@@ -27,3 +27,10 @@ def extract_job(soup):
         date=extract_text(soup, ".date"),
         url=link.get("href", "") if link else ""
     )
+
+def extract_jobs(soup):
+    """Extrait plusieurs offres depuis une page HTML."""
+
+    job_elements = soup.select(".job")
+
+    return [extract_job(job) for job in job_elements]
