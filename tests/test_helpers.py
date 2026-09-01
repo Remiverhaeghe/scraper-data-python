@@ -4,7 +4,7 @@ Tests des méthodes utilitaires.
 
 from bs4 import BeautifulSoup
 
-from utils.helpers import extract_text
+from utils.helpers import extract_text, extract_rating
 
 
 def test_extract_text():
@@ -26,3 +26,13 @@ def test_extract_text_returns_empty_string_when_element_is_missing():
     result = extract_text(soup, ".company")
 
     assert result == ""   
+
+def test_extract_rating():
+    """Vérifie la conversion d'une note."""
+
+    html = '<p class="star-rating Three"></p>'
+    soup = BeautifulSoup(html, "html.parser")
+
+    result = extract_rating(soup.select_one(".star-rating"))
+
+    assert result == 3

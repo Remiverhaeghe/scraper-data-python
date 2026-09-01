@@ -2,8 +2,8 @@
 Tests du parser HTML.
 """
 
-from scraper.parser import parse_html
-from scraper.parser import extract_job, extract_jobs, parse_html
+from job.model import Job
+from job.parser import extract_job, extract_jobs, parse_html
 
 
 def test_parse_html():

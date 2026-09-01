@@ -4,7 +4,7 @@ Tests du service de scraping.
 
 from unittest.mock import patch
 
-from services.scraper_service import scrape_job, scrape_jobs
+from job.service import scrape_job, scrape_jobs
 
 
 def test_scrape_job():
@@ -22,7 +22,7 @@ def test_scrape_job():
     """
 
     with patch(
-        "services.scraper_service.fetch_page",
+        "job.service.fetch_page",
         return_value=html
     ):
         job = scrape_job("https://example.com/job")
@@ -55,7 +55,7 @@ def test_scrape_jobs():
     """
 
     with patch(
-        "services.scraper_service.fetch_page",
+        "job.service.fetch_page",
         return_value=html
     ):
         jobs = scrape_jobs("https://example.com/jobs")

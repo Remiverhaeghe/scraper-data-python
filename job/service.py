@@ -3,7 +3,7 @@ Service de scraping.
 """
 
 from scraper.http_client import fetch_page
-from scraper.parser import extract_job, extract_jobs, parse_html
+from job.parser import extract_job, extract_jobs, parse_html
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

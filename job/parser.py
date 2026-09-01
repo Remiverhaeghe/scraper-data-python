@@ -4,7 +4,23 @@ Analyse du contenu HTML.
 
 from bs4 import BeautifulSoup
 
-from models.job import Job
+from job.model import Job
+from utils.helpers import extract_rating, extract_text
+
+
+
+
+
+
+
+
+"""
+Analyse du contenu HTML.
+"""
+
+from bs4 import BeautifulSoup
+
+from job.model import Job
 from utils.helpers import extract_text
 
 
