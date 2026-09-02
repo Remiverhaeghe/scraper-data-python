@@ -18,7 +18,7 @@ def scrape_book(url):
     html = fetch_page(url)
     soup = parse_html(html)
 
-    book = extract_book(soup)
+    book = extract_book(soup, url)
 
     logger.info("Scraping du livre terminé : %s", url)
 

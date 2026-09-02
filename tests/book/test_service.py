@@ -38,4 +38,4 @@ def test_scrape_book():
     assert book.price == 51.77
     assert book.availability == "In stock"
     assert book.rating == 3
-    assert book.url == "book-1.html"
+    assert book.url == "https://example.com/book-1.html"

@@ -231,6 +231,3 @@ output/*
 # Logs générés par l'application
 logs/
 *.log
-
-# Logs
-logs/

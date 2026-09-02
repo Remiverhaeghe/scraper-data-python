@@ -4,7 +4,7 @@ Tests des méthodes utilitaires.
 
 from bs4 import BeautifulSoup
 
-from utils.helpers import extract_text, extract_rating
+from utils.helpers import extract_price, extract_text, extract_rating
 
 
 def test_extract_text():
@@ -26,6 +26,13 @@ def test_extract_text_returns_empty_string_when_element_is_missing():
     result = extract_text(soup, ".company")
 
     assert result == ""   
+
+def test_extract_price():
+    """Vérifie la conversion d'un prix en valeur numérique."""
+
+    result = extract_price("£51.77")
+
+    assert result == 51.77
 
 def test_extract_rating():
     """Vérifie la conversion d'une note."""
