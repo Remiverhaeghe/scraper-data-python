@@ -23,6 +23,8 @@ def fetch_page(url):
         response = requests.get(url, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
 
+        response.encoding = response.apparent_encoding
+
     except requests.RequestException:
         logger.exception("Échec de récupération : %s", url)
         raise
