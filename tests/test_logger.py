@@ -19,3 +19,19 @@ def test_logger():
     assert logger.level > 0
     assert len(logger.handlers) == 2
     assert log_file.exists()
+
+
+def test_logger_writes_message_to_file():
+    """Vérifie qu'un message est écrit dans le fichier de logs."""
+
+    logger = get_logger("test_file")
+
+    logger.info("Message de test")
+
+    log_file = Path("logs/scraper.log")
+
+    content = log_file.read_text(
+        encoding="utf-8"
+    )
+
+    assert "Message de test" in content

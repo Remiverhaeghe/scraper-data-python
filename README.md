@@ -1,34 +1,24 @@
-````markdown
-# 🐍 Web Scraper Automatique (Python)
+🐍 Web Scraper Automatique (Python)
 
 Projet personnel de scraping développé en Python.
 
 L'objectif est de récupérer des données publiques depuis un site web, de les analyser, de les structurer et de les rendre exploitables.
 
-## 🎯 Objectifs
-
-- Comprendre le fonctionnement d'un scraper Python.
-- Séparer les responsabilités : HTTP, parsing, modèle et logique métier.
-- Gérer la pagination d'un site web.
-- Structurer les données extraites.
-- Mettre en place des logs.
-- Tester progressivement les différents composants.
-- Stocker et exploiter les données extraites.
-
-## 🛠️ Stack technique
-
-- **Langage :** Python 3
-- **Requêtes HTTP :** `requests`
-- **Parsing HTML :** `beautifulsoup4`
-- **Tests :** `pytest`
-- **Analyse de données :** `pandas`
-
-## 📁 Structure
-
-````markdown
-## 📁 Structure
-
-```text
+🎯 Objectifs
+Comprendre le fonctionnement d'un scraper Python.
+Séparer les responsabilités : HTTP, parsing, modèle et logique métier.
+Gérer la pagination d'un site web.
+Structurer les données extraites.
+Mettre en place des logs.
+Tester progressivement les différents composants.
+Stocker et exploiter les données extraites.
+🛠️ Stack technique
+Langage : Python 3
+Requêtes HTTP : requests
+Parsing HTML : beautifulsoup4
+Tests : pytest
+Analyse de données : pandas
+📁 Structure
 scraper-data-python/
 │
 ├── book/                       # Domaine métier consacré aux livres
@@ -60,7 +50,7 @@ scraper-data-python/
 │
 ├── data/                       # Exploitation des données après le scraping
 │   ├── __init__.py             # Déclare le dossier comme package Python
-│   ├── reader.py               # Lit les données enregistrées dans le fichier CSV
+│   ├── reader.py               # Vérifie et lit les données enregistrées dans le fichier CSV
 │   ├── filter.py               # Filtre les données selon les critères demandés
 │   └── display.py              # Affiche les résultats dans la console
 │
@@ -88,14 +78,14 @@ scraper-data-python/
 │   │
 │   ├── data/                   # Tests liés à l'exploitation des données
 │   │   ├── __init__.py         # Déclare le dossier comme package de tests
-│   │   ├── test_reader.py      # Vérifie la lecture des données
+│   │   ├── test_reader.py      # Vérifie la lecture et la présence des données
 │   │   ├── test_filter.py      # Vérifie le filtrage des données
 │   │   └── test_display.py     # Vérifie l'affichage des résultats
 │   │
 │   ├── __init__.py             # Déclare le dossier comme package de tests
 │   ├── test_helpers.py         # Vérifie les fonctions utilitaires
 │   ├── test_http_client.py     # Vérifie les requêtes HTTP et la gestion des erreurs
-│   ├── test_logger.py          # Vérifie la configuration des logs
+│   ├── test_logger.py          # Vérifie la configuration et l'écriture des logs
 │   ├── test_main.py            # Vérifie l'orchestration des différentes étapes
 │   └── test_url.py             # Vérifie la construction des URLs
 │
@@ -104,151 +94,100 @@ scraper-data-python/
 ├── requirements.txt            # Liste les dépendances nécessaires au projet
 ├── README.md                   # Présente le projet et explique son fonctionnement
 └── .gitignore                  # Définit les fichiers qui ne doivent pas être versionnés
-````
-
-## 🚀 Installation
+🚀 Installation
 
 Cloner le dépôt :
 
-```bash
 git clone https://github.com/Remiverhaeghe/scraper-data-python.git
 cd scraper-data-python
-```
 
 Créer un environnement virtuel :
 
-```bash
 python -m venv venv
-```
 
 Sous Windows :
 
-```bash
 venv\Scripts\activate
-```
 
 Installer les dépendances :
 
-```bash
 pip install -r requirements.txt
-```
+▶️ Lancer le scraping
 
-## ▶️ Lancer le scraping
+Pour lancer l'application :
 
-Pour lancer le scraping complet :
-
-```bash
 python main.py
-```
+
+Si le fichier output/books.csv n'existe pas, le scraping est lancé automatiquement.
+
+Pour forcer une nouvelle récupération des données :
+
+python main.py --refresh
 
 Pour limiter le nombre de pages :
 
-```bash
-python main.py --max-pages 2
-```
+python main.py --refresh --max-pages 2
 
 Le résultat complet est enregistré dans :
 
-```text
 output/books.csv
-```
-
-### 🔎 Filtrer les résultats
+🔎 Filtrer les résultats
 
 Rechercher un texte dans les titres :
 
-```bash
 python main.py --title python
-```
 
 Limiter le prix :
 
-```bash
 python main.py --max-price 20
-```
 
 Définir une note minimale :
 
-```bash
 python main.py --min-rating 4
-```
 
 Les critères peuvent être combinés :
 
-```bash
 python main.py --title python --max-price 20 --min-rating 4
-```
+
+Il est également possible de mettre à jour les données avant de les filtrer :
+
+python main.py --refresh --title python --max-price 20 --min-rating 4
 
 Un script de test manuel permet également de réaliser rapidement un scraping limité :
 
-```bash
 python -m scripts.test_books_scraping
-```
-
-## 🧪 Tests
+🧪 Tests
 
 Lancer l'ensemble des tests :
 
-```bash
 python -m pytest
-```
 
-Le projet compte actuellement **44 tests automatisés**.
+Le projet compte actuellement 67 tests automatisés.
 
-## 📝 Logs
+📝 Logs
 
 Les logs sont écrits dans :
 
-```text
 logs/scraper.log
-```
 
-Le dossier `logs/` n'est pas versionné.
+Le dossier logs/ n'est pas versionné.
 
-## 📌 État actuel
-
-* Scraping HTTP fonctionnel
-* Parsing HTML fonctionnel
-* Pagination fonctionnelle
-* Modèle `Book`
-* Gestion des URLs relatives
-* Gestion des erreurs HTTP
-* Système de logs
-* Stockage CSV
-* Configuration centralisée
-* Arguments en ligne de commande
-* Lecture des données avec `pandas`
-* Filtrage des données
-* Affichage des résultats
-* Tests automatisés
-* **44 tests**
-* Scraping de 1 000 livres sur Books to Scrape
-
-Les prochaines évolutions porteront sur l'amélioration de la robustesse et l'exploitation des données.
-
-````
-
-### Petite remarque importante
-
-J'ai volontairement **simplifié la représentation de `tests/`** dans le README. Il n'est pas nécessaire de documenter chaque `__init__.py` et chaque fichier de test individuellement : le README doit rester synthétique.
-
-Et surtout, maintenant le README représente réellement notre architecture :
-
-```text
-book       → domaine
-scraper    → technique HTTP
-data       → exploitation
-cli        → interaction utilisateur
-utils      → fonctionnalités communes
-tests      → validation
-main.py    → orchestration
-````
-
-Après avoir remplacé ton README, fais simplement :
-
-```bash
-python -m pytest
-git status
-```
-
-**On ne commitera qu'après avoir vérifié le `git status`.**
+📌 État actuel
+Scraping HTTP fonctionnel
+Parsing HTML fonctionnel
+Pagination fonctionnelle
+Modèle Book
+Gestion des URLs relatives
+Gestion des erreurs HTTP
+Système de logs
+Stockage CSV
+Configuration centralisée
+Arguments en ligne de commande
+Lecture des données avec pandas
+Filtrage des données
+Affichage des résultats
+Vérification de l'existence du fichier CSV
+Actualisation des données avec --refresh
+Tests automatisés
+67 tests
+Scraping de 1 000 livres sur Books to Scrape

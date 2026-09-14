@@ -118,3 +118,28 @@ def test_min_rating_rejects_value_above_maximum(monkeypatch):
 
     with pytest.raises(SystemExit):
         parse_arguments()
+
+def test_parse_arguments_refresh(monkeypatch):
+    """Vérifie que l'option --refresh est correctement analysée."""
+
+    monkeypatch.setattr(
+        "sys.argv",
+        ["main.py", "--refresh"]
+    )
+
+    arguments = parse_arguments()
+
+    assert arguments.refresh is True
+
+
+def test_parse_arguments_without_refresh(monkeypatch):
+    """Vérifie que --refresh est désactivé par défaut."""
+
+    monkeypatch.setattr(
+        "sys.argv",
+        ["main.py"]
+    )
+
+    arguments = parse_arguments()
+
+    assert arguments.refresh is False

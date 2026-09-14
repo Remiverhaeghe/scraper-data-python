@@ -1,4 +1,4 @@
-from data.reader import read_books
+from data.reader import books_file_exists, read_books
 
 def test_read_books(tmp_path): 
     """Vérifie la lecture d'un fichier CSV de livres."""
@@ -18,3 +18,21 @@ def test_read_books(tmp_path):
     assert books.iloc[0]["title"] == "Livre 1"
     assert books.iloc[0]["price"] == 10.50
     assert books.iloc[1]["rating"] == 5
+
+
+def test_books_file_exists(tmp_path):
+    """Vérifie qu'un fichier existant est correctement détecté."""
+
+    file_path = tmp_path / "books.csv"
+
+    file_path.touch()
+
+    assert books_file_exists(file_path) is True
+
+
+def test_books_file_does_not_exist(tmp_path):
+    """Vérifie qu'un fichier inexistant est correctement détecté."""
+
+    file_path = tmp_path / "books.csv"
+
+    assert books_file_exists(file_path) is False

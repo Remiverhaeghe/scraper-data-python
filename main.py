@@ -8,7 +8,7 @@ from cli.arguments import parse_arguments
 from config import OUTPUT_FILE, URL
 from data.display import display_books
 from data.filter import filter_books
-from data.reader import read_books
+from data.reader import books_file_exists, read_books
 
 
 def main():
@@ -16,12 +16,13 @@ def main():
 
     arguments = parse_arguments()
 
-    books = scrape_books(
-        URL,
-        max_pages=arguments.max_pages
-    )
+    if arguments.refresh or not books_file_exists(OUTPUT_FILE):
+        books = scrape_books(
+            URL,
+            max_pages=arguments.max_pages
+        )
 
-    save_books(books, OUTPUT_FILE)
+        save_books(books, OUTPUT_FILE)
 
     books = read_books(OUTPUT_FILE)
 

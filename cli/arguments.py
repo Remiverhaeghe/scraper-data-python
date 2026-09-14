@@ -61,6 +61,12 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--refresh", 
+        action="store_true",
+        help="Relance le scraping avant d'exploiter les données."
+    )
+
+    parser.add_argument(
         "--title", 
         default=None,
         help="Titre ou texte à rechercher dans les livres."
