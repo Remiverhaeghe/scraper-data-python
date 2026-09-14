@@ -2,8 +2,9 @@
 Tests du stockage des livres.
 """
 
-import csv
+import csv, pytest
 
+from pathlib import Path
 from book.model import Book
 from book.storage import save_books
 
@@ -88,3 +89,33 @@ def test_save_empty_books(tmp_path):
         "rating",
         "url"
     ]]
+
+def test_save_books_logs_error_when_file_cannot_be_written(
+    tmp_path,
+    monkeypatch
+):
+    """Vérifie qu'une erreur d'écriture est enregistrée dans les logs."""
+
+    file_path = tmp_path / "books.csv"
+
+    def mock_open(*args, **kwargs):
+        raise PermissionError("Accès refusé")
+
+    monkeypatch.setattr(
+        Path,
+        "open",
+        mock_open
+    )
+
+    books = [
+        Book(
+            title="Book 1",
+            price=10.00,
+            availability="In stock",
+            rating=4,
+            url="https://example.com/book-1"
+        )
+    ]
+
+    with pytest.raises(PermissionError):
+        save_books(books, file_path)

@@ -14,7 +14,8 @@ def filter_books(books, title=None, max_price=None, min_rating=None):
             result["title"].str.contains(
                 title, 
                 case=False,
-                na=False
+                na=False, 
+                regex=False
             )
         ]
 

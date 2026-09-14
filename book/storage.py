@@ -20,35 +20,43 @@ def save_books(books, file_path):
     )
 
     logger.info(
-        "Enregistrement de %s livre(s) dans : %s", 
-        len(books), 
+        "Enregistrement de %s livre(s) dans : %s",
+        len(books),
         file_path
     )
 
-    with file_path.open(
-        mode="w", 
-        encoding="utf-8",
-        newline=""
-    ) as file:
+    try:
+        with file_path.open(
+            mode="w",
+            encoding="utf-8",
+            newline=""
+        ) as file:
 
-        writer = csv.writer(file)
+            writer = csv.writer(file)
 
-        writer.writerow([
-            "title",
-            "price",
-            "availability",
-            "rating",
-            "url"
-        ])
-
-        for book in books:
             writer.writerow([
-                book.title,
-                book.price,
-                book.availability,
-                book.rating, 
-                book.url
+                "title",
+                "price",
+                "availability",
+                "rating",
+                "url"
             ])
+
+            for book in books:
+                writer.writerow([
+                    book.title,
+                    book.price,
+                    book.availability,
+                    book.rating,
+                    book.url
+                ])
+
+    except OSError:
+        logger.exception(
+            "Erreur lors de l'enregistrement : %s",
+            file_path
+        )
+        raise
 
     logger.info(
         "Enregistrement terminé : %s",

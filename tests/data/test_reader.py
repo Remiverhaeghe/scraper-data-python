@@ -36,3 +36,22 @@ def test_books_file_does_not_exist(tmp_path):
     file_path = tmp_path / "books.csv"
 
     assert books_file_exists(file_path) is False
+
+
+def test_read_empty_books_file(tmp_path):
+    """Vérifie la lecture d'un fichier CSV vide."""
+
+    file_path = tmp_path / "books.csv"
+
+    file_path.touch()
+
+    books = read_books(file_path)
+
+    assert books.empty
+    assert list(books.columns) == [
+        "title",
+        "price",
+        "availability",
+        "rating",
+        "url"
+    ]

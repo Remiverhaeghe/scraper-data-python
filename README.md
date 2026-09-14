@@ -189,5 +189,5 @@ Affichage des résultats
 Vérification de l'existence du fichier CSV
 Actualisation des données avec --refresh
 Tests automatisés
-67 tests
+71 tests
 Scraping de 1 000 livres sur Books to Scrape

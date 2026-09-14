@@ -119,3 +119,76 @@ def test_filter_books_with_all_criteria():
 
     assert len(result) == 1
     assert result.iloc[0]["title"] == "Python débutant"
+
+
+def test_filter_books_title_with_special_characters():
+    """Vérifie que la recherche de titre traite les caractères spéciaux comme du texte."""
+
+    books = pd.DataFrame([
+        {
+            "title": "C++ pour débutants",
+            "price": 20.0,
+            "availability": "In stock",
+            "rating": 4,
+            "url": "https://example.com/book"
+        },
+        {
+            "title": "Python avancé",
+            "price": 15.0,
+            "availability": "In stock",
+            "rating": 5,
+            "url": "https://example.com/book-2"
+        }
+    ])
+
+    result = filter_books(
+        books,
+        title="C++"
+    )
+
+    assert len(result) == 1
+    assert result.iloc[0]["title"] == "C++ pour débutants"
+
+def test_filter_books_with_all_filters():
+    """Vérifie que tous les filtres sont appliqués ensemble."""
+
+    books = pd.DataFrame([
+        {
+            "title": "Python débutant",
+            "price": 15.0,
+            "availability": "In stock",
+            "rating": 5,
+            "url": "https://example.com/book-1"
+        },
+        {
+            "title": "Python avancé",
+            "price": 25.0,
+            "availability": "In stock",
+            "rating": 5,
+            "url": "https://example.com/book-2"
+        },
+        {
+            "title": "Java débutant",
+            "price": 10.0,
+            "availability": "In stock",
+            "rating": 5,
+            "url": "https://example.com/book-3"
+        },
+        {
+            "title": "Python moyen",
+            "price": 15.0,
+            "availability": "In stock",
+            "rating": 3,
+            "url": "https://example.com/book-4"
+        }
+    ])
+
+    result = filter_books(
+        books,
+        title="python",
+        max_price=20,
+        min_rating=4
+    )
+
+    assert len(result) == 1
+    assert result.iloc[0]["title"] == "Python débutant"

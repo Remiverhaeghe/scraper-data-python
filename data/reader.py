@@ -12,7 +12,19 @@ def books_file_exists(file_path):
 
     return Path(file_path).exists()
 
-def read_books(file_path): 
+def read_books(file_path):
     """Lit un fichier CSV contenant les livres."""
 
-    return pd.read_csv(file_path)
+    try:
+        return pd.read_csv(file_path)
+
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame(
+            columns=[
+                "title",
+                "price",
+                "availability",
+                "rating",
+                "url"
+            ]
+        )
