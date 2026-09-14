@@ -5,22 +5,6 @@ Analyse du contenu HTML.
 from bs4 import BeautifulSoup
 
 from job.model import Job
-from utils.helpers import extract_rating, extract_text
-
-
-
-
-
-
-
-
-"""
-Analyse du contenu HTML.
-"""
-
-from bs4 import BeautifulSoup
-
-from job.model import Job
 from utils.helpers import extract_text
 
 
@@ -43,6 +27,7 @@ def extract_job(soup):
         date=extract_text(soup, ".date"),
         url=link.get("href", "") if link else ""
     )
+
 
 def extract_jobs(soup):
     """Extrait plusieurs offres depuis une page HTML."""
