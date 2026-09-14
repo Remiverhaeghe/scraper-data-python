@@ -3,6 +3,7 @@ Test manuel du scraping de Books to Scrape.
 """
 
 from book.service import scrape_books
+from book.storage import save_books
 
 
 URL = "https://books.toscrape.com/"
@@ -11,7 +12,9 @@ URL = "https://books.toscrape.com/"
 def main():
     """Récupère et affiche un résumé du scraping."""
 
-    books = scrape_books(URL)
+    books = scrape_books(URL, max_pages=2)
+
+    save_books(books, "output/book.csv")
 
     print(f"Nombre de livres trouvés : {len(books)}")
 

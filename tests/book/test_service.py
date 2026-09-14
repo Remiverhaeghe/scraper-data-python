@@ -99,3 +99,67 @@ def test_scrape_books():
     assert books[1].price == 20.00
     assert books[1].rating == 5
 
+
+def test_scrape_books_with_max_pages():
+    """Vérifie que le scraping s'arrête après le nombre de pages demandé."""
+
+    html_page_1 = """
+    <ul class="pager">
+        <li class="next">
+            <a href="page-2.html">next</a>
+        </li>
+    </ul>
+
+    <article class="product_pod">
+        <h3>
+            <a href="book-1.html">Book 1</a>
+        </h3>
+        <p class="price_color">£10.00</p>
+        <p class="instock availability">In stock</p>
+        <p class="star-rating One"></p>
+    </article>
+    """
+
+    html_page_2 = """
+    <ul class="pager">
+        <li class="next">
+            <a href="page-3.html">next</a>
+        </li>
+    </ul>
+
+    <article class="product_pod">
+        <h3>
+            <a href="book-2.html">Book 2</a>
+        </h3>
+        <p class="price_color">£20.00</p>
+        <p class="instock availability">In stock</p>
+        <p class="star-rating Two"></p>
+    </article>
+    """
+
+    html_page_3 = """
+    <article class="product_pod">
+        <h3>
+            <a href="book-3.html">Book 3</a>
+        </h3>
+        <p class="price_color">£30.00</p>
+        <p class="instock availability">In stock</p>
+        <p class="star-rating Three"></p>
+    </article>
+    """
+
+    with patch(
+        "book.service.fetch_page",
+        side_effect=[
+            html_page_1,
+            html_page_2
+        ]
+    ):
+        books = scrape_books(
+            "https://example.com/",
+            max_pages=2
+        )
+
+    assert len(books) == 2
+    assert books[0].title == "Book 1"
+    assert books[1].title == "Book 2"
