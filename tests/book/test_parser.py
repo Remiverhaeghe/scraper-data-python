@@ -153,3 +153,47 @@ def test_extract_next_url_without_next_page():
     )
 
     assert result == ""
+
+def test_extract_book_with_missing_data():
+    """Vérifie le comportement lorsque certaines données sont absentes."""
+
+    html = """
+    <article class="product_pod">
+        <h3>
+            <a href="book.html">Mon livre</a>
+        </h3>
+    </article>
+    """
+
+    soup = parse_html(html)
+
+    book = extract_book(
+        soup,
+        "https://books.toscrape.com/"
+    )
+
+    assert book.title == "Mon livre"
+    assert book.price == 0.0
+    assert book.availability == ""
+    assert book.rating == 0
+    assert book.url == "https://books.toscrape.com/book.html"
+
+def test_extract_books_without_books():
+    """Vérifie qu'une page sans livre retourne une liste vide."""
+
+    html = """
+    <html>
+        <body>
+            <h1>Page sans livre</h1>
+        </body>
+    </html>
+    """
+
+    soup = parse_html(html)
+
+    books = extract_books(
+        soup,
+        "https://books.toscrape.com/"
+    )
+
+    assert books == []

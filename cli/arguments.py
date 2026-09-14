@@ -32,4 +32,24 @@ def parse_arguments():
         help="Nombre maximum de pages à scraper."
     )
 
+    parser.add_argument(
+        "--title", 
+        default=None,
+        help="Titre ou texte à rechercher dans les livres."
+    )
+
+    parser.add_argument(
+        "--max-price", 
+        type=float,
+        default=None,
+        help="Prix maximum des livres."
+    )
+
+    parser.add_argument(
+        "--min-rating",
+        type=int,
+        default=None,
+        help="Note minimum des livres."
+    )
+
     return parser.parse_args()
