@@ -60,3 +60,15 @@ def extract_books(soup, base_url):
         extract_book(book, base_url)
         for book in book_elements
     ]
+
+def extract_next_url(soup, base_url):
+    """Extrait l'URL de la page suivante."""
+
+    next_element = soup.select_one("li.next a")
+
+    if next_element is None:
+        return ""
+
+    relative_url = next_element.get("href", "")
+
+    return build_absolute_url(base_url, relative_url)
