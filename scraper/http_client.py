@@ -5,10 +5,9 @@ Gestion des requêtes HTTP du scraper.
 import requests
 
 from utils.logger import get_logger
+from config import REQUEST_TIMEOUT
 
 logger = get_logger(__name__)
-
-REQUEST_TIMEOUT = 10
 
 def fetch_page(url):
     """

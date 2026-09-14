@@ -64,3 +64,27 @@ def test_save_books(tmp_path):
         "5",
         "https://example.com/book-2"
     ]
+
+def test_save_empty_books(tmp_path):
+    """Vérifie l'enregistrement d'une liste de livres vide."""
+
+    file_path = tmp_path / "books.csv"
+
+    save_books([], file_path)
+
+    assert file_path.exists()
+
+    with file_path.open(
+        mode="r",
+        encoding="utf-8",
+        newline=""
+    ) as file:
+        rows = list(csv.reader(file))
+
+    assert rows == [[
+        "title",
+        "price",
+        "availability",
+        "rating",
+        "url"
+    ]]

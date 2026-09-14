@@ -2,17 +2,17 @@
 Point d'entrée de l'application.
 """
 
-from scraper.http_client import fetch_page
+from book.service import scrape_books
+from book.storage import save_books
+from config import OUTPUT_FILE, URL
 
 
 def main():
-    """Lance l'application."""
+    """Lance le scraping et l'enregistrement des livres."""
 
-    url = "https://example.com"
+    books = scrape_books(URL)
 
-    html = fetch_page(url)
-
-    print(f"Page récupérée : {len(html)} caractères")
+    save_books(books, OUTPUT_FILE)
 
 
 if __name__ == "__main__":
