@@ -163,3 +163,58 @@ def test_scrape_books_with_max_pages():
     assert len(books) == 2
     assert books[0].title == "Book 1"
     assert books[1].title == "Book 2"
+
+
+def test_scrape_books_with_max_pages_one():
+    """Vérifie que le scraping s'arrête après une seule page."""
+
+    html_page = """
+    <ul class="pager">
+        <li class="next">
+            <a href="page-2.html">next</a>
+        </li>
+    </ul>
+
+    <article class="product_pod">
+        <h3>
+            <a href="book-1.html">Book 1</a>
+        </h3>
+        <p class="price_color">£10.00</p>
+        <p class="instock availability">In stock</p>
+        <p class="star-rating One"></p>
+    </article>
+    """
+
+    with patch(
+        "book.service.fetch_page",
+        return_value=html_page
+    ) as mock_fetch_page:
+        books = scrape_books(
+            "https://example.com/",
+            max_pages=1
+        )
+
+    assert len(books) == 1
+    assert books[0].title == "Book 1"
+    assert mock_fetch_page.call_count == 1
+
+def test_scrape_books_without_books():
+    """Vérifie qu'une page sans livre retourne une liste vide."""
+
+    html_page = """
+    <html>
+        <body>
+            <h1>Aucun livre</h1>
+        </body>
+    </html>
+    """
+
+    with patch(
+        "book.service.fetch_page",
+        return_value=html_page
+    ):
+        books = scrape_books(
+            "https://example.com/"
+        )
+
+    assert books == []

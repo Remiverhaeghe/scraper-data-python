@@ -197,3 +197,55 @@ def test_extract_books_without_books():
     )
 
     assert books == []
+
+def test_extract_book_without_title():
+    """Vérifie le comportement lorsqu'un livre n'a pas de titre."""
+
+    html = """
+    <article class="product_pod">
+        <p class="price_color">£10.00</p>
+        <p class="availability">In stock</p>
+        <p class="star-rating Three"></p>
+    </article>
+    """
+
+    soup = parse_html(html)
+
+    book = extract_book(
+        soup,
+        "https://books.toscrape.com/"
+    )
+
+    assert book.title == ""
+    assert book.price == 10.00
+    assert book.availability == "In stock"
+    assert book.rating == 3
+    assert book.url == ""
+
+
+def test_extract_book_without_url():
+    """Vérifie le comportement lorsqu'un livre n'a pas d'URL."""
+
+    html = """
+    <article class="product_pod">
+        <h3>
+            <a>Mon livre</a>
+        </h3>
+        <p class="price_color">£10.00</p>
+        <p class="availability">In stock</p>
+        <p class="star-rating Three"></p>
+    </article>
+    """
+
+    soup = parse_html(html)
+
+    book = extract_book(
+        soup,
+        "https://books.toscrape.com/"
+    )
+
+    assert book.title == "Mon livre"
+    assert book.price == 10.00
+    assert book.availability == "In stock"
+    assert book.rating == 3
+    assert book.url == ""

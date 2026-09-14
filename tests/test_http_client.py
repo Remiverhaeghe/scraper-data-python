@@ -68,3 +68,27 @@ def test_fetch_page_timeout(monkeypatch):
 
     with pytest.raises(requests.Timeout):
         fetch_page("https://example.com/page")
+
+
+def test_fetch_page_uses_configured_timeout(monkeypatch):
+    """Vérifie que le timeout configuré est utilisé."""
+
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        apparent_encoding = "utf-8"
+        text = "contenu"
+
+    def fake_get(url, timeout):
+        captured["timeout"] = timeout
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    result = fetch_page("https://example.com")
+
+    assert captured["timeout"] == 10
+    assert result == "contenu"
