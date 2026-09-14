@@ -4,6 +4,8 @@ Gestion des arguments de ligne de commande.
 
 import argparse
 
+from config import MIN_RATING, MAX_RATING
+
 
 def positive_integer(value):
     """Vérifie qu'une valeur est un entier positif."""
@@ -17,6 +19,32 @@ def positive_integer(value):
 
     return value
 
+
+def positive_float(value):
+    """Vérifie qu'une valeur est un nombre positif."""
+
+    value = float(value)
+
+    if value < 0:
+        raise argparse.ArgumentTypeError(
+            "Le prix doit être supérieur ou égal à 0."
+        )
+
+    return value
+
+
+def valid_rating(value): 
+    """Vérifie qu'une note est comprise dans les limites configurées."""
+
+    value = int(value)
+
+    if value < MIN_RATING or value > MAX_RATING: 
+        raise argparse.ArgumentTypeError(
+            f"La note doit être comprise entre "
+            f"{MIN_RATING} et {MAX_RATING}."
+        )
+
+    return value
 
 def parse_arguments():
     """Analyse les arguments fournis en ligne de commande."""
@@ -40,14 +68,14 @@ def parse_arguments():
 
     parser.add_argument(
         "--max-price", 
-        type=float,
+        type=positive_float,
         default=None,
         help="Prix maximum des livres."
     )
 
     parser.add_argument(
         "--min-rating",
-        type=int,
+        type=valid_rating,
         default=None,
         help="Note minimum des livres."
     )
