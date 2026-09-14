@@ -92,3 +92,17 @@ def test_fetch_page_uses_configured_timeout(monkeypatch):
 
     assert captured["timeout"] == 10
     assert result == "contenu"
+
+
+def test_fetch_page_logs_http_error(caplog, monkeypatch):
+    """Vérifie qu'une erreur HTTP est enregistrée dans les logs."""
+
+    def fake_get(url, timeout):
+        raise requests.HTTPError("404 Not Found")
+
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    with pytest.raises(requests.HTTPError):
+        fetch_page("https://example.com/page")
+
+    assert "Échec de récupération" in caplog.text

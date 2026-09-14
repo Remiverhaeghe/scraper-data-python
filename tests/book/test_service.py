@@ -4,6 +4,8 @@ Tests du service Book.
 
 from unittest.mock import patch
 
+import pytest, requests
+
 from book.model import Book
 from book.parser import extract_next_url, parse_html
 from book.service import scrape_book, scrape_books
@@ -218,3 +220,34 @@ def test_scrape_books_without_books():
         )
 
     assert books == []
+
+
+def test_scrape_books_raises_http_error_on_next_page():
+    """Vérifie qu'une erreur HTTP sur une page suivante est remontée."""
+
+    html_page_1 = """
+    <ul class="pager">
+        <li class="next">
+            <a href="page-2.html">next</a>
+        </li>
+    </ul>
+
+    <article class="product_pod">
+        <h3>
+            <a href="book-1.html">Book 1</a>
+        </h3>
+        <p class="price_color">£10.00</p>
+        <p class="instock availability">In stock</p>
+        <p class="star-rating One"></p>
+    </article>
+    """
+
+    with patch(
+        "book.service.fetch_page",
+        side_effect=[
+            html_page_1,
+            requests.HTTPError("404 Not Found")
+        ]
+    ):
+        with pytest.raises(requests.HTTPError):
+            scrape_books("https://example.com/")
