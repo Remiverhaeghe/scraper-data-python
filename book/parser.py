@@ -1,74 +1,146 @@
-"""
-Analyse du contenu HTML.
-"""
+# ============================================================================
+# Analyse et extraction des données HTML des livres
+# ============================================================================
+
 
 from bs4 import BeautifulSoup
 
 from book.model import Book
 from utils.helpers import extract_price, extract_rating, extract_text
-from utils.url import build_absolute_url
 from utils.logger import get_logger
+from utils.url import build_absolute_url
 
 
 logger = get_logger(__name__)
 
 
-def parse_html(html):
-    """Transforme le HTML en objet BeautifulSoup."""
+def parse_html(pHtml):
+    """
+    Transforme le HTML en objet BeautifulSoup.
 
-    return BeautifulSoup(html, "html.parser")
+    :param pHtml: Contenu HTML à analyser.
+    :return: Objet BeautifulSoup.
+    """
+
+    rSoup = BeautifulSoup(
+        pHtml,
+        "html.parser"
+    )
+
+    return rSoup
 
 
-def extract_book(soup, base_url):
-    """Extrait un livre depuis le HTML."""
+def extract_book(pSoup, pBaseUrl):
+    """
+    Extrait un livre depuis le HTML.
+
+    :param pSoup: Élément HTML contenant le livre.
+    :param pBaseUrl: URL de base permettant de construire l'URL absolue.
+    :return: Livre extrait.
+    """
 
     try:
-        title_element = soup.select_one("h3 a")
-        price = extract_text(soup, ".price_color")
-        availability = extract_text(soup, ".availability")
-        rating_element = soup.select_one(".star-rating")
+        vTitleElement = pSoup.select_one("h3 a")
+        vPrice = extract_text(
+            pSoup,
+            ".price_color"
+        )
+        vAvailability = extract_text(
+            pSoup,
+            ".availability"
+        )
+        vRatingElement = pSoup.select_one(
+            ".star-rating"
+        )
 
-        relative_url = (
-            title_element.get("href", "")
-            if title_element
+        vRelativeUrl = (
+            vTitleElement.get("href", "")
+            if vTitleElement
             else ""
         )
 
-        return Book(
-            title=title_element.get_text(strip=True) if title_element else "",
-            price=extract_price(price),
-            availability=availability,
-            rating=extract_rating(rating_element),
-            url=build_absolute_url(base_url, relative_url)
+        vBook = Book(
+            title=(
+                vTitleElement.get_text(strip=True)
+                if vTitleElement
+                else ""
+            ),
+            price=extract_price(vPrice),
+            availability=vAvailability,
+            rating=extract_rating(vRatingElement),
+            url=build_absolute_url(
+                pBaseUrl,
+                vRelativeUrl
+            )
         )
 
     except Exception:
-        logger.exception("Erreur lors de l'analyse d'un livre")
+        logger.exception(
+            "Erreur lors de l'analyse d'un livre"
+        )
         raise
 
-def extract_books(soup, base_url):
-    """Extrait plusieurs livres depuis une page HTML."""
+    rBook = vBook
 
-    book_elements = soup.select(".product_pod")
+    return rBook
+
+
+def extract_books(pSoup, pBaseUrl):
+    """
+    Extrait plusieurs livres depuis une page HTML.
+
+    :param pSoup: Page HTML contenant les livres.
+    :param pBaseUrl: URL de base permettant de construire les URLs.
+    :return: Liste des livres extraits.
+    """
+
+    vBookElements = pSoup.select(
+        ".product_pod"
+    )
 
     logger.info(
         "%s livre(s) trouvé(s) dans la page",
-        len(book_elements)
+        len(vBookElements)
     )
 
-    return [
-        extract_book(book, base_url)
-        for book in book_elements
+    vBooks = [
+        extract_book(
+            vBook,
+            pBaseUrl
+        )
+        for vBook in vBookElements
     ]
 
-def extract_next_url(soup, base_url):
-    """Extrait l'URL de la page suivante."""
+    rBooks = vBooks
 
-    next_element = soup.select_one("li.next a")
+    return rBooks
 
-    if next_element is None:
-        return ""
 
-    relative_url = next_element.get("href", "")
+def extract_next_url(pSoup, pBaseUrl):
+    """
+    Extrait l'URL de la page suivante.
 
-    return build_absolute_url(base_url, relative_url)
+    :param pSoup: Page HTML contenant le lien suivant.
+    :param pBaseUrl: URL de base permettant de construire l'URL absolue.
+    :return: URL absolue de la page suivante ou chaîne vide.
+    """
+
+    vNextElement = pSoup.select_one(
+        "li.next a"
+    )
+
+    if vNextElement is None:
+        rUrl = ""
+
+    else:
+        vRelativeUrl = vNextElement.get(
+            "href",
+            ""
+        )
+
+        rUrl = build_absolute_url(
+            pBaseUrl,
+            vRelativeUrl
+        )
+
+    return rUrl

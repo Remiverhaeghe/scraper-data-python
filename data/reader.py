@@ -1,25 +1,43 @@
-""" 
-Lecture des données issues du scraping.
-"""
+# ============================================================================
+# Lecture des données issues du scraping
+# ============================================================================
+
 
 from pathlib import Path
 
 import pandas as pd
 
 
-def books_file_exists(file_path): 
-    """Vérifie si le fichier de données existe."""
+def books_file_exists(pFilePath):
+    """
+    Vérifie si le fichier de données existe.
 
-    return Path(file_path).exists()
+    :param pFilePath: Chemin du fichier de données.
+    :return: True si le fichier existe, sinon False.
+    """
 
-def read_books(file_path):
-    """Lit un fichier CSV contenant les livres."""
+    vFilePath = Path(pFilePath)
+
+    rExists = vFilePath.exists()
+
+    return rExists
+
+
+def read_books(pFilePath):
+    """
+    Lit un fichier CSV contenant les livres.
+
+    :param pFilePath: Chemin du fichier CSV.
+    :return: DataFrame contenant les livres.
+    """
 
     try:
-        return pd.read_csv(file_path)
+        vBooks = pd.read_csv(
+            pFilePath
+        )
 
     except pd.errors.EmptyDataError:
-        return pd.DataFrame(
+        vBooks = pd.DataFrame(
             columns=[
                 "title",
                 "price",
@@ -28,3 +46,7 @@ def read_books(file_path):
                 "url"
             ]
         )
+
+    rBooks = vBooks
+
+    return rBooks

@@ -1,6 +1,7 @@
-"""
-Configuration du système de logs.
-"""
+# ============================================================================
+# Configuration du système de logs
+# ============================================================================
+
 
 import logging
 from pathlib import Path
@@ -10,33 +11,58 @@ LOG_DIR = Path("logs")
 LOG_FILE = LOG_DIR / "scraper.log"
 
 
-def get_logger(name):
-    """Crée et configure un logger."""
+def get_logger(pName):
+    """
+    Crée et configure un logger.
 
-    LOG_DIR.mkdir(exist_ok=True)
+    :param pName: Nom du logger.
+    :return: Logger configuré.
+    """
 
-    logger = logging.getLogger(name)
-
-    if logger.handlers:
-        return logger
-
-    logger.setLevel(logging.INFO)
-
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+    LOG_DIR.mkdir(
+        parents=True,
+        exist_ok=True
     )
 
-    file_handler = logging.FileHandler(
-        LOG_FILE,
-        encoding="utf-8"
+    vLogger = logging.getLogger(
+        pName
     )
 
-    console_handler = logging.StreamHandler()
+    if vLogger.handlers:
+        rLogger = vLogger
 
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
+    else:
+        vLogger.setLevel(
+            logging.INFO
+        )
 
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
+        vFormatter = logging.Formatter(
+            "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+        )
 
-    return logger
+        vFileHandler = logging.FileHandler(
+            LOG_FILE,
+            encoding="utf-8"
+        )
+
+        vConsoleHandler = logging.StreamHandler()
+
+        vFileHandler.setFormatter(
+            vFormatter
+        )
+
+        vConsoleHandler.setFormatter(
+            vFormatter
+        )
+
+        vLogger.addHandler(
+            vFileHandler
+        )
+
+        vLogger.addHandler(
+            vConsoleHandler
+        )
+
+        rLogger = vLogger
+
+    return rLogger

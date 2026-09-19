@@ -1,12 +1,19 @@
+# ============================================================================
+# Tests de l'affichage des données des livres
+# ============================================================================
+
+
 import pandas as pd
 
 from data.display import display_books
 
 
 def test_display_books(capsys):
-    """Vérifie l'affichage des livres."""
+    """
+    Vérifie l'affichage des livres.
+    """
 
-    books = pd.DataFrame([
+    vBooks = pd.DataFrame([
         {
             "title": "Livre 1",
             "price": 10.50,
@@ -16,21 +23,25 @@ def test_display_books(capsys):
         }
     ])
 
-    display_books(books)
+    display_books(
+        vBooks
+    )
 
-    output = capsys.readouterr().out
+    vOutput = capsys.readouterr().out
 
-    assert "Livre 1" in output
-    assert "10.5" in output
-    assert "4" in output
-    assert "In stock" in output
-    assert "1 livre(s) trouvé(s)." in output
+    assert "Livre 1" in vOutput
+    assert "10.5" in vOutput
+    assert "4" in vOutput
+    assert "In stock" in vOutput
+    assert "1 livre(s) trouvé(s)." in vOutput
 
 
 def test_display_books_empty(capsys):
-    """Vérifie l'affichage lorsqu'aucun livre n'est trouvé."""
+    """
+    Vérifie l'affichage lorsqu'aucun livre n'est trouvé.
+    """
 
-    books = pd.DataFrame(
+    vBooks = pd.DataFrame(
         columns=[
             "title",
             "price",
@@ -40,8 +51,10 @@ def test_display_books_empty(capsys):
         ]
     )
 
-    display_books(books)
+    display_books(
+        vBooks
+    )
 
-    output = capsys.readouterr().out
+    vOutput = capsys.readouterr().out
 
-    assert "Aucun livre trouvé." in output
+    assert "Aucun livre trouvé." in vOutput

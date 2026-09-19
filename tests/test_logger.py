@@ -1,6 +1,7 @@
-"""
-Tests du système de logs.
-"""
+# ============================================================================
+# Tests du système de logs
+# ============================================================================
+
 
 from pathlib import Path
 
@@ -8,30 +9,47 @@ from utils.logger import get_logger
 
 
 def test_logger():
-    """Vérifie la création du logger."""
+    """
+    Vérifie la création et la configuration du logger.
+    """
 
-    logger = get_logger("test")
-    logger.info("Test du système de logs")
+    vLogger = get_logger(
+        "test"
+    )
 
-    log_file = Path("logs/scraper.log")
+    vLogger.info(
+        "Test du système de logs"
+    )
 
-    assert logger.name == "test"
-    assert logger.level > 0
-    assert len(logger.handlers) == 2
-    assert log_file.exists()
+    vLogFile = Path(
+        "logs/scraper.log"
+    )
+
+    assert vLogger.name == "test"
+    assert vLogger.level > 0
+    assert len(vLogger.handlers) == 2
+    assert vLogFile.exists()
 
 
 def test_logger_writes_message_to_file():
-    """Vérifie qu'un message est écrit dans le fichier de logs."""
+    """
+    Vérifie qu'un message est écrit dans le fichier de logs.
+    """
 
-    logger = get_logger("test_file")
+    vLogger = get_logger(
+        "test_file"
+    )
 
-    logger.info("Message de test")
+    vLogger.info(
+        "Message de test"
+    )
 
-    log_file = Path("logs/scraper.log")
+    vLogFile = Path(
+        "logs/scraper.log"
+    )
 
-    content = log_file.read_text(
+    vContent = vLogFile.read_text(
         encoding="utf-8"
     )
 
-    assert "Message de test" in content
+    assert "Message de test" in vContent

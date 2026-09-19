@@ -1,67 +1,136 @@
-"""
-Service de scraping des livres.
-"""
+# ============================================================================
+# Service de scraping des livres
+# ============================================================================
 
+
+from book.config import BookScrapingConfig
+from book.parser import (
+    extract_book,
+    extract_books,
+    extract_next_url,
+    parse_html
+)
 from scraper.http_client import fetch_page
-from book.parser import extract_book, extract_books, extract_next_url, parse_html
 from utils.logger import get_logger
 
 
 logger = get_logger(__name__)
 
 
-def scrape_book(url):
-    """Récupère et analyse un livre."""
+def scrape_book(pUrl, pConfig):
+    """
+    Récupère et analyse un livre à partir de son URL.
 
-    logger.info("Début du scraping du livre : %s", url)
+    :param pUrl: URL du livre à récupérer.
+    :param pConfig: Configuration du scraping.
+    :return: Livre récupéré.
+    """
 
-    html = fetch_page(url)
-    soup = parse_html(html)
+    logger.info(
+        "Début du scraping du livre : %s",
+        pUrl
+    )
 
-    book = extract_book(soup, url)
+    vHtml = fetch_page(
+        pUrl,
+        pTimeout=pConfig.timeout
+    )
 
-    logger.info("Scraping du livre terminé : %s", url)
+    vSoup = parse_html(
+        vHtml
+    )
 
-    return book
+    vBook = extract_book(
+        vSoup,
+        pUrl
+    )
+
+    logger.info(
+        "Scraping du livre terminé : %s",
+        pUrl
+    )
+
+    rBook = vBook
+
+    return rBook
 
 
-def scrape_books(url, max_pages=None):
-    """Récupère et analyse les livres de plusieurs pages."""
+def scrape_books(pUrl, pConfig):
+    """
+    Récupère les livres présents sur plusieurs pages.
 
-    books = []
-    current_url = url
-    page_count = 0
+    :param pUrl: URL de départ du scraping.
+    :param pConfig: Configuration du scraping.
+    :return: Liste des livres récupérés.
+    """
 
-    logger.info("Début du scraping des livres : %s", url)
+    vBooks = []
+    vCurrentUrl = pUrl
+    vPageCount = 0
 
-    while current_url:
+    logger.info(
+        "Début du scraping des livres : %s",
+        pUrl
+    )
 
-        if max_pages is not None and page_count >= max_pages:
+    while vCurrentUrl:
+        # Vérification du nombre maximum de pages
+        if (
+            pConfig.max_pages is not None
+            and vPageCount >= pConfig.max_pages
+        ):
             break
 
-        page_count += 1
+        # Vérification du nombre maximum de livres
+        if (
+            pConfig.max_items is not None
+            and len(vBooks) >= pConfig.max_items
+        ):
+            break
+
+        vPageCount += 1
 
         logger.info(
             "Scraping de la page %s : %s",
-            page_count,
-            current_url
+            vPageCount,
+            vCurrentUrl
         )
 
-        html = fetch_page(current_url)
-        soup = parse_html(html)
-
-        books.extend(
-            extract_books(soup, current_url)
+        vHtml = fetch_page(
+            vCurrentUrl,
+            pTimeout=pConfig.timeout
         )
 
-        current_url = extract_next_url(
-            soup,
-            current_url
+        vSoup = parse_html(
+            vHtml
+        )
+
+        vBooks.extend(
+            extract_books(
+                vSoup,
+                vCurrentUrl
+            )
+        )
+
+        # Suppression des livres supplémentaires si la limite est atteinte
+        if (
+            pConfig.max_items is not None
+            and len(vBooks) > pConfig.max_items
+        ):
+            vBooks = vBooks[
+                :pConfig.max_items
+            ]
+
+        vCurrentUrl = extract_next_url(
+            vSoup,
+            vCurrentUrl
         )
 
     logger.info(
         "Scraping terminé : %s livre(s) récupéré(s)",
-        len(books)
+        len(vBooks)
     )
 
-    return books
+    rBooks = vBooks
+
+    return rBooks

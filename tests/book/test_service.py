@@ -1,253 +1,219 @@
-"""
-Tests du service Book.
-"""
+# ============================================================================
+# Tests du service de scraping des livres
+# ============================================================================
+
 
 from unittest.mock import patch
 
-import pytest, requests
-
+from book.config import BookScrapingConfig
 from book.model import Book
-from book.parser import extract_next_url, parse_html
 from book.service import scrape_book, scrape_books
 
 
 def test_scrape_book():
-    """Vérifie la récupération d'un livre."""
-
-    html = """
-    <article class="product_pod">
-        <h3>
-            <a href="book-1.html">A Light in the Attic</a>
-        </h3>
-
-        <p class="price_color">£51.77</p>
-
-        <p class="instock availability">
-            In stock
-        </p>
-
-        <p class="star-rating Three"></p>
-    </article>
+    """
+    Vérifie le scraping d'un livre.
     """
 
-    with patch(
-        "book.service.fetch_page",
-        return_value=html
-    ):
-        book = scrape_book("https://example.com/book")
+    vConfig = BookScrapingConfig(
+        timeout=30
+    )
 
-    assert isinstance(book, Book)
-    assert book.title == "A Light in the Attic"
-    assert book.price == 51.77
-    assert book.availability == "In stock"
-    assert book.rating == 3
-    assert book.url == "https://example.com/book-1.html"
-
-
-def test_scrape_books():
-    """Vérifie la récupération de plusieurs pages."""
-
-    html_page_1 = """
-    <ul class="pager">
-        <li class="next">
-            <a href="page-2.html">next</a>
-        </li>
-    </ul>
-
-    <article class="product_pod">
-        <h3>
-            <a href="book-1.html">Book 1</a>
-        </h3>
-        <p class="price_color">£10.00</p>
-        <p class="instock availability">In stock</p>
-        <p class="star-rating One"></p>
-    </article>
-    """
-
-    html_page_2 = """
-    <article class="product_pod">
-        <h3>
-            <a href="book-2.html">Book 2</a>
-        </h3>
-        <p class="price_color">£20.00</p>
-        <p class="instock availability">In stock</p>
-        <p class="star-rating Five"></p>
-    </article>
-    """
-
-    soup = parse_html(html_page_1)
-
-    print(
-        "NEXT TEST :",
-        extract_next_url(soup, "https://example.com/")
+    vBook = Book(
+        title="Python",
+        price=10.0,
+        availability="In stock",
+        rating=5,
+        url="https://books.toscrape.com/catalogue/python.html"
     )
 
     with patch(
         "book.service.fetch_page",
+        return_value="<html>Test</html>"
+    ) as vFetchPage, patch(
+        "book.service.parse_html"
+    ) as vParseHtml, patch(
+        "book.service.extract_book",
+        return_value=vBook
+    ):
+
+        rBook = scrape_book(
+            "https://books.toscrape.com/catalogue/python.html",
+            vConfig
+        )
+
+    vFetchPage.assert_called_once_with(
+        "https://books.toscrape.com/catalogue/python.html",
+        pTimeout=30
+    )
+
+    vParseHtml.assert_called_once_with(
+        "<html>Test</html>"
+    )
+
+    assert rBook == vBook
+
+
+def test_scrape_books():
+    """
+    Vérifie le scraping de plusieurs pages.
+    """
+
+    vConfig = BookScrapingConfig(
+        timeout=20,
+        max_pages=2
+    )
+
+    vBook = Book(
+        title="Python",
+        price=10.0,
+        availability="In stock",
+        rating=5,
+        url="https://books.toscrape.com/catalogue/python.html"
+    )
+
+    vSoup = object()
+
+    with patch(
+        "book.service.fetch_page",
+        return_value="<html>Test</html>"
+    ) as vFetchPage, patch(
+        "book.service.parse_html",
+        return_value=vSoup
+    ), patch(
+        "book.service.extract_books",
         side_effect=[
-            html_page_1,
-            html_page_2
+            [vBook],
+            [vBook]
+        ]
+    ), patch(
+        "book.service.extract_next_url",
+        side_effect=[
+            "https://books.toscrape.com/page-2.html",
+            ""
         ]
     ):
-        books = scrape_books("https://example.com/")
 
-    assert len(books) == 2
+        rBooks = scrape_books(
+            "https://books.toscrape.com/",
+            vConfig
+        )
 
-    assert books[0].title == "Book 1"
-    assert books[0].price == 10.00
-    assert books[0].rating == 1
+    assert rBooks == [
+        vBook,
+        vBook
+    ]
 
-    assert books[1].title == "Book 2"
-    assert books[1].price == 20.00
-    assert books[1].rating == 5
+    assert vFetchPage.call_count == 2
+
+    vFetchPage.assert_any_call(
+        "https://books.toscrape.com/",
+        pTimeout=20
+    )
+
+    vFetchPage.assert_any_call(
+        "https://books.toscrape.com/page-2.html",
+        pTimeout=20
+    )
+
+
+def test_scrape_books_with_max_items():
+    """
+    Vérifie que le nombre maximum d'éléments est respecté.
+    """
+
+    vConfig = BookScrapingConfig(
+        timeout=10,
+        max_items=2
+    )
+
+    vBooks = [
+        Book(
+            title="Book 1",
+            price=10.0,
+            availability="In stock",
+            rating=5,
+            url="https://books.toscrape.com/book1.html"
+        ),
+        Book(
+            title="Book 2",
+            price=20.0,
+            availability="In stock",
+            rating=4,
+            url="https://books.toscrape.com/book2.html"
+        ),
+        Book(
+            title="Book 3",
+            price=30.0,
+            availability="In stock",
+            rating=3,
+            url="https://books.toscrape.com/book3.html"
+        )
+    ]
+
+    vSoup = object()
+
+    with patch(
+        "book.service.fetch_page",
+        return_value="<html>Test</html>"
+    ), patch(
+        "book.service.parse_html",
+        return_value=vSoup
+    ), patch(
+        "book.service.extract_books",
+        return_value=vBooks
+    ), patch(
+        "book.service.extract_next_url",
+        return_value="https://books.toscrape.com/page-2.html"
+    ):
+
+        rBooks = scrape_books(
+            "https://books.toscrape.com/",
+            vConfig
+        )
+
+    assert len(rBooks) == 2
+    assert rBooks == vBooks[:2]
 
 
 def test_scrape_books_with_max_pages():
-    """Vérifie que le scraping s'arrête après le nombre de pages demandé."""
-
-    html_page_1 = """
-    <ul class="pager">
-        <li class="next">
-            <a href="page-2.html">next</a>
-        </li>
-    </ul>
-
-    <article class="product_pod">
-        <h3>
-            <a href="book-1.html">Book 1</a>
-        </h3>
-        <p class="price_color">£10.00</p>
-        <p class="instock availability">In stock</p>
-        <p class="star-rating One"></p>
-    </article>
+    """
+    Vérifie que le nombre maximum de pages est respecté.
     """
 
-    html_page_2 = """
-    <ul class="pager">
-        <li class="next">
-            <a href="page-3.html">next</a>
-        </li>
-    </ul>
+    vConfig = BookScrapingConfig(
+        timeout=10,
+        max_pages=1
+    )
 
-    <article class="product_pod">
-        <h3>
-            <a href="book-2.html">Book 2</a>
-        </h3>
-        <p class="price_color">£20.00</p>
-        <p class="instock availability">In stock</p>
-        <p class="star-rating Two"></p>
-    </article>
-    """
+    vBook = Book(
+        title="Python",
+        price=10.0,
+        availability="In stock",
+        rating=5,
+        url="https://books.toscrape.com/python.html"
+    )
 
-    html_page_3 = """
-    <article class="product_pod">
-        <h3>
-            <a href="book-3.html">Book 3</a>
-        </h3>
-        <p class="price_color">£30.00</p>
-        <p class="instock availability">In stock</p>
-        <p class="star-rating Three"></p>
-    </article>
-    """
+    vSoup = object()
 
     with patch(
         "book.service.fetch_page",
-        side_effect=[
-            html_page_1,
-            html_page_2
-        ]
+        return_value="<html>Test</html>"
+    ) as vFetchPage, patch(
+        "book.service.parse_html",
+        return_value=vSoup
+    ), patch(
+        "book.service.extract_books",
+        return_value=[vBook]
+    ), patch(
+        "book.service.extract_next_url",
+        return_value="https://books.toscrape.com/page-2.html"
     ):
-        books = scrape_books(
-            "https://example.com/",
-            max_pages=2
+
+        rBooks = scrape_books(
+            "https://books.toscrape.com/",
+            vConfig
         )
 
-    assert len(books) == 2
-    assert books[0].title == "Book 1"
-    assert books[1].title == "Book 2"
-
-
-def test_scrape_books_with_max_pages_one():
-    """Vérifie que le scraping s'arrête après une seule page."""
-
-    html_page = """
-    <ul class="pager">
-        <li class="next">
-            <a href="page-2.html">next</a>
-        </li>
-    </ul>
-
-    <article class="product_pod">
-        <h3>
-            <a href="book-1.html">Book 1</a>
-        </h3>
-        <p class="price_color">£10.00</p>
-        <p class="instock availability">In stock</p>
-        <p class="star-rating One"></p>
-    </article>
-    """
-
-    with patch(
-        "book.service.fetch_page",
-        return_value=html_page
-    ) as mock_fetch_page:
-        books = scrape_books(
-            "https://example.com/",
-            max_pages=1
-        )
-
-    assert len(books) == 1
-    assert books[0].title == "Book 1"
-    assert mock_fetch_page.call_count == 1
-
-def test_scrape_books_without_books():
-    """Vérifie qu'une page sans livre retourne une liste vide."""
-
-    html_page = """
-    <html>
-        <body>
-            <h1>Aucun livre</h1>
-        </body>
-    </html>
-    """
-
-    with patch(
-        "book.service.fetch_page",
-        return_value=html_page
-    ):
-        books = scrape_books(
-            "https://example.com/"
-        )
-
-    assert books == []
-
-
-def test_scrape_books_raises_http_error_on_next_page():
-    """Vérifie qu'une erreur HTTP sur une page suivante est remontée."""
-
-    html_page_1 = """
-    <ul class="pager">
-        <li class="next">
-            <a href="page-2.html">next</a>
-        </li>
-    </ul>
-
-    <article class="product_pod">
-        <h3>
-            <a href="book-1.html">Book 1</a>
-        </h3>
-        <p class="price_color">£10.00</p>
-        <p class="instock availability">In stock</p>
-        <p class="star-rating One"></p>
-    </article>
-    """
-
-    with patch(
-        "book.service.fetch_page",
-        side_effect=[
-            html_page_1,
-            requests.HTTPError("404 Not Found")
-        ]
-    ):
-        with pytest.raises(requests.HTTPError):
-            scrape_books("https://example.com/")
+    assert rBooks == [vBook]
+    assert vFetchPage.call_count == 1

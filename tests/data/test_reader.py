@@ -1,54 +1,79 @@
-from data.reader import books_file_exists, read_books
+# ============================================================================
+# Tests de la lecture des données des livres
+# ============================================================================
 
-def test_read_books(tmp_path): 
-    """Vérifie la lecture d'un fichier CSV de livres."""
 
-    file_path = tmp_path / "books.csv"
+from data.reader import (
+    books_file_exists,
+    read_books
+)
 
-    file_path.write_text(
+
+def test_read_books(tmp_path):
+    """
+    Vérifie la lecture d'un fichier CSV de livres.
+    """
+
+    vFilePath = tmp_path / "books.csv"
+
+    vFilePath.write_text(
         "title,price,availability,rating,url\n"
         "Livre 1,10.50,In stock,4,https://example.com/book1\n"
         "Livre 2,25.00,In stock,5,https://example.com/book2\n",
         encoding="utf-8"
     )
 
-    books = read_books(file_path)
+    vBooks = read_books(
+        vFilePath
+    )
 
-    assert len(books) == 2
-    assert books.iloc[0]["title"] == "Livre 1"
-    assert books.iloc[0]["price"] == 10.50
-    assert books.iloc[1]["rating"] == 5
+    assert len(vBooks) == 2
+    assert vBooks.iloc[0]["title"] == "Livre 1"
+    assert vBooks.iloc[0]["price"] == 10.50
+    assert vBooks.iloc[1]["rating"] == 5
 
 
 def test_books_file_exists(tmp_path):
-    """Vérifie qu'un fichier existant est correctement détecté."""
+    """
+    Vérifie qu'un fichier existant est correctement détecté.
+    """
 
-    file_path = tmp_path / "books.csv"
+    vFilePath = tmp_path / "books.csv"
 
-    file_path.touch()
+    vFilePath.touch()
 
-    assert books_file_exists(file_path) is True
+    assert books_file_exists(
+        vFilePath
+    ) is True
 
 
 def test_books_file_does_not_exist(tmp_path):
-    """Vérifie qu'un fichier inexistant est correctement détecté."""
+    """
+    Vérifie qu'un fichier inexistant est correctement détecté.
+    """
 
-    file_path = tmp_path / "books.csv"
+    vFilePath = tmp_path / "books.csv"
 
-    assert books_file_exists(file_path) is False
+    assert books_file_exists(
+        vFilePath
+    ) is False
 
 
 def test_read_empty_books_file(tmp_path):
-    """Vérifie la lecture d'un fichier CSV vide."""
+    """
+    Vérifie la lecture d'un fichier CSV vide.
+    """
 
-    file_path = tmp_path / "books.csv"
+    vFilePath = tmp_path / "books.csv"
 
-    file_path.touch()
+    vFilePath.touch()
 
-    books = read_books(file_path)
+    vBooks = read_books(
+        vFilePath
+    )
 
-    assert books.empty
-    assert list(books.columns) == [
+    assert vBooks.empty
+    assert list(vBooks.columns) == [
         "title",
         "price",
         "availability",

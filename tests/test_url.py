@@ -1,26 +1,42 @@
+# ============================================================================
+# Tests des méthodes de gestion des URLs
+# ============================================================================
+
+
 from utils.url import build_absolute_url
 
 
 def test_build_absolute_url():
-    """Vérifie la construction d'une URL absolue."""
+    """
+    Vérifie qu'une URL relative est correctement transformée
+    en URL absolue.
+    """
 
-    result = build_absolute_url(
-        "https://books.toscrape.com/catalogue/",
-        "a-light-in-the-attic_1000/index.html"
+    vBaseUrl = "https://books.toscrape.com/catalogue/"
+    vRelativeUrl = "a-light-in-the-attic_1000/index.html"
+
+    rUrl = build_absolute_url(
+        vBaseUrl,
+        vRelativeUrl
     )
 
-    assert result == (
+    assert rUrl == (
         "https://books.toscrape.com/catalogue/"
         "a-light-in-the-attic_1000/index.html"
     )
 
 
 def test_build_absolute_url_empty():
-    """Vérifie la gestion d'une URL vide."""
+    """
+    Vérifie qu'une URL relative vide retourne une chaîne vide.
+    """
 
-    result = build_absolute_url(
-        "https://books.toscrape.com/catalogue/",
-        ""
+    vBaseUrl = "https://books.toscrape.com/catalogue/"
+    vRelativeUrl = ""
+
+    rUrl = build_absolute_url(
+        vBaseUrl,
+        vRelativeUrl
     )
 
-    assert result == ""
+    assert rUrl == ""

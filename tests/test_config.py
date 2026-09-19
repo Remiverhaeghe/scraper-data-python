@@ -1,20 +1,36 @@
-"""
-Test de la configuration de l'application.
-"""
+# ============================================================================
+# Tests de la configuration générale de l'application
+# ============================================================================
+
 
 from config import (
     MAX_RATING,
     MIN_RATING,
     OUTPUT_FILE,
-    REQUEST_TIMEOUT,
     URL
 )
 
 
-def test_config():
-    """Vérifie que la configuration de l'application est cohérente."""
+def test_url():
+    """
+    Vérifie que l'URL du site Books to Scrape est configurée.
+    """
 
-    assert URL
-    assert OUTPUT_FILE
-    assert REQUEST_TIMEOUT > 0
-    assert MIN_RATING <= MAX_RATING
+    assert URL == "https://books.toscrape.com/"
+
+
+def test_output_file():
+    """
+    Vérifie que le fichier de sortie est correctement configuré.
+    """
+
+    assert OUTPUT_FILE == "output/books.csv"
+
+
+def test_rating_limits():
+    """
+    Vérifie les limites des notes.
+    """
+
+    assert MIN_RATING == 1
+    assert MAX_RATING == 5

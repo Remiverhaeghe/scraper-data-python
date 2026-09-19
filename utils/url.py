@@ -1,14 +1,27 @@
-"""
-Méthodes utilitaires pour la gestion des URLs.
-"""
+# ============================================================================
+# Méthodes utilitaires pour la gestion des URLs
+# ============================================================================
+
 
 from urllib.parse import urljoin
 
 
-def build_absolute_url(base_url, relative_url):
-    """Construit une URL absolue à partir d'une URL de base."""
+def build_absolute_url(pBaseUrl, pRelativeUrl):
+    """
+    Construit une URL absolue à partir d'une URL de base.
 
-    if not relative_url:
-        return ""
+    :param pBaseUrl: URL de base.
+    :param pRelativeUrl: URL relative.
+    :return: URL absolue ou chaîne vide.
+    """
 
-    return urljoin(base_url, relative_url)
+    if not pRelativeUrl:
+        rUrl = ""
+
+    else:
+        rUrl = urljoin(
+            pBaseUrl,
+            pRelativeUrl
+        )
+
+    return rUrl

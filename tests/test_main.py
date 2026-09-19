@@ -1,17 +1,27 @@
+# ============================================================================
+# Tests du point d'entrée de l'application
+# ============================================================================
+
+
 import pandas as pd
 
 import main
 
 
 def test_main(monkeypatch):
-    """Vérifie l'enchaînement des différentes étapes de l'application."""
+    """
+    Vérifie l'enchaînement des différentes étapes de l'application.
+    """
 
-    calls = []
+    vCalls = []
 
-    arguments = type(
+    vArguments = type(
         "Arguments",
         (),
         {
+            "max_items": 100,
+            "delay": 1.0,
+            "timeout": 30,
             "max_pages": 2,
             "title": "python",
             "max_price": 20,
@@ -20,9 +30,12 @@ def test_main(monkeypatch):
         }
     )()
 
-    books_scraped = ["book1", "book2"]
+    vBooksScraped = [
+        "book1",
+        "book2"
+    ]
 
-    books_filtered = pd.DataFrame([
+    vBooksFiltered = pd.DataFrame([
         {
             "title": "Python débutant",
             "price": 15.0,
@@ -32,60 +45,96 @@ def test_main(monkeypatch):
         }
     ])
 
-    # Simule la lecture des arguments de la ligne de commande.
     def mock_parse_arguments():
-        calls.append("parse_arguments")
-        return arguments
+        """Simule la lecture des arguments de la ligne de commande."""
 
-    # Simule le scraping afin de ne pas effectuer de requête HTTP.
-    def mock_scrape_books(url, max_pages):
-        calls.append("scrape_books")
+        vCalls.append("parse_arguments")
 
-        assert max_pages == 2
+        return vArguments
 
-        return books_scraped
+    def mock_scrape_books(pUrl, pConfig):
+        """Simule le scraping sans effectuer de requête HTTP."""
 
-    # Simule l'enregistrement du fichier CSV.
-    def mock_save_books(books, file_path):
-        calls.append("save_books")
+        vCalls.append("scrape_books")
 
-        assert books == books_scraped
+        assert pConfig.max_items == 100
+        assert pConfig.delay == 1.0
+        assert pConfig.timeout == 30
+        assert pConfig.max_pages == 2
 
-    # Simule la lecture du fichier CSV.
-    def mock_read_books(file_path):
-        calls.append("read_books")
+        return vBooksScraped
 
-        return books_filtered
+    def mock_save_books(pBooks, pFilePath):
+        """Simule l'enregistrement du fichier CSV."""
 
-    # Simule le filtrage des livres avec les critères de la CLI.
-    def mock_filter_books(books, title, max_price, min_rating):
-        calls.append("filter_books")
+        vCalls.append("save_books")
+
+        assert pBooks == vBooksScraped
+
+    def mock_read_books(pFilePath):
+        """Simule la lecture du fichier CSV."""
+
+        vCalls.append("read_books")
+
+        return vBooksFiltered
+
+    def mock_filter_books(
+        pBooks,
+        title,
+        max_price,
+        min_rating
+    ):
+        """Simule le filtrage des livres."""
+
+        vCalls.append("filter_books")
 
         assert title == "python"
         assert max_price == 20
         assert min_rating == 4
 
-        return books
+        return pBooks
 
-    # Simule l'affichage des résultats dans la console.
-    def mock_display_books(books):
-        calls.append("display_books")
+    def mock_display_books(pBooks):
+        """Simule l'affichage des résultats."""
 
-        assert books is books_filtered
+        vCalls.append("display_books")
 
-    # Remplace temporairement les fonctions réelles par les fonctions simulées.
-    monkeypatch.setattr(main, "parse_arguments", mock_parse_arguments)
-    monkeypatch.setattr(main, "scrape_books", mock_scrape_books)
-    monkeypatch.setattr(main, "save_books", mock_save_books)
-    monkeypatch.setattr(main, "read_books", mock_read_books)
-    monkeypatch.setattr(main, "filter_books", mock_filter_books)
-    monkeypatch.setattr(main, "display_books", mock_display_books)
+        assert pBooks is vBooksFiltered
 
-    # Exécute le point d'entrée de l'application.
+    monkeypatch.setattr(
+        main,
+        "parse_arguments",
+        mock_parse_arguments
+    )
+    monkeypatch.setattr(
+        main,
+        "scrape_books",
+        mock_scrape_books
+    )
+    monkeypatch.setattr(
+        main,
+        "save_books",
+        mock_save_books
+    )
+    monkeypatch.setattr(
+        main,
+        "read_books",
+        mock_read_books
+    )
+    monkeypatch.setattr(
+        main,
+        "filter_books",
+        mock_filter_books
+    )
+    monkeypatch.setattr(
+        main,
+        "display_books",
+        mock_display_books
+    )
+
     main.main()
 
-    # Vérifie que les différentes étapes ont été exécutées dans le bon ordre.
-    assert calls == [
+    assert vCalls == [
         "parse_arguments",
         "scrape_books",
         "save_books",
@@ -96,14 +145,20 @@ def test_main(monkeypatch):
 
 
 def test_main_without_refresh(monkeypatch):
-    """Vérifie que le scraping n'est pas lancé sans --refresh."""
+    """
+    Vérifie que le scraping n'est pas lancé sans --refresh
+    lorsque le fichier existe.
+    """
 
-    calls = []
+    vCalls = []
 
-    arguments = type(
+    vArguments = type(
         "Arguments",
         (),
         {
+            "max_items": None,
+            "delay": 0.0,
+            "timeout": 10,
             "max_pages": None,
             "refresh": False,
             "title": None,
@@ -112,7 +167,7 @@ def test_main_without_refresh(monkeypatch):
         }
     )()
 
-    books = pd.DataFrame([
+    vBooks = pd.DataFrame([
         {
             "title": "Livre existant",
             "price": 10.0,
@@ -123,34 +178,51 @@ def test_main_without_refresh(monkeypatch):
     ])
 
     def mock_parse_arguments():
-        calls.append("parse_arguments")
-        return arguments
+        """Simule la lecture des arguments."""
 
-    def mock_books_file_exists(file_path): 
-        calls.append("books_file_exists")
+        vCalls.append("parse_arguments")
+
+        return vArguments
+
+    def mock_books_file_exists(pFilePath):
+        """Simule l'existence du fichier de données."""
+
+        vCalls.append("books_file_exists")
+
         return True
 
-    def mock_scrape_books(url, max_pages):
-        calls.append("scrape_books")
+    def mock_scrape_books(pUrl, pConfig):
+        """Vérifie que le scraping n'est pas lancé."""
+
+        vCalls.append("scrape_books")
+
         raise AssertionError(
             "Le scraping ne doit pas être lancé sans --refresh."
         )
 
-    def mock_read_books(file_path):
-        calls.append("read_books")
-        return books
+    def mock_read_books(pFilePath):
+        """Simule la lecture du fichier de données."""
+
+        vCalls.append("read_books")
+
+        return vBooks
 
     def mock_filter_books(
-        books,
+        pBooks,
         title,
         max_price,
         min_rating
     ):
-        calls.append("filter_books")
-        return books
+        """Simule le filtrage des livres."""
 
-    def mock_display_books(books):
-        calls.append("display_books")
+        vCalls.append("filter_books")
+
+        return pBooks
+
+    def mock_display_books(pBooks):
+        """Simule l'affichage des résultats."""
+
+        vCalls.append("display_books")
 
     monkeypatch.setattr(
         main,
@@ -185,7 +257,7 @@ def test_main_without_refresh(monkeypatch):
 
     main.main()
 
-    assert calls == [
+    assert vCalls == [
         "parse_arguments",
         "books_file_exists",
         "read_books",
@@ -193,15 +265,21 @@ def test_main_without_refresh(monkeypatch):
         "display_books"
     ]
 
+
 def test_main_without_refresh_and_without_file(monkeypatch):
-    """Vérifie que le scraping démarre si le CSV est absent."""
+    """
+    Vérifie que le scraping démarre si le CSV est absent.
+    """
 
-    calls = []
+    vCalls = []
 
-    arguments = type(
+    vArguments = type(
         "Arguments",
         (),
         {
+            "max_items": 100,
+            "delay": 1.0,
+            "timeout": 30,
             "max_pages": 2,
             "refresh": False,
             "title": None,
@@ -210,9 +288,12 @@ def test_main_without_refresh_and_without_file(monkeypatch):
         }
     )()
 
-    books_scraped = ["book1", "book2"]
+    vBooksScraped = [
+        "book1",
+        "book2"
+    ]
 
-    books_filtered = pd.DataFrame([
+    vBooksFiltered = pd.DataFrame([
         {
             "title": "Livre récupéré",
             "price": 10.0,
@@ -223,79 +304,92 @@ def test_main_without_refresh_and_without_file(monkeypatch):
     ])
 
     def mock_parse_arguments():
-        calls.append("parse_arguments")
-        return arguments
+        """Simule la lecture des arguments."""
 
-    def mock_books_file_exists(file_path):
-        calls.append("books_file_exists")
+        vCalls.append("parse_arguments")
+
+        return vArguments
+
+    def mock_books_file_exists(pFilePath):
+        """Simule l'absence du fichier de données."""
+
+        vCalls.append("books_file_exists")
+
         return False
 
-    def mock_scrape_books(url, max_pages):
-        calls.append("scrape_books")
+    def mock_scrape_books(pUrl, pConfig):
+        """Simule le scraping."""
 
-        assert max_pages == 2
+        vCalls.append("scrape_books")
 
-        return books_scraped
+        assert pConfig.max_items == 100
+        assert pConfig.delay == 1.0
+        assert pConfig.timeout == 30
+        assert pConfig.max_pages == 2
 
-    def mock_save_books(books, file_path):
-        calls.append("save_books")
+        return vBooksScraped
 
-        assert books == books_scraped
+    def mock_save_books(pBooks, pFilePath):
+        """Simule l'enregistrement du fichier CSV."""
 
-    def mock_read_books(file_path):
-        calls.append("read_books")
+        vCalls.append("save_books")
 
-        return books_filtered
+        assert pBooks == vBooksScraped
+
+    def mock_read_books(pFilePath):
+        """Simule la lecture du fichier CSV."""
+
+        vCalls.append("read_books")
+
+        return vBooksFiltered
 
     def mock_filter_books(
-        books,
+        pBooks,
         title,
         max_price,
         min_rating
     ):
-        calls.append("filter_books")
+        """Simule le filtrage des livres."""
 
-        return books
+        vCalls.append("filter_books")
 
-    def mock_display_books(books):
-        calls.append("display_books")
+        return pBooks
+
+    def mock_display_books(pBooks):
+        """Simule l'affichage des résultats."""
+
+        vCalls.append("display_books")
 
     monkeypatch.setattr(
         main,
         "parse_arguments",
         mock_parse_arguments
     )
-
     monkeypatch.setattr(
         main,
         "books_file_exists",
         mock_books_file_exists
     )
-
     monkeypatch.setattr(
         main,
         "scrape_books",
         mock_scrape_books
     )
-
     monkeypatch.setattr(
         main,
         "save_books",
         mock_save_books
     )
-
     monkeypatch.setattr(
         main,
         "read_books",
         mock_read_books
     )
-
     monkeypatch.setattr(
         main,
         "filter_books",
         mock_filter_books
     )
-
     monkeypatch.setattr(
         main,
         "display_books",
@@ -304,7 +398,7 @@ def test_main_without_refresh_and_without_file(monkeypatch):
 
     main.main()
 
-    assert calls == [
+    assert vCalls == [
         "parse_arguments",
         "books_file_exists",
         "scrape_books",

@@ -1,33 +1,42 @@
-"""
-Affichage des données des livres. 
-"""
+# ============================================================================
+# Affichage des données des livres
+# ============================================================================
+
 
 from utils.logger import get_logger
 
+
 logger = get_logger(__name__)
 
-def display_books(books):
-    """Affiche les livres dans la console."""
 
-    if books.empty:
+def display_books(pBooks):
+    """
+    Affiche les livres dans la console.
+
+    :param pBooks: DataFrame contenant les livres à afficher.
+    """
+
+    if pBooks.empty:
         print("Aucun livre trouvé.")
-        return
 
-    logger.info(
-        "Affichage de %s livre(s)", 
-        len(books)
-    )
+    else:
+        logger.info(
+            "Affichage de %s livre(s)",
+            len(pBooks)
+        )
 
-    print()
-    print(
-        books[
-            [
-            "title",
-            "price",
-            "rating",
-            "availability"
-            ]
-        ].to_string(index=False)
-    )
-    print()
-    print(f"{len(books)} livre(s) trouvé(s).")
+        print()
+        print(
+            pBooks[
+                [
+                    "title",
+                    "price",
+                    "rating",
+                    "availability"
+                ]
+            ].to_string(index=False)
+        )
+        print()
+        print(
+            f"{len(pBooks)} livre(s) trouvé(s)."
+        )

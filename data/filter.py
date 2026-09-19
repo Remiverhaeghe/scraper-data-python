@@ -1,28 +1,46 @@
-"""
-Filtrage des données des livres. 
-"""
+# ============================================================================
+# Filtrage des données des livres
+# ============================================================================
 
-import pandas as pd 
 
-def filter_books(books, title=None, max_price=None, min_rating=None): 
-    """Filtre les livres selon leur titre, leur prix et leur note"""
+def filter_books(
+    pBooks,
+    title=None,
+    max_price=None,
+    min_rating=None
+):
+    """
+    Filtre les livres selon leur titre, leur prix et leur note.
 
-    result = books
+    :param pBooks: DataFrame contenant les livres.
+    :param title: Texte à rechercher dans les titres.
+    :param max_price: Prix maximum autorisé.
+    :param min_rating: Note minimale autorisée.
+    :return: DataFrame contenant les livres filtrés.
+    """
 
-    if title is not None: 
-        result = result[
-            result["title"].str.contains(
-                title, 
+    vResult = pBooks
+
+    if title is not None:
+        vResult = vResult[
+            vResult["title"].str.contains(
+                title,
                 case=False,
-                na=False, 
+                na=False,
                 regex=False
             )
         ]
 
     if max_price is not None:
-        result = result[result["price"] <= max_price]
+        vResult = vResult[
+            vResult["price"] <= max_price
+        ]
 
-    if min_rating is not None:  
-        result = result[result["rating"] >= min_rating]
+    if min_rating is not None:
+        vResult = vResult[
+            vResult["rating"] >= min_rating
+        ]
 
-    return result
+    rResult = vResult
+
+    return rResult

@@ -1,41 +1,56 @@
-"""
-Test manuel du scraping de Books to Scrape.
-"""
+# ============================================================================
+# Test manuel du scraping de Books to Scrape
+# ============================================================================
 
+
+from book.config import BookScrapingConfig
 from book.service import scrape_books
 from book.storage import save_books
-
-
-URL = "https://books.toscrape.com/"
+from config import OUTPUT_FILE, URL
 
 
 def main():
-    """Récupère et affiche un résumé du scraping."""
+    """
+    Exécute manuellement un scraping limité à deux pages
+    et affiche un résumé du résultat.
+    """
 
-    books = scrape_books(URL, max_pages=2)
-
-    save_books(books, "output/book.csv")
-
-    print(f"Nombre de livres trouvés : {len(books)}")
-
-    if not books:
-        return
-
-    print("\nPremier livre :")
-    print(
-        f"{books[0].title} | "
-        f"{books[0].price} £ | "
-        f"{books[0].availability} | "
-        f"{books[0].rating}/5"
+    vConfig = BookScrapingConfig(
+        max_pages=2
     )
 
-    print("\nDernier livre :")
-    print(
-        f"{books[-1].title} | "
-        f"{books[-1].price} £ | "
-        f"{books[-1].availability} | "
-        f"{books[-1].rating}/5"
+    vConfig.validate()
+
+    vBooks = scrape_books(
+        URL,
+        vConfig
     )
+
+    save_books(
+        vBooks,
+        OUTPUT_FILE
+    )
+
+    print(
+        f"Nombre de livres trouvés : {len(vBooks)}"
+    )
+
+    if vBooks:
+        print("\nPremier livre :")
+        print(
+            f"{vBooks[0].title} | "
+            f"{vBooks[0].price} £ | "
+            f"{vBooks[0].availability} | "
+            f"{vBooks[0].rating}/5"
+        )
+
+        print("\nDernier livre :")
+        print(
+            f"{vBooks[-1].title} | "
+            f"{vBooks[-1].price} £ | "
+            f"{vBooks[-1].availability} | "
+            f"{vBooks[-1].rating}/5"
+        )
 
 
 if __name__ == "__main__":

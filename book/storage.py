@@ -1,40 +1,48 @@
-"""
-Gestion du stockage des livres
-"""
+# ============================================================================
+# Gestion du stockage des livres
+# ============================================================================
+
 
 import csv
 from pathlib import Path
 
 from utils.logger import get_logger
 
+
 logger = get_logger(__name__)
 
-def save_books(books, file_path):
-    """Enregistre une liste de livres dans un fichier CSV."""
 
-    file_path = Path(file_path)
+def save_books(pBooks, pFilePath):
+    """
+    Enregistre une liste de livres dans un fichier CSV.
 
-    file_path.parent.mkdir(
+    :param pBooks: Liste des livres à enregistrer.
+    :param pFilePath: Chemin du fichier CSV de destination.
+    """
+
+    vFilePath = Path(pFilePath)
+
+    vFilePath.parent.mkdir(
         parents=True,
         exist_ok=True
     )
 
     logger.info(
         "Enregistrement de %s livre(s) dans : %s",
-        len(books),
-        file_path
+        len(pBooks),
+        vFilePath
     )
 
     try:
-        with file_path.open(
+        with vFilePath.open(
             mode="w",
             encoding="utf-8",
             newline=""
-        ) as file:
+        ) as vFile:
 
-            writer = csv.writer(file)
+            vWriter = csv.writer(vFile)
 
-            writer.writerow([
+            vWriter.writerow([
                 "title",
                 "price",
                 "availability",
@@ -42,23 +50,23 @@ def save_books(books, file_path):
                 "url"
             ])
 
-            for book in books:
-                writer.writerow([
-                    book.title,
-                    book.price,
-                    book.availability,
-                    book.rating,
-                    book.url
+            for vBook in pBooks:
+                vWriter.writerow([
+                    vBook.title,
+                    vBook.price,
+                    vBook.availability,
+                    vBook.rating,
+                    vBook.url
                 ])
 
     except OSError:
         logger.exception(
             "Erreur lors de l'enregistrement : %s",
-            file_path
+            vFilePath
         )
         raise
 
     logger.info(
         "Enregistrement terminé : %s",
-        file_path
+        vFilePath
     )

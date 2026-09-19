@@ -1,34 +1,52 @@
-"""
-Gestion des requêtes HTTP du scraper.
-"""
+# ============================================================================
+# Gestion des requêtes HTTP du scraper
+# ============================================================================
+
 
 import requests
 
 from utils.logger import get_logger
-from config import REQUEST_TIMEOUT
+
 
 logger = get_logger(__name__)
 
-def fetch_page(url):
+
+def fetch_page(pUrl, pTimeout):
     """
     Récupère le contenu HTML d'une page web.
 
-    :param url: URL de la page à récupérer.
+    :param pUrl: URL de la page à récupérer.
+    :param pTimeout: Temps maximum d'attente de la requête.
     :return: Contenu HTML.
     """
-    logger.info("Récupération de la page : %s", url)
+
+    logger.info(
+        "Récupération de la page : %s",
+        pUrl
+    )
 
     try:
-        response = requests.get(url, timeout=REQUEST_TIMEOUT)
-        response.raise_for_status()
+        vResponse = requests.get(
+            pUrl,
+            timeout=pTimeout
+        )
 
-        response.encoding = response.apparent_encoding
+        vResponse.raise_for_status()
+
+        vResponse.encoding = vResponse.apparent_encoding
 
     except requests.RequestException:
-        logger.exception("Échec de récupération : %s", url)
+        logger.exception(
+            "Échec de récupération : %s",
+            pUrl
+        )
         raise
 
+    logger.info(
+        "Page récupérée avec succès : %s",
+        pUrl
+    )
 
-    logger.info("Page récupérée avec succès : %s", url)
+    rHtml = vResponse.text
 
-    return response.text
+    return rHtml

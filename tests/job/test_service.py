@@ -1,16 +1,20 @@
-"""
-Tests du service de scraping.
-"""
+# ============================================================================
+# Tests du service de scraping des offres d'emploi
+# ============================================================================
+
 
 from unittest.mock import patch
 
+from job.model import Job
 from job.service import scrape_job, scrape_jobs
 
 
 def test_scrape_job():
-    """Vérifie la récupération d'une offre."""
+    """
+    Vérifie la récupération d'une offre.
+    """
 
-    html = """
+    vHtml = """
     <div class="job">
         <h1>Développeur Python</h1>
         <div class="company">Entreprise A</div>
@@ -23,18 +27,23 @@ def test_scrape_job():
 
     with patch(
         "job.service.fetch_page",
-        return_value=html
+        return_value=vHtml
     ):
-        job = scrape_job("https://example.com/job")
+        vJob = scrape_job(
+            "https://example.com/job"
+        )
 
-    assert job.title == "Développeur Python"
-    assert job.company == "Entreprise A"
+    assert isinstance(vJob, Job)
+    assert vJob.title == "Développeur Python"
+    assert vJob.company == "Entreprise A"
 
 
 def test_scrape_jobs():
-    """Vérifie la récupération de plusieurs offres."""
+    """
+    Vérifie la récupération de plusieurs offres.
+    """
 
-    html = """
+    vHtml = """
     <div class="job">
         <h1>Développeur Python</h1>
         <div class="company">Entreprise A</div>
@@ -56,10 +65,12 @@ def test_scrape_jobs():
 
     with patch(
         "job.service.fetch_page",
-        return_value=html
+        return_value=vHtml
     ):
-        jobs = scrape_jobs("https://example.com/jobs")
+        vJobs = scrape_jobs(
+            "https://example.com/jobs"
+        )
 
-    assert len(jobs) == 2
-    assert jobs[0].title == "Développeur Python"
-    assert jobs[1].title == "Développeur Java"
+    assert len(vJobs) == 2
+    assert vJobs[0].title == "Développeur Python"
+    assert vJobs[1].title == "Développeur Java"

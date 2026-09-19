@@ -1,0 +1,38 @@
+"""
+Styles graphiques de l'application.
+"""
+
+# Polices
+FONT_TITLE = ("Arial", 22, "bold")
+FONT_SUBTITLE = ("Arial", 11)
+FONT_SECTION = ("Arial", 11, "bold")
+FONT_NORMAL = ("Arial", 10)
+FONT_BUTTON = ("Arial", 10, "bold")
+FONT_STATUS = ("Arial", 10)
+
+# Couleurs
+COLOR_BACKGROUND = "#F5F6F8"
+COLOR_SURFACE = "#FFFFFF"
+COLOR_TEXT = "#202124"
+COLOR_TEXT_SECONDARY = "#5F6368"
+
+COLOR_PRIMARY = "#2F6FED"
+COLOR_PRIMARY_HOVER = "#2459C5"
+
+COLOR_SUCCESS = "#188038"
+COLOR_WARNING = "#B06000"
+COLOR_ERROR = "#D93025"
+
+COLOR_BORDER = "#DADCE0"
+COLOR_WHITE = "#FFFFFF"
+
+# Dimensions de la fenêtre
+WINDOW_WIDTH = 1100
+WINDOW_HEIGHT = 750
+
+# Dimensions des composants
+BUTTON_WIDTH = 22
+BUTTON_HEIGHT = 2
+
+CONTENT_WIDTH = 850
+PROGRESS_WIDTH = 700

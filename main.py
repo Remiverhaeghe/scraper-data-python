@@ -1,7 +1,9 @@
-"""
-Point d'entrée de l'application.
-"""
+# ============================================================================
+# Point d'entrée de l'application
+# ============================================================================
 
+
+from book.config import BookScrapingConfig
 from book.service import scrape_books
 from book.storage import save_books
 from cli.arguments import parse_arguments
@@ -12,28 +14,46 @@ from data.reader import books_file_exists, read_books
 
 
 def main():
-    """Lance le scraping, le filtrage et l'affichage des livres."""
+    """
+    Lance le scraping, le filtrage et l'affichage des livres.
+    """
 
-    arguments = parse_arguments()
+    vArguments = parse_arguments()
 
-    if arguments.refresh or not books_file_exists(OUTPUT_FILE):
-        books = scrape_books(
-            URL,
-            max_pages=arguments.max_pages
-        )
-
-        save_books(books, OUTPUT_FILE)
-
-    books = read_books(OUTPUT_FILE)
-
-    books = filter_books(
-        books,
-        title=arguments.title,
-        max_price=arguments.max_price,
-        min_rating=arguments.min_rating
+    vConfig = BookScrapingConfig(
+        max_items=vArguments.max_items,
+        delay=vArguments.delay,
+        timeout=vArguments.timeout,
+        max_pages=vArguments.max_pages,
+        title=vArguments.title,
+        max_price=vArguments.max_price,
+        min_rating=vArguments.min_rating
     )
 
-    display_books(books)
+    vConfig.validate()
+
+    if vArguments.refresh or not books_file_exists(OUTPUT_FILE):
+        vBooks = scrape_books(
+            URL,
+            vConfig
+        )
+
+        save_books(
+            vBooks,
+            OUTPUT_FILE
+        )
+
+    vBooks = read_books(OUTPUT_FILE)
+
+    vBooks = filter_books(
+        vBooks,
+        title=vArguments.title,
+        max_price=vArguments.max_price,
+        min_rating=vArguments.min_rating
+    )
+
+    display_books(vBooks)
+
 
 if __name__ == "__main__":
     main()

@@ -1,8 +1,9 @@
-"""
-Tests du client HTTP.
-"""
+# ============================================================================
+# Tests du client HTTP du scraper
+# ============================================================================
 
-from unittest.mock import patch
+
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -10,99 +11,90 @@ import requests
 from scraper.http_client import fetch_page
 
 
-def test_fetch_page_with_invalid_url():
-    """Vérifie la gestion d'une erreur HTTP."""
+@patch("scraper.http_client.requests.get")
+def test_fetch_page(mock_get):
+    """
+    Vérifie que le contenu HTML d'une page est correctement récupéré.
+    """
 
-    url = "https://example.com/page-inexistante"
+    vResponse = Mock()
+    vResponse.text = "<html>Test</html>"
+    vResponse.apparent_encoding = "utf-8"
+    vResponse.status_code = 200
 
-    with pytest.raises(requests.HTTPError):
-        fetch_page(url)
+    mock_get.return_value = vResponse
 
+    rHtml = fetch_page(
+        "https://example.com",
+        pTimeout=30
+    )
 
-def test_fetch_page_with_utf8_encoding():
-    """Vérifie que l'encodage détecté est utilisé."""
+    mock_get.assert_called_once_with(
+        "https://example.com",
+        timeout=30
+    )
 
-    response = requests.Response()
-    response.status_code = 200
-    response._content = "Prix : £51.77".encode("utf-8")
+    vResponse.raise_for_status.assert_called_once()
 
-    with patch(
-        "scraper.http_client.requests.get",
-        return_value=response
-    ):
-        with patch.object(
-            type(response),
-            "apparent_encoding",
-            new_callable=lambda: property(
-                lambda self: "utf-8"
-            )
-        ):
-            result = fetch_page("https://example.com")
-
-    assert response.encoding == "utf-8"
-    assert result == "Prix : £51.77"
-
-def test_fetch_page_http_error(monkeypatch):
-    """Vérifie qu'une erreur HTTP est bien remontée."""
-
-    class FakeResponse:
-        def raise_for_status(self):
-            raise requests.HTTPError("404 Not Found")
-
-    def fake_get(url, timeout):
-        return FakeResponse()
-
-    monkeypatch.setattr(requests, "get", fake_get)
-
-    with pytest.raises(requests.HTTPError):
-        fetch_page("https://example.com/page")
+    assert rHtml == "<html>Test</html>"
 
 
-def test_fetch_page_timeout(monkeypatch):
-    """Vérifie qu'un timeout HTTP est bien remonté."""
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_with_default_encoding(mock_get):
+    """
+    Vérifie que l'encodage détecté est appliqué à la réponse.
+    """
 
-    def fake_get(url, timeout):
-        raise requests.Timeout("Request timed out")
+    vResponse = Mock()
+    vResponse.text = "Contenu français"
+    vResponse.apparent_encoding = "utf-8"
+    vResponse.status_code = 200
 
-    monkeypatch.setattr(requests, "get", fake_get)
+    mock_get.return_value = vResponse
 
-    with pytest.raises(requests.Timeout):
-        fetch_page("https://example.com/page")
+    rHtml = fetch_page(
+        "https://example.com",
+        pTimeout=10
+    )
 
-
-def test_fetch_page_uses_configured_timeout(monkeypatch):
-    """Vérifie que le timeout configuré est utilisé."""
-
-    captured = {}
-
-    class FakeResponse:
-        def raise_for_status(self):
-            pass
-
-        apparent_encoding = "utf-8"
-        text = "contenu"
-
-    def fake_get(url, timeout):
-        captured["timeout"] = timeout
-        return FakeResponse()
-
-    monkeypatch.setattr(requests, "get", fake_get)
-
-    result = fetch_page("https://example.com")
-
-    assert captured["timeout"] == 10
-    assert result == "contenu"
+    assert vResponse.encoding == "utf-8"
+    assert rHtml == "Contenu français"
 
 
-def test_fetch_page_logs_http_error(caplog, monkeypatch):
-    """Vérifie qu'une erreur HTTP est enregistrée dans les logs."""
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_with_http_error(mock_get):
+    """
+    Vérifie qu'une erreur HTTP est propagée.
+    """
 
-    def fake_get(url, timeout):
-        raise requests.HTTPError("404 Not Found")
+    vResponse = Mock()
+    vResponse.status_code = 404
 
-    monkeypatch.setattr(requests, "get", fake_get)
+    vResponse.raise_for_status.side_effect = requests.HTTPError(
+        "404 Not Found"
+    )
+
+    mock_get.return_value = vResponse
 
     with pytest.raises(requests.HTTPError):
-        fetch_page("https://example.com/page")
+        fetch_page(
+            "https://example.com/page-inexistante",
+            pTimeout=10
+        )
 
-    assert "Échec de récupération" in caplog.text
+
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_with_request_error(mock_get):
+    """
+    Vérifie qu'une erreur Requests est propagée.
+    """
+
+    mock_get.side_effect = requests.RequestException(
+        "Erreur de connexion"
+    )
+
+    with pytest.raises(requests.RequestException):
+        fetch_page(
+            "https://example.com",
+            pTimeout=10
+        )

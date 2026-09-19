@@ -1,12 +1,19 @@
+# ============================================================================
+# Tests du filtrage des données des livres
+# ============================================================================
+
+
 import pandas as pd
 
 from data.filter import filter_books
 
 
 def test_filter_books():
-    """Vérifie le filtrage des livres par prix et note."""
+    """
+    Vérifie le filtrage des livres par prix et note.
+    """
 
-    books = pd.DataFrame([
+    vBooks = pd.DataFrame([
         {
             "title": "Livre 1",
             "price": 10.0,
@@ -30,20 +37,22 @@ def test_filter_books():
         }
     ])
 
-    result = filter_books(
-        books,
+    rBooks = filter_books(
+        vBooks,
         max_price=20,
         min_rating=4
     )
 
-    assert len(result) == 1
-    assert result.iloc[0]["title"] == "Livre 1"
+    assert len(rBooks) == 1
+    assert rBooks.iloc[0]["title"] == "Livre 1"
 
 
 def test_filter_books_by_title():
-    """Vérifie le filtrage des livres par titre."""
+    """
+    Vérifie le filtrage des livres par titre.
+    """
 
-    books = pd.DataFrame([
+    vBooks = pd.DataFrame([
         {
             "title": "Python pour débutants",
             "price": 10.0,
@@ -67,19 +76,22 @@ def test_filter_books_by_title():
         }
     ])
 
-    result = filter_books(
-        books,
+    rBooks = filter_books(
+        vBooks,
         title="python"
     )
 
-    assert len(result) == 2
-    assert result.iloc[0]["title"] == "Python pour débutants"
-    assert result.iloc[1]["title"] == "Python avancé"
+    assert len(rBooks) == 2
+    assert rBooks.iloc[0]["title"] == "Python pour débutants"
+    assert rBooks.iloc[1]["title"] == "Python avancé"
+
 
 def test_filter_books_with_all_criteria():
-    """Vérifie la combinaison des critères de recherche."""
+    """
+    Vérifie la combinaison des critères de recherche.
+    """
 
-    books = pd.DataFrame([
+    vBooks = pd.DataFrame([
         {
             "title": "Python débutant",
             "price": 15.0,
@@ -110,21 +122,24 @@ def test_filter_books_with_all_criteria():
         }
     ])
 
-    result = filter_books(
-        books,
+    rBooks = filter_books(
+        vBooks,
         title="python",
         max_price=20,
         min_rating=4
     )
 
-    assert len(result) == 1
-    assert result.iloc[0]["title"] == "Python débutant"
+    assert len(rBooks) == 1
+    assert rBooks.iloc[0]["title"] == "Python débutant"
 
 
 def test_filter_books_title_with_special_characters():
-    """Vérifie que la recherche de titre traite les caractères spéciaux comme du texte."""
+    """
+    Vérifie que la recherche de titre traite les caractères spéciaux
+    comme du texte.
+    """
 
-    books = pd.DataFrame([
+    vBooks = pd.DataFrame([
         {
             "title": "C++ pour débutants",
             "price": 20.0,
@@ -141,18 +156,21 @@ def test_filter_books_title_with_special_characters():
         }
     ])
 
-    result = filter_books(
-        books,
+    rBooks = filter_books(
+        vBooks,
         title="C++"
     )
 
-    assert len(result) == 1
-    assert result.iloc[0]["title"] == "C++ pour débutants"
+    assert len(rBooks) == 1
+    assert rBooks.iloc[0]["title"] == "C++ pour débutants"
+
 
 def test_filter_books_with_all_filters():
-    """Vérifie que tous les filtres sont appliqués ensemble."""
+    """
+    Vérifie que tous les filtres sont appliqués ensemble.
+    """
 
-    books = pd.DataFrame([
+    vBooks = pd.DataFrame([
         {
             "title": "Python débutant",
             "price": 15.0,
@@ -183,12 +201,12 @@ def test_filter_books_with_all_filters():
         }
     ])
 
-    result = filter_books(
-        books,
+    rBooks = filter_books(
+        vBooks,
         title="python",
         max_price=20,
         min_rating=4
     )
 
-    assert len(result) == 1
-    assert result.iloc[0]["title"] == "Python débutant"
+    assert len(rBooks) == 1
+    assert rBooks.iloc[0]["title"] == "Python débutant"

@@ -1,32 +1,63 @@
-"""
-Méthodes utilitaires générales.
-"""
+# ============================================================================
+# Méthodes utilitaires générales
+# ============================================================================
 
 
-def extract_text(soup, selector):
-    """Extrait le texte d'un élément HTML."""
+def extract_text(pSoup, pSelector):
+    """
+    Extrait le texte d'un élément HTML.
 
-    element = soup.select_one(selector)
+    :param pSoup: Élément BeautifulSoup dans lequel rechercher.
+    :param pSelector: Sélecteur CSS de l'élément à rechercher.
+    :return: Texte extrait ou chaîne vide.
+    """
 
-    if element is None:
-        return ""
+    vElement = pSoup.select_one(
+        pSelector
+    )
 
-    return element.get_text(strip=True)
+    if vElement is None:
+        rText = ""
+
+    else:
+        rText = vElement.get_text(
+            strip=True
+        )
+
+    return rText
 
 
-def extract_price(value):
-    """Convertit un prix textuel en valeur numérique."""
+def extract_price(pValue):
+    """
+    Convertit un prix textuel en valeur numérique.
 
-    if not value:
-        return 0.0
+    :param pValue: Prix sous forme textuelle.
+    :return: Prix sous forme de nombre décimal.
+    """
 
-    return float(value.replace("£", "").strip())
+    if not pValue:
+        rPrice = 0.0
+
+    else:
+        rPrice = float(
+            pValue.replace(
+                "£",
+                ""
+            ).strip()
+        )
+
+    return rPrice
 
 
-def extract_rating(element):
-    """Convertit une note textuelle en valeur numérique."""
+def extract_rating(pElement):
+    """
+    Convertit une note textuelle en valeur numérique.
 
-    ratings = {
+    :param pElement: Élément HTML contenant la classe de notation.
+    :return: Note comprise entre 0 et 5.
+    """
+
+    vRatings = {
         "One": 1,
         "Two": 2,
         "Three": 3,
@@ -34,11 +65,18 @@ def extract_rating(element):
         "Five": 5
     }
 
-    if element is None:
-        return 0
+    if pElement is None:
+        rRating = 0
 
-    for value in element.get("class", []):
-        if value in ratings:
-            return ratings[value]
+    else:
+        rRating = 0
 
-    return 0
+        for vValue in pElement.get(
+            "class",
+            []
+        ):
+            if vValue in vRatings:
+                rRating = vRatings[vValue]
+                break
+
+    return rRating

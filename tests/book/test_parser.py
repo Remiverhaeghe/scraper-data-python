@@ -1,24 +1,39 @@
-"""
-Tests du parser HTML.
-"""
+# ============================================================================
+# Tests du parser HTML des livres
+# ============================================================================
+
+
 import pytest
+
 from book.model import Book
-from book.parser import extract_book, extract_books, extract_next_url, parse_html
+from book.parser import (
+    extract_book,
+    extract_books,
+    extract_next_url,
+    parse_html
+)
 
 
 def test_parse_html():
-    """Vérifie la conversion du HTML."""
+    """
+    Vérifie la conversion du HTML en objet BeautifulSoup.
+    """
 
-    html = "<h1>Développeur Python</h1>"
+    vHtml = "<h1>Développeur Python</h1>"
 
-    soup = parse_html(html)
+    vSoup = parse_html(
+        vHtml
+    )
 
-    assert soup.h1.text == "Développeur Python"
+    assert vSoup.h1.text == "Développeur Python"
+
 
 def test_extract_book():
-    """Vérifie l'extraction d'un livre."""
+    """
+    Vérifie l'extraction d'un livre.
+    """
 
-    html = """
+    vHtml = """
     <article class="product_pod">
         <h3>
             <a href="catalogue/a-light-in-the-attic_1000/index.html">
@@ -36,23 +51,32 @@ def test_extract_book():
     </article>
     """
 
-    soup = parse_html(html)
-    book = extract_book(soup, "https://books.toscrape.com/")
+    vSoup = parse_html(
+        vHtml
+    )
 
-    assert isinstance(book, Book)
-    assert book.title == "A Light in the Attic"
-    assert book.price == 51.77
-    assert book.availability == "In stock"
-    assert book.rating == 3
-    assert book.url == (
+    vBook = extract_book(
+        vSoup,
         "https://books.toscrape.com/"
-        "catalogue/a-light-in-the-attic_1000/index.html")
+    )
+
+    assert isinstance(vBook, Book)
+    assert vBook.title == "A Light in the Attic"
+    assert vBook.price == 51.77
+    assert vBook.availability == "In stock"
+    assert vBook.rating == 3
+    assert vBook.url == (
+        "https://books.toscrape.com/"
+        "catalogue/a-light-in-the-attic_1000/index.html"
+    )
 
 
 def test_extract_books():
-    """Vérifie l'extraction de plusieurs livres."""
+    """
+    Vérifie l'extraction de plusieurs livres.
+    """
 
-    html = """
+    vHtml = """
     <article class="product_pod">
         <h3>
             <a href="book-1.html">A Light in the Attic</a>
@@ -72,31 +96,40 @@ def test_extract_books():
     </article>
     """
 
-    soup = parse_html(html)
-    books = extract_books(soup, "https://books.toscrape.com/catalogue/")
+    vSoup = parse_html(
+        vHtml
+    )
 
-    assert len(books) == 2
+    vBooks = extract_books(
+        vSoup,
+        "https://books.toscrape.com/catalogue/"
+    )
 
-    assert books[0].title == "A Light in the Attic"
-    assert books[0].price == 51.77
-    assert books[0].rating == 3
-    assert books[0].url == (
+    assert len(vBooks) == 2
+
+    assert vBooks[0].title == "A Light in the Attic"
+    assert vBooks[0].price == 51.77
+    assert vBooks[0].rating == 3
+    assert vBooks[0].url == (
         "https://books.toscrape.com/catalogue/"
         "book-1.html"
     )
 
-    assert books[1].title == "Tipping the Velvet"
-    assert books[1].price == 53.74
-    assert books[1].rating == 1
-    assert books[1].url == (
+    assert vBooks[1].title == "Tipping the Velvet"
+    assert vBooks[1].price == 53.74
+    assert vBooks[1].rating == 1
+    assert vBooks[1].url == (
         "https://books.toscrape.com/catalogue/"
         "book-2.html"
     )
 
-def test_extract_book_invalid_price():
-    """Vérifie qu'une erreur de prix est bien remontée."""
 
-    html = """
+def test_extract_book_invalid_price():
+    """
+    Vérifie qu'une erreur de prix est correctement remontée.
+    """
+
+    vHtml = """
     <article class="product_pod">
         <h3>
             <a href="book-1.html">A Light in the Attic</a>
@@ -107,16 +140,23 @@ def test_extract_book_invalid_price():
     </article>
     """
 
-    soup = parse_html(html)
+    vSoup = parse_html(
+        vHtml
+    )
 
     with pytest.raises(ValueError):
-        extract_book(soup,"https://books.toscrape.com/catalogue/" )
+        extract_book(
+            vSoup,
+            "https://books.toscrape.com/catalogue/"
+        )
 
 
 def test_extract_next_url():
-    """Vérifie l'extraction de l'URL de la page suivante."""
+    """
+    Vérifie l'extraction de l'URL de la page suivante.
+    """
 
-    html = """
+    vHtml = """
     <ul class="pager">
         <li class="next">
             <a href="catalogue/page-2.html">next</a>
@@ -124,40 +164,49 @@ def test_extract_next_url():
     </ul>
     """
 
-    soup = parse_html(html)
+    vSoup = parse_html(
+        vHtml
+    )
 
-    result = extract_next_url(
-        soup,
+    rUrl = extract_next_url(
+        vSoup,
         "https://books.toscrape.com/"
     )
 
-    assert result == (
+    assert rUrl == (
         "https://books.toscrape.com/"
         "catalogue/page-2.html"
     )
 
 
 def test_extract_next_url_without_next_page():
-    """Vérifie l'absence de page suivante."""
+    """
+    Vérifie l'absence de page suivante.
+    """
 
-    html = """
+    vHtml = """
     <ul class="pager">
     </ul>
     """
 
-    soup = parse_html(html)
+    vSoup = parse_html(
+        vHtml
+    )
 
-    result = extract_next_url(
-        soup,
+    rUrl = extract_next_url(
+        vSoup,
         "https://books.toscrape.com/"
     )
 
-    assert result == ""
+    assert rUrl == ""
+
 
 def test_extract_book_with_missing_data():
-    """Vérifie le comportement lorsque certaines données sont absentes."""
+    """
+    Vérifie le comportement lorsque certaines données sont absentes.
+    """
 
-    html = """
+    vHtml = """
     <article class="product_pod">
         <h3>
             <a href="book.html">Mon livre</a>
@@ -165,23 +214,28 @@ def test_extract_book_with_missing_data():
     </article>
     """
 
-    soup = parse_html(html)
+    vSoup = parse_html(
+        vHtml
+    )
 
-    book = extract_book(
-        soup,
+    vBook = extract_book(
+        vSoup,
         "https://books.toscrape.com/"
     )
 
-    assert book.title == "Mon livre"
-    assert book.price == 0.0
-    assert book.availability == ""
-    assert book.rating == 0
-    assert book.url == "https://books.toscrape.com/book.html"
+    assert vBook.title == "Mon livre"
+    assert vBook.price == 0.0
+    assert vBook.availability == ""
+    assert vBook.rating == 0
+    assert vBook.url == "https://books.toscrape.com/book.html"
+
 
 def test_extract_books_without_books():
-    """Vérifie qu'une page sans livre retourne une liste vide."""
+    """
+    Vérifie qu'une page sans livre retourne une liste vide.
+    """
 
-    html = """
+    vHtml = """
     <html>
         <body>
             <h1>Page sans livre</h1>
@@ -189,19 +243,24 @@ def test_extract_books_without_books():
     </html>
     """
 
-    soup = parse_html(html)
+    vSoup = parse_html(
+        vHtml
+    )
 
-    books = extract_books(
-        soup,
+    vBooks = extract_books(
+        vSoup,
         "https://books.toscrape.com/"
     )
 
-    assert books == []
+    assert vBooks == []
+
 
 def test_extract_book_without_title():
-    """Vérifie le comportement lorsqu'un livre n'a pas de titre."""
+    """
+    Vérifie le comportement lorsqu'un livre n'a pas de titre.
+    """
 
-    html = """
+    vHtml = """
     <article class="product_pod">
         <p class="price_color">£10.00</p>
         <p class="availability">In stock</p>
@@ -209,24 +268,28 @@ def test_extract_book_without_title():
     </article>
     """
 
-    soup = parse_html(html)
+    vSoup = parse_html(
+        vHtml
+    )
 
-    book = extract_book(
-        soup,
+    vBook = extract_book(
+        vSoup,
         "https://books.toscrape.com/"
     )
 
-    assert book.title == ""
-    assert book.price == 10.00
-    assert book.availability == "In stock"
-    assert book.rating == 3
-    assert book.url == ""
+    assert vBook.title == ""
+    assert vBook.price == 10.00
+    assert vBook.availability == "In stock"
+    assert vBook.rating == 3
+    assert vBook.url == ""
 
 
 def test_extract_book_without_url():
-    """Vérifie le comportement lorsqu'un livre n'a pas d'URL."""
+    """
+    Vérifie le comportement lorsqu'un livre n'a pas d'URL.
+    """
 
-    html = """
+    vHtml = """
     <article class="product_pod">
         <h3>
             <a>Mon livre</a>
@@ -237,15 +300,17 @@ def test_extract_book_without_url():
     </article>
     """
 
-    soup = parse_html(html)
+    vSoup = parse_html(
+        vHtml
+    )
 
-    book = extract_book(
-        soup,
+    vBook = extract_book(
+        vSoup,
         "https://books.toscrape.com/"
     )
 
-    assert book.title == "Mon livre"
-    assert book.price == 10.00
-    assert book.availability == "In stock"
-    assert book.rating == 3
-    assert book.url == ""
+    assert vBook.title == "Mon livre"
+    assert vBook.price == 10.00
+    assert vBook.availability == "In stock"
+    assert vBook.rating == 3
+    assert vBook.url == ""

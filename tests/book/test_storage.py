@@ -1,20 +1,25 @@
-"""
-Tests du stockage des livres.
-"""
+# ============================================================================
+# Tests du stockage des livres
+# ============================================================================
 
-import csv, pytest
 
+import csv
 from pathlib import Path
+
+import pytest
+
 from book.model import Book
 from book.storage import save_books
 
 
 def test_save_books(tmp_path):
-    """Vérifie l'enregistrement des livres dans un fichier CSV."""
+    """
+    Vérifie l'enregistrement des livres dans un fichier CSV.
+    """
 
-    file_path = tmp_path / "books.csv"
+    vFilePath = tmp_path / "books.csv"
 
-    books = [
+    vBooks = [
         Book(
             title="Book 1",
             price=10.00,
@@ -31,18 +36,23 @@ def test_save_books(tmp_path):
         )
     ]
 
-    save_books(books, file_path)
+    save_books(
+        vBooks,
+        vFilePath
+    )
 
-    assert file_path.exists()
+    assert vFilePath.exists()
 
-    with file_path.open(
+    with vFilePath.open(
         mode="r",
         encoding="utf-8",
         newline=""
-    ) as file:
-        rows = list(csv.reader(file))
+    ) as vFile:
+        vRows = list(
+            csv.reader(vFile)
+        )
 
-    assert rows[0] == [
+    assert vRows[0] == [
         "title",
         "price",
         "availability",
@@ -50,7 +60,7 @@ def test_save_books(tmp_path):
         "url"
     ]
 
-    assert rows[1] == [
+    assert vRows[1] == [
         "Book 1",
         "10.0",
         "In stock",
@@ -58,7 +68,7 @@ def test_save_books(tmp_path):
         "https://example.com/book-1"
     ]
 
-    assert rows[2] == [
+    assert vRows[2] == [
         "Book 2",
         "20.0",
         "In stock",
@@ -66,23 +76,31 @@ def test_save_books(tmp_path):
         "https://example.com/book-2"
     ]
 
+
 def test_save_empty_books(tmp_path):
-    """Vérifie l'enregistrement d'une liste de livres vide."""
+    """
+    Vérifie l'enregistrement d'une liste de livres vide.
+    """
 
-    file_path = tmp_path / "books.csv"
+    vFilePath = tmp_path / "books.csv"
 
-    save_books([], file_path)
+    save_books(
+        [],
+        vFilePath
+    )
 
-    assert file_path.exists()
+    assert vFilePath.exists()
 
-    with file_path.open(
+    with vFilePath.open(
         mode="r",
         encoding="utf-8",
         newline=""
-    ) as file:
-        rows = list(csv.reader(file))
+    ) as vFile:
+        vRows = list(
+            csv.reader(vFile)
+        )
 
-    assert rows == [[
+    assert vRows == [[
         "title",
         "price",
         "availability",
@@ -90,16 +108,21 @@ def test_save_empty_books(tmp_path):
         "url"
     ]]
 
+
 def test_save_books_logs_error_when_file_cannot_be_written(
     tmp_path,
     monkeypatch
 ):
-    """Vérifie qu'une erreur d'écriture est enregistrée dans les logs."""
+    """
+    Vérifie qu'une erreur d'écriture est enregistrée dans les logs.
+    """
 
-    file_path = tmp_path / "books.csv"
+    vFilePath = tmp_path / "books.csv"
 
     def mock_open(*args, **kwargs):
-        raise PermissionError("Accès refusé")
+        raise PermissionError(
+            "Accès refusé"
+        )
 
     monkeypatch.setattr(
         Path,
@@ -107,7 +130,7 @@ def test_save_books_logs_error_when_file_cannot_be_written(
         mock_open
     )
 
-    books = [
+    vBooks = [
         Book(
             title="Book 1",
             price=10.00,
@@ -118,4 +141,7 @@ def test_save_books_logs_error_when_file_cannot_be_written(
     ]
 
     with pytest.raises(PermissionError):
-        save_books(books, file_path)
+        save_books(
+            vBooks,
+            vFilePath
+        )
