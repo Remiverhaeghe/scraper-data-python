@@ -5,7 +5,7 @@
 
 import pandas as pd
 
-from data.display import display_books
+from book.display import display_books
 
 
 def test_display_books(capsys):

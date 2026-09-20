@@ -11,12 +11,6 @@ def filter_books(
 ):
     """
     Filtre les livres selon leur titre, leur prix et leur note.
-
-    :param pBooks: DataFrame contenant les livres.
-    :param title: Texte à rechercher dans les titres.
-    :param max_price: Prix maximum autorisé.
-    :param min_rating: Note minimale autorisée.
-    :return: DataFrame contenant les livres filtrés.
     """
 
     vResult = pBooks

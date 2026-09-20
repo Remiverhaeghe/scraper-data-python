@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from book.csv_schema import BOOK_COLUMNS
 from book.model import Book
 from book.storage import save_books
 
@@ -52,13 +53,7 @@ def test_save_books(tmp_path):
             csv.reader(vFile)
         )
 
-    assert vRows[0] == [
-        "title",
-        "price",
-        "availability",
-        "rating",
-        "url"
-    ]
+    assert vRows[0] == BOOK_COLUMNS
 
     assert vRows[1] == [
         "Book 1",
@@ -100,13 +95,9 @@ def test_save_empty_books(tmp_path):
             csv.reader(vFile)
         )
 
-    assert vRows == [[
-        "title",
-        "price",
-        "availability",
-        "rating",
-        "url"
-    ]]
+    assert vRows == [
+        BOOK_COLUMNS
+    ]
 
 
 def test_save_books_logs_error_when_file_cannot_be_written(

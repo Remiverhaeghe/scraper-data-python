@@ -5,7 +5,7 @@
 
 import pandas as pd
 
-from data.filter import filter_books
+from book.filter import filter_books
 
 
 def test_filter_books():

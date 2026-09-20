@@ -33,7 +33,7 @@ def scrape_book(pUrl, pConfig):
 
     vHtml = fetch_page(
         pUrl,
-        pTimeout=pConfig.timeout
+        pConfig
     )
 
     vSoup = parse_html(
@@ -98,7 +98,7 @@ def scrape_books(pUrl, pConfig):
 
         vHtml = fetch_page(
             vCurrentUrl,
-            pTimeout=pConfig.timeout
+            pConfig
         )
 
         vSoup = parse_html(

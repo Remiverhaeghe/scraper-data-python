@@ -44,7 +44,7 @@ def test_scrape_book():
 
     vFetchPage.assert_called_once_with(
         "https://books.toscrape.com/catalogue/python.html",
-        pTimeout=30
+        vConfig
     )
 
     vParseHtml.assert_called_once_with(
@@ -108,12 +108,12 @@ def test_scrape_books():
 
     vFetchPage.assert_any_call(
         "https://books.toscrape.com/",
-        pTimeout=20
+        vConfig
     )
 
     vFetchPage.assert_any_call(
         "https://books.toscrape.com/page-2.html",
-        pTimeout=20
+        vConfig
     )
 
 

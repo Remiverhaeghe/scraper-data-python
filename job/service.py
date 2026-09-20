@@ -15,14 +15,14 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def scrape_job(pUrl):
+def scrape_job(pUrl, pConfig):
     """
     Récupère et analyse une offre d'emploi.
     """
 
     logger.info("Début du scraping : %s", pUrl)
 
-    vHtml = fetch_page(pUrl)
+    vHtml = fetch_page(pUrl, pConfig)
     vSoup = parse_html(vHtml)
     vJob = extract_job(vSoup)
 
@@ -32,14 +32,14 @@ def scrape_job(pUrl):
     return rJob
 
 
-def scrape_jobs(pUrl):
+def scrape_jobs(pUrl, pConfig):
     """
     Récupère et analyse plusieurs offres d'emploi.
     """
 
     logger.info("Début du scraping : %s", pUrl)
 
-    vHtml = fetch_page(pUrl)
+    vHtml = fetch_page(pUrl, pConfig)
     vSoup = parse_html(vHtml)
     vJobs = extract_jobs(vSoup)
 

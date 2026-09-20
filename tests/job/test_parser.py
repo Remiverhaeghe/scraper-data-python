@@ -130,3 +130,31 @@ def test_extract_jobs():
     assert vJobs[0].title == "Développeur Python"
     assert vJobs[1].title == "Développeur Java"
     assert vJobs[2].title == "Développeur Web"
+
+def test_extract_job_without_link():
+    """
+    Vérifie l'extraction d'une offre sans lien.
+    """
+
+    vHtml = """
+    <h1>Développeur Python</h1>
+    <div class="company">OpenAI</div>
+    <div class="location">Paris</div>
+    <div class="contract">CDI</div>
+    <div class="date">31/08/2026</div>
+    """
+
+    vSoup = parse_html(
+        vHtml
+    )
+
+    vJob = extract_job(
+        vSoup
+    )
+
+    assert vJob.title == "Développeur Python"
+    assert vJob.company == "OpenAI"
+    assert vJob.location == "Paris"
+    assert vJob.contract == "CDI"
+    assert vJob.date == "31/08/2026"
+    assert vJob.url == ""
