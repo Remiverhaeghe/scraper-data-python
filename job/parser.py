@@ -1,37 +1,62 @@
-"""
-Analyse du contenu HTML.
-"""
+# ============================================================================
+# Analyse et extraction des données HTML des offres d'emploi
+# ============================================================================
+
 
 from bs4 import BeautifulSoup
 
 from job.model import Job
 from utils.helpers import extract_text
+from utils.logger import get_logger
 
 
-def parse_html(html):
-    """Transforme le HTML en objet BeautifulSoup."""
-
-    return BeautifulSoup(html, "html.parser")
+logger = get_logger(__name__)
 
 
-def extract_job(soup):
-    """Extrait une offre d'emploi depuis le HTML."""
+def parse_html(pHtml):
+    """
+    Transforme le HTML en objet BeautifulSoup.
+    """
 
-    link = soup.select_one("a")
+    rSoup = BeautifulSoup(pHtml, "html.parser")
+    return rSoup
 
-    return Job(
-        title=extract_text(soup, "h1"),
-        company=extract_text(soup, ".company"),
-        location=extract_text(soup, ".location"),
-        contract=extract_text(soup, ".contract"),
-        date=extract_text(soup, ".date"),
-        url=link.get("href", "") if link else ""
+
+def extract_job(pSoup):
+    """
+    Extrait une offre d'emploi depuis le HTML.
+    """
+
+    logger.info("Extraction d'une offre d'emploi")
+
+    vLink = pSoup.select_one("a")
+    vJob = Job(
+        title=extract_text(pSoup, "h1"),
+        company=extract_text(pSoup, ".company"),
+        location=extract_text(pSoup, ".location"),
+        contract=extract_text(pSoup, ".contract"),
+        date=extract_text(pSoup, ".date"),
+        url=vLink.get("href", "") if vLink else ""
     )
 
+    logger.info("Offre extraite : %s", vJob.title)
 
-def extract_jobs(soup):
-    """Extrait plusieurs offres depuis une page HTML."""
+    rJob = vJob
+    return rJob
 
-    job_elements = soup.select(".job")
 
-    return [extract_job(job) for job in job_elements]
+def extract_jobs(pSoup):
+    """
+    Extrait plusieurs offres depuis une page HTML.
+    """
+
+    vJobElements = pSoup.select(".job")
+    logger.info(
+        "%s offre(s) trouvée(s) dans la page",
+        len(vJobElements)
+    )
+
+    vJobs = [extract_job(vJob) for vJob in vJobElements]
+
+    rJobs = vJobs
+    return rJobs

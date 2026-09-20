@@ -1,38 +1,52 @@
-"""
-Service de scraping.
-"""
+# ============================================================================
+# Service de scraping des offres d'emploi
+# ============================================================================
 
+
+from job.parser import (
+    extract_job,
+    extract_jobs,
+    parse_html
+)
 from scraper.http_client import fetch_page
-from job.parser import extract_job, extract_jobs, parse_html
 from utils.logger import get_logger
+
 
 logger = get_logger(__name__)
 
-def scrape_job(url):
-    """Récupère et analyse une offre."""
 
-    logger.info("Début du scraping : %s", url)
+def scrape_job(pUrl):
+    """
+    Récupère et analyse une offre d'emploi.
+    """
 
-    html = fetch_page(url)
-    soup = parse_html(html)
+    logger.info("Début du scraping : %s", pUrl)
 
-    job = extract_job(soup)
+    vHtml = fetch_page(pUrl)
+    vSoup = parse_html(vHtml)
+    vJob = extract_job(vSoup)
 
-    logger.info("Scraping terminé : %s", url)
+    logger.info("Scraping terminé : %s", pUrl)
 
-    return job
+    rJob = vJob
+    return rJob
 
 
-def scrape_jobs(url):
-    """Récupère et analyse plusieurs offres."""
+def scrape_jobs(pUrl):
+    """
+    Récupère et analyse plusieurs offres d'emploi.
+    """
 
-    logger.info("Début du scraping : %s", url)
+    logger.info("Début du scraping : %s", pUrl)
 
-    html = fetch_page(url)
-    soup = parse_html(html)
+    vHtml = fetch_page(pUrl)
+    vSoup = parse_html(vHtml)
+    vJobs = extract_jobs(vSoup)
 
-    jobs = extract_jobs(soup)
+    logger.info(
+        "Scraping terminé : %s offre(s) trouvée(s)",
+        len(vJobs)
+    )
 
-    logger.info("Scraping terminé : %s offre(s) trouvée(s)", len(jobs))
-
-    return jobs
+    rJobs = vJobs
+    return rJobs

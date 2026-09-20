@@ -25,8 +25,6 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 
 ## 📋 Suivi du projet
 
-### 🏗️ Architecture
-
 - [x] Séparer les responsabilités HTTP / parsing / modèle / service
 - [x] Séparer les domaines Books et Jobs
 - [x] Mettre en place une configuration commune
@@ -97,8 +95,10 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 
 ### 🔐 Sécurité
 
-- [ ] Validation des URLs
-- [ ] Protection contre les accès réseau non autorisés
+- [x] Validation des URLs
+- [x] Protection contre les accès réseau locaux
+- [x] Protection contre les redirections dangereuses
+- [x] Protection contre les résolutions DNS vers des IP privées
 - [ ] Gestion sécurisée des téléchargements
 - [ ] Limitation de la taille des réponses
 - [ ] Protection contre les fichiers malveillants
@@ -113,89 +113,93 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 - [x] Tests unitaires
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
+- [x] 100 tests automatisés
 - [ ] Augmenter progressivement la couverture
-- [ ] Ajouter des tests de sécurité
-- [ ] Ajouter des tests d'intégration
+- [x] Tests de sécurité
+- [ ] Tests d'intégration
 
 ## 📁 Structure
 
-```text
 scraper-data-python/
 │
-├── book/                              # Domaine métier consacré aux livres
-│   ├── __init__.py                    # Déclare le dossier comme package Python
-│   ├── config.py                      # Définit la configuration spécifique au scraping des livres
-│   ├── model.py                       # Définit la structure d'un livre
-│   ├── parser.py                      # Analyse le HTML et extrait les informations des livres
-│   ├── service.py                     # Orchestre le scraping des livres et la pagination
-│   └── storage.py                     # Enregistre les livres dans un fichier CSV
+├── book/                                      # Domaine métier consacré aux livres
+│   ├── __init__.py                            # Déclare le dossier comme package Python
+│   ├── config.py                              # Configuration spécifique au scraping des livres
+│   ├── model.py                               # Définit la structure d'un livre
+│   ├── parser.py                              # Analyse le HTML et extrait les livres
+│   ├── service.py                             # Orchestre le scraping et la pagination
+│   └── storage.py                             # Enregistre les livres extraits
 │
-├── job/                               # Domaine métier consacré aux offres d'emploi
-│   ├── __init__.py                    # Déclare le dossier comme package Python
-│   ├── model.py                       # Définit la structure d'une offre d'emploi
-│   ├── parser.py                      # Analyse le HTML et extrait les informations des offres
-│   └── service.py                     # Orchestre le scraping des offres d'emploi
+├── job/                                       # Domaine métier consacré aux offres d'emploi
+│   ├── __init__.py                            # Déclare le dossier comme package Python
+│   ├── model.py                               # Définit la structure d'une offre d'emploi
+│   ├── parser.py                              # Analyse le HTML et extrait les offres
+│   └── service.py                             # Orchestre le scraping des offres
 │
-├── scraper/                           # Composants techniques communs au scraping
-│   ├── __init__.py                    # Déclare le dossier comme package Python
-│   ├── config.py                      # Définit la configuration commune aux scrapers
-│   └── http_client.py                 # Effectue les requêtes HTTP et récupère les pages HTML
+├── scraper/                                   # Composants techniques communs au scraping
+│   ├── __init__.py                            # Déclare le dossier comme package Python
+│   ├── config.py                              # Configuration commune aux différents scrapers
+│   └── http_client.py                         # Effectue les requêtes HTTP et gère les redirections
 │
-├── utils/                             # Fonctions techniques réutilisables
-│   ├── __init__.py                    # Déclare le dossier comme package Python
-│   ├── helpers.py                     # Contient les fonctions d'extraction et de conversion
-│   ├── logger.py                      # Configure le système de logs de l'application
-│   └── url.py                          # Construit et manipule les URLs
+├── utils/                                     # Fonctions techniques réutilisables
+│   ├── __init__.py                            # Déclare le dossier comme package Python
+│   ├── helpers.py                             # Contient les fonctions utilitaires communes
+│   ├── logger.py                              # Configure et centralise les logs
+│   ├── security.py                            # Valide les URLs et sécurise les accès réseau
+│   └── url.py                                 # Construit et manipule les URLs
 │
-├── cli/                               # Gestion des interactions avec la ligne de commande
-│   ├── __init__.py                    # Déclare le dossier comme package Python
-│   └── arguments.py                   # Analyse et valide les arguments fournis par l'utilisateur
+├── cli/                                      # Gestion de l'interface en ligne de commande
+│   ├── __init__.py                            # Déclare le dossier comme package Python
+│   └── arguments.py                           # Analyse et valide les arguments CLI
 │
-├── data/                              # Exploitation des données après le scraping
-│   ├── __init__.py                    # Déclare le dossier comme package Python
-│   ├── reader.py                      # Vérifie et lit les données enregistrées dans le fichier CSV
-│   ├── filter.py                      # Filtre les données selon les critères demandés
-│   └── display.py                     # Affiche les résultats dans la console
+├── data/                                     # Exploitation des données après le scraping
+│   ├── __init__.py                            # Déclare le dossier comme package Python
+│   ├── reader.py                              # Lit et vérifie les données enregistrées
+│   ├── filter.py                              # Filtre les données selon les critères demandés
+│   └── display.py                             # Affiche les résultats
 │
-├── scripts/                            # Scripts destinés aux essais et vérifications manuelles
-│   ├── __init__.py                    # Déclare le dossier comme package Python
-│   └── test_books_scraping.py         # Lance un scraping réel pour vérifier le comportement du scraper
+├── scripts/                                  # Scripts destinés aux essais manuels
+│   ├── __init__.py                            # Déclare le dossier comme package Python
+│   └── test_books_scraping.py                 # Lance un scraping réel pour vérifier le comportement
 │
-├── tests/                              # Tests automatisés de l'application
-│   ├── book/                           # Tests des composants du domaine Book
-│   │   ├── __init__.py                 # Déclare le dossier comme package de tests
-│   │   ├── test_config.py              # Vérifie la configuration du scraping des livres
-│   │   ├── test_model.py               # Vérifie le modèle Book
-│   │   ├── test_parser.py              # Vérifie l'analyse et l'extraction des livres
-│   │   ├── test_service.py             # Vérifie le service de scraping des livres
-│   │   └── test_storage.py             # Vérifie l'enregistrement des livres
+├── tests/                                    # Tests automatisés du projet
 │   │
-│   ├── job/                            # Tests des composants du domaine Job
-│   │   ├── __init__.py                 # Déclare le dossier comme package de tests
-│   │   ├── test_model.py               # Vérifie le modèle Job
-│   │   ├── test_parser.py              # Vérifie l'analyse et l'extraction des offres
-│   │   └── test_service.py             # Vérifie le service de scraping des offres
+│   ├── book/                                 # Tests du domaine Book
+│   │   ├── __init__.py                        # Déclare le dossier comme package de tests
+│   │   ├── test_config.py                     # Teste la configuration des livres
+│   │   ├── test_model.py                      # Teste le modèle Book
+│   │   ├── test_parser.py                     # Teste le parsing et l'extraction
+│   │   ├── test_service.py                    # Teste le service de scraping
+│   │   └── test_storage.py                    # Teste le stockage des livres
 │   │
-│   ├── cli/                            # Tests de la ligne de commande
-│   │   ├── __init__.py                 # Déclare le dossier comme package de tests
-│   │   └── test_arguments.py            # Vérifie l'analyse et la validation des arguments
+│   ├── job/                                  # Tests du domaine Job
+│   │   ├── __init__.py                        # Déclare le dossier comme package de tests
+│   │   ├── test_model.py                      # Teste le modèle Job
+│   │   ├── test_parser.py                     # Teste le parsing et l'extraction
+│   │   └── test_service.py                    # Teste le service de scraping
 │   │
-│   ├── data/                           # Tests liés à l'exploitation des données
-│   │   ├── __init__.py                 # Déclare le dossier comme package de tests
-│   │   ├── test_reader.py              # Vérifie la lecture et la présence des données
-│   │   ├── test_filter.py              # Vérifie le filtrage des données
-│   │   └── test_display.py             # Vérifie l'affichage des résultats
+│   ├── cli/                                  # Tests de la ligne de commande
+│   │   ├── __init__.py                        # Déclare le dossier comme package de tests
+│   │   └── test_arguments.py                  # Teste les arguments CLI
 │   │
-│   ├── __init__.py                     # Déclare le dossier comme package de tests
-│   ├── test_config.py                  # Vérifie la configuration générale de l'application
-│   ├── test_helpers.py                 # Vérifie les fonctions utilitaires
-│   ├── test_http_client.py             # Vérifie les requêtes HTTP et la gestion des erreurs
-│   ├── test_logger.py                  # Vérifie la configuration et l'écriture des logs
-│   ├── test_main.py                    # Vérifie l'orchestration des différentes étapes
-│   └── test_url.py                     # Vérifie la construction et la manipulation des URLs
+│   ├── data/                                 # Tests liés aux données
+│   │   ├── __init__.py                        # Déclare le dossier comme package de tests
+│   │   ├── test_reader.py                     # Teste la lecture des données
+│   │   ├── test_filter.py                     # Teste le filtrage
+│   │   └── test_display.py                    # Teste l'affichage
+│   │
+│   ├── __init__.py                            # Déclare le dossier comme package de tests
+│   ├── test_config.py                         # Teste la configuration générale
+│   ├── test_helpers.py                        # Teste les fonctions utilitaires
+│   ├── test_http_client.py                    # Teste les requêtes HTTP et les redirections
+│   ├── test_logger.py                         # Teste le système de logs
+│   ├── test_main.py                           # Teste le point d'entrée de l'application
+│   ├── test_security.py                       # Teste les protections de sécurité réseau
+│   └── test_url.py                            # Teste la construction et la manipulation des URLs
 │
-├── config.py                           # Centralise les paramètres généraux de l'application
-├── main.py                              # Point d'entrée et orchestrateur principal de l'application
-├── requirements.txt                     # Liste les dépendances nécessaires au projet
-├── README.md                            # Présente le projet et explique son fonctionnement
-└── .gitignore                           # Définit les fichiers qui ne doivent pas être versionnés
+├── config.py                                  # Centralise les paramètres généraux de l'application
+├── main.py                                    # Point d'entrée et orchestration principale
+├── requirements.txt                           # Liste les dépendances Python du projet
+├── README.md                                  # Présente le projet, son architecture et son avancement
+├── .gitignore                                 # Définit les fichiers exclus du versionnement Git
+└── LICENSE                                    # Définit les conditions d'utilisation du projet

@@ -1,13 +1,16 @@
-"""
-Modèle représentant une offre d'emploi.
-"""
+# ============================================================================
+# Modèle représentant une offre d'emploi
+# ============================================================================
+
 
 from dataclasses import dataclass
 
 
 @dataclass
 class Job:
-    """Représente une offre d'emploi."""
+    """
+    Représente une offre d'emploi.
+    """
 
     title: str
     company: str
