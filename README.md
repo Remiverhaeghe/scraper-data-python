@@ -100,7 +100,7 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 - [x] Protection contre les redirections dangereuses
 - [x] Protection contre les résolutions DNS vers des IP privées
 - [ ] Gestion sécurisée des téléchargements
-- [ ] Limitation de la taille des réponses
+- [x] Limitation de la taille des réponses
 - [ ] Protection contre les fichiers malveillants
 - [ ] Protection contre le path traversal
 - [ ] Gestion sécurisée des secrets
@@ -113,7 +113,7 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 - [x] Tests unitaires
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
-- [x] 100 tests automatisés
+- [x] 109 tests automatisés
 - [ ] Augmenter progressivement la couverture
 - [x] Tests de sécurité
 - [ ] Tests d'intégration

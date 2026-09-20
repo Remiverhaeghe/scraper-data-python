@@ -5,6 +5,8 @@
 
 from dataclasses import dataclass
 
+from config import MAX_RESPONSE_SIZE_MB
+
 
 @dataclass
 class ScrapingConfig:
@@ -20,6 +22,18 @@ class ScrapingConfig:
 
     # Temps maximum d'attente d'une requête HTTP
     timeout: int = 10
+
+    # Taille maximale d'une réponse HTTP en Mo
+    max_response_size_mb: float = MAX_RESPONSE_SIZE_MB
+
+    @property
+    def max_response_size(self) -> int:
+        """
+        Retourne la taille maximale d'une réponse HTTP en octets.
+        """
+
+        rSize = int(self.max_response_size_mb * 1024 * 1024)
+        return rSize
 
     def validate(self) -> None:
         """
@@ -37,3 +51,9 @@ class ScrapingConfig:
         # Vérification du délai d'attente HTTP
         if self.timeout <= 0:
             raise ValueError("timeout doit être supérieur à 0")
+
+        # Vérification de la taille maximale des réponses HTTP
+        if self.max_response_size_mb <= 0:
+            raise ValueError(
+                "max_response_size_mb doit être supérieur à 0"
+            )
