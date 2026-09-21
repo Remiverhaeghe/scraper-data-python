@@ -18,3 +18,28 @@ def has_reached_limit(pItems, pMaxItems):
     )
 
     return rReached
+
+
+def deduplicate_items(pItems, pKeyFunction):
+    """
+    Supprime les doublons d'une collection en conservant
+    la première occurrence de chaque élément.
+
+    :param pItems: Collection d'éléments.
+    :param pKeyFunction: Fonction permettant d'obtenir la clé unique.
+    :return: Collection sans doublon.
+    """
+
+    vSeenKeys = set()
+    vUniqueItems = []
+
+    for vItem in pItems:
+        vKey = pKeyFunction(vItem)
+
+        if vKey not in vSeenKeys:
+            vSeenKeys.add(vKey)
+            vUniqueItems.append(vItem)
+
+    rItems = vUniqueItems
+
+    return rItems

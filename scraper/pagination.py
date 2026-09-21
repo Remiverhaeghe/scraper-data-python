@@ -6,7 +6,7 @@
 import time
 from datetime import datetime
 
-from scraper.collection import has_reached_limit
+from scraper.collection import deduplicate_items, has_reached_limit
 from scraper.result import ScrapingResult
 from utils.logger import get_logger
 
@@ -20,7 +20,8 @@ def scrape_paginated(
     pFetchPage,
     pParseHtml,
     pExtractItems,
-    pExtractNextUrl
+    pExtractNextUrl,
+    pGetItemKey=None
 ):
     """
     Parcourt plusieurs pages et récupère les éléments présents sur chaque page.
@@ -31,6 +32,7 @@ def scrape_paginated(
     :param pParseHtml: Fonction permettant de parser le HTML.
     :param pExtractItems: Fonction permettant d'extraire les éléments.
     :param pExtractNextUrl: Fonction permettant de récupérer l'URL suivante.
+    :param pGetItemKey: Fonction permettant d'obtenir la clé unique d'un élément.
     :return: Résultat du scraping paginé.
     """
 
@@ -82,6 +84,16 @@ def scrape_paginated(
                     vCurrentUrl
                 )
             )
+
+            # Suppression des doublons
+            if (
+                pConfig.avoid_duplicates
+                and pGetItemKey is not None
+            ):
+                vItems = deduplicate_items(
+                    vItems,
+                    pGetItemKey
+                )
 
             # Limitation du nombre maximum d'éléments
             if has_reached_limit(

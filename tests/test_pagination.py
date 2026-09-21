@@ -29,6 +29,7 @@ def test_scrape_paginated_scrapes_multiple_pages():
     class Config:
         max_pages = None
         max_items = None
+        avoid_duplicates = True
 
     def fetch_page(pUrl, pConfig):
         return vPages[pUrl]
@@ -83,6 +84,7 @@ def test_scrape_paginated_respects_max_pages():
     class Config:
         max_pages = 1
         max_items = None
+        avoid_duplicates = True
 
     def fetch_page(pUrl, pConfig):
         return vPages[pUrl]
@@ -138,6 +140,7 @@ def test_scrape_paginated_respects_max_items():
     class Config:
         max_pages = None
         max_items = 3
+        avoid_duplicates = True
 
     def fetch_page(pUrl, pConfig):
         return vPages[pUrl]
@@ -181,6 +184,7 @@ def test_scrape_paginated_returns_error_result_when_scraping_fails():
     class Config:
         max_pages = None
         max_items = None
+        avoid_duplicates = True
 
     def fetch_page(pUrl, pConfig):
         raise ValueError(
@@ -213,3 +217,76 @@ def test_scrape_paginated_returns_error_result_when_scraping_fails():
     assert rResult.error_message == (
         "Erreur de récupération de la page."
     )
+
+def test_scrape_paginated_removes_duplicates():
+    """
+    Vérifie que les doublons présents sur plusieurs pages
+    sont supprimés.
+    """
+
+    vPages = {
+        "https://example.com/page1": "page1",
+        "https://example.com/page2": "page2"
+    }
+
+    vNextUrls = {
+        "https://example.com/page1": "https://example.com/page2",
+        "https://example.com/page2": ""
+    }
+
+    vItems = {
+        "page1": [
+            {"url": "https://example.com/1", "title": "Premier"},
+            {"url": "https://example.com/2", "title": "Deuxième"}
+        ],
+        "page2": [
+            {"url": "https://example.com/2", "title": "Deuxième doublon"},
+            {"url": "https://example.com/3", "title": "Troisième"}
+        ]
+    }
+
+    class Config:
+        max_pages = None
+        max_items = None
+        avoid_duplicates = True
+
+    def fetch_page(pUrl, pConfig):
+        return vPages[pUrl]
+
+    def parse_html(pHtml):
+        return pHtml
+
+    def extract_items(pSoup, pCurrentUrl):
+        return vItems[pSoup]
+
+    def extract_next_url(pSoup, pCurrentUrl):
+        return vNextUrls[pCurrentUrl]
+
+    rResult = scrape_paginated(
+        "https://example.com/page1",
+        Config(),
+        fetch_page,
+        parse_html,
+        extract_items,
+        extract_next_url,
+        lambda pItem: pItem["url"]
+    )
+
+    assert rResult.items == [
+        {
+            "url": "https://example.com/1",
+            "title": "Premier"
+        },
+        {
+            "url": "https://example.com/2",
+            "title": "Deuxième"
+        },
+        {
+            "url": "https://example.com/3",
+            "title": "Troisième"
+        }
+    ]
+
+    assert rResult.page_count == 2
+    assert rResult.status == "success"
+    assert rResult.error_message is None

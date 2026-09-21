@@ -34,7 +34,7 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 - [x] Mettre en place une écriture CSV générique
 - [x] Finaliser les composants communs aux scrapers
 - [x] Ajouter une gestion centralisée des résultats
-- [ ] Ajouter l'historique des exécutions
+- [x] Ajouter l'historique des exécutions
 
 ### 📚 Books
 
@@ -78,7 +78,7 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 - [x] Délai entre les requêtes
 - [x] Limitation du nombre d'éléments
 - [x] Limitation du nombre de pages
-- [ ] Déduplication
+- [x] Déduplication
 - [x] Historique des exécutions
 - [x] Statistiques d'exécution
 - [ ] Export JSON
@@ -121,7 +121,7 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 - [x] Tests unitaires
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
-- [x] **161 tests automatisés**
+- [x] **163 tests automatisés**
 - [x] Tests de sécurité
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration

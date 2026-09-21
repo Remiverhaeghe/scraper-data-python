@@ -56,7 +56,8 @@ def test_scrape_book():
 
 def test_scrape_books():
     """
-    Vérifie le scraping de plusieurs pages.
+    Vérifie le scraping de plusieurs pages et la suppression
+    des doublons.
     """
 
     vConfig = BookScrapingConfig(
@@ -100,12 +101,13 @@ def test_scrape_books():
         )
 
     assert rResult.items == [
-        vBook,
         vBook
     ]
 
     assert rResult.page_count == 2
     assert rResult.duration_seconds >= 0
+    assert rResult.status == "success"
+    assert rResult.error_message is None
 
     assert vFetchPage.call_count == 2
 
@@ -180,6 +182,8 @@ def test_scrape_books_with_max_items():
 
     assert rResult.page_count == 1
     assert rResult.duration_seconds >= 0
+    assert rResult.status == "success"
+    assert rResult.error_message is None
 
 
 def test_scrape_books_with_max_pages():
@@ -227,5 +231,7 @@ def test_scrape_books_with_max_pages():
 
     assert rResult.page_count == 1
     assert rResult.duration_seconds >= 0
+    assert rResult.status == "success"
+    assert rResult.error_message is None
 
     assert vFetchPage.call_count == 1

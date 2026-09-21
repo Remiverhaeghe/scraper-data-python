@@ -3,7 +3,7 @@
 # ============================================================================
 
 
-from scraper.collection import has_reached_limit
+from scraper.collection import has_reached_limit, deduplicate_items
 
 
 def test_has_reached_limit_when_limit_is_not_defined():
@@ -59,3 +59,27 @@ def test_has_reached_limit_when_limit_is_not_reached():
     )
 
     assert rReached is False
+
+def test_deduplicate_items_removes_duplicates():
+    """
+    Vérifie que les doublons sont supprimés en conservant
+    la première occurrence.
+    """
+
+    vItems = [
+        {"url": "https://example.com/1", "title": "Premier"},
+        {"url": "https://example.com/2", "title": "Deuxième"},
+        {"url": "https://example.com/1", "title": "Premier doublon"},
+        {"url": "https://example.com/3", "title": "Troisième"},
+    ]
+
+    rItems = deduplicate_items(
+        vItems,
+        lambda pItem: pItem["url"]
+    )
+
+    assert rItems == [
+        {"url": "https://example.com/1", "title": "Premier"},
+        {"url": "https://example.com/2", "title": "Deuxième"},
+        {"url": "https://example.com/3", "title": "Troisième"},
+    ]

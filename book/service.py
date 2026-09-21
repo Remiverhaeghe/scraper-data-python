@@ -75,7 +75,8 @@ def scrape_books(pUrl, pConfig):
         fetch_page,
         parse_html,
         extract_books,
-        extract_next_url
+        extract_next_url,
+        lambda pItem: pItem.url
     )
 
     logger.info(

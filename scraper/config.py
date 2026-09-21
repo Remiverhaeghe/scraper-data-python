@@ -20,6 +20,9 @@ class ScrapingConfig:
     # Nombre maximum de pages à parcourir
     max_pages: int | None = None
 
+    # Évite de récupérer plusieurs fois le même élément
+    avoid_duplicates: bool = True
+
     # Délai entre deux requêtes HTTP
     delay: float = 0.0
 

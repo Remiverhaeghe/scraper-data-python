@@ -17,9 +17,6 @@ class BookScrapingConfig(ScrapingConfig):
     # Première page à scraper
     start_page: int = 1
 
-    # Évite de récupérer plusieurs fois le même livre
-    avoid_duplicates: bool = True
-
     # Filtre sur le titre
     title: str | None = None
 

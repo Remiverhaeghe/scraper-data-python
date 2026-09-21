@@ -58,7 +58,7 @@ def scrape_jobs(pUrl, pConfig):
     """
     Scrape plusieurs offres d'emploi avec pagination.
 
-    :param pUrl: URL de départ.
+    :param pUrl: URL de départ du scraping.
     :param pConfig: Configuration du scraping.
     :return: Résultat du scraping paginé.
     """
@@ -74,7 +74,8 @@ def scrape_jobs(pUrl, pConfig):
         fetch_page,
         parse_html,
         extract_jobs,
-        extract_next_url
+        extract_next_url,
+        lambda pItem: pItem.url
     )
 
     logger.info(
