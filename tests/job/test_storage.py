@@ -58,27 +58,75 @@ def test_save_jobs(tmp_path):
         "title",
         "company",
         "location",
+        "city",
+        "postal_code",
+        "distance_km",
         "contract",
+        "salary_min",
+        "salary_max",
+        "salary_period",
+        "remote",
+        "remote_days",
+        "remote_type",
+        "nearest_metro",
+        "metro_distance_km",
         "date",
-        "url"
+        "url",
+        "description",
+        "missions",
+        "requirements",
+        "education",
+        "skills"
     ]
 
     assert vRows[1] == [
         "Développeur Python",
         "Entreprise A",
         "Paris",
+        "",
+        "",
+        "",
         "CDI",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         "31/08/2026",
-        "https://example.com/job-1"
+        "https://example.com/job-1",
+        "",
+        "",
+        "",
+        "",
+        ""
     ]
 
     assert vRows[2] == [
         "Développeur Java",
         "Entreprise B",
         "Lille",
+        "",
+        "",
+        "",
         "CDD",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         "30/08/2026",
-        "https://example.com/job-2"
+        "https://example.com/job-2",
+        "",
+        "",
+        "",
+        "",
+        ""
     ]
 
 
@@ -109,9 +157,25 @@ def test_save_empty_jobs(tmp_path):
         "title",
         "company",
         "location",
+        "city",
+        "postal_code",
+        "distance_km",
         "contract",
+        "salary_min",
+        "salary_max",
+        "salary_period",
+        "remote",
+        "remote_days",
+        "remote_type",
+        "nearest_metro",
+        "metro_distance_km",
         "date",
-        "url"
+        "url",
+        "description",
+        "missions",
+        "requirements",
+        "education",
+        "skills"
     ]]
 
 

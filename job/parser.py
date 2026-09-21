@@ -2,6 +2,7 @@
 # Analyse et extraction des données HTML des offres d'emploi
 # ============================================================================
 
+
 from bs4 import BeautifulSoup
 
 from job.model import Job
@@ -32,6 +33,9 @@ def extract_job(pSoup):
     """
     Extrait une offre d'emploi depuis un document HTML.
 
+    Les informations qui ne sont pas encore disponibles dans
+    la source HTML sont initialisées à None ou à une chaîne vide.
+
     :param pSoup: Élément HTML contenant l'offre.
     :return: Offre d'emploi extraite.
     """
@@ -41,12 +45,46 @@ def extract_job(pSoup):
     vLink = pSoup.select_one("a")
 
     vJob = Job(
-        title=extract_text(pSoup, "h1"),
-        company=extract_text(pSoup, ".company"),
-        location=extract_text(pSoup, ".location"),
-        contract=extract_text(pSoup, ".contract"),
-        date=extract_text(pSoup, ".date"),
-        url=vLink.get("href", "") if vLink else ""
+        title=extract_text(
+            pSoup,
+            "h1"
+        ),
+        company=extract_text(
+            pSoup,
+            ".company"
+        ),
+        location=extract_text(
+            pSoup,
+            ".location"
+        ),
+        city="",
+        postal_code="",
+        distance_km=None,
+        contract=extract_text(
+            pSoup,
+            ".contract"
+        ),
+        salary_min=None,
+        salary_max=None,
+        salary_period=None,
+        remote=None,
+        remote_days=None,
+        remote_type=None,
+        nearest_metro=None,
+        metro_distance_km=None,
+        date=extract_text(
+            pSoup,
+            ".date"
+        ),
+        url=vLink.get(
+            "href",
+            ""
+        ) if vLink else "",
+        description="",
+        missions="",
+        requirements="",
+        education="",
+        skills=""
     )
 
     logger.info(
@@ -68,7 +106,9 @@ def extract_jobs(pSoup, pCurrentUrl):
     :return: Liste des offres extraites.
     """
 
-    vJobElements = pSoup.select(".job")
+    vJobElements = pSoup.select(
+        ".job"
+    )
 
     logger.info(
         "%s offre(s) trouvée(s) dans la page",
@@ -89,7 +129,7 @@ def extract_next_url(pSoup, pCurrentUrl):
     """
     Extrait l'URL de la page suivante.
 
-    :param pSoup: Document HTML analysé.
+    :param pSoup: Document HTML de la page courante.
     :param pCurrentUrl: URL de la page courante.
     :return: URL de la page suivante ou une chaîne vide.
     """

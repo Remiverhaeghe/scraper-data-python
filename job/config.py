@@ -14,14 +14,33 @@ class JobScrapingConfig(ScrapingConfig):
     Configuration spécifique au scraping des offres d'emploi.
     """
 
-    # Mot-clé recherché dans les offres
+    # Recherche textuelle
     keyword: str | None = None
 
-    # Localisation recherchée
+    # Localisation
     location: str | None = None
+    max_distance_km: float | None = None
 
-    # Type de contrat recherché
+    # Type de contrat
     contract: str | None = None
 
-    # Télétravail recherché
+    # Salaire
+    min_salary: float | None = None
+    max_salary: float | None = None
+
+    # Télétravail
     remote: bool | None = None
+    min_remote_days: int | None = None
+
+    # Accessibilité en métro
+    metro_required: bool | None = None
+    max_metro_distance_km: float | None = None
+
+    # Formation
+    education: str | None = None
+
+    # Compétences recherchées
+    skills: list[str] | None = None
+
+    # Missions recherchées
+    missions: list[str] | None = None
