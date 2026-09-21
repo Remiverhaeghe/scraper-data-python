@@ -94,15 +94,18 @@ def test_scrape_books():
         ]
     ):
 
-        rBooks = scrape_books(
+        rResult = scrape_books(
             "https://books.toscrape.com/",
             vConfig
         )
 
-    assert rBooks == [
+    assert rResult.items == [
         vBook,
         vBook
     ]
+
+    assert rResult.page_count == 2
+    assert rResult.duration_seconds >= 0
 
     assert vFetchPage.call_count == 2
 
@@ -167,13 +170,16 @@ def test_scrape_books_with_max_items():
         return_value="https://books.toscrape.com/page-2.html"
     ):
 
-        rBooks = scrape_books(
+        rResult = scrape_books(
             "https://books.toscrape.com/",
             vConfig
         )
 
-    assert len(rBooks) == 2
-    assert rBooks == vBooks[:2]
+    assert len(rResult.items) == 2
+    assert rResult.items == vBooks[:2]
+
+    assert rResult.page_count == 1
+    assert rResult.duration_seconds >= 0
 
 
 def test_scrape_books_with_max_pages():
@@ -210,10 +216,16 @@ def test_scrape_books_with_max_pages():
         return_value="https://books.toscrape.com/page-2.html"
     ):
 
-        rBooks = scrape_books(
+        rResult = scrape_books(
             "https://books.toscrape.com/",
             vConfig
         )
 
-    assert rBooks == [vBook]
+    assert rResult.items == [
+        vBook
+    ]
+
+    assert rResult.page_count == 1
+    assert rResult.duration_seconds >= 0
+
     assert vFetchPage.call_count == 1

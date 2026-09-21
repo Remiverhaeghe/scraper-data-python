@@ -2,6 +2,7 @@
 # Service de scraping des offres d'emploi
 # ============================================================================
 
+
 from job.parser import (
     extract_job,
     extract_jobs,
@@ -59,7 +60,7 @@ def scrape_jobs(pUrl, pConfig):
 
     :param pUrl: URL de départ.
     :param pConfig: Configuration du scraping.
-    :return: Liste des offres d'emploi.
+    :return: Résultat du scraping paginé.
     """
 
     logger.info(
@@ -67,7 +68,7 @@ def scrape_jobs(pUrl, pConfig):
         pUrl
     )
 
-    vJobs = scrape_paginated(
+    rResult = scrape_paginated(
         pUrl,
         pConfig,
         fetch_page,
@@ -77,10 +78,9 @@ def scrape_jobs(pUrl, pConfig):
     )
 
     logger.info(
-        "Scraping terminé : %s offre(s) trouvée(s)",
-        len(vJobs)
+        "Scraping terminé : %s offre(s) trouvée(s) sur %s page(s)",
+        len(rResult.items),
+        rResult.page_count
     )
 
-    rJobs = vJobs
-
-    return rJobs
+    return rResult

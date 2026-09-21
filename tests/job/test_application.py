@@ -3,17 +3,19 @@
 # ============================================================================
 
 
+from datetime import datetime
 from unittest.mock import patch
 
 from job.application import process_jobs
 from job.model import Job
 from scraper.config import ScrapingConfig
+from scraper.result import ScrapingResult
 
 
 def test_process_jobs():
     """
     Vérifie que le traitement des offres lance le scraping
-    avec la configuration fournie.
+    et enregistre le résultat dans l'historique.
     """
 
     vConfig = ScrapingConfig(
@@ -33,12 +35,21 @@ def test_process_jobs():
         )
     ]
 
+    vScrapingResult = ScrapingResult(
+        items=vJobs,
+        page_count=1,
+        duration_seconds=0.1,
+        started_at=datetime(2026, 9, 21, 17, 0, 0)
+    )
+
     with patch(
         "job.application.scrape_jobs",
-        return_value=vJobs
-    ) as vScrapeJobs:
+        return_value=vScrapingResult
+    ) as vScrapeJobs, patch(
+        "job.application.record_history"
+    ) as vRecordHistory:
 
-        rJobs = process_jobs(
+        rResult = process_jobs(
             "https://example.com/jobs",
             vConfig
         )
@@ -48,4 +59,14 @@ def test_process_jobs():
         vConfig
     )
 
-    assert rJobs == vJobs
+    vRecordHistory.assert_called_once_with(
+        "data/scraper.db",
+        "job",
+        "https://example.com/jobs",
+        vScrapingResult
+    )
+
+    assert rResult == vScrapingResult
+    assert rResult.items == vJobs
+    assert rResult.page_count == 1
+    assert rResult.duration_seconds >= 0

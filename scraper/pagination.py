@@ -3,7 +3,15 @@
 # ============================================================================
 
 
+import time
+from datetime import datetime
+
 from scraper.collection import has_reached_limit
+from scraper.result import ScrapingResult
+from utils.logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 def scrape_paginated(
@@ -23,61 +31,92 @@ def scrape_paginated(
     :param pParseHtml: Fonction permettant de parser le HTML.
     :param pExtractItems: Fonction permettant d'extraire les éléments.
     :param pExtractNextUrl: Fonction permettant de récupérer l'URL suivante.
-    :return: Liste des éléments récupérés.
+    :return: Résultat du scraping paginé.
     """
+
+    vStartTime = time.perf_counter()
+    vStartedAt = datetime.now()
 
     vItems = []
     vCurrentUrl = pUrl
     vPageCount = 0
+    vStatus = "success"
+    vErrorMessage = None
 
-    while vCurrentUrl:
-        # Vérification du nombre maximum de pages
-        if (
-            pConfig.max_pages is not None
-            and vPageCount >= pConfig.max_pages
-        ):
-            break
+    try:
+        while vCurrentUrl:
+            # Vérification du nombre maximum de pages
+            if (
+                pConfig.max_pages is not None
+                and vPageCount >= pConfig.max_pages
+            ):
+                break
 
-        # Vérification du nombre maximum d'éléments
-        if has_reached_limit(
-            vItems,
-            pConfig.max_items
-        ):
-            break
+            # Vérification du nombre maximum d'éléments
+            if has_reached_limit(
+                vItems,
+                pConfig.max_items
+            ):
+                break
 
-        vPageCount += 1
+            vPageCount += 1
 
-        vHtml = pFetchPage(
-            vCurrentUrl,
-            pConfig
-        )
+            logger.info(
+                "Traitement de la page %s : %s",
+                vPageCount,
+                vCurrentUrl
+            )
 
-        vSoup = pParseHtml(
-            vHtml
-        )
+            vHtml = pFetchPage(
+                vCurrentUrl,
+                pConfig
+            )
 
-        vItems.extend(
-            pExtractItems(
+            vSoup = pParseHtml(
+                vHtml
+            )
+
+            vItems.extend(
+                pExtractItems(
+                    vSoup,
+                    vCurrentUrl
+                )
+            )
+
+            # Limitation du nombre maximum d'éléments
+            if has_reached_limit(
+                vItems,
+                pConfig.max_items
+            ):
+                vItems = vItems[
+                    :pConfig.max_items
+                ]
+                break
+
+            vCurrentUrl = pExtractNextUrl(
                 vSoup,
                 vCurrentUrl
             )
+
+    except Exception as vException:
+        vStatus = "error"
+        vErrorMessage = str(vException)
+
+        logger.exception(
+            "Erreur pendant le scraping à la page %s : %s",
+            vPageCount,
+            vException
         )
 
-        # Limitation du nombre maximum d'éléments
-        if has_reached_limit(
-            vItems,
-            pConfig.max_items
-        ):
-            vItems = vItems[
-                :pConfig.max_items
-            ]
-            break
+    vDuration = time.perf_counter() - vStartTime
 
-        vCurrentUrl = pExtractNextUrl(
-            vSoup,
-            vCurrentUrl
-        )
+    rResult = ScrapingResult(
+        items=vItems,
+        page_count=vPageCount,
+        duration_seconds=vDuration,
+        started_at=vStartedAt,
+        status=vStatus,
+        error_message=vErrorMessage
+    )
 
-    rItems = vItems
-
-    return rItems
+    return rResult

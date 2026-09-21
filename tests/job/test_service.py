@@ -86,7 +86,7 @@ def test_scrape_jobs():
         return_value=vHtml
     ) as vFetchPage:
 
-        vJobs = scrape_jobs(
+        vResult = scrape_jobs(
             "https://example.com/jobs",
             vConfig
         )
@@ -96,9 +96,12 @@ def test_scrape_jobs():
         vConfig
     )
 
-    assert len(vJobs) == 2
-    assert vJobs[0].title == "Développeur Python"
-    assert vJobs[1].title == "Développeur Java"
+    assert len(vResult.items) == 2
+    assert vResult.items[0].title == "Développeur Python"
+    assert vResult.items[1].title == "Développeur Java"
+
+    assert vResult.page_count == 1
+    assert vResult.duration_seconds >= 0
 
 
 def test_scrape_jobs_with_multiple_pages():
@@ -158,15 +161,18 @@ def test_scrape_jobs_with_multiple_pages():
         ]
     ):
 
-        vJobs = scrape_jobs(
+        vResult = scrape_jobs(
             "https://example.com/jobs",
             vConfig
         )
 
-    assert vJobs == [
+    assert vResult.items == [
         vJob1,
         vJob2
     ]
+
+    assert vResult.page_count == 2
+    assert vResult.duration_seconds >= 0
 
     assert vFetchPage.call_count == 2
 
@@ -206,13 +212,16 @@ def test_scrape_jobs_respects_max_items():
         return_value=vHtml
     ):
 
-        vJobs = scrape_jobs(
+        vResult = scrape_jobs(
             "https://example.com/jobs",
             vConfig
         )
 
-    assert len(vJobs) == 1
-    assert vJobs[0].title == "Développeur Python"
+    assert len(vResult.items) == 1
+    assert vResult.items[0].title == "Développeur Python"
+
+    assert vResult.page_count == 1
+    assert vResult.duration_seconds >= 0
 
 
 def test_scrape_jobs_keeps_all_jobs_when_max_items_is_greater():
@@ -251,12 +260,14 @@ def test_scrape_jobs_keeps_all_jobs_when_max_items_is_greater():
         return_value=vHtml
     ):
 
-        vJobs = scrape_jobs(
+        vResult = scrape_jobs(
             "https://example.com/jobs",
             vConfig
         )
 
-    assert len(vJobs) == 2
+    assert len(vResult.items) == 2
+    assert vResult.page_count == 1
+    assert vResult.duration_seconds >= 0
 
 
 def test_scrape_jobs_keeps_all_jobs_when_max_items_is_equal():
@@ -295,17 +306,20 @@ def test_scrape_jobs_keeps_all_jobs_when_max_items_is_equal():
         return_value=vHtml
     ):
 
-        vJobs = scrape_jobs(
+        vResult = scrape_jobs(
             "https://example.com/jobs",
             vConfig
         )
 
-    assert len(vJobs) == 2
+    assert len(vResult.items) == 2
+    assert vResult.page_count == 1
+    assert vResult.duration_seconds >= 0
 
 
-def test_scrape_jobs_propagates_fetch_error():
+def test_scrape_jobs_returns_error_result_when_fetch_fails():
     """
-    Vérifie qu'une erreur de récupération est propagée.
+    Vérifie qu'une erreur de récupération est enregistrée
+    dans le résultat du scraping.
     """
 
     vConfig = ScrapingConfig(
@@ -317,11 +331,14 @@ def test_scrape_jobs_propagates_fetch_error():
         side_effect=RuntimeError("Erreur HTTP")
     ):
 
-        with pytest.raises(
-            RuntimeError,
-            match="Erreur HTTP"
-        ):
-            scrape_jobs(
-                "https://example.com/jobs",
-                vConfig
-            )
+        vResult = scrape_jobs(
+            "https://example.com/jobs",
+            vConfig
+        )
+
+    assert vResult.items == []
+    assert vResult.page_count == 1
+    assert vResult.duration_seconds >= 0
+    assert vResult.started_at is not None
+    assert vResult.status == "error"
+    assert vResult.error_message == "Erreur HTTP"

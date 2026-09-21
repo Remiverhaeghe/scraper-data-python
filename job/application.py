@@ -3,7 +3,9 @@
 # ============================================================================
 
 
+from config import DATABASE_FILE
 from job.service import scrape_jobs
+from scraper.history_service import record_history
 from utils.logger import get_logger
 
 
@@ -14,13 +16,12 @@ def process_jobs(pUrl, pConfig):
     """
     Lance le traitement des offres d'emploi.
 
-    Pour le moment, le traitement se limite au scraping.
-    Le filtrage, le stockage et la détection des nouvelles offres
-    seront ajoutés progressivement.
+    Pour le moment, le traitement se limite au scraping et à
+    l'enregistrement de l'exécution dans l'historique.
 
     :param pUrl: URL de départ du scraping.
     :param pConfig: Configuration du scraping.
-    :return: Liste des offres récupérées.
+    :return: Résultat du scraping.
     """
 
     logger.info(
@@ -28,15 +29,22 @@ def process_jobs(pUrl, pConfig):
         pUrl
     )
 
-    vJobs = scrape_jobs(
+    rResult = scrape_jobs(
         pUrl,
         pConfig
     )
 
-    logger.info(
-        "Traitement des offres terminé : %s offre(s)",
-        len(vJobs)
+    record_history(
+        DATABASE_FILE,
+        "job",
+        pUrl,
+        rResult
     )
 
-    rJobs = vJobs
-    return rJobs
+    logger.info(
+        "Traitement des offres terminé : %s offre(s) sur %s page(s)",
+        len(rResult.items),
+        rResult.page_count
+    )
+
+    return rResult

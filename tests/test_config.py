@@ -34,3 +34,12 @@ def test_rating_limits():
 
     assert MIN_RATING == 1
     assert MAX_RATING == 5
+
+def test_database_file_is_configured():
+    """
+    Vérifie que le chemin de la base SQLite est configuré.
+    """
+
+    from config import DATABASE_FILE
+
+    assert DATABASE_FILE == "data/scraper.db"

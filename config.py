@@ -5,6 +5,7 @@
 
 URL = "https://books.toscrape.com/"
 OUTPUT_FILE = "output/books.csv"
+DATABASE_FILE = "data/scraper.db"
 
 MIN_RATING = 1
 MAX_RATING = 5

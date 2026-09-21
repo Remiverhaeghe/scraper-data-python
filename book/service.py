@@ -61,7 +61,7 @@ def scrape_books(pUrl, pConfig):
 
     :param pUrl: URL de départ du scraping.
     :param pConfig: Configuration du scraping.
-    :return: Liste des livres récupérés.
+    :return: Résultat du scraping paginé.
     """
 
     logger.info(
@@ -69,7 +69,7 @@ def scrape_books(pUrl, pConfig):
         pUrl
     )
 
-    vBooks = scrape_paginated(
+    rResult = scrape_paginated(
         pUrl,
         pConfig,
         fetch_page,
@@ -79,10 +79,9 @@ def scrape_books(pUrl, pConfig):
     )
 
     logger.info(
-        "Scraping terminé : %s livre(s) récupéré(s)",
-        len(vBooks)
+        "Scraping terminé : %s livre(s) récupéré(s) sur %s page(s)",
+        len(rResult.items),
+        rResult.page_count
     )
 
-    rBooks = vBooks
-
-    return rBooks
+    return rResult

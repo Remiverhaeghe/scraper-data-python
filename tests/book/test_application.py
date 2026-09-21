@@ -3,12 +3,14 @@
 # ============================================================================
 
 
+from datetime import datetime
 from unittest.mock import patch
 
 import pandas as pd
 
 from book.application import process_books
 from book.config import BookScrapingConfig
+from scraper.result import ScrapingResult
 
 
 def test_process_books_with_refresh():
@@ -32,6 +34,13 @@ def test_process_books_with_refresh():
         "book2"
     ]
 
+    vScrapingResult = ScrapingResult(
+        items=vBooksScraped,
+        page_count=2,
+        duration_seconds=0.1,
+        started_at=datetime(2026, 9, 21, 17, 0, 0)
+    )
+
     vBooksFiltered = pd.DataFrame([
         {
             "title": "Python débutant",
@@ -47,10 +56,12 @@ def test_process_books_with_refresh():
         return_value=True
     ), patch(
         "book.application.scrape_books",
-        return_value=vBooksScraped
+        return_value=vScrapingResult
     ) as vScrapeBooks, patch(
         "book.application.save_books"
     ) as vSaveBooks, patch(
+        "book.application.record_history"
+    ) as vRecordHistory, patch(
         "book.application.read_books",
         return_value=vBooksFiltered
     ) as vReadBooks, patch(
@@ -60,7 +71,7 @@ def test_process_books_with_refresh():
         "book.application.display_books"
     ) as vDisplayBooks:
 
-        process_books(
+        rResult = process_books(
             "https://books.toscrape.com/",
             "output/books.csv",
             vConfig,
@@ -77,6 +88,13 @@ def test_process_books_with_refresh():
         "output/books.csv"
     )
 
+    vRecordHistory.assert_called_once_with(
+        "data/scraper.db",
+        "book",
+        "https://books.toscrape.com/",
+        vScrapingResult
+    )
+
     vReadBooks.assert_called_once_with(
         "output/books.csv"
     )
@@ -91,6 +109,8 @@ def test_process_books_with_refresh():
     vDisplayBooks.assert_called_once_with(
         vBooksFiltered
     )
+
+    assert rResult == vScrapingResult
 
 
 def test_process_books_without_refresh_with_existing_file():
@@ -119,6 +139,8 @@ def test_process_books_without_refresh_with_existing_file():
     ), patch(
         "book.application.scrape_books"
     ) as vScrapeBooks, patch(
+        "book.application.record_history"
+    ) as vRecordHistory, patch(
         "book.application.read_books",
         return_value=vBooks
     ) as vReadBooks, patch(
@@ -128,7 +150,7 @@ def test_process_books_without_refresh_with_existing_file():
         "book.application.display_books"
     ) as vDisplayBooks:
 
-        process_books(
+        rResult = process_books(
             "https://books.toscrape.com/",
             "output/books.csv",
             vConfig,
@@ -136,6 +158,7 @@ def test_process_books_without_refresh_with_existing_file():
         )
 
     vScrapeBooks.assert_not_called()
+    vRecordHistory.assert_not_called()
 
     vReadBooks.assert_called_once_with(
         "output/books.csv"
@@ -151,6 +174,8 @@ def test_process_books_without_refresh_with_existing_file():
     vDisplayBooks.assert_called_once_with(
         vBooks
     )
+
+    assert rResult is None
 
 
 def test_process_books_without_refresh_without_file():
@@ -171,6 +196,13 @@ def test_process_books_without_refresh_without_file():
         "book2"
     ]
 
+    vScrapingResult = ScrapingResult(
+        items=vBooksScraped,
+        page_count=2,
+        duration_seconds=0.1,
+        started_at=datetime(2026, 9, 21, 17, 0, 0)
+    )
+
     vBooksFiltered = pd.DataFrame([
         {
             "title": "Livre récupéré",
@@ -186,10 +218,12 @@ def test_process_books_without_refresh_without_file():
         return_value=False
     ), patch(
         "book.application.scrape_books",
-        return_value=vBooksScraped
+        return_value=vScrapingResult
     ) as vScrapeBooks, patch(
         "book.application.save_books"
     ) as vSaveBooks, patch(
+        "book.application.record_history"
+    ) as vRecordHistory, patch(
         "book.application.read_books",
         return_value=vBooksFiltered
     ) as vReadBooks, patch(
@@ -199,7 +233,7 @@ def test_process_books_without_refresh_without_file():
         "book.application.display_books"
     ) as vDisplayBooks:
 
-        process_books(
+        rResult = process_books(
             "https://books.toscrape.com/",
             "output/books.csv",
             vConfig,
@@ -216,6 +250,13 @@ def test_process_books_without_refresh_without_file():
         "output/books.csv"
     )
 
+    vRecordHistory.assert_called_once_with(
+        "data/scraper.db",
+        "book",
+        "https://books.toscrape.com/",
+        vScrapingResult
+    )
+
     vReadBooks.assert_called_once_with(
         "output/books.csv"
     )
@@ -230,3 +271,5 @@ def test_process_books_without_refresh_without_file():
     vDisplayBooks.assert_called_once_with(
         vBooksFiltered
     )
+
+    assert rResult == vScrapingResult
