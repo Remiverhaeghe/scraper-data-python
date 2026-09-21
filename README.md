@@ -32,7 +32,7 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 - [x] Mettre en place une suite de tests
 - [x] Mettre en place une lecture CSV générique
 - [x] Mettre en place une écriture CSV générique
-- [ ] Finaliser les composants communs aux scrapers
+- [x] Finaliser les composants communs aux scrapers
 - [ ] Ajouter une gestion centralisée des résultats
 - [ ] Ajouter l'historique des exécutions
 
@@ -74,9 +74,10 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 - [x] Tests automatisés
 - [x] Lecture CSV générique
 - [x] Écriture CSV générique
-- [ ] Retry des requêtes
-- [ ] Délai entre les requêtes
-- [ ] Limitation du nombre d'éléments
+- [x] Retry des requêtes
+- [x] Délai entre les requêtes
+- [x] Limitation du nombre d'éléments
+- [x] Limitation du nombre de pages
 - [ ] Déduplication
 - [ ] Historique des exécutions
 - [ ] Statistiques d'exécution
@@ -120,7 +121,7 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 - [x] Tests unitaires
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
-- [x] **128 tests automatisés**
+- [x] **147 tests automatisés**
 - [x] Tests de sécurité
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
@@ -130,98 +131,102 @@ L'objectif est de récupérer des données publiques depuis un site web, de les 
 scraper-data-python/
 │
 ├── book/                              # Domaine métier consacré aux livres
-│   ├── __init__.py                   # Initialise le package Python Book
-│   ├── config.py                     # Configuration spécifique au scraping des livres
-│   ├── csv_schema.py                 # Définit les colonnes utilisées pour les livres
-│   ├── model.py                      # Définit le modèle de données Book
-│   ├── parser.py                     # Analyse le HTML et extrait les informations des livres
-│   ├── service.py                    # Contient la logique de scraping et de pagination
-│   ├── storage.py                    # Enregistre les livres dans le stockage
-│   ├── application.py                # Orchestre le traitement complet des livres
-│   ├── reader.py                     # Adapte la lecture CSV au domaine Book
-│   ├── filter.py                     # Applique les critères de filtrage aux livres
-│   └── display.py                    # Affiche les résultats des livres
+│   ├── __init__.py                    # Initialise le package Book
+│   ├── config.py                      # Configuration spécifique aux livres
+│   ├── csv_schema.py                  # Définit les colonnes CSV des livres
+│   ├── model.py                       # Définit le modèle de données Book
+│   ├── parser.py                      # Analyse le HTML et extrait les livres
+│   ├── service.py                     # Orchestre le scraping des livres
+│   ├── storage.py                     # Enregistre les livres
+│   ├── application.py                 # Orchestre le traitement complet Book
+│   ├── reader.py                      # Lit les CSV et crée les objets Book
+│   ├── filter.py                      # Filtre les livres selon les critères
+│   └── display.py                     # Prépare l'affichage des livres
 │
-├── job/                               # Domaine métier consacré aux offres d'emploi
-│   ├── __init__.py                   # Initialise le package Python Job
-│   ├── config.py                     # Configuration spécifique au scraping des offres
-│   ├── csv_schema.py                 # Définit les colonnes utilisées pour les offres
-│   ├── model.py                      # Définit le modèle de données Job
-│   ├── parser.py                     # Analyse le HTML et extrait les informations des offres
-│   ├── service.py                    # Contient la logique de scraping des offres
-│   ├── storage.py                    # Enregistre les offres dans le stockage
-│   ├── application.py                # Orchestre le traitement complet des offres
-│   └── reader.py                     # Adapte la lecture CSV au domaine Job
+├── job/                               # Domaine métier consacré aux emplois
+│   ├── __init__.py                    # Initialise le package Job
+│   ├── config.py                      # Configuration spécifique aux emplois
+│   ├── csv_schema.py                  # Définit les colonnes CSV des emplois
+│   ├── model.py                       # Définit le modèle de données Job
+│   ├── parser.py                      # Analyse le HTML et extrait les offres
+│   ├── service.py                     # Orchestre le scraping des offres
+│   ├── storage.py                     # Enregistre les offres
+│   ├── application.py                 # Orchestre le traitement complet Job
+│   └── reader.py                      # Lit les CSV et crée les objets Job
 │
 ├── scraper/                           # Composants techniques communs au scraping
-│   ├── __init__.py                   # Initialise le package Python Scraper
-│   ├── config.py                     # Configuration commune aux différents scrapers
-│   └── http_client.py                # Effectue les requêtes HTTP et gère les redirections
+│   ├── __init__.py                    # Initialise le package Scraper
+│   ├── config.py                      # Configuration commune des scrapers
+│   ├── http_client.py                 # Effectue les requêtes HTTP sécurisées
+│   ├── collection.py                  # Gère les limites sur les collections
+│   └── pagination.py                  # Gère la pagination commune
 │
-├── utils/                             # Fonctions techniques réutilisables
-│   ├── __init__.py                   # Initialise le package Python Utils
-│   ├── helpers.py                    # Regroupe les fonctions utilitaires communes
-│   ├── logger.py                     # Configure et centralise la gestion des logs
-│   ├── security.py                   # Centralise les contrôles de sécurité
-│   └── url.py                        # Construit et manipule les URLs
+├── utils/                             # Utilitaires techniques transverses
+│   ├── __init__.py                    # Initialise le package Utils
+│   ├── helpers.py                     # Fonctions utilitaires communes
+│   ├── logger.py                      # Centralise la gestion des logs
+│   ├── url.py                         # Construit et manipule les URLs
+│   └── security.py                    # Centralise les contrôles de sécurité
 │
-├── cli/                               # Gestion de l'interface en ligne de commande
-│   ├── __init__.py                   # Initialise le package Python CLI
-│   └── arguments.py                  # Analyse et valide les arguments de la ligne de commande
+├── cli/                               # Interface en ligne de commande
+│   ├── __init__.py                    # Initialise le package CLI
+│   └── arguments.py                   # Analyse et valide les arguments CLI
 │
-├── data/                              # Composants génériques de gestion des données
-│   ├── __init__.py                   # Initialise le package Python Data
-│   ├── csv_reader.py                 # Lit les fichiers CSV et retourne des DataFrames
-│   └── csv_writer.py                 # Écrit les données dans des fichiers CSV
+├── data/                              # Gestion générique des données
+│   ├── __init__.py                    # Initialise le package Data
+│   ├── csv_reader.py                  # Lecture générique des fichiers CSV
+│   └── csv_writer.py                  # Écriture générique des fichiers CSV
 │
 ├── scripts/                           # Scripts destinés aux essais manuels
-│   ├── __init__.py                   # Initialise le package Python Scripts
-│   └── test_books_scraping.py        # Lance un scraping réel des livres pour les essais
+│   ├── __init__.py                    # Initialise le package Scripts
+│   └── test_books_scraping.py         # Lance un scraping réel des livres
 │
 ├── tests/                             # Tests automatisés du projet
-│   ├── __init__.py                   # Initialise le package de tests
+│   ├── __init__.py                    # Initialise le package de tests
 │   │
-│   ├── book/                          # Tests du domaine Book
-│   │   ├── __init__.py               # Initialise le package de tests Book
-│   │   ├── test_config.py            # Vérifie la configuration des livres
-│   │   ├── test_model.py             # Vérifie le modèle Book
-│   │   ├── test_parser.py            # Vérifie le parsing et l'extraction des livres
-│   │   ├── test_service.py           # Vérifie le service de scraping des livres
-│   │   ├── test_storage.py           # Vérifie le stockage des livres
-│   │   ├── test_application.py       # Vérifie l'orchestration du traitement Book
-│   │   ├── test_filter.py             # Vérifie le filtrage des livres
-│   │   └── test_display.py            # Vérifie l'affichage des résultats
+│   ├── book/                           # Tests du domaine Book
+│   │   ├── __init__.py                # Initialise les tests Book
+│   │   ├── test_config.py             # Teste la configuration Book
+│   │   ├── test_model.py              # Teste le modèle Book
+│   │   ├── test_parser.py             # Teste le parsing Book
+│   │   ├── test_service.py            # Teste le service Book
+│   │   ├── test_storage.py            # Teste le stockage Book
+│   │   ├── test_application.py        # Teste l'orchestration Book
+│   │   ├── test_filter.py             # Teste les filtres Book
+│   │   └── test_display.py            # Teste l'affichage Book
 │   │
-│   ├── job/                           # Tests du domaine Job
-│   │   ├── __init__.py               # Initialise le package de tests Job
-│   │   ├── test_config.py            # Vérifie la configuration des offres
-│   │   ├── test_model.py             # Vérifie le modèle Job
-│   │   ├── test_parser.py            # Vérifie le parsing et l'extraction des offres
-│   │   ├── test_service.py           # Vérifie le service de scraping des offres
-│   │   ├── test_storage.py           # Vérifie le stockage des offres
-│   │   ├── test_application.py       # Vérifie l'orchestration du traitement Job
-│   │   └── test_reader.py             # Vérifie la conversion des CSV en objets Job
+│   ├── job/                            # Tests du domaine Job
+│   │   ├── __init__.py                # Initialise les tests Job
+│   │   ├── test_config.py             # Teste la configuration Job
+│   │   ├── test_model.py              # Teste le modèle Job
+│   │   ├── test_parser.py             # Teste le parsing Job
+│   │   ├── test_service.py            # Teste le service Job
+│   │   ├── test_storage.py            # Teste le stockage Job
+│   │   ├── test_application.py        # Teste l'orchestration Job
+│   │   └── test_config.py             # Teste la configuration Job
 │   │
-│   ├── cli/                           # Tests de l'interface en ligne de commande
-│   │   ├── __init__.py               # Initialise le package de tests CLI
-│   │   └── test_arguments.py         # Vérifie l'analyse et la validation des arguments
+│   ├── cli/                            # Tests de l'interface CLI
+│   │   ├── __init__.py                # Initialise les tests CLI
+│   │   └── test_arguments.py          # Teste les arguments CLI
 │   │
-│   ├── data/                          # Tests des composants génériques de données
-│   │   ├── __init__.py               # Initialise le package de tests Data
-│   │   ├── test_csv_reader.py        # Vérifie la lecture générique des fichiers CSV
-│   │   └── test_csv_writer.py        # Vérifie l'écriture générique des fichiers CSV
+│   ├── data/                           # Tests des composants Data
+│   │   ├── __init__.py                # Initialise les tests Data
+│   │   ├── test_csv_reader.py         # Teste la lecture CSV
+│   │   └── test_csv_writer.py         # Teste l'écriture CSV
 │   │
-│   ├── test_config.py                 # Vérifie la configuration générale
-│   ├── test_helpers.py                # Vérifie les fonctions utilitaires
-│   ├── test_http_client.py            # Vérifie les requêtes HTTP et les redirections
-│   ├── test_logger.py                 # Vérifie la configuration et le fonctionnement des logs
-│   ├── test_main.py                   # Vérifie le point d'entrée de l'application
-│   ├── test_security.py               # Vérifie les protections de sécurité
-│   └── test_url.py                    # Vérifie la construction et la manipulation des URLs
+│   ├── test_config.py                 # Teste la configuration générale
+│   ├── test_helpers.py                # Teste les fonctions utilitaires
+│   ├── test_http_client.py            # Teste les requêtes HTTP
+│   ├── test_logger.py                 # Teste la gestion des logs
+│   ├── test_main.py                   # Teste le point d'entrée
+│   ├── test_security.py               # Teste les protections de sécurité
+│   ├── test_url.py                    # Teste les fonctions liées aux URLs
+│   ├── test_collection.py             # Teste les limites de collections
+│   └── test_pagination.py             # Teste la pagination commune
 │
-├── config.py                          # Centralise les paramètres généraux de l'application
-├── main.py                            # Point d'entrée principal de l'application
-├── requirements.txt                   # Liste les dépendances Python du projet
-├── README.md                          # Présente le projet, son architecture et son avancement
-├── .gitignore                         # Définit les fichiers ignorés par Git
-└── LICENSE                            # Définit les conditions d'utilisation du projet
+├── config.py                           # Configuration générale de l'application
+├── main.py                             # Point d'entrée principal
+├── requirements.txt                    # Dépendances Python
+├── README.md                           # Documentation synthétique du projet
+├── .gitignore                          # Fichiers ignorés par Git
+└── LICENSE                             # Licence du projet

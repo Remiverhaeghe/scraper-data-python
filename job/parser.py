@@ -2,7 +2,6 @@
 # Analyse et extraction des données HTML des offres d'emploi
 # ============================================================================
 
-
 from bs4 import BeautifulSoup
 
 from job.model import Job
@@ -15,21 +14,32 @@ logger = get_logger(__name__)
 
 def parse_html(pHtml):
     """
-    Transforme le HTML en objet BeautifulSoup.
+    Analyse le contenu HTML d'une page.
+
+    :param pHtml: Contenu HTML de la page.
+    :return: Document HTML analysé.
     """
 
-    rSoup = BeautifulSoup(pHtml, "html.parser")
+    rSoup = BeautifulSoup(
+        pHtml,
+        "html.parser"
+    )
+
     return rSoup
 
 
 def extract_job(pSoup):
     """
-    Extrait une offre d'emploi depuis le HTML.
+    Extrait une offre d'emploi depuis un document HTML.
+
+    :param pSoup: Élément HTML contenant l'offre.
+    :return: Offre d'emploi extraite.
     """
 
     logger.info("Extraction d'une offre d'emploi")
 
     vLink = pSoup.select_one("a")
+
     vJob = Job(
         title=extract_text(pSoup, "h1"),
         company=extract_text(pSoup, ".company"),
@@ -39,24 +49,63 @@ def extract_job(pSoup):
         url=vLink.get("href", "") if vLink else ""
     )
 
-    logger.info("Offre extraite : %s", vJob.title)
+    logger.info(
+        "Offre extraite : %s",
+        vJob.title
+    )
 
     rJob = vJob
+
     return rJob
 
 
-def extract_jobs(pSoup):
+def extract_jobs(pSoup, pCurrentUrl):
     """
     Extrait plusieurs offres depuis une page HTML.
+
+    :param pSoup: Document HTML analysé.
+    :param pCurrentUrl: URL de la page courante.
+    :return: Liste des offres extraites.
     """
 
     vJobElements = pSoup.select(".job")
+
     logger.info(
         "%s offre(s) trouvée(s) dans la page",
         len(vJobElements)
     )
 
-    vJobs = [extract_job(vJob) for vJob in vJobElements]
+    vJobs = [
+        extract_job(vJob)
+        for vJob in vJobElements
+    ]
 
     rJobs = vJobs
+
     return rJobs
+
+
+def extract_next_url(pSoup, pCurrentUrl):
+    """
+    Extrait l'URL de la page suivante.
+
+    :param pSoup: Document HTML analysé.
+    :param pCurrentUrl: URL de la page courante.
+    :return: URL de la page suivante ou une chaîne vide.
+    """
+
+    vNextLink = pSoup.select_one(
+        'a[rel="next"]'
+    )
+
+    vNextUrl = ""
+
+    if vNextLink:
+        vNextUrl = vNextLink.get(
+            "href",
+            ""
+        )
+
+    rNextUrl = vNextUrl
+
+    return rNextUrl

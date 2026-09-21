@@ -410,3 +410,263 @@ def test_fetch_page_rejects_chunked_response_over_size_limit():
                 "https://example.com",
                 vConfig
             )
+
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_retries_after_request_error(mock_get):
+    """
+    Vérifie qu'une nouvelle tentative est effectuée après une erreur réseau.
+    """
+
+    vResponse = Mock()
+    vResponse.status_code = 200
+    vResponse.is_redirect = False
+    vResponse.headers = {}
+    vResponse.apparent_encoding = "utf-8"
+    vResponse.iter_content.return_value = [
+        b"<html>Test</html>"
+    ]
+
+    mock_get.side_effect = [
+        requests.RequestException("Erreur de connexion"),
+        vResponse
+    ]
+
+    vConfig = ScrapingConfig(
+        retry_count=1,
+        retry_delay=0
+    )
+
+    rHtml = fetch_page(
+        "https://example.com",
+        vConfig
+    )
+
+    assert rHtml == "<html>Test</html>"
+    assert mock_get.call_count == 2
+
+
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_stops_after_max_retries(mock_get):
+    """
+    Vérifie que le nombre maximum de tentatives est respecté.
+    """
+
+    mock_get.side_effect = requests.RequestException(
+        "Erreur de connexion"
+    )
+
+    vConfig = ScrapingConfig(
+        retry_count=2,
+        retry_delay=0
+    )
+
+    with pytest.raises(requests.RequestException):
+        fetch_page(
+            "https://example.com",
+            vConfig
+        )
+
+    assert mock_get.call_count == 3
+
+
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_without_retry_only_attempts_once(mock_get):
+    """
+    Vérifie qu'aucune nouvelle tentative n'est effectuée lorsque
+    le retry est désactivé.
+    """
+
+    mock_get.side_effect = requests.RequestException(
+        "Erreur de connexion"
+    )
+
+    vConfig = ScrapingConfig(
+        retry_count=0
+    )
+
+    with pytest.raises(requests.RequestException):
+        fetch_page(
+            "https://example.com",
+            vConfig
+        )
+
+    assert mock_get.call_count == 1
+
+
+@patch("scraper.http_client.time.sleep")
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_waits_before_retry(mock_get, mock_sleep):
+    """
+    Vérifie que le délai configuré est appliqué avant une nouvelle tentative.
+    """
+
+    vResponse = Mock()
+    vResponse.status_code = 200
+    vResponse.is_redirect = False
+    vResponse.headers = {}
+    vResponse.apparent_encoding = "utf-8"
+    vResponse.iter_content.return_value = [
+        b"<html>Test</html>"
+    ]
+
+    mock_get.side_effect = [
+        requests.RequestException("Erreur de connexion"),
+        vResponse
+    ]
+
+    vConfig = ScrapingConfig(
+        retry_count=1,
+        retry_delay=2
+    )
+
+    rHtml = fetch_page(
+        "https://example.com",
+        vConfig
+    )
+
+    assert rHtml == "<html>Test</html>"
+    mock_sleep.assert_called_once_with(2)
+    assert mock_get.call_count == 2
+
+@patch("scraper.http_client.time.sleep")
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_applies_delay_between_requests(
+    mock_get,
+    mock_sleep
+):
+    """
+    Vérifie que le délai est appliqué entre deux requêtes HTTP.
+    """
+
+    vFirstResponse = Mock()
+    vFirstResponse.status_code = 302
+    vFirstResponse.is_redirect = True
+    vFirstResponse.headers = {
+        "Location": "https://example.com/page-2"
+    }
+
+    vSecondResponse = Mock()
+    vSecondResponse.status_code = 200
+    vSecondResponse.is_redirect = False
+    vSecondResponse.headers = {}
+    vSecondResponse.apparent_encoding = "utf-8"
+    vSecondResponse.iter_content.return_value = [
+        b"<html>Page 2</html>"
+    ]
+
+    mock_get.side_effect = [
+        vFirstResponse,
+        vSecondResponse
+    ]
+
+    vConfig = ScrapingConfig(
+        delay=2
+    )
+
+    rHtml = fetch_page(
+        "https://example.com",
+        vConfig
+    )
+
+    assert rHtml == "<html>Page 2</html>"
+    mock_sleep.assert_called_once_with(2)
+    assert mock_get.call_count == 2
+
+
+@patch("scraper.http_client.time.sleep")
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_applies_delay_between_multiple_redirects(
+    mock_get,
+    mock_sleep
+):
+    """
+    Vérifie que le délai est appliqué entre plusieurs requêtes.
+    """
+
+    vFirstResponse = Mock()
+    vFirstResponse.status_code = 302
+    vFirstResponse.is_redirect = True
+    vFirstResponse.headers = {
+        "Location": "https://example.com/page-2"
+    }
+
+    vSecondResponse = Mock()
+    vSecondResponse.status_code = 302
+    vSecondResponse.is_redirect = True
+    vSecondResponse.headers = {
+        "Location": "https://example.com/page-3"
+    }
+
+    vThirdResponse = Mock()
+    vThirdResponse.status_code = 200
+    vThirdResponse.is_redirect = False
+    vThirdResponse.headers = {}
+    vThirdResponse.apparent_encoding = "utf-8"
+    vThirdResponse.iter_content.return_value = [
+        b"<html>Page 3</html>"
+    ]
+
+    mock_get.side_effect = [
+        vFirstResponse,
+        vSecondResponse,
+        vThirdResponse
+    ]
+
+    vConfig = ScrapingConfig(
+        delay=2
+    )
+
+    rHtml = fetch_page(
+        "https://example.com",
+        vConfig
+    )
+
+    assert rHtml == "<html>Page 3</html>"
+    assert mock_sleep.call_count == 2
+    mock_sleep.assert_any_call(2)
+    assert mock_get.call_count == 3
+
+
+@patch("scraper.http_client.time.sleep")
+@patch("scraper.http_client.requests.get")
+def test_fetch_page_without_delay_does_not_sleep(
+    mock_get,
+    mock_sleep
+):
+    """
+    Vérifie qu'aucun délai n'est appliqué lorsque delay vaut zéro.
+    """
+
+    vFirstResponse = Mock()
+    vFirstResponse.status_code = 302
+    vFirstResponse.is_redirect = True
+    vFirstResponse.headers = {
+        "Location": "https://example.com/page-2"
+    }
+
+    vSecondResponse = Mock()
+    vSecondResponse.status_code = 200
+    vSecondResponse.is_redirect = False
+    vSecondResponse.headers = {}
+    vSecondResponse.apparent_encoding = "utf-8"
+    vSecondResponse.iter_content.return_value = [
+        b"<html>Page 2</html>"
+    ]
+
+    mock_get.side_effect = [
+        vFirstResponse,
+        vSecondResponse
+    ]
+
+    vConfig = ScrapingConfig(
+        delay=0
+    )
+
+    rHtml = fetch_page(
+        "https://example.com",
+        vConfig
+    )
+
+    assert rHtml == "<html>Page 2</html>"
+    mock_sleep.assert_not_called()
+    assert mock_get.call_count == 2

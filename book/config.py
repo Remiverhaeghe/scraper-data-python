@@ -17,9 +17,6 @@ class BookScrapingConfig(ScrapingConfig):
     # Première page à scraper
     start_page: int = 1
 
-    # Nombre maximum de pages à scraper
-    max_pages: int | None = None
-
     # Évite de récupérer plusieurs fois le même livre
     avoid_duplicates: bool = True
 
@@ -53,12 +50,6 @@ class BookScrapingConfig(ScrapingConfig):
         if self.start_page <= 0:
             raise ValueError(
                 "start_page doit être supérieur à 0"
-            )
-
-        # Vérification du nombre maximum de pages
-        if self.max_pages is not None and self.max_pages <= 0:
-            raise ValueError(
-                "max_pages doit être supérieur à 0"
             )
 
         # Vérification du prix maximum

@@ -1,47 +1,45 @@
 # ============================================================================
-# Tests du parser HTML des offres d'emploi
+# Tests du parsing et de l'extraction des offres d'emploi
 # ============================================================================
-
 
 from job.model import Job
 from job.parser import (
     extract_job,
     extract_jobs,
+    extract_next_url,
     parse_html
 )
 
 
 def test_parse_html():
     """
-    Vérifie la conversion du HTML en objet BeautifulSoup.
+    Vérifie que le HTML est correctement analysé.
     """
 
-    vHtml = "<h1>Développeur Python</h1>"
+    vHtml = "<html><body><h1>Développeur Python</h1></body></html>"
 
-    vSoup = parse_html(
-        vHtml
-    )
+    vSoup = parse_html(vHtml)
 
     assert vSoup.h1.text == "Développeur Python"
 
 
 def test_extract_job():
     """
-    Vérifie l'extraction d'une offre.
+    Vérifie l'extraction d'une offre complète.
     """
 
     vHtml = """
-    <h1>Développeur Python</h1>
-    <div class="company">OpenAI</div>
-    <div class="location">Paris</div>
-    <div class="contract">CDI</div>
-    <div class="date">31/08/2026</div>
-    <a href="https://example.com/job">Voir l'offre</a>
+    <div class="job">
+        <h1>Développeur Python</h1>
+        <span class="company">Entreprise A</span>
+        <span class="location">Paris</span>
+        <span class="contract">CDI</span>
+        <span class="date">2026-09-20</span>
+        <a href="https://example.com/job/1">Voir l'offre</a>
+    </div>
     """
 
-    vSoup = parse_html(
-        vHtml
-    )
+    vSoup = parse_html(vHtml)
 
     vJob = extract_job(
         vSoup
@@ -49,39 +47,58 @@ def test_extract_job():
 
     assert isinstance(vJob, Job)
     assert vJob.title == "Développeur Python"
-    assert vJob.company == "OpenAI"
+    assert vJob.company == "Entreprise A"
     assert vJob.location == "Paris"
     assert vJob.contract == "CDI"
-    assert vJob.date == "31/08/2026"
-    assert vJob.url == "https://example.com/job"
+    assert vJob.date == "2026-09-20"
+    assert vJob.url == "https://example.com/job/1"
 
 
-def test_extract_job_with_missing_data():
+def test_extract_job_without_link():
     """
-    Vérifie l'extraction d'une offre incomplète.
+    Vérifie l'extraction d'une offre sans lien.
     """
 
     vHtml = """
-    <h1>Développeur Python</h1>
-    <div class="company">OpenAI</div>
-    <div class="location">Paris</div>
-    <a href="https://example.com/job">Voir l'offre</a>
+    <div class="job">
+        <h1>Développeur Python</h1>
+        <span class="company">Entreprise A</span>
+    </div>
     """
 
-    vSoup = parse_html(
-        vHtml
-    )
+    vSoup = parse_html(vHtml)
 
     vJob = extract_job(
         vSoup
     )
 
     assert vJob.title == "Développeur Python"
-    assert vJob.company == "OpenAI"
-    assert vJob.location == "Paris"
+    assert vJob.url == ""
+
+
+def test_extract_job_with_missing_data():
+    """
+    Vérifie l'extraction d'une offre avec des données absentes.
+    """
+
+    vHtml = """
+    <div class="job">
+        <h1>Développeur Python</h1>
+    </div>
+    """
+
+    vSoup = parse_html(vHtml)
+
+    vJob = extract_job(
+        vSoup
+    )
+
+    assert vJob.title == "Développeur Python"
+    assert vJob.company == ""
+    assert vJob.location == ""
     assert vJob.contract == ""
     assert vJob.date == ""
-    assert vJob.url == "https://example.com/job"
+    assert vJob.url == ""
 
 
 def test_extract_jobs():
@@ -92,69 +109,67 @@ def test_extract_jobs():
     vHtml = """
     <div class="job">
         <h1>Développeur Python</h1>
-        <div class="company">Entreprise A</div>
-        <div class="location">Paris</div>
-        <div class="contract">CDI</div>
-        <div class="date">31/08/2026</div>
-        <a href="https://example.com/job-1">Voir l'offre</a>
+        <span class="company">Entreprise A</span>
     </div>
 
     <div class="job">
         <h1>Développeur Java</h1>
-        <div class="company">Entreprise B</div>
-        <div class="location">Lille</div>
-        <div class="contract">CDD</div>
-        <div class="date">30/08/2026</div>
-        <a href="https://example.com/job-2">Voir l'offre</a>
-    </div>
-
-    <div class="job">
-        <h1>Développeur Web</h1>
-        <div class="company">Entreprise C</div>
-        <div class="location">Lyon</div>
-        <div class="contract">CDI</div>
-        <div class="date">29/08/2026</div>
-        <a href="https://example.com/job-3">Voir l'offre</a>
+        <span class="company">Entreprise B</span>
     </div>
     """
 
-    vSoup = parse_html(
-        vHtml
-    )
+    vSoup = parse_html(vHtml)
 
     vJobs = extract_jobs(
-        vSoup
+        vSoup,
+        "https://example.com/jobs"
     )
 
-    assert len(vJobs) == 3
+    assert len(vJobs) == 2
     assert vJobs[0].title == "Développeur Python"
     assert vJobs[1].title == "Développeur Java"
-    assert vJobs[2].title == "Développeur Web"
 
-def test_extract_job_without_link():
+
+def test_extract_next_url():
     """
-    Vérifie l'extraction d'une offre sans lien.
+    Vérifie l'extraction de l'URL de la page suivante.
     """
 
     vHtml = """
-    <h1>Développeur Python</h1>
-    <div class="company">OpenAI</div>
-    <div class="location">Paris</div>
-    <div class="contract">CDI</div>
-    <div class="date">31/08/2026</div>
+    <a rel="next" href="https://example.com/jobs?page=2">
+        Page suivante
+    </a>
     """
 
-    vSoup = parse_html(
-        vHtml
+    vSoup = parse_html(vHtml)
+
+    vNextUrl = extract_next_url(
+        vSoup,
+        "https://example.com/jobs"
     )
 
-    vJob = extract_job(
-        vSoup
+    assert vNextUrl == "https://example.com/jobs?page=2"
+
+
+def test_extract_next_url_without_next_page():
+    """
+    Vérifie qu'une chaîne vide est retournée lorsqu'il n'y a pas
+    de page suivante.
+    """
+
+    vHtml = """
+    <html>
+        <body>
+            <p>Dernière page</p>
+        </body>
+    </html>
+    """
+
+    vSoup = parse_html(vHtml)
+
+    vNextUrl = extract_next_url(
+        vSoup,
+        "https://example.com/jobs"
     )
 
-    assert vJob.title == "Développeur Python"
-    assert vJob.company == "OpenAI"
-    assert vJob.location == "Paris"
-    assert vJob.contract == "CDI"
-    assert vJob.date == "31/08/2026"
-    assert vJob.url == ""
+    assert vNextUrl == ""
