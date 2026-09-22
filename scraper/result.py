@@ -1,20 +1,21 @@
 # ============================================================================
-# Modèle commun représentant le résultat d'un scraping
+# Résultat générique d'une opération de scraping
 # ============================================================================
 
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+
+import pandas as pd
 
 
 @dataclass
 class ScrapingResult:
     """
-    Représente le résultat d'une opération de scraping.
+    Contient le résultat et les informations d'une opération de scraping.
     """
 
-    items: list[Any]
+    items: pd.DataFrame
     page_count: int
     duration_seconds: float
     started_at: datetime | None = None

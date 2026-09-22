@@ -3,10 +3,11 @@
 # ============================================================================
 
 
+import pandas as pd
+
 from unittest.mock import patch
 
 from book.config import BookScrapingConfig
-from book.model import Book
 from book.service import scrape_book, scrape_books
 
 
@@ -19,13 +20,13 @@ def test_scrape_book():
         timeout=30
     )
 
-    vBook = Book(
-        title="Python",
-        price=10.0,
-        availability="In stock",
-        rating=5,
-        url="https://books.toscrape.com/catalogue/python.html"
-    )
+    vBook = {
+        "title": "Python",
+        "price": 10.0,
+        "availability": "In stock",
+        "rating": 5,
+        "url": "https://books.toscrape.com/catalogue/python.html"
+    }
 
     with patch(
         "book.service.fetch_page",
@@ -65,12 +66,16 @@ def test_scrape_books():
         max_pages=2
     )
 
-    vBook = Book(
-        title="Python",
-        price=10.0,
-        availability="In stock",
-        rating=5,
-        url="https://books.toscrape.com/catalogue/python.html"
+    vBooks = pd.DataFrame(
+        [
+            {
+                "title": "Python",
+                "price": 10.0,
+                "availability": "In stock",
+                "rating": 5,
+                "url": "https://books.toscrape.com/catalogue/python.html"
+            }
+        ]
     )
 
     vSoup = object()
@@ -84,8 +89,8 @@ def test_scrape_books():
     ), patch(
         "book.service.extract_books",
         side_effect=[
-            [vBook],
-            [vBook]
+            vBooks,
+            vBooks
         ]
     ), patch(
         "book.service.extract_next_url",
@@ -100,8 +105,27 @@ def test_scrape_books():
             vConfig
         )
 
-    assert rResult.items == [
-        vBook
+    assert isinstance(
+        rResult.items,
+        pd.DataFrame
+    )
+
+    assert len(rResult.items) == 1
+
+    assert rResult.items["title"].tolist() == [
+        "Python"
+    ]
+
+    assert rResult.items["price"].tolist() == [
+        10.0
+    ]
+
+    assert rResult.items["rating"].tolist() == [
+        5
+    ]
+
+    assert rResult.items["url"].tolist() == [
+        "https://books.toscrape.com/catalogue/python.html"
     ]
 
     assert rResult.page_count == 2
@@ -132,29 +156,31 @@ def test_scrape_books_with_max_items():
         max_items=2
     )
 
-    vBooks = [
-        Book(
-            title="Book 1",
-            price=10.0,
-            availability="In stock",
-            rating=5,
-            url="https://books.toscrape.com/book1.html"
-        ),
-        Book(
-            title="Book 2",
-            price=20.0,
-            availability="In stock",
-            rating=4,
-            url="https://books.toscrape.com/book2.html"
-        ),
-        Book(
-            title="Book 3",
-            price=30.0,
-            availability="In stock",
-            rating=3,
-            url="https://books.toscrape.com/book3.html"
-        )
-    ]
+    vBooks = pd.DataFrame(
+        [
+            {
+                "title": "Book 1",
+                "price": 10.0,
+                "availability": "In stock",
+                "rating": 5,
+                "url": "https://books.toscrape.com/book1.html"
+            },
+            {
+                "title": "Book 2",
+                "price": 20.0,
+                "availability": "In stock",
+                "rating": 4,
+                "url": "https://books.toscrape.com/book2.html"
+            },
+            {
+                "title": "Book 3",
+                "price": 30.0,
+                "availability": "In stock",
+                "rating": 3,
+                "url": "https://books.toscrape.com/book3.html"
+            }
+        ]
+    )
 
     vSoup = object()
 
@@ -177,8 +203,22 @@ def test_scrape_books_with_max_items():
             vConfig
         )
 
+    assert isinstance(
+        rResult.items,
+        pd.DataFrame
+    )
+
     assert len(rResult.items) == 2
-    assert rResult.items == vBooks[:2]
+
+    assert rResult.items["title"].tolist() == [
+        "Book 1",
+        "Book 2"
+    ]
+
+    assert rResult.items["price"].tolist() == [
+        10.0,
+        20.0
+    ]
 
     assert rResult.page_count == 1
     assert rResult.duration_seconds >= 0
@@ -196,12 +236,16 @@ def test_scrape_books_with_max_pages():
         max_pages=1
     )
 
-    vBook = Book(
-        title="Python",
-        price=10.0,
-        availability="In stock",
-        rating=5,
-        url="https://books.toscrape.com/python.html"
+    vBooks = pd.DataFrame(
+        [
+            {
+                "title": "Python",
+                "price": 10.0,
+                "availability": "In stock",
+                "rating": 5,
+                "url": "https://books.toscrape.com/python.html"
+            }
+        ]
     )
 
     vSoup = object()
@@ -214,7 +258,7 @@ def test_scrape_books_with_max_pages():
         return_value=vSoup
     ), patch(
         "book.service.extract_books",
-        return_value=[vBook]
+        return_value=vBooks
     ), patch(
         "book.service.extract_next_url",
         return_value="https://books.toscrape.com/page-2.html"
@@ -225,8 +269,19 @@ def test_scrape_books_with_max_pages():
             vConfig
         )
 
-    assert rResult.items == [
-        vBook
+    assert isinstance(
+        rResult.items,
+        pd.DataFrame
+    )
+
+    assert len(rResult.items) == 1
+
+    assert rResult.items["title"].tolist() == [
+        "Python"
+    ]
+
+    assert rResult.items["url"].tolist() == [
+        "https://books.toscrape.com/python.html"
     ]
 
     assert rResult.page_count == 1

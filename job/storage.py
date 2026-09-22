@@ -13,9 +13,9 @@ logger = get_logger(__name__)
 
 def save_jobs(pJobs, pFilePath):
     """
-    Enregistre une liste d'offres d'emploi dans un fichier CSV.
+    Enregistre les offres d'emploi dans un fichier CSV.
 
-    :param pJobs: Liste des offres à enregistrer.
+    :param pJobs: DataFrame contenant les offres à enregistrer.
     :param pFilePath: Chemin du fichier CSV de destination.
     """
 

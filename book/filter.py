@@ -1,5 +1,5 @@
 # ============================================================================
-# Filtrage des données des livres
+# Filtrage spécifique des livres
 # ============================================================================
 
 
@@ -10,14 +10,20 @@ def filter_books(
     min_rating=None
 ):
     """
-    Filtre les livres selon leur titre, leur prix et leur note.
+    Filtre les livres selon les critères de recherche.
+
+    :param pBooks: DataFrame contenant les livres.
+    :param title: Titre recherché.
+    :param max_price: Prix maximum accepté.
+    :param min_rating: Note minimale acceptée.
+    :return: DataFrame contenant les livres filtrés.
     """
 
-    vResult = pBooks
+    vBooks = pBooks
 
     if title is not None:
-        vResult = vResult[
-            vResult["title"].str.contains(
+        vBooks = vBooks[
+            vBooks["title"].str.contains(
                 title,
                 case=False,
                 na=False,
@@ -26,15 +32,15 @@ def filter_books(
         ]
 
     if max_price is not None:
-        vResult = vResult[
-            vResult["price"] <= max_price
+        vBooks = vBooks[
+            vBooks["price"] <= max_price
         ]
 
     if min_rating is not None:
-        vResult = vResult[
-            vResult["rating"] >= min_rating
+        vBooks = vBooks[
+            vBooks["rating"] >= min_rating
         ]
 
-    rResult = vResult
+    rBooks = vBooks
 
-    return rResult
+    return rBooks

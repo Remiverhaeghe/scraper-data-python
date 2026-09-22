@@ -1,12 +1,17 @@
 # ============================================================================
-# Gestion commune de la pagination des scrapers
+# Gestion générique de la pagination du scraper
 # ============================================================================
 
 
 import time
 from datetime import datetime
 
-from scraper.collection import deduplicate_items, has_reached_limit
+import pandas as pd
+
+from scraper.collection import (
+    deduplicate_dataframe,
+    has_reached_limit
+)
 from scraper.result import ScrapingResult
 from utils.logger import get_logger
 
@@ -21,25 +26,25 @@ def scrape_paginated(
     pParseHtml,
     pExtractItems,
     pExtractNextUrl,
-    pGetItemKey=None
+    pDeduplicateColumn=None
 ):
     """
-    Parcourt plusieurs pages et récupère les éléments présents sur chaque page.
+    Scrape plusieurs pages et retourne les données sous forme de DataFrame.
 
     :param pUrl: URL de départ.
-    :param pConfig: Configuration commune du scraping.
-    :param pFetchPage: Fonction permettant de récupérer une page.
-    :param pParseHtml: Fonction permettant de parser le HTML.
-    :param pExtractItems: Fonction permettant d'extraire les éléments.
-    :param pExtractNextUrl: Fonction permettant de récupérer l'URL suivante.
-    :param pGetItemKey: Fonction permettant d'obtenir la clé unique d'un élément.
-    :return: Résultat du scraping paginé.
+    :param pConfig: Configuration du scraping.
+    :param pFetchPage: Fonction de récupération HTML.
+    :param pParseHtml: Fonction d'analyse HTML.
+    :param pExtractItems: Fonction d'extraction des éléments.
+    :param pExtractNextUrl: Fonction d'extraction de la page suivante.
+    :param pDeduplicateColumn: Colonne utilisée pour supprimer les doublons.
+    :return: Résultat du scraping.
     """
 
     vStartTime = time.perf_counter()
     vStartedAt = datetime.now()
 
-    vItems = []
+    vDataFrame = pd.DataFrame()
     vCurrentUrl = pUrl
     vPageCount = 0
     vStatus = "success"
@@ -47,16 +52,15 @@ def scrape_paginated(
 
     try:
         while vCurrentUrl:
-            # Vérification du nombre maximum de pages
+
             if (
                 pConfig.max_pages is not None
                 and vPageCount >= pConfig.max_pages
             ):
                 break
 
-            # Vérification du nombre maximum d'éléments
             if has_reached_limit(
-                vItems,
+                vDataFrame,
                 pConfig.max_items
             ):
                 break
@@ -78,31 +82,44 @@ def scrape_paginated(
                 vHtml
             )
 
-            vItems.extend(
-                pExtractItems(
-                    vSoup,
-                    vCurrentUrl
-                )
+            vPageDataFrame = pExtractItems(
+                vSoup,
+                vCurrentUrl
             )
 
-            # Suppression des doublons
+            if not vPageDataFrame.empty:
+
+                if vDataFrame.empty:
+                    vDataFrame = vPageDataFrame.copy()
+                else:
+                    vDataFrame = pd.concat(
+                        [
+                            vDataFrame,
+                            vPageDataFrame
+                        ],
+                        ignore_index=True
+                    )
+
             if (
                 pConfig.avoid_duplicates
-                and pGetItemKey is not None
+                and pDeduplicateColumn is not None
+                and pDeduplicateColumn in vDataFrame.columns
             ):
-                vItems = deduplicate_items(
-                    vItems,
-                    pGetItemKey
+                vDataFrame = deduplicate_dataframe(
+                    vDataFrame,
+                    pDeduplicateColumn
                 )
 
-            # Limitation du nombre maximum d'éléments
             if has_reached_limit(
-                vItems,
+                vDataFrame,
                 pConfig.max_items
             ):
-                vItems = vItems[
+                vDataFrame = vDataFrame.iloc[
                     :pConfig.max_items
-                ]
+                ].reset_index(
+                    drop=True
+                )
+
                 break
 
             vCurrentUrl = pExtractNextUrl(
@@ -120,10 +137,13 @@ def scrape_paginated(
             vException
         )
 
-    vDuration = time.perf_counter() - vStartTime
+    vDuration = (
+        time.perf_counter()
+        - vStartTime
+    )
 
     rResult = ScrapingResult(
-        items=vItems,
+        items=vDataFrame,
         page_count=vPageCount,
         duration_seconds=vDuration,
         started_at=vStartedAt,

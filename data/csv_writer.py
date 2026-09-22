@@ -3,17 +3,20 @@
 # ============================================================================
 
 
-import csv
 from pathlib import Path
 
+import pandas as pd
 
-def save_csv(pItems, pFilePath, pColumns):
+
+def save_csv(
+    pDataFrame,
+    pFilePath,
+    pColumns
+):
     """
-    Enregistre une liste d'objets dans un fichier CSV.
+    Enregistre un DataFrame dans un fichier CSV.
 
-    Chaque objet doit fournir une méthode to_csv_row().
-
-    :param pItems: Liste des objets à enregistrer.
+    :param pDataFrame: DataFrame contenant les données à enregistrer.
     :param pFilePath: Chemin du fichier CSV de destination.
     :param pColumns: Colonnes du fichier CSV.
     """
@@ -27,21 +30,12 @@ def save_csv(pItems, pFilePath, pColumns):
         exist_ok=True
     )
 
-    with vFilePath.open(
-        mode="w",
-        encoding="utf-8",
-        newline=""
-    ) as vFile:
+    vDataFrame = pDataFrame[
+        pColumns
+    ]
 
-        vWriter = csv.writer(
-            vFile
-        )
-
-        vWriter.writerow(
-            pColumns
-        )
-
-        for vItem in pItems:
-            vWriter.writerow(
-                vItem.to_csv_row()
-            )
+    vDataFrame.to_csv(
+        vFilePath,
+        index=False,
+        encoding="utf-8"
+    )

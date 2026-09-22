@@ -23,7 +23,7 @@ def scrape_job(pUrl, pConfig):
 
     :param pUrl: URL de l'offre.
     :param pConfig: Configuration du scraping.
-    :return: Offre d'emploi extraite.
+    :return: Données de l'offre extraite.
     """
 
     logger.info(
@@ -75,7 +75,7 @@ def scrape_jobs(pUrl, pConfig):
         parse_html,
         extract_jobs,
         extract_next_url,
-        lambda pItem: pItem.url
+        "url"
     )
 
     logger.info(

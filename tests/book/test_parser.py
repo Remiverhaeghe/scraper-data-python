@@ -3,9 +3,9 @@
 # ============================================================================
 
 
+import pandas as pd
 import pytest
 
-from book.model import Book
 from book.parser import (
     extract_book,
     extract_books,
@@ -60,12 +60,12 @@ def test_extract_book():
         "https://books.toscrape.com/"
     )
 
-    assert isinstance(vBook, Book)
-    assert vBook.title == "A Light in the Attic"
-    assert vBook.price == 51.77
-    assert vBook.availability == "In stock"
-    assert vBook.rating == 3
-    assert vBook.url == (
+    assert isinstance(vBook, dict)
+    assert vBook["title"] == "A Light in the Attic"
+    assert vBook["price"] == 51.77
+    assert vBook["availability"] == "In stock"
+    assert vBook["rating"] == 3
+    assert vBook["url"] == (
         "https://books.toscrape.com/"
         "catalogue/a-light-in-the-attic_1000/index.html"
     )
@@ -105,20 +105,21 @@ def test_extract_books():
         "https://books.toscrape.com/catalogue/"
     )
 
+    assert isinstance(vBooks, pd.DataFrame)
     assert len(vBooks) == 2
 
-    assert vBooks[0].title == "A Light in the Attic"
-    assert vBooks[0].price == 51.77
-    assert vBooks[0].rating == 3
-    assert vBooks[0].url == (
+    assert vBooks.iloc[0]["title"] == "A Light in the Attic"
+    assert vBooks.iloc[0]["price"] == 51.77
+    assert vBooks.iloc[0]["rating"] == 3
+    assert vBooks.iloc[0]["url"] == (
         "https://books.toscrape.com/catalogue/"
         "book-1.html"
     )
 
-    assert vBooks[1].title == "Tipping the Velvet"
-    assert vBooks[1].price == 53.74
-    assert vBooks[1].rating == 1
-    assert vBooks[1].url == (
+    assert vBooks.iloc[1]["title"] == "Tipping the Velvet"
+    assert vBooks.iloc[1]["price"] == 53.74
+    assert vBooks.iloc[1]["rating"] == 1
+    assert vBooks.iloc[1]["url"] == (
         "https://books.toscrape.com/catalogue/"
         "book-2.html"
     )
@@ -223,16 +224,16 @@ def test_extract_book_with_missing_data():
         "https://books.toscrape.com/"
     )
 
-    assert vBook.title == "Mon livre"
-    assert vBook.price == 0.0
-    assert vBook.availability == ""
-    assert vBook.rating == 0
-    assert vBook.url == "https://books.toscrape.com/book.html"
+    assert vBook["title"] == "Mon livre"
+    assert vBook["price"] == 0.0
+    assert vBook["availability"] == ""
+    assert vBook["rating"] == 0
+    assert vBook["url"] == "https://books.toscrape.com/book.html"
 
 
 def test_extract_books_without_books():
     """
-    Vérifie qu'une page sans livre retourne une liste vide.
+    Vérifie qu'une page sans livre retourne un DataFrame vide.
     """
 
     vHtml = """
@@ -252,7 +253,8 @@ def test_extract_books_without_books():
         "https://books.toscrape.com/"
     )
 
-    assert vBooks == []
+    assert isinstance(vBooks, pd.DataFrame)
+    assert vBooks.empty
 
 
 def test_extract_book_without_title():
@@ -277,11 +279,11 @@ def test_extract_book_without_title():
         "https://books.toscrape.com/"
     )
 
-    assert vBook.title == ""
-    assert vBook.price == 10.00
-    assert vBook.availability == "In stock"
-    assert vBook.rating == 3
-    assert vBook.url == ""
+    assert vBook["title"] == ""
+    assert vBook["price"] == 10.00
+    assert vBook["availability"] == "In stock"
+    assert vBook["rating"] == 3
+    assert vBook["url"] == ""
 
 
 def test_extract_book_without_url():
@@ -309,8 +311,8 @@ def test_extract_book_without_url():
         "https://books.toscrape.com/"
     )
 
-    assert vBook.title == "Mon livre"
-    assert vBook.price == 10.00
-    assert vBook.availability == "In stock"
-    assert vBook.rating == 3
-    assert vBook.url == ""
+    assert vBook["title"] == "Mon livre"
+    assert vBook["price"] == 10.00
+    assert vBook["availability"] == "In stock"
+    assert vBook["rating"] == 3
+    assert vBook["url"] == ""

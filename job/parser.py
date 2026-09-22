@@ -3,9 +3,9 @@
 # ============================================================================
 
 
+import pandas as pd
 from bs4 import BeautifulSoup
 
-from job.model import Job
 from utils.helpers import extract_text
 from utils.logger import get_logger
 
@@ -31,65 +31,70 @@ def parse_html(pHtml):
 
 def extract_job(pSoup):
     """
-    Extrait une offre d'emploi depuis un document HTML.
-
-    Les informations qui ne sont pas encore disponibles dans
-    la source HTML sont initialisées à None ou à une chaîne vide.
+    Extrait les données d'une offre d'emploi.
 
     :param pSoup: Élément HTML contenant l'offre.
-    :return: Offre d'emploi extraite.
+    :return: Dictionnaire contenant les données extraites.
     """
 
-    logger.info("Extraction d'une offre d'emploi")
+    logger.info(
+        "Extraction d'une offre d'emploi"
+    )
 
-    vLink = pSoup.select_one("a")
+    vLink = pSoup.select_one(
+        "a"
+    )
 
-    vJob = Job(
-        title=extract_text(
+    vJob = {
+        "title": extract_text(
             pSoup,
             "h1"
         ),
-        company=extract_text(
+        "company": extract_text(
             pSoup,
             ".company"
         ),
-        location=extract_text(
+        "location": extract_text(
             pSoup,
             ".location"
         ),
-        city="",
-        postal_code="",
-        distance_km=None,
-        contract=extract_text(
+        "city": "",
+        "postal_code": "",
+        "distance_km": None,
+        "contract": extract_text(
             pSoup,
             ".contract"
         ),
-        salary_min=None,
-        salary_max=None,
-        salary_period=None,
-        remote=None,
-        remote_days=None,
-        remote_type=None,
-        nearest_metro=None,
-        metro_distance_km=None,
-        date=extract_text(
+        "salary_min": None,
+        "salary_max": None,
+        "salary_period": None,
+        "remote": None,
+        "remote_days": None,
+        "remote_type": None,
+        "nearest_metro": None,
+        "metro_distance_km": None,
+        "date": extract_text(
             pSoup,
             ".date"
         ),
-        url=vLink.get(
-            "href",
-            ""
-        ) if vLink else "",
-        description="",
-        missions="",
-        requirements="",
-        education="",
-        skills=""
-    )
+        "url": (
+            vLink.get(
+                "href",
+                ""
+            )
+            if vLink
+            else ""
+        ),
+        "description": "",
+        "missions": "",
+        "requirements": "",
+        "education": "",
+        "skills": ""
+    }
 
     logger.info(
         "Offre extraite : %s",
-        vJob.title
+        vJob["title"]
     )
 
     rJob = vJob
@@ -103,7 +108,7 @@ def extract_jobs(pSoup, pCurrentUrl):
 
     :param pSoup: Document HTML analysé.
     :param pCurrentUrl: URL de la page courante.
-    :return: Liste des offres extraites.
+    :return: DataFrame contenant les offres extraites.
     """
 
     vJobElements = pSoup.select(
@@ -120,7 +125,9 @@ def extract_jobs(pSoup, pCurrentUrl):
         for vJob in vJobElements
     ]
 
-    rJobs = vJobs
+    rJobs = pd.DataFrame(
+        vJobs
+    )
 
     return rJobs
 
@@ -130,7 +137,7 @@ def extract_next_url(pSoup, pCurrentUrl):
     Extrait l'URL de la page suivante.
 
     :param pSoup: Document HTML de la page courante.
-    :param pCurrentUrl: URL de la page courante.
+    :param pCurrentUrl: URL de la page suivante.
     :return: URL de la page suivante ou une chaîne vide.
     """
 

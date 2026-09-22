@@ -3,11 +3,10 @@
 # ============================================================================
 
 
-import pytest
+import pandas as pd
 
 from unittest.mock import patch
 
-from job.model import Job
 from job.service import scrape_job, scrape_jobs
 from scraper.config import ScrapingConfig
 
@@ -47,9 +46,9 @@ def test_scrape_job():
         vConfig
     )
 
-    assert isinstance(vJob, Job)
-    assert vJob.title == "Développeur Python"
-    assert vJob.company == "Entreprise A"
+    assert isinstance(vJob, dict)
+    assert vJob["title"] == "Développeur Python"
+    assert vJob["company"] == "Entreprise A"
 
 
 def test_scrape_jobs():
@@ -96,9 +95,17 @@ def test_scrape_jobs():
         vConfig
     )
 
+    assert isinstance(vResult.items, pd.DataFrame)
     assert len(vResult.items) == 2
-    assert vResult.items[0].title == "Développeur Python"
-    assert vResult.items[1].title == "Développeur Java"
+    assert vResult.items["title"].tolist() == [
+        "Développeur Python",
+        "Développeur Java"
+    ]
+
+    assert vResult.items["company"].tolist() == [
+        "Entreprise A",
+        "Entreprise B"
+    ]
 
     assert vResult.page_count == 1
     assert vResult.duration_seconds >= 0
@@ -114,26 +121,24 @@ def test_scrape_jobs_with_multiple_pages():
         max_pages=2
     )
 
-    vJob1 = Job(
-        title="Développeur Python",
-        company="Entreprise A",
-        location="Paris",
-        contract="CDI",
-        date="31/08/2026",
-        url="https://example.com/job-1"
-    )
-
-    vJob2 = Job(
-        title="Développeur Java",
-        company="Entreprise B",
-        location="Lille",
-        contract="CDD",
-        date="30/08/2026",
-        url="https://example.com/job-2"
-    )
-
     vSoup1 = object()
     vSoup2 = object()
+
+    vPage1 = pd.DataFrame([
+        {
+            "title": "Développeur Python",
+            "company": "Entreprise A",
+            "url": "https://example.com/job-1"
+        }
+    ])
+
+    vPage2 = pd.DataFrame([
+        {
+            "title": "Développeur Java",
+            "company": "Entreprise B",
+            "url": "https://example.com/job-2"
+        }
+    ])
 
     with patch(
         "job.service.fetch_page",
@@ -150,8 +155,8 @@ def test_scrape_jobs_with_multiple_pages():
     ), patch(
         "job.service.extract_jobs",
         side_effect=[
-            [vJob1],
-            [vJob2]
+            vPage1,
+            vPage2
         ]
     ), patch(
         "job.service.extract_next_url",
@@ -166,14 +171,23 @@ def test_scrape_jobs_with_multiple_pages():
             vConfig
         )
 
-    assert vResult.items == [
-        vJob1,
-        vJob2
+    assert vResult.items["title"].tolist() == [
+        "Développeur Python",
+        "Développeur Java"
+    ]
+
+    assert vResult.items["company"].tolist() == [
+        "Entreprise A",
+        "Entreprise B"
+    ]
+
+    assert vResult.items["url"].tolist() == [
+        "https://example.com/job-1",
+        "https://example.com/job-2"
     ]
 
     assert vResult.page_count == 2
     assert vResult.duration_seconds >= 0
-
     assert vFetchPage.call_count == 2
 
 
@@ -218,7 +232,7 @@ def test_scrape_jobs_respects_max_items():
         )
 
     assert len(vResult.items) == 1
-    assert vResult.items[0].title == "Développeur Python"
+    assert vResult.items.iloc[0]["title"] == "Développeur Python"
 
     assert vResult.page_count == 1
     assert vResult.duration_seconds >= 0
@@ -336,7 +350,8 @@ def test_scrape_jobs_returns_error_result_when_fetch_fails():
             vConfig
         )
 
-    assert vResult.items == []
+    assert isinstance(vResult.items, pd.DataFrame)
+    assert vResult.items.empty
     assert vResult.page_count == 1
     assert vResult.duration_seconds >= 0
     assert vResult.started_at is not None

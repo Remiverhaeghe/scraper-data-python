@@ -13,9 +13,9 @@ logger = get_logger(__name__)
 
 def save_books(pBooks, pFilePath):
     """
-    Enregistre une liste de livres dans un fichier CSV.
+    Enregistre les livres dans un fichier CSV.
 
-    :param pBooks: Liste des livres à enregistrer.
+    :param pBooks: DataFrame contenant les livres.
     :param pFilePath: Chemin du fichier CSV de destination.
     """
 

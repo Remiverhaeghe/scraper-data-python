@@ -5,48 +5,30 @@
 
 import csv
 
+import pandas as pd
+
 from data.csv_writer import save_csv
-
-
-class CsvTestItem:
-    """
-    Objet de test permettant de vérifier l'écriture générique.
-    """
-
-    def __init__(self, pName, pValue):
-        self.name = pName
-        self.value = pValue
-
-    def to_csv_row(self):
-        """
-        Retourne les données de l'objet sous forme de ligne CSV.
-        """
-
-        rRow = [
-            self.name,
-            self.value
-        ]
-
-        return rRow
 
 
 def test_save_csv(tmp_path):
     """
-    Vérifie l'enregistrement d'objets dans un fichier CSV.
+    Vérifie l'enregistrement d'un DataFrame dans un fichier CSV.
     """
 
     vFilePath = tmp_path / "data.csv"
 
-    vItems = [
-        CsvTestItem(
-            "Element 1",
-            10
-        ),
-        CsvTestItem(
-            "Element 2",
-            20
-        )
-    ]
+    vDataFrame = pd.DataFrame(
+        [
+            {
+                "name": "Element 1",
+                "value": 10
+            },
+            {
+                "name": "Element 2",
+                "value": 20
+            }
+        ]
+    )
 
     vColumns = [
         "name",
@@ -54,7 +36,7 @@ def test_save_csv(tmp_path):
     ]
 
     save_csv(
-        vItems,
+        vDataFrame,
         vFilePath,
         vColumns
     )
@@ -80,10 +62,17 @@ def test_save_csv(tmp_path):
 
 def test_save_empty_csv(tmp_path):
     """
-    Vérifie l'enregistrement d'une liste vide.
+    Vérifie l'enregistrement d'un DataFrame vide.
     """
 
     vFilePath = tmp_path / "data.csv"
+
+    vDataFrame = pd.DataFrame(
+        columns=[
+            "name",
+            "value"
+        ]
+    )
 
     vColumns = [
         "name",
@@ -91,7 +80,7 @@ def test_save_empty_csv(tmp_path):
     ]
 
     save_csv(
-        [],
+        vDataFrame,
         vFilePath,
         vColumns
     )

@@ -3,6 +3,8 @@
 # ============================================================================
 
 
+import pandas as pd
+
 from scraper.pagination import scrape_paginated
 
 
@@ -22,8 +24,14 @@ def test_scrape_paginated_scrapes_multiple_pages():
     }
 
     vItems = {
-        "page1": ["A", "B"],
-        "page2": ["C", "D"]
+        "page1": pd.DataFrame([
+            {"url": "A"},
+            {"url": "B"}
+        ]),
+        "page2": pd.DataFrame([
+            {"url": "C"},
+            {"url": "D"}
+        ])
     }
 
     class Config:
@@ -52,7 +60,7 @@ def test_scrape_paginated_scrapes_multiple_pages():
         extract_next_url
     )
 
-    assert rResult.items == [
+    assert rResult.items["url"].tolist() == [
         "A",
         "B",
         "C",
@@ -77,8 +85,14 @@ def test_scrape_paginated_respects_max_pages():
     }
 
     vItems = {
-        "page1": ["A", "B"],
-        "page2": ["C", "D"]
+        "page1": pd.DataFrame([
+            {"url": "A"},
+            {"url": "B"}
+        ]),
+        "page2": pd.DataFrame([
+            {"url": "C"},
+            {"url": "D"}
+        ])
     }
 
     class Config:
@@ -107,7 +121,7 @@ def test_scrape_paginated_respects_max_pages():
         extract_next_url
     )
 
-    assert rResult.items == [
+    assert rResult.items["url"].tolist() == [
         "A",
         "B"
     ]
@@ -129,12 +143,12 @@ def test_scrape_paginated_respects_max_items():
     }
 
     vItems = {
-        "page1": [
-            "A",
-            "B",
-            "C",
-            "D"
-        ]
+        "page1": pd.DataFrame([
+            {"url": "A"},
+            {"url": "B"},
+            {"url": "C"},
+            {"url": "D"}
+        ])
     }
 
     class Config:
@@ -163,7 +177,7 @@ def test_scrape_paginated_respects_max_items():
         extract_next_url
     )
 
-    assert rResult.items == [
+    assert rResult.items["url"].tolist() == [
         "A",
         "B",
         "C"
@@ -195,7 +209,7 @@ def test_scrape_paginated_returns_error_result_when_scraping_fails():
         return pHtml
 
     def extract_items(pSoup, pCurrentUrl):
-        return []
+        return pd.DataFrame()
 
     def extract_next_url(pSoup, pCurrentUrl):
         return ""
@@ -209,7 +223,7 @@ def test_scrape_paginated_returns_error_result_when_scraping_fails():
         extract_next_url
     )
 
-    assert rResult.items == []
+    assert rResult.items.empty
     assert rResult.page_count == 1
     assert rResult.duration_seconds >= 0
     assert rResult.started_at is not None
@@ -217,6 +231,7 @@ def test_scrape_paginated_returns_error_result_when_scraping_fails():
     assert rResult.error_message == (
         "Erreur de récupération de la page."
     )
+
 
 def test_scrape_paginated_removes_duplicates():
     """
@@ -235,14 +250,26 @@ def test_scrape_paginated_removes_duplicates():
     }
 
     vItems = {
-        "page1": [
-            {"url": "https://example.com/1", "title": "Premier"},
-            {"url": "https://example.com/2", "title": "Deuxième"}
-        ],
-        "page2": [
-            {"url": "https://example.com/2", "title": "Deuxième doublon"},
-            {"url": "https://example.com/3", "title": "Troisième"}
-        ]
+        "page1": pd.DataFrame([
+            {
+                "url": "https://example.com/1",
+                "title": "Premier"
+            },
+            {
+                "url": "https://example.com/2",
+                "title": "Deuxième"
+            }
+        ]),
+        "page2": pd.DataFrame([
+            {
+                "url": "https://example.com/2",
+                "title": "Deuxième doublon"
+            },
+            {
+                "url": "https://example.com/3",
+                "title": "Troisième"
+            }
+        ])
     }
 
     class Config:
@@ -269,24 +296,22 @@ def test_scrape_paginated_removes_duplicates():
         parse_html,
         extract_items,
         extract_next_url,
-        lambda pItem: pItem["url"]
+        "url"
     )
 
-    assert rResult.items == [
-        {
-            "url": "https://example.com/1",
-            "title": "Premier"
-        },
-        {
-            "url": "https://example.com/2",
-            "title": "Deuxième"
-        },
-        {
-            "url": "https://example.com/3",
-            "title": "Troisième"
-        }
+    assert rResult.items["url"].tolist() == [
+        "https://example.com/1",
+        "https://example.com/2",
+        "https://example.com/3"
     ]
 
+    assert rResult.items["title"].tolist() == [
+        "Premier",
+        "Deuxième",
+        "Troisième"
+    ]
+
+    assert len(rResult.items) == 3
     assert rResult.page_count == 2
     assert rResult.status == "success"
     assert rResult.error_message is None

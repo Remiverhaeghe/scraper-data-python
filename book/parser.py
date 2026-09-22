@@ -3,9 +3,10 @@
 # ============================================================================
 
 
+import pandas as pd
+
 from bs4 import BeautifulSoup
 
-from book.model import Book
 from utils.helpers import extract_price, extract_rating, extract_text
 from utils.logger import get_logger
 from utils.url import build_absolute_url
@@ -36,43 +37,57 @@ def extract_book(pSoup, pBaseUrl):
 
     :param pSoup: Élément HTML contenant le livre.
     :param pBaseUrl: URL de base permettant de construire l'URL absolue.
-    :return: Livre extrait.
+    :return: Dictionnaire contenant les données du livre.
     """
 
     try:
-        vTitleElement = pSoup.select_one("h3 a")
+        vTitleElement = pSoup.select_one(
+            "h3 a"
+        )
+
         vPrice = extract_text(
             pSoup,
             ".price_color"
         )
+
         vAvailability = extract_text(
             pSoup,
             ".availability"
         )
+
         vRatingElement = pSoup.select_one(
             ".star-rating"
         )
 
         vRelativeUrl = (
-            vTitleElement.get("href", "")
+            vTitleElement.get(
+                "href",
+                ""
+            )
             if vTitleElement
             else ""
         )
 
-        vBook = Book(
-            title=(
-                vTitleElement.get_text(strip=True)
+        vBook = {
+            "title": (
+                vTitleElement.get_text(
+                    strip=True
+                )
                 if vTitleElement
                 else ""
             ),
-            price=extract_price(vPrice),
-            availability=vAvailability,
-            rating=extract_rating(vRatingElement),
-            url=build_absolute_url(
+            "price": extract_price(
+                vPrice
+            ),
+            "availability": vAvailability,
+            "rating": extract_rating(
+                vRatingElement
+            ),
+            "url": build_absolute_url(
                 pBaseUrl,
                 vRelativeUrl
             )
-        )
+        }
 
     except Exception:
         logger.exception(
@@ -91,7 +106,7 @@ def extract_books(pSoup, pBaseUrl):
 
     :param pSoup: Page HTML contenant les livres.
     :param pBaseUrl: URL de base permettant de construire les URLs.
-    :return: Liste des livres extraits.
+    :return: DataFrame contenant les livres extraits.
     """
 
     vBookElements = pSoup.select(
@@ -111,7 +126,9 @@ def extract_books(pSoup, pBaseUrl):
         for vBook in vBookElements
     ]
 
-    rBooks = vBooks
+    rBooks = pd.DataFrame(
+        vBooks
+    )
 
     return rBooks
 

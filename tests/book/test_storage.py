@@ -6,10 +6,10 @@
 import csv
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from book.csv_schema import BOOK_COLUMNS
-from book.model import Book
 from book.storage import save_books
 
 
@@ -20,22 +20,24 @@ def test_save_books(tmp_path):
 
     vFilePath = tmp_path / "books.csv"
 
-    vBooks = [
-        Book(
-            title="Book 1",
-            price=10.00,
-            availability="In stock",
-            rating=4,
-            url="https://example.com/book-1"
-        ),
-        Book(
-            title="Book 2",
-            price=20.00,
-            availability="In stock",
-            rating=5,
-            url="https://example.com/book-2"
-        )
-    ]
+    vBooks = pd.DataFrame(
+        [
+            {
+                "title": "Book 1",
+                "price": 10.00,
+                "availability": "In stock",
+                "rating": 4,
+                "url": "https://example.com/book-1"
+            },
+            {
+                "title": "Book 2",
+                "price": 20.00,
+                "availability": "In stock",
+                "rating": 5,
+                "url": "https://example.com/book-2"
+            }
+        ]
+    )
 
     save_books(
         vBooks,
@@ -74,13 +76,17 @@ def test_save_books(tmp_path):
 
 def test_save_empty_books(tmp_path):
     """
-    Vérifie l'enregistrement d'une liste de livres vide.
+    Vérifie l'enregistrement d'un DataFrame de livres vide.
     """
 
     vFilePath = tmp_path / "books.csv"
 
+    vBooks = pd.DataFrame(
+        columns=BOOK_COLUMNS
+    )
+
     save_books(
-        [],
+        vBooks,
         vFilePath
     )
 
@@ -110,26 +116,28 @@ def test_save_books_logs_error_when_file_cannot_be_written(
 
     vFilePath = tmp_path / "books.csv"
 
-    def mock_open(*args, **kwargs):
+    def mock_to_csv(*args, **kwargs):
         raise PermissionError(
             "Accès refusé"
         )
 
     monkeypatch.setattr(
-        Path,
-        "open",
-        mock_open
+        pd.DataFrame,
+        "to_csv",
+        mock_to_csv
     )
 
-    vBooks = [
-        Book(
-            title="Book 1",
-            price=10.00,
-            availability="In stock",
-            rating=4,
-            url="https://example.com/book-1"
-        )
-    ]
+    vBooks = pd.DataFrame(
+        [
+            {
+                "title": "Book 1",
+                "price": 10.00,
+                "availability": "In stock",
+                "rating": 4,
+                "url": "https://example.com/book-1"
+            }
+        ]
+    )
 
     with pytest.raises(PermissionError):
         save_books(

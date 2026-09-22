@@ -3,13 +3,12 @@
 # ============================================================================
 
 
+import pandas as pd
+
+
 def has_reached_limit(pItems, pMaxItems):
     """
-    Vérifie si le nombre maximum d'éléments est atteint.
-
-    :param pItems: Collection d'éléments.
-    :param pMaxItems: Nombre maximum d'éléments autorisés.
-    :return: True si la limite est atteinte, sinon False.
+    Vérifie si le nombre d'éléments maximum est atteint.
     """
 
     rReached = (
@@ -22,12 +21,7 @@ def has_reached_limit(pItems, pMaxItems):
 
 def deduplicate_items(pItems, pKeyFunction):
     """
-    Supprime les doublons d'une collection en conservant
-    la première occurrence de chaque élément.
-
-    :param pItems: Collection d'éléments.
-    :param pKeyFunction: Fonction permettant d'obtenir la clé unique.
-    :return: Collection sans doublon.
+    Supprime les doublons d'une collection Python.
     """
 
     vSeenKeys = set()
@@ -43,3 +37,20 @@ def deduplicate_items(pItems, pKeyFunction):
     rItems = vUniqueItems
 
     return rItems
+
+
+def deduplicate_dataframe(pDataFrame, pKeyColumn):
+    """
+    Supprime les doublons d'un DataFrame à partir d'une colonne.
+    """
+
+    vDataFrame = pDataFrame.drop_duplicates(
+        subset=[pKeyColumn],
+        keep="first"
+    )
+
+    rDataFrame = vDataFrame.reset_index(
+        drop=True
+    )
+
+    return rDataFrame

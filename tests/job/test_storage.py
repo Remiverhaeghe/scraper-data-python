@@ -2,13 +2,11 @@
 # Tests du stockage des offres d'emploi
 # ============================================================================
 
-
 import csv
-from pathlib import Path
 
+import pandas as pd
 import pytest
 
-from job.model import Job
 from job.storage import save_jobs
 
 
@@ -19,24 +17,58 @@ def test_save_jobs(tmp_path):
 
     vFilePath = tmp_path / "jobs.csv"
 
-    vJobs = [
-        Job(
-            title="Développeur Python",
-            company="Entreprise A",
-            location="Paris",
-            contract="CDI",
-            date="31/08/2026",
-            url="https://example.com/job-1"
-        ),
-        Job(
-            title="Développeur Java",
-            company="Entreprise B",
-            location="Lille",
-            contract="CDD",
-            date="30/08/2026",
-            url="https://example.com/job-2"
-        )
-    ]
+    vJobs = pd.DataFrame(
+        [
+            {
+                "title": "Développeur Python",
+                "company": "Entreprise A",
+                "location": "Paris",
+                "city": "",
+                "postal_code": "",
+                "distance_km": None,
+                "contract": "CDI",
+                "salary_min": None,
+                "salary_max": None,
+                "salary_period": None,
+                "remote": None,
+                "remote_days": None,
+                "remote_type": None,
+                "nearest_metro": None,
+                "metro_distance_km": None,
+                "date": "31/08/2026",
+                "url": "https://example.com/job-1",
+                "description": "",
+                "missions": "",
+                "requirements": "",
+                "education": "",
+                "skills": ""
+            },
+            {
+                "title": "Développeur Java",
+                "company": "Entreprise B",
+                "location": "Lille",
+                "city": "",
+                "postal_code": "",
+                "distance_km": None,
+                "contract": "CDD",
+                "salary_min": None,
+                "salary_max": None,
+                "salary_period": None,
+                "remote": None,
+                "remote_days": None,
+                "remote_type": None,
+                "nearest_metro": None,
+                "metro_distance_km": None,
+                "date": "30/08/2026",
+                "url": "https://example.com/job-2",
+                "description": "",
+                "missions": "",
+                "requirements": "",
+                "education": "",
+                "skills": ""
+            }
+        ]
+    )
 
     save_jobs(
         vJobs,
@@ -132,13 +164,40 @@ def test_save_jobs(tmp_path):
 
 def test_save_empty_jobs(tmp_path):
     """
-    Vérifie l'enregistrement d'une liste d'offres vide.
+    Vérifie l'enregistrement d'un DataFrame d'offres vide.
     """
 
     vFilePath = tmp_path / "jobs.csv"
 
+    vJobs = pd.DataFrame(
+        columns=[
+            "title",
+            "company",
+            "location",
+            "city",
+            "postal_code",
+            "distance_km",
+            "contract",
+            "salary_min",
+            "salary_max",
+            "salary_period",
+            "remote",
+            "remote_days",
+            "remote_type",
+            "nearest_metro",
+            "metro_distance_km",
+            "date",
+            "url",
+            "description",
+            "missions",
+            "requirements",
+            "education",
+            "skills"
+        ]
+    )
+
     save_jobs(
-        [],
+        vJobs,
         vFilePath
     )
 
@@ -153,30 +212,32 @@ def test_save_empty_jobs(tmp_path):
             csv.reader(vFile)
         )
 
-    assert vRows == [[
-        "title",
-        "company",
-        "location",
-        "city",
-        "postal_code",
-        "distance_km",
-        "contract",
-        "salary_min",
-        "salary_max",
-        "salary_period",
-        "remote",
-        "remote_days",
-        "remote_type",
-        "nearest_metro",
-        "metro_distance_km",
-        "date",
-        "url",
-        "description",
-        "missions",
-        "requirements",
-        "education",
-        "skills"
-    ]]
+    assert vRows == [
+        [
+            "title",
+            "company",
+            "location",
+            "city",
+            "postal_code",
+            "distance_km",
+            "contract",
+            "salary_min",
+            "salary_max",
+            "salary_period",
+            "remote",
+            "remote_days",
+            "remote_type",
+            "nearest_metro",
+            "metro_distance_km",
+            "date",
+            "url",
+            "description",
+            "missions",
+            "requirements",
+            "education",
+            "skills"
+        ]
+    ]
 
 
 def test_save_jobs_logs_error_when_file_cannot_be_written(
@@ -189,27 +250,45 @@ def test_save_jobs_logs_error_when_file_cannot_be_written(
 
     vFilePath = tmp_path / "jobs.csv"
 
-    def mock_open(*args, **kwargs):
+    def mock_to_csv(*args, **kwargs):
         raise PermissionError(
             "Accès refusé"
         )
 
     monkeypatch.setattr(
-        Path,
-        "open",
-        mock_open
+        pd.DataFrame,
+        "to_csv",
+        mock_to_csv
     )
 
-    vJobs = [
-        Job(
-            title="Développeur Python",
-            company="Entreprise A",
-            location="Paris",
-            contract="CDI",
-            date="31/08/2026",
-            url="https://example.com/job-1"
-        )
-    ]
+    vJobs = pd.DataFrame(
+        [
+            {
+                "title": "Développeur Python",
+                "company": "Entreprise A",
+                "location": "Paris",
+                "city": "",
+                "postal_code": "",
+                "distance_km": None,
+                "contract": "CDI",
+                "salary_min": None,
+                "salary_max": None,
+                "salary_period": None,
+                "remote": None,
+                "remote_days": None,
+                "remote_type": None,
+                "nearest_metro": None,
+                "metro_distance_km": None,
+                "date": "31/08/2026",
+                "url": "https://example.com/job-1",
+                "description": "",
+                "missions": "",
+                "requirements": "",
+                "education": "",
+                "skills": ""
+            }
+        ]
+    )
 
     with pytest.raises(PermissionError):
         save_jobs(

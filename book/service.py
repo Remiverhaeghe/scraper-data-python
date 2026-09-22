@@ -23,7 +23,7 @@ def scrape_book(pUrl, pConfig):
 
     :param pUrl: URL du livre à récupérer.
     :param pConfig: Configuration du scraping.
-    :return: Livre récupéré.
+    :return: Dictionnaire contenant le livre récupéré.
     """
 
     logger.info(
@@ -76,7 +76,7 @@ def scrape_books(pUrl, pConfig):
         parse_html,
         extract_books,
         extract_next_url,
-        lambda pItem: pItem.url
+        "url"
     )
 
     logger.info(
