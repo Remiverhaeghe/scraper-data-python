@@ -2,9 +2,9 @@
 # Configuration spécifique au scraping des offres d'emploi
 # ============================================================================
 
+from dataclasses import dataclass, field
 
-from dataclasses import dataclass
-
+from job.sources.config import SourceConfig
 from scraper.config import ScrapingConfig
 
 
@@ -44,3 +44,29 @@ class JobScrapingConfig(ScrapingConfig):
 
     # Missions recherchées
     missions: list[str] | None = None
+
+    # Sources
+    france_travail: SourceConfig = field(
+        default_factory=SourceConfig
+    )
+
+    greenhouse: SourceConfig = field(
+        default_factory=SourceConfig
+    )
+
+    lever: SourceConfig = field(
+        default_factory=SourceConfig
+    )
+
+    def validate(self):
+        """
+        Vérifie que la configuration complète est cohérente.
+        """
+
+        # Validation des paramètres communs
+        super().validate()
+
+        # Validation des sources
+        self.france_travail.validate()
+        self.greenhouse.validate()
+        self.lever.validate()
