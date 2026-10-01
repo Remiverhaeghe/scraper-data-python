@@ -55,6 +55,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Gérer le choix API / HTML selon les capacités d'une source
 - [x] Centraliser l'agrégation des sources d'emploi
 - [x] Centraliser l'orchestration du traitement des offres
+- [x] Dédupliquer les offres lors de l'agrégation multi-sources
 
 ### 📚 Books
 
@@ -83,6 +84,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Normalisation des données entre les sources
 - [x] Agrégation des résultats
 - [x] Orchestration du traitement multi-sources
+- [x] Déduplication des offres entre les sources
 - [x] Filtrage des résultats après agrégation
 - [x] Enregistrement de l'historique du traitement
 - [x] Configuration API / HTML par source
@@ -156,7 +158,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **223 tests automatisés**
+- [x] **230 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 

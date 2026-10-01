@@ -11,6 +11,9 @@ def parse_job(pJob):
     """
     Transforme une offre France Travail en dictionnaire Job.
 
+    Les données propres à France Travail sont converties
+    vers le modèle commun utilisé par les différentes sources.
+
     :param pJob: Offre France Travail au format dictionnaire.
     :return: Offre normalisée.
     """
@@ -20,38 +23,58 @@ def parse_job(pJob):
     vSalaire = pJob.get("salaire") or {}
 
     vJob = {
+        # Identification
         "title": pJob.get("intitule"),
         "company": vEntreprise.get("nom"),
         "company_id": None,
         "source": "france_travail",
         "source_id": pJob.get("id"),
+        "url": pJob.get("origineOffre", {}).get("urlOrigine"),
+
+        # Localisation
         "location": vLieu.get("libelle"),
         "city": vLieu.get("commune"),
         "postal_code": vLieu.get("codePostal"),
         "country": "France",
         "distance_km": None,
+
+        # Contrat
         "contract": pJob.get("typeContratLibelle"),
         "contract_type": pJob.get("typeContrat"),
         "employment_type": None,
+
+        # Rémunération
         "salary_min": None,
         "salary_max": None,
         "salary_currency": "EUR",
         "salary_period": None,
+
+        # Télétravail
         "remote": None,
         "remote_days": None,
         "remote_type": None,
+
+        # Transport
         "nearest_metro": None,
         "metro_distance_km": None,
+
+        # Dates fournies par France Travail
         "date": pJob.get("dateCreation"),
         "published_at": pJob.get("dateCreation"),
         "updated_at": pJob.get("dateActualisation"),
+
+        # Dates gérées par notre application
         "scraped_at": None,
-        "url": pJob.get("origineOffre", {}).get("urlOrigine"),
+        "first_seen_at": None,
+
+        # Contenu
         "description": pJob.get("description"),
         "missions": None,
         "requirements": None,
         "education": pJob.get("formations"),
         "skills": pJob.get("competences"),
+
+        # Informations complémentaires
         "department": None,
         "experience_level": pJob.get("experienceLibelle"),
         "job_type": None
@@ -63,6 +86,7 @@ def parse_job(pJob):
         vJob["salary_period"] = vSalaire.get("libelle")
 
     rJob = vJob
+
     return rJob
 
 
@@ -85,4 +109,5 @@ def parse_jobs(pJobs):
     )
 
     rDataFrame = vDataFrame
+
     return rDataFrame

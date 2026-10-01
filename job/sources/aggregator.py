@@ -17,6 +17,8 @@ from job.sources.greenhouse.service import (
 from job.sources.lever.service import (
     scrape_jobs as scrape_lever
 )
+
+from scraper.collection import deduplicate_dataframe
 from scraper.result import ScrapingResult
 from utils.logger import get_logger
 
@@ -152,6 +154,30 @@ def scrape_sources(pConfig):
 
         vItems = vItems.reindex(
             columns=JOB_COLUMNS
+        )
+
+        # Création d'une clé technique uniquement pour les offres
+        # possédant un identifiant fourni par leur source.
+        vItems["_deduplication_key"] = pd.NA
+
+        vHasSourceId = vItems["source_id"].notna()
+        
+        vItems.loc[
+            vHasSourceId,
+            "_deduplication_key"
+            ] = (
+            vItems.loc[vHasSourceId, "source"].astype(str)
+            + "::"
+            + vItems.loc[vHasSourceId, "source_id"].astype(str)
+        )
+
+        vItems = deduplicate_dataframe(
+            vItems,
+            "_deduplication_key"
+        )
+
+        vItems = vItems.drop(
+            columns=["_deduplication_key"]
         )
     else:
         vItems = pd.DataFrame(

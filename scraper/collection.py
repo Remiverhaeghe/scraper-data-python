@@ -40,17 +40,25 @@ def deduplicate_items(pItems, pKeyFunction):
 
 
 def deduplicate_dataframe(pDataFrame, pKeyColumn):
-    """
-    Supprime les doublons d'un DataFrame à partir d'une colonne.
-    """
+    """Supprime les doublons d'un DataFrame à partir d'une colonne."""
 
-    vDataFrame = pDataFrame.drop_duplicates(
+    vHasKey = pDataFrame[pKeyColumn].notna()
+
+    vDataFrameWithKey = pDataFrame[vHasKey].drop_duplicates(
         subset=[pKeyColumn],
         keep="first"
     )
 
-    rDataFrame = vDataFrame.reset_index(
-        drop=True
+    vDataFrameWithoutKey = pDataFrame[~vHasKey]
+
+    vDataFrame = pd.concat(
+        [
+            vDataFrameWithKey,
+            vDataFrameWithoutKey
+        ],
+        ignore_index=True
     )
+
+    rDataFrame = vDataFrame.reset_index(drop=True)
 
     return rDataFrame

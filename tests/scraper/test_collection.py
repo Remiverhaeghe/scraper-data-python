@@ -83,3 +83,120 @@ def test_deduplicate_items_removes_duplicates():
         {"url": "https://example.com/2", "title": "Deuxième"},
         {"url": "https://example.com/3", "title": "Troisième"},
     ]
+
+# ============================================================================
+# Tests de déduplication des offres
+# ============================================================================
+
+def test_deduplicate_items_removes_duplicate_source_id():
+    """
+    Vérifie qu'une même offre provenant de la même source
+    n'est conservée qu'une seule fois.
+    """
+
+    vItems = [
+        {
+            "source": "france_travail",
+            "source_id": "123"
+        },
+        {
+            "source": "france_travail",
+            "source_id": "123"
+        }
+    ]
+
+    rItems = deduplicate_items(
+        vItems,
+        lambda pItem: (
+            pItem["source"],
+            pItem["source_id"]
+        )
+    )
+
+    assert len(rItems) == 1
+    assert rItems[0]["source_id"] == "123"
+
+
+def test_deduplicate_items_keeps_different_sources():
+    """
+    Vérifie qu'un même identifiant provenant de sources différentes
+    correspond à deux offres distinctes.
+    """
+
+    vItems = [
+        {
+            "source": "france_travail",
+            "source_id": "123"
+        },
+        {
+            "source": "greenhouse",
+            "source_id": "123"
+        }
+    ]
+
+    rItems = deduplicate_items(
+        vItems,
+        lambda pItem: (
+            pItem["source"],
+            pItem["source_id"]
+        )
+    )
+
+    assert len(rItems) == 2
+
+
+def test_deduplicate_items_keeps_first_occurrence():
+    """
+    Vérifie que la première occurrence d'une offre est conservée.
+    """
+
+    vItems = [
+        {
+            "source": "lever",
+            "source_id": "456",
+            "title": "Première version"
+        },
+        {
+            "source": "lever",
+            "source_id": "456",
+            "title": "Deuxième version"
+        }
+    ]
+
+    rItems = deduplicate_items(
+        vItems,
+        lambda pItem: (
+            pItem["source"],
+            pItem["source_id"]
+        )
+    )
+
+    assert len(rItems) == 1
+    assert rItems[0]["title"] == "Première version"
+
+
+def test_deduplicate_items_keeps_different_offers():
+    """
+    Vérifie que deux offres différentes sont conservées.
+    """
+
+    vItems = [
+        {
+            "source": "lever",
+            "source_id": "456"
+        },
+        {
+            "source": "lever",
+            "source_id": "789"
+        }
+    ]
+
+    rItems = deduplicate_items(
+        vItems,
+        lambda pItem: (
+            pItem["source"],
+            pItem["source_id"]
+        )
+    )
+
+    assert len(rItems) == 2
