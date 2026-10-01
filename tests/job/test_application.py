@@ -2,7 +2,6 @@
 # Tests de l'orchestration du traitement des offres d'emploi
 # ============================================================================
 
-
 from datetime import datetime
 from unittest.mock import patch
 
@@ -15,9 +14,9 @@ from scraper.result import ScrapingResult
 
 def test_process_jobs():
     """
-    Vérifie que le traitement des offres lance le scraping,
-    enregistre le résultat brut dans l'historique et applique
-    les filtres.
+    Vérifie que le traitement des offres lance le scraping
+    multi-sources, enregistre le résultat brut dans l'historique
+    et applique les filtres.
     """
 
     vConfig = JobScrapingConfig(
@@ -95,26 +94,24 @@ def test_process_jobs():
     )
 
     with patch(
-        "job.application.scrape_jobs",
+        "job.application.scrape_sources",
         return_value=vScrapingResult
-    ) as vScrapeJobs, patch(
+    ) as vScrapeSources, patch(
         "job.application.record_history"
     ) as vRecordHistory:
 
         rResult = process_jobs(
-            "https://example.com/jobs",
             vConfig
         )
 
-    vScrapeJobs.assert_called_once_with(
-        "https://example.com/jobs",
+    vScrapeSources.assert_called_once_with(
         vConfig
     )
 
     vRecordHistory.assert_called_once_with(
         "data/scraper.db",
         "job",
-        "https://example.com/jobs",
+        "multi-source",
         vScrapingResult
     )
 
