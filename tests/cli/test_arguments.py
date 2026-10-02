@@ -19,6 +19,7 @@ def test_parse_arguments_default_values():
     ):
         vArguments = parse_arguments()
 
+    assert vArguments.type == "book"
     assert vArguments.max_items is None
     assert vArguments.delay == 0.0
     assert vArguments.timeout == 10
@@ -80,3 +81,22 @@ def test_parse_arguments_book_configuration():
     assert vArguments.max_price == 50.0
     assert vArguments.min_rating == 4
     assert vArguments.refresh is True
+
+
+def test_parse_arguments_accepts_job(monkeypatch):
+    """
+    Vérifie que le scraping des offres d'emploi peut être sélectionné.
+    """
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "main.py",
+            "--type",
+            "job"
+        ]
+    )
+
+    vArguments = parse_arguments()
+
+    assert vArguments.type == "job"

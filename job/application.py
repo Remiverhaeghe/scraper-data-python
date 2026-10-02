@@ -2,12 +2,15 @@
 # Orchestration du traitement des offres d'emploi
 # ============================================================================
 
+
+from datetime import datetime
 from dataclasses import replace
 
 from config import DATABASE_FILE
 from job.filter import filter_jobs
 from job.sources.aggregator import scrape_sources
 from scraper.history_service import record_history
+from storage.job_tracking import track_jobs
 from utils.logger import get_logger
 
 
@@ -20,8 +23,10 @@ def process_jobs(pConfig):
 
     Le scraping produit d'abord un résultat brut provenant
     des sources activées dans la configuration.
-    Ce résultat est enregistré dans l'historique avant
-    l'application des filtres de recherche.
+
+    Les dates de première et dernière récupération sont ensuite
+    mises à jour avant l'enregistrement de l'historique et
+    l'application des filtres.
 
     :param pConfig: Configuration du scraping et des filtres.
     :return: Résultat du scraping après filtrage.
@@ -33,6 +38,19 @@ def process_jobs(pConfig):
 
     vScrapingResult = scrape_sources(
         pConfig
+    )
+
+    vScrapedAt = datetime.now()
+
+    vTrackedItems = track_jobs(
+        DATABASE_FILE,
+        vScrapingResult.items,
+        vScrapedAt
+    )
+
+    vScrapingResult = replace(
+        vScrapingResult,
+        items=vTrackedItems
     )
 
     record_history(

@@ -15,7 +15,8 @@ from scraper.result import ScrapingResult
 def test_process_jobs():
     """
     Vérifie que le traitement des offres lance le scraping
-    multi-sources, enregistre le résultat brut dans l'historique
+    multi-sources, met à jour le suivi des offres,
+    enregistre le résultat brut dans l'historique
     et applique les filtres.
     """
 
@@ -97,6 +98,9 @@ def test_process_jobs():
         "job.application.scrape_sources",
         return_value=vScrapingResult
     ) as vScrapeSources, patch(
+        "job.application.track_jobs",
+        return_value=vJobs
+    ) as vTrackJobs, patch(
         "job.application.record_history"
     ) as vRecordHistory:
 
@@ -108,12 +112,27 @@ def test_process_jobs():
         vConfig
     )
 
-    vRecordHistory.assert_called_once_with(
-        "data/scraper.db",
-        "job",
-        "multi-source",
-        vScrapingResult
+    vTrackJobs.assert_called_once()
+
+    vTrackArguments = vTrackJobs.call_args.args
+
+    assert vTrackArguments[0] == "data/scraper.db"
+
+    assert vTrackArguments[1] is vScrapingResult.items
+
+    assert isinstance(
+        vTrackArguments[2],
+        datetime
     )
+
+    vRecordHistory.assert_called_once()
+
+    vHistoryArguments = vRecordHistory.call_args.args
+
+    assert vHistoryArguments[0] == "data/scraper.db"
+    assert vHistoryArguments[1] == "job"
+    assert vHistoryArguments[2] == "multi-source"
+    assert vHistoryArguments[3].items is vJobs
 
     assert rResult is not vScrapingResult
 

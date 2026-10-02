@@ -77,7 +77,15 @@ def parse_arguments():
     """
 
     vParser = argparse.ArgumentParser(
-        description="Scrape les livres depuis Books to Scrape."
+        description="Scraper de données multi-domaines."
+    )
+
+    # Domaine à traiter
+    vParser.add_argument(
+        "--type",
+        choices=["book", "job"],
+        default="book",
+        help="Type de données à scraper."
     )
 
     # Configuration commune

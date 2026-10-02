@@ -6,34 +6,92 @@
 from book.application import process_books
 from book.config import BookScrapingConfig
 from cli.arguments import parse_arguments
-from config import OUTPUT_FILE, URL
+from config import DATABASE_FILE, OUTPUT_FILE, URL
+from job.application import process_jobs
+from job.config import JobScrapingConfig
+from storage.database import initialize_database
 
 
-def main():
+def process_book_arguments(pArguments):
     """
-    Lance l'application de scraping des livres.
-    """
+    Construit la configuration de scraping des livres.
 
-    vArguments = parse_arguments()
+    :param pArguments: Arguments de ligne de commande.
+    :return: Configuration des livres.
+    """
 
     vConfig = BookScrapingConfig(
-        max_items=vArguments.max_items,
-        delay=vArguments.delay,
-        timeout=vArguments.timeout,
-        max_pages=vArguments.max_pages,
-        title=vArguments.title,
-        max_price=vArguments.max_price,
-        min_rating=vArguments.min_rating
+        max_items=pArguments.max_items,
+        delay=pArguments.delay,
+        timeout=pArguments.timeout,
+        max_pages=pArguments.max_pages,
+        title=pArguments.title,
+        max_price=pArguments.max_price,
+        min_rating=pArguments.min_rating
     )
 
     vConfig.validate()
 
-    process_books(
-        URL,
-        OUTPUT_FILE,
-        vConfig,
-        pRefresh=vArguments.refresh
+    rConfig = vConfig
+
+    return rConfig
+
+
+def process_job_arguments(pArguments):
+    """
+    Construit la configuration de scraping des offres d'emploi.
+
+    :param pArguments: Arguments de ligne de commande.
+    :return: Configuration des offres d'emploi.
+    """
+
+    vConfig = JobScrapingConfig(
+        max_items=pArguments.max_items,
+        delay=pArguments.delay,
+        timeout=pArguments.timeout,
+        max_pages=pArguments.max_pages
     )
+
+    vConfig.validate()
+
+    rConfig = vConfig
+
+    return rConfig
+
+
+def main():
+    """
+    Initialise l'application et lance le traitement demandé.
+    """
+
+    vArguments = parse_arguments()
+
+    initialize_database(
+        DATABASE_FILE
+    )
+
+    if vArguments.type == "book":
+
+        vConfig = process_book_arguments(
+            vArguments
+        )
+
+        process_books(
+            URL,
+            OUTPUT_FILE,
+            vConfig,
+            pRefresh=vArguments.refresh
+        )
+
+    else:
+
+        vConfig = process_job_arguments(
+            vArguments
+        )
+
+        process_jobs(
+            vConfig
+        )
 
 
 if __name__ == "__main__":
