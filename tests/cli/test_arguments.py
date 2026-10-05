@@ -100,3 +100,52 @@ def test_parse_arguments_accepts_job(monkeypatch):
     vArguments = parse_arguments()
 
     assert vArguments.type == "job"
+
+
+def test_parse_arguments_job_source(monkeypatch):
+    """
+    Vérifie qu'une seule source d'emploi peut être sélectionnée
+    """
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "main.py",
+            "--type",
+            "job",
+            "--source",
+            "france-travail"
+        ]
+    )
+
+    vArguments = parse_arguments()
+
+    assert vArguments.sources == ["france-travail"]
+
+
+def test_parse_arguments_multiple_job_sources(monkeypatch):
+    """
+    Vérifie que plusieurs sources d'emploi peuvent être sélectionnées
+    """
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "main.py",
+            "--type",
+            "job",
+            "--source",
+            "france-travail",
+            "--source",
+            "greenhouse",
+            "--source",
+            "lever"
+        ]
+    )
+
+    vArguments = parse_arguments()
+
+    assert vArguments.sources == [
+        "france-travail",
+        "greenhouse",
+        "lever"
+    ]

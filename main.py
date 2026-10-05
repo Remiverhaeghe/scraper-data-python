@@ -8,7 +8,7 @@ from book.config import BookScrapingConfig
 from cli.arguments import parse_arguments
 from config import DATABASE_FILE, OUTPUT_FILE, URL
 from job.application import process_jobs
-from job.config import JobScrapingConfig
+from job.sources.configuration import build_job_config
 from storage.database import initialize_database
 
 
@@ -45,16 +45,9 @@ def process_job_arguments(pArguments):
     :return: Configuration des offres d'emploi.
     """
 
-    vConfig = JobScrapingConfig(
-        max_items=pArguments.max_items,
-        delay=pArguments.delay,
-        timeout=pArguments.timeout,
-        max_pages=pArguments.max_pages
+    rConfig = build_job_config(
+        pArguments
     )
-
-    vConfig.validate()
-
-    rConfig = vConfig
 
     return rConfig
 

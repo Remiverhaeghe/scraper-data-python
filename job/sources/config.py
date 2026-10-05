@@ -26,7 +26,7 @@ class SourceConfig:
         default_factory=dict
     )
 
-    def validate(self):
+    def validate(self) -> None:
         """
         Vérifie que la configuration de la source est cohérente.
         """

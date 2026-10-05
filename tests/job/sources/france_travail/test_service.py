@@ -29,16 +29,21 @@ def test_scrape_jobs(monkeypatch):
         ]
     }
 
-    def mock_search_jobs(pConfig, pParams):
+    def mock_search_jobs(
+        pConfig,
+        pParams
+    ):
         assert isinstance(
             pConfig,
             FakeConfig
         )
+
         assert pParams == {
             "motsCles": "python"
         }
 
-        return vData
+        rData = vData
+        return rData
 
     monkeypatch.setattr(
         "job.sources.france_travail.service.search_jobs",
@@ -58,6 +63,7 @@ def test_scrape_jobs(monkeypatch):
     )
 
     assert len(rDataFrame) == 1
+
     assert rDataFrame.iloc[0]["title"] == (
         "Développeur Python"
     )
@@ -68,8 +74,12 @@ def test_scrape_jobs_without_results(monkeypatch):
     Vérifie le comportement lorsqu'aucune offre n'est retournée.
     """
 
-    def mock_search_jobs(pConfig, pParams):
-        return {}
+    def mock_search_jobs(
+        pConfig,
+        pParams
+    ):
+        rData = {}
+        return rData
 
     monkeypatch.setattr(
         "job.sources.france_travail.service.search_jobs",
@@ -87,3 +97,147 @@ def test_scrape_jobs_without_results(monkeypatch):
     )
 
     assert rDataFrame.empty
+
+
+def test_scrape_jobs_respects_max_items(monkeypatch):
+    """
+    Vérifie que le nombre maximum d'offres est respecté.
+    """
+
+    vData = {
+        "resultats": [
+            {
+                "id": "1",
+                "intitule": "Développeur Python"
+            },
+            {
+                "id": "2",
+                "intitule": "Développeur Java"
+            },
+            {
+                "id": "3",
+                "intitule": "DevOps"
+            },
+            {
+                "id": "4",
+                "intitule": "Software Engineer"
+            },
+            {
+                "id": "5",
+                "intitule": "Backend Developer"
+            }
+        ]
+    }
+
+    def mock_search_jobs(
+        pConfig,
+        pParams
+    ):
+        rData = vData
+        return rData
+
+    monkeypatch.setattr(
+        "job.sources.france_travail.service.search_jobs",
+        mock_search_jobs
+    )
+
+    rDataFrame = scrape_jobs(
+        FakeConfig(),
+        {},
+        pMaxItems=3
+    )
+
+    assert len(rDataFrame) == 3
+
+    assert rDataFrame["title"].tolist() == [
+        "Développeur Python",
+        "Développeur Java",
+        "DevOps"
+    ]
+
+
+def test_scrape_jobs_keeps_all_items_without_max_items(
+    monkeypatch
+):
+    """
+    Vérifie que toutes les offres sont conservées sans limite.
+    """
+
+    vData = {
+        "resultats": [
+            {
+                "id": "1",
+                "intitule": "Développeur Python"
+            },
+            {
+                "id": "2",
+                "intitule": "Développeur Java"
+            },
+            {
+                "id": "3",
+                "intitule": "DevOps"
+            }
+        ]
+    }
+
+    def mock_search_jobs(
+        pConfig,
+        pParams
+    ):
+        rData = vData
+        return rData
+
+    monkeypatch.setattr(
+        "job.sources.france_travail.service.search_jobs",
+        mock_search_jobs
+    )
+
+    rDataFrame = scrape_jobs(
+        FakeConfig(),
+        {},
+        pMaxItems=None
+    )
+
+    assert len(rDataFrame) == 3
+
+
+def test_scrape_jobs_max_items_greater_than_results(
+    monkeypatch
+):
+    """
+    Vérifie qu'une limite supérieure au nombre de résultats
+    conserve toutes les offres.
+    """
+
+    vData = {
+        "resultats": [
+            {
+                "id": "1",
+                "intitule": "Développeur Python"
+            },
+            {
+                "id": "2",
+                "intitule": "Développeur Java"
+            }
+        ]
+    }
+
+    def mock_search_jobs(
+        pConfig,
+        pParams
+    ):
+        rData = vData
+        return rData
+
+    monkeypatch.setattr(
+        "job.sources.france_travail.service.search_jobs",
+        mock_search_jobs
+    )
+
+    rDataFrame = scrape_jobs(
+        FakeConfig(),
+        {},
+        pMaxItems=10
+    )
+
+    assert len(rDataFrame) == 2

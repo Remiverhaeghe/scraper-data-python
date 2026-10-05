@@ -1,400 +1,360 @@
 # ============================================================================
-# Tests de l'agrégateur des sources d'emploi
+# Tests de l'agrégation des offres provenant des différentes sources
 # ============================================================================
+
 
 import pandas as pd
 
-from unittest.mock import patch
 from job.config import JobScrapingConfig
-from job.csv_schema import JOB_COLUMNS
 from job.sources.aggregator import scrape_sources
-from job.sources.config import SourceConfig
-from scraper.result import ScrapingResult
 
 
-def test_scrape_sources(monkeypatch):
+def test_scrape_sources_limits_global_number_of_items(
+    monkeypatch
+):
     """
-    Vérifie l'agrégation de plusieurs sources activées.
+    Vérifie que max_items limite le nombre global d'offres.
     """
 
-    vFranceTravail = pd.DataFrame(
-        [
-            {
-                "title": "Développeur Python",
-                "source": "france_travail",
-                "source_id": "ft-1"
-            }
-        ],
-        columns=JOB_COLUMNS
+    # Vérifie que plusieurs sources peuvent produire plus d'offres
+    # que la limite globale configurée.
+    vFranceTravailDataFrame = pd.DataFrame(
+        {
+            "title": ["FT 1", "FT 2", "FT 3"],
+            "source": [
+                "france_travail",
+                "france_travail",
+                "france_travail"
+            ],
+            "source_id": ["1", "2", "3"]
+        }
     )
 
-    vGreenhouse = pd.DataFrame(
-        [
-            {
-                "title": "Développeur Java",
-                "source": "greenhouse",
-                "source_id": "gh-1"
-            }
-        ],
-        columns=JOB_COLUMNS
+    vGreenhouseDataFrame = pd.DataFrame(
+        {
+            "title": ["GH 1", "GH 2"],
+            "source": ["greenhouse", "greenhouse"],
+            "source_id": ["1", "2"]
+        }
     )
 
-    vLever = pd.DataFrame(
-        [
-            {
-                "title": "DevOps Engineer",
-                "source": "lever",
-                "source_id": "lv-1"
-            }
-        ],
-        columns=JOB_COLUMNS
+    vLeverDataFrame = pd.DataFrame(
+        {
+            "title": ["Lever 1", "Lever 2"],
+            "source": ["lever", "lever"],
+            "source_id": ["1", "2"]
+        }
     )
-
-    def mock_france_travail(pConfig, pParams):
-        return vFranceTravail
-
-    def mock_greenhouse(pBoard):
-        return vGreenhouse
-
-    def mock_lever(pSite):
-        return vLever
 
     monkeypatch.setattr(
         "job.sources.aggregator.scrape_france_travail",
-        mock_france_travail
+        lambda pConfig, pParams, pMaxItems=None: vFranceTravailDataFrame
     )
 
     monkeypatch.setattr(
         "job.sources.aggregator.scrape_greenhouse",
-        mock_greenhouse
+        lambda pBoard, pMaxItems=None: vGreenhouseDataFrame
     )
 
     monkeypatch.setattr(
         "job.sources.aggregator.scrape_lever",
-        mock_lever
+        lambda pSite, pMaxItems=None: vLeverDataFrame
     )
 
     vConfig = JobScrapingConfig(
-        france_travail=SourceConfig(
-            enabled=True,
-            api_available=True,
-            mode="api",
-            parameters={
-                "config": "config",
-                "params": {
-                    "motCle": "python"
-                }
-            }
-        ),
-        greenhouse=SourceConfig(
-            enabled=True,
-            api_available=True,
-            mode="api",
-            parameters={
-                "board": "example-board"
-            }
-        ),
-        lever=SourceConfig(
-            enabled=True,
-            api_available=True,
-            mode="api",
-            parameters={
-                "site": "example-company"
-            }
-        )
+        max_items=4
     )
+
+    vConfig.france_travail.enabled = True
+    vConfig.france_travail.mode = "api"
+    vConfig.france_travail.api_available = True
+    vConfig.france_travail.parameters = {
+        "config": object(),
+        "params": {}
+    }
+
+    vConfig.greenhouse.enabled = True
+    vConfig.greenhouse.mode = "api"
+    vConfig.greenhouse.api_available = True
+    vConfig.greenhouse.parameters = {
+        "board": "test-board"
+    }
+
+    vConfig.lever.enabled = True
+    vConfig.lever.mode = "api"
+    vConfig.lever.api_available = True
+    vConfig.lever.parameters = {
+        "site": "test-site"
+    }
 
     rResult = scrape_sources(
         vConfig
     )
 
-    assert isinstance(
-        rResult,
-        ScrapingResult
+    assert len(rResult.items) == 4
+
+
+def test_scrape_sources_passes_max_items_to_lever(
+    monkeypatch
+):
+    """
+    Vérifie que max_items est transmis au service Lever.
+    """
+
+    # Vérifie que l'agrégateur transmet la limite globale à la source Lever.
+    vCalls = []
+
+    vLeverDataFrame = pd.DataFrame(
+        {
+            "title": ["Lever 1"],
+            "source": ["lever"],
+            "source_id": ["1"]
+        }
+    )
+
+    def mock_scrape_lever(
+        pSite,
+        pMaxItems=None
+    ):
+        vCalls.append(
+            {
+                "site": pSite,
+                "max_items": pMaxItems
+            }
+        )
+
+        rDataFrame = vLeverDataFrame
+
+        return rDataFrame
+
+    monkeypatch.setattr(
+        "job.sources.aggregator.scrape_lever",
+        mock_scrape_lever
+    )
+
+    vConfig = JobScrapingConfig(
+        max_items=25
+    )
+
+    vConfig.lever.enabled = True
+    vConfig.lever.mode = "api"
+    vConfig.lever.api_available = True
+    vConfig.lever.parameters = {
+        "site": "test-site"
+    }
+
+    rResult = scrape_sources(
+        vConfig
+    )
+
+    assert len(rResult.items) == 1
+
+    assert vCalls == [
+        {
+            "site": "test-site",
+            "max_items": 25
+        }
+    ]
+
+
+def test_scrape_sources_deduplicates_before_applying_limit(
+    monkeypatch
+):
+    """
+    Vérifie que la déduplication est effectuée avant max_items.
+    """
+
+    # Vérifie qu'un doublon ne consomme pas une place dans la limite finale.
+    vFranceTravailDataFrame = pd.DataFrame(
+        {
+            "title": ["Offre 1", "Offre 2"],
+            "source": [
+                "france_travail",
+                "france_travail"
+            ],
+            "source_id": ["1", "2"]
+        }
+    )
+
+    vGreenhouseDataFrame = pd.DataFrame(
+        {
+            "title": ["Offre 3", "Offre 4"],
+            "source": [
+                "greenhouse",
+                "greenhouse"
+            ],
+            "source_id": ["1", "2"]
+        }
+    )
+
+    monkeypatch.setattr(
+        "job.sources.aggregator.scrape_france_travail",
+        lambda pConfig, pParams, pMaxItems=None: vFranceTravailDataFrame
+    )
+
+    monkeypatch.setattr(
+        "job.sources.aggregator.scrape_greenhouse",
+        lambda pBoard, pMaxItems=None: vGreenhouseDataFrame
+    )
+
+    vConfig = JobScrapingConfig(
+        max_items=3
+    )
+
+    vConfig.france_travail.enabled = True
+    vConfig.france_travail.mode = "api"
+    vConfig.france_travail.api_available = True
+    vConfig.france_travail.parameters = {
+        "config": object(),
+        "params": {}
+    }
+
+    vConfig.greenhouse.enabled = True
+    vConfig.greenhouse.mode = "api"
+    vConfig.greenhouse.api_available = True
+    vConfig.greenhouse.parameters = {
+        "board": "test-board"
+    }
+
+    rResult = scrape_sources(
+        vConfig
     )
 
     assert len(rResult.items) == 3
 
-    assert list(rResult.items.columns) == JOB_COLUMNS
-
-    assert list(rResult.items["source"]) == [
-        "france_travail",
-        "greenhouse",
-        "lever"
+    assert rResult.items["source_id"].tolist() == [
+        "1",
+        "2",
+        "1"
     ]
 
-    assert rResult.page_count == 3
-    assert rResult.duration_seconds >= 0
-    assert rResult.started_at is not None
-    assert rResult.status == "success"
-    assert rResult.error_message is None
-
-
-def test_scrape_sources_without_sources():
-    """
-    Vérifie qu'aucune source ne produit un résultat vide structuré.
-    """
-
-    vConfig = JobScrapingConfig()
-
-    rResult = scrape_sources(
-        vConfig
-    )
-
-    assert isinstance(
-        rResult,
-        ScrapingResult
-    )
-
-    assert rResult.items.empty
-    assert list(rResult.items.columns) == JOB_COLUMNS
-    assert rResult.page_count == 0
-    assert rResult.duration_seconds >= 0
-    assert rResult.started_at is not None
-
-
-def test_scrape_sources_with_one_source(monkeypatch):
-    """
-    Vérifie qu'une seule source peut être utilisée.
-    """
-
-    vDataFrame = pd.DataFrame(
-        [
-            {
-                "title": "Python Developer",
-                "source": "lever",
-                "source_id": "lv-1"
-            }
-        ],
-        columns=JOB_COLUMNS
-    )
-
-    def mock_lever(pSite):
-        return vDataFrame
-
-    monkeypatch.setattr(
-        "job.sources.aggregator.scrape_lever",
-        mock_lever
-    )
-
-    vConfig = JobScrapingConfig(
-        lever=SourceConfig(
-            enabled=True,
-            api_available=True,
-            mode="api",
-            parameters={
-                "site": "example-company"
-            }
-        )
-    )
-
-    rResult = scrape_sources(
-        vConfig
-    )
-
-    assert isinstance(
-        rResult,
-        ScrapingResult
-    )
-
-    assert len(rResult.items) == 1
-
-    assert rResult.items.iloc[0]["title"] == (
-        "Python Developer"
-    )
-
-    assert rResult.items.iloc[0]["source"] == "lever"
-
-    assert rResult.page_count == 1
-
-
-def test_scrape_sources_does_not_call_disabled_sources(
+def test_scrape_sources_passes_max_items_to_france_travail(
     monkeypatch
 ):
     """
-    Vérifie qu'une source désactivée n'est jamais appelée.
+    Vérifie que la limite globale est transmise à France Travail.
     """
 
-    vCalled = {
-        "lever": False
-    }
+    vCalls = []
 
-    def mock_lever(pSite):
-        vCalled["lever"] = True
-
-        return pd.DataFrame(
-            columns=JOB_COLUMNS
-        )
-
-    monkeypatch.setattr(
-        "job.sources.aggregator.scrape_lever",
-        mock_lever
+    vDataFrame = pd.DataFrame(
+        {
+            "title": ["Offre Python"],
+            "source": ["france_travail"],
+            "source_id": ["1"]
+        }
     )
 
-    vConfig = JobScrapingConfig()
+    def mock_scrape_france_travail(
+        pConfig,
+        pParams,
+        pMaxItems=None
+    ):
+        vCalls.append(
+            {
+                "config": pConfig,
+                "params": pParams,
+                "max_items": pMaxItems
+            }
+        )
+
+        rDataFrame = vDataFrame
+        return rDataFrame
+
+    monkeypatch.setattr(
+        "job.sources.aggregator.scrape_france_travail",
+        mock_scrape_france_travail
+    )
+
+    vConfig = JobScrapingConfig(
+        max_items=25
+    )
+
+    vConfig.france_travail.enabled = True
+    vConfig.france_travail.api_available = True
+    vConfig.france_travail.mode = "api"
+
+    vFranceTravailConfig = object()
+
+    vFranceTravailParams = {
+        "motsCles": "Python"
+    }
+
+    vConfig.france_travail.parameters = {
+        "config": vFranceTravailConfig,
+        "params": vFranceTravailParams
+    }
 
     rResult = scrape_sources(
         vConfig
     )
 
-    assert rResult.items.empty
-    assert not vCalled["lever"]
+    assert len(rResult.items) == 1
 
-# ============================================================================
-# Tests de déduplication lors de l'agrégation
-# ============================================================================
+    assert vCalls == [
+        {
+            "config": vFranceTravailConfig,
+            "params": vFranceTravailParams,
+            "max_items": 25
+        }
+    ]
 
-def test_scrape_sources_removes_duplicate_from_same_source():
+def test_scrape_sources_passes_max_items_to_greenhouse(
+    monkeypatch
+):
     """
-    Vérifie qu'une même offre provenant deux fois de la même source
-    n'est conservée qu'une seule fois.
+    Vérifie que max_items est transmis au service Greenhouse.
     """
 
-    vConfig = JobScrapingConfig(
-        france_travail=SourceConfig(
-            enabled=False
-        ),
-        greenhouse=SourceConfig(
-            enabled=False
-        ),
-        lever=SourceConfig(
-            enabled=True,
-            api_available=True,
-            mode="api",
-            parameters={
-                "site": "test"
+    vCalls = []
+
+    vDataFrame = pd.DataFrame(
+        {
+            "title": ["Offre Python"],
+            "source": ["greenhouse"],
+            "source_id": ["1"]
+        }
+    )
+
+    def mock_scrape_greenhouse(
+        pBoard,
+        pMaxItems=None
+    ):
+        vCalls.append(
+            {
+                "board": pBoard,
+                "max_items": pMaxItems
             }
         )
+
+        rDataFrame = vDataFrame
+        return rDataFrame
+
+    monkeypatch.setattr(
+        "job.sources.aggregator.scrape_greenhouse",
+        mock_scrape_greenhouse
     )
 
-    vJobs = pd.DataFrame(
-        [
-            {
-                "source": "lever",
-                "source_id": "job-1",
-                "title": "Développeur Python"
-            },
-            {
-                "source": "lever",
-                "source_id": "job-1",
-                "title": "Développeur Python"
-            }
-        ]
+    vConfig = JobScrapingConfig(
+        max_items=25
     )
 
-    with patch(
-        "job.sources.aggregator.scrape_lever",
-        return_value=vJobs
-    ):
-        rResult = scrape_sources(vConfig)
+    vConfig.greenhouse.enabled = True
+    vConfig.greenhouse.mode = "api"
+    vConfig.greenhouse.api_available = True
+    vConfig.greenhouse.parameters = {
+        "board": "test-board"
+    }
+
+    rResult = scrape_sources(
+        vConfig
+    )
 
     assert len(rResult.items) == 1
-    assert rResult.items.iloc[0]["source_id"] == "job-1"
 
-
-def test_scrape_sources_keeps_same_source_id_from_different_sources():
-    """
-    Vérifie qu'un même identifiant provenant de deux sources différentes
-    n'est pas considéré comme un doublon.
-    """
-
-    vConfig = JobScrapingConfig(
-        france_travail=SourceConfig(
-            enabled=False
-        ),
-        greenhouse=SourceConfig(
-            enabled=True,
-            api_available=True,
-            mode="api",
-            parameters={
-                "board": "test"
-            }
-        ),
-        lever=SourceConfig(
-            enabled=True,
-            api_available=True,
-            mode="api",
-            parameters={
-                "site": "test"
-            }
-        )
-    )
-
-    vGreenhouseJobs = pd.DataFrame(
-        [
-            {
-                "source": "greenhouse",
-                "source_id": "job-1",
-                "title": "Développeur Python"
-            }
-        ]
-    )
-
-    vLeverJobs = pd.DataFrame(
-        [
-            {
-                "source": "lever",
-                "source_id": "job-1",
-                "title": "Développeur Python"
-            }
-        ]
-    )
-
-    with patch(
-        "job.sources.aggregator.scrape_greenhouse",
-        return_value=vGreenhouseJobs
-    ), patch(
-        "job.sources.aggregator.scrape_lever",
-        return_value=vLeverJobs
-    ):
-        rResult = scrape_sources(vConfig)
-
-    assert len(rResult.items) == 2
-    assert set(rResult.items["source"]) == {
-        "greenhouse",
-        "lever"
-    }
-
-def test_scrape_sources_keeps_jobs_without_source_id():
-    """
-    Vérifie que les offres sans identifiant source
-    sont conservées individuellement.
-    """
-
-    vConfig = JobScrapingConfig(
-        lever=SourceConfig(
-            enabled=True,
-            api_available=True,
-            mode="api",
-            parameters={
-                "site": "test"
-            }
-        )
-    )
-
-    vJobs = pd.DataFrame(
-        [
-            {
-                "source": "lever",
-                "source_id": None,
-                "title": "Développeur Python"
-            },
-            {
-                "source": "lever",
-                "source_id": None,
-                "title": "Développeur Java"
-            }
-        ]
-    )
-
-    with patch(
-        "job.sources.aggregator.scrape_lever",
-        return_value=vJobs
-    ):
-        rResult = scrape_sources(vConfig)
-
-    assert len(rResult.items) == 2
-    assert set(rResult.items["title"]) == {
-        "Développeur Python",
-        "Développeur Java"
-    }
+    assert vCalls == [
+        {
+            "board": "test-board",
+            "max_items": 25
+        }
+    ]

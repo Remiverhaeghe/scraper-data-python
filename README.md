@@ -56,6 +56,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Centraliser l'agrégation des sources d'emploi
 - [x] Centraliser l'orchestration du traitement des offres
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
+- [x] Gérer les limites par source et la limite globale
 
 ### 📚 Books
 
@@ -94,6 +95,8 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [ ] Pagination spécifique aux sites
 - [x] Enregistrement de la première récupération
 - [x] Enregistrement de la dernière récupération
+- [x] Gestion des limites par source
+- [x] Limitation globale après déduplication
 - [ ] Détection des nouvelles offres
 - [ ] Suivi des candidatures
 - [ ] Relances
@@ -160,7 +163,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **236 tests automatisés**
+- [x] **256 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 

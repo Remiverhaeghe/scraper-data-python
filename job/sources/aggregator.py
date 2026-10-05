@@ -18,7 +18,10 @@ from job.sources.lever.service import (
     scrape_jobs as scrape_lever
 )
 
-from scraper.collection import deduplicate_dataframe
+from scraper.collection import (
+    deduplicate_dataframe,
+    limit_dataframe
+)
 from scraper.result import ScrapingResult
 from utils.logger import get_logger
 
@@ -70,7 +73,8 @@ def scrape_sources(pConfig):
 
         vDataFrame = scrape_france_travail(
             vConfig,
-            vParams
+            vParams, 
+            pMaxItems=pConfig.max_items
         )
 
         vPageCount += 1
@@ -102,7 +106,8 @@ def scrape_sources(pConfig):
             )
 
         vDataFrame = scrape_greenhouse(
-            vBoard
+            vBoard,
+            pMaxItems=pConfig.max_items
         )
 
         vPageCount += 1
@@ -134,7 +139,8 @@ def scrape_sources(pConfig):
             )
 
         vDataFrame = scrape_lever(
-            vSite
+            vSite,
+            pMaxItems=pConfig.max_items
         )
 
         vPageCount += 1
@@ -161,16 +167,17 @@ def scrape_sources(pConfig):
         vItems["_deduplication_key"] = pd.NA
 
         vHasSourceId = vItems["source_id"].notna()
-        
+
         vItems.loc[
             vHasSourceId,
             "_deduplication_key"
-            ] = (
+        ] = (
             vItems.loc[vHasSourceId, "source"].astype(str)
             + "::"
             + vItems.loc[vHasSourceId, "source_id"].astype(str)
         )
 
+        # Suppression des doublons avant l'application de max_items.
         vItems = deduplicate_dataframe(
             vItems,
             "_deduplication_key"
@@ -183,6 +190,24 @@ def scrape_sources(pConfig):
         vItems = pd.DataFrame(
             columns=JOB_COLUMNS
         )
+
+    # ========================================================================
+    # Limite globale du nombre d'offres
+    # ========================================================================
+
+    if (
+        pConfig.max_items is not None
+        and len(vItems) > pConfig.max_items
+    ):
+        logger.info(
+            "Limitation du résultat à %s offre(s)",
+            pConfig.max_items
+        )
+
+        vItems = limit_dataframe(
+            vItems,
+            pConfig.max_items
+        ) 
 
     vDuration = perf_counter() - vStartTime
 

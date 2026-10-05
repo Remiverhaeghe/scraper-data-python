@@ -2,7 +2,6 @@
 # Gestion des arguments de ligne de commande
 # ============================================================================
 
-
 import argparse
 
 from config import MIN_RATING, MAX_RATING
@@ -142,6 +141,111 @@ def parse_arguments():
         type=valid_rating,
         default=None,
         help="Note minimum des livres."
+    )
+
+    # Configuration spécifique aux offres d'emploi
+    vParser.add_argument(
+        "--keyword",
+        default=None,
+        help="Mot-clé recherché dans les offres."
+    )
+
+    vParser.add_argument(
+        "--location",
+        default=None,
+        help="Localisation recherchée pour les offres."
+    )
+
+    vParser.add_argument(
+        "--max-distance-km",
+        type=positive_float,
+        default=None,
+        help="Distance maximale autour de la localisation."
+    )
+
+    vParser.add_argument(
+        "--contract",
+        default=None,
+        help="Type de contrat recherché."
+    )
+
+    vParser.add_argument(
+        "--min-salary",
+        type=positive_float,
+        default=None,
+        help="Salaire minimum recherché."
+    )
+
+    vParser.add_argument(
+        "--max-salary",
+        type=positive_float,
+        default=None,
+        help="Salaire maximum recherché."
+    )
+
+    vParser.add_argument(
+        "--remote",
+        action="store_true",
+        default=None,
+        help="Recherche uniquement des offres en télétravail."
+    )
+
+    vParser.add_argument(
+        "--min-remote-days",
+        type=positive_integer,
+        default=None,
+        help="Nombre minimum de jours de télétravail."
+    )
+
+    vParser.add_argument(
+        "--metro-required",
+        action="store_true",
+        default=None,
+        help="Recherche uniquement les offres accessibles en métro."
+    )
+
+    vParser.add_argument(
+        "--max-metro-distance-km",
+        type=positive_float,
+        default=None,
+        help="Distance maximale jusqu'au métro."
+    )
+
+    vParser.add_argument(
+        "--education",
+        default=None,
+        help="Formation recherchée."
+    )
+
+    vParser.add_argument(
+        "--skills",
+        nargs="+",
+        default=None,
+        help="Compétences recherchées."
+    )
+
+    vParser.add_argument(
+        "--missions",
+        nargs="+",
+        default=None,
+        help="Missions recherchées."
+    )
+
+    # Sources d'emploi
+    vParser.add_argument(
+        "--source",
+        dest="sources",
+        choices=[
+            "france-travail",
+            "greenhouse",
+            "lever"
+        ],
+        action="append",
+        default=None,
+        help=(
+            "Source d'emploi à utiliser. "
+            "L'option peut être répétée."
+        )
     )
 
     rArguments = vParser.parse_args()

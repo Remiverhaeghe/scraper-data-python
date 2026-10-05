@@ -6,6 +6,49 @@
 import main
 
 
+# ============================================================================
+# Configuration des sources pour les tests
+# ============================================================================
+
+
+def set_job_sources_environment(pMonkeypatch):
+    """
+    Configure les variables d'environnement fictives des sources d'emploi.
+
+    :param pMonkeypatch: Fixture pytest permettant de modifier l'environnement.
+    """
+
+    pMonkeypatch.setenv(
+        "FRANCE_TRAVAIL_CLIENT_ID",
+        "test-client-id"
+    )
+    pMonkeypatch.setenv(
+        "FRANCE_TRAVAIL_CLIENT_SECRET",
+        "test-client-secret"
+    )
+    pMonkeypatch.setenv(
+        "FRANCE_TRAVAIL_SCOPE",
+        "test-scope"
+    )
+    pMonkeypatch.setenv(
+        "FRANCE_TRAVAIL_TOKEN_URL",
+        "https://test.example/token"
+    )
+    pMonkeypatch.setenv(
+        "FRANCE_TRAVAIL_API_BASE_URL",
+        "https://test.example/api/"
+    )
+    pMonkeypatch.setenv(
+        "GREENHOUSE_BOARD",
+        "test-board"
+    )
+    pMonkeypatch.setenv(
+        "LEVER_SITE",
+        "test-site"
+    )
+
+
+# Vérifie que main lance correctement le traitement des livres
 def test_main_processes_books(monkeypatch):
     """
     Vérifie que main lance le traitement des livres par défaut.
@@ -87,10 +130,15 @@ def test_main_processes_books(monkeypatch):
     ]
 
 
+# Vérifie que main lance correctement le traitement des offres d'emploi
 def test_main_processes_jobs(monkeypatch):
     """
     Vérifie que main lance le traitement des offres d'emploi.
     """
+
+    set_job_sources_environment(
+        monkeypatch
+    )
 
     vCalls = []
 
@@ -106,7 +154,29 @@ def test_main_processes_jobs(monkeypatch):
             "title": None,
             "max_price": None,
             "min_rating": None,
-            "refresh": False
+            "refresh": False,
+            "keyword": "Python",
+            "location": "Lille",
+            "max_distance_km": 30,
+            "contract": "CDI",
+            "min_salary": 40000,
+            "max_salary": 60000,
+            "remote": True,
+            "min_remote_days": 2,
+            "metro_required": True,
+            "max_metro_distance_km": 1.5,
+            "education": "Bac+3",
+            "skills": [
+                "Python",
+                "Django"
+            ],
+            "missions": [
+                "Développement"
+            ],
+            "sources": [
+                "france-travail",
+                "greenhouse"
+            ]
         }
     )()
 
@@ -125,6 +195,34 @@ def test_main_processes_jobs(monkeypatch):
         assert pConfig.max_items == 100
         assert pConfig.delay == 1.0
         assert pConfig.timeout == 30
+        assert pConfig.max_pages == 2
+
+        assert pConfig.keyword == "Python"
+        assert pConfig.location == "Lille"
+        assert pConfig.max_distance_km == 30
+        assert pConfig.contract == "CDI"
+        assert pConfig.min_salary == 40000
+        assert pConfig.max_salary == 60000
+        assert pConfig.remote is True
+        assert pConfig.min_remote_days == 2
+        assert pConfig.metro_required is True
+        assert pConfig.max_metro_distance_km == 1.5
+        assert pConfig.education == "Bac+3"
+        assert pConfig.skills == [
+            "Python",
+            "Django"
+        ]
+        assert pConfig.missions == [
+            "Développement"
+        ]
+
+        assert pConfig.france_travail.enabled is True
+        assert pConfig.france_travail.mode == "api"
+
+        assert pConfig.greenhouse.enabled is True
+        assert pConfig.greenhouse.mode == "api"
+
+        assert pConfig.lever.enabled is False
 
     def mock_initialize_database(pDatabaseFile):
         """Simule l'initialisation de la base."""
@@ -158,6 +256,7 @@ def test_main_processes_jobs(monkeypatch):
     ]
 
 
+# Vérifie que l'option refresh est correctement transmise
 def test_main_without_refresh(monkeypatch):
     """
     Vérifie que l'option refresh est correctement transmise
@@ -237,6 +336,7 @@ def test_main_without_refresh(monkeypatch):
     ]
 
 
+# Vérifie que main délègue la gestion du fichier à process_books
 def test_main_without_file(monkeypatch):
     """
     Vérifie que main délègue la gestion du fichier
@@ -314,3 +414,163 @@ def test_main_without_file(monkeypatch):
         "initialize_database",
         "process_books"
     ]
+
+
+# Vérifie qu'aucune source d'emploi n'est activée par défaut
+def test_process_job_arguments_without_sources():
+    """
+    Vérifie qu'aucune source d'emploi n'est activée par défaut.
+    """
+
+    vArguments = type(
+        "Arguments",
+        (),
+        {
+            "max_items": None,
+            "delay": 0.0,
+            "timeout": 10,
+            "max_pages": None,
+            "keyword": None,
+            "location": None,
+            "max_distance_km": None,
+            "contract": None,
+            "min_salary": None,
+            "max_salary": None,
+            "remote": None,
+            "min_remote_days": None,
+            "metro_required": None,
+            "max_metro_distance_km": None,
+            "education": None,
+            "skills": None,
+            "missions": None,
+            "sources": None
+        }
+    )()
+
+    vConfig = main.process_job_arguments(
+        vArguments
+    )
+
+    assert vConfig.france_travail.enabled is False
+    assert vConfig.greenhouse.enabled is False
+    assert vConfig.lever.enabled is False
+
+
+# Vérifie qu'une source d'emploi sélectionnée est correctement configurée
+def test_process_job_arguments_with_one_source(monkeypatch):
+    """
+    Vérifie qu'une source d'emploi sélectionnée est correctement configurée.
+    """
+
+    set_job_sources_environment(
+        monkeypatch
+    )
+
+    vArguments = type(
+        "Arguments",
+        (),
+        {
+            "max_items": 100,
+            "delay": 1.0,
+            "timeout": 30,
+            "max_pages": 2,
+            "keyword": "Python",
+            "location": "Lille",
+            "max_distance_km": 30,
+            "contract": "CDI",
+            "min_salary": 40000,
+            "max_salary": 60000,
+            "remote": True,
+            "min_remote_days": 2,
+            "metro_required": True,
+            "max_metro_distance_km": 1.5,
+            "education": "Bac+3",
+            "skills": [
+                "Python",
+                "Django"
+            ],
+            "missions": [
+                "Développement"
+            ],
+            "sources": [
+                "france-travail"
+            ]
+        }
+    )()
+
+    vConfig = main.process_job_arguments(
+        vArguments
+    )
+
+    assert vConfig.keyword == "Python"
+    assert vConfig.location == "Lille"
+    assert vConfig.max_distance_km == 30
+    assert vConfig.contract == "CDI"
+    assert vConfig.min_salary == 40000
+    assert vConfig.max_salary == 60000
+    assert vConfig.remote is True
+    assert vConfig.min_remote_days == 2
+    assert vConfig.skills == [
+        "Python",
+        "Django"
+    ]
+
+    assert vConfig.france_travail.enabled is True
+    assert vConfig.france_travail.api_available is True
+    assert vConfig.france_travail.mode == "api"
+
+    assert vConfig.greenhouse.enabled is False
+    assert vConfig.lever.enabled is False
+
+
+# Vérifie que plusieurs sources peuvent être activées simultanément
+def test_process_job_arguments_with_multiple_sources(monkeypatch):
+    """
+    Vérifie que plusieurs sources d'emploi peuvent être activées simultanément.
+    """
+
+    set_job_sources_environment(
+        monkeypatch
+    )
+
+    vArguments = type(
+        "Arguments",
+        (),
+        {
+            "max_items": None,
+            "delay": 0.0,
+            "timeout": 10,
+            "max_pages": None,
+            "keyword": None,
+            "location": None,
+            "max_distance_km": None,
+            "contract": None,
+            "min_salary": None,
+            "max_salary": None,
+            "remote": None,
+            "min_remote_days": None,
+            "metro_required": None,
+            "max_metro_distance_km": None,
+            "education": None,
+            "skills": None,
+            "missions": None,
+            "sources": [
+                "france-travail",
+                "greenhouse",
+                "lever"
+            ]
+        }
+    )()
+
+    vConfig = main.process_job_arguments(
+        vArguments
+    )
+
+    assert vConfig.france_travail.enabled is True
+    assert vConfig.france_travail.mode == "api"
+
+    assert vConfig.greenhouse.enabled is True
+    assert vConfig.greenhouse.mode == "api"
+
+    assert vConfig.lever.enabled is True
+    assert vConfig.lever.mode == "api"

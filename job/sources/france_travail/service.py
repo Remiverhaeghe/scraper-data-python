@@ -4,17 +4,23 @@
 
 from job.sources.france_travail.client import search_jobs
 from job.sources.france_travail.parser import parse_jobs
+from scraper.collection import limit_dataframe
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-def scrape_jobs(pConfig, pParams):
+def scrape_jobs(
+    pConfig,
+    pParams,
+    pMaxItems=None
+):
     """
     Récupère et normalise les offres France Travail.
 
     :param pConfig: Configuration France Travail.
     :param pParams: Paramètres de recherche.
+    :param pMaxItems: Nombre maximum d'offres à conserver.
     :return: DataFrame contenant les offres normalisées.
     """
 
@@ -40,6 +46,12 @@ def scrape_jobs(pConfig, pParams):
     vDataFrame = parse_jobs(
         vJobs
     )
+
+    if pMaxItems is not None:
+        vDataFrame = limit_dataframe(
+            vDataFrame,
+            pMaxItems
+        )
 
     logger.info(
         "%s offre(s) normalisée(s)",

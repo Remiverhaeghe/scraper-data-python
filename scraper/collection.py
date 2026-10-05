@@ -62,3 +62,23 @@ def deduplicate_dataframe(pDataFrame, pKeyColumn):
     rDataFrame = vDataFrame.reset_index(drop=True)
 
     return rDataFrame
+
+def limit_dataframe(pDataFrame, pMaxItems):
+    """
+    Limite le nombre d'éléments d'un DataFrame.
+
+    :param pDataFrame: DataFrame à limiter.
+    :param pMaxItems: Nombre maximum d'éléments.
+    :return: DataFrame limité.
+    """
+
+    if pMaxItems is None:
+        rDataFrame = pDataFrame
+    else:
+        rDataFrame = pDataFrame.iloc[
+            :pMaxItems
+        ].reset_index(
+            drop=True
+        )
+
+    return rDataFrame

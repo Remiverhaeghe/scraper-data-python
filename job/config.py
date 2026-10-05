@@ -58,7 +58,7 @@ class JobScrapingConfig(ScrapingConfig):
         default_factory=SourceConfig
     )
 
-    def validate(self):
+    def validate(self) -> None:
         """
         Vérifie que la configuration complète est cohérente.
         """
