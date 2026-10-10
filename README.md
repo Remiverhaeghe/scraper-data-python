@@ -29,8 +29,22 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - **Parsing HTML :** beautifulsoup4
 - **Analyse et structure des données :** pandas
 - **Tests :** pytest
-- **Stockage historique :** SQLite
-- **Interface graphique :** Python GUI
+- **Stockage :** SQLite
+- **Interface graphique :** Tkinter
+- **Tableau de bord web :** FastAPI, Jinja2, HTMX
+
+---
+
+## 🚀 Lancement
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env              # puis renseigner les clés des sources utilisées
+
+python main.py                    # interface graphique
+python -m cli.main --help         # ligne de commande
+python -m web                     # tableau de bord sur http://127.0.0.1:8000
+```
 
 ---
 
@@ -167,6 +181,16 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [ ] Résultats avancés
 - [ ] Historique graphique
 
+### 🌐 Tableau de bord web
+
+- [x] Liste des offres avec mise en évidence des nouvelles
+- [x] Filtres : recherche, source, contrat, télétravail, net mensuel, nouveautés
+- [x] Mise à jour des résultats sans rechargement (HTMX)
+- [x] Fiche détaillée avec lien et mention de la source
+- [ ] Suivi des candidatures
+- [ ] Authentification
+- [ ] Historique des exécutions
+
 ### 🔐 Sécurité
 
 - [x] Validation des URLs
@@ -188,7 +212,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **442 tests automatisés**
+- [x] **458 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 
@@ -337,6 +361,19 @@ scraper-data-python/
 │   ├── jobs_view.py                           # Vue graphique consacrée aux offres
 │   ├── styles.py                              # Styles et apparence graphique
 │   └── window.py                              # Gestion de la fenêtre principale
+│
+├── web/                                       # Tableau de bord web
+│   ├── __init__.py                            # Initialise le package Web
+│   ├── __main__.py                            # Lance le serveur avec python -m web
+│   ├── app.py                                 # Application FastAPI et routes
+│   ├── templates/                             # Gabarits HTML Jinja2
+│   │   ├── base.html                          # Mise en page commune
+│   │   ├── offers.html                        # Liste des offres et filtres
+│   │   ├── _offers_table.html                 # Tableau rechargé par HTMX
+│   │   └── offer.html                         # Fiche détaillée d'une offre
+│   └── static/                                # Fichiers statiques
+│       ├── style.css                          # Feuille de style
+│       └── htmx.min.js                        # HTMX 2.0.4, copie locale
 │
 ├── utils/                                     # Utilitaires techniques communs
 │   ├── __init__.py                            # Initialise le package Utils
@@ -495,6 +532,10 @@ scraper-data-python/
 │   │   ├── test_history_repository.py          # Teste la persistance de l'historique
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
 │   │   └── test_job_offers.py                  # Teste l'enregistrement des offres
+│   │
+│   ├── web/                                    # Tests du tableau de bord
+│   │   ├── __init__.py                          # Initialise le package de tests Web
+│   │   └── test_app.py                         # Teste les routes et la sécurité de l'affichage
 │   │
 │   ├── test_config.py                          # Teste la configuration générale
 │   ├── test_helpers.py                         # Teste les fonctions utilitaires

@@ -1,6 +1,7 @@
 """Enregistrement et lecture des offres d'emploi en base"""
 
 import json
+import sqlite3
 from datetime import datetime
 
 import pandas as pd
@@ -129,16 +130,71 @@ def save_offers(pDatabaseFile, pItems, pScrapedAt):
     return rItems
 
 
-def get_offers(pDatabaseFile):
-    """Retourne les offres enregistrées, des plus récentes aux plus anciennes."""
+def build_offer_conditions(
+    pSearch=None,
+    pSource=None,
+    pContract=None,
+    pRemote=False,
+    pMinNetSalary=None,
+    pSeenSince=None,
+):
+    """Construit les conditions SQL et leurs paramètres à partir des filtres."""
+
+    vConditions = []
+    vParams = []
+
+    if pSearch:
+        vConditions.append(
+            "(title LIKE ? OR company LIKE ? OR location LIKE ? OR description LIKE ?)"
+        )
+        vParams += [f"%{pSearch}%"] * 4
+
+    if pSource:
+        vConditions.append("source = ?")
+        vParams.append(pSource)
+
+    if pContract:
+        vConditions.append("contract = ?")
+        vParams.append(pContract)
+
+    if pRemote:
+        vConditions.append("remote = 1")
+
+    if pMinNetSalary is not None:
+        vConditions.append(
+            "COALESCE(salary_net_monthly_max, salary_net_monthly_min) >= ?"
+        )
+        vParams.append(pMinNetSalary)
+
+    if pSeenSince is not None:
+        vConditions.append("first_seen_at >= ?")
+        vParams.append(pSeenSince.isoformat())
+
+    rConditions = (vConditions, vParams)
+
+    return rConditions
+
+
+def get_offers(pDatabaseFile, pLimit=None, **pFilters):
+    """Retourne les offres filtrées, des plus récentes aux plus anciennes."""
+
+    vConditions, vParams = build_offer_conditions(**pFilters)
+
+    vQuery = "SELECT * FROM job_offer"
+
+    if vConditions:
+        vQuery += " WHERE " + " AND ".join(vConditions)
+
+    vQuery += " ORDER BY first_seen_at DESC, published_at DESC"
+
+    if pLimit is not None:
+        vQuery += " LIMIT ?"
+        vParams.append(pLimit)
 
     vConnection = connect_database(pDatabaseFile)
 
     try:
-        vOffers = pd.read_sql_query(
-            "SELECT * FROM job_offer ORDER BY first_seen_at DESC",
-            vConnection,
-        )
+        vOffers = pd.read_sql_query(vQuery, vConnection, params=vParams)
 
     finally:
         vConnection.close()
@@ -146,3 +202,24 @@ def get_offers(pDatabaseFile):
     rOffers = vOffers
 
     return rOffers
+
+
+def get_offer(pDatabaseFile, pSource, pSourceId):
+    """Retourne une offre sous forme de dictionnaire, ou None si elle n'existe pas."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vConnection.row_factory = sqlite3.Row
+
+        vRow = vConnection.execute(
+            "SELECT * FROM job_offer WHERE source = ? AND source_id = ?",
+            (pSource, str(pSourceId)),
+        ).fetchone()
+
+    finally:
+        vConnection.close()
+
+    rOffer = dict(vRow) if vRow is not None else None
+
+    return rOffer

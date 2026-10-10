@@ -30,7 +30,7 @@ def test_parse_job():
 
     assert rJob["title"] == "Développeur Python"
     assert rJob["company"] == "Entreprise A"
-    assert rJob["source"] == "france_travail"
+    assert rJob["source"] == "france-travail"
     assert rJob["source_id"] == "123"
     assert rJob["city"] == "Paris"
     assert rJob["postal_code"] == "75001"
@@ -47,7 +47,7 @@ def test_parse_job_with_missing_values():
     rJob = parse_job({"id": "456", "intitule": "Développeur Java"})
 
     assert rJob["title"] == "Développeur Java"
-    assert rJob["source"] == "france_travail"
+    assert rJob["source"] == "france-travail"
     assert rJob["source_id"] == "456"
     assert rJob["company"] is None
     assert rJob["salary_min"] is None

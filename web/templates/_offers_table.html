@@ -1,0 +1,48 @@
+<p class="count">
+    {{ offers | length }} offre{% if offers | length > 1 %}s{% endif %}
+    {% if is_truncated %}affichées, affinez la recherche pour voir au-delà des {{ max_offers }} plus récentes{% endif %}
+</p>
+
+{% if offers %}
+<div class="table-wrapper">
+    <table class="offers">
+        <thead>
+            <tr>
+                <th>Poste</th>
+                <th>Entreprise</th>
+                <th>Lieu</th>
+                <th>Contrat</th>
+                <th class="amount">Net mensuel</th>
+                <th>Source</th>
+                <th>Découverte</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for offer in offers %}
+            <tr class="{% if offer.is_new %}is-new{% endif %}">
+                <td>
+                    {% if offer.is_new %}<span class="badge badge-new">Nouvelle</span>{% endif %}
+                    <a href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Sans titre" }}</a>
+                    {% if offer.remote %}<span class="badge">Télétravail</span>{% endif %}
+                </td>
+                <td>{{ offer.company or "" }}</td>
+                <td>{{ offer.location or "" }}</td>
+                <td>{{ offer.contract or "" }}</td>
+                <td class="amount">
+                    {% if offer.salary_net_monthly_min or offer.salary_net_monthly_max %}
+                    {{ (offer.salary_net_monthly_min or offer.salary_net_monthly_max) | euros }}
+                    {% if offer.salary_net_monthly_max and offer.salary_net_monthly_max != offer.salary_net_monthly_min %}
+                    – {{ offer.salary_net_monthly_max | euros }}
+                    {% endif %}
+                    {% endif %}
+                </td>
+                <td><a href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">{{ offer.source_label }}</a></td>
+                <td>{{ offer.first_seen_at | date_fr }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="empty">Aucune offre ne correspond à ces critères.</p>
+{% endif %}

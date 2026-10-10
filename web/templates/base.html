@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Offres d'emploi{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css').path }}">
+    <script src="{{ url_for('static', path='htmx.min.js').path }}" defer></script>
+</head>
+<body>
+    <header class="header">
+        <a class="brand" href="{{ url_for('list_offers').path }}">Offres d'emploi</a>
+    </header>
+
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        Offres issues des sources indiquées sur chaque annonce, consultables sur leur site d'origine.
+    </footer>
+</body>
+</html>

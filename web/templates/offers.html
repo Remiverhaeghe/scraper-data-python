@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form class="filters"
+      hx-get="{{ url_for('list_offers').path }}"
+      hx-target="#offers"
+      hx-trigger="change, input changed delay:400ms from:.filters-search"
+      hx-push-url="true">
+
+    <input class="filters-search" type="search" name="q" value="{{ filters.q }}"
+           placeholder="Titre, entreprise, lieu, description" aria-label="Recherche">
+
+    <select name="source" aria-label="Source">
+        <option value="">Toutes les sources</option>
+        {% for name, definition in sources.items() %}
+        <option value="{{ name }}" {% if filters.source == name %}selected{% endif %}>{{ definition.label }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="contract" aria-label="Contrat">
+        <option value="">Tous les contrats</option>
+        {% for contract in contracts %}
+        <option value="{{ contract }}" {% if filters.contract == contract %}selected{% endif %}>{{ contract }}</option>
+        {% endfor %}
+    </select>
+
+    <input type="text" inputmode="numeric" name="min_salary" value="{{ filters.min_salary }}"
+           placeholder="Net mensuel minimum" aria-label="Net mensuel minimum">
+
+    <label class="filters-check">
+        <input type="checkbox" name="remote" value="1" {% if filters.remote %}checked{% endif %}>
+        Télétravail
+    </label>
+
+    <label class="filters-check">
+        <input type="checkbox" name="new" value="1" {% if filters.new %}checked{% endif %}>
+        Nouvelles uniquement
+    </label>
+</form>
+
+<section id="offers">
+    {% include "_offers_table.html" %}
+</section>
+{% endblock %}

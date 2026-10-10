@@ -95,3 +95,25 @@ def test_get_income_tax_rate_rejects_invalid_value(monkeypatch, pValue):
 
     with pytest.raises(ValueError, match="INCOME_TAX_RATE"):
         get_income_tax_rate()
+
+
+def test_add_net_salary_logs_ignored_amounts_once(caplog):
+    """Vérifie que les montants incohérents sont signalés en un seul message."""
+
+    vItems = pd.concat(
+        [
+            build_items(360, "year"),
+            build_items(450, "year"),
+            build_items(48000, "year"),
+        ],
+        ignore_index=True,
+    )
+
+    add_net_salary(vItems, pNetRatio=0.75)
+
+    vWarnings = [
+        vRecord for vRecord in caplog.records if vRecord.levelname == "WARNING"
+    ]
+
+    assert len(vWarnings) == 1
+    assert "2 salaire(s) ignoré(s)" in vWarnings[0].getMessage()

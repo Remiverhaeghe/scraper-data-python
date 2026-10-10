@@ -74,7 +74,7 @@ def parse_job(pJob):
         "title": pJob.get("intitule"),
         "company": vEntreprise.get("nom"),
         "company_id": None,
-        "source": "france_travail",
+        "source": "france-travail",
         "source_id": pJob.get("id"),
         "url": (pJob.get("origineOffre") or {}).get("urlOrigine")
         or OFFER_URL + str(pJob.get("id")),

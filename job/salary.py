@@ -51,13 +51,6 @@ def to_net_monthly(pAmount, pPeriod, pNetRatio):
         if vMonthlyGross >= MIN_MONTHLY_GROSS:
             rAmount = round(vMonthlyGross * pNetRatio)
 
-        else:
-            logger.warning(
-                "Salaire ignoré, montant incohérent avec la période : %s (%s)",
-                pAmount,
-                pPeriod,
-            )
-
     return rAmount
 
 
@@ -105,6 +98,21 @@ def add_net_salary(pItems, pNetRatio=NET_SALARY_RATIO, pTaxRate=None):
         vItems["salary_net_monthly_min"].notna()
         | vItems["salary_net_monthly_max"].notna()
     )
+
+    vIsConvertible = (
+        vIsEuro
+        & vItems["salary_period"].isin(MONTHLY_FACTORS)
+        & (vItems["salary_min"].notna() | vItems["salary_max"].notna())
+    )
+
+    vIgnoredCount = (vIsConvertible & ~vHasNetSalary).sum()
+
+    if vIgnoredCount:
+        logger.warning(
+            "%s salaire(s) ignoré(s), montant incohérent avec la période annoncée "
+            "(souvent un taux journalier de freelance)",
+            vIgnoredCount,
+        )
 
     logger.info(
         "Salaire net estimé pour %s offre(s) sur %s", vHasNetSalary.sum(), len(vItems)
