@@ -196,8 +196,10 @@ data/*.db
 # Logs générés par l'application
 logs/
 
-# Fichier .env
+# Fichier .env et ses copies, hors modèle
 .env
+.env.*
+!.env.example
 
 # Configuration locale de l'éditeur
 CLAUDE.md

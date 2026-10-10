@@ -35,8 +35,6 @@ def set_job_sources_environment(pMonkeypatch):
 
     pMonkeypatch.setenv("GREENHOUSE_BOARD", "test-board")
 
-    pMonkeypatch.setenv("LEVER_SITE", "test-site")
-
 
 # Tests du traitement des livres
 
@@ -174,7 +172,7 @@ def test_main_processes_jobs(monkeypatch, france_travail_available):
         assert pConfig.sources["greenhouse"].enabled is True
         assert pConfig.sources["greenhouse"].mode == "api"
 
-        assert pConfig.sources["lever"].enabled is False
+        assert pConfig.sources["remotive"].enabled is False
 
     def mock_initialize_database(pDatabaseFile):
         """Simule l'initialisation de la base."""
@@ -391,7 +389,7 @@ def test_process_job_arguments_with_one_source(monkeypatch, france_travail_avail
     assert vConfig.sources["france-travail"].mode == "api"
 
     assert vConfig.sources["greenhouse"].enabled is False
-    assert vConfig.sources["lever"].enabled is False
+    assert vConfig.sources["remotive"].enabled is False
 
 
 def test_process_job_arguments_with_multiple_sources(
@@ -423,7 +421,7 @@ def test_process_job_arguments_with_multiple_sources(
             "skills": None,
             "missions": None,
             "exclude_keywords": None,
-            "sources": ["france-travail", "greenhouse", "lever"],
+            "sources": ["france-travail", "greenhouse", "remotive"],
         },
     )()
 
@@ -435,5 +433,5 @@ def test_process_job_arguments_with_multiple_sources(
     assert vConfig.sources["greenhouse"].enabled is True
     assert vConfig.sources["greenhouse"].mode == "api"
 
-    assert vConfig.sources["lever"].enabled is True
-    assert vConfig.sources["lever"].mode == "api"
+    assert vConfig.sources["remotive"].enabled is True
+    assert vConfig.sources["remotive"].mode == "api"

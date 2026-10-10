@@ -340,12 +340,12 @@ def test_settings_page_never_shows_secret_values(client, monkeypatch):
     """Vérifie que seuls les noms des variables manquantes sont affichés."""
 
     monkeypatch.setenv("JOOBLE_API_KEY", "valeur-secrete")
-    monkeypatch.delenv("LEVER_SITE", raising=False)
+    monkeypatch.delenv("GREENHOUSE_BOARD", raising=False)
 
     vResponse = client.get("/settings")
 
     assert vResponse.status_code == 200
-    assert "LEVER_SITE" in vResponse.text
+    assert "GREENHOUSE_BOARD" in vResponse.text
     assert "valeur-secrete" not in vResponse.text
 
 

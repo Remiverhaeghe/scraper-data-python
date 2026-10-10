@@ -39,10 +39,10 @@ def test_scrape_sources_limits_global_number_of_items(monkeypatch):
         }
     )
 
-    vLeverDataFrame = pd.DataFrame(
+    vRemotiveDataFrame = pd.DataFrame(
         {
-            "title": ["Lever 1", "Lever 2"],
-            "source": ["lever", "lever"],
+            "title": ["Remotive 1", "Remotive 2"],
+            "source": ["remotive", "remotive"],
             "source_id": ["1", "2"],
         }
     )
@@ -58,8 +58,8 @@ def test_scrape_sources_limits_global_number_of_items(monkeypatch):
     )
 
     monkeypatch.setattr(
-        "job.sources.lever.source.scrape_jobs",
-        lambda pSite, pMaxItems=None: vLeverDataFrame,
+        "job.sources.remotive.source.scrape_jobs",
+        lambda pSearch, pMaxItems=None: vRemotiveDataFrame,
     )
 
     vConfig = JobScrapingConfig(max_items=4)
@@ -68,41 +68,41 @@ def test_scrape_sources_limits_global_number_of_items(monkeypatch):
 
     enable_source(vConfig, "greenhouse", {"board": "test-board"})
 
-    enable_source(vConfig, "lever", {"site": "test-site"})
+    enable_source(vConfig, "remotive", {"search": None})
 
     rResult = scrape_sources(vConfig)
 
     assert len(rResult.items) == 4
 
 
-def test_scrape_sources_passes_max_items_to_lever(monkeypatch):
-    """Vérifie que max_items est transmis au service Lever."""
+def test_scrape_sources_passes_max_items_to_remotive(monkeypatch):
+    """Vérifie que max_items est transmis au service Remotive."""
 
-    # Vérifie que l'agrégateur transmet la limite globale à la source Lever.
+    # Vérifie que l'agrégateur transmet la limite globale à la source Remotive.
     vCalls = []
 
-    vLeverDataFrame = pd.DataFrame(
-        {"title": ["Lever 1"], "source": ["lever"], "source_id": ["1"]}
+    vRemotiveDataFrame = pd.DataFrame(
+        {"title": ["Remotive 1"], "source": ["remotive"], "source_id": ["1"]}
     )
 
-    def mock_scrape_lever(pSite, pMaxItems=None):
-        vCalls.append({"site": pSite, "max_items": pMaxItems})
+    def mock_scrape_remotive(pSearch, pMaxItems=None):
+        vCalls.append({"search": pSearch, "max_items": pMaxItems})
 
-        rDataFrame = vLeverDataFrame
+        rDataFrame = vRemotiveDataFrame
 
         return rDataFrame
 
-    monkeypatch.setattr("job.sources.lever.source.scrape_jobs", mock_scrape_lever)
+    monkeypatch.setattr("job.sources.remotive.source.scrape_jobs", mock_scrape_remotive)
 
     vConfig = JobScrapingConfig(max_items=25)
 
-    enable_source(vConfig, "lever", {"site": "test-site"})
+    enable_source(vConfig, "remotive", {"search": None})
 
     rResult = scrape_sources(vConfig)
 
     assert len(rResult.items) == 1
 
-    assert vCalls == [{"site": "test-site", "max_items": 25}]
+    assert vCalls == [{"search": None, "max_items": 25}]
 
 
 def test_scrape_sources_deduplicates_before_applying_limit(monkeypatch):
@@ -283,8 +283,8 @@ def raise_connection_error(*pArgs, **pKwargs):
 def test_scrape_sources_continues_when_one_source_fails(monkeypatch):
     """Vérifie qu'une source en échec n'empêche pas les autres sources."""
 
-    vLeverDataFrame = pd.DataFrame(
-        {"title": ["Lever 1"], "source": ["lever"], "source_id": ["1"]}
+    vRemotiveDataFrame = pd.DataFrame(
+        {"title": ["Remotive 1"], "source": ["remotive"], "source_id": ["1"]}
     )
 
     monkeypatch.setattr(
@@ -292,18 +292,18 @@ def test_scrape_sources_continues_when_one_source_fails(monkeypatch):
     )
 
     monkeypatch.setattr(
-        "job.sources.lever.source.scrape_jobs",
-        lambda pSite, pMaxItems=None: vLeverDataFrame,
+        "job.sources.remotive.source.scrape_jobs",
+        lambda pSearch, pMaxItems=None: vRemotiveDataFrame,
     )
 
     vConfig = JobScrapingConfig()
 
     enable_source(vConfig, "greenhouse", {"board": "test-board"})
-    enable_source(vConfig, "lever", {"site": "test-site"})
+    enable_source(vConfig, "remotive", {"search": None})
 
     rResult = scrape_sources(vConfig)
 
-    assert rResult.items["title"].tolist() == ["Lever 1"]
+    assert rResult.items["title"].tolist() == ["Remotive 1"]
     assert rResult.page_count == 1
     assert rResult.status == "partial"
     assert rResult.error_message == "Greenhouse : API indisponible"
@@ -312,32 +312,34 @@ def test_scrape_sources_continues_when_one_source_fails(monkeypatch):
 def test_scrape_sources_returns_error_when_all_sources_fail(monkeypatch):
     """Vérifie le statut d'erreur lorsque toutes les sources échouent."""
 
-    monkeypatch.setattr("job.sources.lever.source.scrape_jobs", raise_connection_error)
+    monkeypatch.setattr(
+        "job.sources.remotive.source.scrape_jobs", raise_connection_error
+    )
 
     vConfig = JobScrapingConfig()
 
-    enable_source(vConfig, "lever", {"site": "test-site"})
+    enable_source(vConfig, "remotive", {"search": None})
 
     rResult = scrape_sources(vConfig)
 
     assert rResult.items.empty
     assert rResult.status == "error"
-    assert rResult.error_message == "Lever : API indisponible"
+    assert rResult.error_message == "Remotive : API indisponible"
 
 
 def test_scrape_sources_returns_success_without_error(monkeypatch):
     """Vérifie le statut de succès lorsque toutes les sources répondent."""
 
     monkeypatch.setattr(
-        "job.sources.lever.source.scrape_jobs",
-        lambda pSite, pMaxItems=None: pd.DataFrame(
-            {"title": ["Lever 1"], "source": ["lever"], "source_id": ["1"]}
+        "job.sources.remotive.source.scrape_jobs",
+        lambda pSearch, pMaxItems=None: pd.DataFrame(
+            {"title": ["Remotive 1"], "source": ["remotive"], "source_id": ["1"]}
         ),
     )
 
     vConfig = JobScrapingConfig()
 
-    enable_source(vConfig, "lever", {"site": "test-site"})
+    enable_source(vConfig, "remotive", {"search": None})
 
     rResult = scrape_sources(vConfig)
 
@@ -351,10 +353,10 @@ def test_scrape_sources_adds_net_salary(monkeypatch):
     monkeypatch.delenv("INCOME_TAX_RATE", raising=False)
 
     monkeypatch.setattr(
-        "job.sources.lever.source.scrape_jobs",
-        lambda pSite, pMaxItems=None: pd.DataFrame(
+        "job.sources.remotive.source.scrape_jobs",
+        lambda pSearch, pMaxItems=None: pd.DataFrame(
             {
-                "source": ["lever"],
+                "source": ["remotive"],
                 "source_id": ["1"],
                 "salary_min": [48000],
                 "salary_currency": ["EUR"],
@@ -365,15 +367,15 @@ def test_scrape_sources_adds_net_salary(monkeypatch):
 
     vConfig = JobScrapingConfig()
 
-    enable_source(vConfig, "lever", {"site": "test-site"})
+    enable_source(vConfig, "remotive", {"search": None})
 
     rResult = scrape_sources(vConfig)
 
     assert rResult.items.loc[0, "salary_net_monthly_min"] == 3000
 
 
-def mock_greenhouse_and_lever(monkeypatch, pCalls):
-    """Remplace les services Greenhouse et Lever en mémorisant les appels."""
+def mock_greenhouse_and_remotive(monkeypatch, pCalls):
+    """Remplace les services Greenhouse et Remotive en mémorisant les appels."""
 
     def mock_scrape_greenhouse(pBoard, pMaxItems=None):
         pCalls.append("greenhouse")
@@ -384,11 +386,11 @@ def mock_greenhouse_and_lever(monkeypatch, pCalls):
 
         return rDataFrame
 
-    def mock_scrape_lever(pSite, pMaxItems=None):
-        pCalls.append("lever")
+    def mock_scrape_remotive(pSearch, pMaxItems=None):
+        pCalls.append("remotive")
 
         rDataFrame = pd.DataFrame(
-            {"title": ["Lever 1"], "source": ["lever"], "source_id": ["1"]}
+            {"title": ["Remotive 1"], "source": ["remotive"], "source_id": ["1"]}
         )
 
         return rDataFrame
@@ -397,17 +399,17 @@ def mock_greenhouse_and_lever(monkeypatch, pCalls):
         "job.sources.greenhouse.source.scrape_jobs", mock_scrape_greenhouse
     )
 
-    monkeypatch.setattr("job.sources.lever.source.scrape_jobs", mock_scrape_lever)
+    monkeypatch.setattr("job.sources.remotive.source.scrape_jobs", mock_scrape_remotive)
 
 
-def build_greenhouse_and_lever_config():
-    """Construit une configuration avec Greenhouse et Lever activées."""
+def build_greenhouse_and_remotive_config():
+    """Construit une configuration avec Greenhouse et Remotive activées."""
 
     vConfig = JobScrapingConfig()
 
     enable_source(vConfig, "greenhouse", {"board": "test-board"})
 
-    enable_source(vConfig, "lever", {"site": "test-site"})
+    enable_source(vConfig, "remotive", {"search": None})
 
     rConfig = vConfig
 
@@ -420,16 +422,17 @@ def test_scrape_sources_reports_progress(monkeypatch):
     vCalls = []
     vProgress = []
 
-    mock_greenhouse_and_lever(monkeypatch, vCalls)
+    mock_greenhouse_and_remotive(monkeypatch, vCalls)
 
     scrape_sources(
-        build_greenhouse_and_lever_config(),
+        build_greenhouse_and_remotive_config(),
         pOnProgress=lambda pIndex, pTotal, pLabel: vProgress.append(
             (pIndex, pTotal, pLabel)
         ),
     )
 
-    assert vProgress == [(1, 2, "Greenhouse"), (2, 2, "Lever")]
+    # Ordre du registre : Remotive avant Greenhouse.
+    assert vProgress == [(1, 2, "Remotive"), (2, 2, "Greenhouse")]
 
 
 def test_scrape_sources_stops_before_first_source(monkeypatch):
@@ -439,10 +442,12 @@ def test_scrape_sources_stops_before_first_source(monkeypatch):
     vCancelEvent = threading.Event()
     vCancelEvent.set()
 
-    mock_greenhouse_and_lever(monkeypatch, vCalls)
+    mock_greenhouse_and_remotive(monkeypatch, vCalls)
 
     with pytest.raises(ScrapingCancelled):
-        scrape_sources(build_greenhouse_and_lever_config(), pCancelEvent=vCancelEvent)
+        scrape_sources(
+            build_greenhouse_and_remotive_config(), pCancelEvent=vCancelEvent
+        )
 
     assert vCalls == []
 
@@ -453,14 +458,16 @@ def test_scrape_sources_stops_between_sources(monkeypatch):
     vCalls = []
     vCancelEvent = threading.Event()
 
-    mock_greenhouse_and_lever(monkeypatch, vCalls)
+    mock_greenhouse_and_remotive(monkeypatch, vCalls)
 
     monkeypatch.setattr(
-        "job.sources.greenhouse.source.scrape_jobs",
-        lambda pBoard, pMaxItems=None: vCancelEvent.set() or pd.DataFrame(),
+        "job.sources.remotive.source.scrape_jobs",
+        lambda pSearch, pMaxItems=None: vCancelEvent.set() or pd.DataFrame(),
     )
 
     with pytest.raises(ScrapingCancelled):
-        scrape_sources(build_greenhouse_and_lever_config(), pCancelEvent=vCancelEvent)
+        scrape_sources(
+            build_greenhouse_and_remotive_config(), pCancelEvent=vCancelEvent
+        )
 
     assert vCalls == []

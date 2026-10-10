@@ -100,13 +100,13 @@ def test_parse_arguments_multiple_job_sources(monkeypatch):
             "--source",
             "greenhouse",
             "--source",
-            "lever",
+            "remotive",
         ],
     )
 
     vArguments = parse_arguments()
 
-    assert vArguments.sources == ["france-travail", "greenhouse", "lever"]
+    assert vArguments.sources == ["france-travail", "greenhouse", "remotive"]
 
 
 def test_parse_arguments_normalizes_contract():

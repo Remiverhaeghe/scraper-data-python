@@ -120,7 +120,6 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Findwork — clé à créer, intégration à valider sur un vrai appel
 - [x] Hacker News « Who is hiring? »
 - [x] Greenhouse
-- [x] Lever
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
   - [x] Adzuna
@@ -129,7 +128,6 @@ python -m scheduler               # recherche planifiée et notifications (--onc
   - [x] Jooble
   - [x] Findwork
   - [ ] Greenhouse — non nécessaire sur l'API Job Board utilisée
-  - [x] Lever
   - [ ] Remotive — non nécessaire, l'API renvoie tout en une requête
 - [x] Enregistrement de la première récupération
 - [x] Enregistrement de la dernière récupération
@@ -344,14 +342,6 @@ scraper-data-python/
 │       │   ├── service.py                      # Pagine les offres Jooble
 │       │   └── source.py                       # Déclare la source Jooble
 │       │
-│       ├── lever/                              # Intégration Lever
-│       │   ├── __init__.py                     # Initialise le package Lever
-│       │   ├── client.py                       # Communique avec l'API Lever
-│       │   ├── config.py                       # Configuration Lever
-│       │   ├── parser.py                       # Transforme les réponses Lever
-│       │   ├── service.py                      # Orchestre le scraping Lever
-│       │   └── source.py                       # Déclare la source Lever
-│       │
 │       └── remotive/                           # Intégration Remotive
 │           ├── __init__.py                     # Initialise le package Remotive
 │           ├── client.py                       # Communique avec l'API Remotive
@@ -554,13 +544,6 @@ scraper-data-python/
 │   │       │   ├── test_client.py              # Teste le client API
 │   │       │   ├── test_parser.py              # Teste le parsing
 │   │       │   └── test_service.py             # Teste la pagination et la configuration
-│   │       │
-│   │       ├── lever/                          # Tests Lever
-│   │       │   ├── __init__.py                 # Initialise les tests Lever
-│   │       │   ├── test_client.py              # Teste le client API
-│   │       │   ├── test_config.py              # Teste la configuration
-│   │       │   ├── test_parser.py              # Teste le parsing
-│   │       │   └── test_service.py             # Teste le service
 │   │       │
 │   │       └── remotive/                       # Tests Remotive
 │   │           ├── __init__.py                 # Initialise les tests Remotive

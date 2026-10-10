@@ -121,16 +121,16 @@ def test_job_config_sources_are_independent():
     vConfig.sources["france-travail"] = SourceConfig(
         enabled=True, api_available=True, mode="api"
     )
-    vConfig.sources["lever"] = SourceConfig()
+    vConfig.sources["greenhouse"] = SourceConfig()
 
     assert vConfig.sources["france-travail"].enabled is True
-    assert vConfig.sources["lever"].enabled is False
+    assert vConfig.sources["greenhouse"].enabled is False
 
 
 def test_job_config_sources_validation():
     """Vérifie que la validation des sources est appelée."""
 
-    vConfig = JobScrapingConfig(sources={"lever": SourceConfig(enabled=True)})
+    vConfig = JobScrapingConfig(sources={"greenhouse": SourceConfig(enabled=True)})
 
     with pytest.raises(ValueError, match="au moins un mode"):
         vConfig.validate()
@@ -201,18 +201,22 @@ def test_scrape_each_combines_sites_within_the_limit():
 
     vCalls = []
 
-    rJobs = scrape_each(" qonto, spotify ,alan", build_scraper(vCalls), 3, "Lever")
+    rJobs = scrape_each(
+        " acme, globex ,initech", build_scraper(vCalls), 3, "Greenhouse"
+    )
 
-    assert rJobs["title"].tolist() == ["qonto 1", "qonto 2", "spotify 1"]
-    assert vCalls == [("qonto", 3), ("spotify", 1)]
+    assert rJobs["title"].tolist() == ["acme 1", "acme 2", "globex 1"]
+    assert vCalls == [("acme", 3), ("globex", 1)]
 
 
 def test_scrape_each_skips_a_failing_site(caplog):
     """Vérifie qu'un site en erreur est journalisé sans bloquer les autres."""
 
-    rJobs = scrape_each("inconnu,qonto", build_scraper([], {"inconnu"}), None, "Lever")
+    rJobs = scrape_each(
+        "inconnu,acme", build_scraper([], {"inconnu"}), None, "Greenhouse"
+    )
 
-    assert rJobs["title"].tolist() == ["qonto 1", "qonto 2"]
+    assert rJobs["title"].tolist() == ["acme 1", "acme 2"]
     assert "site inconnu ignoré" in caplog.text
 
 
@@ -220,4 +224,4 @@ def test_scrape_each_raises_when_every_site_fails():
     """Vérifie que l'erreur remonte lorsqu'aucun site n'a répondu."""
 
     with pytest.raises(requests.HTTPError):
-        scrape_each("inconnu", build_scraper([], {"inconnu"}), None, "Lever")
+        scrape_each("inconnu", build_scraper([], {"inconnu"}), None, "Greenhouse")

@@ -10,7 +10,7 @@ JOB_COLUMNS = [
     "company",
     # Identifiant de l'entreprise fourni par la source, lorsqu'il existe
     "company_id",
-    # Source ayant fourni l'offre : france_travail, greenhouse, lever, etc.
+    # Source ayant fourni l'offre : france_travail, greenhouse, remotive, etc.
     "source",
     # Identifiant unique de l'offre chez la source
     # L'identification technique d'une offre repose sur source + source_id

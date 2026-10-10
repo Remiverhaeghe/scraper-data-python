@@ -6,7 +6,7 @@ import pytest
 
 from job.sources.configuration import build_job_config
 from job.sources.france_travail.source import build_params
-from job.sources.lever.config import LeverConfig
+from job.sources.greenhouse.config import GreenhouseConfig
 from job.sources.registry import SOURCES
 
 
@@ -68,23 +68,24 @@ def test_build_job_config_without_sources():
 # Vérifie qu'une source activée charge ses paramètres via le registre
 def test_build_job_config_loads_enabled_source(monkeypatch):
     monkeypatch.setattr(
-        "job.sources.lever.source.load_config", lambda: LeverConfig(site="test-site")
+        "job.sources.greenhouse.source.load_config",
+        lambda: GreenhouseConfig(board="test-board"),
     )
 
-    rConfig = build_job_config(build_arguments(["lever"]))
+    rConfig = build_job_config(build_arguments(["greenhouse"]))
 
-    assert rConfig.sources["lever"].enabled is True
-    assert rConfig.sources["lever"].mode == "api"
-    assert rConfig.sources["lever"].parameters == {"site": "test-site"}
-    assert rConfig.sources["greenhouse"].enabled is False
+    assert rConfig.sources["greenhouse"].enabled is True
+    assert rConfig.sources["greenhouse"].mode == "api"
+    assert rConfig.sources["greenhouse"].parameters == {"board": "test-board"}
+    assert rConfig.sources["remotive"].enabled is False
 
 
 # Vérifie qu'une configuration manquante bloque la construction
 def test_build_job_config_fails_when_source_config_is_missing(monkeypatch):
-    monkeypatch.delenv("LEVER_SITE", raising=False)
+    monkeypatch.delenv("GREENHOUSE_BOARD", raising=False)
 
-    with pytest.raises(ValueError, match="LEVER_SITE"):
-        build_job_config(build_arguments(["lever"]))
+    with pytest.raises(ValueError, match="GREENHOUSE_BOARD"):
+        build_job_config(build_arguments(["greenhouse"]))
 
 
 # Vérifie qu'une source indisponible ne peut pas être sélectionnée

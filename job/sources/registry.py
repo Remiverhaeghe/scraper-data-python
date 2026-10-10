@@ -9,7 +9,6 @@ from job.sources.hackernews.source import SOURCE as HACKERNEWS
 from job.sources.himalayas.source import SOURCE as HIMALAYAS
 from job.sources.jobicy.source import SOURCE as JOBICY
 from job.sources.jooble.source import SOURCE as JOOBLE
-from job.sources.lever.source import SOURCE as LEVER
 from job.sources.remotive.source import SOURCE as REMOTIVE
 
 # L'ordre détermine l'ordre de scraping et d'affichage.
@@ -26,6 +25,5 @@ SOURCES = {
         FINDWORK,
         HACKERNEWS,
         GREENHOUSE,
-        LEVER,
     )
 }
