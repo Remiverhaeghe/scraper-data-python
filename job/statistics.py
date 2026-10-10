@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 
-from config import NEW_OFFER_DAYS
+from job.settings import load_settings
 from job.sources.registry import SOURCES
 from storage.history_repository import get_history
 from storage.job_applications import (
@@ -39,12 +39,13 @@ def load_statistics(pDatabaseFile, pNow=None):
     """Calcule les indicateurs, les dernières exécutions et l'activité par jour."""
 
     vNow = pNow if pNow is not None else datetime.now()
+    vNewOfferDays = load_settings(pDatabaseFile)["new_offer_days"]
 
     rStatistics = {
         "offers": count_offers(pDatabaseFile, pHideIgnored=True),
         "new_offers": count_offers(
             pDatabaseFile,
-            pSeenSince=vNow - timedelta(days=NEW_OFFER_DAYS),
+            pSeenSince=vNow - timedelta(days=vNewOfferDays),
             pHideIgnored=True,
         ),
         "applications": sum(
@@ -52,6 +53,7 @@ def load_statistics(pDatabaseFile, pNow=None):
             for vStatus in FOLLOW_UP_STATUSES
         ),
         "follow_ups": count_offers(pDatabaseFile, pFollowUpBefore=vNow),
+        "new_offer_days": vNewOfferDays,
         "executions": get_history(pDatabaseFile, pLimit=RECENT_EXECUTIONS),
         "daily_activity": {
             vName: vCount(pDatabaseFile, CHART_DAYS, vNow)

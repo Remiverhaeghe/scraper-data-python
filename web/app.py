@@ -16,9 +16,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from config import (
     APPLICATION_NAME,
     ASSETS_DIRECTORY,
+    CONTACT_URL,
     DATABASE_FILE,
     LICENSE_NAME,
-    NEW_OFFER_DAYS,
+    LICENSE_URL,
     REPOSITORY_URL,
     TAGLINE,
 )
@@ -32,7 +33,6 @@ from job.presentation import (
     UNKNOWN_SEARCH,
     build_offer_filters,
     describe_execution,
-    describe_rules,
     describe_search,
     describe_sources,
     format_date,
@@ -41,6 +41,7 @@ from job.presentation import (
     safe_url,
     summarize_history,
 )
+from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
 from job.statistics import (
     ACTIVITY_SERIES,
@@ -147,7 +148,9 @@ templates.env.globals.update(
     app_name=APPLICATION_NAME,
     tagline=TAGLINE,
     repository_url=REPOSITORY_URL,
+    contact_url=CONTACT_URL,
     license_name=LICENSE_NAME,
+    license_url=LICENSE_URL,
 )
 
 
@@ -278,7 +281,7 @@ def show_dashboard(
             "active_page": "dashboard",
             "statistics": vStatistics,
             "ready_sources": count_ready_sources(),
-            "new_offer_days": NEW_OFFER_DAYS,
+            "new_offer_days": vStatistics["new_offer_days"],
             "chart_days": CHART_DAYS,
             "chart": build_bar_chart(
                 [
@@ -323,7 +326,8 @@ def list_offers(
     """Affiche la liste des offres, ou seulement le tableau pour une requête HTMX."""
 
     vNow = datetime.now()
-    vNewSince = vNow - timedelta(days=NEW_OFFER_DAYS)
+    vNewOfferDays = load_settings(pDatabaseFile)["new_offer_days"]
+    vNewSince = vNow - timedelta(days=vNewOfferDays)
 
     vFilters = build_offer_filters(
         pSearch=q,
@@ -334,6 +338,7 @@ def list_offers(
         pNewOnly=bool(new),
         pStatus=status,
         pNow=vNow,
+        pNewOfferDays=vNewOfferDays,
     )
 
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
@@ -411,7 +416,9 @@ def show_offer(
 
     vOffer = get_existing_offer(pDatabaseFile, source, id)
 
-    vNewSince = datetime.now() - timedelta(days=NEW_OFFER_DAYS)
+    vNewSince = datetime.now() - timedelta(
+        days=load_settings(pDatabaseFile)["new_offer_days"]
+    )
 
     rResponse = templates.TemplateResponse(
         request,
@@ -453,6 +460,7 @@ def update_application(
             status,
             pFollowUpDate=parse_date(follow_up_date),
             pNotes=notes.strip(),
+            pFollowUpDays=load_settings(pDatabaseFile)["follow_up_days"],
         )
 
     else:
@@ -477,7 +485,12 @@ def add_follow_up(
     if get_application(pDatabaseFile, source, id) is None:
         raise HTTPException(status_code=400, detail="Aucun suivi pour cette offre")
 
-    record_follow_up(pDatabaseFile, source, id)
+    record_follow_up(
+        pDatabaseFile,
+        source,
+        id,
+        pFollowUpDays=load_settings(pDatabaseFile)["follow_up_days"],
+    )
 
     rResponse = render_application(
         request, pDatabaseFile, vOffer, "Relance enregistrée"
@@ -540,9 +553,8 @@ def show_history(
     return rResponse
 
 
-@app.get("/settings", response_class=HTMLResponse)
-def show_settings(request: Request):
-    """Affiche le thème, l'état des sources et les informations de l'application."""
+def render_settings(pRequest, pDatabaseFile, pMessage=None, pStatusCode=200):
+    """Affiche le thème, les règles de calcul, l'état des sources et les informations."""
 
     vSources = [
         {
@@ -555,9 +567,68 @@ def show_settings(request: Request):
     ]
 
     rResponse = templates.TemplateResponse(
-        request,
+        pRequest,
         "settings.html",
-        {"active_page": "settings", "sources": vSources, "rules": describe_rules()},
+        {
+            "active_page": "settings",
+            "sources": vSources,
+            "settings": load_settings(pDatabaseFile),
+            "definitions": SETTING_DEFINITIONS,
+            "message": pMessage,
+        },
+        status_code=pStatusCode,
     )
+
+    return rResponse
+
+
+@app.get("/settings", response_class=HTMLResponse)
+def show_settings(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche la page des paramètres."""
+
+    rResponse = render_settings(request, pDatabaseFile)
+
+    return rResponse
+
+
+@app.post("/settings", response_class=HTMLResponse)
+async def update_settings(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre les règles de calcul saisies, ou affiche les erreurs de saisie."""
+
+    vForm = await request.form()
+
+    vValues = {vKey: vForm[vKey] for vKey in SETTING_DEFINITIONS if vKey in vForm}
+
+    try:
+        _, vRecomputed = save_settings(pDatabaseFile, vValues)
+
+    except ValueError as vException:
+        rResponse = render_settings(request, pDatabaseFile, str(vException), 400)
+
+    else:
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            (
+                f"Règles enregistrées, salaire net recalculé pour {vRecomputed} offre(s)."
+                if vRecomputed
+                else "Règles enregistrées."
+            ),
+        )
+
+    return rResponse
+
+
+@app.get("/legal", response_class=HTMLResponse)
+def show_legal(request: Request):
+    """Affiche les mentions légales et la licence."""
+
+    rResponse = templates.TemplateResponse(request, "legal.html", {"active_page": None})
 
     return rResponse

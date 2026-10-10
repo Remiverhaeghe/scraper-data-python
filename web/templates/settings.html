@@ -19,20 +19,41 @@
 
         <article class="card">
             <h2>Règles de calcul</h2>
-            <p class="card-subtitle">Comment les montants et les dates sont obtenus</p>
-            <dl class="rules">
-                {% for label, text in rules %}
-                <dt>{{ label }}</dt>
-                <dd>{{ text }}</dd>
+            <p class="card-subtitle">Partagées avec l'application de bureau ; le net des offres est recalculé</p>
+            <form class="rules-form" method="post" action="{{ url_for('update_settings').path }}">
+                {% for key, definition in definitions.items() %}
+                <label class="rule">
+                    <span>
+                        <span class="rule-name">{{ definition.label }}</span>
+                        <span class="rule-help">{{ definition.help }}</span>
+                    </span>
+                    <span class="rule-input">
+                        <input type="number" name="{{ key }}" value="{{ settings[key] }}"
+                               min="{{ definition.minimum }}" max="{{ definition.maximum }}"
+                               step="{{ definition.step }}" required>
+                        <span class="muted">{{ definition.unit }}</span>
+                    </span>
+                </label>
                 {% endfor %}
-            </dl>
+                <div class="rules-actions">
+                    <button class="button button-primary" type="submit">Enregistrer</button>
+                    {% if message %}<p class="application-message" role="status">{{ message }}</p>{% endif %}
+                </div>
+            </form>
         </article>
 
         <article class="card">
             <h2>{{ app_name }}</h2>
             <p class="card-subtitle">{{ tagline }}</p>
-            <p class="muted">Licence {{ license_name }}. Icônes Lucide, sous licence ISC.</p>
-            <a class="button" href="{{ repository_url }}" target="_blank" rel="noopener">{{ icon("github") }} Code source sur GitHub</a>
+            <p class="muted">
+                <a href="{{ license_url }}" target="_blank" rel="noopener">Licence {{ license_name }}</a>.
+                Icônes Lucide, sous licence ISC.
+                <a href="{{ url_for('show_legal').path }}">Mentions légales</a>.
+            </p>
+            <div class="page-actions">
+                <a class="button" href="{{ repository_url }}" target="_blank" rel="noopener">{{ icon("github") }} Code source sur GitHub</a>
+                <a class="button" href="{{ contact_url }}" target="_blank" rel="noopener">{{ icon("linkedin") }} Me contacter sur LinkedIn</a>
+            </div>
         </article>
     </div>
 

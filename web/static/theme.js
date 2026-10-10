@@ -38,18 +38,10 @@
 
     document.addEventListener("click", function (pEvent) {
         var vChoiceButton = pEvent.target.closest("[data-theme-choice]");
-        var vToggleButton = pEvent.target.closest("[data-theme-toggle]");
-        var vChoice = null;
 
         if (vChoiceButton) {
-            vChoice = vChoiceButton.dataset.themeChoice;
-        } else if (vToggleButton) {
-            vChoice = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-        }
-
-        if (vChoice) {
-            saveChoice(vChoice);
-            applyChoice(vChoice);
+            saveChoice(vChoiceButton.dataset.themeChoice);
+            applyChoice(vChoiceButton.dataset.themeChoice);
         }
     });
 })();

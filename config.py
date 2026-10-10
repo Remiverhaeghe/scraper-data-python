@@ -13,15 +13,19 @@ DATABASE_FILE = "data/scraper.db"
 # Logo et icônes partagés par l'interface de bureau et le tableau de bord web
 ASSETS_DIRECTORY = Path(__file__).parent / "assets"
 
-LOGO_FILE = ASSETS_DIRECTORY / "logo.svg"
+LOGO_FILE = ASSETS_DIRECTORY / "logo.png"
 
-APPLICATION_NAME = "RV Veille Emploi"
+APPLICATION_NAME = "JobBoard Perso"
 
 TAGLINE = "Offres, candidatures et relances au même endroit"
 
 REPOSITORY_URL = "https://github.com/Remiverhaeghe/scraper-data-python"
 
 LICENSE_NAME = "PolyForm Strict 1.0.0"
+
+LICENSE_URL = f"{REPOSITORY_URL}/blob/main/LICENSE"
+
+CONTACT_URL = "https://www.linkedin.com/in/remi-verhaeghe-99a532121/"
 
 MIN_RATING = 1
 MAX_RATING = 5

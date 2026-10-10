@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 # Identifiant propre à l'application : sans lui, Windows regroupe la fenêtre
 # sous l'icône de Python dans la barre des tâches.
-WINDOWS_APP_ID = "Remiverhaeghe.VeilleEmploi"
+WINDOWS_APP_ID = "Remiverhaeghe.JobBoardPerso"
 
 THEME_SETTING = "appearance/theme"
 

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 
+from config import NET_SALARY_RATIO
 from job.sources.config import SourceConfig
 from scraper.config import ScrapingConfig
 
@@ -43,6 +44,10 @@ class JobScrapingConfig(ScrapingConfig):
 
     # Configuration de chaque source, indexée par son nom dans le registre
     sources: dict[str, SourceConfig] = field(default_factory=dict)
+
+    # Calcul du salaire net : part du brut conservée et impôt facultatif, en %
+    net_salary_ratio: float = NET_SALARY_RATIO
+    income_tax_rate: float | None = None
 
     def validate(self) -> None:
         """Vérifie que la configuration complète est cohérente."""

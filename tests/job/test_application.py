@@ -12,6 +12,14 @@ from job.sources.aggregator import ScrapingCancelled
 from job.sources.config import SourceConfig
 from scraper.result import ScrapingResult
 
+# Réglages simulés : un test ne doit jamais lire la vraie base de l'application
+SETTINGS = {
+    "net_salary_percent": 80,
+    "income_tax_rate": 7.5,
+    "new_offer_days": 3,
+    "follow_up_days": 7,
+}
+
 
 def test_process_jobs():
     """Vérifie que le traitement des offres lance le scraping
@@ -88,11 +96,19 @@ def test_process_jobs():
         "job.application.save_offers", return_value=vJobs
     ) as vSaveOffers, patch(
         "job.application.record_history"
-    ) as vRecordHistory:
+    ) as vRecordHistory, patch(
+        "job.application.load_settings", return_value=SETTINGS
+    ):
 
         rResult = process_jobs(vConfig)
 
-    vScrapeSources.assert_called_once_with(vConfig, pOnProgress=None, pCancelEvent=None)
+    vScrapeSources.assert_called_once()
+
+    vScrapedConfig = vScrapeSources.call_args.args[0]
+
+    assert vScrapedConfig.keyword == "Python"
+    assert vScrapedConfig.net_salary_ratio == 0.8
+    assert vScrapedConfig.income_tax_rate == 7.5
 
     vSaveOffers.assert_called_once()
 
@@ -139,7 +155,9 @@ def test_process_jobs_saves_nothing_when_cancelled():
         "job.application.scrape_sources", side_effect=ScrapingCancelled()
     ), patch("job.application.save_offers") as vSaveOffers, patch(
         "job.application.record_history"
-    ) as vRecordHistory:
+    ) as vRecordHistory, patch(
+        "job.application.load_settings", return_value=SETTINGS
+    ):
 
         with pytest.raises(ScrapingCancelled):
             process_jobs(JobScrapingConfig())

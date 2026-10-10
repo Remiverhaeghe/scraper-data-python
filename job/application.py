@@ -5,6 +5,7 @@ from dataclasses import replace
 
 from config import DATABASE_FILE
 from job.filter import filter_jobs
+from job.settings import get_net_ratio, get_tax_rate, load_settings
 from job.sources.aggregator import scrape_sources
 from scraper.history_service import record_history
 from storage.job_offers import save_offers
@@ -50,8 +51,17 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None):
 
     logger.info("Début du traitement des offres multi-sources")
 
+    # Les réglages de calcul enregistrés depuis les interfaces s'appliquent ici.
+    vSettings = load_settings(DATABASE_FILE)
+
+    vConfig = replace(
+        pConfig,
+        net_salary_ratio=get_net_ratio(vSettings),
+        income_tax_rate=get_tax_rate(vSettings),
+    )
+
     vScrapingResult = scrape_sources(
-        pConfig, pOnProgress=pOnProgress, pCancelEvent=pCancelEvent
+        vConfig, pOnProgress=pOnProgress, pCancelEvent=pCancelEvent
     )
 
     vScrapedAt = datetime.now()

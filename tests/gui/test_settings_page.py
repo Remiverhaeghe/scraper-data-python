@@ -2,7 +2,9 @@
 
 from gui.settings_page import SettingsPage, describe_source_state
 from gui.theme import COLORS
+from job.settings import load_settings
 from job.sources.config import SourceDefinition
+from storage.database import initialize_database
 
 
 def build_definition(pAvailable=True, pSettings=()):
@@ -41,7 +43,11 @@ def test_theme_buttons_emit_choice(qt_application, tmp_path):
 
     vRequested = []
 
-    vPage = SettingsPage(tmp_path / "scraper.db")
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vPage = SettingsPage(vDatabaseFile)
     vPage.theme_requested.connect(vRequested.append)
 
     vButtons = vPage.theme_buttons.buttons()
@@ -55,3 +61,18 @@ def test_theme_buttons_emit_choice(qt_application, tmp_path):
     vPage.set_theme_enabled(False)
 
     assert not vButtons[1].isEnabled()
+
+
+def test_rules_are_saved_from_the_page(qt_application, tmp_path):
+    """Vérifie l'enregistrement des règles de calcul saisies dans la page."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vPage = SettingsPage(vDatabaseFile)
+    vPage.setting_spins["follow_up_days"].setValue(10)
+    vPage.save_rules()
+
+    assert load_settings(vDatabaseFile)["follow_up_days"] == 10
+    assert vPage.rules_message.text() == "Règles enregistrées."

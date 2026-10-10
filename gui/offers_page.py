@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config import NEW_OFFER_DAYS
 from gui.offer_detail import OfferDetailPanel
 from gui.offers_model import COLUMNS, SORT_ROLE, OffersTableModel
 from gui.theme import COLORS
@@ -35,6 +34,7 @@ from job.presentation import (
     build_offer_filters,
     prepare_offer,
 )
+from job.settings import load_settings
 from job.sources.registry import SOURCES
 from storage.job_offers import get_offers
 from utils.logger import get_logger
@@ -225,7 +225,13 @@ class OffersPage(QWidget):
 
     def export_to(self, pPath):
         """Exporte toutes les offres correspondant aux filtres, sans limite d'affichage."""
-        vOffers = get_offers(self.database_file, **self.build_filters(datetime.now()))
+        vOffers = get_offers(
+            self.database_file,
+            **self.build_filters(
+                datetime.now(),
+                load_settings(self.database_file)["new_offer_days"],
+            ),
+        )
 
         rCount = export_offers(vOffers, pPath)
 
@@ -265,7 +271,7 @@ class OffersPage(QWidget):
 
         self.refresh()
 
-    def build_filters(self, pNow):
+    def build_filters(self, pNow, pNewOfferDays):
         """Traduit les filtres de la page en paramètres de get_offers."""
         rFilters = build_offer_filters(
             pSearch=self.search_edit.text(),
@@ -276,6 +282,7 @@ class OffersPage(QWidget):
             pNewOnly=self.new_check.isChecked(),
             pStatus=self.status_combo.currentData(),
             pNow=pNow,
+            pNewOfferDays=pNewOfferDays,
         )
 
         return rFilters
@@ -286,10 +293,12 @@ class OffersPage(QWidget):
         vSelectedKey = self.get_offer_key(self.detail_panel.offer)
 
         try:
+            vNewOfferDays = load_settings(self.database_file)["new_offer_days"]
+
             vOffers = get_offers(
                 self.database_file,
                 pLimit=MAX_DISPLAYED_OFFERS + 1,
-                **self.build_filters(vNow),
+                **self.build_filters(vNow, vNewOfferDays),
             )
 
         except Exception:
@@ -298,7 +307,7 @@ class OffersPage(QWidget):
             self.count_label.setText("Les offres n'ont pas pu être chargées.")
 
         else:
-            vNewSince = vNow - timedelta(days=NEW_OFFER_DAYS)
+            vNewSince = vNow - timedelta(days=vNewOfferDays)
 
             vPrepared = [
                 prepare_offer(vOffer, vNewSince)
@@ -306,10 +315,10 @@ class OffersPage(QWidget):
             ]
 
             self.model.set_offers(vPrepared)
-            self.count_label.setText(self.describe_count(len(vOffers)))
+            self.count_label.setText(self.describe_count(len(vOffers), vNewOfferDays))
             self.select_offer(vSelectedKey)
 
-    def describe_count(self, pCount):
+    def describe_count(self, pCount, pNewOfferDays):
         """Indique le nombre d'offres affichées."""
         if pCount > MAX_DISPLAYED_OFFERS:
             rText = (
@@ -318,7 +327,7 @@ class OffersPage(QWidget):
             )
         else:
             rText = (
-                f"{pCount} offre(s) · en gras, les nouvelles des {NEW_OFFER_DAYS} "
+                f"{pCount} offre(s) · en gras, les nouvelles des {pNewOfferDays} "
                 "derniers jours · double-clic pour ouvrir l'offre"
             )
 

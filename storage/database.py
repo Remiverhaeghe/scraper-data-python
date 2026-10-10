@@ -139,6 +139,17 @@ def migrate_to_v3(pConnection):
         """)
 
 
+def migrate_to_v4(pConnection):
+    """Ajoute les réglages modifiables depuis les interfaces."""
+
+    pConnection.execute("""
+        CREATE TABLE app_setting (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )
+        """)
+
+
 # Colonnes de date sur lesquelles un décompte quotidien est autorisé
 DAILY_COUNT_COLUMNS = {
     ("job_offer", "first_seen_at"),
@@ -186,7 +197,7 @@ def count_by_day(pDatabasePath, pTable, pDateColumn, pDays, pNow=None):
     return rCounts
 
 
-MIGRATIONS = [migrate_to_v1, migrate_to_v2, migrate_to_v3]
+MIGRATIONS = [migrate_to_v1, migrate_to_v2, migrate_to_v3, migrate_to_v4]
 
 
 def get_schema_version(pConnection):

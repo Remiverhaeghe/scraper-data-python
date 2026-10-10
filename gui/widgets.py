@@ -123,14 +123,14 @@ class StatisticCard(QFrame):
         self.value_label = QLabel("-")
         self.value_label.setObjectName("statisticValue")
 
-        vLabel = QLabel(pLabel)
-        vLabel.setObjectName("statisticLabel")
-        vLabel.setWordWrap(True)
+        self.label = QLabel(pLabel)
+        self.label.setObjectName("statisticLabel")
+        self.label.setWordWrap(True)
 
         vTexts = QVBoxLayout()
         vTexts.setSpacing(0)
         vTexts.addWidget(self.value_label)
-        vTexts.addWidget(vLabel)
+        vTexts.addWidget(self.label)
 
         vLayout = QHBoxLayout(self)
         vLayout.setContentsMargins(18, 16, 18, 16)
@@ -141,6 +141,10 @@ class StatisticCard(QFrame):
     def set_value(self, pValue):
         """Met à jour la valeur affichée."""
         self.value_label.setText(str(pValue))
+
+    def set_label(self, pLabel):
+        """Met à jour le libellé, lorsqu'il dépend d'un réglage."""
+        self.label.setText(pLabel)
 
     def mouseReleaseEvent(self, pEvent):
         """Émet clicked lorsque la carte est cliquée."""

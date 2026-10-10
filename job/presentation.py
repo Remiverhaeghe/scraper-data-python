@@ -5,9 +5,8 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from config import FOLLOW_UP_DAYS, NET_SALARY_RATIO, NEW_OFFER_DAYS
+from config import NEW_OFFER_DAYS
 from job.contract import CONTRACT_TYPES
-from job.salary import get_income_tax_rate
 from job.sources.registry import SOURCES
 from storage.job_applications import APPLICATION_STATUSES
 
@@ -150,6 +149,7 @@ def build_offer_filters(
     pNewOnly=False,
     pStatus=None,
     pNow=None,
+    pNewOfferDays=NEW_OFFER_DAYS,
 ):
     """Traduit les filtres saisis en paramètres de get_offers.
 
@@ -165,7 +165,7 @@ def build_offer_filters(
         "pContract": pContract if pContract in CONTRACT_TYPES else None,
         "pRemote": bool(pRemote),
         "pMinNetSalary": pMinNetSalary,
-        "pSeenSince": vNow - timedelta(days=NEW_OFFER_DAYS) if pNewOnly else None,
+        "pSeenSince": vNow - timedelta(days=pNewOfferDays) if pNewOnly else None,
         "pStatus": pStatus if pStatus in APPLICATION_STATUSES else None,
         "pFollowUpBefore": vNow if pStatus == FOLLOW_UP_FILTER else None,
         "pHideIgnored": True,
@@ -251,38 +251,3 @@ def describe_execution(pEntry):
     }
 
     return rDescription
-
-
-def describe_tax_rule():
-    """Décrit la prise en compte de l'impôt, selon INCOME_TAX_RATE."""
-
-    try:
-        vRate = get_income_tax_rate()
-
-    except ValueError as vException:
-        rRule = f"Non déduit : {vException}"
-
-    else:
-        rRule = (
-            f"Taux de {vRate:g} % déduit du net (INCOME_TAX_RATE)"
-            if vRate is not None
-            else "Non déduit : INCOME_TAX_RATE non renseigné"
-        )
-
-    return rRule
-
-
-def describe_rules():
-    """Retourne les règles de calcul appliquées aux offres et au suivi."""
-
-    rRules = [
-        (
-            "Salaire net",
-            f"Brut × {round(NET_SALARY_RATIO * 100)} %, l'hypothèse la plus prudente",
-        ),
-        ("Impôt sur le revenu", describe_tax_rule()),
-        ("Nouvelle offre", f"Découverte il y a moins de {NEW_OFFER_DAYS} jours"),
-        ("Relance", f"Proposée {FOLLOW_UP_DAYS} jours après l'envoi d'une candidature"),
-    ]
-
-    return rRules

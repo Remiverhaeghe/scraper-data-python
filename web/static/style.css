@@ -194,11 +194,13 @@ h3 {
 }
 
 .sidebar-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: var(--muted);
+    display: grid;
+    gap: 4px;
     font-size: 12px;
+}
+
+.sidebar-footer a {
+    color: var(--muted);
 }
 
 .content {
@@ -291,16 +293,6 @@ h3 {
 .button-block {
     width: 100%;
     justify-content: center;
-}
-
-.theme-light-only,
-.theme-dark-only {
-    display: none;
-}
-
-:root[data-theme="light"] .theme-light-only,
-:root[data-theme="dark"] .theme-dark-only {
-    display: inline-flex;
 }
 
 /* Cartes */
@@ -868,21 +860,75 @@ input[type="checkbox"] {
     white-space: pre-line;
 }
 
-.rules {
+.rules-form {
     display: grid;
-    grid-template-columns: 150px 1fr;
-    gap: 10px 14px;
-    margin: 0;
+    gap: 12px;
 }
 
-.rules dt {
+.rule {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+}
+
+.rule-name {
+    display: block;
     color: var(--heading);
     font-weight: 600;
 }
 
-.rules dd {
-    margin: 0;
+.rule-input {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.rule-input input {
+    width: 80px;
+}
+
+.rule-help {
+    display: block;
     color: var(--muted);
+    font-size: 12px;
+}
+
+.rule-input {
+    min-width: 170px;
+}
+
+.rules-actions {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.rules-actions p {
+    margin: 0;
+}
+
+.legal h2 {
+    margin-top: 18px;
+    font-size: 16px;
+}
+
+.legal h2:first-child {
+    margin-top: 0;
+}
+
+.legal p {
+    margin: 6px 0 0;
+    max-width: 820px;
+}
+
+input[type="number"] {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
 }
 
 /* Suivi de candidature */

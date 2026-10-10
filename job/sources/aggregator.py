@@ -8,7 +8,7 @@ import pandas as pd
 from job.benefits import add_benefits
 from job.contract import add_contract
 from job.csv_schema import JOB_COLUMNS
-from job.salary import add_net_salary, get_income_tax_rate
+from job.salary import add_net_salary
 from job.sources.registry import SOURCES
 from scraper.collection import deduplicate_dataframe, limit_dataframe
 from scraper.result import ScrapingResult
@@ -113,7 +113,9 @@ def scrape_sources(pConfig, pOnProgress=None, pCancelEvent=None):
     else:
         vItems = pd.DataFrame(columns=JOB_COLUMNS)
 
-    vItems = add_net_salary(vItems, pTaxRate=get_income_tax_rate())
+    vItems = add_net_salary(
+        vItems, pNetRatio=pConfig.net_salary_ratio, pTaxRate=pConfig.income_tax_rate
+    )
     vItems = add_benefits(vItems)
     vItems = add_contract(vItems)
 

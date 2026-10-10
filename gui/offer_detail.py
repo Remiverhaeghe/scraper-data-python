@@ -20,11 +20,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config import FOLLOW_UP_DAYS
 from gui.offers_model import format_net_salary
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, create_icon_label
 from job.presentation import STATUS_LABELS, format_date, safe_url
+from job.settings import load_settings
 from storage.job_applications import (
     delete_application,
     get_application,
@@ -319,7 +319,7 @@ class OfferDetailPanel(QWidget):
         self.follow_up_edit.setDate(
             QDate.fromString(vFollowUpDate[:10], "yyyy-MM-dd")
             if vFollowUpDate
-            else QDate.currentDate().addDays(FOLLOW_UP_DAYS)
+            else QDate.currentDate().addDays(self.get_follow_up_days())
         )
 
         self.notes_edit.setPlainText(vApplication.get("notes") or "")
@@ -327,6 +327,12 @@ class OfferDetailPanel(QWidget):
             vApplication.get("status") in FOLLOW_UP_STATUSES
         )
         self.application_label.setText(describe_application(vApplication))
+
+    def get_follow_up_days(self):
+        """Retourne le délai de relance défini dans les paramètres."""
+        rDays = load_settings(self.database_file)["follow_up_days"]
+
+        return rDays
 
     def get_follow_up_date(self):
         """Retourne la date de relance saisie, ou None si aucune n'est prévue."""
@@ -355,6 +361,7 @@ class OfferDetailPanel(QWidget):
                     vStatus,
                     pFollowUpDate=self.get_follow_up_date(),
                     pNotes=self.notes_edit.toPlainText().strip(),
+                    pFollowUpDays=self.get_follow_up_days(),
                 )
 
         except Exception:
@@ -371,7 +378,10 @@ class OfferDetailPanel(QWidget):
     def add_follow_up(self):
         """Enregistre une relance faite aujourd'hui et programme la suivante."""
         record_follow_up(
-            self.database_file, self.offer["source"], self.offer["source_id"]
+            self.database_file,
+            self.offer["source"],
+            self.offer["source_id"],
+            pFollowUpDays=self.get_follow_up_days(),
         )
 
         self.load_application()

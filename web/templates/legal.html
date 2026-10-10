@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Mentions légales{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Mentions légales", "Édition, contenus, données et licence", "file-text") }}
+
+<article class="card legal">
+    <h2>Édition</h2>
+    <p>
+        {{ app_name }} est un projet personnel, sans finalité commerciale, dont le code est
+        publié sur <a href="{{ repository_url }}" target="_blank" rel="noopener">GitHub</a>.
+        L'application s'exécute sur le poste ou le serveur de la personne qui l'installe.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+        Pour toute question sur le projet :
+        <a href="{{ contact_url }}" target="_blank" rel="noopener">profil LinkedIn de l'auteur</a>.
+    </p>
+
+    <h2>Contenus</h2>
+    <p>
+        Les offres d'emploi proviennent des sources indiquées sur chaque annonce et restent
+        la propriété de leurs éditeurs. Elles sont présentées telles que fournies par ces
+        sources, avec un lien vers l'annonce d'origine qui fait seule foi. Les salaires nets
+        sont des estimations calculées selon les règles des paramètres.
+    </p>
+
+    <h2>Données personnelles</h2>
+    <p>
+        Le suivi des candidatures et les notes sont enregistrés uniquement dans la base de
+        données locale de l'application. Aucun cookie n'est déposé : seul le choix du thème
+        est conservé dans ce navigateur.
+    </p>
+
+    <h2>Licence</h2>
+    <p>
+        Le code est distribué sous
+        <a href="{{ license_url }}" target="_blank" rel="noopener">licence {{ license_name }}</a> :
+        il peut être consulté et utilisé tel quel à des fins non commerciales, mais ni modifié
+        ni redistribué. Les icônes proviennent de Lucide, sous licence ISC.
+    </p>
+</article>
+{% endblock %}

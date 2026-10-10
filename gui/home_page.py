@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config import NEW_OFFER_DAYS
 from gui.chart import BarChart
 from gui.theme import COLORS
 from gui.widgets import (
@@ -139,9 +138,7 @@ class HomePage(QWidget):
             "offers": StatisticCard(
                 "Offres actives en base", "briefcase", "blue", True
             ),
-            "new_offers": StatisticCard(
-                f"Nouvelles sur {NEW_OFFER_DAYS} jours", "sparkles", "green", True
-            ),
+            "new_offers": StatisticCard("Nouvelles offres", "sparkles", "green", True),
             "applications": StatisticCard(
                 "Candidatures en cours", "send", "amber", True
             ),
@@ -271,6 +268,10 @@ class HomePage(QWidget):
         else:
             for vName, vCard in self.cards.items():
                 vCard.set_value(vStatistics[vName])
+
+            self.cards["new_offers"].set_label(
+                f"Nouvelles sur {vStatistics['new_offer_days']} jours"
+            )
 
             self.show_activity(vStatistics["executions"])
             self.show_chart(vStatistics["daily_activity"])

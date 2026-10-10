@@ -345,10 +345,10 @@ def test_settings_page_never_shows_secret_values(client, monkeypatch):
 def test_assets_are_served(client):
     """Vérifie la mise à disposition du logo partagé avec l'interface de bureau."""
 
-    vResponse = client.get("/assets/logo.svg")
+    vResponse = client.get("/assets/logo.png")
 
     assert vResponse.status_code == 200
-    assert "<svg" in vResponse.text
+    assert vResponse.headers["content-type"] == "image/png"
 
 
 @pytest.mark.parametrize("pName", ["../logo", "inconnue", "House", "house.svg"])
@@ -416,3 +416,41 @@ def test_build_bar_chart_with_independent_scales():
     )
 
     assert [vBar["height"] for vBar in vChart["series"][1]["bars"]] == [50, 100]
+
+
+def test_settings_are_saved_from_the_form(client):
+    """Vérifie l'enregistrement des règles de calcul depuis le formulaire."""
+
+    vResponse = client.post(
+        "/settings",
+        data={
+            "net_salary_percent": "80",
+            "income_tax_rate": "0",
+            "new_offer_days": "5",
+            "follow_up_days": "10",
+        },
+    )
+
+    assert vResponse.status_code == 200
+    assert "Règles enregistrées" in vResponse.text
+    assert 'name="follow_up_days" value="10"' in vResponse.text
+
+
+def test_settings_form_rejects_invalid_values(client):
+    """Vérifie qu'une valeur hors bornes est refusée sans rien enregistrer."""
+
+    vResponse = client.post("/settings", data={"new_offer_days": "0"})
+
+    assert vResponse.status_code == 400
+    assert "Nouvelle offre : valeur attendue entre 1 et 30" in vResponse.text
+
+
+def test_legal_page(client):
+    """Vérifie la page des mentions légales et le lien vers la licence."""
+
+    vResponse = client.get("/legal")
+
+    assert vResponse.status_code == 200
+    assert "Données personnelles" in vResponse.text
+    assert "/blob/main/LICENSE" in vResponse.text
+    assert "linkedin.com/in/" in vResponse.text

@@ -74,7 +74,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 📚 Books
@@ -171,7 +171,8 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Sources non configurées grisées, derniers critères mémorisés
 - [x] Offres : filtres, tableau triable, détail et suivi des candidatures
 - [x] Historique des exécutions : synthèse, critères et statut de chaque recherche
-- [x] Thèmes clair et sombre, changement sans scintillement ; page Paramètres (règles de calcul, sources)
+- [x] Thèmes clair et sombre, changement sans scintillement ; page Paramètres (sources)
+- [x] Règles de calcul modifiables (net, impôt, nouveauté, relance), partagées avec le web, net recalculé
 - [x] Graphique d'activité (offres, candidatures, relances) et cartes d'accès direct aux offres filtrées
 - [x] Historique : répartition des offres par source et rendement des recherches
 
@@ -189,6 +190,8 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Historique des exécutions et page Paramètres (état des sources)
 - [x] Thèmes clair et sombre, choix mémorisé dans le navigateur
 - [x] Pages d'erreur intégrées au site
+- [x] Règles de calcul modifiables, partagées avec l'application de bureau
+- [x] Mentions légales, lien vers la licence et contact LinkedIn
 - [ ] Authentification
 
 ### 🔐 Sécurité
@@ -254,6 +257,7 @@ scraper-data-python/
 │   ├── contract.py                            # Normalise le contrat : CDI, CDD ou freelance
 │   ├── presentation.py                        # Mise en forme et filtres communs aux interfaces
 │   ├── statistics.py                          # Indicateurs et graphiques, bureau et web
+│   ├── settings.py                            # Réglages de calcul modifiables et recalcul du net
 │   ├── export.py                              # Export des offres en CSV, Excel et JSON
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
@@ -392,6 +396,7 @@ scraper-data-python/
 │   │   ├── _application.html                  # Bloc de suivi d'une candidature
 │   │   ├── history.html                       # Historique des exécutions
 │   │   ├── settings.html                      # Thème et état des sources
+│   │   ├── legal.html                         # Mentions légales
 │   │   └── error.html                         # Page d'erreur
 │   └── static/                                # Fichiers statiques
 │       ├── style.css                          # Feuille de style, thèmes clair et sombre
@@ -399,7 +404,7 @@ scraper-data-python/
 │       └── htmx.min.js                        # HTMX 2.0.4, copie locale
 │
 ├── assets/                                    # Ressources partagées par le bureau et le web
-│   ├── logo.svg                               # Logo, icône de fenêtre et favicon
+│   ├── logo.png                               # Logo, icône de fenêtre et favicon
 │   └── icons/                                 # Icônes SVG Lucide (licence ISC)
 │
 ├── utils/                                     # Utilitaires techniques communs
@@ -424,6 +429,7 @@ scraper-data-python/
 │   ├── database.py                            # Gère la connexion et les migrations SQLite
 │   ├── history_repository.py                  # Persiste et récupère l'historique
 │   ├── job_applications.py                    # Suit les candidatures et les relances
+│   ├── settings_repository.py                 # Persiste les réglages modifiables
 │   └── job_offers.py                          # Enregistre les offres et détecte les nouvelles
 │
 ├── scripts/                                   # Scripts destinés aux essais manuels
@@ -455,6 +461,7 @@ scraper-data-python/
 │   │   ├── test_contract.py                   # Teste la normalisation du contrat
 │   │   ├── test_presentation.py               # Teste la mise en forme commune des offres
 │   │   ├── test_statistics.py                 # Teste les indicateurs du tableau de bord
+│   │   ├── test_settings.py                   # Teste les réglages et le recalcul du net
 │   │   ├── test_export.py                     # Teste l'export et la neutralisation des formules
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │

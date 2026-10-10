@@ -95,7 +95,13 @@ def update_application_status(pDatabaseFile, pSource, pSourceId, pStatus):
         vConnection.close()
 
 
-def record_follow_up(pDatabaseFile, pSource, pSourceId, pFollowUpDate=None):
+def record_follow_up(
+    pDatabaseFile,
+    pSource,
+    pSourceId,
+    pFollowUpDate=None,
+    pFollowUpDays=FOLLOW_UP_DAYS,
+):
     """Enregistre une relance et programme la suivante."""
 
     vFollowUpAt = pFollowUpDate
@@ -103,7 +109,7 @@ def record_follow_up(pDatabaseFile, pSource, pSourceId, pFollowUpDate=None):
     if vFollowUpAt is None:
         vFollowUpAt = datetime.now()
 
-    vNextFollowUpAt = vFollowUpAt + timedelta(days=FOLLOW_UP_DAYS)
+    vNextFollowUpAt = vFollowUpAt + timedelta(days=pFollowUpDays)
 
     vConnection = connect_database(pDatabaseFile)
 
@@ -184,6 +190,7 @@ def save_application(
     pFollowUpDate=None,
     pNotes=None,
     pNow=None,
+    pFollowUpDays=FOLLOW_UP_DAYS,
 ):
     """Crée ou met à jour le suivi d'une offre depuis le tableau de bord.
 
@@ -201,7 +208,7 @@ def save_application(
     vFollowUpDate = pFollowUpDate
 
     if vFollowUpDate is None and pStatus == "APPLIED":
-        vFollowUpDate = vNow + timedelta(days=FOLLOW_UP_DAYS)
+        vFollowUpDate = vNow + timedelta(days=pFollowUpDays)
 
     vConnection = connect_database(pDatabaseFile)
 

@@ -292,6 +292,70 @@ def count_offers_by_source(pDatabaseFile):
     return rCounts
 
 
+# Colonnes de salaire net recalculées lorsque les réglages de calcul changent
+NET_SALARY_COLUMNS = (
+    "salary_net_monthly_min",
+    "salary_net_monthly_max",
+    "salary_net_after_tax_monthly_min",
+    "salary_net_after_tax_monthly_max",
+)
+
+
+def get_salaries(pDatabaseFile):
+    """Retourne le salaire brut de chaque offre, pour recalculer son net."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rSalaries = pd.read_sql_query(
+            """
+            SELECT source, source_id, salary_min, salary_max,
+                   salary_period, salary_currency
+            FROM job_offer
+            """,
+            vConnection,
+        )
+
+    finally:
+        vConnection.close()
+
+    return rSalaries
+
+
+def update_net_salaries(pDatabaseFile, pSalaries):
+    """Enregistre les salaires nets recalculés ; retourne le nombre d'offres mises à jour."""
+
+    vRows = [
+        (
+            *(to_sql_value(vRow[vColumn]) for vColumn in NET_SALARY_COLUMNS),
+            vRow["source"],
+            vRow["source_id"],
+        )
+        for _, vRow in pSalaries.iterrows()
+    ]
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vConnection.executemany(
+            f"""
+            UPDATE job_offer
+            SET {", ".join(f"{vColumn} = ?" for vColumn in NET_SALARY_COLUMNS)}
+            WHERE source = ? AND source_id = ?
+            """,
+            vRows,
+        )
+
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    rCount = len(vRows)
+
+    return rCount
+
+
 def get_offer(pDatabaseFile, pSource, pSourceId):
     """Retourne une offre sous forme de dictionnaire, ou None si elle n'existe pas."""
 

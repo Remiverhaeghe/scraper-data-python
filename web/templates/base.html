@@ -6,14 +6,14 @@
     <title>{% block title %}Tableau de bord{% endblock %} · {{ app_name }}</title>
     <script src="{{ url_for('static', path='theme.js').path }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', path='style.css').path }}">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('assets', path='logo.svg').path }}">
+    <link rel="icon" type="image/png" href="{{ url_for('assets', path='logo.png').path }}">
     <script src="{{ url_for('static', path='htmx.min.js').path }}" defer></script>
 </head>
 <body>
 <div class="layout">
     <aside class="sidebar">
         <a class="brand" href="{{ url_for('show_dashboard').path }}">
-            <img src="{{ url_for('assets', path='logo.svg').path }}" alt="" width="44" height="44">
+            <img src="{{ url_for('assets', path='logo.png').path }}" alt="" width="44" height="44">
             <span>
                 <strong>{{ app_name }}</strong>
                 <small>{{ tagline }}</small>
@@ -35,13 +35,11 @@
             {% endfor %}
         </nav>
 
-        <div class="sidebar-footer">
-            <span>Tableau de bord web</span>
-            <button class="button" type="button" data-theme-toggle title="Changer de thème">
-                <span class="theme-light-only">{{ icon("moon", 16) }}</span>
-                <span class="theme-dark-only">{{ icon("sun", 16) }}</span>
-            </button>
-        </div>
+        <footer class="sidebar-footer">
+            <a href="{{ url_for('show_legal').path }}">Mentions légales</a>
+            <a href="{{ contact_url }}" target="_blank" rel="noopener">Me contacter</a>
+            <a href="{{ license_url }}" target="_blank" rel="noopener">Licence {{ license_name }}</a>
+        </footer>
     </aside>
 
     <main class="content">
