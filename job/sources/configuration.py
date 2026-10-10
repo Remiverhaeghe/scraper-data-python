@@ -38,6 +38,12 @@ def build_job_config(pArguments):
 
     vSources = pArguments.sources or []
 
+    for vSource in vSources:
+        if not SOURCES[vSource].available:
+            raise ValueError(
+                f"La source {SOURCES[vSource].label} est actuellement indisponible."
+            )
+
     logger.info("Sources sélectionnées : %s", vSources)
 
     vSourceConfigs = {}

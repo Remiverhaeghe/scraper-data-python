@@ -1,6 +1,21 @@
 """Tests du point d'entrée du mode ligne de commande"""
 
+from dataclasses import replace
+
+import pytest
+
 import cli.main as main
+from job.sources.registry import SOURCES
+
+
+@pytest.fixture
+def france_travail_available(monkeypatch):
+    """Rend France Travail disponible le temps d'un test."""
+
+    monkeypatch.setitem(
+        SOURCES, "france-travail", replace(SOURCES["france-travail"], available=True)
+    )
+
 
 # Configuration des sources pour les tests
 
@@ -84,7 +99,7 @@ def test_main_processes_books(monkeypatch):
     assert vCalls == ["parse_arguments", "initialize_database", "process_books"]
 
 
-def test_main_processes_jobs(monkeypatch):
+def test_main_processes_jobs(monkeypatch, france_travail_available):
     """Vérifie que le mode CLI lance le traitement des offres d'emploi."""
 
     set_job_sources_environment(monkeypatch)
@@ -326,7 +341,7 @@ def test_process_job_arguments_without_sources():
     assert all(not vSource.enabled for vSource in vConfig.sources.values())
 
 
-def test_process_job_arguments_with_one_source(monkeypatch):
+def test_process_job_arguments_with_one_source(monkeypatch, france_travail_available):
     """Vérifie qu'une source d'emploi sélectionnée est correctement configurée."""
 
     set_job_sources_environment(monkeypatch)
@@ -376,7 +391,9 @@ def test_process_job_arguments_with_one_source(monkeypatch):
     assert vConfig.sources["lever"].enabled is False
 
 
-def test_process_job_arguments_with_multiple_sources(monkeypatch):
+def test_process_job_arguments_with_multiple_sources(
+    monkeypatch, france_travail_available
+):
     """Vérifie que plusieurs sources d'emploi peuvent être activées simultanément."""
 
     set_job_sources_environment(monkeypatch)

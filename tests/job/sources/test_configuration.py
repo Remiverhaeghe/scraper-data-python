@@ -84,3 +84,9 @@ def test_build_job_config_fails_when_source_config_is_missing(monkeypatch):
 
     with pytest.raises(ValueError, match="LEVER_SITE"):
         build_job_config(build_arguments(["lever"]))
+
+
+# Vérifie qu'une source indisponible ne peut pas être sélectionnée
+def test_build_job_config_rejects_unavailable_source():
+    with pytest.raises(ValueError, match="indisponible"):
+        build_job_config(build_arguments(["france-travail"]))

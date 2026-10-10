@@ -58,3 +58,6 @@ class SourceDefinition:
 
     # Récupère les offres à partir des paramètres chargés et des critères
     scrape: Callable
+
+    # Une source indisponible reste affichée mais ne peut pas être sélectionnée
+    available: bool = True

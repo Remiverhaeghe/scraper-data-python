@@ -92,7 +92,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Filtrage des résultats après agrégation
 - [x] Enregistrement de l'historique du traitement
 - [x] Configuration API / HTML par source
-- [x] France Travail
+- [x] France Travail — API suspendue par France Travail, accès sur demande
 - [x] Greenhouse
 - [x] Lever
 - [ ] Pagination spécifique aux sites
@@ -105,6 +105,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Limitation globale après déduplication
 - [x] Normalisation de la période des salaires
 - [x] Estimation du salaire net mensuel, avant et après impôt
+- [x] Détection des primes, du 13e mois et de l'épargne salariale
 - [x] Poursuite du traitement si une source échoue
 - [x] Détection des nouvelles offres
 - [ ] Suivi des candidatures
@@ -172,7 +173,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **261 tests automatisés**
+- [x] **322 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 
@@ -206,6 +207,7 @@ scraper-data-python/
 │   ├── reader.py                              # Lit les offres depuis un fichier CSV
 │   ├── filter.py                              # Applique les filtres aux offres
 │   ├── salary.py                              # Estime le salaire net mensuel
+│   ├── benefits.py                            # Détecte primes, 13e mois et épargne salariale
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
 │       ├── __init__.py                         # Initialise le package des sources
@@ -246,6 +248,7 @@ scraper-data-python/
 │   ├── collection.py                          # Gère les collections et la déduplication
 │   ├── pagination.py                          # Gère la pagination commune
 │   ├── result.py                              # Représente le résultat d'une exécution
+│   ├── service.py                             # Mécanique commune de scraping d'un élément
 │   ├── history.py                             # Représente une entrée d'historique
 │   └── history_service.py                     # Construit et enregistre l'historique
 │
@@ -254,6 +257,8 @@ scraper-data-python/
 │   ├── books_view.py                          # Vue graphique consacrée aux livres
 │   ├── components.py                          # Composants graphiques réutilisables
 │   ├── home_view.py                           # Vue principale de l'application
+│   ├── job_controller.py                      # Lance le traitement des offres depuis la GUI
+│   ├── job_results_view.py                    # Affiche les résultats de recherche Jobs
 │   ├── jobs_view.py                           # Vue graphique consacrée aux offres
 │   ├── styles.py                              # Styles et apparence graphique
 │   └── window.py                              # Gestion de la fenêtre principale
@@ -267,7 +272,8 @@ scraper-data-python/
 │
 ├── cli/                                       # Gestion de l'interface en ligne de commande
 │   ├── __init__.py                            # Initialise le package CLI
-│   └── arguments.py                           # Analyse et valide les arguments CLI
+│   ├── arguments.py                           # Analyse et valide les arguments CLI
+│   └── main.py                                # Point d'entrée du mode ligne de commande
 │
 ├── data/                                      # Composants génériques de gestion des données
 │   ├── __init__.py                            # Initialise le package Data
@@ -306,16 +312,18 @@ scraper-data-python/
 │   │   ├── test_storage.py                    # Teste la sauvegarde des offres
 │   │   ├── test_application.py                # Teste l'orchestration Job
 │   │   ├── test_salary.py                     # Teste l'estimation du salaire net
+│   │   ├── test_benefits.py                   # Teste la détection des avantages
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
 │   │       ├── __init__.py                     # Initialise les tests des sources
 │   │       ├── test_aggregator.py              # Teste l'agrégation des sources
 │   │       ├── test_config.py                  # Teste la configuration commune
+│   │       ├── test_configuration.py           # Teste la construction de la configuration
 │   │       │
 │   │       ├── france_travail/                 # Tests France Travail
 │   │       │   ├── __init__.py                 # Initialise les tests France Travail
-│   │       │   ├── test_authentication.py     # Teste l'authentification
+│   │       │   ├── test_authentication.py      # Teste l'authentification
 │   │       │   ├── test_client.py              # Teste le client API
 │   │       │   ├── test_config.py              # Teste la configuration
 │   │       │   ├── test_parser.py              # Teste le parsing
@@ -324,18 +332,25 @@ scraper-data-python/
 │   │       ├── greenhouse/                     # Tests Greenhouse
 │   │       │   ├── __init__.py                 # Initialise les tests Greenhouse
 │   │       │   ├── test_client.py              # Teste le client API
+│   │       │   ├── test_config.py              # Teste la configuration
 │   │       │   ├── test_parser.py              # Teste le parsing
 │   │       │   └── test_service.py             # Teste le service
 │   │       │
 │   │       └── lever/                          # Tests Lever
 │   │           ├── __init__.py                 # Initialise les tests Lever
 │   │           ├── test_client.py              # Teste le client API
+│   │           ├── test_config.py              # Teste la configuration
 │   │           ├── test_parser.py              # Teste le parsing
 │   │           └── test_service.py             # Teste le service
 │   │
 │   ├── cli/                                    # Tests de l'interface CLI
 │   │   ├── __init__.py                          # Initialise le package de tests CLI
-│   │   └── test_arguments.py                   # Teste les arguments CLI
+│   │   ├── test_arguments.py                   # Teste les arguments CLI
+│   │   └── test_main.py                        # Teste le point d'entrée CLI
+│   │
+│   ├── gui/                                    # Tests de l'interface graphique
+│   │   ├── __init__.py                          # Initialise le package de tests GUI
+│   │   └── test_job_controller.py              # Teste le contrôleur des offres
 │   │
 │   ├── data/                                   # Tests des composants génériques de données
 │   │   ├── __init__.py                          # Initialise le package de tests Data
@@ -345,7 +360,8 @@ scraper-data-python/
 │   ├── scraper/                                # Tests des composants communs
 │   │   ├── __init__.py                          # Initialise le package de tests Scraper
 │   │   ├── test_collection.py                  # Teste les collections
-│   │   └── test_config.py                      # Teste la configuration commune
+│   │   ├── test_config.py                      # Teste la configuration commune
+│   │   └── test_service.py                     # Teste la mécanique commune de scraping
 │   │
 │   ├── storage/                                # Tests de la persistance commune
 │   │   ├── __init__.py                          # Initialise le package de tests Storage
@@ -369,6 +385,8 @@ scraper-data-python/
 ├── config.py                                   # Configuration générale de l'application
 ├── requirements.txt                            # Liste des dépendances Python
 ├── README.md                                   # Documentation synthétique du projet
+├── .env.example                                # Modèle des variables d'environnement
+├── .gitattributes                              # Impose les fins de ligne LF
 ├── .gitignore                                  # Liste des fichiers ignorés par Git
 └── LICENSE                                     # Licence du projet
 ```

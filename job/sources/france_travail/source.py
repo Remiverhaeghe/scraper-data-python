@@ -53,4 +53,6 @@ SOURCE = SourceDefinition(
     label="France Travail",
     load_parameters=load_parameters,
     scrape=scrape,
+    # API suspendue par France Travail, accès soumis à une demande
+    available=False,
 )

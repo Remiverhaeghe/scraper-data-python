@@ -50,12 +50,19 @@ JOB_COLUMNS = [
     "salary_currency",
     # Période de référence normalisée : hour, month ou year
     "salary_period",
+    # Libellé du salaire tel que fourni par la source, avec ses compléments
+    "salary_label",
     # Salaire net mensuel avant impôt, estimé à partir du brut
     "salary_net_monthly_min",
     "salary_net_monthly_max",
     # Salaire net mensuel après impôt, si un taux d'imposition est renseigné
     "salary_net_after_tax_monthly_min",
     "salary_net_after_tax_monthly_max",
+    # Avantages détectés dans l'offre : True si mentionnés, vide sinon
+    "has_13th_month",
+    "has_bonus",
+    "has_profit_sharing",
+    "has_savings_plan",
     # ------------------------------------------------------------------------
     # Télétravail
     # ------------------------------------------------------------------------

@@ -182,7 +182,10 @@ class JobsView:
 
         for vName, vDefinition in SOURCES.items():
             self.create_source_checkbutton(
-                vSources, vDefinition.label, self.source_vars[vName]
+                vSources,
+                vDefinition.label,
+                self.source_vars[vName],
+                vDefinition.available,
             )
 
         vActions = tk.Frame(vContent, bg=COLOR_SURFACE)
@@ -231,12 +234,13 @@ class JobsView:
             vFrame, textvariable=pVariable, font=FONT_NORMAL, relief="solid", bd=1
         ).pack(fill="x", pady=(6, 0), ipady=5)
 
-    def create_source_checkbutton(self, pParent, pText, pVariable):
+    def create_source_checkbutton(self, pParent, pText, pVariable, pAvailable=True):
         """Crée une case de sélection d'une source."""
         tk.Checkbutton(
             pParent,
-            text=pText,
+            text=pText if pAvailable else f"{pText} (indisponible)",
             variable=pVariable,
+            state="normal" if pAvailable else "disabled",
             font=FONT_NORMAL,
             bg=COLOR_SURFACE,
             activebackground=COLOR_SURFACE,

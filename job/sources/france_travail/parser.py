@@ -35,6 +35,26 @@ def parse_salary(pLabel):
     return rSalary
 
 
+def build_salary_label(pSalaire):
+    """Regroupe le libellé du salaire et ses compléments en un seul texte."""
+
+    vParts = [
+        pSalaire.get("libelle"),
+        pSalaire.get("commentaire"),
+        pSalaire.get("complement1"),
+        pSalaire.get("complement2"),
+    ]
+
+    vParts += [
+        vComplement.get("libelle")
+        for vComplement in pSalaire.get("listeComplements") or []
+    ]
+
+    rLabel = " | ".join(vPart for vPart in vParts if vPart) or None
+
+    return rLabel
+
+
 def parse_job(pJob):
     """Transforme une offre France Travail en dictionnaire Job.
 
@@ -101,6 +121,7 @@ def parse_job(pJob):
     vJob["salary_min"] = vSalaryMin
     vJob["salary_max"] = vSalaryMax
     vJob["salary_period"] = vSalaryPeriod
+    vJob["salary_label"] = build_salary_label(vSalaire)
 
     rJob = vJob
 

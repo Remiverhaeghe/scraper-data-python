@@ -102,3 +102,22 @@ def test_parse_job_builds_url_when_missing():
     assert rJob["url"] == (
         "https://candidat.francetravail.fr/offres/recherche/detail/123ABC"
     )
+
+
+def test_parse_job_keeps_salary_label_with_complements():
+    """Vérifie la conservation du libellé de salaire et de ses compléments."""
+
+    rJob = parse_job(
+        {
+            "id": "1",
+            "salaire": {
+                "libelle": "Mensuel de 2500.00 Euros sur 13 mois",
+                "complement1": "Primes",
+                "listeComplements": [{"code": "1", "libelle": "Intéressement"}],
+            },
+        }
+    )
+
+    assert rJob["salary_label"] == (
+        "Mensuel de 2500.00 Euros sur 13 mois | Primes | Intéressement"
+    )
