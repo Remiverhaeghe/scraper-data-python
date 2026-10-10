@@ -21,6 +21,12 @@ jobs:
           python-version: "3.14"
           cache: pip
 
+      # Bibliothèques système chargées par Qt, même en mode sans écran
+      - name: Installation des bibliothèques Qt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libegl1 libgl1 libxkbcommon0 libfontconfig1
+
       - name: Installation des dépendances
         run: pip install -r requirements.txt
 

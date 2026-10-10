@@ -119,3 +119,7 @@ def test_get_history_returns_entries_in_reverse_chronological_order(tmp_path):
     assert len(vEntries) == 2
     assert vEntries[0].started_at == vSecondEntry.started_at
     assert vEntries[1].started_at == vFirstEntry.started_at
+
+    vLatestEntries = get_history(vDatabasePath, pLimit=1)
+
+    assert [vEntry.started_at for vEntry in vLatestEntries] == [vSecondEntry.started_at]

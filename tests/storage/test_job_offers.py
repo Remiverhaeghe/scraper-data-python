@@ -7,7 +7,13 @@ import pandas as pd
 
 from storage.database import connect_database, initialize_database
 from storage.job_applications import save_application
-from storage.job_offers import CONTENT_COLUMNS, get_offer, get_offers, save_offers
+from storage.job_offers import (
+    CONTENT_COLUMNS,
+    count_offers,
+    get_offer,
+    get_offers,
+    save_offers,
+)
 
 
 def build_items():
@@ -223,6 +229,16 @@ def test_get_offers_filters_follow_ups_due(tmp_path):
     vOffers = get_offers(vDatabaseFile, pFollowUpBefore=datetime(2026, 10, 9))
 
     assert vOffers["source_id"].tolist() == ["1"]
+
+
+def test_count_offers_applies_filters(tmp_path):
+    """Vérifie que le comptage applique les mêmes filtres que la lecture."""
+
+    vDatabaseFile = build_tracked_database(tmp_path)
+
+    assert count_offers(vDatabaseFile) == 3
+    assert count_offers(vDatabaseFile, pHideIgnored=True) == 2
+    assert count_offers(vDatabaseFile, pStatus="APPLIED") == 1
 
 
 def test_get_offer(tmp_path):

@@ -1,10 +1,12 @@
 """Tests du point d'entrée de l'application"""
 
+import pytest
+
 import main
 
 
 def test_main_initializes_database_and_starts_gui(monkeypatch):
-    """Vérifie que main initialise la base puis démarre la GUI."""
+    """Vérifie que main initialise la base, démarre la GUI et transmet son code."""
 
     vCalls = []
 
@@ -13,21 +15,20 @@ def test_main_initializes_database_and_starts_gui(monkeypatch):
 
         vCalls.append("initialize_database")
 
-    class MockApplication:
-        """Simule la fenêtre principale de l'application."""
+    def mock_run():
+        """Simule l'exécution de l'interface graphique."""
 
-        def __init__(self):
-            vCalls.append("application")
+        vCalls.append("run")
 
-        def mainloop(self):
-            """Simule le lancement de la boucle graphique."""
-
-            vCalls.append("mainloop")
+        return 0
 
     monkeypatch.setattr(main, "initialize_database", mock_initialize_database)
 
-    monkeypatch.setattr(main, "ApplicationWindow", MockApplication)
+    monkeypatch.setattr(main, "run", mock_run)
 
-    main.main()
+    with pytest.raises(SystemExit) as vExit:
+        main.main()
 
-    assert vCalls == ["initialize_database", "application", "mainloop"]
+    assert vExit.value.code == 0
+
+    assert vCalls == ["initialize_database", "run"]

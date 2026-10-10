@@ -133,6 +133,12 @@ def save_offers(pDatabaseFile, pItems, pScrapedAt):
 # Statuts pour lesquels une relance reste pertinente
 FOLLOW_UP_STATUSES = ("APPLIED", "INTERVIEW")
 
+OFFERS_WITH_APPLICATION = """
+        FROM job_offer o
+        LEFT JOIN job_application a
+            ON a.source = o.source AND a.source_id = o.source_id
+"""
+
 
 def build_offer_conditions(
     pSearch=None,
@@ -207,15 +213,13 @@ def get_offers(pDatabaseFile, pLimit=None, **pFilters):
 
     vConditions, vParams = build_offer_conditions(**pFilters)
 
-    vQuery = """
+    vQuery = f"""
         SELECT
             o.*,
             a.status AS application_status,
             a.applied_at,
             a.follow_up_date
-        FROM job_offer o
-        LEFT JOIN job_application a
-            ON a.source = o.source AND a.source_id = o.source_id
+        {OFFERS_WITH_APPLICATION}
         """
 
     if vConditions:
@@ -238,6 +242,27 @@ def get_offers(pDatabaseFile, pLimit=None, **pFilters):
     rOffers = vOffers
 
     return rOffers
+
+
+def count_offers(pDatabaseFile, **pFilters):
+    """Compte les offres correspondant aux mêmes filtres que get_offers."""
+
+    vConditions, vParams = build_offer_conditions(**pFilters)
+
+    vQuery = f"SELECT COUNT(*) {OFFERS_WITH_APPLICATION}"
+
+    if vConditions:
+        vQuery += " WHERE " + " AND ".join(vConditions)
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rCount = vConnection.execute(vQuery, vParams).fetchone()[0]
+
+    finally:
+        vConnection.close()
+
+    return rCount
 
 
 def get_offer(pDatabaseFile, pSource, pSourceId):

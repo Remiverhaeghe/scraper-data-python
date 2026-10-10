@@ -1,18 +1,18 @@
 """Point d'entrée de l'application"""
 
+import sys
+
 from config import DATABASE_FILE
-from gui.window import ApplicationWindow
+from gui.app import run
 from storage.database import initialize_database
 
 
 def main():
-    """Initialise l'application et lance l'interface graphique."""
+    """Initialise la base et lance l'interface graphique."""
 
     initialize_database(DATABASE_FILE)
 
-    vApplication = ApplicationWindow()
-
-    vApplication.mainloop()
+    sys.exit(run())
 
 
 if __name__ == "__main__":

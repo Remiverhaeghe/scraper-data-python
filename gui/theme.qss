@@ -1,0 +1,51 @@
+/* Les couleurs viennent de la palette Qt pour suivre le thème clair ou sombre */
+
+QWidget#sidebar {
+    background: palette(base);
+    border-right: 1px solid palette(mid);
+}
+
+QLabel#brand {
+    font-size: 16px;
+    font-weight: 600;
+    padding: 0 8px 16px 8px;
+}
+
+QListWidget#navigation {
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    outline: none;
+}
+
+QListWidget#navigation::item {
+    padding: 10px 12px;
+    border-radius: 6px;
+}
+
+QListWidget#navigation::item:selected {
+    background: palette(highlight);
+    color: palette(highlighted-text);
+}
+
+QLabel#pageTitle {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+QLabel#pageSubtitle,
+QLabel#statisticLabel {
+    color: palette(placeholder-text);
+}
+
+QFrame#statisticCard {
+    background: palette(base);
+    border: 1px solid palette(mid);
+    border-radius: 8px;
+}
+
+QLabel#statisticValue {
+    font-size: 28px;
+    font-weight: 600;
+    color: palette(highlight);
+}

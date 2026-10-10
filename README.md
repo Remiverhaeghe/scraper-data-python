@@ -32,7 +32,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - **Analyse et structure des données :** pandas
 - **Tests :** pytest
 - **Stockage :** SQLite
-- **Interface graphique :** Tkinter
+- **Interface graphique :** PySide6 (Qt)
 - **Tableau de bord web :** FastAPI, Jinja2, HTMX
 
 ---
@@ -165,23 +165,12 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 
 ### 🖥️ Interface graphique
 
-- [x] Structure de l'interface graphique
-- [x] Vue principale
-- [x] Vue Books
-- [x] Vue Jobs
-- [x] Composants graphiques communs
-- [x] Gestion des styles
-- [x] Fenêtre principale
-- [ ] Gestion complète des sources
-- [ ] Configuration complète du scraping
-- [ ] Filtres graphiques
-- [ ] Options avancées
-- [ ] Planification
-- [ ] Notifications
-- [ ] Progression de l'exécution
-- [ ] Arrêt d'une exécution
-- [ ] Résultats avancés
-- [ ] Historique graphique
+- [x] Fenêtre principale avec menu latéral
+- [x] Thème clair et sombre selon le système
+- [x] Accueil : offres, nouveautés, candidatures, relances et dernière exécution
+- [ ] Recherche : sources, filtres, options avancées, progression et arrêt
+- [ ] Offres : tableau triable et suivi des candidatures
+- [ ] Historique des exécutions
 
 ### 🌐 Tableau de bord web
 
@@ -360,14 +349,12 @@ scraper-data-python/
 │
 ├── gui/                                       # Interface graphique de l'application
 │   ├── __init__.py                            # Initialise le package GUI
-│   ├── books_view.py                          # Vue graphique consacrée aux livres
-│   ├── components.py                          # Composants graphiques réutilisables
-│   ├── home_view.py                           # Vue principale de l'application
-│   ├── job_controller.py                      # Lance le traitement des offres depuis la GUI
-│   ├── job_results_view.py                    # Affiche les résultats de recherche Jobs
-│   ├── jobs_view.py                           # Vue graphique consacrée aux offres
-│   ├── styles.py                              # Styles et apparence graphique
-│   └── window.py                              # Gestion de la fenêtre principale
+│   ├── app.py                                 # Crée l'application Qt et ouvre la fenêtre
+│   ├── main_window.py                         # Fenêtre principale, menu latéral et pages
+│   ├── home_page.py                           # Accueil et indicateurs
+│   ├── widgets.py                             # Composants graphiques partagés
+│   ├── theme.qss                              # Feuille de style Qt
+│   └── job_controller.py                      # Lance le traitement des offres depuis la GUI
 │
 ├── web/                                       # Tableau de bord web
 │   ├── __init__.py                            # Initialise le package Web
@@ -521,6 +508,8 @@ scraper-data-python/
 │   │
 │   ├── gui/                                    # Tests de l'interface graphique
 │   │   ├── __init__.py                          # Initialise le package de tests GUI
+│   │   ├── conftest.py                         # Crée l'application Qt sans écran
+│   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   └── test_job_controller.py              # Teste le contrôleur des offres
 │   │
 │   ├── data/                                   # Tests des composants génériques de données

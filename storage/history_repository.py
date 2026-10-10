@@ -41,12 +41,10 @@ def save_history(pDatabasePath, pEntry):
     vConnection.close()
 
 
-def get_history(pDatabasePath):
-    """Récupère les entrées de l'historique."""
+def get_history(pDatabasePath, pLimit=None):
+    """Récupère les entrées de l'historique, des plus récentes aux plus anciennes."""
 
-    vConnection = connect_database(pDatabasePath)
-
-    vRows = vConnection.execute("""
+    vQuery = """
         SELECT
             started_at,
             scraper_type,
@@ -58,7 +56,17 @@ def get_history(pDatabasePath):
             error_message
         FROM history
         ORDER BY started_at DESC
-        """).fetchall()
+        """
+
+    vParams = []
+
+    if pLimit is not None:
+        vQuery += " LIMIT ?"
+        vParams.append(pLimit)
+
+    vConnection = connect_database(pDatabasePath)
+
+    vRows = vConnection.execute(vQuery, vParams).fetchall()
 
     vConnection.close()
 
