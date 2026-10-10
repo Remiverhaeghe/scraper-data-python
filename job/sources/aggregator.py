@@ -22,6 +22,7 @@ def scrape_sources(pConfig):
 
     vDataFrames = []
     vPageCount = 0
+    vErrors = []
 
     # Vérification de la configuration
     pConfig.validate()
@@ -41,7 +42,14 @@ def scrape_sources(pConfig):
                 "n'est pas encore supporté."
             )
 
-        vDataFrame = vDefinition.scrape(vSourceConfig.parameters, pConfig)
+        # Une source en échec ne doit pas empêcher la récupération des autres.
+        try:
+            vDataFrame = vDefinition.scrape(vSourceConfig.parameters, pConfig)
+
+        except Exception as vException:
+            logger.exception("Échec de la source %s", vDefinition.label)
+            vErrors.append(f"{vDefinition.label} : {vException}")
+            continue
 
         vPageCount += 1
 
@@ -83,15 +91,25 @@ def scrape_sources(pConfig):
 
     vDuration = perf_counter() - vStartTime
 
+    vStatus = "success"
+
+    if vErrors:
+        vStatus = "partial" if vPageCount > 0 else "error"
+
     vResult = ScrapingResult(
         items=vItems,
         page_count=vPageCount,
         duration_seconds=vDuration,
         started_at=vStartedAt,
+        status=vStatus,
+        error_message=" | ".join(vErrors) or None,
     )
 
     logger.info(
-        "Agrégation terminée : %s offre(s) depuis %s source(s)", len(vItems), vPageCount
+        "Agrégation terminée : %s offre(s) depuis %s source(s), %s source(s) en échec",
+        len(vItems),
+        vPageCount,
+        len(vErrors),
     )
 
     rResult = vResult

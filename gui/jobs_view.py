@@ -464,9 +464,21 @@ class JobsView:
 
             self.progress_label.config(text="100 %")
 
-            self.status.set("Recherche terminée")
+            if self.search_result.status == "success":
+                self.status.set("Recherche terminée")
 
-            self.status_indicator.config(fg="#16A34A")
+                self.status_indicator.config(fg="#16A34A")
+
+            else:
+                self.status.set("Recherche terminée avec erreurs")
+
+                self.status_indicator.config(fg="#D97706")
+
+                messagebox.showwarning(
+                    "Sources en erreur",
+                    "Certaines sources n'ont pas pu être interrogées :\n"
+                    f"{self.search_result.error_message}",
+                )
 
         self.set_search_state(False)
 

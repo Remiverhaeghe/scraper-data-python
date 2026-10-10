@@ -269,3 +269,74 @@ def test_scrape_sources_passes_max_pages_to_france_travail(monkeypatch):
             "max_pages": 3,
         }
     ]
+
+
+def raise_connection_error(*pArgs, **pKwargs):
+    """Simule une source indisponible."""
+
+    raise ConnectionError("API indisponible")
+
+
+def test_scrape_sources_continues_when_one_source_fails(monkeypatch):
+    """Vérifie qu'une source en échec n'empêche pas les autres sources."""
+
+    vLeverDataFrame = pd.DataFrame(
+        {"title": ["Lever 1"], "source": ["lever"], "source_id": ["1"]}
+    )
+
+    monkeypatch.setattr(
+        "job.sources.greenhouse.source.scrape_jobs", raise_connection_error
+    )
+
+    monkeypatch.setattr(
+        "job.sources.lever.source.scrape_jobs",
+        lambda pSite, pMaxItems=None: vLeverDataFrame,
+    )
+
+    vConfig = JobScrapingConfig()
+
+    enable_source(vConfig, "greenhouse", {"board": "test-board"})
+    enable_source(vConfig, "lever", {"site": "test-site"})
+
+    rResult = scrape_sources(vConfig)
+
+    assert rResult.items["title"].tolist() == ["Lever 1"]
+    assert rResult.page_count == 1
+    assert rResult.status == "partial"
+    assert rResult.error_message == "Greenhouse : API indisponible"
+
+
+def test_scrape_sources_returns_error_when_all_sources_fail(monkeypatch):
+    """Vérifie le statut d'erreur lorsque toutes les sources échouent."""
+
+    monkeypatch.setattr("job.sources.lever.source.scrape_jobs", raise_connection_error)
+
+    vConfig = JobScrapingConfig()
+
+    enable_source(vConfig, "lever", {"site": "test-site"})
+
+    rResult = scrape_sources(vConfig)
+
+    assert rResult.items.empty
+    assert rResult.status == "error"
+    assert rResult.error_message == "Lever : API indisponible"
+
+
+def test_scrape_sources_returns_success_without_error(monkeypatch):
+    """Vérifie le statut de succès lorsque toutes les sources répondent."""
+
+    monkeypatch.setattr(
+        "job.sources.lever.source.scrape_jobs",
+        lambda pSite, pMaxItems=None: pd.DataFrame(
+            {"title": ["Lever 1"], "source": ["lever"], "source_id": ["1"]}
+        ),
+    )
+
+    vConfig = JobScrapingConfig()
+
+    enable_source(vConfig, "lever", {"site": "test-site"})
+
+    rResult = scrape_sources(vConfig)
+
+    assert rResult.status == "success"
+    assert rResult.error_message is None
