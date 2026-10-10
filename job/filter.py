@@ -7,91 +7,84 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def keep_matching(pJobs, pPredicate):
+    """Conserve les offres pour lesquelles pPredicate est vrai.
+
+    Sur un DataFrame vide, apply(axis=1) renvoie un DataFrame et non une série
+    de booléens : l'utiliser comme masque ferait perdre les colonnes.
+    """
+
+    rJobs = pJobs if pJobs.empty else pJobs[pJobs.apply(pPredicate, axis=1)]
+
+    return rJobs
+
+
 def filter_jobs(pJobs, pConfig):
     """Filtre les offres selon la configuration de recherche."""
 
     vJobs = pJobs.copy()
 
     if pConfig.keyword:
-        vJobs = vJobs[
-            vJobs.apply(lambda pJob: matches_keyword(pJob, pConfig.keyword), axis=1)
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: matches_keyword(pJob, pConfig.keyword)
+        )
 
     if pConfig.location:
-        vJobs = vJobs[
-            vJobs.apply(lambda pJob: matches_location(pJob, pConfig.location), axis=1)
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: matches_location(pJob, pConfig.location)
+        )
 
     if pConfig.max_distance_km is not None:
-        vJobs = vJobs[
-            vJobs.apply(
-                lambda pJob: _matches_distance(pJob, pConfig.max_distance_km), axis=1
-            )
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: _matches_distance(pJob, pConfig.max_distance_km)
+        )
 
     if pConfig.contract:
-        vJobs = vJobs[
-            vJobs.apply(lambda pJob: _matches_contract(pJob, pConfig.contract), axis=1)
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: _matches_contract(pJob, pConfig.contract)
+        )
 
     if pConfig.min_salary is not None:
-        vJobs = vJobs[
-            vJobs.apply(
-                lambda pJob: _matches_min_salary(pJob, pConfig.min_salary), axis=1
-            )
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: _matches_min_salary(pJob, pConfig.min_salary)
+        )
 
     if pConfig.max_salary is not None:
-        vJobs = vJobs[
-            vJobs.apply(
-                lambda pJob: _matches_max_salary(pJob, pConfig.max_salary), axis=1
-            )
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: _matches_max_salary(pJob, pConfig.max_salary)
+        )
 
     if pConfig.remote is not None:
         vJobs = vJobs[vJobs["remote"] == pConfig.remote]
 
     if pConfig.min_remote_days is not None:
-        vJobs = vJobs[
-            vJobs.apply(
-                lambda pJob: _matches_remote_days(pJob, pConfig.min_remote_days), axis=1
-            )
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: _matches_remote_days(pJob, pConfig.min_remote_days)
+        )
 
     if pConfig.metro_required:
-        vJobs = vJobs[vJobs.apply(_matches_metro, axis=1)]
+        vJobs = keep_matching(vJobs, _matches_metro)
 
     if pConfig.max_metro_distance_km is not None:
-        vJobs = vJobs[
-            vJobs.apply(
-                lambda pJob: _matches_metro_distance(
-                    pJob, pConfig.max_metro_distance_km
-                ),
-                axis=1,
-            )
-        ]
+        vJobs = keep_matching(
+            vJobs,
+            lambda pJob: _matches_metro_distance(pJob, pConfig.max_metro_distance_km),
+        )
 
     if pConfig.education:
-        vJobs = vJobs[
-            vJobs.apply(
-                lambda pJob: _matches_text(pJob["education"], pConfig.education), axis=1
-            )
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: _matches_text(pJob["education"], pConfig.education)
+        )
 
     if pConfig.skills:
-        vJobs = vJobs[
-            vJobs.apply(
-                lambda pJob: _matches_all_texts(pJob["skills"], pConfig.skills), axis=1
-            )
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: _matches_all_texts(pJob["skills"], pConfig.skills)
+        )
 
     if pConfig.missions:
-        vJobs = vJobs[
-            vJobs.apply(
-                lambda pJob: _matches_all_texts(pJob["missions"], pConfig.missions),
-                axis=1,
-            )
-        ]
+        vJobs = keep_matching(
+            vJobs, lambda pJob: _matches_all_texts(pJob["missions"], pConfig.missions)
+        )
 
     vJobs = vJobs.reset_index(drop=True)
 
@@ -253,12 +246,10 @@ def filter_by_keyword_and_location(pJobs, pKeyword, pLocation):
 
     rJobs = pJobs
 
-    if pKeyword and not rJobs.empty:
-        rJobs = rJobs[rJobs.apply(lambda pJob: matches_keyword(pJob, pKeyword), axis=1)]
+    if pKeyword:
+        rJobs = keep_matching(rJobs, lambda pJob: matches_keyword(pJob, pKeyword))
 
-    if pLocation and not rJobs.empty:
-        rJobs = rJobs[
-            rJobs.apply(lambda pJob: matches_location(pJob, pLocation), axis=1)
-        ]
+    if pLocation:
+        rJobs = keep_matching(rJobs, lambda pJob: matches_location(pJob, pLocation))
 
     return rJobs

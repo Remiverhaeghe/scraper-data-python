@@ -336,3 +336,16 @@ def test_filter_jobs_rejects_missing_required_data():
 
     assert len(rJobs) == 1
     assert rJobs.iloc[0]["url"] == "https://example.com/job-2"
+
+
+def test_filter_jobs_keeps_columns_when_a_filter_empties_the_result():
+    """Vérifie que les filtres suivants fonctionnent après un résultat vide."""
+
+    vJobs = create_jobs(create_job(contract="CDD", remote=True))
+
+    vConfig = JobScrapingConfig(contract="CDI", min_salary=2000, remote=True)
+
+    rJobs = filter_jobs(vJobs, vConfig)
+
+    assert rJobs.empty
+    assert list(rJobs.columns) == list(vJobs.columns)
