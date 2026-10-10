@@ -9,6 +9,9 @@ from gui.job_results_view import JobResultsView
 from gui.styles import COLOR_BACKGROUND, COLOR_SURFACE, FONT_NORMAL, BUTTON_WIDTH
 from job.sources.registry import SOURCES
 
+# Nombre de sources affichées par ligne
+SOURCE_COLUMNS = 4
+
 
 class JobsView:
     """Affiche l'interface de recherche des offres d'emploi."""
@@ -180,12 +183,13 @@ class JobsView:
 
         vSources.pack(anchor="w")
 
-        for vName, vDefinition in SOURCES.items():
+        for vIndex, (vName, vDefinition) in enumerate(SOURCES.items()):
             self.create_source_checkbutton(
                 vSources,
                 vDefinition.label,
                 self.source_vars[vName],
                 vDefinition.available,
+                divmod(vIndex, SOURCE_COLUMNS),
             )
 
         vActions = tk.Frame(vContent, bg=COLOR_SURFACE)
@@ -234,7 +238,9 @@ class JobsView:
             vFrame, textvariable=pVariable, font=FONT_NORMAL, relief="solid", bd=1
         ).pack(fill="x", pady=(6, 0), ipady=5)
 
-    def create_source_checkbutton(self, pParent, pText, pVariable, pAvailable=True):
+    def create_source_checkbutton(
+        self, pParent, pText, pVariable, pAvailable=True, pPosition=(0, 0)
+    ):
         """Crée une case de sélection d'une source."""
         tk.Checkbutton(
             pParent,
@@ -245,7 +251,7 @@ class JobsView:
             bg=COLOR_SURFACE,
             activebackground=COLOR_SURFACE,
             padx=5,
-        ).pack(side="left", padx=(0, 25))
+        ).grid(row=pPosition[0], column=pPosition[1], sticky="w", padx=(0, 25))
 
     def create_progress_section(self, pParent):
         """Construit la zone de progression."""

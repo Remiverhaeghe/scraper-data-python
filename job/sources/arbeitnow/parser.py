@@ -1,22 +1,9 @@
 """Transformation des données Arbeitnow vers le format Job commun"""
 
-from datetime import UTC, datetime
-
 import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
-from utils.helpers import html_to_text
-
-
-def to_iso_date(pTimestamp):
-    """Convertit un horodatage Unix en date ISO."""
-
-    rDate = None
-
-    if pTimestamp is not None:
-        rDate = datetime.fromtimestamp(pTimestamp, UTC).isoformat()
-
-    return rDate
+from utils.helpers import html_to_text, timestamp_to_iso
 
 
 def parse_job(pJob):
@@ -28,7 +15,7 @@ def parse_job(pJob):
     """
 
     vRemote = pJob.get("remote")
-    vCreatedAt = to_iso_date(pJob.get("created_at"))
+    vCreatedAt = timestamp_to_iso(pJob.get("created_at"))
 
     vJob = {
         # Identification

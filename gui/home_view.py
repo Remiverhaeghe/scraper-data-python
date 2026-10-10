@@ -395,11 +395,13 @@ class HomeView(tk.Frame):
 
         tk.Label(
             v_content,
-            text="    ".join(vSource.label for vSource in SOURCES.values()),
+            text=" · ".join(vSource.label for vSource in SOURCES.values()),
             bg=COLOR_SURFACE,
             fg=COLOR_JOBS,
             font=FONT_SMALL,
             anchor="w",
+            justify="left",
+            wraplength=320,
         ).pack(
             fill="x",
         )

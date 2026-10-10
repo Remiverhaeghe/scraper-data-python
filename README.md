@@ -96,12 +96,15 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Adzuna
 - [x] Remotive (télétravail)
 - [x] Arbeitnow (Europe)
+- [x] Jobicy (télétravail ouvert à la France)
+- [x] Himalayas (télétravail ouvert à la France)
 - [x] Greenhouse
 - [x] Lever
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
   - [x] Adzuna
   - [x] Arbeitnow
+  - [x] Himalayas
   - [ ] Greenhouse — non nécessaire sur l'API Job Board utilisée
   - [x] Lever
   - [ ] Remotive — non nécessaire, l'API renvoie tout en une requête
@@ -180,7 +183,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **385 tests automatisés**
+- [x] **409 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 
@@ -255,6 +258,20 @@ scraper-data-python/
 │       │   ├── parser.py                       # Transforme les réponses Greenhouse
 │       │   ├── service.py                      # Orchestre le scraping Greenhouse
 │       │   └── source.py                       # Déclare la source Greenhouse
+│       │
+│       ├── himalayas/                          # Intégration Himalayas
+│       │   ├── __init__.py                     # Initialise le package Himalayas
+│       │   ├── client.py                       # Communique avec l'API Himalayas
+│       │   ├── parser.py                       # Transforme les réponses Himalayas
+│       │   ├── service.py                      # Pagine les offres Himalayas ouvertes à la France
+│       │   └── source.py                       # Déclare la source Himalayas
+│       │
+│       ├── jobicy/                             # Intégration Jobicy
+│       │   ├── __init__.py                     # Initialise le package Jobicy
+│       │   ├── client.py                       # Communique avec l'API Jobicy
+│       │   ├── parser.py                       # Transforme les réponses Jobicy
+│       │   ├── service.py                      # Récupère les offres Jobicy ouvertes à la France
+│       │   └── source.py                       # Déclare la source Jobicy
 │       │
 │       ├── lever/                              # Intégration Lever
 │       │   ├── __init__.py                     # Initialise le package Lever
@@ -378,6 +395,18 @@ scraper-data-python/
 │   │       │   ├── __init__.py                 # Initialise les tests Greenhouse
 │   │       │   ├── test_client.py              # Teste le client API
 │   │       │   ├── test_config.py              # Teste la configuration
+│   │       │   ├── test_parser.py              # Teste le parsing
+│   │       │   └── test_service.py             # Teste le service
+│   │       │
+│   │       ├── himalayas/                      # Tests Himalayas
+│   │       │   ├── __init__.py                 # Initialise les tests Himalayas
+│   │       │   ├── test_client.py              # Teste le client API
+│   │       │   ├── test_parser.py              # Teste le parsing
+│   │       │   └── test_service.py             # Teste la pagination
+│   │       │
+│   │       ├── jobicy/                         # Tests Jobicy
+│   │       │   ├── __init__.py                 # Initialise les tests Jobicy
+│   │       │   ├── test_client.py              # Teste le client API
 │   │       │   ├── test_parser.py              # Teste le parsing
 │   │       │   └── test_service.py             # Teste le service
 │   │       │

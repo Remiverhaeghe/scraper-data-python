@@ -3,7 +3,14 @@
 from bs4 import BeautifulSoup
 import pytest
 
-from utils.helpers import extract_price, extract_rating, extract_text, html_to_text
+from utils.helpers import (
+    extract_price,
+    extract_rating,
+    extract_text,
+    html_to_text,
+    join_values,
+    timestamp_to_iso,
+)
 
 
 def test_extract_text():
@@ -108,3 +115,32 @@ def test_html_to_text_without_content(pHtml):
     """Vérifie qu'un contenu vide ne produit pas de texte."""
 
     assert html_to_text(pHtml) is None
+
+
+@pytest.mark.parametrize(
+    "pTimestamp, pExpected",
+    [
+        (1791622873, "2026-10-10T09:01:13+00:00"),
+        ("1791622873", "2026-10-10T09:01:13+00:00"),
+        (None, None),
+    ],
+)
+def test_timestamp_to_iso(pTimestamp, pExpected):
+    """Vérifie la conversion d'un horodatage Unix en date ISO."""
+
+    assert timestamp_to_iso(pTimestamp) == pExpected
+
+
+@pytest.mark.parametrize(
+    "pValues, pExpected",
+    [
+        (["Full-Time", "Contract"], "Full-Time, Contract"),
+        ("Senior", "Senior"),
+        ([], None),
+        (None, None),
+    ],
+)
+def test_join_values(pValues, pExpected):
+    """Vérifie le regroupement d'une liste de valeurs en texte."""
+
+    assert join_values(pValues) == pExpected
