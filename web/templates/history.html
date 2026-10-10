@@ -4,13 +4,27 @@
 {% block title %}Historique{% endblock %}
 
 {% block content %}
-{{ ui.page_header("Historique", "Chaque recherche lancée, ses critères et son résultat") }}
+{{ ui.page_header("Historique", "Chaque recherche lancée, ses critères et son résultat", "history") }}
 
 <section class="grid grid-4">
     {{ ui.stat(summary.executions, "Exécutions", "history", "blue") }}
-    {{ ui.stat(summary.items, "Offres récupérées", "briefcase", "green") }}
+    {{ ui.stat(summary.item_count, "Offres récupérées", "briefcase", "green") }}
     {{ ui.stat(summary.average_duration, "Durée moyenne", "timer", "amber") }}
     {{ ui.stat(summary.success_rate, "Taux de réussite", "circle-check", "purple") }}
+</section>
+
+<section class="grid grid-2 section-gap">
+    <article class="card">
+        <h2>Offres par source</h2>
+        <p class="card-subtitle">Répartition des offres actuellement en base</p>
+        {{ ui.pie(source_pie, "Répartition des offres par source") }}
+    </article>
+
+    <article class="card">
+        <h2>Rendement des recherches</h2>
+        <p class="card-subtitle">Offres récupérées lors des {{ execution_chart_size }} dernières exécutions</p>
+        {{ ui.bar_chart(execution_chart, "Offres par exécution") }}
+    </article>
 </section>
 
 <p class="count count-after-cards">

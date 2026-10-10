@@ -24,6 +24,7 @@ from config import (
 )
 from job.contract import CONTRACT_TYPES
 from job.presentation import (
+    CHART_PALETTE,
     EXECUTION_STATUS_LABELS,
     EXECUTION_TONES,
     FOLLOW_UP_FILTER,
@@ -31,6 +32,7 @@ from job.presentation import (
     UNKNOWN_SEARCH,
     build_offer_filters,
     describe_execution,
+    describe_rules,
     describe_search,
     describe_sources,
     format_date,
@@ -40,7 +42,15 @@ from job.presentation import (
     summarize_history,
 )
 from job.sources.registry import SOURCES
-from job.statistics import CHART_DAYS, count_ready_sources, load_statistics
+from job.statistics import (
+    ACTIVITY_SERIES,
+    CHART_DAYS,
+    EXECUTION_CHART_SIZE,
+    count_ready_sources,
+    get_execution_counts,
+    get_source_shares,
+    load_statistics,
+)
 from storage.database import initialize_database
 from storage.history_repository import get_history, get_history_summary
 from storage.job_applications import (
@@ -191,21 +201,65 @@ async def render_http_error(pRequest, pException):
     return rResponse
 
 
-def build_chart(pDailyCounts):
-    """Prépare les barres du graphique, leur hauteur relative à la plus grande."""
+def build_bar_chart(pLabels, pSeries, pIndependentScales=False):
+    """Prépare un histogramme : pSeries contient des (nom, couleur, valeurs).
 
-    vMaximum = max((vCount for _, vCount in pDailyCounts), default=0) or 1
+    Les hauteurs sont relatives à la plus grande valeur toutes séries confondues,
+    ou à celle de chaque série avec pIndependentScales, pour qu'une série de
+    faibles valeurs reste visible à côté d'une série de valeurs élevées.
+    """
 
-    rBars = [
-        {
-            "label": f"{vDay:%d/%m}",
-            "value": vCount,
-            "height": max(round(100 * vCount / vMaximum), 2),
-        }
-        for vDay, vCount in pDailyCounts
+    vCommonMaximum = (
+        max((vValue for _, _, vValues in pSeries for vValue in vValues), default=0) or 1
+    )
+
+    vSeries = []
+
+    for vName, vColor, vValues in pSeries:
+        vMaximum = (
+            (max(vValues, default=0) or 1) if pIndependentScales else vCommonMaximum
+        )
+
+        vSeries.append(
+            {
+                "name": vName,
+                "color": vColor,
+                "bars": [
+                    {"value": vValue, "height": max(round(100 * vValue / vMaximum), 2)}
+                    for vValue in vValues
+                ],
+            }
+        )
+
+    rChart = {"labels": pLabels, "series": vSeries}
+
+    return rChart
+
+
+def build_pie(pShares):
+    """Prépare un camembert CSS : dégradé conique et légende colorée."""
+
+    vItems = [
+        {**vShare, "color": CHART_PALETTE[vIndex]}
+        for vIndex, vShare in enumerate(pShares)
     ]
 
-    return rBars
+    vSegments = []
+    vStart = 0
+    vTotal = sum(vItem["count"] for vItem in vItems) or 1
+
+    for vItem in vItems:
+        vEnd = vStart + 100 * vItem["count"] / vTotal
+        vSegments.append(f"{vItem['color']} {vStart:.2f}% {vEnd:.2f}%")
+        vStart = vEnd
+
+    rPie = {
+        "slices": vItems,
+        "total": sum(vItem["count"] for vItem in vItems),
+        "gradient": f"conic-gradient({', '.join(vSegments)})" if vSegments else "",
+    }
+
+    return rPie
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -226,7 +280,23 @@ def show_dashboard(
             "ready_sources": count_ready_sources(),
             "new_offer_days": NEW_OFFER_DAYS,
             "chart_days": CHART_DAYS,
-            "chart": build_chart(vStatistics["daily_new_offers"]),
+            "chart": build_bar_chart(
+                [
+                    f"{vDay:%d/%m}"
+                    for vDay, _ in vStatistics["daily_activity"]["new_offers"]
+                ],
+                [
+                    (
+                        ACTIVITY_SERIES[vName][0],
+                        CHART_PALETTE[vIndex],
+                        [vCount for _, vCount in vCounts],
+                    )
+                    for vIndex, (vName, vCounts) in enumerate(
+                        vStatistics["daily_activity"].items()
+                    )
+                ],
+                pIndependentScales=True,
+            ),
             "activities": [
                 describe_execution(vEntry) for vEntry in vStatistics["executions"]
             ],
@@ -421,7 +491,9 @@ def show_history(
     request: Request,
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Affiche la synthèse et la liste des dernières exécutions."""
+    """Affiche la synthèse, les graphiques et la liste des dernières exécutions."""
+
+    vExecutionCounts = get_execution_counts(pDatabaseFile)
 
     vExecutions = [
         {
@@ -447,6 +519,18 @@ def show_history(
         {
             "active_page": "history",
             "summary": summarize_history(get_history_summary(pDatabaseFile)),
+            "source_pie": build_pie(get_source_shares(pDatabaseFile)),
+            "execution_chart": build_bar_chart(
+                [vLabel for vLabel, _ in vExecutionCounts],
+                [
+                    (
+                        "Offres",
+                        CHART_PALETTE[0],
+                        [vCount for _, vCount in vExecutionCounts],
+                    )
+                ],
+            ),
+            "execution_chart_size": EXECUTION_CHART_SIZE,
             "executions": vExecutions,
             "unknown_search": UNKNOWN_SEARCH,
             "tone_icons": TONE_ICONS,
@@ -473,7 +557,7 @@ def show_settings(request: Request):
     rResponse = templates.TemplateResponse(
         request,
         "settings.html",
-        {"active_page": "settings", "sources": vSources},
+        {"active_page": "settings", "sources": vSources, "rules": describe_rules()},
     )
 
     return rResponse

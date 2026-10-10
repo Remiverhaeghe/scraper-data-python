@@ -74,7 +74,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 📚 Books
@@ -171,8 +171,9 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Sources non configurées grisées, derniers critères mémorisés
 - [x] Offres : filtres, tableau triable, détail et suivi des candidatures
 - [x] Historique des exécutions : synthèse, critères et statut de chaque recherche
-- [x] Thèmes clair et sombre, choix mémorisé ; page Paramètres (sources, données)
-- [x] Graphique des nouvelles offres et cartes d'accès direct aux offres filtrées
+- [x] Thèmes clair et sombre, changement sans scintillement ; page Paramètres (règles de calcul, sources)
+- [x] Graphique d'activité (offres, candidatures, relances) et cartes d'accès direct aux offres filtrées
+- [x] Historique : répartition des offres par source et rendement des recherches
 
 ### 🌐 Tableau de bord web
 
@@ -183,7 +184,8 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Suivi des candidatures : statut, notes, relances
 - [x] Filtre des candidatures à relancer et masquage des offres ignorées
 - [x] Même identité que l'application de bureau : menu latéral, logo, icônes, cartes
-- [x] Tableau de bord : indicateurs cliquables, graphique, activité récente
+- [x] Tableau de bord : indicateurs cliquables, graphique d'activité, activité récente
+- [x] Historique : camembert des offres par source et rendement des recherches
 - [x] Historique des exécutions et page Paramètres (état des sources)
 - [x] Thèmes clair et sombre, choix mémorisé dans le navigateur
 - [x] Pages d'erreur intégrées au site
@@ -251,7 +253,7 @@ scraper-data-python/
 │   ├── benefits.py                            # Détecte primes, 13e mois et épargne salariale
 │   ├── contract.py                            # Normalise le contrat : CDI, CDD ou freelance
 │   ├── presentation.py                        # Mise en forme et filtres communs aux interfaces
-│   ├── statistics.py                          # Indicateurs du tableau de bord, bureau et web
+│   ├── statistics.py                          # Indicateurs et graphiques, bureau et web
 │   ├── export.py                              # Export des offres en CSV, Excel et JSON
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
@@ -369,7 +371,7 @@ scraper-data-python/
 │   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── settings_page.py                       # Thème, état des sources et données
-│   ├── chart.py                               # Histogramme dessiné avec QPainter
+│   ├── chart.py                               # Histogramme et camembert dessinés avec QPainter
 │   ├── widgets.py                             # Composants graphiques partagés
 │   ├── theme.py                               # Thèmes clair et sombre, palette et feuille de style
 │   ├── theme.qss                              # Feuille de style Qt, couleurs en variables
@@ -452,6 +454,7 @@ scraper-data-python/
 │   │   ├── test_benefits.py                   # Teste la détection des avantages
 │   │   ├── test_contract.py                   # Teste la normalisation du contrat
 │   │   ├── test_presentation.py               # Teste la mise en forme commune des offres
+│   │   ├── test_statistics.py                 # Teste les indicateurs du tableau de bord
 │   │   ├── test_export.py                     # Teste l'export et la neutralisation des formules
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │

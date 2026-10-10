@@ -2,12 +2,12 @@
 
 import json
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
-from storage.database import connect_database
+from storage.database import connect_database, count_by_day
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -268,31 +268,26 @@ def count_offers(pDatabaseFile, **pFilters):
 def count_new_offers_by_day(pDatabaseFile, pDays, pNow=None):
     """Compte les offres découvertes chaque jour, jours sans offre compris."""
 
-    vToday = (pNow or datetime.now()).date()
-    vFirstDay = vToday - timedelta(days=pDays - 1)
+    rCounts = count_by_day(pDatabaseFile, "job_offer", "first_seen_at", pDays, pNow)
+
+    return rCounts
+
+
+def count_offers_by_source(pDatabaseFile):
+    """Compte les offres en base par source, de la plus fournie à la moins fournie."""
 
     vConnection = connect_database(pDatabaseFile)
 
     try:
-        vRows = vConnection.execute(
-            """
-            SELECT substr(first_seen_at, 1, 10) AS day, COUNT(*)
+        rCounts = vConnection.execute("""
+            SELECT source, COUNT(*) AS offer_count
             FROM job_offer
-            WHERE first_seen_at >= ?
-            GROUP BY day
-            """,
-            (vFirstDay.isoformat(),),
-        ).fetchall()
+            GROUP BY source
+            ORDER BY offer_count DESC, source
+            """).fetchall()
 
     finally:
         vConnection.close()
-
-    vCounts = dict(vRows)
-
-    rCounts = [
-        (vDay, vCounts.get(vDay.isoformat(), 0))
-        for vDay in (vFirstDay + timedelta(days=vOffset) for vOffset in range(pDays))
-    ]
 
     return rCounts
 

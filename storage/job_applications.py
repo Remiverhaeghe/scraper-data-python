@@ -4,7 +4,7 @@ import sqlite3
 from datetime import datetime, timedelta
 
 from config import FOLLOW_UP_DAYS
-from storage.database import connect_database
+from storage.database import connect_database, count_by_day
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -108,6 +108,14 @@ def record_follow_up(pDatabaseFile, pSource, pSourceId, pFollowUpDate=None):
     vConnection = connect_database(pDatabaseFile)
 
     try:
+        vConnection.execute(
+            """
+            INSERT INTO job_follow_up (source, source_id, followed_up_at)
+            VALUES (?, ?, ?)
+            """,
+            (pSource, str(pSourceId), vFollowUpAt.isoformat()),
+        )
+
         vConnection.execute(
             """
             UPDATE job_application
@@ -273,3 +281,21 @@ def get_application(pDatabaseFile, pSource, pSourceId):
     rApplication = dict(vRow) if vRow is not None else None
 
     return rApplication
+
+
+def count_applications_by_day(pDatabaseFile, pDays, pNow=None):
+    """Compte les candidatures envoyées chaque jour, jours vides compris."""
+
+    rCounts = count_by_day(pDatabaseFile, "job_application", "applied_at", pDays, pNow)
+
+    return rCounts
+
+
+def count_follow_ups_by_day(pDatabaseFile, pDays, pNow=None):
+    """Compte les relances effectuées chaque jour, jours vides compris."""
+
+    rCounts = count_by_day(
+        pDatabaseFile, "job_follow_up", "followed_up_at", pDays, pNow
+    )
+
+    return rCounts

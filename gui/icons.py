@@ -7,6 +7,9 @@ from PySide6.QtGui import QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 
 from config import ASSETS_DIRECTORY
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 ICONS_DIRECTORY = ASSETS_DIRECTORY / "icons"
 
@@ -16,17 +19,29 @@ PIXEL_RATIO = 2
 
 @lru_cache
 def render_icon(pName, pColor, pSize):
-    """Dessine une icône Lucide, dont le trait suit currentColor, dans une couleur."""
+    """Dessine une icône Lucide, dont le trait suit currentColor, dans une couleur.
 
-    vSvg = (ICONS_DIRECTORY / f"{pName}.svg").read_text(encoding="utf-8")
-    vRenderer = QSvgRenderer(QByteArray(vSvg.replace("currentColor", pColor).encode()))
+    Une icône introuvable donne une image transparente : un fichier manquant
+    ne doit pas empêcher l'affichage de la page.
+    """
 
     rPixmap = QPixmap(pSize * PIXEL_RATIO, pSize * PIXEL_RATIO)
     rPixmap.fill(Qt.GlobalColor.transparent)
 
-    vPainter = QPainter(rPixmap)
-    vRenderer.render(vPainter)
-    vPainter.end()
+    try:
+        vSvg = (ICONS_DIRECTORY / f"{pName}.svg").read_text(encoding="utf-8")
+
+    except OSError:
+        logger.error("Icône introuvable : %s", pName)
+
+    else:
+        vRenderer = QSvgRenderer(
+            QByteArray(vSvg.replace("currentColor", pColor).encode())
+        )
+
+        vPainter = QPainter(rPixmap)
+        vRenderer.render(vPainter)
+        vPainter.end()
 
     rPixmap.setDevicePixelRatio(PIXEL_RATIO)
 

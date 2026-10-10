@@ -41,17 +41,17 @@ def test_theme_buttons_emit_choice(qt_application, tmp_path):
 
     vRequested = []
 
-    vPage = SettingsPage(tmp_path / "scraper.db", "system")
+    vPage = SettingsPage(tmp_path / "scraper.db")
     vPage.theme_requested.connect(vRequested.append)
 
     vButtons = vPage.theme_buttons.buttons()
 
     assert vButtons[0].isChecked()
 
-    vButtons[2].click()
+    vButtons[1].click()
 
     assert vRequested == ["dark"]
 
     vPage.set_theme_enabled(False)
 
-    assert not vButtons[2].isEnabled()
+    assert not vButtons[1].isEnabled()

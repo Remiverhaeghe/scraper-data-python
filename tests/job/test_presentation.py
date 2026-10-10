@@ -6,7 +6,9 @@ from job.presentation import (
     FOLLOW_UP_FILTER,
     build_offer_filters,
     describe_search,
+    describe_rules,
     describe_sources,
+    describe_tax_rule,
     summarize_history,
 )
 
@@ -95,16 +97,43 @@ def test_summarize_history():
     """Vérifie la mise en forme de la synthèse de l'historique."""
 
     assert summarize_history(
-        {"executions": 4, "items": 120, "average_duration": 2.345, "successes": 3}
+        {"executions": 4, "item_count": 120, "average_duration": 2.345, "successes": 3}
     ) == {
         "executions": 4,
-        "items": 120,
+        "item_count": 120,
         "average_duration": "2.3 s",
         "success_rate": "75 %",
     }
     assert (
         summarize_history(
-            {"executions": 0, "items": 0, "average_duration": 0, "successes": 0}
+            {"executions": 0, "item_count": 0, "average_duration": 0, "successes": 0}
         )["success_rate"]
         == "-"
     )
+
+
+def test_describe_tax_rule(monkeypatch):
+    """Vérifie le texte de l'impôt selon INCOME_TAX_RATE."""
+
+    monkeypatch.delenv("INCOME_TAX_RATE", raising=False)
+
+    assert describe_tax_rule() == "Non déduit : INCOME_TAX_RATE non renseigné"
+
+    monkeypatch.setenv("INCOME_TAX_RATE", "7.5")
+
+    assert describe_tax_rule() == "Taux de 7.5 % déduit du net (INCOME_TAX_RATE)"
+
+    monkeypatch.setenv("INCOME_TAX_RATE", "abc")
+
+    assert describe_tax_rule().startswith("Non déduit : INCOME_TAX_RATE doit")
+
+
+def test_describe_rules_lists_every_rule():
+    """Vérifie la liste des règles affichées dans les paramètres."""
+
+    assert [vLabel for vLabel, _ in describe_rules()] == [
+        "Salaire net",
+        "Impôt sur le revenu",
+        "Nouvelle offre",
+        "Relance",
+    ]

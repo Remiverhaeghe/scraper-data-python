@@ -2,9 +2,7 @@
 {% import "_macros.html" as ui %}
 
 {% block content %}
-{% call ui.page_header("Tableau de bord", "Vue d'ensemble de vos offres et de vos candidatures") %}
-<a class="button" href="{{ repository_url }}" target="_blank" rel="noopener">{{ icon("github") }} GitHub</a>
-{% endcall %}
+{{ ui.page_header("Tableau de bord", "Vue d'ensemble de vos offres et de vos candidatures", "house") }}
 
 <section class="banner">
     <div>
@@ -37,17 +35,9 @@
 
 <section class="grid grid-dashboard">
     <article class="card">
-        <h2>Nouvelles offres</h2>
-        <p class="card-subtitle">Offres découvertes sur {{ chart_days }} jours</p>
-        <div class="chart" role="img" aria-label="Nouvelles offres par jour">
-            {% for bar in chart %}
-            <div class="chart-bar{% if not bar.value %} is-empty{% endif %}" title="{{ bar.label }} : {{ bar.value }} offre(s)">
-                {% if bar.value %}<span>{{ bar.value }}</span>{% endif %}
-                <i style="height: {{ bar.height }}%"></i>
-                <small>{{ bar.label }}</small>
-            </div>
-            {% endfor %}
-        </div>
+        <h2>Activité</h2>
+        <p class="card-subtitle">Sur {{ chart_days }} jours, chaque série à sa propre échelle</p>
+        {{ ui.bar_chart(chart, "Activité par jour") }}
     </article>
 
     <article class="card">

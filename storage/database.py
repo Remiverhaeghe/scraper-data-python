@@ -1,6 +1,7 @@
 """Gestion de la connexion et des migrations de la base SQLite"""
 
 import sqlite3
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from utils.logger import get_logger
@@ -115,7 +116,77 @@ def migrate_to_v2(pConnection):
     pConnection.execute("ALTER TABLE history ADD COLUMN parameters TEXT")
 
 
-MIGRATIONS = [migrate_to_v1, migrate_to_v2]
+def migrate_to_v3(pConnection):
+    """Conserve chaque relance pour pouvoir les compter jour par jour."""
+
+    pConnection.execute("""
+        CREATE TABLE job_follow_up (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            followed_up_at TEXT NOT NULL,
+            FOREIGN KEY (source, source_id)
+                REFERENCES job_offer(source, source_id)
+        )
+        """)
+
+    # Avant cette version, seule la dernière relance de chaque candidature est connue.
+    pConnection.execute("""
+        INSERT INTO job_follow_up (source, source_id, followed_up_at)
+        SELECT source, source_id, last_follow_up_at
+        FROM job_application
+        WHERE last_follow_up_at IS NOT NULL
+        """)
+
+
+# Colonnes de date sur lesquelles un décompte quotidien est autorisé
+DAILY_COUNT_COLUMNS = {
+    ("job_offer", "first_seen_at"),
+    ("job_application", "applied_at"),
+    ("job_follow_up", "followed_up_at"),
+}
+
+
+def count_by_day(pDatabasePath, pTable, pDateColumn, pDays, pNow=None):
+    """Compte les lignes datées de chacun des derniers jours, jours vides compris.
+
+    La table et la colonne sont insérées dans la requête : seules celles de
+    DAILY_COUNT_COLUMNS sont acceptées.
+    """
+
+    if (pTable, pDateColumn) not in DAILY_COUNT_COLUMNS:
+        raise ValueError(f"Décompte quotidien non autorisé : {pTable}.{pDateColumn}")
+
+    vToday = (pNow or datetime.now()).date()
+    vFirstDay = vToday - timedelta(days=pDays - 1)
+
+    vConnection = connect_database(pDatabasePath)
+
+    try:
+        vRows = vConnection.execute(
+            f"""
+            SELECT substr({pDateColumn}, 1, 10) AS day, COUNT(*)
+            FROM {pTable}
+            WHERE {pDateColumn} >= ?
+            GROUP BY day
+            """,
+            (vFirstDay.isoformat(),),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    vCounts = dict(vRows)
+
+    rCounts = [
+        (vDay, vCounts.get(vDay.isoformat(), 0))
+        for vDay in (vFirstDay + timedelta(days=vOffset) for vOffset in range(pDays))
+    ]
+
+    return rCounts
+
+
+MIGRATIONS = [migrate_to_v1, migrate_to_v2, migrate_to_v3]
 
 
 def get_schema_version(pConnection):

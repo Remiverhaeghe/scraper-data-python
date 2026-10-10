@@ -9,7 +9,8 @@ from fastapi.testclient import TestClient
 from storage.job_offers import save_offers
 from web.app import (
     app,
-    build_chart,
+    build_bar_chart,
+    build_pie,
     format_euros,
     get_database_file,
     render_icon,
@@ -311,7 +312,8 @@ def test_dashboard_shows_statistics(client):
     assert vResponse.status_code == 200
     assert "Tableau de bord" in vResponse.text
     assert "Offres actives en base" in vResponse.text
-    assert 'class="chart"' in vResponse.text
+    assert 'class="chart chart-dense"' in vResponse.text
+    assert "Candidatures" in vResponse.text
     assert 'aria-current="page"' in vResponse.text
     assert "Aucune recherche lancée pour le moment." in vResponse.text
 
@@ -323,6 +325,7 @@ def test_history_page(client):
 
     assert vResponse.status_code == 200
     assert "Taux de réussite" in vResponse.text
+    assert "built-in" not in vResponse.text
     assert "Aucune exécution enregistrée pour le moment." in vResponse.text
 
 
@@ -364,15 +367,33 @@ def test_render_icon_sets_size():
     assert 'width="20"' in vIcon
 
 
-def test_build_chart_scales_bars():
-    """Vérifie la hauteur relative des barres, jamais nulle."""
+def test_build_bar_chart_uses_a_common_scale():
+    """Vérifie que les séries partagent la même échelle, sans barre nulle."""
 
-    vBars = build_chart([(datetime(2026, 10, 9), 0), (datetime(2026, 10, 10), 40)])
+    vChart = build_bar_chart(
+        ["09/10", "10/10"],
+        [("Offres", "#3B82F6", [0, 40]), ("Candidatures", "#F59E0B", [10, 4])],
+    )
 
-    assert [(vBar["label"], vBar["height"]) for vBar in vBars] == [
-        ("09/10", 2),
-        ("10/10", 100),
-    ]
+    assert [vBar["height"] for vBar in vChart["series"][0]["bars"]] == [2, 100]
+    assert [vBar["height"] for vBar in vChart["series"][1]["bars"]] == [25, 10]
+
+
+def test_build_pie_builds_conic_gradient():
+    """Vérifie les segments du camembert et leur couleur."""
+
+    vPie = build_pie(
+        [
+            {"label": "Adzuna", "count": 3, "percent": 75},
+            {"label": "Jooble", "count": 1, "percent": 25},
+        ]
+    )
+
+    assert vPie["total"] == 4
+    assert vPie["gradient"] == (
+        "conic-gradient(#3B82F6 0.00% 75.00%, #F59E0B 75.00% 100.00%)"
+    )
+    assert build_pie([])["gradient"] == ""
 
 
 def test_unknown_offer_renders_error_page(client):
@@ -383,3 +404,15 @@ def test_unknown_offer_renders_error_page(client):
     assert vResponse.status_code == 404
     assert "Page introuvable" in vResponse.text
     assert "Offre introuvable" in vResponse.text
+
+
+def test_build_bar_chart_with_independent_scales():
+    """Vérifie qu'une série de faibles valeurs garde des barres visibles."""
+
+    vChart = build_bar_chart(
+        ["09/10", "10/10"],
+        [("Offres", "#3B82F6", [0, 500]), ("Relances", "#8B5CF6", [1, 2])],
+        pIndependentScales=True,
+    )
+
+    assert [vBar["height"] for vBar in vChart["series"][1]["bars"]] == [50, 100]

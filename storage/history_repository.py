@@ -119,7 +119,7 @@ def get_history_summary(pDatabasePath):
 
     rSummary = {
         "executions": vRow[0],
-        "items": vRow[1],
+        "item_count": vRow[1],
         "average_duration": vRow[2],
         "successes": vRow[3],
     }

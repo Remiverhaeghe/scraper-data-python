@@ -4,7 +4,7 @@
 {% block title %}Paramètres{% endblock %}
 
 {% block content %}
-{{ ui.page_header("Paramètres", "Apparence, sources et informations de l'application") }}
+{{ ui.page_header("Paramètres", "Apparence, règles de calcul, sources et informations", "settings") }}
 
 <div class="grid grid-settings">
     <div class="stack">
@@ -12,10 +12,20 @@
             <h2>Apparence</h2>
             <p class="card-subtitle">Thème mémorisé dans ce navigateur</p>
             <div class="segmented">
-                <button class="button" type="button" data-theme-choice="system">{{ icon("monitor", 16) }} Système</button>
                 <button class="button" type="button" data-theme-choice="light">{{ icon("sun", 16) }} Clair</button>
                 <button class="button" type="button" data-theme-choice="dark">{{ icon("moon", 16) }} Sombre</button>
             </div>
+        </article>
+
+        <article class="card">
+            <h2>Règles de calcul</h2>
+            <p class="card-subtitle">Comment les montants et les dates sont obtenus</p>
+            <dl class="rules">
+                {% for label, text in rules %}
+                <dt>{{ label }}</dt>
+                <dd>{{ text }}</dd>
+                {% endfor %}
+            </dl>
         </article>
 
         <article class="card">

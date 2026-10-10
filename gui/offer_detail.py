@@ -3,12 +3,11 @@
 from datetime import datetime
 
 from PySide6.QtCore import QDate, Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QTextBlockFormat, QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDateEdit,
-    QFormLayout,
     QFrame,
     QGroupBox,
     QHBoxLayout,
@@ -36,6 +35,20 @@ from storage.job_offers import FOLLOW_UP_STATUSES
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Clé, libellé et icône des informations affichées sous le titre de l'offre
+INFO_ROWS = (
+    ("contract", "Contrat", "file-text"),
+    ("salary", "Net mensuel", "banknote"),
+    ("salary_label", "Salaire annoncé", "tag"),
+    ("remote", "Télétravail", "house"),
+    ("benefits", "Avantages", "gift"),
+    ("published_at", "Publiée le", "calendar"),
+    ("source_label", "Source", "globe"),
+)
+
+# Interligne de la description, en pourcentage de la hauteur d'une ligne
+DESCRIPTION_LINE_HEIGHT = 145
 
 
 def describe_application(pApplication):
@@ -84,25 +97,24 @@ class OfferDetailPanel(QWidget):
         )
         self.open_button.clicked.connect(self.open_offer)
 
-        self.info_labels = {}
+        # Ligne et libellé de valeur de chaque information, masquée si elle est vide
+        self.info_rows = {}
 
-        vInfoForm = QFormLayout()
+        vInfos = QVBoxLayout()
+        vInfos.setSpacing(8)
 
-        for vKey, vLabel in (
-            ("contract", "Contrat"),
-            ("salary", "Net mensuel"),
-            ("salary_label", "Salaire annoncé"),
-            ("remote", "Télétravail"),
-            ("benefits", "Avantages"),
-            ("published_at", "Publiée le"),
-            ("source_label", "Source"),
-        ):
-            self.info_labels[vKey] = QLabel()
-            self.info_labels[vKey].setWordWrap(True)
-            vInfoForm.addRow(vLabel, self.info_labels[vKey])
+        for vKey, vLabel, vIcon in INFO_ROWS:
+            vRow, vValue = self.create_info_row(vLabel, vIcon)
+
+            self.info_rows[vKey] = (vRow, vValue)
+            vInfos.addWidget(vRow)
 
         self.description = QTextBrowser()
+        self.description.setObjectName("descriptionText")
         self.description.setPlaceholderText("Aucune description fournie par la source.")
+
+        vDescriptionCard, vDescriptionLayout = create_card("Description")
+        vDescriptionLayout.addWidget(self.description, 1)
 
         vSummaryWidget = QFrame()
         vSummaryWidget.setObjectName("card")
@@ -113,7 +125,8 @@ class OfferDetailPanel(QWidget):
         vSummary.addWidget(self.title_label)
         vSummary.addWidget(self.company_label)
         vSummary.addWidget(self.open_button)
-        vSummary.addLayout(vInfoForm)
+        vSummary.addSpacing(6)
+        vSummary.addLayout(vInfos)
         vSummary.addStretch()
 
         vApplicationGroup = self.create_application_group()
@@ -125,7 +138,7 @@ class OfferDetailPanel(QWidget):
         vContentLayout.setContentsMargins(0, 12, 0, 0)
         vContentLayout.setSpacing(16)
         vContentLayout.addWidget(vSummaryWidget)
-        vContentLayout.addWidget(self.description, 1)
+        vContentLayout.addWidget(vDescriptionCard, 1)
         vContentLayout.addWidget(vApplicationGroup)
 
         # Page 0 : aucune offre choisie, page 1 : détail de l'offre
@@ -136,6 +149,28 @@ class OfferDetailPanel(QWidget):
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.addWidget(self.stack)
+
+    def create_info_row(self, pLabel, pIcon):
+        """Crée une ligne icône, libellé et valeur ; retourne la ligne et sa valeur."""
+        vName = QLabel(pLabel)
+        vName.setObjectName("cardSubtitle")
+        vName.setFixedWidth(110)
+
+        vValue = QLabel()
+        vValue.setWordWrap(True)
+
+        rRow = QWidget()
+
+        vLayout = QHBoxLayout(rRow)
+        vLayout.setContentsMargins(0, 0, 0, 0)
+        vLayout.setSpacing(10)
+        vLayout.addWidget(create_icon_label(pIcon, COLORS["primary"], 16))
+        vLayout.addWidget(vName)
+        vLayout.addWidget(vValue, 1)
+
+        rRowAndValue = (rRow, vValue)
+
+        return rRowAndValue
 
     def create_empty_state(self):
         """Construit le message affiché tant qu'aucune offre n'est sélectionnée."""
@@ -237,13 +272,30 @@ class OfferDetailPanel(QWidget):
             "source_label": vOffer.get("source_label"),
         }
 
-        for vKey, vLabel in self.info_labels.items():
-            vLabel.setText(str(vInfos[vKey] or "Non renseigné"))
+        # Une information absente est masquée plutôt qu'affichée « Non renseigné ».
+        for vKey, (vRow, vValue) in self.info_rows.items():
+            vValue.setText(str(vInfos[vKey] or ""))
+            vRow.setVisible(bool(vInfos[vKey]))
 
-        # Texte brut : une description ne doit jamais être interprétée en HTML.
-        self.description.setPlainText(vOffer.get("description") or "")
+        self.show_description(vOffer.get("description"))
 
         self.load_application()
+
+    def show_description(self, pDescription):
+        """Affiche la description en texte brut, avec un interligne aéré."""
+        # Texte brut : une description ne doit jamais être interprétée en HTML.
+        self.description.setPlainText(pDescription or "")
+
+        vFormat = QTextBlockFormat()
+        vFormat.setLineHeight(
+            DESCRIPTION_LINE_HEIGHT,
+            QTextBlockFormat.LineHeightTypes.ProportionalHeight.value,
+        )
+        vFormat.setBottomMargin(8)
+
+        vCursor = QTextCursor(self.description.document())
+        vCursor.select(QTextCursor.SelectionType.Document)
+        vCursor.setBlockFormat(vFormat)
 
     def load_application(self):
         """Remplit le formulaire de suivi à partir de la base."""

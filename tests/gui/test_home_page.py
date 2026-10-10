@@ -160,9 +160,14 @@ def test_statistic_card_requests_filtered_offers(qt_application, tmp_path):
 
 
 def test_home_page_fills_chart(qt_application, tmp_path):
-    """Vérifie que le graphique reçoit une valeur par jour."""
+    """Vérifie que le graphique reçoit une valeur par jour et par activité."""
 
     vPage = HomePage(build_database(tmp_path))
     vPage.refresh()
 
-    assert len(vPage.chart.values) == CHART_DAYS
+    assert len(vPage.chart.labels) == CHART_DAYS
+    assert [vName for vName, _, _ in vPage.chart.series] == [
+        "Nouvelles offres",
+        "Candidatures",
+        "Relances",
+    ]

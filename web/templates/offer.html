@@ -2,46 +2,54 @@
 
 {% block title %}{{ offer.title or "Offre" }}{% endblock %}
 
+{% macro detail(icon_name, label) %}
+<div class="detail">
+    <span class="detail-icon">{{ icon(icon_name, 16) }}</span>
+    <span class="detail-label">{{ label }}</span>
+    <span>{{ caller() }}</span>
+</div>
+{% endmacro %}
+
 {% block content %}
 <a class="back-link" href="{{ url_for('list_offers').path }}">← Retour aux offres</a>
 
 <div class="offer-layout">
-    <article class="card">
-        <header class="offer-header">
-            <h1>
-                {% if offer.is_new %}<span class="badge badge-new">Nouvelle</span>{% endif %}
-                {{ offer.title or "Titre non communiqué par la source" }}
-            </h1>
-            <p class="offer-company">{{ offer.company or "" }}{% if offer.location %} · {{ offer.location }}{% endif %}</p>
-            <a class="button button-primary" href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">
-                {{ icon("external-link", 16) }} Voir l'offre sur {{ offer.source_label }}
-            </a>
-        </header>
+    <div class="stack">
+        <article class="card">
+            <header class="offer-header">
+                <h1>
+                    {% if offer.is_new %}<span class="badge badge-new">Nouvelle</span>{% endif %}
+                    {{ offer.title or "Titre non communiqué par la source" }}
+                </h1>
+                <p class="offer-company">{{ offer.company or "" }}{% if offer.location %} · {{ offer.location }}{% endif %}</p>
+                <a class="button button-primary" href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">
+                    {{ icon("external-link", 16) }} Voir l'offre sur {{ offer.source_label }}
+                </a>
+            </header>
 
-        <dl class="offer-details">
-            <dt>Contrat</dt>
-            <dd>{{ offer.contract or "Non précisé" }}{% if offer.contract_type %} ({{ offer.contract_type }}){% endif %}</dd>
+            {# Une information absente est masquée plutôt qu'affichée « Non précisé ». #}
+            <div class="details">
+                {% if offer.contract or offer.contract_type %}
+                {% call detail("file-text", "Contrat") %}{{ offer.contract or offer.contract_type }}{% if offer.contract and offer.contract_type and offer.contract_type != offer.contract %} ({{ offer.contract_type }}){% endif %}{% endcall %}
+                {% endif %}
 
-            <dt>Télétravail</dt>
-            <dd>{% if offer.remote %}Oui{% if offer.remote_type == "full" %}, complet{% endif %}{% else %}Non précisé{% endif %}</dd>
+                {% if offer.remote %}
+                {% call detail("house", "Télétravail") %}Oui{% if offer.remote_type == "full" %}, complet{% endif %}{% endcall %}
+                {% endif %}
 
-            <dt>Salaire brut</dt>
-            <dd>
                 {% if offer.salary_min or offer.salary_max %}
+                {% call detail("tag", "Salaire brut") %}
                 {{ offer.salary_min | euros if offer.salary_currency == "EUR" else offer.salary_min }}
                 {% if offer.salary_max %} – {{ offer.salary_max | euros if offer.salary_currency == "EUR" else offer.salary_max }}{% endif %}
                 {% if offer.salary_currency != "EUR" %} {{ offer.salary_currency or "" }}{% endif %}
                 {% if offer.salary_period %} ({{ {"year": "par an", "month": "par mois", "hour": "par heure"}[offer.salary_period] }}){% endif %}
+                {% endcall %}
                 {% elif offer.salary_label %}
-                {{ offer.salary_label }}
-                {% else %}
-                Non précisé
+                {% call detail("tag", "Salaire annoncé") %}{{ offer.salary_label }}{% endcall %}
                 {% endif %}
-            </dd>
 
-            <dt>Net mensuel estimé</dt>
-            <dd>
                 {% if offer.salary_net_monthly_min or offer.salary_net_monthly_max %}
+                {% call detail("banknote", "Net mensuel estimé") %}
                 {{ (offer.salary_net_monthly_min or offer.salary_net_monthly_max) | euros }}
                 {% if offer.salary_net_monthly_max and offer.salary_net_monthly_max != offer.salary_net_monthly_min %} – {{ offer.salary_net_monthly_max | euros }}{% endif %}
                 avant impôt
@@ -50,33 +58,34 @@
                 {% if offer.salary_net_after_tax_monthly_max and offer.salary_net_after_tax_monthly_max != offer.salary_net_after_tax_monthly_min %} – {{ offer.salary_net_after_tax_monthly_max | euros }}{% endif %}
                 après impôt
                 {% endif %}
-                {% else %}
-                Non calculable
+                {% endcall %}
                 {% endif %}
-            </dd>
 
-            <dt>Avantages mentionnés</dt>
-            <dd>{{ offer.benefits | join(", ") if offer.benefits else "Aucun détecté" }}</dd>
+                {% if offer.benefits %}
+                {% call detail("gift", "Avantages") %}{{ offer.benefits | join(", ") }}{% endcall %}
+                {% endif %}
 
-            {% if offer.skills_list %}
-            <dt>Compétences</dt>
-            <dd>{{ offer.skills_list | join(", ") }}</dd>
+                {% if offer.skills_list %}
+                {% call detail("sparkles", "Compétences") %}{{ offer.skills_list | join(", ") }}{% endcall %}
+                {% endif %}
+
+                {% if offer.published_at %}
+                {% call detail("calendar", "Publiée le") %}{{ offer.published_at | date_fr }}{% endcall %}
+                {% endif %}
+
+                {% call detail("globe", "Découverte") %}{{ offer.first_seen_at | date_fr }}, vue pour la dernière fois le {{ offer.last_seen_at | date_fr }}{% endcall %}
+            </div>
+        </article>
+
+        <article class="card">
+            <h2>Description</h2>
+            {% if offer.description %}
+            <p class="offer-description">{{ offer.description }}</p>
+            {% else %}
+            <p class="muted">Aucune description fournie par la source.</p>
             {% endif %}
-
-            <dt>Publiée</dt>
-            <dd>{{ offer.published_at | date_fr or "Non précisé" }}</dd>
-
-            <dt>Découverte</dt>
-            <dd>{{ offer.first_seen_at | date_fr }}, vue pour la dernière fois le {{ offer.last_seen_at | date_fr }}</dd>
-        </dl>
-
-        <h2>Description</h2>
-        {% if offer.description %}
-        <p class="offer-description">{{ offer.description }}</p>
-        {% else %}
-        <p class="muted">Aucune description fournie par la source.</p>
-        {% endif %}
-    </article>
+        </article>
+    </div>
 
     {% include "_application.html" %}
 </div>

@@ -209,6 +209,22 @@ h3 {
 
 /* En-tête de page */
 
+.page-title {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.page-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
 .page-header {
     display: flex;
     gap: 16px;
@@ -321,6 +337,14 @@ h3 {
     margin-top: 18px;
 }
 
+.grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.section-gap {
+    margin-top: 18px;
+}
+
 .grid-settings {
     grid-template-columns: 1fr 1fr;
     align-items: start;
@@ -430,54 +454,124 @@ a.stat:hover {
     --accent-light: var(--purple-light);
 }
 
-/* Graphique */
+/* Graphiques */
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin: 0 0 6px;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.legend li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.legend-column {
+    flex-direction: column;
+    font-size: 13px;
+    color: var(--text);
+}
 
 .chart {
     display: flex;
-    gap: 6px;
-    align-items: flex-end;
-    height: 190px;
-    padding-top: 20px;
+    gap: 4px;
+    height: 200px;
+    padding-top: 22px;
 }
 
-.chart-bar {
+.chart-group {
     display: flex;
     flex: 1;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
     gap: 4px;
-    height: 100%;
     min-width: 0;
 }
 
-.chart-bar span {
+.chart-bars {
+    display: flex;
+    flex: 1;
+    gap: 2px;
+    align-items: flex-end;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.chart-bars i {
+    position: relative;
+    width: min(100%, 18px);
+    border-radius: 3px 3px 0 0;
+    background: var(--bar-color);
+}
+
+.chart-bars i.is-empty {
+    background: var(--border);
+}
+
+.chart-bars b {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
     color: var(--heading);
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.chart-bar i {
-    width: min(100%, 26px);
-    border-radius: 4px;
-    background: var(--primary);
-}
-
-.chart-bar.is-empty i {
-    background: var(--primary-light);
-}
-
-.chart-bar small {
-    color: var(--muted);
-    font-size: 11px;
+    font-size: 10px;
     white-space: nowrap;
 }
 
-/* Une date sur deux sur les écrans étroits, la plus récente toujours visible */
-@media (max-width: 1400px) {
-    .chart-bar:nth-last-child(even) small {
-        visibility: hidden;
-    }
+.chart-group small {
+    margin: 0 -12px;
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* La date la plus récente reste toujours visible */
+.chart-dense .chart-group:nth-last-child(even) small {
+    visibility: hidden;
+}
+
+.pie-chart {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    min-height: 200px;
+}
+
+.pie {
+    position: relative;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: var(--border);
+}
+
+/* Le disque central transforme le camembert en anneau, plus lisible */
+.pie span {
+    display: grid;
+    place-items: center;
+    width: 56%;
+    height: 56%;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--heading);
+    font-size: 22px;
+    font-weight: 700;
 }
 
 /* Listes : activité, sources */
@@ -741,24 +835,54 @@ input[type="checkbox"] {
     color: var(--muted);
 }
 
-.offer-details {
+.details {
     display: grid;
-    grid-template-columns: 190px 1fr;
-    gap: 8px 16px;
-    margin: 20px 0;
+    gap: 10px;
+    margin-top: 20px;
 }
 
-.offer-details dt {
+.detail {
+    display: grid;
+    grid-template-columns: 32px 160px 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.detail-icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.detail-label {
     color: var(--muted);
 }
 
-.offer-details dd {
+.offer-description {
+    margin: 10px 0 0;
+    line-height: 1.7;
+    white-space: pre-line;
+}
+
+.rules {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 10px 14px;
     margin: 0;
 }
 
-.offer-description {
+.rules dt {
+    color: var(--heading);
+    font-weight: 600;
+}
+
+.rules dd {
     margin: 0;
-    white-space: pre-line;
+    color: var(--muted);
 }
 
 /* Suivi de candidature */
@@ -795,9 +919,9 @@ input[type="checkbox"] {
     gap: 10px;
 }
 
-:root[data-theme-choice="system"] [data-theme-choice="system"],
-:root[data-theme-choice="light"] [data-theme-choice="light"],
-:root[data-theme-choice="dark"] [data-theme-choice="dark"] {
+/* Le bouton actif est celui du thème réellement appliqué */
+:root[data-theme="light"] [data-theme-choice="light"],
+:root[data-theme="dark"] [data-theme-choice="dark"] {
     background: var(--primary-light);
     border-color: var(--primary);
     color: var(--primary);
@@ -826,6 +950,7 @@ code {
 
 @media (max-width: 1100px) {
     .grid-dashboard,
+    .grid-2,
     .grid-settings,
     .offer-layout {
         grid-template-columns: 1fr;
@@ -867,8 +992,16 @@ code {
         grid-template-columns: 1fr;
     }
 
-    .offer-details {
-        grid-template-columns: 1fr;
+    .detail {
+        grid-template-columns: 32px 1fr;
+    }
+
+    .detail-label {
+        display: none;
+    }
+
+    .pie-chart {
+        flex-direction: column;
     }
 }
 

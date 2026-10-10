@@ -36,3 +36,20 @@ def test_status_follows_search(qt_application, tmp_path):
     vWindow.search_page.search_ended.emit()
 
     assert vWindow.status_label.text() == "Prêt"
+
+
+def test_rebuild_keeps_window_and_shows_page(qt_application, tmp_path):
+    """Vérifie que le changement de thème repeint la même fenêtre."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vWindow = MainWindow(vDatabaseFile, "Test")
+    vOldPages = vWindow.pages
+
+    vWindow.rebuild("settings")
+
+    assert vWindow.pages is not vOldPages
+    assert vWindow.pages.currentWidget() is vWindow.settings_page
+    assert vWindow.windowTitle() == "Paramètres · Test"

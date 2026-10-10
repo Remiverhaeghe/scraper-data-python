@@ -10,7 +10,7 @@ from gui.icons import stylesheet_path
 
 THEME_FILE = Path(__file__).with_name("theme.qss")
 
-THEME_CHOICES = {"system": "Système", "light": "Clair", "dark": "Sombre"}
+THEME_CHOICES = {"light": "Clair", "dark": "Sombre"}
 
 THEMES = {
     "light": {

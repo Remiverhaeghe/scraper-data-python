@@ -22,44 +22,33 @@ THEME_SETTING = "appearance/theme"
 
 
 class DesktopApplication:
-    """Ouvre la fenêtre principale et la reconstruit à chaque changement de thème."""
+    """Ouvre la fenêtre principale et en repeint le contenu au changement de thème."""
 
     def __init__(self, pApplication, pSettings):
         """Applique le thème mémorisé puis ouvre la fenêtre."""
         self.application = pApplication
         self.settings = pSettings
-        self.window = None
 
-        self.open_window(self.settings.value(THEME_SETTING, "system", str))
+        # Sans choix mémorisé, le premier lancement suit le thème de Windows.
+        vTheme = apply_theme(
+            self.application, self.settings.value(THEME_SETTING, "system", str)
+        )
 
-    def open_window(self, pThemeChoice, pPage="home"):
-        """Applique un thème et affiche une nouvelle fenêtre à la place de l'ancienne.
-
-        Les icônes et les cartes colorées sont dessinées à la construction :
-        recréer la fenêtre est le moyen le plus simple de tout repeindre.
-        """
-        vTheme = apply_theme(self.application, pThemeChoice)
-
-        vWindow = MainWindow(DATABASE_FILE, APPLICATION_NAME, pThemeChoice)
-        vWindow.theme_requested.connect(self.change_theme)
-        vWindow.navigate(pPage)
-
-        if self.window is not None:
-            vWindow.setGeometry(self.window.geometry())
-            self.window.close()
-            self.window.deleteLater()
-
-        vWindow.show()
-
-        self.window = vWindow
+        self.window = MainWindow(DATABASE_FILE, APPLICATION_NAME)
+        self.window.theme_requested.connect(self.change_theme)
+        self.window.show()
 
         logger.info("Fenêtre ouverte avec le thème %s", vTheme)
 
-    def change_theme(self, pThemeChoice):
-        """Mémorise le thème choisi et repeint l'application."""
-        self.settings.setValue(THEME_SETTING, pThemeChoice)
+    def change_theme(self, pTheme):
+        """Mémorise le thème choisi et repeint la fenêtre sans la recréer."""
+        self.settings.setValue(THEME_SETTING, pTheme)
 
-        self.open_window(pThemeChoice, "settings")
+        apply_theme(self.application, pTheme)
+
+        self.window.rebuild("settings")
+
+        logger.info("Thème %s appliqué", pTheme)
 
 
 def run():

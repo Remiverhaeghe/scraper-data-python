@@ -181,3 +181,15 @@ def test_export_uses_current_filters(offers_page, tmp_path):
     )
 
     assert offers_page.export_to(tmp_path / "offres.json") == 1
+
+
+def test_empty_information_is_hidden(offers_page):
+    """Vérifie qu'une information absente n'est pas affichée."""
+
+    offers_page.select_offer(("lever", "1"))
+
+    vRows = offers_page.detail_panel.info_rows
+
+    assert not vRows["salary"][0].isVisibleTo(offers_page.detail_panel)
+    assert vRows["contract"][0].isVisibleTo(offers_page.detail_panel)
+    assert vRows["contract"][1].text() == "CDI"

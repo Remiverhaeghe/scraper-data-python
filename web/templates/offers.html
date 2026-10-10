@@ -4,7 +4,7 @@
 {% block title %}Offres{% endblock %}
 
 {% block content %}
-{{ ui.page_header("Offres", "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures") }}
+{{ ui.page_header("Offres", "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures", "briefcase") }}
 
 <form class="filters card"
       hx-get="{{ url_for('list_offers').path }}"

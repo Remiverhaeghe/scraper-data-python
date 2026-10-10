@@ -9,6 +9,7 @@ from storage.database import (
     connect_database,
     get_schema_version,
     initialize_database,
+    count_by_day,
     migrate_to_v1,
 )
 
@@ -150,5 +151,54 @@ def test_migration_to_v2_keeps_existing_history(tmp_path):
     finally:
         vConnection.close()
 
-    assert vVersion == 2
+    assert vVersion == len(MIGRATIONS)
     assert vRows == [(40, None)]
+
+
+def test_migration_to_v3_keeps_last_follow_ups(tmp_path):
+    """Vérifie que la dernière relance connue est reprise dans le journal."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        for vMigration in MIGRATIONS[:2]:
+            vMigration(vConnection)
+
+        vConnection.execute("PRAGMA user_version = 2")
+        vConnection.execute("""
+            INSERT INTO job_offer (source, source_id, first_seen_at, last_seen_at)
+            VALUES ('lever', '1', '2026-10-01', '2026-10-01')
+            """)
+        vConnection.execute("""
+            INSERT INTO job_application (
+                source, source_id, status, follow_up_count, last_follow_up_at
+            )
+            VALUES ('lever', '1', 'APPLIED', 2, '2026-10-05T09:00:00')
+            """)
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    initialize_database(vDatabaseFile)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(
+            "SELECT source, source_id, followed_up_at FROM job_follow_up"
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    assert vRows == [("lever", "1", "2026-10-05T09:00:00")]
+
+
+def test_count_by_day_rejects_unknown_column(tmp_path):
+    """Vérifie qu'une table ou une colonne non prévue est refusée."""
+
+    with pytest.raises(ValueError, match="job_offer.title"):
+        count_by_day(tmp_path / "scraper.db", "job_offer", "title", 7)

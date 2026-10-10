@@ -7,6 +7,8 @@ import pytest
 
 from storage.database import initialize_database
 from storage.job_applications import (
+    count_applications_by_day,
+    count_follow_ups_by_day,
     create_application,
     delete_application,
     get_application,
@@ -351,3 +353,24 @@ def test_delete_application(tmp_path):
     delete_application(vDatabaseFile, "adzuna", "1")
 
     assert get_application(vDatabaseFile, "adzuna", "1") is None
+
+
+def test_follow_ups_and_applications_are_counted_by_day(tmp_path):
+    """Vérifie les décomptes quotidiens de candidatures et de relances."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    save_application(vDatabaseFile, "lever", "1", "APPLIED", pNow=datetime(2026, 10, 8))
+    record_follow_up(vDatabaseFile, "lever", "1", datetime(2026, 10, 9, 10, 0))
+    record_follow_up(vDatabaseFile, "lever", "1", datetime(2026, 10, 10, 10, 0))
+
+    vNow = datetime(2026, 10, 10, 12, 0)
+
+    assert [
+        vCount for _, vCount in count_applications_by_day(vDatabaseFile, 3, vNow)
+    ] == [1, 0, 0]
+    assert [
+        vCount for _, vCount in count_follow_ups_by_day(vDatabaseFile, 3, vNow)
+    ] == [0, 1, 1]

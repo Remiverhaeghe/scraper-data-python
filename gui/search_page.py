@@ -90,6 +90,7 @@ class SearchPage(QWidget):
             vLayout,
             "Recherche",
             "Interrogez les sources et enregistrez les nouvelles offres en base",
+            pIcon="search",
         )
 
         self.advanced_button = QPushButton("Afficher les options avancées")

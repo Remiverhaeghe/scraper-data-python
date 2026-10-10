@@ -1,7 +1,6 @@
 """Page d'accueil : synthèse des offres, du suivi et des dernières exécutions"""
 
-from PySide6.QtCore import Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -11,9 +10,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config import NEW_OFFER_DAYS, REPOSITORY_URL
+from config import NEW_OFFER_DAYS
 from gui.chart import BarChart
-from gui.theme import COLORS, is_dark_theme
+from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
     create_button,
@@ -21,8 +20,13 @@ from gui.widgets import (
     create_icon_label,
     create_page_header,
 )
-from job.presentation import describe_execution
-from job.statistics import CHART_DAYS, count_ready_sources, load_statistics
+from job.presentation import CHART_PALETTE, describe_execution
+from job.statistics import (
+    ACTIVITY_SERIES,
+    CHART_DAYS,
+    count_ready_sources,
+    load_statistics,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -58,28 +62,11 @@ class HomePage(QWidget):
     # Clé de la page ou du filtre à afficher, interprétée par la fenêtre principale
     navigation_requested = Signal(str)
 
-    # Thème demandé par le bouton clair/sombre : light ou dark
-    theme_requested = Signal(str)
-
     def __init__(self, pDatabaseFile):
         """Construit la page ; les données sont chargées par refresh."""
         super().__init__()
 
         self.database_file = pDatabaseFile
-
-        vGithubButton = create_button("GitHub", "github")
-        vGithubButton.clicked.connect(
-            lambda: QDesktopServices.openUrl(QUrl(REPOSITORY_URL))
-        )
-
-        vIsDark = is_dark_theme()
-
-        vThemeButton = create_button(
-            "Mode clair" if vIsDark else "Mode sombre", "sun" if vIsDark else "moon"
-        )
-        vThemeButton.clicked.connect(
-            lambda: self.theme_requested.emit("light" if vIsDark else "dark")
-        )
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(32, 28, 32, 28)
@@ -89,7 +76,7 @@ class HomePage(QWidget):
             vLayout,
             "Tableau de bord",
             "Vue d'ensemble de vos offres et de vos candidatures",
-            [vThemeButton, vGithubButton],
+            pIcon="house",
         )
 
         vLayout.addWidget(self.create_banner())
@@ -178,7 +165,8 @@ class HomePage(QWidget):
     def create_chart_card(self):
         """Construit le graphique des nouvelles offres par jour."""
         vCard, vLayout = create_card(
-            "Nouvelles offres", f"Offres découvertes sur {CHART_DAYS} jours"
+            "Activité",
+            f"Sur {CHART_DAYS} jours, chaque série à sa propre échelle",
         )
 
         self.chart = BarChart()
@@ -285,9 +273,21 @@ class HomePage(QWidget):
                 vCard.set_value(vStatistics[vName])
 
             self.show_activity(vStatistics["executions"])
-            self.chart.set_values(
-                [
-                    (f"{vDay:%d/%m}", vCount)
-                    for vDay, vCount in vStatistics["daily_new_offers"]
-                ]
-            )
+            self.show_chart(vStatistics["daily_activity"])
+
+    def show_chart(self, pDailyActivity):
+        """Affiche une série de barres par type d'activité, jour par jour."""
+        vFirstSeries = next(iter(pDailyActivity.values()))
+
+        self.chart.set_series(
+            [f"{vDay:%d/%m}" for vDay, _ in vFirstSeries],
+            [
+                (
+                    ACTIVITY_SERIES[vName][0],
+                    CHART_PALETTE[vIndex],
+                    [vCount for _, vCount in vCounts],
+                )
+                for vIndex, (vName, vCounts) in enumerate(pDailyActivity.items())
+            ],
+            pIndependentScales=True,
+        )

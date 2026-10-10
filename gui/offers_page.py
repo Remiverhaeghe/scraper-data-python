@@ -106,6 +106,7 @@ class OffersPage(QWidget):
             "Offres",
             "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures",
             [self.create_export_button()],
+            pIcon="briefcase",
         )
 
         vLayout.addLayout(self.create_filters())

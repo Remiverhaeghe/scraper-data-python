@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from config import TAGLINE
+from gui.branding import create_logo_icon
 from gui.history_page import HistoryPage
 from gui.home_page import HomePage
 from gui.icons import get_icon
@@ -29,15 +30,29 @@ OFFER_PRESETS = ("offers", "new_offers", "applications", "follow_ups")
 class MainWindow(QMainWindow):
     """Affiche le menu latéral et la page sélectionnée."""
 
-    # Thème choisi dans les paramètres : system, light ou dark
+    # Thème choisi dans les paramètres : light ou dark
     theme_requested = Signal(str)
 
-    def __init__(self, pDatabaseFile, pTitle, pThemeChoice="system"):
-        """Construit la fenêtre et ses pages."""
+    def __init__(self, pDatabaseFile, pTitle):
+        """Construit la fenêtre et son contenu."""
         super().__init__()
+
+        self.database_file = pDatabaseFile
+        self.title = pTitle
 
         self.setWindowTitle(pTitle)
         self.setMinimumSize(1180, 760)
+
+        self.build_content()
+
+    def build_content(self):
+        """Construit le menu latéral et les pages.
+
+        Appelée de nouveau après un changement de thème : les icônes et les
+        cartes colorées sont dessinées à la construction.
+        """
+        pDatabaseFile = self.database_file
+        self.page_labels = {}
 
         self.navigation = QListWidget()
         self.navigation.setObjectName("navigation")
@@ -55,13 +70,12 @@ class MainWindow(QMainWindow):
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
         self.add_page("history", "Historique", "history", HistoryPage(pDatabaseFile))
 
-        self.settings_page = SettingsPage(pDatabaseFile, pThemeChoice)
+        self.settings_page = SettingsPage(pDatabaseFile)
         self.add_page("settings", "Paramètres", "settings", self.settings_page)
 
         self.settings_page.theme_requested.connect(self.theme_requested)
 
         self.home_page.navigation_requested.connect(self.navigate)
-        self.home_page.theme_requested.connect(self.theme_requested)
         self.search_page.show_offers_requested.connect(lambda: self.navigate("offers"))
         self.search_page.search_started.connect(self.on_search_started)
         self.search_page.search_ended.connect(self.on_search_ended)
@@ -71,7 +85,7 @@ class MainWindow(QMainWindow):
         vLayout = QHBoxLayout(vCentral)
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.setSpacing(0)
-        vLayout.addWidget(self.create_sidebar(pTitle))
+        vLayout.addWidget(self.create_sidebar(self.title))
         vLayout.addWidget(self.pages, 1)
 
         self.setCentralWidget(vCentral)
@@ -82,10 +96,9 @@ class MainWindow(QMainWindow):
 
     def create_sidebar(self, pTitle):
         """Construit le menu latéral : marque, navigation et état."""
-        vLogo = QLabel("RV")
-        vLogo.setObjectName("logo")
+        vLogo = QLabel()
+        vLogo.setPixmap(create_logo_icon().pixmap(44, 44))
         vLogo.setFixedSize(44, 44)
-        vLogo.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         vName = QLabel(pTitle)
         vName.setObjectName("brandName")
@@ -138,6 +151,7 @@ class MainWindow(QMainWindow):
         )
 
         self.page_rows[pKey] = self.pages.count()
+        self.page_labels[self.pages.count()] = pLabel
         self.navigation.addItem(vItem)
         self.pages.addWidget(pPage)
 
@@ -151,9 +165,25 @@ class MainWindow(QMainWindow):
 
         self.navigation.setCurrentRow(self.page_rows[vKey])
 
+    def rebuild(self, pPage):
+        """Reconstruit le contenu dans la même fenêtre, sans la fermer.
+
+        L'affichage est suspendu pendant la reconstruction pour éviter tout
+        scintillement ; setCentralWidget détruit l'ancien contenu.
+        """
+        self.setUpdatesEnabled(False)
+
+        try:
+            self.build_content()
+            self.navigate(pPage)
+
+        finally:
+            self.setUpdatesEnabled(True)
+
     def show_page(self, pIndex):
         """Affiche la page choisie et rafraîchit ses données si elle le permet."""
         self.pages.setCurrentIndex(pIndex)
+        self.setWindowTitle(f"{self.page_labels[pIndex]} · {self.title}")
 
         vPage = self.pages.currentWidget()
 

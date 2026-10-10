@@ -5,8 +5,9 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from config import NEW_OFFER_DAYS
+from config import FOLLOW_UP_DAYS, NET_SALARY_RATIO, NEW_OFFER_DAYS
 from job.contract import CONTRACT_TYPES
+from job.salary import get_income_tax_rate
 from job.sources.registry import SOURCES
 from storage.job_applications import APPLICATION_STATUSES
 
@@ -32,6 +33,17 @@ EXECUTION_STATUS_LABELS = {
     "partial": "Partielle",
     "error": "En échec",
 }
+
+# Couleurs des séries et des parts de graphique, lisibles dans les deux thèmes
+CHART_PALETTE = (
+    "#3B82F6",
+    "#F59E0B",
+    "#8B5CF6",
+    "#10B981",
+    "#EC4899",
+    "#06B6D4",
+    "#94A3B8",
+)
 
 # Tonalité d'affichage de chaque statut d'exécution ; tout autre statut est un échec
 EXECUTION_TONES = {"success": "success", "partial": "warning"}
@@ -207,7 +219,7 @@ def summarize_history(pSummary):
 
     rValues = {
         "executions": vExecutions,
-        "items": pSummary["items"],
+        "item_count": pSummary["item_count"],
         "average_duration": f"{pSummary['average_duration']:.1f} s",
         "success_rate": (
             f"{round(100 * pSummary['successes'] / vExecutions)} %"
@@ -239,3 +251,38 @@ def describe_execution(pEntry):
     }
 
     return rDescription
+
+
+def describe_tax_rule():
+    """Décrit la prise en compte de l'impôt, selon INCOME_TAX_RATE."""
+
+    try:
+        vRate = get_income_tax_rate()
+
+    except ValueError as vException:
+        rRule = f"Non déduit : {vException}"
+
+    else:
+        rRule = (
+            f"Taux de {vRate:g} % déduit du net (INCOME_TAX_RATE)"
+            if vRate is not None
+            else "Non déduit : INCOME_TAX_RATE non renseigné"
+        )
+
+    return rRule
+
+
+def describe_rules():
+    """Retourne les règles de calcul appliquées aux offres et au suivi."""
+
+    rRules = [
+        (
+            "Salaire net",
+            f"Brut × {round(NET_SALARY_RATIO * 100)} %, l'hypothèse la plus prudente",
+        ),
+        ("Impôt sur le revenu", describe_tax_rule()),
+        ("Nouvelle offre", f"Découverte il y a moins de {NEW_OFFER_DAYS} jours"),
+        ("Relance", f"Proposée {FOLLOW_UP_DAYS} jours après l'envoi d'une candidature"),
+    ]
+
+    return rRules

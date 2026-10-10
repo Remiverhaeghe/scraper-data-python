@@ -72,6 +72,8 @@ def test_history_page_lists_executions(qt_application, tmp_path):
     assert vPage.message_label.text().startswith("1 dernière(s) exécution(s)")
     assert vPage.cards["executions"].value_label.text() == "1"
     assert vPage.cards["success_rate"].value_label.text() == "0 %"
+    assert len(vPage.execution_chart.labels) == 1
+    assert vPage.source_chart.shares == []
 
 
 def test_build_row_without_parameters():

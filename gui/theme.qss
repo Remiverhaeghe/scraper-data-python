@@ -88,6 +88,11 @@ QLabel#pageTitle {
     font-weight: 700;
 }
 
+QLabel#pageIcon {
+    background: $primary_light;
+    border-radius: 10px;
+}
+
 QLabel#pageSubtitle,
 QLabel#cardSubtitle,
 QLabel#statisticLabel {
@@ -151,6 +156,13 @@ QLabel#fieldLabel {
     color: $muted;
     font-size: 12px;
     font-weight: 600;
+}
+
+QTextBrowser#descriptionText {
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 13px;
 }
 
 QLabel#warning {

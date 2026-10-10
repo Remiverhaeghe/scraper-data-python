@@ -164,7 +164,7 @@ def test_get_history_summary(tmp_path):
 
     assert get_history_summary(vDatabasePath) == {
         "executions": 0,
-        "items": 0,
+        "item_count": 0,
         "average_duration": 0,
         "successes": 0,
     }
@@ -185,7 +185,7 @@ def test_get_history_summary(tmp_path):
 
     assert get_history_summary(vDatabasePath) == {
         "executions": 2,
-        "items": 30,
+        "item_count": 30,
         "average_duration": 3.0,
         "successes": 1,
     }

@@ -7,11 +7,24 @@ from gui.icons import get_icon
 from gui.theme import ACCENTS, COLORS
 
 
-def create_page_header(pLayout, pTitle, pSubtitle, pActions=()):
-    """Ajoute le titre, le sous-titre et les boutons d'action d'une page."""
+def create_page_header(pLayout, pTitle, pSubtitle, pActions=(), pIcon=None):
+    """Ajoute le titre, son icône, le sous-titre et les boutons d'action d'une page."""
 
     vTitle = QLabel(pTitle)
     vTitle.setObjectName("pageTitle")
+
+    vTitleRow = QHBoxLayout()
+    vTitleRow.setSpacing(12)
+
+    if pIcon is not None:
+        vIcon = create_icon_label(pIcon, COLORS["primary"], 22)
+        vIcon.setObjectName("pageIcon")
+        vIcon.setFixedSize(40, 40)
+        vIcon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        vTitleRow.addWidget(vIcon)
+
+    vTitleRow.addWidget(vTitle)
+    vTitleRow.addStretch()
 
     vSubtitle = QLabel(pSubtitle)
     vSubtitle.setObjectName("pageSubtitle")
@@ -19,7 +32,7 @@ def create_page_header(pLayout, pTitle, pSubtitle, pActions=()):
 
     vTexts = QVBoxLayout()
     vTexts.setSpacing(4)
-    vTexts.addWidget(vTitle)
+    vTexts.addLayout(vTitleRow)
     vTexts.addWidget(vSubtitle)
 
     vHeader = QHBoxLayout()

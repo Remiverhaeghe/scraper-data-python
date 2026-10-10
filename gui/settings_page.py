@@ -1,6 +1,4 @@
-"""Page des paramètres : apparence, sources, données et informations"""
-
-from pathlib import Path
+"""Page des paramètres : apparence, règles de calcul, sources et informations"""
 
 from PySide6.QtCore import QUrl, Signal
 from PySide6.QtGui import QDesktopServices
@@ -14,16 +12,17 @@ from PySide6.QtWidgets import (
 )
 
 from config import APPLICATION_NAME, LICENSE_NAME, REPOSITORY_URL, TAGLINE
-from gui.theme import COLORS, THEME_CHOICES
+from gui.theme import COLORS, THEME_CHOICES, is_dark_theme
 from gui.widgets import (
     create_button,
     create_card,
     create_icon_label,
     create_page_header,
 )
+from job.presentation import describe_rules
 from job.sources.registry import SOURCES
 
-THEME_ICONS = {"system": "monitor", "light": "sun", "dark": "moon"}
+THEME_ICONS = {"light": "sun", "dark": "moon"}
 
 
 def describe_source_state(pDefinition):
@@ -45,28 +44,48 @@ def describe_source_state(pDefinition):
     return rState
 
 
+def create_line(pLabel, pText, pLabelWidth=150):
+    """Crée une ligne libellé et texte, utilisée par les cartes de la page."""
+
+    vLabel = QLabel(pLabel)
+    vLabel.setObjectName("activityTitle")
+    vLabel.setFixedWidth(pLabelWidth)
+
+    vText = QLabel(pText)
+    vText.setObjectName("cardSubtitle")
+    vText.setWordWrap(True)
+
+    rLayout = QHBoxLayout()
+    rLayout.setSpacing(12)
+    rLayout.addWidget(vLabel)
+    rLayout.addWidget(vText, 1)
+
+    return rLayout
+
+
 class SettingsPage(QWidget):
     """Regroupe les réglages de l'application et l'état de sa configuration."""
 
     theme_requested = Signal(str)
 
-    def __init__(self, pDatabaseFile, pThemeChoice):
-        """Construit les quatre cartes de la page."""
+    def __init__(self, pDatabaseFile):
+        """Construit les cartes de la page."""
         super().__init__()
-
-        self.database_file = Path(pDatabaseFile).resolve()
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(32, 28, 32, 28)
 
         create_page_header(
-            vLayout, "Paramètres", "Apparence, sources et données de l'application"
+            vLayout,
+            "Paramètres",
+            "Apparence, règles de calcul, sources et informations",
+            pIcon="settings",
         )
 
         vGrid = QGridLayout()
         vGrid.setSpacing(18)
-        vGrid.addWidget(self.create_appearance_card(pThemeChoice), 0, 0)
-        vGrid.addWidget(self.create_data_card(), 1, 0)
+        vGrid.addWidget(self.create_appearance_card(), 0, 0)
+        vGrid.addWidget(self.create_rules_card(), 1, 0)
         vGrid.addWidget(self.create_about_card(), 2, 0)
         vGrid.addWidget(self.create_sources_card(), 0, 1, 3, 1)
         vGrid.setColumnStretch(0, 1)
@@ -75,11 +94,13 @@ class SettingsPage(QWidget):
         vLayout.addLayout(vGrid)
         vLayout.addStretch()
 
-    def create_appearance_card(self, pThemeChoice):
-        """Construit le choix du thème."""
+    def create_appearance_card(self):
+        """Construit le choix du thème, mémorisé pour les prochains lancements."""
         vCard, vLayout = create_card("Apparence", "Thème de l'interface")
 
         self.theme_buttons = QButtonGroup(self)
+
+        vCurrentTheme = "dark" if is_dark_theme() else "light"
 
         vButtons = QHBoxLayout()
 
@@ -88,7 +109,7 @@ class SettingsPage(QWidget):
                 vLabel, THEME_ICONS[vChoice], "segmentButton", COLORS["primary"]
             )
             vButton.setCheckable(True)
-            vButton.setChecked(vChoice == pThemeChoice)
+            vButton.setChecked(vChoice == vCurrentTheme)
             vButton.clicked.connect(
                 lambda _=False, pChoice=vChoice: self.theme_requested.emit(pChoice)
             )
@@ -98,6 +119,17 @@ class SettingsPage(QWidget):
 
         vButtons.addStretch()
         vLayout.addLayout(vButtons)
+
+        return vCard
+
+    def create_rules_card(self):
+        """Construit le rappel des règles utilisées pour les chiffres affichés."""
+        vCard, vLayout = create_card(
+            "Règles de calcul", "Comment les montants et les dates sont obtenus"
+        )
+
+        for vLabel, vText in describe_rules():
+            vLayout.addLayout(create_line(vLabel, vText))
 
         return vCard
 
@@ -133,27 +165,6 @@ class SettingsPage(QWidget):
 
         return vCard
 
-    def create_data_card(self):
-        """Construit l'emplacement de la base de données."""
-        vCard, vLayout = create_card("Données", "Base SQLite des offres et du suivi")
-
-        vPath = QLabel(str(self.database_file))
-        vPath.setWordWrap(True)
-
-        vButton = create_button(
-            "Ouvrir le dossier", "folder-open", pIconColor=COLORS["primary"]
-        )
-        vButton.clicked.connect(
-            lambda: QDesktopServices.openUrl(
-                QUrl.fromLocalFile(str(self.database_file.parent))
-            )
-        )
-
-        vLayout.addWidget(vPath)
-        vLayout.addWidget(vButton, 0)
-
-        return vCard
-
     def create_about_card(self):
         """Construit les informations sur l'application."""
         vCard, vLayout = create_card(APPLICATION_NAME, TAGLINE)
@@ -173,7 +184,7 @@ class SettingsPage(QWidget):
     def set_theme_enabled(self, pEnabled):
         """Bloque le changement de thème pendant une recherche.
 
-        Changer de thème recrée la fenêtre, ce qui interromprait la recherche.
+        Changer de thème reconstruit les pages, ce qui interromprait la recherche.
         """
         for vButton in self.theme_buttons.buttons():
             vButton.setEnabled(pEnabled)

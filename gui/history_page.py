@@ -4,6 +4,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QGridLayout,
+    QHBoxLayout,
     QHeaderView,
     QLabel,
     QTableWidget,
@@ -13,14 +14,21 @@ from PySide6.QtWidgets import (
 )
 
 from gui.icons import get_icon
+from gui.chart import BarChart, PieChart
 from gui.theme import COLORS
-from gui.widgets import StatisticCard, create_page_header
+from gui.widgets import StatisticCard, create_card, create_page_header
 from job.presentation import (
+    CHART_PALETTE,
     EXECUTION_STATUS_LABELS,
     UNKNOWN_SEARCH,
     describe_search,
     describe_sources,
     summarize_history,
+)
+from job.statistics import (
+    EXECUTION_CHART_SIZE,
+    get_execution_counts,
+    get_source_shares,
 )
 from storage.history_repository import get_history, get_history_summary
 from utils.logger import get_logger
@@ -71,7 +79,7 @@ class HistoryPage(QWidget):
 
         self.cards = {
             "executions": StatisticCard("Exécutions", "history", "blue"),
-            "items": StatisticCard("Offres récupérées", "briefcase", "green"),
+            "item_count": StatisticCard("Offres récupérées", "briefcase", "green"),
             "average_duration": StatisticCard("Durée moyenne", "timer", "amber"),
             "success_rate": StatisticCard("Taux de réussite", "circle-check", "purple"),
         }
@@ -105,11 +113,37 @@ class HistoryPage(QWidget):
             vLayout,
             "Historique",
             "Chaque recherche lancée, ses critères et son résultat",
+            pIcon="history",
         )
 
         vLayout.addLayout(vCards)
+        vLayout.addLayout(self.create_charts())
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.table, 1)
+
+    def create_charts(self):
+        """Construit la répartition par source et le rendement des exécutions."""
+        vSourceCard, vSourceLayout = create_card(
+            "Offres par source", "Répartition des offres actuellement en base"
+        )
+
+        self.source_chart = PieChart()
+        vSourceLayout.addWidget(self.source_chart, 1)
+
+        vExecutionCard, vExecutionLayout = create_card(
+            "Rendement des recherches",
+            f"Offres récupérées lors des {EXECUTION_CHART_SIZE} dernières exécutions",
+        )
+
+        self.execution_chart = BarChart()
+        vExecutionLayout.addWidget(self.execution_chart, 1)
+
+        rLayout = QHBoxLayout()
+        rLayout.setSpacing(18)
+        rLayout.addWidget(vSourceCard, 1)
+        rLayout.addWidget(vExecutionCard, 1)
+
+        return rLayout
 
     def fill_row(self, pRow, pEntry):
         """Remplit une ligne du tableau, avec l'icône du statut et l'erreur en infobulle."""
@@ -143,6 +177,28 @@ class HistoryPage(QWidget):
         else:
             for vName, vValue in summarize_history(vSummary).items():
                 self.cards[vName].set_value(vValue)
+
+            self.source_chart.set_shares(
+                [
+                    (vShare["label"], vShare["count"], CHART_PALETTE[vIndex])
+                    for vIndex, vShare in enumerate(
+                        get_source_shares(self.database_file)
+                    )
+                ]
+            )
+
+            vExecutions = get_execution_counts(self.database_file)
+
+            self.execution_chart.set_series(
+                [vLabel for vLabel, _ in vExecutions],
+                [
+                    (
+                        "Offres",
+                        CHART_PALETTE[0],
+                        [vCount for _, vCount in vExecutions],
+                    )
+                ],
+            )
 
             self.table.setRowCount(len(vEntries))
 
