@@ -1,11 +1,9 @@
 """Application web du tableau de bord des offres d'emploi"""
 
-import json
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import pandas as pd
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -13,6 +11,15 @@ from fastapi.templating import Jinja2Templates
 
 from config import DATABASE_FILE, NEW_OFFER_DAYS
 from job.contract import CONTRACT_TYPES
+from job.presentation import (
+    FOLLOW_UP_FILTER,
+    STATUS_LABELS,
+    build_offer_filters,
+    format_date,
+    format_euros,
+    prepare_offer,
+    safe_url,
+)
 from job.sources.registry import SOURCES
 from storage.database import initialize_database
 from storage.job_applications import (
@@ -31,26 +38,6 @@ WEB_DIRECTORY = Path(__file__).parent
 
 # Au-delà, l'utilisateur affine sa recherche plutôt que de parcourir la liste.
 MAX_DISPLAYED_OFFERS = 300
-
-BENEFIT_LABELS = {
-    "has_13th_month": "13e mois",
-    "has_bonus": "primes",
-    "has_profit_sharing": "intéressement ou participation",
-    "has_savings_plan": "épargne salariale",
-}
-
-STATUS_LABELS = {
-    "INTERESTED": "Intéressé",
-    "APPLIED": "Postulé",
-    "INTERVIEW": "Entretien",
-    "ACCEPTED": "Accepté",
-    "REJECTED": "Refusé",
-    "CLOSED": "Clôturé",
-    "IGNORED": "Ignorée",
-}
-
-# Valeur du filtre de statut affichant les candidatures à relancer
-FOLLOW_UP_FILTER = "FOLLOW_UP"
 
 
 def get_database_file():
@@ -82,95 +69,9 @@ app.mount("/static", StaticFiles(directory=WEB_DIRECTORY / "static"), name="stat
 templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
 
 
-def format_euros(pAmount):
-    """Formate un montant en euros avec un espace comme séparateur de milliers."""
-
-    rText = ""
-
-    if pAmount is not None:
-        rText = f"{round(pAmount):,} €".replace(",", " ")
-
-    return rText
-
-
-def format_date(pValue):
-    """Formate une date ISO au format français, ou renvoie la valeur d'origine."""
-
-    rText = ""
-
-    if pValue:
-        try:
-            rText = datetime.fromisoformat(str(pValue)).strftime("%d/%m/%Y")
-
-        except ValueError:
-            rText = str(pValue)
-
-    return rText
-
-
-def safe_url(pUrl):
-    """Retourne l'URL si elle est en http ou https, sinon un lien neutre.
-
-    L'échappement HTML ne protège pas un attribut href : une URL
-    « javascript: » fournie par une source serait exécutée au clic.
-    """
-
-    rUrl = "#"
-
-    if pUrl and str(pUrl).lower().startswith(("http://", "https://")):
-        rUrl = str(pUrl)
-
-    return rUrl
-
-
 templates.env.filters["euros"] = format_euros
 templates.env.filters["date_fr"] = format_date
 templates.env.filters["safe_url"] = safe_url
-
-
-def to_list(pValue):
-    """Convertit une liste enregistrée en JSON en liste Python."""
-
-    rValues = []
-
-    if pValue:
-        try:
-            vValues = json.loads(pValue)
-            rValues = vValues if isinstance(vValues, list) else [pValue]
-
-        except ValueError:
-            rValues = [pValue]
-
-    return rValues
-
-
-def prepare_offer(pOffer, pNewSince):
-    """Complète une offre avec les informations utiles à l'affichage."""
-
-    vOffer = {
-        vKey: (
-            None if not isinstance(vValue, (list, dict)) and pd.isna(vValue) else vValue
-        )
-        for vKey, vValue in pOffer.items()
-    }
-
-    vSource = SOURCES.get(vOffer["source"])
-
-    vOffer["source_label"] = vSource.label if vSource else vOffer["source"]
-    vOffer["is_new"] = vOffer["first_seen_at"] >= pNewSince.isoformat()
-    vOffer["skills_list"] = to_list(vOffer.get("skills"))
-    vOffer["follow_up_due"] = bool(
-        vOffer.get("follow_up_date")
-        and vOffer.get("application_status") in ("APPLIED", "INTERVIEW")
-        and vOffer["follow_up_date"] <= datetime.now().isoformat()
-    )
-    vOffer["benefits"] = [
-        vLabel for vColumn, vLabel in BENEFIT_LABELS.items() if vOffer.get(vColumn)
-    ]
-
-    rOffer = vOffer
-
-    return rOffer
 
 
 def parse_amount(pValue):
@@ -218,18 +119,16 @@ def list_offers(
     vNow = datetime.now()
     vNewSince = vNow - timedelta(days=NEW_OFFER_DAYS)
 
-    # Les offres ignorées restent masquées sauf si on les demande explicitement.
-    vFilters = {
-        "pSearch": q.strip() or None,
-        "pSource": source if source in SOURCES else None,
-        "pContract": contract if contract in CONTRACT_TYPES else None,
-        "pRemote": bool(remote),
-        "pMinNetSalary": parse_amount(min_salary),
-        "pSeenSince": vNewSince if new else None,
-        "pStatus": status if status in APPLICATION_STATUSES else None,
-        "pFollowUpBefore": vNow if status == FOLLOW_UP_FILTER else None,
-        "pHideIgnored": True,
-    }
+    vFilters = build_offer_filters(
+        pSearch=q,
+        pSource=source,
+        pContract=contract,
+        pRemote=remote,
+        pMinNetSalary=parse_amount(min_salary),
+        pNewOnly=bool(new),
+        pStatus=status,
+        pNow=vNow,
+    )
 
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
 
