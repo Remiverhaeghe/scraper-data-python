@@ -15,7 +15,13 @@ from PySide6.QtWidgets import (
 from gui.icons import get_icon
 from gui.theme import COLORS
 from gui.widgets import StatisticCard, create_page_header
-from job.presentation import EXECUTION_STATUS_LABELS, describe_search, describe_sources
+from job.presentation import (
+    EXECUTION_STATUS_LABELS,
+    UNKNOWN_SEARCH,
+    describe_search,
+    describe_sources,
+    summarize_history,
+)
 from storage.history_repository import get_history, get_history_summary
 from utils.logger import get_logger
 
@@ -25,9 +31,6 @@ logger = get_logger(__name__)
 MAX_DISPLAYED_EXECUTIONS = 200
 
 COLUMNS = ["Date", "Recherche", "Sources", "Offres", "Durée", "Statut"]
-
-# Texte des exécutions antérieures à l'enregistrement des critères
-UNKNOWN_SEARCH = "Critères non enregistrés"
 
 # Icône et couleur de chaque statut d'exécution
 STATUS_ICONS = {
@@ -55,25 +58,6 @@ def build_row(pEntry):
     ]
 
     return rRow
-
-
-def summarize(pSummary):
-    """Traduit la synthèse de l'historique en valeurs affichables."""
-
-    vExecutions = pSummary["executions"]
-
-    rValues = {
-        "executions": vExecutions,
-        "items": pSummary["items"],
-        "average_duration": f"{pSummary['average_duration']:.1f} s",
-        "success_rate": (
-            f"{round(100 * pSummary['successes'] / vExecutions)} %"
-            if vExecutions
-            else "-"
-        ),
-    }
-
-    return rValues
 
 
 class HistoryPage(QWidget):
@@ -157,7 +141,7 @@ class HistoryPage(QWidget):
             self.message_label.setText("L'historique n'a pas pu être chargé.")
 
         else:
-            for vName, vValue in summarize(vSummary).items():
+            for vName, vValue in summarize_history(vSummary).items():
                 self.cards[vName].set_value(vValue)
 
             self.table.setRowCount(len(vEntries))

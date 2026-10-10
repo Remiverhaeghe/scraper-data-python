@@ -6,8 +6,8 @@ import sys
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication
 
-from config import DATABASE_FILE
-from gui.branding import APPLICATION_NAME, create_logo_icon
+from config import APPLICATION_NAME, DATABASE_FILE
+from gui.branding import create_logo_icon
 from gui.main_window import MainWindow
 from gui.theme import apply_theme
 from utils.logger import get_logger

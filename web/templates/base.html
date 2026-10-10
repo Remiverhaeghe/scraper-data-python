@@ -3,22 +3,50 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Offres d'emploi{% endblock %}</title>
+    <title>{% block title %}Tableau de bord{% endblock %} · {{ app_name }}</title>
+    <script src="{{ url_for('static', path='theme.js').path }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', path='style.css').path }}">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='favicon.svg').path }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('assets', path='logo.svg').path }}">
     <script src="{{ url_for('static', path='htmx.min.js').path }}" defer></script>
 </head>
 <body>
-    <header class="header">
-        <a class="brand" href="{{ url_for('list_offers').path }}">Offres d'emploi</a>
-    </header>
+<div class="layout">
+    <aside class="sidebar">
+        <a class="brand" href="{{ url_for('show_dashboard').path }}">
+            <img src="{{ url_for('assets', path='logo.svg').path }}" alt="" width="44" height="44">
+            <span>
+                <strong>{{ app_name }}</strong>
+                <small>{{ tagline }}</small>
+            </span>
+        </a>
 
-    <main class="main">
+        <nav class="nav" aria-label="Navigation principale">
+            {% for key, label, icon_name, route in [
+                ("dashboard", "Tableau de bord", "house", "show_dashboard"),
+                ("offers", "Offres", "briefcase", "list_offers"),
+                ("history", "Historique", "history", "show_history"),
+                ("settings", "Paramètres", "settings", "show_settings"),
+            ] %}
+            <a class="nav-item{% if active_page == key %} is-active{% endif %}"
+               href="{{ url_for(route).path }}"
+               {% if active_page == key %}aria-current="page"{% endif %}>
+                {{ icon(icon_name, 20) }}<span>{{ label }}</span>
+            </a>
+            {% endfor %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <span>Tableau de bord web</span>
+            <button class="button" type="button" data-theme-toggle title="Changer de thème">
+                <span class="theme-light-only">{{ icon("moon", 16) }}</span>
+                <span class="theme-dark-only">{{ icon("sun", 16) }}</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="content">
         {% block content %}{% endblock %}
     </main>
-
-    <footer class="footer">
-        Offres issues des sources indiquées sur chaque annonce, consultables sur leur site d'origine.
-    </footer>
+</div>
 </body>
 </html>

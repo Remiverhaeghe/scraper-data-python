@@ -7,7 +7,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from storage.job_offers import save_offers
-from web.app import app, format_euros, get_database_file, safe_url
+from web.app import (
+    app,
+    build_chart,
+    format_euros,
+    get_database_file,
+    render_icon,
+    safe_url,
+)
 
 
 def build_offer(pSourceId, **pValues):
@@ -83,10 +90,10 @@ def client(tmp_path):
 def test_list_offers_displays_all_offers(client):
     """Vérifie l'affichage de la page complète des offres."""
 
-    vResponse = client.get("/")
+    vResponse = client.get("/offers")
 
     assert vResponse.status_code == 200
-    assert '<form class="filters"' in vResponse.text
+    assert '<form class="filters' in vResponse.text
     assert "3 offres" in vResponse.text
     assert "Nouvelle" in vResponse.text
 
@@ -94,7 +101,7 @@ def test_list_offers_displays_all_offers(client):
 def test_list_offers_filters_by_search_and_contract(client):
     """Vérifie l'application des filtres de recherche et de contrat."""
 
-    vResponse = client.get("/", params={"q": "java", "contract": "CDD"})
+    vResponse = client.get("/offers", params={"q": "java", "contract": "CDD"})
 
     assert "1 offre" in vResponse.text
     assert "Développeur Java" in vResponse.text
@@ -111,7 +118,7 @@ def test_list_offers_filters_by_search_and_contract(client):
 def test_list_offers_filters(client, pParams, pExpected):
     """Vérifie les filtres télétravail, salaire et nouveauté."""
 
-    vResponse = client.get("/", params=pParams)
+    vResponse = client.get("/offers", params=pParams)
 
     assert "1 offre" in vResponse.text
     assert pExpected in vResponse.text
@@ -121,7 +128,7 @@ def test_list_offers_ignores_invalid_values(client):
     """Vérifie qu'une saisie invalide n'empêche pas l'affichage."""
 
     vResponse = client.get(
-        "/", params={"min_salary": "abc", "source": "inconnue", "contract": "X"}
+        "/offers", params={"min_salary": "abc", "source": "inconnue", "contract": "X"}
     )
 
     assert vResponse.status_code == 200
@@ -131,7 +138,7 @@ def test_list_offers_ignores_invalid_values(client):
 def test_list_offers_returns_table_for_htmx(client):
     """Vérifie qu'une requête HTMX ne reçoit que le tableau."""
 
-    vResponse = client.get("/", headers={"HX-Request": "true"})
+    vResponse = client.get("/offers", headers={"HX-Request": "true"})
 
     assert "<table" in vResponse.text
     assert "<form" not in vResponse.text
@@ -140,7 +147,7 @@ def test_list_offers_returns_table_for_htmx(client):
 def test_list_offers_escapes_untrusted_content(client):
     """Vérifie que le contenu des sources ne peut pas injecter de script."""
 
-    vResponse = client.get("/")
+    vResponse = client.get("/offers")
 
     assert "<script>alert(1)</script>" not in vResponse.text
     assert "&lt;script&gt;" in vResponse.text
@@ -218,7 +225,7 @@ def test_update_application_saves_status_and_notes(client):
     assert "Candidature envoyée le" in vResponse.text
     assert "relancé aujourd" in vResponse.text
 
-    vList = client.get("/", params={"status": "APPLIED"})
+    vList = client.get("/offers", params={"status": "APPLIED"})
 
     assert "1 offre" in vList.text
     assert "Postulé" in vList.text
@@ -232,13 +239,13 @@ def test_update_application_without_status_deletes_tracking(client):
         data={"source": "adzuna", "id": "new", "status": "IGNORED"},
     )
 
-    assert "2 offres" in client.get("/").text
+    assert "2 offres" in client.get("/offers").text
 
     client.post(
         "/offer/application", data={"source": "adzuna", "id": "new", "status": ""}
     )
 
-    assert "3 offres" in client.get("/").text
+    assert "3 offres" in client.get("/offers").text
 
 
 def test_update_application_rejects_unknown_values(client):
@@ -290,7 +297,89 @@ def test_list_offers_shows_follow_ups_due(client):
         },
     )
 
-    vResponse = client.get("/", params={"status": "FOLLOW_UP"})
+    vResponse = client.get("/offers", params={"status": "FOLLOW_UP"})
 
     assert "1 offre" in vResponse.text
     assert "Relance le 01/01/2020" in vResponse.text
+
+
+def test_dashboard_shows_statistics(client):
+    """Vérifie le tableau de bord : indicateurs, graphique et menu actif."""
+
+    vResponse = client.get("/")
+
+    assert vResponse.status_code == 200
+    assert "Tableau de bord" in vResponse.text
+    assert "Offres actives en base" in vResponse.text
+    assert 'class="chart"' in vResponse.text
+    assert 'aria-current="page"' in vResponse.text
+    assert "Aucune recherche lancée pour le moment." in vResponse.text
+
+
+def test_history_page(client):
+    """Vérifie que l'historique s'affiche, même vide."""
+
+    vResponse = client.get("/history")
+
+    assert vResponse.status_code == 200
+    assert "Taux de réussite" in vResponse.text
+    assert "Aucune exécution enregistrée pour le moment." in vResponse.text
+
+
+def test_settings_page_never_shows_secret_values(client, monkeypatch):
+    """Vérifie que seuls les noms des variables manquantes sont affichés."""
+
+    monkeypatch.setenv("JOOBLE_API_KEY", "valeur-secrete")
+    monkeypatch.delenv("LEVER_SITE", raising=False)
+
+    vResponse = client.get("/settings")
+
+    assert vResponse.status_code == 200
+    assert "LEVER_SITE" in vResponse.text
+    assert "valeur-secrete" not in vResponse.text
+
+
+def test_assets_are_served(client):
+    """Vérifie la mise à disposition du logo partagé avec l'interface de bureau."""
+
+    vResponse = client.get("/assets/logo.svg")
+
+    assert vResponse.status_code == 200
+    assert "<svg" in vResponse.text
+
+
+@pytest.mark.parametrize("pName", ["../logo", "inconnue", "House", "house.svg"])
+def test_render_icon_rejects_unknown_names(pName):
+    """Vérifie qu'un nom hors du dossier d'icônes ne produit rien."""
+
+    assert render_icon(pName) == ""
+
+
+def test_render_icon_sets_size():
+    """Vérifie l'insertion d'une icône à la taille demandée."""
+
+    vIcon = render_icon("house", 20)
+
+    assert vIcon.startswith('<svg aria-hidden="true"')
+    assert 'width="20"' in vIcon
+
+
+def test_build_chart_scales_bars():
+    """Vérifie la hauteur relative des barres, jamais nulle."""
+
+    vBars = build_chart([(datetime(2026, 10, 9), 0), (datetime(2026, 10, 10), 40)])
+
+    assert [(vBar["label"], vBar["height"]) for vBar in vBars] == [
+        ("09/10", 2),
+        ("10/10", 100),
+    ]
+
+
+def test_unknown_offer_renders_error_page(client):
+    """Vérifie qu'une offre introuvable affiche une page du site, pas du JSON."""
+
+    vResponse = client.get("/offer", params={"source": "adzuna", "id": "inconnue"})
+
+    assert vResponse.status_code == 404
+    assert "Page introuvable" in vResponse.text
+    assert "Offre introuvable" in vResponse.text

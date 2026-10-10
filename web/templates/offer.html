@@ -3,79 +3,81 @@
 {% block title %}{{ offer.title or "Offre" }}{% endblock %}
 
 {% block content %}
-<article class="offer">
-    <p><a href="{{ url_for('list_offers').path }}">Retour aux offres</a></p>
+<a class="back-link" href="{{ url_for('list_offers').path }}">← Retour aux offres</a>
 
-    <h1>
-        {{ offer.title or "Sans titre" }}
-        {% if offer.is_new %}<span class="badge badge-new">Nouvelle</span>{% endif %}
-    </h1>
+<div class="offer-layout">
+    <article class="card">
+        <header class="offer-header">
+            <h1>
+                {% if offer.is_new %}<span class="badge badge-new">Nouvelle</span>{% endif %}
+                {{ offer.title or "Titre non communiqué par la source" }}
+            </h1>
+            <p class="offer-company">{{ offer.company or "" }}{% if offer.location %} · {{ offer.location }}{% endif %}</p>
+            <a class="button button-primary" href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">
+                {{ icon("external-link", 16) }} Voir l'offre sur {{ offer.source_label }}
+            </a>
+        </header>
 
-    <p class="offer-company">{{ offer.company or "" }}{% if offer.location %} · {{ offer.location }}{% endif %}</p>
+        <dl class="offer-details">
+            <dt>Contrat</dt>
+            <dd>{{ offer.contract or "Non précisé" }}{% if offer.contract_type %} ({{ offer.contract_type }}){% endif %}</dd>
 
-    <p>
-        <a class="button" href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">
-            Voir l'offre sur {{ offer.source_label }}
-        </a>
-    </p>
+            <dt>Télétravail</dt>
+            <dd>{% if offer.remote %}Oui{% if offer.remote_type == "full" %}, complet{% endif %}{% else %}Non précisé{% endif %}</dd>
 
-    <dl class="offer-details">
-        <dt>Contrat</dt>
-        <dd>{{ offer.contract or "Non précisé" }}{% if offer.contract_type %} ({{ offer.contract_type }}){% endif %}</dd>
+            <dt>Salaire brut</dt>
+            <dd>
+                {% if offer.salary_min or offer.salary_max %}
+                {{ offer.salary_min | euros if offer.salary_currency == "EUR" else offer.salary_min }}
+                {% if offer.salary_max %} – {{ offer.salary_max | euros if offer.salary_currency == "EUR" else offer.salary_max }}{% endif %}
+                {% if offer.salary_currency != "EUR" %} {{ offer.salary_currency or "" }}{% endif %}
+                {% if offer.salary_period %} ({{ {"year": "par an", "month": "par mois", "hour": "par heure"}[offer.salary_period] }}){% endif %}
+                {% elif offer.salary_label %}
+                {{ offer.salary_label }}
+                {% else %}
+                Non précisé
+                {% endif %}
+            </dd>
 
-        <dt>Télétravail</dt>
-        <dd>{% if offer.remote %}Oui{% if offer.remote_type == "full" %}, complet{% endif %}{% else %}Non précisé{% endif %}</dd>
+            <dt>Net mensuel estimé</dt>
+            <dd>
+                {% if offer.salary_net_monthly_min or offer.salary_net_monthly_max %}
+                {{ (offer.salary_net_monthly_min or offer.salary_net_monthly_max) | euros }}
+                {% if offer.salary_net_monthly_max and offer.salary_net_monthly_max != offer.salary_net_monthly_min %} – {{ offer.salary_net_monthly_max | euros }}{% endif %}
+                avant impôt
+                {% if offer.salary_net_after_tax_monthly_min %}
+                , {{ offer.salary_net_after_tax_monthly_min | euros }}
+                {% if offer.salary_net_after_tax_monthly_max and offer.salary_net_after_tax_monthly_max != offer.salary_net_after_tax_monthly_min %} – {{ offer.salary_net_after_tax_monthly_max | euros }}{% endif %}
+                après impôt
+                {% endif %}
+                {% else %}
+                Non calculable
+                {% endif %}
+            </dd>
 
-        <dt>Salaire brut</dt>
-        <dd>
-            {% if offer.salary_min or offer.salary_max %}
-            {{ offer.salary_min | euros if offer.salary_currency == "EUR" else offer.salary_min }}
-            {% if offer.salary_max %} – {{ offer.salary_max | euros if offer.salary_currency == "EUR" else offer.salary_max }}{% endif %}
-            {% if offer.salary_currency != "EUR" %} {{ offer.salary_currency or "" }}{% endif %}
-            {% if offer.salary_period %} ({{ {"year": "par an", "month": "par mois", "hour": "par heure"}[offer.salary_period] }}){% endif %}
-            {% elif offer.salary_label %}
-            {{ offer.salary_label }}
-            {% else %}
-            Non précisé
+            <dt>Avantages mentionnés</dt>
+            <dd>{{ offer.benefits | join(", ") if offer.benefits else "Aucun détecté" }}</dd>
+
+            {% if offer.skills_list %}
+            <dt>Compétences</dt>
+            <dd>{{ offer.skills_list | join(", ") }}</dd>
             {% endif %}
-        </dd>
 
-        <dt>Net mensuel estimé</dt>
-        <dd>
-            {% if offer.salary_net_monthly_min or offer.salary_net_monthly_max %}
-            {{ (offer.salary_net_monthly_min or offer.salary_net_monthly_max) | euros }}
-            {% if offer.salary_net_monthly_max and offer.salary_net_monthly_max != offer.salary_net_monthly_min %} – {{ offer.salary_net_monthly_max | euros }}{% endif %}
-            avant impôt
-            {% if offer.salary_net_after_tax_monthly_min %}
-            , {{ offer.salary_net_after_tax_monthly_min | euros }}
-            {% if offer.salary_net_after_tax_monthly_max and offer.salary_net_after_tax_monthly_max != offer.salary_net_after_tax_monthly_min %} – {{ offer.salary_net_after_tax_monthly_max | euros }}{% endif %}
-            après impôt
-            {% endif %}
-            {% else %}
-            Non calculable
-            {% endif %}
-        </dd>
+            <dt>Publiée</dt>
+            <dd>{{ offer.published_at | date_fr or "Non précisé" }}</dd>
 
-        <dt>Avantages mentionnés</dt>
-        <dd>{{ offer.benefits | join(", ") if offer.benefits else "Aucun détecté" }}</dd>
+            <dt>Découverte</dt>
+            <dd>{{ offer.first_seen_at | date_fr }}, vue pour la dernière fois le {{ offer.last_seen_at | date_fr }}</dd>
+        </dl>
 
-        {% if offer.skills_list %}
-        <dt>Compétences</dt>
-        <dd>{{ offer.skills_list | join(", ") }}</dd>
+        <h2>Description</h2>
+        {% if offer.description %}
+        <p class="offer-description">{{ offer.description }}</p>
+        {% else %}
+        <p class="muted">Aucune description fournie par la source.</p>
         {% endif %}
-
-        <dt>Publiée</dt>
-        <dd>{{ offer.published_at | date_fr or "Non précisé" }}</dd>
-
-        <dt>Découverte</dt>
-        <dd>{{ offer.first_seen_at | date_fr }}, vue pour la dernière fois le {{ offer.last_seen_at | date_fr }}</dd>
-    </dl>
+    </article>
 
     {% include "_application.html" %}
-
-    {% if offer.description %}
-    <h2>Description</h2>
-    <p class="offer-description">{{ offer.description }}</p>
-    {% endif %}
-</article>
+</div>
 {% endblock %}

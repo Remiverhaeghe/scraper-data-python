@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Paramètres{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Paramètres", "Apparence, sources et informations de l'application") }}
+
+<div class="grid grid-settings">
+    <div class="stack">
+        <article class="card">
+            <h2>Apparence</h2>
+            <p class="card-subtitle">Thème mémorisé dans ce navigateur</p>
+            <div class="segmented">
+                <button class="button" type="button" data-theme-choice="system">{{ icon("monitor", 16) }} Système</button>
+                <button class="button" type="button" data-theme-choice="light">{{ icon("sun", 16) }} Clair</button>
+                <button class="button" type="button" data-theme-choice="dark">{{ icon("moon", 16) }} Sombre</button>
+            </div>
+        </article>
+
+        <article class="card">
+            <h2>{{ app_name }}</h2>
+            <p class="card-subtitle">{{ tagline }}</p>
+            <p class="muted">Licence {{ license_name }}. Icônes Lucide, sous licence ISC.</p>
+            <a class="button" href="{{ repository_url }}" target="_blank" rel="noopener">{{ icon("github") }} Code source sur GitHub</a>
+        </article>
+    </div>
+
+    <article class="card">
+        <h2>Sources</h2>
+        <p class="card-subtitle">Les clés d'API se renseignent dans le fichier <code>.env</code>, jamais ici</p>
+        {% for source in sources %}
+        <div class="source-state">
+            {% if source.reason is none %}
+            <span class="tone-success">{{ icon("circle-check") }}</span>
+            <strong>{{ source.label }}</strong>
+            <span class="muted">Prête</span>
+            {% elif source.missing and source.reason == "non configurée" %}
+            <span class="tone-warning">{{ icon("circle-alert") }}</span>
+            <strong>{{ source.label }}</strong>
+            <span class="muted">À renseigner dans .env : {% for name in source.missing %}<code>{{ name }}</code> {% endfor %}</span>
+            {% else %}
+            <span class="tone-muted">{{ icon("circle-alert") }}</span>
+            <strong>{{ source.label }}</strong>
+            <span class="muted">Indisponible pour le moment</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </article>
+</div>
+{% endblock %}

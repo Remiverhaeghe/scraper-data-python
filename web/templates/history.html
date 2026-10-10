@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Historique{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Historique", "Chaque recherche lancée, ses critères et son résultat") }}
+
+<section class="grid grid-4">
+    {{ ui.stat(summary.executions, "Exécutions", "history", "blue") }}
+    {{ ui.stat(summary.items, "Offres récupérées", "briefcase", "green") }}
+    {{ ui.stat(summary.average_duration, "Durée moyenne", "timer", "amber") }}
+    {{ ui.stat(summary.success_rate, "Taux de réussite", "circle-check", "purple") }}
+</section>
+
+<p class="count count-after-cards">
+    {% if executions %}
+    {{ executions | length }} dernière(s) exécution(s) · survolez un statut pour lire le détail d'une erreur
+    {% endif %}
+</p>
+
+{% if executions %}
+<div class="table-wrapper">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Recherche</th>
+                <th>Sources</th>
+                <th class="amount">Offres</th>
+                <th class="amount">Durée</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for execution in executions %}
+            <tr>
+                <td class="nowrap">{{ execution.started_at.strftime("%d/%m/%Y %H:%M") }}</td>
+                <td class="{% if execution.search == unknown_search %}muted{% else %}offer-title{% endif %}">{{ execution.search }}</td>
+                <td class="muted">{{ execution.sources or "—" }}</td>
+                <td class="amount">{{ execution.item_count }}</td>
+                <td class="amount">{{ execution.duration }}</td>
+                <td>
+                    <span class="status-cell tone-{{ execution.tone }}"{% if execution.error_message %} title="{{ execution.error_message }}"{% endif %}>
+                        {{ icon(tone_icons[execution.tone], 16) }}{{ execution.status }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card empty">{{ icon("inbox", 32) }}Aucune exécution enregistrée pour le moment.</div>
+{% endif %}
+{% endblock %}

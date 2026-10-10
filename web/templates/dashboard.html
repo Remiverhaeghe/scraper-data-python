@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block content %}
+{% call ui.page_header("Tableau de bord", "Vue d'ensemble de vos offres et de vos candidatures") %}
+<a class="button" href="{{ repository_url }}" target="_blank" rel="noopener">{{ icon("github") }} GitHub</a>
+{% endcall %}
+
+<section class="banner">
+    <div>
+        <h2>Votre recherche d'emploi, pilotée au même endroit</h2>
+        <p>
+            Centralisez les offres de {{ ready_sources }} sources configurées,
+            suivez vos candidatures et n'oubliez plus aucune relance.
+        </p>
+        <div class="banner-actions">
+            <a class="button button-banner" href="{{ url_for('list_offers').path }}">
+                Consulter les offres {{ icon("arrow-right", 16) }}
+            </a>
+            <a class="button" href="{{ url_for('list_offers').path }}?status={{ follow_up_filter }}">
+                {{ icon("bell-ring", 16) }} Relances à faire
+            </a>
+        </div>
+    </div>
+    <div class="banner-icons">
+        {{ icon("search", 46) }}{{ icon("briefcase", 46) }}{{ icon("bell-ring", 46) }}
+    </div>
+</section>
+
+<section class="grid grid-4">
+    {% set offers_url = url_for('list_offers').path %}
+    {{ ui.stat(statistics.offers, "Offres actives en base", "briefcase", "blue", offers_url) }}
+    {{ ui.stat(statistics.new_offers, "Nouvelles sur " ~ new_offer_days ~ " jours", "sparkles", "green", offers_url ~ "?new=1") }}
+    {{ ui.stat(statistics.applications, "Candidatures en cours", "send", "amber", offers_url ~ "?status=APPLIED") }}
+    {{ ui.stat(statistics.follow_ups, "Relances à faire", "bell-ring", "purple", offers_url ~ "?status=" ~ follow_up_filter) }}
+</section>
+
+<section class="grid grid-dashboard">
+    <article class="card">
+        <h2>Nouvelles offres</h2>
+        <p class="card-subtitle">Offres découvertes sur {{ chart_days }} jours</p>
+        <div class="chart" role="img" aria-label="Nouvelles offres par jour">
+            {% for bar in chart %}
+            <div class="chart-bar{% if not bar.value %} is-empty{% endif %}" title="{{ bar.label }} : {{ bar.value }} offre(s)">
+                {% if bar.value %}<span>{{ bar.value }}</span>{% endif %}
+                <i style="height: {{ bar.height }}%"></i>
+                <small>{{ bar.label }}</small>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="card">
+        <h2>Activité récente</h2>
+        <p class="card-subtitle">Vos dernières recherches et leur résultat</p>
+        {% if activities %}
+        <ul class="list">
+            {% for activity in activities %}
+            <li class="list-item">
+                <span class="tone-{{ activity.tone }}">{{ icon(tone_icons[activity.tone], 22) }}</span>
+                <div>
+                    <strong>{{ activity.title }}</strong>
+                    <small>{{ activity.detail }}</small>
+                </div>
+                <em>{{ activity.result }}</em>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty">{{ icon("inbox", 32) }}Aucune recherche lancée pour le moment.</div>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <h2>Actions rapides</h2>
+        <p class="card-subtitle">Accédez directement aux fonctions principales</p>
+        <div class="quick-actions">
+            <a class="button" href="{{ url_for('list_offers').path }}">{{ icon("list-checks") }} Consulter les offres</a>
+            <a class="button" href="{{ url_for('list_offers').path }}?new=1">{{ icon("sparkles") }} Nouvelles offres</a>
+            <a class="button" href="{{ url_for('list_offers').path }}?status={{ follow_up_filter }}">{{ icon("bell-ring") }} Candidatures à relancer</a>
+            <a class="button" href="{{ url_for('show_history').path }}">{{ icon("history") }} Historique des exécutions</a>
+        </div>
+    </article>
+</section>
+{% endblock %}

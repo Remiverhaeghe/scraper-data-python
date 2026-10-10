@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card empty error-page">
+    {{ icon("circle-alert", 40) }}
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+    <a class="button button-primary" href="{{ url_for('list_offers').path }}">Retour aux offres</a>
+</div>
+{% endblock %}

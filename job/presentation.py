@@ -33,6 +33,12 @@ EXECUTION_STATUS_LABELS = {
     "error": "En échec",
 }
 
+# Tonalité d'affichage de chaque statut d'exécution ; tout autre statut est un échec
+EXECUTION_TONES = {"success": "success", "partial": "warning"}
+
+# Texte des exécutions antérieures à l'enregistrement des critères
+UNKNOWN_SEARCH = "Critères non enregistrés"
+
 # Valeur du filtre de statut affichant les candidatures à relancer
 FOLLOW_UP_FILTER = "FOLLOW_UP"
 
@@ -192,3 +198,44 @@ def describe_sources(pParameters):
     )
 
     return rLabels
+
+
+def summarize_history(pSummary):
+    """Traduit la synthèse de l'historique en valeurs affichables."""
+
+    vExecutions = pSummary["executions"]
+
+    rValues = {
+        "executions": vExecutions,
+        "items": pSummary["items"],
+        "average_duration": f"{pSummary['average_duration']:.1f} s",
+        "success_rate": (
+            f"{round(100 * pSummary['successes'] / vExecutions)} %"
+            if vExecutions
+            else "-"
+        ),
+    }
+
+    return rValues
+
+
+def describe_execution(pEntry):
+    """Résume une exécution : tonalité, titre, détail et nombre d'offres."""
+
+    if pEntry.scraper_type == "job":
+        vTitle = describe_search(pEntry.parameters) or "Recherche d'offres"
+        vDetail = describe_sources(pEntry.parameters)
+    else:
+        vTitle = "Scraping de livres"
+        vDetail = pEntry.url
+
+    vDate = f"{pEntry.started_at:%d/%m/%Y à %H:%M}"
+
+    rDescription = {
+        "tone": EXECUTION_TONES.get(pEntry.status, "danger"),
+        "title": vTitle,
+        "detail": f"{vDate} · {vDetail}" if vDetail else vDate,
+        "result": f"{pEntry.item_count} offre(s)",
+    }
+
+    return rDescription

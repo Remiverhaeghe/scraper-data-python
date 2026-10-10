@@ -6,7 +6,8 @@ import pandas as pd
 
 from PySide6.QtWidgets import QPushButton
 
-from gui.home_page import CHART_DAYS, HomePage, describe_activity, load_statistics
+from gui.home_page import HomePage, describe_activity
+from job.statistics import CHART_DAYS, load_statistics
 from gui.theme import COLORS
 from scraper.history import HistoryEntry
 from storage.database import initialize_database

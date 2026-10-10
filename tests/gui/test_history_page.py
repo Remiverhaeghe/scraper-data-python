@@ -2,7 +2,8 @@
 
 from datetime import datetime
 
-from gui.history_page import UNKNOWN_SEARCH, HistoryPage, build_row, summarize
+from gui.history_page import HistoryPage, build_row
+from job.presentation import UNKNOWN_SEARCH
 from scraper.history import HistoryEntry
 from storage.database import initialize_database
 from storage.history_repository import save_history
@@ -80,22 +81,3 @@ def test_build_row_without_parameters():
 
     assert vRow[1] == UNKNOWN_SEARCH
     assert vRow[2] == "—"
-
-
-def test_summarize():
-    """Vérifie la mise en forme de la synthèse de l'historique."""
-
-    assert summarize(
-        {"executions": 4, "items": 120, "average_duration": 2.345, "successes": 3}
-    ) == {
-        "executions": 4,
-        "items": 120,
-        "average_duration": "2.3 s",
-        "success_rate": "75 %",
-    }
-    assert (
-        summarize({"executions": 0, "items": 0, "average_duration": 0, "successes": 0})[
-            "success_rate"
-        ]
-        == "-"
-    )

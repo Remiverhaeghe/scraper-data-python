@@ -1,20 +1,10 @@
-"""Identité de l'application : nom, slogan, logo et liens"""
-
-from pathlib import Path
+"""Icône de l'application dessinée à partir de son logo"""
 
 from PySide6.QtCore import QByteArray, Qt
 from PySide6.QtGui import QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 
-APPLICATION_NAME = "RV Veille Emploi"
-
-TAGLINE = "Offres, candidatures et relances au même endroit"
-
-REPOSITORY_URL = "https://github.com/Remiverhaeghe/scraper-data-python"
-
-LICENSE_NAME = "PolyForm Strict 1.0.0"
-
-LOGO_FILE = Path(__file__).with_name("logo.svg")
+from config import LOGO_FILE
 
 # Tailles demandées par Windows pour la barre de titre, la barre des tâches et Alt+Tab
 LOGO_SIZES = (16, 24, 32, 48, 64, 256)

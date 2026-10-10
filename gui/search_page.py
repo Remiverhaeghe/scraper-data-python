@@ -38,20 +38,6 @@ STATUS_STYLES = {
 }
 
 
-def get_unavailability_reason(pDefinition):
-    """Retourne la raison pour laquelle une source ne peut pas être cochée."""
-
-    rReason = None
-
-    if not pDefinition.available:
-        rReason = "indisponible"
-
-    elif pDefinition.get_missing_settings():
-        rReason = "non configurée"
-
-    return rReason
-
-
 def create_spin_box(pMinimum, pMaximum, pValue, pSuffix="", pEmptyText=None):
     """Crée un champ numérique ; pEmptyText remplace l'affichage du minimum."""
 
@@ -220,7 +206,7 @@ class SearchPage(QWidget):
         )
         rButton.toggled.connect(self.update_source_count)
 
-        vReason = get_unavailability_reason(pDefinition)
+        vReason = pDefinition.get_unavailability_reason()
 
         if vReason is not None:
             rButton.setEnabled(False)

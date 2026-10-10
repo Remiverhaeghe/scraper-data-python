@@ -1,49 +1,58 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Offres{% endblock %}
 
 {% block content %}
-<form class="filters"
+{{ ui.page_header("Offres", "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures") }}
+
+<form class="filters card"
       hx-get="{{ url_for('list_offers').path }}"
       hx-target="#offers"
       hx-trigger="change, input changed delay:400ms from:.filters-search"
       hx-push-url="true">
 
-    <input class="filters-search" type="search" name="q" value="{{ filters.q }}"
-           placeholder="Titre, entreprise, lieu, description" aria-label="Recherche">
+    <div class="filters-row">
+        <input class="filters-search" type="search" name="q" value="{{ filters.q }}"
+               placeholder="Titre, entreprise, lieu, description" aria-label="Recherche">
 
-    <select name="source" aria-label="Source">
-        <option value="">Toutes les sources</option>
-        {% for name, definition in sources.items() %}
-        <option value="{{ name }}" {% if filters.source == name %}selected{% endif %}>{{ definition.label }}</option>
-        {% endfor %}
-    </select>
+        <select name="source" aria-label="Source">
+            <option value="">Toutes les sources</option>
+            {% for name, definition in sources.items() %}
+            <option value="{{ name }}" {% if filters.source == name %}selected{% endif %}>{{ definition.label }}</option>
+            {% endfor %}
+        </select>
 
-    <select name="contract" aria-label="Contrat">
-        <option value="">Tous les contrats</option>
-        {% for contract in contracts %}
-        <option value="{{ contract }}" {% if filters.contract == contract %}selected{% endif %}>{{ contract }}</option>
-        {% endfor %}
-    </select>
+        <select name="status" aria-label="Suivi">
+            <option value="">Offres actives</option>
+            <option value="{{ follow_up_filter }}" {% if filters.status == follow_up_filter %}selected{% endif %}>À relancer</option>
+            {% for value, label in statuses.items() %}
+            <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
 
-    <select name="status" aria-label="Suivi">
-        <option value="">Offres actives</option>
-        <option value="{{ follow_up_filter }}" {% if filters.status == follow_up_filter %}selected{% endif %}>À relancer</option>
-        {% for value, label in statuses.items() %}
-        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-    </select>
+    <div class="filters-row">
+        <select name="contract" aria-label="Contrat">
+            <option value="">Tous les contrats</option>
+            {% for contract in contracts %}
+            <option value="{{ contract }}" {% if filters.contract == contract %}selected{% endif %}>{{ contract }}</option>
+            {% endfor %}
+        </select>
 
-    <input type="text" inputmode="numeric" name="min_salary" value="{{ filters.min_salary }}"
-           placeholder="Net mensuel minimum" aria-label="Net mensuel minimum">
+        <input type="text" inputmode="numeric" name="min_salary" value="{{ filters.min_salary }}"
+               placeholder="Net mensuel minimum" aria-label="Net mensuel minimum">
 
-    <label class="filters-check">
-        <input type="checkbox" name="remote" value="1" {% if filters.remote %}checked{% endif %}>
-        Télétravail
-    </label>
+        <label class="check">
+            <input type="checkbox" name="remote" value="1" {% if filters.remote %}checked{% endif %}>
+            Télétravail
+        </label>
 
-    <label class="filters-check">
-        <input type="checkbox" name="new" value="1" {% if filters.new %}checked{% endif %}>
-        Nouvelles uniquement
-    </label>
+        <label class="check">
+            <input type="checkbox" name="new" value="1" {% if filters.new %}checked{% endif %}>
+            Nouvelles uniquement
+        </label>
+    </div>
 </form>
 
 <section id="offers">

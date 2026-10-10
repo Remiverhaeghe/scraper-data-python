@@ -1,5 +1,6 @@
-<section id="application" class="application">
+<section id="application" class="card application">
     <h2>Suivi</h2>
+    <p class="card-subtitle">Statut, relance et notes de votre candidature</p>
 
     <form hx-post="{{ url_for('update_application').path }}"
           hx-target="#application"
@@ -24,12 +25,12 @@
                    value="{{ application.follow_up_date[:10] if application and application.follow_up_date else '' }}">
         </label>
 
-        <label class="application-notes">
+        <label>
             Notes
-            <textarea name="notes" rows="4">{{ application.notes or '' if application else '' }}</textarea>
+            <textarea name="notes" rows="5">{{ application.notes or '' if application else '' }}</textarea>
         </label>
 
-        <button class="button" type="submit">Enregistrer</button>
+        <button class="button button-primary button-block" type="submit">Enregistrer</button>
     </form>
 
     {% if application %}
@@ -44,7 +45,7 @@
           hx-swap="outerHTML">
         <input type="hidden" name="source" value="{{ offer.source }}">
         <input type="hidden" name="id" value="{{ offer.source_id }}">
-        <button class="button button-secondary" type="submit">J'ai relancé aujourd'hui</button>
+        <button class="button button-block" type="submit">{{ icon("bell-ring", 16) }} J'ai relancé aujourd'hui</button>
     </form>
     {% endif %}
     {% endif %}

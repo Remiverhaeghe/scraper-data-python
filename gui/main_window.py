@@ -13,11 +13,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from config import TAGLINE
 from gui.history_page import HistoryPage
 from gui.home_page import HomePage
 from gui.icons import get_icon
 from gui.offers_page import OffersPage
-from gui.branding import TAGLINE
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
 from gui.theme import COLORS

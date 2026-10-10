@@ -1,7 +1,5 @@
 """Page d'accueil : synthèse des offres, du suivi et des dernières exécutions"""
 
-from datetime import datetime, timedelta
-
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
@@ -13,10 +11,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config import NEW_OFFER_DAYS
-from gui.branding import REPOSITORY_URL
+from config import NEW_OFFER_DAYS, REPOSITORY_URL
 from gui.chart import BarChart
-from gui.search_page import get_unavailability_reason
 from gui.theme import COLORS, is_dark_theme
 from gui.widgets import (
     StatisticCard,
@@ -25,83 +21,32 @@ from gui.widgets import (
     create_icon_label,
     create_page_header,
 )
-from job.presentation import describe_search, describe_sources
-from job.sources.registry import SOURCES
-from storage.history_repository import get_history
-from storage.job_offers import (
-    FOLLOW_UP_STATUSES,
-    count_new_offers_by_day,
-    count_offers,
-)
+from job.presentation import describe_execution
+from job.statistics import CHART_DAYS, count_ready_sources, load_statistics
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-RECENT_EXECUTIONS = 4
 
-# Nombre de jours représentés par le graphique des nouvelles offres
-CHART_DAYS = 14
-
-
-def load_statistics(pDatabaseFile, pNow=None):
-    """Calcule les indicateurs et la liste des dernières exécutions."""
-
-    vNow = pNow if pNow is not None else datetime.now()
-
-    rStatistics = {
-        "offers": count_offers(pDatabaseFile, pHideIgnored=True),
-        "new_offers": count_offers(
-            pDatabaseFile,
-            pSeenSince=vNow - timedelta(days=NEW_OFFER_DAYS),
-            pHideIgnored=True,
-        ),
-        "applications": sum(
-            count_offers(pDatabaseFile, pStatus=vStatus)
-            for vStatus in FOLLOW_UP_STATUSES
-        ),
-        "follow_ups": count_offers(pDatabaseFile, pFollowUpBefore=vNow),
-        "executions": get_history(pDatabaseFile, pLimit=RECENT_EXECUTIONS),
-        "daily_new_offers": count_new_offers_by_day(pDatabaseFile, CHART_DAYS, vNow),
-    }
-
-    return rStatistics
-
-
-def count_ready_sources():
-    """Compte les sources sélectionnables, c'est-à-dire disponibles et configurées."""
-
-    rCount = sum(
-        1
-        for vDefinition in SOURCES.values()
-        if get_unavailability_reason(vDefinition) is None
-    )
-
-    return rCount
+# Icône de chaque tonalité d'exécution
+TONE_ICONS = {
+    "success": "circle-check",
+    "warning": "circle-alert",
+    "danger": "circle-alert",
+}
 
 
 def describe_activity(pEntry):
     """Retourne l'icône, sa couleur, le titre, le détail et le bilan d'une exécution."""
 
-    if pEntry.scraper_type == "job":
-        vTitle = describe_search(pEntry.parameters) or "Recherche d'offres"
-        vDetail = describe_sources(pEntry.parameters)
-    else:
-        vTitle = "Scraping de livres"
-        vDetail = pEntry.url
-
-    vIcon, vColor = {
-        "success": ("circle-check", COLORS["success"]),
-        "partial": ("circle-alert", COLORS["warning"]),
-    }.get(pEntry.status, ("circle-alert", COLORS["danger"]))
-
-    vDate = f"{pEntry.started_at:%d/%m/%Y à %H:%M}"
+    vDescription = describe_execution(pEntry)
 
     rActivity = (
-        vIcon,
-        vColor,
-        vTitle,
-        f"{vDate} · {vDetail}" if vDetail else vDate,
-        f"{pEntry.item_count} offre(s)",
+        TONE_ICONS[vDescription["tone"]],
+        COLORS[vDescription["tone"]],
+        vDescription["title"],
+        vDescription["detail"],
+        vDescription["result"],
     )
 
     return rActivity

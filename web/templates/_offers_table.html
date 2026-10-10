@@ -5,7 +5,7 @@
 
 {% if offers %}
 <div class="table-wrapper">
-    <table class="offers">
+    <table class="table">
         <thead>
             <tr>
                 <th>Poste</th>
@@ -15,7 +15,6 @@
                 <th class="amount">Net mensuel</th>
                 <th>Suivi</th>
                 <th>Source</th>
-                <th>Découverte</th>
             </tr>
         </thead>
         <tbody>
@@ -23,11 +22,11 @@
             <tr class="{% if offer.is_new %}is-new{% endif %}">
                 <td>
                     {% if offer.is_new %}<span class="badge badge-new">Nouvelle</span>{% endif %}
-                    <a href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Sans titre" }}</a>
+                    <a class="offer-title" href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Titre non communiqué" }}</a>
                     {% if offer.remote %}<span class="badge">Télétravail</span>{% endif %}
                 </td>
                 <td>{{ offer.company or "" }}</td>
-                <td>{{ offer.location or "" }}</td>
+                <td class="muted">{{ offer.location or "" }}</td>
                 <td>{{ offer.contract or "" }}</td>
                 <td class="amount">
                     {% if offer.salary_net_monthly_min or offer.salary_net_monthly_max %}
@@ -37,17 +36,16 @@
                     {% endif %}
                     {% endif %}
                 </td>
-                <td>
+                <td class="nowrap">
                     {% if offer.application_status %}<span class="badge badge-status">{{ statuses[offer.application_status] }}</span>{% endif %}
                     {% if offer.follow_up_due %}<span class="badge badge-due">Relance le {{ offer.follow_up_date | date_fr }}</span>{% endif %}
                 </td>
-                <td><a href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">{{ offer.source_label }}</a></td>
-                <td>{{ offer.first_seen_at | date_fr }}</td>
+                <td class="nowrap"><a href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">{{ offer.source_label }}</a></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 {% else %}
-<p class="empty">Aucune offre ne correspond à ces critères.</p>
+<div class="card empty">{{ icon("inbox", 32) }}Aucune offre ne correspond à ces critères.</div>
 {% endif %}

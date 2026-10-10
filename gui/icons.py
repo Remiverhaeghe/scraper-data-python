@@ -1,13 +1,14 @@
 """Chargement des icônes SVG dans la couleur souhaitée"""
 
 from functools import lru_cache
-from pathlib import Path
 
 from PySide6.QtCore import QByteArray, Qt
 from PySide6.QtGui import QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 
-ICONS_DIRECTORY = Path(__file__).with_name("icons")
+from config import ASSETS_DIRECTORY
+
+ICONS_DIRECTORY = ASSETS_DIRECTORY / "icons"
 
 # Rendu en double résolution pour rester net sur les écrans haute densité
 PIXEL_RATIO = 2

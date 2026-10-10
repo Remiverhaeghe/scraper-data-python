@@ -7,6 +7,7 @@ from job.presentation import (
     build_offer_filters,
     describe_search,
     describe_sources,
+    summarize_history,
 )
 
 
@@ -88,3 +89,22 @@ def test_describe_sources():
 
     assert describe_sources({"sources": ["adzuna", "ancienne"]}) == "Adzuna, ancienne"
     assert describe_sources(None) == ""
+
+
+def test_summarize_history():
+    """Vérifie la mise en forme de la synthèse de l'historique."""
+
+    assert summarize_history(
+        {"executions": 4, "items": 120, "average_duration": 2.345, "successes": 3}
+    ) == {
+        "executions": 4,
+        "items": 120,
+        "average_duration": "2.3 s",
+        "success_rate": "75 %",
+    }
+    assert (
+        summarize_history(
+            {"executions": 0, "items": 0, "average_duration": 0, "successes": 0}
+        )["success_rate"]
+        == "-"
+    )

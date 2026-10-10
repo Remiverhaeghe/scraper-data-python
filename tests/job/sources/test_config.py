@@ -153,3 +153,28 @@ def test_source_definition_lists_missing_settings(monkeypatch):
         "TEST_SOURCE_KEY",
         "TEST_SOURCE_SITE",
     ]
+
+
+@pytest.mark.parametrize(
+    "pAvailable, pSettings, pExpected",
+    [
+        (True, (), None),
+        (False, (), "indisponible"),
+        (True, ("TEST_MISSING_SETTING",), "non configurée"),
+    ],
+)
+def test_get_unavailability_reason(monkeypatch, pAvailable, pSettings, pExpected):
+    """Vérifie la raison affichée à côté d'une source non sélectionnable."""
+
+    monkeypatch.delenv("TEST_MISSING_SETTING", raising=False)
+
+    vDefinition = SourceDefinition(
+        name="test",
+        label="Test",
+        load_parameters=None,
+        scrape=None,
+        available=pAvailable,
+        settings=pSettings,
+    )
+
+    assert vDefinition.get_unavailability_reason() == pExpected

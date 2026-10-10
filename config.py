@@ -1,5 +1,7 @@
 """Configuration générale de l'application"""
 
+from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -7,6 +9,19 @@ load_dotenv()
 URL = "https://books.toscrape.com/"
 OUTPUT_FILE = "output/books.csv"
 DATABASE_FILE = "data/scraper.db"
+
+# Logo et icônes partagés par l'interface de bureau et le tableau de bord web
+ASSETS_DIRECTORY = Path(__file__).parent / "assets"
+
+LOGO_FILE = ASSETS_DIRECTORY / "logo.svg"
+
+APPLICATION_NAME = "RV Veille Emploi"
+
+TAGLINE = "Offres, candidatures et relances au même endroit"
+
+REPOSITORY_URL = "https://github.com/Remiverhaeghe/scraper-data-python"
+
+LICENSE_NAME = "PolyForm Strict 1.0.0"
 
 MIN_RATING = 1
 MAX_RATING = 5

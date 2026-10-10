@@ -72,3 +72,16 @@ class SourceDefinition:
         rMissing = [vName for vName in self.settings if not os.getenv(vName)]
 
         return rMissing
+
+    def get_unavailability_reason(self):
+        """Retourne pourquoi la source ne peut pas être utilisée, ou None."""
+
+        rReason = None
+
+        if not self.available:
+            rReason = "indisponible"
+
+        elif self.get_missing_settings():
+            rReason = "non configurée"
+
+        return rReason

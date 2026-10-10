@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.branding import APPLICATION_NAME, LICENSE_NAME, REPOSITORY_URL, TAGLINE
+from config import APPLICATION_NAME, LICENSE_NAME, REPOSITORY_URL, TAGLINE
 from gui.theme import COLORS, THEME_CHOICES
 from gui.widgets import (
     create_button,

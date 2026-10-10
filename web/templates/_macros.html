@@ -1,0 +1,19 @@
+{% macro page_header(title, subtitle) %}
+<header class="page-header">
+    <div>
+        <h1>{{ title }}</h1>
+        <p>{{ subtitle }}</p>
+    </div>
+    {% if caller %}<div class="page-actions">{{ caller() }}</div>{% endif %}
+</header>
+{% endmacro %}
+
+{% macro stat(value, label, icon_name, accent, href=None) %}
+<{{ "a" if href else "div" }} class="stat accent-{{ accent }}"{% if href %} href="{{ href }}"{% endif %}>
+    <span class="stat-icon">{{ icon(icon_name, 22) }}</span>
+    <span>
+        <strong>{{ value }}</strong>
+        <span>{{ label }}</span>
+    </span>
+</{{ "a" if href else "div" }}>
+{% endmacro %}

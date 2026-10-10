@@ -7,10 +7,9 @@ import pandas as pd
 import pytest
 from PySide6.QtCore import QCoreApplication, QSettings
 
-from gui.search_page import SearchPage, get_unavailability_reason
+from gui.search_page import SearchPage
 from gui.search_worker import SearchWorker
 from job.sources.aggregator import ScrapingCancelled
-from job.sources.config import SourceDefinition
 
 
 @pytest.fixture
@@ -66,31 +65,6 @@ def select_only_remotive(pPage):
 
     pPage.check_sources(False)
     pPage.source_buttons["remotive"].setChecked(True)
-
-
-@pytest.mark.parametrize(
-    "pAvailable, pSettings, pExpected",
-    [
-        (True, (), None),
-        (False, (), "indisponible"),
-        (True, ("TEST_MISSING_SETTING",), "non configurée"),
-    ],
-)
-def test_get_unavailability_reason(monkeypatch, pAvailable, pSettings, pExpected):
-    """Vérifie la raison affichée à côté d'une source non sélectionnable."""
-
-    monkeypatch.delenv("TEST_MISSING_SETTING", raising=False)
-
-    vDefinition = SourceDefinition(
-        name="test",
-        label="Test",
-        load_parameters=None,
-        scrape=None,
-        available=pAvailable,
-        settings=pSettings,
-    )
-
-    assert get_unavailability_reason(vDefinition) == pExpected
 
 
 def test_unavailable_source_cannot_be_selected(search_page):

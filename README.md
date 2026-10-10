@@ -182,8 +182,12 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Fiche détaillée avec lien et mention de la source
 - [x] Suivi des candidatures : statut, notes, relances
 - [x] Filtre des candidatures à relancer et masquage des offres ignorées
+- [x] Même identité que l'application de bureau : menu latéral, logo, icônes, cartes
+- [x] Tableau de bord : indicateurs cliquables, graphique, activité récente
+- [x] Historique des exécutions et page Paramètres (état des sources)
+- [x] Thèmes clair et sombre, choix mémorisé dans le navigateur
+- [x] Pages d'erreur intégrées au site
 - [ ] Authentification
-- [ ] Historique des exécutions
 
 ### 🔐 Sécurité
 
@@ -247,6 +251,7 @@ scraper-data-python/
 │   ├── benefits.py                            # Détecte primes, 13e mois et épargne salariale
 │   ├── contract.py                            # Normalise le contrat : CDI, CDD ou freelance
 │   ├── presentation.py                        # Mise en forme et filtres communs aux interfaces
+│   ├── statistics.py                          # Indicateurs du tableau de bord, bureau et web
 │   ├── export.py                              # Export des offres en CSV, Excel et JSON
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
@@ -355,7 +360,6 @@ scraper-data-python/
 │   ├── __init__.py                            # Initialise le package GUI
 │   ├── app.py                                 # Crée l'application Qt et ouvre la fenêtre
 │   ├── branding.py                            # Nom, slogan et logo de l'application
-│   ├── logo.svg                               # Logo, aussi utilisé comme icône de fenêtre
 │   ├── main_window.py                         # Fenêtre principale, menu latéral et pages
 │   ├── home_page.py                           # Accueil et indicateurs
 │   ├── search_page.py                         # Critères, sources, progression et arrêt
@@ -370,7 +374,6 @@ scraper-data-python/
 │   ├── theme.py                               # Thèmes clair et sombre, palette et feuille de style
 │   ├── theme.qss                              # Feuille de style Qt, couleurs en variables
 │   ├── icons.py                               # Charge les icônes SVG dans une couleur donnée
-│   ├── icons/                                 # Icônes SVG Lucide (licence ISC)
 │   └── job_controller.py                      # Lance le traitement des offres depuis la GUI
 │
 ├── web/                                       # Tableau de bord web
@@ -378,15 +381,24 @@ scraper-data-python/
 │   ├── __main__.py                            # Lance le serveur avec python -m web
 │   ├── app.py                                 # Application FastAPI et routes
 │   ├── templates/                             # Gabarits HTML Jinja2
-│   │   ├── base.html                          # Mise en page commune
+│   │   ├── base.html                          # Mise en page commune et menu latéral
+│   │   ├── _macros.html                       # En-tête de page et carte statistique
+│   │   ├── dashboard.html                     # Tableau de bord
 │   │   ├── offers.html                        # Liste des offres et filtres
 │   │   ├── _offers_table.html                 # Tableau rechargé par HTMX
+│   │   ├── offer.html                         # Fiche détaillée d'une offre
 │   │   ├── _application.html                  # Bloc de suivi d'une candidature
-│   │   └── offer.html                         # Fiche détaillée d'une offre
+│   │   ├── history.html                       # Historique des exécutions
+│   │   ├── settings.html                      # Thème et état des sources
+│   │   └── error.html                         # Page d'erreur
 │   └── static/                                # Fichiers statiques
-│       ├── style.css                          # Feuille de style
-│       ├── favicon.svg                        # Logo de l'application
+│       ├── style.css                          # Feuille de style, thèmes clair et sombre
+│       ├── theme.js                           # Applique et mémorise le thème choisi
 │       └── htmx.min.js                        # HTMX 2.0.4, copie locale
+│
+├── assets/                                    # Ressources partagées par le bureau et le web
+│   ├── logo.svg                               # Logo, icône de fenêtre et favicon
+│   └── icons/                                 # Icônes SVG Lucide (licence ISC)
 │
 ├── utils/                                     # Utilitaires techniques communs
 │   ├── __init__.py                            # Initialise le package Utils
@@ -588,4 +600,4 @@ scraper-data-python/
 
 Ce projet est publié sous licence [PolyForm Strict 1.0.0](LICENSE) : le code peut être consulté et utilisé tel quel à des fins non commerciales, mais ni modifié, ni redistribué.
 
-Les icônes de `gui/icons/` proviennent de [Lucide](https://lucide.dev) et restent sous leur licence [ISC](gui/icons/LICENSE).
+Les icônes de `assets/icons/` proviennent de [Lucide](https://lucide.dev) et restent sous leur licence [ISC](assets/icons/LICENSE).

@@ -1,27 +1,48 @@
 """Application web du tableau de bord des offres d'emploi"""
 
+import re
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
+from functools import lru_cache
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from config import DATABASE_FILE, NEW_OFFER_DAYS
+from config import (
+    APPLICATION_NAME,
+    ASSETS_DIRECTORY,
+    DATABASE_FILE,
+    LICENSE_NAME,
+    NEW_OFFER_DAYS,
+    REPOSITORY_URL,
+    TAGLINE,
+)
 from job.contract import CONTRACT_TYPES
 from job.presentation import (
+    EXECUTION_STATUS_LABELS,
+    EXECUTION_TONES,
     FOLLOW_UP_FILTER,
     STATUS_LABELS,
+    UNKNOWN_SEARCH,
     build_offer_filters,
+    describe_execution,
+    describe_search,
+    describe_sources,
     format_date,
     format_euros,
     prepare_offer,
     safe_url,
+    summarize_history,
 )
 from job.sources.registry import SOURCES
+from job.statistics import CHART_DAYS, count_ready_sources, load_statistics
 from storage.database import initialize_database
+from storage.history_repository import get_history, get_history_summary
 from storage.job_applications import (
     APPLICATION_STATUSES,
     delete_application,
@@ -36,8 +57,21 @@ logger = get_logger(__name__)
 
 WEB_DIRECTORY = Path(__file__).parent
 
+ICONS_DIRECTORY = ASSETS_DIRECTORY / "icons"
+
 # Au-delà, l'utilisateur affine sa recherche plutôt que de parcourir la liste.
 MAX_DISPLAYED_OFFERS = 300
+
+MAX_DISPLAYED_EXECUTIONS = 200
+
+ICON_NAME_PATTERN = re.compile(r"[a-z][a-z-]*")
+
+# Icône associée à chaque tonalité d'exécution
+TONE_ICONS = {
+    "success": "circle-check",
+    "warning": "circle-alert",
+    "danger": "circle-alert",
+}
 
 
 def get_database_file():
@@ -65,13 +99,46 @@ async def lifespan(pApp):
 app = FastAPI(title="Offres d'emploi", lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory=WEB_DIRECTORY / "static"), name="static")
+app.mount("/assets", StaticFiles(directory=ASSETS_DIRECTORY), name="assets")
 
 templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
+
+
+@lru_cache
+def render_icon(pName, pSize=18):
+    """Retourne le SVG d'une icône à insérer dans la page, ou rien s'il n'existe pas.
+
+    Insérée telle quelle, l'icône prend la couleur du texte grâce à currentColor.
+    Seuls les noms simples d'un fichier du dossier d'icônes sont acceptés.
+    """
+
+    rIcon = Markup("")
+
+    vPath = ICONS_DIRECTORY / f"{pName}.svg"
+
+    if ICON_NAME_PATTERN.fullmatch(pName) and vPath.is_file():
+        vSvg = vPath.read_text(encoding="utf-8")
+        vSvg = vSvg[vSvg.index("<svg") :]
+        vSvg = vSvg.replace('width="24"', f'width="{pSize}"', 1)
+        vSvg = vSvg.replace('height="24"', f'height="{pSize}"', 1)
+        vSvg = vSvg.replace("<svg", '<svg aria-hidden="true" focusable="false"', 1)
+
+        rIcon = Markup(vSvg)
+
+    return rIcon
 
 
 templates.env.filters["euros"] = format_euros
 templates.env.filters["date_fr"] = format_date
 templates.env.filters["safe_url"] = safe_url
+
+templates.env.globals.update(
+    icon=render_icon,
+    app_name=APPLICATION_NAME,
+    tagline=TAGLINE,
+    repository_url=REPOSITORY_URL,
+    license_name=LICENSE_NAME,
+)
 
 
 def parse_amount(pValue):
@@ -102,7 +169,76 @@ def parse_date(pValue):
     return rDate
 
 
+@app.exception_handler(StarletteHTTPException)
+async def render_http_error(pRequest, pException):
+    """Affiche une erreur dans le gabarit du site plutôt qu'en JSON brut.
+
+    Les requêtes HTMX reçoivent un simple texte, inséré sans casser la page.
+    """
+
+    vTitle = "Page introuvable" if pException.status_code == 404 else "Requête refusée"
+
+    if pRequest.headers.get("HX-Request"):
+        rResponse = HTMLResponse(pException.detail, status_code=pException.status_code)
+    else:
+        rResponse = templates.TemplateResponse(
+            pRequest,
+            "error.html",
+            {"title": vTitle, "message": pException.detail},
+            status_code=pException.status_code,
+        )
+
+    return rResponse
+
+
+def build_chart(pDailyCounts):
+    """Prépare les barres du graphique, leur hauteur relative à la plus grande."""
+
+    vMaximum = max((vCount for _, vCount in pDailyCounts), default=0) or 1
+
+    rBars = [
+        {
+            "label": f"{vDay:%d/%m}",
+            "value": vCount,
+            "height": max(round(100 * vCount / vMaximum), 2),
+        }
+        for vDay, vCount in pDailyCounts
+    ]
+
+    return rBars
+
+
 @app.get("/", response_class=HTMLResponse)
+def show_dashboard(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche le tableau de bord : indicateurs, graphique et activité récente."""
+
+    vStatistics = load_statistics(pDatabaseFile)
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "dashboard.html",
+        {
+            "active_page": "dashboard",
+            "statistics": vStatistics,
+            "ready_sources": count_ready_sources(),
+            "new_offer_days": NEW_OFFER_DAYS,
+            "chart_days": CHART_DAYS,
+            "chart": build_chart(vStatistics["daily_new_offers"]),
+            "activities": [
+                describe_execution(vEntry) for vEntry in vStatistics["executions"]
+            ],
+            "tone_icons": TONE_ICONS,
+            "follow_up_filter": FOLLOW_UP_FILTER,
+        },
+    )
+
+    return rResponse
+
+
+@app.get("/offers", response_class=HTMLResponse)
 def list_offers(
     request: Request,
     q: str = "",
@@ -133,6 +269,7 @@ def list_offers(
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
 
     vContext = {
+        "active_page": "offers",
         "offers": [
             prepare_offer(vOffer, vNewSince)
             for vOffer in vOffers.head(MAX_DISPLAYED_OFFERS).to_dict("records")
@@ -210,6 +347,7 @@ def show_offer(
         request,
         "offer.html",
         {
+            "active_page": "offers",
             "offer": prepare_offer(vOffer, vNewSince),
             "application": get_application(pDatabaseFile, source, id),
             "statuses": STATUS_LABELS,
@@ -273,6 +411,69 @@ def add_follow_up(
 
     rResponse = render_application(
         request, pDatabaseFile, vOffer, "Relance enregistrée"
+    )
+
+    return rResponse
+
+
+@app.get("/history", response_class=HTMLResponse)
+def show_history(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche la synthèse et la liste des dernières exécutions."""
+
+    vExecutions = [
+        {
+            "started_at": vEntry.started_at,
+            "search": (
+                describe_search(vEntry.parameters) or UNKNOWN_SEARCH
+                if vEntry.scraper_type == "job"
+                else f"Livres · {vEntry.url}"
+            ),
+            "sources": describe_sources(vEntry.parameters),
+            "item_count": vEntry.item_count,
+            "duration": f"{vEntry.duration_seconds:.1f} s",
+            "status": EXECUTION_STATUS_LABELS.get(vEntry.status, vEntry.status),
+            "tone": EXECUTION_TONES.get(vEntry.status, "danger"),
+            "error_message": vEntry.error_message,
+        }
+        for vEntry in get_history(pDatabaseFile, pLimit=MAX_DISPLAYED_EXECUTIONS)
+    ]
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "history.html",
+        {
+            "active_page": "history",
+            "summary": summarize_history(get_history_summary(pDatabaseFile)),
+            "executions": vExecutions,
+            "unknown_search": UNKNOWN_SEARCH,
+            "tone_icons": TONE_ICONS,
+        },
+    )
+
+    return rResponse
+
+
+@app.get("/settings", response_class=HTMLResponse)
+def show_settings(request: Request):
+    """Affiche le thème, l'état des sources et les informations de l'application."""
+
+    vSources = [
+        {
+            "label": vDefinition.label,
+            "reason": vDefinition.get_unavailability_reason(),
+            # Seuls les noms des variables sont affichés, jamais leurs valeurs.
+            "missing": vDefinition.get_missing_settings(),
+        }
+        for vDefinition in SOURCES.values()
+    ]
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "settings.html",
+        {"active_page": "settings", "sources": vSources},
     )
 
     return rResponse
