@@ -39,6 +39,12 @@ def test_to_net_monthly_ignores_unknown_period():
     assert to_net_monthly(48000, None, 0.75) is None
 
 
+def test_to_net_monthly_ignores_implausible_amount():
+    """Vérifie qu'un taux journalier présenté comme annuel est ignoré."""
+
+    assert to_net_monthly(360, "year", 0.75) is None
+
+
 def test_add_net_salary_without_tax_rate():
     """Vérifie le calcul du net sans taux d'imposition renseigné."""
 

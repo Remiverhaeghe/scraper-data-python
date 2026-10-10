@@ -93,10 +93,12 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Enregistrement de l'historique du traitement
 - [x] Configuration API / HTML par source
 - [x] France Travail — API suspendue par France Travail, accès sur demande
+- [x] Adzuna
 - [x] Greenhouse
 - [x] Lever
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
+  - [x] Adzuna
   - [ ] Greenhouse — non nécessaire sur l'API Job Board utilisée
   - [x] Lever
 - [x] Enregistrement de la première récupération
@@ -173,7 +175,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **322 tests automatisés**
+- [x] **339 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 
@@ -215,6 +217,14 @@ scraper-data-python/
 │       ├── configuration.py                    # Construit la configuration des sources
 │       ├── registry.py                         # Liste des sources disponibles
 │       ├── aggregator.py                       # Agrège les résultats des sources
+│       │
+│       ├── adzuna/                             # Intégration Adzuna
+│       │   ├── __init__.py                     # Initialise le package Adzuna
+│       │   ├── client.py                       # Communique avec l'API Adzuna
+│       │   ├── config.py                       # Configuration Adzuna
+│       │   ├── parser.py                       # Transforme les réponses Adzuna
+│       │   ├── service.py                      # Orchestre le scraping Adzuna
+│       │   └── source.py                       # Déclare la source Adzuna
 │       │
 │       ├── france_travail/                     # Intégration France Travail
 │       │   ├── __init__.py                     # Initialise le package France Travail
@@ -320,6 +330,14 @@ scraper-data-python/
 │   │       ├── test_aggregator.py              # Teste l'agrégation des sources
 │   │       ├── test_config.py                  # Teste la configuration commune
 │   │       ├── test_configuration.py           # Teste la construction de la configuration
+│   │       │
+│   │       ├── adzuna/                         # Tests Adzuna
+│   │       │   ├── __init__.py                 # Initialise les tests Adzuna
+│   │       │   ├── test_client.py              # Teste le client API
+│   │       │   ├── test_config.py              # Teste la configuration
+│   │       │   ├── test_parser.py              # Teste le parsing
+│   │       │   ├── test_service.py             # Teste le service
+│   │       │   └── test_source.py              # Teste la déclaration de la source
 │   │       │
 │   │       ├── france_travail/                 # Tests France Travail
 │   │       │   ├── __init__.py                 # Initialise les tests France Travail

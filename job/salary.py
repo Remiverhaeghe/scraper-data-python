@@ -13,6 +13,10 @@ logger = get_logger(__name__)
 # 151,67 heures correspondent à un temps plein de 35 heures par semaine.
 MONTHLY_FACTORS = {"hour": 151.67, "month": 1, "year": 1 / 12}
 
+# En dessous, le montant n'est pas un salaire crédible pour la période annoncée :
+# par exemple un taux journalier de freelance présenté comme un salaire annuel.
+MIN_MONTHLY_GROSS = 500
+
 
 def get_income_tax_rate():
     """Retourne le taux d'imposition facultatif défini dans INCOME_TAX_RATE."""
@@ -42,7 +46,17 @@ def to_net_monthly(pAmount, pPeriod, pNetRatio):
     rAmount = None
 
     if not pd.isna(pAmount) and pPeriod in MONTHLY_FACTORS:
-        rAmount = round(float(pAmount) * MONTHLY_FACTORS[pPeriod] * pNetRatio)
+        vMonthlyGross = float(pAmount) * MONTHLY_FACTORS[pPeriod]
+
+        if vMonthlyGross >= MIN_MONTHLY_GROSS:
+            rAmount = round(vMonthlyGross * pNetRatio)
+
+        else:
+            logger.warning(
+                "Salaire ignoré, montant incohérent avec la période : %s (%s)",
+                pAmount,
+                pPeriod,
+            )
 
     return rAmount
 
