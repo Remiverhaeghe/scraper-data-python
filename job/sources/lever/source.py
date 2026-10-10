@@ -26,4 +26,5 @@ SOURCE = SourceDefinition(
     label="Lever",
     load_parameters=load_parameters,
     scrape=scrape,
+    settings=("LEVER_SITE",),
 )

@@ -53,6 +53,13 @@ SOURCE = SourceDefinition(
     label="France Travail",
     load_parameters=load_parameters,
     scrape=scrape,
+    settings=(
+        "FRANCE_TRAVAIL_CLIENT_ID",
+        "FRANCE_TRAVAIL_CLIENT_SECRET",
+        "FRANCE_TRAVAIL_SCOPE",
+        "FRANCE_TRAVAIL_TOKEN_URL",
+        "FRANCE_TRAVAIL_API_BASE_URL",
+    ),
     # API suspendue par France Travail, accès soumis à une demande
     available=False,
 )

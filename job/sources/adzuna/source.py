@@ -54,4 +54,5 @@ SOURCE = SourceDefinition(
     label="Adzuna",
     load_parameters=load_parameters,
     scrape=scrape,
+    settings=("ADZUNA_APP_ID", "ADZUNA_APP_KEY"),
 )

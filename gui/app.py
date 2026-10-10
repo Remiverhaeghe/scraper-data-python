@@ -22,6 +22,9 @@ def run():
     vApplication = QApplication(sys.argv)
     vApplication.setApplicationName(APPLICATION_NAME)
 
+    # Nom utilisé par QSettings pour mémoriser les derniers critères de recherche
+    vApplication.setOrganizationName("Remiverhaeghe")
+
     # Fusion suit le thème clair ou sombre du système sur toutes les plateformes.
     vApplication.setStyle("Fusion")
     vApplication.setStyleSheet(THEME_FILE.read_text(encoding="utf-8"))

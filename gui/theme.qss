@@ -49,3 +49,52 @@ QLabel#statisticValue {
     font-weight: 600;
     color: palette(highlight);
 }
+
+QGroupBox {
+    font-weight: 600;
+    border: 1px solid palette(mid);
+    border-radius: 8px;
+    margin-top: 10px;
+    padding: 14px 12px 10px 12px;
+    background: palette(base);
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 4px;
+}
+
+QGroupBox QLabel,
+QGroupBox QCheckBox {
+    font-weight: normal;
+}
+
+QPushButton {
+    padding: 6px 14px;
+}
+
+QPushButton#primaryButton {
+    background: palette(highlight);
+    color: palette(highlighted-text);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-weight: 600;
+}
+
+QPushButton#primaryButton:disabled {
+    background: palette(mid);
+}
+
+QPushButton#linkButton {
+    border: none;
+    background: transparent;
+    color: palette(link);
+    text-align: left;
+    padding: 0;
+}
+
+QLabel#warning {
+    color: #d97706;
+}

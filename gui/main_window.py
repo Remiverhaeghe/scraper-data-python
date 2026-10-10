@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.home_page import HomePage
+from gui.search_page import SearchPage
 
 
 class MainWindow(QMainWindow):
@@ -28,7 +29,10 @@ class MainWindow(QMainWindow):
 
         self.pages = QStackedWidget()
 
+        self.search_page = SearchPage()
+
         self.add_page("Accueil", HomePage(pDatabaseFile))
+        self.add_page("Recherche", self.search_page)
 
         vSidebar = QWidget()
         vSidebar.setObjectName("sidebar")
@@ -69,3 +73,17 @@ class MainWindow(QMainWindow):
 
         if hasattr(vPage, "refresh"):
             vPage.refresh()
+
+    def closeEvent(self, pEvent):
+        """Diffère la fermeture tant qu'une recherche est en cours.
+
+        Détruire un QThread actif fait planter l'application : la recherche est
+        arrêtée et la fenêtre se ferme d'elle-même à la fin de la source en cours.
+        """
+        if self.search_page.is_running():
+            self.search_page.search_ended.connect(self.close)
+            self.search_page.stop_search()
+
+            pEvent.ignore()
+        else:
+            pEvent.accept()

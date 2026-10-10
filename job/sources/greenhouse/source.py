@@ -26,4 +26,5 @@ SOURCE = SourceDefinition(
     label="Greenhouse",
     load_parameters=load_parameters,
     scrape=scrape,
+    settings=("GREENHOUSE_BOARD",),
 )

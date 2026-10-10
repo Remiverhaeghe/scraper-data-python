@@ -1,5 +1,6 @@
 """Configuration commune des sources d'emploi"""
 
+import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
@@ -61,3 +62,13 @@ class SourceDefinition:
 
     # Une source indisponible reste affichée mais ne peut pas être sélectionnée
     available: bool = True
+
+    # Variables d'environnement indispensables, comme les clés d'API
+    settings: tuple[str, ...] = ()
+
+    def get_missing_settings(self):
+        """Retourne les variables d'environnement requises non renseignées."""
+
+        rMissing = [vName for vName in self.settings if not os.getenv(vName)]
+
+        return rMissing

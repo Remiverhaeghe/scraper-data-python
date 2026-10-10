@@ -8,32 +8,42 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Critères attendus par build_job_config, avec les valeurs par défaut de la GUI
+DEFAULT_CRITERIA = {
+    "max_items": None,
+    "delay": 0.0,
+    "timeout": 30,
+    "max_pages": None,
+    "keyword": None,
+    "location": None,
+    "max_distance_km": None,
+    "contract": None,
+    "min_salary": None,
+    "max_salary": None,
+    "remote": None,
+    "min_remote_days": None,
+    "metro_required": None,
+    "max_metro_distance_km": None,
+    "education": None,
+    "skills": None,
+    "missions": None,
+}
+
 
 class JobController:
     """Fait le lien entre la GUI Jobs et le traitement métier."""
 
-    def search_jobs(
-        self,
-        pMaxItems,
-        pKeyword,
-        pLocation,
-        pSources,
-        pOnProgress=None,
-        pCancelEvent=None,
-    ):
+    def search_jobs(self, pSources, pCriteria, pOnProgress=None, pCancelEvent=None):
         """Lance une recherche d'offres avec les paramètres de la GUI."""
 
-        vArguments = self.build_arguments(pMaxItems, pKeyword, pLocation, pSources)
+        vArguments = self.build_arguments(pSources, pCriteria)
 
-        logger.info("Lancement d'une recherche Jobs depuis la GUI")
-
-        logger.info("Construction de la configuration Jobs")
+        logger.info(
+            "Lancement d'une recherche Jobs depuis la GUI sur %s source(s)",
+            len(pSources),
+        )
 
         vConfig = build_job_config(vArguments)
-
-        logger.info("Configuration Jobs construite avec succès")
-
-        logger.info("Lancement du traitement Jobs")
 
         rResult = process_jobs(
             vConfig, pOnProgress=pOnProgress, pCancelEvent=pCancelEvent
@@ -43,28 +53,16 @@ class JobController:
 
         return rResult
 
-    def build_arguments(self, pMaxItems, pKeyword, pLocation, pSources):
+    def build_arguments(self, pSources, pCriteria):
         """Construit les arguments attendus par la configuration Jobs."""
 
-        vArguments = SimpleNamespace(
-            max_items=pMaxItems,
-            delay=0.0,
-            timeout=30,
-            max_pages=None,
-            keyword=pKeyword,
-            location=pLocation,
-            max_distance_km=None,
-            contract=None,
-            min_salary=None,
-            max_salary=None,
-            remote=None,
-            min_remote_days=None,
-            metro_required=None,
-            max_metro_distance_km=None,
-            education=None,
-            skills=None,
-            missions=None,
-            sources=pSources,
+        vUnknown = sorted(set(pCriteria) - set(DEFAULT_CRITERIA))
+
+        if vUnknown:
+            raise ValueError(f"Critère(s) de recherche inconnu(s) : {vUnknown}")
+
+        rArguments = SimpleNamespace(
+            **{**DEFAULT_CRITERIA, **pCriteria}, sources=pSources
         )
 
-        return vArguments
+        return rArguments

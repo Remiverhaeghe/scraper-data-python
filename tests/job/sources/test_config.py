@@ -2,9 +2,8 @@
 
 import pytest
 
-from job.sources.config import SourceConfig
 from job.config import JobScrapingConfig
-from job.sources.config import SourceConfig
+from job.sources.config import SourceConfig, SourceDefinition
 
 
 def test_source_disabled():
@@ -133,3 +132,24 @@ def test_job_config_sources_validation():
 
     with pytest.raises(ValueError, match="au moins un mode"):
         vConfig.validate()
+
+
+def test_source_definition_lists_missing_settings(monkeypatch):
+    """Vérifie que seules les variables absentes ou vides sont signalées."""
+
+    monkeypatch.setenv("TEST_SOURCE_ID", "identifiant")
+    monkeypatch.setenv("TEST_SOURCE_KEY", "")
+    monkeypatch.delenv("TEST_SOURCE_SITE", raising=False)
+
+    vDefinition = SourceDefinition(
+        name="test",
+        label="Test",
+        load_parameters=None,
+        scrape=None,
+        settings=("TEST_SOURCE_ID", "TEST_SOURCE_KEY", "TEST_SOURCE_SITE"),
+    )
+
+    assert vDefinition.get_missing_settings() == [
+        "TEST_SOURCE_KEY",
+        "TEST_SOURCE_SITE",
+    ]

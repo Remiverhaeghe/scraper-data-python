@@ -3,22 +3,34 @@
 import threading
 from types import SimpleNamespace
 
+import pytest
+
 from gui.job_controller import JobController
 
 
 def test_build_arguments():
-    """Vérifie la construction des paramètres Jobs."""
+    """Vérifie que les critères complètent les valeurs par défaut."""
 
     vController = JobController()
 
-    vArguments = vController.build_arguments(20, "Java", "Lille", ["france-travail"])
+    vArguments = vController.build_arguments(
+        ["adzuna"], {"keyword": "Java", "contract": "CDI", "min_salary": 2500}
+    )
 
-    assert vArguments.max_items == 20
+    assert vArguments.sources == ["adzuna"]
     assert vArguments.keyword == "Java"
-    assert vArguments.location == "Lille"
-    assert vArguments.sources == ["france-travail"]
+    assert vArguments.contract == "CDI"
+    assert vArguments.min_salary == 2500
+    assert vArguments.location is None
     assert vArguments.delay == 0.0
     assert vArguments.timeout == 30
+
+
+def test_build_arguments_rejects_unknown_criteria():
+    """Vérifie qu'une faute de frappe dans un critère est signalée."""
+
+    with pytest.raises(ValueError, match="keywords"):
+        JobController().build_arguments(["adzuna"], {"keywords": "Java"})
 
 
 def test_search_jobs(monkeypatch):
@@ -37,10 +49,8 @@ def test_search_jobs(monkeypatch):
 
         vCalls.append("build_config")
 
-        assert pArguments.max_items == 20
         assert pArguments.keyword == "Java"
-        assert pArguments.location == "Lille"
-        assert pArguments.sources == ["france-travail"]
+        assert pArguments.sources == ["adzuna"]
 
         return "config"
 
@@ -59,13 +69,9 @@ def test_search_jobs(monkeypatch):
 
     monkeypatch.setattr("gui.job_controller.process_jobs", mock_process_jobs)
 
-    vController = JobController()
-
-    rResult = vController.search_jobs(
-        20,
-        "Java",
-        "Lille",
-        ["france-travail"],
+    rResult = JobController().search_jobs(
+        ["adzuna"],
+        {"keyword": "Java"},
         pOnProgress=vOnProgress,
         pCancelEvent=vCancelEvent,
     )

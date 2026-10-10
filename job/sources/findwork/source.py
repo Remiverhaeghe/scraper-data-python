@@ -47,4 +47,5 @@ SOURCE = SourceDefinition(
     label="Findwork",
     load_parameters=load_parameters,
     scrape=scrape,
+    settings=("FINDWORK_API_KEY",),
 )

@@ -168,7 +168,8 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Fenêtre principale avec menu latéral
 - [x] Thème clair et sombre selon le système
 - [x] Accueil : offres, nouveautés, candidatures, relances et dernière exécution
-- [ ] Recherche : sources, filtres, options avancées, progression et arrêt
+- [x] Recherche : sources, filtres, options avancées, progression et arrêt
+- [x] Sources non configurées grisées, derniers critères mémorisés
 - [ ] Offres : tableau triable et suivi des candidatures
 - [ ] Historique des exécutions
 
@@ -352,6 +353,8 @@ scraper-data-python/
 │   ├── app.py                                 # Crée l'application Qt et ouvre la fenêtre
 │   ├── main_window.py                         # Fenêtre principale, menu latéral et pages
 │   ├── home_page.py                           # Accueil et indicateurs
+│   ├── search_page.py                         # Critères, sources, progression et arrêt
+│   ├── search_worker.py                       # Exécute la recherche dans un QThread
 │   ├── widgets.py                             # Composants graphiques partagés
 │   ├── theme.qss                              # Feuille de style Qt
 │   └── job_controller.py                      # Lance le traitement des offres depuis la GUI
@@ -510,7 +513,9 @@ scraper-data-python/
 │   │   ├── __init__.py                          # Initialise le package de tests GUI
 │   │   ├── conftest.py                         # Crée l'application Qt sans écran
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
-│   │   └── test_job_controller.py              # Teste le contrôleur des offres
+│   │   ├── test_job_controller.py              # Teste le contrôleur des offres
+│   │   ├── test_search_page.py                 # Teste la page de recherche
+│   │   └── test_search_worker.py               # Teste le worker de recherche
 │   │
 │   ├── data/                                   # Tests des composants génériques de données
 │   │   ├── __init__.py                          # Initialise le package de tests Data

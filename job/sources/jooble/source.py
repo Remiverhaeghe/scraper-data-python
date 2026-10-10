@@ -47,4 +47,5 @@ SOURCE = SourceDefinition(
     label="Jooble",
     load_parameters=load_parameters,
     scrape=scrape,
+    settings=("JOOBLE_API_KEY",),
 )
