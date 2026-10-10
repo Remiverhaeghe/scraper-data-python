@@ -3,6 +3,7 @@
 import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
+from utils.helpers import html_to_text
 
 
 def parse_job(pJob):
@@ -53,7 +54,7 @@ def parse_job(pJob):
         "scraped_at": None,
         "first_seen_at": None,
         # Contenu
-        "description": pJob.get("content"),
+        "description": html_to_text(pJob.get("content")),
         "missions": None,
         "requirements": None,
         "education": None,

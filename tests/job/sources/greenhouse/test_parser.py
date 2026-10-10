@@ -26,7 +26,7 @@ def test_parse_job():
     assert rJob["source_id"] == "123"
     assert rJob["location"] == "Paris"
     assert rJob["url"] == "https://example.com/job/123"
-    assert rJob["description"] == ("<p>Développement Python</p>")
+    assert rJob["description"] == "Développement Python"
 
 
 def test_parse_job_with_missing_values():

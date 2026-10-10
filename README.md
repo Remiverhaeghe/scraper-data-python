@@ -94,13 +94,17 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Configuration API / HTML par source
 - [x] France Travail — API suspendue par France Travail, accès sur demande
 - [x] Adzuna
+- [x] Remotive (télétravail)
+- [x] Arbeitnow (Europe)
 - [x] Greenhouse
 - [x] Lever
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
   - [x] Adzuna
+  - [x] Arbeitnow
   - [ ] Greenhouse — non nécessaire sur l'API Job Board utilisée
   - [x] Lever
+  - [ ] Remotive — non nécessaire, l'API renvoie tout en une requête
 - [x] Enregistrement de la première récupération
 - [x] Enregistrement de la dernière récupération
 - [x] Gestion des limites par source
@@ -176,7 +180,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **356 tests automatisés**
+- [x] **385 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 
@@ -228,6 +232,13 @@ scraper-data-python/
 │       │   ├── service.py                      # Orchestre le scraping Adzuna
 │       │   └── source.py                       # Déclare la source Adzuna
 │       │
+│       ├── arbeitnow/                          # Intégration Arbeitnow
+│       │   ├── __init__.py                     # Initialise le package Arbeitnow
+│       │   ├── client.py                       # Communique avec l'API Arbeitnow
+│       │   ├── parser.py                       # Transforme les réponses Arbeitnow
+│       │   ├── service.py                      # Filtre et pagine les offres Arbeitnow
+│       │   └── source.py                       # Déclare la source Arbeitnow
+│       │
 │       ├── france_travail/                     # Intégration France Travail
 │       │   ├── __init__.py                     # Initialise le package France Travail
 │       │   ├── authentication.py               # Gère l'authentification OAuth2
@@ -245,13 +256,20 @@ scraper-data-python/
 │       │   ├── service.py                      # Orchestre le scraping Greenhouse
 │       │   └── source.py                       # Déclare la source Greenhouse
 │       │
-│       └── lever/                              # Intégration Lever
-│           ├── __init__.py                     # Initialise le package Lever
-│           ├── client.py                       # Communique avec l'API Lever
-│           ├── config.py                       # Configuration Lever
-│           ├── parser.py                       # Transforme les réponses Lever
-│           ├── service.py                      # Orchestre le scraping Lever
-│           └── source.py                       # Déclare la source Lever
+│       ├── lever/                              # Intégration Lever
+│       │   ├── __init__.py                     # Initialise le package Lever
+│       │   ├── client.py                       # Communique avec l'API Lever
+│       │   ├── config.py                       # Configuration Lever
+│       │   ├── parser.py                       # Transforme les réponses Lever
+│       │   ├── service.py                      # Orchestre le scraping Lever
+│       │   └── source.py                       # Déclare la source Lever
+│       │
+│       └── remotive/                           # Intégration Remotive
+│           ├── __init__.py                     # Initialise le package Remotive
+│           ├── client.py                       # Communique avec l'API Remotive
+│           ├── parser.py                       # Transforme les réponses Remotive
+│           ├── service.py                      # Applique le délai de publication Remotive
+│           └── source.py                       # Déclare la source Remotive
 │
 ├── scraper/                                   # Composants techniques communs au scraping
 │   ├── __init__.py                            # Initialise le package Scraper
@@ -342,6 +360,12 @@ scraper-data-python/
 │   │       │   ├── test_service.py             # Teste le service
 │   │       │   └── test_source.py              # Teste la déclaration de la source
 │   │       │
+│   │       ├── arbeitnow/                      # Tests Arbeitnow
+│   │       │   ├── __init__.py                 # Initialise les tests Arbeitnow
+│   │       │   ├── test_client.py              # Teste le client API
+│   │       │   ├── test_parser.py              # Teste le parsing
+│   │       │   └── test_service.py             # Teste le filtrage et la pagination
+│   │       │
 │   │       ├── france_travail/                 # Tests France Travail
 │   │       │   ├── __init__.py                 # Initialise les tests France Travail
 │   │       │   ├── test_authentication.py      # Teste l'authentification
@@ -357,12 +381,18 @@ scraper-data-python/
 │   │       │   ├── test_parser.py              # Teste le parsing
 │   │       │   └── test_service.py             # Teste le service
 │   │       │
-│   │       └── lever/                          # Tests Lever
-│   │           ├── __init__.py                 # Initialise les tests Lever
+│   │       ├── lever/                          # Tests Lever
+│   │       │   ├── __init__.py                 # Initialise les tests Lever
+│   │       │   ├── test_client.py              # Teste le client API
+│   │       │   ├── test_config.py              # Teste la configuration
+│   │       │   ├── test_parser.py              # Teste le parsing
+│   │       │   └── test_service.py             # Teste le service
+│   │       │
+│   │       └── remotive/                       # Tests Remotive
+│   │           ├── __init__.py                 # Initialise les tests Remotive
 │   │           ├── test_client.py              # Teste le client API
-│   │           ├── test_config.py              # Teste la configuration
 │   │           ├── test_parser.py              # Teste le parsing
-│   │           └── test_service.py             # Teste le service
+│   │           └── test_service.py             # Teste le délai de publication
 │   │
 │   ├── cli/                                    # Tests de l'interface CLI
 │   │   ├── __init__.py                          # Initialise le package de tests CLI

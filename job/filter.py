@@ -14,12 +14,12 @@ def filter_jobs(pJobs, pConfig):
 
     if pConfig.keyword:
         vJobs = vJobs[
-            vJobs.apply(lambda pJob: _matches_keyword(pJob, pConfig.keyword), axis=1)
+            vJobs.apply(lambda pJob: matches_keyword(pJob, pConfig.keyword), axis=1)
         ]
 
     if pConfig.location:
         vJobs = vJobs[
-            vJobs.apply(lambda pJob: _matches_location(pJob, pConfig.location), axis=1)
+            vJobs.apply(lambda pJob: matches_location(pJob, pConfig.location), axis=1)
         ]
 
     if pConfig.max_distance_km is not None:
@@ -104,7 +104,7 @@ def filter_jobs(pJobs, pConfig):
     return rJobs
 
 
-def _matches_keyword(pJob, pKeyword):
+def matches_keyword(pJob, pKeyword):
     """Recherche un mot-clé dans les principales informations textuelles
     de l'offre.
     """
@@ -124,7 +124,7 @@ def _matches_keyword(pJob, pKeyword):
     return rMatches
 
 
-def _matches_location(pJob, pLocation):
+def matches_location(pJob, pLocation):
     """Vérifie que la localisation recherchée est présente dans l'offre."""
 
     vLocation = str(pJob["location"] or "")

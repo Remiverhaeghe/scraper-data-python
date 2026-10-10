@@ -3,7 +3,7 @@
 from bs4 import BeautifulSoup
 import pytest
 
-from utils.helpers import extract_price, extract_rating, extract_text
+from utils.helpers import extract_price, extract_rating, extract_text, html_to_text
 
 
 def test_extract_text():
@@ -79,3 +79,32 @@ def test_extract_price_raises_error_when_value_is_invalid():
 
     with pytest.raises(ValueError):
         extract_price("£abc")
+
+
+def test_html_to_text():
+    """Vérifie la conversion d'un contenu HTML en texte brut."""
+
+    assert html_to_text("<h2>Poste</h2><p>Développeur <b>Python</b></p>") == (
+        "Poste Développeur Python"
+    )
+
+
+def test_html_to_text_decodes_escaped_html():
+    """Vérifie la conversion d'un HTML échappé par la source."""
+
+    assert html_to_text("&lt;p&gt;Poste &lt;b&gt;Python&lt;/b&gt;&lt;/p&gt;") == (
+        "Poste Python"
+    )
+
+
+def test_html_to_text_keeps_comparison_signs():
+    """Vérifie qu'un texte contenant des comparaisons n'est pas altéré."""
+
+    assert html_to_text("<p>Expérience &lt; 3 ans</p>") == "Expérience < 3 ans"
+
+
+@pytest.mark.parametrize("pHtml", [None, ""])
+def test_html_to_text_without_content(pHtml):
+    """Vérifie qu'un contenu vide ne produit pas de texte."""
+
+    assert html_to_text(pHtml) is None

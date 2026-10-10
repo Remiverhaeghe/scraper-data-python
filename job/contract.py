@@ -11,8 +11,16 @@ logger = get_logger(__name__)
 CONTRACT_TYPES = ("CDI", "CDD", "FREELANCE")
 
 CONTRACT_PATTERNS = {
-    "CDI": re.compile(r"\bCDI\b|contrat\s+à\s+durée\s+indéterminée", re.IGNORECASE),
-    "CDD": re.compile(r"\bCDD\b|contrat\s+à\s+durée\s+déterminée", re.IGNORECASE),
+    # Formulations françaises, anglaises et allemandes (Arbeitnow, Lever)
+    "CDI": re.compile(
+        r"\bCDI\b|contrat\s+à\s+durée\s+indéterminée|\bpermanent\b|\bunbefristet",
+        re.IGNORECASE,
+    ),
+    "CDD": re.compile(
+        r"\bCDD\b|contrat\s+à\s+durée\s+déterminée|\bfixed[\s-]term\b"
+        r"|\btemporary\b|\bbefristet",
+        re.IGNORECASE,
+    ),
     "FREELANCE": re.compile(
         r"\bfree-?lances?\b|\bindépendants?\b|\bportage\s+salarial\b|\bTJM\b",
         re.IGNORECASE,

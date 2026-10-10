@@ -14,6 +14,12 @@ from job.contract import add_contract, detect_contract
         ("Mission freelance, TJM selon profil", "FREELANCE"),
         ("Free-lance Python", "FREELANCE"),
         ("Portage salarial possible", "FREELANCE"),
+        ("Full-time permanent, Mid-senior", "CDI"),
+        ("Unbefristeter Arbeitsvertrag", "CDI"),
+        ("parttime fixed term", "CDD"),
+        ("Temporary employment", "CDD"),
+        ("Befristeter Vertrag", "CDD"),
+        ("Full-time contract", None),
         ("Développeur Python", None),
     ],
 )
