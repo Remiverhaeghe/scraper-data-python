@@ -1,5 +1,7 @@
 # 🐍 Web Scraper Automatique (Python)
 
+[![CI](https://github.com/Remiverhaeghe/scraper-data-python/actions/workflows/ci.yml/badge.svg)](https://github.com/Remiverhaeghe/scraper-data-python/actions/workflows/ci.yml)
+
 Projet personnel de scraping développé en Python.
 
 L'objectif est de récupérer des données publiques depuis des sites web, de les analyser, de les structurer et de les rendre exploitables.
@@ -213,7 +215,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **474 tests automatisés**
+- [x] Intégration continue : tests, formatage Black et recherche de secrets à chaque push
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 
@@ -223,6 +225,10 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 
 ```text
 scraper-data-python/
+│
+├── .github/                                   # Configuration GitHub
+│   └── workflows/                             # Workflows GitHub Actions
+│       └── ci.yml                             # Tests, formatage et recherche de secrets
 │
 ├── book/                                      # Domaine métier consacré aux livres
 │   ├── __init__.py                            # Initialise le package Book
@@ -557,6 +563,7 @@ scraper-data-python/
 ├── .env.example                                # Modèle des variables d'environnement
 ├── .gitattributes                              # Impose les fins de ligne LF
 ├── .gitignore                                  # Liste des fichiers ignorés par Git
+├── .gitleaksignore                             # Fausses alertes connues de gitleaks
 └── LICENSE                                     # Licence du projet
 ```
 
