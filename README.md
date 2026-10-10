@@ -216,9 +216,9 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] Intégration continue : tests, formatage Black et recherche de secrets à chaque push
-- [ ] Augmenter progressivement la couverture
-- [ ] Tests d'intégration
+- [x] Intégration continue : tests, couverture, formatage Black et recherche de secrets à chaque push
+- [x] Couverture mesurée, branches comprises, avec un seuil minimal relevé progressivement (95 %)
+- [x] Tests d'intégration : des API simulées jusqu'à la base, au tableau de bord web et à l'export
 
 ---
 
@@ -251,7 +251,6 @@ scraper-data-python/
 │   ├── service.py                             # Service de scraping des offres
 │   ├── storage.py                             # Gère la sauvegarde des offres
 │   ├── application.py                         # Orchestre le traitement des offres
-│   ├── reader.py                              # Lit les offres depuis un fichier CSV
 │   ├── filter.py                              # Applique les filtres aux offres
 │   ├── salary.py                              # Estime le salaire net mensuel
 │   ├── benefits.py                            # Détecte primes, 13e mois et épargne salariale
@@ -472,6 +471,7 @@ scraper-data-python/
 │   │       ├── conftest.py                     # Évite la résolution DNS dans les tests
 │   │       ├── fake_http.py                    # Réponses HTTP simulées des API
 │   │       ├── test_aggregator.py              # Teste l'agrégation des sources
+│   │       ├── test_api_keys.py                # Teste le chargement des clés d'API
 │   │       ├── test_config.py                  # Teste la configuration commune
 │   │       ├── test_configuration.py           # Teste la construction de la configuration
 │   │       │
@@ -555,6 +555,8 @@ scraper-data-python/
 │   ├── gui/                                    # Tests de l'interface graphique
 │   │   ├── __init__.py                          # Initialise le package de tests GUI
 │   │   ├── conftest.py                         # Crée l'application Qt sans écran
+│   │   ├── test_app.py                         # Teste le lancement et le changement de thème
+│   │   ├── test_chart.py                       # Teste le rendu des graphiques
 │   │   ├── test_history_page.py                # Teste la page de l'historique
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
@@ -584,6 +586,10 @@ scraper-data-python/
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
 │   │   └── test_job_offers.py                  # Teste l'enregistrement des offres
 │   │
+│   ├── integration/                            # Tests de bout en bout
+│   │   ├── __init__.py                          # Initialise le package des tests d'intégration
+│   │   └── test_search_to_dashboard.py         # Recherche, base, statistiques, web et export
+│   │
 │   ├── web/                                    # Tests du tableau de bord
 │   │   ├── __init__.py                          # Initialise le package de tests Web
 │   │   └── test_app.py                         # Teste les routes et la sécurité de l'affichage
@@ -604,6 +610,7 @@ scraper-data-python/
 ├── main.py                                     # Point d'entrée principal de l'application
 ├── config.py                                   # Configuration générale de l'application
 ├── requirements.txt                            # Liste des dépendances Python
+├── pyproject.toml                              # Configuration et seuil de la couverture
 ├── README.md                                   # Documentation synthétique du projet
 ├── .env.example                                # Modèle des variables d'environnement
 ├── .gitattributes                              # Impose les fins de ligne LF

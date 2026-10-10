@@ -1,0 +1,12 @@
+[tool.coverage.run]
+source = ["."]
+# web/__main__.py se limite à lancer uvicorn : rien à y tester.
+omit = ["tests/*", "scripts/*", "web/__main__.py"]
+branch = true
+
+[tool.coverage.report]
+# Seuil relevé à mesure que la couverture progresse : la CI échoue en dessous.
+fail_under = 95
+show_missing = true
+skip_covered = true
+exclude_also = ['if __name__ == "__main__":']

@@ -33,8 +33,9 @@ jobs:
       - name: Vérification du formatage
         run: black --check .
 
-      - name: Tests
-        run: pytest -q
+      # Le seuil de couverture est défini dans pyproject.toml
+      - name: Tests et couverture
+        run: pytest -q --cov
 
   secrets:
     name: Recherche de secrets
