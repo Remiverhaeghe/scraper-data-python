@@ -3,6 +3,7 @@
 import requests
 
 from job.sources.greenhouse.client import get_jobs
+from tests.job.sources.fake_http import FakeJsonResponse
 
 
 def test_get_jobs(monkeypatch):
@@ -10,10 +11,10 @@ def test_get_jobs(monkeypatch):
 
     vCalls = []
 
-    def mock_get(pUrl, params, timeout):
+    def mock_get(pMethod, pUrl, params, timeout, **pOptions):
         vCalls.append({"url": pUrl, "params": params, "timeout": timeout})
 
-        class FakeResponse:
+        class FakeResponse(FakeJsonResponse):
 
             def raise_for_status(self):
                 pass
@@ -24,7 +25,7 @@ def test_get_jobs(monkeypatch):
         rResponse = FakeResponse()
         return rResponse
 
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_get)
 
     rData = get_jobs("example-board")
 
@@ -45,7 +46,7 @@ def test_get_jobs_http_error(monkeypatch):
     def mock_get(*args, **kwargs):
         raise requests.RequestException("Erreur HTTP")
 
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_get)
 
     try:
         get_jobs("example-board")

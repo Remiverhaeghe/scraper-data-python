@@ -2,6 +2,7 @@
 
 import requests
 
+from utils.api_client import request_json
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -25,21 +26,19 @@ def search_jobs(pQuery=None, pCountry=None, pPage=1):
     logger.info("Récupération des offres Himalayas : %s", vParams)
 
     try:
-        vResponse = requests.get(API_URL, params=vParams, headers=vHeaders, timeout=10)
-
-        vResponse.raise_for_status()
-
-        vData = vResponse.json()
+        vData = request_json(
+            "GET", API_URL, pParams=vParams, pHeaders=vHeaders, pTimeout=10
+        )
 
     except requests.RequestException as vException:
         logger.error("Erreur HTTP Himalayas sur la page %s : %s", pPage, vException)
         raise
 
     except ValueError as vException:
-        logger.error("Réponse JSON invalide d'Himalayas sur la page %s", pPage)
-        raise ValueError(
-            "La réponse Himalayas n'est pas un JSON valide"
-        ) from vException
+        logger.error(
+            "Appel refusé ou réponse invalide d'Himalayas sur la page %s", pPage
+        )
+        raise ValueError(f"Himalayas : {vException}") from None
 
     rData = vData
 

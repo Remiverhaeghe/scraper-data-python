@@ -4,9 +4,10 @@ import pytest
 import requests
 
 from job.sources.himalayas.client import search_jobs
+from tests.job.sources.fake_http import FakeJsonResponse
 
 
-class FakeResponse:
+class FakeResponse(FakeJsonResponse):
     """Réponse HTTP simulée."""
 
     def __init__(self, pData=None):
@@ -27,14 +28,14 @@ def test_search_jobs_sends_filters(monkeypatch):
 
     vCalls = []
 
-    def mock_get(pUrl, params, headers, timeout):
+    def mock_get(pMethod, pUrl, params, headers, timeout, **pOptions):
         vCalls.append({"url": pUrl, "params": params, "timeout": timeout})
 
         rResponse = FakeResponse({"jobs": [], "totalCount": 0})
 
         return rResponse
 
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_get)
 
     rData = search_jobs("python", "France", 2)
 
@@ -47,7 +48,7 @@ def test_search_jobs_sends_filters(monkeypatch):
 def test_search_jobs_invalid_json(monkeypatch):
     """Vérifie l'erreur levée pour une réponse non JSON."""
 
-    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr(requests, "request", lambda *args, **kwargs: FakeResponse())
 
-    with pytest.raises(ValueError, match="JSON valide"):
+    with pytest.raises(ValueError, match="Expecting value"):
         search_jobs()

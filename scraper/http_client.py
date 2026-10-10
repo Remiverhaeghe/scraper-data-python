@@ -5,6 +5,7 @@ import time
 import requests
 
 from scraper.config import ScrapingConfig
+from utils.api_client import check_announced_size, read_limited_content
 from utils.logger import get_logger
 from utils.security import validate_url
 
@@ -12,7 +13,6 @@ logger = get_logger(__name__)
 
 
 MAX_REDIRECTS = 5
-CHUNK_SIZE = 64 * 1024
 
 
 def fetch_page(pUrl, pConfig: ScrapingConfig):
@@ -53,7 +53,7 @@ def fetch_page(pUrl, pConfig: ScrapingConfig):
 
     vResponse.raise_for_status()
 
-    _validate_response_size(vResponse, pConfig)
+    check_announced_size(vResponse, pConfig.max_response_size)
 
     # Détermine l'encodage avant de consommer le flux.
     vEncoding = vResponse.apparent_encoding
@@ -61,7 +61,7 @@ def fetch_page(pUrl, pConfig: ScrapingConfig):
     if vEncoding:
         vResponse.encoding = vEncoding
 
-    vContent = _read_response_content(vResponse, pConfig)
+    vContent = read_limited_content(vResponse, pConfig.max_response_size)
 
     logger.info("Page récupérée avec succès : %s", vCurrentUrl)
 
@@ -104,36 +104,3 @@ def _request(pUrl, pConfig: ScrapingConfig):
     rResponse = vResponse
 
     return rResponse
-
-
-def _validate_response_size(pResponse, pConfig: ScrapingConfig):
-    """Vérifie que la taille annoncée de la réponse HTTP respecte la limite."""
-
-    vContentLength = pResponse.headers.get("Content-Length")
-
-    if vContentLength is not None and int(vContentLength) > pConfig.max_response_size:
-        raise ValueError("La taille de la réponse HTTP dépasse la limite autorisée.")
-
-
-def _read_response_content(pResponse, pConfig: ScrapingConfig) -> bytes:
-    """Lit le contenu HTTP par morceaux en contrôlant sa taille réelle."""
-
-    vContent = bytearray()
-    vContentSize = 0
-
-    for vChunk in pResponse.iter_content(chunk_size=CHUNK_SIZE):
-        if not vChunk:
-            continue
-
-        vContentSize += len(vChunk)
-
-        if vContentSize > pConfig.max_response_size:
-            raise ValueError(
-                "La taille de la réponse HTTP dépasse la limite autorisée."
-            )
-
-        vContent.extend(vChunk)
-
-    rContent = bytes(vContent)
-
-    return rContent

@@ -2,6 +2,7 @@
 
 import requests
 
+from utils.api_client import request_json
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -17,23 +18,19 @@ def get_jobs(pPage=1):
     logger.info("Récupération des offres Arbeitnow : page %s", pPage)
 
     try:
-        vResponse = requests.get(
-            API_URL, params={"page": pPage}, headers=vHeaders, timeout=10
+        vData = request_json(
+            "GET", API_URL, pParams={"page": pPage}, pHeaders=vHeaders, pTimeout=10
         )
-
-        vResponse.raise_for_status()
-
-        vData = vResponse.json()
 
     except requests.RequestException as vException:
         logger.error("Erreur HTTP Arbeitnow sur la page %s : %s", pPage, vException)
         raise
 
     except ValueError as vException:
-        logger.error("Réponse JSON invalide d'Arbeitnow sur la page %s", pPage)
-        raise ValueError(
-            "La réponse Arbeitnow n'est pas un JSON valide"
-        ) from vException
+        logger.error(
+            "Appel refusé ou réponse invalide d'Arbeitnow sur la page %s", pPage
+        )
+        raise ValueError(f"Arbeitnow : {vException}") from None
 
     rData = vData
 

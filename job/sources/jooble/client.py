@@ -2,6 +2,7 @@
 
 import requests
 
+from utils.api_client import request_json
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -21,14 +22,10 @@ def search_jobs(pConfig, pBody):
     logger.info("Récupération des offres Jooble : %s", pBody)
 
     try:
-        vResponse = requests.post(vUrl, json=pBody, timeout=10)
+        vData = request_json("POST", vUrl, pJson=pBody, pTimeout=10)
 
-        vResponse.raise_for_status()
-
-        vData = vResponse.json()
-
-    except requests.HTTPError:
-        vMessage = f"Erreur HTTP Jooble {vResponse.status_code}"
+    except requests.HTTPError as vException:
+        vMessage = f"Erreur HTTP Jooble {vException.response.status_code}"
         logger.error(vMessage)
         raise RuntimeError(vMessage) from None
 
@@ -37,9 +34,9 @@ def search_jobs(pConfig, pBody):
         logger.error(vMessage)
         raise RuntimeError(vMessage) from None
 
-    except ValueError:
-        logger.error("Réponse JSON invalide de Jooble")
-        raise ValueError("La réponse Jooble n'est pas un JSON valide") from None
+    except ValueError as vException:
+        logger.error("Appel refusé ou réponse invalide de Jooble")
+        raise ValueError(f"Jooble : {vException}") from None
 
     rData = vData
 

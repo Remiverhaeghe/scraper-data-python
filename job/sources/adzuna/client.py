@@ -2,6 +2,7 @@
 
 import requests
 
+from utils.api_client import request_json
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -33,14 +34,14 @@ def search_jobs(pConfig, pParams, pPage, pResultsPerPage=RESULTS_PER_PAGE):
     logger.info("Récupération des offres Adzuna : page %s", pPage)
 
     try:
-        vResponse = requests.get(vUrl, params=vParams, headers=vHeaders, timeout=10)
+        vData = request_json(
+            "GET", vUrl, pParams=vParams, pHeaders=vHeaders, pTimeout=10
+        )
 
-        vResponse.raise_for_status()
-
-        vData = vResponse.json()
-
-    except requests.HTTPError:
-        vMessage = f"Erreur HTTP Adzuna {vResponse.status_code} sur la page {pPage}"
+    except requests.HTTPError as vException:
+        vMessage = (
+            f"Erreur HTTP Adzuna {vException.response.status_code} sur la page {pPage}"
+        )
         logger.error(vMessage)
         raise RuntimeError(vMessage) from None
 
@@ -51,9 +52,9 @@ def search_jobs(pConfig, pParams, pPage, pResultsPerPage=RESULTS_PER_PAGE):
         logger.error(vMessage)
         raise RuntimeError(vMessage) from None
 
-    except ValueError:
-        logger.error("Réponse JSON invalide d'Adzuna sur la page %s", pPage)
-        raise ValueError("La réponse Adzuna n'est pas un JSON valide") from None
+    except ValueError as vException:
+        logger.error("Appel refusé ou réponse invalide d'Adzuna sur la page %s", pPage)
+        raise ValueError(f"Adzuna : {vException}") from None
 
     rData = vData
 

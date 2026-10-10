@@ -1,5 +1,7 @@
 """Tests du thème et des icônes"""
 
+import re
+
 from gui.icons import ICONS_DIRECTORY, get_icon
 from gui.branding import LOGO_SIZES, create_logo_icon
 from gui.theme import THEMES, COLORS, apply_theme, build_stylesheet, is_dark_theme
@@ -43,3 +45,14 @@ def test_logo_icon_has_standard_sizes(qt_application):
     vIcon = create_logo_icon()
 
     assert len(vIcon.availableSizes()) == len(LOGO_SIZES)
+
+
+def test_embedded_icons_contain_only_drawing():
+    """Vérifie qu'aucune icône embarquée ne peut exécuter de code dans une page."""
+
+    vForbidden = re.compile(
+        r"<script|javascript:|\son[a-z]+=|<foreignObject|href=", re.I
+    )
+
+    for vFile in ICONS_DIRECTORY.glob("*.svg"):
+        assert not vForbidden.search(vFile.read_text(encoding="utf-8")), vFile.name

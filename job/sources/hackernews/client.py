@@ -2,6 +2,7 @@
 
 import requests
 
+from utils.api_client import request_json
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,21 +20,15 @@ def get_json(pUrl, pParams=None):
     """Effectue une requête GET et retourne la réponse JSON."""
 
     try:
-        vResponse = requests.get(pUrl, params=pParams, timeout=30)
-
-        vResponse.raise_for_status()
-
-        rData = vResponse.json()
+        rData = request_json("GET", pUrl, pParams=pParams, pTimeout=30)
 
     except requests.RequestException as vException:
         logger.error("Erreur HTTP Hacker News : %s", vException)
         raise
 
     except ValueError as vException:
-        logger.error("Réponse JSON invalide de Hacker News : %s", pUrl)
-        raise ValueError(
-            "La réponse Hacker News n'est pas un JSON valide"
-        ) from vException
+        logger.error("Appel refusé ou réponse invalide de Hacker News : %s", pUrl)
+        raise ValueError(f"Hacker News : {vException}") from None
 
     return rData
 

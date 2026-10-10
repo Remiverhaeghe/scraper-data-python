@@ -5,6 +5,7 @@ import requests
 
 from job.sources.adzuna.client import search_jobs
 from job.sources.adzuna.config import AdzunaConfig
+from tests.job.sources.fake_http import FakeJsonResponse
 
 SECRET_KEY = "secret-key-123"
 
@@ -17,7 +18,7 @@ def build_config():
     return rConfig
 
 
-class FakeResponse:
+class FakeResponse(FakeJsonResponse):
     """Réponse HTTP simulée."""
 
     def __init__(self, pStatusCode=200, pData=None):
@@ -28,7 +29,8 @@ class FakeResponse:
         if self.status_code >= 400:
             raise requests.HTTPError(
                 f"{self.status_code} Client Error for url: "
-                f"https://api.adzuna.com/?app_key={SECRET_KEY}"
+                f"https://api.adzuna.com/?app_key={SECRET_KEY}",
+                response=self,
             )
 
     def json(self):
@@ -43,14 +45,14 @@ def test_search_jobs_sends_credentials_and_params(monkeypatch):
 
     vCalls = []
 
-    def mock_get(pUrl, params, headers, timeout):
+    def mock_get(pMethod, pUrl, params, headers, timeout, **pOptions):
         vCalls.append({"url": pUrl, "params": params, "timeout": timeout})
 
         rResponse = FakeResponse(pData={"results": []})
 
         return rResponse
 
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_get)
 
     rData = search_jobs(build_config(), {"what": "python"}, 2, 20)
 
@@ -68,7 +70,7 @@ def test_search_jobs_sends_credentials_and_params(monkeypatch):
 def test_search_jobs_http_error_hides_key(monkeypatch, caplog):
     """Vérifie qu'une erreur HTTP ne révèle pas la clé."""
 
-    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: FakeResponse(401))
+    monkeypatch.setattr(requests, "request", lambda *args, **kwargs: FakeResponse(401))
 
     with pytest.raises(RuntimeError) as vError:
         search_jobs(build_config(), {}, 1)
@@ -84,7 +86,7 @@ def test_search_jobs_network_error_hides_key(monkeypatch, caplog):
     def mock_get(*args, **kwargs):
         raise requests.ConnectionError(f"Max retries with url: ?app_key={SECRET_KEY}")
 
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_get)
 
     with pytest.raises(RuntimeError) as vError:
         search_jobs(build_config(), {}, 1)
@@ -98,7 +100,7 @@ def test_search_jobs_network_error_hides_key(monkeypatch, caplog):
 def test_search_jobs_invalid_json(monkeypatch):
     """Vérifie l'erreur levée pour une réponse non JSON."""
 
-    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr(requests, "request", lambda *args, **kwargs: FakeResponse())
 
-    with pytest.raises(ValueError, match="JSON valide"):
+    with pytest.raises(ValueError, match="Expecting value"):
         search_jobs(build_config(), {}, 1)

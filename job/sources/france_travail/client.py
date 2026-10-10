@@ -3,6 +3,7 @@
 import requests
 
 from job.sources.france_travail.authentication import get_access_token
+from utils.api_client import request_json
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -25,15 +26,10 @@ def search_jobs(pConfig, pParams, pRange=None):
     logger.info("Recherche d'offres France Travail")
 
     try:
-        vResponse = requests.get(
-            vUrl, headers=vHeaders, params=vRequestParams, timeout=10
-        )
-        vResponse.raise_for_status()
+        vData = request_json("GET", vUrl, pParams=vRequestParams, pHeaders=vHeaders)
     except requests.RequestException:
         logger.exception("Erreur lors de la recherche France Travail")
         raise
-
-    vData = vResponse.json()
 
     logger.info("Recherche France Travail terminée")
 

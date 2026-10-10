@@ -1,20 +1,35 @@
 """Tests du client HTTP de l'API publique Lever"""
 
-from unittest.mock import Mock
-
 import pytest
 import requests
 
 from job.sources.lever.client import get_jobs
+from tests.job.sources.fake_http import FakeJsonResponse
+
+
+class FakeResponse(FakeJsonResponse):
+    """Réponse HTTP simulée."""
+
+    def __init__(self, pData=None, pError=None):
+        self.data = pData
+        self.error = pError
+
+    def raise_for_status(self):
+        if self.error is not None:
+            raise self.error
+
+    def json(self):
+        if self.data is None:
+            raise ValueError("JSON invalide")
+
+        return self.data
 
 
 def test_get_jobs(monkeypatch):
     """Vérifie la récupération des offres Lever."""
 
-    vResponse = Mock()
-    vResponse.json.return_value = [{"id": "job-1", "text": "Python Developer"}]
-
-    def mock_get(pUrl, params, headers, timeout):
+    def mock_request(pMethod, pUrl, params, headers, timeout, **pOptions):
+        assert pMethod == "GET"
         assert pUrl == "https://api.lever.co/v0/postings/example-company"
 
         assert params["mode"] == "json"
@@ -23,10 +38,11 @@ def test_get_jobs(monkeypatch):
 
         assert headers["Accept"] == "application/json"
         assert timeout == 10
+        assert pOptions["allow_redirects"] is False
 
-        return vResponse
+        return FakeResponse([{"id": "job-1", "text": "Python Developer"}])
 
-    monkeypatch.setattr("job.sources.lever.client.requests.get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_request)
 
     rData = get_jobs("example-company", pLimit=50, pSkip=100)
 
@@ -37,16 +53,13 @@ def test_get_jobs(monkeypatch):
 def test_get_jobs_without_offset(monkeypatch):
     """Vérifie que le scraping commence à l'offset zéro."""
 
-    vResponse = Mock()
-    vResponse.json.return_value = [{"id": "job-1"}]
-
-    def mock_get(pUrl, params, headers, timeout):
+    def mock_request(pMethod, pUrl, params, headers, timeout, **pOptions):
         assert params["limit"] == 100
         assert params["skip"] == 0
 
-        return vResponse
+        return FakeResponse([{"id": "job-1"}])
 
-    monkeypatch.setattr("job.sources.lever.client.requests.get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_request)
 
     rData = get_jobs("example-company")
 
@@ -56,31 +69,22 @@ def test_get_jobs_without_offset(monkeypatch):
 def test_get_jobs_http_error(monkeypatch):
     """Vérifie qu'une erreur HTTP est propagée."""
 
-    vResponse = Mock()
+    monkeypatch.setattr(
+        requests,
+        "request",
+        lambda *args, **kwargs: FakeResponse(
+            pError=requests.HTTPError("Erreur HTTP 503")
+        ),
+    )
 
-    vResponse.raise_for_status.side_effect = requests.RequestException("Erreur HTTP")
-
-    def mock_get(pUrl, params, headers, timeout):
-        return vResponse
-
-    monkeypatch.setattr("job.sources.lever.client.requests.get", mock_get)
-
-    with pytest.raises(requests.RequestException):
+    with pytest.raises(requests.HTTPError, match="503"):
         get_jobs("example-company")
 
 
 def test_get_jobs_invalid_json(monkeypatch):
-    """Vérifie qu'un JSON invalide provoque une erreur explicite."""
+    """Vérifie qu'une réponse non JSON provoque une erreur explicite."""
 
-    vResponse = Mock()
+    monkeypatch.setattr(requests, "request", lambda *args, **kwargs: FakeResponse())
 
-    vResponse.raise_for_status.return_value = None
-    vResponse.json.side_effect = ValueError("JSON invalide")
-
-    def mock_get(pUrl, params, headers, timeout):
-        return vResponse
-
-    monkeypatch.setattr("job.sources.lever.client.requests.get", mock_get)
-
-    with pytest.raises(ValueError, match="La réponse Lever n'est pas un JSON valide"):
+    with pytest.raises(ValueError, match="Lever : Expecting value"):
         get_jobs("example-company")

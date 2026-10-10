@@ -3,6 +3,7 @@
 import requests
 
 from job.sources.france_travail.client import search_jobs
+from tests.job.sources.fake_http import FakeJsonResponse
 
 
 class FakeConfig:
@@ -16,12 +17,12 @@ def test_search_jobs(monkeypatch):
 
     vCalls = []
 
-    def mock_get(pUrl, headers, params, timeout):
+    def mock_get(pMethod, pUrl, headers, params, timeout, **pOptions):
         vCalls.append(
             {"url": pUrl, "headers": headers, "params": params, "timeout": timeout}
         )
 
-        class FakeResponse:
+        class FakeResponse(FakeJsonResponse):
 
             def raise_for_status(self):
                 pass
@@ -35,7 +36,7 @@ def test_search_jobs(monkeypatch):
     def mock_get_access_token(pConfig):
         return "token-test"
 
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_get)
 
     monkeypatch.setattr(
         "job.sources.france_travail.client.get_access_token", mock_get_access_token
@@ -71,7 +72,7 @@ def test_search_jobs_http_error(monkeypatch):
         "job.sources.france_travail.client.get_access_token", mock_get_access_token
     )
 
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_get)
 
     try:
         search_jobs(FakeConfig(), {})
@@ -85,10 +86,10 @@ def test_search_jobs_adds_range_parameter(monkeypatch):
 
     vCalls = []
 
-    def mock_get(pUrl, headers, params, timeout):
+    def mock_get(pMethod, pUrl, headers, params, timeout, **pOptions):
         vCalls.append(params)
 
-        class FakeResponse:
+        class FakeResponse(FakeJsonResponse):
 
             def raise_for_status(self):
                 pass
@@ -102,7 +103,7 @@ def test_search_jobs_adds_range_parameter(monkeypatch):
     def mock_get_access_token(pConfig):
         return "token-test"
 
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(requests, "request", mock_get)
 
     monkeypatch.setattr(
         "job.sources.france_travail.client.get_access_token", mock_get_access_token

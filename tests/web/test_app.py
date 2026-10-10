@@ -454,3 +454,21 @@ def test_legal_page(client):
     assert "Données personnelles" in vResponse.text
     assert "/blob/main/LICENSE" in vResponse.text
     assert "linkedin.com/in/" in vResponse.text
+
+
+@pytest.mark.parametrize(
+    "pPath",
+    [
+        "/assets/../config.py",
+        "/assets/%2e%2e/config.py",
+        "/static/..%2f..%2fconfig.py",
+        "/assets/icons/../../.env",
+    ],
+)
+def test_static_files_refuse_path_traversal(client, pPath):
+    """Vérifie qu'aucun fichier hors des dossiers publics n'est servi."""
+
+    vResponse = client.get(pPath)
+
+    assert vResponse.status_code == 404
+    assert "APPLICATION_NAME" not in vResponse.text

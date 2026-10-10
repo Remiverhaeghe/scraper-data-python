@@ -160,7 +160,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Export des offres en CSV, Excel et JSON, avec protection contre l'injection de formules
 - [ ] Notifications email
 - [ ] Planification des exécutions
-- [ ] Arrêt d'une exécution en cours
+- [x] Arrêt d'une exécution en cours (recherche d'offres)
 
 ### 🖥️ Interface graphique
 
@@ -201,10 +201,11 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Protection contre les redirections dangereuses
 - [x] Protection contre les résolutions DNS vers des IP privées
 - [x] Limitation de la taille des réponses
-- [ ] Gestion sécurisée des téléchargements
-- [ ] Protection contre les fichiers malveillants
-- [ ] Protection contre le path traversal
-- [ ] Gestion sécurisée des secrets
+- [x] Gestion sécurisée des téléchargements : client commun des API (redirections refusées, taille plafonnée, type JSON vérifié)
+- [x] Protection contre les fichiers malveillants : contenus échappés, injection de formules neutralisée, icônes vérifiées par test
+- [x] Protection contre le path traversal : aucun chemin saisi côté serveur, fichiers statiques testés
+- [x] Gestion sécurisée des secrets : .env ignoré, gitleaks en CI, clés masquées dans les erreurs et jamais affichées
+- [x] Aucun accès réseau réel pendant les tests
 - [ ] Exécution avec des privilèges minimum
 - [ ] Isolation du scraper sur le NAS
 - [ ] Préparation d'une exécution Docker sécurisée
@@ -412,6 +413,7 @@ scraper-data-python/
 │   ├── helpers.py                             # Fonctions utilitaires génériques
 │   ├── logger.py                              # Configure et centralise les logs
 │   ├── url.py                                 # Validation et manipulation des URLs
+│   ├── api_client.py                          # Appels sécurisés aux API des sources
 │   └── security.py                            # Contrôles de sécurité du scraper
 │
 ├── cli/                                       # Gestion de l'interface en ligne de commande
@@ -467,6 +469,8 @@ scraper-data-python/
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
 │   │       ├── __init__.py                     # Initialise les tests des sources
+│   │       ├── conftest.py                     # Évite la résolution DNS dans les tests
+│   │       ├── fake_http.py                    # Réponses HTTP simulées des API
 │   │       ├── test_aggregator.py              # Teste l'agrégation des sources
 │   │       ├── test_config.py                  # Teste la configuration commune
 │   │       ├── test_configuration.py           # Teste la construction de la configuration
@@ -584,6 +588,8 @@ scraper-data-python/
 │   │   ├── __init__.py                          # Initialise le package de tests Web
 │   │   └── test_app.py                         # Teste les routes et la sécurité de l'affichage
 │   │
+│   ├── conftest.py                             # Bloque tout accès réseau réel
+│   ├── test_api_client.py                      # Teste les appels sécurisés aux API
 │   ├── test_config.py                          # Teste la configuration générale
 │   ├── test_helpers.py                         # Teste les fonctions utilitaires
 │   ├── test_history.py                         # Teste le modèle d'historique

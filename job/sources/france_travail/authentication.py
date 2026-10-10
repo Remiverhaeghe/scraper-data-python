@@ -36,7 +36,11 @@ def get_access_token(pConfig):
     }
 
     try:
-        vResponse = requests.post(pConfig.token_url, data=vData, timeout=10)
+        # Appel direct : le corps de l'erreur OAuth sert au diagnostic, il doit
+        # rester lisible après raise_for_status.
+        vResponse = requests.post(
+            pConfig.token_url, data=vData, timeout=10, allow_redirects=False
+        )
         vResponse.raise_for_status()
     except requests.HTTPError:
         logger.error(

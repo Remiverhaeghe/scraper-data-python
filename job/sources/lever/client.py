@@ -2,6 +2,7 @@
 
 import requests
 
+from utils.api_client import request_json
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,19 +20,17 @@ def get_jobs(pSite, pLimit=100, pSkip=0):
     logger.info("Récupération des offres Lever : %s", pSite)
 
     try:
-        vResponse = requests.get(vUrl, params=vParams, headers=vHeaders, timeout=10)
-
-        vResponse.raise_for_status()
-
-        vData = vResponse.json()
+        vData = request_json(
+            "GET", vUrl, pParams=vParams, pHeaders=vHeaders, pTimeout=10
+        )
 
     except requests.RequestException as vException:
         logger.error("Erreur HTTP Lever pour le site %s : %s", pSite, vException)
         raise
 
     except ValueError as vException:
-        logger.error("Réponse JSON invalide de Lever pour le site %s", pSite)
-        raise ValueError("La réponse Lever n'est pas un JSON valide") from vException
+        logger.error("Appel refusé ou réponse invalide de Lever pour le site %s", pSite)
+        raise ValueError(f"Lever : {vException}") from None
 
     rData = vData
 

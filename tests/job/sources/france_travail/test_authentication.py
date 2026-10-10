@@ -26,7 +26,7 @@ def test_get_access_token(monkeypatch):
         def json(self):
             return {"access_token": "token-test"}
 
-    def mock_post(pUrl, data, timeout):
+    def mock_post(pUrl, data, timeout, **pOptions):
         assert pUrl == FakeConfig.token_url
         assert data["grant_type"] == "client_credentials"
         assert data["client_id"] == "test-client"

@@ -2,6 +2,7 @@
 
 import requests
 
+from utils.api_client import request_json
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -15,13 +16,10 @@ def get_jobs(pBoardToken):
     logger.info("Récupération des offres Greenhouse")
 
     try:
-        vResponse = requests.get(vUrl, params={"content": "true"}, timeout=10)
-        vResponse.raise_for_status()
+        vData = request_json("GET", vUrl, pParams={"content": "true"})
     except requests.RequestException:
         logger.exception("Erreur lors de la récupération Greenhouse")
         raise
-
-    vData = vResponse.json()
 
     logger.info("Récupération Greenhouse terminée")
 
