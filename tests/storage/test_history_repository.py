@@ -4,51 +4,8 @@ import sqlite3
 from datetime import datetime
 
 from scraper.history import HistoryEntry
-from storage.history_repository import get_history, initialize_history, save_history
-
-
-def test_initialize_history_creates_table(tmp_path):
-    """Vérifie que la table history est correctement créée."""
-
-    vDatabasePath = tmp_path / "scraper.db"
-
-    initialize_history(vDatabasePath)
-
-    vConnection = sqlite3.connect(vDatabasePath)
-
-    vCursor = vConnection.execute("""
-        SELECT name
-        FROM sqlite_master
-        WHERE type = 'table'
-        AND name = 'history'
-        """)
-
-    vTable = vCursor.fetchone()
-
-    vConnection.close()
-
-    assert vTable is not None
-    assert vTable[0] == "history"
-
-
-def test_initialize_history_creates_error_message_column(tmp_path):
-    """Vérifie que la colonne error_message existe."""
-
-    vDatabasePath = tmp_path / "scraper.db"
-
-    initialize_history(vDatabasePath)
-
-    vConnection = sqlite3.connect(vDatabasePath)
-
-    vColumns = vConnection.execute("""
-        PRAGMA table_info(history)
-        """).fetchall()
-
-    vConnection.close()
-
-    vColumnNames = [vColumn[1] for vColumn in vColumns]
-
-    assert "error_message" in vColumnNames
+from storage.database import initialize_database
+from storage.history_repository import get_history, save_history
 
 
 def test_save_history_stores_entry(tmp_path):
@@ -56,7 +13,7 @@ def test_save_history_stores_entry(tmp_path):
 
     vDatabasePath = tmp_path / "scraper.db"
 
-    initialize_history(vDatabasePath)
+    initialize_database(vDatabasePath)
 
     vEntry = HistoryEntry(
         started_at=datetime(2026, 9, 21, 17, 42, 10),
@@ -104,7 +61,7 @@ def test_save_history_stores_error_message(tmp_path):
 
     vDatabasePath = tmp_path / "scraper.db"
 
-    initialize_history(vDatabasePath)
+    initialize_database(vDatabasePath)
 
     vEntry = HistoryEntry(
         started_at=datetime(2026, 9, 21, 18, 10, 15),
@@ -131,7 +88,7 @@ def test_get_history_returns_entries_in_reverse_chronological_order(tmp_path):
 
     vDatabasePath = tmp_path / "scraper.db"
 
-    initialize_history(vDatabasePath)
+    initialize_database(vDatabasePath)
 
     vFirstEntry = HistoryEntry(
         started_at=datetime(2026, 9, 21, 17, 42, 10),

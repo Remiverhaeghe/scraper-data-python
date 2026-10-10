@@ -1,5 +1,6 @@
 """Configuration commune des sources d'emploi"""
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 
@@ -40,3 +41,20 @@ class SourceConfig:
 
         if self.mode == "html" and not self.html_available:
             raise ValueError("Le mode HTML n'est pas disponible pour cette source.")
+
+
+@dataclass(frozen=True)
+class SourceDefinition:
+    """Description d'une source d'emploi utilisable par l'application."""
+
+    # Identifiant utilisé dans la configuration et la CLI
+    name: str
+
+    # Libellé affiché à l'utilisateur
+    label: str
+
+    # Charge les paramètres de la source à partir des critères de recherche
+    load_parameters: Callable
+
+    # Récupère les offres à partir des paramètres chargés et des critères
+    scrape: Callable

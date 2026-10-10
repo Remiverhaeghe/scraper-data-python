@@ -1,0 +1,163 @@
+"""Tests de l'enregistrement des offres d'emploi en base"""
+
+from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
+
+from storage.database import connect_database, initialize_database
+from storage.job_offers import CONTENT_COLUMNS, get_offers, save_offers
+
+
+def build_items():
+    """Construit un DataFrame minimal pour les tests."""
+
+    rItems = pd.DataFrame(
+        [{"source": "lever", "source_id": "123", "title": "Développeur Python"}]
+    )
+
+    return rItems
+
+
+def build_database(pTmpPath):
+    """Crée une base initialisée dans un dossier temporaire."""
+
+    rDatabaseFile = Path(pTmpPath) / "scraper.db"
+
+    initialize_database(rDatabaseFile)
+
+    return rDatabaseFile
+
+
+def test_job_offer_table_contains_content_columns(tmp_path):
+    """Vérifie que la table contient toutes les colonnes de JOB_COLUMNS."""
+
+    vDatabaseFile = build_database(tmp_path)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vColumns = {
+            vRow[1] for vRow in vConnection.execute("PRAGMA table_info(job_offer)")
+        }
+
+    finally:
+        vConnection.close()
+
+    assert set(CONTENT_COLUMNS) <= vColumns
+
+
+def test_new_job_gets_first_seen_at(tmp_path):
+    """Vérifie qu'une nouvelle offre reçoit une date de première découverte."""
+
+    vDatabaseFile = build_database(tmp_path)
+
+    vScrapedAt = datetime(2026, 10, 1, 10, 0, 0)
+
+    vItems = save_offers(vDatabaseFile, build_items(), vScrapedAt)
+
+    assert vItems.loc[0, "scraped_at"] == vScrapedAt
+    assert vItems.loc[0, "first_seen_at"] == vScrapedAt
+    assert vItems.loc[0, "is_new"] == True
+
+
+def test_existing_job_keeps_first_seen_at(tmp_path):
+    """Vérifie qu'une offre déjà connue garde sa date de découverte."""
+
+    vDatabaseFile = build_database(tmp_path)
+
+    vFirstScrapedAt = datetime(2026, 10, 1, 10, 0, 0)
+    vSecondScrapedAt = datetime(2026, 10, 2, 10, 0, 0)
+
+    save_offers(vDatabaseFile, build_items(), vFirstScrapedAt)
+
+    vItems = save_offers(vDatabaseFile, build_items(), vSecondScrapedAt)
+
+    assert vItems.loc[0, "first_seen_at"] == vFirstScrapedAt
+    assert vItems.loc[0, "scraped_at"] == vSecondScrapedAt
+    assert vItems.loc[0, "is_new"] == False
+
+
+def test_same_source_id_is_tracked_separately(tmp_path):
+    """Vérifie qu'un même source_id de deux sources donne deux offres."""
+
+    vDatabaseFile = build_database(tmp_path)
+
+    vItems = pd.DataFrame(
+        [
+            {"source": "lever", "source_id": "123", "title": "Offre Lever"},
+            {"source": "greenhouse", "source_id": "123", "title": "Offre Greenhouse"},
+        ]
+    )
+
+    vResult = save_offers(vDatabaseFile, vItems, datetime(2026, 10, 1, 10, 0, 0))
+
+    assert vResult["is_new"].tolist() == [True, True]
+    assert len(get_offers(vDatabaseFile)) == 2
+
+
+def test_existing_job_content_is_updated(tmp_path):
+    """Vérifie que le contenu d'une offre connue est mis à jour."""
+
+    vDatabaseFile = build_database(tmp_path)
+
+    save_offers(vDatabaseFile, build_items(), datetime(2026, 10, 1, 10, 0, 0))
+
+    vItems = build_items()
+    vItems["title"] = "Développeur Python senior"
+
+    save_offers(vDatabaseFile, vItems, datetime(2026, 10, 2, 10, 0, 0))
+
+    vOffers = get_offers(vDatabaseFile)
+
+    assert vOffers.loc[0, "title"] == "Développeur Python senior"
+    assert vOffers.loc[0, "first_seen_at"] == "2026-10-01T10:00:00"
+    assert vOffers.loc[0, "last_seen_at"] == "2026-10-02T10:00:00"
+
+
+def test_job_without_source_id_is_not_saved(tmp_path):
+    """Vérifie qu'une offre sans source_id n'est pas enregistrée."""
+
+    vDatabaseFile = build_database(tmp_path)
+
+    vItems = pd.DataFrame([{"source": "lever", "source_id": None, "title": "Offre"}])
+
+    vResult = save_offers(vDatabaseFile, vItems, datetime(2026, 10, 1, 10, 0, 0))
+
+    assert vResult.loc[0, "is_new"] == False
+    assert get_offers(vDatabaseFile).empty
+
+
+def test_non_scalar_values_are_saved(tmp_path):
+    """Vérifie l'enregistrement des listes, dates et valeurs manquantes."""
+
+    vDatabaseFile = build_database(tmp_path)
+
+    vItems = build_items()
+    vItems["skills"] = [[{"libelle": "Python"}]]
+    vItems["published_at"] = [pd.Timestamp("2026-09-30 08:00:00")]
+    vItems["salary_min"] = [float("nan")]
+
+    save_offers(vDatabaseFile, vItems, datetime(2026, 10, 1, 10, 0, 0))
+
+    vOffers = get_offers(vDatabaseFile)
+
+    assert vOffers.loc[0, "skills"] == '[{"libelle": "Python"}]'
+    assert vOffers.loc[0, "published_at"] == "2026-09-30T08:00:00"
+    assert pd.isna(vOffers.loc[0, "salary_min"])
+
+
+def test_get_offers_returns_most_recent_first(tmp_path):
+    """Vérifie que les offres découvertes en dernier sont retournées en premier."""
+
+    vDatabaseFile = build_database(tmp_path)
+
+    save_offers(vDatabaseFile, build_items(), datetime(2026, 10, 1, 10, 0, 0))
+
+    vItems = pd.DataFrame([{"source": "lever", "source_id": "456", "title": "Récente"}])
+
+    save_offers(vDatabaseFile, vItems, datetime(2026, 10, 2, 10, 0, 0))
+
+    vOffers = get_offers(vDatabaseFile)
+
+    assert vOffers["source_id"].tolist() == ["456", "123"]

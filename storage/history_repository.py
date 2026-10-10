@@ -5,43 +5,6 @@ from datetime import datetime
 from scraper.history import HistoryEntry
 from storage.database import connect_database
 
-HISTORY_TABLE = "history"
-
-
-def initialize_history(pDatabasePath):
-    """Crée et met à jour la table d'historique si nécessaire."""
-
-    vConnection = connect_database(pDatabasePath)
-
-    vConnection.execute("""
-        CREATE TABLE IF NOT EXISTS history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            started_at TEXT NOT NULL,
-            scraper_type TEXT NOT NULL,
-            url TEXT NOT NULL,
-            page_count INTEGER NOT NULL,
-            item_count INTEGER NOT NULL,
-            duration_seconds REAL NOT NULL,
-            status TEXT NOT NULL,
-            error_message TEXT
-        )
-        """)
-
-    vColumns = vConnection.execute("""
-        PRAGMA table_info(history)
-        """).fetchall()
-
-    vColumnNames = [vColumn[1] for vColumn in vColumns]
-
-    if "error_message" not in vColumnNames:
-        vConnection.execute("""
-            ALTER TABLE history
-            ADD COLUMN error_message TEXT
-            """)
-
-    vConnection.commit()
-    vConnection.close()
-
 
 def save_history(pDatabasePath, pEntry):
     """Enregistre une entrée dans l'historique."""
@@ -80,8 +43,6 @@ def save_history(pDatabasePath, pEntry):
 
 def get_history(pDatabasePath):
     """Récupère les entrées de l'historique."""
-
-    initialize_history(pDatabasePath)
 
     vConnection = connect_database(pDatabasePath)
 

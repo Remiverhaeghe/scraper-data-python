@@ -7,7 +7,7 @@ from config import DATABASE_FILE
 from job.filter import filter_jobs
 from job.sources.aggregator import scrape_sources
 from scraper.history_service import record_history
-from storage.job_tracking import track_jobs
+from storage.job_offers import save_offers
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,9 +19,9 @@ def process_jobs(pConfig):
     Le scraping produit d'abord un résultat brut provenant
     des sources activées dans la configuration.
 
-    Les dates de première et dernière récupération sont ensuite
-    mises à jour avant l'enregistrement de l'historique et
-    l'application des filtres.
+    Les offres sont ensuite enregistrées en base, avec leurs dates de
+    première et dernière récupération, avant l'enregistrement de
+    l'historique et l'application des filtres.
     """
 
     logger.info("Début du traitement des offres multi-sources")
@@ -30,9 +30,9 @@ def process_jobs(pConfig):
 
     vScrapedAt = datetime.now()
 
-    vTrackedItems = track_jobs(DATABASE_FILE, vScrapingResult.items, vScrapedAt)
+    vSavedItems = save_offers(DATABASE_FILE, vScrapingResult.items, vScrapedAt)
 
-    vScrapingResult = replace(vScrapingResult, items=vTrackedItems)
+    vScrapingResult = replace(vScrapingResult, items=vSavedItems)
 
     record_history(DATABASE_FILE, "job", "multi-source", vScrapingResult)
 

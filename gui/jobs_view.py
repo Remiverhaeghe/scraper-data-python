@@ -7,6 +7,7 @@ from tkinter import messagebox, ttk
 from gui.job_controller import JobController
 from gui.job_results_view import JobResultsView
 from gui.styles import COLOR_BACKGROUND, COLOR_SURFACE, FONT_NORMAL, BUTTON_WIDTH
+from job.sources.registry import SOURCES
 
 
 class JobsView:
@@ -25,11 +26,9 @@ class JobsView:
 
         self.max_items = tk.StringVar(value="20")
 
-        self.france_travail = tk.BooleanVar(value=False)
-
-        self.greenhouse = tk.BooleanVar(value=True)
-
-        self.lever = tk.BooleanVar(value=False)
+        self.source_vars = {
+            vName: tk.BooleanVar(value=vName == "greenhouse") for vName in SOURCES
+        }
 
         self.status = tk.StringVar(value="Prêt")
 
@@ -181,11 +180,10 @@ class JobsView:
 
         vSources.pack(anchor="w")
 
-        self.create_source_checkbutton(vSources, "France Travail", self.france_travail)
-
-        self.create_source_checkbutton(vSources, "Greenhouse", self.greenhouse)
-
-        self.create_source_checkbutton(vSources, "Lever", self.lever)
+        for vName, vDefinition in SOURCES.items():
+            self.create_source_checkbutton(
+                vSources, vDefinition.label, self.source_vars[vName]
+            )
 
         vActions = tk.Frame(vContent, bg=COLOR_SURFACE)
 
@@ -349,18 +347,9 @@ class JobsView:
 
     def get_selected_sources(self):
         """Retourne les sources sélectionnées."""
-        vSources = []
+        rSources = [vName for vName, vVar in self.source_vars.items() if vVar.get()]
 
-        if self.france_travail.get():
-            vSources.append("france-travail")
-
-        if self.greenhouse.get():
-            vSources.append("greenhouse")
-
-        if self.lever.get():
-            vSources.append("lever")
-
-        return vSources
+        return rSources
 
     def search_jobs(self):
         """Valide les paramètres et lance la recherche."""

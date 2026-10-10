@@ -37,6 +37,7 @@ from gui.styles import (
     SPACING_LARGE,
     SPACING_XLARGE,
 )
+from job.sources.registry import SOURCES
 
 # Vue principale
 
@@ -394,7 +395,7 @@ class HomeView(tk.Frame):
 
         tk.Label(
             v_content,
-            text="France Travail    Greenhouse    Lever",
+            text="    ".join(vSource.label for vSource in SOURCES.values()),
             bg=COLOR_SURFACE,
             fg=COLOR_JOBS,
             font=FONT_SMALL,

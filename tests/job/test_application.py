@@ -82,8 +82,8 @@ def test_process_jobs():
     with patch(
         "job.application.scrape_sources", return_value=vScrapingResult
     ) as vScrapeSources, patch(
-        "job.application.track_jobs", return_value=vJobs
-    ) as vTrackJobs, patch(
+        "job.application.save_offers", return_value=vJobs
+    ) as vSaveOffers, patch(
         "job.application.record_history"
     ) as vRecordHistory:
 
@@ -91,15 +91,15 @@ def test_process_jobs():
 
     vScrapeSources.assert_called_once_with(vConfig)
 
-    vTrackJobs.assert_called_once()
+    vSaveOffers.assert_called_once()
 
-    vTrackArguments = vTrackJobs.call_args.args
+    vSaveArguments = vSaveOffers.call_args.args
 
-    assert vTrackArguments[0] == "data/scraper.db"
+    assert vSaveArguments[0] == "data/scraper.db"
 
-    assert vTrackArguments[1] is vScrapingResult.items
+    assert vSaveArguments[1] is vScrapingResult.items
 
-    assert isinstance(vTrackArguments[2], datetime)
+    assert isinstance(vSaveArguments[2], datetime)
 
     vRecordHistory.assert_called_once()
 

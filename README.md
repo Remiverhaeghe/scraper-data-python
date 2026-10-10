@@ -57,6 +57,9 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Centraliser l'orchestration du traitement des offres
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
+- [x] Stocker les offres en base SQLite
+- [x] Versionner le schéma de la base par migrations
+- [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 📚 Books
 
@@ -100,7 +103,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Enregistrement de la dernière récupération
 - [x] Gestion des limites par source
 - [x] Limitation globale après déduplication
-- [ ] Détection des nouvelles offres
+- [x] Détection des nouvelles offres
 - [ ] Suivi des candidatures
 - [ ] Relances
 
@@ -202,7 +205,9 @@ scraper-data-python/
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
 │       ├── __init__.py                         # Initialise le package des sources
-│       ├── config.py                           # Configuration commune des sources
+│       ├── config.py                           # Configuration et définition commune des sources
+│       ├── configuration.py                    # Construit la configuration des sources
+│       ├── registry.py                         # Liste des sources disponibles
 │       ├── aggregator.py                       # Agrège les résultats des sources
 │       │
 │       ├── france_travail/                     # Intégration France Travail
@@ -211,19 +216,24 @@ scraper-data-python/
 │       │   ├── client.py                       # Communique avec l'API France Travail
 │       │   ├── config.py                       # Configuration France Travail
 │       │   ├── parser.py                       # Transforme les réponses France Travail
-│       │   └── service.py                      # Orchestre le scraping France Travail
+│       │   ├── service.py                      # Orchestre le scraping France Travail
+│       │   └── source.py                       # Déclare la source France Travail
 │       │
 │       ├── greenhouse/                         # Intégration Greenhouse
 │       │   ├── __init__.py                     # Initialise le package Greenhouse
 │       │   ├── client.py                       # Communique avec l'API Greenhouse
+│       │   ├── config.py                       # Configuration Greenhouse
 │       │   ├── parser.py                       # Transforme les réponses Greenhouse
-│       │   └── service.py                      # Orchestre le scraping Greenhouse
+│       │   ├── service.py                      # Orchestre le scraping Greenhouse
+│       │   └── source.py                       # Déclare la source Greenhouse
 │       │
 │       └── lever/                              # Intégration Lever
 │           ├── __init__.py                     # Initialise le package Lever
 │           ├── client.py                       # Communique avec l'API Lever
+│           ├── config.py                       # Configuration Lever
 │           ├── parser.py                       # Transforme les réponses Lever
-│           └── service.py                      # Orchestre le scraping Lever
+│           ├── service.py                      # Orchestre le scraping Lever
+│           └── source.py                       # Déclare la source Lever
 │
 ├── scraper/                                   # Composants techniques communs au scraping
 │   ├── __init__.py                            # Initialise le package Scraper
@@ -262,9 +272,10 @@ scraper-data-python/
 │
 ├── storage/                                   # Persistance technique des données communes
 │   ├── __init__.py                            # Initialise le package Storage
-│   ├── database.py                            # Gère la connexion et l'initialisation SQLite
+│   ├── database.py                            # Gère la connexion et les migrations SQLite
 │   ├── history_repository.py                  # Persiste et récupère l'historique
-│   └── job_tracking.py                        # Suit la première et dernière récupération des offres
+│   ├── job_applications.py                    # Suit les candidatures et les relances
+│   └── job_offers.py                          # Enregistre les offres et détecte les nouvelles
 │
 ├── scripts/                                   # Scripts destinés aux essais manuels
 │   ├── __init__.py                            # Initialise le package Scripts
@@ -335,7 +346,8 @@ scraper-data-python/
 │   │   ├── __init__.py                          # Initialise le package de tests Storage
 │   │   ├── test_database.py                    # Teste la base SQLite
 │   │   ├── test_history_repository.py          # Teste la persistance de l'historique
-│   │   └── test_job_tracking.py                # Teste le suivi des offres
+│   │   ├── test_job_applications.py            # Teste le suivi des candidatures
+│   │   └── test_job_offers.py                  # Teste l'enregistrement des offres
 │   │
 │   ├── test_config.py                          # Teste la configuration générale
 │   ├── test_helpers.py                         # Teste les fonctions utilitaires

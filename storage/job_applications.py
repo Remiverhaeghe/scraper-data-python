@@ -5,7 +5,7 @@ from datetime import datetime
 from storage.database import connect_database
 
 APPLICATION_STATUSES = (
-    "NEW",
+    "IGNORED",
     "INTERESTED",
     "APPLIED",
     "INTERVIEW",

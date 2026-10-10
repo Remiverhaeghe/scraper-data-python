@@ -2,7 +2,7 @@
 
 from scraper.history import HistoryEntry
 from scraper.result import ScrapingResult
-from storage.history_repository import initialize_history, save_history
+from storage.history_repository import save_history
 
 
 def build_history_entry(pScraperType, pUrl, pResult):
@@ -25,8 +25,6 @@ def build_history_entry(pScraperType, pUrl, pResult):
 
 def record_history(pDatabasePath, pScraperType, pUrl, pResult):
     """Construit et enregistre une entrée d'historique."""
-
-    initialize_history(pDatabasePath)
 
     vEntry = build_history_entry(pScraperType, pUrl, pResult)
 

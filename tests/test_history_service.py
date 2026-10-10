@@ -4,6 +4,7 @@ from datetime import datetime
 
 from scraper.history_service import build_history_entry, record_history
 from scraper.result import ScrapingResult
+from storage.database import initialize_database
 from storage.history_repository import get_history
 
 
@@ -55,6 +56,8 @@ def test_record_history_saves_entry(tmp_path):
 
     vDatabasePath = tmp_path / "scraper.db"
 
+    initialize_database(vDatabasePath)
+
     vResult = ScrapingResult(
         items=["A", "B"],
         page_count=1,
@@ -75,6 +78,8 @@ def test_record_history_saves_error_entry(tmp_path):
     """Vérifie qu'une erreur est enregistrée dans SQLite."""
 
     vDatabasePath = tmp_path / "scraper.db"
+
+    initialize_database(vDatabasePath)
 
     vResult = ScrapingResult(
         items=["A"],

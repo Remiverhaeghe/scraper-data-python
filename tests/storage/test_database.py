@@ -1,8 +1,33 @@
-"""Tests de la connexion à la base SQLite"""
+"""Tests de la connexion et des migrations de la base SQLite"""
 
 import sqlite3
 
-from storage.database import connect_database, initialize_database
+import pytest
+
+from storage.database import (
+    MIGRATIONS,
+    connect_database,
+    get_schema_version,
+    initialize_database,
+)
+
+
+def get_table_names(pDatabaseFile):
+    """Retourne le nom des tables présentes dans la base."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vCursor = vConnection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        )
+
+        rTableNames = {vRow[0] for vRow in vCursor.fetchall()}
+
+    finally:
+        vConnection.close()
+
+    return rTableNames
 
 
 def test_connect_database_creates_database(tmp_path):
@@ -18,8 +43,21 @@ def test_connect_database_creates_database(tmp_path):
     vConnection.close()
 
 
-def test_initialize_database_creates_job_tracking_table(tmp_path):
-    """Vérifie que l'initialisation crée la table de suivi des offres."""
+def test_initialize_database_creates_tables(tmp_path):
+    """Vérifie que l'initialisation crée toutes les tables de l'application."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vTableNames = get_table_names(vDatabaseFile)
+
+    assert {"job_offer", "job_application", "history"} <= vTableNames
+    assert "job_tracking" not in vTableNames
+
+
+def test_initialize_database_sets_latest_version(tmp_path):
+    """Vérifie que la base est à la dernière version après initialisation."""
 
     vDatabaseFile = tmp_path / "scraper.db"
 
@@ -28,41 +66,49 @@ def test_initialize_database_creates_job_tracking_table(tmp_path):
     vConnection = connect_database(vDatabaseFile)
 
     try:
-        vCursor = vConnection.execute("""
-            SELECT name
-            FROM sqlite_master
-            WHERE type = 'table'
-            AND name = 'job_tracking'
-            """)
-
-        vRow = vCursor.fetchone()
+        vVersion = get_schema_version(vConnection)
 
     finally:
         vConnection.close()
 
-    assert vRow is not None
+    assert vVersion == len(MIGRATIONS)
 
 
-def test_initialize_database_creates_job_tracking_table(tmp_path):
-    """Vérifie que l'initialisation crée la table de suivi des offres."""
+def test_initialize_database_can_run_twice(tmp_path):
+    """Vérifie qu'une seconde initialisation ne rejoue pas les migrations."""
 
     vDatabaseFile = tmp_path / "scraper.db"
 
     initialize_database(vDatabaseFile)
+    initialize_database(vDatabaseFile)
+
+    assert "job_offer" in get_table_names(vDatabaseFile)
+
+
+def test_failed_migration_keeps_previous_version(tmp_path):
+    """Vérifie qu'une migration en échec ne laisse pas la base à moitié migrée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
 
     vConnection = connect_database(vDatabaseFile)
 
     try:
-        vCursor = vConnection.execute("""
-            SELECT name
-            FROM sqlite_master
-            WHERE type = 'table'
-            AND name = 'job_tracking'
-            """)
-
-        vRow = vCursor.fetchone()
+        vConnection.execute("CREATE TABLE job_application (id INTEGER)")
+        vConnection.commit()
 
     finally:
         vConnection.close()
 
-    assert vRow is not None
+    with pytest.raises(sqlite3.Error):
+        initialize_database(vDatabaseFile)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vVersion = get_schema_version(vConnection)
+
+    finally:
+        vConnection.close()
+
+    assert vVersion == 0
+    assert "job_offer" not in get_table_names(vDatabaseFile)

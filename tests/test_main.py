@@ -19,10 +19,10 @@ def test_main_initializes_database_and_starts_gui(monkeypatch):
         def __init__(self):
             vCalls.append("application")
 
-        def run(self):
+        def mainloop(self):
             """Simule le lancement de la boucle graphique."""
 
-            vCalls.append("run")
+            vCalls.append("mainloop")
 
     monkeypatch.setattr(main, "initialize_database", mock_initialize_database)
 
@@ -30,4 +30,4 @@ def test_main_initializes_database_and_starts_gui(monkeypatch):
 
     main.main()
 
-    assert vCalls == ["initialize_database", "application", "run"]
+    assert vCalls == ["initialize_database", "application", "mainloop"]

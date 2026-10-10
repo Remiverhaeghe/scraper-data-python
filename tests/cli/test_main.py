@@ -152,13 +152,13 @@ def test_main_processes_jobs(monkeypatch):
         assert pConfig.skills == ["Python", "Django"]
         assert pConfig.missions == ["Développement"]
 
-        assert pConfig.france_travail.enabled is True
-        assert pConfig.france_travail.mode == "api"
+        assert pConfig.sources["france-travail"].enabled is True
+        assert pConfig.sources["france-travail"].mode == "api"
 
-        assert pConfig.greenhouse.enabled is True
-        assert pConfig.greenhouse.mode == "api"
+        assert pConfig.sources["greenhouse"].enabled is True
+        assert pConfig.sources["greenhouse"].mode == "api"
 
-        assert pConfig.lever.enabled is False
+        assert pConfig.sources["lever"].enabled is False
 
     def mock_initialize_database(pDatabaseFile):
         """Simule l'initialisation de la base."""
@@ -323,9 +323,7 @@ def test_process_job_arguments_without_sources():
 
     vConfig = main.process_job_arguments(vArguments)
 
-    assert vConfig.france_travail.enabled is False
-    assert vConfig.greenhouse.enabled is False
-    assert vConfig.lever.enabled is False
+    assert all(not vSource.enabled for vSource in vConfig.sources.values())
 
 
 def test_process_job_arguments_with_one_source(monkeypatch):
@@ -370,12 +368,12 @@ def test_process_job_arguments_with_one_source(monkeypatch):
     assert vConfig.min_remote_days == 2
     assert vConfig.skills == ["Python", "Django"]
 
-    assert vConfig.france_travail.enabled is True
-    assert vConfig.france_travail.api_available is True
-    assert vConfig.france_travail.mode == "api"
+    assert vConfig.sources["france-travail"].enabled is True
+    assert vConfig.sources["france-travail"].api_available is True
+    assert vConfig.sources["france-travail"].mode == "api"
 
-    assert vConfig.greenhouse.enabled is False
-    assert vConfig.lever.enabled is False
+    assert vConfig.sources["greenhouse"].enabled is False
+    assert vConfig.sources["lever"].enabled is False
 
 
 def test_process_job_arguments_with_multiple_sources(monkeypatch):
@@ -410,11 +408,11 @@ def test_process_job_arguments_with_multiple_sources(monkeypatch):
 
     vConfig = main.process_job_arguments(vArguments)
 
-    assert vConfig.france_travail.enabled is True
-    assert vConfig.france_travail.mode == "api"
+    assert vConfig.sources["france-travail"].enabled is True
+    assert vConfig.sources["france-travail"].mode == "api"
 
-    assert vConfig.greenhouse.enabled is True
-    assert vConfig.greenhouse.mode == "api"
+    assert vConfig.sources["greenhouse"].enabled is True
+    assert vConfig.sources["greenhouse"].mode == "api"
 
-    assert vConfig.lever.enabled is True
-    assert vConfig.lever.mode == "api"
+    assert vConfig.sources["lever"].enabled is True
+    assert vConfig.sources["lever"].mode == "api"

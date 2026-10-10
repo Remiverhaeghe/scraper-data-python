@@ -3,6 +3,7 @@
 import argparse
 
 from config import MIN_RATING, MAX_RATING
+from job.sources.registry import SOURCES
 
 
 def positive_integer(pValue):
@@ -184,7 +185,7 @@ def parse_arguments():
     vParser.add_argument(
         "--source",
         dest="sources",
-        choices=["france-travail", "greenhouse", "lever"],
+        choices=list(SOURCES),
         action="append",
         default=None,
         help=("Source d'emploi à utiliser. " "L'option peut être répétée."),

@@ -41,12 +41,8 @@ class JobScrapingConfig(ScrapingConfig):
     # Missions recherchées
     missions: list[str] | None = None
 
-    # Sources
-    france_travail: SourceConfig = field(default_factory=SourceConfig)
-
-    greenhouse: SourceConfig = field(default_factory=SourceConfig)
-
-    lever: SourceConfig = field(default_factory=SourceConfig)
+    # Configuration de chaque source, indexée par son nom dans le registre
+    sources: dict[str, SourceConfig] = field(default_factory=dict)
 
     def validate(self) -> None:
         """Vérifie que la configuration complète est cohérente."""
@@ -55,6 +51,5 @@ class JobScrapingConfig(ScrapingConfig):
         super().validate()
 
         # Validation des sources
-        self.france_travail.validate()
-        self.greenhouse.validate()
-        self.lever.validate()
+        for vSourceConfig in self.sources.values():
+            vSourceConfig.validate()

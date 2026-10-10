@@ -104,16 +104,12 @@ def test_disabled_source_with_mode():
         vConfig.validate()
 
 
-def test_job_config_has_sources():
-    """Vérifie que les sources sont disponibles dans la configuration."""
+def test_job_config_has_no_source_by_default():
+    """Vérifie qu'aucune source n'est configurée par défaut."""
 
     vConfig = JobScrapingConfig()
 
-    assert isinstance(vConfig.france_travail, SourceConfig)
-
-    assert isinstance(vConfig.greenhouse, SourceConfig)
-
-    assert isinstance(vConfig.lever, SourceConfig)
+    assert vConfig.sources == {}
 
 
 def test_job_config_sources_are_independent():
@@ -121,20 +117,19 @@ def test_job_config_sources_are_independent():
 
     vConfig = JobScrapingConfig()
 
-    vConfig.france_travail.enabled = True
-    vConfig.france_travail.api_available = True
-    vConfig.france_travail.mode = "api"
+    vConfig.sources["france-travail"] = SourceConfig(
+        enabled=True, api_available=True, mode="api"
+    )
+    vConfig.sources["lever"] = SourceConfig()
 
-    assert vConfig.france_travail.enabled is True
-    assert vConfig.greenhouse.enabled is False
-    assert vConfig.lever.enabled is False
+    assert vConfig.sources["france-travail"].enabled is True
+    assert vConfig.sources["lever"].enabled is False
 
 
 def test_job_config_sources_validation():
     """Vérifie que la validation des sources est appelée."""
 
-    vConfig = JobScrapingConfig(
-        france_travail=SourceConfig(enabled=True, api_available=True, mode="api")
-    )
+    vConfig = JobScrapingConfig(sources={"lever": SourceConfig(enabled=True)})
 
-    vConfig.validate()
+    with pytest.raises(ValueError, match="au moins un mode"):
+        vConfig.validate()
