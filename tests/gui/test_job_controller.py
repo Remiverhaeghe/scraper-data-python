@@ -1,5 +1,6 @@
 """Tests du contrôleur Jobs"""
 
+import threading
 from types import SimpleNamespace
 
 from gui.job_controller import JobController
@@ -27,6 +28,10 @@ def test_search_jobs(monkeypatch):
 
     vResult = SimpleNamespace(items=[{"title": "Développeur Java"}])
 
+    vOnProgress = object()
+
+    vCancelEvent = threading.Event()
+
     def mock_build_job_config(pArguments):
         """Simule la création de la configuration."""
 
@@ -39,12 +44,14 @@ def test_search_jobs(monkeypatch):
 
         return "config"
 
-    def mock_process_jobs(pConfig):
+    def mock_process_jobs(pConfig, pOnProgress=None, pCancelEvent=None):
         """Simule le traitement Jobs."""
 
         vCalls.append("process_jobs")
 
         assert pConfig == "config"
+        assert pOnProgress is vOnProgress
+        assert pCancelEvent is vCancelEvent
 
         return vResult
 
@@ -54,7 +61,14 @@ def test_search_jobs(monkeypatch):
 
     vController = JobController()
 
-    rResult = vController.search_jobs(20, "Java", "Lille", ["france-travail"])
+    rResult = vController.search_jobs(
+        20,
+        "Java",
+        "Lille",
+        ["france-travail"],
+        pOnProgress=vOnProgress,
+        pCancelEvent=vCancelEvent,
+    )
 
     assert rResult is vResult
 

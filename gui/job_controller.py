@@ -12,7 +12,15 @@ logger = get_logger(__name__)
 class JobController:
     """Fait le lien entre la GUI Jobs et le traitement métier."""
 
-    def search_jobs(self, pMaxItems, pKeyword, pLocation, pSources):
+    def search_jobs(
+        self,
+        pMaxItems,
+        pKeyword,
+        pLocation,
+        pSources,
+        pOnProgress=None,
+        pCancelEvent=None,
+    ):
         """Lance une recherche d'offres avec les paramètres de la GUI."""
 
         vArguments = self.build_arguments(pMaxItems, pKeyword, pLocation, pSources)
@@ -27,7 +35,9 @@ class JobController:
 
         logger.info("Lancement du traitement Jobs")
 
-        rResult = process_jobs(vConfig)
+        rResult = process_jobs(
+            vConfig, pOnProgress=pOnProgress, pCancelEvent=pCancelEvent
+        )
 
         logger.info("Recherche Jobs terminée : %s offre(s)", len(rResult.items))
 

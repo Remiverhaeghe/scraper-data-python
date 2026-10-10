@@ -17,8 +17,26 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def scrape_sources(pConfig):
-    """Récupère et regroupe les offres des sources activées."""
+class ScrapingCancelled(Exception):
+    """Signale l'arrêt d'une récupération demandé par l'utilisateur."""
+
+
+def check_cancelled(pCancelEvent):
+    """Lève ScrapingCancelled si l'arrêt a été demandé."""
+
+    if pCancelEvent is not None and pCancelEvent.is_set():
+        logger.info("Récupération des offres arrêtée par l'utilisateur")
+
+        raise ScrapingCancelled("Récupération arrêtée par l'utilisateur.")
+
+
+def scrape_sources(pConfig, pOnProgress=None, pCancelEvent=None):
+    """Récupère et regroupe les offres des sources activées.
+
+    pOnProgress est appelé avant chaque source avec son rang, le nombre total
+    de sources et son libellé. pCancelEvent est vérifié entre deux sources :
+    une requête déjà partie n'est pas interrompue.
+    """
 
     vStartedAt = datetime.now()
     vStartTime = perf_counter()
@@ -30,12 +48,20 @@ def scrape_sources(pConfig):
     # Vérification de la configuration
     pConfig.validate()
 
-    for vName, vDefinition in SOURCES.items():
+    vEnabledSources = [
+        (vName, vDefinition)
+        for vName, vDefinition in SOURCES.items()
+        if pConfig.sources.get(vName) is not None and pConfig.sources[vName].enabled
+    ]
 
-        vSourceConfig = pConfig.sources.get(vName)
+    for vIndex, (vName, vDefinition) in enumerate(vEnabledSources, start=1):
 
-        if vSourceConfig is None or not vSourceConfig.enabled:
-            continue
+        vSourceConfig = pConfig.sources[vName]
+
+        check_cancelled(pCancelEvent)
+
+        if pOnProgress is not None:
+            pOnProgress(vIndex, len(vEnabledSources), vDefinition.label)
 
         logger.info("Scraping de la source %s", vDefinition.label)
 
@@ -58,6 +84,8 @@ def scrape_sources(pConfig):
 
         if not vDataFrame.empty:
             vDataFrames.append(vDataFrame)
+
+    check_cancelled(pCancelEvent)
 
     # Agrégation
 

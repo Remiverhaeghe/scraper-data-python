@@ -13,7 +13,7 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def process_jobs(pConfig):
+def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None):
     """Lance le traitement des offres d'emploi.
 
     Le scraping produit d'abord un résultat brut provenant
@@ -21,12 +21,15 @@ def process_jobs(pConfig):
 
     Les offres sont ensuite enregistrées en base, avec leurs dates de
     première et dernière récupération, avant l'enregistrement de
-    l'historique et l'application des filtres.
+    l'historique et l'application des filtres. Un arrêt demandé pendant
+    le scraping lève ScrapingCancelled avant tout enregistrement.
     """
 
     logger.info("Début du traitement des offres multi-sources")
 
-    vScrapingResult = scrape_sources(pConfig)
+    vScrapingResult = scrape_sources(
+        pConfig, pOnProgress=pOnProgress, pCancelEvent=pCancelEvent
+    )
 
     vScrapedAt = datetime.now()
 

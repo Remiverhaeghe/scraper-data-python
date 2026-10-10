@@ -4,9 +4,11 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pandas as pd
+import pytest
 
 from job.application import process_jobs
 from job.config import JobScrapingConfig
+from job.sources.aggregator import ScrapingCancelled
 from scraper.result import ScrapingResult
 
 
@@ -89,7 +91,7 @@ def test_process_jobs():
 
         rResult = process_jobs(vConfig)
 
-    vScrapeSources.assert_called_once_with(vConfig)
+    vScrapeSources.assert_called_once_with(vConfig, pOnProgress=None, pCancelEvent=None)
 
     vSaveOffers.assert_called_once()
 
@@ -123,3 +125,20 @@ def test_process_jobs():
     assert rResult.page_count == 1
 
     assert rResult.duration_seconds >= 0
+
+
+def test_process_jobs_saves_nothing_when_cancelled():
+    """Vérifie qu'un arrêt pendant le scraping n'enregistre rien."""
+
+    with patch(
+        "job.application.scrape_sources", side_effect=ScrapingCancelled()
+    ), patch("job.application.save_offers") as vSaveOffers, patch(
+        "job.application.record_history"
+    ) as vRecordHistory:
+
+        with pytest.raises(ScrapingCancelled):
+            process_jobs(JobScrapingConfig())
+
+    vSaveOffers.assert_not_called()
+
+    vRecordHistory.assert_not_called()

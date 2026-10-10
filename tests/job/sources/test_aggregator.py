@@ -1,9 +1,12 @@
 """Tests de l'agrégation des offres provenant des différentes sources"""
 
+import threading
+
 import pandas as pd
+import pytest
 
 from job.config import JobScrapingConfig
-from job.sources.aggregator import scrape_sources
+from job.sources.aggregator import ScrapingCancelled, scrape_sources
 from job.sources.config import SourceConfig
 
 
@@ -367,3 +370,97 @@ def test_scrape_sources_adds_net_salary(monkeypatch):
     rResult = scrape_sources(vConfig)
 
     assert rResult.items.loc[0, "salary_net_monthly_min"] == 3000
+
+
+def mock_greenhouse_and_lever(monkeypatch, pCalls):
+    """Remplace les services Greenhouse et Lever en mémorisant les appels."""
+
+    def mock_scrape_greenhouse(pBoard, pMaxItems=None):
+        pCalls.append("greenhouse")
+
+        rDataFrame = pd.DataFrame(
+            {"title": ["GH 1"], "source": ["greenhouse"], "source_id": ["1"]}
+        )
+
+        return rDataFrame
+
+    def mock_scrape_lever(pSite, pMaxItems=None):
+        pCalls.append("lever")
+
+        rDataFrame = pd.DataFrame(
+            {"title": ["Lever 1"], "source": ["lever"], "source_id": ["1"]}
+        )
+
+        return rDataFrame
+
+    monkeypatch.setattr(
+        "job.sources.greenhouse.source.scrape_jobs", mock_scrape_greenhouse
+    )
+
+    monkeypatch.setattr("job.sources.lever.source.scrape_jobs", mock_scrape_lever)
+
+
+def build_greenhouse_and_lever_config():
+    """Construit une configuration avec Greenhouse et Lever activées."""
+
+    vConfig = JobScrapingConfig()
+
+    enable_source(vConfig, "greenhouse", {"board": "test-board"})
+
+    enable_source(vConfig, "lever", {"site": "test-site"})
+
+    rConfig = vConfig
+
+    return rConfig
+
+
+def test_scrape_sources_reports_progress(monkeypatch):
+    """Vérifie que la progression est signalée avant chaque source."""
+
+    vCalls = []
+    vProgress = []
+
+    mock_greenhouse_and_lever(monkeypatch, vCalls)
+
+    scrape_sources(
+        build_greenhouse_and_lever_config(),
+        pOnProgress=lambda pIndex, pTotal, pLabel: vProgress.append(
+            (pIndex, pTotal, pLabel)
+        ),
+    )
+
+    assert vProgress == [(1, 2, "Greenhouse"), (2, 2, "Lever")]
+
+
+def test_scrape_sources_stops_before_first_source(monkeypatch):
+    """Vérifie qu'un arrêt déjà demandé n'interroge aucune source."""
+
+    vCalls = []
+    vCancelEvent = threading.Event()
+    vCancelEvent.set()
+
+    mock_greenhouse_and_lever(monkeypatch, vCalls)
+
+    with pytest.raises(ScrapingCancelled):
+        scrape_sources(build_greenhouse_and_lever_config(), pCancelEvent=vCancelEvent)
+
+    assert vCalls == []
+
+
+def test_scrape_sources_stops_between_sources(monkeypatch):
+    """Vérifie qu'un arrêt demandé pendant une source empêche la suivante."""
+
+    vCalls = []
+    vCancelEvent = threading.Event()
+
+    mock_greenhouse_and_lever(monkeypatch, vCalls)
+
+    monkeypatch.setattr(
+        "job.sources.greenhouse.source.scrape_jobs",
+        lambda pBoard, pMaxItems=None: vCancelEvent.set() or pd.DataFrame(),
+    )
+
+    with pytest.raises(ScrapingCancelled):
+        scrape_sources(build_greenhouse_and_lever_config(), pCancelEvent=vCancelEvent)
+
+    assert vCalls == []
