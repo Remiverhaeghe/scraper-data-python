@@ -4,7 +4,9 @@ import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
 
-CONTRACTS = {"permanent": "CDI", "contract": "CDD / mission"}
+# « contract » couvre aussi bien un CDD qu'une mission freelance : il est
+# laissé à la détection commune.
+CONTRACTS = {"permanent": "CDI"}
 
 
 def parse_job(pJob):

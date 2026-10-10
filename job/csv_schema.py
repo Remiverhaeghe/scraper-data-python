@@ -33,9 +33,9 @@ JOB_COLUMNS = [
     # ------------------------------------------------------------------------
     # Contrat et type d'emploi
     # ------------------------------------------------------------------------
-    # Libellé du contrat : CDI, CDD, alternance, etc.
+    # Contrat normalisé : CDI, CDD ou FREELANCE, vide si inconnu
     "contract",
-    # Code ou type de contrat fourni par la source
+    # Type de contrat tel que fourni par la source
     "contract_type",
     # Type d'emploi : temps plein, temps partiel, etc.
     "employment_type",

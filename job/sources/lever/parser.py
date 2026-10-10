@@ -36,8 +36,8 @@ def parse_job(pJob):
         "country": pJob.get("country"),
         "distance_km": None,
         # Contrat
-        "contract": vCategories.get("commitment"),
-        "contract_type": None,
+        "contract": None,
+        "contract_type": vCategories.get("commitment"),
         "employment_type": vCategories.get("commitment"),
         # Rémunération
         "salary_min": vSalaryRange.get("min"),

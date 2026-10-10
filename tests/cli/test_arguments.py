@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from cli.arguments import parse_arguments
 
 
@@ -105,3 +107,20 @@ def test_parse_arguments_multiple_job_sources(monkeypatch):
     vArguments = parse_arguments()
 
     assert vArguments.sources == ["france-travail", "greenhouse", "lever"]
+
+
+def test_parse_arguments_normalizes_contract():
+    """Vérifie que le contrat est accepté quelle que soit la casse."""
+
+    with patch("sys.argv", ["main.py", "--contract", "freelance"]):
+        vArguments = parse_arguments()
+
+    assert vArguments.contract == "FREELANCE"
+
+
+def test_parse_arguments_rejects_unknown_contract():
+    """Vérifie le rejet d'un type de contrat inconnu."""
+
+    with patch("sys.argv", ["main.py", "--contract", "stage"]):
+        with pytest.raises(SystemExit):
+            parse_arguments()

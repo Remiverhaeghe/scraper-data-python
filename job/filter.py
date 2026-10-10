@@ -149,9 +149,7 @@ def _matches_distance(pJob, pMaxDistanceKm):
 def _matches_contract(pJob, pContract):
     """Vérifie le type de contrat."""
 
-    vContract = str(pJob["contract"] or "")
-
-    rMatches = vContract.lower() == pContract.lower()
+    rMatches = pJob["contract"] == pContract.upper()
 
     return rMatches
 

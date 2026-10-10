@@ -121,3 +121,16 @@ def test_parse_job_keeps_salary_label_with_complements():
     assert rJob["salary_label"] == (
         "Mensuel de 2500.00 Euros sur 13 mois | Primes | Intéressement"
     )
+
+
+@pytest.mark.parametrize(
+    "pCode, pExpected",
+    [("CDI", "CDI"), ("SAI", "CDD"), ("LIB", "FREELANCE"), ("MIS", None)],
+)
+def test_parse_job_normalizes_contract(pCode, pExpected):
+    """Vérifie la conversion des codes de contrat France Travail."""
+
+    rJob = parse_job({"id": "1", "typeContrat": pCode})
+
+    assert rJob["contract"] == pExpected
+    assert rJob["contract_type"] == pCode

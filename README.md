@@ -108,6 +108,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Normalisation de la période des salaires
 - [x] Estimation du salaire net mensuel, avant et après impôt
 - [x] Détection des primes, du 13e mois et de l'épargne salariale
+- [x] Normalisation du contrat : CDI, CDD ou freelance
 - [x] Poursuite du traitement si une source échoue
 - [x] Détection des nouvelles offres
 - [ ] Suivi des candidatures
@@ -175,7 +176,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **339 tests automatisés**
+- [x] **356 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 
@@ -210,6 +211,7 @@ scraper-data-python/
 │   ├── filter.py                              # Applique les filtres aux offres
 │   ├── salary.py                              # Estime le salaire net mensuel
 │   ├── benefits.py                            # Détecte primes, 13e mois et épargne salariale
+│   ├── contract.py                            # Normalise le contrat : CDI, CDD ou freelance
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
 │       ├── __init__.py                         # Initialise le package des sources
@@ -323,6 +325,7 @@ scraper-data-python/
 │   │   ├── test_application.py                # Teste l'orchestration Job
 │   │   ├── test_salary.py                     # Teste l'estimation du salaire net
 │   │   ├── test_benefits.py                   # Teste la détection des avantages
+│   │   ├── test_contract.py                   # Teste la normalisation du contrat
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi

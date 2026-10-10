@@ -3,6 +3,7 @@
 import argparse
 
 from config import MIN_RATING, MAX_RATING
+from job.contract import CONTRACT_TYPES
 from job.sources.registry import SOURCES
 
 
@@ -127,7 +128,13 @@ def parse_arguments():
         help="Distance maximale autour de la localisation.",
     )
 
-    vParser.add_argument("--contract", default=None, help="Type de contrat recherché.")
+    vParser.add_argument(
+        "--contract",
+        type=str.upper,
+        choices=CONTRACT_TYPES,
+        default=None,
+        help="Type de contrat recherché.",
+    )
 
     vParser.add_argument(
         "--min-salary",

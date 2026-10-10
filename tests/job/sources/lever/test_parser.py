@@ -35,7 +35,8 @@ def test_parse_job():
     assert rJob["location"] == "Paris"
     assert rJob["country"] == "FR"
 
-    assert rJob["contract"] == "Full-time"
+    assert rJob["contract"] is None
+    assert rJob["contract_type"] == "Full-time"
     assert rJob["employment_type"] == "Full-time"
 
     assert rJob["date"] == 1234567890000

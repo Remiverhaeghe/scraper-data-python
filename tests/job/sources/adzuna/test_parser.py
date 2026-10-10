@@ -80,3 +80,12 @@ def test_parse_jobs():
 
     assert list(rJobs.columns) == JOB_COLUMNS
     assert rJobs["source_id"].tolist() == ["5920450613", "2"]
+
+
+def test_parse_job_leaves_ambiguous_contract_to_detection():
+    """Vérifie qu'un contrat « contract », CDD ou freelance, n'est pas qualifié."""
+
+    rJob = parse_job(build_job(contract_type="contract"))
+
+    assert rJob["contract"] is None
+    assert rJob["contract_type"] == "contract"

@@ -10,6 +10,9 @@ OFFER_URL = "https://candidat.francetravail.fr/offres/recherche/detail/"
 
 SALARY_PERIODS = {"Horaire": "hour", "Mensuel": "month", "Annuel": "year"}
 
+# Codes typeContrat : SAI (saisonnier) est un CDD, LIB une activité libérale.
+CONTRACTS = {"CDI": "CDI", "CDD": "CDD", "SAI": "CDD", "LIB": "FREELANCE"}
+
 # Exemple : "Mensuel de 2000.00 Euros à 2500.00 Euros sur 12 mois"
 SALARY_PATTERN = re.compile(
     r"^(Horaire|Mensuel|Annuel) de ([\d.]+) Euros(?: à ([\d.]+) Euros)?"
@@ -82,7 +85,7 @@ def parse_job(pJob):
         "country": "France",
         "distance_km": None,
         # Contrat
-        "contract": pJob.get("typeContratLibelle"),
+        "contract": CONTRACTS.get(pJob.get("typeContrat")),
         "contract_type": pJob.get("typeContrat"),
         "employment_type": None,
         # Rémunération
