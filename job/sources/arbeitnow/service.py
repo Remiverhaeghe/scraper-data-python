@@ -3,7 +3,7 @@
 import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
-from job.filter import matches_keyword, matches_location
+from job.filter import filter_by_keyword_and_location
 from job.sources.arbeitnow.client import get_jobs
 from job.sources.arbeitnow.parser import parse_jobs
 from utils.logger import get_logger
@@ -12,22 +12,6 @@ logger = get_logger(__name__)
 
 # Chaque page contient plusieurs centaines d'offres.
 DEFAULT_MAX_PAGES = 2
-
-
-def filter_page(pJobs, pKeyword, pLocation):
-    """Applique localement les critères que l'API ne sait pas filtrer."""
-
-    rJobs = pJobs
-
-    if pKeyword and not rJobs.empty:
-        rJobs = rJobs[rJobs.apply(lambda pJob: matches_keyword(pJob, pKeyword), axis=1)]
-
-    if pLocation and not rJobs.empty:
-        rJobs = rJobs[
-            rJobs.apply(lambda pJob: matches_location(pJob, pLocation), axis=1)
-        ]
-
-    return rJobs
 
 
 def scrape_jobs(pKeyword=None, pLocation=None, pMaxItems=None, pMaxPages=None):
@@ -48,7 +32,9 @@ def scrape_jobs(pKeyword=None, pLocation=None, pMaxItems=None, pMaxPages=None):
 
         vData = get_jobs(vPage)
 
-        vJobs = filter_page(parse_jobs(vData.get("data") or []), pKeyword, pLocation)
+        vJobs = filter_by_keyword_and_location(
+            parse_jobs(vData.get("data") or []), pKeyword, pLocation
+        )
 
         vPages.append(vJobs)
         vCount += len(vJobs)

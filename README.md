@@ -98,6 +98,9 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Arbeitnow (Europe)
 - [x] Jobicy (télétravail ouvert à la France)
 - [x] Himalayas (télétravail ouvert à la France)
+- [x] Jooble — clé à demander, intégration à valider sur un vrai appel
+- [x] Findwork — clé à créer, intégration à valider sur un vrai appel
+- [x] Hacker News « Who is hiring? »
 - [x] Greenhouse
 - [x] Lever
 - [ ] Pagination spécifique aux sites
@@ -105,6 +108,8 @@ Le projet sert également de support d'apprentissage afin de construire progress
   - [x] Adzuna
   - [x] Arbeitnow
   - [x] Himalayas
+  - [x] Jooble
+  - [x] Findwork
   - [ ] Greenhouse — non nécessaire sur l'API Job Board utilisée
   - [x] Lever
   - [ ] Remotive — non nécessaire, l'API renvoie tout en une requête
@@ -183,7 +188,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **409 tests automatisés**
+- [x] **442 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 
@@ -242,6 +247,14 @@ scraper-data-python/
 │       │   ├── service.py                      # Filtre et pagine les offres Arbeitnow
 │       │   └── source.py                       # Déclare la source Arbeitnow
 │       │
+│       ├── findwork/                           # Intégration Findwork
+│       │   ├── __init__.py                     # Initialise le package Findwork
+│       │   ├── client.py                       # Communique avec l'API Findwork
+│       │   ├── config.py                       # Configuration Findwork
+│       │   ├── parser.py                       # Transforme les réponses Findwork
+│       │   ├── service.py                      # Pagine les offres Findwork
+│       │   └── source.py                       # Déclare la source Findwork
+│       │
 │       ├── france_travail/                     # Intégration France Travail
 │       │   ├── __init__.py                     # Initialise le package France Travail
 │       │   ├── authentication.py               # Gère l'authentification OAuth2
@@ -259,6 +272,13 @@ scraper-data-python/
 │       │   ├── service.py                      # Orchestre le scraping Greenhouse
 │       │   └── source.py                       # Déclare la source Greenhouse
 │       │
+│       ├── hackernews/                         # Intégration Hacker News
+│       │   ├── __init__.py                     # Initialise le package Hacker News
+│       │   ├── client.py                       # Communique avec l'API Hacker News
+│       │   ├── parser.py                       # Transforme les réponses Hacker News
+│       │   ├── service.py                      # Filtre les offres du fil « Who is hiring? »
+│       │   └── source.py                       # Déclare la source Hacker News
+│       │
 │       ├── himalayas/                          # Intégration Himalayas
 │       │   ├── __init__.py                     # Initialise le package Himalayas
 │       │   ├── client.py                       # Communique avec l'API Himalayas
@@ -272,6 +292,14 @@ scraper-data-python/
 │       │   ├── parser.py                       # Transforme les réponses Jobicy
 │       │   ├── service.py                      # Récupère les offres Jobicy ouvertes à la France
 │       │   └── source.py                       # Déclare la source Jobicy
+│       │
+│       ├── jooble/                             # Intégration Jooble
+│       │   ├── __init__.py                     # Initialise le package Jooble
+│       │   ├── client.py                       # Communique avec l'API Jooble
+│       │   ├── config.py                       # Configuration Jooble
+│       │   ├── parser.py                       # Transforme les réponses Jooble
+│       │   ├── service.py                      # Pagine les offres Jooble
+│       │   └── source.py                       # Déclare la source Jooble
 │       │
 │       ├── lever/                              # Intégration Lever
 │       │   ├── __init__.py                     # Initialise le package Lever
@@ -383,6 +411,12 @@ scraper-data-python/
 │   │       │   ├── test_parser.py              # Teste le parsing
 │   │       │   └── test_service.py             # Teste le filtrage et la pagination
 │   │       │
+│   │       ├── findwork/                       # Tests Findwork
+│   │       │   ├── __init__.py                 # Initialise les tests Findwork
+│   │       │   ├── test_client.py              # Teste le client API
+│   │       │   ├── test_parser.py              # Teste le parsing
+│   │       │   └── test_service.py             # Teste la pagination et la configuration
+│   │       │
 │   │       ├── france_travail/                 # Tests France Travail
 │   │       │   ├── __init__.py                 # Initialise les tests France Travail
 │   │       │   ├── test_authentication.py      # Teste l'authentification
@@ -398,6 +432,12 @@ scraper-data-python/
 │   │       │   ├── test_parser.py              # Teste le parsing
 │   │       │   └── test_service.py             # Teste le service
 │   │       │
+│   │       ├── hackernews/                     # Tests Hacker News
+│   │       │   ├── __init__.py                 # Initialise les tests Hacker News
+│   │       │   ├── test_client.py              # Teste le client API
+│   │       │   ├── test_parser.py              # Teste le parsing
+│   │       │   └── test_service.py             # Teste le filtrage local
+│   │       │
 │   │       ├── himalayas/                      # Tests Himalayas
 │   │       │   ├── __init__.py                 # Initialise les tests Himalayas
 │   │       │   ├── test_client.py              # Teste le client API
@@ -409,6 +449,12 @@ scraper-data-python/
 │   │       │   ├── test_client.py              # Teste le client API
 │   │       │   ├── test_parser.py              # Teste le parsing
 │   │       │   └── test_service.py             # Teste le service
+│   │       │
+│   │       ├── jooble/                         # Tests Jooble
+│   │       │   ├── __init__.py                 # Initialise les tests Jooble
+│   │       │   ├── test_client.py              # Teste le client API
+│   │       │   ├── test_parser.py              # Teste le parsing
+│   │       │   └── test_service.py             # Teste la pagination et la configuration
 │   │       │
 │   │       ├── lever/                          # Tests Lever
 │   │       │   ├── __init__.py                 # Initialise les tests Lever

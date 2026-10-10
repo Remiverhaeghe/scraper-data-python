@@ -246,3 +246,19 @@ def _matches_all_texts(pText, pExpectedTexts):
     rMatches = vMatches
 
     return rMatches
+
+
+def filter_by_keyword_and_location(pJobs, pKeyword, pLocation):
+    """Filtre les offres d'une source dont l'API ne propose pas ces critères."""
+
+    rJobs = pJobs
+
+    if pKeyword and not rJobs.empty:
+        rJobs = rJobs[rJobs.apply(lambda pJob: matches_keyword(pJob, pKeyword), axis=1)]
+
+    if pLocation and not rJobs.empty:
+        rJobs = rJobs[
+            rJobs.apply(lambda pJob: matches_location(pJob, pLocation), axis=1)
+        ]
+
+    return rJobs
