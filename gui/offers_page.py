@@ -9,12 +9,14 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFileDialog,
+    QFrame,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
     QMenu,
     QMessageBox,
+    QPushButton,
     QSpinBox,
     QSplitter,
     QTableView,
@@ -25,11 +27,12 @@ from PySide6.QtWidgets import (
 from gui.offer_detail import OfferDetailPanel
 from gui.offers_model import COLUMNS, SORT_ROLE, OffersTableModel
 from gui.theme import COLORS
-from gui.widgets import create_button, create_page_header
+from gui.widgets import create_button, create_icon_label, create_page_header
 from job.contract import CONTRACT_TYPES
 from job.export import EXPORT_FORMATS, export_offers
 from job.presentation import (
     FOLLOW_UP_FILTER,
+    PUBLISHED_PERIODS,
     STATUS_LABELS,
     build_offer_filters,
     prepare_offer,
@@ -49,6 +52,18 @@ PRESET_STATUSES = {"applications": "APPLIED", "follow_ups": FOLLOW_UP_FILTER}
 
 # Attente après la dernière frappe avant de relancer la recherche
 SEARCH_DELAY_MS = 300
+
+
+def create_salary_spin(pEmptyText, pSuffix):
+    """Crée un champ de salaire net mensuel ; 0 signifie aucune borne."""
+
+    rSpin = QSpinBox()
+    rSpin.setRange(0, 20000)
+    rSpin.setSingleStep(100)
+    rSpin.setSuffix(pSuffix)
+    rSpin.setSpecialValueText(pEmptyText)
+
+    return rSpin
 
 
 class OffersPage(QWidget):
@@ -109,7 +124,11 @@ class OffersPage(QWidget):
             pIcon="briefcase",
         )
 
+        self.result_keys = None
+        self.results_banner = self.create_results_banner()
+
         vLayout.addLayout(self.create_filters())
+        vLayout.addWidget(self.results_banner)
         vLayout.addWidget(self.count_label)
         vLayout.addWidget(vSplitter, 1)
 
@@ -144,21 +163,31 @@ class OffersPage(QWidget):
         for vStatus, vLabel in STATUS_LABELS.items():
             self.status_combo.addItem(vLabel, vStatus)
 
-        self.min_salary_spin = QSpinBox()
-        self.min_salary_spin.setRange(0, 20000)
-        self.min_salary_spin.setSingleStep(100)
-        self.min_salary_spin.setSuffix(" € net/mois")
-        self.min_salary_spin.setSpecialValueText("Tous salaires")
+        self.min_salary_spin = create_salary_spin("Sans minimum", " € net min")
+        self.max_salary_spin = create_salary_spin("Sans maximum", " € net max")
 
+        self.published_combo = QComboBox()
+
+        for vDays, vLabel in PUBLISHED_PERIODS.items():
+            self.published_combo.addItem(vLabel, vDays)
+
+        self.salary_check = QCheckBox("Avec salaire")
         self.remote_check = QCheckBox("Télétravail")
         self.new_check = QCheckBox("Nouvelles uniquement")
 
-        for vCombo in (self.source_combo, self.contract_combo, self.status_combo):
+        for vCombo in (
+            self.source_combo,
+            self.contract_combo,
+            self.status_combo,
+            self.published_combo,
+        ):
             vCombo.currentIndexChanged.connect(self.refresh)
 
-        self.min_salary_spin.valueChanged.connect(self.search_timer.start)
-        self.remote_check.toggled.connect(self.refresh)
-        self.new_check.toggled.connect(self.refresh)
+        for vSpin in (self.min_salary_spin, self.max_salary_spin):
+            vSpin.valueChanged.connect(self.search_timer.start)
+
+        for vCheck in (self.salary_check, self.remote_check, self.new_check):
+            vCheck.toggled.connect(self.refresh)
 
         vSearchRow = QHBoxLayout()
         vSearchRow.addWidget(self.search_edit, 1)
@@ -167,10 +196,17 @@ class OffersPage(QWidget):
 
         vOptionsRow = QHBoxLayout()
         vOptionsRow.setSpacing(16)
-        vOptionsRow.addWidget(self.contract_combo)
-        vOptionsRow.addWidget(self.min_salary_spin)
-        vOptionsRow.addWidget(self.remote_check)
-        vOptionsRow.addWidget(self.new_check)
+        for vWidget in (
+            self.contract_combo,
+            self.published_combo,
+            self.min_salary_spin,
+            self.max_salary_spin,
+            self.salary_check,
+            self.remote_check,
+            self.new_check,
+        ):
+            vOptionsRow.addWidget(vWidget)
+
         vOptionsRow.addStretch()
 
         rLayout = QVBoxLayout()
@@ -237,17 +273,47 @@ class OffersPage(QWidget):
 
         return rCount
 
-    def apply_preset(self, pPreset):
-        """Réinitialise les filtres puis applique un préréglage de l'accueil.
+    def create_results_banner(self):
+        """Construit le bandeau qui signale l'affichage des résultats d'une recherche."""
+        self.results_label = QLabel()
+        self.results_label.setObjectName("activityTitle")
 
-        Préréglages : offers, new_offers, applications ou follow_ups.
+        vShowAllButton = QPushButton("Afficher toutes les offres")
+        vShowAllButton.setObjectName("linkButton")
+        vShowAllButton.clicked.connect(lambda: self.apply_preset("offers"))
+
+        rBanner = QFrame()
+        rBanner.setObjectName("resultsBanner")
+
+        vLayout = QHBoxLayout(rBanner)
+        vLayout.setContentsMargins(14, 8, 14, 8)
+        vLayout.addWidget(create_icon_label("search", COLORS["primary"], 18))
+        vLayout.addWidget(self.results_label, 1)
+        vLayout.addWidget(vShowAllButton)
+
+        rBanner.hide()
+
+        return rBanner
+
+    def apply_preset(self, pPreset, pKeys=None, pDescription=""):
+        """Réinitialise les filtres puis applique un préréglage.
+
+        Préréglages : offers, new_offers, applications ou follow_ups. pKeys
+        restreint la liste aux offres d'une recherche, décrite par pDescription.
         """
+        self.result_keys = pKeys
+        self.results_label.setText(pDescription)
+        self.results_banner.setVisible(pKeys is not None)
+
         vWidgets = (
             self.search_edit,
             self.source_combo,
             self.contract_combo,
             self.status_combo,
+            self.published_combo,
             self.min_salary_spin,
+            self.max_salary_spin,
+            self.salary_check,
             self.remote_check,
             self.new_check,
         )
@@ -259,7 +325,10 @@ class OffersPage(QWidget):
         self.search_edit.clear()
         self.source_combo.setCurrentIndex(0)
         self.contract_combo.setCurrentIndex(0)
+        self.published_combo.setCurrentIndex(0)
         self.min_salary_spin.setValue(0)
+        self.max_salary_spin.setValue(0)
+        self.salary_check.setChecked(False)
         self.remote_check.setChecked(False)
         self.new_check.setChecked(pPreset == "new_offers")
         self.status_combo.setCurrentIndex(
@@ -283,6 +352,10 @@ class OffersPage(QWidget):
             pStatus=self.status_combo.currentData(),
             pNow=pNow,
             pNewOfferDays=pNewOfferDays,
+            pMaxNetSalary=self.max_salary_spin.value() or None,
+            pPublishedDays=self.published_combo.currentData(),
+            pHasSalary=self.salary_check.isChecked(),
+            pKeys=self.result_keys,
         )
 
         return rFilters

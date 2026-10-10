@@ -349,3 +349,29 @@ def test_filter_jobs_keeps_columns_when_a_filter_empties_the_result():
 
     assert rJobs.empty
     assert list(rJobs.columns) == list(vJobs.columns)
+
+
+def test_filter_jobs_skills_are_searched_in_whole_text():
+    """Vérifie qu'une compétence citée seulement dans la description est trouvée."""
+
+    vJobs = create_jobs(create_job(skills=None, description="Projet Kotlin et SQL"))
+
+    assert len(filter_jobs(vJobs, JobScrapingConfig(skills=["kotlin", "sql"]))) == 1
+    assert filter_jobs(vJobs, JobScrapingConfig(skills=["rust"])).empty
+
+
+def test_filter_jobs_excludes_title_keywords():
+    """Vérifie l'exclusion par le titre, sans tenir compte de la description."""
+
+    vJobs = create_jobs(
+        create_job(title="Stage - Développeur Python"),
+        create_job(
+            title="Développeur Python",
+            description="Pas de stage",
+            url="https://example.com/job-2",
+        ),
+    )
+
+    rJobs = filter_jobs(vJobs, JobScrapingConfig(exclude_keywords=["STAGE"]))
+
+    assert rJobs["title"].tolist() == ["Développeur Python"]

@@ -38,12 +38,16 @@ logger = get_logger(__name__)
 
 # Clé, libellé et icône des informations affichées sous le titre de l'offre
 INFO_ROWS = (
+    ("location", "Lieu", "map-pin"),
     ("contract", "Contrat", "file-text"),
     ("salary", "Net mensuel", "banknote"),
     ("salary_label", "Salaire annoncé", "tag"),
     ("remote", "Télétravail", "house"),
     ("benefits", "Avantages", "gift"),
+    ("experience_level", "Expérience", "timer"),
+    ("skills", "Compétences", "list-checks"),
     ("published_at", "Publiée le", "calendar"),
+    ("first_seen_at", "Découverte le", "search"),
     ("source_label", "Source", "globe"),
 )
 
@@ -263,12 +267,16 @@ class OfferDetailPanel(QWidget):
         vRemote = vOffer.get("remote")
 
         vInfos = {
+            "location": vOffer.get("location"),
             "contract": vOffer.get("contract"),
             "salary": format_net_salary(vOffer),
             "salary_label": vOffer.get("salary_label"),
             "remote": None if vRemote is None else ("Oui" if vRemote else "Non"),
             "benefits": ", ".join(vOffer.get("benefits") or []),
+            "experience_level": vOffer.get("experience_level"),
+            "skills": ", ".join(vOffer.get("skills_list") or []),
             "published_at": format_date(vOffer.get("published_at")),
+            "first_seen_at": format_date(vOffer.get("first_seen_at")),
             "source_label": vOffer.get("source_label"),
         }
 

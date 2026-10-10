@@ -79,6 +79,7 @@ def build_job_config(pArguments):
         education=pArguments.education,
         skills=pArguments.skills,
         missions=pArguments.missions,
+        exclude_keywords=pArguments.exclude_keywords,
         sources=vSourceConfigs,
     )
 

@@ -42,6 +42,9 @@ class JobScrapingConfig(ScrapingConfig):
     # Missions recherchées
     missions: list[str] | None = None
 
+    # Mots qui excluent une offre lorsqu'ils figurent dans son titre
+    exclude_keywords: list[str] | None = None
+
     # Configuration de chaque source, indexée par son nom dans le registre
     sources: dict[str, SourceConfig] = field(default_factory=dict)
 

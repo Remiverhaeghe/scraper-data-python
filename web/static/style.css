@@ -1063,3 +1063,46 @@ code {
 .error-page h1 {
     font-size: 22px;
 }
+
+.chart + .legend {
+    margin: 10px 0 0;
+}
+
+.legal-links {
+    margin-top: 22px;
+}
+
+.license-text {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: inherit;
+    line-height: 1.6;
+}
+
+.list-link {
+    padding: 8px;
+    border-radius: 8px;
+    color: inherit;
+}
+
+.list-link:hover {
+    background: var(--primary-light);
+    text-decoration: none;
+}
+
+.pies {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+}
+
+.pies .pie {
+    width: 130px;
+    height: 130px;
+}
+
+.cell-detail {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+}

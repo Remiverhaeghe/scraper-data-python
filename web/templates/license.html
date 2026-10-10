@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Licence{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Licence", license_name, "file-text") }}
+
+<article class="card">
+    <pre class="license-text">{{ license_text }}</pre>
+</article>
+{% endblock %}

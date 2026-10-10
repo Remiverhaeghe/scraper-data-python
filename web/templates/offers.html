@@ -40,8 +40,22 @@
             {% endfor %}
         </select>
 
+        <select name="published" aria-label="Date de publication">
+            {% for days, label in published_periods.items() %}
+            <option value="{{ days or '' }}" {% if filters.published == (days | string) %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
         <input type="text" inputmode="numeric" name="min_salary" value="{{ filters.min_salary }}"
-               placeholder="Net mensuel minimum" aria-label="Net mensuel minimum">
+               placeholder="Net minimum" aria-label="Net mensuel minimum">
+
+        <input type="text" inputmode="numeric" name="max_salary" value="{{ filters.max_salary }}"
+               placeholder="Net maximum" aria-label="Net mensuel maximum">
+
+        <label class="check">
+            <input type="checkbox" name="has_salary" value="1" {% if filters.has_salary %}checked{% endif %}>
+            Avec salaire
+        </label>
 
         <label class="check">
             <input type="checkbox" name="remote" value="1" {% if filters.remote %}checked{% endif %}>

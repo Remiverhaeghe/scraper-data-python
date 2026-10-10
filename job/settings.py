@@ -27,7 +27,7 @@ class SettingDefinition:
 SETTING_DEFINITIONS = {
     "net_salary_percent": SettingDefinition(
         "Salaire net",
-        "Part du brut conservée après cotisations ; 75 % est l'hypothèse prudente",
+        "Part du brut conservée après cotisations. 75 % est l'hypothèse prudente.",
         50,
         100,
         1,
@@ -35,7 +35,7 @@ SETTING_DEFINITIONS = {
     ),
     "income_tax_rate": SettingDefinition(
         "Impôt sur le revenu",
-        "Taux de prélèvement à la source ; 0 % pour ne pas le déduire",
+        "Taux de prélèvement à la source. 0 % pour ne pas le déduire.",
         0,
         60,
         0.1,
@@ -44,7 +44,7 @@ SETTING_DEFINITIONS = {
     ),
     "new_offer_days": SettingDefinition(
         "Nouvelle offre",
-        "Durée pendant laquelle une offre découverte est signalée comme nouvelle",
+        "Durée pendant laquelle une offre découverte est signalée comme nouvelle.",
         1,
         30,
         1,
@@ -52,7 +52,7 @@ SETTING_DEFINITIONS = {
     ),
     "follow_up_days": SettingDefinition(
         "Relance",
-        "Délai proposé entre l'envoi d'une candidature et sa relance",
+        "Délai proposé entre l'envoi d'une candidature et sa relance.",
         1,
         60,
         1,
@@ -180,7 +180,7 @@ def save_settings(pDatabaseFile, pValues):
                 vErrors.append(str(vException))
 
     if vErrors:
-        raise ValueError(" ; ".join(vErrors))
+        raise ValueError(". ".join(vErrors))
 
     save_setting_values(pDatabaseFile, vSettings)
 

@@ -1,6 +1,9 @@
 """Fenêtre principale : menu latéral et pages de l'application"""
 
-from PySide6.QtCore import QSize, Qt, Signal
+from html import escape
+
+from PySide6.QtCore import QSize, Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -13,8 +16,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from config import TAGLINE
+from config import CONTACT_URL, LICENSE_NAME, TAGLINE
 from gui.branding import create_logo_icon
+from gui.dialogs import show_legal_notice, show_license
 from gui.history_page import HistoryPage
 from gui.home_page import HomePage
 from gui.icons import get_icon
@@ -22,6 +26,10 @@ from gui.offers_page import OffersPage
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
 from gui.theme import COLORS
+
+# Liens internes du pied de menu, ouverts dans l'application
+LEGAL_LINK = "#mentions-legales"
+LICENSE_LINK = "#licence"
 
 # Clés de navigation qui ouvrent la page des offres avec des filtres prédéfinis
 OFFER_PRESETS = ("offers", "new_offers", "applications", "follow_ups")
@@ -76,7 +84,8 @@ class MainWindow(QMainWindow):
         self.settings_page.theme_requested.connect(self.theme_requested)
 
         self.home_page.navigation_requested.connect(self.navigate)
-        self.search_page.show_offers_requested.connect(lambda: self.navigate("offers"))
+        self.home_page.offer_requested.connect(self.show_search_results)
+        self.search_page.show_offers_requested.connect(self.show_search_results)
         self.search_page.search_started.connect(self.on_search_started)
         self.search_page.search_ended.connect(self.on_search_ended)
 
@@ -139,9 +148,38 @@ class MainWindow(QMainWindow):
         vLayout.addLayout(vBrand)
         vLayout.addWidget(vSeparator)
         vLayout.addWidget(self.navigation, 1)
+        vLayout.addWidget(self.create_footer_links())
         vLayout.addLayout(vStatus)
 
         return rSidebar
+
+    def create_footer_links(self):
+        """Construit les liens du pied de menu, identiques à ceux du web."""
+        vStyle = f'style="color: {COLORS["muted"]}; text-decoration: none;"'
+
+        rLinks = QLabel(
+            "<br>".join(
+                f'<a href="{vTarget}" {vStyle}>{escape(vLabel)}</a>'
+                for vTarget, vLabel in (
+                    (LEGAL_LINK, "Mentions légales"),
+                    (CONTACT_URL, "Me contacter"),
+                    (LICENSE_LINK, f"Licence {LICENSE_NAME}"),
+                )
+            )
+        )
+        rLinks.setObjectName("sidebarLinks")
+        rLinks.linkActivated.connect(self.open_footer_link)
+
+        return rLinks
+
+    def open_footer_link(self, pTarget):
+        """Ouvre mentions légales et licence dans l'application, le contact au navigateur."""
+        if pTarget == LEGAL_LINK:
+            show_legal_notice(self)
+        elif pTarget == LICENSE_LINK:
+            show_license(self)
+        else:
+            QDesktopServices.openUrl(QUrl(pTarget))
 
     def add_page(self, pKey, pLabel, pIcon, pPage):
         """Ajoute une page et son entrée dans le menu latéral."""
@@ -179,6 +217,11 @@ class MainWindow(QMainWindow):
 
         finally:
             self.setUpdatesEnabled(True)
+
+    def show_search_results(self, pKeys, pDescription):
+        """Ouvre la page des offres restreinte aux résultats d'une recherche."""
+        self.offers_page.apply_preset("offers", pKeys, pDescription)
+        self.navigation.setCurrentRow(self.page_rows["offers"])
 
     def show_page(self, pIndex):
         """Affiche la page choisie et rafraîchit ses données si elle le permet."""

@@ -2,7 +2,15 @@
 {% import "_macros.html" as ui %}
 
 {% block content %}
-{{ ui.page_header("Tableau de bord", "Vue d'ensemble de vos offres et de vos candidatures", "house") }}
+{% call ui.page_header("Tableau de bord", "Vue d'ensemble de vos offres et de vos candidatures", "house") %}
+<span class="muted">
+    {% if statistics.executions %}
+    Dernière recherche le {{ statistics.executions[0].started_at.strftime("%d/%m à %H:%M") }} · {{ statistics.executions[0].item_count }} offre(s)
+    {% else %}
+    Aucune recherche pour le moment
+    {% endif %}
+</span>
+{% endcall %}
 
 <section class="banner">
     <div>
@@ -36,7 +44,7 @@
 <section class="grid grid-dashboard">
     <article class="card">
         <h2>Activité</h2>
-        <p class="card-subtitle">Sur {{ chart_days }} jours, chaque série à sa propre échelle</p>
+        <p class="card-subtitle">Activité quotidienne, chaque série à sa propre échelle</p>
         {{ ui.bar_chart(chart, "Activité par jour") }}
     </article>
 
@@ -70,6 +78,58 @@
             <a class="button" href="{{ url_for('list_offers').path }}?status={{ follow_up_filter }}">{{ icon("bell-ring") }} Candidatures à relancer</a>
             <a class="button" href="{{ url_for('show_history').path }}">{{ icon("history") }} Historique des exécutions</a>
         </div>
+    </article>
+</section>
+
+<section class="grid grid-2 section-gap">
+    <article class="card">
+        <h2>Relances à venir</h2>
+        <p class="card-subtitle">Les candidatures à relancer, les plus proches en premier</p>
+        {% if statistics.upcoming_follow_ups %}
+        <ul class="list">
+            {% for follow_up in statistics.upcoming_follow_ups %}
+            <li>
+                <a class="list-item list-link" href="{{ url_for('show_offer').path }}?source={{ follow_up.source | urlencode }}&id={{ follow_up.source_id | urlencode }}">
+                    <span class="{% if follow_up.follow_up_date <= now_iso %}tone-warning{% else %}tone-muted{% endif %}">{{ icon("bell-ring", 20) }}</span>
+                    <div>
+                        <strong>{{ follow_up.title or "Titre non communiqué" }}</strong>
+                        <small>{{ follow_up.company or "" }}</small>
+                    </div>
+                    <em>{{ follow_up.follow_up_date | date_fr }}</em>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty">{{ icon("bell-ring", 32) }}Aucune relance prévue.</div>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <h2>Dernières offres</h2>
+        <p class="card-subtitle">Les offres découvertes le plus récemment</p>
+        {% if statistics.latest_offers %}
+        <ul class="list">
+            {% for offer in statistics.latest_offers %}
+            <li>
+                <a class="list-item list-link" href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">
+                    <span class="{% if offer.is_new %}tone-success{% else %}tone-muted{% endif %}">{{ icon("sparkles" if offer.is_new else "briefcase", 20) }}</span>
+                    <div>
+                        <strong>{{ offer.title or "Titre non communiqué" }}</strong>
+                        <small>{{ offer.company or "" }}{% if offer.company %} · {% endif %}{{ offer.source_label }}</small>
+                    </div>
+                    <em>
+                        {% if offer.salary_net_monthly_min or offer.salary_net_monthly_max %}
+                        {{ (offer.salary_net_monthly_min or offer.salary_net_monthly_max) | euros }}
+                        {% endif %}
+                    </em>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty">{{ icon("inbox", 32) }}Aucune offre en base pour le moment.</div>
+        {% endif %}
     </article>
 </section>
 {% endblock %}

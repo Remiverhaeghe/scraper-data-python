@@ -1,16 +1,21 @@
 """Page d'accueil : synthèse des offres, du suivi et des dernières exécutions"""
 
+from datetime import datetime
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
 from gui.chart import BarChart
+from gui.offers_model import format_net_salary
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -19,10 +24,9 @@ from gui.widgets import (
     create_icon_label,
     create_page_header,
 )
-from job.presentation import CHART_PALETTE, describe_execution
+from job.presentation import CHART_PALETTE, describe_execution, format_date
 from job.statistics import (
     ACTIVITY_SERIES,
-    CHART_DAYS,
     count_ready_sources,
     load_statistics,
 )
@@ -55,11 +59,29 @@ def describe_activity(pEntry):
     return rActivity
 
 
+def describe_last_search(pExecutions):
+    """Résume la dernière recherche pour l'en-tête du tableau de bord."""
+
+    rDescription = "Aucune recherche pour le moment"
+
+    if pExecutions:
+        vEntry = pExecutions[0]
+        rDescription = (
+            f"Dernière recherche le {vEntry.started_at:%d/%m à %H:%M} · "
+            f"{vEntry.item_count} offre(s)"
+        )
+
+    return rDescription
+
+
 class HomePage(QWidget):
     """Affiche la bannière, les indicateurs, l'activité et les actions rapides."""
 
     # Clé de la page ou du filtre à afficher, interprétée par la fenêtre principale
     navigation_requested = Signal(str)
+
+    # Offre à afficher, en couple (source, identifiant), et sa description
+    offer_requested = Signal(object, str)
 
     def __init__(self, pDatabaseFile):
         """Construit la page ; les données sont chargées par refresh."""
@@ -67,7 +89,17 @@ class HomePage(QWidget):
 
         self.database_file = pDatabaseFile
 
-        vLayout = QVBoxLayout(self)
+        self.last_search_label = QLabel()
+        self.last_search_label.setObjectName("pageSubtitle")
+
+        vSearchButton = create_button(
+            "Nouvelle recherche", "search", "primaryButton", COLORS["on_primary"]
+        )
+        vSearchButton.clicked.connect(lambda: self.navigation_requested.emit("search"))
+
+        vContent = QWidget()
+
+        vLayout = QVBoxLayout(vContent)
         vLayout.setContentsMargins(32, 28, 32, 28)
         vLayout.setSpacing(18)
 
@@ -75,20 +107,36 @@ class HomePage(QWidget):
             vLayout,
             "Tableau de bord",
             "Vue d'ensemble de vos offres et de vos candidatures",
+            [self.last_search_label, vSearchButton],
             pIcon="house",
         )
 
         vLayout.addWidget(self.create_banner())
         vLayout.addLayout(self.create_statistics())
 
+        vMiddle = QHBoxLayout()
+        vMiddle.setSpacing(18)
+        vMiddle.addWidget(self.create_chart_card(), 3)
+        vMiddle.addWidget(self.create_activity_card(), 3)
+        vMiddle.addWidget(self.create_actions_card(), 2)
+
         vBottom = QHBoxLayout()
         vBottom.setSpacing(18)
-        vBottom.addWidget(self.create_chart_card(), 3)
-        vBottom.addWidget(self.create_activity_card(), 3)
-        vBottom.addWidget(self.create_actions_card(), 2)
+        vBottom.addWidget(self.create_follow_ups_card(), 1)
+        vBottom.addWidget(self.create_latest_offers_card(), 1)
 
+        vLayout.addLayout(vMiddle)
         vLayout.addLayout(vBottom)
         vLayout.addStretch()
+
+        # La page s'allonge avec les listes : elle défile sur les petits écrans.
+        vScrollArea = QScrollArea()
+        vScrollArea.setWidgetResizable(True)
+        vScrollArea.setWidget(vContent)
+
+        vPageLayout = QVBoxLayout(self)
+        vPageLayout.setContentsMargins(0, 0, 0, 0)
+        vPageLayout.addWidget(vScrollArea)
 
     def create_banner(self):
         """Construit la bannière de bienvenue."""
@@ -163,7 +211,7 @@ class HomePage(QWidget):
         """Construit le graphique des nouvelles offres par jour."""
         vCard, vLayout = create_card(
             "Activité",
-            f"Sur {CHART_DAYS} jours, chaque série à sa propre échelle",
+            "Activité quotidienne, chaque série à sa propre échelle",
         )
 
         self.chart = BarChart()
@@ -171,6 +219,132 @@ class HomePage(QWidget):
         vLayout.addWidget(self.chart, 1)
 
         return vCard
+
+    def create_follow_ups_card(self):
+        """Construit la liste des prochaines relances prévues."""
+        vCard, vLayout = create_card(
+            "Relances à venir",
+            "Les candidatures à relancer, les plus proches en premier",
+        )
+
+        self.follow_ups_layout = QVBoxLayout()
+        self.follow_ups_layout.setSpacing(2)
+
+        vLayout.addLayout(self.follow_ups_layout)
+        vLayout.addStretch()
+
+        return vCard
+
+    def create_latest_offers_card(self):
+        """Construit la liste des dernières offres découvertes."""
+        vCard, vLayout = create_card(
+            "Dernières offres", "Les offres découvertes le plus récemment"
+        )
+
+        self.latest_offers_layout = QVBoxLayout()
+        self.latest_offers_layout.setSpacing(2)
+
+        vLayout.addLayout(self.latest_offers_layout)
+        vLayout.addStretch()
+
+        return vCard
+
+    def create_offer_row(self, pIcon, pColor, pTitle, pDetail, pResult, pKey):
+        """Construit une ligne cliquable qui ouvre l'offre dans la page des offres."""
+        vButton = QPushButton()
+        vButton.setObjectName("listRow")
+        vButton.setCursor(Qt.CursorShape.PointingHandCursor)
+        vButton.clicked.connect(
+            lambda: self.offer_requested.emit(
+                [pKey], f"Offre ouverte depuis l'accueil : {pTitle}"
+            )
+        )
+
+        vTitleLabel = QLabel(pTitle)
+        vTitleLabel.setObjectName("activityTitle")
+
+        vDetailLabel = QLabel(pDetail)
+        vDetailLabel.setObjectName("cardSubtitle")
+
+        vTexts = QVBoxLayout()
+        vTexts.setSpacing(2)
+        vTexts.addWidget(vTitleLabel)
+        vTexts.addWidget(vDetailLabel)
+
+        vResultLabel = QLabel(pResult)
+        vResultLabel.setObjectName("activityResult")
+
+        vLayout = QHBoxLayout(vButton)
+        vLayout.setContentsMargins(8, 6, 8, 6)
+        vLayout.setSpacing(12)
+        vLayout.addWidget(create_icon_label(pIcon, pColor, 20))
+        vLayout.addLayout(vTexts, 1)
+        vLayout.addWidget(vResultLabel)
+
+        vButton.setMinimumHeight(vLayout.sizeHint().height())
+
+        return vButton
+
+    def show_rows(self, pLayout, pRows, pEmptyText):
+        """Remplace les lignes d'une liste, ou affiche un message si elle est vide."""
+        while pLayout.count():
+            pLayout.takeAt(0).widget().deleteLater()
+
+        if not pRows:
+            vEmpty = QLabel(pEmptyText)
+            vEmpty.setObjectName("cardSubtitle")
+            pLayout.addWidget(vEmpty)
+
+        for vRow in pRows:
+            pLayout.addWidget(vRow)
+
+    def show_follow_ups(self, pFollowUps):
+        """Affiche les prochaines relances, en orange lorsqu'elles sont dues."""
+        vToday = datetime.now().isoformat()
+
+        self.show_rows(
+            self.follow_ups_layout,
+            [
+                self.create_offer_row(
+                    "bell-ring",
+                    COLORS[
+                        (
+                            "warning"
+                            if vFollowUp["follow_up_date"] <= vToday
+                            else "primary"
+                        )
+                    ],
+                    vFollowUp["title"] or "Titre non communiqué",
+                    vFollowUp["company"] or "",
+                    format_date(vFollowUp["follow_up_date"]),
+                    (vFollowUp["source"], vFollowUp["source_id"]),
+                )
+                for vFollowUp in pFollowUps
+            ],
+            "Aucune relance prévue.",
+        )
+
+    def show_latest_offers(self, pOffers):
+        """Affiche les dernières offres avec leur source et leur salaire net."""
+        self.show_rows(
+            self.latest_offers_layout,
+            [
+                self.create_offer_row(
+                    "sparkles" if vOffer["is_new"] else "briefcase",
+                    COLORS["success" if vOffer["is_new"] else "muted"],
+                    vOffer["title"] or "Titre non communiqué",
+                    " · ".join(
+                        vPart
+                        for vPart in (vOffer["company"], vOffer["source_label"])
+                        if vPart
+                    ),
+                    format_net_salary(vOffer),
+                    (vOffer["source"], vOffer["source_id"]),
+                )
+                for vOffer in pOffers
+            ],
+            "Aucune offre en base pour le moment.",
+        )
 
     def create_activity_card(self):
         """Construit la carte des dernières exécutions."""
@@ -275,6 +449,11 @@ class HomePage(QWidget):
 
             self.show_activity(vStatistics["executions"])
             self.show_chart(vStatistics["daily_activity"])
+            self.show_follow_ups(vStatistics["upcoming_follow_ups"])
+            self.show_latest_offers(vStatistics["latest_offers"])
+            self.last_search_label.setText(
+                describe_last_search(vStatistics["executions"])
+            )
 
     def show_chart(self, pDailyActivity):
         """Affiche une série de barres par type d'activité, jour par jour."""

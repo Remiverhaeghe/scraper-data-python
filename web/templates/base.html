@@ -38,7 +38,7 @@
         <footer class="sidebar-footer">
             <a href="{{ url_for('show_legal').path }}">Mentions légales</a>
             <a href="{{ contact_url }}" target="_blank" rel="noopener">Me contacter</a>
-            <a href="{{ license_url }}" target="_blank" rel="noopener">Licence {{ license_name }}</a>
+            <a href="{{ url_for('show_license').path }}">Licence {{ license_name }}</a>
         </footer>
     </aside>
 

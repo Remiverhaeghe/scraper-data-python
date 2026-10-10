@@ -132,6 +132,7 @@ def test_main_processes_jobs(monkeypatch, france_travail_available):
             "education": "Bac+3",
             "skills": ["Python", "Django"],
             "missions": ["Développement"],
+            "exclude_keywords": None,
             "sources": ["france-travail", "greenhouse"],
         },
     )()
@@ -332,6 +333,7 @@ def test_process_job_arguments_without_sources():
             "education": None,
             "skills": None,
             "missions": None,
+            "exclude_keywords": None,
             "sources": None,
         },
     )()
@@ -367,6 +369,7 @@ def test_process_job_arguments_with_one_source(monkeypatch, france_travail_avail
             "education": "Bac+3",
             "skills": ["Python", "Django"],
             "missions": ["Développement"],
+            "exclude_keywords": None,
             "sources": ["france-travail"],
         },
     )()
@@ -419,6 +422,7 @@ def test_process_job_arguments_with_multiple_sources(
             "education": None,
             "skills": None,
             "missions": None,
+            "exclude_keywords": None,
             "sources": ["france-travail", "greenhouse", "lever"],
         },
     )()

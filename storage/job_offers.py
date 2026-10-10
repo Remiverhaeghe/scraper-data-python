@@ -150,10 +150,15 @@ def build_offer_conditions(
     pStatus=None,
     pFollowUpBefore=None,
     pHideIgnored=False,
+    pMaxNetSalary=None,
+    pPublishedSince=None,
+    pHasSalary=False,
+    pKeys=None,
 ):
     """Construit les conditions SQL et leurs paramètres à partir des filtres.
 
-    Les colonnes sont préfixées : o pour l'offre, a pour son suivi.
+    Les colonnes sont préfixées : o pour l'offre, a pour son suivi. pKeys
+    restreint le résultat à une liste de couples (source, identifiant).
     """
 
     vConditions = []
@@ -182,6 +187,33 @@ def build_offer_conditions(
             "COALESCE(o.salary_net_monthly_max, o.salary_net_monthly_min) >= ?"
         )
         vParams.append(pMinNetSalary)
+
+    if pMaxNetSalary is not None:
+        vConditions.append(
+            "COALESCE(o.salary_net_monthly_min, o.salary_net_monthly_max) <= ?"
+        )
+        vParams.append(pMaxNetSalary)
+
+    if pHasSalary:
+        vConditions.append(
+            "COALESCE(o.salary_net_monthly_min, o.salary_net_monthly_max) IS NOT NULL"
+        )
+
+    # Sans date de publication fournie par la source, la découverte fait foi.
+    if pPublishedSince is not None:
+        vConditions.append("COALESCE(o.published_at, o.first_seen_at) >= ?")
+        vParams.append(pPublishedSince.date().isoformat())
+
+    if pKeys is not None:
+        if pKeys:
+            vConditions.append(
+                "(o.source, o.source_id) IN (VALUES "
+                + ", ".join("(?, ?)" for _ in pKeys)
+                + ")"
+            )
+            vParams += [str(vValue) for vKey in pKeys for vValue in vKey]
+        else:
+            vConditions.append("0")
 
     if pSeenSince is not None:
         vConditions.append("o.first_seen_at >= ?")
@@ -354,6 +386,25 @@ def update_net_salaries(pDatabaseFile, pSalaries):
     rCount = len(vRows)
 
     return rCount
+
+
+def count_offers_by_contract(pDatabaseFile):
+    """Compte les offres en base par type de contrat, du plus fréquent au moins fréquent."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rCounts = vConnection.execute("""
+            SELECT contract, COUNT(*) AS offer_count
+            FROM job_offer
+            GROUP BY contract
+            ORDER BY offer_count DESC
+            """).fetchall()
+
+    finally:
+        vConnection.close()
+
+    return rCounts
 
 
 def get_offer(pDatabaseFile, pSource, pSourceId):

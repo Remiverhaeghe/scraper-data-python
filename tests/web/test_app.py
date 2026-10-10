@@ -312,7 +312,7 @@ def test_dashboard_shows_statistics(client):
     assert vResponse.status_code == 200
     assert "Tableau de bord" in vResponse.text
     assert "Offres actives en base" in vResponse.text
-    assert 'class="chart chart-dense"' in vResponse.text
+    assert 'class="chart"' in vResponse.text
     assert "Candidatures" in vResponse.text
     assert 'aria-current="page"' in vResponse.text
     assert "Aucune recherche lancée pour le moment." in vResponse.text
@@ -452,7 +452,7 @@ def test_legal_page(client):
 
     assert vResponse.status_code == 200
     assert "Données personnelles" in vResponse.text
-    assert "/blob/main/LICENSE" in vResponse.text
+    assert 'href="/license"' in vResponse.text
     assert "linkedin.com/in/" in vResponse.text
 
 
@@ -472,3 +472,32 @@ def test_static_files_refuse_path_traversal(client, pPath):
 
     assert vResponse.status_code == 404
     assert "APPLICATION_NAME" not in vResponse.text
+
+
+def test_list_offers_new_filters(client):
+    """Vérifie les filtres de salaire maximum, de salaire présent et de publication."""
+
+    vResponse = client.get(
+        "/offers", params={"max_salary": "1500", "has_salary": "1", "published": "7"}
+    )
+
+    assert vResponse.status_code == 200
+    assert "0 offre" in vResponse.text
+
+
+def test_list_offers_ignores_unknown_publication_period(client):
+    """Vérifie qu'une période inconnue est ignorée plutôt que refusée."""
+
+    vResponse = client.get("/offers", params={"published": "999"})
+
+    assert vResponse.status_code == 200
+    assert "3 offres" in vResponse.text
+
+
+def test_license_is_shown_without_leaving_the_site(client):
+    """Vérifie que la licence est affichée depuis le fichier du projet."""
+
+    vResponse = client.get("/license")
+
+    assert vResponse.status_code == 200
+    assert "PolyForm Strict License 1.0.0" in vResponse.text

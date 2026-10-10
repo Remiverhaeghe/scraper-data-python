@@ -37,6 +37,10 @@ def test_build_offer_filters_keeps_known_values():
         "pStatus": "APPLIED",
         "pFollowUpBefore": None,
         "pHideIgnored": True,
+        "pMaxNetSalary": None,
+        "pPublishedSince": None,
+        "pHasSalary": False,
+        "pKeys": None,
     }
 
 

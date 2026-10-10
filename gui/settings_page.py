@@ -16,10 +16,10 @@ from config import (
     APPLICATION_NAME,
     CONTACT_URL,
     LICENSE_NAME,
-    LICENSE_URL,
     REPOSITORY_URL,
     TAGLINE,
 )
+from gui.dialogs import show_license
 from gui.theme import COLORS, THEME_CHOICES, is_dark_theme
 from gui.widgets import (
     create_button,
@@ -120,7 +120,7 @@ class SettingsPage(QWidget):
         """Construit le formulaire des règles de calcul, enregistrées en base."""
         vCard, vLayout = create_card(
             "Règles de calcul",
-            "Partagées avec le tableau de bord web ; le net des offres est recalculé",
+            "Partagées avec le tableau de bord web. Le net des offres est recalculé.",
         )
 
         vSettings = load_settings(self.database_file)
@@ -235,12 +235,12 @@ class SettingsPage(QWidget):
         vCard, vLayout = create_card(APPLICATION_NAME, TAGLINE)
 
         vLicense = QLabel(
-            f'<a href="{LICENSE_URL}">Licence {LICENSE_NAME}</a>. '
+            f'<a href="#licence">Licence {LICENSE_NAME}</a>. '
             "Icônes Lucide, sous licence ISC."
         )
         vLicense.setObjectName("cardSubtitle")
         vLicense.setWordWrap(True)
-        vLicense.setOpenExternalLinks(True)
+        vLicense.linkActivated.connect(lambda _: show_license(self))
 
         vGithubButton = create_button("Code source sur GitHub", "github")
         vGithubButton.clicked.connect(

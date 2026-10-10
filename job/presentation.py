@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from config import NEW_OFFER_DAYS
+from config import LICENSE_FILE, NEW_OFFER_DAYS
 from job.contract import CONTRACT_TYPES
 from job.sources.registry import SOURCES
 from storage.job_applications import APPLICATION_STATUSES
@@ -49,6 +49,14 @@ EXECUTION_TONES = {"success": "success", "partial": "warning"}
 
 # Texte des exécutions antérieures à l'enregistrement des critères
 UNKNOWN_SEARCH = "Critères non enregistrés"
+
+# Périodes proposées par le filtre de date de publication, en jours
+PUBLISHED_PERIODS = {
+    None: "Toutes les dates",
+    1: "Publiées depuis 24 h",
+    7: "Publiées depuis 7 jours",
+    30: "Publiées depuis 30 jours",
+}
 
 # Valeur du filtre de statut affichant les candidatures à relancer
 FOLLOW_UP_FILTER = "FOLLOW_UP"
@@ -150,6 +158,10 @@ def build_offer_filters(
     pStatus=None,
     pNow=None,
     pNewOfferDays=NEW_OFFER_DAYS,
+    pMaxNetSalary=None,
+    pPublishedDays=None,
+    pHasSalary=False,
+    pKeys=None,
 ):
     """Traduit les filtres saisis en paramètres de get_offers.
 
@@ -168,6 +180,12 @@ def build_offer_filters(
         "pSeenSince": vNow - timedelta(days=pNewOfferDays) if pNewOnly else None,
         "pStatus": pStatus if pStatus in APPLICATION_STATUSES else None,
         "pFollowUpBefore": vNow if pStatus == FOLLOW_UP_FILTER else None,
+        "pMaxNetSalary": pMaxNetSalary,
+        "pPublishedSince": (
+            vNow - timedelta(days=pPublishedDays) if pPublishedDays else None
+        ),
+        "pHasSalary": bool(pHasSalary),
+        "pKeys": pKeys,
         "pHideIgnored": True,
     }
 
@@ -193,8 +211,17 @@ def describe_search(pParameters):
         if pParameters.get("min_salary") is not None:
             vParts.append(f"≥ {format_euros(pParameters['min_salary'])} net")
 
+        if pParameters.get("max_salary") is not None:
+            vParts.append(f"≤ {format_euros(pParameters['max_salary'])} net")
+
         if pParameters.get("remote"):
             vParts.append("télétravail")
+
+        if pParameters.get("skills"):
+            vParts.append("compétences : " + ", ".join(pParameters["skills"]))
+
+        if pParameters.get("exclude_keywords"):
+            vParts.append("sans : " + ", ".join(pParameters["exclude_keywords"]))
 
         rDescription = " · ".join(vPart for vPart in vParts if vPart) or "Sans critère"
 
@@ -251,3 +278,54 @@ def describe_execution(pEntry):
     }
 
     return rDescription
+
+
+def build_legal_sections(pApplicationName):
+    """Retourne les mentions légales, communes au bureau et au web."""
+
+    rSections = [
+        (
+            "Édition",
+            f"{pApplicationName} est un projet personnel, sans finalité commerciale, "
+            "dont le code est publié sur GitHub. L'application s'exécute sur le poste "
+            "ou le serveur de la personne qui l'installe.",
+        ),
+        (
+            "Contact",
+            "Pour toute question sur le projet, l'auteur est joignable sur LinkedIn.",
+        ),
+        (
+            "Contenus",
+            "Les offres d'emploi proviennent des sources indiquées sur chaque annonce "
+            "et restent la propriété de leurs éditeurs. Elles sont présentées telles "
+            "que fournies par ces sources, avec un lien vers l'annonce d'origine qui "
+            "fait seule foi. Les salaires nets sont des estimations calculées selon "
+            "les règles des paramètres.",
+        ),
+        (
+            "Données personnelles",
+            "Le suivi des candidatures et les notes sont enregistrés uniquement dans "
+            "la base de données locale de l'application. Aucun cookie n'est déposé : "
+            "seul le choix du thème est conservé sur l'appareil.",
+        ),
+        (
+            "Licence",
+            "Le code peut être consulté et utilisé tel quel à des fins non "
+            "commerciales, mais ni modifié ni redistribué. Les icônes proviennent de "
+            "Lucide, sous licence ISC.",
+        ),
+    ]
+
+    return rSections
+
+
+def read_license():
+    """Retourne le texte de la licence, lu dans le fichier LICENSE du projet."""
+
+    try:
+        rText = LICENSE_FILE.read_text(encoding="utf-8")
+
+    except OSError:
+        rText = "Le fichier de licence est introuvable dans cette installation."
+
+    return rText

@@ -7,7 +7,7 @@ import pandas as pd
 from PySide6.QtWidgets import QPushButton
 
 from gui.home_page import HomePage, describe_activity
-from job.statistics import CHART_DAYS, load_statistics
+from job.statistics import CHART_DAYS, MIN_CHART_DAYS, load_statistics
 from gui.theme import COLORS
 from scraper.history import HistoryEntry
 from storage.database import initialize_database
@@ -165,7 +165,7 @@ def test_home_page_fills_chart(qt_application, tmp_path):
     vPage = HomePage(build_database(tmp_path))
     vPage.refresh()
 
-    assert len(vPage.chart.labels) == CHART_DAYS
+    assert MIN_CHART_DAYS <= len(vPage.chart.labels) <= CHART_DAYS
     assert [vName for vName, _, _ in vPage.chart.series] == [
         "Nouvelles offres",
         "Candidatures",

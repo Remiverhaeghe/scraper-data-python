@@ -19,7 +19,6 @@ from config import (
     CONTACT_URL,
     DATABASE_FILE,
     LICENSE_NAME,
-    LICENSE_URL,
     REPOSITORY_URL,
     TAGLINE,
 )
@@ -29,8 +28,10 @@ from job.presentation import (
     EXECUTION_STATUS_LABELS,
     EXECUTION_TONES,
     FOLLOW_UP_FILTER,
+    PUBLISHED_PERIODS,
     STATUS_LABELS,
     UNKNOWN_SEARCH,
+    build_legal_sections,
     build_offer_filters,
     describe_execution,
     describe_search,
@@ -38,6 +39,7 @@ from job.presentation import (
     format_date,
     format_euros,
     prepare_offer,
+    read_license,
     safe_url,
     summarize_history,
 )
@@ -45,9 +47,9 @@ from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
 from job.statistics import (
     ACTIVITY_SERIES,
-    CHART_DAYS,
     EXECUTION_CHART_SIZE,
     count_ready_sources,
+    get_contract_shares,
     get_execution_counts,
     get_source_shares,
     load_statistics,
@@ -150,7 +152,6 @@ templates.env.globals.update(
     repository_url=REPOSITORY_URL,
     contact_url=CONTACT_URL,
     license_name=LICENSE_NAME,
-    license_url=LICENSE_URL,
 )
 
 
@@ -166,6 +167,17 @@ def parse_amount(pValue):
         logger.warning("Montant de filtre ignoré : %s", pValue)
 
     return rAmount
+
+
+def parse_published_days(pValue):
+    """Convertit la période de publication choisie, en ignorant une valeur inconnue."""
+
+    rDays = None
+
+    if pValue.isdigit() and int(pValue) in PUBLISHED_PERIODS:
+        rDays = int(pValue)
+
+    return rDays
 
 
 def parse_date(pValue):
@@ -282,7 +294,6 @@ def show_dashboard(
             "statistics": vStatistics,
             "ready_sources": count_ready_sources(),
             "new_offer_days": vStatistics["new_offer_days"],
-            "chart_days": CHART_DAYS,
             "chart": build_bar_chart(
                 [
                     f"{vDay:%d/%m}"
@@ -305,6 +316,7 @@ def show_dashboard(
             ],
             "tone_icons": TONE_ICONS,
             "follow_up_filter": FOLLOW_UP_FILTER,
+            "now_iso": datetime.now().isoformat(),
         },
     )
 
@@ -319,6 +331,9 @@ def list_offers(
     contract: str = "",
     remote: str = "",
     min_salary: str = "",
+    max_salary: str = "",
+    published: str = "",
+    has_salary: str = "",
     new: str = "",
     status: str = "",
     pDatabaseFile: str = Depends(get_database_file),
@@ -339,6 +354,9 @@ def list_offers(
         pStatus=status,
         pNow=vNow,
         pNewOfferDays=vNewOfferDays,
+        pMaxNetSalary=parse_amount(max_salary),
+        pPublishedDays=parse_published_days(published),
+        pHasSalary=bool(has_salary),
     )
 
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
@@ -355,12 +373,16 @@ def list_offers(
         "contracts": CONTRACT_TYPES,
         "statuses": STATUS_LABELS,
         "follow_up_filter": FOLLOW_UP_FILTER,
+        "published_periods": PUBLISHED_PERIODS,
         "filters": {
             "q": q,
             "source": source,
             "contract": contract,
             "remote": remote,
             "min_salary": min_salary,
+            "max_salary": max_salary,
+            "published": published,
+            "has_salary": has_salary,
             "new": new,
             "status": status,
         },
@@ -533,6 +555,7 @@ def show_history(
             "active_page": "history",
             "summary": summarize_history(get_history_summary(pDatabaseFile)),
             "source_pie": build_pie(get_source_shares(pDatabaseFile)),
+            "contract_pie": build_pie(get_contract_shares(pDatabaseFile)),
             "execution_chart": build_bar_chart(
                 [vLabel for vLabel, _ in vExecutionCounts],
                 [
@@ -625,10 +648,25 @@ async def update_settings(
     return rResponse
 
 
+@app.get("/license", response_class=HTMLResponse)
+def show_license(request: Request):
+    """Affiche la licence du projet, lue dans le fichier LICENSE."""
+
+    rResponse = templates.TemplateResponse(
+        request, "license.html", {"active_page": None, "license_text": read_license()}
+    )
+
+    return rResponse
+
+
 @app.get("/legal", response_class=HTMLResponse)
 def show_legal(request: Request):
     """Affiche les mentions légales et la licence."""
 
-    rResponse = templates.TemplateResponse(request, "legal.html", {"active_page": None})
+    rResponse = templates.TemplateResponse(
+        request,
+        "legal.html",
+        {"active_page": None, "sections": build_legal_sections(APPLICATION_NAME)},
+    )
 
     return rResponse

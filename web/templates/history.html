@@ -15,9 +15,12 @@
 
 <section class="grid grid-2 section-gap">
     <article class="card">
-        <h2>Offres par source</h2>
-        <p class="card-subtitle">Répartition des offres actuellement en base</p>
-        {{ ui.pie(source_pie, "Répartition des offres par source") }}
+        <h2>Répartition des offres</h2>
+        <p class="card-subtitle">Par source et par contrat, pour les offres en base</p>
+        <div class="pies">
+            {{ ui.pie(source_pie, "Répartition des offres par source") }}
+            {{ ui.pie(contract_pie, "Répartition des offres par contrat") }}
+        </div>
     </article>
 
     <article class="card">
@@ -39,8 +42,7 @@
         <thead>
             <tr>
                 <th>Date</th>
-                <th>Recherche</th>
-                <th>Sources</th>
+                <th>Recherche et sources</th>
                 <th class="amount">Offres</th>
                 <th class="amount">Durée</th>
                 <th>Statut</th>
@@ -50,8 +52,10 @@
             {% for execution in executions %}
             <tr>
                 <td class="nowrap">{{ execution.started_at.strftime("%d/%m/%Y %H:%M") }}</td>
-                <td class="{% if execution.search == unknown_search %}muted{% else %}offer-title{% endif %}">{{ execution.search }}</td>
-                <td class="muted">{{ execution.sources or "—" }}</td>
+                <td>
+                    <span class="{% if execution.search == unknown_search %}muted{% else %}offer-title{% endif %}">{{ execution.search }}</span>
+                    {% if execution.sources %}<small class="muted cell-detail">{{ execution.sources }}</small>{% endif %}
+                </td>
                 <td class="amount">{{ execution.item_count }}</td>
                 <td class="amount">{{ execution.duration }}</td>
                 <td>

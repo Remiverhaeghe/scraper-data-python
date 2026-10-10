@@ -76,9 +76,17 @@ def filter_jobs(pJobs, pConfig):
             vJobs, lambda pJob: _matches_text(pJob["education"], pConfig.education)
         )
 
+    # Peu de sources renseignent les compétences : elles sont cherchées dans tout
+    # le texte de l'offre, comme le mot-clé.
     if pConfig.skills:
         vJobs = keep_matching(
-            vJobs, lambda pJob: _matches_all_texts(pJob["skills"], pConfig.skills)
+            vJobs, lambda pJob: _matches_all_texts(get_offer_text(pJob), pConfig.skills)
+        )
+
+    if pConfig.exclude_keywords:
+        vJobs = keep_matching(
+            vJobs,
+            lambda pJob: not _contains_any(pJob.get("title"), pConfig.exclude_keywords),
         )
 
     if pConfig.missions:
@@ -97,22 +105,23 @@ def filter_jobs(pJobs, pConfig):
     return rJobs
 
 
+def get_offer_text(pJob):
+    """Regroupe les principales informations textuelles d'une offre, en minuscules."""
+
+    rText = " ".join(
+        str(pJob.get(vColumn) or "")
+        for vColumn in ("title", "description", "missions", "requirements", "skills")
+    ).lower()
+
+    return rText
+
+
 def matches_keyword(pJob, pKeyword):
     """Recherche un mot-clé dans les principales informations textuelles
     de l'offre.
     """
 
-    vText = " ".join(
-        [
-            str(pJob["title"] or ""),
-            str(pJob["description"] or ""),
-            str(pJob["missions"] or ""),
-            str(pJob["requirements"] or ""),
-            str(pJob["skills"] or ""),
-        ]
-    )
-
-    rMatches = pKeyword.lower() in vText.lower()
+    rMatches = pKeyword.lower() in get_offer_text(pJob)
 
     return rMatches
 
@@ -222,6 +231,16 @@ def _matches_text(pText, pExpectedText):
     rMatches = pExpectedText.lower() in str(pText or "").lower()
 
     return rMatches
+
+
+def _contains_any(pText, pWords):
+    """Indique si l'un des mots figure dans le texte."""
+
+    vText = str(pText or "").lower()
+
+    rContains = any(vWord.lower() in vText for vWord in pWords)
+
+    return rContains
 
 
 def _matches_all_texts(pText, pExpectedTexts):

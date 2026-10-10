@@ -14,7 +14,16 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 # Critères de recherche conservés dans l'historique lorsqu'ils sont renseignés
-HISTORY_CRITERIA = ("keyword", "location", "contract", "min_salary", "remote")
+HISTORY_CRITERIA = (
+    "keyword",
+    "location",
+    "contract",
+    "min_salary",
+    "max_salary",
+    "remote",
+    "skills",
+    "exclude_keywords",
+)
 
 
 def build_search_parameters(pConfig):

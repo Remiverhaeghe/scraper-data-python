@@ -27,6 +27,7 @@ DEFAULT_CRITERIA = {
     "education": None,
     "skills": None,
     "missions": None,
+    "exclude_keywords": None,
 }
 
 

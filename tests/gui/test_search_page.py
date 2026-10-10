@@ -127,7 +127,14 @@ def test_search_displays_result(search_page):
     """Vérifie le déroulement complet d'une recherche dans son thread."""
 
     vResult = SimpleNamespace(
-        items=pd.DataFrame({"title": ["A", "B"], "is_new": [True, False]}),
+        items=pd.DataFrame(
+            {
+                "title": ["A", "B"],
+                "source": ["remotive", "jobicy"],
+                "source_id": ["1", "2"],
+                "is_new": [True, False],
+            }
+        ),
         error_message="Jooble : délai dépassé",
     )
 
@@ -164,3 +171,40 @@ def test_search_can_be_stopped(search_page):
         "Recherche arrêtée, aucune offre enregistrée"
     )
     assert search_page.progress_bar.value() == 0
+
+
+def test_show_offers_sends_search_results(search_page):
+    """Vérifie que « Voir les offres » transmet les seules offres trouvées."""
+
+    vRequests = []
+
+    search_page.show_offers_requested.connect(
+        lambda pKeys, pDescription: vRequests.append((pKeys, pDescription))
+    )
+
+    search_page.show_result(
+        SimpleNamespace(
+            items=pd.DataFrame(
+                {"source": ["remotive"], "source_id": ["7"], "is_new": [True]}
+            ),
+            error_message=None,
+        )
+    )
+    search_page.show_offers_button.click()
+
+    assert vRequests[0][0] == [("remotive", "7")]
+    assert "1 offre(s), dont 1 nouvelle(s)" in vRequests[0][1]
+
+
+def test_build_criteria_splits_word_lists(search_page):
+    """Vérifie le découpage des compétences et des mots à exclure."""
+
+    search_page.skills_edit.setText(" Java, Spring ,, SQL ")
+    search_page.exclude_edit.setText("stage")
+    search_page.max_salary_spin.setValue(4000)
+
+    rCriteria = search_page.build_criteria()
+
+    assert rCriteria["skills"] == ["Java", "Spring", "SQL"]
+    assert rCriteria["exclude_keywords"] == ["stage"]
+    assert rCriteria["max_salary"] == 4000

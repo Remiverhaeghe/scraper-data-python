@@ -29,6 +29,10 @@
 
             {# Une information absente est masquée plutôt qu'affichée « Non précisé ». #}
             <div class="details">
+                {% if offer.location %}
+                {% call detail("map-pin", "Lieu") %}{{ offer.location }}{% endcall %}
+                {% endif %}
+
                 {% if offer.contract or offer.contract_type %}
                 {% call detail("file-text", "Contrat") %}{{ offer.contract or offer.contract_type }}{% if offer.contract and offer.contract_type and offer.contract_type != offer.contract %} ({{ offer.contract_type }}){% endif %}{% endcall %}
                 {% endif %}
@@ -65,15 +69,19 @@
                 {% call detail("gift", "Avantages") %}{{ offer.benefits | join(", ") }}{% endcall %}
                 {% endif %}
 
+                {% if offer.experience_level %}
+                {% call detail("timer", "Expérience") %}{{ offer.experience_level }}{% endcall %}
+                {% endif %}
+
                 {% if offer.skills_list %}
-                {% call detail("sparkles", "Compétences") %}{{ offer.skills_list | join(", ") }}{% endcall %}
+                {% call detail("list-checks", "Compétences") %}{{ offer.skills_list | join(", ") }}{% endcall %}
                 {% endif %}
 
                 {% if offer.published_at %}
                 {% call detail("calendar", "Publiée le") %}{{ offer.published_at | date_fr }}{% endcall %}
                 {% endif %}
 
-                {% call detail("globe", "Découverte") %}{{ offer.first_seen_at | date_fr }}, vue pour la dernière fois le {{ offer.last_seen_at | date_fr }}{% endcall %}
+                {% call detail("search", "Découverte") %}{{ offer.first_seen_at | date_fr }}, vue pour la dernière fois le {{ offer.last_seen_at | date_fr }}{% endcall %}
             </div>
         </article>
 

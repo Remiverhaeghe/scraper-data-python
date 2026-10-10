@@ -19,7 +19,7 @@
 
         <article class="card">
             <h2>Règles de calcul</h2>
-            <p class="card-subtitle">Partagées avec l'application de bureau ; le net des offres est recalculé</p>
+            <p class="card-subtitle">Partagées avec l'application de bureau. Le net des offres est recalculé.</p>
             <form class="rules-form" method="post" action="{{ url_for('update_settings').path }}">
                 {% for key, definition in definitions.items() %}
                 <label class="rule">
@@ -46,7 +46,7 @@
             <h2>{{ app_name }}</h2>
             <p class="card-subtitle">{{ tagline }}</p>
             <p class="muted">
-                <a href="{{ license_url }}" target="_blank" rel="noopener">Licence {{ license_name }}</a>.
+                <a href="{{ url_for('show_license').path }}">Licence {{ license_name }}</a>.
                 Icônes Lucide, sous licence ISC.
                 <a href="{{ url_for('show_legal').path }}">Mentions légales</a>.
             </p>

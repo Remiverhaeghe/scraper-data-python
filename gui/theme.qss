@@ -165,6 +165,12 @@ QTextBrowser#descriptionText {
     font-size: 13px;
 }
 
+QFrame#resultsBanner {
+    background: $primary_light;
+    border: 1px solid $primary;
+    border-radius: 8px;
+}
+
 QLabel#warning {
     color: $warning;
 }
@@ -246,15 +252,31 @@ QPushButton#sourceChip {
 }
 
 QPushButton#sourceChip:checked {
-    background: $primary_light;
-    border-color: $primary;
-    color: $primary;
+    background: $success_light;
+    border-color: $success;
+    color: $success;
 }
 
 QPushButton#sourceChip:disabled {
     background: $surface_alt;
     border-style: dashed;
     color: $muted;
+}
+
+QPushButton#listRow {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    text-align: left;
+}
+
+QPushButton#listRow:hover {
+    background: $primary_light;
+}
+
+QLabel#sidebarLinks {
+    font-size: 12px;
 }
 
 QPushButton#quickAction {

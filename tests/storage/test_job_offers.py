@@ -270,3 +270,70 @@ def test_count_new_offers_by_day(tmp_path):
         ("2026-10-09", 0),
         ("2026-10-10", 1),
     ]
+
+
+def build_salary_database(pTmpPath):
+    """Crée une base avec trois offres : sans salaire, à 2 000 € et à 3 000 € net."""
+
+    rDatabaseFile = build_database(pTmpPath)
+
+    vItems = pd.DataFrame(
+        [
+            {
+                "source": "lever",
+                "source_id": "1",
+                "published_at": "2026-09-01T10:00:00Z",
+            },
+            {
+                "source": "lever",
+                "source_id": "2",
+                "salary_net_monthly_min": 2000,
+                "published_at": "2026-10-08T10:00:00Z",
+            },
+            {
+                "source": "lever",
+                "source_id": "3",
+                "salary_net_monthly_min": 3000,
+                "salary_net_monthly_max": 3500,
+            },
+        ]
+    )
+
+    save_offers(rDatabaseFile, vItems, datetime(2026, 10, 10, 9, 0))
+
+    return rDatabaseFile
+
+
+def get_ids(pDatabaseFile, **pFilters):
+    """Retourne les identifiants des offres correspondant aux filtres."""
+
+    rIds = sorted(get_offers(pDatabaseFile, **pFilters)["source_id"])
+
+    return rIds
+
+
+def test_get_offers_filters_salary_range(tmp_path):
+    """Vérifie les bornes de salaire et le filtre des offres avec salaire."""
+
+    vDatabaseFile = build_salary_database(tmp_path)
+
+    assert get_ids(vDatabaseFile, pMinNetSalary=2500) == ["3"]
+    assert get_ids(vDatabaseFile, pMaxNetSalary=2500) == ["2"]
+    assert get_ids(vDatabaseFile, pHasSalary=True) == ["2", "3"]
+
+
+def test_get_offers_filters_publication_date(tmp_path):
+    """Vérifie que la date de découverte remplace une date de publication absente."""
+
+    vDatabaseFile = build_salary_database(tmp_path)
+
+    assert get_ids(vDatabaseFile, pPublishedSince=datetime(2026, 10, 1)) == ["2", "3"]
+
+
+def test_get_offers_filters_keys(tmp_path):
+    """Vérifie la restriction aux offres d'une recherche, liste vide comprise."""
+
+    vDatabaseFile = build_salary_database(tmp_path)
+
+    assert get_ids(vDatabaseFile, pKeys=[("lever", "1"), ("lever", "3")]) == ["1", "3"]
+    assert get_ids(vDatabaseFile, pKeys=[]) == []

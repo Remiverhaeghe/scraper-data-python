@@ -188,6 +188,14 @@ def parse_arguments():
         "--missions", nargs="+", default=None, help="Missions recherchées."
     )
 
+    vParser.add_argument(
+        "--exclude",
+        dest="exclude_keywords",
+        nargs="+",
+        default=None,
+        help="Mots qui excluent une offre lorsqu'ils figurent dans son titre.",
+    )
+
     # Sources d'emploi
     vParser.add_argument(
         "--source",

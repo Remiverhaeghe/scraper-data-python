@@ -1,6 +1,7 @@
 """Tests du rendu des graphiques"""
 
 import pytest
+from PySide6.QtCore import qInstallMessageHandler
 
 from gui.chart import BarChart, PieChart
 
@@ -67,3 +68,24 @@ def test_pie_chart_renders(qt_application, pShares):
     vChart.set_shares(pShares)
 
     assert not render(vChart).isNull()
+
+
+def test_pie_chart_renders_without_qt_warning(qt_application):
+    """Vérifie que le titre central ne provoque aucun avertissement de police."""
+
+    vMessages = []
+
+    vPrevious = qInstallMessageHandler(
+        lambda pType, pContext, pMessage: vMessages.append(pMessage)
+    )
+
+    try:
+        vChart = PieChart()
+        vChart.setStyleSheet("font-size: 13px;")
+        vChart.set_shares([("Adzuna", 3, "#3B82F6")])
+        render(vChart)
+
+    finally:
+        qInstallMessageHandler(vPrevious)
+
+    assert not [vMessage for vMessage in vMessages if "setPointSizeF" in vMessage]

@@ -16,11 +16,28 @@ LEGEND_ROW_HEIGHT = 18
 MIN_LABEL_WIDTH = 40
 
 
-def draw_legend(pPainter, pItems, pWidth):
-    """Dessine une légende qui passe à la ligne ; retourne la hauteur occupée."""
+def scale_font(pFont, pFactor):
+    """Agrandit ou réduit une police, qu'elle soit définie en points ou en pixels.
+
+    La feuille de style fixe la taille en pixels : la taille en points vaut
+    alors -1 et ne peut pas être multipliée.
+    """
+
+    if pFont.pointSizeF() > 0:
+        pFont.setPointSizeF(pFont.pointSizeF() * pFactor)
+    else:
+        pFont.setPixelSize(max(round(pFont.pixelSize() * pFactor), 1))
+
+
+def draw_legend(pPainter, pItems, pWidth, pTop, pDraw=True):
+    """Dessine une légende qui passe à la ligne et retourne sa hauteur.
+
+    Avec pDraw à False, la légende est seulement mesurée, pour réserver sa
+    place sous le graphique avant de dessiner les barres.
+    """
 
     vLeft = 0
-    vTop = 0
+    vTop = pTop
 
     for vLabel, vColor in pItems:
         vWidth = pPainter.fontMetrics().horizontalAdvance(vLabel)
@@ -29,20 +46,21 @@ def draw_legend(pPainter, pItems, pWidth):
             vLeft = 0
             vTop += LEGEND_ROW_HEIGHT
 
-        pPainter.setPen(Qt.PenStyle.NoPen)
-        pPainter.setBrush(QColor(vColor))
-        pPainter.drawRoundedRect(QRectF(vLeft, vTop + 4, 10, 10), 3, 3)
+        if pDraw:
+            pPainter.setPen(Qt.PenStyle.NoPen)
+            pPainter.setBrush(QColor(vColor))
+            pPainter.drawRoundedRect(QRectF(vLeft, vTop + 4, 10, 10), 3, 3)
 
-        pPainter.setPen(QColor(COLORS["muted"]))
-        pPainter.drawText(
-            QRectF(vLeft + 16, vTop, vWidth + 4, LEGEND_ROW_HEIGHT),
-            Qt.AlignmentFlag.AlignVCenter,
-            vLabel,
-        )
+            pPainter.setPen(QColor(COLORS["muted"]))
+            pPainter.drawText(
+                QRectF(vLeft + 16, vTop, vWidth + 4, LEGEND_ROW_HEIGHT),
+                Qt.AlignmentFlag.AlignVCenter,
+                vLabel,
+            )
 
         vLeft += vWidth + 36
 
-    rHeight = vTop + LEGEND_ROW_HEIGHT + 6
+    rHeight = vTop - pTop + LEGEND_ROW_HEIGHT + 6
 
     return rHeight
 
@@ -83,7 +101,7 @@ class BarChart(QWidget):
         return rMaximum
 
     def paintEvent(self, pEvent):
-        """Dessine la légende éventuelle puis les barres groupées par libellé.
+        """Dessine les barres groupées par libellé, puis la légende en dessous.
 
         Avec plusieurs séries, le total de chacune figure dans la légende plutôt
         qu'au-dessus des barres, où les nombres se chevaucheraient.
@@ -95,19 +113,23 @@ class BarChart(QWidget):
         vTop = LABEL_HEIGHT
 
         vHasLegend = len(self.series) > 1
+        vLegendItems = [
+            (f"{vName} · {sum(vValues)}", vColor)
+            for vName, vColor, vValues in self.series
+        ]
+        vLegendHeight = (
+            draw_legend(vPainter, vLegendItems, vWidth, 0, pDraw=False)
+            if vHasLegend
+            else 0
+        )
+
+        vChartHeight = self.height() - vTop - LABEL_HEIGHT - vLegendHeight
+        vBaseline = vTop + vChartHeight
 
         if vHasLegend:
-            vTop += draw_legend(
-                vPainter,
-                [
-                    (f"{vName} · {sum(vValues)}", vColor)
-                    for vName, vColor, vValues in self.series
-                ],
-                vWidth,
+            draw_legend(
+                vPainter, vLegendItems, vWidth, self.height() - vLegendHeight + 6
             )
-
-        vChartHeight = self.height() - vTop - LABEL_HEIGHT
-        vBaseline = vTop + vChartHeight
 
         vPainter.setPen(QColor(COLORS["border"]))
         vPainter.drawLine(0, vBaseline, vWidth, vBaseline)
@@ -212,16 +234,16 @@ class PieChart(QWidget):
         vPainter.setBrush(QColor(COLORS["surface"]))
         vPainter.drawEllipse(vHole)
 
+        vPainter.save()
         vPainter.setPen(QColor(COLORS["heading"]))
+
         vFont = vPainter.font()
         vFont.setBold(True)
-        vFont.setPointSizeF(vFont.pointSizeF() * 1.4)
+        scale_font(vFont, 1.4)
+
         vPainter.setFont(vFont)
         vPainter.drawText(vHole, Qt.AlignmentFlag.AlignCenter, str(vTotal))
-
-        vFont.setBold(False)
-        vFont.setPointSizeF(vFont.pointSizeF() / 1.4)
-        vPainter.setFont(vFont)
+        vPainter.restore()
 
         vLegendLeft = vRing.right() + 20
         vRowHeight = 22

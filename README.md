@@ -374,7 +374,8 @@ scraper-data-python/
 │   ├── offers_model.py                        # Modèle Qt du tableau des offres
 │   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
 │   ├── history_page.py                        # Historique des exécutions
-│   ├── settings_page.py                       # Thème, état des sources et données
+│   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
+│   ├── dialogs.py                             # Fenêtres des mentions légales et de la licence
 │   ├── chart.py                               # Histogramme et camembert dessinés avec QPainter
 │   ├── widgets.py                             # Composants graphiques partagés
 │   ├── theme.py                               # Thèmes clair et sombre, palette et feuille de style
@@ -395,8 +396,9 @@ scraper-data-python/
 │   │   ├── offer.html                         # Fiche détaillée d'une offre
 │   │   ├── _application.html                  # Bloc de suivi d'une candidature
 │   │   ├── history.html                       # Historique des exécutions
-│   │   ├── settings.html                      # Thème et état des sources
+│   │   ├── settings.html                      # Thème, règles de calcul et état des sources
 │   │   ├── legal.html                         # Mentions légales
+│   │   ├── license.html                       # Texte de la licence
 │   │   └── error.html                         # Page d'erreur
 │   └── static/                                # Fichiers statiques
 │       ├── style.css                          # Feuille de style, thèmes clair et sombre

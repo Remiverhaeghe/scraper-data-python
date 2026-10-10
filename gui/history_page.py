@@ -27,6 +27,7 @@ from job.presentation import (
 )
 from job.statistics import (
     EXECUTION_CHART_SIZE,
+    get_contract_shares,
     get_execution_counts,
     get_source_shares,
 )
@@ -38,7 +39,7 @@ logger = get_logger(__name__)
 # Les exécutions plus anciennes restent en base mais ne sont pas affichées
 MAX_DISPLAYED_EXECUTIONS = 200
 
-COLUMNS = ["Date", "Recherche", "Sources", "Offres", "Durée", "Statut"]
+COLUMNS = ["Date", "Recherche et sources", "Offres", "Durée", "Statut"]
 
 # Icône et couleur de chaque statut d'exécution
 STATUS_ICONS = {
@@ -56,10 +57,12 @@ def build_row(pEntry):
     else:
         vSearch = f"Livres · {pEntry.url}"
 
+    # Les sources sont affichées sous les critères, dans la même cellule.
+    vSources = describe_sources(pEntry.parameters)
+
     rRow = [
         f"{pEntry.started_at:%d/%m/%Y %H:%M}",
-        vSearch,
-        describe_sources(pEntry.parameters) or "—",
+        f"{vSearch}\n{vSources}" if vSources else vSearch,
         str(pEntry.item_count),
         f"{pEntry.duration_seconds:.1f} s",
         EXECUTION_STATUS_LABELS.get(pEntry.status, pEntry.status),
@@ -100,7 +103,6 @@ class HistoryPage(QWidget):
         vHeader = self.table.horizontalHeader()
         vHeader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         vHeader.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        vHeader.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
 
         self.message_label = QLabel()
         self.message_label.setObjectName("pageSubtitle")
@@ -124,11 +126,19 @@ class HistoryPage(QWidget):
     def create_charts(self):
         """Construit la répartition par source et le rendement des exécutions."""
         vSourceCard, vSourceLayout = create_card(
-            "Offres par source", "Répartition des offres actuellement en base"
+            "Répartition des offres",
+            "Par source et par contrat, pour les offres en base",
         )
 
         self.source_chart = PieChart()
-        vSourceLayout.addWidget(self.source_chart, 1)
+        self.contract_chart = PieChart()
+
+        vCharts = QHBoxLayout()
+        vCharts.setSpacing(18)
+        vCharts.addWidget(self.source_chart, 1)
+        vCharts.addWidget(self.contract_chart, 1)
+
+        vSourceLayout.addLayout(vCharts, 1)
 
         vExecutionCard, vExecutionLayout = create_card(
             "Rendement des recherches",
@@ -150,7 +160,7 @@ class HistoryPage(QWidget):
         for vColumn, vText in enumerate(build_row(pEntry)):
             vItem = QTableWidgetItem(vText)
 
-            if vText in (UNKNOWN_SEARCH, "—"):
+            if vText == UNKNOWN_SEARCH:
                 vItem.setForeground(QColor(COLORS["muted"]))
 
             self.table.setItem(pRow, vColumn, vItem)
@@ -187,6 +197,15 @@ class HistoryPage(QWidget):
                 ]
             )
 
+            self.contract_chart.set_shares(
+                [
+                    (vShare["label"], vShare["count"], CHART_PALETTE[vIndex])
+                    for vIndex, vShare in enumerate(
+                        get_contract_shares(self.database_file)
+                    )
+                ]
+            )
+
             vExecutions = get_execution_counts(self.database_file)
 
             self.execution_chart.set_series(
@@ -204,6 +223,9 @@ class HistoryPage(QWidget):
 
             for vRow, vEntry in enumerate(vEntries):
                 self.fill_row(vRow, vEntry)
+
+            # Les critères et les sources tiennent sur deux lignes.
+            self.table.resizeRowsToContents()
 
             self.message_label.setText(
                 f"{len(vEntries)} dernière(s) exécution(s) · survolez un statut "

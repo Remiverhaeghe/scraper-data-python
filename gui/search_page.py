@@ -1,5 +1,7 @@
 """Page de recherche : critères, sources, progression et arrêt"""
 
+from datetime import datetime
+
 from PySide6.QtCore import QSettings, QThread, Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -52,6 +54,14 @@ def create_spin_box(pMinimum, pMaximum, pValue, pSuffix="", pEmptyText=None):
     return rSpinBox
 
 
+def split_words(pText):
+    """Découpe une saisie séparée par des virgules ; None si elle est vide."""
+
+    rWords = [vWord.strip() for vWord in pText.split(",") if vWord.strip()] or None
+
+    return rWords
+
+
 def create_field(pLabel, pWidget):
     """Place un libellé au-dessus de son champ."""
 
@@ -71,7 +81,8 @@ class SearchPage(QWidget):
 
     search_started = Signal()
     search_ended = Signal()
-    show_offers_requested = Signal()
+    # Offres trouvées, en couples (source, identifiant), et leur description
+    show_offers_requested = Signal(object, str)
 
     def __init__(self, pSettings=None):
         """Construit le formulaire et restaure les derniers critères saisis."""
@@ -81,6 +92,8 @@ class SearchPage(QWidget):
         self.search_thread = None
         self.search_worker = None
         self.source_buttons = {}
+        self.last_result_keys = []
+        self.last_result_label = ""
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(32, 28, 32, 28)
@@ -134,6 +147,17 @@ class SearchPage(QWidget):
 
         self.remote_check = QCheckBox("Télétravail uniquement")
 
+        self.max_salary_spin = create_spin_box(
+            0, 20000, 0, " € net/mois", "Aucun maximum"
+        )
+        self.max_salary_spin.setSingleStep(100)
+
+        self.skills_edit = QLineEdit()
+        self.skills_edit.setPlaceholderText("Ex. Java, Spring, SQL")
+
+        self.exclude_edit = QLineEdit()
+        self.exclude_edit.setPlaceholderText("Ex. stage, alternance")
+
         vCard, vLayout = create_card("Critères")
 
         vGrid = QGridLayout()
@@ -145,6 +169,11 @@ class SearchPage(QWidget):
         vGrid.addLayout(create_field("Contrat", self.contract_combo), 1, 0)
         vGrid.addLayout(create_field("Salaire minimum", self.min_salary_spin), 1, 1)
         vGrid.addWidget(self.remote_check, 1, 2, Qt.AlignmentFlag.AlignBottom)
+        vGrid.addLayout(create_field("Compétences requises", self.skills_edit), 2, 0)
+        vGrid.addLayout(
+            create_field("Mots à exclure du titre", self.exclude_edit), 2, 1
+        )
+        vGrid.addLayout(create_field("Salaire maximum", self.max_salary_spin), 2, 2)
         vGrid.setColumnStretch(0, 2)
         vGrid.setColumnStretch(1, 2)
         vGrid.setColumnStretch(2, 1)
@@ -202,7 +231,7 @@ class SearchPage(QWidget):
         rButton.setCursor(Qt.CursorShape.PointingHandCursor)
         rButton.setIcon(
             get_icon(
-                "circle-check", COLORS["border"], 16, pCheckedColor=COLORS["primary"]
+                "circle-check", COLORS["border"], 16, pCheckedColor=COLORS["success"]
             )
         )
         rButton.toggled.connect(self.update_source_count)
@@ -278,7 +307,7 @@ class SearchPage(QWidget):
             "Voir les offres", "arrow-right", pIconColor=COLORS["primary"]
         )
         self.show_offers_button.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        self.show_offers_button.clicked.connect(self.show_offers_requested.emit)
+        self.show_offers_button.clicked.connect(self.request_results)
         self.show_offers_button.hide()
 
         vRow = QHBoxLayout()
@@ -360,6 +389,9 @@ class SearchPage(QWidget):
             "max_items": self.max_items_spin.value(),
             "contract": self.contract_combo.currentData(),
             "min_salary": self.min_salary_spin.value() or None,
+            "max_salary": self.max_salary_spin.value() or None,
+            "skills": split_words(self.skills_edit.text()),
+            "exclude_keywords": split_words(self.exclude_edit.text()),
             "remote": True if self.remote_check.isChecked() else None,
             "max_pages": self.max_pages_spin.value() or None,
             "delay": self.delay_spin.value(),
@@ -438,10 +470,22 @@ class SearchPage(QWidget):
         )
 
     @Slot(object)
+    def request_results(self):
+        """Demande l'affichage des seules offres trouvées par la dernière recherche."""
+        self.show_offers_requested.emit(self.last_result_keys, self.last_result_label)
+
     def show_result(self, pResult):
         """Affiche le bilan d'une recherche terminée."""
         vItems = pResult.items
         vNewCount = int(vItems["is_new"].sum()) if "is_new" in vItems else 0
+
+        self.last_result_keys = list(
+            zip(vItems["source"].astype(str), vItems["source_id"].astype(str))
+        )
+        self.last_result_label = (
+            f"Résultats de la recherche de {datetime.now():%H:%M} : "
+            f"{len(vItems)} offre(s), dont {vNewCount} nouvelle(s)"
+        )
 
         self.progress_bar.setValue(100)
         self.set_status(

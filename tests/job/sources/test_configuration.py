@@ -49,6 +49,7 @@ def build_arguments(pSources):
         education=None,
         skills=None,
         missions=None,
+        exclude_keywords=None,
         sources=pSources,
     )
 

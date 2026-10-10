@@ -193,3 +193,31 @@ def test_empty_information_is_hidden(offers_page):
     assert not vRows["salary"][0].isVisibleTo(offers_page.detail_panel)
     assert vRows["contract"][0].isVisibleTo(offers_page.detail_panel)
     assert vRows["contract"][1].text() == "CDI"
+
+
+def test_search_results_are_shown_alone(offers_page):
+    """Vérifie l'affichage des seuls résultats d'une recherche, puis le retour."""
+
+    offers_page.apply_preset("offers", [("lever", "2")], "Résultats de la recherche")
+
+    assert get_titles(offers_page) == ["Data Engineer"]
+    assert offers_page.results_banner.isVisibleTo(offers_page)
+
+    offers_page.apply_preset("offers")
+
+    assert get_titles(offers_page) == ["Data Engineer", "Développeur Java"]
+    assert not offers_page.results_banner.isVisibleTo(offers_page)
+
+
+def test_salary_and_publication_filters(offers_page):
+    """Vérifie que les nouveaux filtres sont transmis à la requête."""
+
+    offers_page.max_salary_spin.setValue(2500)
+    offers_page.salary_check.setChecked(True)
+    offers_page.published_combo.setCurrentIndex(2)
+
+    vFilters = offers_page.build_filters(datetime.now(), 3)
+
+    assert vFilters["pMaxNetSalary"] == 2500
+    assert vFilters["pHasSalary"] is True
+    assert vFilters["pPublishedSince"] is not None

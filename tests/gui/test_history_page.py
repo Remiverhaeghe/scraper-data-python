@@ -36,8 +36,7 @@ def test_build_row():
 
     assert build_row(build_entry()) == [
         "09/10/2026 08:30",
-        "Java",
-        "Adzuna, Jooble",
+        "Java\nAdzuna, Jooble",
         "42",
         "3.2 s",
         "Partielle",
@@ -52,7 +51,7 @@ def test_build_row_for_books():
     )
 
     assert vRow[1] == "Livres · https://example.com"
-    assert vRow[2] == "—"
+    assert vRow[2] == "42"
 
 
 def test_history_page_lists_executions(qt_application, tmp_path):
@@ -67,8 +66,8 @@ def test_history_page_lists_executions(qt_application, tmp_path):
     vPage.refresh()
 
     assert vPage.table.rowCount() == 1
-    assert vPage.table.item(0, 1).text() == "Java"
-    assert vPage.table.item(0, 5).toolTip() == "Jooble : délai dépassé"
+    assert vPage.table.item(0, 1).text() == "Java\nAdzuna, Jooble"
+    assert vPage.table.item(0, 4).toolTip() == "Jooble : délai dépassé"
     assert vPage.message_label.text().startswith("1 dernière(s) exécution(s)")
     assert vPage.cards["executions"].value_label.text() == "1"
     assert vPage.cards["success_rate"].value_label.text() == "0 %"
@@ -82,4 +81,3 @@ def test_build_row_without_parameters():
     vRow = build_row(build_entry(parameters=None))
 
     assert vRow[1] == UNKNOWN_SEARCH
-    assert vRow[2] == "—"
