@@ -1,7 +1,4 @@
-# ============================================================================
-# Orchestration du traitement des offres d'emploi
-# ============================================================================
-
+"""Orchestration du traitement des offres d'emploi"""
 
 from datetime import datetime
 from dataclasses import replace
@@ -13,13 +10,11 @@ from scraper.history_service import record_history
 from storage.job_tracking import track_jobs
 from utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 
 def process_jobs(pConfig):
-    """
-    Lance le traitement des offres d'emploi.
+    """Lance le traitement des offres d'emploi.
 
     Le scraping produit d'abord un résultat brut provenant
     des sources activées dans la configuration.
@@ -27,55 +22,30 @@ def process_jobs(pConfig):
     Les dates de première et dernière récupération sont ensuite
     mises à jour avant l'enregistrement de l'historique et
     l'application des filtres.
-
-    :param pConfig: Configuration du scraping et des filtres.
-    :return: Résultat du scraping après filtrage.
     """
 
-    logger.info(
-        "Début du traitement des offres multi-sources"
-    )
+    logger.info("Début du traitement des offres multi-sources")
 
-    vScrapingResult = scrape_sources(
-        pConfig
-    )
+    vScrapingResult = scrape_sources(pConfig)
 
     vScrapedAt = datetime.now()
 
-    vTrackedItems = track_jobs(
-        DATABASE_FILE,
-        vScrapingResult.items,
-        vScrapedAt
-    )
+    vTrackedItems = track_jobs(DATABASE_FILE, vScrapingResult.items, vScrapedAt)
 
-    vScrapingResult = replace(
-        vScrapingResult,
-        items=vTrackedItems
-    )
+    vScrapingResult = replace(vScrapingResult, items=vTrackedItems)
 
-    record_history(
-        DATABASE_FILE,
-        "job",
-        "multi-source",
-        vScrapingResult
-    )
+    record_history(DATABASE_FILE, "job", "multi-source", vScrapingResult)
 
-    vFilteredJobs = filter_jobs(
-        vScrapingResult.items,
-        pConfig
-    )
+    vFilteredJobs = filter_jobs(vScrapingResult.items, pConfig)
 
-    rResult = replace(
-        vScrapingResult,
-        items=vFilteredJobs
-    )
+    rResult = replace(vScrapingResult, items=vFilteredJobs)
 
     logger.info(
         "Traitement des offres terminé : %s offre(s) trouvée(s), "
         "%s offre(s) après filtrage sur %s source(s)",
         len(vScrapingResult.items),
         len(rResult.items),
-        rResult.page_count
+        rResult.page_count,
     )
 
     return rResult

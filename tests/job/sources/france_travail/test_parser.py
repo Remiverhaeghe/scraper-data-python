@@ -1,18 +1,11 @@
-# ============================================================================
-# Tests de la transformation des offres France Travail
-# ============================================================================
+"""Tests de la transformation des offres France Travail"""
 
 from job.csv_schema import JOB_COLUMNS
-from job.sources.france_travail.parser import (
-    parse_job,
-    parse_jobs
-)
+from job.sources.france_travail.parser import parse_job, parse_jobs
 
 
 def test_parse_job():
-    """
-    Vérifie la transformation d'une offre France Travail.
-    """
+    """Vérifie la transformation d'une offre France Travail."""
 
     vJob = {
         "id": "123",
@@ -23,28 +16,12 @@ def test_parse_job():
         "experienceLibelle": "Débutant accepté",
         "dateCreation": "2026-09-22",
         "dateActualisation": "2026-09-22",
-        "entreprise": {
-            "nom": "Entreprise A"
-        },
-        "lieuTravail": {
-            "libelle": "Paris",
-            "commune": "Paris",
-            "codePostal": "75001"
-        },
-        "salaire": {
-            "min": 35000,
-            "max": 45000,
-            "libelle": "Annuel"
-        },
-        "origineOffre": {
-            "urlOrigine": "https://example.com/job/123"
-        },
+        "entreprise": {"nom": "Entreprise A"},
+        "lieuTravail": {"libelle": "Paris", "commune": "Paris", "codePostal": "75001"},
+        "salaire": {"min": 35000, "max": 45000, "libelle": "Annuel"},
+        "origineOffre": {"urlOrigine": "https://example.com/job/123"},
         "formations": "Bac +2",
-        "competences": [
-            {
-                "libelle": "Python"
-            }
-        ]
+        "competences": [{"libelle": "Python"}],
     }
 
     rJob = parse_job(vJob)
@@ -63,16 +40,9 @@ def test_parse_job():
 
 
 def test_parse_job_with_missing_values():
-    """
-    Vérifie qu'une offre partiellement renseignée est acceptée.
-    """
+    """Vérifie qu'une offre partiellement renseignée est acceptée."""
 
-    rJob = parse_job(
-        {
-            "id": "456",
-            "intitule": "Développeur Java"
-        }
-    )
+    rJob = parse_job({"id": "456", "intitule": "Développeur Java"})
 
     assert rJob["title"] == "Développeur Java"
     assert rJob["source"] == "france_travail"
@@ -82,19 +52,11 @@ def test_parse_job_with_missing_values():
 
 
 def test_parse_jobs():
-    """
-    Vérifie la transformation de plusieurs offres.
-    """
+    """Vérifie la transformation de plusieurs offres."""
 
     vJobs = [
-        {
-            "id": "1",
-            "intitule": "Développeur Python"
-        },
-        {
-            "id": "2",
-            "intitule": "Développeur Java"
-        }
+        {"id": "1", "intitule": "Développeur Python"},
+        {"id": "2", "intitule": "Développeur Java"},
     ]
 
     rDataFrame = parse_jobs(vJobs)
@@ -106,9 +68,7 @@ def test_parse_jobs():
 
 
 def test_parse_empty_jobs():
-    """
-    Vérifie la transformation d'une liste vide.
-    """
+    """Vérifie la transformation d'une liste vide."""
 
     rDataFrame = parse_jobs([])
 

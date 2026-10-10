@@ -1,6 +1,4 @@
-# ============================================================================
-# Tests du client France Travail
-# ============================================================================
+"""Tests du client France Travail"""
 
 import requests
 
@@ -8,33 +6,19 @@ from job.sources.france_travail.client import search_jobs
 
 
 class FakeConfig:
-    """
-    Configuration fictive utilisée par les tests.
-    """
+    """Configuration fictive utilisée par les tests."""
 
     api_base_url = "https://example.com/"
 
 
 def test_search_jobs(monkeypatch):
-    """
-    Vérifie l'appel de recherche des offres.
-    """
+    """Vérifie l'appel de recherche des offres."""
 
     vCalls = []
 
-    def mock_get(
-        pUrl,
-        headers,
-        params,
-        timeout
-    ):
+    def mock_get(pUrl, headers, params, timeout):
         vCalls.append(
-            {
-                "url": pUrl,
-                "headers": headers,
-                "params": params,
-                "timeout": timeout
-            }
+            {"url": pUrl, "headers": headers, "params": params, "timeout": timeout}
         )
 
         class FakeResponse:
@@ -43,13 +27,7 @@ def test_search_jobs(monkeypatch):
                 pass
 
             def json(self):
-                return {
-                    "resultats": [
-                        {
-                            "id": "123"
-                        }
-                    ]
-                }
+                return {"resultats": [{"id": "123"}]}
 
         rResponse = FakeResponse()
         return rResponse
@@ -57,43 +35,23 @@ def test_search_jobs(monkeypatch):
     def mock_get_access_token(pConfig):
         return "token-test"
 
-    monkeypatch.setattr(
-        requests,
-        "get",
-        mock_get
-    )
+    monkeypatch.setattr(requests, "get", mock_get)
 
     monkeypatch.setattr(
-        "job.sources.france_travail.client.get_access_token",
-        mock_get_access_token
+        "job.sources.france_travail.client.get_access_token", mock_get_access_token
     )
 
-    vParams = {
-        "motsCles": "python",
-        "commune": "59000"
-    }
+    vParams = {"motsCles": "python", "commune": "59000"}
 
-    rData = search_jobs(
-        FakeConfig(),
-        vParams
-    )
+    rData = search_jobs(FakeConfig(), vParams)
 
-    assert rData == {
-        "resultats": [
-            {
-                "id": "123"
-            }
-        ]
-    }
+    assert rData == {"resultats": [{"id": "123"}]}
 
-    assert vCalls[0]["url"] == (
-        "https://example.com/"
-        "offresdemploi/v2/offres/search"
-    )
+    assert vCalls[0]["url"] == ("https://example.com/" "offresdemploi/v2/offres/search")
 
     assert vCalls[0]["headers"] == {
         "Authorization": "Bearer token-test",
-        "Accept": "application/json"
+        "Accept": "application/json",
     }
 
     assert vCalls[0]["params"] == vParams
@@ -101,34 +59,55 @@ def test_search_jobs(monkeypatch):
 
 
 def test_search_jobs_http_error(monkeypatch):
-    """
-    Vérifie la propagation d'une erreur HTTP.
-    """
+    """Vérifie la propagation d'une erreur HTTP."""
 
     def mock_get_access_token(pConfig):
         return "token-test"
 
     def mock_get(*args, **kwargs):
-        raise requests.RequestException(
-            "Erreur HTTP"
-        )
+        raise requests.RequestException("Erreur HTTP")
 
     monkeypatch.setattr(
-        "job.sources.france_travail.client.get_access_token",
-        mock_get_access_token
+        "job.sources.france_travail.client.get_access_token", mock_get_access_token
     )
 
-    monkeypatch.setattr(
-        requests,
-        "get",
-        mock_get
-    )
+    monkeypatch.setattr(requests, "get", mock_get)
 
     try:
-        search_jobs(
-            FakeConfig(),
-            {}
-        )
+        search_jobs(FakeConfig(), {})
         assert False
     except requests.RequestException:
         assert True
+
+
+def test_search_jobs_adds_range_parameter(monkeypatch):
+    """Vérifie que la plage de résultats est transmise à l'API."""
+
+    vCalls = []
+
+    def mock_get(pUrl, headers, params, timeout):
+        vCalls.append(params)
+
+        class FakeResponse:
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"resultats": []}
+
+        rResponse = FakeResponse()
+        return rResponse
+
+    def mock_get_access_token(pConfig):
+        return "token-test"
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    monkeypatch.setattr(
+        "job.sources.france_travail.client.get_access_token", mock_get_access_token
+    )
+
+    search_jobs(FakeConfig(), {"motsCles": "python"}, pRange="150-299")
+
+    assert vCalls == [{"motsCles": "python", "range": "150-299"}]

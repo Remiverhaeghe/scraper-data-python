@@ -1,6 +1,4 @@
-# ============================================================================
-# Tests du stockage des offres d'emploi
-# ============================================================================
+"""Tests du stockage des offres d'emploi"""
 
 import csv
 
@@ -12,9 +10,7 @@ from job.storage import save_jobs
 
 
 def test_save_jobs(tmp_path):
-    """
-    Vérifie l'enregistrement des offres dans un fichier CSV.
-    """
+    """Vérifie l'enregistrement des offres dans un fichier CSV."""
 
     vFilePath = tmp_path / "jobs.csv"
 
@@ -55,7 +51,7 @@ def test_save_jobs(tmp_path):
                 "skills": "",
                 "department": None,
                 "experience_level": "junior",
-                "job_type": "development"
+                "job_type": "development",
             },
             {
                 "title": "Développeur Java",
@@ -93,26 +89,17 @@ def test_save_jobs(tmp_path):
                 "skills": "",
                 "department": None,
                 "experience_level": "junior",
-                "job_type": "development"
-            }
+                "job_type": "development",
+            },
         ]
     )
 
-    save_jobs(
-        vJobs,
-        vFilePath
-    )
+    save_jobs(vJobs, vFilePath)
 
     assert vFilePath.exists()
 
-    with vFilePath.open(
-        mode="r",
-        encoding="utf-8",
-        newline=""
-    ) as vFile:
-        vRows = list(
-            csv.reader(vFile)
-        )
+    with vFilePath.open(mode="r", encoding="utf-8", newline="") as vFile:
+        vRows = list(csv.reader(vFile))
 
     # Vérifie que l'ordre des colonnes du CSV respecte le schéma commun.
     assert vRows[0] == JOB_COLUMNS
@@ -124,9 +111,7 @@ def test_save_jobs(tmp_path):
     assert vRows[1][JOB_COLUMNS.index("source_id")] == "job-1"
     assert vRows[1][JOB_COLUMNS.index("location")] == "Paris"
     assert vRows[1][JOB_COLUMNS.index("contract")] == "CDI"
-    assert vRows[1][JOB_COLUMNS.index("url")] == (
-        "https://example.com/job-1"
-    )
+    assert vRows[1][JOB_COLUMNS.index("url")] == ("https://example.com/job-1")
 
     # Vérifie les principales valeurs de la seconde offre.
     assert vRows[2][JOB_COLUMNS.index("title")] == "Développeur Java"
@@ -135,63 +120,35 @@ def test_save_jobs(tmp_path):
     assert vRows[2][JOB_COLUMNS.index("source_id")] == "job-2"
     assert vRows[2][JOB_COLUMNS.index("location")] == "Lille"
     assert vRows[2][JOB_COLUMNS.index("contract")] == "CDD"
-    assert vRows[2][JOB_COLUMNS.index("url")] == (
-        "https://example.com/job-2"
-    )
+    assert vRows[2][JOB_COLUMNS.index("url")] == ("https://example.com/job-2")
 
 
 def test_save_empty_jobs(tmp_path):
-    """
-    Vérifie l'enregistrement d'un DataFrame d'offres vide.
-    """
+    """Vérifie l'enregistrement d'un DataFrame d'offres vide."""
 
     vFilePath = tmp_path / "jobs.csv"
 
-    vJobs = pd.DataFrame(
-        columns=JOB_COLUMNS
-    )
+    vJobs = pd.DataFrame(columns=JOB_COLUMNS)
 
-    save_jobs(
-        vJobs,
-        vFilePath
-    )
+    save_jobs(vJobs, vFilePath)
 
     assert vFilePath.exists()
 
-    with vFilePath.open(
-        mode="r",
-        encoding="utf-8",
-        newline=""
-    ) as vFile:
-        vRows = list(
-            csv.reader(vFile)
-        )
+    with vFilePath.open(mode="r", encoding="utf-8", newline="") as vFile:
+        vRows = list(csv.reader(vFile))
 
-    assert vRows == [
-        JOB_COLUMNS
-    ]
+    assert vRows == [JOB_COLUMNS]
 
 
-def test_save_jobs_logs_error_when_file_cannot_be_written(
-    tmp_path,
-    monkeypatch
-):
-    """
-    Vérifie qu'une erreur d'écriture est enregistrée dans les logs.
-    """
+def test_save_jobs_logs_error_when_file_cannot_be_written(tmp_path, monkeypatch):
+    """Vérifie qu'une erreur d'écriture est enregistrée dans les logs."""
 
     vFilePath = tmp_path / "jobs.csv"
 
     def mock_to_csv(*args, **kwargs):
-        raise PermissionError(
-            "Accès refusé"
-        )
+        raise PermissionError("Accès refusé")
 
-    monkeypatch.setattr(
-        pd.DataFrame,
-        "to_csv",
-        mock_to_csv
-    )
+    monkeypatch.setattr(pd.DataFrame, "to_csv", mock_to_csv)
 
     vJobs = pd.DataFrame(
         [
@@ -231,13 +188,10 @@ def test_save_jobs_logs_error_when_file_cannot_be_written(
                 "skills": "",
                 "department": None,
                 "experience_level": "junior",
-                "job_type": "development"
+                "job_type": "development",
             }
         ]
     )
 
     with pytest.raises(PermissionError):
-        save_jobs(
-            vJobs,
-            vFilePath
-        )
+        save_jobs(vJobs, vFilePath)

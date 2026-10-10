@@ -1,22 +1,14 @@
-# ============================================================================
-# Tests du service de gestion de l'historique des scrapers
-# ============================================================================
-
+"""Tests du service de gestion de l'historique des scrapers"""
 
 from datetime import datetime
 
-from scraper.history_service import (
-    build_history_entry,
-    record_history
-)
+from scraper.history_service import build_history_entry, record_history
 from scraper.result import ScrapingResult
 from storage.history_repository import get_history
 
 
 def test_build_history_entry_creates_entry_from_result():
-    """
-    Vérifie qu'un résultat de scraping est correctement transformé.
-    """
+    """Vérifie qu'un résultat de scraping est correctement transformé."""
 
     vStartedAt = datetime(2026, 9, 21, 17, 42, 10)
 
@@ -25,14 +17,10 @@ def test_build_history_entry_creates_entry_from_result():
         page_count=2,
         duration_seconds=4.82,
         started_at=vStartedAt,
-        status="success"
+        status="success",
     )
 
-    vEntry = build_history_entry(
-        "book",
-        "https://example.com/books",
-        vResult
-    )
+    vEntry = build_history_entry("book", "https://example.com/books", vResult)
 
     assert vEntry.started_at == vStartedAt
     assert vEntry.scraper_type == "book"
@@ -45,9 +33,7 @@ def test_build_history_entry_creates_entry_from_result():
 
 
 def test_build_history_entry_creates_error_entry():
-    """
-    Vérifie qu'une erreur est correctement transmise à l'historique.
-    """
+    """Vérifie qu'une erreur est correctement transmise à l'historique."""
 
     vResult = ScrapingResult(
         items=["A"],
@@ -55,23 +41,17 @@ def test_build_history_entry_creates_error_entry():
         duration_seconds=1.25,
         started_at=datetime(2026, 9, 21, 18, 10, 15),
         status="error",
-        error_message="Erreur de récupération."
+        error_message="Erreur de récupération.",
     )
 
-    vEntry = build_history_entry(
-        "job",
-        "https://example.com/jobs",
-        vResult
-    )
+    vEntry = build_history_entry("job", "https://example.com/jobs", vResult)
 
     assert vEntry.status == "error"
     assert vEntry.error_message == "Erreur de récupération."
 
 
 def test_record_history_saves_entry(tmp_path):
-    """
-    Vérifie qu'un résultat de scraping est enregistré dans SQLite.
-    """
+    """Vérifie qu'un résultat de scraping est enregistré dans SQLite."""
 
     vDatabasePath = tmp_path / "scraper.db"
 
@@ -80,28 +60,19 @@ def test_record_history_saves_entry(tmp_path):
         page_count=1,
         duration_seconds=1.25,
         started_at=datetime(2026, 9, 21, 18, 10, 15),
-        status="success"
+        status="success",
     )
 
-    vEntry = record_history(
-        vDatabasePath,
-        "job",
-        "https://example.com/jobs",
-        vResult
-    )
+    vEntry = record_history(vDatabasePath, "job", "https://example.com/jobs", vResult)
 
-    vEntries = get_history(
-        vDatabasePath
-    )
+    vEntries = get_history(vDatabasePath)
 
     assert len(vEntries) == 1
     assert vEntries[0] == vEntry
 
 
 def test_record_history_saves_error_entry(tmp_path):
-    """
-    Vérifie qu'une erreur est enregistrée dans SQLite.
-    """
+    """Vérifie qu'une erreur est enregistrée dans SQLite."""
 
     vDatabasePath = tmp_path / "scraper.db"
 
@@ -111,23 +82,14 @@ def test_record_history_saves_error_entry(tmp_path):
         duration_seconds=1.25,
         started_at=datetime(2026, 9, 21, 18, 10, 15),
         status="error",
-        error_message="Erreur de récupération."
+        error_message="Erreur de récupération.",
     )
 
-    vEntry = record_history(
-        vDatabasePath,
-        "job",
-        "https://example.com/jobs",
-        vResult
-    )
+    vEntry = record_history(vDatabasePath, "job", "https://example.com/jobs", vResult)
 
-    vEntries = get_history(
-        vDatabasePath
-    )
+    vEntries = get_history(vDatabasePath)
 
     assert len(vEntries) == 1
     assert vEntries[0] == vEntry
     assert vEntries[0].status == "error"
-    assert vEntries[0].error_message == (
-        "Erreur de récupération."
-    )
+    assert vEntries[0].error_message == ("Erreur de récupération.")

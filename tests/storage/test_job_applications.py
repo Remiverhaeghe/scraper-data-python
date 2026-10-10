@@ -1,0 +1,277 @@
+"""Tests du suivi des candidatures"""
+
+from datetime import datetime
+from pathlib import Path
+
+import pytest
+
+from storage.database import initialize_database
+from storage.job_applications import (
+    create_application,
+    get_follow_ups,
+    record_follow_up,
+    update_application_status,
+)
+
+
+def test_create_application(tmp_path):
+    """Vérifie qu'une candidature peut être créée."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vAppliedAt = datetime(2026, 10, 1, 10, 0, 0)
+
+    vFollowUpDate = datetime(2026, 10, 8, 10, 0, 0)
+
+    create_application(
+        vDatabaseFile,
+        "lever",
+        "123",
+        pStatus="APPLIED",
+        pAppliedAt=vAppliedAt,
+        pFollowUpDate=vFollowUpDate,
+        pNotes="Candidature envoyée",
+    )
+
+    import sqlite3
+
+    vConnection = sqlite3.connect(vDatabaseFile)
+
+    try:
+        vRow = vConnection.execute(
+            """
+            SELECT
+                source,
+                source_id,
+                status,
+                applied_at,
+                follow_up_date,
+                follow_up_count,
+                notes
+            FROM job_application
+            WHERE source = ?
+            AND source_id = ?
+            """,
+            ("lever", "123"),
+        ).fetchone()
+    finally:
+        vConnection.close()
+
+    assert vRow[0] == "lever"
+    assert vRow[1] == "123"
+    assert vRow[2] == "APPLIED"
+    assert vRow[3] == vAppliedAt.isoformat()
+    assert vRow[4] == vFollowUpDate.isoformat()
+    assert vRow[5] == 0
+    assert vRow[6] == "Candidature envoyée"
+
+
+def test_update_application_status(tmp_path):
+    """Vérifie que le statut d'une candidature peut être modifié."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    create_application(vDatabaseFile, "lever", "123")
+
+    update_application_status(vDatabaseFile, "lever", "123", "INTERVIEW")
+
+    import sqlite3
+
+    vConnection = sqlite3.connect(vDatabaseFile)
+
+    try:
+        vRow = vConnection.execute(
+            """
+            SELECT status
+            FROM job_application
+            WHERE source = ?
+            AND source_id = ?
+            """,
+            ("lever", "123"),
+        ).fetchone()
+    finally:
+        vConnection.close()
+
+    assert vRow[0] == "INTERVIEW"
+
+
+def test_record_follow_up(tmp_path):
+    """Vérifie qu'une relance incrémente le compteur
+    et mémorise la date de dernière relance.
+    """
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    create_application(vDatabaseFile, "lever", "123", pStatus="APPLIED")
+
+    vFollowUpDate = datetime(2026, 10, 8, 10, 0, 0)
+
+    record_follow_up(vDatabaseFile, "lever", "123", pFollowUpDate=vFollowUpDate)
+
+    import sqlite3
+
+    vConnection = sqlite3.connect(vDatabaseFile)
+
+    try:
+        vRow = vConnection.execute(
+            """
+            SELECT
+                follow_up_count,
+                last_follow_up_at,
+                follow_up_date
+            FROM job_application
+            WHERE source = ?
+            AND source_id = ?
+            """,
+            ("lever", "123"),
+        ).fetchone()
+    finally:
+        vConnection.close()
+
+    assert vRow[0] == 1
+    assert vRow[1] == vFollowUpDate.isoformat()
+    assert vRow[2] == vFollowUpDate.isoformat()
+
+
+def test_record_multiple_follow_ups(tmp_path):
+    """Vérifie que plusieurs relances sont correctement comptabilisées."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    create_application(vDatabaseFile, "lever", "123", pStatus="APPLIED")
+
+    vFirstFollowUp = datetime(2026, 10, 8, 10, 0, 0)
+
+    vSecondFollowUp = datetime(2026, 10, 15, 10, 0, 0)
+
+    record_follow_up(vDatabaseFile, "lever", "123", pFollowUpDate=vFirstFollowUp)
+
+    record_follow_up(vDatabaseFile, "lever", "123", pFollowUpDate=vSecondFollowUp)
+
+    import sqlite3
+
+    vConnection = sqlite3.connect(vDatabaseFile)
+
+    try:
+        vRow = vConnection.execute(
+            """
+            SELECT
+                follow_up_count,
+                last_follow_up_at
+            FROM job_application
+            WHERE source = ?
+            AND source_id = ?
+            """,
+            ("lever", "123"),
+        ).fetchone()
+    finally:
+        vConnection.close()
+
+    assert vRow[0] == 2
+    assert vRow[1] == vSecondFollowUp.isoformat()
+
+
+def test_get_follow_ups(tmp_path):
+    """Vérifie que les relances arrivées à échéance sont récupérées."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vDueDate = datetime(2026, 10, 5, 10, 0, 0)
+
+    vFutureDate = datetime(2026, 10, 15, 10, 0, 0)
+
+    create_application(
+        vDatabaseFile, "lever", "123", pStatus="APPLIED", pFollowUpDate=vDueDate
+    )
+
+    create_application(
+        vDatabaseFile,
+        "greenhouse",
+        "456",
+        pStatus="INTERVIEW",
+        pFollowUpDate=vFutureDate,
+    )
+
+    vFollowUps = get_follow_ups(vDatabaseFile, pDate=datetime(2026, 10, 10, 10, 0, 0))
+
+    assert len(vFollowUps) == 1
+    assert vFollowUps[0][0] == "lever"
+    assert vFollowUps[0][1] == "123"
+
+
+def test_get_follow_ups_only_returns_active_statuses(tmp_path):
+    """Vérifie qu'une candidature refusée n'est plus proposée
+    dans les relances à effectuer.
+    """
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vFollowUpDate = datetime(2026, 10, 5, 10, 0, 0)
+
+    create_application(
+        vDatabaseFile, "lever", "123", pStatus="REJECTED", pFollowUpDate=vFollowUpDate
+    )
+
+    vFollowUps = get_follow_ups(vDatabaseFile, pDate=datetime(2026, 10, 10, 10, 0, 0))
+
+    assert len(vFollowUps) == 0
+
+
+def test_invalid_application_status(tmp_path):
+    """Vérifie qu'un statut de candidature inconnu est refusé."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    with pytest.raises(ValueError):
+        create_application(vDatabaseFile, "lever", "123", pStatus="UNKNOWN")
+
+
+def test_same_application_is_not_duplicated(tmp_path):
+    """Vérifie qu'une même candidature reste unique pour une source
+    et un identifiant d'offre.
+    """
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    create_application(vDatabaseFile, "lever", "123", pStatus="APPLIED")
+
+    create_application(vDatabaseFile, "lever", "123", pStatus="INTERVIEW")
+
+    import sqlite3
+
+    vConnection = sqlite3.connect(vDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(
+            """
+            SELECT
+                source,
+                source_id,
+                status
+            FROM job_application
+            WHERE source = ?
+            AND source_id = ?
+            """,
+            ("lever", "123"),
+        ).fetchall()
+    finally:
+        vConnection.close()
+
+    assert len(vRows) == 1
+    assert vRows[0][2] == "INTERVIEW"

@@ -1,7 +1,4 @@
-# ============================================================================
-# Tests de la gestion des arguments de ligne de commande
-# ============================================================================
-
+"""Tests de la gestion des arguments de ligne de commande"""
 
 from unittest.mock import patch
 
@@ -9,14 +6,9 @@ from cli.arguments import parse_arguments
 
 
 def test_parse_arguments_default_values():
-    """
-    Vérifie les valeurs par défaut des arguments.
-    """
+    """Vérifie les valeurs par défaut des arguments."""
 
-    with patch(
-        "sys.argv",
-        ["main.py"]
-    ):
+    with patch("sys.argv", ["main.py"]):
         vArguments = parse_arguments()
 
     assert vArguments.type == "book"
@@ -31,21 +23,11 @@ def test_parse_arguments_default_values():
 
 
 def test_parse_arguments_common_configuration():
-    """
-    Vérifie la récupération des paramètres communs au scraping.
-    """
+    """Vérifie la récupération des paramètres communs au scraping."""
 
     with patch(
         "sys.argv",
-        [
-            "main.py",
-            "--max-items",
-            "100",
-            "--delay",
-            "2.5",
-            "--timeout",
-            "30"
-        ]
+        ["main.py", "--max-items", "100", "--delay", "2.5", "--timeout", "30"],
     ):
         vArguments = parse_arguments()
 
@@ -55,9 +37,7 @@ def test_parse_arguments_common_configuration():
 
 
 def test_parse_arguments_book_configuration():
-    """
-    Vérifie la récupération des paramètres spécifiques aux livres.
-    """
+    """Vérifie la récupération des paramètres spécifiques aux livres."""
 
     with patch(
         "sys.argv",
@@ -71,8 +51,8 @@ def test_parse_arguments_book_configuration():
             "50.0",
             "--min-rating",
             "4",
-            "--refresh"
-        ]
+            "--refresh",
+        ],
     ):
         vArguments = parse_arguments()
 
@@ -84,18 +64,9 @@ def test_parse_arguments_book_configuration():
 
 
 def test_parse_arguments_accepts_job(monkeypatch):
-    """
-    Vérifie que le scraping des offres d'emploi peut être sélectionné.
-    """
+    """Vérifie que le scraping des offres d'emploi peut être sélectionné."""
 
-    monkeypatch.setattr(
-        "sys.argv",
-        [
-            "main.py",
-            "--type",
-            "job"
-        ]
-    )
+    monkeypatch.setattr("sys.argv", ["main.py", "--type", "job"])
 
     vArguments = parse_arguments()
 
@@ -103,19 +74,10 @@ def test_parse_arguments_accepts_job(monkeypatch):
 
 
 def test_parse_arguments_job_source(monkeypatch):
-    """
-    Vérifie qu'une seule source d'emploi peut être sélectionnée
-    """
+    """Vérifie qu'une seule source d'emploi peut être sélectionnée"""
 
     monkeypatch.setattr(
-        "sys.argv",
-        [
-            "main.py",
-            "--type",
-            "job",
-            "--source",
-            "france-travail"
-        ]
+        "sys.argv", ["main.py", "--type", "job", "--source", "france-travail"]
     )
 
     vArguments = parse_arguments()
@@ -124,9 +86,7 @@ def test_parse_arguments_job_source(monkeypatch):
 
 
 def test_parse_arguments_multiple_job_sources(monkeypatch):
-    """
-    Vérifie que plusieurs sources d'emploi peuvent être sélectionnées
-    """
+    """Vérifie que plusieurs sources d'emploi peuvent être sélectionnées"""
     monkeypatch.setattr(
         "sys.argv",
         [
@@ -138,14 +98,10 @@ def test_parse_arguments_multiple_job_sources(monkeypatch):
             "--source",
             "greenhouse",
             "--source",
-            "lever"
-        ]
+            "lever",
+        ],
     )
 
     vArguments = parse_arguments()
 
-    assert vArguments.sources == [
-        "france-travail",
-        "greenhouse",
-        "lever"
-    ]
+    assert vArguments.sources == ["france-travail", "greenhouse", "lever"]

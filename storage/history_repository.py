@@ -1,30 +1,19 @@
-# ============================================================================
-# Persistance des entrées d'historique dans SQLite
-# ============================================================================
-
+"""Persistance des entrées d'historique dans SQLite"""
 
 from datetime import datetime
 
 from scraper.history import HistoryEntry
 from storage.database import connect_database
 
-
 HISTORY_TABLE = "history"
 
 
 def initialize_history(pDatabasePath):
-    """
-    Crée et met à jour la table d'historique si nécessaire.
+    """Crée et met à jour la table d'historique si nécessaire."""
 
-    :param pDatabasePath: Chemin vers la base SQLite.
-    """
+    vConnection = connect_database(pDatabasePath)
 
-    vConnection = connect_database(
-        pDatabasePath
-    )
-
-    vConnection.execute(
-        """
+    vConnection.execute("""
         CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             started_at TEXT NOT NULL,
@@ -36,43 +25,28 @@ def initialize_history(pDatabasePath):
             status TEXT NOT NULL,
             error_message TEXT
         )
-        """
-    )
+        """)
 
-    vColumns = vConnection.execute(
-        """
+    vColumns = vConnection.execute("""
         PRAGMA table_info(history)
-        """
-    ).fetchall()
+        """).fetchall()
 
-    vColumnNames = [
-        vColumn[1]
-        for vColumn in vColumns
-    ]
+    vColumnNames = [vColumn[1] for vColumn in vColumns]
 
     if "error_message" not in vColumnNames:
-        vConnection.execute(
-            """
+        vConnection.execute("""
             ALTER TABLE history
             ADD COLUMN error_message TEXT
-            """
-        )
+            """)
 
     vConnection.commit()
     vConnection.close()
 
 
 def save_history(pDatabasePath, pEntry):
-    """
-    Enregistre une entrée dans l'historique.
+    """Enregistre une entrée dans l'historique."""
 
-    :param pDatabasePath: Chemin vers la base SQLite.
-    :param pEntry: Entrée d'historique à enregistrer.
-    """
-
-    vConnection = connect_database(
-        pDatabasePath
-    )
+    vConnection = connect_database(pDatabasePath)
 
     vConnection.execute(
         """
@@ -96,8 +70,8 @@ def save_history(pDatabasePath, pEntry):
             pEntry.item_count,
             pEntry.duration_seconds,
             pEntry.status,
-            pEntry.error_message
-        )
+            pEntry.error_message,
+        ),
     )
 
     vConnection.commit()
@@ -105,23 +79,13 @@ def save_history(pDatabasePath, pEntry):
 
 
 def get_history(pDatabasePath):
-    """
-    Récupère les entrées de l'historique.
+    """Récupère les entrées de l'historique."""
 
-    :param pDatabasePath: Chemin vers la base SQLite.
-    :return: Liste des entrées d'historique.
-    """
+    initialize_history(pDatabasePath)
 
-    initialize_history(
-        pDatabasePath
-    )
+    vConnection = connect_database(pDatabasePath)
 
-    vConnection = connect_database(
-        pDatabasePath
-    )
-
-    vRows = vConnection.execute(
-        """
+    vRows = vConnection.execute("""
         SELECT
             started_at,
             scraper_type,
@@ -133,8 +97,7 @@ def get_history(pDatabasePath):
             error_message
         FROM history
         ORDER BY started_at DESC
-        """
-    ).fetchall()
+        """).fetchall()
 
     vConnection.close()
 
@@ -149,12 +112,10 @@ def get_history(pDatabasePath):
             item_count=vRow[4],
             duration_seconds=vRow[5],
             status=vRow[6],
-            error_message=vRow[7]
+            error_message=vRow[7],
         )
 
-        vEntries.append(
-            vEntry
-        )
+        vEntries.append(vEntry)
 
     rEntries = vEntries
     return rEntries

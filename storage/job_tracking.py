@@ -1,7 +1,4 @@
-# ============================================================================
-# Suivi de la première et dernière récupération des offres
-# ============================================================================
-
+"""Suivi de la première et dernière récupération des offres"""
 
 from datetime import datetime
 
@@ -11,31 +8,27 @@ from storage.database import connect_database
 
 
 def track_jobs(pDatabaseFile, pItems, pScrapedAt):
-    """
-    Met à jour le suivi des offres récupérées.
+    """Met à jour le suivi des offres récupérées.
 
     Une nouvelle offre reçoit une date de première découverte.
-    Une offre déjà connue conserve cette date et met à jour
-    uniquement sa date de dernière récupération.
+
+    Une offre déjà connue conserve cette date et met uniquement
+    à jour sa date de dernière récupération.
+
+    Une colonne is_new indique si l'offre vient d'être découverte.
 
     Les offres sans source_id ne peuvent pas être suivies
     entre deux exécutions.
-
-    :param pDatabaseFile: Chemin de la base SQLite.
-    :param pItems: DataFrame contenant les offres.
-    :param pScrapedAt: Date et heure de récupération.
-    :return: DataFrame enrichi avec scraped_at et first_seen_at.
     """
 
-    vConnection = connect_database(
-        pDatabaseFile
-    )
+    vConnection = connect_database(pDatabaseFile)
 
     try:
         vItems = pItems.copy()
 
         vItems["scraped_at"] = pScrapedAt
         vItems["first_seen_at"] = None
+        vItems["is_new"] = False
 
         for vIndex, vJob in vItems.iterrows():
 
@@ -54,10 +47,7 @@ def track_jobs(pDatabaseFile, pItems, pScrapedAt):
                 WHERE source = ?
                 AND source_id = ?
                 """,
-                (
-                    vSource,
-                    vSourceId
-                )
+                (vSource, vSourceId),
             )
 
             vRow = vCursor.fetchone()
@@ -76,13 +66,10 @@ def track_jobs(pDatabaseFile, pItems, pScrapedAt):
                     )
                     VALUES (?, ?, ?, ?)
                     """,
-                    (
-                        vSource,
-                        vSourceId,
-                        vFirstSeenAt,
-                        pScrapedAt.isoformat()
-                    )
+                    (vSource, vSourceId, vFirstSeenAt, pScrapedAt.isoformat()),
                 )
+
+                vIsNew = True
 
             else:
 
@@ -95,19 +82,14 @@ def track_jobs(pDatabaseFile, pItems, pScrapedAt):
                     WHERE source = ?
                     AND source_id = ?
                     """,
-                    (
-                        pScrapedAt.isoformat(),
-                        vSource,
-                        vSourceId
-                    )
+                    (pScrapedAt.isoformat(), vSource, vSourceId),
                 )
 
-            vItems.loc[
-                vIndex,
-                "first_seen_at"
-            ] = datetime.fromisoformat(
-                vFirstSeenAt
-            )
+                vIsNew = False
+
+            vItems.loc[vIndex, "first_seen_at"] = datetime.fromisoformat(vFirstSeenAt)
+
+            vItems.loc[vIndex, "is_new"] = vIsNew
 
         vConnection.commit()
 

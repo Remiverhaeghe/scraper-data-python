@@ -1,7 +1,4 @@
-# ============================================================================
-# Tests du service de scraping des offres d'emploi
-# ============================================================================
-
+"""Tests du service de scraping des offres d'emploi"""
 
 import pandas as pd
 
@@ -12,13 +9,9 @@ from scraper.config import ScrapingConfig
 
 
 def test_scrape_job():
-    """
-    Vérifie la récupération d'une offre.
-    """
+    """Vérifie la récupération d'une offre."""
 
-    vConfig = ScrapingConfig(
-        timeout=30
-    )
+    vConfig = ScrapingConfig(timeout=30)
 
     vHtml = """
     <div class="job">
@@ -31,20 +24,11 @@ def test_scrape_job():
     </div>
     """
 
-    with patch(
-        "job.service.fetch_page",
-        return_value=vHtml
-    ) as vFetchPage:
+    with patch("job.service.fetch_page", return_value=vHtml) as vFetchPage:
 
-        vJob = scrape_job(
-            "https://example.com/job",
-            vConfig
-        )
+        vJob = scrape_job("https://example.com/job", vConfig)
 
-    vFetchPage.assert_called_once_with(
-        "https://example.com/job",
-        vConfig
-    )
+    vFetchPage.assert_called_once_with("https://example.com/job", vConfig)
 
     assert isinstance(vJob, dict)
     assert vJob["title"] == "Développeur Python"
@@ -52,13 +36,9 @@ def test_scrape_job():
 
 
 def test_scrape_jobs():
-    """
-    Vérifie la récupération de plusieurs offres.
-    """
+    """Vérifie la récupération de plusieurs offres."""
 
-    vConfig = ScrapingConfig(
-        timeout=30
-    )
+    vConfig = ScrapingConfig(timeout=30)
 
     vHtml = """
     <div class="job">
@@ -80,110 +60,71 @@ def test_scrape_jobs():
     </div>
     """
 
-    with patch(
-        "job.service.fetch_page",
-        return_value=vHtml
-    ) as vFetchPage:
+    with patch("job.service.fetch_page", return_value=vHtml) as vFetchPage:
 
-        vResult = scrape_jobs(
-            "https://example.com/jobs",
-            vConfig
-        )
+        vResult = scrape_jobs("https://example.com/jobs", vConfig)
 
-    vFetchPage.assert_called_once_with(
-        "https://example.com/jobs",
-        vConfig
-    )
+    vFetchPage.assert_called_once_with("https://example.com/jobs", vConfig)
 
     assert isinstance(vResult.items, pd.DataFrame)
     assert len(vResult.items) == 2
-    assert vResult.items["title"].tolist() == [
-        "Développeur Python",
-        "Développeur Java"
-    ]
+    assert vResult.items["title"].tolist() == ["Développeur Python", "Développeur Java"]
 
-    assert vResult.items["company"].tolist() == [
-        "Entreprise A",
-        "Entreprise B"
-    ]
+    assert vResult.items["company"].tolist() == ["Entreprise A", "Entreprise B"]
 
     assert vResult.page_count == 1
     assert vResult.duration_seconds >= 0
 
 
 def test_scrape_jobs_with_multiple_pages():
-    """
-    Vérifie que plusieurs pages d'offres sont parcourues.
-    """
+    """Vérifie que plusieurs pages d'offres sont parcourues."""
 
-    vConfig = ScrapingConfig(
-        timeout=30,
-        max_pages=2
-    )
+    vConfig = ScrapingConfig(timeout=30, max_pages=2)
 
     vSoup1 = object()
     vSoup2 = object()
 
-    vPage1 = pd.DataFrame([
-        {
-            "title": "Développeur Python",
-            "company": "Entreprise A",
-            "url": "https://example.com/job-1"
-        }
-    ])
+    vPage1 = pd.DataFrame(
+        [
+            {
+                "title": "Développeur Python",
+                "company": "Entreprise A",
+                "url": "https://example.com/job-1",
+            }
+        ]
+    )
 
-    vPage2 = pd.DataFrame([
-        {
-            "title": "Développeur Java",
-            "company": "Entreprise B",
-            "url": "https://example.com/job-2"
-        }
-    ])
+    vPage2 = pd.DataFrame(
+        [
+            {
+                "title": "Développeur Java",
+                "company": "Entreprise B",
+                "url": "https://example.com/job-2",
+            }
+        ]
+    )
 
     with patch(
         "job.service.fetch_page",
-        side_effect=[
-            "<html>Page 1</html>",
-            "<html>Page 2</html>"
-        ]
+        side_effect=["<html>Page 1</html>", "<html>Page 2</html>"],
     ) as vFetchPage, patch(
-        "job.service.parse_html",
-        side_effect=[
-            vSoup1,
-            vSoup2
-        ]
+        "job.service.parse_html", side_effect=[vSoup1, vSoup2]
     ), patch(
-        "job.service.extract_jobs",
-        side_effect=[
-            vPage1,
-            vPage2
-        ]
+        "job.service.extract_jobs", side_effect=[vPage1, vPage2]
     ), patch(
         "job.service.extract_next_url",
-        side_effect=[
-            "https://example.com/jobs?page=2",
-            ""
-        ]
+        side_effect=["https://example.com/jobs?page=2", ""],
     ):
 
-        vResult = scrape_jobs(
-            "https://example.com/jobs",
-            vConfig
-        )
+        vResult = scrape_jobs("https://example.com/jobs", vConfig)
 
-    assert vResult.items["title"].tolist() == [
-        "Développeur Python",
-        "Développeur Java"
-    ]
+    assert vResult.items["title"].tolist() == ["Développeur Python", "Développeur Java"]
 
-    assert vResult.items["company"].tolist() == [
-        "Entreprise A",
-        "Entreprise B"
-    ]
+    assert vResult.items["company"].tolist() == ["Entreprise A", "Entreprise B"]
 
     assert vResult.items["url"].tolist() == [
         "https://example.com/job-1",
-        "https://example.com/job-2"
+        "https://example.com/job-2",
     ]
 
     assert vResult.page_count == 2
@@ -192,14 +133,9 @@ def test_scrape_jobs_with_multiple_pages():
 
 
 def test_scrape_jobs_respects_max_items():
-    """
-    Vérifie que le nombre maximum d'offres est respecté.
-    """
+    """Vérifie que le nombre maximum d'offres est respecté."""
 
-    vConfig = ScrapingConfig(
-        timeout=30,
-        max_items=1
-    )
+    vConfig = ScrapingConfig(timeout=30, max_items=1)
 
     vHtml = """
     <div class="job">
@@ -221,15 +157,9 @@ def test_scrape_jobs_respects_max_items():
     </div>
     """
 
-    with patch(
-        "job.service.fetch_page",
-        return_value=vHtml
-    ):
+    with patch("job.service.fetch_page", return_value=vHtml):
 
-        vResult = scrape_jobs(
-            "https://example.com/jobs",
-            vConfig
-        )
+        vResult = scrape_jobs("https://example.com/jobs", vConfig)
 
     assert len(vResult.items) == 1
     assert vResult.items.iloc[0]["title"] == "Développeur Python"
@@ -239,15 +169,11 @@ def test_scrape_jobs_respects_max_items():
 
 
 def test_scrape_jobs_keeps_all_jobs_when_max_items_is_greater():
-    """
-    Vérifie que toutes les offres sont conservées lorsque la limite
+    """Vérifie que toutes les offres sont conservées lorsque la limite
     est supérieure au nombre d'offres récupérées.
     """
 
-    vConfig = ScrapingConfig(
-        timeout=30,
-        max_items=5
-    )
+    vConfig = ScrapingConfig(timeout=30, max_items=5)
 
     vHtml = """
     <div class="job">
@@ -269,15 +195,9 @@ def test_scrape_jobs_keeps_all_jobs_when_max_items_is_greater():
     </div>
     """
 
-    with patch(
-        "job.service.fetch_page",
-        return_value=vHtml
-    ):
+    with patch("job.service.fetch_page", return_value=vHtml):
 
-        vResult = scrape_jobs(
-            "https://example.com/jobs",
-            vConfig
-        )
+        vResult = scrape_jobs("https://example.com/jobs", vConfig)
 
     assert len(vResult.items) == 2
     assert vResult.page_count == 1
@@ -285,15 +205,11 @@ def test_scrape_jobs_keeps_all_jobs_when_max_items_is_greater():
 
 
 def test_scrape_jobs_keeps_all_jobs_when_max_items_is_equal():
-    """
-    Vérifie que toutes les offres sont conservées lorsque la limite
+    """Vérifie que toutes les offres sont conservées lorsque la limite
     correspond exactement au nombre d'offres récupérées.
     """
 
-    vConfig = ScrapingConfig(
-        timeout=30,
-        max_items=2
-    )
+    vConfig = ScrapingConfig(timeout=30, max_items=2)
 
     vHtml = """
     <div class="job">
@@ -315,15 +231,9 @@ def test_scrape_jobs_keeps_all_jobs_when_max_items_is_equal():
     </div>
     """
 
-    with patch(
-        "job.service.fetch_page",
-        return_value=vHtml
-    ):
+    with patch("job.service.fetch_page", return_value=vHtml):
 
-        vResult = scrape_jobs(
-            "https://example.com/jobs",
-            vConfig
-        )
+        vResult = scrape_jobs("https://example.com/jobs", vConfig)
 
     assert len(vResult.items) == 2
     assert vResult.page_count == 1
@@ -331,24 +241,15 @@ def test_scrape_jobs_keeps_all_jobs_when_max_items_is_equal():
 
 
 def test_scrape_jobs_returns_error_result_when_fetch_fails():
-    """
-    Vérifie qu'une erreur de récupération est enregistrée
+    """Vérifie qu'une erreur de récupération est enregistrée
     dans le résultat du scraping.
     """
 
-    vConfig = ScrapingConfig(
-        timeout=30
-    )
+    vConfig = ScrapingConfig(timeout=30)
 
-    with patch(
-        "job.service.fetch_page",
-        side_effect=RuntimeError("Erreur HTTP")
-    ):
+    with patch("job.service.fetch_page", side_effect=RuntimeError("Erreur HTTP")):
 
-        vResult = scrape_jobs(
-            "https://example.com/jobs",
-            vConfig
-        )
+        vResult = scrape_jobs("https://example.com/jobs", vConfig)
 
     assert isinstance(vResult.items, pd.DataFrame)
     assert vResult.items.empty

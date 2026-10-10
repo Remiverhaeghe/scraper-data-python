@@ -1,6 +1,4 @@
-# ============================================================================
-# Tests de l'orchestration du traitement des offres d'emploi
-# ============================================================================
+"""Tests de l'orchestration du traitement des offres d'emploi"""
 
 from datetime import datetime
 from unittest.mock import patch
@@ -13,19 +11,13 @@ from scraper.result import ScrapingResult
 
 
 def test_process_jobs():
-    """
-    Vérifie que le traitement des offres lance le scraping
+    """Vérifie que le traitement des offres lance le scraping
     multi-sources, met à jour le suivi des offres,
     enregistre le résultat brut dans l'historique
     et applique les filtres.
     """
 
-    vConfig = JobScrapingConfig(
-        max_items=50,
-        delay=1.0,
-        timeout=30,
-        keyword="Python"
-    )
+    vConfig = JobScrapingConfig(max_items=50, delay=1.0, timeout=30, keyword="Python")
 
     vJobs = pd.DataFrame(
         [
@@ -51,7 +43,7 @@ def test_process_jobs():
                 "missions": "Développer des applications Python",
                 "requirements": "Expérience Python",
                 "education": "Bac+3",
-                "skills": "Python, Django, Git"
+                "skills": "Python, Django, Git",
             },
             {
                 "title": "Développeur Java",
@@ -75,8 +67,8 @@ def test_process_jobs():
                 "missions": "Développer des applications Java",
                 "requirements": "Expérience Java",
                 "education": "Bac+3",
-                "skills": "Java, Spring, Git"
-            }
+                "skills": "Java, Spring, Git",
+            },
         ]
     )
 
@@ -84,33 +76,20 @@ def test_process_jobs():
         items=vJobs,
         page_count=1,
         duration_seconds=0.1,
-        started_at=datetime(
-            2026,
-            9,
-            21,
-            17,
-            0,
-            0
-        )
+        started_at=datetime(2026, 9, 21, 17, 0, 0),
     )
 
     with patch(
-        "job.application.scrape_sources",
-        return_value=vScrapingResult
+        "job.application.scrape_sources", return_value=vScrapingResult
     ) as vScrapeSources, patch(
-        "job.application.track_jobs",
-        return_value=vJobs
+        "job.application.track_jobs", return_value=vJobs
     ) as vTrackJobs, patch(
         "job.application.record_history"
     ) as vRecordHistory:
 
-        rResult = process_jobs(
-            vConfig
-        )
+        rResult = process_jobs(vConfig)
 
-    vScrapeSources.assert_called_once_with(
-        vConfig
-    )
+    vScrapeSources.assert_called_once_with(vConfig)
 
     vTrackJobs.assert_called_once()
 
@@ -120,10 +99,7 @@ def test_process_jobs():
 
     assert vTrackArguments[1] is vScrapingResult.items
 
-    assert isinstance(
-        vTrackArguments[2],
-        datetime
-    )
+    assert isinstance(vTrackArguments[2], datetime)
 
     vRecordHistory.assert_called_once()
 
@@ -138,13 +114,9 @@ def test_process_jobs():
 
     assert len(rResult.items) == 1
 
-    assert rResult.items.iloc[0]["title"] == (
-        "Développeur Python"
-    )
+    assert rResult.items.iloc[0]["title"] == ("Développeur Python")
 
-    assert rResult.items.iloc[0]["url"] == (
-        "https://example.com/job-1"
-    )
+    assert rResult.items.iloc[0]["url"] == ("https://example.com/job-1")
 
     assert len(vScrapingResult.items) == 2
 

@@ -1,16 +1,16 @@
-# ============================================================================
-# Configuration de la source France Travail
-# ============================================================================
+"""Configuration de la source France Travail"""
 
 import os
 from dataclasses import dataclass
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 @dataclass
 class FranceTravailConfig:
-    """
-    Configuration nécessaire à l'utilisation de l'API France Travail.
-    """
+    """Configuration nécessaire à l'utilisation de l'API France Travail."""
 
     client_id: str
     client_secret: str
@@ -20,64 +20,40 @@ class FranceTravailConfig:
 
 
 def load_config():
-    """
-    Charge la configuration France Travail depuis les variables
-    d'environnement.
-
-    :return: Configuration France Travail.
+    """Charge la configuration France Travail depuis le fichier .env
+    ou les variables d'environnement.
     """
 
-    vClientId = os.getenv(
-        "FRANCE_TRAVAIL_CLIENT_ID"
-    )
+    vClientId = os.getenv("FRANCE_TRAVAIL_CLIENT_ID")
 
-    vClientSecret = os.getenv(
-        "FRANCE_TRAVAIL_CLIENT_SECRET"
-    )
+    vClientSecret = os.getenv("FRANCE_TRAVAIL_CLIENT_SECRET")
 
-    vScope = os.getenv(
-        "FRANCE_TRAVAIL_SCOPE"
-    )
+    vScope = os.getenv("FRANCE_TRAVAIL_SCOPE")
 
-    vTokenUrl = os.getenv(
-        "FRANCE_TRAVAIL_TOKEN_URL"
-    )
+    vTokenUrl = os.getenv("FRANCE_TRAVAIL_TOKEN_URL")
 
-    vApiBaseUrl = os.getenv(
-        "FRANCE_TRAVAIL_API_BASE_URL"
-    )
+    vApiBaseUrl = os.getenv("FRANCE_TRAVAIL_API_BASE_URL")
 
     vMissingValues = []
 
     if not vClientId:
-        vMissingValues.append(
-            "FRANCE_TRAVAIL_CLIENT_ID"
-        )
+        vMissingValues.append("FRANCE_TRAVAIL_CLIENT_ID")
 
     if not vClientSecret:
-        vMissingValues.append(
-            "FRANCE_TRAVAIL_CLIENT_SECRET"
-        )
+        vMissingValues.append("FRANCE_TRAVAIL_CLIENT_SECRET")
 
     if not vScope:
-        vMissingValues.append(
-            "FRANCE_TRAVAIL_SCOPE"
-        )
+        vMissingValues.append("FRANCE_TRAVAIL_SCOPE")
 
     if not vTokenUrl:
-        vMissingValues.append(
-            "FRANCE_TRAVAIL_TOKEN_URL"
-        )
+        vMissingValues.append("FRANCE_TRAVAIL_TOKEN_URL")
 
     if not vApiBaseUrl:
-        vMissingValues.append(
-            "FRANCE_TRAVAIL_API_BASE_URL"
-        )
+        vMissingValues.append("FRANCE_TRAVAIL_API_BASE_URL")
 
     if vMissingValues:
         raise ValueError(
-            "Configuration France Travail incomplète : "
-            + ", ".join(vMissingValues)
+            "Configuration France Travail incomplète : " + ", ".join(vMissingValues)
         )
 
     vConfig = FranceTravailConfig(
@@ -85,7 +61,7 @@ def load_config():
         client_secret=vClientSecret,
         scope=vScope,
         token_url=vTokenUrl,
-        api_base_url=vApiBaseUrl
+        api_base_url=vApiBaseUrl,
     )
 
     rConfig = vConfig

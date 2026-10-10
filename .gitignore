@@ -195,3 +195,10 @@ data/*.db
 
 # Logs générés par l'application
 logs/
+
+# Fichier .env
+.env
+
+# Configuration locale de l'éditeur
+CLAUDE.md
+.claude/

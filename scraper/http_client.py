@@ -1,7 +1,4 @@
-# ============================================================================
-# Gestion des requêtes HTTP du scraper
-# ============================================================================
-
+"""Gestion des requêtes HTTP du scraper"""
 
 import time
 
@@ -11,7 +8,6 @@ from scraper.config import ScrapingConfig
 from utils.logger import get_logger
 from utils.security import validate_url
 
-
 logger = get_logger(__name__)
 
 
@@ -20,18 +16,9 @@ CHUNK_SIZE = 64 * 1024
 
 
 def fetch_page(pUrl, pConfig: ScrapingConfig):
-    """
-    Récupère le contenu HTML d'une page web.
+    """Récupère le contenu HTML d'une page web."""
 
-    :param pUrl: URL de la page à récupérer.
-    :param pConfig: Configuration du scraping.
-    :return: Contenu HTML.
-    """
-
-    logger.info(
-        "Récupération de la page : %s",
-        pUrl
-    )
+    logger.info("Récupération de la page : %s", pUrl)
 
     vCurrentUrl = pUrl
     vRedirectCount = 0
@@ -39,20 +26,13 @@ def fetch_page(pUrl, pConfig: ScrapingConfig):
     vResponse = None
 
     while vCurrentUrl:
-        validate_url(
-            vCurrentUrl
-        )
+        validate_url(vCurrentUrl)
 
         # Applique le délai entre deux requêtes HTTP.
         if vRequestCount > 0 and pConfig.delay > 0:
-            time.sleep(
-                pConfig.delay
-            )
+            time.sleep(pConfig.delay)
 
-        vResponse = _request(
-            vCurrentUrl,
-            pConfig
-        )
+        vResponse = _request(vCurrentUrl, pConfig)
 
         vRequestCount += 1
 
@@ -62,59 +42,36 @@ def fetch_page(pUrl, pConfig: ScrapingConfig):
         vRedirectCount += 1
 
         if vRedirectCount > MAX_REDIRECTS:
-            raise ValueError(
-                "Nombre maximum de redirections dépassé."
-            )
+            raise ValueError("Nombre maximum de redirections dépassé.")
 
-        vCurrentUrl = vResponse.headers.get(
-            "Location"
-        )
+        vCurrentUrl = vResponse.headers.get("Location")
 
         if not vCurrentUrl:
-            raise ValueError(
-                "La redirection ne contient pas de destination."
-            )
+            raise ValueError("La redirection ne contient pas de destination.")
 
-        logger.info(
-            "Redirection détectée vers : %s",
-            vCurrentUrl
-        )
+        logger.info("Redirection détectée vers : %s", vCurrentUrl)
 
     vResponse.raise_for_status()
 
-    _validate_response_size(
-        vResponse,
-        pConfig
-    )
+    _validate_response_size(vResponse, pConfig)
 
-    vContent = _read_response_content(
-        vResponse,
-        pConfig
-    )
+    # Détermine l'encodage avant de consommer le flux.
+    vEncoding = vResponse.apparent_encoding
 
-    vResponse.encoding = vResponse.apparent_encoding
+    if vEncoding:
+        vResponse.encoding = vEncoding
 
-    logger.info(
-        "Page récupérée avec succès : %s",
-        vCurrentUrl
-    )
+    vContent = _read_response_content(vResponse, pConfig)
 
-    rHtml = vContent.decode(
-        vResponse.encoding or "utf-8",
-        errors="replace"
-    )
+    logger.info("Page récupérée avec succès : %s", vCurrentUrl)
+
+    rHtml = vContent.decode(vEncoding or "utf-8", errors="replace")
 
     return rHtml
 
 
 def _request(pUrl, pConfig: ScrapingConfig):
-    """
-    Effectue une requête HTTP avec gestion des nouvelles tentatives.
-
-    :param pUrl: URL à récupérer.
-    :param pConfig: Configuration du scraping.
-    :return: Réponse HTTP.
-    """
+    """Effectue une requête HTTP avec gestion des nouvelles tentatives."""
 
     vAttempt = 0
     vResponse = None
@@ -122,81 +79,49 @@ def _request(pUrl, pConfig: ScrapingConfig):
     while vResponse is None:
         try:
             vResponse = requests.get(
-                pUrl,
-                timeout=pConfig.timeout,
-                allow_redirects=False,
-                stream=True
+                pUrl, timeout=pConfig.timeout, allow_redirects=False, stream=True
             )
+
         except requests.RequestException:
             vAttempt += 1
 
             if vAttempt > pConfig.retry_count:
                 logger.exception(
-                    "Échec de récupération après %s tentative(s) : %s",
-                    vAttempt,
-                    pUrl
+                    "Échec de récupération après %s tentative(s) : %s", vAttempt, pUrl
                 )
                 raise
 
             logger.warning(
-                "Échec de récupération, nouvelle tentative "
-                "%s/%s : %s",
+                "Échec de récupération, nouvelle tentative " "%s/%s : %s",
                 vAttempt,
                 pConfig.retry_count,
-                pUrl
+                pUrl,
             )
 
             if pConfig.retry_delay > 0:
-                time.sleep(
-                    pConfig.retry_delay
-                )
+                time.sleep(pConfig.retry_delay)
 
     rResponse = vResponse
+
     return rResponse
 
 
-def _validate_response_size(
-    pResponse,
-    pConfig: ScrapingConfig
-):
-    """
-    Vérifie que la taille annoncée de la réponse HTTP respecte la limite.
+def _validate_response_size(pResponse, pConfig: ScrapingConfig):
+    """Vérifie que la taille annoncée de la réponse HTTP respecte la limite."""
 
-    :param pResponse: Réponse HTTP.
-    :param pConfig: Configuration du scraping.
-    """
+    vContentLength = pResponse.headers.get("Content-Length")
 
-    vContentLength = pResponse.headers.get(
-        "Content-Length"
-    )
-
-    if (
-        vContentLength is not None
-        and int(vContentLength) > pConfig.max_response_size
-    ):
-        raise ValueError(
-            "La taille de la réponse HTTP dépasse la limite autorisée."
-        )
+    if vContentLength is not None and int(vContentLength) > pConfig.max_response_size:
+        raise ValueError("La taille de la réponse HTTP dépasse la limite autorisée.")
 
 
-def _read_response_content(
-    pResponse,
-    pConfig: ScrapingConfig
-) -> bytes:
-    """
-    Lit le contenu HTTP par morceaux en contrôlant sa taille réelle.
-
-    :param pResponse: Réponse HTTP.
-    :param pConfig: Configuration du scraping.
-    :return: Contenu de la réponse en octets.
-    """
+def _read_response_content(pResponse, pConfig: ScrapingConfig) -> bytes:
+    """Lit le contenu HTTP par morceaux en contrôlant sa taille réelle."""
 
     vContent = bytearray()
     vContentSize = 0
 
-    for vChunk in pResponse.iter_content(
-        chunk_size=CHUNK_SIZE
-    ):
+    for vChunk in pResponse.iter_content(chunk_size=CHUNK_SIZE):
         if not vChunk:
             continue
 
@@ -207,12 +132,8 @@ def _read_response_content(
                 "La taille de la réponse HTTP dépasse la limite autorisée."
             )
 
-        vContent.extend(
-            vChunk
-        )
+        vContent.extend(vChunk)
 
-    rContent = bytes(
-        vContent
-    )
+    rContent = bytes(vContent)
 
     return rContent

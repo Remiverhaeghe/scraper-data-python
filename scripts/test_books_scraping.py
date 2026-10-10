@@ -1,7 +1,4 @@
-# ============================================================================
-# Test manuel du scraping de Books to Scrape
-# ============================================================================
-
+"""Test manuel du scraping de Books to Scrape"""
 
 from book.config import BookScrapingConfig
 from book.service import scrape_books
@@ -10,30 +7,19 @@ from config import OUTPUT_FILE, URL
 
 
 def main():
-    """
-    Exécute manuellement un scraping limité à deux pages
+    """Exécute manuellement un scraping limité à deux pages
     et affiche un résumé du résultat.
     """
 
-    vConfig = BookScrapingConfig(
-        max_pages=2
-    )
+    vConfig = BookScrapingConfig(max_pages=2)
 
     vConfig.validate()
 
-    vBooks = scrape_books(
-        URL,
-        vConfig
-    )
+    vBooks = scrape_books(URL, vConfig)
 
-    save_books(
-        vBooks,
-        OUTPUT_FILE
-    )
+    save_books(vBooks, OUTPUT_FILE)
 
-    print(
-        f"Nombre de livres trouvés : {len(vBooks)}"
-    )
+    print(f"Nombre de livres trouvés : {len(vBooks)}")
 
     if vBooks:
         print("\nPremier livre :")

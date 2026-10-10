@@ -1,6 +1,4 @@
-# ============================================================================
-# Tests de la configuration du scraping des offres d'emploi
-# ============================================================================
+"""Tests de la configuration du scraping des offres d'emploi"""
 
 import pytest
 
@@ -8,9 +6,7 @@ from job.config import JobScrapingConfig
 
 
 def test_job_scraping_config():
-    """
-    Vérifie la création d'une configuration Jobs.
-    """
+    """Vérifie la création d'une configuration Jobs."""
 
     vConfig = JobScrapingConfig(
         max_items=50,
@@ -19,7 +15,7 @@ def test_job_scraping_config():
         keyword="Python",
         location="Lille",
         contract="CDI",
-        remote=True
+        remote=True,
     )
 
     assert vConfig.max_items == 50
@@ -32,9 +28,7 @@ def test_job_scraping_config():
 
 
 def test_job_scraping_config_with_default_values():
-    """
-    Vérifie les valeurs par défaut de la configuration Jobs.
-    """
+    """Vérifie les valeurs par défaut de la configuration Jobs."""
 
     vConfig = JobScrapingConfig()
 
@@ -46,17 +40,11 @@ def test_job_scraping_config_with_default_values():
     assert vConfig.contract is None
     assert vConfig.remote is None
 
+
 def test_job_scraping_config_validates_common_values():
-    """
-    Vérifie que la configuration Jobs utilise les validations communes.
-    """
+    """Vérifie que la configuration Jobs utilise les validations communes."""
 
-    vConfig = JobScrapingConfig(
-        max_items=0
-    )
+    vConfig = JobScrapingConfig(max_items=0)
 
-    with pytest.raises(
-        ValueError,
-        match="max_items"
-    ):
+    with pytest.raises(ValueError, match="max_items"):
         vConfig.validate()

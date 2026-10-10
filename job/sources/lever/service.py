@@ -1,6 +1,4 @@
-# ============================================================================
-# Service de scraping des offres Lever
-# ============================================================================
+"""Service de scraping des offres Lever"""
 
 import pandas as pd
 
@@ -9,28 +7,13 @@ from job.sources.lever.client import get_jobs
 from job.sources.lever.parser import parse_jobs
 from utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 
-def scrape_jobs(
-    pSite,
-    pLimit=100,
-    pMaxItems=None
-):
-    """
-    Récupère et normalise les offres d'un site Lever.
+def scrape_jobs(pSite, pLimit=100, pMaxItems=None):
+    """Récupère et normalise les offres d'un site Lever."""
 
-    :param pSite: Identifiant du site Lever.
-    :param pLimit: Nombre maximum d'offres par appel.
-    :param pMaxItems: Nombre maximum d'offres à récupérer.
-    :return: DataFrame des offres.
-    """
-
-    logger.info(
-        "Début du scraping Lever : %s",
-        pSite
-    )
+    logger.info("Début du scraping Lever : %s", pSite)
 
     vAllJobs = []
     vSkip = 0
@@ -46,18 +29,11 @@ def scrape_jobs(
                 vHasResults = False
                 continue
 
-            vRequestLimit = min(
-                pLimit,
-                vRemainingItems
-            )
+            vRequestLimit = min(pLimit, vRemainingItems)
         else:
             vRequestLimit = pLimit
 
-        vJobs = get_jobs(
-            pSite,
-            pLimit=vRequestLimit,
-            pSkip=vSkip
-        )
+        vJobs = get_jobs(pSite, pLimit=vRequestLimit, pSkip=vSkip)
 
         if not vJobs:
             vHasResults = False
@@ -69,19 +45,12 @@ def scrape_jobs(
             else:
                 vSkip += len(vJobs)
 
-    vDataFrame = parse_jobs(
-        vAllJobs
-    )
+    vDataFrame = parse_jobs(vAllJobs)
 
     if vDataFrame.empty:
-        vDataFrame = pd.DataFrame(
-            columns=JOB_COLUMNS
-        )
+        vDataFrame = pd.DataFrame(columns=JOB_COLUMNS)
 
-    logger.info(
-        "Scraping Lever terminé : %s offres",
-        len(vDataFrame)
-    )
+    logger.info("Scraping Lever terminé : %s offres", len(vDataFrame))
 
     rData = vDataFrame
 

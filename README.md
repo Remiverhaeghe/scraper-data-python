@@ -93,6 +93,9 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Greenhouse
 - [x] Lever
 - [ ] Pagination spécifique aux sites
+  - [x] France Travail
+  - [ ] Greenhouse — non nécessaire sur l'API Job Board utilisée
+  - [x] Lever
 - [x] Enregistrement de la première récupération
 - [x] Enregistrement de la dernière récupération
 - [x] Gestion des limites par source
@@ -163,7 +166,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **256 tests automatisés**
+- [x] **261 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 

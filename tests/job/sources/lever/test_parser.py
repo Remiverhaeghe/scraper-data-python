@@ -1,15 +1,11 @@
-# ============================================================================
-# Tests du parser des offres Lever
-# ============================================================================
+"""Tests du parser des offres Lever"""
 
 from job.csv_schema import JOB_COLUMNS
 from job.sources.lever.parser import parse_job, parse_jobs
 
 
 def test_parse_job():
-    """
-    Vérifie la transformation d'une offre Lever.
-    """
+    """Vérifie la transformation d'une offre Lever."""
 
     vJob = {
         "id": "job-123",
@@ -24,8 +20,8 @@ def test_parse_job():
             "commitment": "Full-time",
             "department": "Engineering",
             "level": "Mid Level",
-            "team": "Software"
-        }
+            "team": "Software",
+        },
     }
 
     rJob = parse_job(vJob)
@@ -53,15 +49,9 @@ def test_parse_job():
 
 
 def test_parse_job_without_optional_values():
-    """
-    Vérifie qu'une offre incomplète est correctement traitée.
-    """
+    """Vérifie qu'une offre incomplète est correctement traitée."""
 
-    vJob = {
-        "id": "job-123",
-        "text": "Python Developer",
-        "categories": {}
-    }
+    vJob = {"id": "job-123", "text": "Python Developer", "categories": {}}
 
     rJob = parse_job(vJob)
 
@@ -77,27 +67,21 @@ def test_parse_job_without_optional_values():
 
 
 def test_parse_jobs():
-    """
-    Vérifie la transformation de plusieurs offres Lever.
-    """
+    """Vérifie la transformation de plusieurs offres Lever."""
 
     vJobs = [
         {
             "id": "job-1",
             "text": "Python Developer",
             "country": "FR",
-            "categories": {
-                "location": "Paris"
-            }
+            "categories": {"location": "Paris"},
         },
         {
             "id": "job-2",
             "text": "Java Developer",
             "country": "FR",
-            "categories": {
-                "location": "Lille"
-            }
-        }
+            "categories": {"location": "Lille"},
+        },
     ]
 
     rData = parse_jobs(vJobs)
@@ -113,9 +97,7 @@ def test_parse_jobs():
 
 
 def test_parse_jobs_without_results():
-    """
-    Vérifie qu'une liste vide produit un DataFrame vide mais structuré.
-    """
+    """Vérifie qu'une liste vide produit un DataFrame vide mais structuré."""
 
     rData = parse_jobs([])
 

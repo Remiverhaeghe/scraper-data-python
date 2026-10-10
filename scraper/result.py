@@ -1,7 +1,4 @@
-# ============================================================================
-# Résultat générique d'une opération de scraping
-# ============================================================================
-
+"""Résultat générique d'une opération de scraping"""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -11,9 +8,7 @@ import pandas as pd
 
 @dataclass
 class ScrapingResult:
-    """
-    Contient le résultat et les informations d'une opération de scraping.
-    """
+    """Contient le résultat et les informations d'une opération de scraping."""
 
     items: pd.DataFrame
     page_count: int

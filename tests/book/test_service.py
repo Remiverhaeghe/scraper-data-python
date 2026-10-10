@@ -1,7 +1,4 @@
-# ============================================================================
-# Tests du service de scraping des livres
-# ============================================================================
-
+"""Tests du service de scraping des livres"""
 
 import pandas as pd
 
@@ -12,59 +9,41 @@ from book.service import scrape_book, scrape_books
 
 
 def test_scrape_book():
-    """
-    Vérifie le scraping d'un livre.
-    """
+    """Vérifie le scraping d'un livre."""
 
-    vConfig = BookScrapingConfig(
-        timeout=30
-    )
+    vConfig = BookScrapingConfig(timeout=30)
 
     vBook = {
         "title": "Python",
         "price": 10.0,
         "availability": "In stock",
         "rating": 5,
-        "url": "https://books.toscrape.com/catalogue/python.html"
+        "url": "https://books.toscrape.com/catalogue/python.html",
     }
 
     with patch(
-        "book.service.fetch_page",
-        return_value="<html>Test</html>"
-    ) as vFetchPage, patch(
-        "book.service.parse_html"
-    ) as vParseHtml, patch(
-        "book.service.extract_book",
-        return_value=vBook
+        "book.service.fetch_page", return_value="<html>Test</html>"
+    ) as vFetchPage, patch("book.service.parse_html") as vParseHtml, patch(
+        "book.service.extract_book", return_value=vBook
     ):
 
-        rBook = scrape_book(
-            "https://books.toscrape.com/catalogue/python.html",
-            vConfig
-        )
+        rBook = scrape_book("https://books.toscrape.com/catalogue/python.html", vConfig)
 
     vFetchPage.assert_called_once_with(
-        "https://books.toscrape.com/catalogue/python.html",
-        vConfig
+        "https://books.toscrape.com/catalogue/python.html", vConfig
     )
 
-    vParseHtml.assert_called_once_with(
-        "<html>Test</html>"
-    )
+    vParseHtml.assert_called_once_with("<html>Test</html>")
 
     assert rBook == vBook
 
 
 def test_scrape_books():
-    """
-    Vérifie le scraping de plusieurs pages et la suppression
+    """Vérifie le scraping de plusieurs pages et la suppression
     des doublons.
     """
 
-    vConfig = BookScrapingConfig(
-        timeout=20,
-        max_pages=2
-    )
+    vConfig = BookScrapingConfig(timeout=20, max_pages=2)
 
     vBooks = pd.DataFrame(
         [
@@ -73,7 +52,7 @@ def test_scrape_books():
                 "price": 10.0,
                 "availability": "In stock",
                 "rating": 5,
-                "url": "https://books.toscrape.com/catalogue/python.html"
+                "url": "https://books.toscrape.com/catalogue/python.html",
             }
         ]
     )
@@ -81,48 +60,25 @@ def test_scrape_books():
     vSoup = object()
 
     with patch(
-        "book.service.fetch_page",
-        return_value="<html>Test</html>"
-    ) as vFetchPage, patch(
-        "book.service.parse_html",
-        return_value=vSoup
-    ), patch(
-        "book.service.extract_books",
-        side_effect=[
-            vBooks,
-            vBooks
-        ]
+        "book.service.fetch_page", return_value="<html>Test</html>"
+    ) as vFetchPage, patch("book.service.parse_html", return_value=vSoup), patch(
+        "book.service.extract_books", side_effect=[vBooks, vBooks]
     ), patch(
         "book.service.extract_next_url",
-        side_effect=[
-            "https://books.toscrape.com/page-2.html",
-            ""
-        ]
+        side_effect=["https://books.toscrape.com/page-2.html", ""],
     ):
 
-        rResult = scrape_books(
-            "https://books.toscrape.com/",
-            vConfig
-        )
+        rResult = scrape_books("https://books.toscrape.com/", vConfig)
 
-    assert isinstance(
-        rResult.items,
-        pd.DataFrame
-    )
+    assert isinstance(rResult.items, pd.DataFrame)
 
     assert len(rResult.items) == 1
 
-    assert rResult.items["title"].tolist() == [
-        "Python"
-    ]
+    assert rResult.items["title"].tolist() == ["Python"]
 
-    assert rResult.items["price"].tolist() == [
-        10.0
-    ]
+    assert rResult.items["price"].tolist() == [10.0]
 
-    assert rResult.items["rating"].tolist() == [
-        5
-    ]
+    assert rResult.items["rating"].tolist() == [5]
 
     assert rResult.items["url"].tolist() == [
         "https://books.toscrape.com/catalogue/python.html"
@@ -135,26 +91,15 @@ def test_scrape_books():
 
     assert vFetchPage.call_count == 2
 
-    vFetchPage.assert_any_call(
-        "https://books.toscrape.com/",
-        vConfig
-    )
+    vFetchPage.assert_any_call("https://books.toscrape.com/", vConfig)
 
-    vFetchPage.assert_any_call(
-        "https://books.toscrape.com/page-2.html",
-        vConfig
-    )
+    vFetchPage.assert_any_call("https://books.toscrape.com/page-2.html", vConfig)
 
 
 def test_scrape_books_with_max_items():
-    """
-    Vérifie que le nombre maximum d'éléments est respecté.
-    """
+    """Vérifie que le nombre maximum d'éléments est respecté."""
 
-    vConfig = BookScrapingConfig(
-        timeout=10,
-        max_items=2
-    )
+    vConfig = BookScrapingConfig(timeout=10, max_items=2)
 
     vBooks = pd.DataFrame(
         [
@@ -163,62 +108,43 @@ def test_scrape_books_with_max_items():
                 "price": 10.0,
                 "availability": "In stock",
                 "rating": 5,
-                "url": "https://books.toscrape.com/book1.html"
+                "url": "https://books.toscrape.com/book1.html",
             },
             {
                 "title": "Book 2",
                 "price": 20.0,
                 "availability": "In stock",
                 "rating": 4,
-                "url": "https://books.toscrape.com/book2.html"
+                "url": "https://books.toscrape.com/book2.html",
             },
             {
                 "title": "Book 3",
                 "price": 30.0,
                 "availability": "In stock",
                 "rating": 3,
-                "url": "https://books.toscrape.com/book3.html"
-            }
+                "url": "https://books.toscrape.com/book3.html",
+            },
         ]
     )
 
     vSoup = object()
 
-    with patch(
-        "book.service.fetch_page",
-        return_value="<html>Test</html>"
-    ), patch(
-        "book.service.parse_html",
-        return_value=vSoup
-    ), patch(
-        "book.service.extract_books",
-        return_value=vBooks
-    ), patch(
+    with patch("book.service.fetch_page", return_value="<html>Test</html>"), patch(
+        "book.service.parse_html", return_value=vSoup
+    ), patch("book.service.extract_books", return_value=vBooks), patch(
         "book.service.extract_next_url",
-        return_value="https://books.toscrape.com/page-2.html"
+        return_value="https://books.toscrape.com/page-2.html",
     ):
 
-        rResult = scrape_books(
-            "https://books.toscrape.com/",
-            vConfig
-        )
+        rResult = scrape_books("https://books.toscrape.com/", vConfig)
 
-    assert isinstance(
-        rResult.items,
-        pd.DataFrame
-    )
+    assert isinstance(rResult.items, pd.DataFrame)
 
     assert len(rResult.items) == 2
 
-    assert rResult.items["title"].tolist() == [
-        "Book 1",
-        "Book 2"
-    ]
+    assert rResult.items["title"].tolist() == ["Book 1", "Book 2"]
 
-    assert rResult.items["price"].tolist() == [
-        10.0,
-        20.0
-    ]
+    assert rResult.items["price"].tolist() == [10.0, 20.0]
 
     assert rResult.page_count == 1
     assert rResult.duration_seconds >= 0
@@ -227,14 +153,9 @@ def test_scrape_books_with_max_items():
 
 
 def test_scrape_books_with_max_pages():
-    """
-    Vérifie que le nombre maximum de pages est respecté.
-    """
+    """Vérifie que le nombre maximum de pages est respecté."""
 
-    vConfig = BookScrapingConfig(
-        timeout=10,
-        max_pages=1
-    )
+    vConfig = BookScrapingConfig(timeout=10, max_pages=1)
 
     vBooks = pd.DataFrame(
         [
@@ -243,7 +164,7 @@ def test_scrape_books_with_max_pages():
                 "price": 10.0,
                 "availability": "In stock",
                 "rating": 5,
-                "url": "https://books.toscrape.com/python.html"
+                "url": "https://books.toscrape.com/python.html",
             }
         ]
     )
@@ -251,38 +172,23 @@ def test_scrape_books_with_max_pages():
     vSoup = object()
 
     with patch(
-        "book.service.fetch_page",
-        return_value="<html>Test</html>"
-    ) as vFetchPage, patch(
-        "book.service.parse_html",
-        return_value=vSoup
-    ), patch(
-        "book.service.extract_books",
-        return_value=vBooks
+        "book.service.fetch_page", return_value="<html>Test</html>"
+    ) as vFetchPage, patch("book.service.parse_html", return_value=vSoup), patch(
+        "book.service.extract_books", return_value=vBooks
     ), patch(
         "book.service.extract_next_url",
-        return_value="https://books.toscrape.com/page-2.html"
+        return_value="https://books.toscrape.com/page-2.html",
     ):
 
-        rResult = scrape_books(
-            "https://books.toscrape.com/",
-            vConfig
-        )
+        rResult = scrape_books("https://books.toscrape.com/", vConfig)
 
-    assert isinstance(
-        rResult.items,
-        pd.DataFrame
-    )
+    assert isinstance(rResult.items, pd.DataFrame)
 
     assert len(rResult.items) == 1
 
-    assert rResult.items["title"].tolist() == [
-        "Python"
-    ]
+    assert rResult.items["title"].tolist() == ["Python"]
 
-    assert rResult.items["url"].tolist() == [
-        "https://books.toscrape.com/python.html"
-    ]
+    assert rResult.items["url"].tolist() == ["https://books.toscrape.com/python.html"]
 
     assert rResult.page_count == 1
     assert rResult.duration_seconds >= 0

@@ -1,7 +1,4 @@
-# ============================================================================
-# Orchestration du traitement complet des livres
-# ============================================================================
-
+"""Orchestration du traitement complet des livres"""
 
 from book.display import display_books
 from book.filter import filter_books
@@ -12,75 +9,37 @@ from config import DATABASE_FILE
 from scraper.history_service import record_history
 from utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 
-def process_books(
-    pUrl,
-    pOutputFile,
-    pConfig,
-    pRefresh=False
-):
-    """
-    Lance le traitement complet des livres.
+def process_books(pUrl, pOutputFile, pConfig, pRefresh=False):
+    """Lance le traitement complet des livres."""
 
-    :param pUrl: URL de départ du scraping.
-    :param pOutputFile: Fichier CSV de sortie.
-    :param pConfig: Configuration du scraping.
-    :param pRefresh: Force un nouveau scraping.
-    :return: Résultat du scraping ou None si le fichier existant est utilisé.
-    """
-
-    logger.info(
-        "Début du traitement des livres"
-    )
+    logger.info("Début du traitement des livres")
 
     vResult = None
 
-    if pRefresh or not books_file_exists(
-        pOutputFile
-    ):
-        logger.info(
-            "Lancement du scraping des livres"
-        )
+    if pRefresh or not books_file_exists(pOutputFile):
+        logger.info("Lancement du scraping des livres")
 
-        vResult = scrape_books(
-            pUrl,
-            pConfig
-        )
+        vResult = scrape_books(pUrl, pConfig)
 
-        save_books(
-            vResult.items,
-            pOutputFile
-        )
+        save_books(vResult.items, pOutputFile)
 
-        record_history(
-            DATABASE_FILE,
-            "book",
-            pUrl,
-            vResult
-        )
+        record_history(DATABASE_FILE, "book", pUrl, vResult)
 
-    vBooks = read_books(
-        pOutputFile
-    )
+    vBooks = read_books(pOutputFile)
 
     vBooks = filter_books(
         vBooks,
         title=pConfig.title,
         max_price=pConfig.max_price,
-        min_rating=pConfig.min_rating
+        min_rating=pConfig.min_rating,
     )
 
-    display_books(
-        vBooks
-    )
+    display_books(vBooks)
 
-    logger.info(
-        "Traitement des livres terminé : %s livre(s)",
-        len(vBooks)
-    )
+    logger.info("Traitement des livres terminé : %s livre(s)", len(vBooks))
 
     rResult = vResult
 

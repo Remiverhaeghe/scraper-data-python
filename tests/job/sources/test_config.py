@@ -1,6 +1,4 @@
-# ============================================================================
-# Tests de la configuration commune des sources
-# ============================================================================
+"""Tests de la configuration commune des sources"""
 
 import pytest
 
@@ -10,9 +8,7 @@ from job.sources.config import SourceConfig
 
 
 def test_source_disabled():
-    """
-    Vérifie qu'une source désactivée est valide.
-    """
+    """Vérifie qu'une source désactivée est valide."""
 
     vConfig = SourceConfig()
 
@@ -20,171 +16,108 @@ def test_source_disabled():
 
 
 def test_source_api_only():
-    """
-    Vérifie qu'une source API uniquement est valide.
-    """
+    """Vérifie qu'une source API uniquement est valide."""
 
     vConfig = SourceConfig(
-        enabled=True,
-        api_available=True,
-        html_available=False,
-        mode="api"
+        enabled=True, api_available=True, html_available=False, mode="api"
     )
 
     vConfig.validate()
 
 
 def test_source_html_only():
-    """
-    Vérifie qu'une source HTML uniquement est valide.
-    """
+    """Vérifie qu'une source HTML uniquement est valide."""
 
     vConfig = SourceConfig(
-        enabled=True,
-        api_available=False,
-        html_available=True,
-        mode="html"
+        enabled=True, api_available=False, html_available=True, mode="html"
     )
 
     vConfig.validate()
 
 
 def test_source_api_and_html():
-    """
-    Vérifie qu'une source proposant les deux modes est valide.
-    """
+    """Vérifie qu'une source proposant les deux modes est valide."""
 
     vConfig = SourceConfig(
-        enabled=True,
-        api_available=True,
-        html_available=True,
-        mode="api"
+        enabled=True, api_available=True, html_available=True, mode="api"
     )
 
     vConfig.validate()
 
 
 def test_enabled_source_without_mode():
-    """
-    Vérifie qu'une source active doit avoir un mode.
-    """
+    """Vérifie qu'une source active doit avoir un mode."""
 
-    vConfig = SourceConfig(
-        enabled=True,
-        api_available=True,
-        html_available=True
-    )
+    vConfig = SourceConfig(enabled=True, api_available=True, html_available=True)
 
-    with pytest.raises(
-        ValueError,
-        match="Le mode doit être"
-    ):
+    with pytest.raises(ValueError, match="Le mode doit être"):
         vConfig.validate()
 
 
 def test_enabled_source_without_available_mode():
-    """
-    Vérifie qu'une source active doit proposer au moins
+    """Vérifie qu'une source active doit proposer au moins
     un mode de récupération.
     """
 
-    vConfig = SourceConfig(
-        enabled=True
-    )
+    vConfig = SourceConfig(enabled=True)
 
-    with pytest.raises(
-        ValueError,
-        match="au moins un mode"
-    ):
+    with pytest.raises(ValueError, match="au moins un mode"):
         vConfig.validate()
 
 
 def test_api_mode_not_available():
-    """
-    Vérifie qu'une source ne peut pas utiliser une API
+    """Vérifie qu'une source ne peut pas utiliser une API
     qui n'est pas disponible.
     """
 
     vConfig = SourceConfig(
-        enabled=True,
-        api_available=False,
-        html_available=True,
-        mode="api"
+        enabled=True, api_available=False, html_available=True, mode="api"
     )
 
-    with pytest.raises(
-        ValueError,
-        match="mode API n'est pas disponible"
-    ):
+    with pytest.raises(ValueError, match="mode API n'est pas disponible"):
         vConfig.validate()
 
 
 def test_html_mode_not_available():
-    """
-    Vérifie qu'une source ne peut pas utiliser HTML
+    """Vérifie qu'une source ne peut pas utiliser HTML
     si HTML n'est pas disponible.
     """
 
     vConfig = SourceConfig(
-        enabled=True,
-        api_available=True,
-        html_available=False,
-        mode="html"
+        enabled=True, api_available=True, html_available=False, mode="html"
     )
 
-    with pytest.raises(
-        ValueError,
-        match="mode HTML n'est pas disponible"
-    ):
+    with pytest.raises(ValueError, match="mode HTML n'est pas disponible"):
         vConfig.validate()
 
 
 def test_disabled_source_with_mode():
-    """
-    Vérifie qu'une source désactivée ne peut pas avoir
+    """Vérifie qu'une source désactivée ne peut pas avoir
     de mode sélectionné.
     """
 
     vConfig = SourceConfig(
-        enabled=False,
-        api_available=True,
-        html_available=True,
-        mode="api"
+        enabled=False, api_available=True, html_available=True, mode="api"
     )
 
-    with pytest.raises(
-        ValueError,
-        match="source désactivée"
-    ):
+    with pytest.raises(ValueError, match="source désactivée"):
         vConfig.validate()
 
+
 def test_job_config_has_sources():
-    """
-    Vérifie que les sources sont disponibles dans la configuration.
-    """
+    """Vérifie que les sources sont disponibles dans la configuration."""
 
     vConfig = JobScrapingConfig()
 
-    assert isinstance(
-        vConfig.france_travail,
-        SourceConfig
-    )
+    assert isinstance(vConfig.france_travail, SourceConfig)
 
-    assert isinstance(
-        vConfig.greenhouse,
-        SourceConfig
-    )
+    assert isinstance(vConfig.greenhouse, SourceConfig)
 
-    assert isinstance(
-        vConfig.lever,
-        SourceConfig
-    )
+    assert isinstance(vConfig.lever, SourceConfig)
 
 
 def test_job_config_sources_are_independent():
-    """
-    Vérifie que chaque source possède sa propre configuration.
-    """
+    """Vérifie que chaque source possède sa propre configuration."""
 
     vConfig = JobScrapingConfig()
 
@@ -198,16 +131,10 @@ def test_job_config_sources_are_independent():
 
 
 def test_job_config_sources_validation():
-    """
-    Vérifie que la validation des sources est appelée.
-    """
+    """Vérifie que la validation des sources est appelée."""
 
     vConfig = JobScrapingConfig(
-        france_travail=SourceConfig(
-            enabled=True,
-            api_available=True,
-            mode="api"
-        )
+        france_travail=SourceConfig(enabled=True, api_available=True, mode="api")
     )
 
     vConfig.validate()

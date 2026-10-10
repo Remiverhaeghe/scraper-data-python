@@ -1,39 +1,24 @@
-# ============================================================================
-# Tests de construction de la configuration des sources d'emploi
-# ============================================================================
+"""Tests de construction de la configuration des sources d'emploi"""
 
 from types import SimpleNamespace
 
-from job.sources.configuration import (
-    build_france_travail_params,
-    build_job_config
-)
+from job.sources.configuration import build_france_travail_params, build_job_config
 
 
 # Vérifie la conversion du mot-clé vers le paramètre France Travail
 def test_build_france_travail_params():
-    vJobConfig = SimpleNamespace(
-        keyword="Python"
-    )
+    vJobConfig = SimpleNamespace(keyword="Python")
 
-    rParams = build_france_travail_params(
-        vJobConfig
-    )
+    rParams = build_france_travail_params(vJobConfig)
 
-    assert rParams == {
-        "motsCles": "Python"
-    }
+    assert rParams == {"motsCles": "Python"}
 
 
 # Vérifie l'absence de paramètre lorsque aucun mot-clé n'est fourni
 def test_build_france_travail_params_without_keyword():
-    vJobConfig = SimpleNamespace(
-        keyword=None
-    )
+    vJobConfig = SimpleNamespace(keyword=None)
 
-    rParams = build_france_travail_params(
-        vJobConfig
-    )
+    rParams = build_france_travail_params(vJobConfig)
 
     assert rParams == {}
 
@@ -58,12 +43,10 @@ def test_build_job_config_without_sources():
         education=None,
         skills=None,
         missions=None,
-        sources=None
+        sources=None,
     )
 
-    rConfig = build_job_config(
-        vArguments
-    )
+    rConfig = build_job_config(vArguments)
 
     assert rConfig.france_travail.enabled is False
     assert rConfig.greenhouse.enabled is False

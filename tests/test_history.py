@@ -1,7 +1,4 @@
-# ============================================================================
-# Tests du modèle représentant l'historique des scrapers
-# ============================================================================
-
+"""Tests du modèle représentant l'historique des scrapers"""
 
 from datetime import datetime
 
@@ -9,9 +6,7 @@ from scraper.history import HistoryEntry
 
 
 def test_history_entry_contains_scraping_information():
-    """
-    Vérifie qu'une entrée d'historique contient les informations du scraping.
-    """
+    """Vérifie qu'une entrée d'historique contient les informations du scraping."""
 
     vStartedAt = datetime(2026, 9, 21, 17, 42, 10)
 
@@ -22,7 +17,7 @@ def test_history_entry_contains_scraping_information():
         page_count=5,
         item_count=100,
         duration_seconds=4.82,
-        status="success"
+        status="success",
     )
 
     assert vEntry.started_at == vStartedAt
@@ -36,9 +31,7 @@ def test_history_entry_contains_scraping_information():
 
 
 def test_history_entry_contains_error_message():
-    """
-    Vérifie qu'une entrée d'historique peut contenir une erreur.
-    """
+    """Vérifie qu'une entrée d'historique peut contenir une erreur."""
 
     vEntry = HistoryEntry(
         started_at=datetime(2026, 9, 21, 18, 10, 15),
@@ -48,7 +41,7 @@ def test_history_entry_contains_error_message():
         item_count=10,
         duration_seconds=1.25,
         status="error",
-        error_message="Erreur de récupération."
+        error_message="Erreur de récupération.",
     )
 
     assert vEntry.status == "error"

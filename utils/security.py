@@ -1,20 +1,14 @@
-# ============================================================================
-# Validation de sécurité des URLs
-# ============================================================================
-
+"""Validation de sécurité des URLs"""
 
 import ipaddress
 import socket
 from urllib.parse import urlparse
 
-
 ALLOWED_SCHEMES = {"http", "https"}
 
 
 def validate_url(pUrl):
-    """
-    Vérifie qu'une URL peut être utilisée par le scraper.
-    """
+    """Vérifie qu'une URL peut être utilisée par le scraper."""
 
     if not pUrl:
         raise ValueError("L'URL ne peut pas être vide.")
@@ -45,14 +39,9 @@ def validate_url(pUrl):
         raise ValueError("La destination localhost n'est pas autorisée.")
 
     try:
-        vAddresses = socket.getaddrinfo(
-            vParsedUrl.hostname,
-            None
-        )
+        vAddresses = socket.getaddrinfo(vParsedUrl.hostname, None)
     except socket.gaierror:
-        raise ValueError(
-            "Impossible de résoudre le nom de domaine."
-        )
+        raise ValueError("Impossible de résoudre le nom de domaine.")
 
     for vAddress in vAddresses:
         vIpAddress = ipaddress.ip_address(vAddress[4][0])
@@ -64,9 +53,7 @@ def validate_url(pUrl):
             or vIpAddress.is_multicast
             or vIpAddress.is_reserved
         ):
-            raise ValueError(
-                "La destination réseau n'est pas autorisée."
-            )
+            raise ValueError("La destination réseau n'est pas autorisée.")
 
     rValid = True
     return rValid

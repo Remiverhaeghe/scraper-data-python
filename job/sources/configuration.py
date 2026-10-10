@@ -1,31 +1,19 @@
-# ============================================================================
-# Construction de la configuration des sources d'emploi
-# ============================================================================
+"""Construction de la configuration des sources d'emploi"""
 
 from job.config import JobScrapingConfig
 from job.sources.config import SourceConfig
-from job.sources.france_travail.config import (
-    load_config as load_france_travail_config
-)
-from job.sources.greenhouse.config import (
-    load_config as load_greenhouse_config
-)
-from job.sources.lever.config import (
-    load_config as load_lever_config
-)
+from job.sources.france_travail.config import load_config as load_france_travail_config
+from job.sources.greenhouse.config import load_config as load_greenhouse_config
+from job.sources.lever.config import load_config as load_lever_config
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
-def build_source_config(
-    pSourceName,
-    pSources
-):
-    """
-    Construit la configuration générique d'une source d'emploi.
+def build_source_config(pSourceName, pSources):
+    """Construit la configuration générique d'une source d'emploi."""
 
-    :param pSourceName: Nom de la source.
-    :param pSources: Sources sélectionnées.
-    :return: Configuration générique de la source.
-    """
+    logger.info("Construction de la configuration source : %s", pSourceName)
 
     vEnabled = pSourceName in pSources
 
@@ -33,7 +21,11 @@ def build_source_config(
         enabled=vEnabled,
         api_available=vEnabled,
         html_available=False,
-        mode="api" if vEnabled else None
+        mode="api" if vEnabled else None,
+    )
+
+    logger.info(
+        "Source %s : activée=%s, mode=%s", pSourceName, vConfig.enabled, vConfig.mode
     )
 
     rConfig = vConfig
@@ -42,30 +34,27 @@ def build_source_config(
 
 
 def build_france_travail_config(pSources, pJobConfig):
-    """
-    Construit la configuration France Travail.
+    """Construit la configuration France Travail."""
 
-    :param pSources: Sources sélectionnées.
-    :param pJobConfig: Configuration du scraping des offres.
-    :return: Configuration générique France Travail.
-    """
+    logger.info("Début construction configuration France Travail")
 
-    vConfig = build_source_config(
-        "france-travail",
-        pSources
-    )
+    vConfig = build_source_config("france-travail", pSources)
 
     if vConfig.enabled:
+        logger.info("Chargement de la configuration France Travail")
+
         vFranceTravailConfig = load_france_travail_config()
+
+        logger.info("Configuration France Travail chargée")
 
         vParameters = {
             "config": vFranceTravailConfig,
-            "params": build_france_travail_params(
-                pJobConfig
-            )
+            "params": build_france_travail_params(pJobConfig),
         }
 
         vConfig.parameters = vParameters
+
+    logger.info("Configuration France Travail terminée")
 
     rConfig = vConfig
 
@@ -73,15 +62,13 @@ def build_france_travail_config(pSources, pJobConfig):
 
 
 def build_france_travail_params(pJobConfig):
-    """
-    Construit les paramètres de recherche France Travail.
+    """Construit les paramètres de recherche France Travail.
 
     Seuls les paramètres dont le mapping avec l'API est actuellement
     défini dans le projet sont construits ici.
-
-    :param pJobConfig: Configuration du scraping des offres.
-    :return: Paramètres de recherche France Travail.
     """
+
+    logger.info("Construction des paramètres France Travail")
 
     vParams = {}
 
@@ -94,24 +81,22 @@ def build_france_travail_params(pJobConfig):
 
 
 def build_greenhouse_config(pSources):
-    """
-    Construit la configuration Greenhouse.
+    """Construit la configuration Greenhouse."""
 
-    :param pSources: Sources sélectionnées.
-    :return: Configuration générique Greenhouse.
-    """
+    logger.info("Début construction configuration Greenhouse")
 
-    vConfig = build_source_config(
-        "greenhouse",
-        pSources
-    )
+    vConfig = build_source_config("greenhouse", pSources)
 
     if vConfig.enabled:
+        logger.info("Chargement de la configuration Greenhouse")
+
         vGreenhouseConfig = load_greenhouse_config()
 
-        vConfig.parameters = {
-            "board": vGreenhouseConfig.board
-        }
+        logger.info("Configuration Greenhouse chargée")
+
+        vConfig.parameters = {"board": vGreenhouseConfig.board}
+
+    logger.info("Configuration Greenhouse terminée")
 
     rConfig = vConfig
 
@@ -119,24 +104,22 @@ def build_greenhouse_config(pSources):
 
 
 def build_lever_config(pSources):
-    """
-    Construit la configuration Lever.
+    """Construit la configuration Lever."""
 
-    :param pSources: Sources sélectionnées.
-    :return: Configuration générique Lever.
-    """
+    logger.info("Début construction configuration Lever")
 
-    vConfig = build_source_config(
-        "lever",
-        pSources
-    )
+    vConfig = build_source_config("lever", pSources)
 
     if vConfig.enabled:
+        logger.info("Chargement de la configuration Lever")
+
         vLeverConfig = load_lever_config()
 
-        vConfig.parameters = {
-            "site": vLeverConfig.site
-        }
+        logger.info("Configuration Lever chargée")
+
+        vConfig.parameters = {"site": vLeverConfig.site}
+
+    logger.info("Configuration Lever terminée")
 
     rConfig = vConfig
 
@@ -144,14 +127,27 @@ def build_lever_config(pSources):
 
 
 def build_job_config(pArguments):
-    """
-    Construit la configuration complète du scraping des offres.
+    """Construit la configuration complète du scraping des offres."""
 
-    :param pArguments: Arguments de ligne de commande.
-    :return: Configuration des offres d'emploi.
-    """
+    logger.info("Début construction configuration Jobs")
 
     vSources = pArguments.sources or []
+
+    logger.info("Sources sélectionnées : %s", vSources)
+
+    logger.info("Construction configuration France Travail")
+
+    vFranceTravailConfig = build_france_travail_config(vSources, pArguments)
+
+    logger.info("Construction configuration Greenhouse")
+
+    vGreenhouseConfig = build_greenhouse_config(vSources)
+
+    logger.info("Construction configuration Lever")
+
+    vLeverConfig = build_lever_config(vSources)
+
+    logger.info("Construction de JobScrapingConfig")
 
     vConfig = JobScrapingConfig(
         max_items=pArguments.max_items,
@@ -171,19 +167,16 @@ def build_job_config(pArguments):
         education=pArguments.education,
         skills=pArguments.skills,
         missions=pArguments.missions,
-        france_travail=build_france_travail_config(
-            vSources,
-            pArguments
-        ),
-        greenhouse=build_greenhouse_config(
-            vSources
-        ),
-        lever=build_lever_config(
-            vSources
-        )
+        france_travail=vFranceTravailConfig,
+        greenhouse=vGreenhouseConfig,
+        lever=vLeverConfig,
     )
 
+    logger.info("Validation de la configuration Jobs")
+
     vConfig.validate()
+
+    logger.info("Configuration Jobs construite et validée")
 
     rConfig = vConfig
 

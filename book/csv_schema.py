@@ -1,12 +1,3 @@
-# ============================================================================
-# Définition du format CSV des livres
-# ============================================================================
+"""Définition du format CSV des livres"""
 
-
-BOOK_COLUMNS = [
-    "title",
-    "price",
-    "availability",
-    "rating",
-    "url"
-]
+BOOK_COLUMNS = ["title", "price", "availability", "rating", "url"]
