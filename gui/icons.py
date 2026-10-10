@@ -32,13 +32,24 @@ def render_icon(pName, pColor, pSize):
     return rPixmap
 
 
-def get_icon(pName, pColor, pSize=20, pSelectedColor=None):
-    """Retourne une icône, avec une seconde couleur pour l'état sélectionné."""
+def get_icon(pName, pColor, pSize=20, pSelectedColor=None, pCheckedColor=None):
+    """Retourne une icône, avec une couleur propre à l'état sélectionné ou coché.
+
+    Un élément de liste sélectionné utilise le mode Selected ; un bouton coché
+    utilise l'état On.
+    """
 
     rIcon = QIcon(render_icon(pName, pColor, pSize))
 
     if pSelectedColor is not None:
         rIcon.addPixmap(render_icon(pName, pSelectedColor, pSize), QIcon.Mode.Selected)
+
+    if pCheckedColor is not None:
+        rIcon.addPixmap(
+            render_icon(pName, pCheckedColor, pSize),
+            QIcon.Mode.Normal,
+            QIcon.State.On,
+        )
 
     return rIcon
 

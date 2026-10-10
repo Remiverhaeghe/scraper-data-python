@@ -9,6 +9,7 @@ from storage.database import connect_database, initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import (
     CONTENT_COLUMNS,
+    count_new_offers_by_day,
     count_offers,
     get_offer,
     get_offers,
@@ -248,3 +249,24 @@ def test_get_offer(tmp_path):
 
     assert get_offer(vDatabaseFile, "lever", "1")["title"] == "Offre 1"
     assert get_offer(vDatabaseFile, "lever", "inconnue") is None
+
+
+def test_count_new_offers_by_day(tmp_path):
+    """Vérifie le décompte quotidien, jours sans nouvelle offre compris."""
+
+    vDatabaseFile = build_database(tmp_path)
+
+    vItems = pd.DataFrame(
+        [{"source": "lever", "source_id": vId} for vId in ("1", "2", "3")]
+    )
+
+    save_offers(vDatabaseFile, vItems.iloc[:2], datetime(2026, 10, 8, 9, 0))
+    save_offers(vDatabaseFile, vItems.iloc[2:], datetime(2026, 10, 10, 9, 0))
+
+    rCounts = count_new_offers_by_day(vDatabaseFile, 3, datetime(2026, 10, 10, 12, 0))
+
+    assert [(vDay.isoformat(), vCount) for vDay, vCount in rCounts] == [
+        ("2026-10-08", 2),
+        ("2026-10-09", 0),
+        ("2026-10-10", 1),
+    ]

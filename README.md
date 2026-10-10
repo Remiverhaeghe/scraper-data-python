@@ -157,8 +157,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Déduplication
 - [x] Historique des exécutions
 - [x] Statistiques d'exécution
-- [ ] Export JSON
-- [ ] Export XLSX
+- [x] Export des offres en CSV, Excel et JSON, avec protection contre l'injection de formules
 - [ ] Notifications email
 - [ ] Planification des exécutions
 - [ ] Arrêt d'une exécution en cours
@@ -171,7 +170,9 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Recherche : sources, filtres, options avancées, progression et arrêt
 - [x] Sources non configurées grisées, derniers critères mémorisés
 - [x] Offres : filtres, tableau triable, détail et suivi des candidatures
-- [x] Historique des exécutions avec les critères de chaque recherche
+- [x] Historique des exécutions : synthèse, critères et statut de chaque recherche
+- [x] Thèmes clair et sombre, choix mémorisé ; page Paramètres (sources, données)
+- [x] Graphique des nouvelles offres et cartes d'accès direct aux offres filtrées
 
 ### 🌐 Tableau de bord web
 
@@ -246,6 +247,7 @@ scraper-data-python/
 │   ├── benefits.py                            # Détecte primes, 13e mois et épargne salariale
 │   ├── contract.py                            # Normalise le contrat : CDI, CDD ou freelance
 │   ├── presentation.py                        # Mise en forme et filtres communs aux interfaces
+│   ├── export.py                              # Export des offres en CSV, Excel et JSON
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
 │       ├── __init__.py                         # Initialise le package des sources
@@ -352,6 +354,8 @@ scraper-data-python/
 ├── gui/                                       # Interface graphique de l'application
 │   ├── __init__.py                            # Initialise le package GUI
 │   ├── app.py                                 # Crée l'application Qt et ouvre la fenêtre
+│   ├── branding.py                            # Nom, slogan et logo de l'application
+│   ├── logo.svg                               # Logo, aussi utilisé comme icône de fenêtre
 │   ├── main_window.py                         # Fenêtre principale, menu latéral et pages
 │   ├── home_page.py                           # Accueil et indicateurs
 │   ├── search_page.py                         # Critères, sources, progression et arrêt
@@ -360,8 +364,10 @@ scraper-data-python/
 │   ├── offers_model.py                        # Modèle Qt du tableau des offres
 │   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
 │   ├── history_page.py                        # Historique des exécutions
+│   ├── settings_page.py                       # Thème, état des sources et données
+│   ├── chart.py                               # Histogramme dessiné avec QPainter
 │   ├── widgets.py                             # Composants graphiques partagés
-│   ├── theme.py                               # Couleurs et construction de la feuille de style
+│   ├── theme.py                               # Thèmes clair et sombre, palette et feuille de style
 │   ├── theme.qss                              # Feuille de style Qt, couleurs en variables
 │   ├── icons.py                               # Charge les icônes SVG dans une couleur donnée
 │   ├── icons/                                 # Icônes SVG Lucide (licence ISC)
@@ -379,6 +385,7 @@ scraper-data-python/
 │   │   └── offer.html                         # Fiche détaillée d'une offre
 │   └── static/                                # Fichiers statiques
 │       ├── style.css                          # Feuille de style
+│       ├── favicon.svg                        # Logo de l'application
 │       └── htmx.min.js                        # HTMX 2.0.4, copie locale
 │
 ├── utils/                                     # Utilitaires techniques communs
@@ -433,6 +440,7 @@ scraper-data-python/
 │   │   ├── test_benefits.py                   # Teste la détection des avantages
 │   │   ├── test_contract.py                   # Teste la normalisation du contrat
 │   │   ├── test_presentation.py               # Teste la mise en forme commune des offres
+│   │   ├── test_export.py                     # Teste l'export et la neutralisation des formules
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
@@ -529,7 +537,8 @@ scraper-data-python/
 │   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
-│   │   └── test_theme.py                       # Teste la feuille de style et les icônes
+│   │   ├── test_settings_page.py               # Teste la page des paramètres
+│   │   └── test_theme.py                       # Teste les thèmes, les icônes et le logo
 │   │
 │   ├── data/                                   # Tests des composants génériques de données
 │   │   ├── __init__.py                          # Initialise le package de tests Data

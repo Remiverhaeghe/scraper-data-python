@@ -16,7 +16,6 @@ COLUMNS = [
     ("Contrat", "contract", 85),
     ("Net mensuel", "salary_net_monthly_min", 145),
     ("Source", "source_label", 105),
-    ("Vue le", "first_seen_at", 110),
     ("Suivi", "application_status", 120),
 ]
 

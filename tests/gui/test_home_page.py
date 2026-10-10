@@ -6,7 +6,7 @@ import pandas as pd
 
 from PySide6.QtWidgets import QPushButton
 
-from gui.home_page import HomePage, describe_activity, load_statistics
+from gui.home_page import CHART_DAYS, HomePage, describe_activity, load_statistics
 from gui.theme import COLORS
 from scraper.history import HistoryEntry
 from storage.database import initialize_database
@@ -143,3 +143,25 @@ def test_home_page_requests_navigation(qt_application, tmp_path):
     vPage.findChild(QPushButton, "bannerButton").click()
 
     assert vTargets == ["search"]
+
+
+def test_statistic_card_requests_filtered_offers(qt_application, tmp_path):
+    """Vérifie qu'un clic sur une carte demande les offres correspondantes."""
+
+    vTargets = []
+
+    vPage = HomePage(build_database(tmp_path))
+    vPage.navigation_requested.connect(vTargets.append)
+
+    vPage.cards["follow_ups"].clicked.emit()
+
+    assert vTargets == ["follow_ups"]
+
+
+def test_home_page_fills_chart(qt_application, tmp_path):
+    """Vérifie que le graphique reçoit une valeur par jour."""
+
+    vPage = HomePage(build_database(tmp_path))
+    vPage.refresh()
+
+    assert len(vPage.chart.values) == CHART_DAYS

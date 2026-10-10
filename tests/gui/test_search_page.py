@@ -65,7 +65,7 @@ def select_only_remotive(pPage):
     """Sélectionne Remotive, qui ne demande aucune configuration."""
 
     pPage.check_sources(False)
-    pPage.source_checkboxes["remotive"].setChecked(True)
+    pPage.source_buttons["remotive"].setChecked(True)
 
 
 @pytest.mark.parametrize(
@@ -98,7 +98,7 @@ def test_unavailable_source_cannot_be_selected(search_page):
 
     search_page.check_sources(True)
 
-    assert not search_page.source_checkboxes["france-travail"].isEnabled()
+    assert not search_page.source_buttons["france-travail"].isEnabled()
     assert "france-travail" not in search_page.get_selected_sources()
 
 

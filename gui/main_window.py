@@ -1,6 +1,6 @@
 """Fenêtre principale : menu latéral et pages de l'application"""
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -17,16 +17,22 @@ from gui.history_page import HistoryPage
 from gui.home_page import HomePage
 from gui.icons import get_icon
 from gui.offers_page import OffersPage
+from gui.branding import TAGLINE
 from gui.search_page import SearchPage
+from gui.settings_page import SettingsPage
 from gui.theme import COLORS
 
-TAGLINE = "Vos offres d'emploi, centralisées"
+# Clés de navigation qui ouvrent la page des offres avec des filtres prédéfinis
+OFFER_PRESETS = ("offers", "new_offers", "applications", "follow_ups")
 
 
 class MainWindow(QMainWindow):
     """Affiche le menu latéral et la page sélectionnée."""
 
-    def __init__(self, pDatabaseFile, pTitle):
+    # Thème choisi dans les paramètres : system, light ou dark
+    theme_requested = Signal(str)
+
+    def __init__(self, pDatabaseFile, pTitle, pThemeChoice="system"):
         """Construit la fenêtre et ses pages."""
         super().__init__()
 
@@ -49,14 +55,16 @@ class MainWindow(QMainWindow):
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
         self.add_page("history", "Historique", "history", HistoryPage(pDatabaseFile))
 
+        self.settings_page = SettingsPage(pDatabaseFile, pThemeChoice)
+        self.add_page("settings", "Paramètres", "settings", self.settings_page)
+
+        self.settings_page.theme_requested.connect(self.theme_requested)
+
         self.home_page.navigation_requested.connect(self.navigate)
+        self.home_page.theme_requested.connect(self.theme_requested)
         self.search_page.show_offers_requested.connect(lambda: self.navigate("offers"))
-        self.search_page.search_started.connect(
-            lambda: self.set_status("Recherche en cours", COLORS["warning"])
-        )
-        self.search_page.search_ended.connect(
-            lambda: self.set_status("Prêt", COLORS["success"])
-        )
+        self.search_page.search_started.connect(self.on_search_started)
+        self.search_page.search_ended.connect(self.on_search_ended)
 
         vCentral = QWidget()
 
@@ -125,7 +133,7 @@ class MainWindow(QMainWindow):
     def add_page(self, pKey, pLabel, pIcon, pPage):
         """Ajoute une page et son entrée dans le menu latéral."""
         vItem = QListWidgetItem(
-            get_icon(pIcon, COLORS["muted"], 20, pSelectedColor=COLORS["surface"]),
+            get_icon(pIcon, COLORS["muted"], 20, pSelectedColor=COLORS["on_primary"]),
             pLabel,
         )
 
@@ -134,11 +142,11 @@ class MainWindow(QMainWindow):
         self.pages.addWidget(pPage)
 
     def navigate(self, pKey):
-        """Affiche une page à partir de sa clé ; follow_ups filtre les relances."""
+        """Affiche une page, ou la page des offres avec un préréglage de filtres."""
         vKey = pKey
 
-        if pKey == "follow_ups":
-            self.offers_page.show_follow_ups()
+        if pKey in OFFER_PRESETS:
+            self.offers_page.apply_preset(pKey)
             vKey = "offers"
 
         self.navigation.setCurrentRow(self.page_rows[vKey])
@@ -151,6 +159,16 @@ class MainWindow(QMainWindow):
 
         if hasattr(vPage, "refresh"):
             vPage.refresh()
+
+    def on_search_started(self):
+        """Signale la recherche en cours et bloque le changement de thème."""
+        self.set_status("Recherche en cours", COLORS["warning"])
+        self.settings_page.set_theme_enabled(False)
+
+    def on_search_ended(self):
+        """Signale le retour au repos et réautorise le changement de thème."""
+        self.set_status("Prêt", COLORS["success"])
+        self.settings_page.set_theme_enabled(True)
 
     def set_status(self, pText, pColor):
         """Affiche l'état de l'application en bas du menu latéral."""

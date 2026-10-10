@@ -14,8 +14,10 @@ from PySide6.QtWidgets import (
 )
 
 from config import NEW_OFFER_DAYS
+from gui.branding import REPOSITORY_URL
+from gui.chart import BarChart
 from gui.search_page import get_unavailability_reason
-from gui.theme import COLORS
+from gui.theme import COLORS, is_dark_theme
 from gui.widgets import (
     StatisticCard,
     create_button,
@@ -26,14 +28,19 @@ from gui.widgets import (
 from job.presentation import describe_search, describe_sources
 from job.sources.registry import SOURCES
 from storage.history_repository import get_history
-from storage.job_offers import FOLLOW_UP_STATUSES, count_offers
+from storage.job_offers import (
+    FOLLOW_UP_STATUSES,
+    count_new_offers_by_day,
+    count_offers,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-REPOSITORY_URL = "https://github.com/Remiverhaeghe/scraper-data-python"
+RECENT_EXECUTIONS = 4
 
-RECENT_EXECUTIONS = 5
+# Nombre de jours représentés par le graphique des nouvelles offres
+CHART_DAYS = 14
 
 
 def load_statistics(pDatabaseFile, pNow=None):
@@ -54,6 +61,7 @@ def load_statistics(pDatabaseFile, pNow=None):
         ),
         "follow_ups": count_offers(pDatabaseFile, pFollowUpBefore=vNow),
         "executions": get_history(pDatabaseFile, pLimit=RECENT_EXECUTIONS),
+        "daily_new_offers": count_new_offers_by_day(pDatabaseFile, CHART_DAYS, vNow),
     }
 
     return rStatistics
@@ -102,8 +110,11 @@ def describe_activity(pEntry):
 class HomePage(QWidget):
     """Affiche la bannière, les indicateurs, l'activité et les actions rapides."""
 
-    # Clé de la page à afficher : search, offers, follow_ups ou history
+    # Clé de la page ou du filtre à afficher, interprétée par la fenêtre principale
     navigation_requested = Signal(str)
+
+    # Thème demandé par le bouton clair/sombre : light ou dark
+    theme_requested = Signal(str)
 
     def __init__(self, pDatabaseFile):
         """Construit la page ; les données sont chargées par refresh."""
@@ -116,6 +127,15 @@ class HomePage(QWidget):
             lambda: QDesktopServices.openUrl(QUrl(REPOSITORY_URL))
         )
 
+        vIsDark = is_dark_theme()
+
+        vThemeButton = create_button(
+            "Mode clair" if vIsDark else "Mode sombre", "sun" if vIsDark else "moon"
+        )
+        vThemeButton.clicked.connect(
+            lambda: self.theme_requested.emit("light" if vIsDark else "dark")
+        )
+
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(32, 28, 32, 28)
         vLayout.setSpacing(18)
@@ -124,7 +144,7 @@ class HomePage(QWidget):
             vLayout,
             "Tableau de bord",
             "Vue d'ensemble de vos offres et de vos candidatures",
-            [vGithubButton],
+            [vThemeButton, vGithubButton],
         )
 
         vLayout.addWidget(self.create_banner())
@@ -132,6 +152,7 @@ class HomePage(QWidget):
 
         vBottom = QHBoxLayout()
         vBottom.setSpacing(18)
+        vBottom.addWidget(self.create_chart_card(), 3)
         vBottom.addWidget(self.create_activity_card(), 3)
         vBottom.addWidget(self.create_actions_card(), 2)
 
@@ -143,7 +164,7 @@ class HomePage(QWidget):
         rBanner = QFrame()
         rBanner.setObjectName("banner")
 
-        vTitle = QLabel("Bienvenue sur RV - Web Scraper")
+        vTitle = QLabel("Votre recherche d'emploi, pilotée au même endroit")
         vTitle.setObjectName("bannerTitle")
 
         self.banner_text = QLabel()
@@ -183,21 +204,43 @@ class HomePage(QWidget):
     def create_statistics(self):
         """Construit les cartes statistiques colorées."""
         self.cards = {
-            "offers": StatisticCard("Offres actives en base", "briefcase", "blue"),
-            "new_offers": StatisticCard(
-                f"Nouvelles sur {NEW_OFFER_DAYS} jours", "sparkles", "green"
+            "offers": StatisticCard(
+                "Offres actives en base", "briefcase", "blue", True
             ),
-            "applications": StatisticCard("Candidatures en cours", "send", "amber"),
-            "follow_ups": StatisticCard("Relances à faire", "bell-ring", "purple"),
+            "new_offers": StatisticCard(
+                f"Nouvelles sur {NEW_OFFER_DAYS} jours", "sparkles", "green", True
+            ),
+            "applications": StatisticCard(
+                "Candidatures en cours", "send", "amber", True
+            ),
+            "follow_ups": StatisticCard(
+                "Relances à faire", "bell-ring", "purple", True
+            ),
         }
 
         rGrid = QGridLayout()
         rGrid.setSpacing(18)
 
-        for vIndex, vCard in enumerate(self.cards.values()):
+        # Chaque carte ouvre les offres correspondantes.
+        for vIndex, (vName, vCard) in enumerate(self.cards.items()):
+            vCard.clicked.connect(
+                lambda pName=vName: self.navigation_requested.emit(pName)
+            )
             rGrid.addWidget(vCard, 0, vIndex)
 
         return rGrid
+
+    def create_chart_card(self):
+        """Construit le graphique des nouvelles offres par jour."""
+        vCard, vLayout = create_card(
+            "Nouvelles offres", f"Offres découvertes sur {CHART_DAYS} jours"
+        )
+
+        self.chart = BarChart()
+
+        vLayout.addWidget(self.chart, 1)
+
+        return vCard
 
     def create_activity_card(self):
         """Construit la carte des dernières exécutions."""
@@ -297,3 +340,9 @@ class HomePage(QWidget):
                 vCard.set_value(vStatistics[vName])
 
             self.show_activity(vStatistics["executions"])
+            self.chart.set_values(
+                [
+                    (f"{vDay:%d/%m}", vCount)
+                    for vDay, vCount in vStatistics["daily_new_offers"]
+                ]
+            )

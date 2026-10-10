@@ -67,7 +67,7 @@ def test_page_lists_active_offers(offers_page):
     """Vérifie que les offres ignorées sont masquées par défaut."""
 
     assert get_titles(offers_page) == ["Data Engineer", "Développeur Java"]
-    assert offers_page.count_label.text() == "2 offre(s)"
+    assert offers_page.count_label.text().startswith("2 offre(s)")
 
 
 def test_page_applies_filters(offers_page):
@@ -140,3 +140,44 @@ def test_describe_application():
         "Candidature envoyée le 01/10/2026. 2 relance(s), la dernière le 08/10/2026."
     )
     assert describe_application(None) == ""
+
+
+def test_empty_result_shows_empty_state(offers_page):
+    """Vérifie l'état vide lorsqu'aucune offre ne correspond aux filtres."""
+
+    offers_page.search_edit.setText("introuvable")
+    offers_page.refresh()
+
+    assert offers_page.detail_panel.stack.currentIndex() == 0
+    assert offers_page.detail_panel.offer is None
+
+
+def test_first_offer_is_selected_by_default(offers_page):
+    """Vérifie qu'une offre est affichée sans action de l'utilisateur."""
+
+    assert offers_page.detail_panel.stack.currentIndex() == 1
+    assert offers_page.detail_panel.offer is not None
+
+
+def test_apply_preset_resets_other_filters(offers_page):
+    """Vérifie qu'un préréglage repart de filtres vierges."""
+
+    offers_page.contract_combo.setCurrentIndex(
+        offers_page.contract_combo.findData("CDD")
+    )
+
+    offers_page.apply_preset("new_offers")
+
+    assert offers_page.contract_combo.currentData() is None
+    assert offers_page.new_check.isChecked()
+    assert get_titles(offers_page) == ["Data Engineer", "Développeur Java"]
+
+
+def test_export_uses_current_filters(offers_page, tmp_path):
+    """Vérifie que l'export reprend les filtres affichés."""
+
+    offers_page.contract_combo.setCurrentIndex(
+        offers_page.contract_combo.findData("CDI")
+    )
+
+    assert offers_page.export_to(tmp_path / "offres.json") == 1

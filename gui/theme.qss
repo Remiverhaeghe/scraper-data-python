@@ -19,7 +19,7 @@ QScrollArea > QWidget > QWidget {
 
 QToolTip {
     background: $heading;
-    color: $surface;
+    color: $background;
     border: none;
     padding: 6px 8px;
 }
@@ -33,7 +33,7 @@ QWidget#sidebar {
 
 QLabel#logo {
     background: $primary;
-    color: $surface;
+    color: $on_primary;
     font-size: 18px;
     font-weight: 700;
     border-radius: 10px;
@@ -77,7 +77,7 @@ QListWidget#navigation::item:hover {
 
 QListWidget#navigation::item:selected {
     background: $primary;
-    color: $surface;
+    color: $on_primary;
 }
 
 /* En-têtes et cartes */
@@ -147,6 +147,12 @@ QLabel#activityResult {
     font-weight: 600;
 }
 
+QLabel#fieldLabel {
+    color: $muted;
+    font-size: 12px;
+    font-weight: 600;
+}
+
 QLabel#warning {
     color: $warning;
 }
@@ -160,7 +166,7 @@ QFrame#banner {
 }
 
 QLabel#bannerTitle {
-    color: $surface;
+    color: $on_primary;
     font-size: 24px;
     font-weight: 700;
 }
@@ -192,7 +198,7 @@ QPushButton:disabled {
 
 QPushButton#primaryButton {
     background: $primary;
-    color: $surface;
+    color: $on_primary;
     border: none;
 }
 
@@ -213,6 +219,30 @@ QPushButton#bannerButton {
 
 QPushButton#bannerButton:hover {
     background: $primary_light;
+}
+
+QPushButton#segmentButton:checked {
+    background: $primary_light;
+    border-color: $primary;
+    color: $primary;
+}
+
+QPushButton#sourceChip {
+    border-radius: 16px;
+    padding: 7px 12px;
+    text-align: left;
+}
+
+QPushButton#sourceChip:checked {
+    background: $primary_light;
+    border-color: $primary;
+    color: $primary;
+}
+
+QPushButton#sourceChip:disabled {
+    background: $surface_alt;
+    border-style: dashed;
+    color: $muted;
 }
 
 QPushButton#quickAction {
@@ -342,4 +372,37 @@ QProgressBar::chunk {
 
 QSplitter::handle {
     background: transparent;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 2px;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 10px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical,
+QScrollBar::handle:horizontal {
+    background: $border;
+    border-radius: 3px;
+    min-height: 30px;
+    min-width: 30px;
+}
+
+QScrollBar::handle:hover {
+    background: $muted;
+}
+
+QScrollBar::add-line,
+QScrollBar::sub-line,
+QScrollBar::add-page,
+QScrollBar::sub-page {
+    background: none;
+    width: 0;
+    height: 0;
 }

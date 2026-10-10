@@ -1,7 +1,9 @@
 """Page de l'historique des exécutions"""
 
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QGridLayout,
     QHeaderView,
     QLabel,
     QTableWidget,
@@ -10,9 +12,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.widgets import create_page_header
+from gui.icons import get_icon
+from gui.theme import COLORS
+from gui.widgets import StatisticCard, create_page_header
 from job.presentation import EXECUTION_STATUS_LABELS, describe_search, describe_sources
-from storage.history_repository import get_history
+from storage.history_repository import get_history, get_history_summary
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,19 +26,29 @@ MAX_DISPLAYED_EXECUTIONS = 200
 
 COLUMNS = ["Date", "Recherche", "Sources", "Offres", "Durée", "Statut"]
 
+# Texte des exécutions antérieures à l'enregistrement des critères
+UNKNOWN_SEARCH = "Critères non enregistrés"
+
+# Icône et couleur de chaque statut d'exécution
+STATUS_ICONS = {
+    "success": ("circle-check", "success"),
+    "partial": ("circle-alert", "warning"),
+    "error": ("circle-alert", "danger"),
+}
+
 
 def build_row(pEntry):
     """Retourne les textes d'une ligne de l'historique."""
 
     if pEntry.scraper_type == "job":
-        vSearch = describe_search(pEntry.parameters)
+        vSearch = describe_search(pEntry.parameters) or UNKNOWN_SEARCH
     else:
         vSearch = f"Livres · {pEntry.url}"
 
     rRow = [
         f"{pEntry.started_at:%d/%m/%Y %H:%M}",
         vSearch,
-        describe_sources(pEntry.parameters),
+        describe_sources(pEntry.parameters) or "—",
         str(pEntry.item_count),
         f"{pEntry.duration_seconds:.1f} s",
         EXECUTION_STATUS_LABELS.get(pEntry.status, pEntry.status),
@@ -43,14 +57,46 @@ def build_row(pEntry):
     return rRow
 
 
+def summarize(pSummary):
+    """Traduit la synthèse de l'historique en valeurs affichables."""
+
+    vExecutions = pSummary["executions"]
+
+    rValues = {
+        "executions": vExecutions,
+        "items": pSummary["items"],
+        "average_duration": f"{pSummary['average_duration']:.1f} s",
+        "success_rate": (
+            f"{round(100 * pSummary['successes'] / vExecutions)} %"
+            if vExecutions
+            else "-"
+        ),
+    }
+
+    return rValues
+
+
 class HistoryPage(QWidget):
-    """Liste les dernières exécutions, les plus récentes en premier."""
+    """Affiche la synthèse et la liste des dernières exécutions."""
 
     def __init__(self, pDatabaseFile):
-        """Construit le tableau de l'historique."""
+        """Construit les cartes de synthèse et le tableau."""
         super().__init__()
 
         self.database_file = pDatabaseFile
+
+        self.cards = {
+            "executions": StatisticCard("Exécutions", "history", "blue"),
+            "items": StatisticCard("Offres récupérées", "briefcase", "green"),
+            "average_duration": StatisticCard("Durée moyenne", "timer", "amber"),
+            "success_rate": StatisticCard("Taux de réussite", "circle-check", "purple"),
+        }
+
+        vCards = QGridLayout()
+        vCards.setSpacing(18)
+
+        for vIndex, vCard in enumerate(self.cards.values()):
+            vCards.addWidget(vCard, 0, vIndex)
 
         self.table = QTableWidget(0, len(COLUMNS))
         self.table.setHorizontalHeaderLabels(COLUMNS)
@@ -69,20 +115,41 @@ class HistoryPage(QWidget):
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(32, 28, 32, 28)
+        vLayout.setSpacing(14)
 
         create_page_header(
             vLayout,
             "Historique",
-            "Dernières exécutions ; survolez un statut pour voir le détail d'une erreur",
+            "Chaque recherche lancée, ses critères et son résultat",
         )
 
+        vLayout.addLayout(vCards)
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.table, 1)
 
+    def fill_row(self, pRow, pEntry):
+        """Remplit une ligne du tableau, avec l'icône du statut et l'erreur en infobulle."""
+        for vColumn, vText in enumerate(build_row(pEntry)):
+            vItem = QTableWidgetItem(vText)
+
+            if vText in (UNKNOWN_SEARCH, "—"):
+                vItem.setForeground(QColor(COLORS["muted"]))
+
+            self.table.setItem(pRow, vColumn, vItem)
+
+        vIcon, vColorName = STATUS_ICONS.get(pEntry.status, STATUS_ICONS["error"])
+
+        vStatusItem = self.table.item(pRow, len(COLUMNS) - 1)
+        vStatusItem.setIcon(get_icon(vIcon, COLORS[vColorName], 16))
+
+        if pEntry.error_message:
+            vStatusItem.setToolTip(pEntry.error_message)
+
     def refresh(self):
-        """Relit l'historique en base."""
+        """Relit la synthèse et l'historique en base."""
         try:
             vEntries = get_history(self.database_file, pLimit=MAX_DISPLAYED_EXECUTIONS)
+            vSummary = get_history_summary(self.database_file)
 
         except Exception:
             logger.exception("Impossible de charger l'historique")
@@ -90,19 +157,17 @@ class HistoryPage(QWidget):
             self.message_label.setText("L'historique n'a pas pu être chargé.")
 
         else:
+            for vName, vValue in summarize(vSummary).items():
+                self.cards[vName].set_value(vValue)
+
             self.table.setRowCount(len(vEntries))
 
             for vRow, vEntry in enumerate(vEntries):
-                for vColumn, vText in enumerate(build_row(vEntry)):
-                    self.table.setItem(vRow, vColumn, QTableWidgetItem(vText))
-
-                if vEntry.error_message:
-                    self.table.item(vRow, len(COLUMNS) - 1).setToolTip(
-                        vEntry.error_message
-                    )
+                self.fill_row(vRow, vEntry)
 
             self.message_label.setText(
-                f"{len(vEntries)} exécution(s)"
+                f"{len(vEntries)} dernière(s) exécution(s) · survolez un statut "
+                "pour lire le détail d'une erreur"
                 if vEntries
                 else "Aucune exécution enregistrée pour le moment."
             )

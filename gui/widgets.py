@@ -1,6 +1,6 @@
 """Composants graphiques partagés entre les pages"""
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 
 from gui.icons import get_icon
@@ -85,9 +85,14 @@ def create_icon_label(pIcon, pColor, pSize=20):
 class StatisticCard(QFrame):
     """Affiche une valeur chiffrée sur fond coloré, avec son icône et son libellé."""
 
-    def __init__(self, pLabel, pIcon, pAccent):
+    clicked = Signal()
+
+    def __init__(self, pLabel, pIcon, pAccent, pClickable=False):
         """Construit la carte avec une valeur vide."""
         super().__init__()
+
+        if pClickable:
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         vColor, vBackground = ACCENTS[pAccent]
 
@@ -123,3 +128,10 @@ class StatisticCard(QFrame):
     def set_value(self, pValue):
         """Met à jour la valeur affichée."""
         self.value_label.setText(str(pValue))
+
+    def mouseReleaseEvent(self, pEvent):
+        """Émet clicked lorsque la carte est cliquée."""
+        super().mouseReleaseEvent(pEvent)
+
+        if self.rect().contains(pEvent.position().toPoint()):
+            self.clicked.emit()

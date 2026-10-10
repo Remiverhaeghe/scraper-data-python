@@ -2,7 +2,7 @@
 
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 
@@ -263,6 +263,38 @@ def count_offers(pDatabaseFile, **pFilters):
         vConnection.close()
 
     return rCount
+
+
+def count_new_offers_by_day(pDatabaseFile, pDays, pNow=None):
+    """Compte les offres découvertes chaque jour, jours sans offre compris."""
+
+    vToday = (pNow or datetime.now()).date()
+    vFirstDay = vToday - timedelta(days=pDays - 1)
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(
+            """
+            SELECT substr(first_seen_at, 1, 10) AS day, COUNT(*)
+            FROM job_offer
+            WHERE first_seen_at >= ?
+            GROUP BY day
+            """,
+            (vFirstDay.isoformat(),),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    vCounts = dict(vRows)
+
+    rCounts = [
+        (vDay, vCounts.get(vDay.isoformat(), 0))
+        for vDay in (vFirstDay + timedelta(days=vOffset) for vOffset in range(pDays))
+    ]
+
+    return rCounts
 
 
 def get_offer(pDatabaseFile, pSource, pSourceId):

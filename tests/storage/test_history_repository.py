@@ -5,7 +5,7 @@ from datetime import datetime
 
 from scraper.history import HistoryEntry
 from storage.database import initialize_database
-from storage.history_repository import get_history, save_history
+from storage.history_repository import get_history, get_history_summary, save_history
 
 
 def test_save_history_stores_entry(tmp_path):
@@ -153,3 +153,39 @@ def test_history_parameters_round_trip(tmp_path):
 
     assert vEntries[0].parameters is None
     assert vEntries[1].parameters == vParameters
+
+
+def test_get_history_summary(tmp_path):
+    """Vérifie les totaux calculés sur tout l'historique."""
+
+    vDatabasePath = tmp_path / "scraper.db"
+
+    initialize_database(vDatabasePath)
+
+    assert get_history_summary(vDatabasePath) == {
+        "executions": 0,
+        "items": 0,
+        "average_duration": 0,
+        "successes": 0,
+    }
+
+    for vStatus, vItems, vDuration in (("success", 30, 2.0), ("error", 0, 4.0)):
+        save_history(
+            vDatabasePath,
+            HistoryEntry(
+                started_at=datetime(2026, 10, 1, 8, 0, vItems),
+                scraper_type="job",
+                url="multi-source",
+                page_count=1,
+                item_count=vItems,
+                duration_seconds=vDuration,
+                status=vStatus,
+            ),
+        )
+
+    assert get_history_summary(vDatabasePath) == {
+        "executions": 2,
+        "items": 30,
+        "average_duration": 3.0,
+        "successes": 1,
+    }

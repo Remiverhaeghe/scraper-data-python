@@ -1,7 +1,8 @@
 """Tests du thème et des icônes"""
 
 from gui.icons import ICONS_DIRECTORY, get_icon
-from gui.theme import COLORS, build_stylesheet
+from gui.branding import LOGO_SIZES, create_logo_icon
+from gui.theme import THEMES, COLORS, apply_theme, build_stylesheet, is_dark_theme
 
 
 def test_stylesheet_has_no_unresolved_variable():
@@ -20,3 +21,25 @@ def test_every_icon_can_be_rendered(qt_application):
         vIcon = get_icon(vFile.stem, COLORS["primary"], 20, COLORS["surface"])
 
         assert not vIcon.pixmap(20, 20).isNull(), vFile.name
+
+
+def test_apply_theme_switches_colors(qt_application):
+    """Vérifie le passage au thème sombre puis le retour au thème clair."""
+
+    try:
+        assert apply_theme(qt_application, "dark") == "dark"
+        assert COLORS == THEMES["dark"]
+        assert is_dark_theme()
+
+    finally:
+        apply_theme(qt_application, "light")
+
+    assert COLORS == THEMES["light"]
+
+
+def test_logo_icon_has_standard_sizes(qt_application):
+    """Vérifie que l'icône de l'application existe à plusieurs tailles."""
+
+    vIcon = create_logo_icon()
+
+    assert len(vIcon.availableSizes()) == len(LOGO_SIZES)

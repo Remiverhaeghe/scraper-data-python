@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from PySide6.QtCore import QDate, QUrl, Signal
+from PySide6.QtCore import QDate, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPlainTextEdit,
     QPushButton,
+    QStackedWidget,
     QTextBrowser,
     QVBoxLayout,
     QWidget,
@@ -23,7 +24,7 @@ from PySide6.QtWidgets import (
 from config import FOLLOW_UP_DAYS
 from gui.offers_model import format_net_salary
 from gui.theme import COLORS
-from gui.widgets import create_button
+from gui.widgets import create_button, create_card, create_icon_label
 from job.presentation import STATUS_LABELS, format_date, safe_url
 from storage.job_applications import (
     delete_application,
@@ -79,7 +80,7 @@ class OfferDetailPanel(QWidget):
         self.company_label.setWordWrap(True)
 
         self.open_button = create_button(
-            "Ouvrir l'offre", "external-link", "primaryButton", COLORS["surface"]
+            "Ouvrir l'offre", "external-link", "primaryButton", COLORS["on_primary"]
         )
         self.open_button.clicked.connect(self.open_offer)
 
@@ -101,6 +102,7 @@ class OfferDetailPanel(QWidget):
             vInfoForm.addRow(vLabel, self.info_labels[vKey])
 
         self.description = QTextBrowser()
+        self.description.setPlaceholderText("Aucune description fournie par la source.")
 
         vSummaryWidget = QFrame()
         vSummaryWidget.setObjectName("card")
@@ -117,14 +119,42 @@ class OfferDetailPanel(QWidget):
         vApplicationGroup = self.create_application_group()
         vApplicationGroup.setFixedWidth(340)
 
-        vLayout = QHBoxLayout(self)
-        vLayout.setContentsMargins(0, 12, 0, 0)
-        vLayout.setSpacing(16)
-        vLayout.addWidget(vSummaryWidget)
-        vLayout.addWidget(self.description, 1)
-        vLayout.addWidget(vApplicationGroup)
+        vContent = QWidget()
 
-        self.setEnabled(False)
+        vContentLayout = QHBoxLayout(vContent)
+        vContentLayout.setContentsMargins(0, 12, 0, 0)
+        vContentLayout.setSpacing(16)
+        vContentLayout.addWidget(vSummaryWidget)
+        vContentLayout.addWidget(self.description, 1)
+        vContentLayout.addWidget(vApplicationGroup)
+
+        # Page 0 : aucune offre choisie, page 1 : détail de l'offre
+        self.stack = QStackedWidget()
+        self.stack.addWidget(self.create_empty_state())
+        self.stack.addWidget(vContent)
+
+        vLayout = QVBoxLayout(self)
+        vLayout.setContentsMargins(0, 0, 0, 0)
+        vLayout.addWidget(self.stack)
+
+    def create_empty_state(self):
+        """Construit le message affiché tant qu'aucune offre n'est sélectionnée."""
+        vText = QLabel(
+            "Aucune offre ne correspond aux filtres, ou aucune n'est sélectionnée."
+        )
+        vText.setObjectName("cardSubtitle")
+
+        rCard, vLayout = create_card()
+        vLayout.addStretch()
+        vLayout.addWidget(
+            create_icon_label("inbox", COLORS["muted"], 36),
+            0,
+            Qt.AlignmentFlag.AlignCenter,
+        )
+        vLayout.addWidget(vText, 0, Qt.AlignmentFlag.AlignCenter)
+        vLayout.addStretch()
+
+        return rCard
 
     def create_application_group(self):
         """Construit le formulaire de suivi de candidature."""
@@ -179,11 +209,13 @@ class OfferDetailPanel(QWidget):
     def show_offer(self, pOffer):
         """Affiche une offre préparée par prepare_offer, ou vide le panneau."""
         self.offer = pOffer
-        self.setEnabled(pOffer is not None)
+        self.stack.setCurrentIndex(0 if pOffer is None else 1)
 
         vOffer = pOffer or {}
 
-        self.title_label.setText(vOffer.get("title") or "Sans titre")
+        self.title_label.setText(
+            vOffer.get("title") or "Titre non communiqué par la source"
+        )
         self.company_label.setText(
             " · ".join(
                 vValue

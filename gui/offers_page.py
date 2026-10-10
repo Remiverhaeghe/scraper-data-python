@@ -1,16 +1,20 @@
 """Page des offres enregistrées : filtres, tableau triable et suivi"""
 
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from PySide6.QtCore import QSortFilterProxyModel, Qt, QTimer
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
     QComboBox,
+    QFileDialog,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
+    QMenu,
+    QMessageBox,
     QSpinBox,
     QSplitter,
     QTableView,
@@ -21,8 +25,10 @@ from PySide6.QtWidgets import (
 from config import NEW_OFFER_DAYS
 from gui.offer_detail import OfferDetailPanel
 from gui.offers_model import COLUMNS, SORT_ROLE, OffersTableModel
-from gui.widgets import create_page_header
+from gui.theme import COLORS
+from gui.widgets import create_button, create_page_header
 from job.contract import CONTRACT_TYPES
+from job.export import EXPORT_FORMATS, export_offers
 from job.presentation import (
     FOLLOW_UP_FILTER,
     STATUS_LABELS,
@@ -37,6 +43,9 @@ logger = get_logger(__name__)
 
 # Au-delà, l'utilisateur affine ses filtres plutôt que de parcourir la liste
 MAX_DISPLAYED_OFFERS = 1000
+
+# Statut filtré par les préréglages ouverts depuis l'accueil
+PRESET_STATUSES = {"applications": "APPLIED", "follow_ups": FOLLOW_UP_FILTER}
 
 # Attente après la dernière frappe avant de relancer la recherche
 SEARCH_DELAY_MS = 300
@@ -72,7 +81,8 @@ class OffersPage(QWidget):
                 vHeader.setSectionResizeMode(vColumn, QHeaderView.ResizeMode.Stretch)
             else:
                 self.table.setColumnWidth(vColumn, vWidth)
-        self.table.sortByColumn(6, Qt.SortOrder.DescendingOrder)
+        # Sans colonne triée, l'ordre de la requête est conservé : nouvelles en tête.
+        self.table.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)
 
         self.table.selectionModel().currentRowChanged.connect(self.show_selected_offer)
         self.table.doubleClicked.connect(lambda: self.detail_panel.open_offer())
@@ -94,8 +104,8 @@ class OffersPage(QWidget):
         create_page_header(
             vLayout,
             "Offres",
-            f"Offres enregistrées, les nouvelles des {NEW_OFFER_DAYS} derniers "
-            "jours en gras ; double-cliquez pour ouvrir l'offre",
+            "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures",
+            [self.create_export_button()],
         )
 
         vLayout.addLayout(self.create_filters())
@@ -111,6 +121,7 @@ class OffersPage(QWidget):
 
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText("Titre, entreprise, lieu, description")
+        self.search_edit.setMinimumWidth(260)
         self.search_edit.textChanged.connect(self.search_timer.start)
 
         self.source_combo = QComboBox()
@@ -148,24 +159,110 @@ class OffersPage(QWidget):
         self.remote_check.toggled.connect(self.refresh)
         self.new_check.toggled.connect(self.refresh)
 
-        rLayout = QHBoxLayout()
-        rLayout.addWidget(self.search_edit, 1)
+        vSearchRow = QHBoxLayout()
+        vSearchRow.addWidget(self.search_edit, 1)
+        vSearchRow.addWidget(self.source_combo)
+        vSearchRow.addWidget(self.status_combo)
 
-        for vWidget in (
+        vOptionsRow = QHBoxLayout()
+        vOptionsRow.setSpacing(16)
+        vOptionsRow.addWidget(self.contract_combo)
+        vOptionsRow.addWidget(self.min_salary_spin)
+        vOptionsRow.addWidget(self.remote_check)
+        vOptionsRow.addWidget(self.new_check)
+        vOptionsRow.addStretch()
+
+        rLayout = QVBoxLayout()
+        rLayout.setSpacing(10)
+        rLayout.addLayout(vSearchRow)
+        rLayout.addLayout(vOptionsRow)
+
+        return rLayout
+
+    def create_export_button(self):
+        """Crée le bouton d'export et son menu de formats."""
+        rButton = create_button("Exporter", "download", pIconColor=COLORS["primary"])
+
+        vMenu = QMenu(rButton)
+
+        for vSuffix, vLabel in EXPORT_FORMATS.items():
+            vMenu.addAction(
+                f"{vLabel} ({vSuffix})",
+                lambda pSuffix=vSuffix: self.choose_export_file(pSuffix),
+            )
+
+        rButton.setMenu(vMenu)
+
+        return rButton
+
+    def choose_export_file(self, pSuffix):
+        """Demande où enregistrer l'export puis l'écrit."""
+        vLabel = EXPORT_FORMATS[pSuffix]
+
+        vPath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Exporter les offres",
+            str(Path.home() / f"offres_{datetime.now():%Y-%m-%d}{pSuffix}"),
+            f"{vLabel} (*{pSuffix})",
+        )
+
+        if vPath:
+            try:
+                vCount = self.export_to(vPath)
+
+            except Exception:
+                logger.exception("Échec de l'export des offres en %s", vLabel)
+
+                QMessageBox.warning(
+                    self, "Export impossible", "Le fichier n'a pas pu être écrit."
+                )
+
+            else:
+                QMessageBox.information(
+                    self, "Export terminé", f"{vCount} offre(s) exportée(s)."
+                )
+
+    def export_to(self, pPath):
+        """Exporte toutes les offres correspondant aux filtres, sans limite d'affichage."""
+        vOffers = get_offers(self.database_file, **self.build_filters(datetime.now()))
+
+        rCount = export_offers(vOffers, pPath)
+
+        return rCount
+
+    def apply_preset(self, pPreset):
+        """Réinitialise les filtres puis applique un préréglage de l'accueil.
+
+        Préréglages : offers, new_offers, applications ou follow_ups.
+        """
+        vWidgets = (
+            self.search_edit,
             self.source_combo,
             self.contract_combo,
             self.status_combo,
             self.min_salary_spin,
             self.remote_check,
             self.new_check,
-        ):
-            rLayout.addWidget(vWidget)
+        )
 
-        return rLayout
+        # Une seule relecture en base plutôt qu'une par filtre modifié
+        for vWidget in vWidgets:
+            vWidget.blockSignals(True)
 
-    def show_follow_ups(self):
-        """Sélectionne le filtre des candidatures à relancer."""
-        self.status_combo.setCurrentIndex(self.status_combo.findData(FOLLOW_UP_FILTER))
+        self.search_edit.clear()
+        self.source_combo.setCurrentIndex(0)
+        self.contract_combo.setCurrentIndex(0)
+        self.min_salary_spin.setValue(0)
+        self.remote_check.setChecked(False)
+        self.new_check.setChecked(pPreset == "new_offers")
+        self.status_combo.setCurrentIndex(
+            max(self.status_combo.findData(PRESET_STATUSES.get(pPreset)), 0)
+        )
+
+        for vWidget in vWidgets:
+            vWidget.blockSignals(False)
+
+        self.refresh()
 
     def build_filters(self, pNow):
         """Traduit les filtres de la page en paramètres de get_offers."""
@@ -219,7 +316,10 @@ class OffersPage(QWidget):
                 "affinez les filtres pour voir les autres."
             )
         else:
-            rText = f"{pCount} offre(s)"
+            rText = (
+                f"{pCount} offre(s) · en gras, les nouvelles des {NEW_OFFER_DAYS} "
+                "derniers jours · double-clic pour ouvrir l'offre"
+            )
 
         return rText
 
@@ -241,7 +341,10 @@ class OffersPage(QWidget):
             None,
         )
 
-        if vSourceRow is None:
+        # Sans offre à resélectionner, la première est affichée plutôt qu'un détail vide.
+        if vSourceRow is None and self.model.offers:
+            self.table.selectRow(0)
+        elif vSourceRow is None:
             self.table.clearSelection()
             self.detail_panel.show_offer(None)
         else:

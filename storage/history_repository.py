@@ -97,3 +97,31 @@ def get_history(pDatabasePath, pLimit=None):
 
     rEntries = vEntries
     return rEntries
+
+
+def get_history_summary(pDatabasePath):
+    """Calcule le nombre d'exécutions, d'offres, la durée moyenne et les réussites."""
+
+    vConnection = connect_database(pDatabasePath)
+
+    try:
+        vRow = vConnection.execute("""
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(item_count), 0),
+                COALESCE(AVG(duration_seconds), 0),
+                COALESCE(SUM(status = 'success'), 0)
+            FROM history
+            """).fetchone()
+
+    finally:
+        vConnection.close()
+
+    rSummary = {
+        "executions": vRow[0],
+        "items": vRow[1],
+        "average_duration": vRow[2],
+        "successes": vRow[3],
+    }
+
+    return rSummary

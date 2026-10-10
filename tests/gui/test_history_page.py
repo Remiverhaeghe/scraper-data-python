@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from gui.history_page import HistoryPage, build_row
+from gui.history_page import UNKNOWN_SEARCH, HistoryPage, build_row, summarize
 from scraper.history import HistoryEntry
 from storage.database import initialize_database
 from storage.history_repository import save_history
@@ -51,7 +51,7 @@ def test_build_row_for_books():
     )
 
     assert vRow[1] == "Livres · https://example.com"
-    assert vRow[2] == ""
+    assert vRow[2] == "—"
 
 
 def test_history_page_lists_executions(qt_application, tmp_path):
@@ -68,4 +68,34 @@ def test_history_page_lists_executions(qt_application, tmp_path):
     assert vPage.table.rowCount() == 1
     assert vPage.table.item(0, 1).text() == "Java"
     assert vPage.table.item(0, 5).toolTip() == "Jooble : délai dépassé"
-    assert vPage.message_label.text() == "1 exécution(s)"
+    assert vPage.message_label.text().startswith("1 dernière(s) exécution(s)")
+    assert vPage.cards["executions"].value_label.text() == "1"
+    assert vPage.cards["success_rate"].value_label.text() == "0 %"
+
+
+def test_build_row_without_parameters():
+    """Vérifie qu'une exécution sans critères enregistrés le signale."""
+
+    vRow = build_row(build_entry(parameters=None))
+
+    assert vRow[1] == UNKNOWN_SEARCH
+    assert vRow[2] == "—"
+
+
+def test_summarize():
+    """Vérifie la mise en forme de la synthèse de l'historique."""
+
+    assert summarize(
+        {"executions": 4, "items": 120, "average_duration": 2.345, "successes": 3}
+    ) == {
+        "executions": 4,
+        "items": 120,
+        "average_duration": "2.3 s",
+        "success_rate": "75 %",
+    }
+    assert (
+        summarize({"executions": 0, "items": 0, "average_duration": 0, "successes": 0})[
+            "success_rate"
+        ]
+        == "-"
+    )
