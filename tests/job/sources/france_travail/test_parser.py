@@ -1,7 +1,9 @@
 """Tests de la transformation des offres France Travail"""
 
+import pytest
+
 from job.csv_schema import JOB_COLUMNS
-from job.sources.france_travail.parser import parse_job, parse_jobs
+from job.sources.france_travail.parser import parse_job, parse_jobs, parse_salary
 
 
 def test_parse_job():
@@ -18,7 +20,7 @@ def test_parse_job():
         "dateActualisation": "2026-09-22",
         "entreprise": {"nom": "Entreprise A"},
         "lieuTravail": {"libelle": "Paris", "commune": "Paris", "codePostal": "75001"},
-        "salaire": {"min": 35000, "max": 45000, "libelle": "Annuel"},
+        "salaire": {"libelle": "Annuel de 35000.0 Euros à 45000.0 Euros sur 12 mois"},
         "origineOffre": {"urlOrigine": "https://example.com/job/123"},
         "formations": "Bac +2",
         "competences": [{"libelle": "Python"}],
@@ -36,7 +38,7 @@ def test_parse_job():
     assert rJob["salary_min"] == 35000
     assert rJob["salary_max"] == 45000
     assert rJob["salary_currency"] == "EUR"
-    assert rJob["salary_period"] == "Annuel"
+    assert rJob["salary_period"] == "year"
 
 
 def test_parse_job_with_missing_values():
@@ -74,3 +76,29 @@ def test_parse_empty_jobs():
 
     assert rDataFrame.empty
     assert list(rDataFrame.columns) == JOB_COLUMNS
+
+
+@pytest.mark.parametrize(
+    "pLabel, pExpected",
+    [
+        ("Mensuel de 2000.00 Euros à 2500.00 Euros sur 12 mois", (2000, 2500, "month")),
+        ("Annuel de 40000.0 Euros sur 12.0 mois", (40000, None, "year")),
+        ("Horaire de 11.88 Euros sur 12 mois", (11.88, None, "hour")),
+        ("Selon profil", (None, None, None)),
+        (None, (None, None, None)),
+    ],
+)
+def test_parse_salary(pLabel, pExpected):
+    """Vérifie l'extraction du salaire depuis le libellé France Travail."""
+
+    assert parse_salary(pLabel) == pExpected
+
+
+def test_parse_job_builds_url_when_missing():
+    """Vérifie que l'URL de l'offre est reconstruite si la source ne la fournit pas."""
+
+    rJob = parse_job({"id": "123ABC"})
+
+    assert rJob["url"] == (
+        "https://candidat.francetravail.fr/offres/recherche/detail/123ABC"
+    )

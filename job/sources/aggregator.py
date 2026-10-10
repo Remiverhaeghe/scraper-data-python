@@ -6,6 +6,7 @@ from time import perf_counter
 import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
+from job.salary import add_net_salary, get_income_tax_rate
 from job.sources.registry import SOURCES
 from scraper.collection import deduplicate_dataframe, limit_dataframe
 from scraper.result import ScrapingResult
@@ -81,6 +82,8 @@ def scrape_sources(pConfig):
         vItems = vItems.drop(columns=["_deduplication_key"])
     else:
         vItems = pd.DataFrame(columns=JOB_COLUMNS)
+
+    vItems = add_net_salary(vItems, pTaxRate=get_income_tax_rate())
 
     # Limite globale du nombre d'offres
 

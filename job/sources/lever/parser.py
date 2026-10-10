@@ -4,6 +4,12 @@ import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
 
+SALARY_PERIODS = {
+    "per-hour-wage": "hour",
+    "per-month-salary": "month",
+    "per-year-salary": "year",
+}
+
 
 def parse_job(pJob):
     """Transforme une offre Lever en dictionnaire Job.
@@ -13,6 +19,7 @@ def parse_job(pJob):
     """
 
     vCategories = pJob.get("categories") or {}
+    vSalaryRange = pJob.get("salaryRange") or {}
 
     vJob = {
         # Identification
@@ -33,10 +40,10 @@ def parse_job(pJob):
         "contract_type": None,
         "employment_type": vCategories.get("commitment"),
         # Rémunération
-        "salary_min": None,
-        "salary_max": None,
-        "salary_currency": None,
-        "salary_period": None,
+        "salary_min": vSalaryRange.get("min"),
+        "salary_max": vSalaryRange.get("max"),
+        "salary_currency": vSalaryRange.get("currency"),
+        "salary_period": SALARY_PERIODS.get(vSalaryRange.get("interval")),
         # Télétravail
         "remote": None,
         "remote_days": None,

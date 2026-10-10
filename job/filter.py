@@ -156,26 +156,33 @@ def _matches_contract(pJob, pContract):
     return rMatches
 
 
+def _get_net_salary(pJob, pBound, pFallbackBound):
+    """Retourne une borne du salaire net mensuel, ou l'autre borne à défaut."""
+
+    rSalary = pJob[f"salary_net_monthly_{pBound}"]
+
+    if rSalary is None or pd.isna(rSalary):
+        rSalary = pJob[f"salary_net_monthly_{pFallbackBound}"]
+
+    return rSalary
+
+
 def _matches_min_salary(pJob, pMinSalary):
-    """Vérifie que le salaire maximum de l'offre atteint le minimum recherché."""
+    """Vérifie que le net mensuel maximum de l'offre atteint le minimum recherché."""
 
-    vSalaryMax = pJob["salary_max"]
+    vSalary = _get_net_salary(pJob, "max", "min")
 
-    rMatches = (
-        vSalaryMax is not None and not pd.isna(vSalaryMax) and vSalaryMax >= pMinSalary
-    )
+    rMatches = vSalary is not None and not pd.isna(vSalary) and vSalary >= pMinSalary
 
     return rMatches
 
 
 def _matches_max_salary(pJob, pMaxSalary):
-    """Vérifie que le salaire minimum de l'offre ne dépasse pas le maximum recherché."""
+    """Vérifie que le net mensuel minimum de l'offre ne dépasse pas le maximum."""
 
-    vSalaryMin = pJob["salary_min"]
+    vSalary = _get_net_salary(pJob, "min", "max")
 
-    rMatches = (
-        vSalaryMin is not None and not pd.isna(vSalaryMin) and vSalaryMin <= pMaxSalary
-    )
+    rMatches = vSalary is not None and not pd.isna(vSalary) and vSalary <= pMaxSalary
 
     return rMatches
 

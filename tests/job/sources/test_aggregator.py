@@ -340,3 +340,30 @@ def test_scrape_sources_returns_success_without_error(monkeypatch):
 
     assert rResult.status == "success"
     assert rResult.error_message is None
+
+
+def test_scrape_sources_adds_net_salary(monkeypatch):
+    """Vérifie que l'agrégation calcule le net mensuel pour toutes les sources."""
+
+    monkeypatch.delenv("INCOME_TAX_RATE", raising=False)
+
+    monkeypatch.setattr(
+        "job.sources.lever.source.scrape_jobs",
+        lambda pSite, pMaxItems=None: pd.DataFrame(
+            {
+                "source": ["lever"],
+                "source_id": ["1"],
+                "salary_min": [48000],
+                "salary_currency": ["EUR"],
+                "salary_period": ["year"],
+            }
+        ),
+    )
+
+    vConfig = JobScrapingConfig()
+
+    enable_source(vConfig, "lever", {"site": "test-site"})
+
+    rResult = scrape_sources(vConfig)
+
+    assert rResult.items.loc[0, "salary_net_monthly_min"] == 3000

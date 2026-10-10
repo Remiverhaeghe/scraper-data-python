@@ -103,3 +103,24 @@ def test_parse_jobs_without_results():
 
     assert rData.empty
     assert list(rData.columns) == JOB_COLUMNS
+
+
+def test_parse_job_with_salary_range():
+    """Vérifie la lecture de la fourchette de salaire Lever."""
+
+    rJob = parse_job(
+        {
+            "id": "abc",
+            "salaryRange": {
+                "min": 45000,
+                "max": 55000,
+                "currency": "EUR",
+                "interval": "per-year-salary",
+            },
+        }
+    )
+
+    assert rJob["salary_min"] == 45000
+    assert rJob["salary_max"] == 55000
+    assert rJob["salary_currency"] == "EUR"
+    assert rJob["salary_period"] == "year"

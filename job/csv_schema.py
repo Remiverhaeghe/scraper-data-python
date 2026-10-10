@@ -48,8 +48,14 @@ JOB_COLUMNS = [
     "salary_max",
     # Devise de la rémunération : EUR, USD, etc.
     "salary_currency",
-    # Période de référence : heure, mois, année, etc.
+    # Période de référence normalisée : hour, month ou year
     "salary_period",
+    # Salaire net mensuel avant impôt, estimé à partir du brut
+    "salary_net_monthly_min",
+    "salary_net_monthly_max",
+    # Salaire net mensuel après impôt, si un taux d'imposition est renseigné
+    "salary_net_after_tax_monthly_min",
+    "salary_net_after_tax_monthly_max",
     # ------------------------------------------------------------------------
     # Télétravail
     # ------------------------------------------------------------------------

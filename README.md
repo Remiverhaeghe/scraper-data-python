@@ -103,6 +103,9 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - [x] Enregistrement de la dernière récupération
 - [x] Gestion des limites par source
 - [x] Limitation globale après déduplication
+- [x] Normalisation de la période des salaires
+- [x] Estimation du salaire net mensuel, avant et après impôt
+- [x] Poursuite du traitement si une source échoue
 - [x] Détection des nouvelles offres
 - [ ] Suivi des candidatures
 - [ ] Relances
@@ -202,6 +205,7 @@ scraper-data-python/
 │   ├── application.py                         # Orchestre le traitement des offres
 │   ├── reader.py                              # Lit les offres depuis un fichier CSV
 │   ├── filter.py                              # Applique les filtres aux offres
+│   ├── salary.py                              # Estime le salaire net mensuel
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
 │       ├── __init__.py                         # Initialise le package des sources
@@ -301,6 +305,7 @@ scraper-data-python/
 │   │   ├── test_service.py                    # Teste le service des offres
 │   │   ├── test_storage.py                    # Teste la sauvegarde des offres
 │   │   ├── test_application.py                # Teste l'orchestration Job
+│   │   ├── test_salary.py                     # Teste l'estimation du salaire net
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi

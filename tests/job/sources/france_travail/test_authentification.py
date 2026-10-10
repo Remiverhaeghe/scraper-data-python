@@ -75,3 +75,25 @@ def test_get_access_token_http_error(monkeypatch):
 
     with pytest.raises(requests.RequestException):
         get_access_token(FakeConfig())
+
+
+def test_get_access_token_logs_oauth_error(monkeypatch, caplog):
+    """Vérifie que le code d'erreur OAuth2 est journalisé sans le secret."""
+
+    class FakeResponse:
+
+        status_code = 400
+
+        def raise_for_status(self):
+            raise requests.HTTPError("400 Client Error")
+
+        def json(self):
+            return {"error": "invalid_client", "error_description": "Bad client"}
+
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: FakeResponse())
+
+    with pytest.raises(requests.HTTPError):
+        get_access_token(FakeConfig())
+
+    assert "HTTP 400, invalid_client (Bad client)" in caplog.text
+    assert "test-secret" not in caplog.text

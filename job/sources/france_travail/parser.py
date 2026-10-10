@@ -1,8 +1,38 @@
 """Transformation des données France Travail vers le format Job commun"""
 
+import re
+
 import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
+
+OFFER_URL = "https://candidat.francetravail.fr/offres/recherche/detail/"
+
+SALARY_PERIODS = {"Horaire": "hour", "Mensuel": "month", "Annuel": "year"}
+
+# Exemple : "Mensuel de 2000.00 Euros à 2500.00 Euros sur 12 mois"
+SALARY_PATTERN = re.compile(
+    r"^(Horaire|Mensuel|Annuel) de ([\d.]+) Euros(?: à ([\d.]+) Euros)?"
+)
+
+
+def parse_salary(pLabel):
+    """Extrait le minimum, le maximum et la période d'un libellé de salaire."""
+
+    rSalary = (None, None, None)
+
+    vMatch = SALARY_PATTERN.match(pLabel or "")
+
+    if vMatch:
+        vPeriod, vMin, vMax = vMatch.groups()
+
+        rSalary = (
+            float(vMin),
+            float(vMax) if vMax else None,
+            SALARY_PERIODS[vPeriod],
+        )
+
+    return rSalary
 
 
 def parse_job(pJob):
@@ -23,7 +53,8 @@ def parse_job(pJob):
         "company_id": None,
         "source": "france_travail",
         "source_id": pJob.get("id"),
-        "url": pJob.get("origineOffre", {}).get("urlOrigine"),
+        "url": (pJob.get("origineOffre") or {}).get("urlOrigine")
+        or OFFER_URL + str(pJob.get("id")),
         # Localisation
         "location": vLieu.get("libelle"),
         "city": vLieu.get("commune"),
@@ -65,10 +96,11 @@ def parse_job(pJob):
         "job_type": None,
     }
 
-    if vSalaire:
-        vJob["salary_min"] = vSalaire.get("min")
-        vJob["salary_max"] = vSalaire.get("max")
-        vJob["salary_period"] = vSalaire.get("libelle")
+    vSalaryMin, vSalaryMax, vSalaryPeriod = parse_salary(vSalaire.get("libelle"))
+
+    vJob["salary_min"] = vSalaryMin
+    vJob["salary_max"] = vSalaryMax
+    vJob["salary_period"] = vSalaryPeriod
 
     rJob = vJob
 

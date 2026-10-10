@@ -20,6 +20,8 @@ def create_job(**pValues):
         "salary_min": 40000,
         "salary_max": 50000,
         "salary_period": "year",
+        "salary_net_monthly_min": 2500,
+        "salary_net_monthly_max": 3125,
         "remote": True,
         "remote_days": 2,
         "remote_type": "hybrid",
@@ -122,19 +124,40 @@ def test_filter_jobs_by_contract():
 
 
 def test_filter_jobs_by_salary():
-    """Vérifie le filtrage par salaire."""
+    """Vérifie le filtrage par salaire net mensuel."""
 
     vJobs = create_jobs(
-        create_job(salary_min=40000, salary_max=50000),
-        create_job(salary_min=30000, salary_max=35000, url="https://example.com/job-2"),
+        create_job(salary_net_monthly_min=2500, salary_net_monthly_max=3125),
+        create_job(
+            salary_net_monthly_min=1875,
+            salary_net_monthly_max=2188,
+            url="https://example.com/job-2",
+        ),
     )
 
-    vConfig = JobScrapingConfig(min_salary=40000)
+    vConfig = JobScrapingConfig(min_salary=2500)
 
     rJobs = filter_jobs(vJobs, vConfig)
 
     assert len(rJobs) == 1
-    assert rJobs.iloc[0]["salary_min"] == 40000
+    assert rJobs.iloc[0]["salary_net_monthly_min"] == 2500
+
+
+def test_filter_jobs_by_salary_uses_other_bound_when_missing():
+    """Vérifie qu'un salaire sans maximum est comparé à son minimum."""
+
+    vJobs = create_jobs(
+        create_job(salary_net_monthly_min=2600, salary_net_monthly_max=None),
+        create_job(
+            salary_net_monthly_min=1900,
+            salary_net_monthly_max=None,
+            url="https://example.com/job-2",
+        ),
+    )
+
+    rJobs = filter_jobs(vJobs, JobScrapingConfig(min_salary=2500))
+
+    assert rJobs["url"].tolist() == ["https://example.com/job"]
 
 
 def test_filter_jobs_by_remote():
@@ -285,7 +308,7 @@ def test_filter_jobs_with_multiple_criteria():
         location="Lille",
         max_distance_km=40,
         contract="CDI",
-        min_salary=40000,
+        min_salary=2500,
         min_remote_days=2,
         metro_required=True,
         max_metro_distance_km=1,

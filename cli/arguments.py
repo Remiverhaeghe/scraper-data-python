@@ -133,14 +133,14 @@ def parse_arguments():
         "--min-salary",
         type=positive_float,
         default=None,
-        help="Salaire minimum recherché.",
+        help="Salaire net mensuel minimum recherché, avant impôt.",
     )
 
     vParser.add_argument(
         "--max-salary",
         type=positive_float,
         default=None,
-        help="Salaire maximum recherché.",
+        help="Salaire net mensuel maximum recherché, avant impôt.",
     )
 
     vParser.add_argument(
