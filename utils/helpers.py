@@ -87,3 +87,24 @@ def join_values(pValues):
         rText = ", ".join(str(vValue) for vValue in pValues) or None
 
     return rText
+
+
+def decode_unicode_escapes(pText):
+    """Remplace les séquences \\uXXXX laissées telles quelles par leur caractère."""
+
+    rText = pText
+
+    # Les demi-codets (D800-DFFF) sont ignorés : seuls, ils rendraient le texte
+    # impossible à encoder en UTF-8.
+    if pText:
+        rText = re.sub(
+            r"\\u([0-9a-fA-F]{4})",
+            lambda pMatch: (
+                pMatch.group(0)
+                if 0xD800 <= int(pMatch.group(1), 16) <= 0xDFFF
+                else chr(int(pMatch.group(1), 16))
+            ),
+            pText,
+        )
+
+    return rText

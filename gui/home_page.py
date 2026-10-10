@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
 )
 
 from gui.chart import BarChart
-from gui.offers_model import format_net_salary
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -24,7 +23,12 @@ from gui.widgets import (
     create_icon_label,
     create_page_header,
 )
-from job.presentation import CHART_PALETTE, describe_execution, format_date
+from job.presentation import (
+    CHART_PALETTE,
+    describe_execution,
+    format_date,
+    format_net_salary,
+)
 from job.statistics import (
     ACTIVITY_SERIES,
     count_ready_sources,
@@ -42,9 +46,16 @@ TONE_ICONS = {
     "danger": "circle-alert",
 }
 
+# Raccourcis de la bannière, après le bouton de recherche
+BANNER_ACTIONS = (
+    ("Consulter les offres", "list-checks", "offers"),
+    ("Relances à faire", "bell-ring", "follow_ups"),
+    ("Historique", "history", "history"),
+)
+
 
 def describe_activity(pEntry):
-    """Retourne l'icône, sa couleur, le titre, le détail et le bilan d'une exécution."""
+    """Retourne l'icône, sa couleur, le titre, le détail, les sources et le bilan."""
 
     vDescription = describe_execution(pEntry)
 
@@ -53,6 +64,7 @@ def describe_activity(pEntry):
         COLORS[vDescription["tone"]],
         vDescription["title"],
         vDescription["detail"],
+        vDescription["sources"],
         vDescription["result"],
     )
 
@@ -92,44 +104,38 @@ class HomePage(QWidget):
         self.last_search_label = QLabel()
         self.last_search_label.setObjectName("pageSubtitle")
 
-        vSearchButton = create_button(
-            "Nouvelle recherche", "search", "primaryButton", COLORS["on_primary"]
-        )
-        vSearchButton.clicked.connect(lambda: self.navigation_requested.emit("search"))
-
         vContent = QWidget()
 
         vLayout = QVBoxLayout(vContent)
-        vLayout.setContentsMargins(32, 28, 32, 28)
-        vLayout.setSpacing(18)
+        vLayout.setContentsMargins(32, 22, 32, 22)
+        vLayout.setSpacing(16)
 
         create_page_header(
             vLayout,
             "Tableau de bord",
             "Vue d'ensemble de vos offres et de vos candidatures",
-            [self.last_search_label, vSearchButton],
+            [self.last_search_label],
             pIcon="house",
         )
 
         vLayout.addWidget(self.create_banner())
         vLayout.addLayout(self.create_statistics())
 
-        vMiddle = QHBoxLayout()
-        vMiddle.setSpacing(18)
-        vMiddle.addWidget(self.create_chart_card(), 3)
-        vMiddle.addWidget(self.create_activity_card(), 3)
-        vMiddle.addWidget(self.create_actions_card(), 2)
+        # Une grille aligne les colonnes des deux rangées, qui se partagent la
+        # hauteur de la fenêtre : la page ne défile que sur un petit écran.
+        vGrid = QGridLayout()
+        vGrid.setSpacing(16)
+        vGrid.addWidget(self.create_chart_card(), 0, 0)
+        vGrid.addWidget(self.create_activity_card(), 0, 1)
+        vGrid.addWidget(self.create_follow_ups_card(), 1, 0)
+        vGrid.addWidget(self.create_latest_offers_card(), 1, 1)
 
-        vBottom = QHBoxLayout()
-        vBottom.setSpacing(18)
-        vBottom.addWidget(self.create_follow_ups_card(), 1)
-        vBottom.addWidget(self.create_latest_offers_card(), 1)
+        for vIndex in range(2):
+            vGrid.setColumnStretch(vIndex, 1)
+            vGrid.setRowStretch(vIndex, 1)
 
-        vLayout.addLayout(vMiddle)
-        vLayout.addLayout(vBottom)
-        vLayout.addStretch()
+        vLayout.addLayout(vGrid, 1)
 
-        # La page s'allonge avec les listes : elle défile sur les petits écrans.
         vScrollArea = QScrollArea()
         vScrollArea.setWidgetResizable(True)
         vScrollArea.setWidget(vContent)
@@ -150,14 +156,25 @@ class HomePage(QWidget):
         self.banner_text.setObjectName("bannerText")
         self.banner_text.setWordWrap(True)
 
-        vButton = create_button(
-            "Lancer une recherche", "arrow-right", "bannerButton", COLORS["primary"]
+        vSearchButton = create_button(
+            "Nouvelle recherche", "arrow-right", "bannerButton", COLORS["primary"]
         )
-        vButton.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        vButton.clicked.connect(lambda: self.navigation_requested.emit("search"))
+        vSearchButton.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        vSearchButton.clicked.connect(lambda: self.navigation_requested.emit("search"))
 
         vButtonRow = QHBoxLayout()
-        vButtonRow.addWidget(vButton)
+        vButtonRow.setSpacing(10)
+        vButtonRow.addWidget(vSearchButton)
+
+        for vText, vIcon, vTarget in BANNER_ACTIONS:
+            vButton = create_button(
+                vText, vIcon, "bannerSecondaryButton", COLORS["on_primary"]
+            )
+            vButton.clicked.connect(
+                lambda _=False, pTarget=vTarget: self.navigation_requested.emit(pTarget)
+            )
+            vButtonRow.addWidget(vButton)
+
         vButtonRow.addStretch()
 
         vTexts = QVBoxLayout()
@@ -174,7 +191,7 @@ class HomePage(QWidget):
             vIcons.addWidget(create_icon_label(vIcon, COLORS["banner_text"], 46))
 
         vLayout = QHBoxLayout(rBanner)
-        vLayout.setContentsMargins(32, 26, 40, 26)
+        vLayout.setContentsMargins(32, 22, 40, 22)
         vLayout.addLayout(vTexts, 1)
         vLayout.addLayout(vIcons)
 
@@ -196,7 +213,7 @@ class HomePage(QWidget):
         }
 
         rGrid = QGridLayout()
-        rGrid.setSpacing(18)
+        rGrid.setSpacing(16)
 
         # Chaque carte ouvre les offres correspondantes.
         for vIndex, (vName, vCard) in enumerate(self.cards.items()):
@@ -211,7 +228,7 @@ class HomePage(QWidget):
         """Construit le graphique des nouvelles offres par jour."""
         vCard, vLayout = create_card(
             "Activité",
-            "Activité quotidienne, chaque série à sa propre échelle",
+            "Nouvelles offres, candidatures et relances par jour",
         )
 
         self.chart = BarChart()
@@ -325,7 +342,7 @@ class HomePage(QWidget):
         )
 
     def show_latest_offers(self, pOffers):
-        """Affiche les dernières offres avec leur source et leur salaire net."""
+        """Affiche les dernières offres avec leur source, leur salaire et leur date."""
         self.show_rows(
             self.latest_offers_layout,
             [
@@ -335,10 +352,14 @@ class HomePage(QWidget):
                     vOffer["title"] or "Titre non communiqué",
                     " · ".join(
                         vPart
-                        for vPart in (vOffer["company"], vOffer["source_label"])
+                        for vPart in (
+                            vOffer["company"],
+                            vOffer["source_label"],
+                            format_net_salary(vOffer),
+                        )
                         if vPart
                     ),
-                    format_net_salary(vOffer),
+                    format_date(vOffer["published_at"] or vOffer["first_seen_at"]),
                     (vOffer["source"], vOffer["source_id"]),
                 )
                 for vOffer in pOffers
@@ -360,37 +381,16 @@ class HomePage(QWidget):
 
         return vCard
 
-    def create_actions_card(self):
-        """Construit la carte des actions rapides."""
-        vCard, vLayout = create_card(
-            "Actions rapides", "Accédez directement aux fonctions principales"
-        )
-
-        for vText, vIcon, vTarget in (
-            ("Nouvelle recherche", "search", "search"),
-            ("Consulter les offres", "list-checks", "offers"),
-            ("Candidatures à relancer", "bell-ring", "follow_ups"),
-            ("Historique des exécutions", "history", "history"),
-        ):
-            vButton = create_button(vText, vIcon, "quickAction", COLORS["primary"])
-            vButton.clicked.connect(
-                lambda _=False, pTarget=vTarget: self.navigation_requested.emit(pTarget)
-            )
-            vLayout.addWidget(vButton)
-
-        vLayout.addStretch()
-
-        return vCard
-
     def create_activity_row(self, pEntry):
         """Construit la ligne d'une exécution dans l'activité récente."""
-        vIcon, vColor, vTitle, vDetail, vResult = describe_activity(pEntry)
+        vIcon, vColor, vTitle, vDetail, vSources, vResult = describe_activity(pEntry)
 
         vTitleLabel = QLabel(vTitle)
         vTitleLabel.setObjectName("activityTitle")
 
         vDetailLabel = QLabel(vDetail)
         vDetailLabel.setObjectName("cardSubtitle")
+        vDetailLabel.setToolTip(vSources)
 
         vTexts = QVBoxLayout()
         vTexts.setSpacing(2)

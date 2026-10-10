@@ -1,11 +1,48 @@
 """Construction de la configuration des sources d'emploi"""
 
+from types import SimpleNamespace
+
 from job.config import JobScrapingConfig
 from job.sources.config import SourceConfig
 from job.sources.registry import SOURCES
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Critères attendus par build_job_config, hors ligne de commande
+DEFAULT_CRITERIA = {
+    "max_items": None,
+    "delay": 0.0,
+    "timeout": 30,
+    "max_pages": None,
+    "keyword": None,
+    "location": None,
+    "max_distance_km": None,
+    "contract": None,
+    "min_salary": None,
+    "max_salary": None,
+    "remote": None,
+    "min_remote_days": None,
+    "metro_required": None,
+    "max_metro_distance_km": None,
+    "education": None,
+    "skills": None,
+    "missions": None,
+    "exclude_keywords": None,
+}
+
+
+def build_search_arguments(pSources, pCriteria):
+    """Construit les arguments de build_job_config pour une recherche hors CLI."""
+
+    vUnknown = sorted(set(pCriteria) - set(DEFAULT_CRITERIA))
+
+    if vUnknown:
+        raise ValueError(f"Critère(s) de recherche inconnu(s) : {vUnknown}")
+
+    rArguments = SimpleNamespace(**{**DEFAULT_CRITERIA, **pCriteria}, sources=pSources)
+
+    return rArguments
 
 
 def build_source_config(pSourceName, pSources):

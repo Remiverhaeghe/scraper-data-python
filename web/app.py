@@ -1,13 +1,16 @@
 """Application web du tableau de bord des offres d'emploi"""
 
+import hmac
+import os
 import re
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import quote
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
@@ -28,6 +31,8 @@ from job.presentation import (
     EXECUTION_STATUS_LABELS,
     EXECUTION_TONES,
     FOLLOW_UP_FILTER,
+    LICENSE_SUMMARY,
+    LICENSE_SUMMARY_NOTE,
     PUBLISHED_PERIODS,
     STATUS_LABELS,
     UNKNOWN_SEARCH,
@@ -42,6 +47,12 @@ from job.presentation import (
     read_license,
     safe_url,
     summarize_history,
+)
+from job.schedule import (
+    describe_schedule_runs,
+    describe_scheduled_search,
+    format_interval,
+    load_schedule,
 )
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
@@ -65,6 +76,17 @@ from storage.job_applications import (
 )
 from storage.job_offers import get_offer, get_offers
 from utils.logger import get_logger
+from utils.mailer import get_missing_email_settings
+from web.auth import (
+    SESSION_COOKIE,
+    SESSION_DURATION,
+    LoginRateLimiter,
+    check_credentials,
+    create_session_token,
+    get_missing_auth_settings,
+    is_safe_redirect,
+    read_session_token,
+)
 
 logger = get_logger(__name__)
 
@@ -78,6 +100,10 @@ MAX_DISPLAYED_OFFERS = 300
 MAX_DISPLAYED_EXECUTIONS = 200
 
 ICON_NAME_PATTERN = re.compile(r"[a-z][a-z-]*")
+
+# Pages accessibles sans connexion : connexion, informations légales et ressources
+PUBLIC_PATHS = ("/login", "/legal", "/license")
+PUBLIC_PREFIXES = ("/static/", "/assets/")
 
 # Icône associée à chaque tonalité d'exécution
 TONE_ICONS = {
@@ -116,6 +142,77 @@ app.mount("/assets", StaticFiles(directory=ASSETS_DIRECTORY), name="assets")
 
 templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
 
+login_rate_limiter = LoginRateLimiter()
+
+
+def is_public_path(pPath):
+    """Indique si une adresse reste accessible sans être connecté."""
+
+    rPublic = pPath in PUBLIC_PATHS or pPath.startswith(PUBLIC_PREFIXES)
+
+    return rPublic
+
+
+def get_csrf_token(pRequest):
+    """Retourne le jeton CSRF de la session, à placer dans les formulaires."""
+
+    vSession = getattr(pRequest.state, "session", None)
+
+    rToken = vSession["csrf"] if vSession else ""
+
+    return rToken
+
+
+@app.middleware("http")
+async def require_login(request: Request, call_next):
+    """Réserve le tableau de bord à l'utilisateur connecté."""
+
+    vSecret = os.getenv("WEB_SESSION_SECRET")
+    vToken = request.cookies.get(SESSION_COOKIE)
+
+    request.state.session = (
+        read_session_token(vSecret, vToken, datetime.now())
+        if vSecret and vToken
+        else None
+    )
+
+    vPath = request.url.path
+
+    if request.state.session is None and not is_public_path(vPath):
+        vTarget = f"{vPath}?{request.url.query}" if request.url.query else vPath
+        vLoginUrl = f"{app.url_path_for('show_login')}?next={quote(vTarget)}"
+
+        # HTMX remplacerait un fragment par la page de connexion : il recharge
+        # plutôt toute la page vers l'adresse indiquée.
+        if request.headers.get("HX-Request"):
+            rResponse = Response(status_code=401, headers={"HX-Redirect": vLoginUrl})
+        else:
+            rResponse = RedirectResponse(vLoginUrl, status_code=303)
+
+    else:
+        rResponse = await call_next(request)
+
+    return rResponse
+
+
+async def require_csrf(request: Request):
+    """Refuse une requête d'écriture sans le jeton CSRF de la session."""
+
+    vExpected = get_csrf_token(request)
+    vToken = request.headers.get("X-CSRF-Token")
+
+    if vToken is None:
+        vToken = (await request.form()).get("csrf_token")
+
+    if not vExpected or not vToken or not hmac.compare_digest(str(vToken), vExpected):
+        logger.warning(
+            "Requête refusée : jeton CSRF absent ou invalide sur %s", request.url.path
+        )
+
+        raise HTTPException(
+            status_code=403, detail="Jeton de sécurité invalide : rechargez la page."
+        )
+
 
 @lru_cache
 def render_icon(pName, pSize=18):
@@ -152,6 +249,7 @@ templates.env.globals.update(
     repository_url=REPOSITORY_URL,
     contact_url=CONTACT_URL,
     license_name=LICENSE_NAME,
+    csrf_token=get_csrf_token,
 )
 
 
@@ -457,7 +555,11 @@ def show_offer(
     return rResponse
 
 
-@app.post("/offer/application", response_class=HTMLResponse)
+@app.post(
+    "/offer/application",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
 def update_application(
     request: Request,
     source: str = Form(...),
@@ -493,7 +595,11 @@ def update_application(
     return rResponse
 
 
-@app.post("/offer/follow-up", response_class=HTMLResponse)
+@app.post(
+    "/offer/follow-up",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
 def add_follow_up(
     request: Request,
     source: str = Form(...),
@@ -577,7 +683,7 @@ def show_history(
 
 
 def render_settings(pRequest, pDatabaseFile, pMessage=None, pStatusCode=200):
-    """Affiche le thème, les règles de calcul, l'état des sources et les informations."""
+    """Affiche le thème, les règles, la planification, les notifications et les sources."""
 
     vSources = [
         {
@@ -589,12 +695,25 @@ def render_settings(pRequest, pDatabaseFile, pMessage=None, pStatusCode=200):
         for vDefinition in SOURCES.values()
     ]
 
+    vSchedule = load_schedule(pDatabaseFile)
+    vSearch, vSearchSources = describe_scheduled_search(vSchedule)
+
     rResponse = templates.TemplateResponse(
         pRequest,
         "settings.html",
         {
             "active_page": "settings",
             "sources": vSources,
+            # Sans authentification, l'adresse e-mail elle-même n'est pas affichée.
+            "schedule": {
+                "search": vSearch,
+                "sources": vSearchSources,
+                "enabled": vSchedule["enabled"],
+                "interval": format_interval(vSchedule["interval_hours"]),
+                "runs": describe_schedule_runs(vSchedule, datetime.now()),
+                "has_email": vSchedule["email"] is not None,
+                "missing_email_settings": get_missing_email_settings(),
+            },
             "settings": load_settings(pDatabaseFile),
             "definitions": SETTING_DEFINITIONS,
             "message": pMessage,
@@ -617,7 +736,9 @@ def show_settings(
     return rResponse
 
 
-@app.post("/settings", response_class=HTMLResponse)
+@app.post(
+    "/settings", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
 async def update_settings(
     request: Request,
     pDatabaseFile: str = Depends(get_database_file),
@@ -653,8 +774,113 @@ def show_license(request: Request):
     """Affiche la licence du projet, lue dans le fichier LICENSE."""
 
     rResponse = templates.TemplateResponse(
-        request, "license.html", {"active_page": None, "license_text": read_license()}
+        request,
+        "license.html",
+        {
+            "active_page": None,
+            "license_text": read_license(),
+            "license_summary": LICENSE_SUMMARY,
+            "license_summary_note": LICENSE_SUMMARY_NOTE,
+        },
     )
+
+    return rResponse
+
+
+def render_login(pRequest, pNext, pMessage=None, pStatusCode=200):
+    """Affiche la page de connexion, ou ce qu'il manque pour l'utiliser."""
+
+    rResponse = templates.TemplateResponse(
+        pRequest,
+        "login.html",
+        {
+            "next": pNext if is_safe_redirect(pNext) else "/",
+            "message": pMessage,
+            # Seuls les noms des variables sont affichés, jamais leurs valeurs.
+            "missing_settings": get_missing_auth_settings(),
+        },
+        status_code=pStatusCode,
+    )
+
+    return rResponse
+
+
+@app.get("/login", response_class=HTMLResponse)
+def show_login(request: Request, pNext: str = Query("/", alias="next")):
+    """Affiche la connexion, ou renvoie vers la page demandée si déjà connecté."""
+
+    if request.state.session:
+        rResponse = RedirectResponse(
+            pNext if is_safe_redirect(pNext) else "/", status_code=303
+        )
+    else:
+        rResponse = render_login(request, pNext)
+
+    return rResponse
+
+
+@app.post("/login", response_class=HTMLResponse)
+def login(
+    request: Request,
+    username: str = Form(""),
+    password: str = Form(""),
+    pNext: str = Form("/", alias="next"),
+):
+    """Ouvre une session si l'identifiant et le mot de passe sont corrects."""
+
+    vAddress = request.client.host if request.client else "inconnue"
+    vNow = datetime.now()
+
+    if get_missing_auth_settings():
+        rResponse = render_login(
+            request, pNext, "Authentification non configurée.", 503
+        )
+
+    elif login_rate_limiter.is_blocked(vAddress, vNow):
+        logger.warning("Connexion refusée après trop d'échecs depuis %s", vAddress)
+
+        rResponse = render_login(
+            request, pNext, "Trop de tentatives. Réessayez dans 15 minutes.", 429
+        )
+
+    elif not check_credentials(username, password):
+        login_rate_limiter.record_failure(vAddress, vNow)
+
+        logger.warning("Échec de connexion au tableau de bord depuis %s", vAddress)
+
+        rResponse = render_login(
+            request, pNext, "Identifiant ou mot de passe incorrect.", 401
+        )
+
+    else:
+        login_rate_limiter.reset(vAddress)
+
+        logger.info("Connexion au tableau de bord depuis %s", vAddress)
+
+        rResponse = RedirectResponse(
+            pNext if is_safe_redirect(pNext) else "/", status_code=303
+        )
+        rResponse.set_cookie(
+            SESSION_COOKIE,
+            create_session_token(os.getenv("WEB_SESSION_SECRET"), username, vNow),
+            max_age=int(SESSION_DURATION.total_seconds()),
+            httponly=True,
+            samesite="lax",
+            # À activer lorsque le tableau de bord est servi en HTTPS.
+            secure=os.getenv("WEB_SECURE_COOKIE") == "1",
+        )
+
+    return rResponse
+
+
+@app.post("/logout", dependencies=[Depends(require_csrf)])
+def logout(request: Request):
+    """Ferme la session en supprimant son cookie."""
+
+    logger.info("Déconnexion du tableau de bord")
+
+    rResponse = RedirectResponse(app.url_path_for("show_login"), status_code=303)
+    rResponse.delete_cookie(SESSION_COOKIE)
 
     return rResponse
 

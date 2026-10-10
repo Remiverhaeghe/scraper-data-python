@@ -1,9 +1,11 @@
 """Tests de la configuration commune des sources"""
 
+import pandas as pd
 import pytest
+import requests
 
 from job.config import JobScrapingConfig
-from job.sources.config import SourceConfig, SourceDefinition
+from job.sources.config import SourceConfig, SourceDefinition, scrape_each
 
 
 def test_source_disabled():
@@ -178,3 +180,44 @@ def test_get_unavailability_reason(monkeypatch, pAvailable, pSettings, pExpected
     )
 
     assert vDefinition.get_unavailability_reason() == pExpected
+
+
+def build_scraper(pCalls, pFailing=()):
+    """Simule le scraping d'un site : deux offres, ou une erreur pour pFailing."""
+
+    def scrape(pName, pMaxItems):
+        pCalls.append((pName, pMaxItems))
+
+        if pName in pFailing:
+            raise requests.HTTPError("404")
+
+        return pd.DataFrame({"title": [f"{pName} 1", f"{pName} 2"]}).head(pMaxItems)
+
+    return scrape
+
+
+def test_scrape_each_combines_sites_within_the_limit():
+    """Vérifie l'enchaînement des sites et le partage du nombre maximum d'offres."""
+
+    vCalls = []
+
+    rJobs = scrape_each(" qonto, spotify ,alan", build_scraper(vCalls), 3, "Lever")
+
+    assert rJobs["title"].tolist() == ["qonto 1", "qonto 2", "spotify 1"]
+    assert vCalls == [("qonto", 3), ("spotify", 1)]
+
+
+def test_scrape_each_skips_a_failing_site(caplog):
+    """Vérifie qu'un site en erreur est journalisé sans bloquer les autres."""
+
+    rJobs = scrape_each("inconnu,qonto", build_scraper([], {"inconnu"}), None, "Lever")
+
+    assert rJobs["title"].tolist() == ["qonto 1", "qonto 2"]
+    assert "site inconnu ignoré" in caplog.text
+
+
+def test_scrape_each_raises_when_every_site_fails():
+    """Vérifie que l'erreur remonte lorsqu'aucun site n'a répondu."""
+
+    with pytest.raises(requests.HTTPError):
+        scrape_each("inconnu", build_scraper([], {"inconnu"}), None, "Lever")

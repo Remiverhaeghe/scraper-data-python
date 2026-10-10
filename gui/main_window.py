@@ -1,7 +1,5 @@
 """Fenêtre principale : menu latéral et pages de l'application"""
 
-from html import escape
-
 from PySide6.QtCore import QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
@@ -11,12 +9,13 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QPushButton,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
 
-from config import CONTACT_URL, LICENSE_NAME, TAGLINE
+from config import CONTACT_URL, LICENSE_NAME, REPOSITORY_URL, TAGLINE
 from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
 from gui.history_page import HistoryPage
@@ -26,6 +25,10 @@ from gui.offers_page import OffersPage
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
 from gui.theme import COLORS
+from job.schedule import save_scheduled_search
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Liens internes du pied de menu, ouverts dans l'application
 LEGAL_LINK = "#mentions-legales"
@@ -88,6 +91,7 @@ class MainWindow(QMainWindow):
         self.search_page.show_offers_requested.connect(self.show_search_results)
         self.search_page.search_started.connect(self.on_search_started)
         self.search_page.search_ended.connect(self.on_search_ended)
+        self.search_page.schedule_requested.connect(self.save_scheduled_search)
 
         vCentral = QWidget()
 
@@ -155,20 +159,26 @@ class MainWindow(QMainWindow):
 
     def create_footer_links(self):
         """Construit les liens du pied de menu, identiques à ceux du web."""
-        vStyle = f'style="color: {COLORS["muted"]}; text-decoration: none;"'
-
-        rLinks = QLabel(
-            "<br>".join(
-                f'<a href="{vTarget}" {vStyle}>{escape(vLabel)}</a>'
-                for vTarget, vLabel in (
-                    (LEGAL_LINK, "Mentions légales"),
-                    (CONTACT_URL, "Me contacter"),
-                    (LICENSE_LINK, f"Licence {LICENSE_NAME}"),
-                )
-            )
-        )
+        rLinks = QFrame()
         rLinks.setObjectName("sidebarLinks")
-        rLinks.linkActivated.connect(self.open_footer_link)
+
+        vLayout = QVBoxLayout(rLinks)
+        vLayout.setContentsMargins(0, 10, 0, 0)
+        vLayout.setSpacing(2)
+
+        for vTarget, vLabel, vIcon in (
+            (LEGAL_LINK, "Mentions légales", "file-text"),
+            (CONTACT_URL, "Me contacter", "linkedin"),
+            (REPOSITORY_URL, "Code source", "github"),
+            (LICENSE_LINK, f"Licence {LICENSE_NAME}", "scale"),
+        ):
+            vButton = QPushButton(get_icon(vIcon, COLORS["muted"], 16), vLabel)
+            vButton.setObjectName("sidebarLink")
+            vButton.setCursor(Qt.CursorShape.PointingHandCursor)
+            vButton.clicked.connect(
+                lambda _=False, pTarget=vTarget: self.open_footer_link(pTarget)
+            )
+            vLayout.addWidget(vButton)
 
         return rLinks
 
@@ -217,6 +227,26 @@ class MainWindow(QMainWindow):
 
         finally:
             self.setUpdatesEnabled(True)
+
+    def save_scheduled_search(self, pSources, pCriteria):
+        """Enregistre la recherche du planificateur et l'indique sur la page."""
+        try:
+            save_scheduled_search(self.database_file, pSources, pCriteria)
+
+        except Exception:
+            logger.exception("Échec de l'enregistrement de la recherche planifiée")
+
+            self.search_page.set_status(
+                "error", "La recherche planifiée n'a pas pu être enregistrée."
+            )
+
+        else:
+            self.search_page.set_status(
+                "success",
+                "Recherche planifiée enregistrée",
+                "Activez-la et choisissez sa fréquence dans les Paramètres.",
+            )
+            self.settings_page.refresh_schedule()
 
     def show_search_results(self, pKeys, pDescription):
         """Ouvre la page des offres restreinte aux résultats d'une recherche."""

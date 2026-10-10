@@ -3,7 +3,7 @@
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QFont
 
-from job.presentation import STATUS_LABELS, format_date, format_euros
+from job.presentation import STATUS_LABELS, format_date, format_net_salary
 
 # Rôle portant la valeur brute, utilisée pour trier les colonnes
 SORT_ROLE = Qt.ItemDataRole.UserRole
@@ -18,20 +18,6 @@ COLUMNS = [
     ("Source", "source_label", 105),
     ("Suivi", "application_status", 120),
 ]
-
-
-def format_net_salary(pOffer):
-    """Formate la fourchette de salaire net mensuel d'une offre."""
-
-    vMinimum = pOffer.get("salary_net_monthly_min")
-    vMaximum = pOffer.get("salary_net_monthly_max")
-
-    if vMinimum is not None and vMaximum is not None and vMinimum != vMaximum:
-        rText = f"{format_euros(vMinimum)} – {format_euros(vMaximum)}"
-    else:
-        rText = format_euros(vMinimum if vMinimum is not None else vMaximum)
-
-    return rText
 
 
 def format_status(pOffer):

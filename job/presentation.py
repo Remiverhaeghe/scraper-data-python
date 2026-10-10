@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from config import LICENSE_FILE, NEW_OFFER_DAYS
+from config import AUTHOR_NAME, LICENSE_FILE, LICENSE_NAME, NEW_OFFER_DAYS
 from job.contract import CONTRACT_TYPES
 from job.sources.registry import SOURCES
 from storage.job_applications import APPLICATION_STATUSES
@@ -49,6 +49,12 @@ EXECUTION_TONES = {"success": "success", "partial": "warning"}
 
 # Texte des exécutions antérieures à l'enregistrement des critères
 UNKNOWN_SEARCH = "Critères non enregistrés"
+
+# Au-delà, une ligne d'activité résume les sources par leur nombre
+MAX_LISTED_SOURCES = 3
+
+# Déclencheur noté dans l'historique pour les recherches du planificateur
+SCHEDULED_TRIGGER = "scheduled"
 
 # Périodes proposées par le filtre de date de publication, en jours
 PUBLISHED_PERIODS = {
@@ -119,21 +125,44 @@ def to_list(pValue):
     return rValues
 
 
-def prepare_offer(pOffer, pNewSince):
-    """Complète une offre avec les informations utiles à l'affichage."""
+def format_net_salary(pOffer):
+    """Formate la fourchette de salaire net mensuel d'une offre."""
 
-    vOffer = {
+    vMinimum = pOffer.get("salary_net_monthly_min")
+    vMaximum = pOffer.get("salary_net_monthly_max")
+
+    if vMinimum is not None and vMaximum is not None and vMinimum != vMaximum:
+        rText = f"{format_euros(vMinimum)} – {format_euros(vMaximum)}"
+    else:
+        rText = format_euros(vMinimum if vMinimum is not None else vMaximum)
+
+    return rText
+
+
+def clean_missing_values(pOffer):
+    """Remplace les valeurs manquantes de pandas (NaN, NaT) par None."""
+
+    rOffer = {
         vKey: (
             None if not isinstance(vValue, (list, dict)) and pd.isna(vValue) else vValue
         )
         for vKey, vValue in pOffer.items()
     }
 
+    return rOffer
+
+
+def prepare_offer(pOffer, pNewSince):
+    """Complète une offre avec les informations utiles à l'affichage."""
+
+    vOffer = clean_missing_values(pOffer)
+
     vSource = SOURCES.get(vOffer["source"])
 
     vOffer["source_label"] = vSource.label if vSource else vOffer["source"]
     vOffer["is_new"] = vOffer["first_seen_at"] >= pNewSince.isoformat()
     vOffer["skills_list"] = to_list(vOffer.get("skills"))
+    vOffer["net_salary"] = format_net_salary(vOffer)
     vOffer["follow_up_due"] = bool(
         vOffer.get("follow_up_date")
         and vOffer.get("application_status") in ("APPLIED", "INTERVIEW")
@@ -259,21 +288,31 @@ def summarize_history(pSummary):
 
 
 def describe_execution(pEntry):
-    """Résume une exécution : tonalité, titre, détail et nombre d'offres."""
+    """Résume une exécution : tonalité, titre, détail, sources et nombre d'offres."""
+
+    vSources = ""
 
     if pEntry.scraper_type == "job":
         vTitle = describe_search(pEntry.parameters) or "Recherche d'offres"
-        vDetail = describe_sources(pEntry.parameters)
+        vSources = describe_sources(pEntry.parameters)
+        vSourceCount = len((pEntry.parameters or {}).get("sources", []))
+        vDetail = (
+            f"{vSourceCount} sources" if vSourceCount > MAX_LISTED_SOURCES else vSources
+        )
     else:
         vTitle = "Scraping de livres"
         vDetail = pEntry.url
 
     vDate = f"{pEntry.started_at:%d/%m/%Y à %H:%M}"
 
+    if (pEntry.parameters or {}).get("trigger") == SCHEDULED_TRIGGER:
+        vDate = f"{vDate} · planifiée"
+
     rDescription = {
         "tone": EXECUTION_TONES.get(pEntry.status, "danger"),
         "title": vTitle,
         "detail": f"{vDate} · {vDetail}" if vDetail else vDate,
+        "sources": vSources,
         "result": f"{pEntry.item_count} offre(s)",
     }
 
@@ -286,37 +325,92 @@ def build_legal_sections(pApplicationName):
     rSections = [
         (
             "Édition",
-            f"{pApplicationName} est un projet personnel, sans finalité commerciale, "
-            "dont le code est publié sur GitHub. L'application s'exécute sur le poste "
-            "ou le serveur de la personne qui l'installe.",
+            f"{pApplicationName} est un projet personnel et non commercial, développé "
+            f"par {AUTHOR_NAME}, titulaire des droits sur le code publié sur GitHub.",
         ),
         (
-            "Contact",
-            "Pour toute question sur le projet, l'auteur est joignable sur LinkedIn.",
+            "Hébergement",
+            "L'application n'est pas un service en ligne. Elle s'exécute sur le poste "
+            "ou le serveur de la personne qui l'installe, qui en assure l'hébergement "
+            "et l'usage.",
+        ),
+        (
+            "Contact et signalement",
+            "Pour toute question, ou pour demander le retrait d'un contenu, l'auteur "
+            "est joignable sur LinkedIn.",
         ),
         (
             "Contenus",
             "Les offres d'emploi proviennent des sources indiquées sur chaque annonce "
             "et restent la propriété de leurs éditeurs. Elles sont présentées telles "
             "que fournies par ces sources, avec un lien vers l'annonce d'origine qui "
-            "fait seule foi. Les salaires nets sont des estimations calculées selon "
-            "les règles des paramètres.",
+            "fait seule foi. L'application n'est ni un recruteur ni un intermédiaire : "
+            "elle ne publie aucune offre et n'intervient pas dans les candidatures.",
+        ),
+        (
+            "Sources de données",
+            "Les offres sont obtenues par les interfaces de programmation (API) mises "
+            "à disposition par chaque source. La personne qui installe l'application "
+            "utilise ses propres clés d'accès et s'engage à respecter les conditions "
+            "d'utilisation de chaque source, notamment leurs limites de requêtes.",
+        ),
+        (
+            "Limitation de responsabilité",
+            "L'application est fournie en l'état, sans garantie d'exactitude, "
+            "d'exhaustivité ni de disponibilité. Les informations affichées, dont les "
+            "salaires nets estimés selon les règles des paramètres, sont indicatives "
+            "et ne constituent pas un conseil juridique, fiscal ou professionnel. "
+            "L'auteur ne peut être tenu responsable du contenu des offres, des "
+            "décisions prises à partir de ces informations ni de l'usage fait de "
+            "l'application.",
         ),
         (
             "Données personnelles",
             "Le suivi des candidatures et les notes sont enregistrés uniquement dans "
-            "la base de données locale de l'application. Aucun cookie n'est déposé : "
-            "seul le choix du thème est conservé sur l'appareil.",
+            "la base de données locale de l'application et ne sont jamais transmis à "
+            "l'auteur. Seuls les critères de recherche sont envoyés aux sources "
+            "interrogées. La personne qui installe l'application est responsable des "
+            "données qu'elle y enregistre, au sens du RGPD. Si elle active les "
+            "notifications, les nouvelles offres lui sont envoyées par e-mail depuis "
+            "son propre compte Gmail. Aucun cookie publicitaire ni de mesure "
+            "d'audience n'est déposé : le tableau de bord web utilise seulement un "
+            "cookie de session, nécessaire à la connexion et supprimé à la "
+            "déconnexion, et le choix du thème est conservé sur l'appareil.",
+        ),
+        (
+            "Propriété intellectuelle",
+            "Les noms et marques des sources citées appartiennent à leurs titulaires "
+            "et servent uniquement à indiquer l'origine des offres. Les icônes "
+            "proviennent de Lucide, sous licence ISC.",
         ),
         (
             "Licence",
             "Le code peut être consulté et utilisé tel quel à des fins non "
-            "commerciales, mais ni modifié ni redistribué. Les icônes proviennent de "
-            "Lucide, sous licence ISC.",
+            "commerciales, mais ni modifié ni redistribué, selon les termes de la "
+            f"licence {LICENSE_NAME}.",
+        ),
+        (
+            "Droit applicable",
+            "Ces mentions sont régies par le droit français.",
         ),
     ]
 
     return rSections
+
+
+# La licence n'a de valeur qu'en anglais : ce résumé aide à la lire sans la remplacer.
+LICENSE_SUMMARY_NOTE = "Résumé indicatif en français : seul le texte anglais fait foi."
+LICENSE_SUMMARY = (
+    "Le logiciel peut être utilisé à des fins non commerciales : usage personnel, "
+    "recherche, enseignement, associations et organismes publics.",
+    "Il ne peut être ni modifié, ni redistribué, ni servir de base à une autre "
+    "œuvre.",
+    "Une licence de brevet est accordée pour ces mêmes usages.",
+    "En cas de manquement, la licence prend fin, sauf mise en conformité dans les "
+    "32 jours suivant la notification.",
+    "Le logiciel est fourni sans garantie, et son auteur n'est pas responsable des "
+    "dommages liés à son utilisation.",
+)
 
 
 def read_license():

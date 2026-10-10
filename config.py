@@ -17,6 +17,9 @@ LOGO_FILE = ASSETS_DIRECTORY / "logo.png"
 
 APPLICATION_NAME = "JobBoard Perso"
 
+# Titulaire des droits, tel qu'indiqué dans le fichier LICENSE
+AUTHOR_NAME = "Remiverhaeghe"
+
 TAGLINE = "Offres, candidatures et relances au même endroit"
 
 REPOSITORY_URL = "https://github.com/Remiverhaeghe/scraper-data-python"

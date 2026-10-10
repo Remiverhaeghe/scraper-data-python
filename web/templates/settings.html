@@ -4,7 +4,7 @@
 {% block title %}Paramètres{% endblock %}
 
 {% block content %}
-{{ ui.page_header("Paramètres", "Apparence, règles de calcul, sources et informations", "settings") }}
+{{ ui.page_header("Paramètres", "Apparence, règles de calcul, planification, notifications et sources", "settings") }}
 
 <div class="grid grid-settings">
     <div class="stack">
@@ -21,6 +21,7 @@
             <h2>Règles de calcul</h2>
             <p class="card-subtitle">Partagées avec l'application de bureau. Le net des offres est recalculé.</p>
             <form class="rules-form" method="post" action="{{ url_for('update_settings').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                 {% for key, definition in definitions.items() %}
                 <label class="rule">
                     <span>
@@ -43,40 +44,65 @@
         </article>
 
         <article class="card">
-            <h2>{{ app_name }}</h2>
-            <p class="card-subtitle">{{ tagline }}</p>
-            <p class="muted">
-                <a href="{{ url_for('show_license').path }}">Licence {{ license_name }}</a>.
-                Icônes Lucide, sous licence ISC.
-                <a href="{{ url_for('show_legal').path }}">Mentions légales</a>.
-            </p>
-            <div class="page-actions">
-                <a class="button" href="{{ repository_url }}" target="_blank" rel="noopener">{{ icon("github") }} Code source sur GitHub</a>
-                <a class="button" href="{{ contact_url }}" target="_blank" rel="noopener">{{ icon("linkedin") }} Me contacter sur LinkedIn</a>
+            <h2>Recherche planifiée</h2>
+            <p class="card-subtitle">Lancée par le planificateur (<code>python -m scheduler</code>). Elle se choisit et s'active depuis l'application de bureau.</p>
+            <div class="source-state">
+                <span class="tone-primary">{{ icon("search") }}</span>
+                <strong>{{ schedule.search }}</strong>
+                <span class="muted">{{ schedule.sources }}</span>
             </div>
+            <div class="source-state">
+                <span class="{% if schedule.enabled %}tone-success{% else %}tone-muted{% endif %}">{{ icon("calendar") }}</span>
+                <strong>{% if schedule.enabled %}Activée{% else %}Désactivée{% endif %}</strong>
+                <span class="muted">{{ schedule.interval }}</span>
+            </div>
+            <p class="muted">{{ schedule.runs }}</p>
         </article>
     </div>
 
-    <article class="card">
-        <h2>Sources</h2>
-        <p class="card-subtitle">Les clés d'API se renseignent dans le fichier <code>.env</code>, jamais ici</p>
-        {% for source in sources %}
-        <div class="source-state">
-            {% if source.reason is none %}
-            <span class="tone-success">{{ icon("circle-check") }}</span>
-            <strong>{{ source.label }}</strong>
-            <span class="muted">Prête</span>
-            {% elif source.missing and source.reason == "non configurée" %}
-            <span class="tone-warning">{{ icon("circle-alert") }}</span>
-            <strong>{{ source.label }}</strong>
-            <span class="muted">À renseigner dans .env : {% for name in source.missing %}<code>{{ name }}</code> {% endfor %}</span>
-            {% else %}
-            <span class="tone-muted">{{ icon("circle-alert") }}</span>
-            <strong>{{ source.label }}</strong>
-            <span class="muted">Indisponible pour le moment</span>
-            {% endif %}
-        </div>
-        {% endfor %}
-    </article>
+    <div class="stack">
+        <article class="card">
+            <h2>Notifications e-mail</h2>
+            <p class="card-subtitle">Les nouvelles offres de la recherche planifiée, envoyées par Gmail</p>
+            <div class="source-state">
+                {% if schedule.missing_email_settings %}
+                <span class="tone-warning">{{ icon("circle-alert") }}</span>
+                <strong>Compte Gmail</strong>
+                <span class="muted">À renseigner dans .env : {% for name in schedule.missing_email_settings %}<code>{{ name }}</code> {% endfor %}</span>
+                {% else %}
+                <span class="tone-success">{{ icon("circle-check") }}</span>
+                <strong>Compte Gmail</strong>
+                <span class="muted">Configuré dans .env</span>
+                {% endif %}
+            </div>
+            <div class="source-state">
+                <span class="{% if schedule.has_email %}tone-success{% else %}tone-muted{% endif %}">{{ icon("send") }}</span>
+                <strong>Destinataire</strong>
+                <span class="muted">{% if schedule.has_email %}Adresse renseignée{% else %}Aucune adresse : notifications désactivées{% endif %}</span>
+            </div>
+        </article>
+
+        <article class="card">
+            <h2>Sources</h2>
+            <p class="card-subtitle">Les clés d'API se renseignent dans le fichier <code>.env</code>, jamais ici</p>
+            {% for source in sources %}
+            <div class="source-state">
+                {% if source.reason is none %}
+                <span class="tone-success">{{ icon("circle-check") }}</span>
+                <strong>{{ source.label }}</strong>
+                <span class="muted">Prête</span>
+                {% elif source.missing and source.reason == "non configurée" %}
+                <span class="tone-warning">{{ icon("circle-alert") }}</span>
+                <strong>{{ source.label }}</strong>
+                <span class="muted">À renseigner dans .env : {% for name in source.missing %}<code>{{ name }}</code> {% endfor %}</span>
+                {% else %}
+                <span class="tone-muted">{{ icon("circle-alert") }}</span>
+                <strong>{{ source.label }}</strong>
+                <span class="muted">Indisponible pour le moment</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </article>
+    </div>
 </div>
 {% endblock %}

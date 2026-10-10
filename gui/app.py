@@ -36,7 +36,7 @@ class DesktopApplication:
 
         self.window = MainWindow(DATABASE_FILE, APPLICATION_NAME)
         self.window.theme_requested.connect(self.change_theme)
-        self.window.show()
+        self.window.showMaximized()
 
         logger.info("Fenêtre ouverte avec le thème %s", vTheme)
 

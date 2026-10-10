@@ -6,7 +6,16 @@
 {% block content %}
 {{ ui.page_header("Licence", license_name, "file-text") }}
 
-<article class="card">
+<article class="card legal">
+    <h2>En résumé</h2>
+    <p class="muted"><em>{{ license_summary_note }}</em></p>
+    <ul>
+        {% for point in license_summary %}
+        <li>{{ point }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Texte officiel</h2>
     <pre class="license-text">{{ license_text }}</pre>
 </article>
 {% endblock %}

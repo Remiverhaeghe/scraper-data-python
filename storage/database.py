@@ -150,6 +150,82 @@ def migrate_to_v4(pConnection):
         """)
 
 
+def migrate_to_v5(pConnection):
+    """Reprend les offres enregistrées avant deux corrections de parsing.
+
+    Adzuna renvoyait parfois ses accents échappés (\\u00e9) ; Hacker News rangeait
+    tout l'en-tête de l'annonce dans le lieu et le titre.
+    """
+
+    # Imports locaux : la reprise réutilise le parsing métier sans que le
+    # stockage en dépende pour son fonctionnement courant.
+    from job.sources.hackernews.parser import parse_header
+    from utils.helpers import decode_unicode_escapes
+
+    vEscapedRows = pConnection.execute(r"""
+        SELECT source, source_id, title, description
+        FROM job_offer
+        WHERE title LIKE '%\u%' OR description LIKE '%\u%'
+        """).fetchall()
+
+    pConnection.executemany(
+        "UPDATE job_offer SET title = ?, description = ? "
+        "WHERE source = ? AND source_id = ?",
+        [
+            (
+                decode_unicode_escapes(vTitle),
+                decode_unicode_escapes(vDescription),
+                vSource,
+                vSourceId,
+            )
+            for vSource, vSourceId, vTitle, vDescription in vEscapedRows
+        ],
+    )
+
+    # L'ancien découpage conservait l'en-tête complet, entreprise en tête, dans le lieu.
+    vHeaderRows = [
+        (vSourceId, vLocation)
+        for vSourceId, vCompany, vLocation in pConnection.execute("""
+            SELECT source_id, company, location
+            FROM job_offer
+            WHERE source = 'hackernews' AND company IS NOT NULL
+            """)
+        if vLocation and vLocation.startswith(vCompany)
+    ]
+
+    vUpdates = []
+
+    for vSourceId, vHeader in vHeaderRows:
+        vDetails = parse_header(vHeader)
+        vUpdates.append(
+            (
+                vDetails["title"],
+                vDetails["location"],
+                vDetails["employment"],
+                vDetails["employment"],
+                vDetails["salary"],
+                vSourceId,
+            )
+        )
+
+    pConnection.executemany(
+        """
+        UPDATE job_offer
+        SET title = ?, location = ?, contract_type = ?, employment_type = ?,
+            salary_label = ?
+        WHERE source = 'hackernews' AND source_id = ?
+        """,
+        vUpdates,
+    )
+
+    logger.info(
+        "Reprise des offres : %s texte(s) décodé(s), %s en-tête(s) Hacker News "
+        "redécoupé(s)",
+        len(vEscapedRows),
+        len(vUpdates),
+    )
+
+
 # Colonnes de date sur lesquelles un décompte quotidien est autorisé
 DAILY_COUNT_COLUMNS = {
     ("job_offer", "first_seen_at"),
@@ -197,7 +273,13 @@ def count_by_day(pDatabasePath, pTable, pDateColumn, pDays, pNow=None):
     return rCounts
 
 
-MIGRATIONS = [migrate_to_v1, migrate_to_v2, migrate_to_v3, migrate_to_v4]
+MIGRATIONS = [
+    migrate_to_v1,
+    migrate_to_v2,
+    migrate_to_v3,
+    migrate_to_v4,
+    migrate_to_v5,
+]
 
 
 def get_schema_version(pConnection):

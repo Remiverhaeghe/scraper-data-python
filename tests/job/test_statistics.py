@@ -61,14 +61,14 @@ def build_activity(pCounts):
 @pytest.mark.parametrize(
     "pOffers, pApplications, pExpectedDays",
     [
-        ([0] * 10 + [5, 0, 0, 2], [0] * 14, 7),
+        ([0] * 10 + [5, 0, 0, 2], [0] * 14, 4),
         ([0, 0, 3] + [0] * 11, [0] * 14, 12),
-        ([0] * 14, [0] * 13 + [1], 7),
-        ([0] * 14, [0] * 14, 7),
+        ([0] * 14, [0] * 12 + [1, 0], 2),
+        ([0] * 14, [0] * 14, 1),
     ],
 )
 def test_trim_leading_empty_days(pOffers, pApplications, pExpectedDays):
-    """Vérifie que l'activité démarre au premier jour actif, sur 7 jours au moins."""
+    """Vérifie que l'activité démarre au premier jour actif, sans jour vide avant."""
 
     rActivity = trim_leading_empty_days(
         {

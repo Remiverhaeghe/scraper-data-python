@@ -6,6 +6,11 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from job.schedule import (
+    save_notification_email,
+    save_schedule_options,
+    save_scheduled_search,
+)
 from storage.job_offers import save_offers
 from web.app import (
     app,
@@ -38,14 +43,16 @@ def build_offer(pSourceId, **pValues):
 
 
 @pytest.fixture
-def client(tmp_path):
-    """Fournit un client de test branché sur une base temporaire remplie."""
+def client(tmp_path, web_login):
+    """Fournit un client connecté, branché sur une base temporaire remplie."""
 
     vDatabaseFile = tmp_path / "scraper.db"
 
     app.dependency_overrides[get_database_file] = lambda: vDatabaseFile
 
     with TestClient(app) as rClient:
+        web_login(rClient)
+
         save_offers(
             vDatabaseFile,
             pd.DataFrame(
@@ -452,6 +459,8 @@ def test_legal_page(client):
 
     assert vResponse.status_code == 200
     assert "Données personnelles" in vResponse.text
+    assert "Limitation de responsabilité" in vResponse.text
+    assert "Remiverhaeghe" in vResponse.text
     assert 'href="/license"' in vResponse.text
     assert "linkedin.com/in/" in vResponse.text
 
@@ -501,3 +510,24 @@ def test_license_is_shown_without_leaving_the_site(client):
 
     assert vResponse.status_code == 200
     assert "PolyForm Strict License 1.0.0" in vResponse.text
+    assert "seul le texte anglais fait foi" in vResponse.text
+
+
+def test_settings_page_shows_schedule_without_email(client, tmp_path, monkeypatch):
+    """Vérifie la planification affichée en lecture seule, sans l'adresse e-mail."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    monkeypatch.delenv("GMAIL_APP_PASSWORD", raising=False)
+    save_scheduled_search(vDatabaseFile, ["remotive"], {"keyword": "Kotlin"})
+    save_schedule_options(vDatabaseFile, True, 12)
+    save_notification_email(vDatabaseFile, "secret@example.com")
+
+    vResponse = client.get("/settings")
+
+    assert vResponse.status_code == 200
+    assert "Kotlin" in vResponse.text
+    assert "Toutes les 12 heures" in vResponse.text
+    assert "Adresse renseignée" in vResponse.text
+    assert "secret@example.com" not in vResponse.text
+    assert "GMAIL_APP_PASSWORD" in vResponse.text

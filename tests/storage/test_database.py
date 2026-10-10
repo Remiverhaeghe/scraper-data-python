@@ -197,6 +197,65 @@ def test_migration_to_v3_keeps_last_follow_ups(tmp_path):
     assert vRows == [("lever", "1", "2026-10-05T09:00:00")]
 
 
+def test_migration_to_v5_repairs_saved_offers(tmp_path):
+    """Vérifie la reprise des accents échappés et des en-têtes Hacker News."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        for vMigration in MIGRATIONS[:4]:
+            vMigration(vConnection)
+
+        vConnection.execute("PRAGMA user_version = 4")
+        vConnection.executemany(
+            """
+            INSERT INTO job_offer (
+                source, source_id, first_seen_at, last_seen_at,
+                title, company, location, description
+            )
+            VALUES (?, ?, '2026-10-01', '2026-10-01', ?, ?, ?, ?)
+            """,
+            [
+                ("adzuna", "1", "D\\u00e9veloppeur", "LCL", "Paris", "Syst\\u00e8mes"),
+                (
+                    "hackernews",
+                    "2",
+                    "Senior SWE | REMOTE (US) | Full-time | $170k",
+                    "Sidekick",
+                    "Sidekick | Senior SWE | REMOTE (US) | Full-time | $170k",
+                    None,
+                ),
+                ("hackernews", "3", "Backend", "Acme", "Berlin", None),
+            ],
+        )
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    initialize_database(vDatabaseFile)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vRows = vConnection.execute("""
+            SELECT title, location, description, contract_type, salary_label
+            FROM job_offer
+            ORDER BY source_id
+            """).fetchall()
+
+    finally:
+        vConnection.close()
+
+    assert vRows == [
+        ("Développeur", "Paris", "Systèmes", None, None),
+        ("Senior SWE", "REMOTE (US)", None, "Full-time", "$170k"),
+        ("Backend", "Berlin", None, None, None),
+    ]
+
+
 def test_count_by_day_rejects_unknown_column(tmp_path):
     """Vérifie qu'une table ou une colonne non prévue est refusée."""
 

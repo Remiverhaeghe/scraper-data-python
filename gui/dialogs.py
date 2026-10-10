@@ -5,7 +5,12 @@ from html import escape
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QTextBrowser, QVBoxLayout
 
 from config import APPLICATION_NAME
-from job.presentation import build_legal_sections, read_license
+from job.presentation import (
+    LICENSE_SUMMARY,
+    LICENSE_SUMMARY_NOTE,
+    build_legal_sections,
+    read_license,
+)
 
 
 def show_text_dialog(pParent, pTitle, pHtml=None, pText=None):
@@ -19,6 +24,7 @@ def show_text_dialog(pParent, pTitle, pHtml=None, pText=None):
         vBrowser.setPlainText(pText)
 
     vButtons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+    vButtons.button(QDialogButtonBox.StandardButton.Close).setText("Fermer")
 
     vDialog = QDialog(pParent)
     vDialog.setWindowTitle(pTitle)
@@ -48,4 +54,14 @@ def show_legal_notice(pParent):
 def show_license(pParent):
     """Affiche la licence du projet, lue dans le fichier LICENSE."""
 
-    show_text_dialog(pParent, "Licence", pText=read_license())
+    vSummary = "".join(f"<li>{escape(vPoint)}</li>" for vPoint in LICENSE_SUMMARY)
+
+    show_text_dialog(
+        pParent,
+        "Licence",
+        pHtml=(
+            f"<h3>En résumé</h3><p><i>{escape(LICENSE_SUMMARY_NOTE)}</i></p>"
+            f"<ul>{vSummary}</ul><h3>Texte officiel</h3>"
+            f"<pre style='white-space: pre-wrap'>{escape(read_license())}</pre>"
+        ),
+    )

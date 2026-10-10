@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Connexion · {{ app_name }}</title>
+    <script src="{{ url_for('static', path='theme.js').path }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css').path }}">
+    <link rel="icon" type="image/png" href="{{ url_for('assets', path='logo.png').path }}">
+</head>
+<body class="login-page">
+<main class="card login-card">
+    <img src="{{ url_for('assets', path='logo.png').path }}" alt="" width="56" height="56">
+    <h1>{{ app_name }}</h1>
+    <p class="muted">{{ tagline }}</p>
+
+    {% if missing_settings %}
+    <div class="login-alert" role="alert">
+        <span class="tone-warning">{{ icon("circle-alert") }}</span>
+        <p>
+            Authentification non configurée. Renseignez dans <code>.env</code> :
+            {% for name in missing_settings %}<code>{{ name }}</code> {% endfor %}.
+            L'empreinte du mot de passe et le secret se génèrent avec
+            <code>python -m web.password</code>.
+        </p>
+    </div>
+    {% else %}
+    <form class="login-form" method="post" action="{{ url_for('login').path }}">
+        <input type="hidden" name="next" value="{{ next }}">
+        <label>
+            Identifiant
+            <input type="text" name="username" autocomplete="username" required autofocus>
+        </label>
+        <label>
+            Mot de passe
+            <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        {% if message %}<p class="login-message" role="alert">{{ message }}</p>{% endif %}
+        <button class="button button-primary" type="submit">{{ icon("lock", 16) }} Se connecter</button>
+    </form>
+    {% endif %}
+
+    <p class="login-links">
+        <a href="{{ url_for('show_legal').path }}">Mentions légales</a>
+        · <a href="{{ url_for('show_license').path }}">Licence {{ license_name }}</a>
+    </p>
+</main>
+</body>
+</html>

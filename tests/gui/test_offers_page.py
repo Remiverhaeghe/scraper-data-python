@@ -5,7 +5,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from gui.offer_detail import describe_application
+from gui.offer_detail import describe_application, summarize_values
 from gui.offers_page import OffersPage
 from storage.database import initialize_database
 from storage.job_applications import get_application, save_application
@@ -221,3 +221,17 @@ def test_salary_and_publication_filters(offers_page):
     assert vFilters["pMaxNetSalary"] == 2500
     assert vFilters["pHasSalary"] is True
     assert vFilters["pPublishedSince"] is not None
+
+
+@pytest.mark.parametrize(
+    "pValues, pExpected",
+    [
+        (None, ""),
+        (["Java", "SQL"], "Java, SQL"),
+        (["A", "B", "C", "D", "E", "F"], "A, B, C, D +2"),
+    ],
+)
+def test_summarize_values(pValues, pExpected):
+    """Vérifie qu'une longue liste est abrégée pour tenir dans le panneau."""
+
+    assert summarize_values(pValues) == pExpected

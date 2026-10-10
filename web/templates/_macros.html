@@ -50,11 +50,14 @@
 {% endif %}
 {% endmacro %}
 
-{% macro pie(pie_data, label) %}
+{% macro pie(pie_data, label, title=None) %}
 <div class="pie-chart">
-    <div class="pie" role="img" aria-label="{{ label }}"
-         {% if pie_data.gradient %}style="background: {{ pie_data.gradient }}"{% endif %}>
-        <span>{{ pie_data.total }}</span>
+    <div class="pie-figure">
+        {% if title %}<h3 class="chart-title">{{ title }}</h3>{% endif %}
+        <div class="pie" role="img" aria-label="{{ label }}"
+             {% if pie_data.gradient %}style="background: {{ pie_data.gradient }}"{% endif %}>
+            <span>{{ pie_data.total }}</span>
+        </div>
     </div>
     <ul class="legend legend-column">
         {% for item in pie_data.slices %}

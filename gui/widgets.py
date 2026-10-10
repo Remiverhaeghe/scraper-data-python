@@ -39,7 +39,7 @@ def create_page_header(pLayout, pTitle, pSubtitle, pActions=(), pIcon=None):
     vHeader.addLayout(vTexts, 1)
 
     for vAction in pActions:
-        vHeader.addWidget(vAction, 0, Qt.AlignmentFlag.AlignTop)
+        vHeader.addWidget(vAction, 0, Qt.AlignmentFlag.AlignVCenter)
 
     pLayout.addLayout(vHeader)
     pLayout.addSpacing(18)

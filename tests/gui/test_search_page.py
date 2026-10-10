@@ -208,3 +208,96 @@ def test_build_criteria_splits_word_lists(search_page):
     assert rCriteria["skills"] == ["Java", "Spring", "SQL"]
     assert rCriteria["exclude_keywords"] == ["stage"]
     assert rCriteria["max_salary"] == 4000
+
+
+@pytest.mark.parametrize(
+    "pChanged, pOther, pExpected",
+    [
+        ("min_salary_spin", "max_salary_spin", 3000),
+        ("max_salary_spin", "min_salary_spin", 2500),
+    ],
+)
+def test_salary_range_stays_ordered(search_page, pChanged, pOther, pExpected):
+    """Vérifie que la borne modifiée entraîne l'autre borne."""
+
+    search_page.min_salary_spin.setValue(2800)
+    search_page.max_salary_spin.setValue(2900)
+
+    getattr(search_page, pChanged).setValue(pExpected)
+
+    assert getattr(search_page, pOther).value() == pExpected
+
+
+def test_salary_range_ignores_empty_bound(search_page):
+    """Vérifie qu'une borne vide, sans limite, n'est pas alignée sur l'autre."""
+
+    search_page.min_salary_spin.setValue(3000)
+
+    assert search_page.max_salary_spin.value() == 0
+
+
+def test_schedule_requires_a_source(search_page):
+    """Vérifie qu'une recherche sans source ne peut pas être planifiée."""
+
+    vRequests = []
+
+    search_page.schedule_requested.connect(
+        lambda pSources, pCriteria: vRequests.append(pSources)
+    )
+    search_page.check_sources(False)
+    search_page.request_schedule()
+
+    assert vRequests == []
+    assert search_page.status_label.text() == "Sélectionnez au moins une source."
+
+
+def test_all_criteria_are_restored_when_remembered(qt_application, tmp_path):
+    """Vérifie que tous les critères sont retrouvés lorsque la case est cochée."""
+
+    vSettings = QSettings(str(tmp_path / "settings.ini"), QSettings.IniFormat)
+
+    vPage = SearchPage(vSettings)
+    vPage.contract_combo.setCurrentIndex(vPage.contract_combo.findData("CDI"))
+    vPage.min_salary_spin.setValue(2500)
+    vPage.max_salary_spin.setValue(3500)
+    vPage.remote_check.setChecked(True)
+    vPage.skills_edit.setText("Java, SQL")
+    vPage.exclude_edit.setText("stage")
+    vPage.max_items_spin.setValue(40)
+    vPage.save_settings()
+
+    vCriteria = SearchPage(vSettings).build_criteria()
+
+    assert vCriteria["contract"] == "CDI"
+    assert (vCriteria["min_salary"], vCriteria["max_salary"]) == (2500, 3500)
+    assert vCriteria["remote"] is True
+    assert vCriteria["skills"] == ["Java", "SQL"]
+    assert vCriteria["exclude_keywords"] == ["stage"]
+    assert vCriteria["max_items"] == 40
+
+
+def test_unchecked_memory_resets_criteria_but_keeps_sources(qt_application, tmp_path):
+    """Vérifie que, décochée, la case vide les champs sans oublier les sources."""
+
+    vSettings = QSettings(str(tmp_path / "settings.ini"), QSettings.IniFormat)
+
+    vPage = SearchPage(vSettings)
+    vPage.keyword_edit.setText("Python")
+    select_only_remotive(vPage)
+    vPage.save_settings()
+    vPage.remember_check.setChecked(False)
+
+    vReopenedPage = SearchPage(vSettings)
+
+    assert not vReopenedPage.remember_check.isChecked()
+    assert vReopenedPage.keyword_edit.text() == ""
+    assert vReopenedPage.get_selected_sources() == ["remotive"]
+
+
+def test_previous_keyword_setting_is_still_read(qt_application, tmp_path):
+    """Vérifie la reprise du mot-clé mémorisé par les versions précédentes."""
+
+    vSettings = QSettings(str(tmp_path / "settings.ini"), QSettings.IniFormat)
+    vSettings.setValue("search/keyword", "Kotlin")
+
+    assert SearchPage(vSettings).keyword_edit.text() == "Kotlin"

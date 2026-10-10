@@ -1,7 +1,11 @@
 """Tests de la page des paramètres"""
 
+import pytest
+
+from gui import settings_page
 from gui.settings_page import SettingsPage, describe_source_state
 from gui.theme import COLORS
+from job.schedule import load_schedule, save_scheduled_search
 from job.settings import load_settings
 from job.sources.config import SourceDefinition
 from storage.database import initialize_database
@@ -76,3 +80,115 @@ def test_rules_are_saved_from_the_page(qt_application, tmp_path):
 
     assert load_settings(vDatabaseFile)["follow_up_days"] == 10
     assert vPage.rules_message.text() == "Règles enregistrées."
+
+
+def create_page(pDatabaseFile, pMonkeypatch, pGmailConfigured=True):
+    """Crée la page avec un compte Gmail configuré ou non."""
+
+    for vName in ("GMAIL_ADDRESS", "GMAIL_APP_PASSWORD"):
+        if pGmailConfigured:
+            pMonkeypatch.setenv(vName, "valeur")
+        else:
+            pMonkeypatch.delenv(vName, raising=False)
+
+    initialize_database(pDatabaseFile)
+
+    rPage = SettingsPage(pDatabaseFile)
+
+    return rPage
+
+
+def test_schedule_requires_a_saved_search(qt_application, tmp_path, monkeypatch):
+    """Vérifie qu'une planification sans recherche enregistrée est refusée."""
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+
+    vPage.schedule_check.setChecked(True)
+    vPage.save_schedule()
+
+    assert "Enregistrez d'abord une recherche" in vPage.schedule_message.text()
+    assert vPage.schedule_search_label.text() == "Aucune recherche enregistrée"
+
+
+def test_schedule_is_saved_from_the_page(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'activation, la fréquence et le résumé de la recherche planifiée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile, monkeypatch)
+
+    save_scheduled_search(vDatabaseFile, ["remotive"], {"keyword": "Java"})
+    vPage.refresh_schedule()
+
+    vPage.schedule_check.setChecked(True)
+    vPage.interval_combo.setCurrentIndex(vPage.interval_combo.findData(12))
+    vPage.save_schedule()
+
+    vSchedule = load_schedule(vDatabaseFile)
+
+    assert vSchedule["enabled"] is True
+    assert vSchedule["interval_hours"] == 12
+    assert vPage.schedule_message.text() == "Planification enregistrée."
+    assert vPage.schedule_search_label.text() == "Java"
+    assert vPage.schedule_sources_label.text() == "Remotive"
+
+
+@pytest.mark.parametrize(
+    "pEmail, pMessage, pSaved",
+    [
+        ("moi@example.com", "Adresse enregistrée.", "moi@example.com"),
+        ("", "Notifications désactivées.", None),
+        ("invalide", "Adresse e-mail invalide.", None),
+    ],
+)
+def test_email_is_saved_from_the_page(
+    qt_application, tmp_path, monkeypatch, pEmail, pMessage, pSaved
+):
+    """Vérifie l'enregistrement de l'adresse de notification."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile, monkeypatch)
+
+    vPage.email_edit.setText(pEmail)
+    vPage.save_email()
+
+    assert vPage.email_message.text() == pMessage
+    assert load_schedule(vDatabaseFile)["email"] == pSaved
+
+
+def test_test_email_is_disabled_without_gmail(qt_application, tmp_path, monkeypatch):
+    """Vérifie que l'e-mail de test n'est proposé qu'avec un compte configuré."""
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch, pGmailConfigured=False)
+
+    assert not vPage.test_email_button.isEnabled()
+
+
+@pytest.mark.parametrize(
+    "pEmail, pError, pMessage",
+    [
+        ("", None, "Saisissez d'abord une adresse."),
+        ("moi@example.com", None, "E-mail de test envoyé."),
+        ("moi@example.com", OSError("hors ligne"), "Échec de l'envoi : hors ligne"),
+    ],
+)
+def test_send_test_email(
+    qt_application, tmp_path, monkeypatch, pEmail, pError, pMessage
+):
+    """Vérifie le message affiché après l'envoi de l'e-mail de test."""
+
+    vSent = []
+
+    def fake_send(pRecipient, pSubject, pText):
+        if pError:
+            raise pError
+
+        vSent.append(pRecipient)
+
+    monkeypatch.setattr(settings_page, "send_email", fake_send)
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+    vPage.email_edit.setText(pEmail)
+    vPage.send_test_email()
+
+    assert vPage.email_message.text() == pMessage
+    assert vSent == (["moi@example.com"] if pEmail and not pError else [])

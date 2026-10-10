@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" href="{{ url_for('assets', path='logo.png').path }}">
     <script src="{{ url_for('static', path='htmx.min.js').path }}" defer></script>
 </head>
-<body>
+<body hx-headers='{{ {"X-CSRF-Token": csrf_token(request)} | tojson }}'>
 <div class="layout">
     <aside class="sidebar">
         <a class="brand" href="{{ url_for('show_dashboard').path }}">
@@ -36,9 +36,16 @@
         </nav>
 
         <footer class="sidebar-footer">
-            <a href="{{ url_for('show_legal').path }}">Mentions légales</a>
-            <a href="{{ contact_url }}" target="_blank" rel="noopener">Me contacter</a>
-            <a href="{{ url_for('show_license').path }}">Licence {{ license_name }}</a>
+            <a href="{{ url_for('show_legal').path }}">{{ icon("file-text") }} Mentions légales</a>
+            <a href="{{ contact_url }}" target="_blank" rel="noopener">{{ icon("linkedin") }} Me contacter</a>
+            <a href="{{ repository_url }}" target="_blank" rel="noopener">{{ icon("github") }} Code source</a>
+            <a href="{{ url_for('show_license').path }}">{{ icon("scale") }} Licence {{ license_name }}</a>
+            {% if request.state.session %}
+            <form method="post" action="{{ url_for('logout').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <button class="link-button" type="submit">{{ icon("log-out") }} Se déconnecter</button>
+            </form>
+            {% endif %}
         </footer>
     </aside>
 

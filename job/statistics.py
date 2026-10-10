@@ -20,14 +20,13 @@ from storage.job_offers import (
     get_offers,
 )
 
-RECENT_EXECUTIONS = 4
+RECENT_EXECUTIONS = 3
 
 # Nombre de lignes des listes « Relances à venir » et « Dernières offres »
-DASHBOARD_LIST_SIZE = 5
+DASHBOARD_LIST_SIZE = 4
 
-# Nombre de jours représentés au plus et au moins par le graphique d'activité
+# Nombre de jours représentés au plus par le graphique d'activité
 CHART_DAYS = 14
-MIN_CHART_DAYS = 7
 
 # Séries du graphique d'activité : libellé et décompte quotidien
 ACTIVITY_SERIES = {
@@ -83,8 +82,8 @@ def load_statistics(pDatabaseFile, pNow=None):
     return rStatistics
 
 
-def trim_leading_empty_days(pDailyActivity, pMinimumDays=MIN_CHART_DAYS):
-    """Fait démarrer l'activité au premier jour non vide, sur pMinimumDays au moins.
+def trim_leading_empty_days(pDailyActivity):
+    """Fait démarrer l'activité au premier jour non vide, ou au dernier jour.
 
     Sans cela, une base récente afficherait surtout des jours vides avant
     les premières offres.
@@ -102,7 +101,7 @@ def trim_leading_empty_days(pDailyActivity, pMinimumDays=MIN_CHART_DAYS):
         vDayCount,
     )
 
-    vStart = max(min(vFirstActiveDay, vDayCount - pMinimumDays), 0)
+    vStart = max(min(vFirstActiveDay, vDayCount - 1), 0)
 
     rDailyActivity = {
         vName: vCounts[vStart:] for vName, vCounts in pDailyActivity.items()

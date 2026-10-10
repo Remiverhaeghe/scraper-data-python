@@ -1,0 +1,203 @@
+"""Authentification du tableau de bord : mot de passe, session signée et tentatives"""
+
+import base64
+import hashlib
+import hmac
+import json
+import os
+import secrets
+from collections import defaultdict, deque
+from datetime import datetime, timedelta
+
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+# Variables du fichier .env requises pour ouvrir le tableau de bord
+AUTH_SETTINGS = ("WEB_USERNAME", "WEB_PASSWORD_HASH", "WEB_SESSION_SECRET")
+
+PASSWORD_ALGORITHM = "pbkdf2_sha256"
+
+# Valeur recommandée par l'OWASP pour PBKDF2-SHA256
+PASSWORD_ITERATIONS = 600_000
+
+SESSION_COOKIE = "jobboard_session"
+SESSION_DURATION = timedelta(hours=12)
+
+MAX_LOGIN_FAILURES = 5
+LOGIN_FAILURE_WINDOW = timedelta(minutes=15)
+
+
+def get_missing_auth_settings():
+    """Retourne les variables d'authentification non renseignées."""
+
+    rMissing = [vName for vName in AUTH_SETTINGS if not os.getenv(vName)]
+
+    return rMissing
+
+
+def hash_password(pPassword, pIterations=PASSWORD_ITERATIONS):
+    """Calcule l'empreinte salée d'un mot de passe : algorithme:tours:sel:hash."""
+
+    vSalt = secrets.token_hex(16)
+    vHash = hashlib.pbkdf2_hmac(
+        "sha256", pPassword.encode("utf-8"), bytes.fromhex(vSalt), pIterations
+    )
+
+    rHash = f"{PASSWORD_ALGORITHM}:{pIterations}:{vSalt}:{vHash.hex()}"
+
+    return rHash
+
+
+def verify_password(pPassword, pStoredHash):
+    """Indique si le mot de passe correspond à l'empreinte enregistrée."""
+
+    rValid = False
+
+    try:
+        vAlgorithm, vIterations, vSalt, vHash = pStoredHash.split(":")
+
+        if vAlgorithm == PASSWORD_ALGORITHM:
+            vCandidate = hashlib.pbkdf2_hmac(
+                "sha256",
+                pPassword.encode("utf-8"),
+                bytes.fromhex(vSalt),
+                int(vIterations),
+            )
+
+            # Comparaison à durée constante : le temps de réponse ne révèle rien.
+            rValid = hmac.compare_digest(vCandidate.hex(), vHash)
+
+    except (AttributeError, ValueError):
+        logger.error("Empreinte WEB_PASSWORD_HASH illisible : régénérez-la")
+
+    return rValid
+
+
+def check_credentials(pUsername, pPassword):
+    """Vérifie l'identifiant et le mot de passe saisis contre la configuration."""
+
+    vExpectedUsername = os.getenv("WEB_USERNAME", "")
+
+    # Le mot de passe est toujours vérifié, pour une durée identique quel que soit
+    # l'identifiant saisi.
+    vPasswordValid = verify_password(pPassword, os.getenv("WEB_PASSWORD_HASH", ""))
+
+    rValid = (
+        hmac.compare_digest(
+            pUsername.encode("utf-8"), vExpectedUsername.encode("utf-8")
+        )
+        and vPasswordValid
+    )
+
+    return rValid
+
+
+def encode_part(pData):
+    """Encode des octets en base64 compatible avec un cookie."""
+
+    rText = base64.urlsafe_b64encode(pData).decode("ascii").rstrip("=")
+
+    return rText
+
+
+def decode_part(pText):
+    """Décode une partie de jeton encodée par encode_part."""
+
+    rData = base64.urlsafe_b64decode(pText + "=" * (-len(pText) % 4))
+
+    return rData
+
+
+def sign(pPayload, pSecret):
+    """Signe le contenu d'un jeton avec le secret de session."""
+
+    rSignature = encode_part(
+        hmac.new(pSecret.encode("utf-8"), pPayload.encode("ascii"), "sha256").digest()
+    )
+
+    return rSignature
+
+
+def create_session_token(pSecret, pUsername, pNow):
+    """Crée le jeton de session signé, avec son expiration et son jeton CSRF."""
+
+    vPayload = encode_part(
+        json.dumps(
+            {
+                "user": pUsername,
+                "expires": (pNow + SESSION_DURATION).timestamp(),
+                "csrf": secrets.token_urlsafe(32),
+            }
+        ).encode("utf-8")
+    )
+
+    rToken = f"{vPayload}.{sign(vPayload, pSecret)}"
+
+    return rToken
+
+
+def read_session_token(pSecret, pToken, pNow):
+    """Retourne la session d'un jeton valide et non expiré, sinon None."""
+
+    rSession = None
+
+    try:
+        vPayload, vSignature = pToken.split(".")
+
+        if hmac.compare_digest(vSignature, sign(vPayload, pSecret)):
+            vSession = json.loads(decode_part(vPayload))
+
+            if vSession["expires"] > pNow.timestamp():
+                rSession = vSession
+
+    except (AttributeError, ValueError, KeyError, TypeError):
+        rSession = None
+
+    return rSession
+
+
+def is_safe_redirect(pTarget):
+    """Indique si une adresse de retour reste sur le site, sans redirection ouverte."""
+
+    rSafe = (
+        bool(pTarget)
+        and pTarget.startswith("/")
+        and not pTarget.startswith("//")
+        and "\\" not in pTarget
+    )
+
+    return rSafe
+
+
+class LoginRateLimiter:
+    """Bloque une adresse après trop d'échecs de connexion récents."""
+
+    def __init__(self, pMaxFailures=MAX_LOGIN_FAILURES, pWindow=LOGIN_FAILURE_WINDOW):
+        """Crée un compteur vide ; les échecs sont gardés en mémoire."""
+        self.max_failures = pMaxFailures
+        self.window = pWindow
+        self.failures = defaultdict(deque)
+
+    def forget_old_failures(self, pAddress, pNow):
+        """Oublie les échecs sortis de la fenêtre d'observation."""
+        vFailures = self.failures[pAddress]
+
+        while vFailures and vFailures[0] <= pNow - self.window:
+            vFailures.popleft()
+
+    def is_blocked(self, pAddress, pNow):
+        """Indique si l'adresse a atteint le nombre d'échecs autorisés."""
+        self.forget_old_failures(pAddress, pNow)
+
+        rBlocked = len(self.failures[pAddress]) >= self.max_failures
+
+        return rBlocked
+
+    def record_failure(self, pAddress, pNow):
+        """Ajoute un échec de connexion pour l'adresse."""
+        self.failures[pAddress].append(pNow)
+
+    def reset(self, pAddress):
+        """Efface les échecs de l'adresse après une connexion réussie."""
+        self.failures.pop(pAddress, None)

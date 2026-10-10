@@ -3,6 +3,7 @@
 import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
+from utils.helpers import decode_unicode_escapes
 
 # « contract » couvre aussi bien un CDD qu'une mission freelance : il est
 # laissé à la détection commune.
@@ -28,7 +29,7 @@ def parse_job(pJob):
 
     vJob = {
         # Identification
-        "title": pJob.get("title"),
+        "title": decode_unicode_escapes(pJob.get("title")),
         "company": vCompany.get("display_name"),
         "company_id": None,
         "source": "adzuna",
@@ -65,7 +66,8 @@ def parse_job(pJob):
         "scraped_at": None,
         "first_seen_at": None,
         # Contenu : Adzuna ne fournit qu'un extrait de la description
-        "description": pJob.get("description"),
+        # Adzuna renvoie parfois le texte avec ses accents encore échappés
+        "description": decode_unicode_escapes(pJob.get("description")),
         "missions": None,
         "requirements": None,
         "education": None,

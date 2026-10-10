@@ -195,11 +195,30 @@ h3 {
 
 .sidebar-footer {
     display: grid;
-    gap: 4px;
-    font-size: 12px;
+    gap: 2px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
 }
 
 .sidebar-footer a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: var(--text);
+}
+
+.sidebar-footer a:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.sidebar-footer svg {
+    width: 16px;
+    height: 16px;
     color: var(--muted);
 }
 
@@ -230,7 +249,7 @@ h3 {
 .page-header {
     display: flex;
     gap: 16px;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     margin-bottom: 22px;
 }
@@ -325,7 +344,7 @@ h3 {
 }
 
 .grid-dashboard {
-    grid-template-columns: minmax(0, 3fr) minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     margin-top: 18px;
 }
 
@@ -622,16 +641,7 @@ a.stat:hover {
     color: var(--muted);
 }
 
-.quick-actions {
-    display: grid;
-    gap: 10px;
-}
-
-.quick-actions .button {
-    padding: 12px 14px;
-}
-
-.quick-actions svg {
+.tone-primary {
     color: var(--primary);
 }
 
@@ -664,6 +674,7 @@ a.stat:hover {
 
 input[type="search"],
 input[type="text"],
+input[type="password"],
 input[type="date"],
 select,
 textarea {
@@ -1105,4 +1116,102 @@ code {
     display: block;
     margin-top: 2px;
     font-size: 12px;
+}
+
+.pie-figure {
+    display: grid;
+    justify-items: center;
+}
+
+.chart-title {
+    margin: 0 0 8px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.sidebar-footer form {
+    margin: 0;
+}
+
+.link-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.link-button:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.link-button svg {
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+}
+
+.login-page {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    padding: 16px;
+}
+
+.login-card {
+    display: grid;
+    gap: 12px;
+    width: min(400px, 100%);
+    justify-items: center;
+    text-align: center;
+}
+
+.login-card h1 {
+    margin: 0;
+}
+
+.login-form {
+    display: grid;
+    gap: 14px;
+    width: 100%;
+    text-align: left;
+}
+
+.login-form label {
+    display: grid;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.login-form .button {
+    justify-content: center;
+}
+
+.login-message {
+    margin: 0;
+    color: var(--danger);
+}
+
+.login-alert {
+    display: flex;
+    gap: 10px;
+    text-align: left;
+}
+
+.login-alert p {
+    margin: 0;
+}
+
+.login-links {
+    margin: 4px 0 0;
+    font-size: 13px;
 }

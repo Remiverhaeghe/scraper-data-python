@@ -2,6 +2,7 @@
 
 from gui.main_window import MainWindow
 from job.presentation import FOLLOW_UP_FILTER
+from job.schedule import load_schedule
 from storage.database import initialize_database
 
 
@@ -53,3 +54,24 @@ def test_rebuild_keeps_window_and_shows_page(qt_application, tmp_path):
     assert vWindow.pages is not vOldPages
     assert vWindow.pages.currentWidget() is vWindow.settings_page
     assert vWindow.windowTitle() == "Paramètres · Test"
+
+
+def test_search_page_saves_scheduled_search(qt_application, tmp_path):
+    """Vérifie que « Planifier cette recherche » enregistre critères et sources."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vWindow = MainWindow(vDatabaseFile, "Test")
+    vSearchPage = vWindow.search_page
+
+    vSearchPage.keyword_edit.setText("Python")
+    vSearchPage.request_schedule()
+
+    vSearch = load_schedule(vDatabaseFile)["search"]
+
+    assert vSearch["criteria"]["keyword"] == "Python"
+    assert vSearch["sources"] == vSearchPage.get_selected_sources()
+    assert vSearchPage.status_label.text() == "Recherche planifiée enregistrée"
+    assert vWindow.settings_page.schedule_search_label.text().startswith("Python")

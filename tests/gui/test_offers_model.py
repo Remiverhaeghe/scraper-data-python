@@ -7,10 +7,10 @@ from gui.offers_model import (
     COLUMNS,
     SORT_ROLE,
     OffersTableModel,
-    format_net_salary,
     format_status,
     get_sort_value,
 )
+from job.presentation import format_net_salary
 
 # Séparateur de milliers de format_euros : espace fine insécable
 THOUSANDS = "\u202f"

@@ -4,6 +4,14 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+import pandas as pd
+import requests
+
+from job.csv_schema import JOB_COLUMNS
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 @dataclass
 class SourceConfig:
@@ -85,3 +93,38 @@ class SourceDefinition:
             rReason = "non configurée"
 
         return rReason
+
+
+def scrape_each(pNames, pScrape, pMaxItems, pLabel):
+    """Récupère les offres de plusieurs sites d'une source, séparés par des virgules.
+
+    Un site en erreur, mal orthographié par exemple, n'empêche pas les autres ;
+    l'erreur remonte seulement si aucun site n'a répondu.
+    """
+
+    vFrames = []
+    vError = None
+
+    for vName in [vName.strip() for vName in pNames.split(",") if vName.strip()]:
+        vRemaining = None if pMaxItems is None else pMaxItems - sum(map(len, vFrames))
+
+        if vRemaining is not None and vRemaining <= 0:
+            break
+
+        try:
+            vFrames.append(pScrape(vName, vRemaining))
+
+        except (requests.RequestException, ValueError) as vException:
+            logger.error("%s : site %s ignoré : %s", pLabel, vName, vException)
+            vError = vException
+
+    if not vFrames and vError is not None:
+        raise vError
+
+    rDataFrame = (
+        pd.concat(vFrames, ignore_index=True)
+        if vFrames
+        else pd.DataFrame(columns=JOB_COLUMNS)
+    )
+
+    return rDataFrame

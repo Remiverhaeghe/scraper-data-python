@@ -7,7 +7,7 @@ import pandas as pd
 from PySide6.QtWidgets import QPushButton
 
 from gui.home_page import HomePage, describe_activity
-from job.statistics import CHART_DAYS, MIN_CHART_DAYS, load_statistics
+from job.statistics import CHART_DAYS, load_statistics
 from gui.theme import COLORS
 from scraper.history import HistoryEntry
 from storage.database import initialize_database
@@ -101,19 +101,33 @@ def build_entry(**pValues):
 def test_describe_activity():
     """Vérifie la ligne d'activité d'une exécution."""
 
-    vIcon, vColor, vTitle, vDetail, vResult = describe_activity(build_entry())
+    vIcon, vColor, vTitle, vDetail, vSources, vResult = describe_activity(build_entry())
 
     assert vIcon == "circle-alert"
     assert vColor == COLORS["warning"]
     assert vTitle == "Java"
     assert vDetail == "09/10/2026 à 08:30 · Adzuna"
+    assert vSources == "Adzuna"
     assert vResult == "42 offre(s)"
+
+
+def test_describe_activity_counts_many_sources():
+    """Vérifie qu'au-delà de trois sources, la ligne affiche leur nombre."""
+
+    _, _, _, vDetail, vSources, _ = describe_activity(
+        build_entry(
+            parameters={"sources": ["adzuna", "jooble", "remotive", "himalayas"]}
+        )
+    )
+
+    assert vDetail == "09/10/2026 à 08:30 · 4 sources"
+    assert vSources == "Adzuna, Jooble, Remotive, Himalayas"
 
 
 def test_describe_activity_without_parameters():
     """Vérifie une exécution réussie antérieure à l'enregistrement des paramètres."""
 
-    vIcon, _, vTitle, vDetail, _ = describe_activity(
+    vIcon, _, vTitle, vDetail, _, _ = describe_activity(
         build_entry(status="success", parameters=None)
     )
 
@@ -165,7 +179,7 @@ def test_home_page_fills_chart(qt_application, tmp_path):
     vPage = HomePage(build_database(tmp_path))
     vPage.refresh()
 
-    assert MIN_CHART_DAYS <= len(vPage.chart.labels) <= CHART_DAYS
+    assert 1 <= len(vPage.chart.labels) <= CHART_DAYS
     assert [vName for vName, _, _ in vPage.chart.series] == [
         "Nouvelles offres",
         "Candidatures",

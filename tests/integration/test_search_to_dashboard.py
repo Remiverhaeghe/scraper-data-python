@@ -108,7 +108,7 @@ def database_file(tmp_path, monkeypatch):
 
 
 def test_search_feeds_database_dashboard_and_export(
-    database_file, monkeypatch, tmp_path
+    database_file, monkeypatch, tmp_path, web_login
 ):
     """Vérifie le parcours complet d'une recherche jusqu'à l'export."""
 
@@ -129,6 +129,8 @@ def test_search_feeds_database_dashboard_and_export(
     )
 
     with TestClient(app) as vClient:
+        web_login(vClient)
+
         vDashboard = vClient.get("/")
         vOffers = vClient.get("/offers")
 

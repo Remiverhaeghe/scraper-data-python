@@ -54,6 +54,22 @@ def create_spin_box(pMinimum, pMaximum, pValue, pSuffix="", pEmptyText=None):
     return rSpinBox
 
 
+def create_range(pMinimum, pMaximum):
+    """Place deux champs côte à côte sous la forme « entre … et … »."""
+
+    rRange = QWidget()
+
+    vLayout = QHBoxLayout(rRange)
+    vLayout.setContentsMargins(0, 0, 0, 0)
+    vLayout.setSpacing(10)
+    vLayout.addWidget(QLabel("entre"))
+    vLayout.addWidget(pMinimum, 1)
+    vLayout.addWidget(QLabel("et"))
+    vLayout.addWidget(pMaximum, 1)
+
+    return rRange
+
+
 def split_words(pText):
     """Découpe une saisie séparée par des virgules ; None si elle est vide."""
 
@@ -83,6 +99,7 @@ class SearchPage(QWidget):
     search_ended = Signal()
     # Offres trouvées, en couples (source, identifiant), et leur description
     show_offers_requested = Signal(object, str)
+    schedule_requested = Signal(list, dict)
 
     def __init__(self, pSettings=None):
         """Construit le formulaire et restaure les derniers critères saisis."""
@@ -140,17 +157,14 @@ class SearchPage(QWidget):
         for vContract in CONTRACT_TYPES:
             self.contract_combo.addItem(vContract, vContract)
 
-        self.min_salary_spin = create_spin_box(
-            0, 20000, 0, " € net/mois", "Aucun minimum"
-        )
-        self.min_salary_spin.setSingleStep(100)
+        self.min_salary_spin = create_spin_box(0, 20000, 0, " €", "Aucun minimum")
+        self.max_salary_spin = create_spin_box(0, 20000, 0, " €", "Aucun maximum")
+
+        for vSpin in (self.min_salary_spin, self.max_salary_spin):
+            vSpin.setSingleStep(100)
+            vSpin.valueChanged.connect(self.keep_salary_range)
 
         self.remote_check = QCheckBox("Télétravail uniquement")
-
-        self.max_salary_spin = create_spin_box(
-            0, 20000, 0, " € net/mois", "Aucun maximum"
-        )
-        self.max_salary_spin.setSingleStep(100)
 
         self.skills_edit = QLineEdit()
         self.skills_edit.setPlaceholderText("Ex. Java, Spring, SQL")
@@ -167,18 +181,32 @@ class SearchPage(QWidget):
         vGrid.addLayout(create_field("Localisation", self.location_edit), 0, 1)
         vGrid.addLayout(create_field("Nombre maximum", self.max_items_spin), 0, 2)
         vGrid.addLayout(create_field("Contrat", self.contract_combo), 1, 0)
-        vGrid.addLayout(create_field("Salaire minimum", self.min_salary_spin), 1, 1)
+        vGrid.addLayout(
+            create_field(
+                "Salaire net mensuel",
+                create_range(self.min_salary_spin, self.max_salary_spin),
+            ),
+            1,
+            1,
+        )
         vGrid.addWidget(self.remote_check, 1, 2, Qt.AlignmentFlag.AlignBottom)
         vGrid.addLayout(create_field("Compétences requises", self.skills_edit), 2, 0)
         vGrid.addLayout(
-            create_field("Mots à exclure du titre", self.exclude_edit), 2, 1
+            create_field("Mots à exclure du titre", self.exclude_edit), 2, 1, 1, 2
         )
-        vGrid.addLayout(create_field("Salaire maximum", self.max_salary_spin), 2, 2)
         vGrid.setColumnStretch(0, 2)
         vGrid.setColumnStretch(1, 2)
         vGrid.setColumnStretch(2, 1)
 
+        self.remember_check = QCheckBox("Mémoriser ces critères")
+        self.remember_check.setToolTip(
+            "Coché, la recherche est retrouvée à la prochaine ouverture ; "
+            "sinon les champs repartent vides"
+        )
+        self.remember_check.toggled.connect(self.save_settings)
+
         vLayout.addLayout(vGrid)
+        vLayout.addWidget(self.remember_check)
 
         return vCard
 
@@ -290,6 +318,14 @@ class SearchPage(QWidget):
         self.stop_button.setEnabled(False)
         self.stop_button.clicked.connect(self.stop_search)
 
+        self.schedule_button = create_button(
+            "Planifier cette recherche", "calendar", pIconColor=COLORS["primary"]
+        )
+        self.schedule_button.setToolTip(
+            "Enregistre ces critères et ces sources pour le planificateur"
+        )
+        self.schedule_button.clicked.connect(self.request_schedule)
+
         self.status_icon = QLabel()
 
         self.status_label = QLabel()
@@ -314,6 +350,7 @@ class SearchPage(QWidget):
         vRow.setSpacing(12)
         vRow.addWidget(self.start_button)
         vRow.addWidget(self.stop_button)
+        vRow.addWidget(self.schedule_button)
         vRow.addSpacing(16)
         vRow.addWidget(self.status_icon)
         vRow.addLayout(vMessages, 1)
@@ -380,6 +417,18 @@ class SearchPage(QWidget):
         ]
 
         return rSources
+
+    def keep_salary_range(self):
+        """Aligne l'autre borne du salaire lorsque le minimum dépasse le maximum."""
+        vMinimum = self.min_salary_spin.value()
+        vMaximum = self.max_salary_spin.value()
+
+        # Zéro signifie « sans borne » : il n'y a alors rien à aligner.
+        if vMinimum and vMaximum and vMinimum > vMaximum:
+            if self.sender() is self.min_salary_spin:
+                self.max_salary_spin.setValue(vMinimum)
+            else:
+                self.min_salary_spin.setValue(vMaximum)
 
     def build_criteria(self):
         """Traduit le formulaire en critères pour le contrôleur ; 0 signifie aucun."""
@@ -453,6 +502,15 @@ class SearchPage(QWidget):
             self.search_thread.start()
             self.search_started.emit()
 
+    def request_schedule(self):
+        """Demande l'enregistrement des critères et des sources pour le planificateur."""
+        vSources = self.get_selected_sources()
+
+        if vSources:
+            self.schedule_requested.emit(vSources, self.build_criteria())
+        else:
+            self.set_status("warning", "Sélectionnez au moins une source.")
+
     def stop_search(self):
         """Demande l'arrêt de la recherche avant la source suivante."""
         if self.is_running():
@@ -471,7 +529,7 @@ class SearchPage(QWidget):
 
     @Slot(object)
     def request_results(self):
-        """Demande l'affichage des seules offres trouvées par la dernière recherche."""
+        """Affiche uniquement les offres trouvées par la dernière recherche."""
         self.show_offers_requested.emit(self.last_result_keys, self.last_result_label)
 
     def show_result(self, pResult):
@@ -535,15 +593,40 @@ class SearchPage(QWidget):
         self.stop_button.setEnabled(pRunning)
 
     def save_settings(self):
-        """Mémorise les derniers critères saisis pour la prochaine ouverture."""
-        self.settings.setValue("search/keyword", self.keyword_edit.text())
-        self.settings.setValue("search/location", self.location_edit.text())
+        """Mémorise les sources et, si la case est cochée, les critères saisis."""
+        vRemember = self.remember_check.isChecked()
+
+        self.settings.setValue("search/remember", vRemember)
         self.settings.setValue("search/sources", ",".join(self.get_selected_sources()))
 
+        # Décochée, la case efface les critères gardés : les champs repartiront vides.
+        self.settings.remove("search/criteria")
+
+        if vRemember:
+            for vName, vValue in (
+                ("keyword", self.keyword_edit.text()),
+                ("location", self.location_edit.text()),
+                ("contract", self.contract_combo.currentData() or ""),
+                ("min_salary", self.min_salary_spin.value()),
+                ("max_salary", self.max_salary_spin.value()),
+                ("remote", self.remote_check.isChecked()),
+                ("skills", self.skills_edit.text()),
+                ("exclude_keywords", self.exclude_edit.text()),
+                ("max_items", self.max_items_spin.value()),
+            ):
+                self.settings.setValue(f"search/criteria/{vName}", vValue)
+
     def restore_settings(self):
-        """Restaure les derniers critères ; toutes les sources par défaut."""
-        self.keyword_edit.setText(self.settings.value("search/keyword", "", str))
-        self.location_edit.setText(self.settings.value("search/location", "", str))
+        """Restaure les critères mémorisés ; toutes les sources par défaut."""
+        vRemember = self.settings.value("search/remember", True, bool)
+
+        # Bloque l'enregistrement déclenché par la case pendant sa restauration.
+        self.remember_check.blockSignals(True)
+        self.remember_check.setChecked(vRemember)
+        self.remember_check.blockSignals(False)
+
+        if vRemember:
+            self.restore_criteria()
 
         vSources = self.settings.value("search/sources", None)
 
@@ -555,3 +638,30 @@ class SearchPage(QWidget):
                     self.source_buttons[vName].setChecked(True)
 
         self.update_source_count()
+
+    def restore_criteria(self):
+        """Remplit le formulaire avec les critères mémorisés."""
+
+        def read(pName, pDefault, pType):
+            rValue = self.settings.value(f"search/criteria/{pName}", pDefault, pType)
+
+            return rValue
+
+        # Avant la mémorisation de tous les critères, seuls ces deux-là existaient.
+        self.keyword_edit.setText(
+            read("keyword", self.settings.value("search/keyword", "", str), str)
+        )
+        self.location_edit.setText(
+            read("location", self.settings.value("search/location", "", str), str)
+        )
+        self.contract_combo.setCurrentIndex(
+            max(self.contract_combo.findData(read("contract", "", str) or None), 0)
+        )
+        self.min_salary_spin.setValue(read("min_salary", 0, int))
+        self.max_salary_spin.setValue(read("max_salary", 0, int))
+        self.remote_check.setChecked(read("remote", False, bool))
+        self.skills_edit.setText(read("skills", "", str))
+        self.exclude_edit.setText(read("exclude_keywords", "", str))
+        self.max_items_spin.setValue(
+            read("max_items", self.max_items_spin.value(), int)
+        )

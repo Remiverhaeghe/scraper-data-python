@@ -6,6 +6,7 @@ import pytest
 from utils.helpers import (
     extract_price,
     extract_rating,
+    decode_unicode_escapes,
     extract_text,
     html_to_text,
     join_values,
@@ -144,3 +145,20 @@ def test_join_values(pValues, pExpected):
     """Vérifie le regroupement d'une liste de valeurs en texte."""
 
     assert join_values(pValues) == pExpected
+
+
+@pytest.mark.parametrize(
+    ("pText", "pExpected"),
+    [
+        (None, None),
+        ("", ""),
+        ("Syst\\u00e8mes d\\u2019Information", "Systèmes d’Information"),
+        ("d\\u00E9j\\u00e0 vu", "déjà vu"),
+        ("demi \\ud83d codet", "demi \\ud83d codet"),
+        ("chemin C:\\users", "chemin C:\\users"),
+    ],
+)
+def test_decode_unicode_escapes(pText, pExpected):
+    """Vérifie le décodage des séquences unicode laissées dans le texte."""
+
+    assert decode_unicode_escapes(pText) == pExpected

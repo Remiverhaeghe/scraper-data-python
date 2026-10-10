@@ -1,7 +1,14 @@
 """Configuration commune à tous les tests"""
 
+import smtplib
+from datetime import datetime
+
 import pytest
 import requests
+
+from web.auth import SESSION_COOKIE, hash_password, read_session_token
+
+TEST_PASSWORD = "mot-de-passe-de-test"
 
 
 def refuse_network_access(*pArgs, **pKwargs):
@@ -14,10 +21,43 @@ def refuse_network_access(*pArgs, **pKwargs):
 
 @pytest.fixture(autouse=True)
 def block_network(monkeypatch):
-    """Bloque tout appel HTTP réel qu'un test aurait oublié de simuler.
+    """Bloque tout appel HTTP ou SMTP réel qu'un test aurait oublié de simuler.
 
     Les tests qui simulent requests.get, requests.post ou requests.request
     remplacent ces fonctions avant que la session réelle ne soit atteinte.
     """
 
     monkeypatch.setattr(requests.sessions.Session, "request", refuse_network_access)
+    monkeypatch.setattr(smtplib, "SMTP_SSL", refuse_network_access)
+
+
+@pytest.fixture
+def web_login(monkeypatch):
+    """Configure un compte du tableau de bord et retourne de quoi s'y connecter."""
+
+    from web.app import login_rate_limiter
+
+    login_rate_limiter.failures.clear()
+
+    monkeypatch.setenv("WEB_USERNAME", "admin")
+    # Peu de tours de hachage : les tests restent rapides.
+    monkeypatch.setenv("WEB_PASSWORD_HASH", hash_password(TEST_PASSWORD, 1000))
+    monkeypatch.setenv("WEB_SESSION_SECRET", "secret-de-test")
+
+    def login(pClient):
+        """Ouvre une session et joint son jeton CSRF aux requêtes suivantes."""
+
+        vResponse = pClient.post(
+            "/login",
+            data={"username": "admin", "password": TEST_PASSWORD},
+            follow_redirects=False,
+        )
+
+        assert vResponse.status_code == 303
+
+        vSession = read_session_token(
+            "secret-de-test", pClient.cookies[SESSION_COOKIE], datetime.now()
+        )
+        pClient.headers["X-CSRF-Token"] = vSession["csrf"]
+
+    return login

@@ -42,10 +42,12 @@ Le projet sert également de support d'apprentissage afin de construire progress
 ```bash
 pip install -r requirements.txt
 cp .env.example .env              # puis renseigner les clés des sources utilisées
+python -m web.password            # empreinte du mot de passe du tableau de bord web
 
 python main.py                    # interface graphique
 python -m cli.main --help         # ligne de commande
 python -m web                     # tableau de bord sur http://127.0.0.1:8000
+python -m scheduler               # recherche planifiée et notifications (--once : une vérification)
 ```
 
 ---
@@ -158,14 +160,15 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Historique des exécutions
 - [x] Statistiques d'exécution
 - [x] Export des offres en CSV, Excel et JSON, avec protection contre l'injection de formules
-- [ ] Notifications email
-- [ ] Planification des exécutions
+- [x] Notifications e-mail des nouvelles offres via Gmail (mot de passe d'application dans .env)
+- [x] Planification des exécutions : planificateur intégré, fréquence réglable, arrêt propre sur signal
+- [x] Reprise automatique des offres enregistrées lors d'une correction de parsing (migration)
 - [x] Arrêt d'une exécution en cours (recherche d'offres)
 
 ### 🖥️ Interface graphique
 
 - [x] Fenêtre principale avec menu latéral
-- [x] Identité visuelle : logo, icônes, bannière, cartes colorées, activité récente et actions rapides
+- [x] Identité visuelle : logo, icônes, bannière avec actions, cartes colorées, activité récente
 - [x] Accueil : offres, nouveautés, candidatures, relances et dernière exécution
 - [x] Recherche : sources, filtres, options avancées, progression et arrêt
 - [x] Sources non configurées grisées, derniers critères mémorisés
@@ -174,7 +177,9 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Thèmes clair et sombre, changement sans scintillement ; page Paramètres (sources)
 - [x] Règles de calcul modifiables (net, impôt, nouveauté, relance), partagées avec le web, net recalculé
 - [x] Graphique d'activité (offres, candidatures, relances) et cartes d'accès direct aux offres filtrées
-- [x] Historique : répartition des offres par source et rendement des recherches
+- [x] Historique : répartition des offres par source et par contrat, rendement des recherches
+- [x] Recherche planifiée enregistrée depuis la page Recherche, activée et réglée dans les Paramètres
+- [x] Notifications : adresse de destination, état du compte Gmail et e-mail de test
 
 ### 🌐 Tableau de bord web
 
@@ -191,8 +196,9 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Thèmes clair et sombre, choix mémorisé dans le navigateur
 - [x] Pages d'erreur intégrées au site
 - [x] Règles de calcul modifiables, partagées avec l'application de bureau
-- [x] Mentions légales, lien vers la licence et contact LinkedIn
-- [ ] Authentification
+- [x] Mentions légales, licence avec résumé en français et contact LinkedIn
+- [x] Planification et notifications en lecture seule, sans afficher l'adresse e-mail
+- [x] Authentification : connexion, session signée de 12 h, protection CSRF, tentatives limitées
 
 ### 🔐 Sécurité
 
@@ -259,6 +265,8 @@ scraper-data-python/
 │   ├── statistics.py                          # Indicateurs et graphiques, bureau et web
 │   ├── settings.py                            # Réglages de calcul modifiables et recalcul du net
 │   ├── export.py                              # Export des offres en CSV, Excel et JSON
+│   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
+│   ├── notification.py                        # Contenu des e-mails de nouvelles offres
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
 │       ├── __init__.py                         # Initialise le package des sources
@@ -383,9 +391,16 @@ scraper-data-python/
 │   ├── icons.py                               # Charge les icônes SVG dans une couleur donnée
 │   └── job_controller.py                      # Lance le traitement des offres depuis la GUI
 │
+├── scheduler/                                 # Planificateur de la recherche automatique
+│   ├── __init__.py                            # Initialise le package Scheduler
+│   ├── __main__.py                            # Lance le planificateur avec python -m scheduler
+│   └── runner.py                              # Échéance, recherche et e-mail des nouveautés
+│
 ├── web/                                       # Tableau de bord web
 │   ├── __init__.py                            # Initialise le package Web
 │   ├── __main__.py                            # Lance le serveur avec python -m web
+│   ├── auth.py                                # Mot de passe, session signée et tentatives
+│   ├── password.py                            # Génère l'empreinte du mot de passe (.env)
 │   ├── app.py                                 # Application FastAPI et routes
 │   ├── templates/                             # Gabarits HTML Jinja2
 │   │   ├── base.html                          # Mise en page commune et menu latéral
@@ -398,6 +413,7 @@ scraper-data-python/
 │   │   ├── history.html                       # Historique des exécutions
 │   │   ├── settings.html                      # Thème, règles de calcul et état des sources
 │   │   ├── legal.html                         # Mentions légales
+│   │   ├── login.html                         # Connexion au tableau de bord
 │   │   ├── license.html                       # Texte de la licence
 │   │   └── error.html                         # Page d'erreur
 │   └── static/                                # Fichiers statiques
@@ -415,6 +431,7 @@ scraper-data-python/
 │   ├── logger.py                              # Configure et centralise les logs
 │   ├── url.py                                 # Validation et manipulation des URLs
 │   ├── api_client.py                          # Appels sécurisés aux API des sources
+│   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
 │   └── security.py                            # Contrôles de sécurité du scraper
 │
 ├── cli/                                       # Gestion de l'interface en ligne de commande
@@ -466,6 +483,8 @@ scraper-data-python/
 │   │   ├── test_statistics.py                 # Teste les indicateurs du tableau de bord
 │   │   ├── test_settings.py                   # Teste les réglages et le recalcul du net
 │   │   ├── test_export.py                     # Teste l'export et la neutralisation des formules
+│   │   ├── test_schedule.py                   # Teste les réglages et l'échéance de la planification
+│   │   ├── test_notification.py               # Teste le contenu et l'échappement des e-mails
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
@@ -592,11 +611,18 @@ scraper-data-python/
 │   │   ├── __init__.py                          # Initialise le package des tests d'intégration
 │   │   └── test_search_to_dashboard.py         # Recherche, base, statistiques, web et export
 │   │
+│   ├── scheduler/                              # Tests du planificateur
+│   │   ├── __init__.py                          # Initialise le package de tests du planificateur
+│   │   ├── test_main.py                        # Teste le point d'entrée et l'arrêt sur signal
+│   │   └── test_runner.py                      # Teste l'échéance, la recherche et la notification
+│   │
 │   ├── web/                                    # Tests du tableau de bord
 │   │   ├── __init__.py                          # Initialise le package de tests Web
-│   │   └── test_app.py                         # Teste les routes et la sécurité de l'affichage
+│   │   ├── test_app.py                         # Teste les routes et la sécurité de l'affichage
+│   │   ├── test_auth.py                        # Teste la connexion, la session et le CSRF
+│   │   └── test_password.py                    # Teste la génération de l'empreinte
 │   │
-│   ├── conftest.py                             # Bloque tout accès réseau réel
+│   ├── conftest.py                             # Bloque tout accès réseau et SMTP réel
 │   ├── test_api_client.py                      # Teste les appels sécurisés aux API
 │   ├── test_config.py                          # Teste la configuration générale
 │   ├── test_helpers.py                         # Teste les fonctions utilitaires
@@ -604,6 +630,7 @@ scraper-data-python/
 │   ├── test_history_service.py                 # Teste le service d'historique
 │   ├── test_http_client.py                     # Teste le client HTTP
 │   ├── test_logger.py                          # Teste la configuration des logs
+│   ├── test_mailer.py                          # Teste l'envoi d'e-mails, serveur simulé
 │   ├── test_main.py                            # Teste le point d'entrée principal
 │   ├── test_pagination.py                      # Teste la pagination commune
 │   ├── test_security.py                        # Teste les contrôles de sécurité

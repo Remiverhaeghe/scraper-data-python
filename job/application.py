@@ -46,7 +46,7 @@ def build_search_parameters(pConfig):
     return rParameters
 
 
-def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None):
+def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
     """Lance le traitement des offres d'emploi.
 
     Le scraping produit d'abord un résultat brut provenant
@@ -55,7 +55,8 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None):
     Les offres sont ensuite enregistrées en base, avec leurs dates de
     première et dernière récupération, avant l'enregistrement de
     l'historique et l'application des filtres. Un arrêt demandé pendant
-    le scraping lève ScrapingCancelled avant tout enregistrement.
+    le scraping lève ScrapingCancelled avant tout enregistrement. pTrigger
+    indique dans l'historique ce qui a déclenché une recherche automatique.
     """
 
     logger.info("Début du traitement des offres multi-sources")
@@ -79,12 +80,13 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None):
 
     vScrapingResult = replace(vScrapingResult, items=vSavedItems)
 
+    vParameters = build_search_parameters(pConfig)
+
+    if pTrigger:
+        vParameters["trigger"] = pTrigger
+
     record_history(
-        DATABASE_FILE,
-        "job",
-        "multi-source",
-        vScrapingResult,
-        pParameters=build_search_parameters(pConfig),
+        DATABASE_FILE, "job", "multi-source", vScrapingResult, pParameters=vParameters
     )
 
     vFilteredJobs = filter_jobs(vScrapingResult.items, pConfig)

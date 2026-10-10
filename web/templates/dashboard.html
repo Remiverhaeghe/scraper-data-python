@@ -26,6 +26,9 @@
             <a class="button" href="{{ url_for('list_offers').path }}?status={{ follow_up_filter }}">
                 {{ icon("bell-ring", 16) }} Relances à faire
             </a>
+            <a class="button" href="{{ url_for('show_history').path }}">
+                {{ icon("history", 16) }} Historique
+            </a>
         </div>
     </div>
     <div class="banner-icons">
@@ -44,7 +47,7 @@
 <section class="grid grid-dashboard">
     <article class="card">
         <h2>Activité</h2>
-        <p class="card-subtitle">Activité quotidienne, chaque série à sa propre échelle</p>
+        <p class="card-subtitle">Nouvelles offres, candidatures et relances par jour</p>
         {{ ui.bar_chart(chart, "Activité par jour") }}
     </article>
 
@@ -58,7 +61,7 @@
                 <span class="tone-{{ activity.tone }}">{{ icon(tone_icons[activity.tone], 22) }}</span>
                 <div>
                     <strong>{{ activity.title }}</strong>
-                    <small>{{ activity.detail }}</small>
+                    <small{% if activity.sources %} title="{{ activity.sources }}"{% endif %}>{{ activity.detail }}</small>
                 </div>
                 <em>{{ activity.result }}</em>
             </li>
@@ -67,17 +70,6 @@
         {% else %}
         <div class="empty">{{ icon("inbox", 32) }}Aucune recherche lancée pour le moment.</div>
         {% endif %}
-    </article>
-
-    <article class="card">
-        <h2>Actions rapides</h2>
-        <p class="card-subtitle">Accédez directement aux fonctions principales</p>
-        <div class="quick-actions">
-            <a class="button" href="{{ url_for('list_offers').path }}">{{ icon("list-checks") }} Consulter les offres</a>
-            <a class="button" href="{{ url_for('list_offers').path }}?new=1">{{ icon("sparkles") }} Nouvelles offres</a>
-            <a class="button" href="{{ url_for('list_offers').path }}?status={{ follow_up_filter }}">{{ icon("bell-ring") }} Candidatures à relancer</a>
-            <a class="button" href="{{ url_for('show_history').path }}">{{ icon("history") }} Historique des exécutions</a>
-        </div>
     </article>
 </section>
 
@@ -116,13 +108,12 @@
                     <span class="{% if offer.is_new %}tone-success{% else %}tone-muted{% endif %}">{{ icon("sparkles" if offer.is_new else "briefcase", 20) }}</span>
                     <div>
                         <strong>{{ offer.title or "Titre non communiqué" }}</strong>
-                        <small>{{ offer.company or "" }}{% if offer.company %} · {% endif %}{{ offer.source_label }}</small>
+                        <small>
+                            {{ offer.company or "" }}{% if offer.company %} · {% endif %}{{ offer.source_label }}
+                            {% if offer.net_salary %} · {{ offer.net_salary }}{% endif %}
+                        </small>
                     </div>
-                    <em>
-                        {% if offer.salary_net_monthly_min or offer.salary_net_monthly_max %}
-                        {{ (offer.salary_net_monthly_min or offer.salary_net_monthly_max) | euros }}
-                        {% endif %}
-                    </em>
+                    <em>{{ (offer.published_at or offer.first_seen_at) | date_fr }}</em>
                 </a>
             </li>
             {% endfor %}

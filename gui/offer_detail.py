@@ -20,10 +20,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.offers_model import format_net_salary
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, create_icon_label
-from job.presentation import STATUS_LABELS, format_date, safe_url
+from job.presentation import STATUS_LABELS, format_date, format_net_salary, safe_url
 from job.settings import load_settings
 from storage.job_applications import (
     delete_application,
@@ -37,6 +36,9 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 # Clé, libellé et icône des informations affichées sous le titre de l'offre
+# Au-delà, une liste déborderait du panneau de largeur fixe : le reste est en infobulle.
+MAX_LIST_VALUES = 4
+
 INFO_ROWS = (
     ("location", "Lieu", "map-pin"),
     ("contract", "Contrat", "file-text"),
@@ -74,6 +76,19 @@ def describe_application(pApplication):
     rDescription = " ".join(vParts)
 
     return rDescription
+
+
+def summarize_values(pValues, pLimit=MAX_LIST_VALUES):
+    """Résume une liste en ses premières valeurs suivies du nombre restant."""
+
+    vValues = list(pValues or [])
+
+    rText = ", ".join(vValues[:pLimit])
+
+    if len(vValues) > pLimit:
+        rText += f" +{len(vValues) - pLimit}"
+
+    return rText
 
 
 class OfferDetailPanel(QWidget):
@@ -208,6 +223,7 @@ class OfferDetailPanel(QWidget):
         self.follow_up_edit = QDateEdit()
         self.follow_up_edit.setCalendarPopup(True)
         self.follow_up_edit.setDisplayFormat("dd/MM/yyyy")
+        self.follow_up_edit.calendarWidget().setMinimumSize(320, 240)
 
         self.follow_up_check.toggled.connect(self.follow_up_edit.setEnabled)
 
@@ -272,17 +288,23 @@ class OfferDetailPanel(QWidget):
             "salary": format_net_salary(vOffer),
             "salary_label": vOffer.get("salary_label"),
             "remote": None if vRemote is None else ("Oui" if vRemote else "Non"),
-            "benefits": ", ".join(vOffer.get("benefits") or []),
+            "benefits": summarize_values(vOffer.get("benefits")),
             "experience_level": vOffer.get("experience_level"),
-            "skills": ", ".join(vOffer.get("skills_list") or []),
+            "skills": summarize_values(vOffer.get("skills_list")),
             "published_at": format_date(vOffer.get("published_at")),
             "first_seen_at": format_date(vOffer.get("first_seen_at")),
             "source_label": vOffer.get("source_label"),
         }
 
         # Une information absente est masquée plutôt qu'affichée « Non renseigné ».
+        vFullLists = {
+            "benefits": ", ".join(vOffer.get("benefits") or []),
+            "skills": ", ".join(vOffer.get("skills_list") or []),
+        }
+
         for vKey, (vRow, vValue) in self.info_rows.items():
             vValue.setText(str(vInfos[vKey] or ""))
+            vValue.setToolTip(vFullLists.get(vKey, ""))
             vRow.setVisible(bool(vInfos[vKey]))
 
         self.show_description(vOffer.get("description"))

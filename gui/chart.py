@@ -12,6 +12,9 @@ LABEL_HEIGHT = 18
 # Hauteur d'une ligne de la légende affichée lorsqu'il y a plusieurs séries
 LEGEND_ROW_HEIGHT = 18
 
+# Hauteur réservée au titre d'un camembert, au-dessus de l'anneau
+PIE_TITLE_HEIGHT = 22
+
 # En dessous de cette largeur par groupe de barres, un libellé sur deux est affiché
 MIN_LABEL_WIDTH = 40
 
@@ -171,13 +174,17 @@ class BarChart(QWidget):
 
                 # Le dernier libellé, souvent le jour courant, reste toujours visible.
                 if vSlot >= MIN_LABEL_WIDTH or (len(self.labels) - 1 - vIndex) % 2 == 0:
+                    # Centré sous sa barre, le texte n'est décalé que s'il
+                    # déborde du graphique.
+                    vLabelWidth = vPainter.fontMetrics().horizontalAdvance(vLabel) + 4
                     vLabelLeft = min(
-                        max(vIndex * vSlot - vSlot / 2, 0), vWidth - 2 * vSlot
+                        max((vIndex + 0.5) * vSlot - vLabelWidth / 2, 0),
+                        vWidth - vLabelWidth,
                     )
 
                     vPainter.setPen(QColor(COLORS["muted"]))
                     vPainter.drawText(
-                        QRectF(vLabelLeft, vBaseline, vSlot * 2, LABEL_HEIGHT),
+                        QRectF(vLabelLeft, vBaseline, vLabelWidth, LABEL_HEIGHT),
                         Qt.AlignmentFlag.AlignCenter,
                         vLabel,
                     )
@@ -188,12 +195,13 @@ class BarChart(QWidget):
 class PieChart(QWidget):
     """Affiche des parts sous forme d'anneau, avec leur légende à droite."""
 
-    def __init__(self):
-        """Crée un camembert vide."""
+    def __init__(self, pTitle=None):
+        """Crée un camembert vide, avec un titre centré au-dessus de l'anneau."""
         super().__init__()
 
+        self.title = pTitle
         self.shares = []
-        self.setMinimumHeight(170)
+        self.setMinimumHeight(170 + (PIE_TITLE_HEIGHT if pTitle else 0))
 
     def set_shares(self, pShares):
         """Remplace les parts : des (libellé, valeur, couleur)."""
@@ -206,8 +214,25 @@ class PieChart(QWidget):
         vPainter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         vTotal = sum(vValue for _, vValue, _ in self.shares)
-        vDiameter = min(self.height() - 8, self.width() / 2)
-        vRing = QRectF(4, (self.height() - vDiameter) / 2, vDiameter, vDiameter)
+        vTop = PIE_TITLE_HEIGHT if self.title else 0
+        vHeight = self.height() - vTop
+        vDiameter = min(vHeight - 8, self.width() / 2)
+        vRing = QRectF(4, vTop + (vHeight - vDiameter) / 2, vDiameter, vDiameter)
+
+        if self.title:
+            vPainter.save()
+            vPainter.setPen(QColor(COLORS["muted"]))
+
+            vFont = vPainter.font()
+            vFont.setBold(True)
+            vPainter.setFont(vFont)
+
+            vPainter.drawText(
+                QRectF(vRing.left(), 0, vRing.width(), PIE_TITLE_HEIGHT),
+                Qt.AlignmentFlag.AlignCenter,
+                self.title,
+            )
+            vPainter.restore()
 
         if vTotal:
             # Qt compte les angles en seizièmes de degré, à partir de trois heures.
@@ -247,7 +272,7 @@ class PieChart(QWidget):
 
         vLegendLeft = vRing.right() + 20
         vRowHeight = 22
-        vLegendTop = (self.height() - vRowHeight * len(self.shares)) / 2
+        vLegendTop = vTop + (vHeight - vRowHeight * len(self.shares)) / 2
 
         for vIndex, (vLabel, vValue, vColor) in enumerate(self.shares):
             vTop = vLegendTop + vIndex * vRowHeight

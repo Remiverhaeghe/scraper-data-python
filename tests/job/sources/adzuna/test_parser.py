@@ -89,3 +89,17 @@ def test_parse_job_leaves_ambiguous_contract_to_detection():
 
     assert rJob["contract"] is None
     assert rJob["contract_type"] == "contract"
+
+
+def test_parse_job_decodes_unicode_escapes():
+    """Vérifie que les accents échappés par Adzuna sont restitués."""
+
+    vJob = parse_job(
+        {
+            "title": "D\\u00e9veloppeur",
+            "description": "Syst\\u00e8mes d\\u2019Information",
+        }
+    )
+
+    assert vJob["title"] == "Développeur"
+    assert vJob["description"] == "Systèmes d’Information"

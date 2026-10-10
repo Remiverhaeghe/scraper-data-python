@@ -127,11 +127,11 @@ class HistoryPage(QWidget):
         """Construit la répartition par source et le rendement des exécutions."""
         vSourceCard, vSourceLayout = create_card(
             "Répartition des offres",
-            "Par source et par contrat, pour les offres en base",
+            "Offres actuellement en base",
         )
 
-        self.source_chart = PieChart()
-        self.contract_chart = PieChart()
+        self.source_chart = PieChart("Par source")
+        self.contract_chart = PieChart("Par contrat")
 
         vCharts = QHBoxLayout()
         vCharts.setSpacing(18)

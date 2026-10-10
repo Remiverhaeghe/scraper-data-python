@@ -239,6 +239,17 @@ QPushButton#bannerButton:hover {
     background: $primary_light;
 }
 
+QPushButton#bannerSecondaryButton {
+    background: transparent;
+    border: 1px solid $banner_text;
+    color: $on_primary;
+    padding: 9px 16px;
+}
+
+QPushButton#bannerSecondaryButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
 QPushButton#segmentButton:checked {
     background: $primary_light;
     border-color: $primary;
@@ -275,13 +286,23 @@ QPushButton#listRow:hover {
     background: $primary_light;
 }
 
-QLabel#sidebarLinks {
-    font-size: 12px;
+QFrame#sidebarLinks {
+    border-top: 1px solid $border;
 }
 
-QPushButton#quickAction {
+QPushButton#sidebarLink {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: $text;
+    font-size: 13px;
+    padding: 6px 8px;
     text-align: left;
-    padding: 12px 14px;
+}
+
+QPushButton#sidebarLink:hover {
+    background: $primary_light;
+    color: $primary;
 }
 
 QPushButton#linkButton {
@@ -375,6 +396,31 @@ QTableView {
 QTableView::item {
     padding: 6px 8px;
     border-bottom: 1px solid $border;
+}
+
+/* La grille du calendrier est un QTableView : sans ces règles, elle hériterait des
+   marges du tableau des offres et les dates ne tiendraient plus dans les cases. */
+QCalendarWidget QTableView {
+    border: none;
+    border-radius: 0;
+    alternate-background-color: $surface;
+}
+
+QCalendarWidget QTableView::item {
+    padding: 0;
+    border: none;
+}
+
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background: $primary;
+}
+
+QCalendarWidget QToolButton {
+    background: transparent;
+    border: none;
+    color: $on_primary;
+    font-weight: 600;
+    padding: 4px 8px;
 }
 
 QHeaderView::section {
