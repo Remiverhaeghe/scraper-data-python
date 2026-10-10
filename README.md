@@ -137,8 +137,8 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Normalisation du contrat : CDI, CDD ou freelance
 - [x] Poursuite du traitement si une source échoue
 - [x] Détection des nouvelles offres
-- [ ] Suivi des candidatures
-- [ ] Relances
+- [x] Suivi des candidatures
+- [x] Relances
 
 ### ⚙️ Fonctionnalités communes
 
@@ -187,7 +187,8 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Filtres : recherche, source, contrat, télétravail, net mensuel, nouveautés
 - [x] Mise à jour des résultats sans rechargement (HTMX)
 - [x] Fiche détaillée avec lien et mention de la source
-- [ ] Suivi des candidatures
+- [x] Suivi des candidatures : statut, notes, relances
+- [x] Filtre des candidatures à relancer et masquage des offres ignorées
 - [ ] Authentification
 - [ ] Historique des exécutions
 
@@ -212,7 +213,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] **458 tests automatisés**
+- [x] **474 tests automatisés**
 - [ ] Augmenter progressivement la couverture
 - [ ] Tests d'intégration
 
@@ -370,6 +371,7 @@ scraper-data-python/
 │   │   ├── base.html                          # Mise en page commune
 │   │   ├── offers.html                        # Liste des offres et filtres
 │   │   ├── _offers_table.html                 # Tableau rechargé par HTMX
+│   │   ├── _application.html                  # Bloc de suivi d'une candidature
 │   │   └── offer.html                         # Fiche détaillée d'une offre
 │   └── static/                                # Fichiers statiques
 │       ├── style.css                          # Feuille de style

@@ -8,8 +8,11 @@ import pytest
 from storage.database import initialize_database
 from storage.job_applications import (
     create_application,
+    delete_application,
+    get_application,
     get_follow_ups,
     record_follow_up,
+    save_application,
     update_application_status,
 )
 
@@ -136,7 +139,7 @@ def test_record_follow_up(tmp_path):
 
     assert vRow[0] == 1
     assert vRow[1] == vFollowUpDate.isoformat()
-    assert vRow[2] == vFollowUpDate.isoformat()
+    assert vRow[2] == datetime(2026, 10, 15, 10, 0, 0).isoformat()
 
 
 def test_record_multiple_follow_ups(tmp_path):
@@ -275,3 +278,76 @@ def test_same_application_is_not_duplicated(tmp_path):
 
     assert len(vRows) == 1
     assert vRows[0][2] == "INTERVIEW"
+
+
+def test_save_application_sets_applied_date_and_default_follow_up(tmp_path):
+    """Vérifie la date de candidature et la relance par défaut."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vNow = datetime(2026, 10, 10, 9, 0, 0)
+
+    save_application(vDatabaseFile, "adzuna", "1", "APPLIED", pNow=vNow)
+
+    rApplication = get_application(vDatabaseFile, "adzuna", "1")
+
+    assert rApplication["status"] == "APPLIED"
+    assert rApplication["applied_at"] == vNow.isoformat()
+    assert rApplication["follow_up_date"] == "2026-10-17T09:00:00"
+
+
+def test_save_application_keeps_first_applied_date(tmp_path):
+    """Vérifie que la date de candidature initiale est conservée."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    save_application(
+        vDatabaseFile, "adzuna", "1", "APPLIED", pNow=datetime(2026, 10, 1)
+    )
+    save_application(
+        vDatabaseFile,
+        "adzuna",
+        "1",
+        "INTERVIEW",
+        pNotes="Entretien technique",
+        pNow=datetime(2026, 10, 9),
+    )
+
+    rApplication = get_application(vDatabaseFile, "adzuna", "1")
+
+    assert rApplication["status"] == "INTERVIEW"
+    assert rApplication["applied_at"] == datetime(2026, 10, 1).isoformat()
+    assert rApplication["notes"] == "Entretien technique"
+
+
+def test_save_application_without_follow_up_for_other_status(tmp_path):
+    """Vérifie qu'une offre simplement intéressante n'a pas de relance."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    save_application(vDatabaseFile, "adzuna", "1", "INTERESTED")
+
+    rApplication = get_application(vDatabaseFile, "adzuna", "1")
+
+    assert rApplication["follow_up_date"] is None
+    assert rApplication["applied_at"] is None
+
+
+def test_delete_application(tmp_path):
+    """Vérifie la suppression du suivi d'une offre."""
+
+    vDatabaseFile = Path(tmp_path) / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    save_application(vDatabaseFile, "adzuna", "1", "IGNORED")
+
+    delete_application(vDatabaseFile, "adzuna", "1")
+
+    assert get_application(vDatabaseFile, "adzuna", "1") is None

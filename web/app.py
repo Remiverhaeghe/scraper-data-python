@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -15,6 +15,13 @@ from config import DATABASE_FILE, NEW_OFFER_DAYS
 from job.contract import CONTRACT_TYPES
 from job.sources.registry import SOURCES
 from storage.database import initialize_database
+from storage.job_applications import (
+    APPLICATION_STATUSES,
+    delete_application,
+    get_application,
+    record_follow_up,
+    save_application,
+)
 from storage.job_offers import get_offer, get_offers
 from utils.logger import get_logger
 
@@ -31,6 +38,19 @@ BENEFIT_LABELS = {
     "has_profit_sharing": "intéressement ou participation",
     "has_savings_plan": "épargne salariale",
 }
+
+STATUS_LABELS = {
+    "INTERESTED": "Intéressé",
+    "APPLIED": "Postulé",
+    "INTERVIEW": "Entretien",
+    "ACCEPTED": "Accepté",
+    "REJECTED": "Refusé",
+    "CLOSED": "Clôturé",
+    "IGNORED": "Ignorée",
+}
+
+# Valeur du filtre de statut affichant les candidatures à relancer
+FOLLOW_UP_FILTER = "FOLLOW_UP"
 
 
 def get_database_file():
@@ -139,6 +159,11 @@ def prepare_offer(pOffer, pNewSince):
     vOffer["source_label"] = vSource.label if vSource else vOffer["source"]
     vOffer["is_new"] = vOffer["first_seen_at"] >= pNewSince.isoformat()
     vOffer["skills_list"] = to_list(vOffer.get("skills"))
+    vOffer["follow_up_due"] = bool(
+        vOffer.get("follow_up_date")
+        and vOffer.get("application_status") in ("APPLIED", "INTERVIEW")
+        and vOffer["follow_up_date"] <= datetime.now().isoformat()
+    )
     vOffer["benefits"] = [
         vLabel for vColumn, vLabel in BENEFIT_LABELS.items() if vOffer.get(vColumn)
     ]
@@ -162,6 +187,20 @@ def parse_amount(pValue):
     return rAmount
 
 
+def parse_date(pValue):
+    """Convertit une date saisie au format AAAA-MM-JJ, ou retourne None."""
+
+    rDate = None
+
+    try:
+        rDate = datetime.strptime(pValue, "%Y-%m-%d") if pValue else None
+
+    except ValueError:
+        logger.warning("Date saisie ignorée : %s", pValue)
+
+    return rDate
+
+
 @app.get("/", response_class=HTMLResponse)
 def list_offers(
     request: Request,
@@ -171,12 +210,15 @@ def list_offers(
     remote: str = "",
     min_salary: str = "",
     new: str = "",
+    status: str = "",
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche la liste des offres, ou seulement le tableau pour une requête HTMX."""
 
-    vNewSince = datetime.now() - timedelta(days=NEW_OFFER_DAYS)
+    vNow = datetime.now()
+    vNewSince = vNow - timedelta(days=NEW_OFFER_DAYS)
 
+    # Les offres ignorées restent masquées sauf si on les demande explicitement.
     vFilters = {
         "pSearch": q.strip() or None,
         "pSource": source if source in SOURCES else None,
@@ -184,6 +226,9 @@ def list_offers(
         "pRemote": bool(remote),
         "pMinNetSalary": parse_amount(min_salary),
         "pSeenSince": vNewSince if new else None,
+        "pStatus": status if status in APPLICATION_STATUSES else None,
+        "pFollowUpBefore": vNow if status == FOLLOW_UP_FILTER else None,
+        "pHideIgnored": True,
     }
 
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
@@ -197,6 +242,8 @@ def list_offers(
         "max_offers": MAX_DISPLAYED_OFFERS,
         "sources": SOURCES,
         "contracts": CONTRACT_TYPES,
+        "statuses": STATUS_LABELS,
+        "follow_up_filter": FOLLOW_UP_FILTER,
         "filters": {
             "q": q,
             "source": source,
@@ -204,6 +251,7 @@ def list_offers(
             "remote": remote,
             "min_salary": min_salary,
             "new": new,
+            "status": status,
         },
     }
 
@@ -216,6 +264,36 @@ def list_offers(
     return rResponse
 
 
+def get_existing_offer(pDatabaseFile, pSource, pSourceId):
+    """Retourne une offre ou lève une erreur 404 si elle n'existe pas."""
+
+    rOffer = get_offer(pDatabaseFile, pSource, pSourceId)
+
+    if rOffer is None:
+        raise HTTPException(status_code=404, detail="Offre introuvable")
+
+    return rOffer
+
+
+def render_application(pRequest, pDatabaseFile, pOffer, pMessage=None):
+    """Affiche le bloc de suivi d'une offre."""
+
+    vApplication = get_application(pDatabaseFile, pOffer["source"], pOffer["source_id"])
+
+    rResponse = templates.TemplateResponse(
+        pRequest,
+        "_application.html",
+        {
+            "offer": pOffer,
+            "application": vApplication,
+            "statuses": STATUS_LABELS,
+            "message": pMessage,
+        },
+    )
+
+    return rResponse
+
+
 @app.get("/offer", response_class=HTMLResponse)
 def show_offer(
     request: Request,
@@ -223,17 +301,79 @@ def show_offer(
     id: str,
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Affiche la fiche détaillée d'une offre."""
+    """Affiche la fiche détaillée d'une offre et son suivi."""
 
-    vOffer = get_offer(pDatabaseFile, source, id)
-
-    if vOffer is None:
-        raise HTTPException(status_code=404, detail="Offre introuvable")
+    vOffer = get_existing_offer(pDatabaseFile, source, id)
 
     vNewSince = datetime.now() - timedelta(days=NEW_OFFER_DAYS)
 
     rResponse = templates.TemplateResponse(
-        request, "offer.html", {"offer": prepare_offer(vOffer, vNewSince)}
+        request,
+        "offer.html",
+        {
+            "offer": prepare_offer(vOffer, vNewSince),
+            "application": get_application(pDatabaseFile, source, id),
+            "statuses": STATUS_LABELS,
+            "message": None,
+        },
+    )
+
+    return rResponse
+
+
+@app.post("/offer/application", response_class=HTMLResponse)
+def update_application(
+    request: Request,
+    source: str = Form(...),
+    id: str = Form(...),
+    status: str = Form(""),
+    follow_up_date: str = Form(""),
+    notes: str = Form(""),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre le suivi d'une offre, ou le supprime si aucun statut n'est choisi."""
+
+    vOffer = get_existing_offer(pDatabaseFile, source, id)
+
+    if status and status not in APPLICATION_STATUSES:
+        raise HTTPException(status_code=400, detail="Statut inconnu")
+
+    if status:
+        save_application(
+            pDatabaseFile,
+            source,
+            id,
+            status,
+            pFollowUpDate=parse_date(follow_up_date),
+            pNotes=notes.strip(),
+        )
+
+    else:
+        delete_application(pDatabaseFile, source, id)
+
+    rResponse = render_application(request, pDatabaseFile, vOffer, "Suivi enregistré")
+
+    return rResponse
+
+
+@app.post("/offer/follow-up", response_class=HTMLResponse)
+def add_follow_up(
+    request: Request,
+    source: str = Form(...),
+    id: str = Form(...),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre une relance effectuée aujourd'hui."""
+
+    vOffer = get_existing_offer(pDatabaseFile, source, id)
+
+    if get_application(pDatabaseFile, source, id) is None:
+        raise HTTPException(status_code=400, detail="Aucun suivi pour cette offre")
+
+    record_follow_up(pDatabaseFile, source, id)
+
+    rResponse = render_application(
+        request, pDatabaseFile, vOffer, "Relance enregistrée"
     )
 
     return rResponse

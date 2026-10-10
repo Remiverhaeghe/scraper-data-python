@@ -13,6 +13,7 @@ pluggy==1.6.0
 Pygments==2.21.0
 pytest==9.1.1
 python-dotenv
+python-multipart==0.0.32
 requests==2.34.2
 soupsieve==2.9.2
 typing_extensions==4.16.0

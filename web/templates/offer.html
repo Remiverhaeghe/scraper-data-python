@@ -71,6 +71,8 @@
         <dd>{{ offer.first_seen_at | date_fr }}, vue pour la dernière fois le {{ offer.last_seen_at | date_fr }}</dd>
     </dl>
 
+    {% include "_application.html" %}
+
     {% if offer.description %}
     <h2>Description</h2>
     <p class="offer-description">{{ offer.description }}</p>

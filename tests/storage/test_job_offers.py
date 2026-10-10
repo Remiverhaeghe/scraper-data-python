@@ -6,7 +6,8 @@ from pathlib import Path
 import pandas as pd
 
 from storage.database import connect_database, initialize_database
-from storage.job_offers import CONTENT_COLUMNS, get_offers, save_offers
+from storage.job_applications import save_application
+from storage.job_offers import CONTENT_COLUMNS, get_offer, get_offers, save_offers
 
 
 def build_items():
@@ -161,3 +162,73 @@ def test_get_offers_returns_most_recent_first(tmp_path):
     vOffers = get_offers(vDatabaseFile)
 
     assert vOffers["source_id"].tolist() == ["456", "123"]
+
+
+def build_tracked_database(pTmpPath):
+    """Crée une base avec trois offres, dont deux suivies."""
+
+    rDatabaseFile = build_database(pTmpPath)
+
+    vItems = pd.DataFrame(
+        [
+            {"source": "lever", "source_id": vId, "title": f"Offre {vId}"}
+            for vId in ("1", "2", "3")
+        ]
+    )
+
+    save_offers(rDatabaseFile, vItems, datetime(2026, 10, 1, 10, 0, 0))
+
+    save_application(rDatabaseFile, "lever", "1", "APPLIED", pNow=datetime(2026, 10, 1))
+    save_application(rDatabaseFile, "lever", "2", "IGNORED")
+
+    return rDatabaseFile
+
+
+def test_get_offers_includes_application_status(tmp_path):
+    """Vérifie que le statut du suivi accompagne chaque offre."""
+
+    vOffers = get_offers(build_tracked_database(tmp_path))
+
+    vStatuses = dict(zip(vOffers["source_id"], vOffers["application_status"]))
+
+    assert vStatuses["1"] == "APPLIED"
+    assert pd.isna(vStatuses["3"])
+
+
+def test_get_offers_hides_ignored_offers(tmp_path):
+    """Vérifie le masquage des offres ignorées."""
+
+    vOffers = get_offers(build_tracked_database(tmp_path), pHideIgnored=True)
+
+    assert sorted(vOffers["source_id"]) == ["1", "3"]
+
+
+def test_get_offers_filters_status(tmp_path):
+    """Vérifie que filtrer sur un statut affiche aussi les offres ignorées."""
+
+    vOffers = get_offers(
+        build_tracked_database(tmp_path), pStatus="IGNORED", pHideIgnored=True
+    )
+
+    assert vOffers["source_id"].tolist() == ["2"]
+
+
+def test_get_offers_filters_follow_ups_due(tmp_path):
+    """Vérifie la sélection des candidatures à relancer."""
+
+    vDatabaseFile = build_tracked_database(tmp_path)
+
+    assert get_offers(vDatabaseFile, pFollowUpBefore=datetime(2026, 10, 5)).empty
+
+    vOffers = get_offers(vDatabaseFile, pFollowUpBefore=datetime(2026, 10, 9))
+
+    assert vOffers["source_id"].tolist() == ["1"]
+
+
+def test_get_offer(tmp_path):
+    """Vérifie la lecture d'une offre et le cas d'une offre inconnue."""
+
+    vDatabaseFile = build_tracked_database(tmp_path)
+
+    assert get_offer(vDatabaseFile, "lever", "1")["title"] == "Offre 1"
+    assert get_offer(vDatabaseFile, "lever", "inconnue") is None

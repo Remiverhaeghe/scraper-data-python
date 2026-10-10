@@ -1,0 +1,53 @@
+<section id="application" class="application">
+    <h2>Suivi</h2>
+
+    <form hx-post="{{ url_for('update_application').path }}"
+          hx-target="#application"
+          hx-swap="outerHTML">
+
+        <input type="hidden" name="source" value="{{ offer.source }}">
+        <input type="hidden" name="id" value="{{ offer.source_id }}">
+
+        <label>
+            Statut
+            <select name="status">
+                <option value="">Aucun suivi</option>
+                {% for value, label in statuses.items() %}
+                <option value="{{ value }}" {% if application and application.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            Prochaine relance
+            <input type="date" name="follow_up_date"
+                   value="{{ application.follow_up_date[:10] if application and application.follow_up_date else '' }}">
+        </label>
+
+        <label class="application-notes">
+            Notes
+            <textarea name="notes" rows="4">{{ application.notes or '' if application else '' }}</textarea>
+        </label>
+
+        <button class="button" type="submit">Enregistrer</button>
+    </form>
+
+    {% if application %}
+    <p class="application-info">
+        {% if application.applied_at %}Candidature envoyée le {{ application.applied_at | date_fr }}.{% endif %}
+        {% if application.follow_up_count %}{{ application.follow_up_count }} relance{% if application.follow_up_count > 1 %}s{% endif %}, la dernière le {{ application.last_follow_up_at | date_fr }}.{% endif %}
+    </p>
+
+    {% if application.status in ("APPLIED", "INTERVIEW") %}
+    <form hx-post="{{ url_for('add_follow_up').path }}"
+          hx-target="#application"
+          hx-swap="outerHTML">
+        <input type="hidden" name="source" value="{{ offer.source }}">
+        <input type="hidden" name="id" value="{{ offer.source_id }}">
+        <button class="button button-secondary" type="submit">J'ai relancé aujourd'hui</button>
+    </form>
+    {% endif %}
+    {% endif %}
+
+    {% if message %}<p class="application-message" role="status">{{ message }}</p>{% endif %}
+</section>

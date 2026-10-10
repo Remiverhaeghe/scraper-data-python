@@ -24,3 +24,6 @@ WEB_PORT = 8000
 
 # Une offre est signalée comme nouvelle pendant ce nombre de jours
 NEW_OFFER_DAYS = 3
+
+# Délai par défaut avant de relancer une candidature, en jours
+FOLLOW_UP_DAYS = 7

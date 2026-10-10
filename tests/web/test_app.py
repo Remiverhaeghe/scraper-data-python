@@ -187,3 +187,110 @@ def test_safe_url(pUrl, pExpected):
     """Vérifie que seules les URL http et https sont conservées."""
 
     assert safe_url(pUrl) == pExpected
+
+
+def test_show_offer_displays_application_form(client):
+    """Vérifie la présence du formulaire de suivi sur la fiche."""
+
+    vResponse = client.get("/offer", params={"source": "adzuna", "id": "new"})
+
+    assert "Aucun suivi" in vResponse.text
+    assert 'name="follow_up_date"' in vResponse.text
+
+
+def test_update_application_saves_status_and_notes(client):
+    """Vérifie l'enregistrement d'un statut et de notes."""
+
+    vResponse = client.post(
+        "/offer/application",
+        data={
+            "source": "adzuna",
+            "id": "new",
+            "status": "APPLIED",
+            "follow_up_date": "",
+            "notes": "Envoyée via le site",
+        },
+    )
+
+    assert vResponse.status_code == 200
+    assert "Suivi enregistré" in vResponse.text
+    assert "Envoyée via le site" in vResponse.text
+    assert "Candidature envoyée le" in vResponse.text
+    assert "relancé aujourd" in vResponse.text
+
+    vList = client.get("/", params={"status": "APPLIED"})
+
+    assert "1 offre" in vList.text
+    assert "Postulé" in vList.text
+
+
+def test_update_application_without_status_deletes_tracking(client):
+    """Vérifie qu'un statut vide supprime le suivi."""
+
+    client.post(
+        "/offer/application",
+        data={"source": "adzuna", "id": "new", "status": "IGNORED"},
+    )
+
+    assert "2 offres" in client.get("/").text
+
+    client.post(
+        "/offer/application", data={"source": "adzuna", "id": "new", "status": ""}
+    )
+
+    assert "3 offres" in client.get("/").text
+
+
+def test_update_application_rejects_unknown_values(client):
+    """Vérifie le refus d'un statut ou d'une offre inconnus."""
+
+    vBadStatus = client.post(
+        "/offer/application", data={"source": "adzuna", "id": "new", "status": "HACK"}
+    )
+    vUnknownOffer = client.post(
+        "/offer/application", data={"source": "adzuna", "id": "x", "status": "APPLIED"}
+    )
+
+    assert vBadStatus.status_code == 400
+    assert vUnknownOffer.status_code == 404
+
+
+def test_add_follow_up(client):
+    """Vérifie l'enregistrement d'une relance."""
+
+    client.post(
+        "/offer/application",
+        data={"source": "adzuna", "id": "new", "status": "APPLIED"},
+    )
+
+    vResponse = client.post("/offer/follow-up", data={"source": "adzuna", "id": "new"})
+
+    assert "Relance enregistrée" in vResponse.text
+    assert "1 relance" in vResponse.text
+
+
+def test_add_follow_up_requires_tracking(client):
+    """Vérifie qu'une relance exige un suivi existant."""
+
+    vResponse = client.post("/offer/follow-up", data={"source": "adzuna", "id": "new"})
+
+    assert vResponse.status_code == 400
+
+
+def test_list_offers_shows_follow_ups_due(client):
+    """Vérifie le filtre des candidatures à relancer."""
+
+    client.post(
+        "/offer/application",
+        data={
+            "source": "adzuna",
+            "id": "new",
+            "status": "APPLIED",
+            "follow_up_date": "2020-01-01",
+        },
+    )
+
+    vResponse = client.get("/", params={"status": "FOLLOW_UP"})
+
+    assert "1 offre" in vResponse.text
+    assert "Relance le 01/01/2020" in vResponse.text

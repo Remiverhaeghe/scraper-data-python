@@ -130,6 +130,10 @@ def save_offers(pDatabaseFile, pItems, pScrapedAt):
     return rItems
 
 
+# Statuts pour lesquels une relance reste pertinente
+FOLLOW_UP_STATUSES = ("APPLIED", "INTERVIEW")
+
+
 def build_offer_conditions(
     pSearch=None,
     pSource=None,
@@ -137,38 +141,59 @@ def build_offer_conditions(
     pRemote=False,
     pMinNetSalary=None,
     pSeenSince=None,
+    pStatus=None,
+    pFollowUpBefore=None,
+    pHideIgnored=False,
 ):
-    """Construit les conditions SQL et leurs paramètres à partir des filtres."""
+    """Construit les conditions SQL et leurs paramètres à partir des filtres.
+
+    Les colonnes sont préfixées : o pour l'offre, a pour son suivi.
+    """
 
     vConditions = []
     vParams = []
 
     if pSearch:
         vConditions.append(
-            "(title LIKE ? OR company LIKE ? OR location LIKE ? OR description LIKE ?)"
+            "(o.title LIKE ? OR o.company LIKE ? OR o.location LIKE ?"
+            " OR o.description LIKE ?)"
         )
         vParams += [f"%{pSearch}%"] * 4
 
     if pSource:
-        vConditions.append("source = ?")
+        vConditions.append("o.source = ?")
         vParams.append(pSource)
 
     if pContract:
-        vConditions.append("contract = ?")
+        vConditions.append("o.contract = ?")
         vParams.append(pContract)
 
     if pRemote:
-        vConditions.append("remote = 1")
+        vConditions.append("o.remote = 1")
 
     if pMinNetSalary is not None:
         vConditions.append(
-            "COALESCE(salary_net_monthly_max, salary_net_monthly_min) >= ?"
+            "COALESCE(o.salary_net_monthly_max, o.salary_net_monthly_min) >= ?"
         )
         vParams.append(pMinNetSalary)
 
     if pSeenSince is not None:
-        vConditions.append("first_seen_at >= ?")
+        vConditions.append("o.first_seen_at >= ?")
         vParams.append(pSeenSince.isoformat())
+
+    if pStatus:
+        vConditions.append("a.status = ?")
+        vParams.append(pStatus)
+
+    elif pHideIgnored:
+        vConditions.append("(a.status IS NULL OR a.status != 'IGNORED')")
+
+    if pFollowUpBefore is not None:
+        vConditions.append(
+            f"a.status IN ({', '.join('?' for _ in FOLLOW_UP_STATUSES)})"
+            " AND a.follow_up_date <= ?"
+        )
+        vParams += [*FOLLOW_UP_STATUSES, pFollowUpBefore.isoformat()]
 
     rConditions = (vConditions, vParams)
 
@@ -176,16 +201,27 @@ def build_offer_conditions(
 
 
 def get_offers(pDatabaseFile, pLimit=None, **pFilters):
-    """Retourne les offres filtrées, des plus récentes aux plus anciennes."""
+    """Retourne les offres filtrées avec leur suivi, des plus récentes aux plus
+    anciennes.
+    """
 
     vConditions, vParams = build_offer_conditions(**pFilters)
 
-    vQuery = "SELECT * FROM job_offer"
+    vQuery = """
+        SELECT
+            o.*,
+            a.status AS application_status,
+            a.applied_at,
+            a.follow_up_date
+        FROM job_offer o
+        LEFT JOIN job_application a
+            ON a.source = o.source AND a.source_id = o.source_id
+        """
 
     if vConditions:
         vQuery += " WHERE " + " AND ".join(vConditions)
 
-    vQuery += " ORDER BY first_seen_at DESC, published_at DESC"
+    vQuery += " ORDER BY o.first_seen_at DESC, o.published_at DESC"
 
     if pLimit is not None:
         vQuery += " LIMIT ?"

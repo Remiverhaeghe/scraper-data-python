@@ -13,6 +13,7 @@
                 <th>Lieu</th>
                 <th>Contrat</th>
                 <th class="amount">Net mensuel</th>
+                <th>Suivi</th>
                 <th>Source</th>
                 <th>Découverte</th>
             </tr>
@@ -35,6 +36,10 @@
                     – {{ offer.salary_net_monthly_max | euros }}
                     {% endif %}
                     {% endif %}
+                </td>
+                <td>
+                    {% if offer.application_status %}<span class="badge badge-status">{{ statuses[offer.application_status] }}</span>{% endif %}
+                    {% if offer.follow_up_due %}<span class="badge badge-due">Relance le {{ offer.follow_up_date | date_fr }}</span>{% endif %}
                 </td>
                 <td><a href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">{{ offer.source_label }}</a></td>
                 <td>{{ offer.first_seen_at | date_fr }}</td>

@@ -24,6 +24,14 @@
         {% endfor %}
     </select>
 
+    <select name="status" aria-label="Suivi">
+        <option value="">Offres actives</option>
+        <option value="{{ follow_up_filter }}" {% if filters.status == follow_up_filter %}selected{% endif %}>À relancer</option>
+        {% for value, label in statuses.items() %}
+        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+
     <input type="text" inputmode="numeric" name="min_salary" value="{{ filters.min_salary }}"
            placeholder="Net mensuel minimum" aria-label="Net mensuel minimum">
 

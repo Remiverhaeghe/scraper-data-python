@@ -8,6 +8,8 @@
     --new-background: #ecfdf3;
     --new-text: #067647;
     --badge-background: #eef2f6;
+    --due-background: #fff4e5;
+    --due-text: #b54708;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +23,8 @@
         --new-background: #10291c;
         --new-text: #6ce9a6;
         --badge-background: #262d35;
+        --due-background: #3a2410;
+        --due-text: #fdb022;
     }
 }
 
@@ -198,6 +202,71 @@ a {
 
 .offer-description {
     white-space: pre-line;
+}
+
+.badge-status {
+    margin-left: 0;
+    background: var(--accent);
+    color: var(--surface);
+}
+
+.badge-due {
+    background: var(--due-background);
+    color: var(--due-text);
+}
+
+.button.button-secondary {
+    background: var(--badge-background);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+button.button {
+    border: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.application {
+    margin: 24px 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.application form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 12px;
+}
+
+.application label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.application select,
+.application input,
+.application textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+}
+
+.application-notes {
+    flex: 1 1 100%;
+}
+
+.application-info,
+.application-message {
+    color: var(--text-muted);
 }
 
 @media (max-width: 640px) {
