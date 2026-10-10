@@ -163,6 +163,10 @@ class OffersPage(QWidget):
 
         return rLayout
 
+    def show_follow_ups(self):
+        """Sélectionne le filtre des candidatures à relancer."""
+        self.status_combo.setCurrentIndex(self.status_combo.findData(FOLLOW_UP_FILTER))
+
     def build_filters(self, pNow):
         """Traduit les filtres de la page en paramètres de get_offers."""
         rFilters = build_offer_filters(

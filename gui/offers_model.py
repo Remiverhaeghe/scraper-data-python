@@ -11,13 +11,13 @@ SORT_ROLE = Qt.ItemDataRole.UserRole
 # Libellé, clé de l'offre et largeur en pixels ; le titre occupe l'espace restant
 COLUMNS = [
     ("Titre", "title", None),
-    ("Entreprise", "company", 150),
-    ("Lieu", "location", 150),
-    ("Contrat", "contract", 80),
-    ("Net mensuel", "salary_net_monthly_min", 130),
-    ("Source", "source_label", 100),
-    ("Vue le", "first_seen_at", 90),
-    ("Suivi", "application_status", 110),
+    ("Entreprise", "company", 160),
+    ("Lieu", "location", 160),
+    ("Contrat", "contract", 85),
+    ("Net mensuel", "salary_net_monthly_min", 145),
+    ("Source", "source_label", 105),
+    ("Vue le", "first_seen_at", 110),
+    ("Suivi", "application_status", 120),
 ]
 
 

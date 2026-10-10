@@ -20,7 +20,8 @@ from PySide6.QtWidgets import (
 )
 
 from gui.search_worker import SearchWorker
-from gui.widgets import create_page_header
+from gui.theme import COLORS
+from gui.widgets import create_button, create_page_header
 from job.contract import CONTRACT_TYPES
 from job.sources.registry import SOURCES
 
@@ -61,6 +62,7 @@ def create_spin_box(pMinimum, pMaximum, pValue, pSuffix="", pEmptyText=None):
 class SearchPage(QWidget):
     """Permet de lancer une recherche d'offres et d'en suivre l'avancement."""
 
+    search_started = Signal()
     search_ended = Signal()
     show_offers_requested = Signal()
 
@@ -215,8 +217,9 @@ class SearchPage(QWidget):
 
     def create_actions(self):
         """Construit les boutons de lancement et d'arrêt."""
-        self.start_button = QPushButton("Lancer la recherche")
-        self.start_button.setObjectName("primaryButton")
+        self.start_button = create_button(
+            "Lancer la recherche", "search", "primaryButton", COLORS["surface"]
+        )
         self.start_button.clicked.connect(self.start_search)
 
         self.stop_button = QPushButton("Arrêter")
@@ -356,6 +359,7 @@ class SearchPage(QWidget):
             self.search_thread.finished.connect(self.end_search)
 
             self.search_thread.start()
+            self.search_started.emit()
 
     def stop_search(self):
         """Demande l'arrêt de la recherche avant la source suivante."""

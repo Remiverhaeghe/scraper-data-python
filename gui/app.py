@@ -1,19 +1,17 @@
 """Lancement de l'application de bureau"""
 
 import sys
-from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
 from config import DATABASE_FILE
 from gui.main_window import MainWindow
+from gui.theme import build_palette, build_stylesheet
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 APPLICATION_NAME = "RV - Web Scraper"
-
-THEME_FILE = Path(__file__).with_name("theme.qss")
 
 
 def run():
@@ -25,9 +23,10 @@ def run():
     # Nom utilisé par QSettings pour mémoriser les derniers critères de recherche
     vApplication.setOrganizationName("Remiverhaeghe")
 
-    # Fusion suit le thème clair ou sombre du système sur toutes les plateformes.
+    # Fusion respecte la palette fournie, identique sur toutes les plateformes.
     vApplication.setStyle("Fusion")
-    vApplication.setStyleSheet(THEME_FILE.read_text(encoding="utf-8"))
+    vApplication.setPalette(build_palette())
+    vApplication.setStyleSheet(build_stylesheet())
 
     vWindow = MainWindow(DATABASE_FILE, APPLICATION_NAME)
     vWindow.show()

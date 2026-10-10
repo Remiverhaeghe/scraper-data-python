@@ -166,7 +166,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 ### 🖥️ Interface graphique
 
 - [x] Fenêtre principale avec menu latéral
-- [x] Thème clair et sombre selon le système
+- [x] Identité visuelle : logo, icônes, bannière, cartes colorées, activité récente et actions rapides
 - [x] Accueil : offres, nouveautés, candidatures, relances et dernière exécution
 - [x] Recherche : sources, filtres, options avancées, progression et arrêt
 - [x] Sources non configurées grisées, derniers critères mémorisés
@@ -361,7 +361,10 @@ scraper-data-python/
 │   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── widgets.py                             # Composants graphiques partagés
-│   ├── theme.qss                              # Feuille de style Qt
+│   ├── theme.py                               # Couleurs et construction de la feuille de style
+│   ├── theme.qss                              # Feuille de style Qt, couleurs en variables
+│   ├── icons.py                               # Charge les icônes SVG dans une couleur donnée
+│   ├── icons/                                 # Icônes SVG Lucide (licence ISC)
 │   └── job_controller.py                      # Lance le traitement des offres depuis la GUI
 │
 ├── web/                                       # Tableau de bord web
@@ -521,10 +524,12 @@ scraper-data-python/
 │   │   ├── test_history_page.py                # Teste la page de l'historique
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
+│   │   ├── test_main_window.py                 # Teste la navigation et l'état du menu
 │   │   ├── test_offers_model.py                # Teste le modèle du tableau des offres
 │   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
 │   │   ├── test_search_page.py                 # Teste la page de recherche
-│   │   └── test_search_worker.py               # Teste le worker de recherche
+│   │   ├── test_search_worker.py               # Teste le worker de recherche
+│   │   └── test_theme.py                       # Teste la feuille de style et les icônes
 │   │
 │   ├── data/                                   # Tests des composants génériques de données
 │   │   ├── __init__.py                          # Initialise le package de tests Data
@@ -573,3 +578,5 @@ scraper-data-python/
 ## 📄 Licence
 
 Ce projet est publié sous licence [PolyForm Strict 1.0.0](LICENSE) : le code peut être consulté et utilisé tel quel à des fins non commerciales, mais ni modifié, ni redistribué.
+
+Les icônes de `gui/icons/` proviennent de [Lucide](https://lucide.dev) et restent sous leur licence [ISC](gui/icons/LICENSE).

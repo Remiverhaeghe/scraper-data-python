@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDateEdit,
     QFormLayout,
+    QFrame,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -21,6 +22,8 @@ from PySide6.QtWidgets import (
 
 from config import FOLLOW_UP_DAYS
 from gui.offers_model import format_net_salary
+from gui.theme import COLORS
+from gui.widgets import create_button
 from job.presentation import STATUS_LABELS, format_date, safe_url
 from storage.job_applications import (
     delete_application,
@@ -75,7 +78,9 @@ class OfferDetailPanel(QWidget):
         self.company_label.setObjectName("pageSubtitle")
         self.company_label.setWordWrap(True)
 
-        self.open_button = QPushButton("Ouvrir l'offre")
+        self.open_button = create_button(
+            "Ouvrir l'offre", "external-link", "primaryButton", COLORS["surface"]
+        )
         self.open_button.clicked.connect(self.open_offer)
 
         self.info_labels = {}
@@ -97,16 +102,17 @@ class OfferDetailPanel(QWidget):
 
         self.description = QTextBrowser()
 
-        vSummary = QVBoxLayout()
+        vSummaryWidget = QFrame()
+        vSummaryWidget.setObjectName("card")
+        vSummaryWidget.setFixedWidth(340)
+
+        vSummary = QVBoxLayout(vSummaryWidget)
+        vSummary.setContentsMargins(18, 16, 18, 16)
         vSummary.addWidget(self.title_label)
         vSummary.addWidget(self.company_label)
         vSummary.addWidget(self.open_button)
         vSummary.addLayout(vInfoForm)
         vSummary.addStretch()
-
-        vSummaryWidget = QWidget()
-        vSummaryWidget.setFixedWidth(340)
-        vSummaryWidget.setLayout(vSummary)
 
         vApplicationGroup = self.create_application_group()
         vApplicationGroup.setFixedWidth(340)
@@ -144,8 +150,7 @@ class OfferDetailPanel(QWidget):
         self.notes_edit = QPlainTextEdit()
         self.notes_edit.setPlaceholderText("Notes")
 
-        vSaveButton = QPushButton("Enregistrer")
-        vSaveButton.setObjectName("primaryButton")
+        vSaveButton = create_button("Enregistrer", pObjectName="primaryButton")
         vSaveButton.clicked.connect(self.save)
 
         self.follow_up_button = QPushButton("J'ai relancé aujourd'hui")

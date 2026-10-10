@@ -4,7 +4,10 @@ from datetime import datetime
 
 import pandas as pd
 
-from gui.home_page import HomePage, describe_execution, load_statistics
+from PySide6.QtWidgets import QPushButton
+
+from gui.home_page import HomePage, describe_activity, load_statistics
+from gui.theme import COLORS
 from scraper.history import HistoryEntry
 from storage.database import initialize_database
 from storage.history_repository import save_history
@@ -57,7 +60,7 @@ def test_load_statistics(tmp_path):
     assert rStatistics["new_offers"] == 1
     assert rStatistics["applications"] == 1
     assert rStatistics["follow_ups"] == 1
-    assert rStatistics["last_execution"].item_count == 42
+    assert [vEntry.item_count for vEntry in rStatistics["executions"]] == [42]
 
 
 def test_load_statistics_on_empty_database(tmp_path):
@@ -70,37 +73,73 @@ def test_load_statistics_on_empty_database(tmp_path):
     rStatistics = load_statistics(vDatabaseFile)
 
     assert rStatistics["offers"] == 0
-    assert rStatistics["last_execution"] is None
+    assert rStatistics["executions"] == []
 
 
-def test_describe_execution():
-    """Vérifie le résumé de la dernière exécution."""
+def build_entry(**pValues):
+    """Construit une exécution de recherche d'offres partielle."""
 
-    vEntry = HistoryEntry(
-        started_at=datetime(2026, 10, 9, 8, 30),
-        scraper_type="job",
-        url="multi-source",
-        page_count=2,
-        item_count=42,
-        duration_seconds=3.25,
-        status="partial",
-        parameters={"keyword": "Java"},
+    vValues = {
+        "started_at": datetime(2026, 10, 9, 8, 30),
+        "scraper_type": "job",
+        "url": "multi-source",
+        "page_count": 2,
+        "item_count": 42,
+        "duration_seconds": 3.25,
+        "status": "partial",
+        "parameters": {"keyword": "Java", "sources": ["adzuna"]},
+    }
+
+    vValues.update(pValues)
+
+    rEntry = HistoryEntry(**vValues)
+
+    return rEntry
+
+
+def test_describe_activity():
+    """Vérifie la ligne d'activité d'une exécution."""
+
+    vIcon, vColor, vTitle, vDetail, vResult = describe_activity(build_entry())
+
+    assert vIcon == "circle-alert"
+    assert vColor == COLORS["warning"]
+    assert vTitle == "Java"
+    assert vDetail == "09/10/2026 à 08:30 · Adzuna"
+    assert vResult == "42 offre(s)"
+
+
+def test_describe_activity_without_parameters():
+    """Vérifie une exécution réussie antérieure à l'enregistrement des paramètres."""
+
+    vIcon, _, vTitle, vDetail, _ = describe_activity(
+        build_entry(status="success", parameters=None)
     )
 
-    assert describe_execution(vEntry) == (
-        "Dernière exécution le 09/10/2026 à 08:30 (Java) : "
-        "42 offre(s) en 3.2 s, partielle."
-    )
-
-    assert describe_execution(None) == "Aucune recherche lancée pour le moment."
+    assert vIcon == "circle-check"
+    assert vTitle == "Recherche d'offres"
+    assert vDetail == "09/10/2026 à 08:30"
 
 
 def test_home_page_displays_statistics(qt_application, tmp_path):
-    """Vérifie que la page affiche les indicateurs lus en base."""
+    """Vérifie que la page affiche les indicateurs et l'activité lus en base."""
 
     vPage = HomePage(build_database(tmp_path))
 
     vPage.refresh()
 
     assert vPage.cards["offers"].value_label.text() == "2"
-    assert "42 offre(s)" in vPage.execution_label.text()
+    assert vPage.activity_layout.count() == 1
+
+
+def test_home_page_requests_navigation(qt_application, tmp_path):
+    """Vérifie que la bannière demande l'ouverture de la page de recherche."""
+
+    vTargets = []
+
+    vPage = HomePage(build_database(tmp_path))
+    vPage.navigation_requested.connect(vTargets.append)
+
+    vPage.findChild(QPushButton, "bannerButton").click()
+
+    assert vTargets == ["search"]
