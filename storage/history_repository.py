@@ -1,5 +1,6 @@
 """Persistance des entrées d'historique dans SQLite"""
 
+import json
 from datetime import datetime
 
 from scraper.history import HistoryEntry
@@ -21,9 +22,10 @@ def save_history(pDatabasePath, pEntry):
             item_count,
             duration_seconds,
             status,
-            error_message
+            error_message,
+            parameters
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             pEntry.started_at.isoformat(),
@@ -34,6 +36,11 @@ def save_history(pDatabasePath, pEntry):
             pEntry.duration_seconds,
             pEntry.status,
             pEntry.error_message,
+            (
+                json.dumps(pEntry.parameters, ensure_ascii=False)
+                if pEntry.parameters is not None
+                else None
+            ),
         ),
     )
 
@@ -53,7 +60,8 @@ def get_history(pDatabasePath, pLimit=None):
             item_count,
             duration_seconds,
             status,
-            error_message
+            error_message,
+            parameters
         FROM history
         ORDER BY started_at DESC
         """
@@ -82,6 +90,7 @@ def get_history(pDatabasePath, pLimit=None):
             duration_seconds=vRow[5],
             status=vRow[6],
             error_message=vRow[7],
+            parameters=json.loads(vRow[8]) if vRow[8] else None,
         )
 
         vEntries.append(vEntry)

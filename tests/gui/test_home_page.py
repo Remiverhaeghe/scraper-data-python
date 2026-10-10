@@ -84,10 +84,12 @@ def test_describe_execution():
         item_count=42,
         duration_seconds=3.25,
         status="partial",
+        parameters={"keyword": "Java"},
     )
 
     assert describe_execution(vEntry) == (
-        "Dernière exécution le 09/10/2026 à 08:30 : 42 offre(s) en 3.2 s, partielle."
+        "Dernière exécution le 09/10/2026 à 08:30 (Java) : "
+        "42 offre(s) en 3.2 s, partielle."
     )
 
     assert describe_execution(None) == "Aucune recherche lancée pour le moment."

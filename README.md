@@ -74,7 +74,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 📚 Books
@@ -171,7 +171,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Recherche : sources, filtres, options avancées, progression et arrêt
 - [x] Sources non configurées grisées, derniers critères mémorisés
 - [x] Offres : filtres, tableau triable, détail et suivi des candidatures
-- [ ] Historique des exécutions
+- [x] Historique des exécutions avec les critères de chaque recherche
 
 ### 🌐 Tableau de bord web
 
@@ -359,6 +359,7 @@ scraper-data-python/
 │   ├── offers_page.py                         # Filtres et tableau des offres en base
 │   ├── offers_model.py                        # Modèle Qt du tableau des offres
 │   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
+│   ├── history_page.py                        # Historique des exécutions
 │   ├── widgets.py                             # Composants graphiques partagés
 │   ├── theme.qss                              # Feuille de style Qt
 │   └── job_controller.py                      # Lance le traitement des offres depuis la GUI
@@ -517,6 +518,7 @@ scraper-data-python/
 │   ├── gui/                                    # Tests de l'interface graphique
 │   │   ├── __init__.py                          # Initialise le package de tests GUI
 │   │   ├── conftest.py                         # Crée l'application Qt sans écran
+│   │   ├── test_history_page.py                # Teste la page de l'historique
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
 │   │   ├── test_offers_model.py                # Teste le modèle du tableau des offres

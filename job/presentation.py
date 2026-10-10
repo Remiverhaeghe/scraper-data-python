@@ -27,6 +27,12 @@ STATUS_LABELS = {
     "IGNORED": "Ignorée",
 }
 
+EXECUTION_STATUS_LABELS = {
+    "success": "Réussie",
+    "partial": "Partielle",
+    "error": "En échec",
+}
+
 # Valeur du filtre de statut affichant les candidatures à relancer
 FOLLOW_UP_FILTER = "FOLLOW_UP"
 
@@ -37,7 +43,7 @@ def format_euros(pAmount):
     rText = ""
 
     if pAmount is not None:
-        rText = f"{round(pAmount):,} €".replace(",", " ")
+        rText = f"{round(pAmount):,} €".replace(",", "\u202f")
 
     return rText
 
@@ -148,3 +154,41 @@ def build_offer_filters(
     }
 
     return rFilters
+
+
+def describe_search(pParameters):
+    """Résume en une ligne les critères d'une recherche enregistrée.
+
+    Une exécution antérieure à l'enregistrement des paramètres renvoie un texte
+    vide, à distinguer d'une recherche lancée sans critère.
+    """
+
+    rDescription = ""
+
+    if pParameters is not None:
+        vParts = [
+            pParameters.get("keyword"),
+            pParameters.get("location"),
+            pParameters.get("contract"),
+        ]
+
+        if pParameters.get("min_salary") is not None:
+            vParts.append(f"≥ {format_euros(pParameters['min_salary'])} net")
+
+        if pParameters.get("remote"):
+            vParts.append("télétravail")
+
+        rDescription = " · ".join(vPart for vPart in vParts if vPart) or "Sans critère"
+
+    return rDescription
+
+
+def describe_sources(pParameters):
+    """Retourne les libellés des sources interrogées lors d'une recherche."""
+
+    rLabels = ", ".join(
+        SOURCES[vName].label if vName in SOURCES else vName
+        for vName in (pParameters or {}).get("sources", [])
+    )
+
+    return rLabels

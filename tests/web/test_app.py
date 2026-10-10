@@ -170,7 +170,7 @@ def test_show_offer_not_found(client):
 def test_format_euros():
     """Vérifie le format français des montants."""
 
-    assert format_euros(2187.6) == "2 188 €"
+    assert format_euros(2187.6) == "2\u202f188 €"
     assert format_euros(None) == ""
 
 

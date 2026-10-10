@@ -123,3 +123,33 @@ def test_get_history_returns_entries_in_reverse_chronological_order(tmp_path):
     vLatestEntries = get_history(vDatabasePath, pLimit=1)
 
     assert [vEntry.started_at for vEntry in vLatestEntries] == [vSecondEntry.started_at]
+
+
+def test_history_parameters_round_trip(tmp_path):
+    """Vérifie l'enregistrement et la relecture des paramètres d'une recherche."""
+
+    vDatabasePath = tmp_path / "scraper.db"
+
+    initialize_database(vDatabasePath)
+
+    vParameters = {"keyword": "Développeur", "sources": ["adzuna", "jooble"]}
+
+    for vEntryParameters in (vParameters, None):
+        save_history(
+            vDatabasePath,
+            HistoryEntry(
+                started_at=datetime(2026, 10, 1, 8, 0, 0 if vEntryParameters else 1),
+                scraper_type="job",
+                url="multi-source",
+                page_count=2,
+                item_count=40,
+                duration_seconds=3.5,
+                status="success",
+                parameters=vEntryParameters,
+            ),
+        )
+
+    vEntries = get_history(vDatabasePath)
+
+    assert vEntries[0].parameters is None
+    assert vEntries[1].parameters == vParameters

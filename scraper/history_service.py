@@ -5,7 +5,7 @@ from scraper.result import ScrapingResult
 from storage.history_repository import save_history
 
 
-def build_history_entry(pScraperType, pUrl, pResult):
+def build_history_entry(pScraperType, pUrl, pResult, pParameters=None):
     """Construit une entrée d'historique à partir du résultat d'un scraping."""
 
     vEntry = HistoryEntry(
@@ -17,16 +17,17 @@ def build_history_entry(pScraperType, pUrl, pResult):
         duration_seconds=pResult.duration_seconds,
         status=pResult.status,
         error_message=pResult.error_message,
+        parameters=pParameters,
     )
 
     rEntry = vEntry
     return rEntry
 
 
-def record_history(pDatabasePath, pScraperType, pUrl, pResult):
+def record_history(pDatabasePath, pScraperType, pUrl, pResult, pParameters=None):
     """Construit et enregistre une entrée d'historique."""
 
-    vEntry = build_history_entry(pScraperType, pUrl, pResult)
+    vEntry = build_history_entry(pScraperType, pUrl, pResult, pParameters)
 
     save_history(pDatabasePath, vEntry)
 

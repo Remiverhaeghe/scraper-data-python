@@ -108,7 +108,14 @@ def migrate_to_v1(pConnection):
         """)
 
 
-MIGRATIONS = [migrate_to_v1]
+def migrate_to_v2(pConnection):
+    """Ajoute à l'historique les paramètres de chaque exécution."""
+
+    # Paramètres au format JSON, absents pour les exécutions antérieures.
+    pConnection.execute("ALTER TABLE history ADD COLUMN parameters TEXT")
+
+
+MIGRATIONS = [migrate_to_v1, migrate_to_v2]
 
 
 def get_schema_version(pConnection):

@@ -2,7 +2,12 @@
 
 from datetime import datetime
 
-from job.presentation import FOLLOW_UP_FILTER, build_offer_filters
+from job.presentation import (
+    FOLLOW_UP_FILTER,
+    build_offer_filters,
+    describe_search,
+    describe_sources,
+)
 
 
 def test_build_offer_filters_keeps_known_values():
@@ -57,3 +62,29 @@ def test_build_offer_filters_selects_follow_ups():
 
     assert rFilters["pFollowUpBefore"] == vNow
     assert rFilters["pStatus"] is None
+
+
+def test_describe_search():
+    """Vérifie le résumé des critères d'une recherche enregistrée."""
+
+    vParameters = {
+        "keyword": "Java",
+        "location": "Lille",
+        "contract": "CDI",
+        "min_salary": 2500,
+        "remote": True,
+    }
+
+    assert describe_search(vParameters) == (
+        "Java · Lille · CDI · ≥ 2\u202f500 € net · télétravail"
+    )
+    assert describe_search({"sources": ["adzuna"]}) == "Sans critère"
+    assert describe_search({}) == "Sans critère"
+    assert describe_search(None) == ""
+
+
+def test_describe_sources():
+    """Vérifie l'affichage des libellés des sources, même inconnues."""
+
+    assert describe_sources({"sources": ["adzuna", "ancienne"]}) == "Adzuna, ancienne"
+    assert describe_sources(None) == ""

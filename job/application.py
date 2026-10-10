@@ -12,6 +12,29 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Critères de recherche conservés dans l'historique lorsqu'ils sont renseignés
+HISTORY_CRITERIA = ("keyword", "location", "contract", "min_salary", "remote")
+
+
+def build_search_parameters(pConfig):
+    """Décrit une recherche pour l'historique : critères renseignés et sources."""
+
+    vParameters = {
+        vName: getattr(pConfig, vName)
+        for vName in HISTORY_CRITERIA
+        if getattr(pConfig, vName) is not None
+    }
+
+    vParameters["sources"] = [
+        vName
+        for vName, vSourceConfig in pConfig.sources.items()
+        if vSourceConfig.enabled
+    ]
+
+    rParameters = vParameters
+
+    return rParameters
+
 
 def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None):
     """Lance le traitement des offres d'emploi.
@@ -37,7 +60,13 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None):
 
     vScrapingResult = replace(vScrapingResult, items=vSavedItems)
 
-    record_history(DATABASE_FILE, "job", "multi-source", vScrapingResult)
+    record_history(
+        DATABASE_FILE,
+        "job",
+        "multi-source",
+        vScrapingResult,
+        pParameters=build_search_parameters(pConfig),
+    )
 
     vFilteredJobs = filter_jobs(vScrapingResult.items, pConfig)
 

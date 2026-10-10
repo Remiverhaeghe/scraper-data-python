@@ -6,9 +6,10 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from job.application import process_jobs
+from job.application import build_search_parameters, process_jobs
 from job.config import JobScrapingConfig
 from job.sources.aggregator import ScrapingCancelled
+from job.sources.config import SourceConfig
 from scraper.result import ScrapingResult
 
 
@@ -111,6 +112,10 @@ def test_process_jobs():
     assert vHistoryArguments[1] == "job"
     assert vHistoryArguments[2] == "multi-source"
     assert vHistoryArguments[3].items is vJobs
+    assert vRecordHistory.call_args.kwargs["pParameters"] == {
+        "keyword": "Python",
+        "sources": [],
+    }
 
     assert rResult is not vScrapingResult
 
@@ -142,3 +147,19 @@ def test_process_jobs_saves_nothing_when_cancelled():
     vSaveOffers.assert_not_called()
 
     vRecordHistory.assert_not_called()
+
+
+def test_build_search_parameters_keeps_filled_criteria():
+    """Vérifie que seuls les critères renseignés et les sources actives sont gardés."""
+
+    vConfig = JobScrapingConfig(location="Lille", contract="CDI", remote=True)
+
+    vConfig.sources["adzuna"] = SourceConfig(enabled=True)
+    vConfig.sources["jooble"] = SourceConfig(enabled=False)
+
+    assert build_search_parameters(vConfig) == {
+        "location": "Lille",
+        "contract": "CDI",
+        "remote": True,
+        "sources": ["adzuna"],
+    }

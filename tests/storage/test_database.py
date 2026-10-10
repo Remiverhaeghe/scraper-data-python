@@ -9,6 +9,7 @@ from storage.database import (
     connect_database,
     get_schema_version,
     initialize_database,
+    migrate_to_v1,
 )
 
 
@@ -112,3 +113,42 @@ def test_failed_migration_keeps_previous_version(tmp_path):
 
     assert vVersion == 0
     assert "job_offer" not in get_table_names(vDatabaseFile)
+
+
+def test_migration_to_v2_keeps_existing_history(tmp_path):
+    """Vérifie qu'une base en version 1 passe en version 2 sans perdre de données."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        migrate_to_v1(vConnection)
+        vConnection.execute("PRAGMA user_version = 1")
+        vConnection.execute("""
+            INSERT INTO history (
+                started_at, scraper_type, url, page_count,
+                item_count, duration_seconds, status
+            )
+            VALUES ('2026-10-01T08:00:00', 'job', 'multi-source', 2, 40, 3.5, 'success')
+            """)
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    initialize_database(vDatabaseFile)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vVersion = get_schema_version(vConnection)
+        vRows = vConnection.execute(
+            "SELECT item_count, parameters FROM history"
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    assert vVersion == 2
+    assert vRows == [(40, None)]

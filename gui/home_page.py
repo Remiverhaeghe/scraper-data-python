@@ -6,13 +6,12 @@ from PySide6.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from config import NEW_OFFER_DAYS
 from gui.widgets import StatisticCard, create_page_header
+from job.presentation import EXECUTION_STATUS_LABELS, describe_search
 from storage.history_repository import get_history
 from storage.job_offers import FOLLOW_UP_STATUSES, count_offers
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-STATUS_LABELS = {"success": "réussie", "partial": "partielle", "error": "en échec"}
 
 
 def load_statistics(pDatabaseFile, pNow=None):
@@ -46,10 +45,14 @@ def describe_execution(pEntry):
     if pEntry is None:
         rDescription = "Aucune recherche lancée pour le moment."
     else:
+        vStatus = EXECUTION_STATUS_LABELS.get(pEntry.status, pEntry.status)
+        vSearch = describe_search(pEntry.parameters)
+
         rDescription = (
-            f"Dernière exécution le {pEntry.started_at:%d/%m/%Y à %H:%M} : "
+            f"Dernière exécution le {pEntry.started_at:%d/%m/%Y à %H:%M}"
+            f"{f' ({vSearch})' if vSearch else ''} : "
             f"{pEntry.item_count} offre(s) en {pEntry.duration_seconds:.1f} s, "
-            f"{STATUS_LABELS.get(pEntry.status, pEntry.status)}."
+            f"{vStatus.lower()}."
         )
 
     return rDescription

@@ -16,3 +16,4 @@ class HistoryEntry:
     duration_seconds: float
     status: str
     error_message: str | None = None
+    parameters: dict | None = None

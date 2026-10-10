@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.history_page import HistoryPage
 from gui.home_page import HomePage
 from gui.offers_page import OffersPage
 from gui.search_page import SearchPage
@@ -35,6 +36,7 @@ class MainWindow(QMainWindow):
         self.add_page("Accueil", HomePage(pDatabaseFile))
         self.add_page("Recherche", self.search_page)
         self.add_page("Offres", OffersPage(pDatabaseFile))
+        self.add_page("Historique", HistoryPage(pDatabaseFile))
 
         self.search_page.show_offers_requested.connect(
             lambda: self.navigation.setCurrentRow(2)
