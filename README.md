@@ -354,3 +354,8 @@ scraper-data-python/
 ├── README.md                                   # Documentation synthétique du projet
 ├── .gitignore                                  # Liste des fichiers ignorés par Git
 └── LICENSE                                     # Licence du projet
+```
+
+## 📄 Licence
+
+Ce projet est publié sous licence [PolyForm Strict 1.0.0](LICENSE) : le code peut être consulté et utilisé tel quel à des fins non commerciales, mais ni modifié, ni redistribué.
