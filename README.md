@@ -170,7 +170,7 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 - [x] Accueil : offres, nouveautés, candidatures, relances et dernière exécution
 - [x] Recherche : sources, filtres, options avancées, progression et arrêt
 - [x] Sources non configurées grisées, derniers critères mémorisés
-- [ ] Offres : tableau triable et suivi des candidatures
+- [x] Offres : filtres, tableau triable, détail et suivi des candidatures
 - [ ] Historique des exécutions
 
 ### 🌐 Tableau de bord web
@@ -245,6 +245,7 @@ scraper-data-python/
 │   ├── salary.py                              # Estime le salaire net mensuel
 │   ├── benefits.py                            # Détecte primes, 13e mois et épargne salariale
 │   ├── contract.py                            # Normalise le contrat : CDI, CDD ou freelance
+│   ├── presentation.py                        # Mise en forme et filtres communs aux interfaces
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
 │       ├── __init__.py                         # Initialise le package des sources
@@ -355,6 +356,9 @@ scraper-data-python/
 │   ├── home_page.py                           # Accueil et indicateurs
 │   ├── search_page.py                         # Critères, sources, progression et arrêt
 │   ├── search_worker.py                       # Exécute la recherche dans un QThread
+│   ├── offers_page.py                         # Filtres et tableau des offres en base
+│   ├── offers_model.py                        # Modèle Qt du tableau des offres
+│   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
 │   ├── widgets.py                             # Composants graphiques partagés
 │   ├── theme.qss                              # Feuille de style Qt
 │   └── job_controller.py                      # Lance le traitement des offres depuis la GUI
@@ -424,6 +428,7 @@ scraper-data-python/
 │   │   ├── test_salary.py                     # Teste l'estimation du salaire net
 │   │   ├── test_benefits.py                   # Teste la détection des avantages
 │   │   ├── test_contract.py                   # Teste la normalisation du contrat
+│   │   ├── test_presentation.py               # Teste la mise en forme commune des offres
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
@@ -514,6 +519,8 @@ scraper-data-python/
 │   │   ├── conftest.py                         # Crée l'application Qt sans écran
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
+│   │   ├── test_offers_model.py                # Teste le modèle du tableau des offres
+│   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   └── test_search_worker.py               # Teste le worker de recherche
 │   │

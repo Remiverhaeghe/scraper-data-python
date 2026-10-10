@@ -98,3 +98,8 @@ QPushButton#linkButton {
 QLabel#warning {
     color: #d97706;
 }
+
+QLabel#offerTitle {
+    font-size: 18px;
+    font-weight: 600;
+}

@@ -62,6 +62,7 @@ class SearchPage(QWidget):
     """Permet de lancer une recherche d'offres et d'en suivre l'avancement."""
 
     search_ended = Signal()
+    show_offers_requested = Signal()
 
     def __init__(self, pSettings=None):
         """Construit le formulaire et restaure les derniers critères saisis."""
@@ -239,6 +240,15 @@ class SearchPage(QWidget):
         self.result_label = QLabel()
         self.result_label.setObjectName("pageSubtitle")
 
+        self.show_offers_button = QPushButton("Voir les offres")
+        self.show_offers_button.clicked.connect(self.show_offers_requested.emit)
+        self.show_offers_button.hide()
+
+        vResult = QHBoxLayout()
+        vResult.addWidget(self.result_label)
+        vResult.addWidget(self.show_offers_button)
+        vResult.addStretch()
+
         self.warning_label = QLabel()
         self.warning_label.setObjectName("warning")
         self.warning_label.setWordWrap(True)
@@ -247,7 +257,7 @@ class SearchPage(QWidget):
         rLayout = QVBoxLayout()
         rLayout.addWidget(self.progress_bar)
         rLayout.addWidget(self.status_label)
-        rLayout.addWidget(self.result_label)
+        rLayout.addLayout(vResult)
         rLayout.addWidget(self.warning_label)
 
         return rLayout
@@ -318,6 +328,7 @@ class SearchPage(QWidget):
             self.save_settings()
 
             self.result_label.clear()
+            self.show_offers_button.hide()
             self.warning_label.hide()
             self.progress_bar.setValue(0)
             self.status_label.setText("Démarrage de la recherche...")
@@ -372,6 +383,7 @@ class SearchPage(QWidget):
             f"{len(vItems)} offre(s) correspondent aux critères, "
             f"dont {vNewCount} nouvelle(s)."
         )
+        self.show_offers_button.show()
 
         if pResult.error_message:
             self.show_warning(f"Sources en erreur : {pResult.error_message}")
