@@ -10,6 +10,7 @@ logger = get_logger(__name__)
 # Ordre imposé par les clés étrangères : les tables qui référencent les offres
 # sont vidées avant elles.
 RESET_TABLES = (
+    "quiz_answer",
     "job_attachment",
     "job_follow_up",
     "job_application",

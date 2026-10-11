@@ -1,0 +1,137 @@
+{
+  "theme": "SQL",
+  "skills": ["SQL", "PostgreSQL", "MySQL"],
+  "questions": [
+    {
+      "id": "sql-left-join",
+      "level": "débutant",
+      "question": "Que renvoie un LEFT JOIN entre client et commande ?",
+      "choices": [
+        "Seulement les clients qui ont une commande",
+        "Tous les clients, avec des colonnes de commande à NULL pour ceux qui n'en ont pas",
+        "Toutes les commandes, même sans client",
+        "Le produit cartésien des deux tables"
+      ],
+      "answer": 1,
+      "explanation": "LEFT JOIN garde toutes les lignes de la table de gauche ; sans correspondance, les colonnes de droite valent NULL. INNER JOIN ne garderait que les clients ayant une commande."
+    },
+    {
+      "id": "sql-having",
+      "level": "débutant",
+      "question": "Quelle différence entre WHERE et HAVING ?",
+      "choices": [
+        "Aucune, ce sont deux syntaxes équivalentes",
+        "WHERE filtre les lignes avant le regroupement, HAVING filtre les groupes après GROUP BY",
+        "HAVING est plus rapide que WHERE",
+        "WHERE ne fonctionne qu'avec des index"
+      ],
+      "answer": 1,
+      "explanation": "WHERE s'applique aux lignes, avant GROUP BY ; HAVING s'applique aux groupes et peut donc utiliser des agrégats comme COUNT(*) ou AVG(...)."
+    },
+    {
+      "id": "sql-count",
+      "level": "débutant",
+      "question": "Quelle différence entre COUNT(*) et COUNT(telephone) ?",
+      "choices": [
+        "Aucune",
+        "COUNT(telephone) ignore les lignes où telephone est NULL",
+        "COUNT(*) ignore les doublons",
+        "COUNT(telephone) compte les valeurs distinctes"
+      ],
+      "answer": 1,
+      "explanation": "COUNT(*) compte toutes les lignes ; COUNT(colonne) ne compte que les valeurs non NULL. Pour les valeurs distinctes : COUNT(DISTINCT colonne)."
+    },
+    {
+      "id": "sql-null",
+      "level": "débutant",
+      "question": "Que renvoie SELECT * FROM client WHERE email = NULL ?",
+      "choices": [
+        "Les clients sans e-mail",
+        "Aucune ligne",
+        "Tous les clients",
+        "Une erreur de syntaxe"
+      ],
+      "answer": 1,
+      "explanation": "Toute comparaison avec NULL donne « inconnu », jamais vrai : aucune ligne ne passe le filtre. Il faut écrire WHERE email IS NULL."
+    },
+    {
+      "id": "sql-index",
+      "level": "confirmé",
+      "question": "Quel est le principal coût d'un index ?",
+      "choices": [
+        "Il ralentit toutes les lectures",
+        "Il ralentit les écritures (INSERT, UPDATE, DELETE) et occupe de la place",
+        "Il empêche les doublons",
+        "Il n'a aucun coût"
+      ],
+      "answer": 1,
+      "explanation": "Chaque écriture doit aussi mettre à jour les index de la table. On indexe donc les colonnes réellement utilisées pour filtrer, joindre ou trier."
+    },
+    {
+      "id": "sql-injection",
+      "level": "débutant",
+      "question": "Comment se protéger des injections SQL ?",
+      "choices": [
+        "En supprimant les apostrophes des saisies",
+        "Avec des requêtes paramétrées, les valeurs étant transmises à part",
+        "En chiffrant la base de données",
+        "En limitant la longueur des saisies"
+      ],
+      "answer": 1,
+      "explanation": "Avec une requête paramétrée (WHERE nom = ?), la valeur ne fait jamais partie du texte SQL : elle ne peut pas en modifier la structure. Nettoyer les saisies à la main laisse toujours des failles."
+    },
+    {
+      "id": "sql-atomicite",
+      "level": "débutant",
+      "question": "Que garantit l'atomicité d'une transaction (le A de ACID) ?",
+      "choices": [
+        "Que la transaction est rapide",
+        "Que toutes ses opérations sont appliquées, ou aucune",
+        "Que deux transactions ne se voient pas",
+        "Que les données survivent à une panne"
+      ],
+      "answer": 1,
+      "explanation": "Atomicité : tout ou rien, en cas d'erreur un ROLLBACK annule l'ensemble. L'isolation (I) concerne les transactions concurrentes, la durabilité (D) la survie aux pannes."
+    },
+    {
+      "id": "sql-group-by",
+      "level": "confirmé",
+      "question": "Que fait cette requête ?",
+      "code": "SELECT departement, AVG(salaire)\nFROM employe\nGROUP BY departement\nHAVING AVG(salaire) > 3000;",
+      "choices": [
+        "Elle liste les employés gagnant plus de 3000",
+        "Elle donne le salaire moyen par département, seulement pour ceux dont la moyenne dépasse 3000",
+        "Elle donne le salaire moyen global s'il dépasse 3000",
+        "Elle renvoie une erreur : AVG est interdit dans HAVING"
+      ],
+      "answer": 1,
+      "explanation": "GROUP BY forme un groupe par département, AVG calcule la moyenne de chacun, puis HAVING ne garde que les groupes dont la moyenne dépasse 3000."
+    },
+    {
+      "id": "sql-union",
+      "level": "débutant",
+      "question": "Quelle différence entre UNION et UNION ALL ?",
+      "choices": [
+        "UNION supprime les doublons, UNION ALL les garde",
+        "UNION ALL supprime les doublons",
+        "UNION trie toujours le résultat",
+        "Aucune"
+      ],
+      "answer": 0,
+      "explanation": "UNION élimine les lignes en double, ce qui demande un travail supplémentaire ; UNION ALL les conserve et est donc plus rapide quand les doublons sont impossibles ou acceptés."
+    },
+    {
+      "id": "sql-cle-etrangere",
+      "level": "débutant",
+      "question": "À quoi sert une clé étrangère ?",
+      "choices": [
+        "À accélérer les recherches",
+        "À garantir que la valeur référencée existe dans l'autre table",
+        "À rendre une colonne unique",
+        "À chiffrer une colonne"
+      ],
+      "answer": 1,
+      "explanation": "La base refuse une commande dont le client n'existe pas, ou la suppression d'un client encore référencé (selon ON DELETE). C'est l'intégrité référentielle."
+    }
+  ]
+}

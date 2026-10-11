@@ -26,6 +26,7 @@ from gui.icons import get_icon
 from gui.offers_page import OffersPage
 from gui.profile_page import ProfilePage
 from gui.quality_page import QualityPage
+from gui.quiz_page import QuizPage
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
 from gui.theme import COLORS
@@ -94,6 +95,7 @@ class MainWindow(QMainWindow):
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
         self.add_page("applications", "Candidatures", "send", self.applications_page)
         self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
+        self.add_page("quiz", "Révision", "graduation-cap", QuizPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
         self.add_page("quality", "Qualité", "list-checks", QualityPage(vDatabaseFile))
         self.add_page("logs", "Journaux", "terminal", LogsPage())

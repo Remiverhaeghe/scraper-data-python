@@ -46,6 +46,8 @@ from job.application_tracking import (
     build_application_statistics,
     build_board,
 )
+from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
+from job.company_info import lookup_company, summarize_company
 from job.companies import (
     add_company_rule,
     build_company_filter_keys,
@@ -113,6 +115,14 @@ from job.profile import (
     save_profile,
 )
 from job.quality import build_quality_export, get_quality_report
+from job.quiz import (
+    DEFAULT_MODE,
+    QUIZ_MODES,
+    answer_question,
+    build_quiz_overview,
+    load_quiz,
+    pick_question,
+)
 from job.schedule import (
     describe_schedule_runs,
     describe_scheduled_search,
@@ -154,6 +164,7 @@ from storage.attachments import (
     get_attachments,
 )
 from storage.duplicates import get_decisions, save_decision
+from storage.quiz_answers import get_last_answers
 from storage.job_offers import get_offer, get_offers, set_availability
 from utils.link_checker import check_offer_link
 from utils.log_reader import (
@@ -858,6 +869,9 @@ def show_offer(
             "application": get_application(pDatabaseFile, pSource, pSourceId),
             "attachments": get_attachments(pDatabaseFile, pSource, pSourceId),
             "attachment_extensions": ALLOWED_EXTENSIONS,
+            "prompts": build_prompts(load_profile(pDatabaseFile), vPrepared),
+            "prompt_kinds": PROMPT_KINDS,
+            "chatgpt_url": CHATGPT_URL,
             "statuses": STATUS_LABELS,
             "message": None,
         },
@@ -961,6 +975,117 @@ def check_availability(
         )
 
     rResponse = HTMLResponse(AVAILABILITY_MESSAGES[vAvailability])
+
+    return rResponse
+
+
+def render_quiz(pRequest, pDatabaseFile, pTheme=None, pMode=DEFAULT_MODE, pResult=None):
+    """Affiche les thèmes de révision, avec une question ou une correction."""
+
+    vQuiz = load_quiz()
+    vMode = pMode if pMode in QUIZ_MODES else DEFAULT_MODE
+    vTheme = pTheme if pTheme in vQuiz else None
+    vQuestion = None
+
+    if vTheme and pResult is None:
+        vQuestion = pick_question(vQuiz, vTheme, vMode, get_last_answers(pDatabaseFile))
+
+    vThemes = build_quiz_overview(pDatabaseFile, vQuiz)
+
+    rResponse = templates.TemplateResponse(
+        pRequest,
+        "quiz.html",
+        {
+            "active_page": "quiz",
+            "themes": vThemes,
+            "themes_by_key": {vItem["key"]: vItem for vItem in vThemes},
+            "theme": vTheme,
+            "mode": vMode,
+            "modes": QUIZ_MODES,
+            "question": vQuestion,
+            "result": pResult,
+        },
+    )
+
+    return rResponse
+
+
+@app.get("/quiz", response_class=HTMLResponse)
+def show_quiz(
+    request: Request,
+    pTheme: str = Query("", alias="theme"),
+    pMode: str = Query(DEFAULT_MODE, alias="mode"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche les thèmes de révision et, si un thème est choisi, une question."""
+
+    rResponse = render_quiz(request, pDatabaseFile, pTheme, pMode)
+
+    return rResponse
+
+
+@app.post(
+    "/quiz/answer", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+def answer_quiz(
+    request: Request,
+    pQuestionId: str = Form(alias="question_id"),
+    pChoice: int = Form(alias="choice"),
+    pMode: str = Form(DEFAULT_MODE, alias="mode"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Corrige une réponse et affiche son explication."""
+
+    try:
+        vResult = answer_question(
+            pDatabaseFile, load_quiz(), pQuestionId, pChoice, datetime.now()
+        )
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = render_quiz(
+        request, pDatabaseFile, vResult["theme_key"], pMode, pResult=vResult
+    )
+
+    return rResponse
+
+
+@app.get("/offer/company-info", response_class=HTMLResponse)
+def show_company_info(
+    request: Request,
+    pSource: str = Query(alias="source"),
+    pSourceId: str = Query(alias="id"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Cherche l'entreprise de l'offre dans l'annuaire public et complète la demande."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    vContext = {"companies": [], "message": None}
+
+    try:
+        vCompanies = lookup_company(vOffer.get("company"))
+
+    except ValueError as vException:
+        vContext["message"] = str(vException)
+
+    else:
+        vContext["companies"] = [
+            {**vCompany, "summary": summarize_company(vCompany).split(" : ", 1)[-1]}
+            for vCompany in vCompanies
+        ]
+
+        # Les résultats possibles sont repris dans la demande « Comprendre
+        # l'entreprise » : ChatGPT peut reconnaître la bonne société.
+        vContext["prompts"] = build_prompts(
+            load_profile(pDatabaseFile),
+            vOffer,
+            " ; ".join(summarize_company(vCompany) for vCompany in vCompanies),
+        )
+        vContext["prompt_kinds"] = PROMPT_KINDS
+        vContext["chatgpt_url"] = CHATGPT_URL
+
+    rResponse = templates.TemplateResponse(request, "_company_info.html", vContext)
 
     return rResponse
 

@@ -531,3 +531,59 @@ def test_company_preferred_from_detail(offers_page, database_file):
 
     assert format_cell(offers_page.model.offers[vRow], "company") == "★ Globex"
     assert offers_page.detail_panel.company_buttons["preferred"].isHidden()
+
+
+def test_chatgpt_prompt_and_company_info(offers_page, database_file, monkeypatch):
+    """Vérifie la demande copiée pour ChatGPT et les infos d'entreprise reprises."""
+
+    vSourceId = add_manual_offer(
+        database_file,
+        {"title": "Go", "company": "Globex", "url": "https://g.example"},
+        NOW,
+    )
+    offers_page.refresh()
+    offers_page.select_offer(("manual", vSourceId))
+
+    vPanel = offers_page.detail_panel
+    vOpened = []
+    vDialogs = []
+
+    monkeypatch.setattr(
+        offer_detail.QDesktopServices, "openUrl", lambda pUrl: vOpened.append(pUrl)
+    )
+    monkeypatch.setattr(
+        offer_detail,
+        "lookup_company",
+        lambda pName: [
+            {
+                "name": "GLOBEX",
+                "siren": "123456789",
+                "activity": "Information et communication",
+                "activity_code": "62.01Z",
+                "employees": None,
+                "category": "PME",
+                "created": "2010",
+                "city": "LILLE",
+                "revenue": None,
+                "active": True,
+                "url": "https://annuaire.example/123456789",
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        offer_detail,
+        "show_text_dialog",
+        lambda pParent, pTitle, pHtml: vDialogs.append(pHtml),
+    )
+
+    vPanel.show_company_info()
+    vPanel.copy_prompt("company")
+
+    assert "https://annuaire.example/123456789" in vDialogs[0]
+    assert vOpened[0].toString() == "https://chatgpt.com/"
+    assert "Informations publiques déjà trouvées : GLOBEX" in (
+        offer_detail.QApplication.clipboard().text()
+    )
+    assert vPanel.assistant_label.text().startswith(
+        "Demande « Comprendre l'entreprise » copiée"
+    )

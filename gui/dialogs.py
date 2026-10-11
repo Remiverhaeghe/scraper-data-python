@@ -27,6 +27,8 @@ def show_text_dialog(pParent, pTitle, pHtml=None, pText=None):
     """Affiche un texte long dans une fenêtre défilante."""
 
     vBrowser = QTextBrowser()
+    # Un lien s'ouvre dans le navigateur plutôt que dans la fenêtre elle-même.
+    vBrowser.setOpenExternalLinks(True)
 
     if pHtml is not None:
         vBrowser.setHtml(pHtml)

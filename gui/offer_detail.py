@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QMenu,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
@@ -28,7 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.dialogs import show_preparation
+from gui.dialogs import show_preparation, show_text_dialog
 from gui.theme import COLORS
 from gui.widgets import (
     align_spin_box,
@@ -36,6 +37,8 @@ from gui.widgets import (
     create_card,
     create_icon_label,
 )
+from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
+from job.company_info import lookup_company, summarize_company
 from job.companies import (
     add_company_rule,
     describe_company_applications,
@@ -147,6 +150,33 @@ def describe_availability(pOffer):
     return rText
 
 
+def describe_companies_html(pCompanies):
+    """Présente les entreprises trouvées, avec le lien vers leur fiche officielle."""
+
+    vItems = []
+
+    for vCompany in pCompanies:
+        # Textes reçus d'un service extérieur : échappés avant d'être affichés en HTML.
+        vLink = (
+            f"<br><a href='{escape(vCompany['url'])}'>Fiche sur l'Annuaire des "
+            "entreprises</a>"
+            if vCompany["url"]
+            else ""
+        )
+        vItems.append(
+            f"<li><b>{escape(vCompany['name'])}</b><br>"
+            f"{escape(summarize_company(vCompany).split(' : ', 1)[-1])}{vLink}</li>"
+        )
+
+    rHtml = (
+        "<p>Plusieurs sociétés portent souvent le même nom (groupe, filiales) : "
+        "vérifiez la bonne avant l'entretien.</p>"
+        f"<ul>{''.join(vItems)}</ul>"
+    )
+
+    return rHtml
+
+
 def describe_duplicates(pGroup):
     """Décrit en HTML les annonces d'une offre, valeurs différentes en orange."""
 
@@ -193,6 +223,7 @@ class OfferDetailPanel(QWidget):
         self.database_file = pDatabaseFile
         self.offer = None
         self.attachments_list = None
+        self.company_summary = None
 
         self.title_label = QLabel()
         self.title_label.setObjectName("offerTitle")
@@ -334,6 +365,10 @@ class OfferDetailPanel(QWidget):
     def show_company(self, pOffer):
         """Affiche l'avertissement de candidature déjà envoyée et l'état de l'entreprise."""
         vHasCompany = bool(pOffer.get("company"))
+
+        self.company_summary = None
+        self.assistant_label.clear()
+        self.company_info_button.setEnabled(vHasCompany)
         vText = None
 
         if pOffer and vHasCompany:
@@ -369,9 +404,39 @@ class OfferDetailPanel(QWidget):
         )
         self.prepare_button.clicked.connect(self.open_preparation)
 
+        # Demandes à coller dans ChatGPT : aucune API payante n'est appelée.
+        self.chatgpt_button = create_button(
+            "Préparer avec ChatGPT", "send", pIconColor=COLORS["primary"]
+        )
+        self.chatgpt_button.setToolTip(
+            "Copie une demande complète et ouvre ChatGPT : collez-la avec Ctrl+V"
+        )
+
+        vMenu = QMenu(self.chatgpt_button)
+
+        for vKind, vLabel in PROMPT_KINDS.items():
+            vMenu.addAction(vLabel, lambda pKind=vKind: self.copy_prompt(pKind))
+
+        self.chatgpt_button.setMenu(vMenu)
+
+        self.company_info_button = create_button(
+            "Infos sur l'entreprise", "globe", pIconColor=COLORS["primary"]
+        )
+        self.company_info_button.setToolTip(
+            "Activité, taille et siège, depuis l'annuaire public des entreprises"
+        )
+        self.company_info_button.clicked.connect(self.show_company_info)
+
+        self.assistant_label = QLabel()
+        self.assistant_label.setObjectName("cardSubtitle")
+        self.assistant_label.setWordWrap(True)
+
         rLayout = QVBoxLayout()
         rLayout.setSpacing(4)
         rLayout.addWidget(self.prepare_button)
+        rLayout.addWidget(self.chatgpt_button)
+        rLayout.addWidget(self.company_info_button)
+        rLayout.addWidget(self.assistant_label)
         rLayout.addWidget(self.availability_button)
         rLayout.addWidget(self.availability_label)
 
@@ -395,6 +460,63 @@ class OfferDetailPanel(QWidget):
                 self,
                 self.offer.get("title") or "offre",
                 prepare_application(vProfile, self.offer),
+            )
+
+    def copy_prompt(self, pKind):
+        """Copie une demande préparée pour ChatGPT puis ouvre le site."""
+        vPrompt = build_prompts(
+            load_profile(self.database_file), self.offer, self.company_summary
+        )[pKind]
+
+        QApplication.clipboard().setText(vPrompt)
+        QDesktopServices.openUrl(QUrl(CHATGPT_URL))
+
+        self.assistant_label.setText(
+            f"Demande « {PROMPT_KINDS[pKind]} » copiée : collez-la dans ChatGPT "
+            "(Ctrl+V) et relisez-la avant de l'envoyer."
+        )
+
+        logger.info("Demande ChatGPT copiée : %s", pKind)
+
+    def show_company_info(self):
+        """Affiche les entreprises trouvées dans l'annuaire public sous ce nom."""
+        vCompanyName = self.offer.get("company")
+
+        vCompanies = None
+        vMessage = None
+
+        # Requête courte mais bloquante : le curseur signale l'attente.
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+        try:
+            vCompanies = lookup_company(vCompanyName)
+
+        except ValueError as vException:
+            vMessage = str(vException)
+
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        if vCompanies is None:
+            QMessageBox.warning(self, "Infos sur l'entreprise", vMessage)
+
+        elif not vCompanies:
+            QMessageBox.information(
+                self,
+                "Infos sur l'entreprise",
+                f"Aucune entreprise française trouvée sous le nom « {vCompanyName} ».",
+            )
+
+        else:
+            # Les résultats possibles sont repris dans la demande « Comprendre
+            # l'entreprise » : ChatGPT peut reconnaître la bonne société.
+            self.company_summary = " ; ".join(
+                summarize_company(vCompany) for vCompany in vCompanies
+            )
+            show_text_dialog(
+                self,
+                f"Entreprises trouvées pour « {vCompanyName} »",
+                pHtml=describe_companies_html(vCompanies),
             )
 
     def check_availability(self):

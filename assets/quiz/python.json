@@ -1,0 +1,116 @@
+{
+  "theme": "Python",
+  "skills": ["Python", "Django", "Flask", "FastAPI", "Pandas"],
+  "questions": [
+    {
+      "id": "python-defaut-mutable",
+      "level": "confirmé",
+      "question": "Que renvoie le second appel ?",
+      "code": "def ajouter(x, liste=[]):\n    liste.append(x)\n    return liste\n\najouter(1)\najouter(2)",
+      "choices": ["[2]", "[1, 2]", "[1]", "Une erreur"],
+      "answer": 1,
+      "explanation": "La valeur par défaut est créée une seule fois, à la définition de la fonction : la même liste est réutilisée à chaque appel. On écrit plutôt liste=None puis liste = [] if liste is None else liste."
+    },
+    {
+      "id": "python-comprehension",
+      "level": "débutant",
+      "question": "Qu'affiche ce code ?",
+      "code": "print([x * 2 for x in range(3)])",
+      "choices": ["[2, 4, 6]", "[0, 2, 4]", "[0, 1, 2]", "[0, 2, 4, 6]"],
+      "answer": 1,
+      "explanation": "range(3) produit 0, 1 et 2 (la borne de fin est exclue), multipliés ensuite par 2."
+    },
+    {
+      "id": "python-tuple",
+      "level": "débutant",
+      "question": "Quelle différence entre une liste et un tuple ?",
+      "choices": [
+        "Un tuple ne peut contenir qu'un seul type de valeur",
+        "Un tuple n'est pas modifiable et peut servir de clé de dictionnaire",
+        "Une liste est plus rapide à créer",
+        "Aucune, ce sont deux noms du même type"
+      ],
+      "answer": 1,
+      "explanation": "Un tuple est immuable : on ne peut ni ajouter ni remplacer d'élément. S'il ne contient que des valeurs hachables, il peut servir de clé de dictionnaire, contrairement à une liste."
+    },
+    {
+      "id": "python-reference",
+      "level": "débutant",
+      "question": "Qu'affiche ce code ?",
+      "code": "a = [1, 2]\nb = a\nb.append(3)\nprint(a)",
+      "choices": ["[1, 2]", "[1, 2, 3]", "[3]", "Une erreur"],
+      "answer": 1,
+      "explanation": "b = a ne copie pas la liste : les deux noms désignent le même objet. Pour une copie : b = a.copy() ou b = list(a)."
+    },
+    {
+      "id": "python-with",
+      "level": "débutant",
+      "question": "Quel est l'intérêt de with open(\"f.txt\") as f ?",
+      "choices": [
+        "Lire le fichier plus vite",
+        "Fermer le fichier automatiquement, même en cas d'exception",
+        "Ouvrir le fichier en écriture",
+        "Charger le fichier entier en mémoire"
+      ],
+      "answer": 1,
+      "explanation": "with utilise un gestionnaire de contexte : à la sortie du bloc, normale ou par exception, le fichier est fermé. Sans lui, il faut un try/finally."
+    },
+    {
+      "id": "python-dict-get",
+      "level": "débutant",
+      "question": "Que renvoie cette expression ?",
+      "code": "{\"a\": 1}.get(\"b\", 0)",
+      "choices": ["None", "0", "Une KeyError", "1"],
+      "answer": 1,
+      "explanation": "get renvoie la valeur par défaut fournie si la clé est absente, sans lever de KeyError contrairement à {\"a\": 1}[\"b\"]."
+    },
+    {
+      "id": "python-generateur",
+      "level": "confirmé",
+      "question": "Quel est l'avantage de sum(x for x in range(1_000_000)) sur sum([x for x in range(1_000_000)]) ?",
+      "choices": [
+        "Le résultat est plus précis",
+        "Le générateur ne construit pas la liste entière en mémoire",
+        "Il n'y a aucune différence",
+        "Le générateur s'exécute en parallèle"
+      ],
+      "answer": 1,
+      "explanation": "Une expression génératrice produit les valeurs une à une, à la demande : la mémoire utilisée reste constante, quelle que soit la taille."
+    },
+    {
+      "id": "python-is-none",
+      "level": "débutant",
+      "question": "Pourquoi écrire if x is None plutôt que if x == None ?",
+      "choices": [
+        "is est plus lisible, sans autre différence",
+        "None est un objet unique : is compare l'identité et ne peut pas être redéfini par une classe",
+        "== ne fonctionne pas avec None",
+        "is convertit x en booléen"
+      ],
+      "answer": 1,
+      "explanation": "Il n'existe qu'un seul objet None. is teste l'identité, alors que == appelle __eq__, qu'une classe peut redéfinir de façon surprenante."
+    },
+    {
+      "id": "python-format",
+      "level": "débutant",
+      "question": "Qu'affiche ce code ?",
+      "code": "print(f\"{3.14159:.2f}\")",
+      "choices": ["3.14159", "3.14", "3.1", "3"],
+      "answer": 1,
+      "explanation": ".2f formate le nombre en virgule fixe avec deux décimales, arrondies."
+    },
+    {
+      "id": "python-gil",
+      "level": "confirmé",
+      "question": "Avec CPython standard, comment accélérer un calcul lourd pour le processeur sur plusieurs cœurs ?",
+      "choices": [
+        "Avec des threads (threading)",
+        "Avec plusieurs processus (multiprocessing ou ProcessPoolExecutor)",
+        "Avec async et await",
+        "Ce n'est pas possible en Python"
+      ],
+      "answer": 1,
+      "explanation": "Le GIL empêche plusieurs threads d'exécuter du code Python en même temps : ils conviennent aux attentes réseau ou disque, pas au calcul. Des processus séparés ont chacun leur interpréteur."
+    }
+  ]
+}

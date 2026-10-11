@@ -7,6 +7,8 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+import web.app as web_app
+
 from job.schedule import (
     save_notification_email,
     save_schedule_options,
@@ -813,7 +815,15 @@ def test_security_headers(client):
 def test_pages_have_no_inline_script(client):
     """Vérifie qu'aucun script en ligne, bloqué par la CSP, ne reste dans les pages."""
 
-    for vPath in ("/", "/offers", "/offers/new", "/applications", "/logs", "/settings"):
+    for vPath in (
+        "/",
+        "/offers",
+        "/offers/new",
+        "/applications",
+        "/quiz?theme=java",
+        "/logs",
+        "/settings",
+    ):
         vText = client.get(vPath).text
 
         assert re.search(r"\son[a-z]+=", vText) is None
@@ -992,3 +1002,96 @@ def test_attachments_upload_download_delete(client):
     client.post("/attachment/delete", data={"id": vAttachmentId})
 
     assert client.get(f"/attachment?id={vAttachmentId}").status_code == 404
+
+
+def test_chatgpt_prompts_and_company_info(client, monkeypatch):
+    """Vérifie les demandes affichées et la recherche d'entreprise qui les complète."""
+
+    vOfferUrl = client.post(
+        "/offers/new",
+        data={
+            "title": "Analyste Kotlin",
+            "company": "Data SA",
+            "url": "https://d.example",
+        },
+        follow_redirects=False,
+    ).headers["location"]
+    vSourceId = vOfferUrl.rsplit("=", 1)[1]
+
+    vPage = client.get(vOfferUrl).text
+
+    assert 'data-copy="prompt-interview"' in vPage
+    assert "Tu es recruteur pour le poste ci-dessous" in vPage
+
+    monkeypatch.setattr(
+        web_app,
+        "lookup_company",
+        lambda pName: [
+            {
+                "name": "DATA SA",
+                "siren": "123456789",
+                "activity": "Information et communication",
+                "activity_code": "62.01Z",
+                "employees": "10 à 19 salariés",
+                "category": "PME",
+                "created": "2015",
+                "city": "LILLE",
+                "revenue": None,
+                "active": True,
+                "url": "https://annuaire.example/123456789",
+            }
+        ],
+    )
+
+    vInfo = client.get(f"/offer/company-info?source=manual&id={vSourceId}").text
+
+    assert "Information et communication, PME, 10 à 19 salariés" in vInfo
+    assert "https://annuaire.example/123456789" in vInfo
+    assert 'id="prompt-company" class="prompt" hx-swap-oob="true"' in vInfo
+    assert "Informations publiques déjà trouvées : DATA SA" in vInfo
+
+    monkeypatch.setattr(
+        web_app,
+        "lookup_company",
+        lambda pName: (_ for _ in ()).throw(ValueError("Service indisponible.")),
+    )
+
+    assert (
+        "Service indisponible."
+        in client.get(f"/offer/company-info?source=manual&id={vSourceId}").text
+    )
+
+
+def test_quiz_question_answer_and_review(client):
+    """Vérifie une question, sa correction et la question ratée proposée à revoir."""
+
+    vOverview = client.get("/quiz").text
+
+    assert "Révision" in vOverview
+    assert "?theme=sql&mode=discover" in vOverview
+
+    vQuestion = client.get("/quiz?theme=sql&mode=discover").text
+    vQuestionId = re.search(r'name="question_id" value="([^"]+)"', vQuestion).group(1)
+
+    assert vQuestion.count('name="choice"') >= 2
+
+    vAnswer = client.post(
+        "/quiz/answer",
+        data={"question_id": "sql-null", "choice": "0", "mode": "discover"},
+    ).text
+
+    assert "Réponse incorrecte" in vAnswer
+    assert "Réponse : Aucune ligne" in vAnswer
+    assert "1 à revoir" in vAnswer
+    assert vQuestionId.startswith("sql-")
+
+    vReview = client.get("/quiz?theme=sql&mode=review").text
+
+    assert 'name="question_id" value="sql-null"' in vReview
+
+    vRefused = client.post(
+        "/quiz/answer",
+        data={"question_id": "inconnue", "choice": "0", "mode": "discover"},
+    )
+
+    assert vRefused.status_code == 400

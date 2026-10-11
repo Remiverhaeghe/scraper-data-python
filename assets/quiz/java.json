@@ -1,0 +1,126 @@
+{
+  "theme": "Java",
+  "skills": ["Java", "Spring", "Kotlin"],
+  "questions": [
+    {
+      "id": "java-11-nouveautes",
+      "level": "confirmé",
+      "question": "Laquelle de ces nouveautés est apportée par Java 11 ?",
+      "choices": [
+        "Le mot-clé var dans les paramètres des lambdas",
+        "Les records",
+        "Le pattern matching dans les switch",
+        "Le système de modules"
+      ],
+      "answer": 0,
+      "explanation": "Java 11 (version LTS de 2018) ajoute var dans les paramètres des lambdas, le client HTTP standard (java.net.http), les méthodes String isBlank, lines, strip et repeat, et le lancement direct d'un fichier source (java Main.java). Les modules datent de Java 9, les records de Java 16, le pattern matching des switch de Java 21."
+    },
+    {
+      "id": "java-list-of",
+      "level": "débutant",
+      "question": "Que fait ce code ?",
+      "code": "List<String> noms = List.of(\"a\", \"b\");\nnoms.add(\"c\");",
+      "choices": [
+        "Il ajoute \"c\" à la liste",
+        "Il lève une UnsupportedOperationException",
+        "Il ne compile pas",
+        "Il lève une NullPointerException"
+      ],
+      "answer": 1,
+      "explanation": "List.of (Java 9) crée une liste non modifiable : add, remove ou set lèvent une UnsupportedOperationException à l'exécution. Pour une liste modifiable : new ArrayList<>(List.of(\"a\", \"b\"))."
+    },
+    {
+      "id": "java-egalite-chaines",
+      "level": "débutant",
+      "question": "Qu'affiche ce code ?",
+      "code": "String a = \"java\";\nString b = new String(\"java\");\nSystem.out.println(a == b);",
+      "choices": ["true", "false", "Une erreur de compilation", "java"],
+      "answer": 1,
+      "explanation": "== compare les références : new String crée un nouvel objet, distinct de la chaîne littérale. Pour comparer le contenu, on utilise a.equals(b), qui vaut true."
+    },
+    {
+      "id": "java-interface-default",
+      "level": "débutant",
+      "question": "Depuis Java 8, quelle affirmation sur les interfaces est vraie ?",
+      "choices": [
+        "Une interface peut contenir des méthodes default avec une implémentation",
+        "Une interface peut avoir des attributs d'instance modifiables",
+        "Une classe ne peut implémenter qu'une seule interface",
+        "Une interface peut avoir un constructeur"
+      ],
+      "answer": 0,
+      "explanation": "Les méthodes default (et static) permettent d'ajouter un comportement à une interface sans casser les classes qui l'implémentent. Une classe peut implémenter plusieurs interfaces ; une interface n'a ni constructeur ni état d'instance."
+    },
+    {
+      "id": "java-optional",
+      "level": "débutant",
+      "question": "Que renvoie cette expression ?",
+      "code": "Optional.ofNullable(null).orElse(\"vide\")",
+      "choices": ["null", "\"vide\"", "Une NullPointerException", "Optional.empty()"],
+      "answer": 1,
+      "explanation": "ofNullable(null) crée un Optional vide, et orElse renvoie alors la valeur par défaut. Optional.of(null) lèverait, lui, une NullPointerException."
+    },
+    {
+      "id": "java-stream",
+      "level": "confirmé",
+      "question": "Que contient la liste obtenue ?",
+      "code": "List.of(1, 2, 3, 4).stream()\n    .filter(n -> n % 2 == 0)\n    .map(n -> n * 10)\n    .collect(Collectors.toList());",
+      "choices": ["[10, 30]", "[20, 40]", "[10, 20, 30, 40]", "[2, 4]"],
+      "answer": 1,
+      "explanation": "filter garde les nombres pairs (2 et 4), puis map les multiplie par 10. Les opérations d'un stream ne s'exécutent qu'au moment de l'opération terminale, ici collect."
+    },
+    {
+      "id": "java-equals-hashcode",
+      "level": "confirmé",
+      "question": "Que risque-t-on en redéfinissant equals sans redéfinir hashCode ?",
+      "choices": [
+        "Rien, hashCode n'est utilisé que par la JVM",
+        "Une erreur de compilation",
+        "Deux objets égaux peuvent être rangés à deux endroits différents d'un HashMap ou d'un HashSet",
+        "Une perte de performance uniquement"
+      ],
+      "answer": 2,
+      "explanation": "Le contrat impose que deux objets égaux aient le même hashCode. Sinon, un HashSet peut contenir deux objets « égaux », et un HashMap ne retrouve pas la valeur rangée sous une clé égale."
+    },
+    {
+      "id": "java-unchecked",
+      "level": "débutant",
+      "question": "Laquelle de ces exceptions est non vérifiée (unchecked) ?",
+      "choices": [
+        "IOException",
+        "SQLException",
+        "IllegalArgumentException",
+        "ClassNotFoundException"
+      ],
+      "answer": 2,
+      "explanation": "Les exceptions qui héritent de RuntimeException, comme IllegalArgumentException, n'ont pas à être déclarées ni attrapées. Les autres (IOException, SQLException…) sont vérifiées par le compilateur."
+    },
+    {
+      "id": "java-spring-transactional",
+      "level": "confirmé",
+      "question": "Une méthode annotée @Transactional est appelée depuis une autre méthode de la même classe. Que se passe-t-il ?",
+      "choices": [
+        "La transaction s'applique normalement",
+        "L'annotation est ignorée : l'appel ne passe pas par le proxy Spring",
+        "Spring lève une exception au démarrage",
+        "La transaction est toujours annulée"
+      ],
+      "answer": 1,
+      "explanation": "Spring applique @Transactional par un proxy qui entoure le bean. Un appel interne (this.methode()) ne traverse pas ce proxy : aucune transaction n'est ouverte. Il faut appeler la méthode depuis un autre bean."
+    },
+    {
+      "id": "java-final-liste",
+      "level": "débutant",
+      "question": "Ce code compile-t-il ?",
+      "code": "final List<String> liste = new ArrayList<>();\nliste.add(\"x\");",
+      "choices": [
+        "Oui : final empêche seulement de réaffecter la variable",
+        "Non : une liste final ne peut pas être modifiée",
+        "Non : final est interdit sur une variable locale",
+        "Oui, mais add lève une exception"
+      ],
+      "answer": 0,
+      "explanation": "final porte sur la référence : liste ne peut pas désigner une autre liste, mais l'objet référencé reste modifiable. Pour une liste non modifiable, on utilise List.of ou Collections.unmodifiableList."
+    }
+  ]
+}

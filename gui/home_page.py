@@ -40,6 +40,8 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+HOME_CHART_MIN_HEIGHT = 110
+
 
 # Icône de chaque tonalité d'exécution
 TONE_ICONS = {
@@ -107,8 +109,8 @@ class HomePage(QWidget):
         self.last_search_label.setObjectName("pageSubtitle")
 
         vLayout = QVBoxLayout(create_scroll_content(self))
-        vLayout.setContentsMargins(32, 22, 32, 22)
-        vLayout.setSpacing(16)
+        vLayout.setContentsMargins(32, 18, 32, 18)
+        vLayout.setSpacing(12)
 
         create_page_header(
             vLayout,
@@ -224,6 +226,9 @@ class HomePage(QWidget):
         )
 
         self.chart = BarChart()
+        # Plus bas qu'ailleurs : l'accueil tient sans défiler dans une fenêtre réduite,
+        # le graphique s'agrandit quand la place le permet.
+        self.chart.setMinimumHeight(HOME_CHART_MIN_HEIGHT)
 
         vLayout.addWidget(self.chart, 1)
 

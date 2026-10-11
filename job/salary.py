@@ -1,6 +1,7 @@
 """Estimation du salaire net mensuel à partir du salaire brut"""
 
 import os
+import re
 
 import pandas as pd
 
@@ -16,6 +17,20 @@ MONTHLY_FACTORS = {"hour": 151.67, "month": 1, "year": 1 / 12}
 # En dessous, le montant n'est pas un salaire crédible pour la période annoncée :
 # par exemple un taux journalier de freelance présenté comme un salaire annuel.
 MIN_MONTHLY_GROSS = 500
+
+FRANCE_COUNTRY_NAMES = ("france", "fr", "fra")
+
+# Lieu en France : le pays ou une région qui le contient (« Hauts-de-France »),
+# un code postal à cinq chiffres ou un département entre parenthèses.
+FRANCE_LOCATION_PATTERN = re.compile(r"france|\b\d{5}\b|\(\d{2,3}\)")
+
+# Autre pays ou zone du monde : l'offre est alors internationale, le dollar est réel.
+FOREIGN_LOCATION_PATTERN = re.compile(
+    r"\b(usa|us|united states|uk|united kingdom|canada|germany|deutschland|spain"
+    r"|italy|japan|india|turkey|mexico|brazil|australia|ireland|netherlands"
+    r"|belgium|switzerland|portugal|poland|norway|sweden|vietnam|singapore"
+    r"|worldwide|anywhere|europe|emea|americas|latam|apac)\b"
+)
 
 
 def get_income_tax_rate():
@@ -63,6 +78,79 @@ def apply_tax(pAmount, pTaxRate):
         rAmount = round(pAmount * (1 - pTaxRate / 100))
 
     return rAmount
+
+
+def is_located_in_france(pLocation, pCountry):
+    """Indique si l'offre se situe en France seulement, d'après son pays ou son lieu.
+
+    « France », « Lille, Hauts-de-France » ou « 59000 Lille » sont en France ;
+    « France, Japan, Turkey » est une offre internationale.
+    """
+
+    vCountry = str(pCountry or "").strip().lower()
+
+    if vCountry:
+        rInFrance = vCountry in FRANCE_COUNTRY_NAMES
+
+    else:
+        vSegments = [
+            vSegment.strip().lower()
+            for vSegment in re.split(r"[,;/|]", str(pLocation or ""))
+            if vSegment.strip()
+        ]
+        vFrench = [
+            bool(FRANCE_LOCATION_PATTERN.search(vSegment)) for vSegment in vSegments
+        ]
+
+        # Les segments sans pays (ville, « Remote ») ne disent rien ; aucun ne
+        # doit en revanche désigner un autre pays ou une autre région du monde.
+        rInFrance = any(vFrench) and all(
+            vIsFrench or not FOREIGN_LOCATION_PATTERN.search(vSegment)
+            for vSegment, vIsFrench in zip(vSegments, vFrench)
+        )
+
+    return rInFrance
+
+
+def assume_euro_in_france(pItems):
+    """Considère en euros le salaire sans devise ou en dollars d'une offre en France.
+
+    Certaines sources (Jooble) affichent « $ » quelle que soit la devise réelle :
+    pour un poste en France, le montant est en euros et le net peut être estimé.
+    """
+
+    vItems = pItems.copy()
+
+    vColumns = vItems.reindex(
+        columns=["salary_currency", "salary_min", "salary_max", "location", "country"]
+    )
+
+    vAssumed = [
+        (pd.isna(vCurrency) or vCurrency == "USD")
+        and (pd.notna(vMinimum) or pd.notna(vMaximum))
+        and is_located_in_france(
+            None if pd.isna(vLocation) else vLocation,
+            None if pd.isna(vCountry) else vCountry,
+        )
+        for vCurrency, vMinimum, vMaximum, vLocation, vCountry in vColumns.itertuples(
+            index=False
+        )
+    ]
+
+    vItems["salary_currency"] = [
+        "EUR" if vIsAssumed else vCurrency
+        for vIsAssumed, vCurrency in zip(vAssumed, vColumns["salary_currency"])
+    ]
+
+    if any(vAssumed):
+        logger.info(
+            "Salaire considéré en euros pour %s offre(s) située(s) en France",
+            sum(vAssumed),
+        )
+
+    rItems = vItems
+
+    return rItems
 
 
 def add_net_salary(pItems, pNetRatio=NET_SALARY_RATIO, pTaxRate=None):

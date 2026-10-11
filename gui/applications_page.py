@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
+    clear_layout,
     create_card,
     create_page_header,
     create_scroll_content,
@@ -38,16 +39,6 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 STATISTIC_HEADERS = ["", "Envoyées", "Réponses", "Taux"]
-
-
-def clear_layout(pLayout):
-    """Retire et détruit les widgets d'une mise en page avant de la remplir à nouveau."""
-
-    while pLayout.count():
-        vWidget = pLayout.takeAt(0).widget()
-
-        if vWidget is not None:
-            vWidget.deleteLater()
 
 
 class ApplicationsPage(QWidget):

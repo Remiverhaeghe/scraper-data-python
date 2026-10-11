@@ -3,7 +3,13 @@
 import pandas as pd
 import pytest
 
-from job.salary import add_net_salary, get_income_tax_rate, to_net_monthly
+from job.salary import (
+    add_net_salary,
+    assume_euro_in_france,
+    get_income_tax_rate,
+    is_located_in_france,
+    to_net_monthly,
+)
 
 
 def build_items(pAmount, pPeriod, pCurrency="EUR"):
@@ -117,3 +123,43 @@ def test_add_net_salary_logs_ignored_amounts_once(caplog):
 
     assert len(vWarnings) == 1
     assert "2 salaire(s) ignoré(s)" in vWarnings[0].getMessage()
+
+
+@pytest.mark.parametrize(
+    "pLocation, pCountry, pExpected",
+    [
+        ("France", None, True),
+        ("Lille, Hauts-de-France", None, True),
+        ("59000 Lille", None, True),
+        ("Paris (75)", None, True),
+        ("France (Remote)", None, True),
+        ("France, Japan, Turkey, Vietnam, Mexico, Norway", None, False),
+        ("EMEA", None, False),
+        ("Lille", None, False),
+        (None, "France", True),
+        ("Remote", "Germany", False),
+    ],
+)
+def test_is_located_in_france(pLocation, pCountry, pExpected):
+    """Vérifie la reconnaissance d'une offre située en France seulement."""
+
+    assert is_located_in_france(pLocation, pCountry) is pExpected
+
+
+def test_assume_euro_in_france():
+    """Vérifie que seul un salaire en dollars ou sans devise d'une offre en France passe en euros."""
+
+    vItems = pd.DataFrame(
+        [
+            {"location": "France", "salary_min": 60000, "salary_currency": "USD"},
+            {"location": "France", "salary_min": 40000, "salary_currency": None},
+            {"location": "France", "salary_min": 50000, "salary_currency": "GBP"},
+            {"location": "France", "salary_min": None, "salary_currency": "USD"},
+            {"location": "Worldwide", "salary_min": 90000, "salary_currency": "USD"},
+        ]
+    )
+
+    vCurrencies = list(assume_euro_in_france(vItems)["salary_currency"])
+
+    assert vCurrencies[:3] == ["EUR", "EUR", "GBP"]
+    assert vCurrencies[3:] == ["USD", "USD"]

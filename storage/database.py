@@ -457,6 +457,25 @@ def migrate_to_v10(pConnection):
     )
 
 
+def migrate_to_v11(pConnection):
+    """Ajoute l'historique des réponses aux questions de révision."""
+
+    # Une ligne par réponse : la dernière réponse à une question dit si elle est
+    # acquise ou à revoir, les précédentes gardent la progression.
+    pConnection.execute("""
+        CREATE TABLE quiz_answer (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question_id TEXT NOT NULL,
+            theme TEXT NOT NULL,
+            correct INTEGER NOT NULL,
+            answered_at TEXT NOT NULL
+        )
+        """)
+    pConnection.execute(
+        "CREATE INDEX idx_quiz_answer_question ON quiz_answer(question_id)"
+    )
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -468,6 +487,7 @@ MIGRATIONS = [
     migrate_to_v8,
     migrate_to_v9,
     migrate_to_v10,
+    migrate_to_v11,
 ]
 
 

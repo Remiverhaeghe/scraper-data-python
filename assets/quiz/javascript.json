@@ -1,0 +1,89 @@
+{
+  "theme": "JavaScript",
+  "skills": ["JavaScript", "TypeScript", "React", "Angular", "Vue.js", "Node.js"],
+  "questions": [
+    {
+      "id": "js-flottants",
+      "level": "débutant",
+      "question": "Qu'affiche ce code ?",
+      "code": "console.log(0.1 + 0.2 === 0.3);",
+      "choices": ["true", "false", "NaN", "Une erreur"],
+      "answer": 1,
+      "explanation": "Les nombres sont des flottants binaires : 0.1 + 0.2 vaut 0.30000000000000004. Pour des montants, on calcule en centimes entiers."
+    },
+    {
+      "id": "js-let-var",
+      "level": "débutant",
+      "question": "Quelle différence entre let et var ?",
+      "choices": [
+        "Aucune",
+        "let a une portée de bloc, var une portée de fonction",
+        "var est réservé aux constantes",
+        "let ne peut pas être réaffecté"
+      ],
+      "answer": 1,
+      "explanation": "Une variable let n'existe que dans le bloc { } où elle est déclarée ; var est visible dans toute la fonction. const, lui, interdit la réaffectation."
+    },
+    {
+      "id": "js-typeof-null",
+      "level": "confirmé",
+      "question": "Que vaut typeof null ?",
+      "choices": ["\"null\"", "\"object\"", "\"undefined\"", "\"number\""],
+      "answer": 1,
+      "explanation": "C'est une erreur historique du langage, conservée pour ne pas casser le web. On teste donc null avec valeur === null."
+    },
+    {
+      "id": "js-map",
+      "level": "débutant",
+      "question": "Que renvoie cette expression ?",
+      "code": "[1, 2, 3].map(n => n * 2)",
+      "choices": ["[2, 4, 6]", "12", "[1, 2, 3]", "undefined"],
+      "answer": 0,
+      "explanation": "map crée un nouveau tableau avec le résultat de la fonction pour chaque élément, sans modifier l'original."
+    },
+    {
+      "id": "js-egalite",
+      "level": "débutant",
+      "question": "Que vaut \"5\" == 5, puis \"5\" === 5 ?",
+      "choices": ["true puis true", "true puis false", "false puis false", "false puis true"],
+      "answer": 1,
+      "explanation": "== convertit les types avant de comparer ; === compare aussi le type. On utilise === par défaut pour éviter les conversions surprenantes."
+    },
+    {
+      "id": "js-async",
+      "level": "confirmé",
+      "question": "Que renvoie toujours une fonction déclarée async ?",
+      "choices": [
+        "La valeur de son return",
+        "Une Promise",
+        "undefined",
+        "Un objet Event"
+      ],
+      "answer": 1,
+      "explanation": "Une fonction async renvoie une Promise, résolue avec la valeur du return ou rejetée par une exception. On récupère la valeur avec await ou .then()."
+    },
+    {
+      "id": "js-event-loop",
+      "level": "confirmé",
+      "question": "Dans quel ordre s'affichent les lettres ?",
+      "code": "console.log(\"A\");\nsetTimeout(() => console.log(\"B\"), 0);\nconsole.log(\"C\");",
+      "choices": ["A B C", "A C B", "B A C", "C A B"],
+      "answer": 1,
+      "explanation": "setTimeout place la fonction dans la file d'attente : elle ne s'exécute qu'une fois le code en cours terminé, même avec un délai de 0."
+    },
+    {
+      "id": "js-const-objet",
+      "level": "débutant",
+      "question": "Ce code est-il valide ?",
+      "code": "const options = { theme: \"clair\" };\noptions.theme = \"sombre\";",
+      "choices": [
+        "Oui : const empêche de réaffecter la variable, pas de modifier l'objet",
+        "Non : une constante ne peut pas changer",
+        "Non : il faut Object.freeze",
+        "Oui, mais seulement en mode strict"
+      ],
+      "answer": 0,
+      "explanation": "const fixe la référence, pas le contenu. Pour un objet réellement figé, on utilise Object.freeze (de façon superficielle)."
+    }
+  ]
+}

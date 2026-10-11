@@ -1,0 +1,21 @@
+{# Résultat de la recherche dans l'annuaire public (route /offer/company-info),
+   inséré sous le bouton ; la demande « Comprendre l'entreprise » est mise à jour. #}
+{% if message %}
+<p class="application-message" role="status">{{ message }}</p>
+{% elif not companies %}
+<p class="muted">Aucune entreprise française trouvée sous ce nom.</p>
+{% else %}
+<p class="muted">Plusieurs sociétés portent souvent le même nom (groupe, filiales) : vérifiez la bonne avant l'entretien.</p>
+<ul class="company-results">
+    {% for company in companies %}
+    <li>
+        <strong>{{ company.name }}</strong><br>
+        <span class="muted">{{ company.summary }}</span>
+        {% if company.url %}<br><a href="{{ company.url }}" target="_blank" rel="noopener">Fiche sur l'Annuaire des entreprises</a>{% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% set kind = "company" %}
+{% set swap = true %}
+{% include "_prompt.html" %}
+{% endif %}

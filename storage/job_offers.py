@@ -566,3 +566,31 @@ def get_fingerprints(pDatabaseFile):
     rFingerprints = {vRow[0] for vRow in vRows}
 
     return rFingerprints
+
+
+def count_offers_by_skill(pDatabaseFile):
+    """Compte les offres en base qui citent chaque compétence."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(
+            "SELECT skills FROM job_offer WHERE skills IS NOT NULL"
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rCounts = {}
+
+    for (vSkills,) in vRows:
+        try:
+            vList = json.loads(vSkills)
+
+        except ValueError:
+            continue
+
+        for vSkill in set(vList if isinstance(vList, list) else []):
+            rCounts[vSkill] = rCounts.get(vSkill, 0) + 1
+
+    return rCounts

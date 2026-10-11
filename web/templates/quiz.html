@@ -1,0 +1,63 @@
+{# Révision technique (routes /quiz et /quiz/answer) : mêmes questions et même
+   progression que la page Révision du bureau, gérées par job/quiz.py. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Révision{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Révision", "QCM techniques pour préparer les entretiens, thèmes conseillés selon vos offres", "graduation-cap") }}
+
+{% if result %}
+<article class="card quiz-card">
+    <p class="quiz-verdict {{ 'tone-success' if result.correct else 'tone-danger' }}" role="status">
+        {{ icon("circle-check" if result.correct else "circle-alert", 18) }}
+        {{ "Bonne réponse" if result.correct else "Réponse incorrecte" }}
+    </p>
+    <h2>{{ result.question.question }}</h2>
+    {% if result.question.code %}<pre class="quiz-code"><code>{{ result.question.code }}</code></pre>{% endif %}
+    {% if not result.correct %}<p class="muted">Votre réponse : {{ result.chosen }}</p>{% endif %}
+    <p><strong>Réponse : {{ result.answer }}</strong></p>
+    <p>{{ result.explanation }}</p>
+    <a class="button button-primary" href="{{ url_for('show_quiz').path }}?theme={{ result.theme_key }}&mode={{ mode }}">Question suivante {{ icon("arrow-right", 16) }}</a>
+</article>
+{% elif question %}
+<article class="card quiz-card">
+    <p class="muted">{{ themes_by_key[question.theme_key].label }} · {{ question.level }} · {{ modes[mode] }}</p>
+    <h2>{{ question.question }}</h2>
+    {% if question.code %}<pre class="quiz-code"><code>{{ question.code }}</code></pre>{% endif %}
+    <form class="quiz-form" method="post" action="{{ url_for('answer_quiz').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="question_id" value="{{ question.id }}">
+        <input type="hidden" name="mode" value="{{ mode }}">
+        {% for index, choice in question.shuffled %}
+        <label class="quiz-choice"><input type="radio" name="choice" value="{{ index }}" required> {{ choice }}</label>
+        {% endfor %}
+        <button class="button button-primary" type="submit">Valider</button>
+    </form>
+</article>
+{% elif theme %}
+<article class="card quiz-card">
+    <p class="muted">Aucune question ratée à revoir dans ce thème.</p>
+    <a class="button" href="{{ url_for('show_quiz').path }}?theme={{ theme }}&mode=discover">Continuer la révision</a>
+</article>
+{% endif %}
+
+<section class="grid grid-settings section-gap quiz-themes">
+    {% for theme_item in themes %}
+    <article class="card">
+        <h2>{{ theme_item.label }}</h2>
+        <p class="muted">
+            {{ theme_item.correct }} / {{ theme_item.total }} acquises
+            {% if theme_item.to_review %} · {{ theme_item.to_review }} à revoir{% endif %}
+            {% if theme_item.offer_count %} · <span class="tone-primary">demandé dans {{ theme_item.offer_count }} offre(s)</span>{% endif %}
+        </p>
+        <div class="quiz-progress" role="progressbar" aria-valuenow="{{ theme_item.score }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression {{ theme_item.label }}"><span style="width: {{ theme_item.score }}%"></span></div>
+        <div class="rules-actions">
+            <a class="button button-primary" href="{{ url_for('show_quiz').path }}?theme={{ theme_item.key }}&mode=discover">Réviser</a>
+            {% if theme_item.to_review %}<a class="button" href="{{ url_for('show_quiz').path }}?theme={{ theme_item.key }}&mode=review">Revoir les erreurs</a>{% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% endblock %}

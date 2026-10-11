@@ -1,0 +1,6 @@
+{# Demande préparée pour ChatGPT ; remplacée par la route /offer/company-info
+   une fois les informations publiques de l'entreprise trouvées. #}
+<div id="prompt-{{ kind }}" class="prompt"{% if swap %} hx-swap-oob="true"{% endif %}>
+    <textarea class="letter" rows="8" readonly aria-label="{{ prompt_kinds[kind] }}">{{ prompts[kind] }}</textarea>
+    <button class="button button-primary" type="button" data-copy="prompt-{{ kind }}" data-open="{{ chatgpt_url }}">Copier et ouvrir ChatGPT</button>
+</div>

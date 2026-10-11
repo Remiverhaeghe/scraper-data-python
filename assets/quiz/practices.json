@@ -1,0 +1,105 @@
+{
+  "theme": "Bonnes pratiques et API",
+  "skills": ["REST", "Agile", "GraphQL"],
+  "questions": [
+    {
+      "id": "practices-srp",
+      "level": "débutant",
+      "question": "Que dit le principe de responsabilité unique (le S de SOLID) ?",
+      "choices": [
+        "Une classe ne doit avoir qu'une seule méthode",
+        "Une classe ne doit avoir qu'une seule raison de changer",
+        "Un projet ne doit avoir qu'un seul développeur",
+        "Une fonction ne doit être appelée qu'une fois"
+      ],
+      "answer": 1,
+      "explanation": "Une classe qui lit un fichier, calcule et affiche change pour trois raisons différentes. En séparant ces responsabilités, chaque modification reste localisée et testable."
+    },
+    {
+      "id": "practices-inversion",
+      "level": "confirmé",
+      "question": "À quoi sert l'injection de dépendances ?",
+      "choices": [
+        "À accélérer l'exécution",
+        "À fournir ses dépendances à un objet de l'extérieur, pour le découpler et le tester avec des doublures",
+        "À supprimer les interfaces",
+        "À charger les classes plus tôt"
+      ],
+      "answer": 1,
+      "explanation": "Un service qui reçoit son dépôt de données au lieu de le créer peut être testé avec un faux dépôt. C'est l'application du principe d'inversion des dépendances (le D de SOLID)."
+    },
+    {
+      "id": "practices-test-unitaire",
+      "level": "débutant",
+      "question": "Quelle est la qualité attendue d'un test unitaire ?",
+      "choices": [
+        "Qu'il teste toute l'application d'un coup",
+        "Qu'il soit rapide, isolé et reproductible, sans réseau ni base partagée",
+        "Qu'il ne contienne aucune assertion",
+        "Qu'il dépende de l'ordre d'exécution des autres tests"
+      ],
+      "answer": 1,
+      "explanation": "Un test unitaire vérifie une petite unité de code ; s'il dépend du réseau ou d'autres tests, il devient lent et instable. Les tests d'intégration couvrent les échanges entre composants."
+    },
+    {
+      "id": "practices-mock",
+      "level": "débutant",
+      "question": "À quoi sert un mock dans un test ?",
+      "choices": [
+        "À remplacer une dépendance pour contrôler son comportement et vérifier son utilisation",
+        "À mesurer la couverture du code",
+        "À générer des données de production",
+        "À compiler plus vite"
+      ],
+      "answer": 0,
+      "explanation": "Un mock remplace par exemple un appel HTTP : le test devient rapide, reproductible, et peut simuler une erreur difficile à provoquer autrement."
+    },
+    {
+      "id": "practices-logs",
+      "level": "débutant",
+      "question": "Que ne faut-il jamais écrire dans un journal applicatif ?",
+      "choices": [
+        "L'heure d'une erreur",
+        "Un mot de passe, un jeton ou une clé d'API",
+        "Le nom du module concerné",
+        "Le nombre d'éléments traités"
+      ],
+      "answer": 1,
+      "explanation": "Les journaux sont souvent lus, copiés ou envoyés à des outils tiers : un secret y serait exposé. On journalise le contexte utile au diagnostic, jamais les valeurs sensibles."
+    },
+    {
+      "id": "practices-http-401-403",
+      "level": "débutant",
+      "question": "Quelle différence entre les codes HTTP 401 et 403 ?",
+      "choices": [
+        "401 : non authentifié ; 403 : authentifié mais non autorisé",
+        "401 : page introuvable ; 403 : erreur du serveur",
+        "Ce sont deux synonymes",
+        "401 : requête trop grande ; 403 : délai dépassé"
+      ],
+      "answer": 0,
+      "explanation": "401 Unauthorized invite à s'authentifier ; 403 Forbidden signifie que l'identité est connue mais n'a pas le droit d'accéder à la ressource."
+    },
+    {
+      "id": "practices-idempotence",
+      "level": "confirmé",
+      "question": "Quelle méthode HTTP est idempotente : la répéter produit le même état que l'appeler une fois ?",
+      "choices": ["POST", "PUT", "PATCH, toujours", "Aucune"],
+      "answer": 1,
+      "explanation": "PUT remplace la ressource par la représentation envoyée : deux appels identiques donnent le même résultat. POST crée en général une nouvelle ressource à chaque appel. GET et DELETE sont aussi idempotents."
+    },
+    {
+      "id": "practices-rest-sans-etat",
+      "level": "confirmé",
+      "question": "Que signifie qu'une API REST est sans état (stateless) ?",
+      "choices": [
+        "Qu'elle n'utilise pas de base de données",
+        "Que chaque requête contient tout ce qu'il faut pour être traitée, sans session conservée par le serveur",
+        "Qu'elle ne renvoie jamais d'erreur",
+        "Qu'elle n'accepte que GET"
+      ],
+      "answer": 1,
+      "explanation": "Le serveur ne garde pas de contexte entre deux requêtes : l'authentification accompagne chaque appel (jeton, cookie signé). On peut ainsi répartir les requêtes sur plusieurs serveurs."
+    }
+  ]
+}

@@ -26,6 +26,9 @@ LICENSE_NAME = "PolyForm Strict 1.0.0"
 
 LICENSE_FILE = Path(__file__).parent / "LICENSE"
 ICONS_LICENSE_FILE = ASSETS_DIRECTORY / "icons" / "LICENSE"
+
+# Questions de révision technique, un fichier JSON par thème
+QUIZ_DIRECTORY = ASSETS_DIRECTORY / "quiz"
 ICONS_URL = "https://lucide.dev"
 
 CONTACT_URL = "https://www.linkedin.com/in/remi-verhaeghe-99a532121/"

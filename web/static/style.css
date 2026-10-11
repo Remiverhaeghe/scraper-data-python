@@ -1497,3 +1497,61 @@ code {
     width: auto;
     color: var(--danger);
 }
+
+/* Révision technique */
+.quiz-card {
+    max-width: 860px;
+}
+
+.quiz-verdict {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.quiz-code {
+    overflow-x: auto;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    font-size: 0.875rem;
+}
+
+.quiz-form {
+    display: grid;
+    gap: 10px;
+}
+
+.quiz-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.quiz-choice:hover {
+    border-color: var(--primary);
+}
+
+.quiz-choice input {
+    margin-top: 3px;
+}
+
+.quiz-progress {
+    height: 8px;
+    margin: 10px 0 14px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--surface-alt);
+}
+
+.quiz-progress span {
+    display: block;
+    height: 100%;
+    background: var(--success);
+}

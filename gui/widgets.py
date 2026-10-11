@@ -127,6 +127,16 @@ def create_scroll_content(pPage):
     return rContent
 
 
+def clear_layout(pLayout):
+    """Retire et détruit les widgets d'une mise en page avant de la remplir à nouveau."""
+
+    while pLayout.count():
+        vWidget = pLayout.takeAt(0).widget()
+
+        if vWidget is not None:
+            vWidget.deleteLater()
+
+
 def align_spin_box(pSpinBox):
     """Décale le texte d'un champ numérique comme celui des autres champs."""
 

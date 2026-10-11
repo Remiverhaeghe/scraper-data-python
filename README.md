@@ -74,7 +74,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -115,6 +115,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Limitation globale après déduplication
 - [x] Normalisation de la période des salaires
 - [x] Estimation du salaire net mensuel, avant et après impôt
+- [x] Salaire en dollars ou sans devise d'une offre située en France considéré en euros (Jooble affiche « $ » par défaut)
 - [x] Détection des primes, du 13e mois et de l'épargne salariale
 - [x] Normalisation du contrat : CDI, CDD ou freelance
 - [x] Poursuite du traitement si une source échoue
@@ -169,6 +170,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Page Candidatures : colonnes par étape, statut modifiable, taux de réponse
 - [x] Entreprises à exclure ou à privilégier, avertissement si déjà candidat dans l'entreprise
 - [x] Pièces jointes par candidature (CV, lettre), ouvertes avec l'application du système
+- [x] Révision technique par QCM, demandes prêtes pour ChatGPT et infos publiques sur l'entreprise
 
 ### 🌐 Tableau de bord web
 
@@ -197,6 +199,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Lancement de la recherche enregistrée, exécutée par le planificateur
 - [x] Installable sur l'écran d'accueil d'un téléphone (manifeste web)
 - [x] Ajout et import d'offres, page Candidatures, entreprises et pièces jointes, comme sur le bureau
+- [x] Révision par QCM, demandes ChatGPT à copier et infos sur l'entreprise, comme sur le bureau
 
 ### 🔐 Sécurité
 
@@ -285,17 +288,25 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Ajout manuel d'une offre (source « Saisie manuelle »), sur le bureau et le web : titre, entreprise et lien ou description obligatoires, création refusée sinon avec le champ manquant indiqué
 - [x] Import d'offres depuis un fichier CSV, Excel ou JSON au format de l'export : lignes incomplètes rejetées et listées, doublons écartés par l'empreinte
 
-### Révision technique
+### Révision technique et préparation avec ChatGPT
 
-Application mobile séparée, sans service payant, pour préparer les entretiens techniques :
+Page Révision du bureau et du web (installable sur le téléphone), sans service payant :
 
-- [ ] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
-- [ ] Explication de la bonne réponse après chaque question
-- [ ] Questions stockées dans des fichiers JSON versionnés, faciles à compléter
-- [ ] Suivi de la progression : score par thème, questions ratées à revoir
-- [ ] Thèmes proposés selon les compétences demandées dans les offres enregistrées
-- [ ] J'ai un compte CHATGPT je pense que cela peux aider, important aussi avoir des info sur la société (savoir ce qu'elle fait et autre) interet pour la boite 
-- [ ] On pourrait ajouter un bouton quand je postule à l'offre qui demande à chatgpt une liste de question recruteur etc... et pk pas le CV à envoyer. 
+- [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
+- [x] Explication de la bonne réponse après chaque question, choix mélangés à chaque affichage
+- [x] Questions stockées dans des fichiers JSON versionnés (`assets/quiz/`), faciles à compléter
+- [x] Suivi de la progression : score par thème, questions ratées à revoir
+- [x] Thèmes proposés selon les compétences demandées dans les offres enregistrées
+- [x] Informations publiques sur l'entreprise : activité, taille, siège, chiffre d'affaires (API Recherche d'entreprises de l'État)
+- [x] Demandes prêtes pour ChatGPT depuis la fiche d'une offre : questions du recruteur, CV et lettre adaptés, connaissance de l'entreprise. Copiées puis collées avec son propre compte : l'API d'OpenAI, payante, n'est pas utilisée
+
+Format d'une question (un fichier par thème, `skills` reprend les compétences des offres) :
+
+```json
+{"id": "java-list-of", "level": "débutant", "question": "Que fait ce code ?",
+ "code": "List.of(\"a\").add(\"b\");", "choices": ["…", "…"], "answer": 1,
+ "explanation": "…"}
+```
 
 ---
 
@@ -350,6 +361,9 @@ scraper-data-python/
 │   ├── manual_offers.py                       # Ajout manuel et import d'offres depuis un fichier
 │   ├── companies.py                           # Entreprises exclues ou privilégiées, candidatures déjà envoyées
 │   ├── application_tracking.py                # Colonnes de suivi, relances dues et taux de réponse
+│   ├── company_info.py                        # Informations publiques sur une entreprise française
+│   ├── assistant.py                           # Demandes préparées pour ChatGPT
+│   ├── quiz.py                                # Révision : questions, progression, thèmes conseillés
 │   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
 │   ├── notification.py                        # Contenu des e-mails de nouvelles offres et de relances
 │   │
@@ -457,6 +471,7 @@ scraper-data-python/
 │   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
 │   ├── offer_form.py                          # Saisie manuelle d'une offre
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
+│   ├── quiz_page.py                           # Révision technique par QCM
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
 │   ├── quality_page.py                        # Qualité des données et offres à vérifier
@@ -492,6 +507,9 @@ scraper-data-python/
 │   │   ├── _attachments.html                  # Pièces jointes d'une offre
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
+│   │   ├── quiz.html                          # Révision technique par QCM
+│   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
+│   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
 │   │   ├── history.html                       # Historique des exécutions
 │   │   ├── logs.html                          # Consultation des logs
 │   │   ├── quality.html                       # Qualité des données
@@ -512,7 +530,14 @@ scraper-data-python/
 │
 ├── assets/                                    # Ressources partagées par le bureau et le web
 │   ├── logo.png                               # Logo, icône de fenêtre et favicon
-│   └── icons/                                 # Icônes SVG Lucide (licence ISC)
+│   ├── icons/                                 # Icônes SVG Lucide (licence ISC)
+│   └── quiz/                                  # Questions de révision, un fichier JSON par thème
+│       ├── java.json                          # Java et Spring
+│       ├── python.json                        # Python
+│       ├── sql.json                           # SQL
+│       ├── javascript.json                    # JavaScript
+│       ├── git.json                           # Git
+│       └── practices.json                     # Bonnes pratiques et API
 │
 ├── utils/                                     # Utilitaires techniques communs
 │   ├── __init__.py                            # Initialise le package Utils
@@ -537,6 +562,7 @@ scraper-data-python/
 │   ├── settings_repository.py                 # Persiste les réglages modifiables
 │   ├── backup.py                              # Sauvegarde de la base et rotation des copies
 │   ├── attachments.py                         # Pièces jointes des candidatures, rangées à côté de la base
+│   ├── quiz_answers.py                        # Réponses de révision, pour la progression
 │   ├── maintenance.py                         # Réinitialisation de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
@@ -565,6 +591,8 @@ scraper-data-python/
 │   │   ├── test_manual_offers.py              # Teste l'ajout manuel et l'import d'offres
 │   │   ├── test_companies.py                  # Teste les listes d'entreprises et l'avertissement
 │   │   ├── test_application_tracking.py       # Teste les colonnes de suivi et les statistiques
+│   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
+│   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
@@ -661,6 +689,7 @@ scraper-data-python/
 │   │   ├── test_offers_model.py                # Teste le modèle du tableau des offres
 │   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
 │   │   ├── test_applications_page.py           # Teste la page des candidatures
+│   │   ├── test_quiz_page.py                   # Teste la page de révision
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres

@@ -4,7 +4,7 @@ from job.benefits import add_benefits
 from job.contract import add_contract
 from job.enrichment import enrich_offers
 from job.fingerprint import build_fingerprint
-from job.salary import add_net_salary
+from job.salary import add_net_salary, assume_euro_in_france
 
 
 def complete_offers(pItems, pNetRatio, pTaxRate):
@@ -22,6 +22,7 @@ def complete_offers(pItems, pNetRatio, pTaxRate):
         build_fingerprint(vOffer) for vOffer in vItems.to_dict("records")
     ]
 
+    vItems = assume_euro_in_france(vItems)
     vItems = add_net_salary(vItems, pNetRatio=pNetRatio, pTaxRate=pTaxRate)
     vItems = add_benefits(vItems)
     vItems = add_contract(vItems)
