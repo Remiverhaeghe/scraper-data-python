@@ -263,11 +263,11 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 ### Hébergement et sécurité
 
 - [ ] Docker sur ce PC avant le NAS : conteneur sans privilèges, utilisateur non root, système de fichiers en lecture seule hors données, port lié à 127.0.0.1
-- [ ] Mises à jour des dépendances surveillées (Dependabot) et analyse de vulnérabilités (pip-audit) en CI
+- [x] Mises à jour des dépendances surveillées (Dependabot) et analyse de vulnérabilités (pip-audit) en CI
 - [x] Analyse statique de sécurité du code en CI (Bandit)
-- [ ] Politique de sécurité (SECURITY.md) et actions GitHub épinglées par empreinte
-- [ ] En-têtes HTTP de sécurité sur le web : Content-Security-Policy, X-Frame-Options, Referrer-Policy
-- [ ] Sauvegarde automatique de la base avant chaque migration et rotation des sauvegardes
+- [x] Politique de sécurité (SECURITY.md) et actions GitHub épinglées par empreinte
+- [x] En-têtes HTTP de sécurité sur le web : Content-Security-Policy, X-Frame-Options, Referrer-Policy
+- [x] Sauvegarde automatique de la base avant chaque migration et rotation des sauvegardes (10 conservées, BACKUP_KEEP_COUNT)
 
 ### Autres idées
 
@@ -289,6 +289,8 @@ Application mobile séparée, sans service payant, pour préparer les entretiens
 - [ ] Questions stockées dans des fichiers JSON versionnés, faciles à compléter
 - [ ] Suivi de la progression : score par thème, questions ratées à revoir
 - [ ] Thèmes proposés selon les compétences demandées dans les offres enregistrées
+- [ ] J'ai un compte CHATGPT je pense que cela peux aider, important aussi avoir des info sur la société (savoir ce qu'elle fait et autre) interet pour la boite 
+- [ ] On pourrait ajouter un bouton quand je postule à l'offre qui demande à chatgpt une liste de question recruteur etc... et pk pas le CV à envoyer. 
 
 ---
 
@@ -316,8 +318,9 @@ recherche depuis le téléphone, le planificateur (`python -m scheduler`) doit t
 scraper-data-python/
 │
 ├── .github/                                   # Configuration GitHub
+│   ├── dependabot.yml                         # Mises à jour hebdomadaires des dépendances
 │   └── workflows/                             # Workflows GitHub Actions
-│       └── ci.yml                             # Tests, formatage et recherche de secrets
+│       └── ci.yml                             # Tests, analyses, vulnérabilités et secrets
 │
 ├── job/                                       # Domaine métier consacré aux offres d'emploi
 │   ├── __init__.py                            # Initialise le package Job
@@ -487,6 +490,7 @@ scraper-data-python/
 │   └── static/                                # Fichiers statiques
 │       ├── style.css                          # Feuille de style, thèmes clair et sombre
 │       ├── theme.js                           # Applique et mémorise le thème choisi
+│       ├── forms.js                           # Envoi automatique des filtres, sans script en ligne
 │       ├── manifest.webmanifest               # Installation sur l'écran d'accueil d'un téléphone
 │       ├── icon-192.png                       # Icône de l'écran d'accueil
 │       ├── icon-512.png                       # Icône de l'écran d'accueil, grande taille
@@ -517,7 +521,8 @@ scraper-data-python/
 │   ├── history_repository.py                  # Persiste et récupère l'historique
 │   ├── job_applications.py                    # Suit les candidatures et les relances
 │   ├── settings_repository.py                 # Persiste les réglages modifiables
-│   ├── maintenance.py                         # Sauvegarde et réinitialisation de la base
+│   ├── backup.py                              # Sauvegarde de la base et rotation des copies
+│   ├── maintenance.py                         # Réinitialisation de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
 │   └── job_offers.py                          # Enregistre les offres et détecte les nouvelles
@@ -652,7 +657,7 @@ scraper-data-python/
 │   │   ├── test_database.py                    # Teste la base SQLite
 │   │   ├── test_history_repository.py          # Teste la persistance de l'historique
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
-│   │   ├── test_maintenance.py                 # Teste la sauvegarde et la réinitialisation
+│   │   ├── test_maintenance.py                 # Teste les sauvegardes, leur rotation et la réinitialisation
 │   │   ├── test_saved_searches.py              # Teste les recherches enregistrées
 │   │   └── test_job_offers.py                  # Teste l'enregistrement des offres
 │   │
@@ -689,6 +694,7 @@ scraper-data-python/
 ├── requirements.txt                            # Liste des dépendances Python
 ├── pyproject.toml                              # Couverture, convention de nommage pylint
 ├── README.md                                   # Documentation synthétique du projet
+├── SECURITY.md                                 # Signalement des vulnérabilités
 ├── .env.example                                # Modèle des variables d'environnement
 ├── .gitattributes                              # Impose les fins de ligne LF
 ├── .gitignore                                  # Liste des fichiers ignorés par Git

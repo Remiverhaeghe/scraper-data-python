@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from storage.backup import backup_database
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -466,6 +467,11 @@ def initialize_database(pDatabasePath):
         # user_version) : seules les migrations plus récentes s'appliquent. Pour
         # diagnostiquer, ouvrir la base avec un outil SQLite et lire cette valeur.
         vCurrentVersion = get_schema_version(vConnection)
+
+        # Une base déjà remplie est copiée avant d'être modifiée ; sans copie
+        # réussie, l'exception interrompt le lancement et la base reste intacte.
+        if 0 < vCurrentVersion < len(MIGRATIONS):
+            backup_database(pDatabasePath, datetime.now(), f"avant-v{len(MIGRATIONS)}")
 
         for vVersion in range(vCurrentVersion + 1, len(MIGRATIONS) + 1):
 

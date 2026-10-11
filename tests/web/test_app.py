@@ -1,5 +1,6 @@
 """Tests du tableau de bord web"""
 
+import re
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -790,3 +791,30 @@ def test_manifest_and_icons_are_public(client):
     assert vManifest.status_code == 200
     assert vManifest.json()["display"] == "standalone"
     assert client.get("/static/icon-192.png").status_code == 200
+
+
+def test_security_headers(client):
+    """Vérifie les en-têtes de sécurité sur une page et sur une redirection."""
+
+    vPage = client.get("/")
+
+    client.cookies.clear()
+    vRedirect = client.get("/offers", follow_redirects=False)
+
+    for vResponse in (vPage, vRedirect):
+        assert "script-src 'self';" in vResponse.headers["Content-Security-Policy"]
+        assert vResponse.headers["X-Frame-Options"] == "DENY"
+        assert vResponse.headers["X-Content-Type-Options"] == "nosniff"
+        assert vResponse.headers["Referrer-Policy"] == "same-origin"
+
+    assert vRedirect.status_code == 303
+
+
+def test_pages_have_no_inline_script(client):
+    """Vérifie qu'aucun script en ligne, bloqué par la CSP, ne reste dans les pages."""
+
+    for vPath in ("/", "/offers", "/logs", "/settings"):
+        vText = client.get(vPath).text
+
+        assert re.search(r"\son[a-z]+=", vText) is None
+        assert "<script>" not in vText

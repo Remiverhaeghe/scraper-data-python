@@ -1,15 +1,10 @@
-"""Sauvegarde et réinitialisation de la base de données"""
+"""Réinitialisation de la base de données, après sauvegarde"""
 
-import sqlite3
-from pathlib import Path
-
+from storage.backup import backup_database
 from storage.database import connect_database
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-# Dossier des sauvegardes, à côté de la base
-BACKUP_DIRECTORY_NAME = "backups"
 
 # Ordre imposé par les clés étrangères : les tables qui référencent les offres
 # sont vidées avant elles.
@@ -22,33 +17,6 @@ RESET_TABLES = (
     "saved_search",
     "duplicate_decision",
 )
-
-
-def backup_database(pDatabaseFile, pNow):
-    """Copie la base dans le dossier des sauvegardes ; retourne le fichier créé."""
-
-    vDatabaseFile = Path(pDatabaseFile)
-    vDirectory = vDatabaseFile.parent / BACKUP_DIRECTORY_NAME
-    vDirectory.mkdir(parents=True, exist_ok=True)
-
-    rBackupFile = vDirectory / f"{vDatabaseFile.stem}-{pNow:%Y%m%d-%H%M%S}.db"
-
-    # L'API de sauvegarde de SQLite produit une copie cohérente, même si une autre
-    # application écrit dans la base au même moment, ce que ne garantit pas une
-    # simple copie de fichier.
-    vSource = sqlite3.connect(vDatabaseFile)
-    vTarget = sqlite3.connect(rBackupFile)
-
-    try:
-        vSource.backup(vTarget)
-
-    finally:
-        vTarget.close()
-        vSource.close()
-
-    logger.info("Sauvegarde de la base créée : %s", rBackupFile.name)
-
-    return rBackupFile
 
 
 def reset_database(pDatabaseFile, pNow):

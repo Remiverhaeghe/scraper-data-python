@@ -244,6 +244,42 @@ async def require_login(request: Request, call_next):
     return rResponse
 
 
+# Scripts limités aux fichiers du site ; les styles en ligne restent permis pour
+# les couleurs et hauteurs calculées des graphiques.
+CONTENT_SECURITY_POLICY = "; ".join(
+    (
+        "default-src 'self'",
+        "script-src 'self'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+    )
+)
+
+SECURITY_HEADERS = {
+    "Content-Security-Policy": CONTENT_SECURITY_POLICY,
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "same-origin",
+}
+
+
+# Déclaré après require_login, il l'englobe : les redirections vers la
+# connexion reçoivent aussi les en-têtes.
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Ajoute les en-têtes de sécurité HTTP à chaque réponse."""
+
+    rResponse = await call_next(request)
+
+    rResponse.headers.update(SECURITY_HEADERS)
+
+    return rResponse
+
+
 async def require_csrf(request: Request):
     """Refuse une requête d'écriture sans le jeton CSRF de la session."""
 

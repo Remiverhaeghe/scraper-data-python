@@ -6,12 +6,14 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
+import storage.database as database
 import storage.maintenance as maintenance
+from storage.backup import backup_database, purge_backups
 from job.schedule import load_schedule, save_notification_email
 from storage.database import initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import count_offers, save_offers
-from storage.maintenance import backup_database, reset_database
+from storage.maintenance import reset_database
 
 NOW = datetime(2026, 10, 11, 9, 30, 15)
 
@@ -58,6 +60,51 @@ def test_backup_database_copies_all_data(database_file):
     )
     assert count_rows(vBackupFile, "job_offer") == 1
     assert count_rows(vBackupFile, "job_application") == 1
+
+
+def test_purge_backups_keeps_the_latest(tmp_path):
+    """Vérifie que seules les sauvegardes les plus récentes sont conservées."""
+
+    vDirectory = tmp_path / "backups"
+    vDirectory.mkdir()
+
+    for vDay in range(1, 6):
+        (vDirectory / f"scraper-2026100{vDay}-090000.db").touch()
+
+    (vDirectory / "autre-20261001-090000.db").touch()
+
+    assert purge_backups(tmp_path / "scraper.db", 3) == 2
+    assert sorted(vFile.name for vFile in vDirectory.iterdir()) == [
+        "autre-20261001-090000.db",
+        "scraper-20261003-090000.db",
+        "scraper-20261004-090000.db",
+        "scraper-20261005-090000.db",
+    ]
+
+
+def test_migration_backs_up_existing_database(database_file, monkeypatch):
+    """Vérifie la sauvegarde d'une base remplie avant une nouvelle migration."""
+
+    monkeypatch.setattr(
+        database, "MIGRATIONS", [*database.MIGRATIONS, lambda pConnection: None]
+    )
+
+    initialize_database(database_file)
+
+    vBackups = list((database_file.parent / "backups").glob("scraper-*.db"))
+
+    assert len(vBackups) == 1
+    assert vBackups[0].name.endswith(f"-avant-v{len(database.MIGRATIONS)}.db")
+    assert count_rows(vBackups[0], "job_offer") == 1
+
+
+def test_new_database_is_not_backed_up(tmp_path):
+    """Vérifie qu'une base neuve ou à jour n'est pas sauvegardée."""
+
+    initialize_database(tmp_path / "scraper.db")
+    initialize_database(tmp_path / "scraper.db")
+
+    assert not (tmp_path / "backups").exists()
 
 
 def test_reset_database_empties_tables_and_keeps_schema(database_file):

@@ -1,0 +1,18 @@
+# Propose chaque semaine les mises à jour des dépendances Python et des actions GitHub
+version: 2
+
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    # Une seule demande de fusion pour les mises à jour mineures, pour limiter le bruit
+    groups:
+      python-mineures:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -9,7 +9,7 @@
 
 <form class="filters card" method="get" action="{{ url_for('show_logs').path }}">
     <div class="filters-row">
-        <select name="level" aria-label="Niveau" onchange="this.form.submit()">
+        <select name="level" aria-label="Niveau" data-autosubmit>
             {% for value, label in level_filters.items() %}
             <option value="{{ value or '' }}"{% if value == level %} selected{% endif %}>{{ label }}</option>
             {% endfor %}

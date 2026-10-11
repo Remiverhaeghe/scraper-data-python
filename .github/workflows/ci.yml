@@ -8,15 +8,18 @@ on:
 permissions:
   contents: read
 
+# Les actions sont épinglées par empreinte de commit : une étiquette déplacée ne
+# peut pas changer le code exécuté. Dependabot propose les nouvelles versions.
+
 jobs:
   tests:
     name: Tests et formatage
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
           cache: pip
@@ -45,15 +48,32 @@ jobs:
       - name: Tests et couverture
         run: pytest -q --cov
 
+  audit:
+    name: Vulnérabilités des dépendances
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+
+      # Compare les versions de requirements.txt aux failles publiées (base PyPI/OSV)
+      - name: Analyse pip-audit
+        run: |
+          pip install pip-audit==2.10.1
+          pip-audit -r requirements.txt
+
   secrets:
     name: Recherche de secrets
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
 
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
