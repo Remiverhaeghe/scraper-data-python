@@ -32,6 +32,14 @@ def normalize(pText):
     return rText
 
 
+def normalize_company(pCompany):
+    """Met un nom d'entreprise sous une forme comparable, sans sa forme juridique."""
+
+    rCompany = normalize(LEGAL_FORMS.sub(" ", str(pCompany or "")))
+
+    return rCompany
+
+
 def normalize_city(pLocation):
     """Retourne la ville d'un lieu : « Lille (59) » ou « 59000 Lille, France » donnent « lille »."""
 
@@ -46,7 +54,7 @@ def build_fingerprint(pOffer):
     """Construit l'empreinte d'une offre, ou None sans titre exploitable."""
 
     vTitle = normalize(pOffer.get("title"))
-    vCompany = normalize(LEGAL_FORMS.sub(" ", str(pOffer.get("company") or "")))
+    vCompany = normalize_company(pOffer.get("company"))
 
     rFingerprint = None
 

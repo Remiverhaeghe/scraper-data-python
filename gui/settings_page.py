@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
+    QPlainTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -28,6 +29,7 @@ from gui.widgets import (
     create_page_header,
     create_scroll_content,
 )
+from job.companies import load_company_rules, save_company_rules
 from job.notification import build_test_email
 from job.schedule import (
     SCHEDULE_INTERVALS,
@@ -107,6 +109,7 @@ class SettingsPage(QWidget):
             (
                 self.create_notification_card(),
                 self.create_sources_card(),
+                self.create_companies_card(),
                 self.create_reset_card(),
             ),
         ):
@@ -347,7 +350,7 @@ class SettingsPage(QWidget):
         """Construit l'adresse des notifications et l'état du compte Gmail."""
         vCard, vLayout = create_card(
             "Notifications e-mail",
-            "Les nouvelles offres de la recherche planifiée, envoyées par Gmail",
+            "Nouvelles offres de la recherche planifiée et relances du jour, par Gmail",
         )
 
         # Seuls les noms des variables manquantes sont affichés, jamais leurs valeurs.
@@ -400,8 +403,95 @@ class SettingsPage(QWidget):
         return vCard
 
     def refresh(self):
-        """Relit la planification à l'affichage de la page."""
+        """Relit la planification et les entreprises à l'affichage de la page."""
         self.refresh_schedule()
+        self.refresh_companies()
+
+    def create_companies_card(self):
+        """Construit les listes d'entreprises à exclure et à privilégier."""
+        vCard, vLayout = create_card(
+            "Entreprises",
+            "Une entreprise par ligne. Les exclues sont masquées de la liste des "
+            "offres, les privilégiées marquées d'une étoile.",
+        )
+
+        self.company_edits = {}
+
+        vGrid = QGridLayout()
+        vGrid.setHorizontalSpacing(12)
+
+        for vColumn, (vKind, vLabel) in enumerate(
+            (("excluded", "À exclure"), ("preferred", "À privilégier"))
+        ):
+            vTitle = QLabel(vLabel)
+            vTitle.setObjectName("fieldLabel")
+
+            vEdit = QPlainTextEdit()
+            vEdit.setPlaceholderText("Ex. Acme\nGlobex")
+            vEdit.setFixedHeight(110)
+
+            self.company_edits[vKind] = vEdit
+            vGrid.addWidget(vTitle, 0, vColumn)
+            vGrid.addWidget(vEdit, 1, vColumn)
+
+        vSaveButton = create_button("Enregistrer", pObjectName="primaryButton")
+        vSaveButton.clicked.connect(self.save_companies)
+
+        self.companies_message = QLabel()
+        self.companies_message.setObjectName("cardSubtitle")
+        self.companies_message.setWordWrap(True)
+
+        vActions = QHBoxLayout()
+        vActions.addWidget(vSaveButton)
+        vActions.addWidget(self.companies_message, 1)
+
+        vLayout.addLayout(vGrid)
+        vLayout.addLayout(vActions)
+
+        self.refresh_companies()
+
+        return vCard
+
+    def refresh_companies(self):
+        """Relit les listes d'entreprises en base."""
+        try:
+            vRules = load_company_rules(self.database_file)
+
+        except Exception:
+            logger.exception("Impossible de lire les listes d'entreprises")
+
+            self.companies_message.setText("Les listes n'ont pas pu être lues.")
+
+        else:
+            for vKind, vEdit in self.company_edits.items():
+                vEdit.setPlainText("\n".join(vRules[vKind]))
+
+    def save_companies(self):
+        """Enregistre les deux listes d'entreprises."""
+        try:
+            vRules = save_company_rules(
+                self.database_file,
+                self.company_edits["excluded"].toPlainText(),
+                self.company_edits["preferred"].toPlainText(),
+            )
+
+        except ValueError as vException:
+            vMessage = str(vException)
+
+        except Exception:
+            logger.exception("Échec de l'enregistrement des listes d'entreprises")
+
+            vMessage = "Les listes n'ont pas pu être enregistrées."
+
+        else:
+            self.refresh_companies()
+
+            vMessage = (
+                f"{len(vRules['excluded'])} entreprise(s) exclue(s), "
+                f"{len(vRules['preferred'])} privilégiée(s)."
+            )
+
+        self.companies_message.setText(vMessage)
 
     def refresh_saved_searches(self):
         """Propose les recherches enregistrées pour remplacer la recherche planifiée."""

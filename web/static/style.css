@@ -349,6 +349,13 @@ h3 {
     font-weight: 600;
 }
 
+.profile-form label.check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 400;
+}
+
 .profile-form textarea,
 .letter {
     width: 100%;
@@ -1396,4 +1403,97 @@ code {
     .pie-chart {
         flex-direction: column;
     }
+}
+
+/* Candidature déjà envoyée à l'entreprise de l'offre */
+.company-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    background: var(--amber-light);
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.company-warning svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.company-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.company-actions .link-button {
+    width: auto;
+    color: var(--primary);
+}
+
+/* Tableau de suivi des candidatures */
+.board {
+    align-items: start;
+}
+
+.board-column h2 {
+    font-size: 1rem;
+}
+
+.board-card {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-alt);
+}
+
+.board-card p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.board-card select {
+    width: 100%;
+    margin-top: 4px;
+}
+
+.statistic-tables {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+    .statistic-tables {
+        grid-template-columns: 1fr;
+    }
+}
+
+.attachment {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.attachment a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.attachment form {
+    margin: 0 0 0 auto;
+}
+
+.attachment .link-button {
+    width: auto;
+    color: var(--danger);
 }

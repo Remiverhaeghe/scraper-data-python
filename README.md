@@ -74,7 +74,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -165,6 +165,10 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Profil du candidat et préparation de candidature : correspondance, CV, entretien, lettre
 - [x] Offres regroupées quand elles sont publiées plusieurs fois, différences à valider
 - [x] Offres probablement expirées masquées, vérification du lien à la demande
+- [x] Ajout manuel d'une offre et import d'un fichier au format de l'export
+- [x] Page Candidatures : colonnes par étape, statut modifiable, taux de réponse
+- [x] Entreprises à exclure ou à privilégier, avertissement si déjà candidat dans l'entreprise
+- [x] Pièces jointes par candidature (CV, lettre), ouvertes avec l'application du système
 
 ### 🌐 Tableau de bord web
 
@@ -192,6 +196,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Profil, préparation de candidature, offres regroupées et expirées, comme sur le bureau
 - [x] Lancement de la recherche enregistrée, exécutée par le planificateur
 - [x] Installable sur l'écran d'accueil d'un téléphone (manifeste web)
+- [x] Ajout et import d'offres, page Candidatures, entreprises et pièces jointes, comme sur le bureau
 
 ### 🔐 Sécurité
 
@@ -244,7 +249,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 
 - [x] Enrichissement à partir de la description : télétravail, compétences, expérience, salaire, contrat
 - [x] Rejet des offres inexploitables (ni titre ni description), compté dans la qualité des données
-- [ ] Analyse des offres exportées depuis « Qualité des données » pour ajouter des règles de découpage
+- [x] Analyse des offres exportées depuis « Qualité des données » pour ajouter des règles de découpage : milliers avec décimales, taux horaires, titres en plusieurs segments
 
 ### Aide à la candidature, à base de règles et sans service payant
 
@@ -271,14 +276,14 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 
 ### Autres idées
 
-- [ ] Tableau de suivi des candidatures par colonnes (à postuler, postulé, entretien, réponse)
-- [ ] Rappels de relance par e-mail, avec la recherche planifiée
-- [ ] Statistiques de candidature : taux de réponse par source, par type de poste et par société
-- [ ] Liste d'entreprises à exclure ou à privilégier
-- [ ] Notes et pièces jointes (CV envoyé) par candidature
-- [ ] Avertissement en orange quand une candidature est déjà envoyée ou en cours dans la même société
-- [ ] Ajout manuel d'une offre (source « Saisie manuelle »), sur le bureau et le web : titre, entreprise et lien ou description obligatoires, création refusée sinon avec le champ manquant indiqué
-- [ ] Import d'offres depuis un fichier CSV ou JSON au format de l'export : lignes incomplètes rejetées et listées, doublons écartés par l'empreinte
+- [x] Tableau de suivi des candidatures par colonnes (à postuler, postulé, entretien, réponse)
+- [x] Rappels de relance par e-mail, avec la recherche planifiée (un e-mail par jour au plus)
+- [x] Statistiques de candidature : taux de réponse par source, par type de poste et par société
+- [x] Liste d'entreprises à exclure ou à privilégier
+- [x] Notes et pièces jointes (CV envoyé) par candidature
+- [x] Avertissement en orange quand une candidature est déjà envoyée ou en cours dans la même société
+- [x] Ajout manuel d'une offre (source « Saisie manuelle »), sur le bureau et le web : titre, entreprise et lien ou description obligatoires, création refusée sinon avec le champ manquant indiqué
+- [x] Import d'offres depuis un fichier CSV, Excel ou JSON au format de l'export : lignes incomplètes rejetées et listées, doublons écartés par l'empreinte
 
 ### Révision technique
 
@@ -341,8 +346,12 @@ scraper-data-python/
 │   ├── deduplication.py                       # Regroupe les annonces d'une même offre
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
+│   ├── completion.py                          # Complétion commune avant enregistrement des offres
+│   ├── manual_offers.py                       # Ajout manuel et import d'offres depuis un fichier
+│   ├── companies.py                           # Entreprises exclues ou privilégiées, candidatures déjà envoyées
+│   ├── application_tracking.py                # Colonnes de suivi, relances dues et taux de réponse
 │   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
-│   ├── notification.py                        # Contenu des e-mails de nouvelles offres
+│   ├── notification.py                        # Contenu des e-mails de nouvelles offres et de relances
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
 │       ├── __init__.py                         # Initialise le package des sources
@@ -446,6 +455,8 @@ scraper-data-python/
 │   ├── offers_page.py                         # Filtres et tableau des offres en base
 │   ├── offers_model.py                        # Modèle Qt du tableau des offres
 │   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
+│   ├── offer_form.py                          # Saisie manuelle d'une offre
+│   ├── applications_page.py                   # Candidatures par étape et taux de réponse
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
 │   ├── quality_page.py                        # Qualité des données et offres à vérifier
@@ -478,6 +489,9 @@ scraper-data-python/
 │   │   ├── _offers_table.html                 # Tableau rechargé par HTMX
 │   │   ├── offer.html                         # Fiche détaillée d'une offre
 │   │   ├── _application.html                  # Bloc de suivi d'une candidature
+│   │   ├── _attachments.html                  # Pièces jointes d'une offre
+│   │   ├── offer_new.html                     # Ajout manuel et import d'offres
+│   │   ├── applications.html                  # Candidatures par étape et taux de réponse
 │   │   ├── history.html                       # Historique des exécutions
 │   │   ├── logs.html                          # Consultation des logs
 │   │   ├── quality.html                       # Qualité des données
@@ -522,6 +536,7 @@ scraper-data-python/
 │   ├── job_applications.py                    # Suit les candidatures et les relances
 │   ├── settings_repository.py                 # Persiste les réglages modifiables
 │   ├── backup.py                              # Sauvegarde de la base et rotation des copies
+│   ├── attachments.py                         # Pièces jointes des candidatures, rangées à côté de la base
 │   ├── maintenance.py                         # Réinitialisation de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
@@ -547,6 +562,9 @@ scraper-data-python/
 │   │   ├── test_enrichment.py                 # Teste l'enrichissement depuis la description
 │   │   ├── test_deduplication.py              # Teste l'empreinte et le regroupement des annonces
 │   │   ├── test_preparation.py                # Teste le profil et la préparation de candidature
+│   │   ├── test_manual_offers.py              # Teste l'ajout manuel et l'import d'offres
+│   │   ├── test_companies.py                  # Teste les listes d'entreprises et l'avertissement
+│   │   ├── test_application_tracking.py       # Teste les colonnes de suivi et les statistiques
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
@@ -642,6 +660,7 @@ scraper-data-python/
 │   │   ├── test_main_window.py                 # Teste la navigation et l'état du menu
 │   │   ├── test_offers_model.py                # Teste le modèle du tableau des offres
 │   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
+│   │   ├── test_applications_page.py           # Teste la page des candidatures
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres
@@ -659,6 +678,7 @@ scraper-data-python/
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
 │   │   ├── test_maintenance.py                 # Teste les sauvegardes, leur rotation et la réinitialisation
 │   │   ├── test_saved_searches.py              # Teste les recherches enregistrées
+│   │   ├── test_attachments.py                 # Teste les pièces jointes et leur conservation
 │   │   └── test_job_offers.py                  # Teste l'enregistrement des offres
 │   │
 │   ├── integration/                            # Tests de bout en bout

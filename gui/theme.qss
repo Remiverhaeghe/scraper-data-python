@@ -175,6 +175,21 @@ QLabel#warning {
     color: $warning;
 }
 
+QFrame#boardCard {
+    background: $surface_alt;
+    border: 1px solid $border;
+    border-radius: 10px;
+}
+
+QLabel#companyWarning {
+    background: $warning_light;
+    border: 1px solid $warning;
+    border-radius: 8px;
+    color: $warning;
+    font-weight: 600;
+    padding: 8px 10px;
+}
+
 /* Bannière d'accueil */
 
 QFrame#banner {

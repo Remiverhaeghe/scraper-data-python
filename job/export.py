@@ -2,8 +2,7 @@
 
 from pathlib import Path
 
-from job.presentation import STATUS_LABELS
-from job.sources.registry import SOURCES
+from job.presentation import STATUS_LABELS, get_source_label
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -48,9 +47,7 @@ def prepare_for_spreadsheet(pOffers):
 
     vOffers = pOffers.copy()
 
-    vOffers["source"] = vOffers["source"].map(
-        lambda pName: SOURCES[pName].label if pName in SOURCES else pName
-    )
+    vOffers["source"] = vOffers["source"].map(get_source_label)
     vOffers["application_status"] = vOffers["application_status"].map(
         lambda pStatus: STATUS_LABELS.get(pStatus, "")
     )

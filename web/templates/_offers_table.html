@@ -31,7 +31,7 @@
                     {% if offer.remote %}<span class="badge">Télétravail</span>{% endif %}
                     {% for benefit in offer.benefits[:max_benefit_badges] %}<span class="badge badge-muted">{{ benefit }}</span>{% endfor %}
                 </td>
-                <td>{{ offer.company or "" }}</td>
+                <td>{% if offer.company_preferred %}<span class="tone-primary" title="Entreprise privilégiée">★</span> {% endif %}{{ offer.company or "" }}</td>
                 <td class="muted">{{ offer.location or "" }}</td>
                 <td>{% if offer.contract %}<span class="badge badge-first badge-{{ contract_tones.get(offer.contract, 'muted') }}">{{ offer.contract }}</span>{% endif %}</td>
                 <td class="amount">

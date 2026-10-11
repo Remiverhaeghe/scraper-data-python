@@ -434,6 +434,29 @@ def count_by_day(pDatabasePath, pTable, pDateColumn, pDays, pNow=None):
     return rCounts
 
 
+def migrate_to_v10(pConnection):
+    """Ajoute les pièces jointes des candidatures (CV envoyé, lettre)."""
+
+    # Le fichier est rangé sous stored_name, un nom aléatoire : le nom choisi par
+    # l'utilisateur (file_name) ne sert qu'à l'affichage et au téléchargement.
+    pConnection.execute("""
+        CREATE TABLE job_attachment (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            file_name TEXT NOT NULL,
+            stored_name TEXT NOT NULL UNIQUE,
+            size INTEGER NOT NULL,
+            added_at TEXT NOT NULL,
+            FOREIGN KEY (source, source_id)
+                REFERENCES job_offer(source, source_id)
+        )
+        """)
+    pConnection.execute(
+        "CREATE INDEX idx_job_attachment_offer ON job_attachment(source, source_id)"
+    )
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -444,6 +467,7 @@ MIGRATIONS = [
     migrate_to_v7,
     migrate_to_v8,
     migrate_to_v9,
+    migrate_to_v10,
 ]
 
 

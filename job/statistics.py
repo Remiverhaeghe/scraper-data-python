@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 
-from job.presentation import prepare_offer
+from job.presentation import get_source_label, prepare_offer
 from job.settings import load_settings
 from job.sources.registry import SOURCES
 from storage.history_repository import get_history
@@ -137,7 +137,7 @@ def get_source_shares(pDatabaseFile):
     """
 
     vCounts = [
-        (SOURCES[vName].label if vName in SOURCES else vName, vCount)
+        (get_source_label(vName), vCount)
         for vName, vCount in count_offers_by_source(pDatabaseFile)
     ]
 

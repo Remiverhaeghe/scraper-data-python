@@ -50,6 +50,9 @@ def format_cell(pOffer, pKey):
     elif pKey == "application_status":
         rText = format_status(pOffer)
 
+    elif pKey == "company" and pOffer.get("company_preferred"):
+        rText = f"★ {pOffer.get('company') or ''}"
+
     # Une offre publiée plusieurs fois liste toutes ses sources.
     elif pKey == "source_label" and pOffer.get("source_labels"):
         rText = ", ".join(pOffer["source_labels"])
@@ -89,6 +92,8 @@ def get_cell_color(pOffer, pKey):
         vTone = CONTRACT_TONES.get(pOffer.get("contract"))
     elif pKey == "application_status":
         vTone = STATUS_TONES.get(pOffer.get("application_status"))
+    elif pKey == "company" and pOffer.get("company_preferred"):
+        vTone = "primary"
     elif pKey == "source_label" and pOffer.get("needs_review"):
         vTone = "warning"
 

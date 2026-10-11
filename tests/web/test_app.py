@@ -813,8 +813,182 @@ def test_security_headers(client):
 def test_pages_have_no_inline_script(client):
     """Vérifie qu'aucun script en ligne, bloqué par la CSP, ne reste dans les pages."""
 
-    for vPath in ("/", "/offers", "/logs", "/settings"):
+    for vPath in ("/", "/offers", "/offers/new", "/applications", "/logs", "/settings"):
         vText = client.get(vPath).text
 
         assert re.search(r"\son[a-z]+=", vText) is None
         assert "<script>" not in vText
+
+
+def test_manual_offer_is_created_or_refused(client):
+    """Vérifie la création d'une offre saisie et le refus d'une offre incomplète."""
+
+    vRefused = client.post("/offers/new", data={"title": "Analyste"})
+
+    assert vRefused.status_code == 400
+    assert "entreprise manquante, lien ou description manquant" in vRefused.text
+    assert 'value="Analyste"' in vRefused.text
+
+    vCreated = client.post(
+        "/offers/new",
+        data={"title": "Analyste", "company": "Data SA", "url": "https://d.example"},
+        follow_redirects=False,
+    )
+
+    assert vCreated.status_code == 303
+    assert vCreated.headers["location"].startswith("/offer?source=manual&id=")
+    assert "Saisie manuelle" in client.get(vCreated.headers["location"]).text
+
+
+def test_offers_import_reports_rejected_lines(client):
+    """Vérifie l'import d'un fichier envoyé et les lignes refusées affichées."""
+
+    vContent = (
+        "Titre;Entreprise;Lien\n"
+        "Analyste;Data SA;https://d.example\n"
+        "Sans entreprise;;https://d.example/2\n"
+    ).encode("utf-8")
+
+    vResponse = client.post(
+        "/offers/import", files={"file": ("offres.csv", vContent, "text/csv")}
+    )
+
+    assert "1 offre(s) importée(s) sur 2" in vResponse.text
+    assert "Ligne 3 : entreprise manquante" in vResponse.text
+
+    vRefused = client.post(
+        "/offers/import", files={"file": ("offres.txt", b"x", "text/plain")}
+    )
+
+    assert vRefused.status_code == 400
+    assert "Format non pris en charge" in vRefused.text
+
+
+def test_company_rules_from_offer_and_settings(client):
+    """Vérifie l'avertissement, l'exclusion depuis la fiche et les listes des Paramètres."""
+
+    vCreated = []
+
+    for vTitle in ("Analyste Kotlin", "Architecte Rust"):
+        vResponse = client.post(
+            "/offers/new",
+            data={"title": vTitle, "company": "Acme", "url": "https://a.example"},
+            follow_redirects=False,
+        )
+        vCreated.append(vResponse.headers["location"])
+
+    vFirstId = vCreated[0].rsplit("=", 1)[1]
+    client.post(
+        "/offer/application",
+        data={"source": "manual", "id": vFirstId, "status": "APPLIED"},
+    )
+
+    vOffer = client.get(vCreated[1]).text
+
+    assert "Déjà 1 candidature(s) dans cette entreprise : Analyste Kotlin" in vOffer
+
+    vSecondId = vCreated[1].rsplit("=", 1)[1]
+    vExcluded = client.post(
+        "/offer/company",
+        data={"source": "manual", "id": vSecondId, "kind": "excluded"},
+        headers={"HX-Request": "true"},
+    )
+
+    assert vExcluded.headers["HX-Redirect"] == "/offers"
+    assert "Architecte Rust" not in client.get("/offers").text
+
+    vSettings = client.post(
+        "/settings/companies", data={"excluded": "Acme", "preferred": "acme sas"}
+    )
+
+    assert vSettings.status_code == 400
+    assert "à la fois exclue et privilégiée" in vSettings.text
+
+
+def test_applications_page_and_status_change(client):
+    """Vérifie les colonnes, les statistiques et le changement de statut."""
+
+    vCreated = client.post(
+        "/offers/new",
+        data={
+            "title": "Analyste Kotlin",
+            "company": "Data SA",
+            "url": "https://d.example",
+        },
+        follow_redirects=False,
+    )
+    vSourceId = vCreated.headers["location"].rsplit("=", 1)[1]
+    client.post(
+        "/offer/application",
+        data={"source": "manual", "id": vSourceId, "status": "APPLIED"},
+    )
+
+    vPage = client.get("/applications").text
+
+    assert 'Postulé <span class="muted">(1)</span>' in vPage
+    assert "Analyste Kotlin" in vPage
+    assert "data-autosubmit" in vPage
+
+    vMoved = client.post(
+        "/applications/status",
+        data={"source": "manual", "id": vSourceId, "status": "INTERVIEW"},
+        follow_redirects=False,
+    )
+
+    assert vMoved.status_code == 303
+    assert (
+        'Entretien <span class="muted">(1)</span>' in client.get("/applications").text
+    )
+
+    vRefused = client.post(
+        "/applications/status",
+        data={"source": "manual", "id": vSourceId, "status": "IGNORED"},
+    )
+
+    assert vRefused.status_code == 400
+
+
+def test_attachments_upload_download_delete(client):
+    """Vérifie l'envoi, le téléchargement et la suppression d'une pièce jointe."""
+
+    vOfferUrl = client.post(
+        "/offers/new",
+        data={
+            "title": "Analyste Kotlin",
+            "company": "Data SA",
+            "url": "https://d.example",
+        },
+        follow_redirects=False,
+    ).headers["location"]
+    vSourceId = vOfferUrl.rsplit("=", 1)[1]
+
+    vUploaded = client.post(
+        "/offer/attachments",
+        data={"source": "manual", "id": vSourceId},
+        files={"file": ("../CV Rémi.pdf", b"%PDF", "application/pdf")},
+        follow_redirects=False,
+    )
+
+    assert vUploaded.status_code == 303
+
+    vPage = client.get(vOfferUrl).text
+    vAttachmentId = re.search(r"/attachment\?id=(\d+)", vPage).group(1)
+
+    assert "CV Rémi.pdf" in vPage
+
+    vDownload = client.get(f"/attachment?id={vAttachmentId}")
+
+    assert vDownload.content == b"%PDF"
+    assert vDownload.headers["content-disposition"].startswith("attachment;")
+
+    vRefused = client.post(
+        "/offer/attachments",
+        data={"source": "manual", "id": vSourceId},
+        files={"file": ("outil.exe", b"MZ", "application/octet-stream")},
+    )
+
+    assert vRefused.status_code == 400
+
+    client.post("/attachment/delete", data={"id": vAttachmentId})
+
+    assert client.get(f"/attachment?id={vAttachmentId}").status_code == 404

@@ -23,6 +23,9 @@ EMAIL_KEY = "notification_email"
 # Demande de recherche immédiate déposée depuis le web, traitée par le planificateur
 RUN_REQUEST_KEY = "schedule_run_requested"
 
+# Jour du dernier rappel de relances envoyé : un seul e-mail par jour
+FOLLOW_UP_REMINDER_KEY = "follow_up_reminder_sent"
+
 # Contrôle de forme volontairement simple : seul l'envoi prouve que l'adresse existe.
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 

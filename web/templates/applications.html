@@ -1,0 +1,81 @@
+{# Candidatures (route /applications) : mêmes colonnes et statistiques que la page
+   du bureau, calculées par job/applications.py. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Candidatures{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Candidatures", "Vos candidatures par étape, et les sources ou postes qui répondent le plus", "send") }}
+
+<section class="grid grid-4">
+    {{ ui.stat(statistics.sent, "Candidatures envoyées", "send", "blue") }}
+    {{ ui.stat(statistics.answered, "Réponses reçues", "circle-check", "green") }}
+    {{ ui.stat(statistics.interviews, "Entretiens obtenus", "calendar", "amber") }}
+    {{ ui.stat("-" if statistics.rate is none else statistics.rate ~ " %", "Taux de réponse", "sparkles", "purple") }}
+</section>
+
+<section class="grid grid-4 section-gap board">
+    {% for column in board %}
+    <article class="card board-column">
+        <h2>{{ column.label }} <span class="muted">({{ column.cards | length }})</span></h2>
+        {% for card in column.cards %}
+        <div class="board-card">
+            <a class="offer-title" href="{{ url_for('show_offer').path }}?source={{ card.source | urlencode }}&id={{ card.source_id | urlencode }}">{{ card.title or "Offre sans titre" }}</a>
+            <p class="muted">{{ [card.company, card.source_label] | select | join(" · ") }}</p>
+            {% if card.applied_label %}<p class="muted">Postulé le {{ card.applied_label }}</p>{% endif %}
+            {% if card.follow_up_due %}<p class="tone-warning">À relancer depuis le {{ card.follow_up_label }}</p>{% endif %}
+            {# forms.js envoie le formulaire au changement : aucun script en ligne. #}
+            <form method="post" action="{{ url_for('change_application_status').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <input type="hidden" name="source" value="{{ card.source }}">
+                <input type="hidden" name="id" value="{{ card.source_id }}">
+                <select name="status" aria-label="Statut" data-autosubmit title="« Clôturé » retire la candidature du tableau">
+                    {% for status in board_statuses %}
+                    <option value="{{ status }}" {% if card.status == status %}selected{% endif %}>{{ statuses[status] }}</option>
+                    {% endfor %}
+                </select>
+                <noscript><button class="button" type="submit">Changer</button></noscript>
+            </form>
+        </div>
+        {% else %}
+        <p class="muted">Aucune candidature</p>
+        {% endfor %}
+    </article>
+    {% endfor %}
+</section>
+
+<section class="grid grid-settings section-gap statistic-tables">
+    {% for title, rows in statistics.tables %}
+    <article class="card">
+        <h2>{{ title }}</h2>
+        {% if rows %}
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th class="amount">Envoyées</th>
+                        <th class="amount">Réponses</th>
+                        <th class="amount">Taux</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>{{ row.label }}</td>
+                        <td class="amount">{{ row.sent }}</td>
+                        <td class="amount">{{ row.answered }}</td>
+                        <td class="amount">{{ row.rate }} %</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty">{{ icon("inbox", 32) }}Aucune candidature envoyée.</div>
+        {% endif %}
+    </article>
+    {% endfor %}
+</section>
+{% endblock %}

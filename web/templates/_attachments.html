@@ -1,0 +1,28 @@
+{# Pièces jointes d'une offre (routes /offer/attachments, /attachment et
+   /attachment/delete) : formulaires classiques, la page est rechargée. #}
+<section class="card">
+    <h2>Pièces jointes</h2>
+    <p class="card-subtitle">CV envoyé, lettre : {{ attachment_extensions | join(", ") }}, 10 Mo maximum</p>
+
+    {% for attachment in attachments %}
+    <div class="attachment">
+        <a href="{{ url_for('download_attachment').path }}?id={{ attachment.id }}">{{ icon("file-text", 16) }} {{ attachment.file_name }}</a>
+        <span class="muted">{{ attachment.added_at | date_fr }}</span>
+        <form method="post" action="{{ url_for('remove_attachment').path }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <input type="hidden" name="id" value="{{ attachment.id }}">
+            <button class="link-button" type="submit" aria-label="Supprimer {{ attachment.file_name }}">Supprimer</button>
+        </form>
+    </div>
+    {% else %}
+    <p class="muted">Aucun fichier joint.</p>
+    {% endfor %}
+
+    <form class="profile-form" method="post" action="{{ url_for('upload_attachment').path }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="source" value="{{ offer.source }}">
+        <input type="hidden" name="id" value="{{ offer.source_id }}">
+        <input type="file" name="file" required accept="{{ attachment_extensions | join(',') }}" aria-label="Fichier à joindre">
+        <button class="button" type="submit">Joindre le fichier</button>
+    </form>
+</section>

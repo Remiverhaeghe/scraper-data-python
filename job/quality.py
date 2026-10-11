@@ -4,8 +4,7 @@ import csv
 import io
 
 from job.export import protect_formula
-from job.presentation import clean_missing_values
-from job.sources.registry import SOURCES
+from job.presentation import clean_missing_values, get_source_label
 from storage.history_repository import get_history
 from storage.job_offers import QUALITY_COLUMNS, count_filled_fields, get_offers
 
@@ -72,7 +71,7 @@ def get_quality_report(pDatabaseFile):
 
     vRows = [
         {
-            "source": SOURCES[vSource].label if vSource in SOURCES else vSource,
+            "source": get_source_label(vSource),
             "count": vTotal,
             "rates": build_rates(vTotal, vFilled),
         }
@@ -117,9 +116,14 @@ def find_problems(pOffer):
     if not pOffer.get("location") and not pOffer.get("remote"):
         rProblems.append("lieu absent")
 
-    # Un salaire écrit par la source mais non converti en net mensuel montre un
-    # format que l'analyse ne sait pas encore lire.
-    if pOffer.get("salary_label") and pOffer.get("salary_net_monthly_min") is None:
+    # Un salaire écrit par la source mais sans montant lu montre un format que
+    # l'analyse ne sait pas encore lire. Un montant lu dans une autre devise que
+    # l'euro n'est pas un défaut : il n'est simplement pas converti en net.
+    if (
+        pOffer.get("salary_label")
+        and pOffer.get("salary_min") is None
+        and pOffer.get("salary_max") is None
+    ):
         rProblems.append("salaire non interprété")
 
     if not pOffer.get("description"):

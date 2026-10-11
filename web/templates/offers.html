@@ -6,7 +6,9 @@
 {% block title %}Offres{% endblock %}
 
 {% block content %}
-{{ ui.page_header("Offres", "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures", "briefcase") }}
+{% call ui.page_header("Offres", "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures", "briefcase") %}
+<a class="button" href="{{ url_for('show_new_offer').path }}">{{ icon("sparkles", 16) }} Ajouter ou importer</a>
+{% endcall %}
 
 <form class="filters card"
       hx-get="{{ url_for('list_offers').path }}"
@@ -22,6 +24,9 @@
             <option value="">Toutes les sources</option>
             {% for name, definition in sources.items() %}
             <option value="{{ name }}" {% if filters.source == name %}selected{% endif %}>{{ definition.label }}</option>
+            {% endfor %}
+            {% for name, label in added_sources.items() %}
+            <option value="{{ name }}" {% if filters.source == name %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
         </select>
 
@@ -68,6 +73,11 @@
         <label class="check">
             <input type="checkbox" name="multiple" value="1" {% if filters.multiple %}checked{% endif %}>
             Multi-annonces
+        </label>
+
+        <label class="check" title="Seulement les entreprises de la liste des Paramètres">
+            <input type="checkbox" name="preferred" value="1" {% if filters.preferred %}checked{% endif %}>
+            Entreprises privilégiées
         </label>
 
         <label class="check">

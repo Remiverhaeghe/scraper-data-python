@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from config import EXPIRY_DAYS
 from gui.offer_detail import OfferDetailPanel
+from gui.offer_form import ManualOfferDialog
 from gui.offers_model import COLUMNS, SORT_ROLE, OffersTableModel
 from gui.theme import COLORS
 from gui.widgets import (
@@ -34,13 +35,26 @@ from gui.widgets import (
     create_icon_label,
     create_page_header,
 )
+from job.companies import (
+    build_company_filter_keys,
+    load_company_rules,
+    mark_preferred_companies,
+)
 from job.contract import CONTRACT_TYPES
 from job.deduplication import group_offers
 from job.export import EXPORT_FORMATS, export_offers
+from job.manual_offers import (
+    IMPORT_FORMATS,
+    describe_import,
+    import_offers_file,
+    list_import_problems,
+)
 from job.presentation import (
+    ADDED_SOURCE_LABELS,
     AVAILABILITY_FILTERS,
     DEFAULT_AVAILABILITY,
     FOLLOW_UP_FILTER,
+    MANUAL_SOURCE,
     PUBLISHED_PERIODS,
     STATUS_LABELS,
     build_offer_filters,
@@ -134,7 +148,11 @@ class OffersPage(QWidget):
             vLayout,
             "Offres",
             "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures",
-            [self.create_export_button()],
+            [
+                self.create_add_button(),
+                self.create_import_button(),
+                self.create_export_button(),
+            ],
             pIcon="briefcase",
         )
 
@@ -163,6 +181,9 @@ class OffersPage(QWidget):
 
         for vName, vDefinition in SOURCES.items():
             self.source_combo.addItem(vDefinition.label, vName)
+
+        for vName, vLabel in ADDED_SOURCE_LABELS.items():
+            self.source_combo.addItem(vLabel, vName)
 
         self.contract_combo = QComboBox()
         self.contract_combo.addItem("Tous les contrats", None)
@@ -195,6 +216,10 @@ class OffersPage(QWidget):
         self.new_check = QCheckBox("Nouvelles uniquement")
         self.multiple_check = QCheckBox("Multi-annonces")
         self.multiple_check.setToolTip("Offres publiées plusieurs fois, regroupées")
+        self.preferred_check = QCheckBox("Entreprises privilégiées")
+        self.preferred_check.setToolTip(
+            "Seulement les entreprises de la liste des Paramètres"
+        )
 
         for vCombo in (
             self.source_combo,
@@ -213,6 +238,7 @@ class OffersPage(QWidget):
             self.remote_check,
             self.new_check,
             self.multiple_check,
+            self.preferred_check,
         ):
             vCheck.toggled.connect(self.refresh)
 
@@ -233,6 +259,7 @@ class OffersPage(QWidget):
             self.remote_check,
             self.new_check,
             self.multiple_check,
+            self.preferred_check,
         ):
             vOptionsRow.addWidget(vWidget)
 
@@ -244,6 +271,78 @@ class OffersPage(QWidget):
         rLayout.addLayout(vOptionsRow)
 
         return rLayout
+
+    def create_add_button(self):
+        """Crée le bouton de saisie manuelle d'une offre."""
+        rButton = create_button(
+            "Ajouter une offre", "sparkles", pIconColor=COLORS["primary"]
+        )
+        rButton.setToolTip("Saisir une offre trouvée en dehors des sources")
+        rButton.clicked.connect(self.add_offer)
+
+        return rButton
+
+    def add_offer(self):
+        """Ouvre la saisie d'une offre puis l'affiche une fois créée."""
+        vDialog = ManualOfferDialog(self.database_file, self)
+
+        if vDialog.exec():
+            self.apply_preset("offers")
+            self.select_offer((MANUAL_SOURCE, vDialog.source_id))
+
+    def create_import_button(self):
+        """Crée le bouton d'import d'offres depuis un fichier."""
+        rButton = create_button("Importer", "file-text", pIconColor=COLORS["primary"])
+        rButton.setToolTip(
+            "Importer des offres depuis un fichier CSV, Excel ou JSON "
+            "au format de l'export"
+        )
+        rButton.clicked.connect(self.choose_import_file)
+
+        return rButton
+
+    def choose_import_file(self):
+        """Demande le fichier à importer puis affiche le bilan."""
+        vFilter = " ".join(f"*{vSuffix}" for vSuffix in IMPORT_FORMATS)
+
+        vPath, _ = QFileDialog.getOpenFileName(
+            self, "Importer des offres", str(Path.home()), f"Offres ({vFilter})"
+        )
+
+        if vPath:
+            self.import_from(vPath)
+
+    def import_from(self, pPath):
+        """Importe un fichier d'offres et affiche le bilan, lignes refusées comprises."""
+        try:
+            vReport = import_offers_file(
+                self.database_file, pPath, Path(pPath).suffix, datetime.now()
+            )
+
+        except ValueError as vException:
+            QMessageBox.warning(self, "Import impossible", str(vException))
+            return
+
+        except Exception:
+            logger.exception("Échec de l'import des offres")
+
+            QMessageBox.warning(
+                self, "Import impossible", "Le fichier n'a pas pu être importé."
+            )
+            return
+
+        self.apply_preset("offers")
+
+        vBox = QMessageBox(self)
+        vBox.setWindowTitle("Import terminé")
+        vBox.setText(describe_import(vReport))
+
+        vProblems = list_import_problems(vReport)
+
+        if vProblems:
+            vBox.setDetailedText("\n".join(vProblems))
+
+        vBox.exec()
 
     def create_export_button(self):
         """Crée le bouton d'export et son menu de formats."""
@@ -298,6 +397,7 @@ class OffersPage(QWidget):
                 datetime.now(),
                 vSettings["new_offer_days"],
                 vSettings["expiry_days"],
+                load_company_rules(self.database_file),
             ),
         )
 
@@ -350,6 +450,7 @@ class OffersPage(QWidget):
             self.remote_check,
             self.new_check,
             self.multiple_check,
+            self.preferred_check,
         )
 
         # Une seule relecture en base plutôt qu'une par filtre modifié
@@ -369,6 +470,7 @@ class OffersPage(QWidget):
         self.remote_check.setChecked(False)
         self.new_check.setChecked(pPreset == "new_offers")
         self.multiple_check.setChecked(False)
+        self.preferred_check.setChecked(False)
         self.status_combo.setCurrentIndex(
             max(self.status_combo.findData(PRESET_STATUSES.get(pPreset)), 0)
         )
@@ -378,9 +480,15 @@ class OffersPage(QWidget):
 
         self.refresh()
 
-    def build_filters(self, pNow, pNewOfferDays, pExpiryDays=EXPIRY_DAYS):
+    def build_filters(
+        self, pNow, pNewOfferDays, pExpiryDays=EXPIRY_DAYS, pCompanyRules=None
+    ):
         """Traduit les filtres de la page en paramètres de get_offers."""
         rFilters = build_offer_filters(
+            pCompanyKeys=(
+                build_company_filter_keys(pCompanyRules) if pCompanyRules else None
+            ),
+            pPreferredOnly=self.preferred_check.isChecked(),
             pSearch=self.search_edit.text(),
             pSource=self.source_combo.currentData(),
             pContract=self.contract_combo.currentData(),
@@ -408,13 +516,16 @@ class OffersPage(QWidget):
         try:
             vSettings = load_settings(self.database_file)
             vNewOfferDays = vSettings["new_offer_days"]
+            vCompanyRules = load_company_rules(self.database_file)
 
             vOffers = get_offers(
                 self.database_file,
                 # Une offre de plus que la limite est lue pour savoir s'il en reste : le
                 # message invite alors à affiner les filtres.
                 pLimit=MAX_DISPLAYED_OFFERS + 1,
-                **self.build_filters(vNow, vNewOfferDays, vSettings["expiry_days"]),
+                **self.build_filters(
+                    vNow, vNewOfferDays, vSettings["expiry_days"], vCompanyRules
+                ),
             )
 
         except Exception:
@@ -429,6 +540,8 @@ class OffersPage(QWidget):
                 prepare_offer(vOffer, vNewSince, vNow, vSettings["expiry_days"])
                 for vOffer in vOffers.head(MAX_DISPLAYED_OFFERS).to_dict("records")
             ]
+
+            mark_preferred_companies(vPrepared, vCompanyRules)
 
             # Les annonces d'une même offre sont regroupées en une seule ligne.
             vPrepared = group_offers(vPrepared, get_decisions(self.database_file))

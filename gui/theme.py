@@ -30,6 +30,7 @@ THEMES = {
         "success": "#16A34A",
         "success_light": "#E7F7EC",
         "warning": "#D97706",
+        "warning_light": "#FEF3E2",
         "danger": "#DC2626",
     },
     "dark": {
@@ -49,6 +50,7 @@ THEMES = {
         "success": "#22C55E",
         "success_light": "#132A1F",
         "warning": "#F59E0B",
+        "warning_light": "#2E2310",
         "danger": "#EF4444",
     },
 }

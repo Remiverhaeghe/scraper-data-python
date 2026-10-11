@@ -73,11 +73,20 @@ def create_application(
         vConnection.close()
 
 
-def update_application_status(pDatabaseFile, pSource, pSourceId, pStatus):
-    """Modifie le statut d'une candidature."""
+def update_application_status(
+    pDatabaseFile, pSource, pSourceId, pStatus, pNow=None, pFollowUpDays=FOLLOW_UP_DAYS
+):
+    """Modifie le statut d'une candidature, notes et dates déjà saisies conservées.
+
+    Au passage au statut APPLIED, la date de candidature et la relance par défaut
+    sont fixées si elles manquent, comme dans save_application.
+    """
 
     if pStatus not in APPLICATION_STATUSES:
         raise ValueError("Statut de candidature invalide.")
+
+    vNow = pNow or datetime.now()
+    vApplied = pStatus == "APPLIED"
 
     vConnection = connect_database(pDatabaseFile)
 
@@ -85,17 +94,31 @@ def update_application_status(pDatabaseFile, pSource, pSourceId, pStatus):
         vConnection.execute(
             """
             UPDATE job_application
-            SET status = ?
+            SET status = ?,
+                applied_at = COALESCE(applied_at, ?),
+                follow_up_date = COALESCE(follow_up_date, ?)
             WHERE source = ?
             AND source_id = ?
             """,
-            (pStatus, pSource, str(pSourceId)),
+            (
+                pStatus,
+                vNow.isoformat() if vApplied else None,
+                (
+                    (vNow + timedelta(days=pFollowUpDays)).isoformat()
+                    if vApplied
+                    else None
+                ),
+                pSource,
+                str(pSourceId),
+            ),
         )
 
         vConnection.commit()
 
     finally:
         vConnection.close()
+
+    logger.info("Statut modifié : %s %s, statut %s", pSource, pSourceId, pStatus)
 
 
 def record_follow_up(
@@ -300,6 +323,47 @@ def get_application(pDatabaseFile, pSource, pSourceId):
     return rApplication
 
 
+# Statuts d'une candidature envoyée, qu'elle soit en cours ou terminée
+SENT_STATUSES = ("APPLIED", "INTERVIEW", "REJECTED", "ACCEPTED")
+
+
+def get_company_applications(pDatabaseFile, pCompanyKey, pExcludedKey=None):
+    """Retourne les candidatures envoyées à une entreprise, la plus récente en tête.
+
+    pCompanyKey est le nom normalisé de l'entreprise (job.fingerprint) ;
+    pExcludedKey écarte l'offre consultée, sous la forme (source, identifiant).
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vConnection.row_factory = sqlite3.Row
+
+        # Le nom normalisé ne contient ni « | » ni joker LIKE.
+        vRows = vConnection.execute(
+            f"""
+            SELECT o.source, o.source_id, o.title, o.company, a.status, a.applied_at
+            FROM job_application a
+            JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id
+            WHERE o.fingerprint LIKE ?
+                AND a.status IN ({", ".join("?" for _ in SENT_STATUSES)})
+            ORDER BY COALESCE(a.applied_at, '') DESC
+            """,  # nosec B608
+            (f"%|{pCompanyKey}|%", *SENT_STATUSES),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rApplications = [
+        dict(vRow)
+        for vRow in vRows
+        if (vRow["source"], vRow["source_id"]) != pExcludedKey
+    ]
+
+    return rApplications
+
+
 def count_applications_by_day(pDatabaseFile, pDays, pNow=None):
     """Compte les candidatures envoyées chaque jour, jours vides compris."""
 
@@ -344,3 +408,33 @@ def get_upcoming_follow_ups(pDatabaseFile, pLimit):
     rFollowUps = [dict(vRow) for vRow in vRows]
 
     return rFollowUps
+
+
+def get_applications_with_offers(pDatabaseFile, pStatuses):
+    """Retourne les candidatures des statuts donnés avec leur offre, récentes en tête."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vConnection.row_factory = sqlite3.Row
+
+        # Les marqueurs « ? » sont générés à partir du nombre de statuts.
+        vRows = vConnection.execute(
+            f"""
+            SELECT
+                o.source, o.source_id, o.title, o.company, o.location, o.contract,
+                o.url, a.status, a.applied_at, a.follow_up_date, a.follow_up_count
+            FROM job_application a
+            JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id
+            WHERE a.status IN ({", ".join("?" for _ in pStatuses)})
+            ORDER BY COALESCE(a.applied_at, o.first_seen_at) DESC
+            """,  # nosec B608
+            tuple(pStatuses),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rApplications = [dict(vRow) for vRow in vRows]
+
+    return rApplications

@@ -107,6 +107,14 @@ AVAILABILITY_MESSAGES = {
 # Valeur du filtre de statut affichant les candidatures à relancer
 FOLLOW_UP_FILTER = "FOLLOW_UP"
 
+# Offres ajoutées par l'utilisateur plutôt que trouvées par une recherche
+MANUAL_SOURCE = "manual"
+IMPORT_SOURCE = "import"
+ADDED_SOURCE_LABELS = {
+    MANUAL_SOURCE: "Saisie manuelle",
+    IMPORT_SOURCE: "Import de fichier",
+}
+
 
 def format_euros(pAmount):
     """Formate un montant en euros avec un espace comme séparateur de milliers."""
@@ -132,6 +140,16 @@ def format_date(pValue):
             rText = str(pValue)
 
     return rText
+
+
+def get_source_label(pName):
+    """Retourne le libellé d'une source, ou son nom si elle est inconnue."""
+
+    vSource = SOURCES.get(pName)
+
+    rLabel = vSource.label if vSource else ADDED_SOURCE_LABELS.get(pName, pName)
+
+    return rLabel
 
 
 def safe_url(pUrl):
@@ -197,9 +215,7 @@ def prepare_offer(pOffer, pNewSince, pNow=None, pExpiryDays=EXPIRY_DAYS):
 
     vOffer = clean_missing_values(pOffer)
 
-    vSource = SOURCES.get(vOffer["source"])
-
-    vOffer["source_label"] = vSource.label if vSource else vOffer["source"]
+    vOffer["source_label"] = get_source_label(vOffer["source"])
     vOffer["is_new"] = vOffer["first_seen_at"] >= pNewSince.isoformat()
     vOffer["skills_list"] = to_list(vOffer.get("skills"))
     vOffer["net_salary"] = format_net_salary(vOffer)
@@ -256,18 +272,25 @@ def build_offer_filters(
     pKeys=None,
     pAvailability=DEFAULT_AVAILABILITY,
     pExpiryDays=EXPIRY_DAYS,
+    pCompanyKeys=None,
+    pPreferredOnly=False,
 ):
     """Traduit les filtres saisis en paramètres de get_offers.
 
     Les valeurs inconnues sont ignorées. Les offres ignorées restent masquées
-    sauf si ce statut est demandé explicitement.
+    sauf si ce statut est demandé explicitement, comme celles des entreprises
+    exclues. pCompanyKeys donne les noms normalisés des listes d'entreprises.
     """
+
+    vCompanyKeys = pCompanyKeys or {"excluded": [], "preferred": []}
 
     vNow = pNow or datetime.now()
 
     rFilters = {
         "pSearch": (pSearch or "").strip() or None,
-        "pSource": pSource if pSource in SOURCES else None,
+        "pSource": (
+            pSource if pSource in SOURCES or pSource in ADDED_SOURCE_LABELS else None
+        ),
         "pContract": pContract if pContract in CONTRACT_TYPES else None,
         "pRemote": bool(pRemote),
         "pMinNetSalary": pMinNetSalary,
@@ -286,6 +309,8 @@ def build_offer_filters(
         ),
         "pNow": vNow,
         "pExpiredBefore": vNow - timedelta(days=pExpiryDays),
+        "pExcludedCompanies": vCompanyKeys["excluded"],
+        "pPreferredCompanies": vCompanyKeys["preferred"] if pPreferredOnly else None,
     }
 
     return rFilters
@@ -331,8 +356,7 @@ def describe_sources(pParameters):
     """Retourne les libellés des sources interrogées lors d'une recherche."""
 
     rLabels = ", ".join(
-        SOURCES[vName].label if vName in SOURCES else vName
-        for vName in (pParameters or {}).get("sources", [])
+        get_source_label(vName) for vName in (pParameters or {}).get("sources", [])
     )
 
     return rLabels

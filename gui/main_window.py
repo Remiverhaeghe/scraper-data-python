@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 from config import CONTACT_URL, LICENSE_NAME, REPOSITORY_URL, TAGLINE
 from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
+from gui.applications_page import ApplicationsPage
 from gui.history_page import HistoryPage
 from gui.home_page import HomePage
 from gui.logs_page import LogsPage
@@ -85,11 +86,13 @@ class MainWindow(QMainWindow):
         self.home_page = HomePage(vDatabaseFile)
         self.search_page = SearchPage(pDatabaseFile=vDatabaseFile)
         self.offers_page = OffersPage(vDatabaseFile)
+        self.applications_page = ApplicationsPage(vDatabaseFile)
 
         # L'ordre d'ajout fixe l'ordre du menu ; la clé sert à navigate().
         self.add_page("home", "Accueil", "house", self.home_page)
         self.add_page("search", "Recherche", "search", self.search_page)
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
+        self.add_page("applications", "Candidatures", "send", self.applications_page)
         self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
         self.add_page("quality", "Qualité", "list-checks", QualityPage(vDatabaseFile))
@@ -105,6 +108,7 @@ class MainWindow(QMainWindow):
 
         self.home_page.navigation_requested.connect(self.navigate)
         self.home_page.offer_requested.connect(self.show_search_results)
+        self.applications_page.offer_requested.connect(self.show_search_results)
         self.search_page.show_offers_requested.connect(self.show_search_results)
         self.search_page.search_started.connect(self.on_search_started)
         self.search_page.search_ended.connect(self.on_search_ended)

@@ -1,6 +1,7 @@
 """Application web du tableau de bord des offres d'emploi"""
 
 import hmac
+import io
 import os
 import re
 from contextlib import asynccontextmanager
@@ -9,8 +10,18 @@ from functools import lru_cache
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 from fastapi.responses import (
+    FileResponse,
     HTMLResponse,
     PlainTextResponse,
     RedirectResponse,
@@ -30,8 +41,32 @@ from config import (
     REPOSITORY_URL,
     TAGLINE,
 )
+from job.application_tracking import (
+    BOARD_STATUSES,
+    build_application_statistics,
+    build_board,
+)
+from job.companies import (
+    add_company_rule,
+    build_company_filter_keys,
+    describe_company_applications,
+    find_company_applications,
+    get_company_rule,
+    load_company_rules,
+    mark_preferred_companies,
+    save_company_rules,
+)
 from job.contract import CONTRACT_TYPES
+from job.manual_offers import (
+    IMPORT_FORMATS,
+    MAX_IMPORT_BYTES,
+    add_manual_offer,
+    describe_import,
+    import_offers_file,
+    list_import_problems,
+)
 from job.presentation import (
+    ADDED_SOURCE_LABELS,
     AVAILABILITY_FILTERS,
     AVAILABILITY_LABELS,
     AVAILABILITY_MESSAGES,
@@ -42,6 +77,7 @@ from job.presentation import (
     EXECUTION_TONES,
     FOLLOW_UP_FILTER,
     LICENSE_SUMMARY,
+    MANUAL_SOURCE,
     LICENSE_SUMMARY_NOTE,
     MAX_BENEFIT_BADGES,
     PUBLISHED_PERIODS,
@@ -107,6 +143,15 @@ from storage.job_applications import (
     get_application,
     record_follow_up,
     save_application,
+    update_application_status,
+)
+from storage.attachments import (
+    ALLOWED_EXTENSIONS,
+    MAX_ATTACHMENT_BYTES,
+    add_attachment,
+    delete_attachment,
+    get_attachment,
+    get_attachments,
 )
 from storage.duplicates import get_decisions, save_decision
 from storage.job_offers import get_offer, get_offers, set_availability
@@ -547,6 +592,7 @@ def list_offers(
     pStatus: str = Query("", alias="status"),
     pAvailability: str = Query(DEFAULT_AVAILABILITY, alias="availability"),
     pMultiple: str = Query("", alias="multiple"),
+    pPreferred: str = Query("", alias="preferred"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche la liste des offres, ou seulement le tableau pour une requête HTMX."""
@@ -555,6 +601,7 @@ def list_offers(
     vSettings = load_settings(pDatabaseFile)
     vNewOfferDays = vSettings["new_offer_days"]
     vNewSince = vNow - timedelta(days=vNewOfferDays)
+    vCompanyRules = load_company_rules(pDatabaseFile)
 
     vFilters = build_offer_filters(
         pSearch=pSearch,
@@ -571,18 +618,20 @@ def list_offers(
         pMaxNetSalary=parse_amount(pMaxSalary),
         pPublishedDays=parse_published_days(pPublished),
         pHasSalary=bool(pHasSalary),
+        pCompanyKeys=build_company_filter_keys(vCompanyRules),
+        pPreferredOnly=bool(pPreferred),
     )
 
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
 
+    vPrepared = [
+        prepare_offer(vOffer, vNewSince, vNow, vSettings["expiry_days"])
+        for vOffer in vOffers.head(MAX_DISPLAYED_OFFERS).to_dict("records")
+    ]
+    mark_preferred_companies(vPrepared, vCompanyRules)
+
     # Les annonces d'une même offre sont regroupées en une seule ligne.
-    vGrouped = group_offers(
-        [
-            prepare_offer(vOffer, vNewSince, vNow, vSettings["expiry_days"])
-            for vOffer in vOffers.head(MAX_DISPLAYED_OFFERS).to_dict("records")
-        ],
-        get_decisions(pDatabaseFile),
-    )
+    vGrouped = group_offers(vPrepared, get_decisions(pDatabaseFile))
 
     if pMultiple:
         vGrouped = [vOffer for vOffer in vGrouped if vOffer["duplicates"]]
@@ -596,6 +645,7 @@ def list_offers(
         "is_truncated": len(vOffers) > MAX_DISPLAYED_OFFERS,
         "max_offers": MAX_DISPLAYED_OFFERS,
         "sources": SOURCES,
+        "added_sources": ADDED_SOURCE_LABELS,
         "contracts": CONTRACT_TYPES,
         "statuses": STATUS_LABELS,
         "follow_up_filter": FOLLOW_UP_FILTER,
@@ -604,6 +654,7 @@ def list_offers(
         "filters": {
             "availability": pAvailability,
             "multiple": pMultiple,
+            "preferred": pPreferred,
             "q": pSearch,
             "source": pSource,
             "contract": pContract,
@@ -658,6 +709,115 @@ def render_application(pRequest, pDatabaseFile, pOffer, pMessage=None):
     return rResponse
 
 
+def render_new_offer(pRequest, pFields=None, pMessage=None, pReport=None, pStatus=200):
+    """Affiche la saisie manuelle et l'import d'offres, avec le dernier résultat."""
+
+    rResponse = templates.TemplateResponse(
+        pRequest,
+        "offer_new.html",
+        {
+            "active_page": "offers",
+            "fields": pFields or {},
+            "contracts": CONTRACT_TYPES,
+            "message": pMessage,
+            "report": pReport,
+            "import_summary": describe_import(pReport) if pReport else None,
+            "import_problems": list_import_problems(pReport) if pReport else [],
+            "import_formats": IMPORT_FORMATS,
+        },
+        status_code=pStatus,
+    )
+
+    return rResponse
+
+
+@app.get("/offers/new", response_class=HTMLResponse)
+def show_new_offer(request: Request):
+    """Affiche la saisie manuelle et l'import d'offres."""
+
+    rResponse = render_new_offer(request)
+
+    return rResponse
+
+
+@app.post(
+    "/offers/new", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+def create_offer(
+    request: Request,
+    pTitle: str = Form("", alias="title"),
+    pCompany: str = Form("", alias="company"),
+    pUrl: str = Form("", alias="url"),
+    pDescription: str = Form("", alias="description"),
+    pLocation: str = Form("", alias="location"),
+    pContract: str = Form("", alias="contract"),
+    pSalary: str = Form("", alias="salary_label"),
+    pRemote: str = Form("", alias="remote"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Crée une offre saisie à la main, ou réaffiche le formulaire avec l'erreur."""
+
+    vFields = {
+        "title": pTitle,
+        "company": pCompany,
+        "url": pUrl,
+        "description": pDescription,
+        "location": pLocation,
+        "contract": pContract,
+        "salary_label": pSalary,
+        "remote": "oui" if pRemote else None,
+    }
+
+    try:
+        vSourceId = add_manual_offer(pDatabaseFile, vFields, datetime.now())
+
+    except ValueError as vException:
+        rResponse = render_new_offer(request, vFields, str(vException), pStatus=400)
+
+    else:
+        rResponse = RedirectResponse(
+            build_offer_url(MANUAL_SOURCE, vSourceId), status_code=303
+        )
+
+    return rResponse
+
+
+@app.post(
+    "/offers/import",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def import_offers(
+    request: Request,
+    pFile: UploadFile = File(alias="file"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Importe les offres d'un fichier envoyé et affiche le bilan."""
+
+    # Un octet de plus que la limite suffit à savoir qu'elle est dépassée.
+    vContent = pFile.file.read(MAX_IMPORT_BYTES + 1)
+    vSuffix = Path(pFile.filename or "").suffix
+
+    try:
+        if len(vContent) > MAX_IMPORT_BYTES:
+            raise ValueError(
+                f"Fichier trop volumineux : {MAX_IMPORT_BYTES // (1024 * 1024)} Mo "
+                "au maximum."
+            )
+
+        vReport = import_offers_file(
+            pDatabaseFile, io.BytesIO(vContent), vSuffix, datetime.now()
+        )
+
+    except ValueError as vException:
+        rResponse = render_new_offer(request, pMessage=str(vException), pStatus=400)
+
+    else:
+        rResponse = render_new_offer(request, pReport=vReport)
+
+    return rResponse
+
+
 @app.get("/offer", response_class=HTMLResponse)
 def show_offer(
     request: Request,
@@ -679,11 +839,16 @@ def show_offer(
         return rOffer
 
     vPrepared = prepare(vOffer)
+    vCompanyRules = load_company_rules(pDatabaseFile)
 
     rResponse = templates.TemplateResponse(
         request,
         "offer.html",
         {
+            "company_warning": describe_company_applications(
+                find_company_applications(pDatabaseFile, vPrepared)
+            ),
+            "company_rule": get_company_rule(vPrepared.get("company"), vCompanyRules),
             "active_page": "offers",
             "availability_labels": AVAILABILITY_LABELS,
             "offer": vPrepared,
@@ -691,6 +856,8 @@ def show_offer(
             "preparation": build_preparation(pDatabaseFile, vPrepared),
             "compared_fields": COMPARED_FIELDS,
             "application": get_application(pDatabaseFile, pSource, pSourceId),
+            "attachments": get_attachments(pDatabaseFile, pSource, pSourceId),
+            "attachment_extensions": ALLOWED_EXTENSIONS,
             "statuses": STATUS_LABELS,
             "message": None,
         },
@@ -798,6 +965,162 @@ def check_availability(
     return rResponse
 
 
+def build_offer_url(pSource, pSourceId):
+    """Retourne l'adresse de la fiche d'une offre."""
+
+    rUrl = (
+        f"{app.url_path_for('show_offer')}?source={quote(pSource)}"
+        f"&id={quote(pSourceId)}"
+    )
+
+    return rUrl
+
+
+@app.post("/offer/attachments", dependencies=[Depends(require_csrf)])
+def upload_attachment(
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pFile: UploadFile = File(alias="file"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Joint un fichier envoyé à une offre, puis rouvre sa fiche."""
+
+    get_existing_offer(pDatabaseFile, pSource, pSourceId)
+
+    # Un octet de plus que la limite suffit à savoir qu'elle est dépassée.
+    vContent = pFile.file.read(MAX_ATTACHMENT_BYTES + 1)
+
+    try:
+        add_attachment(
+            pDatabaseFile, pSource, pSourceId, pFile.filename, vContent, datetime.now()
+        )
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = RedirectResponse(build_offer_url(pSource, pSourceId), status_code=303)
+
+    return rResponse
+
+
+@app.get("/attachment")
+def download_attachment(
+    pAttachmentId: int = Query(alias="id"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Renvoie une pièce jointe en téléchargement, sous son nom d'origine."""
+
+    vAttachment = get_attachment(pDatabaseFile, pAttachmentId)
+
+    if vAttachment is None or not vAttachment["path"].is_file():
+        raise HTTPException(status_code=404, detail="Pièce jointe introuvable.")
+
+    # Téléchargé plutôt qu'affiché : un fichier joint n'est jamais interprété
+    # par le navigateur comme une page du site.
+    rResponse = FileResponse(
+        vAttachment["path"],
+        filename=vAttachment["file_name"],
+        content_disposition_type="attachment",
+    )
+
+    return rResponse
+
+
+@app.post("/attachment/delete", dependencies=[Depends(require_csrf)])
+def remove_attachment(
+    pAttachmentId: int = Form(alias="id"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Supprime une pièce jointe puis rouvre la fiche de son offre."""
+
+    vAttachment = get_attachment(pDatabaseFile, pAttachmentId)
+
+    if vAttachment is None:
+        raise HTTPException(status_code=404, detail="Pièce jointe introuvable.")
+
+    delete_attachment(pDatabaseFile, pAttachmentId)
+
+    rResponse = RedirectResponse(
+        build_offer_url(vAttachment["source"], vAttachment["source_id"]),
+        status_code=303,
+    )
+
+    return rResponse
+
+
+@app.get("/applications", response_class=HTMLResponse)
+def show_applications(
+    request: Request, pDatabaseFile: str = Depends(get_database_file)
+):
+    """Affiche les candidatures par étape et leurs taux de réponse."""
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "applications.html",
+        {
+            "active_page": "applications",
+            "board": build_board(pDatabaseFile, datetime.now()),
+            "statistics": build_application_statistics(pDatabaseFile),
+            "board_statuses": BOARD_STATUSES,
+            "statuses": STATUS_LABELS,
+        },
+    )
+
+    return rResponse
+
+
+@app.post("/applications/status", dependencies=[Depends(require_csrf)])
+def change_application_status(
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pStatus: str = Form(alias="status"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Déplace une candidature dans la colonne de son nouveau statut."""
+
+    if pStatus not in BOARD_STATUSES:
+        raise HTTPException(status_code=400, detail="Statut de candidature invalide.")
+
+    update_application_status(pDatabaseFile, pSource, pSourceId, pStatus)
+
+    rResponse = RedirectResponse(app.url_path_for("show_applications"), status_code=303)
+
+    return rResponse
+
+
+@app.post("/offer/company", dependencies=[Depends(require_csrf)])
+def update_company_rule(
+    request: Request,
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pKind: str = Form(alias="kind"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Exclut ou privilégie l'entreprise d'une offre, puis rouvre la page adaptée."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+
+    try:
+        add_company_rule(pDatabaseFile, vOffer.get("company"), pKind)
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    # Une entreprise exclue disparaît de la liste : on y retourne plutôt qu'à la fiche.
+    vTarget = (
+        app.url_path_for("list_offers")
+        if pKind == "excluded"
+        else build_offer_url(pSource, pSourceId)
+    )
+
+    if request.headers.get("HX-Request"):
+        rResponse = Response(status_code=204, headers={"HX-Redirect": vTarget})
+    else:
+        rResponse = RedirectResponse(vTarget, status_code=303)
+
+    return rResponse
+
+
 @app.post("/offer/duplicates", dependencies=[Depends(require_csrf)])
 def decide_duplicates(
     pSource: str = Form(..., alias="source"),
@@ -814,11 +1137,7 @@ def decide_duplicates(
 
     save_decision(pDatabaseFile, vOffer["fingerprint"], pDecision, datetime.now())
 
-    rResponse = RedirectResponse(
-        f"{app.url_path_for('show_offer')}?source={quote(pSource)}"
-        f"&id={quote(pSourceId)}",
-        status_code=303,
-    )
+    rResponse = RedirectResponse(build_offer_url(pSource, pSourceId), status_code=303)
 
     return rResponse
 
@@ -1005,7 +1324,13 @@ def show_history(
 
 
 def render_settings(
-    pRequest, pDatabaseFile, pMessage=None, pStatusCode=200, pResetMessage=None
+    pRequest,
+    pDatabaseFile,
+    pMessage=None,
+    pStatusCode=200,
+    pResetMessage=None,
+    pCompanies=None,
+    pCompaniesMessage=None,
 ):
     """Affiche thème, règles, planification, notifications et sources."""
 
@@ -1042,6 +1367,13 @@ def render_settings(
             "definitions": SETTING_DEFINITIONS,
             "message": pMessage,
             "reset_message": pResetMessage,
+            # Textes saisis réaffichés après une erreur, sinon listes enregistrées
+            "companies": pCompanies
+            or {
+                vKind: "\n".join(vNames)
+                for vKind, vNames in load_company_rules(pDatabaseFile).items()
+            },
+            "companies_message": pCompaniesMessage,
         },
         status_code=pStatusCode,
     )
@@ -1217,6 +1549,42 @@ async def reset_data(
 
 
 # Pages publiques : licence, connexion, déconnexion et mentions légales.
+@app.post(
+    "/settings/companies",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def update_companies(
+    request: Request,
+    pExcluded: str = Form("", alias="excluded"),
+    pPreferred: str = Form("", alias="preferred"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre les listes d'entreprises, ou les réaffiche avec l'erreur."""
+
+    try:
+        vRules = save_company_rules(pDatabaseFile, pExcluded, pPreferred)
+
+    except ValueError as vException:
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            pStatusCode=400,
+            pCompanies={"excluded": pExcluded, "preferred": pPreferred},
+            pCompaniesMessage=str(vException),
+        )
+
+    else:
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            pCompaniesMessage=f"{len(vRules['excluded'])} entreprise(s) exclue(s), "
+            f"{len(vRules['preferred'])} privilégiée(s).",
+        )
+
+    return rResponse
+
+
 @app.get("/license", response_class=HTMLResponse)
 def show_license(request: Request):
     """Affiche la licence du projet, lue dans le fichier LICENSE."""

@@ -170,6 +170,8 @@ def build_offer_conditions(
     pNow=None,
     pExpiredBefore=None,
     pFingerprint=None,
+    pExcludedCompanies=None,
+    pPreferredCompanies=None,
 ):
     """Construit les conditions SQL et leurs paramètres à partir des filtres.
 
@@ -252,6 +254,24 @@ def build_offer_conditions(
     if pFingerprint is not None:
         vConditions.append("o.fingerprint = ?")
         vParams.append(pFingerprint)
+
+    # L'empreinte « titre|entreprise|ville » contient le nom normalisé de
+    # l'entreprise, sans « | » ni joker LIKE : il est cherché entre ses séparateurs.
+    if pExcludedCompanies:
+        vConditions.append(
+            "(o.fingerprint IS NULL OR NOT ("
+            + " OR ".join("o.fingerprint LIKE ?" for _ in pExcludedCompanies)
+            + "))"
+        )
+        vParams += [f"%|{vCompany}|%" for vCompany in pExcludedCompanies]
+
+    if pPreferredCompanies is not None:
+        vConditions.append(
+            "("
+            + (" OR ".join("o.fingerprint LIKE ?" for _ in pPreferredCompanies) or "0")
+            + ")"
+        )
+        vParams += [f"%|{vCompany}|%" for vCompany in pPreferredCompanies]
 
     if pSeenSince is not None:
         vConditions.append("o.first_seen_at >= ?")
@@ -528,3 +548,21 @@ def get_offer(pDatabaseFile, pSource, pSourceId):
     rOffer = dict(vRow) if vRow is not None else None
 
     return rOffer
+
+
+def get_fingerprints(pDatabaseFile):
+    """Retourne les empreintes des offres en base, pour écarter les doublons."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(
+            "SELECT DISTINCT fingerprint FROM job_offer WHERE fingerprint IS NOT NULL"
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rFingerprints = {vRow[0] for vRow in vRows}
+
+    return rFingerprints

@@ -65,7 +65,7 @@
     <div class="stack">
         <article class="card">
             <h2>Notifications e-mail</h2>
-            <p class="card-subtitle">Les nouvelles offres de la recherche planifiée, envoyées par Gmail</p>
+            <p class="card-subtitle">Nouvelles offres de la recherche planifiée et relances du jour, par Gmail</p>
             <div class="source-state">
                 {% if schedule.missing_email_settings %}
                 <span class="tone-warning">{{ icon("circle-alert") }}</span>
@@ -104,6 +104,26 @@
                 {% endif %}
             </div>
             {% endfor %}
+        </article>
+
+        <article class="card">
+            <h2>Entreprises</h2>
+            <p class="card-subtitle">Une entreprise par ligne. Les exclues sont masquées de la liste des offres, les privilégiées marquées d'une étoile.</p>
+            <form class="profile-form" method="post" action="{{ url_for('update_companies').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <div class="grid grid-2">
+                    <label>À exclure
+                        <textarea name="excluded" rows="5" placeholder="Ex. Acme">{{ companies.excluded }}</textarea>
+                    </label>
+                    <label>À privilégier
+                        <textarea name="preferred" rows="5" placeholder="Ex. Globex">{{ companies.preferred }}</textarea>
+                    </label>
+                </div>
+                <div class="rules-actions">
+                    <button class="button button-primary" type="submit">Enregistrer</button>
+                    {% if companies_message %}<p class="application-message" role="status">{{ companies_message }}</p>{% endif %}
+                </div>
+            </form>
         </article>
 
         <article class="card">

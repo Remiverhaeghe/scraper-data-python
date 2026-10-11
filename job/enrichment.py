@@ -46,14 +46,25 @@ EXPERIENCE_LEVELS = (
 
 # Salaire : seulement avec une devise et une unité explicites. « 45 » seul peut
 # être un âge, un département ou un nombre d'heures.
+# Milliers avec décimales éventuelles, au point ou à la virgule : « 35,3k », « 135.84k »
+THOUSANDS = r"\d{2,3}(?:[.,]\d{1,2})?"
 SALARY_RANGE_K_PATTERN = re.compile(
-    r"(?P<currency1>[€$£])?\s*(?P<min>\d{2,3})\s*[kK]?\s*(?P<currency2>[€$£])?"
-    r"\s*(?:-|–|à|to)\s*(?P<currency3>[€$£])?\s*(?P<max>\d{2,3})\s*[kK]"
+    rf"(?P<currency1>[€$£])?\s*(?P<min>{THOUSANDS})\s*[kK]?\s*(?P<currency2>[€$£])?"
+    rf"\s*(?:-|–|à|to)\s*(?P<currency3>[€$£])?\s*(?P<max>{THOUSANDS})\s*[kK]"
     r"\s*(?P<currency4>[€$£])?",
 )
 SALARY_SINGLE_K_PATTERN = re.compile(
-    r"(?P<currency1>[€$£])\s*(?P<min>\d{2,3})\s*[kK]\b"
-    r"|(?P<min2>\d{2,3})\s*[kK]\s*(?P<currency2>[€$£])",
+    rf"(?P<currency1>[€$£])\s*(?P<min>{THOUSANDS})\s*[kK]\b"
+    rf"|(?P<min2>{THOUSANDS})\s*[kK]\s*(?P<currency2>[€$£])",
+)
+# Taux horaire, devise obligatoire : « $45-$120/Hour », « $22 per hour », « 15 €/h »
+HOURLY = r"\d{1,3}(?:[.,]\d{1,2})?"
+SALARY_HOURLY_PATTERN = re.compile(
+    rf"(?P<currency1>[€$£])?\s*(?P<min>{HOURLY})\s*(?P<currency2>[€$£])?"
+    rf"(?:\s*(?:-|–|à|to)\s*(?P<currency3>[€$£])?\s*(?P<max>{HOURLY})"
+    r"\s*(?P<currency4>[€$£])?)?"
+    r"\s*(?:/|per|par)\s*(?:hour|hr|h|heure)\b",
+    re.IGNORECASE,
 )
 SALARY_FULL_PATTERN = re.compile(
     r"(?P<min>\d{1,3}[\s  ]?\d{3})\s*(?:€|euros?)"
@@ -64,6 +75,9 @@ SALARY_FULL_PATTERN = re.compile(
 # En dessous, un montant n'est retenu qu'avec une période explicite :
 # « 1 000 € de prime » n'est pas un salaire.
 MIN_AMOUNT_WITHOUT_PERIOD = 10000
+
+# Séparateur des compléments ajoutés au titre par certaines sources (Arbeitnow, Jobicy)
+TITLE_SEPARATOR = " | "
 CURRENCIES = {"€": "EUR", "$": "USD", "£": "GBP"}
 
 # Compétences techniques reconnues, avec leur forme affichée. Les mots trop
@@ -209,36 +223,63 @@ def to_amount(pValue):
     return rAmount
 
 
+def to_decimal(pValue):
+    """Convertit « 35,3 » ou « 35.3 » en nombre."""
+
+    rNumber = float(pValue.replace(",", "."))
+
+    return rNumber
+
+
+def find_currency(pMatch):
+    """Retourne la devise trouvée à l'un des emplacements du motif, ou None."""
+
+    rCurrency = next(
+        (
+            pMatch.group(vName)
+            for vName in ("currency1", "currency2", "currency3", "currency4")
+            if pMatch.group(vName)
+        ),
+        None,
+    )
+
+    return rCurrency
+
+
 def detect_salary(pText):
     """Retourne (minimum, maximum, devise, période) d'un salaire explicite, ou None."""
 
     rSalary = None
 
-    vMatch = SALARY_RANGE_K_PATTERN.search(pText)
+    # Avant les milliers : dans « $45-$120/Hour », 45 et 120 sont des taux horaires.
+    vMatch = SALARY_HOURLY_PATTERN.search(pText)
 
-    # Une fourchette en milliers n'est retenue qu'avec une devise.
-    if vMatch and any(
-        vMatch.group(vName)
-        for vName in ("currency1", "currency2", "currency3", "currency4")
-    ):
-        vCurrency = next(
-            vMatch.group(vName)
-            for vName in ("currency1", "currency2", "currency3", "currency4")
-            if vMatch.group(vName)
-        )
+    if vMatch and find_currency(vMatch):
         rSalary = (
-            float(vMatch.group("min")) * 1000,
-            float(vMatch.group("max")) * 1000,
-            CURRENCIES[vCurrency],
-            "year",
+            to_decimal(vMatch.group("min")),
+            to_decimal(vMatch.group("max")) if vMatch.group("max") else None,
+            CURRENCIES[find_currency(vMatch)],
+            "hour",
         )
+
+    if rSalary is None:
+        vMatch = SALARY_RANGE_K_PATTERN.search(pText)
+
+        # Une fourchette en milliers n'est retenue qu'avec une devise.
+        if vMatch and find_currency(vMatch):
+            rSalary = (
+                to_decimal(vMatch.group("min")) * 1000,
+                to_decimal(vMatch.group("max")) * 1000,
+                CURRENCIES[find_currency(vMatch)],
+                "year",
+            )
 
     if rSalary is None:
         vMatch = SALARY_SINGLE_K_PATTERN.search(pText)
 
         if vMatch:
             vCurrency = vMatch.group("currency1") or vMatch.group("currency2")
-            vAmount = float(vMatch.group("min") or vMatch.group("min2")) * 1000
+            vAmount = to_decimal(vMatch.group("min") or vMatch.group("min2")) * 1000
             rSalary = (vAmount, None, CURRENCIES[vCurrency], "year")
 
     if rSalary is None:
@@ -300,6 +341,14 @@ def enrich_offer(pOffer, pText):
                 pOffer["salary_period"],
             ) = vSalary
             rFilled.append("salary")
+
+    # « Data engineer (m/w/d) | Snowflake | Remote » : le premier segment est le
+    # poste, les autres des compléments déjà lus ci-dessus dans le texte complet.
+    vTitle = pOffer.get("title")
+
+    if isinstance(vTitle, str) and TITLE_SEPARATOR in vTitle:
+        pOffer["title"] = vTitle.split(TITLE_SEPARATOR)[0].strip() or vTitle
+        rFilled.append("title")
 
     return rFilled
 

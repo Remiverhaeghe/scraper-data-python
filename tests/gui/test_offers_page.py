@@ -6,6 +6,10 @@ import pandas as pd
 import pytest
 
 import gui.offer_detail as offer_detail
+import gui.offers_page as offers_page_module
+from gui.offer_form import ManualOfferDialog
+from job.companies import load_company_rules
+from job.manual_offers import add_manual_offer
 from gui.offer_detail import describe_application, summarize_values
 from gui.offers_model import format_cell, get_cell_color
 from gui.theme import COLORS
@@ -13,6 +17,8 @@ from gui.offers_page import OffersPage
 from storage.database import initialize_database
 from storage.job_applications import get_application, save_application
 from storage.job_offers import get_offer, save_offers, set_availability
+
+NOW = datetime(2026, 10, 11, 10, 0)
 
 
 @pytest.fixture
@@ -322,3 +328,206 @@ def test_duplicates_are_grouped_then_separated(offers_page, database_file):
     offers_page.multiple_check.setChecked(False)
 
     assert get_titles(offers_page).count("QA") == 2
+
+
+def test_manual_offer_dialog_requires_fields(qt_application, database_file):
+    """Vérifie que la saisie incomplète reste ouverte, puis que l'offre est créée."""
+
+    vDialog = ManualOfferDialog(database_file)
+
+    vDialog.save()
+
+    assert vDialog.error_label.text().startswith("Offre non créée : titre manquant")
+    assert vDialog.source_id is None
+
+    vDialog.title_edit.setText("Architecte cloud")
+    vDialog.company_edit.setText("Nimbus")
+    vDialog.url_edit.setText("https://nimbus.example/offre")
+    vDialog.save()
+
+    assert get_offer(database_file, "manual", vDialog.source_id)["title"] == (
+        "Architecte cloud"
+    )
+
+
+def test_import_from_file_shows_report(offers_page, tmp_path, monkeypatch):
+    """Vérifie l'import d'un fichier et le bilan affiché, lignes refusées comprises."""
+
+    vPath = tmp_path / "offres.json"
+    vPath.write_text(
+        '[{"title": "Analyste", "company": "Data SA", "url": "https://d.example"},'
+        ' {"title": "Sans entreprise", "url": "https://d.example/2"}]',
+        encoding="utf-8",
+    )
+    vShown = {}
+
+    monkeypatch.setattr(
+        offers_page_module.QMessageBox,
+        "exec",
+        lambda pBox: vShown.update(text=pBox.text(), details=pBox.detailedText()),
+    )
+
+    offers_page.import_from(str(vPath))
+
+    assert "Analyste" in get_titles(offers_page)
+    assert vShown["text"].startswith("1 offre(s) importée(s) sur 2")
+    assert vShown["details"] == "Ligne 2 : entreprise manquante"
+
+
+def test_company_warning_and_exclusion(offers_page, database_file, monkeypatch):
+    """Vérifie l'avertissement orange puis l'exclusion de l'entreprise depuis la fiche."""
+
+    vFields = {"company": "Acme", "url": "https://acme.example"}
+    vFirstId = add_manual_offer(database_file, {**vFields, "title": "Java"}, NOW)
+    vSecondId = add_manual_offer(database_file, {**vFields, "title": "Python"}, NOW)
+    save_application(database_file, "manual", vFirstId, "APPLIED")
+
+    offers_page.refresh()
+    offers_page.select_offer(("manual", vSecondId))
+
+    vPanel = offers_page.detail_panel
+
+    assert not vPanel.company_warning.isHidden()
+    assert vPanel.company_warning.text().startswith(
+        "Déjà 1 candidature(s) dans cette entreprise : Java"
+    )
+
+    monkeypatch.setattr(
+        offer_detail.QMessageBox,
+        "question",
+        lambda *pArgs: offer_detail.QMessageBox.StandardButton.Yes,
+    )
+    vPanel.company_buttons["excluded"].click()
+
+    assert "Python" not in get_titles(offers_page)
+    assert load_company_rules(database_file)["excluded"] == ["Acme"]
+
+
+def test_attachments_are_added_and_deleted(
+    offers_page, database_file, tmp_path, monkeypatch
+):
+    """Vérifie l'ajout d'une pièce jointe, le refus d'un type inconnu et la suppression."""
+
+    vPanel = offers_page.detail_panel
+    vCv = tmp_path / "CV.pdf"
+    vCv.write_bytes(b"%PDF")
+    vRefused = tmp_path / "outil.exe"
+    vRefused.write_bytes(b"MZ")
+    vWarnings = []
+
+    monkeypatch.setattr(
+        offer_detail.QMessageBox,
+        "warning",
+        lambda pParent, pTitle, pText: vWarnings.append(pText),
+    )
+    monkeypatch.setattr(
+        offer_detail.QMessageBox,
+        "question",
+        lambda *pArgs: offer_detail.QMessageBox.StandardButton.Yes,
+    )
+
+    vPanel.attach_file(str(vCv))
+    vPanel.attach_file(str(vRefused))
+
+    assert vPanel.attachments_list.count() == 1
+    assert vPanel.attachments_list.item(0).text().startswith("CV.pdf · ")
+    assert vWarnings[0].startswith("Type de fichier non accepté")
+
+    vPanel.attachments_list.setCurrentRow(0)
+    vPanel.delete_attachment()
+
+    assert vPanel.attachments_list.count() == 0
+
+
+def test_add_offer_selects_created_offer(offers_page, monkeypatch):
+    """Vérifie que l'offre saisie est affichée et sélectionnée après sa création."""
+
+    def accept(pDialog):
+        """Remplit puis valide la fenêtre comme le ferait l'utilisateur."""
+        pDialog.title_edit.setText("Architecte cloud")
+        pDialog.company_edit.setText("Nimbus")
+        pDialog.description_edit.setPlainText("Kubernetes et Terraform")
+        pDialog.save()
+
+        return pDialog.result()
+
+    monkeypatch.setattr(offers_page_module.ManualOfferDialog, "exec", accept)
+
+    offers_page.add_offer()
+
+    assert offers_page.detail_panel.offer["title"] == "Architecte cloud"
+
+
+def test_import_errors_are_reported(offers_page, tmp_path, monkeypatch):
+    """Vérifie les messages d'un fichier refusé ou illisible, et le choix annulé."""
+
+    vWarnings = []
+
+    monkeypatch.setattr(
+        offers_page_module.QMessageBox,
+        "warning",
+        lambda pParent, pTitle, pText: vWarnings.append(pText),
+    )
+    monkeypatch.setattr(
+        offers_page_module.QFileDialog,
+        "getOpenFileName",
+        lambda *pArgs: (str(tmp_path / "offres.txt"), ""),
+    )
+
+    offers_page.choose_import_file()
+
+    monkeypatch.setattr(
+        offers_page_module,
+        "import_offers_file",
+        lambda *pArgs: (_ for _ in ()).throw(OSError("disque")),
+    )
+    offers_page.import_from(str(tmp_path / "offres.csv"))
+
+    assert vWarnings == [
+        "Format non pris en charge : .txt.",
+        "Le fichier n'a pas pu être importé.",
+    ]
+
+
+def test_attachment_dialogs(offers_page, tmp_path, monkeypatch):
+    """Vérifie le choix d'un fichier à joindre et l'ouverture d'une pièce jointe."""
+
+    vPanel = offers_page.detail_panel
+    vCv = tmp_path / "CV.pdf"
+    vCv.write_bytes(b"%PDF")
+    vOpened = []
+
+    monkeypatch.setattr(
+        offer_detail.QFileDialog, "getOpenFileName", lambda *pArgs: (str(vCv), "")
+    )
+    monkeypatch.setattr(
+        offer_detail.QDesktopServices, "openUrl", lambda pUrl: vOpened.append(pUrl)
+    )
+
+    vPanel.add_attachment()
+    vPanel.open_attachment(vPanel.attachments_list.item(0))
+
+    assert vOpened[0].toLocalFile().endswith(".pdf")
+
+
+def test_company_preferred_from_detail(offers_page, database_file):
+    """Vérifie qu'une entreprise privilégiée est marquée d'une étoile dans la liste."""
+
+    vSourceId = add_manual_offer(
+        database_file,
+        {"title": "Go", "company": "Globex", "url": "https://g.example"},
+        NOW,
+    )
+    offers_page.refresh()
+    offers_page.select_offer(("manual", vSourceId))
+
+    offers_page.detail_panel.company_buttons["preferred"].click()
+
+    vRow = next(
+        vIndex
+        for vIndex, vOffer in enumerate(offers_page.model.offers)
+        if vOffer["source_id"] == vSourceId
+    )
+
+    assert format_cell(offers_page.model.offers[vRow], "company") == "★ Globex"
+    assert offers_page.detail_panel.company_buttons["preferred"].isHidden()

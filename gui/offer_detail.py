@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from html import escape
+from pathlib import Path
 
 from PySide6.QtCore import QDate, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QTextBlockFormat, QTextCursor
@@ -13,7 +14,10 @@ from PySide6.QtWidgets import (
     QFrame,
     QGroupBox,
     QHBoxLayout,
+    QFileDialog,
     QLabel,
+    QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
@@ -31,6 +35,11 @@ from gui.widgets import (
     create_button,
     create_card,
     create_icon_label,
+)
+from job.companies import (
+    add_company_rule,
+    describe_company_applications,
+    find_company_applications,
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
 from job.preparation import prepare_application
@@ -50,6 +59,13 @@ from storage.job_applications import (
     get_application,
     record_follow_up,
     save_application,
+)
+from storage.attachments import (
+    ALLOWED_EXTENSIONS,
+    add_attachment,
+    delete_attachment,
+    get_attachment,
+    get_attachments,
 )
 from storage.duplicates import save_decision
 from storage.job_offers import FOLLOW_UP_STATUSES, set_availability
@@ -176,6 +192,7 @@ class OfferDetailPanel(QWidget):
 
         self.database_file = pDatabaseFile
         self.offer = None
+        self.attachments_list = None
 
         self.title_label = QLabel()
         self.title_label.setObjectName("offerTitle")
@@ -184,6 +201,12 @@ class OfferDetailPanel(QWidget):
         self.company_label = QLabel()
         self.company_label.setObjectName("pageSubtitle")
         self.company_label.setWordWrap(True)
+
+        # Avertissement si une candidature a déjà été envoyée à cette entreprise
+        self.company_warning = QLabel()
+        self.company_warning.setObjectName("companyWarning")
+        self.company_warning.setWordWrap(True)
+        self.company_warning.hide()
 
         self.open_button = create_button(
             "Ouvrir l'offre", "external-link", "primaryButton", COLORS["on_primary"]
@@ -217,6 +240,8 @@ class OfferDetailPanel(QWidget):
         vSummary.setContentsMargins(18, 16, 18, 16)
         vSummary.addWidget(self.title_label)
         vSummary.addWidget(self.company_label)
+        vSummary.addWidget(self.company_warning)
+        vSummary.addLayout(self.create_company_row())
         vSummary.addWidget(self.open_button)
         vSummary.addLayout(self.create_availability_row())
         vSummary.addWidget(self.create_duplicates_group())
@@ -255,6 +280,78 @@ class OfferDetailPanel(QWidget):
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.addWidget(self.stack)
+
+    def create_company_row(self):
+        """Construit les boutons qui excluent ou privilégient l'entreprise de l'offre."""
+        self.company_buttons = {}
+
+        rLayout = QHBoxLayout()
+        rLayout.setSpacing(12)
+
+        for vKind, vText in (("preferred", "Privilégier"), ("excluded", "Exclure")):
+            vButton = QPushButton(f"{vText} l'entreprise")
+            vButton.setObjectName("linkButton")
+            vButton.clicked.connect(
+                lambda pChecked=False, pKind=vKind: self.set_company_rule(pKind)
+            )
+
+            self.company_buttons[vKind] = vButton
+            rLayout.addWidget(vButton)
+
+        rLayout.addStretch()
+
+        return rLayout
+
+    def set_company_rule(self, pKind):
+        """Range l'entreprise de l'offre dans une liste, après confirmation pour l'exclusion."""
+        vCompany = self.offer.get("company")
+
+        if pKind == "excluded":
+            vAnswer = QMessageBox.question(
+                self,
+                "Exclure l'entreprise",
+                f"Masquer toutes les offres de « {vCompany} » ? La liste se modifie "
+                "dans les Paramètres.",
+            )
+
+            if vAnswer != QMessageBox.StandardButton.Yes:
+                return
+
+        try:
+            add_company_rule(self.database_file, vCompany, pKind)
+
+        except Exception:
+            logger.exception("Échec de l'enregistrement de la liste d'entreprises")
+
+            QMessageBox.warning(
+                self, "Entreprise", "La liste d'entreprises n'a pas pu être modifiée."
+            )
+
+        else:
+            # La liste des offres se recharge : une entreprise exclue en disparaît.
+            self.application_changed.emit()
+
+    def show_company(self, pOffer):
+        """Affiche l'avertissement de candidature déjà envoyée et l'état de l'entreprise."""
+        vHasCompany = bool(pOffer.get("company"))
+        vText = None
+
+        if pOffer and vHasCompany:
+            try:
+                vText = describe_company_applications(
+                    find_company_applications(self.database_file, pOffer)
+                )
+
+            except Exception:
+                logger.exception("Impossible de lire les candidatures de l'entreprise")
+
+        self.company_warning.setText(vText or "")
+        self.company_warning.setVisible(vText is not None)
+
+        vPreferred = bool(pOffer.get("company_preferred"))
+
+        self.company_buttons["preferred"].setVisible(vHasCompany and not vPreferred)
+        self.company_buttons["excluded"].setVisible(vHasCompany)
 
     def create_availability_row(self):
         """Construit la vérification du lien et son résultat."""
@@ -466,8 +563,127 @@ class OfferDetailPanel(QWidget):
         vLayout.addWidget(self.notes_edit)
         vLayout.addLayout(vButtons)
         vLayout.addWidget(self.application_label)
+        vLayout.addLayout(self.create_attachments_row())
 
         return rGroup
+
+    def create_attachments_row(self):
+        """Construit la liste des pièces jointes et ses boutons."""
+        vTitle = QLabel("Pièces jointes")
+        vTitle.setObjectName("fieldLabel")
+
+        self.attachments_list = QListWidget()
+        self.attachments_list.setMaximumHeight(90)
+        self.attachments_list.setToolTip("Double-clic pour ouvrir le fichier")
+        self.attachments_list.itemDoubleClicked.connect(self.open_attachment)
+
+        vAddButton = QPushButton("Joindre un fichier…")
+        vAddButton.setObjectName("linkButton")
+        vAddButton.setToolTip(
+            "CV envoyé, lettre : " + ", ".join(ALLOWED_EXTENSIONS) + ", 10 Mo maximum"
+        )
+        vAddButton.clicked.connect(self.add_attachment)
+
+        vDeleteButton = QPushButton("Supprimer")
+        vDeleteButton.setObjectName("linkButton")
+        vDeleteButton.clicked.connect(self.delete_attachment)
+
+        vButtons = QHBoxLayout()
+        vButtons.addWidget(vAddButton)
+        vButtons.addWidget(vDeleteButton)
+        vButtons.addStretch()
+
+        rLayout = QVBoxLayout()
+        rLayout.setSpacing(4)
+        rLayout.addWidget(vTitle)
+        rLayout.addWidget(self.attachments_list)
+        rLayout.addLayout(vButtons)
+
+        return rLayout
+
+    def load_attachments(self):
+        """Affiche les pièces jointes de l'offre."""
+        self.attachments_list.clear()
+
+        if self.offer is None:
+            return
+
+        try:
+            vAttachments = get_attachments(
+                self.database_file, self.offer["source"], self.offer["source_id"]
+            )
+
+        except Exception:
+            logger.exception("Impossible de lire les pièces jointes")
+            vAttachments = []
+
+        for vAttachment in vAttachments:
+            vItem = QListWidgetItem(
+                f"{vAttachment['file_name']} · {format_date(vAttachment['added_at'])}"
+            )
+            vItem.setData(Qt.ItemDataRole.UserRole, vAttachment["id"])
+            self.attachments_list.addItem(vItem)
+
+    def add_attachment(self):
+        """Joint un fichier choisi sur le disque à l'offre affichée."""
+        vFilter = " ".join(f"*{vExtension}" for vExtension in ALLOWED_EXTENSIONS)
+
+        vPath, _ = QFileDialog.getOpenFileName(
+            self, "Joindre un fichier", str(Path.home()), f"Documents ({vFilter})"
+        )
+
+        if vPath:
+            self.attach_file(vPath)
+
+    def attach_file(self, pPath):
+        """Range le fichier avec l'offre, ou explique pourquoi il est refusé."""
+        try:
+            add_attachment(
+                self.database_file,
+                self.offer["source"],
+                self.offer["source_id"],
+                Path(pPath).name,
+                Path(pPath).read_bytes(),
+                datetime.now(),
+            )
+
+        except ValueError as vException:
+            QMessageBox.warning(self, "Pièce jointe refusée", str(vException))
+
+        except Exception:
+            logger.exception("Échec de l'ajout de la pièce jointe")
+
+            QMessageBox.warning(
+                self, "Pièce jointe", "Le fichier n'a pas pu être joint."
+            )
+
+        self.load_attachments()
+
+    def open_attachment(self, pItem):
+        """Ouvre une pièce jointe avec l'application associée à son type."""
+        vAttachment = get_attachment(
+            self.database_file, pItem.data(Qt.ItemDataRole.UserRole)
+        )
+
+        if vAttachment is not None and vAttachment["path"].exists():
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(vAttachment["path"])))
+        else:
+            QMessageBox.warning(self, "Pièce jointe", "Le fichier est introuvable.")
+
+    def delete_attachment(self):
+        """Supprime la pièce jointe sélectionnée, après confirmation."""
+        vItem = self.attachments_list.currentItem()
+
+        if vItem is None:
+            return
+
+        vAnswer = QMessageBox.question(
+            self, "Supprimer la pièce jointe", f"Supprimer « {vItem.text()} » ?"
+        )
+
+        if vAnswer == QMessageBox.StandardButton.Yes:
+            delete_attachment(self.database_file, vItem.data(Qt.ItemDataRole.UserRole))
+            self.load_attachments()
 
     def show_offer(self, pOffer):
         """Affiche une offre préparée par prepare_offer, ou vide le panneau."""
@@ -490,6 +706,7 @@ class OfferDetailPanel(QWidget):
         self.availability_button.setEnabled(safe_url(vOffer.get("url")) != "#")
         self.availability_label.setText(describe_availability(vOffer))
         self.show_duplicates(vOffer)
+        self.show_company(vOffer)
 
         vRemote = vOffer.get("remote")
 
@@ -569,6 +786,7 @@ class OfferDetailPanel(QWidget):
             vApplication.get("status") in FOLLOW_UP_STATUSES
         )
         self.application_label.setText(describe_application(vApplication))
+        self.load_attachments()
 
     def get_follow_up_days(self):
         """Retourne le délai de relance défini dans les paramètres."""

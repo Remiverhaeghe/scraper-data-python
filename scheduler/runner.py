@@ -4,9 +4,11 @@ import smtplib
 from datetime import datetime
 
 from job.application import process_jobs
-from job.notification import build_new_offers_email
+from job.application_tracking import get_due_follow_ups
+from job.notification import build_follow_ups_email, build_new_offers_email
 from job.presentation import SCHEDULED_TRIGGER
 from job.schedule import (
+    FOLLOW_UP_REMINDER_KEY,
     describe_scheduled_search,
     is_schedule_due,
     load_schedule,
@@ -14,6 +16,7 @@ from job.schedule import (
 )
 from job.sources.aggregator import ScrapingCancelled
 from job.sources.configuration import build_job_config, build_search_arguments
+from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
 from utils.mailer import send_email
 
@@ -56,6 +59,41 @@ def notify_new_offers(pSchedule, pItems):
     return rSent
 
 
+def notify_follow_ups(pDatabaseFile, pSchedule, pNow):
+    """Envoie le rappel des relances dues, une fois par jour ; retourne True s'il est parti."""
+
+    rSent = False
+
+    vToday = pNow.date().isoformat()
+
+    if not pSchedule["email"]:
+        logger.info("Aucune adresse de notification : pas de rappel de relances")
+
+    elif get_setting_values(pDatabaseFile).get(FOLLOW_UP_REMINDER_KEY) == vToday:
+        logger.info("Rappel des relances déjà envoyé aujourd'hui")
+
+    else:
+        vFollowUps = get_due_follow_ups(pDatabaseFile, pNow)
+
+        if not vFollowUps:
+            logger.info("Aucune relance due : pas de rappel envoyé")
+
+        else:
+            try:
+                send_email(pSchedule["email"], *build_follow_ups_email(vFollowUps))
+
+            except (OSError, smtplib.SMTPException, ValueError) as vException:
+                logger.error("Échec de l'envoi du rappel des relances : %s", vException)
+
+            else:
+                save_setting_values(pDatabaseFile, {FOLLOW_UP_REMINDER_KEY: vToday})
+                rSent = True
+
+                logger.info("Rappel envoyé pour %s relance(s)", len(vFollowUps))
+
+    return rSent
+
+
 def run_due_search(pDatabaseFile, pNow, pCancelEvent=None):
     """Lance la recherche planifiée si elle est due ; retourne son résultat ou None."""
 
@@ -84,6 +122,7 @@ def run_due_search(pDatabaseFile, pNow, pCancelEvent=None):
         )
 
         notify_new_offers(vSchedule, rResult.items)
+        notify_follow_ups(pDatabaseFile, vSchedule, pNow)
 
     return rResult
 

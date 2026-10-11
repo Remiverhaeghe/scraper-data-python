@@ -1,0 +1,73 @@
+{# Ajout d'offres (routes /offers/new et /offers/import) : mêmes champs obligatoires
+   et même import que la page Offres du bureau, via job/manual_offers.py. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Ajouter des offres{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Ajouter des offres", "Une offre trouvée ailleurs, ou un fichier au format de l'export", "sparkles") }}
+
+{% if message %}<p class="application-message tone-danger" role="alert">{{ message }}</p>{% endif %}
+
+<div class="grid grid-settings">
+    <article class="card">
+        <h2>Saisie manuelle</h2>
+        <p class="card-subtitle">* obligatoire. Renseignez au moins le lien ou la description : compétences, télétravail et salaire y sont repérés.</p>
+        <form class="profile-form" method="post" action="{{ url_for('create_offer').path }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <label>Titre *
+                <input type="text" name="title" value="{{ fields.title or '' }}" required maxlength="300" placeholder="Ex. Développeur Java">
+            </label>
+            <label>Entreprise *
+                <input type="text" name="company" value="{{ fields.company or '' }}" required maxlength="200">
+            </label>
+            <label>Lien
+                <input type="url" name="url" value="{{ fields.url or '' }}" placeholder="https://…">
+            </label>
+            <label>Description
+                <textarea name="description" rows="6">{{ fields.description or '' }}</textarea>
+            </label>
+            <label>Lieu
+                <input type="text" name="location" value="{{ fields.location or '' }}" placeholder="Ex. Lille">
+            </label>
+            <label>Contrat
+                <select name="contract">
+                    <option value="">Non précisé</option>
+                    {% for contract in contracts %}
+                    <option value="{{ contract }}" {% if fields.contract == contract %}selected{% endif %}>{{ contract }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Salaire annoncé
+                <input type="text" name="salary_label" value="{{ fields.salary_label or '' }}" placeholder="Ex. 45 k€ brut annuel">
+            </label>
+            <label class="check"><input type="checkbox" name="remote" value="1" {% if fields.remote %}checked{% endif %}> Télétravail possible</label>
+            <div class="rules-actions">
+                <button class="button button-primary" type="submit">Ajouter l'offre</button>
+            </div>
+        </form>
+    </article>
+
+    <article class="card">
+        <h2>Import de fichier</h2>
+        <p class="card-subtitle">CSV, Excel ou JSON au format de l'export de la page Offres. Les lignes sans titre, entreprise, ni lien ou description sont rejetées ; les offres déjà présentes sont écartées.</p>
+        <form class="profile-form" method="post" action="{{ url_for('import_offers').path }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <label>Fichier
+                <input type="file" name="file" required accept="{{ import_formats | join(',') }}">
+            </label>
+            <div class="rules-actions">
+                <button class="button button-primary" type="submit">{{ icon("file-text", 16) }} Importer</button>
+            </div>
+        </form>
+        {% if import_summary %}
+        <p class="application-message" role="status">{{ import_summary }}</p>
+        {% if import_problems %}
+        <ul class="muted">{% for problem in import_problems %}<li>{{ problem }}</li>{% endfor %}</ul>
+        {% endif %}
+        <p><a href="{{ url_for('list_offers').path }}">Voir les offres</a></p>
+        {% endif %}
+    </article>
+</div>
+{% endblock %}

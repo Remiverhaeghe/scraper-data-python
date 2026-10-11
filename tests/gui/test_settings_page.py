@@ -262,3 +262,23 @@ def test_reset_failure_is_reported(qt_application, tmp_path, monkeypatch):
     vPage.reset_data()
 
     assert "La réinitialisation a échoué" in vPage.reset_message.text()
+
+
+def test_companies_are_saved_from_the_page(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'enregistrement des listes d'entreprises et le message d'erreur."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile, monkeypatch)
+
+    vPage.company_edits["excluded"].setPlainText("Globex\nInitech")
+    vPage.company_edits["preferred"].setPlainText("Acme")
+    vPage.save_companies()
+
+    assert vPage.companies_message.text() == (
+        "2 entreprise(s) exclue(s), 1 privilégiée(s)."
+    )
+
+    vPage.company_edits["preferred"].setPlainText("globex")
+    vPage.save_companies()
+
+    assert "à la fois exclue et privilégiée" in vPage.companies_message.text()

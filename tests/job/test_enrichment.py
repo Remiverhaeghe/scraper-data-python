@@ -8,6 +8,7 @@ from job.enrichment import (
     detect_remote,
     detect_salary,
     detect_skills,
+    enrich_offer,
     enrich_offers,
 )
 
@@ -60,6 +61,15 @@ def test_detect_experience(pText, pExpected):
         ("Prime de 1 000 € à l'embauche", None),
         ("Mission de 45k sans devise", None),
         ("€60kilos de matériel", None),
+        # Libellés relevés dans l'export Qualité, non lus auparavant
+        ("$21.2k", (21200.0, None, "USD", "year")),
+        ("$135.84k - $212.25k", (135840.0, 212250.0, "USD", "year")),
+        ("$35,3k- $52k", (35300.0, 52000.0, "USD", "year")),
+        ("$45-$120/Hour", (45.0, 120.0, "USD", "hour")),
+        ("$90 - $150 /hour", (90.0, 150.0, "USD", "hour")),
+        ("$22 per hour", (22.0, None, "USD", "hour")),
+        ("15,50 €/h", (15.5, None, "EUR", "hour")),
+        ("Travail 35 h par semaine", None),
     ],
 )
 def test_detect_salary(pText, pExpected):
@@ -108,3 +118,15 @@ def test_enrich_offers_fills_only_empty_fields_and_rejects_unusable():
     assert vOffer["experience_level"] == "Junior"
     assert (vOffer["salary_min"], vOffer["salary_max"]) == (50000.0, 60000.0)
     assert vOffer["salary_currency"] == "EUR"
+
+
+def test_title_segments_are_split_after_reading():
+    """Vérifie que seul le poste reste dans le titre, le télétravail étant lu avant."""
+
+    vOffer = {"title": "Senior Consultant (m/w/d) Finance | komplett remote"}
+
+    vFilled = enrich_offer(vOffer, "Senior Consultant Finance | fully remote")
+
+    assert vOffer["title"] == "Senior Consultant (m/w/d) Finance"
+    assert "title" in vFilled
+    assert vOffer["remote"] in (1, True)

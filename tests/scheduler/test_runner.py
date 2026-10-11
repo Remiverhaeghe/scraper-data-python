@@ -18,6 +18,8 @@ from job.schedule import (
 )
 from job.sources.aggregator import ScrapingCancelled
 from storage.database import initialize_database
+from storage.job_applications import save_application
+from storage.job_offers import save_offers
 
 NOW = datetime(2026, 10, 10, 12, 0)
 
@@ -161,3 +163,36 @@ def test_run_due_search_handles_web_request(database_file, monkeypatch, sent_ema
 
     assert runner.run_due_search(database_file, NOW) is not None
     assert load_schedule(database_file)["run_requested"] is None
+
+
+def test_notify_follow_ups_once_a_day(database_file, sent_emails):
+    """Vérifie le rappel des relances dues, envoyé une seule fois par jour."""
+
+    save_offers(
+        database_file,
+        pd.DataFrame(
+            [
+                {
+                    "source": "remotive",
+                    "source_id": "1",
+                    "title": "Java",
+                    "company": "Acme",
+                    "url": "https://acme.example",
+                }
+            ]
+        ),
+        NOW,
+    )
+    vSchedule = load_schedule(database_file)
+
+    assert runner.notify_follow_ups(database_file, vSchedule, NOW) is False
+
+    save_application(
+        database_file, "remotive", "1", "APPLIED", pFollowUpDate=NOW, pNow=NOW
+    )
+
+    assert runner.notify_follow_ups(database_file, vSchedule, NOW) is True
+    assert sent_emails[0][1] == "JobBoard Perso : 1 relance(s) à faire"
+    assert "Acme · relance prévue le 10/10/2026" in sent_emails[0][2]
+    assert runner.notify_follow_ups(database_file, vSchedule, NOW) is False
+    assert len(sent_emails) == 1

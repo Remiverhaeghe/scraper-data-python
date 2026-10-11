@@ -22,7 +22,17 @@
                     {% if offer.is_expired %}<span class="badge badge-first badge-danger">Probablement expirée</span>{% endif %}
                     {{ offer.title or "Titre non communiqué par la source" }}
                 </h1>
-                <p class="offer-company">{{ offer.company or "" }}{% if offer.location %} · {{ offer.location }}{% endif %}</p>
+                <p class="offer-company">{% if company_rule == "preferred" %}<span class="tone-primary" title="Entreprise privilégiée">★</span> {% endif %}{{ offer.company or "" }}{% if offer.location %} · {{ offer.location }}{% endif %}</p>
+                {% if company_warning %}<p class="company-warning" role="alert">{{ icon("circle-alert", 16) }} {{ company_warning }}</p>{% endif %}
+                {# hx-confirm demande confirmation sans script en ligne, bloqué par la CSP. #}
+                {% if offer.company %}
+                <div class="company-actions">
+                    {% if company_rule != "preferred" %}
+                    <button class="link-button" type="button" hx-post="{{ url_for('update_company_rule').path }}" hx-vals='{{ {"source": offer.source, "id": offer.source_id, "kind": "preferred"} | tojson }}'>Privilégier l'entreprise</button>
+                    {% endif %}
+                    <button class="link-button" type="button" hx-post="{{ url_for('update_company_rule').path }}" hx-vals='{{ {"source": offer.source, "id": offer.source_id, "kind": "excluded"} | tojson }}' hx-confirm="Masquer toutes les offres de cette entreprise ? La liste se modifie dans les Paramètres.">Exclure l'entreprise</button>
+                </div>
+                {% endif %}
                 <a class="button button-primary" href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">
                     {{ icon("external-link", 16) }} Voir l'offre sur {{ offer.source_label }}
                 </a>
@@ -178,6 +188,9 @@
         </article>
     </div>
 
-    {% include "_application.html" %}
+    <div class="stack">
+        {% include "_application.html" %}
+        {% include "_attachments.html" %}
+    </div>
 </div>
 {% endblock %}
