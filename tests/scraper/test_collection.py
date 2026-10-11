@@ -8,39 +8,8 @@ import pandas as pd
 from scraper.collection import (
     deduplicate_dataframe,
     deduplicate_items,
-    has_reached_limit,
     limit_dataframe,
 )
-
-
-def test_has_reached_limit_returns_true_when_limit_is_reached():
-    """Vérifie que la limite est considérée comme atteinte."""
-
-    vItems = ["item1", "item2", "item3"]
-
-    rResult = has_reached_limit(vItems, 3)
-
-    assert rResult is True
-
-
-def test_has_reached_limit_returns_false_when_limit_is_not_reached():
-    """Vérifie que la limite n'est pas considérée comme atteinte."""
-
-    vItems = ["item1", "item2"]
-
-    rResult = has_reached_limit(vItems, 3)
-
-    assert rResult is False
-
-
-def test_has_reached_limit_returns_false_without_limit():
-    """Vérifie qu'aucune limite signifie que la collection n'est jamais limitée."""
-
-    vItems = ["item1", "item2", "item3"]
-
-    rResult = has_reached_limit(vItems, None)
-
-    assert rResult is False
 
 
 def test_deduplicate_items_removes_duplicates():

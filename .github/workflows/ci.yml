@@ -33,6 +33,14 @@ jobs:
       - name: Vérification du formatage
         run: black --check .
 
+      # Qualité du code : la configuration (convention p, v, r) est dans pyproject.toml.
+      - name: Analyse pylint
+        run: pylint $(git ls-files '*.py' | grep -v '^tests/') --fail-under=9.8
+
+      # Sécurité : toute alerte non justifiée par un « nosec » commenté fait échouer.
+      - name: Analyse de sécurité bandit
+        run: bandit -q -r . -x ./tests
+
       # Le seuil de couverture est défini dans pyproject.toml
       - name: Tests et couverture
         run: pytest -q --cov

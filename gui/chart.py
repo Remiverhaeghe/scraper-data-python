@@ -122,7 +122,7 @@ class BarChart(QWidget):
 
         return rMaximum
 
-    def paintEvent(self, pEvent):
+    def paintEvent(self, _pEvent):
         """Dessine les barres groupées par libellé, puis la légende en dessous.
 
         Avec plusieurs séries, le total de chacune figure dans la légende plutôt
@@ -257,7 +257,7 @@ class PieChart(QWidget):
         self.shares = pShares
         self.update()
 
-    def paintEvent(self, pEvent):
+    def paintEvent(self, _pEvent):
         """Dessine l'anneau puis la légende avec valeur et pourcentage."""
         vPainter = QPainter(self)
         vPainter.setRenderHint(QPainter.RenderHint.Antialiasing)

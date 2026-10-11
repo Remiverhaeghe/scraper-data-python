@@ -5,7 +5,7 @@ from job.sources.greenhouse.config import load_config
 from job.sources.greenhouse.service import scrape_jobs
 
 
-def load_parameters(pJobConfig):
+def load_parameters(_pJobConfig):
     """Charge les paramètres Greenhouse depuis l'environnement."""
 
     rParameters = {"board": load_config().board}

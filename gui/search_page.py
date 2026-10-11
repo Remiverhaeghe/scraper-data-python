@@ -138,6 +138,11 @@ class SearchPage(QWidget):
 
         self.settings = pSettings if pSettings is not None else QSettings()
         self.database_file = pDatabaseFile
+
+        # Recherches enregistrées : widgets créés seulement avec une base
+        self.saved_combo = None
+        self.delete_saved_button = None
+        self.saved_searches = {}
         self.search_thread = None
         self.search_worker = None
         self.source_buttons = {}

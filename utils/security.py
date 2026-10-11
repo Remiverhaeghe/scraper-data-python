@@ -7,6 +7,20 @@ from urllib.parse import urlparse
 ALLOWED_SCHEMES = {"http", "https"}
 
 
+def is_forbidden_address(pIpAddress):
+    """Indique si une adresse IP désigne un réseau interne ou réservé."""
+
+    rForbidden = (
+        pIpAddress.is_private
+        or pIpAddress.is_loopback
+        or pIpAddress.is_link_local
+        or pIpAddress.is_multicast
+        or pIpAddress.is_reserved
+    )
+
+    return rForbidden
+
+
 def validate_url(pUrl):
     """Vérifie qu'une URL peut être utilisée par le scraper."""
 
@@ -28,13 +42,7 @@ def validate_url(pUrl):
     except ValueError:
         vIpAddress = None
 
-    if vIpAddress is not None and (
-        vIpAddress.is_private
-        or vIpAddress.is_loopback
-        or vIpAddress.is_link_local
-        or vIpAddress.is_multicast
-        or vIpAddress.is_reserved
-    ):
+    if vIpAddress is not None and is_forbidden_address(vIpAddress):
         raise ValueError("La destination réseau n'est pas autorisée.")
 
     if vParsedUrl.hostname.lower() == "localhost":
@@ -45,18 +53,12 @@ def validate_url(pUrl):
     try:
         vAddresses = socket.getaddrinfo(vParsedUrl.hostname, None)
     except socket.gaierror:
-        raise ValueError("Impossible de résoudre le nom de domaine.")
+        raise ValueError("Impossible de résoudre le nom de domaine.") from None
 
     for vAddress in vAddresses:
         vIpAddress = ipaddress.ip_address(vAddress[4][0])
 
-        if (
-            vIpAddress.is_private
-            or vIpAddress.is_loopback
-            or vIpAddress.is_link_local
-            or vIpAddress.is_multicast
-            or vIpAddress.is_reserved
-        ):
+        if is_forbidden_address(vIpAddress):
             raise ValueError("La destination réseau n'est pas autorisée.")
 
     rValid = True

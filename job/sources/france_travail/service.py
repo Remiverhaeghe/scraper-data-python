@@ -44,7 +44,7 @@ def scrape_jobs(pConfig, pParams, pMaxItems=None, pMaxPages=None):
         vRange = f"{vStart}-{vEnd}"
 
         logger.info(
-            "Récupération de la page France Travail %s " "(range=%s)",
+            "Récupération de la page France Travail %s (range=%s)",
             vPageCount + 1,
             vRange,
         )

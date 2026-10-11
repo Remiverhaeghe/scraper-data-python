@@ -53,6 +53,10 @@ class MainWindow(QMainWindow):
         self.database_file = pDatabaseFile
         self.title = pTitle
 
+        # Créés par create_sidebar, appelée à chaque construction du contenu
+        self.status_dot = None
+        self.status_label = None
+
         self.setWindowTitle(pTitle)
         # En dessous, les cartes se chevauchent. Sur un petit écran ou un téléphone,
         # le tableau de bord web s'adapte à la largeur disponible.
@@ -66,7 +70,7 @@ class MainWindow(QMainWindow):
         Appelée de nouveau après un changement de thème : les icônes et les
         cartes colorées sont dessinées à la construction.
         """
-        pDatabaseFile = self.database_file
+        vDatabaseFile = self.database_file
         self.page_labels = {}
 
         self.navigation = QListWidget()
@@ -76,19 +80,19 @@ class MainWindow(QMainWindow):
         self.pages = QStackedWidget()
         self.page_rows = {}
 
-        self.home_page = HomePage(pDatabaseFile)
-        self.search_page = SearchPage(pDatabaseFile=pDatabaseFile)
-        self.offers_page = OffersPage(pDatabaseFile)
+        self.home_page = HomePage(vDatabaseFile)
+        self.search_page = SearchPage(pDatabaseFile=vDatabaseFile)
+        self.offers_page = OffersPage(vDatabaseFile)
 
         # L'ordre d'ajout fixe l'ordre du menu ; la clé sert à navigate().
         self.add_page("home", "Accueil", "house", self.home_page)
         self.add_page("search", "Recherche", "search", self.search_page)
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
-        self.add_page("history", "Historique", "history", HistoryPage(pDatabaseFile))
-        self.add_page("quality", "Qualité", "list-checks", QualityPage(pDatabaseFile))
+        self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
+        self.add_page("quality", "Qualité", "list-checks", QualityPage(vDatabaseFile))
         self.add_page("logs", "Journaux", "terminal", LogsPage())
 
-        self.settings_page = SettingsPage(pDatabaseFile)
+        self.settings_page = SettingsPage(vDatabaseFile)
         self.add_page("settings", "Paramètres", "settings", self.settings_page)
 
         # Les pages ne se connaissent pas : elles émettent des signaux et la fenêtre

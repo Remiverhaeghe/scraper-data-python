@@ -63,7 +63,8 @@ def reset_database(pDatabaseFile, pNow):
 
     try:
         for vTable in RESET_TABLES:
-            vConnection.execute(f"DELETE FROM {vTable}")
+            # Nom de table issu de RESET_TABLES, une constante du code.
+            vConnection.execute(f"DELETE FROM {vTable}")  # nosec B608
 
         vConnection.commit()
 

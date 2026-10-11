@@ -3,14 +3,6 @@
 import pandas as pd
 
 
-def has_reached_limit(pItems, pMaxItems):
-    """Vérifie si le nombre d'éléments maximum est atteint."""
-
-    rReached = pMaxItems is not None and len(pItems) >= pMaxItems
-
-    return rReached
-
-
 def deduplicate_items(pItems, pKeyFunction):
     """Supprime les doublons d'une collection Python."""
 

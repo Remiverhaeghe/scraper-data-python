@@ -50,14 +50,14 @@ def build_upsert_query():
         for vColumn in ["last_seen_at"] + CONTENT_COLUMNS
     )
 
-    # first_seen_at n'est pas mis à jour : il garde la date de découverte.
-    rQuery = f"""
-        INSERT INTO job_offer ({", ".join(vColumns)})
-        VALUES ({vPlaceholders})
-        ON CONFLICT(source, source_id) DO UPDATE SET
-            {vUpdates}
-        RETURNING first_seen_at
-        """
+    # first_seen_at n'est pas mis à jour : il garde la date de découverte. Les
+    # noms de colonnes viennent de JOB_COLUMNS, les valeurs passent en paramètres.
+    rQuery = (
+        f"INSERT INTO job_offer ({', '.join(vColumns)}) "  # nosec B608
+        f"VALUES ({vPlaceholders}) "
+        f"ON CONFLICT(source, source_id) DO UPDATE SET {vUpdates} "
+        "RETURNING first_seen_at"
+    )
 
     return rQuery
 
@@ -360,12 +360,11 @@ def count_filled_fields(pDatabaseFile):
     vConnection = connect_database(pDatabaseFile)
 
     try:
-        vRows = vConnection.execute(f"""
-            SELECT source, COUNT(*), {vCounts}
-            FROM job_offer
-            GROUP BY source
-            ORDER BY COUNT(*) DESC, source
-            """).fetchall()
+        # Colonnes issues de la liste blanche QUALITY_COLUMNS.
+        vRows = vConnection.execute(
+            f"SELECT source, COUNT(*), {vCounts} FROM job_offer "  # nosec B608
+            "GROUP BY source ORDER BY COUNT(*) DESC, source"
+        ).fetchall()
 
     finally:
         vConnection.close()
@@ -422,12 +421,11 @@ def update_net_salaries(pDatabaseFile, pSalaries):
     vConnection = connect_database(pDatabaseFile)
 
     try:
+        # Colonnes issues de la constante NET_SALARY_COLUMNS.
         vConnection.executemany(
-            f"""
-            UPDATE job_offer
-            SET {", ".join(f"{vColumn} = ?" for vColumn in NET_SALARY_COLUMNS)}
-            WHERE source = ? AND source_id = ?
-            """,
+            "UPDATE job_offer SET "  # nosec B608
+            + ", ".join(f"{vColumn} = ?" for vColumn in NET_SALARY_COLUMNS)
+            + " WHERE source = ? AND source_id = ?",
             vRows,
         )
 

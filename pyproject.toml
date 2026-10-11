@@ -10,3 +10,31 @@ fail_under = 95
 show_missing = true
 skip_covered = true
 exclude_also = ['if __name__ == "__main__":']
+
+[tool.pylint.main]
+# PySide6 est une extension compilée : pylint doit l'importer pour en connaître le contenu.
+extension-pkg-allow-list = ["PySide6"]
+
+[tool.pylint.basic]
+# Convention du projet : p pour un paramètre, v pour une variable locale, r pour
+# la valeur retournée. Les noms imposés par Qt ou FastAPI sont autorisés à part.
+argument-rgx = "^(_?p[A-Z][A-Za-z0-9]*|_[a-z]*|self|cls|request|call_next)$"
+variable-rgx = "^([vr][A-Z][A-Za-z0-9]*|_)$"
+inlinevar-rgx = "^([vr][A-Z][A-Za-z0-9]*|_)$"
+const-rgx = "^(_?[A-Z][A-Z0-9_]*|logger|app|templates|login_rate_limiter)$"
+# Paramètre volontairement inutilisé d'une méthode imposée (Qt, interface commune)
+ignored-argument-names = "^_.*"
+
+[tool.pylint.typecheck]
+# Les signaux Qt sont créés à l'exécution : pylint ne voit pas connect ni emit.
+generated-members = [".*\\.connect", ".*\\.emit"]
+
+[tool.pylint.similarities]
+# Les parsers associent explicitement chaque champ de JOB_COLUMNS : cette
+# répétition est voulue, seuls les blocs vraiment longs sont signalés.
+min-similarity-lines = 25
+
+[tool.pylint."messages control"]
+# Les interfaces et la boucle du planificateur interceptent toute erreur pour la
+# journaliser et afficher un message, plutôt que d'arrêter l'application.
+disable = ["broad-exception-caught"]

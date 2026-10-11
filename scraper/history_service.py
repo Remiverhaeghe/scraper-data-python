@@ -1,7 +1,6 @@
 """Service de gestion de l'historique des scrapers"""
 
 from scraper.history import HistoryEntry
-from scraper.result import ScrapingResult
 from storage.history_repository import save_history
 
 

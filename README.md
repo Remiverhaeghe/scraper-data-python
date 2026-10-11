@@ -28,7 +28,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 
 - **Langage :** Python 3
 - **Requêtes HTTP :** requests
-- **Parsing HTML :** beautifulsoup4
+- **Nettoyage du HTML des descriptions :** beautifulsoup4
 - **Analyse et structure des données :** pandas
 - **Tests :** pytest
 - **Stockage :** SQLite
@@ -61,8 +61,6 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Mettre en place une configuration commune
 - [x] Mettre en place une gestion centralisée des logs
 - [x] Mettre en place une suite de tests
-- [x] Mettre en place une lecture CSV générique
-- [x] Mettre en place une écriture CSV générique
 - [x] Finaliser les composants communs aux scrapers
 - [x] Ajouter une gestion centralisée des résultats
 - [x] Ajouter l'historique des exécutions
@@ -70,7 +68,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Supprimer l'anciens modèles `Job`
 - [x] Ajouter une configuration commune aux sources d'emploi
 - [x] Permettre l'activation / désactivation des sources
-- [x] Gérer le choix API / HTML selon les capacités d'une source
+- [x] Interroger toutes les sources par leur API officielle (le scraping de pages HTML a été retiré)
 - [x] Centraliser l'agrégation des sources d'emploi
 - [x] Centraliser l'orchestration du traitement des offres
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
@@ -81,11 +79,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 
 ### 💼 Jobs
 
-- [x] Parsing HTML
-- [x] Extraction des offres
-- [x] Service de scraping
-- [x] Lecture CSV
-- [x] Stockage CSV
+- [x] Extraction des offres depuis les API
 - [x] Filtrage des offres
 - [x] Configuration des recherches
 - [x] Gestion de plusieurs sources
@@ -134,8 +128,6 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Gestion des erreurs HTTP
 - [x] Logs : un fichier par jour, conservé 14 jours par défaut (LOG_RETENTION_DAYS)
 - [x] Tests automatisés
-- [x] Lecture CSV générique
-- [x] Écriture CSV générique
 - [x] Retry des requêtes
 - [x] Délai entre les requêtes
 - [x] Limitation du nombre d'éléments
@@ -220,6 +212,8 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Intégration continue : tests, couverture, formatage Black et recherche de secrets à chaque push
 - [x] Couverture mesurée, branches comprises, avec un seuil minimal relevé progressivement (95 %)
 - [x] Tests d'intégration : des API simulées jusqu'à la base, au tableau de bord web et à l'export
+- [x] Analyse pylint en CI, configurée pour la convention p, v, r (note minimale 9.8/10)
+- [x] Analyse de sécurité bandit en CI ; chaque exception « nosec » est justifiée dans le code
 
 ---
 
@@ -292,9 +286,6 @@ scraper-data-python/
 │   ├── __init__.py                            # Initialise le package Job
 │   ├── config.py                              # Configuration spécifique aux offres
 │   ├── csv_schema.py                          # Définit les colonnes CSV des offres
-│   ├── parser.py                              # Parse le HTML et extrait les offres
-│   ├── service.py                             # Service de scraping des offres
-│   ├── storage.py                             # Gère la sauvegarde des offres
 │   ├── application.py                         # Orchestre le traitement des offres
 │   ├── filter.py                              # Applique les filtres aux offres
 │   ├── salary.py                              # Estime le salaire net mensuel
@@ -394,11 +385,8 @@ scraper-data-python/
 ├── scraper/                                   # Composants techniques communs au scraping
 │   ├── __init__.py                            # Initialise le package Scraper
 │   ├── config.py                              # Configuration commune des scrapers
-│   ├── http_client.py                         # Effectue les requêtes HTTP
 │   ├── collection.py                          # Gère les collections et la déduplication
-│   ├── pagination.py                          # Gère la pagination commune
 │   ├── result.py                              # Représente le résultat d'une exécution
-│   ├── service.py                             # Mécanique commune de scraping d'un élément
 │   ├── history.py                             # Représente une entrée d'historique
 │   └── history_service.py                     # Construit et enregistre l'historique
 │
@@ -466,7 +454,6 @@ scraper-data-python/
 │   ├── helpers.py                             # Fonctions utilitaires génériques
 │   ├── logger.py                              # Logs : un fichier par jour, purge automatique
 │   ├── log_reader.py                          # Lecture et filtrage des logs pour l'affichage
-│   ├── url.py                                 # Validation et manipulation des URLs
 │   ├── api_client.py                          # Appels sécurisés aux API des sources
 │   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
 │   └── security.py                            # Contrôles de sécurité du scraper
@@ -475,11 +462,6 @@ scraper-data-python/
 │   ├── __init__.py                            # Initialise le package CLI
 │   ├── arguments.py                           # Analyse et valide les arguments CLI
 │   └── main.py                                # Point d'entrée du mode ligne de commande
-│
-├── data/                                      # Composants génériques de gestion des données
-│   ├── __init__.py                            # Initialise le package Data
-│   ├── csv_reader.py                          # Lecture générique des fichiers CSV
-│   └── csv_writer.py                          # Écriture générique des fichiers CSV
 │
 ├── storage/                                   # Persistance technique des données communes
 │   ├── __init__.py                            # Initialise le package Storage
@@ -497,9 +479,6 @@ scraper-data-python/
 │   ├── job/                                   # Tests du domaine Job
 │   │   ├── __init__.py                         # Initialise le package de tests Job
 │   │   ├── test_config.py                      # Teste la configuration des offres
-│   │   ├── test_parser.py                      # Teste le parsing des offres
-│   │   ├── test_service.py                    # Teste le service des offres
-│   │   ├── test_storage.py                    # Teste la sauvegarde des offres
 │   │   ├── test_application.py                # Teste l'orchestration Job
 │   │   ├── test_salary.py                     # Teste l'estimation du salaire net
 │   │   ├── test_benefits.py                   # Teste la détection des avantages
@@ -610,16 +589,10 @@ scraper-data-python/
 │   │   ├── test_settings_page.py               # Teste la page des paramètres
 │   │   └── test_theme.py                       # Teste les thèmes, les icônes et le logo
 │   │
-│   ├── data/                                   # Tests des composants génériques de données
-│   │   ├── __init__.py                          # Initialise le package de tests Data
-│   │   ├── test_csv_reader.py                  # Teste la lecture CSV
-│   │   └── test_csv_writer.py                  # Teste l'écriture CSV
-│   │
 │   ├── scraper/                                # Tests des composants communs
 │   │   ├── __init__.py                          # Initialise le package de tests Scraper
 │   │   ├── test_collection.py                  # Teste les collections
-│   │   ├── test_config.py                      # Teste la configuration commune
-│   │   └── test_service.py                     # Teste la mécanique commune de scraping
+│   │   └── test_config.py                      # Teste la configuration commune
 │   │
 │   ├── storage/                                # Tests de la persistance commune
 │   │   ├── __init__.py                          # Initialise le package de tests Storage
@@ -651,19 +624,16 @@ scraper-data-python/
 │   ├── test_helpers.py                         # Teste les fonctions utilitaires
 │   ├── test_history.py                         # Teste le modèle d'historique
 │   ├── test_history_service.py                 # Teste le service d'historique
-│   ├── test_http_client.py                     # Teste le client HTTP
 │   ├── test_logger.py                          # Teste le fichier du jour et la purge
 │   ├── test_log_reader.py                      # Teste la lecture et les filtres des logs
 │   ├── test_mailer.py                          # Teste l'envoi d'e-mails, serveur simulé
 │   ├── test_main.py                            # Teste le point d'entrée principal
-│   ├── test_pagination.py                      # Teste la pagination commune
-│   ├── test_security.py                        # Teste les contrôles de sécurité
-│   └── test_url.py                             # Teste la gestion des URLs
+│   └── test_security.py                        # Teste les contrôles de sécurité
 │
 ├── main.py                                     # Point d'entrée principal de l'application
 ├── config.py                                   # Configuration générale de l'application
 ├── requirements.txt                            # Liste des dépendances Python
-├── pyproject.toml                              # Configuration et seuil de la couverture
+├── pyproject.toml                              # Couverture, convention de nommage pylint
 ├── README.md                                   # Documentation synthétique du projet
 ├── .env.example                                # Modèle des variables d'environnement
 ├── .gitattributes                              # Impose les fins de ligne LF

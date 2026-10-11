@@ -7,7 +7,7 @@ import json
 import os
 import secrets
 from collections import defaultdict, deque
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from utils.logger import get_logger
 
@@ -16,7 +16,8 @@ logger = get_logger(__name__)
 # Variables du fichier .env requises pour ouvrir le tableau de bord
 AUTH_SETTINGS = ("WEB_USERNAME", "WEB_PASSWORD_HASH", "WEB_SESSION_SECRET")
 
-PASSWORD_ALGORITHM = "pbkdf2_sha256"
+# Nom de l'algorithme d'empreinte, et non un mot de passe.
+PASSWORD_ALGORITHM = "pbkdf2_sha256"  # nosec B105
 
 # Valeur recommandée par l'OWASP pour PBKDF2-SHA256
 PASSWORD_ITERATIONS = 600_000

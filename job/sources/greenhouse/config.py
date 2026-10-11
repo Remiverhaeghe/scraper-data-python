@@ -19,7 +19,7 @@ def load_config():
     vBoard = os.getenv("GREENHOUSE_BOARD")
 
     if not vBoard:
-        raise ValueError("Configuration Greenhouse incomplète : " "GREENHOUSE_BOARD")
+        raise ValueError("Configuration Greenhouse incomplète : GREENHOUSE_BOARD")
 
     vConfig = GreenhouseConfig(board=vBoard)
 

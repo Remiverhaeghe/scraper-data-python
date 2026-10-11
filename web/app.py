@@ -261,7 +261,9 @@ def render_icon(pName, pSize=18):
         vSvg = vSvg.replace('height="24"', f'height="{pSize}"', 1)
         vSvg = vSvg.replace("<svg", '<svg aria-hidden="true" focusable="false"', 1)
 
-        rIcon = Markup(vSvg)
+        # Fichier SVG du projet, au nom validé par ICON_NAME_PATTERN : jamais une
+        # donnée saisie ou reçue d'une source.
+        rIcon = Markup(vSvg)  # nosec B704
 
     return rIcon
 
@@ -475,16 +477,16 @@ def show_dashboard(
 @app.get("/offers", response_class=HTMLResponse)
 def list_offers(
     request: Request,
-    q: str = "",
-    source: str = "",
-    contract: str = "",
-    remote: str = "",
-    min_salary: str = "",
-    max_salary: str = "",
-    published: str = "",
-    has_salary: str = "",
-    new: str = "",
-    status: str = "",
+    pSearch: str = Query("", alias="q"),
+    pSource: str = Query("", alias="source"),
+    pContract: str = Query("", alias="contract"),
+    pRemote: str = Query("", alias="remote"),
+    pMinSalary: str = Query("", alias="min_salary"),
+    pMaxSalary: str = Query("", alias="max_salary"),
+    pPublished: str = Query("", alias="published"),
+    pHasSalary: str = Query("", alias="has_salary"),
+    pNew: str = Query("", alias="new"),
+    pStatus: str = Query("", alias="status"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche la liste des offres, ou seulement le tableau pour une requête HTMX."""
@@ -494,18 +496,18 @@ def list_offers(
     vNewSince = vNow - timedelta(days=vNewOfferDays)
 
     vFilters = build_offer_filters(
-        pSearch=q,
-        pSource=source,
-        pContract=contract,
-        pRemote=remote,
-        pMinNetSalary=parse_amount(min_salary),
-        pNewOnly=bool(new),
-        pStatus=status,
+        pSearch=pSearch,
+        pSource=pSource,
+        pContract=pContract,
+        pRemote=pRemote,
+        pMinNetSalary=parse_amount(pMinSalary),
+        pNewOnly=bool(pNew),
+        pStatus=pStatus,
         pNow=vNow,
         pNewOfferDays=vNewOfferDays,
-        pMaxNetSalary=parse_amount(max_salary),
-        pPublishedDays=parse_published_days(published),
-        pHasSalary=bool(has_salary),
+        pMaxNetSalary=parse_amount(pMaxSalary),
+        pPublishedDays=parse_published_days(pPublished),
+        pHasSalary=bool(pHasSalary),
     )
 
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
@@ -527,16 +529,16 @@ def list_offers(
         "follow_up_filter": FOLLOW_UP_FILTER,
         "published_periods": PUBLISHED_PERIODS,
         "filters": {
-            "q": q,
-            "source": source,
-            "contract": contract,
-            "remote": remote,
-            "min_salary": min_salary,
-            "max_salary": max_salary,
-            "published": published,
-            "has_salary": has_salary,
-            "new": new,
-            "status": status,
+            "q": pSearch,
+            "source": pSource,
+            "contract": pContract,
+            "remote": pRemote,
+            "min_salary": pMinSalary,
+            "max_salary": pMaxSalary,
+            "published": pPublished,
+            "has_salary": pHasSalary,
+            "new": pNew,
+            "status": pStatus,
         },
     }
 
@@ -584,13 +586,13 @@ def render_application(pRequest, pDatabaseFile, pOffer, pMessage=None):
 @app.get("/offer", response_class=HTMLResponse)
 def show_offer(
     request: Request,
-    source: str,
-    id: str,
+    pSource: str = Query(alias="source"),
+    pSourceId: str = Query(alias="id"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche la fiche détaillée d'une offre et son suivi."""
 
-    vOffer = get_existing_offer(pDatabaseFile, source, id)
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
 
     vNewSince = datetime.now() - timedelta(
         days=load_settings(pDatabaseFile)["new_offer_days"]
@@ -602,7 +604,7 @@ def show_offer(
         {
             "active_page": "offers",
             "offer": prepare_offer(vOffer, vNewSince),
-            "application": get_application(pDatabaseFile, source, id),
+            "application": get_application(pDatabaseFile, pSource, pSourceId),
             "statuses": STATUS_LABELS,
             "message": None,
         },
@@ -618,33 +620,33 @@ def show_offer(
 )
 def update_application(
     request: Request,
-    source: str = Form(...),
-    id: str = Form(...),
-    status: str = Form(""),
-    follow_up_date: str = Form(""),
-    notes: str = Form(""),
+    pSource: str = Form(..., alias="source"),
+    pSourceId: str = Form(..., alias="id"),
+    pStatus: str = Form("", alias="status"),
+    pFollowUpDate: str = Form("", alias="follow_up_date"),
+    pNotes: str = Form("", alias="notes"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Enregistre le suivi d'une offre, ou le supprime si aucun statut n'est choisi."""
 
-    vOffer = get_existing_offer(pDatabaseFile, source, id)
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
 
-    if status and status not in APPLICATION_STATUSES:
+    if pStatus and pStatus not in APPLICATION_STATUSES:
         raise HTTPException(status_code=400, detail="Statut inconnu")
 
-    if status:
+    if pStatus:
         save_application(
             pDatabaseFile,
-            source,
-            id,
-            status,
-            pFollowUpDate=parse_date(follow_up_date),
-            pNotes=notes.strip(),
+            pSource,
+            pSourceId,
+            pStatus,
+            pFollowUpDate=parse_date(pFollowUpDate),
+            pNotes=pNotes.strip(),
             pFollowUpDays=load_settings(pDatabaseFile)["follow_up_days"],
         )
 
     else:
-        delete_application(pDatabaseFile, source, id)
+        delete_application(pDatabaseFile, pSource, pSourceId)
 
     rResponse = render_application(request, pDatabaseFile, vOffer, "Suivi enregistré")
 
@@ -658,21 +660,21 @@ def update_application(
 )
 def add_follow_up(
     request: Request,
-    source: str = Form(...),
-    id: str = Form(...),
+    pSource: str = Form(..., alias="source"),
+    pSourceId: str = Form(..., alias="id"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Enregistre une relance effectuée aujourd'hui."""
 
-    vOffer = get_existing_offer(pDatabaseFile, source, id)
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
 
-    if get_application(pDatabaseFile, source, id) is None:
+    if get_application(pDatabaseFile, pSource, pSourceId) is None:
         raise HTTPException(status_code=400, detail="Aucun suivi pour cette offre")
 
     record_follow_up(
         pDatabaseFile,
-        source,
-        id,
+        pSource,
+        pSourceId,
         pFollowUpDays=load_settings(pDatabaseFile)["follow_up_days"],
     )
 
@@ -736,11 +738,15 @@ def export_quality(pDatabaseFile: str = Depends(get_database_file)):
 
 
 @app.get("/logs", response_class=HTMLResponse)
-def show_logs(request: Request, level: str = "", search: str = ""):
+def show_logs(
+    request: Request,
+    pLevel: str = Query("", alias="level"),
+    pSearch: str = Query("", alias="search"),
+):
     """Affiche les derniers logs, filtrables par niveau et par texte."""
 
-    vLevel = level if level in LEVEL_FILTERS else None
-    vSearch = search.strip() or None
+    vLevel = pLevel if pLevel in LEVEL_FILTERS else None
+    vSearch = pSearch.strip() or None
 
     rResponse = templates.TemplateResponse(
         request,
@@ -1038,8 +1044,8 @@ def show_login(request: Request, pNext: str = Query("/", alias="next")):
 @app.post("/login", response_class=HTMLResponse)
 def login(
     request: Request,
-    username: str = Form(""),
-    password: str = Form(""),
+    pUsername: str = Form("", alias="username"),
+    pPassword: str = Form("", alias="password"),
     pNext: str = Form("/", alias="next"),
 ):
     """Ouvre une session si l'identifiant et le mot de passe sont corrects."""
@@ -1059,7 +1065,7 @@ def login(
             request, pNext, "Trop de tentatives. Réessayez dans 15 minutes.", 429
         )
 
-    elif not check_credentials(username, password):
+    elif not check_credentials(pUsername, pPassword):
         login_rate_limiter.record_failure(vAddress, vNow)
 
         logger.warning("Échec de connexion au tableau de bord depuis %s", vAddress)
@@ -1078,7 +1084,7 @@ def login(
         )
         rResponse.set_cookie(
             SESSION_COOKIE,
-            create_session_token(os.getenv("WEB_SESSION_SECRET"), username, vNow),
+            create_session_token(os.getenv("WEB_SESSION_SECRET"), pUsername, vNow),
             max_age=int(SESSION_DURATION.total_seconds()),
             httponly=True,
             samesite="lax",
@@ -1090,7 +1096,7 @@ def login(
 
 
 @app.post("/logout", dependencies=[Depends(require_csrf)])
-def logout(request: Request):
+def logout():
     """Ferme la session en supprimant son cookie."""
 
     logger.info("Déconnexion du tableau de bord")

@@ -2,10 +2,10 @@
 
 from datetime import datetime, timedelta
 
+from job.presentation import prepare_offer
 from job.settings import load_settings
 from job.sources.registry import SOURCES
 from storage.history_repository import get_history
-from job.presentation import prepare_offer
 from storage.job_applications import (
     count_applications_by_day,
     count_follow_ups_by_day,

@@ -100,7 +100,11 @@ class OffersPage(QWidget):
         self.table.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)
 
         self.table.selectionModel().currentRowChanged.connect(self.show_selected_offer)
-        self.table.doubleClicked.connect(lambda: self.detail_panel.open_offer())
+        # Le lambda est nécessaire : detail_panel n'est créé qu'après cette ligne,
+        # il n'est donc cherché qu'au moment du double-clic.
+        self.table.doubleClicked.connect(
+            lambda: self.detail_panel.open_offer()  # pylint: disable=unnecessary-lambda
+        )
 
         self.detail_panel = OfferDetailPanel(pDatabaseFile)
         self.detail_panel.application_changed.connect(self.refresh)

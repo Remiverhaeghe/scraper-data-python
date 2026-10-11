@@ -326,17 +326,15 @@ def get_upcoming_follow_ups(pDatabaseFile, pLimit):
     try:
         vConnection.row_factory = sqlite3.Row
 
+        # Seuls des « ? » sont insérés : les statuts passent en paramètres.
         vRows = vConnection.execute(
-            f"""
-            SELECT a.source, a.source_id, a.status, a.follow_up_date,
-                   o.title, o.company
-            FROM job_application a
-            JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id
-            WHERE a.follow_up_date IS NOT NULL
-            AND a.status IN ({", ".join("?" for _ in FOLLOW_UP_STATUSES)})
-            ORDER BY a.follow_up_date
-            LIMIT ?
-            """,
+            "SELECT a.source, a.source_id, a.status, a.follow_up_date,"
+            " o.title, o.company"
+            " FROM job_application a"
+            " JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id"
+            " WHERE a.follow_up_date IS NOT NULL"
+            f" AND a.status IN ({', '.join('?' for _ in FOLLOW_UP_STATUSES)})"  # nosec B608
+            " ORDER BY a.follow_up_date LIMIT ?",
             (*FOLLOW_UP_STATUSES, pLimit),
         ).fetchall()
 

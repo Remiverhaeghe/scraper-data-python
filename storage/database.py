@@ -162,6 +162,7 @@ def migrate_to_v5(pConnection):
 
     # Imports locaux : la reprise réutilise le parsing métier sans que le
     # stockage en dépende pour son fonctionnement courant.
+    # pylint: disable=import-outside-toplevel
     from job.sources.hackernews.parser import parse_header
     from utils.helpers import decode_unicode_escapes
 
@@ -267,13 +268,10 @@ def count_by_day(pDatabasePath, pTable, pDateColumn, pDays, pNow=None):
     vConnection = connect_database(pDatabasePath)
 
     try:
+        # Table et colonne vérifiées contre DAILY_COUNT_COLUMNS ci-dessus.
         vRows = vConnection.execute(
-            f"""
-            SELECT substr({pDateColumn}, 1, 10) AS day, COUNT(*)
-            FROM {pTable}
-            WHERE {pDateColumn} >= ?
-            GROUP BY day
-            """,
+            f"SELECT substr({pDateColumn}, 1, 10) AS day, COUNT(*) "  # nosec B608
+            f"FROM {pTable} WHERE {pDateColumn} >= ? GROUP BY day",
             (vFirstDay.isoformat(),),
         ).fetchall()
 

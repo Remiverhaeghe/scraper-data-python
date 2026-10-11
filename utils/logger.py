@@ -87,7 +87,8 @@ class DailyFileHandler(logging.FileHandler):
 
         super().__init__(get_log_file(pDirectory, self.day), encoding="utf-8")
 
-    def emit(self, pRecord):
+    # Le nom pRecord suit la convention du projet plutôt que celui de logging.
+    def emit(self, pRecord):  # pylint: disable=arguments-renamed
         """Change de fichier lorsque la journée a changé, puis écrit le message."""
         vToday = date.today()
 
