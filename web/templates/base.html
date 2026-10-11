@@ -10,7 +10,9 @@
     <script src="{{ url_for('static', path='htmx.min.js').path }}" defer></script>
 </head>
 <body hx-headers='{{ {"X-CSRF-Token": csrf_token(request)} | tojson }}'>
-<div class="layout">
+<div class="layout{% if not request.state.session %} layout-public{% endif %}">
+    {# Sans session, aucun menu : seules les pages publiques restent lisibles. #}
+    {% if request.state.session %}
     <aside class="sidebar">
         <a class="brand" href="{{ url_for('show_dashboard').path }}">
             <img src="{{ url_for('assets', path='logo.png').path }}" alt="" width="44" height="44">
@@ -25,6 +27,8 @@
                 ("dashboard", "Tableau de bord", "house", "show_dashboard"),
                 ("offers", "Offres", "briefcase", "list_offers"),
                 ("history", "Historique", "history", "show_history"),
+                ("quality", "Qualité", "list-checks", "show_quality"),
+                ("logs", "Journaux", "terminal", "show_logs"),
                 ("settings", "Paramètres", "settings", "show_settings"),
             ] %}
             <a class="nav-item{% if active_page == key %} is-active{% endif %}"
@@ -48,6 +52,15 @@
             {% endif %}
         </footer>
     </aside>
+    {% else %}
+    <header class="public-header">
+        <span class="brand">
+            <img src="{{ url_for('assets', path='logo.png').path }}" alt="" width="36" height="36">
+            <strong>{{ app_name }}</strong>
+        </span>
+        <a class="button button-primary" href="{{ url_for('show_login').path }}">{{ icon("lock", 16) }} Se connecter</a>
+    </header>
+    {% endif %}
 
     <main class="content">
         {% block content %}{% endblock %}

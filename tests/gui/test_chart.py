@@ -89,3 +89,20 @@ def test_pie_chart_renders_without_qt_warning(qt_application):
         qInstallMessageHandler(vPrevious)
 
     assert not [vMessage for vMessage in vMessages if "setPointSizeF" in vMessage]
+
+
+@pytest.mark.parametrize("pValues, pEmpty", [([0, 0], True), ([0, 3], False)])
+def test_bar_chart_empty_state_and_axes(qt_application, pValues, pEmpty):
+    """Vérifie l'état vide et le dessin avec les libellés d'axes."""
+
+    vChart = BarChart()
+    vChart.resize(400, 220)
+    vChart.set_series(
+        ["10/10", "11/10"],
+        [("Offres", "#3b82f6", pValues)],
+        pAxes=("Jour", "Nombre par jour"),
+        pEmptyText="Aucune activité",
+    )
+
+    assert vChart.is_empty() is pEmpty
+    assert not vChart.grab().isNull()

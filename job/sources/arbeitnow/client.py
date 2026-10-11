@@ -17,6 +17,8 @@ def get_jobs(pPage=1):
 
     logger.info("Récupération des offres Arbeitnow : page %s", pPage)
 
+    # API publique sans clé : une erreur vient du réseau ou d'une indisponibilité
+    # passagère du site, la recherche suivante la retentera.
     try:
         vData = request_json(
             "GET", API_URL, pParams={"page": pPage}, pHeaders=vHeaders, pTimeout=10

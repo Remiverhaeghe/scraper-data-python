@@ -187,8 +187,9 @@ __marimo__/
 output/*
 !output/.gitkeep
 
-# Base SQLite générée par l'application
+# Base SQLite générée par l'application et ses sauvegardes
 data/*.db
+data/backups/
 
 # Fichiers locaux
 *.local

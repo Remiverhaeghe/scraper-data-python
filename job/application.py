@@ -76,6 +76,9 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
 
     vScrapedAt = datetime.now()
 
+    # Toutes les offres trouvées sont enregistrées, puis seul le résultat renvoyé
+    # est filtré : une offre présente en base mais absente du résultat d'une
+    # recherche a donc été écartée par un critère (job/filter.py).
     vSavedItems = save_offers(DATABASE_FILE, vScrapingResult.items, vScrapedAt)
 
     vScrapingResult = replace(vScrapingResult, items=vSavedItems)

@@ -33,6 +33,8 @@ def search_jobs(pConfig, pParams, pPage, pResultsPerPage=RESULTS_PER_PAGE):
 
     logger.info("Récupération des offres Adzuna : page %s", pPage)
 
+    # Dépannage : 401 signale ADZUNA_APP_ID ou ADZUNA_APP_KEY invalide dans .env,
+    # 429 le quota quotidien atteint (250 requêtes par jour en offre gratuite).
     try:
         vData = request_json(
             "GET", vUrl, pParams=vParams, pHeaders=vHeaders, pTimeout=10

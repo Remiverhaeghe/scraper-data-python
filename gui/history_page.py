@@ -26,6 +26,7 @@ from job.presentation import (
     summarize_history,
 )
 from job.statistics import (
+    EXECUTION_AXES,
     EXECUTION_CHART_SIZE,
     get_contract_shares,
     get_execution_counts,
@@ -156,7 +157,7 @@ class HistoryPage(QWidget):
         return rLayout
 
     def fill_row(self, pRow, pEntry):
-        """Remplit une ligne du tableau, avec l'icône du statut et l'erreur en infobulle."""
+        """Remplit une ligne du tableau ; l'erreur éventuelle est en infobulle."""
         for vColumn, vText in enumerate(build_row(pEntry)):
             vItem = QTableWidgetItem(vText)
 
@@ -217,6 +218,8 @@ class HistoryPage(QWidget):
                         [vCount for _, vCount in vExecutions],
                     )
                 ],
+                pAxes=EXECUTION_AXES,
+                pEmptyText="Aucune exécution pour le moment",
             )
 
             self.table.setRowCount(len(vEntries))

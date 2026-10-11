@@ -204,6 +204,12 @@ QPushButton {
     font-weight: 600;
 }
 
+QPushButton#dangerButton {
+    background: transparent;
+    border-color: $danger;
+    color: $danger;
+}
+
 QPushButton:hover {
     background: $primary_light;
     border-color: $primary;

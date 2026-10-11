@@ -98,6 +98,8 @@ def resolve_theme(pChoice):
 def build_stylesheet():
     """Retourne la feuille de style, ses variables remplacées par les couleurs."""
 
+    # Dépannage : une variable $nom de theme.qss absente de COLORS lève KeyError
+    # au démarrage ; une propriété CSS inconnue de Qt est ignorée sans erreur.
     rStylesheet = Template(THEME_FILE.read_text(encoding="utf-8")).substitute(
         COLORS,
         chevron_up=stylesheet_path("chevron-up"),

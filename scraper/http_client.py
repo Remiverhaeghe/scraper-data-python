@@ -25,6 +25,8 @@ def fetch_page(pUrl, pConfig: ScrapingConfig):
     vRequestCount = 0
     vResponse = None
 
+    # Les redirections sont suivies à la main, et non par requests, pour valider
+    # chaque destination : une page ne peut pas rediriger vers une adresse interne.
     while vCurrentUrl:
         validate_url(vCurrentUrl)
 
@@ -56,6 +58,8 @@ def fetch_page(pUrl, pConfig: ScrapingConfig):
     check_announced_size(vResponse, pConfig.max_response_size)
 
     # Détermine l'encodage avant de consommer le flux.
+    # Des accents illisibles (Ã©) viennent d'un encodage mal annoncé par le site :
+    # l'encodage détecté sur le contenu est préféré à celui de l'en-tête.
     vEncoding = vResponse.apparent_encoding
 
     if vEncoding:

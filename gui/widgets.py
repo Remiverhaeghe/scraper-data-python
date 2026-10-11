@@ -150,5 +150,6 @@ class StatisticCard(QFrame):
         """Émet clicked lorsque la carte est cliquée."""
         super().mouseReleaseEvent(pEvent)
 
+        # Un bouton relâché hors de la carte annule le clic, comme pour un vrai bouton.
         if self.rect().contains(pEvent.position().toPoint()):
             self.clicked.emit()

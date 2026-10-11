@@ -29,6 +29,8 @@ def record_history(pDatabasePath, pScraperType, pUrl, pResult, pParameters=None)
 
     vEntry = build_history_entry(pScraperType, pUrl, pResult, pParameters)
 
+    # Chaque exécution est enregistrée, réussie ou non : c'est la source de la page
+    # Historique et des graphiques de rendement.
     save_history(pDatabasePath, vEntry)
 
     rEntry = vEntry

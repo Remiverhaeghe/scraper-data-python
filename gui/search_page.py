@@ -9,8 +9,10 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QGridLayout,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QProgressBar,
     QPushButton,
     QSpinBox,
@@ -23,7 +25,16 @@ from gui.search_worker import SearchWorker
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, create_page_header
 from job.contract import CONTRACT_TYPES
+from job.presentation import describe_search, describe_sources
 from job.sources.registry import SOURCES
+from storage.saved_searches import (
+    delete_saved_search,
+    get_saved_searches,
+    save_search,
+)
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Nombre de pastilles de sources par ligne
 SOURCE_COLUMNS = 6
@@ -92,6 +103,23 @@ def create_field(pLabel, pWidget):
     return rLayout
 
 
+def describe_saved_search(pSearch):
+    """Résume une recherche enregistrée : critères, puis sources."""
+
+    vParameters = {**pSearch["criteria"], "sources": pSearch["sources"]}
+
+    rDescription = " · ".join(
+        vPart
+        for vPart in (
+            describe_search(vParameters) or "Sans critère",
+            describe_sources(vParameters),
+        )
+        if vPart
+    )
+
+    return rDescription
+
+
 class SearchPage(QWidget):
     """Permet de lancer une recherche d'offres et d'en suivre l'avancement."""
 
@@ -101,11 +129,15 @@ class SearchPage(QWidget):
     show_offers_requested = Signal(object, str)
     schedule_requested = Signal(list, dict)
 
-    def __init__(self, pSettings=None):
-        """Construit le formulaire et restaure les derniers critères saisis."""
+    def __init__(self, pSettings=None, pDatabaseFile=None):
+        """Construit le formulaire et restaure les derniers critères saisis.
+
+        Sans base de données, les recherches enregistrées ne sont pas proposées.
+        """
         super().__init__()
 
         self.settings = pSettings if pSettings is not None else QSettings()
+        self.database_file = pDatabaseFile
         self.search_thread = None
         self.search_worker = None
         self.source_buttons = {}
@@ -173,6 +205,9 @@ class SearchPage(QWidget):
         self.exclude_edit.setPlaceholderText("Ex. stage, alternance")
 
         vCard, vLayout = create_card("Critères")
+
+        if self.database_file is not None:
+            vLayout.addLayout(self.create_saved_searches_row())
 
         vGrid = QGridLayout()
         vGrid.setHorizontalSpacing(16)
@@ -478,9 +513,13 @@ class SearchPage(QWidget):
             self.set_status("running", "Démarrage de la recherche...")
             self.set_running(True)
 
+            # La recherche tourne dans un QThread : interroger les sources dans le
+            # thread de l'interface figerait la fenêtre pendant toute la recherche.
             self.search_worker = self.create_worker(vSources, self.build_criteria())
             self.search_thread = QThread(self)
 
+            # Le worker vit dans le thread : ses signaux reviennent dans l'interface par
+            # la file d'événements de Qt, sans accès concurrent aux widgets.
             self.search_worker.moveToThread(self.search_thread)
 
             self.search_thread.started.connect(self.search_worker.run)
@@ -490,6 +529,9 @@ class SearchPage(QWidget):
             self.search_worker.cancelled.connect(self.show_cancelled)
             self.search_worker.failed.connect(self.show_error)
 
+            # Quelle que soit l'issue, le thread s'arrête puis end_search libère
+            # les ressources. Une erreur levée dans un slot est avalée par Qt : si
+            # l'écran ne se met pas à jour, consulter les journaux.
             for vSignal in (
                 self.search_worker.succeeded,
                 self.search_worker.cancelled,
@@ -503,7 +545,7 @@ class SearchPage(QWidget):
             self.search_started.emit()
 
     def request_schedule(self):
-        """Demande l'enregistrement des critères et des sources pour le planificateur."""
+        """Demande l'enregistrement des critères et sources pour le planificateur."""
         vSources = self.get_selected_sources()
 
         if vSources:
@@ -537,6 +579,8 @@ class SearchPage(QWidget):
         vItems = pResult.items
         vNewCount = int(vItems["is_new"].sum()) if "is_new" in vItems else 0
 
+        # Les clés des offres trouvées permettent à « Voir les offres » de n'afficher
+        # que les résultats de cette recherche.
         self.last_result_keys = list(
             zip(vItems["source"].astype(str), vItems["source_id"].astype(str))
         )
@@ -578,6 +622,7 @@ class SearchPage(QWidget):
     @Slot()
     def end_search(self):
         """Libère le thread et réactive le formulaire."""
+        # deleteLater laisse Qt détruire les objets une fois leurs signaux traités.
         self.search_worker.deleteLater()
         self.search_thread.deleteLater()
 
@@ -594,6 +639,8 @@ class SearchPage(QWidget):
 
     def save_settings(self):
         """Mémorise les sources et, si la case est cochée, les critères saisis."""
+        # Clés QSettings search/remember, search/sources et search/criteria/*,
+        # stockées dans le registre Windows au nom de l'application.
         vRemember = self.remember_check.isChecked()
 
         self.settings.setValue("search/remember", vRemember)
@@ -636,6 +683,175 @@ class SearchPage(QWidget):
             for vName in vSources.split(","):
                 if vName in self.source_buttons:
                     self.source_buttons[vName].setChecked(True)
+
+        self.update_source_count()
+
+    def create_saved_searches_row(self):
+        """Construit la liste des recherches enregistrées et ses boutons."""
+        self.saved_combo = QComboBox()
+        self.saved_combo.setMinimumWidth(280)
+        self.saved_combo.activated.connect(self.load_saved_search)
+
+        vSaveButton = create_button(
+            "Enregistrer…", "download", pIconColor=COLORS["primary"]
+        )
+        vSaveButton.setToolTip("Enregistre les critères et les sources actuels")
+        vSaveButton.clicked.connect(self.save_current_search)
+
+        self.delete_saved_button = create_button("Supprimer")
+        self.delete_saved_button.clicked.connect(self.delete_current_search)
+
+        vLabel = QLabel("Recherche enregistrée")
+        vLabel.setObjectName("fieldLabel")
+
+        rRow = QHBoxLayout()
+        rRow.setSpacing(10)
+        rRow.addWidget(vLabel)
+        rRow.addWidget(self.saved_combo)
+        rRow.addWidget(vSaveButton)
+        rRow.addWidget(self.delete_saved_button)
+        rRow.addStretch()
+
+        self.refresh_saved_searches()
+
+        return rRow
+
+    def refresh_saved_searches(self, pSelectedName=None):
+        """Recharge la liste des recherches enregistrées."""
+        try:
+            self.saved_searches = {
+                vSearch["name"]: vSearch
+                for vSearch in get_saved_searches(self.database_file)
+            }
+
+        except Exception:
+            logger.exception("Impossible de lire les recherches enregistrées")
+
+            self.saved_searches = {}
+
+        self.saved_combo.clear()
+        self.saved_combo.addItem(
+            "Choisir une recherche…" if self.saved_searches else "Aucune recherche",
+            None,
+        )
+
+        for vName, vSearch in self.saved_searches.items():
+            self.saved_combo.addItem(vName, vName)
+
+            # L'infobulle résume les critères et les sources de la recherche.
+            self.saved_combo.setItemData(
+                self.saved_combo.count() - 1,
+                describe_saved_search(vSearch),
+                Qt.ItemDataRole.ToolTipRole,
+            )
+
+        self.saved_combo.setCurrentIndex(
+            max(self.saved_combo.findData(pSelectedName), 0)
+        )
+        self.delete_saved_button.setEnabled(bool(self.saved_searches))
+
+    def load_saved_search(self):
+        """Remplit le formulaire et les sources avec la recherche choisie."""
+        vName = self.saved_combo.currentData()
+
+        if vName in self.saved_searches:
+            vSearch = self.saved_searches[vName]
+
+            self.apply_criteria(vSearch["criteria"])
+            self.select_sources(vSearch["sources"])
+            self.set_status("idle", f"Recherche « {vName} » chargée")
+
+    def save_current_search(self):
+        """Demande un nom puis enregistre les critères et les sources actuels."""
+        vSources = self.get_selected_sources()
+
+        if not vSources:
+            self.set_status("warning", "Sélectionnez au moins une source.")
+            return
+
+        vName, vAccepted = QInputDialog.getText(
+            self,
+            "Enregistrer la recherche",
+            "Nom de la recherche (un nom existant est remplacé) :",
+            text=self.saved_combo.currentData() or "",
+        )
+
+        if vAccepted:
+            try:
+                vSavedName = save_search(
+                    self.database_file,
+                    vName,
+                    vSources,
+                    self.build_criteria(),
+                    datetime.now(),
+                )
+
+            except ValueError as vException:
+                self.set_status("warning", str(vException))
+
+            except Exception:
+                logger.exception("Échec de l'enregistrement de la recherche")
+
+                self.set_status("error", "La recherche n'a pas pu être enregistrée.")
+
+            else:
+                self.refresh_saved_searches(vSavedName)
+                self.set_status("success", f"Recherche « {vSavedName} » enregistrée")
+
+    def delete_current_search(self):
+        """Supprime la recherche choisie, après confirmation."""
+        vName = self.saved_combo.currentData()
+
+        if vName is None:
+            self.set_status("warning", "Choisissez d'abord une recherche enregistrée.")
+            return
+
+        vAnswer = QMessageBox.question(
+            self,
+            "Supprimer la recherche",
+            f"Supprimer la recherche « {vName} » ?",
+        )
+
+        if vAnswer == QMessageBox.StandardButton.Yes:
+            try:
+                delete_saved_search(self.database_file, vName)
+
+            except Exception:
+                logger.exception("Échec de la suppression de la recherche")
+
+                self.set_status("error", "La recherche n'a pas pu être supprimée.")
+
+            else:
+                self.refresh_saved_searches()
+                self.set_status("idle", f"Recherche « {vName} » supprimée")
+
+    def apply_criteria(self, pCriteria):
+        """Remplit le formulaire avec des critères ; un critère absent est vidé."""
+        self.keyword_edit.setText(pCriteria.get("keyword") or "")
+        self.location_edit.setText(pCriteria.get("location") or "")
+        self.contract_combo.setCurrentIndex(
+            max(self.contract_combo.findData(pCriteria.get("contract")), 0)
+        )
+        self.min_salary_spin.setValue(pCriteria.get("min_salary") or 0)
+        self.max_salary_spin.setValue(pCriteria.get("max_salary") or 0)
+        self.remote_check.setChecked(bool(pCriteria.get("remote")))
+        self.skills_edit.setText(", ".join(pCriteria.get("skills") or []))
+        self.exclude_edit.setText(", ".join(pCriteria.get("exclude_keywords") or []))
+
+        for vSpin, vName in (
+            (self.max_items_spin, "max_items"),
+            (self.max_pages_spin, "max_pages"),
+            (self.delay_spin, "delay"),
+            (self.timeout_spin, "timeout"),
+            (self.distance_spin, "max_distance_km"),
+        ):
+            if vName in pCriteria:
+                vSpin.setValue(pCriteria[vName] or 0)
+
+    def select_sources(self, pSources):
+        """Sélectionne exactement les sources indiquées, si elles sont disponibles."""
+        for vName, vButton in self.source_buttons.items():
+            vButton.setChecked(vButton.isEnabled() and vName in pSources)
 
         self.update_source_count()
 

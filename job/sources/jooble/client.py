@@ -21,6 +21,8 @@ def search_jobs(pConfig, pBody):
 
     logger.info("Récupération des offres Jooble : %s", pBody)
 
+    # Dépannage : 403 signale une clé JOOBLE_API_KEY invalide ; seul le code est
+    # journalisé, la clé figurant dans l'adresse.
     try:
         vData = request_json("POST", vUrl, pJson=pBody, pTimeout=10)
 

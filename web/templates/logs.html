@@ -1,0 +1,64 @@
+{# Journaux (route /logs) : lecture par utils/log_reader.py, filtres en GET. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Journaux{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Journaux", "Ce que fait l'application, pour comprendre une erreur ou un résultat", "terminal") }}
+
+<form class="filters card" method="get" action="{{ url_for('show_logs').path }}">
+    <div class="filters-row">
+        <select name="level" aria-label="Niveau" onchange="this.form.submit()">
+            {% for value, label in level_filters.items() %}
+            <option value="{{ value or '' }}"{% if value == level %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <input class="filters-search" type="search" name="search" value="{{ search or '' }}"
+               placeholder="Rechercher dans les messages et modules" aria-label="Recherche">
+        <button class="button" type="submit">{{ icon("search", 16) }} Filtrer</button>
+        <a class="button" href="{{ url_for('download_logs').path }}">{{ icon("download", 16) }} Télécharger</a>
+    </div>
+</form>
+
+<form class="logs-clear" method="post" action="{{ url_for('clear_logs_page').path }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <label class="check">
+        <input type="checkbox" name="confirm" required>
+        Effacer tous les journaux (téléchargez-les avant pour les garder)
+    </label>
+    <button class="button button-danger" type="submit">{{ icon("circle-alert", 16) }} Vider</button>
+</form>
+
+<p class="muted">
+    {{ entries | length }} entrée(s) affichée(s), {{ max_entries }} au plus · logs conservés
+    {{ retention_days }} jours · le détail d'une erreur s'affiche au survol du message
+</p>
+
+{% if entries %}
+<div class="table-wrapper">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Niveau</th>
+                <th>Module</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td class="nowrap">{{ entry.time }}</td>
+                <td class="nowrap tone-{{ level_tones.get(entry.level, 'muted') }}">{{ entry.level_label }}</td>
+                <td class="nowrap muted">{{ entry.module }}</td>
+                <td title="{{ entry.message }}">{{ entry.message.split("\n")[0] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card empty">{{ icon("inbox", 32) }}Aucune entrée ne correspond aux filtres.</div>
+{% endif %}
+{% endblock %}

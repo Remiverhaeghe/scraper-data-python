@@ -66,6 +66,8 @@ def request_json(
     ses éventuelles clés avant de les journaliser.
     """
 
+    # Dépannage : une URL refusée ici vise une adresse locale ou privée, bloquée
+    # pour qu'une source ne puisse pas faire interroger le réseau interne.
     validate_url(pUrl)
 
     vResponse = requests.request(
@@ -76,6 +78,8 @@ def request_json(
         json=pJson,
         data=pData,
         timeout=pTimeout,
+        # Une redirection pourrait mener vers une adresse non validée : elle est refusée
+        # et signalée comme erreur plutôt que suivie.
         allow_redirects=False,
         stream=True,
     )
@@ -88,6 +92,8 @@ def request_json(
 
         vContentType = vResponse.headers.get("Content-Type", "")
 
+        # Une page HTML à la place du JSON signale souvent une maintenance du site ou
+        # une clé refusée présentée sous forme de page.
         if "json" not in vContentType.lower():
             raise ValueError(f"Réponse inattendue : type {vContentType or 'inconnu'}")
 

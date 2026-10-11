@@ -16,6 +16,9 @@ def connect_database(pDatabasePath):
 
     vDatabasePath.parent.mkdir(parents=True, exist_ok=True)
 
+    # Une connexion par opération, fermée aussitôt : le bureau, le web et le
+    # planificateur peuvent partager le même fichier. « database is locked »
+    # signale une écriture longue d'un autre processus, à relancer.
     vConnection = sqlite3.connect(vDatabasePath)
 
     rConnection = vConnection
@@ -226,6 +229,20 @@ def migrate_to_v5(pConnection):
     )
 
 
+def migrate_to_v6(pConnection):
+    """Ajoute les recherches enregistrées, réutilisables depuis la page Recherche."""
+
+    # Sources et critères sont stockés en JSON, comme dans l'historique.
+    pConnection.execute("""
+        CREATE TABLE saved_search (
+            name TEXT PRIMARY KEY,
+            sources TEXT NOT NULL,
+            criteria TEXT NOT NULL,
+            saved_at TEXT NOT NULL
+        )
+        """)
+
+
 # Colonnes de date sur lesquelles un décompte quotidien est autorisé
 DAILY_COUNT_COLUMNS = {
     ("job_offer", "first_seen_at"),
@@ -279,6 +296,7 @@ MIGRATIONS = [
     migrate_to_v3,
     migrate_to_v4,
     migrate_to_v5,
+    migrate_to_v6,
 ]
 
 
@@ -298,6 +316,9 @@ def initialize_database(pDatabasePath):
     vConnection = connect_database(pDatabasePath)
 
     try:
+        # La version du schéma est stockée dans la base elle-même (PRAGMA
+        # user_version) : seules les migrations plus récentes s'appliquent. Pour
+        # diagnostiquer, ouvrir la base avec un outil SQLite et lire cette valeur.
         vCurrentVersion = get_schema_version(vConnection)
 
         for vVersion in range(vCurrentVersion + 1, len(MIGRATIONS) + 1):

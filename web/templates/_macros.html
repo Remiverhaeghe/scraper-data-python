@@ -22,6 +22,10 @@
 {% endmacro %}
 
 {% macro bar_chart(chart, label) %}
+{% if chart.empty_text %}
+<div class="empty">{{ icon("inbox", 32) }}{{ chart.empty_text }}</div>
+{% else %}
+{% if chart.y_axis %}<p class="chart-axis">{{ chart.y_axis }}</p>{% endif %}
 {# Au-delà de 8 barres, une date sur deux suffit et reste lisible #}
 <div class="chart{% if chart.labels | length > 8 %} chart-dense{% endif %}" role="img" aria-label="{{ label }}">
     {% for day_label in chart.labels %}
@@ -41,12 +45,14 @@
     </div>
     {% endfor %}
 </div>
+{% if chart.x_axis %}<p class="chart-axis chart-axis-x">{{ chart.x_axis }}</p>{% endif %}
 {% if chart.series | length > 1 %}
 <ul class="legend">
     {% for series in chart.series %}
     <li><i style="background: {{ series.color }}"></i>{{ series.name }} <span class="muted">· {{ series.bars | sum(attribute="value") }}</span></li>
     {% endfor %}
 </ul>
+{% endif %}
 {% endif %}
 {% endmacro %}
 

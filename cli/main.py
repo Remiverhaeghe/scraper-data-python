@@ -42,6 +42,7 @@ def main():
 
     vArguments = parse_arguments()
 
+    # Même initialisation que l'interface : les migrations s'appliquent d'abord.
     initialize_database(DATABASE_FILE)
 
     if vArguments.type == "book":

@@ -78,18 +78,37 @@ class BarChart(QWidget):
         self.labels = []
         self.series = []
         self.independent_scales = False
+        self.axes = (None, None)
+        self.empty_text = ""
         self.setMinimumHeight(170)
 
-    def set_series(self, pLabels, pSeries, pIndependentScales=False):
+    def set_series(
+        self,
+        pLabels,
+        pSeries,
+        pIndependentScales=False,
+        pAxes=(None, None),
+        pEmptyText="",
+    ):
         """Remplace les données : pSeries contient des (nom, couleur, valeurs).
 
         Avec pIndependentScales, chaque série a sa propre échelle : une série de
         faibles valeurs reste visible à côté d'une série de valeurs élevées.
+        pAxes donne les libellés des axes horizontal et vertical ; pEmptyText
+        remplace le graphique lorsque toutes les valeurs sont nulles.
         """
         self.labels = pLabels
         self.series = pSeries
         self.independent_scales = pIndependentScales
+        self.axes = pAxes
+        self.empty_text = pEmptyText
         self.update()
+
+    def is_empty(self):
+        """Indique si aucune série ne contient de valeur."""
+        rEmpty = not any(vValue for _, _, vValues in self.series for vValue in vValues)
+
+        return rEmpty
 
     def get_maximum(self, pValues):
         """Retourne la valeur qui correspond à la hauteur maximale d'une barre."""
@@ -112,8 +131,27 @@ class BarChart(QWidget):
         vPainter = QPainter(self)
         vPainter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
+        if self.empty_text and self.is_empty():
+            vPainter.setPen(QColor(COLORS["muted"]))
+            vPainter.drawText(
+                self.rect(), Qt.AlignmentFlag.AlignCenter, self.empty_text
+            )
+            vPainter.end()
+            return
+
+        vXAxisLabel, vYAxisLabel = self.axes
         vWidth = self.width()
-        vTop = LABEL_HEIGHT
+
+        # Le libellé de l'axe vertical occupe une ligne au-dessus des barres.
+        vTop = LABEL_HEIGHT * (2 if vYAxisLabel else 1)
+
+        if vYAxisLabel:
+            vPainter.setPen(QColor(COLORS["muted"]))
+            vPainter.drawText(
+                QRectF(0, 0, vWidth, LABEL_HEIGHT),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                vYAxisLabel,
+            )
 
         vHasLegend = len(self.series) > 1
         vLegendItems = [
@@ -126,8 +164,19 @@ class BarChart(QWidget):
             else 0
         )
 
-        vChartHeight = self.height() - vTop - LABEL_HEIGHT - vLegendHeight
+        vXAxisHeight = LABEL_HEIGHT if vXAxisLabel else 0
+        vChartHeight = (
+            self.height() - vTop - LABEL_HEIGHT - vXAxisHeight - vLegendHeight
+        )
         vBaseline = vTop + vChartHeight
+
+        if vXAxisLabel:
+            vPainter.setPen(QColor(COLORS["muted"]))
+            vPainter.drawText(
+                QRectF(0, vBaseline + LABEL_HEIGHT, vWidth, LABEL_HEIGHT),
+                Qt.AlignmentFlag.AlignCenter,
+                vXAxisLabel,
+            )
 
         if vHasLegend:
             draw_legend(

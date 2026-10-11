@@ -9,6 +9,7 @@ from job.presentation import (
     LICENSE_SUMMARY,
     LICENSE_SUMMARY_NOTE,
     build_legal_sections,
+    read_icons_license,
     read_license,
 )
 
@@ -63,5 +64,7 @@ def show_license(pParent):
             f"<h3>En résumé</h3><p><i>{escape(LICENSE_SUMMARY_NOTE)}</i></p>"
             f"<ul>{vSummary}</ul><h3>Texte officiel</h3>"
             f"<pre style='white-space: pre-wrap'>{escape(read_license())}</pre>"
+            "<h3>Licence des icônes Lucide (ISC)</h3>"
+            f"<pre style='white-space: pre-wrap'>{escape(read_icons_license())}</pre>"
         ),
     )

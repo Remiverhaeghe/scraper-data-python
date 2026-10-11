@@ -25,6 +25,7 @@ def search_jobs(pQuery=None, pCountry=None, pPage=1):
 
     logger.info("Récupération des offres Himalayas : %s", vParams)
 
+    # API publique sans clé ; 429 signale trop de requêtes rapprochées.
     try:
         vData = request_json(
             "GET", API_URL, pParams=vParams, pHeaders=vHeaders, pTimeout=10

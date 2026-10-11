@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QVBoxLayout,
     QWidget,
 )
@@ -37,6 +38,7 @@ from job.schedule import (
 )
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
+from storage.maintenance import reset_database
 from utils.logger import get_logger
 from utils.mailer import EMAIL_SETTINGS, get_missing_email_settings, send_email
 
@@ -68,6 +70,7 @@ class SettingsPage(QWidget):
     """Regroupe les réglages de l'application et l'état de sa configuration."""
 
     theme_requested = Signal(str)
+    data_reset = Signal(str)
 
     def __init__(self, pDatabaseFile):
         """Construit les cartes de la page."""
@@ -96,7 +99,11 @@ class SettingsPage(QWidget):
                 self.create_rules_card(),
                 self.create_schedule_card(),
             ),
-            (self.create_notification_card(), self.create_sources_card()),
+            (
+                self.create_notification_card(),
+                self.create_sources_card(),
+                self.create_reset_card(),
+            ),
         ):
             vColumn = QVBoxLayout()
             vColumn.setSpacing(18)
@@ -204,6 +211,8 @@ class SettingsPage(QWidget):
         vValues = {vKey: vSpin.value() for vKey, vSpin in self.setting_spins.items()}
 
         try:
+            # Changer le net ou l'impôt recalcule le salaire net de toutes les offres en
+            # base : le nombre d'offres concernées est indiqué dans le message.
             _, vRecomputed = save_settings(self.database_file, vValues)
 
         except ValueError as vException:
@@ -216,7 +225,8 @@ class SettingsPage(QWidget):
 
         else:
             self.rules_message.setText(
-                f"Règles enregistrées, salaire net recalculé pour {vRecomputed} offre(s)."
+                f"Règles enregistrées, salaire net recalculé pour {vRecomputed} "
+                "offre(s)."
                 if vRecomputed
                 else "Règles enregistrées."
             )
@@ -232,6 +242,8 @@ class SettingsPage(QWidget):
         vGrid.setHorizontalSpacing(12)
         vGrid.setVerticalSpacing(10)
 
+        # Le fichier .env n'est lu qu'au démarrage (config.py) : après l'avoir modifié,
+        # relancer l'application pour voir l'état des sources à jour.
         for vRow, vDefinition in enumerate(SOURCES.values()):
             vIcon, vColor, vText = describe_source_state(vDefinition)
 
@@ -325,6 +337,7 @@ class SettingsPage(QWidget):
             "Les nouvelles offres de la recherche planifiée, envoyées par Gmail",
         )
 
+        # Seuls les noms des variables manquantes sont affichés, jamais leurs valeurs.
         vMissing = get_missing_email_settings()
 
         if vMissing:
@@ -463,10 +476,85 @@ class SettingsPage(QWidget):
         finally:
             QApplication.restoreOverrideCursor()
 
-    def set_theme_enabled(self, pEnabled):
-        """Bloque le changement de thème pendant une recherche.
+    def create_reset_card(self):
+        """Construit la réinitialisation des données, précédée d'une sauvegarde."""
+        vCard, vLayout = create_card(
+            "Réinitialisation",
+            "Efface les offres, candidatures, relances, historique, réglages et "
+            "recherches enregistrées. "
+            "Une sauvegarde de la base est faite juste avant.",
+        )
 
-        Changer de thème reconstruit les pages, ce qui interromprait la recherche.
+        self.reset_button = create_button(
+            "Réinitialiser les données",
+            "circle-alert",
+            "dangerButton",
+            COLORS["danger"],
+        )
+        self.reset_button.clicked.connect(self.confirm_reset)
+
+        self.reset_message = QLabel()
+        self.reset_message.setObjectName("cardSubtitle")
+        self.reset_message.setWordWrap(True)
+
+        vActions = QHBoxLayout()
+        vActions.addWidget(self.reset_button)
+        vActions.addWidget(self.reset_message, 1)
+
+        vLayout.addLayout(vActions)
+
+        return vCard
+
+    def confirm_reset(self):
+        """Demande confirmation, puis réinitialise les données."""
+        vDialog = QMessageBox(self)
+        vDialog.setIcon(QMessageBox.Icon.Warning)
+        vDialog.setWindowTitle("Réinitialiser les données")
+        vDialog.setText("Toutes les données de l'application vont être effacées.")
+        vDialog.setInformativeText(
+            "Offres, candidatures, relances, historique, réglages, recherches "
+            "enregistrées et planifiée, adresse de notification. Une sauvegarde "
+            "de la base est "
+            "faite avant, dans data/backups. Continuer ?"
+        )
+
+        vConfirmButton = vDialog.addButton(
+            "Réinitialiser", QMessageBox.ButtonRole.DestructiveRole
+        )
+        vCancelButton = vDialog.addButton("Annuler", QMessageBox.ButtonRole.RejectRole)
+
+        # Par sécurité, Entrée annule : il faut cliquer sur Réinitialiser.
+        vDialog.setDefaultButton(vCancelButton)
+        vDialog.exec()
+
+        if vDialog.clickedButton() is vConfirmButton:
+            self.reset_data()
+
+    def reset_data(self):
+        """Sauvegarde puis efface les données ; les pages sont ensuite reconstruites."""
+        try:
+            vBackupFile = reset_database(self.database_file, datetime.now())
+
+        except Exception:
+            logger.exception("Échec de la réinitialisation des données")
+
+            self.reset_message.setText(
+                "La réinitialisation a échoué, aucune donnée n'a été effacée "
+                "si la sauvegarde n'a pas pu être faite. Voir les journaux."
+            )
+
+        else:
+            # Les pages sont reconstruites : le message est affiché sur la nouvelle.
+            self.data_reset.emit(
+                f"Données réinitialisées. Sauvegarde : {vBackupFile.name}"
+            )
+
+    def set_actions_enabled(self, pEnabled):
+        """Bloque le changement de thème et la réinitialisation pendant une recherche.
+
+        Les deux reconstruisent les pages, ce qui interromprait la recherche.
         """
         for vButton in self.theme_buttons.buttons():
             vButton.setEnabled(pEnabled)
+
+        self.reset_button.setEnabled(pEnabled)

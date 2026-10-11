@@ -22,6 +22,8 @@ def keep_matching(pJobs, pPredicate):
 def filter_jobs(pJobs, pConfig):
     """Filtre les offres selon la configuration de recherche."""
 
+    # Chaque filtre est journalisé par son effet global en fin de fonction : pour
+    # comprendre pourquoi une offre manque, relancer avec moins de critères.
     vJobs = pJobs.copy()
 
     if pConfig.keyword:

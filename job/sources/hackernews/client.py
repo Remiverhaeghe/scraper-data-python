@@ -19,6 +19,8 @@ THREAD_TITLE = "Ask HN: Who is hiring?"
 def get_json(pUrl, pParams=None):
     """Effectue une requête GET et retourne la réponse JSON."""
 
+    # Délai plus long que les autres sources : un fil complet compte plusieurs
+    # centaines de commentaires.
     try:
         rData = request_json("GET", pUrl, pParams=pParams, pTimeout=30)
 

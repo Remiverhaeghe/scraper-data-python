@@ -62,7 +62,7 @@ def test_theme_buttons_emit_choice(qt_application, tmp_path):
 
     assert vRequested == ["dark"]
 
-    vPage.set_theme_enabled(False)
+    vPage.set_actions_enabled(False)
 
     assert not vButtons[1].isEnabled()
 
@@ -192,3 +192,49 @@ def test_send_test_email(
 
     assert vPage.email_message.text() == pMessage
     assert vSent == (["moi@example.com"] if pEmail and not pError else [])
+
+
+@pytest.mark.parametrize("pConfirmed", [True, False])
+def test_reset_asks_confirmation(qt_application, tmp_path, monkeypatch, pConfirmed):
+    """Vérifie que la réinitialisation n'a lieu qu'après confirmation."""
+
+    vResets = []
+
+    def fake_exec(pDialog):
+        vButtons = {vButton.text(): vButton for vButton in pDialog.buttons()}
+        pDialog.clickedButton = lambda: vButtons[
+            "Réinitialiser" if pConfirmed else "Annuler"
+        ]
+
+    monkeypatch.setattr(settings_page.QMessageBox, "exec", fake_exec)
+    monkeypatch.setattr(
+        settings_page,
+        "reset_database",
+        lambda pDatabaseFile, pNow: vResets.append(pDatabaseFile)
+        or tmp_path / "backups" / "scraper-1.db",
+    )
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+    vMessages = []
+    vPage.data_reset.connect(vMessages.append)
+
+    vPage.confirm_reset()
+
+    assert len(vResets) == (1 if pConfirmed else 0)
+    assert vMessages == (
+        ["Données réinitialisées. Sauvegarde : scraper-1.db"] if pConfirmed else []
+    )
+
+
+def test_reset_failure_is_reported(qt_application, tmp_path, monkeypatch):
+    """Vérifie le message affiché lorsque la réinitialisation échoue."""
+
+    def refuse(pDatabaseFile, pNow):
+        raise OSError("disque plein")
+
+    monkeypatch.setattr(settings_page, "reset_database", refuse)
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+    vPage.reset_data()
+
+    assert "La réinitialisation a échoué" in vPage.reset_message.text()

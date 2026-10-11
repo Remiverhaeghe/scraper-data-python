@@ -5,11 +5,13 @@ from types import SimpleNamespace
 
 import pandas as pd
 import pytest
-from PySide6.QtCore import QCoreApplication, QSettings
+from PySide6.QtCore import QCoreApplication, QSettings, Qt
 
+import gui.search_page as search_page_module
 from gui.search_page import SearchPage
 from gui.search_worker import SearchWorker
 from job.sources.aggregator import ScrapingCancelled
+from storage.database import initialize_database
 
 
 @pytest.fixture
@@ -301,3 +303,83 @@ def test_previous_keyword_setting_is_still_read(qt_application, tmp_path):
     vSettings.setValue("search/keyword", "Kotlin")
 
     assert SearchPage(vSettings).keyword_edit.text() == "Kotlin"
+
+
+@pytest.fixture
+def saved_search_page(qt_application, tmp_path):
+    """Crée une page reliée à une base, pour les recherches enregistrées."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    rPage = SearchPage(
+        QSettings(str(tmp_path / "settings.ini"), QSettings.IniFormat), vDatabaseFile
+    )
+
+    return rPage
+
+
+def test_saved_search_round_trip(saved_search_page, monkeypatch):
+    """Vérifie l'enregistrement puis le rechargement des critères et des sources."""
+
+    vPage = saved_search_page
+
+    vPage.keyword_edit.setText("Python")
+    vPage.skills_edit.setText("Django, SQL")
+    select_only_remotive(vPage)
+
+    monkeypatch.setattr(
+        search_page_module.QInputDialog,
+        "getText",
+        lambda *pArgs, **pKwargs: ("Python remote", True),
+    )
+    vPage.save_current_search()
+
+    assert vPage.saved_combo.currentData() == "Python remote"
+    assert "Python" in vPage.saved_combo.itemData(1, Qt.ItemDataRole.ToolTipRole)
+
+    vPage.keyword_edit.clear()
+    vPage.skills_edit.clear()
+    vPage.check_sources(True)
+    vPage.load_saved_search()
+
+    assert vPage.keyword_edit.text() == "Python"
+    assert vPage.skills_edit.text() == "Django, SQL"
+    assert vPage.get_selected_sources() == ["remotive"]
+    assert vPage.status_label.text() == "Recherche « Python remote » chargée"
+
+
+def test_saved_search_deletion_asks_confirmation(saved_search_page, monkeypatch):
+    """Vérifie la suppression après confirmation."""
+
+    vPage = saved_search_page
+
+    monkeypatch.setattr(
+        search_page_module.QInputDialog,
+        "getText",
+        lambda *pArgs, **pKwargs: ("À supprimer", True),
+    )
+    vPage.save_current_search()
+
+    monkeypatch.setattr(
+        search_page_module.QMessageBox,
+        "question",
+        lambda *pArgs: search_page_module.QMessageBox.StandardButton.Yes,
+    )
+    vPage.delete_current_search()
+
+    assert vPage.saved_combo.count() == 1
+    assert vPage.saved_combo.currentText() == "Aucune recherche"
+    assert not vPage.delete_saved_button.isEnabled()
+
+
+def test_saved_search_reports_invalid_name(saved_search_page, monkeypatch):
+    """Vérifie le message affiché pour un nom vide."""
+
+    monkeypatch.setattr(
+        search_page_module.QInputDialog, "getText", lambda *pArgs, **pKwargs: ("", True)
+    )
+    saved_search_page.save_current_search()
+
+    assert saved_search_page.status_label.text() == "Donnez un nom à la recherche."

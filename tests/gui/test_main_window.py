@@ -75,3 +75,20 @@ def test_search_page_saves_scheduled_search(qt_application, tmp_path):
     assert vSearch["sources"] == vSearchPage.get_selected_sources()
     assert vSearchPage.status_label.text() == "Recherche planifiée enregistrée"
     assert vWindow.settings_page.schedule_search_label.text().startswith("Python")
+
+
+def test_reset_rebuilds_pages_with_message(qt_application, tmp_path):
+    """Vérifie que les pages sont rechargées et le résultat affiché après reset."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vWindow = MainWindow(vDatabaseFile, "Test")
+    vOldSettingsPage = vWindow.settings_page
+
+    vWindow.settings_page.data_reset.emit("Données réinitialisées.")
+
+    assert vWindow.settings_page is not vOldSettingsPage
+    assert vWindow.pages.currentWidget() is vWindow.settings_page
+    assert vWindow.settings_page.reset_message.text() == "Données réinitialisées."

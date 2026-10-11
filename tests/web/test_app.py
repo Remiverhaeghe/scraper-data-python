@@ -511,6 +511,7 @@ def test_license_is_shown_without_leaving_the_site(client):
     assert vResponse.status_code == 200
     assert "PolyForm Strict License 1.0.0" in vResponse.text
     assert "seul le texte anglais fait foi" in vResponse.text
+    assert "Lucide Contributors" in vResponse.text
 
 
 def test_settings_page_shows_schedule_without_email(client, tmp_path, monkeypatch):
@@ -531,3 +532,117 @@ def test_settings_page_shows_schedule_without_email(client, tmp_path, monkeypatc
     assert "Adresse renseignée" in vResponse.text
     assert "secret@example.com" not in vResponse.text
     assert "GMAIL_APP_PASSWORD" in vResponse.text
+
+
+def test_logs_page_shows_filtered_entries(client, monkeypatch):
+    """Vérifie l'affichage des logs filtrés, avec la trace d'erreur au survol."""
+
+    vCalls = []
+
+    def fake_read(pLevel=None, pSearch=None):
+        vCalls.append((pLevel, pSearch))
+
+        return [
+            {
+                "time": "2026-10-10 09:00:00",
+                "level": "ERROR",
+                "level_label": "Erreur",
+                "module": "web.app",
+                "message": "Erreur <b>inattendue</b>\nTraceback détaillé",
+            }
+        ]
+
+    monkeypatch.setattr("web.app.read_log_entries", fake_read)
+
+    vResponse = client.get("/logs?level=ERROR&search=%20web%20")
+
+    assert vResponse.status_code == 200
+    assert vCalls == [("ERROR", "web")]
+    assert "tone-danger" in vResponse.text
+    assert "Erreur &lt;b&gt;inattendue&lt;/b&gt;" in vResponse.text
+    assert "<b>inattendue</b>" not in vResponse.text
+
+
+def test_logs_page_ignores_unknown_level(client, monkeypatch):
+    """Vérifie qu'un niveau inconnu revient à afficher tous les logs."""
+
+    vCalls = []
+
+    monkeypatch.setattr(
+        "web.app.read_log_entries",
+        lambda pLevel=None, pSearch=None: vCalls.append(pLevel) or [],
+    )
+
+    vResponse = client.get("/logs?level=DEBUG")
+
+    assert vResponse.status_code == 200
+    assert vCalls == [None]
+    assert "Aucune entrée ne correspond aux filtres." in vResponse.text
+
+
+def test_reset_requires_confirmation(client):
+    """Vérifie qu'une réinitialisation sans la case cochée ne change rien."""
+
+    vResponse = client.post("/settings/reset", data={})
+
+    assert vResponse.status_code == 400
+    assert "Cochez la case de confirmation" in vResponse.text
+    assert "Développeur Java" in client.get("/offers").text
+
+
+def test_reset_backs_up_then_empties_data(client, tmp_path):
+    """Vérifie la sauvegarde puis l'effacement des offres."""
+
+    vResponse = client.post("/settings/reset", data={"confirm": "1"})
+
+    assert vResponse.status_code == 200
+    assert "Données réinitialisées. Sauvegarde : scraper-" in vResponse.text
+    assert len(list((tmp_path / "backups").glob("scraper-*.db"))) == 1
+    assert "Développeur Java" not in client.get("/offers").text
+
+
+def test_logs_can_be_downloaded_and_cleared(client, monkeypatch):
+    """Vérifie le téléchargement des journaux et leur remise à zéro protégée."""
+
+    vCleared = []
+
+    monkeypatch.setattr("web.app.export_logs", lambda: "ligne de journal\n")
+    monkeypatch.setattr("web.app.clear_logs", lambda: vCleared.append(True))
+
+    vDownload = client.get("/logs/download")
+
+    assert vDownload.text == "ligne de journal\n"
+    assert "attachment" in vDownload.headers["content-disposition"]
+
+    vClear = client.post("/logs/clear", data={"confirm": "on"}, follow_redirects=False)
+
+    assert vClear.status_code == 303
+    assert vCleared == [True]
+
+
+@pytest.mark.parametrize("pValues, pEmptyText", [([0, 0], "Vide"), ([1, 0], "")])
+def test_build_bar_chart_empty_state_and_axes(pValues, pEmptyText):
+    """Vérifie le texte d'état vide et les libellés d'axes transmis au gabarit."""
+
+    vChart = build_bar_chart(
+        ["a", "b"],
+        [("Offres", "#000", pValues)],
+        pAxes=("Jour", "Nombre"),
+        pEmptyText="Vide",
+    )
+
+    assert vChart["empty_text"] == pEmptyText
+    assert (vChart["x_axis"], vChart["y_axis"]) == ("Jour", "Nombre")
+
+
+def test_quality_page_and_export(client):
+    """Vérifie la page de qualité et le téléchargement des offres à vérifier."""
+
+    vPage = client.get("/quality")
+    vExport = client.get("/quality/export")
+
+    assert vPage.status_code == 200
+    assert "Remplissage global" in vPage.text
+    assert "tone-success" in vPage.text
+    assert "attachment" in vExport.headers["content-disposition"]
+    assert vExport.text.lstrip("﻿").startswith("source;source_id;problems")

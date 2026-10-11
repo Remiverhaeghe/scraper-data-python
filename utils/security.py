@@ -15,6 +15,8 @@ def validate_url(pUrl):
 
     vParsedUrl = urlparse(pUrl)
 
+    # file://, ftp:// ou javascript: sont refusés : seules des pages web publiques
+    # sont interrogées.
     if vParsedUrl.scheme.lower() not in ALLOWED_SCHEMES:
         raise ValueError("Le schéma de l'URL n'est pas autorisé.")
 
@@ -38,6 +40,8 @@ def validate_url(pUrl):
     if vParsedUrl.hostname.lower() == "localhost":
         raise ValueError("La destination localhost n'est pas autorisée.")
 
+    # Un nom de domaine peut pointer vers une adresse interne : chaque adresse
+    # résolue est vérifiée, pas seulement le nom (protection contre le SSRF).
     try:
         vAddresses = socket.getaddrinfo(vParsedUrl.hostname, None)
     except socket.gaierror:

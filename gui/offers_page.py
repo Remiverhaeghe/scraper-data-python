@@ -370,6 +370,8 @@ class OffersPage(QWidget):
 
             vOffers = get_offers(
                 self.database_file,
+                # Une offre de plus que la limite est lue pour savoir s'il en reste : le
+                # message invite alors à affiner les filtres.
                 pLimit=MAX_DISPLAYED_OFFERS + 1,
                 **self.build_filters(vNow, vNewOfferDays),
             )
@@ -440,6 +442,8 @@ class OffersPage(QWidget):
         vOffer = None
 
         if pCurrent.isValid():
+            # Le tableau est trié par un proxy : une ligne affichée ne correspond pas à la
+            # même ligne du modèle, d'où la conversion par mapToSource.
             vOffer = self.model.offer_at(self.proxy.mapToSource(pCurrent).row())
 
         self.detail_panel.show_offer(vOffer)

@@ -54,6 +54,7 @@ def test_license_dialog_is_read_only(qt_application, monkeypatch):
     assert vShown[0][0] is True
     assert "PolyForm Strict License 1.0.0" in vShown[0][1]
     assert "seul le texte anglais fait foi" in vShown[0][1]
+    assert "Lucide Contributors" in vShown[0][1]
 
 
 def test_legal_notice_dialog_is_in_french(qt_application, monkeypatch):

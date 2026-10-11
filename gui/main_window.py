@@ -20,8 +20,10 @@ from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
 from gui.history_page import HistoryPage
 from gui.home_page import HomePage
+from gui.logs_page import LogsPage
 from gui.icons import get_icon
 from gui.offers_page import OffersPage
+from gui.quality_page import QualityPage
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
 from gui.theme import COLORS
@@ -52,6 +54,8 @@ class MainWindow(QMainWindow):
         self.title = pTitle
 
         self.setWindowTitle(pTitle)
+        # En dessous, les cartes se chevauchent. Sur un petit écran ou un téléphone,
+        # le tableau de bord web s'adapte à la largeur disponible.
         self.setMinimumSize(1180, 760)
 
         self.build_content()
@@ -73,18 +77,24 @@ class MainWindow(QMainWindow):
         self.page_rows = {}
 
         self.home_page = HomePage(pDatabaseFile)
-        self.search_page = SearchPage()
+        self.search_page = SearchPage(pDatabaseFile=pDatabaseFile)
         self.offers_page = OffersPage(pDatabaseFile)
 
+        # L'ordre d'ajout fixe l'ordre du menu ; la clé sert à navigate().
         self.add_page("home", "Accueil", "house", self.home_page)
         self.add_page("search", "Recherche", "search", self.search_page)
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
         self.add_page("history", "Historique", "history", HistoryPage(pDatabaseFile))
+        self.add_page("quality", "Qualité", "list-checks", QualityPage(pDatabaseFile))
+        self.add_page("logs", "Journaux", "terminal", LogsPage())
 
         self.settings_page = SettingsPage(pDatabaseFile)
         self.add_page("settings", "Paramètres", "settings", self.settings_page)
 
+        # Les pages ne se connaissent pas : elles émettent des signaux et la fenêtre
+        # décide de la suite. Pour suivre l'effet d'un clic, partir de ces connexions.
         self.settings_page.theme_requested.connect(self.theme_requested)
+        self.settings_page.data_reset.connect(self.show_reset_result)
 
         self.home_page.navigation_requested.connect(self.navigate)
         self.home_page.offer_requested.connect(self.show_search_results)
@@ -183,7 +193,7 @@ class MainWindow(QMainWindow):
         return rLinks
 
     def open_footer_link(self, pTarget):
-        """Ouvre mentions légales et licence dans l'application, le contact au navigateur."""
+        """Ouvre mentions et licence dans l'application, le contact au navigateur."""
         if pTarget == LEGAL_LINK:
             show_legal_notice(self)
         elif pTarget == LICENSE_LINK:
@@ -228,6 +238,11 @@ class MainWindow(QMainWindow):
         finally:
             self.setUpdatesEnabled(True)
 
+    def show_reset_result(self, pMessage):
+        """Recharge toutes les pages après une réinitialisation des données."""
+        self.rebuild("settings")
+        self.settings_page.reset_message.setText(pMessage)
+
     def save_scheduled_search(self, pSources, pCriteria):
         """Enregistre la recherche du planificateur et l'indique sur la page."""
         try:
@@ -266,12 +281,12 @@ class MainWindow(QMainWindow):
     def on_search_started(self):
         """Signale la recherche en cours et bloque le changement de thème."""
         self.set_status("Recherche en cours", COLORS["warning"])
-        self.settings_page.set_theme_enabled(False)
+        self.settings_page.set_actions_enabled(False)
 
     def on_search_ended(self):
         """Signale le retour au repos et réautorise le changement de thème."""
         self.set_status("Prêt", COLORS["success"])
-        self.settings_page.set_theme_enabled(True)
+        self.settings_page.set_actions_enabled(True)
 
     def set_status(self, pText, pColor):
         """Affiche l'état de l'application en bas du menu latéral."""

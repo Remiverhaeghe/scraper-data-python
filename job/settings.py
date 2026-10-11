@@ -116,6 +116,8 @@ def load_settings(pDatabaseFile):
     vSettings = get_default_settings()
 
     for vKey, vValue in get_setting_values(pDatabaseFile).items():
+        # app_setting contient aussi la planification et l'adresse e-mail
+        # (job/schedule.py) : seules les clés des règles de calcul sont lues ici.
         if vKey in SETTING_DEFINITIONS:
             try:
                 vSettings[vKey] = parse_setting(vKey, vValue)

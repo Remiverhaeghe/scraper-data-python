@@ -74,6 +74,8 @@ def scrape_paginated(
 
             vCurrentUrl = pExtractNextUrl(vSoup, vCurrentUrl)
 
+    # Une erreur sur une page n'efface pas les pages déjà lues : le résultat
+    # partiel est conservé et l'erreur est notée dans l'historique.
     except Exception as vException:
         vStatus = "error"
         vErrorMessage = str(vException)

@@ -1,0 +1,48 @@
+{# Qualité des données (route /quality) : rapport calculé par job/quality.py. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Qualité des données{% endblock %}
+
+{% block content %}
+{% call ui.page_header("Qualité des données", "Les informations fournies par chaque source, pour voir ce qui manque", "list-checks") %}
+<a class="button" href="{{ url_for('export_quality').path }}">{{ icon("download", 16) }} Exporter les offres à vérifier</a>
+{% endcall %}
+
+<article class="card">
+    <h2>Remplissage global</h2>
+    <p class="card-subtitle">Part des offres en base dont le champ est renseigné, toutes sources</p>
+    {{ ui.bar_chart(chart, "Remplissage des champs") }}
+</article>
+
+<article class="card section-gap">
+    <h2>Par source</h2>
+    <p class="card-subtitle">Vert : 80 % et plus · orange : 40 % et plus · rouge : en dessous</p>
+    {% if report.rows %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Source</th>
+                    <th class="amount">Offres</th>
+                    {% for column in report.columns %}<th class="amount">{{ column }}</th>{% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report.rows %}
+                <tr>
+                    <td class="nowrap">{{ row.source }}</td>
+                    <td class="amount">{{ row.count }}</td>
+                    {% for rate in row.rates %}<td class="amount tone-{{ rate.tone }}">{{ rate.rate }} %</td>{% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty">{{ icon("inbox", 32) }}Aucune offre en base pour le moment.</div>
+    {% endif %}
+</article>
+
+<p class="muted">{{ report.total.count }} offre(s) analysée(s). L'export liste les offres incomplètes ou mal découpées, pour améliorer leur analyse.</p>
+{% endblock %}

@@ -25,6 +25,8 @@ def get_jobs(pConfig, pParams, pPage=1):
 
     logger.info("Récupération des offres Findwork : %s", vParams)
 
+    # Dépannage : 401 signale FINDWORK_API_KEY absente ou invalide dans .env,
+    # 429 un nombre de requêtes trop élevé.
     try:
         vData = request_json(
             "GET", API_URL, pParams=vParams, pHeaders=vHeaders, pTimeout=10

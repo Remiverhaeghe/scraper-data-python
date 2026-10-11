@@ -89,6 +89,8 @@ def build_job_config(pArguments):
 
         vSourceConfig = build_source_config(vName, vSources)
 
+        # Seules les sources cochées chargent leurs paramètres : une clé manquante dans
+        # .env n'empêche pas d'utiliser les autres sources.
         if vSourceConfig.enabled:
             logger.info("Chargement de la configuration %s", vDefinition.label)
 
@@ -122,6 +124,8 @@ def build_job_config(pArguments):
 
     logger.info("Validation de la configuration Jobs")
 
+    # La validation lève une ValueError lisible en cas de critère incohérent, par
+    # exemple un salaire minimum supérieur au maximum.
     vConfig.validate()
 
     logger.info("Configuration Jobs construite et validée")

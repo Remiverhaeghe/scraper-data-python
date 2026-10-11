@@ -1,3 +1,5 @@
+{# Paramètres (route /settings) : règles de calcul modifiables ; planification
+   et notifications en lecture seule, réglées depuis l'application de bureau. #}
 {% extends "base.html" %}
 {% import "_macros.html" as ui %}
 
@@ -102,6 +104,20 @@
                 {% endif %}
             </div>
             {% endfor %}
+        </article>
+
+        <article class="card">
+            <h2>Réinitialisation</h2>
+            <p class="card-subtitle">Efface les offres, candidatures, relances, historique, réglages et recherches enregistrées. Une sauvegarde de la base est faite juste avant.</p>
+            <form class="reset-form" method="post" action="{{ url_for('reset_data').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <label class="check">
+                    <input type="checkbox" name="confirm" value="1" required>
+                    Je comprends que toutes les données seront effacées
+                </label>
+                <button class="button button-danger" type="submit">{{ icon("circle-alert", 16) }} Réinitialiser les données</button>
+                {% if reset_message %}<p class="application-message" role="status">{{ reset_message }}</p>{% endif %}
+            </form>
         </article>
     </div>
 </div>

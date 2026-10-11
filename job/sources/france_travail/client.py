@@ -25,6 +25,8 @@ def search_jobs(pConfig, pParams, pRange=None):
 
     logger.info("Recherche d'offres France Travail")
 
+    # Dépannage : 401 signale un jeton refusé (identifiants FRANCE_TRAVAIL_* ou
+    # portée FRANCE_TRAVAIL_SCOPE), 206 une réponse partielle normale paginée par range.
     try:
         vData = request_json("GET", vUrl, pParams=vRequestParams, pHeaders=vHeaders)
     except requests.RequestException:

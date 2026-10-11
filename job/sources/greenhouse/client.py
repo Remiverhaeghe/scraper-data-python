@@ -15,6 +15,8 @@ def get_jobs(pBoardToken):
 
     logger.info("Récupération des offres Greenhouse")
 
+    # Dépannage : 404 signale un identifiant GREENHOUSE_BOARD inconnu, à vérifier
+    # dans l'adresse boards.greenhouse.io/<identifiant> de l'entreprise.
     try:
         vData = request_json("GET", vUrl, pParams={"content": "true"})
     except requests.RequestException:

@@ -137,7 +137,7 @@ def test_public_pages_stay_open(anonymous_client, pPath):
 
 
 def test_login_page_explains_missing_configuration(anonymous_client, monkeypatch):
-    """Vérifie qu'un tableau de bord non configuré reste fermé, avec la marche à suivre."""
+    """Vérifie qu'un tableau de bord non configuré reste fermé et l'explique."""
 
     monkeypatch.delenv("WEB_PASSWORD_HASH")
 
@@ -216,3 +216,16 @@ def test_logout_closes_the_session(anonymous_client):
 
     assert vResponse.status_code == 303
     assert anonymous_client.get("/", follow_redirects=False).status_code == 303
+
+
+@pytest.mark.parametrize("pPath", ["/legal", "/license"])
+def test_public_pages_hide_the_application(anonymous_client, monkeypatch, pPath):
+    """Vérifie qu'une page publique n'affiche ni menu ni action sans session."""
+
+    monkeypatch.delenv("WEB_PASSWORD_HASH")
+
+    vText = anonymous_client.get(pPath).text
+
+    assert 'class="sidebar"' not in vText
+    assert "Se connecter" in vText
+    assert "/offers" not in vText

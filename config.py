@@ -27,6 +27,8 @@ REPOSITORY_URL = "https://github.com/Remiverhaeghe/scraper-data-python"
 LICENSE_NAME = "PolyForm Strict 1.0.0"
 
 LICENSE_FILE = Path(__file__).parent / "LICENSE"
+ICONS_LICENSE_FILE = ASSETS_DIRECTORY / "icons" / "LICENSE"
+ICONS_URL = "https://lucide.dev"
 
 CONTACT_URL = "https://www.linkedin.com/in/remi-verhaeghe-99a532121/"
 

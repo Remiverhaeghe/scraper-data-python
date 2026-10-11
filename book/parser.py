@@ -55,6 +55,8 @@ def extract_book(pSoup, pBaseUrl):
 def extract_books(pSoup, pBaseUrl):
     """Extrait plusieurs livres depuis une page HTML."""
 
+    # Sélecteurs propres au site books.toscrape.com : si le site change sa mise en
+    # page, aucun livre n'est trouvé et ce nombre tombe à zéro dans les journaux.
     vBookElements = pSoup.select(".product_pod")
 
     logger.info("%s livre(s) trouvé(s) dans la page", len(vBookElements))

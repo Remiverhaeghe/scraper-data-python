@@ -146,7 +146,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 
 - [x] Gestion du timeout HTTP
 - [x] Gestion des erreurs HTTP
-- [x] Logs
+- [x] Logs : un fichier par jour, conservé 14 jours par défaut (LOG_RETENTION_DAYS)
 - [x] Tests automatisés
 - [x] Lecture CSV générique
 - [x] Écriture CSV générique
@@ -154,7 +154,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Délai entre les requêtes
 - [x] Limitation du nombre d'éléments
 - [x] Limitation du nombre de pages
-- [x] Déduplication
+- [x] Déduplication des offres d'une même source
 - [x] Historique des exécutions
 - [x] Statistiques d'exécution
 - [x] Export des offres en CSV, Excel et JSON, avec protection contre l'injection de formules
@@ -162,6 +162,8 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Planification des exécutions : planificateur intégré, fréquence réglable, arrêt propre sur signal
 - [x] Reprise automatique des offres enregistrées lors d'une correction de parsing (migration)
 - [x] Arrêt d'une exécution en cours (recherche d'offres)
+- [x] Consultation des logs depuis le bureau et le web, filtres par niveau et texte
+- [x] Réinitialisation des données après confirmation, avec sauvegarde préalable de la base
 
 ### 🖥️ Interface graphique
 
@@ -178,6 +180,10 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Historique : répartition des offres par source et par contrat, rendement des recherches
 - [x] Recherche planifiée enregistrée depuis la page Recherche, activée et réglée dans les Paramètres
 - [x] Notifications : adresse de destination, état du compte Gmail et e-mail de test
+- [x] Recherches enregistrées : enregistrer, recharger et supprimer des critères nommés
+- [x] Qualité des données : remplissage par champ et par source, export des offres à vérifier
+- [x] Journaux : consultation filtrée, téléchargement et remise à zéro
+- [x] Réinitialisation des données après confirmation, base sauvegardée avant
 
 ### 🌐 Tableau de bord web
 
@@ -197,6 +203,10 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Mentions légales, licence avec résumé en français et contact LinkedIn
 - [x] Planification et notifications en lecture seule, sans afficher l'adresse e-mail
 - [x] Authentification : connexion, session signée de 12 h, protection CSRF, tentatives limitées
+- [x] Sans session, aucun menu : seules les pages légales restent lisibles
+- [x] Adapté au téléphone : menu compact défilant, cartes et formulaires sur une colonne
+- [x] Graphiques avec libellés d'axes et état vide explicite
+- [x] Qualité des données, journaux et réinitialisation, comme sur le bureau
 
 ### 🔐 Sécurité
 
@@ -223,6 +233,62 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Intégration continue : tests, couverture, formatage Black et recherche de secrets à chaque push
 - [x] Couverture mesurée, branches comprises, avec un seuil minimal relevé progressivement (95 %)
 - [x] Tests d'intégration : des API simulées jusqu'à la base, au tableau de bord web et à l'export
+
+---
+
+## 🗺️ Évolutions prévues
+
+### Offres en double et offres multi-sources
+
+- [ ] Empreinte de chaque offre : titre, entreprise et ville normalisés (minuscules, sans accents, sans mentions comme « H/F » ou « (m/w/d) »)
+- [ ] Regroupement des offres de même empreinte en une seule offre, avec la liste de ses sources (offre « multi-sources »)
+- [ ] Comparaison des annonces d'un groupe : salaire, contrat, lieu ou télétravail différents signalés
+- [ ] Validation manuelle des différences avant fusion, depuis la fiche de l'offre
+- [ ] Indicateur « multi-sources » dans la liste des offres et filtre dédié
+
+### Offres qui ne sont plus disponibles
+
+- [ ] Offre absente des recherches depuis N jours : marquée « probablement expirée » (date `last_seen_at` déjà enregistrée)
+- [ ] Vérification ponctuelle du lien de l'offre : une page introuvable (404, 410) ou une redirection vers la liste des offres indique une offre retirée
+- [ ] Date limite de candidature fournie par certaines sources, utilisée lorsqu'elle existe
+- [ ] Offres expirées masquées par défaut, avec un filtre pour les revoir
+
+### Données plus complètes
+
+- [ ] Enrichissement à partir de la description : télétravail, compétences, expérience, salaire, contrat
+- [ ] Rejet des offres inexploitables (ni titre ni description), compté dans la qualité des données
+- [ ] Analyse des offres exportées depuis « Qualité des données » pour ajouter des règles de découpage
+
+### Aide à la candidature, à base de règles et sans service payant
+
+- [ ] Profil : compétences, expériences et variantes de CV
+- [ ] Correspondance avec l'offre : compétences couvertes et manquantes, score
+- [ ] CV conseillé selon l'offre
+- [ ] Préparation d'entretien : expériences à citer, questions à poser
+- [ ] Brouillon de lettre de motivation
+
+### Utilisation depuis un téléphone
+
+- [ ] Accès au tableau de bord web à distance sans ouvrir de port sur Internet, par un réseau privé (Tailscale, offre gratuite personnelle)
+- [ ] Lancement d'une recherche depuis le web, avec la même file d'exécution que le planificateur
+- [ ] Application installable sur l'écran d'accueil (manifeste web et icône)
+
+### Hébergement et sécurité
+
+- [ ] Docker sur ce PC avant le NAS : conteneur sans privilèges, utilisateur non root, système de fichiers en lecture seule hors données, port lié à 127.0.0.1
+- [ ] Mises à jour des dépendances surveillées (Dependabot) et analyse de vulnérabilités (pip-audit) en CI
+- [ ] Analyse statique de sécurité du code (CodeQL ou Bandit) en CI
+- [ ] Politique de sécurité (SECURITY.md) et actions GitHub épinglées par empreinte
+- [ ] En-têtes HTTP de sécurité sur le web : Content-Security-Policy, X-Frame-Options, Referrer-Policy
+- [ ] Sauvegarde automatique de la base avant chaque migration et rotation des sauvegardes
+
+### Autres idées
+
+- [ ] Tableau de suivi des candidatures par colonnes (à postuler, postulé, entretien, réponse)
+- [ ] Rappels de relance par e-mail, avec la recherche planifiée
+- [ ] Statistiques de candidature : taux de réponse par source et par type de poste
+- [ ] Liste d'entreprises à exclure ou à privilégier
+- [ ] Notes et pièces jointes (CV envoyé) par candidature
 
 ---
 
@@ -263,6 +329,7 @@ scraper-data-python/
 │   ├── statistics.py                          # Indicateurs et graphiques, bureau et web
 │   ├── settings.py                            # Réglages de calcul modifiables et recalcul du net
 │   ├── export.py                              # Export des offres en CSV, Excel et JSON
+│   ├── quality.py                             # Remplissage des champs et offres à vérifier
 │   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
 │   ├── notification.py                        # Contenu des e-mails de nouvelles offres
 │   │
@@ -372,6 +439,8 @@ scraper-data-python/
 │   ├── offers_model.py                        # Modèle Qt du tableau des offres
 │   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
 │   ├── history_page.py                        # Historique des exécutions
+│   ├── logs_page.py                           # Consultation des logs
+│   ├── quality_page.py                        # Qualité des données et offres à vérifier
 │   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
 │   ├── dialogs.py                             # Fenêtres des mentions légales et de la licence
 │   ├── chart.py                               # Histogramme et camembert dessinés avec QPainter
@@ -401,6 +470,8 @@ scraper-data-python/
 │   │   ├── offer.html                         # Fiche détaillée d'une offre
 │   │   ├── _application.html                  # Bloc de suivi d'une candidature
 │   │   ├── history.html                       # Historique des exécutions
+│   │   ├── logs.html                          # Consultation des logs
+│   │   ├── quality.html                       # Qualité des données
 │   │   ├── settings.html                      # Thème, règles de calcul et état des sources
 │   │   ├── legal.html                         # Mentions légales
 │   │   ├── login.html                         # Connexion au tableau de bord
@@ -418,7 +489,8 @@ scraper-data-python/
 ├── utils/                                     # Utilitaires techniques communs
 │   ├── __init__.py                            # Initialise le package Utils
 │   ├── helpers.py                             # Fonctions utilitaires génériques
-│   ├── logger.py                              # Configure et centralise les logs
+│   ├── logger.py                              # Logs : un fichier par jour, purge automatique
+│   ├── log_reader.py                          # Lecture et filtrage des logs pour l'affichage
 │   ├── url.py                                 # Validation et manipulation des URLs
 │   ├── api_client.py                          # Appels sécurisés aux API des sources
 │   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
@@ -440,6 +512,8 @@ scraper-data-python/
 │   ├── history_repository.py                  # Persiste et récupère l'historique
 │   ├── job_applications.py                    # Suit les candidatures et les relances
 │   ├── settings_repository.py                 # Persiste les réglages modifiables
+│   ├── maintenance.py                         # Sauvegarde et réinitialisation de la base
+│   ├── saved_searches.py                      # Recherches enregistrées
 │   └── job_offers.py                          # Enregistre les offres et détecte les nouvelles
 │
 ├── scripts/                                   # Scripts destinés aux essais manuels
@@ -475,6 +549,7 @@ scraper-data-python/
 │   │   ├── test_export.py                     # Teste l'export et la neutralisation des formules
 │   │   ├── test_schedule.py                   # Teste les réglages et l'échéance de la planification
 │   │   ├── test_notification.py               # Teste le contenu et l'échappement des e-mails
+│   │   ├── test_quality.py                    # Teste l'analyse de qualité et son export
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
@@ -562,6 +637,8 @@ scraper-data-python/
 │   │   ├── test_app.py                         # Teste le lancement et le changement de thème
 │   │   ├── test_chart.py                       # Teste le rendu des graphiques
 │   │   ├── test_history_page.py                # Teste la page de l'historique
+│   │   ├── test_logs_page.py                   # Teste la page des logs
+│   │   ├── test_quality_page.py                # Teste la page de qualité des données
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
 │   │   ├── test_main_window.py                 # Teste la navigation et l'état du menu
@@ -588,6 +665,8 @@ scraper-data-python/
 │   │   ├── test_database.py                    # Teste la base SQLite
 │   │   ├── test_history_repository.py          # Teste la persistance de l'historique
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
+│   │   ├── test_maintenance.py                 # Teste la sauvegarde et la réinitialisation
+│   │   ├── test_saved_searches.py              # Teste les recherches enregistrées
 │   │   └── test_job_offers.py                  # Teste l'enregistrement des offres
 │   │
 │   ├── integration/                            # Tests de bout en bout
@@ -612,7 +691,8 @@ scraper-data-python/
 │   ├── test_history.py                         # Teste le modèle d'historique
 │   ├── test_history_service.py                 # Teste le service d'historique
 │   ├── test_http_client.py                     # Teste le client HTTP
-│   ├── test_logger.py                          # Teste la configuration des logs
+│   ├── test_logger.py                          # Teste le fichier du jour et la purge
+│   ├── test_log_reader.py                      # Teste la lecture et les filtres des logs
 │   ├── test_mailer.py                          # Teste l'envoi d'e-mails, serveur simulé
 │   ├── test_main.py                            # Teste le point d'entrée principal
 │   ├── test_pagination.py                      # Teste la pagination commune

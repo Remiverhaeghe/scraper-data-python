@@ -25,6 +25,7 @@ def read_csv(pFilePath, pColumns=None):
     try:
         vData = pd.read_csv(pFilePath)
 
+    # Un fichier vide, créé mais jamais rempli, est un cas normal et non une erreur.
     except pd.errors.EmptyDataError:
         vData = pd.DataFrame(columns=pColumns)
 

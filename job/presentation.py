@@ -5,7 +5,14 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from config import AUTHOR_NAME, LICENSE_FILE, LICENSE_NAME, NEW_OFFER_DAYS
+from config import (
+    AUTHOR_NAME,
+    ICONS_LICENSE_FILE,
+    ICONS_URL,
+    LICENSE_FILE,
+    LICENSE_NAME,
+    NEW_OFFER_DAYS,
+)
 from job.contract import CONTRACT_TYPES
 from job.sources.registry import SOURCES
 from storage.job_applications import APPLICATION_STATUSES
@@ -380,8 +387,17 @@ def build_legal_sections(pApplicationName):
         (
             "Propriété intellectuelle",
             "Les noms et marques des sources citées appartiennent à leurs titulaires "
-            "et servent uniquement à indiquer l'origine des offres. Les icônes "
-            "proviennent de Lucide, sous licence ISC.",
+            "et servent uniquement à indiquer l'origine des offres. Le logo de "
+            "l'application appartient à son auteur.",
+        ),
+        (
+            "Icônes",
+            f"Les icônes proviennent de la bibliothèque Lucide ({ICONS_URL}), "
+            "distribuée sous licence ISC. Cette licence autorise leur utilisation et "
+            "leur modification, à condition de conserver la mention de copyright et "
+            "le texte de la licence : il est fourni avec l'application et affiché à "
+            "la suite de la licence du projet. Une partie des icônes provient de "
+            "Feather, sous licence MIT.",
         ),
         (
             "Licence",
@@ -413,13 +429,21 @@ LICENSE_SUMMARY = (
 )
 
 
-def read_license():
-    """Retourne le texte de la licence, lu dans le fichier LICENSE du projet."""
+def read_license(pFile=LICENSE_FILE):
+    """Retourne le texte d'une licence, par défaut celle du projet."""
 
     try:
-        rText = LICENSE_FILE.read_text(encoding="utf-8")
+        rText = pFile.read_text(encoding="utf-8")
 
     except OSError:
         rText = "Le fichier de licence est introuvable dans cette installation."
+
+    return rText
+
+
+def read_icons_license():
+    """Retourne le texte de la licence ISC des icônes Lucide."""
+
+    rText = read_license(ICONS_LICENSE_FILE)
 
     return rText

@@ -30,7 +30,9 @@ from job.presentation import (
     format_net_salary,
 )
 from job.statistics import (
+    ACTIVITY_AXES,
     ACTIVITY_SERIES,
+    EMPTY_CHART_TEXT,
     count_ready_sources,
     load_statistics,
 )
@@ -432,6 +434,8 @@ class HomePage(QWidget):
         )
 
         try:
+            # La page est relue à chaque affichage (MainWindow.show_page) : les chiffres
+            # suivent les recherches et candidatures faites ailleurs, web compris.
             vStatistics = load_statistics(self.database_file)
 
         except Exception:
@@ -470,4 +474,6 @@ class HomePage(QWidget):
                 for vIndex, (vName, vCounts) in enumerate(pDailyActivity.items())
             ],
             pIndependentScales=True,
+            pAxes=ACTIVITY_AXES,
+            pEmptyText=EMPTY_CHART_TEXT,
         )

@@ -10,6 +10,8 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Statuts stockés en base ; leurs libellés affichés sont dans job/presentation.py
+# (STATUS_LABELS). Un nouveau statut doit être ajouté aux deux endroits.
 APPLICATION_STATUSES = (
     "IGNORED",
     "INTERESTED",
@@ -115,6 +117,9 @@ def record_follow_up(
     vConnection = connect_database(pDatabaseFile)
 
     try:
+        # La relance est ajoutée au journal job_follow_up, qui alimente le graphique
+        # jour par jour, puis la candidature reçoit la date de la relance suivante :
+        # les deux écritures sont validées ensemble par le même commit.
         vConnection.execute(
             """
             INSERT INTO job_follow_up (source, source_id, followed_up_at)
@@ -204,6 +209,8 @@ def save_application(
 
     vNow = pNow or datetime.now()
 
+    # Les dates sont stockées au format ISO : comparées comme du texte, elles
+    # restent triées dans l'ordre chronologique.
     vAppliedAt = vNow.isoformat() if pStatus == "APPLIED" else None
 
     vFollowUpDate = pFollowUpDate
@@ -229,6 +236,8 @@ def save_application(
             ON CONFLICT(source, source_id)
             DO UPDATE SET
                 status = excluded.status,
+                -- COALESCE garde la première date de candidature : repasser une offre au
+                -- statut APPLIED ne la remplace pas.
                 applied_at = COALESCE(job_application.applied_at, excluded.applied_at),
                 follow_up_date = excluded.follow_up_date,
                 notes = excluded.notes

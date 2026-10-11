@@ -25,6 +25,13 @@ RECENT_EXECUTIONS = 3
 # Nombre de lignes des listes « Relances à venir » et « Dernières offres »
 DASHBOARD_LIST_SIZE = 4
 
+# Libellés des axes horizontal et vertical, communs au bureau et au web
+ACTIVITY_AXES = ("Jour", "Nombre par jour")
+EXECUTION_AXES = ("Exécution", "Offres récupérées")
+
+# Texte affiché à la place d'un graphique sans aucune valeur
+EMPTY_CHART_TEXT = "Aucune activité pour le moment"
+
 # Nombre de jours représentés au plus par le graphique d'activité
 CHART_DAYS = 14
 

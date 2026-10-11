@@ -27,6 +27,8 @@ def get_jobs(pTag=None, pGeo=None, pCount=MAX_COUNT):
 
     logger.info("Récupération des offres Jobicy : %s", vParams)
 
+    # API publique sans clé et sans pagination : une seule réponse contient au plus
+    # MAX_COUNT offres.
     try:
         vData = request_json(
             "GET", API_URL, pParams=vParams, pHeaders=vHeaders, pTimeout=10

@@ -161,6 +161,8 @@ def build_offer_conditions(
     restreint le résultat à une liste de couples (source, identifiant).
     """
 
+    # Chaque valeur passe par un paramètre « ? », jamais par concaténation : une
+    # saisie de l'utilisateur ne peut pas modifier la requête (injection SQL).
     vConditions = []
     vParams = []
 
@@ -182,6 +184,8 @@ def build_offer_conditions(
     if pRemote:
         vConditions.append("o.remote = 1")
 
+    # Une offre sans maximum est comparée sur son minimum, et inversement : une
+    # fourchette partielle reste prise en compte par les filtres de salaire.
     if pMinNetSalary is not None:
         vConditions.append(
             "COALESCE(o.salary_net_monthly_max, o.salary_net_monthly_min) >= ?"
@@ -204,6 +208,8 @@ def build_offer_conditions(
         vConditions.append("COALESCE(o.published_at, o.first_seen_at) >= ?")
         vParams.append(pPublishedSince.date().isoformat())
 
+    # Une liste vide doit ne rien renvoyer : la condition « 0 » est toujours fausse,
+    # alors que l'absence de condition renverrait toutes les offres.
     if pKeys is not None:
         if pKeys:
             vConditions.append(
@@ -219,6 +225,8 @@ def build_offer_conditions(
         vConditions.append("o.first_seen_at >= ?")
         vParams.append(pSeenSince.isoformat())
 
+    # Les colonnes a.* viennent de la jointure gauche : une offre sans suivi a un
+    # statut NULL, d'où le test explicite pour masquer les offres ignorées.
     if pStatus:
         vConditions.append("a.status = ?")
         vParams.append(pStatus)
@@ -320,6 +328,51 @@ def count_offers_by_source(pDatabaseFile):
 
     finally:
         vConnection.close()
+
+    return rCounts
+
+
+# Colonnes dont le taux de remplissage est mesuré par l'analyse de qualité ;
+# la liste blanche protège la requête construite à partir de ces noms.
+QUALITY_COLUMNS = (
+    "title",
+    "company",
+    "location",
+    "contract",
+    "salary_net_monthly_min",
+    "remote",
+    "skills",
+    "experience_level",
+    "published_at",
+    "description",
+)
+
+
+def count_filled_fields(pDatabaseFile):
+    """Compte, par source, les offres et les valeurs renseignées de chaque colonne."""
+
+    # Une valeur vide ou composée d'espaces compte comme absente.
+    vCounts = ", ".join(
+        f"SUM(CASE WHEN TRIM(COALESCE({vColumn}, '')) != '' THEN 1 ELSE 0 END)"
+        for vColumn in QUALITY_COLUMNS
+    )
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(f"""
+            SELECT source, COUNT(*), {vCounts}
+            FROM job_offer
+            GROUP BY source
+            ORDER BY COUNT(*) DESC, source
+            """).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rCounts = [
+        (vRow[0], vRow[1], dict(zip(QUALITY_COLUMNS, vRow[2:]))) for vRow in vRows
+    ]
 
     return rCounts
 

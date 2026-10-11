@@ -1,3 +1,5 @@
+{# Fragment du tableau des offres : la route /offers le renvoie seul quand HTMX
+   actualise la liste après un changement de filtre. #}
 <p class="count">
     {{ offers | length }} offre{% if offers | length > 1 %}s{% endif %}
     {% if is_truncated %}affichées, affinez la recherche pour voir au-delà des {{ max_offers }} plus récentes{% endif %}

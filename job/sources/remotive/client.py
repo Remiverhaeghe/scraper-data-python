@@ -25,6 +25,8 @@ def get_jobs(pSearch=None, pLimit=None):
 
     logger.info("Récupération des offres Remotive : %s", vParams)
 
+    # API publique sans clé : Remotive demande d'espacer les appels, d'où une seule
+    # requête par recherche.
     try:
         vData = request_json(
             "GET", API_URL, pParams=vParams, pHeaders=vHeaders, pTimeout=10

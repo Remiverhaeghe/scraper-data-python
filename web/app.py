@@ -10,7 +10,12 @@ from pathlib import Path
 from urllib.parse import quote
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import (
+    HTMLResponse,
+    PlainTextResponse,
+    RedirectResponse,
+    Response,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
@@ -44,10 +49,12 @@ from job.presentation import (
     format_date,
     format_euros,
     prepare_offer,
+    read_icons_license,
     read_license,
     safe_url,
     summarize_history,
 )
+from job.quality import build_quality_export, get_quality_report
 from job.schedule import (
     describe_schedule_runs,
     describe_scheduled_search,
@@ -57,7 +64,10 @@ from job.schedule import (
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
 from job.statistics import (
+    ACTIVITY_AXES,
     ACTIVITY_SERIES,
+    EMPTY_CHART_TEXT,
+    EXECUTION_AXES,
     EXECUTION_CHART_SIZE,
     count_ready_sources,
     get_contract_shares,
@@ -66,6 +76,7 @@ from job.statistics import (
     load_statistics,
 )
 from storage.database import initialize_database
+from storage.maintenance import reset_database
 from storage.history_repository import get_history, get_history_summary
 from storage.job_applications import (
     APPLICATION_STATUSES,
@@ -75,7 +86,15 @@ from storage.job_applications import (
     save_application,
 )
 from storage.job_offers import get_offer, get_offers
-from utils.logger import get_logger
+from utils.log_reader import (
+    LEVEL_FILTERS,
+    LEVEL_TONES,
+    MAX_LOG_ENTRIES,
+    clear_logs,
+    export_logs,
+    read_log_entries,
+)
+from utils.logger import get_logger, get_retention_days
 from utils.mailer import get_missing_email_settings
 from web.auth import (
     SESSION_COOKIE,
@@ -113,6 +132,7 @@ TONE_ICONS = {
 }
 
 
+# Base de données : remplaçable dans les tests par app.dependency_overrides.
 def get_database_file():
     """Retourne le chemin de la base, remplaçable dans les tests."""
 
@@ -145,6 +165,10 @@ templates = Jinja2Templates(directory=WEB_DIRECTORY / "templates")
 login_rate_limiter = LoginRateLimiter()
 
 
+# Authentification : toute page exige une session, sauf PUBLIC_PATHS et les
+# ressources statiques. Mot de passe et jeton de session : voir web/auth.py.
+# Une page qui renvoie sans cesse vers /login signale un .env incomplet
+# (WEB_USERNAME, WEB_PASSWORD_HASH, WEB_SESSION_SECRET).
 def is_public_path(pPath):
     """Indique si une adresse reste accessible sans être connecté."""
 
@@ -215,6 +239,7 @@ async def require_csrf(request: Request):
 
 
 @lru_cache
+# Fonctions et filtres disponibles dans les gabarits Jinja.
 def render_icon(pName, pSize=18):
     """Retourne le SVG d'une icône à insérer dans la page, ou rien s'il n'existe pas.
 
@@ -253,6 +278,8 @@ templates.env.globals.update(
 )
 
 
+# Lecture des filtres saisis : une valeur invalide est ignorée et journalisée,
+# jamais transformée en erreur 500.
 def parse_amount(pValue):
     """Convertit une saisie de montant en nombre, en ignorant une saisie invalide."""
 
@@ -292,6 +319,7 @@ def parse_date(pValue):
     return rDate
 
 
+# Pages d'erreur intégrées au site.
 @app.exception_handler(StarletteHTTPException)
 async def render_http_error(pRequest, pException):
     """Affiche une erreur dans le gabarit du site plutôt qu'en JSON brut.
@@ -314,7 +342,11 @@ async def render_http_error(pRequest, pException):
     return rResponse
 
 
-def build_bar_chart(pLabels, pSeries, pIndependentScales=False):
+# Préparation des graphiques : le serveur calcule les hauteurs, le dessin est
+# entièrement en CSS (pas de bibliothèque JavaScript).
+def build_bar_chart(
+    pLabels, pSeries, pIndependentScales=False, pAxes=(None, None), pEmptyText=""
+):
     """Prépare un histogramme : pSeries contient des (nom, couleur, valeurs).
 
     Les hauteurs sont relatives à la plus grande valeur toutes séries confondues,
@@ -344,7 +376,18 @@ def build_bar_chart(pLabels, pSeries, pIndependentScales=False):
             }
         )
 
-    rChart = {"labels": pLabels, "series": vSeries}
+    rChart = {
+        "labels": pLabels,
+        "series": vSeries,
+        "x_axis": pAxes[0],
+        "y_axis": pAxes[1],
+        # Sans aucune valeur, le gabarit affiche ce texte à la place des barres.
+        "empty_text": (
+            pEmptyText
+            if not any(vValue for _, _, vValues in pSeries for vValue in vValues)
+            else ""
+        ),
+    }
 
     return rChart
 
@@ -375,6 +418,9 @@ def build_pie(pShares):
     return rPie
 
 
+# Pages principales. Les données et leur mise en forme viennent de job/,
+# partagé avec l'application de bureau : une différence d'affichage entre les
+# deux interfaces se corrige d'abord là.
 @app.get("/", response_class=HTMLResponse)
 def show_dashboard(
     request: Request,
@@ -408,6 +454,8 @@ def show_dashboard(
                     )
                 ],
                 pIndependentScales=True,
+                pAxes=ACTIVITY_AXES,
+                pEmptyText=EMPTY_CHART_TEXT,
             ),
             "activities": [
                 describe_execution(vEntry) for vEntry in vStatistics["executions"]
@@ -495,6 +543,8 @@ def list_offers(
     return rResponse
 
 
+# Fiche d'une offre et suivi de candidature. Les formulaires sont envoyés par
+# HTMX, qui remplace seulement le bloc de candidature (_application.html).
 def get_existing_offer(pDatabaseFile, pSource, pSourceId):
     """Retourne une offre ou lève une erreur 404 si elle n'existe pas."""
 
@@ -627,6 +677,111 @@ def add_follow_up(
     return rResponse
 
 
+# Qualité des données et journaux : lecture seule, sauf la remise à zéro des
+# journaux, protégée par le jeton CSRF.
+@app.get("/quality", response_class=HTMLResponse)
+def show_quality(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche le remplissage des champs, globalement puis par source."""
+
+    vReport = get_quality_report(pDatabaseFile)
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "quality.html",
+        {
+            "active_page": "quality",
+            "report": vReport,
+            "chart": build_bar_chart(
+                vReport["columns"],
+                [
+                    (
+                        "Remplissage",
+                        CHART_PALETTE[0],
+                        [vRate["rate"] for vRate in vReport["total"]["rates"]],
+                    )
+                ],
+                pAxes=("Champ", "% des offres renseignées"),
+                pEmptyText="Aucune offre en base pour le moment",
+            ),
+        },
+    )
+
+    return rResponse
+
+
+@app.get("/quality/export")
+def export_quality(pDatabaseFile: str = Depends(get_database_file)):
+    """Télécharge le CSV des offres incomplètes ou mal découpées."""
+
+    rResponse = Response(
+        build_quality_export(pDatabaseFile),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="offres-a-verifier-{datetime.now():%Y%m%d}.csv"'
+            )
+        },
+    )
+
+    return rResponse
+
+
+@app.get("/logs", response_class=HTMLResponse)
+def show_logs(request: Request, level: str = "", search: str = ""):
+    """Affiche les derniers logs, filtrables par niveau et par texte."""
+
+    vLevel = level if level in LEVEL_FILTERS else None
+    vSearch = search.strip() or None
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "logs.html",
+        {
+            "active_page": "logs",
+            "entries": read_log_entries(pLevel=vLevel, pSearch=vSearch),
+            "level": vLevel,
+            "search": vSearch,
+            "level_filters": LEVEL_FILTERS,
+            "level_tones": LEVEL_TONES,
+            "max_entries": MAX_LOG_ENTRIES,
+            "retention_days": get_retention_days(),
+        },
+    )
+
+    return rResponse
+
+
+@app.get("/logs/download")
+def download_logs():
+    """Télécharge tous les journaux conservés dans un seul fichier texte."""
+
+    rResponse = PlainTextResponse(
+        export_logs(),
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="journaux-{datetime.now():%Y%m%d}.log"'
+            )
+        },
+    )
+
+    return rResponse
+
+
+@app.post("/logs/clear", dependencies=[Depends(require_csrf)])
+def clear_logs_page():
+    """Efface tous les journaux, puis revient à leur page."""
+
+    clear_logs()
+
+    rResponse = RedirectResponse(app.url_path_for("show_logs"), status_code=303)
+
+    return rResponse
+
+
+# Historique des exécutions et paramètres.
 @app.get("/history", response_class=HTMLResponse)
 def show_history(
     request: Request,
@@ -671,6 +826,8 @@ def show_history(
                         [vCount for _, vCount in vExecutionCounts],
                     )
                 ],
+                pAxes=EXECUTION_AXES,
+                pEmptyText="Aucune exécution pour le moment",
             ),
             "execution_chart_size": EXECUTION_CHART_SIZE,
             "executions": vExecutions,
@@ -682,8 +839,10 @@ def show_history(
     return rResponse
 
 
-def render_settings(pRequest, pDatabaseFile, pMessage=None, pStatusCode=200):
-    """Affiche le thème, les règles, la planification, les notifications et les sources."""
+def render_settings(
+    pRequest, pDatabaseFile, pMessage=None, pStatusCode=200, pResetMessage=None
+):
+    """Affiche thème, règles, planification, notifications et sources."""
 
     vSources = [
         {
@@ -717,6 +876,7 @@ def render_settings(pRequest, pDatabaseFile, pMessage=None, pStatusCode=200):
             "settings": load_settings(pDatabaseFile),
             "definitions": SETTING_DEFINITIONS,
             "message": pMessage,
+            "reset_message": pResetMessage,
         },
         status_code=pStatusCode,
     )
@@ -760,7 +920,8 @@ async def update_settings(
             request,
             pDatabaseFile,
             (
-                f"Règles enregistrées, salaire net recalculé pour {vRecomputed} offre(s)."
+                f"Règles enregistrées, salaire net recalculé pour {vRecomputed} "
+                "offre(s)."
                 if vRecomputed
                 else "Règles enregistrées."
             ),
@@ -769,6 +930,54 @@ async def update_settings(
     return rResponse
 
 
+@app.post(
+    "/settings/reset",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+async def reset_data(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Sauvegarde puis efface toutes les données, après confirmation explicite."""
+
+    vForm = await request.form()
+
+    if vForm.get("confirm") != "1":
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            pStatusCode=400,
+            pResetMessage="Cochez la case de confirmation pour réinitialiser.",
+        )
+
+    else:
+        try:
+            vBackupFile = reset_database(pDatabaseFile, datetime.now())
+
+        except Exception:
+            logger.exception("Échec de la réinitialisation des données depuis le web")
+
+            rResponse = render_settings(
+                request,
+                pDatabaseFile,
+                pStatusCode=500,
+                pResetMessage="La réinitialisation a échoué. Voir les journaux.",
+            )
+
+        else:
+            rResponse = render_settings(
+                request,
+                pDatabaseFile,
+                pResetMessage=(
+                    f"Données réinitialisées. Sauvegarde : {vBackupFile.name}"
+                ),
+            )
+
+    return rResponse
+
+
+# Pages publiques : licence, connexion, déconnexion et mentions légales.
 @app.get("/license", response_class=HTMLResponse)
 def show_license(request: Request):
     """Affiche la licence du projet, lue dans le fichier LICENSE."""
@@ -779,6 +988,7 @@ def show_license(request: Request):
         {
             "active_page": None,
             "license_text": read_license(),
+            "icons_license_text": read_icons_license(),
             "license_summary": LICENSE_SUMMARY,
             "license_summary_note": LICENSE_SUMMARY_NOTE,
         },
