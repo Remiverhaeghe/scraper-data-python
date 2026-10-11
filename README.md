@@ -276,7 +276,17 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [ ] Statistiques de candidature : taux de réponse par source, par type de poste et par société
 - [ ] Liste d'entreprises à exclure ou à privilégier
 - [ ] Notes et pièces jointes (CV envoyé) par candidature
-- [ ] Emettre un message en orange quand déjà postulé ou canditure en cours dans une société 
+- [ ] Avertissement en orange quand une candidature est déjà envoyée ou en cours dans la même société
+
+### Révision technique
+
+Application mobile séparée, sans service payant, pour préparer les entretiens techniques :
+
+- [ ] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
+- [ ] Explication de la bonne réponse après chaque question
+- [ ] Questions stockées dans des fichiers JSON versionnés, faciles à compléter
+- [ ] Suivi de la progression : score par thème, questions ratées à revoir
+- [ ] Thèmes proposés selon les compétences demandées dans les offres enregistrées
 
 ---
 
