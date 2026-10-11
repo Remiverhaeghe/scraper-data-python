@@ -1,7 +1,7 @@
 [tool.coverage.run]
 source = ["."]
 # web/__main__.py se limite à lancer uvicorn : rien à y tester.
-omit = ["tests/*", "scripts/*", "web/__main__.py"]
+omit = ["tests/*", "web/__main__.py"]
 branch = true
 
 [tool.coverage.report]

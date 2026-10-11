@@ -33,13 +33,16 @@ from config import (
 from job.contract import CONTRACT_TYPES
 from job.presentation import (
     CHART_PALETTE,
+    CONTRACT_TONES,
     EXECUTION_STATUS_LABELS,
     EXECUTION_TONES,
     FOLLOW_UP_FILTER,
     LICENSE_SUMMARY,
     LICENSE_SUMMARY_NOTE,
+    MAX_BENEFIT_BADGES,
     PUBLISHED_PERIODS,
     STATUS_LABELS,
+    STATUS_TONES,
     UNKNOWN_SEARCH,
     build_legal_sections,
     build_offer_filters,
@@ -509,6 +512,9 @@ def list_offers(
 
     vContext = {
         "active_page": "offers",
+        "contract_tones": CONTRACT_TONES,
+        "status_tones": STATUS_TONES,
+        "max_benefit_badges": MAX_BENEFIT_BADGES,
         "offers": [
             prepare_offer(vOffer, vNewSince)
             for vOffer in vOffers.head(MAX_DISPLAYED_OFFERS).to_dict("records")

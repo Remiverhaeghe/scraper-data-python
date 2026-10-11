@@ -2,7 +2,6 @@
 
 import argparse
 
-from config import MIN_RATING, MAX_RATING
 from job.contract import CONTRACT_TYPES
 from job.sources.registry import SOURCES
 
@@ -33,32 +32,11 @@ def positive_float(pValue):
     return rValue
 
 
-def valid_rating(pValue):
-    """Vérifie qu'une note est comprise dans les limites configurées."""
-
-    vValue = int(pValue)
-
-    if vValue < MIN_RATING or vValue > MAX_RATING:
-        raise argparse.ArgumentTypeError(
-            f"La note doit être comprise entre " f"{MIN_RATING} et {MAX_RATING}."
-        )
-
-    rValue = vValue
-
-    return rValue
-
-
 def parse_arguments():
     """Analyse les arguments fournis en ligne de commande."""
 
-    vParser = argparse.ArgumentParser(description="Scraper de données multi-domaines.")
-
-    # Domaine à traiter
-    vParser.add_argument(
-        "--type",
-        choices=["book", "job"],
-        default="book",
-        help="Type de données à scraper.",
+    vParser = argparse.ArgumentParser(
+        description="Recherche d'offres d'emploi multi-sources."
     )
 
     # Configuration commune
@@ -83,36 +61,14 @@ def parse_arguments():
         help="Temps maximum d'attente d'une requête HTTP, en secondes.",
     )
 
-    # Configuration spécifique aux livres
     vParser.add_argument(
         "--max-pages",
         type=positive_integer,
         default=None,
-        help="Nombre maximum de pages à scraper.",
+        help="Nombre maximum de pages interrogées par source.",
     )
 
-    vParser.add_argument(
-        "--refresh",
-        action="store_true",
-        help="Relance le scraping avant d'exploiter les données.",
-    )
-
-    vParser.add_argument(
-        "--title", default=None, help="Titre ou texte à rechercher dans les livres."
-    )
-
-    vParser.add_argument(
-        "--max-price",
-        type=positive_float,
-        default=None,
-        help="Prix maximum des livres.",
-    )
-
-    vParser.add_argument(
-        "--min-rating", type=valid_rating, default=None, help="Note minimum des livres."
-    )
-
-    # Configuration spécifique aux offres d'emploi
+    # Critères de recherche des offres
     vParser.add_argument(
         "--keyword", default=None, help="Mot-clé recherché dans les offres."
     )

@@ -57,7 +57,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 ### 🏗️ Architecture
 
 - [x] Séparer les responsabilités HTTP / parsing / service
-- [x] Séparer les domaines Books et Jobs
+- [x] Séparer les domaines métier (la partie livres, d'apprentissage, a été retirée)
 - [x] Mettre en place une configuration commune
 - [x] Mettre en place une gestion centralisée des logs
 - [x] Mettre en place une suite de tests
@@ -67,7 +67,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Ajouter une gestion centralisée des résultats
 - [x] Ajouter l'historique des exécutions
 - [x] Utiliser des DataFrames pour les données extraites
-- [x] Supprimer les anciens modèles `Book` et `Job`
+- [x] Supprimer l'anciens modèles `Job`
 - [x] Ajouter une configuration commune aux sources d'emploi
 - [x] Permettre l'activation / désactivation des sources
 - [x] Gérer le choix API / HTML selon les capacités d'une source
@@ -76,22 +76,8 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 : reprise des offres, v6 : recherches enregistrées)
 - [x] Déclarer les sources d'emploi dans un registre unique
-
-### 📚 Books
-
-- [x] Récupération des pages
-- [x] Parsing HTML
-- [x] Extraction des livres
-- [x] Pagination
-- [x] Stockage CSV
-- [x] Lecture CSV
-- [x] Filtrage des résultats
-- [x] Configuration du scraping
-- [ ] Export JSON
-- [ ] Export XLSX
-- [ ] Détection des nouveaux éléments
 
 ### 💼 Jobs
 
@@ -188,6 +174,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 ### 🌐 Tableau de bord web
 
 - [x] Liste des offres avec mise en évidence des nouvelles
+- [x] Badges colorés : contrat, suivi, télétravail et avantages, couleurs partagées avec le bureau
 - [x] Filtres : recherche, source, contrat, télétravail, net mensuel, nouveautés
 - [x] Mise à jour des résultats sans rechargement (HTMX)
 - [x] Fiche détaillée avec lien et mention de la source
@@ -300,18 +287,6 @@ scraper-data-python/
 ├── .github/                                   # Configuration GitHub
 │   └── workflows/                             # Workflows GitHub Actions
 │       └── ci.yml                             # Tests, formatage et recherche de secrets
-│
-├── book/                                      # Domaine métier consacré aux livres
-│   ├── __init__.py                            # Initialise le package Book
-│   ├── config.py                              # Configuration spécifique aux livres
-│   ├── csv_schema.py                          # Définit les colonnes CSV des livres
-│   ├── parser.py                              # Parse le HTML et extrait les livres
-│   ├── service.py                             # Service réalisant le scraping des livres
-│   ├── storage.py                             # Gère la sauvegarde des livres
-│   ├── application.py                         # Orchestre le traitement complet des livres
-│   ├── reader.py                              # Lit les livres depuis un fichier CSV
-│   ├── filter.py                              # Applique les filtres aux livres
-│   └── display.py                             # Gère l'affichage des livres
 │
 ├── job/                                       # Domaine métier consacré aux offres d'emploi
 │   ├── __init__.py                            # Initialise le package Job
@@ -516,22 +491,8 @@ scraper-data-python/
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   └── job_offers.py                          # Enregistre les offres et détecte les nouvelles
 │
-├── scripts/                                   # Scripts destinés aux essais manuels
-│   ├── __init__.py                            # Initialise le package Scripts
-│   └── test_books_scraping.py                 # Lance un scraping réel des livres
-│
 ├── tests/                                     # Ensemble des tests automatisés
 │   ├── __init__.py                            # Initialise le package de tests
-│   │
-│   ├── book/                                  # Tests du domaine Book
-│   │   ├── __init__.py                        # Initialise le package de tests Book
-│   │   ├── test_config.py                     # Teste la configuration des livres
-│   │   ├── test_parser.py                     # Teste le parsing des livres
-│   │   ├── test_service.py                    # Teste le service de scraping
-│   │   ├── test_storage.py                    # Teste la sauvegarde des livres
-│   │   ├── test_application.py                # Teste l'orchestration Book
-│   │   ├── test_filter.py                     # Teste les filtres des livres
-│   │   └── test_display.py                    # Teste l'affichage des livres
 │   │
 │   ├── job/                                   # Tests du domaine Job
 │   │   ├── __init__.py                         # Initialise le package de tests Job

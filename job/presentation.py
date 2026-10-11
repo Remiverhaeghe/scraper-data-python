@@ -34,6 +34,22 @@ STATUS_LABELS = {
     "IGNORED": "Ignorée",
 }
 
+# Tonalité de couleur des contrats et des statuts de suivi, communes au bureau
+# (couleur du texte) et au web (badges) ; ces tonalités existent dans les deux.
+CONTRACT_TONES = {"CDI": "success", "CDD": "warning", "FREELANCE": "primary"}
+STATUS_TONES = {
+    "INTERESTED": "primary",
+    "APPLIED": "primary",
+    "INTERVIEW": "warning",
+    "ACCEPTED": "success",
+    "REJECTED": "danger",
+    "CLOSED": "muted",
+    "IGNORED": "muted",
+}
+
+# Nombre d'avantages affichés en badges dans une liste, pour garder des lignes courtes
+MAX_BENEFIT_BADGES = 2
+
 EXECUTION_STATUS_LABELS = {
     "success": "Réussie",
     "partial": "Partielle",
@@ -307,6 +323,7 @@ def describe_execution(pEntry):
             f"{vSourceCount} sources" if vSourceCount > MAX_LISTED_SOURCES else vSources
         )
     else:
+        # Anciennes exécutions de la partie livres, retirée du projet.
         vTitle = "Scraping de livres"
         vDetail = pEntry.url
 

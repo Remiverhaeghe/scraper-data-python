@@ -841,10 +841,30 @@ input[type="checkbox"] {
     color: var(--green);
 }
 
-.badge-status {
+.badge-first {
     margin-left: 0;
-    background: var(--purple-light);
-    color: var(--purple);
+}
+
+/* Tonalités partagées avec le bureau (job/presentation.py) */
+.badge-success {
+    background: var(--green-light);
+    color: var(--green);
+}
+
+.badge-warning {
+    background: var(--amber-light);
+    color: var(--amber);
+}
+
+.badge-danger {
+    background: color-mix(in srgb, var(--danger) 14%, transparent);
+    color: var(--danger);
+}
+
+.badge-muted {
+    background: var(--surface-alt);
+    color: var(--muted);
+    border: 1px solid var(--border);
 }
 
 .badge-due {

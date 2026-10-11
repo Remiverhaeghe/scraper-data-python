@@ -1,3 +1,0 @@
-"""Définition du format CSV des livres"""
-
-BOOK_COLUMNS = ["title", "price", "availability", "rating", "url"]

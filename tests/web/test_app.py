@@ -646,3 +646,12 @@ def test_quality_page_and_export(client):
     assert "tone-success" in vPage.text
     assert "attachment" in vExport.headers["content-disposition"]
     assert vExport.text.lstrip("﻿").startswith("source;source_id;problems")
+
+
+def test_offers_show_colored_badges(client):
+    """Vérifie les badges de contrat et d'avantages, aux couleurs partagées."""
+
+    vText = client.get("/offers").text
+
+    assert 'badge-first badge-warning">CDD</span>' in vText
+    assert 'badge badge-muted">13e mois</span>' in vText

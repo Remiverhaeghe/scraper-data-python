@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-URL = "https://books.toscrape.com/"
-OUTPUT_FILE = "output/books.csv"
 DATABASE_FILE = "data/scraper.db"
 
 # Logo et icônes partagés par l'interface de bureau et le tableau de bord web
@@ -31,9 +29,6 @@ ICONS_LICENSE_FILE = ASSETS_DIRECTORY / "icons" / "LICENSE"
 ICONS_URL = "https://lucide.dev"
 
 CONTACT_URL = "https://www.linkedin.com/in/remi-verhaeghe-99a532121/"
-
-MIN_RATING = 1
-MAX_RATING = 5
 
 # Taille maximale d'une réponse HTTP en Mo
 MAX_RESPONSE_SIZE_MB = 5.0

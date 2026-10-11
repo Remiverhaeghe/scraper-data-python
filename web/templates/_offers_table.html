@@ -26,10 +26,11 @@
                     {% if offer.is_new %}<span class="badge badge-new">Nouvelle</span>{% endif %}
                     <a class="offer-title" href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Titre non communiqué" }}</a>
                     {% if offer.remote %}<span class="badge">Télétravail</span>{% endif %}
+                    {% for benefit in offer.benefits[:max_benefit_badges] %}<span class="badge badge-muted">{{ benefit }}</span>{% endfor %}
                 </td>
                 <td>{{ offer.company or "" }}</td>
                 <td class="muted">{{ offer.location or "" }}</td>
-                <td>{{ offer.contract or "" }}</td>
+                <td>{% if offer.contract %}<span class="badge badge-first badge-{{ contract_tones.get(offer.contract, 'muted') }}">{{ offer.contract }}</span>{% endif %}</td>
                 <td class="amount">
                     {% if offer.salary_net_monthly_min or offer.salary_net_monthly_max %}
                     {{ (offer.salary_net_monthly_min or offer.salary_net_monthly_max) | euros }}
@@ -39,7 +40,7 @@
                     {% endif %}
                 </td>
                 <td class="nowrap">
-                    {% if offer.application_status %}<span class="badge badge-status">{{ statuses[offer.application_status] }}</span>{% endif %}
+                    {% if offer.application_status %}<span class="badge badge-first badge-{{ status_tones.get(offer.application_status, 'muted') }}">{{ statuses[offer.application_status] }}</span>{% endif %}
                     {% if offer.follow_up_due %}<span class="badge badge-due">Relance le {{ offer.follow_up_date | date_fr }}</span>{% endif %}
                 </td>
                 <td class="nowrap"><a href="{{ offer.url | safe_url }}" target="_blank" rel="noopener">{{ offer.source_label }}</a></td>

@@ -1,9 +1,16 @@
 """Modèle Qt exposant les offres à un tableau"""
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QColor, QFont
 
-from job.presentation import STATUS_LABELS, format_date, format_net_salary
+from gui.theme import COLORS
+from job.presentation import (
+    CONTRACT_TONES,
+    STATUS_LABELS,
+    STATUS_TONES,
+    format_date,
+    format_net_salary,
+)
 
 # Rôle portant la valeur brute, utilisée pour trier les colonnes
 SORT_ROLE = Qt.ItemDataRole.UserRole
@@ -64,6 +71,21 @@ def get_sort_value(pOffer, pKey):
         rValue = str(vValue or "").lower()
 
     return rValue
+
+
+def get_cell_color(pOffer, pKey):
+    """Retourne la couleur du contrat ou du suivi, comme les badges du web."""
+
+    vTone = None
+
+    if pKey == "contract":
+        vTone = CONTRACT_TONES.get(pOffer.get("contract"))
+    elif pKey == "application_status":
+        vTone = STATUS_TONES.get(pOffer.get("application_status"))
+
+    rColor = QColor(COLORS[vTone]) if vTone else None
+
+    return rColor
 
 
 class OffersTableModel(QAbstractTableModel):
@@ -127,6 +149,9 @@ class OffersTableModel(QAbstractTableModel):
 
             elif pRole == Qt.ItemDataRole.ToolTipRole and vKey == "title":
                 rData = vOffer.get("title")
+
+            elif pRole == Qt.ItemDataRole.ForegroundRole:
+                rData = get_cell_color(vOffer, vKey)
 
             elif pRole == Qt.ItemDataRole.FontRole and vOffer.get("is_new"):
                 rData = QFont()

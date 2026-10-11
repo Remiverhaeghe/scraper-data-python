@@ -8,8 +8,10 @@ from gui.offers_model import (
     SORT_ROLE,
     OffersTableModel,
     format_status,
+    get_cell_color,
     get_sort_value,
 )
+from gui.theme import COLORS
 from job.presentation import format_net_salary
 
 # Séparateur de milliers de format_euros : espace fine insécable
@@ -82,3 +84,23 @@ def test_model_exposes_offers(qt_application):
     assert vModel.data(vTitle, Qt.ItemDataRole.FontRole).bold()
     assert vModel.data(vSalary) == f"2{THOUSANDS}100 € – 2{THOUSANDS}600 €"
     assert vModel.data(vSalary, SORT_ROLE) == 2100.0
+
+
+@pytest.mark.parametrize(
+    "pKey, pOffer, pTone",
+    [
+        ("contract", {"contract": "CDI"}, "success"),
+        ("application_status", {"application_status": "REJECTED"}, "danger"),
+        ("contract", {"contract": None}, None),
+        ("title", {"title": "Offre"}, None),
+    ],
+)
+def test_get_cell_color(pKey, pOffer, pTone):
+    """Vérifie la couleur du contrat et du suivi, identique aux badges du web."""
+
+    vColor = get_cell_color(pOffer, pKey)
+
+    if pTone is None:
+        assert vColor is None
+    else:
+        assert vColor.name() == COLORS[pTone].lower()
