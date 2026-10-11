@@ -20,6 +20,9 @@ SEARCH_KEY = "schedule_search"
 LAST_RUN_KEY = "schedule_last_run"
 EMAIL_KEY = "notification_email"
 
+# Demande de recherche immédiate déposée depuis le web, traitée par le planificateur
+RUN_REQUEST_KEY = "schedule_run_requested"
+
 # Contrôle de forme volontairement simple : seul l'envoi prouve que l'adresse existe.
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -77,6 +80,7 @@ def load_schedule(pDatabaseFile):
         "search": parse_search(vValues.get(SEARCH_KEY)),
         "last_run": parse_date(vValues.get(LAST_RUN_KEY)),
         "email": vValues.get(EMAIL_KEY) or None,
+        "run_requested": parse_date(vValues.get(RUN_REQUEST_KEY)),
     }
 
     return rSchedule
@@ -145,9 +149,26 @@ def save_notification_email(pDatabaseFile, pEmail):
 
 
 def mark_schedule_run(pDatabaseFile, pRunAt):
-    """Note l'heure de lancement de la recherche planifiée."""
+    """Note l'heure de lancement de la recherche planifiée et efface la demande."""
 
-    save_setting_values(pDatabaseFile, {LAST_RUN_KEY: pRunAt.isoformat()})
+    save_setting_values(
+        pDatabaseFile, {LAST_RUN_KEY: pRunAt.isoformat(), RUN_REQUEST_KEY: ""}
+    )
+
+
+def request_immediate_run(pDatabaseFile, pNow):
+    """Demande au planificateur de lancer la recherche ; retourne les erreurs."""
+
+    rErrors = []
+
+    if load_schedule(pDatabaseFile)["search"] is None:
+        rErrors.append("Enregistrez d'abord une recherche depuis la page Recherche.")
+    else:
+        save_setting_values(pDatabaseFile, {RUN_REQUEST_KEY: pNow.isoformat()})
+
+        logger.info("Recherche immédiate demandée au planificateur")
+
+    return rErrors
 
 
 def get_next_run(pSchedule, pNow):
@@ -171,7 +192,10 @@ def is_schedule_due(pSchedule, pNow):
 
     vNextRun = get_next_run(pSchedule, pNow)
 
-    rDue = vNextRun is not None and vNextRun <= pNow
+    # Une demande immédiate est traitée même si la planification est désactivée.
+    rDue = (vNextRun is not None and vNextRun <= pNow) or (
+        pSchedule.get("run_requested") is not None and pSchedule["search"] is not None
+    )
 
     return rDue
 
@@ -214,7 +238,13 @@ def describe_schedule_runs(pSchedule, pNow):
 
     vLast = f"{vLastRun:%d/%m/%Y à %H:%M}" if vLastRun else "jamais"
 
-    if vNextRun is None:
+    if pSchedule.get("run_requested") is not None:
+        rText = (
+            f"Recherche demandée le {pSchedule['run_requested']:%d/%m/%Y à %H:%M}, "
+            "lancée à la prochaine vérification du planificateur (python -m "
+            f"scheduler). Dernière exécution : {vLast}."
+        )
+    elif vNextRun is None:
         rText = f"Planification désactivée. Dernière exécution : {vLast}."
     elif vNextRun <= pNow:
         rText = (

@@ -13,6 +13,7 @@ from job.schedule import (
     is_schedule_due,
     load_schedule,
     mark_schedule_run,
+    request_immediate_run,
     save_notification_email,
     save_schedule_options,
     save_scheduled_search,
@@ -59,6 +60,7 @@ def test_load_schedule_returns_defaults(database_file):
         "search": None,
         "last_run": None,
         "email": None,
+        "run_requested": None,
     }
 
 
@@ -219,3 +221,25 @@ def test_describe_schedule_runs(pSchedule, pExpected):
     """Vérifie le résumé des exécutions passées et à venir."""
 
     assert pExpected in describe_schedule_runs(pSchedule, NOW)
+
+
+def test_immediate_run_request(database_file):
+    """Vérifie la demande immédiate : refusée sans recherche, puis traitée et effacée."""
+
+    assert request_immediate_run(database_file, NOW) == [
+        "Enregistrez d'abord une recherche depuis la page Recherche."
+    ]
+
+    save_scheduled_search(database_file, ["adzuna"], {})
+
+    assert request_immediate_run(database_file, NOW) == []
+
+    vSchedule = load_schedule(database_file)
+
+    # La planification régulière est désactivée : seule la demande la déclenche.
+    assert is_schedule_due(vSchedule, NOW)
+    assert "Recherche demandée le 10/10/2026" in describe_schedule_runs(vSchedule, NOW)
+
+    mark_schedule_run(database_file, NOW)
+
+    assert load_schedule(database_file)["run_requested"] is None

@@ -16,3 +16,5 @@ class ScrapingResult:
     started_at: datetime | None = None
     status: str = "success"
     error_message: str | None = None
+    # Offres écartées faute de titre et de description, comptées par la qualité
+    rejected_count: int = 0

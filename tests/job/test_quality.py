@@ -67,6 +67,7 @@ def test_get_quality_report(database_file):
     assert vReport["rows"][0]["count"] == 2
     assert vReport["rows"][0]["rates"][vCompany] == {"rate": 50, "tone": "warning"}
     assert vReport["total"]["count"] == 2
+    assert vReport["rejected"] == 0
 
 
 def test_find_problems():

@@ -1,0 +1,37 @@
+{# Profil du candidat (route /profile) : même format de saisie que le bureau,
+   lu et écrit par job/profile.py. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Profil{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Profil", "Vos compétences et expériences, pour préparer chaque candidature", "user") }}
+
+<article class="card">
+    <h2>Mon profil</h2>
+    <p class="card-subtitle">Sert à comparer chaque offre à vos compétences, à conseiller un CV et à préparer l'entretien et la lettre. Il reste dans votre base de données.</p>
+    <form class="profile-form" method="post" action="{{ url_for('update_profile').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <label>Nom
+            <input type="text" name="name" value="{{ profile.name }}" placeholder="Nom affiché en signature de la lettre">
+        </label>
+        <label>Présentation
+            <input type="text" name="headline" value="{{ profile.headline }}" placeholder="Ex. Développeur Java depuis 5 ans, orienté qualité et performance.">
+        </label>
+        <label>Compétences
+            <input type="text" name="skills" value="{{ profile.skills }}" placeholder="Ex. Java, Spring, SQL, Docker">
+        </label>
+        <label>Expériences
+            <textarea name="experiences" rows="6" placeholder="Une expérience par ligne : Poste | compétences | réalisation marquante&#10;Ex. Développeur backend | Java, Spring | Réduit de 40 % le temps de réponse">{{ profile.experiences }}</textarea>
+        </label>
+        <label>Variantes de CV
+            <textarea name="cv_variants" rows="3" placeholder="Une variante par ligne : Nom du CV | compétences mises en avant&#10;Ex. CV Java backend | Java, Spring, SQL">{{ profile.cv_variants }}</textarea>
+        </label>
+        <div class="rules-actions">
+            <button class="button button-primary" type="submit">Enregistrer</button>
+            {% if message %}<p class="application-message" role="status">{{ message }}</p>{% endif %}
+        </div>
+    </form>
+</article>
+{% endblock %}

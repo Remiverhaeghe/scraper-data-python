@@ -19,6 +19,7 @@
             <header class="offer-header">
                 <h1>
                     {% if offer.is_new %}<span class="badge badge-new">Nouvelle</span>{% endif %}
+                    {% if offer.is_expired %}<span class="badge badge-first badge-danger">Probablement expirée</span>{% endif %}
                     {{ offer.title or "Titre non communiqué par la source" }}
                 </h1>
                 <p class="offer-company">{{ offer.company or "" }}{% if offer.location %} · {{ offer.location }}{% endif %}</p>
@@ -82,8 +83,90 @@
                 {% endif %}
 
                 {% call detail("search", "Découverte") %}{{ offer.first_seen_at | date_fr }}, vue pour la dernière fois le {{ offer.last_seen_at | date_fr }}{% endcall %}
+
+                {% if offer.expires_at %}
+                {% call detail("calendar", "Date limite") %}{{ offer.expires_at | date_fr }}{% endcall %}
+                {% endif %}
             </div>
+
+            {# Le résultat de la vérification remplace le texte, sans recharger la page. #}
+            <form class="availability" hx-post="{{ url_for('check_availability').path }}" hx-target="#availability-result">
+                <input type="hidden" name="source" value="{{ offer.source }}">
+                <input type="hidden" name="id" value="{{ offer.source_id }}">
+                <button class="button" type="submit">{{ icon("circle-check", 16) }} Vérifier la disponibilité</button>
+                <span id="availability-result" class="muted">
+                    {% if offer.availability_checked_at %}Vérifiée le {{ offer.availability_checked_at | date_fr }} : {{ availability_labels[offer.availability] }}{% endif %}
+                </span>
+            </form>
         </article>
+
+        {% if group.offers | length > 1 %}
+        {# Annonces d'une même offre : les valeurs différentes sont mises en évidence. #}
+        <article class="card">
+            <h2>Annonces de cette offre</h2>
+            <p class="card-subtitle">
+                {% if group.differences %}Différences : {{ group.differences | join(", ") }}{% else %}Annonces identiques sur les champs comparés{% endif %}
+                {% if group.decision == "merged" %} · fusionnées{% elif group.decision == "separate" %} · gardées séparées{% endif %}
+            </p>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Source</th>
+                            {% for field, label in compared_fields %}<th>{{ label }}</th>{% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in group.offers %}
+                        <tr>
+                            <td class="nowrap"><a href="{{ item.url | safe_url }}" target="_blank" rel="noopener">{{ item.source_label }}</a></td>
+                            {% for field, label in compared_fields %}
+                            <td class="{% if label in group.differences %}tone-warning{% endif %}">
+                                {% if field == "remote" %}{% if item.remote is none %}{% elif item.remote %}Oui{% else %}Non{% endif %}{% else %}{{ item[field] or "" }}{% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <form class="page-actions duplicate-actions" method="post" action="{{ url_for('decide_duplicates').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <input type="hidden" name="source" value="{{ offer.source }}">
+                <input type="hidden" name="id" value="{{ offer.source_id }}">
+                <button class="button" type="submit" name="decision" value="merged">{{ icon("circle-check", 16) }} Fusionner en une offre</button>
+                <button class="button" type="submit" name="decision" value="separate">Garder séparées</button>
+            </form>
+        </article>
+        {% endif %}
+
+        {# Préparation à base de règles : rien n'est envoyé à un service extérieur. #}
+        <details class="card preparation">
+            <summary><h2>{{ icon("sparkles") }} Préparer ma candidature</h2></summary>
+            {% if preparation %}
+            <p>
+                {% if preparation.match.score is not none %}<strong>{{ preparation.match.score }} %</strong> des compétences repérées dans l'offre{% else %}Aucune compétence technique repérée dans l'offre{% endif %}
+                {% if preparation.cv %} · CV conseillé : <strong>{{ preparation.cv.name }}</strong>{% endif %}
+            </p>
+            <p class="muted">Couvertes : {{ preparation.match.covered | join(", ") or "aucune" }}<br>Manquantes : {{ preparation.match.missing | join(", ") or "aucune" }}</p>
+            <h3>Points forts à citer</h3>
+            <ul>
+                {% for strength in preparation.interview.strengths %}
+                <li><strong>{{ strength.skill }}</strong>{% if strength.examples %}<ul>{% for example in strength.examples %}<li>{{ example }}</li>{% endfor %}</ul>{% endif %}</li>
+                {% else %}
+                <li class="muted">À compléter dans votre profil</li>
+                {% endfor %}
+            </ul>
+            <h3>Points à préparer</h3>
+            <ul>{% for gap in preparation.interview.gaps %}<li>{{ gap }}</li>{% else %}<li class="muted">Aucun</li>{% endfor %}</ul>
+            <h3>Questions à poser</h3>
+            <ul>{% for question in preparation.interview.questions %}<li>{{ question }}</li>{% endfor %}</ul>
+            <h3>Brouillon de lettre de motivation</h3>
+            <textarea class="letter" rows="14" aria-label="Brouillon de lettre de motivation">{{ preparation.letter }}</textarea>
+            {% else %}
+            <p class="muted">Renseignez d'abord vos compétences et expériences dans la page <a href="{{ url_for('show_profile').path }}">Profil</a>.</p>
+            {% endif %}
+        </details>
 
         <article class="card">
             <h2>Description</h2>

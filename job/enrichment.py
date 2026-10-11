@@ -1,0 +1,350 @@
+"""Enrichissement des offres à partir de leur description"""
+
+import re
+
+import pandas as pd
+
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+# Textes analysés, du plus fiable au moins fiable
+TEXT_COLUMNS = ["title", "salary_label", "description", "missions", "requirements"]
+
+# Télétravail : « hybride » et un nombre de jours avant le plein télétravail, pour
+# qu'une offre « 2 jours de télétravail » ne soit pas classée en télétravail complet.
+REMOTE_DAYS_PATTERN = re.compile(
+    r"\b([1-4])\s*(?:jours?|j)\s*(?:de\s+)?(?:télétravail|teletravail|remote)\b"
+    r"|\b([1-4])\s*days?\s*(?:of\s+)?(?:remote|home\s*office|wfh)\b",
+    re.IGNORECASE,
+)
+HYBRID_PATTERN = re.compile(
+    r"\bhybride?\b|\bhybrid\b|\btélétravail\s+partiel\b", re.IGNORECASE
+)
+FULL_REMOTE_PATTERN = re.compile(
+    r"\bfull[\s-]?remote\b|\bfully\s+remote\b|\b100\s*%\s*(?:en\s+)?(?:télétravail|remote)\b"
+    r"|\btélétravail\s+(?:complet|total|intégral)\b|\bremote[\s-]first\b",
+    re.IGNORECASE,
+)
+NO_REMOTE_PATTERN = re.compile(
+    r"\bpas\s+de\s+télétravail\b|\bsans\s+télétravail\b|\b100\s*%\s*présentiel\b"
+    r"|\bno\s+remote\b|\bon[\s-]?site\s+only\b",
+    re.IGNORECASE,
+)
+
+# Expérience : un nombre d'années explicite, sinon un niveau nommé.
+EXPERIENCE_YEARS_PATTERN = re.compile(
+    r"\b(\d{1,2})\s*(?:\+\s*)?(?:ans|années)\s+(?:minimum\s+)?d['’]\s*expérience\b"
+    r"|\b(\d{1,2})\s*\+?\s*years?\s+(?:of\s+)?(?:professional\s+)?experience\b",
+    re.IGNORECASE,
+)
+EXPERIENCE_LEVELS = (
+    ("Débutant", re.compile(r"\bdébutants?\b|\bjunior\b|\bentry[\s-]level\b", re.I)),
+    ("Senior", re.compile(r"\bsenior\b|\bexpert\b|\blead\b", re.I)),
+    ("Confirmé", re.compile(r"\bconfirmée?s?\b|\bmid[\s-]level\b", re.I)),
+)
+
+# Salaire : seulement avec une devise et une unité explicites. « 45 » seul peut
+# être un âge, un département ou un nombre d'heures.
+SALARY_RANGE_K_PATTERN = re.compile(
+    r"(?P<currency1>[€$£])?\s*(?P<min>\d{2,3})\s*[kK]?\s*(?P<currency2>[€$£])?"
+    r"\s*(?:-|–|à|to)\s*(?P<currency3>[€$£])?\s*(?P<max>\d{2,3})\s*[kK]"
+    r"\s*(?P<currency4>[€$£])?",
+)
+SALARY_SINGLE_K_PATTERN = re.compile(
+    r"(?P<currency1>[€$£])\s*(?P<min>\d{2,3})\s*[kK]\b"
+    r"|(?P<min2>\d{2,3})\s*[kK]\s*(?P<currency2>[€$£])",
+)
+SALARY_FULL_PATTERN = re.compile(
+    r"(?P<min>\d{1,3}[\s  ]?\d{3})\s*(?:€|euros?)"
+    r"(?:\s*(?:-|–|à)\s*(?P<max>\d{1,3}[\s  ]?\d{3})\s*(?:€|euros?))?"
+    r"(?P<period>\s*(?:brut\s+)?(?:/|par)?\s*(?:an|annuel|mois|mensuel))?",
+    re.IGNORECASE,
+)
+# En dessous, un montant n'est retenu qu'avec une période explicite :
+# « 1 000 € de prime » n'est pas un salaire.
+MIN_AMOUNT_WITHOUT_PERIOD = 10000
+CURRENCIES = {"€": "EUR", "$": "USD", "£": "GBP"}
+
+# Compétences techniques reconnues, avec leur forme affichée. Les mots trop
+# courants (« go », « r ») ne sont cherchés qu'avec une forme non ambiguë.
+SKILLS = {
+    "Python": r"python",
+    "Java": r"java(?!\s*script)",
+    "JavaScript": r"javascript|\bjs\b",
+    "TypeScript": r"typescript",
+    "SQL": r"\bsql\b",
+    "PostgreSQL": r"postgre(?:s|sql)",
+    "MySQL": r"mysql",
+    "MongoDB": r"mongo(?:db)?",
+    "React": r"\breact(?:\.js|js)?\b",
+    "Angular": r"\bangular\b",
+    "Vue.js": r"\bvue(?:\.js|js)?\b",
+    "Node.js": r"\bnode(?:\.js|js)\b",
+    "Django": r"\bdjango\b",
+    "Flask": r"\bflask\b",
+    "FastAPI": r"\bfastapi\b",
+    "Spring": r"\bspring(?:\s*boot)?\b",
+    "PHP": r"\bphp\b",
+    "Symfony": r"\bsymfony\b",
+    "C#": r"(?<!\w)c#",
+    ".NET": r"(?<!\w)\.net\b",
+    "C++": r"(?<!\w)c\+\+",
+    "Go": r"\bgolang\b",
+    "Rust": r"\brust\b",
+    "Kotlin": r"\bkotlin\b",
+    "Swift": r"\bswift\b",
+    "Scala": r"\bscala\b",
+    "Docker": r"\bdocker\b",
+    "Kubernetes": r"\bkubernetes\b|\bk8s\b",
+    "AWS": r"\baws\b|amazon\s+web\s+services",
+    "Azure": r"\bazure\b",
+    "GCP": r"\bgcp\b|google\s+cloud",
+    "Terraform": r"\bterraform\b",
+    "Ansible": r"\bansible\b",
+    "Linux": r"\blinux\b",
+    "Git": r"\bgit\b",
+    "CI/CD": r"\bci\s*/\s*cd\b",
+    "Kafka": r"\bkafka\b",
+    "Spark": r"\bspark\b",
+    "Airflow": r"\bairflow\b",
+    "Pandas": r"\bpandas\b",
+    "TensorFlow": r"\btensorflow\b",
+    "PyTorch": r"\bpytorch\b",
+    "Power BI": r"\bpower\s*bi\b",
+    "Tableau": r"\btableau\s+(?:software|desktop)\b",
+    "Excel": r"\bexcel\b",
+    "SAP": r"\bsap\b",
+    "Salesforce": r"\bsalesforce\b",
+    "HTML": r"\bhtml5?\b",
+    "CSS": r"\bcss3?\b",
+    "GraphQL": r"\bgraphql\b",
+    "REST": r"\brest(?:ful)?\s+api",
+    "Agile": r"\bagile\b|\bscrum\b",
+}
+SKILL_PATTERNS = {
+    vLabel: re.compile(vPattern, re.IGNORECASE) for vLabel, vPattern in SKILLS.items()
+}
+
+
+# Colonnes que l'enrichissement peut remplir
+ENRICHED_COLUMNS = (
+    "remote",
+    "remote_type",
+    "remote_days",
+    "skills",
+    "experience_level",
+    "salary_min",
+    "salary_max",
+    "salary_currency",
+    "salary_period",
+)
+
+
+def is_empty(pValue):
+    """Indique si une valeur fournie par la source est absente."""
+
+    rEmpty = pValue is None or (not isinstance(pValue, list) and pd.isna(pValue))
+
+    if isinstance(pValue, (list, str)) and not pValue:
+        rEmpty = True
+
+    return rEmpty
+
+
+def detect_remote(pText):
+    """Retourne (télétravail, type, jours) détectés, ou None s'il n'est pas mentionné."""
+
+    rRemote = None
+    vDays = REMOTE_DAYS_PATTERN.search(pText)
+
+    if NO_REMOTE_PATTERN.search(pText):
+        rRemote = (False, None, None)
+    elif vDays:
+        rRemote = (True, "hybrid", int(vDays.group(1) or vDays.group(2)))
+    elif FULL_REMOTE_PATTERN.search(pText):
+        rRemote = (True, "full", None)
+    elif HYBRID_PATTERN.search(pText):
+        rRemote = (True, "hybrid", None)
+
+    return rRemote
+
+
+def detect_experience(pText):
+    """Retourne l'expérience demandée, en années si elles sont précisées."""
+
+    rExperience = None
+    vYears = EXPERIENCE_YEARS_PATTERN.search(pText)
+
+    if vYears:
+        rExperience = f"{vYears.group(1) or vYears.group(2)} ans"
+    else:
+        rExperience = next(
+            (
+                vLabel
+                for vLabel, vPattern in EXPERIENCE_LEVELS
+                if vPattern.search(pText)
+            ),
+            None,
+        )
+
+    return rExperience
+
+
+def detect_skills(pText):
+    """Retourne les compétences techniques citées, dans l'ordre du dictionnaire."""
+
+    rSkills = [
+        vLabel for vLabel, vPattern in SKILL_PATTERNS.items() if vPattern.search(pText)
+    ]
+
+    return rSkills
+
+
+def to_amount(pValue):
+    """Convertit « 45 000 » ou « 45000 » en nombre."""
+
+    rAmount = float(re.sub(r"[\s  ]", "", pValue))
+
+    return rAmount
+
+
+def detect_salary(pText):
+    """Retourne (minimum, maximum, devise, période) d'un salaire explicite, ou None."""
+
+    rSalary = None
+
+    vMatch = SALARY_RANGE_K_PATTERN.search(pText)
+
+    # Une fourchette en milliers n'est retenue qu'avec une devise.
+    if vMatch and any(
+        vMatch.group(vName)
+        for vName in ("currency1", "currency2", "currency3", "currency4")
+    ):
+        vCurrency = next(
+            vMatch.group(vName)
+            for vName in ("currency1", "currency2", "currency3", "currency4")
+            if vMatch.group(vName)
+        )
+        rSalary = (
+            float(vMatch.group("min")) * 1000,
+            float(vMatch.group("max")) * 1000,
+            CURRENCIES[vCurrency],
+            "year",
+        )
+
+    if rSalary is None:
+        vMatch = SALARY_SINGLE_K_PATTERN.search(pText)
+
+        if vMatch:
+            vCurrency = vMatch.group("currency1") or vMatch.group("currency2")
+            vAmount = float(vMatch.group("min") or vMatch.group("min2")) * 1000
+            rSalary = (vAmount, None, CURRENCIES[vCurrency], "year")
+
+    if rSalary is None:
+        vMatch = SALARY_FULL_PATTERN.search(pText)
+
+        if vMatch:
+            vMinimum = to_amount(vMatch.group("min"))
+            vMaximum = to_amount(vMatch.group("max")) if vMatch.group("max") else None
+            vPeriod = vMatch.group("period") or ""
+            vIsMonthly = re.search(r"mois|mensuel", vPeriod, re.IGNORECASE)
+
+            if vPeriod.strip() or vMinimum >= MIN_AMOUNT_WITHOUT_PERIOD:
+                rSalary = (
+                    vMinimum,
+                    vMaximum,
+                    "EUR",
+                    "month" if vIsMonthly else "year",
+                )
+
+    return rSalary
+
+
+def enrich_offer(pOffer, pText):
+    """Complète les champs vides d'une offre ; retourne les champs remplis."""
+
+    rFilled = []
+
+    if is_empty(pOffer.get("remote")):
+        vRemote = detect_remote(pText)
+
+        if vRemote is not None:
+            pOffer["remote"], vType, vDays = vRemote
+            pOffer["remote_type"] = pOffer.get("remote_type") or vType
+            pOffer["remote_days"] = pOffer.get("remote_days") or vDays
+            rFilled.append("remote")
+
+    if is_empty(pOffer.get("skills")):
+        vSkills = detect_skills(pText)
+
+        if vSkills:
+            pOffer["skills"] = vSkills
+            rFilled.append("skills")
+
+    if is_empty(pOffer.get("experience_level")):
+        vExperience = detect_experience(pText)
+
+        if vExperience:
+            pOffer["experience_level"] = vExperience
+            rFilled.append("experience_level")
+
+    if is_empty(pOffer.get("salary_min")) and is_empty(pOffer.get("salary_max")):
+        vSalary = detect_salary(pText)
+
+        if vSalary is not None:
+            (
+                pOffer["salary_min"],
+                pOffer["salary_max"],
+                pOffer["salary_currency"],
+                pOffer["salary_period"],
+            ) = vSalary
+            rFilled.append("salary")
+
+    return rFilled
+
+
+def is_unusable(pOffer):
+    """Indique si une offre n'a ni titre ni description, et n'apporte donc rien."""
+
+    rUnusable = is_empty(pOffer.get("title")) and is_empty(pOffer.get("description"))
+
+    return rUnusable
+
+
+def enrich_offers(pItems):
+    """Écarte les offres inexploitables et complète les autres ; retourne aussi le nombre écarté."""
+
+    vOffers = []
+    vRejected = 0
+    vFilledCounts = {}
+
+    for vOffer in pItems.to_dict("records"):
+        if is_unusable(vOffer):
+            vRejected += 1
+            continue
+
+        vText = " ".join(
+            str(vOffer.get(vColumn) or "")
+            for vColumn in TEXT_COLUMNS
+            if not is_empty(vOffer.get(vColumn))
+        )
+
+        for vField in enrich_offer(vOffer, vText):
+            vFilledCounts[vField] = vFilledCounts.get(vField, 0) + 1
+
+        vOffers.append(vOffer)
+
+    logger.info(
+        "Enrichissement : %s champ(s) complété(s) %s, %s offre(s) inexploitable(s) écartée(s)",
+        sum(vFilledCounts.values()),
+        vFilledCounts,
+        vRejected,
+    )
+
+    # Les colonnes remplies sont garanties même si le tableau reçu ne les avait pas.
+    vColumns = list(dict.fromkeys([*pItems.columns, *ENRICHED_COLUMNS]))
+
+    rResult = (pd.DataFrame(vOffers, columns=vColumns), vRejected)
+
+    return rResult

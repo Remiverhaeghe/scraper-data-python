@@ -24,13 +24,17 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from config import EXPIRY_DAYS
 from gui.offer_detail import OfferDetailPanel
 from gui.offers_model import COLUMNS, SORT_ROLE, OffersTableModel
 from gui.theme import COLORS
 from gui.widgets import create_button, create_icon_label, create_page_header
 from job.contract import CONTRACT_TYPES
+from job.deduplication import group_offers
 from job.export import EXPORT_FORMATS, export_offers
 from job.presentation import (
+    AVAILABILITY_FILTERS,
+    DEFAULT_AVAILABILITY,
     FOLLOW_UP_FILTER,
     PUBLISHED_PERIODS,
     STATUS_LABELS,
@@ -39,6 +43,7 @@ from job.presentation import (
 )
 from job.settings import load_settings
 from job.sources.registry import SOURCES
+from storage.duplicates import get_decisions
 from storage.job_offers import get_offers
 from utils.logger import get_logger
 
@@ -170,6 +175,11 @@ class OffersPage(QWidget):
         self.min_salary_spin = create_salary_spin("Sans minimum", " € net min")
         self.max_salary_spin = create_salary_spin("Sans maximum", " € net max")
 
+        self.availability_combo = QComboBox()
+
+        for vValue, vLabel in AVAILABILITY_FILTERS.items():
+            self.availability_combo.addItem(vLabel, vValue)
+
         self.published_combo = QComboBox()
 
         for vDays, vLabel in PUBLISHED_PERIODS.items():
@@ -178,11 +188,14 @@ class OffersPage(QWidget):
         self.salary_check = QCheckBox("Avec salaire")
         self.remote_check = QCheckBox("Télétravail")
         self.new_check = QCheckBox("Nouvelles uniquement")
+        self.multiple_check = QCheckBox("Multi-annonces")
+        self.multiple_check.setToolTip("Offres publiées plusieurs fois, regroupées")
 
         for vCombo in (
             self.source_combo,
             self.contract_combo,
             self.status_combo,
+            self.availability_combo,
             self.published_combo,
         ):
             vCombo.currentIndexChanged.connect(self.refresh)
@@ -190,7 +203,12 @@ class OffersPage(QWidget):
         for vSpin in (self.min_salary_spin, self.max_salary_spin):
             vSpin.valueChanged.connect(self.search_timer.start)
 
-        for vCheck in (self.salary_check, self.remote_check, self.new_check):
+        for vCheck in (
+            self.salary_check,
+            self.remote_check,
+            self.new_check,
+            self.multiple_check,
+        ):
             vCheck.toggled.connect(self.refresh)
 
         vSearchRow = QHBoxLayout()
@@ -202,12 +220,14 @@ class OffersPage(QWidget):
         vOptionsRow.setSpacing(16)
         for vWidget in (
             self.contract_combo,
+            self.availability_combo,
             self.published_combo,
             self.min_salary_spin,
             self.max_salary_spin,
             self.salary_check,
             self.remote_check,
             self.new_check,
+            self.multiple_check,
         ):
             vOptionsRow.addWidget(vWidget)
 
@@ -265,11 +285,14 @@ class OffersPage(QWidget):
 
     def export_to(self, pPath):
         """Exporte toutes les offres correspondant aux filtres, sans limite d'affichage."""
+        vSettings = load_settings(self.database_file)
+
         vOffers = get_offers(
             self.database_file,
             **self.build_filters(
                 datetime.now(),
-                load_settings(self.database_file)["new_offer_days"],
+                vSettings["new_offer_days"],
+                vSettings["expiry_days"],
             ),
         )
 
@@ -314,12 +337,14 @@ class OffersPage(QWidget):
             self.source_combo,
             self.contract_combo,
             self.status_combo,
+            self.availability_combo,
             self.published_combo,
             self.min_salary_spin,
             self.max_salary_spin,
             self.salary_check,
             self.remote_check,
             self.new_check,
+            self.multiple_check,
         )
 
         # Une seule relecture en base plutôt qu'une par filtre modifié
@@ -330,11 +355,15 @@ class OffersPage(QWidget):
         self.source_combo.setCurrentIndex(0)
         self.contract_combo.setCurrentIndex(0)
         self.published_combo.setCurrentIndex(0)
+        self.availability_combo.setCurrentIndex(
+            self.availability_combo.findData(DEFAULT_AVAILABILITY)
+        )
         self.min_salary_spin.setValue(0)
         self.max_salary_spin.setValue(0)
         self.salary_check.setChecked(False)
         self.remote_check.setChecked(False)
         self.new_check.setChecked(pPreset == "new_offers")
+        self.multiple_check.setChecked(False)
         self.status_combo.setCurrentIndex(
             max(self.status_combo.findData(PRESET_STATUSES.get(pPreset)), 0)
         )
@@ -344,7 +373,7 @@ class OffersPage(QWidget):
 
         self.refresh()
 
-    def build_filters(self, pNow, pNewOfferDays):
+    def build_filters(self, pNow, pNewOfferDays, pExpiryDays=EXPIRY_DAYS):
         """Traduit les filtres de la page en paramètres de get_offers."""
         rFilters = build_offer_filters(
             pSearch=self.search_edit.text(),
@@ -360,6 +389,8 @@ class OffersPage(QWidget):
             pPublishedDays=self.published_combo.currentData(),
             pHasSalary=self.salary_check.isChecked(),
             pKeys=self.result_keys,
+            pAvailability=self.availability_combo.currentData(),
+            pExpiryDays=pExpiryDays,
         )
 
         return rFilters
@@ -370,14 +401,15 @@ class OffersPage(QWidget):
         vSelectedKey = self.get_offer_key(self.detail_panel.offer)
 
         try:
-            vNewOfferDays = load_settings(self.database_file)["new_offer_days"]
+            vSettings = load_settings(self.database_file)
+            vNewOfferDays = vSettings["new_offer_days"]
 
             vOffers = get_offers(
                 self.database_file,
                 # Une offre de plus que la limite est lue pour savoir s'il en reste : le
                 # message invite alors à affiner les filtres.
                 pLimit=MAX_DISPLAYED_OFFERS + 1,
-                **self.build_filters(vNow, vNewOfferDays),
+                **self.build_filters(vNow, vNewOfferDays, vSettings["expiry_days"]),
             )
 
         except Exception:
@@ -389,12 +421,23 @@ class OffersPage(QWidget):
             vNewSince = vNow - timedelta(days=vNewOfferDays)
 
             vPrepared = [
-                prepare_offer(vOffer, vNewSince)
+                prepare_offer(vOffer, vNewSince, vNow, vSettings["expiry_days"])
                 for vOffer in vOffers.head(MAX_DISPLAYED_OFFERS).to_dict("records")
             ]
 
+            # Les annonces d'une même offre sont regroupées en une seule ligne.
+            vPrepared = group_offers(vPrepared, get_decisions(self.database_file))
+
+            if self.multiple_check.isChecked():
+                vPrepared = [vOffer for vOffer in vPrepared if vOffer["duplicates"]]
+
             self.model.set_offers(vPrepared)
-            self.count_label.setText(self.describe_count(len(vOffers), vNewOfferDays))
+            # Au-delà de la limite, le message invite à affiner ; sinon, il compte
+            # les lignes affichées, annonces regroupées comprises.
+            vCount = (
+                len(vOffers) if len(vOffers) > MAX_DISPLAYED_OFFERS else len(vPrepared)
+            )
+            self.count_label.setText(self.describe_count(vCount, vNewOfferDays))
             self.select_offer(vSelectedKey)
 
     def describe_count(self, pCount, pNewOfferDays):

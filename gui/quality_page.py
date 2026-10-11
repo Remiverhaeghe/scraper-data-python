@@ -129,8 +129,9 @@ class QualityPage(QWidget):
                 self.table.setItem(vRow, vColumn, vItem)
 
         self.message_label.setText(
-            f"{pReport['total']['count']} offre(s) analysée(s). L'export liste les "
-            "offres incomplètes ou mal découpées, pour améliorer leur analyse."
+            f"{pReport['total']['count']} offre(s) analysée(s), "
+            f"{pReport['rejected']} écartée(s) faute de titre et de description. "
+            "L'export liste les offres incomplètes ou mal découpées."
         )
 
     def export_problems(self):

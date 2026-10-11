@@ -88,6 +88,10 @@ JOB_COLUMNS = [
     "published_at",
     # Date de dernière modification connue par la source
     "updated_at",
+    # Date limite de candidature, lorsque la source la fournit
+    "expires_at",
+    # Empreinte titre, entreprise et ville, commune aux annonces d'une même offre
+    "fingerprint",
     # ------------------------------------------------------------------------
     # Dates gérées par notre scraper
     # ------------------------------------------------------------------------

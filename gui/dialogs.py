@@ -1,8 +1,17 @@
-"""Fenêtres d'information : mentions légales et licence"""
+"""Fenêtres d'information : mentions légales, licence et préparation de candidature"""
 
 from html import escape
 
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QTextBrowser, QVBoxLayout
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QDialogButtonBox,
+    QLabel,
+    QPlainTextEdit,
+    QPushButton,
+    QTextBrowser,
+    QVBoxLayout,
+)
 
 from config import APPLICATION_NAME
 from job.presentation import (
@@ -68,3 +77,82 @@ def show_license(pParent):
             f"<pre style='white-space: pre-wrap'>{escape(read_icons_license())}</pre>"
         ),
     )
+
+
+def describe_preparation(pPreparation):
+    """Met en forme la correspondance, le CV et l'entretien en HTML."""
+
+    vMatch = pPreparation["match"]
+    vInterview = pPreparation["interview"]
+
+    def items(pValues):
+        rHtml = "".join(f"<li>{escape(vValue)}</li>" for vValue in pValues)
+
+        return rHtml
+
+    vScore = (
+        f"{vMatch['score']} % des compétences repérées dans l'offre"
+        if vMatch["score"] is not None
+        else "aucune compétence technique repérée dans l'offre"
+    )
+
+    vStrengths = "".join(
+        f"<li><b>{escape(vStrength['skill'])}</b>"
+        + (f"<ul>{items(vStrength['examples'])}</ul>" if vStrength["examples"] else "")
+        + "</li>"
+        for vStrength in vInterview["strengths"]
+    )
+
+    rHtml = (
+        f"<h3>Correspondance</h3><p>{escape(vScore)}</p>"
+        f"<p>Couvertes : {escape(', '.join(vMatch['covered']) or 'aucune')}<br>"
+        f"Manquantes : {escape(', '.join(vMatch['missing']) or 'aucune')}</p>"
+    )
+
+    if pPreparation["cv"]:
+        rHtml += (
+            f"<h3>CV conseillé</h3><p>{escape(pPreparation['cv']['name'])} "
+            f"({pPreparation['cv']['matching']} compétence(s) de l'offre)</p>"
+        )
+
+    rHtml += (
+        f"<h3>Points forts à citer</h3><ul>{vStrengths or '<li>À compléter</li>'}</ul>"
+        f"<h3>Points à préparer</h3><ul>{items(vInterview['gaps']) or '<li>Aucun</li>'}</ul>"
+        f"<h3>Questions à poser</h3><ul>{items(vInterview['questions'])}</ul>"
+    )
+
+    return rHtml
+
+
+def show_preparation(pParent, pTitle, pPreparation):
+    """Affiche la préparation d'une candidature et le brouillon de lettre."""
+
+    vBrowser = QTextBrowser()
+    vBrowser.setHtml(describe_preparation(pPreparation))
+
+    # La lettre reste modifiable : c'est un brouillon à personnaliser.
+    vLetter = QPlainTextEdit(pPreparation["letter"])
+
+    vCopyButton = QPushButton("Copier la lettre")
+    vCopyButton.clicked.connect(
+        lambda: QApplication.clipboard().setText(vLetter.toPlainText())
+    )
+
+    vButtons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+    vButtons.button(QDialogButtonBox.StandardButton.Close).setText("Fermer")
+    vButtons.addButton(vCopyButton, QDialogButtonBox.ButtonRole.ActionRole)
+
+    vDialog = QDialog(pParent)
+    vDialog.setWindowTitle(f"Préparer ma candidature · {pTitle}")
+    vDialog.resize(820, 720)
+    vButtons.rejected.connect(vDialog.reject)
+
+    vLayout = QVBoxLayout(vDialog)
+    vLayout.addWidget(vBrowser, 3)
+    vLayout.addWidget(
+        QLabel("Brouillon de lettre de motivation, à relire et compléter")
+    )
+    vLayout.addWidget(vLetter, 2)
+    vLayout.addWidget(vButtons)
+
+    vDialog.exec()

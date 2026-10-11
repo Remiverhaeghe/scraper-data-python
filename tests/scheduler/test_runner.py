@@ -11,6 +11,7 @@ import pytest
 import scheduler.runner as runner
 from job.schedule import (
     load_schedule,
+    request_immediate_run,
     save_notification_email,
     save_schedule_options,
     save_scheduled_search,
@@ -141,3 +142,22 @@ def test_run_forever_survives_errors_until_stop(monkeypatch, pError):
     runner.run_forever("scraper.db", vStopEvent, pPollSeconds=0)
 
     assert len(vCalls) == 2
+
+
+def test_run_due_search_handles_web_request(database_file, monkeypatch, sent_emails):
+    """Vérifie qu'une demande du web lance la recherche, planification désactivée."""
+
+    save_schedule_options(database_file, False, 6)
+    runner.mark_schedule_run(database_file, NOW)
+    request_immediate_run(database_file, NOW)
+
+    monkeypatch.setattr(
+        runner,
+        "process_jobs",
+        lambda pConfig, pCancelEvent=None, pTrigger=None: SimpleNamespace(
+            items=build_items(False)
+        ),
+    )
+
+    assert runner.run_due_search(database_file, NOW) is not None
+    assert load_schedule(database_file)["run_requested"] is None

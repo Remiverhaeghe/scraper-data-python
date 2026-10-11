@@ -69,6 +69,7 @@ def parse_job(pJob):
         "date": vPublishedAt,
         "published_at": vPublishedAt,
         "updated_at": None,
+        "expires_at": timestamp_to_iso(pJob.get("expiryDate")),
         # Dates gérées par notre application
         "scraped_at": None,
         "first_seen_at": None,

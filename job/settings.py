@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from config import FOLLOW_UP_DAYS, NET_SALARY_RATIO, NEW_OFFER_DAYS
+from config import EXPIRY_DAYS, FOLLOW_UP_DAYS, NET_SALARY_RATIO, NEW_OFFER_DAYS
 from job.salary import add_net_salary, get_income_tax_rate
 from storage.job_offers import get_salaries, update_net_salaries
 from storage.settings_repository import get_setting_values, save_setting_values
@@ -50,6 +50,14 @@ SETTING_DEFINITIONS = {
         1,
         "jours",
     ),
+    "expiry_days": SettingDefinition(
+        "Offre expirée",
+        "Une offre absente des recherches depuis ce délai est probablement expirée.",
+        7,
+        180,
+        1,
+        "jours",
+    ),
     "follow_up_days": SettingDefinition(
         "Relance",
         "Délai proposé entre l'envoi d'une candidature et sa relance.",
@@ -79,6 +87,7 @@ def get_default_settings():
         "net_salary_percent": round(NET_SALARY_RATIO * 100),
         "income_tax_rate": vTaxRate,
         "new_offer_days": NEW_OFFER_DAYS,
+        "expiry_days": EXPIRY_DAYS,
         "follow_up_days": FOLLOW_UP_DAYS,
     }
 

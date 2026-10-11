@@ -358,6 +358,7 @@ def test_scrape_sources_adds_net_salary(monkeypatch):
             {
                 "source": ["remotive"],
                 "source_id": ["1"],
+                "title": ["Développeur"],
                 "salary_min": [48000],
                 "salary_currency": ["EUR"],
                 "salary_period": ["year"],

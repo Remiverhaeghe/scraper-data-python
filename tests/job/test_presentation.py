@@ -2,11 +2,14 @@
 
 from datetime import datetime
 
+import pytest
+
 from job.presentation import (
     FOLLOW_UP_FILTER,
     build_offer_filters,
     describe_search,
     describe_sources,
+    prepare_offer,
     summarize_history,
 )
 
@@ -41,6 +44,9 @@ def test_build_offer_filters_keeps_known_values():
         "pPublishedSince": None,
         "pHasSalary": False,
         "pKeys": None,
+        "pAvailability": "available",
+        "pNow": vNow,
+        "pExpiredBefore": datetime(2026, 9, 10, 12, 0),
     }
 
 
@@ -112,3 +118,24 @@ def test_summarize_history():
         )["success_rate"]
         == "-"
     )
+
+
+@pytest.mark.parametrize(
+    "pStored, pExpected", [("1", True), ("0", False), (None, None), (True, True)]
+)
+def test_prepare_offer_converts_stored_remote(pStored, pExpected):
+    """Vérifie que la valeur texte '0' n'est pas prise pour du télétravail."""
+
+    vOffer = prepare_offer(
+        {
+            "source": "adzuna",
+            "source_id": "1",
+            "first_seen_at": "2026-10-10",
+            "last_seen_at": "2026-10-10",
+            "remote": pStored,
+        },
+        datetime(2026, 10, 1),
+        datetime(2026, 10, 11),
+    )
+
+    assert vOffer["remote"] is pExpected

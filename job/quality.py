@@ -6,6 +6,7 @@ import io
 from job.export import protect_formula
 from job.presentation import clean_missing_values
 from job.sources.registry import SOURCES
+from storage.history_repository import get_history
 from storage.job_offers import QUALITY_COLUMNS, count_filled_fields, get_offers
 
 # Libellé affiché pour chaque colonne mesurée, dans l'ordre de QUALITY_COLUMNS
@@ -88,6 +89,11 @@ def get_quality_report(pDatabaseFile):
         "columns": [QUALITY_LABELS[vColumn] for vColumn in QUALITY_COLUMNS],
         "rows": vRows,
         "total": {"count": vTotal, "rates": build_rates(vTotal, vAllFilled)},
+        # Offres sans titre ni description, écartées avant l'enregistrement
+        "rejected": sum(
+            (vEntry.parameters or {}).get("rejected", 0)
+            for vEntry in get_history(pDatabaseFile)
+        ),
     }
 
     return rReport

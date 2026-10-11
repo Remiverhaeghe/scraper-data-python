@@ -5,11 +5,14 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
+import gui.offer_detail as offer_detail
 from gui.offer_detail import describe_application, summarize_values
+from gui.offers_model import format_cell, get_cell_color
+from gui.theme import COLORS
 from gui.offers_page import OffersPage
 from storage.database import initialize_database
 from storage.job_applications import get_application, save_application
-from storage.job_offers import save_offers
+from storage.job_offers import get_offer, save_offers, set_availability
 
 
 @pytest.fixture
@@ -235,3 +238,87 @@ def test_summarize_values(pValues, pExpected):
     """Vérifie qu'une longue liste est abrégée pour tenir dans le panneau."""
 
     assert summarize_values(pValues) == pExpected
+
+
+def test_expired_offers_are_hidden_then_shown_greyed(offers_page, database_file):
+    """Vérifie le masquage par défaut puis l'affichage grisé des offres retirées."""
+
+    set_availability(database_file, "lever", "2", "expired", datetime.now())
+    offers_page.refresh()
+
+    assert get_titles(offers_page) == ["Développeur Java"]
+
+    offers_page.availability_combo.setCurrentIndex(
+        offers_page.availability_combo.findData("expired")
+    )
+
+    assert get_titles(offers_page) == ["Data Engineer"]
+    assert (
+        get_cell_color(offers_page.model.offers[0], "contract").name()
+        == COLORS["muted"].lower()
+    )
+
+
+@pytest.mark.parametrize(
+    "pResult, pText, pSaved",
+    [
+        ("expired", "retirée", "expired"),
+        (None, "n'a pas permis de conclure", None),
+    ],
+)
+def test_detail_checks_availability(
+    offers_page, database_file, monkeypatch, pResult, pText, pSaved
+):
+    """Vérifie la vérification du lien depuis le détail et l'enregistrement."""
+
+    monkeypatch.setattr(offer_detail, "check_offer_link", lambda pUrl: pResult)
+
+    offers_page.select_offer(("lever", "1"))
+    offers_page.detail_panel.check_availability()
+
+    assert pText in offers_page.detail_panel.availability_label.text()
+    assert get_offer(database_file, "lever", "1")["availability"] == pSaved
+
+
+def test_duplicates_are_grouped_then_separated(offers_page, database_file):
+    """Vérifie le regroupement des annonces, leur comparaison et la séparation."""
+
+    save_offers(
+        database_file,
+        pd.DataFrame(
+            [
+                {
+                    "source": "adzuna",
+                    "source_id": "a",
+                    "title": "QA",
+                    "contract": "CDI",
+                    "fingerprint": "qa|acme|lille",
+                },
+                {
+                    "source": "jooble",
+                    "source_id": "b",
+                    "title": "QA",
+                    "contract": "CDD",
+                    "fingerprint": "qa|acme|lille",
+                },
+            ]
+        ),
+        datetime.now(),
+    )
+    offers_page.multiple_check.setChecked(True)
+
+    vOffer = offers_page.model.offers[0]
+
+    assert len(offers_page.model.offers) == 1
+    assert format_cell(vOffer, "source_label") == "Adzuna, Jooble"
+    assert vOffer["needs_review"]
+
+    offers_page.select_offer(("adzuna", "a"))
+
+    assert offers_page.detail_panel.duplicates_group.isVisibleTo(offers_page)
+    assert "Différences à valider" in offers_page.detail_panel.duplicates_label.text()
+
+    offers_page.detail_panel.decide_duplicates("separate")
+    offers_page.multiple_check.setChecked(False)
+
+    assert get_titles(offers_page).count("QA") == 2

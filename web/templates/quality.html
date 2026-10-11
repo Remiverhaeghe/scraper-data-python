@@ -44,5 +44,5 @@
     {% endif %}
 </article>
 
-<p class="muted">{{ report.total.count }} offre(s) analysée(s). L'export liste les offres incomplètes ou mal découpées, pour améliorer leur analyse.</p>
+<p class="muted">{{ report.total.count }} offre(s) analysée(s), {{ report.rejected }} écartée(s) faute de titre et de description. L'export liste les offres incomplètes ou mal découpées.</p>
 {% endblock %}

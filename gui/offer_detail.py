@@ -1,10 +1,12 @@
 """Panneau de détail d'une offre et de son suivi de candidature"""
 
 from datetime import datetime
+from html import escape
 
 from PySide6.QtCore import QDate, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QTextBlockFormat, QTextCursor
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QDateEdit,
@@ -12,17 +14,31 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QScrollArea,
     QStackedWidget,
     QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
 
+from gui.dialogs import show_preparation
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, create_icon_label
-from job.presentation import STATUS_LABELS, format_date, format_net_salary, safe_url
+from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
+from job.preparation import prepare_application
+from job.presentation import (
+    AVAILABILITY_LABELS,
+    AVAILABILITY_MESSAGES,
+    STATUS_LABELS,
+    format_date,
+    format_net_salary,
+    prepare_offer,
+    safe_url,
+)
+from job.profile import is_profile_empty, load_profile
 from job.settings import load_settings
 from storage.job_applications import (
     delete_application,
@@ -30,7 +46,9 @@ from storage.job_applications import (
     record_follow_up,
     save_application,
 )
-from storage.job_offers import FOLLOW_UP_STATUSES
+from storage.duplicates import save_decision
+from storage.job_offers import FOLLOW_UP_STATUSES, set_availability
+from utils.link_checker import check_offer_link
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -50,6 +68,7 @@ INFO_ROWS = (
     ("skills", "Compétences", "list-checks"),
     ("published_at", "Publiée le", "calendar"),
     ("first_seen_at", "Découverte le", "search"),
+    ("expires_at", "Date limite", "calendar"),
     ("source_label", "Source", "globe"),
 )
 
@@ -89,6 +108,56 @@ def summarize_values(pValues, pLimit=MAX_LIST_VALUES):
         rText += f" +{len(vValues) - pLimit}"
 
     return rText
+
+
+def describe_availability(pOffer):
+    """Résume la disponibilité connue d'une offre, sous le bouton de vérification."""
+
+    rText = ""
+
+    if pOffer.get("availability_checked_at"):
+        rText = (
+            f"Vérifiée le {format_date(pOffer['availability_checked_at'])} : "
+            f"{AVAILABILITY_LABELS[pOffer['availability']]}"
+        )
+    elif pOffer.get("is_expired"):
+        rText = "Probablement expirée : plus vue dans les recherches récentes."
+
+    return rText
+
+
+def describe_duplicates(pGroup):
+    """Décrit en HTML les annonces d'une offre, valeurs différentes en orange."""
+
+    vRows = []
+
+    for vOffer in pGroup["offers"]:
+        vCells = []
+
+        for vField, vLabel in COMPARED_FIELDS:
+            vValue = vOffer.get(vField)
+
+            if vField == "remote" and vValue is not None:
+                vValue = "télétravail" if vValue else "sur site"
+
+            if vValue:
+                vText = escape(str(vValue))
+
+                if vLabel in pGroup["differences"]:
+                    vText = f"<span style='color: {COLORS['warning']}'>{vText}</span>"
+
+                vCells.append(vText)
+
+        vSource = escape(vOffer.get("source_label") or vOffer.get("source") or "")
+        vRows.append(f"<b>{vSource}</b> : {' · '.join(vCells)}")
+
+    vDecision = {MERGED: "Fusionnées.", SEPARATE: "Gardées séparées."}.get(
+        pGroup["decision"], "Différences à valider." if pGroup["differences"] else ""
+    )
+
+    rHtml = "<br>".join(vRows) + (f"<br><i>{vDecision}</i>" if vDecision else "")
+
+    return rHtml
 
 
 class OfferDetailPanel(QWidget):
@@ -144,6 +213,8 @@ class OfferDetailPanel(QWidget):
         vSummary.addWidget(self.title_label)
         vSummary.addWidget(self.company_label)
         vSummary.addWidget(self.open_button)
+        vSummary.addLayout(self.create_availability_row())
+        vSummary.addWidget(self.create_duplicates_group())
         vSummary.addSpacing(6)
         vSummary.addLayout(vInfos)
         vSummary.addStretch()
@@ -156,7 +227,18 @@ class OfferDetailPanel(QWidget):
         vContentLayout = QHBoxLayout(vContent)
         vContentLayout.setContentsMargins(0, 12, 0, 0)
         vContentLayout.setSpacing(16)
-        vContentLayout.addWidget(vSummaryWidget)
+        # Le résumé défile s'il manque de hauteur : sans cela, sa hauteur minimale
+        # écraserait le tableau des offres au-dessus.
+        vSummaryScroll = QScrollArea()
+        vSummaryScroll.setWidget(vSummaryWidget)
+        vSummaryScroll.setWidgetResizable(True)
+        vSummaryScroll.setFixedWidth(360)
+        vSummaryScroll.setFrameShape(QFrame.Shape.NoFrame)
+        vSummaryScroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+
+        vContentLayout.addWidget(vSummaryScroll)
         vContentLayout.addWidget(vDescriptionCard, 1)
         vContentLayout.addWidget(vApplicationGroup)
 
@@ -168,6 +250,127 @@ class OfferDetailPanel(QWidget):
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.addWidget(self.stack)
+
+    def create_availability_row(self):
+        """Construit la vérification du lien et son résultat."""
+        self.availability_button = create_button(
+            "Vérifier la disponibilité", "circle-check", pIconColor=COLORS["primary"]
+        )
+        self.availability_button.clicked.connect(self.check_availability)
+
+        self.availability_label = QLabel()
+        self.availability_label.setObjectName("cardSubtitle")
+        self.availability_label.setWordWrap(True)
+
+        self.prepare_button = create_button(
+            "Préparer ma candidature", "sparkles", pIconColor=COLORS["primary"]
+        )
+        self.prepare_button.clicked.connect(self.open_preparation)
+
+        rLayout = QVBoxLayout()
+        rLayout.setSpacing(4)
+        rLayout.addWidget(self.prepare_button)
+        rLayout.addWidget(self.availability_button)
+        rLayout.addWidget(self.availability_label)
+
+        return rLayout
+
+    def open_preparation(self):
+        """Ouvre la préparation de candidature, ou invite à remplir le profil."""
+        if self.offer is None:
+            return
+
+        vProfile = load_profile(self.database_file)
+
+        if is_profile_empty(vProfile):
+            QMessageBox.information(
+                self,
+                "Préparer ma candidature",
+                "Renseignez d'abord vos compétences et expériences dans la page Profil.",
+            )
+        else:
+            show_preparation(
+                self,
+                self.offer.get("title") or "offre",
+                prepare_application(vProfile, self.offer),
+            )
+
+    def check_availability(self):
+        """Vérifie le lien de l'offre et enregistre un résultat net."""
+        if self.offer is None:
+            return
+
+        # Requête courte mais bloquante : le curseur signale l'attente.
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+        try:
+            vAvailability = check_offer_link(self.offer.get("url") or "")
+
+            if vAvailability is not None:
+                set_availability(
+                    self.database_file,
+                    self.offer["source"],
+                    self.offer["source_id"],
+                    vAvailability,
+                    datetime.now(),
+                )
+                self.offer["availability"] = vAvailability
+
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        self.availability_label.setText(AVAILABILITY_MESSAGES[vAvailability])
+
+    def create_duplicates_group(self):
+        """Construit la comparaison des annonces d'une offre publiée plusieurs fois."""
+        self.duplicates_label = QLabel()
+        self.duplicates_label.setObjectName("cardSubtitle")
+        self.duplicates_label.setWordWrap(True)
+        self.duplicates_label.setTextFormat(Qt.TextFormat.RichText)
+
+        vMergeButton = create_button("Fusionner", "circle-check")
+        vMergeButton.setToolTip("Une seule offre, malgré les différences")
+        vMergeButton.clicked.connect(lambda: self.decide_duplicates(MERGED))
+
+        vSeparateButton = create_button("Garder séparées")
+        vSeparateButton.clicked.connect(lambda: self.decide_duplicates(SEPARATE))
+
+        vButtons = QHBoxLayout()
+        vButtons.addWidget(vMergeButton)
+        vButtons.addWidget(vSeparateButton)
+
+        self.duplicates_group = QGroupBox("Annonces de cette offre")
+
+        vLayout = QVBoxLayout(self.duplicates_group)
+        vLayout.addWidget(self.duplicates_label)
+        vLayout.addLayout(vButtons)
+
+        self.duplicates_group.hide()
+
+        return self.duplicates_group
+
+    def show_duplicates(self, pOffer):
+        """Affiche les annonces d'une offre et leurs différences, s'il y en a plusieurs."""
+        vGroup = get_offer_group(
+            self.database_file,
+            pOffer,
+            lambda pItem: prepare_offer(pItem, datetime.now()),
+        )
+
+        vHasDuplicates = len(vGroup["offers"]) > 1
+
+        self.duplicates_group.setVisible(vHasDuplicates)
+        self.duplicates_label.setText(
+            describe_duplicates(vGroup) if vHasDuplicates else ""
+        )
+
+    def decide_duplicates(self, pDecision):
+        """Enregistre la fusion ou la séparation, puis recharge la liste."""
+        if self.offer is not None and self.offer.get("fingerprint"):
+            save_decision(
+                self.database_file, self.offer["fingerprint"], pDecision, datetime.now()
+            )
+            self.application_changed.emit()
 
     def create_info_row(self, pLabel, pIcon):
         """Crée une ligne icône, libellé et valeur ; retourne la ligne et sa valeur."""
@@ -279,6 +482,9 @@ class OfferDetailPanel(QWidget):
             )
         )
         self.open_button.setEnabled(safe_url(vOffer.get("url")) != "#")
+        self.availability_button.setEnabled(safe_url(vOffer.get("url")) != "#")
+        self.availability_label.setText(describe_availability(vOffer))
+        self.show_duplicates(vOffer)
 
         vRemote = vOffer.get("remote")
 
@@ -293,6 +499,7 @@ class OfferDetailPanel(QWidget):
             "skills": summarize_values(vOffer.get("skills_list")),
             "published_at": format_date(vOffer.get("published_at")),
             "first_seen_at": format_date(vOffer.get("first_seen_at")),
+            "expires_at": format_date(vOffer.get("expires_at")),
             "source_label": vOffer.get("source_label"),
         }
 

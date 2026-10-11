@@ -88,6 +88,9 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
     if pTrigger:
         vParameters["trigger"] = pTrigger
 
+    if vScrapingResult.rejected_count:
+        vParameters["rejected"] = vScrapingResult.rejected_count
+
     record_history(
         DATABASE_FILE, "job", "multi-source", vScrapingResult, pParameters=vParameters
     )

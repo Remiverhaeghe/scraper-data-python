@@ -10,6 +10,7 @@ from config import (
     ICONS_LICENSE_FILE,
     ICONS_URL,
     LICENSE_FILE,
+    EXPIRY_DAYS,
     LICENSE_NAME,
     NEW_OFFER_DAYS,
 )
@@ -85,6 +86,22 @@ PUBLISHED_PERIODS = {
     1: "Publiées depuis 24 h",
     7: "Publiées depuis 7 jours",
     30: "Publiées depuis 30 jours",
+}
+
+# Filtre de disponibilité ; par défaut, les offres probablement expirées sont masquées
+AVAILABILITY_FILTERS = {
+    "available": "Offres disponibles",
+    "expired": "Probablement expirées",
+    "all": "Disponibles et expirées",
+}
+DEFAULT_AVAILABILITY = "available"
+
+# Résultat de la vérification du lien d'une offre, tel qu'affiché
+AVAILABILITY_LABELS = {"available": "disponible", "expired": "retirée"}
+AVAILABILITY_MESSAGES = {
+    "available": "L'offre est toujours en ligne.",
+    "expired": "L'offre a été retirée : elle est désormais masquée par défaut.",
+    None: "Le site de l'offre n'a pas permis de conclure (accès refusé ou erreur).",
 }
 
 # Valeur du filtre de statut affichant les candidatures à relancer
@@ -175,7 +192,7 @@ def clean_missing_values(pOffer):
     return rOffer
 
 
-def prepare_offer(pOffer, pNewSince):
+def prepare_offer(pOffer, pNewSince, pNow=None, pExpiryDays=EXPIRY_DAYS):
     """Complète une offre avec les informations utiles à l'affichage."""
 
     vOffer = clean_missing_values(pOffer)
@@ -186,6 +203,11 @@ def prepare_offer(pOffer, pNewSince):
     vOffer["is_new"] = vOffer["first_seen_at"] >= pNewSince.isoformat()
     vOffer["skills_list"] = to_list(vOffer.get("skills"))
     vOffer["net_salary"] = format_net_salary(vOffer)
+
+    # remote est stocké en texte ('1' ou '0') : la chaîne '0' serait « vraie ».
+    if vOffer.get("remote") is not None:
+        vOffer["remote"] = str(vOffer["remote"]).lower() in ("1", "true")
+    vOffer["is_expired"] = is_offer_expired(vOffer, pNow or datetime.now(), pExpiryDays)
     vOffer["follow_up_due"] = bool(
         vOffer.get("follow_up_date")
         and vOffer.get("application_status") in ("APPLIED", "INTERVIEW")
@@ -198,6 +220,24 @@ def prepare_offer(pOffer, pNewSince):
     rOffer = vOffer
 
     return rOffer
+
+
+def is_offer_expired(pOffer, pNow, pExpiryDays=EXPIRY_DAYS):
+    """Applique à une offre la même règle que EXPIRED_CONDITION en base."""
+
+    vCutoff = (pNow - timedelta(days=pExpiryDays)).isoformat()
+    vLastSign = pOffer.get("last_seen_at") or ""
+
+    if pOffer.get("availability") == "available":
+        vLastSign = max(vLastSign, pOffer.get("availability_checked_at") or "")
+
+    rExpired = (
+        pOffer.get("availability") == "expired"
+        or bool(pOffer.get("expires_at") and pOffer["expires_at"] < pNow.isoformat())
+        or vLastSign < vCutoff
+    )
+
+    return rExpired
 
 
 def build_offer_filters(
@@ -214,6 +254,8 @@ def build_offer_filters(
     pPublishedDays=None,
     pHasSalary=False,
     pKeys=None,
+    pAvailability=DEFAULT_AVAILABILITY,
+    pExpiryDays=EXPIRY_DAYS,
 ):
     """Traduit les filtres saisis en paramètres de get_offers.
 
@@ -239,6 +281,11 @@ def build_offer_filters(
         "pHasSalary": bool(pHasSalary),
         "pKeys": pKeys,
         "pHideIgnored": True,
+        "pAvailability": (
+            pAvailability if pAvailability in AVAILABILITY_FILTERS else None
+        ),
+        "pNow": vNow,
+        "pExpiredBefore": vNow - timedelta(days=pExpiryDays),
     }
 
     return rFilters

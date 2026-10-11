@@ -326,6 +326,47 @@ h3 {
     margin-bottom: 14px;
 }
 
+.availability {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.duplicate-actions {
+    margin-top: 14px;
+}
+
+.profile-form {
+    display: grid;
+    gap: 14px;
+}
+
+.profile-form label {
+    display: grid;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.profile-form textarea,
+.letter {
+    width: 100%;
+    font: inherit;
+}
+
+.preparation summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.preparation summary h2 {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    margin: 0;
+}
+
 .reset-form {
     display: grid;
     gap: 12px;
@@ -435,6 +476,19 @@ h3 {
     display: flex;
     gap: 22px;
     color: var(--banner-text);
+}
+
+.banner-message {
+    margin: 12px 0 0;
+    color: var(--on-primary);
+}
+
+.banner-message:empty {
+    display: none;
+}
+
+.banner-actions form {
+    margin: 0;
 }
 
 .banner-actions {

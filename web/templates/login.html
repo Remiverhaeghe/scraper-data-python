@@ -9,6 +9,10 @@
     <script src="{{ url_for('static', path='theme.js').path }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', path='style.css').path }}">
     <link rel="icon" type="image/png" href="{{ url_for('assets', path='logo.png').path }}">
+    {# Installation sur l'écran d'accueil d'un téléphone #}
+    <link rel="manifest" href="{{ url_for('static', path='manifest.webmanifest').path }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', path='icon-192.png').path }}">
+    <meta name="theme-color" content="#1769e0">
 </head>
 <body class="login-page">
 <main class="card login-card">

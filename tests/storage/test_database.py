@@ -261,3 +261,90 @@ def test_count_by_day_rejects_unknown_column(tmp_path):
 
     with pytest.raises(ValueError, match="job_offer.title"):
         count_by_day(tmp_path / "scraper.db", "job_offer", "title", 7)
+
+
+def test_migration_to_v7_enriches_saved_offers(tmp_path):
+    """Vérifie que les offres en base sont complétées et leur net calculé."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        for vMigration in MIGRATIONS[:6]:
+            vMigration(vConnection)
+
+        vConnection.execute("PRAGMA user_version = 6")
+        vConnection.execute("""
+            INSERT INTO app_setting (key, value) VALUES ('net_salary_percent', '80')
+            """)
+        vConnection.execute("""
+            INSERT INTO job_offer (
+                source, source_id, first_seen_at, last_seen_at, title, description,
+                experience_level
+            )
+            VALUES (
+                'adzuna', '1', '2026-10-01', '2026-10-01', 'Développeur Python',
+                'Full remote, 3 ans d''expérience, 48 000 € brut annuel', NULL
+            )
+            """)
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    initialize_database(vDatabaseFile)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vRow = vConnection.execute("""
+            SELECT remote, remote_type, skills, experience_level, salary_min,
+                   salary_currency, salary_net_monthly_min
+            FROM job_offer
+            """).fetchone()
+
+    finally:
+        vConnection.close()
+
+    # La colonne remote est de type TEXT depuis la version 1 du schéma.
+    assert vRow == ("1", "full", '["Python"]', "3 ans", 48000.0, "EUR", 3200)
+
+
+def test_migration_to_v9_computes_fingerprints(tmp_path):
+    """Vérifie le calcul de l'empreinte des offres déjà en base."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        for vMigration in MIGRATIONS[:8]:
+            vMigration(vConnection)
+
+        vConnection.execute("PRAGMA user_version = 8")
+        vConnection.execute("""
+            INSERT INTO job_offer (
+                source, source_id, first_seen_at, last_seen_at, title, company, location
+            )
+            VALUES ('adzuna', '1', '2026-10-01', '2026-10-01',
+                    'Développeur Java H/F', 'Acme SAS', 'Lille (59)')
+            """)
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    initialize_database(vDatabaseFile)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vFingerprint = vConnection.execute(
+            "SELECT fingerprint FROM job_offer"
+        ).fetchone()[0]
+
+    finally:
+        vConnection.close()
+
+    assert vFingerprint == "developpeur java|acme|lille"

@@ -50,6 +50,10 @@ def format_cell(pOffer, pKey):
     elif pKey == "application_status":
         rText = format_status(pOffer)
 
+    # Une offre publiée plusieurs fois liste toutes ses sources.
+    elif pKey == "source_label" and pOffer.get("source_labels"):
+        rText = ", ".join(pOffer["source_labels"])
+
     else:
         rText = str(pOffer.get(pKey) or "")
 
@@ -78,10 +82,15 @@ def get_cell_color(pOffer, pKey):
 
     vTone = None
 
-    if pKey == "contract":
+    # Une offre probablement expirée est grisée sur toute sa ligne.
+    if pOffer.get("is_expired"):
+        vTone = "muted"
+    elif pKey == "contract":
         vTone = CONTRACT_TONES.get(pOffer.get("contract"))
     elif pKey == "application_status":
         vTone = STATUS_TONES.get(pOffer.get("application_status"))
+    elif pKey == "source_label" and pOffer.get("needs_review"):
+        vTone = "warning"
 
     rColor = QColor(COLORS[vTone]) if vTone else None
 
@@ -149,6 +158,15 @@ class OffersTableModel(QAbstractTableModel):
 
             elif pRole == Qt.ItemDataRole.ToolTipRole and vKey == "title":
                 rData = vOffer.get("title")
+
+                if vOffer.get("is_expired"):
+                    rData = f"{rData or ''}\nProbablement expirée"
+
+                if vOffer.get("needs_review"):
+                    rData = (
+                        f"{rData or ''}\nÀ valider, différences entre annonces : "
+                        + ", ".join(vOffer["differences"])
+                    )
 
             elif pRole == Qt.ItemDataRole.ForegroundRole:
                 rData = get_cell_color(vOffer, vKey)

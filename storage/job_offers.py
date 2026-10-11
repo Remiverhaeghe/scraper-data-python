@@ -133,6 +133,18 @@ def save_offers(pDatabaseFile, pItems, pScrapedAt):
 # Statuts pour lesquels une relance reste pertinente
 FOLLOW_UP_STATUSES = ("APPLIED", "INTERVIEW")
 
+# Offre probablement expirée : lien vérifié comme retiré, date limite passée, ou
+# ni revue ni vérifiée disponible depuis le délai d'expiration. Une vérification
+# réussie compte comme une apparition récente.
+# COALESCE évite les valeurs NULL : en SQL, une comparaison avec NULL n'est ni
+# vraie ni fausse, et NOT(NULL) masquerait aussi les offres disponibles.
+EXPIRED_CONDITION = (
+    "(COALESCE(o.availability, '') = 'expired'"
+    " OR COALESCE(o.expires_at, '9999') < ?"
+    " OR MAX(o.last_seen_at, CASE WHEN o.availability = 'available'"
+    " THEN COALESCE(o.availability_checked_at, '') ELSE '' END) < ?)"
+)
+
 OFFERS_WITH_APPLICATION = """
         FROM job_offer o
         LEFT JOIN job_application a
@@ -154,6 +166,10 @@ def build_offer_conditions(
     pPublishedSince=None,
     pHasSalary=False,
     pKeys=None,
+    pAvailability=None,
+    pNow=None,
+    pExpiredBefore=None,
+    pFingerprint=None,
 ):
     """Construit les conditions SQL et leurs paramètres à partir des filtres.
 
@@ -220,6 +236,22 @@ def build_offer_conditions(
             vParams += [str(vValue) for vKey in pKeys for vValue in vKey]
         else:
             vConditions.append("0")
+
+    # pAvailability : available masque les offres probablement expirées, expired
+    # ne montre qu'elles ; pNow et pExpiredBefore en fixent les dates.
+    if pAvailability in ("available", "expired"):
+        vCondition = EXPIRED_CONDITION
+
+        if pAvailability == "available":
+            vCondition = f"NOT {EXPIRED_CONDITION}"
+
+        vConditions.append(vCondition)
+        vParams += [pNow.isoformat(), pExpiredBefore.isoformat()]
+
+    # Toutes les annonces d'une même offre, pour les comparer sur sa fiche
+    if pFingerprint is not None:
+        vConditions.append("o.fingerprint = ?")
+        vParams.append(pFingerprint)
 
     if pSeenSince is not None:
         vConditions.append("o.first_seen_at >= ?")
@@ -456,6 +488,25 @@ def count_offers_by_contract(pDatabaseFile):
         vConnection.close()
 
     return rCounts
+
+
+def set_availability(pDatabaseFile, pSource, pSourceId, pAvailability, pNow):
+    """Enregistre le résultat de la vérification du lien d'une offre."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vConnection.execute(
+            "UPDATE job_offer SET availability = ?, availability_checked_at = ?"
+            " WHERE source = ? AND source_id = ?",
+            (pAvailability, pNow.isoformat(), pSource, str(pSourceId)),
+        )
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    logger.info("Disponibilité vérifiée : %s %s, %s", pSource, pSourceId, pAvailability)
 
 
 def get_offer(pDatabaseFile, pSource, pSourceId):

@@ -32,8 +32,12 @@ from config import (
 )
 from job.contract import CONTRACT_TYPES
 from job.presentation import (
+    AVAILABILITY_FILTERS,
+    AVAILABILITY_LABELS,
+    AVAILABILITY_MESSAGES,
     CHART_PALETTE,
     CONTRACT_TONES,
+    DEFAULT_AVAILABILITY,
     EXECUTION_STATUS_LABELS,
     EXECUTION_TONES,
     FOLLOW_UP_FILTER,
@@ -57,12 +61,28 @@ from job.presentation import (
     safe_url,
     summarize_history,
 )
+from job.deduplication import (
+    COMPARED_FIELDS,
+    MERGED,
+    SEPARATE,
+    get_offer_group,
+    group_offers,
+)
+from job.preparation import prepare_application
+from job.profile import (
+    build_profile,
+    is_profile_empty,
+    load_profile,
+    profile_to_texts,
+    save_profile,
+)
 from job.quality import build_quality_export, get_quality_report
 from job.schedule import (
     describe_schedule_runs,
     describe_scheduled_search,
     format_interval,
     load_schedule,
+    request_immediate_run,
 )
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
@@ -88,7 +108,9 @@ from storage.job_applications import (
     record_follow_up,
     save_application,
 )
-from storage.job_offers import get_offer, get_offers
+from storage.duplicates import get_decisions, save_decision
+from storage.job_offers import get_offer, get_offers, set_availability
+from utils.link_checker import check_offer_link
 from utils.log_reader import (
     LEVEL_FILTERS,
     LEVEL_TONES,
@@ -487,12 +509,15 @@ def list_offers(
     pHasSalary: str = Query("", alias="has_salary"),
     pNew: str = Query("", alias="new"),
     pStatus: str = Query("", alias="status"),
+    pAvailability: str = Query(DEFAULT_AVAILABILITY, alias="availability"),
+    pMultiple: str = Query("", alias="multiple"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche la liste des offres, ou seulement le tableau pour une requête HTMX."""
 
     vNow = datetime.now()
-    vNewOfferDays = load_settings(pDatabaseFile)["new_offer_days"]
+    vSettings = load_settings(pDatabaseFile)
+    vNewOfferDays = vSettings["new_offer_days"]
     vNewSince = vNow - timedelta(days=vNewOfferDays)
 
     vFilters = build_offer_filters(
@@ -505,6 +530,8 @@ def list_offers(
         pStatus=pStatus,
         pNow=vNow,
         pNewOfferDays=vNewOfferDays,
+        pAvailability=pAvailability,
+        pExpiryDays=vSettings["expiry_days"],
         pMaxNetSalary=parse_amount(pMaxSalary),
         pPublishedDays=parse_published_days(pPublished),
         pHasSalary=bool(pHasSalary),
@@ -512,15 +539,24 @@ def list_offers(
 
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
 
+    # Les annonces d'une même offre sont regroupées en une seule ligne.
+    vGrouped = group_offers(
+        [
+            prepare_offer(vOffer, vNewSince, vNow, vSettings["expiry_days"])
+            for vOffer in vOffers.head(MAX_DISPLAYED_OFFERS).to_dict("records")
+        ],
+        get_decisions(pDatabaseFile),
+    )
+
+    if pMultiple:
+        vGrouped = [vOffer for vOffer in vGrouped if vOffer["duplicates"]]
+
     vContext = {
         "active_page": "offers",
         "contract_tones": CONTRACT_TONES,
         "status_tones": STATUS_TONES,
         "max_benefit_badges": MAX_BENEFIT_BADGES,
-        "offers": [
-            prepare_offer(vOffer, vNewSince)
-            for vOffer in vOffers.head(MAX_DISPLAYED_OFFERS).to_dict("records")
-        ],
+        "offers": vGrouped,
         "is_truncated": len(vOffers) > MAX_DISPLAYED_OFFERS,
         "max_offers": MAX_DISPLAYED_OFFERS,
         "sources": SOURCES,
@@ -528,7 +564,10 @@ def list_offers(
         "statuses": STATUS_LABELS,
         "follow_up_filter": FOLLOW_UP_FILTER,
         "published_periods": PUBLISHED_PERIODS,
+        "availability_filters": AVAILABILITY_FILTERS,
         "filters": {
+            "availability": pAvailability,
+            "multiple": pMultiple,
             "q": pSearch,
             "source": pSource,
             "contract": pContract,
@@ -594,16 +633,27 @@ def show_offer(
 
     vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
 
-    vNewSince = datetime.now() - timedelta(
-        days=load_settings(pDatabaseFile)["new_offer_days"]
-    )
+    vSettings = load_settings(pDatabaseFile)
+    vNewSince = datetime.now() - timedelta(days=vSettings["new_offer_days"])
+
+    def prepare(pOffer):
+        """Met en forme une annonce comme dans la liste des offres."""
+        rOffer = prepare_offer(pOffer, vNewSince, pExpiryDays=vSettings["expiry_days"])
+
+        return rOffer
+
+    vPrepared = prepare(vOffer)
 
     rResponse = templates.TemplateResponse(
         request,
         "offer.html",
         {
             "active_page": "offers",
-            "offer": prepare_offer(vOffer, vNewSince),
+            "availability_labels": AVAILABILITY_LABELS,
+            "offer": vPrepared,
+            "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
+            "preparation": build_preparation(pDatabaseFile, vPrepared),
+            "compared_fields": COMPARED_FIELDS,
             "application": get_application(pDatabaseFile, pSource, pSourceId),
             "statuses": STATUS_LABELS,
             "message": None,
@@ -687,6 +737,73 @@ def add_follow_up(
 
 # Qualité des données et journaux : lecture seule, sauf la remise à zéro des
 # journaux, protégée par le jeton CSRF.
+@app.post(
+    "/offer/availability",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def check_availability(
+    pSource: str = Form(..., alias="source"),
+    pSourceId: str = Form(..., alias="id"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Vérifie le lien de l'offre et renvoie le résultat à insérer dans la fiche."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    vAvailability = check_offer_link(vOffer.get("url") or "")
+
+    if vAvailability is not None:
+        set_availability(
+            pDatabaseFile, pSource, pSourceId, vAvailability, datetime.now()
+        )
+
+    rResponse = HTMLResponse(AVAILABILITY_MESSAGES[vAvailability])
+
+    return rResponse
+
+
+@app.post("/offer/duplicates", dependencies=[Depends(require_csrf)])
+def decide_duplicates(
+    pSource: str = Form(..., alias="source"),
+    pSourceId: str = Form(..., alias="id"),
+    pDecision: str = Form(..., alias="decision"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Fusionne ou sépare les annonces d'une offre, puis revient à sa fiche."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+
+    if pDecision not in (MERGED, SEPARATE) or not vOffer.get("fingerprint"):
+        raise HTTPException(status_code=400, detail="Décision invalide.")
+
+    save_decision(pDatabaseFile, vOffer["fingerprint"], pDecision, datetime.now())
+
+    rResponse = RedirectResponse(
+        f"{app.url_path_for('show_offer')}?source={quote(pSource)}"
+        f"&id={quote(pSourceId)}",
+        status_code=303,
+    )
+
+    return rResponse
+
+
+@app.post(
+    "/search/run", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+def request_search(pDatabaseFile: str = Depends(get_database_file)):
+    """Demande au planificateur de lancer la recherche enregistrée."""
+
+    vErrors = request_immediate_run(pDatabaseFile, datetime.now())
+
+    rResponse = HTMLResponse(
+        " ".join(vErrors)
+        or "Recherche demandée : le planificateur la lance dans la minute. "
+        "Les nouvelles offres apparaîtront ensuite dans la liste."
+    )
+
+    return rResponse
+
+
 @app.get("/quality", response_class=HTMLResponse)
 def show_quality(
     request: Request,
@@ -892,6 +1009,80 @@ def render_settings(
         },
         status_code=pStatusCode,
     )
+
+    return rResponse
+
+
+def build_preparation(pDatabaseFile, pOffer):
+    """Prépare la candidature pour une offre, ou None tant que le profil est vide."""
+
+    vProfile = load_profile(pDatabaseFile)
+
+    rPreparation = (
+        None if is_profile_empty(vProfile) else prepare_application(vProfile, pOffer)
+    )
+
+    return rPreparation
+
+
+def render_profile(pRequest, pTexts, pMessage=None, pStatusCode=200):
+    """Affiche le formulaire du profil avec les textes donnés."""
+
+    rResponse = templates.TemplateResponse(
+        pRequest,
+        "profile.html",
+        {"active_page": "profile", "profile": pTexts, "message": pMessage},
+        status_code=pStatusCode,
+    )
+
+    return rResponse
+
+
+@app.get("/profile", response_class=HTMLResponse)
+def show_profile(request: Request, pDatabaseFile: str = Depends(get_database_file)):
+    """Affiche le profil du candidat."""
+
+    rResponse = render_profile(request, profile_to_texts(load_profile(pDatabaseFile)))
+
+    return rResponse
+
+
+@app.post("/profile", response_class=HTMLResponse, dependencies=[Depends(require_csrf)])
+def update_profile(
+    request: Request,
+    pName: str = Form("", alias="name"),
+    pHeadline: str = Form("", alias="headline"),
+    pSkills: str = Form("", alias="skills"),
+    pExperiences: str = Form("", alias="experiences"),
+    pCvVariants: str = Form("", alias="cv_variants"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre le profil saisi, ou réaffiche le formulaire avec l'erreur."""
+
+    vTexts = {
+        "name": pName,
+        "headline": pHeadline,
+        "skills": pSkills,
+        "experiences": pExperiences,
+        "cv_variants": pCvVariants,
+    }
+
+    try:
+        vProfile = build_profile(pName, pHeadline, pSkills, pExperiences, pCvVariants)
+
+    except ValueError as vException:
+        rResponse = render_profile(request, vTexts, str(vException), 400)
+
+    else:
+        save_profile(pDatabaseFile, vProfile)
+
+        rResponse = render_profile(
+            request,
+            profile_to_texts(vProfile),
+            f"Profil enregistré : {len(vProfile['skills'])} compétence(s), "
+            f"{len(vProfile['experiences'])} expérience(s), "
+            f"{len(vProfile['cv_variants'])} CV.",
+        )
 
     return rResponse
 

@@ -22,7 +22,11 @@
             suivez vos candidatures et n'oubliez plus aucune relance.
         </p>
         <div class="banner-actions">
-            <a class="button button-banner" href="{{ url_for('list_offers').path }}">
+            {# Le planificateur exécute la demande : le web ne lance pas lui-même de recherche longue. #}
+            <form hx-post="{{ url_for('request_search').path }}" hx-target="#search-request" hx-swap="innerHTML">
+                <button class="button button-banner" type="submit">{{ icon("search", 16) }} Lancer la recherche enregistrée</button>
+            </form>
+            <a class="button" href="{{ url_for('list_offers').path }}">
                 Consulter les offres {{ icon("arrow-right", 16) }}
             </a>
             <a class="button" href="{{ url_for('list_offers').path }}?status={{ follow_up_filter }}">
@@ -32,6 +36,7 @@
                 {{ icon("history", 16) }} Historique
             </a>
         </div>
+        <p id="search-request" class="banner-message" role="status"></p>
     </div>
     <div class="banner-icons">
         {{ icon("search", 46) }}{{ icon("briefcase", 46) }}{{ icon("bell-ring", 46) }}

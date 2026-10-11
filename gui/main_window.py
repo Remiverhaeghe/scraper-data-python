@@ -23,6 +23,7 @@ from gui.home_page import HomePage
 from gui.logs_page import LogsPage
 from gui.icons import get_icon
 from gui.offers_page import OffersPage
+from gui.profile_page import ProfilePage
 from gui.quality_page import QualityPage
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
@@ -88,6 +89,7 @@ class MainWindow(QMainWindow):
         self.add_page("home", "Accueil", "house", self.home_page)
         self.add_page("search", "Recherche", "search", self.search_page)
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
+        self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
         self.add_page("quality", "Qualité", "list-checks", QualityPage(vDatabaseFile))
         self.add_page("logs", "Journaux", "terminal", LogsPage())

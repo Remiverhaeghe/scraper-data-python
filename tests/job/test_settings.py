@@ -54,6 +54,7 @@ def test_load_settings_returns_defaults(database_file):
         "net_salary_percent": 75,
         "income_tax_rate": 0,
         "new_offer_days": 3,
+        "expiry_days": 30,
         "follow_up_days": 7,
     }
 

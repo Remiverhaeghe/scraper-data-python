@@ -74,7 +74,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 : reprise des offres, v6 : recherches enregistrées)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -162,6 +162,9 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Qualité des données : remplissage par champ et par source, export des offres à vérifier
 - [x] Journaux : consultation filtrée, téléchargement et remise à zéro
 - [x] Réinitialisation des données après confirmation, base sauvegardée avant
+- [x] Profil du candidat et préparation de candidature : correspondance, CV, entretien, lettre
+- [x] Offres regroupées quand elles sont publiées plusieurs fois, différences à valider
+- [x] Offres probablement expirées masquées, vérification du lien à la demande
 
 ### 🌐 Tableau de bord web
 
@@ -186,6 +189,9 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Adapté au téléphone : menu compact défilant, cartes et formulaires sur une colonne
 - [x] Graphiques avec libellés d'axes et état vide explicite
 - [x] Qualité des données, journaux et réinitialisation, comme sur le bureau
+- [x] Profil, préparation de candidature, offres regroupées et expirées, comme sur le bureau
+- [x] Lancement de la recherche enregistrée, exécutée par le planificateur
+- [x] Installable sur l'écran d'accueil d'un téléphone (manifeste web)
 
 ### 🔐 Sécurité
 
@@ -221,44 +227,44 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 
 ### Offres en double et offres multi-sources
 
-- [ ] Empreinte de chaque offre : titre, entreprise et ville normalisés (minuscules, sans accents, sans mentions comme « H/F » ou « (m/w/d) »)
-- [ ] Regroupement des offres de même empreinte en une seule offre, avec la liste de ses sources (offre « multi-sources »)
-- [ ] Comparaison des annonces d'un groupe : salaire, contrat, lieu ou télétravail différents signalés
-- [ ] Validation manuelle des différences avant fusion, depuis la fiche de l'offre
-- [ ] Indicateur « multi-sources » dans la liste des offres et filtre dédié
+- [x] Empreinte de chaque offre : titre, entreprise et ville normalisés (minuscules, sans accents, sans mentions comme « H/F » ou « (m/w/d) »)
+- [x] Regroupement des offres de même empreinte en une seule offre, avec la liste de ses sources (offre « multi-sources »)
+- [x] Comparaison des annonces d'un groupe : salaire, contrat, lieu ou télétravail différents signalés
+- [x] Validation manuelle des différences avant fusion, depuis la fiche de l'offre
+- [x] Indicateur « multi-sources » dans la liste des offres et filtre dédié
 
 ### Offres qui ne sont plus disponibles
 
-- [ ] Offre absente des recherches depuis N jours : marquée « probablement expirée » (date `last_seen_at` déjà enregistrée)
-- [ ] Vérification ponctuelle du lien de l'offre : une page introuvable (404, 410) ou une redirection vers la liste des offres indique une offre retirée
-- [ ] Date limite de candidature fournie par certaines sources, utilisée lorsqu'elle existe
-- [ ] Offres expirées masquées par défaut, avec un filtre pour les revoir
+- [x] Offre absente des recherches depuis N jours : marquée « probablement expirée » (date `last_seen_at` déjà enregistrée)
+- [x] Vérification ponctuelle du lien de l'offre : une page introuvable (404, 410) ou une redirection vers la liste des offres indique une offre retirée
+- [x] Date limite de candidature fournie par certaines sources, utilisée lorsqu'elle existe
+- [x] Offres expirées masquées par défaut, avec un filtre pour les revoir
 
 ### Données plus complètes
 
-- [ ] Enrichissement à partir de la description : télétravail, compétences, expérience, salaire, contrat
-- [ ] Rejet des offres inexploitables (ni titre ni description), compté dans la qualité des données
+- [x] Enrichissement à partir de la description : télétravail, compétences, expérience, salaire, contrat
+- [x] Rejet des offres inexploitables (ni titre ni description), compté dans la qualité des données
 - [ ] Analyse des offres exportées depuis « Qualité des données » pour ajouter des règles de découpage
 
 ### Aide à la candidature, à base de règles et sans service payant
 
-- [ ] Profil : compétences, expériences et variantes de CV
-- [ ] Correspondance avec l'offre : compétences couvertes et manquantes, score
-- [ ] CV conseillé selon l'offre
-- [ ] Préparation d'entretien : expériences à citer, questions à poser
-- [ ] Brouillon de lettre de motivation
+- [x] Profil : compétences, expériences et variantes de CV
+- [x] Correspondance avec l'offre : compétences couvertes et manquantes, score
+- [x] CV conseillé selon l'offre
+- [x] Préparation d'entretien : expériences à citer, questions à poser
+- [x] Brouillon de lettre de motivation
 
 ### Utilisation depuis un téléphone
 
-- [ ] Accès au tableau de bord web à distance sans ouvrir de port sur Internet, par un réseau privé (Tailscale, offre gratuite personnelle)
-- [ ] Lancement d'une recherche depuis le web, avec la même file d'exécution que le planificateur
-- [ ] Application installable sur l'écran d'accueil (manifeste web et icône)
+- [x] Accès au tableau de bord web à distance sans ouvrir de port sur Internet, par un réseau privé (procédure Tailscale ci-dessous)
+- [x] Lancement d'une recherche depuis le web, avec la même file d'exécution que le planificateur
+- [x] Application installable sur l'écran d'accueil (manifeste web et icône)
 
 ### Hébergement et sécurité
 
 - [ ] Docker sur ce PC avant le NAS : conteneur sans privilèges, utilisateur non root, système de fichiers en lecture seule hors données, port lié à 127.0.0.1
 - [ ] Mises à jour des dépendances surveillées (Dependabot) et analyse de vulnérabilités (pip-audit) en CI
-- [ ] Analyse statique de sécurité du code (CodeQL ou Bandit) en CI
+- [x] Analyse statique de sécurité du code en CI (Bandit)
 - [ ] Politique de sécurité (SECURITY.md) et actions GitHub épinglées par empreinte
 - [ ] En-têtes HTTP de sécurité sur le web : Content-Security-Policy, X-Frame-Options, Referrer-Policy
 - [ ] Sauvegarde automatique de la base avant chaque migration et rotation des sauvegardes
@@ -267,9 +273,28 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 
 - [ ] Tableau de suivi des candidatures par colonnes (à postuler, postulé, entretien, réponse)
 - [ ] Rappels de relance par e-mail, avec la recherche planifiée
-- [ ] Statistiques de candidature : taux de réponse par source et par type de poste
+- [ ] Statistiques de candidature : taux de réponse par source, par type de poste et par société
 - [ ] Liste d'entreprises à exclure ou à privilégier
 - [ ] Notes et pièces jointes (CV envoyé) par candidature
+- [ ] Emettre un message en orange quand déjà postulé ou canditure en cours dans une société 
+
+---
+
+## 📱 Accès depuis un téléphone
+
+Le tableau de bord web s'adapte au téléphone et peut s'installer sur l'écran d'accueil
+(menu du navigateur, « Ajouter à l'écran d'accueil »). Pour y accéder hors de chez soi
+sans exposer ce PC sur Internet, un réseau privé chiffré relie le téléphone au PC :
+
+1. Installer Tailscale (offre gratuite personnelle) sur le PC et sur le téléphone, avec le même compte.
+2. Sur le PC, lancer le tableau de bord en écoutant sur l'adresse Tailscale du PC (100.x.y.z,
+   visible dans l'application Tailscale) : modifier `WEB_HOST` dans `config.py`, ou
+   lancer `uvicorn web.app:app --host 100.x.y.z --port 8000`.
+3. Depuis le téléphone, ouvrir `http://100.x.y.z:8000`, puis se connecter.
+
+Aucun port n'est ouvert sur la box : seuls les appareils de votre compte Tailscale
+atteignent le PC. L'authentification du tableau de bord reste obligatoire. Pour lancer une
+recherche depuis le téléphone, le planificateur (`python -m scheduler`) doit tourner sur le PC.
 
 ---
 
@@ -296,6 +321,11 @@ scraper-data-python/
 │   ├── settings.py                            # Réglages de calcul modifiables et recalcul du net
 │   ├── export.py                              # Export des offres en CSV, Excel et JSON
 │   ├── quality.py                             # Remplissage des champs et offres à vérifier
+│   ├── enrichment.py                          # Complète les offres depuis leur description
+│   ├── fingerprint.py                         # Empreinte titre, entreprise et ville d'une offre
+│   ├── deduplication.py                       # Regroupe les annonces d'une même offre
+│   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
+│   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
 │   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
 │   ├── notification.py                        # Contenu des e-mails de nouvelles offres
 │   │
@@ -404,6 +434,7 @@ scraper-data-python/
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
 │   ├── quality_page.py                        # Qualité des données et offres à vérifier
+│   ├── profile_page.py                        # Saisie du profil du candidat
 │   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
 │   ├── dialogs.py                             # Fenêtres des mentions légales et de la licence
 │   ├── chart.py                               # Histogramme et camembert dessinés avec QPainter
@@ -435,6 +466,7 @@ scraper-data-python/
 │   │   ├── history.html                       # Historique des exécutions
 │   │   ├── logs.html                          # Consultation des logs
 │   │   ├── quality.html                       # Qualité des données
+│   │   ├── profile.html                       # Profil du candidat
 │   │   ├── settings.html                      # Thème, règles de calcul et état des sources
 │   │   ├── legal.html                         # Mentions légales
 │   │   ├── login.html                         # Connexion au tableau de bord
@@ -443,6 +475,9 @@ scraper-data-python/
 │   └── static/                                # Fichiers statiques
 │       ├── style.css                          # Feuille de style, thèmes clair et sombre
 │       ├── theme.js                           # Applique et mémorise le thème choisi
+│       ├── manifest.webmanifest               # Installation sur l'écran d'accueil d'un téléphone
+│       ├── icon-192.png                       # Icône de l'écran d'accueil
+│       ├── icon-512.png                       # Icône de l'écran d'accueil, grande taille
 │       └── htmx.min.js                        # HTMX 2.0.4, copie locale
 │
 ├── assets/                                    # Ressources partagées par le bureau et le web
@@ -454,6 +489,7 @@ scraper-data-python/
 │   ├── helpers.py                             # Fonctions utilitaires génériques
 │   ├── logger.py                              # Logs : un fichier par jour, purge automatique
 │   ├── log_reader.py                          # Lecture et filtrage des logs pour l'affichage
+│   ├── link_checker.py                        # Vérifie si le lien d'une offre est encore en ligne
 │   ├── api_client.py                          # Appels sécurisés aux API des sources
 │   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
 │   └── security.py                            # Contrôles de sécurité du scraper
@@ -471,6 +507,7 @@ scraper-data-python/
 │   ├── settings_repository.py                 # Persiste les réglages modifiables
 │   ├── maintenance.py                         # Sauvegarde et réinitialisation de la base
 │   ├── saved_searches.py                      # Recherches enregistrées
+│   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
 │   └── job_offers.py                          # Enregistre les offres et détecte les nouvelles
 │
 ├── tests/                                     # Ensemble des tests automatisés
@@ -490,6 +527,9 @@ scraper-data-python/
 │   │   ├── test_schedule.py                   # Teste les réglages et l'échéance de la planification
 │   │   ├── test_notification.py               # Teste le contenu et l'échappement des e-mails
 │   │   ├── test_quality.py                    # Teste l'analyse de qualité et son export
+│   │   ├── test_enrichment.py                 # Teste l'enrichissement depuis la description
+│   │   ├── test_deduplication.py              # Teste l'empreinte et le regroupement des annonces
+│   │   ├── test_preparation.py                # Teste le profil et la préparation de candidature
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
@@ -579,6 +619,7 @@ scraper-data-python/
 │   │   ├── test_history_page.py                # Teste la page de l'historique
 │   │   ├── test_logs_page.py                   # Teste la page des logs
 │   │   ├── test_quality_page.py                # Teste la page de qualité des données
+│   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
 │   │   ├── test_main_window.py                 # Teste la navigation et l'état du menu
@@ -626,6 +667,7 @@ scraper-data-python/
 │   ├── test_history_service.py                 # Teste le service d'historique
 │   ├── test_logger.py                          # Teste le fichier du jour et la purge
 │   ├── test_log_reader.py                      # Teste la lecture et les filtres des logs
+│   ├── test_link_checker.py                    # Teste la vérification du lien des offres
 │   ├── test_mailer.py                          # Teste l'envoi d'e-mails, serveur simulé
 │   ├── test_main.py                            # Teste le point d'entrée principal
 │   └── test_security.py                        # Teste les contrôles de sécurité

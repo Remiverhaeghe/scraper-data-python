@@ -1,0 +1,15 @@
+{
+  "name": "JobBoard Perso",
+  "short_name": "JobBoard",
+  "description": "Offres, candidatures et relances au même endroit",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#1769e0",
+  "icons": [
+    { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

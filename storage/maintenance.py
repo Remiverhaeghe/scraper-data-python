@@ -20,6 +20,7 @@ RESET_TABLES = (
     "history",
     "app_setting",
     "saved_search",
+    "duplicate_decision",
 )
 
 

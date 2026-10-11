@@ -11,7 +11,7 @@ from job.schedule import (
     save_schedule_options,
     save_scheduled_search,
 )
-from storage.job_offers import save_offers
+from storage.job_offers import get_offer, save_offers, set_availability
 from web.app import (
     app,
     build_bar_chart,
@@ -65,7 +65,7 @@ def client(tmp_path, web_login):
                     )
                 ]
             ),
-            datetime.now() - timedelta(days=30),
+            datetime.now() - timedelta(days=20),
         )
 
         save_offers(
@@ -655,3 +655,138 @@ def test_offers_show_colored_badges(client):
 
     assert 'badge-first badge-warning">CDD</span>' in vText
     assert 'badge badge-muted">13e mois</span>' in vText
+
+
+def test_expired_offers_are_hidden_by_default(client, tmp_path):
+    """Vérifie le masquage par défaut, le filtre et le badge des offres retirées."""
+
+    set_availability(
+        tmp_path / "scraper.db", "adzuna", "new", "expired", datetime.now()
+    )
+
+    vDefault = client.get("/offers").text
+    vExpired = client.get("/offers?availability=expired").text
+
+    assert "Développeur Python new" not in vDefault
+    assert "Développeur Python new" in vExpired
+    assert "Probablement expirée" in vExpired
+
+
+@pytest.mark.parametrize(
+    "pResult, pMessage, pSaved",
+    [
+        ("available", "toujours en ligne", "available"),
+        (None, "n'a pas permis de conclure", None),
+    ],
+)
+def test_check_availability(client, tmp_path, monkeypatch, pResult, pMessage, pSaved):
+    """Vérifie le message renvoyé et l'enregistrement du seul résultat net."""
+
+    monkeypatch.setattr("web.app.check_offer_link", lambda pUrl: pResult)
+
+    vResponse = client.post(
+        "/offer/availability", data={"source": "adzuna", "id": "new"}
+    )
+
+    assert pMessage in vResponse.text
+    assert get_offer(tmp_path / "scraper.db", "adzuna", "new")["availability"] == pSaved
+
+
+def test_duplicate_offers_are_grouped_and_decided(client, tmp_path):
+    """Vérifie le regroupement, la comparaison sur la fiche et la décision."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                build_offer(
+                    "dup1", title="Data Analyst", fingerprint="data|acme|lille"
+                ),
+                build_offer(
+                    "dup2",
+                    source="jooble",
+                    title="Data Analyst",
+                    contract="CDD",
+                    fingerprint="data|acme|lille",
+                ),
+            ]
+        ),
+        datetime.now(),
+    )
+
+    vList = client.get("/offers?multiple=1").text
+    vOffer = client.get("/offer?source=adzuna&id=dup1").text
+
+    assert vList.count("Data Analyst") == 1
+    assert "2 annonces" in vList
+    assert "À valider" in vList
+    assert "Annonces de cette offre" in vOffer
+    assert "Différences : Contrat" in vOffer
+
+    vResponse = client.post(
+        "/offer/duplicates",
+        data={"source": "adzuna", "id": "dup1", "decision": "separate"},
+        follow_redirects=False,
+    )
+
+    assert vResponse.status_code == 303
+    assert client.get("/offers").text.count("Data Analyst") == 2
+    assert (
+        client.post(
+            "/offer/duplicates",
+            data={"source": "adzuna", "id": "dup1", "decision": "autre"},
+        ).status_code
+        == 400
+    )
+
+
+def test_profile_page_and_offer_preparation(client):
+    """Vérifie l'enregistrement du profil et la préparation affichée sur la fiche."""
+
+    vEmpty = client.get("/offer?source=adzuna&id=new").text
+
+    vSaved = client.post(
+        "/profile",
+        data={
+            "skills": "Python, Django",
+            "experiences": "Développeur | Python | Livré une API",
+            "cv_variants": "CV Python | Python, Django",
+        },
+    )
+    vOffer = client.get("/offer?source=adzuna&id=new").text
+
+    assert "Renseignez d'abord vos compétences" in vEmpty
+    assert "Profil enregistré : 2 compétence(s)" in vSaved.text
+    assert "CV conseillé : <strong>CV Python</strong>" in vOffer
+    assert "Brouillon de lettre de motivation" in vOffer
+    assert client.post("/profile", data={"skills": "x" * 30000}).status_code == 400
+
+
+def test_dashboard_requests_a_search(client):
+    """Vérifie la demande de recherche transmise au planificateur."""
+
+    vRefused = client.post("/search/run").text
+
+    save_scheduled_search(
+        client.app.dependency_overrides[get_database_file](), ["remotive"], {}
+    )
+
+    vAccepted = client.post("/search/run").text
+
+    assert "Enregistrez d'abord une recherche" in vRefused
+    assert "le planificateur la lance dans la minute" in vAccepted
+    assert "Lancer la recherche enregistrée" in client.get("/").text
+
+
+def test_manifest_and_icons_are_public(client):
+    """Vérifie que le manifeste d'installation est servi, même sans session."""
+
+    client.cookies.clear()
+
+    vManifest = client.get("/static/manifest.webmanifest")
+
+    assert vManifest.status_code == 200
+    assert vManifest.json()["display"] == "standalone"
+    assert client.get("/static/icon-192.png").status_code == 200

@@ -46,3 +46,6 @@ NEW_OFFER_DAYS = 3
 
 # Délai par défaut avant de relancer une candidature, en jours
 FOLLOW_UP_DAYS = 7
+
+# Une offre absente des recherches depuis ce nombre de jours est probablement expirée
+EXPIRY_DAYS = 30

@@ -1,0 +1,151 @@
+"""Tests du profil du candidat et de la préparation des candidatures"""
+
+import pytest
+
+from job.preparation import (
+    build_questions,
+    get_offer_skills,
+    match_profile,
+    prepare_application,
+    recommend_cv,
+)
+from job.profile import (
+    MAX_TEXT_LENGTH,
+    build_profile,
+    is_profile_empty,
+    load_profile,
+    profile_to_texts,
+    save_profile,
+)
+from storage.database import initialize_database
+
+EXPERIENCES = (
+    "Développeur backend | Java, Spring, SQL | Réduit de 40 % le temps de réponse\n"
+    "\n"
+    "Tech lead | Docker, Java | Mis en place l'intégration continue"
+)
+
+
+@pytest.fixture
+def profile():
+    """Construit un profil complet à partir des textes saisis."""
+
+    rProfile = build_profile(
+        "Rémi V.",
+        "Développeur Java depuis 5 ans.",
+        "Java, Spring, SQL, Docker, java",
+        EXPERIENCES,
+        "CV Java backend | Java, Spring, SQL\nCV Data | Python, SQL",
+    )
+
+    return rProfile
+
+
+def test_build_profile_parses_lines(profile):
+    """Vérifie le découpage des listes et des lignes, doublons et lignes vides exclus."""
+
+    assert profile["skills"] == ["Java", "Spring", "SQL", "Docker"]
+    assert profile["experiences"][1] == {
+        "title": "Tech lead",
+        "skills": ["Docker", "Java"],
+        "achievement": "Mis en place l'intégration continue",
+    }
+    assert len(profile["experiences"]) == 2
+    assert profile["cv_variants"][1]["skills"] == ["Python", "SQL"]
+
+
+def test_profile_round_trip(tmp_path, profile):
+    """Vérifie l'enregistrement puis la relecture du profil et de ses textes."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    assert is_profile_empty(load_profile(vDatabaseFile))
+
+    save_profile(vDatabaseFile, profile)
+    vTexts = profile_to_texts(load_profile(vDatabaseFile))
+
+    assert vTexts["experiences"].splitlines()[0] == (
+        "Développeur backend | Java, Spring, SQL | Réduit de 40 % le temps de réponse"
+    )
+    assert build_profile(
+        vTexts["name"],
+        vTexts["headline"],
+        vTexts["skills"],
+        vTexts["experiences"],
+        vTexts["cv_variants"],
+    ) == load_profile(vDatabaseFile)
+
+
+def test_build_profile_rejects_huge_text():
+    """Vérifie le refus d'un champ démesuré."""
+
+    with pytest.raises(ValueError):
+        build_profile("", "", "x" * (MAX_TEXT_LENGTH + 1), "", "")
+
+
+def test_match_and_recommendation(profile):
+    """Vérifie les compétences couvertes, manquantes, le score et le CV conseillé."""
+
+    vOfferSkills = get_offer_skills(
+        {"skills": '["Kafka"]', "description": "Java, Spring Boot et Docker"}
+    )
+
+    vMatch = match_profile(profile, vOfferSkills)
+
+    assert vOfferSkills == ["Kafka", "Java", "Spring", "Docker"]
+    assert vMatch == {
+        "covered": ["Java", "Spring", "Docker"],
+        "missing": ["Kafka"],
+        "score": 75,
+    }
+    assert recommend_cv(profile, vOfferSkills) == {
+        "name": "CV Java backend",
+        "matching": 2,
+    }
+    assert match_profile(profile, [])["score"] is None
+
+
+@pytest.mark.parametrize(
+    "pOffer, pExpected",
+    [
+        ({}, ["rémunération", "télétravail", "type de contrat"]),
+        ({"contract": "CDD", "remote": True, "salary_label": "45k"}, ["CDI"]),
+        ({"contract": "CDI", "remote": False, "salary_net_monthly_min": 3000}, []),
+    ],
+)
+def test_build_questions(pOffer, pExpected):
+    """Vérifie les questions ajoutées selon ce que l'offre ne précise pas."""
+
+    vSpecific = build_questions(pOffer)[: len(pExpected)]
+
+    assert all(vWord in vQuestion for vWord, vQuestion in zip(pExpected, vSpecific))
+    assert len(build_questions(pOffer)) == len(pExpected) + 3
+
+
+def test_prepare_application(profile):
+    """Vérifie l'entretien et la lettre préparés pour une offre."""
+
+    vPreparation = prepare_application(
+        profile,
+        {
+            "title": "Développeur Java H/F",
+            "company": "Acme",
+            "contract": "CDI",
+            "description": "Java, Kafka",
+        },
+    )
+    vLetter = vPreparation["letter"]
+
+    assert vPreparation["interview"]["strengths"][0] == {
+        "skill": "Java",
+        "examples": [
+            "Développeur backend : Réduit de 40 % le temps de réponse",
+            "Tech lead : Mis en place l'intégration continue",
+        ],
+    }
+    assert vPreparation["interview"]["gaps"][0].startswith("Kafka :")
+    assert "« Développeur Java » chez Acme" in vLetter
+    assert "En tant que développeur backend, j'ai par exemple réduit" in vLetter
+    assert vLetter.endswith("Rémi V.")

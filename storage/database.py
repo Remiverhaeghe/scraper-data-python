@@ -1,5 +1,7 @@
 """Gestion de la connexion et des migrations de la base SQLite"""
 
+import json
+import math
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -244,6 +246,149 @@ def migrate_to_v6(pConnection):
         """)
 
 
+def migrate_to_v7(pConnection):
+    """Complète les offres déjà en base à partir de leur description.
+
+    Même enrichissement que les nouvelles recherches : télétravail, compétences,
+    expérience et salaire, uniquement pour les champs encore vides. Le net des
+    salaires trouvés est calculé avec les règles enregistrées. Tout passe par la
+    connexion de la migration : une seconde connexion attendrait son verrou.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    import pandas as pd
+
+    from job.enrichment import ENRICHED_COLUMNS, TEXT_COLUMNS, enrich_offer
+    from config import NET_SALARY_RATIO
+    from job.salary import add_net_salary, get_income_tax_rate
+
+    vColumns = ["source", "source_id", *TEXT_COLUMNS, *ENRICHED_COLUMNS]
+    vColumns = list(dict.fromkeys(vColumns))
+    # Colonnes issues des constantes TEXT_COLUMNS et ENRICHED_COLUMNS.
+    vCursor = pConnection.execute(
+        f"SELECT {', '.join(vColumns)} FROM job_offer"  # nosec B608
+    )
+    vOffers = [dict(zip(vColumns, vRow)) for vRow in vCursor.fetchall()]
+
+    vUpdated = []
+
+    for vOffer in vOffers:
+        vText = " ".join(str(vOffer.get(vColumn) or "") for vColumn in TEXT_COLUMNS)
+
+        if enrich_offer(vOffer, vText):
+            vUpdated.append(vOffer)
+
+    if vUpdated:
+        # Réglages lus directement : passer par job.settings créerait une
+        # dépendance circulaire entre le stockage et le métier.
+        vValues = dict(pConnection.execute("SELECT key, value FROM app_setting"))
+        vNetPercent = float(vValues.get("net_salary_percent", NET_SALARY_RATIO * 100))
+        vTaxRate = float(vValues.get("income_tax_rate", get_income_tax_rate() or 0))
+
+        vItems = add_net_salary(
+            pd.DataFrame(vUpdated),
+            pNetRatio=vNetPercent / 100,
+            pTaxRate=vTaxRate or None,
+        )
+
+        vSetColumns = [*ENRICHED_COLUMNS, *NET_COLUMNS]
+
+        pConnection.executemany(
+            "UPDATE job_offer SET "  # nosec B608
+            + ", ".join(f"{vColumn} = ?" for vColumn in vSetColumns)
+            + " WHERE source = ? AND source_id = ?",
+            [
+                (
+                    *(to_storage(vRow[vColumn]) for vColumn in vSetColumns),
+                    vRow["source"],
+                    vRow["source_id"],
+                )
+                for vRow in vItems.to_dict("records")
+            ],
+        )
+
+    logger.info("Reprise des offres : %s offre(s) complétée(s)", len(vUpdated))
+
+
+def migrate_to_v8(pConnection):
+    """Ajoute la date limite fournie par la source et la vérification du lien."""
+
+    # availability : NULL tant que le lien n'a pas été vérifié, puis available ou
+    # expired selon la réponse du site de l'offre.
+    for vColumn in ("expires_at", "availability", "availability_checked_at"):
+        pConnection.execute(f"ALTER TABLE job_offer ADD COLUMN {vColumn} TEXT")
+
+
+def migrate_to_v9(pConnection):
+    """Ajoute l'empreinte des offres et les décisions sur les offres multi-sources."""
+
+    # pylint: disable=import-outside-toplevel
+    from job.fingerprint import build_fingerprint
+
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN fingerprint TEXT")
+    pConnection.execute(
+        "CREATE INDEX idx_job_offer_fingerprint ON job_offer(fingerprint)"
+    )
+
+    # Décision prise sur un groupe d'annonces : merged pour une seule offre
+    # malgré leurs différences, separate pour les garder distinctes.
+    pConnection.execute("""
+        CREATE TABLE duplicate_decision (
+            fingerprint TEXT PRIMARY KEY,
+            decision TEXT NOT NULL,
+            decided_at TEXT NOT NULL
+        )
+        """)
+
+    vRows = pConnection.execute(
+        "SELECT source, source_id, title, company, location FROM job_offer"
+    ).fetchall()
+
+    pConnection.executemany(
+        "UPDATE job_offer SET fingerprint = ? WHERE source = ? AND source_id = ?",
+        [
+            (
+                build_fingerprint(
+                    {"title": vTitle, "company": vCompany, "location": vLocation}
+                ),
+                vSource,
+                vSourceId,
+            )
+            for vSource, vSourceId, vTitle, vCompany, vLocation in vRows
+        ],
+    )
+
+
+# Colonnes de salaire net calculées par add_net_salary
+NET_COLUMNS = (
+    "salary_net_monthly_min",
+    "salary_net_monthly_max",
+    "salary_net_after_tax_monthly_min",
+    "salary_net_after_tax_monthly_max",
+)
+
+
+def _is_missing(pValue):
+    """Indique si une valeur est un NaN de pandas, qui n'a pas sa place en base."""
+
+    rMissing = isinstance(pValue, float) and math.isnan(pValue)
+
+    return rMissing
+
+
+def to_storage(pValue):
+    """Convertit une valeur enrichie pour SQLite : liste en JSON, NaN en NULL."""
+
+    rValue = pValue
+
+    if isinstance(pValue, list):
+        rValue = json.dumps(pValue, ensure_ascii=False)
+    elif _is_missing(pValue):
+        rValue = None
+
+    return rValue
+
+
 # Colonnes de date sur lesquelles un décompte quotidien est autorisé
 DAILY_COUNT_COLUMNS = {
     ("job_offer", "first_seen_at"),
@@ -295,6 +440,9 @@ MIGRATIONS = [
     migrate_to_v4,
     migrate_to_v5,
     migrate_to_v6,
+    migrate_to_v7,
+    migrate_to_v8,
+    migrate_to_v9,
 ]
 
 
