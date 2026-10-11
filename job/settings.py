@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from config import EXPIRY_DAYS, FOLLOW_UP_DAYS, NET_SALARY_RATIO, NEW_OFFER_DAYS
+from job.exchange_rates import load_stored_rates
 from job.salary import add_net_salary, get_income_tax_rate
 from storage.job_offers import get_salaries, update_net_salaries
 from storage.settings_repository import get_setting_values, save_setting_values
@@ -160,8 +161,12 @@ def recompute_net_salaries(pDatabaseFile, pSettings):
 
     vSalaries = get_salaries(pDatabaseFile)
 
+    # Taux déjà enregistrés seulement : modifier une règle n'attend pas le réseau.
     vSalaries = add_net_salary(
-        vSalaries, pNetRatio=get_net_ratio(pSettings), pTaxRate=get_tax_rate(pSettings)
+        vSalaries,
+        pNetRatio=get_net_ratio(pSettings),
+        pTaxRate=get_tax_rate(pSettings),
+        pRates=load_stored_rates(pDatabaseFile)[0],
     )
 
     rCount = update_net_salaries(pDatabaseFile, vSalaries)

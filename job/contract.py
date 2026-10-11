@@ -69,8 +69,9 @@ def add_contract(pItems):
     vItems["contract"] = vContracts
 
     logger.info(
-        "Contrats identifiés : %s",
-        {vType: vContracts.count(vType) for vType in CONTRACT_TYPES},
+        "Contrats identifiés : %s, non précisé %s",
+        ", ".join(f"{vType} {vContracts.count(vType)}" for vType in CONTRACT_TYPES),
+        sum(1 for vContract in vContracts if vContract not in CONTRACT_TYPES),
     )
 
     rItems = vItems

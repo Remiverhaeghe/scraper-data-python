@@ -33,6 +33,7 @@ from job.companies import load_company_rules, save_company_rules
 from job.notification import build_test_email
 from job.schedule import (
     SCHEDULE_INTERVALS,
+    clear_scheduled_search,
     describe_schedule_runs,
     describe_scheduled_search,
     format_interval,
@@ -51,6 +52,9 @@ from utils.mailer import EMAIL_SETTINGS, get_missing_email_settings, send_email
 logger = get_logger(__name__)
 
 THEME_ICONS = {"light": "sun", "dark": "moon"}
+
+# Choix de la liste des recherches qui retire la recherche planifiée
+REMOVE_SCHEDULED_SEARCH = "__remove__"
 
 
 def describe_source_state(pDefinition):
@@ -519,7 +523,9 @@ class SettingsPage(QWidget):
         for vName in self.saved_searches:
             self.schedule_search_combo.addItem(f"Planifier « {vName} »", vName)
 
-        self.schedule_search_combo.setEnabled(bool(self.saved_searches))
+        self.schedule_search_combo.addItem(
+            "Retirer la recherche planifiée", REMOVE_SCHEDULED_SEARCH
+        )
 
     def refresh_schedule(self):
         """Relit la planification et l'adresse de notification en base."""
@@ -553,7 +559,10 @@ class SettingsPage(QWidget):
         vName = self.schedule_search_combo.currentData()
 
         try:
-            if vName is not None:
+            if vName == REMOVE_SCHEDULED_SEARCH:
+                clear_scheduled_search(self.database_file)
+
+            elif vName is not None:
                 vSearch = self.saved_searches[vName]
 
                 save_scheduled_search(
@@ -562,7 +571,7 @@ class SettingsPage(QWidget):
 
             vErrors = save_schedule_options(
                 self.database_file,
-                self.schedule_check.isChecked(),
+                self.schedule_check.isChecked() and vName != REMOVE_SCHEDULED_SEARCH,
                 self.interval_combo.currentData(),
             )
 

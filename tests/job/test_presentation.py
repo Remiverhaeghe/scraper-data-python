@@ -49,6 +49,7 @@ def test_build_offer_filters_keeps_known_values():
         "pExpiredBefore": datetime(2026, 9, 10, 12, 0),
         "pExcludedCompanies": [],
         "pPreferredCompanies": None,
+        "pCountry": None,
     }
 
 

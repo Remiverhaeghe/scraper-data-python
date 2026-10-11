@@ -1095,3 +1095,35 @@ def test_quiz_question_answer_and_review(client):
     )
 
     assert vRefused.status_code == 400
+
+
+def test_interview_date_and_calendar_export(client):
+    """Vérifie la date d'entretien saisie et le fichier agenda téléchargé."""
+
+    vOfferUrl = client.post(
+        "/offers/new",
+        data={
+            "title": "Analyste Kotlin",
+            "company": "Data SA",
+            "url": "https://d.example",
+        },
+        follow_redirects=False,
+    ).headers["location"]
+    vSourceId = vOfferUrl.rsplit("=", 1)[1]
+
+    client.post(
+        "/offer/application",
+        data={
+            "source": "manual",
+            "id": vSourceId,
+            "status": "INTERVIEW",
+            "interview_at": "2026-10-20T14:30",
+        },
+    )
+
+    assert 'value="2026-10-20T14:30"' in client.get(vOfferUrl).text
+
+    vCalendar = client.get("/applications/calendar.ics")
+
+    assert vCalendar.headers["content-type"].startswith("text/calendar")
+    assert "SUMMARY:Entretien : Analyste Kotlin – Data SA" in vCalendar.text

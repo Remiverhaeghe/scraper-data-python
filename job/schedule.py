@@ -108,6 +108,14 @@ def save_scheduled_search(pDatabaseFile, pSources, pCriteria):
     logger.info("Recherche planifiée enregistrée sur %s source(s)", len(pSources))
 
 
+def clear_scheduled_search(pDatabaseFile):
+    """Retire la recherche planifiée et désactive la planification."""
+
+    save_setting_values(pDatabaseFile, {SEARCH_KEY: "", ENABLED_KEY: "0"})
+
+    logger.info("Recherche planifiée retirée")
+
+
 def save_schedule_options(pDatabaseFile, pEnabled, pIntervalHours):
     """Enregistre l'activation et la fréquence ; retourne les erreurs éventuelles."""
 

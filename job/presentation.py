@@ -14,16 +14,11 @@ from config import (
     LICENSE_NAME,
     NEW_OFFER_DAYS,
 )
+from job.benefits import BENEFIT_LABELS
 from job.contract import CONTRACT_TYPES
+from job.location import FRANCE
 from job.sources.registry import SOURCES
 from storage.job_applications import APPLICATION_STATUSES
-
-BENEFIT_LABELS = {
-    "has_13th_month": "13e mois",
-    "has_bonus": "primes",
-    "has_profit_sharing": "intéressement ou participation",
-    "has_savings_plan": "épargne salariale",
-}
 
 STATUS_LABELS = {
     "INTERESTED": "Intéressé",
@@ -194,6 +189,12 @@ def format_net_salary(pOffer):
     else:
         rText = format_euros(vMinimum if vMinimum is not None else vMaximum)
 
+    vCurrency = pOffer.get("salary_currency")
+
+    # Converti depuis une autre devise au taux de la BCE : une estimation.
+    if rText and vCurrency and vCurrency != "EUR":
+        rText = f"≈ {rText} ({vCurrency})"
+
     return rText
 
 
@@ -274,6 +275,7 @@ def build_offer_filters(
     pExpiryDays=EXPIRY_DAYS,
     pCompanyKeys=None,
     pPreferredOnly=False,
+    pFranceOnly=False,
 ):
     """Traduit les filtres saisis en paramètres de get_offers.
 
@@ -311,6 +313,7 @@ def build_offer_filters(
         "pExpiredBefore": vNow - timedelta(days=pExpiryDays),
         "pExcludedCompanies": vCompanyKeys["excluded"],
         "pPreferredCompanies": vCompanyKeys["preferred"] if pPreferredOnly else None,
+        "pCountry": FRANCE if pFranceOnly else None,
     }
 
     return rFilters

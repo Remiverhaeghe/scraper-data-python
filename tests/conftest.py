@@ -1,12 +1,22 @@
 """Configuration commune à tous les tests"""
 
+import os
 import smtplib
+import tempfile
 from datetime import datetime
 
-import pytest
-import requests
+# Avant tout import du code : les messages des tests, erreurs simulées comprises,
+# ne doivent pas se mélanger aux journaux réels consultés dans l'application.
+os.environ["LOG_DIRECTORY"] = tempfile.mkdtemp(prefix="jobboard-tests-logs-")
 
-from web.auth import SESSION_COOKIE, hash_password, read_session_token
+import pytest  # noqa: E402
+import requests  # noqa: E402
+
+from web.auth import (  # noqa: E402
+    SESSION_COOKIE,
+    hash_password,
+    read_session_token,
+)
 
 TEST_PASSWORD = "mot-de-passe-de-test"
 

@@ -3,7 +3,7 @@
 import logging
 import re
 
-from utils.logger import LOG_DIRECTORY, LOG_FILE_PREFIX, get_log_day, get_logger
+from utils.logger import LOG_FILE_PREFIX, get_log_day, get_log_directory, get_logger
 
 logger = get_logger(__name__)
 
@@ -86,13 +86,15 @@ def matches_filters(pEntry, pMinimumLevel, pSearch):
     return rMatches
 
 
-def list_log_files(pDirectory=LOG_DIRECTORY):
+def list_log_files(pDirectory=None):
     """Retourne les fichiers de logs du plus récent au plus ancien."""
 
     rFiles = sorted(
         (
             vFile
-            for vFile in pDirectory.glob(f"{LOG_FILE_PREFIX}*.log")
+            for vFile in (pDirectory or get_log_directory()).glob(
+                f"{LOG_FILE_PREFIX}*.log"
+            )
             if get_log_day(vFile) is not None
         ),
         key=get_log_day,
@@ -103,7 +105,7 @@ def list_log_files(pDirectory=LOG_DIRECTORY):
 
 
 def read_log_entries(
-    pDirectory=LOG_DIRECTORY, pLevel=None, pSearch=None, pLimit=MAX_LOG_ENTRIES
+    pDirectory=None, pLevel=None, pSearch=None, pLimit=MAX_LOG_ENTRIES
 ):
     """Retourne les entrées les plus récentes en premier, filtrées et limitées."""
 
@@ -127,7 +129,7 @@ def read_log_entries(
     return rEntries
 
 
-def export_logs(pDirectory=LOG_DIRECTORY):
+def export_logs(pDirectory=None):
     """Retourne tous les journaux conservés, du plus ancien au plus récent."""
 
     rText = "".join(
@@ -138,17 +140,18 @@ def export_logs(pDirectory=LOG_DIRECTORY):
     return rText
 
 
-def clear_logs(pDirectory=LOG_DIRECTORY):
+def clear_logs(pDirectory=None):
     """Supprime les anciens journaux et vide celui du jour ; retourne leur nombre.
 
     Le fichier du jour est vidé plutôt que supprimé : l'application y écrit
     encore et ne le recréerait pas tant que la journée n'a pas changé.
     """
 
-    vFiles = list_log_files(pDirectory)
+    vDirectory = pDirectory or get_log_directory()
+    vFiles = list_log_files(vDirectory)
 
     # Ancien fichier unique, antérieur au découpage par jour : il n'est plus écrit.
-    vLegacyFile = pDirectory / LEGACY_LOG_FILE_NAME
+    vLegacyFile = vDirectory / LEGACY_LOG_FILE_NAME
 
     if vLegacyFile.exists():
         vFiles.append(vLegacyFile)

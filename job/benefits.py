@@ -6,6 +6,14 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Libellés affichés des avantages, partagés par le bureau, le web et les logs
+BENEFIT_LABELS = {
+    "has_13th_month": "13e mois",
+    "has_bonus": "primes",
+    "has_profit_sharing": "intéressement ou participation",
+    "has_savings_plan": "épargne salariale",
+}
+
 # Formulations volontairement strictes pour limiter les faux positifs :
 # « participation » ou « variable » seuls sont trop fréquents dans les offres.
 BENEFIT_PATTERNS = {
@@ -61,7 +69,10 @@ def add_benefits(pItems):
 
     logger.info(
         "Avantages détectés : %s",
-        {vColumn: int(vItems[vColumn].notna().sum()) for vColumn in BENEFIT_PATTERNS},
+        ", ".join(
+            f"{BENEFIT_LABELS[vColumn]} {int(vItems[vColumn].notna().sum())}"
+            for vColumn in BENEFIT_PATTERNS
+        ),
     )
 
     rItems = vItems

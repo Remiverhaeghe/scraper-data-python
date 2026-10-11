@@ -282,3 +282,24 @@ def test_companies_are_saved_from_the_page(qt_application, tmp_path, monkeypatch
     vPage.save_companies()
 
     assert "à la fois exclue et privilégiée" in vPage.companies_message.text()
+
+
+def test_scheduled_search_can_be_removed(qt_application, tmp_path, monkeypatch):
+    """Vérifie le retrait de la recherche planifiée et la désactivation."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile, monkeypatch)
+
+    save_scheduled_search(vDatabaseFile, ["remotive"], {"keyword": "Java"})
+    vPage.refresh()
+
+    vPage.schedule_check.setChecked(True)
+    vCombo = vPage.schedule_search_combo
+    vCombo.setCurrentIndex(vCombo.count() - 1)
+    vPage.save_schedule()
+
+    vSchedule = load_schedule(vDatabaseFile)
+
+    assert vSchedule["search"] is None
+    assert vSchedule["enabled"] is False
+    assert vPage.schedule_search_label.text() == "Aucune recherche enregistrée"

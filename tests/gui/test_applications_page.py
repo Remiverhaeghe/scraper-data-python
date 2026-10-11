@@ -131,3 +131,27 @@ def test_errors_are_reported(qt_application, tmp_path, monkeypatch):
     vPage.refresh()
 
     assert vPage.message_label.text() == "Les candidatures n'ont pas pu être chargées."
+
+
+def test_calendar_export(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'écriture du fichier agenda et le message de fin."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vPath = tmp_path / "agenda.ics"
+    vShown = []
+
+    monkeypatch.setattr(
+        applications_page.QFileDialog,
+        "getSaveFileName",
+        lambda *pArgs: (str(vPath), ""),
+    )
+    monkeypatch.setattr(
+        applications_page.QMessageBox,
+        "information",
+        lambda pParent, pTitle, pText: vShown.append(pTitle),
+    )
+
+    vPage.choose_calendar_file()
+
+    assert vPath.read_bytes().startswith(b"BEGIN:VCALENDAR\r\n")
+    assert vShown == ["Export terminé"]

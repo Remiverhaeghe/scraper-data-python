@@ -112,7 +112,10 @@ def scrape_sources(pConfig, pOnProgress=None, pCancelEvent=None):
         vItems = pd.DataFrame(columns=JOB_COLUMNS)
 
     vItems, vRejectedCount = complete_offers(
-        vItems, pConfig.net_salary_ratio, pConfig.income_tax_rate
+        vItems,
+        pConfig.net_salary_ratio,
+        pConfig.income_tax_rate,
+        pConfig.exchange_rates,
     )
 
     # Limite globale du nombre d'offres

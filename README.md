@@ -74,7 +74,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -116,6 +116,8 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Normalisation de la période des salaires
 - [x] Estimation du salaire net mensuel, avant et après impôt
 - [x] Salaire en dollars ou sans devise d'une offre située en France considéré en euros (Jooble affiche « $ » par défaut)
+- [x] Salaire dans une autre devise converti en euros au taux de la BCE (gratuit, rafraîchi chaque semaine), net affiché « ≈ »
+- [x] Pays et ville déduits du lieu (code postal, département, villes connues), filtre « France uniquement »
 - [x] Détection des primes, du 13e mois et de l'épargne salariale
 - [x] Normalisation du contrat : CDI, CDD ou freelance
 - [x] Poursuite du traitement si une source échoue
@@ -171,6 +173,8 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Entreprises à exclure ou à privilégier, avertissement si déjà candidat dans l'entreprise
 - [x] Pièces jointes par candidature (CV, lettre), ouvertes avec l'application du système
 - [x] Révision technique par QCM, demandes prêtes pour ChatGPT et infos publiques sur l'entreprise
+- [x] Score de correspondance avec le profil dans la liste des offres, tri par correspondance
+- [x] Date d'entretien et export des relances et entretiens vers un agenda (.ics)
 
 ### 🌐 Tableau de bord web
 
@@ -200,6 +204,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Installable sur l'écran d'accueil d'un téléphone (manifeste web)
 - [x] Ajout et import d'offres, page Candidatures, entreprises et pièces jointes, comme sur le bureau
 - [x] Révision par QCM, demandes ChatGPT à copier et infos sur l'entreprise, comme sur le bureau
+- [x] Score et tri par correspondance, filtre France, date d'entretien et export agenda, comme sur le bureau
 
 ### 🔐 Sécurité
 
@@ -364,6 +369,9 @@ scraper-data-python/
 │   ├── company_info.py                        # Informations publiques sur une entreprise française
 │   ├── assistant.py                           # Demandes préparées pour ChatGPT
 │   ├── quiz.py                                # Révision : questions, progression, thèmes conseillés
+│   ├── location.py                            # Pays et ville déduits du lieu d'une offre
+│   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
+│   ├── calendar.py                            # Export des relances et entretiens au format .ics
 │   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
 │   ├── notification.py                        # Contenu des e-mails de nouvelles offres et de relances
 │   │
@@ -593,6 +601,8 @@ scraper-data-python/
 │   │   ├── test_application_tracking.py       # Teste les colonnes de suivi et les statistiques
 │   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
+│   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
+│   │   ├── test_calendar.py                   # Teste l'export vers un agenda
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi

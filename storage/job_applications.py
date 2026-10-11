@@ -220,6 +220,7 @@ def save_application(
     pNotes=None,
     pNow=None,
     pFollowUpDays=FOLLOW_UP_DAYS,
+    pInterviewAt=None,
 ):
     """Crée ou met à jour le suivi d'une offre depuis le tableau de bord.
 
@@ -253,9 +254,10 @@ def save_application(
                 applied_at,
                 follow_up_date,
                 follow_up_count,
-                notes
+                notes,
+                interview_at
             )
-            VALUES (?, ?, ?, ?, ?, 0, ?)
+            VALUES (?, ?, ?, ?, ?, 0, ?, ?)
             ON CONFLICT(source, source_id)
             DO UPDATE SET
                 status = excluded.status,
@@ -263,7 +265,8 @@ def save_application(
                 -- statut APPLIED ne la remplace pas.
                 applied_at = COALESCE(job_application.applied_at, excluded.applied_at),
                 follow_up_date = excluded.follow_up_date,
-                notes = excluded.notes
+                notes = excluded.notes,
+                interview_at = excluded.interview_at
             """,
             (
                 pSource,
@@ -272,6 +275,7 @@ def save_application(
                 vAppliedAt,
                 vFollowUpDate.isoformat() if vFollowUpDate else None,
                 pNotes or None,
+                pInterviewAt.isoformat(timespec="minutes") if pInterviewAt else None,
             ),
         )
 
@@ -423,7 +427,8 @@ def get_applications_with_offers(pDatabaseFile, pStatuses):
             f"""
             SELECT
                 o.source, o.source_id, o.title, o.company, o.location, o.contract,
-                o.url, a.status, a.applied_at, a.follow_up_date, a.follow_up_count
+                o.url, a.status, a.applied_at, a.follow_up_date, a.follow_up_count,
+                a.interview_at
             FROM job_application a
             JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id
             WHERE a.status IN ({", ".join("?" for _ in pStatuses)})

@@ -8,6 +8,7 @@ import pandas as pd
 from job.completion import complete_offers
 from job.contract import CONTRACT_TYPES
 from job.csv_schema import JOB_COLUMNS
+from job.exchange_rates import get_exchange_rates
 from job.export import EXPORT_COLUMNS, FORMULA_PREFIXES
 from job.presentation import (
     ADDED_SOURCE_LABELS,
@@ -141,7 +142,10 @@ def add_offers(pDatabaseFile, pRows, pSource, pNow):
 
         # Les offres validées ont un titre : aucune n'est écartée à cette étape.
         vItems, _ = complete_offers(
-            vItems, get_net_ratio(vSettings), get_tax_rate(vSettings)
+            vItems,
+            get_net_ratio(vSettings),
+            get_tax_rate(vSettings),
+            get_exchange_rates(pDatabaseFile, pNow),
         )
 
         vKnown = get_fingerprints(pDatabaseFile)

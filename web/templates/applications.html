@@ -1,12 +1,14 @@
 {# Candidatures (route /applications) : mêmes colonnes et statistiques que la page
-   du bureau, calculées par job/applications.py. #}
+   du bureau, calculées par job/application_tracking.py. #}
 {% extends "base.html" %}
 {% import "_macros.html" as ui %}
 
 {% block title %}Candidatures{% endblock %}
 
 {% block content %}
-{{ ui.page_header("Candidatures", "Vos candidatures par étape, et les sources ou postes qui répondent le plus", "send") }}
+{% call ui.page_header("Candidatures", "Vos candidatures par étape, et les sources ou postes qui répondent le plus", "send") %}
+<a class="button" href="{{ url_for('download_calendar').path }}" title="Relances et entretiens, à importer dans Google Agenda ou Outlook">{{ icon("calendar", 16) }} Exporter vers l'agenda</a>
+{% endcall %}
 
 <section class="grid grid-4">
     {{ ui.stat(statistics.sent, "Candidatures envoyées", "send", "blue") }}

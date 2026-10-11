@@ -1,16 +1,19 @@
 """Page des candidatures : tableau de suivi par colonnes et taux de réponse"""
 
 from datetime import datetime
+from pathlib import Path
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QFileDialog,
     QFrame,
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QTableWidget,
@@ -23,6 +26,7 @@ from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
     clear_layout,
+    create_button,
     create_card,
     create_page_header,
     create_scroll_content,
@@ -32,6 +36,7 @@ from job.application_tracking import (
     build_application_statistics,
     build_board,
 )
+from job.calendar import build_calendar
 from job.presentation import STATUS_LABELS
 from storage.job_applications import update_application_status
 from utils.logger import get_logger
@@ -58,10 +63,20 @@ class ApplicationsPage(QWidget):
         vLayout.setContentsMargins(32, 28, 32, 28)
         vLayout.setSpacing(18)
 
+        vExportButton = create_button(
+            "Exporter vers l'agenda", "calendar", pIconColor=COLORS["primary"]
+        )
+        vExportButton.setToolTip(
+            "Fichier .ics des relances et entretiens, à importer dans Google Agenda "
+            "ou Outlook"
+        )
+        vExportButton.clicked.connect(self.choose_calendar_file)
+
         create_page_header(
             vLayout,
             "Candidatures",
             "Vos candidatures par étape, et les sources ou postes qui répondent le plus",
+            [vExportButton],
             pIcon="send",
         )
 
@@ -87,6 +102,42 @@ class ApplicationsPage(QWidget):
         vLayout.addLayout(self.create_board())
         vLayout.addLayout(self.create_statistic_tables())
         vLayout.addStretch()
+
+    def choose_calendar_file(self):
+        """Demande où enregistrer le fichier agenda puis l'écrit."""
+        vPath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Exporter vers l'agenda",
+            str(Path.home() / "candidatures.ics"),
+            "Agenda (*.ics)",
+        )
+
+        if vPath:
+            self.export_calendar(vPath)
+
+    def export_calendar(self, pPath):
+        """Écrit les relances et entretiens au format iCalendar."""
+        try:
+            # newline="" garde les fins de ligne CRLF imposées par le format.
+            with open(pPath, "w", encoding="utf-8", newline="") as vFile:
+                vFile.write(build_calendar(self.database_file, datetime.now()))
+
+        except OSError:
+            logger.exception("Échec de l'export de l'agenda")
+
+            QMessageBox.warning(
+                self, "Export impossible", "Le fichier n'a pas pu être écrit."
+            )
+
+        else:
+            logger.info("Agenda des candidatures exporté")
+
+            QMessageBox.information(
+                self,
+                "Export terminé",
+                "Relances et entretiens exportés : importez le fichier dans votre "
+                "agenda.",
+            )
 
     def create_board(self):
         """Construit les quatre colonnes du tableau de suivi."""
@@ -127,10 +178,14 @@ class ApplicationsPage(QWidget):
             vTable.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             vTable.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
             vTable.verticalHeader().hide()
+            # Colonnes chiffrées à la largeur de leur en-tête, le libellé prend le reste.
             vTable.horizontalHeader().setSectionResizeMode(
-                QHeaderView.ResizeMode.Stretch
+                QHeaderView.ResizeMode.ResizeToContents
             )
-            vTable.setMinimumHeight(260)
+            vTable.horizontalHeader().setSectionResizeMode(
+                0, QHeaderView.ResizeMode.Stretch
+            )
+            vTable.setMinimumHeight(200)
 
             vCard, vCardLayout = create_card("")
             vCardLayout.addWidget(vTable, 1)

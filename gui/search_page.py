@@ -162,8 +162,8 @@ class SearchPage(QWidget):
         self.last_result_label = ""
 
         vLayout = QVBoxLayout(create_scroll_content(self))
-        vLayout.setContentsMargins(32, 28, 32, 28)
-        vLayout.setSpacing(16)
+        vLayout.setContentsMargins(32, 22, 32, 12)
+        vLayout.setSpacing(12)
 
         create_page_header(
             vLayout,
@@ -184,8 +184,17 @@ class SearchPage(QWidget):
         vLayout.addWidget(self.create_sources_card())
         vLayout.addWidget(self.advanced_button, 0, Qt.AlignmentFlag.AlignLeft)
         vLayout.addWidget(self.advanced_card)
-        vLayout.addWidget(self.create_actions_card())
         vLayout.addStretch()
+
+        # Hors de la zone qui défile : le lancement et la progression restent
+        # visibles, même dans une petite fenêtre.
+        vActions = QWidget()
+
+        vActionsLayout = QVBoxLayout(vActions)
+        vActionsLayout.setContentsMargins(32, 0, 32, 16)
+        vActionsLayout.addWidget(self.create_actions_card())
+
+        self.layout().addWidget(vActions)
 
         self.restore_settings()
 
@@ -712,12 +721,14 @@ class SearchPage(QWidget):
         vLabel.setObjectName("fieldLabel")
 
         vSaveButton = create_button(
-            "Enregistrer…", "download", pIconColor=COLORS["primary"]
+            "Enregistrer…", "download", "primaryButton", COLORS["on_primary"]
         )
         vSaveButton.setToolTip("Enregistre les critères et les sources actuels")
         vSaveButton.clicked.connect(self.save_current_search)
 
-        self.delete_saved_button = create_button("Supprimer")
+        self.delete_saved_button = create_button(
+            "Supprimer", "circle-alert", "dangerButton", COLORS["danger"]
+        )
         self.delete_saved_button.setToolTip("Supprime la recherche sélectionnée")
         self.delete_saved_button.clicked.connect(self.delete_current_search)
 
@@ -728,13 +739,15 @@ class SearchPage(QWidget):
 
         self.saved_message_label = QLabel()
 
+        # Boutons à côté du libellé, le message de résultat à leur suite
         vHeader.addWidget(vLabel)
+        vHeader.addSpacing(8)
+        vHeader.addWidget(vSaveButton)
+        vHeader.addWidget(self.delete_saved_button)
         vHeader.addSpacing(12)
         vHeader.addWidget(self.saved_message_icon)
         vHeader.addWidget(self.saved_message_label)
         vHeader.addStretch()
-        vHeader.addWidget(vSaveButton)
-        vHeader.addWidget(self.delete_saved_button)
 
         self.saved_group = QButtonGroup(self)
 
@@ -818,9 +831,8 @@ class SearchPage(QWidget):
                 self.saved_searches[self.selected_search_name]
             )
         elif self.saved_searches:
-            vSummary = (
-                "Cliquez sur une recherche pour remplir les critères et les sources."
-            )
+            # Les pastilles parlent d'elles-mêmes : pas de ligne d'aide en plus.
+            vSummary = ""
         else:
             vSummary = (
                 "Aucune recherche enregistrée : remplissez les critères et les "
@@ -828,6 +840,7 @@ class SearchPage(QWidget):
             )
 
         self.saved_summary_label.setText(vSummary)
+        self.saved_summary_label.setVisible(bool(vSummary))
         self.delete_saved_button.setEnabled(self.selected_search_name is not None)
 
     def load_saved_search(self, pName):

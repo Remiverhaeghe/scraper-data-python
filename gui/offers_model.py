@@ -22,6 +22,7 @@ COLUMNS = [
     ("Lieu", "location", 160),
     ("Contrat", "contract", 85),
     ("Net mensuel", "salary_net_monthly_min", 145),
+    ("Profil", "match_score", 70),
     ("Source", "source_label", 105),
     ("Suivi", "application_status", 120),
 ]
@@ -43,6 +44,9 @@ def format_cell(pOffer, pKey):
 
     if pKey == "salary_net_monthly_min":
         rText = format_net_salary(pOffer)
+
+    elif pKey == "match_score":
+        rText = "" if pOffer.get(pKey) is None else f"{pOffer[pKey]} %"
 
     elif pKey == "first_seen_at":
         rText = format_date(pOffer.get(pKey))
@@ -74,6 +78,9 @@ def get_sort_value(pOffer, pKey):
 
         rValue = float(vValue) if vValue is not None else -1.0
 
+    elif pKey == "match_score":
+        rValue = -1.0 if vValue is None else float(vValue)
+
     else:
         rValue = str(vValue or "").lower()
 
@@ -94,6 +101,12 @@ def get_cell_color(pOffer, pKey):
         vTone = STATUS_TONES.get(pOffer.get("application_status"))
     elif pKey == "company" and pOffer.get("company_preferred"):
         vTone = "primary"
+    elif pKey == "match_score" and pOffer.get(pKey) is not None:
+        vTone = (
+            "success"
+            if pOffer[pKey] >= 70
+            else ("warning" if pOffer[pKey] >= 40 else "muted")
+        )
     elif pKey == "source_label" and pOffer.get("needs_review"):
         vTone = "warning"
 

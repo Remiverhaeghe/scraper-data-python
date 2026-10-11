@@ -5,7 +5,8 @@ import os
 from datetime import date, timedelta
 from pathlib import Path
 
-# Dossier des logs, à la racine du projet quel que soit le dossier de lancement
+# Dossier des logs, à la racine du projet quel que soit le dossier de lancement ;
+# la variable d'environnement LOG_DIRECTORY le remplace (les tests l'utilisent).
 LOG_DIRECTORY = Path(__file__).resolve().parent.parent / "logs"
 
 LOG_FILE_PREFIX = "scraper-"
@@ -25,6 +26,16 @@ def get_retention_days():
         rDays = DEFAULT_LOG_RETENTION_DAYS
 
     return rDays
+
+
+def get_log_directory():
+    """Retourne le dossier des logs, éventuellement remplacé par LOG_DIRECTORY."""
+
+    vDirectory = os.getenv("LOG_DIRECTORY")
+
+    rDirectory = Path(vDirectory) if vDirectory else LOG_DIRECTORY
+
+    return rDirectory
 
 
 def get_log_file(pDirectory, pDay):
@@ -111,7 +122,7 @@ def configure_logging():
     ):
         vFormatter = logging.Formatter(LOG_FORMAT)
 
-        vFileHandler = DailyFileHandler(LOG_DIRECTORY, get_retention_days())
+        vFileHandler = DailyFileHandler(get_log_directory(), get_retention_days())
         vFileHandler.setFormatter(vFormatter)
 
         vConsoleHandler = logging.StreamHandler()
@@ -120,6 +131,11 @@ def configure_logging():
         vRootLogger.addHandler(vFileHandler)
         vRootLogger.addHandler(vConsoleHandler)
         vRootLogger.setLevel(logging.INFO)
+
+        # Les bibliothèques HTTP journalisent chaque URL appelée : une clé d'API
+        # passée en paramètre y apparaîtrait. Seuls leurs problèmes sont gardés.
+        for vName in ("httpx", "httpcore", "urllib3"):
+            logging.getLogger(vName).setLevel(logging.WARNING)
 
 
 def get_logger(pName):

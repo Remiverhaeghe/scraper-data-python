@@ -48,8 +48,6 @@ def build_search_arguments(pSources, pCriteria):
 def build_source_config(pSourceName, pSources):
     """Construit la configuration générique d'une source d'emploi."""
 
-    logger.info("Construction de la configuration source : %s", pSourceName)
-
     vEnabled = pSourceName in pSources
 
     vConfig = SourceConfig(
@@ -57,10 +55,6 @@ def build_source_config(pSourceName, pSources):
         api_available=vEnabled,
         html_available=False,
         mode="api" if vEnabled else None,
-    )
-
-    logger.info(
-        "Source %s : activée=%s, mode=%s", pSourceName, vConfig.enabled, vConfig.mode
     )
 
     rConfig = vConfig
@@ -71,8 +65,6 @@ def build_source_config(pSourceName, pSources):
 def build_job_config(pArguments):
     """Construit la configuration complète du scraping des offres."""
 
-    logger.info("Début construction configuration Jobs")
-
     vSources = pArguments.sources or []
 
     for vSource in vSources:
@@ -80,8 +72,6 @@ def build_job_config(pArguments):
             raise ValueError(
                 f"La source {SOURCES[vSource].label} est actuellement indisponible."
             )
-
-    logger.info("Sources sélectionnées : %s", vSources)
 
     vSourceConfigs = {}
 
@@ -92,13 +82,9 @@ def build_job_config(pArguments):
         # Seules les sources cochées chargent leurs paramètres : une clé manquante dans
         # .env n'empêche pas d'utiliser les autres sources.
         if vSourceConfig.enabled:
-            logger.info("Chargement de la configuration %s", vDefinition.label)
-
             vSourceConfig.parameters = vDefinition.load_parameters(pArguments)
 
         vSourceConfigs[vName] = vSourceConfig
-
-    logger.info("Construction de JobScrapingConfig")
 
     vConfig = JobScrapingConfig(
         max_items=pArguments.max_items,
@@ -122,13 +108,18 @@ def build_job_config(pArguments):
         sources=vSourceConfigs,
     )
 
-    logger.info("Validation de la configuration Jobs")
-
     # La validation lève une ValueError lisible en cas de critère incohérent, par
     # exemple un salaire minimum supérieur au maximum.
     vConfig.validate()
 
-    logger.info("Configuration Jobs construite et validée")
+    # Une seule ligne par recherche : les sources et les critères utiles au diagnostic.
+    logger.info(
+        "Recherche configurée : %s ; mot-clé %s, lieu %s, %s offre(s) au plus",
+        ", ".join(SOURCES[vSource].label for vSource in vSources) or "aucune source",
+        pArguments.keyword or "aucun",
+        pArguments.location or "aucun",
+        pArguments.max_items or "sans limite de",
+    )
 
     rConfig = vConfig
 

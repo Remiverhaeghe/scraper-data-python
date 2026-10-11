@@ -47,6 +47,7 @@ from job.application_tracking import (
     build_board,
 )
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
+from job.calendar import build_calendar
 from job.company_info import lookup_company, summarize_company
 from job.companies import (
     add_company_rule,
@@ -106,7 +107,7 @@ from job.deduplication import (
     get_offer_group,
     group_offers,
 )
-from job.preparation import prepare_application
+from job.preparation import prepare_application, score_offers
 from job.profile import (
     build_profile,
     is_profile_empty,
@@ -424,13 +425,13 @@ def parse_published_days(pValue):
     return rDays
 
 
-def parse_date(pValue):
-    """Convertit une date saisie au format AAAA-MM-JJ, ou retourne None."""
+def parse_date(pValue, pFormat="%Y-%m-%d"):
+    """Convertit une date saisie (AAAA-MM-JJ par défaut), ou retourne None."""
 
     rDate = None
 
     try:
-        rDate = datetime.strptime(pValue, "%Y-%m-%d") if pValue else None
+        rDate = datetime.strptime(pValue, pFormat) if pValue else None
 
     except ValueError:
         logger.warning("Date saisie ignorée : %s", pValue)
@@ -604,6 +605,8 @@ def list_offers(
     pAvailability: str = Query(DEFAULT_AVAILABILITY, alias="availability"),
     pMultiple: str = Query("", alias="multiple"),
     pPreferred: str = Query("", alias="preferred"),
+    pFrance: str = Query("", alias="france"),
+    pSort: str = Query("", alias="sort"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche la liste des offres, ou seulement le tableau pour une requête HTMX."""
@@ -631,6 +634,7 @@ def list_offers(
         pHasSalary=bool(pHasSalary),
         pCompanyKeys=build_company_filter_keys(vCompanyRules),
         pPreferredOnly=bool(pPreferred),
+        pFranceOnly=bool(pFrance),
     )
 
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
@@ -640,6 +644,16 @@ def list_offers(
         for vOffer in vOffers.head(MAX_DISPLAYED_OFFERS).to_dict("records")
     ]
     mark_preferred_companies(vPrepared, vCompanyRules)
+    score_offers(vPrepared, load_profile(pDatabaseFile))
+
+    if pSort == "match":
+        # Offres sans score (aucune compétence repérée) en fin de liste
+        vPrepared.sort(
+            key=lambda pOffer: (
+                -1 if pOffer["match_score"] is None else pOffer["match_score"]
+            ),
+            reverse=True,
+        )
 
     # Les annonces d'une même offre sont regroupées en une seule ligne.
     vGrouped = group_offers(vPrepared, get_decisions(pDatabaseFile))
@@ -666,6 +680,8 @@ def list_offers(
             "availability": pAvailability,
             "multiple": pMultiple,
             "preferred": pPreferred,
+            "france": pFrance,
+            "sort": pSort,
             "q": pSearch,
             "source": pSource,
             "contract": pContract,
@@ -892,6 +908,7 @@ def update_application(
     pStatus: str = Form("", alias="status"),
     pFollowUpDate: str = Form("", alias="follow_up_date"),
     pNotes: str = Form("", alias="notes"),
+    pInterviewAt: str = Form("", alias="interview_at"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Enregistre le suivi d'une offre, ou le supprime si aucun statut n'est choisi."""
@@ -910,6 +927,7 @@ def update_application(
             pFollowUpDate=parse_date(pFollowUpDate),
             pNotes=pNotes.strip(),
             pFollowUpDays=load_settings(pDatabaseFile)["follow_up_days"],
+            pInterviewAt=parse_date(pInterviewAt, "%Y-%m-%dT%H:%M"),
         )
 
     else:
@@ -1189,6 +1207,19 @@ def show_applications(
             "board_statuses": BOARD_STATUSES,
             "statuses": STATUS_LABELS,
         },
+    )
+
+    return rResponse
+
+
+@app.get("/applications/calendar.ics")
+def download_calendar(pDatabaseFile: str = Depends(get_database_file)):
+    """Télécharge les relances et entretiens au format agenda (.ics)."""
+
+    rResponse = Response(
+        build_calendar(pDatabaseFile, datetime.now()),
+        media_type="text/calendar; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="candidatures.ics"'},
     )
 
     return rResponse

@@ -153,25 +153,39 @@ def assume_euro_in_france(pItems):
     return rItems
 
 
-def add_net_salary(pItems, pNetRatio=NET_SALARY_RATIO, pTaxRate=None):
+def add_net_salary(pItems, pNetRatio=NET_SALARY_RATIO, pTaxRate=None, pRates=None):
     """Ajoute les salaires nets mensuels estimés aux offres.
 
-    Seuls les salaires en euros sont convertis : le ratio brut / net
-    utilisé ne vaut que pour la France.
+    Un salaire dans une autre devise est d'abord converti en euros avec pRates
+    (unités de devise pour un euro, taux de la BCE) : le net obtenu est une
+    estimation, le ratio brut / net étant celui de la France.
     """
 
     vItems = pItems.copy()
 
-    vIsEuro = vItems["salary_currency"] == "EUR"
+    vRates = {**(pRates or {}), "EUR": 1.0}
+
+    # Taux de la devise de chaque offre ; None sans taux connu, pas de net alors.
+    vOfferRates = [
+        vRates.get(vCurrency) if isinstance(vCurrency, str) else None
+        for vCurrency in vItems["salary_currency"]
+    ]
+    vIsEuro = pd.Series(
+        [vRate is not None for vRate in vOfferRates], index=vItems.index
+    )
 
     for vBound in ("min", "max"):
         vNetColumn = f"salary_net_monthly_{vBound}"
         vTaxColumn = f"salary_net_after_tax_monthly_{vBound}"
 
         vItems[vNetColumn] = [
-            to_net_monthly(vAmount, vPeriod, pNetRatio) if vEuro else None
-            for vAmount, vPeriod, vEuro in zip(
-                vItems[f"salary_{vBound}"], vItems["salary_period"], vIsEuro
+            (
+                to_net_monthly(float(vAmount) / vRate, vPeriod, pNetRatio)
+                if vRate is not None and not pd.isna(vAmount)
+                else None
+            )
+            for vAmount, vPeriod, vRate in zip(
+                vItems[f"salary_{vBound}"], vItems["salary_period"], vOfferRates
             )
         ]
 

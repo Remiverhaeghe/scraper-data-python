@@ -52,6 +52,9 @@ class JobScrapingConfig(ScrapingConfig):
     net_salary_ratio: float = NET_SALARY_RATIO
     income_tax_rate: float | None = None
 
+    # Taux de change de la BCE, unités de devise pour un euro (job.exchange_rates)
+    exchange_rates: dict[str, float] | None = None
+
     def validate(self) -> None:
         """Vérifie que la configuration complète est cohérente."""
 

@@ -76,6 +76,15 @@ SALARY_FULL_PATTERN = re.compile(
 # « 1 000 € de prime » n'est pas un salaire.
 MIN_AMOUNT_WITHOUT_PERIOD = 10000
 
+# Libellés des champs complétés, pour un message de log lisible
+FILLED_FIELD_LABELS = {
+    "remote": "télétravail",
+    "skills": "compétences",
+    "experience_level": "expérience",
+    "salary": "salaire",
+    "title": "titre découpé",
+}
+
 # Séparateur des compléments ajoutés au titre par certaines sources (Arbeitnow, Jobicy)
 TITLE_SEPARATOR = " | "
 CURRENCIES = {"€": "EUR", "$": "USD", "£": "GBP"}
@@ -385,9 +394,14 @@ def enrich_offers(pItems):
         vOffers.append(vOffer)
 
     logger.info(
-        "Enrichissement : %s champ(s) complété(s) %s, %s offre(s) inexploitable(s) écartée(s)",
-        sum(vFilledCounts.values()),
-        vFilledCounts,
+        "Enrichissement de %s offre(s) : %s ; %s offre(s) sans titre ni description "
+        "écartée(s)",
+        len(vOffers),
+        ", ".join(
+            f"{FILLED_FIELD_LABELS.get(vField, vField)} {vCount}"
+            for vField, vCount in vFilledCounts.items()
+        )
+        or "rien à compléter",
         vRejected,
     )
 

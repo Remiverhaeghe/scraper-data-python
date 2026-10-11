@@ -4,6 +4,7 @@ from datetime import datetime
 from dataclasses import replace
 
 from config import DATABASE_FILE
+from job.exchange_rates import get_exchange_rates
 from job.filter import filter_jobs
 from job.settings import get_net_ratio, get_tax_rate, load_settings
 from job.sources.aggregator import scrape_sources
@@ -68,6 +69,7 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
         pConfig,
         net_salary_ratio=get_net_ratio(vSettings),
         income_tax_rate=get_tax_rate(vSettings),
+        exchange_rates=get_exchange_rates(DATABASE_FILE, datetime.now()),
     )
 
     vScrapingResult = scrape_sources(

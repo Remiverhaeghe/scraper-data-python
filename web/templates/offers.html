@@ -30,6 +30,11 @@
             {% endfor %}
         </select>
 
+        <select name="sort" aria-label="Tri">
+            <option value="">Plus récentes</option>
+            <option value="match" {% if filters.sort == "match" %}selected{% endif %}>Correspondance avec mon profil</option>
+        </select>
+
         <select name="status" aria-label="Suivi">
             <option value="">Offres actives</option>
             <option value="{{ follow_up_filter }}" {% if filters.status == follow_up_filter %}selected{% endif %}>À relancer</option>
@@ -73,6 +78,11 @@
         <label class="check">
             <input type="checkbox" name="multiple" value="1" {% if filters.multiple %}checked{% endif %}>
             Multi-annonces
+        </label>
+
+        <label class="check" title="Pays donné par la source ou déduit du lieu">
+            <input type="checkbox" name="france" value="1" {% if filters.france %}checked{% endif %}>
+            France uniquement
         </label>
 
         <label class="check" title="Seulement les entreprises de la liste des Paramètres">

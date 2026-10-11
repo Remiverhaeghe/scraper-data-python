@@ -476,6 +476,38 @@ def migrate_to_v11(pConnection):
     )
 
 
+def migrate_to_v12(pConnection):
+    """Ajoute la date d'entretien et complète le pays et la ville des offres."""
+
+    # pylint: disable=import-outside-toplevel
+    from job.location import detect_location
+
+    pConnection.execute("ALTER TABLE job_application ADD COLUMN interview_at TEXT")
+
+    vRows = pConnection.execute(
+        "SELECT source, source_id, location, country, city FROM job_offer"
+    ).fetchall()
+
+    vUpdates = []
+
+    for vSource, vSourceId, vLocation, vCountry, vCity in vRows:
+        vFoundCountry, vFoundCity = detect_location(vLocation, vCountry)
+
+        if (vFoundCountry and not vCountry) or (vFoundCity and not vCity):
+            vUpdates.append(
+                (vCountry or vFoundCountry, vCity or vFoundCity, vSource, vSourceId)
+            )
+
+    pConnection.executemany(
+        "UPDATE job_offer SET country = ?, city = ? WHERE source = ? AND source_id = ?",
+        vUpdates,
+    )
+
+    logger.info(
+        "Reprise des offres : pays ou ville complété pour %s offre(s)", len(vUpdates)
+    )
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -488,6 +520,7 @@ MIGRATIONS = [
     migrate_to_v9,
     migrate_to_v10,
     migrate_to_v11,
+    migrate_to_v12,
 ]
 
 

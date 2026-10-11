@@ -172,6 +172,7 @@ def build_offer_conditions(
     pFingerprint=None,
     pExcludedCompanies=None,
     pPreferredCompanies=None,
+    pCountry=None,
 ):
     """Construit les conditions SQL et leurs paramètres à partir des filtres.
 
@@ -194,6 +195,10 @@ def build_offer_conditions(
     if pSource:
         vConditions.append("o.source = ?")
         vParams.append(pSource)
+
+    if pCountry:
+        vConditions.append("o.country = ?")
+        vParams.append(pCountry)
 
     if pContract:
         vConditions.append("o.contract = ?")

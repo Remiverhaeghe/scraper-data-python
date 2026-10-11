@@ -4,13 +4,14 @@ from datetime import datetime
 from html import escape
 from pathlib import Path
 
-from PySide6.QtCore import QDate, Qt, QUrl, Signal
+from PySide6.QtCore import QDate, QDateTime, Qt, QTime, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QTextBlockFormat, QTextCursor
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
     QDateEdit,
+    QDateTimeEdit,
     QFrame,
     QGroupBox,
     QHBoxLayout,
@@ -659,6 +660,20 @@ class OfferDetailPanel(QWidget):
         vFollowUp.addWidget(self.follow_up_edit)
         vFollowUp.addStretch()
 
+        self.interview_check = QCheckBox("Entretien le")
+
+        self.interview_edit = align_spin_box(QDateTimeEdit())
+        self.interview_edit.setCalendarPopup(True)
+        self.interview_edit.setDisplayFormat("dd/MM/yyyy HH:mm")
+        self.interview_edit.calendarWidget().setMinimumSize(320, 240)
+
+        self.interview_check.toggled.connect(self.interview_edit.setEnabled)
+
+        vInterview = QHBoxLayout()
+        vInterview.addWidget(self.interview_check)
+        vInterview.addWidget(self.interview_edit)
+        vInterview.addStretch()
+
         self.notes_edit = QPlainTextEdit()
         self.notes_edit.setPlaceholderText("Notes")
 
@@ -682,6 +697,7 @@ class OfferDetailPanel(QWidget):
         vLayout = QVBoxLayout(rGroup)
         vLayout.addWidget(self.status_combo)
         vLayout.addLayout(vFollowUp)
+        vLayout.addLayout(vInterview)
         vLayout.addWidget(self.notes_edit)
         vLayout.addLayout(vButtons)
         vLayout.addWidget(self.application_label)
@@ -903,6 +919,16 @@ class OfferDetailPanel(QWidget):
             else QDate.currentDate().addDays(self.get_follow_up_days())
         )
 
+        vInterviewAt = vApplication.get("interview_at")
+
+        self.interview_check.setChecked(bool(vInterviewAt))
+        self.interview_edit.setEnabled(bool(vInterviewAt))
+        self.interview_edit.setDateTime(
+            QDateTime.fromString(vInterviewAt, "yyyy-MM-ddTHH:mm")
+            if vInterviewAt
+            else QDateTime(QDate.currentDate().addDays(7), QTime(10, 0))
+        )
+
         self.notes_edit.setPlainText(vApplication.get("notes") or "")
         self.follow_up_button.setVisible(
             vApplication.get("status") in FOLLOW_UP_STATUSES
@@ -926,6 +952,22 @@ class OfferDetailPanel(QWidget):
 
         return rDate
 
+    def get_interview_at(self):
+        """Retourne la date et l'heure d'entretien saisies, ou None."""
+        rInterviewAt = None
+
+        if self.interview_check.isChecked():
+            vValue = self.interview_edit.dateTime()
+            rInterviewAt = datetime(
+                vValue.date().year(),
+                vValue.date().month(),
+                vValue.date().day(),
+                vValue.time().hour(),
+                vValue.time().minute(),
+            )
+
+        return rInterviewAt
+
     def save(self):
         """Enregistre le suivi, ou le supprime si aucun statut n'est choisi."""
         vStatus = self.status_combo.currentData()
@@ -944,6 +986,7 @@ class OfferDetailPanel(QWidget):
                     pFollowUpDate=self.get_follow_up_date(),
                     pNotes=self.notes_edit.toPlainText().strip(),
                     pFollowUpDays=self.get_follow_up_days(),
+                    pInterviewAt=self.get_interview_at(),
                 )
 
         except Exception:

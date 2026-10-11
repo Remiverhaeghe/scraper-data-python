@@ -10,6 +10,7 @@ import gui.offers_page as offers_page_module
 from gui.offer_form import ManualOfferDialog
 from job.companies import load_company_rules
 from job.manual_offers import add_manual_offer
+from job.profile import build_profile, save_profile
 from gui.offer_detail import describe_application, summarize_values
 from gui.offers_model import format_cell, get_cell_color
 from gui.theme import COLORS
@@ -587,3 +588,37 @@ def test_chatgpt_prompt_and_company_info(offers_page, database_file, monkeypatch
     assert vPanel.assistant_label.text().startswith(
         "Demande « Comprendre l'entreprise » copiée"
     )
+
+
+def test_interview_score_and_france_filter(offers_page, database_file):
+    """Vérifie la date d'entretien enregistrée, le score affiché et le filtre France."""
+
+    save_profile(database_file, build_profile("", "", "Java, Spring", "", ""))
+    vSourceId = add_manual_offer(
+        database_file,
+        {
+            "title": "Développeur Java",
+            "company": "Acme",
+            "location": "Lille",
+            "description": "Java et Kafka",
+        },
+        NOW,
+    )
+    offers_page.refresh()
+    offers_page.select_offer(("manual", vSourceId))
+
+    vPanel = offers_page.detail_panel
+    vOffer = vPanel.offer
+
+    assert format_cell(vOffer, "match_score") == "50 %"
+    assert vOffer["country"] == "France"
+
+    vPanel.status_combo.setCurrentIndex(vPanel.status_combo.findData("INTERVIEW"))
+    vPanel.interview_check.setChecked(True)
+    vPanel.save()
+
+    assert get_application(database_file, "manual", vSourceId)["interview_at"]
+
+    offers_page.france_check.setChecked(True)
+
+    assert get_titles(offers_page) == ["Développeur Java"]

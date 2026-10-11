@@ -231,3 +231,19 @@ def prepare_application(pProfile, pOffer):
     }
 
     return rPreparation
+
+
+def score_offers(pOffers, pProfile):
+    """Ajoute à chaque offre son score de correspondance avec le profil, ou None.
+
+    Sans profil renseigné, aucun score n'est calculé.
+    """
+
+    vEmpty = not pProfile.get("skills")
+
+    for vOffer in pOffers:
+        vOffer["match_score"] = (
+            None
+            if vEmpty
+            else match_profile(pProfile, get_offer_skills(vOffer))["score"]
+        )

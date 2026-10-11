@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -108,7 +109,15 @@ class HomePage(QWidget):
         self.last_search_label = QLabel()
         self.last_search_label.setObjectName("pageSubtitle")
 
-        vLayout = QVBoxLayout(create_scroll_content(self))
+        vContent = create_scroll_content(self)
+
+        # Les cartes du bas partagent la hauteur restante : l'accueil peut se
+        # réduire jusqu'à sa taille minimale avant de défiler.
+        vContent.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
+        )
+
+        vLayout = QVBoxLayout(vContent)
         vLayout.setContentsMargins(32, 18, 32, 18)
         vLayout.setSpacing(12)
 
