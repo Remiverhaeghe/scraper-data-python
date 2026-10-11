@@ -1,10 +1,22 @@
 """Composants graphiques partagés entre les pages"""
 
 from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 from gui.icons import get_icon
 from gui.theme import ACCENTS, COLORS
+
+# Même retrait que le padding horizontal des champs dans theme.qss
+SPIN_BOX_TEXT_MARGIN = 10
 
 
 def create_page_header(pLayout, pTitle, pSubtitle, pActions=(), pIcon=None):
@@ -93,6 +105,35 @@ def create_icon_label(pIcon, pColor, pSize=20):
     rLabel.setPixmap(get_icon(pIcon, pColor, pSize).pixmap(pSize, pSize))
 
     return rLabel
+
+
+def create_scroll_content(pPage):
+    """Place une zone défilante dans la page et retourne le contenu à remplir."""
+
+    rContent = QWidget()
+
+    # Sans possibilité de rétrécir, le contenu garde sa taille idéale : la page
+    # défile sur un petit écran au lieu d'écraser les cartes et leurs textes.
+    rContent.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+
+    vScrollArea = QScrollArea()
+    vScrollArea.setWidgetResizable(True)
+    vScrollArea.setWidget(rContent)
+
+    vLayout = QVBoxLayout(pPage)
+    vLayout.setContentsMargins(0, 0, 0, 0)
+    vLayout.addWidget(vScrollArea)
+
+    return rContent
+
+
+def align_spin_box(pSpinBox):
+    """Décale le texte d'un champ numérique comme celui des autres champs."""
+
+    # La marge gauche de la feuille de style n'atteint pas le champ interne.
+    pSpinBox.lineEdit().setTextMargins(SPIN_BOX_TEXT_MARGIN, 0, 0, 0)
+
+    return pSpinBox
 
 
 class StatisticCard(QFrame):

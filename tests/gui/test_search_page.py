@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pandas as pd
 import pytest
-from PySide6.QtCore import QCoreApplication, QSettings, Qt
+from PySide6.QtCore import QCoreApplication, QSettings
 
 import gui.search_page as search_page_module
 from gui.search_page import SearchPage
@@ -336,18 +336,22 @@ def test_saved_search_round_trip(saved_search_page, monkeypatch):
     )
     vPage.save_current_search()
 
-    assert vPage.saved_combo.currentData() == "Python remote"
-    assert "Python" in vPage.saved_combo.itemData(1, Qt.ItemDataRole.ToolTipRole)
+    vChip = vPage.saved_group.buttons()[0]
+
+    assert vPage.selected_search_name == "Python remote"
+    assert vChip.isChecked()
+    assert "Python" in vChip.toolTip()
+    assert "Python" in vPage.saved_summary_label.text()
 
     vPage.keyword_edit.clear()
     vPage.skills_edit.clear()
     vPage.check_sources(True)
-    vPage.load_saved_search()
+    vChip.click()
 
     assert vPage.keyword_edit.text() == "Python"
     assert vPage.skills_edit.text() == "Django, SQL"
     assert vPage.get_selected_sources() == ["remotive"]
-    assert vPage.status_label.text() == "Recherche « Python remote » chargée"
+    assert vPage.saved_message_label.text() == "Recherche « Python remote » chargée"
 
 
 def test_saved_search_deletion_asks_confirmation(saved_search_page, monkeypatch):
@@ -369,8 +373,9 @@ def test_saved_search_deletion_asks_confirmation(saved_search_page, monkeypatch)
     )
     vPage.delete_current_search()
 
-    assert vPage.saved_combo.count() == 1
-    assert vPage.saved_combo.currentText() == "Aucune recherche"
+    assert not vPage.saved_group.buttons()
+    assert vPage.selected_search_name is None
+    assert vPage.saved_summary_label.text().startswith("Aucune recherche")
     assert not vPage.delete_saved_button.isEnabled()
 
 
@@ -382,4 +387,6 @@ def test_saved_search_reports_invalid_name(saved_search_page, monkeypatch):
     )
     saved_search_page.save_current_search()
 
-    assert saved_search_page.status_label.text() == "Donnez un nom à la recherche."
+    assert (
+        saved_search_page.saved_message_label.text() == "Donnez un nom à la recherche."
+    )

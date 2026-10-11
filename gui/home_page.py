@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -22,6 +21,7 @@ from gui.widgets import (
     create_card,
     create_icon_label,
     create_page_header,
+    create_scroll_content,
 )
 from job.presentation import (
     CHART_PALETTE,
@@ -106,9 +106,7 @@ class HomePage(QWidget):
         self.last_search_label = QLabel()
         self.last_search_label.setObjectName("pageSubtitle")
 
-        vContent = QWidget()
-
-        vLayout = QVBoxLayout(vContent)
+        vLayout = QVBoxLayout(create_scroll_content(self))
         vLayout.setContentsMargins(32, 22, 32, 22)
         vLayout.setSpacing(16)
 
@@ -137,14 +135,6 @@ class HomePage(QWidget):
             vGrid.setRowStretch(vIndex, 1)
 
         vLayout.addLayout(vGrid, 1)
-
-        vScrollArea = QScrollArea()
-        vScrollArea.setWidgetResizable(True)
-        vScrollArea.setWidget(vContent)
-
-        vPageLayout = QVBoxLayout(self)
-        vPageLayout.setContentsMargins(0, 0, 0, 0)
-        vPageLayout.addWidget(vScrollArea)
 
     def create_banner(self):
         """Construit la bannière de bienvenue."""

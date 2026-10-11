@@ -6,12 +6,16 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPlainTextEdit,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
-from gui.widgets import create_button, create_card, create_page_header
+from gui.widgets import (
+    create_button,
+    create_card,
+    create_page_header,
+    create_scroll_content,
+)
 from job.profile import build_profile, load_profile, profile_to_texts, save_profile
 from utils.logger import get_logger
 
@@ -101,9 +105,7 @@ class ProfilePage(QWidget):
         vCardLayout.addLayout(vGrid)
         vCardLayout.addLayout(vActions)
 
-        vContent = QWidget()
-
-        vLayout = QVBoxLayout(vContent)
+        vLayout = QVBoxLayout(create_scroll_content(self))
         vLayout.setContentsMargins(32, 28, 32, 28)
         vLayout.setSpacing(14)
 
@@ -115,15 +117,6 @@ class ProfilePage(QWidget):
         )
 
         vLayout.addWidget(vCard, 1)
-
-        # Le formulaire défile sur un petit écran plutôt que d'écraser les champs.
-        vScrollArea = QScrollArea()
-        vScrollArea.setWidgetResizable(True)
-        vScrollArea.setWidget(vContent)
-
-        vPageLayout = QVBoxLayout(self)
-        vPageLayout.setContentsMargins(0, 0, 0, 0)
-        vPageLayout.addWidget(vScrollArea)
 
     def refresh(self):
         """Remplit le formulaire avec le profil enregistré."""

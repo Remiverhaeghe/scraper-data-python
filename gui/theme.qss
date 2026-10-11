@@ -280,6 +280,18 @@ QPushButton#sourceChip:disabled {
     color: $muted;
 }
 
+QPushButton#savedChip {
+    border-radius: 16px;
+    padding: 6px 14px;
+}
+
+QPushButton#savedChip:checked {
+    background: $primary_light;
+    border-color: $primary;
+    color: $primary;
+    font-weight: 600;
+}
+
 QPushButton#listRow {
     background: transparent;
     border: none;
@@ -363,6 +375,13 @@ QComboBox QAbstractItemView {
     selection-background-color: $primary_light;
     selection-color: $heading;
     outline: none;
+}
+
+/* Hauteur alignée sur les autres champs, flèches comprises */
+QSpinBox,
+QDoubleSpinBox,
+QDateEdit {
+    padding: 5px 10px;
 }
 
 QSpinBox::up-button,

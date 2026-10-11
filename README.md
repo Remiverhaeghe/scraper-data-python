@@ -277,6 +277,8 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [ ] Liste d'entreprises à exclure ou à privilégier
 - [ ] Notes et pièces jointes (CV envoyé) par candidature
 - [ ] Avertissement en orange quand une candidature est déjà envoyée ou en cours dans la même société
+- [ ] Ajout manuel d'une offre (source « Saisie manuelle »), sur le bureau et le web : titre, entreprise et lien ou description obligatoires, création refusée sinon avec le champ manquant indiqué
+- [ ] Import d'offres depuis un fichier CSV ou JSON au format de l'export : lignes incomplètes rejetées et listées, doublons écartés par l'empreinte
 
 ### Révision technique
 

@@ -38,7 +38,7 @@ class DesktopApplication:
         self.window.theme_requested.connect(self.change_theme)
         self.window.showMaximized()
 
-        logger.info("Fenêtre ouverte avec le thème %s", vTheme)
+        logger.info("Application de bureau ouverte avec le thème %s", vTheme)
 
     def change_theme(self, pTheme):
         """Mémorise le thème choisi et repeint la fenêtre sans la recréer."""
@@ -70,8 +70,8 @@ def run():
     # La référence garde la fenêtre en vie pendant toute la boucle d'événements.
     vDesktop = DesktopApplication(vApplication, QSettings())
 
-    logger.info("Interface graphique ouverte : %s", vDesktop.window.windowTitle())
-
     rExitCode = vApplication.exec()
+
+    del vDesktop
 
     return rExitCode

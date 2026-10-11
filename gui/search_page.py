@@ -4,6 +4,7 @@ from datetime import datetime
 
 from PySide6.QtCore import QSettings, QThread, Qt, Signal, Slot
 from PySide6.QtWidgets import (
+    QButtonGroup,
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
@@ -23,7 +24,13 @@ from PySide6.QtWidgets import (
 from gui.icons import get_icon
 from gui.search_worker import SearchWorker
 from gui.theme import COLORS
-from gui.widgets import create_button, create_card, create_page_header
+from gui.widgets import (
+    align_spin_box,
+    create_button,
+    create_card,
+    create_page_header,
+    create_scroll_content,
+)
 from job.contract import CONTRACT_TYPES
 from job.presentation import describe_search, describe_sources
 from job.sources.registry import SOURCES
@@ -54,7 +61,7 @@ STATUS_STYLES = {
 def create_spin_box(pMinimum, pMaximum, pValue, pSuffix="", pEmptyText=None):
     """Crée un champ numérique ; pEmptyText remplace l'affichage du minimum."""
 
-    rSpinBox = QSpinBox()
+    rSpinBox = align_spin_box(QSpinBox())
     rSpinBox.setRange(pMinimum, pMaximum)
     rSpinBox.setValue(pValue)
     rSpinBox.setSuffix(pSuffix)
@@ -140,7 +147,12 @@ class SearchPage(QWidget):
         self.database_file = pDatabaseFile
 
         # Recherches enregistrées : widgets créés seulement avec une base
-        self.saved_combo = None
+        self.saved_group = None
+        self.saved_grid = None
+        self.saved_summary_label = None
+        self.saved_message_icon = None
+        self.saved_message_label = None
+        self.selected_search_name = None
         self.delete_saved_button = None
         self.saved_searches = {}
         self.search_thread = None
@@ -149,7 +161,7 @@ class SearchPage(QWidget):
         self.last_result_keys = []
         self.last_result_label = ""
 
-        vLayout = QVBoxLayout(self)
+        vLayout = QVBoxLayout(create_scroll_content(self))
         vLayout.setContentsMargins(32, 28, 32, 28)
         vLayout.setSpacing(16)
 
@@ -176,7 +188,6 @@ class SearchPage(QWidget):
         vLayout.addStretch()
 
         self.restore_settings()
-        self.set_status("idle", "Prêt à lancer une recherche")
 
     def create_criteria_card(self):
         """Construit les critères de recherche et les filtres sur deux lignes."""
@@ -325,7 +336,7 @@ class SearchPage(QWidget):
         """Construit les options techniques du scraping sur une ligne."""
         self.max_pages_spin = create_spin_box(0, 50, 0, " pages", "Par défaut")
 
-        self.delay_spin = QDoubleSpinBox()
+        self.delay_spin = align_spin_box(QDoubleSpinBox())
         self.delay_spin.setRange(0, 10)
         self.delay_spin.setSingleStep(0.5)
         self.delay_spin.setSuffix(" s")
@@ -373,6 +384,7 @@ class SearchPage(QWidget):
 
         self.result_label = QLabel()
         self.result_label.setObjectName("cardSubtitle")
+        self.result_label.hide()
 
         vMessages = QVBoxLayout()
         vMessages.setSpacing(2)
@@ -392,7 +404,7 @@ class SearchPage(QWidget):
         vRow.addWidget(self.stop_button)
         vRow.addWidget(self.schedule_button)
         vRow.addSpacing(16)
-        vRow.addWidget(self.status_icon)
+        vRow.addWidget(self.status_icon, 0, Qt.AlignmentFlag.AlignVCenter)
         vRow.addLayout(vMessages, 1)
         vRow.addWidget(self.show_offers_button)
 
@@ -421,6 +433,9 @@ class SearchPage(QWidget):
         )
         self.status_label.setText(pText)
         self.result_label.setText(pDetail)
+
+        # Un détail vide occuperait sa ligne et décentrerait le message.
+        self.result_label.setVisible(bool(pDetail))
 
     def toggle_advanced_options(self, pVisible):
         """Affiche ou masque les options avancées."""
@@ -692,10 +707,9 @@ class SearchPage(QWidget):
         self.update_source_count()
 
     def create_saved_searches_row(self):
-        """Construit la liste des recherches enregistrées et ses boutons."""
-        self.saved_combo = QComboBox()
-        self.saved_combo.setMinimumWidth(280)
-        self.saved_combo.activated.connect(self.load_saved_search)
+        """Construit les recherches enregistrées en pastilles, avec leurs boutons."""
+        vLabel = QLabel("Recherches enregistrées")
+        vLabel.setObjectName("fieldLabel")
 
         vSaveButton = create_button(
             "Enregistrer…", "download", pIconColor=COLORS["primary"]
@@ -704,25 +718,56 @@ class SearchPage(QWidget):
         vSaveButton.clicked.connect(self.save_current_search)
 
         self.delete_saved_button = create_button("Supprimer")
+        self.delete_saved_button.setToolTip("Supprime la recherche sélectionnée")
         self.delete_saved_button.clicked.connect(self.delete_current_search)
 
-        vLabel = QLabel("Recherche enregistrée")
-        vLabel.setObjectName("fieldLabel")
+        vHeader = QHBoxLayout()
+        vHeader.setSpacing(10)
+        # Messages propres aux recherches enregistrées, affichés près d'elles
+        self.saved_message_icon = QLabel()
 
-        rRow = QHBoxLayout()
-        rRow.setSpacing(10)
-        rRow.addWidget(vLabel)
-        rRow.addWidget(self.saved_combo)
-        rRow.addWidget(vSaveButton)
-        rRow.addWidget(self.delete_saved_button)
-        rRow.addStretch()
+        self.saved_message_label = QLabel()
+
+        vHeader.addWidget(vLabel)
+        vHeader.addSpacing(12)
+        vHeader.addWidget(self.saved_message_icon)
+        vHeader.addWidget(self.saved_message_label)
+        vHeader.addStretch()
+        vHeader.addWidget(vSaveButton)
+        vHeader.addWidget(self.delete_saved_button)
+
+        self.saved_group = QButtonGroup(self)
+
+        self.saved_grid = QGridLayout()
+        self.saved_grid.setSpacing(8)
+        self.saved_grid.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        self.saved_summary_label = QLabel()
+        self.saved_summary_label.setObjectName("cardSubtitle")
+        self.saved_summary_label.setWordWrap(True)
+
+        rLayout = QVBoxLayout()
+        rLayout.setSpacing(8)
+        rLayout.addLayout(vHeader)
+        rLayout.addLayout(self.saved_grid)
+        rLayout.addWidget(self.saved_summary_label)
 
         self.refresh_saved_searches()
 
-        return rRow
+        return rLayout
+
+    def set_saved_message(self, pKind, pText):
+        """Affiche le résultat d'une action sur les recherches enregistrées."""
+        vIcon, vColorName = STATUS_STYLES[pKind]
+
+        self.saved_message_icon.setPixmap(
+            get_icon(vIcon, COLORS[vColorName], 16).pixmap(16, 16)
+        )
+        self.saved_message_label.setStyleSheet(f"color: {COLORS[vColorName]};")
+        self.saved_message_label.setText(pText)
 
     def refresh_saved_searches(self, pSelectedName=None):
-        """Recharge la liste des recherches enregistrées."""
+        """Recharge les pastilles des recherches enregistrées."""
         try:
             self.saved_searches = {
                 vSearch["name"]: vSearch
@@ -734,51 +779,80 @@ class SearchPage(QWidget):
 
             self.saved_searches = {}
 
-        self.saved_combo.clear()
-        self.saved_combo.addItem(
-            "Choisir une recherche…" if self.saved_searches else "Aucune recherche",
-            None,
-        )
+        for vButton in self.saved_group.buttons():
+            self.saved_group.removeButton(vButton)
+            vButton.setParent(None)
+            vButton.deleteLater()
 
-        for vName, vSearch in self.saved_searches.items():
-            self.saved_combo.addItem(vName, vName)
-
-            # L'infobulle résume les critères et les sources de la recherche.
-            self.saved_combo.setItemData(
-                self.saved_combo.count() - 1,
-                describe_saved_search(vSearch),
-                Qt.ItemDataRole.ToolTipRole,
+        for vIndex, (vName, vSearch) in enumerate(self.saved_searches.items()):
+            vButton = QPushButton(vName)
+            vButton.setObjectName("savedChip")
+            vButton.setCheckable(True)
+            vButton.setCursor(Qt.CursorShape.PointingHandCursor)
+            vButton.setIcon(get_icon("search", COLORS["primary"], 14))
+            vButton.setToolTip(describe_saved_search(vSearch))
+            vButton.clicked.connect(
+                lambda pChecked=False, pName=vName: self.load_saved_search(pName)
             )
 
-        self.saved_combo.setCurrentIndex(
-            max(self.saved_combo.findData(pSelectedName), 0)
-        )
-        self.delete_saved_button.setEnabled(bool(self.saved_searches))
+            self.saved_group.addButton(vButton)
+            self.saved_grid.addWidget(vButton, *divmod(vIndex, SOURCE_COLUMNS))
 
-    def load_saved_search(self):
+        self.select_saved_search(pSelectedName)
+
+    def select_saved_search(self, pName):
+        """Met en avant la recherche choisie et affiche son résumé."""
+        self.selected_search_name = pName if pName in self.saved_searches else None
+
+        # Le groupe exclusif interdit de tout décocher : il est suspendu le temps
+        # de mettre à jour les pastilles.
+        self.saved_group.setExclusive(False)
+
+        for vButton in self.saved_group.buttons():
+            vButton.setChecked(vButton.text() == self.selected_search_name)
+
+        self.saved_group.setExclusive(True)
+
+        if self.selected_search_name is not None:
+            vSummary = describe_saved_search(
+                self.saved_searches[self.selected_search_name]
+            )
+        elif self.saved_searches:
+            vSummary = (
+                "Cliquez sur une recherche pour remplir les critères et les sources."
+            )
+        else:
+            vSummary = (
+                "Aucune recherche enregistrée : remplissez les critères et les "
+                "sources, puis cliquez sur « Enregistrer… »."
+            )
+
+        self.saved_summary_label.setText(vSummary)
+        self.delete_saved_button.setEnabled(self.selected_search_name is not None)
+
+    def load_saved_search(self, pName):
         """Remplit le formulaire et les sources avec la recherche choisie."""
-        vName = self.saved_combo.currentData()
-
-        if vName in self.saved_searches:
-            vSearch = self.saved_searches[vName]
+        if pName in self.saved_searches:
+            vSearch = self.saved_searches[pName]
 
             self.apply_criteria(vSearch["criteria"])
             self.select_sources(vSearch["sources"])
-            self.set_status("idle", f"Recherche « {vName} » chargée")
+            self.select_saved_search(pName)
+            self.set_saved_message("idle", f"Recherche « {pName} » chargée")
 
     def save_current_search(self):
         """Demande un nom puis enregistre les critères et les sources actuels."""
         vSources = self.get_selected_sources()
 
         if not vSources:
-            self.set_status("warning", "Sélectionnez au moins une source.")
+            self.set_saved_message("warning", "Sélectionnez au moins une source.")
             return
 
         vName, vAccepted = QInputDialog.getText(
             self,
             "Enregistrer la recherche",
             "Nom de la recherche (un nom existant est remplacé) :",
-            text=self.saved_combo.currentData() or "",
+            text=self.selected_search_name or "",
         )
 
         if vAccepted:
@@ -792,23 +866,29 @@ class SearchPage(QWidget):
                 )
 
             except ValueError as vException:
-                self.set_status("warning", str(vException))
+                self.set_saved_message("warning", str(vException))
 
             except Exception:
                 logger.exception("Échec de l'enregistrement de la recherche")
 
-                self.set_status("error", "La recherche n'a pas pu être enregistrée.")
+                self.set_saved_message(
+                    "error", "La recherche n'a pas pu être enregistrée."
+                )
 
             else:
                 self.refresh_saved_searches(vSavedName)
-                self.set_status("success", f"Recherche « {vSavedName} » enregistrée")
+                self.set_saved_message(
+                    "success", f"Recherche « {vSavedName} » enregistrée"
+                )
 
     def delete_current_search(self):
         """Supprime la recherche choisie, après confirmation."""
-        vName = self.saved_combo.currentData()
+        vName = self.selected_search_name
 
         if vName is None:
-            self.set_status("warning", "Choisissez d'abord une recherche enregistrée.")
+            self.set_saved_message(
+                "warning", "Choisissez d'abord une recherche enregistrée."
+            )
             return
 
         vAnswer = QMessageBox.question(
@@ -824,11 +904,13 @@ class SearchPage(QWidget):
             except Exception:
                 logger.exception("Échec de la suppression de la recherche")
 
-                self.set_status("error", "La recherche n'a pas pu être supprimée.")
+                self.set_saved_message(
+                    "error", "La recherche n'a pas pu être supprimée."
+                )
 
             else:
                 self.refresh_saved_searches()
-                self.set_status("idle", f"Recherche « {vName} » supprimée")
+                self.set_saved_message("idle", f"Recherche « {vName} » supprimée")
 
     def apply_criteria(self, pCriteria):
         """Remplit le formulaire avec des critères ; un critère absent est vidé."""

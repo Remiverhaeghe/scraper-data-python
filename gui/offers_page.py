@@ -28,7 +28,12 @@ from config import EXPIRY_DAYS
 from gui.offer_detail import OfferDetailPanel
 from gui.offers_model import COLUMNS, SORT_ROLE, OffersTableModel
 from gui.theme import COLORS
-from gui.widgets import create_button, create_icon_label, create_page_header
+from gui.widgets import (
+    align_spin_box,
+    create_button,
+    create_icon_label,
+    create_page_header,
+)
 from job.contract import CONTRACT_TYPES
 from job.deduplication import group_offers
 from job.export import EXPORT_FORMATS, export_offers
@@ -62,7 +67,7 @@ SEARCH_DELAY_MS = 300
 def create_salary_spin(pEmptyText, pSuffix):
     """Crée un champ de salaire net mensuel ; 0 signifie aucune borne."""
 
-    rSpin = QSpinBox()
+    rSpin = align_spin_box(QSpinBox())
     rSpin.setRange(0, 20000)
     rSpin.setSingleStep(100)
     rSpin.setSuffix(pSuffix)

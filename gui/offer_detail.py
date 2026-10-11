@@ -26,7 +26,12 @@ from PySide6.QtWidgets import (
 
 from gui.dialogs import show_preparation
 from gui.theme import COLORS
-from gui.widgets import create_button, create_card, create_icon_label
+from gui.widgets import (
+    align_spin_box,
+    create_button,
+    create_card,
+    create_icon_label,
+)
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
 from job.preparation import prepare_application
 from job.presentation import (
@@ -423,7 +428,7 @@ class OfferDetailPanel(QWidget):
 
         self.follow_up_check = QCheckBox("Relance prévue le")
 
-        self.follow_up_edit = QDateEdit()
+        self.follow_up_edit = align_spin_box(QDateEdit())
         self.follow_up_edit.setCalendarPopup(True)
         self.follow_up_edit.setDisplayFormat("dd/MM/yyyy")
         self.follow_up_edit.calendarWidget().setMinimumSize(320, 240)

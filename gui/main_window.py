@@ -55,6 +55,7 @@ class MainWindow(QMainWindow):
         self.title = pTitle
 
         # Créés par create_sidebar, appelée à chaque construction du contenu
+        self.status_bar = None
         self.status_dot = None
         self.status_label = None
 
@@ -121,7 +122,6 @@ class MainWindow(QMainWindow):
 
         self.navigation.currentRowChanged.connect(self.show_page)
         self.navigation.setCurrentRow(0)
-        self.set_status("Prêt", COLORS["success"])
 
     def create_sidebar(self, pTitle):
         """Construit le menu latéral : marque, navigation et état."""
@@ -154,7 +154,12 @@ class MainWindow(QMainWindow):
         self.status_label = QLabel()
         self.status_label.setObjectName("sidebarStatus")
 
-        vStatus = QHBoxLayout()
+        # Visible seulement pendant une recherche, pour la suivre depuis une autre page
+        self.status_bar = QWidget()
+        self.status_bar.setVisible(False)
+
+        vStatus = QHBoxLayout(self.status_bar)
+        vStatus.setContentsMargins(0, 0, 0, 0)
         vStatus.addWidget(self.status_dot)
         vStatus.addWidget(self.status_label, 1)
 
@@ -169,7 +174,7 @@ class MainWindow(QMainWindow):
         vLayout.addWidget(vSeparator)
         vLayout.addWidget(self.navigation, 1)
         vLayout.addWidget(self.create_footer_links())
-        vLayout.addLayout(vStatus)
+        vLayout.addWidget(self.status_bar)
 
         return rSidebar
 
@@ -286,18 +291,15 @@ class MainWindow(QMainWindow):
 
     def on_search_started(self):
         """Signale la recherche en cours et bloque le changement de thème."""
-        self.set_status("Recherche en cours", COLORS["warning"])
+        self.status_dot.setStyleSheet(f"color: {COLORS['warning']};")
+        self.status_label.setText("Recherche en cours")
+        self.status_bar.setVisible(True)
         self.settings_page.set_actions_enabled(False)
 
     def on_search_ended(self):
-        """Signale le retour au repos et réautorise le changement de thème."""
-        self.set_status("Prêt", COLORS["success"])
+        """Masque l'état et réautorise le changement de thème."""
+        self.status_bar.setVisible(False)
         self.settings_page.set_actions_enabled(True)
-
-    def set_status(self, pText, pColor):
-        """Affiche l'état de l'application en bas du menu latéral."""
-        self.status_dot.setStyleSheet(f"color: {pColor};")
-        self.status_label.setText(pText)
 
     def closeEvent(self, pEvent):
         """Diffère la fermeture tant qu'une recherche est en cours.

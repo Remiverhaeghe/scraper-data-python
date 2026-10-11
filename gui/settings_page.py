@@ -21,10 +21,12 @@ from PySide6.QtWidgets import (
 
 from gui.theme import COLORS, THEME_CHOICES, is_dark_theme
 from gui.widgets import (
+    align_spin_box,
     create_button,
     create_card,
     create_icon_label,
     create_page_header,
+    create_scroll_content,
 )
 from job.notification import build_test_email
 from job.schedule import (
@@ -35,10 +37,12 @@ from job.schedule import (
     load_schedule,
     save_notification_email,
     save_schedule_options,
+    save_scheduled_search,
 )
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
 from storage.maintenance import reset_database
+from storage.saved_searches import get_saved_searches
 from utils.logger import get_logger
 from utils.mailer import EMAIL_SETTINGS, get_missing_email_settings, send_email
 
@@ -77,8 +81,9 @@ class SettingsPage(QWidget):
         super().__init__()
 
         self.database_file = pDatabaseFile
+        self.saved_searches = {}
 
-        vLayout = QVBoxLayout(self)
+        vLayout = QVBoxLayout(create_scroll_content(self))
         vLayout.setContentsMargins(32, 28, 32, 28)
 
         create_page_header(
@@ -162,7 +167,7 @@ class SettingsPage(QWidget):
         vGrid.setVerticalSpacing(10)
 
         for vRow, (vKey, vDefinition) in enumerate(SETTING_DEFINITIONS.items()):
-            vSpin = QDoubleSpinBox()
+            vSpin = align_spin_box(QDoubleSpinBox())
             vSpin.setDecimals(0 if vDefinition.is_integer else 1)
             vSpin.setRange(vDefinition.minimum, vDefinition.maximum)
             vSpin.setSingleStep(vDefinition.step)
@@ -269,8 +274,8 @@ class SettingsPage(QWidget):
         """Construit l'activation, la fréquence et l'état de la recherche planifiée."""
         vCard, vLayout = create_card(
             "Recherche planifiée",
-            "Lancée par le planificateur (python -m scheduler). La recherche se "
-            "choisit depuis la page Recherche.",
+            "Lancée par le planificateur (python -m scheduler), parmi les "
+            "recherches enregistrées de la page Recherche.",
         )
 
         self.schedule_search_label = QLabel()
@@ -294,6 +299,13 @@ class SettingsPage(QWidget):
             Qt.AlignmentFlag.AlignTop,
         )
         vSearch.addLayout(vSearchTexts, 1)
+
+        # Recopie les critères et les sources : modifier ensuite la recherche
+        # enregistrée ne change pas la recherche planifiée.
+        self.schedule_search_combo = QComboBox()
+        self.schedule_search_combo.setToolTip(
+            "Remplace la recherche planifiée à l'enregistrement"
+        )
 
         self.schedule_check = QCheckBox("Activer la recherche planifiée")
 
@@ -324,6 +336,7 @@ class SettingsPage(QWidget):
         vActions.addWidget(self.schedule_message, 1)
 
         vLayout.addLayout(vSearch)
+        vLayout.addWidget(self.schedule_search_combo)
         vLayout.addLayout(vOptions)
         vLayout.addWidget(self.schedule_runs_label)
         vLayout.addLayout(vActions)
@@ -386,8 +399,42 @@ class SettingsPage(QWidget):
 
         return vCard
 
+    def refresh(self):
+        """Relit la planification à l'affichage de la page."""
+        self.refresh_schedule()
+
+    def refresh_saved_searches(self):
+        """Propose les recherches enregistrées pour remplacer la recherche planifiée."""
+        try:
+            self.saved_searches = {
+                vSearch["name"]: vSearch
+                for vSearch in get_saved_searches(self.database_file)
+            }
+
+        except Exception:
+            logger.exception("Impossible de lire les recherches enregistrées")
+
+            self.saved_searches = {}
+
+        self.schedule_search_combo.clear()
+        self.schedule_search_combo.addItem(
+            (
+                "Garder la recherche actuelle"
+                if self.saved_searches
+                else "Aucune recherche enregistrée dans la page Recherche"
+            ),
+            None,
+        )
+
+        for vName in self.saved_searches:
+            self.schedule_search_combo.addItem(f"Planifier « {vName} »", vName)
+
+        self.schedule_search_combo.setEnabled(bool(self.saved_searches))
+
     def refresh_schedule(self):
         """Relit la planification et l'adresse de notification en base."""
+        self.refresh_saved_searches()
+
         try:
             vSchedule = load_schedule(self.database_file)
 
@@ -413,7 +460,16 @@ class SettingsPage(QWidget):
 
     def save_schedule(self):
         """Enregistre l'activation et la fréquence de la recherche planifiée."""
+        vName = self.schedule_search_combo.currentData()
+
         try:
+            if vName is not None:
+                vSearch = self.saved_searches[vName]
+
+                save_scheduled_search(
+                    self.database_file, vSearch["sources"], vSearch["criteria"]
+                )
+
             vErrors = save_schedule_options(
                 self.database_file,
                 self.schedule_check.isChecked(),

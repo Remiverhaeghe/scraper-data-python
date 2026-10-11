@@ -30,13 +30,16 @@ def test_status_follows_search(qt_application, tmp_path):
 
     vWindow = MainWindow(vDatabaseFile, "Test")
 
+    assert vWindow.status_bar.isHidden()
+
     vWindow.search_page.search_started.emit()
 
     assert vWindow.status_label.text() == "Recherche en cours"
+    assert not vWindow.status_bar.isHidden()
 
     vWindow.search_page.search_ended.emit()
 
-    assert vWindow.status_label.text() == "Prêt"
+    assert vWindow.status_bar.isHidden()
 
 
 def test_rebuild_keeps_window_and_shows_page(qt_application, tmp_path):

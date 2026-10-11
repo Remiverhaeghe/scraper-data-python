@@ -1,5 +1,7 @@
 """Tests de la page des paramètres"""
 
+from datetime import datetime
+
 import pytest
 
 from gui import settings_page
@@ -9,6 +11,7 @@ from job.schedule import load_schedule, save_scheduled_search
 from job.settings import load_settings
 from job.sources.config import SourceDefinition
 from storage.database import initialize_database
+from storage.saved_searches import save_search
 
 
 def build_definition(pAvailable=True, pSettings=()):
@@ -130,6 +133,27 @@ def test_schedule_is_saved_from_the_page(qt_application, tmp_path, monkeypatch):
     assert vPage.schedule_message.text() == "Planification enregistrée."
     assert vPage.schedule_search_label.text() == "Java"
     assert vPage.schedule_sources_label.text() == "Remotive"
+
+
+def test_schedule_uses_a_saved_search(qt_application, tmp_path, monkeypatch):
+    """Vérifie le remplacement de la recherche planifiée par une recherche enregistrée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile, monkeypatch)
+
+    save_search(
+        vDatabaseFile, "Python", ["remotive"], {"keyword": "Python"}, datetime.now()
+    )
+    vPage.refresh()
+
+    vPage.schedule_search_combo.setCurrentIndex(1)
+    vPage.save_schedule()
+
+    assert load_schedule(vDatabaseFile)["search"] == {
+        "sources": ["remotive"],
+        "criteria": {"keyword": "Python"},
+    }
+    assert vPage.schedule_search_label.text() == "Python"
 
 
 @pytest.mark.parametrize(
