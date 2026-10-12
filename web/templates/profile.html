@@ -46,7 +46,7 @@
         </label>
         <div class="rules-actions">
             <button class="button button-primary" type="submit">Enregistrer</button>
-            {% if message %}<p class="application-message" role="status">{{ message }}</p>{% endif %}
+            {% if message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ message }}</p>{% endif %}
         </div>
     </form>
 </article>

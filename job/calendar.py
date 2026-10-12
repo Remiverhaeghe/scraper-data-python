@@ -1,13 +1,16 @@
 """Export des relances et des entretiens vers un agenda (format iCalendar, .ics)"""
 
-import secrets
 from datetime import datetime, timedelta, timezone
 
 from config import APPLICATION_NAME
+from job.access_tokens import (
+    check_access_token,
+    get_access_token,
+    renew_access_token,
+)
 from job.presentation import safe_url
 from storage.job_applications import get_applications_with_offers
 from storage.job_offers import FOLLOW_UP_STATUSES
-from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -24,9 +27,6 @@ MAX_LINE_BYTES = 75
 # constante est le nom du réglage, pas le jeton : fausse alerte de bandit.
 CALENDAR_TOKEN_KEY = "calendar_token"  # nosec B105
 
-# 32 octets aléatoires : impossible à deviner, même en essayant en boucle
-CALENDAR_TOKEN_BYTES = 32
-
 # Chemin de l'abonnement sur le tableau de bord web, jeton compris
 CALENDAR_SUBSCRIPTION_PATH = "/calendar/{token}.ics"
 
@@ -34,7 +34,7 @@ CALENDAR_SUBSCRIPTION_PATH = "/calendar/{token}.ics"
 def get_calendar_token(pDatabaseFile):
     """Retourne le jeton de l'abonnement, ou None s'il n'a pas été créé."""
 
-    rToken = get_setting_values(pDatabaseFile).get(CALENDAR_TOKEN_KEY) or None
+    rToken = get_access_token(pDatabaseFile, CALENDAR_TOKEN_KEY)
 
     return rToken
 
@@ -42,9 +42,7 @@ def get_calendar_token(pDatabaseFile):
 def renew_calendar_token(pDatabaseFile):
     """Crée un nouveau jeton ; l'ancienne adresse cesse de fonctionner."""
 
-    rToken = secrets.token_urlsafe(CALENDAR_TOKEN_BYTES)
-
-    save_setting_values(pDatabaseFile, {CALENDAR_TOKEN_KEY: rToken})
+    rToken = renew_access_token(pDatabaseFile, CALENDAR_TOKEN_KEY)
 
     # Le jeton lui-même n'est jamais journalisé : il donne accès à l'agenda.
     logger.info("Nouvelle adresse d'abonnement à l'agenda créée")
@@ -55,12 +53,7 @@ def renew_calendar_token(pDatabaseFile):
 def check_calendar_token(pDatabaseFile, pToken):
     """Indique si le jeton reçu correspond à celui de l'abonnement."""
 
-    vExpected = get_calendar_token(pDatabaseFile)
-
-    # Comparaison en temps constant : la durée ne révèle rien du jeton attendu.
-    rValid = bool(vExpected and pToken) and secrets.compare_digest(
-        vExpected.encode(), str(pToken).encode()
-    )
+    rValid = check_access_token(pDatabaseFile, CALENDAR_TOKEN_KEY, pToken)
 
     return rValid
 

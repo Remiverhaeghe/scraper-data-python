@@ -24,6 +24,7 @@ from job.quiz import (
 )
 from job.quiz_import import (
     build_generation_prompt,
+    describe_import_details,
     describe_quiz_import,
     import_questions,
     import_questions_file,
@@ -255,9 +256,10 @@ def test_import_questions_checks_each_question(database_file):
         "kafka-offset",
     ]
     assert "extra" not in vQuiz["kafka"]["questions"][1]
-    assert "2 question(s) ajoutée(s) : Kafka. 4 écartée(s)" in describe_quiz_import(
-        vReport
+    assert describe_quiz_import(vReport) == (
+        "2 question(s) ajoutée(s) : Kafka · 4 écartée(s)."
     )
+    assert "- question 6 : format inattendu" in describe_import_details(vReport)
 
 
 def test_import_questions_uses_json_theme_and_existing_label(database_file):

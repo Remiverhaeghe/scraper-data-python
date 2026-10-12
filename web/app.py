@@ -24,6 +24,7 @@ from fastapi import (
 from fastapi.responses import (
     FileResponse,
     HTMLResponse,
+    JSONResponse,
     PlainTextResponse,
     RedirectResponse,
     Response,
@@ -38,7 +39,6 @@ from config import (
     APPLICATION_NAME,
     ASSETS_DIRECTORY,
     CONTACT_URL,
-    DATABASE_FILE,
     LICENSE_NAME,
     REPOSITORY_URL,
     TAGLINE,
@@ -85,6 +85,7 @@ from job.manual_offers import (
     import_offers_file,
     list_import_problems,
 )
+from job.mobile_sync import API_PREFIX, get_mobile_token, renew_mobile_token
 from job.presentation import (
     ADDED_SOURCE_LABELS,
     AVAILABILITY_FILTERS,
@@ -150,6 +151,7 @@ from job.quality import (
 from job.quiz import (
     DEFAULT_MODE,
     QUIZ_MODES,
+    THEME_STATUSES,
     answer_question,
     flag_question,
     build_quiz_overview,
@@ -160,7 +162,12 @@ from job.quiz import (
     load_active_quiz,
     pick_question,
 )
-from job.quiz_domains import DOMAIN_ICONS, group_themes
+from job.quiz_domains import (
+    DOMAIN_ICONS,
+    build_category_progress,
+    filter_guides,
+    group_themes,
+)
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
     answer_exam,
@@ -177,6 +184,7 @@ from job.quiz_import import (
     MIXED_LEVEL,
     IMPORT_EXTENSIONS,
     build_generation_prompt,
+    describe_import_details,
     describe_quiz_import,
     export_quiz_pack,
     import_questions,
@@ -242,6 +250,7 @@ from utils.log_reader import (
 from utils.logger import get_logger, get_retention_days
 from utils.mailer import get_missing_email_settings
 from utils.markdown import render_markdown
+from web.api import router as api_router
 from web.auth import (
     SESSION_COOKIE,
     SESSION_DURATION,
@@ -252,6 +261,7 @@ from web.auth import (
     is_safe_redirect,
     read_session_token,
 )
+from web.dependencies import get_database_file
 
 logger = get_logger(__name__)
 
@@ -276,7 +286,8 @@ ICON_NAME_PATTERN = re.compile(r"[a-z][a-z-]*")
 # Pages accessibles sans connexion : connexion, informations légales et ressources
 PUBLIC_PATHS = ("/login", "/legal", "/license")
 # L'abonnement à l'agenda est relu sans session : son jeton secret le protège.
-PUBLIC_PREFIXES = ("/static/", "/assets/", "/calendar/")
+# L'API mobile n'a pas de session : chacune de ses routes exige son jeton.
+PUBLIC_PREFIXES = ("/static/", "/assets/", "/calendar/", "/api/")
 
 # Icône associée à chaque tonalité d'exécution
 TONE_ICONS = {
@@ -284,15 +295,6 @@ TONE_ICONS = {
     "warning": "circle-alert",
     "danger": "circle-alert",
 }
-
-
-# Base de données : remplaçable dans les tests par app.dependency_overrides.
-def get_database_file():
-    """Retourne le chemin de la base, remplaçable dans les tests."""
-
-    rDatabaseFile = DATABASE_FILE
-
-    return rDatabaseFile
 
 
 @asynccontextmanager
@@ -310,6 +312,9 @@ async def lifespan(pApp):
 
 
 app = FastAPI(title="Offres d'emploi", lifespan=lifespan)
+
+# API de l'application mobile de révision, protégée par son propre jeton
+app.include_router(api_router)
 
 app.mount("/static", StaticFiles(directory=WEB_DIRECTORY / "static"), name="static")
 app.mount("/assets", StaticFiles(directory=ASSETS_DIRECTORY), name="assets")
@@ -518,12 +523,19 @@ def parse_date(pValue, pFormat="%Y-%m-%d"):
 async def render_http_error(pRequest, pException):
     """Affiche une erreur dans le gabarit du site plutôt qu'en JSON brut.
 
-    Les requêtes HTMX reçoivent un simple texte, inséré sans casser la page.
+    Les requêtes HTMX reçoivent un simple texte, inséré sans casser la page ;
+    l'API mobile reçoit du JSON, avec les en-têtes de l'erreur (WWW-Authenticate).
     """
 
     vTitle = "Page introuvable" if pException.status_code == 404 else "Requête refusée"
 
-    if pRequest.headers.get("HX-Request"):
+    if pRequest.url.path.startswith(API_PREFIX):
+        rResponse = JSONResponse(
+            {"detail": pException.detail},
+            status_code=pException.status_code,
+            headers=pException.headers,
+        )
+    elif pRequest.headers.get("HX-Request"):
         rResponse = HTMLResponse(pException.detail, status_code=pException.status_code)
     else:
         rResponse = templates.TemplateResponse(
@@ -534,6 +546,19 @@ async def render_http_error(pRequest, pException):
         )
 
     return rResponse
+
+
+def get_message_tone(pStatusCode):
+    """Retourne la couleur d'un message : réussite, saisie refusée ou panne."""
+
+    if pStatusCode >= 500:
+        rTone = "danger"
+    elif pStatusCode >= 400:
+        rTone = "warning"
+    else:
+        rTone = "success"
+
+    return rTone
 
 
 # Préparation des graphiques : le serveur calcule les hauteurs, le dessin est
@@ -1164,6 +1189,7 @@ def render_quiz(
                 else None
             ),
             "import_form": pImport or {},
+            "message_tone": get_message_tone(pStatusCode),
             "domains": [vDomain for vDomain, _ in group_themes(vThemes)],
             "exam": load_exam(pDatabaseFile),
             "exam_count": EXAM_QUESTION_COUNT,
@@ -1179,8 +1205,14 @@ def render_quiz(
             ),
             "subdomain": pSubdomain,
             "groups": group_themes(vThemes, pDomain, pSubdomain),
+            "all_groups": group_themes(vThemes),
+            "category_progress": build_category_progress(vThemes),
+            "theme_count": len(vThemes),
+            "theme_statuses": THEME_STATUSES,
             "domain_icons": DOMAIN_ICONS,
-            "guides": get_quiz_guides(pDatabaseFile),
+            "guides": filter_guides(
+                get_quiz_guides(pDatabaseFile), vThemes, pDomain, pSubdomain
+            ),
             "levels": GENERATION_LEVELS,
             "generation_counts": GENERATION_COUNTS,
             "import_extensions": ",".join(IMPORT_EXTENSIONS),
@@ -1339,7 +1371,11 @@ def import_quiz_questions(
         rResponse = render_quiz(
             request,
             pDatabaseFile,
-            pImport={"theme": pTheme, "message": describe_quiz_import(vReport)},
+            pImport={
+                "theme": pTheme,
+                "message": describe_quiz_import(vReport),
+                "details": describe_import_details(vReport),
+            },
         )
 
     return rResponse
@@ -1432,9 +1468,10 @@ def show_quiz_guide(
 def begin_quiz_exam(
     request: Request,
     pDomain: str = Form("", alias="domain"),
+    pSubdomain: str = Form("", alias="subdomain"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Commence un examen sur un domaine, ou reprend celui en cours."""
+    """Commence un examen sur une catégorie, ou reprend celui en cours."""
 
     vExam = load_exam(pDatabaseFile)
 
@@ -1445,6 +1482,7 @@ def begin_quiz_exam(
                 load_active_quiz(pDatabaseFile),
                 pDomain or None,
                 datetime.now(),
+                pSubdomain=pSubdomain or None,
             )
 
         except ValueError as vException:
@@ -1984,6 +2022,7 @@ def render_settings(
     pNotificationMessage=None,
     pCalendarMessage=None,
     pArchiveMessage=None,
+    pMobileMessage=None,
 ):
     """Affiche thème, règles, planification, notifications et sources."""
 
@@ -2036,6 +2075,10 @@ def render_settings(
                 str(pRequest.base_url), get_calendar_token(pDatabaseFile)
             ),
             "calendar_message": pCalendarMessage,
+            "mobile_address": str(pRequest.base_url).rstrip("/") + API_PREFIX,
+            "mobile_token": get_mobile_token(pDatabaseFile),
+            "mobile_message": pMobileMessage,
+            "message_tone": get_message_tone(pStatusCode),
             "archive_message": pArchiveMessage,
         },
         status_code=pStatusCode,
@@ -2066,6 +2109,7 @@ def render_profile(pRequest, pTexts, pMessage=None, pStatusCode=200, pCvPrompt=N
             "active_page": "profile",
             "profile": pTexts,
             "message": pMessage,
+            "message_tone": get_message_tone(pStatusCode),
             "cv_prompt": pCvPrompt,
             "cv_extensions": ",".join(CV_EXTENSIONS),
             "chatgpt_url": CHATGPT_URL,
@@ -2331,6 +2375,28 @@ def renew_calendar(
         pDatabaseFile,
         pCalendarMessage="Adresse créée : ajoutez-la dans l'agenda comme agenda "
         "par URL.",
+    )
+
+    return rResponse
+
+
+@app.post(
+    "/settings/mobile",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def renew_mobile(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Crée un nouveau jeton de l'application mobile ; l'ancien cesse de fonctionner."""
+
+    renew_mobile_token(pDatabaseFile)
+
+    rResponse = render_settings(
+        request,
+        pDatabaseFile,
+        pMobileMessage="Jeton créé : saisissez-le dans l'application.",
     )
 
     return rResponse

@@ -40,7 +40,7 @@
                 {% endfor %}
                 <div class="rules-actions">
                     <button class="button button-primary" type="submit">Enregistrer</button>
-                    {% if message %}<p class="application-message" role="status">{{ message }}</p>{% endif %}
+                    {% if message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ message }}</p>{% endif %}
                 </div>
             </form>
         </article>
@@ -62,6 +62,25 @@
         </article>
 
         <article class="card">
+            <h2>Application mobile</h2>
+            <p class="card-subtitle">Révision sur le téléphone, même hors ligne : saisissez cette adresse et ce jeton dans l'application. Les réponses rejoignent la progression d'ici au retour du réseau.</p>
+            <p><code>{{ mobile_address }}</code></p>
+            {% if mobile_token %}
+            <div class="copy-field" id="mobile-token">
+                <textarea rows="1" readonly aria-label="Jeton de l'application mobile">{{ mobile_token }}</textarea>
+                <button class="button" type="button" data-copy="mobile-token" data-copied="Jeton copié">{{ icon("copy", 16) }} Copier</button>
+            </div>
+            {% else %}
+            <p class="muted">Aucun jeton créé.</p>
+            {% endif %}
+            <form method="post" action="{{ url_for('renew_mobile').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <button class="button" type="submit" title="Un nouveau jeton désactive l'ancien">{{ icon("lock", 16) }} {% if mobile_token %}Renouveler le jeton{% else %}Créer le jeton{% endif %}</button>
+            </form>
+            {% if mobile_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ mobile_message }}</p>{% endif %}
+        </article>
+
+        <article class="card">
             <h2>Abonnement à l'agenda</h2>
             <p class="card-subtitle">Relances et entretiens relus automatiquement par l'agenda du téléphone ou du PC, sur le réseau local ou par Tailscale</p>
             {% if calendar_url %}
@@ -76,7 +95,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                 <button class="button" type="submit" title="Une nouvelle adresse désactive l'ancienne">{{ icon("calendar", 16) }} {% if calendar_url %}Renouveler l'adresse{% else %}Créer l'adresse{% endif %}</button>
             </form>
-            {% if calendar_message %}<p class="application-message" role="status">{{ calendar_message }}</p>{% endif %}
+            {% if calendar_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ calendar_message }}</p>{% endif %}
         </article>
     </div>
 
@@ -109,7 +128,7 @@
                 </select>
                 <button class="button button-primary" type="submit">Enregistrer</button>
             </form>
-            {% if notification_message %}<p class="application-message" role="status">{{ notification_message }}</p>{% endif %}
+            {% if notification_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ notification_message }}</p>{% endif %}
         </article>
 
         <article class="card">
@@ -140,16 +159,16 @@
             <form class="profile-form" method="post" action="{{ url_for('update_companies').path }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                 <div class="grid grid-2">
-                    <label>À exclure
-                        <textarea name="excluded" rows="5" placeholder="Ex. Acme">{{ companies.excluded }}</textarea>
+                    <label class="tone-danger">{{ icon("circle-alert", 16) }} À exclure
+                        <textarea class="companies-excluded" name="excluded" rows="3" placeholder="Ex. Acme">{{ companies.excluded }}</textarea>
                     </label>
-                    <label>À privilégier
-                        <textarea name="preferred" rows="5" placeholder="Ex. Globex">{{ companies.preferred }}</textarea>
+                    <label class="tone-success">{{ icon("circle-check", 16) }} À privilégier
+                        <textarea class="companies-preferred" name="preferred" rows="3" placeholder="Ex. Globex">{{ companies.preferred }}</textarea>
                     </label>
                 </div>
                 <div class="rules-actions">
                     <button class="button button-primary" type="submit">Enregistrer</button>
-                    {% if companies_message %}<p class="application-message" role="status">{{ companies_message }}</p>{% endif %}
+                    {% if companies_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ companies_message }}</p>{% endif %}
                 </div>
             </form>
         </article>
@@ -166,7 +185,7 @@
                     Je comprends que les données actuelles seront remplacées
                 </label>
                 <button class="button button-danger" type="submit">{{ icon("upload", 16) }} Restaurer</button>
-                {% if archive_message %}<p class="application-message" role="status">{{ archive_message }}</p>{% endif %}
+                {% if archive_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ archive_message }}</p>{% endif %}
             </form>
         </article>
 
@@ -180,7 +199,7 @@
                     Je comprends que toutes les données seront effacées
                 </label>
                 <button class="button button-danger" type="submit">{{ icon("circle-alert", 16) }} Réinitialiser les données</button>
-                {% if reset_message %}<p class="application-message" role="status">{{ reset_message }}</p>{% endif %}
+                {% if reset_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ reset_message }}</p>{% endif %}
             </form>
         </article>
     </div>

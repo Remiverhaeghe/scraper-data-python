@@ -61,62 +61,70 @@
 {% endif %}
 
 {# Domaines : un lien par domaine, la page entière se recharge filtrée. #}
-{# Examen : questions tirées au hasard dans le domaine affiché, ou dans tous. #}
-<form class="inline-form section-gap" method="post" action="{{ url_for('begin_quiz_exam').path }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
-    <input type="hidden" name="domain" value="{{ domain or '' }}">
-    <button class="button button-primary" type="submit" title="Questions tirées au hasard, notées et chronométrées">{{ icon("timer", 16) }}
-        {% if exam and not exam.finished_at %}Reprendre l'examen ({{ exam.index + 1 }} / {{ exam.ids | length }}){% else %}Mode examen ({{ exam_count }} questions{% if domain %}, {{ domain }}{% endif %}){% endif %}
-    </button>
-</form>
+{# Catégories à gauche, thèmes de la catégorie choisie à droite : un second clic
+   sur la catégorie active revient à l'ensemble des thèmes. #}
+<div class="quiz-layout section-gap">
+    <nav class="card quiz-nav" aria-label="Catégories">
+        <a class="quiz-nav-item{% if not domain %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}">{{ icon("graduation-cap", 16) }} Tous les thèmes ({{ theme_count }})</a>
+        {% for domain_item, sections in all_groups %}
+        {% set domain_active = domain == domain_item and not subdomain %}
+        <a class="quiz-nav-item{% if domain_active %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}{% if not domain_active %}?domain={{ domain_item | urlencode }}{% endif %}">{{ icon(domain_icons.get(domain_item, "sparkles"), 16) }} {{ domain_item }} ({{ sections | map(attribute=1) | map("length") | sum }})</a>
+        {% for subdomain_item, theme_items in sections %}
+        {% set subdomain_active = domain == domain_item and subdomain == subdomain_item %}
+        <a class="quiz-nav-item quiz-nav-child{% if subdomain_active %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}?domain={{ domain_item | urlencode }}{% if not subdomain_active %}&subdomain={{ subdomain_item | urlencode }}{% endif %}">{{ icon(domain_icons.get(subdomain_item, "tag"), 16) }} {{ subdomain_item }} ({{ theme_items | length }})</a>
+        {% endfor %}
+        {% endfor %}
+    </nav>
 
-<nav class="chips section-gap" aria-label="Domaines">
-    <a class="chip{% if not domain %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}">Tous les domaines</a>
-    {% for domain_item in domains %}
-    <a class="chip{% if domain == domain_item %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}?domain={{ domain_item | urlencode }}">{{ domain_item }}</a>
-    {% endfor %}
-</nav>
-{% if subdomains %}
-<nav class="chips section-gap" aria-label="Sous-domaines">
-    <a class="chip{% if not subdomain %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}?domain={{ domain | urlencode }}">Tous les sous-domaines</a>
-    {% for subdomain_item in subdomains %}
-    <a class="chip{% if subdomain == subdomain_item %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}?domain={{ domain | urlencode }}&subdomain={{ subdomain_item | urlencode }}">{{ subdomain_item }}</a>
-    {% endfor %}
-</nav>
-{% endif %}
-
-{% for domain_item, sections in groups %}
-{% set domain_themes = sections | map(attribute=1) | sum(start=[]) %}
-<div class="domain-header section-gap">
-    <span class="domain-icon">{{ icon(domain_icons.get(domain_item, "sparkles"), 22) }}</span>
     <div>
-        <h2>{{ domain_item }}</h2>
-        <p class="muted">{{ domain_themes | length }} thème(s) · {{ domain_themes | sum(attribute="correct") }} / {{ domain_themes | sum(attribute="total") }} questions acquises</p>
+        <div class="quiz-main-header">
+            <h2>{{ [domain, subdomain] | select | join(" › ") or "Tous les thèmes" }}</h2>
+            {# Examen : questions tirées au hasard dans la catégorie affichée. #}
+            <form method="post" action="{{ url_for('begin_quiz_exam').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <input type="hidden" name="domain" value="{{ domain or '' }}">
+                <input type="hidden" name="subdomain" value="{{ subdomain or '' }}">
+                <button class="button button-primary" type="submit" title="Questions tirées au hasard dans la catégorie affichée, notées et chronométrées">{{ icon("timer", 16) }}
+                    {% if exam and not exam.finished_at %}Reprendre l'examen ({{ exam.index + 1 }} / {{ exam.ids | length }}){% else %}Mode examen ({{ exam_count }} questions){% endif %}
+                </button>
+            </form>
+        </div>
+
+        {% for domain_item, sections in groups %}
+        {% set domain_themes = sections | map(attribute=1) | sum(start=[]) %}
+        <div class="domain-header section-gap">
+            <span class="domain-icon">{{ icon(domain_icons.get(domain_item, "sparkles"), 22) }}</span>
+            <div>
+                <h2>{{ domain_item }}</h2>
+                <p class="muted">{{ domain_themes | length }} thème(s) · {{ domain_themes | sum(attribute="correct") }} / {{ domain_themes | sum(attribute="total") }} questions acquises</p>
+            </div>
+        </div>
+        {% for subdomain_item, theme_items in sections %}
+        <p><span class="subdomain-badge">{{ icon(domain_icons.get(subdomain_item, "tag"), 14) }} {{ subdomain_item }} · {{ theme_items | length }}</span></p>
+        <section class="grid grid-settings quiz-themes">
+            {% for theme_item in theme_items %}
+            <article class="card">
+                <h2>{% if theme_item.status %}{% set status = theme_statuses[theme_item.status] %}<span class="tone-{{ status[1] }}" title="{{ status[2] }}">{{ icon(status[0], 18) }}</span> {% endif %}{{ theme_item.label }}</h2>
+                <p class="muted">
+                    {{ theme_item.correct }} / {{ theme_item.total }} acquises
+                    {% if theme_item.to_review %} · {{ theme_item.to_review }} ratée(s){% endif %}
+                    {% if theme_item.due %} · <strong class="tone-warning">{{ theme_item.due }} à revoir aujourd'hui</strong>{% endif %}
+                    · {% if theme_item.offer_count %}<strong class="tone-primary">demandé dans {{ theme_item.offer_count }} offre(s)</strong>{% else %}pas encore demandé dans vos offres{% endif %}
+                </p>
+                <div class="quiz-progress" role="progressbar" aria-valuenow="{{ theme_item.score }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression {{ theme_item.label }}"><span style="width: {{ theme_item.score }}%"></span></div>
+                <div class="rules-actions">
+                    <a class="button button-primary" href="{{ url_for('show_quiz').path }}?theme={{ theme_item.key }}&mode=spaced" title="Répétition espacée : questions à revoir aujourd'hui, puis nouvelles">Réviser</a>
+                    {% if theme_item.to_review %}<a class="button" href="{{ url_for('show_quiz').path }}?theme={{ theme_item.key }}&mode=review">Revoir les erreurs</a>{% endif %}
+                    {% if theme_item.guide %}<a class="button" href="{{ url_for('show_quiz_guide', pName=theme_item.guide).path }}">{{ icon("file-text", 16) }} Guide</a>{% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </section>
+        {% endfor %}
+        {% endfor %}
+
     </div>
 </div>
-{% for subdomain, theme_items in sections %}
-<p><span class="subdomain-badge">{{ subdomain }} · {{ theme_items | length }}</span></p>
-<section class="grid grid-settings quiz-themes">
-    {% for theme_item in theme_items %}
-    <article class="card">
-        <h2>{{ theme_item.label }}</h2>
-        <p class="muted">
-            {{ theme_item.correct }} / {{ theme_item.total }} acquises
-            {% if theme_item.to_review %} · {{ theme_item.to_review }} ratée(s){% endif %}
-            {% if theme_item.due %} · <strong class="tone-warning">{{ theme_item.due }} à revoir aujourd'hui</strong>{% endif %}
-            · {% if theme_item.offer_count %}<strong class="tone-primary">demandé dans {{ theme_item.offer_count }} offre(s)</strong>{% else %}pas encore demandé dans vos offres{% endif %}
-        </p>
-        <div class="quiz-progress" role="progressbar" aria-valuenow="{{ theme_item.score }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression {{ theme_item.label }}"><span style="width: {{ theme_item.score }}%"></span></div>
-        <div class="rules-actions">
-            <a class="button button-primary" href="{{ url_for('show_quiz').path }}?theme={{ theme_item.key }}&mode=spaced" title="Répétition espacée : questions à revoir aujourd'hui, puis nouvelles">Réviser</a>
-            {% if theme_item.to_review %}<a class="button" href="{{ url_for('show_quiz').path }}?theme={{ theme_item.key }}&mode=review">Revoir les erreurs</a>{% endif %}
-            {% if theme_item.guide %}<a class="button" href="{{ url_for('show_quiz_guide', pName=theme_item.guide).path }}">{{ icon("file-text", 16) }} Guide</a>{% endif %}
-        </div>
-    </article>
-    {% endfor %}
-</section>
-{% endfor %}
-{% endfor %}
 
 {% if guides %}
 <article class="card section-gap">
@@ -157,7 +165,13 @@
         <button class="button" type="submit">{{ icon("upload", 16) }} Importer</button>
     </form>
     <p class="section-gap"><a class="button" href="{{ url_for('download_quiz_pack').path }}" title="Pack .zip des questions importées, schémas et guides, réimportable">{{ icon("download", 16) }} Exporter mes questions</a></p>
-    {% if import_form.message %}<p class="application-message" role="status">{{ import_form.message }}</p>{% endif %}
+    {% if import_form.message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ import_form.message }}</p>{% endif %}
+    {% if import_form.details %}
+    <details class="import-details">
+        <summary>Voir le détail</summary>
+        <pre>{{ import_form.details }}</pre>
+    </details>
+    {% endif %}
 </article>
 
 <article class="card section-gap">
@@ -169,6 +183,31 @@
         {{ ui.stat("-" if statistics.rate is none else statistics.rate ~ " %", "Bonnes réponses", "sparkles", "purple") }}
         {{ ui.stat(statistics.streak, "Jours de révision d'affilée", "calendar", "amber") }}
     </section>
+    <h3 class="section-gap">Progression par catégorie</h3>
+    <div class="table-wrapper">
+        <table class="table category-progress">
+            <thead>
+                <tr>
+                    <th>Catégorie</th>
+                    <th class="amount">Thèmes</th>
+                    <th class="amount">Acquises</th>
+                    <th>Progression</th>
+                    <th class="amount">À revoir</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in category_progress %}
+                <tr class="{{ 'category-domain' if row.level == 0 else 'category-subdomain' }}">
+                    <td>{{ icon(row.icon, 16) }} {{ row.label }}</td>
+                    <td class="amount">{{ row.themes }}</td>
+                    <td class="amount">{{ row.correct }} / {{ row.total }}</td>
+                    <td><div class="quiz-progress" role="progressbar" aria-valuenow="{{ row.score }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression {{ row.label }}"><span style="width: {{ row.score }}%"></span></div> <small class="muted">{{ row.score }} %</small></td>
+                    <td class="amount tone-warning">{{ row.due or "" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     <div class="section-gap">{{ ui.bar_chart(statistics_chart, "Réponses par jour") }}</div>
 </article>
 {% endblock %}

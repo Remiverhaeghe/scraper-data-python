@@ -9,11 +9,21 @@ import unicodedata
 
 OTHER_DOMAIN = ("Autres", "Divers")
 
-# Icône de chaque domaine, partagée par le bureau et le web
+# Icône de chaque domaine et sous-domaine, partagée par le bureau et le web
 DOMAIN_ICONS = {
     "Informatique": "terminal",
     "Réseau et sécurité": "lock",
     "Industrie": "settings",
+    "Développement": "code",
+    "Données": "database",
+    "Exploitation et DevOps": "server",
+    "Outils et méthodes": "list-checks",
+    "Réseau": "network",
+    "Sécurité et identité": "shield",
+    "Maintenance": "wrench",
+    "Électricité et énergie": "zap",
+    "Mécanique et fluides": "settings",
+    "Automatisme": "cpu",
 }
 
 # Ordre d'affichage des domaines et de leurs sous-domaines
@@ -141,3 +151,77 @@ def group_themes(pThemes, pDomain=None, pSubdomain=None):
             rGroups.append((vDomain, vSections))
 
     return rGroups
+
+
+def locate_guide(pGuide, pThemes):
+    """Retourne le domaine et le sous-domaine d'un guide pratique.
+
+    Un guide rattaché à un thème suit ce thème ; sinon, son titre le classe.
+    """
+
+    vTheme = next(
+        (vTheme for vTheme in pThemes if vTheme["key"] == pGuide["theme"]), None
+    )
+
+    rDomain = (
+        (vTheme["domain"], vTheme["subdomain"])
+        if vTheme
+        else classify_theme(pGuide["title"])
+    )
+
+    return rDomain
+
+
+def filter_guides(pGuides, pThemes, pDomain=None, pSubdomain=None):
+    """Garde les guides de la catégorie affichée ; tous sans filtre."""
+
+    rGuides = []
+
+    for vGuide in pGuides:
+        vDomain, vSubdomain = locate_guide(vGuide, pThemes)
+
+        if (not pDomain or vDomain == pDomain) and (
+            not pSubdomain or vSubdomain == pSubdomain
+        ):
+            rGuides.append(vGuide)
+
+    return rGuides
+
+
+def build_category_progress(pThemes):
+    """Résume la progression par domaine puis sous-domaine, pour les statistiques.
+
+    Retourne des lignes {label, level (0 domaine, 1 sous-domaine), icon, themes,
+    correct, total, score, due}, dans l'ordre d'affichage.
+    """
+
+    def summarize(pLabel, pLevel, pThemes):
+        vCorrect = sum(vTheme["correct"] for vTheme in pThemes)
+        vTotal = sum(vTheme["total"] for vTheme in pThemes)
+
+        rRow = {
+            "label": pLabel,
+            "level": pLevel,
+            "icon": DOMAIN_ICONS.get(pLabel, "tag"),
+            "themes": len(pThemes),
+            "correct": vCorrect,
+            "total": vTotal,
+            "score": round(100 * vCorrect / vTotal) if vTotal else 0,
+            "due": sum(vTheme["due"] for vTheme in pThemes),
+        }
+
+        return rRow
+
+    rRows = []
+
+    for vDomain, vSections in group_themes(pThemes):
+        rRows.append(
+            summarize(
+                vDomain, 0, [vTheme for _, vThemes in vSections for vTheme in vThemes]
+            )
+        )
+        rRows += [
+            summarize(vSubdomain, 1, vThemes) for vSubdomain, vThemes in vSections
+        ]
+
+    return rRows

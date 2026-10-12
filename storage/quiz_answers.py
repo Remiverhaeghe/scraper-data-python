@@ -57,13 +57,14 @@ def get_last_answers(pDatabaseFile):
 
     try:
         vRows = vConnection.execute(
-            "SELECT question_id, correct FROM quiz_answer ORDER BY id"
+            "SELECT question_id, correct FROM quiz_answer ORDER BY answered_at, id"
         ).fetchall()
 
     finally:
         vConnection.close()
 
-    # Les réponses sont lues dans l'ordre : la plus récente remplace les autres.
+    # Lues par heure de réponse : une réponse du téléphone envoyée en retard
+    # reprend sa place, et la plus récente remplace les autres.
     rAnswers = {vQuestionId: bool(vCorrect) for vQuestionId, vCorrect in vRows}
 
     return rAnswers
@@ -78,7 +79,8 @@ def get_answer_history(pDatabaseFile):
         rHistory = [
             (vQuestionId, bool(vCorrect), vAnsweredAt)
             for vQuestionId, vCorrect, vAnsweredAt in vConnection.execute(
-                "SELECT question_id, correct, answered_at FROM quiz_answer ORDER BY id"
+                "SELECT question_id, correct, answered_at FROM quiz_answer "
+                "ORDER BY answered_at, id"
             )
         ]
 
@@ -86,3 +88,35 @@ def get_answer_history(pDatabaseFile):
         vConnection.close()
 
     return rHistory
+
+
+def save_synced_answers(pDatabaseFile, pAnswers):
+    """Enregistre des réponses venues du téléphone ; retourne le nombre ajouté.
+
+    pAnswers contient (identifiant, question, thème, juste, date). Une réponse
+    déjà reçue sous le même identifiant est ignorée.
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vBefore = vConnection.total_changes
+        vConnection.executemany(
+            """
+            INSERT OR IGNORE INTO quiz_answer
+                (client_id, question_id, theme, correct, answered_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            [
+                (vClientId, vQuestionId, vTheme, int(bool(vCorrect)), vAnsweredAt)
+                for vClientId, vQuestionId, vTheme, vCorrect, vAnsweredAt in pAnswers
+            ],
+        )
+        vConnection.commit()
+
+        rAdded = vConnection.total_changes - vBefore
+
+    finally:
+        vConnection.close()
+
+    return rAdded

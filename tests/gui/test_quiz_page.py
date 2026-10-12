@@ -25,7 +25,7 @@ def test_question_answer_and_review(qt_application, tmp_path):
     vPage = create_page(tmp_path / "scraper.db")
 
     assert len(vPage.themes) >= 6
-    assert vPage.domain_group.buttons()[0].isChecked()
+    assert vPage.category_buttons[(None, None)].isChecked()
 
     vPage.start("sql", "discover")
     vPage.validate()
@@ -216,9 +216,7 @@ def test_domain_filter_zero_offers_and_scroll(qt_application, tmp_path):
     vPage = create_page(tmp_path / "scraper.db")
     vScroll = vPage.findChild(quiz_page.QScrollArea)
 
-    assert [vButton.text() for vButton in vPage.domain_group.buttons()][0] == (
-        "Tous les domaines"
-    )
+    assert vPage.category_buttons[(None, None)].text().startswith("Tous les thèmes")
 
     vPage.select_domain("Informatique")
 
@@ -245,7 +243,7 @@ def test_exam_is_run_resumed_and_closed(qt_application, tmp_path):
     """Vérifie l'examen sur le bureau : questions, reprise, résultat et fermeture."""
 
     vPage = create_page(tmp_path / "scraper.db")
-    vExamButton = vPage.domain_layout.itemAt(vPage.domain_layout.count() - 1).widget()
+    vExamButton = vPage.exam_button
 
     assert vExamButton.text().startswith("Mode examen (20 questions)")
 
@@ -256,7 +254,7 @@ def test_exam_is_run_resumed_and_closed(qt_application, tmp_path):
     assert vPage.flag_button.isHidden()
 
     vPage.refresh()
-    vResume = vPage.domain_layout.itemAt(vPage.domain_layout.count() - 1).widget()
+    vResume = vPage.exam_button
 
     assert vResume.text() == "Reprendre l'examen (1 / 20)"
 
@@ -291,21 +289,22 @@ def test_exam_reports_empty_domain(qt_application, tmp_path):
     assert vPage.message_label.text() == "Aucune question dans ce domaine."
 
 
-def test_subdomain_chips_filter_themes(qt_application, tmp_path):
-    """Vérifie les pastilles de sous-domaine, visibles une fois le domaine choisi."""
+def test_category_list_filters_and_toggles(qt_application, tmp_path):
+    """Vérifie la liste des catégories : sous-domaines, filtre, second clic et titre."""
 
     vPage = create_page(tmp_path / "scraper.db")
 
-    assert vPage.subdomain_group.buttons() == []
+    assert (
+        vPage.category_buttons[("Informatique", "Données")]
+        .text()
+        .startswith("Données (")
+    )
 
-    vPage.select_domain("Informatique")
-    vLabels = [vButton.text() for vButton in vPage.subdomain_group.buttons()]
+    vPage.category_buttons[("Informatique", "Données")].click()
 
-    assert vLabels[:2] == ["Tous les sous-domaines", "Développement"]
-
-    vPage.select_subdomain("Données")
-
-    assert vPage.subdomain == "Données"
+    assert (vPage.domain, vPage.subdomain) == ("Informatique", "Données")
+    assert vPage.filter_label.text() == "Informatique › Données"
+    assert vPage.category_buttons[("Informatique", "Données")].isChecked()
 
     vTitles = {
         vLabel.text()
@@ -315,3 +314,10 @@ def test_subdomain_chips_filter_themes(qt_application, tmp_path):
 
     assert "SQL" in vTitles
     assert "Java" not in vTitles
+    assert "Données · 1" in vTitles
+
+    # Second clic sur la catégorie active : retour à l'ensemble des thèmes
+    vPage.category_buttons[("Informatique", "Données")].click()
+
+    assert (vPage.domain, vPage.subdomain) == (None, None)
+    assert vPage.filter_label.text() == "Tous les thèmes"

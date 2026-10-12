@@ -78,7 +78,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées, v14 : thèmes, schémas et guides importés, v15 : domaine des thèmes importés)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées, v14 : thèmes, schémas et guides importés, v15 : domaine des thèmes importés, v16 : identifiant des réponses du téléphone)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -325,8 +325,12 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Suivi de la progression : score par thème, questions ratées à revoir
 - [x] Statistiques : questions acquises, taux de bonnes réponses, jours de révision d'affilée, réponses des 14 derniers jours
 - [x] Thèmes proposés selon les compétences demandées dans les offres enregistrées ; pour un thème importé, compétences cherchées dans le texte des offres (deux au moins par offre)
-- [x] Thèmes rangés par domaine (Informatique, Réseau et sécurité, Industrie) et sous-domaine, avec des pastilles de filtre par domaine puis sous-domaine ; un pack peut imposer le domaine de ses thèmes
+- [x] Thèmes rangés par domaine (Informatique, Réseau et sécurité, Industrie) et sous-domaine, avec une liste des catégories à gauche (icône et nombre de thèmes, second clic pour tout réafficher) ; un pack peut imposer le domaine de ses thèmes
+- [x] État de chaque thème en un coup d'œil (acquis, à revoir aujourd'hui, en cours), guides pratiques limités à la catégorie affichée
+- [x] Statistiques : progression par domaine et sous-domaine (questions acquises, taux, révisions dues)
 - [x] Répétition espacée (méthode Leitner) : une question revient après 1, 3, 7, 21 puis 60 jours selon les réponses ; questions à revoir aujourd'hui signalées par thème
+- [x] Import d'archives réunissant plusieurs packs (un manifest par dossier) ou d'autres archives .zip (un niveau)
+- [x] API JSON pour une application mobile de révision hors ligne : contenu complet, progression et envoi des réponses
 - [x] Mode examen : 20 questions tirées au hasard dans un domaine, notées et chronométrées, thèmes à revoir en fin d'examen ; repris sur le bureau ou le web
 - [x] Informations publiques sur l'entreprise : activité, taille, siège, chiffre d'affaires (API Recherche d'entreprises de l'État)
 - [x] Demandes prêtes pour ChatGPT depuis la fiche d'une offre : questions du recruteur, simulation d'entretien (une question à la fois, réponse notée), CV et lettre adaptés, connaissance de l'entreprise. Copiées puis collées avec son propre compte : l'API d'OpenAI, payante, n'est pas utilisée
@@ -369,6 +373,23 @@ depuis la même carte, ce qui désactive l'ancienne. L'agenda doit pouvoir joind
 
 Google Agenda sur le web ne convient pas : ses serveurs devraient joindre le PC depuis
 Internet, ce que l'accès par Tailscale évite justement.
+
+### API de l'application mobile de révision
+
+Une application mobile séparée peut réviser hors ligne puis envoyer ses réponses. Le jeton
+se crée dans Paramètres, « Application mobile », avec l'adresse à saisir dans l'application.
+Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune session n'est utilisée.
+
+| Méthode | Adresse | Rôle |
+|---|---|---|
+| GET | `/api/v1/quiz` | Thèmes, questions (réponse et explication comprises), schémas et guides ; `ETag` : 304 si rien n'a changé |
+| GET | `/api/v1/progress` | Boîte et date de révision de chaque question, chiffres d'ensemble |
+| POST | `/api/v1/answers` | Réponses faites hors ligne : `{"answers": [{"id", "question_id", "choice", "answered_at"}]}` |
+
+Le téléphone corrige lui-même avec le contenu téléchargé ; à l'envoi, le serveur recalcule
+chaque correction, ignore une réponse déjà reçue (même `id`) et refuse une date hors limites.
+Les réponses sont rangées par heure de réponse : un envoi tardif ne fausse pas la répétition
+espacée. Au plus 500 réponses par envoi.
 
 ---
 
@@ -414,6 +435,8 @@ scraper-data-python/
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
+│   ├── access_tokens.py                       # Jetons d'accès secrets (agenda, application mobile)
+│   ├── mobile_sync.py                         # Contenu hors ligne et réponses de l'application mobile
 │   ├── cv_import.py                           # Import d'un CV : lecture et pré-remplissage du profil
 │   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
 │   ├── notification.py                        # Contenu des e-mails de nouvelles offres et de relances
@@ -547,6 +570,8 @@ scraper-data-python/
 │   ├── auth.py                                # Mot de passe, session signée et tentatives
 │   ├── password.py                            # Génère l'empreinte du mot de passe (.env)
 │   ├── app.py                                 # Application FastAPI et routes
+│   ├── api.py                                 # API JSON de l'application mobile (jeton)
+│   ├── dependencies.py                        # Base de données partagée par les routes
 │   ├── templates/                             # Gabarits HTML Jinja2
 │   │   ├── base.html                          # Mise en page commune et menu latéral
 │   │   ├── _macros.html                       # En-tête de page et carte statistique
@@ -654,6 +679,7 @@ scraper-data-python/
 │   │   ├── test_quiz_import.py                # Teste l'import des packs, schémas et guides
 │   │   ├── test_quiz_domains.py               # Teste les domaines et le compte des offres par thème
 │   │   ├── test_quiz_exam.py                  # Teste le mode examen
+│   │   ├── test_mobile_sync.py                # Teste le contenu hors ligne et l'envoi des réponses
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage
@@ -791,6 +817,7 @@ scraper-data-python/
 │   ├── web/                                    # Tests du tableau de bord
 │   │   ├── __init__.py                          # Initialise le package de tests Web
 │   │   ├── test_app.py                         # Teste les routes et la sécurité de l'affichage
+│   │   ├── test_api.py                         # Teste l'API mobile : jeton, contenu et réponses
 │   │   ├── test_auth.py                        # Teste la connexion, la session et le CSRF
 │   │   └── test_password.py                    # Teste la génération de l'empreinte
 │   │

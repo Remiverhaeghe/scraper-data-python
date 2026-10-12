@@ -560,6 +560,18 @@ def migrate_to_v15(pConnection):
     pConnection.execute("ALTER TABLE quiz_theme ADD COLUMN subdomain TEXT")
 
 
+def migrate_to_v16(pConnection):
+    """Ajoute l'identifiant des réponses envoyées par l'application mobile."""
+
+    # Identifiant choisi par le téléphone : un envoi relancé après une coupure
+    # ne crée pas de doublon. Les réponses faites ici n'en ont pas.
+    pConnection.execute("ALTER TABLE quiz_answer ADD COLUMN client_id TEXT")
+    pConnection.execute(
+        "CREATE UNIQUE INDEX idx_quiz_answer_client ON quiz_answer(client_id) "
+        "WHERE client_id IS NOT NULL"
+    )
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -576,6 +588,7 @@ MIGRATIONS = [
     migrate_to_v13,
     migrate_to_v14,
     migrate_to_v15,
+    migrate_to_v16,
 ]
 
 

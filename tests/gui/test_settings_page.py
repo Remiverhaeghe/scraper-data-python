@@ -440,3 +440,75 @@ def test_calendar_and_archive_errors_are_reported(
     assert (
         vPage.archive_message.text() == "La restauration a échoué. Voir les journaux."
     )
+
+
+def test_mobile_token_is_created_copied_and_renewed(
+    qt_application, tmp_path, monkeypatch
+):
+    """Vérifie la carte de l'application mobile : création, copie et renouvellement."""
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+
+    assert vPage.mobile_edit.text() == ""
+    assert not vPage.copy_mobile_button.isEnabled()
+
+    vPage.mobile_button.click()
+    vFirst = vPage.mobile_edit.text()
+
+    assert len(vFirst) >= 40
+    assert vPage.mobile_button.text() == "Renouveler le jeton"
+
+    vPage.copy_mobile_button.click()
+
+    assert settings_page.QApplication.clipboard().text() == vFirst
+
+    vAnswers = [
+        settings_page.QMessageBox.StandardButton.No,
+        settings_page.QMessageBox.StandardButton.Yes,
+    ]
+    monkeypatch.setattr(
+        settings_page.QMessageBox, "question", lambda *pArgs: vAnswers.pop(0)
+    )
+
+    vPage.mobile_button.click()
+
+    assert vPage.mobile_edit.text() == vFirst
+
+    vPage.mobile_button.click()
+
+    assert vPage.mobile_edit.text() not in ("", vFirst)
+
+    monkeypatch.setattr(settings_page, "renew_mobile_token", lambda *pArgs: 1 / 0)
+    vPage.mobile_button.setText("Créer le jeton")
+    vPage.mobile_edit.clear()
+    vPage.mobile_button.click()
+
+    assert vPage.mobile_message.text() == "Le jeton n'a pas pu être créé."
+
+
+def test_messages_are_colored_and_cards_reflow(qt_application, tmp_path, monkeypatch):
+    """Vérifie les messages colorés et le passage sur une colonne en fenêtre étroite."""
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+
+    vPage.company_edits["excluded"].setPlainText("acme")
+    vPage.company_edits["preferred"].setPlainText("acme")
+    vPage.save_companies()
+
+    assert COLORS["warning"] in vPage.companies_message.styleSheet()
+
+    vPage.company_edits["preferred"].setPlainText("globex")
+    vPage.save_companies()
+
+    assert COLORS["success"] in vPage.companies_message.styleSheet()
+    assert vPage.company_edits["excluded"].objectName() == "excludedCompanies"
+
+    vPage.resize(800, 600)
+    vPage.arrange_cards(vPage.width() < settings_page.SINGLE_COLUMN_WIDTH)
+
+    assert vPage.columns[1].count() == 1
+    assert vPage.columns[0].count() == 11
+
+    vPage.arrange_cards(False)
+
+    assert vPage.columns[1].count() == 6

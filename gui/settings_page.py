@@ -30,6 +30,7 @@ from gui.widgets import (
     create_icon_label,
     create_page_header,
     create_scroll_content,
+    show_message,
 )
 from config import WEB_HOST, WEB_PORT
 from job.calendar import (
@@ -38,6 +39,7 @@ from job.calendar import (
     renew_calendar_token,
 )
 from job.companies import load_company_rules, save_company_rules
+from job.mobile_sync import API_PREFIX, get_mobile_token, renew_mobile_token
 from job.notification import build_test_email
 from job.schedule import (
     MIN_SCORE_CHOICES,
@@ -64,6 +66,12 @@ from utils.mailer import EMAIL_SETTINGS, get_missing_email_settings, send_email
 logger = get_logger(__name__)
 
 THEME_ICONS = {"light": "sun", "dark": "moon"}
+
+# Hauteur des listes d'entreprises : quelques lignes, la liste défile au-delà.
+COMPANY_EDIT_HEIGHT = 76
+
+# En dessous de cette largeur de page, les cartes passent sur une colonne.
+SINGLE_COLUMN_WIDTH = 1100
 
 # Adresse du tableau de bord : WEB_HOST vaut l'adresse Tailscale pour un accès
 # depuis le téléphone, voir le README.
@@ -114,37 +122,72 @@ class SettingsPage(QWidget):
 
         # Deux colonnes indépendantes : dans une grille, une carte courte prendrait
         # la hauteur de sa voisine et s'étirerait.
-        vColumns = QHBoxLayout()
-        vColumns.setSpacing(18)
-
-        for vCards in (
-            (
+        # Deux colonnes sur un écran large, une seule dans une fenêtre réduite :
+        # les cartes sont redistribuées au redimensionnement (resizeEvent).
+        self.card_groups = (
+            [
                 self.create_appearance_card(),
                 self.create_rules_card(),
                 self.create_schedule_card(),
                 self.create_calendar_card(),
-            ),
-            (
+                self.create_mobile_card(),
+            ],
+            [
                 self.create_notification_card(),
                 self.create_sources_card(),
                 self.create_companies_card(),
                 self.create_archive_card(),
                 self.create_reset_card(),
-            ),
-        ):
+            ],
+        )
+        self.columns = []
+        self.single_column = None
+
+        vColumns = QHBoxLayout()
+        vColumns.setSpacing(18)
+
+        for _ in self.card_groups:
             vColumn = QVBoxLayout()
             vColumn.setSpacing(18)
-
-            for vCard in vCards:
-                vColumn.addWidget(vCard)
-
-            vColumn.addStretch()
+            self.columns.append(vColumn)
             vColumns.addLayout(vColumn, 1)
+
+        self.arrange_cards(False)
 
         vLayout.addLayout(vColumns, 1)
 
         self.refresh_schedule()
         self.refresh_calendar()
+        self.refresh_mobile()
+
+    def arrange_cards(self, pSingleColumn):
+        """Range les cartes sur une colonne, ou sur deux côte à côte."""
+        if pSingleColumn == self.single_column:
+            return
+
+        self.single_column = pSingleColumn
+
+        for vColumn in self.columns:
+            while vColumn.count():
+                vColumn.takeAt(0)
+
+        vGroups = (
+            (self.card_groups[0] + self.card_groups[1], [])
+            if pSingleColumn
+            else self.card_groups
+        )
+
+        for vColumn, vCards in zip(self.columns, vGroups):
+            for vCard in vCards:
+                vColumn.addWidget(vCard)
+
+            vColumn.addStretch()
+
+    def resizeEvent(self, pEvent):  # pylint: disable=invalid-name
+        """Passe sur une colonne quand la page devient trop étroite pour deux."""
+        super().resizeEvent(pEvent)
+
+        self.arrange_cards(self.width() < SINGLE_COLUMN_WIDTH)
 
     def create_appearance_card(self):
         """Construit le choix du thème, mémorisé pour les prochains lancements."""
@@ -244,19 +287,26 @@ class SettingsPage(QWidget):
             _, vRecomputed = save_settings(self.database_file, vValues)
 
         except ValueError as vException:
-            self.rules_message.setText(str(vException))
+            show_message(self.rules_message, str(vException), "warning")
 
         except Exception:
             logger.exception("Échec de l'enregistrement des règles de calcul")
 
-            self.rules_message.setText("Les règles n'ont pas pu être enregistrées.")
+            show_message(
+                self.rules_message,
+                "Les règles n'ont pas pu être enregistrées.",
+                "danger",
+            )
 
         else:
-            self.rules_message.setText(
-                f"Règles enregistrées, salaire net recalculé pour {vRecomputed} "
-                "offre(s)."
-                if vRecomputed
-                else "Règles enregistrées."
+            show_message(
+                self.rules_message,
+                (
+                    f"Règles enregistrées, salaire net recalculé pour {vRecomputed} "
+                    "offre(s)."
+                    if vRecomputed
+                    else "Règles enregistrées."
+                ),
             )
 
     def create_sources_card(self):
@@ -459,18 +509,28 @@ class SettingsPage(QWidget):
         vGrid = QGridLayout()
         vGrid.setHorizontalSpacing(12)
 
-        for vColumn, (vKind, vLabel) in enumerate(
-            (("excluded", "À exclure"), ("preferred", "À privilégier"))
+        # Exclues en rouge, privilégiées en vert : le rôle de chaque liste se voit.
+        for vColumn, (vKind, vLabel, vIcon, vTone) in enumerate(
+            (
+                ("excluded", "À exclure", "circle-alert", "danger"),
+                ("preferred", "À privilégier", "circle-check", "success"),
+            )
         ):
             vTitle = QLabel(vLabel)
-            vTitle.setObjectName("fieldLabel")
+            vTitle.setStyleSheet(f"color: {COLORS[vTone]}; font-weight: 600;")
+
+            vTitleRow = QHBoxLayout()
+            vTitleRow.setSpacing(6)
+            vTitleRow.addWidget(create_icon_label(vIcon, COLORS[vTone], 16))
+            vTitleRow.addWidget(vTitle, 1)
 
             vEdit = QPlainTextEdit()
+            vEdit.setObjectName(f"{vKind}Companies")
             vEdit.setPlaceholderText("Ex. Acme\nGlobex")
-            vEdit.setFixedHeight(110)
+            vEdit.setFixedHeight(COMPANY_EDIT_HEIGHT)
 
             self.company_edits[vKind] = vEdit
-            vGrid.addWidget(vTitle, 0, vColumn)
+            vGrid.addLayout(vTitleRow, 0, vColumn)
             vGrid.addWidget(vEdit, 1, vColumn)
 
         vSaveButton = create_button("Enregistrer", pObjectName="primaryButton")
@@ -499,7 +559,9 @@ class SettingsPage(QWidget):
         except Exception:
             logger.exception("Impossible de lire les listes d'entreprises")
 
-            self.companies_message.setText("Les listes n'ont pas pu être lues.")
+            show_message(
+                self.companies_message, "Les listes n'ont pas pu être lues.", "danger"
+            )
 
         else:
             for vKind, vEdit in self.company_edits.items():
@@ -515,22 +577,23 @@ class SettingsPage(QWidget):
             )
 
         except ValueError as vException:
-            vMessage = str(vException)
+            vMessage, vTone = str(vException), "warning"
 
         except Exception:
             logger.exception("Échec de l'enregistrement des listes d'entreprises")
 
-            vMessage = "Les listes n'ont pas pu être enregistrées."
+            vMessage, vTone = "Les listes n'ont pas pu être enregistrées.", "danger"
 
         else:
             self.refresh_companies()
 
-            vMessage = (
+            vMessage, vTone = (
                 f"{len(vRules['excluded'])} entreprise(s) exclue(s), "
-                f"{len(vRules['preferred'])} privilégiée(s)."
+                f"{len(vRules['preferred'])} privilégiée(s).",
+                "success",
             )
 
-        self.companies_message.setText(vMessage)
+        show_message(self.companies_message, vMessage, vTone)
 
     def refresh_saved_searches(self):
         """Propose les recherches enregistrées pour remplacer la recherche planifiée."""
@@ -610,12 +673,21 @@ class SettingsPage(QWidget):
         except Exception:
             logger.exception("Échec de l'enregistrement de la planification")
 
-            vErrors = ["La planification n'a pas pu être enregistrée."]
+            show_message(
+                self.schedule_message,
+                "La planification n'a pas pu être enregistrée.",
+                "danger",
+            )
+            return
 
         if not vErrors:
             self.refresh_schedule()
 
-        self.schedule_message.setText(" ".join(vErrors) or "Planification enregistrée.")
+        show_message(
+            self.schedule_message,
+            " ".join(vErrors) or "Planification enregistrée.",
+            "warning" if vErrors else "success",
+        )
 
     def remove_scheduled_search(self):
         """Retire la recherche planifiée, après confirmation."""
@@ -636,11 +708,13 @@ class SettingsPage(QWidget):
         except Exception:
             logger.exception("Échec du retrait de la recherche planifiée")
 
-            self.schedule_message.setText("La recherche n'a pas pu être retirée.")
+            show_message(
+                self.schedule_message, "La recherche n'a pas pu être retirée.", "danger"
+            )
 
         else:
             self.refresh_schedule()
-            self.schedule_message.setText("Recherche planifiée retirée.")
+            show_message(self.schedule_message, "Recherche planifiée retirée.")
 
     def save_email(self):
         """Enregistre l'adresse de destination des notifications."""
@@ -652,23 +726,26 @@ class SettingsPage(QWidget):
         except Exception:
             logger.exception("Échec de l'enregistrement de l'adresse de notification")
 
-            vErrors = ["L'adresse n'a pas pu être enregistrée."]
+            show_message(
+                self.email_message, "L'adresse n'a pas pu être enregistrée.", "danger"
+            )
+            return
 
         if vErrors:
-            vMessage = " ".join(vErrors)
+            show_message(self.email_message, " ".join(vErrors), "warning")
         elif self.email_edit.text().strip():
-            vMessage = "Adresse enregistrée."
+            show_message(self.email_message, "Adresse enregistrée.")
         else:
-            vMessage = "Notifications désactivées."
-
-        self.email_message.setText(vMessage)
+            show_message(self.email_message, "Notifications désactivées.", "warning")
 
     def send_test_email(self):
         """Envoie un e-mail de test à l'adresse saisie."""
         vEmail = self.email_edit.text().strip()
 
         if not vEmail:
-            self.email_message.setText("Saisissez d'abord une adresse.")
+            show_message(
+                self.email_message, "Saisissez d'abord une adresse.", "warning"
+            )
             return
 
         # L'envoi est court mais bloquant : le curseur signale l'attente.
@@ -680,10 +757,12 @@ class SettingsPage(QWidget):
         except (OSError, smtplib.SMTPException, ValueError) as vException:
             logger.error("Échec de l'e-mail de test : %s", vException)
 
-            self.email_message.setText(f"Échec de l'envoi : {vException}")
+            show_message(
+                self.email_message, f"Échec de l'envoi : {vException}", "danger"
+            )
 
         else:
-            self.email_message.setText("E-mail de test envoyé.")
+            show_message(self.email_message, "E-mail de test envoyé.")
 
         finally:
             QApplication.restoreOverrideCursor()
@@ -762,19 +841,116 @@ class SettingsPage(QWidget):
         except Exception:
             logger.exception("Échec de la création de l'adresse d'abonnement")
 
-            self.calendar_message.setText("L'adresse n'a pas pu être créée.")
+            show_message(
+                self.calendar_message, "L'adresse n'a pas pu être créée.", "danger"
+            )
 
         else:
             self.refresh_calendar()
-            self.calendar_message.setText(
-                "Adresse créée : ajoutez-la dans l'agenda comme agenda par URL."
+            show_message(
+                self.calendar_message,
+                "Adresse créée : ajoutez-la dans l'agenda comme agenda par URL.",
             )
 
     def copy_calendar(self):
         """Copie l'adresse d'abonnement dans le presse-papiers."""
         QApplication.clipboard().setText(self.calendar_edit.text())
 
-        self.calendar_message.setText("Adresse copiée.")
+        show_message(self.calendar_message, "Adresse copiée.")
+
+    def create_mobile_card(self):
+        """Construit l'accès de l'application mobile de révision : adresse et jeton."""
+        vCard, vLayout = create_card(
+            "Application mobile",
+            "Révision sur le téléphone, même hors ligne : saisissez cette adresse "
+            "et ce jeton dans l'application. Les réponses rejoignent la "
+            "progression d'ici au retour du réseau.",
+        )
+
+        vAddress = QLineEdit(f"{WEB_BASE_URL}{API_PREFIX}")
+        vAddress.setReadOnly(True)
+        vAddress.setToolTip("Adresse du serveur, à saisir dans l'application")
+
+        self.mobile_edit = QLineEdit()
+        self.mobile_edit.setReadOnly(True)
+        self.mobile_edit.setPlaceholderText("Aucun jeton créé")
+
+        self.mobile_button = create_button(
+            "Créer le jeton", "lock", pIconColor=COLORS["primary"]
+        )
+        self.mobile_button.setToolTip("Un nouveau jeton désactive l'ancien")
+        self.mobile_button.clicked.connect(self.renew_mobile)
+
+        self.copy_mobile_button = create_button(
+            "Copier", "copy", pIconColor=COLORS["primary"]
+        )
+        self.copy_mobile_button.clicked.connect(self.copy_mobile)
+
+        self.mobile_message = QLabel()
+        self.mobile_message.setObjectName("cardSubtitle")
+        self.mobile_message.setWordWrap(True)
+
+        vActions = QHBoxLayout()
+        vActions.addWidget(self.mobile_button)
+        vActions.addWidget(self.copy_mobile_button)
+        vActions.addWidget(self.mobile_message, 1)
+
+        vLayout.addWidget(vAddress)
+        vLayout.addWidget(self.mobile_edit)
+        vLayout.addLayout(vActions)
+
+        return vCard
+
+    def refresh_mobile(self):
+        """Affiche le jeton de l'application mobile enregistré."""
+        try:
+            vToken = get_mobile_token(self.database_file)
+
+        except Exception:
+            logger.exception("Impossible de lire le jeton de l'application mobile")
+
+            vToken = None
+
+        self.mobile_edit.setText(vToken or "")
+        self.mobile_button.setText(
+            "Renouveler le jeton" if vToken else "Créer le jeton"
+        )
+        self.copy_mobile_button.setEnabled(bool(vToken))
+
+    def renew_mobile(self):
+        """Crée un jeton ; un jeton existant n'est remplacé qu'après confirmation."""
+        if self.mobile_edit.text() and (
+            QMessageBox.question(
+                self,
+                "Renouveler le jeton",
+                "Le jeton actuel cessera de fonctionner : l'application mobile "
+                "devra utiliser le nouveau. Continuer ?",
+            )
+            != QMessageBox.StandardButton.Yes
+        ):
+            return
+
+        try:
+            renew_mobile_token(self.database_file)
+
+        except Exception:
+            logger.exception("Échec de la création du jeton de l'application mobile")
+
+            show_message(
+                self.mobile_message, "Le jeton n'a pas pu être créé.", "danger"
+            )
+
+        else:
+            self.refresh_mobile()
+            show_message(
+                self.mobile_message, "Jeton créé : saisissez-le dans l'application."
+            )
+
+    def copy_mobile(self):
+        """Copie le jeton de l'application mobile dans le presse-papiers."""
+        QApplication.clipboard().setText(self.mobile_edit.text())
+
+        show_message(self.mobile_message, "Jeton copié.")
 
     def create_archive_card(self):
         """Construit l'export et la restauration de la sauvegarde complète."""
@@ -827,11 +1003,14 @@ class SettingsPage(QWidget):
         except Exception:
             logger.exception("Échec de l'export de la sauvegarde complète")
 
-            self.archive_message.setText("L'export a échoué. Voir les journaux.")
+            show_message(
+                self.archive_message, "L'export a échoué. Voir les journaux.", "danger"
+            )
 
         else:
-            self.archive_message.setText(
-                f"Sauvegarde exportée : base et {vCount} pièce(s) jointe(s)."
+            show_message(
+                self.archive_message,
+                f"Sauvegarde exportée : base et {vCount} pièce(s) jointe(s).",
             )
 
     def choose_archive_source(self):
@@ -865,12 +1044,16 @@ class SettingsPage(QWidget):
         except ValueError as vException:
             logger.warning("Restauration refusée : %s", vException)
 
-            self.archive_message.setText(str(vException))
+            show_message(self.archive_message, str(vException), "warning")
 
         except Exception:
             logger.exception("Échec de la restauration de la sauvegarde complète")
 
-            self.archive_message.setText("La restauration a échoué. Voir les journaux.")
+            show_message(
+                self.archive_message,
+                "La restauration a échoué. Voir les journaux.",
+                "danger",
+            )
 
         else:
             self.data_reset.emit(
@@ -939,9 +1122,11 @@ class SettingsPage(QWidget):
         except Exception:
             logger.exception("Échec de la réinitialisation des données")
 
-            self.reset_message.setText(
+            show_message(
+                self.reset_message,
                 "La réinitialisation a échoué, aucune donnée n'a été effacée "
-                "si la sauvegarde n'a pas pu être faite. Voir les journaux."
+                "si la sauvegarde n'a pas pu être faite. Voir les journaux.",
+                "danger",
             )
 
         else:

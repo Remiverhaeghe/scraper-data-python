@@ -6,7 +6,8 @@ import sqlite3
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import urlsplit
+from urllib.request import url2pathname
 
 # Avant tout import du code : les messages des tests, erreurs simulées comprises,
 # ne doivent pas se mélanger aux journaux réels consultés dans l'application.
@@ -57,8 +58,10 @@ def get_database_path(pDatabase):
 
     vDatabase = str(pDatabase)
 
+    # Chemin d'une adresse file: converti selon le système : « /C:/… » sous
+    # Windows, « /home/… » sous Linux.
     if vDatabase.startswith("file:"):
-        vDatabase = unquote(urlsplit(vDatabase).path).lstrip("/")
+        vDatabase = url2pathname(urlsplit(vDatabase).path)
 
     rPath = None if vDatabase in ("", ":memory:") else Path(vDatabase).resolve()
 

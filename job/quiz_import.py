@@ -62,6 +62,9 @@ GENERATION_LEVELS = {
 IMPORT_EXTENSIONS = (".json", ".txt", ".zip")
 MAX_ZIP_FILES = 300
 MAX_ZIP_BYTES = 20 * 1024 * 1024
+
+# Archives contenues dans l'archive importée : un seul niveau est ouvert.
+MAX_ZIP_DEPTH = 1
 MAX_SVG_BYTES = 300 * 1024
 MAX_GUIDE_BYTES = 200 * 1024
 
@@ -383,37 +386,76 @@ def merge_report(pReport, pFileReport, pFileName):
     ]
 
 
-def find_theme_files(pArchive, pNames):
-    """Retourne les fichiers de questions d'un pack et la clé imposée de chacun.
+def is_question_file(pName):
+    """Indique si un fichier d'archive peut contenir des questions.
 
-    Un manifest.json liste les thèmes : les autres JSON, comme un exemple de
-    format, sont alors ignorés.
+    Le manifest et l'exemple de format (schema-…) décrivent le pack : ils n'en
+    contiennent pas.
+    """
+
+    vName = PurePosixPath(pName).name.lower()
+
+    rQuestions = (
+        vName.endswith(".json")
+        and vName != "manifest.json"
+        and not vName.startswith("schema")
+    )
+
+    return rQuestions
+
+
+def find_theme_files(pArchive, pNames):
+    """Retourne les fichiers de questions d'une archive et la clé imposée de chacun.
+
+    Une archive peut réunir plusieurs packs, chacun dans son dossier avec son
+    manifest.json. Un manifest qui liste ses thèmes est suivi à la lettre ; sans
+    liste, tous les fichiers de questions de son dossier sont lus. Un fichier
+    hors de tout pack est lu aussi.
     """
 
     vManifests = sorted(
         (vName for vName in pNames if PurePosixPath(vName).name == "manifest.json"),
         key=len,
     )
+    vRoots = []
+    rFiles = []
 
-    if vManifests:
-        vRoot = posixpath.dirname(vManifests[0])
-        vManifest = json.loads(pArchive.read(vManifests[0]).decode("utf-8"))
+    for vManifestName in vManifests:
+        vRoot = posixpath.dirname(vManifestName)
+        vManifest = json.loads(pArchive.read(vManifestName).decode("utf-8"))
+        vThemes = vManifest.get("themes") if isinstance(vManifest, dict) else None
+        vRoots.append(vRoot)
 
-        rFiles = [
-            (
-                posixpath.normpath(posixpath.join(vRoot, vTheme["file"])),
-                slugify(vTheme.get("id") or PurePosixPath(vTheme["file"]).stem),
-            )
-            for vTheme in vManifest.get("themes", [])
-            if isinstance(vTheme, dict) and isinstance(vTheme.get("file"), str)
-        ]
-    else:
-        rFiles = [
-            (vName, None)
-            for vName in pNames
-            if vName.lower().endswith(".json")
-            and not PurePosixPath(vName).name.lower().startswith("schema")
-        ]
+        if isinstance(vThemes, list) and vThemes:
+            rFiles += [
+                (
+                    posixpath.normpath(posixpath.join(vRoot, vTheme["file"])),
+                    slugify(vTheme.get("id") or PurePosixPath(vTheme["file"]).stem),
+                )
+                for vTheme in vThemes
+                if isinstance(vTheme, dict) and isinstance(vTheme.get("file"), str)
+            ]
+        else:
+            rFiles += [
+                (vName, None)
+                for vName in pNames
+                if is_question_file(vName)
+                and vName.startswith(f"{vRoot}/" if vRoot else "")
+            ]
+
+    vListed = {vName for vName, _ in rFiles}
+
+    # Fichiers hors de tout pack ; un pack placé dans un autre ne compte qu'une fois.
+    rFiles += [
+        (vName, None)
+        for vName in pNames
+        if is_question_file(vName)
+        and vName not in vListed
+        and not any(vName.startswith(f"{vRoot}/") for vRoot in vRoots if vRoot)
+        and not ("" in vRoots and vManifests)
+    ]
+
+    rFiles = list(dict.fromkeys(rFiles))
 
     return rFiles
 
@@ -509,8 +551,12 @@ def read_guides(pArchive, pNames, pThemeKeys):
     return rGuides
 
 
-def import_zip(pDatabaseFile, pThemeLabel, pContent, pNow):
-    """Importe un pack .zip : questions, schémas et guides."""
+def import_zip(pDatabaseFile, pThemeLabel, pContent, pNow, pDepth=0):
+    """Importe un pack .zip : questions, schémas et guides.
+
+    Une archive peut en contenir d'autres, ouvertes à leur tour sur un seul
+    niveau : au-delà, l'archive est probablement piégée.
+    """
 
     try:
         vArchive = zipfile.ZipFile(BytesIO(pContent))
@@ -539,11 +585,38 @@ def import_zip(pDatabaseFile, pThemeLabel, pContent, pNow):
         except (ValueError, KeyError, zipfile.BadZipFile) as vException:
             raise ValueError("manifest.json illisible.") from vException
 
-        if not vThemeFiles:
+        vInnerArchives = (
+            [vName for vName in vNames if vName.lower().endswith(".zip")]
+            if pDepth < MAX_ZIP_DEPTH
+            else []
+        )
+
+        if not vThemeFiles and not vInnerArchives:
             raise ValueError("L'archive ne contient aucun fichier .json.")
 
         rReport = {"themes": [], "added": 0, "rejected": [], "assets": 0, "guides": 0}
         vAssets = {}
+        vInnerCounts = {"assets": 0, "guides": 0}
+
+        for vInnerName in vInnerArchives:
+            vFileName = PurePosixPath(vInnerName).name
+
+            try:
+                vInner = import_zip(
+                    pDatabaseFile,
+                    pThemeLabel,
+                    vArchive.read(vInnerName),
+                    pNow,
+                    pDepth + 1,
+                )
+
+            except (ValueError, zipfile.BadZipFile) as vException:
+                rReport["rejected"].append(f"{vFileName} : {vException}")
+
+            else:
+                merge_report(rReport, vInner, vFileName)
+                vInnerCounts["assets"] += vInner["assets"]
+                vInnerCounts["guides"] += vInner["guides"]
 
         for vThemeFile, vThemeKey in vThemeFiles:
             vFileName = PurePosixPath(vThemeFile).name
@@ -583,8 +656,8 @@ def import_zip(pDatabaseFile, pThemeLabel, pContent, pNow):
         if vGuides:
             save_quiz_guides(pDatabaseFile, vGuides, pNow)
 
-    rReport["assets"] = len(vAssets)
-    rReport["guides"] = len(vGuides)
+    rReport["assets"] = len(vAssets) + vInnerCounts["assets"]
+    rReport["guides"] = len(vGuides) + vInnerCounts["guides"]
 
     logger.info(
         "Pack de révision importé : %s question(s), %s schéma(s), %s guide(s)",
@@ -617,21 +690,42 @@ def import_questions_file(pDatabaseFile, pThemeLabel, pFileName, pContent, pNow)
 
 
 def describe_quiz_import(pReport):
-    """Résume un import en une phrase, avec les premières raisons de rejet."""
+    """Résume un import en une ligne : chiffres seulement, le détail est à part."""
 
-    rText = f"{pReport['added']} question(s) ajoutée(s)" + (
-        f" : {', '.join(pReport['themes'])}." if pReport["themes"] else "."
-    )
+    vParts = [f"{pReport['added']} question(s) ajoutée(s)"]
 
-    if pReport.get("assets") or pReport.get("guides"):
-        rText += f" {pReport['assets']} schéma(s) et {pReport['guides']} guide(s)."
+    if len(pReport["themes"]) > 1:
+        vParts[0] += f" dans {len(pReport['themes'])} thèmes"
+    elif pReport["themes"]:
+        vParts[0] += f" : {pReport['themes'][0]}"
+
+    if pReport.get("assets"):
+        vParts.append(f"{pReport['assets']} schéma(s)")
+
+    if pReport.get("guides"):
+        vParts.append(f"{pReport['guides']} guide(s)")
 
     if pReport["rejected"]:
-        rText += (
-            f" {len(pReport['rejected'])} écartée(s) : "
-            + " ; ".join(pReport["rejected"][:5])
-            + (" ; …" if len(pReport["rejected"]) > 5 else "")
-        )
+        vParts.append(f"{len(pReport['rejected'])} écartée(s)")
+
+    rText = " · ".join(vParts) + "."
+
+    return rText
+
+
+def describe_import_details(pReport):
+    """Détaille un import : thèmes concernés, puis chaque question écartée."""
+
+    vLines = []
+
+    if pReport["themes"]:
+        vLines.append("Thèmes : " + ", ".join(pReport["themes"]) + ".")
+
+    if pReport["rejected"]:
+        vLines.append("Écartées :")
+        vLines += [f"- {vReason}" for vReason in pReport["rejected"]]
+
+    rText = "\n".join(vLines)
 
     return rText
 

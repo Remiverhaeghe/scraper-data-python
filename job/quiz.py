@@ -40,6 +40,13 @@ QUIZ_MODES = {
 }
 DEFAULT_MODE = "spaced"
 
+# État d'un thème, signalé par une icône sur sa carte : (icône, tonalité, texte)
+THEME_STATUSES = {
+    "done": ("circle-check", "success", "Toutes les questions sont acquises"),
+    "due": ("circle-alert", "warning", "Des questions sont à revoir aujourd'hui"),
+    "progress": ("history", "primary", "Révision commencée"),
+}
+
 # Répétition espacée (méthode Leitner) : délai avant de revoir une question, en
 # jours, selon sa boîte. Une bonne réponse la fait monter d'une boîte, une
 # erreur la renvoie dans la première.
@@ -353,6 +360,21 @@ def count_theme_offers(pDatabaseFile, pQuiz):
     return rCounts
 
 
+def get_theme_status(pCorrect, pTotal, pAnswered, pDue):
+    """Retourne l'état d'un thème : done, due, progress, ou None s'il est neuf."""
+
+    if pTotal and pCorrect == pTotal:
+        rStatus = "done"
+    elif pDue:
+        rStatus = "due"
+    elif pAnswered:
+        rStatus = "progress"
+    else:
+        rStatus = None
+
+    return rStatus
+
+
 def build_quiz_overview(pDatabaseFile, pQuiz, pToday=None):
     """Retourne les thèmes avec leur score, leurs questions à revoir et leur intérêt.
 
@@ -377,6 +399,7 @@ def build_quiz_overview(pDatabaseFile, pQuiz, pToday=None):
         vAnswered = [vId for vId in vIds if vId in vAnswers]
         vCorrect = sum(vAnswers[vId] for vId in vAnswered)
         vOfferCount = vOfferCounts[vTheme["key"]]
+        vDue = count_due_questions(vTheme["questions"], vSchedule, vToday)
         vDomain, vSubdomain = vTheme.get("domain") or classify_theme(
             vTheme["label"], vTheme["skills"]
         )
@@ -392,7 +415,8 @@ def build_quiz_overview(pDatabaseFile, pQuiz, pToday=None):
                 "score": round(100 * vCorrect / len(vIds)) if vIds else 0,
                 "offer_count": vOfferCount,
                 "guide": vGuides.get(vTheme["key"]),
-                "due": count_due_questions(vTheme["questions"], vSchedule, vToday),
+                "due": vDue,
+                "status": get_theme_status(vCorrect, len(vIds), len(vAnswered), vDue),
                 "domain": vDomain,
                 "subdomain": vSubdomain,
             }

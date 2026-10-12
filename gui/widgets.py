@@ -91,6 +91,8 @@ def create_card(pTitle=None, pSubtitle=None):
     if pSubtitle is not None:
         vSubtitle = QLabel(pSubtitle)
         vSubtitle.setObjectName("cardSubtitle")
+        # Retour à la ligne : un long sous-titre ne force pas la largeur de la carte.
+        vSubtitle.setWordWrap(True)
         vLayout.addWidget(vSubtitle)
 
     rCard = (vCard, vLayout)
@@ -207,3 +209,14 @@ class StatisticCard(QFrame):
         # Un bouton relâché hors de la carte annule le clic, comme pour un vrai bouton.
         if self.rect().contains(pEvent.position().toPoint()):
             self.clicked.emit()
+
+
+def show_message(pLabel, pText, pTone="success"):
+    """Affiche un message coloré selon sa nature : success, warning ou danger.
+
+    Vert pour une réussite, orange pour une saisie à corriger, rouge pour une
+    erreur ; un texte vide efface le message.
+    """
+
+    pLabel.setText(pText)
+    pLabel.setStyleSheet(f"color: {COLORS[pTone]}; font-weight: 600;" if pText else "")

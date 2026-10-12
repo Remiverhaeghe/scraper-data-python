@@ -1357,22 +1357,6 @@ def test_quiz_pack_export(client):
         assert "questions/ram-jvm.json" in vArchive.namelist()
 
 
-def test_quiz_themes_grouped_by_domain(client):
-    """Vérifie les pastilles de domaine et le filtre sur l'un d'eux."""
-
-    vAll = client.get("/quiz").text
-
-    assert 'class="chip is-active"' in vAll
-    assert "<h2>Informatique</h2>" in vAll
-    assert "questions acquises" in vAll
-    assert '<span class="subdomain-badge">Développement · ' in vAll
-
-    vFiltered = client.get("/quiz", params={"domain": "Informatique"}).text
-
-    assert "?domain=Informatique" in vFiltered
-    assert '<a class="chip is-active" href="/quiz?domain=Informatique">' in vFiltered
-
-
 def test_quiz_exam_on_the_web(client):
     """Vérifie l'examen sur le web : début, réponse, résultat et fermeture."""
 
@@ -1405,24 +1389,6 @@ def test_quiz_exam_on_the_web(client):
     assert client.post("/quiz/exam/answer", data={"choice": "0"}).status_code == 400
 
 
-def test_quiz_subdomain_chips(client):
-    """Vérifie les pastilles de sous-domaine et le filtre sur l'un d'eux."""
-
-    assert "Tous les sous-domaines" not in client.get("/quiz").text
-
-    vDomain = client.get("/quiz", params={"domain": "Informatique"}).text
-
-    assert "Tous les sous-domaines" in vDomain
-    assert "subdomain=D%C3%A9veloppement" in vDomain
-
-    vFiltered = client.get(
-        "/quiz", params={"domain": "Informatique", "subdomain": "Données"}
-    ).text
-
-    assert ">SQL</h2>" in vFiltered
-    assert ">Java</h2>" not in vFiltered
-
-
 def test_list_offers_filters_by_match(client, tmp_path):
     """Vérifie le filtre de correspondance minimale de la liste des offres."""
 
@@ -1438,3 +1404,72 @@ def test_list_offers_filters_by_match(client, tmp_path):
     assert "Développeur Python new" in vClose
     assert '<option value="70" selected>' in vClose
     assert "Développeur Java" in client.get("/offers", params={"match": "42"}).text
+
+
+def test_quiz_category_navigation(client):
+    """Vérifie les catégories : filtre, second clic, statut des thèmes et examen."""
+
+    vAll = client.get("/quiz").text
+
+    assert 'class="quiz-nav-item is-active"' in vAll
+    assert "Tous les thèmes (" in vAll
+    assert "<h2>Informatique</h2>" in vAll
+    assert "questions acquises" in vAll
+    assert '<span class="subdomain-badge">' in vAll
+
+    vFiltered = client.get(
+        "/quiz", params={"domain": "Informatique", "subdomain": "Données"}
+    ).text
+
+    assert "<h2>Informatique › Données</h2>" in vFiltered
+    assert ">SQL</h2>" in vFiltered
+    assert ">Java</h2>" not in vFiltered
+    # Lien de la catégorie active : il ramène au domaine, sans le sous-domaine.
+    assert 'href="/quiz?domain=Informatique"' in vFiltered
+    assert 'name="subdomain" value="Données"' in vFiltered
+
+    client.post(
+        "/quiz/answer",
+        data={"question_id": "sql-null", "choice": "1", "mode": "spaced"},
+    )
+
+    assert 'class="tone-primary" title="Révision commencée"' in client.get("/quiz").text
+
+
+def test_settings_mobile_token(client):
+    """Vérifie la carte de l'application mobile : adresse, création du jeton."""
+
+    vPage = client.get("/settings").text
+
+    assert "http://testserver/api/v1" in vPage
+    assert "Aucun jeton créé." in vPage
+
+    vCreated = client.post("/settings/mobile").text
+
+    assert "Jeton créé : saisissez-le dans l&#39;application." in vCreated or (
+        "Jeton créé : saisissez-le dans l'application." in vCreated
+    )
+    assert 'id="mobile-token"' in vCreated
+
+
+@pytest.mark.parametrize(
+    "pStatusCode, pTone", [(200, "success"), (400, "warning"), (500, "danger")]
+)
+def test_get_message_tone(pStatusCode, pTone):
+    """Vérifie la couleur d'un message selon le résultat de la requête."""
+
+    assert web_app.get_message_tone(pStatusCode) == pTone
+
+
+def test_settings_messages_are_colored(client):
+    """Vérifie un message d'erreur de saisie en orange et un succès en vert."""
+
+    vRefused = client.post(
+        "/settings/companies", data={"excluded": "acme", "preferred": "acme"}
+    ).text
+    vSaved = client.post(
+        "/settings/companies", data={"excluded": "acme", "preferred": "globex"}
+    ).text
+
+    assert 'class="application-message tone-warning"' in vRefused
+    assert 'class="application-message tone-success"' in vSaved

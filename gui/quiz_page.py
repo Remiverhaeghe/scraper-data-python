@@ -4,29 +4,34 @@ from datetime import datetime
 from html import escape
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, Qt, QUrl
+from PySide6.QtCore import QByteArray, QSize, Qt, QUrl
+from PySide6.QtGui import QColor, QDesktopServices, QFontDatabase
 from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtGui import QDesktopServices, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
     QButtonGroup,
     QComboBox,
     QFileDialog,
-    QMessageBox,
     QGridLayout,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
+    QMessageBox,
     QPlainTextEdit,
     QProgressBar,
     QRadioButton,
     QScrollArea,
+    QFrame,
     QSizePolicy,
+    QTreeWidget,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
 from gui.chart import BarChart
 from gui.dialogs import show_text_dialog
+from gui.icons import get_icon
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -41,6 +46,7 @@ from job.assistant import CHATGPT_URL
 from job.quiz import (
     DEFAULT_MODE,
     QUIZ_MODES,
+    THEME_STATUSES,
     answer_question,
     build_quiz_overview,
     build_quiz_statistics,
@@ -51,7 +57,12 @@ from job.quiz import (
     load_active_quiz,
     pick_question,
 )
-from job.quiz_domains import DOMAIN_ICONS, group_themes
+from job.quiz_domains import (
+    DOMAIN_ICONS,
+    build_category_progress,
+    filter_guides,
+    group_themes,
+)
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
     answer_exam,
@@ -67,6 +78,7 @@ from job.quiz_import import (
     GENERATION_LEVELS,
     IMPORT_EXTENSIONS,
     build_generation_prompt,
+    describe_import_details,
     describe_quiz_import,
     export_quiz_pack,
     import_questions,
@@ -84,6 +96,14 @@ THEME_COLUMNS = 3
 
 # Mode de la page pendant un examen, à côté des modes de révision
 EXAM_MODE = "exam"
+
+# Colonnes du tableau de progression par catégorie
+PROGRESS_COLUMNS = ["Catégorie", "Thèmes", "Acquises", "Progression", "À revoir"]
+PROGRESS_BAR_WIDTH = 140
+PROGRESS_BAR_HEIGHT = 14
+
+# Largeur du panneau des catégories, à gauche des thèmes
+CATEGORY_WIDTH = 270
 
 # Hauteur d'affichage des schémas des questions importées
 VISUAL_HEIGHT = 280
@@ -117,28 +137,56 @@ class QuizPage(QWidget):
         self.message_label.setObjectName("pageSubtitle")
         self.message_label.hide()
 
-        # Pastilles de domaine : une seule cochée, « Tous » par défaut
+        # Catégorie affichée : domaine puis sous-domaine, None pour tout montrer
         self.domain = None
-        self.domain_group = QButtonGroup(self)
-        self.domain_layout = QHBoxLayout()
-        self.domain_layout.setSpacing(8)
-
-        # Sous-domaines du domaine choisi, en pastilles eux aussi
         self.subdomain = None
-        self.subdomain_group = QButtonGroup(self)
-        self.subdomain_layout = QHBoxLayout()
-        self.subdomain_layout.setSpacing(8)
+        self.themes = []
+
+        # Catégories en arborescence, toujours visibles à gauche des thèmes
+        # Catégories en liste verticale, toujours visibles à gauche des thèmes :
+        # domaines puis sous-domaines en retrait, chacun avec son icône.
+        self.category_buttons = {}
+        self.category_card = QFrame()
+        self.category_card.setObjectName("card")
+        self.category_card.setFixedWidth(CATEGORY_WIDTH)
+        self.category_layout = QVBoxLayout(self.category_card)
+        self.category_layout.setContentsMargins(10, 10, 10, 10)
+        self.category_layout.setSpacing(2)
+
+        self.filter_label = QLabel()
+        self.filter_label.setObjectName("cardTitle")
+
+        self.exam_button = create_button(
+            "", "timer", "primaryButton", COLORS["on_primary"]
+        )
+        self.exam_button.setToolTip(
+            "Questions tirées au hasard dans la catégorie choisie, notées et "
+            "chronométrées"
+        )
+        self.exam_button.clicked.connect(self.start_exam)
+
+        vHeader = QHBoxLayout()
+        vHeader.addWidget(self.filter_label, 1)
+        vHeader.addWidget(self.exam_button)
 
         # Les thèmes sont reconstruits à chaque rafraîchissement dans un conteneur
         # remplacé d'un bloc : domaines et sous-domaines y sont imbriqués.
         self.themes_holder = QVBoxLayout()
         self.themes_holder.setContentsMargins(0, 0, 0, 0)
 
+        vThemesColumn = QVBoxLayout()
+        vThemesColumn.setSpacing(12)
+        vThemesColumn.addLayout(vHeader)
+        vThemesColumn.addLayout(self.themes_holder)
+
+        vBody = QHBoxLayout()
+        vBody.setSpacing(18)
+        vBody.addWidget(self.category_card, 0, Qt.AlignmentFlag.AlignTop)
+        vBody.addLayout(vThemesColumn, 1)
+
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.create_question_card())
-        vLayout.addLayout(self.domain_layout)
-        vLayout.addLayout(self.subdomain_layout)
-        vLayout.addLayout(self.themes_holder)
+        vLayout.addLayout(vBody)
 
         # Guides pratiques des packs importés, masqués tant qu'il n'y en a pas
         self.guides_card, vGuidesLayout = create_card(
@@ -153,7 +201,9 @@ class QuizPage(QWidget):
         vLayout.addWidget(self.guides_card)
         vLayout.addWidget(self.create_import_card())
         vLayout.addWidget(self.create_statistics_card())
-        vLayout.addStretch()
+        # Facteur 1 : la place libre d'une page courte va ici, et non aux cartes
+        # qui contiennent une zone de texte extensible.
+        vLayout.addStretch(1)
 
     def create_question_card(self):
         """Construit la carte de la question, de ses choix et de sa correction."""
@@ -301,6 +351,17 @@ class QuizPage(QWidget):
         vActions.addWidget(vExportButton)
         vActions.addWidget(self.import_message, 1)
 
+        # Le message reste court ; le détail d'un gros import s'ouvre à part.
+        self.import_details = ""
+        self.details_button = create_button("Voir le détail", "file-text")
+        self.details_button.clicked.connect(
+            lambda: show_text_dialog(
+                self, "Détail de l'import", pText=self.import_details
+            )
+        )
+        self.details_button.hide()
+        vActions.addWidget(self.details_button)
+
         vCard, vLayout = create_card(
             "Ajouter des questions",
             "Générées avec votre compte ChatGPT, puis vérifiées une à une à "
@@ -413,6 +474,10 @@ class QuizPage(QWidget):
             return
 
         self.import_message.setText(describe_quiz_import(vReport))
+        self.import_details = describe_import_details(vReport)
+        self.details_button.setVisible(
+            bool(vReport["rejected"]) or len(vReport["themes"]) > 1
+        )
 
         if vReport["added"]:
             self.import_edit.clear()
@@ -453,13 +518,94 @@ class QuizPage(QWidget):
 
         self.statistics_chart = BarChart()
 
+        # Progression par catégorie : domaines puis sous-domaines, sans le détail
+        # des thèmes pour rester lisible.
+        self.progress_tree = QTreeWidget()
+        self.progress_tree.setObjectName("progressTree")
+        self.progress_tree.setColumnCount(len(PROGRESS_COLUMNS))
+        self.progress_tree.setHeaderLabels(PROGRESS_COLUMNS)
+        self.progress_tree.setIconSize(QSize(16, 16))
+        self.progress_tree.setUniformRowHeights(True)
+        self.progress_tree.setRootIsDecorated(True)
+        self.progress_tree.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.progress_tree.header().setStretchLastSection(False)
+        self.progress_tree.header().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Stretch
+        )
+
+        for vColumn in range(1, len(PROGRESS_COLUMNS)):
+            self.progress_tree.header().setSectionResizeMode(
+                vColumn, QHeaderView.ResizeMode.ResizeToContents
+            )
+
+        vProgressTitle = QLabel("Progression par catégorie")
+        vProgressTitle.setObjectName("fieldLabel")
+
         vCard, vLayout = create_card(
             "Mes statistiques", "Progression globale et réponses des 14 derniers jours"
         )
         vLayout.addLayout(vCards)
+        vLayout.addWidget(vProgressTitle)
+        vLayout.addWidget(self.progress_tree)
         vLayout.addWidget(self.statistics_chart)
 
         return vCard
+
+    def show_category_progress(self, pThemes):
+        """Remplit le tableau de progression par domaine et sous-domaine."""
+        self.progress_tree.clear()
+
+        vDomainItem = None
+
+        for vRow in build_category_progress(pThemes):
+            vItem = QTreeWidgetItem(
+                [
+                    vRow["label"],
+                    str(vRow["themes"]),
+                    f"{vRow['correct']} / {vRow['total']}",
+                    "",
+                    str(vRow["due"]) if vRow["due"] else "",
+                ]
+            )
+            vItem.setIcon(
+                0,
+                get_icon(
+                    vRow["icon"],
+                    COLORS["primary"] if vRow["level"] == 0 else COLORS["muted"],
+                    16,
+                ),
+            )
+            vItem.setForeground(4, QColor(COLORS["warning"]))
+
+            if vRow["level"] == 0:
+                vFont = vItem.font(0)
+                vFont.setBold(True)
+                vItem.setFont(0, vFont)
+                self.progress_tree.addTopLevelItem(vItem)
+                vDomainItem = vItem
+            else:
+                vDomainItem.addChild(vItem)
+
+            vBar = QProgressBar()
+            vBar.setValue(vRow["score"])
+            vBar.setFormat(f"{vRow['score']} %")
+            vBar.setFixedSize(PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT)
+            self.progress_tree.setItemWidget(vItem, 3, vBar)
+
+        self.progress_tree.expandAll()
+
+        # Toutes les lignes visibles : la page défile, pas le tableau.
+        vRows = sum(
+            1 + self.progress_tree.topLevelItem(vIndex).childCount()
+            for vIndex in range(self.progress_tree.topLevelItemCount())
+        )
+        self.progress_tree.setFixedHeight(
+            self.progress_tree.header().sizeHint().height()
+            + vRows * self.progress_tree.sizeHintForRow(0)
+            + 8
+        )
 
     def show_statistics(self, pStatistics):
         """Affiche les chiffres de la révision et le graphique des derniers jours."""
@@ -509,106 +655,101 @@ class QuizPage(QWidget):
             self.message_label.show()
             return
 
-        self.refresh_guides()
-
         vCurrent = self.theme_combo.currentText()
         self.theme_combo.clear()
         self.theme_combo.addItems(sorted(vTheme["label"] for vTheme in vThemes))
         self.theme_combo.setCurrentText(vCurrent)
 
         self.themes = vThemes
-        self.refresh_domains()
-        self.refresh_subdomains()
-        self.show_themes()
+        self.show_category_progress(vThemes)
+        self.select_category(self.domain, self.subdomain)
 
-    def refresh_domains(self):
-        """Propose une pastille par domaine qui contient des thèmes."""
-        clear_layout(self.domain_layout)
+    def refresh_categories(self):
+        """Reconstruit la liste des domaines et sous-domaines, avec leurs comptes."""
+        clear_layout(self.category_layout)
+        self.category_buttons = {}
 
-        for vButton in self.domain_group.buttons():
-            self.domain_group.removeButton(vButton)
+        vEntries = [
+            ((None, None), "graduation-cap", f"Tous les thèmes ({len(self.themes)})")
+        ]
 
-        vDomains = [vDomain for vDomain, _ in group_themes(self.themes)]
+        for vDomain, vSections in group_themes(self.themes):
+            vCount = sum(len(vThemes) for _, vThemes in vSections)
+            vEntries.append(
+                (
+                    (vDomain, None),
+                    DOMAIN_ICONS.get(vDomain, "sparkles"),
+                    f"{vDomain} ({vCount})",
+                )
+            )
+            vEntries += [
+                (
+                    (vDomain, vSubdomain),
+                    DOMAIN_ICONS.get(vSubdomain, "tag"),
+                    f"{vSubdomain} ({len(vThemes)})",
+                )
+                for vSubdomain, vThemes in vSections
+            ]
 
-        if self.domain not in vDomains:
-            self.domain = None
+        # Catégorie disparue (dernier thème supprimé) : retour à l'ensemble.
+        if (self.domain, self.subdomain) not in [vKey for vKey, _, _ in vEntries]:
+            self.domain, self.subdomain = None, None
 
-        for vDomain in [None, *vDomains]:
+        for vKey, vIcon, vText in vEntries:
+            vChild = vKey[1] is not None
             vButton = create_button(
-                vDomain or "Tous les domaines", pObjectName="segmentButton"
+                vText,
+                vIcon,
+                "categoryChildButton" if vChild else "categoryButton",
+                COLORS["muted"] if vChild else COLORS["primary"],
             )
             vButton.setCheckable(True)
-            vButton.setChecked(vDomain == self.domain)
+            vButton.setChecked(vKey == (self.domain, self.subdomain))
             vButton.clicked.connect(
-                lambda _=False, pDomain=vDomain: self.select_domain(pDomain)
+                lambda _=False, pKey=vKey: self.on_category_clicked(pKey)
             )
-            self.domain_group.addButton(vButton)
-            self.domain_layout.addWidget(vButton)
+            self.category_buttons[vKey] = vButton
+            self.category_layout.addWidget(vButton)
 
-        self.domain_layout.addStretch()
+    def on_category_clicked(self, pCategory):
+        """Filtre sur la catégorie cliquée ; un second clic revient à l'ensemble."""
+        vCategory = (
+            (None, None) if pCategory == (self.domain, self.subdomain) else pCategory
+        )
 
-        vExam = load_exam(self.database_file)
-        vButton = create_button(
-            (
-                f"Reprendre l'examen ({vExam['index'] + 1} / {len(vExam['ids'])})"
-                if vExam and not vExam["finished_at"]
-                else f"Mode examen ({EXAM_QUESTION_COUNT} questions)"
-            ),
-            "timer",
-            "primaryButton",
-            COLORS["on_primary"],
-        )
-        vButton.setToolTip(
-            "Questions tirées au hasard dans le domaine choisi, notées et "
-            "chronométrées"
-        )
-        vButton.clicked.connect(self.start_exam)
-        self.domain_layout.addWidget(vButton)
+        self.select_category(*vCategory)
+
+    def select_category(self, pDomain, pSubdomain=None):
+        """Affiche les thèmes, guides et l'examen d'une catégorie, ou de toutes."""
+        self.domain = pDomain
+        self.subdomain = pSubdomain
+
+        self.refresh_categories()
+        self.refresh_exam_button()
+        self.refresh_guides()
+        self.show_themes()
 
     def select_domain(self, pDomain):
         """Limite l'affichage des thèmes à un domaine, ou les montre tous."""
-        self.domain = pDomain
-        self.subdomain = None
-        self.refresh_subdomains()
-        self.show_themes()
-
-    def refresh_subdomains(self):
-        """Propose les sous-domaines du domaine choisi ; aucun pour « Tous »."""
-        clear_layout(self.subdomain_layout)
-
-        for vButton in self.subdomain_group.buttons():
-            self.subdomain_group.removeButton(vButton)
-
-        vSubdomains = [
-            vSubdomain
-            for _, vSections in group_themes(self.themes, self.domain)
-            for vSubdomain, _ in vSections
-        ]
-
-        if self.subdomain not in vSubdomains:
-            self.subdomain = None
-
-        if not self.domain:
-            return
-
-        for vSubdomain in [None, *vSubdomains]:
-            vButton = create_button(
-                vSubdomain or "Tous les sous-domaines", pObjectName="segmentButton"
-            )
-            vButton.setCheckable(True)
-            vButton.setChecked(vSubdomain == self.subdomain)
-            vButton.clicked.connect(
-                lambda _=False, pSubdomain=vSubdomain: self.select_subdomain(pSubdomain)
-            )
-            self.subdomain_group.addButton(vButton)
-            self.subdomain_layout.addWidget(vButton)
-
-        self.subdomain_layout.addStretch()
+        self.select_category(pDomain)
 
     def select_subdomain(self, pSubdomain):
         """Limite l'affichage aux thèmes d'un sous-domaine du domaine choisi."""
-        self.subdomain = pSubdomain
-        self.show_themes()
+        self.select_category(self.domain, pSubdomain)
+
+    def refresh_exam_button(self):
+        """Propose de reprendre l'examen en cours, ou d'en commencer un."""
+        vExam = load_exam(self.database_file)
+
+        self.exam_button.setText(
+            f"Reprendre l'examen ({vExam['index'] + 1} / {len(vExam['ids'])})"
+            if vExam and not vExam["finished_at"]
+            else f"Mode examen ({EXAM_QUESTION_COUNT} questions)"
+        )
+        self.filter_label.setText(
+            " › ".join(vPart for vPart in (self.domain, self.subdomain) if vPart)
+            or "Tous les thèmes"
+        )
 
     def show_themes(self):
         """Affiche les thèmes du domaine choisi, rangés par sous-domaine."""
@@ -625,9 +766,7 @@ class QuizPage(QWidget):
             vLayout.addWidget(self.create_domain_header(vDomain, vSections))
 
             for vSubdomain, vThemes in vSections:
-                # Badge du sous-domaine : nom et nombre de thèmes
-                vSubtitle = QLabel(f"{vSubdomain} · {len(vThemes)}")
-                vSubtitle.setObjectName("subdomainBadge")
+                vSubtitle = self.create_subdomain_badge(vSubdomain, len(vThemes))
 
                 vGrid = QGridLayout()
                 vGrid.setSpacing(16)
@@ -644,6 +783,26 @@ class QuizPage(QWidget):
                 vLayout.addLayout(vGrid)
 
         self.themes_holder.addWidget(vContainer)
+
+    def create_subdomain_badge(self, pSubdomain, pCount):
+        """Crée le badge d'un sous-domaine : icône, nom et nombre de thèmes."""
+        rBadge = QFrame()
+        rBadge.setObjectName("subdomainBadge")
+
+        vText = QLabel(f"{pSubdomain} · {pCount}")
+        vText.setObjectName("subdomainBadgeText")
+
+        vLayout = QHBoxLayout(rBadge)
+        vLayout.setContentsMargins(10, 3, 12, 3)
+        vLayout.setSpacing(6)
+        vLayout.addWidget(
+            create_icon_label(
+                DOMAIN_ICONS.get(pSubdomain, "tag"), COLORS["primary"], 14
+            )
+        )
+        vLayout.addWidget(vText)
+
+        return rBadge
 
     def create_domain_header(self, pDomain, pSections):
         """Crée l'en-tête d'un domaine : icône, nom et progression d'ensemble."""
@@ -679,7 +838,23 @@ class QuizPage(QWidget):
 
     def create_theme_card(self, pTheme):
         """Crée la carte d'un thème : progression, intérêt et boutons."""
-        rCard, vLayout = create_card(pTheme["label"])
+        rCard, vLayout = create_card()
+
+        vTitle = QLabel(pTheme["label"])
+        vTitle.setObjectName("cardTitle")
+        vTitle.setWordWrap(True)
+
+        vTitleRow = QHBoxLayout()
+        vTitleRow.setSpacing(8)
+
+        if pTheme["status"]:
+            vIcon, vTone, vText = THEME_STATUSES[pTheme["status"]]
+            vStatus = create_icon_label(vIcon, COLORS[vTone], 18)
+            vStatus.setToolTip(vText)
+            vTitleRow.addWidget(vStatus)
+
+        vTitleRow.addWidget(vTitle, 1)
+        vLayout.addLayout(vTitleRow)
 
         # Largeur fixée par la grille seule : les colonnes restent égales.
         rCard.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
@@ -788,7 +963,12 @@ class QuizPage(QWidget):
         """Liste les guides pratiques importés avec les questions."""
         clear_layout(self.guides_layout)
 
-        vGuides = get_quiz_guides(self.database_file)
+        vGuides = filter_guides(
+            get_quiz_guides(self.database_file),
+            self.themes,
+            self.domain,
+            self.subdomain,
+        )
 
         for vIndex, vGuide in enumerate(vGuides):
             vButton = create_button(
@@ -878,6 +1058,7 @@ class QuizPage(QWidget):
                     load_active_quiz(self.database_file),
                     self.domain,
                     datetime.now(),
+                    pSubdomain=self.subdomain,
                 )
 
             except ValueError as vException:

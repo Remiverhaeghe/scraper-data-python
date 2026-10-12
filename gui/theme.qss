@@ -152,11 +152,59 @@ QLabel#activityResult {
     font-weight: 600;
 }
 
-QLabel#subdomainBadge {
+QPushButton#categoryButton,
+QPushButton#categoryChildButton {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 10px;
+    text-align: left;
+    font-weight: 600;
+}
+
+QPushButton#categoryChildButton {
+    padding-left: 28px;
+    font-weight: 400;
+    color: $muted;
+}
+
+QPushButton#categoryButton:hover,
+QPushButton#categoryChildButton:hover {
+    background: $surface_alt;
+}
+
+QPushButton#categoryButton:checked,
+QPushButton#categoryChildButton:checked {
     background: $primary_light;
     color: $primary;
+}
+
+QTreeWidget#progressTree {
+    background: $surface;
+    border: 1px solid $border;
     border-radius: 10px;
-    padding: 3px 10px;
+    outline: none;
+}
+
+QTreeWidget#progressTree::item {
+    padding: 6px 4px;
+}
+
+QPlainTextEdit#excludedCompanies {
+    border: 1px solid $danger;
+}
+
+QPlainTextEdit#preferredCompanies {
+    border: 1px solid $success;
+}
+
+QFrame#subdomainBadge {
+    background: $primary_light;
+    border-radius: 10px;
+}
+
+QLabel#subdomainBadgeText {
+    color: $primary;
     font-size: 12px;
     font-weight: 600;
 }

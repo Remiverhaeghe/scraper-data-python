@@ -125,7 +125,16 @@ def test_import_pack_reads_manifest_visuals_and_guides(database_file):
     assert "theme-001" not in str(load_active_quiz(database_file))
     assert "réponse attendue incohérente" in " ".join(vReport["rejected"])
     assert "seul le type qcm" in " ".join(vReport["rejected"])
-    assert "1 schéma(s) et 2 guide(s)" in describe_quiz_import(vReport)
+    assert describe_quiz_import(vReport) == (
+        "2 question(s) ajoutée(s) : Analyse RAM et JVM · 1 schéma(s) · 2 guide(s) "
+        "· 2 écartée(s)."
+    )
+    assert (
+        describe_quiz_import(
+            {"added": 5, "themes": ["A", "B"], "rejected": [], "assets": 0, "guides": 0}
+        )
+        == "5 question(s) ajoutée(s) dans 2 thèmes."
+    )
 
     vGuides = {vGuide["name"]: vGuide for vGuide in get_quiz_guides(database_file)}
 
@@ -318,3 +327,67 @@ def test_generation_prompt_asks_for_schemas_explanations_and_safe_links():
     assert "pourquoi chaque autre choix est faux" in vPrompt
     assert "Uniquement du SVG" in vPrompt
     assert "ni raccourcisseur" in vPrompt
+
+
+def build_lot(pFolder, pThemeId):
+    """Construit un lot au format des envois de ChatGPT : manifest sans liste."""
+
+    rFiles = {
+        f"{pFolder}/manifest.json": json.dumps({"id": pThemeId, "name": "Lot"}),
+        f"{pFolder}/README.md": "# Lot",
+        f"{pFolder}/questions/{pThemeId}.json": json.dumps(
+            {
+                "theme": f"Thème {pThemeId}",
+                "questions": [build_pack_question(f"{pThemeId}-001", visual=None)],
+            }
+        ),
+    }
+
+    return rFiles
+
+
+def write_zip(pFiles):
+    """Écrit une archive en mémoire à partir de {nom: contenu}."""
+
+    vBuffer = io.BytesIO()
+
+    with zipfile.ZipFile(vBuffer, "w") as vArchive:
+        for vName, vContent in pFiles.items():
+            vArchive.writestr(vName, vContent)
+
+    rContent = vBuffer.getvalue()
+
+    return rContent
+
+
+def test_import_archive_of_several_packs(database_file):
+    """Vérifie une archive qui réunit plusieurs lots, chacun avec son manifest."""
+
+    vContent = write_zip(
+        {**build_lot("lots/lot-38", "git"), **build_lot("lots/lot-39", "python-bases")}
+    )
+
+    vReport = import_questions_file(database_file, "", "lots.zip", vContent, NOW)
+
+    assert vReport["added"] == 2
+    assert vReport["themes"] == ["Thème git", "Thème python-bases"]
+
+
+def test_import_archive_of_archives(database_file):
+    """Vérifie une archive qui contient d'autres archives, sur un niveau seulement."""
+
+    vInner = write_zip(build_lot("lot-18", "linux"))
+    vDeep = write_zip({"niveau-2.zip": write_zip(build_lot("lot-19", "bash"))})
+
+    vReport = import_questions_file(
+        database_file,
+        "",
+        "lots.zip",
+        write_zip({"lot-18.zip": vInner, "profond.zip": vDeep, "casse.zip": b"x"}),
+        NOW,
+    )
+
+    assert vReport["added"] == 1
+    assert vReport["themes"] == ["Thème linux"]
+    assert any("profond.zip" in vReason for vReason in vReport["rejected"])
+    assert any("casse.zip" in vReason for vReason in vReport["rejected"])

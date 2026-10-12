@@ -1256,25 +1256,95 @@ code {
     font-weight: 600;
 }
 
-/* Pastilles de filtre : domaines de révision */
-.chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+/* Entreprises : liste à exclure en rouge, à privilégier en vert */
+textarea.companies-excluded {
+    border-color: var(--danger);
 }
 
-.chip {
-    padding: 6px 14px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
+textarea.companies-preferred {
+    border-color: var(--success);
+}
+
+/* Détail d'un import de questions, replié par défaut */
+.import-details pre {
+    max-height: 240px;
+    overflow: auto;
+    white-space: pre-wrap;
+    font-size: 13px;
+}
+
+/* Progression par catégorie : domaines en gras, sous-domaines en retrait */
+.category-domain td:first-child {
+    font-weight: 600;
+}
+
+.category-subdomain td:first-child {
+    padding-left: 30px;
+    color: var(--muted);
+}
+
+.category-progress .quiz-progress {
+    display: inline-block;
+    width: 120px;
+    vertical-align: middle;
+}
+
+/* Révision : catégories à gauche, thèmes à droite ; une colonne sur téléphone */
+.quiz-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.quiz-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px;
+}
+
+.quiz-nav-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
     color: var(--text);
     text-decoration: none;
 }
 
-.chip.is-active {
-    border-color: var(--primary);
-    background: var(--primary);
-    color: #ffffff;
+.quiz-nav-item:hover {
+    background: var(--surface-alt);
+}
+
+.quiz-nav-child {
+    padding-left: 30px;
+    font-size: 14px;
+}
+
+.quiz-nav-item.is-active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.quiz-main-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.quiz-main-header h2 {
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .quiz-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 .chart-scale {
