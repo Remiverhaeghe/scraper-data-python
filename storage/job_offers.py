@@ -599,3 +599,40 @@ def count_offers_by_skill(pDatabaseFile):
             rCounts[vSkill] = rCounts.get(vSkill, 0) + 1
 
     return rCounts
+
+
+def get_offer_texts(pDatabaseFile):
+    """Retourne le titre et la description de chaque offre, réunis en un texte."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rTexts = [
+            f"{vTitle or ''} {vDescription or ''}"
+            for vTitle, vDescription in vConnection.execute(
+                "SELECT title, description FROM job_offer"
+            )
+        ]
+
+    finally:
+        vConnection.close()
+
+    return rTexts
+
+
+def get_offers_signature(pDatabaseFile):
+    """Retourne le nombre d'offres et la dernière date vue : change avec les offres."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rSignature = tuple(
+            vConnection.execute(
+                "SELECT COUNT(*), MAX(last_seen_at) FROM job_offer"
+            ).fetchone()
+        )
+
+    finally:
+        vConnection.close()
+
+    return rSignature

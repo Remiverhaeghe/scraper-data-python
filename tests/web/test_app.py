@@ -1354,3 +1354,18 @@ def test_quiz_pack_export(client):
 
     with zipfile.ZipFile(io.BytesIO(vExport.content)) as vArchive:
         assert "questions/ram-jvm.json" in vArchive.namelist()
+
+
+def test_quiz_themes_grouped_by_domain(client):
+    """Vérifie les pastilles de domaine et le filtre sur l'un d'eux."""
+
+    vAll = client.get("/quiz").text
+
+    assert 'class="chip is-active"' in vAll
+    assert '<h2 class="section-gap">Informatique</h2>' in vAll
+    assert "Développement" in vAll
+
+    vFiltered = client.get("/quiz", params={"domain": "Informatique"}).text
+
+    assert "?domain=Informatique" in vFiltered
+    assert '<a class="chip is-active" href="/quiz?domain=Informatique">' in vFiltered

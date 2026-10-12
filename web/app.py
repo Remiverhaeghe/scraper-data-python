@@ -153,6 +153,7 @@ from job.quiz import (
     load_active_quiz,
     pick_question,
 )
+from job.quiz_domains import group_themes
 from job.quiz_import import (
     GENERATION_COUNTS,
     IMPORT_EXTENSIONS,
@@ -1091,6 +1092,7 @@ def render_quiz(
     pResult=None,
     pImport=None,
     pStatusCode=200,
+    pDomain=None,
 ):
     """Affiche les thèmes de révision, avec une question ou une correction.
 
@@ -1122,6 +1124,9 @@ def render_quiz(
             "question": vQuestion,
             "result": pResult,
             "import_form": pImport or {},
+            "domains": [vDomain for vDomain, _ in group_themes(vThemes)],
+            "domain": pDomain,
+            "groups": group_themes(vThemes, pDomain),
             "guides": get_quiz_guides(pDatabaseFile),
             "levels": QUIZ_LEVELS,
             "generation_counts": GENERATION_COUNTS,
@@ -1157,11 +1162,14 @@ def show_quiz(
     request: Request,
     pTheme: str = Query("", alias="theme"),
     pMode: str = Query(DEFAULT_MODE, alias="mode"),
+    pDomain: str = Query("", alias="domain"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche les thèmes de révision et, si un thème est choisi, une question."""
 
-    rResponse = render_quiz(request, pDatabaseFile, pTheme, pMode)
+    rResponse = render_quiz(
+        request, pDatabaseFile, pTheme, pMode, pDomain=pDomain or None
+    )
 
     return rResponse
 

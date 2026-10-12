@@ -133,7 +133,10 @@ def clear_layout(pLayout):
     while pLayout.count():
         vWidget = pLayout.takeAt(0).widget()
 
+        # Masqué tout de suite : la destruction n'a lieu qu'au tour suivant de la
+        # boucle d'événements, et l'ancien contenu resterait affiché d'ici là.
         if vWidget is not None:
+            vWidget.hide()
             vWidget.deleteLater()
 
 

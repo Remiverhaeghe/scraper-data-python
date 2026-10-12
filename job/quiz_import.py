@@ -23,6 +23,7 @@ from job.quiz import (
     load_quiz,
     slugify,
 )
+from job.quiz_domains import DOMAIN_ORDER, classify_theme
 from storage.quiz_questions import (
     get_imported_questions,
     get_quiz_assets,
@@ -115,6 +116,7 @@ def parse_questions_text(pText):
 
     vTheme = vObject.get("theme")
     vSkills = vObject.get("skills")
+    vDomain = (vObject.get("domain"), vObject.get("subdomain"))
 
     rParsed = {
         "theme": vTheme.strip() if isinstance(vTheme, str) and vTheme.strip() else None,
@@ -124,6 +126,8 @@ def parse_questions_text(pText):
             else []
         ),
         "questions": vQuestions,
+        # Domaine retenu seulement s'il fait partie du classement de l'application
+        "domain": vDomain if vDomain[1] in DOMAIN_ORDER.get(vDomain[0], ()) else None,
     }
 
     return rParsed
@@ -276,6 +280,7 @@ def import_questions(
                 vThemeKey,
                 vThemeLabel,
                 vParsed["skills"] or [vThemeLabel],
+                vParsed["domain"],
             )
 
         save_imported_questions(pDatabaseFile, vThemeKey, vThemeLabel, vAdded, pNow)
@@ -620,9 +625,18 @@ def export_quiz_pack(pDatabaseFile, pTarget):
             }
 
         vTheme = vQuiz.get(vKey, {"label": vLabel, "skills": [vLabel]})
+        vDomain = vTheme.get("domain") or classify_theme(
+            vTheme["label"], vTheme["skills"]
+        )
         vThemes.setdefault(
             vKey,
-            {"theme": vTheme["label"], "skills": vTheme["skills"], "questions": []},
+            {
+                "theme": vTheme["label"],
+                "domain": vDomain[0],
+                "subdomain": vDomain[1],
+                "skills": vTheme["skills"],
+                "questions": [],
+            },
         )["questions"].append(vExported)
 
     if not vThemes:

@@ -175,7 +175,8 @@ def test_quiz_statistics_count_answers_rate_and_streak(database_file):
     assert vStatistics["answers"] == 3
     assert vStatistics["rate"] == 67
     assert vStatistics["streak"] == 2
-    assert len(vStatistics["days"]) == 14
+    # Le graphique part du premier jour de révision, la veille.
+    assert len(vStatistics["days"]) == 2
     assert vStatistics["days"][-1] == (NOW.date(), 2, 1)
 
 

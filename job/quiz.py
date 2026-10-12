@@ -9,7 +9,12 @@ from functools import lru_cache
 from pathlib import Path
 
 from config import QUIZ_DIRECTORY
-from storage.job_offers import count_offers_by_skill
+from job.quiz_domains import classify_theme
+from storage.job_offers import (
+    count_offers_by_skill,
+    get_offer_texts,
+    get_offers_signature,
+)
 from storage.quiz_answers import (
     count_answers_by_day,
     get_last_answers,
@@ -178,13 +183,16 @@ def load_active_quiz(pDatabaseFile):
 
     for vKey, vLabel, vQuestion in get_imported_questions(pDatabaseFile):
         # Un thème importé garde les compétences données par son fichier.
-        vMeta = vImportedThemes.get(vKey, {"label": vLabel, "skills": [vLabel]})
+        vMeta = vImportedThemes.get(
+            vKey, {"label": vLabel, "skills": [vLabel], "domain": None}
+        )
         vTheme = rThemes.setdefault(
             vKey,
             {
                 "key": vKey,
                 "label": vMeta["label"],
                 "skills": vMeta["skills"] or [vMeta["label"]],
+                "domain": vMeta["domain"],
                 "questions": [],
             },
         )
@@ -235,6 +243,109 @@ def find_question(pQuiz, pQuestionId):
     return rFound
 
 
+# Sigle court (« GC », « SSO ») : cherché tel quel en majuscules, sinon il
+# reconnaîtrait des mots sans rapport.
+MIN_INSENSITIVE_LENGTH = 4
+
+# Une compétence générique (« HTTP », « maintenance ») apparaît partout : une
+# offre ne compte pour un thème que si elle en cite au moins deux.
+MIN_MATCHED_SKILLS = 2
+
+# Comptes par texte, gardés tant que les offres en base ne changent pas
+TEXT_COUNTS_CACHE = {}
+
+
+def build_skills_pattern(pSkills):
+    """Retourne le motif qui repère les compétences, en mots entiers, ou None."""
+
+    vParts = [
+        (
+            re.escape(vSkill)
+            if len(vSkill) < MIN_INSENSITIVE_LENGTH
+            else f"(?i:{re.escape(vSkill)})"
+        )
+        for vSkill in sorted(pSkills, key=len, reverse=True)
+        if vSkill.strip()
+    ]
+
+    rPattern = (
+        re.compile(r"(?<![\w-])(?:" + "|".join(vParts) + r")(?![\w-])")
+        if vParts
+        else None
+    )
+
+    return rPattern
+
+
+def count_offers_by_text(pDatabaseFile, pThemes):
+    """Compte, par thème, les offres dont le texte cite assez de ses compétences.
+
+    Sert aux thèmes importés dont les compétences (« Tomcat », « logs ») ne sont
+    pas reconnues à l'enrichissement. Une seule recherche par offre, pour tous
+    les thèmes à la fois.
+    """
+
+    vThemeSkills = {
+        vTheme["key"]: {vSkill.lower() for vSkill in vTheme["skills"] if vSkill.strip()}
+        for vTheme in pThemes
+    }
+    vKey = (
+        str(pDatabaseFile),
+        get_offers_signature(pDatabaseFile),
+        tuple(
+            sorted(
+                (vTheme, tuple(sorted(vSkills)))
+                for vTheme, vSkills in vThemeSkills.items()
+            )
+        ),
+    )
+
+    if vKey not in TEXT_COUNTS_CACHE:
+        vPattern = build_skills_pattern(
+            {vSkill for vTheme in pThemes for vSkill in vTheme["skills"]}
+        )
+        rCounts = dict.fromkeys(vThemeSkills, 0)
+
+        for vText in get_offer_texts(pDatabaseFile) if vPattern else []:
+            vFound = {vMatch.lower() for vMatch in vPattern.findall(vText)}
+
+            for vTheme, vSkills in vThemeSkills.items():
+                if len(vFound & vSkills) >= min(MIN_MATCHED_SKILLS, len(vSkills)):
+                    rCounts[vTheme] += 1
+
+        # Un seul état gardé : la base a changé, l'ancien compte ne sert plus.
+        TEXT_COUNTS_CACHE.clear()
+        TEXT_COUNTS_CACHE[vKey] = rCounts
+
+    rCounts = TEXT_COUNTS_CACHE[vKey]
+
+    return rCounts
+
+
+def count_theme_offers(pDatabaseFile, pQuiz):
+    """Compte, par thème, les offres qui demandent ses compétences.
+
+    Les compétences reconnues à l'enrichissement sont comptées directement ;
+    sinon, elles sont cherchées dans le titre et la description.
+    """
+
+    vSkillCounts = count_offers_by_skill(pDatabaseFile)
+
+    rCounts = {
+        vKey: max(
+            (vSkillCounts.get(vSkill, 0) for vSkill in vTheme["skills"]), default=0
+        )
+        for vKey, vTheme in pQuiz.items()
+    }
+
+    vMissing = [vTheme for vKey, vTheme in pQuiz.items() if not rCounts[vKey]]
+
+    if vMissing:
+        rCounts.update(count_offers_by_text(pDatabaseFile, vMissing))
+
+    return rCounts
+
+
 def build_quiz_overview(pDatabaseFile, pQuiz):
     """Retourne les thèmes avec leur score, leurs questions à revoir et leur intérêt.
 
@@ -243,7 +354,7 @@ def build_quiz_overview(pDatabaseFile, pQuiz):
     """
 
     vAnswers = get_last_answers(pDatabaseFile)
-    vSkillCounts = count_offers_by_skill(pDatabaseFile)
+    vOfferCounts = count_theme_offers(pDatabaseFile, pQuiz)
     vGuides = {
         vGuide["theme"]: vGuide["name"]
         for vGuide in get_quiz_guides(pDatabaseFile)
@@ -256,8 +367,9 @@ def build_quiz_overview(pDatabaseFile, pQuiz):
         vIds = [vQuestion["id"] for vQuestion in vTheme["questions"]]
         vAnswered = [vId for vId in vIds if vId in vAnswers]
         vCorrect = sum(vAnswers[vId] for vId in vAnswered)
-        vOfferCount = max(
-            (vSkillCounts.get(vSkill, 0) for vSkill in vTheme["skills"]), default=0
+        vOfferCount = vOfferCounts[vTheme["key"]]
+        vDomain, vSubdomain = vTheme.get("domain") or classify_theme(
+            vTheme["label"], vTheme["skills"]
         )
 
         vThemes.append(
@@ -271,6 +383,8 @@ def build_quiz_overview(pDatabaseFile, pQuiz):
                 "score": round(100 * vCorrect / len(vIds)) if vIds else 0,
                 "offer_count": vOfferCount,
                 "guide": vGuides.get(vTheme["key"]),
+                "domain": vDomain,
+                "subdomain": vSubdomain,
             }
         )
 
@@ -315,6 +429,12 @@ def build_quiz_statistics(pDatabaseFile, pThemes, pNow, pDays=STATISTICS_DAYS):
     vToday = pNow.date()
     vChartDays = [vToday - timedelta(days=vOffset) for vOffset in range(pDays)][::-1]
 
+    # Le graphique commence au premier jour de révision : sans jours vides
+    # avant lui, la barre ne se retrouve pas isolée à droite.
+    vFirstDay = min(
+        (vDay for vDay in vChartDays if vDay.isoformat() in vDays), default=vToday
+    )
+
     rStatistics = {
         "acquired": sum(vTheme["correct"] for vTheme in pThemes),
         "total": sum(vTheme["total"] for vTheme in pThemes),
@@ -322,7 +442,11 @@ def build_quiz_statistics(pDatabaseFile, pThemes, pNow, pDays=STATISTICS_DAYS):
         "answers": vAnswers,
         "rate": round(100 * vCorrect / vAnswers) if vAnswers else None,
         "streak": count_streak(vDays, vToday),
-        "days": [(vDay, *vDays.get(vDay.isoformat(), (0, 0))) for vDay in vChartDays],
+        "days": [
+            (vDay, *vDays.get(vDay.isoformat(), (0, 0)))
+            for vDay in vChartDays
+            if vDay >= vFirstDay
+        ],
     }
 
     return rStatistics

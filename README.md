@@ -78,7 +78,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées, v14 : thèmes, schémas et guides importés)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées, v14 : thèmes, schémas et guides importés, v15 : domaine des thèmes importés)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -323,7 +323,8 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Questions stockées dans des fichiers JSON versionnés (`assets/quiz/`), faciles à compléter
 - [x] Suivi de la progression : score par thème, questions ratées à revoir
 - [x] Statistiques : questions acquises, taux de bonnes réponses, jours de révision d'affilée, réponses des 14 derniers jours
-- [x] Thèmes proposés selon les compétences demandées dans les offres enregistrées
+- [x] Thèmes proposés selon les compétences demandées dans les offres enregistrées ; pour un thème importé, compétences cherchées dans le texte des offres (deux au moins par offre)
+- [x] Thèmes rangés par domaine (Informatique, Réseau et sécurité, Industrie) et sous-domaine, avec un filtre par domaine ; un pack peut imposer le domaine de ses thèmes
 - [x] Informations publiques sur l'entreprise : activité, taille, siège, chiffre d'affaires (API Recherche d'entreprises de l'État)
 - [x] Demandes prêtes pour ChatGPT depuis la fiche d'une offre : questions du recruteur, simulation d'entretien (une question à la fois, réponse notée), CV et lettre adaptés, connaissance de l'entreprise. Copiées puis collées avec son propre compte : l'API d'OpenAI, payante, n'est pas utilisée
 
@@ -404,7 +405,8 @@ scraper-data-python/
 │   ├── company_info.py                        # Informations publiques sur une entreprise française
 │   ├── assistant.py                           # Demandes préparées pour ChatGPT
 │   ├── quiz.py                                # Révision : questions, progression, thèmes conseillés
-│   ├── quiz_import.py                         # Import de questions et de packs (schémas, guides)
+│   ├── quiz_import.py                         # Import et export de questions et de packs
+│   ├── quiz_domains.py                        # Classement des thèmes par domaine et sous-domaine
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
@@ -645,6 +647,7 @@ scraper-data-python/
 │   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_quiz_import.py                # Teste l'import des packs, schémas et guides
+│   │   ├── test_quiz_domains.py               # Teste les domaines et le compte des offres par thème
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage

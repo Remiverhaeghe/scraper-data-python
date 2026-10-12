@@ -553,6 +553,13 @@ def migrate_to_v14(pConnection):
         """)
 
 
+def migrate_to_v15(pConnection):
+    """Ajoute le domaine et le sous-domaine indiqués par un pack de révision."""
+
+    pConnection.execute("ALTER TABLE quiz_theme ADD COLUMN domain TEXT")
+    pConnection.execute("ALTER TABLE quiz_theme ADD COLUMN subdomain TEXT")
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -568,6 +575,7 @@ MIGRATIONS = [
     migrate_to_v12,
     migrate_to_v13,
     migrate_to_v14,
+    migrate_to_v15,
 ]
 
 

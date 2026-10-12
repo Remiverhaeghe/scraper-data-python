@@ -1226,6 +1226,27 @@ code {
     margin-top: 18px;
 }
 
+/* Pastilles de filtre : domaines de révision */
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.chip.is-active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #ffffff;
+}
+
 .chart-scale {
     margin-left: 12px;
     font-weight: 600;

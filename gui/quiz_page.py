@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QProgressBar,
     QRadioButton,
+    QScrollArea,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -46,6 +47,7 @@ from job.quiz import (
     load_active_quiz,
     pick_question,
 )
+from job.quiz_domains import group_themes
 from job.quiz_import import (
     GENERATION_COUNTS,
     IMPORT_EXTENSIONS,
@@ -97,15 +99,21 @@ class QuizPage(QWidget):
         self.message_label.setObjectName("pageSubtitle")
         self.message_label.hide()
 
-        self.themes_grid = QGridLayout()
-        self.themes_grid.setSpacing(16)
+        # Pastilles de domaine : une seule cochée, « Tous » par défaut
+        self.domain = None
+        self.domain_group = QButtonGroup(self)
+        self.domain_layout = QHBoxLayout()
+        self.domain_layout.setSpacing(8)
 
-        for vColumn in range(THEME_COLUMNS):
-            self.themes_grid.setColumnStretch(vColumn, 1)
+        # Les thèmes sont reconstruits à chaque rafraîchissement dans un conteneur
+        # remplacé d'un bloc : domaines et sous-domaines y sont imbriqués.
+        self.themes_holder = QVBoxLayout()
+        self.themes_holder.setContentsMargins(0, 0, 0, 0)
 
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.create_question_card())
-        vLayout.addLayout(self.themes_grid)
+        vLayout.addLayout(self.domain_layout)
+        vLayout.addLayout(self.themes_holder)
 
         # Guides pratiques des packs importés, masqués tant qu'il n'y en a pas
         self.guides_card, vGuidesLayout = create_card(
@@ -471,7 +479,6 @@ class QuizPage(QWidget):
             self.message_label.show()
             return
 
-        clear_layout(self.themes_grid)
         self.refresh_guides()
 
         vCurrent = self.theme_combo.currentText()
@@ -479,10 +486,74 @@ class QuizPage(QWidget):
         self.theme_combo.addItems(sorted(vTheme["label"] for vTheme in vThemes))
         self.theme_combo.setCurrentText(vCurrent)
 
-        for vIndex, vTheme in enumerate(vThemes):
-            self.themes_grid.addWidget(
-                self.create_theme_card(vTheme), *divmod(vIndex, THEME_COLUMNS)
+        self.themes = vThemes
+        self.refresh_domains()
+        self.show_themes()
+
+    def refresh_domains(self):
+        """Propose une pastille par domaine qui contient des thèmes."""
+        clear_layout(self.domain_layout)
+
+        for vButton in self.domain_group.buttons():
+            self.domain_group.removeButton(vButton)
+
+        vDomains = [vDomain for vDomain, _ in group_themes(self.themes)]
+
+        if self.domain not in vDomains:
+            self.domain = None
+
+        for vDomain in [None, *vDomains]:
+            vButton = create_button(
+                vDomain or "Tous les domaines", pObjectName="segmentButton"
             )
+            vButton.setCheckable(True)
+            vButton.setChecked(vDomain == self.domain)
+            vButton.clicked.connect(
+                lambda _=False, pDomain=vDomain: self.select_domain(pDomain)
+            )
+            self.domain_group.addButton(vButton)
+            self.domain_layout.addWidget(vButton)
+
+        self.domain_layout.addStretch()
+
+    def select_domain(self, pDomain):
+        """Limite l'affichage des thèmes à un domaine, ou les montre tous."""
+        self.domain = pDomain
+        self.show_themes()
+
+    def show_themes(self):
+        """Affiche les thèmes du domaine choisi, rangés par sous-domaine."""
+        clear_layout(self.themes_holder)
+
+        vContainer = QWidget()
+        vLayout = QVBoxLayout(vContainer)
+        vLayout.setContentsMargins(0, 0, 0, 0)
+        vLayout.setSpacing(12)
+
+        for vDomain, vSections in group_themes(self.themes, self.domain):
+            vTitle = QLabel(vDomain)
+            vTitle.setObjectName("cardTitle")
+            vLayout.addWidget(vTitle)
+
+            for vSubdomain, vThemes in vSections:
+                vSubtitle = QLabel(vSubdomain)
+                vSubtitle.setObjectName("fieldLabel")
+
+                vGrid = QGridLayout()
+                vGrid.setSpacing(16)
+
+                for vColumn in range(THEME_COLUMNS):
+                    vGrid.setColumnStretch(vColumn, 1)
+
+                for vIndex, vTheme in enumerate(vThemes):
+                    vGrid.addWidget(
+                        self.create_theme_card(vTheme), *divmod(vIndex, THEME_COLUMNS)
+                    )
+
+                vLayout.addWidget(vSubtitle)
+                vLayout.addLayout(vGrid)
+
+        self.themes_holder.addWidget(vContainer)
 
     def create_theme_card(self, pTheme):
         """Crée la carte d'un thème : progression, intérêt et boutons."""
@@ -496,8 +567,11 @@ class QuizPage(QWidget):
         if pTheme["to_review"]:
             vParts.append(f"{pTheme['to_review']} à revoir")
 
-        if pTheme["offer_count"]:
-            vParts.append(f"demandé dans {pTheme['offer_count']} offre(s)")
+        vParts.append(
+            f"demandé dans {pTheme['offer_count']} offre(s)"
+            if pTheme["offer_count"]
+            else "pas encore demandé dans vos offres"
+        )
 
         vInfo = QLabel(" · ".join(vParts))
         vInfo.setObjectName("cardSubtitle")
@@ -599,6 +673,9 @@ class QuizPage(QWidget):
         )
 
         self.question_card.show()
+
+        # La question s'affiche en haut de la page : on y remonte.
+        self.findChild(QScrollArea).verticalScrollBar().setValue(0)
         self.verdict_label.clear()
         self.explanation_label.clear()
         self.visual_widget.hide()

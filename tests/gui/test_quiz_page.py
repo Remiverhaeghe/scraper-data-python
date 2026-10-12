@@ -24,7 +24,8 @@ def test_question_answer_and_review(qt_application, tmp_path):
 
     vPage = create_page(tmp_path / "scraper.db")
 
-    assert vPage.themes_grid.count() >= 6
+    assert len(vPage.themes) >= 6
+    assert vPage.domain_group.buttons()[0].isChecked()
 
     vPage.start("sql", "discover")
     vPage.validate()
@@ -207,3 +208,33 @@ def test_questions_are_exported(qt_application, tmp_path, monkeypatch):
     vPage.export_questions(str(tmp_path / "absent" / "export.zip"))
 
     assert vPage.import_message.text() == "L'export a échoué. Voir les journaux."
+
+
+def test_domain_filter_zero_offers_and_scroll(qt_application, tmp_path):
+    """Vérifie le filtre par domaine, la mention sans offre et la remontée en haut."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vScroll = vPage.findChild(quiz_page.QScrollArea)
+
+    assert [vButton.text() for vButton in vPage.domain_group.buttons()][0] == (
+        "Tous les domaines"
+    )
+
+    vPage.select_domain("Informatique")
+
+    assert vPage.domain == "Informatique"
+
+    vLabels = [
+        vLabel.text()
+        for vLabel in vPage.findChildren(quiz_page.QLabel)
+        if vLabel.isVisibleTo(vPage)
+    ]
+
+    assert "Développement" in vLabels
+    assert any("pas encore demandé dans vos offres" in vText for vText in vLabels)
+
+    vScroll.verticalScrollBar().setMaximum(1000)
+    vScroll.verticalScrollBar().setValue(500)
+    vPage.start("sql", "discover")
+
+    assert vScroll.verticalScrollBar().value() == 0

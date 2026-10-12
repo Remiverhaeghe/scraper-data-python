@@ -60,14 +60,26 @@
 </article>
 {% endif %}
 
-<section class="grid grid-settings section-gap quiz-themes">
-    {% for theme_item in themes %}
+{# Domaines : un lien par domaine, la page entière se recharge filtrée. #}
+<nav class="chips section-gap" aria-label="Domaines">
+    <a class="chip{% if not domain %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}">Tous les domaines</a>
+    {% for domain_item in domains %}
+    <a class="chip{% if domain == domain_item %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}?domain={{ domain_item | urlencode }}">{{ domain_item }}</a>
+    {% endfor %}
+</nav>
+
+{% for domain_item, sections in groups %}
+<h2 class="section-gap">{{ domain_item }}</h2>
+{% for subdomain, theme_items in sections %}
+<h3 class="muted">{{ subdomain }}</h3>
+<section class="grid grid-settings quiz-themes">
+    {% for theme_item in theme_items %}
     <article class="card">
         <h2>{{ theme_item.label }}</h2>
         <p class="muted">
             {{ theme_item.correct }} / {{ theme_item.total }} acquises
             {% if theme_item.to_review %} · {{ theme_item.to_review }} à revoir{% endif %}
-            {% if theme_item.offer_count %} · <span class="tone-primary">demandé dans {{ theme_item.offer_count }} offre(s)</span>{% endif %}
+            · {% if theme_item.offer_count %}<span class="tone-primary">demandé dans {{ theme_item.offer_count }} offre(s)</span>{% else %}pas encore demandé dans vos offres{% endif %}
         </p>
         <div class="quiz-progress" role="progressbar" aria-valuenow="{{ theme_item.score }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression {{ theme_item.label }}"><span style="width: {{ theme_item.score }}%"></span></div>
         <div class="rules-actions">
@@ -78,6 +90,8 @@
     </article>
     {% endfor %}
 </section>
+{% endfor %}
+{% endfor %}
 
 {% if guides %}
 <article class="card section-gap">

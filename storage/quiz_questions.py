@@ -62,19 +62,29 @@ def get_imported_questions(pDatabaseFile):
     return rQuestions
 
 
-def save_quiz_theme(pDatabaseFile, pThemeKey, pLabel, pSkills):
-    """Enregistre le libellé et les compétences d'un thème importé."""
+def save_quiz_theme(pDatabaseFile, pThemeKey, pLabel, pSkills, pDomain=None):
+    """Enregistre le libellé, les compétences et le domaine d'un thème importé.
+
+    pDomain est (domaine, sous-domaine), ou None pour un classement automatique.
+    """
 
     vConnection = connect_database(pDatabaseFile)
 
     try:
         vConnection.execute(
             """
-            INSERT INTO quiz_theme (theme, label, skills) VALUES (?, ?, ?)
+            INSERT INTO quiz_theme (theme, label, skills, domain, subdomain)
+            VALUES (?, ?, ?, ?, ?)
             ON CONFLICT(theme) DO UPDATE SET
-                label = excluded.label, skills = excluded.skills
+                label = excluded.label, skills = excluded.skills,
+                domain = excluded.domain, subdomain = excluded.subdomain
             """,
-            (pThemeKey, pLabel, json.dumps(pSkills, ensure_ascii=False)),
+            (
+                pThemeKey,
+                pLabel,
+                json.dumps(pSkills, ensure_ascii=False),
+                *(pDomain or (None, None)),
+            ),
         )
         vConnection.commit()
 
@@ -89,15 +99,19 @@ def get_quiz_themes(pDatabaseFile):
 
     try:
         vRows = vConnection.execute(
-            "SELECT theme, label, skills FROM quiz_theme"
+            "SELECT theme, label, skills, domain, subdomain FROM quiz_theme"
         ).fetchall()
 
     finally:
         vConnection.close()
 
     rThemes = {
-        vTheme: {"label": vLabel, "skills": json.loads(vSkills)}
-        for vTheme, vLabel, vSkills in vRows
+        vTheme: {
+            "label": vLabel,
+            "skills": json.loads(vSkills),
+            "domain": (vDomain, vSubdomain) if vDomain else None,
+        }
+        for vTheme, vLabel, vSkills, vDomain, vSubdomain in vRows
     }
 
     return rThemes
