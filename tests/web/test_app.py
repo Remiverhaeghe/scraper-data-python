@@ -1473,3 +1473,21 @@ def test_settings_messages_are_colored(client):
 
     assert 'class="application-message tone-warning"' in vRefused
     assert 'class="application-message tone-success"' in vSaved
+
+
+def test_quiz_imported_questions_cleared_after_confirmation(client):
+    """Vérifie l'effacement des questions importées depuis le web, confirmé."""
+
+    client.post(
+        "/quiz/import", files={"file": ("pack.zip", build_pack(), "application/zip")}
+    )
+
+    vRefused = client.post("/quiz/clear", data={})
+
+    assert vRefused.status_code == 400
+    assert "Cochez la case" in vRefused.text
+
+    vCleared = client.post("/quiz/clear", data={"confirm": "1"}).text
+
+    assert "2 question(s) importée(s) effacée(s)" in vCleared
+    assert "Analyse RAM et JVM" not in vCleared

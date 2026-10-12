@@ -15,6 +15,7 @@ from pathlib import PurePosixPath
 from urllib.parse import urlsplit
 
 from job.quiz import (
+    FLAGGED_KEY,
     QUESTION_FIELDS,
     QUIZ_LEVELS,
     check_question,
@@ -25,7 +26,10 @@ from job.quiz import (
     slugify,
 )
 from job.quiz_domains import DOMAIN_ORDER, OTHER_DOMAIN, classify_theme
+from job.quiz_exam import EXAM_KEY
+from storage.backup import backup_database
 from storage.quiz_questions import (
+    delete_imported_content,
     get_imported_questions,
     get_quiz_assets,
     get_quiz_guide,
@@ -35,6 +39,7 @@ from storage.quiz_questions import (
     save_quiz_guides,
     save_quiz_theme,
 )
+from storage.settings_repository import save_setting_values
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -956,3 +961,27 @@ def export_quiz_pack(pDatabaseFile, pTarget):
     )
 
     return rCount
+
+
+def clear_imported_questions(pDatabaseFile, pNow):
+    """Sauvegarde la base puis efface toutes les questions importées.
+
+    Retourne (nombre de questions effacées, fichier de sauvegarde). Sans
+    sauvegarde réussie, rien n'est effacé.
+    """
+
+    vBackupFile = backup_database(pDatabaseFile, pNow, "avant-effacement-questions")
+    vCount = delete_imported_content(pDatabaseFile)
+
+    # Signalements et examen en cours visaient des questions qui n'existent plus.
+    save_setting_values(pDatabaseFile, {FLAGGED_KEY: "", EXAM_KEY: ""})
+
+    logger.warning(
+        "Questions de révision importées effacées : %s ; sauvegarde : %s",
+        vCount,
+        vBackupFile.name,
+    )
+
+    rResult = (vCount, vBackupFile)
+
+    return rResult

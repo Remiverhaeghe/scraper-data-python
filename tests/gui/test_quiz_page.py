@@ -2,6 +2,8 @@
 
 import json
 
+import pytest
+
 import gui.quiz_page as quiz_page
 from gui.quiz_page import QuizPage
 from storage.database import initialize_database
@@ -321,3 +323,40 @@ def test_category_list_filters_and_toggles(qt_application, tmp_path):
 
     assert (vPage.domain, vPage.subdomain) == (None, None)
     assert vPage.filter_label.text() == "Tous les thèmes"
+
+
+@pytest.mark.parametrize("pConfirmed", [False, True])
+def test_imported_questions_can_be_cleared(
+    qt_application, tmp_path, monkeypatch, pConfirmed
+):
+    """Vérifie l'effacement des questions importées, seulement après confirmation."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vPage.import_edit.setPlainText(QUESTIONS_JSON)
+    vPage.import_pasted_questions()
+
+    def fake_exec(pDialog):
+        vButtons = {vButton.text(): vButton for vButton in pDialog.buttons()}
+        pDialog.clickedButton = lambda: vButtons[
+            "Supprimer" if pConfirmed else "Annuler"
+        ]
+
+    monkeypatch.setattr(quiz_page.QMessageBox, "exec", fake_exec)
+    vPage.confirm_clear_questions()
+
+    vKeys = {vTheme["key"] for vTheme in vPage.themes}
+
+    assert ("kafka" in vKeys) is not pConfirmed
+
+    if pConfirmed:
+        assert vPage.import_message.text().startswith(
+            "1 question(s) importée(s) effacée(s)"
+        )
+
+    def fail(*pArgs):
+        raise OSError("disque plein")
+
+    monkeypatch.setattr(quiz_page, "clear_imported_questions", fail)
+    vPage.clear_questions()
+
+    assert vPage.import_message.text().startswith("L'effacement a échoué")

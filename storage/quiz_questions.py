@@ -232,3 +232,33 @@ def get_quiz_assets(pDatabaseFile):
         vConnection.close()
 
     return rAssets
+
+
+def delete_imported_content(pDatabaseFile):
+    """Efface les questions importées, leurs réponses, thèmes, schémas et guides.
+
+    Les questions livrées avec l'application et leurs réponses sont gardées.
+    Retourne le nombre de questions effacées.
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rCount = vConnection.execute("SELECT COUNT(*) FROM quiz_question").fetchone()[0]
+
+        # Réponses aux questions importées d'abord : elles n'auraient plus de sens.
+        vConnection.execute(
+            "DELETE FROM quiz_answer "
+            "WHERE question_id IN (SELECT question_id FROM quiz_question)"
+        )
+
+        for vTable in ("quiz_question", "quiz_theme", "quiz_asset", "quiz_guide"):
+            # Nom de table issu de la liste ci-dessus, une constante du code.
+            vConnection.execute(f"DELETE FROM {vTable}")  # nosec B608
+
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    return rCount

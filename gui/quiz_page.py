@@ -41,6 +41,7 @@ from gui.widgets import (
     create_icon_label,
     create_page_header,
     create_scroll_content,
+    show_message,
 )
 from job.assistant import CHATGPT_URL
 from job.quiz import (
@@ -78,6 +79,7 @@ from job.quiz_import import (
     GENERATION_LEVELS,
     IMPORT_EXTENSIONS,
     build_generation_prompt,
+    clear_imported_questions,
     describe_import_details,
     describe_quiz_import,
     export_quiz_pack,
@@ -349,6 +351,19 @@ class QuizPage(QWidget):
         vActions.addWidget(vPasteButton)
         vActions.addWidget(vFileButton)
         vActions.addWidget(vExportButton)
+
+        vClearButton = create_button(
+            "Supprimer les questions importées",
+            "trash-2",
+            "dangerButton",
+            COLORS["danger"],
+        )
+        vClearButton.setToolTip(
+            "Efface les questions importées, leurs schémas, guides et réponses ; "
+            "les questions livrées sont gardées"
+        )
+        vClearButton.clicked.connect(self.confirm_clear_questions)
+        vActions.addWidget(vClearButton)
         vActions.addWidget(self.import_message, 1)
 
         # Le message reste court ; le détail d'un gros import s'ouvre à part.
@@ -457,6 +472,59 @@ class QuizPage(QWidget):
             self.import_message.setText(
                 f"{vCount} question(s) exportée(s) : {Path(pPath).name}"
             )
+
+    def confirm_clear_questions(self):
+        """Demande confirmation, puis efface toutes les questions importées."""
+        vDialog = QMessageBox(self)
+        vDialog.setIcon(QMessageBox.Icon.Warning)
+        vDialog.setWindowTitle("Supprimer les questions importées")
+        vDialog.setText("Toutes les questions importées vont être effacées.")
+        vDialog.setInformativeText(
+            "Avec leurs thèmes, schémas, guides et vos réponses à ces questions. "
+            "Les questions livrées avec l'application sont gardées. Une sauvegarde "
+            "de la base est faite avant ; « Exporter mes questions » permet aussi de "
+            "les garder dans un fichier. Continuer ?"
+        )
+
+        vConfirmButton = vDialog.addButton(
+            "Supprimer", QMessageBox.ButtonRole.DestructiveRole
+        )
+        vCancelButton = vDialog.addButton("Annuler", QMessageBox.ButtonRole.RejectRole)
+
+        # Par sécurité, Entrée annule : il faut cliquer sur Supprimer.
+        vDialog.setDefaultButton(vCancelButton)
+        vDialog.exec()
+
+        if vDialog.clickedButton() is vConfirmButton:
+            self.clear_questions()
+
+    def clear_questions(self):
+        """Efface les questions importées après sauvegarde, puis met la page à jour."""
+        try:
+            vCount, vBackupFile = clear_imported_questions(
+                self.database_file, datetime.now()
+            )
+
+        except Exception:
+            logger.exception("Échec de l'effacement des questions importées")
+
+            show_message(
+                self.import_message,
+                "L'effacement a échoué ; rien n'a été effacé sans sauvegarde. "
+                "Voir les journaux.",
+                "danger",
+            )
+            return
+
+        self.mode = None
+        self.question_card.hide()
+        self.refresh()
+
+        show_message(
+            self.import_message,
+            f"{vCount} question(s) importée(s) effacée(s). Sauvegarde : "
+            f"{vBackupFile.name}",
+        )
 
     def run_import(self, pImport):
         """Lance un import, affiche son bilan et met à jour les thèmes."""

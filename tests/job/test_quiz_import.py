@@ -7,9 +7,16 @@ from datetime import datetime
 
 import pytest
 
-from job.quiz import build_quiz_overview, flag_question, load_active_quiz
+from job.quiz import (
+    answer_question,
+    build_quiz_overview,
+    flag_question,
+    load_active_quiz,
+    load_quiz,
+)
 from job.quiz_import import (
     build_generation_prompt,
+    clear_imported_questions,
     is_safe_reference,
     describe_quiz_import,
     export_quiz_pack,
@@ -18,6 +25,7 @@ from job.quiz_import import (
     normalize_question,
 )
 from storage.database import initialize_database
+from storage.quiz_answers import get_last_answers
 from storage.quiz_questions import get_quiz_asset, get_quiz_guide, get_quiz_guides
 from utils.markdown import render_markdown
 
@@ -391,3 +399,25 @@ def test_import_archive_of_archives(database_file):
     assert vReport["themes"] == ["Thème linux"]
     assert any("profond.zip" in vReason for vReason in vReport["rejected"])
     assert any("casse.zip" in vReason for vReason in vReport["rejected"])
+
+
+def test_clear_imported_questions_keeps_shipped_ones(database_file):
+    """Vérifie l'effacement : importées parties, livrées et leurs réponses gardées."""
+
+    import_questions_file(database_file, "", "pack.zip", build_pack(), NOW)
+    answer_question(database_file, load_quiz(), "sql-null", 1, NOW)
+    answer_question(
+        database_file, load_active_quiz(database_file), "ram-jvm-001", 0, NOW
+    )
+    flag_question(database_file, "ram-jvm-002")
+
+    vCount, vBackupFile = clear_imported_questions(database_file, NOW)
+    vQuiz = load_active_quiz(database_file)
+
+    assert vCount == 2
+    assert "avant-effacement-questions" in vBackupFile.name
+    assert "ram-jvm" not in vQuiz
+    assert len(vQuiz) == len(load_quiz())
+    assert get_last_answers(database_file) == {"sql-null": True}
+    assert get_quiz_guides(database_file) == []
+    assert get_quiz_asset(database_file, "ram.svg") is None

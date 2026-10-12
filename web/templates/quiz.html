@@ -165,6 +165,14 @@
         <button class="button" type="submit">{{ icon("upload", 16) }} Importer</button>
     </form>
     <p class="section-gap"><a class="button" href="{{ url_for('download_quiz_pack').path }}" title="Pack .zip des questions importées, schémas et guides, réimportable">{{ icon("download", 16) }} Exporter mes questions</a></p>
+    <form class="reset-form section-gap" method="post" action="{{ url_for('clear_quiz_questions').path }}#add-questions">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <label class="check">
+            <input type="checkbox" name="confirm" value="1" required>
+            Je comprends que les questions importées, leurs schémas, guides et mes réponses à ces questions seront effacés (sauvegarde faite avant)
+        </label>
+        <button class="button button-danger" type="submit">{{ icon("trash-2", 16) }} Supprimer les questions importées</button>
+    </form>
     {% if import_form.message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ import_form.message }}</p>{% endif %}
     {% if import_form.details %}
     <details class="import-details">

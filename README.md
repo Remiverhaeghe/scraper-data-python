@@ -319,6 +319,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande reprenant le modèle complet d'un pack (domaine, niveaux répartis ou au choix, schémas et guides facultatifs), import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
 - [x] Signalement d'une question douteuse, retirée des tirages
 - [x] Export des questions importées en pack .zip réimportable (manifest, questions, schémas, guides), sans les questions signalées
+- [x] Suppression de toutes les questions importées (schémas, guides et réponses compris) après confirmation, base sauvegardée avant ; les questions livrées sont gardées
 - [x] Packs .zip enrichis : thèmes listés par manifest.json, niveaux intermédiaire et expert, schémas SVG affichés avec la correction (refusés s'ils contiennent du script), références https et guides pratiques en Markdown
 - [x] Explication de la bonne réponse après chaque question, choix mélangés à chaque affichage
 - [x] Questions stockées dans des fichiers JSON versionnés (`assets/quiz/`), faciles à compléter

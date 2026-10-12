@@ -184,6 +184,7 @@ from job.quiz_import import (
     MIXED_LEVEL,
     IMPORT_EXTENSIONS,
     build_generation_prompt,
+    clear_imported_questions,
     describe_import_details,
     describe_quiz_import,
     export_quiz_pack,
@@ -1572,6 +1573,39 @@ def stop_quiz_exam(pDatabaseFile: str = Depends(get_database_file)):
     stop_exam(pDatabaseFile)
 
     rResponse = RedirectResponse(app.url_path_for("show_quiz"), status_code=303)
+
+    return rResponse
+
+
+@app.post(
+    "/quiz/clear", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+def clear_quiz_questions(
+    request: Request,
+    pConfirm: str = Form("", alias="confirm"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Efface les questions importées après sauvegarde, sur confirmation explicite."""
+
+    if pConfirm != "1":
+        rResponse = render_quiz(
+            request,
+            pDatabaseFile,
+            pImport={"message": "Cochez la case de confirmation pour supprimer."},
+            pStatusCode=400,
+        )
+
+    else:
+        vCount, vBackupFile = clear_imported_questions(pDatabaseFile, datetime.now())
+
+        rResponse = render_quiz(
+            request,
+            pDatabaseFile,
+            pImport={
+                "message": f"{vCount} question(s) importée(s) effacée(s). "
+                f"Sauvegarde : {vBackupFile.name}"
+            },
+        )
 
     return rResponse
 
