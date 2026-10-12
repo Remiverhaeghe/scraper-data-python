@@ -664,6 +664,14 @@ def build_generation_prompt(pQuiz, pThemeLabel, pLevel, pCount):
     vTheme = pQuiz.get(vThemeKey, {})
     vSkills = vTheme.get("skills") or [vThemeLabel]
     vDomain, vSubdomain = vTheme.get("domain") or classify_theme(vThemeLabel, vSkills)
+
+    # Thème nouveau ou non classé : ChatGPT choisit le domaine et les compétences
+    # plutôt que de recopier une valeur par défaut.
+    if (vDomain, vSubdomain) == OTHER_DOMAIN:
+        vDomain, vSubdomain = "à choisir (règle 2)", "à choisir (règle 2)"
+
+    if not vTheme:
+        vSkills = ["compétence 1", "compétence 2", "…"]
     vIds = [vQuestion["id"] for vQuestion in vTheme.get("questions", [])]
     vLevels = split_levels(pLevel, pCount)
 

@@ -98,6 +98,8 @@ def test_process_jobs():
         "job.application.record_history"
     ) as vRecordHistory, patch(
         "job.application.load_settings", return_value=SETTINGS
+    ), patch(
+        "job.application.get_exchange_rates", return_value={}
     ):
 
         rResult = process_jobs(vConfig)
@@ -157,6 +159,8 @@ def test_process_jobs_saves_nothing_when_cancelled():
         "job.application.record_history"
     ) as vRecordHistory, patch(
         "job.application.load_settings", return_value=SETTINGS
+    ), patch(
+        "job.application.get_exchange_rates", return_value={}
     ):
 
         with pytest.raises(ScrapingCancelled):
