@@ -180,6 +180,13 @@
         <pre>{{ import_form.details }}</pre>
     </details>
     {% endif %}
+    {% if import_form.correction %}
+    <div class="copy-field section-gap" id="quiz-correction">
+        <textarea rows="5" readonly aria-label="Demande de correction pour ChatGPT">{{ import_form.correction }}</textarea>
+        <button class="button button-primary" type="button" data-copy="quiz-correction" data-open="{{ chatgpt_url }}">{{ icon("bot", 16) }} Faire corriger par ChatGPT</button>
+    </div>
+    <p class="card-subtitle">Importez ensuite le lot corrigé : il remplacera les questions signalées.</p>
+    {% endif %}
 </article>
 
 <article class="card section-gap">

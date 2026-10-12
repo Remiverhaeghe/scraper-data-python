@@ -1,12 +1,13 @@
 # Génération des questions de révision avec ChatGPT
 
 Les questions supplémentaires sont créées avec son propre compte ChatGPT, puis importées
-dans la page Révision. La demande est produite par l'application à partir de deux fichiers :
+dans la page Révision. Les demandes sont produites par l'application à partir de ces fichiers :
 
 | Fichier | Contenu |
 |---|---|
 | `assets/quiz_generation/catalog.json` | Catalogue des thèmes, rangés par domaine puis sous-domaine |
 | `assets/quiz_generation/prompt.txt` | Texte de la demande et ses règles, avec des variables `$…` |
+| `assets/quiz_generation/correction.txt` | Demande de correction d'un lot signalé, variable `$themes` |
 
 ## Utilisation
 
@@ -17,14 +18,37 @@ dans la page Révision. La demande est produite par l'application à partir de d
 3. Importer l'archive .zip obtenue, ou coller le JSON.
 4. Lire le bilan : en orange, le lot ne respecte pas la demande (bonne réponse trop souvent
    la plus longue ou à la même position, explications trop courtes). « Voir le détail »
-   donne les mesures de chaque thème. Un lot douteux se supprime en signalant ses questions
-   ou se redemande à ChatGPT.
+   donne les mesures de chaque thème.
+5. Lot en orange : « Faire corriger par ChatGPT » copie une demande qui cite les alertes
+   et les questions concernées. Le lot corrigé se réimporte normalement : chaque question
+   importée revenant avec le même identifiant est remplacée. Ses réponses restent
+   rattachées, un schéma absent de la correction est gardé et un signalement est levé.
+   Une question livrée avec l'application ou d'un autre thème n'est jamais remplacée.
 
 Chaque demande porte le numéro du lot suivant du thème, calculé d'après les questions déjà
 importées : les identifiants `<thème>-l<lot>-<numéro>` ne se chevauchent jamais.
 
 Les thèmes `python`, `java`, `spring`, `javascript`, `sql`, `git` et `docker` portent
 l'identifiant des thèmes livrés dans `assets/quiz` : leurs questions s'y ajoutent.
+
+## Ordre de travail conseillé
+
+Le numéro de lot appartient à chaque thème : le lot 1 de `grafcet` et le lot 1 de
+`hydraulique` sont deux demandes distinctes. Les séries ci-dessous regroupent seulement les
+thèmes à traiter ensuite, un thème par demande.
+
+| Série | Thèmes |
+|---|---|
+| 1. Automatisme | `automates-programmables`, `grafcet`, `capteurs-actionneurs`, `regulation`, `supervision-scada`, `reseaux-industriels`, `securite-machines`, `vision-industrielle`, `robotique` |
+| 2. Électricité et énergie | `electricite`, `schemas-electriques`, `habilitation-electrique`, `distribution-electrique`, `moteurs-variateurs`, `electronique`, `energie`, `energies-renouvelables` |
+| 3. Maintenance et qualité | `maintenance-industrielle`, `fiabilite`, `metrologie`, `securite-industrielle`, `levage-manutention`, `qualite`, `lean` |
+| 4. Mécanique et fluides | `mecanique`, `lecture-plans`, `hydraulique`, `pneumatique`, `usinage`, `soudage`, `genie-climatique`, `automobile` |
+| 5. Diagnostic et exploitation | `linux-systeme`, `windows-server`, `reseaux-fondamentaux`, `reseaux-diagnostic`, `reseau-prod`, `wifi`, `pare-feu-vpn`, `observabilite`, `sql-diagnostic` |
+| 6. DevOps et cloud | `docker`, `ci-cd`, `kubernetes`, `cloud`, `infrastructure-as-code`, `virtualisation` |
+| 7. Développement | `python`, `java`, `spring`, `javascript`, `typescript`, `csharp-dotnet`, `web-html-css`, `react-frontend`, `api-rest`, `architecture-logicielle`, `microservices`, `algorithmique`, `performance` |
+| 8. Données | `sql`, `bases-de-donnees`, `analyse-donnees`, `data-engineering`, `bi-reporting`, `ia-machine-learning` |
+| 9. Sécurité | `securite-applicative`, `identite-acces`, `cryptographie`, `securite-systemes`, `rgpd`, `cybersecurite-industrielle` |
+| 10. Outils et méthodes | `git`, `tests-logiciels`, `agile`, `itil-support` |
 
 ## Cadrer ChatGPT
 

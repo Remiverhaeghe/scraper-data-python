@@ -78,6 +78,7 @@ from job.quiz_generation import (
     DEFAULT_GENERATION_COUNT,
     GENERATION_COUNTS,
     GENERATION_LEVELS,
+    build_correction_prompt,
     build_generation_prompt,
     list_generation_themes,
 )
@@ -388,6 +389,18 @@ class QuizPage(QWidget):
         self.details_button.hide()
         vActions.addWidget(self.details_button)
 
+        # Un lot qui ne respecte pas la demande repart chez ChatGPT, alertes jointes.
+        self.import_review = []
+        self.correction_button = create_button(
+            "Faire corriger par ChatGPT", "bot", pIconColor=COLORS["warning"]
+        )
+        self.correction_button.setToolTip(
+            "Copie une demande de correction des questions signalées et ouvre ChatGPT"
+        )
+        self.correction_button.clicked.connect(self.copy_correction_prompt)
+        self.correction_button.hide()
+        vActions.addWidget(self.correction_button)
+
         vCard, vLayout = create_card(
             "Ajouter des questions",
             "Générées avec votre compte ChatGPT, puis vérifiées une à une à "
@@ -422,6 +435,17 @@ class QuizPage(QWidget):
         show_message(
             self.import_message,
             "Demande copiée : collez-la dans ChatGPT, puis sa réponse ci-dessus.",
+        )
+
+    def copy_correction_prompt(self):
+        """Copie la demande de correction du dernier lot importé puis ouvre ChatGPT."""
+        QApplication.clipboard().setText(build_correction_prompt(self.import_review))
+        QDesktopServices.openUrl(QUrl(CHATGPT_URL))
+
+        show_message(
+            self.import_message,
+            "Demande de correction copiée : importez ensuite le lot corrigé, "
+            "il remplacera les questions signalées.",
         )
 
     def import_pasted_questions(self):
@@ -567,6 +591,8 @@ class QuizPage(QWidget):
         )
         self.import_details = describe_import_details(vReport)
         self.details_button.setVisible(bool(self.import_details))
+        self.import_review = vReport["review"]
+        self.correction_button.setVisible(bool(self.import_review))
 
         if vReport["added"]:
             self.import_edit.clear()

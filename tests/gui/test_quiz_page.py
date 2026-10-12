@@ -6,7 +6,9 @@ import pytest
 
 import gui.quiz_page as quiz_page
 from gui.quiz_page import QuizPage
+from job.quiz_generation import MIN_QUALITY_SAMPLE
 from storage.database import initialize_database
+from tests.job.test_quiz_generation import build_lot_text, build_question
 from tests.job.test_quiz_import import build_pack
 
 
@@ -362,3 +364,32 @@ def test_imported_questions_can_be_cleared(
     vPage.clear_questions()
 
     assert vPage.import_message.text().startswith("L'effacement a échoué")
+
+
+def test_biased_lot_offers_a_correction(qt_application, tmp_path, monkeypatch):
+    """Vérifie le bilan orange d'un lot biaisé et la demande de correction copiée."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vOpened = []
+    monkeypatch.setattr(quiz_page.QDesktopServices, "openUrl", vOpened.append)
+
+    vPage.import_edit.setPlainText(
+        build_lot_text(
+            [
+                build_question(vIndex, pAnswer=1, pLongest=True)
+                for vIndex in range(MIN_QUALITY_SAMPLE)
+            ]
+        )
+    )
+    vPage.import_pasted_questions()
+
+    assert "alerte(s) de qualité" in vPage.import_message.text()
+    assert not vPage.correction_button.isHidden()
+
+    vPage.copy_correction_prompt()
+
+    assert "Questions concernées : grafcet-l1-000" in (
+        quiz_page.QApplication.clipboard().text()
+    )
+    assert len(vOpened) == 1
+    assert vPage.import_message.text().startswith("Demande de correction copiée")

@@ -183,6 +183,7 @@ from job.quiz_generation import (
     GENERATION_COUNTS,
     GENERATION_LEVELS,
     MIXED_LEVEL,
+    build_correction_prompt,
     build_generation_prompt,
     list_generation_themes,
 )
@@ -1385,6 +1386,11 @@ def import_quiz_questions(
                 "message": describe_quiz_import(vReport),
                 "details": describe_import_details(vReport),
                 "tone": get_import_tone(vReport),
+                "correction": (
+                    build_correction_prompt(vReport["review"])
+                    if vReport["review"]
+                    else ""
+                ),
             },
         )
 

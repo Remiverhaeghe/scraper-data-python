@@ -6,11 +6,19 @@ from datetime import datetime
 
 import pytest
 
-from job.quiz import QUESTION_ID_PATTERN, QUIZ_LEVELS, load_active_quiz, load_quiz
+from job.quiz import (
+    QUESTION_ID_PATTERN,
+    QUIZ_LEVELS,
+    flag_question,
+    get_flagged_questions,
+    load_active_quiz,
+    load_quiz,
+)
 from job.quiz_domains import DOMAIN_ORDER
 from job.quiz_generation import (
     MIN_QUALITY_SAMPLE,
     assess_questions,
+    build_correction_prompt,
     build_generation_prompt,
     find_catalog_theme,
     get_next_lot,
@@ -25,6 +33,7 @@ from job.quiz_import import (
     import_questions,
 )
 from storage.database import initialize_database
+from storage.quiz_answers import get_last_answers, save_quiz_answer
 from storage.quiz_questions import get_quiz_themes
 
 NOW = datetime(2026, 10, 12, 10, 0)
@@ -260,3 +269,109 @@ def test_pasted_catalog_theme_keeps_its_key_and_reports_quality(database_file):
         vDetails
     )
     assert "Mesures :" in vDetails
+
+
+def build_lot_text(pQuestions):
+    """Construit le JSON d'un lot du thème grafcet."""
+
+    rText = json.dumps(
+        {"theme": "Grafcet et logique séquentielle", "questions": pQuestions}
+    )
+
+    return rText
+
+
+def test_corrected_lot_replaces_imported_questions(database_file):
+    """Vérifie qu'un lot corrigé remplace ses questions, réponses et schémas gardés."""
+
+    vFirst = build_question(1, pAnswer=1, pLongest=True)
+    vFirst["visual"] = {"type": "svg", "path": "../schemas/g.svg", "alt": "Grafcet"}
+    import_questions(
+        database_file,
+        "",
+        build_lot_text([vFirst]),
+        NOW,
+        pVisuals={"../schemas/g.svg": "grafcet.svg"},
+    )
+    save_quiz_answer(database_file, vFirst["id"], "grafcet", True, NOW)
+    flag_question(database_file, vFirst["id"])
+
+    vCorrected = build_question(1, pAnswer=3)
+    vCorrected["question"] = "Question corrigée sur le grafcet ?"
+
+    vReport = import_questions(database_file, "", build_lot_text([vCorrected]), NOW)
+
+    vQuestion = load_active_quiz(database_file)["grafcet"]["questions"][0]
+
+    assert (vReport["added"], vReport["replaced"]) == (0, 1)
+    assert describe_quiz_import(vReport).startswith(
+        "0 question(s) ajoutée(s), 1 remplacée(s)"
+    )
+    assert vQuestion["question"] == "Question corrigée sur le grafcet ?"
+    assert vQuestion["answer"] == 3
+    # Le lot corrigé arrive sans ses schémas : celui déjà importé reste.
+    assert vQuestion["visual"] == {"asset": "grafcet.svg", "alt": "Grafcet"}
+    assert vFirst["id"] not in get_flagged_questions(database_file)
+    assert vFirst["id"] in get_last_answers(database_file)
+
+
+def test_replacement_is_refused_outside_its_theme(database_file):
+    """Vérifie les identifiants refusés : question livrée, autre thème, doublon du lot."""
+
+    vShippedId = load_quiz()["java"]["questions"][0]["id"]
+    import_questions(
+        database_file,
+        "",
+        json.dumps({"theme": "Kafka", "questions": [build_question(7)]}),
+        NOW,
+    )
+
+    vReport = import_questions(
+        database_file,
+        "",
+        build_lot_text(
+            [
+                {**build_question(1), "id": vShippedId},
+                build_question(7),
+                build_question(2),
+                {**build_question(2), "question": "Autre énoncé du grafcet ?"},
+            ]
+        ),
+        NOW,
+    )
+
+    assert (vReport["added"], vReport["replaced"]) == (1, 0)
+    assert vReport["rejected"] == [
+        f"question {vShippedId} : identifiant déjà utilisé",
+        "question grafcet-l1-007 : identifiant déjà utilisé",
+        "question grafcet-l1-002 : en double dans le lot",
+    ]
+
+
+def test_correction_prompt_lists_flagged_questions(database_file):
+    """Vérifie la demande de correction : thème, alertes et questions concernées."""
+
+    vReport = import_questions(
+        database_file,
+        "",
+        build_lot_text(
+            [
+                build_question(vIndex, pAnswer=vIndex % 4, pLongest=vIndex < 15)
+                for vIndex in range(MIN_QUALITY_SAMPLE)
+            ]
+        ),
+        NOW,
+    )
+
+    assert [vTheme["key"] for vTheme in vReport["review"]] == ["grafcet"]
+
+    vPrompt = build_correction_prompt(vReport["review"])
+
+    assert (
+        "Thème « Grafcet et logique séquentielle », fichier questions/grafcet.json :"
+        in vPrompt
+    )
+    assert "- bonne réponse la plus longue dans 75 % des questions" in vPrompt
+    assert "Questions concernées : grafcet-l1-000, grafcet-l1-001" in vPrompt
+    assert "grafcet-l1-015" not in vPrompt
+    assert not re.search(r"\$[a-z_]", vPrompt)

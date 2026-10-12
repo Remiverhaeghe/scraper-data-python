@@ -18,8 +18,10 @@ from job.schedule import (
     save_scheduled_search,
 )
 from job.profile import build_profile, save_profile
+from job.quiz_generation import MIN_QUALITY_SAMPLE
 from storage.job_offers import get_offer, save_offers, set_availability
 from tests.job.test_quiz_import import build_pack
+from tests.job.test_quiz_generation import build_lot_text, build_question
 from web.app import (
     app,
     build_bar_chart,
@@ -1491,3 +1493,24 @@ def test_quiz_imported_questions_cleared_after_confirmation(client):
 
     assert "2 question(s) importée(s) effacée(s)" in vCleared
     assert "Analyse RAM et JVM" not in vCleared
+
+
+def test_biased_lot_shows_a_correction_prompt(client):
+    """Vérifie la demande de correction affichée après l'import d'un lot biaisé."""
+
+    vResponse = client.post(
+        "/quiz/import",
+        data={
+            "text": build_lot_text(
+                [
+                    build_question(vIndex, pAnswer=1, pLongest=True)
+                    for vIndex in range(MIN_QUALITY_SAMPLE)
+                ]
+            )
+        },
+    )
+
+    assert vResponse.status_code == 200
+    assert "tone-warning" in vResponse.text
+    assert 'id="quiz-correction"' in vResponse.text
+    assert "Questions concernées : grafcet-l1-000" in vResponse.text

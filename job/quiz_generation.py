@@ -20,6 +20,7 @@ logger = get_logger(__name__)
 
 CATALOG_FILE = QUIZ_GENERATION_DIRECTORY / "catalog.json"
 PROMPT_FILE = QUIZ_GENERATION_DIRECTORY / "prompt.txt"
+CORRECTION_FILE = QUIZ_GENERATION_DIRECTORY / "correction.txt"
 
 # Nombre de questions demandées à ChatGPT en une fois : 100 remplissent une
 # réponse, ChatGPT continue sur demande si elle est coupée.
@@ -275,15 +276,21 @@ def assess_questions(pQuestions):
     """
 
     vTotal = len(pQuestions)
-    vLongest = sum(is_longest_answer(vQuestion) for vQuestion in pQuestions)
-    vPositions = [
-        sum(vQuestion["answer"] == vIndex for vQuestion in pQuestions)
+    vLongestIds = [
+        vQuestion["id"] for vQuestion in pQuestions if is_longest_answer(vQuestion)
+    ]
+    vLongest = len(vLongestIds)
+    vPositionIds = [
+        [vQuestion["id"] for vQuestion in pQuestions if vQuestion["answer"] == vIndex]
         for vIndex in range(len(POSITION_LABELS))
     ]
-    vShort = sum(
-        len(vQuestion["explanation"].strip()) < MIN_EXPLANATION_LENGTH
+    vPositions = [len(vIds) for vIds in vPositionIds]
+    vShortIds = [
+        vQuestion["id"]
         for vQuestion in pQuestions
-    )
+        if len(vQuestion["explanation"].strip()) < MIN_EXPLANATION_LENGTH
+    ]
+    vShort = len(vShortIds)
     vLevels = [
         sum(vQuestion["level"] == vLevel for vQuestion in pQuestions)
         for vLevel in QUIZ_LEVELS
@@ -302,31 +309,67 @@ def assess_questions(pQuestions):
         f", schémas {sum('visual' in vQuestion for vQuestion in pQuestions)}"
         f", références {sum('references' in vQuestion for vQuestion in pQuestions)}"
     )
-    rWarnings = []
+    # Chaque alerte garde ses questions : la demande de correction les cite.
+    vIssues = []
 
     if vTotal >= MIN_QUALITY_SAMPLE:
         if vLongest > MAX_LONGEST_SHARE * vTotal:
-            rWarnings.append(
-                "bonne réponse la plus longue dans "
-                f"{format_share(vLongest, vTotal)} des questions : elle se devine"
+            vIssues.append(
+                (
+                    "bonne réponse la plus longue dans "
+                    f"{format_share(vLongest, vTotal)} des questions : elle se devine",
+                    vLongestIds,
+                )
             )
 
-        rWarnings += [
-            f"bonne réponse en position {vLabel} dans "
-            f"{format_share(vCount, vTotal)} des questions"
-            for vLabel, vCount in zip(POSITION_LABELS, vPositions)
-            if vCount > MAX_POSITION_SHARE * vTotal
+        vIssues += [
+            (
+                f"bonne réponse en position {vLabel} dans "
+                f"{format_share(len(vIds), vTotal)} des questions",
+                vIds,
+            )
+            for vLabel, vIds in zip(POSITION_LABELS, vPositionIds)
+            if len(vIds) > MAX_POSITION_SHARE * vTotal
         ]
 
         if vShort > MAX_SHORT_EXPLANATION_SHARE * vTotal:
-            rWarnings.append(
-                f"{vShort} explication(s) de moins de {MIN_EXPLANATION_LENGTH} "
-                "caractères"
+            vIssues.append(
+                (
+                    f"{vShort} explication(s) de moins de {MIN_EXPLANATION_LENGTH} "
+                    "caractères",
+                    vShortIds,
+                )
             )
 
-    if rWarnings:
-        logger.warning("Lot de révision à vérifier : %s", " ; ".join(rWarnings))
+    if vIssues:
+        logger.warning(
+            "Lot de révision à vérifier : %s",
+            " ; ".join(vWarning for vWarning, _ in vIssues),
+        )
 
-    rQuality = {"summary": vSummary, "warnings": rWarnings}
+    rQuality = {
+        "summary": vSummary,
+        "warnings": [vWarning for vWarning, _ in vIssues],
+        "issues": vIssues,
+    }
 
     return rQuality
+
+
+def build_correction_prompt(pReview):
+    """Retourne la demande de correction des thèmes signalés à l'import d'un lot."""
+
+    vThemes = "\n\n".join(
+        f"Thème « {vTheme['label']} », fichier questions/{vTheme['key']}.json :\n"
+        + "\n".join(
+            f"- {vWarning}\n  Questions concernées : {', '.join(vIds)}"
+            for vWarning, vIds in vTheme["issues"]
+        )
+        for vTheme in pReview
+    )
+
+    rPrompt = Template(CORRECTION_FILE.read_text(encoding="utf-8")).substitute(
+        themes=vThemes
+    )
+
+    return rPrompt

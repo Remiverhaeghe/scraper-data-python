@@ -304,44 +304,50 @@ def import_questions(
     if pThemeKey and vThemeKey not in vQuiz:
         vThemeLabel = vRequestedTheme
 
-    # Les questions signalées gardent leur identifiant : il reste pris.
-    vIds = {
+    # Une question livrée ne se remplace pas ; une question importée dans le même
+    # thème, signalée ou non, est remplacée par sa version corrigée.
+    vImported = {
+        vQuestion["id"]: (vKey, vQuestion)
+        for vKey, _, vQuestion in get_imported_questions(pDatabaseFile)
+    }
+    vShippedIds = {
         vQuestion["id"]
         for vTheme in load_quiz().values()
         for vQuestion in vTheme["questions"]
     }
-    vIds |= {
-        vQuestion["id"] for _, _, vQuestion in get_imported_questions(pDatabaseFile)
-    }
     vTexts = {
-        " ".join(vQuestion["question"].lower().split()) + vQuestion.get("code", "")
+        get_question_text(vQuestion): vQuestion["id"]
         for vQuestion in vQuiz.get(vThemeKey, {}).get("questions", [])
     }
 
     vAdded = []
+    vReplaced = []
     rRejected = []
 
     for vIndex, vQuestion in enumerate(vParsed["questions"], start=1):
         try:
             vClean = normalize_question(vQuestion, f"question {vIndex}", pVisuals or {})
+            vId = vClean["id"]
+            vPrevious = vImported.get(vId)
 
-            vText = " ".join(vClean["question"].lower().split()) + vClean.get(
-                "code", ""
-            )
-
-            if vClean["id"] in vIds:
-                raise ValueError(f"question {vClean['id']} : identifiant déjà utilisé")
-
-            if vText in vTexts:
-                raise ValueError(f"question {vClean['id']} : déjà présente")
+            check_question_place(vClean, vPrevious, vThemeKey, vShippedIds, vTexts)
 
         except ValueError as vException:
             rRejected.append(str(vException))
 
         else:
-            vAdded.append(vClean)
-            vIds.add(vClean["id"])
-            vTexts.add(vText)
+            # Une correction livrée sans ses schémas garde ceux déjà importés.
+            if vPrevious and "visual" in vPrevious[1] and "visual" not in vClean:
+                vClean["visual"] = vPrevious[1]["visual"]
+
+            (vReplaced if vPrevious else vAdded).append(vClean)
+            vImported[vId] = (vThemeKey, None)
+            vTexts[get_question_text(vClean)] = vId
+
+    if vReplaced:
+        unflag_questions(pDatabaseFile, {vQuestion["id"] for vQuestion in vReplaced})
+
+    vAdded += vReplaced
 
     if vAdded:
         # Un thème livré garde ses compétences ; un nouveau prend celles du fichier.
@@ -364,18 +370,26 @@ def import_questions(
     if rRejected:
         logger.warning("Import de révision : %s question(s) écartée(s)", len(rRejected))
 
-    vQuality = assess_questions(vAdded) if vAdded else None
+    vQuality = (
+        assess_questions(vAdded)
+        if vAdded
+        else {"summary": "", "warnings": [], "issues": []}
+    )
 
     rReport = {
         "themes": [vThemeLabel] if vAdded else [],
-        "added": len(vAdded),
+        "added": len(vAdded) - len(vReplaced),
+        "replaced": len(vReplaced),
         "rejected": rRejected,
         "assets": 0,
         "guides": 0,
-        "quality": [f"{vThemeLabel} : {vQuality['summary']}"] if vQuality else [],
-        "warnings": (
-            [f"{vThemeLabel} : {vWarning}" for vWarning in vQuality["warnings"]]
-            if vQuality
+        "quality": [f"{vThemeLabel} : {vQuality['summary']}"] if vAdded else [],
+        "warnings": [
+            f"{vThemeLabel} : {vWarning}" for vWarning in vQuality["warnings"]
+        ],
+        "review": (
+            [{"key": vThemeKey, "label": vThemeLabel, "issues": vQuality["issues"]}]
+            if vQuality["issues"]
             else []
         ),
     }
@@ -383,10 +397,56 @@ def import_questions(
     return rReport
 
 
+def check_question_place(pQuestion, pPrevious, pThemeKey, pShippedIds, pTexts):
+    """Lève ValueError si une question ne peut ni s'ajouter ni remplacer l'existante.
+
+    pPrevious est le thème et la version importée de même identifiant ; une
+    version vide signale une question déjà lue dans ce lot.
+    """
+
+    vId = pQuestion["id"]
+
+    if vId in pShippedIds or (pPrevious and pPrevious[0] != pThemeKey):
+        raise ValueError(f"question {vId} : identifiant déjà utilisé")
+
+    if pPrevious and pPrevious[1] is None:
+        raise ValueError(f"question {vId} : en double dans le lot")
+
+    if pTexts.get(get_question_text(pQuestion), vId) != vId:
+        raise ValueError(f"question {vId} : déjà présente")
+
+
+def get_question_text(pQuestion):
+    """Retourne l'énoncé et le code d'une question, pour repérer un doublon."""
+
+    rText = " ".join(pQuestion["question"].lower().split()) + pQuestion.get("code", "")
+
+    return rText
+
+
+def unflag_questions(pDatabaseFile, pQuestionIds):
+    """Remet dans les tirages des questions signalées, remplacées par leur correction."""
+
+    vFlagged = get_flagged_questions(pDatabaseFile)
+    vCleared = vFlagged & pQuestionIds
+
+    if vCleared:
+        save_setting_values(
+            pDatabaseFile, {FLAGGED_KEY: json.dumps(sorted(vFlagged - vCleared))}
+        )
+
+        logger.info(
+            "Révision : %s question(s) corrigée(s) remise(s) dans les tirages",
+            len(vCleared),
+        )
+
+
 def merge_report(pReport, pFileReport, pFileName):
     """Ajoute le bilan d'un fichier de l'archive au bilan global."""
 
     pReport["added"] += pFileReport["added"]
+    pReport["replaced"] += pFileReport["replaced"]
+    pReport["review"] += pFileReport["review"]
     pReport["themes"] += [
         vTheme for vTheme in pFileReport["themes"] if vTheme not in pReport["themes"]
     ]
@@ -608,11 +668,13 @@ def import_zip(pDatabaseFile, pThemeLabel, pContent, pNow, pDepth=0):
         rReport = {
             "themes": [],
             "added": 0,
+            "replaced": 0,
             "rejected": [],
             "assets": 0,
             "guides": 0,
             "quality": [],
             "warnings": [],
+            "review": [],
         }
         vAssets = {}
         vInnerCounts = {"assets": 0, "guides": 0}
@@ -679,8 +741,10 @@ def import_zip(pDatabaseFile, pThemeLabel, pContent, pNow, pDepth=0):
     rReport["guides"] = len(vGuides) + vInnerCounts["guides"]
 
     logger.info(
-        "Pack de révision importé : %s question(s), %s schéma(s), %s guide(s)",
+        "Pack de révision importé : %s question(s), %s remplacée(s), %s schéma(s), "
+        "%s guide(s)",
         rReport["added"],
+        rReport["replaced"],
         rReport["assets"],
         rReport["guides"],
     )
@@ -712,6 +776,9 @@ def describe_quiz_import(pReport):
     """Résume un import en une ligne : chiffres seulement, le détail est à part."""
 
     vParts = [f"{pReport['added']} question(s) ajoutée(s)"]
+
+    if pReport.get("replaced"):
+        vParts[0] += f", {pReport['replaced']} remplacée(s)"
 
     if len(pReport["themes"]) > 1:
         vParts[0] += f" dans {len(pReport['themes'])} thèmes"

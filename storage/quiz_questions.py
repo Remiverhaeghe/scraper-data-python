@@ -9,7 +9,11 @@ logger = get_logger(__name__)
 
 
 def save_imported_questions(pDatabaseFile, pThemeKey, pThemeLabel, pQuestions, pNow):
-    """Enregistre des questions déjà vérifiées dans un thème."""
+    """Enregistre des questions déjà vérifiées dans un thème.
+
+    Une question déjà importée est remplacée par sa version corrigée et garde
+    sa date d'ajout.
+    """
 
     vConnection = connect_database(pDatabaseFile)
 
@@ -18,6 +22,9 @@ def save_imported_questions(pDatabaseFile, pThemeKey, pThemeLabel, pQuestions, p
             """
             INSERT INTO quiz_question (question_id, theme, theme_label, content, added_at)
             VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(question_id) DO UPDATE SET
+                theme_label = excluded.theme_label,
+                content = excluded.content
             """,
             [
                 (
