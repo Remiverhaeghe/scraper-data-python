@@ -1,9 +1,11 @@
 """Page de révision technique : thèmes, questions à choix multiple et corrections"""
 
 from datetime import datetime
+from html import escape
 from pathlib import Path
 
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QByteArray, Qt, QUrl
+from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtGui import QDesktopServices, QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
@@ -23,6 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.chart import BarChart
+from gui.dialogs import show_text_dialog
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -34,28 +37,35 @@ from gui.widgets import (
 )
 from job.assistant import CHATGPT_URL
 from job.quiz import (
-    GENERATION_COUNTS,
-    IMPORT_EXTENSIONS,
     QUIZ_LEVELS,
     QUIZ_MODES,
     answer_question,
     build_quiz_overview,
-    build_generation_prompt,
     build_quiz_statistics,
-    describe_quiz_import,
     flag_question,
-    import_questions,
-    import_questions_file,
     load_active_quiz,
     pick_question,
 )
+from job.quiz_import import (
+    GENERATION_COUNTS,
+    IMPORT_EXTENSIONS,
+    build_generation_prompt,
+    describe_quiz_import,
+    import_questions,
+    import_questions_file,
+)
 from job.presentation import CHART_PALETTE
 from storage.quiz_answers import get_last_answers
+from storage.quiz_questions import get_quiz_asset, get_quiz_guide, get_quiz_guides
+from utils.markdown import render_markdown
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 THEME_COLUMNS = 3
+
+# Hauteur d'affichage des schémas des questions importées
+VISUAL_HEIGHT = 280
 
 
 class QuizPage(QWidget):
@@ -95,6 +105,18 @@ class QuizPage(QWidget):
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.create_question_card())
         vLayout.addLayout(self.themes_grid)
+
+        # Guides pratiques des packs importés, masqués tant qu'il n'y en a pas
+        self.guides_card, vGuidesLayout = create_card(
+            "Guides pratiques", "Méthodes de diagnostic livrées avec les questions"
+        )
+        # Plusieurs guides par ligne, sans déborder dans une fenêtre réduite
+        self.guides_layout = QGridLayout()
+        self.guides_layout.setSpacing(8)
+        vGuidesLayout.addLayout(self.guides_layout)
+        self.guides_card.hide()
+
+        vLayout.addWidget(self.guides_card)
         vLayout.addWidget(self.create_import_card())
         vLayout.addWidget(self.create_statistics_card())
         vLayout.addStretch()
@@ -129,6 +151,19 @@ class QuizPage(QWidget):
         self.explanation_label = QLabel()
         self.explanation_label.setWordWrap(True)
 
+        # Schéma et références des questions importées, montrés avec la correction
+        self.visual_widget = QSvgWidget()
+        # Schémas dessinés en sombre sur blanc : fond blanc, même en thème sombre.
+        self.visual_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.visual_widget.setStyleSheet("background: #ffffff; border-radius: 8px;")
+        self.visual_widget.hide()
+
+        self.references_label = QLabel()
+        self.references_label.setTextFormat(Qt.TextFormat.RichText)
+        self.references_label.setOpenExternalLinks(True)
+        self.references_label.setWordWrap(True)
+        self.references_label.hide()
+
         self.validate_button = create_button("Valider", pObjectName="primaryButton")
         self.validate_button.clicked.connect(self.validate)
 
@@ -156,6 +191,8 @@ class QuizPage(QWidget):
         vLayout.addLayout(self.choices_layout)
         vLayout.addWidget(self.verdict_label)
         vLayout.addWidget(self.explanation_label)
+        vLayout.addWidget(self.visual_widget)
+        vLayout.addWidget(self.references_label)
         vLayout.addLayout(vButtons)
 
         return self.question_card
@@ -395,6 +432,7 @@ class QuizPage(QWidget):
             return
 
         clear_layout(self.themes_grid)
+        self.refresh_guides()
 
         vCurrent = self.theme_combo.currentText()
         self.theme_combo.clear()
@@ -440,6 +478,11 @@ class QuizPage(QWidget):
             vReview.clicked.connect(lambda: self.start(pTheme["key"], "review"))
             vButtons.addWidget(vReview)
 
+        if pTheme["guide"]:
+            vGuide = create_button("Guide", "file-text", pIconColor=COLORS["primary"])
+            vGuide.clicked.connect(lambda: self.show_guide(pTheme["guide"]))
+            vButtons.addWidget(vGuide)
+
         vButtons.addStretch()
 
         vLayout.addWidget(vInfo)
@@ -447,6 +490,63 @@ class QuizPage(QWidget):
         vLayout.addLayout(vButtons)
 
         return rCard
+
+    def show_extras(self, pQuestion):
+        """Affiche le schéma et les références d'une question, s'il y en a."""
+        vVisual = pQuestion.get("visual")
+        vContent = (
+            get_quiz_asset(self.database_file, vVisual["asset"]) if vVisual else None
+        )
+
+        if vContent:
+            self.visual_widget.load(QByteArray(vContent.encode("utf-8")))
+            self.visual_widget.setToolTip(vVisual["alt"])
+
+            # Chaque chargement remet le rendu à zéro : proportions et taille
+            # d'origine sont réappliquées, à une hauteur fixe.
+            vRenderer = self.visual_widget.renderer()
+            vRenderer.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
+            vSize = vRenderer.defaultSize()
+            self.visual_widget.setFixedSize(
+                round(VISUAL_HEIGHT * vSize.width() / max(vSize.height(), 1)),
+                VISUAL_HEIGHT,
+            )
+
+        self.visual_widget.setVisible(bool(vContent))
+
+        vLinks = [
+            f'<a href="{escape(vReference["url"])}">{escape(vReference["title"])}</a>'
+            for vReference in pQuestion.get("references", [])
+        ]
+
+        self.references_label.setText("Pour aller plus loin : " + " · ".join(vLinks))
+        self.references_label.setVisible(bool(vLinks))
+
+    def show_guide(self, pName):
+        """Ouvre un guide pratique, mis en forme."""
+        vGuide = get_quiz_guide(self.database_file, pName)
+
+        if vGuide:
+            show_text_dialog(
+                self, vGuide["title"], pHtml=render_markdown(vGuide["content"])
+            )
+
+    def refresh_guides(self):
+        """Liste les guides pratiques importés avec les questions."""
+        clear_layout(self.guides_layout)
+
+        vGuides = get_quiz_guides(self.database_file)
+
+        for vIndex, vGuide in enumerate(vGuides):
+            vButton = create_button(
+                vGuide["title"], "file-text", pIconColor=COLORS["primary"]
+            )
+            vButton.clicked.connect(
+                lambda _=False, pName=vGuide["name"]: self.show_guide(pName)
+            )
+            self.guides_layout.addWidget(vButton, *divmod(vIndex, THEME_COLUMNS))
+
+        self.guides_card.setVisible(bool(vGuides))
 
     def start(self, pThemeKey, pMode):
         """Affiche une nouvelle question du thème, ou signale qu'il n'y en a plus."""
@@ -461,6 +561,8 @@ class QuizPage(QWidget):
         self.question_card.show()
         self.verdict_label.clear()
         self.explanation_label.clear()
+        self.visual_widget.hide()
+        self.references_label.hide()
         self.next_button.hide()
 
         clear_layout(self.choices_layout)
@@ -517,6 +619,7 @@ class QuizPage(QWidget):
             else f"Réponse incorrecte. Réponse attendue : {vResult['answer']}"
         )
         self.explanation_label.setText(vResult["explanation"])
+        self.show_extras(vResult["question"])
 
         for vButton in self.choices_group.buttons():
             vButton.setEnabled(False)

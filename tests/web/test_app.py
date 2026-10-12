@@ -18,6 +18,7 @@ from job.schedule import (
     save_scheduled_search,
 )
 from storage.job_offers import get_offer, save_offers, set_availability
+from tests.job.test_quiz_import import build_pack
 from web.app import (
     app,
     build_bar_chart,
@@ -1299,3 +1300,37 @@ def test_quiz_questions_prompt_import_and_flag(client):
 
     assert vFlag.status_code == 303
     assert 'value="kafka-topic"' not in client.get(vFlag.headers["location"]).text
+
+
+def test_quiz_pack_visual_references_and_guides(client):
+    """Vérifie le schéma, les références et les guides d'un pack importé."""
+
+    vPack = build_pack()
+
+    client.post(
+        "/quiz/import",
+        files={"file": ("pack.zip", vPack, "application/zip")},
+    )
+
+    vResult = client.post(
+        "/quiz/answer",
+        data={"question_id": "ram-jvm-001", "choice": "0", "mode": "discover"},
+    ).text
+
+    assert '<img src="/quiz/asset/ram.svg" alt="RAM">' in vResult
+    assert 'href="https://docs.oracle.com/"' in vResult
+    assert "Guides pratiques" in vResult
+    assert "/quiz/guide/ram-jvm-analyse" in vResult
+
+    vAsset = client.get("/quiz/asset/ram.svg")
+
+    assert vAsset.headers["content-type"].startswith("image/svg+xml")
+    assert "sandbox" in vAsset.headers["content-security-policy"]
+    assert client.get("/quiz/asset/absent.svg").status_code == 404
+    assert client.get("/quiz/asset/..%2Fscraper.db").status_code == 404
+
+    vGuide = client.get("/quiz/guide/ram-jvm-analyse")
+
+    assert "Analyser la RAM" in vGuide.text
+    assert "<li>Heap</li>" in vGuide.text
+    assert client.get("/quiz/guide/absent").status_code == 404

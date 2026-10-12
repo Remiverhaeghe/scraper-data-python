@@ -523,6 +523,36 @@ def migrate_to_v13(pConnection):
         """)
 
 
+def migrate_to_v14(pConnection):
+    """Ajoute les thèmes, schémas et guides importés avec les questions de révision."""
+
+    pConnection.execute("""
+        CREATE TABLE quiz_theme (
+            theme TEXT PRIMARY KEY,
+            label TEXT NOT NULL,
+            skills TEXT NOT NULL
+        )
+        """)
+    # Schéma SVG d'une question, déjà vérifié sans script à l'import
+    pConnection.execute("""
+        CREATE TABLE quiz_asset (
+            name TEXT PRIMARY KEY,
+            content TEXT NOT NULL,
+            added_at TEXT NOT NULL
+        )
+        """)
+    # Guide en Markdown, rattaché au thème de même nom quand il existe
+    pConnection.execute("""
+        CREATE TABLE quiz_guide (
+            name TEXT PRIMARY KEY,
+            theme TEXT,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            added_at TEXT NOT NULL
+        )
+        """)
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -537,6 +567,7 @@ MIGRATIONS = [
     migrate_to_v11,
     migrate_to_v12,
     migrate_to_v13,
+    migrate_to_v14,
 ]
 
 

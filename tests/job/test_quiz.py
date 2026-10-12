@@ -12,16 +12,18 @@ import pytest
 from job.quiz import (
     answer_question,
     build_quiz_overview,
-    build_generation_prompt,
     build_quiz_statistics,
     count_streak,
-    describe_quiz_import,
     flag_question,
-    import_questions,
-    import_questions_file,
     load_active_quiz,
     load_quiz,
     pick_question,
+)
+from job.quiz_import import (
+    build_generation_prompt,
+    describe_quiz_import,
+    import_questions,
+    import_questions_file,
 )
 from storage.database import initialize_database
 from storage.job_offers import save_offers
@@ -336,7 +338,7 @@ def test_import_questions_file_reads_zip_of_json(database_file):
         ("questions.zip", build_zip({"a.txt": "x"}), "aucun fichier .json"),
         (
             "questions.zip",
-            build_zip({f"{vIndex}.json": "[]" for vIndex in range(101)}),
+            build_zip({f"{vIndex}.json": "[]" for vIndex in range(301)}),
             "trop volumineuse",
         ),
     ],

@@ -144,20 +144,22 @@ from job.quality import (
 )
 from job.quiz import (
     DEFAULT_MODE,
-    GENERATION_COUNTS,
-    IMPORT_EXTENSIONS,
     QUIZ_LEVELS,
     QUIZ_MODES,
     answer_question,
-    build_generation_prompt,
-    describe_quiz_import,
     flag_question,
-    import_questions,
-    import_questions_file,
     build_quiz_overview,
     build_quiz_statistics,
     load_active_quiz,
     pick_question,
+)
+from job.quiz_import import (
+    GENERATION_COUNTS,
+    IMPORT_EXTENSIONS,
+    build_generation_prompt,
+    describe_quiz_import,
+    import_questions,
+    import_questions_file,
 )
 from job.schedule import (
     MIN_SCORE_CHOICES,
@@ -205,6 +207,7 @@ from storage.attachments import (
 )
 from storage.duplicates import get_decisions, save_decision
 from storage.quiz_answers import get_last_answers
+from storage.quiz_questions import get_quiz_asset, get_quiz_guide, get_quiz_guides
 from storage.job_offers import get_offer, get_offers, set_availability
 from utils.link_checker import check_offer_link
 from utils.log_reader import (
@@ -217,6 +220,7 @@ from utils.log_reader import (
 )
 from utils.logger import get_logger, get_retention_days
 from utils.mailer import get_missing_email_settings
+from utils.markdown import render_markdown
 from web.auth import (
     SESSION_COOKIE,
     SESSION_DURATION,
@@ -233,6 +237,10 @@ logger = get_logger(__name__)
 WEB_DIRECTORY = Path(__file__).parent
 
 ICONS_DIRECTORY = ASSETS_DIRECTORY / "icons"
+
+# Schémas des questions importées : nom produit à l'import, et SVG sans script
+QUIZ_ASSET_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*\.svg")
+QUIZ_ASSET_POLICY = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
 
 # Archive de questions de révision envoyée depuis le web
 MAX_QUIZ_UPLOAD_BYTES = 20 * 1024 * 1024
@@ -375,7 +383,9 @@ async def add_security_headers(request: Request, call_next):
 
     rResponse = await call_next(request)
 
-    rResponse.headers.update(SECURITY_HEADERS)
+    # Une route plus stricte, celle des schémas SVG, garde sa propre politique.
+    for vName, vValue in SECURITY_HEADERS.items():
+        rResponse.headers.setdefault(vName, vValue)
 
     return rResponse
 
@@ -1111,6 +1121,7 @@ def render_quiz(
             "question": vQuestion,
             "result": pResult,
             "import_form": pImport or {},
+            "guides": get_quiz_guides(pDatabaseFile),
             "levels": QUIZ_LEVELS,
             "generation_counts": GENERATION_COUNTS,
             "import_extensions": ",".join(IMPORT_EXTENSIONS),
@@ -1262,6 +1273,55 @@ def import_quiz_questions(
             pDatabaseFile,
             pImport={"theme": pTheme, "message": describe_quiz_import(vReport)},
         )
+
+    return rResponse
+
+
+@app.get("/quiz/asset/{pName}")
+def show_quiz_asset(pName: str, pDatabaseFile: str = Depends(get_database_file)):
+    """Sert le schéma SVG d'une question importée."""
+
+    vContent = (
+        get_quiz_asset(pDatabaseFile, pName)
+        if QUIZ_ASSET_PATTERN.fullmatch(pName)
+        else None
+    )
+
+    if vContent is None:
+        raise HTTPException(status_code=404)
+
+    # Vérifié sans script à l'import ; ouvert seul dans un onglet, le SVG reste
+    # en plus isolé et privé de tout script par sa politique de sécurité.
+    rResponse = Response(
+        vContent,
+        media_type="image/svg+xml",
+        headers={"Content-Security-Policy": QUIZ_ASSET_POLICY},
+    )
+
+    return rResponse
+
+
+@app.get("/quiz/guide/{pName}", response_class=HTMLResponse)
+def show_quiz_guide(
+    request: Request, pName: str, pDatabaseFile: str = Depends(get_database_file)
+):
+    """Affiche un guide pratique importé avec les questions."""
+
+    vGuide = get_quiz_guide(pDatabaseFile, pName)
+
+    if vGuide is None:
+        raise HTTPException(status_code=404)
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "guide.html",
+        {
+            "active_page": "quiz",
+            "guide": vGuide,
+            # Texte échappé puis mis en forme par render_markdown : HTML sûr.
+            "content": Markup(render_markdown(vGuide["content"])),  # nosec B704
+        },
+    )
 
     return rResponse
 

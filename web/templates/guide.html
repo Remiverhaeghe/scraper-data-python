@@ -1,0 +1,15 @@
+{# Guide pratique de révision (route /quiz/guide/<nom>) : Markdown importé avec
+   un pack de questions, converti en HTML sûr par utils/markdown.py. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}{{ guide.title }}{% endblock %}
+
+{% block content %}
+{{ ui.page_header(guide.title, "Guide pratique de révision", "file-text") }}
+
+<article class="card guide">
+    {{ content }}
+    <p class="section-gap"><a class="button" href="{{ url_for('show_quiz').path }}{% if guide.theme %}?theme={{ guide.theme }}&mode=discover{% endif %}">{{ icon("graduation-cap", 16) }} Retour à la révision</a></p>
+</article>
+{% endblock %}

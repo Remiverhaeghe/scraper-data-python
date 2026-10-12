@@ -5,6 +5,7 @@ import json
 import gui.quiz_page as quiz_page
 from gui.quiz_page import QuizPage
 from storage.database import initialize_database
+from tests.job.test_quiz_import import build_pack
 
 
 def create_page(pDatabaseFile):
@@ -138,3 +139,46 @@ def test_questions_file_import_and_errors(qt_application, tmp_path, monkeypatch)
     vPage.run_import(fail)
 
     assert vPage.import_message.text() == "L'import a échoué. Voir les journaux."
+
+
+def test_pack_question_shows_visual_references_and_guide(
+    qt_application, tmp_path, monkeypatch
+):
+    """Vérifie le schéma et les liens après la réponse, et l'ouverture d'un guide."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vPack = tmp_path / "pack.zip"
+    vPack.write_bytes(build_pack())
+    vOpened = []
+
+    monkeypatch.setattr(
+        quiz_page.QFileDialog, "getOpenFileName", lambda *pArgs: (str(vPack), "")
+    )
+    monkeypatch.setattr(
+        quiz_page, "show_text_dialog", lambda *pArgs, **pKwargs: vOpened.append(pKwargs)
+    )
+    vPage.choose_questions_file()
+
+    assert not vPage.guides_card.isHidden()
+
+    vPage.start("ram-jvm", "discover")
+
+    while vPage.question["id"] != "ram-jvm-001":
+        vPage.start("ram-jvm", "discover")
+
+    next(
+        vButton
+        for vButton in vPage.choices_group.buttons()
+        if vPage.choices_group.id(vButton) == 0
+    ).setChecked(True)
+    vPage.validate()
+
+    assert not vPage.visual_widget.isHidden()
+    assert vPage.visual_widget.height() == quiz_page.VISUAL_HEIGHT
+    assert "docs.oracle.com" in vPage.references_label.text()
+
+    vPage.show_guide("ram-jvm-analyse")
+    vPage.show_guide("absent")
+
+    assert len(vOpened) == 1
+    assert "<li>Heap</li>" in vOpened[0]["pHtml"]

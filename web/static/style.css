@@ -1063,6 +1063,7 @@ input[type="checkbox"] {
 
 .rules-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 14px;
     align-items: center;
 }
@@ -1204,6 +1205,25 @@ code {
     margin: 0 0 6px;
     color: var(--muted);
     font-size: 12px;
+}
+
+/* Schéma d'une question : dessiné en sombre sur blanc, même en thème sombre */
+.quiz-visual {
+    margin: 12px 0;
+}
+
+.quiz-visual img {
+    display: block;
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.guide h2,
+.guide h3 {
+    margin-top: 18px;
 }
 
 .chart-scale {

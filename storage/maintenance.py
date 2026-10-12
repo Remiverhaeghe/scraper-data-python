@@ -12,6 +12,9 @@ logger = get_logger(__name__)
 RESET_TABLES = (
     "quiz_answer",
     "quiz_question",
+    "quiz_theme",
+    "quiz_asset",
+    "quiz_guide",
     "job_attachment",
     "job_follow_up",
     "job_application",

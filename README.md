@@ -78,7 +78,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées, v14 : thèmes, schémas et guides importés)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -317,6 +317,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande au format attendu, import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
 - [x] Signalement d'une question douteuse, retirée des tirages
+- [x] Packs .zip enrichis : thèmes listés par manifest.json, niveaux intermédiaire et expert, schémas SVG affichés avec la correction (refusés s'ils contiennent du script), références https et guides pratiques en Markdown
 - [x] Explication de la bonne réponse après chaque question, choix mélangés à chaque affichage
 - [x] Questions stockées dans des fichiers JSON versionnés (`assets/quiz/`), faciles à compléter
 - [x] Suivi de la progression : score par thème, questions ratées à revoir
@@ -402,6 +403,7 @@ scraper-data-python/
 │   ├── company_info.py                        # Informations publiques sur une entreprise française
 │   ├── assistant.py                           # Demandes préparées pour ChatGPT
 │   ├── quiz.py                                # Révision : questions, progression, thèmes conseillés
+│   ├── quiz_import.py                         # Import de questions et de packs (schémas, guides)
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
@@ -560,6 +562,7 @@ scraper-data-python/
 │   │   ├── legal.html                         # Mentions légales
 │   │   ├── login.html                         # Connexion au tableau de bord
 │   │   ├── license.html                       # Texte de la licence
+│   │   ├── guide.html                         # Guide pratique de révision
 │   │   └── error.html                         # Page d'erreur
 │   └── static/                                # Fichiers statiques
 │       ├── style.css                          # Feuille de style, thèmes clair et sombre
@@ -588,6 +591,7 @@ scraper-data-python/
 │   ├── helpers.py                             # Fonctions utilitaires génériques
 │   ├── logger.py                              # Logs : un fichier par jour, purge automatique
 │   ├── log_reader.py                          # Lecture et filtrage des logs pour l'affichage
+│   ├── markdown.py                            # Markdown simple vers HTML sûr, pour les guides
 │   ├── link_checker.py                        # Vérifie si le lien d'une offre est encore en ligne
 │   ├── api_client.py                          # Appels sécurisés aux API des sources
 │   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
@@ -608,7 +612,7 @@ scraper-data-python/
 │   ├── archive.py                             # Sauvegarde complète (.zip) : export et restauration contrôlée
 │   ├── attachments.py                         # Pièces jointes des candidatures, rangées à côté de la base
 │   ├── quiz_answers.py                        # Réponses de révision, pour la progression
-│   ├── quiz_questions.py                      # Questions de révision importées
+│   ├── quiz_questions.py                      # Questions, thèmes, schémas et guides importés
 │   ├── maintenance.py                         # Réinitialisation de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
@@ -639,6 +643,7 @@ scraper-data-python/
 │   │   ├── test_application_tracking.py       # Teste les colonnes de suivi et les statistiques
 │   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
+│   │   ├── test_quiz_import.py                # Teste l'import des packs, schémas et guides
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage
