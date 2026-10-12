@@ -52,6 +52,34 @@ jobs:
       - name: Tests et couverture
         run: pytest -q --cov
 
+  # L'application s'utilise sous Windows : les tests y tournent aussi, pour voir
+  # tôt un écart entre systèmes (chemins, Qt, encodage). Formatage et analyses
+  # donnent le même résultat partout : ils restent dans le job Linux.
+  tests-windows:
+    name: Tests sous Windows
+    runs-on: windows-latest
+
+    # Encodage UTF-8 imposé : la console Windows n'affiche pas les accents sinon.
+    env:
+      PYTHONUTF8: "1"
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Installation des dépendances
+        run: pip install -r requirements.txt
+
+      - name: Installation de Chromium pour Playwright
+        run: python -m playwright install chromium
+
+      - name: Tests et couverture
+        run: pytest -q --cov
+
   audit:
     name: Vulnérabilités des dépendances
     runs-on: ubuntu-latest

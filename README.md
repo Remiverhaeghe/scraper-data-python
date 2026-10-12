@@ -240,7 +240,8 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Tests des composants principaux
 - [x] Tests anti-régression
 - [x] Tests de sécurité
-- [x] Intégration continue : tests, couverture, formatage Black et recherche de secrets à chaque push
+- [x] Intégration continue : tests, couverture, formatage Black et recherche de secrets à chaque push ; tests lancés sous Linux et sous Windows
+- [x] Tests isolés des données réelles : un test qui ouvre data/scraper.db échoue aussitôt
 - [x] Couverture mesurée, branches comprises, avec un seuil minimal relevé progressivement (95 %)
 - [x] Tests d'intégration : des API simulées jusqu'à la base, au tableau de bord web et à l'export
 - [x] Analyse pylint en CI, configurée pour la convention p, v, r (note minimale 9.8/10)
@@ -788,7 +789,8 @@ scraper-data-python/
 │   │   ├── test_auth.py                        # Teste la connexion, la session et le CSRF
 │   │   └── test_password.py                    # Teste la génération de l'empreinte
 │   │
-│   ├── conftest.py                             # Bloque tout accès réseau et SMTP réel
+│   ├── conftest.py                             # Bloque l'accès réseau, SMTP et à la base réelle
+│   ├── test_isolation.py                       # Teste le blocage de la base réelle pendant les tests
 │   ├── test_api_client.py                      # Teste les appels sécurisés aux API
 │   ├── test_config.py                          # Teste la configuration générale
 │   ├── test_helpers.py                         # Teste les fonctions utilitaires

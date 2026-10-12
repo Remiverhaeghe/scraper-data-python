@@ -2,8 +2,11 @@
 
 import os
 import smtplib
+import sqlite3
 import tempfile
 from datetime import datetime
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 # Avant tout import du code : les messages des tests, erreurs simulées comprises,
 # ne doivent pas se mélanger aux journaux réels consultés dans l'application.
@@ -11,6 +14,8 @@ os.environ["LOG_DIRECTORY"] = tempfile.mkdtemp(prefix="jobboard-tests-logs-")
 
 import pytest  # noqa: E402
 import requests  # noqa: E402
+
+from config import DATABASE_FILE  # noqa: E402
 
 from web.auth import (  # noqa: E402
     SESSION_COOKIE,
@@ -39,6 +44,46 @@ def block_network(monkeypatch):
 
     monkeypatch.setattr(requests.sessions.Session, "request", refuse_network_access)
     monkeypatch.setattr(smtplib, "SMTP_SSL", refuse_network_access)
+
+
+# Base réelle de l'application : un test qui l'ouvre dépend des données de ce
+# PC et échoue ailleurs, en CI notamment.
+REAL_DATABASE = Path(DATABASE_FILE).resolve()
+SQLITE_CONNECT = sqlite3.connect
+
+
+def get_database_path(pDatabase):
+    """Retourne le fichier visé par sqlite3.connect, adresse file: comprise."""
+
+    vDatabase = str(pDatabase)
+
+    if vDatabase.startswith("file:"):
+        vDatabase = unquote(urlsplit(vDatabase).path).lstrip("/")
+
+    rPath = None if vDatabase in ("", ":memory:") else Path(vDatabase).resolve()
+
+    return rPath
+
+
+def refuse_real_database(pDatabase, *pArgs, **pKwargs):
+    """Ouvre une base SQLite, sauf la base réelle de l'application."""
+
+    if get_database_path(pDatabase) == REAL_DATABASE:
+        raise RuntimeError(
+            f"Base réelle {DATABASE_FILE} ouverte pendant un test : passez une base "
+            "temporaire (tmp_path) ou simulez la fonction qui la lit."
+        )
+
+    rConnection = SQLITE_CONNECT(pDatabase, *pArgs, **pKwargs)
+
+    return rConnection
+
+
+@pytest.fixture(autouse=True)
+def block_real_database(monkeypatch):
+    """Empêche tout test d'ouvrir data/scraper.db, sur ce PC comme en CI."""
+
+    monkeypatch.setattr(sqlite3, "connect", refuse_real_database)
 
 
 @pytest.fixture
