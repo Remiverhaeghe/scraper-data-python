@@ -1253,7 +1253,7 @@ def test_quiz_questions_prompt_import_and_flag(client):
         "/quiz/prompt", data={"theme": "Kafka", "level": "confirmé", "count": "20"}
     )
 
-    assert "Écris 20 questions à choix multiple sur « Kafka »" in vPrompt.text
+    assert "Thème : Kafka. 20 questions : 20 confirmé." in vPrompt.text
     assert (
         client.post("/quiz/prompt", data={"theme": " ", "count": "20"}).status_code
         == 400

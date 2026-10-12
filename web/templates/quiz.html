@@ -111,7 +111,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
         <input type="text" name="theme" list="quiz-themes" value="{{ import_form.theme or '' }}" placeholder="Thème, ex. Kafka" aria-label="Thème" required>
         <select name="level" aria-label="Niveau">
-            {% for level in levels %}<option value="{{ level }}" {% if import_form.level == level %}selected{% endif %}>{{ level | capitalize }}</option>{% endfor %}
+            {% for level, level_label in levels.items() %}<option value="{{ level }}" {% if import_form.level == level %}selected{% endif %}>{{ level_label }}</option>{% endfor %}
         </select>
         <select name="count" aria-label="Nombre de questions">
             {% for count in generation_counts %}<option value="{{ count }}" {% if import_form.count == count %}selected{% endif %}>{{ count }} questions</option>{% endfor %}

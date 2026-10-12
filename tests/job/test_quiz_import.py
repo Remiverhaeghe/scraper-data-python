@@ -9,6 +9,8 @@ import pytest
 
 from job.quiz import build_quiz_overview, flag_question, load_active_quiz
 from job.quiz_import import (
+    build_generation_prompt,
+    is_safe_reference,
     describe_quiz_import,
     export_quiz_pack,
     import_questions,
@@ -283,3 +285,36 @@ def test_export_pack_without_imported_questions(database_file, tmp_path):
 
     with pytest.raises(ValueError, match="Aucune question importée"):
         export_quiz_pack(database_file, tmp_path / "export.zip")
+
+
+@pytest.mark.parametrize(
+    "pUrl, pSafe",
+    [
+        ("https://docs.oracle.com/en/java/", True),
+        ("https://developer.mozilla.org/fr/docs/Web/HTTP?x=1", True),
+        ("http://docs.oracle.com/", False),
+        ("https://bit.ly/abc", False),
+        ("https://www.tinyurl.com/abc", False),
+        ("https://user:secret@docs.oracle.com/", False),
+        ("https://192.168.1.10/admin", False),
+        ("https://docs.oracle.com:8443/", False),
+        ("https://example.org/outil.EXE", False),
+        ("https://localhost/", False),
+        ("https://exemple.org:99999/", False),
+        ("https://" + "a" * 500 + ".org/", False),
+    ],
+)
+def test_is_safe_reference(pUrl, pSafe):
+    """Vérifie les liens de référence gardés et ceux écartés pour la sécurité."""
+
+    assert is_safe_reference(pUrl) is pSafe
+
+
+def test_generation_prompt_asks_for_schemas_explanations_and_safe_links():
+    """Vérifie que la demande exige explications, schémas SVG sûrs et liens officiels."""
+
+    vPrompt = build_generation_prompt({}, "Kafka", "tous", 10)
+
+    assert "pourquoi chaque autre choix est faux" in vPrompt
+    assert "Uniquement du SVG" in vPrompt
+    assert "ni raccourcisseur" in vPrompt

@@ -12,6 +12,7 @@ import unicodedata
 import zipfile
 from io import BytesIO
 from pathlib import PurePosixPath
+from urllib.parse import urlsplit
 
 from job.quiz import (
     QUESTION_FIELDS,
@@ -23,7 +24,7 @@ from job.quiz import (
     load_quiz,
     slugify,
 )
-from job.quiz_domains import DOMAIN_ORDER, classify_theme
+from job.quiz_domains import DOMAIN_ORDER, OTHER_DOMAIN, classify_theme
 from storage.quiz_questions import (
     get_imported_questions,
     get_quiz_assets,
@@ -49,6 +50,15 @@ GENERATION_COUNTS = (10, 20, 30, 50)
 # Identifiants déjà pris envoyés à ChatGPT, pour éviter les doublons
 MAX_PROMPT_IDS = 300
 
+# Niveau « tous » de la demande : répartition des questions par niveau, de
+# débutant à expert, comme un pack équilibré (30 questions : 10, 10, 7, 3).
+MIXED_LEVEL = "tous"
+LEVEL_WEIGHTS = (0.34, 0.33, 0.23, 0.10)
+GENERATION_LEVELS = {
+    MIXED_LEVEL: "Tous les niveaux",
+    **{vLevel: vLevel.capitalize() for vLevel in QUIZ_LEVELS},
+}
+
 IMPORT_EXTENSIONS = (".json", ".txt", ".zip")
 MAX_ZIP_FILES = 300
 MAX_ZIP_BYTES = 20 * 1024 * 1024
@@ -69,6 +79,35 @@ QUESTION_TYPES = ("qcm",)
 
 MAX_TAGS = 10
 MAX_REFERENCES = 5
+MAX_REFERENCE_LENGTH = 500
+
+# Raccourcisseurs d'adresse : la destination réelle resterait cachée.
+URL_SHORTENERS = frozenset(
+    "bit.ly tinyurl.com t.co goo.gl ow.ly is.gd buff.ly cutt.ly rebrand.ly "
+    "shorturl.at tiny.cc s.id t.ly".split()
+)
+
+# Une référence mène à une page à lire, jamais à un fichier à exécuter.
+DOWNLOAD_EXTENSIONS = (
+    ".exe",
+    ".msi",
+    ".bat",
+    ".cmd",
+    ".ps1",
+    ".sh",
+    ".jar",
+    ".apk",
+    ".dmg",
+    ".zip",
+    ".rar",
+    ".7z",
+    ".iso",
+    ".scr",
+    ".vbs",
+    ".js",
+)
+
+IP_HOST_PATTERN = re.compile(r"[\d.]+")
 
 # Un SVG peut porter du script : affiché tel quel, il pourrait agir dans la page.
 UNSAFE_SVG_PATTERN = re.compile(
@@ -133,17 +172,50 @@ def parse_questions_text(pText):
     return rParsed
 
 
+def is_safe_reference(pUrl):
+    """Indique si un lien de référence peut être proposé sans risque.
+
+    Seul un lien https direct vers un site nommé est gardé : ni raccourcisseur
+    qui masque la destination, ni adresse IP, ni identifiants dans l'adresse,
+    ni port inhabituel, ni fichier à télécharger.
+    """
+
+    try:
+        vUrl = urlsplit(pUrl.strip())
+        vPort = vUrl.port
+
+    except ValueError:
+        return False
+
+    vHost = (vUrl.hostname or "").lower()
+
+    rSafe = (
+        vUrl.scheme == "https"
+        and len(pUrl) <= MAX_REFERENCE_LENGTH
+        and "." in vHost
+        and not vUrl.username
+        and not vUrl.password
+        and vPort in (None, 443)
+        and not IP_HOST_PATTERN.fullmatch(vHost)
+        and not vHost.startswith("[")
+        and vHost.removeprefix("www.") not in URL_SHORTENERS
+        and not vUrl.path.lower().endswith(DOWNLOAD_EXTENSIONS)
+    )
+
+    return rSafe
+
+
 def clean_references(pReferences):
-    """Garde les références au format attendu, et seulement les liens https."""
+    """Garde les références au format attendu, et seulement les liens sûrs."""
 
     rReferences = [
         {"title": vReference["title"].strip()[:150], "url": vReference["url"].strip()}
         for vReference in (pReferences if isinstance(pReferences, list) else [])
         if isinstance(vReference, dict)
         and isinstance(vReference.get("title"), str)
+        and vReference["title"].strip()
         and isinstance(vReference.get("url"), str)
-        and vReference["url"].strip().startswith("https://")
-        and len(vReference["url"]) <= 500
+        and is_safe_reference(vReference["url"])
     ][:MAX_REFERENCES]
 
     return rReferences
@@ -564,33 +636,128 @@ def describe_quiz_import(pReport):
     return rText
 
 
+def split_levels(pLevel, pCount):
+    """Retourne la répartition des questions par niveau : [(niveau, nombre)]."""
+
+    if pLevel in QUIZ_LEVELS:
+        rLevels = [(pLevel, pCount)]
+    else:
+        vCounts = [round(pCount * vWeight) for vWeight in LEVEL_WEIGHTS]
+        # L'arrondi peut décaler le total : l'écart va au premier niveau.
+        vCounts[0] += pCount - sum(vCounts)
+
+        rLevels = [
+            (vLevel, vCount) for vLevel, vCount in zip(QUIZ_LEVELS, vCounts) if vCount
+        ]
+
+    return rLevels
+
+
 def build_generation_prompt(pQuiz, pThemeLabel, pLevel, pCount):
-    """Retourne la demande ChatGPT qui produit des questions au format attendu."""
+    """Retourne la demande ChatGPT d'un pack de questions au format de l'import.
+
+    La demande reprend le modèle complet : manifest, fichier de questions,
+    schémas et guides facultatifs, domaines admis et identifiants déjà pris.
+    """
 
     vThemeKey, vThemeLabel = find_theme(pQuiz, pThemeLabel)
-    vIds = [
-        vQuestion["id"] for vQuestion in pQuiz.get(vThemeKey, {}).get("questions", [])
-    ]
-    vLevel = pLevel if pLevel in QUIZ_LEVELS else QUIZ_LEVELS[0]
+    vTheme = pQuiz.get(vThemeKey, {})
+    vSkills = vTheme.get("skills") or [vThemeLabel]
+    vDomain, vSubdomain = vTheme.get("domain") or classify_theme(vThemeLabel, vSkills)
+    vIds = [vQuestion["id"] for vQuestion in vTheme.get("questions", [])]
+    vLevels = split_levels(pLevel, pCount)
+
+    vExample = {
+        "theme": vThemeLabel,
+        "domain": vDomain,
+        "subdomain": vSubdomain,
+        "skills": vSkills,
+        "questions": [
+            {
+                "id": f"{vThemeKey}-001",
+                "level": vLevels[0][0],
+                "type": "qcm",
+                "question": "Énoncé de la question ?",
+                "code": "facultatif : extrait de code ou de configuration",
+                "choices": ["…", "…", "…", "…"],
+                "answer": 1,
+                "expectedAnswer": "texte exact du choix d'indice answer",
+                "explanation": (
+                    "2 à 5 phrases : la notion expliquée, pourquoi cette réponse "
+                    "est juste et pourquoi les autres choix sont faux."
+                ),
+                "tags": vSkills[:2],
+                "visual": {
+                    "type": "svg",
+                    "path": f"../assets/schemas/{vThemeKey}-schema.svg",
+                    "alt": "Description du schéma",
+                },
+                "references": [
+                    {
+                        "title": "Page de la documentation officielle qui donne "
+                        "la réponse",
+                        "url": "https://…",
+                    }
+                ],
+            }
+        ],
+    }
+    vDomains = "\n".join(
+        f"   {vName} : {', '.join(vSubdomains)}"
+        for vName, vSubdomains in DOMAIN_ORDER.items()
+        if vName != OTHER_DOMAIN[0]
+    )
 
     rPrompt = (
-        f"Écris {pCount} questions à choix multiple sur « {vThemeLabel} », niveau "
-        f"{vLevel}, pour préparer un entretien technique de développeur.\n"
-        "Règles :\n"
-        "1. Une seule bonne réponse par question, vérifiée ; 4 choix plausibles.\n"
-        "2. Place la bonne réponse à des positions variées.\n"
-        "3. Mélange « que fait ce code ? », notions, nouveautés de version et "
-        "bonnes pratiques.\n"
-        "4. Une explication de 1 à 3 phrases qui justifie la réponse.\n"
-        f"5. Identifiants en minuscules et tirets, commençant par « {vThemeKey}- », "
-        "jamais parmi ceux déjà pris ci-dessous.\n"
-        "6. Une ou deux références officielles en https quand elles existent.\n"
-        "7. Tout en français, sauf le code.\n"
-        "Réponds uniquement par ce JSON, sans texte autour :\n"
-        '{"questions": [{"id": "' + vThemeKey + '-exemple", "level": "' + vLevel + '", '
-        '"question": "Que fait ce code ?", "code": "facultatif", '
-        '"choices": ["…", "…", "…", "…"], "answer": 0, "explanation": "…", '
-        '"references": [{"title": "…", "url": "https://…"}]}]}\n\n'
+        "Crée un pack de questions QCM pour préparer des entretiens techniques, "
+        "en français.\n"
+        f"Thème : {vThemeLabel}. {pCount} questions : "
+        + ", ".join(f"{vCount} {vLevel}" for vLevel, vCount in vLevels)
+        + ".\n\n"
+        "Livre une archive .zip avec cette arborescence :\n"
+        "- manifest.json\n"
+        f"- questions/{vThemeKey}.json\n"
+        "- assets/schemas/<nom>.svg   (facultatif : schémas simples, sans script "
+        "ni image externe)\n"
+        f"- guides/{vThemeKey}.md    (facultatif : méthode pratique en Markdown, "
+        "titres, listes, liens https)\n"
+        "Si tu ne peux pas créer d'archive, donne seulement le contenu de "
+        f"questions/{vThemeKey}.json.\n\n"
+        "manifest.json :\n"
+        + json.dumps(
+            {"themes": [{"id": vThemeKey, "file": f"questions/{vThemeKey}.json"}]},
+            ensure_ascii=False,
+            indent=2,
+        )
+        + f"\n\nquestions/{vThemeKey}.json :\n"
+        + json.dumps(vExample, ensure_ascii=False, indent=2)
+        + "\n\nRègles strictes :\n"
+        '1. "level" : ' + ", ".join(QUIZ_LEVELS) + ".\n"
+        '2. "domain" et "subdomain", à choisir dans cette liste :\n' + vDomains + "\n"
+        '3. "answer" est l\'indice du bon choix, à partir de 0 ; varie sa position '
+        "d'une question à l'autre.\n"
+        '4. "expectedAnswer" recopie exactement choices[answer].\n'
+        "5. Identifiants uniques en minuscules et tirets, préfixés par "
+        f"« {vThemeKey}- », jamais parmi ceux déjà pris ci-dessous.\n"
+        "6. 4 choix plausibles, une seule bonne réponse, vérifiée.\n"
+        '7. Seulement le type "qcm".\n'
+        '8. Dans "skills", les mots tels qu\'ils apparaissent dans les offres '
+        "d'emploi.\n"
+        '9. "explanation" doit faire comprendre la notion, pas seulement donner '
+        "la réponse : explique pourquoi la bonne réponse est juste et pourquoi "
+        "chaque autre choix est faux.\n"
+        "10. Schémas : dès qu'un schéma aide à comprendre (architecture, flux, "
+        'séquence, couches), fournis un fichier SVG et renseigne "visual". '
+        "Uniquement du SVG : pas de PNG ni JPEG. Le SVG ne contient ni script, "
+        "ni attribut on…=, ni foreignObject, ni lien, ni image ou police "
+        "externe ; texte en français, fond blanc, largeur 900 au plus.\n"
+        '11. "references" : 1 ou 2 pages qui contiennent la réponse, sur le site '
+        "officiel (documentation de l'éditeur, norme ou RFC, MDN pour le web). "
+        "Lien https direct vers la page exacte : ni raccourcisseur, ni adresse "
+        "IP, ni identifiant dans l'adresse, ni fichier à télécharger, ni site "
+        "personnel. Ne cite qu'une page dont tu es sûr qu'elle existe.\n"
+        '12. "code", "tags", "visual" et "references" sont facultatifs : '
+        "omets-les plutôt que de les inventer.\n\n"
         "Identifiants déjà pris : " + (", ".join(vIds[-MAX_PROMPT_IDS:]) or "aucun")
     )
 

@@ -94,7 +94,7 @@ def test_questions_are_generated_imported_and_flagged(
     vPage.theme_combo.setCurrentText("Kafka")
     vPage.copy_generation_prompt()
 
-    assert "« Kafka »" in quiz_page.QApplication.clipboard().text()
+    assert "Thème : Kafka. 10 questions" in quiz_page.QApplication.clipboard().text()
     assert len(vOpened) == 1
 
     vPage.import_edit.setPlainText(QUESTIONS_JSON)

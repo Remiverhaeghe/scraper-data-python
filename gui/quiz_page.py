@@ -38,7 +38,6 @@ from gui.widgets import (
 )
 from job.assistant import CHATGPT_URL
 from job.quiz import (
-    QUIZ_LEVELS,
     QUIZ_MODES,
     answer_question,
     build_quiz_overview,
@@ -50,6 +49,7 @@ from job.quiz import (
 from job.quiz_domains import group_themes
 from job.quiz_import import (
     GENERATION_COUNTS,
+    GENERATION_LEVELS,
     IMPORT_EXTENSIONS,
     build_generation_prompt,
     describe_quiz_import,
@@ -214,8 +214,8 @@ class QuizPage(QWidget):
 
         self.level_combo = QComboBox()
 
-        for vLevel in QUIZ_LEVELS:
-            self.level_combo.addItem(vLevel.capitalize(), vLevel)
+        for vLevel, vLabel in GENERATION_LEVELS.items():
+            self.level_combo.addItem(vLabel, vLevel)
 
         self.count_combo = QComboBox()
 

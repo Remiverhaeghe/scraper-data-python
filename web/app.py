@@ -144,7 +144,6 @@ from job.quality import (
 )
 from job.quiz import (
     DEFAULT_MODE,
-    QUIZ_LEVELS,
     QUIZ_MODES,
     answer_question,
     flag_question,
@@ -156,6 +155,8 @@ from job.quiz import (
 from job.quiz_domains import group_themes
 from job.quiz_import import (
     GENERATION_COUNTS,
+    GENERATION_LEVELS,
+    MIXED_LEVEL,
     IMPORT_EXTENSIONS,
     build_generation_prompt,
     describe_quiz_import,
@@ -1128,7 +1129,7 @@ def render_quiz(
             "domain": pDomain,
             "groups": group_themes(vThemes, pDomain),
             "guides": get_quiz_guides(pDatabaseFile),
-            "levels": QUIZ_LEVELS,
+            "levels": GENERATION_LEVELS,
             "generation_counts": GENERATION_COUNTS,
             "import_extensions": ",".join(IMPORT_EXTENSIONS),
             "chatgpt_url": CHATGPT_URL,
@@ -1211,7 +1212,7 @@ def answer_quiz(
 def prepare_quiz_prompt(
     request: Request,
     pTheme: str = Form("", alias="theme"),
-    pLevel: str = Form(QUIZ_LEVELS[0], alias="level"),
+    pLevel: str = Form(MIXED_LEVEL, alias="level"),
     pCount: int = Form(GENERATION_COUNTS[0], alias="count"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
