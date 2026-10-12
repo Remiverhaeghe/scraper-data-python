@@ -60,6 +60,18 @@ CODE_SUBDOMAINS = (
 )
 MIN_CODE_SHARE = 0.15
 
+# Un choix coupé par des points de suspension a été raccourci pour tromper la
+# mesure des longueurs : il ne se lit plus.
+TRUNCATED_ENDINGS = ("…", "...")
+
+# Un énoncé qui s'appuie sur son extrait le cite ; sinon l'extrait a été ajouté
+# au hasard pour atteindre la part de cas concrets. Au-delà de cette part des
+# questions avec code, le lot est signalé.
+CODE_REFERENCE_PATTERN = re.compile(
+    r"extrait|code|programme|instruction|ci-dessous|commande suivante|`", re.I
+)
+MAX_UNRELATED_CODE_SHARE = 0.25
+
 POSITION_LABELS = "ABCD"
 
 
@@ -368,6 +380,39 @@ def assess_questions(pQuestions, pDomain=None):
                     [],
                 )
             )
+
+    vTruncatedIds = [
+        vQuestion["id"]
+        for vQuestion in pQuestions
+        if any(
+            vChoice.rstrip().endswith(TRUNCATED_ENDINGS)
+            for vChoice in vQuestion["choices"]
+        )
+    ]
+
+    if vTruncatedIds:
+        vIssues.append(
+            (
+                f"{len(vTruncatedIds)} question(s) aux choix coupés par « … »",
+                vTruncatedIds,
+            )
+        )
+
+    vCodeIds = [vQuestion["id"] for vQuestion in pQuestions if "code" in vQuestion]
+    vUnrelatedIds = [
+        vQuestion["id"]
+        for vQuestion in pQuestions
+        if "code" in vQuestion
+        and not CODE_REFERENCE_PATTERN.search(vQuestion["question"])
+    ]
+
+    if len(vUnrelatedIds) > MAX_UNRELATED_CODE_SHARE * len(vCodeIds):
+        vIssues.append(
+            (
+                f"{len(vUnrelatedIds)} extrait(s) de code que l'énoncé ne cite pas",
+                vUnrelatedIds,
+            )
+        )
 
     if vIssues:
         logger.warning(

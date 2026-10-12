@@ -398,9 +398,10 @@ def test_assess_questions_asks_for_concrete_cases(pDomain, pCode, pAlert):
 
     for vQuestion in vQuestions[:pCode]:
         vQuestion["code"] = "IF Marche THEN Moteur := TRUE; END_IF;"
+        vQuestion["question"] = f"Que fait cet extrait n° {vQuestion['id']} ?"
 
     vQuality = assess_questions(vQuestions, pDomain)
-    vAlerts = [vWarning for vWarning, _ in vQuality["issues"] if "code" in vWarning]
+    vAlerts = [vWarning for vWarning, _ in vQuality["issues"] if "concrets" in vWarning]
 
     assert vAlerts == (
         [f"{pCode} question(s) avec code sur 20 : moins de 15 % de cas concrets"]
@@ -417,3 +418,27 @@ def test_assess_questions_asks_for_concrete_cases(pDomain, pCode, pAlert):
         assert f"- {vAlerts[0]}\n" in vPrompt
         assert "Questions concernées" not in vPrompt
         assert "pas assez de cas concrets (règle 7)" in vPrompt
+
+
+def test_assess_questions_flags_truncated_choices_and_unrelated_code():
+    """Vérifie les alertes des choix tronqués et des extraits que l'énoncé ignore."""
+
+    vQuestions = [build_question(vIndex, pAnswer=vIndex % 4) for vIndex in range(4)]
+    vQuestions[0]["choices"][2] = "Quand elle est validée et que sa…"
+    vQuestions[1]["choices"][0] = "Une condition logique de..."
+
+    for vQuestion in vQuestions[:3]:
+        vQuestion["code"] = "S1 := FALSE;"
+
+    vQuestions[2]["question"] = "Que fait cet extrait ?"
+
+    assert assess_questions(vQuestions)["issues"] == [
+        (
+            "2 question(s) aux choix coupés par « … »",
+            ["grafcet-l1-000", "grafcet-l1-001"],
+        ),
+        (
+            "2 extrait(s) de code que l'énoncé ne cite pas",
+            ["grafcet-l1-000", "grafcet-l1-001"],
+        ),
+    ]

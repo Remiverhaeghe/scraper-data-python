@@ -24,10 +24,11 @@ RÈGLES STRICTES
 3. Identifiants de question : "$key-l$lot-001", "-002"… uniques, en minuscules, chiffres et tirets.
 4. Exactement 4 choix, une seule bonne réponse, vérifiée. "answer" est l'indice du bon choix à partir de 0 ; répartis-le équitablement entre 0, 1, 2 et 3.
 5. "expectedAnswer" recopie exactement choices[answer].
-6. Les 4 choix ont une longueur comparable (écart de 20 % au plus) : la bonne réponse ne doit jamais se deviner parce qu'elle est la plus longue ou la plus précise. Les mauvaises réponses sont plausibles, des erreurs que ferait vraiment un candidat ; jamais de réponse absurde ou hors sujet.
+6. Les 4 choix ont une longueur comparable (écart de 20 % au plus) : la bonne réponse ne doit jamais se deviner parce qu'elle est la plus longue ou la plus précise. Les mauvaises réponses sont plausibles, des erreurs que ferait vraiment un candidat ; jamais de réponse absurde ou hors sujet. Chaque choix est une phrase complète : pour équilibrer les longueurs, reformule, ne tronque jamais avec « … » et n'ajoute pas de mots de remplissage.
 7. Environ un tiers des questions est concret :
    - informatique et réseau : un extrait de code, de configuration ou de commande dans "code" (5 à 15 lignes au plus) : « que fait ce code ? », « quelle est la sortie ? », « où est l'erreur ? » ;
    - industrie : un petit calcul avec ses valeurs (loi d'Ohm, puissance, pression × surface, couple, rapport de transmission, réglage PID), la lecture d'un schéma, d'une plaque signalétique ou d'un relevé de mesure, ou un extrait de programme automate en texte structuré IEC 61131-3 dans "code".
+   Un extrait dans "code" n'accompagne qu'une question qui porte sur lui et le cite (« cet extrait », « ce programme »).
    Les autres questions : notions, scénarios de terrain, diagnostic de panne ou d'incident, bonnes pratiques, normes.
 8. "explanation" : 3 à 5 phrases qui font comprendre la notion. Dis pourquoi la bonne réponse est juste, puis pourquoi chacun des autres choix est faux. Pour un calcul, détaille le calcul.
 9. Sécurité : pour l'électricité, l'hydraulique, la pneumatique, la mécanique, le soudage, le levage, l'automatisme et la robotique, les questions rappellent les bonnes pratiques (consignation, habilitation, EPI, arrêt d'urgence, purge de l'énergie). Elles ne présentent jamais un geste dangereux comme correct.
