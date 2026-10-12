@@ -152,6 +152,15 @@ QLabel#activityResult {
     font-weight: 600;
 }
 
+QLabel#subdomainBadge {
+    background: $primary_light;
+    color: $primary;
+    border-radius: 10px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
 QLabel#fieldLabel {
     color: $muted;
     font-size: 12px;

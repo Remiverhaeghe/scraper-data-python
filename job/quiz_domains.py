@@ -9,6 +9,13 @@ import unicodedata
 
 OTHER_DOMAIN = ("Autres", "Divers")
 
+# Icône de chaque domaine, partagée par le bureau et le web
+DOMAIN_ICONS = {
+    "Informatique": "terminal",
+    "Réseau et sécurité": "lock",
+    "Industrie": "settings",
+}
+
 # Ordre d'affichage des domaines et de leurs sous-domaines
 DOMAIN_ORDER = {
     "Informatique": (
@@ -103,11 +110,11 @@ def classify_theme(pLabel, pSkills=()):
     return rDomain
 
 
-def group_themes(pThemes, pDomain=None):
+def group_themes(pThemes, pDomain=None, pSubdomain=None):
     """Regroupe des thèmes par domaine puis sous-domaine, dans l'ordre d'affichage.
 
-    Retourne une liste de (domaine, [(sous-domaine, [thèmes])]) ; pDomain limite
-    le résultat à un domaine.
+    Retourne une liste de (domaine, [(sous-domaine, [thèmes])]) ; pDomain et
+    pSubdomain limitent le résultat à un domaine, puis à un sous-domaine.
     """
 
     rGroups = []
@@ -126,6 +133,7 @@ def group_themes(pThemes, pDomain=None):
                 ],
             )
             for vSubdomain in vSubdomains
+            if not pSubdomain or vSubdomain == pSubdomain
         ]
         vSections = [vSection for vSection in vSections if vSection[1]]
 

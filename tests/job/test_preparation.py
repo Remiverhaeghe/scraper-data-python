@@ -3,6 +3,7 @@
 import pytest
 
 from job.preparation import (
+    filter_by_match,
     build_questions,
     get_offer_skills,
     match_profile,
@@ -191,3 +192,17 @@ def test_recruiter_answers_without_profile_details():
     assert "ajoutez une réalisation" in vAnswers[2]
     assert vAnswers[3].startswith("Un vrai point d'amélioration")
     assert "ne donne pas de salaire" in vAnswers[4]
+
+
+def test_filter_by_match_keeps_close_offers():
+    """Vérifie le filtre de correspondance, ignoré sans score calculé."""
+
+    vOffers = [
+        {"title": "A", "match_score": 80},
+        {"title": "B", "match_score": 40},
+        {"title": "C", "match_score": None},
+    ]
+
+    assert [vOffer["title"] for vOffer in filter_by_match(vOffers, 50)] == ["A"]
+    assert filter_by_match(vOffers, 0) == vOffers
+    assert filter_by_match([{"match_score": None}], 70) == [{"match_score": None}]

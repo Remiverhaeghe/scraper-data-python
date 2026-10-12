@@ -17,6 +17,7 @@ from job.schedule import (
     save_schedule_options,
     save_scheduled_search,
 )
+from job.profile import build_profile, save_profile
 from storage.job_offers import get_offer, save_offers, set_availability
 from tests.job.test_quiz_import import build_pack
 from web.app import (
@@ -1080,7 +1081,7 @@ def test_quiz_question_answer_and_review(client):
     vOverview = client.get("/quiz").text
 
     assert "Révision" in vOverview
-    assert "?theme=sql&mode=discover" in vOverview
+    assert "?theme=sql&mode=spaced" in vOverview
 
     vQuestion = client.get("/quiz?theme=sql&mode=discover").text
     vQuestionId = re.search(r'name="question_id" value="([^"]+)"', vQuestion).group(1)
@@ -1094,7 +1095,7 @@ def test_quiz_question_answer_and_review(client):
 
     assert "Réponse incorrecte" in vAnswer
     assert "Réponse : Aucune ligne" in vAnswer
-    assert "1 à revoir" in vAnswer
+    assert "1 ratée(s)" in vAnswer
     assert vQuestionId.startswith("sql-")
 
     vReview = client.get("/quiz?theme=sql&mode=review").text
@@ -1285,7 +1286,7 @@ def test_quiz_questions_prompt_import_and_flag(client):
     )
 
     assert "1 question(s) ajoutée(s) : Kafka." in vImport.text
-    assert "?theme=kafka&mode=discover" in vImport.text
+    assert "?theme=kafka&mode=spaced" in vImport.text
 
     vRefused = client.post("/quiz/import", data={"theme": "Kafka", "text": "rien"})
 
@@ -1362,10 +1363,78 @@ def test_quiz_themes_grouped_by_domain(client):
     vAll = client.get("/quiz").text
 
     assert 'class="chip is-active"' in vAll
-    assert '<h2 class="section-gap">Informatique</h2>' in vAll
-    assert "Développement" in vAll
+    assert "<h2>Informatique</h2>" in vAll
+    assert "questions acquises" in vAll
+    assert '<span class="subdomain-badge">Développement · ' in vAll
 
     vFiltered = client.get("/quiz", params={"domain": "Informatique"}).text
 
     assert "?domain=Informatique" in vFiltered
     assert '<a class="chip is-active" href="/quiz?domain=Informatique">' in vFiltered
+
+
+def test_quiz_exam_on_the_web(client):
+    """Vérifie l'examen sur le web : début, réponse, résultat et fermeture."""
+
+    assert "Mode examen (20 questions)" in client.get("/quiz").text
+    assert client.get("/quiz/exam", follow_redirects=False).status_code == 303
+
+    vStart = client.post("/quiz/exam/start", data={"domain": "Informatique"})
+
+    assert "Question 1 / 20" in vStart.text
+
+    for vIndex in range(20):
+        vPage = client.get("/quiz/exam").text
+        vChoice = re.search(r'name="choice" value="(\d+)"', vPage).group(1)
+        vAnswer = client.post("/quiz/exam/answer", data={"choice": vChoice}).text
+
+        assert "Réponse :" in vAnswer
+
+    vResult = client.get("/quiz/exam").text
+
+    assert "Examen terminé" in vResult
+    assert "Note :" in vResult
+    assert "Fermer l'examen" in vResult
+
+    client.post("/quiz/exam/stop")
+
+    assert client.get("/quiz/exam", follow_redirects=False).status_code == 303
+    assert (
+        client.post("/quiz/exam/start", data={"domain": "Industrie"}).status_code == 400
+    )
+    assert client.post("/quiz/exam/answer", data={"choice": "0"}).status_code == 400
+
+
+def test_quiz_subdomain_chips(client):
+    """Vérifie les pastilles de sous-domaine et le filtre sur l'un d'eux."""
+
+    assert "Tous les sous-domaines" not in client.get("/quiz").text
+
+    vDomain = client.get("/quiz", params={"domain": "Informatique"}).text
+
+    assert "Tous les sous-domaines" in vDomain
+    assert "subdomain=D%C3%A9veloppement" in vDomain
+
+    vFiltered = client.get(
+        "/quiz", params={"domain": "Informatique", "subdomain": "Données"}
+    ).text
+
+    assert ">SQL</h2>" in vFiltered
+    assert ">Java</h2>" not in vFiltered
+
+
+def test_list_offers_filters_by_match(client, tmp_path):
+    """Vérifie le filtre de correspondance minimale de la liste des offres."""
+
+    save_profile(
+        tmp_path / "scraper.db", build_profile("", "", "Python, Django", "", "")
+    )
+
+    vAll = client.get("/offers").text
+    vClose = client.get("/offers", params={"match": "70"}).text
+
+    assert "Développeur Java" in vAll
+    assert "Développeur Java" not in vClose
+    assert "Développeur Python new" in vClose
+    assert '<option value="70" selected>' in vClose
+    assert "Développeur Java" in client.get("/offers", params={"match": "42"}).text

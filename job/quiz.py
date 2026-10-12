@@ -4,7 +4,7 @@ import json
 import random
 import re
 import unicodedata
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -17,6 +17,7 @@ from storage.job_offers import (
 )
 from storage.quiz_answers import (
     count_answers_by_day,
+    get_answer_history,
     get_last_answers,
     save_quiz_answer,
 )
@@ -33,10 +34,16 @@ logger = get_logger(__name__)
 QUIZ_LEVELS = ("débutant", "intermédiaire", "confirmé", "expert")
 
 QUIZ_MODES = {
+    "spaced": "Répétition espacée",
     "discover": "Nouvelles questions d'abord",
     "review": "Questions ratées à revoir",
 }
-DEFAULT_MODE = "discover"
+DEFAULT_MODE = "spaced"
+
+# Répétition espacée (méthode Leitner) : délai avant de revoir une question, en
+# jours, selon sa boîte. Une bonne réponse la fait monter d'une boîte, une
+# erreur la renvoie dans la première.
+LEITNER_INTERVALS = (1, 3, 7, 21, 60)
 
 QUESTION_FIELDS = ("id", "level", "question", "choices", "answer", "explanation")
 TEXT_FIELDS = ("question", "explanation")
@@ -346,7 +353,7 @@ def count_theme_offers(pDatabaseFile, pQuiz):
     return rCounts
 
 
-def build_quiz_overview(pDatabaseFile, pQuiz):
+def build_quiz_overview(pDatabaseFile, pQuiz, pToday=None):
     """Retourne les thèmes avec leur score, leurs questions à revoir et leur intérêt.
 
     Un thème est conseillé quand ses compétences sont citées dans les offres en
@@ -354,6 +361,8 @@ def build_quiz_overview(pDatabaseFile, pQuiz):
     """
 
     vAnswers = get_last_answers(pDatabaseFile)
+    vSchedule = get_review_schedule(pDatabaseFile)
+    vToday = pToday or date.today()
     vOfferCounts = count_theme_offers(pDatabaseFile, pQuiz)
     vGuides = {
         vGuide["theme"]: vGuide["name"]
@@ -383,6 +392,7 @@ def build_quiz_overview(pDatabaseFile, pQuiz):
                 "score": round(100 * vCorrect / len(vIds)) if vIds else 0,
                 "offer_count": vOfferCount,
                 "guide": vGuides.get(vTheme["key"]),
+                "due": count_due_questions(vTheme["questions"], vSchedule, vToday),
                 "domain": vDomain,
                 "subdomain": vSubdomain,
             }
@@ -452,16 +462,107 @@ def build_quiz_statistics(pDatabaseFile, pThemes, pNow, pDays=STATISTICS_DAYS):
     return rStatistics
 
 
-def pick_question(pQuiz, pThemeKey, pMode, pLastAnswers, pRandom=random):
+def build_review_schedule(pHistory):
+    """Calcule la boîte et la date de prochaine révision de chaque question.
+
+    Retourne {question: {"box": 1 à 5, "due": date}} à partir de l'historique
+    des réponses, sans rien enregistrer de plus.
+    """
+
+    rSchedule = {}
+
+    for vQuestionId, vCorrect, vAnsweredAt in pHistory:
+        vBox = rSchedule.get(vQuestionId, {"box": 0})["box"]
+        vBox = min(vBox + 1, len(LEITNER_INTERVALS)) if vCorrect else 1
+
+        rSchedule[vQuestionId] = {
+            "box": vBox,
+            "due": datetime.fromisoformat(vAnsweredAt).date()
+            + timedelta(days=LEITNER_INTERVALS[vBox - 1]),
+        }
+
+    return rSchedule
+
+
+def get_review_schedule(pDatabaseFile):
+    """Retourne le calendrier de révision des questions déjà répondues."""
+
+    rSchedule = build_review_schedule(get_answer_history(pDatabaseFile))
+
+    return rSchedule
+
+
+def count_due_questions(pQuestions, pSchedule, pToday):
+    """Compte les questions déjà vues dont la révision est due."""
+
+    rCount = sum(
+        1
+        for vQuestion in pQuestions
+        if vQuestion["id"] in pSchedule and pSchedule[vQuestion["id"]]["due"] <= pToday
+    )
+
+    return rCount
+
+
+def get_next_review(pQuiz, pThemeKey, pSchedule):
+    """Retourne la prochaine date de révision d'un thème, ou None."""
+
+    rDate = min(
+        (
+            pSchedule[vQuestion["id"]]["due"]
+            for vQuestion in pQuiz[pThemeKey]["questions"]
+            if vQuestion["id"] in pSchedule
+        ),
+        default=None,
+    )
+
+    return rDate
+
+
+def describe_no_question(pMode, pNextReview):
+    """Explique pourquoi aucune question n'est proposée dans ce mode."""
+
+    if pMode == "review":
+        rText = "Aucune question ratée à revoir dans ce thème."
+    elif pNextReview:
+        rText = (
+            "Rien à revoir aujourd'hui dans ce thème : prochaine révision le "
+            f"{pNextReview:%d/%m/%Y}."
+        )
+    else:
+        rText = "Aucune question dans ce thème."
+
+    return rText
+
+
+def pick_question(
+    pQuiz,
+    pThemeKey,
+    pMode,
+    pLastAnswers,
+    pRandom=random,
+    pSchedule=None,
+    pToday=None,
+):
     """Choisit une question du thème, choix mélangés ; None s'il n'y en a plus.
 
-    discover propose d'abord les questions jamais répondues, review seulement
-    celles dont la dernière réponse était fausse.
+    spaced propose les questions dont la révision est due, puis les nouvelles ;
+    discover d'abord les questions jamais répondues, review seulement celles
+    dont la dernière réponse était fausse.
     """
 
     vQuestions = pQuiz[pThemeKey]["questions"]
 
-    if pMode == "review":
+    if pMode == "spaced":
+        vSchedule = pSchedule or {}
+        vToday = pToday or date.today()
+        vCandidates = [
+            vQuestion
+            for vQuestion in vQuestions
+            if vQuestion["id"] in vSchedule
+            and vSchedule[vQuestion["id"]]["due"] <= vToday
+        ] or [vQuestion for vQuestion in vQuestions if vQuestion["id"] not in vSchedule]
+    elif pMode == "review":
         vCandidates = [
             vQuestion
             for vQuestion in vQuestions

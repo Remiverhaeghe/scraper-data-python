@@ -230,7 +230,8 @@ def test_domain_filter_zero_offers_and_scroll(qt_application, tmp_path):
         if vLabel.isVisibleTo(vPage)
     ]
 
-    assert "Développement" in vLabels
+    assert any(vText.startswith("Développement · ") for vText in vLabels)
+    assert any("questions acquises" in vText for vText in vLabels)
     assert any("pas encore demandé dans vos offres" in vText for vText in vLabels)
 
     vScroll.verticalScrollBar().setMaximum(1000)
@@ -238,3 +239,79 @@ def test_domain_filter_zero_offers_and_scroll(qt_application, tmp_path):
     vPage.start("sql", "discover")
 
     assert vScroll.verticalScrollBar().value() == 0
+
+
+def test_exam_is_run_resumed_and_closed(qt_application, tmp_path):
+    """Vérifie l'examen sur le bureau : questions, reprise, résultat et fermeture."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vExamButton = vPage.domain_layout.itemAt(vPage.domain_layout.count() - 1).widget()
+
+    assert vExamButton.text().startswith("Mode examen (20 questions)")
+
+    vExamButton.click()
+
+    assert vPage.meta_label.text().startswith("Examen · question 1 / 20")
+    assert not vPage.stop_exam_button.isHidden()
+    assert vPage.flag_button.isHidden()
+
+    vPage.refresh()
+    vResume = vPage.domain_layout.itemAt(vPage.domain_layout.count() - 1).widget()
+
+    assert vResume.text() == "Reprendre l'examen (1 / 20)"
+
+    vResume.click()
+
+    for _ in range(20):
+        next(
+            vButton
+            for vButton in vPage.choices_group.buttons()
+            if vPage.choices_group.id(vButton) == vPage.question["answer"]
+        ).setChecked(True)
+        vPage.validate()
+        vPage.next_button.click()
+
+    assert vPage.meta_label.text() == "Examen terminé"
+    assert vPage.question_label.text().startswith("Note : 20 / 20 (100 %)")
+    assert vPage.stop_exam_button.text() == "Fermer l'examen"
+
+    vPage.stop_exam_button.click()
+
+    assert vPage.question_card.isHidden()
+    assert quiz_page.load_exam(tmp_path / "scraper.db") is None
+
+
+def test_exam_reports_empty_domain(qt_application, tmp_path):
+    """Vérifie le message d'un examen demandé sur un domaine sans question."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vPage.domain = "Industrie"
+    vPage.start_exam()
+
+    assert vPage.message_label.text() == "Aucune question dans ce domaine."
+
+
+def test_subdomain_chips_filter_themes(qt_application, tmp_path):
+    """Vérifie les pastilles de sous-domaine, visibles une fois le domaine choisi."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+
+    assert vPage.subdomain_group.buttons() == []
+
+    vPage.select_domain("Informatique")
+    vLabels = [vButton.text() for vButton in vPage.subdomain_group.buttons()]
+
+    assert vLabels[:2] == ["Tous les sous-domaines", "Développement"]
+
+    vPage.select_subdomain("Données")
+
+    assert vPage.subdomain == "Données"
+
+    vTitles = {
+        vLabel.text()
+        for vLabel in vPage.findChildren(quiz_page.QLabel)
+        if vLabel.isVisibleTo(vPage)
+    }
+
+    assert "SQL" in vTitles
+    assert "Java" not in vTitles

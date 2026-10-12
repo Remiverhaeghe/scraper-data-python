@@ -128,7 +128,12 @@ from job.deduplication import (
     get_offer_group,
     group_offers,
 )
-from job.preparation import prepare_application, score_offers
+from job.preparation import (
+    MATCH_FILTERS,
+    filter_by_match,
+    prepare_application,
+    score_offers,
+)
 from job.profile import (
     build_profile,
     is_profile_empty,
@@ -149,10 +154,23 @@ from job.quiz import (
     flag_question,
     build_quiz_overview,
     build_quiz_statistics,
+    describe_no_question,
+    get_next_review,
+    get_review_schedule,
     load_active_quiz,
     pick_question,
 )
-from job.quiz_domains import group_themes
+from job.quiz_domains import DOMAIN_ICONS, group_themes
+from job.quiz_exam import (
+    EXAM_QUESTION_COUNT,
+    answer_exam,
+    describe_exam_summary,
+    get_exam_question,
+    load_exam,
+    start_exam,
+    stop_exam,
+    summarize_exam,
+)
 from job.quiz_import import (
     GENERATION_COUNTS,
     GENERATION_LEVELS,
@@ -688,6 +706,7 @@ def list_offers(
     pPreferred: str = Query("", alias="preferred"),
     pFrance: str = Query("", alias="france"),
     pSort: str = Query("", alias="sort"),
+    pMatch: str = Query("", alias="match"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche la liste des offres, ou seulement le tableau pour une requête HTMX."""
@@ -727,6 +746,10 @@ def list_offers(
     mark_preferred_companies(vPrepared, vCompanyRules)
     score_offers(vPrepared, load_profile(pDatabaseFile))
 
+    # Valeur inconnue : aucun filtre, comme pour les autres listes de choix
+    vMinMatch = int(pMatch) if pMatch.isdigit() and int(pMatch) in MATCH_FILTERS else 0
+    vPrepared = filter_by_match(vPrepared, vMinMatch)
+
     if pSort == "match":
         # Offres sans score (aucune compétence repérée) en fin de liste
         vPrepared.sort(
@@ -757,12 +780,14 @@ def list_offers(
         "follow_up_filter": FOLLOW_UP_FILTER,
         "published_periods": PUBLISHED_PERIODS,
         "availability_filters": AVAILABILITY_FILTERS,
+        "match_filters": MATCH_FILTERS,
         "filters": {
             "availability": pAvailability,
             "multiple": pMultiple,
             "preferred": pPreferred,
             "france": pFrance,
             "sort": pSort,
+            "match": vMinMatch,
             "q": pSearch,
             "source": pSource,
             "contract": pContract,
@@ -1094,6 +1119,7 @@ def render_quiz(
     pImport=None,
     pStatusCode=200,
     pDomain=None,
+    pSubdomain=None,
 ):
     """Affiche les thèmes de révision, avec une question ou une correction.
 
@@ -1106,8 +1132,16 @@ def render_quiz(
     vTheme = pTheme if pTheme in vQuiz else None
     vQuestion = None
 
+    vSchedule = get_review_schedule(pDatabaseFile)
+
     if vTheme and pResult is None:
-        vQuestion = pick_question(vQuiz, vTheme, vMode, get_last_answers(pDatabaseFile))
+        vQuestion = pick_question(
+            vQuiz,
+            vTheme,
+            vMode,
+            get_last_answers(pDatabaseFile),
+            pSchedule=vSchedule,
+        )
 
     vThemes = build_quiz_overview(pDatabaseFile, vQuiz)
     vStatistics = build_quiz_statistics(pDatabaseFile, vThemes, datetime.now())
@@ -1124,10 +1158,28 @@ def render_quiz(
             "modes": QUIZ_MODES,
             "question": vQuestion,
             "result": pResult,
+            "no_question": (
+                describe_no_question(vMode, get_next_review(vQuiz, vTheme, vSchedule))
+                if vTheme and vQuestion is None
+                else None
+            ),
             "import_form": pImport or {},
             "domains": [vDomain for vDomain, _ in group_themes(vThemes)],
+            "exam": load_exam(pDatabaseFile),
+            "exam_count": EXAM_QUESTION_COUNT,
             "domain": pDomain,
-            "groups": group_themes(vThemes, pDomain),
+            "subdomains": (
+                [
+                    vSubdomain
+                    for _, vSections in group_themes(vThemes, pDomain)
+                    for vSubdomain, _ in vSections
+                ]
+                if pDomain
+                else []
+            ),
+            "subdomain": pSubdomain,
+            "groups": group_themes(vThemes, pDomain, pSubdomain),
+            "domain_icons": DOMAIN_ICONS,
             "guides": get_quiz_guides(pDatabaseFile),
             "levels": GENERATION_LEVELS,
             "generation_counts": GENERATION_COUNTS,
@@ -1164,12 +1216,18 @@ def show_quiz(
     pTheme: str = Query("", alias="theme"),
     pMode: str = Query(DEFAULT_MODE, alias="mode"),
     pDomain: str = Query("", alias="domain"),
+    pSubdomain: str = Query("", alias="subdomain"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche les thèmes de révision et, si un thème est choisi, une question."""
 
     rResponse = render_quiz(
-        request, pDatabaseFile, pTheme, pMode, pDomain=pDomain or None
+        request,
+        pDatabaseFile,
+        pTheme,
+        pMode,
+        pDomain=pDomain or None,
+        pSubdomain=pSubdomain or None,
     )
 
     return rResponse
@@ -1366,6 +1424,116 @@ def show_quiz_guide(
             "content": Markup(render_markdown(vGuide["content"])),  # nosec B704
         },
     )
+
+    return rResponse
+
+
+@app.post("/quiz/exam/start", dependencies=[Depends(require_csrf)])
+def begin_quiz_exam(
+    request: Request,
+    pDomain: str = Form("", alias="domain"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Commence un examen sur un domaine, ou reprend celui en cours."""
+
+    vExam = load_exam(pDatabaseFile)
+
+    if not vExam or vExam["finished_at"]:
+        try:
+            start_exam(
+                pDatabaseFile,
+                load_active_quiz(pDatabaseFile),
+                pDomain or None,
+                datetime.now(),
+            )
+
+        except ValueError as vException:
+            return render_quiz(
+                request,
+                pDatabaseFile,
+                pImport={"message": str(vException)},
+                pStatusCode=400,
+            )
+
+    rResponse = RedirectResponse(app.url_path_for("show_quiz_exam"), status_code=303)
+
+    return rResponse
+
+
+def render_exam(pRequest, pDatabaseFile, pResult=None):
+    """Affiche la question en cours de l'examen, sa correction ou le résultat."""
+
+    vQuiz = load_active_quiz(pDatabaseFile)
+    vExam = load_exam(pDatabaseFile)
+
+    rResponse = templates.TemplateResponse(
+        pRequest,
+        "quiz_exam.html",
+        {
+            "active_page": "quiz",
+            "exam": vExam,
+            "result": pResult,
+            "question": None if pResult else get_exam_question(vQuiz, vExam),
+            "summary": (
+                describe_exam_summary(summarize_exam(vQuiz, vExam))
+                if vExam["finished_at"] and not pResult
+                else None
+            ),
+        },
+    )
+
+    return rResponse
+
+
+@app.get("/quiz/exam", response_class=HTMLResponse)
+def show_quiz_exam(request: Request, pDatabaseFile: str = Depends(get_database_file)):
+    """Affiche l'examen en cours, ou revient à la révision s'il n'y en a pas."""
+
+    if load_exam(pDatabaseFile) is None:
+        rResponse = RedirectResponse(app.url_path_for("show_quiz"), status_code=303)
+    else:
+        rResponse = render_exam(request, pDatabaseFile)
+
+    return rResponse
+
+
+@app.post(
+    "/quiz/exam/answer",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def answer_quiz_exam(
+    request: Request,
+    pChoice: int = Form(alias="choice"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Corrige la réponse à la question en cours de l'examen."""
+
+    try:
+        vResult, _ = answer_exam(
+            pDatabaseFile, load_active_quiz(pDatabaseFile), pChoice, datetime.now()
+        )
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    # Question supprimée pendant l'examen : passée, la suivante s'affiche.
+    rResponse = (
+        render_exam(request, pDatabaseFile, vResult)
+        if vResult
+        else RedirectResponse(app.url_path_for("show_quiz_exam"), status_code=303)
+    )
+
+    return rResponse
+
+
+@app.post("/quiz/exam/stop", dependencies=[Depends(require_csrf)])
+def stop_quiz_exam(pDatabaseFile: str = Depends(get_database_file)):
+    """Abandonne ou referme l'examen, puis revient à la révision."""
+
+    stop_exam(pDatabaseFile)
+
+    rResponse = RedirectResponse(app.url_path_for("show_quiz"), status_code=303)
 
     return rResponse
 

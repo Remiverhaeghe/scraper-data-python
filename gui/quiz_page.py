@@ -33,20 +33,35 @@ from gui.widgets import (
     clear_layout,
     create_button,
     create_card,
+    create_icon_label,
     create_page_header,
     create_scroll_content,
 )
 from job.assistant import CHATGPT_URL
 from job.quiz import (
+    DEFAULT_MODE,
     QUIZ_MODES,
     answer_question,
     build_quiz_overview,
     build_quiz_statistics,
+    describe_no_question,
+    get_next_review,
+    get_review_schedule,
     flag_question,
     load_active_quiz,
     pick_question,
 )
-from job.quiz_domains import group_themes
+from job.quiz_domains import DOMAIN_ICONS, group_themes
+from job.quiz_exam import (
+    EXAM_QUESTION_COUNT,
+    answer_exam,
+    describe_exam_summary,
+    get_exam_question,
+    load_exam,
+    start_exam,
+    stop_exam,
+    summarize_exam,
+)
 from job.quiz_import import (
     GENERATION_COUNTS,
     GENERATION_LEVELS,
@@ -66,6 +81,9 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 THEME_COLUMNS = 3
+
+# Mode de la page pendant un examen, à côté des modes de révision
+EXAM_MODE = "exam"
 
 # Hauteur d'affichage des schémas des questions importées
 VISUAL_HEIGHT = 280
@@ -105,6 +123,12 @@ class QuizPage(QWidget):
         self.domain_layout = QHBoxLayout()
         self.domain_layout.setSpacing(8)
 
+        # Sous-domaines du domaine choisi, en pastilles eux aussi
+        self.subdomain = None
+        self.subdomain_group = QButtonGroup(self)
+        self.subdomain_layout = QHBoxLayout()
+        self.subdomain_layout.setSpacing(8)
+
         # Les thèmes sont reconstruits à chaque rafraîchissement dans un conteneur
         # remplacé d'un bloc : domaines et sous-domaines y sont imbriqués.
         self.themes_holder = QVBoxLayout()
@@ -113,6 +137,7 @@ class QuizPage(QWidget):
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.create_question_card())
         vLayout.addLayout(self.domain_layout)
+        vLayout.addLayout(self.subdomain_layout)
         vLayout.addLayout(self.themes_holder)
 
         # Guides pratiques des packs importés, masqués tant qu'il n'y en a pas
@@ -179,7 +204,11 @@ class QuizPage(QWidget):
         self.next_button = create_button(
             "Question suivante", "arrow-right", pIconColor=COLORS["primary"]
         )
-        self.next_button.clicked.connect(lambda: self.start(self.theme_key, self.mode))
+        self.next_button.clicked.connect(self.go_next)
+
+        self.stop_exam_button = create_button("Abandonner l'examen")
+        self.stop_exam_button.clicked.connect(self.close_exam)
+        self.stop_exam_button.hide()
 
         # Une question importée peut être fausse : elle sort des tirages.
         self.flag_button = create_button(
@@ -192,6 +221,7 @@ class QuizPage(QWidget):
         vButtons.addWidget(self.validate_button)
         vButtons.addWidget(self.next_button)
         vButtons.addStretch()
+        vButtons.addWidget(self.stop_exam_button)
         vButtons.addWidget(self.flag_button)
 
         vLayout.addWidget(self.meta_label)
@@ -488,6 +518,7 @@ class QuizPage(QWidget):
 
         self.themes = vThemes
         self.refresh_domains()
+        self.refresh_subdomains()
         self.show_themes()
 
     def refresh_domains(self):
@@ -516,9 +547,67 @@ class QuizPage(QWidget):
 
         self.domain_layout.addStretch()
 
+        vExam = load_exam(self.database_file)
+        vButton = create_button(
+            (
+                f"Reprendre l'examen ({vExam['index'] + 1} / {len(vExam['ids'])})"
+                if vExam and not vExam["finished_at"]
+                else f"Mode examen ({EXAM_QUESTION_COUNT} questions)"
+            ),
+            "timer",
+            "primaryButton",
+            COLORS["on_primary"],
+        )
+        vButton.setToolTip(
+            "Questions tirées au hasard dans le domaine choisi, notées et "
+            "chronométrées"
+        )
+        vButton.clicked.connect(self.start_exam)
+        self.domain_layout.addWidget(vButton)
+
     def select_domain(self, pDomain):
         """Limite l'affichage des thèmes à un domaine, ou les montre tous."""
         self.domain = pDomain
+        self.subdomain = None
+        self.refresh_subdomains()
+        self.show_themes()
+
+    def refresh_subdomains(self):
+        """Propose les sous-domaines du domaine choisi ; aucun pour « Tous »."""
+        clear_layout(self.subdomain_layout)
+
+        for vButton in self.subdomain_group.buttons():
+            self.subdomain_group.removeButton(vButton)
+
+        vSubdomains = [
+            vSubdomain
+            for _, vSections in group_themes(self.themes, self.domain)
+            for vSubdomain, _ in vSections
+        ]
+
+        if self.subdomain not in vSubdomains:
+            self.subdomain = None
+
+        if not self.domain:
+            return
+
+        for vSubdomain in [None, *vSubdomains]:
+            vButton = create_button(
+                vSubdomain or "Tous les sous-domaines", pObjectName="segmentButton"
+            )
+            vButton.setCheckable(True)
+            vButton.setChecked(vSubdomain == self.subdomain)
+            vButton.clicked.connect(
+                lambda _=False, pSubdomain=vSubdomain: self.select_subdomain(pSubdomain)
+            )
+            self.subdomain_group.addButton(vButton)
+            self.subdomain_layout.addWidget(vButton)
+
+        self.subdomain_layout.addStretch()
+
+    def select_subdomain(self, pSubdomain):
+        """Limite l'affichage aux thèmes d'un sous-domaine du domaine choisi."""
+        self.subdomain = pSubdomain
         self.show_themes()
 
     def show_themes(self):
@@ -530,14 +619,15 @@ class QuizPage(QWidget):
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.setSpacing(12)
 
-        for vDomain, vSections in group_themes(self.themes, self.domain):
-            vTitle = QLabel(vDomain)
-            vTitle.setObjectName("cardTitle")
-            vLayout.addWidget(vTitle)
+        for vDomain, vSections in group_themes(
+            self.themes, self.domain, self.subdomain
+        ):
+            vLayout.addWidget(self.create_domain_header(vDomain, vSections))
 
             for vSubdomain, vThemes in vSections:
-                vSubtitle = QLabel(vSubdomain)
-                vSubtitle.setObjectName("fieldLabel")
+                # Badge du sous-domaine : nom et nombre de thèmes
+                vSubtitle = QLabel(f"{vSubdomain} · {len(vThemes)}")
+                vSubtitle.setObjectName("subdomainBadge")
 
                 vGrid = QGridLayout()
                 vGrid.setSpacing(16)
@@ -550,10 +640,42 @@ class QuizPage(QWidget):
                         self.create_theme_card(vTheme), *divmod(vIndex, THEME_COLUMNS)
                     )
 
-                vLayout.addWidget(vSubtitle)
+                vLayout.addWidget(vSubtitle, 0, Qt.AlignmentFlag.AlignLeft)
                 vLayout.addLayout(vGrid)
 
         self.themes_holder.addWidget(vContainer)
+
+    def create_domain_header(self, pDomain, pSections):
+        """Crée l'en-tête d'un domaine : icône, nom et progression d'ensemble."""
+        vThemes = [vTheme for _, vThemes in pSections for vTheme in vThemes]
+
+        vTitle = QLabel(pDomain)
+        vTitle.setObjectName("cardTitle")
+
+        vSummary = QLabel(
+            f"{len(vThemes)} thème(s) · "
+            f"{sum(vTheme['correct'] for vTheme in vThemes)} / "
+            f"{sum(vTheme['total'] for vTheme in vThemes)} questions acquises"
+        )
+        vSummary.setObjectName("cardSubtitle")
+
+        vTexts = QVBoxLayout()
+        vTexts.setSpacing(2)
+        vTexts.addWidget(vTitle)
+        vTexts.addWidget(vSummary)
+
+        rHeader = QWidget()
+        vLayout = QHBoxLayout(rHeader)
+        vLayout.setContentsMargins(0, 12, 0, 0)
+        vLayout.setSpacing(12)
+        vLayout.addWidget(
+            create_icon_label(
+                DOMAIN_ICONS.get(pDomain, "sparkles"), COLORS["primary"], 22
+            )
+        )
+        vLayout.addLayout(vTexts, 1)
+
+        return rHeader
 
     def create_theme_card(self, pTheme):
         """Crée la carte d'un thème : progression, intérêt et boutons."""
@@ -562,18 +684,32 @@ class QuizPage(QWidget):
         # Largeur fixée par la grille seule : les colonnes restent égales.
         rCard.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 
-        vParts = [f"{pTheme['correct']} / {pTheme['total']} acquises"]
+        # Les indications utiles ressortent en couleur : intérêt pour les offres
+        # en bleu, révisions dues en orange.
+        def highlight(pText, pTone):
+            rHtml = (
+                f'<span style="color: {COLORS[pTone]}; font-weight: 600;">'
+                f"{escape(pText)}</span>"
+            )
+
+            return rHtml
+
+        vParts = [escape(f"{pTheme['correct']} / {pTheme['total']} acquises")]
 
         if pTheme["to_review"]:
-            vParts.append(f"{pTheme['to_review']} à revoir")
+            vParts.append(escape(f"{pTheme['to_review']} ratée(s)"))
+
+        if pTheme["due"]:
+            vParts.append(highlight(f"{pTheme['due']} à revoir aujourd'hui", "warning"))
 
         vParts.append(
-            f"demandé dans {pTheme['offer_count']} offre(s)"
+            highlight(f"demandé dans {pTheme['offer_count']} offre(s)", "primary")
             if pTheme["offer_count"]
-            else "pas encore demandé dans vos offres"
+            else escape("pas encore demandé dans vos offres")
         )
 
         vInfo = QLabel(" · ".join(vParts))
+        vInfo.setTextFormat(Qt.TextFormat.RichText)
         vInfo.setObjectName("cardSubtitle")
         vInfo.setWordWrap(True)
 
@@ -582,7 +718,10 @@ class QuizPage(QWidget):
         vProgress.setValue(pTheme["score"])
 
         vStart = create_button("Réviser", pObjectName="primaryButton")
-        vStart.clicked.connect(lambda: self.start(pTheme["key"], "discover"))
+        vStart.setToolTip(
+            "Répétition espacée : questions à revoir aujourd'hui, puis nouvelles"
+        )
+        vStart.clicked.connect(lambda: self.start(pTheme["key"], DEFAULT_MODE))
 
         vButtons = QHBoxLayout()
         vButtons.addWidget(vStart)
@@ -668,10 +807,29 @@ class QuizPage(QWidget):
 
         self.theme_key = pThemeKey
         self.mode = pMode
-        self.question = pick_question(
-            vQuiz, pThemeKey, pMode, get_last_answers(self.database_file)
+        vSchedule = get_review_schedule(self.database_file)
+        vQuestion = pick_question(
+            vQuiz,
+            pThemeKey,
+            pMode,
+            get_last_answers(self.database_file),
+            pSchedule=vSchedule,
         )
 
+        self.display_question(
+            vQuestion,
+            (
+                f"{vQuiz[pThemeKey]['label']} · {vQuestion['level']} · "
+                f"{QUIZ_MODES[pMode]}"
+                if vQuestion
+                else vQuiz[pThemeKey]["label"]
+            ),
+            describe_no_question(pMode, get_next_review(vQuiz, pThemeKey, vSchedule)),
+        )
+
+    def display_question(self, pQuestion, pMeta, pEmptyText):
+        """Affiche une question et ses choix, ou pEmptyText s'il n'y en a pas."""
+        self.question = pQuestion
         self.question_card.show()
 
         # La question s'affiche en haut de la page : on y remonte.
@@ -681,35 +839,97 @@ class QuizPage(QWidget):
         self.visual_widget.hide()
         self.references_label.hide()
         self.next_button.hide()
+        self.next_button.setText("Question suivante")
+        self.stop_exam_button.setVisible(self.mode == EXAM_MODE)
+        self.meta_label.setText(pMeta)
 
         clear_layout(self.choices_layout)
 
         for vButton in self.choices_group.buttons():
             self.choices_group.removeButton(vButton)
 
-        if self.question is None:
-            self.meta_label.setText(vQuiz[pThemeKey]["label"])
-            self.question_label.setText("Aucune question ratée à revoir dans ce thème.")
+        if pQuestion is None:
+            self.question_label.setText(pEmptyText)
             self.code_edit.hide()
             self.validate_button.hide()
             self.flag_button.hide()
             return
 
-        self.meta_label.setText(
-            f"{vQuiz[pThemeKey]['label']} · {self.question['level']} · "
-            f"{QUIZ_MODES[pMode]}"
-        )
-        self.question_label.setText(self.question["question"])
-        self.code_edit.setPlainText(self.question.get("code", ""))
-        self.code_edit.setVisible(bool(self.question.get("code")))
+        self.question_label.setText(pQuestion["question"])
+        self.code_edit.setPlainText(pQuestion.get("code", ""))
+        self.code_edit.setVisible(bool(pQuestion.get("code")))
         self.validate_button.show()
-        self.flag_button.show()
+        self.flag_button.setVisible(self.mode != EXAM_MODE)
 
         # L'identifiant du bouton est l'indice d'origine du choix, avant mélange.
-        for vIndex, vChoice in self.question["shuffled"]:
+        for vIndex, vChoice in pQuestion["shuffled"]:
             vButton = QRadioButton(vChoice)
             self.choices_group.addButton(vButton, vIndex)
             self.choices_layout.addWidget(vButton)
+
+    def start_exam(self):
+        """Reprend l'examen en cours, ou en commence un sur le domaine choisi."""
+        vExam = load_exam(self.database_file)
+
+        if not vExam or vExam["finished_at"]:
+            try:
+                start_exam(
+                    self.database_file,
+                    load_active_quiz(self.database_file),
+                    self.domain,
+                    datetime.now(),
+                )
+
+            except ValueError as vException:
+                self.message_label.setText(str(vException))
+                self.message_label.show()
+                return
+
+        self.mode = EXAM_MODE
+        self.show_exam_question()
+
+    def show_exam_question(self):
+        """Affiche la question en cours de l'examen, ou son résultat."""
+        vQuiz = load_active_quiz(self.database_file)
+        vExam = load_exam(self.database_file)
+
+        if vExam and vExam["finished_at"]:
+            self.display_question(
+                None,
+                "Examen terminé",
+                describe_exam_summary(summarize_exam(vQuiz, vExam)),
+            )
+            self.stop_exam_button.setText("Fermer l'examen")
+            return
+
+        vQuestion = get_exam_question(vQuiz, vExam)
+
+        self.stop_exam_button.setText("Abandonner l'examen")
+        self.display_question(
+            vQuestion,
+            (
+                f"Examen · question {vQuestion['position']} / {vQuestion['count']} · "
+                f"{vQuestion['theme_label']} · {vQuestion['level']}"
+                if vQuestion
+                else "Examen"
+            ),
+            "Cette question n'existe plus : passez à la suivante.",
+        )
+
+    def close_exam(self):
+        """Abandonne ou referme l'examen, puis revient à la liste des thèmes."""
+        stop_exam(self.database_file)
+
+        self.mode = None
+        self.question_card.hide()
+        self.refresh()
+
+    def go_next(self):
+        """Passe à la question suivante du thème ou de l'examen."""
+        if self.mode == EXAM_MODE:
+            self.show_exam_question()
+        else:
+            self.start(self.theme_key, self.mode)
 
     def validate(self):
         """Corrige la réponse choisie et affiche l'explication."""
@@ -719,13 +939,29 @@ class QuizPage(QWidget):
             self.verdict_label.setText("Choisissez une réponse.")
             return
 
-        vResult = answer_question(
-            self.database_file,
-            load_active_quiz(self.database_file),
-            self.question["id"],
-            vChoice,
-            datetime.now(),
-        )
+        if self.mode == EXAM_MODE:
+            vResult, vExam = answer_exam(
+                self.database_file,
+                load_active_quiz(self.database_file),
+                vChoice,
+                datetime.now(),
+            )
+
+            if vExam["finished_at"]:
+                self.next_button.setText("Voir le résultat")
+        else:
+            vResult = answer_question(
+                self.database_file,
+                load_active_quiz(self.database_file),
+                self.question["id"],
+                vChoice,
+                datetime.now(),
+            )
+
+        # Question supprimée depuis le début de l'examen : elle est passée.
+        if vResult is None:
+            self.go_next()
+            return
 
         vTone = "success" if vResult["correct"] else "danger"
 

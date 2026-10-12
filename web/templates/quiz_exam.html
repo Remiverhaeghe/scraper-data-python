@@ -1,0 +1,42 @@
+{# Examen de révision (routes /quiz/exam) : une question à la fois, état gardé
+   en base par job/quiz_exam.py, comme sur le bureau. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Examen{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Examen", "Questions tirées au hasard, notées et chronométrées", "timer") }}
+
+<article class="card quiz-card">
+    {% if summary %}
+    <h2>Examen terminé</h2>
+    <p>{{ summary }}</p>
+    {% elif result %}
+    <p class="quiz-verdict {{ 'tone-success' if result.correct else 'tone-danger' }}" role="status">
+        {{ icon("circle-check" if result.correct else "circle-alert", 18) }}
+        {{ "Bonne réponse" if result.correct else "Réponse incorrecte" }}
+    </p>
+    <h2>{{ result.question.question }}</h2>
+    {% if not result.correct %}<p class="muted">Votre réponse : {{ result.chosen }}</p>{% endif %}
+    <p><strong>Réponse : {{ result.answer }}</strong></p>
+    <p>{{ result.explanation }}</p>
+    <a class="button button-primary" href="{{ url_for('show_quiz_exam').path }}">{% if exam.finished_at %}Voir le résultat{% else %}Question suivante{% endif %} {{ icon("arrow-right", 16) }}</a>
+    {% elif question %}
+    <p class="muted">Question {{ question.position }} / {{ question.count }} · {{ question.theme_label }} · {{ question.level }}</p>
+    <h2>{{ question.question }}</h2>
+    {% if question.code %}<pre class="quiz-code"><code>{{ question.code }}</code></pre>{% endif %}
+    <form class="quiz-form" method="post" action="{{ url_for('answer_quiz_exam').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        {% for index, choice in question.shuffled %}
+        <label class="quiz-choice"><input type="radio" name="choice" value="{{ index }}" required> {{ choice }}</label>
+        {% endfor %}
+        <button class="button button-primary" type="submit">Valider</button>
+    </form>
+    {% endif %}
+    <form class="section-gap" method="post" action="{{ url_for('stop_quiz_exam').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button class="button" type="submit">{% if exam.finished_at and not result %}Fermer l'examen{% else %}Abandonner l'examen{% endif %}</button>
+    </form>
+</article>
+{% endblock %}

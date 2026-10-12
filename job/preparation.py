@@ -323,3 +323,36 @@ def score_offers(pOffers, pProfile):
             if vEmpty
             else match_profile(pProfile, get_offer_skills(vOffer))["score"]
         )
+
+
+# Filtre de la liste des offres : correspondance minimale avec le profil
+MATCH_FILTERS = {
+    0: "Toute correspondance",
+    30: "Correspondance 30 % et +",
+    50: "Correspondance 50 % et +",
+    70: "Correspondance 70 % et +",
+    90: "Correspondance 90 % et +",
+}
+
+
+def filter_by_match(pOffers, pMinScore):
+    """Garde les offres au moins aussi proches du profil que pMinScore.
+
+    Sans compétence dans le profil, aucune offre n'a de score : le filtre est
+    alors ignoré plutôt que de vider la liste.
+    """
+
+    vScored = any(vOffer.get("match_score") is not None for vOffer in pOffers)
+
+    rOffers = (
+        [
+            vOffer
+            for vOffer in pOffers
+            if vOffer.get("match_score") is not None
+            and vOffer["match_score"] >= pMinScore
+        ]
+        if pMinScore and vScored
+        else pOffers
+    )
+
+    return rOffers

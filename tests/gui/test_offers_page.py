@@ -626,6 +626,15 @@ def test_interview_score_and_france_filter(offers_page, database_file):
 
     assert get_titles(offers_page) == ["Développeur Java"]
 
+    # Filtre France gardé : seule l'offre ajoutée, à 50 % du profil, reste.
+    offers_page.match_combo.setCurrentIndex(offers_page.match_combo.findData(70))
+
+    assert get_titles(offers_page) == []
+
+    offers_page.match_combo.setCurrentIndex(offers_page.match_combo.findData(50))
+
+    assert get_titles(offers_page) == ["Développeur Java"]
+
 
 def test_detail_offers_translation_and_limits_company_info(
     offers_page, database_file, monkeypatch

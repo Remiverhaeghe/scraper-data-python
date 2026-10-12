@@ -180,7 +180,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Entreprises à exclure ou à privilégier, avertissement si déjà candidat dans l'entreprise
 - [x] Pièces jointes par candidature (CV, lettre), ouvertes avec l'application du système
 - [x] Révision technique par QCM, demandes prêtes pour ChatGPT et infos publiques sur l'entreprise
-- [x] Score de correspondance avec le profil dans la liste des offres, tri par correspondance
+- [x] Score de correspondance avec le profil dans la liste des offres, tri et filtre par correspondance minimale
 - [x] Date d'entretien et export des relances et entretiens vers un agenda (.ics)
 - [x] Abonnement à l'agenda par une adresse secrète, relue automatiquement, renouvelable
 - [x] Alertes ciblées : score de correspondance minimal des nouvelles offres envoyées par e-mail
@@ -325,7 +325,9 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Suivi de la progression : score par thème, questions ratées à revoir
 - [x] Statistiques : questions acquises, taux de bonnes réponses, jours de révision d'affilée, réponses des 14 derniers jours
 - [x] Thèmes proposés selon les compétences demandées dans les offres enregistrées ; pour un thème importé, compétences cherchées dans le texte des offres (deux au moins par offre)
-- [x] Thèmes rangés par domaine (Informatique, Réseau et sécurité, Industrie) et sous-domaine, avec un filtre par domaine ; un pack peut imposer le domaine de ses thèmes
+- [x] Thèmes rangés par domaine (Informatique, Réseau et sécurité, Industrie) et sous-domaine, avec des pastilles de filtre par domaine puis sous-domaine ; un pack peut imposer le domaine de ses thèmes
+- [x] Répétition espacée (méthode Leitner) : une question revient après 1, 3, 7, 21 puis 60 jours selon les réponses ; questions à revoir aujourd'hui signalées par thème
+- [x] Mode examen : 20 questions tirées au hasard dans un domaine, notées et chronométrées, thèmes à revoir en fin d'examen ; repris sur le bureau ou le web
 - [x] Informations publiques sur l'entreprise : activité, taille, siège, chiffre d'affaires (API Recherche d'entreprises de l'État)
 - [x] Demandes prêtes pour ChatGPT depuis la fiche d'une offre : questions du recruteur, simulation d'entretien (une question à la fois, réponse notée), CV et lettre adaptés, connaissance de l'entreprise. Copiées puis collées avec son propre compte : l'API d'OpenAI, payante, n'est pas utilisée
 
@@ -408,6 +410,7 @@ scraper-data-python/
 │   ├── quiz.py                                # Révision : questions, progression, thèmes conseillés
 │   ├── quiz_import.py                         # Import et export de questions et de packs
 │   ├── quiz_domains.py                        # Classement des thèmes par domaine et sous-domaine
+│   ├── quiz_exam.py                           # Mode examen : tirage, réponses et résultat
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
@@ -567,6 +570,7 @@ scraper-data-python/
 │   │   ├── login.html                         # Connexion au tableau de bord
 │   │   ├── license.html                       # Texte de la licence
 │   │   ├── guide.html                         # Guide pratique de révision
+│   │   ├── quiz_exam.html                     # Examen de révision, une question à la fois
 │   │   └── error.html                         # Page d'erreur
 │   └── static/                                # Fichiers statiques
 │       ├── style.css                          # Feuille de style, thèmes clair et sombre
@@ -649,6 +653,7 @@ scraper-data-python/
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_quiz_import.py                # Teste l'import des packs, schémas et guides
 │   │   ├── test_quiz_domains.py               # Teste les domaines et le compte des offres par thème
+│   │   ├── test_quiz_exam.py                  # Teste le mode examen
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage

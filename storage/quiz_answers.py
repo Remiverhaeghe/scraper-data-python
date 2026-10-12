@@ -67,3 +67,22 @@ def get_last_answers(pDatabaseFile):
     rAnswers = {vQuestionId: bool(vCorrect) for vQuestionId, vCorrect in vRows}
 
     return rAnswers
+
+
+def get_answer_history(pDatabaseFile):
+    """Retourne toutes les réponses, dans l'ordre : (question, juste, date)."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rHistory = [
+            (vQuestionId, bool(vCorrect), vAnsweredAt)
+            for vQuestionId, vCorrect, vAnsweredAt in vConnection.execute(
+                "SELECT question_id, correct, answered_at FROM quiz_answer ORDER BY id"
+            )
+        ]
+
+    finally:
+        vConnection.close()
+
+    return rHistory

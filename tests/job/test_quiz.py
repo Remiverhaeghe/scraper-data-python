@@ -13,18 +13,21 @@ from job.quiz import (
     answer_question,
     build_quiz_overview,
     build_quiz_statistics,
+    build_review_schedule,
     count_streak,
+    describe_no_question,
     flag_question,
+    get_next_review,
     load_active_quiz,
     load_quiz,
     pick_question,
 )
 from job.quiz_import import (
     build_generation_prompt,
-    split_levels,
     describe_quiz_import,
     import_questions,
     import_questions_file,
+    split_levels,
 )
 from storage.database import initialize_database
 from storage.job_offers import save_offers
@@ -421,3 +424,92 @@ def test_split_levels():
     ]
     assert sum(vCount for _, vCount in split_levels("tous", 50)) == 50
     assert split_levels("expert", 20) == [("expert", 20)]
+
+
+def test_review_schedule_moves_questions_between_boxes():
+    """Vérifie Leitner : une bonne réponse monte d'une boîte, une erreur renvoie à 1."""
+
+    vSchedule = build_review_schedule(
+        [
+            ("q-1", True, "2026-10-01T10:00:00"),
+            ("q-1", True, "2026-10-02T10:00:00"),
+            ("q-2", True, "2026-10-01T10:00:00"),
+            ("q-2", False, "2026-10-05T10:00:00"),
+        ]
+        + [("q-3", True, f"2026-10-0{vDay}T10:00:00") for vDay in range(1, 8)]
+    )
+
+    assert vSchedule["q-1"] == {"box": 2, "due": date(2026, 10, 5)}
+    assert vSchedule["q-2"] == {"box": 1, "due": date(2026, 10, 6)}
+    assert vSchedule["q-3"]["box"] == 5
+    assert vSchedule["q-3"]["due"] == date(2026, 10, 7) + timedelta(days=60)
+
+
+def test_spaced_mode_offers_due_then_new_questions():
+    """Vérifie le tirage : questions dues d'abord, puis nouvelles, puis rien."""
+
+    vQuiz = {
+        "t": {
+            "key": "t",
+            "label": "T",
+            "questions": [
+                {"id": vId, "choices": ["a", "b"], "answer": 0}
+                for vId in ("due", "later", "new")
+            ],
+        }
+    }
+    vToday = date(2026, 10, 12)
+    vSchedule = {
+        "due": {"box": 1, "due": vToday},
+        "later": {"box": 3, "due": vToday + timedelta(days=7)},
+    }
+
+    vFirst = pick_question(vQuiz, "t", "spaced", {}, pSchedule=vSchedule, pToday=vToday)
+
+    assert vFirst["id"] == "due"
+
+    vSchedule["due"]["due"] = vToday + timedelta(days=1)
+    vSecond = pick_question(
+        vQuiz, "t", "spaced", {}, pSchedule=vSchedule, pToday=vToday
+    )
+
+    assert vSecond["id"] == "new"
+
+    vSchedule["new"] = {"box": 1, "due": vToday + timedelta(days=1)}
+
+    assert (
+        pick_question(vQuiz, "t", "spaced", {}, pSchedule=vSchedule, pToday=vToday)
+        is None
+    )
+    assert get_next_review(vQuiz, "t", vSchedule) == vToday + timedelta(days=1)
+
+
+@pytest.mark.parametrize(
+    "pMode, pNext, pText",
+    [
+        ("review", None, "Aucune question ratée"),
+        ("spaced", date(2026, 10, 13), "prochaine révision le 13/10/2026"),
+        ("spaced", None, "Aucune question dans ce thème"),
+    ],
+)
+def test_describe_no_question(pMode, pNext, pText):
+    """Vérifie le message affiché quand aucune question n'est proposée."""
+
+    assert pText in describe_no_question(pMode, pNext)
+
+
+def test_overview_counts_questions_due_today(database_file):
+    """Vérifie le nombre de questions à revoir aujourd'hui par thème."""
+
+    vQuiz = load_quiz()
+    answer_question(database_file, vQuiz, "java-optional", 1, NOW)
+
+    vJava = next(
+        vTheme
+        for vTheme in build_quiz_overview(
+            database_file, vQuiz, NOW.date() + timedelta(days=1)
+        )
+        if vTheme["key"] == "java"
+    )
+
+    assert vJava["due"] == 1

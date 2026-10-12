@@ -60,7 +60,7 @@ from job.presentation import (
     build_offer_filters,
     prepare_offer,
 )
-from job.preparation import score_offers
+from job.preparation import MATCH_FILTERS, filter_by_match, score_offers
 from job.profile import load_profile
 from job.settings import load_settings
 from job.sources.registry import SOURCES
@@ -222,6 +222,15 @@ class OffersPage(QWidget):
         self.france_check.setToolTip(
             "Offres dont le pays, donné par la source ou déduit du lieu, est la France"
         )
+        # Écarte les offres éloignées du métier, d'après les compétences du profil
+        self.match_combo = QComboBox()
+        self.match_combo.setToolTip(
+            "Correspondance minimale avec les compétences de la page Profil"
+        )
+
+        for vScore, vLabel in MATCH_FILTERS.items():
+            self.match_combo.addItem(vLabel, vScore)
+
         self.preferred_check = QCheckBox("Entreprises privilégiées")
         self.preferred_check.setToolTip(
             "Seulement les entreprises de la liste des Paramètres"
@@ -233,6 +242,7 @@ class OffersPage(QWidget):
             self.status_combo,
             self.availability_combo,
             self.published_combo,
+            self.match_combo,
         ):
             vCombo.currentIndexChanged.connect(self.refresh)
 
@@ -253,6 +263,7 @@ class OffersPage(QWidget):
         vSearchRow.addWidget(self.search_edit, 1)
         vSearchRow.addWidget(self.source_combo)
         vSearchRow.addWidget(self.status_combo)
+        vSearchRow.addWidget(self.match_combo)
 
         vOptionsRow = QHBoxLayout()
         vOptionsRow.setSpacing(16)
@@ -460,6 +471,7 @@ class OffersPage(QWidget):
             self.multiple_check,
             self.france_check,
             self.preferred_check,
+            self.match_combo,
         )
 
         # Une seule relecture en base plutôt qu'une par filtre modifié
@@ -481,6 +493,7 @@ class OffersPage(QWidget):
         self.multiple_check.setChecked(False)
         self.preferred_check.setChecked(False)
         self.france_check.setChecked(False)
+        self.match_combo.setCurrentIndex(0)
         self.status_combo.setCurrentIndex(
             max(self.status_combo.findData(PRESET_STATUSES.get(pPreset)), 0)
         )
@@ -554,6 +567,7 @@ class OffersPage(QWidget):
 
             mark_preferred_companies(vPrepared, vCompanyRules)
             score_offers(vPrepared, load_profile(self.database_file))
+            vPrepared = filter_by_match(vPrepared, self.match_combo.currentData())
 
             # Les annonces d'une même offre sont regroupées en une seule ligne.
             vPrepared = group_offers(vPrepared, get_decisions(self.database_file))

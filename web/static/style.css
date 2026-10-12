@@ -1226,6 +1226,36 @@ code {
     margin-top: 18px;
 }
 
+/* En-têtes des domaines de révision et badges des sous-domaines */
+.domain-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.domain-header h2,
+.domain-header p {
+    margin: 0;
+}
+
+.domain-icon {
+    display: inline-flex;
+    padding: 8px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.subdomain-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
 /* Pastilles de filtre : domaines de révision */
 .chips {
     display: flex;
