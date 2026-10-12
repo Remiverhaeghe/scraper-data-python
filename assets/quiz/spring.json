@@ -1,0 +1,113 @@
+{
+  "theme": "Spring",
+  "skills": [
+    "Spring",
+    "Spring Boot"
+  ],
+  "questions": [
+    {
+      "id": "spring-injection",
+      "level": "débutant",
+      "question": "Qu'est-ce que l'injection de dépendances ?",
+      "choices": [
+        "Le framework fournit à une classe les objets dont elle a besoin, au lieu qu'elle les crée",
+        "Une faille de sécurité",
+        "L'ajout d'une dépendance Maven",
+        "Un type de test"
+      ],
+      "answer": 0,
+      "explanation": "Une classe reçoit ses dépendances, de préférence par le constructeur : on peut les remplacer par des simulations dans les tests et changer d'implémentation sans la modifier."
+    },
+    {
+      "id": "spring-portee-bean",
+      "level": "confirmé",
+      "question": "Quelle est la portée par défaut d'un bean Spring ?",
+      "choices": [
+        "prototype : une instance par injection",
+        "singleton : une seule instance pour tout le contexte",
+        "request",
+        "session"
+      ],
+      "answer": 1,
+      "explanation": "Un bean singleton est partagé : il ne doit pas garder dans ses attributs d'état propre à un utilisateur ou à une requête."
+    },
+    {
+      "id": "spring-restcontroller",
+      "level": "débutant",
+      "question": "Que fait @RestController ?",
+      "choices": [
+        "Il crée une table",
+        "Il expose des méthodes HTTP dont le retour est converti en JSON",
+        "Il planifie une tâche",
+        "Il sécurise l'application"
+      ],
+      "answer": 1,
+      "explanation": "@RestController réunit @Controller et @ResponseBody. Les méthodes annotées @GetMapping, @PostMapping... répondent aux requêtes ; Jackson convertit les objets renvoyés en JSON."
+    },
+    {
+      "id": "spring-transactional-interne",
+      "level": "confirmé",
+      "question": "Pourquoi @Transactional est-il ignoré quand une méthode de la même classe l'appelle ?",
+      "choices": [
+        "C'est un bug de Spring",
+        "La transaction passe par un proxy : un appel interne ne traverse pas le proxy",
+        "Il faut l'annotation sur la classe",
+        "La méthode doit être statique"
+      ],
+      "answer": 1,
+      "explanation": "Spring enveloppe le bean dans un proxy qui ouvre la transaction. this.methode() appelle l'objet directement, sans proxy. Solution : déplacer la méthode dans un autre bean."
+    },
+    {
+      "id": "spring-jpa-n-plus-1",
+      "level": "confirmé",
+      "question": "Qu'est-ce que le problème N+1 avec JPA ?",
+      "choices": [
+        "Une requête de trop à la fin",
+        "Une requête pour la liste, puis une par élément pour charger une relation",
+        "Un index manquant",
+        "Une transaction imbriquée"
+      ],
+      "answer": 1,
+      "explanation": "Charger 100 commandes puis lire commande.getClient() en chargement paresseux déclenche 100 requêtes. Solutions : JOIN FETCH, @EntityGraph ou une requête dédiée."
+    },
+    {
+      "id": "spring-profils",
+      "level": "débutant",
+      "question": "À quoi servent les profils Spring (dev, prod) ?",
+      "choices": [
+        "À gérer les utilisateurs",
+        "À charger une configuration différente selon l'environnement",
+        "À mesurer les performances",
+        "À créer des branches Git"
+      ],
+      "answer": 1,
+      "explanation": "application-dev.properties et application-prod.properties sont choisis par spring.profiles.active. Les secrets viennent de variables d'environnement, jamais du dépôt."
+    },
+    {
+      "id": "spring-boot-starter",
+      "level": "débutant",
+      "question": "Qu'apporte un « starter » Spring Boot (spring-boot-starter-web) ?",
+      "choices": [
+        "Un serveur de production payant",
+        "Un ensemble cohérent de dépendances et leur configuration automatique",
+        "Un générateur de code",
+        "Une base de données embarquée obligatoire"
+      ],
+      "answer": 1,
+      "explanation": "Un starter regroupe les bibliothèques d'un besoin (web : Spring MVC, Jackson, Tomcat embarqué) en versions compatibles ; l'auto-configuration les règle selon ce qui est présent."
+    },
+    {
+      "id": "spring-validation",
+      "level": "confirmé",
+      "question": "Que fait @Valid sur un paramètre @RequestBody ?",
+      "choices": [
+        "Il chiffre le corps de la requête",
+        "Il déclenche les contraintes (@NotBlank, @Size...) de l'objet et renvoie 400 si elles échouent",
+        "Il vérifie l'authentification",
+        "Il convertit le JSON en XML"
+      ],
+      "answer": 1,
+      "explanation": "Bean Validation contrôle l'entrée avant le code métier. Une erreur produit une MethodArgumentNotValidException, transformée en réponse 400, personnalisable avec @ControllerAdvice."
+    }
+  ]
+}

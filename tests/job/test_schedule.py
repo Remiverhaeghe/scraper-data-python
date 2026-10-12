@@ -9,11 +9,13 @@ from job.schedule import (
     describe_schedule_runs,
     describe_scheduled_search,
     format_interval,
+    format_min_score,
     get_next_run,
     is_schedule_due,
     load_schedule,
     mark_schedule_run,
     request_immediate_run,
+    save_min_score,
     save_notification_email,
     save_schedule_options,
     save_scheduled_search,
@@ -60,6 +62,7 @@ def test_load_schedule_returns_defaults(database_file):
         "search": None,
         "last_run": None,
         "email": None,
+        "min_score": 0,
         "run_requested": None,
     }
 
@@ -243,3 +246,18 @@ def test_immediate_run_request(database_file):
     mark_schedule_run(database_file, NOW)
 
     assert load_schedule(database_file)["run_requested"] is None
+
+
+def test_save_min_score(database_file):
+    """Vérifie l'enregistrement du score minimal et le refus d'un score non proposé."""
+
+    assert save_min_score(database_file, 70) == []
+    assert load_schedule(database_file)["min_score"] == 70
+    assert save_min_score(database_file, 42) == ["Score minimal non proposé."]
+    assert load_schedule(database_file)["min_score"] == 70
+
+    save_setting_values(database_file, {"notification_min_score": "abc"})
+
+    assert load_schedule(database_file)["min_score"] == 0
+    assert format_min_score(0) == "Toutes les nouvelles offres"
+    assert format_min_score(70) == "Offres à 70 % de correspondance ou plus"

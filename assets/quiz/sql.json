@@ -1,6 +1,10 @@
 {
   "theme": "SQL",
-  "skills": ["SQL", "PostgreSQL", "MySQL"],
+  "skills": [
+    "SQL",
+    "PostgreSQL",
+    "MySQL"
+  ],
   "questions": [
     {
       "id": "sql-left-join",
@@ -132,6 +136,59 @@
       ],
       "answer": 1,
       "explanation": "La base refuse une commande dont le client n'existe pas, ou la suppression d'un client encore référencé (selon ON DELETE). C'est l'intégrité référentielle."
+    },
+    {
+      "id": "sql-ordre-evaluation",
+      "level": "débutant",
+      "question": "Dans quel ordre logique une requête est-elle évaluée ?",
+      "choices": [
+        "SELECT, FROM, WHERE, GROUP BY",
+        "FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY",
+        "WHERE, FROM, SELECT, ORDER BY",
+        "FROM, SELECT, WHERE, HAVING"
+      ],
+      "answer": 1,
+      "explanation": "FROM et les jointures d'abord, puis WHERE (lignes), GROUP BY, HAVING (groupes), SELECT et ORDER BY en dernier. C'est pourquoi un alias du SELECT n'est pas utilisable dans WHERE."
+    },
+    {
+      "id": "sql-inner-join",
+      "level": "débutant",
+      "question": "Que renvoie un INNER JOIN ?",
+      "choices": [
+        "Toutes les lignes des deux tables",
+        "Seulement les lignes qui ont une correspondance des deux côtés",
+        "Les lignes de la table de gauche",
+        "Le produit cartésien"
+      ],
+      "answer": 1,
+      "explanation": "INNER JOIN ne garde que les couples qui respectent la condition. LEFT JOIN garde en plus les lignes de gauche sans correspondance, avec des NULL à droite."
+    },
+    {
+      "id": "sql-lecture-non-repetable",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'une lecture non répétable ?",
+      "choices": [
+        "Une requête qui échoue",
+        "Relire une ligne dans la même transaction et obtenir une autre valeur, modifiée entre-temps par une autre transaction",
+        "Une lecture sans index",
+        "Une lecture sur une vue"
+      ],
+      "answer": 1,
+      "explanation": "Les niveaux d'isolation (READ COMMITTED, REPEATABLE READ, SERIALIZABLE) déterminent les anomalies possibles : lecture sale, lecture non répétable, lignes fantômes."
+    },
+    {
+      "id": "sql-fenetre",
+      "level": "confirmé",
+      "question": "À quoi sert ROW_NUMBER() OVER (PARTITION BY ...) ?",
+      "code": "SELECT nom, ROW_NUMBER() OVER (PARTITION BY service ORDER BY salaire DESC)\nFROM employe;",
+      "choices": [
+        "À supprimer les doublons",
+        "À numéroter les lignes dans chaque groupe sans les regrouper",
+        "À créer un index",
+        "À compter les tables"
+      ],
+      "answer": 1,
+      "explanation": "Une fonction de fenêtre calcule sur un ensemble de lignes tout en gardant chaque ligne : classement, cumul, ligne précédente (LAG). Exemple : le meilleur salaire de chaque service."
     }
   ]
 }

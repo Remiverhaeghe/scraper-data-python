@@ -129,6 +129,81 @@ def build_questions(pOffer):
     return rQuestions
 
 
+def build_answers(pProfile, pMatch, pOffer):
+    """Retourne des pistes de réponse aux questions classiques du recruteur."""
+
+    vCompany = pOffer.get("company") or "l'entreprise"
+    vSkills = ", ".join(pMatch["covered"][:LETTER_SKILLS])
+    vExperience = next(
+        (
+            vExperience
+            for vSkill in pMatch["covered"]
+            for vExperience in find_experiences(pProfile, vSkill)
+            if vExperience["achievement"]
+        ),
+        None,
+    )
+    vSalary = pOffer.get("salary_label")
+
+    vPitch = [pProfile["headline"] or "Votre métier et votre niveau en une phrase"]
+
+    if pProfile["experiences"]:
+        vPitch.append(
+            "parcours : "
+            + ", ".join(vItem["title"] for vItem in pProfile["experiences"][:3])
+        )
+
+    if vSkills:
+        vPitch.append(f"compétences utiles ici : {vSkills}")
+
+    rAnswers = [
+        {
+            "question": "Présentez-vous.",
+            "hint": " ; ".join(vPitch)
+            + ". Deux minutes au plus, en finissant par ce qui vous amène à ce poste.",
+        },
+        {
+            "question": f"Pourquoi {vCompany} ?",
+            "hint": f"Citez l'activité de {vCompany} (bouton « Infos entreprise »), "
+            "un élément précis de l'offre qui vous attire, puis le lien avec votre "
+            "parcours. Évitez les réponses valables pour n'importe quelle entreprise.",
+        },
+        {
+            "question": "Parlez-moi d'une réussite.",
+            "hint": (
+                f"Méthode STAR (situation, tâche, action, résultat) à partir de : "
+                f"{vExperience['title']}, {lower_first(vExperience['achievement'])}."
+                if vExperience
+                else "Méthode STAR (situation, tâche, action, résultat) : "
+                "ajoutez une réalisation à vos expériences dans le Profil."
+            ),
+        },
+        {
+            "question": "Quel est votre point faible ?",
+            "hint": (
+                f"{pMatch['missing'][0]} : dites ce que vous avez déjà commencé "
+                "pour progresser (formation, projet personnel) et ce qui vous en "
+                "rapproche."
+                if pMatch["missing"]
+                else "Un vrai point d'amélioration, suivi de ce que vous faites "
+                "pour progresser."
+            ),
+        },
+        {
+            "question": "Quelles sont vos prétentions salariales ?",
+            "hint": (
+                f"L'offre annonce {vSalary} : donnez une fourchette cohérente avec "
+                "ce montant, en brut annuel."
+                if vSalary
+                else "L'offre ne donne pas de salaire : préparez une fourchette en "
+                "brut annuel à partir d'offres comparables de la liste."
+            ),
+        },
+    ]
+
+    return rAnswers
+
+
 def build_interview(pProfile, pMatch, pOffer):
     """Prépare l'entretien : expériences à citer, points à préparer, questions."""
 
@@ -157,6 +232,7 @@ def build_interview(pProfile, pMatch, pOffer):
             "compétence proche déjà pratiquée."
             for vSkill in pMatch["missing"]
         ],
+        "answers": build_answers(pProfile, pMatch, pOffer),
         "questions": build_questions(pOffer),
     }
 

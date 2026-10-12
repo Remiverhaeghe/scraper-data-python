@@ -6,7 +6,9 @@ from datetime import datetime
 from job.application import process_jobs
 from job.application_tracking import get_due_follow_ups
 from job.notification import build_follow_ups_email, build_new_offers_email
-from job.presentation import SCHEDULED_TRIGGER
+from job.preparation import score_offers
+from job.presentation import SCHEDULED_TRIGGER, clean_missing_values
+from job.profile import load_profile
 from job.schedule import (
     FOLLOW_UP_REMINDER_KEY,
     describe_scheduled_search,
@@ -26,22 +28,69 @@ logger = get_logger(__name__)
 POLL_SECONDS = 60
 
 
-def notify_new_offers(pSchedule, pItems):
+def select_alert_offers(pDatabaseFile, pOffers, pMinScore):
+    """Garde les offres au-dessus du score minimal, les mieux notées en premier.
+
+    Sans compétence dans le profil, aucun score n'existe : tout est envoyé.
+    """
+
+    score_offers(pOffers, load_profile(pDatabaseFile))
+
+    rOffers = pOffers
+
+    if pMinScore and rOffers and rOffers[0]["match_score"] is None:
+        logger.warning(
+            "Score minimal des alertes ignoré : aucune compétence dans le profil"
+        )
+
+    elif pMinScore:
+        rOffers = sorted(
+            (vOffer for vOffer in rOffers if vOffer["match_score"] >= pMinScore),
+            key=lambda pOffer: pOffer["match_score"],
+            reverse=True,
+        )
+
+        logger.info(
+            "Alertes : %s offre(s) sur %s atteignent %s %% de correspondance",
+            len(rOffers),
+            len(pOffers),
+            pMinScore,
+        )
+
+    return rOffers
+
+
+def notify_new_offers(pDatabaseFile, pSchedule, pItems):
     """Envoie l'e-mail des nouvelles offres ; retourne True s'il est parti."""
 
     rSent = False
 
-    vNewOffers = pItems[pItems["is_new"].astype(bool)] if not pItems.empty else pItems
+    vNewOffers = (
+        [
+            clean_missing_values(vOffer)
+            for vOffer in pItems[pItems["is_new"].astype(bool)].to_dict("records")
+        ]
+        if not pItems.empty
+        else []
+    )
+    vOffers = (
+        select_alert_offers(pDatabaseFile, vNewOffers, pSchedule["min_score"])
+        if pSchedule["email"] and vNewOffers
+        else []
+    )
 
     if not pSchedule["email"]:
         logger.info("Aucune adresse de notification : pas d'e-mail envoyé")
 
-    elif vNewOffers.empty:
+    elif not vNewOffers:
         logger.info("Aucune nouvelle offre : pas d'e-mail envoyé")
+
+    elif not vOffers:
+        logger.info("Aucune nouvelle offre au-dessus du score minimal : pas d'e-mail")
 
     else:
         vSubject, vText, vHtml = build_new_offers_email(
-            vNewOffers.to_dict("records"),
+            vOffers,
             " · ".join(
                 vPart for vPart in describe_scheduled_search(pSchedule) if vPart
             ),
@@ -121,7 +170,7 @@ def run_due_search(pDatabaseFile, pNow, pCancelEvent=None):
             vConfig, pCancelEvent=pCancelEvent, pTrigger=SCHEDULED_TRIGGER
         )
 
-        notify_new_offers(vSchedule, rResult.items)
+        notify_new_offers(pDatabaseFile, vSchedule, rResult.items)
         notify_follow_ups(pDatabaseFile, vSchedule, pNow)
 
     return rResult

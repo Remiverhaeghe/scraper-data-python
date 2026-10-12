@@ -1,6 +1,10 @@
 {
   "theme": "Bonnes pratiques et API",
-  "skills": ["REST", "Agile", "GraphQL"],
+  "skills": [
+    "REST",
+    "Agile",
+    "GraphQL"
+  ],
   "questions": [
     {
       "id": "practices-srp",
@@ -84,7 +88,12 @@
       "id": "practices-idempotence",
       "level": "confirmé",
       "question": "Quelle méthode HTTP est idempotente : la répéter produit le même état que l'appeler une fois ?",
-      "choices": ["POST", "PUT", "PATCH, toujours", "Aucune"],
+      "choices": [
+        "POST",
+        "PUT",
+        "PATCH, toujours",
+        "Aucune"
+      ],
       "answer": 1,
       "explanation": "PUT remplace la ressource par la représentation envoyée : deux appels identiques donnent le même résultat. POST crée en général une nouvelle ressource à chaque appel. GET et DELETE sont aussi idempotents."
     },
@@ -100,6 +109,58 @@
       ],
       "answer": 1,
       "explanation": "Le serveur ne garde pas de contexte entre deux requêtes : l'authentification accompagne chaque appel (jeton, cookie signé). On peut ainsi répartir les requêtes sur plusieurs serveurs."
+    },
+    {
+      "id": "practices-dry",
+      "level": "débutant",
+      "question": "Que signifie DRY ?",
+      "choices": [
+        "Don't Repeat Yourself : une règle n'est écrite qu'à un endroit",
+        "Debug, Run, Yield",
+        "Ne jamais écrire de tests",
+        "Documenter chaque ligne"
+      ],
+      "answer": 0,
+      "explanation": "Dupliquer une règle oblige à la corriger partout. Attention à ne pas fusionner deux codes qui se ressemblent par hasard mais évolueront différemment."
+    },
+    {
+      "id": "practices-ouvert-ferme",
+      "level": "confirmé",
+      "question": "Que dit le principe ouvert/fermé (le O de SOLID) ?",
+      "choices": [
+        "Une classe doit être publique",
+        "On ajoute un comportement en ajoutant du code, sans modifier le code existant",
+        "Il faut fermer les fichiers ouverts",
+        "Les attributs doivent être privés"
+      ],
+      "answer": 1,
+      "explanation": "Exemple : un registre de sources où l'ajout d'une source passe par un nouveau module, sans toucher au code qui les parcourt."
+    },
+    {
+      "id": "practices-http-404",
+      "level": "débutant",
+      "question": "Quel code HTTP renvoyer quand la ressource demandée n'existe pas ?",
+      "choices": [
+        "200",
+        "301",
+        "404",
+        "500"
+      ],
+      "answer": 2,
+      "explanation": "2xx : succès ; 3xx : redirection ; 4xx : erreur du client (400 requête invalide, 401 non authentifié, 403 interdit, 404 introuvable) ; 5xx : erreur du serveur."
+    },
+    {
+      "id": "practices-revue-code",
+      "level": "débutant",
+      "question": "À quoi sert une revue de code ?",
+      "choices": [
+        "À noter le développeur",
+        "À partager la connaissance et repérer défauts et risques avant la fusion",
+        "À remplacer les tests",
+        "À formater le code"
+      ],
+      "answer": 1,
+      "explanation": "La revue complète les tests : lisibilité, cas oubliés, sécurité, cohérence avec l'architecture. Le formatage, lui, s'automatise (Black, Prettier)."
     }
   ]
 }

@@ -2,6 +2,7 @@
 
 import gui.dialogs as dialogs
 import gui.offer_detail as offer_detail
+import gui.profile_page as profile_page
 from gui.profile_page import ProfilePage
 from job.profile import build_profile, load_profile, save_profile
 from storage.database import initialize_database
@@ -82,6 +83,7 @@ def test_describe_preparation_escapes_and_lists(qt_application):
             "interview": {
                 "strengths": [{"skill": "<Java>", "examples": ["Projet A"]}],
                 "gaps": [],
+                "answers": [{"question": "Pourquoi <Acme> ?", "hint": "Activité"}],
                 "questions": ["Question ?"],
             },
             "letter": "",
@@ -92,3 +94,53 @@ def test_describe_preparation_escapes_and_lists(qt_application):
     assert "<Java>" not in vHtml
     assert "CV backend" in vHtml
     assert "Projet A" in vHtml
+    assert "Pourquoi &lt;Acme&gt; ?" in vHtml
+
+
+def test_cv_import_fills_profile_and_copies_prompt(
+    qt_application, tmp_path, monkeypatch
+):
+    """Vérifie le pré-remplissage depuis un CV et la copie de la demande ChatGPT."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vCv = tmp_path / "cv.txt"
+    vCv.write_text("Rémi Verhaeghe\nDéveloppeur Java\nJava, SQL", encoding="utf-8")
+    vOpened = []
+
+    monkeypatch.setattr(
+        profile_page.QFileDialog, "getOpenFileName", lambda *pArgs: (str(vCv), "")
+    )
+    monkeypatch.setattr(profile_page.QDesktopServices, "openUrl", vOpened.append)
+
+    vPage = ProfilePage(vDatabaseFile)
+    vPage.skills_edit.setText("Kafka")
+    vPage.import_button.click()
+
+    assert vPage.name_edit.text() == "Rémi Verhaeghe"
+    assert vPage.skills_edit.text() == "Kafka, Java, SQL"
+    assert vPage.message_label.text().startswith("CV importé : 2 compétence(s)")
+    assert not vPage.prompt_button.isHidden()
+
+    vPage.prompt_button.click()
+
+    assert "--- Mon CV ---" in profile_page.QApplication.clipboard().text()
+    assert len(vOpened) == 1
+
+
+def test_cv_import_reports_refused_file(qt_application, tmp_path):
+    """Vérifie le message d'un CV refusé ou introuvable."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vPage = ProfilePage(vDatabaseFile)
+    vCv = tmp_path / "cv.odt"
+    vCv.write_bytes(b"x")
+
+    vPage.import_cv(str(vCv))
+
+    assert "formats acceptés" in vPage.message_label.text()
+
+    vPage.import_cv(str(tmp_path / "absent.pdf"))
+
+    assert vPage.message_label.text() == "Le CV n'a pas pu être ouvert."

@@ -29,6 +29,8 @@ def test_quality_page_shows_rates_and_exports(qt_application, tmp_path, monkeypa
     assert vPage.table.rowCount() == 1
     assert vPage.table.item(0, 0).text() == "Remotive"
     assert vPage.table.item(0, 2).text() == "100 %"
+    assert vPage.export_button.text() == "Exporter les offres à vérifier (1)"
+    assert vPage.problems_label.text().startswith("1 offre(s) à vérifier")
 
     monkeypatch.setattr(
         quality_page.QFileDialog,

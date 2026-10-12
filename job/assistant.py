@@ -14,6 +14,7 @@ MAX_DESCRIPTION_LENGTH = 4000
 
 PROMPT_KINDS = {
     "interview": "Questions du recruteur",
+    "simulation": "Simulation d'entretien",
     "cv": "CV et lettre adaptés",
     "company": "Comprendre l'entreprise",
 }
@@ -114,6 +115,19 @@ def build_prompts(pProfile, pOffer, pCompanySummary=None):
             "les présenter honnêtement.\n"
             "4. Trois questions pertinentes à poser à la fin de l'entretien.\n"
             "Réponds en français.\n\n"
+            f"--- Offre ---\n{vOffer}\n\n--- Mon profil ---\n{vProfile}"
+        ),
+        "simulation": (
+            "Simule un entretien d'embauche pour le poste ci-dessous. Tu es le "
+            "recruteur :\n"
+            "1. Pose-moi une seule question à la fois, puis attends ma réponse.\n"
+            "2. Après chaque réponse, note-la sur 5, dis ce qui était bien, ce qui "
+            "manquait, et propose une meilleure formulation tirée de mon profil.\n"
+            "3. Alterne questions techniques sur les compétences de l'offre et "
+            "questions comportementales.\n"
+            "4. Après 8 questions, fais un bilan : points forts, points à "
+            "travailler, et les notions techniques à réviser.\n"
+            "Ne réponds jamais à ma place. Réponds en français.\n\n"
             f"--- Offre ---\n{vOffer}\n\n--- Mon profil ---\n{vProfile}"
         ),
         "cv": (

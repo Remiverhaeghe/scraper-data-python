@@ -1,13 +1,25 @@
 {
   "theme": "JavaScript",
-  "skills": ["JavaScript", "TypeScript", "React", "Angular", "Vue.js", "Node.js"],
+  "skills": [
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Angular",
+    "Vue.js",
+    "Node.js"
+  ],
   "questions": [
     {
       "id": "js-flottants",
       "level": "débutant",
       "question": "Qu'affiche ce code ?",
       "code": "console.log(0.1 + 0.2 === 0.3);",
-      "choices": ["true", "false", "NaN", "Une erreur"],
+      "choices": [
+        "true",
+        "false",
+        "NaN",
+        "Une erreur"
+      ],
       "answer": 1,
       "explanation": "Les nombres sont des flottants binaires : 0.1 + 0.2 vaut 0.30000000000000004. Pour des montants, on calcule en centimes entiers."
     },
@@ -28,7 +40,12 @@
       "id": "js-typeof-null",
       "level": "confirmé",
       "question": "Que vaut typeof null ?",
-      "choices": ["\"null\"", "\"object\"", "\"undefined\"", "\"number\""],
+      "choices": [
+        "\"null\"",
+        "\"object\"",
+        "\"undefined\"",
+        "\"number\""
+      ],
       "answer": 1,
       "explanation": "C'est une erreur historique du langage, conservée pour ne pas casser le web. On teste donc null avec valeur === null."
     },
@@ -37,7 +54,12 @@
       "level": "débutant",
       "question": "Que renvoie cette expression ?",
       "code": "[1, 2, 3].map(n => n * 2)",
-      "choices": ["[2, 4, 6]", "12", "[1, 2, 3]", "undefined"],
+      "choices": [
+        "[2, 4, 6]",
+        "12",
+        "[1, 2, 3]",
+        "undefined"
+      ],
       "answer": 0,
       "explanation": "map crée un nouveau tableau avec le résultat de la fonction pour chaque élément, sans modifier l'original."
     },
@@ -45,7 +67,12 @@
       "id": "js-egalite",
       "level": "débutant",
       "question": "Que vaut \"5\" == 5, puis \"5\" === 5 ?",
-      "choices": ["true puis true", "true puis false", "false puis false", "false puis true"],
+      "choices": [
+        "true puis true",
+        "true puis false",
+        "false puis false",
+        "false puis true"
+      ],
       "answer": 1,
       "explanation": "== convertit les types avant de comparer ; === compare aussi le type. On utilise === par défaut pour éviter les conversions surprenantes."
     },
@@ -67,7 +94,12 @@
       "level": "confirmé",
       "question": "Dans quel ordre s'affichent les lettres ?",
       "code": "console.log(\"A\");\nsetTimeout(() => console.log(\"B\"), 0);\nconsole.log(\"C\");",
-      "choices": ["A B C", "A C B", "B A C", "C A B"],
+      "choices": [
+        "A B C",
+        "A C B",
+        "B A C",
+        "C A B"
+      ],
       "answer": 1,
       "explanation": "setTimeout place la fonction dans la file d'attente : elle ne s'exécute qu'une fois le code en cours terminé, même avec un délai de 0."
     },
@@ -84,6 +116,74 @@
       ],
       "answer": 0,
       "explanation": "const fixe la référence, pas le contenu. Pour un objet réellement figé, on utilise Object.freeze (de façon superficielle)."
+    },
+    {
+      "id": "js-fleche-this",
+      "level": "confirmé",
+      "question": "Quelle différence entre une fonction fléchée et function, pour this ?",
+      "choices": [
+        "Aucune",
+        "La fonction fléchée reprend le this du contexte où elle est écrite",
+        "La fonction fléchée n'accepte pas de paramètres",
+        "function ne peut pas être anonyme"
+      ],
+      "answer": 1,
+      "explanation": "Une fonction fléchée n'a pas son propre this : elle utilise celui de la portée englobante. Pratique dans les callbacks, à éviter pour une méthode d'objet."
+    },
+    {
+      "id": "js-destructuration",
+      "level": "débutant",
+      "question": "Que vaut nom ?",
+      "code": "const { nom } = { nom: \"Alice\", age: 30 };",
+      "choices": [
+        "\"Alice\"",
+        "undefined",
+        "{ nom: \"Alice\" }",
+        "Erreur"
+      ],
+      "answer": 0,
+      "explanation": "La déstructuration extrait des propriétés dans des variables du même nom ; on peut renommer ({ nom: n }) et donner une valeur par défaut ({ age = 18 })."
+    },
+    {
+      "id": "js-spread",
+      "level": "débutant",
+      "question": "Que contient b ?",
+      "code": "const a = [1, 2];\nconst b = [...a, 3];",
+      "choices": [
+        "[1, 2, 3]",
+        "[[1, 2], 3]",
+        "[3]",
+        "Erreur"
+      ],
+      "answer": 0,
+      "explanation": "L'opérateur ... étale les éléments : copie superficielle d'un tableau ou d'un objet ({ ...objet, cle: valeur })."
+    },
+    {
+      "id": "js-optional-chaining",
+      "level": "débutant",
+      "question": "Que vaut ville si client.adresse est undefined ?",
+      "code": "const ville = client.adresse?.ville;",
+      "choices": [
+        "Une erreur TypeError",
+        "undefined",
+        "null",
+        "\"\""
+      ],
+      "answer": 1,
+      "explanation": "?. arrête l'évaluation et renvoie undefined si la valeur à gauche est null ou undefined. ?? donne une valeur par défaut : client.adresse?.ville ?? \"inconnue\"."
+    },
+    {
+      "id": "js-promise-all",
+      "level": "confirmé",
+      "question": "Que fait Promise.all si une des promesses échoue ?",
+      "choices": [
+        "Elle attend les autres et ignore l'erreur",
+        "Elle échoue aussitôt avec cette erreur",
+        "Elle renvoie null",
+        "Elle relance la promesse"
+      ],
+      "answer": 1,
+      "explanation": "Promise.all échoue dès le premier rejet. Promise.allSettled attend toutes les promesses et donne le résultat de chacune, réussie ou non."
     }
   ]
 }

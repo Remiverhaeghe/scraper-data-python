@@ -9,6 +9,7 @@ coverage==7.16.2
 dill==0.4.1
 et_xmlfile==2.0.0
 fastapi==0.143.0
+greenlet==3.5.6
 httpx2==2.13.1
 idna==3.19
 iniconfig==2.3.0
@@ -21,9 +22,12 @@ openpyxl==3.1.5
 packaging==26.3
 pandas==3.0.5
 platformdirs==4.12.4
+playwright==1.62.0
 pluggy==1.6.0
+pyee==13.0.1
 Pygments==2.21.0
 pylint==4.1.2
+pypdf==6.18.0
 PySide6-Essentials==6.12.0
 pytest-cov==7.1.0
 pytest==9.1.1

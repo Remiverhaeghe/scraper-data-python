@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 import scheduler.runner as runner
+from job.profile import build_profile, save_profile
 from job.schedule import (
     load_schedule,
     request_immediate_run,
@@ -101,16 +102,16 @@ def test_run_due_search_waits_for_next_run(database_file, monkeypatch):
     "pEmail, pItems",
     [(None, build_items(True)), ("moi@example.com", build_items(False))],
 )
-def test_notify_new_offers_skips_email(sent_emails, pEmail, pItems):
+def test_notify_new_offers_skips_email(database_file, sent_emails, pEmail, pItems):
     """Vérifie qu'aucun e-mail ne part sans adresse ou sans nouvelle offre."""
 
-    vSchedule = {"email": pEmail, "search": None}
+    vSchedule = {"email": pEmail, "search": None, "min_score": 0}
 
-    assert runner.notify_new_offers(vSchedule, pItems) is False
+    assert runner.notify_new_offers(database_file, vSchedule, pItems) is False
     assert sent_emails == []
 
 
-def test_notify_new_offers_reports_sending_failure(monkeypatch, caplog):
+def test_notify_new_offers_reports_sending_failure(database_file, monkeypatch, caplog):
     """Vérifie qu'un échec d'envoi est journalisé sans interrompre le planificateur."""
 
     def refuse(*pArgs):
@@ -118,9 +119,11 @@ def test_notify_new_offers_reports_sending_failure(monkeypatch, caplog):
 
     monkeypatch.setattr(runner, "send_email", refuse)
 
-    vSchedule = {"email": "moi@example.com", "search": None}
+    vSchedule = {"email": "moi@example.com", "search": None, "min_score": 0}
 
-    assert runner.notify_new_offers(vSchedule, build_items(True)) is False
+    assert (
+        runner.notify_new_offers(database_file, vSchedule, build_items(True)) is False
+    )
     assert "Échec de l'envoi" in caplog.text
 
 
@@ -196,3 +199,58 @@ def test_notify_follow_ups_once_a_day(database_file, sent_emails):
     assert "Acme · relance prévue le 10/10/2026" in sent_emails[0][2]
     assert runner.notify_follow_ups(database_file, vSchedule, NOW) is False
     assert len(sent_emails) == 1
+
+
+def build_scored_items():
+    """Construit trois nouvelles offres plus ou moins proches d'un profil Java."""
+
+    rItems = pd.DataFrame(
+        [
+            {"title": "Développeur Java SQL", "url": "https://example.com/1"},
+            {"title": "Développeur Java PHP", "url": "https://example.com/2"},
+            {"title": "Développeur PHP", "url": "https://example.com/3"},
+        ]
+    ).assign(is_new=True, skills=[["Java", "SQL"], ["Java", "PHP"], ["PHP"]])
+
+    return rItems
+
+
+def test_notify_new_offers_keeps_offers_above_min_score(database_file, sent_emails):
+    """Vérifie que seules les offres assez proches du profil sont envoyées, triées."""
+
+    save_profile(database_file, build_profile("", "", "Java, SQL", "", ""))
+    vSchedule = {"email": "moi@example.com", "search": None, "min_score": 50}
+
+    assert runner.notify_new_offers(database_file, vSchedule, build_scored_items())
+
+    vSubject, vText = sent_emails[0][1], sent_emails[0][2]
+
+    assert "2 nouvelle(s) offre(s)" in vSubject
+    assert vText.index("Java SQL") < vText.index("Java PHP")
+    assert "correspondance 100 %" in vText
+    assert "Développeur PHP" not in vText
+
+
+def test_notify_new_offers_skips_email_below_min_score(
+    database_file, sent_emails, caplog
+):
+    """Vérifie qu'aucun e-mail ne part quand aucune offre n'atteint le score."""
+
+    save_profile(database_file, build_profile("", "", "Python", "", ""))
+    vSchedule = {"email": "moi@example.com", "search": None, "min_score": 90}
+
+    assert not runner.notify_new_offers(database_file, vSchedule, build_scored_items())
+    assert sent_emails == []
+    assert "au-dessus du score minimal" in caplog.text
+
+
+def test_notify_new_offers_ignores_min_score_without_profile(
+    database_file, sent_emails, caplog
+):
+    """Vérifie que tout est envoyé, avec un avertissement, sans profil renseigné."""
+
+    vSchedule = {"email": "moi@example.com", "search": None, "min_score": 70}
+
+    assert runner.notify_new_offers(database_file, vSchedule, build_scored_items())
+    assert "3 nouvelle(s) offre(s)" in sent_emails[0][1]
+    assert "aucune compétence dans le profil" in caplog.text

@@ -101,3 +101,9 @@ def test_parse_salary_ignores_incomplete_label(pLabel):
 
     assert rSalary["salary_min"] is None
     assert rSalary["salary_period"] is None
+
+
+def test_parse_job_uses_update_as_publication():
+    """Vérifie que la date de mise à jour sert de date de publication."""
+
+    assert parse_job(build_job())["published_at"] == "2026-10-09T00:00:00.0000000"

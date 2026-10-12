@@ -33,6 +33,10 @@ jobs:
       - name: Installation des dépendances
         run: pip install -r requirements.txt
 
+      # Navigateur des tests de bout en bout du tableau de bord (tests/e2e)
+      - name: Installation de Chromium pour Playwright
+        run: python -m playwright install --with-deps chromium
+
       - name: Vérification du formatage
         run: black --check .
 

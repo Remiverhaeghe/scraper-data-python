@@ -284,6 +284,9 @@ def test_detail_checks_availability(
     offers_page.detail_panel.check_availability()
 
     assert pText in offers_page.detail_panel.availability_label.text()
+    assert (
+        "font-weight: 600" in offers_page.detail_panel.availability_label.styleSheet()
+    )
     assert get_offer(database_file, "lever", "1")["availability"] == pSaved
 
 
@@ -622,3 +625,40 @@ def test_interview_score_and_france_filter(offers_page, database_file):
     offers_page.france_check.setChecked(True)
 
     assert get_titles(offers_page) == ["Développeur Java"]
+
+
+def test_detail_offers_translation_and_limits_company_info(
+    offers_page, database_file, monkeypatch
+):
+    """Vérifie la traduction d'une annonce étrangère et l'annuaire grisé hors France."""
+
+    save_offers(
+        database_file,
+        pd.DataFrame(
+            [
+                {
+                    "source": "arbeitnow",
+                    "source_id": "de",
+                    "title": "Entwickler",
+                    "company": "GmbH",
+                    "location": "Düsseldorf, Allemagne",
+                    "country": "Allemagne",
+                    "description": "Wir suchen neue Mitarbeiter für unser Team in Düsseldorf",
+                }
+            ]
+        ),
+        datetime.now(),
+    )
+    vOpened = []
+    monkeypatch.setattr(offer_detail.QDesktopServices, "openUrl", vOpened.append)
+
+    offers_page.refresh()
+    offers_page.select_offer(("arbeitnow", "de"))
+    vPanel = offers_page.detail_panel
+
+    assert not vPanel.translate_button.isHidden()
+    assert not vPanel.company_info_button.isEnabled()
+
+    vPanel.translate_button.click()
+
+    assert "translate.google.com" in vOpened[0].toString()

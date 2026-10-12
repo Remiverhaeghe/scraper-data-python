@@ -29,6 +29,12 @@ ECB_SAMPLE = """<Cube time='2026-10-09'>
         ("Paris (75)", None, ("France", "Paris")),
         ("France", None, ("France", None)),
         ("Berlin", None, ("Allemagne", "Berlin")),
+        # Relevés dans la base : code postal allemand, mots parasites
+        ("München (81671)", None, ("Allemagne", "München")),
+        ("Nürnberg", None, ("Allemagne", "Nürnberg")),
+        ("Paris Office", None, ("France", "Paris")),
+        ("Zurich HQ", None, ("Suisse", "Zurich")),
+        ("Remote in Deutschland", None, ("Allemagne", None)),
         ("London, UK", None, ("Royaume-Uni", "London")),
         ("France, Japan, Turkey", None, (None, None)),
         ("Worldwide", None, (None, None)),

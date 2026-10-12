@@ -70,6 +70,15 @@ def test_detect_experience(pText, pExpected):
         ("$22 per hour", (22.0, None, "USD", "hour")),
         ("15,50 €/h", (15.5, None, "EUR", "hour")),
         ("Travail 35 h par semaine", None),
+        # Devises en code et montants à l'anglaise (Hacker News)
+        ("100k-160k GBP + 0.25-0.75% Equity", (100000.0, 160000.0, "GBP", "year")),
+        ("60-100k EUR", (60000.0, 100000.0, "EUR", "year")),
+        ("£80,000-150,000", (80000.0, 150000.0, "GBP", "year")),
+        ("$175,000 - $300,000", (175000.0, 300000.0, "USD", "year")),
+        ("$150,000 USD", (150000.0, None, "USD", "year")),
+        ("$23-$34 USD/hour", (23.0, 34.0, "USD", "hour")),
+        ("$3,500-$5,000 USD/month", (3500.0, 5000.0, "USD", "month")),
+        ("Bac+5 en 2 ans", None),
     ],
 )
 def test_detect_salary(pText, pExpected):

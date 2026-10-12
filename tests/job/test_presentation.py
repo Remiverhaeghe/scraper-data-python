@@ -7,6 +7,9 @@ import pytest
 from job.presentation import (
     FOLLOW_UP_FILTER,
     build_offer_filters,
+    build_translate_url,
+    can_lookup_company,
+    is_french,
     describe_search,
     describe_sources,
     prepare_offer,
@@ -142,3 +145,51 @@ def test_prepare_offer_converts_stored_remote(pStored, pExpected):
     )
 
     assert vOffer["remote"] is pExpected
+
+
+@pytest.mark.parametrize(
+    "pText, pFrench",
+    [
+        ("Nous recherchons un développeur pour rejoindre notre équipe à Lille", True),
+        ("Wir suchen neue Mitarbeiter für unser Team in Düsseldorf", False),
+        ("We are looking for a senior engineer to join the team", False),
+        ("", False),
+    ],
+)
+def test_is_french(pText, pFrench):
+    """Vérifie la détection d'un texte français par ses mots outils."""
+
+    assert is_french(pText) is pFrench
+
+
+def test_build_translate_url_only_for_foreign_text():
+    """Vérifie le lien de traduction, absent pour un texte français ou vide."""
+
+    vUrl = build_translate_url(
+        "Wir suchen neue Mitarbeiter für unser Team " + "x" * 5000
+    )
+
+    assert vUrl.startswith("https://translate.google.com/?sl=auto&tl=fr")
+    assert "Wir%20suchen" in vUrl
+    assert len(vUrl) < 4200
+    assert (
+        build_translate_url("Nous recherchons un développeur pour notre équipe") is None
+    )
+    assert build_translate_url("Wir suchen") is None
+    assert build_translate_url(None) is None
+
+
+@pytest.mark.parametrize(
+    "pOffer, pPossible",
+    [
+        ({"company": "Acme", "country": "France"}, True),
+        ({"company": "Acme", "country": None}, True),
+        ({"company": "Acme", "country": "Allemagne"}, False),
+        ({"company": "Acme", "country": None, "location": "Nürnberg"}, False),
+        ({"company": None, "country": "France"}, False),
+    ],
+)
+def test_can_lookup_company(pOffer, pPossible):
+    """Vérifie que l'annuaire n'est proposé que pour une entreprise française."""
+
+    assert can_lookup_company(pOffer) is pPossible

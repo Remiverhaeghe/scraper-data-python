@@ -1,7 +1,9 @@
 """Mise en forme des offres, commune au tableau de bord web et à l'interface"""
 
 import json
+import re
 from datetime import datetime, timedelta
+from urllib.parse import quote
 
 import pandas as pd
 
@@ -16,7 +18,7 @@ from config import (
 )
 from job.benefits import BENEFIT_LABELS
 from job.contract import CONTRACT_TYPES
-from job.location import FRANCE
+from job.location import FRANCE, detect_location
 from job.sources.registry import SOURCES
 from storage.job_applications import APPLICATION_STATUSES
 
@@ -93,6 +95,28 @@ DEFAULT_AVAILABILITY = "available"
 
 # Résultat de la vérification du lien d'une offre, tel qu'affiché
 AVAILABILITY_LABELS = {"available": "disponible", "expired": "retirée"}
+# Couleur du résultat de la vérification, partagée par le bureau et le web
+AVAILABILITY_TONES = {"available": "success", "expired": "danger", None: "warning"}
+
+AVAILABILITY_HELP = (
+    "Ouvre le lien de l'offre pour savoir si elle est toujours en ligne ; une offre "
+    "retirée est ensuite masquée de la liste"
+)
+
+# Traduction gratuite, sans clé : le texte est passé dans l'adresse, à sa limite.
+TRANSLATE_URL = "https://translate.google.com/?sl=auto&tl=fr&op=translate&text="
+MAX_TRANSLATE_LENGTH = 4000
+
+# Mots outils du français : leur part dans un texte trahit sa langue.
+FRENCH_WORDS = frozenset(
+    "le la les des du un une et est pour dans avec vous nous sur au aux qui que "
+    "en de votre nos vos ce cette être sont par".split()
+)
+WORD_PATTERN = re.compile(r"[a-zàâçéèêëîïôûùüÿœ']+", re.IGNORECASE)
+MIN_FRENCH_RATIO = 0.08
+# Un texte plus court ne permet pas de juger sa langue : pas de traduction proposée.
+MIN_TRANSLATE_WORDS = 8
+
 AVAILABILITY_MESSAGES = {
     "available": "L'offre est toujours en ligne.",
     "expired": "L'offre a été retirée : elle est désormais masquée par défaut.",
@@ -167,7 +191,10 @@ def to_list(pValue):
 
     rValues = []
 
-    if pValue:
+    # Les offres d'une recherche en cours portent déjà des listes.
+    if isinstance(pValue, list):
+        rValues = pValue
+    elif pValue:
         try:
             vValues = json.loads(pValue)
             rValues = vValues if isinstance(vValues, list) else [pValue]
@@ -209,6 +236,44 @@ def clean_missing_values(pOffer):
     }
 
     return rOffer
+
+
+def is_french(pText):
+    """Indique si un texte est probablement rédigé en français."""
+
+    vWords = WORD_PATTERN.findall((pText or "").lower())
+
+    rFrench = bool(vWords) and (
+        sum(vWord in FRENCH_WORDS for vWord in vWords) / len(vWords) >= MIN_FRENCH_RATIO
+    )
+
+    return rFrench
+
+
+def build_translate_url(pText):
+    """Retourne le lien de traduction d'un texte étranger, ou None."""
+
+    vText = (pText or "").strip()
+
+    rUrl = (
+        TRANSLATE_URL + quote(vText[:MAX_TRANSLATE_LENGTH])
+        if len(WORD_PATTERN.findall(vText)) >= MIN_TRANSLATE_WORDS
+        and not is_french(vText)
+        else None
+    )
+
+    return rUrl
+
+
+def can_lookup_company(pOffer):
+    """Indique si l'annuaire public, limité à la France, peut décrire l'entreprise."""
+
+    # Pays absent des offres enregistrées avant sa détection : déduit du lieu.
+    vCountry = pOffer.get("country") or detect_location(pOffer.get("location"))[0]
+
+    rPossible = bool(pOffer.get("company")) and vCountry in (None, FRANCE)
+
+    return rPossible
 
 
 def prepare_offer(pOffer, pNewSince, pNow=None, pExpiryDays=EXPIRY_DAYS):

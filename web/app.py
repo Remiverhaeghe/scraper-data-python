@@ -4,6 +4,7 @@ import hmac
 import io
 import os
 import re
+import tempfile
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from functools import lru_cache
@@ -30,6 +31,7 @@ from fastapi.responses import (
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
+from starlette.background import BackgroundTask
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from config import (
@@ -47,8 +49,23 @@ from job.application_tracking import (
     build_board,
 )
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
-from job.calendar import build_calendar
+from job.calendar import (
+    CALENDAR_SUBSCRIPTION_PATH,
+    build_calendar,
+    build_subscription_url,
+    check_calendar_token,
+    get_calendar_token,
+    renew_calendar_token,
+)
 from job.company_info import lookup_company, summarize_company
+from job.cv_import import (
+    CV_EXTENSIONS,
+    MAX_CV_BYTES,
+    build_cv_prompt,
+    extract_profile,
+    merge_profile_texts,
+    read_cv_text,
+)
 from job.companies import (
     add_company_rule,
     build_company_filter_keys,
@@ -72,7 +89,11 @@ from job.presentation import (
     ADDED_SOURCE_LABELS,
     AVAILABILITY_FILTERS,
     AVAILABILITY_LABELS,
+    AVAILABILITY_HELP,
     AVAILABILITY_MESSAGES,
+    AVAILABILITY_TONES,
+    build_translate_url,
+    can_lookup_company,
     CHART_PALETTE,
     CONTRACT_TONES,
     DEFAULT_AVAILABILITY,
@@ -115,21 +136,38 @@ from job.profile import (
     profile_to_texts,
     save_profile,
 )
-from job.quality import build_quality_export, get_quality_report
+from job.quality import (
+    PROBLEMS_HELP,
+    build_quality_export,
+    describe_problems,
+    get_quality_report,
+)
 from job.quiz import (
     DEFAULT_MODE,
+    GENERATION_COUNTS,
+    IMPORT_EXTENSIONS,
+    QUIZ_LEVELS,
     QUIZ_MODES,
     answer_question,
+    build_generation_prompt,
+    describe_quiz_import,
+    flag_question,
+    import_questions,
+    import_questions_file,
     build_quiz_overview,
-    load_quiz,
+    build_quiz_statistics,
+    load_active_quiz,
     pick_question,
 )
 from job.schedule import (
+    MIN_SCORE_CHOICES,
     describe_schedule_runs,
     describe_scheduled_search,
     format_interval,
+    format_min_score,
     load_schedule,
     request_immediate_run,
+    save_min_score,
 )
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
@@ -146,6 +184,7 @@ from job.statistics import (
     load_statistics,
 )
 from storage.database import initialize_database
+from storage.archive import export_archive, restore_archive
 from storage.maintenance import reset_database
 from storage.history_repository import get_history, get_history_summary
 from storage.job_applications import (
@@ -195,6 +234,9 @@ WEB_DIRECTORY = Path(__file__).parent
 
 ICONS_DIRECTORY = ASSETS_DIRECTORY / "icons"
 
+# Archive de questions de révision envoyée depuis le web
+MAX_QUIZ_UPLOAD_BYTES = 20 * 1024 * 1024
+
 # Au-delà, l'utilisateur affine sa recherche plutôt que de parcourir la liste.
 MAX_DISPLAYED_OFFERS = 300
 
@@ -204,7 +246,8 @@ ICON_NAME_PATTERN = re.compile(r"[a-z][a-z-]*")
 
 # Pages accessibles sans connexion : connexion, informations légales et ressources
 PUBLIC_PATHS = ("/login", "/legal", "/license")
-PUBLIC_PREFIXES = ("/static/", "/assets/")
+# L'abonnement à l'agenda est relu sans session : son jeton secret le protège.
+PUBLIC_PREFIXES = ("/static/", "/assets/", "/calendar/")
 
 # Icône associée à chaque tonalité d'exécution
 TONE_ICONS = {
@@ -465,7 +508,12 @@ async def render_http_error(pRequest, pException):
 # Préparation des graphiques : le serveur calcule les hauteurs, le dessin est
 # entièrement en CSS (pas de bibliothèque JavaScript).
 def build_bar_chart(
-    pLabels, pSeries, pIndependentScales=False, pAxes=(None, None), pEmptyText=""
+    pLabels,
+    pSeries,
+    pIndependentScales=False,
+    pAxes=(None, None),
+    pEmptyText="",
+    pFillWidth=False,
 ):
     """Prépare un histogramme : pSeries contient des (nom, couleur, valeurs).
 
@@ -489,9 +537,18 @@ def build_bar_chart(
             {
                 "name": vName,
                 "color": vColor,
+                # Une couleur par barre quand la série en donne une liste
                 "bars": [
-                    {"value": vValue, "height": max(round(100 * vValue / vMaximum), 2)}
-                    for vValue in vValues
+                    {
+                        "value": vValue,
+                        "height": max(round(100 * vValue / vMaximum), 2),
+                        "color": (
+                            vColor[vIndex]
+                            if isinstance(vColor, (list, tuple))
+                            else vColor
+                        ),
+                    }
+                    for vIndex, vValue in enumerate(vValues)
                 ],
             }
         )
@@ -501,6 +558,17 @@ def build_bar_chart(
         "series": vSeries,
         "x_axis": pAxes[0],
         "y_axis": pAxes[1],
+        "fill": pFillWidth,
+        # Valeur de la ligne haute : une par série avec des échelles indépendantes
+        "scale": (
+            [
+                {"value": max(vValues), "color": vColor}
+                for _, vColor, vValues in pSeries
+                if any(vValues)
+            ]
+            if pIndependentScales
+            else [{"value": vCommonMaximum, "color": None}]
+        ),
         # Sans aucune valeur, le gabarit affiche ce texte à la place des barres.
         "empty_text": (
             pEmptyText
@@ -878,6 +946,10 @@ def show_offer(
             "company_rule": get_company_rule(vPrepared.get("company"), vCompanyRules),
             "active_page": "offers",
             "availability_labels": AVAILABILITY_LABELS,
+            "availability_tones": AVAILABILITY_TONES,
+            "availability_help": AVAILABILITY_HELP,
+            "translate_url": build_translate_url(vPrepared.get("description")),
+            "company_lookup": can_lookup_company(vPrepared),
             "offer": vPrepared,
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
             "preparation": build_preparation(pDatabaseFile, vPrepared),
@@ -992,15 +1064,30 @@ def check_availability(
             pDatabaseFile, pSource, pSourceId, vAvailability, datetime.now()
         )
 
-    rResponse = HTMLResponse(AVAILABILITY_MESSAGES[vAvailability])
+    rResponse = HTMLResponse(
+        f'<strong class="tone-{AVAILABILITY_TONES[vAvailability]}">'
+        f"{AVAILABILITY_MESSAGES[vAvailability]}</strong>"
+    )
 
     return rResponse
 
 
-def render_quiz(pRequest, pDatabaseFile, pTheme=None, pMode=DEFAULT_MODE, pResult=None):
-    """Affiche les thèmes de révision, avec une question ou une correction."""
+def render_quiz(
+    pRequest,
+    pDatabaseFile,
+    pTheme=None,
+    pMode=DEFAULT_MODE,
+    pResult=None,
+    pImport=None,
+    pStatusCode=200,
+):
+    """Affiche les thèmes de révision, avec une question ou une correction.
 
-    vQuiz = load_quiz()
+    pImport porte la saisie, la demande ChatGPT et le message de l'ajout de
+    questions.
+    """
+
+    vQuiz = load_active_quiz(pDatabaseFile)
     vMode = pMode if pMode in QUIZ_MODES else DEFAULT_MODE
     vTheme = pTheme if pTheme in vQuiz else None
     vQuestion = None
@@ -1009,6 +1096,7 @@ def render_quiz(pRequest, pDatabaseFile, pTheme=None, pMode=DEFAULT_MODE, pResul
         vQuestion = pick_question(vQuiz, vTheme, vMode, get_last_answers(pDatabaseFile))
 
     vThemes = build_quiz_overview(pDatabaseFile, vQuiz)
+    vStatistics = build_quiz_statistics(pDatabaseFile, vThemes, datetime.now())
 
     rResponse = templates.TemplateResponse(
         pRequest,
@@ -1022,7 +1110,31 @@ def render_quiz(pRequest, pDatabaseFile, pTheme=None, pMode=DEFAULT_MODE, pResul
             "modes": QUIZ_MODES,
             "question": vQuestion,
             "result": pResult,
+            "import_form": pImport or {},
+            "levels": QUIZ_LEVELS,
+            "generation_counts": GENERATION_COUNTS,
+            "import_extensions": ",".join(IMPORT_EXTENSIONS),
+            "chatgpt_url": CHATGPT_URL,
+            "statistics": vStatistics,
+            "statistics_chart": build_bar_chart(
+                [f"{vDay:%d/%m}" for vDay, _, _ in vStatistics["days"]],
+                [
+                    (
+                        "Réponses",
+                        CHART_PALETTE[0],
+                        [vCount for _, vCount, _ in vStatistics["days"]],
+                    ),
+                    (
+                        "Bonnes réponses",
+                        CHART_PALETTE[1],
+                        [vCorrect for _, _, vCorrect in vStatistics["days"]],
+                    ),
+                ],
+                pAxes=("Jour", "Réponses par jour"),
+                pEmptyText="Aucune réponse ces 14 derniers jours",
+            ),
         },
+        status_code=pStatusCode,
     )
 
     return rResponse
@@ -1056,7 +1168,11 @@ def answer_quiz(
 
     try:
         vResult = answer_question(
-            pDatabaseFile, load_quiz(), pQuestionId, pChoice, datetime.now()
+            pDatabaseFile,
+            load_active_quiz(pDatabaseFile),
+            pQuestionId,
+            pChoice,
+            datetime.now(),
         )
 
     except ValueError as vException:
@@ -1064,6 +1180,106 @@ def answer_quiz(
 
     rResponse = render_quiz(
         request, pDatabaseFile, vResult["theme_key"], pMode, pResult=vResult
+    )
+
+    return rResponse
+
+
+@app.post(
+    "/quiz/prompt", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+def prepare_quiz_prompt(
+    request: Request,
+    pTheme: str = Form("", alias="theme"),
+    pLevel: str = Form(QUIZ_LEVELS[0], alias="level"),
+    pCount: int = Form(GENERATION_COUNTS[0], alias="count"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Prépare la demande de questions à copier dans ChatGPT."""
+
+    vForm = {"theme": pTheme, "level": pLevel, "count": pCount}
+
+    if not pTheme.strip() or pCount not in GENERATION_COUNTS:
+        rResponse = render_quiz(
+            request,
+            pDatabaseFile,
+            pImport={**vForm, "message": "Choisissez un thème et un nombre proposé."},
+            pStatusCode=400,
+        )
+
+    else:
+        rResponse = render_quiz(
+            request,
+            pDatabaseFile,
+            pImport={
+                **vForm,
+                "prompt": build_generation_prompt(
+                    load_active_quiz(pDatabaseFile), pTheme, pLevel, pCount
+                ),
+            },
+        )
+
+    return rResponse
+
+
+@app.post(
+    "/quiz/import", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+def import_quiz_questions(
+    request: Request,
+    pTheme: str = Form("", alias="theme"),
+    pText: str = Form("", alias="text"),
+    pFile: UploadFile | None = File(None, alias="file"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Importe des questions collées ou envoyées en fichier (.json ou .zip)."""
+
+    try:
+        if pFile is not None and pFile.filename:
+            # Un octet de plus que la limite suffit à savoir qu'elle est dépassée.
+            vContent = pFile.file.read(MAX_QUIZ_UPLOAD_BYTES + 1)
+
+            if len(vContent) > MAX_QUIZ_UPLOAD_BYTES:
+                raise ValueError("Fichier trop volumineux.")
+
+            vReport = import_questions_file(
+                pDatabaseFile, pTheme, pFile.filename, vContent, datetime.now()
+            )
+        else:
+            vReport = import_questions(pDatabaseFile, pTheme, pText, datetime.now())
+
+    except ValueError as vException:
+        rResponse = render_quiz(
+            request,
+            pDatabaseFile,
+            pImport={"theme": pTheme, "text": pText, "message": str(vException)},
+            pStatusCode=400,
+        )
+
+    else:
+        rResponse = render_quiz(
+            request,
+            pDatabaseFile,
+            pImport={"theme": pTheme, "message": describe_quiz_import(vReport)},
+        )
+
+    return rResponse
+
+
+@app.post("/quiz/flag", dependencies=[Depends(require_csrf)])
+def flag_quiz_question(
+    pQuestionId: str = Form(alias="question_id"),
+    pTheme: str = Form("", alias="theme"),
+    pMode: str = Form(DEFAULT_MODE, alias="mode"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Retire une question douteuse des tirages, puis propose la suivante."""
+
+    flag_question(pDatabaseFile, pQuestionId)
+
+    rResponse = RedirectResponse(
+        f"{app.url_path_for('show_quiz')}?theme={quote(pTheme)}&mode={quote(pMode)}",
+        status_code=303,
     )
 
     return rResponse
@@ -1330,17 +1546,23 @@ def show_quality(
         {
             "active_page": "quality",
             "report": vReport,
+            "problems_text": describe_problems(vReport["problems"]),
+            "problems_help": PROBLEMS_HELP,
             "chart": build_bar_chart(
                 vReport["columns"],
                 [
                     (
                         "Remplissage",
-                        CHART_PALETTE[0],
+                        [
+                            f"var(--{vRate['tone']})"
+                            for vRate in vReport["total"]["rates"]
+                        ],
                         [vRate["rate"] for vRate in vReport["total"]["rates"]],
                     )
                 ],
                 pAxes=("Champ", "% des offres renseignées"),
                 pEmptyText="Aucune offre en base pour le moment",
+                pFillWidth=True,
             ),
         },
     )
@@ -1487,6 +1709,9 @@ def render_settings(
     pResetMessage=None,
     pCompanies=None,
     pCompaniesMessage=None,
+    pNotificationMessage=None,
+    pCalendarMessage=None,
+    pArchiveMessage=None,
 ):
     """Affiche thème, règles, planification, notifications et sources."""
 
@@ -1517,6 +1742,7 @@ def render_settings(
                 "interval": format_interval(vSchedule["interval_hours"]),
                 "runs": describe_schedule_runs(vSchedule, datetime.now()),
                 "has_email": vSchedule["email"] is not None,
+                "min_score": vSchedule["min_score"],
                 "missing_email_settings": get_missing_email_settings(),
             },
             "settings": load_settings(pDatabaseFile),
@@ -1530,6 +1756,15 @@ def render_settings(
                 for vKind, vNames in load_company_rules(pDatabaseFile).items()
             },
             "companies_message": pCompaniesMessage,
+            "min_scores": {
+                vScore: format_min_score(vScore) for vScore in MIN_SCORE_CHOICES
+            },
+            "notification_message": pNotificationMessage,
+            "calendar_url": build_subscription_url(
+                str(pRequest.base_url), get_calendar_token(pDatabaseFile)
+            ),
+            "calendar_message": pCalendarMessage,
+            "archive_message": pArchiveMessage,
         },
         status_code=pStatusCode,
     )
@@ -1549,13 +1784,20 @@ def build_preparation(pDatabaseFile, pOffer):
     return rPreparation
 
 
-def render_profile(pRequest, pTexts, pMessage=None, pStatusCode=200):
+def render_profile(pRequest, pTexts, pMessage=None, pStatusCode=200, pCvPrompt=None):
     """Affiche le formulaire du profil avec les textes donnés."""
 
     rResponse = templates.TemplateResponse(
         pRequest,
         "profile.html",
-        {"active_page": "profile", "profile": pTexts, "message": pMessage},
+        {
+            "active_page": "profile",
+            "profile": pTexts,
+            "message": pMessage,
+            "cv_prompt": pCvPrompt,
+            "cv_extensions": ",".join(CV_EXTENSIONS),
+            "chatgpt_url": CHATGPT_URL,
+        },
         status_code=pStatusCode,
     )
 
@@ -1606,6 +1848,40 @@ def update_profile(
             f"Profil enregistré : {len(vProfile['skills'])} compétence(s), "
             f"{len(vProfile['experiences'])} expérience(s), "
             f"{len(vProfile['cv_variants'])} CV.",
+        )
+
+    return rResponse
+
+
+@app.post(
+    "/profile/cv", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+def import_cv(
+    request: Request,
+    pFile: UploadFile = File(alias="file"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Pré-remplit le profil depuis un CV envoyé ; rien n'est enregistré."""
+
+    vTexts = profile_to_texts(load_profile(pDatabaseFile))
+
+    try:
+        # Un octet de plus que la limite suffit à savoir qu'elle est dépassée.
+        vText = read_cv_text(pFile.filename, pFile.file.read(MAX_CV_BYTES + 1))
+
+    except ValueError as vException:
+        rResponse = render_profile(request, vTexts, str(vException), 400)
+
+    else:
+        vExtracted = extract_profile(vText)
+
+        rResponse = render_profile(
+            request,
+            merge_profile_texts(vTexts, vExtracted),
+            f"CV importé : {len(vExtracted['skills'])} compétence(s) repérée(s). "
+            "Pour les expériences, copiez la demande pour ChatGPT ci-dessous et "
+            "collez sa réponse dans le formulaire. Vérifiez puis enregistrez.",
+            pCvPrompt=build_cv_prompt(vText),
         )
 
     return rResponse
@@ -1737,6 +2013,142 @@ def update_companies(
             pCompaniesMessage=f"{len(vRules['excluded'])} entreprise(s) exclue(s), "
             f"{len(vRules['preferred'])} privilégiée(s).",
         )
+
+    return rResponse
+
+
+@app.post(
+    "/settings/alerts",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def update_alerts(
+    request: Request,
+    pMinScore: int = Form(alias="min_score"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre le score minimal des offres envoyées par e-mail."""
+
+    vErrors = save_min_score(pDatabaseFile, pMinScore)
+
+    rResponse = render_settings(
+        request,
+        pDatabaseFile,
+        pStatusCode=400 if vErrors else 200,
+        pNotificationMessage=" ".join(vErrors) or "Alertes enregistrées.",
+    )
+
+    return rResponse
+
+
+@app.post(
+    "/settings/calendar",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def renew_calendar(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Crée une nouvelle adresse d'abonnement ; l'ancienne cesse de fonctionner."""
+
+    renew_calendar_token(pDatabaseFile)
+
+    rResponse = render_settings(
+        request,
+        pDatabaseFile,
+        pCalendarMessage="Adresse créée : ajoutez-la dans l'agenda comme agenda "
+        "par URL.",
+    )
+
+    return rResponse
+
+
+@app.get(CALENDAR_SUBSCRIPTION_PATH.replace("{token}", "{pToken}"))
+def subscribe_calendar(
+    pToken: str,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Sert l'agenda aux applications abonnées, sur présentation du jeton."""
+
+    if not check_calendar_token(pDatabaseFile, pToken):
+        # Le jeton reçu n'est pas journalisé : il pourrait être presque juste.
+        logger.warning("Abonnement à l'agenda refusé : jeton invalide")
+
+        raise HTTPException(status_code=404)
+
+    rResponse = Response(
+        build_calendar(pDatabaseFile, datetime.now()),
+        media_type="text/calendar; charset=utf-8",
+    )
+
+    return rResponse
+
+
+@app.get("/settings/archive")
+def download_archive(pDatabaseFile: str = Depends(get_database_file)):
+    """Télécharge la base et les pièces jointes dans une archive .zip."""
+
+    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as vFile:
+        vPath = Path(vFile.name)
+
+    try:
+        export_archive(pDatabaseFile, vPath)
+
+    except Exception:
+        vPath.unlink(missing_ok=True)
+        raise
+
+    # Le fichier temporaire est supprimé une fois envoyé.
+    rResponse = FileResponse(
+        vPath,
+        media_type="application/zip",
+        filename=f"jobboard-{datetime.now():%Y%m%d}.zip",
+        background=BackgroundTask(vPath.unlink, missing_ok=True),
+    )
+
+    return rResponse
+
+
+@app.post(
+    "/settings/archive",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def upload_archive(
+    request: Request,
+    pFile: UploadFile = File(alias="file"),
+    pConfirm: str = Form("", alias="confirm"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Restaure une sauvegarde complète envoyée, après confirmation explicite."""
+
+    if pConfirm != "1":
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            pStatusCode=400,
+            pArchiveMessage="Cochez la case de confirmation pour restaurer.",
+        )
+
+    else:
+        try:
+            vBackupFile = restore_archive(pDatabaseFile, pFile.file, datetime.now())
+
+        except ValueError as vException:
+            logger.warning("Restauration refusée depuis le web : %s", vException)
+
+            rResponse = render_settings(
+                request, pDatabaseFile, pStatusCode=400, pArchiveMessage=str(vException)
+            )
+
+        else:
+            rResponse = render_settings(
+                request,
+                pDatabaseFile,
+                pArchiveMessage=f"Sauvegarde restaurée. Anciennes données : "
+                f"{vBackupFile.name}",
+            )
 
     return rResponse
 

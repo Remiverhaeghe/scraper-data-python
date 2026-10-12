@@ -1,7 +1,7 @@
 """Histogramme et camembert dessinés avec QPainter"""
 
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
 from gui.theme import COLORS
@@ -17,6 +17,10 @@ PIE_TITLE_HEIGHT = 22
 
 # En dessous de cette largeur par groupe de barres, un libellé sur deux est affiché
 MIN_LABEL_WIDTH = 40
+
+# Largeur maximale d'un jour : avec peu de jours, les barres restent à gauche
+# au lieu de s'étaler sur toute la largeur.
+MAX_SLOT_WIDTH = 56
 
 
 def scale_font(pFont, pFactor):
@@ -80,6 +84,7 @@ class BarChart(QWidget):
         self.independent_scales = False
         self.axes = (None, None)
         self.empty_text = ""
+        self.fill_width = False
         self.setMinimumHeight(170)
 
     def set_series(
@@ -89,19 +94,23 @@ class BarChart(QWidget):
         pIndependentScales=False,
         pAxes=(None, None),
         pEmptyText="",
+        pFillWidth=False,
     ):
         """Remplace les données : pSeries contient des (nom, couleur, valeurs).
 
         Avec pIndependentScales, chaque série a sa propre échelle : une série de
         faibles valeurs reste visible à côté d'une série de valeurs élevées.
         pAxes donne les libellés des axes horizontal et vertical ; pEmptyText
-        remplace le graphique lorsque toutes les valeurs sont nulles.
+        remplace le graphique lorsque toutes les valeurs sont nulles. La couleur
+        peut être une liste, une par barre ; pFillWidth répartit les barres sur
+        toute la largeur, pour des catégories plutôt que des jours.
         """
         self.labels = pLabels
         self.series = pSeries
         self.independent_scales = pIndependentScales
         self.axes = pAxes
         self.empty_text = pEmptyText
+        self.fill_width = pFillWidth
         self.update()
 
     def is_empty(self):
@@ -121,6 +130,23 @@ class BarChart(QWidget):
         rMaximum = max(vValues, default=0) or 1
 
         return rMaximum
+
+    def get_scale(self):
+        """Retourne la valeur de la ligne haute du graphique et sa couleur, par échelle.
+
+        Avec des échelles indépendantes, chaque série non vide a la sienne.
+        """
+        rScale = (
+            [
+                (max(vValues), vColor)
+                for _, vColor, vValues in self.series
+                if any(vValues)
+            ]
+            if self.independent_scales
+            else [(self.get_maximum([]), COLORS["muted"])]
+        )
+
+        return rScale
 
     def paintEvent(self, _pEvent):
         """Dessine les barres groupées par libellé, puis la légende en dessous.
@@ -152,6 +178,19 @@ class BarChart(QWidget):
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                 vYAxisLabel,
             )
+
+            # Valeur de la ligne haute, à droite du libellé de l'axe
+            vLeft = vPainter.fontMetrics().horizontalAdvance(vYAxisLabel + "   ")
+
+            for vValue, vColor in self.get_scale():
+                vText = f"max {vValue}"
+                vPainter.setPen(QColor(vColor))
+                vPainter.drawText(
+                    QRectF(vLeft, 0, vWidth, LABEL_HEIGHT),
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                    vText,
+                )
+                vLeft += vPainter.fontMetrics().horizontalAdvance(vText + "   ")
 
         vHasLegend = len(self.series) > 1
         vLegendItems = [
@@ -186,8 +225,15 @@ class BarChart(QWidget):
         vPainter.setPen(QColor(COLORS["border"]))
         vPainter.drawLine(0, vBaseline, vWidth, vBaseline)
 
+        if vYAxisLabel:
+            vPainter.setPen(QPen(QColor(COLORS["border"]), 1, Qt.PenStyle.DashLine))
+            vPainter.drawLine(0, vTop, vWidth, vTop)
+
         if self.labels:
             vSlot = vWidth / len(self.labels)
+
+            if not self.fill_width:
+                vSlot = min(vSlot, MAX_SLOT_WIDTH)
             vBarWidth = min(vSlot * 0.7 / len(self.series), 22)
             vGroupWidth = vBarWidth * len(self.series)
 
@@ -201,7 +247,10 @@ class BarChart(QWidget):
                     vLeft = vGroupLeft + vSeriesIndex * vBarWidth
 
                     vPainter.setPen(Qt.PenStyle.NoPen)
-                    vPainter.setBrush(QColor(vColor if vValue else COLORS["border"]))
+                    vBarColor = (
+                        vColor[vIndex] if isinstance(vColor, (list, tuple)) else vColor
+                    )
+                    vPainter.setBrush(QColor(vBarColor if vValue else COLORS["border"]))
                     vPainter.drawRoundedRect(
                         QRectF(vLeft + 1, vBaseline - vHeight, vBarWidth - 2, vHeight),
                         3,

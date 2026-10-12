@@ -1,6 +1,12 @@
 """Page du profil du candidat, utilisé pour préparer les candidatures"""
 
+from pathlib import Path
+
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -10,11 +16,20 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.theme import COLORS
 from gui.widgets import (
     create_button,
     create_card,
     create_page_header,
     create_scroll_content,
+)
+from job.assistant import CHATGPT_URL
+from job.cv_import import (
+    CV_EXTENSIONS,
+    build_cv_prompt,
+    extract_profile,
+    merge_profile_texts,
+    read_cv_text,
 )
 from job.profile import build_profile, load_profile, profile_to_texts, save_profile
 from utils.logger import get_logger
@@ -54,6 +69,7 @@ class ProfilePage(QWidget):
         super().__init__()
 
         self.database_file = pDatabaseFile
+        self.cv_prompt = None
 
         self.name_edit = QLineEdit()
         self.name_edit.setPlaceholderText("Nom affiché en signature de la lettre")
@@ -85,6 +101,9 @@ class ProfilePage(QWidget):
         vGrid.addLayout(create_text_field("Variantes de CV", self.cv_edit), 3, 0, 1, 2)
         vGrid.setColumnStretch(0, 1)
         vGrid.setColumnStretch(1, 2)
+        # La hauteur libre va aux expériences : les variantes de CV, limitées en
+        # hauteur, laisseraient sinon un vide au-dessus de leur champ.
+        vGrid.setRowStretch(2, 1)
 
         vSaveButton = create_button("Enregistrer", pObjectName="primaryButton")
         vSaveButton.clicked.connect(self.save)
@@ -93,8 +112,29 @@ class ProfilePage(QWidget):
         self.message_label.setObjectName("cardSubtitle")
         self.message_label.setWordWrap(True)
 
+        self.import_button = create_button(
+            "Importer un CV…", "upload", pIconColor=COLORS["primary"]
+        )
+        self.import_button.setToolTip(
+            "Remplit le nom, la présentation et les compétences depuis un CV "
+            "(" + ", ".join(CV_EXTENSIONS) + ")"
+        )
+        self.import_button.clicked.connect(self.choose_cv)
+
+        # Les expériences se convertissent avec ChatGPT, après l'import du CV.
+        self.prompt_button = create_button(
+            "Copier la demande pour ChatGPT", "copy", pIconColor=COLORS["primary"]
+        )
+        self.prompt_button.setToolTip(
+            "Convertit les expériences du CV au format attendu, à coller ici"
+        )
+        self.prompt_button.clicked.connect(self.copy_cv_prompt)
+        self.prompt_button.hide()
+
         vActions = QHBoxLayout()
         vActions.addWidget(vSaveButton)
+        vActions.addWidget(self.import_button)
+        vActions.addWidget(self.prompt_button)
         vActions.addWidget(self.message_label, 1)
 
         vCard, vCardLayout = create_card(
@@ -134,6 +174,71 @@ class ProfilePage(QWidget):
             self.skills_edit.setText(vTexts["skills"])
             self.experiences_edit.setPlainText(vTexts["experiences"])
             self.cv_edit.setPlainText(vTexts["cv_variants"])
+
+    def get_texts(self):
+        """Retourne les textes saisis dans le formulaire."""
+        rTexts = {
+            "name": self.name_edit.text(),
+            "headline": self.headline_edit.text(),
+            "skills": self.skills_edit.text(),
+            "experiences": self.experiences_edit.toPlainText(),
+            "cv_variants": self.cv_edit.toPlainText(),
+        }
+
+        return rTexts
+
+    def choose_cv(self):
+        """Demande le CV à importer."""
+        vPath, _ = QFileDialog.getOpenFileName(
+            self,
+            "Importer un CV",
+            str(Path.home()),
+            "CV (" + " ".join(f"*{vExtension}" for vExtension in CV_EXTENSIONS) + ")",
+        )
+
+        if vPath:
+            self.import_cv(vPath)
+
+    def import_cv(self, pPath):
+        """Complète le formulaire depuis le CV, sans écraser ce qui est saisi."""
+        try:
+            vText = read_cv_text(pPath, Path(pPath).read_bytes())
+
+        except ValueError as vException:
+            self.message_label.setText(str(vException))
+            return
+
+        except OSError:
+            logger.exception("CV illisible sur le disque")
+
+            self.message_label.setText("Le CV n'a pas pu être ouvert.")
+            return
+
+        vExtracted = extract_profile(vText)
+        vTexts = merge_profile_texts(self.get_texts(), vExtracted)
+
+        self.name_edit.setText(vTexts["name"])
+        self.headline_edit.setText(vTexts["headline"])
+        self.skills_edit.setText(vTexts["skills"])
+
+        self.cv_prompt = build_cv_prompt(vText)
+        self.prompt_button.show()
+
+        self.message_label.setText(
+            f"CV importé : {len(vExtracted['skills'])} compétence(s) repérée(s). "
+            "Pour les expériences, copiez la demande pour ChatGPT et collez sa "
+            "réponse ci-dessus. Vérifiez puis enregistrez."
+        )
+
+    def copy_cv_prompt(self):
+        """Copie la demande de conversion du CV puis ouvre ChatGPT."""
+        QApplication.clipboard().setText(self.cv_prompt)
+        QDesktopServices.openUrl(QUrl(CHATGPT_URL))
+
+        self.message_label.setText(
+            "Demande copiée : collez-la dans ChatGPT (Ctrl+V), puis sa réponse "
+            "dans Expériences et Variantes de CV."
+        )
 
     def save(self):
         """Enregistre le profil saisi."""

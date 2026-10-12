@@ -29,8 +29,9 @@ Le projet sert également de support d'apprentissage afin de construire progress
 - **Langage :** Python 3
 - **Requêtes HTTP :** requests
 - **Nettoyage du HTML des descriptions :** beautifulsoup4
+- **Lecture des CV au format PDF :** pypdf
 - **Analyse et structure des données :** pandas
-- **Tests :** pytest
+- **Tests :** pytest, Playwright (navigateur, tests de bout en bout du web)
 - **Stockage :** SQLite
 - **Interface graphique :** PySide6 (Qt)
 - **Tableau de bord web :** FastAPI, Jinja2, HTMX
@@ -48,6 +49,9 @@ python main.py                    # interface graphique
 python -m cli.main --help         # ligne de commande
 python -m web                     # tableau de bord sur http://127.0.0.1:8000
 python -m scheduler               # recherche planifiée et notifications (--once : une vérification)
+
+python -m playwright install chromium   # une fois, pour les tests de bout en bout du web
+pytest                            # tous les tests ; ceux du navigateur sont ignorés sans Chromium
 ```
 
 ---
@@ -74,7 +78,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -158,11 +162,14 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Thèmes clair et sombre, changement sans scintillement ; page Paramètres (sources)
 - [x] Règles de calcul modifiables (net, impôt, nouveauté, relance), partagées avec le web, net recalculé
 - [x] Graphique d'activité (offres, candidatures, relances) et cartes d'accès direct aux offres filtrées
+- [x] Graphiques : valeur maximale indiquée sur l'axe, barres alignées à gauche quand les jours sont peu nombreux
 - [x] Historique : répartition des offres par source et par contrat, rendement des recherches
 - [x] Recherche planifiée enregistrée depuis la page Recherche, activée et réglée dans les Paramètres
 - [x] Notifications : adresse de destination, état du compte Gmail et e-mail de test
 - [x] Recherches enregistrées : enregistrer, recharger et supprimer des critères nommés
 - [x] Qualité des données : remplissage par champ et par source, export des offres à vérifier
+- [x] Nombre d'offres à vérifier et défauts les plus fréquents, avec l'usage de l'export expliqué
+- [x] Fiche d'une offre : disponibilité en couleur, traduction d'une annonce étrangère (Google Traduction), infos entreprise réservées aux offres en France
 - [x] Journaux : consultation filtrée, téléchargement et remise à zéro
 - [x] Réinitialisation des données après confirmation, base sauvegardée avant
 - [x] Profil du candidat et préparation de candidature : correspondance, CV, entretien, lettre
@@ -175,6 +182,10 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Révision technique par QCM, demandes prêtes pour ChatGPT et infos publiques sur l'entreprise
 - [x] Score de correspondance avec le profil dans la liste des offres, tri par correspondance
 - [x] Date d'entretien et export des relances et entretiens vers un agenda (.ics)
+- [x] Abonnement à l'agenda par une adresse secrète, relue automatiquement, renouvelable
+- [x] Alertes ciblées : score de correspondance minimal des nouvelles offres envoyées par e-mail
+- [x] Sauvegarde complète exportable et restaurable (base et pièces jointes dans un .zip)
+- [x] Pistes de réponse aux questions classiques du recruteur et simulation d'entretien avec ChatGPT
 
 ### 🌐 Tableau de bord web
 
@@ -205,6 +216,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Ajout et import d'offres, page Candidatures, entreprises et pièces jointes, comme sur le bureau
 - [x] Révision par QCM, demandes ChatGPT à copier et infos sur l'entreprise, comme sur le bureau
 - [x] Score et tri par correspondance, filtre France, date d'entretien et export agenda, comme sur le bureau
+- [x] Abonnement à l'agenda, alertes ciblées et sauvegarde complète, comme sur le bureau
 
 ### 🔐 Sécurité
 
@@ -233,6 +245,7 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 - [x] Tests d'intégration : des API simulées jusqu'à la base, au tableau de bord web et à l'export
 - [x] Analyse pylint en CI, configurée pour la convention p, v, r (note minimale 9.8/10)
 - [x] Analyse de sécurité bandit en CI ; chaque exception « nosec » est justifiée dans le code
+- [x] Tests de bout en bout du web dans Chromium (Playwright) : pages sans erreur ni blocage CSP, affichage sur téléphone sans défilement horizontal, filtres HTMX, thème, abonnement à l'agenda
 
 ---
 
@@ -257,14 +270,17 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 
 - [x] Enrichissement à partir de la description : télétravail, compétences, expérience, salaire, contrat
 - [x] Rejet des offres inexploitables (ni titre ni description), compté dans la qualité des données
-- [x] Analyse des offres exportées depuis « Qualité des données » pour ajouter des règles de découpage : milliers avec décimales, taux horaires, titres en plusieurs segments
+- [x] Analyse des offres exportées depuis « Qualité des données » pour ajouter des règles de découpage : milliers avec décimales, taux horaires, titres en plusieurs segments, devises en code (EUR, USD, GBP), montants à l'anglaise (« $175,000 »), salaires mensuels
+- [x] Entreprise des offres Greenhouse, date des offres Jooble et titre des annonces Findwork sans poste renseigné
 
 ### Aide à la candidature, à base de règles et sans service payant
 
 - [x] Profil : compétences, expériences et variantes de CV
+- [x] Import d'un CV (PDF, Word, texte) : nom, présentation et compétences repérés, expériences converties avec une demande prête pour ChatGPT
 - [x] Correspondance avec l'offre : compétences couvertes et manquantes, score
 - [x] CV conseillé selon l'offre
 - [x] Préparation d'entretien : expériences à citer, questions à poser
+- [x] Pistes de réponse aux questions classiques : présentation, pourquoi l'entreprise, réussite (méthode STAR), point faible, prétentions salariales
 - [x] Brouillon de lettre de motivation
 
 ### Utilisation depuis un téléphone
@@ -298,12 +314,16 @@ python -m scheduler               # recherche planifiée et notifications (--onc
 Page Révision du bureau et du web (installable sur le téléphone), sans service payant :
 
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
+- [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
+- [x] Questions supplémentaires générées avec son compte ChatGPT : demande au format attendu, import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
+- [x] Signalement d'une question douteuse, retirée des tirages
 - [x] Explication de la bonne réponse après chaque question, choix mélangés à chaque affichage
 - [x] Questions stockées dans des fichiers JSON versionnés (`assets/quiz/`), faciles à compléter
 - [x] Suivi de la progression : score par thème, questions ratées à revoir
+- [x] Statistiques : questions acquises, taux de bonnes réponses, jours de révision d'affilée, réponses des 14 derniers jours
 - [x] Thèmes proposés selon les compétences demandées dans les offres enregistrées
 - [x] Informations publiques sur l'entreprise : activité, taille, siège, chiffre d'affaires (API Recherche d'entreprises de l'État)
-- [x] Demandes prêtes pour ChatGPT depuis la fiche d'une offre : questions du recruteur, CV et lettre adaptés, connaissance de l'entreprise. Copiées puis collées avec son propre compte : l'API d'OpenAI, payante, n'est pas utilisée
+- [x] Demandes prêtes pour ChatGPT depuis la fiche d'une offre : questions du recruteur, simulation d'entretien (une question à la fois, réponse notée), CV et lettre adaptés, connaissance de l'entreprise. Copiées puis collées avec son propre compte : l'API d'OpenAI, payante, n'est pas utilisée
 
 Format d'une question (un fichier par thème, `skills` reprend les compétences des offres) :
 
@@ -330,6 +350,19 @@ sans exposer ce PC sur Internet, un réseau privé chiffré relie le téléphone
 Aucun port n'est ouvert sur la box : seuls les appareils de votre compte Tailscale
 atteignent le PC. L'authentification du tableau de bord reste obligatoire. Pour lancer une
 recherche depuis le téléphone, le planificateur (`python -m scheduler`) doit tourner sur le PC.
+
+### Abonnement à l'agenda
+
+Paramètres, « Abonnement à l'agenda », « Créer l'adresse » : l'adresse contient un jeton
+secret qui suffit à lire les relances et entretiens, sans session. Elle se renouvelle
+depuis la même carte, ce qui désactive l'ancienne. L'agenda doit pouvoir joindre le PC :
+
+- iPhone : Réglages, Calendrier, Comptes, « Ajouter un calendrier avec abonnement » ;
+- Android : l'application gratuite ICSx⁵ abonne l'agenda du téléphone, visible dans Google Agenda ;
+- PC : Outlook ou Thunderbird, « ajouter un calendrier depuis Internet ».
+
+Google Agenda sur le web ne convient pas : ses serveurs devraient joindre le PC depuis
+Internet, ce que l'accès par Tailscale évite justement.
 
 ---
 
@@ -372,6 +405,7 @@ scraper-data-python/
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
+│   ├── cv_import.py                           # Import d'un CV : lecture et pré-remplissage du profil
 │   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
 │   ├── notification.py                        # Contenu des e-mails de nouvelles offres et de relances
 │   │
@@ -540,11 +574,13 @@ scraper-data-python/
 │   ├── logo.png                               # Logo, icône de fenêtre et favicon
 │   ├── icons/                                 # Icônes SVG Lucide (licence ISC)
 │   └── quiz/                                  # Questions de révision, un fichier JSON par thème
-│       ├── java.json                          # Java et Spring
+│       ├── java.json                          # Java, nouveautés de Java 8 à 21
+│       ├── spring.json                        # Spring et Spring Boot
 │       ├── python.json                        # Python
 │       ├── sql.json                           # SQL
 │       ├── javascript.json                    # JavaScript
 │       ├── git.json                           # Git
+│       ├── docker.json                        # Docker
 │       └── practices.json                     # Bonnes pratiques et API
 │
 ├── utils/                                     # Utilitaires techniques communs
@@ -569,8 +605,10 @@ scraper-data-python/
 │   ├── job_applications.py                    # Suit les candidatures et les relances
 │   ├── settings_repository.py                 # Persiste les réglages modifiables
 │   ├── backup.py                              # Sauvegarde de la base et rotation des copies
+│   ├── archive.py                             # Sauvegarde complète (.zip) : export et restauration contrôlée
 │   ├── attachments.py                         # Pièces jointes des candidatures, rangées à côté de la base
 │   ├── quiz_answers.py                        # Réponses de révision, pour la progression
+│   ├── quiz_questions.py                      # Questions de révision importées
 │   ├── maintenance.py                         # Réinitialisation de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
@@ -603,6 +641,7 @@ scraper-data-python/
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
+│   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
@@ -716,6 +755,7 @@ scraper-data-python/
 │   │   ├── test_history_repository.py          # Teste la persistance de l'historique
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
 │   │   ├── test_maintenance.py                 # Teste les sauvegardes, leur rotation et la réinitialisation
+│   │   ├── test_archive.py                     # Teste la sauvegarde complète et le refus des archives piégées
 │   │   ├── test_saved_searches.py              # Teste les recherches enregistrées
 │   │   ├── test_attachments.py                 # Teste les pièces jointes et leur conservation
 │   │   └── test_job_offers.py                  # Teste l'enregistrement des offres
@@ -724,10 +764,14 @@ scraper-data-python/
 │   │   ├── __init__.py                          # Initialise le package des tests d'intégration
 │   │   └── test_search_to_dashboard.py         # Recherche, base, statistiques, web et export
 │   │
+│   ├── e2e/                                    # Tests du web dans un vrai navigateur (Playwright)
+│   │   ├── __init__.py                          # Initialise le package des tests de bout en bout
+│   │   └── test_web_browser.py                 # Pages, téléphone, HTMX, thème et agenda dans Chromium
+│   │
 │   ├── scheduler/                              # Tests du planificateur
 │   │   ├── __init__.py                          # Initialise le package de tests du planificateur
 │   │   ├── test_main.py                        # Teste le point d'entrée et l'arrêt sur signal
-│   │   └── test_runner.py                      # Teste l'échéance, la recherche et la notification
+│   │   └── test_runner.py                      # Teste l'échéance, la recherche, la notification et le score minimal
 │   │
 │   ├── web/                                    # Tests du tableau de bord
 │   │   ├── __init__.py                          # Initialise le package de tests Web

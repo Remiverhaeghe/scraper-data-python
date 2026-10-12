@@ -1,5 +1,6 @@
 """Configuration commune des tests de l'interface graphique"""
 
+import gc
 import os
 
 import pytest
@@ -17,7 +18,18 @@ def qt_application():
 
     rApplication = QApplication.instance() or QApplication([])
 
-    return rApplication
+    yield rApplication
+
+    # Sous Linux, laisser Python détruire Qt à la sortie de l'interpréteur fait
+    # planter le processus (code 139) après des tests pourtant réussis : les
+    # fenêtres sont détruites ici, puis l'application est arrêtée explicitement.
+    for vWidget in rApplication.topLevelWidgets():
+        vWidget.close()
+        vWidget.deleteLater()
+
+    rApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    gc.collect()
+    rApplication.shutdown()
 
 
 @pytest.fixture(autouse=True)

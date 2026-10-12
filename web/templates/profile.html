@@ -9,6 +9,22 @@
 {{ ui.page_header("Profil", "Vos compétences et expériences, pour préparer chaque candidature", "user") }}
 
 <article class="card">
+    <h2>Importer un CV</h2>
+    <p class="card-subtitle">Remplit le nom, la présentation et les compétences ; une demande prête pour ChatGPT convertit ensuite les expériences au format attendu. Rien n'est enregistré avant votre validation.</p>
+    <form class="inline-form" method="post" action="{{ url_for('import_cv').path }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="file" name="file" accept="{{ cv_extensions }}" required aria-label="CV à importer">
+        <button class="button" type="submit">{{ icon("upload", 16) }} Importer</button>
+    </form>
+    {% if cv_prompt %}
+    <div class="copy-field section-gap" id="cv-prompt">
+        <textarea rows="5" readonly aria-label="Demande pour ChatGPT">{{ cv_prompt }}</textarea>
+        <button class="button button-primary" type="button" data-copy="cv-prompt" data-open="{{ chatgpt_url }}">Copier et ouvrir ChatGPT</button>
+    </div>
+    {% endif %}
+</article>
+
+<article class="card section-gap">
     <h2>Mon profil</h2>
     <p class="card-subtitle">Sert à comparer chaque offre à vos compétences, à conseiller un CV et à préparer l'entretien et la lettre. Il reste dans votre base de données.</p>
     <form class="profile-form" method="post" action="{{ url_for('update_profile').path }}">

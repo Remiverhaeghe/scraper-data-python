@@ -1,10 +1,16 @@
 """Page de révision technique : thèmes, questions à choix multiple et corrections"""
 
 from datetime import datetime
+from pathlib import Path
 
-from PySide6.QtGui import QFontDatabase
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices, QFontDatabase
 from PySide6.QtWidgets import (
+    QApplication,
     QButtonGroup,
+    QComboBox,
+    QFileDialog,
+    QMessageBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -16,21 +22,34 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.chart import BarChart
 from gui.theme import COLORS
 from gui.widgets import (
+    StatisticCard,
     clear_layout,
     create_button,
     create_card,
     create_page_header,
     create_scroll_content,
 )
+from job.assistant import CHATGPT_URL
 from job.quiz import (
+    GENERATION_COUNTS,
+    IMPORT_EXTENSIONS,
+    QUIZ_LEVELS,
     QUIZ_MODES,
     answer_question,
     build_quiz_overview,
-    load_quiz,
+    build_generation_prompt,
+    build_quiz_statistics,
+    describe_quiz_import,
+    flag_question,
+    import_questions,
+    import_questions_file,
+    load_active_quiz,
     pick_question,
 )
+from job.presentation import CHART_PALETTE
 from storage.quiz_answers import get_last_answers
 from utils.logger import get_logger
 
@@ -76,6 +95,8 @@ class QuizPage(QWidget):
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.create_question_card())
         vLayout.addLayout(self.themes_grid)
+        vLayout.addWidget(self.create_import_card())
+        vLayout.addWidget(self.create_statistics_card())
         vLayout.addStretch()
 
     def create_question_card(self):
@@ -116,10 +137,18 @@ class QuizPage(QWidget):
         )
         self.next_button.clicked.connect(lambda: self.start(self.theme_key, self.mode))
 
+        # Une question importée peut être fausse : elle sort des tirages.
+        self.flag_button = create_button(
+            "Question douteuse", "circle-alert", pIconColor=COLORS["warning"]
+        )
+        self.flag_button.setToolTip("Retire cette question des prochains tirages")
+        self.flag_button.clicked.connect(self.flag_current_question)
+
         vButtons = QHBoxLayout()
         vButtons.addWidget(self.validate_button)
         vButtons.addWidget(self.next_button)
         vButtons.addStretch()
+        vButtons.addWidget(self.flag_button)
 
         vLayout.addWidget(self.meta_label)
         vLayout.addWidget(self.question_label)
@@ -131,10 +160,232 @@ class QuizPage(QWidget):
 
         return self.question_card
 
+    def create_import_card(self):
+        """Construit la génération de questions avec ChatGPT et leur import."""
+        self.theme_combo = QComboBox()
+        self.theme_combo.setEditable(True)
+        self.theme_combo.setToolTip("Thème existant ou nouveau, par exemple Kafka")
+
+        self.level_combo = QComboBox()
+
+        for vLevel in QUIZ_LEVELS:
+            self.level_combo.addItem(vLevel.capitalize(), vLevel)
+
+        self.count_combo = QComboBox()
+
+        for vCount in GENERATION_COUNTS:
+            self.count_combo.addItem(f"{vCount} questions", vCount)
+
+        vGenerateButton = create_button(
+            "Générer avec ChatGPT", "bot", "primaryButton", COLORS["on_primary"]
+        )
+        vGenerateButton.setToolTip(
+            "Copie une demande au format attendu et ouvre ChatGPT"
+        )
+        vGenerateButton.clicked.connect(self.copy_generation_prompt)
+
+        vOptions = QHBoxLayout()
+        vOptions.addWidget(self.theme_combo, 2)
+        vOptions.addWidget(self.level_combo, 1)
+        vOptions.addWidget(self.count_combo, 1)
+        vOptions.addWidget(vGenerateButton)
+
+        self.import_edit = QPlainTextEdit()
+        self.import_edit.setPlaceholderText(
+            "Collez ici la réponse de ChatGPT (JSON), puis importez"
+        )
+        self.import_edit.setMaximumHeight(110)
+
+        vPasteButton = create_button(
+            "Importer le texte collé", "download", pIconColor=COLORS["primary"]
+        )
+        vPasteButton.clicked.connect(self.import_pasted_questions)
+
+        vFileButton = create_button(
+            "Importer un fichier…", "upload", pIconColor=COLORS["primary"]
+        )
+        vFileButton.setToolTip("Fichier .json, ou archive .zip de fichiers .json")
+        vFileButton.clicked.connect(self.choose_questions_file)
+
+        self.import_message = QLabel()
+        self.import_message.setObjectName("cardSubtitle")
+        self.import_message.setWordWrap(True)
+
+        vActions = QHBoxLayout()
+        vActions.addWidget(vPasteButton)
+        vActions.addWidget(vFileButton)
+        vActions.addWidget(self.import_message, 1)
+
+        vCard, vLayout = create_card(
+            "Ajouter des questions",
+            "Générées avec votre compte ChatGPT, puis vérifiées une à une à "
+            "l'import : une question incomplète ou en double est écartée.",
+        )
+        vLayout.addLayout(vOptions)
+        vLayout.addWidget(self.import_edit)
+        vLayout.addLayout(vActions)
+
+        return vCard
+
+    def copy_generation_prompt(self):
+        """Copie la demande de questions pour ChatGPT puis ouvre le site."""
+        vTheme = self.theme_combo.currentText().strip()
+
+        if not vTheme:
+            self.import_message.setText("Choisissez ou saisissez un thème.")
+            return
+
+        QApplication.clipboard().setText(
+            build_generation_prompt(
+                load_active_quiz(self.database_file),
+                vTheme,
+                self.level_combo.currentData(),
+                self.count_combo.currentData(),
+            )
+        )
+        QDesktopServices.openUrl(QUrl(CHATGPT_URL))
+
+        self.import_message.setText(
+            "Demande copiée : collez-la dans ChatGPT, puis sa réponse ci-dessus."
+        )
+
+    def import_pasted_questions(self):
+        """Importe les questions collées dans la zone de texte."""
+        self.run_import(
+            lambda: import_questions(
+                self.database_file,
+                self.theme_combo.currentText(),
+                self.import_edit.toPlainText(),
+                datetime.now(),
+            )
+        )
+
+    def choose_questions_file(self):
+        """Demande le fichier de questions à importer."""
+        vPath, _ = QFileDialog.getOpenFileName(
+            self,
+            "Importer des questions",
+            str(Path.home()),
+            "Questions ("
+            + " ".join(f"*{vExtension}" for vExtension in IMPORT_EXTENSIONS)
+            + ")",
+        )
+
+        if vPath:
+            self.run_import(
+                lambda: import_questions_file(
+                    self.database_file,
+                    self.theme_combo.currentText(),
+                    vPath,
+                    Path(vPath).read_bytes(),
+                    datetime.now(),
+                )
+            )
+
+    def run_import(self, pImport):
+        """Lance un import, affiche son bilan et met à jour les thèmes."""
+        try:
+            vReport = pImport()
+
+        except ValueError as vException:
+            self.import_message.setText(str(vException))
+            return
+
+        except Exception:
+            logger.exception("Échec de l'import de questions de révision")
+
+            self.import_message.setText("L'import a échoué. Voir les journaux.")
+            return
+
+        self.import_message.setText(describe_quiz_import(vReport))
+
+        if vReport["added"]:
+            self.import_edit.clear()
+
+        self.refresh()
+
+    def flag_current_question(self):
+        """Retire la question affichée des tirages, après confirmation."""
+        if (
+            QMessageBox.question(
+                self,
+                "Question douteuse",
+                "Cette question ne sera plus proposée. Continuer ?",
+            )
+            != QMessageBox.StandardButton.Yes
+        ):
+            return
+
+        flag_question(self.database_file, self.question["id"])
+
+        self.refresh()
+        self.start(self.theme_key, self.mode)
+
+    def create_statistics_card(self):
+        """Construit les chiffres de la révision et le graphique des derniers jours."""
+        self.statistic_cards = {
+            "acquired": StatisticCard("Questions acquises", "circle-check", "green"),
+            "answers": StatisticCard("Réponses données", "graduation-cap", "blue"),
+            "rate": StatisticCard("Bonnes réponses", "sparkles", "purple"),
+            "streak": StatisticCard("Jours de révision d'affilée", "calendar", "amber"),
+        }
+
+        vCards = QHBoxLayout()
+        vCards.setSpacing(16)
+
+        for vCard in self.statistic_cards.values():
+            vCards.addWidget(vCard, 1)
+
+        self.statistics_chart = BarChart()
+
+        vCard, vLayout = create_card(
+            "Mes statistiques", "Progression globale et réponses des 14 derniers jours"
+        )
+        vLayout.addLayout(vCards)
+        vLayout.addWidget(self.statistics_chart)
+
+        return vCard
+
+    def show_statistics(self, pStatistics):
+        """Affiche les chiffres de la révision et le graphique des derniers jours."""
+        vCards = self.statistic_cards
+
+        vCards["acquired"].set_value(
+            f"{pStatistics['acquired']} / {pStatistics['total']}"
+        )
+        vCards["answers"].set_value(str(pStatistics["answers"]))
+        vCards["rate"].set_value(
+            "-" if pStatistics["rate"] is None else f"{pStatistics['rate']} %"
+        )
+        vCards["streak"].set_value(str(pStatistics["streak"]))
+
+        self.statistics_chart.set_series(
+            [f"{vDay:%d/%m}" for vDay, _, _ in pStatistics["days"]],
+            [
+                (
+                    "Réponses",
+                    CHART_PALETTE[0],
+                    [vCount for _, vCount, _ in pStatistics["days"]],
+                ),
+                (
+                    "Bonnes réponses",
+                    CHART_PALETTE[1],
+                    [vCorrect for _, _, vCorrect in pStatistics["days"]],
+                ),
+            ],
+            pAxes=("Jour", "Réponses par jour"),
+            pEmptyText="Aucune réponse ces 14 derniers jours",
+        )
+
     def refresh(self):
         """Relit la progression et reconstruit les cartes des thèmes."""
         try:
-            vThemes = build_quiz_overview(self.database_file, load_quiz())
+            vThemes = build_quiz_overview(
+                self.database_file, load_active_quiz(self.database_file)
+            )
+            self.show_statistics(
+                build_quiz_statistics(self.database_file, vThemes, datetime.now())
+            )
 
         except Exception:
             logger.exception("Impossible de charger la révision")
@@ -144,6 +395,11 @@ class QuizPage(QWidget):
             return
 
         clear_layout(self.themes_grid)
+
+        vCurrent = self.theme_combo.currentText()
+        self.theme_combo.clear()
+        self.theme_combo.addItems(sorted(vTheme["label"] for vTheme in vThemes))
+        self.theme_combo.setCurrentText(vCurrent)
 
         for vIndex, vTheme in enumerate(vThemes):
             self.themes_grid.addWidget(
@@ -194,7 +450,7 @@ class QuizPage(QWidget):
 
     def start(self, pThemeKey, pMode):
         """Affiche une nouvelle question du thème, ou signale qu'il n'y en a plus."""
-        vQuiz = load_quiz()
+        vQuiz = load_active_quiz(self.database_file)
 
         self.theme_key = pThemeKey
         self.mode = pMode
@@ -217,6 +473,7 @@ class QuizPage(QWidget):
             self.question_label.setText("Aucune question ratée à revoir dans ce thème.")
             self.code_edit.hide()
             self.validate_button.hide()
+            self.flag_button.hide()
             return
 
         self.meta_label.setText(
@@ -227,6 +484,7 @@ class QuizPage(QWidget):
         self.code_edit.setPlainText(self.question.get("code", ""))
         self.code_edit.setVisible(bool(self.question.get("code")))
         self.validate_button.show()
+        self.flag_button.show()
 
         # L'identifiant du bouton est l'indice d'origine du choix, avant mélange.
         for vIndex, vChoice in self.question["shuffled"]:
@@ -244,7 +502,7 @@ class QuizPage(QWidget):
 
         vResult = answer_question(
             self.database_file,
-            load_quiz(),
+            load_active_quiz(self.database_file),
             self.question["id"],
             vChoice,
             datetime.now(),

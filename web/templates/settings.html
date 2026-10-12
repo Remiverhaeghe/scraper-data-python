@@ -60,6 +60,24 @@
             </div>
             <p class="muted">{{ schedule.runs }}</p>
         </article>
+
+        <article class="card">
+            <h2>Abonnement à l'agenda</h2>
+            <p class="card-subtitle">Relances et entretiens relus automatiquement par l'agenda du téléphone ou du PC, sur le réseau local ou par Tailscale</p>
+            {% if calendar_url %}
+            <div class="copy-field" id="calendar-url">
+                <textarea rows="2" readonly aria-label="Adresse d'abonnement">{{ calendar_url }}</textarea>
+                <button class="button" type="button" data-copy="calendar-url" data-copied="Adresse copiée">{{ icon("copy", 16) }} Copier</button>
+            </div>
+            {% else %}
+            <p class="muted">Aucune adresse créée.</p>
+            {% endif %}
+            <form method="post" action="{{ url_for('renew_calendar').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <button class="button" type="submit" title="Une nouvelle adresse désactive l'ancienne">{{ icon("calendar", 16) }} {% if calendar_url %}Renouveler l'adresse{% else %}Créer l'adresse{% endif %}</button>
+            </form>
+            {% if calendar_message %}<p class="application-message" role="status">{{ calendar_message }}</p>{% endif %}
+        </article>
     </div>
 
     <div class="stack">
@@ -82,6 +100,16 @@
                 <strong>Destinataire</strong>
                 <span class="muted">{% if schedule.has_email %}Adresse renseignée{% else %}Aucune adresse : notifications désactivées{% endif %}</span>
             </div>
+            <form class="inline-form" method="post" action="{{ url_for('update_alerts').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <select name="min_score" aria-label="Offres envoyées" title="Seules les nouvelles offres assez proches du profil sont envoyées">
+                    {% for score, label in min_scores.items() %}
+                    <option value="{{ score }}" {% if schedule.min_score == score %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="button button-primary" type="submit">Enregistrer</button>
+            </form>
+            {% if notification_message %}<p class="application-message" role="status">{{ notification_message }}</p>{% endif %}
         </article>
 
         <article class="card">
@@ -123,6 +151,22 @@
                     <button class="button button-primary" type="submit">Enregistrer</button>
                     {% if companies_message %}<p class="application-message" role="status">{{ companies_message }}</p>{% endif %}
                 </div>
+            </form>
+        </article>
+
+        <article class="card">
+            <h2>Sauvegarde complète</h2>
+            <p class="card-subtitle">Base et pièces jointes dans une archive .zip, pour changer de PC sans rien perdre. La restauration sauvegarde d'abord les données actuelles.</p>
+            <a class="button" href="{{ url_for('download_archive').path }}">{{ icon("download", 16) }} Exporter</a>
+            <form class="reset-form" method="post" action="{{ url_for('upload_archive').path }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <input type="file" name="file" accept=".zip" required aria-label="Archive à restaurer">
+                <label class="check">
+                    <input type="checkbox" name="confirm" value="1" required>
+                    Je comprends que les données actuelles seront remplacées
+                </label>
+                <button class="button button-danger" type="submit">{{ icon("upload", 16) }} Restaurer</button>
+                {% if archive_message %}<p class="application-message" role="status">{{ archive_message }}</p>{% endif %}
             </form>
         </article>
 

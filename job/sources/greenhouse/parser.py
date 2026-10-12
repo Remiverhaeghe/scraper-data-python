@@ -6,11 +6,13 @@ from job.csv_schema import JOB_COLUMNS
 from utils.helpers import html_to_text
 
 
-def parse_job(pJob):
+def parse_job(pJob, pBoardName=None):
     """Transforme une offre Greenhouse en dictionnaire Job.
 
     Les données propres à Greenhouse sont converties
-    vers le modèle commun utilisé par les différentes sources.
+    vers le modèle commun utilisé par les différentes sources. pBoardName sert
+    d'entreprise quand l'offre ne la précise pas : un board appartient à une
+    seule entreprise.
     """
 
     vLocation = pJob.get("location") or {}
@@ -19,7 +21,7 @@ def parse_job(pJob):
     vJob = {
         # Identification
         "title": pJob.get("title"),
-        "company": vCompany.get("name"),
+        "company": vCompany.get("name") or pJob.get("company_name") or pBoardName,
         "company_id": None,
         "source": "greenhouse",
         "source_id": (str(pJob.get("id")) if pJob.get("id") is not None else None),
@@ -70,10 +72,10 @@ def parse_job(pJob):
     return rJob
 
 
-def parse_jobs(pJobs):
+def parse_jobs(pJobs, pBoardName=None):
     """Transforme plusieurs offres Greenhouse en DataFrame Job."""
 
-    vJobs = [parse_job(vJob) for vJob in pJobs]
+    vJobs = [parse_job(vJob, pBoardName) for vJob in pJobs]
 
     vDataFrame = pd.DataFrame(vJobs, columns=JOB_COLUMNS)
 

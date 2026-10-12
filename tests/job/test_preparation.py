@@ -149,3 +149,45 @@ def test_prepare_application(profile):
     assert "« Développeur Java » chez Acme" in vLetter
     assert "En tant que développeur backend, j'ai par exemple réduit" in vLetter
     assert vLetter.endswith("Rémi V.")
+
+
+def test_prepare_application_answers_recruiter_questions(profile):
+    """Vérifie les pistes de réponse tirées du profil et de l'offre."""
+
+    vAnswers = {
+        vAnswer["question"]: vAnswer["hint"]
+        for vAnswer in prepare_application(
+            profile,
+            {
+                "title": "Développeur Java",
+                "company": "Acme",
+                "description": "Java, Kafka",
+                "salary_label": "45 000 € par an",
+            },
+        )["interview"]["answers"]
+    }
+
+    assert vAnswers["Présentez-vous."].startswith("Développeur Java depuis 5 ans.")
+    assert "Développeur backend, Tech lead" in vAnswers["Présentez-vous."]
+    assert "Acme" in vAnswers["Pourquoi Acme ?"]
+    assert "réduit de 40 %" in vAnswers["Parlez-moi d'une réussite."]
+    assert vAnswers["Quel est votre point faible ?"].startswith("Kafka :")
+    assert "45 000 € par an" in vAnswers["Quelles sont vos prétentions salariales ?"]
+
+
+def test_recruiter_answers_without_profile_details():
+    """Vérifie les pistes génériques quand le profil et l'offre sont peu remplis."""
+
+    vProfile = build_profile("", "", "Java", "", "")
+
+    vAnswers = [
+        vAnswer["hint"]
+        for vAnswer in prepare_application(vProfile, {"description": "Java"})[
+            "interview"
+        ]["answers"]
+    ]
+
+    assert vAnswers[0].startswith("Votre métier et votre niveau en une phrase")
+    assert "ajoutez une réalisation" in vAnswers[2]
+    assert vAnswers[3].startswith("Un vrai point d'amélioration")
+    assert "ne donne pas de salaire" in vAnswers[4]

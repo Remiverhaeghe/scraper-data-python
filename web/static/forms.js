@@ -8,7 +8,7 @@
         }
     });
 
-    // Copie le texte d'une demande puis ouvre le site indiqué (ChatGPT).
+    // Copie le texte d'un champ, puis ouvre le site indiqué s'il y en a un (ChatGPT).
     // navigator.clipboard n'existe qu'en HTTPS ou en local : par Tailscale en HTTP,
     // la sélection du texte et execCommand prennent le relais.
     document.addEventListener("click", function (pEvent) {
@@ -27,7 +27,7 @@
             document.execCommand("copy");
         }
 
-        vButton.textContent = "Copié : collez dans ChatGPT";
+        vButton.textContent = vButton.dataset.copied || "Copié : collez dans ChatGPT";
 
         if (vButton.dataset.open) {
             window.open(vButton.dataset.open, "_blank", "noopener");

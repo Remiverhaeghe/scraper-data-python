@@ -51,10 +51,12 @@ def test_bar_chart_independent_scales(qt_application):
     )
 
     assert vChart.get_maximum([2]) == 2
+    assert vChart.get_scale() == [(400, "#3B82F6"), (2, "#8B5CF6")]
 
     vChart.set_series(["10/10"], vChart.series)
 
     assert vChart.get_maximum([2]) == 400
+    assert [vValue for vValue, _ in vChart.get_scale()] == [400]
 
 
 @pytest.mark.parametrize(
@@ -105,4 +107,20 @@ def test_bar_chart_empty_state_and_axes(qt_application, pValues, pEmpty):
     )
 
     assert vChart.is_empty() is pEmpty
+    assert not vChart.grab().isNull()
+
+
+def test_bar_chart_accepts_colors_per_bar_and_full_width(qt_application):
+    """Vérifie le dessin avec une couleur par barre sur toute la largeur."""
+
+    vChart = BarChart()
+    vChart.resize(600, 200)
+    vChart.set_series(
+        ["Titre", "Salaire"],
+        [("Remplissage", ["#16A34A", "#DC2626"], [97, 11])],
+        pAxes=("Champ", "%"),
+        pFillWidth=True,
+    )
+
+    assert vChart.fill_width
     assert not vChart.grab().isNull()

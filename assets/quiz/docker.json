@@ -1,0 +1,115 @@
+{
+  "theme": "Docker",
+  "skills": [
+    "Docker",
+    "Kubernetes",
+    "DevOps"
+  ],
+  "questions": [
+    {
+      "id": "docker-image-conteneur",
+      "level": "débutant",
+      "question": "Quelle différence entre une image et un conteneur ?",
+      "choices": [
+        "Aucune",
+        "L'image est le modèle en lecture seule, le conteneur une instance qui tourne",
+        "Le conteneur est stocké sur Docker Hub",
+        "L'image est une machine virtuelle"
+      ],
+      "answer": 1,
+      "explanation": "Une image, construite depuis un Dockerfile, se lance en autant de conteneurs que voulu. Les modifications faites dans un conteneur disparaissent avec lui, sauf dans un volume."
+    },
+    {
+      "id": "docker-volume",
+      "level": "débutant",
+      "question": "Pourquoi utiliser un volume ?",
+      "choices": [
+        "Pour accélérer le réseau",
+        "Pour garder des données au-delà de la vie du conteneur",
+        "Pour réduire la taille de l'image",
+        "Pour exposer un port"
+      ],
+      "answer": 1,
+      "explanation": "Une base de données, des fichiers envoyés ou des journaux vont dans un volume : le conteneur peut être recréé (mise à jour de l'image) sans rien perdre."
+    },
+    {
+      "id": "docker-couches",
+      "level": "confirmé",
+      "question": "Pourquoi installer les dépendances avant de copier le code ?",
+      "code": "COPY requirements.txt .\nRUN pip install -r requirements.txt\nCOPY . .",
+      "choices": [
+        "C'est obligatoire",
+        "Chaque instruction crée une couche en cache : les dépendances ne sont réinstallées que si requirements.txt change",
+        "Pour réduire les droits",
+        "Pour que le code soit en lecture seule"
+      ],
+      "answer": 1,
+      "explanation": "Docker réutilise une couche tant que ses fichiers d'entrée n'ont pas changé. Placer en dernier ce qui change le plus, le code, accélère fortement les reconstructions."
+    },
+    {
+      "id": "docker-utilisateur",
+      "level": "confirmé",
+      "question": "Pourquoi ajouter USER dans un Dockerfile ?",
+      "choices": [
+        "Pour se connecter à Docker Hub",
+        "Pour ne pas exécuter l'application en root dans le conteneur",
+        "Pour créer un compte administrateur",
+        "Pour accélérer le démarrage"
+      ],
+      "answer": 1,
+      "explanation": "Par défaut, le processus tourne en root : une faille de l'application donnerait plus de pouvoir à un attaquant. Un utilisateur dédié limite les dégâts."
+    },
+    {
+      "id": "docker-port",
+      "level": "débutant",
+      "question": "Que fait l'option -p 127.0.0.1:8000:8000 ?",
+      "choices": [
+        "Elle ouvre le port 8000 sur Internet",
+        "Elle publie le port 8000 du conteneur sur celui de la machine, accessible seulement en local",
+        "Elle limite la mémoire",
+        "Elle nomme le conteneur"
+      ],
+      "answer": 1,
+      "explanation": "Sans adresse (-p 8000:8000), le port est publié sur toutes les interfaces de la machine. Préciser 127.0.0.1 le réserve à la machine elle-même."
+    },
+    {
+      "id": "docker-compose",
+      "level": "débutant",
+      "question": "À quoi sert docker compose ?",
+      "choices": [
+        "À compiler une image",
+        "À décrire et lancer ensemble plusieurs conteneurs liés (application, base, planificateur)",
+        "À publier une image",
+        "À remplacer le Dockerfile"
+      ],
+      "answer": 1,
+      "explanation": "compose.yaml décrit services, volumes, réseaux et variables d'environnement ; docker compose up -d lance l'ensemble."
+    },
+    {
+      "id": "docker-dockerignore",
+      "level": "débutant",
+      "question": "À quoi sert le fichier .dockerignore ?",
+      "choices": [
+        "À ignorer des conteneurs",
+        "À exclure des fichiers du contexte de construction de l'image",
+        "À désactiver les journaux",
+        "À ignorer des erreurs de construction"
+      ],
+      "answer": 1,
+      "explanation": "Comme .gitignore : .env, .git, les données ou les environnements virtuels ne sont pas envoyés au moteur Docker. L'image est plus légère et aucun secret n'y est copié par erreur."
+    },
+    {
+      "id": "docker-cmd-entrypoint",
+      "level": "confirmé",
+      "question": "Quelle différence entre CMD et ENTRYPOINT ?",
+      "choices": [
+        "Aucune",
+        "ENTRYPOINT fixe le programme lancé, CMD donne des arguments par défaut qu'on peut remplacer au lancement",
+        "CMD s'exécute à la construction de l'image",
+        "ENTRYPOINT est réservé à Windows"
+      ],
+      "answer": 1,
+      "explanation": "Avec ENTRYPOINT [\"python\", \"-m\", \"scheduler\"], docker run image --option ajoute l'option au programme. CMD seul est entièrement remplacé par la commande donnée à docker run. RUN, lui, s'exécute à la construction."
+    }
+  ]
+}

@@ -4,7 +4,15 @@ from datetime import datetime
 
 import pandas as pd
 
-from job.calendar import build_calendar, escape_text, fold_line
+from job.calendar import (
+    build_calendar,
+    build_subscription_url,
+    check_calendar_token,
+    escape_text,
+    fold_line,
+    get_calendar_token,
+    renew_calendar_token,
+)
 from storage.database import initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import save_offers
@@ -74,3 +82,28 @@ def test_build_calendar_lists_follow_ups_and_interviews(tmp_path):
     assert "DTSTART:20261020T143000\r\nDTEND:20261020T153000" in vText
     assert "SUMMARY:Entretien : Python – Acme" in vText
     assert "Go" not in vText
+
+
+def test_calendar_token_is_created_checked_and_renewed(tmp_path):
+    """Vérifie le jeton d'abonnement : absent, valide, puis remplacé."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+
+    assert get_calendar_token(vDatabaseFile) is None
+    assert not check_calendar_token(vDatabaseFile, "")
+
+    vFirst = renew_calendar_token(vDatabaseFile)
+
+    assert len(vFirst) >= 40
+    assert check_calendar_token(vDatabaseFile, vFirst)
+    assert not check_calendar_token(vDatabaseFile, vFirst[:-1])
+
+    vSecond = renew_calendar_token(vDatabaseFile)
+
+    assert vSecond != vFirst
+    assert not check_calendar_token(vDatabaseFile, vFirst)
+    assert build_subscription_url("http://127.0.0.1:8000/", vSecond) == (
+        f"http://127.0.0.1:8000/calendar/{vSecond}.ics"
+    )
+    assert build_subscription_url("http://127.0.0.1:8000", None) is None

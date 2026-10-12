@@ -508,6 +508,21 @@ def migrate_to_v12(pConnection):
     )
 
 
+def migrate_to_v13(pConnection):
+    """Crée la table des questions de révision importées par l'utilisateur."""
+
+    # Le contenu de la question est gardé en JSON, au format des fichiers livrés.
+    pConnection.execute("""
+        CREATE TABLE quiz_question (
+            question_id TEXT PRIMARY KEY,
+            theme TEXT NOT NULL,
+            theme_label TEXT NOT NULL,
+            content TEXT NOT NULL,
+            added_at TEXT NOT NULL
+        )
+        """)
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -521,6 +536,7 @@ MIGRATIONS = [
     migrate_to_v10,
     migrate_to_v11,
     migrate_to_v12,
+    migrate_to_v13,
 ]
 
 

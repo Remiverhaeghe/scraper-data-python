@@ -87,4 +87,6 @@ def test_build_prompts_uses_offer_profile_and_company():
     assert "CV conseillé pour cette offre : CV Java" in vPrompts["cv"]
     assert "que je n'ai pas indiquées : Kafka" in vPrompts["cv"]
     assert "Informations publiques déjà trouvées : ACME" in vPrompts["company"]
+    assert "une seule question à la fois" in vPrompts["simulation"]
+    assert "Poste : Développeur Java" in vPrompts["simulation"]
     assert describe_offer(vOffer).endswith("x […]")

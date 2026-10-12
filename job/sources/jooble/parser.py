@@ -81,7 +81,8 @@ def parse_job(pJob):
         "metro_distance_km": None,
         # Dates fournies par Jooble
         "date": pJob.get("updated"),
-        "published_at": None,
+        # Jooble ne fournit que la date de mise à jour, à défaut de publication.
+        "published_at": pJob.get("updated"),
         "updated_at": pJob.get("updated"),
         # Dates gérées par notre application
         "scraped_at": None,

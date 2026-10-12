@@ -1,6 +1,10 @@
 {
   "theme": "Java",
-  "skills": ["Java", "Spring", "Kotlin"],
+  "skills": [
+    "Java",
+    "Spring",
+    "Kotlin"
+  ],
   "questions": [
     {
       "id": "java-11-nouveautes",
@@ -34,7 +38,12 @@
       "level": "débutant",
       "question": "Qu'affiche ce code ?",
       "code": "String a = \"java\";\nString b = new String(\"java\");\nSystem.out.println(a == b);",
-      "choices": ["true", "false", "Une erreur de compilation", "java"],
+      "choices": [
+        "true",
+        "false",
+        "Une erreur de compilation",
+        "java"
+      ],
       "answer": 1,
       "explanation": "== compare les références : new String crée un nouvel objet, distinct de la chaîne littérale. Pour comparer le contenu, on utilise a.equals(b), qui vaut true."
     },
@@ -56,7 +65,12 @@
       "level": "débutant",
       "question": "Que renvoie cette expression ?",
       "code": "Optional.ofNullable(null).orElse(\"vide\")",
-      "choices": ["null", "\"vide\"", "Une NullPointerException", "Optional.empty()"],
+      "choices": [
+        "null",
+        "\"vide\"",
+        "Une NullPointerException",
+        "Optional.empty()"
+      ],
       "answer": 1,
       "explanation": "ofNullable(null) crée un Optional vide, et orElse renvoie alors la valeur par défaut. Optional.of(null) lèverait, lui, une NullPointerException."
     },
@@ -65,7 +79,12 @@
       "level": "confirmé",
       "question": "Que contient la liste obtenue ?",
       "code": "List.of(1, 2, 3, 4).stream()\n    .filter(n -> n % 2 == 0)\n    .map(n -> n * 10)\n    .collect(Collectors.toList());",
-      "choices": ["[10, 30]", "[20, 40]", "[10, 20, 30, 40]", "[2, 4]"],
+      "choices": [
+        "[10, 30]",
+        "[20, 40]",
+        "[10, 20, 30, 40]",
+        "[2, 4]"
+      ],
       "answer": 1,
       "explanation": "filter garde les nombres pairs (2 et 4), puis map les multiplie par 10. Les opérations d'un stream ne s'exécutent qu'au moment de l'opération terminale, ici collect."
     },
@@ -121,6 +140,113 @@
       ],
       "answer": 0,
       "explanation": "final porte sur la référence : liste ne peut pas désigner une autre liste, mais l'objet référencé reste modifiable. Pour une liste non modifiable, on utilise List.of ou Collections.unmodifiableList."
+    },
+    {
+      "id": "java-8-lambda",
+      "level": "débutant",
+      "question": "Qu'apporte Java 8 de plus marquant ?",
+      "choices": [
+        "Les lambdas et l'API Stream",
+        "Les génériques",
+        "Le mot-clé var",
+        "Les records"
+      ],
+      "answer": 0,
+      "explanation": "Java 8 (2014, LTS) ajoute les lambdas, les références de méthodes (String::length), l'API Stream, Optional, les méthodes default dans les interfaces et l'API de dates java.time. Les génériques datent de Java 5, var de Java 10, les records de Java 16."
+    },
+    {
+      "id": "java-var",
+      "level": "débutant",
+      "question": "Que fait le mot-clé var (Java 10) ?",
+      "code": "var noms = new ArrayList<String>();",
+      "choices": [
+        "Il rend la variable dynamique, comme en JavaScript",
+        "Il laisse le compilateur déduire le type, qui reste fixe",
+        "Il déclare une constante",
+        "Il crée une variable globale"
+      ],
+      "answer": 1,
+      "explanation": "var ne s'utilise que pour une variable locale initialisée : le type est déduit à la compilation et ne change plus. var x = 1; puis x = \"a\"; ne compile pas."
+    },
+    {
+      "id": "java-17-records",
+      "level": "débutant",
+      "question": "Que génère automatiquement ce record (Java 16, LTS en 17) ?",
+      "code": "record Point(int x, int y) {}",
+      "choices": [
+        "Seulement un constructeur",
+        "Un constructeur, les accesseurs x() et y(), equals, hashCode et toString",
+        "Des setters",
+        "Une interface"
+      ],
+      "answer": 1,
+      "explanation": "Un record est une classe de données immuable : champs private final, constructeur, accesseurs du même nom que les champs (x(), pas getX()), equals, hashCode et toString. Il n'a pas de setter."
+    },
+    {
+      "id": "java-switch-expression",
+      "level": "confirmé",
+      "question": "Que vaut libelle si jour vaut 6 ?",
+      "code": "String libelle = switch (jour) {\n    case 6, 7 -> \"Week-end\";\n    default -> \"Semaine\";\n};",
+      "choices": [
+        "\"Semaine\"",
+        "\"Week-end\"",
+        "Erreur de compilation",
+        "null"
+      ],
+      "answer": 1,
+      "explanation": "Depuis Java 14, switch peut être une expression avec la flèche -> : pas de break, pas de passage au cas suivant, et plusieurs valeurs par cas séparées par des virgules."
+    },
+    {
+      "id": "java-text-block",
+      "level": "débutant",
+      "question": "À quoi servent les triples guillemets (Java 15) ?",
+      "choices": [
+        "À écrire une chaîne sur plusieurs lignes sans \\n ni concaténation",
+        "À commenter un bloc",
+        "À déclarer une chaîne non modifiable",
+        "À échapper les caractères d'une regex"
+      ],
+      "answer": 0,
+      "explanation": "Un bloc de texte (text block) garde les retours à la ligne et retire l'indentation commune : pratique pour du JSON, du SQL ou du HTML dans le code."
+    },
+    {
+      "id": "java-21-virtual-threads",
+      "level": "confirmé",
+      "question": "Qu'apportent les threads virtuels de Java 21 ?",
+      "choices": [
+        "Des threads plus rapides pour le calcul",
+        "Des milliers de tâches bloquantes (attente réseau, base) sans un thread système chacune",
+        "L'exécution sur la carte graphique",
+        "La suppression du ramasse-miettes"
+      ],
+      "answer": 1,
+      "explanation": "Un thread virtuel est géré par la JVM : quand il attend une entrée-sortie, il libère son thread système. On peut en lancer des centaines de milliers (Executors.newVirtualThreadPerTaskExecutor()). Il n'accélère pas le calcul pur."
+    },
+    {
+      "id": "java-stringbuilder",
+      "level": "débutant",
+      "question": "Pourquoi utiliser StringBuilder dans une boucle ?",
+      "choices": [
+        "String est immuable : chaque + crée un nouvel objet",
+        "StringBuilder est thread-safe",
+        "String ne gère pas les accents",
+        "Pour trier les caractères"
+      ],
+      "answer": 0,
+      "explanation": "Concaténer avec + dans une boucle recrée une chaîne à chaque tour. StringBuilder modifie un tampon. StringBuffer est la version synchronisée, plus lente, rarement utile."
+    },
+    {
+      "id": "java-hashmap-ordre",
+      "level": "confirmé",
+      "question": "Dans quel ordre une HashMap renvoie-t-elle ses clés ?",
+      "choices": [
+        "Ordre d'insertion",
+        "Ordre alphabétique",
+        "Aucun ordre garanti",
+        "Ordre inverse d'insertion"
+      ],
+      "answer": 2,
+      "explanation": "HashMap ne garantit aucun ordre. LinkedHashMap garde l'ordre d'insertion, TreeMap trie les clés."
     }
   ]
 }

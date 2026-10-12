@@ -1,6 +1,9 @@
 """Tests du tableau de bord web"""
 
+import io
+import json
 import re
+import zipfile
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -175,6 +178,9 @@ def test_show_offer(client):
     assert "https://www.adzuna.fr/details/new" in vResponse.text
     assert "13e mois" in vResponse.text
     assert "python, django" in vResponse.text
+    # Description française, entreprise sans pays connu : pas de traduction
+    assert "Traduire en français" not in vResponse.text
+    assert "Infos sur l'entreprise (France)</button>" in vResponse.text
 
 
 def test_show_offer_not_found(client):
@@ -426,6 +432,10 @@ def test_build_bar_chart_with_independent_scales():
     )
 
     assert [vBar["height"] for vBar in vChart["series"][1]["bars"]] == [50, 100]
+    assert vChart["scale"] == [
+        {"value": 500, "color": "#3B82F6"},
+        {"value": 2, "color": "#8B5CF6"},
+    ]
 
 
 def test_settings_are_saved_from_the_form(client):
@@ -646,6 +656,7 @@ def test_quality_page_and_export(client):
 
     assert vPage.status_code == 200
     assert "Remplissage global" in vPage.text
+    assert "Aucune offre à vérifier." in vPage.text
     assert "tone-success" in vPage.text
     assert "attachment" in vExport.headers["content-disposition"]
     assert vExport.text.lstrip("﻿").startswith("source;source_id;problems")
@@ -1127,3 +1138,164 @@ def test_interview_date_and_calendar_export(client):
 
     assert vCalendar.headers["content-type"].startswith("text/calendar")
     assert "SUMMARY:Entretien : Analyste Kotlin – Data SA" in vCalendar.text
+
+
+def test_alerts_min_score_is_saved(client, tmp_path):
+    """Vérifie l'enregistrement du score minimal des alertes et le refus d'un autre."""
+
+    vResponse = client.post("/settings/alerts", data={"min_score": "70"})
+
+    assert vResponse.status_code == 200
+    assert "Alertes enregistrées." in vResponse.text
+    assert 'value="70" selected' in vResponse.text
+    assert client.post("/settings/alerts", data={"min_score": "42"}).status_code == (
+        400
+    )
+
+
+def test_calendar_subscription_requires_valid_token(client):
+    """Vérifie la création de l'adresse, sa lecture sans session et le refus du reste."""
+
+    assert "Aucune adresse créée." in client.get("/settings").text
+
+    vPage = client.post("/settings/calendar").text
+    vUrl = re.search(r"http://testserver/calendar/[\w-]+\.ics", vPage).group(0)
+    vPath = vUrl.removeprefix("http://testserver")
+
+    client.cookies.clear()
+
+    vCalendar = client.get(vPath)
+
+    assert vCalendar.status_code == 200
+    assert vCalendar.headers["content-type"].startswith("text/calendar")
+    assert vCalendar.text.startswith("BEGIN:VCALENDAR")
+    assert client.get("/calendar/mauvais-jeton.ics").status_code == 404
+
+
+def test_archive_can_be_downloaded_and_restored(client, tmp_path):
+    """Vérifie l'export de la sauvegarde complète puis sa restauration confirmée."""
+
+    vArchive = client.get("/settings/archive")
+
+    assert vArchive.status_code == 200
+    assert vArchive.headers["content-type"] == "application/zip"
+
+    vFiles = {"file": ("sauvegarde.zip", vArchive.content, "application/zip")}
+
+    vRefused = client.post("/settings/archive", files=vFiles)
+
+    assert vRefused.status_code == 400
+    assert "Cochez la case de confirmation" in vRefused.text
+
+    client.post("/settings/reset", data={"confirm": "1"})
+    vRestored = client.post("/settings/archive", files=vFiles, data={"confirm": "1"})
+
+    assert "Sauvegarde restaurée." in vRestored.text
+    assert "Développeur Java" in client.get("/offers").text
+
+
+def test_archive_restore_reports_invalid_file(client):
+    """Vérifie le message d'une archive refusée, sans rien modifier."""
+
+    vResponse = client.post(
+        "/settings/archive",
+        files={"file": ("faux.zip", b"pas une archive", "application/zip")},
+        data={"confirm": "1"},
+    )
+
+    assert vResponse.status_code == 400
+    assert "ce n&#39;est pas un fichier .zip" in vResponse.text
+    assert "Développeur Java" in client.get("/offers").text
+
+
+def test_profile_cv_import_prefills_without_saving(client):
+    """Vérifie le pré-remplissage depuis un CV envoyé, sans enregistrement."""
+
+    vResponse = client.post(
+        "/profile/cv",
+        files={"file": ("cv.txt", "Rémi Verhaeghe\nJava, SQL".encode(), "text/plain")},
+    )
+
+    assert vResponse.status_code == 200
+    assert 'value="Rémi Verhaeghe"' in vResponse.text
+    assert "--- Mon CV ---" in vResponse.text
+    assert 'value=""' in client.get("/profile").text
+
+    vRefused = client.post(
+        "/profile/cv", files={"file": ("cv.odt", b"x", "application/octet-stream")}
+    )
+
+    assert vRefused.status_code == 400
+    assert "formats acceptés" in vRefused.text
+
+
+def test_build_bar_chart_with_colors_per_bar_and_full_width():
+    """Vérifie une couleur par barre et l'occupation de toute la largeur."""
+
+    vChart = build_bar_chart(
+        ["Titre", "Salaire"],
+        [("Remplissage", ["var(--success)", "var(--danger)"], [97, 11])],
+        pFillWidth=True,
+    )
+
+    assert [vBar["color"] for vBar in vChart["series"][0]["bars"]] == [
+        "var(--success)",
+        "var(--danger)",
+    ]
+    assert vChart["fill"] is True
+
+
+def test_quiz_questions_prompt_import_and_flag(client):
+    """Vérifie la demande ChatGPT, l'import d'une archive et le signalement."""
+
+    vPrompt = client.post(
+        "/quiz/prompt", data={"theme": "Kafka", "level": "confirmé", "count": "20"}
+    )
+
+    assert "Écris 20 questions à choix multiple sur « Kafka »" in vPrompt.text
+    assert (
+        client.post("/quiz/prompt", data={"theme": " ", "count": "20"}).status_code
+        == 400
+    )
+
+    vBuffer = io.BytesIO()
+
+    with zipfile.ZipFile(vBuffer, "w") as vArchive:
+        vArchive.writestr(
+            "kafka.json",
+            json.dumps(
+                [
+                    {
+                        "id": "kafka-topic",
+                        "level": "débutant",
+                        "question": "Qu'est-ce qu'un topic ?",
+                        "choices": ["Un flux de messages", "Une table"],
+                        "answer": 0,
+                        "explanation": "Un topic regroupe des messages.",
+                    }
+                ]
+            ),
+        )
+
+    vImport = client.post(
+        "/quiz/import",
+        data={"theme": "Kafka"},
+        files={"file": ("questions.zip", vBuffer.getvalue(), "application/zip")},
+    )
+
+    assert "1 question(s) ajoutée(s) : Kafka." in vImport.text
+    assert "?theme=kafka&mode=discover" in vImport.text
+
+    vRefused = client.post("/quiz/import", data={"theme": "Kafka", "text": "rien"})
+
+    assert vRefused.status_code == 400
+    assert "Aucune question" in vRefused.text
+
+    vFlag = client.post(
+        "/quiz/flag",
+        data={"question_id": "kafka-topic", "theme": "kafka", "mode": "discover"},
+        follow_redirects=False,
+    )
+
+    assert vFlag.status_code == 303
+    assert 'value="kafka-topic"' not in client.get(vFlag.headers["location"]).text

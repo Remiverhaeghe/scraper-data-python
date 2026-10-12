@@ -294,12 +294,149 @@ def test_scheduled_search_can_be_removed(qt_application, tmp_path, monkeypatch):
     vPage.refresh()
 
     vPage.schedule_check.setChecked(True)
-    vCombo = vPage.schedule_search_combo
-    vCombo.setCurrentIndex(vCombo.count() - 1)
     vPage.save_schedule()
+
+    assert not vPage.remove_schedule_button.isHidden()
+
+    monkeypatch.setattr(
+        settings_page.QMessageBox,
+        "question",
+        lambda *pArgs: settings_page.QMessageBox.StandardButton.Yes,
+    )
+    vPage.remove_schedule_button.click()
 
     vSchedule = load_schedule(vDatabaseFile)
 
     assert vSchedule["search"] is None
     assert vSchedule["enabled"] is False
     assert vPage.schedule_search_label.text() == "Aucune recherche enregistrée"
+    assert vPage.remove_schedule_button.isHidden()
+    assert vPage.schedule_message.text() == "Recherche planifiée retirée."
+
+
+def test_min_score_is_saved_with_the_email(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'enregistrement du score minimal des alertes avec l'adresse."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile, monkeypatch)
+
+    vPage.email_edit.setText("moi@example.com")
+    vPage.min_score_combo.setCurrentIndex(vPage.min_score_combo.findData(70))
+    vPage.save_email()
+
+    assert load_schedule(vDatabaseFile)["min_score"] == 70
+    assert vPage.email_message.text() == "Adresse enregistrée."
+
+
+def test_calendar_address_is_created_copied_and_renewed(
+    qt_application, tmp_path, monkeypatch
+):
+    """Vérifie la création, la copie et le renouvellement confirmé de l'adresse."""
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+
+    assert vPage.calendar_edit.text() == ""
+    assert not vPage.copy_calendar_button.isEnabled()
+
+    vPage.calendar_button.click()
+    vFirst = vPage.calendar_edit.text()
+
+    assert vFirst.startswith(f"{settings_page.WEB_BASE_URL}/calendar/")
+    assert vPage.calendar_button.text() == "Renouveler l'adresse"
+
+    vPage.copy_calendar_button.click()
+
+    assert settings_page.QApplication.clipboard().text() == vFirst
+
+    vAnswers = [
+        settings_page.QMessageBox.StandardButton.No,
+        settings_page.QMessageBox.StandardButton.Yes,
+    ]
+    monkeypatch.setattr(
+        settings_page.QMessageBox, "question", lambda *pArgs: vAnswers.pop(0)
+    )
+
+    vPage.calendar_button.click()
+
+    assert vPage.calendar_edit.text() == vFirst
+
+    vPage.calendar_button.click()
+
+    assert vPage.calendar_edit.text() not in ("", vFirst)
+
+
+def test_archive_is_exported_then_restored(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'export de la sauvegarde complète, puis sa restauration confirmée."""
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+    vArchive = tmp_path / "sauvegarde.zip"
+    vMessages = []
+    vPage.data_reset.connect(vMessages.append)
+
+    monkeypatch.setattr(
+        settings_page.QFileDialog,
+        "getSaveFileName",
+        lambda *pArgs: (str(vArchive), ""),
+    )
+    vPage.export_archive_button.click()
+
+    assert vPage.archive_message.text().startswith("Sauvegarde exportée")
+
+    monkeypatch.setattr(
+        settings_page.QFileDialog,
+        "getOpenFileName",
+        lambda *pArgs: (str(vArchive), ""),
+    )
+    monkeypatch.setattr(
+        settings_page.QMessageBox,
+        "warning",
+        lambda *pArgs: settings_page.QMessageBox.StandardButton.Yes,
+    )
+    vPage.restore_archive_button.click()
+
+    assert vMessages[0].startswith("Sauvegarde restaurée.")
+
+
+def test_archive_restore_reports_refused_file(qt_application, tmp_path, monkeypatch):
+    """Vérifie le message d'une archive refusée et d'un export impossible."""
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+    vText = tmp_path / "faux.zip"
+    vText.write_text("texte", encoding="utf-8")
+
+    vPage.restore_archive(str(vText))
+
+    assert "pas un fichier .zip" in vPage.archive_message.text()
+
+    vPage.export_archive(str(tmp_path / "absent" / "sauvegarde.zip"))
+
+    assert vPage.archive_message.text() == "L'export a échoué. Voir les journaux."
+
+
+def test_calendar_and_archive_errors_are_reported(
+    qt_application, tmp_path, monkeypatch
+):
+    """Vérifie les messages d'échec de l'adresse d'agenda et de la restauration."""
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+
+    def fail(*pArgs):
+        raise OSError("disque plein")
+
+    monkeypatch.setattr(settings_page, "renew_calendar_token", fail)
+    monkeypatch.setattr(settings_page, "restore_archive", fail)
+    monkeypatch.setattr(
+        settings_page.QFileDialog, "getOpenFileName", lambda *pArgs: ("", "")
+    )
+
+    vPage.calendar_button.click()
+    vPage.restore_archive_button.click()
+
+    assert vPage.calendar_message.text() == "L'adresse n'a pas pu être créée."
+    assert vPage.archive_message.text() == ""
+
+    vPage.restore_archive(str(tmp_path / "sauvegarde.zip"))
+
+    assert (
+        vPage.archive_message.text() == "La restauration a échoué. Voir les journaux."
+    )

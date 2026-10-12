@@ -231,7 +231,93 @@ CITY_COUNTRIES = {
     "toronto": "Canada",
     "new york": "États-Unis",
     "san francisco": "États-Unis",
+    "nurnberg": "Allemagne",
+    "nuremberg": "Allemagne",
+    "augsburg": "Allemagne",
+    "mannheim": "Allemagne",
+    "karlsruhe": "Allemagne",
+    "hannover": "Allemagne",
+    "hanover": "Allemagne",
+    "bremen": "Allemagne",
+    "dresden": "Allemagne",
+    "dortmund": "Allemagne",
+    "essen": "Allemagne",
+    "bonn": "Allemagne",
+    "wiesbaden": "Allemagne",
+    "mainz": "Allemagne",
+    "heidelberg": "Allemagne",
+    "freiburg": "Allemagne",
+    "munster": "Allemagne",
+    "regensburg": "Allemagne",
+    "ulm": "Allemagne",
+    "kiel": "Allemagne",
+    "potsdam": "Allemagne",
+    "aachen": "Allemagne",
+    "bielefeld": "Allemagne",
+    "wurzburg": "Allemagne",
+    "ingolstadt": "Allemagne",
+    "darmstadt": "Allemagne",
+    "wien": "Autriche",
+    "vienna": "Autriche",
+    "graz": "Autriche",
+    "linz": "Autriche",
+    "salzburg": "Autriche",
+    "innsbruck": "Autriche",
+    "lausanne": "Suisse",
+    "bern": "Suisse",
+    "berne": "Suisse",
+    "basel": "Suisse",
+    "bale": "Suisse",
+    "lugano": "Suisse",
+    "lucerne": "Suisse",
+    "luzern": "Suisse",
+    "edinburgh": "Royaume-Uni",
+    "glasgow": "Royaume-Uni",
+    "birmingham": "Royaume-Uni",
+    "bristol": "Royaume-Uni",
+    "cambridge": "Royaume-Uni",
+    "oxford": "Royaume-Uni",
+    "leeds": "Royaume-Uni",
+    "liverpool": "Royaume-Uni",
+    "abingdon": "Royaume-Uni",
+    "westminster": "Royaume-Uni",
+    "belfast": "Royaume-Uni",
+    "valencia": "Espagne",
+    "valence": "Espagne",
+    "seville": "Espagne",
+    "sevilla": "Espagne",
+    "malaga": "Espagne",
+    "bilbao": "Espagne",
+    "rotterdam": "Pays-Bas",
+    "utrecht": "Pays-Bas",
+    "eindhoven": "Pays-Bas",
+    "antwerp": "Belgique",
+    "anvers": "Belgique",
+    "gent": "Belgique",
+    "gand": "Belgique",
+    "liege": "Belgique",
+    "namur": "Belgique",
+    "charleroi": "Belgique",
+    "milan": "Italie",
+    "milano": "Italie",
+    "rome": "Italie",
+    "roma": "Italie",
+    "turin": "Italie",
+    "torino": "Italie",
+    "warsaw": "Pologne",
+    "varsovie": "Pologne",
+    "krakow": "Pologne",
+    "cracovie": "Pologne",
+    "wroclaw": "Pologne",
 }
+
+# Mots sans rapport avec le lieu, retirés avant une seconde recherche :
+# « Paris Office », « Zurich HQ », « Remote in Deutschland »
+FILLER_WORDS_PATTERN = re.compile(
+    r"\b(?:office|hq|headquarters|remote|hybrid|onsite|on site|in|only|area|"
+    r"based|preferred)\b",
+    re.IGNORECASE,
+)
 
 # Code postal français ou département entre parenthèses : « 59000 », « (59) », « (2A) »
 FRENCH_POSTAL_PATTERN = re.compile(r"\b\d{5}\b|\((?:\d{2,3}|2[ab])\)", re.IGNORECASE)
@@ -240,6 +326,20 @@ FRENCH_POSTAL_PATTERN = re.compile(r"\b\d{5}\b|\((?:\d{2,3}|2[ab])\)", re.IGNORE
 FRENCH_REGION_PATTERN = re.compile(r"france")
 
 SEGMENT_SEPARATORS = re.compile(r"[,;/|]| - ")
+
+
+def is_known_place(pKey):
+    """Indique si un lieu normalisé est une zone, un pays ou une ville connus."""
+
+    rKnown = (
+        pKey in WORLD_REGIONS
+        or pKey.split()[0] in WORLD_REGIONS
+        or pKey in COUNTRY_ALIASES
+        or pKey in CITY_COUNTRIES
+        or bool(FRENCH_REGION_PATTERN.search(pKey))
+    )
+
+    return rKnown
 
 
 def detect_location(pLocation, pCountry=None):
@@ -256,12 +356,13 @@ def detect_location(pLocation, pCountry=None):
 
     vLocation = str(pLocation or "")
 
-    if FRENCH_POSTAL_PATTERN.search(vLocation):
-        vCountries.add(FRANCE)
-
     for vSegment in SEGMENT_SEPARATORS.split(vLocation):
         # Sans chiffres ni parenthèses : « 59000 Lille (59) » donne « lille ».
         vKey = normalize(re.sub(r"\(.*?\)|\d+", " ", vSegment))
+
+        if vKey and not is_known_place(vKey):
+            vKey = " ".join(FILLER_WORDS_PATTERN.sub(" ", vKey).split())
+            vSegment = FILLER_WORDS_PATTERN.sub(" ", vSegment)
 
         if not vKey:
             continue
@@ -278,6 +379,11 @@ def detect_location(pLocation, pCountry=None):
         elif vKey in CITY_COUNTRIES:
             vCountries.add(CITY_COUNTRIES[vKey])
             rCity = rCity or vSegment.strip(" ()0123456789").strip()
+
+    # Un code postal à 5 chiffres n'indique la France que faute d'autre indice :
+    # « München (81671) » est allemand.
+    if not vCountries and FRENCH_POSTAL_PATTERN.search(vLocation):
+        vCountries.add(FRANCE)
 
     rCountry = vCountries.pop() if len(vCountries) == 1 else None
 

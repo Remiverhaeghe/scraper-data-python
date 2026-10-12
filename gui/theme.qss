@@ -249,6 +249,22 @@ QPushButton#primaryButton:disabled {
     background: $border;
 }
 
+QPushButton#iconButton {
+    background: transparent;
+    border: none;
+    padding: 4px;
+}
+
+QPushButton#iconButton:hover {
+    background: $surface_alt;
+}
+
+QPushButton#dangerButton:disabled {
+    background: $surface_alt;
+    border-color: $border;
+    color: $muted;
+}
+
 QPushButton#bannerButton {
     background: $surface;
     color: $primary;

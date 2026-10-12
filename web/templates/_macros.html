@@ -25,9 +25,9 @@
 {% if chart.empty_text %}
 <div class="empty">{{ icon("inbox", 32) }}{{ chart.empty_text }}</div>
 {% else %}
-{% if chart.y_axis %}<p class="chart-axis">{{ chart.y_axis }}</p>{% endif %}
+{% if chart.y_axis %}<p class="chart-axis">{{ chart.y_axis }}{% for scale in chart.scale %}<span class="chart-scale"{% if scale.color %} style="color: {{ scale.color }}"{% endif %}>max {{ scale.value }}</span>{% endfor %}</p>{% endif %}
 {# Au-delà de 8 barres, une date sur deux suffit et reste lisible #}
-<div class="chart{% if chart.labels | length > 8 %} chart-dense{% endif %}" role="img" aria-label="{{ label }}">
+<div class="chart{% if chart.labels | length > 8 %} chart-dense{% endif %}{% if chart.fill %} chart-fill{% endif %}" role="img" aria-label="{{ label }}">
     {% for day_label in chart.labels %}
     {% set index = loop.index0 %}
     <div class="chart-group">
@@ -35,7 +35,7 @@
             {% for series in chart.series %}
             {% set bar = series.bars[index] %}
             <i class="{% if not bar.value %}is-empty{% endif %}"
-               style="height: {{ bar.height }}%; --bar-color: {{ series.color }}"
+               style="height: {{ bar.height }}%; --bar-color: {{ bar.color }}"
                title="{{ day_label }} · {{ series.name }} : {{ bar.value }}">
                 {% if bar.value and chart.series | length == 1 %}<b>{{ bar.value }}</b>{% endif %}
             </i>

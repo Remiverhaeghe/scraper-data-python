@@ -20,6 +20,10 @@ SEARCH_KEY = "schedule_search"
 LAST_RUN_KEY = "schedule_last_run"
 EMAIL_KEY = "notification_email"
 
+# Score de correspondance minimal des offres envoyées par e-mail ; 0 : toutes
+MIN_SCORE_KEY = "notification_min_score"
+MIN_SCORE_CHOICES = (0, 30, 50, 70, 90)
+
 # Demande de recherche immédiate déposée depuis le web, traitée par le planificateur
 RUN_REQUEST_KEY = "schedule_run_requested"
 
@@ -43,6 +47,21 @@ def parse_interval(pValue):
         rInterval = DEFAULT_INTERVAL_HOURS
 
     return rInterval
+
+
+def parse_min_score(pValue):
+    """Retourne le score minimal enregistré, ou 0 s'il est absent ou invalide."""
+
+    try:
+        rScore = int(pValue)
+
+    except (TypeError, ValueError):
+        rScore = 0
+
+    if rScore not in MIN_SCORE_CHOICES:
+        rScore = 0
+
+    return rScore
 
 
 def parse_search(pValue):
@@ -83,6 +102,7 @@ def load_schedule(pDatabaseFile):
         "search": parse_search(vValues.get(SEARCH_KEY)),
         "last_run": parse_date(vValues.get(LAST_RUN_KEY)),
         "email": vValues.get(EMAIL_KEY) or None,
+        "min_score": parse_min_score(vValues.get(MIN_SCORE_KEY)),
         "run_requested": parse_date(vValues.get(RUN_REQUEST_KEY)),
     }
 
@@ -157,6 +177,33 @@ def save_notification_email(pDatabaseFile, pEmail):
         logger.info("Notifications e-mail %s", "activées" if vEmail else "désactivées")
 
     return rErrors
+
+
+def save_min_score(pDatabaseFile, pMinScore):
+    """Enregistre le score minimal des alertes ; retourne les erreurs éventuelles."""
+
+    rErrors = []
+
+    if pMinScore not in MIN_SCORE_CHOICES:
+        rErrors.append("Score minimal non proposé.")
+    else:
+        save_setting_values(pDatabaseFile, {MIN_SCORE_KEY: pMinScore})
+
+        logger.info("Score minimal des alertes : %s %%", pMinScore)
+
+    return rErrors
+
+
+def format_min_score(pMinScore):
+    """Décrit le score minimal des alertes en toutes lettres."""
+
+    rText = (
+        f"Offres à {pMinScore} % de correspondance ou plus"
+        if pMinScore
+        else "Toutes les nouvelles offres"
+    )
+
+    return rText
 
 
 def mark_schedule_run(pDatabaseFile, pRunAt):

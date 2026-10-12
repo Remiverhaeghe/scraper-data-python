@@ -15,7 +15,9 @@ MAX_EMAIL_OFFERS = 20
 
 
 def describe_offer(pOffer):
-    """Résume une offre en une ligne : entreprise, lieu et salaire net."""
+    """Résume une offre en une ligne : entreprise, lieu, salaire net et score."""
+
+    vScore = pOffer.get("match_score")
 
     rDetail = " · ".join(
         vPart
@@ -23,6 +25,7 @@ def describe_offer(pOffer):
             pOffer.get("company"),
             pOffer.get("location"),
             format_net_salary(pOffer),
+            f"correspondance {vScore} %" if vScore is not None else None,
         )
         if vPart
     )

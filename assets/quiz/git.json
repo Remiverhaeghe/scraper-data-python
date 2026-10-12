@@ -1,6 +1,9 @@
 {
   "theme": "Git",
-  "skills": ["Git", "CI/CD"],
+  "skills": [
+    "Git",
+    "CI/CD"
+  ],
   "questions": [
     {
       "id": "git-fetch-pull",
@@ -105,6 +108,45 @@
       ],
       "answer": 1,
       "explanation": "amend remplace le dernier commit par un nouveau. Comme il réécrit l'historique, on l'évite sur un commit déjà poussé."
+    },
+    {
+      "id": "git-switch",
+      "level": "débutant",
+      "question": "Quelle commande crée une branche et s'y place ?",
+      "choices": [
+        "git branch -d nouvelle",
+        "git switch -c nouvelle",
+        "git merge nouvelle",
+        "git push nouvelle"
+      ],
+      "answer": 1,
+      "explanation": "git switch -c (ou l'ancien git checkout -b) crée la branche et s'y place. git branch -d supprime une branche déjà fusionnée."
+    },
+    {
+      "id": "git-cherry-pick",
+      "level": "confirmé",
+      "question": "Que fait git cherry-pick <commit> ?",
+      "choices": [
+        "Il supprime le commit",
+        "Il applique les changements de ce commit sur la branche courante",
+        "Il affiche le commit",
+        "Il renomme le commit"
+      ],
+      "answer": 1,
+      "explanation": "cherry-pick recopie un commit précis sur la branche courante, avec un nouvel identifiant : utile pour reporter un correctif sur une autre branche."
+    },
+    {
+      "id": "git-log-graph",
+      "level": "débutant",
+      "question": "Comment voir l'historique des branches de façon compacte ?",
+      "choices": [
+        "git status",
+        "git log --oneline --graph --all",
+        "git diff",
+        "git show"
+      ],
+      "answer": 1,
+      "explanation": "--oneline met un commit par ligne, --graph dessine les fusions, --all inclut toutes les branches."
     }
   ]
 }

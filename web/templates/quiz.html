@@ -35,6 +35,13 @@
         {% endfor %}
         <button class="button button-primary" type="submit">Valider</button>
     </form>
+    <form class="quiz-flag" method="post" action="{{ url_for('flag_quiz_question').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="question_id" value="{{ question.id }}">
+        <input type="hidden" name="theme" value="{{ question.theme_key }}">
+        <input type="hidden" name="mode" value="{{ mode }}">
+        <button class="button" type="submit" title="Retire cette question des prochains tirages">{{ icon("circle-alert", 16) }} Question douteuse</button>
+    </form>
 </article>
 {% elif theme %}
 <article class="card quiz-card">
@@ -60,4 +67,47 @@
     </article>
     {% endfor %}
 </section>
+
+<article class="card section-gap" id="add-questions">
+    <h2>Ajouter des questions</h2>
+    <p class="card-subtitle">Générées avec votre compte ChatGPT, puis vérifiées une à une à l'import : une question incomplète ou en double est écartée.</p>
+    <datalist id="quiz-themes">{% for theme_item in themes %}<option value="{{ theme_item.label }}">{% endfor %}</datalist>
+    <form class="inline-form" method="post" action="{{ url_for('prepare_quiz_prompt').path }}#add-questions">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="text" name="theme" list="quiz-themes" value="{{ import_form.theme or '' }}" placeholder="Thème, ex. Kafka" aria-label="Thème" required>
+        <select name="level" aria-label="Niveau">
+            {% for level in levels %}<option value="{{ level }}" {% if import_form.level == level %}selected{% endif %}>{{ level | capitalize }}</option>{% endfor %}
+        </select>
+        <select name="count" aria-label="Nombre de questions">
+            {% for count in generation_counts %}<option value="{{ count }}" {% if import_form.count == count %}selected{% endif %}>{{ count }} questions</option>{% endfor %}
+        </select>
+        <button class="button button-primary" type="submit">{{ icon("bot", 16) }} Préparer la demande</button>
+    </form>
+    {% if import_form.prompt %}
+    <div class="copy-field section-gap" id="quiz-prompt">
+        <textarea rows="5" readonly aria-label="Demande pour ChatGPT">{{ import_form.prompt }}</textarea>
+        <button class="button button-primary" type="button" data-copy="quiz-prompt" data-open="{{ chatgpt_url }}">Copier et ouvrir ChatGPT</button>
+    </div>
+    {% endif %}
+    <form class="reset-form section-gap" method="post" action="{{ url_for('import_quiz_questions').path }}#add-questions" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="text" name="theme" list="quiz-themes" value="{{ import_form.theme or '' }}" placeholder="Thème, si le JSON ne l'indique pas" aria-label="Thème des questions importées">
+        <textarea name="text" rows="4" placeholder="Collez ici la réponse de ChatGPT (JSON)" aria-label="Questions à importer">{{ import_form.text or '' }}</textarea>
+        <input type="file" name="file" accept="{{ import_extensions }}" aria-label="Fichier .json ou archive .zip">
+        <button class="button" type="submit">{{ icon("upload", 16) }} Importer</button>
+    </form>
+    {% if import_form.message %}<p class="application-message" role="status">{{ import_form.message }}</p>{% endif %}
+</article>
+
+<article class="card section-gap">
+    <h2>Mes statistiques</h2>
+    <p class="card-subtitle">Progression globale et réponses des 14 derniers jours</p>
+    <section class="grid grid-4">
+        {{ ui.stat(statistics.acquired ~ " / " ~ statistics.total, "Questions acquises", "circle-check", "green") }}
+        {{ ui.stat(statistics.answers, "Réponses données", "graduation-cap", "blue") }}
+        {{ ui.stat("-" if statistics.rate is none else statistics.rate ~ " %", "Bonnes réponses", "sparkles", "purple") }}
+        {{ ui.stat(statistics.streak, "Jours de révision d'affilée", "calendar", "amber") }}
+    </section>
+    <div class="section-gap">{{ ui.bar_chart(statistics_chart, "Réponses par jour") }}</div>
+</article>
 {% endblock %}

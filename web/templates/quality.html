@@ -6,13 +6,19 @@
 
 {% block content %}
 {% call ui.page_header("Qualité des données", "Les informations fournies par chaque source, pour voir ce qui manque", "list-checks") %}
-<a class="button" href="{{ url_for('export_quality').path }}">{{ icon("download", 16) }} Exporter les offres à vérifier</a>
+{% if report.problems.total %}<a class="button" href="{{ url_for('export_quality').path }}">{{ icon("download", 16) }} Exporter les offres à vérifier ({{ report.problems.total }})</a>{% endif %}
 {% endcall %}
 
 <article class="card">
     <h2>Remplissage global</h2>
     <p class="card-subtitle">Part des offres en base dont le champ est renseigné, toutes sources</p>
     {{ ui.bar_chart(chart, "Remplissage des champs") }}
+</article>
+
+<article class="card section-gap">
+    <h2>Offres à vérifier</h2>
+    <p><strong>{{ problems_text }}</strong></p>
+    <p class="card-subtitle">{{ problems_help }}</p>
 </article>
 
 <article class="card section-gap">
@@ -44,5 +50,5 @@
     {% endif %}
 </article>
 
-<p class="muted">{{ report.total.count }} offre(s) analysée(s), {{ report.rejected }} écartée(s) faute de titre et de description. L'export liste les offres incomplètes ou mal découpées.</p>
+<p class="muted">{{ report.total.count }} offre(s) analysée(s), {{ report.rejected }} écartée(s) faute de titre et de description.</p>
 {% endblock %}

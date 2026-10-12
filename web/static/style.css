@@ -374,6 +374,26 @@ h3 {
     margin: 0;
 }
 
+.inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.copy-field {
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+}
+
+.copy-field textarea {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.85rem;
+    resize: none;
+}
+
 .reset-form {
     display: grid;
     gap: 12px;
@@ -598,19 +618,29 @@ a.stat:hover {
     color: var(--text);
 }
 
+/* Ligne haute en pointillé : elle correspond à la valeur « max » de l'axe. */
 .chart {
     display: flex;
     gap: 4px;
     height: 200px;
     padding-top: 22px;
+    background: linear-gradient(90deg, var(--border) 50%, transparent 0) 0 22px / 8px 1px
+        repeat-x;
 }
 
+/* Largeur plafonnée : avec peu de jours, les barres restent à gauche. */
 .chart-group {
     display: flex;
-    flex: 1;
+    flex: 1 1 0;
+    max-width: 56px;
     flex-direction: column;
     gap: 4px;
     min-width: 0;
+}
+
+/* Catégories plutôt que jours : les barres occupent toute la largeur. */
+.chart-fill .chart-group {
+    max-width: none;
 }
 
 .chart-bars {
@@ -1174,6 +1204,11 @@ code {
     margin: 0 0 6px;
     color: var(--muted);
     font-size: 12px;
+}
+
+.chart-scale {
+    margin-left: 12px;
+    font-weight: 600;
 }
 
 .chart-axis-x {

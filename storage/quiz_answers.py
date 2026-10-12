@@ -29,6 +29,27 @@ def save_quiz_answer(pDatabaseFile, pQuestionId, pTheme, pCorrect, pNow):
     )
 
 
+def count_answers_by_day(pDatabaseFile):
+    """Retourne, par jour, le nombre de réponses et de bonnes réponses."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rDays = {
+            vDay: (vCount, vCorrect)
+            for vDay, vCount, vCorrect in vConnection.execute("""
+                SELECT substr(answered_at, 1, 10), COUNT(*), SUM(correct)
+                FROM quiz_answer
+                GROUP BY substr(answered_at, 1, 10)
+                """)
+        }
+
+    finally:
+        vConnection.close()
+
+    return rDays
+
+
 def get_last_answers(pDatabaseFile):
     """Retourne, par question, si la dernière réponse donnée était juste."""
 

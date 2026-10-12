@@ -64,3 +64,10 @@ def test_parse_empty_jobs():
 
     assert rDataFrame.empty
     assert list(rDataFrame.columns) == JOB_COLUMNS
+
+
+def test_parse_job_company_fallbacks():
+    """Vérifie l'entreprise tirée de company_name, puis du nom du board."""
+
+    assert parse_job({"company_name": "Vercel"})["company"] == "Vercel"
+    assert parse_job({}, "Acme Corp")["company"] == "Acme Corp"

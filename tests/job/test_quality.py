@@ -7,6 +7,7 @@ import pytest
 
 from job.quality import (
     build_quality_export,
+    describe_problems,
     find_problems,
     get_quality_report,
     get_rate_tone,
@@ -68,6 +69,12 @@ def test_get_quality_report(database_file):
     assert vReport["rows"][0]["rates"][vCompany] == {"rate": 50, "tone": "warning"}
     assert vReport["total"]["count"] == 2
     assert vReport["rejected"] == 0
+    assert vReport["problems"]["total"] == 1
+    assert describe_problems(vReport["problems"]) == (
+        "1 offre(s) à vérifier : description absente 1, entreprise absente 1, "
+        "lieu absent 1, salaire non interprété 1, titre en plusieurs segments 1"
+    )
+    assert describe_problems({"total": 0, "kinds": []}) == "Aucune offre à vérifier."
 
 
 def test_find_problems():

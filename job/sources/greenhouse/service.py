@@ -19,7 +19,8 @@ def scrape_jobs(pBoardToken, pMaxItems=None):
 
     logger.info("%s offre(s) récupérée(s) depuis Greenhouse", len(vJobs))
 
-    vDataFrame = parse_jobs(vJobs)
+    # « acme-corp » devient « Acme Corp » quand l'offre ne nomme pas l'entreprise.
+    vDataFrame = parse_jobs(vJobs, pBoardToken.replace("-", " ").title())
 
     if pMaxItems is not None:
         vDataFrame = limit_dataframe(vDataFrame, pMaxItems)

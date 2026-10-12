@@ -103,9 +103,9 @@
             <form class="availability" hx-post="{{ url_for('check_availability').path }}" hx-target="#availability-result">
                 <input type="hidden" name="source" value="{{ offer.source }}">
                 <input type="hidden" name="id" value="{{ offer.source_id }}">
-                <button class="button" type="submit">{{ icon("circle-check", 16) }} Vérifier la disponibilité</button>
-                <span id="availability-result" class="muted">
-                    {% if offer.availability_checked_at %}Vérifiée le {{ offer.availability_checked_at | date_fr }} : {{ availability_labels[offer.availability] }}{% endif %}
+                <button class="button" type="submit" title="{{ availability_help }}">{{ icon("circle-check", 16) }} Vérifier la disponibilité</button>
+                <span id="availability-result">
+                    {% if offer.availability_checked_at %}<strong class="tone-{{ availability_tones[offer.availability] }}">Vérifiée le {{ offer.availability_checked_at | date_fr }} : {{ availability_labels[offer.availability] }}</strong>{% endif %}
                 </span>
             </form>
         </article>
@@ -169,6 +169,8 @@
             </ul>
             <h3>Points à préparer</h3>
             <ul>{% for gap in preparation.interview.gaps %}<li>{{ gap }}</li>{% else %}<li class="muted">Aucun</li>{% endfor %}</ul>
+            <h3>Questions du recruteur</h3>
+            <ul>{% for answer in preparation.interview.answers %}<li><strong>{{ answer.question }}</strong><br>{{ answer.hint }}</li>{% endfor %}</ul>
             <h3>Questions à poser</h3>
             <ul>{% for question in preparation.interview.questions %}<li>{{ question }}</li>{% endfor %}</ul>
             <h3>Brouillon de lettre de motivation</h3>
@@ -180,10 +182,12 @@
 
         {# Demandes à coller dans ChatGPT avec son propre compte : aucune API payante. #}
         <details class="card preparation">
-            <summary><h2>{{ icon("send") }} Préparer avec ChatGPT</h2></summary>
+            <summary><h2>{{ icon("bot") }} Préparer avec ChatGPT</h2></summary>
             <p class="muted">Le bouton copie la demande et ouvre ChatGPT : collez-la, relisez-la, puis envoyez-la.</p>
-            {% if offer.company %}
-            <button class="button" type="button" hx-get="{{ url_for('show_company_info').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}" hx-target="#company-info">{{ icon("globe", 16) }} Infos sur l'entreprise</button>
+            {% if offer.company and not company_lookup %}
+            <p class="muted">Infos sur l'entreprise : l'annuaire public ne couvre que les entreprises françaises.</p>
+            {% elif offer.company %}
+            <button class="button" type="button" hx-get="{{ url_for('show_company_info').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}" hx-target="#company-info">{{ icon("globe", 16) }} Infos sur l'entreprise (France)</button>
             <div id="company-info"></div>
             {% endif %}
             {% for kind, label in prompt_kinds.items() %}
@@ -194,6 +198,7 @@
 
         <article class="card">
             <h2>Description</h2>
+            {% if translate_url %}<a class="button" href="{{ translate_url }}" target="_blank" rel="noopener noreferrer" title="Ouvre la description dans Google Traduction">{{ icon("languages", 16) }} Traduire en français</a>{% endif %}
             {% if offer.description %}
             <p class="offer-description">{{ offer.description }}</p>
             {% else %}

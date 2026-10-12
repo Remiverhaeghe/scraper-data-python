@@ -1,9 +1,35 @@
 """Transformation des données Findwork vers le format Job commun"""
 
+import re
+
 import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
 from utils.helpers import html_to_text, join_values
+
+# Sans poste renseigné, la première ligne de l'annonce sert de titre si elle en a
+# la forme : courte, sans « Clé : valeur » ni lien (« Remote: Yes », « https:// »).
+MAX_TITLE_LENGTH = 80
+NOT_A_TITLE_PATTERN = re.compile(r"^[\w\s-]{1,25}:|https?://|^[-•*]")
+
+
+def guess_title(pDescription):
+    """Retourne la première ligne de l'annonce si elle ressemble à un titre."""
+
+    vLine = next(
+        (vLine.strip() for vLine in (pDescription or "").splitlines() if vLine.strip()),
+        "",
+    )
+
+    rTitle = (
+        vLine
+        if vLine
+        and len(vLine) <= MAX_TITLE_LENGTH
+        and not NOT_A_TITLE_PATTERN.search(vLine)
+        else None
+    )
+
+    return rTitle
 
 
 def parse_job(pJob):
@@ -14,10 +40,11 @@ def parse_job(pJob):
     """
 
     vRemote = pJob.get("remote")
+    vDescription = html_to_text(pJob.get("text"))
 
     vJob = {
         # Identification
-        "title": pJob.get("role"),
+        "title": pJob.get("role") or guess_title(vDescription),
         "company": pJob.get("company_name"),
         "company_id": None,
         "source": "findwork",
@@ -54,7 +81,7 @@ def parse_job(pJob):
         "scraped_at": None,
         "first_seen_at": None,
         # Contenu
-        "description": html_to_text(pJob.get("text")),
+        "description": vDescription,
         "missions": None,
         "requirements": None,
         "education": None,

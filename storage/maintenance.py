@@ -11,6 +11,7 @@ logger = get_logger(__name__)
 # sont vidées avant elles.
 RESET_TABLES = (
     "quiz_answer",
+    "quiz_question",
     "job_attachment",
     "job_follow_up",
     "job_application",

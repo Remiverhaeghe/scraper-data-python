@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QDateTimeEdit,
     QFrame,
     QGroupBox,
+    QGridLayout,
     QHBoxLayout,
     QFileDialog,
     QLabel,
@@ -49,7 +50,11 @@ from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
 from job.preparation import prepare_application
 from job.presentation import (
     AVAILABILITY_LABELS,
+    AVAILABILITY_HELP,
     AVAILABILITY_MESSAGES,
+    AVAILABILITY_TONES,
+    build_translate_url,
+    can_lookup_company,
     STATUS_LABELS,
     format_date,
     format_net_salary,
@@ -261,7 +266,23 @@ class OfferDetailPanel(QWidget):
         self.description.setObjectName("descriptionText")
         self.description.setPlaceholderText("Aucune description fournie par la source.")
 
+        # Une description étrangère s'ouvre dans Google Traduction, gratuit.
+        self.translate_url = None
+        self.translate_button = create_button(
+            "Traduire en français", "languages", pIconColor=COLORS["primary"]
+        )
+        self.translate_button.setToolTip(
+            "Ouvre la description dans Google Traduction, dans le navigateur"
+        )
+        self.translate_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl(self.translate_url))
+        )
+        self.translate_button.hide()
+
         vDescriptionCard, vDescriptionLayout = create_card("Description")
+        vDescriptionLayout.addWidget(
+            self.translate_button, 0, Qt.AlignmentFlag.AlignLeft
+        )
         vDescriptionLayout.addWidget(self.description, 1)
 
         vSummaryWidget = QFrame()
@@ -369,7 +390,13 @@ class OfferDetailPanel(QWidget):
 
         self.company_summary = None
         self.assistant_label.clear()
-        self.company_info_button.setEnabled(vHasCompany)
+        vLookup = can_lookup_company(pOffer)
+        self.company_info_button.setEnabled(vLookup)
+        self.company_info_button.setToolTip(
+            "L'annuaire public ne couvre que les entreprises françaises"
+            if vHasCompany and not vLookup
+            else "Activité, taille et siège, depuis l'annuaire public des entreprises"
+        )
         vText = None
 
         if pOffer and vHasCompany:
@@ -394,6 +421,7 @@ class OfferDetailPanel(QWidget):
         self.availability_button = create_button(
             "Vérifier la disponibilité", "circle-check", pIconColor=COLORS["primary"]
         )
+        self.availability_button.setToolTip(AVAILABILITY_HELP)
         self.availability_button.clicked.connect(self.check_availability)
 
         self.availability_label = QLabel()
@@ -407,7 +435,7 @@ class OfferDetailPanel(QWidget):
 
         # Demandes à coller dans ChatGPT : aucune API payante n'est appelée.
         self.chatgpt_button = create_button(
-            "Préparer avec ChatGPT", "send", pIconColor=COLORS["primary"]
+            "Préparer avec ChatGPT", "bot", pIconColor=COLORS["primary"]
         )
         self.chatgpt_button.setToolTip(
             "Copie une demande complète et ouvre ChatGPT : collez-la avec Ctrl+V"
@@ -421,7 +449,7 @@ class OfferDetailPanel(QWidget):
         self.chatgpt_button.setMenu(vMenu)
 
         self.company_info_button = create_button(
-            "Infos sur l'entreprise", "globe", pIconColor=COLORS["primary"]
+            "Infos sur l'entreprise (France)", "globe", pIconColor=COLORS["primary"]
         )
         self.company_info_button.setToolTip(
             "Activité, taille et siège, depuis l'annuaire public des entreprises"
@@ -544,7 +572,16 @@ class OfferDetailPanel(QWidget):
         finally:
             QApplication.restoreOverrideCursor()
 
-        self.availability_label.setText(AVAILABILITY_MESSAGES[vAvailability])
+        self.show_availability(AVAILABILITY_MESSAGES[vAvailability], vAvailability)
+
+    def show_availability(self, pText, pAvailability):
+        """Affiche le résultat de la vérification, en gras et en couleur."""
+        self.availability_label.setText(pText)
+        self.availability_label.setStyleSheet(
+            f"color: {COLORS[AVAILABILITY_TONES[pAvailability]]}; font-weight: 600;"
+            if pText
+            else ""
+        )
 
     def create_duplicates_group(self):
         """Construit la comparaison des annonces d'une offre publiée plusieurs fois."""
@@ -655,11 +692,6 @@ class OfferDetailPanel(QWidget):
 
         self.follow_up_check.toggled.connect(self.follow_up_edit.setEnabled)
 
-        vFollowUp = QHBoxLayout()
-        vFollowUp.addWidget(self.follow_up_check)
-        vFollowUp.addWidget(self.follow_up_edit)
-        vFollowUp.addStretch()
-
         self.interview_check = QCheckBox("Entretien le")
 
         self.interview_edit = align_spin_box(QDateTimeEdit())
@@ -669,10 +701,14 @@ class OfferDetailPanel(QWidget):
 
         self.interview_check.toggled.connect(self.interview_edit.setEnabled)
 
-        vInterview = QHBoxLayout()
-        vInterview.addWidget(self.interview_check)
-        vInterview.addWidget(self.interview_edit)
-        vInterview.addStretch()
+        # Les deux dates partagent une colonne : même largeur, sans texte coupé.
+        vDates = QGridLayout()
+        vDates.setHorizontalSpacing(8)
+        vDates.addWidget(self.follow_up_check, 0, 0)
+        vDates.addWidget(self.follow_up_edit, 0, 1)
+        vDates.addWidget(self.interview_check, 1, 0)
+        vDates.addWidget(self.interview_edit, 1, 1)
+        vDates.setColumnStretch(1, 1)
 
         self.notes_edit = QPlainTextEdit()
         self.notes_edit.setPlaceholderText("Notes")
@@ -696,8 +732,7 @@ class OfferDetailPanel(QWidget):
 
         vLayout = QVBoxLayout(rGroup)
         vLayout.addWidget(self.status_combo)
-        vLayout.addLayout(vFollowUp)
-        vLayout.addLayout(vInterview)
+        vLayout.addLayout(vDates)
         vLayout.addWidget(self.notes_edit)
         vLayout.addLayout(vButtons)
         vLayout.addWidget(self.application_label)
@@ -842,7 +877,17 @@ class OfferDetailPanel(QWidget):
         )
         self.open_button.setEnabled(safe_url(vOffer.get("url")) != "#")
         self.availability_button.setEnabled(safe_url(vOffer.get("url")) != "#")
-        self.availability_label.setText(describe_availability(vOffer))
+        self.show_availability(
+            describe_availability(vOffer),
+            (
+                vOffer.get("availability")
+                if vOffer.get("availability_checked_at")
+                else None
+            ),
+        )
+
+        self.translate_url = build_translate_url(vOffer.get("description"))
+        self.translate_button.setVisible(self.translate_url is not None)
         self.show_duplicates(vOffer)
         self.show_company(vOffer)
 

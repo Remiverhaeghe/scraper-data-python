@@ -1,7 +1,9 @@
 """Tests de la transformation des offres Findwork"""
 
 from job.csv_schema import JOB_COLUMNS
-from job.sources.findwork.parser import parse_job, parse_jobs
+import pytest
+
+from job.sources.findwork.parser import guess_title, parse_job, parse_jobs
 
 
 def build_job(**pValues):
@@ -59,3 +61,22 @@ def test_parse_jobs():
 
     assert list(rJobs.columns) == JOB_COLUMNS
     assert rJobs["source_id"].tolist() == ["12345", "2"]
+
+
+@pytest.mark.parametrize(
+    "pText, pTitle",
+    [
+        (
+            "Currently hiring BI Analyst and Network Specialist\nDétails",
+            "Currently hiring BI Analyst and Network Specialist",
+        ),
+        ("Remote: Yes Willing to relocate: No", None),
+        ("- Engineering Manager : you will lead", None),
+        ("x" * 100, None),
+        (None, None),
+    ],
+)
+def test_guess_title_from_first_line(pText, pTitle):
+    """Vérifie le titre tiré de la première ligne quand le poste manque."""
+
+    assert guess_title(pText) == pTitle

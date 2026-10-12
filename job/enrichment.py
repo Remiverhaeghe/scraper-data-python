@@ -46,12 +46,14 @@ EXPERIENCE_LEVELS = (
 
 # Salaire : seulement avec une devise et une unité explicites. « 45 » seul peut
 # être un âge, un département ou un nombre d'heures.
+# Devise en symbole ou en code : « 60-100k EUR », « 100k-160k GBP »
+CURRENCY = r"(?:[€$£]|\b(?:EUR|USD|GBP)\b)"
 # Milliers avec décimales éventuelles, au point ou à la virgule : « 35,3k », « 135.84k »
 THOUSANDS = r"\d{2,3}(?:[.,]\d{1,2})?"
 SALARY_RANGE_K_PATTERN = re.compile(
-    rf"(?P<currency1>[€$£])?\s*(?P<min>{THOUSANDS})\s*[kK]?\s*(?P<currency2>[€$£])?"
-    rf"\s*(?:-|–|à|to)\s*(?P<currency3>[€$£])?\s*(?P<max>{THOUSANDS})\s*[kK]"
-    r"\s*(?P<currency4>[€$£])?",
+    rf"(?P<currency1>{CURRENCY})?\s*(?P<min>{THOUSANDS})\s*[kK]?\s*"
+    rf"(?P<currency2>{CURRENCY})?\s*(?:-|–|à|to)\s*(?P<currency3>{CURRENCY})?\s*"
+    rf"(?P<max>{THOUSANDS})\s*[kK]\s*(?P<currency4>{CURRENCY})?",
 )
 SALARY_SINGLE_K_PATTERN = re.compile(
     rf"(?P<currency1>[€$£])\s*(?P<min>{THOUSANDS})\s*[kK]\b"
@@ -63,7 +65,18 @@ SALARY_HOURLY_PATTERN = re.compile(
     rf"(?P<currency1>[€$£])?\s*(?P<min>{HOURLY})\s*(?P<currency2>[€$£])?"
     rf"(?:\s*(?:-|–|à|to)\s*(?P<currency3>[€$£])?\s*(?P<max>{HOURLY})"
     r"\s*(?P<currency4>[€$£])?)?"
+    rf"(?:\s*(?P<currency5>{CURRENCY}))?"
     r"\s*(?:/|per|par)\s*(?:hour|hr|h|heure)\b",
+    re.IGNORECASE,
+)
+# Montants complets à l'anglaise, virgule des milliers et symbole obligatoire :
+# « $175,000 - $300,000 », « £80,000-150,000 », « $3,500-$5,000 USD/month »
+FULL_AMOUNT = r"\d{1,3}(?:,\d{3})+"
+SALARY_FULL_SYMBOL_PATTERN = re.compile(
+    rf"(?P<currency1>[€$£])\s*(?P<min>{FULL_AMOUNT})"
+    rf"(?:\s*(?:-|–|to)\s*(?P<currency2>[€$£])?\s*(?P<max>{FULL_AMOUNT}))?"
+    rf"(?:\s*(?P<currency3>{CURRENCY}))?"
+    r"(?P<period>\s*(?:/|per\s)\s*(?:month|mo)\b)?",
     re.IGNORECASE,
 )
 SALARY_FULL_PATTERN = re.compile(
@@ -87,7 +100,14 @@ FILLED_FIELD_LABELS = {
 
 # Séparateur des compléments ajoutés au titre par certaines sources (Arbeitnow, Jobicy)
 TITLE_SEPARATOR = " | "
-CURRENCIES = {"€": "EUR", "$": "USD", "£": "GBP"}
+CURRENCIES = {
+    "€": "EUR",
+    "$": "USD",
+    "£": "GBP",
+    "EUR": "EUR",
+    "USD": "USD",
+    "GBP": "GBP",
+}
 
 # Compétences techniques reconnues, avec leur forme affichée. Les mots trop
 # courants (« go », « r ») ne sont cherchés qu'avec une forme non ambiguë.
@@ -243,11 +263,12 @@ def to_decimal(pValue):
 def find_currency(pMatch):
     """Retourne la devise trouvée à l'un des emplacements du motif, ou None."""
 
+    # Un code écrit « usd » dans le texte reste reconnu.
     rCurrency = next(
         (
-            pMatch.group(vName)
-            for vName in ("currency1", "currency2", "currency3", "currency4")
-            if pMatch.group(vName)
+            vValue.upper() if vValue.isalpha() else vValue
+            for vName, vValue in pMatch.groupdict().items()
+            if vName.startswith("currency") and vValue
         ),
         None,
     )
@@ -290,6 +311,21 @@ def detect_salary(pText):
             vCurrency = vMatch.group("currency1") or vMatch.group("currency2")
             vAmount = to_decimal(vMatch.group("min") or vMatch.group("min2")) * 1000
             rSalary = (vAmount, None, CURRENCIES[vCurrency], "year")
+
+    if rSalary is None:
+        vMatch = SALARY_FULL_SYMBOL_PATTERN.search(pText)
+
+        if vMatch:
+            rSalary = (
+                to_amount(vMatch.group("min").replace(",", "")),
+                (
+                    to_amount(vMatch.group("max").replace(",", ""))
+                    if vMatch.group("max")
+                    else None
+                ),
+                CURRENCIES[find_currency(vMatch)],
+                "month" if vMatch.group("period") else "year",
+            )
 
     if rSalary is None:
         vMatch = SALARY_FULL_PATTERN.search(pText)

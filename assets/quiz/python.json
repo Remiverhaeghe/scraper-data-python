@@ -1,13 +1,24 @@
 {
   "theme": "Python",
-  "skills": ["Python", "Django", "Flask", "FastAPI", "Pandas"],
+  "skills": [
+    "Python",
+    "Django",
+    "Flask",
+    "FastAPI",
+    "Pandas"
+  ],
   "questions": [
     {
       "id": "python-defaut-mutable",
       "level": "confirmé",
       "question": "Que renvoie le second appel ?",
       "code": "def ajouter(x, liste=[]):\n    liste.append(x)\n    return liste\n\najouter(1)\najouter(2)",
-      "choices": ["[2]", "[1, 2]", "[1]", "Une erreur"],
+      "choices": [
+        "[2]",
+        "[1, 2]",
+        "[1]",
+        "Une erreur"
+      ],
       "answer": 1,
       "explanation": "La valeur par défaut est créée une seule fois, à la définition de la fonction : la même liste est réutilisée à chaque appel. On écrit plutôt liste=None puis liste = [] if liste is None else liste."
     },
@@ -16,7 +27,12 @@
       "level": "débutant",
       "question": "Qu'affiche ce code ?",
       "code": "print([x * 2 for x in range(3)])",
-      "choices": ["[2, 4, 6]", "[0, 2, 4]", "[0, 1, 2]", "[0, 2, 4, 6]"],
+      "choices": [
+        "[2, 4, 6]",
+        "[0, 2, 4]",
+        "[0, 1, 2]",
+        "[0, 2, 4, 6]"
+      ],
       "answer": 1,
       "explanation": "range(3) produit 0, 1 et 2 (la borne de fin est exclue), multipliés ensuite par 2."
     },
@@ -38,7 +54,12 @@
       "level": "débutant",
       "question": "Qu'affiche ce code ?",
       "code": "a = [1, 2]\nb = a\nb.append(3)\nprint(a)",
-      "choices": ["[1, 2]", "[1, 2, 3]", "[3]", "Une erreur"],
+      "choices": [
+        "[1, 2]",
+        "[1, 2, 3]",
+        "[3]",
+        "Une erreur"
+      ],
       "answer": 1,
       "explanation": "b = a ne copie pas la liste : les deux noms désignent le même objet. Pour une copie : b = a.copy() ou b = list(a)."
     },
@@ -60,7 +81,12 @@
       "level": "débutant",
       "question": "Que renvoie cette expression ?",
       "code": "{\"a\": 1}.get(\"b\", 0)",
-      "choices": ["None", "0", "Une KeyError", "1"],
+      "choices": [
+        "None",
+        "0",
+        "Une KeyError",
+        "1"
+      ],
       "answer": 1,
       "explanation": "get renvoie la valeur par défaut fournie si la clé est absente, sans lever de KeyError contrairement à {\"a\": 1}[\"b\"]."
     },
@@ -95,7 +121,12 @@
       "level": "débutant",
       "question": "Qu'affiche ce code ?",
       "code": "print(f\"{3.14159:.2f}\")",
-      "choices": ["3.14159", "3.14", "3.1", "3"],
+      "choices": [
+        "3.14159",
+        "3.14",
+        "3.1",
+        "3"
+      ],
       "answer": 1,
       "explanation": ".2f formate le nombre en virgule fixe avec deux décimales, arrondies."
     },
@@ -111,6 +142,88 @@
       ],
       "answer": 1,
       "explanation": "Le GIL empêche plusieurs threads d'exécuter du code Python en même temps : ils conviennent aux attentes réseau ou disque, pas au calcul. Des processus séparés ont chacun leur interpréteur."
+    },
+    {
+      "id": "python-fstring-debug",
+      "level": "débutant",
+      "question": "Qu'affiche ce code ?",
+      "code": "x = 3\nprint(f\"{x=}\")",
+      "choices": [
+        "x=3",
+        "3",
+        "{x=}",
+        "Erreur de syntaxe"
+      ],
+      "answer": 0,
+      "explanation": "Depuis Python 3.8, f\"{x=}\" affiche le texte de l'expression et sa valeur : pratique pour déboguer."
+    },
+    {
+      "id": "python-walrus",
+      "level": "confirmé",
+      "question": "Que fait l'opérateur := ?",
+      "code": "while (ligne := fichier.readline()):\n    traiter(ligne)",
+      "choices": [
+        "Il compare deux valeurs",
+        "Il affecte une valeur à l'intérieur d'une expression",
+        "Il déclare une constante",
+        "Il copie une liste"
+      ],
+      "answer": 1,
+      "explanation": "L'opérateur morse (Python 3.8) affecte et renvoie la valeur : la ligne lue sert à la fois de condition et de variable."
+    },
+    {
+      "id": "python-match",
+      "level": "confirmé",
+      "question": "À quoi sert match / case (Python 3.10) ?",
+      "choices": [
+        "À comparer des chaînes avec une regex",
+        "Au filtrage par motif, selon la forme et la valeur d'un objet",
+        "À gérer les exceptions",
+        "À créer une boucle"
+      ],
+      "answer": 1,
+      "explanation": "match compare une valeur à des motifs : littéraux, structures (case [x, y]), classes (case Point(x=0)), avec capture des variables. C'est plus qu'un switch."
+    },
+    {
+      "id": "python-copie",
+      "level": "débutant",
+      "question": "Que contient a après ce code ?",
+      "code": "a = [1, 2]\nb = a\nb.append(3)",
+      "choices": [
+        "[1, 2]",
+        "[1, 2, 3]",
+        "[3]",
+        "Erreur"
+      ],
+      "answer": 1,
+      "explanation": "b = a ne copie pas la liste : les deux noms désignent le même objet. Pour une copie : a.copy() ou list(a) (copie superficielle), copy.deepcopy pour les objets imbriqués."
+    },
+    {
+      "id": "python-decorateur",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'un décorateur ?",
+      "choices": [
+        "Une fonction qui reçoit une fonction et renvoie une fonction qui l'enveloppe",
+        "Un commentaire spécial",
+        "Une classe abstraite",
+        "Un type de variable"
+      ],
+      "answer": 0,
+      "explanation": "@mon_decorateur au-dessus de def f équivaut à f = mon_decorateur(f). Utile pour les logs, le cache (@lru_cache) ou les contrôles d'accès. functools.wraps garde le nom de la fonction d'origine."
+    },
+    {
+      "id": "python-args-kwargs",
+      "level": "débutant",
+      "question": "Que reçoit kwargs lors de l'appel f(1, 2, a=3) ?",
+      "code": "def f(*args, **kwargs):\n    ...",
+      "choices": [
+        "(1, 2)",
+        "{'a': 3}",
+        "[3]",
+        "None"
+      ],
+      "answer": 1,
+      "explanation": "*args regroupe les arguments positionnels supplémentaires dans un tuple, **kwargs les arguments nommés dans un dictionnaire."
     }
   ]
 }

@@ -19,8 +19,12 @@ from PySide6.QtWidgets import (
 from gui.chart import BarChart
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, create_page_header
-from job.presentation import CHART_PALETTE
-from job.quality import build_quality_export, get_quality_report
+from job.quality import (
+    PROBLEMS_HELP,
+    build_quality_export,
+    describe_problems,
+    get_quality_report,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -35,13 +39,25 @@ class QualityPage(QWidget):
 
         self.database_file = pDatabaseFile
 
-        vExportButton = create_button(
+        self.export_button = create_button(
             "Exporter les offres à vérifier", "download", pIconColor=COLORS["primary"]
         )
-        vExportButton.setToolTip(
+        self.export_button.setToolTip(
             "CSV des offres incomplètes ou mal découpées, avec le défaut repéré"
         )
-        vExportButton.clicked.connect(self.export_problems)
+        self.export_button.clicked.connect(self.export_problems)
+
+        self.problems_label = QLabel()
+        self.problems_label.setObjectName("activityTitle")
+        self.problems_label.setWordWrap(True)
+
+        vProblemsHelp = QLabel(PROBLEMS_HELP)
+        vProblemsHelp.setObjectName("cardSubtitle")
+        vProblemsHelp.setWordWrap(True)
+
+        vProblemsCard, vProblemsLayout = create_card("Offres à vérifier")
+        vProblemsLayout.addWidget(self.problems_label)
+        vProblemsLayout.addWidget(vProblemsHelp)
 
         self.chart = BarChart()
         self.chart.setMinimumHeight(220)
@@ -78,11 +94,12 @@ class QualityPage(QWidget):
             vLayout,
             "Qualité des données",
             "Les informations fournies par chaque source, pour voir ce qui manque",
-            [vExportButton],
+            [self.export_button],
             pIcon="list-checks",
         )
 
         vLayout.addWidget(vChartCard)
+        vLayout.addWidget(vProblemsCard)
         vLayout.addWidget(vTableCard, 1)
         vLayout.addWidget(self.message_label)
 
@@ -106,12 +123,14 @@ class QualityPage(QWidget):
             [
                 (
                     "Remplissage",
-                    CHART_PALETTE[0],
+                    # Mêmes couleurs que le tableau : vert, orange ou rouge selon le taux
+                    [COLORS[vRate["tone"]] for vRate in pReport["total"]["rates"]],
                     [vRate["rate"] for vRate in pReport["total"]["rates"]],
                 )
             ],
             pAxes=("Champ", "% des offres renseignées"),
             pEmptyText="Aucune offre en base pour le moment",
+            pFillWidth=True,
         )
 
         self.table.setColumnCount(len(pReport["columns"]) + 2)
@@ -128,10 +147,19 @@ class QualityPage(QWidget):
                 vItem.setForeground(QColor(COLORS[vRate["tone"]]))
                 self.table.setItem(vRow, vColumn, vItem)
 
+        vProblems = pReport["problems"]
+
+        self.export_button.setText(
+            f"Exporter les offres à vérifier ({vProblems['total']})"
+            if vProblems["total"]
+            else "Aucune offre à vérifier"
+        )
+        self.export_button.setEnabled(bool(vProblems["total"]))
+        self.problems_label.setText(describe_problems(vProblems))
+
         self.message_label.setText(
             f"{pReport['total']['count']} offre(s) analysée(s), "
             f"{pReport['rejected']} écartée(s) faute de titre et de description. "
-            "L'export liste les offres incomplètes ou mal découpées."
         )
 
     def export_problems(self):

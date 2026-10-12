@@ -180,10 +180,10 @@ class SearchPage(QWidget):
         self.advanced_card = self.create_advanced_card()
         self.advanced_card.hide()
 
+        # Les options avancées s'ouvrent sous les critères, près de leur lien.
         vLayout.addWidget(self.create_criteria_card())
-        vLayout.addWidget(self.create_sources_card())
-        vLayout.addWidget(self.advanced_button, 0, Qt.AlignmentFlag.AlignLeft)
         vLayout.addWidget(self.advanced_card)
+        vLayout.addWidget(self.create_sources_card())
         vLayout.addStretch()
 
         # Hors de la zone qui défile : le lancement et la progression restent
@@ -265,8 +265,14 @@ class SearchPage(QWidget):
         )
         self.remember_check.toggled.connect(self.save_settings)
 
+        vOptions = QHBoxLayout()
+        vOptions.addWidget(self.remember_check)
+        vOptions.addSpacing(24)
+        vOptions.addWidget(self.advanced_button)
+        vOptions.addStretch()
+
         vLayout.addLayout(vGrid)
-        vLayout.addWidget(self.remember_check)
+        vLayout.addLayout(vOptions)
 
         return vCard
 
