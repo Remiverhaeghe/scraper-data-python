@@ -766,7 +766,11 @@ class QuizPage(QWidget):
         except Exception:
             logger.exception("Impossible de charger la révision")
 
-            self.message_label.setText("Les questions n'ont pas pu être chargées.")
+            show_message(
+                self.message_label,
+                "Les questions n'ont pas pu être chargées.",
+                "danger",
+            )
             self.message_label.show()
             return
 
@@ -1177,7 +1181,7 @@ class QuizPage(QWidget):
                 )
 
             except ValueError as vException:
-                self.message_label.setText(str(vException))
+                show_message(self.message_label, str(vException), "warning")
                 self.message_label.show()
                 return
 

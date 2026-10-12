@@ -30,6 +30,7 @@ from gui.quiz_page import QuizPage
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
 from gui.theme import COLORS
+from gui.widgets import show_message
 from job.schedule import save_scheduled_search
 from utils.logger import get_logger
 
@@ -258,7 +259,7 @@ class MainWindow(QMainWindow):
     def show_reset_result(self, pMessage):
         """Recharge toutes les pages après une réinitialisation des données."""
         self.rebuild("settings")
-        self.settings_page.reset_message.setText(pMessage)
+        show_message(self.settings_page.reset_message, pMessage)
 
     def save_scheduled_search(self, pSources, pCriteria):
         """Enregistre la recherche du planificateur et l'indique sur la page."""

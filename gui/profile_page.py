@@ -22,6 +22,7 @@ from gui.widgets import (
     create_card,
     create_page_header,
     create_scroll_content,
+    show_message,
 )
 from job.assistant import CHATGPT_URL
 from job.cv_import import (
@@ -166,7 +167,7 @@ class ProfilePage(QWidget):
         except Exception:
             logger.exception("Impossible de lire le profil")
 
-            self.message_label.setText("Le profil n'a pas pu être lu.")
+            show_message(self.message_label, "Le profil n'a pas pu être lu.", "danger")
 
         else:
             self.name_edit.setText(vTexts["name"])
@@ -205,13 +206,13 @@ class ProfilePage(QWidget):
             vText = read_cv_text(pPath, Path(pPath).read_bytes())
 
         except ValueError as vException:
-            self.message_label.setText(str(vException))
+            show_message(self.message_label, str(vException), "warning")
             return
 
         except OSError:
             logger.exception("CV illisible sur le disque")
 
-            self.message_label.setText("Le CV n'a pas pu être ouvert.")
+            show_message(self.message_label, "Le CV n'a pas pu être ouvert.", "danger")
             return
 
         vExtracted = extract_profile(vText)
@@ -224,10 +225,11 @@ class ProfilePage(QWidget):
         self.cv_prompt = build_cv_prompt(vText)
         self.prompt_button.show()
 
-        self.message_label.setText(
+        show_message(
+            self.message_label,
             f"CV importé : {len(vExtracted['skills'])} compétence(s) repérée(s). "
             "Pour les expériences, copiez la demande pour ChatGPT et collez sa "
-            "réponse ci-dessus. Vérifiez puis enregistrez."
+            "réponse ci-dessus. Vérifiez puis enregistrez.",
         )
 
     def copy_cv_prompt(self):
@@ -235,9 +237,10 @@ class ProfilePage(QWidget):
         QApplication.clipboard().setText(self.cv_prompt)
         QDesktopServices.openUrl(QUrl(CHATGPT_URL))
 
-        self.message_label.setText(
+        show_message(
+            self.message_label,
             "Demande copiée : collez-la dans ChatGPT (Ctrl+V), puis sa réponse "
-            "dans Expériences et Variantes de CV."
+            "dans Expériences et Variantes de CV.",
         )
 
     def save(self):
@@ -253,16 +256,21 @@ class ProfilePage(QWidget):
             save_profile(self.database_file, vProfile)
 
         except ValueError as vException:
-            self.message_label.setText(str(vException))
+            show_message(self.message_label, str(vException), "warning")
 
         except Exception:
             logger.exception("Échec de l'enregistrement du profil")
 
-            self.message_label.setText("Le profil n'a pas pu être enregistré.")
+            show_message(
+                self.message_label,
+                "Le profil n'a pas pu être enregistré.",
+                "danger",
+            )
 
         else:
-            self.message_label.setText(
+            show_message(
+                self.message_label,
                 f"Profil enregistré : {len(vProfile['skills'])} compétence(s), "
                 f"{len(vProfile['experiences'])} expérience(s), "
-                f"{len(vProfile['cv_variants'])} CV."
+                f"{len(vProfile['cv_variants'])} CV.",
             )

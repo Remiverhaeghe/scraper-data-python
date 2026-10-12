@@ -348,6 +348,15 @@ def import_questions(
         unflag_questions(pDatabaseFile, {vQuestion["id"] for vQuestion in vReplaced})
 
     vAdded += vReplaced
+    vDomain = (
+        vParsed["domain"]
+        or (
+            (vCatalogTheme["domain"], vCatalogTheme["subdomain"])
+            if vCatalogTheme
+            else None
+        )
+        or vQuiz.get(vThemeKey, {}).get("domain")
+    )
 
     if vAdded:
         # Un thème livré garde ses compétences ; un nouveau prend celles du fichier.
@@ -357,12 +366,7 @@ def import_questions(
                 vThemeKey,
                 vThemeLabel,
                 vParsed["skills"] or [vThemeLabel],
-                vParsed["domain"]
-                or (
-                    (vCatalogTheme["domain"], vCatalogTheme["subdomain"])
-                    if vCatalogTheme
-                    else None
-                ),
+                vDomain,
             )
 
         save_imported_questions(pDatabaseFile, vThemeKey, vThemeLabel, vAdded, pNow)
@@ -371,7 +375,7 @@ def import_questions(
         logger.warning("Import de révision : %s question(s) écartée(s)", len(rRejected))
 
     vQuality = (
-        assess_questions(vAdded)
+        assess_questions(vAdded, vDomain)
         if vAdded
         else {"summary": "", "warnings": [], "issues": []}
     )

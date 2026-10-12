@@ -6,7 +6,8 @@ Pour chaque thème ci-dessus, refais le fichier questions/<identifiant du thème
 Selon l'alerte :
 - bonne réponse trop souvent la plus longue (règle 6) : réécris les choix pour que les 4 aient une longueur comparable (écart de 20 % au plus). Allonge les mauvaises réponses en restant plausible, ou raccourcis la bonne ; jamais de réponse absurde ou hors sujet ;
 - bonne réponse trop souvent à la même position (règle 4) : réordonne les choix pour répartir "answer" équitablement entre 0, 1, 2 et 3 ;
-- explications trop courtes (règle 8) : 3 à 5 phrases qui disent pourquoi la bonne réponse est juste, puis pourquoi chacun des autres choix est faux.
+- explications trop courtes (règle 8) : 3 à 5 phrases qui disent pourquoi la bonne réponse est juste, puis pourquoi chacun des autres choix est faux ;
+- pas assez de cas concrets (règle 7) : transforme environ un tiers des questions en cas pratiques avec un extrait de code, de commande, de configuration ou de programme automate en texte structuré IEC 61131-3 (5 à 15 lignes) dans "code" : que fait ce code, quelle est la sortie, où est l'erreur. Garde l'identifiant et le niveau de chaque question transformée.
 Mets à jour "answer" et "expectedAnswer" après chaque changement de choix. Ne change pas le sens d'une question ; si une bonne réponse était fausse, corrige-la et signale-le en dehors du fichier.
 Garde les champs "code", "visual" et "references" existants ; si tu n'inclus pas les schémas dans l'archive, l'application garde ceux déjà importés.
 

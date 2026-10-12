@@ -215,8 +215,11 @@ def show_message(pLabel, pText, pTone="success"):
     """Affiche un message coloré selon sa nature : success, warning ou danger.
 
     Vert pour une réussite, orange pour une saisie à corriger, rouge pour une
-    erreur ; un texte vide efface le message.
+    erreur ; None garde le style de l'étiquette, pour une simple information.
+    Un texte vide efface le message.
     """
 
     pLabel.setText(pText)
-    pLabel.setStyleSheet(f"color: {COLORS[pTone]}; font-weight: 600;" if pText else "")
+    pLabel.setStyleSheet(
+        f"color: {COLORS[pTone]}; font-weight: 600;" if pText and pTone else ""
+    )

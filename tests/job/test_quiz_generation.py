@@ -260,7 +260,7 @@ def test_pasted_catalog_theme_keeps_its_key_and_reports_quality(database_file):
         "Automatisme",
     )
     assert get_import_tone(vReport) == "warning"
-    assert describe_quiz_import(vReport).endswith("2 alerte(s) de qualité.")
+    assert describe_quiz_import(vReport).endswith("3 alerte(s) de qualité.")
 
     vDetails = describe_import_details(vReport)
 
@@ -375,3 +375,45 @@ def test_correction_prompt_lists_flagged_questions(database_file):
     assert "Questions concernées : grafcet-l1-000, grafcet-l1-001" in vPrompt
     assert "grafcet-l1-015" not in vPrompt
     assert not re.search(r"\$[a-z_]", vPrompt)
+
+
+@pytest.mark.parametrize(
+    ("pDomain", "pCode", "pAlert"),
+    [
+        (("Industrie", "Automatisme"), 0, True),
+        (("Informatique", "Développement"), 2, True),
+        (("Informatique", "Développement"), 3, False),
+        (("Informatique", "Outils et méthodes"), 0, False),
+        (("Industrie", "Mécanique et fluides"), 0, False),
+        (None, 0, False),
+    ],
+)
+def test_assess_questions_asks_for_concrete_cases(pDomain, pCode, pAlert):
+    """Vérifie l'alerte des thèmes techniques sans assez d'extraits de code."""
+
+    vQuestions = [
+        build_question(vIndex, pAnswer=vIndex % 4)
+        for vIndex in range(MIN_QUALITY_SAMPLE)
+    ]
+
+    for vQuestion in vQuestions[:pCode]:
+        vQuestion["code"] = "IF Marche THEN Moteur := TRUE; END_IF;"
+
+    vQuality = assess_questions(vQuestions, pDomain)
+    vAlerts = [vWarning for vWarning, _ in vQuality["issues"] if "code" in vWarning]
+
+    assert vAlerts == (
+        [f"{pCode} question(s) avec code sur 20 : moins de 15 % de cas concrets"]
+        if pAlert
+        else []
+    )
+
+    if pAlert:
+        vPrompt = build_correction_prompt(
+            [{"key": "grafcet", "label": "Grafcet", "issues": vQuality["issues"]}]
+        )
+
+        # L'alerte porte sur tout le lot : aucune question n'est citée.
+        assert f"- {vAlerts[0]}\n" in vPrompt
+        assert "Questions concernées" not in vPrompt
+        assert "pas assez de cas concrets (règle 7)" in vPrompt

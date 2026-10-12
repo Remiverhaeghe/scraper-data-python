@@ -192,6 +192,9 @@ data/*.db
 data/backups/
 data/attachments/
 
+# Lots de questions de révision prêts à importer
+data/packs/
+
 # Fichiers locaux
 *.local
 

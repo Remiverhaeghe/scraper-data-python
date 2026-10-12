@@ -4,6 +4,7 @@ import gui.dialogs as dialogs
 import gui.offer_detail as offer_detail
 import gui.profile_page as profile_page
 from gui.profile_page import ProfilePage
+from gui.theme import COLORS
 from job.profile import build_profile, load_profile, save_profile
 from storage.database import initialize_database
 
@@ -22,6 +23,7 @@ def test_profile_is_saved_and_reloaded(qt_application, tmp_path):
     vPage.save()
 
     assert vPage.message_label.text().startswith("Profil enregistré : 2 compétence(s)")
+    assert COLORS["success"] in vPage.message_label.styleSheet()
     assert load_profile(vDatabaseFile)["experiences"][0]["title"] == "Développeur"
 
     vReopened = ProfilePage(vDatabaseFile)
@@ -42,6 +44,7 @@ def test_profile_reports_invalid_input(qt_application, tmp_path):
     vPage.save()
 
     assert "trop long" in vPage.message_label.text()
+    assert COLORS["warning"] in vPage.message_label.styleSheet()
 
 
 def test_preparation_needs_a_profile_then_opens(qt_application, tmp_path, monkeypatch):

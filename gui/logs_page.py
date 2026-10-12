@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.theme import COLORS
-from gui.widgets import create_button, create_page_header
+from gui.widgets import create_button, create_page_header, show_message
 from utils.log_reader import (
     LEVEL_FILTERS,
     clear_logs,
@@ -129,13 +129,19 @@ class LogsPage(QWidget):
             logger.exception("Impossible de lire les fichiers de logs")
 
             vEntries = []
-            self.message_label.setText("Les fichiers de logs n'ont pas pu être lus.")
+            show_message(
+                self.message_label,
+                "Les fichiers de logs n'ont pas pu être lus.",
+                "danger",
+            )
 
         else:
-            self.message_label.setText(
+            show_message(
+                self.message_label,
                 f"{len(vEntries)} entrée(s) affichée(s), {MAX_LOG_ENTRIES} au plus · "
                 f"logs conservés {get_retention_days()} jours · le détail d'une "
-                "erreur s'affiche au survol du message"
+                "erreur s'affiche au survol du message",
+                None,
             )
 
         self.show_entries(vEntries)
@@ -156,12 +162,18 @@ class LogsPage(QWidget):
             except OSError:
                 logger.exception("Échec de l'export des journaux")
 
-                self.message_label.setText(
-                    "Les journaux n'ont pas pu être enregistrés."
+                show_message(
+                    self.message_label,
+                    "Les journaux n'ont pas pu être enregistrés.",
+                    "danger",
                 )
 
             else:
-                self.message_label.setText(f"Journaux enregistrés : {vFileName}")
+                show_message(
+                    self.message_label,
+                    f"Journaux enregistrés : {vFileName}",
+                    "success",
+                )
 
     def confirm_clear(self):
         """Demande confirmation, puis efface tous les journaux."""

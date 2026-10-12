@@ -30,6 +30,7 @@ from gui.widgets import (
     create_card,
     create_page_header,
     create_scroll_content,
+    show_message,
 )
 from job.application_tracking import (
     BOARD_STATUSES,
@@ -204,7 +205,11 @@ class ApplicationsPage(QWidget):
         except Exception:
             logger.exception("Impossible de charger les candidatures")
 
-            self.message_label.setText("Les candidatures n'ont pas pu être chargées.")
+            show_message(
+                self.message_label,
+                "Les candidatures n'ont pas pu être chargées.",
+                "danger",
+            )
             self.message_label.show()
             return
 
@@ -308,7 +313,11 @@ class ApplicationsPage(QWidget):
         except Exception:
             logger.exception("Échec du changement de statut de la candidature")
 
-            self.message_label.setText("Le statut n'a pas pu être modifié.")
+            show_message(
+                self.message_label,
+                "Le statut n'a pas pu être modifié.",
+                "danger",
+            )
             self.message_label.show()
 
         else:

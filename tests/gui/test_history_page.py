@@ -2,7 +2,11 @@
 
 from datetime import datetime
 
+from PySide6.QtWidgets import QLabel
+
 from gui.history_page import HistoryPage, build_row
+from gui.theme import COLORS
+from gui.widgets import show_message
 from job.presentation import UNKNOWN_SEARCH
 from scraper.history import HistoryEntry
 from storage.database import initialize_database
@@ -81,3 +85,17 @@ def test_build_row_without_parameters():
     vRow = build_row(build_entry(parameters=None))
 
     assert vRow[1] == UNKNOWN_SEARCH
+
+
+def test_information_message_drops_previous_colour(qt_application):
+    """Vérifie qu'une information reprend le style de l'étiquette après une erreur."""
+
+    vLabel = QLabel()
+
+    show_message(vLabel, "Échec.", "danger")
+
+    assert COLORS["danger"] in vLabel.styleSheet()
+
+    show_message(vLabel, "3 exécution(s).", None)
+
+    assert (vLabel.text(), vLabel.styleSheet()) == ("3 exécution(s).", "")

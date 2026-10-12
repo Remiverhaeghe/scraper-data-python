@@ -25,6 +25,8 @@ dans la page Révision. Les demandes sont produites par l'application à partir 
    rattachées, un schéma absent de la correction est gardé et un signalement est levé.
    Une question livrée avec l'application ou d'un autre thème n'est jamais remplacée.
 
+Les archives à garder ou à retravailler se rangent dans `data/packs/`, ignoré par Git.
+
 Chaque demande porte le numéro du lot suivant du thème, calculé d'après les questions déjà
 importées : les identifiants `<thème>-l<lot>-<numéro>` ne se chevauchent jamais.
 

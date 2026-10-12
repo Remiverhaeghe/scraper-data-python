@@ -16,7 +16,12 @@ from PySide6.QtWidgets import (
 from gui.icons import get_icon
 from gui.chart import BarChart, PieChart
 from gui.theme import COLORS
-from gui.widgets import StatisticCard, create_card, create_page_header
+from gui.widgets import (
+    StatisticCard,
+    create_card,
+    create_page_header,
+    show_message,
+)
 from job.presentation import (
     CHART_PALETTE,
     EXECUTION_STATUS_LABELS,
@@ -183,7 +188,11 @@ class HistoryPage(QWidget):
         except Exception:
             logger.exception("Impossible de charger l'historique")
 
-            self.message_label.setText("L'historique n'a pas pu être chargé.")
+            show_message(
+                self.message_label,
+                "L'historique n'a pas pu être chargé.",
+                "danger",
+            )
 
         else:
             for vName, vValue in summarize_history(vSummary).items():
@@ -230,9 +239,13 @@ class HistoryPage(QWidget):
             # Les critères et les sources tiennent sur deux lignes.
             self.table.resizeRowsToContents()
 
-            self.message_label.setText(
-                f"{len(vEntries)} dernière(s) exécution(s) · survolez un statut "
-                "pour lire le détail d'une erreur"
-                if vEntries
-                else "Aucune exécution enregistrée pour le moment."
+            show_message(
+                self.message_label,
+                (
+                    f"{len(vEntries)} dernière(s) exécution(s) · survolez un statut "
+                    "pour lire le détail d'une erreur"
+                    if vEntries
+                    else "Aucune exécution enregistrée pour le moment."
+                ),
+                None,
             )

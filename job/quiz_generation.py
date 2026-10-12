@@ -48,6 +48,18 @@ MAX_POSITION_SHARE = 0.4
 MIN_EXPLANATION_LENGTH = 80
 MAX_SHORT_EXPLANATION_SHARE = 0.2
 
+# Thèmes où un tiers des questions doit porter sur un extrait de code, de
+# commande ou de programme automate : en dessous de cette part, le lot reste
+# théorique.
+CODE_SUBDOMAINS = (
+    "Développement",
+    "Données",
+    "Exploitation et DevOps",
+    "Réseau",
+    "Automatisme",
+)
+MIN_CODE_SHARE = 0.15
+
 POSITION_LABELS = "ABCD"
 
 
@@ -268,11 +280,12 @@ def format_share(pCount, pTotal):
     return rText
 
 
-def assess_questions(pQuestions):
+def assess_questions(pQuestions, pDomain=None):
     """Mesure un lot importé ; retourne son résumé et ses alertes.
 
     Un écart aux règles de la demande (réponse qui se devine, explications
-    trop courtes) est signalé dès que le lot est assez grand pour le prouver.
+    trop courtes, pas assez de cas concrets selon le domaine du thème) est
+    signalé dès que le lot est assez grand pour le prouver.
     """
 
     vTotal = len(pQuestions)
@@ -341,6 +354,21 @@ def assess_questions(pQuestions):
                 )
             )
 
+        vCode = sum("code" in vQuestion for vQuestion in pQuestions)
+
+        if (
+            pDomain
+            and pDomain[1] in CODE_SUBDOMAINS
+            and vCode < MIN_CODE_SHARE * vTotal
+        ):
+            vIssues.append(
+                (
+                    f"{vCode} question(s) avec code sur {vTotal} : moins de "
+                    f"{round(100 * MIN_CODE_SHARE)} % de cas concrets",
+                    [],
+                )
+            )
+
     if vIssues:
         logger.warning(
             "Lot de révision à vérifier : %s",
@@ -362,7 +390,8 @@ def build_correction_prompt(pReview):
     vThemes = "\n\n".join(
         f"Thème « {vTheme['label']} », fichier questions/{vTheme['key']}.json :\n"
         + "\n".join(
-            f"- {vWarning}\n  Questions concernées : {', '.join(vIds)}"
+            f"- {vWarning}"
+            + (f"\n  Questions concernées : {', '.join(vIds)}" if vIds else "")
             for vWarning, vIds in vTheme["issues"]
         )
         for vTheme in pReview

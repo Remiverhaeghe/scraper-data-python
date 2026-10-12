@@ -18,7 +18,12 @@ from PySide6.QtWidgets import (
 
 from gui.chart import BarChart
 from gui.theme import COLORS
-from gui.widgets import create_button, create_card, create_page_header
+from gui.widgets import (
+    create_button,
+    create_card,
+    create_page_header,
+    show_message,
+)
 from job.quality import (
     PROBLEMS_HELP,
     build_quality_export,
@@ -111,7 +116,11 @@ class QualityPage(QWidget):
         except Exception:
             logger.exception("Impossible de calculer la qualité des données")
 
-            self.message_label.setText("La qualité des données n'a pas pu être lue.")
+            show_message(
+                self.message_label,
+                "La qualité des données n'a pas pu être lue.",
+                "danger",
+            )
 
         else:
             self.show_report(vReport)
@@ -157,9 +166,11 @@ class QualityPage(QWidget):
         self.export_button.setEnabled(bool(vProblems["total"]))
         self.problems_label.setText(describe_problems(vProblems))
 
-        self.message_label.setText(
+        show_message(
+            self.message_label,
             f"{pReport['total']['count']} offre(s) analysée(s), "
-            f"{pReport['rejected']} écartée(s) faute de titre et de description. "
+            f"{pReport['rejected']} écartée(s) faute de titre et de description. ",
+            None,
         )
 
     def export_problems(self):
@@ -180,7 +191,15 @@ class QualityPage(QWidget):
             except Exception:
                 logger.exception("Échec de l'export des offres à vérifier")
 
-                self.message_label.setText("L'export n'a pas pu être enregistré.")
+                show_message(
+                    self.message_label,
+                    "L'export n'a pas pu être enregistré.",
+                    "danger",
+                )
 
             else:
-                self.message_label.setText(f"Offres à vérifier exportées : {vFileName}")
+                show_message(
+                    self.message_label,
+                    f"Offres à vérifier exportées : {vFileName}",
+                    "success",
+                )

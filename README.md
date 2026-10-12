@@ -154,6 +154,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 
 - [x] Fenêtre principale avec menu latéral
 - [x] Identité visuelle : logo, icônes, bannière avec actions, cartes colorées, activité récente
+- [x] Messages colorés sur toutes les pages : vert pour une réussite, orange pour une saisie à corriger, rouge pour une erreur
 - [x] Accueil : offres, nouveautés, candidatures, relances et dernière exécution
 - [x] Recherche : sources, filtres, options avancées, progression et arrêt
 - [x] Sources non configurées grisées, derniers critères mémorisés
@@ -318,7 +319,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande reprenant le modèle complet d'un pack (domaine, niveaux répartis ou au choix, schémas et guides facultatifs), import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
 - [x] Catalogue de 76 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
-- [x] Contrôle de chaque lot importé : bonne réponse trop souvent la plus longue ou à la même position, explications trop courtes ; bilan en orange, mesures par thème et demande de correction pour ChatGPT citant les questions concernées
+- [x] Contrôle de chaque lot importé : bonne réponse trop souvent la plus longue ou à la même position, explications trop courtes, moins de 15 % de cas concrets avec code pour un thème technique ; bilan en orange, mesures par thème et demande de correction pour ChatGPT citant les questions concernées
 - [x] Lot corrigé réimporté : une question importée revenant avec le même identifiant est remplacée, réponses et schémas gardés ; une question livrée n'est jamais remplacée
 - [x] Signalement d'une question douteuse, retirée des tirages
 - [x] Export des questions importées en pack .zip réimportable (manifest, questions, schémas, guides), sans les questions signalées
