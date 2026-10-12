@@ -158,6 +158,7 @@ from job.quiz_import import (
     IMPORT_EXTENSIONS,
     build_generation_prompt,
     describe_quiz_import,
+    export_quiz_pack,
     import_questions,
     import_questions_file,
 )
@@ -1272,6 +1273,40 @@ def import_quiz_questions(
             request,
             pDatabaseFile,
             pImport={"theme": pTheme, "message": describe_quiz_import(vReport)},
+        )
+
+    return rResponse
+
+
+@app.get("/quiz/export")
+def download_quiz_pack(
+    request: Request, pDatabaseFile: str = Depends(get_database_file)
+):
+    """Télécharge les questions importées dans un pack .zip réimportable."""
+
+    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as vFile:
+        vPath = Path(vFile.name)
+
+    try:
+        export_quiz_pack(pDatabaseFile, vPath)
+
+    except ValueError as vException:
+        vPath.unlink(missing_ok=True)
+
+        rResponse = render_quiz(
+            request,
+            pDatabaseFile,
+            pImport={"message": str(vException)},
+            pStatusCode=400,
+        )
+
+    else:
+        # Le fichier temporaire est supprimé une fois envoyé.
+        rResponse = FileResponse(
+            vPath,
+            media_type="application/zip",
+            filename=f"questions-revision-{datetime.now():%Y%m%d}.zip",
+            background=BackgroundTask(vPath.unlink, missing_ok=True),
         )
 
     return rResponse

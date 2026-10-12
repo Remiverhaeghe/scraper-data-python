@@ -51,6 +51,7 @@ from job.quiz_import import (
     IMPORT_EXTENSIONS,
     build_generation_prompt,
     describe_quiz_import,
+    export_quiz_pack,
     import_questions,
     import_questions_file,
 )
@@ -244,6 +245,14 @@ class QuizPage(QWidget):
         vFileButton.setToolTip("Fichier .json, ou archive .zip de fichiers .json")
         vFileButton.clicked.connect(self.choose_questions_file)
 
+        vExportButton = create_button(
+            "Exporter mes questions…", "download", pIconColor=COLORS["primary"]
+        )
+        vExportButton.setToolTip(
+            "Pack .zip des questions importées, schémas et guides, réimportable"
+        )
+        vExportButton.clicked.connect(self.choose_export_file)
+
         self.import_message = QLabel()
         self.import_message.setObjectName("cardSubtitle")
         self.import_message.setWordWrap(True)
@@ -251,6 +260,7 @@ class QuizPage(QWidget):
         vActions = QHBoxLayout()
         vActions.addWidget(vPasteButton)
         vActions.addWidget(vFileButton)
+        vActions.addWidget(vExportButton)
         vActions.addWidget(self.import_message, 1)
 
         vCard, vLayout = create_card(
@@ -317,6 +327,36 @@ class QuizPage(QWidget):
                     Path(vPath).read_bytes(),
                     datetime.now(),
                 )
+            )
+
+    def choose_export_file(self):
+        """Demande où enregistrer le pack de questions, puis l'écrit."""
+        vPath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Exporter mes questions",
+            str(Path.home() / f"questions-revision-{datetime.now():%Y%m%d}.zip"),
+            "Archive (*.zip)",
+        )
+
+        if vPath:
+            self.export_questions(vPath)
+
+    def export_questions(self, pPath):
+        """Écrit les questions importées dans un pack réimportable."""
+        try:
+            vCount = export_quiz_pack(self.database_file, pPath)
+
+        except ValueError as vException:
+            self.import_message.setText(str(vException))
+
+        except Exception:
+            logger.exception("Échec de l'export des questions de révision")
+
+            self.import_message.setText("L'export a échoué. Voir les journaux.")
+
+        else:
+            self.import_message.setText(
+                f"{vCount} question(s) exportée(s) : {Path(pPath).name}"
             )
 
     def run_import(self, pImport):

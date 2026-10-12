@@ -171,7 +171,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Nombre d'offres à vérifier et défauts les plus fréquents, avec l'usage de l'export expliqué
 - [x] Fiche d'une offre : disponibilité en couleur, traduction d'une annonce étrangère (Google Traduction), infos entreprise réservées aux offres en France
 - [x] Journaux : consultation filtrée, téléchargement et remise à zéro
-- [x] Réinitialisation des données après confirmation, base sauvegardée avant
+- [x] Réinitialisation des données après confirmation, base sauvegardée avant ; les questions de révision importées et leurs signalements sont conservés
 - [x] Profil du candidat et préparation de candidature : correspondance, CV, entretien, lettre
 - [x] Offres regroupées quand elles sont publiées plusieurs fois, différences à valider
 - [x] Offres probablement expirées masquées, vérification du lien à la demande
@@ -317,6 +317,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande au format attendu, import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
 - [x] Signalement d'une question douteuse, retirée des tirages
+- [x] Export des questions importées en pack .zip réimportable (manifest, questions, schémas, guides), sans les questions signalées
 - [x] Packs .zip enrichis : thèmes listés par manifest.json, niveaux intermédiaire et expert, schémas SVG affichés avec la correction (refusés s'ils contiennent du script), références https et guides pratiques en Markdown
 - [x] Explication de la bonne réponse après chaque question, choix mélangés à chaque affichage
 - [x] Questions stockées dans des fichiers JSON versionnés (`assets/quiz/`), faciles à compléter

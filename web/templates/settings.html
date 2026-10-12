@@ -172,7 +172,7 @@
 
         <article class="card">
             <h2>Réinitialisation</h2>
-            <p class="card-subtitle">Efface les offres, candidatures, relances, historique, réglages et recherches enregistrées. Une sauvegarde de la base est faite juste avant.</p>
+            <p class="card-subtitle">Efface les offres, candidatures, relances, historique, réglages et recherches enregistrées. Les questions de révision sont conservées. Une sauvegarde de la base est faite juste avant.</p>
             <form class="reset-form" method="post" action="{{ url_for('reset_data').path }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                 <label class="check">

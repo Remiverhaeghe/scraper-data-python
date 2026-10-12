@@ -1334,3 +1334,23 @@ def test_quiz_pack_visual_references_and_guides(client):
     assert "Analyser la RAM" in vGuide.text
     assert "<li>Heap</li>" in vGuide.text
     assert client.get("/quiz/guide/absent").status_code == 404
+
+
+def test_quiz_pack_export(client):
+    """Vérifie le téléchargement des questions importées, et son absence."""
+
+    vEmpty = client.get("/quiz/export")
+
+    assert vEmpty.status_code == 400
+    assert "Aucune question importée" in vEmpty.text
+
+    client.post(
+        "/quiz/import", files={"file": ("pack.zip", build_pack(), "application/zip")}
+    )
+
+    vExport = client.get("/quiz/export")
+
+    assert vExport.headers["content-type"] == "application/zip"
+
+    with zipfile.ZipFile(io.BytesIO(vExport.content)) as vArchive:
+        assert "questions/ram-jvm.json" in vArchive.namelist()

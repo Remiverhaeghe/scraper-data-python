@@ -8,22 +8,22 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 # Ordre imposé par les clés étrangères : les tables qui référencent les offres
-# sont vidées avant elles.
+# sont vidées avant elles. Les questions de révision importées, leurs thèmes,
+# schémas et guides ne sont pas des données de recherche : elles sont gardées.
 RESET_TABLES = (
     "quiz_answer",
-    "quiz_question",
-    "quiz_theme",
-    "quiz_asset",
-    "quiz_guide",
     "job_attachment",
     "job_follow_up",
     "job_application",
     "job_offer",
     "history",
-    "app_setting",
     "saved_search",
     "duplicate_decision",
 )
+
+# Réglages gardés avec les questions : la liste des questions signalées comme
+# douteuses (FLAGGED_KEY de job/quiz.py), sans quoi elles reviendraient.
+KEPT_SETTINGS = ("quiz_flagged",)
 
 
 def move_attachments(pDatabaseFile, pNow):
@@ -59,6 +59,12 @@ def reset_database(pDatabaseFile, pNow):
         for vTable in RESET_TABLES:
             # Nom de table issu de RESET_TABLES, une constante du code.
             vConnection.execute(f"DELETE FROM {vTable}")  # nosec B608
+
+        vConnection.execute(
+            "DELETE FROM app_setting WHERE key NOT IN "
+            f"({', '.join('?' * len(KEPT_SETTINGS))})",  # nosec B608
+            KEPT_SETTINGS,
+        )
 
         vConnection.commit()
 

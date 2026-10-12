@@ -27,7 +27,7 @@ pluggy==1.6.0
 pyee==13.0.1
 Pygments==2.21.0
 pylint==4.1.2
-pypdf==6.18.0
+pypdf==6.20.0
 PySide6-Essentials==6.12.0
 pytest-cov==7.1.0
 pytest==9.1.1

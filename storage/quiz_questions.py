@@ -202,3 +202,19 @@ def get_quiz_guide(pDatabaseFile, pName):
     rGuide = dict(zip(("name", "theme", "title", "content"), vRow)) if vRow else None
 
     return rGuide
+
+
+def get_quiz_assets(pDatabaseFile):
+    """Retourne tous les schémas enregistrés : contenu par nom."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rAssets = dict(
+            vConnection.execute("SELECT name, content FROM quiz_asset ORDER BY name")
+        )
+
+    finally:
+        vConnection.close()
+
+    return rAssets

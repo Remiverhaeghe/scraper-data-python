@@ -882,7 +882,7 @@ class SettingsPage(QWidget):
         vCard, vLayout = create_card(
             "Réinitialisation",
             "Efface les offres, candidatures, relances, historique, réglages et "
-            "recherches enregistrées. "
+            "recherches enregistrées. Les questions de révision sont conservées. "
             "Une sauvegarde de la base est faite juste avant.",
         )
 
@@ -914,9 +914,9 @@ class SettingsPage(QWidget):
         vDialog.setText("Toutes les données de l'application vont être effacées.")
         vDialog.setInformativeText(
             "Offres, candidatures, relances, historique, réglages, recherches "
-            "enregistrées et planifiée, adresse de notification. Une sauvegarde "
-            "de la base est "
-            "faite avant, dans data/backups. Continuer ?"
+            "enregistrées et planifiée, adresse de notification, progression de "
+            "révision. Les questions de révision importées sont conservées. Une "
+            "sauvegarde de la base est faite avant, dans data/backups. Continuer ?"
         )
 
         vConfirmButton = vDialog.addButton(

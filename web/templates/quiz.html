@@ -117,6 +117,7 @@
         <input type="file" name="file" accept="{{ import_extensions }}" aria-label="Fichier .json ou archive .zip">
         <button class="button" type="submit">{{ icon("upload", 16) }} Importer</button>
     </form>
+    <p class="section-gap"><a class="button" href="{{ url_for('download_quiz_pack').path }}" title="Pack .zip des questions importées, schémas et guides, réimportable">{{ icon("download", 16) }} Exporter mes questions</a></p>
     {% if import_form.message %}<p class="application-message" role="status">{{ import_form.message }}</p>{% endif %}
 </article>
 

@@ -9,11 +9,16 @@ import pytest
 import storage.database as database
 import storage.maintenance as maintenance
 from storage.backup import backup_database, purge_backups
+from job.quiz import FLAGGED_KEY, flag_question, load_active_quiz
+from job.quiz_import import import_questions_file
 from job.schedule import load_schedule, save_notification_email
 from storage.database import initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import count_offers, save_offers
 from storage.maintenance import reset_database
+from storage.quiz_answers import save_quiz_answer
+from storage.quiz_questions import get_quiz_asset, get_quiz_guides
+from tests.job.test_quiz_import import build_pack
 
 NOW = datetime(2026, 10, 11, 9, 30, 15)
 
@@ -138,3 +143,25 @@ def test_reset_database_keeps_data_when_backup_fails(database_file, monkeypatch)
         reset_database(database_file, NOW)
 
     assert count_offers(database_file) == 1
+
+
+def test_reset_database_keeps_quiz_questions(database_file):
+    """Vérifie que questions, schémas, guides et signalements survivent à l'effacement."""
+
+    import_questions_file(database_file, "", "pack.zip", build_pack(), NOW)
+    flag_question(database_file, "ram-jvm-002")
+    save_quiz_answer(database_file, "ram-jvm-001", "ram-jvm", True, NOW)
+
+    reset_database(database_file, NOW)
+
+    vQuiz = load_active_quiz(database_file)
+
+    assert [vQuestion["id"] for vQuestion in vQuiz["ram-jvm"]["questions"]] == [
+        "ram-jvm-001"
+    ]
+    assert vQuiz["ram-jvm"]["skills"] == ["JVM", "GC"]
+    assert get_quiz_asset(database_file, "ram.svg")
+    assert len(get_quiz_guides(database_file)) == 2
+    assert count_rows(database_file, "quiz_answer") == 0
+    assert load_schedule(database_file)["email"] is None
+    assert maintenance.KEPT_SETTINGS == (FLAGGED_KEY,)

@@ -7,9 +7,10 @@ from datetime import datetime
 
 import pytest
 
-from job.quiz import build_quiz_overview, load_active_quiz
+from job.quiz import build_quiz_overview, flag_question, load_active_quiz
 from job.quiz_import import (
     describe_quiz_import,
+    export_quiz_pack,
     import_questions,
     import_questions_file,
     normalize_question,
@@ -246,3 +247,39 @@ def test_render_markdown_escapes_and_formats():
     assert '<a href="https://docs.oracle.com/x"' in vHtml
     assert "<script>" not in vHtml
     assert 'href="javascript' not in vHtml
+
+
+def test_export_pack_round_trip(database_file, tmp_path):
+    """Vérifie l'export puis le réimport dans une base vide, sans les signalées."""
+
+    import_questions_file(database_file, "", "pack.zip", build_pack(), NOW)
+    flag_question(database_file, "ram-jvm-002")
+    vPack = tmp_path / "export.zip"
+
+    assert export_quiz_pack(database_file, vPack) == 1
+
+    with zipfile.ZipFile(vPack) as vArchive:
+        vManifest = json.loads(vArchive.read("manifest.json"))
+        vNames = vArchive.namelist()
+
+    assert vManifest["themes"][0]["file"] == "questions/ram-jvm.json"
+    assert "assets/schemas/ram.svg" in vNames
+    assert "guides/ram-jvm-analyse.md" in vNames
+
+    vTarget = tmp_path / "autre.db"
+    initialize_database(vTarget)
+
+    vReport = import_questions_file(vTarget, "", "export.zip", vPack.read_bytes(), NOW)
+    vQuestion = load_active_quiz(vTarget)["ram-jvm"]["questions"][0]
+
+    assert (vReport["added"], vReport["assets"], vReport["guides"]) == (1, 1, 2)
+    assert vReport["rejected"] == []
+    assert vQuestion["visual"] == {"asset": "ram.svg", "alt": "RAM"}
+    assert load_active_quiz(vTarget)["ram-jvm"]["skills"] == ["JVM", "GC"]
+
+
+def test_export_pack_without_imported_questions(database_file, tmp_path):
+    """Vérifie le message quand aucune question n'a été importée."""
+
+    with pytest.raises(ValueError, match="Aucune question importée"):
+        export_quiz_pack(database_file, tmp_path / "export.zip")

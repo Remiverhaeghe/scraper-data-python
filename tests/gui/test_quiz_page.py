@@ -182,3 +182,28 @@ def test_pack_question_shows_visual_references_and_guide(
 
     assert len(vOpened) == 1
     assert "<li>Heap</li>" in vOpened[0]["pHtml"]
+
+
+def test_questions_are_exported(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'export des questions importées et le message sans question."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vExport = tmp_path / "export.zip"
+
+    monkeypatch.setattr(
+        quiz_page.QFileDialog, "getSaveFileName", lambda *pArgs: (str(vExport), "")
+    )
+    vPage.choose_export_file()
+
+    assert vPage.import_message.text() == "Aucune question importée à exporter."
+
+    vPage.import_edit.setPlainText(QUESTIONS_JSON)
+    vPage.import_pasted_questions()
+    vPage.choose_export_file()
+
+    assert vPage.import_message.text() == "1 question(s) exportée(s) : export.zip"
+    assert vExport.exists()
+
+    vPage.export_questions(str(tmp_path / "absent" / "export.zip"))
+
+    assert vPage.import_message.text() == "L'export a échoué. Voir les journaux."
