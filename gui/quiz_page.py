@@ -74,14 +74,19 @@ from job.quiz_exam import (
     stop_exam,
     summarize_exam,
 )
-from job.quiz_import import (
+from job.quiz_generation import (
+    DEFAULT_GENERATION_COUNT,
     GENERATION_COUNTS,
     GENERATION_LEVELS,
-    IMPORT_EXTENSIONS,
     build_generation_prompt,
+    list_generation_themes,
+)
+from job.quiz_import import (
+    IMPORT_EXTENSIONS,
     clear_imported_questions,
     describe_import_details,
     describe_quiz_import,
+    get_import_tone,
     export_quiz_pack,
     import_questions,
     import_questions_file,
@@ -292,7 +297,9 @@ class QuizPage(QWidget):
         """Construit la génération de questions avec ChatGPT et leur import."""
         self.theme_combo = QComboBox()
         self.theme_combo.setEditable(True)
-        self.theme_combo.setToolTip("Thème existant ou nouveau, par exemple Kafka")
+        self.theme_combo.setToolTip(
+            "Thème du catalogue, existant ou nouveau, par exemple Kafka"
+        )
 
         self.level_combo = QComboBox()
 
@@ -303,6 +310,10 @@ class QuizPage(QWidget):
 
         for vCount in GENERATION_COUNTS:
             self.count_combo.addItem(f"{vCount} questions", vCount)
+
+        self.count_combo.setCurrentIndex(
+            self.count_combo.findData(DEFAULT_GENERATION_COUNT)
+        )
 
         vGenerateButton = create_button(
             "Générer avec ChatGPT", "bot", "primaryButton", COLORS["on_primary"]
@@ -393,7 +404,9 @@ class QuizPage(QWidget):
         vTheme = self.theme_combo.currentText().strip()
 
         if not vTheme:
-            self.import_message.setText("Choisissez ou saisissez un thème.")
+            show_message(
+                self.import_message, "Choisissez ou saisissez un thème.", "warning"
+            )
             return
 
         QApplication.clipboard().setText(
@@ -406,8 +419,9 @@ class QuizPage(QWidget):
         )
         QDesktopServices.openUrl(QUrl(CHATGPT_URL))
 
-        self.import_message.setText(
-            "Demande copiée : collez-la dans ChatGPT, puis sa réponse ci-dessus."
+        show_message(
+            self.import_message,
+            "Demande copiée : collez-la dans ChatGPT, puis sa réponse ci-dessus.",
         )
 
     def import_pasted_questions(self):
@@ -461,16 +475,19 @@ class QuizPage(QWidget):
             vCount = export_quiz_pack(self.database_file, pPath)
 
         except ValueError as vException:
-            self.import_message.setText(str(vException))
+            show_message(self.import_message, str(vException), "warning")
 
         except Exception:
             logger.exception("Échec de l'export des questions de révision")
 
-            self.import_message.setText("L'export a échoué. Voir les journaux.")
+            show_message(
+                self.import_message, "L'export a échoué. Voir les journaux.", "danger"
+            )
 
         else:
-            self.import_message.setText(
-                f"{vCount} question(s) exportée(s) : {Path(pPath).name}"
+            show_message(
+                self.import_message,
+                f"{vCount} question(s) exportée(s) : {Path(pPath).name}",
             )
 
     def confirm_clear_questions(self):
@@ -532,20 +549,24 @@ class QuizPage(QWidget):
             vReport = pImport()
 
         except ValueError as vException:
-            self.import_message.setText(str(vException))
+            show_message(self.import_message, str(vException), "warning")
             return
 
         except Exception:
             logger.exception("Échec de l'import de questions de révision")
 
-            self.import_message.setText("L'import a échoué. Voir les journaux.")
+            show_message(
+                self.import_message, "L'import a échoué. Voir les journaux.", "danger"
+            )
             return
 
-        self.import_message.setText(describe_quiz_import(vReport))
-        self.import_details = describe_import_details(vReport)
-        self.details_button.setVisible(
-            bool(vReport["rejected"]) or len(vReport["themes"]) > 1
+        show_message(
+            self.import_message,
+            describe_quiz_import(vReport),
+            get_import_tone(vReport),
         )
+        self.import_details = describe_import_details(vReport)
+        self.details_button.setVisible(bool(self.import_details))
 
         if vReport["added"]:
             self.import_edit.clear()
@@ -725,7 +746,7 @@ class QuizPage(QWidget):
 
         vCurrent = self.theme_combo.currentText()
         self.theme_combo.clear()
-        self.theme_combo.addItems(sorted(vTheme["label"] for vTheme in vThemes))
+        self.theme_combo.addItems(list_generation_themes(vThemes))
         self.theme_combo.setCurrentText(vCurrent)
 
         self.themes = vThemes

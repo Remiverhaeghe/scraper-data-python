@@ -29,6 +29,9 @@ ICONS_LICENSE_FILE = ASSETS_DIRECTORY / "icons" / "LICENSE"
 
 # Questions de révision technique, un fichier JSON par thème
 QUIZ_DIRECTORY = ASSETS_DIRECTORY / "quiz"
+
+# Catalogue des thèmes et modèle de la demande de questions à ChatGPT
+QUIZ_GENERATION_DIRECTORY = ASSETS_DIRECTORY / "quiz_generation"
 ICONS_URL = "https://lucide.dev"
 
 CONTACT_URL = "https://www.linkedin.com/in/remi-verhaeghe-99a532121/"

@@ -139,7 +139,7 @@
 <article class="card section-gap" id="add-questions">
     <h2>Ajouter des questions</h2>
     <p class="card-subtitle">Générées avec votre compte ChatGPT, puis vérifiées une à une à l'import : une question incomplète ou en double est écartée.</p>
-    <datalist id="quiz-themes">{% for theme_item in themes %}<option value="{{ theme_item.label }}">{% endfor %}</datalist>
+    <datalist id="quiz-themes">{% for theme_label in generation_themes %}<option value="{{ theme_label }}">{% endfor %}</datalist>
     <form class="inline-form" method="post" action="{{ url_for('prepare_quiz_prompt').path }}#add-questions">
         <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
         <input type="text" name="theme" list="quiz-themes" value="{{ import_form.theme or '' }}" placeholder="Thème, ex. Kafka" aria-label="Thème" required>
@@ -147,7 +147,7 @@
             {% for level, level_label in levels.items() %}<option value="{{ level }}" {% if import_form.level == level %}selected{% endif %}>{{ level_label }}</option>{% endfor %}
         </select>
         <select name="count" aria-label="Nombre de questions">
-            {% for count in generation_counts %}<option value="{{ count }}" {% if import_form.count == count %}selected{% endif %}>{{ count }} questions</option>{% endfor %}
+            {% for count in generation_counts %}<option value="{{ count }}" {% if (import_form.count or default_count) == count %}selected{% endif %}>{{ count }} questions</option>{% endfor %}
         </select>
         <button class="button button-primary" type="submit">{{ icon("bot", 16) }} Préparer la demande</button>
     </form>

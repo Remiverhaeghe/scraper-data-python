@@ -317,7 +317,8 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande reprenant le modèle complet d'un pack (domaine, niveaux répartis ou au choix, schémas et guides facultatifs), import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
-- [x] Demande complète et catalogue de thèmes (informatique, réseau, industrie) pour générer des lots de 100 questions : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
+- [x] Catalogue de 76 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
+- [x] Contrôle de chaque lot importé : bonne réponse trop souvent la plus longue ou à la même position, explications trop courtes ; bilan en orange et mesures par thème
 - [x] Signalement d'une question douteuse, retirée des tirages
 - [x] Export des questions importées en pack .zip réimportable (manifest, questions, schémas, guides), sans les questions signalées
 - [x] Suppression de toutes les questions importées (schémas, guides et réponses compris) après confirmation, base sauvegardée avant ; les questions livrées sont gardées
@@ -432,6 +433,7 @@ scraper-data-python/
 │   ├── assistant.py                           # Demandes préparées pour ChatGPT
 │   ├── quiz.py                                # Révision : questions, progression, thèmes conseillés
 │   ├── quiz_import.py                         # Import et export de questions et de packs
+│   ├── quiz_generation.py                     # Demande ChatGPT par lot et contrôle des lots importés
 │   ├── quiz_domains.py                        # Classement des thèmes par domaine et sous-domaine
 │   ├── quiz_exam.py                           # Mode examen : tirage, réponses et résultat
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
@@ -611,18 +613,21 @@ scraper-data-python/
 ├── assets/                                    # Ressources partagées par le bureau et le web
 │   ├── logo.png                               # Logo, icône de fenêtre et favicon
 │   ├── icons/                                 # Icônes SVG Lucide (licence ISC)
-│   └── quiz/                                  # Questions de révision, un fichier JSON par thème
-│       ├── java.json                          # Java, nouveautés de Java 8 à 21
-│       ├── spring.json                        # Spring et Spring Boot
-│       ├── python.json                        # Python
-│       ├── sql.json                           # SQL
-│       ├── javascript.json                    # JavaScript
-│       ├── git.json                           # Git
-│       ├── docker.json                        # Docker
-│       └── practices.json                     # Bonnes pratiques et API
+│   ├── quiz/                                  # Questions de révision, un fichier JSON par thème
+│   │   ├── java.json                          # Java, nouveautés de Java 8 à 21
+│   │   ├── spring.json                        # Spring et Spring Boot
+│   │   ├── python.json                        # Python
+│   │   ├── sql.json                           # SQL
+│   │   ├── javascript.json                    # JavaScript
+│   │   ├── git.json                           # Git
+│   │   ├── docker.json                        # Docker
+│   │   └── practices.json                     # Bonnes pratiques et API
+│   └── quiz_generation/                       # Génération de questions avec ChatGPT
+│       ├── catalog.json                       # Catalogue des thèmes par domaine
+│       └── prompt.txt                         # Texte et règles de la demande
 │
 ├── docs/                                      # Documentation complémentaire
-│   └── consignes-qcm-chatgpt.md               # Demande et catalogue de thèmes pour générer des QCM
+│   └── consignes-qcm-chatgpt.md               # Génération des QCM avec ChatGPT et évolution du catalogue
 │
 ├── utils/                                     # Utilitaires techniques communs
 │   ├── __init__.py                            # Initialise le package Utils
@@ -682,6 +687,7 @@ scraper-data-python/
 │   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_quiz_import.py                # Teste l'import des packs, schémas et guides
+│   │   ├── test_quiz_generation.py            # Teste le catalogue, la demande et le contrôle des lots
 │   │   ├── test_quiz_domains.py               # Teste les domaines et le compte des offres par thème
 │   │   ├── test_quiz_exam.py                  # Teste le mode examen
 │   │   ├── test_mobile_sync.py                # Teste le contenu hors ligne et l'envoi des réponses

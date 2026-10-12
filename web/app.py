@@ -178,15 +178,20 @@ from job.quiz_exam import (
     stop_exam,
     summarize_exam,
 )
-from job.quiz_import import (
+from job.quiz_generation import (
+    DEFAULT_GENERATION_COUNT,
     GENERATION_COUNTS,
     GENERATION_LEVELS,
     MIXED_LEVEL,
-    IMPORT_EXTENSIONS,
     build_generation_prompt,
+    list_generation_themes,
+)
+from job.quiz_import import (
+    IMPORT_EXTENSIONS,
     clear_imported_questions,
     describe_import_details,
     describe_quiz_import,
+    get_import_tone,
     export_quiz_pack,
     import_questions,
     import_questions_file,
@@ -1190,7 +1195,10 @@ def render_quiz(
                 else None
             ),
             "import_form": pImport or {},
-            "message_tone": get_message_tone(pStatusCode),
+            "message_tone": (pImport or {}).get("tone")
+            or get_message_tone(pStatusCode),
+            "generation_themes": list_generation_themes(vThemes),
+            "default_count": DEFAULT_GENERATION_COUNT,
             "domains": [vDomain for vDomain, _ in group_themes(vThemes)],
             "exam": load_exam(pDatabaseFile),
             "exam_count": EXAM_QUESTION_COUNT,
@@ -1304,7 +1312,7 @@ def prepare_quiz_prompt(
     request: Request,
     pTheme: str = Form("", alias="theme"),
     pLevel: str = Form(MIXED_LEVEL, alias="level"),
-    pCount: int = Form(GENERATION_COUNTS[0], alias="count"),
+    pCount: int = Form(DEFAULT_GENERATION_COUNT, alias="count"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Prépare la demande de questions à copier dans ChatGPT."""
@@ -1376,6 +1384,7 @@ def import_quiz_questions(
                 "theme": pTheme,
                 "message": describe_quiz_import(vReport),
                 "details": describe_import_details(vReport),
+                "tone": get_import_tone(vReport),
             },
         )
 

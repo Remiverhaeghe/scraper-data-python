@@ -15,7 +15,6 @@ from job.quiz import (
     load_quiz,
 )
 from job.quiz_import import (
-    build_generation_prompt,
     clear_imported_questions,
     is_safe_reference,
     describe_quiz_import,
@@ -325,16 +324,6 @@ def test_is_safe_reference(pUrl, pSafe):
     """Vérifie les liens de référence gardés et ceux écartés pour la sécurité."""
 
     assert is_safe_reference(pUrl) is pSafe
-
-
-def test_generation_prompt_asks_for_schemas_explanations_and_safe_links():
-    """Vérifie que la demande exige explications, schémas SVG sûrs et liens officiels."""
-
-    vPrompt = build_generation_prompt({}, "Kafka", "tous", 10)
-
-    assert "pourquoi chaque autre choix est faux" in vPrompt
-    assert "Uniquement du SVG" in vPrompt
-    assert "ni raccourcisseur" in vPrompt
 
 
 def build_lot(pFolder, pThemeId):

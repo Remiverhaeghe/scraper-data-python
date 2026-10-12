@@ -23,12 +23,10 @@ from job.quiz import (
     pick_question,
 )
 from job.quiz_import import (
-    build_generation_prompt,
     describe_import_details,
     describe_quiz_import,
     import_questions,
     import_questions_file,
-    split_levels,
 )
 from storage.database import initialize_database
 from storage.job_offers import save_offers
@@ -395,37 +393,6 @@ def test_flagged_list_unreadable_is_ignored(database_file, caplog):
 
     assert load_active_quiz(database_file)["java"]["questions"]
     assert "illisible" in caplog.text
-
-
-def test_build_generation_prompt_lists_taken_ids():
-    """Vérifie la demande : thème, niveaux, modèle de pack et identifiants pris."""
-
-    vPrompt = build_generation_prompt(load_quiz(), "JAVA", "confirmé", 20)
-
-    assert "Thème : Java. 20 questions : 20 confirmé." in vPrompt
-    assert "- questions/java.json" in vPrompt
-    assert '"subdomain": "Développement"' in vPrompt
-    assert '"level": "confirmé"' in vPrompt
-    assert "java-list-of" in vPrompt
-
-    vNew = build_generation_prompt({}, "Spring Boot", "tous", 30)
-
-    assert "30 questions : 10 débutant, 10 intermédiaire, 7 confirmé, 3 expert." in vNew
-    assert "Identifiants déjà pris : aucun" in vNew
-    assert '"id": "spring-boot-001"' in vNew
-
-
-def test_split_levels():
-    """Vérifie la répartition par niveau, total conservé malgré les arrondis."""
-
-    assert split_levels("tous", 10) == [
-        ("débutant", 4),
-        ("intermédiaire", 3),
-        ("confirmé", 2),
-        ("expert", 1),
-    ]
-    assert sum(vCount for _, vCount in split_levels("tous", 50)) == 50
-    assert split_levels("expert", 20) == [("expert", 20)]
 
 
 def test_review_schedule_moves_questions_between_boxes():
