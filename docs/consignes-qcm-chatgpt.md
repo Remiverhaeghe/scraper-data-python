@@ -47,14 +47,14 @@ thèmes à traiter ensuite, un thème par demande.
 
 | Série | Thèmes |
 |---|---|
-| 1. Automatisme | `automates-programmables`, `grafcet`, `capteurs-actionneurs`, `regulation`, `supervision-scada`, `reseaux-industriels`, `securite-machines`, `vision-industrielle`, `robotique` |
-| 2. Électricité et énergie | `electricite`, `schemas-electriques`, `habilitation-electrique`, `distribution-electrique`, `moteurs-variateurs`, `electronique`, `energie`, `energies-renouvelables` |
-| 3. Maintenance et qualité | `maintenance-industrielle`, `fiabilite`, `metrologie`, `securite-industrielle`, `levage-manutention`, `qualite`, `lean` |
-| 4. Mécanique et fluides | `mecanique`, `lecture-plans`, `hydraulique`, `pneumatique`, `usinage`, `soudage`, `genie-climatique`, `automobile` |
-| 5. Diagnostic et exploitation | `linux-systeme`, `windows-server`, `reseaux-fondamentaux`, `reseaux-diagnostic`, `reseau-prod`, `wifi`, `pare-feu-vpn`, `observabilite`, `sql-diagnostic` |
+| 1. Automatisme | `automates-programmables`, `grafcet`, `capteurs-actionneurs`, `regulation`, `supervision-scada`, `reseaux-industriels`, `securite-machines`, `vision-industrielle`, `robotique`, `iot-industriel` |
+| 2. Électricité et énergie | `electricite`, `schemas-electriques`, `habilitation-electrique`, `distribution-electrique`, `moteurs-variateurs`, `electronique`, `energie`, `energies-renouvelables`, `installations-electriques-batiment` |
+| 3. Maintenance et qualité | `maintenance-industrielle`, `fiabilite`, `metrologie`, `securite-industrielle`, `levage-manutention`, `qualite`, `lean`, `maintenance-conditionnelle` |
+| 4. Mécanique et fluides | `mecanique`, `lecture-plans`, `hydraulique`, `pneumatique`, `usinage`, `soudage`, `genie-climatique`, `automobile`, `transmissions-mecaniques` |
+| 5. Diagnostic et exploitation | `linux-systeme`, `windows-server`, `reseaux-fondamentaux`, `reseaux-diagnostic`, `reseau-prod`, `wifi`, `pare-feu-vpn`, `observabilite`, `sql-diagnostic`, `telephonie-ip`, `serveurs-web`, `sauvegarde-pra` |
 | 6. DevOps et cloud | `docker`, `ci-cd`, `kubernetes`, `cloud`, `infrastructure-as-code`, `virtualisation` |
-| 7. Développement | `python`, `java`, `spring`, `javascript`, `typescript`, `csharp-dotnet`, `web-html-css`, `react-frontend`, `api-rest`, `architecture-logicielle`, `microservices`, `algorithmique`, `performance` |
-| 8. Données | `sql`, `bases-de-donnees`, `analyse-donnees`, `data-engineering`, `bi-reporting`, `ia-machine-learning` |
+| 7. Développement | `python`, `java`, `spring`, `javascript`, `typescript`, `csharp-dotnet`, `web-html-css`, `react-frontend`, `api-rest`, `architecture-logicielle`, `microservices`, `algorithmique`, `performance`, `kotlin`, `php`, `golang`, `android`, `c-cpp-embarque` |
+| 8. Données | `sql`, `bases-de-donnees`, `analyse-donnees`, `data-engineering`, `bi-reporting`, `ia-machine-learning`, `hibernate-jpa` |
 | 9. Sécurité | `securite-applicative`, `identite-acces`, `cryptographie`, `securite-systemes`, `rgpd`, `cybersecurite-industrielle` |
 | 10. Outils et méthodes | `git`, `tests-logiciels`, `agile`, `itil-support` |
 
@@ -86,6 +86,14 @@ Un lot peut aussi s'écrire directement dans `tools/quiz_lots/<thème>/` : des f
 
 ```text
 python -m tools.quiz_lot build <thème>
+```
+
+Une question peut citer une ou deux références, ligne `R: Titre | https://…`. Avant de les
+garder, on vérifie que les pages existent (accès réseau, à la demande seulement) ; le code de
+retour vaut 1 si une page est retirée :
+
+```text
+python -m tools.quiz_lot links <thème ou archive.zip>
 ```
 
 Les tests reconstruisent et contrôlent chaque lot de `tools/quiz_lots` : un lot modifié qui

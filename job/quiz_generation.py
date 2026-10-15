@@ -13,7 +13,13 @@ from pathlib import Path
 from string import Template
 
 from config import QUIZ_GENERATION_DIRECTORY
-from job.quiz import QUIZ_LEVELS, count_theme_offers, find_theme, slugify
+from job.quiz import (
+    QUIZ_LEVELS,
+    count_theme_offers,
+    find_theme,
+    load_quiz,
+    slugify,
+)
 from job.quiz_domains import DOMAIN_ORDER, OTHER_DOMAIN, classify_theme
 from storage.quiz_questions import get_imported_questions
 from utils.logger import get_logger
@@ -66,12 +72,16 @@ MIN_CODE_SHARE = 0.15
 # mesure des longueurs : il ne se lit plus.
 TRUNCATED_ENDINGS = ("…", "...")
 
-# Un énoncé qui s'appuie sur son extrait le cite ; sinon l'extrait a été ajouté
-# au hasard pour atteindre la part de cas concrets. Au-delà de cette part des
-# questions avec code, le lot est signalé.
+# Un énoncé qui s'appuie sur son extrait le cite, par un mot-repère, un
+# démonstratif (« cette méthode ») ou un identifiant du code ; sinon l'extrait a
+# été ajouté au hasard pour atteindre la part de cas concrets. Au-delà de cette
+# part des questions avec code, le lot est signalé.
 CODE_REFERENCE_PATTERN = re.compile(
-    r"extrait|code|programme|instruction|ci-dessous|commande suivante|`", re.I
+    r"extrait|code|programme|instruction|ci-dessous|commande suivante|`"
+    r"|\b(?:ce|cet|cette|ces)\s+\w+",
+    re.I,
 )
+MIN_IDENTIFIER_LENGTH = 3
 MAX_UNRELATED_CODE_SHARE = 0.25
 
 # Mots de remplissage ajoutés pour égaliser les longueurs (« dans ce cas »,
@@ -81,6 +91,11 @@ FILLER_ENDING_WORDS = 3
 FILLER_MIN_COUNT = 6
 FILLER_SHARE = 0.1
 MAX_FILLER_ISSUES = 3
+
+# Deux questions qui partagent l'essentiel de leurs mots (énoncé, extrait et
+# bonne réponse) testent la même chose : une reformulation n'apporte rien.
+DUPLICATE_SIMILARITY = 0.8
+MIN_SIGNIFICANT_LENGTH = 4
 
 POSITION_LABELS = "ABCD"
 
@@ -476,14 +491,105 @@ def find_bias_issues(pQuestions, pDomain):
     return rIssues
 
 
-def find_writing_issues(pQuestions):
+def get_question_words(pQuestion):
+    """Retourne les mots significatifs d'une question : énoncé, extrait, bonne réponse.
+
+    Les nombres comptent quelle que soit leur longueur : deux calculs aux
+    valeurs différentes ne sont pas des doublons.
+    """
+
+    vText = " ".join(
+        (
+            pQuestion["question"],
+            pQuestion.get("code", ""),
+            pQuestion["choices"][pQuestion["answer"]],
+        )
+    ).lower()
+
+    rWords = {
+        vWord
+        for vWord in re.findall(r"\w+", vText)
+        if len(vWord) >= MIN_SIGNIFICANT_LENGTH or vWord.isdigit()
+    }
+
+    return rWords
+
+
+def is_near_duplicate(pWords, pOtherWords):
+    """Indique si deux ensembles de mots sont assez proches pour un doublon."""
+
+    vUnion = pWords | pOtherWords
+
+    rDuplicate = bool(vUnion) and (
+        len(pWords & pOtherWords) / len(vUnion) >= DUPLICATE_SIMILARITY
+    )
+
+    return rDuplicate
+
+
+def find_duplicate_issue(pQuestions, pOthers=()):
+    """Retourne l'alerte des quasi-doublons, ou None.
+
+    Chaque question du lot est comparée aux autres questions du lot et à
+    pOthers, les questions du thème déjà en place.
+    """
+
+    vWords = [
+        (vQuestion["id"], get_question_words(vQuestion)) for vQuestion in pQuestions
+    ]
+    vOthers = [
+        (vQuestion["id"], get_question_words(vQuestion)) for vQuestion in pOthers
+    ]
+    vPairs = [
+        (vId, vOtherId)
+        for vIndex, (vId, vSet) in enumerate(vWords)
+        for vOtherId, vOtherSet in vWords[vIndex + 1 :] + vOthers
+        if is_near_duplicate(vSet, vOtherSet)
+    ]
+
+    if not vPairs:
+        return None
+
+    vIds = sorted({vId for vId, _ in vPairs})
+
+    rIssue = (
+        f"{len(vIds)} question(s) presque identique(s) à une autre, par exemple "
+        f"{vPairs[0][0]} et {vPairs[0][1]}",
+        vIds,
+    )
+
+    return rIssue
+
+
+def cites_code(pQuestion):
+    """Indique si l'énoncé d'une question s'appuie sur son extrait de code."""
+
+    vIdentifiers = {
+        vWord
+        for vWord in re.findall(r"\w+", pQuestion["code"])
+        if len(vWord) >= MIN_IDENTIFIER_LENGTH
+    }
+
+    rCites = bool(CODE_REFERENCE_PATTERN.search(pQuestion["question"])) or bool(
+        vIdentifiers & set(re.findall(r"\w+", pQuestion["question"]))
+    )
+
+    return rCites
+
+
+def find_writing_issues(pQuestions, pOthers=()):
     """Retourne les défauts d'écriture d'un lot, quelle que soit sa taille.
 
     Choix tronqués, fins de choix répétées et extraits de code hors sujet sont
-    les contournements habituels des règles de longueur et de cas concrets.
+    les contournements habituels des règles de longueur et de cas concrets ;
+    une reformulation d'une question existante n'apporte rien.
     """
 
     rIssues = []
+    vDuplicate = find_duplicate_issue(pQuestions, pOthers)
+
+    if vDuplicate:
+        rIssues.append(vDuplicate)
     vTruncatedIds = [
         vQuestion["id"]
         for vQuestion in pQuestions
@@ -530,8 +636,7 @@ def find_writing_issues(pQuestions):
     vUnrelatedIds = [
         vQuestion["id"]
         for vQuestion in pQuestions
-        if "code" in vQuestion
-        and not CODE_REFERENCE_PATTERN.search(vQuestion["question"])
+        if "code" in vQuestion and not cites_code(vQuestion)
     ]
 
     if len(vUnrelatedIds) > MAX_UNRELATED_CODE_SHARE * len(vCodeIds):
@@ -545,11 +650,12 @@ def find_writing_issues(pQuestions):
     return rIssues
 
 
-def assess_questions(pQuestions, pDomain=None):
-    """Mesure les questions d'un thème ; retourne leur résumé et leurs alertes.
+def assess_questions(pQuestions, pDomain=None, pOthers=()):
+    """Mesure les questions d'un lot ; retourne leur résumé et leurs alertes.
 
-    Chaque alerte garde les identifiants concernés : la demande de correction
-    les cite.
+    pOthers sont les autres questions du thème, comparées pour repérer les
+    doublons. Chaque alerte garde les identifiants concernés : la demande de
+    correction les cite.
     """
 
     vIssues = []
@@ -557,7 +663,7 @@ def assess_questions(pQuestions, pDomain=None):
     if len(pQuestions) >= MIN_QUALITY_SAMPLE:
         vIssues += find_bias_issues(pQuestions, pDomain)
 
-    vIssues += find_writing_issues(pQuestions)
+    vIssues += find_writing_issues(pQuestions, pOthers)
 
     if vIssues:
         logger.warning(
@@ -616,7 +722,13 @@ def apply_lot_quality(pDatabaseFile, pReport):
                 or get_lot_number(vQuestion["id"], vKey) in vTheme["lots"] - {None}
             )
         ]
-        vQuality = assess_questions(vQuestions, vTheme["domain"])
+        vLotIds = {vQuestion["id"] for vQuestion in vQuestions}
+        vOthers = [
+            vQuestion
+            for vThemeKey, _, vQuestion in vImported
+            if vThemeKey == vKey and vQuestion["id"] not in vLotIds
+        ] + load_quiz().get(vKey, {}).get("questions", [])
+        vQuality = assess_questions(vQuestions, vTheme["domain"], vOthers)
         vIssues = list(vQuality["issues"])
 
         if vTheme["unknown_domain"]:

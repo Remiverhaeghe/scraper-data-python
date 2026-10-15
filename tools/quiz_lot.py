@@ -7,6 +7,7 @@ exemple livrée par ChatGPT, en l'important dans une copie de la base.
 
     python -m tools.quiz_lot build <thème>
     python -m tools.quiz_lot check <archive.zip>
+    python -m tools.quiz_lot links <thème ou archive.zip>
 
 Format compact d'une question :
 
@@ -17,6 +18,7 @@ Format compact d'une question :
     W: Mauvaise réponse
     W: Mauvaise réponse
     E: Explication.
+    R: Titre de la page officielle | https://…   (facultatif, deux au plus)
     ```
     extrait de code facultatif
     ```
@@ -44,6 +46,7 @@ from job.quiz_import import (
 )
 from storage.database import initialize_database
 from tools.quiz_svg import build_chain_svg
+from utils.link_checker import check_offer_link
 
 LOTS_DIRECTORY = Path(__file__).parent / "quiz_lots"
 
@@ -56,7 +59,14 @@ LEVEL_LAYOUT = (
 )
 LOT_SIZE = sum(vCount for _, vCount in LEVEL_LAYOUT)
 
-FIELD_PATTERN = re.compile(r"([QCWE]): (.*)")
+FIELD_PATTERN = re.compile(r"([QCWER]): (.*)")
+
+# Une référence s'écrit « Titre | adresse » ; le contrôle d'import garde les sûres.
+REFERENCE_SEPARATOR = " | "
+MAX_REFERENCES = 2
+
+# Libellés des états renvoyés par la vérification d'un lien
+LINK_STATUSES = {"available": "en ligne", "expired": "retirée", None: "indéterminée"}
 
 
 def parse_lot_text(pText):
@@ -68,7 +78,8 @@ def parse_lot_text(pText):
 
     rQuestions = {}
 
-    for vBlock in re.split(r"^@", pText, flags=re.MULTILINE)[1:]:
+    # Seule une ligne « @numéro » ouvre une question : @Override reste dans le code.
+    for vBlock in re.split(r"^@(?=\d+\s*$)", pText, flags=re.MULTILINE)[1:]:
         vNumber, vBody = vBlock.split("\n", 1)
         vCode = None
 
@@ -76,7 +87,7 @@ def parse_lot_text(pText):
             vBody, vCode, _ = vBody.split("```", 2)
             vCode = vCode.strip("\n")
 
-        vFields = {"W": [], "code": vCode}
+        vFields = {"W": [], "R": [], "code": vCode}
 
         for vLine in vBody.strip().splitlines():
             vMatch = FIELD_PATTERN.fullmatch(vLine.strip())
@@ -84,13 +95,18 @@ def parse_lot_text(pText):
             if not vMatch:
                 raise ValueError(f"question {vNumber.strip()} : ligne illisible")
 
-            if vMatch.group(1) == "W":
-                vFields["W"].append(vMatch.group(2).strip())
+            if vMatch.group(1) in "WR":
+                vFields[vMatch.group(1)].append(vMatch.group(2).strip())
             else:
                 vFields[vMatch.group(1)] = vMatch.group(2).strip()
 
         if len(vFields["W"]) != 3 or not all(vKey in vFields for vKey in "QCE"):
             raise ValueError(f"question {vNumber.strip()} : champs incomplets")
+
+        if len(vFields["R"]) > MAX_REFERENCES or any(
+            REFERENCE_SEPARATOR not in vReference for vReference in vFields["R"]
+        ):
+            raise ValueError(f"question {vNumber.strip()} : référence mal écrite")
 
         rQuestions[vNumber.strip()] = vFields
 
@@ -184,6 +200,12 @@ def build_questions(pTheme, pConfig, pQuestions):
             }
         )
 
+        if vSource["R"]:
+            vQuestion["references"] = [
+                dict(zip(("title", "url"), vReference.split(REFERENCE_SEPARATOR, 1)))
+                for vReference in vSource["R"]
+            ]
+
         if vNumber in vVisuals:
             vQuestion["visual"] = {
                 "type": "svg",
@@ -275,6 +297,84 @@ def describe_check(pReport):
     return rText
 
 
+def read_pack_questions(pContent):
+    """Retourne toutes les questions des fichiers de questions d'une archive."""
+
+    rQuestions = []
+
+    with zipfile.ZipFile(io.BytesIO(pContent)) as vArchive:
+        for vName in vArchive.namelist():
+            if vName.startswith("questions/") and vName.endswith(".json"):
+                vData = json.loads(vArchive.read(vName).decode("utf-8"))
+                rQuestions += vData.get("questions", [])
+
+    return rQuestions
+
+
+def collect_references(pQuestions):
+    """Retourne les adresses citées en référence et les questions qui les citent."""
+
+    rReferences = {}
+
+    for vQuestion in pQuestions:
+        for vReference in vQuestion.get("references", []):
+            rReferences.setdefault(vReference["url"], []).append(vQuestion["id"])
+
+    return rReferences
+
+
+def check_references(pReferences, pChecker=None):
+    """Vérifie chaque adresse en ligne ; retourne {adresse : état}.
+
+    pChecker suit les redirections sans jamais viser le réseau interne : une
+    page retirée répond 404 ou 410, ou renvoie vers une page parente.
+    """
+
+    vChecker = pChecker or check_offer_link
+
+    rStatuses = {vUrl: vChecker(vUrl) for vUrl in pReferences}
+
+    return rStatuses
+
+
+def describe_references(pReferences, pStatuses):
+    """Retourne le bilan des références, pages retirées en premier."""
+
+    vLines = [
+        f"{LINK_STATUSES[pStatuses[vUrl]]} : {vUrl} ({', '.join(pReferences[vUrl])})"
+        for vUrl in sorted(
+            pReferences, key=lambda pUrl: (pStatuses[pUrl] != "expired", pUrl)
+        )
+    ]
+    vExpired = sum(vStatus == "expired" for vStatus in pStatuses.values())
+
+    rText = "\n".join(
+        [f"{len(pReferences)} référence(s), {vExpired} retirée(s)", *vLines]
+    )
+
+    return rText
+
+
+def run_links(pTarget):
+    """Vérifie les références d'un lot écrit ou d'une archive ; retourne le code."""
+
+    vPath = Path(pTarget)
+
+    if vPath.suffix == ".zip":
+        vQuestions = read_pack_questions(vPath.read_bytes())
+    else:
+        vConfig, vSource = load_lot(pTarget)
+        vQuestions = build_questions(pTarget, vConfig, vSource)
+
+    vReferences = collect_references(vQuestions)
+    vStatuses = check_references(vReferences)
+    print(describe_references(vReferences, vStatuses))
+
+    rStatus = 1 if "expired" in vStatuses.values() else 0
+
+    return rStatus
+
+
 def main(pArguments=None):
     """Lance la commande demandée ; retourne 1 si le lot n'est pas conforme."""
 
@@ -286,10 +386,17 @@ def main(pArguments=None):
     vCommands.add_parser(
         "check", help="contrôle une archive sans l'importer"
     ).add_argument("archive")
+    vCommands.add_parser(
+        "links", help="vérifie en ligne les références d'un lot ou d'une archive"
+    ).add_argument("target")
     vArguments = vParser.parse_args(pArguments)
 
-    # Le contrôle importe dans une copie : ses journaux ne concernent pas l'application.
+    # Ces commandes travaillent sur des copies : leurs journaux ne concernent pas
+    # l'application et encombreraient le bilan affiché.
     logging.disable(logging.CRITICAL)
+
+    if vArguments.command == "links":
+        return run_links(vArguments.target)
 
     if vArguments.command == "build":
         vFileName, vContent = build_pack(vArguments.theme)

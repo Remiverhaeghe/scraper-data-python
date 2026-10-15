@@ -1,0 +1,43 @@
+{
+  "lot": 1,
+  "seed": 1995,
+  "skills": ["Java", "JVM", "Java EE", "Jakarta EE", "Maven"],
+  "schemas": [
+    {
+      "name": "java-compilation.svg",
+      "questions": ["001", "002", "080"],
+      "diagram": {
+        "title": "De la source à l'exécution",
+        "nodes": ["Main.java", "javac", "Main.class (bytecode)", "JVM : interprétation", "JIT : code natif"],
+        "note": "Le JIT compile en code machine les méthodes appelées souvent."
+      }
+    },
+    {
+      "name": "java-memoire.svg",
+      "questions": ["075", "076", "077", "078"],
+      "diagram": {
+        "title": "Mémoire de la JVM",
+        "nodes": ["Pile du thread : variables locales", "Références", "Tas : objets créés avec new", "Ramasse-miettes"],
+        "note": "Un objet du tas que plus aucune référence n'atteint peut être récupéré."
+      }
+    },
+    {
+      "name": "java-stream.svg",
+      "questions": ["039", "040", "041", "042"],
+      "diagram": {
+        "title": "Chaîne d'un stream",
+        "nodes": ["Source : liste, Stream.of", "filter (intermédiaire)", "map (intermédiaire)", "toList, reduce (terminale)"],
+        "note": "Les opérations intermédiaires ne s'exécutent qu'à l'appel d'une opération terminale."
+      }
+    },
+    {
+      "name": "java-exceptions.svg",
+      "questions": ["017", "035", "037"],
+      "diagram": {
+        "title": "Hiérarchie des exceptions",
+        "nodes": ["Throwable", "Exception (vérifiée)", "RuntimeException (non vérifiée)", "Exceptions métier"],
+        "note": "Error, l'autre branche de Throwable, signale un problème grave de la JVM."
+      }
+    }
+  ]
+}

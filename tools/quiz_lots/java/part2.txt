@@ -1,0 +1,516 @@
+@026
+Q: Qu'affiche ce code ?
+C: true puis false
+W: true puis true
+W: false puis false
+W: false puis true
+E: L'autoboxing passe par Integer.valueOf, qui renvoie des objets mis en cache pour les valeurs de −128 à 127 : a et b désignent le même objet, c et d deux objets distincts. == compare les références, d'où true puis false. Pour comparer des valeurs d'Integer, il faut utiliser equals ou comparer des int.
+R: Integer (Java SE 21) | https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Integer.html
+```
+Integer a = 127, b = 127;
+Integer c = 128, d = 128;
+System.out.println(a == b);
+System.out.println(c == d);
+```
+
+@027
+Q: Combien d'éléments contient ce Set ?
+C: 1
+W: 2
+W: 0
+W: Le code ne compile pas
+E: Un record génère equals et hashCode à partir de ses composants : les deux Point(1, 2) sont égaux et ont le même hashCode, le HashSet n'en garde qu'un. Avec une classe ordinaire sans equals ni hashCode redéfinis, on obtiendrait 2. Le Set n'est pas vide. Le code compile depuis Java 16.
+R: JEP 395: Records | https://openjdk.org/jeps/395
+```
+record Point(int x, int y) {}
+
+Set<Point> points = new HashSet<>();
+points.add(new Point(1, 2));
+points.add(new Point(1, 2));
+System.out.println(points.size());
+```
+
+@028
+Q: Pourquoi cette recherche dans la HashMap échoue-t-elle ?
+C: La clé a changé après son ajout, son hashCode aussi
+W: Une HashMap n'accepte pas de liste comme clé
+W: get compare les clés avec == et non avec equals
+W: La HashMap trie ses clés et perd l'ordre d'ajout
+E: La HashMap range l'entrée selon le hashCode de la clé au moment de l'ajout ; en modifiant la liste, son hashCode change et la recherche regarde au mauvais endroit : get renvoie null. Il faut des clés immuables. Une liste est acceptée comme clé, mais c'est risqué. get utilise bien equals. L'ordre des clés n'est pas en cause.
+```
+List<String> cle = new ArrayList<>(List.of("a"));
+Map<List<String>, Integer> scores = new HashMap<>();
+scores.put(cle, 10);
+cle.add("b");
+System.out.println(scores.get(cle));
+```
+
+@029
+Q: Dans quel cas une ArrayList est-elle nettement plus efficace qu'une LinkedList ?
+C: Pour l'accès à un élément par son indice
+W: Pour l'insertion répétée en tête de liste
+W: Pour stocker des éléments null
+W: Pour trier la liste par ordre alphabétique
+E: L'ArrayList s'appuie sur un tableau : get(i) est immédiat, alors que la LinkedList doit parcourir ses maillons. Insérer en tête est au contraire coûteux pour l'ArrayList, qui décale tous les éléments. Les deux acceptent null. Le tri n'est pas leur différence décisive. En pratique, l'ArrayList est le bon choix dans la grande majorité des cas.
+
+@030
+Q: Que se passe-t-il à l'exécution de cette boucle ?
+C: Une ConcurrentModificationException est levée
+W: L'élément « b » est supprimé sans problème
+W: Tous les éléments de la liste sont supprimés
+W: La boucle tourne indéfiniment
+E: Modifier une ArrayList pendant qu'on la parcourt avec for-each invalide l'itérateur, qui détecte la modification et lève une ConcurrentModificationException. On utilise plutôt removeIf ou Iterator.remove. Rien ne garantit une suppression propre ici. Les autres éléments ne sont pas supprimés. La boucle ne tourne pas indéfiniment.
+```
+List<String> lettres = new ArrayList<>(List.of("a", "b", "c"));
+for (String lettre : lettres) {
+    if (lettre.equals("a")) {
+        lettres.remove(lettre);
+    }
+}
+```
+
+@031
+Q: Que contient nombres après cet appel ?
+C: [1, 3, 5]
+W: [2, 4]
+W: [1, 2, 3, 4, 5]
+W: []
+E: removeIf supprime les éléments pour lesquels le prédicat est vrai : les nombres pairs sont retirés, il reste 1, 3 et 5. C'est la façon sûre de filtrer une collection en place. [2, 4] garderait les pairs au lieu de les retirer. La liste n'est ni inchangée ni vidée.
+```
+List<Integer> nombres = new ArrayList<>(List.of(1, 2, 3, 4, 5));
+nombres.removeIf(n -> n % 2 == 0);
+```
+
+@032
+Q: Pourquoi cette affectation ne compile-t-elle pas ?
+C: List<String> n'est pas un sous-type de List<Object>
+W: Une liste ne peut pas contenir de String
+W: Il manque un transtypage explicite en Object
+W: Les génériques n'existent pas avant Java 11
+E: Les génériques sont invariants : sinon, on pourrait ajouter un Integer dans une List<Object> qui désigne en réalité une List<String>. Pour accepter une liste de n'importe quoi en lecture, on écrit List<?> ou List<? extends Object>. Une liste contient très bien des String. Un transtypage ne résout pas le problème de type. Les génériques existent depuis Java 5.
+```
+List<String> noms = new ArrayList<>();
+List<Object> objets = noms;
+```
+
+@033
+Q: Que permet le paramètre de type List<? extends Number> dans cette méthode ?
+C: Lire des Number dans une liste d'Integer ou de Double
+W: Ajouter n'importe quel Number dans la liste
+W: Accepter uniquement une List<Number> exacte
+W: Convertir automatiquement les nombres en int
+E: Le joker « ? extends Number » accepte une List<Integer>, une List<Double> ou une List<Number>, et permet d'en lire les éléments comme des Number. En revanche, on ne peut rien y ajouter, sauf null, car le type exact est inconnu. Ce n'est pas limité à List<Number>. Aucune conversion en int n'a lieu.
+```
+double somme(List<? extends Number> valeurs) {
+    double total = 0;
+    for (Number valeur : valeurs) {
+        total += valeur.doubleValue();
+    }
+    return total;
+}
+```
+
+@034
+Q: Qu'est-ce que l'effacement de type des génériques ?
+C: Les types génériques disparaissent du bytecode
+W: Le compilateur supprime les génériques inutilisés
+W: Le ramasse-miettes efface les objets génériques
+W: Les génériques sont convertis en tableaux typés
+E: Les paramètres de type servent aux vérifications de compilation, puis sont effacés : à l'exécution, une List<String> et une List<Integer> ont la même classe. C'est pourquoi on ne peut pas écrire new T() ni tester instanceof List<String>. Le compilateur ne supprime pas de code. Le ramasse-miettes n'est pas concerné. Aucun tableau n'est créé.
+
+@035
+Q: Quelle différence entre une exception vérifiée et une exception non vérifiée ?
+C: La vérifiée doit être traitée ou déclarée avec throws
+W: La vérifiée ne peut jamais être attrapée
+W: La non vérifiée arrête toujours la JVM
+W: La non vérifiée hérite toujours d'Exception directement
+E: Le compilateur impose de gérer une exception vérifiée, comme IOException, par un catch ou une déclaration throws. Les non vérifiées, qui héritent de RuntimeException, signalent plutôt des erreurs de programmation et n'ont pas cette obligation. Toutes peuvent être attrapées. Une exception non attrapée arrête le thread, pas forcément la JVM.
+
+@036
+Q: Que garantit try-with-resources sur le lecteur de cet extrait ?
+C: Sa fermeture automatique
+W: Sa lecture complète avant la fin du bloc
+W: Sa réouverture si la lecture échoue
+W: L'absence de toute IOException
+E: Toute ressource qui implémente AutoCloseable, déclarée entre les parenthèses du try, est fermée automatiquement à la sortie du bloc, normale ou par exception, dans l'ordre inverse de son ouverture. La lecture complète n'est pas garantie. La ressource n'est pas rouverte. Une IOException peut toujours survenir et doit être traitée.
+R: The try-with-resources Statement | https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html
+```
+try (BufferedReader lecteur = Files.newBufferedReader(chemin)) {
+    return lecteur.readLine();
+}
+```
+
+@037
+Q: Pourquoi faire hériter cette exception métier de RuntimeException ?
+C: Éviter throws chez les appelants
+W: Pour qu'elle soit attrapée par le compilateur
+W: Pour pouvoir lui ajouter un message
+W: Pour qu'elle arrête le programme sans trace
+E: Une exception qui hérite de RuntimeException est non vérifiée : les méthodes intermédiaires n'ont pas à la déclarer, ce qui est courant pour une erreur métier traitée en haut de l'application. Le compilateur n'attrape aucune exception. Toute exception peut recevoir un message, par son constructeur. Elle conserve sa pile d'appels.
+```
+public class SoldeInsuffisantException extends RuntimeException {
+    public SoldeInsuffisantException(String message) {
+        super(message);
+    }
+}
+```
+
+@038
+Q: Qu'est-ce qu'une interface fonctionnelle ?
+C: Une interface avec une seule méthode abstraite
+W: Une interface qui ne contient que des constantes
+W: Une interface marquée obligatoirement @Override
+W: Une classe qui ne contient que des méthodes static
+E: Une interface fonctionnelle, comme Runnable, Comparator ou Function, n'a qu'une méthode abstraite : une lambda peut alors en fournir l'implémentation. L'annotation @FunctionalInterface est facultative mais vérifie cette règle. Une interface de constantes n'en est pas une. @Override concerne les méthodes redéfinies. Ce n'est pas une classe.
+
+@039
+Q: Que contient longueurs après ce code ?
+C: [4, 6, 2]
+W: [java, kotlin, go]
+W: [2, 4, 6]
+W: 12
+E: map applique String::length à chaque élément, dans l'ordre : java fait 4 caractères, kotlin 6, go 2. La liste contient les longueurs, pas les mots. Le stream ne trie pas les résultats. 12 serait la somme, que calcule un mapToInt suivi de sum.
+```
+List<Integer> longueurs = Stream.of("java", "kotlin", "go")
+        .map(String::length)
+        .toList();
+```
+
+@040
+Q: Qu'affiche ce code ?
+C: [ANNE, BOB]
+W: [anne, bob, cyril]
+W: [ANNE, BOB, CYRIL]
+W: [CYRIL]
+E: filter ne garde que les prénoms de moins de 5 lettres, anne et bob, puis map les met en majuscules. cyril, qui a 5 lettres, est écarté. Sans filter, on obtiendrait les trois prénoms. Les prénoms sont bien transformés en majuscules.
+```
+List<String> prenoms = List.of("anne", "bob", "cyril");
+System.out.println(prenoms.stream()
+        .filter(p -> p.length() < 5)
+        .map(String::toUpperCase)
+        .toList());
+```
+
+@041
+Q: Combien de lignes ce code affiche-t-il ?
+C: Aucune
+W: Trois
+W: Une seule
+W: Six
+E: Les opérations intermédiaires comme peek ou map sont paresseuses : elles ne s'exécutent qu'au lancement d'une opération terminale, comme toList ou forEach. Ici, aucune opération terminale n'est appelée, donc rien n'est affiché. Avec .toList() à la fin, on aurait trois lignes.
+```
+Stream.of("a", "b", "c")
+        .peek(System.out::println)
+        .map(String::toUpperCase);
+```
+
+@042
+Q: Que vaut total ?
+C: 10
+W: 0
+W: 24
+W: 4
+E: reduce combine les éléments deux à deux à partir de la valeur initiale 0 avec l'addition : 0 + 1 + 2 + 3 + 4 = 10. 0 est la valeur de départ, pas le résultat. 24 serait le produit. 4 est le nombre d'éléments.
+```
+int total = Stream.of(1, 2, 3, 4)
+        .reduce(0, Integer::sum);
+```
+
+@043
+Q: Quel est le type de parVille ?
+C: Map<String, List<Client>>
+W: List<Map<String, Client>>
+W: Map<Client, String>
+W: Set<String>
+E: groupingBy regroupe les éléments selon la clé fournie, ici la ville : on obtient une Map dont chaque clé est une ville et chaque valeur la liste des clients de cette ville. Une liste de maps ou une map inversée ne correspondent pas. Un Set des villes s'obtiendrait avec map puis toSet.
+```
+var parVille = clients.stream()
+        .collect(Collectors.groupingBy(Client::ville));
+```
+
+@044
+Q: Quelle différence entre orElse et orElseGet dans cet extrait ?
+C: orElse calcule toujours la valeur de repli, orElseGet seulement si vide
+W: orElseGet calcule toujours la valeur de repli, orElse seulement si vide
+W: orElse lève une exception si l'Optional est vide
+W: Les deux sont strictement équivalents en coût
+E: L'argument d'orElse est évalué avant l'appel, même si l'Optional contient une valeur : ici, chargerParDefaut() s'exécute pour rien. orElseGet reçoit un fournisseur, appelé seulement si l'Optional est vide. L'inverse est faux. Lever une exception est le rôle d'orElseThrow. Leur coût diffère dès que la valeur de repli est chère à calculer.
+R: Optional (Java SE 21) | https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html
+```
+Config a = trouver(nom).orElse(chargerParDefaut());
+Config b = trouver(nom).orElseGet(() -> chargerParDefaut());
+```
+
+@045
+Q: Que vaut ville si le client n'a pas d'adresse, adresse() renvoyant un Optional vide ?
+C: "inconnue"
+W: null
+W: Une NullPointerException
+W: Un Optional vide
+E: flatMap aplatit un Optional<Optional<Adresse>> en Optional<Adresse> ; vide, il reste vide, map ne s'applique pas, et orElse renvoie « inconnue ». C'est l'intérêt d'Optional : enchaîner sans tester null à chaque étape. null n'est jamais renvoyé ici. Aucune exception n'est levée. orElse renvoie une String, pas un Optional.
+```
+String ville = trouverClient(id)
+        .flatMap(Client::adresse)
+        .map(Adresse::ville)
+        .orElse("inconnue");
+```
+
+@046
+Q: Combien d'éléments contient ce tableau ?
+C: 4
+W: 3
+W: 5
+W: 2
+E: split coupe à chaque virgule : « a », « b », une chaîne vide entre les deux virgules consécutives, puis « c ». Seules les chaînes vides en fin de résultat sont supprimées, pas celles du milieu. 3 oublierait l'élément vide. 5 et 2 ne correspondent à aucun découpage.
+```
+String[] parties = "a,b,,c".split(",");
+System.out.println(parties.length);
+```
+
+@047
+Q: Que vaut type pour un jour égal à SAMEDI avec cette expression switch ?
+C: "week-end"
+W: "semaine"
+W: Une erreur de compilation, il manque default
+W: null
+E: Avec la syntaxe flèche, le cas SAMEDI, DIMANCHE renvoie « week-end », sans retomber dans les cas suivants : il n'y a pas de fall-through. Sur une énumération, un switch qui couvre toutes les constantes est exhaustif, default n'est pas obligatoire. L'expression renvoie toujours une valeur, jamais null ici.
+R: JEP 361: Switch Expressions | https://openjdk.org/jeps/361
+```
+String type = switch (jour) {
+    case SAMEDI, DIMANCHE -> "week-end";
+    case LUNDI, MARDI, MERCREDI, JEUDI, VENDREDI -> "semaine";
+};
+```
+
+@048
+Q: Que se passe-t-il à la création de new Age(-3) ?
+C: Une IllegalArgumentException est levée
+W: L'objet est créé avec la valeur 0
+W: L'objet est créé avec la valeur -3
+W: Le code ne compile pas
+E: Le constructeur compact d'un record s'exécute avant l'affectation des champs : il sert à valider les composants, et lève ici une IllegalArgumentException pour une valeur négative. Aucune valeur n'est corrigée en 0. L'objet n'est pas créé avec −3. Cette syntaxe est valide depuis Java 16.
+```
+record Age(int valeur) {
+    Age {
+        if (valeur < 0) {
+            throw new IllegalArgumentException("âge négatif");
+        }
+    }
+}
+```
+
+@049
+Q: Que garantit le mot-clé sealed sur cette interface ?
+C: Seules Carre et Cercle peuvent l'implémenter
+W: Aucune classe ne peut plus l'implémenter
+W: Ses méthodes ne peuvent pas être redéfinies
+W: Ses implémentations sont toutes immuables
+E: Une interface sealed liste ses implémentations autorisées avec permits : le compilateur refuse toute autre implémentation, ce qui permet aussi des switch exhaustifs sur ce type. Elle reste implémentable par les classes listées. Les méthodes peuvent être redéfinies. L'immuabilité n'est pas imposée.
+R: JEP 409: Sealed Classes | https://openjdk.org/jeps/409
+```
+sealed interface Forme permits Carre, Cercle {}
+record Carre(double cote) implements Forme {}
+record Cercle(double rayon) implements Forme {}
+```
+
+@050
+Q: Qu'apporte ce test instanceof, valable depuis Java 16 ?
+C: Il teste le type et déclare une variable typée
+W: Il convertit l'objet en String s'il ne l'est pas
+W: Il lève une exception si l'objet n'est pas une String
+W: Il compare deux chaînes avec equals
+E: Le filtrage par motif déclare la variable texte, déjà typée String, quand le test réussit : plus besoin du transtypage explicite (String) objet. Aucune conversion n'a lieu si l'objet n'est pas une String, le test est simplement faux. Aucune exception n'est levée. Aucune comparaison de contenu n'est faite.
+R: JEP 394: Pattern Matching for instanceof | https://openjdk.org/jeps/394
+```
+if (objet instanceof String texte) {
+    System.out.println(texte.length());
+}
+```
+
+@051
+Q: Lequel de ces usages de var ne compile pas ?
+C: var inconnu = null;
+W: var liste = new ArrayList<String>();
+W: var total = 0;
+W: for (var nom : noms) { }
+E: var déduit le type de l'initialisation : avec null, aucun type ne peut être déduit, le compilateur refuse. Les trois autres usages sont valides : le type est ArrayList<String>, int, puis le type des éléments de noms. var ne s'emploie que pour des variables locales, pas pour des champs ni des paramètres.
+R: JEP 286: Local-Variable Type Inference | https://openjdk.org/jeps/286
+
+@052
+Q: Qu'affiche ce code ?
+C: [a, b, c]
+W: [a, b]
+W: Une UnsupportedOperationException
+W: Une ConcurrentModificationException
+E: Collections.unmodifiableList renvoie une vue en lecture seule de la liste d'origine : on ne peut pas modifier la vue, mais les modifications de la liste d'origine y sont visibles. Après l'ajout de « c » dans source, la vue affiche les trois éléments. Aucune exception, puisqu'on ne modifie pas la vue. List.copyOf aurait au contraire créé une copie figée.
+```
+List<String> source = new ArrayList<>(List.of("a", "b"));
+List<String> vue = Collections.unmodifiableList(source);
+source.add("c");
+System.out.println(vue);
+```
+
+@053
+Q: Qu'affiche ce code ?
+C: false
+W: true
+W: 0.3
+W: Une erreur de compilation
+E: 0.1 et 0.2 n'ont pas de représentation exacte en binaire : leur somme vaut 0.30000000000000004, différente de 0.3. On ne compare jamais des double avec ==, on utilise une tolérance, ou BigDecimal pour les montants. Le code affiche un booléen, pas un nombre. Il compile.
+```
+System.out.println(0.1 + 0.2 == 0.3);
+```
+
+@054
+Q: Qu'affiche ce code ?
+C: false puis 0
+W: true puis 0
+W: false puis 1
+W: true puis 1
+E: equals de BigDecimal compare la valeur et l'échelle : 2.0 et 2.00 n'ont pas la même échelle, equals renvoie false. compareTo ne compare que la valeur numérique et renvoie 0. Pour tester l'égalité de montants, on utilise donc compareTo. 1 signalerait un premier nombre plus grand.
+R: BigDecimal (Java SE 21) | https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/math/BigDecimal.html
+```
+BigDecimal a = new BigDecimal("2.0");
+BigDecimal b = new BigDecimal("2.00");
+System.out.println(a.equals(b));
+System.out.println(a.compareTo(b));
+```
+
+@055
+Q: Qu'affiche ce code ?
+C: 2026-01-01
+W: 2026-01-11
+W: 2026-01-10
+W: Une erreur de compilation
+E: LocalDate est immuable : plusDays renvoie une nouvelle date sans modifier l'objet d'origine, et le résultat est ignoré ici. debut garde sa valeur, le 1er janvier 2026. Pour obtenir le 11 janvier, il faut écrire debut = debut.plusDays(10). Le code compile.
+```
+LocalDate debut = LocalDate.of(2026, 1, 1);
+debut.plusDays(10);
+System.out.println(debut);
+```
+
+@056
+Q: Quelle différence entre Duration et Period ?
+C: Duration mesure en heures et secondes, Period en jours et mois
+W: Duration mesure en mois, Period en millisecondes
+W: Period ne fonctionne qu'avec des fuseaux horaires
+W: Duration et Period sont deux noms de la même classe
+E: Duration exprime une durée exacte en secondes et nanosecondes, adaptée aux heures et minutes ; Period exprime une durée calendaire en années, mois et jours, dont la longueur réelle dépend des dates. Les correspondances proposées sont inversées. Period ne dépend pas des fuseaux horaires. Ce sont deux classes distinctes.
+
+@057
+Q: Qu'est-ce qui distingue une classe imbriquée static d'une classe interne ?
+C: Aucun lien avec une instance
+W: Elle ne peut contenir que des méthodes static
+W: Elle n'est visible que dans sa classe englobante
+W: Elle ne peut pas avoir de constructeur
+E: Une classe interne non static garde une référence implicite vers une instance de la classe englobante, ce qui peut retenir cet objet en mémoire. Une classe imbriquée static n'a pas ce lien et se crée sans instance englobante. Elle peut avoir des méthodes d'instance, être publique et avoir des constructeurs.
+
+@058
+Q: Quand préférer une classe abstraite à une interface ?
+C: Pour partager un état et du code entre classes proches
+W: Pour permettre l'héritage de plusieurs types à la fois
+W: Pour définir une seule méthode utilisée par une lambda
+W: Pour éviter tout constructeur dans la hiérarchie
+E: Une classe abstraite peut avoir des champs d'instance, des constructeurs et des méthodes avec du code commun : elle convient à des classes proches qui partagent un état. Une interface permet l'implémentation multiple et peut servir de cible à une lambda, ce que ne permet pas une classe abstraite. Une classe abstraite a au contraire souvent un constructeur.
+
+@059
+Q: Que signifie final sur une classe ?
+C: Elle ne peut pas être étendue
+W: Ses attributs ne peuvent plus être modifiés
+W: Elle ne peut pas être instanciée
+W: Ses méthodes deviennent toutes static
+E: Une classe final ne peut pas avoir de sous-classe, comme String : son comportement ne peut pas être modifié par héritage. Ses attributs ne deviennent pas immuables pour autant, ils doivent être déclarés final eux-mêmes. Elle s'instancie normalement. Ses méthodes ne deviennent pas static.
+
+@060
+Q: Qu'affiche ce code ?
+C: Ouaf
+W: Grr
+W: Une erreur de compilation
+W: Ouaf puis Grr
+E: La variable est de type Animal, mais l'objet est un Chien : à l'exécution, la JVM appelle la méthode redéfinie du type réel de l'objet. C'est la liaison dynamique, base du polymorphisme. La méthode d'Animal n'est pas appelée. Le code compile. Seule une méthode s'exécute.
+```
+class Animal {
+    String cri() { return "Grr"; }
+}
+
+class Chien extends Animal {
+    @Override
+    String cri() { return "Ouaf"; }
+}
+
+Animal animal = new Chien();
+System.out.println(animal.cri());
+```
+
+@061
+Q: Qu'affiche ce code ?
+C: objet
+W: texte
+W: Une erreur de compilation
+W: objet puis texte
+E: La surcharge se résout à la compilation, d'après le type déclaré de l'argument : valeur est déclarée Object, la méthode decrire(Object) est choisie, même si l'objet est une String. C'est la grande différence avec la redéfinition, résolue à l'exécution. Le code compile. Une seule méthode est appelée.
+```
+static String decrire(Object o) { return "objet"; }
+static String decrire(String s) { return "texte"; }
+
+Object valeur = "bonjour";
+System.out.println(decrire(valeur));
+```
+
+@062
+Q: Comment trier ces employés par service, puis par salaire décroissant ?
+C: comparing(Employe::service).thenComparing(Employe::salaire, reverseOrder())
+W: comparing(Employe::salaire).reversed().thenComparing(Employe::service)
+W: comparing(Employe::service).reversed()
+W: comparing(Employe::service, Employe::salaire)
+E: comparing fixe le premier critère, le service, et thenComparing ajoute le second, le salaire, ici en ordre décroissant grâce à reverseOrder. La deuxième proposition trie d'abord par salaire, puis par service. La troisième inverse l'ordre des services et ignore le salaire. La quatrième passe le salaire comme comparateur, ce qui ne compile pas.
+```
+employes.sort(/* comparateur */);
+```
+
+@063
+Q: Qu'affiche ce code ?
+C: 3 puis 0.5
+W: 3 puis 3
+W: 0 puis 0.5
+W: Une erreur de compilation
+E: values() renvoie toutes les constantes d'une énumération, ici trois. Chaque constante appelle le constructeur avec sa remise : NORMAL vaut 0.0, ETUDIANT 0.5 et SENIOR 0.3. Une énumération Java peut porter des champs et des méthodes. Le code compile.
+```
+enum Tarif {
+    NORMAL(0.0), ETUDIANT(0.5), SENIOR(0.3);
+
+    private final double remise;
+
+    Tarif(double remise) { this.remise = remise; }
+
+    double remise() { return remise; }
+}
+
+System.out.println(Tarif.values().length);
+System.out.println(Tarif.ETUDIANT.remise());
+```
+
+@064
+Q: Quelle condition garantit qu'une méthode equals redéfinie respecte son contrat ?
+C: Réflexivité, symétrie, transitivité
+W: Comparer les objets uniquement avec ==
+W: Renvoyer true dès que les classes sont identiques
+W: Lever une exception si l'argument est null
+E: Le contrat d'equals impose : x.equals(x) est vrai, x.equals(y) équivaut à y.equals(x), la transitivité, des résultats stables, et x.equals(null) renvoie false. Comparer avec == revient à ne pas redéfinir equals. Deux objets de même classe ne sont pas forcément égaux. Pour null, equals doit renvoyer false, sans exception.
+R: Object (Java SE 21) | https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html
+
+@065
+Q: Qu'affiche ce code, Java 15 ou plus ?
+C: Trois lignes : un, deux et trois
+W: Une seule ligne contenant un\ndeux\ntrois
+W: Une erreur de compilation sur les guillemets
+W: Les trois mots séparés par des espaces
+E: Un bloc de texte, entre triples guillemets, conserve les retours à la ligne et retire l'indentation commune : il produit une chaîne de trois lignes. Les retours à la ligne sont réels, pas des séquences \n écrites. La syntaxe est valide depuis Java 15. Les mots ne sont pas joints par des espaces.
+R: JEP 378: Text Blocks | https://openjdk.org/jeps/378
+```
+String texte = """
+        un
+        deux
+        trois""";
+System.out.print(texte);
+```

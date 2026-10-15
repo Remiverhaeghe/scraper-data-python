@@ -15,6 +15,7 @@ from tools.quiz_lot import (
     build_pack,
     build_questions,
     check_pack,
+    collect_references,
     load_lot,
     main,
     parse_lot_text,
@@ -185,3 +186,73 @@ def test_main_builds_then_checks_an_archive(tmp_path, monkeypatch, capsys):
 
     assert main(["check", str(vBiased)]) == 1
     assert "la plus longue" in capsys.readouterr().out
+
+
+def test_references_are_read_and_built(tmp_path):
+    """Vérifie les références du format compact et leur place dans la question."""
+
+    vQuestions = parse_lot_text(
+        QUESTION_TEXT.replace(
+            "E: Explication détaillée de la notion et des erreurs courantes du "
+            "candidat.\n```",
+            "E: Explication détaillée de la notion et des erreurs courantes du "
+            "candidat.\nR: Documentation | https://docs.example.org/page\n```",
+            1,
+        )
+    )
+
+    assert vQuestions["001"]["R"] == ["Documentation | https://docs.example.org/page"]
+
+    with pytest.raises(ValueError, match="référence mal écrite"):
+        parse_lot_text(
+            QUESTION_TEXT.replace(
+                "E: Explication", "R: sans adresse\nE: Explication", 1
+            )
+        )
+
+    write_lot(tmp_path, "grafcet")
+    vConfig, vSource = load_lot("grafcet", tmp_path)
+    vSource["001"]["R"] = ["Guide | https://docs.example.org/guide"]
+
+    assert build_questions("grafcet", vConfig, vSource)[0]["references"] == [
+        {"title": "Guide", "url": "https://docs.example.org/guide"}
+    ]
+
+
+def test_links_command_reports_removed_pages(tmp_path, monkeypatch, capsys):
+    """Vérifie la vérification des références d'une archive, sans réseau."""
+
+    vQuestions = [
+        {"id": "q1", "references": [{"title": "A", "url": "https://a.example.org"}]},
+        {"id": "q2", "references": [{"title": "B", "url": "https://b.example.org"}]},
+        {"id": "q3", "references": [{"title": "A", "url": "https://a.example.org"}]},
+    ]
+    vArchive = tmp_path / "lot.zip"
+
+    with zipfile.ZipFile(vArchive, "w") as vZip:
+        vZip.writestr("questions/lot.json", json.dumps({"questions": vQuestions}))
+
+    assert collect_references(vQuestions) == {
+        "https://a.example.org": ["q1", "q3"],
+        "https://b.example.org": ["q2"],
+    }
+
+    vStatuses = {
+        "https://a.example.org": "available",
+        "https://b.example.org": "expired",
+    }
+    monkeypatch.setattr(quiz_lot, "check_offer_link", vStatuses.get)
+
+    assert main(["links", str(vArchive)]) == 1
+
+    vLines = capsys.readouterr().out.splitlines()
+
+    assert vLines == [
+        "2 référence(s), 1 retirée(s)",
+        "retirée : https://b.example.org (q2)",
+        "en ligne : https://a.example.org (q1, q3)",
+    ]
+
+    monkeypatch.setattr(quiz_lot, "check_offer_link", lambda _: None)
+
+    assert main(["links", "grafcet"]) == 0

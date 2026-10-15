@@ -1,0 +1,254 @@
+@066
+Q: Quelle différence y a-t-il entre ces deux appels ?
+C: start lance un nouveau thread, run s'exécute dans le thread courant
+W: run lance un nouveau thread, start s'exécute dans le thread courant
+W: Les deux lancent un nouveau thread de la même façon
+W: start attend la fin du thread avant de rendre la main
+E: start crée un nouveau fil d'exécution qui appelle run de son côté ; appeler run directement exécute simplement la méthode dans le thread courant, sans aucun parallélisme. L'inverse est faux. Les deux appels ne sont donc pas équivalents. Attendre la fin d'un thread est le rôle de join.
+```
+Thread tache = new Thread(() -> traiter());
+tache.start();
+tache.run();
+```
+
+@067
+Q: Pourquoi ce compteur peut-il afficher moins de 2 000 ?
+C: compteur++ n'est pas atomique entre les deux threads
+W: Les threads ne démarrent jamais en même temps
+W: Un int ne peut pas dépasser 1 000 en Java
+W: join interrompt les threads avant leur fin
+E: compteur++ lit la valeur, l'incrémente puis l'écrit : deux threads peuvent lire la même valeur et perdre un incrément. On corrige avec synchronized, un AtomicInteger ou un LongAdder. Les threads s'exécutent bien en parallèle, c'est le problème. Un int va bien au-delà de 1 000. join attend la fin du thread, il ne l'interrompt pas.
+```
+static int compteur = 0;
+
+Runnable incrementer = () -> {
+    for (int i = 0; i < 1000; i++) {
+        compteur++;
+    }
+};
+Thread t1 = new Thread(incrementer);
+Thread t2 = new Thread(incrementer);
+t1.start(); t2.start();
+t1.join(); t2.join();
+System.out.println(compteur);
+```
+
+@068
+Q: Que garantit volatile sur un champ partagé entre threads ?
+C: La visibilité des écritures, pas l'atomicité
+W: L'atomicité de toutes les opérations sur le champ
+W: L'exclusion mutuelle comme synchronized
+W: L'absence de toute mise en cache par le processeur
+E: Une écriture dans un champ volatile est visible par les autres threads qui le lisent ensuite : c'est utile pour un drapeau d'arrêt. Mais une opération composée comme compteur++ reste non atomique. volatile n'apporte aucune exclusion mutuelle. Le modèle mémoire garantit la visibilité, sans décrire le fonctionnement des caches.
+
+@069
+Q: Pourquoi AtomicInteger corrige-t-il le compteur partagé entre threads ?
+C: incrementAndGet est une opération atomique
+W: Il ralentit les threads pour qu'ils alternent
+W: Il crée un compteur séparé pour chaque thread
+W: Il empêche plusieurs threads de démarrer
+E: incrementAndGet lit, incrémente et écrit en une seule opération atomique, grâce à une instruction de type compare-and-swap : aucun incrément n'est perdu, sans verrou explicite. Il ne fait pas alterner les threads. Le compteur est bien partagé, pas dupliqué. Les threads démarrent normalement.
+```
+AtomicInteger compteur = new AtomicInteger();
+compteur.incrementAndGet();
+```
+
+@070
+Q: Que risque-t-on en oubliant d'appeler shutdown sur cet exécuteur ?
+C: Le programme peut ne jamais se terminer
+W: Les tâches soumises ne s'exécutent jamais
+W: Les résultats des tâches sont perdus
+W: L'exécuteur lance une exception au bout d'une minute
+E: Les threads d'un pool fixe ne sont pas des threads démons : tant que l'exécuteur n'est pas arrêté, ils attendent de nouvelles tâches et empêchent la JVM de s'arrêter. Les tâches soumises s'exécutent normalement. Les résultats restent disponibles dans les Future. Aucune exception automatique n'est levée.
+```
+ExecutorService pool = Executors.newFixedThreadPool(4);
+Future<Integer> resultat = pool.submit(() -> calculer());
+System.out.println(resultat.get());
+```
+
+@071
+Q: Quelle différence entre thenApply et thenCompose sur un CompletableFuture ?
+C: thenCompose enchaîne une étape qui renvoie elle-même un futur
+W: thenApply attend la fin de toutes les tâches du pool
+W: thenCompose exécute la fonction sur le thread principal
+W: thenApply transforme une exception en résultat
+E: thenApply transforme le résultat avec une fonction ordinaire ; si cette fonction renvoie un CompletableFuture, on obtiendrait un futur de futur. thenCompose aplatit ce cas, comme flatMap. thenApply n'attend pas tout le pool. Le thread d'exécution ne dépend pas de ce choix. Le traitement des erreurs passe par exceptionally ou handle.
+```
+CompletableFuture<Client> client = chargerClient(id);
+CompletableFuture<List<Commande>> commandes =
+        client.thenCompose(c -> chargerCommandes(c));
+```
+
+@072
+Q: Pourquoi utiliser merge sur une ConcurrentHashMap partagée plutôt que get puis put ?
+C: merge met à jour la valeur de façon atomique
+W: get puis put est interdit sur une ConcurrentHashMap
+W: merge trie automatiquement les clés
+W: merge copie la map pour chaque thread
+E: Avec get puis put, deux threads peuvent lire la même ancienne valeur et l'un écrase la mise à jour de l'autre. merge, comme compute, applique la fonction de façon atomique pour la clé. get et put restent autorisés, mais leur enchaînement n'est pas atomique. merge ne trie rien et ne copie pas la map.
+R: ConcurrentHashMap (Java SE 21) | https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/ConcurrentHashMap.html
+```
+ConcurrentHashMap<String, Integer> visites = new ConcurrentHashMap<>();
+visites.merge(page, 1, Integer::sum);
+```
+
+@073
+Q: Deux threads prennent les verrous A et B dans un ordre inverse. Quel risque, et quelle correction ?
+C: Un interblocage ; ordre fixe
+W: Une fuite mémoire : libérer les verrous plus tôt
+W: Un dépassement de pile : réduire la récursion
+W: Aucun risque, la JVM détecte et résout ce cas
+E: Si le premier thread tient A et attend B pendant que le second tient B et attend A, aucun ne progresse : c'est un interblocage. Imposer un ordre global d'acquisition des verrous l'empêche. Ce n'est ni une fuite mémoire ni un problème de pile. La JVM peut le signaler dans un vidage de threads, mais ne le résout pas.
+
+@074
+Q: Quel problème pose ce stream parallèle ?
+C: ArrayList n'est pas sûre en écriture concurrente
+W: Un stream parallèle ne peut pas appeler map
+W: Le résultat est trié alors qu'il ne devrait pas
+W: Le code ne compile pas avec parallel()
+E: forEach s'exécute sur plusieurs threads qui ajoutent en même temps dans une ArrayList non synchronisée : on peut perdre des éléments ou provoquer une exception. Il faut collecter le résultat avec toList ou collect, sans état partagé modifié. map fonctionne en parallèle. Rien n'est trié. Le code compile.
+```
+List<Integer> carres = new ArrayList<>();
+nombres.parallelStream()
+        .map(n -> n * n)
+        .forEach(carres::add);
+```
+
+@075
+Q: Où sont stockés les objets créés avec new ?
+C: Dans le tas, partagé par les threads
+W: Dans la pile du thread qui les crée
+W: Dans le fichier .class de leur classe
+W: Dans le cache du processeur uniquement
+E: Les objets sont alloués dans le tas, géré par le ramasse-miettes et partagé par tous les threads. La pile de chaque thread contient les variables locales et les références vers ces objets. Le fichier .class décrit la classe, pas ses instances. Les caches du processeur ne sont qu'une copie temporaire.
+
+@076
+Q: Quand un objet devient-il éligible au ramasse-miettes ?
+C: Quand il devient inatteignable
+W: Dès qu'on lui affecte la valeur null directement
+W: Après un délai fixe de soixante secondes
+W: Quand on appelle la méthode System.gc()
+E: Le ramasse-miettes récupère les objets inaccessibles depuis les racines : variables locales actives, champs static, threads. Affecter null à une variable ne supprime qu'une référence, d'autres peuvent subsister. Il n'y a pas de délai fixe. System.gc() n'est qu'une suggestion, sans garantie.
+
+@077
+Q: Pourquoi ce cache peut-il provoquer une fuite mémoire ?
+C: La map statique garde les objets indéfiniment
+W: Les champs static sont recopiés à chaque appel
+W: Une HashMap ne peut pas contenir de gros objets
+W: Le ramasse-miettes ne parcourt jamais les maps
+E: Un champ static vit aussi longtemps que sa classe : les rapports ajoutés restent référencés et ne sont jamais libérés, la mémoire grossit jusqu'au OutOfMemoryError. Il faut une taille maximale, une expiration ou une bibliothèque de cache. Un champ static n'est pas recopié. Une HashMap accepte de gros objets. Le ramasse-miettes parcourt les maps, mais tout y est encore atteignable.
+```
+class CacheRapports {
+    private static final Map<Long, Rapport> CACHE = new HashMap<>();
+
+    static Rapport charger(long id) {
+        return CACHE.computeIfAbsent(id, Rapport::generer);
+    }
+}
+```
+
+@078
+Q: Quelle erreur provoque cette méthode ?
+C: Une StackOverflowError
+W: Une OutOfMemoryError sur le tas
+W: Une ArithmeticException
+W: Une boucle infinie silencieuse
+E: La récursion n'a pas de cas d'arrêt : chaque appel empile un nouveau cadre sur la pile du thread jusqu'à la saturer, d'où une StackOverflowError. Le tas n'est pas concerné. Aucune division par zéro n'a lieu. L'erreur survient vite, elle n'est pas silencieuse.
+```
+int factorielle(int n) {
+    return n * factorielle(n - 1);
+}
+```
+
+@079
+Q: Que signifie une NoClassDefFoundError au démarrage d'une application ?
+C: Une classe absente à l'exécution
+W: Une classe a été mal écrite et ne compile pas
+W: Le programme a épuisé la mémoire du tas
+W: Une classe a été trouvée en double dans le projet
+E: Le code a été compilé avec une classe qui n'est plus trouvée à l'exécution, par exemple une dépendance absente du classpath ou une initialisation statique en échec. Une erreur de syntaxe aurait bloqué la compilation. Le manque de mémoire donne une OutOfMemoryError. Une classe en double provoque d'autres symptômes, souvent des conflits de version.
+
+@080
+Q: Pourquoi ce benchmark donne-t-il des mesures trompeuses ?
+C: Le JIT n'est pas chauffé et le résultat inutilisé peut être supprimé
+W: System.nanoTime n'est disponible que sur Linux
+W: Une boucle ne peut pas être chronométrée en Java
+W: Le ramasse-miettes s'arrête pendant les mesures
+E: Les premières exécutions sont interprétées, puis le JIT compile le code chaud : une seule mesure ne reflète pas le régime établi. De plus, un résultat jamais utilisé peut être éliminé par le compilateur. On utilise JMH, qui gère le préchauffage et ces pièges. nanoTime fonctionne partout. Une boucle se chronomètre. Le ramasse-miettes peut au contraire intervenir pendant la mesure.
+```
+long debut = System.nanoTime();
+for (int i = 0; i < 1_000; i++) {
+    calculer(i);
+}
+System.out.println(System.nanoTime() - debut);
+```
+
+@081
+Q: Que signifie la portée test sur cette dépendance Maven ?
+C: Pour les tests uniquement
+W: Elle est incluse dans le livrable de production
+W: Elle est téléchargée seulement en cas d'erreur
+W: Elle remplace la version de Java du projet
+E: Une dépendance en portée test, comme JUnit, sert à compiler et exécuter les tests, mais n'est ni dans le classpath principal ni dans le livrable. La portée compile, par défaut, l'inclurait. Le téléchargement ne dépend pas des erreurs. La version de Java se configure ailleurs.
+```
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+@082
+Q: Que fait la commande mvn package sur un projet standard ?
+C: Elle compile, lance les tests puis crée le livrable
+W: Elle déploie le livrable sur le serveur de production
+W: Elle crée le livrable sans compiler le code
+W: Elle supprime le dossier target du projet
+E: Maven exécute les phases du cycle de vie dans l'ordre jusqu'à package : validation, compilation, tests, puis création du .jar ou du .war dans target. Le déploiement correspond à deploy. Le livrable ne peut pas être créé sans compilation. Supprimer target est le rôle de mvn clean.
+
+@083
+Q: Pourquoi cet equals pose-t-il problème avec une sous-classe PointColore ?
+C: instanceof rend l'égalité non symétrique avec la sous-classe
+W: equals ne peut jamais utiliser instanceof
+W: Le hashCode des deux classes est forcément différent
+W: Une sous-classe ne peut pas redéfinir equals
+E: Si PointColore redéfinit equals en comparant aussi la couleur, point.equals(pointColore) peut être vrai et pointColore.equals(point) faux : la symétrie est rompue. On compare alors les classes avec getClass(), ou on rend la classe final, ou on utilise un record. instanceof est utilisable dans une classe final. hashCode n'est pas forcément différent. Une sous-classe peut redéfinir equals.
+```
+@Override
+public boolean equals(Object o) {
+    if (!(o instanceof Point autre)) {
+        return false;
+    }
+    return x == autre.x && y == autre.y;
+}
+```
+
+@084
+Q: Pourquoi ce constructeur copie-t-il la liste reçue ?
+C: Pour que l'appelant ne modifie pas l'état interne après coup
+W: Pour accélérer les accès à la liste
+W: Parce qu'une liste ne peut pas être affectée à un champ final
+W: Pour trier automatiquement les éléments
+E: Sans copie, l'appelant garde une référence vers la même liste et peut la modifier, ce qui change l'état de l'objet sans passer par ses méthodes. List.copyOf crée une copie non modifiable : c'est une copie défensive. Elle n'accélère rien. Un champ final peut référencer n'importe quelle liste. Rien n'est trié.
+```
+final class Equipe {
+    private final List<String> membres;
+
+    Equipe(List<String> membres) {
+        this.membres = List.copyOf(membres);
+    }
+}
+```
+
+@085
+Q: Que contient original après ce code ?
+C: [1, 99, 3, 4]
+W: [1, 2, 3, 4]
+W: [99]
+W: Une UnsupportedOperationException
+E: subList renvoie une vue sur une portion de la liste d'origine, pas une copie : modifier la vue modifie original. L'élément d'indice 1, qui valait 2, devient 99. original n'est donc pas inchangé. La vue ne remplace pas la liste. Modifier un élément d'une sous-liste d'ArrayList est autorisé.
+```
+List<Integer> original = new ArrayList<>(List.of(1, 2, 3, 4));
+List<Integer> milieu = original.subList(1, 3);
+milieu.set(0, 99);
+```

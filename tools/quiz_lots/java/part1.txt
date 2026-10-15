@@ -1,0 +1,257 @@
+@001
+Q: Quel rôle joue la JVM dans l'exécution d'un programme Java ?
+C: Elle exécute le bytecode des fichiers .class
+W: Elle compile les fichiers .java en bytecode
+W: Elle fournit l'éditeur de code du développeur
+W: Elle transforme le code Java en code C
+E: La JVM, machine virtuelle Java, charge et exécute le bytecode contenu dans les fichiers .class, en l'interprétant puis en compilant à la volée les parties fréquentes. La compilation des sources en bytecode est le rôle de javac, fourni par le JDK. L'éditeur relève de l'IDE. Java n'est pas traduit en C.
+
+@002
+Q: Que produit la commande javac Main.java ?
+C: Un fichier Main.class contenant du bytecode
+W: Un exécutable natif Main.exe pour Windows
+W: Une archive Main.jar prête à distribuer
+W: Un fichier Main.c compilable par gcc
+E: javac compile le code source en bytecode, rangé dans un fichier .class par classe ; ce bytecode est indépendant du système et s'exécute sur toute JVM. Un exécutable natif demande un outil comme GraalVM native-image. Une archive .jar se crée avec l'outil jar ou un outil de build. Aucun code C n'est produit.
+
+@003
+Q: Quelle différence y a-t-il entre int et Integer ?
+C: Primitif contre classe enveloppe
+W: Integer stocke des nombres plus grands que int
+W: int peut valoir null, Integer jamais
+W: Ce sont deux noms pour exactement le même type
+E: int est un type primitif qui contient directement la valeur ; Integer est un objet qui l'enveloppe, utilisable dans les collections et qui peut valoir null. Les deux ont la même plage de valeurs, sur 32 bits. C'est Integer qui peut valoir null, pas int. La conversion entre les deux est automatique : c'est l'autoboxing.
+R: Primitive Data Types | https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
+
+@004
+Q: Que se passe-t-il à la compilation de cette méthode ?
+C: Erreur : variable non initialisée
+W: Elle compile, total vaut 0 par défaut
+W: Elle compile, total vaut null par défaut
+W: Elle compile, mais lève une exception
+E: Une variable locale n'a pas de valeur par défaut : le compilateur refuse de la lire tant qu'elle n'a pas été affectée sur tous les chemins. Ce sont les champs d'une classe qui reçoivent une valeur par défaut, 0 pour un int. Un int ne peut pas valoir null. L'erreur est détectée à la compilation, pas à l'exécution.
+```
+int calculer(boolean bonus) {
+    int total;
+    if (bonus) {
+        total = 10;
+    }
+    return total;
+}
+```
+
+@005
+Q: Qu'affiche ce code ?
+C: 3
+W: 3.5
+W: 4
+W: 3.0
+E: 7 et 2 sont des int : la division est entière et tronque la partie décimale, 7 / 2 vaut 3. Pour obtenir 3.5, il faut qu'un des opérandes soit un double, par exemple 7 / 2.0. Le résultat n'est pas arrondi à 4. 3.0 serait l'affichage d'un double, or le résultat est un int.
+```
+int a = 7;
+int b = 2;
+System.out.println(a / b);
+```
+
+@006
+Q: Que vaut 17 % 5 en Java ?
+C: 2
+W: 3
+W: 3.4
+W: 0
+E: L'opérateur % donne le reste de la division entière : 17 = 3 × 5 + 2, le reste vaut 2. 3 est le quotient, pas le reste. 3.4 est le résultat de la division décimale. 0 ne serait le reste que si 17 était un multiple de 5.
+
+@007
+Q: Pourquoi dit-on qu'une String est immuable ?
+C: Une fois créée, son contenu ne change jamais
+W: Elle ne peut pas être passée à une méthode
+W: Elle ne peut pas contenir plus de 255 caractères
+W: Elle doit être déclarée avec le mot-clé final
+E: Les méthodes comme toUpperCase ou concat ne modifient pas la chaîne : elles en renvoient une nouvelle. Cette immuabilité permet de partager les chaînes sans risque et de les utiliser comme clés de HashMap. Une String se passe librement à une méthode. Sa longueur n'est pas limitée à 255. final concerne la variable, pas l'objet chaîne.
+
+@008
+Q: Qu'affiche ce code ?
+C: java
+W: JAVA
+W: Java
+W: Une erreur de compilation
+E: toUpperCase renvoie une nouvelle chaîne, mais son résultat n'est affecté à rien : langage garde sa valeur d'origine, « java ». Pour afficher « JAVA », il faudrait écrire langage = langage.toUpperCase(). Aucune majuscule initiale n'est ajoutée. Le code compile : ignorer une valeur de retour est autorisé.
+```
+String langage = "java";
+langage.toUpperCase();
+System.out.println(langage);
+```
+
+@009
+Q: Que permet le mot-clé private sur un attribut ?
+C: Limiter son accès à la classe qui le déclare
+W: Le rendre accessible aux seules sous-classes
+W: Le partager entre toutes les instances
+W: L'empêcher d'être modifié après sa création
+E: Un membre private n'est visible que dans sa propre classe : c'est la base de l'encapsulation, l'accès passant par des méthodes. L'accès des sous-classes correspond à protected. Le partage entre instances est le rôle de static. Empêcher la modification est le rôle de final.
+
+@010
+Q: Quelle est la différence entre une classe et un objet ?
+C: La classe est le modèle, l'objet une instance
+W: L'objet est le modèle, la classe une instance
+W: La classe existe à l'exécution, pas l'objet
+W: Il n'y en a aucune en Java
+E: La classe décrit les attributs et les méthodes communs ; chaque objet créé avec new est une instance de cette classe, avec ses propres valeurs d'attributs. L'inverse n'a pas de sens. Les objets existent bien à l'exécution, en mémoire. La distinction est fondamentale en programmation orientée objet.
+
+@011
+Q: À quoi sert un constructeur ?
+C: À initialiser un objet au moment de sa création
+W: À détruire un objet qui n'est plus utilisé
+W: À déclarer les méthodes abstraites de la classe
+W: À importer les classes d'un autre package
+E: Le constructeur porte le nom de la classe, n'a pas de type de retour et s'exécute à chaque new pour donner un état initial cohérent à l'objet. La destruction est gérée par le ramasse-miettes, sans destructeur explicite. Les méthodes abstraites se déclarent ailleurs. Les imports sont des instructions en tête de fichier.
+
+@012
+Q: Ces deux méthodes peuvent-elles coexister dans la même classe ?
+C: Oui, c'est une surcharge : les paramètres diffèrent
+W: Non, deux méthodes ne peuvent pas porter le même nom
+W: Non, il faudrait des types de retour différents
+W: Oui, mais seulement si l'une des deux est static
+E: La surcharge autorise plusieurs méthodes de même nom si leurs listes de paramètres diffèrent par le nombre ou le type ; le compilateur choisit selon les arguments. Le nom seul ne suffit pas à les distinguer. Un type de retour différent ne suffit pas, et n'est pas nécessaire ici. static n'a aucun rapport avec la surcharge.
+```
+int aire(int cote) { return cote * cote; }
+int aire(int largeur, int hauteur) { return largeur * hauteur; }
+```
+
+@013
+Q: Que signifie static sur un attribut ?
+C: L'attribut est partagé par toutes les instances
+W: L'attribut ne peut plus jamais être modifié
+W: L'attribut est visible depuis tout le projet
+W: L'attribut est recréé à chaque appel de méthode
+E: Un attribut static appartient à la classe et non à chaque objet : il existe en un seul exemplaire, partagé par toutes les instances, et s'utilise sans créer d'objet. L'interdiction de modification relève de final. La visibilité relève de public ou private. Un attribut n'est jamais recréé à chaque appel.
+
+@014
+Q: Combien de classes une classe Java peut-elle étendre directement ?
+C: Une seule
+W: Deux au plus
+W: Autant qu'elle veut
+W: Aucune, sauf Object
+E: Java n'autorise l'héritage que d'une seule classe avec extends, pour éviter les ambiguïtés de l'héritage multiple ; une classe peut en revanche implémenter plusieurs interfaces. Toute classe hérite d'Object si elle n'étend rien, mais elle peut étendre une autre classe.
+
+@015
+Q: Comment une classe peut-elle adopter le comportement de plusieurs types ?
+C: En implémentant plusieurs interfaces
+W: En étendant plusieurs classes abstraites
+W: En déclarant plusieurs constructeurs
+W: En dupliquant le code de chaque classe
+E: Une classe peut implémenter autant d'interfaces qu'elle veut, avec implements A, B, C, et être utilisée partout où ces types sont attendus. L'héritage de plusieurs classes, même abstraites, est interdit. Plusieurs constructeurs ne changent pas le type. Dupliquer le code ne crée pas de relation de type.
+
+@016
+Q: Que se passe-t-il à l'exécution de ce code ?
+C: Une NullPointerException est levée
+W: Il affiche 0, la longueur d'une chaîne vide
+W: Il affiche null à l'écran
+W: Le code ne compile pas
+E: nom vaut null : appeler une méthode dessus, ici length(), lève une NullPointerException à l'exécution. null n'est pas une chaîne vide, qui aurait une longueur de 0. Rien n'est affiché. Le compilateur accepte ce code, car il ne suit pas la valeur des variables.
+```
+String nom = null;
+System.out.println(nom.length());
+```
+
+@017
+Q: Qu'affiche ce code ?
+C: A puis B puis C
+W: A puis C
+W: A puis B
+W: B puis C
+E: Le bloc try affiche A, l'exception levée est attrapée par le catch qui affiche B, puis le bloc finally s'exécute dans tous les cas et affiche C. Sauter le catch serait faux, puisque l'exception est bien de ce type. Le finally n'est jamais ignoré, sauf arrêt brutal de la JVM.
+```
+try {
+    System.out.println("A");
+    throw new IllegalStateException();
+} catch (IllegalStateException e) {
+    System.out.println("B");
+} finally {
+    System.out.println("C");
+}
+```
+
+@018
+Q: Quelle signature permet à la JVM de démarrer un programme ?
+C: public static void main(String[] args)
+W: public void main(String args)
+W: static int main()
+W: private static void start(String[] args)
+E: Le point d'entrée classique est une méthode main publique et statique, sans valeur de retour, qui reçoit les arguments de la ligne de commande dans un tableau de String. Une méthode d'instance ne peut pas être appelée sans objet. Un type de retour int n'est pas accepté. Une méthode nommée start ou privée n'est pas reconnue comme point d'entrée.
+
+@019
+Q: Quelle est la différence entre 'a' et "a" en Java ?
+C: 'a' est un char, "a" une String
+W: Ce sont deux écritures de la même String
+W: 'a' est une String, "a" un char
+W: 'a' est un commentaire sur une ligne
+E: Les apostrophes délimitent un caractère unique, de type primitif char ; les guillemets délimitent une chaîne, objet de type String. Ils ne sont pas interchangeables : 'ab' ne compile pas. L'inverse est faux. Les commentaires s'écrivent avec // ou /* */.
+
+@020
+Q: Qu'affiche ce code ?
+C: false
+W: true
+W: Une NullPointerException
+W: Le code ne compile pas
+E: L'opérateur && évalue d'abord liste != null, qui est faux : le résultat est faux et la partie droite n'est pas évaluée, donc liste.isEmpty() n'est jamais appelé. C'est l'évaluation en court-circuit, qui évite ici la NullPointerException. Avec l'opérateur & non court-circuité, l'exception aurait été levée. Le code compile.
+```
+List<String> liste = null;
+boolean pleine = liste != null && !liste.isEmpty();
+System.out.println(pleine);
+```
+
+@021
+Q: Que vaut statut avec ce code, si age vaut 17 ?
+C: "mineur"
+W: "majeur"
+W: true
+W: 17
+E: L'opérateur ternaire condition ? valeurA : valeurB renvoie valeurA si la condition est vraie, valeurB sinon : 17 >= 18 est faux, statut vaut « mineur ». « majeur » serait renvoyé à partir de 18 ans. Le ternaire renvoie une des deux valeurs, pas la condition elle-même, ni l'âge.
+```
+int age = 17;
+String statut = age >= 18 ? "majeur" : "mineur";
+```
+
+@022
+Q: Que vaut n après ce transtypage ?
+C: 3
+W: 4
+W: 3.9
+W: 0
+E: Le transtypage d'un double vers un int tronque la partie décimale, sans arrondir : 3.9 devient 3. Pour arrondir, on utilise Math.round, qui donnerait 4. Un int ne peut pas contenir 3.9. Le résultat n'est pas nul.
+```
+double prix = 3.9;
+int n = (int) prix;
+```
+
+@023
+Q: Que vaut taille après ce code ?
+C: 2
+W: 3
+W: 1
+W: 0
+E: Un Set n'accepte pas les doublons : le second ajout de « java » est ignoré, et add renvoie false. Il reste « java » et « kotlin », soit 2 éléments. 3 compterait le doublon, comme le ferait une List. 1 et 0 ne correspondent à rien ici.
+```
+Set<String> langages = new HashSet<>();
+langages.add("java");
+langages.add("kotlin");
+langages.add("java");
+int taille = langages.size();
+```
+
+@024
+Q: Quelle différence entre un tableau Java et une ArrayList ?
+C: Le tableau a une taille fixe, l'ArrayList s'agrandit
+W: Le tableau accepte seulement des objets, pas des int
+W: L'ArrayList est plus rapide en accès par indice
+W: Un tableau ne peut pas être parcouru avec une boucle
+E: La taille d'un tableau est fixée à sa création ; une ArrayList gère un tableau interne qu'elle remplace par un plus grand quand il est plein. Un tableau accepte aussi les types primitifs, contrairement à une ArrayList. L'accès par indice est rapide dans les deux cas. Un tableau se parcourt avec for ou for-each.
+
+@025
+Q: À quoi sert l'instruction import en tête d'un fichier Java ?
+C: Écrire un nom de classe court
+W: À copier le code d'une autre classe dans le fichier
+W: À télécharger une bibliothèque depuis Internet
+W: À exécuter une autre classe au démarrage
+E: import permet d'écrire List au lieu de java.util.List : c'est un raccourci de nommage, résolu à la compilation. Aucun code n'est copié dans le fichier. Le téléchargement des bibliothèques est le rôle de Maven ou Gradle. Un import n'exécute rien.

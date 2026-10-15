@@ -71,7 +71,7 @@ def build_question(pIndex, pAnswer=0, pLongest=False, pExplanation=EXPLANATION):
     rQuestion = {
         "id": f"grafcet-l1-{pIndex:03d}",
         "level": QUIZ_LEVELS[pIndex % len(QUIZ_LEVELS)],
-        "question": f"Question numéro {pIndex} sur le grafcet ?",
+        "question": f"Quelle propriété du repère{pIndex:03d}ab vérifie-t-on ?",
         "choices": vChoices,
         "answer": pAnswer,
         "explanation": pExplanation,
@@ -404,7 +404,9 @@ def test_assess_questions_asks_for_concrete_cases(pDomain, pCode, pAlert):
     ]
 
     for vQuestion in vQuestions[:pCode]:
-        vQuestion["code"] = "IF Marche THEN Moteur := TRUE; END_IF;"
+        vQuestion["code"] = (
+            f"IF Capteur{vQuestion['id'][-3:]}x THEN Moteur := TRUE; END_IF;"
+        )
         vQuestion["question"] = f"Que fait cet extrait n° {vQuestion['id']} ?"
 
     vQuality = assess_questions(vQuestions, pDomain)
@@ -579,3 +581,38 @@ def test_every_catalog_theme_has_offer_words():
     """Vérifie que chaque thème du catalogue a des mots pour mesurer sa demande."""
 
     assert all(vTheme["skills"] for vTheme in load_catalog())
+
+
+def test_near_duplicates_are_found_in_the_lot_and_the_theme():
+    """Vérifie la détection d'une reformulation, dans le lot ou dans le thème."""
+
+    vOriginal = build_question(1, pAnswer=2)
+    vOriginal["question"] = "Quel symbole représente une transition dans un GRAFCET ?"
+    vCopy = dict(vOriginal, id="grafcet-l2-001")
+    vCopy["question"] = "Dans un GRAFCET, quel symbole représente une transition ?"
+    vOther = build_question(3, pAnswer=2)
+    vOther["question"] = "Comment reconnaît-on une étape initiale dans un GRAFCET ?"
+
+    vInLot = assess_questions([vOriginal, vCopy, vOther])["issues"]
+    vInTheme = assess_questions([vCopy, vOther], pOthers=[vOriginal])["issues"]
+
+    assert vInLot == [
+        (
+            "1 question(s) presque identique(s) à une autre, par exemple "
+            "grafcet-l1-001 et grafcet-l2-001",
+            ["grafcet-l1-001"],
+        )
+    ]
+    assert vInTheme[0][1] == ["grafcet-l2-001"]
+    assert assess_questions([vOriginal, vOther])["issues"] == []
+
+
+def test_calculations_with_other_values_are_not_duplicates():
+    """Vérifie que deux calculs aux valeurs différentes ne sont pas des doublons."""
+
+    vFirst = build_question(1)
+    vFirst["question"] = "Quelle pression donne un courant de 12 mA sur 0 à 10 bar ?"
+    vSecond = build_question(2)
+    vSecond["question"] = "Quelle pression donne un courant de 16 mA sur 0 à 10 bar ?"
+
+    assert assess_questions([vFirst, vSecond])["issues"] == []

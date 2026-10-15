@@ -1,0 +1,190 @@
+@086
+Q: Pourquoi un bloc synchronized peut-il gêner les threads virtuels de Java 21 ?
+C: Il peut épingler le thread virtuel à son thread porteur
+W: Il interdit de créer des threads virtuels dans la classe
+W: Il transforme le thread virtuel en thread démon
+W: Il double la mémoire consommée par chaque thread
+E: En Java 21, un thread virtuel qui bloque à l'intérieur d'un bloc synchronized reste épinglé à son thread porteur, qui ne peut plus servir à d'autres threads virtuels ; avec beaucoup de blocages, on perd l'intérêt du modèle. On préférait alors un ReentrantLock autour des opérations bloquantes ; les versions suivantes du JDK ont levé cette limite. synchronized n'interdit pas les threads virtuels, ne change pas leur nature et ne double pas leur mémoire.
+R: JEP 444: Virtual Threads | https://openjdk.org/jeps/444
+
+@087
+Q: Pourquoi resultat est-il bien visible par le thread principal après join ?
+C: join établit une relation « arrive-avant » avec le thread terminé
+W: Les champs static sont toujours volatile
+W: Le thread principal relit la mémoire toutes les secondes
+W: join copie les variables du thread dans le thread principal
+E: Le modèle mémoire de Java garantit que tout ce qu'un thread a écrit est visible par un autre thread qui a réussi un join sur lui : c'est une relation « arrive-avant ». Sans join, ni volatile ni synchronisation, la lecture n'est pas garantie. Les champs static ne sont pas volatile par défaut. Il n'y a pas de relecture périodique ni de copie de variables.
+```
+static int resultat;
+
+Thread calcul = new Thread(() -> resultat = 42);
+calcul.start();
+calcul.join();
+System.out.println(resultat);
+```
+
+@088
+Q: Pourquoi ce singleton à double vérification exige-t-il volatile sur instance ?
+C: Un objet à moitié construit
+W: Sans volatile, deux instances sont créées à chaque appel
+W: volatile rend le constructeur plus rapide
+W: volatile remplace le bloc synchronized
+E: L'écriture de la référence peut être réordonnée avant la fin du constructeur : un autre thread, qui ne passe pas par synchronized au premier test, peut alors voir un objet partiellement initialisé. volatile interdit ce réordonnancement. Le problème n'est pas une double création systématique. volatile n'accélère rien et ne remplace pas le verrou. On préfère souvent un holder statique ou une énumération.
+```
+private static volatile Service instance;
+
+static Service getInstance() {
+    if (instance == null) {
+        synchronized (Service.class) {
+            if (instance == null) {
+                instance = new Service();
+            }
+        }
+    }
+    return instance;
+}
+```
+
+@089
+Q: Quel risque présente ThreadLocal dans un serveur qui réutilise ses threads ?
+C: Une valeur oubliée fuit d'une requête à la suivante
+W: Chaque requête crée un nouveau thread à son tour
+W: ThreadLocal partage la valeur entre tous les threads
+W: ThreadLocal empêche le serveur de démarrer
+E: Dans un pool, le thread survit à la requête : une valeur ThreadLocal non retirée reste attachée au thread et peut être lue par la requête suivante, voire retenir des objets en mémoire. On appelle remove dans un bloc finally. Le pool réutilise justement ses threads. ThreadLocal donne une valeur par thread, il ne la partage pas. Le démarrage n'est pas concerné.
+
+@090
+Q: Quel est l'objectif principal du ramasse-miettes ZGC ?
+C: Des pauses très courtes, même sur un très grand tas
+W: Une mémoire consommée minimale sur de petits tas
+W: Un démarrage plus rapide de l'application
+W: La suppression complète du ramasse-miettes
+E: ZGC effectue l'essentiel de son travail en parallèle de l'application, avec des pauses de l'ordre de la milliseconde, quelle que soit la taille du tas : il vise les applications sensibles à la latence. Il consomme plutôt plus de mémoire et de processeur. Il n'accélère pas le démarrage. Il reste un ramasse-miettes.
+
+@091
+Q: Que devient l'entrée de ce cache quand la clé n'est plus référencée ailleurs ?
+C: Elle peut disparaître
+W: Elle reste indéfiniment dans la map
+W: Elle lève une exception à la lecture suivante
+W: Elle est recopiée dans une map de secours
+E: Une WeakHashMap tient ses clés par des références faibles : si plus rien d'autre ne référence la clé, le ramasse-miettes peut la récupérer et l'entrée disparaît. C'est utile pour associer des données à des objets sans les retenir en mémoire. L'entrée ne reste pas indéfiniment. Aucune exception n'est levée. Rien n'est recopié.
+```
+Map<Session, Statistiques> parSession = new WeakHashMap<>();
+parSession.put(session, statistiques);
+session = null;
+```
+
+@092
+Q: Pourquoi est-il dangereux de désérialiser des objets Java reçus d'un tiers ?
+C: Des chaînes d'objets piégés peuvent exécuter du code
+W: La désérialisation est toujours plus lente que le JSON
+W: Les objets désérialisés perdent leurs valeurs numériques
+W: La désérialisation n'est possible qu'en Java 8
+E: La désérialisation native reconstruit des objets de classes arbitraires présentes dans le classpath : des données forgées peuvent enchaîner leurs méthodes et aboutir à l'exécution de code, une faille fréquente. On n'accepte pas d'objets sérialisés non fiables, ou on filtre les classes autorisées. La lenteur n'est pas le danger. Les valeurs sont restaurées. Le mécanisme existe dans toutes les versions.
+
+@093
+Q: Pourquoi ce switch compile-t-il sans branche default ?
+C: L'interface scellée rend la liste des cas exhaustive
+W: Un switch Java n'exige jamais de branche default
+W: Le compilateur ajoute un default qui renvoie 0
+W: Les records interdisent l'usage de default
+E: Forme est sealed et ne permet que Carre et Cercle : le compilateur sait que les deux cas couvrent tout, le switch est exhaustif. Si une nouvelle forme est permise plus tard, ce switch ne compilera plus, ce qui oblige à la traiter. Un switch expression sur un type ouvert exige default. Rien n'est ajouté en silence. Les records n'interdisent pas default.
+R: JEP 441: Pattern Matching for switch | https://openjdk.org/jeps/441
+```
+double aire(Forme forme) {
+    return switch (forme) {
+        case Carre c -> c.cote() * c.cote();
+        case Cercle c -> Math.PI * c.rayon() * c.rayon();
+    };
+}
+```
+
+@094
+Q: Ce record est-il réellement immuable ?
+C: Non, la liste reçue peut encore être modifiée
+W: Oui, un record est toujours entièrement immuable
+W: Non, le champ nom peut être réaffecté
+W: Oui, car les composants sont tous private final
+E: Les champs d'un record sont final, mais une liste mutable reste modifiable par quiconque en détient la référence, y compris l'appelant du constructeur : l'immuabilité n'est que superficielle. On copie dans le constructeur compact avec List.copyOf. Un record n'est donc pas toujours entièrement immuable. Le champ nom ne peut pas être réaffecté.
+```
+record Equipe(String nom, List<String> membres) {}
+
+List<String> liste = new ArrayList<>(List.of("Ana"));
+Equipe equipe = new Equipe("Dev", liste);
+liste.add("Bob");
+```
+
+@095
+Q: Qu'affiche ce code ?
+C: false puis true
+W: true puis true
+W: false puis false
+W: true puis false
+E: Selon la norme IEEE 754, NaN n'est égal à rien, pas même à lui-même : == renvoie false. Double.equals est défini pour que NaN soit égal à NaN, afin que les collections fonctionnent : il renvoie true. On teste un NaN avec Double.isNaN. Les autres combinaisons ne correspondent pas à ces règles.
+```
+double x = Double.NaN;
+System.out.println(x == x);
+System.out.println(Double.valueOf(x).equals(x));
+```
+
+@096
+Q: Que se passe-t-il à l'exécution de ces deux lignes ?
+C: Négatif, puis exception
+W: Les deux lèvent une ArithmeticException
+W: Les deux donnent un résultat négatif
+W: Les deux donnent 2147483648
+E: Une addition d'int qui dépasse Integer.MAX_VALUE déborde en silence et donne −2147483648. Math.addExact détecte le débordement et lève une ArithmeticException : on l'emploie pour des calculs où un débordement serait une erreur. Un int ne peut pas contenir 2147483648.
+```
+int total = Integer.MAX_VALUE + 1;
+int verifie = Math.addExact(Integer.MAX_VALUE, 1);
+```
+
+@097
+Q: Pourquoi le tri d'une liste d'objets par Collections.sort est-il qualifié de stable ?
+C: Les éléments égaux gardent leur ordre d'origine
+W: Il ne modifie jamais la liste passée en argument
+W: Il donne toujours le même temps d'exécution
+W: Il ne lève jamais d'exception
+E: Un tri stable conserve l'ordre relatif des éléments considérés comme égaux : trier par service une liste déjà triée par nom garde les noms dans l'ordre au sein de chaque service. Collections.sort modifie bien la liste. Son temps dépend des données. Il peut lever une exception si les éléments ne sont pas comparables.
+
+@098
+Q: Comment une HashMap de Java 8 et plus limite-t-elle l'effet de nombreuses collisions sur une même case ?
+C: Elle transforme la liste de la case en arbre équilibré
+W: Elle double sa taille à chaque collision
+W: Elle refuse les clés dont le hashCode est déjà utilisé
+W: Elle trie toutes ses clés par ordre alphabétique
+E: Quand une case contient trop d'entrées, à partir de huit environ et si la table est assez grande, la HashMap les range dans un arbre équilibré : la recherche passe d'un coût linéaire à un coût logarithmique, ce qui limite l'effet d'attaques par collisions. Elle s'agrandit selon son taux de remplissage, pas à chaque collision. Des hashCode égaux sont acceptés. Elle ne trie pas ses clés.
+
+@099
+Q: Qu'affiche ce code au premier accès à Config.NOM ?
+C: init puis app
+W: app puis init
+W: app seulement
+W: init seulement
+E: Le premier accès à un champ static non constant déclenche l'initialisation de la classe : le bloc static s'exécute, affiche « init » et affecte NOM, puis la valeur est affichée. Si NOM était une constante de compilation, déclarée static final avec une valeur littérale, la classe ne serait pas initialisée et seul « app » s'afficherait.
+```
+class Config {
+    static String NOM;
+
+    static {
+        System.out.println("init");
+        NOM = "app";
+    }
+}
+
+System.out.println(Config.NOM);
+```
+
+@100
+Q: Que se passe-t-il à la fin de ce bloc try ?
+C: Les ressources sont fermées en ordre inverse, b puis a
+W: Les ressources sont fermées dans l'ordre, a puis b
+W: Seule la dernière ressource ouverte est fermée
+W: Aucune ressource n'est fermée sans finally
+E: try-with-resources ferme les ressources dans l'ordre inverse de leur ouverture : b d'abord, puis a, car b dépend souvent de a. Si une fermeture lève une exception pendant qu'une autre est déjà en cours, elle est ajoutée comme exception supprimée. Toutes les ressources sont fermées, sans finally.
+```
+try (Ressource a = ouvrir("a");
+     Ressource b = ouvrir("b")) {
+    traiter(a, b);
+}
+```
