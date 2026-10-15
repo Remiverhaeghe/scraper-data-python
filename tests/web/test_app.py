@@ -1537,3 +1537,28 @@ def test_validated_packs_are_imported_from_the_dashboard(client, tmp_path, monke
 
     assert vResponse.status_code == 200
     assert "100 question(s) ajoutée(s)" in vResponse.text
+
+
+def test_priority_themes_are_shown_on_the_quiz_page(client):
+    """Vérifie la carte des thèmes prioritaires et sa demande préparée."""
+
+    assert "Aucun thème n'est encore demandé" in client.get("/quiz").text
+
+    save_offers(
+        app.dependency_overrides[get_database_file](),
+        pd.DataFrame(
+            [
+                {
+                    "source": "remotive",
+                    "source_id": "99",
+                    "title": "Dev",
+                    "skills": ["SCADA"],
+                }
+            ]
+        ),
+        datetime.now(),
+    )
+    vPage = client.get("/quiz").text
+
+    assert "<strong>Supervision, SCADA et IHM</strong>" in vPage
+    assert '<input type="hidden" name="count" value="100">' in vPage

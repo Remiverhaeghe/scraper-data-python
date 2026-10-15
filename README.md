@@ -321,6 +321,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Catalogue de 76 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
 - [x] Contrôle de chaque lot importé, mesuré en entier même livré en plusieurs fichiers ou archives : bonne réponse trop souvent la plus longue, la plus courte ou à la même position, fins de choix répétées (remplissage), domaine inconnu, explications trop courtes, moins de 15 % de cas concrets avec code pour un thème technique, choix coupés par « … », extraits de code que l'énoncé ne cite pas ; bilan en orange, mesures par thème et demande de correction pour ChatGPT citant les questions concernées
 - [x] Lot corrigé réimporté : une question importée revenant avec le même identifiant est remplacée, réponses et schémas gardés ; une question livrée n'est jamais remplacée ; une question identique est comptée inchangée, sans lever son signalement
+- [x] Thèmes à compléter en priorité : les plus demandés dans les offres parmi ceux loin de 100 questions, thèmes vides du catalogue compris (mots des offres de chaque thème), avec la demande ChatGPT préparée en un clic
 - [x] Import en un clic des lots validés (archives « -valide.zip » de data/packs), sur le bureau et le web, avec un bilan commun
 - [x] Signalement d'une question douteuse, retirée des tirages
 - [x] Export des questions importées en pack .zip réimportable (manifest, questions, schémas, guides), sans les questions signalées
@@ -627,7 +628,7 @@ scraper-data-python/
 │   │   ├── docker.json                        # Docker
 │   │   └── practices.json                     # Bonnes pratiques et API
 │   └── quiz_generation/                       # Génération de questions avec ChatGPT
-│       ├── catalog.json                       # Catalogue des thèmes par domaine
+│       ├── catalog.json                       # Catalogue des thèmes par domaine, avec les mots des offres
 │       ├── prompt.txt                         # Texte et règles de la demande
 │       └── correction.txt                     # Demande de correction d'un lot signalé
 │

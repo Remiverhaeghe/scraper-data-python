@@ -4,6 +4,7 @@ import json
 import re
 from datetime import datetime
 
+import pandas as pd
 import pytest
 
 from job.quiz import (
@@ -20,6 +21,7 @@ from job.quiz_generation import (
     assess_questions,
     build_correction_prompt,
     build_generation_prompt,
+    build_priority_themes,
     find_catalog_theme,
     get_next_lot,
     list_generation_themes,
@@ -31,10 +33,13 @@ from job.quiz_import import (
     describe_quiz_import,
     get_import_tone,
     import_questions,
+    import_questions_file,
 )
 from storage.database import initialize_database
+from storage.job_offers import save_offers
 from storage.quiz_answers import get_last_answers, save_quiz_answer
 from storage.quiz_questions import get_quiz_themes
+from tools.quiz_lot import build_pack as build_lot_pack
 
 NOW = datetime(2026, 10, 12, 10, 0)
 
@@ -513,3 +518,64 @@ def test_unknown_domain_and_outside_catalog_theme_are_reported(database_file):
     assert "Hors catalogue, à ajouter au catalogue si le thème doit durer : Kafka." in (
         describe_import_details(vReport)
     )
+
+
+def test_priority_themes_follow_demand_and_missing_questions(database_file):
+    """Vérifie le classement des priorités, thèmes vides du catalogue compris."""
+
+    save_offers(
+        database_file,
+        pd.DataFrame(
+            [
+                {
+                    "source": "remotive",
+                    "source_id": str(vIndex),
+                    "title": "Automaticien",
+                    "skills": vSkills,
+                }
+                for vIndex, vSkills in enumerate(
+                    [["Grafcet", "automate"]] * 3 + [["Java"]]
+                )
+            ]
+        ),
+        NOW,
+    )
+
+    vPriorities = build_priority_themes(database_file, load_active_quiz(database_file))
+    vKeys = [vTheme["key"] for vTheme in vPriorities]
+
+    assert vKeys[:2] == ["automates-programmables", "grafcet"]
+    assert "java" in vKeys
+    assert "python" not in vKeys
+    assert vPriorities[1] == {
+        "key": "grafcet",
+        "label": "Grafcet et logique séquentielle",
+        "offer_count": 3,
+        "questions": 0,
+        "missing": 100,
+    }
+
+    vName, vContent = build_lot_pack("grafcet")
+    import_questions_file(database_file, "", vName, vContent, NOW)
+
+    assert "grafcet" not in [
+        vTheme["key"]
+        for vTheme in build_priority_themes(
+            database_file, load_active_quiz(database_file)
+        )
+    ]
+
+
+def test_generation_prompt_uses_catalog_skills_for_a_new_theme():
+    """Vérifie que la demande d'un thème vide reprend les mots du catalogue."""
+
+    vPrompt = build_generation_prompt({}, "robotique", "tous", 10)
+
+    assert '"Fanuc"' in vPrompt
+    assert "compétence 1" not in vPrompt
+
+
+def test_every_catalog_theme_has_offer_words():
+    """Vérifie que chaque thème du catalogue a des mots pour mesurer sa demande."""
+
+    assert all(vTheme["skills"] for vTheme in load_catalog())

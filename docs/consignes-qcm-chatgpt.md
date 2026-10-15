@@ -5,13 +5,15 @@ dans la page Révision. Les demandes sont produites par l'application à partir 
 
 | Fichier | Contenu |
 |---|---|
-| `assets/quiz_generation/catalog.json` | Catalogue des thèmes, rangés par domaine puis sous-domaine |
+| `assets/quiz_generation/catalog.json` | Catalogue des thèmes, rangés par domaine puis sous-domaine, avec les mots des offres (`skills`) |
 | `assets/quiz_generation/prompt.txt` | Texte de la demande et ses règles, avec des variables `$…` |
 | `assets/quiz_generation/correction.txt` | Demande de correction d'un lot signalé, variable `$themes` |
 
 ## Utilisation
 
-1. Page Révision, carte « Ajouter des questions » : choisir un thème (catalogue, thème
+1. Page Révision, la carte « À compléter en priorité » propose les thèmes les plus demandés
+   dans vos offres et encore loin de 100 questions ; « Préparer la demande » remplit tout.
+   Sinon, carte « Ajouter des questions » : choisir un thème (catalogue, thème
    existant ou nouveau), le niveau (« Tous les niveaux » : 25 % débutant, 40 %
    intermédiaire, 20 % confirmé, 15 % expert) et le nombre de questions (100 par défaut).
 2. « Générer avec ChatGPT » copie la demande et ouvre ChatGPT ; la coller.

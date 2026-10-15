@@ -183,6 +183,8 @@ from job.quiz_generation import (
     GENERATION_COUNTS,
     GENERATION_LEVELS,
     MIXED_LEVEL,
+    TARGET_QUESTIONS,
+    build_priority_themes,
     build_correction_prompt,
     build_generation_prompt,
     list_generation_themes,
@@ -1200,6 +1202,9 @@ def render_quiz(
             "message_tone": (pImport or {}).get("tone")
             or get_message_tone(pStatusCode),
             "generation_themes": list_generation_themes(vThemes),
+            "priorities": build_priority_themes(pDatabaseFile, vQuiz),
+            "target_questions": TARGET_QUESTIONS,
+            "mixed_level": MIXED_LEVEL,
             "packs_count": len(list_validated_packs()),
             "default_count": DEFAULT_GENERATION_COUNT,
             "domains": [vDomain for vDomain, _ in group_themes(vThemes)],

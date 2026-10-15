@@ -136,6 +136,30 @@
 </article>
 {% endif %}
 
+<article class="card section-gap" id="priorities">
+    <h2>À compléter en priorité</h2>
+    <p class="card-subtitle">Thèmes les plus demandés dans vos offres, encore loin de {{ target_questions }} questions</p>
+    {% if priorities %}
+    <ul class="priority-list">
+        {% for theme_item in priorities %}
+        <li>
+            <strong>{{ theme_item.label }}</strong>
+            <span><span class="tone-info">demandé dans {{ theme_item.offer_count }} offre(s)</span> · {{ theme_item.questions }} question(s)</span>
+            <form method="post" action="{{ url_for('prepare_quiz_prompt').path }}#add-questions">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <input type="hidden" name="theme" value="{{ theme_item.label }}">
+                <input type="hidden" name="level" value="{{ mixed_level }}">
+                <input type="hidden" name="count" value="{{ default_count }}">
+                <button class="button" type="submit">{{ icon("bot", 16) }} Préparer la demande</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Aucun thème n'est encore demandé dans vos offres : lancez une recherche pour mesurer la demande.</p>
+    {% endif %}
+</article>
+
 <article class="card section-gap" id="add-questions">
     <h2>Ajouter des questions</h2>
     <p class="card-subtitle">Générées avec votre compte ChatGPT, puis vérifiées une à une à l'import : une question incomplète ou en double est écartée.</p>

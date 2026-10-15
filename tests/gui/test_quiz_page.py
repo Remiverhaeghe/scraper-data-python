@@ -1,6 +1,9 @@
 """Tests de la page de révision"""
 
 import json
+from datetime import datetime
+
+import pandas as pd
 
 import pytest
 
@@ -9,6 +12,7 @@ import job.quiz_packs as quiz_packs
 from gui.quiz_page import QuizPage
 from job.quiz_generation import MIN_QUALITY_SAMPLE
 from storage.database import initialize_database
+from storage.job_offers import save_offers
 from tests.job.test_quiz_generation import build_lot_text, build_question
 from tests.job.test_quiz_import import build_pack
 from tools.quiz_lot import build_pack as build_lot_pack
@@ -420,3 +424,36 @@ def test_validated_packs_are_imported_in_one_click(
     vPage.import_packs()
 
     assert vPage.import_message.text().startswith("100 question(s) ajoutée(s)")
+
+
+def test_priority_card_prepares_a_full_lot(qt_application, tmp_path, monkeypatch):
+    """Vérifie la carte des priorités : message sans offre, puis demande préparée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile)
+
+    assert vPage.priority_message.text().startswith("Aucun thème")
+
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "remotive",
+                    "source_id": "1",
+                    "title": "Dev",
+                    "skills": ["SCADA"],
+                }
+            ]
+        ),
+        datetime(2026, 10, 15),
+    )
+    vPage.refresh()
+    monkeypatch.setattr(quiz_page.QDesktopServices, "openUrl", lambda _: None)
+
+    assert vPage.priority_message.text() == ""
+    assert vPage.priority_layout.count() == 3
+
+    vPage.prepare_priority("Supervision, SCADA et IHM")
+
+    assert "100 questions : 25 débutant" in quiz_page.QApplication.clipboard().text()

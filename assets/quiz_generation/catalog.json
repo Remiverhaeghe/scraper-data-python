@@ -1,104 +1,104 @@
 {
   "Informatique": {
     "Développement": [
-      {"id": "python", "label": "Python"},
-      {"id": "java", "label": "Java"},
-      {"id": "spring", "label": "Spring"},
-      {"id": "csharp-dotnet", "label": "C# et .NET"},
-      {"id": "javascript", "label": "JavaScript"},
-      {"id": "typescript", "label": "TypeScript"},
-      {"id": "web-html-css", "label": "HTML, CSS et accessibilité"},
-      {"id": "react-frontend", "label": "Frameworks frontend (React, Angular, Vue)"},
-      {"id": "api-rest", "label": "API REST et HTTP"},
-      {"id": "architecture-logicielle", "label": "Conception, SOLID et design patterns"},
-      {"id": "microservices", "label": "Microservices et messagerie (Kafka, RabbitMQ)"},
-      {"id": "algorithmique", "label": "Algorithmique et structures de données"},
-      {"id": "performance", "label": "Performance et optimisation"}
+      {"id": "python", "label": "Python", "skills": ["Python", "Django", "Flask", "FastAPI", "pandas"]},
+      {"id": "java", "label": "Java", "skills": ["Java", "JVM", "Java EE", "Jakarta EE", "Maven"]},
+      {"id": "spring", "label": "Spring", "skills": ["Spring", "Spring Boot", "Spring MVC", "Spring Security"]},
+      {"id": "csharp-dotnet", "label": "C# et .NET", "skills": ["C#", ".NET", "ASP.NET", "Entity Framework"]},
+      {"id": "javascript", "label": "JavaScript", "skills": ["JavaScript", "Node.js", "ES6"]},
+      {"id": "typescript", "label": "TypeScript", "skills": ["TypeScript"]},
+      {"id": "web-html-css", "label": "HTML, CSS et accessibilité", "skills": ["HTML", "CSS", "Sass", "accessibilité"]},
+      {"id": "react-frontend", "label": "Frameworks frontend (React, Angular, Vue)", "skills": ["React", "Angular", "Vue.js", "Redux"]},
+      {"id": "api-rest", "label": "API REST et HTTP", "skills": ["API REST", "REST", "OpenAPI", "Swagger", "JSON"]},
+      {"id": "architecture-logicielle", "label": "Conception, SOLID et design patterns", "skills": ["architecture logicielle", "SOLID", "design patterns", "Clean Code"]},
+      {"id": "microservices", "label": "Microservices et messagerie (Kafka, RabbitMQ)", "skills": ["microservices", "Kafka", "RabbitMQ", "architecture distribuée"]},
+      {"id": "algorithmique", "label": "Algorithmique et structures de données", "skills": ["algorithmique", "structures de données"]},
+      {"id": "performance", "label": "Performance et optimisation", "skills": ["performance", "optimisation", "profiling"]}
     ],
     "Données": [
-      {"id": "sql", "label": "SQL"},
-      {"id": "sql-diagnostic", "label": "SQL et diagnostic de performance"},
-      {"id": "bases-de-donnees", "label": "Modélisation et bases NoSQL"},
-      {"id": "analyse-donnees", "label": "Analyse de données avec Python (Pandas)"},
-      {"id": "data-engineering", "label": "Ingénierie des données et ETL (Spark, Airflow)"},
-      {"id": "bi-reporting", "label": "BI et reporting (Power BI)"},
-      {"id": "ia-machine-learning", "label": "IA et machine learning"}
+      {"id": "sql", "label": "SQL", "skills": ["SQL", "PostgreSQL", "MySQL", "SQL Server", "Oracle"]},
+      {"id": "sql-diagnostic", "label": "SQL et diagnostic de performance", "skills": ["optimisation SQL", "plan d'exécution", "index", "tuning"]},
+      {"id": "bases-de-donnees", "label": "Modélisation et bases NoSQL", "skills": ["MongoDB", "NoSQL", "modélisation de données", "Redis"]},
+      {"id": "analyse-donnees", "label": "Analyse de données avec Python (Pandas)", "skills": ["analyse de données", "pandas", "Excel", "data analyst"]},
+      {"id": "data-engineering", "label": "Ingénierie des données et ETL (Spark, Airflow)", "skills": ["ETL", "Spark", "Airflow", "data engineer", "Databricks"]},
+      {"id": "bi-reporting", "label": "BI et reporting (Power BI)", "skills": ["Power BI", "Tableau", "BI", "reporting", "Qlik"]},
+      {"id": "ia-machine-learning", "label": "IA et machine learning", "skills": ["machine learning", "IA", "intelligence artificielle", "deep learning", "LLM"]}
     ],
     "Exploitation et DevOps": [
-      {"id": "linux-systeme", "label": "Linux et scripts shell"},
-      {"id": "windows-server", "label": "Windows Server et PowerShell"},
-      {"id": "virtualisation", "label": "Virtualisation (VMware, Hyper-V)"},
-      {"id": "docker", "label": "Docker"},
-      {"id": "ci-cd", "label": "Intégration et déploiement continus"},
-      {"id": "kubernetes", "label": "Kubernetes, Pods, images et sécurité"},
-      {"id": "cloud", "label": "Cloud et infrastructure (AWS, Azure)"},
-      {"id": "infrastructure-as-code", "label": "Infrastructure as code (Terraform, Ansible)"},
-      {"id": "observabilite", "label": "Supervision, logs et métriques"}
+      {"id": "linux-systeme", "label": "Linux et scripts shell", "skills": ["Linux", "Bash", "shell", "Unix"]},
+      {"id": "windows-server", "label": "Windows Server et PowerShell", "skills": ["Windows Server", "PowerShell", "Active Directory"]},
+      {"id": "virtualisation", "label": "Virtualisation (VMware, Hyper-V)", "skills": ["VMware", "Hyper-V", "virtualisation", "Proxmox"]},
+      {"id": "docker", "label": "Docker", "skills": ["Docker", "conteneur", "Docker Compose"]},
+      {"id": "ci-cd", "label": "Intégration et déploiement continus", "skills": ["CI/CD", "Jenkins", "GitLab CI", "GitHub Actions"]},
+      {"id": "kubernetes", "label": "Kubernetes, Pods, images et sécurité", "skills": ["Kubernetes", "K8s", "OpenShift", "Helm"]},
+      {"id": "cloud", "label": "Cloud et infrastructure (AWS, Azure)", "skills": ["AWS", "Azure", "GCP", "cloud"]},
+      {"id": "infrastructure-as-code", "label": "Infrastructure as code (Terraform, Ansible)", "skills": ["Terraform", "Ansible", "infrastructure as code"]},
+      {"id": "observabilite", "label": "Supervision, logs et métriques", "skills": ["supervision", "Prometheus", "Grafana", "ELK", "monitoring"]}
     ],
     "Outils et méthodes": [
-      {"id": "git", "label": "Git"},
-      {"id": "tests-logiciels", "label": "Tests et qualité du code"},
-      {"id": "agile", "label": "Méthodes agiles et gestion de projet"},
-      {"id": "itil-support", "label": "Support informatique et ITIL"}
+      {"id": "git", "label": "Git", "skills": ["Git", "GitLab", "GitHub"]},
+      {"id": "tests-logiciels", "label": "Tests et qualité du code", "skills": ["tests unitaires", "JUnit", "pytest", "TDD", "Selenium"]},
+      {"id": "agile", "label": "Méthodes agiles et gestion de projet", "skills": ["Agile", "Scrum", "Kanban", "Jira", "gestion de projet"]},
+      {"id": "itil-support", "label": "Support informatique et ITIL", "skills": ["ITIL", "support informatique", "helpdesk", "ServiceNow"]}
     ]
   },
   "Réseau et sécurité": {
     "Réseau": [
-      {"id": "reseaux-fondamentaux", "label": "Modèle OSI, TCP/IP et adressage"},
-      {"id": "reseaux-diagnostic", "label": "Réseaux et diagnostic"},
-      {"id": "reseau-prod", "label": "Réseau en production"},
-      {"id": "wifi", "label": "Wi-Fi et réseaux sans fil"},
-      {"id": "pare-feu-vpn", "label": "Pare-feu et VPN"}
+      {"id": "reseaux-fondamentaux", "label": "Modèle OSI, TCP/IP et adressage", "skills": ["TCP/IP", "réseau", "adressage IP", "DNS", "DHCP"]},
+      {"id": "reseaux-diagnostic", "label": "Réseaux et diagnostic", "skills": ["Wireshark", "diagnostic réseau", "ping", "traceroute"]},
+      {"id": "reseau-prod", "label": "Réseau en production", "skills": ["Cisco", "VLAN", "routage", "switch", "LAN"]},
+      {"id": "wifi", "label": "Wi-Fi et réseaux sans fil", "skills": ["Wi-Fi", "WiFi", "réseau sans fil"]},
+      {"id": "pare-feu-vpn", "label": "Pare-feu et VPN", "skills": ["pare-feu", "firewall", "VPN", "Fortinet"]}
     ],
     "Sécurité et identité": [
-      {"id": "securite-applicative", "label": "Sécurité applicative (OWASP)"},
-      {"id": "identite-acces", "label": "Identité et accès (Active Directory, OAuth 2, OpenID Connect)"},
-      {"id": "cryptographie", "label": "Chiffrement, certificats et PKI"},
-      {"id": "securite-systemes", "label": "Durcissement des systèmes et réponse aux incidents"},
-      {"id": "rgpd", "label": "RGPD et protection des données"},
-      {"id": "cybersecurite-industrielle", "label": "Cybersécurité industrielle (IEC 62443)"}
+      {"id": "securite-applicative", "label": "Sécurité applicative (OWASP)", "skills": ["OWASP", "sécurité applicative", "pentest"]},
+      {"id": "identite-acces", "label": "Identité et accès (Active Directory, OAuth 2, OpenID Connect)", "skills": ["Active Directory", "OAuth", "OpenID Connect", "IAM", "LDAP"]},
+      {"id": "cryptographie", "label": "Chiffrement, certificats et PKI", "skills": ["PKI", "certificats", "chiffrement", "TLS"]},
+      {"id": "securite-systemes", "label": "Durcissement des systèmes et réponse aux incidents", "skills": ["cybersécurité", "SOC", "durcissement", "SIEM"]},
+      {"id": "rgpd", "label": "RGPD et protection des données", "skills": ["RGPD", "protection des données", "DPO"]},
+      {"id": "cybersecurite-industrielle", "label": "Cybersécurité industrielle (IEC 62443)", "skills": ["IEC 62443", "cybersécurité industrielle", "OT"]}
     ]
   },
   "Industrie": {
     "Maintenance": [
-      {"id": "maintenance-industrielle", "label": "Maintenance industrielle"},
-      {"id": "fiabilite", "label": "Fiabilité et méthodes (AMDEC, MTBF, GMAO)"},
-      {"id": "metrologie", "label": "Métrologie et instrumentation"},
-      {"id": "securite-industrielle", "label": "Sécurité industrielle et prévention"},
-      {"id": "levage-manutention", "label": "Levage et manutention"},
-      {"id": "qualite", "label": "Qualité et résolution de problèmes (8D, Ishikawa, ISO 9001)"},
-      {"id": "lean", "label": "Lean manufacturing et amélioration continue (5S, SMED, TRS)"}
+      {"id": "maintenance-industrielle", "label": "Maintenance industrielle", "skills": ["maintenance industrielle", "maintenance préventive", "maintenance curative", "dépannage"]},
+      {"id": "fiabilite", "label": "Fiabilité et méthodes (AMDEC, MTBF, GMAO)", "skills": ["AMDEC", "GMAO", "MTBF", "fiabilité"]},
+      {"id": "metrologie", "label": "Métrologie et instrumentation", "skills": ["métrologie", "étalonnage", "instrumentation"]},
+      {"id": "securite-industrielle", "label": "Sécurité industrielle et prévention", "skills": ["HSE", "QSE", "prévention des risques", "sécurité industrielle"]},
+      {"id": "levage-manutention", "label": "Levage et manutention", "skills": ["CACES", "levage", "pont roulant", "manutention"]},
+      {"id": "qualite", "label": "Qualité et résolution de problèmes (8D, Ishikawa, ISO 9001)", "skills": ["qualité", "ISO 9001", "8D", "Ishikawa", "non-conformité"]},
+      {"id": "lean", "label": "Lean manufacturing et amélioration continue (5S, SMED, TRS)", "skills": ["Lean", "5S", "SMED", "TRS", "amélioration continue"]}
     ],
     "Électricité et énergie": [
-      {"id": "electricite", "label": "Électricité"},
-      {"id": "schemas-electriques", "label": "Lecture de schémas électriques"},
-      {"id": "electronique", "label": "Électronique"},
-      {"id": "habilitation-electrique", "label": "Habilitation électrique (NF C 18-510)"},
-      {"id": "distribution-electrique", "label": "Distribution électrique et protections (régimes de neutre)"},
-      {"id": "moteurs-variateurs", "label": "Moteurs électriques et variateurs"},
-      {"id": "energie", "label": "Énergie et efficacité énergétique"},
-      {"id": "energies-renouvelables", "label": "Énergies renouvelables (photovoltaïque, éolien)"}
+      {"id": "electricite", "label": "Électricité", "skills": ["électricité", "électrotechnique", "électricien", "câblage"]},
+      {"id": "schemas-electriques", "label": "Lecture de schémas électriques", "skills": ["schémas électriques", "lecture de schémas", "EPLAN", "See Electrical"]},
+      {"id": "electronique", "label": "Électronique", "skills": ["électronique", "carte électronique", "soudure CMS"]},
+      {"id": "habilitation-electrique", "label": "Habilitation électrique (NF C 18-510)", "skills": ["habilitation électrique", "B1V", "B2V", "BR", "BC", "NF C 18-510"]},
+      {"id": "distribution-electrique", "label": "Distribution électrique et protections (régimes de neutre)", "skills": ["HTA", "BT", "TGBT", "distribution électrique", "régime de neutre"]},
+      {"id": "moteurs-variateurs", "label": "Moteurs électriques et variateurs", "skills": ["variateur de vitesse", "moteur électrique", "moteur asynchrone", "servomoteur"]},
+      {"id": "energie", "label": "Énergie et efficacité énergétique", "skills": ["efficacité énergétique", "énergie", "audit énergétique"]},
+      {"id": "energies-renouvelables", "label": "Énergies renouvelables (photovoltaïque, éolien)", "skills": ["photovoltaïque", "éolien", "énergies renouvelables"]}
     ],
     "Mécanique et fluides": [
-      {"id": "mecanique", "label": "Mécanique"},
-      {"id": "lecture-plans", "label": "Dessin technique, cotation et tolérances"},
-      {"id": "usinage", "label": "Usinage et commande numérique"},
-      {"id": "soudage", "label": "Soudage et chaudronnerie"},
-      {"id": "hydraulique", "label": "Hydraulique industrielle"},
-      {"id": "pneumatique", "label": "Pneumatique"},
-      {"id": "genie-climatique", "label": "Froid et génie climatique (CVC)"},
-      {"id": "automobile", "label": "Mécanique automobile"}
+      {"id": "mecanique", "label": "Mécanique", "skills": ["mécanique", "maintenance mécanique", "mécanicien"]},
+      {"id": "lecture-plans", "label": "Dessin technique, cotation et tolérances", "skills": ["lecture de plans", "dessin technique", "cotation", "SolidWorks", "AutoCAD"]},
+      {"id": "usinage", "label": "Usinage et commande numérique", "skills": ["usinage", "commande numérique", "CNC", "tournage", "fraisage"]},
+      {"id": "soudage", "label": "Soudage et chaudronnerie", "skills": ["soudage", "chaudronnerie", "TIG", "MIG", "soudeur"]},
+      {"id": "hydraulique", "label": "Hydraulique industrielle", "skills": ["hydraulique", "vérin hydraulique", "centrale hydraulique"]},
+      {"id": "pneumatique", "label": "Pneumatique", "skills": ["pneumatique", "vérin", "distributeur pneumatique"]},
+      {"id": "genie-climatique", "label": "Froid et génie climatique (CVC)", "skills": ["CVC", "froid", "climatisation", "génie climatique", "frigoriste"]},
+      {"id": "automobile", "label": "Mécanique automobile", "skills": ["mécanique automobile", "diagnostic automobile", "mécanicien automobile"]}
     ],
     "Automatisme": [
-      {"id": "automates-programmables", "label": "Automates programmables (Siemens TIA Portal, Schneider)"},
-      {"id": "grafcet", "label": "Grafcet et logique séquentielle"},
-      {"id": "capteurs-actionneurs", "label": "Capteurs et actionneurs"},
-      {"id": "regulation", "label": "Régulation et boucles PID"},
-      {"id": "supervision-scada", "label": "Supervision, SCADA et IHM"},
-      {"id": "reseaux-industriels", "label": "Réseaux industriels (Profinet, Modbus, OPC UA)"},
-      {"id": "securite-machines", "label": "Sécurité des machines (ISO 13849, directive Machines)"},
-      {"id": "vision-industrielle", "label": "Vision industrielle"},
-      {"id": "robotique", "label": "Robotique industrielle"}
+      {"id": "automates-programmables", "label": "Automates programmables (Siemens TIA Portal, Schneider)", "skills": ["automate", "API", "TIA Portal", "Siemens", "Schneider", "Step 7", "automatisme"]},
+      {"id": "grafcet", "label": "Grafcet et logique séquentielle", "skills": ["Grafcet", "logique séquentielle", "SFC"]},
+      {"id": "capteurs-actionneurs", "label": "Capteurs et actionneurs", "skills": ["capteurs", "actionneurs", "instrumentation", "codeur"]},
+      {"id": "regulation", "label": "Régulation et boucles PID", "skills": ["régulation", "PID", "boucle de régulation", "instrumentation"]},
+      {"id": "supervision-scada", "label": "Supervision, SCADA et IHM", "skills": ["SCADA", "supervision", "IHM", "WinCC", "PcVue", "Wonderware"]},
+      {"id": "reseaux-industriels", "label": "Réseaux industriels (Profinet, Modbus, OPC UA)", "skills": ["Profinet", "Modbus", "OPC UA", "Profibus", "réseaux industriels"]},
+      {"id": "securite-machines", "label": "Sécurité des machines (ISO 13849, directive Machines)", "skills": ["sécurité machine", "ISO 13849", "directive Machines", "automate de sécurité"]},
+      {"id": "vision-industrielle", "label": "Vision industrielle", "skills": ["vision industrielle", "caméra", "Cognex", "Keyence"]},
+      {"id": "robotique", "label": "Robotique industrielle", "skills": ["robotique", "robot", "Fanuc", "ABB", "KUKA", "Stäubli"]}
     ]
   }
 }

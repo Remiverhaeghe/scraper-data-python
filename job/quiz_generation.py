@@ -13,7 +13,7 @@ from pathlib import Path
 from string import Template
 
 from config import QUIZ_GENERATION_DIRECTORY
-from job.quiz import QUIZ_LEVELS, find_theme, slugify
+from job.quiz import QUIZ_LEVELS, count_theme_offers, find_theme, slugify
 from job.quiz_domains import DOMAIN_ORDER, OTHER_DOMAIN, classify_theme
 from storage.quiz_questions import get_imported_questions
 from utils.logger import get_logger
@@ -84,10 +84,15 @@ MAX_FILLER_ISSUES = 3
 
 POSITION_LABELS = "ABCD"
 
+# Objectif de questions par thème ; les thèmes à compléter en priorité sont
+# les plus demandés dans les offres parmi ceux qui en sont loin.
+TARGET_QUESTIONS = 100
+PRIORITY_LIMIT = 5
+
 
 @lru_cache
 def load_catalog(pFile=CATALOG_FILE):
-    """Retourne les thèmes du catalogue, chacun avec son domaine et sous-domaine."""
+    """Retourne les thèmes du catalogue : domaine, sous-domaine et mots des offres."""
 
     vData = json.loads(Path(pFile).read_text(encoding="utf-8"))
 
@@ -97,6 +102,7 @@ def load_catalog(pFile=CATALOG_FILE):
             "label": vTheme["label"],
             "domain": vDomain,
             "subdomain": vSubdomain,
+            "skills": tuple(vTheme.get("skills", ())),
         }
         for vDomain, vSubdomains in vData.items()
         for vSubdomain, vThemes in vSubdomains.items()
@@ -135,6 +141,50 @@ def list_generation_themes(pThemes):
     rLabels = sorted(vLabels, key=str.casefold)
 
     return rLabels
+
+
+def build_priority_themes(pDatabaseFile, pQuiz, pLimit=PRIORITY_LIMIT):
+    """Retourne les thèmes à compléter en priorité : demandés et peu fournis.
+
+    Les thèmes du catalogue encore vides comptent aussi : leurs mots des offres
+    servent à mesurer la demande. Le classement suit la demande multipliée par
+    le nombre de questions manquantes pour atteindre l'objectif.
+    """
+
+    vThemes = dict(pQuiz)
+
+    for vCatalogTheme in load_catalog():
+        if vCatalogTheme["id"] not in vThemes and vCatalogTheme["skills"]:
+            vThemes[vCatalogTheme["id"]] = {
+                "key": vCatalogTheme["id"],
+                "label": vCatalogTheme["label"],
+                "skills": list(vCatalogTheme["skills"]),
+                "questions": [],
+            }
+
+    vCounts = count_theme_offers(pDatabaseFile, vThemes)
+    vCandidates = [
+        {
+            "key": vKey,
+            "label": vTheme["label"],
+            "offer_count": vCounts[vKey],
+            "questions": len(vTheme["questions"]),
+            "missing": TARGET_QUESTIONS - len(vTheme["questions"]),
+        }
+        for vKey, vTheme in vThemes.items()
+        if vCounts[vKey] and len(vTheme["questions"]) < TARGET_QUESTIONS
+    ]
+
+    rThemes = sorted(
+        vCandidates,
+        key=lambda pTheme: (
+            -pTheme["offer_count"] * pTheme["missing"],
+            -pTheme["offer_count"],
+            pTheme["label"],
+        ),
+    )[:pLimit]
+
+    return rThemes
 
 
 def get_next_lot(pQuestions, pThemeKey):
@@ -203,6 +253,13 @@ def build_generation_prompt(pQuiz, pThemeLabel, pLevel, pCount):
         pQuiz, pThemeLabel
     )
     vTheme = pQuiz.get(vThemeKey, {})
+    vCatalogTheme = find_catalog_theme(vThemeKey)
+    # Compétences du thème, sinon les mots du catalogue, sinon à faire choisir.
+    vSkills = (
+        vTheme.get("skills")
+        or list(vCatalogTheme["skills"] if vCatalogTheme else ())
+        or ["compétence 1", "compétence 2", "…"]
+    )
     vLot = get_next_lot(vTheme.get("questions", []), vThemeKey)
     vLevels = split_levels(pLevel, pCount)
     vNeighbours = [
@@ -227,7 +284,7 @@ def build_generation_prompt(pQuiz, pThemeLabel, pLevel, pCount):
         "theme": vThemeLabel,
         "domain": vDomain,
         "subdomain": vSubdomain,
-        "skills": vTheme.get("skills") or ["compétence 1", "compétence 2", "…"],
+        "skills": vSkills,
         "questions": [
             {
                 "id": f"{vThemeKey}-l{vLot}-001",

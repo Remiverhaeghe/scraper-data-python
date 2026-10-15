@@ -78,6 +78,9 @@ from job.quiz_generation import (
     DEFAULT_GENERATION_COUNT,
     GENERATION_COUNTS,
     GENERATION_LEVELS,
+    MIXED_LEVEL,
+    TARGET_QUESTIONS,
+    build_priority_themes,
     build_correction_prompt,
     build_generation_prompt,
     list_generation_themes,
@@ -208,6 +211,7 @@ class QuizPage(QWidget):
         self.guides_card.hide()
 
         vLayout.addWidget(self.guides_card)
+        vLayout.addWidget(self.create_priority_card())
         vLayout.addWidget(self.create_import_card())
         vLayout.addWidget(self.create_statistics_card())
         # Facteur 1 : la place libre d'une page courte va ici, et non aux cartes
@@ -460,6 +464,86 @@ class QuizPage(QWidget):
             "Demande de correction copiée : importez ensuite le lot corrigé, "
             "il remplacera les questions signalées.",
         )
+
+    def create_priority_card(self):
+        """Construit la liste des thèmes à compléter en priorité."""
+        vCard, vLayout = create_card(
+            "À compléter en priorité",
+            "Thèmes les plus demandés dans vos offres, encore loin de "
+            f"{TARGET_QUESTIONS} questions",
+        )
+        self.priority_message = QLabel()
+        self.priority_message.setObjectName("cardSubtitle")
+        self.priority_message.setWordWrap(True)
+        self.priority_layout = QGridLayout()
+        self.priority_layout.setHorizontalSpacing(12)
+        self.priority_layout.setColumnStretch(0, 1)
+
+        vLayout.addWidget(self.priority_message)
+        vLayout.addLayout(self.priority_layout)
+
+        return vCard
+
+    def show_priorities(self):
+        """Affiche les thèmes prioritaires, chacun avec sa demande ChatGPT."""
+        clear_layout(self.priority_layout)
+
+        try:
+            vPriorities = build_priority_themes(
+                self.database_file, load_active_quiz(self.database_file)
+            )
+
+        except Exception:
+            logger.exception("Impossible de calculer les thèmes prioritaires")
+
+            show_message(
+                self.priority_message,
+                "Les priorités n'ont pas pu être calculées.",
+                "danger",
+            )
+            return
+
+        show_message(
+            self.priority_message,
+            (
+                ""
+                if vPriorities
+                else "Aucun thème n'est encore demandé dans vos offres : lancez une "
+                "recherche pour mesurer la demande."
+            ),
+            None,
+        )
+
+        for vRow, vTheme in enumerate(vPriorities):
+            vTitle = QLabel(f"<b>{escape(vTheme['label'])}</b>")
+            vDetail = QLabel(
+                f"<span style='color:{COLORS['primary']}; font-weight:600'>"
+                f"demandé dans {vTheme['offer_count']} offre(s)</span>"
+                f" · {vTheme['questions']} question(s)"
+            )
+            vButton = create_button(
+                "Préparer la demande", "bot", pIconColor=COLORS["primary"]
+            )
+            vButton.setToolTip(
+                f"Copie la demande de {TARGET_QUESTIONS} questions pour ce thème "
+                "et ouvre ChatGPT"
+            )
+            vButton.clicked.connect(
+                lambda _, pLabel=vTheme["label"]: self.prepare_priority(pLabel)
+            )
+
+            self.priority_layout.addWidget(vTitle, vRow, 0)
+            self.priority_layout.addWidget(vDetail, vRow, 1)
+            self.priority_layout.addWidget(vButton, vRow, 2)
+
+    def prepare_priority(self, pThemeLabel):
+        """Prépare la demande d'un lot complet pour un thème prioritaire."""
+        self.theme_combo.setCurrentText(pThemeLabel)
+        self.level_combo.setCurrentIndex(self.level_combo.findData(MIXED_LEVEL))
+        self.count_combo.setCurrentIndex(
+            self.count_combo.findData(DEFAULT_GENERATION_COUNT)
+        )
+        self.copy_generation_prompt()
 
     def import_packs(self):
         """Importe d'un coup toutes les archives validées du dossier des lots."""
@@ -809,6 +893,7 @@ class QuizPage(QWidget):
 
         self.themes = vThemes
         self.show_category_progress(vThemes)
+        self.show_priorities()
         self.select_category(self.domain, self.subdomain)
 
     def refresh_categories(self):

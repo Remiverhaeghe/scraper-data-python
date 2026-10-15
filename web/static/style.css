@@ -1265,6 +1265,31 @@ textarea.companies-preferred {
     border-color: var(--success);
 }
 
+/* Thèmes à compléter en priorité : libellé, demande et bouton sur une ligne */
+.priority-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.priority-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.priority-list li strong {
+    flex: 1 1 220px;
+}
+
+.tone-info {
+    color: var(--primary);
+    font-weight: 600;
+}
+
 /* Détail d'un import de questions, replié par défaut */
 .import-details pre {
     max-height: 240px;
