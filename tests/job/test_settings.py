@@ -56,6 +56,7 @@ def test_load_settings_returns_defaults(database_file):
         "new_offer_days": 3,
         "expiry_days": 30,
         "follow_up_days": 7,
+        "challenge_wait_seconds": 30,
     }
 
 

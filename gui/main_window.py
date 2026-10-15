@@ -20,6 +20,7 @@ from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
 from gui.applications_page import ApplicationsPage
 from gui.challenges_page import ChallengesPage
+from gui.git_page import GitPage
 from gui.history_page import HistoryPage
 from gui.home_page import HomePage
 from gui.logs_page import LogsPage
@@ -99,6 +100,7 @@ class MainWindow(QMainWindow):
         self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
         self.add_page("quiz", "Révision", "graduation-cap", QuizPage(vDatabaseFile))
         self.add_page("challenges", "Défis", "trophy", ChallengesPage(vDatabaseFile))
+        self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
         self.add_page("quality", "Qualité", "list-checks", QualityPage(vDatabaseFile))
         self.add_page("logs", "Journaux", "terminal", LogsPage())

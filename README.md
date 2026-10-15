@@ -78,7 +78,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées, v14 : thèmes, schémas et guides importés, v15 : domaine des thèmes importés, v16 : identifiant des réponses du téléphone, v17 : défis)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées, v14 : thèmes, schémas et guides importés, v15 : domaine des thèmes importés, v16 : identifiant des réponses du téléphone, v17 : défis, v18 : niveaux Git)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -161,7 +161,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Offres : filtres, tableau triable, détail et suivi des candidatures
 - [x] Historique des exécutions : synthèse, critères et statut de chaque recherche
 - [x] Thèmes clair et sombre, changement sans scintillement ; page Paramètres (sources)
-- [x] Règles de calcul modifiables (net, impôt, nouveauté, relance), partagées avec le web, net recalculé
+- [x] Règles de calcul modifiables (net, impôt, nouveauté, relance, attente des défis), partagées avec le web, net recalculé
 - [x] Graphique d'activité (offres, candidatures, relances) et cartes d'accès direct aux offres filtrées
 - [x] Graphiques : valeur maximale indiquée sur l'axe, barres alignées à gauche quand les jours sont peu nombreux
 - [x] Historique : répartition des offres par source et par contrat, rendement des recherches
@@ -376,8 +376,18 @@ Page Défis du bureau et du web, sur le principe des calendriers de défis en li
 - [x] Dix défis en deux parties (production, réseau, automatisme, électricité, Modbus), une étoile par partie réussie
 - [x] Données personnelles tirées d'une graine enregistrée en base, reproductibles ; exemple résolu fourni avec ses réponses
 - [x] Résolution dans le langage de son choix : seule la réponse est comparée, aucun code n'est exécuté par l'application
-- [x] Seconde partie ouverte après la première, attente de 30 s après une erreur, « trop haute » ou « trop basse » pour un nombre
+- [x] Seconde partie ouverte après la première, attente réglable après une erreur (30 s par défaut, jamais nulle), « trop haute » ou « trop basse » pour un nombre
 - [x] Indices dévoilés un à un et solution commentée une fois le défi terminé
+
+### Bac à sable Git
+
+Page Git du bureau et du web, pour s'exercer aux branches sans risque :
+
+- [x] Dépôt simulé (commits, branches, HEAD) : commit, branch, switch, checkout, merge, rebase, reset, revert, cherry-pick, références relatives ^ et ~
+- [x] Graphe des commits en SVG, à côté de l'objectif ; commits perdus estompés
+- [x] Treize niveaux progressifs, objectif comparé par la forme du graphe : un autre chemin vers le même résultat est accepté
+- [x] Annulation de la dernière commande, indice, solution de référence et meilleur nombre de commandes enregistré
+- [x] Aucune commande transmise au système : seul l'historique est simulé
 
 ### Abonnement à l'agenda
 
@@ -456,6 +466,9 @@ scraper-data-python/
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
 │   ├── challenges/                            # Défis : moteur de progression et un module par défi
+│   ├── git_sandbox.py                         # Bac à sable Git : dépôt simulé et commandes
+│   ├── git_graph.py                           # Dessin SVG du graphe des commits
+│   ├── git_levels.py                          # Niveaux Git : objectif, réussite et progression
 │   ├── access_tokens.py                       # Jetons d'accès secrets (agenda, application mobile)
 │   ├── mobile_sync.py                         # Contenu hors ligne et réponses de l'application mobile
 │   ├── cv_import.py                           # Import d'un CV : lecture et pré-remplissage du profil
@@ -568,6 +581,7 @@ scraper-data-python/
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
 │   ├── quiz_page.py                           # Révision technique par QCM
 │   ├── challenges_page.py                     # Défis de programmation
+│   ├── git_page.py                            # Bac à sable Git
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
 │   ├── quality_page.py                        # Qualité des données et offres à vérifier
@@ -607,6 +621,7 @@ scraper-data-python/
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
 │   │   ├── quiz.html                          # Révision technique par QCM
 │   │   ├── challenges.html                    # Défis de programmation
+│   │   ├── git.html                           # Bac à sable Git
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
 │   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
 │   │   ├── history.html                       # Historique des exécutions
@@ -683,6 +698,7 @@ scraper-data-python/
 │   ├── quiz_answers.py                        # Réponses de révision, pour la progression
 │   ├── quiz_questions.py                      # Questions, thèmes, schémas et guides importés
 │   ├── challenges.py                          # Graines et essais des défis
+│   ├── git_levels.py                          # Meilleur résultat des niveaux Git
 │   ├── maintenance.py                         # Réinitialisation de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
@@ -722,6 +738,8 @@ scraper-data-python/
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
 │   │   ├── test_challenges.py                 # Teste les défis, leurs solutions et les réponses
+│   │   ├── test_git_sandbox.py                # Teste le dépôt simulé, les commandes et le graphe
+│   │   ├── test_git_levels.py                 # Teste les niveaux Git et leur progression
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
@@ -821,6 +839,7 @@ scraper-data-python/
 │   │   ├── test_applications_page.py           # Teste la page des candidatures
 │   │   ├── test_quiz_page.py                   # Teste la page de révision
 │   │   ├── test_challenges_page.py             # Teste la page des défis
+│   │   ├── test_git_page.py                    # Teste la page du bac à sable Git
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres

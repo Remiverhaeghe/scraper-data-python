@@ -7,7 +7,6 @@ import pytest
 
 from job.challenges import (
     CHALLENGES,
-    WRONG_ANSWER_DELAY,
     build_challenge_list,
     build_challenge_view,
     build_progress,
@@ -16,6 +15,7 @@ from job.challenges import (
     get_seed,
     submit_answer,
 )
+from job.settings import save_settings
 from storage.challenges import save_challenge_attempt
 from storage.database import initialize_database
 
@@ -103,7 +103,7 @@ def test_answers_unlock_parts_and_wait_after_a_mistake(database_file):
         "Patientez encore 21 s avant de réessayer."
     )
 
-    vAfter = NOW + WRONG_ANSWER_DELAY
+    vAfter = NOW + timedelta(seconds=30)
 
     assert submit_answer(database_file, "engrenages", 1, f" {vFirst} ", vAfter)[0]
     assert build_challenge_view(database_file, "engrenages", vAfter)["note"] == ""
@@ -118,6 +118,23 @@ def test_answers_unlock_parts_and_wait_after_a_mistake(database_file):
         "Cette partie est déjà réussie.",
         "success",
     )
+
+
+def test_wrong_answer_delay_follows_the_setting(database_file):
+    """Vérifie que l'attente après une erreur suit le réglage, sans jamais être nulle."""
+
+    vFirst, _ = expected(database_file, "engrenages")
+    save_settings(database_file, {"challenge_wait_seconds": "5"})
+
+    vMessage = submit_answer(database_file, "engrenages", 1, "0", NOW)[1]
+
+    assert vMessage.endswith("Nouvel essai possible dans 5 s.")
+    assert submit_answer(
+        database_file, "engrenages", 1, vFirst, NOW + timedelta(seconds=5)
+    )[0]
+
+    with pytest.raises(ValueError, match="entre 5 et 600"):
+        save_settings(database_file, {"challenge_wait_seconds": "0"})
 
 
 def test_text_answers_ignore_case_and_spaces(database_file):

@@ -1300,6 +1300,47 @@ textarea.companies-preferred {
     border-radius: 8px;
 }
 
+/* Bac à sable Git : graphes côte à côte, défilants sur un petit écran */
+.git-graphs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.git-graphs figure {
+    margin: 0;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.git-graphs svg {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.git-command {
+    flex: 1 1 220px;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+.git-commands {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin: 0;
+}
+
+.git-commands dd {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .git-commands {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Thèmes à compléter en priorité : libellé, demande et bouton sur une ligne */
 .priority-list {
     list-style: none;

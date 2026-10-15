@@ -1,0 +1,67 @@
+{# Bac à sable Git (routes /git) : les commandes déjà jouées voyagent dans le
+   formulaire et sont rejouées à chaque envoi ; seul un niveau réussi est enregistré. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Git{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Bac à sable Git", "Des commandes Git simulées et leur effet sur le graphe des commits, niveau par niveau", "git-branch") }}
+
+<article class="card">
+    <h2>Les niveaux</h2>
+    <p class="card-subtitle">Atteindre l'objectif, si possible en peu de commandes</p>
+    <div class="challenge-list">
+        {% for item in levels %}
+        <a class="challenge-item{% if view and view.id == item.id %} is-active{% endif %}" href="{{ url_for('show_git_level', pLevelId=item.id).path }}#level">
+            <strong>{% if item.best %}<span class="tone-success">✓</span> {% endif %}{{ item.title }}</strong>
+            <span class="card-subtitle">{{ item.series }} · {% if item.best %}{{ item.best }}/{{ item.par }} commande(s){% else %}{{ item.par }} commande(s) attendue(s){% endif %}</span>
+        </a>
+        {% endfor %}
+    </div>
+</article>
+
+{% if view %}
+<article class="card section-gap" id="level">
+    <h2>{{ view.title }}</h2>
+    <p class="card-subtitle">{{ view.series }} · solution de référence en {{ view.par }} commande(s)</p>
+    {{ intro }}
+
+    <div class="git-graphs">
+        <figure><figcaption class="card-subtitle">Votre dépôt</figcaption>{{ graph }}</figure>
+        <figure><figcaption class="card-subtitle">Objectif</figcaption>{{ goal }}</figure>
+    </div>
+
+    {% if message %}<p class="application-message tone-{{ message[1] }}" role="status">{{ message[0] }}</p>{% endif %}
+
+    {% if view.done %}
+    <div class="rules-actions">
+        <a class="button" href="{{ url_for('show_git_level', pLevelId=view.id).path }}#level">{{ icon("history", 16) }} Recommencer</a>
+        {% if view.next_id %}<a class="button button-primary" href="{{ url_for('show_git_level', pLevelId=view.next_id).path }}#level">{{ icon("arrow-right", 16) }} Niveau suivant</a>{% endif %}
+    </div>
+    {% else %}
+    <form class="inline-form section-gap" method="post" action="{{ url_for('run_git_command', pLevelId=view.id).path }}#level">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        {% for command in view.history %}<input type="hidden" name="history" value="{{ command }}">{% endfor %}
+        <input class="git-command" type="text" name="command" placeholder="git commit" aria-label="Commande Git" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus>
+        <button class="button button-primary" type="submit" name="action" value="run">{{ icon("terminal", 16) }} Exécuter</button>
+        {% if view.history %}<button class="button" type="submit" name="action" value="undo" formnovalidate>{{ icon("history", 16) }} Annuler</button>{% endif %}
+        <a class="button" href="{{ url_for('show_git_level', pLevelId=view.id).path }}#level">{{ icon("trash-2", 16) }} Recommencer</a>
+    </form>
+    {% endif %}
+
+    {% if view.history %}<p class="card-subtitle">Commandes : {{ view.history | join(" · ") }}</p>{% endif %}
+
+    <details class="section-gap"><summary>Afficher un indice</summary><p>{{ view.hint }}</p></details>
+    <details><summary>Afficher la solution</summary><pre class="challenge-example">{{ view.solution | join("\n") }}</pre></details>
+</article>
+{% endif %}
+
+<article class="card section-gap">
+    <h2>Commandes disponibles</h2>
+    <p class="card-subtitle">Seul l'historique est simulé : aucun fichier n'est touché</p>
+    <dl class="git-commands">
+        {% for syntax, role in commands %}<dt><code>{{ syntax }}</code></dt><dd>{{ role }}</dd>{% endfor %}
+    </dl>
+</article>
+{% endblock %}

@@ -599,6 +599,18 @@ def migrate_to_v17(pConnection):
     )
 
 
+def migrate_to_v18(pConnection):
+    """Ajoute le bac à sable Git : meilleur résultat de chaque niveau réussi."""
+
+    pConnection.execute("""
+        CREATE TABLE git_level_result (
+            level TEXT PRIMARY KEY,
+            best_count INTEGER NOT NULL,
+            completed_at TEXT NOT NULL
+        )
+        """)
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -617,6 +629,7 @@ MIGRATIONS = [
     migrate_to_v15,
     migrate_to_v16,
     migrate_to_v17,
+    migrate_to_v18,
 ]
 
 

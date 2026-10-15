@@ -13,6 +13,7 @@ logger = get_logger(__name__)
 RESET_TABLES = (
     "quiz_answer",
     "challenge_attempt",
+    "git_level_result",
     "job_attachment",
     "job_follow_up",
     "job_application",

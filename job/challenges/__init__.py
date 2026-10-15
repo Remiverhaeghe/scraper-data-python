@@ -23,6 +23,7 @@ from job.challenges import (
     tampon_production,
     trames_modbus,
 )
+from job.settings import load_settings
 from storage.challenges import (
     get_challenge_attempts,
     get_challenge_seed,
@@ -43,9 +44,6 @@ CHALLENGES = (
     trames_modbus,
 )
 PARTS = (1, 2)
-
-# Après une réponse fausse, une courte attente décourage les essais au hasard.
-WRONG_ANSWER_DELAY = timedelta(seconds=30)
 
 MAX_SEED = 2**31
 
@@ -110,6 +108,7 @@ def normalize_answer(pAnswer):
 def build_progress(pDatabaseFile, pNow):
     """Retourne, par défi, les parties réussies, le nombre d'essais et l'attente."""
 
+    vDelay = get_wrong_answer_delay(pDatabaseFile)
     rProgress = {
         vChallenge.ID: {"solved": set(), "attempts": 0, "wait_until": {}}
         for vChallenge in CHALLENGES
@@ -129,7 +128,7 @@ def build_progress(pDatabaseFile, pNow):
             vProgress["solved"].add(vPart)
         else:
             vProgress["wait_until"][vPart] = (
-                datetime.fromisoformat(vAnsweredAt) + WRONG_ANSWER_DELAY
+                datetime.fromisoformat(vAnsweredAt) + vDelay
             )
 
     for vProgress in rProgress.values():
@@ -140,6 +139,14 @@ def build_progress(pDatabaseFile, pNow):
         }
 
     return rProgress
+
+
+def get_wrong_answer_delay(pDatabaseFile):
+    """Retourne l'attente imposée après une réponse fausse, réglable mais jamais nulle."""
+
+    rDelay = timedelta(seconds=load_settings(pDatabaseFile)["challenge_wait_seconds"])
+
+    return rDelay
 
 
 def compare_numbers(pAnswer, pExpected):
@@ -209,7 +216,8 @@ def submit_answer(pDatabaseFile, pChallengeId, pPart, pAnswer, pNow):
             False,
             "Ce n'est pas la bonne réponse."
             + compare_numbers(vAnswer, vExpected)
-            + f" Nouvel essai possible dans {WRONG_ANSWER_DELAY.seconds} s.",
+            + " Nouvel essai possible dans "
+            + f"{int(get_wrong_answer_delay(pDatabaseFile).total_seconds())} s.",
             "danger",
         )
 

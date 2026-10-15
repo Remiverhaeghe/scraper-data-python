@@ -1614,3 +1614,48 @@ def test_challenges_are_listed_downloaded_and_answered(client):
 
     assert "Solution commentée" in vSolved.text
     assert "★★" in vSolved.text
+
+
+def test_git_levels_are_listed_played_and_solved(client):
+    """Vérifie le bac à sable Git sur le web : liste, commandes, annulation et réussite."""
+
+    vList = client.get("/git")
+
+    assert vList.status_code == 200
+    assert "Enregistrer son travail" in vList.text
+    assert "git cherry-pick" in vList.text
+    assert client.get("/git/inconnu").status_code == 404
+    assert client.post("/git/inconnu/command", data={}).status_code == 404
+
+    vPage = client.get("/git/premiers-commits")
+
+    assert vPage.text.count("<svg") >= 2 and "Objectif" in vPage.text
+
+    vFirst = client.post(
+        "/git/premiers-commits/command", data={"command": "git commit"}
+    )
+
+    assert "Commit C1 enregistré" in vFirst.text
+    assert 'name="history" value="git commit"' in vFirst.text
+
+    vUndone = client.post(
+        "/git/premiers-commits/command",
+        data={"history": ["git commit"], "action": "undo"},
+    )
+
+    assert 'name="history"' not in vUndone.text
+
+    vSolved = client.post(
+        "/git/premiers-commits/command",
+        data={"history": ["git commit"], "command": "git commit"},
+    )
+
+    assert "parcours optimal" in vSolved.text
+    assert "Niveau suivant" in vSolved.text
+    assert (
+        client.post(
+            "/git/premiers-commits/command",
+            data={"history": ["git push"], "command": "git commit"},
+        ).status_code
+        == 400
+    )

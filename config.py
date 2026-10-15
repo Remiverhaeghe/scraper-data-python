@@ -59,5 +59,8 @@ FOLLOW_UP_DAYS = 7
 # Une offre absente des recherches depuis ce nombre de jours est probablement expirée
 EXPIRY_DAYS = 30
 
+# Attente imposée après une réponse fausse à un défi, en secondes
+CHALLENGE_WAIT_SECONDS = 30
+
 # Nombre de sauvegardes de la base conservées dans data/backups, les plus récentes
 BACKUP_KEEP_COUNT = 10
