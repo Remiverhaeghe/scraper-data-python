@@ -9,7 +9,8 @@ import json
 import random
 from datetime import datetime
 
-from job.quiz import answer_question, build_quiz_overview
+from job.quiz import answer_question, build_quiz_overview, find_question
+from job.quiz_types import prepare_question
 from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
 
@@ -93,7 +94,7 @@ def start_exam(pDatabaseFile, pQuiz, pDomain, pNow, pRandom=random, pSubdomain=N
 
 
 def get_exam_question(pQuiz, pExam, pRandom=random):
-    """Retourne la question en cours, choix mélangés, ou None si l'examen est fini."""
+    """Retourne la question en cours, éléments mélangés, ou None si l'examen est fini."""
 
     rQuestion = None
 
@@ -111,14 +112,10 @@ def get_exam_question(pQuiz, pExam, pRandom=random):
 
         if vFound:
             vQuestion, vKey = vFound
-            vChoices = list(enumerate(vQuestion["choices"]))
-            pRandom.shuffle(vChoices)
-
             rQuestion = {
-                **vQuestion,
+                **prepare_question(vQuestion, pRandom),
                 "theme_key": vKey,
                 "theme_label": pQuiz[vKey]["label"],
-                "shuffled": vChoices,
                 "position": pExam["index"] + 1,
                 "count": len(pExam["ids"]),
             }
@@ -126,10 +123,11 @@ def get_exam_question(pQuiz, pExam, pRandom=random):
     return rQuestion
 
 
-def answer_exam(pDatabaseFile, pQuiz, pChoice, pNow):
+def answer_exam(pDatabaseFile, pQuiz, pResponse, pNow):
     """Corrige la réponse à la question en cours ; retourne (correction, examen).
 
-    Une question supprimée depuis le début de l'examen est passée.
+    Une question supprimée depuis le début de l'examen est passée. Lève
+    ValueError sans avancer si la réponse est illisible.
     """
 
     vExam = load_exam(pDatabaseFile)
@@ -139,11 +137,10 @@ def answer_exam(pDatabaseFile, pQuiz, pChoice, pNow):
 
     vId = vExam["ids"][vExam["index"]]
 
-    try:
-        rResult = answer_question(pDatabaseFile, pQuiz, vId, pChoice, pNow)
+    rResult = None
 
-    except ValueError:
-        rResult = None
+    if find_question(pQuiz, vId)[0] is not None:
+        rResult = answer_question(pDatabaseFile, pQuiz, vId, pResponse, pNow)
 
     if rResult and rResult["correct"]:
         vExam["correct"] += 1

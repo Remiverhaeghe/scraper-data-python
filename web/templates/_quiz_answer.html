@@ -1,0 +1,38 @@
+{# Champs de réponse d'une question, selon son type (job/quiz_types.py) :
+   choice pour un QCM, text pour un calcul ou un code, indexes pour un ordre
+   ou une association. Partagé par la révision et l'examen. #}
+{% if retry_message %}<p class="application-message tone-warning" role="status">{{ retry_message }}</p>{% endif %}
+{% if question.type == "numerique" %}
+<label class="quiz-typed">Votre résultat
+    <input type="text" name="text" inputmode="decimal" placeholder="{{ ('par exemple 2,5 ' ~ question.unit) if question.unit else 'par exemple 2,5' }}" autocomplete="off" required>
+</label>
+{% if question.unit %}<p class="muted">Unité attendue : {{ question.unit }}, préfixes acceptés (m, k, µ…) ; tolérance {{ question.tolerance | default(1) }} %</p>{% endif %}
+{% elif question.type == "saisie" %}
+<label class="quiz-typed">Ce qui remplace ____
+    <input class="quiz-code-input" type="text" name="text" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+</label>
+{% elif question.type == "ordre" %}
+<ol class="quiz-order">
+    {% for position in range(question.shuffled | length) %}
+    <li><select name="indexes" aria-label="Étape {{ position + 1 }}" required>
+        <option value="">Étape {{ position + 1 }}…</option>
+        {% for index, item in question.shuffled %}<option value="{{ index }}">{{ item }}</option>{% endfor %}
+    </select></li>
+    {% endfor %}
+</ol>
+{% elif question.type == "association" %}
+<div class="quiz-pairs">
+    {% for left, _ in question.pairs %}
+    <label>{{ left }}
+        <select name="indexes" required>
+            <option value="">Choisir…</option>
+            {% for index, right in question.shuffled %}<option value="{{ index }}">{{ right }}</option>{% endfor %}
+        </select>
+    </label>
+    {% endfor %}
+</div>
+{% else %}
+{% for index, choice in question.shuffled %}
+<label class="quiz-choice"><input type="radio" name="choice" value="{{ index }}" required> {{ choice }}</label>
+{% endfor %}
+{% endif %}

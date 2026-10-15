@@ -22,6 +22,7 @@ from job.quiz import (
     load_active_quiz,
 )
 from job.quiz_domains import DOMAIN_ICONS
+from job.quiz_types import DEFAULT_TYPE, get_type
 from storage.quiz_answers import get_last_answers, save_synced_answers
 from storage.quiz_questions import get_quiz_assets, get_quiz_guide, get_quiz_guides
 from utils.logger import get_logger
@@ -99,10 +100,12 @@ def build_quiz_package(pDatabaseFile, pNow):
             }
             for vKey, vTheme in vQuiz.items()
         ],
+        # L'application mobile ne sait afficher que les QCM.
         "questions": [
             {**vQuestion, "theme": vKey}
             for vKey, vTheme in vQuiz.items()
             for vQuestion in vTheme["questions"]
+            if get_type(vQuestion) == DEFAULT_TYPE
         ],
         "assets": get_quiz_assets(pDatabaseFile),
         "guides": [
@@ -180,7 +183,7 @@ def check_synced_answer(pQuiz, pAnswer, pNow):
 
     vQuestion, vThemeKey = find_question(pQuiz, pAnswer.get("question_id"))
 
-    if vQuestion is None:
+    if vQuestion is None or get_type(vQuestion) != DEFAULT_TYPE:
         raise ValueError(f"{vClientId} : question inconnue")
 
     vChoice = pAnswer.get("choice")

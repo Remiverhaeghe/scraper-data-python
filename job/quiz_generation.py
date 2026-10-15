@@ -21,6 +21,7 @@ from job.quiz import (
     slugify,
 )
 from job.quiz_domains import DOMAIN_ORDER, OTHER_DOMAIN, classify_theme
+from job.quiz_types import get_type
 from storage.quiz_questions import get_imported_questions
 from utils.logger import get_logger
 
@@ -658,12 +659,15 @@ def assess_questions(pQuestions, pDomain=None, pOthers=()):
     correction les cite.
     """
 
+    # Les mesures portent sur les choix proposés : seuls les QCM sont concernés.
+    vQuestions = [vQuestion for vQuestion in pQuestions if get_type(vQuestion) == "qcm"]
+    vOthers = [vQuestion for vQuestion in pOthers if get_type(vQuestion) == "qcm"]
     vIssues = []
 
-    if len(pQuestions) >= MIN_QUALITY_SAMPLE:
-        vIssues += find_bias_issues(pQuestions, pDomain)
+    if len(vQuestions) >= MIN_QUALITY_SAMPLE:
+        vIssues += find_bias_issues(vQuestions, pDomain)
 
-    vIssues += find_writing_issues(pQuestions, pOthers)
+    vIssues += find_writing_issues(vQuestions, vOthers)
 
     if vIssues:
         logger.warning(
@@ -672,7 +676,11 @@ def assess_questions(pQuestions, pDomain=None, pOthers=()):
         )
 
     rQuality = {
-        "summary": describe_measures(pQuestions),
+        "summary": (
+            describe_measures(vQuestions)
+            if vQuestions
+            else f"{len(pQuestions)} question(s) interactive(s), sans choix à mesurer"
+        ),
         "warnings": [vWarning for vWarning, _ in vIssues],
         "issues": vIssues,
     }

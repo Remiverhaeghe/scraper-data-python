@@ -15,8 +15,8 @@ from pathlib import PurePosixPath
 from urllib.parse import urlsplit
 
 from job.quiz import (
+    COMMON_FIELDS,
     FLAGGED_KEY,
-    QUESTION_FIELDS,
     QUIZ_LEVELS,
     check_question,
     find_theme,
@@ -26,6 +26,13 @@ from job.quiz import (
     slugify,
 )
 from job.quiz_domains import DOMAIN_ORDER, classify_theme
+from job.quiz_types import (
+    DEFAULT_TYPE,
+    OPTIONAL_FIELDS,
+    QUESTION_TYPES,
+    TYPE_FIELDS,
+    get_type,
+)
 from job.quiz_exam import EXAM_KEY
 from job.quiz_generation import apply_lot_quality, find_catalog_theme
 from storage.backup import backup_database
@@ -68,7 +75,6 @@ LEVEL_ALIASES = {
 }
 
 # Seul le QCM est affichable : une question ouverte n'a pas de choix à cocher.
-QUESTION_TYPES = ("qcm",)
 
 MAX_TAGS = 10
 MAX_REFERENCES = 5
@@ -229,9 +235,12 @@ def normalize_question(pQuestion, pLabel, pVisuals):
     vQuestion = dict(pQuestion)
     vId = vQuestion.get("id", "sans identifiant")
 
-    if vQuestion.get("type", "qcm") not in QUESTION_TYPES:
+    vType = get_type(vQuestion)
+
+    if vType not in QUESTION_TYPES:
         raise ValueError(
-            f"{pLabel}, question {vId} : seul le type qcm est pris en charge"
+            f"{pLabel}, question {vId} : type inconnu "
+            f"({', '.join(QUESTION_TYPES)} attendu)"
         )
 
     if isinstance(vQuestion.get("level"), str):
@@ -243,16 +252,22 @@ def normalize_question(pQuestion, pLabel, pVisuals):
     # Champ redondant des packs : un écart signale une question à ne pas croire.
     vExpected = vQuestion.get("expectedAnswer")
 
-    if vExpected is not None and (
-        str(vExpected).strip() != vQuestion["choices"][vQuestion["answer"]].strip()
+    if (
+        vType == DEFAULT_TYPE
+        and vExpected is not None
+        and str(vExpected).strip() != vQuestion["choices"][vQuestion["answer"]].strip()
     ):
         raise ValueError(f"{pLabel}, question {vId} : réponse attendue incohérente")
 
     rQuestion = {
         vField: vQuestion[vField]
-        for vField in (*QUESTION_FIELDS, "code")
+        for vField in (*COMMON_FIELDS, *TYPE_FIELDS[vType], *OPTIONAL_FIELDS)
         if vField in vQuestion
     }
+
+    # Le type par défaut n'est pas écrit : les questions déjà enregistrées n'en ont pas.
+    if vType != DEFAULT_TYPE:
+        rQuestion["type"] = vType
 
     vTags = vQuestion.get("tags")
 

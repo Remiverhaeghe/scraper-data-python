@@ -22,6 +22,15 @@ Format compact d'une question :
     ```
     extrait de code facultatif
     ```
+
+Les questions interactives remplacent C et W par leurs propres champs :
+
+    N: 0,0023                  calcul : valeur attendue
+    U: A                       unité, facultative
+    T: 2                       tolérance en %, 1 par défaut
+    O: Étape                  remise en ordre : une ligne par étape, dans l'ordre
+    P: Élément => Unité        association : une ligne par paire
+    A: length                  code à compléter : réponse acceptée au trou ____
 """
 
 import argparse
@@ -59,7 +68,17 @@ LEVEL_LAYOUT = (
 )
 LOT_SIZE = sum(vCount for _, vCount in LEVEL_LAYOUT)
 
-FIELD_PATTERN = re.compile(r"([QCWER]): (.*)")
+FIELD_PATTERN = re.compile(r"([QCWERNUTOPA]): (.*)")
+# Champs répétables : mauvaises réponses, références, étapes, paires, réponses
+LIST_FIELDS = "WROPA"
+PAIR_SEPARATOR = " => "
+# Le premier champ présent fixe le type d'une question qui n'est pas un QCM.
+TYPE_MARKERS = (
+    ("O", "ordre"),
+    ("P", "association"),
+    ("N", "numerique"),
+    ("A", "saisie"),
+)
 
 # Une référence s'écrit « Titre | adresse » ; le contrôle d'import garde les sûres.
 REFERENCE_SEPARATOR = " | "
@@ -72,8 +91,10 @@ LINK_STATUSES = {"available": "en ligne", "expired": "retirée", None: "indéter
 def parse_lot_text(pText):
     """Lit des questions au format compact ; retourne {numéro : champs}.
 
-    Lève ValueError si une question n'a pas exactement trois mauvaises réponses
-    ou s'il lui manque un champ.
+    Un QCM a une bonne réponse (C) et trois mauvaises (W). Les autres types se
+    reconnaissent à leurs champs : N (valeur, avec U et T facultatifs), O (une
+    étape par ligne), P (« élément => correspondance ») ou A (réponse acceptée
+    au trou ____ du code). Lève ValueError si une question est incomplète.
     """
 
     rQuestions = {}
@@ -87,7 +108,7 @@ def parse_lot_text(pText):
             vBody, vCode, _ = vBody.split("```", 2)
             vCode = vCode.strip("\n")
 
-        vFields = {"W": [], "R": [], "code": vCode}
+        vFields = {vKey: [] for vKey in LIST_FIELDS} | {"code": vCode}
 
         for vLine in vBody.strip().splitlines():
             vMatch = FIELD_PATTERN.fullmatch(vLine.strip())
@@ -95,13 +116,25 @@ def parse_lot_text(pText):
             if not vMatch:
                 raise ValueError(f"question {vNumber.strip()} : ligne illisible")
 
-            if vMatch.group(1) in "WR":
+            if vMatch.group(1) in LIST_FIELDS:
                 vFields[vMatch.group(1)].append(vMatch.group(2).strip())
             else:
                 vFields[vMatch.group(1)] = vMatch.group(2).strip()
 
-        if len(vFields["W"]) != 3 or not all(vKey in vFields for vKey in "QCE"):
+        vFields["type"] = next(
+            (vType for vKey, vType in TYPE_MARKERS if vFields.get(vKey)), "qcm"
+        )
+        vChoiceFields = "C" in vFields or vFields["W"]
+
+        if not all(vKey in vFields for vKey in "QE") or (
+            (len(vFields["W"]) != 3 or "C" not in vFields)
+            if vFields["type"] == "qcm"
+            else vChoiceFields
+        ):
             raise ValueError(f"question {vNumber.strip()} : champs incomplets")
+
+        if any(PAIR_SEPARATOR not in vPair for vPair in vFields["P"]):
+            raise ValueError(f"question {vNumber.strip()} : paire mal écrite")
 
         if len(vFields["R"]) > MAX_REFERENCES or any(
             REFERENCE_SEPARATOR not in vReference for vReference in vFields["R"]
@@ -160,6 +193,42 @@ def build_schemas(pTheme, pConfig, pDirectory=LOTS_DIRECTORY):
     return rSchemas
 
 
+def build_typed_fields(pSource, pPosition):
+    """Retourne les champs propres au type d'une question écrite."""
+
+    vType = pSource.get("type", "qcm")
+
+    if vType == "numerique":
+        rFields = {"value": float(pSource["N"].replace(",", "."))}
+
+        if pSource.get("U"):
+            rFields["unit"] = pSource["U"]
+
+        if pSource.get("T"):
+            rFields["tolerance"] = float(pSource["T"].replace(",", "."))
+    elif vType == "ordre":
+        rFields = {"items": list(pSource["O"])}
+    elif vType == "association":
+        rFields = {
+            "pairs": [
+                [vPart.strip() for vPart in vPair.split(PAIR_SEPARATOR, 1)]
+                for vPair in pSource["P"]
+            ]
+        }
+    elif vType == "saisie":
+        rFields = {"accepted": list(pSource["A"])}
+    else:
+        vChoices = list(pSource["W"])
+        vChoices.insert(pPosition, pSource["C"])
+        rFields = {
+            "choices": vChoices,
+            "answer": pPosition,
+            "expectedAnswer": pSource["C"],
+        }
+
+    return rFields
+
+
 def build_questions(pTheme, pConfig, pQuestions):
     """Retourne les questions au format de l'import, bonnes réponses réparties.
 
@@ -179,26 +248,18 @@ def build_questions(pTheme, pConfig, pQuestions):
 
     for vIndex, vNumber in enumerate(sorted(pQuestions)):
         vSource = pQuestions[vNumber]
-        vChoices = list(vSource["W"])
-        vChoices.insert(vPositions[vIndex], vSource["C"])
         vQuestion = {
             "id": f"{pTheme}-l{pConfig['lot']}-{vNumber}",
             "level": vLevels[vIndex],
-            "type": "qcm",
+            "type": vSource.get("type", "qcm"),
             "question": vSource["Q"],
         }
 
         if vSource["code"]:
             vQuestion["code"] = vSource["code"]
 
-        vQuestion.update(
-            {
-                "choices": vChoices,
-                "answer": vPositions[vIndex],
-                "expectedAnswer": vSource["C"],
-                "explanation": vSource["E"],
-            }
-        )
+        vQuestion.update(build_typed_fields(vSource, vPositions[vIndex]))
+        vQuestion["explanation"] = vSource["E"]
 
         if vSource["R"]:
             vQuestion["references"] = [

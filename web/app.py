@@ -3,6 +3,7 @@
 import hmac
 import io
 import os
+import random
 import re
 import tempfile
 from contextlib import asynccontextmanager
@@ -64,6 +65,7 @@ from job.git_levels import (
     run_level_command,
 )
 from job.git_sandbox import SUPPORTED_COMMANDS
+from job.quiz_types import build_response, prepare_question
 from job.challenges import (
     build_challenge_list,
     build_challenge_view,
@@ -167,6 +169,7 @@ from job.quiz import (
     QUIZ_MODES,
     THEME_STATUSES,
     answer_question,
+    find_question,
     flag_question,
     build_quiz_overview,
     build_quiz_statistics,
@@ -1169,11 +1172,13 @@ def render_quiz(
     pStatusCode=200,
     pDomain=None,
     pSubdomain=None,
+    pRetry=None,
 ):
     """Affiche les thèmes de révision, avec une question ou une correction.
 
     pImport porte la saisie, la demande ChatGPT et le message de l'ajout de
-    questions.
+    questions ; pRetry, la question à reposer et la raison du refus de sa
+    réponse.
     """
 
     vQuiz = load_active_quiz(pDatabaseFile)
@@ -1183,7 +1188,9 @@ def render_quiz(
 
     vSchedule = get_review_schedule(pDatabaseFile)
 
-    if vTheme and pResult is None:
+    if pRetry:
+        vQuestion = {**prepare_question(pRetry[0], random), "theme_key": vTheme}
+    elif vTheme and pResult is None:
         vQuestion = pick_question(
             vQuiz,
             vTheme,
@@ -1206,6 +1213,7 @@ def render_quiz(
             "mode": vMode,
             "modes": QUIZ_MODES,
             "question": vQuestion,
+            "retry_message": pRetry[1] if pRetry else None,
             "result": pResult,
             "no_question": (
                 describe_no_question(vMode, get_next_review(vQuiz, vTheme, vSchedule))
@@ -1302,27 +1310,43 @@ def show_quiz(
 def answer_quiz(
     request: Request,
     pQuestionId: str = Form(alias="question_id"),
-    pChoice: int = Form(alias="choice"),
+    pChoice: int | None = Form(None, alias="choice"),
+    pText: str = Form("", alias="text"),
+    pIndexes: list[int] = Form([], alias="indexes"),
     pMode: str = Form(DEFAULT_MODE, alias="mode"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Corrige une réponse et affiche son explication."""
+    """Corrige une réponse et affiche son explication ; une saisie illisible est reposée."""
+
+    vQuiz = load_active_quiz(pDatabaseFile)
+    vQuestion, vThemeKey = find_question(vQuiz, pQuestionId)
+
+    if vQuestion is None:
+        raise HTTPException(status_code=400, detail="Question ou réponse inconnue.")
 
     try:
         vResult = answer_question(
             pDatabaseFile,
-            load_active_quiz(pDatabaseFile),
+            vQuiz,
             pQuestionId,
-            pChoice,
+            build_response(vQuestion, pChoice, pText, pIndexes),
             datetime.now(),
         )
 
     except ValueError as vException:
-        raise HTTPException(status_code=400, detail=str(vException)) from vException
+        rResponse = render_quiz(
+            request,
+            pDatabaseFile,
+            vThemeKey,
+            pMode,
+            pStatusCode=400,
+            pRetry=(vQuestion, str(vException)),
+        )
 
-    rResponse = render_quiz(
-        request, pDatabaseFile, vResult["theme_key"], pMode, pResult=vResult
-    )
+    else:
+        rResponse = render_quiz(
+            request, pDatabaseFile, vThemeKey, pMode, pResult=vResult
+        )
 
     return rResponse
 
@@ -1568,7 +1592,7 @@ def begin_quiz_exam(
     return rResponse
 
 
-def render_exam(pRequest, pDatabaseFile, pResult=None):
+def render_exam(pRequest, pDatabaseFile, pResult=None, pMessage=None):
     """Affiche la question en cours de l'examen, sa correction ou le résultat."""
 
     vQuiz = load_active_quiz(pDatabaseFile)
@@ -1582,6 +1606,7 @@ def render_exam(pRequest, pDatabaseFile, pResult=None):
             "exam": vExam,
             "result": pResult,
             "question": None if pResult else get_exam_question(vQuiz, vExam),
+            "retry_message": pMessage,
             "summary": (
                 describe_exam_summary(summarize_exam(vQuiz, vExam))
                 if vExam["finished_at"] and not pResult
@@ -1612,25 +1637,39 @@ def show_quiz_exam(request: Request, pDatabaseFile: str = Depends(get_database_f
 )
 def answer_quiz_exam(
     request: Request,
-    pChoice: int = Form(alias="choice"),
+    pChoice: int | None = Form(None, alias="choice"),
+    pText: str = Form("", alias="text"),
+    pIndexes: list[int] = Form([], alias="indexes"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Corrige la réponse à la question en cours de l'examen."""
+    """Corrige la réponse à la question en cours ; une saisie illisible est reposée."""
+
+    vQuiz = load_active_quiz(pDatabaseFile)
+    vExam = load_exam(pDatabaseFile)
+
+    if not vExam or vExam["finished_at"]:
+        raise HTTPException(status_code=400, detail="Aucun examen en cours.")
+
+    vQuestion = find_question(vQuiz, vExam["ids"][vExam["index"]])[0]
 
     try:
         vResult, _ = answer_exam(
-            pDatabaseFile, load_active_quiz(pDatabaseFile), pChoice, datetime.now()
+            pDatabaseFile,
+            vQuiz,
+            build_response(vQuestion or {}, pChoice, pText, pIndexes),
+            datetime.now(),
         )
 
     except ValueError as vException:
-        raise HTTPException(status_code=400, detail=str(vException)) from vException
+        rResponse = render_exam(request, pDatabaseFile, pMessage=str(vException))
 
-    # Question supprimée pendant l'examen : passée, la suivante s'affiche.
-    rResponse = (
-        render_exam(request, pDatabaseFile, vResult)
-        if vResult
-        else RedirectResponse(app.url_path_for("show_quiz_exam"), status_code=303)
-    )
+    else:
+        # Question supprimée pendant l'examen : passée, la suivante s'affiche.
+        rResponse = (
+            render_exam(request, pDatabaseFile, vResult)
+            if vResult
+            else RedirectResponse(app.url_path_for("show_quiz_exam"), status_code=303)
+        )
 
     return rResponse
 

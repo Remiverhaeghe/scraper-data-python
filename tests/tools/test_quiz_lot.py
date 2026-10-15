@@ -256,3 +256,72 @@ def test_links_command_reports_removed_pages(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(quiz_lot, "check_offer_link", lambda _: None)
 
     assert main(["links", "grafcet"]) == 0
+
+
+TYPED_TEXT = """@001
+Q: Courant dans 100 ohms sous 0,23 V ?
+N: 0,0023
+U: A
+T: 2
+E: I = U / R.
+
+@002
+Q: Ordre de la consignation ?
+O: Séparer
+O: Condamner
+O: Vérifier
+E: Dans cet ordre.
+
+@003
+Q: Associer grandeur et unité.
+P: Tension => V
+P: Courant => A
+P: Puissance => W
+E: Volt, ampère, watt.
+
+@004
+Q: Compléter la boucle.
+A: length
+A: length()
+E: Un tableau expose length.
+```
+for (int i = 0; i < tab.____; i++) {}
+```
+"""
+
+
+def test_typed_questions_are_read_and_built():
+    """Vérifie la lecture et la construction des questions qui ne sont pas des QCM."""
+
+    vSource = parse_lot_text(TYPED_TEXT)
+    vQuestions = build_questions(
+        "electricite", {"lot": 1, "seed": 3}, {**vSource, "005": vSource["004"]}
+    )
+
+    assert [vQuestion["type"] for vQuestion in vQuestions] == [
+        "numerique",
+        "ordre",
+        "association",
+        "saisie",
+        "saisie",
+    ]
+    assert (vQuestions[0]["value"], vQuestions[0]["unit"]) == (0.0023, "A")
+    assert vQuestions[0]["tolerance"] == 2.0
+    assert vQuestions[1]["items"] == ["Séparer", "Condamner", "Vérifier"]
+    assert vQuestions[2]["pairs"][0] == ["Tension", "V"]
+    assert vQuestions[3]["accepted"] == ["length", "length()"]
+    assert "choices" not in vQuestions[3]
+
+
+@pytest.mark.parametrize(
+    ("pText", "pMessage"),
+    [
+        ("@001\nQ: Ordre ?\nO: A\nO: B\nW: C\nE: Explication.", "champs incomplets"),
+        ("@001\nQ: Paires ?\nP: A -> 1\nE: Explication.", "paire mal écrite"),
+    ],
+)
+def test_typed_questions_refuse_mixed_or_malformed_fields(pText, pMessage):
+    """Vérifie le refus d'un type mêlé à des choix ou d'une paire mal écrite."""
+
+    with pytest.raises(ValueError, match=pMessage):
+        parse_lot_text(pText)

@@ -20,6 +20,8 @@ from job.schedule import (
 )
 from job.profile import build_profile, save_profile
 from job.challenges import get_expected_answers, get_seed
+from job.quiz_import import import_questions
+from tests.job.test_quiz_types import NUMERIC, ORDER, PAIRS
 from job.quiz_generation import MIN_QUALITY_SAMPLE
 from storage.job_offers import get_offer, save_offers, set_availability
 from tests.job.test_quiz_import import build_pack
@@ -1656,6 +1658,52 @@ def test_git_levels_are_listed_played_and_solved(client):
         client.post(
             "/git/premiers-commits/command",
             data={"history": ["git push"], "command": "git commit"},
+        ).status_code
+        == 400
+    )
+
+
+def test_typed_quiz_questions_on_the_web(client):
+    """Vérifie les questions interactives sur le web : champs, saisie refusée, réussite."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+    import_questions(
+        vDatabaseFile,
+        "",
+        json.dumps({"theme": "Électricité", "questions": [NUMERIC, ORDER, PAIRS]}),
+        datetime.now(),
+    )
+
+    vRetry = client.post(
+        "/quiz/answer", data={"question_id": "ohm-courant", "text": "2,3 V"}
+    )
+
+    assert vRetry.status_code == 400
+    assert "Unité attendue : A" in vRetry.text
+    assert 'name="text"' in vRetry.text and "ohm-courant" in vRetry.text
+
+    vOrder = client.post(
+        "/quiz/answer",
+        data={"question_id": "consignation-ordre", "indexes": ["0", "0", "1", "2"]},
+    )
+
+    assert vOrder.text.count('name="indexes"') == 4
+
+    vPairs = client.post(
+        "/quiz/answer", data={"question_id": "grandeurs-unites", "indexes": ["0"]}
+    )
+
+    assert "Réponse incomplète" in vPairs.text
+    assert '<option value="">Choisir…</option>' in vPairs.text
+
+    vSolved = client.post(
+        "/quiz/answer", data={"question_id": "ohm-courant", "text": "2,3 mA"}
+    )
+
+    assert "Bonne réponse" in vSolved.text and "0,0023 A" in vSolved.text
+    assert (
+        client.post(
+            "/quiz/answer", data={"question_id": "inconnue", "choice": "0"}
         ).status_code
         == 400
     )

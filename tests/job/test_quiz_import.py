@@ -131,7 +131,7 @@ def test_import_pack_reads_manifest_visuals_and_guides(database_file):
     assert get_quiz_asset(database_file, "ram.svg") == SAFE_SVG
     assert "theme-001" not in str(load_active_quiz(database_file))
     assert "réponse attendue incohérente" in " ".join(vReport["rejected"])
-    assert "seul le type qcm" in " ".join(vReport["rejected"])
+    assert "type inconnu" in " ".join(vReport["rejected"])
     assert describe_quiz_import(vReport) == (
         "2 question(s) ajoutée(s) : Analyse RAM et JVM · 1 schéma(s) · 2 guide(s) "
         "· 2 écartée(s)."

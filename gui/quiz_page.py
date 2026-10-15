@@ -16,6 +16,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QPlainTextEdit,
     QProgressBar,
@@ -44,6 +47,7 @@ from gui.widgets import (
     show_message,
 )
 from job.assistant import CHATGPT_URL
+from job.quiz_types import BLANK, DEFAULT_TOLERANCE, format_number
 from job.quiz import (
     DEFAULT_MODE,
     QUIZ_MODES,
@@ -238,6 +242,7 @@ class QuizPage(QWidget):
         self.code_edit.setMaximumHeight(160)
 
         self.choices_group = QButtonGroup(self)
+        self.answer_widgets = []
 
         self.choices_layout = QVBoxLayout()
         self.choices_layout.setSpacing(8)
@@ -1232,7 +1237,7 @@ class QuizPage(QWidget):
             vQuestion,
             (
                 f"{vQuiz[pThemeKey]['label']} · {vQuestion['level']} · "
-                f"{QUIZ_MODES[pMode]}"
+                f"{vQuestion['type_label']} · {QUIZ_MODES[pMode]}"
                 if vQuestion
                 else vQuiz[pThemeKey]["label"]
             ),
@@ -1256,6 +1261,7 @@ class QuizPage(QWidget):
         self.meta_label.setText(pMeta)
 
         clear_layout(self.choices_layout)
+        self.answer_widgets = []
 
         for vButton in self.choices_group.buttons():
             self.choices_group.removeButton(vButton)
@@ -1273,11 +1279,91 @@ class QuizPage(QWidget):
         self.validate_button.show()
         self.flag_button.setVisible(self.mode != EXAM_MODE)
 
+        self.add_answer_widgets(pQuestion)
+
+    def add_answer_widgets(self, pQuestion):
+        """Ajoute la zone de réponse propre au type de la question."""
+        vType = pQuestion["type"]
+
+        if vType in ("numerique", "saisie"):
+            vEdit = QLineEdit()
+            vEdit.returnPressed.connect(self.validate)
+
+            if vType == "saisie":
+                vEdit.setPlaceholderText(f"Ce qui remplace {BLANK}")
+                vEdit.setFont(
+                    QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
+                )
+            else:
+                vUnit = pQuestion.get("unit", "")
+                vEdit.setPlaceholderText(f"Votre résultat, par exemple 2,5 {vUnit}")
+                vEdit.setToolTip(
+                    f"Tolérance "
+                    f"{format_number(pQuestion.get('tolerance', DEFAULT_TOLERANCE))} %"
+                    + (f", préfixes m, k, µ… acceptés devant {vUnit}" if vUnit else "")
+                )
+
+            self.answer_widgets = [vEdit]
+        elif vType == "ordre":
+            vList = QListWidget()
+            vList.setDragDropMode(QListWidget.DragDropMode.InternalMove)
+            vList.setToolTip("Glissez les éléments pour les remettre dans l'ordre")
+
+            for vIndex, vItem in pQuestion["shuffled"]:
+                vListItem = QListWidgetItem(vItem)
+                vListItem.setData(Qt.ItemDataRole.UserRole, vIndex)
+                vList.addItem(vListItem)
+
+            vList.setFixedHeight(vList.sizeHintForRow(0) * vList.count() + 8)
+            self.answer_widgets = [vList]
+        elif vType == "association":
+            vContainer = QWidget()
+            vGrid = QGridLayout(vContainer)
+            vGrid.setContentsMargins(0, 0, 0, 0)
+
+            for vRow, (vLeft, _) in enumerate(pQuestion["pairs"]):
+                vCombo = QComboBox()
+                vCombo.addItem("Choisir…", None)
+
+                for vIndex, vRight in pQuestion["shuffled"]:
+                    vCombo.addItem(vRight, vIndex)
+
+                vGrid.addWidget(QLabel(vLeft), vRow, 0)
+                vGrid.addWidget(vCombo, vRow, 1)
+                self.answer_widgets.append(vCombo)
+
+            self.choices_layout.addWidget(vContainer)
+            return
+
         # L'identifiant du bouton est l'indice d'origine du choix, avant mélange.
         for vIndex, vChoice in pQuestion["shuffled"]:
             vButton = QRadioButton(vChoice)
             self.choices_group.addButton(vButton, vIndex)
-            self.choices_layout.addWidget(vButton)
+            self.answer_widgets.append(vButton)
+
+        for vWidget in self.answer_widgets:
+            self.choices_layout.addWidget(vWidget)
+
+    def read_response(self):
+        """Retourne la réponse saisie selon le type, ou None si elle est incomplète."""
+        vType = self.question["type"]
+
+        if vType in ("numerique", "saisie"):
+            rResponse = self.answer_widgets[0].text().strip() or None
+        elif vType == "ordre":
+            vList = self.answer_widgets[0]
+            rResponse = [
+                vList.item(vRow).data(Qt.ItemDataRole.UserRole)
+                for vRow in range(vList.count())
+            ]
+        elif vType == "association":
+            rResponse = [vCombo.currentData() for vCombo in self.answer_widgets]
+            rResponse = None if None in rResponse else rResponse
+        else:
+            rResponse = self.choices_group.checkedId()
+            rResponse = None if rResponse < 0 else rResponse
+
+        return rResponse
 
     def start_exam(self):
         """Reprend l'examen en cours, ou en commence un sur le domaine choisi."""
@@ -1346,30 +1432,35 @@ class QuizPage(QWidget):
 
     def validate(self):
         """Corrige la réponse choisie et affiche l'explication."""
-        vChoice = self.choices_group.checkedId()
+        vResponse = self.read_response()
 
-        if vChoice < 0:
-            self.verdict_label.setText("Choisissez une réponse.")
+        if vResponse is None:
+            show_message(self.verdict_label, "Complétez votre réponse.", "warning")
             return
 
-        if self.mode == EXAM_MODE:
-            vResult, vExam = answer_exam(
-                self.database_file,
-                load_active_quiz(self.database_file),
-                vChoice,
-                datetime.now(),
-            )
+        try:
+            if self.mode == EXAM_MODE:
+                vResult, vExam = answer_exam(
+                    self.database_file,
+                    load_active_quiz(self.database_file),
+                    vResponse,
+                    datetime.now(),
+                )
 
-            if vExam["finished_at"]:
-                self.next_button.setText("Voir le résultat")
-        else:
-            vResult = answer_question(
-                self.database_file,
-                load_active_quiz(self.database_file),
-                self.question["id"],
-                vChoice,
-                datetime.now(),
-            )
+                if vExam["finished_at"]:
+                    self.next_button.setText("Voir le résultat")
+            else:
+                vResult = answer_question(
+                    self.database_file,
+                    load_active_quiz(self.database_file),
+                    self.question["id"],
+                    vResponse,
+                    datetime.now(),
+                )
+
+        except ValueError as vException:
+            show_message(self.verdict_label, str(vException), "warning")
+            return
 
         # Question supprimée depuis le début de l'examen : elle est passée.
         if vResult is None:
@@ -1382,13 +1473,14 @@ class QuizPage(QWidget):
         self.verdict_label.setText(
             "Bonne réponse."
             if vResult["correct"]
-            else f"Réponse incorrecte. Réponse attendue : {vResult['answer']}"
+            else f"Réponse incorrecte. Votre réponse : {vResult['chosen']}. "
+            f"Réponse attendue : {vResult['answer']}"
         )
         self.explanation_label.setText(vResult["explanation"])
         self.show_extras(vResult["question"])
 
-        for vButton in self.choices_group.buttons():
-            vButton.setEnabled(False)
+        for vWidget in self.answer_widgets:
+            vWidget.setEnabled(False)
 
         self.validate_button.hide()
         self.next_button.show()

@@ -316,6 +316,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 Page Révision du bureau et du web (installable sur le téléphone), sans service payant :
 
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
+- [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile ne reçoit que les QCM
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande reprenant le modèle complet d'un pack (domaine, niveaux répartis ou au choix, schémas et guides facultatifs), import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
 - [x] Catalogue de 89 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
@@ -457,6 +458,7 @@ scraper-data-python/
 │   ├── company_info.py                        # Informations publiques sur une entreprise française
 │   ├── assistant.py                           # Demandes préparées pour ChatGPT
 │   ├── quiz.py                                # Révision : questions, progression, thèmes conseillés
+│   ├── quiz_types.py                          # Types de questions : vérification, présentation et correction
 │   ├── quiz_import.py                         # Import et export de questions et de packs
 │   ├── quiz_generation.py                     # Demande ChatGPT par lot et contrôle des lots importés
 │   ├── quiz_packs.py                          # Import groupé des lots validés de data/packs
@@ -620,6 +622,7 @@ scraper-data-python/
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
 │   │   ├── quiz.html                          # Révision technique par QCM
+│   │   ├── _quiz_answer.html                  # Champs de réponse selon le type de question
 │   │   ├── challenges.html                    # Défis de programmation
 │   │   ├── git.html                           # Bac à sable Git
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
@@ -729,6 +732,7 @@ scraper-data-python/
 │   │   ├── test_application_tracking.py       # Teste les colonnes de suivi et les statistiques
 │   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
+│   │   ├── test_quiz_types.py                 # Teste les questions interactives et leur correction
 │   │   ├── test_quiz_import.py                # Teste l'import des packs, schémas et guides
 │   │   ├── test_quiz_generation.py            # Teste le catalogue, la demande et le contrôle des lots
 │   │   ├── test_quiz_packs.py                 # Teste l'import groupé des lots validés

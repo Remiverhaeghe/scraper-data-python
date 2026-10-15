@@ -1819,6 +1819,49 @@ textarea.companies-preferred {
     margin-top: 3px;
 }
 
+/* Réponses saisies : calcul, code à compléter, ordre et association */
+.quiz-typed {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.quiz-code-input {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+.quiz-order {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding-left: 24px;
+}
+
+.quiz-pairs {
+    display: grid;
+    gap: 8px;
+}
+
+.quiz-pairs label {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+}
+
+.quiz-order select,
+.quiz-pairs select {
+    width: 100%;
+}
+
+@media (max-width: 640px) {
+    .quiz-pairs label {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
+
 .quiz-progress {
     height: 8px;
     margin: 10px 0 14px;

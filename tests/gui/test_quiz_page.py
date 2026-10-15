@@ -1,6 +1,7 @@
 """Tests de la page de révision"""
 
 import json
+import random
 from datetime import datetime
 
 import pandas as pd
@@ -11,10 +12,13 @@ import gui.quiz_page as quiz_page
 import job.quiz_packs as quiz_packs
 from gui.quiz_page import QuizPage
 from job.quiz_generation import MIN_QUALITY_SAMPLE
+from job.quiz_import import import_questions
+from job.quiz_types import prepare_question
 from storage.database import initialize_database
 from storage.job_offers import save_offers
 from tests.job.test_quiz_generation import build_lot_text, build_question
 from tests.job.test_quiz_import import build_pack
+from tests.job.test_quiz_types import COMPLETION, NUMERIC, ORDER, PAIRS
 from tools.quiz_lot import build_pack as build_lot_pack
 
 
@@ -40,7 +44,7 @@ def test_question_answer_and_review(qt_application, tmp_path):
     vPage.start("sql", "discover")
     vPage.validate()
 
-    assert vPage.verdict_label.text() == "Choisissez une réponse."
+    assert vPage.verdict_label.text() == "Complétez votre réponse."
 
     vWrong = next(
         vButton
@@ -457,3 +461,70 @@ def test_priority_card_prepares_a_full_lot(qt_application, tmp_path, monkeypatch
     vPage.prepare_priority("Supervision, SCADA et IHM")
 
     assert "100 questions : 25 débutant" in quiz_page.QApplication.clipboard().text()
+
+
+def test_typed_questions_are_answered_on_the_desktop(qt_application, tmp_path):
+    """Vérifie les zones de réponse d'un calcul, d'un ordre, d'une association et d'un code."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile)
+    import_questions(
+        vDatabaseFile,
+        "",
+        json.dumps(
+            {"theme": "Électricité", "questions": [NUMERIC, ORDER, PAIRS, COMPLETION]}
+        ),
+        datetime.now(),
+    )
+    vPage.mode = "discover"
+
+    def show(pQuestion):
+        vPage.display_question(
+            {**prepare_question(pQuestion, random.Random(1)), "theme_key": "x"},
+            "Électricité",
+            "",
+        )
+
+    show(NUMERIC)
+    vPage.validate()
+
+    assert vPage.verdict_label.text() == "Complétez votre réponse."
+
+    vPage.answer_widgets[0].setText("2,3 V")
+    vPage.validate()
+
+    assert vPage.verdict_label.text().startswith("Unité attendue : A")
+
+    vPage.answer_widgets[0].setText("2,3 mA")
+    vPage.validate()
+
+    assert vPage.verdict_label.text() == "Bonne réponse."
+    assert not vPage.answer_widgets[0].isEnabled()
+
+    show(ORDER)
+    vList = vPage.answer_widgets[0]
+    vItems = [vList.takeItem(0) for _ in range(vList.count())]
+
+    for vItem in sorted(
+        vItems, key=lambda pItem: pItem.data(quiz_page.Qt.ItemDataRole.UserRole)
+    ):
+        vList.addItem(vItem)
+
+    vPage.validate()
+
+    assert vPage.verdict_label.text() == "Bonne réponse."
+
+    show(PAIRS)
+
+    for vCombo in vPage.answer_widgets:
+        vCombo.setCurrentIndex(1)
+
+    vPage.validate()
+
+    assert vPage.verdict_label.text().startswith("Réponse incorrecte. Votre réponse :")
+
+    show(COMPLETION)
+    vPage.answer_widgets[0].setText("length")
+    vPage.validate()
+
+    assert vPage.verdict_label.text() == "Bonne réponse."

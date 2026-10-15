@@ -10,6 +10,7 @@ from pathlib import Path
 
 from config import QUIZ_DIRECTORY
 from job.quiz_domains import classify_theme
+from job.quiz_types import check_typed_fields, grade_answer, prepare_question
 from storage.job_offers import (
     count_offers_by_skill,
     get_offer_texts,
@@ -52,7 +53,8 @@ THEME_STATUSES = {
 # erreur la renvoie dans la première.
 LEITNER_INTERVALS = (1, 3, 7, 21, 60)
 
-QUESTION_FIELDS = ("id", "level", "question", "choices", "answer", "explanation")
+# Champs de toute question ; ceux propres à chaque type sont dans job/quiz_types.py
+COMMON_FIELDS = ("id", "level", "question", "explanation")
 TEXT_FIELDS = ("question", "explanation")
 
 # Identifiant court et lisible : « java-records », « sql-left-join »
@@ -66,7 +68,7 @@ def check_question(pQuestion, pFileName):
     """Vérifie qu'une question est complète ; lève ValueError en nommant le défaut."""
 
     vId = pQuestion.get("id", "sans identifiant")
-    vMissing = [vField for vField in QUESTION_FIELDS if vField not in pQuestion]
+    vMissing = [vField for vField in COMMON_FIELDS if vField not in pQuestion]
 
     if vMissing:
         raise ValueError(
@@ -93,24 +95,10 @@ def check_question(pQuestion, pFileName):
     ):
         raise ValueError(f"{pFileName}, question {vId} : texte vide")
 
-    vChoices = pQuestion["choices"]
+    vIssue = check_typed_fields(pQuestion)
 
-    if (
-        not isinstance(vChoices, list)
-        or not 2 <= len(vChoices) <= 5
-        or any(
-            not isinstance(vChoice, str) or not vChoice.strip() for vChoice in vChoices
-        )
-    ):
-        raise ValueError(f"{pFileName}, question {vId} : 2 à 5 choix attendus")
-
-    # bool est un int en Python : True ne doit pas passer pour la réponse 1.
-    if (
-        not isinstance(pQuestion["answer"], int)
-        or isinstance(pQuestion["answer"], bool)
-        or not 0 <= pQuestion["answer"] < len(vChoices)
-    ):
-        raise ValueError(f"{pFileName}, question {vId} : réponse hors des choix")
+    if vIssue:
+        raise ValueError(f"{pFileName}, question {vId} : {vIssue}")
 
 
 @lru_cache
@@ -568,7 +556,7 @@ def pick_question(
     pSchedule=None,
     pToday=None,
 ):
-    """Choisit une question du thème, choix mélangés ; None s'il n'y en a plus.
+    """Choisit une question du thème, éléments mélangés ; None s'il n'y en a plus.
 
     spaced propose les questions dont la révision est due, puis les nouvelles ;
     discover d'abord les questions jamais répondues, review seulement celles
@@ -604,27 +592,26 @@ def pick_question(
         vQuestion = pRandom.choice(vCandidates)  # nosec B311
 
         # La bonne réponse ne doit pas se deviner à sa place dans la liste : les
-        # choix sont mélangés, chacun gardant son indice d'origine.
-        vChoices = list(enumerate(vQuestion["choices"]))
-        pRandom.shuffle(vChoices)
-
-        rQuestion = {**vQuestion, "theme_key": pThemeKey, "shuffled": vChoices}
+        # éléments sont mélangés, chacun gardant son indice d'origine.
+        rQuestion = {**prepare_question(vQuestion, pRandom), "theme_key": pThemeKey}
 
     return rQuestion
 
 
-def answer_question(pDatabaseFile, pQuiz, pQuestionId, pChoice, pNow):
+def answer_question(pDatabaseFile, pQuiz, pQuestionId, pResponse, pNow):
     """Corrige et enregistre une réponse ; retourne la correction à afficher.
 
-    Lève ValueError pour une question inconnue ou un choix hors liste.
+    pResponse a la forme attendue par le type de la question (job/quiz_types.py).
+    Lève ValueError pour une question inconnue ou une réponse illisible, qui
+    n'est alors pas enregistrée.
     """
 
     vQuestion, vThemeKey = find_question(pQuiz, pQuestionId)
 
-    if vQuestion is None or not 0 <= pChoice < len(vQuestion["choices"]):
+    if vQuestion is None:
         raise ValueError("Question ou réponse inconnue.")
 
-    vCorrect = pChoice == vQuestion["answer"]
+    vCorrect, vChosen, vExpected = grade_answer(vQuestion, pResponse)
 
     save_quiz_answer(pDatabaseFile, pQuestionId, vThemeKey, vCorrect, pNow)
 
@@ -632,8 +619,8 @@ def answer_question(pDatabaseFile, pQuiz, pQuestionId, pChoice, pNow):
         "question": vQuestion,
         "theme_key": vThemeKey,
         "correct": vCorrect,
-        "chosen": vQuestion["choices"][pChoice],
-        "answer": vQuestion["choices"][vQuestion["answer"]],
+        "chosen": vChosen,
+        "answer": vExpected,
         "explanation": vQuestion["explanation"],
     }
 
