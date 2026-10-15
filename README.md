@@ -78,7 +78,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Dédupliquer les offres lors de l'agrégation multi-sources
 - [x] Gérer les limites par source et la limite globale
 - [x] Stocker les offres en base SQLite
-- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées, v14 : thèmes, schémas et guides importés, v15 : domaine des thèmes importés, v16 : identifiant des réponses du téléphone)
+- [x] Versionner le schéma de la base par migrations (v2 : paramètres de l'historique, v3 : journal des relances, v4 : réglages, v5 et v7 : reprise des offres, v6 : recherches enregistrées, v8 : expiration, v9 : empreinte des offres, v10 : pièces jointes, v11 : réponses de révision, v12 : date d'entretien et pays des offres, v13 : questions de révision importées, v14 : thèmes, schémas et guides importés, v15 : domaine des thèmes importés, v16 : identifiant des réponses du téléphone, v17 : défis)
 - [x] Déclarer les sources d'emploi dans un registre unique
 
 ### 💼 Jobs
@@ -369,6 +369,16 @@ Aucun port n'est ouvert sur la box : seuls les appareils de votre compte Tailsca
 atteignent le PC. L'authentification du tableau de bord reste obligatoire. Pour lancer une
 recherche depuis le téléphone, le planificateur (`python -m scheduler`) doit tourner sur le PC.
 
+### Défis de programmation
+
+Page Défis du bureau et du web, sur le principe des calendriers de défis en ligne, avec des énoncés propres au projet :
+
+- [x] Dix défis en deux parties (production, réseau, automatisme, électricité, Modbus), une étoile par partie réussie
+- [x] Données personnelles tirées d'une graine enregistrée en base, reproductibles ; exemple résolu fourni avec ses réponses
+- [x] Résolution dans le langage de son choix : seule la réponse est comparée, aucun code n'est exécuté par l'application
+- [x] Seconde partie ouverte après la première, attente de 30 s après une erreur, « trop haute » ou « trop basse » pour un nombre
+- [x] Indices dévoilés un à un et solution commentée une fois le défi terminé
+
 ### Abonnement à l'agenda
 
 Paramètres, « Abonnement à l'agenda », « Créer l'adresse » : l'adresse contient un jeton
@@ -445,6 +455,7 @@ scraper-data-python/
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
+│   ├── challenges/                            # Défis : moteur de progression et un module par défi
 │   ├── access_tokens.py                       # Jetons d'accès secrets (agenda, application mobile)
 │   ├── mobile_sync.py                         # Contenu hors ligne et réponses de l'application mobile
 │   ├── cv_import.py                           # Import d'un CV : lecture et pré-remplissage du profil
@@ -556,6 +567,7 @@ scraper-data-python/
 │   ├── offer_form.py                          # Saisie manuelle d'une offre
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
 │   ├── quiz_page.py                           # Révision technique par QCM
+│   ├── challenges_page.py                     # Défis de programmation
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
 │   ├── quality_page.py                        # Qualité des données et offres à vérifier
@@ -594,6 +606,7 @@ scraper-data-python/
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
 │   │   ├── quiz.html                          # Révision technique par QCM
+│   │   ├── challenges.html                    # Défis de programmation
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
 │   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
 │   │   ├── history.html                       # Historique des exécutions
@@ -669,6 +682,7 @@ scraper-data-python/
 │   ├── attachments.py                         # Pièces jointes des candidatures, rangées à côté de la base
 │   ├── quiz_answers.py                        # Réponses de révision, pour la progression
 │   ├── quiz_questions.py                      # Questions, thèmes, schémas et guides importés
+│   ├── challenges.py                          # Graines et essais des défis
 │   ├── maintenance.py                         # Réinitialisation de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
@@ -707,6 +721,7 @@ scraper-data-python/
 │   │   ├── test_mobile_sync.py                # Teste le contenu hors ligne et l'envoi des réponses
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
+│   │   ├── test_challenges.py                 # Teste les défis, leurs solutions et les réponses
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
@@ -805,6 +820,7 @@ scraper-data-python/
 │   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
 │   │   ├── test_applications_page.py           # Teste la page des candidatures
 │   │   ├── test_quiz_page.py                   # Teste la page de révision
+│   │   ├── test_challenges_page.py             # Teste la page des défis
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres

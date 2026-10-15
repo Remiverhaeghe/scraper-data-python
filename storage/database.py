@@ -572,6 +572,33 @@ def migrate_to_v16(pConnection):
     )
 
 
+def migrate_to_v17(pConnection):
+    """Ajoute les défis de programmation : graines des données et tentatives."""
+
+    # Une graine par défi : les données personnelles restent les mêmes d'une
+    # session à l'autre, comme la réponse attendue.
+    pConnection.execute("""
+        CREATE TABLE challenge_seed (
+            challenge TEXT PRIMARY KEY,
+            seed INTEGER NOT NULL,
+            created_at TEXT NOT NULL
+        )
+        """)
+    pConnection.execute("""
+        CREATE TABLE challenge_attempt (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            challenge TEXT NOT NULL,
+            part INTEGER NOT NULL,
+            answer TEXT NOT NULL,
+            correct INTEGER NOT NULL,
+            answered_at TEXT NOT NULL
+        )
+        """)
+    pConnection.execute(
+        "CREATE INDEX idx_challenge_attempt ON challenge_attempt(challenge, part)"
+    )
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -589,6 +616,7 @@ MIGRATIONS = [
     migrate_to_v14,
     migrate_to_v15,
     migrate_to_v16,
+    migrate_to_v17,
 ]
 
 

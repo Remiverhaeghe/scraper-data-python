@@ -1,0 +1,68 @@
+{# Défis de programmation (routes /challenges) : énoncé, données personnelles et
+   réponse. Aucun code n'est exécuté ici : seule la réponse est comparée. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Défis{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Défis", "Des problèmes à résoudre avec votre propre code, dans le langage de votre choix : seule la réponse est vérifiée", "trophy") }}
+
+<article class="card">
+    <h2>Les défis</h2>
+    <p class="card-subtitle">Deux parties par défi, une étoile par partie réussie</p>
+    <div class="challenge-list">
+        {% for item in challenges %}
+        <a class="challenge-item{% if view and view.id == item.id %} is-active{% endif %}" href="{{ url_for('show_challenge', pChallengeId=item.id).path }}">
+            <span class="challenge-stars" aria-label="{{ item.stars }} étoile(s) sur 2">{{ "★" * item.stars }}{{ "☆" * (2 - item.stars) }}</span>
+            <strong>{{ item.title }}</strong>
+            <span class="card-subtitle">{{ item.series }} · {{ item.level }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</article>
+
+{% if view %}
+<article class="card section-gap" id="challenge">
+    <h2>{{ view.title }} <span class="challenge-stars">{{ "★" * (view.solved | length) }}{{ "☆" * (2 - (view.solved | length)) }}</span></h2>
+    <p class="card-subtitle">{{ view.series }} · {{ view.level }}</p>
+    {% for statement in statements %}
+    <h3>Partie {{ loop.index }}</h3>
+    {{ statement }}
+    {% endfor %}
+    <p class="card-subtitle">Exemple, avec ses réponses :
+        {% for answer in view.example_answers %}partie {{ loop.index }} : {{ answer }}{% if not loop.last %} · {% endif %}{% endfor %}
+    </p>
+    <pre class="challenge-example">{{ view.example }}</pre>
+
+    <div class="rules-actions">
+        <a class="button" href="{{ url_for('download_challenge_input', pChallengeId=view.id).path }}">{{ icon("download", 16) }} Télécharger mes données</a>
+    </div>
+
+    {% if message %}<p class="application-message tone-{{ message[1] }}" role="status">{{ message[0] }}</p>{% endif %}
+
+    {% if view.next_part %}
+    <form class="inline-form section-gap" method="post" action="{{ url_for('answer_challenge', pChallengeId=view.id).path }}#challenge">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="part" value="{{ view.next_part }}">
+        <input type="text" name="answer" placeholder="Réponse de la partie {{ view.next_part }}" aria-label="Réponse de la partie {{ view.next_part }}" required autocomplete="off">
+        <button class="button button-primary" type="submit">{{ icon("circle-check", 16) }} Valider</button>
+    </form>
+    {% endif %}
+
+    {% if hints %}
+    <ol class="challenge-hints">
+        {% for hint in hints %}<li>{{ hint }}</li>{% endfor %}
+    </ol>
+    {% endif %}
+    {% if hint_count < view.hints | length %}
+    <p><a class="button" href="{{ url_for('show_challenge', pChallengeId=view.id).path }}?hints={{ hint_count + 1 }}#challenge">{{ icon("sparkles", 16) }} Afficher un indice</a></p>
+    {% endif %}
+
+    {% if view.note %}
+    <h3>Solution commentée</h3>
+    {{ note }}
+    {% endif %}
+</article>
+{% endif %}
+{% endblock %}

@@ -12,6 +12,7 @@ logger = get_logger(__name__)
 # schémas et guides ne sont pas des données de recherche : elles sont gardées.
 RESET_TABLES = (
     "quiz_answer",
+    "challenge_attempt",
     "job_attachment",
     "job_follow_up",
     "job_application",

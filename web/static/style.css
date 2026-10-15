@@ -1265,6 +1265,41 @@ textarea.companies-preferred {
     border-color: var(--success);
 }
 
+/* Défis : liste en grille, étoiles et exemple en chasse fixe */
+.challenge-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.challenge-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.challenge-item:hover,
+.challenge-item.is-active {
+    border-color: var(--primary);
+}
+
+.challenge-stars {
+    color: var(--warning);
+    letter-spacing: 2px;
+}
+
+.challenge-example {
+    overflow-x: auto;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
 /* Thèmes à compléter en priorité : libellé, demande et bouton sur une ligne */
 .priority-list {
     list-style: none;

@@ -19,6 +19,7 @@ from job.schedule import (
     save_scheduled_search,
 )
 from job.profile import build_profile, save_profile
+from job.challenges import get_expected_answers, get_seed
 from job.quiz_generation import MIN_QUALITY_SAMPLE
 from storage.job_offers import get_offer, save_offers, set_availability
 from tests.job.test_quiz_import import build_pack
@@ -1562,3 +1563,54 @@ def test_priority_themes_are_shown_on_the_quiz_page(client):
 
     assert "<strong>Supervision, SCADA et IHM</strong>" in vPage
     assert '<input type="hidden" name="count" value="100">' in vPage
+
+
+def test_challenges_are_listed_downloaded_and_answered(client):
+    """Vérifie les défis sur le web : liste, données, réponses et refus."""
+
+    vList = client.get("/challenges")
+
+    assert vList.status_code == 200
+    assert "Les arrêts de la ligne 3" in vList.text
+    assert client.get("/challenges/inconnu").status_code == 404
+
+    vPage = client.get("/challenges/engrenages?hints=1")
+
+    assert "Partie 1" in vPage.text and "Partie 2" not in vPage.text
+    assert "<li>Après t tours" in vPage.text
+    assert "?hints=2" in vPage.text
+
+    vInput = client.get("/challenges/engrenages/input")
+
+    assert vInput.status_code == 200
+    assert "engrenages.txt" in vInput.headers["content-disposition"]
+
+    vWrong = client.post(
+        "/challenges/engrenages/answer", data={"part": "1", "answer": "1"}
+    )
+
+    assert "Ce n&#39;est pas la bonne réponse." in vWrong.text
+    assert (
+        client.post(
+            "/challenges/engrenages/answer", data={"part": "1", "answer": " "}
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post("/challenges/inconnu/answer", data={"answer": "1"}).status_code
+        == 404
+    )
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+    vExpected = get_expected_answers(
+        "pieces-bonnes", get_seed(vDatabaseFile, "pieces-bonnes", datetime.now())
+    )
+
+    for vPart, vAnswer in enumerate(vExpected, start=1):
+        vSolved = client.post(
+            "/challenges/pieces-bonnes/answer",
+            data={"part": str(vPart), "answer": vAnswer},
+        )
+
+    assert "Solution commentée" in vSolved.text
+    assert "★★" in vSolved.text
