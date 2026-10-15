@@ -1,0 +1,208 @@
+@001
+Q: Quel est le rôle principal d'un automate programmable industriel (API) ?
+C: Commander un procédé selon ses entrées et son programme
+W: Fournir l'énergie de puissance aux moteurs de la machine
+W: Remplacer les capteurs en calculant l'état de la machine
+W: Archiver les données de production à la place d'un serveur
+E: Un API lit l'état des capteurs, exécute son programme et commande les actionneurs : c'est un organe de commande. La puissance des moteurs passe par des contacteurs ou des variateurs, jamais par l'automate lui-même. Il ne remplace pas les capteurs, qui restent sa seule source d'information sur le procédé. L'archivage peut exister en complément, mais ce n'est pas sa fonction première.
+
+@002
+Q: Dans un automate, que représente une entrée TOR ?
+C: Un signal à deux états, présent ou absent
+W: Une mesure continue comme une température
+W: Une consigne de vitesse envoyée au variateur
+W: Un message texte reçu depuis le pupitre IHM
+E: TOR signifie « tout ou rien » : l'entrée ne connaît que deux états, par exemple 0 V ou 24 V, lus comme FALSE ou TRUE. Une mesure continue relève d'une entrée analogique. Une consigne de vitesse est une sortie, souvent analogique ou transmise par réseau. Un message IHM transite par la communication, pas par une entrée TOR.
+
+@003
+Q: Quel élément détecte physiquement la présence d'une pièce avant que l'API n'en reçoive l'information ?
+C: Le capteur de présence monté sur la machine
+W: Le module d'alimentation 24 V de l'automate
+W: Le contacteur qui commande le moteur du tapis
+W: Le programme Ladder chargé dans la CPU
+E: Le capteur convertit la présence physique de la pièce en signal électrique, câblé sur une entrée de l'automate. L'alimentation fournit l'énergie aux équipements mais ne détecte rien. Le contacteur est un actionneur commandé par une sortie. Le programme ne fait qu'interpréter l'état de l'entrée : sans capteur, il n'a aucune information.
+
+@004
+Q: Quel est le rôle d'une sortie d'automate ?
+C: Commander un actionneur ou un relais d'interface
+W: Mesurer une grandeur physique comme la pression
+W: Protéger le moteur contre les surintensités
+W: Compiler le programme avant son téléchargement
+E: Une sortie transmet l'ordre calculé par le programme vers un actionneur : voyant, électrovanne, bobine de contacteur ou relais. La mesure est le rôle des entrées, TOR ou analogiques. La protection contre les surintensités revient au disjoncteur ou au relais thermique. La compilation se fait dans le logiciel d'ingénierie, pas dans une sortie.
+
+@005
+Q: Que signifie l'abréviation API dans le contexte industriel français ?
+C: Automate programmable industriel
+W: Armoire de puissance intégrée
+W: Analyseur de procédé informatisé
+W: Alimentation programmable isolée
+E: En français, API désigne l'automate programmable industriel, appelé PLC (Programmable Logic Controller) en anglais. Une armoire, un analyseur ou une alimentation ne sont pas des automates, même si leurs initiales peuvent coïncider. En informatique, API désigne aussi une interface de programmation : c'est le contexte qui lève l'ambiguïté.
+
+@006
+Q: Quel langage représente contacts et bobines sous une forme proche des schémas électriques ?
+C: LD (Ladder Diagram)
+W: ST (Structured Text)
+W: FBD (Function Block Diagram)
+W: SFC (Sequential Function Chart)
+E: Le Ladder dessine la logique sous forme de contacts et de bobines entre deux barres d'alimentation, comme un schéma à relais. ST est un langage textuel proche du Pascal. FBD relie des blocs fonctionnels par des liaisons graphiques. SFC décrit une séquence d'étapes et de transitions, sur le principe du Grafcet.
+
+@007
+Q: Quel langage de la norme IEC 61131-3 est textuel et proche d'un langage de programmation structuré ?
+C: ST (Structured Text)
+W: LD (Ladder Diagram)
+W: FBD (Function Block Diagram)
+W: SFC (Sequential Function Chart)
+E: ST s'écrit sous forme de texte avec des instructions IF, CASE, FOR ou WHILE, à la manière du Pascal ; Siemens l'appelle SCL. LD et FBD sont des langages graphiques, à contacts ou à blocs. SFC est également graphique et organise un programme en étapes et transitions.
+
+@008
+Q: À quoi sert principalement TIA Portal dans un environnement Siemens ?
+C: Configurer et programmer les automates et pupitres
+W: Dimensionner les protections électriques de l'armoire
+W: Dessiner les plans mécaniques des machines en 3D
+W: Mesurer les signaux des capteurs sur le terrain
+E: TIA Portal est l'environnement d'ingénierie de Siemens : configuration matérielle, programmation des automates SIMATIC et des pupitres IHM, diagnostic en ligne. Le dimensionnement électrique relève d'outils de conception électrique. La CAO mécanique utilise d'autres logiciels. La mesure se fait avec des capteurs et des appareils de mesure ; TIA Portal ne fait qu'afficher les valeurs lues par l'automate.
+
+@009
+Q: Avant de modifier un programme automate en production, quelle démarche est la plus appropriée ?
+C: Sauvegarder, analyser les risques et prévenir l'exploitation
+W: Télécharger la modification tout de suite pour gagner du temps
+W: Forcer les sorties concernées pour observer leur effet en direct
+W: Débrancher les capteurs touchés pour éviter les faux départs
+E: Une modification en production peut provoquer un mouvement inattendu : on sauvegarde la version en service, on évalue l'impact et on coordonne l'intervention avec l'exploitation. Télécharger sans préparation empêche tout retour arrière. Forcer des sorties contourne la logique et peut mettre les personnes en danger. Débrancher des capteurs fausse l'état vu par le programme et peut supprimer une sécurité.
+
+@010
+Q: Quel capteur détecte la présence d'une pièce métallique sans contact mécanique ?
+C: Un détecteur de proximité inductif
+W: Un interrupteur de position à galet
+W: Un bouton-poussoir à impulsion
+W: Un relais thermique de protection
+E: Le détecteur inductif crée un champ électromagnétique que perturbe l'approche d'une pièce métallique, sans la toucher. L'interrupteur à galet détecte aussi une position, mais par contact mécanique. Le bouton-poussoir est actionné par l'opérateur. Le relais thermique protège un moteur contre les surcharges, il ne détecte pas de pièce.
+
+@011
+Q: Dans un cycle automate classique, que fait la CPU juste avant d'exécuter le programme ?
+C: Elle lit les entrées et les copie en mémoire image
+W: Elle compile le programme chargé dans sa mémoire
+W: Elle remet toutes les sorties physiques à zéro
+W: Elle attend une validation de l'opérateur au pupitre
+E: Le cycle lit d'abord l'état des entrées et le fige dans la mémoire image des entrées, exécute ensuite le programme, puis met à jour les sorties. Le programme est compilé dans le logiciel d'ingénierie avant le téléchargement, jamais à chaque cycle. Remettre les sorties à zéro à chaque cycle ferait battre les actionneurs. Le cycle tourne en continu sans attendre l'opérateur.
+
+@012
+Q: Dans la chaîne représentée, quel élément décide de commander un actionneur ?
+C: Le programme exécuté par l'automate
+W: Le capteur qui détecte l'événement
+W: Le câble qui relie le capteur à l'entrée
+W: L'actionneur lui-même, selon sa charge
+E: Dans une chaîne d'automatisme, le capteur informe, l'automate décide et l'actionneur agit. Le capteur ne fait que transmettre un état ou une mesure. Le câblage transporte le signal sans le traiter. L'actionneur exécute l'ordre reçu de la sortie, il ne choisit pas quand agir.
+
+@013
+Q: Que fournit une entrée analogique au programme de l'automate ?
+C: Une valeur numérique image d'un signal continu
+W: Un état logique vrai ou faux selon un seuil fixe
+W: Une impulsion à chaque changement de la mesure
+W: Le nom et l'unité de la grandeur raccordée
+E: Le module analogique convertit un signal continu, par exemple 4-20 mA ou 0-10 V, en nombre entier lu par le programme (0 à 27648 en plage nominale chez Siemens). Un état vrai ou faux correspond à une entrée TOR. Le module ne produit pas d'impulsions mais une valeur rafraîchie. Le nom et l'unité sont définis par le programmeur lors de la mise à l'échelle.
+
+@014
+Q: Quel signal est très répandu pour relier un transmetteur analogique industriel à l'automate ?
+C: Une boucle de courant 4-20 mA
+W: Une tension alternative 230 V
+W: Une liaison vidéo de type HDMI
+W: Un train d'impulsions de 0 à 5 V
+E: La boucle 4-20 mA résiste bien aux parasites et aux grandes longueurs de câble, et son zéro vivant à 4 mA permet de détecter une rupture de fil. Le 230 V alternatif sert à la puissance ou à la commande, pas à transmettre une mesure. HDMI est une liaison vidéo grand public. Un train d'impulsions se lit avec un compteur, pas avec une entrée analogique classique.
+
+@015
+Q: Qu'est-ce qui distingue un bloc fonctionnel (FB) d'une fonction (FC) ?
+C: Le FB garde ses données d'un appel à l'autre
+W: Le FB ne peut être écrit qu'en langage Ladder
+W: Le FB s'exécute plus vite que la fonction
+W: Le FB ne reçoit jamais de paramètres d'entrée
+E: Un FB possède une mémoire d'instance, un bloc de données d'instance chez Siemens : ses variables internes, comme l'état d'une temporisation, sont conservées entre deux appels. Une FC n'a pas de mémoire propre persistante. Un FB peut s'écrire en LD, FBD, ST ou SFC. Sa vitesse n'est pas ce qui le caractérise, et il reçoit des paramètres comme une fonction.
+
+@016
+Q: Que vaut `Alarme` après l'exécution de cet extrait ?
+C: TRUE, car 85 est supérieur au seuil de 80
+W: FALSE, car une comparaison renvoie un réel
+W: 85.0, car la valeur de Niveau est recopiée
+W: Rien, l'affectation d'un test est interdite
+E: L'expression Niveau > Seuil est une comparaison qui renvoie un booléen : 85.0 > 80.0 est vrai, donc Alarme vaut TRUE. Une comparaison ne renvoie pas un réel. La valeur de Niveau n'est pas copiée, seul le résultat du test l'est. En ST, affecter le résultat d'une comparaison à une variable BOOL est courant et valide.
+```
+VAR
+    Niveau : REAL := 85.0;
+    Seuil : REAL := 80.0;
+    Alarme : BOOL;
+END_VAR
+
+Alarme := Niveau > Seuil;
+```
+
+@017
+Q: Quel équipement fait l'interface entre une sortie d'automate et un moteur triphasé ?
+C: Un contacteur ou un variateur
+W: Un détecteur inductif en série
+W: Un câble Ethernet vers le moteur
+W: Le bouton d'arrêt d'urgence
+E: Une sortie d'automate délivre quelques centaines de milliampères sous 24 V : elle commande la bobine d'un contacteur ou l'entrée d'un variateur, qui commutent la puissance. Un détecteur inductif est un capteur. Un câble Ethernet transporte des données, pas de la puissance. L'arrêt d'urgence est un organe de sécurité, pas une interface de puissance.
+
+@018
+Q: À quoi sert un compteur CTU dans un programme automate ?
+C: À compter des événements, par exemple des pièces
+W: À mesurer la durée pendant laquelle une entrée reste vraie
+W: À convertir une mesure 4-20 mA en valeur physique
+W: À limiter la fréquence de rafraîchissement des sorties
+E: Le CTU (count up) incrémente sa valeur à chaque front montant de son entrée CU et active sa sortie Q quand la valeur atteint la présélection PV. Mesurer une durée est le rôle d'une temporisation. La conversion d'une mesure 4-20 mA relève de la mise à l'échelle. Les sorties sont rafraîchies par le cycle, pas par un compteur.
+
+@019
+Q: Que fait une temporisation à l'enclenchement TON ?
+C: Elle active sa sortie si l'entrée reste vraie pendant la durée PT
+W: Elle maintient sa sortie active pendant PT après la chute de l'entrée
+W: Elle génère une impulsion de durée PT à chaque front montant
+W: Elle compte le nombre de fois où l'entrée passe à vrai pendant PT
+E: La TON démarre quand IN passe à TRUE ; si IN reste vrai pendant PT, Q passe à TRUE, et Q retombe dès que IN redevient faux. Maintenir la sortie après la chute de l'entrée est le comportement de la TOF. Une impulsion de durée fixe correspond à la TP. Compter des passages à vrai est le rôle d'un compteur.
+
+@020
+Q: Quand un commentaire est-il le plus utile dans un programme automate ?
+C: Pour expliquer la raison d'une logique non évidente
+W: Pour répéter en clair ce que fait chaque instruction
+W: Pour désactiver une partie du code en production
+W: Pour remplacer le dossier de mise en service
+E: Un bon commentaire dit pourquoi : une contrainte du procédé, un choix de sécurité, une exigence du client. Paraphraser chaque instruction alourdit la lecture et vieillit mal. Laisser du code mis en commentaire en production crée une ambiguïté sur ce qui tourne réellement. Le commentaire complète la documentation, il ne remplace pas le dossier de mise en service.
+
+@021
+Q: Une entrée automate ne change jamais d'état quand on actionne le capteur. Que vérifier en premier ?
+C: L'alimentation, le câblage et le voyant du capteur
+W: La version du firmware de la CPU de l'automate
+W: Le nom de la variable dans la table des mnémoniques
+W: Le temps de cycle affiché dans le diagnostic CPU
+E: On remonte la chaîne physique : capteur alimenté, voyant du capteur qui s'allume, câblage jusqu'au bornier et voyant de la voie d'entrée sur le module. Le firmware n'empêche pas une entrée isolée de changer d'état. Le nom de la variable ne modifie pas l'état lu. Un temps de cycle normal ou long ne bloque pas une entrée de façon permanente.
+
+@022
+Q: Quel est le rôle de l'alimentation 24 V CC dans une armoire d'automatisme ?
+C: Alimenter l'automate, les capteurs et les circuits de commande
+W: Fournir la puissance des moteurs triphasés de la machine
+W: Assurer à elle seule l'arrêt sûr de la machine en cas de défaut
+W: Convertir le programme en signaux pour les modules de sortie
+E: L'alimentation transforme le réseau alternatif en 24 V continu pour la CPU, les modules, les capteurs et les bobines de commande. Les moteurs triphasés sont alimentés par le circuit de puissance. L'arrêt sûr repose sur une chaîne de sécurité dédiée, pas sur une alimentation. Les sorties sont pilotées par la CPU, l'alimentation ne fait que fournir l'énergie.
+
+@023
+Q: Quel moyen signale localement un défaut à l'opérateur ?
+C: Un voyant ou une alarme affichée sur l'IHM
+W: Une variable interne sans affichage associé
+W: Une entrée en attente dans le journal du PC
+W: Une sauvegarde du projet sur le serveur
+E: Le voyant et l'alarme IHM sont vus par l'opérateur au poste de travail : ils signalent le défaut là où il faut agir. Une variable interne n'est visible que du programmeur connecté en ligne. Un journal sur un PC distant n'alerte personne sur le moment. Une sauvegarde du projet n'a aucun rôle de signalisation.
+
+@024
+Q: Pourquoi sauvegarder le projet automate avant une modification ?
+C: Pour comparer et revenir à la version connue
+W: Pour empêcher toute modification ultérieure du code
+W: Pour effacer l'historique des alarmes de la CPU
+W: Pour que la modification se télécharge plus vite
+E: La sauvegarde permet de comparer l'ancienne et la nouvelle version, puis de restaurer rapidement l'état connu si la modification pose problème. Elle ne verrouille pas le projet. Elle n'a aucun effet sur l'historique des alarmes. Le temps de téléchargement ne dépend pas de l'existence d'une sauvegarde.
+
+@025
+Q: Quelle action est obligatoire avant une intervention physique sur un actionneur dangereux ?
+C: Consigner et vérifier l'absence d'énergie
+W: Se fier à l'état arrêté affiché sur l'IHM
+W: Acquitter l'alarme puis intervenir aussitôt
+W: Demander à l'opérateur de ne pas redémarrer
+E: La consignation sépare l'équipement de ses sources d'énergie (électrique, pneumatique, hydraulique, mécanique), condamne les organes de séparation et vérifie l'absence d'énergie avant d'intervenir. Un état « arrêté » sur l'IHM n'empêche pas un redémarrage. Acquitter une alarme ne supprime aucune énergie. Une consigne orale ne remplace jamais une condamnation physique.

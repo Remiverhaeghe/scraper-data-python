@@ -1,0 +1,199 @@
+@001
+Q: Quel est le rôle principal d'un système SCADA ?
+C: Superviser et piloter des installations à distance
+W: Remplacer les automates qui commandent la machine
+W: Assurer seul la sécurité des personnes
+W: Programmer les capteurs de terrain
+E: Un SCADA collecte les données des automates, les affiche, archive les historiques, gère les alarmes et permet à l'opérateur d'envoyer des commandes. Les automates continuent d'exécuter la commande en temps réel. La sécurité des personnes repose sur des fonctions dédiées, pas sur la supervision. Les capteurs se paramètrent avec leurs propres outils.
+
+@002
+Q: Qu'est-ce qu'une IHM dans un atelier ?
+C: L'interface entre l'opérateur et la machine
+W: Un automate de sécurité certifié
+W: Un câble de communication blindé
+W: Un capteur de mesure analogique
+E: L'IHM, interface homme-machine, est le pupitre ou l'écran qui affiche l'état de la machine et permet à l'opérateur d'agir : démarrer, régler, acquitter. Un automate de sécurité traite des fonctions de sécurité. Un câble transporte des signaux. Un capteur mesure une grandeur.
+
+@003
+Q: Qu'appelle-t-on une variable, ou tag, dans une supervision ?
+C: Une donnée nommée de l'automate
+W: Un écran de navigation de l'application
+W: Le mot de passe d'un compte opérateur
+W: Une alarme déjà acquittée par l'opérateur
+E: Un tag associe un nom, comme « Pompe1_Marche », à une adresse dans l'automate et à des propriétés : type, unité, échelle, alarmes, archivage. Les écrans utilisent ces tags pour afficher et commander. Un écran, un mot de passe ou une alarme acquittée sont d'autres objets de la supervision.
+
+@004
+Q: Quelle différence entre une alarme et un événement ?
+C: L'alarme demande une action de l'opérateur
+W: L'événement exige toujours un acquittement
+W: L'alarme n'est jamais horodatée
+W: Il n'y en a aucune, ce sont des synonymes
+E: Une alarme signale une situation anormale qui exige une réaction de l'opérateur dans un délai donné ; un événement trace simplement un fait, comme un démarrage ou un changement de consigne, sans action requise. Les événements ne demandent pas d'acquittement. Les alarmes sont toujours horodatées. Confondre les deux noie l'opérateur sous des messages inutiles.
+
+@005
+Q: Que signifie acquitter une alarme ?
+C: Confirmer qu'on en a pris connaissance
+W: Supprimer la cause physique du défaut
+W: Désactiver définitivement l'alarme
+W: Redémarrer automatiquement la machine
+E: L'acquittement indique que l'opérateur a vu l'alarme ; il est tracé avec son nom et l'heure. Il ne supprime pas la cause : l'alarme reste active tant que la condition persiste. Il ne désactive pas l'alarme pour la suite. Il ne redémarre rien.
+
+@006
+Q: À quoi sert une courbe de tendance dans une supervision ?
+C: À suivre l'évolution d'une variable
+W: À commander une vanne depuis un graphique
+W: À configurer l'adresse IP des automates
+W: À remplacer la liste des alarmes actives
+E: La tendance trace une ou plusieurs variables en fonction du temps, en direct ou à partir de l'historique : elle aide à comprendre une dérive, une oscillation ou l'enchaînement d'un incident. Elle ne sert pas à commander. L'adressage des automates se configure ailleurs. La liste des alarmes reste indispensable.
+
+@007
+Q: Qu'est-ce qu'un historien dans une architecture de supervision ?
+C: Une base qui archive les valeurs horodatées
+W: Un opérateur chargé des rapports de poste
+W: Un automate qui exécute les séquences
+W: Un écran qui affiche le synoptique général
+E: L'historien enregistre les valeurs des variables avec leur horodatage, souvent compressées, sur de longues périodes : on l'interroge pour les tendances, les rapports et les analyses d'incident. Ce n'est pas une personne. Il n'exécute pas de séquence. Le synoptique est un écran, qui peut afficher des données de l'historien.
+
+@008
+Q: Qu'est-ce qu'un synoptique ?
+C: Un écran qui représente l'installation et son état
+W: Un rapport papier des incidents de la semaine
+W: Un protocole de communication entre automates
+W: Une sauvegarde complète du projet de supervision
+E: Le synoptique schématise l'installation, cuves, pompes, vannes, et y affiche les valeurs et états en temps réel : l'opérateur voit d'un coup d'œil où en est le procédé. Un rapport, un protocole ou une sauvegarde sont d'autres éléments. Un bon synoptique reste sobre et met en évidence les anomalies.
+
+@009
+Q: Quel protocole est très répandu pour lire les registres d'un automate en Ethernet ?
+C: Modbus TCP
+W: HTTP en simple texte
+W: SMTP pour la messagerie
+W: FTP pour les fichiers
+E: Modbus TCP transporte le protocole Modbus sur Ethernet : le client lit et écrit des registres et des bits dans l'automate, à des adresses définies. HTTP sert au web, SMTP à l'envoi de courriels, FTP au transfert de fichiers : aucun n'est conçu pour l'échange cyclique de données d'automates.
+
+@010
+Q: Quel standard permet d'échanger des données industrielles structurées et sécurisées entre équipements de marques différentes ?
+C: OPC UA
+W: Un câble RS-232 sans protocole
+W: Un fichier CSV déposé chaque soir
+W: Une liaison 4-20 mA analogique
+E: OPC UA définit un modèle d'information, des services de lecture, d'écriture et d'abonnement, ainsi que des mécanismes de sécurité par certificats, indépendamment du constructeur. Une liaison série sans protocole ne structure rien. Un fichier CSV quotidien n'est pas un échange temps réel. Le 4-20 mA ne transporte qu'une seule mesure.
+
+@011
+Q: Pourquoi attribuer des droits différents aux opérateurs, techniciens et administrateurs ?
+C: Pour limiter chaque utilisateur à ce dont il a besoin
+W: Pour que tous puissent modifier la configuration
+W: Pour éviter d'avoir à créer des comptes nominatifs
+W: Pour accélérer l'affichage des écrans de conduite
+E: Le principe du moindre privilège limite les erreurs et les actes malveillants : l'opérateur conduit, le technicien règle, l'administrateur configure. Laisser tout le monde modifier la configuration est risqué. Les comptes doivent rester nominatifs pour la traçabilité. Les droits n'ont pas d'effet sur la vitesse d'affichage.
+
+@012
+Q: Pourquoi chaque opérateur doit-il avoir son propre compte, plutôt qu'un compte commun ?
+C: Pour tracer qui a fait chaque action
+W: Pour avoir moins de mots de passe à retenir
+W: Pour que l'écran s'affiche plus vite
+W: Pour pouvoir supprimer le journal des actions
+E: Un compte nominatif permet de savoir qui a acquitté une alarme, changé une consigne ou démarré une pompe : c'est indispensable pour l'analyse d'incident et la responsabilité. Un compte commun empêche toute traçabilité. La vitesse d'affichage n'est pas concernée. Le journal des actions doit justement être conservé.
+
+@013
+Q: Quel principe de conception d'écran recommande des couleurs neutres en fonctionnement normal ?
+C: Réserver la couleur aux anomalies
+W: Colorier chaque équipement selon sa marque
+W: Mettre un fond noir et du texte rouge partout
+W: Faire clignoter toutes les valeurs en continu
+E: Les écrans dits à haute performance, dans l'esprit de l'ISA-101, utilisent des gris et des couleurs sobres en fonctionnement normal, et réservent les couleurs vives aux alarmes et aux anomalies : l'œil de l'opérateur est attiré par ce qui demande une action. Colorier selon la marque ou tout mettre en rouge brouille l'information. Le clignotement permanent fatigue et fait perdre l'attention.
+
+@014
+Q: Pourquoi afficher l'unité à côté de chaque valeur sur un écran de conduite ?
+C: Pour éviter toute erreur d'interprétation
+W: Pour que la valeur soit archivée plus souvent
+W: Pour réduire la charge du réseau industriel
+W: Pour pouvoir supprimer la légende de l'écran
+E: Une valeur sans unité, comme 6, peut être lue en bar, en mètres ou en pourcentage : l'unité évite les erreurs de conduite et de réglage. L'archivage ne dépend pas de l'affichage. La charge réseau n'est pas concernée. La légende des symboles reste utile.
+
+@015
+Q: Qu'est-ce que l'horodatage d'une alarme ?
+C: La date et l'heure de l'événement
+W: Le choix de la couleur de l'alarme à l'écran
+W: Le classement de l'alarme par ordre alphabétique
+W: La suppression automatique de l'alarme le soir
+E: L'horodatage associe à chaque alarme le moment exact de son apparition, de son acquittement et de sa disparition : c'est indispensable pour reconstituer l'enchaînement d'un incident. La couleur, le tri ou une suppression automatique sont d'autres réglages. Plus l'horodatage est fait près de la source, plus il est précis.
+
+@016
+Q: Pourquoi définir des priorités d'alarmes ?
+C: Pour traiter d'abord les plus urgentes
+W: Pour pouvoir masquer les alarmes graves
+W: Pour réduire la taille de l'historique
+W: Pour que les alarmes s'acquittent seules
+E: Une priorité, haute, moyenne ou basse, reflète la gravité des conséquences et le délai de réaction disponible : en cas de nombreuses alarmes, l'opérateur sait par où commencer. Les alarmes graves ne doivent jamais être masquées. La priorité n'a pas d'effet sur l'historique. L'acquittement reste une action de l'opérateur.
+
+@017
+Q: Une IHM tombe en panne. Que doit-il se passer pour la machine ?
+C: L'automate continue de la commander en sécurité
+W: La machine s'arrête obligatoirement sur le champ
+W: Les sorties de l'automate passent toutes à 1
+W: Les capteurs cessent d'envoyer leurs signaux
+E: La commande en temps réel est assurée par l'automate : la perte de l'IHM ne doit pas créer de situation dangereuse, et le comportement attendu, poursuite ou mise en état sûr, est défini à la conception. Un arrêt brutal n'est pas toujours souhaitable. Les sorties ne changent pas d'état à cause de l'IHM. Les capteurs restent câblés à l'automate.
+
+@018
+Q: Pourquoi l'arrêt d'urgence ne doit-il pas être un simple bouton sur un écran tactile ?
+C: Il doit rester câblé, indépendant du logiciel
+W: Un écran tactile ne peut pas afficher de rouge
+W: Les opérateurs n'utilisent jamais l'écran tactile
+W: Un bouton d'écran est plus lent qu'un bouton physique
+E: L'arrêt d'urgence est une fonction de sécurité : il doit fonctionner même si l'IHM, le réseau ou le logiciel sont défaillants, d'où un bouton physique câblé dans la chaîne de sécurité. Un écran peut afficher du rouge. Les opérateurs utilisent l'écran pour la conduite normale. La rapidité n'est pas le critère principal, c'est l'indépendance.
+
+@019
+Q: Pourquoi demander une confirmation avant une commande importante depuis l'IHM ?
+C: Pour éviter une action déclenchée par erreur
+W: Pour ralentir volontairement les opérateurs
+W: Pour remplacer les interverrouillages de l'automate
+W: Pour que la commande soit exécutée deux fois
+E: Une boîte de confirmation, du type « Arrêter la ligne 2 ? », évite qu'un appui involontaire déclenche une action lourde de conséquences. Elle ne vise pas à ralentir la conduite normale. Les interverrouillages restent dans l'automate, seul juge de la commande. La commande n'est exécutée qu'une fois.
+
+@020
+Q: Que faut-il faire régulièrement pour pouvoir restaurer une supervision après une panne de serveur ?
+C: Sauvegarder le projet et tester sa restauration
+W: Garder uniquement des captures d'écran des vues
+W: Noter les adresses IP sur un papier dans l'armoire
+W: Compter sur le support du fournisseur sans copie
+E: Une sauvegarde régulière du projet, de la configuration et de l'historien, conservée hors du serveur, permet de remettre la supervision en service ; il faut aussi tester la restauration, sinon on ne sait pas si elle fonctionne. Des captures d'écran ne se rechargent pas. Une note papier est insuffisante. Le fournisseur ne détient pas forcément votre configuration.
+
+@021
+Q: Qu'est-ce qu'une recette dans une supervision de production ?
+C: Un jeu de paramètres chargé pour un produit
+W: Un rapport financier de la production du jour
+W: Un mot de passe réservé au chef d'équipe
+W: Une alarme qui signale la fin de lot
+E: Une recette regroupe les consignes et réglages propres à un produit, températures, vitesses, durées, que l'opérateur charge d'un coup dans l'automate au changement de fabrication. Ce n'est pas un rapport financier, un mot de passe ou une alarme. Les recettes réduisent les erreurs de saisie lors des changements de série.
+
+@022
+Q: Pourquoi afficher l'état réel d'une pompe plutôt que le seul ordre envoyé ?
+C: Un ordre ne prouve pas que la pompe tourne
+W: L'ordre n'existe pas dans un automate
+W: L'état réel est plus facile à archiver
+W: L'opérateur ne doit jamais voir les ordres
+E: Une pompe peut être commandée mais arrêtée : protection déclenchée, contacteur défaillant, mode local. Le retour de marche, contact auxiliaire ou mot d'état du variateur, montre la réalité ; l'écart entre ordre et retour doit déclencher une alarme. L'ordre existe bien dans l'automate. La facilité d'archivage n'est pas l'enjeu. L'ordre peut être affiché en complément.
+
+@023
+Q: Que signifie la qualité « mauvaise » d'une valeur affichée sur la supervision ?
+C: Une valeur non fiable
+W: La valeur dépasse le seuil d'alarme haut
+W: La valeur a été saisie par un opérateur
+W: La valeur est affichée dans la mauvaise unité
+E: La qualité accompagne chaque valeur : mauvaise, elle indique une perte de communication, un capteur en défaut ou une valeur hors plage, et la valeur affichée ne doit pas être utilisée pour conduire. Un dépassement de seuil est une alarme. Une saisie manuelle est signalée autrement. L'unité est une propriété du tag, pas une qualité.
+
+@024
+Q: Pourquoi faut-il synchroniser l'heure de tous les automates et serveurs ?
+C: Pour reconstituer l'ordre réel des événements
+W: Pour que les écrans s'affichent en couleur
+W: Pour réduire le nombre d'alarmes générées
+W: Pour que les automates exécutent plus vite
+E: Lors d'un incident, on compare des événements venant de plusieurs équipements : si leurs horloges diffèrent de quelques secondes, l'ordre apparent peut être faux. On synchronise donc tous les équipements sur une source de temps commune, par exemple par NTP. L'heure n'a pas d'effet sur les couleurs, le nombre d'alarmes ou la vitesse d'exécution.
+
+@025
+Q: Pourquoi ne pas utiliser le poste de supervision pour naviguer sur Internet ?
+C: Pour ne pas exposer le réseau industriel
+W: Pour économiser le papier de l'imprimante
+W: Parce que l'écran est trop petit pour le web
+W: Pour que l'historien enregistre plus de valeurs
+E: Un poste de supervision relié au réseau industriel qui navigue sur Internet peut être infecté par un site ou un fichier piégé, et devenir une porte d'entrée vers les automates. Les usages bureautiques se font sur un autre poste, sur un autre réseau. Le papier, la taille de l'écran ou l'historien n'ont rien à voir avec ce risque.

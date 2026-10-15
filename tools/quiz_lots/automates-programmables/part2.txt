@@ -1,0 +1,495 @@
+@026
+Q: Pourquoi la CPU travaille-t-elle sur une image des entrées pendant le cycle ?
+C: Pour que tout le calcul voie le même état des entrées
+W: Pour prendre en compte chaque changement à l'instant exact
+W: Pour conserver l'état des entrées après une coupure secteur
+W: Pour remplacer les modules d'entrées par une simulation
+E: L'image des entrées est figée au début du cycle : toutes les instructions voient le même état, même si un capteur change pendant le calcul. Elle introduit au contraire un retard pouvant atteindre un cycle, d'où les entrées rapides ou les interruptions pour les événements brefs. Elle n'est pas rémanente. Ce n'est pas une simulation : elle contient les valeurs réelles lues sur les modules.
+
+@027
+Q: Que vaut `Resultat` après l'exécution de cet extrait ?
+C: FALSE, car B est faux
+W: TRUE, car A est déjà vrai
+W: La valeur de A, TRUE
+W: Une erreur de type
+E: AND n'est vrai que si les deux opérandes sont vrais ; B vaut FALSE, donc Resultat vaut FALSE. Il suffirait que A soit vrai avec un OR, pas avec un AND. L'affectation recopie le résultat de l'expression, pas l'un de ses opérandes. A et B sont des BOOL : l'expression est bien typée et ne provoque aucune erreur.
+```
+VAR
+    A : BOOL := TRUE;
+    B : BOOL := FALSE;
+    Resultat : BOOL;
+END_VAR
+
+Resultat := A AND B;
+```
+
+@028
+Q: `Demande` passe à TRUE et y reste. Quand `Sortie_TON` passe-t-elle à TRUE ?
+C: Après 3 secondes de Demande vraie
+W: Dès le cycle où Demande passe à TRUE
+W: Pendant 3 secondes, puis elle retombe
+W: 3 secondes après la retombée de Demande
+E: La TON compte le temps pendant lequel IN reste vrai : quand ce temps atteint PT, soit 3 s, Q passe à TRUE et y reste tant que IN est vrai. Une activation immédiate correspondrait à une affectation directe, sans temporisation. Une impulsion de 3 s est le comportement de la TP. Un retard après la retombée de l'entrée est celui de la TOF.
+```
+VAR
+    Demande : BOOL;
+    Sortie_TON : BOOL;
+    Tempo : TON;
+END_VAR
+
+Tempo(IN := Demande, PT := T#3s);
+Sortie_TON := Tempo.Q;
+```
+
+@029
+Q: Pourquoi le compteur est-il piloté par `FrontPiece.Q` plutôt que directement par `Capteur` ?
+C: Pour ne compter qu'une fois par passage de pièce
+W: Pour compter à chaque cycle où le capteur est vrai
+W: Pour filtrer les parasites électriques du capteur
+W: Pour remettre le compteur à zéro à chaque pièce
+E: R_TRIG ne donne TRUE que pendant le cycle où Capteur passe de FALSE à TRUE : chaque pièce n'est comptée qu'une fois, quelle que soit la durée de détection. Compter à chaque cycle où le capteur est vrai est précisément le défaut évité. Un détecteur de front ne filtre pas les rebonds électriques, il faut une temporisation pour cela. La remise à zéro dépend de l'entrée RESET, ici à FALSE.
+```
+VAR
+    Capteur : BOOL;
+    FrontPiece : R_TRIG;
+    Compteur : CTU;
+END_VAR
+
+FrontPiece(CLK := Capteur);
+Compteur(CU := FrontPiece.Q, RESET := FALSE, PV := 100);
+```
+
+@030
+Q: `Demande` est vraie mais `CommandeMoteur` reste FALSE. Quelle cause est possible ?
+C: Autorisation est fausse ou Defaut est vrai
+W: Demande doit être vraie pendant deux cycles
+W: CommandeMoteur doit d'abord être forcée
+W: L'opérateur NOT inverse aussi Demande
+E: CommandeMoteur n'est vraie que si Demande, Autorisation et NOT Defaut le sont : un permissif manquant ou un défaut présent suffit à bloquer le démarrage. Aucune durée minimale n'est programmée sur Demande. Forcer la sortie contournerait les conditions au lieu de trouver la cause. NOT ne s'applique qu'à l'opérande qui le suit, ici Defaut.
+```
+VAR
+    Demande : BOOL;
+    Autorisation : BOOL;
+    Defaut : BOOL;
+    CommandeMoteur : BOOL;
+END_VAR
+
+CommandeMoteur := Demande AND Autorisation AND NOT Defaut;
+```
+
+@031
+Q: Quel est l'intérêt principal d'un bloc fonctionnel réutilisé pour tous les moteurs d'une ligne ?
+C: Une logique standard, testée et corrigée en un seul endroit
+W: Il rend inutile le test de chaque moteur lors de la mise en service
+W: Il garantit le même comportement quel que soit le câblage réel
+W: Il permet de supprimer les protections électriques des moteurs
+E: Un FB moteur standard applique la même logique de marche, de défauts et d'alarmes à chaque instance : une correction profite à tous les moteurs. Chaque instance doit quand même être testée avec son câblage et ses paramètres. Le bloc ne corrige pas un câblage erroné. Les protections électriques restent indispensables, la logique ne les remplace pas.
+
+@032
+Q: La sortie physique `SortieMoteur` est forcée à 1 depuis la console. Quel risque cela crée-t-il ?
+C: Le moteur tourne même si l'interverrouillage est faux
+W: Le programme recalcule la sortie et annule le forçage
+W: L'interverrouillage se met automatiquement à TRUE
+W: Le forçage s'efface tout seul au cycle suivant
+E: Un forçage impose la valeur de la sortie physique quel que soit le résultat du programme : la condition d'interverrouillage n'est plus respectée. Le programme continue de calculer SortieMoteur, mais la valeur forcée l'emporte sur le module. Le forçage ne modifie pas les autres variables. Il reste actif jusqu'à ce qu'on le retire, ce qu'il ne faut jamais oublier.
+```
+VAR
+    Demande : BOOL;
+    Interverrouillage : BOOL;
+    SortieMoteur : BOOL;
+END_VAR
+
+SortieMoteur := Demande AND Interverrouillage;
+```
+
+@033
+Q: Quelle valeur prend `Pression_bar`, la plage 0..27648 correspondant à 0..10 bar ?
+C: 5 bar
+W: 1,38 bar
+W: 2,5 bar
+W: 7,5 bar
+E: 13824 / 27648 = 0,5 : la mesure est à la moitié de la plage, soit 0,5 × 10 = 5 bar. 1,38 bar vient d'une division de la valeur brute par 10 000. 2,5 bar et 7,5 bar correspondent au quart et aux trois quarts de la plage. La conversion INT_TO_REAL évite une division entière qui tronquerait le résultat.
+```
+VAR
+    ValeurBrute : INT := 13824;
+    Pression_bar : REAL;
+END_VAR
+
+Pression_bar := INT_TO_REAL(ValeurBrute) * 10.0 / 27648.0;
+```
+
+@034
+Q: Quelle température calcule cet extrait pour un transmetteur 4-20 mA réglé de 0 à 100 °C ?
+C: 50 °C
+W: 60 °C
+W: 75 °C
+W: 12 °C
+E: Le courant utile vaut 12 − 4 = 8 mA sur une étendue de 16 mA, soit 50 % de la plage : 0,5 × 100 = 50 °C. 60 °C oublie de retrancher le zéro vivant de 4 mA (12 / 20 = 60 %). 75 °C correspondrait à 16 mA. 12 °C recopie le courant sans conversion.
+```
+VAR
+    Courant_mA : REAL := 12.0;
+    Temperature_C : REAL;
+END_VAR
+
+Temperature_C := (Courant_mA - 4.0) * 100.0 / 16.0;
+```
+
+@035
+Q: Pour un transmetteur 4-20 mA, à quel pourcentage de l'étendue de mesure correspond un courant de 8 mA ?
+C: 25 %
+W: 40 %
+W: 50 %
+W: 75 %
+E: L'étendue utile va de 4 à 20 mA, soit 16 mA : (8 − 4) / 16 = 0,25, donc 25 %. 40 % vient d'un calcul sur 0-20 mA qui oublie le zéro vivant (8 / 20). 50 % correspond à 12 mA. 75 % correspond à 16 mA.
+
+@036
+Q: Quel risque crée un mauvais type de données pour une mesure analogique ?
+C: Une valeur tronquée ou lue avec un mauvais signe
+W: Un changement de technologie du capteur raccordé
+W: Un rejet systématique du projet à la compilation
+W: Une correction automatique du câblage de la voie
+E: Si le type ne correspond pas au format de la donnée (signe, taille, entier ou réel), la valeur peut être tronquée, déborder ou être lue avec un mauvais signe, sans message d'erreur. Le logiciel ne modifie pas le capteur. Le compilateur accepte souvent une conversion implicite ou explicite, d'où une erreur silencieuse. Aucun type de donnée ne corrige un câblage.
+
+@037
+Q: Quel usage justifie un compteur rapide matériel plutôt qu'un compteur programmé ?
+C: Des impulsions plus brèves qu'un cycle automate
+W: L'affichage du nombre de pièces sur le pupitre IHM
+W: Le comptage d'un bouton-poussoir actionné à la main
+W: La mise en mémoire du compteur après une coupure
+E: Un compteur programmé ne voit une impulsion que si elle dure plus d'un cycle ; un compteur rapide compte en matériel, indépendamment du cycle, par exemple les impulsions d'un codeur incrémental. L'affichage IHM lit une valeur, quel que soit le compteur. Un bouton-poussoir est bien plus lent que le cycle. La rémanence se règle sur la variable, ce n'est pas le rôle du compteur rapide.
+
+@038
+Q: Dans cet extrait, quand `Commande_B` peut-elle passer à TRUE ?
+C: Si Demande_B est vraie et Commande_A est fausse
+W: Si Demande_B est vraie, quel que soit Commande_A
+W: Si Commande_A et Demande_B sont vraies ensemble
+W: Seulement après un front descendant de Commande_A
+E: Commande_B vaut Demande_B AND NOT Commande_A : la demande doit être présente et la commande A absente, ce qui interdit deux commandes simultanées, par exemple les deux sens de marche d'un moteur. Ignorer Commande_A supprimerait l'interverrouillage. Les deux vraies ensemble donnent FALSE à cause du NOT. Aucun front n'est exigé : il suffit que Commande_A soit fausse au moment du calcul.
+```
+VAR
+    Commande_A : BOOL;
+    Demande_B : BOOL;
+    Commande_B : BOOL;
+END_VAR
+
+Commande_B := Demande_B AND NOT Commande_A;
+```
+
+@039
+Q: Dans TIA Portal, pourquoi la configuration matérielle doit-elle correspondre aux modules réellement montés ?
+C: Sinon la CPU signale un défaut et ignore les voies concernées
+W: Pour que TIA Portal puisse régler la tension des alimentations
+W: Pour autoriser l'accès au programme sans mot de passe
+W: Pour que le programme se compile plus rapidement
+E: Au démarrage, la CPU compare la configuration chargée aux modules présents : une référence différente ou un module manquant génère un diagnostic, et les voies concernées ne sont pas exploitées. Le logiciel ne règle pas la tension des alimentations. La protection d'accès est un réglage indépendant. La compilation ne dépend pas du matériel présent dans l'armoire.
+
+@040
+Q: Une alarme signale la perte de communication avec un îlot d'E/S déporté. Quelle réaction est la bonne ?
+C: Vérifier l'alimentation, le câble réseau et le diagnostic
+W: Forcer les sorties de l'îlot pour maintenir la production
+W: Masquer l'alarme tant que la machine continue de tourner
+W: Recharger tout le programme pour relancer la communication
+E: Une perte de communication a une cause physique ou de configuration : îlot hors tension, câble ou connecteur, switch, adresse en conflit ; le diagnostic de la CPU et de l'îlot oriente la recherche. Forcer des sorties sans communication n'a pas d'effet fiable et peut être dangereux. Masquer l'alarme cache un défaut réel. Recharger le programme ne corrige ni un câblage ni un réseau.
+
+@041
+Q: Quelle démarche limite le risque lors d'une modification de logique en production ?
+C: Sauvegarder, analyser l'impact, tester puis valider avec l'équipe
+W: Regrouper plusieurs modifications pour ne télécharger qu'une fois
+W: Modifier en ligne puis vérifier le comportement sur la machine
+W: Désactiver les alarmes pendant les essais pour éviter les arrêts
+E: Une modification maîtrisée suit un ordre : sauvegarde de l'existant, analyse des effets, essais dans des conditions sûres, puis validation partagée avec l'exploitation. Regrouper plusieurs changements rend une anomalie difficile à attribuer. Tester directement sur la machine en marche expose les personnes et le produit. Désactiver les alarmes supprime des protections pendant la phase la plus risquée.
+
+@042
+Q: Pourquoi séparer `DemandeMarche`, `AutorisationMarche` et `CommandeMoteur` comme dans cet extrait ?
+C: Pour voir quelle condition bloque la marche
+W: Pour ralentir volontairement le démarrage du moteur
+W: Pour éviter d'avoir à câbler le retour de marche
+W: Pour que le moteur démarre même en cas de défaut
+E: Distinguer l'intention (la demande), les conditions (l'autorisation) et l'ordre final (la commande) permet de lire en ligne pourquoi le moteur ne démarre pas, et d'en afficher la cause à l'opérateur. Les affectations s'exécutent dans le même cycle et ne ralentissent rien. Le retour de marche reste nécessaire pour contrôler l'état réel. Le défaut variateur bloque justement l'autorisation.
+```
+VAR
+    DemandeMarche, ProtectionOK, DefautVariateur : BOOL;
+    AutorisationMarche, CommandeMoteur : BOOL;
+END_VAR
+
+AutorisationMarche := ProtectionOK AND NOT DefautVariateur;
+CommandeMoteur := DemandeMarche AND AutorisationMarche;
+```
+
+@043
+Q: Quel est l'effet de cet extrait sur un contact mécanique qui rebondit ?
+C: CapteurValide ne passe à TRUE qu'après 30 ms stables
+W: CapteurValide compte le nombre de rebonds pendant 30 ms
+W: CapteurValide reste TRUE 30 ms après la fin du signal
+W: CapteurValide recopie Capteur avec un cycle de retard
+E: La TON repart de zéro à chaque retombée de Capteur : tant que le contact rebondit, les 30 ms ne sont jamais atteintes, et CapteurValide ne passe à TRUE qu'une fois le signal stable. Une temporisation ne compte pas les rebonds. Rester vrai après la fin du signal serait le comportement d'une TOF. Le retard n'est pas d'un cycle mais de 30 ms de stabilité, à valider selon la vitesse du procédé.
+```
+VAR
+    Capteur : BOOL;
+    AntiRebond : TON;
+    CapteurValide : BOOL;
+END_VAR
+
+AntiRebond(IN := Capteur, PT := T#30ms);
+CapteurValide := AntiRebond.Q;
+```
+
+@044
+Q: Pourquoi documenter chaque consigne avec son unité et sa plage ?
+C: Pour éviter les erreurs d'échelle lors des réglages
+W: Pour interdire toute modification par l'exploitation
+W: Pour se dispenser des contrôles de plage dans le code
+W: Pour que les alarmes deviennent inutiles sur l'IHM
+E: Une consigne de 50 peut être des degrés, des bars ou un pourcentage : l'unité et la plage documentées évitent un réglage dix fois trop fort. La documentation n'empêche pas une modification autorisée. Les contrôles de plage dans le programme restent nécessaires contre une saisie erronée. Les alarmes signalent des écarts réels, la documentation ne les remplace pas.
+
+@045
+Q: Quelle information aide le plus à diagnostiquer un arrêt intermittent d'un convoyeur ?
+C: L'historique horodaté des défauts et des permissifs à l'arrêt
+W: Le nombre total de pièces produites depuis la mise en service
+W: La version du logiciel d'ingénierie installé sur le PC
+W: La liste des opérateurs présents sur l'équipe du jour
+E: Un défaut intermittent ne se voit pas forcément au moment de l'intervention : l'historique horodaté montre quelle condition est tombée juste avant l'arrêt. Le compteur de production ne dit pas pourquoi la machine s'arrête. La version du logiciel d'ingénierie n'agit pas sur le fonctionnement. La liste des opérateurs peut orienter une enquête, mais pas vers la cause technique.
+
+@046
+Q: Quelle affirmation sur la norme IEC 61131-3 est correcte ?
+C: Elle définit les langages ST, LD, FBD et SFC
+W: Elle est réservée aux automates de marque Siemens
+W: Elle impose un seul langage graphique commun
+W: Elle remplace les exigences de sécurité machine
+E: L'IEC 61131-3 normalise les langages de programmation des automates, ST, LD, FBD et SFC (IL étant devenu obsolète), ainsi que les types de données et les blocs. De nombreux constructeurs l'appliquent : Siemens, Schneider, Beckhoff ou les environnements CODESYS. Elle propose plusieurs langages, textuels et graphiques. La sécurité des machines relève d'autres normes, comme l'ISO 13849 ou l'IEC 62061.
+
+@047
+Q: Le voyant de la sortie API est allumé mais l'électrovanne ne bouge pas. Que vérifier ?
+C: Le câblage jusqu'à la bobine, son alimentation et la vanne
+W: La condition logique qui calcule la sortie dans le programme
+W: L'image des entrées lue au début du cycle automate
+W: Le temps de cycle maximal enregistré par la CPU
+E: Le voyant allumé indique que la sortie est commandée : la logique a fait son travail, et le problème se situe en aval, dans le câblage, le bornier, la bobine, son alimentation ou la vanne elle-même. Revoir la logique reviendrait à chercher au mauvais endroit. L'image des entrées concerne la lecture des capteurs. Le temps de cycle n'empêche pas une sortie active d'alimenter une bobine.
+
+@048
+Q: Pourquoi prévoir un état de repli explicite en cas de perte de communication ?
+C: Pour amener l'équipement dans un état sûr et connu
+W: Pour garder la dernière commande active à tout prix
+W: Pour cacher la perte de données à l'opérateur
+W: Pour empêcher tout redémarrage après le défaut
+E: Sans repli défini, un équipement privé de consignes peut garder un ordre devenu dangereux ; le repli, choisi après analyse de risques, l'amène dans un état connu : arrêt, position sûre ou valeur par défaut. Garder la dernière commande peut être inadapté selon le procédé. Le défaut doit être signalé, pas masqué. Le redémarrage reste possible, mais de façon contrôlée.
+
+@049
+Q: Le niveau oscille autour de 40 %. Quel défaut présente cet extrait ?
+C: La pompe bascule sans arrêt autour du seuil
+W: La branche ELSIF n'est jamais exécutée par l'automate
+W: La pompe reste arrêtée quel que soit le niveau mesuré
+W: Le type REAL interdit la comparaison avec 40.0
+E: Avec un seul seuil, chaque petite variation autour de 40 % démarre puis arrête la pompe, ce qui use le moteur et le contacteur ; il faut deux seuils, par exemple marche sous 35 % et arrêt au-dessus de 45 %. La branche ELSIF s'exécute dès que le niveau atteint 40 %. La pompe démarre bien sous le seuil. Comparer un REAL avec une constante réelle est tout à fait valide.
+```
+VAR
+    Niveau : REAL;
+    Pompe : BOOL;
+END_VAR
+
+IF Niveau < 40.0 THEN
+    Pompe := TRUE;
+ELSIF Niveau >= 40.0 THEN
+    Pompe := FALSE;
+END_IF;
+```
+
+@050
+Q: Quelle anomalie `SignalHorsPlage` permet-il de détecter ?
+C: Une valeur brute hors plage, par exemple un fil coupé
+W: Une dérive lente du capteur dans sa plage normale
+W: Une erreur de mise à l'échelle dans le calcul en bar
+W: Un dépassement du temps de cycle de la CPU
+E: Une valeur brute hors de 0 à 27648 sort de la plage nominale : rupture de fil, court-circuit ou capteur hors service, selon le module. Une dérive lente reste dans la plage et passe inaperçue avec ce test. La mise à l'échelle intervient après, alors que ce test porte sur la valeur brute. Le temps de cycle n'a aucun lien avec cette comparaison.
+```
+VAR
+    ValeurBrute : INT;
+    SignalHorsPlage : BOOL;
+END_VAR
+
+SignalHorsPlage := (ValeurBrute < 0) OR (ValeurBrute > 27648);
+```
+
+@051
+Q: Quels contrôles faire après le remplacement d'un module d'E/S ?
+C: Référence, adressage, câblage et diagnostic des voies
+W: Aucun, si le voyant d'alimentation du module est vert
+W: Le forçage de toutes les entrées pour tester le programme
+W: La suppression du module dans la configuration du projet
+E: Un module de remplacement doit avoir la bonne référence et la bonne version, être reconnu à la même adresse, et chaque voie doit être contrôlée : câblage, état lu, diagnostic. Un voyant vert indique seulement que le module est alimenté. Forcer les entrées masque l'état réel des capteurs. Supprimer le module de la configuration rendrait ses voies inutilisables.
+
+@052
+Q: Quelle pratique facilite un retour arrière après une mise à jour du programme ?
+C: Archiver chaque version avec ses notes de changement
+W: Écraser l'ancienne version pour éviter les confusions
+W: Garder seulement des captures d'écran du programme
+W: Nommer les fichiers projet sans numéro de version
+E: Une version archivée, datée et décrite se recharge rapidement et permet de comparer ce qui a changé. Écraser l'ancienne version supprime toute possibilité de retour. Des captures d'écran ne se rechargent pas dans l'automate. Sans numéro de version, on ne sait plus quel fichier correspond au programme en service.
+
+@053
+Q: Quel est l'intérêt d'associer à chaque alarme sa cause probable et l'action attendue ?
+C: Aider l'opérateur à comprendre le défaut et à réagir
+W: Réduire le nombre d'alarmes affichées sur le pupitre
+W: Garantir qu'aucun défaut matériel ne se reproduira
+W: Permettre de désactiver les protections physiques
+E: Un message qui donne la cause probable et l'action à mener réduit le temps d'arrêt et évite les mauvaises manipulations. Il ne change pas le nombre d'alarmes déclenchées. Il ne prévient pas la panne, il aide à la traiter. Les protections physiques restent en place quelle que soit la qualité des messages.
+
+@054
+Q: Quel risque présente la réutilisation de `Temp` dans cet extrait ?
+C: Lue ailleurs, Temp dépend de l'ordre d'exécution
+W: Le compilateur refuse deux affectations de Temp
+W: Le convoyeur prend la valeur calculée pour le tapis
+W: Temp est remis à FALSE entre les deux affectations
+E: Ici chaque sortie est affectée juste après son calcul, donc le résultat est correct ; mais Temp change de sens au cours du cycle, et toute lecture ailleurs, sur l'IHM ou lors d'une modification future, dépend de l'endroit où elle a lieu. Le compilateur accepte plusieurs affectations d'une même variable. Le convoyeur reçoit bien sa propre condition, affectée avant la réutilisation. Rien ne remet Temp à FALSE entre les deux calculs.
+```
+VAR
+    CapteurEntree, Bourrage, Convoyeur : BOOL;
+    CapteurSortie, Autorisation, TapisSortie : BOOL;
+    Temp : BOOL;
+END_VAR
+
+Temp := CapteurEntree AND NOT Bourrage;
+Convoyeur := Temp;
+Temp := CapteurSortie AND Autorisation;
+TapisSortie := Temp;
+```
+
+@055
+Q: Le temps de cycle d'un automate a nettement augmenté. Que faut-il examiner ?
+C: Les blocs exécutés, les boucles et la charge réseau
+W: La longueur des commentaires ajoutés dans le programme
+W: Le nombre de variables déclarées mais jamais utilisées
+W: La fréquence de sauvegarde du projet sur le serveur
+E: Le temps de cycle augmente quand la CPU exécute plus de code : boucle trop longue, bloc appelé à chaque cycle au lieu d'une fois, calcul lourd ou forte charge de communication ; les outils de diagnostic donnent les temps par bloc ou par tâche. Les commentaires ne sont pas chargés dans le code exécuté. Une variable inutilisée occupe de la mémoire sans coûter de temps de calcul. La sauvegarde sur un serveur se fait en dehors de l'automate.
+
+@056
+Q: Au redémarrage de la CPU, `DemandeOperateur` n'est pas rémanente. Que se passe-t-il pour le moteur ?
+C: Il reste arrêté jusqu'à une nouvelle demande
+W: Il redémarre dès que les autorisations sont présentes
+W: Il reprend l'état qu'il avait avant la coupure
+W: Il démarre un cycle puis s'arrête aussitôt
+E: Une variable non rémanente reprend sa valeur initiale, FALSE, au démarrage : la condition IF est fausse et CommandeMoteur vaut FALSE jusqu'à une nouvelle demande. Les autorisations seules ne suffisent pas, la demande est aussi exigée. Rien ne mémorise l'état d'avant la coupure dans cet extrait. La branche ELSE écrit FALSE à chaque cycle, sans impulsion de démarrage, ce qui évite une remise en marche inattendue.
+```
+VAR
+    DemandeOperateur : BOOL;
+    AutorisationsOK : BOOL;
+    CommandeMoteur : BOOL;
+END_VAR
+
+IF AutorisationsOK AND DemandeOperateur THEN
+    CommandeMoteur := TRUE;
+ELSE
+    CommandeMoteur := FALSE;
+END_IF;
+```
+
+@057
+Q: Pourquoi une temporisation programmée ne suffit-elle pas à protéger l'accès à une zone dangereuse ?
+C: Une logique standard n'a pas le niveau de sécurité requis
+W: Un automate ne sait pas mesurer une durée avec précision
+W: La temporisation se remet à zéro à chaque cycle de la CPU
+W: Une durée réglée suffit si elle dépasse l'arrêt de la machine
+E: La protection des personnes doit être assurée par une fonction de sécurité conçue et validée selon les normes, ISO 13849 ou IEC 62061 : interrupteur de sécurité, relais ou automate de sécurité. Un automate standard mesure très bien le temps, mais il n'est pas conçu pour garantir un comportement sûr en cas de défaillance. Une temporisation ne se remet pas à zéro à chaque cycle. Même longue, une durée ne prouve pas que le mouvement est arrêté.
+
+@058
+Q: Quelle est la bonne pratique pour changer l'adresse IP d'un automate en production ?
+C: Planifier, vérifier les conflits et mettre à jour les clients
+W: Changer l'adresse et laisser les clients se reconnecter seuls
+W: Choisir une adresse libre au hasard dans le même réseau
+W: Désactiver le pare-feu le temps de faire le changement
+E: L'IHM, la supervision, d'autres automates ou un serveur utilisent l'adresse actuelle : il faut les recenser, vérifier que la nouvelle adresse est libre et planifier la mise à jour de tous ces clients. Les clients ne découvrent pas seuls une nouvelle adresse fixe. Une adresse prise au hasard peut entrer en conflit ou sortir du plan d'adressage. Désactiver le pare-feu ajoute un risque sans aider au changement.
+
+@059
+Q: Quels essais valident correctement cette condition d'autorisation ?
+C: Capot fermé puis ouvert, avec et sans demande de marche
+W: Uniquement le cas où la demande et le capot sont vrais
+W: La compilation du bloc sans erreur dans TIA Portal
+W: Le forçage de Commande à TRUE pour voir le moteur
+E: Il faut vérifier que la commande s'active quand tout est réuni, mais surtout qu'elle reste à FALSE capot ouvert, même avec une demande : c'est le cas qui protège. Tester le seul cas nominal laisse passer une erreur sur l'autorisation. Une compilation sans erreur ne prouve pas le comportement, et forcer la sortie court-circuite la logique à valider. Ces essais se font dans des conditions sûres.
+```
+VAR
+    DemandeMarche : BOOL;
+    CapotFerme : BOOL;
+    Commande : BOOL;
+END_VAR
+
+Commande := DemandeMarche AND CapotFerme;
+```
+
+@060
+Q: Pourquoi `DefautMemorise` reste-t-il TRUE après la disparition de `DefautInstantane` ?
+C: Il attend que l'opérateur acquitte le défaut
+W: Le défaut instantané est relu au cycle suivant
+W: Le programme ne peut l'effacer qu'en mode STOP
+W: Une variable BOOL ne peut pas revenir à FALSE
+E: Le défaut reste mémorisé tant qu'il n'est pas acquitté : l'opérateur prend connaissance de l'événement même s'il a été bref. La branche ELSIF n'est évaluée que si le défaut a disparu, ce qui empêche d'acquitter un défaut toujours présent. Relire l'entrée au cycle suivant ne remet pas la mémoire à FALSE. Le programme l'efface en marche, sans passage en STOP, et une variable BOOL change librement de valeur.
+```
+VAR
+    DefautInstantane, Acquittement : BOOL;
+    DefautMemorise : BOOL;
+END_VAR
+
+IF DefautInstantane THEN
+    DefautMemorise := TRUE;
+ELSIF Acquittement THEN
+    DefautMemorise := FALSE;
+END_IF;
+```
+
+@061
+Q: Quelle fonction du logiciel d'ingénierie aide à localiser la cause d'un comportement inattendu ?
+C: La visualisation en ligne des variables et du diagnostic
+W: Le renommage des variables pendant la production
+W: La compression du fichier projet avant l'archivage
+W: Le changement de langue de l'interface du logiciel
+E: En ligne, on voit l'état réel des variables, des réseaux Ladder ou du code ST, ainsi que les messages de diagnostic de la CPU et des modules : on remonte de l'effet à la cause. Renommer des variables en production n'apporte aucune information et peut gêner. Compresser le projet ou changer la langue de l'interface n'aide en rien au diagnostic.
+
+@062
+Q: Que signifie `RETAIN` dans cette déclaration ?
+C: Sa valeur est conservée après une coupure secteur
+W: La variable est remise à zéro à chaque cycle automate
+W: La variable ne peut plus être écrite par le programme
+W: La variable est liée à une entrée physique de la CPU
+E: Une variable rémanente garde sa valeur après une coupure ou un redémarrage, selon la zone de rémanence de la CPU : ici, le compteur de pièces n'est pas perdu. Aucune variable n'est remise à zéro à chaque cycle sans instruction. RETAIN n'interdit pas l'écriture : le programme l'incrémente justement. Le lien avec une entrée physique passe par l'adressage, pas par RETAIN.
+```
+VAR RETAIN
+    CompteurPieces : DINT := 0;
+END_VAR
+
+CompteurPieces := CompteurPieces + 1;
+```
+
+@063
+Q: Un bloc utilisé par plusieurs machines vient d'être modifié. Que faut-il valider ?
+C: Chaque instance et chaque fonction qui appelle ce bloc
+W: Uniquement la machine à l'origine de la modification
+W: La compilation du projet, qui suffit à tout contrôler
+W: Les consignes de production, à modifier en même temps
+E: Une modification de bloc touche toutes ses instances : chaque machine doit être revérifiée, avec ses paramètres et son câblage propres. Tester une seule machine laisse passer un effet de bord ailleurs. La compilation vérifie la syntaxe, pas le comportement. Modifier les consignes en même temps empêcherait d'attribuer un écart à sa cause.
+
+@064
+Q: Quelle information faut-il pour interpréter une valeur brute analogique ?
+C: La plage du signal et l'échelle du capteur
+W: Le temps de cycle de la tâche qui lit cette valeur
+W: L'adresse IP de l'automate qui reçoit la mesure
+W: Le type de câble utilisé pour le raccordement
+E: Une même valeur brute, par exemple 13824, n'a de sens qu'avec la plage électrique (4-20 mA, 0-10 V), la plage numérique du module et l'échelle physique du capteur. Le temps de cycle indique quand la valeur est lue, pas ce qu'elle représente. L'adresse IP ne dit rien de la mesure. Le type de câble influence la qualité du signal, pas son interprétation.
+
+@065
+Q: À quoi sert le test qui précède l'accès à `Valeurs[Index]` ?
+C: Empêcher un accès hors des limites du tableau
+W: Accélérer la lecture des valeurs du tableau
+W: Initialiser toutes les valeurs du tableau à zéro
+W: Convertir l'indice INT en indice réel autorisé
+E: Valeurs est déclaré de 0 à 9 : un Index négatif ou supérieur à 9 lirait en dehors du tableau, ce qui provoque une erreur d'exécution ou une valeur aberrante selon la plateforme. Le test ajoute une petite charge, il n'accélère rien. Il n'initialise aucune valeur. Un indice de tableau reste entier, il n'est jamais converti en réel.
+```
+VAR
+    Index : INT;
+    Valeurs : ARRAY[0..9] OF REAL;
+    Mesure : REAL;
+END_VAR
+
+IF (Index >= 0) AND (Index <= 9) THEN
+    Mesure := Valeurs[Index];
+END_IF;
+```

@@ -5,6 +5,9 @@ $themes
 Pour chaque thème ci-dessus, refais le fichier questions/<identifiant du thème>.json complet, au même format, avec les mêmes identifiants et niveaux : mon application remplacera chaque question par sa version corrigée.
 Selon l'alerte :
 - bonne réponse trop souvent la plus longue (règle 6) : réécris les choix pour que les 4 aient une longueur comparable (écart de 20 % au plus). Allonge les mauvaises réponses en restant plausible, ou raccourcis la bonne ; jamais de réponse absurde ou hors sujet ;
+- bonne réponse trop souvent la plus courte (règle 6) : même correction en sens inverse, la bonne réponse ne doit pas se reconnaître à sa brièveté ;
+- fins de choix répétées (règle 6) : supprime les mots de remplissage ajoutés en fin de choix (« dans ce cas », « pour ce besoin »…) et reformule chaque choix pour qu'il se lise naturellement ;
+- domaine inconnu (règle 2) : reprends exactement le domaine et le sous-domaine de la liste ;
 - bonne réponse trop souvent à la même position (règle 4) : réordonne les choix pour répartir "answer" équitablement entre 0, 1, 2 et 3 ;
 - explications trop courtes (règle 8) : 3 à 5 phrases qui disent pourquoi la bonne réponse est juste, puis pourquoi chacun des autres choix est faux ;
 - pas assez de cas concrets (règle 7) : transforme environ un tiers des questions en cas pratiques avec un extrait de code, de commande, de configuration ou de programme automate en texte structuré IEC 61131-3 (5 à 15 lignes) dans "code" : que fait ce code, quelle est la sortie, où est l'erreur. Garde l'identifiant et le niveau de chaque question transformée ;

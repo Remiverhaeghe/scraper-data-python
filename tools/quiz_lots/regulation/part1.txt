@@ -1,0 +1,466 @@
+@001
+Q: Qu'est-ce qui distingue une boucle fermée d'une boucle ouverte ?
+C: La mesure revient au régulateur
+W: La vanne reste toujours ouverte
+W: Le procédé n'a aucune perturbation
+W: La consigne est fixée par un opérateur
+E: En boucle fermée, la mesure de la grandeur réglée est renvoyée au régulateur, qui la compare à la consigne et corrige sa sortie en conséquence. En boucle ouverte, la commande est appliquée sans vérifier son effet. L'état de la vanne ne définit pas la boucle. Toute boucle subit des perturbations. La consigne peut être fixée par un opérateur dans les deux cas.
+
+@002
+Q: Dans une régulation de température de four, quelle est la grandeur réglée ?
+C: La température du four
+W: Le débit de gaz au brûleur
+W: L'ouverture de la vanne de gaz
+W: La consigne réglée par l'opérateur
+E: La grandeur réglée est celle qu'on veut maintenir à la consigne : ici la température du four. Le débit de gaz est la grandeur réglante, celle sur laquelle on agit. L'ouverture de la vanne est le moyen d'agir. La consigne est la valeur souhaitée, pas la grandeur mesurée.
+
+@003
+Q: Comment appelle-t-on la différence entre la consigne et la mesure ?
+C: L'écart, ou l'erreur
+W: Le dépassement
+W: La bande proportionnelle
+W: Le temps mort
+E: L'écart, appelé aussi erreur, vaut consigne moins mesure, ou l'inverse selon le sens d'action : c'est lui que le régulateur cherche à annuler. Le dépassement est le maximum atteint au-delà de la consigne lors d'une réponse. La bande proportionnelle est un réglage du régulateur. Le temps mort est un retard du procédé.
+
+@004
+Q: Quel élément agit physiquement sur le procédé dans une boucle de régulation de débit ?
+C: La vanne de régulation
+W: Le transmetteur de débit
+W: Le régulateur PID
+W: L'enregistreur de tendance
+E: La vanne, ou organe de réglage, modifie le débit selon le signal du régulateur. Le transmetteur mesure le débit sans agir dessus. Le régulateur calcule la commande mais n'agit qu'à travers la vanne. L'enregistreur ne fait qu'afficher et archiver les valeurs.
+
+@005
+Q: Quel est le rôle de l'action proportionnelle d'un régulateur ?
+C: Réagir en proportion de l'écart
+W: Annuler l'écart permanent à la longue
+W: Anticiper l'évolution de la mesure
+W: Bloquer la sortie en cas de défaut
+E: L'action proportionnelle produit une correction proportionnelle à l'écart : plus l'écart est grand, plus la correction est forte. Utilisée seule, elle laisse en général un écart permanent. Annuler cet écart est le rôle de l'action intégrale. Anticiper l'évolution est celui de l'action dérivée. Bloquer la sortie relève d'une logique de sécurité.
+
+@006
+Q: Quelle action supprime l'écart permanent laissé par l'action proportionnelle seule ?
+C: L'action intégrale
+W: L'action dérivée
+W: Une bande proportionnelle plus large
+W: Un filtre plus fort sur la mesure
+E: L'action intégrale cumule l'écart au fil du temps : tant qu'il reste un écart, la sortie continue d'évoluer, jusqu'à ce que la mesure rejoigne la consigne. L'action dérivée réagit à la vitesse de variation, pas à un écart constant. Élargir la bande proportionnelle réduit le gain et augmente l'écart permanent. Un filtre ne corrige rien.
+
+@007
+Q: À quoi sert l'action dérivée d'un PID ?
+C: À freiner une variation rapide de la mesure
+W: À annuler l'écart permanent en régime établi
+W: À multiplier la consigne par un gain
+W: À filtrer le bruit présent sur la mesure
+E: L'action dérivée réagit à la vitesse de variation de l'écart ou de la mesure : elle anticipe et amortit les variations rapides, ce qui peut réduire le dépassement. Elle n'agit pas sur un écart constant, rôle de l'intégrale. Elle ne multiplie pas la consigne. Elle amplifie au contraire le bruit, d'où la prudence dans son réglage.
+
+@008
+Q: Que se passe-t-il quand on passe un régulateur en mode manuel ?
+C: L'opérateur fixe lui-même la sortie
+W: Le régulateur augmente son gain
+W: La mesure n'est plus affichée
+W: La consigne suit automatiquement la vanne
+E: En mode manuel, la boucle est ouverte : la sortie vers la vanne est imposée par l'opérateur, et le régulateur ne corrige plus l'écart. La mesure reste affichée, ce qui permet de surveiller le procédé. Le gain n'est pas modifié. Le suivi de consigne est une option de certains régulateurs, pas une règle du mode manuel.
+
+@009
+Q: Qu'est-ce qu'une perturbation dans une boucle de régulation ?
+C: Une grandeur extérieure qui agit sur la mesure
+W: Un réglage erroné du gain du régulateur
+W: Une modification volontaire de la consigne
+W: Un défaut de câblage du transmetteur
+E: Une perturbation est une influence que le régulateur ne commande pas, comme une variation de charge, de température extérieure ou de pression d'alimentation, et qui écarte la mesure de la consigne. Un mauvais réglage n'est pas une perturbation du procédé. Un changement de consigne est voulu. Un défaut de câblage est une panne de mesure.
+
+@010
+Q: Un régulateur de niveau ouvre la vanne d'entrée quand le niveau baisse. Quel est son sens d'action ?
+C: Inverse : la sortie monte si la mesure baisse
+W: Direct : la sortie monte quand la mesure monte
+W: Neutre : la sortie ne dépend pas de la mesure
+W: Alterné : il change de sens à chaque cycle
+E: Un régulateur à action inverse augmente sa sortie quand la mesure diminue : niveau bas, vanne d'entrée plus ouverte. L'action directe convient par exemple à une vanne de sortie, qu'on ouvre quand le niveau monte. Un mauvais sens d'action rend la boucle instable : le régulateur pousse la mesure dans le mauvais sens. Les sens neutre ou alterné n'existent pas.
+
+@011
+Q: Quel signal sort habituellement d'un régulateur vers une vanne pneumatique équipée d'un positionneur ?
+C: Un signal 4-20 mA
+W: Un signal TOR 230 V
+W: Un train d'impulsions de codeur
+W: Une tension de 400 V triphasée
+E: Le régulateur envoie le plus souvent un signal 4-20 mA, que le positionneur convertit en pression d'air pour placer la vanne à l'ouverture demandée. Un signal TOR ne permet pas une ouverture progressive. Un train d'impulsions de codeur est une mesure de position, pas une commande de vanne. Le 400 V triphasé alimente des moteurs.
+
+@012
+Q: Quel est le rôle d'un positionneur monté sur une vanne de régulation ?
+C: Positionner précisément la vanne
+W: Mesurer le débit qui traverse la vanne
+W: Calculer la consigne de la boucle
+W: Couper l'air en cas d'arrêt d'urgence
+E: Le positionneur compare la position réelle de la tige à la commande et ajuste la pression d'air jusqu'à l'ouverture demandée, malgré les frottements et les efforts du fluide. Il ne mesure pas le débit. Il ne calcule pas la consigne. Une fonction d'arrêt d'urgence relève d'une électrovanne ou d'un dispositif de sécurité dédié.
+
+@013
+Q: Une vanne de vapeur est « fermée par manque d'air ». Que fait-elle si l'air d'instrument est coupé ?
+C: Elle se ferme
+W: Elle s'ouvre en grand
+W: Elle garde sa position
+W: Elle se met à osciller
+E: Une vanne fermée par manque d'air, ou normalement fermée, est ramenée en fermeture par son ressort dès que l'air manque : la vapeur est coupée, ce qui est l'état sûr pour un chauffage. Une vanne ouverte par manque d'air s'ouvrirait. Garder la position demande un dispositif de blocage. Sans air, aucune commande ne peut la faire osciller.
+
+@014
+Q: Qu'est-ce qu'une régulation tout ou rien avec hystérésis ?
+C: Une marche-arrêt avec deux seuils distincts
+W: Une sortie variant en continu entre 0 et 100 %
+W: Un PID dont l'action dérivée est supprimée
+W: Une boucle qui fonctionne sans aucune mesure
+E: La régulation tout ou rien commute l'actionneur en marche ou en arrêt ; l'hystérésis, avec un seuil de marche et un seuil d'arrêt différents, évite les commutations répétées autour d'un seul seuil. Une sortie continue caractérise une régulation proportionnelle. Un PID sans dérivée reste un régulateur continu. Une régulation sans mesure n'est pas une boucle fermée.
+
+@015
+Q: Pourquoi une régulation proportionnelle seule laisse-t-elle souvent un écart permanent ?
+C: Il faut un écart pour produire une sortie
+W: Le transmetteur n'est jamais assez précis
+W: La vanne ne peut pas s'ouvrir à fond
+W: La consigne change constamment
+E: Avec l'action proportionnelle seule, la sortie dépend de l'écart : pour maintenir une sortie différente de sa valeur de repos, il faut qu'un écart subsiste. C'est l'écart permanent, ou statisme. La précision du transmetteur n'est pas en cause. La vanne peut s'ouvrir sur toute sa course. Le phénomène existe même avec une consigne fixe.
+
+@016
+Q: Quelle bande proportionnelle correspond à un gain de 2 ?
+C: 50 %
+W: 200 %
+W: 2 %
+W: 20 %
+E: La bande proportionnelle vaut 100 divisé par le gain : 100 / 2 = 50 %. Une bande de 200 % correspondrait à un gain de 0,5. 2 % et 20 % correspondent à des gains de 50 et 5. Réduire la bande proportionnelle revient donc à augmenter le gain.
+
+@017
+Q: Que vaut la sortie de cet extrait de régulateur proportionnel, pour une consigne de 60 % et une mesure de 55 % ?
+C: 60 %
+W: 55 %
+W: 50 %
+W: 65 %
+E: L'écart vaut 60 − 55 = 5 %, multiplié par le gain de 2 : 10 %. Ajouté à la sortie de repos de 50 %, il donne 60 %. 55 % recopie la mesure. 50 % oublie l'action proportionnelle. 65 % ajoute l'écart à la consigne au lieu de partir de la sortie de repos.
+```
+VAR
+    Consigne, Mesure, Sortie : REAL;
+    Gain : REAL := 2.0;
+    Sortie_Repos : REAL := 50.0;
+END_VAR
+
+Sortie := Sortie_Repos + Gain * (Consigne - Mesure);
+```
+
+@018
+Q: Qu'appelle-t-on le dépassement dans la réponse d'une boucle à un changement de consigne ?
+C: L'excès de mesure après la consigne
+W: Le temps mis pour atteindre la consigne
+W: L'écart qui reste en régime établi
+W: La vitesse de variation de la sortie
+E: Après un échelon de consigne, la mesure peut dépasser sa nouvelle valeur avant de se stabiliser : ce dépassement, souvent exprimé en pourcentage de l'échelon, témoigne d'un réglage nerveux. Le temps de réponse est une autre caractéristique. L'écart en régime établi est l'erreur statique. La vitesse de la sortie concerne l'actionneur.
+
+@019
+Q: Que signifie qu'une boucle de régulation « pompe » ?
+C: La mesure oscille sans se stabiliser
+W: La mesure est figée à la consigne
+W: Le régulateur est en mode manuel
+W: La vanne reste totalement fermée
+E: Une boucle qui pompe présente des oscillations entretenues de la mesure et de la sortie autour de la consigne : réglage trop nerveux, vanne qui colle ou interaction avec une autre boucle. Une mesure figée signale plutôt un capteur défaillant. En manuel, la boucle est ouverte et ne peut pas osciller d'elle-même. Une vanne fermée n'oscille pas.
+
+@020
+Q: Quel appareil convertit une mesure de pression en signal 4-20 mA pour le régulateur ?
+C: Un transmetteur de pression
+W: Un positionneur de vanne
+W: Un pressostat à contact
+W: Un convertisseur de fréquence
+E: Le transmetteur mesure la pression et délivre un courant proportionnel, exploitable par le régulateur. Le positionneur agit sur la vanne. Le pressostat ne fournit qu'un seuil tout ou rien. Un convertisseur de fréquence, ou variateur, commande la vitesse d'un moteur.
+
+@021
+Q: Après un changement de consigne, la mesure met longtemps à atteindre sa valeur. Quel réglage est probablement trop faible ?
+C: Le gain ou l'action intégrale
+W: La plage du transmetteur de mesure
+W: La valeur de la consigne demandée
+W: La durée d'archivage des tendances
+E: Une réponse trop lente indique un régulateur trop mou : gain trop faible, ou temps intégral trop long, ce qui revient à une action intégrale trop faible. On les renforce progressivement, en surveillant le dépassement. La plage du transmetteur fixe l'échelle de mesure, pas la dynamique. La consigne n'est pas un réglage. L'archivage n'a pas d'effet sur la boucle.
+
+@022
+Q: Pourquoi faut-il vérifier l'échelle du transmetteur avant de régler une boucle ?
+C: La régulation suivrait une mesure fausse
+W: L'échelle fixe la vitesse de la vanne
+W: Le régulateur ignore l'échelle de mesure
+W: L'échelle ne sert qu'à l'affichage
+E: Si la mesure est fausse, le régulateur maintient avec précision une valeur qui n'est pas la bonne : il faut d'abord s'assurer que l'échelle du transmetteur et sa mise à l'échelle dans l'automate correspondent. L'échelle n'a pas de rapport avec la vitesse de la vanne. Elle influence le gain réel de la boucle et la grandeur régulée, pas seulement l'affichage.
+
+@023
+Q: Quel appareil est le plus souvent la grandeur réglante d'une régulation de pression de réseau d'eau ?
+C: La vitesse d'une pompe sur variateur
+W: La température de l'eau du réseau
+W: Le diamètre des canalisations
+W: La consigne de pression elle-même
+E: Pour maintenir une pression de réseau, on agit en général sur la vitesse de la pompe, par un variateur de fréquence, ou sur une vanne de régulation. La température de l'eau n'est pas commandée par cette boucle. Le diamètre des canalisations est fixe. La consigne est la valeur cible, pas un moyen d'action.
+
+@024
+Q: Avant de modifier les réglages d'une boucle en production, que faut-il faire ?
+C: Noter les réglages et prévenir
+W: Mettre tous les gains au maximum pour tester
+W: Désactiver les alarmes de la boucle concernée
+W: Changer plusieurs paramètres à la fois
+E: On relève les réglages d'origine pour pouvoir revenir en arrière, on informe l'exploitation des essais et on modifie un paramètre à la fois en observant l'effet. Monter les gains au maximum peut rendre la boucle instable et perturber le procédé. Les alarmes doivent rester actives. Changer plusieurs paramètres à la fois empêche de savoir lequel agit.
+
+@025
+Q: Quelle part de l'échelle représente 12 mA sur la sortie 4-20 mA d'un régulateur ?
+C: 50 %
+W: 60 %
+W: 12 %
+W: 75 %
+E: La sortie va de 4 mA pour 0 % à 20 mA pour 100 % : (12 − 4) / 16 = 0,5, soit 50 %. 60 % divise 12 par 20, en oubliant le zéro vivant. 12 % recopie la valeur en milliampères. 75 % correspond à 16 mA.
+
+@026
+Q: Une boucle est en mode automatique, la consigne passe de 50 à 70 %. Que fait d'abord le régulateur ?
+C: Il réagit à l'écart créé
+W: Il attend que la mesure change
+W: Il passe en mode manuel
+W: Il modifie la consigne en 50 %
+E: Le changement de consigne crée immédiatement un écart de 20 % : le régulateur modifie sa sortie pour le réduire, avec un saut plus ou moins marqué selon que l'action proportionnelle porte sur l'écart ou sur la mesure seule. Il n'attend pas un changement de mesure. Il ne change pas de mode. Il ne revient pas sur la consigne demandée.
+
+@027
+Q: Que fait cet extrait de régulateur proportionnel-intégral à chaque cycle de 100 ms ?
+C: Il cumule l'écart dans le terme intégral
+W: Il remet le terme intégral à zéro
+W: Il calcule la dérivée de la mesure
+W: Il divise la sortie par le gain
+E: Le terme intégral augmente à chaque cycle de Gain × Ts / Ti × écart : tant qu'un écart persiste, la sortie continue d'évoluer, ce qui finit par annuler l'écart permanent. Aucune remise à zéro n'est programmée. L'extrait ne calcule pas de dérivée. La sortie est la somme des termes proportionnel et intégral, pas une division.
+```
+VAR
+    Ecart, Integrale, Sortie : REAL;
+    Gain : REAL := 1.0;
+    Ts : REAL := 0.1;
+    Ti : REAL := 10.0;
+END_VAR
+
+Integrale := Integrale + Gain * Ts / Ti * Ecart;
+Sortie := Gain * Ecart + Integrale;
+```
+
+@028
+Q: Avec cet extrait, de combien le terme intégral augmente-t-il en une seconde pour un écart constant de 5 % ?
+C: 0,5 %
+W: 5,0 %
+W: 0,05 %
+W: 50 %
+E: À chaque cycle de 0,1 s, l'intégrale augmente de 1 × 0,1 / 10 × 5 = 0,05 % ; en une seconde, soit 10 cycles, elle augmente de 0,5 %. 0,05 % est la variation d'un seul cycle. 5 % confondrait l'intégrale avec l'écart. 50 % multiplie le résultat par 100 sans raison.
+```
+VAR
+    Ecart, Integrale, Sortie : REAL;
+    Gain : REAL := 1.0;
+    Ts : REAL := 0.1;
+    Ti : REAL := 10.0;
+END_VAR
+
+Integrale := Integrale + Gain * Ts / Ti * Ecart;
+Sortie := Gain * Ecart + Integrale;
+```
+
+@029
+Q: Que se passe-t-il si l'on réduit fortement le temps intégral Ti d'un PI ?
+C: L'intégrale agit plus fort, voire oscille
+W: L'intégrale agit moins, la réponse ralentit
+W: L'écart permanent revient en régime établi
+W: L'action dérivée devient prépondérante
+E: L'action intégrale est inversement proportionnelle au temps intégral : un Ti plus court renforce l'intégrale, ce qui accélère le retour à la consigne mais finit par provoquer des oscillations et du dépassement. Un Ti plus long ralentirait la réponse. L'écart permanent reste annulé tant que l'intégrale existe. La dérivée n'est pas concernée.
+
+@030
+Q: Pourquoi applique-t-on souvent l'action dérivée à la mesure plutôt qu'à l'écart ?
+C: Éviter un à-coup au changement de consigne
+W: Pour augmenter l'écart permanent de la boucle
+W: Pour que la dérivée agisse comme une intégrale
+W: Pour supprimer le besoin d'action proportionnelle
+E: Un échelon de consigne fait varier l'écart instantanément, et sa dérivée devient énorme : la sortie subit un à-coup brutal. En dérivant la mesure seule, qui évolue de façon continue, on garde l'effet amortisseur sans ce choc. L'écart permanent n'est pas concerné. La dérivée ne devient pas une intégrale. L'action proportionnelle reste nécessaire.
+
+@031
+Q: Qu'est-ce que l'emballement de l'intégrale, ou windup ?
+C: L'intégrale qui grossit en butée de vanne
+W: Une dérivée trop forte sur une mesure bruitée
+W: Un gain proportionnel réglé à une valeur nulle
+W: Une consigne qui varie plus vite que la mesure
+E: Quand la vanne est en butée, à 0 ou 100 %, l'écart persiste et l'intégrale continue de croître sans effet sur le procédé ; au retour, il faut longtemps pour la vider, d'où un fort dépassement. Les dispositifs anti-emballement limitent ou figent l'intégrale en saturation. La dérivée, un gain nul ou une consigne rapide sont d'autres sujets.
+
+@032
+Q: Que fait cet extrait pour éviter l'emballement de l'intégrale ?
+C: Il borne l'intégrale entre 0 et 100 %
+W: Il remet l'intégrale à zéro à chaque cycle
+W: Il double le gain quand la sortie sature
+W: Il supprime l'action proportionnelle
+E: LIMIT empêche l'intégrale de dépasser l'étendue utile de la sortie : en butée, elle ne grossit plus inutilement et la boucle se rétablit rapidement quand l'écart change de signe. Une remise à zéro à chaque cycle supprimerait l'action intégrale. Le gain n'est pas modifié. L'action proportionnelle reste calculée par ailleurs.
+```
+Integrale := Integrale + Gain * Ts / Ti * Ecart;
+Integrale := LIMIT(0.0, Integrale, 100.0);
+Sortie := LIMIT(0.0, Gain * Ecart + Integrale, 100.0);
+```
+
+@033
+Q: Qu'est-ce qu'un passage manuel-automatique « sans à-coup » ?
+C: La sortie repart de la valeur manuelle
+W: La consigne est remise à zéro au passage
+W: Le régulateur se met en sécurité sans sortie
+W: La vanne se ferme pendant le changement de mode
+E: Au passage en automatique, le régulateur initialise son terme intégral pour que la sortie reparte exactement de la valeur manuelle : la vanne ne bouge pas brutalement. Remettre la consigne à zéro provoquerait au contraire un grand écart. Le régulateur ne se met pas en sécurité. Fermer la vanne perturberait le procédé.
+
+@034
+Q: Que fait cet extrait en mode manuel ?
+C: Il recale l'intégrale sur la sortie
+W: Il calcule l'intégrale comme en automatique
+W: Il force la sortie à 0 %
+W: Il recopie la consigne dans la mesure
+E: En manuel, la sortie suit la commande de l'opérateur et l'intégrale est recalée sur cette valeur, diminuée du terme proportionnel : au retour en automatique, la sortie repart sans saut. Calculer l'intégrale en manuel la ferait dériver. La sortie n'est pas forcée à 0. La mesure n'est jamais modifiée par le régulateur.
+```
+IF Mode_Manuel THEN
+    Sortie := Sortie_Manuelle;
+    Integrale := Sortie_Manuelle - Gain * Ecart;
+ELSE
+    Integrale := Integrale + Gain * Ts / Ti * Ecart;
+    Sortie := Gain * Ecart + Integrale;
+END_IF;
+```
+
+@035
+Q: Un four de 20 °C reçoit un échelon de 10 % sur sa commande de chauffe. Le gain du procédé est de 2 °C par %. Quelle température finale attendre ?
+C: 40 °C
+W: 30 °C
+W: 22 °C
+W: 200 °C
+E: Le gain statique relie la variation finale de la mesure à la variation de commande : 10 % × 2 °C/% = 20 °C de hausse, soit 20 + 20 = 40 °C en régime établi. 30 °C n'ajoute que 10 °C. 22 °C ajoute le gain au lieu de le multiplier. 200 °C multiplie 10 par 20 sans tenir compte de la température initiale.
+
+@036
+Q: Un procédé du premier ordre reçoit un échelon. Quelle part de sa variation finale atteint-il au bout d'une constante de temps ?
+C: Environ 63 %
+W: Environ 50 %
+W: Environ 95 %
+W: Exactement 100 %
+E: Pour un procédé du premier ordre, la mesure atteint 1 − e⁻¹ ≈ 63 % de sa variation finale au bout d'une constante de temps, et environ 95 % au bout de trois. 50 % n'a pas de signification particulière. 95 % correspond à trois constantes de temps. Les 100 % ne sont atteints qu'asymptotiquement.
+
+@037
+Q: Qu'est-ce qu'un temps mort dans un procédé ?
+C: Un délai avant que la mesure réagisse
+W: Le temps où le régulateur reste en mode manuel
+W: La durée d'un arrêt programmé de l'installation
+W: Le temps de cycle de l'automate de régulation
+E: Le temps mort, ou retard pur, est le délai entre une action et le début de sa réponse sur la mesure, par exemple le transport d'un fluide jusqu'au capteur. Il rend la régulation difficile, car le régulateur agit sans voir l'effet. Le mode manuel, un arrêt programmé ou le temps de cycle sont d'autres notions.
+
+@038
+Q: Pourquoi une régulation de niveau d'une cuve se comporte-t-elle comme un procédé intégrateur ?
+C: Le niveau monte si l'entrée dépasse la sortie
+W: Le niveau revient seul à sa valeur de départ
+W: Le niveau ne dépend pas des débits de la cuve
+W: Le niveau varie seulement avec la température
+E: Le niveau intègre la différence entre le débit entrant et le débit sortant : un léger excès d'entrée le fait monter indéfiniment, sans palier naturel. Un procédé auto-régulant reviendrait au contraire à un équilibre. Le niveau dépend directement des débits. La température n'est pas la cause principale de ses variations.
+
+@039
+Q: Que fait cet extrait de régulation tout ou rien d'une chauffe ?
+C: Il chauffe sous 58 °C et coupe au-dessus de 62 °C
+W: Il chauffe au-dessus de 62 °C et coupe sous 58 °C
+W: Il chauffe en continu entre 58 et 62 °C
+W: Il chauffe et coupe à chaque cycle de l'automate
+E: La chauffe démarre sous 58 °C et s'arrête au-dessus de 62 °C ; entre les deux, aucune branche ne s'exécute et l'état est conservé : c'est l'hystérésis autour de la consigne de 60 °C. Inverser les seuils ferait chauffer quand il fait déjà chaud. Le chauffage n'est pas forcé entre les seuils. L'hystérésis évite justement les commutations à chaque cycle.
+```
+IF Temperature_C < 58.0 THEN
+    Chauffe := TRUE;
+ELSIF Temperature_C > 62.0 THEN
+    Chauffe := FALSE;
+END_IF;
+```
+
+@040
+Q: Pourquoi élargir l'hystérésis d'une régulation tout ou rien ?
+C: Pour réduire le nombre de commutations
+W: Pour tenir la consigne plus précisément
+W: Pour supprimer tout dépassement
+W: Pour accélérer la réponse de la boucle
+E: Une hystérésis plus large espace les marches et les arrêts : l'actionneur s'use moins, au prix d'une ondulation plus grande de la mesure autour de la consigne. La précision diminue donc. Le dépassement dépend de l'inertie du procédé et existe toujours en tout ou rien. La réponse n'est pas accélérée.
+
+@041
+Q: Que fait cet extrait de consigne en rampe, exécuté toutes les secondes ?
+C: Il approche la cible de 0,5 °C par seconde
+W: Il applique la consigne cible tout de suite
+W: Il fait osciller la consigne autour de la cible
+W: Il diminue la cible de 0,5 °C à chaque seconde
+E: La consigne appliquée au régulateur avance vers la cible de 0,5 °C au plus par seconde, dans un sens ou dans l'autre, puis s'y arrête : c'est une rampe, qui limite les contraintes thermiques. La cible n'est pas appliquée d'un coup. MIN et MAX empêchent de la dépasser, donc pas d'oscillation. La cible elle-même n'est jamais modifiée.
+```
+IF Consigne_C < Cible_C THEN
+    Consigne_C := MIN(Consigne_C + 0.5, Cible_C);
+ELSIF Consigne_C > Cible_C THEN
+    Consigne_C := MAX(Consigne_C - 0.5, Cible_C);
+END_IF;
+```
+
+@042
+Q: Quel effet produit un filtre trop fort sur la mesure d'une boucle de régulation ?
+C: Il ajoute un retard qui déstabilise la boucle
+W: Il rend la boucle plus rapide et plus stable
+W: Il supprime le besoin d'action intégrale
+W: Il corrige les erreurs de calibrage du capteur
+E: Un filtre lisse le bruit, mais il retarde aussi la mesure vue par le régulateur : avec un filtre trop fort, le régulateur réagit trop tard et la boucle oscille ou ralentit. Un filtre ne rend pas la boucle plus rapide. L'intégrale reste nécessaire pour annuler l'écart. Un calibrage faux n'est pas corrigé par un filtre.
+
+@043
+Q: Quel risque présente l'action dérivée sur une mesure de débit très bruitée ?
+C: Elle amplifie le bruit et agite la vanne
+W: Elle supprime le bruit de la mesure
+W: Elle ralentit fortement la boucle
+W: Elle crée un écart permanent important
+E: La dérivée réagit à la vitesse de variation : un bruit rapide produit de fortes variations, que la dérivée transforme en mouvements incessants de la vanne. C'est pourquoi les boucles de débit sont souvent réglées en PI, sans dérivée. La dérivée ne filtre pas le bruit. Elle ne ralentit pas la boucle. L'écart permanent dépend de l'intégrale.
+
+@044
+Q: Dans quel cas la régulation PI, sans dérivée, est-elle généralement préférée ?
+C: Pour une boucle de débit rapide et bruitée
+W: Pour une boucle de température très lente
+W: Pour une boucle qui doit garder un écart permanent
+W: Pour une boucle en mode manuel permanent
+E: Une boucle de débit réagit vite et sa mesure est bruitée : la dérivée apporterait surtout de l'agitation, le PI suffit. Les boucles de température lentes, à forte inertie, profitent au contraire souvent d'un peu de dérivée. L'intégrale du PI supprime l'écart permanent. Une boucle en manuel ne régule pas.
+
+@045
+Q: Que vaut l'ouverture de la vanne de chaud avec cet extrait de partage d'étendue, pour une sortie de 75 % ?
+C: 50 %
+W: 75 %
+W: 25 %
+W: 100 %
+E: La vanne de chaud travaille sur la moitié haute de la sortie : (75 − 50) × 2 = 50 %. La vanne de froid travaille sur la moitié basse et serait ici fermée. 75 % recopie la sortie. 25 % oublie de multiplier par deux. 100 % correspondrait à une sortie de 100 %.
+```
+Vanne_Froid := LIMIT(0.0, (50.0 - Sortie) * 2.0, 100.0);
+Vanne_Chaud := LIMIT(0.0, (Sortie - 50.0) * 2.0, 100.0);
+```
+
+@046
+Q: Qu'est-ce qu'une régulation en cascade ?
+C: Un maître qui donne la consigne d'un esclave
+W: Deux régulateurs qui commandent la même vanne
+W: Un régulateur qui travaille sans aucune mesure
+W: Une suite de régulateurs mis en série sur la mesure
+E: En cascade, le régulateur maître, sur la grandeur principale comme une température, calcule la consigne d'un régulateur esclave, sur une grandeur intermédiaire plus rapide comme un débit de vapeur. L'esclave corrige les perturbations locales avant qu'elles n'affectent la grandeur principale. Deux régulateurs ne commandent pas la même vanne. Chaque régulateur a sa propre mesure.
+
+@047
+Q: Dans une cascade, quelle boucle faut-il régler en premier ?
+C: La boucle esclave, la plus rapide
+W: La boucle maître, la plus lente
+W: Les deux ensemble en même temps
+W: Aucune, la cascade se règle seule
+E: La boucle esclave doit être réglée et stable en premier, le maître étant en manuel ; on règle ensuite le maître, qui voit l'esclave comme une partie du procédé. Régler le maître d'abord n'a pas de sens si l'esclave n'est pas fiable. Régler les deux ensemble rend les effets impossibles à séparer. Une cascade ne se règle pas toute seule.
+
+@048
+Q: Quel est l'intérêt d'une anticipation, ou feedforward, sur une perturbation mesurée ?
+C: Corriger avant l'effet sur la mesure
+W: Supprimer le besoin d'un régulateur en boucle fermée
+W: Augmenter le temps mort apparent du procédé
+W: Remplacer le transmetteur de la grandeur réglée
+E: Si une perturbation est mesurable, comme un débit de charge, l'anticipation calcule sa correction et l'ajoute à la sortie du régulateur avant que la mesure principale ne soit affectée. Elle complète la boucle fermée, qui corrige les écarts résiduels, et ne la remplace pas. Elle ne crée pas de temps mort. La grandeur réglée reste mesurée.
+
+@049
+Q: Que calcule cet extrait de régulation de rapport ?
+C: La consigne de débit B, égale à 40 % du débit A
+W: Le débit A, égal à 40 % du débit B mesuré
+W: La somme des débits A et B à 40 %
+W: L'ouverture de la vanne B, fixée à 40 %
+E: La consigne du régulateur de débit B suit le débit A mesuré, multiplié par le rapport de 0,4 : le mélange garde ses proportions quand le débit A varie. Le débit A n'est pas calculé, il est mesuré. Aucune somme n'est faite. L'extrait fixe une consigne de débit, pas une ouverture de vanne, que règle ensuite le régulateur B.
+```
+Rapport := 0.4;
+Consigne_Debit_B := Rapport * Debit_A_Mesure;
+```
+
+@050
+Q: Une vanne de régulation est très surdimensionnée. Quel problème en résulte ?
+C: Elle travaille presque fermée et régule mal
+W: Elle supprime tout temps mort de la boucle
+W: Elle améliore la précision à faible débit
+W: Elle rend inutile le réglage du régulateur
+E: Une vanne trop grande ne travaille que sur les premiers pourcents de sa course : une petite variation de commande provoque une grande variation de débit, et la régulation devient nerveuse et imprécise, avec usure du siège. Le temps mort n'est pas supprimé. La précision à faible débit se dégrade. Le réglage reste nécessaire, mais devient plus difficile.

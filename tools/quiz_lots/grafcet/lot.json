@@ -1,0 +1,213 @@
+{
+  "lot": 1,
+  "seed": 60848,
+  "skills": [
+    "GRAFCET",
+    "logique séquentielle",
+    "automates programmables",
+    "IEC 61131-3",
+    "diagnostic"
+  ],
+  "schemas": [
+    {
+      "name": "grafcet-l1-002.svg",
+      "questions": [
+        "002"
+      ],
+      "alt": "Schéma GRAFCET : Étape et transition",
+      "file": "schemas/grafcet-l1-002.svg"
+    },
+    {
+      "name": "grafcet-l1-006.svg",
+      "questions": [
+        "006"
+      ],
+      "alt": "Schéma GRAFCET : Étape initiale",
+      "file": "schemas/grafcet-l1-006.svg"
+    },
+    {
+      "name": "grafcet-l1-010.svg",
+      "questions": [
+        "010"
+      ],
+      "alt": "Schéma GRAFCET : Divergence ET",
+      "file": "schemas/grafcet-l1-010.svg"
+    },
+    {
+      "name": "grafcet-l1-014.svg",
+      "questions": [
+        "014"
+      ],
+      "alt": "Schéma GRAFCET : Convergence ET",
+      "file": "schemas/grafcet-l1-014.svg"
+    },
+    {
+      "name": "grafcet-l1-018.svg",
+      "questions": [
+        "018"
+      ],
+      "alt": "Schéma GRAFCET : Divergence OU",
+      "file": "schemas/grafcet-l1-018.svg"
+    },
+    {
+      "name": "grafcet-l1-022.svg",
+      "questions": [
+        "022"
+      ],
+      "alt": "Schéma GRAFCET : Convergence OU",
+      "file": "schemas/grafcet-l1-022.svg"
+    },
+    {
+      "name": "grafcet-l1-026.svg",
+      "questions": [
+        "026"
+      ],
+      "alt": "Schéma GRAFCET : Transition validée",
+      "file": "schemas/grafcet-l1-026.svg"
+    },
+    {
+      "name": "grafcet-l1-030.svg",
+      "questions": [
+        "030"
+      ],
+      "alt": "Schéma GRAFCET : Action d'étape",
+      "file": "schemas/grafcet-l1-030.svg"
+    },
+    {
+      "name": "grafcet-l1-034.svg",
+      "questions": [
+        "034"
+      ],
+      "alt": "Schéma GRAFCET : Temporisation",
+      "file": "schemas/grafcet-l1-034.svg"
+    },
+    {
+      "name": "grafcet-l1-038.svg",
+      "questions": [
+        "038"
+      ],
+      "alt": "Schéma GRAFCET : Comptage",
+      "file": "schemas/grafcet-l1-038.svg"
+    },
+    {
+      "name": "grafcet-l1-042.svg",
+      "questions": [
+        "042"
+      ],
+      "alt": "Schéma GRAFCET : Mode manuel",
+      "file": "schemas/grafcet-l1-042.svg"
+    },
+    {
+      "name": "grafcet-l1-046.svg",
+      "questions": [
+        "046"
+      ],
+      "alt": "Schéma GRAFCET : Mode automatique",
+      "file": "schemas/grafcet-l1-046.svg"
+    },
+    {
+      "name": "grafcet-l1-050.svg",
+      "questions": [
+        "050"
+      ],
+      "alt": "Schéma GRAFCET : Arrêt demandé",
+      "file": "schemas/grafcet-l1-050.svg"
+    },
+    {
+      "name": "grafcet-l1-054.svg",
+      "questions": [
+        "054"
+      ],
+      "alt": "Schéma GRAFCET : Défaut",
+      "file": "schemas/grafcet-l1-054.svg"
+    },
+    {
+      "name": "grafcet-l1-058.svg",
+      "questions": [
+        "058"
+      ],
+      "alt": "Schéma GRAFCET : Capteur",
+      "file": "schemas/grafcet-l1-058.svg"
+    },
+    {
+      "name": "grafcet-l1-062.svg",
+      "questions": [
+        "062"
+      ],
+      "alt": "Schéma GRAFCET : Vérin",
+      "file": "schemas/grafcet-l1-062.svg"
+    },
+    {
+      "name": "grafcet-l1-066.svg",
+      "questions": [
+        "066"
+      ],
+      "alt": "Schéma GRAFCET : Convoyeur",
+      "file": "schemas/grafcet-l1-066.svg"
+    },
+    {
+      "name": "grafcet-l1-070.svg",
+      "questions": [
+        "070"
+      ],
+      "alt": "Schéma GRAFCET : Pompe",
+      "file": "schemas/grafcet-l1-070.svg"
+    },
+    {
+      "name": "grafcet-l1-074.svg",
+      "questions": [
+        "074"
+      ],
+      "alt": "Schéma GRAFCET : Serrage",
+      "file": "schemas/grafcet-l1-074.svg"
+    },
+    {
+      "name": "grafcet-l1-078.svg",
+      "questions": [
+        "078"
+      ],
+      "alt": "Schéma GRAFCET : Contrôle porte",
+      "file": "schemas/grafcet-l1-078.svg"
+    },
+    {
+      "name": "grafcet-l1-082.svg",
+      "questions": [
+        "082"
+      ],
+      "alt": "Schéma GRAFCET : Cycle complet",
+      "file": "schemas/grafcet-l1-082.svg"
+    },
+    {
+      "name": "grafcet-l1-086.svg",
+      "questions": [
+        "086"
+      ],
+      "alt": "Schéma GRAFCET : Réarmement",
+      "file": "schemas/grafcet-l1-086.svg"
+    },
+    {
+      "name": "grafcet-l1-090.svg",
+      "questions": [
+        "090"
+      ],
+      "alt": "Schéma GRAFCET : Sélection alternative",
+      "file": "schemas/grafcet-l1-090.svg"
+    },
+    {
+      "name": "grafcet-l1-094.svg",
+      "questions": [
+        "094"
+      ],
+      "alt": "Schéma GRAFCET : Convergence parallèle",
+      "file": "schemas/grafcet-l1-094.svg"
+    },
+    {
+      "name": "grafcet-l1-098.svg",
+      "questions": [
+        "098"
+      ],
+      "alt": "Schéma GRAFCET : Séquence séquentielle",
+      "file": "schemas/grafcet-l1-098.svg"
+    }
+  ]
+}

@@ -32,6 +32,9 @@ QUIZ_DIRECTORY = ASSETS_DIRECTORY / "quiz"
 
 # Catalogue des thèmes et modèle de la demande de questions à ChatGPT
 QUIZ_GENERATION_DIRECTORY = ASSETS_DIRECTORY / "quiz_generation"
+
+# Lots de questions prêts à importer, hors dépôt
+QUIZ_PACKS_DIRECTORY = "data/packs"
 ICONS_URL = "https://lucide.dev"
 
 CONTACT_URL = "https://www.linkedin.com/in/remi-verhaeghe-99a532121/"

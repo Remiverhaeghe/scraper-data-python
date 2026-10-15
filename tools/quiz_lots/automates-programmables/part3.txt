@@ -1,0 +1,258 @@
+@066
+Q: `Demande` repasse à FALSE. Que vaut `Moteur` si aucune autre instruction ne l'écrit ?
+C: TRUE, car rien ne le remet à FALSE
+W: FALSE, car la condition IF est fausse
+W: FALSE après un cycle de retard
+W: Indéterminé jusqu'au redémarrage
+E: L'instruction IF n'écrit Moteur que lorsque Demande est vraie : quand la condition devient fausse, rien n'est exécuté et Moteur garde sa dernière valeur, TRUE. C'est une mémorisation involontaire, fréquente en ST. Il faudrait une branche ELSE ou l'affectation directe Moteur := Demande. La valeur n'est jamais indéterminée, elle est simplement conservée.
+```
+VAR
+    Demande : BOOL;
+    Moteur : BOOL;
+END_VAR
+
+IF Demande THEN
+    Moteur := TRUE;
+END_IF;
+```
+
+@067
+Q: Quel problème pose cet extrait, où deux blocs écrivent la même sortie ?
+C: Seule la dernière écriture compte à chaque cycle
+W: La sortie prend le OU logique des deux affectations
+W: L'automate signale un conflit et passe en STOP
+W: La première affectation l'emporte sur la seconde
+E: Dans un cycle, la sortie physique reçoit la dernière valeur écrite dans la mémoire image : ici, la commande automatique est toujours écrasée par le bloc de maintenance. Les affectations ne se combinent pas en OU. Aucun automate ne détecte ce conflit, qui passe silencieusement. Il faut une seule écriture de la sortie, avec un arbitrage explicite entre les modes.
+```
+(* Bloc Convoyeur, appelé en premier *)
+Q_Moteur := DemandeAuto AND AutorisationAuto;
+
+(* Bloc Maintenance, appelé ensuite *)
+Q_Moteur := DemandeManuelle AND ModeManuel;
+```
+
+@068
+Q: Quelle pression calcule cet extrait pour 16 mA, sur une plage de 0 à 250 bar ?
+C: 187,5 bar
+W: 200,0 bar
+W: 160,0 bar
+W: 125,0 bar
+E: (16 − 4) / 16 = 0,75, soit 75 % de l'étendue : 0,75 × 250 = 187,5 bar. 200 bar vient d'un calcul qui oublie le zéro vivant : 16 / 20 × 250. 160 bar multiplie simplement le courant par 10. 125 bar correspond à la moitié de la plage, donc à 12 mA.
+```
+VAR
+    Courant_mA : REAL := 16.0;
+    Pression_bar : REAL;
+END_VAR
+
+Pression_bar := (Courant_mA - 4.0) * 250.0 / 16.0;
+```
+
+@069
+Q: Quel risque présente cette transition si `CapteurEtape2` est déjà TRUE quand l'étape s'active ?
+C: L'étape est franchie sans attendre l'action
+W: La séquence se bloque définitivement à l'étape 2
+W: Le capteur est désactivé par le programme
+W: L'étape suivante ne s'active jamais
+E: Si le capteur de fin est déjà vrai à l'activation de l'étape (pièce mal évacuée, capteur collé), la transition est franchie dès le premier cycle, sans que l'action de l'étape ait eu lieu. La séquence ne se bloque pas, elle saute au contraire l'étape. Le programme ne désactive pas un capteur. L'étape suivante s'active bien, mais trop tôt. On ajoute une durée minimale d'étape, un front ou un contrôle du capteur à l'entrée de l'étape.
+```
+VAR
+    Etape2, EtapeSuivante : BOOL;
+    CapteurEtape2 : BOOL;
+END_VAR
+
+IF Etape2 AND CapteurEtape2 THEN
+    Etape2 := FALSE;
+    EtapeSuivante := TRUE;
+END_IF;
+```
+
+@070
+Q: Pourquoi surveiller le temps de cycle maximal et pas seulement sa moyenne ?
+C: Un pic peut dépasser le délai admissible malgré une bonne moyenne
+W: La moyenne suffit car les pics sont absorbés par le chien de garde
+W: Le maximum indique la tension d'alimentation de la CPU
+W: Le maximum dispense des essais de la machine en charge
+E: Une moyenne de 10 ms peut cacher des pics à 80 ms lors d'une communication ou d'un calcul ponctuel : c'est le pire cas qui fixe le temps de réaction réel. Le chien de garde n'absorbe rien, il met la CPU en défaut quand sa limite est dépassée. Le temps de cycle ne renseigne pas sur l'alimentation. Les essais en charge restent nécessaires pour révéler ces pics.
+
+@071
+Q: Une tâche rapide lit `Consigne` pendant qu'une tâche lente l'écrit. Que faut-il maîtriser ?
+C: La cohérence de la donnée partagée
+W: Le type REAL, à remplacer par une chaîne
+W: L'ordre alphabétique des noms des tâches
+W: La priorité, à mettre identique pour les deux
+E: Quand une tâche prioritaire interrompt une tâche lente, une donnée en cours d'écriture peut être lue incomplète, surtout pour une structure ou un type long ; il faut un mécanisme d'échange garanti par la plateforme : copie, verrou ou double tampon. Une chaîne de caractères aggraverait le problème. L'ordre des noms n'a aucun effet. Des priorités identiques ne garantissent pas la cohérence sur toutes les plateformes.
+```
+VAR_GLOBAL
+    Consigne : REAL;
+END_VAR
+
+(* Tâche rapide, 10 ms *)
+Commande := Regulation(Consigne, Mesure);
+
+(* Tâche lente, 500 ms *)
+Consigne := CalculConsigne(Recette);
+```
+
+@072
+Q: Quel est l'intérêt d'une architecture de blocs aux interfaces explicites ?
+C: Limiter les dépendances et tester chaque bloc isolément
+W: Supprimer le besoin de documenter le programme
+W: Faire fonctionner le programme sans matériel réel
+W: Interdire la réutilisation des blocs dans un autre projet
+E: Un bloc qui reçoit ses données par ses entrées et rend ses résultats par ses sorties ne dépend pas de variables globales cachées : on le teste, le réutilise et le modifie sans effet de bord. Des interfaces claires réduisent la documentation à écrire, sans la supprimer. La simulation est un outil à part. Une bonne interface favorise au contraire la réutilisation.
+
+@073
+Q: `ValeurBrute` saute brusquement à sa limite haute. Quel diagnostic faire en priorité ?
+C: Contrôler câblage, capteur et diagnostic du module
+W: Retoucher les réglages du PID qui utilise cette mesure
+W: Fixer la consigne à une valeur sûre en permanence
+W: Supprimer l'alarme qui signale le dépassement
+E: Un saut brutal à la limite haute évoque un défaut physique : fil coupé sur certains modules, court-circuit, capteur défaillant ou alimentation de la boucle. Le diagnostic de voie du module permet de le confirmer. Retoucher le PID revient à régler sur une mesure fausse. Fixer la consigne ou supprimer l'alarme masque le défaut sans le traiter.
+```
+VAR
+    ValeurBrute : INT;
+    DefautMesure : BOOL;
+END_VAR
+
+DefautMesure := (ValeurBrute < 0) OR (ValeurBrute > 27648);
+```
+
+@074
+Q: Pourquoi vérifier le résultat de cette conversion quand `ValeurSignee` est négative ?
+C: Une valeur négative ne se représente pas en UINT
+W: La conversion change le câblage de la voie analogique
+W: La CPU refuse de télécharger un bloc qui convertit
+W: Le résultat est toujours zéro, quelle que soit la valeur
+E: Un UINT ne contient que des valeurs de 0 à 65535 : convertir −1 donne, selon la plateforme, 65535 ou une erreur, mais jamais −1. Une telle conversion doit être précédée d'un test de plage. Une conversion logicielle ne touche pas au câblage. Les conversions sont autorisées au téléchargement. Le résultat n'est pas toujours zéro, il dépend de la valeur et des règles de l'environnement.
+```
+VAR
+    ValeurSignee : INT := -1;
+    ValeurNonSignee : UINT;
+END_VAR
+
+ValeurNonSignee := INT_TO_UINT(ValeurSignee);
+```
+
+@075
+Q: `SortieAPI` vaut TRUE en ligne mais l'actionneur reste inactif. Que faut-il confronter ?
+C: En ligne, diagnostic de voie et tension mesurée
+W: Le nom de la sortie dans la table des mnémoniques
+W: Les commentaires du réseau qui calcule la sortie
+W: La valeur de Demande au cycle précédent
+E: Si la variable est vraie, il faut vérifier que le module la transmet (voyant, diagnostic de voie, court-circuit), puis mesurer la tension sur le bornier et en aval jusqu'à l'actionneur, dans le respect des règles de sécurité électrique. Le nom et les commentaires n'ont aucun effet sur la sortie. La valeur de Demande au cycle précédent n'explique pas qu'une sortie vraie ne commande rien.
+```
+VAR
+    Demande : BOOL;
+    SortieAPI : BOOL;
+END_VAR
+
+SortieAPI := Demande;
+```
+
+@076
+Q: Pourquoi ne pas remplacer le capteur de fin de course d'un vérin par une temporisation fixe ?
+C: Seul le capteur confirme la fin réelle du mouvement
+W: Un automate ne peut pas temporiser un mouvement de vérin
+W: Tous les vérins mettent exactement le même temps à sortir
+W: La temporisation consomme trop de mémoire dans la CPU
+E: Une temporisation suppose que le mouvement dure toujours autant ; or la pression, l'usure, la charge ou un blocage changent sa durée, et la séquence continuerait alors que le vérin n'est pas en place. Le capteur confirme la position réelle. Un automate temporise sans difficulté. Les durées varient justement d'un vérin et d'un cycle à l'autre. Une temporisation occupe une mémoire négligeable.
+
+@077
+Q: Quels cas la table d'essais de cette logique doit-elle couvrir ?
+C: Les quatre combinaisons, y compris les cas bloqués
+W: Uniquement le cas où Demande et Autorisation sont vraies
+W: La seule compilation du bloc sans message d'erreur
+W: Le forçage de Commande pour vérifier l'actionneur
+E: Avec deux entrées, il y a quatre combinaisons : une seule doit donner Commande vraie, les trois autres doivent la bloquer, et ce sont souvent elles qui révèlent une erreur. On y ajoute les cas de défaut et de reprise. Tester le seul cas nominal ne prouve rien sur les blocages. La compilation ne vérifie pas le comportement, et forcer la sortie contourne la logique.
+```
+VAR
+    Demande : BOOL;
+    Autorisation : BOOL;
+    Commande : BOOL;
+END_VAR
+
+Commande := Demande AND Autorisation;
+```
+
+@078
+Q: Un bloc contenant une boucle sur 10 000 éléments est appelé à chaque cycle. Quel effet possible ?
+C: Un temps de cycle allongé, voire un STOP
+W: Une baisse de la consommation de la CPU
+W: Une correction automatique des données traitées
+W: Le passage de la tâche cyclique en tâche d'alarme
+E: Une boucle longue exécutée à chaque cycle allonge le temps de cycle et peut déclencher le chien de garde, qui met la CPU en STOP. On la découpe sur plusieurs cycles, on la déclenche seulement sur événement ou on la déplace dans une tâche moins fréquente. La charge augmente, elle ne baisse pas. Rien ne corrige les données automatiquement. Le type de tâche ne change pas de lui-même.
+
+@079
+Q: Quel compromis faut-il évaluer avant d'utiliser ce filtre sur `Mesure` ?
+C: Moins de bruit, mais une réponse plus lente
+W: Plus de précision du capteur, sans aucun inconvénient
+W: Une mesure toujours égale à la consigne de la boucle
+W: La suppression du besoin de contrôler le capteur
+E: Ce filtre du premier ordre ne garde que 20 % de la nouvelle mesure à chaque calcul : il lisse le bruit, mais une vraie variation met plusieurs cycles à apparaître, ce qui peut gêner une régulation ou une alarme. Un filtre n'améliore pas la précision du capteur. Il n'a aucun lien avec la consigne. Le capteur doit toujours être contrôlé, et le filtre peut même masquer une dérive.
+```
+VAR
+    Mesure : REAL;
+    MesureFiltree : REAL;
+END_VAR
+
+MesureFiltree := 0.8 * MesureFiltree + 0.2 * Mesure;
+```
+
+@080
+Q: Que faut-il avant de télécharger une configuration matérielle modifiée sur une CPU en service ?
+C: Évaluer l'arrêt induit, la compatibilité et le retour arrière
+W: Forcer les sorties de tous les modules pendant le transfert
+W: Supprimer la sauvegarde précédente pour éviter les confusions
+W: Lancer le transfert pendant la production pour gagner du temps
+E: Le téléchargement d'une configuration matérielle impose souvent un passage en STOP : il faut planifier cet arrêt, vérifier la compatibilité des références et des versions, et pouvoir revenir à la configuration précédente. Forcer les sorties ne protège pas le procédé pendant le transfert. Supprimer la sauvegarde rend tout retour impossible. Un transfert improvisé en production expose la machine à un arrêt brutal.
+
+@081
+Q: Comment confirmer la cause d'un défaut intermittent difficile à reproduire ?
+C: Enregistrer états et diagnostics au moment où il survient
+W: Changer plusieurs paramètres à la fois à chaque essai
+W: Désactiver les journaux pour réduire le bruit des alarmes
+W: Se fier au seul souvenir de l'opérateur présent
+E: Un défaut intermittent se capture : trace des variables déclenchée sur l'événement, horodatage des alarmes, puis comparaison des occurrences. Changer plusieurs paramètres à la fois empêche de savoir lequel a agi. Désactiver les journaux supprime justement les preuves. Le témoignage de l'opérateur oriente la recherche mais ne suffit pas à conclure.
+
+@082
+Q: Quel risque y a-t-il à réutiliser un bloc sans vérifier ses hypothèses de fonctionnement ?
+C: Unités, états initiaux ou défauts peuvent différer
+W: Le bloc devient compatible avec toutes les CPU
+W: Le programme cesse de s'exécuter cycliquement
+W: Les entrées physiques changent de type de signal
+E: Un bloc écrit pour un contexte suppose des unités (bar ou kPa), des valeurs initiales et une gestion des défauts précises : réutilisé ailleurs, il peut calculer juste sur le papier et faux sur le procédé. Réutiliser un bloc ne change pas sa compatibilité matérielle. L'exécution reste cyclique. Le type des entrées physiques dépend des modules, pas d'un bloc logiciel.
+
+@083
+Q: Pourquoi cet extrait génère-t-il deux alarmes distinctes plutôt qu'une seule ?
+C: Pour orienter vers la bonne cause et action
+W: Pour afficher le même message deux fois sur l'IHM
+W: Pour supprimer le besoin de journaliser les défauts
+W: Pour éviter de câbler le capteur sur le module
+E: Un capteur invalide se traite sur le terrain (capteur, câble), une perte de communication sur le réseau : deux alarmes distinctes mènent directement à la bonne intervention. Il ne s'agit pas de dupliquer un message. La journalisation reste utile pour l'historique. Le câblage du capteur ne dépend pas des alarmes programmées.
+```
+VAR
+    CapteurValide : BOOL;
+    CommunicationOK : BOOL;
+    AlarmeCapteur : BOOL;
+    AlarmeCom : BOOL;
+END_VAR
+
+AlarmeCapteur := NOT CapteurValide;
+AlarmeCom := NOT CommunicationOK;
+```
+
+@084
+Q: Plusieurs automates échangent des données. Quelle mesure évite les incohérences après une coupure réseau ?
+C: Un délai de surveillance, une qualité et un repli
+W: Supposer que les données distantes restent à jour
+W: Réutiliser la dernière valeur reçue sans limite
+W: Ignorer l'état de qualité transmis avec les données
+E: Chaque automate doit savoir que les données reçues sont périmées : un délai de surveillance ou un compteur de vie détecte l'arrêt des échanges, un indicateur de qualité accompagne la donnée et un repli défini prend le relais. Supposer les données à jour ou réutiliser la dernière valeur sans limite laisse le procédé agir sur une information figée. Ignorer la qualité revient au même.
+
+@085
+Q: Comment limiter l'impact d'une correction sur un bloc utilisé par plusieurs équipements ?
+C: Corriger le bloc et tester chaque instance
+W: Corriger directement les sorties physiques concernées
+W: Supprimer les instances dont on ignore l'usage
+W: Changer aussi la convention de nommage du bloc
+E: La correction se fait à la source, dans le bloc, puis chaque instance est testée avec ses paramètres : c'est le prix et l'intérêt de la réutilisation. Agir sur les sorties contourne la logique et multiplie les cas particuliers. Supprimer une instance mal comprise peut arrêter un équipement. Changer le nommage en même temps ajoute des risques sans rapport avec la correction.

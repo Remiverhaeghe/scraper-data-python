@@ -164,6 +164,12 @@
         <input type="file" name="file" accept="{{ import_extensions }}" aria-label="Fichier .json ou archive .zip">
         <button class="button" type="submit">{{ icon("upload", 16) }} Importer</button>
     </form>
+    {% if packs_count %}
+    <form class="inline-form section-gap" method="post" action="{{ url_for('import_quiz_packs').path }}#add-questions">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button class="button button-primary" type="submit" title="Importe les archives « -valide.zip » du dossier des lots ; une archive déjà importée ne change rien">{{ icon("list-checks", 16) }} Importer les lots validés ({{ packs_count }})</button>
+    </form>
+    {% endif %}
     <p class="section-gap"><a class="button" href="{{ url_for('download_quiz_pack').path }}" title="Pack .zip des questions importées, schémas et guides, réimportable">{{ icon("download", 16) }} Exporter mes questions</a></p>
     <form class="reset-form section-gap" method="post" action="{{ url_for('clear_quiz_questions').path }}#add-questions">
         <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">

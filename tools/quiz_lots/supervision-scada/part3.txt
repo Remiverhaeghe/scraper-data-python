@@ -1,0 +1,363 @@
+@066
+Q: Pourquoi la supervision lit-elle certaines variables toutes les secondes et d'autres toutes les minutes ?
+C: Pour adapter la cadence à la dynamique de chaque variable
+W: Pour que toutes les valeurs soient archivées à l'identique
+W: Pour empêcher l'automate d'exécuter son programme
+W: Pour que les alarmes arrivent toujours en retard
+E: Un débit qui varie vite mérite une lecture rapide, une température de bâtiment beaucoup moins : regrouper les variables par cadence réduit la charge de communication sans dégrader la conduite. L'archivage peut suivre ses propres règles. L'automate continue d'exécuter son programme. Les alarmes critiques sont au contraire lues ou remontées rapidement.
+
+@067
+Q: Que fait cet extrait au passage de l'installation en arrêt programmé ?
+C: Il masque les alarmes inutiles pendant l'arrêt
+W: Il supprime définitivement toutes les alarmes
+W: Il acquitte les alarmes à la place des opérateurs
+W: Il double la priorité de toutes les alarmes
+E: À l'arrêt, des alarmes comme débit faible ou température basse deviennent normales : l'extrait les inhibe tant que l'installation est arrêtée, ce qui laisse visibles les alarmes qui restent pertinentes. Elles réapparaissent au redémarrage. Rien n'est supprimé définitivement. L'acquittement reste humain. Les priorités ne changent pas.
+```
+Inhibition_Arret := Installation_Arretee;
+Alarme_Debit_Faible_Visible := Alarme_Debit_Faible AND NOT Inhibition_Arret;
+Alarme_Temp_Basse_Visible := Alarme_Temp_Basse AND NOT Inhibition_Arret;
+```
+
+@068
+Q: Un opérateur dit ne plus faire attention aux alarmes. Quel indicateur examiner en premier ?
+C: Le nombre d'alarmes par heure et par opérateur
+W: La couleur de fond des écrans de conduite
+W: Le nombre de postes de supervision installés
+W: La version du système d'exploitation des postes
+E: Si les alarmes sont trop nombreuses, bavardes ou permanentes, l'opérateur s'y habitue et finit par les ignorer : on mesure leur fréquence, on identifie les plus fréquentes et on les corrige en priorité. Les couleurs, le nombre de postes ou la version du système n'expliquent pas ce phénomène d'habituation.
+
+@069
+Q: Pourquoi faut-il une gestion des modifications pour le projet de supervision ?
+C: Pour tester, tracer et pouvoir annuler chaque changement
+W: Pour que seuls les opérateurs modifient les écrans
+W: Pour ne jamais changer le projet après sa livraison
+W: Pour supprimer la nécessité de sauvegarder le projet
+E: Une modification d'écran, d'alarme ou de script peut perturber la conduite : on la décrit, on la fait valider, on la teste, on conserve la version précédente et on informe les opérateurs. Les opérateurs ne sont pas les seuls à modifier. Un projet évolue avec l'installation. Les sauvegardes restent indispensables.
+
+@070
+Q: Que réalise cet extrait côté automate pour une commande à deux étapes ?
+C: Il exige sélection puis validation
+W: Il exécute la commande dès la sélection
+W: Il annule la sélection au bout d'une seconde
+W: Il valide toutes les commandes en même temps
+E: L'opérateur sélectionne d'abord l'équipement, puis valide ; si la validation n'arrive pas dans les 5 s, la sélection expire. Ce schéma sélection-exécution évite qu'un clic isolé ou une écriture parasite déclenche une action. La sélection seule n'exécute rien. Le délai est de 5 s, pas d'une seconde. Une seule commande est concernée.
+```
+Expiration(IN := Selection, PT := T#5s);
+IF Selection AND Validation AND NOT Expiration.Q THEN
+    Commande := TRUE;
+    Selection := FALSE;
+ELSIF Expiration.Q THEN
+    Selection := FALSE;
+END_IF;
+Validation := FALSE;
+```
+
+@071
+Q: Quel est le rôle d'un certificat dans une connexion OPC UA sécurisée ?
+C: Authentifier les applications qui communiquent
+W: Accélérer la lecture des variables
+W: Remplacer l'adresse IP du serveur
+W: Stocker les valeurs historiques
+E: Avec OPC UA, le client et le serveur échangent des certificats : chacun vérifie l'identité de l'autre, et les messages peuvent être signés et chiffrés. Un certificat inconnu ou expiré doit être refusé. Le certificat ne rend pas la lecture plus rapide. L'adresse reste nécessaire. L'historique se stocke ailleurs.
+
+@072
+Q: Pourquoi est-il risqué d'accepter automatiquement tous les certificats OPC UA ?
+C: Un équipement inconnu pourrait se connecter
+W: Les certificats ralentissent les échanges
+W: Les variables ne seraient plus affichées
+W: Les mots de passe deviendraient obligatoires
+E: Accepter tout certificat revient à faire confiance à n'importe quelle application qui se présente : un poste compromis pourrait lire ou écrire des valeurs. On approuve explicitement les certificats des applications connues. La vitesse n'est pas le sujet. L'affichage n'est pas concerné. Les mots de passe sont un mécanisme complémentaire.
+
+@073
+Q: Que calcule cet extrait de supervision énergétique ?
+C: L'énergie consommée, à partir de la puissance
+W: La puissance instantanée à partir de l'énergie
+W: Le prix du kilowattheure sur le réseau
+W: Le nombre de démarrages du moteur
+E: Toutes les secondes, la puissance en kW multipliée par 1/3 600 d'heure est ajoutée au cumul : on obtient l'énergie en kWh. C'est une intégration de la puissance dans le temps. L'inverse, retrouver la puissance, demanderait une dérivée. Le prix et les démarrages ne sont pas calculés.
+```
+(* Exécuté toutes les secondes *)
+Energie_kWh := Energie_kWh + Puissance_kW / 3600.0;
+```
+
+@074
+Q: Une valeur de l'historien présente un trou de deux heures. Quelle cause rechercher d'abord ?
+C: Une perte de communication ou un arrêt du serveur
+W: Une consigne modifiée par l'opérateur
+W: Une alarme acquittée trop rapidement
+W: Un changement de couleur de l'écran
+E: Un trou dans l'historique signifie qu'aucune valeur n'a été collectée : liaison avec l'automate coupée, service de l'historien arrêté, disque plein ou mémoire tampon dépassée. Les journaux du serveur et la qualité enregistrée l'indiquent. Une consigne, un acquittement ou une couleur d'écran ne créent pas de trou.
+
+@075
+Q: Que fait cet extrait de l'automate en cas de perte de communication avec la supervision ?
+C: Il ramène la consigne distante à une valeur sûre
+W: Il garde indéfiniment la dernière consigne reçue
+W: Il passe l'automate en mode STOP
+W: Il fait clignoter toutes les sorties
+E: Si le compteur de vie de la supervision ne change plus pendant 10 s, l'automate considère la liaison perdue et applique une consigne de repli définie par l'analyse du procédé, en le signalant. Garder indéfiniment une consigne distante peut être dangereux selon le procédé. L'automate ne s'arrête pas. Les sorties ne clignotent pas.
+```
+Perte_SCADA(IN := Vie_SCADA = Vie_SCADA_Prec, PT := T#10s);
+Vie_SCADA_Prec := Vie_SCADA;
+IF Perte_SCADA.Q THEN
+    Consigne := Consigne_Repli;
+    Alarme_Liaison := TRUE;
+END_IF;
+```
+
+@076
+Q: Pourquoi garder un écran de vue d'ensemble sans détails, en plus des écrans détaillés ?
+C: Pour voir l'état global d'un seul coup d'œil
+W: Pour que l'opérateur n'ouvre jamais les détails
+W: Pour remplacer la liste des alarmes actives
+W: Pour réduire le nombre de tags du projet
+E: Un écran de niveau 1, d'ensemble, montre les indicateurs clés et les écarts de toute l'unité : l'opérateur repère vite la zone en difficulté, puis descend vers les écrans détaillés. Les détails restent nécessaires pour agir. La liste des alarmes garde son rôle. Le nombre de tags n'est pas modifié.
+
+@077
+Q: Qu'est-ce qu'une liste blanche d'applications sur un poste de supervision ?
+C: Seuls les programmes autorisés peuvent s'exécuter
+W: Une liste des opérateurs autorisés à conduire
+W: Un fond d'écran blanc pour mieux voir les alarmes
+W: Une liste des alarmes déjà acquittées
+E: Sur un poste dédié dont les logiciels changent peu, une liste blanche bloque tout programme non autorisé : un logiciel malveillant copié sur le poste ne peut pas s'exécuter. C'est souvent plus adapté qu'un antivirus seul sur ces postes. Les opérateurs se gèrent par les comptes. Le fond d'écran et les alarmes sont d'autres sujets.
+
+@078
+Q: Pourquoi désactiver les ports USB non utilisés des postes de supervision ?
+C: Pour bloquer les logiciels malveillants
+W: Pour que les écrans consomment moins d'énergie
+W: Pour accélérer le démarrage du logiciel
+W: Pour supprimer le besoin de comptes nominatifs
+E: Une clé USB est un vecteur classique d'infection des réseaux industriels, même isolés d'Internet : on bloque les ports non nécessaires et on fait passer les fichiers par une station de décontamination. La consommation et le démarrage ne sont pas en jeu. Les comptes nominatifs restent nécessaires.
+
+@079
+Q: Que fait cet extrait de l'automate avec une écriture de consigne venant du réseau ?
+C: Il refuse les sauts
+W: Il accepte toute valeur sans contrôle
+W: Il multiplie la variation par 10
+W: Il remet la consigne à zéro
+E: Une consigne qui saute de plus de 10 °C est refusée et signalée : une erreur de saisie ou une écriture malveillante ne peut pas provoquer un changement brutal du procédé. Les variations raisonnables sont acceptées. Rien n'est multiplié. La consigne n'est pas remise à zéro, elle garde sa valeur.
+```
+IF ABS(Consigne_Reseau - Consigne) <= 10.0 THEN
+    Consigne := Consigne_Reseau;
+ELSE
+    Alarme_Consigne_Rejetee := TRUE;
+END_IF;
+```
+
+@080
+Q: Pourquoi documenter l'architecture réseau et les flux entre supervision et automates ?
+C: Pour connaître les flux attendus et anormaux
+W: Pour que les automates choisissent leur adresse
+W: Pour pouvoir supprimer les pare-feu inutiles
+W: Pour que chaque poste ait accès à tout le réseau
+E: Une cartographie à jour des équipements et des flux autorisés permet de configurer les pare-feu, de détecter un échange inattendu et d'analyser un incident. Les automates gardent leurs adresses définies. Les pare-feu ne deviennent pas inutiles. Le principe reste de limiter les accès, pas de tout ouvrir.
+
+@081
+Q: Que montre l'extrait sur la manière d'archiver une valeur ?
+C: Il archive les variations de plus de 0,5
+W: Il archive la valeur à chaque cycle de l'automate
+W: Il n'archive jamais la valeur mesurée
+W: Il archive uniquement les valeurs négatives
+E: La valeur n'est enregistrée que si elle s'écarte de plus de 0,5 de la dernière valeur archivée : c'est une bande morte d'archivage, qui réduit le volume tout en gardant les variations significatives. Archiver à chaque cycle produirait un volume énorme. La valeur est bien archivée à chaque variation notable. Le signe n'a pas d'importance.
+```
+IF ABS(Valeur - Derniere_Archivee) > 0.5 THEN
+    Archiver(Valeur);
+    Derniere_Archivee := Valeur;
+END_IF;
+```
+
+@082
+Q: Pourquoi tester un plan de reprise après sinistre de la supervision ?
+C: Pour vérifier qu'on sait vraiment repartir
+W: Pour supprimer les sauvegardes inutiles
+W: Pour arrêter la production chaque semaine
+W: Pour remplacer la redondance des serveurs
+E: Un plan de reprise non testé échoue souvent le jour où il sert : sauvegarde incomplète, licence manquante, procédure oubliée. On l'exerce régulièrement, sur une plateforme de test si possible. Les sauvegardes restent la base du plan. Les tests se planifient sans arrêter la production chaque semaine. La redondance complète le plan sans le remplacer.
+
+@083
+Q: Que vérifie cet extrait avant d'accepter une commande d'arrêt d'une pompe critique ?
+C: Que la pompe de secours tourne déjà
+W: Que la pompe critique est en défaut
+W: Que l'opérateur est en mode local
+W: Que la supervision est en redondance
+E: Arrêter la pompe critique sans relève couperait la fonction assurée : l'extrait n'accepte l'arrêt depuis la supervision que si la pompe de secours est en marche, sinon il refuse et l'explique. Un défaut n'est pas la condition testée. Le mode local n'est pas vérifié ici. La redondance de la supervision n'a pas de rapport.
+```
+IF Demande_Arret_P1 THEN
+    IF Pompe_Secours_En_Marche THEN
+        Commande_P1 := FALSE;
+    ELSE
+        Message := 'Arrêt refusé : démarrer la pompe de secours';
+    END_IF;
+    Demande_Arret_P1 := FALSE;
+END_IF;
+```
+
+@084
+Q: Pourquoi une IHM ne doit-elle pas contenir la logique d'interverrouillage des équipements ?
+C: L'automate doit protéger même sans IHM
+W: L'IHM ne sait pas faire de tests logiques
+W: La logique dans l'IHM serait plus rapide
+W: L'automate ne connaît pas l'état des équipements
+E: Si un interverrouillage n'existe que dans l'IHM, il disparaît quand l'IHM est en panne, ou quand un autre client écrit dans l'automate. La protection doit donc être dans l'automate, qui commande les équipements. L'IHM peut faire des tests, mais ce n'est pas son rôle. La vitesse n'est pas l'argument. L'automate connaît précisément l'état des équipements.
+
+@085
+Q: Comment détecter qu'un poste inconnu communique avec un automate en Modbus TCP ?
+C: En surveillant les flux réseau industriels
+W: En changeant la couleur des écrans de conduite
+W: En redémarrant l'automate chaque matin
+W: En augmentant le nombre d'alarmes de procédé
+E: Une sonde de détection ou la journalisation des pare-feu révèle les échanges inhabituels : une nouvelle adresse qui lit ou écrit dans un automate doit déclencher une alerte de cybersécurité. Les couleurs d'écran ou les alarmes de procédé ne détectent pas ce type d'activité. Redémarrer l'automate n'apporte aucune information.
+
+@086
+Q: Pourquoi séparer les comptes de conduite et les comptes d'ingénierie dans la supervision ?
+C: Pour qu'une session de conduite ne modifie pas le projet
+W: Pour que les ingénieurs ne voient pas les alarmes
+W: Pour que l'opérateur puisse changer la configuration
+W: Pour éviter de journaliser les actions d'ingénierie
+E: Les opérations d'ingénierie, modifier un écran, un script ou une alarme, ne doivent pas être possibles depuis une session de conduite, pour éviter les erreurs et limiter l'impact d'un compte compromis. Les ingénieurs voient aussi les alarmes. L'opérateur ne doit pas modifier la configuration. Les actions d'ingénierie doivent au contraire être tracées.
+
+@087
+Q: Que fait cet extrait pour calculer le taux de disponibilité d'une machine sur un poste ?
+C: Il rapporte le temps de marche au temps requis
+W: Il rapporte les pièces bonnes au total produit
+W: Il compte le nombre d'arrêts de la machine
+W: Il calcule la cadence en pièces par heure
+E: La disponibilité, première composante du TRS, vaut le temps de fonctionnement divisé par le temps requis : 6 h de marche sur 7 h requises donnent environ 85,7 %. Les pièces bonnes donnent le taux de qualité. Le nombre d'arrêts et la cadence sont d'autres indicateurs, utiles pour comprendre la disponibilité.
+```
+IF Temps_Requis_min > 0.0 THEN
+    Disponibilite := Temps_Marche_min * 100.0 / Temps_Requis_min;
+END_IF;
+```
+
+@088
+Q: Quel risque présente la modification en ligne d'un script de supervision pendant la production ?
+C: Une erreur perturbe aussitôt la conduite
+W: Le script devient plus rapide sans être testé
+W: L'automate efface son programme en mémoire
+W: Les tendances perdent leurs couleurs
+E: Un script modifié en ligne s'exécute aussitôt : une erreur peut bloquer un écran, écrire de mauvaises valeurs ou saturer le serveur. On teste sur une plateforme de développement, puis on déploie de façon planifiée, avec un retour arrière possible. La vitesse n'est pas l'enjeu. L'automate garde son programme. Les tendances ne sont pas concernées.
+
+@089
+Q: Que surveille cet extrait sur le serveur de supervision ?
+C: La fraîcheur des données
+W: La température du processeur du serveur
+W: Le nombre d'opérateurs connectés au serveur
+W: La taille de la base de l'historien
+E: Pour chaque automate, l'extrait compare l'heure actuelle à l'heure de la dernière valeur reçue : au-delà de 30 s, la liaison est jugée défaillante et une alarme de communication est levée. La température, les connexions ou la taille de la base se surveillent autrement.
+```
+FOR i := 1 TO Nb_Automates DO
+    IF Heure_Actuelle - Derniere_Reception[i] > T#30s THEN
+        Alarme_Com[i] := TRUE;
+    END_IF;
+END_FOR;
+```
+
+@090
+Q: Pourquoi l'horodatage à la source exige-t-il une synchronisation précise des automates ?
+C: Sinon l'ordre des événements serait faux
+W: Sinon les automates refusent de démarrer
+W: Sinon les alarmes ne peuvent pas être acquittées
+W: Sinon la supervision affiche des couleurs fausses
+E: Horodater à la source n'a de sens que si toutes les horloges sont justes : un décalage d'une seconde entre deux automates suffit à inverser l'ordre apparent de deux événements, et à désigner une mauvaise cause première. Les automates démarrent sans synchronisation. L'acquittement et les couleurs ne dépendent pas de l'heure.
+
+@091
+Q: Quel est l'intérêt d'un journal d'événements de cybersécurité centralisé pour la zone industrielle ?
+C: Corréler les indices d'attaque
+W: Remplacer l'historien de procédé
+W: Accélérer l'affichage des écrans
+W: Supprimer les sauvegardes des automates
+E: Rassembler les journaux des pare-feu, des postes, des serveurs et des automates permet de repérer un enchaînement suspect : connexion inhabituelle puis téléchargement d'un programme, par exemple. L'historien de procédé garde son rôle. L'affichage n'est pas concerné. Les sauvegardes restent indispensables, notamment pour se rétablir après une attaque.
+
+@092
+Q: Pourquoi une alarme de sécurité critique doit-elle aussi exister hors de la supervision ?
+C: La supervision peut être indisponible au mauvais moment
+W: La supervision ne sait pas afficher d'alarmes critiques
+W: Les alarmes critiques sont trop nombreuses pour l'écran
+W: Un voyant coûte moins cher qu'une licence
+E: Une alarme dont dépend la sécurité doit rester perçue si le serveur, le réseau ou l'écran tombe : on la double par un voyant, une sirène ou un report câblé, selon l'analyse de risques. La supervision affiche très bien les alarmes critiques. Leur nombre doit rester faible. Le coût n'est pas le critère.
+
+@093
+Q: Que fait cet extrait au démarrage de la supervision ?
+C: Il relit l'état avant d'autoriser les commandes
+W: Il renvoie les dernières commandes de la veille
+W: Il remet toutes les sorties de l'automate à 0
+W: Il acquitte toutes les alarmes en attente
+E: Au démarrage, la supervision lit d'abord l'état des équipements dans les automates, puis active les commandes : elle n'affiche pas un état supposé et ne renvoie pas d'ordres anciens. Rejouer des commandes de la veille serait dangereux. La supervision ne remet pas les sorties à 0. Les alarmes attendent l'opérateur.
+```
+IF Premier_Cycle THEN
+    Lire_Etats_Automates();
+    Commandes_Autorisees := FALSE;
+ELSIF Lecture_Terminee THEN
+    Commandes_Autorisees := TRUE;
+END_IF;
+```
+
+@094
+Q: Pourquoi un pare-feu industriel peut-il filtrer les fonctions Modbus, et pas seulement les adresses ?
+C: Pour autoriser la lecture mais bloquer l'écriture
+W: Pour accélérer les échanges Modbus
+W: Pour convertir Modbus en OPC UA
+W: Pour supprimer l'authentification
+E: Un pare-feu qui comprend le protocole peut laisser passer les fonctions de lecture, comme 03, et bloquer les écritures, comme 06 ou 16, pour un poste qui ne doit que consulter : un poste compromis ne pourra pas modifier l'automate. Les échanges ne sont pas accélérés. Aucune conversion de protocole n'est faite. Il n'y a pas d'authentification à supprimer en Modbus.
+
+@095
+Q: Que contrôle cet extrait avant de laisser l'IHM changer le mode d'une machine ?
+C: Le niveau de droit de l'utilisateur
+W: Que la machine produit au moins 100 pièces
+W: Que l'écran est en mode plein écran
+W: Que l'heure du poste est synchronisée
+E: Le changement de mode n'est accepté que pour un utilisateur de niveau 2 ou plus, par exemple un régleur ; sinon il est refusé et tracé. Ce contrôle complète celui de l'IHM, car l'automate est le dernier rempart. La production, l'affichage ou l'heure ne sont pas des conditions d'autorisation.
+```
+IF Demande_Mode THEN
+    IF Niveau_Utilisateur >= 2 THEN
+        Mode := Mode_Demande;
+    ELSE
+        Journaliser('Changement de mode refusé');
+    END_IF;
+    Demande_Mode := FALSE;
+END_IF;
+```
+
+@096
+Q: Quel est l'intérêt d'une plateforme de test qui reproduit la supervision ?
+C: Tester sans risque
+W: Doubler la capacité de l'historien
+W: Permettre la conduite depuis le bureau
+W: Supprimer la gestion des modifications
+E: Une plateforme de test, avec des automates simulés ou de test, permet d'essayer une mise à jour, un nouvel écran ou un script avant de toucher à l'installation. Elle n'augmente pas la capacité de l'historien. Elle ne sert pas à conduire. Elle fait partie de la gestion des modifications, qu'elle ne remplace pas.
+
+@097
+Q: Pourquoi la conduite ne doit-elle pas dépendre d'un service situé hors du site, comme un serveur dans le cloud ?
+C: Une coupure externe arrêterait la conduite
+W: Un serveur distant affiche moins de couleurs
+W: Le cloud ne sait pas stocker de données
+W: Les opérateurs ne peuvent pas s'y connecter
+E: Si l'affichage ou les commandes passent par un service externe, une coupure de liaison, une panne du fournisseur ou une attaque privent le site de sa conduite. Les fonctions essentielles restent donc locales, et les services externes servent à l'analyse ou au reporting. Les couleurs ne sont pas en jeu. Le cloud stocke très bien des données. Les opérateurs pourraient s'y connecter.
+
+@098
+Q: Que fait cet extrait pour une alarme qui reste active trop longtemps ?
+C: Il crée une alarme « permanente » à traiter
+W: Il supprime l'alarme au bout de 8 heures
+W: Il acquitte l'alarme au bout de 8 heures
+W: Il baisse la priorité de toutes les alarmes
+E: Une alarme active depuis plus de 8 heures n'est plus un signal utile : elle révèle une cause non traitée ou une alarme mal conçue. L'extrait la signale comme permanente, pour qu'elle soit revue par l'équipe. Elle n'est ni supprimée ni acquittée automatiquement. Les autres alarmes gardent leur priorité.
+```
+Duree_Active(IN := Alarme_Active, PT := T#8h);
+Alarme_Permanente := Duree_Active.Q;
+```
+
+@099
+Q: Pourquoi faut-il pouvoir revenir rapidement à la version précédente du projet de supervision ?
+C: Pour annuler une mise en service qui pose problème
+W: Pour que les opérateurs choisissent leur version
+W: Pour éviter de tester les nouvelles versions
+W: Pour garder deux versions actives en même temps
+E: Si une nouvelle version perturbe la conduite, il faut restaurer vite la précédente, déjà validée : les versions sont archivées et la procédure de retour est connue. Les opérateurs n'ont pas à choisir de version. Les tests restent nécessaires. Deux versions actives en même temps créeraient des incohérences.
+
+@100
+Q: Que vérifier en priorité après la restauration d'une supervision à partir d'une sauvegarde ?
+C: Communications, alarmes, commandes et historique
+W: Uniquement la couleur des écrans de conduite
+W: Uniquement l'heure affichée en haut de l'écran
+W: Uniquement le nombre de licences disponibles
+E: Une restauration n'est validée qu'après contrôle des communications avec chaque automate, du bon fonctionnement des alarmes, de quelques commandes en conditions sûres et de la collecte de l'historique. L'aspect des écrans, l'heure ou les licences sont à vérifier aussi, mais ils ne suffisent pas à reprendre la conduite.

@@ -15,7 +15,9 @@ dans la page Révision. Les demandes sont produites par l'application à partir 
    existant ou nouveau), le niveau (« Tous les niveaux » : 25 % débutant, 40 %
    intermédiaire, 20 % confirmé, 15 % expert) et le nombre de questions (100 par défaut).
 2. « Générer avec ChatGPT » copie la demande et ouvre ChatGPT ; la coller.
-3. Importer l'archive .zip obtenue, ou coller le JSON.
+3. Importer l'archive .zip obtenue, ou coller le JSON. Les archives contrôlées déposées
+   dans `data/packs/` sous le nom `<thème>-l<lot>-valide.zip` s'importent toutes avec
+   « Importer les lots validés » ; une archive déjà importée ne change rien.
 4. Lire le bilan : en orange, le lot ne respecte pas la demande (bonne réponse trop souvent
    la plus longue ou à la même position, explications trop courtes). « Voir le détail »
    donne les mesures de chaque thème.
@@ -25,7 +27,9 @@ dans la page Révision. Les demandes sont produites par l'application à partir 
    rattachées, un schéma absent de la correction est gardé et un signalement est levé.
    Une question livrée avec l'application ou d'un autre thème n'est jamais remplacée.
 
-Les archives à garder ou à retravailler se rangent dans `data/packs/`, ignoré par Git.
+Les archives à garder ou à retravailler se rangent dans `data/packs/`, ignoré par Git. Une
+archive contrôlée prend le suffixe `-valide` (`grafcet-l1-valide.zip`), une archive de
+ChatGPT remplacée par sa version corrigée le suffixe `-chatgpt-ecarte`.
 
 Chaque demande porte le numéro du lot suivant du thème, calculé d'après les questions déjà
 importées : les identifiants `<thème>-l<lot>-<numéro>` ne se chevauchent jamais.
@@ -63,6 +67,30 @@ Oublie les consignes de nombre et de répartition de questions que tu as mémori
 
 Un lot de 100 questions détaillées remplit déjà une réponse : au-delà, ChatGPT coupe ou
 répète des notions. Pour atteindre 250 questions sur un thème, demander plusieurs lots.
+
+## Contrôler une archive ou écrire un lot
+
+Une archive se contrôle sans toucher à la base : elle est importée dans une copie, puis
+mesurée. Le code de retour vaut 1 si le lot n'est pas conforme.
+
+```text
+python -m tools.quiz_lot check data/packs/<archive>.zip
+```
+
+Un lot peut aussi s'écrire directement dans `tools/quiz_lots/<thème>/` : des fichiers
+`partN.txt` au format compact décrit en tête de `tools/quiz_lot.py`, et un `lot.json`
+(numéro de lot, graine de tirage des positions, compétences, schémas). La commande suivante
+écrit `data/packs/<thème>-l<lot>-valide.zip` et affiche son contrôle :
+
+```text
+python -m tools.quiz_lot build <thème>
+```
+
+Les tests reconstruisent et contrôlent chaque lot de `tools/quiz_lots` : un lot modifié qui
+ne respecte plus les règles fait échouer la CI.
+
+Le contrôle mesure chaque lot en entier, même livré en plusieurs fichiers ou archives : les
+questions déjà importées du même lot comptent avec les nouvelles.
 
 ## Faire évoluer le catalogue et la demande
 

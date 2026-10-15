@@ -319,8 +319,9 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande reprenant le modèle complet d'un pack (domaine, niveaux répartis ou au choix, schémas et guides facultatifs), import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
 - [x] Catalogue de 76 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
-- [x] Contrôle de chaque lot importé : bonne réponse trop souvent la plus longue ou à la même position, explications trop courtes, moins de 15 % de cas concrets avec code pour un thème technique, choix coupés par « … », extraits de code que l'énoncé ne cite pas ; bilan en orange, mesures par thème et demande de correction pour ChatGPT citant les questions concernées
-- [x] Lot corrigé réimporté : une question importée revenant avec le même identifiant est remplacée, réponses et schémas gardés ; une question livrée n'est jamais remplacée
+- [x] Contrôle de chaque lot importé, mesuré en entier même livré en plusieurs fichiers ou archives : bonne réponse trop souvent la plus longue, la plus courte ou à la même position, fins de choix répétées (remplissage), domaine inconnu, explications trop courtes, moins de 15 % de cas concrets avec code pour un thème technique, choix coupés par « … », extraits de code que l'énoncé ne cite pas ; bilan en orange, mesures par thème et demande de correction pour ChatGPT citant les questions concernées
+- [x] Lot corrigé réimporté : une question importée revenant avec le même identifiant est remplacée, réponses et schémas gardés ; une question livrée n'est jamais remplacée ; une question identique est comptée inchangée, sans lever son signalement
+- [x] Import en un clic des lots validés (archives « -valide.zip » de data/packs), sur le bureau et le web, avec un bilan commun
 - [x] Signalement d'une question douteuse, retirée des tirages
 - [x] Export des questions importées en pack .zip réimportable (manifest, questions, schémas, guides), sans les questions signalées
 - [x] Suppression de toutes les questions importées (schémas, guides et réponses compris) après confirmation, base sauvegardée avant ; les questions livrées sont gardées
@@ -436,6 +437,7 @@ scraper-data-python/
 │   ├── quiz.py                                # Révision : questions, progression, thèmes conseillés
 │   ├── quiz_import.py                         # Import et export de questions et de packs
 │   ├── quiz_generation.py                     # Demande ChatGPT par lot et contrôle des lots importés
+│   ├── quiz_packs.py                          # Import groupé des lots validés de data/packs
 │   ├── quiz_domains.py                        # Classement des thèmes par domaine et sous-domaine
 │   ├── quiz_exam.py                           # Mode examen : tirage, réponses et résultat
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
@@ -632,6 +634,12 @@ scraper-data-python/
 ├── docs/                                      # Documentation complémentaire
 │   └── consignes-qcm-chatgpt.md               # Génération des QCM avec ChatGPT et évolution du catalogue
 │
+├── tools/                                     # Outils de développement
+│   ├── __init__.py                            # Initialise le package Tools
+│   ├── quiz_lot.py                            # Construit et contrôle les lots de révision
+│   ├── quiz_svg.py                            # Schémas SVG des lots
+│   └── quiz_lots/                             # Sources des lots écrits, un dossier par thème
+│
 ├── utils/                                     # Utilitaires techniques communs
 │   ├── __init__.py                            # Initialise le package Utils
 │   ├── helpers.py                             # Fonctions utilitaires génériques
@@ -691,6 +699,7 @@ scraper-data-python/
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_quiz_import.py                # Teste l'import des packs, schémas et guides
 │   │   ├── test_quiz_generation.py            # Teste le catalogue, la demande et le contrôle des lots
+│   │   ├── test_quiz_packs.py                 # Teste l'import groupé des lots validés
 │   │   ├── test_quiz_domains.py               # Teste les domaines et le compte des offres par thème
 │   │   ├── test_quiz_exam.py                  # Teste le mode examen
 │   │   ├── test_mobile_sync.py                # Teste le contenu hors ligne et l'envoi des réponses
@@ -819,6 +828,10 @@ scraper-data-python/
 │   │   ├── __init__.py                          # Initialise le package des tests d'intégration
 │   │   └── test_search_to_dashboard.py         # Recherche, base, statistiques, web et export
 │   │
+│   ├── tools/                                  # Tests des outils de développement
+│   │   ├── __init__.py                         # Initialise le package des tests des outils
+│   │   ├── test_quiz_lot.py                    # Teste la construction et le contrôle des lots
+│   │   └── test_quiz_svg.py                    # Teste les schémas SVG des lots
 │   ├── e2e/                                    # Tests du web dans un vrai navigateur (Playwright)
 │   │   ├── __init__.py                          # Initialise le package des tests de bout en bout
 │   │   └── test_web_browser.py                 # Pages, téléphone, HTMX, thème et agenda dans Chromium

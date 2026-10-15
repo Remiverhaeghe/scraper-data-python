@@ -1,0 +1,181 @@
+@086
+Q: Avant de réarmer une machine après un défaut, quelles conditions vérifier ?
+C: Cause supprimée, défaut acquitté, état sûr
+W: Uniquement l'appui sur le bouton de réarmement
+W: L'effacement de l'historique des défauts
+W: Le passage de l'automate en mode STOP
+E: Le réarmement n'est sûr que si la cause du défaut a disparu, si l'opérateur l'a acquitté en connaissance de cause et si la machine est dans un état permettant la reprise. L'appui sur le bouton n'est que la demande. L'historique doit au contraire être conservé. Le mode STOP de l'automate n'est pas une étape de réarmement.
+
+@087
+Q: Cet extrait calcule toutes les transitions avant de mettre à jour les étapes. Quelle règle du GRAFCET respecte-t-il ?
+C: Tout ce qui est franchissable l'est en même temps
+W: Une seule transition est franchie par cycle
+W: La transition de gauche a toujours priorité
+W: Une étape active ne peut valider qu'une transition
+E: T1 et T2 étant calculées sur le même état, si a et b sont vrais ensemble, les deux transitions sont franchies et les étapes 2 et 3 s'activent : c'est la règle du franchissement simultané. Ce résultat révèle au passage que la divergence en OU n'est pas exclusive. La norme ne limite pas les franchissements à un par cycle. Le dessin ne fixe aucune priorité. Une étape peut valider plusieurs transitions.
+```
+T1 := X1 AND a;
+T2 := X1 AND b;
+IF T1 THEN X1 := FALSE; X2 := TRUE; END_IF;
+IF T2 THEN X1 := FALSE; X3 := TRUE; END_IF;
+```
+
+@088
+Q: Pourquoi une transition de retour après défaut ne doit-elle pas acquitter l'alarme d'office ?
+C: L'acquittement prouve que l'opérateur a vu le défaut
+W: Une alarme ne peut jamais être acquittée par programme
+W: Le GRAFCET ne sait pas représenter une alarme
+W: L'acquittement relance toujours la production
+E: L'acquittement trace la prise de connaissance du défaut par l'opérateur ; l'effacer automatiquement au retour en séquence masquerait des défauts répétés et leur cause. Un acquittement par programme reste possible dans certains cas maîtrisés, mais pas d'office. Une alarme se représente par une variable ou une action. Acquitter n'est pas redémarrer.
+
+@089
+Q: Que vaut `Pompe` quand `Niveau` vaut 50 %, si la pompe était arrêtée ?
+C: FALSE, elle garde son état entre les deux seuils
+W: TRUE, car 50 % est sous le seuil haut
+W: Indéterminée tant que 70 % n'est pas atteint
+W: Elle bascule à chaque cycle entre TRUE et FALSE
+E: Entre 30 % et 70 %, aucune branche n'est exécutée : Pompe garde sa valeur, ici FALSE puisqu'elle était arrêtée. C'est l'hystérésis voulue : la pompe démarre sous 30 %, s'arrête au-dessus de 70 % et ne bascule pas autour d'un seuil unique. Être sous le seuil haut ne suffit pas à la démarrer. Sa valeur n'est jamais indéterminée, elle est conservée, et elle ne bascule pas à chaque cycle.
+```
+IF Niveau < 30.0 THEN
+    Pompe := TRUE;
+ELSIF Niveau > 70.0 THEN
+    Pompe := FALSE;
+END_IF;
+```
+
+@090
+Q: Une sélection de séquence choisit une branche selon le type de pièce lu au départ. Que prévoir si le type lu change pendant le cycle ?
+C: Mémoriser le choix pour toute la branche
+W: Changer de branche dès que le type lu change
+W: Activer les deux branches pour couvrir les cas
+W: Relire le type à chaque étape de la branche
+E: Le choix doit être figé au moment de la divergence : on mémorise le type de pièce à l'entrée de la sélection, et la branche se déroule jusqu'au bout avec cette valeur. Changer de branche en cours de route laisserait des opérations à moitié faites. Activer les deux branches transformerait la sélection en parallélisme. Relire le type à chaque étape réintroduit le problème.
+
+@091
+Q: Pourquoi cet extrait mémorise-t-il `Arret_Demande` ?
+C: Pour arrêter en fin de cycle après un appui bref
+W: Pour arrêter la machine immédiatement à l'appui
+W: Pour empêcher tout arrêt avant le cycle suivant
+W: Pour compter le nombre d'appuis sur le bouton
+E: L'appui sur BP_Arret peut survenir n'importe quand et ne durer qu'un instant : la mémoire le conserve jusqu'à la fin du cycle, où la transition vers l'étape 0 le prend en compte puis l'efface. L'arrêt n'est donc pas immédiat. Il n'est pas reporté au cycle suivant, il a lieu à la fin du cycle en cours. La variable est un booléen, elle ne compte rien.
+```
+IF BP_Arret THEN
+    Arret_Demande := TRUE;
+END_IF;
+IF X9 AND Fin_Cycle AND Arret_Demande THEN
+    X9 := FALSE;
+    X0 := TRUE;
+    Arret_Demande := FALSE;
+END_IF;
+```
+
+@092
+Q: Un même GRAFCET pilote deux machines identiques. Quelle précaution est essentielle ?
+C: Séparer les étapes et commandes de chaque machine
+W: Partager les étapes pour simplifier le programme
+W: Utiliser un seul capteur de fin pour les deux
+W: Déduire la machine concernée de l'ordre du code
+E: Chaque machine a son propre état : il faut une instance par machine, par exemple un bloc fonctionnel avec ses variables d'étape, ses entrées et ses sorties propres. Partager les étapes mélangerait les deux cycles. Un capteur commun ne dit pas quelle machine a terminé. L'ordre du code ne peut pas identifier une machine.
+
+@093
+Q: Que fait cet extrait si la machine redémarre avec des capteurs incohérents avec `Etape_Memo` ?
+C: Il interdit la reprise et signale un défaut
+W: Il reprend à l'étape mémorisée malgré tout
+W: Il force les capteurs à l'état attendu
+W: Il efface l'étape mémorisée sans le signaler
+E: Au premier cycle, la cohérence entre l'étape mémorisée et les capteurs est contrôlée ; en cas d'écart, la reprise automatique est refusée et un défaut demande l'intervention d'un opérateur. Reprendre malgré tout commanderait des actions sur une situation fausse. Un programme ne force pas l'état physique des capteurs. Rien n'efface Etape_Memo dans cet extrait.
+```
+IF PremierCycle THEN
+    IF Capteurs_Coherents(Etape_Memo) THEN
+        Reprise_Possible := TRUE;
+    ELSE
+        Reprise_Possible := FALSE;
+        Defaut_Reprise := TRUE;
+    END_IF;
+END_IF;
+```
+
+@094
+Q: Une convergence en ET attend une branche bloquée par un capteur défaillant. Quelle mesure aide le diagnostic ?
+C: Une surveillance de durée sur chaque branche
+W: Franchir la convergence après un délai fixe
+W: Supprimer la branche parallèle concernée
+W: Réinitialiser le GRAFCET à chaque cycle
+E: Un contrôle de durée par branche signale laquelle n'a pas terminé dans le temps prévu et oriente vers le bon capteur. Franchir la convergence après un délai ferait continuer le cycle sur une opération peut-être incomplète. Supprimer la branche modifie le fonctionnement. Réinitialiser le GRAFCET à chaque cycle empêcherait toute séquence.
+
+@095
+Q: Une transition dépend de `Cycle_Termine`, écrit par une autre tâche. Quel risque montre cet extrait ?
+C: Une impulsion brève peut échapper à la tâche lente
+W: La tâche lente lit la variable deux fois de suite
+W: La tâche rapide franchit la transition à sa place
+W: Les deux tâches s'exécutent dans le même cycle
+E: Si Capteur_Fin n'est vrai que quelques millisecondes, la tâche rapide recopie TRUE puis FALSE avant que la tâche de 50 ms ne s'exécute : la transition ne voit jamais l'événement. Il faut mémoriser l'événement jusqu'à sa prise en compte, puis l'effacer. Lire deux fois n'est pas le problème. La tâche rapide n'agit pas sur les étapes. Les deux tâches ont des cadences différentes.
+```
+(* Tâche rapide, 2 ms *)
+Cycle_Termine := Capteur_Fin;
+
+(* Tâche de séquence, 50 ms *)
+IF X6 AND Cycle_Termine THEN
+    X6 := FALSE;
+    X7 := TRUE;
+END_IF;
+```
+
+@096
+Q: Un GRAFCET comporte beaucoup d'évolutions fugaces. Que faut-il vérifier à l'implémentation ?
+C: Que les actions des étapes traversées sont voulues
+W: Que le temps de cycle reste inférieur à 1 ms
+W: Que chaque étape possède un rectangle d'action
+W: Que la tâche de séquence tourne le plus vite possible
+E: Lors d'une évolution fugace, des étapes sont traversées sans devenir stables : leurs actions continues ne sont pas émises, mais leurs actions sur événement peuvent l'être. Il faut vérifier que l'implémentation reproduit ce comportement et qu'il correspond à l'intention. Un rectangle d'action n'est pas obligatoire. Le temps de cycle et la vitesse de la tâche ne changent pas ce comportement, défini par la logique.
+
+@097
+Q: Voici toute la logique de séquence d'un programme. Quel défaut de structure révèle cet extrait ?
+C: Les étapes 3 et 4 ne peuvent jamais être atteintes
+W: L'étape 2 s'active et se désactive à chaque cycle
+W: Les étapes 1 et 3 sont actives en même temps
+W: La transition de 1 vers 2 ne peut jamais être franchie
+E: Aucune instruction n'active X3 : depuis la situation initiale, les étapes 3 et 4 sont inatteignables, et l'étape 2 n'a pas de transition de sortie, la séquence s'y arrête. Une analyse d'atteignabilité, à la relecture ou par outil, détecte ce type d'erreur. L'étape 2 reste active une fois atteinte. Les étapes 1 et 3 ne sont jamais actives ensemble. La transition de 1 vers 2 est franchie dès que a est vrai.
+```
+IF X1 AND a THEN
+    X1 := FALSE;
+    X2 := TRUE;
+END_IF;
+IF X3 AND b THEN
+    X3 := FALSE;
+    X4 := TRUE;
+END_IF;
+```
+
+@098
+Q: Dans la séquence 1 → 2 → 3, les réceptivités de 1 vers 2 et de 2 vers 3 sont vraies en même temps. Que dit le GRAFCET ?
+C: L'étape 2 est traversée, jusqu'à l'étape 3
+W: La séquence s'arrête un cycle sur l'étape 2
+W: Les étapes 2 et 3 restent actives ensemble
+W: La séquence reste sur l'étape 1 par sécurité
+E: Si la réceptivité aval est déjà vraie quand l'étape 2 s'active, la transition suivante est franchie aussitôt : l'étape 2 n'est jamais stable, ses actions continues ne sont pas émises, et la situation stable atteinte est l'étape 3. C'est une évolution fugace. Un programme automate peut s'arrêter un cycle sur l'étape 2 selon son implémentation, mais ce n'est pas ce que spécifie le GRAFCET. L'étape 2 se désactive au franchissement, et rien ne retient la séquence sur l'étape 1.
+
+@099
+Q: Que permet d'afficher cet extrait sur l'IHM de maintenance ?
+C: La condition attendue à l'étape
+W: L'historique des étapes parcourues
+W: Le temps passé dans chaque étape
+W: La liste des défauts acquittés
+E: Pour chaque étape, l'extrait associe le texte de la réceptivité attendue : en cas de blocage, l'IHM dit directement quelle condition manque. Il ne conserve aucun historique. Il ne mesure aucun temps. Il ne traite pas les défauts. C'est l'une des aides les plus efficaces pour réduire les temps de dépannage.
+```
+CASE Etape_Active OF
+    3: Attente := 'Capteur pièce en poste';
+    4: Attente := 'Pression de serrage';
+    5: Attente := 'Fin d''usinage';
+ELSE
+    Attente := '';
+END_CASE;
+```
+
+@100
+Q: Quel jeu d'essais couvre le mieux un GRAFCET avec divergence en OU et convergence en ET ?
+C: Chaque branche, les synchronisations et défauts
+W: Un seul cycle nominal qui passe par une branche
+W: Une relecture visuelle du diagramme sans essai
+W: La compilation du programme, sans autre test
+E: Il faut parcourir chaque branche de la sélection, vérifier que la convergence en ET attend bien toutes ses branches, y compris quand l'une est en retard, et tester les défauts et arrêts dans chaque situation. Un seul cycle nominal laisse les autres branches non testées. Une relecture ou une compilation ne prouve pas le comportement.

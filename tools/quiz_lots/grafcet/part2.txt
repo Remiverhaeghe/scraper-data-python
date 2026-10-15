@@ -1,0 +1,477 @@
+@026
+Q: L'étape 2 est active ; la réceptivité de 2 vers 3 est « prêt · fin_course ». prêt vaut 1, fin_course vaut 0. Que se passe-t-il ?
+C: La transition reste validée mais non franchie
+W: La transition est franchie car prêt vaut 1
+W: L'étape 3 s'active au cycle suivant
+W: L'étape 2 se désactive sans activer l'étape 3
+E: L'étape 2 étant active, la transition est validée ; mais le ET exige prêt et fin_course à 1, donc la réceptivité est fausse et la séquence attend. Une seule condition vraie ne suffit pas avec un ET. Rien n'active l'étape 3 tant que fin_course reste à 0. Une étape ne se désactive que par le franchissement d'une transition aval.
+
+@027
+Q: Que vaut `X3` après un cycle de cet extrait, si `X2` est vraie et `Fin` vaut FALSE ?
+C: FALSE, la transition attend Fin
+W: TRUE, car l'étape 2 est active
+W: TRUE, mais X2 reste aussi vraie
+W: FALSE, et X2 devient fausse aussi
+E: La condition X2 AND Fin est fausse puisque Fin vaut FALSE : le bloc IF n'est pas exécuté, X2 reste vraie et X3 garde sa valeur, FALSE. Une étape active ne suffit pas, la réceptivité doit aussi être vraie. Aucune instruction ne met X3 à TRUE hors du IF. X2 ne change que lors du franchissement.
+```
+VAR
+    X2, X3 : BOOL;
+    Fin : BOOL;
+END_VAR
+
+IF X2 AND Fin THEN
+    X2 := FALSE;
+    X3 := TRUE;
+END_IF;
+```
+
+@028
+Q: Une action continue « Pompe » est associée à l'étape 4. Que se passe-t-il quand l'étape 4 se désactive ?
+C: La pompe n'est plus commandée par cette étape
+W: La pompe reste en marche jusqu'à un arrêt manuel
+W: L'étape 4 se réactive pour maintenir la pompe
+W: La transition suivante est annulée
+E: Une action continue n'existe que pendant l'activité de l'étape : à sa désactivation, l'ordre Pompe cesse, sauf si une autre étape active commande aussi la pompe. Maintenir la pompe après l'étape demanderait une action mémorisée. Une étape ne se réactive pas d'elle-même. Le franchissement déjà réalisé n'est pas annulé.
+
+@029
+Q: Que modélise cet extrait pour la transition de l'étape 5 vers l'étape 6 ?
+C: La réceptivité 3s/X5, vraie 3 s après activation de 5
+W: Une action retardée de 3 s associée à l'étape 6
+W: Une impulsion de 3 s envoyée à l'activation de l'étape 6
+W: Un délai de 3 s compté après la désactivation de l'étape 5
+E: La TON démarre quand X5 devient vraie et donne Q après 3 s d'activité continue de l'étape : c'est la réceptivité temporisée 3s/X5. L'extrait ne commande aucune action de l'étape 6, il gère le passage de 5 à 6. Une impulsion correspondrait à une TP. Après la désactivation de l'étape 5, la TON est remise à zéro et ne compte plus.
+```
+VAR
+    X5, X6 : BOOL;
+    T5 : TON;
+END_VAR
+
+T5(IN := X5, PT := T#3s);
+IF X5 AND T5.Q THEN
+    X5 := FALSE;
+    X6 := TRUE;
+END_IF;
+```
+
+@030
+Q: Une action est conditionnée par « Autorisation ». L'étape est active mais Autorisation vaut 0. Que se passe-t-il ?
+C: L'action n'est pas exécutée, l'étape reste active
+W: L'étape se désactive pour attendre l'autorisation
+W: L'action est exécutée car l'étape est active
+W: La transition aval est franchie sans attendre
+E: Une action conditionnelle n'est exécutée que si l'étape est active et sa condition vraie : ici, l'étape reste active mais l'ordre n'est pas émis. L'état de l'étape ne dépend que des transitions. Ignorer la condition reviendrait à traiter l'action comme continue. La transition aval dépend de sa propre réceptivité, pas de la condition de l'action.
+
+@031
+Q: Que réalise cet extrait au franchissement de la transition qui suit l'étape 1 ?
+C: Une divergence en ET : 2 et 3 s'activent ensemble
+W: Une divergence en OU : l'étape 2 ou l'étape 3 s'active
+W: Une convergence en ET des étapes 2 et 3 vers l'étape 1
+W: Un saut d'étape : l'étape 2 est sautée, la 3 s'active
+E: Une seule transition active deux étapes à la fois : c'est la traduction d'une divergence en ET, qui lance deux branches parallèles. Une divergence en OU aurait deux transitions et n'activerait qu'une branche. Une convergence réunirait des branches vers une étape commune, ce qui n'est pas le cas. Les étapes 2 et 3 deviennent toutes deux actives, aucune n'est sautée.
+```
+VAR
+    X1, X2, X3 : BOOL;
+    Depart : BOOL;
+END_VAR
+
+IF X1 AND Depart THEN
+    X1 := FALSE;
+    X2 := TRUE;
+    X3 := TRUE;
+END_IF;
+```
+
+@032
+Q: Pourquoi une action mémorisée demande-t-elle une remise à zéro explicite ?
+C: Elle reste à 1 après la fin de son étape
+W: Elle s'efface seule au franchissement suivant
+W: Elle ne peut être commandée que par l'opérateur
+W: Elle désactive l'étape qui l'a déclenchée
+E: Une action mémorisée, mise à 1 sur l'activation d'une étape, garde sa valeur jusqu'à ce qu'une autre étape la remette à 0 : il faut donc prévoir cette remise à zéro dans tous les parcours, y compris en cas de défaut. Elle ne s'efface pas d'elle-même. Elle est commandée par la séquence, pas seulement par l'opérateur. Elle n'agit pas sur l'état de l'étape.
+
+@033
+Q: Au démarrage, quelle étape cet extrait rend-il active ?
+C: L'étape 0, comme une étape initiale
+W: Les étapes 0, 1 et 2 à la fois
+W: Aucune, il faut un ordre de l'opérateur
+W: L'étape 2, la dernière de la liste
+E: Au premier cycle, l'extrait active X0 et désactive les autres étapes, puis passe PremierCycle à FALSE pour ne plus recommencer : c'est la mise en place de la situation initiale. Les étapes 1 et 2 sont explicitement mises à FALSE. Aucun ordre opérateur n'intervient. L'ordre des lignes ne change rien : seule X0 reçoit TRUE.
+```
+VAR
+    PremierCycle : BOOL := TRUE;
+    X0, X1, X2 : BOOL;
+END_VAR
+
+IF PremierCycle THEN
+    X0 := TRUE;
+    X1 := FALSE;
+    X2 := FALSE;
+    PremierCycle := FALSE;
+END_IF;
+```
+
+@034
+Q: Que signifie la réceptivité « 5s/X7 » ?
+C: Vraie 5 s après l'activation de l'étape 7
+W: Vraie pendant les 5 premières secondes de l'étape 7
+W: Vraie 5 s après la désactivation de l'étape 7
+W: Vraie toutes les 5 s tant que l'étape 7 est active
+E: La notation t/Xi donne une condition qui devient vraie lorsque l'étape i est active depuis t : ici, 5 s après l'activation de l'étape 7, et tant qu'elle reste active. Elle est fausse pendant les 5 premières secondes. Elle se réinitialise à la désactivation de l'étape. Elle ne produit pas d'impulsions périodiques.
+
+@035
+Q: Avec cet extrait, combien de pièces faut-il pour franchir la transition de l'étape 4 ?
+C: 6 pièces détectées pendant l'étape 4
+W: 7 pièces, car le compteur part de 1
+W: 1 seule pièce, la condition étant un niveau
+W: 6 pièces, comptées depuis la mise sous tension
+E: Le CTU compte les fronts montants de son entrée CU, ici chaque nouvelle pièce pendant l'étape 4, et Q passe à TRUE quand la valeur atteint PV, soit 6. Le compteur part de 0, il en faut donc 6, pas 7. CTU compte des fronts : une pièce maintenue devant le capteur ne compte qu'une fois. RESET := NOT X4 remet le compteur à zéro hors de l'étape 4, le comptage ne court donc pas depuis la mise sous tension.
+```
+VAR
+    X4, X5 : BOOL;
+    Piece : BOOL;
+    Comptage : CTU;
+END_VAR
+
+Comptage(CU := X4 AND Piece, RESET := NOT X4, PV := 6);
+IF X4 AND Comptage.Q THEN
+    X4 := FALSE;
+    X5 := TRUE;
+END_IF;
+```
+
+@036
+Q: La séquence reste sur l'étape « Serrage » alors que le vérin est sorti. Que contrôler ?
+C: Le capteur de fin de serrage testé en transition
+W: La sortie du vérin, à couper puis rétablir
+W: Le numéro de l'étape suivante dans le diagramme
+W: La durée de l'étape, à rallonger dans le programme
+E: Si l'action est faite mais que la séquence n'avance pas, c'est la réceptivité qui reste fausse : capteur mal réglé, câblage, ou pression non atteinte si elle est testée. Couper la sortie ne fait pas avancer la séquence. Le numéro de l'étape suivante n'a pas d'effet sur le franchissement. Rallonger une durée n'aide pas si la condition est un capteur.
+
+@037
+Q: L'étape 1 est active, et `a` et `b` sont vrais au même cycle. Quelle étape est active après cet extrait ?
+C: L'étape 3, les deux transitions s'enchaînent
+W: L'étape 2, la seconde attend le cycle suivant
+W: Les étapes 2 et 3 en même temps
+W: Aucune, les deux franchissements s'annulent
+E: Le premier IF active X2, et le second, exécuté juste après dans le même cycle, voit X2 et b vrais : il franchit aussitôt la transition suivante. L'étape 2 n'est active qu'un instant, et ses actions continues ne sont pas émises : c'est une évolution fugace. Ce comportement dépend ici de l'ordre des instructions : si les deux IF étaient inversés, la séquence s'arrêterait un cycle sur l'étape 2. On rend l'exécution indépendante de cet ordre en calculant toutes les transitions avant de mettre à jour les étapes.
+```
+IF X1 AND a THEN
+    X1 := FALSE;
+    X2 := TRUE;
+END_IF;
+IF X2 AND b THEN
+    X2 := FALSE;
+    X3 := TRUE;
+END_IF;
+```
+
+@038
+Q: Une séquence doit répéter une opération 10 fois avant de continuer. Comment la modéliser ?
+C: Un compteur de passages testé dans les réceptivités
+W: Dix étapes identiques dessinées l'une après l'autre
+W: Une temporisation égale à dix fois la durée d'une opération
+W: Une action mémorisée remise à zéro à chaque pièce
+E: On compte les passages, par exemple par une action sur événement à l'activation d'une étape, et une divergence en OU teste le compteur : moins de 10 pour reboucler, 10 pour sortir. Dix étapes identiques alourdissent le diagramme et ne s'adaptent pas à une autre quantité. Une temporisation suppose une durée constante. Une action mémorisée ne compte rien.
+
+@039
+Q: Dans cet extrait, quel rôle joue `Capteur_Sorti` ?
+C: Celui de réceptivité qui termine l'étape 1
+W: Celui d'action commandée par l'étape 1
+W: Celui de variable d'étape de l'étape 2
+W: Celui de condition de l'action Sortir_Verin
+E: Sortir_Verin := X1 est l'action continue de l'étape 1 ; Capteur_Sorti, testé avec X1 pour passer à l'étape 2, est la réceptivité de la transition : le vérin sort jusqu'à ce que le capteur confirme sa position. L'action est Sortir_Verin, pas le capteur. La variable d'étape de l'étape 2 est X2. L'action n'est pas conditionnée, elle ne dépend que de X1.
+```
+VAR
+    X1, X2 : BOOL;
+    Sortir_Verin, Capteur_Sorti : BOOL;
+END_VAR
+
+Sortir_Verin := X1;
+IF X1 AND Capteur_Sorti THEN
+    X1 := FALSE;
+    X2 := TRUE;
+END_IF;
+```
+
+@040
+Q: Dans une divergence en OU, les deux réceptivités peuvent être vraies en même temps. Quel risque ?
+C: Les deux branches s'activent alors ensemble
+W: Le GRAFCET choisit la branche de gauche
+W: La séquence se bloque sur l'étape amont
+W: L'automate signale une erreur et passe en STOP
+E: Selon les règles d'évolution du GRAFCET, toutes les transitions franchissables le sont simultanément : deux branches prévues comme alternatives deviennent actives ensemble. Le dessin ne donne aucune priorité à la branche de gauche ; seule une implémentation particulière peut le faire, ce qui est fragile. La séquence ne se bloque pas. Aucun automate ne détecte ce problème de conception.
+
+@041
+Q: Que réalise cet extrait pour les branches parallèles terminées par les étapes 4 et 6 ?
+C: Une convergence en ET vers l'étape 7
+W: Une convergence en OU vers l'étape 7
+W: Une divergence en ET depuis l'étape 7
+W: Un retour à l'étape 4 si 6 est active
+E: La transition exige que les étapes 4 et 6, fins des deux branches, soient actives toutes les deux : c'est une convergence en ET, qui synchronise les branches avant l'étape 7. Une convergence en OU se contenterait d'une seule branche terminée. Une divergence partirait d'une étape vers plusieurs. Aucun retour n'est programmé.
+```
+IF X4 AND X6 AND Fin_Commune THEN
+    X4 := FALSE;
+    X6 := FALSE;
+    X7 := TRUE;
+END_IF;
+```
+
+@042
+Q: Pourquoi séparer le mode manuel du cycle automatique ?
+C: Pour définir les mouvements permis et sûrs
+W: Pour autoriser toutes les sorties sans condition
+W: Pour que le cycle reprenne seul après le manuel
+W: Pour supprimer les capteurs en mode manuel
+E: Le mode manuel a ses propres règles : mouvements autorisés un par un, interverrouillages maintenus, vitesse réduite si besoin, et le cycle automatique est neutralisé pendant ce temps. Autoriser toutes les sorties supprimerait ces protections. Le retour en automatique passe par une procédure définie, souvent une remise en position initiale. Les capteurs restent utiles en manuel pour les interverrouillages.
+
+@043
+Q: Que fait cet extrait quand l'étape 8 devient active ?
+C: Il ajoute 1, une seule fois par activation
+W: Il ajoute 1 au compteur à chaque cycle de l'étape 8
+W: Il remet le compteur à zéro à chaque activation
+W: Il ajoute 1 à la désactivation de l'étape 8
+E: R_TRIG détecte le front montant de X8 : l'incrément n'a lieu qu'au cycle d'activation de l'étape, c'est une action sur événement. Sans front, NbCycles augmenterait à chaque cycle tant que l'étape reste active. Rien ne remet le compteur à zéro. La désactivation correspondrait à un front descendant, F_TRIG.
+```
+VAR
+    X8 : BOOL;
+    Front8 : R_TRIG;
+    NbCycles : INT;
+END_VAR
+
+Front8(CLK := X8);
+IF Front8.Q THEN
+    NbCycles := NbCycles + 1;
+END_IF;
+```
+
+@044
+Q: Pourquoi une étape peut-elle n'avoir aucune action ?
+C: Elle peut servir à attendre un événement
+W: Elle est interdite par la norme IEC 60848
+W: Elle doit alors être une étape initiale
+W: Elle bloque obligatoirement la séquence
+E: Une étape d'attente, sans action, est courante : elle marque une situation où l'on attend une condition, comme l'arrivée d'une pièce ou un départ cycle. La norme l'autorise. Elle n'a pas à être initiale. Elle ne bloque rien : la séquence avance dès que la réceptivité de sa transition est vraie.
+
+@045
+Q: Pourquoi cet extrait utilise-t-il `NOT Bourrage` dans la réceptivité ?
+C: Pour n'avancer qu'en l'absence de bourrage
+W: Pour avancer uniquement quand un bourrage survient
+W: Pour inverser l'ordre des étapes 3 et 4
+W: Pour désactiver le capteur de bourrage
+E: NOT Bourrage est vrai quand il n'y a pas de bourrage : la transition exige à la fois la pièce sortie et l'absence de défaut, ce qui empêche de poursuivre le cycle sur un incident. La logique inverse avancerait justement en cas de bourrage. L'ordre des étapes est fixé par les affectations, pas par NOT. Un opérateur logique ne désactive pas un capteur, il inverse sa valeur.
+```
+IF X3 AND Piece_Sortie AND NOT Bourrage THEN
+    X3 := FALSE;
+    X4 := TRUE;
+END_IF;
+```
+
+@046
+Q: En mode automatique, d'où démarre normalement un cycle ?
+C: De l'étape initiale, sur une demande de départ
+W: De l'étape où le mode manuel s'est arrêté
+W: De n'importe quelle étape choisie par l'IHM
+W: De la dernière étape de la séquence précédente
+E: Un cycle automatique part de la situation initiale, machine en position de référence, et démarre sur un départ cycle validé par les conditions initiales. Repartir de l'étape où le manuel s'est arrêté supposerait que la machine est dans un état connu, ce qui n'est pas garanti. Laisser choisir une étape quelconque contourne la logique. La dernière étape d'un cycle reboucle normalement vers l'étape initiale.
+
+@047
+Q: Que se passe-t-il avec cet extrait si `Arret` est vrai pendant l'étape 5 ?
+C: La séquence revient à l'étape 0, l'arrêt a priorité
+W: La séquence passe à l'étape 6 dès que Fin est vrai
+W: Les étapes 0 et 6 s'activent ensemble
+W: L'étape 5 reste active jusqu'au relâchement d'Arret
+E: Le IF teste Arret avant Fin : quand Arret est vrai, la première branche s'exécute et la branche ELSIF est ignorée, ce qui donne la priorité au retour à l'étape 0. Même si Fin est vrai au même cycle, l'étape 6 ne s'active pas. Les deux branches sont exclusives grâce au ELSIF. L'étape 5 se désactive dès le premier cycle où Arret est vrai.
+```
+IF X5 AND Arret THEN
+    X5 := FALSE;
+    X0 := TRUE;
+ELSIF X5 AND Fin THEN
+    X5 := FALSE;
+    X6 := TRUE;
+END_IF;
+```
+
+@048
+Q: Après un défaut, pourquoi ne pas réactiver aveuglément l'étape précédente ?
+C: La situation physique peut ne plus lui correspondre
+W: Une étape déjà franchie ne peut plus jamais s'activer
+W: Les entrées de l'automate sont remises à zéro
+W: La norme interdit tout retour en arrière
+E: Pendant le défaut, une pièce a pu être retirée ou un actionneur a pu bouger : reprendre sur l'étape précédente sans vérifier les capteurs commanderait des actions incohérentes. Une étape peut tout à fait être réactivée par une boucle. Les entrées ne sont pas remises à zéro. Les reprises de séquence sont permises, à condition d'être conçues.
+
+@049
+Q: Quel défaut présente cet extrait qui compte les pièces de l'étape 2 ?
+C: Une pièce est comptée à chaque cycle où elle est vue
+W: Une pièce n'est comptée qu'au départ de l'étape 2
+W: Le compteur est remis à zéro à chaque pièce
+W: Les pièces ne sont comptées qu'en dehors de l'étape 2
+E: La condition est un niveau : tant que la pièce est devant le capteur, NbPieces augmente à chaque cycle, soit des dizaines de fois par pièce. Il faut un front montant, par exemple R_TRIG sur Piece. Rien ne limite le comptage au départ de l'étape. Aucune remise à zéro n'est programmée. Le test X2 limite au contraire le comptage à l'étape 2.
+```
+IF X2 AND Piece THEN
+    NbPieces := NbPieces + 1;
+END_IF;
+```
+
+@050
+Q: Une demande d'arrêt arrive en plein cycle. Quelle modélisation est préférable ?
+C: La mémoriser et l'exécuter à la fin du cycle
+W: Couper toutes les sorties au milieu du mouvement
+W: L'ignorer jusqu'au prochain démarrage
+W: Franchir toutes les transitions jusqu'à la fin
+E: Un arrêt normal, à distinguer d'un arrêt d'urgence, est mémorisé puis pris en compte au point prévu, en général la fin de cycle : la machine s'arrête dans un état stable et propre. Couper les sorties en plein mouvement peut laisser une pièce coincée ou un vérin à mi-course. Ignorer la demande frustrerait l'opérateur. Forcer les transitions court-circuite les conditions du cycle.
+
+@051
+Q: Que détecte cet extrait pendant l'étape 3 ?
+C: Une étape 3 active depuis plus de 20 secondes
+W: Une étape 3 qui dure moins de 20 secondes
+W: Un capteur de l'étape 3 resté vrai 20 secondes
+W: Vingt passages par l'étape 3 depuis le démarrage
+E: La TON compte la durée d'activité de l'étape 3 et donne Q au-delà de 20 s : c'est un contrôle de durée, ou chien de garde d'étape, qui signale un blocage. Une étape trop courte n'est pas détectée. Aucun capteur n'est surveillé ici, seulement l'étape. Une TON mesure un temps, pas un nombre de passages.
+```
+VAR
+    X3 : BOOL;
+    Chien3 : TON;
+    Defaut_Etape3 : BOOL;
+END_VAR
+
+Chien3(IN := X3, PT := T#20s);
+IF Chien3.Q THEN
+    Defaut_Etape3 := TRUE;
+END_IF;
+```
+
+@052
+Q: Une réceptivité « 4s/X2 » est utilisée, et l'étape 2 se désactive avant 4 s par une autre transition. Que se passe-t-il ?
+C: La temporisation est réinitialisée et ne franchit rien
+W: La transition est franchie 4 s plus tard malgré tout
+W: L'étape 2 se réactive pour finir les 4 s
+W: Le temps restant s'ajoute à l'étape suivante
+E: La réceptivité t/Xi dépend de l'activité de l'étape i : si l'étape se désactive par une autre transition, le comptage s'arrête et repartira de zéro à la prochaine activation. Rien ne franchit la transition après coup, puisqu'elle n'est plus validée. Une étape ne se réactive pas d'elle-même. Le temps ne se reporte pas sur une autre étape.
+
+@053
+Q: Avec cet extrait, que se passe-t-il si `Choix_A` et `Choix_B` sont vrais ensemble ?
+C: Seule l'étape 2 : le code privilégie A
+W: Les étapes 2 et 3 s'activent ensemble
+W: Seule l'étape 3 s'active : B est testé en dernier
+W: Aucune étape ne s'active, la séquence se bloque
+E: Le ELSIF n'est évalué que si la première condition est fausse : avec Choix_A vrai, seule la branche vers l'étape 2 est exécutée. Le programme impose donc une priorité que le GRAFCET ne montrait peut-être pas : mieux vaut rendre les réceptivités exclusives dans la spécification, par exemple Choix_B · non Choix_A. Les deux étapes ne s'activent pas ensemble. La séquence ne se bloque pas.
+```
+IF X1 AND Choix_A THEN
+    X1 := FALSE;
+    X2 := TRUE;
+ELSIF X1 AND Choix_B THEN
+    X1 := FALSE;
+    X3 := TRUE;
+END_IF;
+```
+
+@054
+Q: Quel rôle joue une étape de défaut suivie d'une étape de réarmement ?
+C: Mettre en sécurité puis revenir à l'état initial
+W: Remplacer les protections physiques de la machine
+W: Effacer l'historique des alarmes après chaque arrêt
+W: Garantir qu'aucun défaut ne pourra se reproduire
+E: L'étape de défaut inhibe les actions dangereuses et signale le problème ; une fois la cause traitée et le défaut acquitté, le réarmement ramène la machine vers une situation initiale connue. Cette logique complète les protections physiques sans les remplacer. L'historique des alarmes doit être conservé. Elle traite le défaut, elle ne l'empêche pas de revenir.
+
+@055
+Q: Pourquoi cet extrait calcule-t-il les transitions avant de modifier les étapes ?
+C: Pour juger les transitions sur un état figé
+W: Pour exécuter les actions avant les transitions
+W: Pour accélérer le cycle de l'automate
+W: Pour franchir plusieurs étapes au même cycle
+E: T12 et T23 sont évaluées sur l'état des étapes au début du calcul : si a et b sont vrais ensemble, l'étape 2 activée à ce cycle n'est pas franchie avant le cycle suivant, quel que soit l'ordre des IF. Sans cette séparation, les deux transitions pourraient s'enchaîner dans le même cycle. Les actions ne sont pas concernées par cet ordre. Le gain n'est pas la vitesse mais un comportement indépendant de l'ordre des instructions.
+```
+T12 := X1 AND a;
+T23 := X2 AND b;
+IF T12 THEN
+    X1 := FALSE;
+    X2 := TRUE;
+END_IF;
+IF T23 THEN
+    X2 := FALSE;
+    X3 := TRUE;
+END_IF;
+```
+
+@056
+Q: Deux étapes actives en parallèle commandent des mouvements opposés au même vérin. Que faut-il faire ?
+C: Définir une priorité ou un interverrouillage
+W: Laisser l'automate choisir selon l'ordre du code
+W: Désactiver les capteurs de position du vérin
+W: Transformer les deux ordres en actions mémorisées
+E: Deux branches parallèles ne doivent jamais commander des mouvements incompatibles : on modifie la séquence pour les rendre exclusives, ou on arbitre la commande avec un interverrouillage explicite. Laisser l'ordre du code décider produit un comportement caché et fragile. Les capteurs restent nécessaires. Des actions mémorisées ne résolvent pas le conflit, elles le rendent plus durable.
+
+@057
+Q: Dans cet extrait, quel est l'effet de `NOT Defaut_Moteur` ?
+C: Couper le convoyeur en défaut, à toute étape
+W: Faire tourner le convoyeur seulement à l'étape 2
+W: Faire passer la séquence à l'étape 5 en défaut
+W: Rendre les étapes 2 et 5 exclusives entre elles
+E: Le convoyeur est commandé par les étapes 2 et 5, mais le terme AND NOT Defaut_Moteur coupe l'ordre dès qu'un défaut apparaît, dans l'une comme dans l'autre. Le OU fait au contraire tourner le convoyeur dans l'une ou l'autre étape. L'action n'agit pas sur les étapes. Le OU ne rend pas des étapes exclusives, c'est la structure du GRAFCET qui le fait.
+```
+Convoyeur := (X2 OR X5) AND NOT Defaut_Moteur;
+```
+
+@058
+Q: Dans une réceptivité, quelle différence entre le niveau « p » et le front « ↑p » ?
+C: p reste vrai, ↑p n'est vrai qu'au changement
+W: p n'est vrai qu'au changement, ↑p reste vrai
+W: Aucune, les deux notations sont équivalentes
+W: ↑p désigne le capteur p raccordé en sortie
+E: Le niveau p est vrai tant que le capteur est actionné ; le front ↑p n'est vrai qu'à l'instant où p passe de 0 à 1. Un front évite qu'une même pièce franchisse plusieurs transitions successives si elle reste devant le capteur. Les deux notations ne sont pas équivalentes. La flèche indique un événement, pas un raccordement.
+
+@059
+Q: Quelle différence entre la condition d'une transition et celle d'une action conditionnelle ?
+C: L'une fait évoluer, l'autre autorise un ordre
+W: Elles sont identiques, seul leur emplacement change
+W: La condition d'action fait elle aussi changer d'étape
+W: La transition ne peut contenir que des temporisations
+E: La réceptivité d'une transition décide du passage d'une situation à la suivante ; la condition d'une action ne fait qu'autoriser ou bloquer l'ordre émis pendant l'étape, sans changer d'étape. Confondre les deux fait avancer une séquence qui aurait dû attendre, ou l'inverse. Une réceptivité peut contenir capteurs, fronts, comparaisons et temporisations.
+
+@060
+Q: L'opérateur signale « bloqué à l'étape 12 ». Quelle information aide le plus le technicien ?
+C: La réceptivité attendue et l'état réel de ses entrées
+W: La couleur du symbole de l'étape sur la supervision
+W: Le nombre total de lignes du programme automate
+W: Le numéro de version du système d'exploitation du PC
+E: Savoir quelle condition est attendue et laquelle manque désigne directement le capteur, l'autorisation ou la temporisation à contrôler. Une IHM bien conçue affiche cette réceptivité et l'état de ses termes. La couleur du symbole confirme seulement que l'étape est active. La taille du programme et la version du PC n'expliquent pas le blocage.
+
+@061
+Q: Qu'apporte une macro-étape dans un GRAFCET complexe ?
+C: Elle regroupe une séquence décrite à part
+W: Elle remplace toutes les étapes initiales
+W: Elle exécute ses actions sans transition
+W: Elle supprime le besoin de réceptivités
+E: Une macro-étape représente une séquence détaillée dans son expansion, entre une étape d'entrée et une étape de sortie : le GRAFCET principal reste lisible. Elle ne remplace pas les étapes initiales. Son expansion contient des étapes et des transitions, comme tout GRAFCET. Les réceptivités restent nécessaires partout.
+
+@062
+Q: Un vérin doit sortir puis rentrer. Quel découpage en étapes convient ?
+C: Une étape « sortie » puis une étape « rentrée »
+W: Une seule étape qui commande sortie et rentrée
+W: Une étape par capteur, sans action associée
+W: Deux étapes initiales actives en même temps
+E: Chaque mouvement correspond à une situation : une étape commande la sortie jusqu'au capteur de fin de sortie, puis une autre commande la rentrée jusqu'au capteur de fin de rentrée. Une seule étape commanderait deux ordres contradictoires en même temps. Les capteurs sont des réceptivités, pas des étapes. Deux étapes initiales lanceraient les deux mouvements ensemble.
+
+@063
+Q: Où traiter une demande d'arrêt en fin de cycle, mémorisée pendant la production ?
+C: Dans la divergence de fin de cycle
+W: Dans le nom de l'étape initiale du GRAFCET
+W: Dans un commentaire du programme automate
+W: Dans chaque action, pour couper les sorties
+E: La demande mémorisée est testée là où le cycle se termine : la divergence en fin de cycle choisit entre reboucler pour un nouveau cycle ou rejoindre l'étape d'arrêt. Le nom d'une étape ou un commentaire n'ont aucun effet. Couper les sorties dans chaque action arrêterait la machine au milieu du cycle, ce qu'on veut justement éviter.
+
+@064
+Q: Deux événements peuvent survenir au même cycle automate. Comment garder une séquence déterministe ?
+C: Fixer une priorité ou des conditions exclusives
+W: Supposer que l'événement lu en premier l'emporte
+W: Ignorer le second événement sans le signaler
+W: Ajouter une temporisation au hasard entre les deux
+E: La spécification doit dire ce qui se passe quand les deux conditions sont vraies : priorité explicite, ou réceptivités construites pour s'exclure. Se fier à l'ordre de lecture rend le comportement dépendant du programme. Ignorer un événement peut perdre une information importante. Une temporisation arbitraire déplace le problème sans le résoudre.
+
+@065
+Q: Une machine doit indexer, serrer, usiner puis desserrer une pièce. Quel découpage est pertinent ?
+C: Une étape par opération, avec sa condition de fin
+W: Une seule étape active qui commande les quatre actions
+W: Une étape par entrée physique, sans actions associées
+W: Quatre étapes initiales actives au démarrage
+E: Chaque opération est une situation distincte, avec son action et sa condition de fin : capteur d'indexage, pression de serrage, fin d'usinage, desserrage confirmé. Une seule étape commanderait tout en même temps. Les entrées sont des réceptivités, pas des étapes. Quatre étapes initiales lanceraient les quatre opérations ensemble.

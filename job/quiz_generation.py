@@ -7,6 +7,7 @@ est ensuite mesuré, pour repérer un lot qui ne respecte pas la demande.
 
 import json
 import re
+from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 from string import Template
@@ -14,6 +15,7 @@ from string import Template
 from config import QUIZ_GENERATION_DIRECTORY
 from job.quiz import QUIZ_LEVELS, find_theme, slugify
 from job.quiz_domains import DOMAIN_ORDER, OTHER_DOMAIN, classify_theme
+from storage.quiz_questions import get_imported_questions
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -39,9 +41,9 @@ GENERATION_LEVELS = {
 # En dessous de ce nombre de questions, une proportion ne prouve rien.
 MIN_QUALITY_SAMPLE = 20
 
-# Au hasard, la bonne réponse est la plus longue ou à une position donnée une
-# fois sur quatre : au-delà de ces parts, elle se devine.
-MAX_LONGEST_SHARE = 0.4
+# Au hasard, la bonne réponse est la plus longue, la plus courte ou à une
+# position donnée une fois sur quatre : au-delà de ces parts, elle se devine.
+MAX_LENGTH_SHARE = 0.4
 MAX_POSITION_SHARE = 0.4
 
 # Une explication plus courte ne détaille pas pourquoi les autres choix sont faux.
@@ -71,6 +73,14 @@ CODE_REFERENCE_PATTERN = re.compile(
     r"extrait|code|programme|instruction|ci-dessous|commande suivante|`", re.I
 )
 MAX_UNRELATED_CODE_SHARE = 0.25
+
+# Mots de remplissage ajoutés pour égaliser les longueurs (« dans ce cas »,
+# « pour ce besoin ») : une même fin de choix revient bien plus souvent que
+# dans un texte rédigé.
+FILLER_ENDING_WORDS = 3
+FILLER_MIN_COUNT = 6
+FILLER_SHARE = 0.1
+MAX_FILLER_ISSUES = 3
 
 POSITION_LABELS = "ABCD"
 
@@ -130,14 +140,9 @@ def list_generation_themes(pThemes):
 def get_next_lot(pQuestions, pThemeKey):
     """Retourne le numéro du prochain lot d'un thème, d'après ses identifiants."""
 
-    vPattern = re.compile(rf"{re.escape(pThemeKey)}-l(\d+)-\d+")
-    vLots = [
-        int(vMatch.group(1))
-        for vQuestion in pQuestions
-        if (vMatch := vPattern.fullmatch(vQuestion["id"]))
-    ]
+    vLots = [get_lot_number(vQuestion["id"], pThemeKey) for vQuestion in pQuestions]
 
-    rLot = max(vLots, default=0) + 1
+    rLot = max((vLot for vLot in vLots if vLot is not None), default=0) + 1
 
     return rLot
 
@@ -284,6 +289,17 @@ def is_longest_answer(pQuestion):
     return rLongest
 
 
+def is_shortest_answer(pQuestion):
+    """Indique si la bonne réponse est strictement plus courte que les autres choix."""
+
+    vLengths = [len(vChoice) for vChoice in pQuestion["choices"]]
+    vRight = vLengths.pop(pQuestion["answer"])
+
+    rShortest = all(vRight < vLength for vLength in vLengths)
+
+    return rShortest
+
+
 def format_share(pCount, pTotal):
     """Retourne une part en pourcentage arrondi."""
 
@@ -292,38 +308,35 @@ def format_share(pCount, pTotal):
     return rText
 
 
-def assess_questions(pQuestions, pDomain=None):
-    """Mesure un lot importé ; retourne son résumé et ses alertes.
+def get_choice_ending(pChoice):
+    """Retourne les derniers mots d'un choix, en minuscules et sans ponctuation."""
 
-    Un écart aux règles de la demande (réponse qui se devine, explications
-    trop courtes, pas assez de cas concrets selon le domaine du thème) est
-    signalé dès que le lot est assez grand pour le prouver.
-    """
+    vWords = pChoice.lower().strip(" .;:!?").split()
+
+    rEnding = " ".join(vWords[-FILLER_ENDING_WORDS:])
+
+    return rEnding
+
+
+def describe_measures(pQuestions):
+    """Résume les mesures d'un lot en une ligne."""
 
     vTotal = len(pQuestions)
-    vLongestIds = [
-        vQuestion["id"] for vQuestion in pQuestions if is_longest_answer(vQuestion)
-    ]
-    vLongest = len(vLongestIds)
-    vPositionIds = [
-        [vQuestion["id"] for vQuestion in pQuestions if vQuestion["answer"] == vIndex]
+    vPositions = [
+        sum(vQuestion["answer"] == vIndex for vQuestion in pQuestions)
         for vIndex in range(len(POSITION_LABELS))
     ]
-    vPositions = [len(vIds) for vIds in vPositionIds]
-    vShortIds = [
-        vQuestion["id"]
-        for vQuestion in pQuestions
-        if len(vQuestion["explanation"].strip()) < MIN_EXPLANATION_LENGTH
-    ]
-    vShort = len(vShortIds)
     vLevels = [
         sum(vQuestion["level"] == vLevel for vQuestion in pQuestions)
         for vLevel in QUIZ_LEVELS
     ]
+    vLongest = sum(is_longest_answer(vQuestion) for vQuestion in pQuestions)
+    vShortest = sum(is_shortest_answer(vQuestion) for vQuestion in pQuestions)
 
-    vSummary = (
+    rSummary = (
         f"{vTotal} question(s), bonne réponse la plus longue "
-        f"{format_share(vLongest, vTotal)}, positions "
+        f"{format_share(vLongest, vTotal)}, la plus courte "
+        f"{format_share(vShortest, vTotal)}, positions "
         + " ".join(
             f"{vLabel} {format_share(vCount, vTotal)}"
             for vLabel, vCount in zip(POSITION_LABELS, vPositions)
@@ -334,53 +347,86 @@ def assess_questions(pQuestions, pDomain=None):
         f", schémas {sum('visual' in vQuestion for vQuestion in pQuestions)}"
         f", références {sum('references' in vQuestion for vQuestion in pQuestions)}"
     )
-    # Chaque alerte garde ses questions : la demande de correction les cite.
-    vIssues = []
 
-    if vTotal >= MIN_QUALITY_SAMPLE:
-        if vLongest > MAX_LONGEST_SHARE * vTotal:
-            vIssues.append(
+    return rSummary
+
+
+def find_bias_issues(pQuestions, pDomain):
+    """Retourne les écarts statistiques d'un lot : [(alerte, identifiants)].
+
+    Ces proportions ne prouvent quelque chose qu'à partir de MIN_QUALITY_SAMPLE
+    questions d'un même thème.
+    """
+
+    vTotal = len(pQuestions)
+    rIssues = []
+
+    for vLabel, vTest in (
+        ("la plus longue", is_longest_answer),
+        ("la plus courte", is_shortest_answer),
+    ):
+        vIds = [vQuestion["id"] for vQuestion in pQuestions if vTest(vQuestion)]
+
+        if len(vIds) > MAX_LENGTH_SHARE * vTotal:
+            rIssues.append(
                 (
-                    "bonne réponse la plus longue dans "
-                    f"{format_share(vLongest, vTotal)} des questions : elle se devine",
-                    vLongestIds,
+                    f"bonne réponse {vLabel} dans "
+                    f"{format_share(len(vIds), vTotal)} des questions : elle se devine",
+                    vIds,
                 )
             )
 
-        vIssues += [
-            (
-                f"bonne réponse en position {vLabel} dans "
-                f"{format_share(len(vIds), vTotal)} des questions",
-                vIds,
-            )
-            for vLabel, vIds in zip(POSITION_LABELS, vPositionIds)
-            if len(vIds) > MAX_POSITION_SHARE * vTotal
+    for vIndex, vLabel in enumerate(POSITION_LABELS):
+        vIds = [
+            vQuestion["id"] for vQuestion in pQuestions if vQuestion["answer"] == vIndex
         ]
 
-        if vShort > MAX_SHORT_EXPLANATION_SHARE * vTotal:
-            vIssues.append(
+        if len(vIds) > MAX_POSITION_SHARE * vTotal:
+            rIssues.append(
                 (
-                    f"{vShort} explication(s) de moins de {MIN_EXPLANATION_LENGTH} "
-                    "caractères",
-                    vShortIds,
+                    f"bonne réponse en position {vLabel} dans "
+                    f"{format_share(len(vIds), vTotal)} des questions",
+                    vIds,
                 )
             )
 
-        vCode = sum("code" in vQuestion for vQuestion in pQuestions)
+    vShortIds = [
+        vQuestion["id"]
+        for vQuestion in pQuestions
+        if len(vQuestion["explanation"].strip()) < MIN_EXPLANATION_LENGTH
+    ]
 
-        if (
-            pDomain
-            and pDomain[1] in CODE_SUBDOMAINS
-            and vCode < MIN_CODE_SHARE * vTotal
-        ):
-            vIssues.append(
-                (
-                    f"{vCode} question(s) avec code sur {vTotal} : moins de "
-                    f"{round(100 * MIN_CODE_SHARE)} % de cas concrets",
-                    [],
-                )
+    if len(vShortIds) > MAX_SHORT_EXPLANATION_SHARE * vTotal:
+        rIssues.append(
+            (
+                f"{len(vShortIds)} explication(s) de moins de "
+                f"{MIN_EXPLANATION_LENGTH} caractères",
+                vShortIds,
             )
+        )
 
+    vCode = sum("code" in vQuestion for vQuestion in pQuestions)
+
+    if pDomain and pDomain[1] in CODE_SUBDOMAINS and vCode < MIN_CODE_SHARE * vTotal:
+        rIssues.append(
+            (
+                f"{vCode} question(s) avec code sur {vTotal} : moins de "
+                f"{round(100 * MIN_CODE_SHARE)} % de cas concrets",
+                [],
+            )
+        )
+
+    return rIssues
+
+
+def find_writing_issues(pQuestions):
+    """Retourne les défauts d'écriture d'un lot, quelle que soit sa taille.
+
+    Choix tronqués, fins de choix répétées et extraits de code hors sujet sont
+    les contournements habituels des règles de longueur et de cas concrets.
+    """
+
+    rIssues = []
     vTruncatedIds = [
         vQuestion["id"]
         for vQuestion in pQuestions
@@ -391,10 +437,35 @@ def assess_questions(pQuestions, pDomain=None):
     ]
 
     if vTruncatedIds:
-        vIssues.append(
+        rIssues.append(
             (
                 f"{len(vTruncatedIds)} question(s) aux choix coupés par « … »",
                 vTruncatedIds,
+            )
+        )
+
+    vEndings = Counter(
+        get_choice_ending(vChoice)
+        for vQuestion in pQuestions
+        for vChoice in vQuestion["choices"]
+    )
+    vLimit = max(FILLER_MIN_COUNT, FILLER_SHARE * len(pQuestions))
+
+    for vEnding, vCount in vEndings.most_common(MAX_FILLER_ISSUES):
+        if vCount < vLimit or len(vEnding.split()) < FILLER_ENDING_WORDS:
+            break
+
+        rIssues.append(
+            (
+                f"{vCount} choix finissent par « {vEnding} » : remplissage probable",
+                [
+                    vQuestion["id"]
+                    for vQuestion in pQuestions
+                    if any(
+                        get_choice_ending(vChoice) == vEnding
+                        for vChoice in vQuestion["choices"]
+                    )
+                ],
             )
         )
 
@@ -407,12 +478,29 @@ def assess_questions(pQuestions, pDomain=None):
     ]
 
     if len(vUnrelatedIds) > MAX_UNRELATED_CODE_SHARE * len(vCodeIds):
-        vIssues.append(
+        rIssues.append(
             (
                 f"{len(vUnrelatedIds)} extrait(s) de code que l'énoncé ne cite pas",
                 vUnrelatedIds,
             )
         )
+
+    return rIssues
+
+
+def assess_questions(pQuestions, pDomain=None):
+    """Mesure les questions d'un thème ; retourne leur résumé et leurs alertes.
+
+    Chaque alerte garde les identifiants concernés : la demande de correction
+    les cite.
+    """
+
+    vIssues = []
+
+    if len(pQuestions) >= MIN_QUALITY_SAMPLE:
+        vIssues += find_bias_issues(pQuestions, pDomain)
+
+    vIssues += find_writing_issues(pQuestions)
 
     if vIssues:
         logger.warning(
@@ -421,12 +509,84 @@ def assess_questions(pQuestions, pDomain=None):
         )
 
     rQuality = {
-        "summary": vSummary,
+        "summary": describe_measures(pQuestions),
         "warnings": [vWarning for vWarning, _ in vIssues],
         "issues": vIssues,
     }
 
     return rQuality
+
+
+def get_lot_number(pQuestionId, pThemeKey):
+    """Retourne le numéro de lot d'un identifiant « thème-lN-… », ou None."""
+
+    vMatch = re.match(rf"{re.escape(pThemeKey)}-l(\d+)-", pQuestionId)
+
+    rLot = int(vMatch.group(1)) if vMatch else None
+
+    return rLot
+
+
+def apply_lot_quality(pDatabaseFile, pReport):
+    """Mesure chaque lot touché par un import et complète le bilan.
+
+    Un lot livré en plusieurs fichiers ou plusieurs archives se mesure en
+    entier : ses questions déjà en base comptent avec les nouvelles.
+    """
+
+    vThemes = {}
+
+    for vBatch in pReport["batches"]:
+        vTheme = vThemes.setdefault(
+            vBatch["key"], {**vBatch, "ids": set(), "lots": set()}
+        )
+        vTheme["ids"] |= set(vBatch["ids"])
+        vTheme["lots"] |= {get_lot_number(vId, vBatch["key"]) for vId in vBatch["ids"]}
+        vTheme["unknown_domain"] = vTheme["unknown_domain"] or vBatch["unknown_domain"]
+
+    if not vThemes:
+        return
+
+    vImported = get_imported_questions(pDatabaseFile)
+
+    for vKey, vTheme in vThemes.items():
+        vQuestions = [
+            vQuestion
+            for vThemeKey, _, vQuestion in vImported
+            if vThemeKey == vKey
+            and (
+                vQuestion["id"] in vTheme["ids"]
+                or get_lot_number(vQuestion["id"], vKey) in vTheme["lots"] - {None}
+            )
+        ]
+        vQuality = assess_questions(vQuestions, vTheme["domain"])
+        vIssues = list(vQuality["issues"])
+
+        if vTheme["unknown_domain"]:
+            vDomain, vSubdomain = vTheme["unknown_domain"]
+            vIssues.append(
+                (
+                    f"domaine « {vDomain} / {vSubdomain} » inconnu : le thème a "
+                    "été classé par mots-clés",
+                    [],
+                )
+            )
+
+        vLots = sorted(vLot for vLot in vTheme["lots"] if vLot is not None)
+        vName = vTheme["label"] + (
+            " (lot " + ", ".join(map(str, vLots)) + ")" if vLots else ""
+        )
+
+        pReport["quality"].append(f"{vName} : {vQuality['summary']}")
+        pReport["warnings"] += [f"{vName} : {vWarning}" for vWarning, _ in vIssues]
+
+        if vIssues:
+            pReport["review"].append(
+                {"key": vKey, "label": vTheme["label"], "issues": vIssues}
+            )
+
+        if vTheme["outside_catalog"]:
+            pReport["notes"].append(vTheme["label"])
 
 
 def build_correction_prompt(pReview):

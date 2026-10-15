@@ -5,11 +5,13 @@ import json
 import pytest
 
 import gui.quiz_page as quiz_page
+import job.quiz_packs as quiz_packs
 from gui.quiz_page import QuizPage
 from job.quiz_generation import MIN_QUALITY_SAMPLE
 from storage.database import initialize_database
 from tests.job.test_quiz_generation import build_lot_text, build_question
 from tests.job.test_quiz_import import build_pack
+from tools.quiz_lot import build_pack as build_lot_pack
 
 
 def create_page(pDatabaseFile):
@@ -393,3 +395,28 @@ def test_biased_lot_offers_a_correction(qt_application, tmp_path, monkeypatch):
     )
     assert len(vOpened) == 1
     assert vPage.import_message.text().startswith("Demande de correction copiée")
+
+
+def test_validated_packs_are_imported_in_one_click(
+    qt_application, tmp_path, monkeypatch
+):
+    """Vérifie le bouton des lots validés : nombre affiché puis import groupé."""
+
+    vFolder = tmp_path / "packs"
+    vFolder.mkdir()
+    monkeypatch.setattr(quiz_packs, "QUIZ_PACKS_DIRECTORY", str(vFolder))
+
+    vPage = create_page(tmp_path / "scraper.db")
+
+    assert vPage.packs_button.isHidden()
+
+    vName, vContent = build_lot_pack("grafcet")
+    (vFolder / vName).write_bytes(vContent)
+    vPage.refresh()
+
+    assert vPage.packs_button.text() == "Importer les lots validés (1)"
+    assert not vPage.packs_button.isHidden()
+
+    vPage.import_packs()
+
+    assert vPage.import_message.text().startswith("100 question(s) ajoutée(s)")

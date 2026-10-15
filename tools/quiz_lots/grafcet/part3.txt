@@ -1,0 +1,214 @@
+@066
+Q: Un convoyeur transfère une pièce entre deux postes. Quelle réceptivité termine l'étape de transfert ?
+C: La pièce vue par le capteur du poste d'arrivée
+W: Une temporisation fixe égale à la durée moyenne
+W: Le démarrage du moteur du convoyeur
+W: La présence de la pièce au poste de départ
+E: L'étape de transfert se termine quand la pièce est effectivement arrivée : seul le capteur du poste d'arrivée le confirme. Une temporisation fixe ignore un glissement, un bourrage ou une pièce tombée. Le démarrage du moteur est le début de l'action, pas sa fin. La présence au poste de départ indique au contraire que le transfert n'est pas fait.
+
+@067
+Q: Quel défaut de conception présente cet extrait ?
+C: À l'étape 3, deux ordres opposés au vérin
+W: Le vérin ne peut jamais rentrer à l'étape 4
+W: Le vérin sort pendant toute l'étape 4
+W: Les deux ordres s'annulent et rien ne bouge jamais
+E: Quand X3 est vraie, les deux affectations donnent TRUE : le distributeur reçoit en même temps l'ordre de sortie et celui de rentrée. Avec un distributeur bistable, le résultat dépend du pilotage précédent ; dans tous les cas, la commande est incohérente. À l'étape 4, seule la rentrée est commandée, ce qui est normal. Le défaut se limite à l'étape 3.
+```
+Verin_Sortir := X3;
+Verin_Rentrer := X3 OR X4;
+```
+
+@068
+Q: Une pièce est restée à mi-course après une coupure. Quelle stratégie de reprise est la plus robuste ?
+C: Identifier l'état réel, puis dégager en manuel
+W: Reprendre à l'étape mémorisée avant la coupure
+W: Forcer toutes les étapes jusqu'à la fin du cycle
+W: Effacer les défauts et relancer le cycle suivant
+E: Après une coupure, la position réelle des pièces et des actionneurs prime : on l'identifie par les capteurs, on bloque les mouvements automatiques, puis on dégage la machine en mode contrôlé avant de revenir à l'état initial. Reprendre à l'étape mémorisée suppose que rien n'a bougé. Forcer les étapes ou relancer le cycle ignore la pièce coincée.
+
+@069
+Q: Que fait cet extrait si `CapteurPresence` rebondit pendant l'étape 2 ?
+C: Il exige 200 ms de détection stable
+W: Il avance au premier front montant du capteur
+W: Il compte les rebonds et avance au deuxième
+W: Il avance 200 ms après la perte du capteur
+E: La TON repart de zéro à chaque retombée du capteur : la transition n'est franchie qu'après 200 ms de détection continue, ce qui filtre les rebonds et les détections fugitives. Avancer au premier front serait exactement le comportement évité. La TON ne compte pas les rebonds. Avancer après la perte du capteur correspondrait à une TOF.
+```
+VAR
+    X2, X3 : BOOL;
+    CapteurPresence : BOOL;
+    Stable : TON;
+END_VAR
+
+Stable(IN := X2 AND CapteurPresence, PT := T#200ms);
+IF X2 AND Stable.Q THEN
+    X2 := FALSE;
+    X3 := TRUE;
+END_IF;
+```
+
+@070
+Q: Une pompe remplit un bac de « niveau bas » à « niveau haut ». Pourquoi deux capteurs plutôt qu'un ?
+C: Pour créer un écart qui évite les relances
+W: Pour doubler la sécurité du même seuil de niveau
+W: Pour mesurer le débit de la pompe en continu
+W: Pour pouvoir supprimer le capteur de trop-plein
+E: Démarrer la pompe sur niveau bas et l'arrêter sur niveau haut crée une hystérésis : entre les deux seuils, l'état ne change pas, et la pompe ne redémarre pas à chaque petite variation. Deux capteurs au même seuil n'apporteraient pas cet écart. Le débit se mesure avec un débitmètre. Un trop-plein de sécurité reste indépendant de la régulation de niveau.
+
+@071
+Q: Dans cet extrait, quand `Pompe` s'arrête-t-elle ?
+C: Quand le niveau haut est atteint
+W: Dès que le niveau bas n'est plus détecté
+W: À chaque cycle où aucun capteur n'est actif
+W: Quand les deux capteurs sont actifs ensemble
+E: La pompe démarre sur niveau bas, puis aucune branche ne s'exécute entre les deux seuils : Pompe garde sa valeur jusqu'au niveau haut, qui l'arrête. Elle ne s'arrête donc pas dès la perte du niveau bas. Sans capteur actif, la valeur est conservée, pas remise à FALSE. Si les deux capteurs étaient vrais, la branche IF l'emporterait et la pompe resterait en marche.
+```
+IF Niveau_Bas THEN
+    Pompe := TRUE;
+ELSIF Niveau_Haut THEN
+    Pompe := FALSE;
+END_IF;
+```
+
+@072
+Q: Une commande est mémorisée dans une étape et remise à zéro dans une autre. Quel scénario faut-il tester ?
+C: Un défaut qui évite l'étape de remise à zéro
+W: Le seul cycle nominal, qui passe par les deux étapes
+W: Le relâchement de la commande par l'opérateur
+W: Le redémarrage de la CPU pendant la compilation
+E: Si un défaut, un arrêt ou une reprise fait sauter l'étape qui remet la commande à zéro, l'actionneur reste commandé alors que la séquence a changé. Il faut vérifier chaque parcours possible, ou remettre la commande à zéro dans les étapes de défaut et d'arrêt. Le cycle nominal ne révèle pas ce piège. Une action mémorisée ne dépend pas d'un relâchement opérateur.
+
+@073
+Q: Quel est le rôle de `Init_Ok` dans cet extrait ?
+C: Vérifier la position de référence
+W: Compter le nombre de cycles déjà réalisés
+W: Mémoriser la demande de départ de l'opérateur
+W: Commander la rentrée du vérin au démarrage
+E: Init_Ok regroupe les conditions initiales : vérin rentré, pince ouverte, poste vide ; le cycle ne démarre que si la machine est dans sa position de référence. Aucune variable n'est comptée ici. La demande de départ est Depart_Cycle, testée directement sans mémorisation. Init_Ok est une condition, elle ne commande aucun mouvement.
+```
+Init_Ok := Verin_Rentre AND Pince_Ouverte AND NOT Piece_En_Poste;
+IF X0 AND Depart_Cycle AND Init_Ok THEN
+    X0 := FALSE;
+    X1 := TRUE;
+END_IF;
+```
+
+@074
+Q: Pourquoi terminer l'étape de serrage sur « pression atteinte » plutôt que sur une durée ?
+C: La pression prouve que la pièce est serrée
+W: Une durée ne peut pas être programmée en GRAFCET
+W: La pression évite d'avoir à alimenter le vérin
+W: Une durée rendrait le serrage plus fort
+E: Le pressostat mesure l'effort réellement appliqué : il confirme le serrage, même si le vérin met plus ou moins de temps selon la pièce ou la pression du réseau. Une durée se programme très bien, mais elle ne prouve rien. Le vérin doit rester alimenté pendant le serrage. La durée n'a aucun effet sur la force de serrage.
+
+@075
+Q: `Capteur_A` détecte le vérin sorti, `Capteur_B` le vérin rentré. Que vérifie cet extrait ?
+C: Que les capteurs ne sont pas vrais ensemble
+W: Que le vérin est sorti avant d'être rentré
+W: Que le capteur A est câblé sur la bonne entrée
+W: Que les capteurs changent d'état à chaque cycle
+E: Un vérin ne peut pas être sorti et rentré à la fois : les deux capteurs vrais signalent un capteur collé, déréglé ou mal câblé. L'extrait refuse alors d'avancer et lève un défaut au lieu de croire Capteur_A. Il ne vérifie pas un ordre de mouvement. Il ne peut pas identifier une erreur d'affectation d'entrée. Les capteurs n'ont pas à changer à chaque cycle.
+```
+IF X4 AND Capteur_A AND Capteur_B THEN
+    Defaut_Capteurs := TRUE;
+ELSIF X4 AND Capteur_A THEN
+    X4 := FALSE;
+    X5 := TRUE;
+END_IF;
+```
+
+@076
+Q: Comment un GRAFCET peut-il aider à détecter un capteur de fin de course collé à 1 ?
+C: En le testant au départ du mouvement
+W: En supprimant la transition qui l'utilise
+W: En le traitant comme un front descendant
+W: En allongeant le temps de cycle automate
+E: Au début d'un mouvement, le capteur de fin doit être à 0 : s'il est déjà à 1, il est collé ou déréglé, et l'étape peut signaler un défaut au lieu de franchir aussitôt. Un contrôle de durée maximale complète ce test. Supprimer la transition casse la séquence. Le traiter en front descendant ne change rien s'il reste à 1. Le temps de cycle n'aide pas.
+
+@077
+Q: Cet extrait traduit une transition qui part de l'étape 2 et y revient. Que vaut `X2` ensuite ?
+C: TRUE, l'activation écrite en dernier gagne
+W: FALSE, la désactivation l'emporte toujours
+W: FALSE pendant un cycle, puis TRUE
+W: TRUE, mais Nb n'est jamais incrémenté
+E: Le GRAFCET précise qu'une étape à la fois désactivée et activée par un même franchissement reste active ; ici l'activation est écrite en dernier, donc X2 vaut TRUE, ce qui respecte cette règle. Si les deux lignes étaient inversées, l'étape serait perdue : l'ordre compte. X2 ne passe jamais à FALSE entre deux cycles. Nb est incrémenté à chaque franchissement.
+```
+IF X2 AND c THEN
+    X2 := FALSE; (* désactivation amont *)
+    X2 := TRUE;  (* activation aval *)
+    Nb := Nb + 1;
+END_IF;
+```
+
+@078
+Q: Un mouvement ne doit être permis que porte fermée. Où cette condition doit-elle figurer ?
+C: Dans la commande et dans une chaîne de sécurité
+W: Uniquement dans la réceptivité qui lance le mouvement
+W: Uniquement dans un message affiché sur le pupitre
+W: Dans le nom de l'étape qui commande le mouvement
+E: Tester la porte seulement au lancement laisse le mouvement continuer si elle s'ouvre ensuite : la condition doit couper l'action pendant toute l'étape. Si l'ouverture expose à un danger, la protection des personnes repose en plus sur une chaîne de sécurité validée, pas sur le seul GRAFCET. Un message ou un nom d'étape n'empêche aucun mouvement.
+
+@079
+Q: Que garantit cet extrait pour `Sortie_Action` quand `Defaut` est vrai ?
+C: Qu'elle reste à FALSE, même pendant l'étape 2
+W: Qu'elle passe à TRUE si l'étape 2 est active
+W: Qu'elle garde sa valeur du cycle précédent
+W: Qu'elle suit uniquement la variable Autorisation
+E: La première branche teste Defaut : tant qu'il est vrai, la sortie est mise à FALSE et les autres branches ne sont pas évaluées. Le défaut a donc priorité sur l'étape et l'autorisation. La branche ELSE évite toute mémorisation involontaire. Hors défaut, la sortie dépend à la fois de X2 et d'Autorisation.
+```
+IF Defaut THEN
+    Sortie_Action := FALSE;
+ELSIF X2 AND Autorisation THEN
+    Sortie_Action := TRUE;
+ELSE
+    Sortie_Action := FALSE;
+END_IF;
+```
+
+@080
+Q: Une réceptivité est vraie en supervision mais la transition n'est pas franchie. Quelle hypothèse examiner ?
+C: Son étape amont n'est peut-être pas active
+W: Le GRAFCET doit être converti en Ladder
+W: La sortie aval doit être forcée à 1
+W: Le numéro de l'étape suivante est trop grand
+E: Une réceptivité vraie ne suffit pas : il faut que la transition soit validée, donc que toutes ses étapes amont soient actives, par exemple les deux branches d'une convergence en ET. On vérifie aussi que la variable affichée est bien celle utilisée par le programme. Le langage d'implémentation, une sortie forcée ou un numéro d'étape n'expliquent pas ce blocage.
+
+@081
+Q: Une impulsion de capteur peut être plus courte que le cycle automate. Quelle précaution prendre ?
+C: Une entrée rapide ou une mémorisation matérielle
+W: Allonger l'impulsion en déplaçant le capteur
+W: Supposer que le cycle lira toujours l'impulsion
+W: Remplacer le capteur par une temporisation
+E: Une impulsion plus brève que le cycle peut tomber entre deux lectures des entrées et être perdue : on utilise une entrée rapide, une interruption matérielle ou un module qui mémorise l'événement. Déplacer le capteur ne garantit rien. Supposer la lecture certaine est précisément l'erreur. Une temporisation ne détecte pas la pièce.
+
+@082
+Q: Une branche parallèle est ajoutée à un cycle existant. Quel essai de régression est indispensable ?
+C: Rejouer les parcours existants avec la branche
+W: Tester seulement la nouvelle branche, isolément
+W: Vérifier uniquement que le projet compile
+W: Supprimer les anciens essais devenus inutiles
+E: Une branche parallèle change la synchronisation du cycle : la convergence en ET attend désormais une branche de plus, et des ressources partagées peuvent entrer en conflit. On rejoue donc les parcours existants, nominaux et en défaut, en plus de la nouvelle branche. La compilation ne prouve pas le comportement. Les anciens essais restent la référence.
+
+@083
+Q: Que décrit le GEMMA en complément du GRAFCET ?
+C: Les modes de marche et d'arrêt de la machine
+W: Le câblage des entrées et sorties de l'automate
+W: Les symboles graphiques des étapes et transitions
+W: Le calcul du niveau de performance de sécurité
+E: Le GEMMA, guide d'étude des modes de marches et d'arrêts, organise les états de la machine : production normale, arrêts, marches de préparation ou de vérification, défaillances. Il guide la conception du GRAFCET de conduite. Le câblage relève des schémas électriques. Les symboles sont définis par l'IEC 60848. Le niveau de performance relève de l'ISO 13849.
+
+@084
+Q: Le passage du mode automatique au mode manuel est permis pendant un mouvement. Quel risque traiter ?
+C: Un actionneur laissé en mouvement sans contrôle
+W: L'impossibilité de revenir un jour en automatique
+W: La perte définitive du programme de l'automate
+W: L'effacement de toutes les étapes initiales
+E: Si le changement de mode interrompt la séquence sans traiter les actions en cours, un mouvement peut continuer alors que plus rien ne le surveille. La spécification doit dire quels ordres sont coupés, quand le changement est permis et comment revenir en automatique. Le retour reste possible. Le programme et les étapes initiales ne sont pas effacés.
+
+@085
+Q: Un GRAFCET contient une boucle dont toutes les réceptivités peuvent être vraies en même temps. Quel risque ?
+C: Une évolution sans fin qui ne s'arrête sur aucune étape
+W: Un blocage définitif sur la première étape de la boucle
+W: Une erreur de compilation empêchant le téléchargement
+W: Une désactivation de toutes les étapes initiales
+E: Si toutes les réceptivités d'une boucle sont vraies, les franchissements s'enchaînent sans qu'aucune étape ne devienne stable : les actions continues ne sont pas exécutées et le comportement devient imprévisible. Il ne s'agit pas d'un blocage, au contraire. Le compilateur ne détecte pas ce problème de logique. Les étapes initiales ne sont pas concernées.

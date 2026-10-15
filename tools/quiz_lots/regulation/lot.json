@@ -1,0 +1,93 @@
+{
+  "lot": 1,
+  "seed": 1408025241,
+  "skills": [
+    "régulation",
+    "boucle PID",
+    "réglage PID",
+    "vanne de régulation",
+    "régulation en cascade",
+    "instrumentation"
+  ],
+  "schemas": [
+    {
+      "name": "regulation-boucle-fermee.svg",
+      "questions": [
+        "001",
+        "002",
+        "003",
+        "004",
+        "026"
+      ],
+      "diagram": {
+        "title": "Boucle de régulation fermée",
+        "nodes": [
+          "Consigne",
+          "Comparateur (écart)",
+          "Régulateur PID",
+          "Vanne de régulation",
+          "Procédé"
+        ],
+        "feedback": [
+          4,
+          1,
+          "mesure renvoyée par le transmetteur"
+        ]
+      }
+    },
+    {
+      "name": "regulation-cascade.svg",
+      "questions": [
+        "046",
+        "047",
+        "060",
+        "061"
+      ],
+      "diagram": {
+        "title": "Régulation en cascade",
+        "nodes": [
+          "Consigne maître",
+          "Régulateur maître (température)",
+          "Régulateur esclave (débit)",
+          "Vanne",
+          "Procédé"
+        ],
+        "note": "La sortie du maître devient la consigne de l'esclave, plus rapide, qui corrige les perturbations locales."
+      }
+    },
+    {
+      "name": "regulation-partage-etendue.svg",
+      "questions": [
+        "045",
+        "083"
+      ],
+      "diagram": {
+        "title": "Partage d'étendue entre froid et chaud",
+        "nodes": [
+          "Sortie du régulateur 0-100 %",
+          "0 à 50 % : vanne de froid de 100 à 0 %",
+          "50 à 100 % : vanne de chaud de 0 à 100 %",
+          "Température du procédé"
+        ]
+      }
+    },
+    {
+      "name": "regulation-anticipation.svg",
+      "questions": [
+        "048",
+        "062"
+      ],
+      "diagram": {
+        "title": "Anticipation sur une perturbation mesurée",
+        "nodes": [
+          "Débit de charge mesuré",
+          "Calcul d'anticipation",
+          "Somme avec la sortie du PID",
+          "Vanne",
+          "Procédé"
+        ],
+        "note": "Le PID corrige l'écart restant ; l'anticipation agit dès que la charge change."
+      }
+    }
+  ]
+}

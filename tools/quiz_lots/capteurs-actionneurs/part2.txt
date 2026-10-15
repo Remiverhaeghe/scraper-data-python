@@ -1,0 +1,564 @@
+@051
+Q: Dans ce démarrage étoile-triangle, pourquoi `KM_Etoile` exige-t-il `NOT KM_Triangle` ?
+C: Pour interdire les deux contacteurs fermés
+W: Pour démarrer le moteur directement en triangle
+W: Pour inverser le sens de rotation du moteur
+W: Pour réduire la vitesse finale du moteur
+E: Les contacteurs étoile et triangle ne doivent jamais être fermés en même temps, sous peine de court-circuit entre phases : chacun est interverrouillé par l'état de l'autre, en logiciel et aussi par contacts auxiliaires câblés. Le moteur démarre en étoile, puis passe en triangle après la temporisation. Le sens de rotation se change en permutant deux phases. La vitesse finale n'est pas modifiée.
+```
+Tempo(IN := Marche, PT := T#6s);
+KM_Ligne := Marche;
+KM_Etoile := Marche AND NOT Tempo.Q AND NOT KM_Triangle;
+KM_Triangle := Marche AND Tempo.Q AND NOT KM_Etoile;
+```
+
+@052
+Q: Quel est l'intérêt d'un démarrage étoile-triangle ?
+C: Réduire le courant d'appel au démarrage
+W: Augmenter le couple de démarrage du moteur
+W: Faire varier la vitesse en continu
+W: Supprimer la protection thermique du moteur
+E: En étoile, chaque enroulement reçoit une tension réduite d'un facteur √3 : le courant de démarrage est divisé par trois environ, ce qui ménage le réseau. Le couple est lui aussi divisé par trois, d'où un démarrage à vide ou sous faible charge. La vitesse ne se règle pas ainsi, il faut un variateur. La protection thermique reste nécessaire.
+
+@053
+Q: Que détecte cet extrait sur la commande du moteur ?
+C: Un retour de contacteur en désaccord avec l'ordre
+W: Un moteur qui tourne dans le mauvais sens
+W: Une surcharge thermique de l'enroulement
+W: Un nombre de démarrages trop élevé par heure
+E: XOR est vrai quand l'ordre et le retour du contact auxiliaire diffèrent : si ce désaccord dure plus de 500 ms, le contacteur n'a pas suivi l'ordre (bobine coupée, contact soudé, protection déclenchée). Le délai tolère le temps normal de fermeture. Le sens de rotation, la température ou le nombre de démarrages ne sont pas surveillés ici.
+```
+VAR
+    Ordre_KM1, Retour_KM1 : BOOL;
+    Discordance : TON;
+    Defaut_KM1 : BOOL;
+END_VAR
+
+Discordance(IN := Ordre_KM1 XOR Retour_KM1, PT := T#500ms);
+Defaut_KM1 := Discordance.Q;
+```
+
+@054
+Q: Qu'est-ce qui distingue un servomoteur d'un moteur pas à pas utilisé sans codeur ?
+C: Le servomoteur corrige sa position grâce à un retour
+W: Le servomoteur ne peut tourner que dans un sens
+W: Le moteur pas à pas mesure lui-même sa position
+W: Le servomoteur fonctionne sans aucun variateur
+E: Le servomoteur fonctionne en boucle fermée : un codeur renvoie la position au variateur, qui corrige l'écart en permanence. Un moteur pas à pas sans codeur avance pas par pas en boucle ouverte, et un pas perdu sous une charge trop forte n'est pas détecté. Les deux tournent dans les deux sens. Le servomoteur a besoin de son variateur.
+
+@055
+Q: Avec cet extrait et un distributeur bistable, que fait le vérin entre l'étape 2 et l'étape 4 ?
+C: Il reste sorti jusqu'à l'ordre de rentrée
+W: Il revient en position rentrée par ressort
+W: Il s'arrête à mi-course, faute d'air
+W: Il oscille entre les deux positions
+E: Un distributeur bistable garde la dernière position commandée : après l'impulsion de sortie à l'étape 2, le vérin reste sorti jusqu'à l'alimentation de la bobine de rentrée à l'étape 4. Le retour par ressort est le propre d'un monostable. L'air reste présent dans la chambre alimentée. Rien ne provoque d'oscillation.
+```
+Bobine_Sortie := X2;
+Bobine_Rentree := X4;
+```
+
+@056
+Q: Qu'apporte IO-Link par rapport à un simple capteur tout ou rien ?
+C: Le paramétrage et le diagnostic du capteur
+W: La suppression de tout câblage vers le capteur
+W: Une alimentation du capteur en 230 V alternatif
+W: La transformation du capteur en automate
+E: IO-Link établit une communication numérique point à point entre le maître et le capteur : on lit des valeurs, on transmet des paramètres et on récupère des diagnostics comme l'encrassement ou la température interne. Le capteur reste câblé, avec un câble standard. L'alimentation reste en 24 V continu. Le capteur ne devient pas un automate.
+
+@057
+Q: Quel est l'effet de cet extrait sur la mesure ?
+C: Il lisse la mesure
+W: Il multiplie la mesure par quatre
+W: Il garde la plus grande des quatre valeurs
+W: Il supprime toute variation réelle de la mesure
+E: L'extrait décale l'historique et calcule la moyenne des quatre derniers échantillons : les fluctuations rapides sont atténuées. La division par 4 annule la somme, la valeur n'est donc pas multipliée. Aucune valeur maximale n'est retenue. Une variation réelle apparaît toujours, avec un retard de quelques échantillons.
+```
+Echantillons[3] := Echantillons[2];
+Echantillons[2] := Echantillons[1];
+Echantillons[1] := Echantillons[0];
+Echantillons[0] := Mesure_Brute;
+Mesure := (Echantillons[0] + Echantillons[1]
+         + Echantillons[2] + Echantillons[3]) / 4.0;
+```
+
+@058
+Q: À quoi sert la compensation de soudure froide d'un thermocouple ?
+C: À connaître la température des bornes
+W: À refroidir la soudure de mesure
+W: À alimenter le thermocouple en courant
+W: À convertir la mesure en 4-20 mA
+E: Le thermocouple mesure un écart de température entre sa soudure chaude et le point de raccordement, la soudure froide : il faut connaître la température de ce point, mesurée par le module ou le transmetteur, pour en déduire la température réelle. Rien ne refroidit la soudure de mesure. Un thermocouple produit sa propre tension. La conversion 4-20 mA est une autre fonction, éventuelle.
+
+@059
+Q: Quelle température donne cet extrait pour une résistance de 119,25 Ω ?
+C: 50 °C
+W: 19 °C
+W: 119 °C
+W: 46 °C
+E: L'extrait applique l'approximation linéaire de la Pt100 : (119,25 − 100) / 0,385 = 19,25 / 0,385 = 50 °C. 19 °C oublie la division par le coefficient. 119 °C recopie la résistance. 46 °C ne correspond à aucun calcul correct.
+```
+VAR
+    Resistance_Ohm : REAL := 119.25;
+    Temperature_C : REAL;
+END_VAR
+
+Temperature_C := (Resistance_Ohm - 100.0) / 0.385;
+```
+
+@060
+Q: Pourquoi un capteur ultrasonore de niveau a-t-il une zone morte ?
+C: Il ne peut pas mesurer trop près de sa face
+W: Il ne mesure rien au-delà de quelques centimètres
+W: Il s'éteint quand le liquide est immobile
+W: Il ne fonctionne qu'avec des liquides chauds
+E: Le capteur émet une impulsion puis écoute l'écho : juste après l'émission, la membrane vibre encore et ne peut pas recevoir, d'où une distance minimale de mesure. Le liquide ne doit jamais monter dans cette zone. La portée maximale atteint souvent plusieurs mètres. Le capteur fonctionne quel que soit le mouvement du liquide. La température influe sur la vitesse du son, ce que le capteur compense, mais n'est pas une condition de fonctionnement.
+
+@061
+Q: La voie A d'un codeur de 1 024 impulsions par tour donne 2 048 impulsions en une seconde. Quelle vitesse calcule cet extrait ?
+C: 120 tr/min
+W: 2 tr/min
+W: 2 048 tr/min
+W: 60 tr/min
+E: 2 048 impulsions par seconde font 2 048 / 1 024 = 2 tours par seconde, soit 2 × 60 = 120 tr/min. 2 tr/min oublie la conversion en minutes. 2 048 tr/min confond impulsions et tours. 60 tr/min ne correspond qu'à 1 tour par seconde.
+```
+VAR
+    Impulsions_par_s : REAL := 2048.0;
+    Vitesse_tr_min : REAL;
+END_VAR
+
+Vitesse_tr_min := Impulsions_par_s / 1024.0 * 60.0;
+```
+
+@062
+Q: Une électrovanne « normalement fermée » perd son alimentation. Que se passe-t-il ?
+C: Elle se ferme aussitôt
+W: Elle reste dans la position où elle était
+W: Elle s'ouvre en grand par sécurité
+W: Elle se met à osciller à 50 Hz
+E: NF signifie que la vanne est fermée au repos : sans courant dans la bobine, le ressort la ferme. Le choix entre NF et NO dépend de l'état sûr du procédé en cas de coupure. Rester en place est le comportement d'une vanne bistable. S'ouvrir à la coupure est le propre d'une vanne NO. Une vanne correctement alimentée n'oscille pas.
+
+@063
+Q: Quelle consigne reçoit le variateur avec cet extrait si `Demande_Hz` vaut 65 ?
+C: 50 Hz
+W: 65 Hz
+W: 0 Hz
+W: 15 Hz
+E: LIMIT(MN, IN, MX) borne la valeur entre un minimum et un maximum : 65 dépasse 50, le résultat vaut donc 50 Hz, ce qui protège la machine d'une consigne trop élevée. 65 Hz serait la valeur non bornée. 0 Hz n'est renvoyé que pour une demande négative ou nulle. 15 Hz est l'écart entre 65 et 50, pas la consigne.
+```
+VAR
+    Demande_Hz : REAL := 65.0;
+    Consigne_Hz : REAL;
+END_VAR
+
+Consigne_Hz := LIMIT(0.0, Demande_Hz, 50.0);
+```
+
+@064
+Q: Quel capteur convient le mieux pour détecter des bouteilles en verre transparent ?
+C: Un ultrasonore ou un photo spécial transparent
+W: Un détecteur inductif réglé à sa portée maximale
+W: Un photoélectrique de proximité standard
+W: Un fin de course à galet sur chaque bouteille
+E: Un objet transparent laisse passer l'essentiel de la lumière : on choisit un détecteur photoélectrique conçu pour les objets transparents, à seuil très fin, ou un capteur ultrasonore, insensible à la transparence. Un inductif ne voit pas le verre. Un photoélectrique de proximité standard détecte mal un objet qui renvoie peu de lumière. Un contact mécanique sur chaque bouteille gênerait le flux et s'userait.
+
+@065
+Q: Quelle valeur brute cet extrait envoie-t-il à la sortie analogique pour 50 % de vitesse ?
+C: 13 824
+W: 27 648
+W: 50
+W: 5 530
+E: La plage nominale de la sortie va de 0 à 27 648 : 50 % donnent 27 648 × 50 / 100 = 13 824. 27 648 correspond à 100 %. 50 recopie le pourcentage sans mise à l'échelle. 5 530 correspond à 4 mA sur une sortie 0-20 mA, pas à 50 %.
+```
+VAR
+    Vitesse_pct : REAL := 50.0;
+    Sortie_Brute : INT;
+END_VAR
+
+Sortie_Brute := REAL_TO_INT(Vitesse_pct * 27648.0 / 100.0);
+```
+
+@066
+Q: Les pièces passent 50 ms devant le capteur. Quel problème pose cet extrait ?
+C: Aucune pièce ne sera jamais détectée
+W: Chaque pièce sera comptée deux fois
+W: Les pièces seront détectées 200 ms plus tôt
+W: Le capteur restera actif en permanence
+E: La TON exige 200 ms de signal continu, alors que chaque pièce ne reste que 50 ms devant le capteur : Piece_Vue ne passe jamais à TRUE. Un filtre doit rester plus court que la durée de détection réelle. Une temporisation ne double pas un comptage. Elle retarde la détection, elle ne l'avance pas. L'état du capteur lui-même n'est pas modifié.
+```
+Filtre(IN := Capteur_Piece, PT := T#200ms);
+Piece_Vue := Filtre.Q;
+```
+
+@067
+Q: Un détecteur capacitif monté contre une cuve plastique détecte même cuve vide. Que faire ?
+C: Réduire sa sensibilité jusqu'à ignorer la paroi
+W: Le remplacer par un détecteur inductif
+W: Augmenter sa sensibilité au maximum
+W: Le raccorder en NPN au lieu de PNP
+E: Le capacitif voit aussi la paroi : on règle sa sensibilité, souvent par potentiomètre ou apprentissage, pour qu'il ignore la paroi seule et réagisse au liquide derrière. Un inductif ne verrait pas un liquide non métallique. Augmenter la sensibilité aggrave le problème. Le type de sortie ne change pas ce qui est détecté.
+
+@068
+Q: Le module de température renvoie des dixièmes de degré. Que vaut `Temperature_C` pour une valeur brute de 235 ?
+C: 23,5 °C
+W: 235,0 °C
+W: 2,35 °C
+W: 0,235 °C
+E: La valeur brute est exprimée en dixièmes de degré : 235 / 10 = 23,5 °C. 235 °C oublie la conversion. 2,35 °C et 0,235 °C divisent trop. Lire la documentation du module évite ces erreurs d'échelle, fréquentes entre modules et constructeurs.
+```
+VAR
+    Brut : INT := 235;
+    Temperature_C : REAL;
+END_VAR
+
+Temperature_C := INT_TO_REAL(Brut) / 10.0;
+```
+
+@069
+Q: Que devient la vitesse d'un moteur asynchrone quand sa charge augmente ?
+C: Elle baisse un peu
+W: Elle augmente pour compenser la charge
+W: Elle reste exactement égale au synchronisme
+W: Elle tombe à zéro dès la moindre surcharge
+E: Le couple d'un moteur asynchrone dépend du glissement : pour fournir plus de couple, le rotor tourne un peu moins vite, par exemple de 1 480 à 1 440 tr/min. Il ne peut pas dépasser la vitesse de synchronisme en fonctionnement moteur. Il ne l'atteint jamais en charge. Une surcharge modérée le ralentit sans l'arrêter, jusqu'au décrochage.
+
+@070
+Q: `Marche` et `Arret` sont actionnés en même temps. Que fait le moteur avec cet extrait ?
+C: Il s'arrête, l'arrêt est prioritaire
+W: Il démarre, la marche est testée ensuite
+W: Il garde son état précédent
+W: Il démarre puis s'arrête à chaque cycle
+E: La condition Arret est testée en premier : tant qu'elle est vraie, Moteur passe à FALSE et la branche ELSIF n'est pas évaluée. Cette priorité à l'arrêt est la règle dans une commande de moteur. La marche n'est jamais exécutée dans ce cas. L'état n'est pas conservé, il est forcé à FALSE. Le moteur ne bascule pas d'un cycle à l'autre.
+```
+IF Arret THEN
+    Moteur := FALSE;
+ELSIF Marche THEN
+    Moteur := TRUE;
+END_IF;
+```
+
+@071
+Q: À quoi sert l'amortissement réglable en fin de course d'un vérin pneumatique ?
+C: À freiner le piston juste avant la butée
+W: À augmenter la force en fin de course
+W: À maintenir la pression après l'arrêt
+W: À détecter la position de fin de course
+E: L'amortissement piège un volume d'air en fin de course et le laisse s'échapper par un orifice réglable : le piston ralentit avant de toucher le fond, ce qui évite les chocs et l'usure. Il ne crée pas de force supplémentaire. Il ne maintient pas la pression. La position se détecte avec un capteur, souvent magnétique.
+
+@072
+Q: Quelle force théorique calcule cet extrait pour un vérin de 32 mm sous 4 bar ?
+C: Environ 322 N
+W: Environ 1 287 N
+W: Environ 128 N
+W: Environ 32 N
+E: La pression en bar est convertie en N/mm² (× 0,1), puis multipliée par la surface π × 16² ≈ 804 mm² : 0,4 × 804 ≈ 322 N. 1 287 N prend le diamètre comme rayon. 128 N convertit mal les bars, avec 0,04 N/mm² au lieu de 0,4. 32 N divise le résultat par dix.
+```
+VAR
+    Pression_bar : REAL := 4.0;
+    Diametre_mm : REAL := 32.0;
+    Force_N : REAL;
+END_VAR
+
+Force_N := Pression_bar * 0.1 * 3.1416
+         * (Diametre_mm / 2.0) * (Diametre_mm / 2.0);
+```
+
+@073
+Q: Pourquoi choisir un relais statique pour une charge commutée plusieurs fois par seconde ?
+C: Il n'a pas de contact mécanique qui s'use
+W: Il ne chauffe jamais, quelle que soit la charge
+W: Il assure une coupure galvanique visible
+W: Il n'a besoin d'aucune commande électrique
+E: Un relais statique commute par semi-conducteurs : il supporte des millions de manœuvres sans usure, là où un relais électromécanique s'userait vite. En contrepartie, il dissipe de la chaleur et demande souvent un dissipateur. Il n'offre pas de coupure visible, ce qui interdit de s'en servir pour isoler un circuit. Il est piloté par un signal de commande.
+
+@074
+Q: Quel est le rôle de cet extrait, qui compare la position d'un codeur à une limite ?
+C: Une fin de course logicielle, en plus des butées
+W: Le remplacement des fins de course physiques
+W: Le calcul de la vitesse de l'axe en mm/s
+W: La remise à zéro du codeur à chaque passage
+E: L'extrait arrête l'axe si la position mesurée dépasse la limite programmée : c'est une fin de course logicielle, utile pour protéger la mécanique avant les butées. Elle complète les fins de course physiques et ne les remplace pas, car elle dépend du codeur et du programme. Aucune vitesse n'est calculée. La position n'est pas remise à zéro.
+```
+IF Position_mm > Limite_Haute_mm THEN
+    Commande_Axe := FALSE;
+    Defaut_Limite := TRUE;
+END_IF;
+```
+
+@075
+Q: Comment prolonger la liaison d'un thermocouple de type K jusqu'au module de mesure ?
+C: Avec un câble de compensation de type K
+W: Avec un câble cuivre ordinaire bien serré
+W: Avec un câble blindé de type Ethernet
+W: Avec le câble d'une sonde Pt100 trois fils
+E: Le thermocouple crée une tension à chaque jonction entre métaux différents : prolonger avec du cuivre ordinaire déplace la soudure froide et fausse la mesure. Le câble de compensation, dans des alliages adaptés au type K, conserve les propriétés jusqu'au module. Un câble Ethernet ou un câble de Pt100 pose le même problème que le cuivre.
+
+@076
+Q: La température monte de 70 à 78 °C. Que vaut `Ventilateur` avec cet extrait, s'il était arrêté ?
+C: FALSE, il ne démarre qu'au-dessus de 80 °C
+W: TRUE, car 78 °C dépasse le seuil bas de 75 °C
+W: TRUE, car la température est en hausse
+W: Il bascule à chaque cycle entre les deux états
+E: Le ventilateur démarre au-dessus de 80 °C et s'arrête sous 75 °C : à 78 °C, aucune branche ne s'exécute et il garde son état, arrêté. C'est une hystérésis de 5 °C qui évite les démarrages répétés. Le seuil de 75 °C sert à l'arrêt, pas au démarrage. L'extrait ne tient pas compte du sens de variation. Il ne bascule pas.
+```
+IF Temperature_C > 80.0 THEN
+    Ventilateur := TRUE;
+ELSIF Temperature_C < 75.0 THEN
+    Ventilateur := FALSE;
+END_IF;
+```
+
+@077
+Q: À quoi sert la voie Z, ou top zéro, d'un codeur incrémental ?
+C: À donner une référence à chaque tour
+W: À indiquer le sens de rotation de l'arbre
+W: À doubler la résolution du codeur
+W: À alimenter le codeur en 24 V
+E: La voie Z donne une seule impulsion par tour, à une position précise : elle sert de référence lors d'une prise d'origine, souvent combinée à un capteur de came. Le sens de rotation se déduit du décalage entre A et B. La résolution dépend du nombre d'impulsions de A et B et de leur décodage. L'alimentation utilise d'autres conducteurs.
+
+@078
+Q: Le transmetteur envoie 22 mA. Que fait cet extrait ?
+C: Il prend la valeur de repli
+W: Il affiche 112,5 % du niveau
+W: Il affiche 100 % du niveau
+W: Il arrête l'automate en STOP
+E: 22 mA dépasse la limite de validité de 20,5 mA : Mesure_Valide est fausse et le niveau prend la valeur de repli définie lors de l'analyse du procédé, en général avec une alarme. Calculer 112,5 % ferait croire à une mesure réelle. Écrêter à 100 % masquerait le défaut. L'automate continue de fonctionner, il ne passe pas en STOP.
+```
+Mesure_Valide := (Courant_mA >= 3.8) AND (Courant_mA <= 20.5);
+IF Mesure_Valide THEN
+    Niveau_pct := (Courant_mA - 4.0) * 100.0 / 16.0;
+ELSE
+    Niveau_pct := Niveau_Repli;
+END_IF;
+```
+
+@079
+Q: Que signifie qu'un détecteur inductif est « noyable » ?
+C: Il peut s'encastrer à fleur dans du métal
+W: Il peut être immergé dans un liquide
+W: Il détecte des objets noyés dans le béton
+W: Il se monte uniquement dans du plastique
+E: Un détecteur noyable a un champ dirigé vers l'avant : il peut être encastré à fleur dans un support métallique sans détecter ce support. Un non noyable a une portée plus grande mais exige un dégagement autour de sa tête. L'immersion relève de l'indice IP. Il ne détecte pas à travers le béton. Il se monte très bien dans le métal, c'est son intérêt.
+
+@080
+Q: Que détecte cet extrait sur un convoyeur entraîné par un moteur avec codeur ?
+C: Un convoyeur arrêté malgré l'ordre
+W: Un convoyeur qui tourne trop vite
+W: Un codeur branché à l'envers
+W: Un moteur qui démarre trop souvent
+E: Le défaut apparaît si le moteur est commandé et que la vitesse mesurée reste sous 10 tr/min pendant 2 s : bourrage, courroie cassée, moteur ou variateur en défaut. Une survitesse demanderait un test sur un seuil haut. Un codeur inversé donnerait une vitesse négative, non testée ici. Le nombre de démarrages n'est pas compté.
+```
+Blocage(IN := Commande_Moteur AND (Vitesse_tr_min < 10.0),
+        PT := T#2s);
+Defaut_Blocage := Blocage.Q;
+```
+
+@081
+Q: Pourquoi un axe entraîné par servomoteur garde-t-il sa position sous une charge qui varie ?
+C: La boucle de position corrige tout écart mesuré
+W: Le moteur se bloque mécaniquement à l'arrêt
+W: La charge est toujours compensée par un ressort
+W: Le variateur coupe le courant dès l'arrêt
+E: Le codeur mesure la position en permanence et le variateur ajuste le courant pour annuler l'écart avec la consigne : l'axe résiste aux variations de charge. Un frein mécanique existe parfois, mais pour l'arrêt hors tension. Aucun ressort n'est nécessaire. Couper le courant laisserait l'axe libre de bouger.
+
+@082
+Q: Quelle vitesse linéaire calcule cet extrait pour 500 Hz, 100 impulsions par tour et un rouleau de 0,2 m de périmètre ?
+C: 1,0 m/s
+W: 0,2 m/s
+W: 5,0 m/s
+W: 100 m/s
+E: 500 impulsions par seconde divisées par 100 impulsions par tour donnent 5 tours par seconde ; chaque tour avance de 0,2 m, soit 5 × 0,2 = 1 m/s. 0,2 m/s ne compte qu'un tour par seconde. 5 m/s oublie le périmètre. 100 m/s multiplie au lieu de diviser.
+```
+VAR
+    Frequence_Hz : REAL := 500.0;
+    Impulsions_par_tour : REAL := 100.0;
+    Perimetre_m : REAL := 0.2;
+    Vitesse_m_s : REAL;
+END_VAR
+
+Vitesse_m_s := Frequence_Hz / Impulsions_par_tour * Perimetre_m;
+```
+
+@083
+Q: Quel capteur faut-il pour surveiller un protecteur mobile qui donne accès à une zone dangereuse ?
+C: Un interrupteur de sécurité en chaîne validée
+W: Un détecteur inductif standard relié à l'automate
+W: Un fin de course classique câblé en contact NO
+W: Une cellule photoélectrique de proximité
+E: La surveillance d'un protecteur relève d'une fonction de sécurité : interrupteur de sécurité, souvent codé pour limiter la fraude, raccordé à un relais ou automate de sécurité, selon le niveau de performance requis par l'analyse de risques. Un détecteur standard, un contact NO ou une cellule de proximité n'offrent ni la conception ni le diagnostic exigés.
+
+@084
+Q: Pourquoi cet extrait utilise-t-il 5 530 comme valeur brute minimale ?
+C: C'est la valeur brute de 4 mA sur une entrée 0-20 mA
+W: C'est la valeur brute de la pleine échelle du capteur
+W: C'est une marge de sécurité choisie au hasard
+W: C'est la valeur brute de 0 mA sur une entrée 4-20 mA
+E: Sur une entrée configurée en 0-20 mA, la plage 0 à 20 mA est codée de 0 à 27 648 : 4 mA valent 27 648 × 4 / 20 ≈ 5 530. La mise à l'échelle part donc de cette valeur pour que 4 mA donnent 0 bar. La pleine échelle vaut 27 648. Ce n'est pas une marge arbitraire. Sur une entrée configurée en 4-20 mA, 4 mA seraient codés 0.
+```
+Pression_bar := (INT_TO_REAL(Brut) - 5530.0) * 10.0
+              / (27648.0 - 5530.0);
+```
+
+@085
+Q: Pourquoi régler une rampe d'accélération sur le variateur d'un convoyeur ?
+C: Pour limiter les à-coups et le courant au démarrage
+W: Pour augmenter la vitesse maximale du convoyeur
+W: Pour supprimer le besoin de capteur de bourrage
+W: Pour démarrer le convoyeur sans aucune commande
+E: Une rampe fait monter la vitesse progressivement : les produits ne glissent pas, la mécanique subit moins de chocs et le courant de démarrage reste modéré. La vitesse maximale dépend d'un autre réglage. La rampe n'a aucun rapport avec la détection des bourrages. Le démarrage reste commandé par l'automate.
+
+@086
+Q: Que vaut `Position` après l'incrément, si elle valait 32 767 ?
+C: −32 768, le type INT déborde
+W: 32 768, la valeur suivante
+W: 0, la variable est remise à zéro
+W: 32 767, la valeur reste bloquée
+E: Un INT est un entier signé sur 16 bits, de −32 768 à 32 767 : ajouter 1 à 32 767 fait passer, sur la plupart des automates, à −32 768. Un comptage de codeur doit donc utiliser un DINT, voire un LINT, ou gérer explicitement le débordement. 32 768 ne tient pas dans un INT. Aucune remise à zéro ni saturation n'est programmée.
+```
+VAR
+    Position : INT := 32767;
+END_VAR
+
+Position := Position + 1;
+```
+
+@087
+Q: Une pièce passe 2 ms devant un capteur et le cycle automate dure 10 ms. Quelle solution est sûre ?
+C: Une entrée rapide ou une détection par interruption
+W: Allonger le temps de cycle de l'automate
+W: Ajouter une temporisation de 20 ms sur l'entrée
+W: Compter sur une lecture chanceuse à chaque passage
+E: Une impulsion de 2 ms peut tomber entre deux lectures des entrées et ne jamais être vue avec un cycle de 10 ms. Une entrée rapide qui mémorise l'événement, un compteur rapide ou une interruption matérielle la capturent. Allonger le cycle aggrave le problème. Une temporisation filtre l'impulsion au lieu de la saisir. Un fonctionnement au hasard n'est pas acceptable.
+
+@088
+Q: Deux transmetteurs mesurent la même pression. À quoi sert cet extrait ?
+C: À repérer une dérive
+W: À calculer la moyenne des deux pressions
+W: À choisir le transmetteur le plus récent
+W: À doubler la précision de la mesure
+E: Si l'écart entre les deux mesures dépasse 0,5 bar, l'une d'elles est fausse : l'extrait le signale, ce qui permet de lancer une vérification. C'est un test de plausibilité. Aucune moyenne n'est calculée. L'extrait ne choisit pas de transmetteur. Deux mesures ne doublent pas la précision ; elles permettent de détecter une incohérence.
+```
+Defaut_Ecart := ABS(Pression1_bar - Pression2_bar) > 0.5;
+```
+
+@089
+Q: Comment raccorder le blindage du câble moteur d'un variateur pour limiter les perturbations ?
+C: À la masse, sur 360°, aux deux extrémités
+W: En le laissant flotter aux deux extrémités
+W: En le coupant à l'entrée de l'armoire
+W: En le reliant au neutre du réseau
+E: Le câble entre variateur et moteur rayonne fortement : son blindage se raccorde à la masse sur toute sa circonférence, par collier ou presse-étoupe, côté variateur et côté moteur, pour offrir un chemin de retour court aux courants haute fréquence. Un blindage flottant ou interrompu ne joue plus son rôle. Le neutre n'est pas une masse de blindage.
+
+@090
+Q: Que fait cet extrait, exécuté toutes les 100 ms, sur la consigne de vitesse ?
+C: Il fait monter la consigne de 5 % par seconde
+W: Il applique la cible dès le premier cycle
+W: Il fait osciller la consigne autour de la cible
+W: Il réduit la cible de 5 % à chaque cycle
+E: Tant que la consigne est sous la cible, elle augmente de 0,5 % toutes les 100 ms, soit 5 % par seconde, puis MIN l'empêche de dépasser la cible : c'est une rampe. La cible n'est atteinte que progressivement. MIN évite le dépassement, donc aucune oscillation. La cible elle-même n'est jamais modifiée.
+```
+IF Consigne_pct < Cible_pct THEN
+    Consigne_pct := MIN(Consigne_pct + 0.5, Cible_pct);
+END_IF;
+```
+
+@091
+Q: Un vérin soulève une charge verticale. Quel risque traiter si la pression chute ?
+C: La descente de la charge, par un maintien en position
+W: La sortie brutale de la tige vers le haut
+W: La surchauffe de la bobine du distributeur
+W: Le blocage définitif du détecteur de position
+E: Sans pression, une charge verticale peut redescendre sous son propre poids : on prévoit, selon l'analyse de risques, des clapets antiretour pilotés, un bloqueur de tige ou un dispositif mécanique de maintien. La tige ne remonte pas d'elle-même sans air. La bobine n'est pas concernée par la chute de pression. Le capteur ne se bloque pas.
+
+@092
+Q: Que réalise cet extrait avec trois capteurs A, B et C ?
+C: Un vote deux sur trois qui tolère un capteur fautif
+W: Une détection qui exige les trois capteurs actifs
+W: Une détection active dès qu'un seul capteur réagit
+W: Un comptage du nombre de capteurs en défaut
+E: Vote est vrai dès que deux capteurs au moins sont actifs : un capteur bloqué à 0 ou à 1 ne fausse pas seul le résultat, ce qui améliore la disponibilité. Exiger les trois capteurs serait un ET global. Réagir à un seul capteur serait un OU global. L'extrait ne compte rien, il combine les états.
+```
+Vote := (A AND B) OR (A AND C) OR (B AND C);
+```
+
+@093
+Q: Quel avantage apporte le stockage des paramètres IO-Link dans le maître ?
+C: Un capteur neuf reprend seul ses réglages
+W: Le capteur n'a plus besoin d'alimentation
+W: Le maître peut remplacer l'automate
+W: Le câble du capteur devient inutile
+E: Avec le stockage de données, le maître conserve les paramètres du capteur : un capteur neuf du même modèle les reçoit automatiquement à son raccordement, ce qui évite les erreurs de réglage lors d'un dépannage. Le capteur reste alimenté par le maître. Le maître IO-Link ne remplace pas l'automate. Le câble reste nécessaire.
+
+@094
+Q: Pourquoi cet extrait calcule-t-il la vitesse sur 100 ms plutôt qu'à chaque cycle de 2 ms ?
+C: Pour mesurer plus finement
+W: Pour que l'automate consomme plus de mémoire
+W: Pour supprimer le besoin d'un codeur
+W: Pour obtenir une vitesse en mètres et non en tours
+E: À faible vitesse, un cycle de 2 ms ne voit que 0, 1 ou 2 impulsions : la vitesse calculée saute par paliers grossiers. Sur une fenêtre de 100 ms, on compte bien plus d'impulsions et la mesure devient fine, au prix d'un petit retard. La mémoire n'est pas l'objectif. Le codeur reste indispensable. L'unité dépend du calcul, pas de la fenêtre.
+```
+(* Exécuté toutes les 100 ms *)
+Vitesse_tr_min := DINT_TO_REAL(Position - Position_Prec)
+                  * 600.0 / 1024.0;
+Position_Prec := Position;
+```
+
+@095
+Q: Une mesure par thermocouple fluctue fortement depuis l'ajout d'une mise à la terre au capteur. Quelle cause est probable ?
+C: Une boucle de masse entre le capteur et le module
+W: Un thermocouple de type K trop précis
+W: Une compensation de soudure froide trop rapide
+W: Une alimentation du thermocouple trop forte
+E: Un thermocouple mis à la terre au point de mesure et raccordé à un module non isolé crée une boucle de masse : des courants parasites ajoutent quelques millivolts au signal, qui ne fait lui-même que quelques millivolts. On utilise un module à entrées isolées ou une soudure isolée. La précision du type K n'est pas en cause. La compensation n'introduit pas de fluctuations. Un thermocouple n'est pas alimenté.
+
+@096
+Q: Une électrovanne 24 V CC claque mal à la mise sous tension en bout de longue ligne. Que vérifier en priorité ?
+C: La tension aux bornes de la bobine en service
+W: La couleur du câble d'alimentation de la bobine
+W: Le type de fluide circulant dans la vanne
+W: Le nombre d'orifices du distributeur
+E: Sur une longue ligne de section trop faible, la chute de tension réduit la tension disponible au moment de l'appel de courant : la bobine ne développe pas assez de force. On mesure la tension à ses bornes pendant la commande, puis on corrige la section ou l'alimentation. La couleur du câble ne joue aucun rôle. Le fluide et le nombre d'orifices n'expliquent pas une bobine sous-alimentée.
+
+@097
+Q: Que surveille cet extrait sur l'entraînement d'une pompe ?
+C: Un écart durable de vitesse
+W: Une consigne de vitesse supérieure à 100 %
+W: Un démarrage de la pompe sans autorisation
+W: Une coupure de courant du variateur
+E: Si la vitesse mesurée s'écarte de plus de 10 % de la consigne pendant 5 s, l'entraînement ne suit pas : limitation de courant, défaut mécanique ou capteur faux. Le délai tolère les rampes normales. Une consigne excessive serait bornée ailleurs. L'autorisation de démarrage n'est pas testée. Une coupure du variateur se détecterait plutôt par son mot d'état.
+```
+Ecart := ABS(Vitesse_Mesuree_pct - Consigne_pct) > 10.0;
+Suivi(IN := Pompe_En_Marche AND Ecart, PT := T#5s);
+Defaut_Suivi := Suivi.Q;
+```
+
+@098
+Q: Pourquoi les capteurs d'une fonction de sécurité de haut niveau sont-ils souvent doublés ?
+C: Pour qu'une seule panne ne supprime pas la fonction
+W: Pour pouvoir utiliser des capteurs standard bon marché
+W: Pour doubler la portée de détection du dispositif
+W: Pour permettre de shunter un capteur en production
+E: Dans les architectures de catégorie 3 ou 4 de l'ISO 13849, deux voies indépendantes, avec détection des défauts, garantissent qu'une défaillance unique ne supprime pas la fonction de sécurité. Le doublement ne justifie pas l'emploi de composants inadaptés. La portée ne change pas. Shunter une voie détruit précisément la sécurité visée.
+
+@099
+Q: La valeur brute de la voie Pt100 vaut 32 767. Que faut-il en conclure avec cet extrait ?
+C: Une rupture de sonde ou un dépassement de plage
+W: Une température de 3 276,7 °C dans le four
+W: Un fonctionnement normal à pleine échelle
+W: Une valeur prête à être mise à l'échelle
+E: De nombreux modules signalent une rupture de sonde ou un dépassement par la valeur maximale de l'entier, 32 767 : l'extrait la traite comme un défaut au lieu de calculer une température absurde. Une Pt100 ne mesure pas 3 276 °C. Ce n'est pas une pleine échelle normale. La valeur ne doit pas être mise à l'échelle avant ce contrôle.
+```
+IF Brut = 32767 THEN
+    Defaut_Sonde := TRUE;
+ELSE
+    Temperature_C := INT_TO_REAL(Brut) / 10.0;
+END_IF;
+```
+
+@100
+Q: Que vérifier avant de remplacer un capteur par un modèle d'une autre marque ?
+C: Sortie, portée, réponse, montage
+W: Uniquement la couleur et la forme du boîtier
+W: Uniquement le prix et le délai de livraison
+W: Uniquement la longueur du câble fourni
+E: Un capteur de remplacement doit avoir le même type de sortie (PNP ou NPN, NO ou NC), une portée et un temps de réponse adaptés, un indice IP suffisant et une fixation compatible ; un paramétrage peut aussi être nécessaire. L'aspect, le prix, le délai ou la longueur de câble comptent, mais ne garantissent pas que le capteur fonctionnera sur la machine.

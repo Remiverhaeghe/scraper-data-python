@@ -1,0 +1,231 @@
+@001
+Q: Dans un GRAFCET, que représente une étape ?
+C: Une situation stable de la partie commande
+W: Une condition logique de passage à la suite
+W: Une liaison orientée entre deux transitions
+W: Une valeur analogique lue sur un capteur
+E: Une étape décrit une situation du système pendant laquelle le comportement reste le même ; elle est active ou inactive et peut porter des actions. La condition de passage est la réceptivité, portée par une transition. Les liaisons orientées relient étapes et transitions. Une valeur analogique peut entrer dans une réceptivité, mais ce n'est pas une étape.
+
+@002
+Q: Quel symbole représente une transition dans un GRAFCET ?
+C: Un trait horizontal qui coupe la liaison
+W: Un carré qui porte un numéro
+W: Un double carré en début de séquence
+W: Un rectangle placé à droite d'une étape
+E: La transition est un trait horizontal placé sur la liaison entre deux étapes, avec sa réceptivité écrite à côté. Le carré numéroté est une étape. Le double carré désigne une étape initiale. Le rectangle à droite d'une étape contient une action.
+
+@003
+Q: Comment reconnaît-on une étape initiale ?
+C: Elle est tracée en double carré
+W: Elle porte toujours le numéro 1
+W: Elle est placée en bas du diagramme
+W: Elle n'a aucune transition en sortie
+E: L'étape initiale, active au démarrage, se dessine avec un double carré ; elle porte souvent le numéro 0, sans que ce soit une obligation. Sa position dans le diagramme est libre, même si on la place généralement en haut. Comme toute étape, elle a une transition en aval pour que la séquence puisse évoluer.
+
+@004
+Q: Quand une transition est-elle franchie ?
+C: Quand elle est validée et que sa réceptivité est vraie
+W: Dès que sa réceptivité est vraie, quelle que soit l'étape
+W: Quand l'étape qui la suit est déjà active
+W: Quand toutes les actions de l'étape sont terminées
+E: Une transition est validée quand toutes les étapes qui la précèdent immédiatement sont actives ; elle est franchie si, en plus, sa réceptivité est vraie. Une réceptivité vraie ne suffit pas si l'étape amont est inactive. L'état de l'étape aval n'intervient pas. La fin des actions ne compte que si elle figure dans la réceptivité, par exemple sous forme de capteur de fin.
+
+@005
+Q: Qu'est-ce qu'une réceptivité ?
+C: La condition associée à une transition
+W: L'action exécutée tant que l'étape est active
+W: Le numéro de l'étape qui suit la transition
+W: La durée maximale autorisée pour une étape
+E: La réceptivité est la condition écrite à côté de la transition : capteur, combinaison logique, front ou temporisation. L'action est portée par l'étape, dans un rectangle. Le numéro identifie une étape, pas une condition. Une durée peut figurer dans une réceptivité temporisée, mais la réceptivité n'est pas une durée en soi.
+
+@006
+Q: Au démarrage du système, quelles étapes du GRAFCET sont actives ?
+C: Les étapes initiales, et elles seules
+W: Toutes les étapes du diagramme
+W: L'étape qui porte le plus petit numéro
+W: Aucune, jusqu'au premier franchissement
+E: Au démarrage, la situation initiale est formée par les étapes initiales, en double carré ; toutes les autres sont inactives. Activer toutes les étapes rendrait le comportement incohérent. Le numéro ne décide de rien : c'est le symbole qui compte. Sans étape active, aucune transition ne serait validée et la séquence ne pourrait jamais démarrer.
+
+@007
+Q: Que signifie qu'une étape est active ?
+C: La situation qu'elle décrit est en cours
+W: Toutes ses transitions aval sont franchies
+W: Toutes les sorties de l'automate sont à 1
+W: Le programme automate est en mode STOP
+E: Une étape active correspond à la situation en cours du système ; ses actions sont alors exécutées, selon leur type. Une étape active valide les transitions qui la suivent, sans pour autant les franchir. Elle ne commande que ses propres actions, pas toutes les sorties. Le mode STOP de l'automate arrête au contraire toute évolution.
+
+@008
+Q: Dans une séquence linéaire, que se passe-t-il quand une transition est franchie ?
+C: L'étape amont se désactive et l'étape aval s'active
+W: L'étape amont reste active jusqu'à la fin du cycle
+W: Toutes les étapes du GRAFCET deviennent actives
+W: L'étape aval s'active au cycle suivant seulement
+E: Le franchissement désactive les étapes immédiatement précédentes et active les étapes immédiatement suivantes, simultanément. L'étape amont ne reste pas active, sauf si elle est aussi réactivée par ce franchissement. Seules les étapes situées juste après la transition s'activent. En théorie le franchissement est instantané ; un programme automate le réalise dans le cycle où la réceptivité est lue vraie.
+
+@009
+Q: Quelle différence y a-t-il entre une transition validée et une transition franchie ?
+C: Validée : amont actif ; franchie : en plus, réceptivité vraie
+W: Validée : réceptivité vraie ; franchie : étape aval déjà active
+W: Il n'y en a pas, les deux mots désignent la même chose
+W: Validée par l'opérateur ; franchie par l'automate seul
+E: Une transition est validée dès que toutes ses étapes amont sont actives ; elle n'est franchie que si sa réceptivité est vraie à ce moment. La réceptivité seule ne valide rien, et l'étape aval n'intervient pas. Les deux mots désignent bien deux états distincts. L'opérateur n'agit que par des entrées qui figurent dans les réceptivités.
+
+@010
+Q: Comment se dessine une divergence en ET ?
+C: Une transition puis une double ligne horizontale
+W: Une étape suivie d'une simple ligne horizontale
+W: Plusieurs transitions qui partent d'une même étape
+W: Un rectangle d'action relié à plusieurs étapes
+E: La divergence en ET part d'une seule transition, suivie d'une double ligne horizontale d'où partent les branches : toutes s'activent ensemble au franchissement. Une simple ligne après une étape, avec plusieurs transitions, est une divergence en OU. Les actions ne relient pas des étapes entre elles.
+
+@011
+Q: Dans une divergence en OU, combien de branches deviennent actives en fonctionnement normal ?
+C: Une seule, celle dont la condition est vraie
+W: Toutes les branches, en même temps
+W: Deux branches au moins, pour la redondance
+W: Aucune, avant une validation de l'opérateur
+E: La divergence en OU propose plusieurs évolutions possibles depuis une même étape ; seule la branche dont la réceptivité est vraie est empruntée. Activer toutes les branches est le rôle de la divergence en ET. Rien n'impose deux branches actives. Une validation opérateur n'est nécessaire que si elle figure dans une réceptivité. Le concepteur rend les réceptivités exclusives pour ne jamais activer deux branches à la fois.
+
+@012
+Q: Dans cet extrait qui programme une transition, que représente `X1` ?
+C: L'état actif ou inactif de l'étape 1
+W: La réceptivité de la transition 1 vers 2
+W: L'action associée à l'étape numéro 1
+W: Le compteur des passages par l'étape 1
+E: Par convention, Xi désigne la variable d'étape : X1 vaut TRUE quand l'étape 1 est active. La réceptivité est ici Capteur_Haut, testée avec X1 pour former la condition de franchissement. Aucune action n'est écrite dans cet extrait. X1 est un booléen, il ne compte rien.
+```
+VAR
+    X1, X2 : BOOL;
+    Capteur_Haut : BOOL;
+END_VAR
+
+IF X1 AND Capteur_Haut THEN
+    X1 := FALSE;
+    X2 := TRUE;
+END_IF;
+```
+
+@013
+Q: Dans une réceptivité, que signifie « a · b » ?
+C: a et b vrais à la fois
+W: a OU b doit être vrai
+W: a doit être vrai, puis b
+W: a et b doivent être faux
+E: Le point est la notation du ET logique : la réceptivité n'est vraie que si a et b le sont tous les deux. Le OU s'écrit « + ». Une succession dans le temps se modélise avec des étapes, pas avec un ET. L'inversion d'une variable se note par une barre au-dessus de son nom.
+
+@014
+Q: À quoi sert une convergence en ET ?
+C: À attendre la fin de toutes les branches
+W: À choisir la première branche terminée
+W: À désactiver une branche quand l'autre finit
+W: À relancer toutes les branches en boucle
+E: La convergence en ET réunit des branches parallèles par une double ligne suivie d'une seule transition : elle n'est validée que lorsque les dernières étapes de toutes les branches sont actives. Choisir la première branche terminée correspond à une convergence en OU. Aucune branche n'est désactivée avant le franchissement commun. Le bouclage dépend des liaisons dessinées, pas de la convergence.
+
+@015
+Q: Qu'est-ce qu'une action continue associée à une étape ?
+C: Un ordre émis tant que l'étape est active
+W: Un ordre émis une seule fois à l'activation
+W: Un ordre qui reste vrai après la désactivation
+W: Un ordre émis uniquement à la désactivation
+E: Une action continue est exécutée pendant toute la durée d'activité de l'étape et cesse dès qu'elle se désactive. Une action émise une seule fois à l'activation est une action sur événement. Une action qui reste vraie après la désactivation est une action mémorisée. Une action à la désactivation est aussi une action sur événement, sur le front descendant de l'étape.
+
+@016
+Q: Que fait cet extrait quand l'étape 3 est active ?
+C: Il commande la pompe tant que l'étape 3 dure
+W: Il démarre la pompe et la laisse en marche
+W: Il active l'étape 3 quand la pompe tourne
+W: Il arrête la pompe à l'activation de l'étape
+E: L'affectation recopie l'état de l'étape à chaque cycle : la pompe tourne tant que X3 est vraie et s'arrête dès que l'étape se désactive. C'est la traduction d'une action continue. Rien ne mémorise la marche après l'étape. L'affectation va de X3 vers Pompe, pas l'inverse. La pompe démarre à l'activation, elle ne s'arrête pas.
+```
+VAR
+    X3 : BOOL;
+    Pompe : BOOL;
+END_VAR
+
+Pompe := X3;
+```
+
+@017
+Q: Pourquoi un GRAFCET peut-il comporter plusieurs étapes initiales ?
+C: La situation initiale réunit plusieurs étapes actives
+W: Chaque sortie de l'automate exige son étape initiale
+W: La norme impose une étape initiale par branche
+W: Une étape initiale remplace la transition de départ
+E: La situation initiale est l'ensemble des étapes actives au démarrage ; quand le système comporte plusieurs parties indépendantes, ou plusieurs GRAFCET, plusieurs étapes initiales sont nécessaires. Les sorties ne réclament pas d'étape initiale. La norme n'impose pas une étape initiale par branche. Une étape initiale a besoin, comme les autres, d'une transition pour évoluer.
+
+@018
+Q: Pourquoi rendre exclusives les réceptivités d'une divergence en OU ?
+C: Pour qu'une seule branche puisse être choisie
+W: Pour que toutes les branches démarrent ensemble
+W: Pour pouvoir supprimer l'étape en amont
+W: Pour accélérer l'exécution du programme
+E: Si deux réceptivités d'une divergence en OU sont vraies en même temps, les deux transitions sont franchies simultanément et deux branches deviennent actives, ce qui n'était pas prévu. Des conditions exclusives, du type a et non a, garantissent un seul choix. Le démarrage simultané est le rôle de la divergence en ET. L'étape amont reste indispensable, et l'exclusivité ne change pas la vitesse d'exécution.
+
+@019
+Q: Que signifie la réceptivité « ↑a » ?
+C: Le front montant, passage de a de 0 à 1
+W: L'état haut de a, tant que a reste à 1
+W: Le front descendant de a, de 1 vers 0
+W: L'inverse de a, vrai quand a vaut 0
+E: La flèche montante désigne un événement : le passage de a de 0 à 1. Elle n'est vraie qu'à cet instant, contrairement au niveau a, qui reste vrai tant que a vaut 1. Le front descendant se note avec une flèche vers le bas. L'inverse se note avec une barre au-dessus de a.
+
+@020
+Q: Dans cet extrait, que se passe-t-il si `Bouton` reste appuyé longtemps ?
+C: La transition n'est franchie qu'une fois, à l'appui
+W: La transition est franchie à chaque cycle d'appui
+W: L'étape 5 se désactive dès que le bouton est relâché
+W: La transition attend le relâchement du bouton
+E: Front.Q n'est vrai que pendant le cycle où Bouton passe de FALSE à TRUE : la réceptivité ↑Bouton n'est vraie qu'une fois par appui. Un niveau maintenu pourrait au contraire franchir plusieurs transitions successives tant que le bouton reste appuyé. Le relâchement n'agit ni sur X5 ni sur la transition. Attendre le relâchement demanderait un front descendant, F_TRIG.
+```
+VAR
+    Bouton : BOOL;
+    Front : R_TRIG;
+    X4, X5 : BOOL;
+END_VAR
+
+Front(CLK := Bouton);
+IF X4 AND Front.Q THEN
+    X4 := FALSE;
+    X5 := TRUE;
+END_IF;
+```
+
+@021
+Q: Qu'apporte un GRAFCET au cahier des charges d'une machine ?
+C: Une description précise du comportement attendu
+W: Le câblage des capteurs sur les modules d'entrée
+W: Le dimensionnement des protections électriques
+W: Le programme automate prêt à être téléchargé
+E: Le GRAFCET, normalisé par l'IEC 60848, décrit le comportement séquentiel attendu de façon graphique et précise ; il sert de référence commune entre concepteur, automaticien et client. Le câblage relève des schémas électriques. Le dimensionnement des protections relève de l'étude électrique. Il faut encore traduire le GRAFCET dans un langage automate, par exemple SFC ou ST.
+
+@022
+Q: Comment se dessine une convergence en OU ?
+C: Des transitions réunies par une ligne simple
+W: Une double ligne suivie d'une transition unique
+W: Plusieurs étapes reliées à la même action
+W: Une étape initiale à chaque fin de branche
+E: Dans une convergence en OU, chaque branche se termine par sa propre transition, et ces transitions rejoignent par une ligne simple l'étape commune ; seule la branche franchie active cette étape. La double ligne suivie d'une transition unique est la convergence en ET. Une action ne relie pas des étapes. Les fins de branches ne sont pas des étapes initiales.
+
+@023
+Q: Une séquence est bloquée. Quel premier contrôle oriente le diagnostic ?
+C: Repérer l'étape active et la condition attendue
+W: Forcer l'étape suivante pour relancer la machine
+W: Supprimer la transition qui semble bloquer
+W: Recharger le programme dans l'automate
+E: L'étape active indique où la séquence s'est arrêtée, et la réceptivité de sa transition aval dit quelle condition manque : capteur, autorisation, temporisation. Forcer l'étape suivante contourne le défaut sans le comprendre et peut être dangereux. Supprimer une transition modifie le comportement validé. Recharger le programme ne corrige pas une condition physique absente.
+
+@024
+Q: Pourquoi nommer clairement étapes et réceptivités dans un projet ?
+C: Pour faciliter la lecture et le dépannage
+W: Pour rendre les essais de mise en service inutiles
+W: Pour que l'automate exécute la séquence plus vite
+W: Pour imposer le même cycle à toutes les machines
+E: Des noms explicites, comme « Serrage » ou « Pièce présente », rendent le GRAFCET et le programme compréhensibles par l'équipe de maintenance, en particulier lors d'un dépannage. Les essais restent indispensables. Les noms n'ont aucun effet sur la vitesse d'exécution. Chaque machine garde son propre cycle.
+
+@025
+Q: Quelle norme définit le langage de spécification GRAFCET ?
+C: IEC 60848
+W: IEC 61131-2
+W: ISO 9001
+W: IEC 60529
+E: L'IEC 60848, reprise en Europe sous la référence EN 60848, définit le GRAFCET comme langage de spécification. L'IEC 61131-2 traite des exigences matérielles des automates, et l'IEC 61131-3 de leurs langages, dont SFC. L'ISO 9001 concerne le management de la qualité. L'IEC 60529 définit les indices de protection IP.

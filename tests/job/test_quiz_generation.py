@@ -61,7 +61,7 @@ def build_question(pIndex, pAnswer=0, pLongest=False, pExplanation=EXPLANATION):
     vChoices = ["Réponse A", "Réponse B", "Réponse C", "Réponse D"]
 
     if pLongest:
-        vChoices[pAnswer] = "Choix nettement plus long et précis"
+        vChoices[pAnswer] = f"Choix plus long et plus précis, variante {pIndex}"
 
     rQuestion = {
         "id": f"grafcet-l1-{pIndex:03d}",
@@ -215,7 +215,8 @@ def test_assess_questions_flags_a_biased_lot(caplog):
         "20 explication(s) de moins de 80 caractères",
     ]
     assert vQuality["summary"].startswith(
-        "20 question(s), bonne réponse la plus longue 100 %, positions A 0 % B 100 %"
+        "20 question(s), bonne réponse la plus longue 100 %, la plus courte 0 %, "
+        "positions A 0 % B 100 %"
     )
     assert "Lot de révision à vérifier" in caplog.text
 
@@ -265,8 +266,9 @@ def test_pasted_catalog_theme_keeps_its_key_and_reports_quality(database_file):
     vDetails = describe_import_details(vReport)
 
     assert "À vérifier, le lot ne respecte pas la demande :" in vDetails
-    assert "- Grafcet et logique séquentielle : bonne réponse en position C" in (
-        vDetails
+    assert (
+        "- Grafcet et logique séquentielle (lot 1) : bonne réponse en position C"
+        in (vDetails)
     )
     assert "Mesures :" in vDetails
 
@@ -442,3 +444,72 @@ def test_assess_questions_flags_truncated_choices_and_unrelated_code():
             ["grafcet-l1-000", "grafcet-l1-001"],
         ),
     ]
+
+
+def test_assess_questions_flags_shortest_answers_and_filler():
+    """Vérifie les alertes de réponse la plus courte et de fins de choix répétées."""
+
+    vQuestions = []
+
+    for vIndex in range(MIN_QUALITY_SAMPLE):
+        vQuestion = build_question(vIndex, pAnswer=vIndex % 4)
+        vQuestion["choices"] = [
+            f"Une proposition détaillée numéro {vPosition} dans ce cas"
+            for vPosition in range(4)
+        ]
+        vQuestion["choices"][vIndex % 4] = f"Court {vIndex}"
+        vQuestions.append(vQuestion)
+
+    vWarnings = assess_questions(vQuestions)["warnings"]
+
+    assert vWarnings == [
+        "bonne réponse la plus courte dans 100 % des questions : elle se devine",
+        "60 choix finissent par « dans ce cas » : remplissage probable",
+    ]
+
+
+def test_lot_delivered_in_several_archives_is_assessed_as_a_whole(database_file):
+    """Vérifie qu'un lot livré en tranches de 10 questions est mesuré en entier."""
+
+    vTranches = [
+        build_lot_text(
+            [
+                build_question(vIndex, pAnswer=1, pLongest=True)
+                for vIndex in range(vStart, vStart + 10)
+            ]
+        )
+        for vStart in (0, 10)
+    ]
+
+    vFirst = import_questions(database_file, "", vTranches[0], NOW)
+    vSecond = import_questions(database_file, "", vTranches[1], NOW)
+
+    assert vFirst["warnings"] == []
+    assert vSecond["quality"][0].startswith(
+        "Grafcet et logique séquentielle (lot 1) : 20 question(s)"
+    )
+    assert "bonne réponse la plus longue dans 100 %" in vSecond["warnings"][0]
+
+
+def test_unknown_domain_and_outside_catalog_theme_are_reported(database_file):
+    """Vérifie l'alerte d'un domaine inventé et la note d'un thème hors catalogue."""
+
+    vText = json.dumps(
+        {
+            "theme": "Kafka",
+            "domain": "Informatique",
+            "subdomain": "Backend",
+            "questions": [build_question(1)],
+        }
+    )
+
+    vReport = import_questions(database_file, "", vText, NOW)
+
+    assert vReport["warnings"] == [
+        "Kafka : domaine « Informatique / Backend » inconnu : "
+        "le thème a été classé par mots-clés"
+    ]
+    assert vReport["notes"] == ["Kafka"]
+    assert "Hors catalogue, à ajouter au catalogue si le thème doit durer : Kafka." in (
+        describe_import_details(vReport)
+    )

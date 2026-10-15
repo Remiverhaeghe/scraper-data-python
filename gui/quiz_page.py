@@ -93,6 +93,7 @@ from job.quiz_import import (
     import_questions_file,
 )
 from job.presentation import CHART_PALETTE
+from job.quiz_packs import import_validated_packs, list_validated_packs
 from storage.quiz_answers import get_last_answers
 from storage.quiz_questions import get_quiz_asset, get_quiz_guide, get_quiz_guides
 from utils.markdown import render_markdown
@@ -347,6 +348,17 @@ class QuizPage(QWidget):
         vFileButton.setToolTip("Fichier .json, ou archive .zip de fichiers .json")
         vFileButton.clicked.connect(self.choose_questions_file)
 
+        # Lots déjà contrôlés, déposés dans data/packs : un clic les importe tous.
+        self.packs_button = create_button(
+            "Importer les lots validés", "list-checks", pIconColor=COLORS["primary"]
+        )
+        self.packs_button.setToolTip(
+            "Importe les archives « -valide.zip » du dossier des lots ; "
+            "une archive déjà importée ne change rien"
+        )
+        self.packs_button.clicked.connect(self.import_packs)
+        self.packs_button.hide()
+
         vExportButton = create_button(
             "Exporter mes questions…", "download", pIconColor=COLORS["primary"]
         )
@@ -362,6 +374,7 @@ class QuizPage(QWidget):
         vActions = QHBoxLayout()
         vActions.addWidget(vPasteButton)
         vActions.addWidget(vFileButton)
+        vActions.addWidget(self.packs_button)
         vActions.addWidget(vExportButton)
 
         vClearButton = create_button(
@@ -447,6 +460,19 @@ class QuizPage(QWidget):
             "Demande de correction copiée : importez ensuite le lot corrigé, "
             "il remplacera les questions signalées.",
         )
+
+    def import_packs(self):
+        """Importe d'un coup toutes les archives validées du dossier des lots."""
+        self.run_import(
+            lambda: import_validated_packs(self.database_file, datetime.now())
+        )
+
+    def refresh_packs_button(self):
+        """Affiche le nombre d'archives validées prêtes à importer."""
+        vCount = len(list_validated_packs())
+
+        self.packs_button.setText(f"Importer les lots validés ({vCount})")
+        self.packs_button.setVisible(bool(vCount))
 
     def import_pasted_questions(self):
         """Importe les questions collées dans la zone de texte."""
@@ -755,6 +781,8 @@ class QuizPage(QWidget):
 
     def refresh(self):
         """Relit la progression et reconstruit les cartes des thèmes."""
+        self.refresh_packs_button()
+
         try:
             vThemes = build_quiz_overview(
                 self.database_file, load_active_quiz(self.database_file)

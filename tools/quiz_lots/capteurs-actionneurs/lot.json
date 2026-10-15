@@ -1,0 +1,103 @@
+{
+  "lot": 1,
+  "seed": 990124664,
+  "skills": [
+    "capteurs",
+    "actionneurs",
+    "détecteur inductif",
+    "transmetteur 4-20 mA",
+    "codeur",
+    "pneumatique",
+    "variateur de vitesse"
+  ],
+  "schemas": [
+    {
+      "name": "capteurs-pnp.svg",
+      "questions": [
+        "004",
+        "028",
+        "029"
+      ],
+      "diagram": {
+        "title": "Raccordement d'un détecteur PNP trois fils",
+        "nodes": [
+          "+24 V (fil marron)",
+          "Détecteur PNP",
+          "Sortie (fil noir)",
+          "Entrée automate",
+          "0 V commun (fil bleu)"
+        ],
+        "note": "Actif, le détecteur fournit le +24 V à l'entrée ; un NPN relierait au contraire l'entrée au 0 V."
+      }
+    },
+    {
+      "name": "capteurs-boucle-4-20ma.svg",
+      "questions": [
+        "023",
+        "030",
+        "038",
+        "040"
+      ],
+      "diagram": {
+        "title": "Boucle de courant 4-20 mA deux fils",
+        "nodes": [
+          "Alimentation 24 V",
+          "Transmetteur",
+          "Entrée analogique",
+          "Valeur brute",
+          "Mise à l'échelle"
+        ],
+        "feedback": [
+          2,
+          0,
+          "retour du courant de boucle"
+        ],
+        "note": "4 mA = début d'échelle, 20 mA = pleine échelle, moins de 3,6 mA = défaut (NAMUR NE 43)."
+      }
+    },
+    {
+      "name": "capteurs-chaine-pneumatique.svg",
+      "questions": [
+        "011",
+        "013",
+        "048",
+        "050"
+      ],
+      "diagram": {
+        "title": "Chaîne de commande d'un vérin double effet",
+        "nodes": [
+          "Sortie automate",
+          "Bobine du distributeur 5/2",
+          "Vérin double effet",
+          "Capteur de fin de course",
+          "Entrée automate"
+        ],
+        "feedback": [
+          3,
+          0,
+          "retour de position dans le programme"
+        ]
+      }
+    },
+    {
+      "name": "capteurs-interface-relais.svg",
+      "questions": [
+        "015",
+        "042",
+        "043",
+        "044"
+      ],
+      "diagram": {
+        "title": "Commande d'un moteur depuis une sortie automate",
+        "nodes": [
+          "Sortie automate 24 V",
+          "Relais d'interface",
+          "Bobine du contacteur",
+          "Pôles de puissance",
+          "Moteur"
+        ],
+        "note": "Diode de roue libre sur les bobines en courant continu ; protection thermique du moteur."
+      }
+    }
+  ]
+}

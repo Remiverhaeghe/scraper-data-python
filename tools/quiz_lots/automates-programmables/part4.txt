@@ -1,0 +1,170 @@
+@086
+Q: Une tâche rapide lit `Consigne` (DINT) qu'une tâche moins prioritaire modifie. Quelle analyse est prioritaire ?
+C: L'atomicité de l'accès et la synchro entre tâches
+W: Le passage de Consigne en type chaîne de caractères
+W: La suppression de la tâche lente pour tout regrouper
+W: Le doublement de la taille de la mémoire rémanente
+E: Si l'écriture d'un DINT n'est pas atomique sur la plateforme, la tâche rapide peut lire une valeur à moitié mise à jour ; même atomique, une lecture-modification-écriture interrompue peut perdre une mise à jour. Il faut vérifier les garanties du constructeur et protéger l'échange si besoin. Une chaîne aggraverait le problème. Tout regrouper change les temps de réponse, et la mémoire rémanente n'a aucun rapport.
+```
+VAR_GLOBAL
+    Consigne : DINT;
+END_VAR
+
+(* Tâche 1 ms, prioritaire *)
+Position := Consigne;
+
+(* Tâche 100 ms *)
+Consigne := Consigne + Pas;
+```
+
+@087
+Q: `EtapeMemorisee` est rémanente. Pourquoi la reprise après coupure doit-elle contrôler les retours physiques ?
+C: L'installation a pu bouger pendant la coupure
+W: La mémoire rémanente est effacée au démarrage
+W: Les sorties reprennent seules leur dernier état
+W: Le programme ne connaît plus l'étape mémorisée
+E: L'étape mémorisée décrit l'état d'avant la coupure ; pendant l'arrêt, une pièce a pu être retirée, un vérin retomber ou un opérateur intervenir. Reprendre sans comparer à l'état réel des capteurs commanderait une action incohérente. La mémoire rémanente n'est pas effacée, c'est tout son intérêt. Les sorties repartent de leur état initial, et le programme connaît l'étape, qui peut simplement ne plus correspondre au terrain.
+```
+VAR RETAIN
+    EtapeMemorisee : INT;
+END_VAR
+
+IF PremierCycle THEN
+    RepriseAutorisee := RetoursConformes(EtapeMemorisee)
+        AND AcquittementOperateur;
+END_IF;
+```
+
+@088
+Q: Une mesure filtrée est utilisée dans une boucle de dosage. Quel compromis faut-il caractériser ?
+C: Bruit atténué contre retard de la boucle
+W: Précision du capteur contre étendue de mesure
+W: Temps de cycle contre nombre d'alarmes
+W: Résolution du module contre type de câble
+E: Un filtre réduit le bruit, mais il ajoute un retard dans la boucle : la régulation réagit plus tard, et un réglage trop vif peut alors osciller ou dépasser la dose. On mesure ce retard et on règle le filtre et le correcteur ensemble. La précision, la résolution ou le nombre d'alarmes n'expliquent pas l'effet du filtre sur la dynamique de la boucle.
+
+@089
+Q: Quelle architecture évite les écritures concurrentes sur `SortieMoteur` ?
+C: Un seul propriétaire écrit la sortie après arbitrage
+W: Chaque tâche écrit la sortie avec sa propre priorité
+W: Des temporisations aléatoires séparent les écritures
+W: La sortie est écrite à la fois en ST et en Ladder
+E: Les tâches transmettent des demandes, et une seule fonction, propriétaire de la sortie, décide selon des règles explicites : le comportement devient prévisible et testable. Laisser chaque tâche écrire la sortie fait dépendre le résultat des préemptions. Des délais aléatoires rendent les conflits plus rares mais pas impossibles. Écrire la sortie dans deux langages ne fait que multiplier les écritures.
+```
+VAR
+    DemandeTacheA, DemandeTacheB : BOOL;
+    SortieMoteur : BOOL;
+END_VAR
+
+SortieMoteur := Arbitrage(DemandeTacheA, DemandeTacheB);
+```
+
+@090
+Q: Comment vérifier qu'une tâche respecte son temps de réponse dans les pires conditions ?
+C: Mesurer les temps maximaux en charge, échanges compris
+W: Se fier à la moyenne du temps de cycle mesurée à vide
+W: Déduire le temps de la fréquence nominale du processeur
+W: Réduire les commentaires pour gagner du temps d'exécution
+E: Le pire cas apparaît en charge : toutes les tâches actives, communications au maximum, alarmes et calculs ponctuels ; on relève le temps maximal et la gigue sur une période représentative. Une moyenne à vide sous-estime largement le risque. La fréquence du processeur ne dit rien de la charge réelle. Les commentaires ne sont pas exécutés.
+
+@091
+Q: Un module signale une voie invalide alors que la mesure mise à l'échelle semble plausible. Quelle interprétation est la plus prudente ?
+C: Le diagnostic fait foi : la mesure doit être écartée
+W: La valeur plausible prouve que le diagnostic est faux
+W: Il suffit de vérifier que l'IHM n'affiche pas d'alarme
+W: On garde la dernière valeur valide sans limite de durée
+E: Quand la voie est déclarée invalide, la valeur transmise peut être une valeur de remplacement ou figée qui paraît normale : c'est le diagnostic qui fait foi, et le programme doit basculer sur un traitement de défaut. Une valeur plausible ne prouve rien. L'absence d'alarme IHM révèle plutôt une alarme mal configurée. Garder la dernière valeur sans limite revient à piloter sur une mesure figée.
+
+@092
+Q: Comment modifier une logique de sécurité validée sans perdre la conformité ?
+C: Analyser l'impact puis revalider la fonction de sécurité
+W: Modifier la logique standard qui l'entoure, sans revalidation
+W: S'appuyer sur les commentaires du programme existant
+W: Désactiver les diagnostics de sécurité pendant les essais
+E: Toute modification d'une fonction de sécurité suit une gestion des modifications : analyse d'impact sur l'appréciation des risques, mise à jour, puis vérification et validation documentées, selon l'ISO 13849 ou l'IEC 62061. Modifier la logique qui l'entoure peut aussi changer son comportement. Les commentaires ne prouvent rien. Désactiver les diagnostics retire une protection pendant les essais.
+
+@093
+Q: Comment cet extrait détecte-t-il une donnée figée envoyée par un équipement distant ?
+C: Il signale un compteur de vie figé pendant 500 ms
+W: Il vérifie que chaque trame Ethernet reçue est valide
+W: Il remet le compteur de vie à zéro à chaque lecture
+W: Il mesure le temps de cycle de l'équipement distant
+E: L'équipement distant incrémente un compteur de vie à chaque envoi : tant qu'il évolue, la TON est relancée ; s'il reste identique pendant 500 ms, DonneesPerimees passe à TRUE et le programme peut basculer en repli. Une trame valide peut transporter des données figées si l'émetteur est bloqué. Le programme ne remet jamais le compteur à zéro. Il ne mesure pas un temps de cycle, mais l'absence de changement.
+```
+VAR
+    CompteurVie, CompteurPrecedent : UINT;
+    Surveillance : TON;
+    DonneesPerimees : BOOL;
+END_VAR
+
+Surveillance(IN := CompteurVie = CompteurPrecedent, PT := T#500ms);
+DonneesPerimees := Surveillance.Q;
+CompteurPrecedent := CompteurVie;
+```
+
+@094
+Q: Dans une architecture multi-automates, pourquoi désigner le propriétaire de chaque commande ?
+C: Éviter les ordres concurrents et clarifier les responsabilités
+W: Permettre à tous les automates de commander chaque actionneur
+W: Supprimer les retours d'état devenus inutiles entre automates
+W: Garantir qu'aucun message réseau ne sera jamais perdu
+E: Si deux automates peuvent commander le même actionneur, leurs ordres se contredisent au gré des échanges ; un propriétaire unique, recevant des demandes arbitrées, rend le comportement prévisible et le diagnostic clair. Autoriser tous les automates crée justement le conflit. Les retours d'état restent indispensables pour vérifier l'exécution. Aucune organisation ne garantit l'absence de pertes réseau, d'où les surveillances.
+
+@095
+Q: Quel critère guide le choix du repli après perte de communication avec un équipement de procédé ?
+C: Les risques, l'état sûr et les conditions de reprise
+W: La dernière consigne reçue, à conserver dans tous les cas
+W: La valeur zéro, appliquée quelle que soit l'application
+W: La valeur qui simplifie le plus le code du programme
+E: Le bon repli dépend du procédé : arrêter une pompe peut être sûr dans un cas et dangereux dans un autre ; l'analyse de risques fixe l'état sûr, la durée tolérée et les conditions de redémarrage. Garder la dernière consigne ou forcer zéro sans analyse peut aggraver la situation. La simplicité du code ne peut pas primer sur la sécurité du procédé.
+
+@096
+Q: Un défaut ne dure que 2 ms alors que la tâche de diagnostic tourne toutes les 100 ms. Que fait cet extrait ?
+C: Il mémorise le défaut pour que la tâche lente le voie
+W: Il filtre le défaut, trop bref pour être significatif
+W: Il ralentit la tâche rapide jusqu'au traitement
+W: Il acquitte le défaut dès qu'il disparaît
+E: Exécuté dans une tâche rapide, le test capture le défaut bref et le mémorise : la tâche de diagnostic le verra à son prochain passage, puis un acquittement contrôlé l'effacera. Rien ne filtre le défaut, au contraire. Une instruction IF ne ralentit pas une tâche. Aucune remise à FALSE n'est programmée ici ; sans mémorisation, le défaut de 2 ms serait perdu entre deux exécutions de la tâche lente.
+```
+VAR
+    DefautInstantane : BOOL;
+    DefautMemorise : BOOL;
+END_VAR
+
+(* Tâche rapide, 1 ms *)
+IF DefautInstantane THEN
+    DefautMemorise := TRUE;
+END_IF;
+```
+
+@097
+Q: Une entrée de sécurité et une entrée standard reflètent le même capteur de porte. Quelle règle appliquer ?
+C: Seule l'entrée de sécurité peut assurer la protection
+W: Fusionner les deux signaux dans une condition standard
+W: Remplacer le circuit de sécurité par un test en ST
+W: Masquer l'état de sécurité sur l'IHM pour simplifier
+E: L'information standard peut servir au diagnostic ou à l'affichage, mais la fonction de sécurité doit rester traitée par la chaîne de sécurité : relais ou automate de sécurité, câblage et logique validés. Fusionner les signaux ou remplacer le circuit par du code standard dégrade le niveau de performance exigé. Masquer l'état de sécurité prive l'opérateur d'une information utile.
+
+@098
+Q: Quel indicateur permet de juger si un anti-rebond logiciel convient à un capteur de position rapide ?
+C: La durée des rebonds et le retard admissible du procédé
+W: Le nombre de réseaux du programme qui lisent le capteur
+W: Le nombre de variables rémanentes déclarées dans la CPU
+W: La taille du fichier projet après compilation complète
+E: Un filtre anti-rebond retarde la prise en compte du signal : il doit couvrir la durée des rebonds tout en restant inférieur au temps de détection de la pièce et au retard que tolère le procédé ; sinon, il faut un capteur statique ou une entrée rapide. Le nombre de réseaux, les variables rémanentes et la taille du projet n'influent pas sur ce choix.
+
+@099
+Q: Une mesure analogique autorise un mouvement dangereux. Quel principe doit primer ?
+C: Traiter la fonction selon les exigences de sécurité
+W: Considérer comme valide toute valeur comprise dans la plage
+W: Remplacer l'analyse de risques par un filtre logiciel
+W: Autoriser le mouvement si le capteur ne répond plus
+E: Si la mesure participe à la protection des personnes, elle fait partie d'une fonction de sécurité : capteur adapté, redondance ou diagnostic, logique validée, selon le niveau de performance défini par l'analyse de risques. Une valeur dans la plage peut être fausse. Un filtre ne remplace pas l'analyse de risques. La perte du capteur doit au contraire interdire le mouvement.
+
+@100
+Q: Le temps de cycle approche sa limite. Quelle démarche adopter avant d'optimiser ?
+C: Mesurer le coût de chaque bloc pour cibler le plus lourd
+W: Réécrire tous les blocs d'un coup sans mesure préalable
+W: Supprimer les diagnostics pour gagner du temps de cycle
+W: Se fier à l'impression de lenteur de la machine
+E: On mesure d'abord : temps par bloc ou par tâche, fréquence d'appel, boucles, communications ; on optimise ensuite ce qui coûte réellement, puis on mesure à nouveau. Tout réécrire sans mesure prend du temps sans garantie de gain. Supprimer les diagnostics fragilise l'installation. Une impression ne remplace pas une mesure.

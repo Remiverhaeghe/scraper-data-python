@@ -1,0 +1,98 @@
+{
+  "lot": 1,
+  "seed": 243561056,
+  "skills": [
+    "SCADA",
+    "supervision",
+    "IHM",
+    "gestion des alarmes",
+    "OPC UA",
+    "Modbus TCP",
+    "cybersécurité industrielle"
+  ],
+  "schemas": [
+    {
+      "name": "scada-architecture.svg",
+      "questions": [
+        "001",
+        "007",
+        "017",
+        "050"
+      ],
+      "diagram": {
+        "title": "Architecture d'une supervision",
+        "nodes": [
+          "Capteurs et actionneurs",
+          "Automates",
+          "Réseau industriel",
+          "Serveur SCADA et historien",
+          "Postes opérateurs"
+        ],
+        "note": "Les automates commandent en temps réel ; la supervision affiche, archive et transmet les ordres."
+      }
+    },
+    {
+      "name": "scada-cycle-alarme.svg",
+      "questions": [
+        "004",
+        "005",
+        "015",
+        "016",
+        "039"
+      ],
+      "diagram": {
+        "title": "Cycle de vie d'une alarme",
+        "nodes": [
+          "Apparition horodatée",
+          "Affichage selon la priorité",
+          "Acquittement par l'opérateur",
+          "Disparition de la condition",
+          "Archivage"
+        ]
+      }
+    },
+    {
+      "name": "scada-commande-ihm.svg",
+      "questions": [
+        "022",
+        "027",
+        "028",
+        "064"
+      ],
+      "diagram": {
+        "title": "Commande d'un équipement depuis l'IHM",
+        "nodes": [
+          "Bouton de l'IHM",
+          "Bit de demande",
+          "Automate : mode et interverrouillages",
+          "Sortie vers l'équipement",
+          "Retour d'état"
+        ],
+        "feedback": [
+          4,
+          0,
+          "état réel affiché à l'opérateur"
+        ]
+      }
+    },
+    {
+      "name": "scada-zones-reseau.svg",
+      "questions": [
+        "043",
+        "044",
+        "045"
+      ],
+      "diagram": {
+        "title": "Séparation des réseaux",
+        "nodes": [
+          "Réseau bureautique",
+          "Pare-feu",
+          "DMZ : copie de l'historien",
+          "Pare-feu",
+          "Réseau industriel"
+        ],
+        "note": "Aucun flux direct entre le réseau bureautique et les automates."
+      }
+    }
+  ]
+}

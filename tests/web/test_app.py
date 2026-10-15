@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import web.app as web_app
+import job.quiz_packs as quiz_packs
 
 from job.schedule import (
     save_notification_email,
@@ -21,6 +22,7 @@ from job.profile import build_profile, save_profile
 from job.quiz_generation import MIN_QUALITY_SAMPLE
 from storage.job_offers import get_offer, save_offers, set_availability
 from tests.job.test_quiz_import import build_pack
+from tools.quiz_lot import build_pack as build_lot_pack
 from tests.job.test_quiz_generation import build_lot_text, build_question
 from web.app import (
     app,
@@ -1514,3 +1516,24 @@ def test_biased_lot_shows_a_correction_prompt(client):
     assert "tone-warning" in vResponse.text
     assert 'id="quiz-correction"' in vResponse.text
     assert "Questions concernées : grafcet-l1-000" in vResponse.text
+
+
+def test_validated_packs_are_imported_from_the_dashboard(client, tmp_path, monkeypatch):
+    """Vérifie le bouton web des lots validés et le message sans archive."""
+
+    vFolder = tmp_path / "packs"
+    vFolder.mkdir()
+    monkeypatch.setattr(quiz_packs, "QUIZ_PACKS_DIRECTORY", str(vFolder))
+
+    assert "Importer les lots validés" not in client.get("/quiz").text
+    assert client.post("/quiz/import-packs").status_code == 400
+
+    vName, vContent = build_lot_pack("grafcet")
+    (vFolder / vName).write_bytes(vContent)
+
+    assert "Importer les lots validés (1)" in client.get("/quiz").text
+
+    vResponse = client.post("/quiz/import-packs")
+
+    assert vResponse.status_code == 200
+    assert "100 question(s) ajoutée(s)" in vResponse.text

@@ -27,7 +27,7 @@ from job.quiz import (
 )
 from job.quiz_domains import DOMAIN_ORDER, classify_theme
 from job.quiz_exam import EXAM_KEY
-from job.quiz_generation import assess_questions, find_catalog_theme
+from job.quiz_generation import apply_lot_quality, find_catalog_theme
 from storage.backup import backup_database
 from storage.quiz_questions import (
     delete_imported_content,
@@ -149,6 +149,7 @@ def parse_questions_text(pText):
     vTheme = vObject.get("theme")
     vSkills = vObject.get("skills")
     vDomain = (vObject.get("domain"), vObject.get("subdomain"))
+    vKnown = vDomain[1] in DOMAIN_ORDER.get(vDomain[0], ())
 
     rParsed = {
         "theme": vTheme.strip() if isinstance(vTheme, str) and vTheme.strip() else None,
@@ -159,7 +160,8 @@ def parse_questions_text(pText):
         ),
         "questions": vQuestions,
         # Domaine retenu seulement s'il fait partie du classement de l'application
-        "domain": vDomain if vDomain[1] in DOMAIN_ORDER.get(vDomain[0], ()) else None,
+        "domain": vDomain if vKnown else None,
+        "unknown_domain": vDomain if any(vDomain) and not vKnown else None,
     }
 
     return rParsed
@@ -280,10 +282,27 @@ def normalize_question(pQuestion, pLabel, pVisuals):
 def import_questions(
     pDatabaseFile, pThemeLabel, pText, pNow, pThemeKey=None, pVisuals=None
 ):
-    """Vérifie puis enregistre des questions ; retourne le bilan de l'import.
+    """Vérifie, enregistre puis contrôle des questions ; retourne le bilan.
 
     Le thème indiqué dans le JSON l'emporte sur pThemeLabel ; pThemeKey impose
     la clé du thème, celle d'un pack. Lève ValueError si rien n'est lisible.
+    """
+
+    rReport = save_question_file(
+        pDatabaseFile, pThemeLabel, pText, pNow, pThemeKey, pVisuals
+    )
+    apply_lot_quality(pDatabaseFile, rReport)
+
+    return rReport
+
+
+def save_question_file(
+    pDatabaseFile, pThemeLabel, pText, pNow, pThemeKey=None, pVisuals=None
+):
+    """Vérifie puis enregistre les questions d'un fichier, sans contrôler le lot.
+
+    Le bilan garde le lot touché : le contrôle se fait une fois tous les
+    fichiers enregistrés, pour mesurer chaque lot en entier.
     """
 
     vParsed = parse_questions_text(pText)
@@ -322,6 +341,7 @@ def import_questions(
 
     vAdded = []
     vReplaced = []
+    vUnchanged = []
     rRejected = []
 
     for vIndex, vQuestion in enumerate(vParsed["questions"], start=1):
@@ -340,7 +360,12 @@ def import_questions(
             if vPrevious and "visual" in vPrevious[1] and "visual" not in vClean:
                 vClean["visual"] = vPrevious[1]["visual"]
 
-            (vReplaced if vPrevious else vAdded).append(vClean)
+            # Une question identique n'est ni réenregistrée ni retirée des signalements.
+            if vPrevious and vClean == vPrevious[1]:
+                vUnchanged.append(vClean)
+            else:
+                (vReplaced if vPrevious else vAdded).append(vClean)
+
             vImported[vId] = (vThemeKey, None)
             vTexts[get_question_text(vClean)] = vId
 
@@ -374,26 +399,31 @@ def import_questions(
     if rRejected:
         logger.warning("Import de révision : %s question(s) écartée(s)", len(rRejected))
 
-    vQuality = (
-        assess_questions(vAdded, vDomain)
-        if vAdded
-        else {"summary": "", "warnings": [], "issues": []}
-    )
-
     rReport = {
-        "themes": [vThemeLabel] if vAdded else [],
+        "themes": [vThemeLabel] if vAdded or vUnchanged else [],
         "added": len(vAdded) - len(vReplaced),
         "replaced": len(vReplaced),
+        "unchanged": len(vUnchanged),
         "rejected": rRejected,
         "assets": 0,
         "guides": 0,
-        "quality": [f"{vThemeLabel} : {vQuality['summary']}"] if vAdded else [],
-        "warnings": [
-            f"{vThemeLabel} : {vWarning}" for vWarning in vQuality["warnings"]
-        ],
-        "review": (
-            [{"key": vThemeKey, "label": vThemeLabel, "issues": vQuality["issues"]}]
-            if vQuality["issues"]
+        "quality": [],
+        "warnings": [],
+        "review": [],
+        "notes": [],
+        "batches": (
+            [
+                {
+                    "key": vThemeKey,
+                    "label": vThemeLabel,
+                    "domain": vDomain,
+                    "ids": [vQuestion["id"] for vQuestion in vAdded],
+                    "unknown_domain": vParsed["unknown_domain"],
+                    "outside_catalog": not vCatalogTheme
+                    and vThemeKey not in load_quiz(),
+                }
+            ]
+            if vAdded
             else []
         ),
     }
@@ -450,15 +480,14 @@ def merge_report(pReport, pFileReport, pFileName):
 
     pReport["added"] += pFileReport["added"]
     pReport["replaced"] += pFileReport["replaced"]
-    pReport["review"] += pFileReport["review"]
+    pReport["unchanged"] += pFileReport["unchanged"]
+    pReport["batches"] += pFileReport["batches"]
     pReport["themes"] += [
         vTheme for vTheme in pFileReport["themes"] if vTheme not in pReport["themes"]
     ]
     pReport["rejected"] += [
         f"{pFileName}, {vReason}" for vReason in pFileReport["rejected"]
     ]
-    pReport["quality"] += pFileReport["quality"]
-    pReport["warnings"] += pFileReport["warnings"]
 
 
 def is_question_file(pName):
@@ -673,12 +702,15 @@ def import_zip(pDatabaseFile, pThemeLabel, pContent, pNow, pDepth=0):
             "themes": [],
             "added": 0,
             "replaced": 0,
+            "unchanged": 0,
             "rejected": [],
             "assets": 0,
             "guides": 0,
             "quality": [],
             "warnings": [],
             "review": [],
+            "notes": [],
+            "batches": [],
         }
         vAssets = {}
         vInnerCounts = {"assets": 0, "guides": 0}
@@ -716,7 +748,7 @@ def import_zip(pDatabaseFile, pThemeLabel, pContent, pNow, pDepth=0):
                     vArchive, vNames, vThemeFile, vText, vRejected
                 )
 
-                vReport = import_questions(
+                vReport = save_question_file(
                     pDatabaseFile,
                     pThemeLabel or PurePosixPath(vThemeFile).stem,
                     vText,
@@ -743,6 +775,10 @@ def import_zip(pDatabaseFile, pThemeLabel, pContent, pNow, pDepth=0):
 
     rReport["assets"] = len(vAssets) + vInnerCounts["assets"]
     rReport["guides"] = len(vGuides) + vInnerCounts["guides"]
+
+    # Une archive incluse est contrôlée avec celle qui la contient.
+    if pDepth == 0:
+        apply_lot_quality(pDatabaseFile, rReport)
 
     logger.info(
         "Pack de révision importé : %s question(s), %s remplacée(s), %s schéma(s), "
@@ -784,6 +820,9 @@ def describe_quiz_import(pReport):
     if pReport.get("replaced"):
         vParts[0] += f", {pReport['replaced']} remplacée(s)"
 
+    if pReport.get("unchanged"):
+        vParts[0] += f", {pReport['unchanged']} inchangée(s)"
+
     if len(pReport["themes"]) > 1:
         vParts[0] += f" dans {len(pReport['themes'])} thèmes"
     elif pReport["themes"]:
@@ -821,6 +860,13 @@ def describe_import_details(pReport):
 
     if pReport["themes"]:
         vLines.append("Thèmes : " + ", ".join(pReport["themes"]) + ".")
+
+    if pReport.get("notes"):
+        vLines.append(
+            "Hors catalogue, à ajouter au catalogue si le thème doit durer : "
+            + ", ".join(pReport["notes"])
+            + "."
+        )
 
     if pReport["warnings"]:
         vLines.append("À vérifier, le lot ne respecte pas la demande :")

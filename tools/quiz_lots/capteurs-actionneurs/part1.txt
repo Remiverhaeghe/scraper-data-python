@@ -1,0 +1,457 @@
+@001
+Q: Quel capteur détecte un objet métallique sans contact ?
+C: Un détecteur de proximité inductif
+W: Un détecteur de proximité capacitif
+W: Une sonde de température Pt100
+W: Un interrupteur de position à galet
+E: Le détecteur inductif produit un champ magnétique alternatif que perturbe l'approche d'un métal : il ne détecte que les objets métalliques, sans contact. Le capacitif détecte aussi des matériaux non métalliques, mais ce n'est pas sa particularité. La Pt100 mesure une température. L'interrupteur à galet détecte une position par contact mécanique.
+
+@002
+Q: Quel capteur peut détecter du plastique, du bois ou un liquide sans contact ?
+C: Un détecteur capacitif
+W: Un détecteur inductif
+W: Un codeur incrémental
+W: Un pressostat mécanique
+E: Le détecteur capacitif réagit à la variation de capacité provoquée par presque tout matériau, conducteur ou isolant, y compris un liquide derrière une paroi non métallique. L'inductif ne voit que les métaux. Le codeur mesure une rotation. Le pressostat réagit à une pression, pas à la présence d'un objet.
+
+@003
+Q: Quel type de détecteur photoélectrique utilise un émetteur et un récepteur placés face à face ?
+C: Le mode barrage
+W: Le mode reflex sur réflecteur
+W: Le mode proximité, sur l'objet
+W: Le mode capacitif à seuil réglable
+E: En barrage, le faisceau va directement de l'émetteur au récepteur, et l'objet est détecté quand il coupe ce faisceau : c'est le mode à la plus grande portée. Le mode reflex renvoie le faisceau par un réflecteur, avec émetteur et récepteur dans le même boîtier. Le mode proximité détecte la lumière renvoyée par l'objet lui-même. Capacitif n'est pas un mode photoélectrique.
+
+@004
+Q: Sur un détecteur trois fils, à quoi sert le fil noir selon le code de couleurs courant ?
+C: À transmettre le signal de sortie
+W: À raccorder le +24 V de l'alimentation
+W: À raccorder le 0 V de l'alimentation
+W: À relier le blindage à la terre
+E: Selon le code de couleurs usuel des détecteurs, le marron reçoit le +24 V, le bleu le 0 V et le noir porte la sortie vers l'entrée de l'automate. Le blindage, quand il existe, n'utilise pas ce fil. On vérifie toujours la notice du constructeur, car certains modèles utilisent un câblage différent.
+
+@005
+Q: Que signifie une sortie de capteur « NO » ?
+C: Le contact est ouvert au repos
+W: Le contact est fermé au repos
+W: La sortie fournit un signal analogique
+W: Le capteur n'a pas besoin d'alimentation
+E: NO, pour normally open, désigne une sortie ouverte, donc inactive, en l'absence de détection, et qui se ferme quand l'objet est détecté. Une sortie fermée au repos est NC, normally closed. NO et NC sont des sorties tout ou rien, pas analogiques. Un détecteur électronique a toujours besoin d'une alimentation.
+
+@006
+Q: Quel est l'intérêt d'une sortie NC pour un signal important comme un niveau très haut ?
+C: Un fil coupé est vu comme une alarme
+W: Le signal arrive plus vite à l'automate
+W: Le câblage n'a plus besoin de fusible
+W: Le capteur consomme moins d'énergie
+E: Avec un contact fermé au repos, l'automate reçoit un 1 en fonctionnement normal : une rupture de câble, une perte d'alimentation ou un capteur défaillant donnent un 0, interprété comme l'alarme. C'est le principe de sécurité positive. Le temps de réponse est le même. La protection du circuit reste nécessaire. La consommation n'est pas le critère.
+
+@007
+Q: Quelle grandeur mesure une sonde Pt100 ?
+C: Une température, par variation de résistance
+W: Une pression, par déformation d'une membrane
+W: Une distance, par temps de vol d'une onde
+W: Une vitesse, par comptage d'impulsions
+E: La Pt100 est une résistance en platine qui vaut 100 Ω à 0 °C et augmente avec la température, d'environ 0,385 Ω par degré. La déformation d'une membrane est le principe d'un capteur de pression. Le temps de vol sert aux capteurs ultrasonores ou radar. Le comptage d'impulsions sert aux codeurs.
+
+@008
+Q: Quel capteur fournit une tension liée à la différence de température entre deux soudures ?
+C: Un thermocouple
+W: Une sonde Pt100
+W: Une thermistance CTN
+W: Un pyromètre optique
+E: Le thermocouple exploite l'effet Seebeck : deux métaux différents soudés produisent une petite tension qui dépend de l'écart de température entre la soudure chaude et la soudure froide, d'où la compensation de soudure froide. La Pt100 et la thermistance changent de résistance, elles ne produisent pas de tension. Le pyromètre mesure le rayonnement infrarouge à distance.
+
+@009
+Q: Quel élément fournit une information de position angulaire sous forme d'impulsions ?
+C: Un codeur incrémental
+W: Un pressostat différentiel
+W: Un détecteur capacitif
+W: Un transmetteur 4-20 mA
+E: Le codeur incrémental émet un nombre fixe d'impulsions par tour : en les comptant, l'automate connaît l'angle parcouru et, avec deux voies décalées, le sens de rotation. Le pressostat réagit à un seuil de pression. Le capacitif détecte une présence. Un transmetteur 4-20 mA fournit une mesure continue, pas des impulsions.
+
+@010
+Q: Quelle est la différence entre un pressostat et un transmetteur de pression ?
+C: L'un donne un seuil, l'autre une mesure continue
+W: L'un mesure les gaz, l'autre seulement les liquides
+W: L'un est électronique, l'autre toujours pneumatique
+W: L'un se monte en série, l'autre toujours en dérivation
+E: Le pressostat commute un contact quand la pression franchit un seuil réglé : c'est une information tout ou rien. Le transmetteur délivre un signal proportionnel à la pression, par exemple 4-20 mA, qui donne la valeur à tout instant. Les deux existent pour les gaz et les liquides, en versions électroniques. Leur montage hydraulique n'est pas ce qui les distingue.
+
+@011
+Q: Quel actionneur transforme l'énergie de l'air comprimé en mouvement linéaire ?
+C: Un vérin pneumatique
+W: Un distributeur 5/2
+W: Un régulateur de pression
+W: Un silencieux d'échappement
+E: Le vérin reçoit l'air comprimé dans une chambre et convertit la pression en effort sur sa tige, qui sort ou rentre. Le distributeur dirige l'air vers l'une ou l'autre chambre, mais ne produit pas de mouvement. Le régulateur fixe la pression d'alimentation. Le silencieux réduit le bruit de l'air évacué.
+
+@012
+Q: Qu'est-ce qui distingue un vérin double effet d'un vérin simple effet ?
+C: L'air commande la sortie et la rentrée
+W: Il ne comporte aucun ressort de rappel
+W: Il fonctionne sans distributeur de commande
+W: Il ne peut travailler qu'en poussant
+E: Dans un vérin double effet, l'air agit alternativement sur les deux faces du piston : la sortie et la rentrée sont toutes deux motorisées. Le simple effet n'a qu'une chambre alimentée, le retour se faisant par ressort ou par la charge. Les deux ont besoin d'un distributeur. Le double effet travaille en poussant comme en tirant.
+
+@013
+Q: Quel composant dirige l'air comprimé vers l'une ou l'autre chambre d'un vérin ?
+C: Un distributeur
+W: Un manomètre
+W: Un filtre régulateur
+W: Un réservoir tampon
+E: Le distributeur, souvent piloté par une bobine électrique, ouvre les passages vers une chambre du vérin et met l'autre à l'échappement. Le manomètre affiche une pression. Le filtre régulateur prépare l'air et fixe sa pression. Le réservoir stocke de l'air, il ne choisit pas sa destination.
+
+@014
+Q: Que désigne la notation « 5/2 » d'un distributeur ?
+C: Cinq orifices et deux positions
+W: Cinq bars et deux bobines
+W: Cinq positions et deux orifices
+W: Cinq millimètres et deux voies
+E: Le premier chiffre donne le nombre d'orifices (alimentation, deux utilisations, deux échappements) et le second le nombre de positions du tiroir. Un 5/2 commande typiquement un vérin double effet. La pression et le nombre de bobines ne figurent pas dans cette notation. Un distributeur à cinq positions et deux orifices n'existe pas.
+
+@015
+Q: Quel appareil commute la puissance d'un moteur sur ordre de l'automate ?
+C: Un contacteur
+W: Un sectionneur
+W: Un transformateur
+W: Un détecteur inductif
+E: Le contacteur possède une bobine commandée par la sortie de l'automate et des pôles de puissance qui alimentent le moteur. Le sectionneur sert à isoler un circuit pour une intervention, il ne se manœuvre pas en charge à chaque cycle. Le transformateur adapte une tension. Le détecteur inductif est un capteur.
+
+@016
+Q: Quel élément protège un moteur contre une surcharge prolongée ?
+C: Un relais thermique adapté au moteur
+W: Un relais d'interface monté sur rail
+W: Un détecteur de position à galet
+W: Un filtre antiparasite sur la commande
+E: Le relais thermique, ou le déclencheur thermique d'un disjoncteur moteur, coupe l'alimentation quand le courant reste trop élevé trop longtemps, ce qui protège les enroulements de l'échauffement. Le relais d'interface sépare la commande de la charge. Le détecteur à galet donne une position. Le filtre antiparasite réduit les perturbations, il ne protège pas d'une surcharge.
+
+@017
+Q: Quelle est la vitesse de synchronisme d'un moteur asynchrone à 4 pôles alimenté en 50 Hz ?
+C: 1 500 tr/min
+W: 3 000 tr/min
+W: 1 000 tr/min
+W: 750 tr/min
+E: La vitesse de synchronisme vaut 60 × f / p, avec p le nombre de paires de pôles : 4 pôles font 2 paires, soit 60 × 50 / 2 = 1 500 tr/min. Le rotor tourne un peu moins vite, vers 1 450 tr/min, à cause du glissement. 3 000 tr/min correspond à 2 pôles, 1 000 tr/min à 6 pôles et 750 tr/min à 8 pôles.
+
+@018
+Q: Que permet un variateur de fréquence sur un moteur asynchrone ?
+C: Régler sa vitesse en variant la fréquence
+W: Supprimer le besoin de protection du moteur
+W: Transformer le moteur en moteur pas à pas
+W: Alimenter le moteur sans aucun câble de terre
+E: La vitesse d'un moteur asynchrone dépend de la fréquence d'alimentation : le variateur la fait varier, avec des rampes d'accélération et de décélération réglables. Il intègre des protections, mais la protection du circuit reste à prévoir. Il ne change pas la nature du moteur. La mise à la terre reste obligatoire.
+
+@019
+Q: Quel indice de protection convient à un capteur exposé à des jets d'eau ?
+C: IP65 au minimum
+W: IP20 suffit en atelier
+W: IP40 si le capteur est fermé
+W: IP10 avec un capot ajouté
+E: Le premier chiffre de l'indice IP concerne les poussières (6 : étanche aux poussières) et le second l'eau (5 : jets d'eau, 7 : immersion temporaire). Un IP65 ou plus convient donc aux projections d'eau. IP20 et IP40 ne protègent pas contre l'eau, IP10 non plus. Un capot improvisé ne remplace pas un indice certifié.
+
+@020
+Q: Que faut-il faire avant de changer un capteur monté sur une machine ?
+C: Consigner la machine selon la procédure
+W: Le débrancher machine en marche, rapidement
+W: Shunter son entrée pour garder la production
+W: Prévenir l'opérateur oralement, sans plus
+E: Changer un capteur expose aux pièces mobiles et parfois aux énergies électriques, pneumatiques ou hydrauliques : on consigne la machine, on vérifie l'absence d'énergie, puis on intervient. Débrancher en marche peut provoquer un mouvement inattendu. Shunter une entrée peut supprimer une sécurité. Une consigne orale ne protège personne.
+
+@021
+Q: Qu'est-ce que la portée nominale d'un détecteur inductif ?
+C: La distance de détection d'une cible en acier
+W: La longueur maximale du câble du détecteur
+W: La distance minimale entre deux détecteurs voisins
+W: La plage de tension d'alimentation admise
+E: La portée nominale, notée Sn, est définie avec une cible en acier de dimensions normalisées. Avec d'autres métaux, comme l'aluminium ou le cuivre, la portée réelle est plus faible et se calcule avec un facteur de correction. La longueur de câble, l'écartement entre détecteurs et la tension d'alimentation sont d'autres caractéristiques de la fiche technique.
+
+@022
+Q: Que fait cet extrait si le détecteur `B1` a une sortie NC ?
+C: Piece_Presente vaut TRUE quand B1 détecte
+W: Piece_Presente vaut TRUE quand B1 est au repos
+W: Piece_Presente change à chaque cycle de l'automate
+W: Piece_Presente reste toujours à FALSE
+E: Un contact NC est fermé au repos, donc l'entrée B1 vaut TRUE sans objet et passe à FALSE quand l'objet est détecté. L'inversion NOT B1 rétablit une variable vraie en présence d'une pièce. Sans NOT, la logique serait inversée. L'affectation ne fait pas osciller la variable, et elle n'est pas figée à FALSE.
+```
+VAR
+    B1 : BOOL;
+    Piece_Presente : BOOL;
+END_VAR
+
+Piece_Presente := NOT B1;
+```
+
+@023
+Q: Quel signal d'un transmetteur correspond au début de son échelle, avec un zéro vivant ?
+C: 4 mA
+W: 0 mA
+W: 20 mA
+W: 12 mA
+E: Dans une boucle 4-20 mA, 4 mA représente le début de l'échelle et 20 mA la fin : ce zéro vivant permet de distinguer une mesure nulle, à 4 mA, d'une rupture de fil, à 0 mA. 0 mA signale donc un défaut, pas un zéro de mesure. 20 mA est la pleine échelle. 12 mA correspond au milieu de l'échelle.
+
+@024
+Q: Quel capteur choisir pour mesurer un niveau sans contact avec le liquide, par le haut de la cuve ?
+C: Un capteur ultrasonore ou radar
+W: Un flotteur à contact magnétique
+W: Une sonde Pt100 plongeante
+W: Un pressostat monté au fond de la cuve
+E: Les capteurs ultrasonores et radar mesurent le temps de vol d'une onde réfléchie par la surface du liquide, depuis le haut de la cuve, sans le toucher. Un flotteur est au contact du liquide. Une Pt100 mesure une température. Un capteur de pression au fond mesure la hauteur de liquide par la pression, mais il est immergé et le pressostat ne donne qu'un seuil.
+
+@025
+Q: Quel risque faut-il prévenir avant de déconnecter un flexible pneumatique ?
+C: Le vérin bouge à la vidange de l'air
+W: L'air comprimé se transforme en liquide
+W: La bobine du distributeur se met à chauffer
+W: Le capteur de fin de course change de type
+E: Un vérin sous pression peut se déplacer brutalement quand la pression d'une chambre chute, et un flexible déconnecté sous pression peut fouetter. On isole donc l'alimentation, on purge l'air du circuit et on vérifie l'absence de pression avant d'intervenir. L'air ne se liquéfie pas à ces pressions. La bobine et les capteurs ne sont pas concernés.
+
+@026
+Q: Quelle portée réelle attendre d'un détecteur inductif de portée nominale 8 mm sur de l'aluminium, avec un facteur de correction de 0,4 ?
+C: 3,2 mm
+W: 8,0 mm
+W: 20 mm
+W: 4,8 mm
+E: La portée réelle vaut la portée nominale multipliée par le facteur de correction du matériau : 8 × 0,4 = 3,2 mm. Garder 8 mm reviendrait à ignorer que la portée est définie pour l'acier. 20 mm divise au lieu de multiplier. 4,8 mm retranche 40 % au lieu d'en garder 40 %.
+
+@027
+Q: Dans un détecteur reflex polarisé, à quoi sert le filtre polarisant ?
+C: À ne pas confondre un objet brillant avec le réflecteur
+W: À augmenter la portée au-delà du mode barrage
+W: À détecter les objets transparents à coup sûr
+W: À supprimer le besoin d'aligner le réflecteur
+E: Le réflecteur prismatique fait tourner la polarisation de la lumière, alors qu'un objet brillant la renvoie sans la modifier : le filtre ne laisse passer que la lumière venant du réflecteur. Un objet réfléchissant n'est donc pas pris pour le réflecteur. La portée reste inférieure au mode barrage. Les objets transparents demandent des capteurs spécifiques. L'alignement reste nécessaire.
+
+@028
+Q: Un capteur PNP est actif. Quel potentiel présente sa sortie ?
+C: Le +24 V de l'alimentation
+W: Le 0 V de l'alimentation
+W: Une tension de 12 V moyenne
+W: Un signal alternatif de 50 Hz
+E: Une sortie PNP commute le potentiel positif vers la charge : active, elle fournit le +24 V à l'entrée de l'automate, qui est reliée de l'autre côté au 0 V. Une sortie NPN fait l'inverse : elle relie l'entrée au 0 V. Aucune tension intermédiaire ou alternative n'est délivrée par un détecteur TOR de ce type.
+
+@029
+Q: Un détecteur NPN est raccordé à une carte d'entrées prévue pour des capteurs PNP. Quel symptôme est probable ?
+C: L'entrée reste à 0 malgré la détection
+W: L'entrée change d'état à chaque cycle
+W: Le détecteur mesure une valeur analogique
+W: La carte d'entrées double sa tension
+E: Une carte prévue pour des capteurs PNP attend qu'on lui fournisse le +24 V ; un NPN ne fait que relier l'entrée au 0 V, ce qui ne crée pas de courant dans ce montage : l'entrée reste à 0. Il faut un capteur du bon type, ou une carte compatible. L'entrée n'oscille pas d'elle-même. Le type de sortie ne rend pas le signal analogique ni ne change la tension de la carte.
+
+@030
+Q: Quel courant correspond à 75 % de l'échelle d'un transmetteur 4-20 mA ?
+C: 16 mA
+W: 15 mA
+W: 18 mA
+W: 12 mA
+E: Le courant vaut 4 + 0,75 × 16 = 16 mA, car l'étendue utile du signal est de 16 mA à partir de 4 mA. 15 mA vient de 0,75 × 20, qui oublie le zéro vivant. 18 mA ne correspond à aucune règle. 12 mA correspond à 50 %.
+
+@031
+Q: Quelle pression donne cet extrait, pour un transmetteur 4-20 mA réglé de 0 à 10 bar ?
+C: 7,5 bar
+W: 8,0 bar
+W: 6,25 bar
+W: 10 bar
+E: Le calcul retire le zéro vivant puis applique l'échelle : (16 − 4) × 10 / 16 = 7,5 bar. 8 bar vient de 16 / 20 × 10, qui oublie le zéro vivant. 6,25 bar ne correspond à aucune étape correcte. 10 bar serait la pleine échelle, atteinte à 20 mA.
+```
+VAR
+    Courant_mA : REAL := 16.0;
+    Pression_bar : REAL;
+END_VAR
+
+Pression_bar := (Courant_mA - 4.0) * 10.0 / 16.0;
+```
+
+@032
+Q: Quelle résistance présente une Pt100 à 100 °C, avec un coefficient de 0,385 Ω par degré ?
+C: Environ 138,5 Ω
+W: Environ 100,0 Ω
+W: Environ 38,5 Ω
+W: Environ 200,0 Ω
+E: La Pt100 vaut 100 Ω à 0 °C et gagne environ 0,385 Ω par degré : 100 + 100 × 0,385 = 138,5 Ω. 100 Ω est la valeur à 0 °C. 38,5 Ω oublie la résistance de départ. 200 Ω supposerait un doublement de la résistance, ce qui n'est pas la loi de la sonde.
+
+@033
+Q: Pourquoi raccorder une Pt100 en trois fils plutôt qu'en deux ?
+C: Pour compenser la résistance de la ligne
+W: Pour doubler la sensibilité de la sonde
+W: Pour alimenter la sonde en courant alternatif
+W: Pour pouvoir supprimer le transmetteur
+E: En deux fils, la résistance des câbles s'ajoute à celle de la sonde et fausse la mesure, d'autant plus que la liaison est longue. Le troisième fil permet à l'appareil de mesurer et retrancher cette résistance de ligne ; le montage quatre fils est encore plus précis. La sensibilité de la sonde ne change pas. L'alimentation reste un faible courant continu. Le transmetteur reste nécessaire selon l'architecture.
+
+@034
+Q: Que fait cet extrait avec les deux voies A et B d'un codeur incrémental ?
+C: Il déduit le sens de rotation avec la voie B
+W: Il compte deux fois plus d'impulsions par tour
+W: Il calcule la vitesse en tours par minute
+W: Il remet la position à zéro à chaque tour
+E: Les voies A et B sont décalées d'un quart de période : au front montant de A, l'état de B indique le sens de rotation, d'où l'incrément ou le décrément de la position. L'extrait compte une impulsion par front de A, sans multiplier la résolution. Aucune vitesse n'est calculée. Rien ne remet la position à zéro, ce que ferait la voie de top zéro.
+```
+VAR
+    A, B : BOOL;
+    FrontA : R_TRIG;
+    Position : DINT;
+END_VAR
+
+FrontA(CLK := A);
+IF FrontA.Q THEN
+    IF B THEN
+        Position := Position - 1;
+    ELSE
+        Position := Position + 1;
+    END_IF;
+END_IF;
+```
+
+@035
+Q: Un codeur de 1 024 impulsions par tour tourne à 1 500 tr/min. Quelle fréquence produit sa voie A ?
+C: 25 600 Hz
+W: 1 536 Hz
+W: 15 000 Hz
+W: 102 400 Hz
+E: 1 500 tr/min font 25 tours par seconde ; à 1 024 impulsions par tour, la voie A produit 25 × 1 024 = 25 600 Hz. Une telle fréquence dépasse largement ce que voit un cycle automate classique : il faut une entrée de comptage rapide. 1 536 Hz oublie la conversion en secondes. Les autres valeurs ne correspondent à aucun calcul correct.
+
+@036
+Q: Quel avantage décisif présente un codeur absolu après une coupure d'alimentation ?
+C: Il donne sa position sans prise d'origine
+W: Il compte plus vite qu'un codeur incrémental
+W: Il n'a besoin d'aucun câblage vers l'automate
+W: Il mesure aussi la température de l'arbre
+E: Chaque position du codeur absolu correspond à un code unique : à la remise sous tension, la position est connue immédiatement. Avec un codeur incrémental, il faut refaire une prise d'origine, puisque le comptage est perdu. La vitesse de comptage n'est pas son avantage. Il se raccorde à l'automate, souvent par un bus. Il ne mesure pas la température.
+
+@037
+Q: Quel défaut de cet extrait de mise à l'échelle 4-20 mA vers 0-100 % faut-il corriger ?
+C: Le zéro vivant de 4 mA n'est pas retranché
+W: Le résultat doit être exprimé en entier
+W: La division par 20 doit être une multiplication
+W: Le courant doit être déclaré en BOOL
+E: Pour 4 mA, début d'échelle, ce calcul donne 20 % au lieu de 0 % : il faut écrire (Courant_mA − 4.0) × 100.0 / 16.0. Un résultat réel est au contraire souhaitable pour garder la précision. Remplacer la division par une multiplication donnerait une valeur aberrante. Un courant n'est jamais un booléen.
+```
+VAR
+    Courant_mA : REAL;
+    Niveau_pct : REAL;
+END_VAR
+
+Niveau_pct := Courant_mA * 100.0 / 20.0;
+```
+
+@038
+Q: Quel signal indique, selon la recommandation NAMUR NE 43, un défaut de capteur sur une boucle 4-20 mA ?
+C: Moins de 3,6 mA environ
+W: Un courant de 4 mA exactement
+W: Un courant de 12 mA stable
+W: Un courant compris entre 4 et 20 mA
+E: La recommandation NAMUR NE 43 réserve les zones hors de la plage de mesure aux défauts : un courant sous environ 3,6 mA ou au-dessus d'environ 21 mA signale une défaillance, et l'automate doit le traiter comme tel. 4 mA est le début de l'échelle, une mesure valide. 12 mA est le milieu. Toute valeur de 4 à 20 mA reste une mesure.
+
+@039
+Q: Que fait cet extrait quand le courant tombe à 2 mA ?
+C: Il signale un défaut de mesure
+W: Il affiche un niveau de 0 %
+W: Il affiche un niveau négatif
+W: Il ignore la valeur et garde l'ancienne
+E: Un courant de 2 mA est inférieur au seuil de 3,6 mA : Defaut_Mesure passe à TRUE, ce qui permet de signaler une rupture de boucle ou un capteur défaillant au lieu d'afficher une valeur trompeuse. Afficher 0 % ou une valeur négative ferait croire à une mesure réelle. L'extrait ne mémorise aucune ancienne valeur.
+```
+VAR
+    Courant_mA : REAL;
+    Defaut_Mesure : BOOL;
+END_VAR
+
+Defaut_Mesure := (Courant_mA < 3.6) OR (Courant_mA > 21.0);
+```
+
+@040
+Q: Pourquoi le signal 4-20 mA est-il préféré au 0-10 V sur de longues distances ?
+C: Le courant ne dépend pas des chutes de tension
+W: Le courant se transmet sans aucun câble de retour
+W: Le 0-10 V ne peut pas être lu par un automate
+W: Le 4-20 mA ne craint aucune perturbation
+E: Dans une boucle de courant, le même courant circule partout : la résistance des câbles ne modifie pas la mesure tant que l'alimentation suffit. En 0-10 V, chaque chute de tension dans la ligne fausse directement la valeur lue. Un retour reste nécessaire pour fermer la boucle. Les automates lisent très bien le 0-10 V. Le 4-20 mA est moins sensible aux perturbations, pas insensible.
+
+@041
+Q: Comment raccorder une entrée analogique pour limiter les perturbations ?
+C: Câble blindé, éloigné des câbles de puissance
+W: Câble posé dans la même goulotte que le moteur
+W: Blindage raccordé aux deux bornes du capteur
+W: Fils les plus longs possible pour amortir
+E: Un câble blindé, posé à distance des câbles de puissance et des sorties de variateurs, réduit les couplages qui font fluctuer la mesure ; le blindage se raccorde selon les recommandations du constructeur, souvent d'un seul côté. Partager la goulotte d'un moteur ou d'un variateur augmente les perturbations. Relier le blindage aux bornes du signal le rend inopérant. Une longueur excessive aggrave le problème.
+
+@042
+Q: Pourquoi faut-il une diode de roue libre sur une bobine de relais alimentée en continu ?
+C: Pour limiter la surtension à la coupure
+W: Pour accélérer la fermeture du contact
+W: Pour transformer le continu en alternatif
+W: Pour supprimer le besoin de fusible
+E: À la coupure, la bobine restitue l'énergie magnétique stockée sous forme d'une surtension qui peut détruire la sortie de l'automate ; la diode, montée en inverse, laisse circuler ce courant et limite la surtension. Elle ralentit plutôt légèrement la retombée du relais. Elle ne change pas la nature du courant. La protection du circuit reste nécessaire.
+
+@043
+Q: Pourquoi intercaler un relais d'interface entre une sortie d'automate et une charge ?
+C: Pour séparer et adapter les circuits électriques
+W: Pour mesurer le courant consommé par la charge
+W: Pour remplacer la protection de la charge
+W: Pour transformer la sortie en entrée analogique
+E: Le relais d'interface isole la sortie de l'automate du circuit de la charge, qui peut être sous une autre tension, alternative, ou demander plus de courant que la sortie n'en supporte. Il ne mesure rien. La charge garde sa propre protection. Il commute un contact, il ne produit pas de signal analogique.
+
+@044
+Q: Une sortie transistor d'automate supporte 0,5 A. Peut-elle commander directement une bobine de 24 V et 12 W ?
+C: Non, la bobine demande 0,5 A sans marge
+W: Oui, 12 W restent sous la limite de 24 W
+W: Oui, car une bobine ne consomme rien au repos
+W: Non, une sortie transistor ne commande jamais de bobine
+E: Le courant vaut P / U = 12 / 24 = 0,5 A, soit exactement la limite de la sortie, sans aucune marge pour l'appel de courant ou l'échauffement : on passe par un relais d'interface. Comparer des watts à une limite en ampères n'a pas de sens. La bobine consomme quand elle est alimentée, ce qui est le cas en fonctionnement. Une sortie transistor commande très bien une petite bobine dimensionnée.
+
+@045
+Q: Quelle force théorique développe en sortie un vérin de 50 mm de diamètre sous 6 bar ?
+C: Environ 1 180 N
+W: Environ 300 N
+W: Environ 4 700 N
+W: Environ 590 N
+E: La surface du piston vaut π × 25² ≈ 1 963 mm², et 6 bar correspondent à 0,6 N/mm² : F = 0,6 × 1 963 ≈ 1 178 N. 300 N prend le quart du diamètre comme rayon. 4 700 N prend le diamètre comme rayon. 590 N divise le résultat par deux sans raison. La force réelle est un peu plus faible, à cause des frottements.
+
+@046
+Q: Pourquoi la force en rentrée d'un vérin double effet est-elle plus faible qu'en sortie ?
+C: La tige réduit la surface utile côté rentrée
+W: L'air est moins comprimé dans la chambre arrière
+W: Le distributeur limite la pression en rentrée
+W: Le ressort de rappel s'oppose au mouvement
+E: En rentrée, l'air agit sur la surface annulaire, c'est-à-dire la surface du piston moins celle de la tige : à pression égale, la force est plus faible. La pression d'alimentation est la même dans les deux sens. Le distributeur ne la limite pas. Un vérin double effet n'a pas de ressort de rappel.
+
+@047
+Q: Quel réglage permet de régler en douceur la vitesse de sortie d'un vérin ?
+C: Un réducteur de débit sur l'échappement
+W: Un réducteur de pression à l'entrée de l'atelier
+W: Un silencieux supprimé sur le distributeur
+W: Un manomètre monté sur la chambre avant
+E: Freiner l'air qui sort de la chambre opposée, avec un réducteur de débit unidirectionnel, donne un mouvement régulier, car le piston reste maintenu entre deux pressions. Baisser la pression générale réduit la force sans régler finement la vitesse. Supprimer un silencieux augmente le bruit sans réglage. Un manomètre mesure, il ne règle rien.
+
+@048
+Q: Quelle différence entre un distributeur monostable et un distributeur bistable ?
+C: Le bistable garde sa position sans commande
+W: Le monostable a deux bobines de pilotage
+W: Le bistable revient seul au repos par ressort
+W: Le monostable ne peut commander qu'un moteur
+E: Le distributeur monostable revient à sa position de repos par ressort dès que sa bobine n'est plus alimentée ; le bistable, piloté par deux bobines, reste dans la dernière position commandée, ce qui en fait une mémoire. C'est le bistable qui a deux bobines. Le retour par ressort caractérise le monostable. Les deux commandent des vérins, pas des moteurs électriques.
+
+@049
+Q: Que se passe-t-il avec un distributeur monostable si l'automate s'arrête et coupe sa sortie ?
+C: Le vérin revient à sa position de repos
+W: Le vérin reste dans sa dernière position
+W: Le vérin oscille entre ses deux positions
+W: Le vérin se bloque à mi-course de façon sûre
+E: Sans alimentation de la bobine, le ressort ramène le tiroir en position de repos : le vérin va dans la position correspondante, ce qu'il faut prendre en compte dans l'analyse de risques. Rester en place est le comportement d'un distributeur bistable. Le vérin n'oscille pas. Un blocage à mi-course demande un distributeur à centre fermé, pas un monostable classique.
+
+@050
+Q: Quel est le rôle de `Defaut_Sortie` dans cet extrait ?
+C: Signaler un vérin bloqué ou trop lent
+W: Couper l'air dès que le vérin a fini de sortir
+W: Mesurer la vitesse moyenne de sortie du vérin
+W: Compter le nombre de sorties du vérin
+E: La TON démarre quand l'ordre de sortie est donné et que le capteur de fin de course n'est pas encore atteint : au-delà de 3 s, Defaut_Sortie signale un vérin bloqué, un manque d'air ou un capteur défaillant. L'extrait ne coupe pas l'air. Il ne mesure pas une vitesse, il surveille un délai maximal. Rien n'est compté.
+```
+VAR
+    Ordre_Sortie, Fin_Sortie : BOOL;
+    Surveillance : TON;
+    Defaut_Sortie : BOOL;
+END_VAR
+
+Surveillance(IN := Ordre_Sortie AND NOT Fin_Sortie, PT := T#3s);
+Defaut_Sortie := Surveillance.Q;
+```

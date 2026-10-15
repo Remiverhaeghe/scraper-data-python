@@ -1,0 +1,420 @@
+@026
+Q: Quel est l'intérêt de cet extrait, exécuté dans l'automate ?
+C: Montrer à la supervision que l'automate vit
+W: Compter les pièces produites par la machine
+W: Mesurer le temps de cycle de l'automate
+W: Synchroniser l'heure de l'automate
+E: Le compteur de vie augmente à chaque cycle ; la supervision le lit et déclenche une alarme s'il ne change plus : automate arrêté, en STOP ou liaison figée, même si les autres valeurs semblent normales. Il ne compte pas de pièces. Il ne mesure pas un temps de cycle. Il ne règle pas l'heure.
+```
+VAR
+    Compteur_Vie : UINT;
+END_VAR
+
+Compteur_Vie := Compteur_Vie + 1;
+```
+
+@027
+Q: Que fait cet extrait avec une demande de démarrage envoyée par l'IHM ?
+C: Il la traite une fois puis la remet à zéro
+W: Il la traite à chaque cycle tant qu'elle existe
+W: Il l'ignore si la pompe est déjà arrêtée
+W: Il la recopie dans l'historique des alarmes
+E: L'IHM met le bit de demande à 1 ; l'automate démarre la pompe si le mode distance est actif, puis remet le bit à 0 : la demande est consommée et ne peut pas être rejouée par erreur. Elle n'est pas traitée à chaque cycle. Une pompe arrêtée est précisément le cas où la demande a un effet. L'historique des alarmes n'est pas concerné.
+```
+IF Demande_Marche_IHM THEN
+    IF Mode_Distance THEN
+        Commande_Pompe := TRUE;
+    END_IF;
+    Demande_Marche_IHM := FALSE;
+END_IF;
+```
+
+@028
+Q: Pourquoi cet extrait refuse-t-il la commande IHM quand `Mode_Distance` est faux ?
+C: Le mode local réserve la conduite au terrain
+W: Pour éviter d'archiver la commande dans l'historien
+W: Pour accélérer le cycle de l'automate
+W: Parce que l'IHM ne peut pas écrire de booléen
+E: En mode local, un intervenant pilote l'équipement depuis le terrain, souvent pour la maintenance : une commande à distance pourrait le mettre en danger ou contredire son action. L'automate refuse donc les ordres de la supervision. L'archivage n'est pas en jeu. Le cycle n'est pas accéléré. L'IHM écrit très bien des booléens.
+```
+IF Demande_Marche_IHM AND Mode_Distance THEN
+    Commande_Pompe := TRUE;
+END_IF;
+Demande_Marche_IHM := FALSE;
+```
+
+@029
+Q: Que fait cet extrait avec une consigne saisie sur l'IHM ?
+C: Il la borne entre 20 et 80 °C, puis l'applique
+W: Il la multiplie par 20 avant de l'appliquer
+W: Il l'applique telle quelle, sans aucun contrôle
+W: Il la remet à 50 °C à chaque cycle
+E: LIMIT ramène toute valeur saisie dans la plage autorisée : une faute de frappe, comme 800 au lieu de 80, ne peut pas atteindre le procédé. Le contrôle est fait dans l'automate, seul juge, et pas seulement dans l'IHM. Aucune multiplication n'est faite. La consigne n'est pas forcée à 50 °C.
+```
+Consigne_C := LIMIT(20.0, Consigne_IHM_C, 80.0);
+```
+
+@030
+Q: Pourquoi vérifier les bornes d'une consigne dans l'automate et pas seulement dans l'IHM ?
+C: D'autres clients peuvent écrire dans l'automate
+W: L'IHM ne sait pas afficher de nombres décimaux
+W: L'automate ne connaît pas l'unité de la consigne
+W: Les bornes de l'IHM ralentissent le réseau
+E: Une consigne peut arriver par l'IHM, mais aussi par un autre poste, un script ou un outil de mise au point : seul l'automate voit toutes les écritures, il doit donc vérifier les bornes. Les limites de l'IHM restent utiles pour guider l'opérateur. L'affichage décimal n'est pas en cause. L'unité est connue par conception. Les bornes n'ont pas d'effet sur le réseau.
+
+@031
+Q: Quelle fonction Modbus lit plusieurs registres de maintien, ou holding registers ?
+C: La fonction 03
+W: La fonction 01
+W: La fonction 05
+W: La fonction 16
+E: La fonction 03, Read Holding Registers, lit un ou plusieurs registres de 16 bits. La fonction 01 lit des bobines, ou bits de sortie. La fonction 05 écrit une seule bobine. La fonction 16 écrit plusieurs registres. Connaître ces codes aide à lire une trame ou un diagnostic de communication.
+
+@032
+Q: Un réel de 32 bits transmis en Modbus s'affiche avec une valeur absurde. Quelle cause est fréquente ?
+C: L'ordre des deux mots de 16 bits est inversé
+W: Le réel est trop grand pour un registre unique
+W: Modbus ne peut pas transmettre de réel
+W: L'unité du réel n'a pas été transmise
+E: Un réel de 32 bits occupe deux registres de 16 bits, et les équipements ne rangent pas tous les mots dans le même ordre : si le client et le serveur ne sont pas d'accord, la valeur décodée est aberrante. On règle l'ordre des mots, ou des octets, dans le client. Il faut bien deux registres. Modbus transmet des réels sur deux registres. L'unité ne transite jamais en Modbus.
+
+@033
+Q: Quelle température affiche la supervision avec cet extrait, pour un registre qui vaut 235 ?
+C: 23,5 °C
+W: 235 °C
+W: 2,35 °C
+W: 0,235 °C
+E: L'automate transmet la température en dixièmes de degré dans un entier de 16 bits, une pratique courante en Modbus ; la supervision divise par 10 : 235 / 10 = 23,5 °C. Oublier la division affiche 235 °C. Diviser par 100 ou 1 000 donnerait 2,35 ou 0,235 °C. L'échelle doit être documentée des deux côtés.
+```
+(* Côté automate *)
+Registre_Temp := REAL_TO_INT(Temperature_C * 10.0);
+
+(* Côté supervision *)
+Temperature_Affichee := INT_TO_REAL(Registre_Temp) / 10.0;
+```
+
+@034
+Q: Qu'est-ce qu'une inondation d'alarmes ?
+C: Trop d'alarmes à la fois pour un opérateur
+W: Une alarme qui signale une fuite d'eau
+W: Un écran entièrement coloré en bleu
+W: Une alarme acquittée par plusieurs postes
+E: Lors d'un incident, des dizaines d'alarmes peuvent arriver en quelques minutes : l'opérateur ne peut plus les lire ni distinguer la cause. La norme ISA-18.2 cite souvent plus de 10 alarmes en 10 minutes par opérateur comme un seuil d'inondation. Une alarme de fuite est une alarme parmi d'autres. La couleur de l'écran ou l'acquittement multiple n'ont rien à voir.
+
+@035
+Q: Qu'est-ce qu'une alarme « bavarde », ou chattering ?
+C: Une alarme qui apparaît et disparaît vite
+W: Une alarme dont le texte est trop long
+W: Une alarme accompagnée d'un message sonore
+W: Une alarme partagée entre plusieurs écrans
+E: Une alarme bavarde bascule plusieurs fois par minute, souvent parce qu'une mesure fluctue autour du seuil : elle encombre la liste et finit par être ignorée. On la corrige avec une hystérésis ou une temporisation. Un texte long, un son ou un affichage multiple ne la définissent pas.
+
+@036
+Q: Que fait cet extrait pour éviter une alarme bavarde sur un niveau haut ?
+C: Il ajoute délai et hystérésis
+W: Il supprime l'alarme quand le niveau est haut
+W: Il double le seuil d'alarme à chaque apparition
+W: Il acquitte l'alarme automatiquement
+E: L'alarme n'apparaît qu'après 10 s au-dessus de 90 %, et ne disparaît que sous 88 % : les fluctuations rapides autour du seuil ne la font plus basculer. Elle n'est pas supprimée. Le seuil reste fixe. L'acquittement reste une action de l'opérateur.
+```
+Delai_Haut(IN := Niveau_pct > 90.0, PT := T#10s);
+IF Delai_Haut.Q THEN
+    Alarme_Niveau_Haut := TRUE;
+ELSIF Niveau_pct < 88.0 THEN
+    Alarme_Niveau_Haut := FALSE;
+END_IF;
+```
+
+@037
+Q: Qu'est-ce que la mise en attente, ou shelving, d'une alarme ?
+C: Masquer temporairement une alarme, avec trace
+W: Supprimer définitivement une alarme gênante
+W: Acquitter toutes les alarmes en un seul clic
+W: Transférer l'alarme vers un autre opérateur
+E: La mise en attente permet à un opérateur autorisé de masquer pour une durée limitée une alarme connue, par exemple pendant une intervention, avec une trace et un rappel à l'échéance. Ce n'est pas une suppression définitive, qui demande une modification contrôlée. Un acquittement global ou un transfert sont d'autres fonctions.
+
+@038
+Q: Que fait cet extrait pour une alarme de débit faible ?
+C: Il ne l'active que si la pompe est en marche
+W: Il l'active dès que la pompe est arrêtée
+W: Il l'active à chaque démarrage de pompe
+W: Il l'active si le débit dépasse 5 m³/h
+E: Un débit nul est normal pompe arrêtée : l'alarme n'a de sens que pompe en marche, après un délai qui laisse le débit s'établir. C'est une suppression d'alarme selon l'état, qui évite des dizaines d'alarmes inutiles à l'arrêt. Pompe arrêtée, l'alarme ne s'active pas. Le délai évite justement les alarmes au démarrage. Le test porte sur un débit trop faible, pas trop fort.
+```
+Debit_Etabli(IN := Pompe_En_Marche, PT := T#30s);
+Alarme_Debit_Faible := Debit_Etabli.Q AND (Debit_m3h < 5.0);
+```
+
+@039
+Q: Pourquoi horodater les alarmes dans l'automate plutôt qu'à leur arrivée dans la supervision ?
+C: L'heure de la source est plus précise
+W: L'automate affiche plus de couleurs
+W: La supervision ne connaît pas l'heure
+W: Cela réduit le nombre d'alarmes
+E: La supervision lit les automates par cycles, parfois toutes les secondes : plusieurs événements proches peuvent recevoir la même heure, ou un ordre faux. Horodatés à la source, à la milliseconde, ils gardent leur ordre réel, essentiel pour trouver la cause première. Les couleurs ne sont pas en cause. La supervision connaît l'heure, mais trop tard. Le nombre d'alarmes ne change pas.
+
+@040
+Q: Que garantit cet extrait de premier défaut, ou first out ?
+C: Il retient le défaut apparu en premier
+W: Il retient le défaut apparu en dernier
+W: Il acquitte tous les défauts d'un coup
+W: Il compte le nombre total de défauts
+E: Le premier défaut est mémorisé seulement si aucun n'est encore enregistré : lors d'un arrêt en cascade, où un défaut en entraîne d'autres, on sait lequel a déclenché l'arrêt. Le dernier défaut serait celui qui écrase les autres. Aucun acquittement n'est réalisé. Rien n'est compté.
+```
+IF Premier_Defaut = 0 THEN
+    IF Defaut_Pression THEN
+        Premier_Defaut := 1;
+    ELSIF Defaut_Temperature THEN
+        Premier_Defaut := 2;
+    ELSIF Defaut_Vitesse THEN
+        Premier_Defaut := 3;
+    END_IF;
+END_IF;
+```
+
+@041
+Q: Que doit indiquer un bon message d'alarme ?
+C: La cause probable et l'action attendue
+W: Le code hexadécimal de l'erreur seulement
+W: Le nom du programmeur de l'automate
+W: La version du logiciel de supervision
+E: Un message comme « Pression huile basse pompe P2 : vérifier le niveau d'huile, arrêter si < 1 bar » dit à l'opérateur ce qui se passe et quoi faire. Un code brut oblige à chercher dans une documentation. Le nom du programmeur et la version du logiciel n'aident pas à réagir.
+
+@042
+Q: Pourquoi l'historien n'enregistre-t-il souvent une valeur que si elle varie au-delà d'une bande morte ?
+C: Pour limiter le volume stocké
+W: Pour cacher les petites variations à l'opérateur
+W: Pour accélérer le cycle de l'automate
+W: Pour éviter de synchroniser les horloges
+E: Une valeur stable n'a pas besoin d'être enregistrée à chaque seconde : la bande morte, ou une compression, n'archive que les variations significatives, ce qui réduit énormément le volume. Une bande trop large ferait perdre des informations utiles, d'où un réglage par variable. L'affichage en direct n'est pas concerné. L'automate n'est pas accéléré. La synchronisation reste nécessaire.
+
+@043
+Q: Pourquoi séparer le réseau industriel du réseau bureautique ?
+C: Pour contenir une attaque ou une panne réseau
+W: Pour que les automates soient plus rapides
+W: Pour que les opérateurs n'aient pas de courriel
+W: Pour pouvoir utiliser des câbles moins chers
+E: Un logiciel malveillant ou une tempête de diffusion sur le réseau bureautique ne doit pas atteindre les automates : on sépare les réseaux et on contrôle les flux entre eux par des pare-feu, selon les principes de zones et conduits de l'IEC 62443. La vitesse des automates n'est pas l'objectif. Les opérateurs ont des postes bureautiques ailleurs. Le coût des câbles n'est pas en jeu.
+
+@044
+Q: À quoi sert une zone démilitarisée, ou DMZ, entre réseau industriel et réseau bureautique ?
+C: À échanger des données sans liaison directe
+W: À relier directement les automates à Internet
+W: À stocker les mots de passe des opérateurs
+W: À remplacer les pare-feu par des switchs
+E: Dans la DMZ, on place des serveurs relais, par exemple une copie de l'historien : le réseau bureautique consulte ces serveurs, sans jamais joindre directement les automates. Relier les automates à Internet est précisément ce qu'on veut éviter. Les mots de passe se gèrent ailleurs. La DMZ est délimitée par des pare-feu.
+
+@045
+Q: Comment un technicien doit-il accéder à distance à une supervision ?
+C: Par un accès sécurisé, authentifié et tracé
+W: Par un logiciel de prise en main laissé ouvert
+W: Par un port ouvert directement sur Internet
+W: Par le compte administrateur partagé
+E: L'accès distant passe par un point d'entrée contrôlé : VPN ou passerelle dédiée, authentification forte, droits limités, session tracée et, si possible, activée seulement le temps de l'intervention. Un logiciel de prise en main permanent, un port exposé ou un compte partagé sont des portes d'entrée classiques pour les attaques.
+
+@046
+Q: Que fait cet extrait quand la liaison avec un automate distant est perdue ?
+C: Il marque la valeur invalide au bout de 5 s
+W: Il garde la dernière valeur sans signalement
+W: Il remet la valeur à zéro immédiatement
+W: Il redémarre l'automate distant
+E: Si le compteur de vie ne change plus pendant 5 s, la liaison est jugée perdue : la valeur est marquée de mauvaise qualité, ce que l'écran affiche, souvent en grisé, au lieu de laisser croire qu'elle est à jour. Garder la valeur sans signalement est dangereux. Une remise à zéro afficherait une valeur fausse. L'automate distant n'est pas redémarré.
+```
+Vie_Figee(IN := Compteur_Vie = Compteur_Vie_Prec, PT := T#5s);
+Compteur_Vie_Prec := Compteur_Vie;
+Qualite_Bonne := NOT Vie_Figee.Q;
+```
+
+@047
+Q: Pourquoi afficher différemment une valeur de qualité mauvaise ?
+C: Pour que l'opérateur ne s'y fie pas
+W: Pour qu'elle soit archivée plus vite
+W: Pour la cacher dans l'historique
+W: Pour économiser de la bande passante
+E: Une valeur figée ou douteuse peut paraître normale : l'afficher en grisé, barrée ou avec un symbole avertit l'opérateur qu'il ne doit pas conduire avec. L'archivage n'est pas accéléré. Elle doit rester visible dans l'historique, avec sa qualité. La bande passante n'est pas concernée.
+
+@048
+Q: Que fait cet extrait de la supervision au chargement d'une recette ?
+C: Il vérifie l'arrêt de la machine avant d'écrire
+W: Il écrit la recette pendant la production en cours
+W: Il efface la recette précédente du disque
+W: Il démarre la machine après le chargement
+E: Une recette se charge machine arrêtée, ou entre deux lots : changer des consignes en pleine fabrication pourrait produire des pièces non conformes. L'extrait refuse le chargement sinon et le signale. Il n'écrit pas pendant la production. La recette précédente n'est pas effacée. Le démarrage reste une action séparée.
+```
+IF Demande_Recette THEN
+    IF Machine_Arretee THEN
+        Charger_Recette(Numero_Recette);
+    ELSE
+        Message := 'Arrêter la machine avant de charger';
+    END_IF;
+    Demande_Recette := FALSE;
+END_IF;
+```
+
+@049
+Q: Pourquoi tracer dans un journal les changements de consigne faits par les opérateurs ?
+C: Pour savoir qui a changé quoi, et quand
+W: Pour bloquer tout changement de consigne
+W: Pour réduire la taille de l'historien
+W: Pour que les consignes s'appliquent plus vite
+E: Le journal d'audit enregistre l'utilisateur, l'heure, l'ancienne et la nouvelle valeur : il permet d'analyser un incident ou un défaut de qualité, et de répondre aux exigences de traçabilité. Il ne bloque rien. Il ajoute des données plutôt qu'il n'en retire. Il n'accélère pas l'application des consignes.
+
+@050
+Q: Quel est l'intérêt de serveurs de supervision redondants ?
+C: La conduite continue si un serveur tombe
+W: Les écrans affichent deux fois plus de données
+W: Les automates n'ont plus besoin de réseau
+W: Il n'est plus nécessaire de sauvegarder le projet
+E: Avec un serveur principal et un serveur de secours synchronisés, la perte de l'un ne prive pas les opérateurs de la supervision : le second reprend la main. Les données affichées ne doublent pas. Le réseau reste indispensable. Les sauvegardes restent nécessaires, car une erreur de configuration se propage aux deux serveurs.
+
+@051
+Q: Que surveille cet extrait sur le nombre d'alarmes ?
+C: Une inondation : plus de 10 alarmes en 10 minutes
+W: Une alarme répétée plus de 10 fois par heure
+W: Une alarme non acquittée depuis 10 minutes
+W: Le nombre d'alarmes acquittées sur la journée
+E: Le compteur est remis à zéro toutes les 10 minutes et compte les nouvelles alarmes : au-delà de 10, l'indicateur d'inondation s'active, ce qui permet de mesurer la charge réelle des opérateurs et d'améliorer la conception des alarmes. Il ne suit pas une alarme en particulier. Il ne surveille ni l'acquittement ni la journée entière.
+```
+Fenetre(IN := NOT Fenetre.Q, PT := T#10m);
+IF Fenetre.Q THEN
+    Nb_Alarmes := 0;
+END_IF;
+IF Nouvelle_Alarme THEN
+    Nb_Alarmes := Nb_Alarmes + 1;
+END_IF;
+Inondation := Nb_Alarmes > 10;
+```
+
+@052
+Q: Pourquoi chaque alarme devrait-elle être justifiée lors d'une revue, ou rationalisation ?
+C: Pour ne garder que les alarmes utiles et actionnables
+W: Pour en ajouter le plus possible par équipement
+W: Pour que toutes aient la priorité la plus haute
+W: Pour supprimer l'acquittement des opérateurs
+E: La rationalisation, prévue par l'ISA-18.2, vérifie pour chaque alarme sa cause, sa conséquence, l'action attendue, le délai de réaction et sa priorité : les alarmes inutiles ou en double sont supprimées. Multiplier les alarmes noie l'opérateur. Si tout est prioritaire, plus rien ne l'est. L'acquittement reste nécessaire.
+
+@053
+Q: Que fait cet extrait de la supervision sur une commande de vanne ?
+C: Il signale une vanne bloquée
+W: Il ouvre la vanne si elle ne répond pas
+W: Il ferme la vanne au bout de 20 secondes
+W: Il acquitte le défaut de vanne seul
+E: Si la vanne est commandée ouverte et que son fin de course d'ouverture ne répond pas en 20 s, une alarme de discordance prévient l'opérateur : vanne bloquée, manque d'air ou capteur défaillant. L'extrait ne relance pas la commande. Il ne ferme pas la vanne. L'alarme reste à acquitter par l'opérateur.
+```
+Discordance(IN := Ordre_Ouverture AND NOT FDC_Ouverte, PT := T#20s);
+Alarme_Vanne := Discordance.Q;
+```
+
+@054
+Q: Pourquoi utiliser des listes de contrôle d'accès et des comptes limités pour OPC UA ou Modbus TCP ?
+C: Pour limiter les écritures permises
+W: Pour ralentir volontairement les échanges réseau
+W: Pour éviter d'avoir à sauvegarder les automates
+W: Pour supprimer le besoin de pare-feu
+E: Modbus TCP n'offre aucune authentification : tout poste qui joint l'automate peut écrire dans ses registres. On restreint donc les adresses autorisées, et avec OPC UA on utilise des comptes et des certificats avec des droits limités. Le but n'est pas de ralentir les échanges. Les sauvegardes restent nécessaires. Les pare-feu restent un complément indispensable.
+
+@055
+Q: Quel risque présente un mot de passe par défaut laissé sur une IHM ou un automate ?
+C: N'importe qui peut prendre la main
+W: L'écran s'éteint plus souvent
+W: Les alarmes ne sont plus horodatées
+W: Le réseau devient plus lent
+E: Les mots de passe par défaut des équipements sont publiés dans les notices et connus des attaquants : les laisser revient à ne pas protéger l'équipement. On les change dès l'installation, avec des mots de passe propres à chaque site. L'écran, l'horodatage et la vitesse du réseau ne sont pas concernés.
+
+@056
+Q: Pourquoi tester les mises à jour de sécurité d'un poste de supervision avant de les déployer ?
+C: Pour vérifier qu'elles ne gênent pas la conduite
+W: Pour pouvoir ne jamais les installer
+W: Parce que les mises à jour ralentissent l'automate
+W: Pour éviter de sauvegarder le poste avant
+E: Une mise à jour du système peut rendre un logiciel de supervision incompatible : on la valide d'abord sur un poste de test ou selon les recommandations de l'éditeur, puis on la déploie à un moment planifié, après une sauvegarde. Ne jamais mettre à jour laisse des failles connues. L'automate n'est pas concerné. La sauvegarde préalable reste indispensable.
+
+@057
+Q: Que fait cet extrait avec les commandes reçues de la supervision ?
+C: Il les refuse pendant la maintenance machine
+W: Il les exécute même en mode maintenance
+W: Il les retarde de 10 s quel que soit le mode
+W: Il les transfère vers une autre machine
+E: En mode maintenance, des personnes interviennent sur la machine : les commandes à distance sont bloquées, et le refus est signalé à l'opérateur pour qu'il comprenne pourquoi rien ne se passe. Les exécuter mettrait en danger les intervenants. Aucun retard n'est introduit. Rien n'est transféré.
+```
+IF Demande_IHM AND NOT Mode_Maintenance THEN
+    Commande := TRUE;
+ELSIF Demande_IHM THEN
+    Message := 'Commande refusée : mode maintenance';
+END_IF;
+Demande_IHM := FALSE;
+```
+
+@058
+Q: Quel est l'avantage d'une bibliothèque d'objets graphiques standard pour les moteurs et vannes ?
+C: Un affichage et un comportement uniformes
+W: Des écrans tous dessinés à la main, un par un
+W: Une couleur différente pour chaque moteur
+W: La suppression des retours d'état des moteurs
+E: Un objet standard, lié à un bloc standard dans l'automate, affiche les états, défauts et modes de la même façon sur tous les écrans : l'opérateur apprend une fois, et une correction profite à tout le projet. Le dessin à la main multiplie les erreurs. Des couleurs différentes brouillent la lecture. Les retours d'état restent indispensables.
+
+@059
+Q: Pourquoi faut-il prévoir l'acquittement d'une alarme depuis l'automate et pas seulement depuis un poste ?
+C: Pour que tous les postes voient le même état
+W: Pour que chaque poste ait son propre état d'alarme
+W: Pour acquitter les alarmes sans opérateur
+W: Pour que les alarmes ne soient plus horodatées
+E: Quand l'état d'acquittement est géré dans l'automate ou un serveur central, il est partagé : une alarme acquittée sur un poste l'est pour tous, et le terrain voit la même chose. Des états différents selon les postes créent des confusions. L'acquittement reste une action humaine. L'horodatage est conservé.
+
+@060
+Q: Que calcule cet extrait affiché sur l'écran de production ?
+C: Le taux de pièces bonnes sur la production
+W: Le temps de cycle moyen de la machine
+W: Le nombre total d'alarmes de la journée
+W: La vitesse de la ligne en pièces par heure
+E: Le taux de qualité rapporte les pièces bonnes au total produit : 950 bonnes sur 1 000 donnent 95 %. Le test évite une division par zéro en début de poste. Le temps de cycle, les alarmes ou la cadence demanderaient d'autres calculs. Ce taux entre dans le calcul du TRS.
+```
+IF Pieces_Total > 0 THEN
+    Taux_Qualite := DINT_TO_REAL(Pieces_Bonnes) * 100.0
+                  / DINT_TO_REAL(Pieces_Total);
+END_IF;
+```
+
+@061
+Q: Pourquoi limiter le nombre d'écritures cycliques de la supervision vers les automates ?
+C: Pour ne pas surcharger l'automate et le réseau
+W: Pour que les écrans ne puissent rien afficher
+W: Pour empêcher toute commande de l'opérateur
+W: Pour que l'historien n'enregistre plus rien
+E: Écrire en permanence des valeurs qui ne changent pas charge inutilement le réseau et la communication de l'automate : on n'écrit que sur changement ou sur action de l'opérateur, et on lit à des cadences adaptées à chaque variable. L'affichage, les commandes et l'historien continuent de fonctionner normalement.
+
+@062
+Q: Pourquoi ne pas dessiner un synoptique comme une photo réaliste de l'installation ?
+C: Les détails inutiles cachent l'information utile
+W: Une photo ne peut pas être affichée sur un écran
+W: Les opérateurs n'ont jamais vu l'installation
+W: Les photos ralentissent toujours l'automate
+E: Un écran de conduite doit faire ressortir l'état du procédé et les écarts : reliefs, ombres et couleurs décoratives distraient l'œil et masquent ce qui compte. Une photo peut s'afficher, mais elle n'aide pas à conduire. Les opérateurs connaissent l'installation. L'automate n'est pas concerné par l'affichage.
+
+@063
+Q: Pourquoi afficher la consigne et la limite d'alarme à côté d'une mesure ?
+C: Pour voir l'écart et la marge restante
+W: Pour que la mesure soit plus précise
+W: Pour supprimer l'alarme correspondante
+W: Pour réduire le volume de l'historien
+E: Voir la mesure, sa consigne et son seuil d'alarme côte à côte permet d'anticiper : l'opérateur sait si la valeur s'éloigne et combien de marge il reste avant l'alarme. Cela ne rend pas la mesure plus précise. L'alarme reste nécessaire. L'historien n'est pas concerné.
+
+@064
+Q: Que fait cet extrait pour une pompe pilotée depuis la supervision ?
+C: Il signale un défaut de démarrage
+W: Il démarre la pompe si le retour est présent
+W: Il arrête la pompe dès qu'elle démarre
+W: Il remet la demande de l'IHM à 1
+E: Si la pompe est commandée et que son retour de marche n'arrive pas en 3 s, l'alarme de défaut de démarrage s'active, et la supervision affiche l'écart entre l'ordre et l'état réel. La pompe n'est pas démarrée par le retour. Elle n'est pas arrêtée par cet extrait. La demande IHM n'est pas modifiée.
+```
+Defaut_Demarrage(IN := Commande_Pompe AND NOT Retour_Marche, PT := T#3s);
+Alarme_Pompe := Defaut_Demarrage.Q;
+```
+
+@065
+Q: Pourquoi documenter chaque tag avec son adresse, son unité et son échelle ?
+C: Pour faciliter la maintenance et le diagnostic
+W: Pour que la supervision fonctionne sans automate
+W: Pour pouvoir changer les adresses au hasard
+W: Pour supprimer les alarmes associées au tag
+E: Une liste de tags à jour permet de retrouver où est lue une valeur, dans quelle unité et à quelle échelle : diagnostic plus rapide, modifications sans erreur, échanges facilités avec d'autres équipes. La supervision a toujours besoin de l'automate. Les adresses ne se changent pas au hasard. Les alarmes restent associées aux tags.

@@ -197,6 +197,7 @@ from job.quiz_import import (
     import_questions,
     import_questions_file,
 )
+from job.quiz_packs import import_validated_packs, list_validated_packs
 from job.schedule import (
     MIN_SCORE_CHOICES,
     describe_schedule_runs,
@@ -1199,6 +1200,7 @@ def render_quiz(
             "message_tone": (pImport or {}).get("tone")
             or get_message_tone(pStatusCode),
             "generation_themes": list_generation_themes(vThemes),
+            "packs_count": len(list_validated_packs()),
             "default_count": DEFAULT_GENERATION_COUNT,
             "domains": [vDomain for vDomain, _ in group_themes(vThemes)],
             "exam": load_exam(pDatabaseFile),
@@ -1378,21 +1380,54 @@ def import_quiz_questions(
         )
 
     else:
+        rResponse = render_import_report(request, pDatabaseFile, vReport, pTheme)
+
+    return rResponse
+
+
+def render_import_report(pRequest, pDatabaseFile, pReport, pTheme=""):
+    """Affiche la révision avec le bilan d'un import : message, détail, correction."""
+
+    rResponse = render_quiz(
+        pRequest,
+        pDatabaseFile,
+        pImport={
+            "theme": pTheme,
+            "message": describe_quiz_import(pReport),
+            "details": describe_import_details(pReport),
+            "tone": get_import_tone(pReport),
+            "correction": (
+                build_correction_prompt(pReport["review"]) if pReport["review"] else ""
+            ),
+        },
+    )
+
+    return rResponse
+
+
+@app.post(
+    "/quiz/import-packs",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def import_quiz_packs(
+    request: Request, pDatabaseFile: str = Depends(get_database_file)
+):
+    """Importe d'un coup les archives validées du dossier des lots."""
+
+    try:
+        vReport = import_validated_packs(pDatabaseFile, datetime.now())
+
+    except ValueError as vException:
         rResponse = render_quiz(
             request,
             pDatabaseFile,
-            pImport={
-                "theme": pTheme,
-                "message": describe_quiz_import(vReport),
-                "details": describe_import_details(vReport),
-                "tone": get_import_tone(vReport),
-                "correction": (
-                    build_correction_prompt(vReport["review"])
-                    if vReport["review"]
-                    else ""
-                ),
-            },
+            pImport={"message": str(vException)},
+            pStatusCode=400,
         )
+
+    else:
+        rResponse = render_import_report(request, pDatabaseFile, vReport)
 
     return rResponse
 

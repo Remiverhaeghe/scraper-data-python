@@ -1,0 +1,219 @@
+{
+  "lot": 1,
+  "seed": 61131,
+  "skills": [
+    "Automate Siemens",
+    "TIA Portal",
+    "STEP 7",
+    "Automate Schneider",
+    "EcoStruxure Machine Expert - Basic",
+    "IEC 61131-3",
+    "Ladder",
+    "Structured Text",
+    "Diagnostic automate",
+    "Entrées-sorties industrielles",
+    "Maintenance et sécurité industrielle"
+  ],
+  "schemas": [
+    {
+      "name": "detecteur-piece.svg",
+      "questions": [
+        "003"
+      ],
+      "alt": "Détection de pièce par capteur puis entrée API",
+      "file": "schemas/detecteur-piece.svg"
+    },
+    {
+      "name": "sortie-actionneur.svg",
+      "questions": [
+        "004"
+      ],
+      "alt": "Commande d’un actionneur depuis une sortie API",
+      "file": "schemas/sortie-actionneur.svg"
+    },
+    {
+      "name": "tia-portal-architecture.svg",
+      "questions": [
+        "008"
+      ],
+      "alt": "Architecture d’ingénierie automate Siemens",
+      "file": "schemas/tia-portal-architecture.svg"
+    },
+    {
+      "name": "securite-intervention.svg",
+      "questions": [
+        "009"
+      ],
+      "alt": "Étapes générales de maîtrise des énergies avant intervention",
+      "file": "schemas/securite-intervention.svg"
+    },
+    {
+      "name": "cycle-api.svg",
+      "questions": [
+        "011"
+      ],
+      "alt": "Cycle classique simplifié d’un automate programmable",
+      "file": "schemas/cycle-api.svg"
+    },
+    {
+      "name": "entree-sortie.svg",
+      "questions": [
+        "012"
+      ],
+      "alt": "Chaîne simplifiée entre capteurs, automate et actionneurs",
+      "file": "schemas/entree-sortie.svg"
+    },
+    {
+      "name": "chaine-analogique.svg",
+      "questions": [
+        "013"
+      ],
+      "alt": "Chaîne de mesure analogique",
+      "file": "schemas/chaine-analogique.svg"
+    },
+    {
+      "name": "bloc-fonctionnel.svg",
+      "questions": [
+        "015"
+      ],
+      "alt": "Bloc fonctionnel avec interface",
+      "file": "schemas/bloc-fonctionnel.svg"
+    },
+    {
+      "name": "commande-moteur.svg",
+      "questions": [
+        "017"
+      ],
+      "alt": "Chaîne de commande moteur",
+      "file": "schemas/commande-moteur.svg"
+    },
+    {
+      "name": "compteur-impulsion.svg",
+      "questions": [
+        "018"
+      ],
+      "alt": "Comptage sur front montant",
+      "file": "schemas/compteur-impulsion.svg"
+    },
+    {
+      "name": "temporisation-ton.svg",
+      "questions": [
+        "019"
+      ],
+      "alt": "Principe de temporisation TON",
+      "file": "schemas/temporisation-ton.svg"
+    },
+    {
+      "name": "diagnostic-entree.svg",
+      "questions": [
+        "021"
+      ],
+      "alt": "Diagnostic d’une entrée qui ne change pas",
+      "file": "schemas/diagnostic-entree.svg"
+    },
+    {
+      "name": "alimentation-24v.svg",
+      "questions": [
+        "022"
+      ],
+      "alt": "Alimentation et distribution 24 V CC",
+      "file": "schemas/alimentation-24v.svg"
+    },
+    {
+      "name": "signalisation-defaut.svg",
+      "questions": [
+        "023"
+      ],
+      "alt": "Signalisation locale d’un défaut",
+      "file": "schemas/signalisation-defaut.svg"
+    },
+    {
+      "name": "cycle-api-image.svg",
+      "questions": [
+        "026"
+      ],
+      "alt": "Cycle classique d’exécution d’un automate",
+      "file": "schemas/cycle-api-image.svg"
+    },
+    {
+      "name": "permissifs-moteur.svg",
+      "questions": [
+        "030"
+      ],
+      "alt": "Chaîne logique des permissifs moteur",
+      "file": "schemas/permissifs-moteur.svg"
+    },
+    {
+      "name": "boucle-4-20ma.svg",
+      "questions": [
+        "034"
+      ],
+      "alt": "Conversion d’un courant 4–20 mA en température",
+      "file": "schemas/boucle-4-20ma.svg"
+    },
+    {
+      "name": "signal-420ma.svg",
+      "questions": [
+        "035"
+      ],
+      "alt": "Relation linéaire entre courant 4–20 mA et pourcentage de mesure",
+      "file": "schemas/signal-420ma.svg"
+    },
+    {
+      "name": "interverrouillage.svg",
+      "questions": [
+        "038"
+      ],
+      "alt": "Interverrouillage de deux commandes",
+      "file": "schemas/interverrouillage.svg"
+    },
+    {
+      "name": "antirebond.svg",
+      "questions": [
+        "043"
+      ],
+      "alt": "Filtrage anti-rebond d’un capteur mécanique",
+      "file": "schemas/antirebond.svg"
+    },
+    {
+      "name": "diagnostic-sortie.svg",
+      "questions": [
+        "047"
+      ],
+      "alt": "Chaîne de diagnostic entre commande logique et actionneur",
+      "file": "schemas/diagnostic-sortie.svg"
+    },
+    {
+      "name": "repli-communication.svg",
+      "questions": [
+        "048"
+      ],
+      "alt": "État de repli après perte de communication",
+      "file": "schemas/repli-communication.svg"
+    },
+    {
+      "name": "remplacement-module-io.svg",
+      "questions": [
+        "051"
+      ],
+      "alt": "Contrôles après remplacement d’un module E/S",
+      "file": "schemas/remplacement-module-io.svg"
+    },
+    {
+      "name": "changement-adresse-ip.svg",
+      "questions": [
+        "058"
+      ],
+      "alt": "Changement maîtrisé d’adresse IP automate",
+      "file": "schemas/changement-adresse-ip.svg"
+    },
+    {
+      "name": "sortie-logique-physique.svg",
+      "questions": [
+        "075"
+      ],
+      "alt": "Diagnostic d’une sortie logique inactive physiquement",
+      "file": "schemas/sortie-logique-physique.svg"
+    }
+  ]
+}
