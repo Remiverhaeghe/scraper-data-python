@@ -47,7 +47,8 @@
       {"id": "git", "label": "Git", "skills": ["Git", "GitLab", "GitHub"]},
       {"id": "tests-logiciels", "label": "Tests et qualité du code", "skills": ["tests unitaires", "JUnit", "pytest", "TDD", "Selenium"]},
       {"id": "agile", "label": "Méthodes agiles et gestion de projet", "skills": ["Agile", "Scrum", "Kanban", "Jira", "gestion de projet"]},
-      {"id": "itil-support", "label": "Support informatique et ITIL", "skills": ["ITIL", "support informatique", "helpdesk", "ServiceNow"]}
+      {"id": "itil-support", "label": "Support informatique et ITIL", "skills": ["ITIL", "support informatique", "helpdesk", "ServiceNow"]},
+      {"id": "sigles-informatique", "label": "Sigles et acronymes de l'informatique et des réseaux", "skills": ["TCP/IP", "API REST", "CI/CD", "SaaS", "RGPD", "VPN"]}
     ]
   },
   "Réseau et sécurité": {

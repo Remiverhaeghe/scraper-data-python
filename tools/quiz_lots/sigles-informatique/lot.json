@@ -1,0 +1,86 @@
+{
+  "lot": 1,
+  "seed": 1590348271,
+  "skills": [
+    "TCP/IP",
+    "API REST",
+    "CI/CD",
+    "SaaS",
+    "RGPD",
+    "VPN"
+  ],
+  "schemas": [
+    {
+      "name": "sigles-osi.svg",
+      "questions": ["086", "087"],
+      "diagram": {
+        "title": "Modèle OSI, de la couche 1 à la couche 7",
+        "nodes": [
+          "1 Physique",
+          "2 Liaison",
+          "3 Réseau",
+          "4 Transport",
+          "5 Session",
+          "6 Présentation",
+          "7 Application"
+        ],
+        "note": "Câble et Wi-Fi en 1, Ethernet et MAC en 2, IP en 3, TCP et UDP en 4, HTTP en 7"
+      }
+    },
+    {
+      "name": "sigles-dns.svg",
+      "questions": ["018", "019", "020"],
+      "diagram": {
+        "title": "Ce qui se passe quand on tape une adresse web",
+        "nodes": [
+          "DHCP : le poste a son adresse IP",
+          "DNS : nom traduit en adresse IP",
+          "TCP : connexion au port 443",
+          "TLS : échanges chiffrés",
+          "HTTP : la page est demandée"
+        ]
+      }
+    },
+    {
+      "name": "sigles-pipeline.svg",
+      "questions": ["037", "038"],
+      "diagram": {
+        "title": "Pipeline CI/CD",
+        "nodes": [
+          "Push",
+          "Compilation",
+          "Tests automatisés",
+          "Image ou artefact",
+          "Déploiement"
+        ],
+        "note": "Un échec à une étape arrête le pipeline : rien de cassé n'arrive en production"
+      }
+    },
+    {
+      "name": "sigles-cloud.svg",
+      "questions": ["040", "041"],
+      "diagram": {
+        "title": "Ce que gère le client selon le modèle de cloud",
+        "nodes": [
+          "IaaS : systèmes, logiciels et données",
+          "PaaS : code et données",
+          "SaaS : données et utilisateurs"
+        ],
+        "note": "Plus on monte vers le SaaS, plus le fournisseur prend en charge"
+      }
+    },
+    {
+      "name": "sigles-continuite.svg",
+      "questions": ["076", "077", "078"],
+      "diagram": {
+        "title": "RPO et RTO autour d'un sinistre",
+        "nodes": [
+          "Dernière sauvegarde",
+          "Sinistre",
+          "Reprise du service"
+        ],
+        "note": "RPO : de la dernière sauvegarde au sinistre · RTO : du sinistre à la reprise"
+      }
+    }
+  ]
+}

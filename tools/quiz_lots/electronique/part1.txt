@@ -1,0 +1,373 @@
+@001
+Q: Associer chaque repère de la planche au composant passif qu'il représente.
+P: Repère 1 => résistance
+P: Repère 2 => condensateur non polarisé
+P: Repère 3 => condensateur polarisé
+P: Repère 4 => inductance
+P: Repère 5 => potentiomètre
+E: La résistance est un rectangle, le condensateur deux plaques face à face ; le polarisé distingue une armature et porte un signe + qui impose son sens de montage. L'inductance se dessine en boucles successives, le potentiomètre est une résistance touchée par une flèche, son curseur.
+
+@002
+Q: Associer chaque repère de la planche au composant qu'il représente.
+P: Repère 1 => diode
+P: Repère 2 => diode électroluminescente (LED)
+P: Repère 3 => diode Zener
+P: Repère 4 => transistor bipolaire NPN
+P: Repère 5 => amplificateur opérationnel
+E: La diode est un triangle qui pointe vers une barre : le courant passe dans le sens de la flèche, de l'anode vers la cathode. Les deux flèches sortantes signalent une LED, la barre aux extrémités repliées une Zener. Le transistor NPN a sa flèche d'émetteur dirigée vers l'extérieur ; l'amplificateur opérationnel est un triangle à deux entrées, moins et plus.
+
+@003
+Q: Sur la planche des semi-conducteurs, quel repère désigne le composant qui émet de la lumière ?
+C: Le repère 2
+W: Le repère 1
+W: Le repère 3
+W: Le repère 4
+E: Les deux flèches qui partent du repère 2 représentent la lumière émise : c'est une LED. Des flèches dirigées vers le composant signaleraient au contraire un composant sensible à la lumière, comme une photodiode. Le repère 1 est une diode ordinaire et le 3 une diode Zener.
+
+@004
+Q: Associer chaque couleur de l'anneau d'une résistance au chiffre qu'elle code.
+P: Noir => 0
+P: Marron => 1
+P: Rouge => 2
+P: Orange => 3
+P: Jaune => 4
+E: Le code des couleurs suit l'ordre noir, marron, rouge, orange, jaune, vert, bleu, violet, gris, blanc pour 0 à 9. Les premiers anneaux donnent les chiffres significatifs, le suivant le multiplicateur, le dernier, souvent or ou argent, la tolérance.
+
+@005
+Q: Une résistance porte les anneaux marron, noir, rouge. Quelle est sa valeur, en ohms ?
+N: 1000
+U: Ω
+E: Marron vaut 1, noir 0, et le rouge du troisième anneau multiplie par 10² : 10 × 100 = 1 000 Ω, soit 1 kΩ. Un anneau or derrière indiquerait une tolérance de 5 %.
+
+@006
+Q: Une résistance porte les anneaux jaune, violet, orange. Quelle est sa valeur, en ohms ?
+N: 47000
+U: Ω
+E: Jaune vaut 4, violet 7, et l'orange multiplie par 10³ : 47 × 1 000 = 47 000 Ω, soit 47 kΩ. Les valeurs suivent les séries normalisées, d'où ces 47 que l'on retrouve partout.
+
+@007
+Q: À quoi sert une résistance placée en série avec une LED ?
+C: Limiter le courant qui traverse la LED
+W: Augmenter la luminosité au-delà de la valeur nominale
+W: Changer la couleur de la lumière émise par la LED
+W: Protéger la LED contre une inversion de polarité
+E: Une LED laisse passer d'autant plus de courant que la tension monte au-delà de son seuil : sans résistance, le courant s'emballe et la LED grille en un instant. La résistance fixe le courant à sa valeur nominale, souvent 10 à 20 mA. Elle ne protège pas contre une inversion, que la LED supporte mal.
+
+@008
+Q: Quelle résistance faut-il pour alimenter en 5 V une LED de 2 V sous 20 mA ?
+N: 150
+U: Ω
+E: La résistance supporte la tension restante, 5 - 2 = 3 V, et laisse passer 20 mA : R = 3 / 0,02 = 150 Ω. On choisit la valeur normalisée la plus proche, 150 Ω justement dans la série E12.
+
+@009
+Q: Dans quel sens une diode laisse-t-elle passer le courant ?
+C: De l'anode vers la cathode
+W: De la cathode vers l'anode, dans tous les cas
+W: Dans les deux sens, comme une résistance ordinaire
+W: Dans aucun sens tant qu'elle n'est pas éclairée
+E: La diode conduit quand l'anode est plus positive que la cathode d'environ 0,6 à 0,7 V pour le silicium, et bloque dans l'autre sens. La cathode est repérée par la barre du symbole et par un anneau sur le boîtier.
+
+@010
+Q: Quelle tension de seuil retient-on pour une diode au silicium qui conduit ?
+C: Environ 0,6 à 0,7 V
+W: Environ 5 V
+W: Environ 0,01 V
+W: Environ 12 V
+E: Une diode au silicium chute environ 0,6 à 0,7 V en conduction, une diode Schottky 0,2 à 0,4 V, une LED 1,8 à 3,5 V selon sa couleur. Cette chute se retrouve dans les calculs d'alimentation et de redressement.
+
+@011
+Q: Que stocke un condensateur ?
+C: Une charge électrique, donc de l'énergie
+W: Un champ magnétique comme une bobine
+W: Un courant constant pour le restituer plus tard
+W: De la chaleur pour protéger les composants voisins
+E: Le condensateur accumule des charges sur ses armatures séparées par un isolant : il garde une tension et l'énergie correspondante. Il lisse une alimentation, filtre des parasites ou crée une temporisation. C'est la bobine qui stocke l'énergie sous forme magnétique.
+
+@012
+Q: Pourquoi faut-il respecter le sens de montage d'un condensateur électrolytique ?
+C: Monté à l'envers, il chauffe et peut éclater
+W: Monté à l'envers, sa capacité double aussitôt
+W: Le sens n'a d'effet que sur la couleur du boîtier
+W: Monté à l'envers, il devient une résistance pure
+E: L'isolant d'un condensateur électrolytique est une couche d'oxyde qui ne tient que dans un sens. À l'envers, elle se détruit, le condensateur chauffe, gonfle et peut éclater. Le côté moins est repéré par une bande sur le boîtier et la patte la plus courte.
+
+@013
+Q: Deux condensateurs de 10 µF et 22 µF sont montés en parallèle. Quelle est la capacité totale ?
+N: 32
+U: µF
+E: En parallèle, les capacités s'additionnent : 10 + 22 = 32 µF. C'est l'inverse des résistances : en série, la capacité totale serait plus faible que la plus petite, ici environ 6,9 µF.
+
+@014
+Q: Une tension alterne avec une période de 2 ms. Quelle est sa fréquence ?
+N: 500
+U: Hz
+E: La fréquence est l'inverse de la période : f = 1 / 0,002 = 500 Hz. À l'oscilloscope, on mesure la période sur l'écran, en comptant les divisions horizontales, puis on en déduit la fréquence.
+
+@015
+Q: Quel appareil permet de visualiser la forme d'une tension qui varie dans le temps ?
+C: Un oscilloscope
+W: Un multimètre
+W: Un mégohmmètre
+W: Un wattmètre
+E: L'oscilloscope trace la tension en fonction du temps : forme d'onde, amplitude, fréquence, parasites, rebonds d'un bouton. Le multimètre ne donne qu'une valeur, moyenne ou efficace. Le mégohmmètre mesure un isolement et le wattmètre une puissance.
+
+@016
+Q: Associer chaque sigle à sa signification.
+P: LED => diode électroluminescente
+P: CMS => composant monté en surface
+P: PCB => circuit imprimé
+P: ESD => décharge électrostatique
+P: AOP => amplificateur opérationnel
+E: Ces sigles reviennent dans toutes les documentations : un composant CMS se soude directement sur les pastilles du circuit imprimé, sans traverser la carte. Les ESD, décharges électrostatiques venues du corps humain, détruisent les composants sensibles sans qu'on les sente.
+
+@017
+Q: Pourquoi porte-t-on un bracelet antistatique relié à la terre pour manipuler une carte électronique ?
+C: Éviter qu'une décharge du corps détruise un composant
+W: Se protéger d'une électrocution par la tension secteur
+W: Améliorer la qualité des soudures sur la carte
+W: Mesurer la température des composants au toucher
+E: En marchant, le corps se charge à plusieurs milliers de volts : une décharge invisible suffit à détruire ou affaiblir un circuit intégré. Le bracelet écoule ces charges en douceur par une résistance d'un mégohm. Il ne protège pas de la tension secteur, au contraire : on ne le porte jamais sur un appareil sous tension.
+
+@018
+Q: Quel est le rôle principal d'un transistor utilisé en commutation ?
+C: Commander un fort courant avec un faible courant
+W: Stocker l'énergie électrique comme un condensateur
+W: Redresser une tension alternative en continu
+W: Mesurer la température de la carte électronique
+E: Un petit courant de base, ou une tension de grille pour un MOSFET, ouvre ou ferme le passage d'un courant bien plus grand : un microcontrôleur qui ne fournit que quelques milliampères peut ainsi commander un relais, un moteur ou une rangée de LED.
+
+@019
+Q: Associer chaque broche d'un transistor bipolaire NPN à son rôle.
+P: Base => électrode de commande
+P: Collecteur => reçoit le courant de la charge
+P: Émetteur => relié à la masse en commutation
+E: En commutation, l'émetteur va à la masse, la charge se branche entre l'alimentation et le collecteur, et un courant injecté dans la base fait conduire le transistor. La flèche de l'émetteur, sortante pour un NPN, indique le sens du courant.
+
+@020
+Q: Quelle valeur efficace a une tension sinusoïdale de 10 V crête ?
+N: 7.07
+U: V
+T: 1
+E: Pour une sinusoïde, la valeur efficace vaut la valeur crête divisée par √2 : 10 / 1,414 ≈ 7,07 V. Les multimètres courants affichent cette valeur efficace ; l'oscilloscope montre plutôt la valeur crête ou crête à crête.
+
+@021
+Q: Que signifie le sigle CMS sur une nomenclature de carte ?
+C: Composant monté en surface
+W: Circuit de mesure sécurisé
+W: Contrôle de masse statique
+W: Convertisseur multi-signal
+E: Les composants CMS, ou SMD en anglais, se soudent sur des pastilles en surface, sans trou traversant. Plus petits et posés par des machines, ils équipent presque toutes les cartes modernes ; leur réparation demande une pince fine, une loupe et un fer à panne fine ou une station à air chaud.
+
+@022
+Q: Quel est le rôle d'une diode Zener montée en inverse ?
+C: Maintenir une tension à peu près fixe
+W: Laisser passer le courant dans les deux sens
+W: Émettre une lumière dont la couleur dépend de la tension
+W: Amplifier un petit signal d'entrée par dix
+E: Polarisée en inverse, la Zener conduit dès que la tension atteint sa tension Zener, par exemple 5,1 V, et la maintient à peu près fixe. Avec une résistance en série, elle sert de référence de tension ou de protection d'une entrée contre les surtensions.
+
+@023
+Q: Un multimètre en position ohmmètre indique « OL » entre les deux bornes d'un fusible. Que conclure ?
+C: Le fusible est coupé
+W: Le fusible est en bon état
+W: Le fusible est en court-circuit
+W: Le multimètre est mal étalonné
+E: « OL » signifie hors limite : la résistance est trop grande pour être mesurée, le circuit est ouvert. Un fusible sain indique presque 0 Ω. On mesure toujours hors tension, composant si possible sorti du circuit pour ne pas lire les éléments en parallèle.
+
+@024
+Q: Pourquoi place-t-on un condensateur de 100 nF près de chaque circuit intégré ?
+C: Filtrer les parasites de l'alimentation au plus près
+W: Augmenter la tension d'alimentation du circuit intégré
+W: Remplacer la résistance de limitation de courant
+W: Stocker le programme quand l'alimentation est coupée
+E: Ce condensateur de découplage fournit les pointes de courant brèves du circuit et absorbe les parasites, avant qu'ils ne se propagent par les pistes. Placé loin du composant, il perd son efficacité. Son absence est une cause classique de redémarrages aléatoires d'un microcontrôleur.
+
+@025
+Q: Convertir le nombre binaire 1011 0110 en décimal.
+N: 182
+E: On additionne les puissances de 2 des bits à 1 : 128 + 32 + 16 + 4 + 2 = 182. En hexadécimal, chaque groupe de 4 bits donne un chiffre : 1011 vaut B et 0110 vaut 6, d'où 0xB6.
+
+@026
+Q: Un diviseur de tension reçoit 12 V, avec R1 = 10 kΩ en haut et R2 = 4,7 kΩ côté masse. Quelle tension obtient-on au point milieu ?
+N: 3.837
+U: V
+T: 1
+E: La sortie vaut Ue × R2 / (R1 + R2) = 12 × 4,7 / 14,7 ≈ 3,84 V. Ce montage abaisse une tension pour l'entrée d'un microcontrôleur, à condition que la charge branchée sur la sortie consomme très peu, sinon elle fausse le rapport.
+
+@027
+Q: Quelle puissance dissipe une résistance de 150 Ω parcourue par 20 mA ?
+N: 0.06
+U: W
+T: 1
+E: P = R × I² = 150 × 0,02² = 0,06 W, soit 60 mW. Une résistance standard de 1/4 W suffit largement. Si la puissance approchait la limite du boîtier, la résistance chaufferait et sa valeur dériverait.
+
+@028
+Q: Un signal PWM est à l'état haut 2 ms sur une période de 5 ms. Quel est son rapport cyclique, en % ?
+N: 40
+U: %
+T: 1
+E: Le rapport cyclique vaut temps haut / période = 2 / 5 = 0,4, soit 40 %. En faisant varier ce rapport, un microcontrôleur règle la puissance moyenne envoyée à une LED, un moteur ou un chauffage, sans dissiper d'énergie dans un composant linéaire.
+
+@029
+Q: Ce signal PWM de 40 % commute une alimentation de 12 V. Quelle tension moyenne reçoit la charge ?
+N: 4.8
+U: V
+T: 1
+E: La tension moyenne vaut rapport cyclique × tension : 0,4 × 12 = 4,8 V. Un moteur à courant continu réagit à cette moyenne grâce à son inertie, une LED semble moins lumineuse parce que l'œil intègre les impulsions.
+
+@030
+Q: Quel montage transforme une tension alternative en tension continue pulsée sur les deux alternances ?
+C: Un pont de diodes
+W: Un diviseur de tension
+W: Un filtre passe-haut RC
+W: Un amplificateur suiveur
+E: Le pont de quatre diodes oriente les deux alternances dans le même sens : on obtient une tension toujours positive, qui ondule encore. Un condensateur de filtrage la lisse ensuite, puis un régulateur la stabilise. Le diviseur ne fait qu'abaisser une tension.
+
+@031
+Q: Remettre dans l'ordre les étages d'une alimentation linéaire classique.
+O: Transformateur abaisseur
+O: Pont de diodes
+O: Condensateur de filtrage
+O: Régulateur de tension
+O: Carte alimentée en 5 V
+E: Le transformateur abaisse et isole la tension du secteur, le pont la redresse, le condensateur lisse les ondulations et le régulateur fournit une tension fixe malgré les variations. Les alimentations à découpage, plus légères, ont remplacé ce montage dans la plupart des appareils.
+
+@032
+Q: Un transformateur délivre 12 V efficaces. Quelle tension crête obtient-on après un pont de diodes, en comptant 0,7 V par diode conductrice ?
+N: 15.57
+U: V
+T: 2
+E: La crête vaut 12 × √2 ≈ 16,97 V. Dans un pont, deux diodes conduisent à la fois : 16,97 - 1,4 ≈ 15,57 V. C'est la tension à laquelle se charge le condensateur de filtrage, et qu'il doit supporter avec une marge.
+
+@033
+Q: Un régulateur 7805 reçoit 12 V et fournit 5 V sous 0,5 A. Quelle puissance dissipe-t-il ?
+N: 3.5
+U: W
+T: 1
+E: Le régulateur linéaire absorbe la différence de tension : P = (12 - 5) × 0,5 = 3,5 W. Sans dissipateur, un boîtier TO-220 dépasserait sa température limite et se mettrait en protection. Une alimentation à découpage éviterait presque toute cette perte.
+
+@034
+Q: Une carte alimentée en 12 V par un régulateur 7805 se coupe au bout de quelques minutes, régulateur brûlant. Quelle est la cause ?
+C: Le régulateur dissipe trop et se met en protection
+W: Le régulateur fournit une tension trop basse à froid
+W: Le condensateur de sortie est monté en parallèle
+W: Le microcontrôleur réclame une tension de 12 V
+E: Le 7805 transforme en chaleur toute la tension en trop multipliée par le courant. Trop chaud, il se coupe par sa protection thermique, puis repart en refroidissant. On ajoute un dissipateur, on baisse la tension d'entrée ou on passe à un régulateur à découpage.
+
+@035
+Q: Pourquoi monte-t-on une diode en parallèle sur la bobine d'un relais commandé par un transistor ?
+C: Absorber la surtension créée à la coupure de la bobine
+W: Empêcher le relais de coller quand la tension est trop basse
+W: Allumer un voyant quand le relais est enclenché
+W: Augmenter la force de collage du relais
+E: À la coupure, la bobine s'oppose à la variation du courant et crée une pointe de tension de plusieurs dizaines de volts, capable de détruire le transistor. La diode de roue libre, montée en inverse, laisse ce courant tourner dans la bobine jusqu'à s'éteindre.
+
+@036
+Q: Un transistor qui commande un relais claque après quelques jours de fonctionnement. Que manque-t-il probablement ?
+C: La diode de roue libre sur la bobine
+W: Une résistance de 150 Ω en série avec le relais
+W: Un condensateur de 100 µF sur la base
+W: Un second relais monté en parallèle
+E: Sans diode de roue libre, chaque coupure envoie une surtension sur le collecteur du transistor : il résiste quelque temps puis se détruit. C'est l'oubli le plus classique dans un montage à relais ; de nombreux modules relais vendus tout faits intègrent déjà cette diode.
+
+@037
+Q: Un transistor NPN doit commuter 100 mA avec un gain β de 100. Quel courant de base minimal faut-il ?
+N: 1
+U: mA
+E: Le courant de base minimal vaut Ic / β = 100 / 100 = 1 mA. En commutation, on en injecte plusieurs fois plus, souvent cinq à dix fois, pour saturer franchement le transistor quel que soit son gain réel, qui varie beaucoup d'un exemplaire à l'autre.
+
+@038
+Q: Pourquoi préfère-t-on souvent un MOSFET à un transistor bipolaire pour commuter un fort courant ?
+C: Il se commande en tension et chauffe peu en conduction
+W: Il ne demande aucune alimentation pour fonctionner
+W: Il supporte une inversion de polarité sans dommage
+W: Il amplifie le courant de commande sans limite
+E: Le MOSFET se commande par la tension de grille, sans courant permanent, et sa résistance en conduction, de quelques milliohms, limite les pertes. Pour une commande directe par un microcontrôleur en 3,3 V, on choisit un modèle dit « logic level », qui conduit pleinement à cette tension.
+
+@039
+Q: Une entrée de microcontrôleur reliée à un bouton lit des valeurs aléatoires quand le bouton est relâché. Que manque-t-il ?
+C: Une résistance de tirage vers un niveau fixe
+W: Un condensateur électrolytique de 1 000 µF
+W: Une diode Zener en série avec le bouton
+W: Un fusible sur la ligne de l'entrée
+E: Bouton relâché, l'entrée n'est reliée à rien : elle flotte et capte les parasites. Une résistance de tirage, souvent 10 kΩ vers l'alimentation (pull-up) ou vers la masse (pull-down), lui impose un état stable. Beaucoup de microcontrôleurs proposent une pull-up interne à activer par programme.
+
+@040
+Q: Un compteur relié à un bouton-poussoir enregistre parfois plusieurs appuis pour un seul. Pourquoi ?
+C: Les rebonds mécaniques du contact
+W: Une tension d'alimentation trop élevée
+W: Une LED montée à l'envers sur la carte
+W: Un condensateur de découplage trop gros
+E: À la fermeture, les lames d'un bouton rebondissent pendant quelques millisecondes : l'entrée voit une rafale d'impulsions. On filtre par un circuit RC ou, plus souvent, par logiciel en ignorant les changements pendant 10 à 50 ms après le premier front.
+
+@041
+Q: Associer chaque bus de communication à sa caractéristique.
+P: I2C => deux fils, données et horloge, adresses par composant
+P: SPI => horloge, deux lignes de données et une sélection par esclave
+P: UART => liaison série asynchrone, sans horloge partagée
+P: CAN => bus différentiel robuste des véhicules et machines
+E: L'I2C relie de nombreux capteurs avec deux fils seulement ; le SPI est plus rapide mais demande une ligne de sélection par composant. L'UART est la liaison série point à point des modules et consoles ; le CAN, conçu pour l'automobile, résiste aux perturbations grâce à sa paire différentielle.
+
+@042
+Q: Pourquoi relie-t-on les masses de deux cartes qui communiquent par une liaison série ?
+C: Les tensions des signaux se mesurent par rapport à la masse
+W: Pour augmenter la vitesse de transmission de la liaison
+W: Pour alimenter la seconde carte par la ligne de données
+W: Pour protéger les cartes contre la foudre directe
+E: Un signal à 3,3 V n'a de sens que par rapport à une référence commune. Sans masse partagée, le récepteur ne sait pas lire les niveaux et les données sont incohérentes. Pour relier des équipements éloignés ou à des masses différentes, on utilise une liaison différentielle ou isolée.
+
+@043
+Q: Convertir le nombre hexadécimal 0x3F en décimal.
+N: 63
+E: En hexadécimal, chaque chiffre vaut 16 fois le suivant : 3 × 16 + 15 = 63, F valant 15. En binaire, 0x3F s'écrit 0011 1111 : les six bits de poids faible à 1. Ce format est courant pour les masques et les registres de microcontrôleur.
+
+@044
+Q: Associer chaque porte logique à sa règle.
+P: ET => sortie à 1 si toutes les entrées sont à 1
+P: OU => sortie à 1 si au moins une entrée est à 1
+P: NON => sortie inverse de l'entrée
+P: OU exclusif => sortie à 1 si les entrées sont différentes
+E: Ces fonctions de base construisent toute la logique numérique, des additionneurs aux mémoires. Les portes NON-ET et NON-OU, inverses du ET et du OU, permettent à elles seules de réaliser toutes les autres, d'où leur présence partout dans les circuits intégrés.
+
+@045
+Q: Un convertisseur analogique-numérique de 10 bits mesure de 0 à 5 V. Quelle est sa résolution, en mV ?
+N: 4.88
+U: mV
+T: 1
+E: Un CAN de 10 bits découpe sa plage en 2¹⁰ = 1 024 pas : 5 V / 1 024 ≈ 4,88 mV par pas. Une variation plus petite n'est pas vue. Avec 12 bits, la résolution passerait à 1,22 mV ; pour aller plus loin, il faut aussi soigner le bruit de la mesure.
+
+@046
+Q: Quel montage à amplificateur opérationnel recopie la tension d'entrée sans charger la source ?
+C: Le montage suiveur
+W: Le montage inverseur
+W: Le comparateur
+W: L'intégrateur
+E: Dans le suiveur, la sortie est reliée à l'entrée moins et le signal arrive sur l'entrée plus : le gain vaut 1. Son intérêt est l'adaptation d'impédance : il ne prélève presque aucun courant à la source et peut alimenter une charge plus gourmande, sans fausser par exemple un diviseur de tension.
+
+@047
+Q: Un montage inverseur a Rf = 100 kΩ et Ri = 10 kΩ. Quelle tension de sortie pour 0,2 V en entrée ?
+N: -2
+U: V
+T: 1
+E: Le gain vaut - Rf / Ri = - 100 / 10 = - 10 : la sortie vaut - 10 × 0,2 = - 2 V. Le signe moins traduit l'opposition de phase. La sortie ne peut jamais dépasser les tensions d'alimentation de l'amplificateur.
+
+@048
+Q: Un montage non inverseur a Rf = 47 kΩ et Rg = 10 kΩ. Quel est son gain ?
+N: 5.7
+T: 1
+E: Le gain du non inverseur vaut 1 + Rf / Rg = 1 + 47 / 10 = 5,7, sans inversion de signe. Il ne peut pas descendre sous 1 : pour atténuer, on utilise un diviseur ; pour un gain unité, le suiveur.
+
+@049
+Q: Que fait un amplificateur opérationnel monté en comparateur, sans contre-réaction ?
+C: Sa sortie bascule selon l'entrée la plus haute
+W: Sa sortie recopie la moyenne des deux entrées
+W: Sa sortie amplifie l'écart d'un gain de deux
+W: Sa sortie reste nulle tant que l'écart est faible
+E: Sans contre-réaction, le gain énorme de l'amplificateur fait saturer la sortie vers l'alimentation haute si l'entrée plus dépasse l'entrée moins, vers la basse sinon. On compare ainsi une mesure à un seuil, par exemple pour un thermostat. Un hystérésis évite les oscillations autour du seuil.
+
+@050
+Q: Quelle est la constante de temps d'un circuit RC avec R = 10 kΩ et C = 47 µF ?
+N: 0.47
+U: s
+T: 1
+E: τ = R × C = 10 000 × 0,000 047 = 0,47 s. Le condensateur atteint 63 % de la tension finale après τ et se considère chargé après 5 τ, environ 2,4 s. Ce montage sert à retarder une mise sous tension ou à filtrer un bouton.

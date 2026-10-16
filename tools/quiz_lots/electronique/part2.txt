@@ -1,0 +1,384 @@
+@051
+Q: Quel est l'effet d'un filtre RC passe-bas sur un signal ?
+C: Il atténue les fréquences au-dessus de la coupure
+W: Il atténue les fréquences en dessous de la coupure
+W: Il amplifie toutes les fréquences de façon égale
+W: Il transforme le signal alternatif en continu pur
+E: Le condensateur se comporte comme un court-circuit pour les fréquences élevées, qu'il renvoie vers la masse : les variations lentes passent, les rapides sont atténuées. On l'utilise pour nettoyer une mesure de capteur ou lisser une sortie PWM. Le passe-haut fait l'inverse.
+
+@052
+Q: Quelle est la fréquence de coupure d'un filtre RC avec R = 1,6 kΩ et C = 100 nF ?
+N: 994.7
+U: Hz
+T: 2
+E: fc = 1 / (2 × π × R × C) = 1 / (6,283 × 1 600 × 0,000 000 1) ≈ 994,7 Hz, soit environ 1 kHz. À cette fréquence, le signal est atténué de 3 dB, environ 70 % de son amplitude.
+
+@053
+Q: Quel est le rôle d'un optocoupleur ?
+C: Transmettre un signal en isolant deux circuits
+W: Amplifier la lumière d'une LED de signalisation
+W: Mesurer l'éclairement d'un local de production
+W: Convertir une tension continue en alternative
+E: Une LED interne éclaire un phototransistor : le signal passe par la lumière, sans liaison électrique entre l'entrée et la sortie. On protège ainsi un microcontrôleur des surtensions et des masses différentes d'un circuit industriel ou du secteur.
+
+@054
+Q: Une entrée 24 V d'automate doit être lue par un microcontrôleur en 3,3 V. Quelle solution est la plus propre ?
+C: Un optocoupleur ou un étage d'adaptation isolé
+W: Un raccordement direct avec une résistance de 10 Ω
+W: Un raccordement sur la broche d'alimentation 3,3 V
+W: Un condensateur de 100 nF inséré en série sur l'entrée
+E: Le 24 V détruirait l'entrée du microcontrôleur. Un optocoupleur avec sa résistance d'entrée adapte le niveau et isole les deux mondes : un parasite ou une erreur de câblage côté industriel ne remonte pas jusqu'au microcontrôleur.
+
+@055
+Q: Pourquoi un pont diviseur de tension ne convient-il pas pour alimenter un circuit ?
+C: Sa tension chute dès qu'on lui demande du courant
+W: Il ne fonctionne qu'avec une tension alternative
+W: Il augmente la tension au lieu de l'abaisser
+W: Il consomme toujours exactement zéro courant
+E: Le courant consommé par la charge passe dans R1 et s'ajoute au courant du pont : la tension de sortie baisse, et varie avec la consommation. Le diviseur sert à mesurer, pas à alimenter ; pour fournir une tension stable, on utilise un régulateur.
+
+@056
+Q: Associer chaque sigle d'une documentation de microcontrôleur à sa signification.
+P: MOSFET => transistor à effet de champ à grille isolée
+P: PWM => modulation de largeur d'impulsion
+P: ADC => convertisseur analogique-numérique
+P: DAC => convertisseur numérique-analogique
+P: GPIO => broche d'entrée-sortie à usage général
+E: Ces sigles anglais remplissent les documentations des microcontrôleurs : les GPIO lisent et commandent des niveaux logiques, l'ADC mesure des tensions, le DAC en produit, la PWM règle une puissance moyenne et le MOSFET la commute. En français, on parle aussi de CAN et CNA pour les convertisseurs.
+
+@057
+Q: Une carte fonctionne par intermittence et se coupe quand on la tapote. Quelle est la cause la plus probable ?
+C: Une soudure sèche ou fissurée
+W: Un condensateur de valeur trop élevée
+W: Un programme mal compilé sur la carte
+W: Une résistance de valeur trop précise
+E: Un défaut sensible aux chocs ou aux vibrations trahit un mauvais contact : soudure fissurée par les cycles de température, connecteur oxydé, composant mal soudé. On le localise à la loupe et en appuyant doucement avec un outil isolant, carte en fonctionnement.
+
+@058
+Q: À quoi reconnaît-on une soudure froide ?
+C: Terne, granuleuse, mal accrochée à la pastille
+W: Brillante, lisse, en cône concave autour de la patte
+W: Recouverte d'un vernis transparent de protection
+W: Parfaitement plate, sans étain visible sur la patte
+E: Une bonne soudure est brillante et forme un congé concave qui mouille la pastille et la patte. Une soudure froide, faite sans chauffer assez la pastille, reste terne et en boule : le contact électrique est incertain. On la refait en chauffant ensemble pastille et patte, avec un peu de flux.
+
+@059
+Q: Remettre dans l'ordre la soudure d'un composant traversant.
+O: Chauffer ensemble la pastille et la patte
+O: Apporter l'étain sur la jonction, pas sur le fer
+O: Retirer l'étain, puis retirer le fer
+O: Couper la patte qui dépasse
+E: L'étain doit fondre au contact des pièces chaudes, pas sur la panne, sinon il ne mouille pas la pastille. On retire d'abord l'étain, puis le fer, sans bouger le composant le temps que la soudure se solidifie. On coupe ensuite l'excédent de patte au ras du cône.
+
+@060
+Q: À quoi sert le flux décapant contenu dans le fil d'étain ?
+C: Il retire l'oxyde pour que l'étain mouille
+W: Il abaisse la tension de la carte pendant la soudure
+W: Il colore la soudure pour faciliter le contrôle
+W: Il remplace l'étain sur les très petits composants
+E: Les surfaces métalliques s'oxydent à chaud et l'étain n'y accroche plus. Le flux dissout cet oxyde et protège la soudure pendant qu'elle se forme. On en ajoute pour reprendre une soudure ou souder des CMS ; ses résidus se nettoient à l'alcool isopropylique.
+
+@061
+Q: Quelle énergie stocke un condensateur de 1 000 µF chargé sous 25 V ?
+N: 0.3125
+U: J
+T: 2
+E: E = ½ × C × U² = 0,5 × 0,001 × 25² = 0,3125 J. C'est peu d'énergie, mais elle peut être libérée en un instant : un court-circuit au tournevis fait une étincelle et marque la panne. Un gros condensateur sous 400 V, lui, est franchement dangereux.
+
+@062
+Q: Pourquoi faut-il décharger les gros condensateurs d'une alimentation débranchée avant de la dépanner ?
+C: Ils restent parfois chargés à une tension dangereuse
+W: Ils se rechargent seuls par l'humidité de l'air ambiant
+W: Ils perdent leur capacité s'ils restent chargés longtemps
+W: Ils empêchent le multimètre de mesurer les résistances
+E: Les condensateurs de filtrage d'une alimentation secteur gardent souvent plus de 300 V plusieurs minutes après le débranchement. On mesure leur tension, puis on les décharge à travers une résistance de puissance, jamais par un court-circuit direct.
+
+@063
+Q: Comment fonctionne un fusible réarmable de type PTC ?
+C: Sa résistance monte quand il chauffe, puis redescend
+W: Il fond comme un fusible classique et se change
+W: Il coupe le courant par un contact mécanique à ressort
+W: Il détecte les fuites à la terre comme un différentiel
+E: En surintensité, le PTC chauffe et sa résistance augmente fortement : le courant chute à quelques milliampères. Une fois le défaut supprimé et le composant refroidi, il redevient passant. On le trouve sur les ports USB et les petites alimentations.
+
+@064
+Q: Trois LED de 2 V sont montées en série sous 12 V, pour un courant de 20 mA. Quelle résistance faut-il ?
+N: 300
+U: Ω
+E: Les trois LED prennent 3 × 2 = 6 V ; la résistance supporte les 6 V restants à 20 mA : R = 6 / 0,02 = 300 Ω. On choisit 330 Ω dans la série E12, pour un courant légèrement plus faible et donc plus sûr.
+
+@065
+Q: Pourquoi monte-t-on des LED en série plutôt qu'en parallèle sur une seule résistance ?
+C: Le même courant les traverse toutes, sans déséquilibre
+W: Elles éclairent davantage en consommant moins de puissance
+W: La série supprime le besoin de toute résistance de limitation
+W: En série, une LED défaillante n'éteint jamais les autres
+E: En parallèle, la LED au seuil le plus bas prend la plus grande part du courant et finit par griller, puis les suivantes. En série, le courant est forcément le même partout. L'inconvénient : une LED coupée éteint toute la chaîne.
+
+@066
+Q: Quel est l'avantage principal d'une alimentation à découpage sur une alimentation linéaire ?
+C: Un bien meilleur rendement, donc peu de chaleur
+W: Une tension de sortie totalement exempte de bruit
+W: Une conception plus simple avec moins de composants
+W: L'absence complète de transistor de puissance
+E: L'alimentation à découpage commute un transistor à haute fréquence et stocke l'énergie dans une bobine : elle atteint 85 à 95 % de rendement, contre bien moins pour un régulateur linéaire qui brûle la différence de tension. Elle est en revanche plus bruyante électriquement et plus complexe.
+
+@067
+Q: Un convertisseur fournit 5 V sous 2 A et absorbe 0,95 A sous 12 V. Quel est son rendement, en % ?
+N: 87.7
+U: %
+T: 1
+E: La puissance de sortie vaut 5 × 2 = 10 W, celle d'entrée 12 × 0,95 = 11,4 W : le rendement vaut 10 / 11,4 ≈ 87,7 %. Les 1,4 W de pertes chauffent le convertisseur ; un régulateur linéaire en aurait dissipé 14 W pour le même service.
+
+@068
+Q: Pourquoi ajoute-t-on un hystérésis à un comparateur ?
+C: Éviter les basculements répétés près du seuil
+W: Doubler le gain de l'amplificateur opérationnel
+W: Supprimer l'alimentation négative du montage
+W: Rendre la sortie proportionnelle à l'entrée
+E: Une mesure bruitée qui tourne autour du seuil fait basculer la sortie des dizaines de fois. Avec un hystérésis, le seuil de montée est un peu plus haut que celui de descente : la sortie ne rebascule qu'après un vrai changement. C'est le principe du trigger de Schmitt et du thermostat.
+
+@069
+Q: Un capteur délivre 0 à 10 V et doit être lu par un convertisseur 0 à 3,3 V. Que faut-il prévoir ?
+C: Un diviseur de tension, suivi si besoin d'un suiveur
+W: Un pont de diodes pour redresser le signal du capteur
+W: Un condensateur électrolytique de 4 700 µF en série
+W: Une résistance de 0 Ω pour protéger l'entrée du capteur
+E: Le diviseur ramène 10 V à 3,3 V. Si le convertisseur prélève un courant non négligeable, un suiveur à amplificateur opérationnel évite de fausser le rapport. Une diode de protection ou une Zener garde l'entrée à l'abri d'une surtension accidentelle.
+
+@070
+Q: Pour ramener 10 V à 3,3 V avec R1 = 20 kΩ côté entrée, quelle valeur faut-il pour R2 côté masse ?
+N: 9851
+U: Ω
+T: 2
+E: De Us = Ue × R2 / (R1 + R2), on tire R2 = R1 × Us / (Ue - Us) = 20 × 3,3 / 6,7 ≈ 9,85 kΩ. La valeur normalisée la plus proche, 10 kΩ, donne 3,33 V : on garde une petite marge sous la pleine échelle.
+
+@071
+Q: Pourquoi lit-on une boucle 4-20 mA à travers une résistance de 250 Ω ?
+C: Elle convertit 4-20 mA en 1-5 V mesurables
+W: Elle protège le capteur contre une inversion de polarité
+W: Elle double la valeur du courant de la boucle
+W: Elle supprime le besoin d'alimenter le capteur
+E: La loi d'Ohm transforme le courant en tension : 4 mA × 250 Ω = 1 V et 20 mA × 250 Ω = 5 V. L'entrée analogique lit alors la mesure. Le signal en courant résiste aux longues distances et une valeur sous 4 mA trahit un fil coupé.
+
+@072
+Q: La boucle 4-20 mA délivre 12 mA dans la résistance de 250 Ω. Quelle tension lit l'entrée ?
+N: 3
+U: V
+E: U = R × I = 250 × 0,012 = 3 V, ce qui correspond exactement au milieu de l'échelle 1-5 V, et donc à la moitié de l'étendue de mesure du capteur.
+
+@073
+Q: Qu'appelle-t-on une boucle de masse ?
+C: Un circuit fermé par la masse où circule un courant parasite
+W: Un câble de masse enroulé pour réduire son encombrement
+W: Une piste de circuit imprimé qui fait le tour de la carte
+W: Le fil de terre d'une prise reliée à un appareil métallique
+E: Quand deux équipements sont reliés à la masse par deux chemins, un courant parasite circule dans la boucle ainsi formée et décale les mesures, avec souvent un ronflement à 50 Hz. On l'évite par une masse en un seul point, une isolation galvanique ou une liaison différentielle.
+
+@074
+Q: Pour un signal analogique basse fréquence, comment relie-t-on habituellement le blindage du câble ?
+C: À la masse d'un seul côté
+W: Aux deux extrémités et au milieu
+W: À aucun potentiel, il reste en l'air
+W: Au fil de signal lui-même
+E: Relié à un seul côté, en général côté mesure, le blindage capte les parasites et les écoule sans créer de boucle de masse. Pour les signaux rapides et la CEM des variateurs, on le relie au contraire aux deux extrémités, sur 360°. La règle dépend donc du type de signal.
+
+@075
+Q: Associer chaque grandeur d'un signal à sa définition.
+P: Période => durée d'un cycle complet
+P: Fréquence => nombre de cycles par seconde
+P: Valeur crête => tension maximale atteinte
+P: Rapport cyclique => part du temps passée à l'état haut
+E: Ces grandeurs se lisent directement à l'oscilloscope : la période sur l'axe horizontal, la crête sur l'axe vertical. La fréquence est l'inverse de la période, et le rapport cyclique décrit les signaux rectangulaires comme la PWM.
+
+@076
+Q: Selon le théorème de Shannon, à quelle fréquence minimale faut-il échantillonner un signal ?
+C: À plus du double de sa fréquence maximale
+W: À la moitié de sa fréquence maximale
+W: À sa fréquence maximale exactement
+W: À une fréquence fixe de 50 Hz
+E: Échantillonné trop lentement, un signal rapide apparaît comme un faux signal plus lent : c'est le repliement de spectre. Il faut au moins deux échantillons par période de la plus haute fréquence ; en pratique, on prend cinq à dix fois plus, avec un filtre anti-repliement avant le convertisseur.
+
+@077
+Q: Un signal contient des fréquences jusqu'à 3 kHz. Quelle fréquence d'échantillonnage minimale théorique faut-il ?
+N: 6000
+U: Hz
+E: Shannon impose plus de deux fois la plus haute fréquence : 2 × 3 000 = 6 000 Hz est la limite théorique. Les cartes son échantillonnent ainsi la voix et la musique à 44,1 ou 48 kHz, pour des fréquences audibles qui ne dépassent pas 20 kHz.
+
+@078
+Q: À quoi sert le chien de garde (watchdog) d'un microcontrôleur ?
+C: Redémarrer le programme s'il se bloque
+W: Surveiller la température du boîtier
+W: Protéger les entrées contre les surtensions
+W: Chiffrer le programme contre la copie
+E: Le programme doit relancer régulièrement un compteur ; s'il se bloque dans une boucle infinie ou sur un parasite, le compteur arrive à son terme et provoque un redémarrage. C'est une sécurité indispensable sur un équipement qui fonctionne sans surveillance.
+
+@079
+Q: Remettre dans l'ordre une démarche de dépannage d'une carte électronique.
+O: Inspecter visuellement la carte
+O: Vérifier les tensions d'alimentation
+O: Contrôler les signaux à l'oscilloscope
+O: Remplacer le composant suspect
+E: Un composant brûlé, un condensateur gonflé ou une soudure fissurée se voient souvent à l'œil : c'est gratuit et rapide. Les alimentations viennent ensuite, car rien ne marche sans elles. L'oscilloscope localise l'étage défaillant ; on ne remplace qu'à coup sûr.
+
+@080
+Q: Une carte de commande redémarre chaque fois qu'un moteur voisin démarre. Quelles pistes faut-il suivre ?
+C: Découpler l'alimentation et éloigner ou filtrer les câbles du moteur
+W: Augmenter la tension d'alimentation de la carte de commande
+W: Remplacer le microcontrôleur par un modèle plus rapide
+W: Retirer le chien de garde qui provoque les redémarrages
+E: Le démarrage d'un moteur crée des chutes de tension et des parasites qui font redémarrer le microcontrôleur. On renforce le découplage, on sépare les alimentations, on éloigne les câbles de puissance des câbles de signal et on filtre. Supprimer le chien de garde masquerait le défaut sans le corriger.
+
+@081
+Q: Comment mesure-t-on un courant avec une résistance de shunt ?
+C: Par la petite tension qui apparaît à ses bornes
+W: Par la chaleur dégagée, lue au thermomètre
+W: Par le champ magnétique qu'elle crée autour
+W: Par la couleur de ses anneaux sous tension
+E: Le shunt, de très faible valeur, est traversé par le courant à mesurer : la tension à ses bornes, quelques dizaines de millivolts, est proportionnelle au courant. Un amplificateur adapte cette tension pour le convertisseur. Le capteur à effet Hall mesure, lui, le champ magnétique.
+
+@082
+Q: Un shunt de 0,1 Ω présente 0,25 V à ses bornes. Quel courant le traverse ?
+N: 2.5
+U: A
+E: D'après la loi d'Ohm, I = U / R = 0,25 / 0,1 = 2,5 A. Le shunt dissipe alors P = R × I² = 0,625 W : il faut choisir sa puissance en conséquence et le placer à l'écart des composants sensibles à la chaleur.
+
+@083
+Q: À quoi sert un pont en H ?
+C: Faire tourner un moteur à courant continu dans les deux sens
+W: Redresser une tension alternative sur ses deux alternances
+W: Mesurer un courant élevé sans couper le circuit
+W: Isoler électriquement deux parties d'une carte
+E: Quatre interrupteurs, transistors ou MOSFET, appliquent la tension au moteur dans un sens ou dans l'autre. Commandés en PWM, ils règlent aussi la vitesse, et un court-circuit des bornes du moteur sert de frein. Des circuits intégrés réunissent tout cela pour les petits moteurs.
+
+@084
+Q: Quelle commande est interdite dans un pont en H ?
+C: Fermer à la fois les deux transistors d'une même branche
+W: Fermer un transistor haut et le transistor bas opposé
+W: Laisser les quatre transistors ouverts au repos
+W: Appliquer une PWM sur un transistor de chaque côté
+E: Fermer le transistor haut et le transistor bas d'une même branche relie directement l'alimentation à la masse : c'est un court-circuit qui détruit les transistors. Les drivers ajoutent un temps mort entre l'ouverture de l'un et la fermeture de l'autre pour l'éviter.
+
+@085
+Q: Associer chaque capteur à son principe.
+P: Thermistance CTN => résistance qui baisse quand la température monte
+P: Sonde PT100 => résistance de platine de 100 Ω à 0 °C
+P: Photorésistance => résistance qui baisse à la lumière
+P: Capteur à effet Hall => tension sensible au champ magnétique
+E: Beaucoup de capteurs sont des résistances variables qu'on lit dans un diviseur de tension. La CTN est peu chère mais non linéaire, la PT100 précise et normalisée. Le capteur à effet Hall détecte un aimant ou mesure un courant sans contact.
+
+@086
+Q: Une sonde PT100 a un coefficient de 0,00385 par °C. Quelle est sa résistance à 50 °C ?
+N: 119.25
+U: Ω
+T: 1
+E: R = R0 × (1 + α × T) = 100 × (1 + 0,00385 × 50) = 119,25 Ω. Chaque degré ajoute environ 0,385 Ω : quelques dixièmes d'ohm de résistance de câble fausseraient la mesure d'un degré, d'où les montages 3 et 4 fils.
+
+@087
+Q: Pourquoi raccorde-t-on une sonde PT100 en 3 fils plutôt qu'en 2 ?
+C: Pour compenser la résistance des fils de liaison
+W: Pour alimenter la sonde avec une tension plus élevée
+W: Pour doubler la sensibilité de la sonde au degré près
+W: Pour pouvoir brancher deux sondes sur la même entrée
+E: En 2 fils, la résistance des conducteurs s'ajoute à celle de la sonde et se lit comme une température plus haute. Le troisième fil permet au transmetteur de mesurer cette résistance de ligne et de la soustraire. Le montage 4 fils l'élimine complètement, pour les mesures de laboratoire.
+
+@088
+Q: Un régulateur dissipe 3,5 W, avec une résistance thermique totale de 15 °C/W jusqu'à l'air ambiant à 25 °C. Quelle température atteint sa jonction ?
+N: 77.5
+U: °C
+T: 1
+E: L'échauffement vaut P × Rth = 3,5 × 15 = 52,5 °C, d'où une jonction à 25 + 52,5 = 77,5 °C, sous la limite de 125 °C. Sans dissipateur, avec environ 50 °C/W, elle dépasserait 200 °C : le régulateur se couperait.
+
+@089
+Q: Pourquoi place-t-on une thermistance CTN en série à l'entrée d'une alimentation à découpage ?
+C: Limiter le courant d'appel à la mise sous tension
+W: Mesurer la température du local de l'installation
+W: Remplacer le fusible de protection de l'entrée
+W: Stabiliser la tension de sortie de l'alimentation
+E: À la mise sous tension, les condensateurs de filtrage vides appellent un courant énorme. Froide, la CTN a une résistance de quelques ohms qui le limite ; elle chauffe ensuite et sa résistance chute presque à zéro en service normal. Sans elle, les disjoncteurs déclenchent parfois à l'allumage.
+
+@090
+Q: Que vise la compatibilité électromagnétique (CEM) d'un appareil ?
+C: Ne pas perturber les autres et ne pas être perturbé
+W: Fonctionner sur toutes les tensions du monde
+W: Résister à l'eau et à la poussière de l'atelier
+W: Consommer le moins d'énergie possible en veille
+E: Un appareil conforme limite ses émissions parasites, conduites par les câbles ou rayonnées, et supporte celles de son environnement : décharges, champs, coupures brèves. La conformité CEM conditionne le marquage CE en Europe, et se prépare dès la conception de la carte.
+
+@091
+Q: Pourquoi réserve-t-on une couche entière du circuit imprimé au plan de masse ?
+C: Offrir un retour de courant court et réduire le bruit
+W: Augmenter la tension disponible pour les composants
+W: Rendre la carte plus rigide pour les vibrations
+W: Économiser du cuivre lors de la fabrication
+E: Un plan de masse continu offre à chaque signal un chemin de retour juste sous sa piste : la boucle est minimale, les rayonnements et la sensibilité aux parasites aussi. Les cartes à microcontrôleur rapides et les circuits radio en ont presque toujours besoin.
+
+@092
+Q: Quelle est la résolution d'un convertisseur de 12 bits sur une plage de 3,3 V, en mV ?
+N: 0.806
+U: mV
+T: 1
+E: 12 bits donnent 2¹² = 4 096 pas : 3,3 / 4 096 ≈ 0,806 mV. En pratique, le bruit de la carte et de la référence de tension fait souvent perdre un ou deux bits ; on moyenne plusieurs mesures pour retrouver la précision.
+
+@093
+Q: Pourquoi place-t-on un filtre anti-repliement avant un convertisseur analogique-numérique ?
+C: Supprimer les fréquences trop hautes pour l'échantillonnage
+W: Augmenter la résolution du convertisseur de deux bits
+W: Fournir la tension de référence au convertisseur
+W: Protéger le convertisseur contre une surtension
+E: Une fréquence au-dessus de la moitié de la fréquence d'échantillonnage se replierait en un faux signal plus lent, impossible à distinguer d'un vrai. Un filtre passe-bas avant le convertisseur élimine ces fréquences. Il ne protège pas l'entrée, rôle d'une diode ou d'une résistance série.
+
+@094
+Q: Associer chaque caractéristique de la fiche technique d'un MOSFET à sa signification.
+P: RDS(on) => résistance en conduction
+P: VGS(th) => tension de seuil de la grille
+P: VDS max => tension maximale entre drain et source
+P: ID => courant de drain admissible
+E: Pour choisir un MOSFET de commutation, on vérifie que VDS max et ID dépassent largement les valeurs du montage, que la tension de commande disponible est bien au-dessus de VGS(th) et que RDS(on), annoncée pour cette tension de grille, donne des pertes acceptables.
+
+@095
+Q: Un MOSFET de RDS(on) = 0,02 Ω conduit 10 A en permanence. Quelle puissance dissipe-t-il ?
+N: 2
+U: W
+E: En conduction, le MOSFET se comporte comme une résistance : P = R × I² = 0,02 × 10² = 2 W. Il faut un petit dissipateur ou une bonne surface de cuivre sur la carte. Les pertes de commutation s'y ajoutent en PWM rapide.
+
+@096
+Q: Pourquoi faut-il un circuit de commande de grille pour piloter un MOSFET en PWM rapide ?
+C: Pour charger et décharger vite la capacité de grille
+W: Pour isoler électriquement la grille de la source
+W: Pour augmenter la tension maximale drain-source
+W: Pour réduire la valeur de RDS(on) du MOSFET
+E: La grille se comporte comme un condensateur de quelques nanofarads : avec un faible courant de commande, elle se charge lentement et le MOSFET passe longtemps dans la zone où il dissipe beaucoup. Le driver fournit des pointes d'un ampère ou plus pour commuter en quelques dizaines de nanosecondes.
+
+@097
+Q: Un MOSFET commandé directement en 3,3 V par un microcontrôleur chauffe énormément sous 5 A. Quelle est la cause ?
+C: Sa grille n'est pas assez polarisée pour conduire
+W: Le microcontrôleur fournit une tension trop élevée
+W: Le MOSFET est monté avec un dissipateur trop grand
+W: La charge consomme moins que le courant prévu
+E: Beaucoup de MOSFET n'atteignent leur RDS(on) annoncée qu'à 10 V de grille. À 3,3 V, ils conduisent à peine et dissipent beaucoup. On choisit un modèle « logic level » spécifié à 3,3 V ou 4,5 V, ou on ajoute un étage de commande.
+
+@098
+Q: Remettre dans l'ordre les étapes de conception d'une carte électronique.
+O: Rédiger le cahier des charges
+O: Dessiner le schéma électronique
+O: Router le circuit imprimé
+O: Fabriquer et câbler un prototype
+O: Tester et valider le prototype
+E: Le cahier des charges fixe tensions, courants, entrées-sorties et contraintes ; le schéma traduit les fonctions en composants ; le routage place et relie ces composants sur le circuit. Le prototype fabriqué est testé et ses défauts corrigés avant la série.
+
+@099
+Q: Pourquoi utilise-t-on un convertisseur continu-continu isolé pour alimenter une interface industrielle ?
+C: Pour couper les boucles de masse et protéger des surtensions
+W: Pour augmenter la vitesse de transmission de l'interface
+W: Pour réduire le nombre de fils du bus de communication
+W: Pour se passer de tout condensateur de découplage
+E: L'isolation galvanique sépare la masse de l'interface de celle du reste de l'équipement : les courants de boucle ne passent plus et une surtension sur le bus ne remonte pas jusqu'au microcontrôleur. Les interfaces RS-485 et CAN isolées associent ce convertisseur à des isolateurs de signal.
+
+@100
+Q: Après un hiver très sec, un lot de cartes revient avec des circuits défaillants, sans cause visible. Quelle est la piste principale ?
+C: Des décharges électrostatiques à la manipulation
+W: Une tension secteur trop basse pendant les tests de série
+W: Des condensateurs de découplage montés en trop grand nombre
+W: Un programme trop volumineux pour la mémoire du circuit
+E: L'air sec favorise l'électricité statique : le personnel se charge davantage et une décharge détruit ou affaiblit des circuits sans laisser de trace visible. On vérifie le poste antistatique, les bracelets, les sachets de protection et l'humidité de l'atelier.

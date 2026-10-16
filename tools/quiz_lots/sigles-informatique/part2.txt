@@ -1,0 +1,393 @@
+@051
+Q: Remettre dans l'ordre l'ouverture d'une connexion TCP.
+O: SYN : le client demande l'ouverture
+O: SYN-ACK : le serveur accepte et répond
+O: ACK : le client confirme
+E: Cette poignée de main en trois temps synchronise les numéros de séquence des deux côtés avant tout envoi de données. Un pare-feu qui bloque le port fait échouer la première étape : le client attend une réponse qui ne vient jamais, d'où un délai d'expiration.
+
+@052
+Q: Associer chaque protocole à sa caractéristique.
+P: TCP => connexion fiable, ordre garanti et renvoi des pertes
+P: UDP => envoi sans connexion ni garantie, très rapide
+P: ICMP => messages de contrôle du réseau, comme le ping
+E: TCP porte le web, la messagerie et les bases de données, qui ne tolèrent aucune perte. UDP porte la voix, la vidéo en direct et le DNS, où la rapidité prime. ICMP signale les erreurs et sert au diagnostic avec ping et traceroute.
+
+@053
+Q: Pourquoi la visioconférence utilise-t-elle plutôt UDP que TCP ?
+C: Mieux vaut perdre un paquet qu'attendre son renvoi
+W: UDP chiffre automatiquement l'image et le son
+W: UDP garantit l'arrivée des paquets dans l'ordre
+W: TCP est interdit sur les réseaux d'entreprise
+E: Un paquet de son arrivé en retard ne sert plus à rien : TCP, en attendant son renvoi, figerait la conversation. Avec UDP, le logiciel saute le paquet perdu et l'image continue, avec au pire un petit défaut. Le chiffrement est ajouté par un autre protocole.
+
+@054
+Q: Que signifie le sigle NAT ?
+C: Network Address Translation
+W: Node Access Table
+W: Network Authentication Token
+W: Native Address Transfer
+E: Le NAT remplace les adresses privées des postes par l'adresse publique du routeur à la sortie vers Internet, et fait le chemin inverse pour les réponses. Toutes les box domestiques le pratiquent.
+
+@055
+Q: Quel est le rôle principal du NAT sur une box Internet ?
+C: Partager une adresse publique entre plusieurs appareils
+W: Attribuer un nom de domaine à chaque appareil du foyer
+W: Chiffrer les échanges entre la box et le fournisseur
+W: Augmenter le débit disponible pour chaque appareil
+E: Le fournisseur n'attribue qu'une adresse IPv4 publique : le NAT permet à tous les appareils de la maison d'en profiter. Effet secondaire, une connexion venue d'Internet ne peut joindre un appareil interne sans redirection de port explicite.
+
+@056
+Q: Combien d'adresses d'hôtes utilisables offre un réseau IPv4 en /24 ?
+N: 254
+T: 0
+E: Un /24 laisse 8 bits pour les hôtes, soit 256 adresses. La première identifie le réseau et la dernière sert à la diffusion : il reste 254 adresses pour les postes, imprimantes et automates, passerelle comprise.
+
+@057
+Q: Quel masque de sous-réseau correspond à la notation /24 ?
+C: 255.255.255.0
+W: 255.255.0.0
+W: 255.0.0.0
+W: 255.255.255.255
+E: La notation /24 indique 24 bits à 1 dans le masque : trois octets de 255 puis un octet à 0, soit 255.255.255.0. Le /16 correspond à 255.255.0.0, le /8 à 255.0.0.0 et le /32 à une seule adresse.
+
+@058
+Q: Que signifie MAC dans « adresse MAC » ?
+C: Media Access Control
+W: Machine Address Code
+W: Main Access Channel
+W: Memory Allocation Control
+E: L'adresse MAC, sur 48 bits, identifie une carte réseau sur le réseau local. Les switchs s'en servent pour acheminer les trames. Elle ne sert pas au-delà du routeur, où c'est l'adresse IP qui compte.
+
+@059
+Q: Qu'est-ce qui distingue l'adresse MAC de l'adresse IP ?
+C: La MAC identifie la carte sur le réseau local
+W: La MAC change à chaque connexion au réseau Wi-Fi
+W: La MAC sert à router les paquets sur Internet
+W: La MAC est attribuée par le serveur DHCP du site
+E: L'adresse MAC est inscrite dans la carte réseau et sert au transport sur le réseau local ; l'adresse IP, attribuée selon le réseau où l'on se trouve, sert au routage entre réseaux. Le DHCP attribue l'IP, souvent en se fondant sur la MAC pour réserver toujours la même.
+
+@060
+Q: Associer chaque équipement réseau à son rôle.
+P: Switch => relie les postes d'un même réseau local
+P: Routeur => relie des réseaux différents
+P: Pare-feu => filtre les flux selon des règles
+P: Point d'accès => connecte les appareils sans fil
+E: Dans un atelier, les automates, les postes de supervision et les caméras se branchent sur des switchs ; le routeur fait le lien avec le réseau de l'usine ou Internet, le pare-feu n'autorise que les flux nécessaires, le point d'accès raccorde les terminaux mobiles.
+
+@061
+Q: Que désigne le sigle MFA ?
+C: Authentification à plusieurs facteurs
+W: Administration fédérée des accès multiples
+W: Fonction d'audit des mots de passe
+W: Filtre anti-attaques multiples
+E: L'authentification multifacteur combine ce que l'on sait (mot de passe), ce que l'on possède (téléphone, clé de sécurité) ou ce que l'on est (empreinte). Un mot de passe volé ne suffit plus pour se connecter. On parle aussi de 2FA pour deux facteurs.
+
+@062
+Q: Le mot de passe d'un salarié a fuité, mais le pirate n'a pas pu se connecter. Quel dispositif l'en a probablement empêché ?
+C: Une authentification à deux facteurs
+W: Un mot de passe de plus de huit caractères
+W: Un antivirus installé sur le poste du salarié
+W: Un disque dur chiffré sur le serveur web
+E: Le pirate connaît le mot de passe mais ne possède pas le second facteur, code reçu sur le téléphone ou clé physique. La longueur du mot de passe n'aide plus une fois qu'il a fuité, et l'antivirus ou le chiffrement du disque ne protègent pas une connexion distante.
+
+@063
+Q: Que signifie le sigle SSO ?
+C: Single Sign-On, authentification unique
+W: Secure Server Operation, serveur protégé
+W: System Security Officer, responsable sécurité
+W: Shared Storage Object, stockage partagé
+E: Avec le SSO, on s'authentifie une fois auprès d'un fournisseur d'identité et l'on accède ensuite à toutes les applications qui lui font confiance. Moins de mots de passe à retenir, et un compte désactivé à un seul endroit pour couper tous les accès.
+
+@064
+Q: Que signifie le sigle LDAP ?
+C: Lightweight Directory Access Protocol
+W: Local Data Archive Process
+W: Linked Domain Authentication Policy
+W: Logical Device Address Port
+E: LDAP interroge un annuaire d'entreprise, comme Active Directory : comptes, groupes, droits. Une application peut vérifier le mot de passe d'un utilisateur et ses groupes dans l'annuaire, au lieu de gérer ses propres comptes.
+
+@065
+Q: Que signifie le sigle SLA ?
+C: Service Level Agreement
+W: System Load Analysis
+W: Secure Line Access
+W: Standard Licence Agreement
+E: Le SLA est l'engagement contractuel de niveau de service : disponibilité, délai de réponse ou de résolution d'un incident, avec des pénalités si l'engagement n'est pas tenu. Il se mesure par des indicateurs suivis en continu.
+
+@066
+Q: Que signifie le sigle TLS ?
+C: Transport Layer Security
+W: Trusted Link Service
+W: Total Line Security
+W: Transfer Lock System
+E: TLS chiffre et authentifie les échanges, en HTTPS, dans les messageries et les connexions aux bases de données. Il a remplacé SSL, aujourd'hui abandonné, même si l'on parle encore souvent de certificat SSL.
+
+@067
+Q: Que signifie le sigle JWT ?
+C: JSON Web Token
+W: Java Web Transaction
+W: Joint Wireless Transfer
+W: JSON Windows Tool
+E: Un JWT est un jeton signé contenant des informations sur l'utilisateur, envoyé à chaque requête vers une API. Le serveur vérifie la signature sans consulter de session. Il est signé, pas chiffré : on n'y met jamais de secret.
+
+@068
+Q: À quoi sert le protocole OAuth 2.0 ?
+C: Déléguer un accès sans partager son mot de passe
+W: Chiffrer le disque dur d'un ordinateur portable
+W: Compresser les échanges entre client et serveur
+W: Remplacer les certificats TLS des sites web
+E: Quand une application demande « se connecter avec » un compte existant, OAuth lui fait obtenir un jeton d'accès limité, sans jamais voir le mot de passe. L'utilisateur peut révoquer ce jeton à tout moment. OpenID Connect ajoute par-dessus l'identification de l'utilisateur.
+
+@069
+Q: Associer chaque sigle de sécurité web à ce qu'il désigne.
+P: XSS => script injecté dans une page vue par d'autres
+P: CSRF => requête forgée au nom d'un utilisateur connecté
+P: Injection SQL => requête détournée par une saisie non filtrée
+P: CORS => règles d'appel entre domaines différents
+E: Les trois premiers sont des attaques : on s'en protège en échappant l'affichage, avec un jeton anti-CSRF dans les formulaires et des requêtes paramétrées. CORS n'est pas une faille mais un mécanisme du navigateur, qu'une configuration trop permissive peut transformer en risque.
+
+@070
+Q: Que signifie le sigle ORM ?
+C: Object-Relational Mapping
+W: Online Resource Manager
+W: Optimized Request Module
+W: Object Runtime Memory
+E: Un ORM fait correspondre les classes du programme aux tables de la base : on manipule des objets, il génère le SQL. Hibernate et JPA en Java, SQLAlchemy en Python. Il faut surveiller le SQL produit, source fréquente de lenteurs.
+
+@071
+Q: Associer chaque lettre d'ACID à la propriété des transactions qu'elle désigne.
+P: Atomicité => tout ou rien
+P: Cohérence => respect des règles de la base
+P: Isolation => transactions sans interférence
+P: Durabilité => données conservées après validation
+E: Un virement bancaire illustre ACID : le débit et le crédit sont appliqués ensemble ou pas du tout, les contraintes restent vraies, deux virements simultanés ne se mélangent pas et, une fois validé, le virement survit à une panne.
+
+@072
+Q: Associer chaque principe de conception à sa signification.
+P: DRY => ne pas dupliquer la connaissance
+P: KISS => privilégier la solution la plus simple
+P: YAGNI => ne pas coder ce qui n'est pas demandé
+P: SOLID => cinq principes de conception objet
+E: DRY vient de Don't Repeat Yourself, KISS de Keep It Simple, Stupid, YAGNI de You Aren't Gonna Need It. Ces principes visent un code plus facile à maintenir : une règle à un seul endroit, pas de complexité gratuite, pas de fonctionnalité spéculative.
+
+@073
+Q: Que désigne le S de SOLID ?
+C: La responsabilité unique d'une classe
+W: La sécurité appliquée par défaut
+W: La séparation des données et du code
+W: La simplicité de lecture du code
+E: SOLID réunit la responsabilité unique, l'ouverture à l'extension et la fermeture à la modification, la substitution de Liskov, la ségrégation des interfaces et l'inversion des dépendances. Une classe à responsabilité unique n'a qu'une seule raison de changer.
+
+@074
+Q: Associer chaque démarche de développement à son principe.
+P: TDD => écrire le test avant le code
+P: BDD => décrire le comportement par des scénarios métier
+P: DDD => modéliser le logiciel autour du domaine métier
+E: Le TDD avance par cycles courts : un test qui échoue, le code minimal qui le fait passer, puis le nettoyage. Le BDD écrit des scénarios lisibles par le métier, du type « Étant donné, quand, alors ». Le DDD structure le code selon le vocabulaire et les règles du métier.
+
+@075
+Q: Que signifie le sigle KPI ?
+C: Key Performance Indicator
+W: Key Process Integration
+W: Known Problem Index
+W: Kernel Performance Interface
+E: Un KPI est un indicateur clé suivi pour piloter une activité : taux de disponibilité d'un service, délai de résolution des incidents, taux de rendement synthétique d'une ligne de production. Un bon indicateur est mesurable, compris de tous et lié à une décision.
+
+@076
+Q: Associer chaque sigle de la continuité d'activité à sa définition.
+P: RTO => durée maximale d'interruption admise
+P: RPO => perte de données maximale admise
+P: PRA => plan de reprise après un sinistre
+P: PCA => plan de continuité sans interruption
+E: Le RTO fixe en combien de temps le service doit repartir, le RPO jusqu'à quel moment on accepte de perdre des données. Le PRA organise le redémarrage après sinistre, le PCA cherche à éviter l'interruption, par exemple avec un second site actif.
+
+@077
+Q: Une entreprise sauvegarde ses données chaque nuit. Quel RPO accepte-t-elle de fait ?
+C: Jusqu'à 24 heures de données perdues
+W: Aucune perte, la sauvegarde étant complète
+W: Une heure, le temps de restaurer le serveur
+W: Une semaine, la durée habituelle de rétention
+E: Si le serveur tombe en fin de journée, tout ce qui a été saisi depuis la sauvegarde de la nuit précédente est perdu : le RPO vaut 24 heures. Pour le réduire, on sauvegarde plus souvent ou on réplique en continu. Le temps de restauration relève du RTO.
+
+@078
+Q: Un service est disponible à 99,9 % sur une année de 8 760 heures. Combien d'heures d'indisponibilité cela autorise-t-il ?
+N: 8.76
+U: h
+T: 1
+E: L'indisponibilité admise vaut 0,1 % de 8 760 heures, soit 8,76 heures par an, environ 43 minutes par mois. Chaque 9 supplémentaire divise ce temps par dix : 99,99 % ne laisse plus que 53 minutes par an.
+
+@079
+Q: Que désigne ITIL ?
+C: Un référentiel de gestion des services informatiques
+W: Un langage de description des interfaces logicielles
+W: Une norme de câblage des réseaux d'entreprise
+W: Un outil de supervision des serveurs sous Linux
+E: ITIL décrit des bonnes pratiques pour gérer les services informatiques : gestion des incidents, des problèmes, des changements, catalogue de services. Les outils de ticketing des centres de support en reprennent le vocabulaire.
+
+@080
+Q: Associer chaque sigle de la cybersécurité à ce qu'il désigne.
+P: SOC => équipe qui surveille la sécurité en continu
+P: SIEM => outil qui centralise et corrèle les journaux
+P: EDR => détection et réponse sur les postes
+P: IDS => détection d'intrusion sur le réseau
+E: Le SIEM collecte les journaux des serveurs, pare-feu et applications et lève des alertes ; les analystes du SOC les traitent. L'EDR surveille le comportement des postes et peut isoler une machine compromise, l'IDS repère les attaques dans le trafic réseau.
+
+@081
+Q: Que signifie le sigle PKI ?
+C: Public Key Infrastructure
+W: Private Key Index
+W: Protected Kernel Interface
+W: Primary Key Identifier
+E: Une PKI émet, gère et révoque les certificats qui associent une clé publique à une identité : serveurs web, utilisateurs, équipements. Les autorités de certification en sont le cœur ; une entreprise peut avoir sa PKI interne pour ses propres certificats.
+
+@082
+Q: Que signifie le sigle MTU ?
+C: Maximum Transmission Unit
+W: Minimum Time Unit
+W: Multiple Transfer Usage
+W: Main Terminal Upload
+E: Le MTU est la taille maximale d'un paquet sur un lien, 1 500 octets en Ethernet. Un tunnel VPN ajoute des en-têtes : si le MTU n'est pas ajusté, certains gros paquets sont perdus et des sites ne s'affichent qu'à moitié, un défaut déroutant à diagnostiquer.
+
+@083
+Q: Que signifie le sigle SNMP ?
+C: Simple Network Management Protocol
+W: Secure Node Monitoring Process
+W: Standard Network Mail Protocol
+W: System Notification Message Port
+E: SNMP permet aux outils de supervision d'interroger les équipements réseau, imprimantes ou onduleurs : état des ports, trafic, température. Les équipements peuvent aussi envoyer des alertes spontanées, les traps. La version 3 ajoute authentification et chiffrement.
+
+@084
+Q: Que signifie le sigle QoS ?
+C: Quality of Service
+W: Queue of Servers
+W: Quick Online Switch
+W: Quota of Storage
+E: La qualité de service donne la priorité à certains flux sur un lien chargé : voix, vidéo, commandes de machines passent avant les téléchargements. Elle ne crée pas de débit, elle choisit qui attend quand la ligne sature.
+
+@085
+Q: La téléphonie IP d'une agence coupe dès qu'un gros fichier est envoyé. Quel réglage faut-il ?
+C: Une QoS qui donne la priorité à la voix
+W: Un DNS secondaire pour tous les téléphones
+W: Un RAID 1 sur le serveur de fichiers
+W: Un VPN distinct pour chaque téléphone
+E: L'envoi du fichier sature la ligne et les paquets de voix attendent derrière : la conversation hache. Avec une QoS, les paquets de voix sont marqués et passent en premier, le fichier ralentit à peine. On réserve aussi parfois un VLAN dédié à la téléphonie.
+
+@086
+Q: Remettre dans l'ordre les sept couches du modèle OSI, de la plus basse à la plus haute.
+O: Physique
+O: Liaison de données
+O: Réseau
+O: Transport
+O: Session
+O: Présentation
+O: Application
+E: Le modèle OSI découpe la communication en couches : signaux et câbles, trames entre voisins, routage des paquets, transport fiable ou non, gestion des sessions, format des données, puis l'application. Il sert surtout à situer un problème : un câble débranché est un défaut de couche 1, une mauvaise adresse IP de couche 3.
+
+@087
+Q: Associer chaque couche OSI à un protocole qui y travaille.
+P: Couche 2 => Ethernet
+P: Couche 3 => IP
+P: Couche 4 => TCP
+P: Couche 7 => HTTP
+E: Une requête web empile ces protocoles : HTTP dans TCP, dans IP, dans une trame Ethernet. Un switch travaille en couche 2 sur les adresses MAC, un routeur en couche 3 sur les adresses IP, un pare-feu applicatif jusqu'en couche 7.
+
+@088
+Q: Que fait le protocole BGP ?
+C: Le routage entre opérateurs d'Internet
+W: L'attribution d'adresses aux postes du réseau
+W: Le chiffrement des connexions des navigateurs
+W: La synchronisation de l'heure des équipements
+E: BGP, Border Gateway Protocol, échange les routes entre les grands réseaux qui forment Internet. Une erreur de configuration BGP chez un opérateur peut rendre des services mondiaux injoignables pendant des heures, comme l'ont montré plusieurs pannes célèbres.
+
+@089
+Q: Associer chaque protocole à son usage.
+P: OSPF => routage dynamique interne d'une organisation
+P: NTP => synchronisation de l'heure
+P: SMTP => envoi des courriels
+P: SNMP => supervision des équipements réseau
+E: NTP paraît secondaire mais conditionne la corrélation des journaux, la validité des certificats et l'authentification : des horloges décalées rendent un incident impossible à reconstituer. OSPF calcule automatiquement les meilleurs chemins entre les routeurs d'un même réseau.
+
+@090
+Q: Associer chaque sigle de l'informatique industrielle à sa signification.
+P: OPC UA => échange de données industrielles normalisé et sécurisé
+P: MQTT => messagerie légère par publication et abonnement
+P: IIoT => objets connectés de l'industrie
+P: OT => informatique des systèmes de production
+E: OPC UA fait dialoguer automates, supervisions et applications de toutes marques. MQTT transporte les mesures de capteurs vers un serveur central avec très peu de bande passante. L'OT, technologie opérationnelle, s'oppose à l'IT bureautique par ses contraintes de disponibilité et de sécurité.
+
+@091
+Q: Pourquoi sépare-t-on les réseaux OT et IT dans une usine ?
+C: Une attaque côté bureautique ne doit pas atteindre les machines
+W: Les automates ne savent pas utiliser le protocole IP
+W: Le réseau IT est toujours plus lent que le réseau OT
+W: La séparation supprime le besoin de mises à jour
+E: Un rançongiciel arrivé par un courriel sur un poste de bureau ne doit pas pouvoir chiffrer les postes de supervision ni arrêter les lignes. On découpe donc le réseau en zones séparées par des pare-feu, avec une zone tampon pour les échanges indispensables, selon la norme IEC 62443.
+
+@092
+Q: Combien d'adresses d'hôtes utilisables offre un réseau IPv4 en /26 ?
+N: 62
+T: 0
+E: Un /26 laisse 6 bits aux hôtes, soit 64 adresses, moins l'adresse de réseau et celle de diffusion : 62 hôtes. Découper un /24 en quatre /26 permet de séparer par exemple bureautique, téléphonie, imprimantes et automates.
+
+@093
+Q: Que signifie le sigle SPOF ?
+C: Single Point of Failure
+W: Secure Port Forwarding
+W: Server Performance Overload Factor
+W: Standard Protocol of Federation
+E: Un SPOF est un élément dont la panne arrête tout le service : un seul serveur, un seul switch, une seule liaison Internet, ou une seule personne qui connaît un système. On les repère et on les double quand l'enjeu le justifie.
+
+@094
+Q: Toute l'usine perd le réseau dès que le switch central tombe en panne. Comment appelle-t-on ce défaut d'architecture ?
+C: Un point unique de défaillance
+W: Un MTU mal ajusté sur les ports du switch
+W: Une traduction d'adresses NAT manquante
+W: Un engagement de niveau de service dépassé
+E: Le switch central est un SPOF : sa panne isole tous les équipements. On double les cœurs de réseau, avec des liens agrégés ou redondants vers chaque switch d'atelier, pour qu'une panne unique ne bloque pas la production.
+
+@095
+Q: Associer chaque sigle de la fiabilité à sa signification.
+P: MTBF => temps moyen entre deux pannes
+P: MTTR => temps moyen de réparation
+P: SLO => objectif de niveau de service mesurable
+P: SRE => ingénierie de la fiabilité des services
+E: MTBF et MTTR viennent de la maintenance industrielle et s'appliquent aussi aux services informatiques. Le SLO est l'objectif interne, plus exigeant que le SLA contractuel. Le SRE, pratique née chez Google, traite l'exploitation comme un problème d'ingénierie logicielle.
+
+@096
+Q: Un équipement a un MTBF de 990 heures et un MTTR de 10 heures. Quelle est sa disponibilité, en % ?
+N: 99
+U: %
+T: 1
+E: La disponibilité vaut MTBF / (MTBF + MTTR) = 990 / 1 000 = 0,99, soit 99 %. Réparer deux fois plus vite améliore autant la disponibilité que tomber deux fois moins souvent en panne, d'où l'intérêt des pièces de rechange et des procédures de dépannage.
+
+@097
+Q: Que signifie le sigle IaC ?
+C: Infrastructure as Code
+W: Integration and Compilation
+W: Internet access Control
+W: Index as Cache
+E: L'infrastructure est décrite dans des fichiers versionnés, avec Terraform ou Ansible, plutôt que configurée à la main : on la recrée à l'identique, on relit les modifications comme du code et on garde l'historique des changements.
+
+@098
+Q: Que propose le modèle CQRS ?
+C: Séparer les modèles de lecture et d'écriture
+W: Chiffrer toutes les requêtes vers la base
+W: Remplacer la base de données par un cache
+W: Regrouper toutes les requêtes en une seule
+E: CQRS, Command Query Responsibility Segregation, sépare les commandes qui modifient les données des requêtes qui les lisent, chacune avec son modèle, voire sa base. On l'emploie quand lectures et écritures ont des besoins très différents ; sur une application simple, il ajoute une complexité inutile.
+
+@099
+Q: Que désigne un appel RPC ?
+C: L'appel d'une fonction exécutée sur une autre machine
+W: Une requête de purge du cache d'un serveur distant
+W: Un rapport de performance du processeur central
+W: Un protocole de copie de fichiers entre serveurs
+E: RPC, Remote Procedure Call, fait appeler une fonction distante comme si elle était locale. gRPC, très utilisé entre microservices, s'appuie sur HTTP/2 et un format binaire compact. Il faut toutefois gérer ce qu'un appel local ignore : délais, pannes réseau, nouvelles tentatives.
+
+@100
+Q: Après un incident, l'équipe rédige un post-mortem sans rechercher de coupable. Pourquoi cette approche ?
+C: Pour que chacun expose les faits et qu'on corrige les causes
+W: Pour éviter de laisser une trace écrite de l'incident
+W: Pour réduire la durée de la prochaine astreinte de nuit
+W: Pour respecter les règles du RGPD sur les données
+E: Si l'on cherche un coupable, chacun minimise son rôle et les vraies causes restent cachées. Le post-mortem sans blâme reconstitue la chronologie, identifie les causes, souvent multiples, et débouche sur des actions concrètes : alerte manquante, procédure floue, SPOF à supprimer.

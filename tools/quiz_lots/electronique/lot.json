@@ -1,0 +1,92 @@
+{
+  "lot": 1,
+  "seed": 498172365,
+  "skills": [
+    "électronique",
+    "carte électronique",
+    "soudure CMS",
+    "microcontrôleur",
+    "oscilloscope",
+    "composants électroniques"
+  ],
+  "schemas": [
+    {
+      "name": "electronique-symboles-passifs.svg",
+      "questions": ["001"],
+      "alt": "Cinq symboles numérotés de composants électroniques passifs",
+      "file": "schemas/symboles-passifs.svg",
+      "on_question": true
+    },
+    {
+      "name": "electronique-symboles-semiconducteurs.svg",
+      "questions": ["002", "003"],
+      "alt": "Cinq symboles numérotés de semi-conducteurs et d'un amplificateur opérationnel",
+      "file": "schemas/symboles-semiconducteurs.svg",
+      "on_question": true
+    },
+    {
+      "name": "electronique-formules.svg",
+      "questions": ["008", "026", "047", "048", "050", "052", "064", "070"],
+      "alt": "Formules de base : diviseur, résistance de LED, RC, amplificateur opérationnel",
+      "file": "schemas/formules.svg"
+    },
+    {
+      "name": "electronique-alimentation-lineaire.svg",
+      "questions": ["030", "031", "032", "033"],
+      "diagram": {
+        "title": "Alimentation linéaire 5 V",
+        "nodes": [
+          "Transformateur",
+          "Pont de diodes",
+          "Condensateur de filtrage",
+          "Régulateur 7805",
+          "Carte en 5 V"
+        ],
+        "note": "Le régulateur dissipe (Ue − Us) × I : un dissipateur est souvent indispensable"
+      }
+    },
+    {
+      "name": "electronique-commande-relais.svg",
+      "questions": ["018", "035", "036", "037"],
+      "diagram": {
+        "title": "Commande d'un relais par un microcontrôleur",
+        "nodes": [
+          "Sortie du microcontrôleur",
+          "Résistance de base",
+          "Transistor NPN",
+          "Bobine du relais",
+          "Diode de roue libre"
+        ],
+        "note": "La diode, en inverse sur la bobine, absorbe la surtension à la coupure"
+      }
+    },
+    {
+      "name": "electronique-depannage.svg",
+      "questions": ["057", "079", "080"],
+      "diagram": {
+        "title": "Dépanner une carte électronique",
+        "nodes": [
+          "Inspection visuelle",
+          "Tensions d'alimentation",
+          "Signaux à l'oscilloscope",
+          "Composant en cause"
+        ],
+        "note": "Du plus simple au plus long : beaucoup de pannes se voient à l'œil ou au multimètre"
+      }
+    },
+    {
+      "name": "electronique-mesure-4-20.svg",
+      "questions": ["071", "072"],
+      "diagram": {
+        "title": "Lecture d'une boucle 4-20 mA",
+        "nodes": [
+          "Capteur 4-20 mA",
+          "Résistance de 250 Ω",
+          "Tension 1 à 5 V",
+          "Entrée analogique"
+        ],
+        "note": "Moins de 4 mA signale un fil coupé ou un capteur en défaut"
+      }
+    }
+  ]
+}

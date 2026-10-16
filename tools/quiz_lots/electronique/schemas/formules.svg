@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="330" viewBox="0 0 860 330" font-family="Arial, sans-serif">
+  <rect width="860" height="330" fill="#ffffff"/>
+  <text x="430" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#0f172a">Formules de base de l'électronique</text>
+  <g fill="#e0f2fe" stroke="#0369a1" stroke-width="2">
+    <rect x="30" y="52" width="390" height="76" rx="8"/>
+    <rect x="440" y="52" width="390" height="76" rx="8"/>
+    <rect x="30" y="142" width="390" height="76" rx="8"/>
+    <rect x="440" y="142" width="390" height="76" rx="8"/>
+    <rect x="30" y="232" width="390" height="76" rx="8"/>
+    <rect x="440" y="232" width="390" height="76" rx="8"/>
+  </g>
+  <g font-size="14" font-weight="bold" fill="#0f172a">
+    <text x="50" y="82">Diviseur : Us = Ue × R2 / (R1 + R2)</text>
+    <text x="460" y="82">Résistance de LED : R = (U − Uled) / I</text>
+    <text x="50" y="172">Circuit RC : τ = R × C</text>
+    <text x="460" y="172">Coupure RC : fc = 1 / (2 × π × R × C)</text>
+    <text x="50" y="262">AOP inverseur : Us = − (Rf / Ri) × Ue</text>
+    <text x="460" y="262">AOP non inverseur : Us = (1 + Rf / Rg) × Ue</text>
+  </g>
+  <g font-size="13" fill="#475569">
+    <text x="50" y="110">R2 est la résistance entre la sortie et la masse</text>
+    <text x="460" y="110">puissance dissipée : P = R × I²</text>
+    <text x="50" y="200">condensateur chargé à 63 % après τ, à 99 % après 5 τ</text>
+    <text x="460" y="200">au-delà de fc, un passe-bas atténue le signal</text>
+    <text x="50" y="290">la sortie est en opposition de phase</text>
+    <text x="460" y="290">gain toujours supérieur ou égal à 1</text>
+  </g>
+</svg>

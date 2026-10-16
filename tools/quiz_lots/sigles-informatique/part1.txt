@@ -1,0 +1,397 @@
+@001
+Q: Associer chaque sigle de matériel informatique à sa signification.
+P: CPU => processeur central
+P: RAM => mémoire vive
+P: SSD => disque à mémoire flash
+P: GPU => processeur graphique
+P: USB => bus série universel
+E: Le processeur exécute les programmes, la RAM garde les données en cours d'utilisation, le SSD les stocke durablement, bien plus vite qu'un disque dur à plateaux. Le GPU calcule l'affichage et sert aussi au calcul intensif ; l'USB relie les périphériques.
+
+@002
+Q: Que signifie le sigle RAM ?
+C: Random Access Memory, mémoire vive
+W: Read And Modify, mémoire de travail
+W: Rapid Archive Memory, mémoire d'archive
+W: Remote Access Module, module d'accès distant
+E: La RAM est une mémoire à accès direct : on lit n'importe quelle case aussi vite que les autres. Elle est rapide mais volatile, son contenu disparaît sans courant. Sa taille limite le nombre de programmes et d'onglets ouverts en même temps.
+
+@003
+Q: Pourquoi un document non enregistré est-il perdu lors d'une coupure de courant ?
+C: Il n'était qu'en mémoire vive, effacée sans courant
+W: Le disque dur efface les fichiers ouverts à l'arrêt
+W: Le processeur supprime les données en cours de calcul
+W: Le système détruit les fichiers qui n'ont pas de nom
+E: Tant qu'on n'enregistre pas, le document n'existe que dans la RAM, qui perd tout sans alimentation. L'enregistrement l'écrit sur le SSD ou le disque, qui conserve les données. Les logiciels récents enregistrent automatiquement pour limiter ce risque.
+
+@004
+Q: Que signifie le sigle URL ?
+C: Uniform Resource Locator
+W: Universal Remote Link
+W: Unified Routing Language
+W: User Request Line
+E: L'URL est l'adresse d'une ressource sur le web : protocole (https), nom de domaine, chemin et éventuels paramètres, par exemple https://exemple.fr/offres?ville=Lille. Elle indique où trouver la ressource et comment y accéder.
+
+@005
+Q: Que signifie le sigle HTTP ?
+C: HyperText Transfer Protocol
+W: High Transfer Text Process
+W: Hosted Text Transport Program
+W: HyperText Terminal Port
+E: HTTP est le protocole du web : le navigateur envoie une requête (GET, POST…) et le serveur renvoie une réponse avec un code d'état et un contenu. Les API REST reposent elles aussi sur HTTP.
+
+@006
+Q: Que garantit le S de HTTPS ?
+C: Des échanges chiffrés avec un serveur authentifié
+W: Une vitesse de chargement supérieure à celle d'HTTP
+W: Un site validé et contrôlé par les services de l'État
+W: L'absence totale de publicité sur les pages du site
+E: HTTPS ajoute une couche TLS : les échanges sont chiffrés et le certificat prouve qu'on parle bien au serveur du domaine. Il ne garantit pas que le site est honnête : un site d'hameçonnage peut tout à fait avoir son cadenas.
+
+@007
+Q: Que signifie le sigle OS ?
+C: Operating System, système d'exploitation
+W: Open Software, logiciel libre
+W: Online Service, service en ligne
+W: Output Signal, signal de sortie
+E: Le système d'exploitation, Windows, Linux, macOS ou Android, gère le matériel et fait fonctionner les applications : mémoire, fichiers, processus, réseau, droits des utilisateurs. Les applications passent par lui pour accéder au matériel.
+
+@008
+Q: Associer chaque protocole à son port par défaut.
+P: HTTP => 80
+P: HTTPS => 443
+P: SSH => 22
+P: DNS => 53
+P: RDP => 3389
+E: Ces ports reviennent en permanence dans les règles de pare-feu et les fichiers de configuration. Un service peut écouter sur un autre port, mais le port par défaut évite de le préciser : https://site.fr sous-entend le port 443.
+
+@009
+Q: Que signifie IP dans « adresse IP » ?
+C: Internet Protocol
+W: Internal Port
+W: Interface Program
+W: Instant Packet
+E: Le protocole IP achemine les paquets d'un réseau à l'autre grâce à l'adresse IP de chaque machine. C'est la couche commune d'Internet sur laquelle s'appuient TCP, UDP et toutes les applications.
+
+@010
+Q: Combien de bits compte une adresse IPv4 ?
+N: 32
+T: 0
+E: Une adresse IPv4 compte 32 bits, écrits en quatre nombres de 0 à 255 : 192.168.1.10. Cela ne fait qu'environ 4,3 milliards d'adresses, épuisées depuis longtemps, d'où le NAT et le passage progressif à IPv6.
+
+@011
+Q: Combien de bits compte une adresse IPv6 ?
+N: 128
+T: 0
+E: Une adresse IPv6 compte 128 bits, écrits en huit groupes hexadécimaux, par exemple 2001:db8::1. Le nombre d'adresses est tel que chaque appareil peut avoir la sienne, sans traduction d'adresse.
+
+@012
+Q: Que signifie le sigle LAN ?
+C: Local Area Network, réseau local
+W: Large Access Node, nœud d'accès étendu
+W: Linked Application Network, réseau d'applications
+W: Line Adapter Number, numéro d'adaptateur
+E: Le LAN relie les équipements d'un même lieu, bureau, atelier ou maison, par câble Ethernet ou Wi-Fi. Au-delà, on parle de WAN, le réseau étendu qui relie des sites éloignés, Internet étant le plus grand de tous.
+
+@013
+Q: Associer chaque type de réseau à sa description.
+P: LAN => réseau local d'un bâtiment
+P: WAN => réseau étendu reliant des sites
+P: WLAN => réseau local sans fil
+P: VLAN => réseau local virtuel sur un même switch
+E: Le préfixe W de WLAN vient de wireless, sans fil. Le VLAN découpe un même équipement en plusieurs réseaux séparés : bureautique, téléphonie et machines de production partagent les switchs sans se voir.
+
+@014
+Q: Que signifie le sigle PDF ?
+C: Portable Document Format
+W: Printed Data File
+W: Public Document Folder
+W: Protected Digital Form
+E: Le PDF fige la mise en page d'un document pour qu'il s'affiche et s'imprime de la même façon partout. Il sert pour les CV, factures et notices ; on peut le signer, le protéger ou y intégrer des formulaires.
+
+@015
+Q: Un vendeur annonce un ordinateur avec « 16 Go de RAM et 512 Go de SSD ». Que désignent ces deux valeurs ?
+C: La mémoire de travail et la capacité de stockage
+W: La vitesse du processeur et le débit du réseau
+W: La taille de la mémoire graphique et de la batterie
+W: La résolution de l'écran et sa taille en pouces
+E: Les 16 Go de RAM fixent ce qu'on peut faire tourner en même temps, les 512 Go de SSD ce qu'on peut stocker. Pour un poste de développeur, la RAM compte beaucoup : IDE, navigateur, conteneurs et machines virtuelles en consomment énormément.
+
+@016
+Q: Que désigne la FAQ d'un site ou d'un logiciel ?
+C: La foire aux questions, réponses aux questions fréquentes
+W: Le fichier d'aide qualifié, notice technique certifiée
+W: Le formulaire d'accès qualifié, page de connexion
+W: La fonction d'alerte quotidienne, envoi de notifications
+E: FAQ vient de Frequently Asked Questions. Elle regroupe les réponses aux questions qui reviennent souvent, ce qui allège le support. Une FAQ bien tenue est un premier niveau d'assistance que l'utilisateur consulte seul.
+
+@017
+Q: À quoi sert le BIOS ou l'UEFI d'un ordinateur ?
+C: Démarrer le matériel et lancer le système
+W: Protéger l'ordinateur des virus en temps réel
+W: Sauvegarder les fichiers de l'utilisateur
+W: Gérer la connexion au réseau Wi-Fi du poste
+E: Ce micrologiciel teste le matériel à la mise sous tension, puis charge le système d'exploitation depuis le disque. L'UEFI a remplacé le BIOS sur les machines récentes ; on y règle l'ordre de démarrage, la virtualisation ou le démarrage sécurisé.
+
+@018
+Q: Que signifie le sigle DNS ?
+C: Domain Name System
+W: Digital Network Service
+W: Data Node Server
+W: Dynamic Naming Software
+E: Le DNS est l'annuaire d'Internet : il associe des noms faciles à retenir à des adresses IP. Sans lui, il faudrait taper l'adresse IP de chaque site. Une panne DNS donne l'impression qu'Internet est coupé alors que le réseau fonctionne.
+
+@019
+Q: Quel est le rôle d'un serveur DNS ?
+C: Traduire un nom de domaine en adresse IP
+W: Attribuer une adresse IP à chaque poste du réseau
+W: Chiffrer les échanges entre navigateur et serveur
+W: Bloquer les sites dangereux pour les utilisateurs
+E: Quand on tape exemple.fr, le poste demande au serveur DNS l'adresse IP correspondante, puis se connecte à cette adresse. L'attribution des adresses aux postes est le rôle du DHCP, le chiffrement celui de TLS. Certains DNS filtrent aussi des sites, mais ce n'est pas leur fonction première.
+
+@020
+Q: Quel est le rôle d'un serveur DHCP ?
+C: Attribuer automatiquement une adresse IP aux postes
+W: Traduire les noms de domaine en adresses IP
+W: Chiffrer les connexions des postes au réseau
+W: Filtrer les ports ouverts sur le pare-feu
+E: Le DHCP distribue à chaque appareil qui se connecte une adresse IP, le masque, la passerelle et les serveurs DNS, pour une durée appelée bail. Sans lui, il faudrait configurer chaque poste à la main ; les serveurs et automates gardent souvent une adresse fixe.
+
+@021
+Q: Que signifie le sigle VPN ?
+C: Virtual Private Network
+W: Verified Public Node
+W: Visual Proxy Navigator
+W: Variable Port Number
+E: Le VPN crée un tunnel chiffré à travers Internet entre un poste et un réseau privé, ou entre deux sites. Les données qui y circulent sont protégées comme si l'on était branché directement sur le réseau de l'entreprise.
+
+@022
+Q: En télétravail, on doit se connecter au VPN avant d'ouvrir les applications de l'entreprise. Pourquoi ?
+C: Pour joindre le réseau interne par un tunnel chiffré
+W: Pour accélérer la connexion Internet du domicile
+W: Pour masquer l'adresse de l'entreprise à ses clients
+W: Pour remplacer l'antivirus de l'ordinateur portable
+E: Les applications internes ne sont pas exposées sur Internet : seul le VPN, après authentification, donne accès au réseau de l'entreprise, avec des échanges chiffrés. Il n'accélère rien, ajoute plutôt un peu de latence, et ne remplace aucune protection du poste.
+
+@023
+Q: Associer chaque unité à ce qu'elle mesure.
+P: Bit => chiffre binaire, 0 ou 1
+P: Octet => groupe de 8 bits
+P: Mb/s => débit d'une connexion réseau
+P: Mo => taille d'un fichier
+E: Les débits s'expriment en bits par seconde, les tailles de fichiers en octets : le b minuscule désigne le bit, le O ou B majuscule l'octet. Une confusion classique fait croire qu'une fibre à 1 Gb/s télécharge 1 Go par seconde.
+
+@024
+Q: Une connexion offre 100 Mb/s. Combien de mégaoctets par seconde peut-elle transférer au mieux ?
+N: 12.5
+U: Mo/s
+T: 1
+E: Un octet compte 8 bits : 100 / 8 = 12,5 Mo/s au maximum. En pratique, les en-têtes des protocoles et le partage de la ligne réduisent ce débit utile d'environ 5 à 10 %.
+
+@025
+Q: Que désigne la DSI dans une entreprise ?
+C: La direction des systèmes d'information
+W: La division de la sécurité industrielle
+W: Le département du support informatique interne
+W: La direction des services immobiliers
+E: La DSI gère l'informatique de l'entreprise : infrastructures, applications, sécurité, support et projets. Elle est dirigée par le DSI, ou CIO en anglais. Un développeur travaille souvent pour la DSI d'un client ou au sein de ses équipes.
+
+@026
+Q: Que signifie le sigle API ?
+C: Application Programming Interface
+W: Automated Process Integration
+W: Advanced Protocol Interface
+W: Application Platform Index
+E: Une API est l'interface qu'un logiciel offre aux autres programmes : liste des fonctions ou des adresses à appeler, données attendues et réponses. En automatisme, API désigne aussi l'automate programmable industriel : le contexte lève l'ambiguïté.
+
+@027
+Q: Quel est le rôle d'une API web ?
+C: Permettre à des programmes d'échanger selon un contrat
+W: Afficher les pages web dans le navigateur de l'utilisateur
+W: Héberger la base de données sur un serveur distant
+W: Remplacer le serveur web par un service plus rapide
+E: L'API web expose des adresses que d'autres programmes appellent en HTTP, avec un format d'échange défini, souvent JSON : une application mobile, un site ou un autre service s'appuient dessus. Ce contrat permet de faire évoluer chaque côté indépendamment.
+
+@028
+Q: Que signifie le sigle REST ?
+C: Representational State Transfer
+W: Remote Execution Service Transport
+W: Request Encoding Standard Type
+W: Resource Exchange Secure Transfer
+E: REST est un style d'architecture : des ressources identifiées par des URL, manipulées par les verbes HTTP, sans état conservé côté serveur entre deux requêtes. Une API qui suit ces principes est dite RESTful.
+
+@029
+Q: Associer chaque verbe HTTP à son usage dans une API REST.
+P: GET => lire une ressource
+P: POST => créer une ressource
+P: PUT => remplacer une ressource
+P: DELETE => supprimer une ressource
+E: Les verbes donnent le sens de la requête sur une même URL : GET /offres/12 lit l'offre, DELETE /offres/12 la supprime. PATCH modifie une partie d'une ressource. GET ne doit jamais rien modifier, ce qui permet de le mettre en cache sans risque.
+
+@030
+Q: Associer chaque code de réponse HTTP à sa signification.
+P: 200 => succès de la requête
+P: 301 => redirection permanente
+P: 401 => authentification requise
+P: 404 => ressource introuvable
+P: 500 => erreur interne du serveur
+E: La famille se lit au premier chiffre : 2xx succès, 3xx redirection, 4xx erreur du client, 5xx erreur du serveur. Dans les journaux, une rafale de 5xx signale un bogue ou une panne côté serveur, une rafale de 4xx plutôt des requêtes mal formées ou non autorisées.
+
+@031
+Q: Que signifie le sigle JSON ?
+C: JavaScript Object Notation
+W: Java Serialized Object Network
+W: JavaScript Online Node
+W: Joint Standard Object Name
+E: JSON est un format texte d'échange de données, objets entre accolades et listes entre crochets : {"ville": "Lille", "postes": 3}. Lisible et léger, il est devenu le format par défaut des API web, bien au-delà de JavaScript.
+
+@032
+Q: Que signifie le sigle SQL ?
+C: Structured Query Language
+W: Standard Quality Logic
+W: Sequential Query Layer
+W: Server Queue Language
+E: SQL est le langage des bases de données relationnelles : SELECT pour lire, INSERT, UPDATE et DELETE pour modifier, CREATE pour définir les tables. PostgreSQL, MySQL, SQLite ou SQL Server en parlent tous un dialecte.
+
+@033
+Q: Associer chaque lettre de CRUD à l'opération qu'elle désigne.
+P: C => Create, créer
+P: R => Read, lire
+P: U => Update, modifier
+P: D => Delete, supprimer
+E: CRUD résume les quatre opérations de base sur des données. Elles correspondent en SQL à INSERT, SELECT, UPDATE et DELETE, et dans une API REST à POST, GET, PUT ou PATCH, et DELETE.
+
+@034
+Q: Que signifie le sigle IDE ?
+C: Integrated Development Environment
+W: Internal Data Exchange
+W: Interactive Debug Engine
+W: Indexed Document Editor
+E: L'IDE réunit éditeur de code, compilation, débogueur, tests et gestion de version : IntelliJ IDEA, Visual Studio Code ou Eclipse. Il complète le code, signale les erreurs et aide à naviguer dans un grand projet.
+
+@035
+Q: Que signifie le sigle SDK ?
+C: Software Development Kit
+W: System Driver Key
+W: Secure Data Kernel
+W: Standard Deployment Kit
+E: Un SDK fournit tout ce qu'il faut pour développer pour une plateforme : bibliothèques, outils, documentation, exemples. Le JDK de Java ou le SDK Android en sont des exemples ; un fournisseur d'API propose souvent un SDK pour l'appeler facilement.
+
+@036
+Q: Que désigne l'architecture MVC ?
+C: Modèle, vue, contrôleur
+W: Module, version, composant
+W: Méthode, variable, classe
+W: Mémoire, vecteur, cache
+E: Le modèle porte les données et les règles métier, la vue les affiche, le contrôleur reçoit les actions de l'utilisateur et fait le lien. Cette séparation des responsabilités se retrouve dans la plupart des frameworks web.
+
+@037
+Q: Que signifie CI/CD ?
+C: Intégration continue et déploiement continu
+W: Contrôle interne et documentation centralisée
+W: Compilation incrémentale et débogage continu
+W: Configuration initiale et diffusion contrôlée
+E: L'intégration continue compile et teste automatiquement chaque modification poussée sur le dépôt ; le déploiement continu met en production ce qui a passé les tests. Les erreurs sont détectées tôt, sur de petites modifications faciles à corriger.
+
+@038
+Q: Remettre dans l'ordre les étapes d'un pipeline CI/CD.
+O: Pousser le code sur le dépôt
+O: Compiler le projet
+O: Lancer les tests automatisés
+O: Construire l'artefact ou l'image
+O: Déployer sur l'environnement cible
+E: Chaque étape conditionne la suivante : un échec de compilation ou de test arrête le pipeline avant la construction de l'image et le déploiement. GitLab CI, GitHub Actions ou Jenkins décrivent ces étapes dans un fichier versionné avec le code.
+
+@039
+Q: Que signifie le sigle VM ?
+C: Virtual Machine, machine virtuelle
+W: Volume Manager, gestionnaire de disques
+W: Visual Monitor, écran de contrôle
+W: Version Module, module de version
+E: Une machine virtuelle est un ordinateur complet simulé par un hyperviseur, avec son propre système d'exploitation. Plusieurs VM partagent un même serveur physique. Un conteneur Docker, plus léger, partage au contraire le noyau de la machine hôte.
+
+@040
+Q: Associer chaque modèle de cloud à ce qu'il fournit.
+P: IaaS => serveurs et réseau à la demande
+P: PaaS => plateforme pour déployer son code
+P: SaaS => logiciel prêt à l'emploi
+E: Plus on monte, moins on gère soi-même : en IaaS, on administre les systèmes ; en PaaS, on ne fournit que le code ; en SaaS, on utilise l'application, comme une messagerie en ligne. Le partage des responsabilités de sécurité suit le même découpage.
+
+@041
+Q: Une PME paie sa messagerie par utilisateur et par mois, sans rien installer ni administrer. De quel modèle s'agit-il ?
+C: SaaS
+W: IaaS
+W: PaaS
+W: RAID
+E: Le logiciel est fourni comme un service : l'éditeur héberge, met à jour et sauvegarde, le client se contente de l'utiliser via un navigateur ou une application. En IaaS ou PaaS, la PME devrait installer et administrer elle-même sa messagerie.
+
+@042
+Q: Que signifie le sigle RGPD ?
+C: Règlement général sur la protection des données
+W: Registre général des projets de développement
+W: Référentiel de gestion des postes et données
+W: Règlement de gouvernance des plateformes digitales
+E: Le RGPD encadre en Europe la collecte et le traitement des données personnelles : finalité précise, minimisation, durée de conservation, droits des personnes, sécurité. Un développeur l'applique directement dans ce qu'il stocke et ce qu'il journalise.
+
+@043
+Q: Un développeur veut journaliser les e-mails et mots de passe saisis pour faciliter le débogage. Qu'en penser ?
+C: À proscrire : ce sont des données personnelles et secrètes
+W: Acceptable si les journaux restent sur le serveur interne
+W: Acceptable pendant la phase de développement seulement
+W: Recommandé pour que le support puisse dépanner plus vite
+E: Un mot de passe ne doit jamais apparaître dans un journal, et un e-mail est une donnée personnelle soumise au RGPD. Les journaux sont copiés, archivés et lus par beaucoup de monde. On journalise un identifiant technique ou un événement, jamais le secret lui-même.
+
+@044
+Q: Que signifie le sigle NAS ?
+C: Network Attached Storage
+W: Network Access Security
+W: Node Allocation Service
+W: Native Archive System
+E: Un NAS est un serveur de fichiers branché au réseau, souvent un boîtier à plusieurs disques en RAID : partages, sauvegardes des postes, archives. Le SAN, réseau de stockage, fournit plutôt des disques en mode bloc aux serveurs.
+
+@045
+Q: Que signifie le sigle RAID ?
+C: Redundant Array of Independent Disks
+W: Rapid Access to Indexed Data
+W: Remote Archive and Incremental Duplication
+W: Reliable Automatic Integrity Detection
+E: Le RAID combine plusieurs disques pour gagner en vitesse, en tolérance aux pannes ou les deux. Selon le niveau, un serveur continue de fonctionner quand un disque tombe en panne, le temps de le remplacer à chaud.
+
+@046
+Q: Un serveur dont les disques sont en RAID 1 dispense-t-il de faire des sauvegardes ?
+C: Non : une suppression ou un virus touche les deux disques
+W: Oui : chaque fichier existe déjà en double sur les disques
+W: Oui, à condition de changer les deux disques chaque année
+W: Non, mais seulement si le serveur est une machine virtuelle
+E: Le RAID protège contre la panne d'un disque, pas contre l'erreur humaine, un rançongiciel ou un incendie : le miroir recopie fidèlement la suppression ou le chiffrement. Une vraie sauvegarde est séparée, versionnée et si possible hors site.
+
+@047
+Q: Associer chaque niveau de RAID à son principe.
+P: RAID 0 => répartition sans redondance, pour la vitesse
+P: RAID 1 => miroir sur deux disques
+P: RAID 5 => parité répartie, tolère un disque en panne
+P: RAID 10 => miroirs regroupés en bandes
+E: Le RAID 0 perd tout si un disque lâche ; le RAID 1 sacrifie la moitié de la capacité ; le RAID 5 n'en perd qu'un disque mais reconstruit lentement ; le RAID 10 cumule vitesse et redondance, au prix de la moitié de la capacité.
+
+@048
+Q: Que signifie le sigle SSH ?
+C: Secure Shell
+W: Server Side Hosting
+W: Simple System Handler
+W: Shared Secure Hub
+E: SSH ouvre une session en ligne de commande chiffrée sur une machine distante, sur le port 22. L'authentification par clé est préférable au mot de passe. SSH sert aussi aux transferts de fichiers (SFTP, SCP) et aux échanges avec les dépôts Git.
+
+@049
+Q: Pourquoi préfère-t-on SFTP à FTP pour transférer des fichiers ?
+C: FTP transmet identifiants et fichiers en clair
+W: FTP ne fonctionne que sur un réseau local
+W: SFTP n'a aucune limite de taille de fichier
+W: FTP est réservé aux seuls serveurs Windows
+E: FTP date d'avant la sécurité sur Internet : mot de passe et contenu circulent sans chiffrement et peuvent être interceptés. SFTP passe par SSH et chiffre tout. FTPS, autre variante, ajoute TLS à FTP.
+
+@050
+Q: Remettre dans l'ordre les quatre échanges par lesquels un poste obtient son adresse auprès d'un serveur DHCP.
+O: Discover : le poste cherche un serveur
+O: Offer : le serveur propose une adresse
+O: Request : le poste demande l'adresse proposée
+O: Acknowledge : le serveur confirme le bail
+E: On retient ces échanges sous le nom DORA. Le poste, encore sans adresse, diffuse sa recherche à tout le réseau ; le serveur répond par une offre, le poste la demande formellement et le serveur la confirme. Un poste qui reste en 169.254.x.x n'a pas obtenu de réponse.
