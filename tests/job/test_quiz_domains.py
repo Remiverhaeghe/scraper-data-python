@@ -8,7 +8,12 @@ import pytest
 
 import job.quiz as quiz
 from job.quiz import build_quiz_overview, load_active_quiz
-from job.quiz_domains import OTHER_DOMAIN, classify_theme, group_themes
+from job.quiz_domains import (
+    OTHER_DOMAIN,
+    classify_theme,
+    count_categories,
+    group_themes,
+)
 from job.quiz_import import import_questions
 from storage.database import initialize_database
 from storage.job_offers import save_offers
@@ -164,3 +169,27 @@ def test_pack_domain_overrides_classification(database_file):
 
     assert vDomains["Kafka"] == ("Informatique", "Données")
     assert vDomains["Rust"] == OTHER_DOMAIN
+
+
+def test_count_categories_keeps_empty_rubrics():
+    """Vérifie les comptes par rubrique, rubriques vides comprises, « Autres » masqué."""
+
+    vThemes = [
+        {"domain": "Informatique", "subdomain": "Données"},
+        {"domain": "Informatique", "subdomain": "Données"},
+        {"domain": "Industrie", "subdomain": "Automatisme"},
+    ]
+
+    vCounts = count_categories(vThemes)
+
+    assert vCounts[(None, None)] == 3
+    assert vCounts[("Informatique", None)] == 2
+    assert vCounts[("Informatique", "Données")] == 2
+    assert vCounts[("Réseau et sécurité", "Réseau")] == 0
+    assert vCounts[("Industrie", "Maintenance")] == 0
+    assert (OTHER_DOMAIN[0], None) not in vCounts
+    assert list(vCounts)[1] == ("Informatique", None)
+
+    vCounts = count_categories([{"domain": "Autres", "subdomain": "Divers"}])
+
+    assert vCounts[OTHER_DOMAIN] == 1

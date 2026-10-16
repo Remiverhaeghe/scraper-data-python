@@ -43,6 +43,7 @@ from job.quiz_domains import (
     DOMAIN_ICONS,
     build_category_progress,
     filter_guides,
+    count_categories,
     group_themes,
 )
 from job.quiz_exam import (
@@ -59,6 +60,7 @@ from job.quiz_generation import (
     DEFAULT_GENERATION_COUNT,
     GENERATION_COUNTS,
     GENERATION_LEVELS,
+    load_catalog,
     MIXED_LEVEL,
     TARGET_QUESTIONS,
     build_correction_prompt,
@@ -181,6 +183,13 @@ def render_quiz(
             ),
             "subdomain": pSubdomain,
             "groups": group_themes(vThemes, pDomain, pSubdomain),
+            "categories": count_categories(vThemes),
+            "empty_themes": [
+                vTheme
+                for vTheme in load_catalog()
+                if pDomain in (None, vTheme["domain"])
+                and pSubdomain in (None, vTheme["subdomain"])
+            ],
             "all_groups": group_themes(vThemes),
             "category_progress": build_category_progress(vThemes),
             "theme_count": len(vThemes),

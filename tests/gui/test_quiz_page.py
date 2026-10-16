@@ -10,6 +10,7 @@ import pytest
 
 from PySide6.QtCore import QPoint
 from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QPushButton
 
 import gui.quiz_import_panel as quiz_import_panel
 import gui.quiz_page as quiz_page
@@ -262,7 +263,7 @@ def test_domain_filter_zero_offers_and_scroll(qt_application, tmp_path):
     vPage = create_page(tmp_path / "scraper.db")
     vScroll = vPage.findChild(quiz_page.QScrollArea)
 
-    assert vPage.category_buttons[(None, None)].title_label.text() == "Tous les thèmes"
+    assert vPage.category_buttons[(None, None)].text().startswith("Tous les thèmes")
 
     vPage.select_domain("Informatique")
 
@@ -689,3 +690,43 @@ def test_schema_is_built_and_graded_on_the_desktop(qt_application, tmp_path):
     assert not vEditor.isEnabled()
     assert not vPage.visual_widget.isHidden()
     assert vPage.visual_widget.toolTip() == "Votre schéma et schéma attendu"
+
+
+def test_show_svg_reduces_a_wide_drawing(qt_application):
+    """Vérifie qu'un schéma trop large est réduit au lieu d'élargir la page."""
+
+    vWidget = quiz_page.QSvgWidget()
+    vSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="200"></svg>'
+
+    quiz_page.show_svg(vWidget, vSvg, "Schéma", 280, pMaxWidth=500)
+
+    assert (vWidget.width(), vWidget.height()) == (500, 100)
+
+    quiz_page.show_svg(vWidget, vSvg, "Schéma", 100, pMaxWidth=800)
+
+    assert (vWidget.width(), vWidget.height()) == (500, 100)
+
+
+def test_empty_rubric_offers_catalog_themes(qt_application, tmp_path, monkeypatch):
+    """Vérifie qu'une rubrique sans question propose ses thèmes du catalogue."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vPrepared = []
+    monkeypatch.setattr(vPage.import_panel, "prepare_priority", vPrepared.append)
+
+    assert vPage.category_buttons[("Réseau et sécurité", None)].text().endswith("(0)")
+
+    vPage.category_buttons[("Industrie", "Maintenance")].click()
+
+    vButtons = [
+        vButton
+        for vButton in vPage.findChildren(QPushButton)
+        if vButton.text() == "Préparer" and vButton.isVisibleTo(vPage)
+    ]
+
+    assert vButtons
+    assert vPage.filter_label.text() == "Industrie › Maintenance"
+
+    vButtons[0].click()
+
+    assert len(vPrepared) == 1

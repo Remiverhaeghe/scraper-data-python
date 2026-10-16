@@ -21,6 +21,7 @@ from web.rendering import WEB_DIRECTORY, templates
 from web.routes.offers import router as offers_router
 from web.routes.applications import router as applications_router
 from web.routes.quiz import router as quiz_router
+from web.routes.skills import router as skills_router
 from web.routes.challenges import router as challenges_router
 from web.routes.git_sandbox import router as git_sandbox_router
 from web.routes.monitoring import router as monitoring_router
@@ -184,6 +185,7 @@ async def render_http_error(pRequest, pException):
 app.include_router(offers_router)
 app.include_router(applications_router)
 app.include_router(quiz_router)
+app.include_router(skills_router)
 app.include_router(challenges_router)
 app.include_router(git_sandbox_router)
 app.include_router(monitoring_router)

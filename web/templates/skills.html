@@ -1,0 +1,62 @@
+{# Compétences (route /skills) : tableau calculé par job/skills_dashboard.py, comme sur le bureau. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Compétences{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Compétences", "Ce que demandent vos offres, et où en est votre préparation", "target") }}
+
+{% set summary = dashboard.summary %}
+<section class="grid grid-4">
+    {{ ui.stat(summary.covered ~ " / " ~ summary.skills, "Compétences avec des questions", "list-checks", "blue") }}
+    {{ ui.stat(summary.readiness ~ " %", "Préparation pondérée par la demande", "graduation-cap", "green") }}
+    {{ ui.stat(summary.in_profile ~ " / " ~ summary.skills, "Dans votre profil", "user", "purple") }}
+    {{ ui.stat(summary.priority or "-", "À travailler en premier", "target", "amber") }}
+</section>
+
+<article class="card section-gap">
+    <h2>Demande des offres</h2>
+    <p class="card-subtitle">Les compétences les plus citées, colorées selon votre préparation : vert maîtrisé, bleu en cours, orange à réviser, rouge sans question</p>
+    {{ ui.bar_chart(chart, "Offres par compétence") }}
+</article>
+
+<article class="card section-gap">
+    <h2>Compétences les plus demandées</h2>
+    <p class="card-subtitle">Réviser un thème existant, ou préparer avec ChatGPT les questions d'une compétence qui n'en a pas encore</p>
+    {% if dashboard.rows %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead><tr><th scope="col">Compétence</th><th scope="col">Offres</th><th scope="col">Profil</th><th scope="col">Thèmes de révision</th><th scope="col">Maîtrise</th><th scope="col">État</th><th scope="col">Action</th></tr></thead>
+            <tbody>
+                {% for row in dashboard.rows %}
+                {% set status = statuses[row.status] %}
+                <tr>
+                    <td><strong>{{ row.skill }}</strong></td>
+                    <td>{{ row.offers }} <small class="muted">({{ row.share }} %)</small></td>
+                    <td>{{ "Oui" if row.in_profile else "Non" }}</td>
+                    <td>{% for key, label in row.themes %}{{ label }}{% if not loop.last %}, {% endif %}{% else %}<span class="muted">Aucun thème</span>{% endfor %}</td>
+                    <td>{% if row.themes %}<div class="quiz-progress" role="progressbar" aria-valuenow="{{ row.score }}" aria-valuemin="0" aria-valuemax="100" aria-label="Maîtrise {{ row.skill }}"><span style="width: {{ row.score }}%"></span></div> <small class="muted">{{ row.score }} %</small>{% else %}-{% endif %}</td>
+                    <td class="tone-{{ status[2] }}">{{ icon(status[1], 16) }} {{ status[0] }}</td>
+                    <td>
+                        {% if row.themes %}
+                        <a class="button" href="{{ url_for('show_quiz').path }}?theme={{ row.themes[0][0] | urlencode }}" title="Ouvre le thème {{ row.themes[0][1] }}">{{ icon("graduation-cap", 16) }} Réviser</a>
+                        {% else %}
+                        <form method="post" action="{{ url_for('prepare_quiz_prompt').path }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                            <input type="hidden" name="theme" value="{{ row.catalog_label }}">
+                            <button class="button" type="submit" title="Prépare la demande ChatGPT pour le thème {{ row.catalog_label }}">{{ icon("bot", 16) }} Préparer</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted">Aucune compétence repérée dans vos offres : lancez une recherche pour remplir la base.</p>
+    {% endif %}
+    <p class="card-subtitle">{{ dashboard.offer_count }} offre(s) analysée(s).</p>
+</article>
+{% endblock %}

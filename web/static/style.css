@@ -1575,44 +1575,85 @@ textarea.companies-preferred {
     vertical-align: middle;
 }
 
-/* Révision : catégories à gauche, thèmes à droite ; une colonne sur téléphone */
-.quiz-layout {
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
-    gap: 18px;
-    align-items: start;
+/* Révision : onglets des domaines et pastilles des sous-domaines */
+.quiz-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
 }
 
-.quiz-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px;
-}
-
-.quiz-nav-item {
-    display: flex;
-    gap: 8px;
+.quiz-tab {
+    display: inline-flex;
+    gap: 6px;
     align-items: center;
-    padding: 6px 10px;
-    border-radius: 8px;
-    color: var(--text);
+    padding: 8px 14px;
+    border-bottom: 3px solid transparent;
+    color: var(--muted);
+    font-weight: 600;
     text-decoration: none;
 }
 
-.quiz-nav-item:hover {
-    background: var(--surface-alt);
-}
-
-.quiz-nav-child {
-    padding-left: 30px;
-    font-size: 14px;
-}
-
-.quiz-nav-item.is-active {
-    background: var(--primary-light);
+.quiz-tab:hover,
+.quiz-tab.is-active {
     color: var(--primary);
+}
+
+.quiz-tab.is-active {
+    border-bottom-color: var(--primary);
+}
+
+.quiz-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+}
+
+.quiz-chip {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.quiz-chip:hover,
+.quiz-chip.is-active {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.quiz-chip.is-active {
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
     font-weight: 600;
+}
+
+.quiz-tab.is-empty,
+.quiz-chip.is-empty {
+    color: var(--muted);
+}
+
+.quiz-chip.is-empty {
+    border-style: dashed;
+}
+
+.empty-rubric {
+    display: grid;
+    gap: 8px;
+    padding: 0;
+    list-style: none;
+}
+
+.empty-rubric li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .quiz-main-header {
@@ -1625,12 +1666,6 @@ textarea.companies-preferred {
 
 .quiz-main-header h2 {
     margin: 0;
-}
-
-@media (max-width: 900px) {
-    .quiz-layout {
-        grid-template-columns: 1fr;
-    }
 }
 
 .chart-scale {

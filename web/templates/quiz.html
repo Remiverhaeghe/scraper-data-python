@@ -66,19 +66,20 @@
 </article>
 {% endif %}
 
-{# Domaines : un lien par domaine, la page entière se recharge filtrée. #}
-{# Catégories à gauche, thèmes de la catégorie choisie à droite : un second clic
-   sur la catégorie active revient à l'ensemble des thèmes. #}
-<div class="quiz-layout section-gap">
-    <nav class="card quiz-nav" aria-label="Catégories">
-        <a class="quiz-nav-item{% if not domain %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}">{{ icon("graduation-cap", 16) }} Tous les thèmes ({{ theme_count }})</a>
-        {% for domain_item, sections in all_groups %}
-        {% set domain_active = domain == domain_item and not subdomain %}
-        <a class="quiz-nav-item{% if domain_active %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}{% if not domain_active %}?domain={{ domain_item | urlencode }}{% endif %}">{{ icon(domain_icons.get(domain_item, "sparkles"), 16) }} {{ domain_item }} ({{ sections | map(attribute=1) | map("length") | sum }})</a>
-        {% for subdomain_item, theme_items in sections %}
-        {% set subdomain_active = domain == domain_item and subdomain == subdomain_item %}
-        <a class="quiz-nav-item quiz-nav-child{% if subdomain_active %} is-active{% endif %}" href="{{ url_for('show_quiz').path }}?domain={{ domain_item | urlencode }}{% if not subdomain_active %}&subdomain={{ subdomain_item | urlencode }}{% endif %}">{{ icon(domain_icons.get(subdomain_item, "tag"), 16) }} {{ subdomain_item }} ({{ theme_items | length }})</a>
+{# Un onglet par domaine, puis les sous-domaines en pastilles : toutes les
+   rubriques du classement sont montrées, même sans question. Un second clic sur
+   la pastille active revient à l'ensemble des thèmes. #}
+<div class="section-gap">
+    <nav class="quiz-tabs" aria-label="Domaines">
+        {% for key, count in categories.items() if not key[1] %}
+        {% set tab_active = domain == key[0] %}
+        <a class="quiz-tab{% if tab_active %} is-active{% endif %}{% if not count %} is-empty{% endif %}" href="{{ url_for('show_quiz').path }}{% if key[0] %}?domain={{ key[0] | urlencode }}{% endif %}">{{ icon(domain_icons.get(key[0], "graduation-cap"), 16) }} {{ key[0] or "Tous les thèmes" }} ({{ count }})</a>
         {% endfor %}
+    </nav>
+    <nav class="quiz-chips" aria-label="Sous-domaines">
+        {% for key, count in categories.items() if key[1] and domain in (none, key[0]) %}
+        {% set chip_active = domain == key[0] and subdomain == key[1] %}
+        <a class="quiz-chip{% if chip_active %} is-active{% endif %}{% if not count %} is-empty{% endif %}" href="{{ url_for('show_quiz').path }}{% if not chip_active %}?domain={{ key[0] | urlencode }}&subdomain={{ key[1] | urlencode }}{% endif %}">{{ icon(domain_icons.get(key[1], "tag"), 14) }} {{ key[1] }} ({{ count }})</a>
         {% endfor %}
     </nav>
 
@@ -96,6 +97,24 @@
             </form>
         </div>
 
+        {% if not groups %}
+        <article class="card section-gap">
+            <h2>Aucune question dans cette rubrique</h2>
+            <p class="card-subtitle">Préparez un lot avec votre compte ChatGPT : la demande s'affiche ci-dessous, à coller dans ChatGPT puis à importer.</p>
+            <ul class="empty-rubric">
+                {% for theme_item in empty_themes %}
+                <li>
+                    <span>{{ theme_item.label }}</span>
+                    <form method="post" action="{{ url_for('prepare_quiz_prompt').path }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        <input type="hidden" name="theme" value="{{ theme_item.label }}">
+                        <button class="button" type="submit">{{ icon("bot", 16) }} Préparer</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </article>
+        {% endif %}
         {% for domain_item, sections in groups %}
         {% set domain_themes = sections | map(attribute=1) | sum(start=[]) %}
         <div class="domain-header section-gap">

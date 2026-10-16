@@ -225,3 +225,29 @@ def build_category_progress(pThemes):
         ]
 
     return rRows
+
+
+def count_categories(pThemes):
+    """Compte les thèmes de chaque rubrique, rubriques vides du classement comprises.
+
+    Les clés sont (None, None) pour l'ensemble, (domaine, None) pour un domaine
+    et (domaine, sous-domaine), dans l'ordre d'affichage.
+    """
+
+    rCounts = {(None, None): len(pThemes)}
+
+    for vDomain, vSubdomains in DOMAIN_ORDER.items():
+        vThemes = [vTheme for vTheme in pThemes if vTheme["domain"] == vDomain]
+
+        # « Autres » n'apparaît que s'il contient des thèmes.
+        if (vDomain, vSubdomains[0]) == OTHER_DOMAIN and not vThemes:
+            continue
+
+        rCounts[(vDomain, None)] = len(vThemes)
+
+        for vSubdomain in vSubdomains:
+            rCounts[(vDomain, vSubdomain)] = sum(
+                1 for vTheme in vThemes if vTheme["subdomain"] == vSubdomain
+            )
+
+    return rCounts

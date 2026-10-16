@@ -29,10 +29,12 @@ from gui.offers_page import OffersPage
 from gui.profile_page import ProfilePage
 from gui.quality_page import QualityPage
 from gui.quiz_page import QuizPage
+from gui.skills_page import SkillsPage
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
 from gui.theme import COLORS
 from gui.widgets import show_message
+from job.quiz import DEFAULT_MODE
 from job.schedule import save_scheduled_search
 from utils.logger import get_logger
 
@@ -92,6 +94,7 @@ class MainWindow(QMainWindow):
         self.offers_page = OffersPage(vDatabaseFile)
         self.applications_page = ApplicationsPage(vDatabaseFile)
         self.quiz_page = QuizPage(vDatabaseFile)
+        self.skills_page = SkillsPage(vDatabaseFile)
 
         # L'ordre d'ajout fixe l'ordre du menu ; la clé sert à navigate().
         self.add_page("home", "Accueil", "house", self.home_page)
@@ -100,6 +103,7 @@ class MainWindow(QMainWindow):
         self.add_page("applications", "Candidatures", "send", self.applications_page)
         self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
         self.add_page("quiz", "Révision", "graduation-cap", self.quiz_page)
+        self.add_page("skills", "Compétences", "target", self.skills_page)
         self.add_page("challenges", "Défis", "trophy", ChallengesPage(vDatabaseFile))
         self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
@@ -118,6 +122,8 @@ class MainWindow(QMainWindow):
         self.home_page.offer_requested.connect(self.show_search_results)
         self.applications_page.offer_requested.connect(self.show_search_results)
         self.offers_page.detail_panel.exam_requested.connect(self.start_offer_exam)
+        self.skills_page.revise_requested.connect(self.revise_theme)
+        self.skills_page.generation_requested.connect(self.prepare_questions)
         self.search_page.show_offers_requested.connect(self.show_search_results)
         self.search_page.search_started.connect(self.on_search_started)
         self.search_page.search_ended.connect(self.on_search_ended)
@@ -296,6 +302,16 @@ class MainWindow(QMainWindow):
         """Ouvre la page Révision sur l'examen blanc d'une offre."""
         self.navigate("quiz")
         self.quiz_page.start_offer_exam(pOffer)
+
+    def revise_theme(self, pThemeKey):
+        """Ouvre la page Révision sur un thème, en répétition espacée."""
+        self.navigate("quiz")
+        self.quiz_page.start(pThemeKey, DEFAULT_MODE)
+
+    def prepare_questions(self, pThemeLabel):
+        """Ouvre la page Révision et prépare la demande de questions d'un thème."""
+        self.navigate("quiz")
+        self.quiz_page.import_panel.prepare_priority(pThemeLabel)
 
     def show_page(self, pIndex):
         """Affiche la page choisie et rafraîchit ses données si elle le permet."""

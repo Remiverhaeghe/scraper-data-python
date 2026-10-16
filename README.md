@@ -283,6 +283,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] CV conseillé selon l'offre
 - [x] Préparation d'entretien : expériences à citer, questions à poser
 - [x] Révision ciblée sur une offre : thèmes dont l'offre demande les compétences, les moins maîtrisés d'abord, puis examen blanc limité à ces thèmes (bureau et web)
+- [x] Tableau de bord des compétences : les 20 compétences les plus demandées dans les offres, croisées avec le profil et les scores de révision ; préparation pondérée par la demande, compétence prioritaire, et pour chacune « Réviser » ou « Préparer » la demande de questions ChatGPT quand elle n'en a pas (bureau et web)
 - [x] Pistes de réponse aux questions classiques : présentation, pourquoi l'entreprise, réussite (méthode STAR), point faible, prétentions salariales
 - [x] Brouillon de lettre de motivation
 
@@ -323,6 +324,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Catalogue de 90 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
 - [x] Contrôle de chaque lot importé, mesuré en entier même livré en plusieurs fichiers ou archives : bonne réponse trop souvent la plus longue, la plus courte ou à la même position, fins de choix répétées (remplissage), quasi-doublons dans le lot ou avec le thème, domaine inconnu, explications trop courtes, moins de 15 % de cas concrets avec code pour un thème technique, choix coupés par « … », extraits de code que l'énoncé ne cite pas ; bilan en orange, mesures par thème et demande de correction pour ChatGPT citant les questions concernées
 - [x] Lot corrigé réimporté : une question importée revenant avec le même identifiant est remplacée, réponses et schémas gardés ; une question livrée n'est jamais remplacée ; une question identique est comptée inchangée, sans lever son signalement
+- [x] Navigation par onglets de domaine et pastilles de sous-domaine ; toutes les rubriques du classement sont montrées, une rubrique vide propose ses thèmes du catalogue à préparer avec ChatGPT ; schémas réduits à la largeur de la page
 - [x] Thèmes à compléter en priorité : les plus demandés dans les offres parmi ceux loin de 100 questions, thèmes vides du catalogue compris (mots des offres de chaque thème), avec la demande ChatGPT préparée en un clic
 - [x] Outil de production des lots (tools/quiz_lot.py) : construction, contrôle d'une archive sans import et vérification en ligne des références
 - [x] Import en un clic des lots validés (archives « -valide.zip » de data/packs), sur le bureau et le web, avec un bilan commun
@@ -454,6 +456,7 @@ scraper-data-python/
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
+│   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
 │   ├── completion.py                          # Complétion commune avant enregistrement des offres
 │   ├── manual_offers.py                       # Ajout manuel et import d'offres depuis un fichier
 │   ├── companies.py                           # Entreprises exclues ou privilégiées, candidatures déjà envoyées
@@ -588,6 +591,7 @@ scraper-data-python/
 │   ├── offer_form.py                          # Saisie manuelle d'une offre
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
 │   ├── quiz_page.py                           # Révision technique : thèmes, questions et examen
+│   ├── skills_page.py                         # Compétences demandées et préparation
 │   ├── quiz_answer.py                         # Zones de réponse selon le type, schéma cliquable
 │   ├── quiz_import_panel.py                   # Ajout de questions : priorités, ChatGPT, import, export
 │   ├── quiz_statistics_card.py                # Statistiques et progression de la révision
@@ -627,6 +631,7 @@ scraper-data-python/
 │   │   ├── offers.py                          # Tableau de bord, offres et pièces jointes
 │   │   ├── applications.py                    # Candidatures, statut et agenda
 │   │   ├── quiz.py                            # Révision, examen et import des questions
+│   │   ├── skills.py                          # Compétences demandées et préparation
 │   │   ├── challenges.py                      # Défis de programmation
 │   │   ├── git_sandbox.py                     # Bac à sable Git
 │   │   ├── monitoring.py                      # Qualité, journaux et historique
@@ -645,6 +650,7 @@ scraper-data-python/
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
 │   │   ├── quiz.html                          # Révision technique par QCM
+│   │   ├── skills.html                        # Tableau de bord des compétences
 │   │   ├── _quiz_answer.html                  # Champs de réponse selon le type de question
 │   │   ├── challenges.html                    # Défis de programmation
 │   │   ├── git.html                           # Bac à sable Git
@@ -764,6 +770,7 @@ scraper-data-python/
 │   │   ├── test_quiz_packs.py                 # Teste l'import groupé des lots validés
 │   │   ├── test_quiz_domains.py               # Teste les domaines et le compte des offres par thème
 │   │   ├── test_quiz_exam.py                  # Teste le mode examen
+│   │   ├── test_skills_dashboard.py           # Teste le tableau de bord des compétences
 │   │   ├── test_mobile_sync.py                # Teste le contenu hors ligne et l'envoi des réponses
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
@@ -874,6 +881,7 @@ scraper-data-python/
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres
+│   │   ├── test_skills_page.py                 # Teste la page des compétences
 │   │   ├── test_theme.py                       # Teste les thèmes, les icônes et le logo
 │   │   └── test_widgets.py                     # Teste la carte repliable et la tuile cliquable
 │   │

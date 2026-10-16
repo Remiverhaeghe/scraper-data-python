@@ -601,6 +601,35 @@ def count_offers_by_skill(pDatabaseFile):
     return rCounts
 
 
+def get_skill_lists(pDatabaseFile):
+    """Retourne la liste des compétences de chaque offre, vide si elle n'en a pas."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vRows = vConnection.execute("SELECT skills FROM job_offer").fetchall()
+
+    finally:
+        vConnection.close()
+
+    rLists = []
+
+    for (vSkills,) in vRows:
+        try:
+            vList = json.loads(vSkills) if vSkills else []
+
+        except ValueError:
+            vList = []
+
+        rLists.append(
+            [vSkill for vSkill in vList if isinstance(vSkill, str)]
+            if isinstance(vList, list)
+            else []
+        )
+
+    return rLists
+
+
 def get_offer_texts(pDatabaseFile):
     """Retourne le titre et la description de chaque offre, réunis en un texte."""
 

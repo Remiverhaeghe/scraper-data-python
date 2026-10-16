@@ -224,6 +224,34 @@ QLabel#tileGroup {
     padding-top: 6px;
 }
 
+QFrame#tabsBar {
+    border-bottom: 1px solid $border;
+}
+
+QPushButton#tabButton {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    padding: 8px 14px;
+    color: $muted;
+    font-weight: 600;
+}
+
+QPushButton#tabButton:hover {
+    color: $primary;
+}
+
+QPushButton#tabButton:checked {
+    border-bottom-color: $primary;
+    color: $primary;
+}
+
+QPushButton#chipButton[empty="true"] {
+    border-style: dashed;
+    color: $muted;
+}
+
 QPushButton#chipButton {
     background: $surface;
     border: 1px solid $border;

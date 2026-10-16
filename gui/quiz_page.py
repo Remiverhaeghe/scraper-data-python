@@ -28,7 +28,6 @@ from gui.quiz_statistics_card import QuizStatisticsCard
 from gui.theme import COLORS
 from gui.widgets import (
     FlowLayout,
-    TileButton,
     clear_layout,
     create_button,
     create_card,
@@ -55,9 +54,11 @@ from job.quiz import (
 from job.interview_revision import start_offer_exam
 from job.quiz_domains import (
     DOMAIN_ICONS,
+    count_categories,
     filter_guides,
     group_themes,
 )
+from job.quiz_generation import load_catalog
 from job.schema_drawing import render_correction
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
@@ -86,14 +87,20 @@ EXAM_MODE = "exam"
 
 # Hauteur d'affichage des schémas des questions importées
 VISUAL_HEIGHT = 280
+
+# Marges de la page et de la carte autour d'un schéma, et largeur minimale :
+# un schéma plus large que la place restante est réduit.
+VISUAL_MARGINS = 120
+MIN_VISUAL_WIDTH = 240
 # Hauteur maximale du schéma attendu d'une question à construire
 EXPECTED_SCHEMA_HEIGHT = 560
 
 
-def show_svg(pWidget, pContent, pTooltip, pHeight, pShrinkOnly=False):
+def show_svg(pWidget, pContent, pTooltip, pHeight, pShrinkOnly=False, pMaxWidth=None):
     """Affiche un SVG à une hauteur fixe, en gardant ses proportions.
 
-    pShrinkOnly limite la hauteur sans jamais agrandir un dessin plus petit.
+    pShrinkOnly limite la hauteur sans jamais agrandir un dessin plus petit ;
+    pMaxWidth réduit un dessin trop large, pour ne jamais défiler de côté.
     """
     pWidget.load(QByteArray(pContent.encode("utf-8")))
     pWidget.setToolTip(pTooltip)
@@ -103,10 +110,13 @@ def show_svg(pWidget, pContent, pTooltip, pHeight, pShrinkOnly=False):
     vRenderer = pWidget.renderer()
     vRenderer.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
     vSize = vRenderer.defaultSize()
+    vRatio = vSize.width() / max(vSize.height(), 1)
     vHeight = min(pHeight, vSize.height()) if pShrinkOnly else pHeight
-    pWidget.setFixedSize(
-        round(vHeight * vSize.width() / max(vSize.height(), 1)), vHeight
-    )
+
+    if pMaxWidth and vHeight * vRatio > pMaxWidth:
+        vHeight = round(pMaxWidth / vRatio)
+
+    pWidget.setFixedSize(round(vHeight * vRatio), vHeight)
 
 
 class QuizPage(QWidget):
@@ -144,11 +154,11 @@ class QuizPage(QWidget):
 
         self.theme_columns = MAX_THEME_COLUMNS
 
-        # Catégories au-dessus des thèmes : une tuile par domaine, ses sous-domaines
-        # en pastilles juste dessous.
+        # Catégories au-dessus des thèmes : un onglet par domaine, puis les
+        # sous-domaines en pastilles sur une ligne qui passe à la suivante.
         self.category_buttons = {}
-        self.category_layout = QGridLayout()
-        self.category_layout.setSpacing(12)
+        self.tabs_layout = FlowLayout(4)
+        self.chips_layout = FlowLayout()
 
         self.filter_label = QLabel()
         self.filter_label.setObjectName("cardTitle")
@@ -173,7 +183,12 @@ class QuizPage(QWidget):
 
         vBody = QVBoxLayout()
         vBody.setSpacing(12)
-        vBody.addLayout(self.category_layout)
+        vTabsBar = QFrame()
+        vTabsBar.setObjectName("tabsBar")
+        vTabsBar.setLayout(self.tabs_layout)
+
+        vBody.addWidget(vTabsBar)
+        vBody.addLayout(self.chips_layout)
         vBody.addLayout(vHeader)
         vBody.addLayout(self.themes_holder)
 
@@ -350,91 +365,56 @@ class QuizPage(QWidget):
         self.select_category(self.domain, self.subdomain)
 
     def refresh_categories(self):
-        """Reconstruit les tuiles des domaines et les pastilles des sous-domaines."""
-        clear_layout(self.category_layout)
+        """Reconstruit les onglets des domaines et les pastilles des sous-domaines.
+
+        Toutes les rubriques du catalogue sont montrées, même sans question.
+        """
+        clear_layout(self.tabs_layout)
+        clear_layout(self.chips_layout)
         self.category_buttons = {}
 
-        vGroups = group_themes(self.themes)
-        vKeys = [(None, None)] + [
-            vKey
-            for vDomain, vSections in vGroups
-            for vKey in [(vDomain, None)]
-            + [(vDomain, vSubdomain) for vSubdomain, _ in vSections]
-        ]
+        vCounts = count_categories(self.themes)
 
         # Catégorie disparue (dernier thème supprimé) : retour à l'ensemble.
-        if (self.domain, self.subdomain) not in vKeys:
+        if (self.domain, self.subdomain) not in vCounts:
             self.domain, self.subdomain = None, None
 
-        vCards = [
-            self.create_category_tile((None, None), "Tous les thèmes", self.themes)
-        ]
-        vCards += [
-            self.create_domain_card(vDomain, vSections)
-            for vDomain, vSections in vGroups
-        ]
-        vColumns = min(len(vCards), self.theme_columns)
+        for vKey, vCount in vCounts.items():
+            vDomain, vSubdomain = vKey
 
-        for vColumn in range(vColumns):
-            self.category_layout.setColumnStretch(vColumn, 1)
+            if vSubdomain is None:
+                vButton = create_button(
+                    f"{vDomain or 'Tous les thèmes'} ({vCount})",
+                    DOMAIN_ICONS.get(vDomain, "graduation-cap"),
+                    "tabButton",
+                    COLORS["primary"] if vCount else COLORS["muted"],
+                )
+                vButton.setChecked(vDomain == self.domain)
+                self.tabs_layout.addWidget(vButton)
 
-        for vIndex, vCard in enumerate(vCards):
-            self.category_layout.addWidget(
-                vCard, *divmod(vIndex, vColumns), Qt.AlignmentFlag.AlignTop
+            elif self.domain in (None, vDomain):
+                vButton = create_button(
+                    f"{vSubdomain} ({vCount})",
+                    DOMAIN_ICONS.get(vSubdomain, "tag"),
+                    "chipButton",
+                    COLORS["primary"] if vCount else COLORS["muted"],
+                )
+                vButton.setChecked(vKey == (self.domain, self.subdomain))
+                vButton.setProperty("empty", not vCount)
+                self.chips_layout.addWidget(vButton)
+
+            else:
+                continue
+
+            vButton.setCheckable(True)
+            vButton.setChecked(
+                vKey == (self.domain, self.subdomain)
+                or (vSubdomain is None and vDomain == self.domain)
             )
-
-    def create_category_tile(self, pKey, pTitle, pThemes):
-        """Crée la tuile d'une catégorie : icône, nombre de thèmes et questions acquises."""
-        vCorrect = sum(vTheme["correct"] for vTheme in pThemes)
-        vTotal = sum(vTheme["total"] for vTheme in pThemes)
-
-        rTile = TileButton(
-            pTitle,
-            f"{len(pThemes)} thème(s) · {vCorrect} / {vTotal} questions acquises",
-            DOMAIN_ICONS.get(pKey[0], "graduation-cap"),
-        )
-        rTile.set_done(bool(vTotal) and vCorrect == vTotal)
-        rTile.setChecked(pKey == (self.domain, self.subdomain))
-        rTile.clicked.connect(lambda: self.on_category_clicked(pKey))
-        self.category_buttons[pKey] = rTile
-
-        return rTile
-
-    def create_domain_card(self, pDomain, pSections):
-        """Crée la carte d'un domaine : sa tuile, puis ses sous-domaines en pastilles."""
-        rCard = QWidget()
-        vLayout = QVBoxLayout(rCard)
-        vLayout.setContentsMargins(0, 0, 0, 0)
-        vLayout.setSpacing(6)
-        vLayout.addWidget(
-            self.create_category_tile(
-                (pDomain, None),
-                pDomain,
-                [vTheme for _, vThemes in pSections for vTheme in vThemes],
-            )
-        )
-
-        vChips = FlowLayout()
-
-        for vSubdomain, vThemes in pSections:
-            vKey = (pDomain, vSubdomain)
-            vChip = create_button(
-                f"{vSubdomain} ({len(vThemes)})",
-                DOMAIN_ICONS.get(vSubdomain, "tag"),
-                "chipButton",
-                COLORS["primary"],
-            )
-            vChip.setCheckable(True)
-            vChip.setChecked(vKey == (self.domain, self.subdomain))
-            vChip.clicked.connect(
+            vButton.clicked.connect(
                 lambda _=False, pKey=vKey: self.on_category_clicked(pKey)
             )
-            self.category_buttons[vKey] = vChip
-            vChips.addWidget(vChip)
-
-        vLayout.addLayout(vChips)
-
-        return rCard
+            self.category_buttons[vKey] = vButton
 
     def resizeEvent(self, pEvent):  # pylint: disable=invalid-name
         """Adapte le nombre de colonnes à la largeur, sans défilement horizontal."""
@@ -453,7 +433,9 @@ class QuizPage(QWidget):
     def on_category_clicked(self, pCategory):
         """Filtre sur la catégorie cliquée ; un second clic revient à l'ensemble."""
         vCategory = (
-            (None, None) if pCategory == (self.domain, self.subdomain) else pCategory
+            (None, None)
+            if pCategory == (self.domain, self.subdomain) and pCategory[1]
+            else pCategory
         )
 
         self.select_category(*vCategory)
@@ -499,9 +481,12 @@ class QuizPage(QWidget):
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.setSpacing(12)
 
-        for vDomain, vSections in group_themes(
-            self.themes, self.domain, self.subdomain
-        ):
+        vGroups = group_themes(self.themes, self.domain, self.subdomain)
+
+        if not vGroups:
+            vLayout.addWidget(self.create_empty_category())
+
+        for vDomain, vSections in vGroups:
             vLayout.addWidget(self.create_domain_header(vDomain, vSections))
 
             for vSubdomain, vThemes in vSections:
@@ -523,6 +508,43 @@ class QuizPage(QWidget):
                 vLayout.addLayout(vGrid)
 
         self.themes_holder.addWidget(vContainer)
+
+    def create_empty_category(self):
+        """Crée la carte d'une rubrique sans question : ses thèmes du catalogue à préparer."""
+        rCard, vLayout = create_card(
+            "Aucune question dans cette rubrique",
+            "Préparez un lot avec votre compte ChatGPT : la demande est copiée, "
+            "collez ensuite la réponse dans « Ajouter des questions ».",
+        )
+
+        vThemes = [
+            vTheme
+            for vTheme in load_catalog()
+            if self.domain in (None, vTheme["domain"])
+            and self.subdomain in (None, vTheme["subdomain"])
+        ]
+        vGrid = QGridLayout()
+        vGrid.setSpacing(8)
+        vGrid.setColumnStretch(0, 1)
+
+        for vRow, vTheme in enumerate(vThemes):
+            vLabel = QLabel(vTheme["label"])
+            vLabel.setWordWrap(True)
+
+            vButton = create_button("Préparer", "bot", pIconColor=COLORS["primary"])
+            vButton.setToolTip("Copie la demande de questions pour ce thème")
+            vButton.clicked.connect(
+                lambda _=False, pLabel=vTheme["label"]: (
+                    self.import_panel.prepare_priority(pLabel)
+                )
+            )
+
+            vGrid.addWidget(vLabel, vRow, 0)
+            vGrid.addWidget(vButton, vRow, 1)
+
+        vLayout.addLayout(vGrid)
+
+        return rCard
 
     def create_subdomain_badge(self, pSubdomain, pCount):
         """Crée le badge d'un sous-domaine : icône, nom et nombre de thèmes."""
@@ -674,6 +696,12 @@ class QuizPage(QWidget):
 
         return rCard
 
+    def get_visual_width(self):
+        """Retourne la largeur disponible pour un schéma dans la carte de question."""
+        rWidth = max(MIN_VISUAL_WIDTH, self.width() - VISUAL_MARGINS)
+
+        return rWidth
+
     def load_visual(self, pWidget, pVisual):
         """Affiche un schéma dans pWidget, ou le masque s'il n'y en a pas."""
         vContent = (
@@ -681,7 +709,13 @@ class QuizPage(QWidget):
         )
 
         if vContent:
-            show_svg(pWidget, vContent, pVisual["alt"], VISUAL_HEIGHT)
+            show_svg(
+                pWidget,
+                vContent,
+                pVisual["alt"],
+                VISUAL_HEIGHT,
+                pMaxWidth=self.get_visual_width(),
+            )
 
         pWidget.setVisible(bool(vContent))
 
@@ -705,6 +739,7 @@ class QuizPage(QWidget):
                 "Votre schéma et schéma attendu",
                 EXPECTED_SCHEMA_HEIGHT,
                 pShrinkOnly=True,
+                pMaxWidth=self.get_visual_width(),
             )
             self.visual_widget.show()
 

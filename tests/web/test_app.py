@@ -673,6 +673,8 @@ def test_quality_page_and_export(client):
     assert "Remplissage global" in vPage.text
     assert "Aucune offre à vérifier." in vPage.text
     assert "tone-success" in vPage.text
+    assert "Remplissage moyen" in vPage.text
+    assert "Toutes sources" in vPage.text
     assert "attachment" in vExport.headers["content-disposition"]
     assert vExport.text.lstrip("﻿").startswith("source;source_id;problems")
 
@@ -1424,7 +1426,8 @@ def test_quiz_category_navigation(client):
 
     vAll = client.get("/quiz").text
 
-    assert 'class="quiz-nav-item is-active"' in vAll
+    assert 'class="quiz-tab is-active"' in vAll
+    assert 'class="quiz-chip is-empty"' in vAll
     assert "Tous les thèmes (" in vAll
     assert "<h2>Informatique</h2>" in vAll
     assert "questions acquises" in vAll
@@ -1440,6 +1443,13 @@ def test_quiz_category_navigation(client):
     # Lien de la catégorie active : il ramène au domaine, sans le sous-domaine.
     assert 'href="/quiz?domain=Informatique"' in vFiltered
     assert 'name="subdomain" value="Données"' in vFiltered
+
+    vEmpty = client.get(
+        "/quiz", params={"domain": "Industrie", "subdomain": "Maintenance"}
+    ).text
+
+    assert "Aucune question dans cette rubrique" in vEmpty
+    assert 'name="theme" value="' in vEmpty
 
     client.post(
         "/quiz/answer",
@@ -1827,3 +1837,18 @@ def test_offer_revision_and_mock_exam(client):
         ).status_code
         == 404
     )
+
+
+def test_skills_page(client):
+    """Vérifie le tableau des compétences : chiffres clés, actions et menu."""
+
+    vPage = client.get("/skills").text
+
+    assert "À travailler en premier" in vPage
+    assert "<strong>Python</strong>" in vPage
+    assert 'href="/skills"' in vPage
+    assert "?theme=python" in vPage
+
+    vPrompt = client.post("/quiz/prompt", data={"theme": "Cloud et infrastructure"})
+
+    assert vPrompt.status_code == 200

@@ -125,3 +125,17 @@ def test_offer_mock_exam_opens_quiz_page(qt_application, tmp_path, monkeypatch):
     assert vWindow.pages.currentWidget() is vWindow.quiz_page
     assert vWindow.quiz_page.mode == "exam"
     assert load_exam(vDatabaseFile)["title"] == "Entretien : Développeur Python"
+
+
+def test_skills_page_opens_theme(qt_application, tmp_path):
+    """Vérifie que « Réviser » sur une compétence ouvre la révision sur son thème."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vWindow = MainWindow(vDatabaseFile, "Test")
+    vWindow.skills_page.revise_requested.emit("sql")
+
+    assert vWindow.pages.currentWidget() is vWindow.quiz_page
+    assert vWindow.quiz_page.theme_key == "sql"

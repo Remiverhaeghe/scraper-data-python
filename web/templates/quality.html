@@ -9,7 +9,15 @@
 {% if report.problems.total %}<a class="button" href="{{ url_for('export_quality').path }}">{{ icon("download", 16) }} Exporter les offres à vérifier ({{ report.problems.total }})</a>{% endif %}
 {% endcall %}
 
-<article class="card">
+{% set summary = report.summary %}
+<section class="grid grid-4">
+    {{ ui.stat(report.total.count, "Offres analysées", "inbox", "blue") }}
+    {{ ui.stat(report.total.average.rate ~ " %", "Remplissage moyen", "list-checks", "green") }}
+    {{ ui.stat((summary.weakest[1] ~ " %") if summary.weakest else "-", ("Champ le moins rempli : " ~ summary.weakest[0]) if summary.weakest else "Champ le moins rempli", "circle-alert", "amber") }}
+    {{ ui.stat((summary.best[1] ~ " %") if summary.best else "-", ("Source la plus complète : " ~ summary.best[0]) if summary.best else "Source la plus complète", "trophy", "purple") }}
+</section>
+
+<article class="card section-gap">
     <h2>Remplissage global</h2>
     <p class="card-subtitle">Part des offres en base dont le champ est renseigné, toutes sources</p>
     {{ ui.bar_chart(chart, "Remplissage des champs") }}
@@ -23,7 +31,7 @@
 
 <article class="card section-gap">
     <h2>Par source</h2>
-    <p class="card-subtitle">Vert : 80 % et plus · orange : 40 % et plus · rouge : en dessous</p>
+    <p class="card-subtitle">Vert : 80 % et plus · orange : 40 % et plus · rouge : en dessous. Les sources les mieux remplies d'abord.</p>
     {% if report.rows %}
     <div class="table-wrapper">
         <table class="table">
@@ -31,18 +39,28 @@
                 <tr>
                     <th>Source</th>
                     <th class="amount">Offres</th>
+                    <th class="amount">Moyenne</th>
                     {% for column in report.columns %}<th class="amount">{{ column }}</th>{% endfor %}
                 </tr>
             </thead>
             <tbody>
-                {% for row in report.rows %}
+                {% for row in report.rows | sort(attribute="average.rate", reverse=true) %}
                 <tr>
                     <td class="nowrap">{{ row.source }}</td>
                     <td class="amount">{{ row.count }}</td>
+                    <td class="amount tone-{{ row.average.tone }}"><strong>{{ row.average.rate }} %</strong></td>
                     {% for rate in row.rates %}<td class="amount tone-{{ rate.tone }}">{{ rate.rate }} %</td>{% endfor %}
                 </tr>
                 {% endfor %}
             </tbody>
+            <tfoot>
+                <tr>
+                    <th scope="row">Toutes sources</th>
+                    <td class="amount"><strong>{{ report.total.count }}</strong></td>
+                    <td class="amount tone-{{ report.total.average.tone }}"><strong>{{ report.total.average.rate }} %</strong></td>
+                    {% for rate in report.total.rates %}<td class="amount tone-{{ rate.tone }}"><strong>{{ rate.rate }} %</strong></td>{% endfor %}
+                </tr>
+            </tfoot>
         </table>
     </div>
     {% else %}
