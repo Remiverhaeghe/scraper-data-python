@@ -514,10 +514,10 @@ def render_correction_schema(pQuestion, pResponse):
     return rSchema
 
 
-def get_schema_config(pTypes):
-    """Retourne la géométrie et les symboles de l'éditeur de schéma web."""
+def get_schema_config(pTypes, pLimits=None):
+    """Retourne la géométrie, les symboles et les exemplaires permis de l'éditeur web."""
 
-    rConfig = build_editor_config(pTypes, GRID_COLUMNS, GRID_ROWS)
+    rConfig = build_editor_config(pTypes, GRID_COLUMNS, GRID_ROWS, pLimits)
 
     return rConfig
 

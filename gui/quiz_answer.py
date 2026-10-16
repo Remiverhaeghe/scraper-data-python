@@ -158,7 +158,9 @@ def add_answer_widgets(pQuestion, pLayout, pGroup, pOnSubmit):
     elif vType == "ordre":
         rWidgets = [create_order_answer(pQuestion)]
     elif vType == "construction":
-        rWidgets = [SchemaEditor(pQuestion["shuffled"])]
+        rWidgets = [
+            SchemaEditor(pQuestion["shuffled"], pQuestion.get("palette_limits"))
+        ]
     elif vType == "zone":
         vHint = QLabel("Cliquez sur le schéma à l'endroit demandé, puis validez.")
         vHint.setObjectName("cardSubtitle")

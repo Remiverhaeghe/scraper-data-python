@@ -66,12 +66,21 @@ W: Memory Allocation Control
 E: L'adresse MAC, sur 48 bits, identifie une carte réseau sur le réseau local. Les switchs s'en servent pour acheminer les trames. Elle ne sert pas au-delà du routeur, où c'est l'adresse IP qui compte.
 
 @059
-Q: Qu'est-ce qui distingue l'adresse MAC de l'adresse IP ?
-C: La MAC identifie la carte sur le réseau local
-W: La MAC change à chaque connexion au réseau Wi-Fi
-W: La MAC sert à router les paquets sur Internet
-W: La MAC est attribuée par le serveur DHCP du site
-E: L'adresse MAC est inscrite dans la carte réseau et sert au transport sur le réseau local ; l'adresse IP, attribuée selon le réseau où l'on se trouve, sert au routage entre réseaux. Le DHCP attribue l'IP, souvent en se fondant sur la MAC pour réserver toujours la même.
+Q: Dans un petit bureau, trois postes de travail doivent accéder à Internet. Construire le réseau : les postes sur le même équipement d'étage, puis la sortie vers l'opérateur.
+S: p1 = poste @ 0 0 | Poste de l'accueil
+S: p2 = poste @ 1 0 | Poste du comptable
+S: p3 = poste @ 2 0 | Poste du technicien
+S: switch @ 1 1
+S: routeur @ 1 2
+S: internet @ 1 3
+L: p1.bas - switch.haut
+L: p2.bas - switch.haut
+L: p3.bas - switch.haut
+L: switch.bas - routeur.haut
+L: routeur.bas - internet.haut
+D: base_donnees
+D: serveur_web
+E: Les postes se branchent chacun sur un port du switch : c'est une topologie en étoile, où la panne d'un câble n'isole qu'un poste. Le switch relie ensuite le réseau local au routeur, qui sort vers Internet. Relier les postes entre eux en chaîne ferait dépendre chaque poste de ses voisins.
 
 @060
 Q: Associer chaque équipement réseau à son rôle.

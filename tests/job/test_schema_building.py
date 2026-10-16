@@ -10,7 +10,7 @@ from job.quiz_types import (
     grade_answer,
     prepare_question,
 )
-from job.schema_building import compare_edges, read_answer
+from job.schema_building import get_labels, get_palette_limits, read_answer
 from job.schema_drawing import (
     render_correction,
     render_expected,
@@ -92,7 +92,7 @@ def test_construction_question_is_checked_and_prepared():
                 "components": MOTOR_FEEDER["components"]
                 + [{"type": "moteur", "x": 1, "y": 0}]
             },
-            "qu'une fois",
+            "même identifiant",
         ),
         (
             {
@@ -158,16 +158,35 @@ def test_wrong_schema_lists_missing_and_extra_parts():
     assert "liaisons en trop : Contact de puissance du contacteur – Moteur" in vChosen
 
 
+def small_question(pTypes, pConnections, **pExtra):
+    """Construit une question de schéma réduite à quelques composants."""
+
+    rQuestion = {
+        **MOTOR_FEEDER,
+        "components": [
+            {"type": vType, "x": 0, "y": vIndex} for vIndex, vType in enumerate(pTypes)
+        ],
+        "connections": pConnections,
+        "distractors": [],
+        **pExtra,
+    }
+
+    return rQuestion
+
+
 def test_non_symmetric_parts_keep_their_terminals():
     """Vérifie qu'un vérin double effet branché à l'envers est refusé."""
 
-    vMissing, vExtra = compare_edges(
+    vQuestion = small_question(
+        ["distributeur_52", "verin_double"],
         [["distributeur_52", "4", "verin_double", "fond"]],
-        [("distributeur_52", "4", "verin_double", "tige")],
-        {"distributeur_52", "verin_double"},
+    )
+    vResponse = answer(
+        ["distributeur_52", "verin_double"],
+        [["distributeur_52", "4", "verin_double", "tige"]],
     )
 
-    assert vMissing and vExtra
+    assert not grade_answer(vQuestion, vResponse)[0]
 
 
 @pytest.mark.parametrize(
@@ -231,13 +250,12 @@ def test_expected_schema_is_drawn_with_wires_and_labels():
 def test_network_devices_accept_either_terminal():
     """Vérifie qu'un équipement réseau se câble indifféremment en haut ou en bas."""
 
-    vMissing, vExtra = compare_edges(
-        [["poste", "bas", "switch", "haut"]],
-        [("switch", "bas", "poste", "haut")],
-        {"poste", "switch"},
+    vQuestion = small_question(
+        ["poste", "switch"], [["poste", "bas", "switch", "haut"]]
     )
+    vResponse = answer(["poste", "switch"], [["switch", "bas", "poste", "haut"]])
 
-    assert not vMissing and not vExtra
+    assert grade_answer(vQuestion, vResponse)[0]
 
 
 def test_facing_terminals_are_joined_by_a_short_bend():
@@ -263,3 +281,161 @@ def test_correction_draws_both_schemas_and_marks_wrong_wires():
     assert ">Votre schéma</text>" in vSvg and ">Schéma attendu</text>" in vSvg
     assert vSvg.count('stroke="#dc2626"') == 1
     assert read_answer(vResponse)[1]["reseau"] == (9, 0)
+
+
+TWO_CYLINDERS = {
+    **MOTOR_FEEDER,
+    "id": "deux-verins",
+    "components": [
+        {"type": "frl", "x": 0, "y": 0},
+        {"id": "d1", "type": "distributeur_52", "x": 1, "y": 1},
+        {"id": "d2", "type": "distributeur_52", "x": 2, "y": 1},
+        {
+            "id": "v1",
+            "type": "verin_double",
+            "x": 1,
+            "y": 0,
+            "label": "Vérin de serrage",
+        },
+        {"id": "v2", "type": "verin_double", "x": 2, "y": 0},
+    ],
+    "connections": [
+        ["frl", "2", "d1", "1"],
+        ["frl", "2", "d2", "1"],
+        ["d1", "4", "v1", "fond"],
+        ["d1", "2", "v1", "tige"],
+        ["d2", "4", "v2", "fond"],
+        ["d2", "2", "v2", "tige"],
+    ],
+    "distractors": ["verin_simple"],
+}
+
+
+def two_cylinders_answer(pWires):
+    """Construit une réponse aux identifiants choisis par l'éditeur."""
+
+    rAnswer = {
+        "components": [
+            {"id": vId, "type": vType, "x": 0, "y": vIndex}
+            for vIndex, (vId, vType) in enumerate(
+                (
+                    ("frl", "frl"),
+                    ("distributeur_52-1", "distributeur_52"),
+                    ("distributeur_52-2", "distributeur_52"),
+                    ("verin_double-1", "verin_double"),
+                    ("verin_double-2", "verin_double"),
+                )
+            )
+        ],
+        "wires": pWires,
+    }
+
+    return rAnswer
+
+
+def test_identical_components_are_matched_whatever_their_numbers():
+    """Vérifie qu'un schéma juste est reconnu, quels que soient les numéros choisis."""
+
+    assert check_typed_fields(TWO_CYLINDERS) == ""
+    assert get_palette_limits(TWO_CYLINDERS) == {
+        "frl": 1,
+        "distributeur_52": 2,
+        "verin_double": 2,
+        "verin_simple": 1,
+    }
+
+    vResponse = two_cylinders_answer(
+        [
+            ["frl", "2", "distributeur_52-2", "1"],
+            ["frl", "2", "distributeur_52-1", "1"],
+            ["distributeur_52-2", "4", "verin_double-1", "fond"],
+            ["distributeur_52-2", "2", "verin_double-1", "tige"],
+            ["distributeur_52-1", "4", "verin_double-2", "fond"],
+            ["distributeur_52-1", "2", "verin_double-2", "tige"],
+        ]
+    )
+
+    assert grade_answer(TWO_CYLINDERS, vResponse) == (
+        True,
+        "Schéma conforme",
+        "Unité FRL (2) – Distributeur 5/2 1 (1) ; Unité FRL (2) – Distributeur 5/2 2 (1)"
+        " ; Distributeur 5/2 1 (4) – Vérin de serrage (fond) ; Distributeur 5/2 1 (2)"
+        " – Vérin de serrage (tige) ; Distributeur 5/2 2 (4) – Vérin double effet 2"
+        " (fond) ; Distributeur 5/2 2 (2) – Vérin double effet 2 (tige)",
+    )
+
+
+def test_wrong_wiring_of_identical_components_is_named_clearly():
+    """Vérifie l'écart nommé quand un distributeur pilote les deux vérins."""
+
+    vResponse = two_cylinders_answer(
+        [
+            ["frl", "2", "distributeur_52-1", "1"],
+            ["distributeur_52-1", "4", "verin_double-1", "fond"],
+            ["distributeur_52-1", "2", "verin_double-1", "tige"],
+            ["distributeur_52-1", "4", "verin_double-2", "fond"],
+            ["distributeur_52-1", "2", "verin_double-2", "tige"],
+        ]
+    )
+
+    vCorrect, vChosen, _ = grade_answer(TWO_CYLINDERS, vResponse)
+    vSvg = render_correction(TWO_CYLINDERS, vResponse)
+
+    assert not vCorrect
+    assert "liaisons manquantes : Distributeur 5/2 2 (1) – Unité FRL (2)" in vChosen
+    assert "liaisons en trop : Distributeur 5/2 1 (2) –" in vChosen
+    assert vSvg.count('stroke="#dc2626"') == 2
+    assert ">Vérin de serrage</text>" in vSvg
+
+
+def test_palette_limits_and_identifiers_are_enforced():
+    """Vérifie le plafond d'exemplaires, les identifiants et les noms affichés."""
+
+    vResponse = two_cylinders_answer([])
+    vResponse["components"].append({"id": "x", "type": "verin_double"})
+
+    with pytest.raises(ValueError, match="Trop de composants : Vérin double effet"):
+        read_answer(vResponse, get_palette_limits(TWO_CYLINDERS))
+
+    vResponse["components"][-1] = {"id": "Pas Valide", "type": "frl"}
+
+    with pytest.raises(ValueError, match="illisible"):
+        read_answer(vResponse)
+
+    assert get_labels(TWO_CYLINDERS["components"])["v2"] == "Vérin double effet 2"
+    assert get_labels(MOTOR_FEEDER["components"])["fusible"] == "Fusible"
+
+
+@pytest.mark.parametrize(
+    ("pChange", "pMessage"),
+    [
+        (
+            {
+                "components": TWO_CYLINDERS["components"][:4]
+                + [{"id": "v1", "type": "verin_double", "x": 3, "y": 3}]
+            },
+            "même identifiant",
+        ),
+        (
+            {
+                "components": [
+                    {"id": f"f{vIndex}", "type": "fusible", "x": vIndex, "y": 0}
+                    for vIndex in range(7)
+                ],
+                "connections": [["f0", "1", "f1", "1"]],
+            },
+            "trop de composants identiques",
+        ),
+        (
+            {
+                "components": TWO_CYLINDERS["components"][:4]
+                + [{"id": "v2", "type": "verin_double", "x": 3, "y": 3, "label": " "}]
+            },
+            "composants",
+        ),
+    ],
+)
+def test_malformed_identical_components_are_refused(pChange, pMessage):
+    """Vérifie le refus d'identifiants en double, d'un calcul démesuré ou d'un nom vide."""
+
+    assert pMessage in check_typed_fields({**TWO_CYLINDERS, **pChange})

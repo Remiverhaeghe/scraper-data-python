@@ -274,11 +274,63 @@ def test_schema_is_built_wired_and_graded_in_the_browser(page):
 
     vAnswer = json.loads(page.locator("[data-schema-answer]").input_value())
 
-    assert {"type": "moteur", "x": 1, "y": 2} in vAnswer["components"]
+    assert {"id": "moteur", "type": "moteur", "x": 1, "y": 2} in vAnswer["components"]
     assert len(vAnswer["wires"]) == 2
 
     page.get_by_role("button", name="Valider").click()
 
     assert "Bonne réponse" in page.locator(".quiz-verdict").inner_text()
     assert page.locator(".schema-expected svg").count() == 1
+    assert page.console_errors == []
+
+
+def test_identical_components_are_numbered_in_the_browser(page):
+    """Vérifie deux lampes identiques : numérotation, plafond et correction juste."""
+
+    import_questions(
+        app.dependency_overrides[get_database_file](),
+        "",
+        json.dumps(
+            {
+                "theme": "Schémas en double",
+                "questions": [
+                    {
+                        "id": "schema-test-lampes",
+                        "level": "débutant",
+                        "type": "construction",
+                        "question": "Alimenter deux points lumineux en parallèle.",
+                        "explanation": "Chaque lampe reçoit la tension du réseau.",
+                        "components": [
+                            {"type": "reseau", "x": 0, "y": 0},
+                            {"id": "l1", "type": "lampe", "x": 0, "y": 1},
+                            {"id": "l2", "type": "lampe", "x": 1, "y": 1},
+                        ],
+                        "connections": [
+                            ["reseau", "sortie", "l1", "entrée"],
+                            ["reseau", "sortie", "l2", "entrée"],
+                        ],
+                    }
+                ],
+            }
+        ),
+        datetime.now(),
+    )
+
+    page.goto("/quiz?theme=schemas-en-double&mode=discover")
+    page.click("[data-type=reseau]")
+    page.click("[data-type=lampe]")
+
+    assert "(1/2)" in page.locator("[data-type=lampe]").inner_text()
+
+    page.click("[data-type=lampe]")
+
+    assert page.locator("[data-type=lampe]").is_disabled()
+
+    for vId in ("lampe-2", "lampe-1"):
+        page.locator('[data-component=reseau] [data-port="sortie"]').click()
+        page.locator(f'[data-component={vId}] [data-port="entrée"]').click()
+
+    page.get_by_role("button", name="Valider").click()
+
+    assert "Bonne réponse" in page.locator(".quiz-verdict").inner_text()
     assert page.console_errors == []

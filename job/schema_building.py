@@ -1,24 +1,39 @@
 """Schémas à construire : vérification d'une question et correction d'un schéma
 
 Un schéma se décrit par ses composants et ses liaisons, chaque liaison reliant
-une borne d'un composant à une borne d'un autre. La correction compare ces
-liaisons, sans tenir compte de la place des composants sur la grille. Chaque
-type de composant n'apparaît qu'une fois par question : il sert d'identifiant.
+une borne d'un composant à une borne d'un autre. Chaque composant a son propre
+identifiant ; sans identifiant, c'est son type qui en tient lieu.
+
+L'apprenant ne sait pas quel vérin la question appelle « v1 » : la correction
+cherche la correspondance entre ses composants et ceux attendus, de même type,
+qui laisse le moins d'écarts. Elle essaie aussi les deux sens de chaque composant
+symétrique, et ne tient pas compte de la place des composants sur la grille.
 """
 
-from itertools import product
+import re
+from collections import Counter
+from itertools import permutations, product
+from math import factorial
 
 from job.schema_library import COMPONENTS
 
-MAX_COMPONENTS = 10
-MAX_CONNECTIONS = 20
+MAX_COMPONENTS = 12
+MAX_CONNECTIONS = 24
 MAX_DISTRACTORS = 6
 GRID_SIZE = 10
+MAX_LABEL_LENGTH = 40
+ID_PATTERN = re.compile(r"[a-z0-9_-]{1,40}")
+
+# Plafond des combinaisons essayées à la correction : correspondances entre
+# composants de même type, multipliées par les deux sens des symétriques.
+MAX_SEARCH = 20_000
 
 # Bornes d'un composant symétrique, interchangeables à la correction
 SYMMETRIC_PORTS = ("1", "2")
 # Nom commun des bornes d'un équipement à point de raccordement unique
 NODE_PORT = "liaison"
+# Marque d'un composant de la réponse sans équivalent dans le schéma attendu
+EXTRA = "en trop"
 
 # Limites d'une réponse, pour refuser un envoi démesuré
 MAX_ANSWER_COMPONENTS = 16
@@ -33,18 +48,71 @@ def get_ports(pType):
     return rPorts
 
 
-def is_connection(pConnection, pTypes):
+def get_instance_id(pItem):
+    """Retourne l'identifiant d'un composant, son type à défaut."""
+
+    rId = pItem.get("id", pItem.get("type"))
+
+    return rId
+
+
+def get_instances(pComponents):
+    """Retourne le type de chaque composant, par identifiant."""
+
+    rInstances = {get_instance_id(vItem): vItem["type"] for vItem in pComponents}
+
+    return rInstances
+
+
+def is_connection(pConnection, pInstances):
     """Indique si une liaison relie deux bornes existantes de composants présents."""
 
     rValid = (
         isinstance(pConnection, (list, tuple))
         and len(pConnection) == 4
         and all(isinstance(vValue, str) for vValue in pConnection)
-        and pConnection[0] in pTypes
-        and pConnection[2] in pTypes
-        and pConnection[1] in get_ports(pConnection[0])
-        and pConnection[3] in get_ports(pConnection[2])
+        and pConnection[0] in pInstances
+        and pConnection[2] in pInstances
+        and pConnection[1] in get_ports(pInstances[pConnection[0]])
+        and pConnection[3] in get_ports(pInstances[pConnection[2]])
         and (pConnection[0], pConnection[1]) != (pConnection[2], pConnection[3])
+    )
+
+    return rValid
+
+
+def count_search(pTypes):
+    """Retourne le nombre de combinaisons qu'essaiera la correction."""
+
+    rCount = 2 ** sum(COMPONENTS[vType].symmetric for vType in pTypes)
+
+    for vCount in Counter(pTypes).values():
+        rCount *= factorial(vCount)
+
+    return rCount
+
+
+def is_component(pItem):
+    """Indique si un composant attendu est bien formé : type, case, nom facultatif."""
+
+    rValid = (
+        isinstance(pItem, dict)
+        and pItem.get("type") in COMPONENTS
+        and isinstance(get_instance_id(pItem), str)
+        and ID_PATTERN.fullmatch(get_instance_id(pItem)) is not None
+        and all(
+            isinstance(pItem.get(vAxis), int)
+            and not isinstance(pItem.get(vAxis), bool)
+            and 0 <= pItem[vAxis] < GRID_SIZE
+            for vAxis in ("x", "y")
+        )
+        and (
+            "label" not in pItem
+            or (
+                isinstance(pItem["label"], str)
+                and 0 < len(pItem["label"].strip()) <= MAX_LABEL_LENGTH
+            )
+        )
     )
 
     return rValid
@@ -56,27 +124,18 @@ def check_components(pComponents):
     if (
         not isinstance(pComponents, list)
         or not 2 <= len(pComponents) <= MAX_COMPONENTS
-        or not all(
-            isinstance(vItem, dict)
-            and vItem.get("type") in COMPONENTS
-            and all(
-                isinstance(vItem.get(vAxis), int)
-                and not isinstance(vItem.get(vAxis), bool)
-                and 0 <= vItem[vAxis] < GRID_SIZE
-                for vAxis in ("x", "y")
-            )
-            for vItem in pComponents
-        )
+        or not all(is_component(vItem) for vItem in pComponents)
     ):
         return f"2 à {MAX_COMPONENTS} composants {{type, x, y}} connus attendus"
 
-    vTypes = [vItem["type"] for vItem in pComponents]
+    if len(get_instances(pComponents)) != len(pComponents):
+        return "deux composants ont le même identifiant"
 
-    if len(set(vTypes)) != len(vTypes):
-        return "chaque type de composant n'apparaît qu'une fois"
-
-    if len({(vItem["x"], vItem["y"]) for vItem in pComponents}) != len(vTypes):
+    if len({(vItem["x"], vItem["y"]) for vItem in pComponents}) != len(pComponents):
         return "deux composants occupent la même case"
+
+    if count_search([vItem["type"] for vItem in pComponents]) > MAX_SEARCH:
+        return "trop de composants identiques ou symétriques à départager"
 
     return ""
 
@@ -90,17 +149,17 @@ def check_construction(pQuestion):
     if vIssue:
         return vIssue
 
-    vTypes = [vItem["type"] for vItem in vComponents]
+    vInstances = get_instances(vComponents)
     vConnections = pQuestion["connections"]
 
     if (
         not isinstance(vConnections, list)
         or not 1 <= len(vConnections) <= MAX_CONNECTIONS
-        or not all(is_connection(vItem, vTypes) for vItem in vConnections)
+        or not all(is_connection(vItem, vInstances) for vItem in vConnections)
     ):
         return "liaison invalide [composant, borne, composant, borne]"
 
-    if {vType for vItem in vConnections for vType in vItem[::2]} != set(vTypes):
+    if {vId for vItem in vConnections for vId in vItem[::2]} != set(vInstances):
         return "un composant attendu n'est relié à rien"
 
     vDistractors = pQuestion.get("distractors", [])
@@ -109,7 +168,8 @@ def check_construction(pQuestion):
         not isinstance(vDistractors, list)
         or len(vDistractors) > MAX_DISTRACTORS
         or not all(
-            vType in COMPONENTS and vType not in vTypes for vType in vDistractors
+            vType in COMPONENTS and vType not in vInstances.values()
+            for vType in vDistractors
         )
     ):
         return f"au plus {MAX_DISTRACTORS} leurres connus, absents du schéma attendu"
@@ -117,10 +177,39 @@ def check_construction(pQuestion):
     return ""
 
 
-def read_answer(pResponse):
-    """Vérifie le schéma envoyé ; retourne (types placés, positions, liaisons).
+def get_palette_limits(pQuestion):
+    """Retourne combien d'exemplaires de chaque type la palette permet de poser."""
 
-    Lève ValueError si le schéma est vide ou illisible.
+    rLimits = Counter(vItem["type"] for vItem in pQuestion["components"])
+    rLimits.update(pQuestion.get("distractors", []))
+
+    return dict(rLimits)
+
+
+def get_labels(pComponents):
+    """Retourne le nom affiché de chaque composant : le sien, ou son type numéroté."""
+
+    vCounts = Counter(vItem["type"] for vItem in pComponents)
+    vSeen = Counter()
+    rLabels = {}
+
+    for vItem in pComponents:
+        vSeen[vItem["type"]] += 1
+        vLabel = COMPONENTS[vItem["type"]].label
+
+        if vCounts[vItem["type"]] > 1:
+            vLabel += f" {vSeen[vItem['type']]}"
+
+        rLabels[get_instance_id(vItem)] = vItem.get("label", vLabel)
+
+    return rLabels
+
+
+def read_answer(pResponse, pLimits=None):
+    """Vérifie le schéma envoyé ; retourne (types par identifiant, cases, liaisons).
+
+    pLimits plafonne le nombre d'exemplaires de chaque type, comme la palette.
+    Lève ValueError si le schéma est vide, illisible ou démesuré.
     """
 
     if not isinstance(pResponse, dict):
@@ -138,14 +227,22 @@ def read_answer(pResponse):
     if len(vComponents) > MAX_ANSWER_COMPONENTS or len(vWires) > MAX_ANSWER_WIRES:
         raise ValueError("Schéma trop grand.")
 
+    vInstances = {}
     vPositions = {}
 
     for vItem in vComponents:
-        if not isinstance(vItem, dict) or vItem.get("type") not in COMPONENTS:
+        if (
+            not isinstance(vItem, dict)
+            or vItem.get("type") not in COMPONENTS
+            or not isinstance(get_instance_id(vItem), str)
+            or not ID_PATTERN.fullmatch(get_instance_id(vItem))
+        ):
             raise ValueError("Schéma illisible.")
 
+        vId = get_instance_id(vItem)
+        vInstances[vId] = vItem["type"]
         # Case bornée à la grille : un envoi forgé ne grossit pas le dessin.
-        vPositions[vItem["type"]] = tuple(
+        vPositions[vId] = tuple(
             (
                 min(max(vItem[vAxis], 0), GRID_SIZE - 1)
                 if isinstance(vItem.get(vAxis), int)
@@ -154,114 +251,215 @@ def read_answer(pResponse):
             for vAxis in ("x", "y")
         )
 
-    if len(vPositions) != len(vComponents) or not all(
-        is_connection(vWire, vPositions) for vWire in vWires
+    if len(vInstances) != len(vComponents) or not all(
+        is_connection(vWire, vInstances) for vWire in vWires
     ):
         raise ValueError("Schéma illisible.")
 
-    rAnswer = (set(vPositions), vPositions, [tuple(vWire) for vWire in vWires])
+    for vType, vCount in Counter(vInstances.values()).items():
+        if pLimits is not None and vCount > pLimits.get(vType, 0):
+            raise ValueError(f"Trop de composants : {COMPONENTS[vType].label}.")
+
+    rAnswer = (vInstances, vPositions, [tuple(vWire) for vWire in vWires])
 
     return rAnswer
 
 
-def build_edges(pConnections, pSwapped=frozenset()):
-    """Retourne les liaisons sans sens, bornes des composants pSwapped inversées."""
+def iterate_mappings(pAnswer, pExpected):
+    """Énumère les correspondances entre composants de la réponse et attendus.
 
-    def port(pType, pPort):
-        if COMPONENTS[pType].node:
-            return NODE_PORT
+    Chaque composant de la réponse va vers un composant attendu de même type,
+    au plus un par composant ; ceux qui restent sans équivalent sont en trop.
+    """
 
-        if pType in pSwapped and pPort in SYMMETRIC_PORTS:
-            return SYMMETRIC_PORTS[1 - SYMMETRIC_PORTS.index(pPort)]
+    vChoices = []
 
-        return pPort
+    for vType in set(pAnswer.values()):
+        vAnswerIds = sorted(vId for vId, vKind in pAnswer.items() if vKind == vType)
+        vExpectedIds = sorted(vId for vId, vKind in pExpected.items() if vKind == vType)
+
+        if len(vAnswerIds) <= len(vExpectedIds):
+            vChoices.append(
+                [
+                    dict(zip(vAnswerIds, vTargets))
+                    for vTargets in permutations(vExpectedIds, len(vAnswerIds))
+                ]
+            )
+        else:
+            vChoices.append(
+                [
+                    dict(zip(vSources, vExpectedIds))
+                    for vSources in permutations(vAnswerIds, len(vExpectedIds))
+                ]
+            )
+
+    for vCombination in product(*vChoices):
+        rMapping = {}
+
+        for vPart in vCombination:
+            rMapping.update(vPart)
+
+        yield rMapping
+
+
+def build_edges(pConnections, pInstances, pMapping=None, pSwapped=frozenset()):
+    """Retourne les liaisons sans sens, exprimées dans les identifiants attendus.
+
+    pMapping traduit les identifiants de la réponse ; un composant sans
+    équivalent devient (EXTRA, identifiant). Les bornes des composants de
+    pSwapped sont inversées, celles d'un point de raccordement unique fusionnées.
+    """
+
+    def end(pId, pPort):
+        vType = COMPONENTS[pInstances[pId]]
+
+        if vType.node:
+            vPort = NODE_PORT
+        elif pId in pSwapped and pPort in SYMMETRIC_PORTS:
+            vPort = SYMMETRIC_PORTS[1 - SYMMETRIC_PORTS.index(pPort)]
+        else:
+            vPort = pPort
+
+        vId = pId if pMapping is None else pMapping.get(pId, (EXTRA, pId))
+
+        return (vId, vPort)
 
     rEdges = {
-        frozenset(((vTypeA, port(vTypeA, vPortA)), (vTypeB, port(vTypeB, vPortB))))
-        for vTypeA, vPortA, vTypeB, vPortB in pConnections
+        frozenset((end(vIdA, vPortA), end(vIdB, vPortB)))
+        for vIdA, vPortA, vIdB, vPortB in pConnections
     }
 
     return rEdges
 
 
-def find_best_match(pExpected, pAnswer, pTypes):
-    """Retourne (composants retournés, manquantes, en trop) au plus près de l'attendu.
+def iterate_matches(pQuestion, pInstances, pWires):
+    """Énumère (correspondance, retournés, manquantes, en trop) de chaque combinaison."""
 
-    Un composant symétrique peut avoir été branché à l'envers : on essaie les
-    deux sens de chacun et l'on garde la variante la plus proche.
+    vExpectedInstances = get_instances(pQuestion["components"])
+    vExpected = build_edges(pQuestion["connections"], vExpectedInstances)
+
+    for vMapping in iterate_mappings(pInstances, vExpectedInstances):
+        vSymmetric = sorted(
+            vId for vId in vMapping if COMPONENTS[pInstances[vId]].symmetric
+        )
+
+        for vChoices in product((False, True), repeat=len(vSymmetric)):
+            vSwapped = frozenset(
+                vId for vId, vSwap in zip(vSymmetric, vChoices) if vSwap
+            )
+            vAnswer = build_edges(pWires, pInstances, vMapping, vSwapped)
+
+            yield (vMapping, vSwapped, vExpected - vAnswer, vAnswer - vExpected)
+
+
+def match_answer(pQuestion, pResponse):
+    """Lit une réponse et la rapproche au mieux du schéma attendu.
+
+    Retourne un dictionnaire : types par identifiant, cases, liaisons de la
+    réponse, correspondance retenue, composants retournés, liaisons manquantes
+    et en trop. Lève ValueError si la réponse est illisible.
     """
 
-    vExpected = build_edges(pExpected)
-    vSymmetric = sorted(vType for vType in pTypes if COMPONENTS[vType].symmetric)
-    vMatches = []
-
-    for vChoices in product((False, True), repeat=len(vSymmetric)):
-        vSwapped = frozenset(
-            vType for vType, vSwap in zip(vSymmetric, vChoices) if vSwap
-        )
-        vAnswer = build_edges(pAnswer, vSwapped)
-        vMatches.append((vSwapped, vExpected - vAnswer, vAnswer - vExpected))
-
-    rBest = min(vMatches, key=lambda pMatch: len(pMatch[1]) + len(pMatch[2]))
-
-    return rBest
-
-
-def compare_edges(pExpected, pAnswer, pTypes):
-    """Retourne (liaisons manquantes, liaisons en trop) au plus près de l'attendu."""
-
-    _, vMissing, vExtra = find_best_match(pExpected, pAnswer, pTypes)
-
-    rGap = (vMissing, vExtra)
-
-    return rGap
-
-
-def find_wrong_wires(pQuestion, pWires, pTypes):
-    """Retourne les indices des fils d'une réponse absents du schéma attendu."""
-
-    vExpectedTypes = {vItem["type"] for vItem in pQuestion["components"]}
-    vSwapped, _, vExtra = find_best_match(
-        pQuestion["connections"], pWires, pTypes | vExpectedTypes
+    vInstances, vPositions, vWires = read_answer(
+        pResponse, get_palette_limits(pQuestion)
     )
+    vBest = min(
+        iterate_matches(pQuestion, vInstances, vWires),
+        key=lambda pMatch: len(pMatch[2]) + len(pMatch[3]),
+    )
+
+    rMatch = {
+        "instances": vInstances,
+        "positions": vPositions,
+        "wires": vWires,
+        "mapping": vBest[0],
+        "swapped": vBest[1],
+        "missing": vBest[2],
+        "extra": vBest[3],
+    }
+
+    return rMatch
+
+
+def find_wrong_wires(pMatch):
+    """Retourne les indices des fils d'une réponse absents du schéma attendu."""
 
     rIndexes = {
         vIndex
-        for vIndex, vWire in enumerate(pWires)
-        if build_edges([vWire], vSwapped) <= vExtra
+        for vIndex, vWire in enumerate(pMatch["wires"])
+        if build_edges(
+            [vWire], pMatch["instances"], pMatch["mapping"], pMatch["swapped"]
+        )
+        <= pMatch["extra"]
     }
 
     return rIndexes
 
 
-def describe_end(pType, pPort):
-    """Décrit une extrémité de liaison ; la borne n'est citée que si elle compte."""
+def get_answer_labels(pQuestion, pMatch):
+    """Retourne le nom de chaque composant de la réponse : celui de son équivalent."""
 
-    vType = COMPONENTS[pType]
-    vLabel = vType.label
+    vLabels = get_labels(pQuestion["components"])
+
+    rLabels = {
+        vId: (
+            vLabels[pMatch["mapping"][vId]]
+            if vId in pMatch["mapping"]
+            else COMPONENTS[vType].label
+        )
+        for vId, vType in pMatch["instances"].items()
+    }
+
+    return rLabels
+
+
+def describe_end(pEnd, pLabels, pExpectedTypes, pAnswerTypes=None):
+    """Décrit une extrémité de liaison ; la borne n'est citée que si elle compte.
+
+    pLabels et pExpectedTypes décrivent les composants attendus, pAnswerTypes
+    ceux de la réponse restés en trop.
+    """
+
+    vId, vPort = pEnd
+
+    if isinstance(vId, tuple):
+        vType = COMPONENTS[pAnswerTypes[vId[1]]]
+        vLabel = vType.label
+    else:
+        vType = COMPONENTS[pExpectedTypes[vId]]
+        vLabel = pLabels[vId]
 
     if len(vType.ports) > 1 and not vType.symmetric and not vType.node:
-        vLabel += f" ({pPort})"
+        vLabel += f" ({vPort})"
 
     rText = vLabel
 
     return rText
 
 
-def describe_edge(pEdge):
+def describe_edge(pEdge, pLabels, pExpectedTypes, pAnswerTypes):
     """Décrit une liaison par ses deux extrémités, dans un ordre stable."""
 
-    rText = " – ".join(sorted(describe_end(*vEnd) for vEnd in pEdge))
+    rText = " – ".join(
+        sorted(
+            describe_end(vEnd, pLabels, pExpectedTypes, pAnswerTypes) for vEnd in pEdge
+        )
+    )
 
     return rText
 
 
-def describe_connections(pConnections):
-    """Décrit les liaisons d'un schéma dans l'ordre où la question les donne."""
+def describe_connections(pQuestion):
+    """Décrit les liaisons attendues dans l'ordre où la question les donne."""
+
+    vLabels = get_labels(pQuestion["components"])
+    vTypes = get_instances(pQuestion["components"])
 
     rText = " ; ".join(
-        f"{describe_end(vTypeA, vPortA)} – {describe_end(vTypeB, vPortB)}"
-        for vTypeA, vPortA, vTypeB, vPortB in pConnections
+        describe_end((vIdA, vPortA), vLabels, vTypes)
+        + " – "
+        + describe_end((vIdB, vPortB), vLabels, vTypes)
+        for vIdA, vPortA, vIdB, vPortB in pQuestion["connections"]
     )
 
     return rText
@@ -270,35 +468,51 @@ def describe_connections(pConnections):
 def grade_construction(pQuestion, pResponse):
     """Corrige un schéma construit ; retourne (juste, écarts constatés, attendu)."""
 
-    vExpectedTypes = {vItem["type"] for vItem in pQuestion["components"]}
-    vTypes, _, vWires = read_answer(pResponse)
-    vMissing, vExtra = compare_edges(
-        pQuestion["connections"], vWires, vTypes | vExpectedTypes
-    )
+    vMatch = match_answer(pQuestion, pResponse)
+    vLabels = get_labels(pQuestion["components"])
+    vExpectedTypes = get_instances(pQuestion["components"])
+    vMapped = set(vMatch["mapping"].values())
 
     vGaps = []
 
-    for vTitle, vItems in (
-        ("composants manquants", vExpectedTypes - vTypes),
-        ("composants en trop", vTypes - vExpectedTypes),
+    for vTitle, vNames in (
+        (
+            "composants manquants",
+            [vLabel for vId, vLabel in vLabels.items() if vId not in vMapped],
+        ),
+        (
+            "composants en trop",
+            [
+                COMPONENTS[vType].label
+                for vId, vType in vMatch["instances"].items()
+                if vId not in vMatch["mapping"]
+            ],
+        ),
     ):
-        if vItems:
-            vGaps.append(
-                f"{vTitle} : "
-                + ", ".join(sorted(COMPONENTS[vType].label for vType in vItems))
-            )
+        if vNames:
+            vGaps.append(f"{vTitle} : " + ", ".join(sorted(vNames)))
 
     for vTitle, vEdges in (
-        ("liaisons manquantes", vMissing),
-        ("liaisons en trop", vExtra),
+        ("liaisons manquantes", vMatch["missing"]),
+        ("liaisons en trop", vMatch["extra"]),
     ):
         if vEdges:
-            vGaps.append(f"{vTitle} : " + ", ".join(sorted(map(describe_edge, vEdges))))
+            vGaps.append(
+                f"{vTitle} : "
+                + ", ".join(
+                    sorted(
+                        describe_edge(
+                            vEdge, vLabels, vExpectedTypes, vMatch["instances"]
+                        )
+                        for vEdge in vEdges
+                    )
+                )
+            )
 
     rGrade = (
         not vGaps,
         "Schéma conforme" if not vGaps else " ; ".join(vGaps),
-        describe_connections(pQuestion["connections"]),
+        describe_connections(pQuestion),
     )
 
     return rGrade

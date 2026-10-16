@@ -22,7 +22,7 @@
         var vAnswer = pRoot.querySelector("[data-schema-answer]");
         var vWiresLayer = createElement("g");
         var vComponentsLayer = createElement("g");
-        // Par type : case occupée et groupe SVG ; chaque type n'est posé qu'une fois.
+        // Par identifiant : type, case occupée et groupe SVG du composant posé.
         var vComponents = {};
         var vWires = [];
         var vPending = null;
@@ -43,21 +43,21 @@
             ];
         }
 
-        function getPort(pType, pPort) {
-            return vConfig.components[pType].ports.filter(function (pItem) {
+        function getPort(pId, pPort) {
+            return vConfig.components[vComponents[pId].type].ports.filter(function (pItem) {
                 return pItem[0] === pPort;
             })[0];
         }
 
-        function getPortPosition(pType, pPort) {
-            var vOrigin = getOrigin(vComponents[pType].cell);
-            var vPort = getPort(pType, pPort);
+        function getPortPosition(pId, pPort) {
+            var vOrigin = getOrigin(vComponents[pId].cell);
+            var vPort = getPort(pId, pPort);
 
             return [vOrigin[0] + vPort[1], vOrigin[1] + vPort[2]];
         }
 
-        function getExit(pType, pPort) {
-            return getPort(pType, pPort)[2] < vGrid.height / 2 ? -1 : 1;
+        function getExit(pId, pPort) {
+            return getPort(pId, pPort)[2] < vGrid.height / 2 ? -1 : 1;
         }
 
         // Même tracé que route_wire côté serveur : sortie de borne, couloirs, arrivée.
@@ -86,11 +86,13 @@
         }
 
         function save() {
-            var vTypes = Object.keys(vComponents);
+            var vIds = Object.keys(vComponents);
 
-            vAnswer.value = vTypes.length ? JSON.stringify({
-                components: vTypes.map(function (pType) {
-                    return { type: pType, x: vComponents[pType].cell[0], y: vComponents[pType].cell[1] };
+            vAnswer.value = vIds.length ? JSON.stringify({
+                components: vIds.map(function (pId) {
+                    var vComponent = vComponents[pId];
+
+                    return { id: pId, type: vComponent.type, x: vComponent.cell[0], y: vComponent.cell[1] };
                 }),
                 wires: vWires.map(function (pWire) {
                     return pWire.start.concat(pWire.end);
@@ -98,11 +100,49 @@
             }) : "";
         }
 
-        function isFree(pCell, pType) {
+        function countType(pType) {
+            return Object.keys(vComponents).filter(function (pId) {
+                return vComponents[pId].type === pType;
+            }).length;
+        }
+
+        function getLimit(pType) {
+            return vConfig.limits[pType] || 1;
+        }
+
+        // Grise un bouton au plafond ; affiche le compte quand plusieurs exemplaires sont permis.
+        function refreshPalette() {
+            pRoot.querySelectorAll("[data-type]").forEach(function (pButton) {
+                var vType = pButton.dataset.type;
+                var vLabel = pButton.querySelector("span");
+                var vCount = countType(vType);
+
+                vLabel.textContent = vConfig.components[vType].label
+                    + (getLimit(vType) > 1 ? " (" + vCount + "/" + getLimit(vType) + ")" : "");
+                pButton.disabled = vCount >= getLimit(vType);
+            });
+        }
+
+        // Un type unique garde son type pour identifiant ; sinon les exemplaires sont numérotés.
+        function newInstance(pType) {
+            var vNumber = 1;
+
+            if (getLimit(pType) === 1) {
+                return { id: pType, number: null };
+            }
+
+            while (vComponents[pType + "-" + vNumber]) {
+                vNumber += 1;
+            }
+
+            return { id: pType + "-" + vNumber, number: vNumber };
+        }
+
+        function isFree(pCell, pId) {
             return !Object.keys(vComponents).some(function (pOther) {
                 var vCell = vComponents[pOther].cell;
 
-                return pOther !== pType && vCell[0] === pCell[0] && vCell[1] === pCell[1];
+                return pOther !== pId && vCell[0] === pCell[0] && vCell[1] === pCell[1];
             });
         }
 
@@ -129,8 +169,8 @@
             ];
         }
 
-        function moveGroup(pType, pX, pY) {
-            vComponents[pType].group.setAttribute("transform", "translate(" + pX + "," + pY + ")");
+        function moveGroup(pId, pX, pY) {
+            vComponents[pId].group.setAttribute("transform", "translate(" + pX + "," + pY + ")");
         }
 
         function redrawWires() {
@@ -201,9 +241,9 @@
             save();
         }
 
-        function selectPort(pType, pPort, pElement) {
+        function selectPort(pId, pPort, pElement) {
             if (!vPending) {
-                setPending({ type: pType, port: pPort, element: pElement });
+                setPending({ id: pId, port: pPort, element: pElement });
                 return;
             }
 
@@ -211,8 +251,8 @@
 
             setPending(null);
 
-            if (vFirst.type !== pType) {
-                addWire([vFirst.type, vFirst.port], [pType, pPort]);
+            if (vFirst.id !== pId) {
+                addWire([vFirst.id, vFirst.port], [pId, pPort]);
             }
         }
 
@@ -220,12 +260,19 @@
             var vCell = getFirstFreeCell();
             var vComponent = vConfig.components[pType];
 
-            if (vComponents[pType] || !vCell) {
+            if (countType(pType) >= getLimit(pType) || !vCell) {
                 return;
             }
 
-            var vGroup = createElement("g", { class: "schema-component", "data-component": pType });
-            var vTop = vGrid.height / 2 - (vComponent.lines.length - 1) * vGrid.labelLineHeight / 2;
+            var vInstance = newInstance(pType);
+            var vLines = vComponent.lines.slice();
+            var vGroup = createElement("g", { class: "schema-component", "data-component": vInstance.id });
+
+            if (vInstance.number) {
+                vLines[vLines.length - 1] += " " + vInstance.number;
+            }
+
+            var vTop = vGrid.height / 2 - (vLines.length - 1) * vGrid.labelLineHeight / 2;
 
             vGroup.appendChild(createElement("rect", {
                 class: "schema-frame", x: -4, y: -4, width: vGrid.width + 8, height: vGrid.height + 8
@@ -237,7 +284,7 @@
             vSymbol.innerHTML = vComponent.drawing;
             vGroup.appendChild(vSymbol);
 
-            vComponent.lines.forEach(function (pLine, pIndex) {
+            vLines.forEach(function (pLine, pIndex) {
                 var vText = createElement("text", {
                     x: vGrid.width + vGrid.labelGap,
                     y: vTop + pIndex * vGrid.labelLineHeight + 4,
@@ -255,15 +302,15 @@
                 });
                 var vTitle = createElement("title");
 
-                vTitle.textContent = vComponent.label + " : borne " + pPort[0];
+                vTitle.textContent = vLines.join(" ") + " : borne " + pPort[0];
                 vCircle.appendChild(vTitle);
                 vGroup.appendChild(vCircle);
             });
 
-            vComponents[pType] = { cell: vCell, group: vGroup, element: vGroup, type: pType };
+            vComponents[vInstance.id] = { id: vInstance.id, type: pType, cell: vCell, group: vGroup, element: vGroup };
             vComponentsLayer.appendChild(vGroup);
-            moveGroup(pType, getOrigin(vCell)[0], getOrigin(vCell)[1]);
-            pRoot.querySelector('[data-type="' + pType + '"]').disabled = true;
+            moveGroup(vInstance.id, getOrigin(vCell)[0], getOrigin(vCell)[1]);
+            refreshPalette();
             save();
         }
 
@@ -272,25 +319,25 @@
             pWire.element.remove();
         }
 
-        function removeComponent(pType) {
+        function removeComponent(pId) {
             vWires.filter(function (pWire) {
-                return pWire.start[0] === pType || pWire.end[0] === pType;
+                return pWire.start[0] === pId || pWire.end[0] === pId;
             }).forEach(removeWire);
 
-            if (vPending && vPending.type === pType) {
+            if (vPending && vPending.id === pId) {
                 setPending(null);
             }
 
-            vComponents[pType].group.remove();
-            delete vComponents[pType];
-            pRoot.querySelector('[data-type="' + pType + '"]').disabled = false;
+            vComponents[pId].group.remove();
+            delete vComponents[pId];
+            refreshPalette();
         }
 
         function deleteSelection() {
             if (vSelected && vSelected.wire) {
                 removeWire(vSelected.wire);
-            } else if (vSelected && vSelected.type) {
-                removeComponent(vSelected.type);
+            } else if (vSelected && vSelected.id) {
+                removeComponent(vSelected.id);
             }
 
             select(null);
@@ -321,12 +368,12 @@
             }
 
             if (vGroup) {
-                var vType = vGroup.dataset.component;
+                var vId = vGroup.dataset.component;
                 var vPoint = getPoint(pEvent);
-                var vOrigin = getOrigin(vComponents[vType].cell);
+                var vOrigin = getOrigin(vComponents[vId].cell);
 
-                select(vComponents[vType]);
-                vDrag = { type: vType, dx: vPoint.x - vOrigin[0], dy: vPoint.y - vOrigin[1] };
+                select(vComponents[vId]);
+                vDrag = { id: vId, dx: vPoint.x - vOrigin[0], dy: vPoint.y - vOrigin[1] };
                 vCanvas.setPointerCapture(pEvent.pointerId);
                 pEvent.preventDefault();
                 return;
@@ -339,7 +386,7 @@
             if (vDrag) {
                 var vPoint = getPoint(pEvent);
 
-                moveGroup(vDrag.type, vPoint.x - vDrag.dx, vPoint.y - vDrag.dy);
+                moveGroup(vDrag.id, vPoint.x - vDrag.dx, vPoint.y - vDrag.dy);
             }
         });
 
@@ -350,14 +397,14 @@
 
             var vPoint = getPoint(pEvent);
             var vCell = getNearestCell(vPoint.x - vDrag.dx, vPoint.y - vDrag.dy);
-            var vComponent = vComponents[vDrag.type];
+            var vComponent = vComponents[vDrag.id];
 
             // Case occupée : le composant revient à sa place.
-            if (isFree(vCell, vDrag.type)) {
+            if (isFree(vCell, vDrag.id)) {
                 vComponent.cell = vCell;
             }
 
-            moveGroup(vDrag.type, getOrigin(vComponent.cell)[0], getOrigin(vComponent.cell)[1]);
+            moveGroup(vDrag.id, getOrigin(vComponent.cell)[0], getOrigin(vComponent.cell)[1]);
             vDrag = null;
             redrawWires();
             save();
@@ -383,6 +430,7 @@
             save();
         });
 
+        refreshPalette();
         pRoot.hidden = false;
     }
 

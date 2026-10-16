@@ -7,7 +7,13 @@ horizontal accueille les fils : ils ne traversent ni symbole ni libellé.
 
 from html import escape
 
-from job.schema_building import find_wrong_wires, read_answer
+from job.schema_building import (
+    find_wrong_wires,
+    get_answer_labels,
+    get_instance_id,
+    get_labels,
+    match_answer,
+)
 from job.schema_library import COMPONENTS, HEIGHT, WIDTH
 
 # Taille de la grille des éditeurs, au bureau comme sur le web
@@ -142,10 +148,10 @@ def wrap_label(pText):
     return rLines
 
 
-def draw_label(pType, pOrigin):
-    """Retourne le libellé d'un composant, à droite de son symbole."""
+def draw_label(pLabel, pOrigin):
+    """Retourne le nom d'un composant, à droite de son symbole."""
 
-    vLines = wrap_label(COMPONENTS[pType].label)
+    vLines = wrap_label(pLabel)
     vX = pOrigin[0] + WIDTH + LABEL_GAP
     vTop = pOrigin[1] + HEIGHT / 2 - (len(vLines) - 1) * LABEL_LINE_HEIGHT / 2
 
@@ -158,34 +164,36 @@ def draw_label(pType, pOrigin):
     return rSvg
 
 
-def draw_schema(pPositions, pConnections, pWrong=frozenset()):
+def draw_schema(pInstances, pConnections, pWrong=frozenset()):
     """Retourne (largeur, hauteur, contenu SVG) d'un schéma, sans son cadre.
 
-    pPositions associe chaque type à sa case (x, y) ; les fils dont l'indice est
-    dans pWrong sont dessinés en rouge pointillé.
+    pInstances associe à chaque identifiant (type, case (x, y), nom) ; les fils
+    dont l'indice est dans pWrong sont dessinés en rouge pointillé.
     """
 
     vOrigins = {
-        vType: get_origin(*vPosition) for vType, vPosition in pPositions.items()
+        vId: get_origin(*vPosition) for vId, (_, vPosition, _) in pInstances.items()
     }
-    vColumns = max(vX for vX, _ in pPositions.values()) + 1
-    vRows = max(vY for _, vY in pPositions.values()) + 1
+    vColumns = max(vX for _, (vX, _), _ in pInstances.values()) + 1
+    vRows = max(vY for _, (_, vY), _ in pInstances.values()) + 1
 
     vParts = [
         draw_wire(
-            (vTypeA, vPortA, vOrigins[vTypeA]),
-            (vTypeB, vPortB, vOrigins[vTypeB]),
+            (pInstances[vIdA][0], vPortA, vOrigins[vIdA]),
+            (pInstances[vIdB][0], vPortB, vOrigins[vIdB]),
             vIndex % LANE_COUNT,
             vIndex in pWrong,
         )
-        for vIndex, (vTypeA, vPortA, vTypeB, vPortB) in enumerate(pConnections)
-        if vTypeA in vOrigins and vTypeB in vOrigins
+        for vIndex, (vIdA, vPortA, vIdB, vPortB) in enumerate(pConnections)
+        if vIdA in vOrigins and vIdB in vOrigins
     ]
-    vParts += [
-        f'<g transform="translate({vX:g},{vY:g})">{COMPONENTS[vType].drawing}</g>'
-        + draw_label(vType, (vX, vY))
-        for vType, (vX, vY) in vOrigins.items()
-    ]
+
+    for vId, (vType, _, vLabel) in pInstances.items():
+        vX, vY = vOrigins[vId]
+        vParts.append(
+            f'<g transform="translate({vX:g},{vY:g})">{COMPONENTS[vType].drawing}</g>'
+            + draw_label(vLabel, (vX, vY))
+        )
 
     rSchema = (
         2 * MARGIN + vColumns * CELL_WIDTH,
@@ -210,12 +218,39 @@ def wrap_svg(pWidth, pHeight, pContent, pTitle):
     return rSvg
 
 
-def render_schema(pPositions, pConnections, pTitle):
-    """Retourne le SVG d'un schéma : pPositions associe chaque type à sa case (x, y)."""
+def get_expected_instances(pQuestion):
+    """Retourne les composants attendus : (type, case, nom) par identifiant."""
 
-    vWidth, vHeight, vContent = draw_schema(pPositions, pConnections)
+    vLabels = get_labels(pQuestion["components"])
+
+    rInstances = {
+        get_instance_id(vItem): (
+            vItem["type"],
+            (vItem["x"], vItem["y"]),
+            vLabels[get_instance_id(vItem)],
+        )
+        for vItem in pQuestion["components"]
+    }
+
+    return rInstances
+
+
+def render_schema(pInstances, pConnections, pTitle):
+    """Retourne le SVG d'un schéma : (type, case, nom) par identifiant."""
+
+    vWidth, vHeight, vContent = draw_schema(pInstances, pConnections)
 
     rSvg = wrap_svg(vWidth, vHeight, vContent, pTitle)
+
+    return rSvg
+
+
+def render_expected(pQuestion):
+    """Retourne le SVG du schéma attendu d'une question à construire."""
+
+    rSvg = render_schema(
+        get_expected_instances(pQuestion), pQuestion["connections"], "Schéma attendu"
+    )
 
     return rSvg
 
@@ -223,20 +258,25 @@ def render_schema(pPositions, pConnections, pTitle):
 def render_correction(pQuestion, pResponse):
     """Retourne côte à côte le schéma construit et le schéma attendu.
 
-    Les fils construits absents du schéma attendu sont en rouge pointillé.
+    Chaque composant construit porte le nom de son équivalent attendu ; les fils
+    absents du schéma attendu sont en rouge pointillé.
     """
 
-    vTypes, vPositions, vWires = read_answer(pResponse)
+    vMatch = match_answer(pQuestion, pResponse)
+    vLabels = get_answer_labels(pQuestion, vMatch)
     vAnswer = draw_schema(
-        vPositions, vWires, find_wrong_wires(pQuestion, vWires, vTypes)
+        {
+            vId: (vType, vMatch["positions"][vId], vLabels[vId])
+            for vId, vType in vMatch["instances"].items()
+        },
+        vMatch["wires"],
+        find_wrong_wires(vMatch),
     )
-    vExpected = draw_schema(
-        {vItem["type"]: (vItem["x"], vItem["y"]) for vItem in pQuestion["components"]},
-        pQuestion["connections"],
-    )
+    vExpected = draw_schema(get_expected_instances(pQuestion), pQuestion["connections"])
     vShift = vAnswer[0] + COLUMN_GAP
     vWidth = vShift + vExpected[0]
     vHeight = HEADING_HEIGHT + max(vAnswer[1], vExpected[1])
+    vSeparator = vShift - COLUMN_GAP / 2
 
     rSvg = wrap_svg(
         vWidth,
@@ -244,7 +284,7 @@ def render_correction(pQuestion, pResponse):
         f'<g font-size="15" font-weight="bold" fill="#0f172a">'
         f'<text x="{MARGIN}" y="22">Votre schéma</text>'
         f'<text x="{vShift + MARGIN}" y="22">Schéma attendu</text></g>'
-        f'<line x1="{vShift - COLUMN_GAP / 2:g}" y1="8" x2="{vShift - COLUMN_GAP / 2:g}" '
+        f'<line x1="{vSeparator:g}" y1="8" x2="{vSeparator:g}" '
         f'y2="{vHeight - 8}" stroke="#cbd5e1" stroke-width="1.5"/>'
         f'<g transform="translate(0,{HEADING_HEIGHT})">{vAnswer[2]}</g>'
         f'<g transform="translate({vShift},{HEADING_HEIGHT})">{vExpected[2]}</g>',
@@ -254,25 +294,14 @@ def render_correction(pQuestion, pResponse):
     return rSvg
 
 
-def render_expected(pQuestion):
-    """Retourne le SVG du schéma attendu d'une question à construire."""
-
-    rSvg = render_schema(
-        {vItem["type"]: (vItem["x"], vItem["y"]) for vItem in pQuestion["components"]},
-        pQuestion["connections"],
-        "Schéma attendu",
-    )
-
-    return rSvg
-
-
-def build_editor_config(pTypes, pColumns, pRows):
-    """Retourne la géométrie et les symboles dont l'éditeur web a besoin.
+def build_editor_config(pTypes, pColumns, pRows, pLimits=None):
+    """Retourne la géométrie, les symboles et les exemplaires permis de l'éditeur web.
 
     Les constantes viennent d'ici : le navigateur dessine comme le serveur.
     """
 
     rConfig = {
+        "limits": {vType: (pLimits or {}).get(vType, 1) for vType in pTypes},
         "grid": {
             "columns": pColumns,
             "rows": pRows,

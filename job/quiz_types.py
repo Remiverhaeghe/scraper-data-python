@@ -11,7 +11,11 @@ import json
 import math
 import re
 
-from job.schema_building import check_construction, grade_construction
+from job.schema_building import (
+    check_construction,
+    get_palette_limits,
+    grade_construction,
+)
 
 DEFAULT_TYPE = "qcm"
 
@@ -253,9 +257,8 @@ def prepare_question(pQuestion, pRandom):
     elif vType == "association":
         vShuffled = list(enumerate(vRight for _, vRight in pQuestion["pairs"]))
     elif vType == "construction":
-        # Palette : composants attendus et leurres, dans le désordre
-        vShuffled = [vItem["type"] for vItem in pQuestion["components"]]
-        vShuffled += pQuestion.get("distractors", [])
+        # Palette : un bouton par type, attendu ou leurre, dans le désordre
+        vShuffled = list(get_palette_limits(pQuestion))
     else:
         vShuffled = []
 
@@ -273,6 +276,9 @@ def prepare_question(pQuestion, pRandom):
         "type_label": TYPE_LABELS[vType],
         "shuffled": vShuffled,
     }
+
+    if vType == "construction":
+        rQuestion["palette_limits"] = get_palette_limits(pQuestion)
 
     return rQuestion
 

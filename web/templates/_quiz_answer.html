@@ -31,7 +31,7 @@
         <button class="button" type="button" data-schema-action="clear">{{ icon("history", 16) }} Tout effacer</button>
     </div>
     <input type="hidden" name="text" value="" data-schema-answer>
-    <script type="application/json" data-schema-config>{{ schema_config(question.shuffled) | tojson }}</script>
+    <script type="application/json" data-schema-config>{{ schema_config(question.shuffled, question.palette_limits) | tojson }}</script>
 </div>
 <noscript><p class="application-message tone-warning">Ce type de question se construit à la souris et demande JavaScript.</p></noscript>
 {% elif question.type == "saisie" %}

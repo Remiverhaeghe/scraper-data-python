@@ -34,7 +34,8 @@ Les questions interactives remplacent C et W par leurs propres champs :
     K: Fusible | 55 45 50 140  zone à désigner sur le schéma : libellé | x y l h
     Z: Moteur | 515 45 70 140  autre zone du schéma, nommée à la correction
     S: fusible @ 0 2           schéma à construire : composant et sa case corrigée
-    L: fusible.2 - moteur.entrée   liaison attendue, borne par borne
+    S: v1 = verin_double @ 1 0 | Vérin de serrage   exemplaire nommé, s'il y en a plusieurs
+    L: fusible.2 - moteur.entrée   liaison attendue, d'identifiant à identifiant
     D: differentiel            leurre proposé dans la palette
 """
 
@@ -88,9 +89,12 @@ TYPE_MARKERS = (
     ("K", "zone"),
     ("S", "construction"),
 )
-# « type @ colonne ligne » et « type.borne - type.borne » d'un schéma à construire
-PLACED_PATTERN = re.compile(r"([a-z_0-9]+) @ (\d) (\d)")
-LINK_PATTERN = re.compile(r"([a-z_0-9]+)\.(\S+) - ([a-z_0-9]+)\.(\S+)")
+# « [id =] type @ colonne ligne [| nom] » et « id.borne - id.borne » d'un schéma
+# à construire ; sans identifiant, le type en tient lieu.
+PLACED_PATTERN = re.compile(
+    r"(?:([a-z0-9_-]+) = )?([a-z_0-9]+) @ (\d) (\d)(?: \| (.+))?"
+)
+LINK_PATTERN = re.compile(r"([a-z0-9_-]+)\.(\S+) - ([a-z0-9_-]+)\.(\S+)")
 
 # Une référence s'écrit « Titre | adresse » ; le contrôle d'import garde les sûres.
 REFERENCE_SEPARATOR = " | "
@@ -242,6 +246,21 @@ def build_schemas(pTheme, pConfig, pDirectory=LOTS_DIRECTORY):
     return rSchemas
 
 
+def build_placed(pGroups):
+    """Retourne un composant attendu à partir d'une ligne « S: » découpée."""
+
+    vId, vType, vX, vY, vLabel = pGroups
+    rComponent = {"type": vType, "x": int(vX), "y": int(vY)}
+
+    if vId:
+        rComponent["id"] = vId
+
+    if vLabel:
+        rComponent["label"] = vLabel.strip()
+
+    return rComponent
+
+
 def build_typed_fields(pSource, pPosition):
     """Retourne les champs propres au type d'une question écrite."""
 
@@ -269,10 +288,8 @@ def build_typed_fields(pSource, pPosition):
     elif vType == "construction":
         rFields = {
             "components": [
-                {"type": vType, "x": int(vX), "y": int(vY)}
-                for vType, vX, vY in (
-                    PLACED_PATTERN.fullmatch(vItem).groups() for vItem in pSource["S"]
-                )
+                build_placed(PLACED_PATTERN.fullmatch(vItem).groups())
+                for vItem in pSource["S"]
             ],
             "connections": [
                 list(LINK_PATTERN.fullmatch(vItem).groups()) for vItem in pSource["L"]

@@ -107,7 +107,7 @@ class PortItem(QGraphicsEllipseItem):
         self.set_active(False)
         self.setAcceptHoverEvents(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip(f"{COMPONENTS[pComponent.type].label} : borne {pName}")
+        self.setToolTip(f"{pComponent.label} : borne {pName}")
 
     def set_active(self, pActive):
         """Met la borne en évidence quand elle attend sa seconde extrémité."""
@@ -123,12 +123,12 @@ class PortItem(QGraphicsEllipseItem):
 class ComponentItem(QGraphicsSvgItem):
     """Composant posé sur la grille, déplaçable de case en case."""
 
-    def __init__(self, pEditor, pType, pRenderer):
-        """Crée le symbole, son libellé et ses bornes."""
+    def __init__(self, pEditor, pInstance, pRenderer):
+        """Crée le symbole, son nom et ses bornes ; pInstance vaut (id, type, nom)."""
         super().__init__()
 
         self.editor = pEditor
-        self.type = pType
+        self.instance_id, self.type, self.label = pInstance
         self.cell = (0, 0)
         self.setSharedRenderer(pRenderer)
         self.setFlags(
@@ -138,14 +138,14 @@ class ComponentItem(QGraphicsSvgItem):
         )
         self.setCursor(Qt.CursorShape.OpenHandCursor)
 
-        for vIndex, vLine in enumerate(wrap_label(COMPONENTS[pType].label)):
+        for vIndex, vLine in enumerate(wrap_label(self.label)):
             vText = QGraphicsSimpleTextItem(vLine, self)
             vText.setBrush(QBrush(QColor("#334155")))
             vText.setPos(WIDTH + LABEL_GAP, HEIGHT / 2 - 20 + vIndex * 14)
 
         self.ports = {
             vName: PortItem(self, vName, vPosition)
-            for vName, vPosition in COMPONENTS[pType].ports
+            for vName, vPosition in COMPONENTS[self.type].ports
         }
 
     def boundingRect(self):
@@ -225,11 +225,11 @@ class WireItem(QGraphicsPathItem):
         return super().itemChange(pChange, pValue)
 
     def describe(self):
-        """Retourne la liaison au format de la réponse : [type, borne, type, borne]."""
+        """Retourne la liaison au format de la réponse : [id, borne, id, borne]."""
         return [
-            self.start.component.type,
+            self.start.component.instance_id,
             self.start.name,
-            self.end.component.type,
+            self.end.component.instance_id,
             self.end.name,
         ]
 
@@ -251,10 +251,14 @@ class SchemaView(QGraphicsView):
 class SchemaEditor(QWidget):
     """Construction d'un schéma à partir d'une palette de composants."""
 
-    def __init__(self, pPalette):
-        """Crée la palette, la grille et les boutons d'édition."""
+    def __init__(self, pPalette, pLimits=None):
+        """Crée la palette, la grille et les boutons d'édition.
+
+        pLimits donne le nombre d'exemplaires permis par type, un par défaut.
+        """
         super().__init__()
 
+        self.limits = {vType: (pLimits or {}).get(vType, 1) for vType in pPalette}
         self.components = {}
         self.wires = []
         self.pending_port = None
@@ -284,7 +288,6 @@ class SchemaEditor(QWidget):
             vButton = QToolButton()
             vButton.setIcon(QIcon(build_icon_pixmap(vType)))
             vButton.setIconSize(build_icon_pixmap(vType).size() * ICON_SIZE / HEIGHT)
-            vButton.setText(COMPONENTS[vType].label)
             vButton.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
             vButton.setToolTip(f"Placer : {COMPONENTS[vType].label}")
             vButton.setMinimumWidth(110)
@@ -317,6 +320,45 @@ class SchemaEditor(QWidget):
         vLayout.addLayout(vPalette)
         vLayout.addWidget(self.view)
         vLayout.addLayout(vActions)
+        self.refresh_palette()
+
+    def refresh_palette(self):
+        """Met à jour chaque bouton : exemplaires posés, et grisé une fois au plafond."""
+        for vType, vButton in self.palette_buttons.items():
+            vCount = self.count_type(vType)
+            vText = COMPONENTS[vType].label
+
+            if self.limits[vType] > 1:
+                vText += f" ({vCount}/{self.limits[vType]})"
+
+            vButton.setText(vText)
+            vButton.setEnabled(vCount < self.limits[vType])
+
+    def count_type(self, pType):
+        """Retourne le nombre d'exemplaires d'un type déjà posés."""
+        rCount = sum(vItem.type == pType for vItem in self.components.values())
+
+        return rCount
+
+    def new_instance(self, pType):
+        """Retourne (identifiant, nom) du prochain exemplaire d'un type.
+
+        Un type unique garde son type pour identifiant ; sinon les exemplaires
+        sont numérotés, en réutilisant le plus petit numéro libre.
+        """
+        vLabel = COMPONENTS[pType].label
+
+        if self.limits[pType] == 1:
+            return (pType, vLabel)
+
+        vNumber = 1
+
+        while f"{pType}-{vNumber}" in self.components:
+            vNumber += 1
+
+        rInstance = (f"{pType}-{vNumber}", f"{vLabel} {vNumber}")
+
+        return rInstance
 
     def nearest_free_cell(self, pPosition, pItem=None):
         """Retourne la case la plus proche d'une position, ou None si elle est prise."""
@@ -356,18 +398,21 @@ class SchemaEditor(QWidget):
         return rCell
 
     def add_component(self, pType, pCell=None):
-        """Pose un composant de la palette dans une case libre."""
+        """Pose un exemplaire d'un type dans une case libre ; retourne son identifiant."""
         vCell = pCell or self.first_free_cell()
 
-        if pType in self.components or vCell is None:
-            return
+        if self.count_type(pType) >= self.limits[pType] or vCell is None:
+            return None
 
-        vItem = ComponentItem(self, pType, self.renderers[pType])
+        vId, vLabel = self.new_instance(pType)
+        vItem = ComponentItem(self, (vId, pType, vLabel), self.renderers[pType])
         vItem.cell = vCell
-        self.components[pType] = vItem
+        self.components[vId] = vItem
         self.scene.addItem(vItem)
         vItem.setPos(QPointF(*get_origin(*vCell)))
-        self.palette_buttons[pType].setEnabled(False)
+        self.refresh_palette()
+
+        return vId
 
     def select_port(self, pPort):
         """Retient une première borne, puis relie la seconde ; un même clic annule."""
@@ -384,14 +429,17 @@ class SchemaEditor(QWidget):
             return
 
         vKey = frozenset(
-            ((vFirst.component.type, vFirst.name), (pPort.component.type, pPort.name))
+            (
+                (vFirst.component.instance_id, vFirst.name),
+                (pPort.component.instance_id, pPort.name),
+            )
         )
 
         if any(
             frozenset(
                 (
-                    (vWire.start.component.type, vWire.start.name),
-                    (vWire.end.component.type, vWire.end.name),
+                    (vWire.start.component.instance_id, vWire.start.name),
+                    (vWire.end.component.instance_id, vWire.end.name),
                 )
             )
             == vKey
@@ -413,9 +461,9 @@ class SchemaEditor(QWidget):
         self.wires.remove(pWire)
         self.scene.removeItem(pWire)
 
-    def remove_component(self, pType):
+    def remove_component(self, pId):
         """Retire un composant, ses fils, et le rend de nouveau disponible."""
-        vItem = self.components.pop(pType)
+        vItem = self.components.pop(pId)
 
         for vWire in [
             vWire
@@ -428,27 +476,30 @@ class SchemaEditor(QWidget):
             self.pending_port = None
 
         self.scene.removeItem(vItem)
-        self.palette_buttons[pType].setEnabled(True)
+        self.refresh_palette()
 
     def delete_selection(self):
         """Supprime les composants et les fils sélectionnés."""
         for vItem in self.scene.selectedItems():
             if isinstance(vItem, WireItem) and vItem in self.wires:
                 self.remove_wire(vItem)
-            elif isinstance(vItem, ComponentItem) and vItem.type in self.components:
-                self.remove_component(vItem.type)
+            elif (
+                isinstance(vItem, ComponentItem)
+                and vItem.instance_id in self.components
+            ):
+                self.remove_component(vItem.instance_id)
 
     def clear(self):
         """Retire tous les composants et tous les fils."""
-        for vType in list(self.components):
-            self.remove_component(vType)
+        for vId in list(self.components):
+            self.remove_component(vId)
 
     def get_answer(self):
         """Retourne le schéma construit, au format attendu par la correction."""
         return {
             "components": [
-                {"type": vType, "x": vItem.cell[0], "y": vItem.cell[1]}
-                for vType, vItem in self.components.items()
+                {"id": vId, "type": vItem.type, "x": vItem.cell[0], "y": vItem.cell[1]}
+                for vId, vItem in self.components.items()
             ],
             "wires": [vWire.describe() for vWire in self.wires],
         }

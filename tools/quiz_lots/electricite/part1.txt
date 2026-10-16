@@ -216,12 +216,21 @@ T: 1
 E: En triphasé équilibré, P = √3 × U × I × cos φ = 1,732 × 400 × 10 × 0,85 ≈ 5 889 W. Le facteur √3 vient de la tension composée U entre phases ; avec la tension simple de 230 V, on écrirait P = 3 × V × I × cos φ, ce qui donne le même résultat.
 
 @029
-Q: Quelle est la tension entre deux phases d'un réseau triphasé 230/400 V ?
-C: 400 V
-W: 230 V
-W: 460 V
-W: 690 V
-E: Dans un réseau 230/400 V, la tension simple entre phase et neutre vaut 230 V et la tension composée entre deux phases vaut 230 × √3 ≈ 400 V. Les phases étant décalées de 120°, on ne double pas la tension : 460 V serait faux. 690 V est la tension composée d'un réseau 400/690 V.
+Q: Dans un couloir, un interrupteur doit allumer ensemble deux points lumineux. Construire le circuit depuis le réseau, avec la protection des personnes et la protection du circuit.
+S: reseau @ 0 0
+S: differentiel @ 0 1
+S: disjoncteur @ 0 2
+S: interrupteur @ 0 3
+S: l1 = lampe @ 0 4 | Point lumineux du couloir
+S: l2 = lampe @ 1 4 | Point lumineux de l'entrée
+L: reseau.sortie - differentiel.1
+L: differentiel.2 - disjoncteur.1
+L: disjoncteur.2 - interrupteur.1
+L: interrupteur.2 - l1.entrée
+L: interrupteur.2 - l2.entrée
+D: prise
+D: contacteur
+E: Le différentiel protège les personnes, le disjoncteur protège le circuit d'éclairage, puis l'interrupteur commande les deux points lumineux montés en parallèle : chacun reçoit la pleine tension, et une lampe grillée n'éteint pas l'autre. En série, elles se partageraient la tension et éclaireraient à peine.
 
 @030
 Q: Que représente le facteur de puissance cos φ d'une installation ?

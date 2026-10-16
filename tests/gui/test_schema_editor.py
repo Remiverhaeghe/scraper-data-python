@@ -43,9 +43,9 @@ def test_components_are_placed_wired_and_described(qt_application):
 
     assert vEditor.get_answer() == {
         "components": [
-            {"type": "reseau", "x": 0, "y": 0},
-            {"type": "fusible", "x": 0, "y": 1},
-            {"type": "moteur", "x": 0, "y": 2},
+            {"id": "reseau", "type": "reseau", "x": 0, "y": 0},
+            {"id": "fusible", "type": "fusible", "x": 0, "y": 1},
+            {"id": "moteur", "type": "moteur", "x": 0, "y": 2},
         ],
         "wires": [
             ["reseau", "sortie", "fusible", "1"],
@@ -114,3 +114,29 @@ def test_svg_path_is_converted_for_qt():
 
     assert vPath.elementCount() == 4
     assert (vPath.currentPosition().x(), vPath.currentPosition().y()) == (60, 80)
+
+
+def test_identical_components_are_numbered_up_to_their_limit(qt_application):
+    """Vérifie les exemplaires numérotés, le plafond de la palette et la renumérotation."""
+
+    vEditor = SchemaEditor(["verin_double", "frl"], {"verin_double": 2})
+
+    assert vEditor.palette_buttons["verin_double"].text() == "Vérin double effet (0/2)"
+    assert vEditor.add_component("verin_double") == "verin_double-1"
+    assert vEditor.add_component("verin_double") == "verin_double-2"
+    assert vEditor.add_component("verin_double") is None
+    assert not vEditor.palette_buttons["verin_double"].isEnabled()
+    assert vEditor.components["verin_double-2"].label == "Vérin double effet 2"
+
+    vEditor.add_component("frl")
+    link(vEditor, "verin_double-1", "fond", "verin_double-2", "fond")
+    vEditor.remove_component("verin_double-1")
+
+    assert vEditor.palette_buttons["verin_double"].isEnabled()
+    assert not vEditor.wires
+    assert vEditor.add_component("verin_double") == "verin_double-1"
+    assert [vItem["id"] for vItem in vEditor.get_answer()["components"]] == [
+        "verin_double-2",
+        "frl",
+        "verin_double-1",
+    ]

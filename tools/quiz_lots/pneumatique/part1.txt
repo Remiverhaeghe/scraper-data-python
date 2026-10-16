@@ -38,12 +38,23 @@ P: Repère 5 => réservoir d'air
 E: Le vérin se dessine comme un cylindre traversé par le piston et sa tige ; le ressort dessiné dans la chambre signale le simple effet, les deux orifices le double effet. Compresseur et moteur sont deux cercles : le triangle pointe vers l'extérieur quand l'énergie sort (compresseur), vers l'intérieur quand elle entre (moteur). Le réservoir est un cadre aux bouts arrondis.
 
 @006
-Q: Quel est le rôle d'un distributeur dans un circuit pneumatique ?
-C: Diriger l'air vers les orifices de l'actionneur
-W: Produire l'air comprimé utilisé par le réseau
-W: Stocker l'air comprimé pour les pointes de consommation
-W: Mesurer la pression d'air dans la conduite
-E: Le distributeur est l'aiguillage du circuit : selon sa position, il envoie l'air vers une chambre du vérin et met l'autre à l'échappement. La production est le rôle du compresseur, le stockage celui du réservoir et la mesure celui du manomètre.
+Q: Sur un poste de travail, un vérin serre la pièce et un second l'éjecte. Câbler les deux vérins double effet, chacun commandé par son propre distributeur 5/2, tous deux alimentés par la même unité de traitement. Au repos, chaque tige doit être rentrée.
+S: source_air @ 0 0
+S: frl @ 0 1
+S: v1 = verin_double @ 1 1 | Vérin de serrage
+S: v2 = verin_double @ 2 1 | Vérin d'éjection
+S: d1 = distributeur_52 @ 1 2 | Distributeur du serrage
+S: d2 = distributeur_52 @ 2 2 | Distributeur de l'éjection
+L: source_air.sortie - frl.1
+L: frl.2 - d1.1
+L: frl.2 - d2.1
+L: d1.4 - v1.fond
+L: d1.2 - v1.tige
+L: d2.4 - v2.fond
+L: d2.2 - v2.tige
+D: distributeur_32
+D: verin_simple
+E: Une seule unité FRL alimente l'orifice 1 des deux distributeurs : la sortie de la FRL se dédouble. Chaque distributeur commande son vérin, 2 côté tige pour qu'elle soit rentrée au repos, 4 côté fond pour la faire sortir. Un distributeur par vérin permet de les commander séparément, serrer puis éjecter.
 
 @007
 Q: Que signifie l'appellation « 5/2 » d'un distributeur ?
