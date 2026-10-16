@@ -615,9 +615,22 @@ scraper-data-python/
 │   ├── __main__.py                            # Lance le serveur avec python -m web
 │   ├── auth.py                                # Mot de passe, session signée et tentatives
 │   ├── password.py                            # Génère l'empreinte du mot de passe (.env)
-│   ├── app.py                                 # Application FastAPI et routes
+│   ├── app.py                                 # Application, sécurité, erreurs et routeurs
 │   ├── api.py                                 # API JSON de l'application mobile (jeton)
-│   ├── dependencies.py                        # Base de données partagée par les routes
+│   ├── dependencies.py                        # Base de données et jeton CSRF des routes
+│   ├── rendering.py                           # Gabarits, icônes, graphiques et schémas
+│   ├── forms.py                               # Lecture des montants, durées et dates
+│   ├── routes/                                # Routes du tableau de bord, par domaine
+│   │   ├── __init__.py                        # Initialise le package des routes
+│   │   ├── offers.py                          # Tableau de bord, offres et pièces jointes
+│   │   ├── applications.py                    # Candidatures, statut et agenda
+│   │   ├── quiz.py                            # Révision, examen et import des questions
+│   │   ├── challenges.py                      # Défis de programmation
+│   │   ├── git_sandbox.py                     # Bac à sable Git
+│   │   ├── monitoring.py                      # Qualité, journaux et historique
+│   │   ├── profile.py                         # Profil et import du CV
+│   │   ├── settings.py                        # Paramètres, abonnements et sauvegardes
+│   │   └── account.py                         # Connexion, mentions légales et licence
 │   ├── templates/                             # Gabarits HTML Jinja2
 │   │   ├── base.html                          # Mise en page commune et menu latéral
 │   │   ├── _macros.html                       # En-tête de page et carte statistique

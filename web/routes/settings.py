@@ -1,0 +1,406 @@
+"""Page des paramètres : réglages, entreprises, alertes, abonnements et sauvegardes"""
+
+import tempfile
+from datetime import datetime
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, Response
+from starlette.background import BackgroundTask
+
+from job.calendar import (
+    CALENDAR_SUBSCRIPTION_PATH,
+    build_calendar,
+    build_subscription_url,
+    check_calendar_token,
+    get_calendar_token,
+    renew_calendar_token,
+)
+from job.companies import load_company_rules, save_company_rules
+from job.mobile_sync import API_PREFIX, get_mobile_token, renew_mobile_token
+from job.schedule import (
+    MIN_SCORE_CHOICES,
+    describe_schedule_runs,
+    describe_scheduled_search,
+    format_interval,
+    format_min_score,
+    load_schedule,
+    save_min_score,
+)
+from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
+from job.sources.registry import SOURCES
+from storage.archive import export_archive, restore_archive
+from storage.maintenance import reset_database
+from utils.logger import get_logger
+from utils.mailer import get_missing_email_settings
+from web.dependencies import get_database_file, require_csrf
+from web.rendering import get_message_tone, templates
+
+logger = get_logger(__name__)
+
+
+router = APIRouter()
+
+
+def render_settings(
+    pRequest,
+    pDatabaseFile,
+    pMessage=None,
+    pStatusCode=200,
+    pResetMessage=None,
+    pCompanies=None,
+    pCompaniesMessage=None,
+    pNotificationMessage=None,
+    pCalendarMessage=None,
+    pArchiveMessage=None,
+    pMobileMessage=None,
+):
+    """Affiche thème, règles, planification, notifications et sources."""
+
+    vSources = [
+        {
+            "label": vDefinition.label,
+            "reason": vDefinition.get_unavailability_reason(),
+            # Seuls les noms des variables sont affichés, jamais leurs valeurs.
+            "missing": vDefinition.get_missing_settings(),
+        }
+        for vDefinition in SOURCES.values()
+    ]
+
+    vSchedule = load_schedule(pDatabaseFile)
+    vSearch, vSearchSources = describe_scheduled_search(vSchedule)
+
+    rResponse = templates.TemplateResponse(
+        pRequest,
+        "settings.html",
+        {
+            "active_page": "settings",
+            "sources": vSources,
+            # Sans authentification, l'adresse e-mail elle-même n'est pas affichée.
+            "schedule": {
+                "search": vSearch,
+                "sources": vSearchSources,
+                "enabled": vSchedule["enabled"],
+                "interval": format_interval(vSchedule["interval_hours"]),
+                "runs": describe_schedule_runs(vSchedule, datetime.now()),
+                "has_email": vSchedule["email"] is not None,
+                "min_score": vSchedule["min_score"],
+                "missing_email_settings": get_missing_email_settings(),
+            },
+            "settings": load_settings(pDatabaseFile),
+            "definitions": SETTING_DEFINITIONS,
+            "message": pMessage,
+            "reset_message": pResetMessage,
+            # Textes saisis réaffichés après une erreur, sinon listes enregistrées
+            "companies": pCompanies
+            or {
+                vKind: "\n".join(vNames)
+                for vKind, vNames in load_company_rules(pDatabaseFile).items()
+            },
+            "companies_message": pCompaniesMessage,
+            "min_scores": {
+                vScore: format_min_score(vScore) for vScore in MIN_SCORE_CHOICES
+            },
+            "notification_message": pNotificationMessage,
+            "calendar_url": build_subscription_url(
+                str(pRequest.base_url), get_calendar_token(pDatabaseFile)
+            ),
+            "calendar_message": pCalendarMessage,
+            "mobile_address": str(pRequest.base_url).rstrip("/") + API_PREFIX,
+            "mobile_token": get_mobile_token(pDatabaseFile),
+            "mobile_message": pMobileMessage,
+            "message_tone": get_message_tone(pStatusCode),
+            "archive_message": pArchiveMessage,
+        },
+        status_code=pStatusCode,
+    )
+
+    return rResponse
+
+
+@router.get("/settings", response_class=HTMLResponse)
+def show_settings(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche la page des paramètres."""
+
+    rResponse = render_settings(request, pDatabaseFile)
+
+    return rResponse
+
+
+@router.post(
+    "/settings", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+async def update_settings(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre les règles de calcul saisies, ou affiche les erreurs de saisie."""
+
+    vForm = await request.form()
+
+    vValues = {vKey: vForm[vKey] for vKey in SETTING_DEFINITIONS if vKey in vForm}
+
+    try:
+        _, vRecomputed = save_settings(pDatabaseFile, vValues)
+
+    except ValueError as vException:
+        rResponse = render_settings(request, pDatabaseFile, str(vException), 400)
+
+    else:
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            (
+                f"Règles enregistrées, salaire net recalculé pour {vRecomputed} "
+                "offre(s)."
+                if vRecomputed
+                else "Règles enregistrées."
+            ),
+        )
+
+    return rResponse
+
+
+@router.post(
+    "/settings/reset",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+async def reset_data(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Sauvegarde puis efface toutes les données, après confirmation explicite."""
+
+    vForm = await request.form()
+
+    if vForm.get("confirm") != "1":
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            pStatusCode=400,
+            pResetMessage="Cochez la case de confirmation pour réinitialiser.",
+        )
+
+    else:
+        try:
+            vBackupFile = reset_database(pDatabaseFile, datetime.now())
+
+        except Exception:
+            logger.exception("Échec de la réinitialisation des données depuis le web")
+
+            rResponse = render_settings(
+                request,
+                pDatabaseFile,
+                pStatusCode=500,
+                pResetMessage="La réinitialisation a échoué. Voir les journaux.",
+            )
+
+        else:
+            rResponse = render_settings(
+                request,
+                pDatabaseFile,
+                pResetMessage=(
+                    f"Données réinitialisées. Sauvegarde : {vBackupFile.name}"
+                ),
+            )
+
+    return rResponse
+
+
+# Pages publiques : licence, connexion, déconnexion et mentions légales.
+@router.post(
+    "/settings/companies",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def update_companies(
+    request: Request,
+    pExcluded: str = Form("", alias="excluded"),
+    pPreferred: str = Form("", alias="preferred"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre les listes d'entreprises, ou les réaffiche avec l'erreur."""
+
+    try:
+        vRules = save_company_rules(pDatabaseFile, pExcluded, pPreferred)
+
+    except ValueError as vException:
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            pStatusCode=400,
+            pCompanies={"excluded": pExcluded, "preferred": pPreferred},
+            pCompaniesMessage=str(vException),
+        )
+
+    else:
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            pCompaniesMessage=f"{len(vRules['excluded'])} entreprise(s) exclue(s), "
+            f"{len(vRules['preferred'])} privilégiée(s).",
+        )
+
+    return rResponse
+
+
+@router.post(
+    "/settings/alerts",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def update_alerts(
+    request: Request,
+    pMinScore: int = Form(alias="min_score"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre le score minimal des offres envoyées par e-mail."""
+
+    vErrors = save_min_score(pDatabaseFile, pMinScore)
+
+    rResponse = render_settings(
+        request,
+        pDatabaseFile,
+        pStatusCode=400 if vErrors else 200,
+        pNotificationMessage=" ".join(vErrors) or "Alertes enregistrées.",
+    )
+
+    return rResponse
+
+
+@router.post(
+    "/settings/calendar",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def renew_calendar(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Crée une nouvelle adresse d'abonnement ; l'ancienne cesse de fonctionner."""
+
+    renew_calendar_token(pDatabaseFile)
+
+    rResponse = render_settings(
+        request,
+        pDatabaseFile,
+        pCalendarMessage="Adresse créée : ajoutez-la dans l'agenda comme agenda "
+        "par URL.",
+    )
+
+    return rResponse
+
+
+@router.post(
+    "/settings/mobile",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def renew_mobile(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Crée un nouveau jeton de l'application mobile ; l'ancien cesse de fonctionner."""
+
+    renew_mobile_token(pDatabaseFile)
+
+    rResponse = render_settings(
+        request,
+        pDatabaseFile,
+        pMobileMessage="Jeton créé : saisissez-le dans l'application.",
+    )
+
+    return rResponse
+
+
+@router.get(CALENDAR_SUBSCRIPTION_PATH.replace("{token}", "{pToken}"))
+def subscribe_calendar(
+    pToken: str,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Sert l'agenda aux applications abonnées, sur présentation du jeton."""
+
+    if not check_calendar_token(pDatabaseFile, pToken):
+        # Le jeton reçu n'est pas journalisé : il pourrait être presque juste.
+        logger.warning("Abonnement à l'agenda refusé : jeton invalide")
+
+        raise HTTPException(status_code=404)
+
+    rResponse = Response(
+        build_calendar(pDatabaseFile, datetime.now()),
+        media_type="text/calendar; charset=utf-8",
+    )
+
+    return rResponse
+
+
+@router.get("/settings/archive")
+def download_archive(pDatabaseFile: str = Depends(get_database_file)):
+    """Télécharge la base et les pièces jointes dans une archive .zip."""
+
+    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as vFile:
+        vPath = Path(vFile.name)
+
+    try:
+        export_archive(pDatabaseFile, vPath)
+
+    except Exception:
+        vPath.unlink(missing_ok=True)
+        raise
+
+    # Le fichier temporaire est supprimé une fois envoyé.
+    rResponse = FileResponse(
+        vPath,
+        media_type="application/zip",
+        filename=f"jobboard-{datetime.now():%Y%m%d}.zip",
+        background=BackgroundTask(vPath.unlink, missing_ok=True),
+    )
+
+    return rResponse
+
+
+@router.post(
+    "/settings/archive",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def upload_archive(
+    request: Request,
+    pFile: UploadFile = File(alias="file"),
+    pConfirm: str = Form("", alias="confirm"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Restaure une sauvegarde complète envoyée, après confirmation explicite."""
+
+    if pConfirm != "1":
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            pStatusCode=400,
+            pArchiveMessage="Cochez la case de confirmation pour restaurer.",
+        )
+
+    else:
+        try:
+            vBackupFile = restore_archive(pDatabaseFile, pFile.file, datetime.now())
+
+        except ValueError as vException:
+            logger.warning("Restauration refusée depuis le web : %s", vException)
+
+            rResponse = render_settings(
+                request, pDatabaseFile, pStatusCode=400, pArchiveMessage=str(vException)
+            )
+
+        else:
+            rResponse = render_settings(
+                request,
+                pDatabaseFile,
+                pArchiveMessage=f"Sauvegarde restaurée. Anciennes données : "
+                f"{vBackupFile.name}",
+            )
+
+    return rResponse

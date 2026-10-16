@@ -93,7 +93,7 @@ def block_real_database(monkeypatch):
 def web_login(monkeypatch):
     """Configure un compte du tableau de bord et retourne de quoi s'y connecter."""
 
-    from web.app import login_rate_limiter
+    from web.routes.account import login_rate_limiter
 
     login_rate_limiter.failures.clear()
 

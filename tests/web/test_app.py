@@ -10,7 +10,8 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-import web.app as web_app
+import web.rendering as web_rendering
+import web.routes.offers as web_offers
 import job.quiz_packs as quiz_packs
 
 from job.schedule import (
@@ -28,12 +29,11 @@ from storage.job_offers import get_offer, save_offers, set_availability
 from tests.job.test_quiz_import import build_pack
 from tools.quiz_lot import build_pack as build_lot_pack
 from tests.job.test_quiz_generation import build_lot_text, build_question
-from web.app import (
-    app,
+from web.app import app, get_database_file
+from web.rendering import (
     build_bar_chart,
     build_pie,
     format_euros,
-    get_database_file,
     render_icon,
     safe_url,
 )
@@ -576,7 +576,7 @@ def test_logs_page_shows_filtered_entries(client, monkeypatch):
             }
         ]
 
-    monkeypatch.setattr("web.app.read_log_entries", fake_read)
+    monkeypatch.setattr("web.routes.monitoring.read_log_entries", fake_read)
 
     vResponse = client.get("/logs?level=ERROR&search=%20web%20")
 
@@ -593,7 +593,7 @@ def test_logs_page_ignores_unknown_level(client, monkeypatch):
     vCalls = []
 
     monkeypatch.setattr(
-        "web.app.read_log_entries",
+        "web.routes.monitoring.read_log_entries",
         lambda pLevel=None, pSearch=None: vCalls.append(pLevel) or [],
     )
 
@@ -630,8 +630,8 @@ def test_logs_can_be_downloaded_and_cleared(client, monkeypatch):
 
     vCleared = []
 
-    monkeypatch.setattr("web.app.export_logs", lambda: "ligne de journal\n")
-    monkeypatch.setattr("web.app.clear_logs", lambda: vCleared.append(True))
+    monkeypatch.setattr("web.routes.monitoring.export_logs", lambda: "ligne de journal\n")
+    monkeypatch.setattr("web.routes.monitoring.clear_logs", lambda: vCleared.append(True))
 
     vDownload = client.get("/logs/download")
 
@@ -707,7 +707,7 @@ def test_expired_offers_are_hidden_by_default(client, tmp_path):
 def test_check_availability(client, tmp_path, monkeypatch, pResult, pMessage, pSaved):
     """Vérifie le message renvoyé et l'enregistrement du seul résultat net."""
 
-    monkeypatch.setattr("web.app.check_offer_link", lambda pUrl: pResult)
+    monkeypatch.setattr("web.routes.offers.check_offer_link", lambda pUrl: pResult)
 
     vResponse = client.post(
         "/offer/availability", data={"source": "adzuna", "id": "new"}
@@ -1046,7 +1046,7 @@ def test_chatgpt_prompts_and_company_info(client, monkeypatch):
     assert "Tu es recruteur pour le poste ci-dessous" in vPage
 
     monkeypatch.setattr(
-        web_app,
+        web_offers,
         "lookup_company",
         lambda pName: [
             {
@@ -1073,7 +1073,7 @@ def test_chatgpt_prompts_and_company_info(client, monkeypatch):
     assert "Informations publiques déjà trouvées : DATA SA" in vInfo
 
     monkeypatch.setattr(
-        web_app,
+        web_offers,
         "lookup_company",
         lambda pName: (_ for _ in ()).throw(ValueError("Service indisponible.")),
     )
@@ -1467,7 +1467,7 @@ def test_settings_mobile_token(client):
 def test_get_message_tone(pStatusCode, pTone):
     """Vérifie la couleur d'un message selon le résultat de la requête."""
 
-    assert web_app.get_message_tone(pStatusCode) == pTone
+    assert web_rendering.get_message_tone(pStatusCode) == pTone
 
 
 def test_settings_messages_are_colored(client):

@@ -21,7 +21,7 @@ extension-pkg-allow-list = ["PySide6"]
 argument-rgx = "^(_?p[A-Z][A-Za-z0-9]*|_[a-z]*|self|cls|request|call_next)$"
 variable-rgx = "^([vr][A-Z][A-Za-z0-9]*|_)$"
 inlinevar-rgx = "^([vr][A-Z][A-Za-z0-9]*|_)$"
-const-rgx = "^(_?[A-Z][A-Z0-9_]*|logger|app|templates|login_rate_limiter)$"
+const-rgx = "^(_?[A-Z][A-Z0-9_]*|logger|app|templates|login_rate_limiter|router)$"
 # Paramètre volontairement inutilisé d'une méthode imposée (Qt, interface commune)
 ignored-argument-names = "^_.*"
 
