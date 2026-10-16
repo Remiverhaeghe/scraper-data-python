@@ -101,12 +101,18 @@ U: kWh
 E: L'énergie vaut la puissance multipliée par la durée : E = 1,5 kW × 4 h = 6 kWh. C'est cette énergie, et non la puissance, que facture le fournisseur ; la puissance souscrite limite seulement ce qu'on peut appeler en même temps.
 
 @015
-Q: On double la tension aux bornes d'une même résistance. Que devient l'intensité ?
-C: Elle double
-W: Elle est divisée par deux
-W: Elle reste identique
-W: Elle est multipliée par quatre
-E: D'après la loi d'Ohm, I = U / R : avec une résistance inchangée, l'intensité est proportionnelle à la tension et double donc aussi. C'est la puissance, P = U × I, qui est multipliée par quatre puisque tension et courant doublent ensemble.
+Q: Dans un logement, construire le circuit qui alimente des prises de courant depuis le réseau : protection des personnes contre les fuites, puis protection des câbles du circuit.
+S: reseau @ 0 0
+S: differentiel @ 0 1
+S: disjoncteur @ 0 2
+S: prise @ 0 3
+L: reseau.sortie - differentiel.1
+L: differentiel.2 - disjoncteur.1
+L: disjoncteur.2 - prise.entrée
+D: contacteur
+D: transformateur
+D: moteur
+E: Au tableau, l'interrupteur différentiel 30 mA protège un groupe de circuits contre les fuites à la terre, puis chaque circuit a son disjoncteur divisionnaire, calibré pour ses câbles, avant d'arriver aux prises. Le contacteur commande un circuit à distance, comme un chauffe-eau, et n'a rien à faire sur un circuit de prises.
 
 @016
 Q: Qu'est-ce qui caractérise un court-circuit par rapport à une surcharge ?
@@ -308,12 +314,21 @@ O: Fermer le contacteur triangle
 E: Le moteur démarre en étoile sous tension réduite ; une temporisation de quelques secondes lui laisse atteindre presque sa vitesse. Le contacteur étoile s'ouvre avant que le triangle se ferme : les deux ne doivent jamais être fermés ensemble, d'où un verrouillage électrique et souvent mécanique entre eux.
 
 @042
-Q: Le moteur d'une pompe s'arrête après vingt minutes de marche : le relais thermique a déclenché. Quel est le rôle de cet appareil ?
-C: Protéger le moteur des surcharges prolongées
-W: Protéger le moteur contre les courts-circuits
-W: Inverser le sens de rotation de l'arbre
-W: Limiter le courant d'appel au démarrage du moteur
-E: Le relais thermique chauffe comme le moteur : si le courant reste trop longtemps au-dessus du réglage, il ouvre le circuit de commande et le contacteur coupe. Il est trop lent pour un court-circuit, confié au disjoncteur ou aux fusibles en amont. Il ne limite pas le courant de démarrage.
+Q: Construire le départ direct classique d'un moteur triphasé depuis le réseau : isolement pour intervenir, protection contre les courts-circuits, commande à distance, puis protection contre les surcharges.
+S: reseau @ 0 0
+S: sectionneur @ 0 1
+S: fusible @ 0 2
+S: contacteur @ 0 3
+S: relais_thermique @ 0 4
+S: moteur @ 0 5
+L: reseau.sortie - sectionneur.1
+L: sectionneur.2 - fusible.1
+L: fusible.2 - contacteur.1
+L: contacteur.2 - relais_thermique.1
+L: relais_thermique.2 - moteur.entrée
+D: differentiel
+D: transformateur
+E: Le sectionneur isole le départ pour intervenir, les fusibles coupent les courts-circuits, le contacteur commande le moteur à distance depuis l'automate ou les boutons, et le relais thermique, juste avant le moteur, le protège des surcharges. Sur les armoires récentes, un disjoncteur-moteur réunit souvent sectionnement et protections en un seul appareil.
 
 @043
 Q: Que signifie l'indice de protection IP54 d'un coffret ?

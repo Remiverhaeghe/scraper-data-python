@@ -29,12 +29,19 @@ W: Native Address Transfer
 E: Le NAT remplace les adresses privées des postes par l'adresse publique du routeur à la sortie vers Internet, et fait le chemin inverse pour les réponses. Toutes les box domestiques le pratiquent.
 
 @055
-Q: Quel est le rôle principal du NAT sur une box Internet ?
-C: Partager une adresse publique entre plusieurs appareils
-W: Attribuer un nom de domaine à chaque appareil du foyer
-W: Chiffrer les échanges entre la box et le fournisseur
-W: Augmenter le débit disponible pour chaque appareil
-E: Le fournisseur n'attribue qu'une adresse IPv4 publique : le NAT permet à tous les appareils de la maison d'en profiter. Effet secondaire, une connexion venue d'Internet ne peut joindre un appareil interne sans redirection de port explicite.
+Q: Un poste de bureau doit accéder à Internet. Construire le chemin le plus courant : réseau local de l'étage, filtrage des flux, puis sortie vers l'opérateur.
+S: poste @ 0 0
+S: switch @ 0 1
+S: pare_feu @ 0 2
+S: routeur @ 0 3
+S: internet @ 0 4
+L: poste.bas - switch.haut
+L: switch.bas - pare_feu.haut
+L: pare_feu.bas - routeur.haut
+L: routeur.bas - internet.haut
+D: base_donnees
+D: point_acces
+E: Le poste se branche sur le switch de l'étage, qui relie les équipements du réseau local. Le pare-feu filtre les flux entre ce réseau et l'extérieur, et le routeur de l'opérateur fait le lien avec Internet, souvent avec le NAT. Dans une petite structure, la box réunit routeur, pare-feu et switch dans un seul boîtier.
 
 @056
 Q: Combien d'adresses d'hôtes utilisables offre un réseau IPv4 en /24 ?

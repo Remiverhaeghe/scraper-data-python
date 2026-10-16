@@ -19,6 +19,9 @@
     {% if not result.correct %}<p class="muted">Votre réponse : {{ result.chosen }}</p>{% endif %}
     <p><strong>Réponse : {{ result.answer }}</strong></p>
     <p>{{ result.explanation }}</p>
+    {% if result.question.type == "construction" %}
+    <figure class="quiz-visual schema-expected">{{ expected_schema(result.question) }}</figure>
+    {% endif %}
     {% if result.question.visual %}
     <figure class="quiz-visual">
         <img src="{{ url_for('show_quiz_asset', pName=result.question.visual.asset).path }}" alt="{{ result.question.visual.alt }}">

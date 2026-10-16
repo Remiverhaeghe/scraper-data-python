@@ -21,6 +21,9 @@
     {% if not result.correct %}<p class="muted">Votre réponse : {{ result.chosen }}</p>{% endif %}
     <p><strong>Réponse : {{ result.answer }}</strong></p>
     <p>{{ result.explanation }}</p>
+    {% if result.question.type == "construction" %}
+    <figure class="quiz-visual schema-expected">{{ expected_schema(result.question) }}</figure>
+    {% endif %}
     <a class="button button-primary" href="{{ url_for('show_quiz_exam').path }}">{% if exam.finished_at %}Voir le résultat{% else %}Question suivante{% endif %} {{ icon("arrow-right", 16) }}</a>
     {% elif question %}
     <p class="muted">Question {{ question.position }} / {{ question.count }} · {{ question.theme_label }} · {{ question.level }} · {{ question.type_label }}</p>

@@ -391,6 +391,7 @@ def test_render_icon_sets_size():
 
     assert vIcon.startswith('<svg aria-hidden="true"')
     assert 'width="20"' in vIcon
+    assert render_icon("trash-2", 16).startswith("<svg")
 
 
 def test_build_bar_chart_uses_a_common_scale():
@@ -1760,3 +1761,44 @@ def test_zone_question_is_answered_by_clicking_the_image(client):
     )
 
     assert "Votre réponse : Fusible" in vWrong.text
+
+
+def test_schema_question_is_built_and_graded_on_the_web(client):
+    """Vérifie un schéma à construire sur le web : éditeur, JSON reçu et correction."""
+
+    import_questions_file(
+        app.dependency_overrides[get_database_file](),
+        "",
+        *build_lot_pack("electricite"),
+        datetime.now(),
+    )
+
+    vEditor = client.post(
+        "/quiz/answer", data={"question_id": "electricite-l1-015", "text": ""}
+    )
+
+    assert vEditor.status_code == 400
+    assert "Placez au moins un composant" in vEditor.text
+    assert "data-schema-editor" in vEditor.text and 'data-type="prise"' in vEditor.text
+
+    vChain = ["reseau", "differentiel", "disjoncteur", "prise"]
+    vSchema = {
+        "components": [
+            {"type": vType, "x": 0, "y": vIndex} for vIndex, vType in enumerate(vChain)
+        ],
+        "wires": [
+            ["reseau", "sortie", "differentiel", "1"],
+            ["differentiel", "2", "disjoncteur", "1"],
+            ["disjoncteur", "2", "prise", "entrée"],
+        ],
+    }
+    vRight = client.post(
+        "/quiz/answer",
+        data={"question_id": "electricite-l1-015", "text": json.dumps(vSchema)},
+    )
+
+    assert "Bonne réponse" in vRight.text
+    assert (
+        "schema-expected" in vRight.text
+        and "<title>Schéma attendu</title>" in vRight.text
+    )

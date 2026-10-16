@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.schema_editor import SchemaEditor
 from gui.theme import COLORS
 from job.quiz_types import BLANK, DEFAULT_TOLERANCE, format_number
 
@@ -156,6 +157,8 @@ def add_answer_widgets(pQuestion, pLayout, pGroup, pOnSubmit):
         rWidgets = [create_text_answer(pQuestion, pOnSubmit)]
     elif vType == "ordre":
         rWidgets = [create_order_answer(pQuestion)]
+    elif vType == "construction":
+        rWidgets = [SchemaEditor(pQuestion["shuffled"])]
     elif vType == "zone":
         vHint = QLabel("Cliquez sur le schéma à l'endroit demandé, puis validez.")
         vHint.setObjectName("cardSubtitle")
@@ -199,6 +202,9 @@ def read_response(pQuestion, pWidgets, pGroup, pPoint):
         rResponse = None if None in rResponse else rResponse
     elif vType == "zone":
         rResponse = list(pPoint) if pPoint else None
+    elif vType == "construction":
+        rResponse = pWidgets[0].get_answer()
+        rResponse = rResponse if rResponse["components"] else None
     else:
         rResponse = pGroup.checkedId()
         rResponse = None if rResponse < 0 else rResponse

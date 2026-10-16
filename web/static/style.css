@@ -1221,6 +1221,108 @@ code {
     background: #ffffff;
 }
 
+/* Schéma à construire : palette d'icônes, grille et fils */
+.schema-editor {
+    display: grid;
+    gap: 10px;
+}
+
+.schema-palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+}
+
+.schema-tool {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.schema-tool svg {
+    width: 36px;
+    height: 45px;
+}
+
+.schema-tool:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.schema-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #ffffff;
+    touch-action: none;
+}
+
+.schema-component {
+    cursor: grab;
+}
+
+.schema-frame {
+    fill: #ffffff;
+    stroke: none;
+}
+
+.schema-component.is-selected .schema-frame {
+    stroke: var(--primary);
+    stroke-dasharray: 6 4;
+}
+
+.schema-port {
+    fill: #ffffff;
+    stroke: var(--primary);
+    stroke-width: 2;
+    cursor: pointer;
+}
+
+.schema-port.is-pending {
+    fill: var(--danger);
+}
+
+.schema-wire-hit {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 12;
+    cursor: pointer;
+}
+
+.schema-wire-line {
+    fill: none;
+    stroke-width: 2.5;
+    pointer-events: none;
+}
+
+.schema-wire.is-selected .schema-wire-line {
+    stroke: var(--danger);
+    stroke-width: 3.5;
+}
+
+.schema-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.schema-expected svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
 /* Zone à désigner : image à sa taille d'origine, le clic vaut réponse */
 .quiz-zone {
     max-width: 100%;

@@ -645,3 +645,47 @@ def test_zone_is_answered_by_clicking_the_drawing(qt_application, tmp_path):
 
     assert vPage.verdict_label.text() == "Bonne réponse."
     assert not vWidget.clickable and vWidget.point is not None
+
+
+def test_schema_is_built_and_graded_on_the_desktop(qt_application, tmp_path):
+    """Vérifie un schéma à construire : éditeur, réponse incomplète, correction et schéma attendu."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile)
+    import_questions_file(
+        vDatabaseFile, "", *build_lot_pack("sigles-informatique"), datetime.now()
+    )
+    vQuestion = next(
+        vItem
+        for vItem in quiz_page.load_active_quiz(vDatabaseFile)["sigles-informatique"][
+            "questions"
+        ]
+        if vItem["id"].endswith("-055")
+    )
+    vPage.mode = "discover"
+    vPage.display_question(
+        {**prepare_question(vQuestion, random.Random(1)), "theme_key": "x"},
+        "Sigles",
+        "",
+    )
+    vEditor = vPage.answer_widgets[0]
+
+    vPage.validate()
+
+    assert vPage.verdict_label.text() == "Complétez votre réponse."
+
+    vChain = ["poste", "switch", "pare_feu", "routeur", "internet"]
+
+    for vType in vChain:
+        vEditor.add_component(vType)
+
+    for vFirst, vSecond in zip(vChain, vChain[1:]):
+        vEditor.select_port(vEditor.components[vFirst].ports["bas"])
+        vEditor.select_port(vEditor.components[vSecond].ports["haut"])
+
+    vPage.validate()
+
+    assert vPage.verdict_label.text() == "Bonne réponse."
+    assert not vEditor.isEnabled()
+    assert not vPage.visual_widget.isHidden()
+    assert vPage.visual_widget.toolTip() == "Schéma attendu"

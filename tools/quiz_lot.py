@@ -33,6 +33,9 @@ Les questions interactives remplacent C et W par leurs propres champs :
     A: length                  code à compléter : réponse acceptée au trou ____
     K: Fusible | 55 45 50 140  zone à désigner sur le schéma : libellé | x y l h
     Z: Moteur | 515 45 70 140  autre zone du schéma, nommée à la correction
+    S: fusible @ 0 2           schéma à construire : composant et sa case corrigée
+    L: fusible.2 - moteur.entrée   liaison attendue, borne par borne
+    D: differentiel            leurre proposé dans la palette
 """
 
 import argparse
@@ -70,10 +73,10 @@ LEVEL_LAYOUT = (
 )
 LOT_SIZE = sum(vCount for _, vCount in LEVEL_LAYOUT)
 
-FIELD_PATTERN = re.compile(r"([QCWERNUTOPAKZ]): (.*)")
+FIELD_PATTERN = re.compile(r"([QCWERNUTOPAKZSLD]): (.*)")
 # Champs répétables : mauvaises réponses, références, étapes, paires, réponses,
-# autres zones d'un schéma
-LIST_FIELDS = "WROPAZ"
+# autres zones d'un schéma, composants, liaisons et leurres d'un schéma à construire
+LIST_FIELDS = "WROPAZSLD"
 ZONE_SEPARATOR = " | "
 PAIR_SEPARATOR = " => "
 # Le premier champ présent fixe le type d'une question qui n'est pas un QCM.
@@ -83,7 +86,11 @@ TYPE_MARKERS = (
     ("N", "numerique"),
     ("A", "saisie"),
     ("K", "zone"),
+    ("S", "construction"),
 )
+# « type @ colonne ligne » et « type.borne - type.borne » d'un schéma à construire
+PLACED_PATTERN = re.compile(r"([a-z_0-9]+) @ (\d) (\d)")
+LINK_PATTERN = re.compile(r"([a-z_0-9]+)\.(\S+) - ([a-z_0-9]+)\.(\S+)")
 
 # Une référence s'écrit « Titre | adresse » ; le contrôle d'import garde les sûres.
 REFERENCE_SEPARATOR = " | "
@@ -154,6 +161,16 @@ def parse_lot_text(pText):
 
         if any(PAIR_SEPARATOR not in vPair for vPair in vFields["P"]):
             raise ValueError(f"question {vNumber.strip()} : paire mal écrite")
+
+        if (vFields["L"] or vFields["D"]) and vFields["type"] != "construction":
+            raise ValueError(f"question {vNumber.strip()} : champs incomplets")
+
+        if vFields["type"] == "construction" and not (
+            all(PLACED_PATTERN.fullmatch(vItem) for vItem in vFields["S"])
+            and vFields["L"]
+            and all(LINK_PATTERN.fullmatch(vItem) for vItem in vFields["L"])
+        ):
+            raise ValueError(f"question {vNumber.strip()} : schéma mal écrit")
 
         if vFields["Z"] and vFields["type"] != "zone":
             raise ValueError(f"question {vNumber.strip()} : champs incomplets")
@@ -249,6 +266,21 @@ def build_typed_fields(pSource, pPosition):
         }
     elif vType == "saisie":
         rFields = {"accepted": list(pSource["A"])}
+    elif vType == "construction":
+        rFields = {
+            "components": [
+                {"type": vType, "x": int(vX), "y": int(vY)}
+                for vType, vX, vY in (
+                    PLACED_PATTERN.fullmatch(vItem).groups() for vItem in pSource["S"]
+                )
+            ],
+            "connections": [
+                list(LINK_PATTERN.fullmatch(vItem).groups()) for vItem in pSource["L"]
+            ],
+        }
+
+        if pSource["D"]:
+            rFields["distractors"] = list(pSource["D"])
     elif vType == "zone":
         # La zone à désigner vient en premier : l'ordre n'est jamais montré.
         rFields = {

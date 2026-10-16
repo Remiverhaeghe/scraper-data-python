@@ -5,6 +5,7 @@ temporaire. Sans Playwright ou sans Chromium installé, ces tests sont ignorés 
 pip install playwright puis python -m playwright install chromium.
 """
 
+import json
 import socket
 import threading
 import time
@@ -14,6 +15,7 @@ import pandas as pd
 import pytest
 import uvicorn
 
+from job.quiz_import import import_questions
 from storage.job_offers import save_offers
 from tests.conftest import TEST_PASSWORD
 from web.app import app, get_database_file
@@ -212,3 +214,71 @@ def test_calendar_address_is_created_and_served(page, server_url, browser):
 
     finally:
         vAnonymous.close()
+
+
+def test_schema_is_built_wired_and_graded_in_the_browser(page):
+    """Vérifie l'éditeur de schéma : palette, câblage, déplacement et correction."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+    import_questions(
+        vDatabaseFile,
+        "",
+        json.dumps(
+            {
+                "theme": "Schémas de test",
+                "questions": [
+                    {
+                        "id": "schema-test-moteur",
+                        "level": "débutant",
+                        "type": "construction",
+                        "question": "Alimenter le moteur à travers un fusible.",
+                        "explanation": "Le fusible protège la ligne du moteur.",
+                        "components": [
+                            {"type": "reseau", "x": 0, "y": 0},
+                            {"type": "fusible", "x": 0, "y": 1},
+                            {"type": "moteur", "x": 0, "y": 2},
+                        ],
+                        "connections": [
+                            ["reseau", "sortie", "fusible", "1"],
+                            ["fusible", "2", "moteur", "entrée"],
+                        ],
+                        "distractors": ["differentiel"],
+                    }
+                ],
+            }
+        ),
+        datetime.now(),
+    )
+
+    page.goto("/quiz?theme=schemas-de-test&mode=discover")
+
+    for vType in ("reseau", "fusible", "moteur"):
+        page.click(f"[data-type={vType}]")
+
+    assert page.locator("[data-type=fusible]").is_disabled()
+
+    for vType, vPort in (
+        ("reseau", "sortie"),
+        ("fusible", "1"),
+        ("fusible", "2"),
+        ("moteur", "entrée"),
+    ):
+        page.locator(f'[data-component={vType}] [data-port="{vPort}"]').click()
+
+    # Le moteur glisse d'une colonne vers la droite : ses fils le suivent.
+    vMotor = page.locator("[data-component=moteur] .schema-frame").bounding_box()
+    page.mouse.move(vMotor["x"] + 20, vMotor["y"] + 30)
+    page.mouse.down()
+    page.mouse.move(vMotor["x"] + 260, vMotor["y"] + 30, steps=5)
+    page.mouse.up()
+
+    vAnswer = json.loads(page.locator("[data-schema-answer]").input_value())
+
+    assert {"type": "moteur", "x": 1, "y": 2} in vAnswer["components"]
+    assert len(vAnswer["wires"]) == 2
+
+    page.get_by_role("button", name="Valider").click()
+
+    assert "Bonne réponse" in page.locator(".quiz-verdict").inner_text()
+    assert page.locator(".schema-expected svg").count() == 1
+    assert page.console_errors == []

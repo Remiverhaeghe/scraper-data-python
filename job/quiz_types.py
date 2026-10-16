@@ -7,8 +7,11 @@ une zone à désigner. Le reste de la révision (tirage, progression, examen) ne
 dépend pas du type.
 """
 
+import json
 import math
 import re
+
+from job.schema_building import check_construction, grade_construction
 
 DEFAULT_TYPE = "qcm"
 
@@ -19,8 +22,9 @@ TYPE_FIELDS = {
     "association": ("pairs",),
     "saisie": ("code", "accepted"),
     "zone": ("zones", "answer"),
+    "construction": ("components", "connections"),
 }
-OPTIONAL_FIELDS = ("code", "unit", "tolerance")
+OPTIONAL_FIELDS = ("code", "unit", "tolerance", "distractors")
 QUESTION_TYPES = tuple(TYPE_FIELDS)
 
 TYPE_LABELS = {
@@ -30,7 +34,11 @@ TYPE_LABELS = {
     "association": "Association",
     "saisie": "Code à compléter",
     "zone": "Zone à désigner",
+    "construction": "Schéma à construire",
 }
+
+# Taille maximale du schéma envoyé par le navigateur, en caractères JSON
+MAX_SCHEMA_LENGTH = 20_000
 
 # Libellé du point cliqué en dehors de toutes les zones d'une question « zone »
 OUTSIDE_ZONES = "un endroit sans composant"
@@ -207,6 +215,7 @@ CHECKS = {
     "association": check_pairs,
     "saisie": check_completion,
     "zone": check_zones,
+    "construction": check_construction,
 }
 
 
@@ -243,6 +252,10 @@ def prepare_question(pQuestion, pRandom):
         vShuffled = list(enumerate(pQuestion["items"]))
     elif vType == "association":
         vShuffled = list(enumerate(vRight for _, vRight in pQuestion["pairs"]))
+    elif vType == "construction":
+        # Palette : composants attendus et leurres, dans le désordre
+        vShuffled = [vItem["type"] for vItem in pQuestion["components"]]
+        vShuffled += pQuestion.get("distractors", [])
     else:
         vShuffled = []
 
@@ -454,6 +467,26 @@ def grade_zone(pQuestion, pResponse):
     return rGrade
 
 
+def parse_schema(pText):
+    """Lit le schéma envoyé en JSON par l'éditeur web ; lève ValueError si illisible."""
+
+    vText = str(pText or "")
+
+    if not vText.strip():
+        raise ValueError("Placez au moins un composant.")
+
+    if len(vText) > MAX_SCHEMA_LENGTH:
+        raise ValueError("Schéma trop grand.")
+
+    try:
+        rSchema = json.loads(vText)
+
+    except ValueError:
+        raise ValueError("Schéma illisible.") from None
+
+    return rSchema
+
+
 def build_response(pQuestion, pChoice, pText, pIndexes, pPoint=None):
     """Retourne, parmi les champs d'un formulaire, la réponse attendue par le type."""
 
@@ -465,6 +498,8 @@ def build_response(pQuestion, pChoice, pText, pIndexes, pPoint=None):
         rResponse = pText
     elif vType == "zone":
         rResponse = list(pPoint) if pPoint else None
+    elif vType == "construction":
+        rResponse = parse_schema(pText)
     else:
         rResponse = list(pIndexes)
 
@@ -478,6 +513,7 @@ GRADERS = {
     "association": grade_pairs,
     "saisie": grade_completion,
     "zone": grade_zone,
+    "construction": grade_construction,
 }
 
 

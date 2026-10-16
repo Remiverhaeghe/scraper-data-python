@@ -66,6 +66,13 @@ from job.git_levels import (
 )
 from job.git_sandbox import SUPPORTED_COMMANDS
 from job.quiz_types import build_response, prepare_question
+from job.schema_drawing import (
+    GRID_COLUMNS,
+    GRID_ROWS,
+    build_editor_config,
+    render_expected,
+)
+from job.schema_library import COMPONENTS, build_icon
 from job.challenges import (
     build_challenge_list,
     build_challenge_view,
@@ -308,7 +315,7 @@ MAX_DISPLAYED_OFFERS = 300
 
 MAX_DISPLAYED_EXECUTIONS = 200
 
-ICON_NAME_PATTERN = re.compile(r"[a-z][a-z-]*")
+ICON_NAME_PATTERN = re.compile(r"[a-z][a-z0-9-]*")
 
 # Pages accessibles sans connexion : connexion, informations légales et ressources
 PUBLIC_PATHS = ("/login", "/legal", "/license")
@@ -489,6 +496,32 @@ def render_icon(pName, pSize=18):
     return rIcon
 
 
+def render_schema_icon(pType):
+    """Retourne l'icône SVG d'un composant de schéma, pour la palette."""
+
+    # Symbole constant de job/schema_library.py, jamais une donnée saisie.
+    rIcon = Markup(build_icon(pType))  # nosec B704
+
+    return rIcon
+
+
+def render_expected_schema(pQuestion):
+    """Retourne le schéma attendu d'une question à construire, à la correction."""
+
+    # Dessin construit par job/schema_drawing.py, libellés échappés : HTML sûr.
+    rSchema = Markup(render_expected(pQuestion))  # nosec B704
+
+    return rSchema
+
+
+def get_schema_config(pTypes):
+    """Retourne la géométrie et les symboles de l'éditeur de schéma web."""
+
+    rConfig = build_editor_config(pTypes, GRID_COLUMNS, GRID_ROWS)
+
+    return rConfig
+
+
 templates.env.filters["euros"] = format_euros
 templates.env.filters["date_fr"] = format_date
 templates.env.filters["safe_url"] = safe_url
@@ -501,6 +534,10 @@ templates.env.globals.update(
     contact_url=CONTACT_URL,
     license_name=LICENSE_NAME,
     csrf_token=get_csrf_token,
+    schema_icon=render_schema_icon,
+    schema_label=lambda pType: COMPONENTS[pType].label,
+    schema_config=get_schema_config,
+    expected_schema=render_expected_schema,
 )
 
 

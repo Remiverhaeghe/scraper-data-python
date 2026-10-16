@@ -353,3 +353,29 @@ def test_zone_question_is_read_and_built():
         parse_lot_text(
             "@001\nQ: Ordre ?\nO: A\nO: B\nO: C\nZ: Moteur | 1 1 2 2\nE: Explication."
         )
+
+
+def test_construction_question_is_read_and_built():
+    """Vérifie la lecture d'un schéma à construire et le refus d'un schéma mal écrit."""
+
+    vSource = parse_lot_text(
+        "@001\nQ: Construire.\nS: reseau @ 0 0\nS: fusible @ 0 1\n"
+        "L: reseau.sortie - fusible.1\nD: moteur\nE: Le fusible protège la ligne.\n"
+    )
+    vQuestion = build_questions("electricite", {"lot": 1, "seed": 3}, vSource)[0]
+
+    assert vQuestion["type"] == "construction"
+    assert vQuestion["components"][1] == {"type": "fusible", "x": 0, "y": 1}
+    assert vQuestion["connections"] == [["reseau", "sortie", "fusible", "1"]]
+    assert vQuestion["distractors"] == ["moteur"]
+
+    for vText in (
+        "@001\nQ: Construire.\nS: reseau 0 0\nL: reseau.sortie - fusible.1\nE: E.",
+        "@001\nQ: Construire.\nS: reseau @ 0 0\nE: Explication.",
+        "@001\nQ: Construire.\nS: reseau @ 0 0\nL: reseau sortie fusible 1\nE: E.",
+    ):
+        with pytest.raises(ValueError, match="schéma mal écrit"):
+            parse_lot_text(vText)
+
+    with pytest.raises(ValueError, match="champs incomplets"):
+        parse_lot_text("@001\nQ: QCM ?\nC: Oui\nW: A\nW: B\nW: C\nD: moteur\nE: E.")

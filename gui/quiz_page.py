@@ -54,6 +54,7 @@ from job.quiz_domains import (
     filter_guides,
     group_themes,
 )
+from job.schema_drawing import render_expected
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
     answer_exam,
@@ -81,6 +82,27 @@ CATEGORY_WIDTH = 270
 
 # Hauteur d'affichage des schémas des questions importées
 VISUAL_HEIGHT = 280
+# Hauteur maximale du schéma attendu d'une question à construire
+EXPECTED_SCHEMA_HEIGHT = 560
+
+
+def show_svg(pWidget, pContent, pTooltip, pHeight, pShrinkOnly=False):
+    """Affiche un SVG à une hauteur fixe, en gardant ses proportions.
+
+    pShrinkOnly limite la hauteur sans jamais agrandir un dessin plus petit.
+    """
+    pWidget.load(QByteArray(pContent.encode("utf-8")))
+    pWidget.setToolTip(pTooltip)
+
+    # Chaque chargement remet le rendu à zéro : proportions et taille d'origine
+    # sont réappliquées, à une hauteur fixe.
+    vRenderer = pWidget.renderer()
+    vRenderer.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
+    vSize = vRenderer.defaultSize()
+    vHeight = min(pHeight, vSize.height()) if pShrinkOnly else pHeight
+    pWidget.setFixedSize(
+        round(vHeight * vSize.width() / max(vSize.height(), 1)), vHeight
+    )
 
 
 class QuizPage(QWidget):
@@ -592,18 +614,7 @@ class QuizPage(QWidget):
         )
 
         if vContent:
-            pWidget.load(QByteArray(vContent.encode("utf-8")))
-            pWidget.setToolTip(pVisual["alt"])
-
-            # Chaque chargement remet le rendu à zéro : proportions et taille
-            # d'origine sont réappliquées, à une hauteur fixe.
-            vRenderer = pWidget.renderer()
-            vRenderer.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
-            vSize = vRenderer.defaultSize()
-            pWidget.setFixedSize(
-                round(VISUAL_HEIGHT * vSize.width() / max(vSize.height(), 1)),
-                VISUAL_HEIGHT,
-            )
+            show_svg(pWidget, vContent, pVisual["alt"], VISUAL_HEIGHT)
 
         pWidget.setVisible(bool(vContent))
 
@@ -616,6 +627,16 @@ class QuizPage(QWidget):
             self.visual_widget,
             vVisual if vVisual and vVisual.get("show") != "question" else None,
         )
+
+        if pQuestion.get("type") == "construction":
+            show_svg(
+                self.visual_widget,
+                render_expected(pQuestion),
+                "Schéma attendu",
+                EXPECTED_SCHEMA_HEIGHT,
+                pShrinkOnly=True,
+            )
+            self.visual_widget.show()
 
         vLinks = [
             f'<a href="{escape(vReference["url"])}">{escape(vReference["title"])}</a>'

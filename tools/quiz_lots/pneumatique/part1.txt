@@ -93,12 +93,19 @@ W: Retirer le silencieux d'échappement
 E: Pour ralentir un vérin, on limite le débit de l'air qui sort de la chambre opposée : le piston est alors retenu par une contre-pression et avance régulièrement. Monter la pression l'accélérerait encore. Les amortissements réglables de fin de course complètent ce réglage sur les derniers millimètres.
 
 @013
-Q: À quoi sert un silencieux monté sur l'échappement d'un distributeur ?
-C: Réduire le bruit de l'air qui s'échappe
-W: Régler la pression d'alimentation du vérin
-W: Empêcher l'air de revenir dans le réseau
-W: Filtrer l'air avant son entrée au distributeur
-E: L'air qui s'échappe brutalement produit un claquement bruyant ; le silencieux, en bronze fritté ou en plastique poreux, le diffuse. Encrassé, il freine l'échappement et ralentit le vérin : c'est une cause classique de vérin devenu lent.
+Q: Câbler la commande d'un vérin double effet par un distributeur 5/2, depuis la source d'air et à travers l'unité de traitement. Au repos, le distributeur alimente son orifice 2 et la tige doit alors être rentrée.
+S: source_air @ 0 0
+S: frl @ 0 1
+S: distributeur_52 @ 1 2
+S: verin_double @ 1 1
+L: source_air.sortie - frl.1
+L: frl.2 - distributeur_52.1
+L: distributeur_52.4 - verin_double.fond
+L: distributeur_52.2 - verin_double.tige
+D: distributeur_32
+D: verin_simple
+D: manometre
+E: L'air passe par l'unité FRL avant d'alimenter l'orifice 1 du distributeur. Pour que la tige soit rentrée au repos, l'orifice 2, alimenté au repos, va côté tige ; l'orifice 4 va côté fond et fait sortir la tige quand le distributeur est commandé. Les orifices 3 et 5 restent à l'échappement.
 
 @014
 Q: Remettre dans l'ordre le chemin de l'air, de sa production jusqu'au mouvement.
@@ -124,12 +131,17 @@ U: bar
 E: Le manomètre affiche la pression relative, au-dessus de l'atmosphère. La pression absolue ajoute la pression atmosphérique : 6 + 1 = 7 bar. C'est elle qui compte pour calculer le volume d'air libre consommé.
 
 @017
-Q: Que mesure le manomètre d'une installation pneumatique ?
-C: La pression relative à l'atmosphère
-W: La pression absolue de l'air du réseau
-W: Le débit d'air consommé
-W: La température de l'air
-E: Les manomètres d'atelier indiquent la pression relative : ils affichent 0 bar à l'air libre. Pour la pression absolue, il faut ajouter environ 1 bar. Le débit se mesure avec un débitmètre et la température avec un thermomètre ou une sonde.
+Q: Câbler la commande d'un vérin simple effet par un distributeur 3/2, depuis la source d'air et à travers l'unité de traitement.
+S: source_air @ 0 0
+S: frl @ 0 1
+S: distributeur_32 @ 1 2
+S: verin_simple @ 1 1
+L: source_air.sortie - frl.1
+L: frl.2 - distributeur_32.1
+L: distributeur_32.2 - verin_simple.fond
+D: distributeur_52
+D: verin_double
+E: Un vérin simple effet n'a qu'un orifice : il suffit d'un distributeur 3/2, qui l'alimente par 2 quand il est commandé et le met à l'échappement par 3 au repos, le ressort ramenant la tige. Le 5/2 et le double effet serviraient à commander les deux sens.
 
 @018
 Q: Quel est le rôle d'un clapet anti-retour ?

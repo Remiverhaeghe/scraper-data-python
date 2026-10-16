@@ -15,6 +15,25 @@
     <input class="quiz-zone-image" type="image" name="point" src="{{ url_for('show_quiz_asset', pName=question.visual.asset).path }}" alt="{{ question.visual.alt }}">
 </div>
 <p class="muted">Cliquez directement sur le schéma, à l'endroit demandé : le clic vaut réponse.</p>
+{% elif question.type == "construction" %}
+{# Éditeur de schéma (static/schema_editor.js) : la réponse part en JSON dans le
+   champ text. Masqué tant que le script ne l'a pas initialisé. #}
+<div class="schema-editor" data-schema-editor hidden>
+    <p class="muted">Cliquez sur une icône pour poser le composant, faites-le glisser sur la grille, puis cliquez sur une borne et sur une autre pour les relier.</p>
+    <div class="schema-palette">
+        {% for type in question.shuffled %}
+        <button class="schema-tool" type="button" data-type="{{ type }}" title="Placer : {{ schema_label(type) }}">{{ schema_icon(type) }}<span>{{ schema_label(type) }}</span></button>
+        {% endfor %}
+    </div>
+    <svg class="schema-canvas" data-schema-canvas tabindex="0" role="application" aria-label="Grille du schéma à construire"></svg>
+    <div class="schema-actions">
+        <button class="button" type="button" data-schema-action="delete">{{ icon("trash-2", 16) }} Supprimer la sélection</button>
+        <button class="button" type="button" data-schema-action="clear">{{ icon("history", 16) }} Tout effacer</button>
+    </div>
+    <input type="hidden" name="text" value="" data-schema-answer>
+    <script type="application/json" data-schema-config>{{ schema_config(question.shuffled) | tojson }}</script>
+</div>
+<noscript><p class="application-message tone-warning">Ce type de question se construit à la souris et demande JavaScript.</p></noscript>
 {% elif question.type == "saisie" %}
 <label class="quiz-typed">Ce qui remplace ____
     <input class="quiz-code-input" type="text" name="text" autocomplete="off" autocapitalize="off" spellcheck="false" required>

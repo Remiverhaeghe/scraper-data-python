@@ -89,8 +89,9 @@ python -m tools.quiz_lot build <thème>
 ```
 
 Un lot écrit peut mêler aux QCM des questions interactives (calcul, remise en ordre,
-association, code à compléter, zone à désigner sur un schéma), dont les champs sont décrits
-au même endroit. Les zones se mesurent dans les coordonnées du SVG ; une question « zone »
+association, code à compléter, zone à désigner sur un schéma, schéma à construire), dont les
+champs sont décrits au même endroit. Les composants d'un schéma à construire viennent de
+`job/schema_library.py` : chacun n'apparaît qu'une fois par question. Les zones se mesurent dans les coordonnées du SVG ; une question « zone »
 montre toujours son schéma avec l'énoncé. Dans
 `lot.json`, un schéma se rattache à des questions par leur numéro ; il s'affiche avec la
 correction, sauf avec `"on_question": true`, pour un symbole ou un schéma qu'il faut lire
