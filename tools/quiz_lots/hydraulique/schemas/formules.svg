@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="330" viewBox="0 0 860 330" font-family="Arial, sans-serif">
+  <rect width="860" height="330" fill="#ffffff"/>
+  <text x="430" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#0f172a">Formules pratiques de l'hydraulique, en unités d'atelier</text>
+  <g fill="#e0f2fe" stroke="#0369a1" stroke-width="2">
+    <rect x="30" y="52" width="390" height="76" rx="8"/>
+    <rect x="440" y="52" width="390" height="76" rx="8"/>
+    <rect x="30" y="142" width="390" height="76" rx="8"/>
+    <rect x="440" y="142" width="390" height="76" rx="8"/>
+    <rect x="30" y="232" width="800" height="76" rx="8"/>
+  </g>
+  <g font-size="14" font-weight="bold" fill="#0f172a">
+    <text x="50" y="82">Effort : F = p × S</text>
+    <text x="460" y="82">Vitesse du vérin : v = Q / S</text>
+    <text x="50" y="172">Puissance : P (kW) = p (bar) × Q (l/min) / 600</text>
+    <text x="460" y="172">Débit de pompe : Q (l/min) = Vg × n / 1 000</text>
+    <text x="50" y="262">Couple d'un moteur hydraulique : C (N·m) = Vg (cm³/tr) × Δp (bar) / (20 × π)</text>
+  </g>
+  <g font-size="13" fill="#475569">
+    <text x="50" y="110">1 bar = 0,1 N/mm² : 100 bar sur 1 000 mm² font 10 000 N</text>
+    <text x="460" y="110">avec Q en cm³/min et S en cm², v sort en cm/min</text>
+    <text x="50" y="200">puissance absorbée = puissance hydraulique / rendement</text>
+    <text x="460" y="200">Vg en cm³/tr, n en tr/min, × rendement volumétrique</text>
+    <text x="50" y="290">la pompe impose le débit, la charge impose la pression</text>
+  </g>
+</svg>

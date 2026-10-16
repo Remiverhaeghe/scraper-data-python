@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="240" viewBox="0 0 900 240" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="fleche-huile" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#0f172a"/>
+    </marker>
+  </defs>
+  <rect width="900" height="240" fill="#ffffff"/>
+  <text x="450" y="26" text-anchor="middle" font-size="17" font-weight="bold" fill="#0f172a">Symboles hydrauliques : distribution et contrôle de l'huile</text>
+  <g stroke="#0f172a" stroke-width="2.2" fill="none" stroke-linejoin="round">
+    <rect x="80" y="90" width="44" height="44"/>
+    <rect x="124" y="90" width="44" height="44"/>
+    <rect x="168" y="90" width="44" height="44"/>
+    <line x1="136" y1="90" x2="136" y2="62"/>
+    <line x1="156" y1="90" x2="156" y2="62"/>
+    <line x1="136" y1="134" x2="136" y2="165"/>
+    <line x1="156" y1="134" x2="156" y2="165"/>
+    <line x1="136" y1="90" x2="136" y2="100"/>
+    <line x1="130" y1="100" x2="142" y2="100"/>
+    <line x1="156" y1="90" x2="156" y2="100"/>
+    <line x1="150" y1="100" x2="162" y2="100"/>
+    <line x1="136" y1="134" x2="136" y2="124"/>
+    <line x1="130" y1="124" x2="142" y2="124"/>
+    <line x1="156" y1="134" x2="156" y2="124"/>
+    <line x1="150" y1="124" x2="162" y2="124"/>
+    <line x1="92" y1="132" x2="92" y2="94" marker-end="url(#fleche-huile)"/>
+    <line x1="112" y1="94" x2="112" y2="132" marker-end="url(#fleche-huile)"/>
+    <line x1="180" y1="132" x2="199" y2="94" marker-end="url(#fleche-huile)"/>
+    <line x1="180" y1="94" x2="199" y2="132" marker-end="url(#fleche-huile)"/>
+    <rect x="56" y="100" width="24" height="24"/>
+    <line x1="56" y1="124" x2="80" y2="100"/>
+    <rect x="212" y="100" width="24" height="24"/>
+    <line x1="212" y1="124" x2="236" y2="100"/>
+    <rect x="340" y="80" width="48" height="60"/>
+    <line x1="364" y1="140" x2="364" y2="180"/>
+    <line x1="364" y1="80" x2="364" y2="50"/>
+    <line x1="374" y1="132" x2="374" y2="90" marker-end="url(#fleche-huile)"/>
+    <polyline points="388,110 393,102 399,118 405,102 411,118 416,110"/>
+    <line x1="392" y1="124" x2="414" y2="96" marker-end="url(#fleche-huile)"/>
+    <polyline points="364,160 326,160 326,110 340,110" stroke-dasharray="6 4"/>
+    <polygon points="520,82 552,114 520,146 488,114"/>
+    <line x1="490" y1="114" x2="550" y2="114" stroke-dasharray="6 4"/>
+    <line x1="520" y1="82" x2="520" y2="50"/>
+    <line x1="520" y1="146" x2="520" y2="180"/>
+    <line x1="660" y1="50" x2="660" y2="96"/>
+    <circle cx="660" cy="106" r="10"/>
+    <polyline points="646,112 660,126 674,112"/>
+    <polyline points="660,96 664,90 656,84 664,78 660,72" stroke-width="1.8"/>
+    <line x1="660" y1="126" x2="660" y2="180"/>
+    <line x1="800" y1="50" x2="800" y2="98"/>
+    <line x1="800" y1="132" x2="800" y2="180"/>
+    <path d="M794,98 Q803,115 794,132"/>
+    <path d="M806,98 Q797,115 806,132"/>
+    <line x1="780" y1="138" x2="818" y2="94" marker-end="url(#fleche-huile)"/>
+  </g>
+  <g font-size="11" fill="#475569" text-anchor="middle">
+    <text x="136" y="58">A</text>
+    <text x="156" y="58">B</text>
+    <text x="136" y="177">P</text>
+    <text x="156" y="177">T</text>
+  </g>
+  <g font-size="20" font-weight="bold" fill="#0369a1" text-anchor="middle">
+    <text x="146" y="224">1</text>
+    <text x="364" y="224">2</text>
+    <text x="520" y="224">3</text>
+    <text x="660" y="224">4</text>
+    <text x="800" y="224">5</text>
+  </g>
+</svg>

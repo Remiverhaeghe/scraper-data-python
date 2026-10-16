@@ -1,0 +1,93 @@
+{
+  "lot": 1,
+  "seed": 1264037819,
+  "skills": [
+    "hydraulique",
+    "vérin hydraulique",
+    "centrale hydraulique",
+    "distributeur hydraulique",
+    "accumulateur",
+    "maintenance hydraulique"
+  ],
+  "schemas": [
+    {
+      "name": "hydraulique-symboles-sources.svg",
+      "questions": ["006"],
+      "alt": "Cinq symboles hydrauliques numérotés : pompes, moteur, accumulateur, réservoir",
+      "file": "schemas/symboles-sources.svg",
+      "on_question": true
+    },
+    {
+      "name": "hydraulique-symboles-valves.svg",
+      "questions": ["028", "029"],
+      "alt": "Cinq symboles hydrauliques numérotés : distributeur, limiteur, filtre, clapet, étrangleur",
+      "file": "schemas/symboles-valves.svg",
+      "on_question": true
+    },
+    {
+      "name": "hydraulique-formules.svg",
+      "questions": ["007", "016", "026", "033", "034", "035", "044"],
+      "alt": "Formules pratiques de l'hydraulique : effort, vitesse, puissance, débit et couple",
+      "file": "schemas/formules.svg"
+    },
+    {
+      "name": "hydraulique-circuit-simple.svg",
+      "questions": ["003", "008", "015"],
+      "diagram": {
+        "title": "Circuit hydraulique simple",
+        "nodes": [
+          "Réservoir",
+          "Pompe",
+          "Distributeur 4/3",
+          "Vérin",
+          "Filtre de retour"
+        ],
+        "feedback": [4, 0, "retour au réservoir"],
+        "note": "Le limiteur de pression, en dérivation après la pompe, renvoie l'huile au réservoir en cas de surpression"
+      }
+    },
+    {
+      "name": "hydraulique-debit-pression.svg",
+      "questions": ["005", "030"],
+      "diagram": {
+        "title": "La pompe crée le débit, la charge crée la pression",
+        "nodes": [
+          "Pompe : débit Q",
+          "Vérin de surface S",
+          "Charge F",
+          "Pression p = F / S"
+        ],
+        "note": "Sans charge, la pression reste faible ; vérin en butée, elle monte jusqu'au limiteur"
+      }
+    },
+    {
+      "name": "hydraulique-consignation.svg",
+      "questions": ["040", "042", "095"],
+      "diagram": {
+        "title": "Intervention sur un circuit hydraulique",
+        "nodes": [
+          "Poser les charges",
+          "Arrêter et consigner",
+          "Décharger, accumulateur compris",
+          "Intervenir",
+          "Purger l'air et contrôler"
+        ],
+        "note": "Un accumulateur reste sous pression pompe arrêtée : on le vide avant de desserrer un raccord"
+      }
+    },
+    {
+      "name": "hydraulique-pollution.svg",
+      "questions": ["025", "075", "093"],
+      "diagram": {
+        "title": "Pollution de l'huile : de la cause à la panne",
+        "nodes": [
+          "Particules, eau, air",
+          "Usure, grippage, cavitation",
+          "Fuites internes",
+          "Perte de vitesse et échauffement"
+        ],
+        "note": "Filtration, analyses d'huile et étanchéité des racleurs coupent la chaîne dès le départ"
+      }
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+@001
+Q: Quel fluide transmet l'énergie dans un circuit hydraulique industriel ?
+C: Une huile minérale sous pression
+W: De l'air comprimé soigneusement déshumidifié
+W: De l'eau glycolée à très basse pression
+W: Un gaz neutre comme l'azote comprimé
+E: L'hydraulique industrielle utilise le plus souvent une huile minérale avec additifs anti-usure : elle transmet l'effort, lubrifie et évacue la chaleur. L'air comprimé est le domaine de la pneumatique ; l'azote ne sert qu'au gonflage des accumulateurs, et les fluides à l'eau glycolée sont réservés aux zones à risque d'incendie.
+
+@002
+Q: Quel est le principal atout de l'hydraulique face à la pneumatique ?
+C: Des efforts très élevés sous un faible encombrement
+W: Une énergie propre, sans aucun risque de fuite polluante
+W: Des mouvements plus rapides et une installation moins chère
+W: Un fluide gratuit, rejeté directement à l'atmosphère
+E: En travaillant à 100, 200 bar ou plus, un petit vérin hydraulique développe des dizaines de tonnes : presses, engins de chantier, plieuses. En contrepartie, l'installation est plus coûteuse, l'huile peut fuir et polluer, et elle doit revenir au réservoir au lieu d'être rejetée.
+
+@003
+Q: Associer chaque élément d'une centrale hydraulique à son rôle.
+P: Réservoir => stocker l'huile et la laisser décanter
+P: Pompe => créer le débit d'huile
+P: Limiteur de pression => protéger contre la surpression
+P: Filtre => retenir les particules
+E: La centrale réunit ces éléments autour d'un moteur électrique. Le réservoir ne sert pas qu'à stocker : l'huile y refroidit, l'air s'en échappe et les impuretés décantent. Le limiteur est la sécurité du circuit, réglé un peu au-dessus de la pression de travail.
+
+@004
+Q: Combien de N/mm² représente une pression de 200 bar ?
+N: 20
+U: N/mm²
+E: Un bar vaut 0,1 N/mm², donc 200 bar valent 20 N/mm². Ce rapport simple permet de calculer un effort de tête : un piston de 1 000 mm² sous 200 bar pousse avec 20 000 N, soit environ deux tonnes.
+
+@005
+Q: La pompe d'une centrale est-elle ce qui crée la pression du circuit ?
+C: Non : elle crée un débit, la charge crée la pression
+W: Oui : la pression ne dépend que de la pompe choisie
+W: Oui, mais seulement quand la pompe tourne à pleine vitesse
+W: Non : la pression vient du réservoir placé en hauteur
+E: La pompe pousse un volume d'huile par tour ; la pression n'apparaît que si quelque chose s'oppose à l'écoulement, comme la charge d'un vérin. Sans charge, la pression reste faible ; vérin en butée, elle monte jusqu'au réglage du limiteur. Comprendre cela évite bien des diagnostics erronés.
+
+@006
+Q: Associer chaque repère de la planche au composant hydraulique qu'il représente.
+P: Repère 1 => pompe à cylindrée fixe
+P: Repère 2 => pompe à cylindrée variable
+P: Repère 3 => moteur hydraulique
+P: Repère 4 => accumulateur
+P: Repère 5 => réservoir à l'air libre
+E: Les triangles pleins signalent l'hydraulique (vides en pneumatique) : pointés vers l'extérieur, l'énergie sort, c'est une pompe ; vers l'intérieur, elle entre, c'est un moteur. La flèche oblique indique un réglage, ici une cylindrée variable. L'accumulateur est une capsule verticale séparée en deux, le réservoir un bac ouvert où plonge la conduite.
+
+@007
+Q: Quelle force développe un vérin hydraulique de diamètre 50 mm alimenté à 100 bar ?
+N: 19635
+U: N
+T: 2
+E: La surface vaut π × 25² ≈ 1 963,5 mm² et 100 bar valent 10 N/mm² : F = 10 × 1 963,5 ≈ 19 635 N, soit près de 2 tonnes. Le même vérin en pneumatique à 6 bar ne donnerait que 1 178 N.
+
+@008
+Q: Quel est le rôle du limiteur de pression d'une centrale ?
+C: Renvoyer l'huile au réservoir au-delà de son réglage
+W: Augmenter la pression disponible au-delà du réglage prévu
+W: Régler la vitesse du vérin en freinant l'huile qui sort
+W: Empêcher l'huile de revenir vers la pompe à l'arrêt
+E: Quand la pression atteint son réglage, le limiteur s'ouvre et renvoie l'huile au réservoir : il protège pompe, flexibles et composants. Toute l'huile qui le traverse sous pression se transforme en chaleur. La vitesse se règle par un étrangleur, et le retour vers la pompe s'empêche par un clapet.
+
+@009
+Q: Pourquoi un vérin hydraulique tient-il sa position bien mieux qu'un vérin pneumatique ?
+C: L'huile est presque incompressible
+W: L'huile est plus légère que l'air comprimé du réseau
+W: Les vérins hydrauliques ont toujours un frein mécanique
+W: La pompe continue de débiter quand le vérin est arrêté
+E: L'huile ne se comprime que très peu : chambres fermées, la tige ne bouge presque pas même si l'effort varie. C'est ce qui rend l'hydraulique adaptée au maintien de charges et au positionnement. L'air, lui, se comprime comme un ressort.
+
+@010
+Q: Qu'appelle-t-on la viscosité d'une huile hydraulique ?
+C: Sa résistance à l'écoulement
+W: Sa capacité à conduire le courant électrique
+W: Sa tendance à mousser dans le réservoir
+W: La température maximale qu'elle supporte
+E: La viscosité mesure l'épaisseur de l'huile : elle diminue quand l'huile chauffe. Trop faible, le film d'huile ne protège plus et les fuites internes augmentent ; trop forte, l'huile circule mal et la pompe aspire difficilement. On la choisit selon la plage de température de la machine.
+
+@011
+Q: Pourquoi une huile très froide est-elle gênante au démarrage d'une centrale ?
+C: Trop épaisse, elle aspire mal et fait caviter la pompe
+W: Elle devient conductrice et grille les électrovannes
+W: Elle se vaporise en gaz dès son arrivée dans le réservoir
+W: Elle dilate les flexibles jusqu'à les faire éclater
+E: À froid, la viscosité grimpe : l'huile peine à remplir la pompe, qui crée des bulles de vapeur par dépression, c'est la cavitation. On prévoit un réchauffeur de réservoir sur les machines extérieures, ou une mise en route à faible charge le temps que l'huile se réchauffe.
+
+@012
+Q: La pompe d'une centrale fait un bruit de gravier qui roule. Quelle est la cause la plus probable ?
+C: De la cavitation à l'aspiration de la pompe
+W: Un limiteur de pression réglé bien trop bas sur le circuit
+W: Un vérin bloqué trop longtemps en fin de course de travail
+W: Une électrovanne alimentée sous une tension trop forte
+E: Une crépine colmatée, une vanne d'aspiration mal ouverte ou une huile trop visqueuse font chuter la pression à l'entrée de la pompe : des bulles de vapeur se forment puis implosent, avec ce bruit caractéristique. La cavitation détruit la pompe en quelques heures si on la laisse continuer.
+
+@013
+Q: Quel est le rôle d'un accumulateur hydraulique ?
+C: Stocker de l'huile sous pression pour la restituer
+W: Stocker l'huile de vidange avant son recyclage en atelier
+W: Augmenter le débit de la pompe de façon permanente
+W: Refroidir l'huile qui revient du circuit au réservoir
+E: L'accumulateur comprime un gaz derrière une vessie ou un piston : il emmagasine de l'huile sous pression et la restitue pour une pointe de débit, une réserve de secours ou l'amortissement des à-coups. Il ne crée pas de débit permanent : il rend ce qu'il a stocké.
+
+@014
+Q: Pourquoi ne faut-il jamais chercher une fuite hydraulique en passant la main le long d'un flexible ?
+C: Un jet fin peut injecter l'huile sous la peau
+W: L'huile chaude tache durablement les gants de travail
+W: Le flexible risque de se débrancher sous la main
+W: La main refroidit le flexible et fausse la recherche
+E: Une micro-fuite à 200 bar produit un jet invisible capable de traverser la peau : l'injection d'huile paraît bénigne mais impose une chirurgie en urgence, sous peine d'amputation. On cherche une fuite avec un carton ou un papier tenu à distance, jamais avec la main.
+
+@015
+Q: Remettre dans l'ordre le chemin de l'huile dans un circuit simple.
+O: Réservoir
+O: Pompe
+O: Distributeur
+O: Vérin
+O: Filtre de retour
+E: La pompe aspire dans le réservoir et refoule vers le distributeur, qui oriente l'huile vers une chambre du vérin. L'huile chassée de l'autre chambre repasse par le distributeur et traverse le filtre de retour avant de rejoindre le réservoir. Le limiteur se branche en dérivation juste après la pompe.
+
+@016
+Q: Une pompe débite 12 l/min dans un vérin de 20 cm² de surface. À quelle vitesse sort la tige ?
+N: 0.1
+U: m/s
+T: 2
+E: La vitesse vaut débit divisé par surface : 12 000 cm³/min / 20 cm² = 600 cm/min, soit 10 cm/s ou 0,1 m/s. La vitesse dépend du débit, pas de la pression : pour aller plus vite, il faut plus de débit.
+
+@017
+Q: En quelle unité exprime-t-on la cylindrée d'une pompe hydraulique ?
+C: En cm³ par tour
+W: En litres par minute
+W: En bar par tour
+W: En kW par litre
+E: La cylindrée est le volume théorique refoulé à chaque tour de l'arbre, en cm³/tr. Le débit en l/min s'en déduit en multipliant par la vitesse de rotation. C'est la caractéristique qui permet de choisir une pompe de remplacement.
+
+@018
+Q: Une pompe de 10 cm³/tr tourne à 1 500 tr/min. Quel est son débit théorique ?
+N: 15
+U: l/min
+E: Le débit théorique vaut cylindrée × vitesse : 10 × 1 500 = 15 000 cm³/min, soit 15 l/min. Le débit réel est un peu plus faible à cause des fuites internes, ce que traduit le rendement volumétrique.
+
+@019
+Q: Que fait un clapet anti-retour monté en sortie de pompe ?
+C: Il empêche l'huile de refluer vers la pompe
+W: Il augmente la pression disponible pour le vérin
+W: Il filtre l'huile envoyée vers le distributeur
+W: Il règle le débit de la pompe selon la charge
+E: À l'arrêt, ou quand un accumulateur est en charge, le clapet empêche l'huile sous pression de revenir à travers la pompe, ce qui la ferait tourner à l'envers et viderait le circuit. Il ne change ni la pression, ni le débit.
+
+@020
+Q: Associer chaque type de trait d'un schéma hydraulique à la conduite qu'il représente.
+P: Trait continu => conduite de travail ou de retour
+P: Trait interrompu long => conduite de pilotage
+P: Trait interrompu court => conduite de drainage ou de fuite
+E: La norme ISO 1219 code les conduites par leur trait : les traits pleins portent le débit principal, les pilotages transmettent un signal de pression vers un clapet ou un distributeur, les drains ramènent au réservoir les fuites internes d'un composant, sans pression.
+
+@021
+Q: Associer chaque lettre d'un distributeur hydraulique à son orifice.
+P: P => arrivée de pression depuis la pompe
+P: T => retour au réservoir
+P: A et B => sorties vers le récepteur
+P: X et Y => pilotage et drain du pilote
+E: P vient de pression, T de l'anglais tank, le réservoir. A et B se raccordent aux chambres du vérin ou aux orifices du moteur. Sur les gros distributeurs pilotés, X reçoit la pression de pilotage et Y draine le pilote vers le réservoir.
+
+@022
+Q: Pourquoi faut-il surveiller le niveau d'huile du réservoir ?
+C: Un niveau bas fait aspirer de l'air à la pompe
+W: Un niveau bas augmente la pression maximale du circuit
+W: Un niveau trop haut fait tourner la pompe à l'envers
+W: Un niveau trop haut empêche le limiteur de s'ouvrir
+E: Si l'huile descend sous la crépine, la pompe aspire de l'air : bruit, mouvements saccadés, huile mousseuse et usure rapide. Une baisse de niveau signale aussi une fuite à rechercher. Les centrales ont un indicateur visuel et souvent un contact de niveau bas qui arrête la pompe.
+
+@023
+Q: L'indicateur de colmatage d'un filtre passe au rouge. Que signifie-t-il ?
+C: Le filtre est encrassé et doit être remplacé
+W: L'huile a atteint sa température idéale de travail
+W: La pompe débite plus que le débit nominal prévu
+W: Le réservoir doit être complété avec la même huile
+E: L'indicateur mesure la différence de pression à travers l'élément filtrant : quand elle devient trop forte, le filtre est plein. Au-delà, un by-pass s'ouvre et l'huile sale contourne le filtre. On change la cartouche rapidement, en notant la date pour suivre la pollution.
+
+@024
+Q: Quelle force développe un vérin de diamètre 100 mm sous 150 bar ?
+N: 117810
+U: N
+T: 2
+E: La surface vaut π × 50² ≈ 7 854 mm² et 150 bar valent 15 N/mm² : F = 15 × 7 854 ≈ 117 810 N, soit près de 12 tonnes. Un vérin de la taille d'une bouteille développe ainsi l'effort d'une presse d'atelier.
+
+@025
+Q: Pourquoi l'huile d'un circuit hydraulique doit-elle rester très propre ?
+C: Les particules usent les pièces aux jeux très fins
+W: Les particules font baisser la viscosité de l'huile
+W: La saleté augmente la pression maximale du circuit
+W: Une huile sale refroidit trop vite dans le réservoir
+E: Pompes et distributeurs ont des jeux de quelques micromètres : des particules invisibles rayent les surfaces, augmentent les fuites internes et grippent les tiroirs. La majorité des pannes hydrauliques vient d'une huile polluée, d'où l'importance des filtres et des analyses.
+
+@026
+Q: Une pompe débite 30 l/min sous 200 bar. Quelle puissance hydraulique transmet-elle ?
+N: 10
+U: kW
+E: La puissance hydraulique vaut P = p × Q / 600, avec p en bar, Q en l/min et P en kW : 200 × 30 / 600 = 10 kW. Le moteur électrique devra fournir davantage pour couvrir les pertes de la pompe.
+
+@027
+Q: Pour fournir 10 kW hydrauliques avec un rendement global de 0,85, quelle puissance doit avoir le moteur électrique ?
+N: 11.76
+U: kW
+T: 2
+E: La puissance absorbée vaut 10 / 0,85 ≈ 11,76 kW : on choisit le moteur normalisé juste au-dessus, 15 kW. Les 1,76 kW de pertes chauffent l'huile, qu'il faudra refroidir si la machine tourne longtemps à pleine charge.
+
+@028
+Q: Associer chaque repère de la planche au composant qu'il représente.
+P: Repère 1 => distributeur 4/3 à centre fermé, électroaimants
+P: Repère 2 => limiteur de pression réglable
+P: Repère 3 => filtre
+P: Repère 4 => clapet anti-retour taré par ressort
+P: Repère 5 => étrangleur réglable
+E: Le distributeur 4/3 a trois cases, les orifices sont bouchés dans la case centrale, et ses électroaimants se dessinent comme des rectangles barrés. Le limiteur est un cadre dont la flèche est décalée des orifices, retenue par un ressort réglable et pilotée par la pression d'entrée en pointillés. Le filtre est un losange traversé de pointillés, l'étrangleur un rétrécissement barré d'une flèche de réglage.
+
+@029
+Q: Sur cette planche, quel repère protège le circuit contre une surpression ?
+C: Le repère 2
+W: Le repère 1
+W: Le repère 3
+W: Le repère 4
+E: Le repère 2 est un limiteur de pression : la flèche décalée montre qu'il est fermé au repos, la ligne pointillée applique la pression d'entrée contre le ressort réglable, et il s'ouvre vers le réservoir quand elle dépasse le réglage. Le 1 est un distributeur, le 3 un filtre, le 4 un clapet anti-retour.
+
+@030
+Q: Un distributeur 4/3 à centre fermé est au neutre, la pompe tournant. Que se passe-t-il ?
+C: Le vérin est bloqué et la pompe débite sur le limiteur
+W: Le vérin est libre et l'huile retourne sans pression au réservoir
+W: Le vérin sort lentement, poussé par le seul débit restant
+W: La pompe s'arrête automatiquement en position centrale
+E: Tous les orifices étant fermés, l'huile de la pompe ne trouve pas d'issue : la pression monte jusqu'au limiteur, qui renvoie tout le débit au réservoir. Le vérin est bien bloqué, mais toute la puissance de la pompe se transforme en chaleur, ce qui impose un centre tandem ou une pompe à cylindrée variable.
+
+@031
+Q: Quel est l'intérêt d'un distributeur 4/3 à centre tandem, P relié à T ?
+C: La pompe décharge au réservoir sans pression
+W: Le vérin devient libre et se déplace à la main
+W: La pompe alimente en même temps les deux chambres
+W: Le circuit monte à la pression de réglage du limiteur
+E: Au neutre, l'huile de la pompe retourne directement au réservoir presque sans pression : elle ne chauffe pas et le moteur électrique ne fournit presque rien. A et B restent fermés, le vérin reste bloqué. Ce centre est très courant sur les circuits simples à une seule fonction.
+
+@032
+Q: Associer chaque centre de distributeur 4/3 à la liaison qu'il réalise au neutre.
+P: Centre fermé => tous les orifices bloqués
+P: Centre tandem => P relié à T, A et B bloqués
+P: Centre ouvert => tous les orifices reliés entre eux
+P: Centre flottant => A et B reliés à T, P bloqué
+E: Le centre choisit le comportement au repos : bloquer le vérin, décharger la pompe, ou laisser le vérin libre pour le manœuvrer à la main ou laisser un moteur tourner en roue libre. Le centre fermé convient quand plusieurs distributeurs partagent une pompe à pression constante.
+
+@033
+Q: Une pompe de 20 l/min alimente le côté fond d'un vérin de diamètre 63 mm. Quelle est la vitesse de sortie ?
+N: 0.107
+U: m/s
+T: 2
+E: La surface vaut π × 3,15² ≈ 31,17 cm². La vitesse vaut 20 000 cm³/min / 31,17 cm² ≈ 641,7 cm/min, soit 10,7 cm/s ou 0,107 m/s. Pour doubler cette vitesse, il faudrait doubler le débit, pas la pression.
+
+@034
+Q: Quel couple fournit un moteur hydraulique de 50 cm³/tr sous une différence de pression de 100 bar ?
+N: 79.6
+U: Nm
+T: 2
+E: Le couple théorique vaut C = Vg × Δp / (20 × π) = 50 × 100 / 62,83 ≈ 79,6 N·m. Le couple dépend de la cylindrée et de la pression ; la vitesse, elle, dépend du débit qui alimente le moteur.
+
+@035
+Q: Ce moteur de 50 cm³/tr reçoit 25 l/min. À quelle vitesse tourne-t-il ?
+N: 500
+U: tr/min
+E: La vitesse vaut débit / cylindrée : 25 000 cm³/min / 50 cm³/tr = 500 tr/min. Un étrangleur sur l'alimentation du moteur permet donc de régler sa vitesse, comme celle d'un vérin.
+
+@036
+Q: À quoi sert un clapet anti-retour piloté monté sur un vérin ?
+C: Maintenir la charge quand le distributeur est au neutre
+W: Augmenter la pression disponible pour soulever la charge
+W: Filtrer l'huile qui revient du vérin vers le réservoir
+W: Refroidir l'huile du circuit de retour avant le réservoir
+E: Le clapet piloté laisse entrer l'huile librement et retient celle qui veut sortir, sans aucune fuite, contrairement au tiroir d'un distributeur. Pour faire descendre la charge, une pression de pilotage venue de l'autre chambre l'ouvre. On l'utilise pour tenir une charge longtemps.
+
+@037
+Q: Quel est le rôle d'une valve d'équilibrage montée sur un vérin de levage ?
+C: Retenir une charge entraînante pendant sa descente
+W: Ajouter de la pression pour soulever la charge plus vite
+W: Vider le vérin au réservoir lors d'un arrêt d'urgence
+W: Remplacer le limiteur de pression du circuit de levage
+E: Une charge qui descend tire le vérin plus vite que la pompe ne remplit l'autre chambre : elle tombe par saccades. La valve d'équilibrage crée une contre-pression réglée qui retient la charge et ne la laisse descendre que poussée par la pompe. On la trouve sur les grues et les nacelles.
+
+@038
+Q: La flèche d'une grue de chantier descend seule de quelques centimètres par heure, distributeur au neutre. Quelle est la cause probable ?
+C: Une fuite interne du vérin ou du clapet de maintien
+W: Un filtre de retour colmaté sur la centrale de la grue
+W: Une pompe beaucoup trop puissante pour ce circuit
+W: Un réservoir d'huile rempli au-delà de son niveau maximal
+E: Une descente lente sous charge signale de l'huile qui passe d'une chambre à l'autre par un joint de piston usé, ou qui fuit à travers un clapet de maintien encrassé. C'est un défaut de sécurité : on cale la flèche, puis on isole le vérin pour savoir lequel des deux fuit.
+
+@039
+Q: Quel est l'intérêt d'un régulateur de débit compensé en pression ?
+C: Garder la même vitesse malgré la charge
+W: Limiter la pression maximale du circuit entier
+W: Supprimer les chocs en fin de course du vérin
+W: Décharger la pompe quand le vérin est arrêté
+E: Un simple étrangleur laisse passer plus de débit quand la différence de pression augmente : la vitesse varie avec la charge. Le régulateur compensé ajuste son ouverture pour garder une chute de pression constante, donc un débit constant. On l'emploie pour une avance de travail régulière.
+
+@040
+Q: Remettre dans l'ordre le remplacement d'un flexible sur une machine hydraulique.
+O: Poser ou caler les charges suspendues
+O: Arrêter la centrale et la consigner
+O: Décharger la pression, accumulateur compris
+O: Remplacer le flexible
+O: Purger l'air et contrôler l'étanchéité
+E: On pose d'abord les charges pendant que la machine fonctionne encore : une fois l'huile évacuée, plus rien ne les retiendrait. Après consignation, on décharge toute la pression, y compris celle d'un accumulateur qui reste plein pompe arrêtée. Au redémarrage, on purge l'air et on vérifie l'absence de fuite à distance.
+
+@041
+Q: Pourquoi faut-il purger l'air d'un circuit après une intervention ?
+C: L'air rend les mouvements saccadés et dégrade l'huile
+W: L'air augmente la force disponible au niveau des vérins
+W: L'air refroidit trop l'huile qui retourne au réservoir
+W: L'air bouche définitivement les éléments filtrants
+E: L'air piégé se comprime : les vérins avancent par à-coups et manquent de rigidité. Sous pression, les bulles s'échauffent brutalement et brûlent l'huile, qui noircit. On purge par les vis de purge aux points hauts, en manœuvrant les vérins à faible pression.
+
+@042
+Q: Pourquoi un circuit avec accumulateur reste-t-il dangereux après l'arrêt de la pompe ?
+C: L'accumulateur reste sous pression pompe arrêtée
+W: Il explose dès que l'huile refroidit au repos
+W: Il se vide automatiquement au réservoir à l'arrêt
+W: Il ne contient de l'huile que pompe en marche
+E: L'accumulateur garde son huile sous la pression du gaz comprimé, parfois plusieurs heures après l'arrêt : un raccord desserré peut libérer un jet violent ou faire bouger un vérin. Avant toute intervention, on le vide au réservoir par sa vanne de décharge et on vérifie la pression au manomètre.
+
+@043
+Q: Avec quel gaz gonfle-t-on un accumulateur hydraulique ?
+C: De l'azote
+W: De l'oxygène
+W: De l'air comprimé
+W: Du gaz carbonique
+E: On utilise de l'azote, gaz neutre. L'oxygène, ou l'air qui en contient, peut provoquer une explosion au contact de l'huile sous pression : c'est l'effet diesel. Le gonflage se fait avec un kit adapté, à partir d'une bouteille d'azote munie d'un détendeur.
+
+@044
+Q: Un vérin de diamètre 80 mm doit fournir 60 kN. Quelle pression faut-il au minimum ?
+N: 119.4
+U: bar
+T: 2
+E: La surface vaut π × 40² ≈ 5 026,5 mm². La pression vaut F / S = 60 000 / 5 026,5 ≈ 11,94 N/mm², soit 119,4 bar. On règle ensuite le limiteur un peu au-dessus, en gardant une marge pour les pertes de charge.
+
+@045
+Q: Que provoque un flexible de diamètre trop petit pour le débit qu'il transporte ?
+C: Des pertes de charge et un échauffement de l'huile
+W: Une hausse de la force disponible au niveau du vérin
+W: Une baisse du bruit de la pompe et des vibrations
+W: Une meilleure filtration de l'huile qui le traverse
+E: Dans un tuyau trop fin, l'huile circule trop vite : elle frotte, perd de la pression et transforme cette énergie en chaleur. Le vérin reçoit moins de pression et la centrale chauffe. On dimensionne les conduites pour une vitesse d'huile raisonnable.
+
+@046
+Q: Associer chaque conduite à la vitesse d'huile habituellement recommandée.
+P: Aspiration de la pompe => 0,5 à 1,5 m/s
+P: Conduite de retour => 2 à 4 m/s
+P: Conduite de pression => 3 à 6 m/s
+E: L'aspiration doit être lente pour éviter la cavitation : on y met les plus gros diamètres. La conduite de pression peut être plus rapide, l'huile étant poussée, mais au-delà de 6 m/s environ, les pertes de charge et l'échauffement deviennent excessifs. Le retour se situe entre les deux.
+
+@047
+Q: Une conduite de pression transporte 30 l/min à 4 m/s. Quelle section intérieure lui faut-il ?
+N: 125
+U: mm²
+T: 2
+E: 30 l/min font 0,0005 m³/s. La section vaut Q / v = 0,0005 / 4 = 0,000125 m², soit 125 mm², ce qui correspond à un diamètre intérieur d'environ 12,6 mm. On choisit le diamètre normalisé juste au-dessus.
+
+@048
+Q: Quelle est la plage de température de travail habituelle de l'huile d'une centrale ?
+C: Entre 40 et 60 °C
+W: Entre 0 et 10 °C
+W: Entre 90 et 110 °C
+W: Au-delà de 120 °C
+E: Entre 40 et 60 °C, l'huile garde une viscosité adaptée et vieillit lentement. Au-delà de 70 à 80 °C, elle s'oxyde vite, les joints durcissent et les fuites internes augmentent. Une huile qui chauffe trop signale une puissance perdue à rechercher.
+
+@049
+Q: L'huile d'une presse monte à 80 °C en fin de poste. Que faut-il vérifier en premier ?
+C: Le refroidisseur et un limiteur qui débite en permanence
+W: La viscosité, sans doute trop élevée pour la saison
+W: La taille de la crépine, sans doute trop grande
+W: La course du vérin, sans doute trop courte pour la presse
+E: La chaleur vient de la puissance perdue : un limiteur qui s'ouvre en permanence, un centre fermé qui fait débiter la pompe sous pression, des fuites internes. On vérifie aussi que le refroidisseur fonctionne et n'est pas encrassé. Mesurer la température aux différents composants localise la perte.
+
+@050
+Q: Qu'est-ce qui caractérise une pompe à engrenages ?
+C: Simple, robuste et à cylindrée fixe
+W: À cylindrée variable par plateau incliné
+W: La plus précise pour les très hautes pressions
+W: Sans aucun jeu interne ni la moindre fuite
+E: La pompe à engrenages extérieurs est la plus répandue : peu chère, tolérante à la pollution, à cylindrée fixe. Les plateaux inclinés et les très hautes pressions sont l'affaire des pompes à pistons axiaux. Toute pompe a des jeux et donc des fuites internes.
