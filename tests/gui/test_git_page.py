@@ -38,11 +38,11 @@ def test_level_is_played_undone_and_solved(qt_application, tmp_path):
     assert not vPage.level_card.isHidden()
     assert vPage.graph_widget.width() > 0
 
-    vPage.command_edit.setText("git push")
+    vPage.command_edit.setText("git stash")
     vPage.run_command()
 
     assert vPage.message_label.text().startswith("Commande non prise en charge")
-    assert vPage.command_edit.text() == "git push"
+    assert vPage.command_edit.text() == "git stash"
 
     vPage.command_edit.setText("git commit")
     vPage.run_command()
@@ -84,3 +84,21 @@ def test_level_is_played_undone_and_solved(qt_application, tmp_path):
     vPage.restart()
 
     assert vPage.history == []
+
+
+def test_server_graphs_follow_the_level(qt_application, tmp_path):
+    """Vérifie que les graphes du serveur n'apparaissent que dans un niveau à origin."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vPage.open_level("push")
+
+    assert all(not vWidget.isHidden() for vWidget in vPage.server_parts)
+
+    vPage.command_edit.setText("git push")
+    vPage.run_command()
+
+    assert vPage.message_label.text().endswith("parcours optimal.")
+
+    vPage.open_level("premiers-commits")
+
+    assert all(vWidget.isHidden() for vWidget in vPage.server_parts)

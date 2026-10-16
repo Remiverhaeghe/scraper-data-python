@@ -374,7 +374,7 @@ recherche depuis le téléphone, le planificateur (`python -m scheduler`) doit t
 
 Page Défis du bureau et du web, sur le principe des calendriers de défis en ligne, avec des énoncés propres au projet :
 
-- [x] Dix défis en deux parties (production, réseau, automatisme, électricité, Modbus), une étoile par partie réussie
+- [x] Treize défis en deux parties (production, maintenance, traçabilité, réseau, automatisme, électricité, Modbus), une étoile par partie réussie
 - [x] Données personnelles tirées d'une graine enregistrée en base, reproductibles ; exemple résolu fourni avec ses réponses
 - [x] Résolution dans le langage de son choix : seule la réponse est comparée, aucun code n'est exécuté par l'application
 - [x] Seconde partie ouverte après la première, attente réglable après une erreur (30 s par défaut, jamais nulle), « trop haute » ou « trop basse » pour un nombre
@@ -385,8 +385,9 @@ Page Défis du bureau et du web, sur le principe des calendriers de défis en li
 Page Git du bureau et du web, pour s'exercer aux branches sans risque :
 
 - [x] Dépôt simulé (commits, branches, HEAD) : commit, branch, switch, checkout, merge, rebase, reset, revert, cherry-pick, références relatives ^ et ~
+- [x] Serveur origin simulé : fetch, pull (avec --rebase), push refusé tant que le travail de l'équipe n'est pas intégré, graphe du serveur à côté du dépôt local
 - [x] Graphe des commits en SVG, à côté de l'objectif ; commits perdus estompés
-- [x] Treize niveaux progressifs, objectif comparé par la forme du graphe : un autre chemin vers le même résultat est accepté
+- [x] Dix-neuf niveaux progressifs, du premier commit au travail à plusieurs, objectif comparé par la forme du graphe : un autre chemin vers le même résultat est accepté
 - [x] Annulation de la dernière commande, indice, solution de référence et meilleur nombre de commandes enregistré
 - [x] Aucune commande transmise au système : seul l'historique est simulé
 

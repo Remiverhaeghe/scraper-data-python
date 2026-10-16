@@ -1654,10 +1654,12 @@ def test_git_levels_are_listed_played_and_solved(client):
 
     assert "parcours optimal" in vSolved.text
     assert "Niveau suivant" in vSolved.text
+    assert "Serveur attendu" not in vSolved.text
+    assert "Serveur attendu" in client.get("/git/push").text
     assert (
         client.post(
             "/git/premiers-commits/command",
-            data={"history": ["git push"], "command": "git commit"},
+            data={"history": ["git stash"], "command": "git commit"},
         ).status_code
         == 400
     )

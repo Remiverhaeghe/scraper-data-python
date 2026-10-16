@@ -14,6 +14,8 @@ from functools import lru_cache
 from job.challenges import (
     arrets_ligne,
     chemin_atelier,
+    courbe_charge,
+    demarrages_moteur,
     engrenages,
     grafcet_rejeu,
     journal_http,
@@ -21,6 +23,7 @@ from job.challenges import (
     pieces_bonnes,
     sous_reseaux,
     tampon_production,
+    tracabilite_lots,
     trames_modbus,
 )
 from job.settings import load_settings
@@ -35,12 +38,15 @@ CHALLENGES = (
     arrets_ligne,
     pieces_bonnes,
     journal_http,
+    demarrages_moteur,
     tampon_production,
     mesures_4_20,
+    courbe_charge,
     sous_reseaux,
     grafcet_rejeu,
     engrenages,
     chemin_atelier,
+    tracabilite_lots,
     trames_modbus,
 )
 PARTS = (1, 2)

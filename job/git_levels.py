@@ -178,6 +178,25 @@ LEVELS = (
         "Une seule commande accepte plusieurs commits.",
     ),
     GitLevel(
+        "second-parent",
+        "Le second parent d'une fusion",
+        "Se déplacer",
+        "Un commit de fusion a deux parents. `^` suit le premier, celui de la "
+        "branche où l'on a fusionné ; `^2` suit le second, celui de la branche "
+        "intégrée.\n\n"
+        "Objectif : créer la branche `retour` sur le second parent de la fusion, "
+        "sans écrire d'identifiant.",
+        (
+            "git switch -c correctif",
+            "git commit",
+            "git switch main",
+            "git commit",
+            "git merge correctif",
+        ),
+        ("git branch retour main^2",),
+        "main^2 désigne le second parent du dernier commit de main.",
+    ),
+    GitLevel(
         "rebase",
         "Rejouer ses commits",
         "Intégrer",
@@ -220,6 +239,69 @@ LEVELS = (
         "Chaque branche se rejoue sur la précédente ; la fusion finale est une "
         "avance rapide.",
     ),
+    GitLevel(
+        "push",
+        "Partager son travail",
+        "Travailler à plusieurs",
+        "Le dépôt a été cloné depuis le serveur **origin**. L'étiquette "
+        "`origin/main` indique où se trouvait `main` sur le serveur lors du "
+        "dernier échange : elle ne bouge pas toute seule.\n\n"
+        "`git push` envoie la branche courante au serveur ; `origin/main` la "
+        "suit.\n\n"
+        "Objectif : envoyer le nouveau commit de `main` au serveur.",
+        ("git commit", "@clone", "git commit"),
+        ("git push",),
+        "Une seule commande, depuis main.",
+    ),
+    GitLevel(
+        "fetch",
+        "Voir le travail de l'équipe",
+        "Travailler à plusieurs",
+        "Un collègue a envoyé deux commits sur le serveur. Votre dépôt ne le sait "
+        "pas encore : `git fetch` les récupère et avance `origin/main`, sans "
+        "toucher à vos branches.\n\n"
+        "Objectif : récupérer les commits du serveur, `main` restant en place.",
+        ("git commit", "@clone", "@equipe main 2"),
+        ("git fetch",),
+        "fetch ne modifie que les étiquettes origin/….",
+    ),
+    GitLevel(
+        "pull",
+        "Se mettre à jour",
+        "Travailler à plusieurs",
+        "`git pull` enchaîne `git fetch` et la fusion de `origin/main` dans "
+        "`main`. Sans travail local, la fusion est une avance rapide.\n\n"
+        "Objectif : amener `main` au niveau du serveur.",
+        ("git commit", "@clone", "@equipe main"),
+        ("git pull",),
+        "git pull fait le fetch et la fusion en une fois.",
+    ),
+    GitLevel(
+        "push-refuse",
+        "Envoi refusé",
+        "Travailler à plusieurs",
+        "Vous avez un commit local, et un collègue en a envoyé un autre entre-"
+        "temps : le serveur refuse votre envoi, il perdrait son commit. Essayez "
+        "`git push` pour voir.\n\n"
+        "`git pull --rebase` récupère son commit et rejoue le vôtre par-dessus : "
+        "l'historique reste linéaire et l'envoi passe.\n\n"
+        "Objectif : votre commit rejoué après celui du collègue, sur le serveur.",
+        ("git commit", "@clone", "git commit", "@equipe main"),
+        ("git pull --rebase", "git push"),
+        "Rejouer d'abord votre commit sur origin/main, puis envoyer.",
+    ),
+    GitLevel(
+        "branche-distante",
+        "Publier une branche",
+        "Travailler à plusieurs",
+        "Une branche créée localement n'existe pas sur le serveur tant qu'on ne "
+        "l'y envoie pas : `git push origin <branche>` la crée là-bas, avec son "
+        "étiquette `origin/<branche>`.\n\n"
+        "Objectif : créer la branche `revue` avec un commit, puis la publier.",
+        ("git commit", "@clone"),
+        ("git switch -c revue", "git commit", "git push origin revue"),
+        "Trois commandes : créer et se placer, valider, envoyer.",
+    ),
 )
 
 
@@ -253,16 +335,23 @@ def build_signatures(pRepository, pBaseCommits):
     return rSignatures
 
 
+def sign_references(pReferences, pSignatures):
+    """Retourne la forme du commit désigné par chaque étiquette."""
+
+    rSigned = {vName: pSignatures[vCommit] for vName, vCommit in pReferences.items()}
+
+    return rSigned
+
+
 def describe(pRepository, pBaseCommits):
-    """Retourne ce qui définit l'état d'un dépôt : branches et position de HEAD."""
+    """Retourne ce qui définit l'état d'un dépôt : branches, serveur et HEAD."""
 
     vSignatures = build_signatures(pRepository, pBaseCommits)
 
     rState = (
-        {
-            vName: vSignatures[vCommit]
-            for vName, vCommit in pRepository.branches.items()
-        },
+        sign_references(pRepository.branches, vSignatures),
+        sign_references(pRepository.remote, vSignatures),
+        sign_references(pRepository.tracking, vSignatures),
         (
             ("détaché", vSignatures[pRepository.head])
             if pRepository.detached
@@ -323,6 +412,7 @@ def replay_level(pLevel, pHistory):
 
     rRepository = replay(pLevel.setup)
 
+    # Les commandes saisies n'ont pas droit à la mise en place (@…).
     for vCommand in pHistory:
         run_command(rRepository, vCommand)
 
@@ -385,6 +475,7 @@ def build_level_view(pLevelId, pHistory):
 
     vLevel = require_level(pLevelId)
     vRepository = replay_level(vLevel, pHistory)
+    vGoal = replay(vLevel.setup + vLevel.solution)
     vIndex = LEVELS.index(vLevel)
 
     rView = {
@@ -398,8 +489,18 @@ def build_level_view(pLevelId, pHistory):
         "history": list(pHistory),
         "done": is_goal_reached(vLevel, vRepository),
         "next_id": LEVELS[vIndex + 1].id if vIndex + 1 < len(LEVELS) else None,
-        "graph": render_graph(vRepository, "Votre dépôt"),
-        "goal": render_graph(replay(vLevel.setup + vLevel.solution), "Objectif"),
+        "graph": render_graph(vRepository.local_view(), "Votre dépôt"),
+        "goal": render_graph(vGoal.local_view(), "Objectif"),
+        "server": (
+            render_graph(vRepository.server_view(), "Serveur", pShowHead=False)
+            if vRepository.remote
+            else ""
+        ),
+        "goal_server": (
+            render_graph(vGoal.server_view(), "Serveur attendu", pShowHead=False)
+            if vGoal.remote
+            else ""
+        ),
     }
 
     return rView

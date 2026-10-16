@@ -40,16 +40,16 @@ def compute_layout(pRepository):
     return rLayout
 
 
-def build_labels(pRepository):
+def build_labels(pRepository, pShowHead=True):
     """Retourne l'étiquette de chaque commit : ses branches, HEAD marqué d'une *."""
 
     rLabels = {}
 
     for vName, vCommit in sorted(pRepository.branches.items()):
-        vCurrent = not pRepository.detached and pRepository.head == vName
+        vCurrent = pShowHead and not pRepository.detached and pRepository.head == vName
         rLabels.setdefault(vCommit, []).append(f"{vName}*" if vCurrent else vName)
 
-    if pRepository.detached:
+    if pShowHead and pRepository.detached:
         rLabels.setdefault(pRepository.head, []).append("HEAD")
 
     return rLabels
@@ -102,31 +102,33 @@ def draw_commit(pCommit, pPosition, pColor, pIsHead, pLabels):
     return rSvg
 
 
-def render_graph(pRepository, pTitle):
-    """Retourne le SVG du graphe ; les commits devenus invisibles sont estompés."""
+def render_graph(pRepository, pTitle, pShowHead=True):
+    """Retourne le SVG du graphe ; les commits devenus invisibles sont estompés.
+
+    Sans HEAD (pShowHead à False), pour le serveur : aucun commit n'est cerclé.
+    """
 
     vLayout = compute_layout(pRepository)
     vPositions = {vCommit: get_position(vLayout, vCommit) for vCommit in vLayout}
-    vLabels = build_labels(pRepository)
+    vLabels = build_labels(pRepository, pShowHead)
     vReachable = pRepository.reachable()
     vEdges = []
     vNodes = []
 
     for vCommit, vData in pRepository.commits.items():
-        vPosition = vPositions[vCommit]
         vOpacity = "1" if vCommit in vReachable else FADED_OPACITY
 
         vEdges.extend(
-            draw_edge(vPositions[vParent], vPosition, vOpacity)
+            draw_edge(vPositions[vParent], vPositions[vCommit], vOpacity)
             for vParent in vData.parents
         )
         vNodes.append(
             f'<g opacity="{vOpacity}">'
             + draw_commit(
                 vCommit,
-                vPosition,
+                vPositions[vCommit],
                 LANE_COLORS[vLayout[vCommit][1] % len(LANE_COLORS)],
-                vCommit == pRepository.head_commit(),
+                pShowHead and vCommit == pRepository.head_commit(),
                 vLabels.get(vCommit),
             )
             + "</g>"

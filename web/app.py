@@ -2187,6 +2187,10 @@ def answer_challenge(
     return rResponse
 
 
+# Graphes SVG d'un niveau Git, affichés tels quels
+GIT_GRAPHS = ("graph", "goal", "server", "goal_server")
+
+
 def render_git(
     pRequest, pDatabaseFile, pLevelId=None, pHistory=(), pMessage=None, pStatusCode=200
 ):
@@ -2203,8 +2207,10 @@ def render_git(
             "view": vView,
             "commands": SUPPORTED_COMMANDS,
             # SVG construit par job/git_graph.py, textes échappés : HTML sûr.
-            "graph": Markup(vView["graph"]) if vView else "",  # nosec B704
-            "goal": Markup(vView["goal"]) if vView else "",  # nosec B704
+            **{
+                vKey: Markup(vView[vKey]) if vView else ""  # nosec B704
+                for vKey in GIT_GRAPHS
+            },
             "intro": Markup(
                 render_markdown(vView["intro"] if vView else "")
             ),  # nosec B704

@@ -149,7 +149,7 @@ def test_reset_revert_cherry_pick_and_amend():
         ("", "Saisissez une commande"),
         ("ls", "commencent par git"),
         ("git", "commencent par git"),
-        ("git push", "non prise en charge"),
+        ("git stash", "non prise en charge"),
         ('git commit -m "oubli', "Guillemet"),
         ("git commit " + "x" * 120, "trop longue"),
         ("git branch C5", "Nom de branche invalide"),
@@ -206,3 +206,85 @@ def test_graph_places_branches_and_fades_lost_commits():
     run_command(vRepository, "git checkout C1")
 
     assert ">f, HEAD</text>" in render_graph(vRepository, "Dépôt")
+
+
+def test_remote_fetch_pull_and_push():
+    """Vérifie le serveur simulé : commits de l'équipe, fetch, pull et push."""
+
+    vRepository = replay(("git commit", "@clone", "@equipe main 2"))
+
+    assert vRepository.tracking == {"origin/main": "C1"}
+    assert "C3" not in vRepository.local_view().commits
+
+    with pytest.raises(ValueError, match="Référence inconnue"):
+        run_command(vRepository, "git checkout C3")
+
+    assert run_command(vRepository, "git fetch") == "2 commit(s) récupéré(s) du serveur"
+    assert run_command(vRepository, "git fetch origin") == "Déjà à jour"
+    assert run_command(vRepository, "git checkout origin/main~1") == (
+        "HEAD détaché sur C2"
+    )
+    assert run_command(vRepository, "git switch main") == "Sur la branche main"
+    assert run_command(vRepository, "git pull") == (
+        "Déjà à jour. Avance rapide jusqu'à C3"
+    )
+
+    run_all(vRepository, "git commit", "git push")
+
+    assert vRepository.remote == {"main": "C4"}
+    assert vRepository.tracking == {"origin/main": "C4"}
+    assert run_command(vRepository, "git push origin main") == "Déjà à jour"
+
+
+def test_push_is_refused_until_the_team_work_is_integrated():
+    """Vérifie le refus d'un envoi sur un serveur qui a avancé, puis pull --rebase."""
+
+    vRepository = replay(("git commit", "@clone", "git commit", "@equipe main"))
+
+    with pytest.raises(ValueError, match="Envoi refusé"):
+        run_command(vRepository, "git push")
+
+    assert run_command(vRepository, "git pull --rebase") == (
+        "1 commit(s) récupéré(s) du serveur. 1 commit(s) rejoué(s) sur C3"
+    )
+    assert run_command(vRepository, "git push") == "main envoyée : origin/main sur C2'"
+
+    run_all(vRepository, "git switch -c revue", "git commit")
+
+    assert run_command(vRepository, "git push origin revue").startswith("revue envoyée")
+    assert set(vRepository.server_view().branches) == {"main", "revue"}
+
+
+@pytest.mark.parametrize(
+    ("pSetup", "pCommand", "pMessage"),
+    [
+        ((), "git fetch", "Aucun dépôt distant"),
+        ((), "git push", "Aucun dépôt distant"),
+        (("@clone",), "git push upstream main", "Dépôt distant inconnu"),
+        (("@clone", "git checkout C0"), "git pull", "HEAD détaché"),
+        (("@clone", "git checkout C0"), "git push", "HEAD détaché"),
+        (("@clone", "git switch -c locale"), "git pull", "n'existe pas sur le serveur"),
+        (("@clone",), "git branch origin/x", "Nom de branche invalide"),
+        (("@clone",), "@equipe main", "commencent par git"),
+    ],
+)
+def test_remote_commands_refuse_bad_requests(pSetup, pCommand, pMessage):
+    """Vérifie les refus des commandes distantes et la mise en place réservée."""
+
+    with pytest.raises(ValueError, match=pMessage):
+        run_command(replay(pSetup), pCommand)
+
+
+def test_unknown_setup_command_is_refused():
+    """Vérifie le refus d'une mise en place inconnue dans un niveau."""
+
+    with pytest.raises(ValueError, match="Mise en place inconnue"):
+        replay(("@inconnue",))
+
+
+def test_server_graph_has_no_head():
+    """Vérifie que le graphe du serveur ne marque aucune branche courante."""
+
+    vSvg = render_graph(replay(("@clone",)).server_view(), "Serveur", pShowHead=False)
+
+    assert ">main</text>" in vSvg and "*" not in vSvg

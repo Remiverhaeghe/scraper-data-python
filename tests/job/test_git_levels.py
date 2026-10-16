@@ -134,7 +134,7 @@ def test_level_view_follows_the_history():
     ("pLevelId", "pHistory", "pMessage"),
     [
         ("inconnu", [], "Niveau inconnu"),
-        ("fusion", ["git push"], "non prise en charge"),
+        ("fusion", ["git stash"], "non prise en charge"),
         ("fusion", ["git status"] * (MAX_HISTORY + 1), "recommencez le niveau"),
     ],
 )

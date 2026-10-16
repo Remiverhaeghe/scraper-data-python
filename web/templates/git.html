@@ -30,6 +30,10 @@
     <div class="git-graphs">
         <figure><figcaption class="card-subtitle">Votre dépôt</figcaption>{{ graph }}</figure>
         <figure><figcaption class="card-subtitle">Objectif</figcaption>{{ goal }}</figure>
+        {% if server %}
+        <figure><figcaption class="card-subtitle">Serveur</figcaption>{{ server }}</figure>
+        <figure><figcaption class="card-subtitle">Serveur attendu</figcaption>{{ goal_server }}</figure>
+        {% endif %}
     </div>
 
     {% if message %}<p class="application-message tone-{{ message[1] }}" role="status">{{ message[0] }}</p>{% endif %}

@@ -1,9 +1,13 @@
 """Bac à sable Git : dépôt simulé et interprétation des commandes saisies
 
 Seul l'historique est simulé (commits, branches et HEAD) : aucun fichier n'est
-lu ni écrit, et aucune commande n'est transmise au système.
+lu ni écrit, et aucune commande n'est transmise au système. Le serveur origin
+partage la même réserve de commits : ses branches sont dans remote, leur copie
+locale (origin/main) dans tracking, et les commits poussés par l'équipe restent
+inconnus du dépôt local jusqu'au prochain fetch.
 """
 
+import copy
 import re
 import shlex
 from dataclasses import dataclass, field
@@ -15,6 +19,10 @@ BRANCH_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9._/-]{0,29}")
 COMMIT_PATTERN = re.compile(r"C\d+'*", re.IGNORECASE)
 REFERENCE_PATTERN = re.compile(r"(?P<base>[A-Za-z0-9._/'-]+?)(?P<moves>(?:[\^~]\d*)*)")
 MOVE_PATTERN = re.compile(r"([\^~])(\d*)")
+
+REMOTE_NAME = "origin"
+# Commandes de mise en place des niveaux, refusées à la saisie
+SETUP_PREFIX = "@"
 
 SUPPORTED_COMMANDS = (
     ("git commit [--amend]", "Enregistre un commit sur la position de HEAD"),
@@ -29,6 +37,9 @@ SUPPORTED_COMMANDS = (
     ("git revert <réf>", "Ajoute un commit qui annule le commit désigné"),
     ("git cherry-pick <réf>…", "Recopie un ou plusieurs commits sur HEAD"),
     ("git status", "Indique la position de HEAD"),
+    ("git fetch", "Récupère les commits du serveur sans toucher aux branches locales"),
+    ("git pull [--rebase]", "fetch puis fusion (ou rebase) de origin/<branche>"),
+    ("git push", "Envoie la branche courante au serveur"),
 )
 
 
@@ -50,6 +61,9 @@ class Repository:
     head: str = "main"
     detached: bool = False
     next_number: int = 1
+    remote: dict = field(default_factory=dict)
+    tracking: dict = field(default_factory=dict)
+    unknown: set = field(default_factory=set)
 
     def head_commit(self):
         """Retourne le commit désigné par HEAD."""
@@ -78,10 +92,50 @@ class Repository:
 
         rReachable = set()
 
-        for vCommit in (*self.branches.values(), self.head_commit()):
+        for vCommit in (
+            *self.branches.values(),
+            *self.tracking.values(),
+            self.head_commit(),
+        ):
             rReachable |= self.ancestors(vCommit)
 
         return rReachable
+
+    def local_view(self):
+        """Retourne le dépôt tel que vu localement : origin/… parmi les étiquettes."""
+
+        rView = Repository(
+            {
+                vCommit: vData
+                for vCommit, vData in self.commits.items()
+                if vCommit not in self.unknown
+            },
+            {**self.branches, **self.tracking},
+            self.head,
+            self.detached,
+        )
+
+        return rView
+
+    def server_view(self):
+        """Retourne le dépôt du serveur : ses commits et ses branches, sans HEAD."""
+
+        vCommits = set()
+
+        for vCommit in self.remote.values():
+            vCommits |= self.ancestors(vCommit)
+
+        rView = Repository(
+            {
+                vCommit: vData
+                for vCommit, vData in self.commits.items()
+                if vCommit in vCommits
+            },
+            dict(self.remote),
+            next(iter(self.remote)),
+        )
+
+        return rView
 
     def add_commit(self, pParents, pKind="commit", pOrigin=""):
         """Ajoute un commit ; une copie reprend l'identifiant de l'original, suivi de '."""
@@ -131,7 +185,9 @@ class Repository:
             rCommit = self.head_commit()
         elif vBase in self.branches:
             rCommit = self.branches[vBase]
-        elif vBase.upper() in self.commits:
+        elif vBase in self.tracking:
+            rCommit = self.tracking[vBase]
+        elif vBase.upper() in self.commits and vBase.upper() not in self.unknown:
             rCommit = vBase.upper()
         else:
             raise ValueError(f"Référence inconnue : {vBase}")
@@ -173,10 +229,12 @@ def check_branch_name(pRepository, pName, pMustExist):
         not BRANCH_PATTERN.fullmatch(pName)
         or pName.upper() == "HEAD"
         or COMMIT_PATTERN.fullmatch(pName)
+        or pName.startswith(f"{REMOTE_NAME}/")
     ):
         raise ValueError(
             f"Nom de branche invalide : {pName} (lettres, chiffres, . _ / -, "
-            "30 caractères au plus, différent d'un identifiant de commit)"
+            "30 caractères au plus, différent d'un identifiant de commit et "
+            f"sans {REMOTE_NAME}/ au début)"
         )
 
     if pName in pRepository.branches:
@@ -471,6 +529,117 @@ def run_status(pRepository, pArguments):
     return rMessage
 
 
+def require_remote(pRepository):
+    """Vérifie que le niveau a un serveur."""
+
+    if not pRepository.remote:
+        raise ValueError(f"Aucun dépôt distant {REMOTE_NAME} dans ce niveau")
+
+
+def run_fetch(pRepository, pArguments):
+    """Récupère les branches du serveur dans origin/…, sans toucher aux branches."""
+
+    require_remote(pRepository)
+    expect_values(split_options(pArguments)[1], 0, 1, "git fetch [origin]")
+
+    vBefore = dict(pRepository.tracking)
+    vCount = len(pRepository.unknown)
+    pRepository.tracking = {
+        f"{REMOTE_NAME}/{vName}": vCommit
+        for vName, vCommit in pRepository.remote.items()
+    }
+    pRepository.unknown = set()
+
+    if pRepository.tracking == vBefore:
+        return "Déjà à jour"
+
+    rMessage = f"{vCount} commit(s) récupéré(s) du serveur"
+
+    return rMessage
+
+
+def run_pull(pRepository, pArguments):
+    """Enchaîne fetch puis la fusion, ou le rebase, de origin/<branche courante>."""
+
+    vOptions, _ = split_options(pArguments)
+
+    if pRepository.detached:
+        raise ValueError("HEAD détaché : placez-vous d'abord sur une branche")
+
+    vFetch = run_fetch(pRepository, [])
+    vTracked = f"{REMOTE_NAME}/{pRepository.head}"
+
+    if vTracked not in pRepository.tracking:
+        raise ValueError(f"{vTracked} n'existe pas sur le serveur")
+
+    vIntegrate = run_rebase if "--rebase" in vOptions else run_merge
+
+    rMessage = f"{vFetch}. {vIntegrate(pRepository, [vTracked])}"
+
+    return rMessage
+
+
+def run_push(pRepository, pArguments):
+    """Envoie une branche au serveur, refusé si le serveur a avancé entre-temps."""
+
+    require_remote(pRepository)
+    _, vValues = split_options(pArguments)
+    expect_values(vValues, 0, 2, "git push [origin [<branche>]]")
+
+    if vValues and vValues[0] != REMOTE_NAME:
+        raise ValueError(f"Dépôt distant inconnu : {vValues[0]}")
+
+    if len(vValues) == 2:
+        vBranch = vValues[1]
+    elif pRepository.detached:
+        raise ValueError("HEAD détaché : précisez la branche à envoyer")
+    else:
+        vBranch = pRepository.head
+
+    check_branch_name(pRepository, vBranch, True)
+
+    vCommit = pRepository.branches[vBranch]
+    vServer = pRepository.remote.get(vBranch)
+
+    if vServer == vCommit:
+        return "Déjà à jour"
+
+    if vServer and vServer not in pRepository.ancestors(vCommit):
+        raise ValueError(
+            "Envoi refusé : le serveur contient des commits que vous n'avez pas. "
+            "Récupérez-les d'abord (git pull)"
+        )
+
+    pRepository.remote[vBranch] = vCommit
+    pRepository.tracking[f"{REMOTE_NAME}/{vBranch}"] = vCommit
+
+    rMessage = f"{vBranch} envoyée : {REMOTE_NAME}/{vBranch} sur {vCommit}"
+
+    return rMessage
+
+
+def run_setup(pRepository, pWords):
+    """Prépare un niveau : clone (@clone) ou commits de l'équipe (@equipe <branche> [n])."""
+
+    if pWords == ["@clone"]:
+        pRepository.remote = dict(pRepository.branches)
+        pRepository.tracking = {
+            f"{REMOTE_NAME}/{vName}": vCommit
+            for vName, vCommit in pRepository.branches.items()
+        }
+    elif pWords[0] == "@equipe" and len(pWords) in (2, 3):
+        vBranch = pWords[1]
+        vParent = pRepository.remote.get(vBranch, pRepository.remote.get("main"))
+
+        for _ in range(int(pWords[2]) if len(pWords) == 3 else 1):
+            vParent = pRepository.add_commit((vParent,))
+            pRepository.unknown.add(vParent)
+
+        pRepository.remote[vBranch] = vParent
+    else:
+        raise ValueError(f"Mise en place inconnue : {' '.join(pWords)}")
+
+
 COMMANDS = {
     "commit": run_commit,
     "branch": run_branch,
@@ -484,13 +653,17 @@ COMMANDS = {
     "revert": run_revert,
     "cherry-pick": run_cherry_pick,
     "status": run_status,
+    "fetch": run_fetch,
+    "pull": run_pull,
+    "push": run_push,
 }
 
 
-def run_command(pRepository, pCommand):
+def run_command(pRepository, pCommand, pAllowSetup=False):
     """Exécute une commande sur le dépôt simulé ; retourne le message à afficher.
 
-    Lève ValueError, sans rien modifier, si la commande est invalide.
+    pAllowSetup accepte les commandes de mise en place d'un niveau (@…). Lève
+    ValueError, sans rien modifier, si la commande est invalide.
     """
 
     if len(pCommand) > MAX_COMMAND_LENGTH:
@@ -504,6 +677,11 @@ def run_command(pRepository, pCommand):
 
     if not vWords:
         raise ValueError("Saisissez une commande")
+
+    if pAllowSetup and vWords[0].startswith(SETUP_PREFIX):
+        run_setup(pRepository, vWords)
+
+        return ""
 
     if vWords[0] != "git" or len(vWords) < 2:
         raise ValueError("Les commandes commencent par git, par exemple git commit")
@@ -534,13 +712,7 @@ def run_command(pRepository, pCommand):
 def snapshot(pRepository):
     """Retourne une copie de l'état du dépôt, pour annuler une commande en échec."""
 
-    rState = (
-        dict(pRepository.commits),
-        dict(pRepository.branches),
-        pRepository.head,
-        pRepository.detached,
-        pRepository.next_number,
-    )
+    rState = copy.deepcopy(vars(pRepository))
 
     return rState
 
@@ -548,13 +720,7 @@ def snapshot(pRepository):
 def restore(pRepository, pState):
     """Rétablit un état pris par snapshot."""
 
-    (
-        pRepository.commits,
-        pRepository.branches,
-        pRepository.head,
-        pRepository.detached,
-        pRepository.next_number,
-    ) = (dict(pState[0]), dict(pState[1]), *pState[2:])
+    vars(pRepository).update(copy.deepcopy(pState))
 
 
 def replay(pCommands):
@@ -563,6 +729,6 @@ def replay(pCommands):
     rRepository = Repository()
 
     for vCommand in pCommands:
-        run_command(rRepository, vCommand)
+        run_command(rRepository, vCommand, pAllowSetup=True)
 
     return rRepository

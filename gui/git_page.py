@@ -117,18 +117,31 @@ class GitPage(QWidget):
 
         self.graph_widget = create_graph_widget()
         self.goal_widget = create_graph_widget()
+        self.server_widget = create_graph_widget()
+        self.goal_server_widget = create_graph_widget()
+        # Graphes du serveur, et leurs titres, masqués dans un niveau sans origin
+        self.server_parts = []
 
         vGraphs = QHBoxLayout()
 
-        for vTitle, vWidget in (
-            ("Votre dépôt", self.graph_widget),
-            ("Objectif", self.goal_widget),
+        for vTitle, vWidget, vServerTitle, vServerWidget in (
+            ("Votre dépôt", self.graph_widget, "Serveur", self.server_widget),
+            (
+                "Objectif",
+                self.goal_widget,
+                "Serveur attendu",
+                self.goal_server_widget,
+            ),
         ):
             vColumn = QVBoxLayout()
-            vLabel = QLabel(vTitle)
-            vLabel.setObjectName("cardSubtitle")
-            vColumn.addWidget(vLabel)
-            vColumn.addWidget(vWidget)
+
+            for vText, vGraph in ((vTitle, vWidget), (vServerTitle, vServerWidget)):
+                vLabel = QLabel(vText)
+                vLabel.setObjectName("cardSubtitle")
+                vColumn.addWidget(vLabel)
+                vColumn.addWidget(vGraph)
+
+            self.server_parts += [vLabel, vServerWidget]
             vColumn.addStretch(1)
             vGraphs.addLayout(vColumn)
 
@@ -257,6 +270,13 @@ class GitPage(QWidget):
         self.intro_label.setText(render_markdown(vView["intro"]))
         load_graph(self.graph_widget, vView["graph"])
         load_graph(self.goal_widget, vView["goal"])
+
+        if vView["server"]:
+            load_graph(self.server_widget, vView["server"])
+            load_graph(self.goal_server_widget, vView["goal_server"])
+
+        for vWidget in self.server_parts:
+            vWidget.setVisible(bool(vView["server"]))
         self.history_label.setText(
             "Commandes : " + " · ".join(vView["history"]) if vView["history"] else ""
         )
