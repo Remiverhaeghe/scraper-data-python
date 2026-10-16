@@ -44,6 +44,8 @@ from job.manual_offers import (
     import_offers_file,
     list_import_problems,
 )
+from job.interview_revision import build_offer_revision
+from job.quiz import THEME_STATUSES, load_active_quiz
 from job.preparation import (
     MATCH_FILTERS,
     filter_by_match,
@@ -101,9 +103,12 @@ from storage.job_applications import (
 )
 from storage.job_offers import get_offer, get_offers, set_availability
 from utils.link_checker import check_offer_link
+from utils.logger import get_logger
 from web.dependencies import get_database_file, require_csrf
 from web.forms import parse_amount, parse_date, parse_published_days
 from web.rendering import TONE_ICONS, build_bar_chart, templates
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -466,6 +471,8 @@ def show_offer(
             "offer": vPrepared,
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
             "preparation": build_preparation(pDatabaseFile, vPrepared),
+            "revision": build_revision(pDatabaseFile, vPrepared),
+            "theme_statuses": THEME_STATUSES,
             "compared_fields": COMPARED_FIELDS,
             "application": get_application(pDatabaseFile, pSource, pSourceId),
             "attachments": get_attachments(pDatabaseFile, pSource, pSourceId),
@@ -788,3 +795,24 @@ def build_preparation(pDatabaseFile, pOffer):
     )
 
     return rPreparation
+
+
+def build_revision(pDatabaseFile, pOffer):
+    """Retourne les thèmes à revoir pour l'offre, ou None si le calcul échoue."""
+
+    try:
+        rRevision = build_offer_revision(
+            pDatabaseFile, load_active_quiz(pDatabaseFile), pOffer
+        )
+
+    except Exception:
+        # La fiche reste consultable même si la révision est illisible.
+        logger.exception(
+            "Échec de la révision ciblée pour l'offre %s/%s",
+            pOffer.get("source"),
+            pOffer.get("source_id"),
+        )
+
+        rRevision = None
+
+    return rRevision

@@ -282,6 +282,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Correspondance avec l'offre : compétences couvertes et manquantes, score
 - [x] CV conseillé selon l'offre
 - [x] Préparation d'entretien : expériences à citer, questions à poser
+- [x] Révision ciblée sur une offre : thèmes dont l'offre demande les compétences, les moins maîtrisés d'abord, puis examen blanc limité à ces thèmes (bureau et web)
 - [x] Pistes de réponse aux questions classiques : présentation, pourquoi l'entreprise, réussite (méthode STAR), point faible, prétentions salariales
 - [x] Brouillon de lettre de motivation
 
@@ -452,6 +453,7 @@ scraper-data-python/
 │   ├── deduplication.py                       # Regroupe les annonces d'une même offre
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
+│   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── completion.py                          # Complétion commune avant enregistrement des offres
 │   ├── manual_offers.py                       # Ajout manuel et import d'offres depuis un fichier
 │   ├── companies.py                           # Entreprises exclues ou privilégiées, candidatures déjà envoyées
@@ -599,7 +601,7 @@ scraper-data-python/
 │   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
 │   ├── dialogs.py                             # Fenêtres des mentions légales et de la licence
 │   ├── chart.py                               # Histogramme et camembert dessinés avec QPainter
-│   ├── widgets.py                             # Composants graphiques partagés
+│   ├── widgets.py                             # Composants partagés : cartes, tuiles, pastilles
 │   ├── theme.py                               # Thèmes clair et sombre, palette et feuille de style
 │   ├── theme.qss                              # Feuille de style Qt, couleurs en variables
 │   ├── icons.py                               # Charge les icônes SVG dans une couleur donnée
@@ -749,6 +751,7 @@ scraper-data-python/
 │   │   ├── test_enrichment.py                 # Teste l'enrichissement depuis la description
 │   │   ├── test_deduplication.py              # Teste l'empreinte et le regroupement des annonces
 │   │   ├── test_preparation.py                # Teste le profil et la préparation de candidature
+│   │   ├── test_interview_revision.py         # Teste la révision ciblée et l'examen blanc d'une offre
 │   │   ├── test_manual_offers.py              # Teste l'ajout manuel et l'import d'offres
 │   │   ├── test_companies.py                  # Teste les listes d'entreprises et l'avertissement
 │   │   ├── test_application_tracking.py       # Teste les colonnes de suivi et les statistiques
@@ -871,7 +874,8 @@ scraper-data-python/
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres
-│   │   └── test_theme.py                       # Teste les thèmes, les icônes et le logo
+│   │   ├── test_theme.py                       # Teste les thèmes, les icônes et le logo
+│   │   └── test_widgets.py                     # Teste la carte repliable et la tuile cliquable
 │   │
 │   ├── scraper/                                # Tests des composants communs
 │   │   ├── __init__.py                          # Initialise le package de tests Scraper

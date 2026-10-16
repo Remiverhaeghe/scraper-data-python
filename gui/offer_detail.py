@@ -47,6 +47,7 @@ from job.companies import (
     find_company_applications,
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
+from job.interview_revision import build_offer_revision
 from job.preparation import prepare_application
 from job.presentation import (
     AVAILABILITY_LABELS,
@@ -62,6 +63,7 @@ from job.presentation import (
     safe_url,
 )
 from job.profile import is_profile_empty, load_profile
+from job.quiz import load_active_quiz
 from job.settings import load_settings
 from storage.job_applications import (
     delete_application,
@@ -221,6 +223,7 @@ class OfferDetailPanel(QWidget):
     """Affiche une offre et permet de mettre à jour son suivi."""
 
     application_changed = Signal()
+    exam_requested = Signal(dict)
 
     def __init__(self, pDatabaseFile):
         """Construit le panneau, vide tant qu'aucune offre n'est choisie."""
@@ -433,6 +436,15 @@ class OfferDetailPanel(QWidget):
         )
         self.prepare_button.clicked.connect(self.open_preparation)
 
+        # Examen blanc sur les thèmes de révision dont l'offre demande les compétences
+        self.exam_button = create_button(
+            "Examen blanc pour l'entretien", "timer", pIconColor=COLORS["primary"]
+        )
+        self.exam_button.setToolTip(
+            "Questions tirées dans les thèmes de révision demandés par l'offre"
+        )
+        self.exam_button.clicked.connect(self.request_exam)
+
         # Demandes à coller dans ChatGPT : aucune API payante n'est appelée.
         self.chatgpt_button = create_button(
             "Préparer avec ChatGPT", "bot", pIconColor=COLORS["primary"]
@@ -463,6 +475,7 @@ class OfferDetailPanel(QWidget):
         rLayout = QVBoxLayout()
         rLayout.setSpacing(4)
         rLayout.addWidget(self.prepare_button)
+        rLayout.addWidget(self.exam_button)
         rLayout.addWidget(self.chatgpt_button)
         rLayout.addWidget(self.company_info_button)
         rLayout.addWidget(self.assistant_label)
@@ -490,6 +503,40 @@ class OfferDetailPanel(QWidget):
                 self.offer.get("title") or "offre",
                 prepare_application(vProfile, self.offer),
             )
+
+    def request_exam(self):
+        """Montre les thèmes à revoir pour l'offre, puis propose l'examen blanc."""
+        if self.offer is None:
+            return
+
+        vRevision = build_offer_revision(
+            self.database_file, load_active_quiz(self.database_file), self.offer
+        )
+
+        if not vRevision["themes"]:
+            QMessageBox.information(
+                self,
+                "Examen blanc",
+                "Aucun thème de révision ne correspond aux compétences de cette "
+                "offre. Importez des questions sur ces sujets depuis la page Révision.",
+            )
+            return
+
+        vThemes = "\n".join(
+            f"• {vTheme['label']} : {vTheme['score']} % acquis "
+            f"({', '.join(vTheme['matched'])})"
+            for vTheme in vRevision["themes"]
+        )
+        vAnswer = QMessageBox.question(
+            self,
+            "Examen blanc",
+            "Thèmes demandés par l'offre, les moins maîtrisés d'abord :\n\n"
+            f"{vThemes}\n\nCommencer un examen blanc de "
+            f"{vRevision['exam_count']} questions ?",
+        )
+
+        if vAnswer == QMessageBox.StandardButton.Yes:
+            self.exam_requested.emit(self.offer)
 
     def copy_prompt(self, pKind):
         """Copie une demande préparée pour ChatGPT puis ouvre le site."""

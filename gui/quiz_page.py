@@ -27,11 +27,14 @@ from gui.quiz_import_panel import QuizImportPanel
 from gui.quiz_statistics_card import QuizStatisticsCard
 from gui.theme import COLORS
 from gui.widgets import (
+    FlowLayout,
+    TileButton,
     clear_layout,
     create_button,
     create_card,
     create_icon_label,
     create_page_header,
+    create_pill,
     create_scroll_content,
     show_message,
 )
@@ -49,6 +52,7 @@ from job.quiz import (
     load_active_quiz,
     pick_question,
 )
+from job.interview_revision import start_offer_exam
 from job.quiz_domains import (
     DOMAIN_ICONS,
     filter_guides,
@@ -72,13 +76,13 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-THEME_COLUMNS = 3
+# Largeur minimale d'une carte de thème : le nombre de colonnes en découle, pour
+# que la page ne défile jamais horizontalement.
+THEME_CARD_WIDTH = 340
+MAX_THEME_COLUMNS = 3
 
 # Mode de la page pendant un examen, à côté des modes de révision
 EXAM_MODE = "exam"
-
-# Largeur du panneau des catégories, à gauche des thèmes
-CATEGORY_WIDTH = 270
 
 # Hauteur d'affichage des schémas des questions importées
 VISUAL_HEIGHT = 280
@@ -138,16 +142,13 @@ class QuizPage(QWidget):
         self.subdomain = None
         self.themes = []
 
-        # Catégories en arborescence, toujours visibles à gauche des thèmes
-        # Catégories en liste verticale, toujours visibles à gauche des thèmes :
-        # domaines puis sous-domaines en retrait, chacun avec son icône.
+        self.theme_columns = MAX_THEME_COLUMNS
+
+        # Catégories au-dessus des thèmes : une tuile par domaine, ses sous-domaines
+        # en pastilles juste dessous.
         self.category_buttons = {}
-        self.category_card = QFrame()
-        self.category_card.setObjectName("card")
-        self.category_card.setFixedWidth(CATEGORY_WIDTH)
-        self.category_layout = QVBoxLayout(self.category_card)
-        self.category_layout.setContentsMargins(10, 10, 10, 10)
-        self.category_layout.setSpacing(2)
+        self.category_layout = QGridLayout()
+        self.category_layout.setSpacing(12)
 
         self.filter_label = QLabel()
         self.filter_label.setObjectName("cardTitle")
@@ -170,15 +171,11 @@ class QuizPage(QWidget):
         self.themes_holder = QVBoxLayout()
         self.themes_holder.setContentsMargins(0, 0, 0, 0)
 
-        vThemesColumn = QVBoxLayout()
-        vThemesColumn.setSpacing(12)
-        vThemesColumn.addLayout(vHeader)
-        vThemesColumn.addLayout(self.themes_holder)
-
-        vBody = QHBoxLayout()
-        vBody.setSpacing(18)
-        vBody.addWidget(self.category_card, 0, Qt.AlignmentFlag.AlignTop)
-        vBody.addLayout(vThemesColumn, 1)
+        vBody = QVBoxLayout()
+        vBody.setSpacing(12)
+        vBody.addLayout(self.category_layout)
+        vBody.addLayout(vHeader)
+        vBody.addLayout(self.themes_holder)
 
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.create_question_card())
@@ -353,51 +350,105 @@ class QuizPage(QWidget):
         self.select_category(self.domain, self.subdomain)
 
     def refresh_categories(self):
-        """Reconstruit la liste des domaines et sous-domaines, avec leurs comptes."""
+        """Reconstruit les tuiles des domaines et les pastilles des sous-domaines."""
         clear_layout(self.category_layout)
         self.category_buttons = {}
 
-        vEntries = [
-            ((None, None), "graduation-cap", f"Tous les thèmes ({len(self.themes)})")
+        vGroups = group_themes(self.themes)
+        vKeys = [(None, None)] + [
+            vKey
+            for vDomain, vSections in vGroups
+            for vKey in [(vDomain, None)]
+            + [(vDomain, vSubdomain) for vSubdomain, _ in vSections]
         ]
 
-        for vDomain, vSections in group_themes(self.themes):
-            vCount = sum(len(vThemes) for _, vThemes in vSections)
-            vEntries.append(
-                (
-                    (vDomain, None),
-                    DOMAIN_ICONS.get(vDomain, "sparkles"),
-                    f"{vDomain} ({vCount})",
-                )
-            )
-            vEntries += [
-                (
-                    (vDomain, vSubdomain),
-                    DOMAIN_ICONS.get(vSubdomain, "tag"),
-                    f"{vSubdomain} ({len(vThemes)})",
-                )
-                for vSubdomain, vThemes in vSections
-            ]
-
         # Catégorie disparue (dernier thème supprimé) : retour à l'ensemble.
-        if (self.domain, self.subdomain) not in [vKey for vKey, _, _ in vEntries]:
+        if (self.domain, self.subdomain) not in vKeys:
             self.domain, self.subdomain = None, None
 
-        for vKey, vIcon, vText in vEntries:
-            vChild = vKey[1] is not None
-            vButton = create_button(
-                vText,
-                vIcon,
-                "categoryChildButton" if vChild else "categoryButton",
-                COLORS["muted"] if vChild else COLORS["primary"],
+        vCards = [
+            self.create_category_tile((None, None), "Tous les thèmes", self.themes)
+        ]
+        vCards += [
+            self.create_domain_card(vDomain, vSections)
+            for vDomain, vSections in vGroups
+        ]
+        vColumns = min(len(vCards), self.theme_columns)
+
+        for vColumn in range(vColumns):
+            self.category_layout.setColumnStretch(vColumn, 1)
+
+        for vIndex, vCard in enumerate(vCards):
+            self.category_layout.addWidget(
+                vCard, *divmod(vIndex, vColumns), Qt.AlignmentFlag.AlignTop
             )
-            vButton.setCheckable(True)
-            vButton.setChecked(vKey == (self.domain, self.subdomain))
-            vButton.clicked.connect(
+
+    def create_category_tile(self, pKey, pTitle, pThemes):
+        """Crée la tuile d'une catégorie : icône, nombre de thèmes et questions acquises."""
+        vCorrect = sum(vTheme["correct"] for vTheme in pThemes)
+        vTotal = sum(vTheme["total"] for vTheme in pThemes)
+
+        rTile = TileButton(
+            pTitle,
+            f"{len(pThemes)} thème(s) · {vCorrect} / {vTotal} questions acquises",
+            DOMAIN_ICONS.get(pKey[0], "graduation-cap"),
+        )
+        rTile.set_done(bool(vTotal) and vCorrect == vTotal)
+        rTile.setChecked(pKey == (self.domain, self.subdomain))
+        rTile.clicked.connect(lambda: self.on_category_clicked(pKey))
+        self.category_buttons[pKey] = rTile
+
+        return rTile
+
+    def create_domain_card(self, pDomain, pSections):
+        """Crée la carte d'un domaine : sa tuile, puis ses sous-domaines en pastilles."""
+        rCard = QWidget()
+        vLayout = QVBoxLayout(rCard)
+        vLayout.setContentsMargins(0, 0, 0, 0)
+        vLayout.setSpacing(6)
+        vLayout.addWidget(
+            self.create_category_tile(
+                (pDomain, None),
+                pDomain,
+                [vTheme for _, vThemes in pSections for vTheme in vThemes],
+            )
+        )
+
+        vChips = FlowLayout()
+
+        for vSubdomain, vThemes in pSections:
+            vKey = (pDomain, vSubdomain)
+            vChip = create_button(
+                f"{vSubdomain} ({len(vThemes)})",
+                DOMAIN_ICONS.get(vSubdomain, "tag"),
+                "chipButton",
+                COLORS["primary"],
+            )
+            vChip.setCheckable(True)
+            vChip.setChecked(vKey == (self.domain, self.subdomain))
+            vChip.clicked.connect(
                 lambda _=False, pKey=vKey: self.on_category_clicked(pKey)
             )
-            self.category_buttons[vKey] = vButton
-            self.category_layout.addWidget(vButton)
+            self.category_buttons[vKey] = vChip
+            vChips.addWidget(vChip)
+
+        vLayout.addLayout(vChips)
+
+        return rCard
+
+    def resizeEvent(self, pEvent):  # pylint: disable=invalid-name
+        """Adapte le nombre de colonnes à la largeur, sans défilement horizontal."""
+        super().resizeEvent(pEvent)
+
+        vColumns = max(
+            1, min(MAX_THEME_COLUMNS, (self.width() - 64) // THEME_CARD_WIDTH)
+        )
+
+        if vColumns != self.theme_columns:
+            self.theme_columns = vColumns
+
+            if self.themes:
+                self.select_category(self.domain, self.subdomain)
 
     def on_category_clicked(self, pCategory):
         """Filtre sur la catégorie cliquée ; un second clic revient à l'ensemble."""
@@ -459,12 +510,13 @@ class QuizPage(QWidget):
                 vGrid = QGridLayout()
                 vGrid.setSpacing(16)
 
-                for vColumn in range(THEME_COLUMNS):
+                for vColumn in range(self.theme_columns):
                     vGrid.setColumnStretch(vColumn, 1)
 
                 for vIndex, vTheme in enumerate(vThemes):
                     vGrid.addWidget(
-                        self.create_theme_card(vTheme), *divmod(vIndex, THEME_COLUMNS)
+                        self.create_theme_card(vTheme, vSubdomain),
+                        *divmod(vIndex, self.theme_columns),
                     )
 
                 vLayout.addWidget(vSubtitle, 0, Qt.AlignmentFlag.AlignLeft)
@@ -524,61 +576,78 @@ class QuizPage(QWidget):
 
         return rHeader
 
-    def create_theme_card(self, pTheme):
-        """Crée la carte d'un thème : progression, intérêt et boutons."""
+    def create_theme_card(self, pTheme, pSubdomain=None):
+        """Crée la carte d'un thème : icône, progression, intérêt et boutons."""
         rCard, vLayout = create_card()
+
+        # Largeur fixée par la grille seule : les colonnes restent égales.
+        rCard.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+
+        vIcon = create_icon_label(
+            DOMAIN_ICONS.get(pSubdomain, "graduation-cap"), COLORS["primary"], 20
+        )
+        vIcon.setFixedSize(40, 40)
+        vIcon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        vIcon.setStyleSheet(
+            f"background: {COLORS['primary_light']}; border-radius: 10px;"
+        )
 
         vTitle = QLabel(pTheme["label"])
         vTitle.setObjectName("cardTitle")
         vTitle.setWordWrap(True)
 
+        vCount = QLabel(
+            f"{pTheme['total']} questions · {pTheme['correct']} acquise(s)"
+            + (f" · {pTheme['to_review']} ratée(s)" if pTheme["to_review"] else "")
+        )
+        vCount.setObjectName("cardSubtitle")
+        vCount.setWordWrap(True)
+
+        vTexts = QVBoxLayout()
+        vTexts.setSpacing(2)
+        vTexts.addWidget(vTitle)
+        vTexts.addWidget(vCount)
+
         vTitleRow = QHBoxLayout()
-        vTitleRow.setSpacing(8)
+        vTitleRow.setSpacing(12)
+        vTitleRow.addWidget(vIcon, 0, Qt.AlignmentFlag.AlignTop)
+        vTitleRow.addLayout(vTexts, 1)
 
         if pTheme["status"]:
-            vIcon, vTone, vText = THEME_STATUSES[pTheme["status"]]
-            vStatus = create_icon_label(vIcon, COLORS[vTone], 18)
+            vStatusIcon, vTone, vText = THEME_STATUSES[pTheme["status"]]
+            vStatus = create_icon_label(vStatusIcon, COLORS[vTone], 18)
             vStatus.setToolTip(vText)
-            vTitleRow.addWidget(vStatus)
+            vTitleRow.addWidget(vStatus, 0, Qt.AlignmentFlag.AlignTop)
 
-        vTitleRow.addWidget(vTitle, 1)
         vLayout.addLayout(vTitleRow)
 
-        # Largeur fixée par la grille seule : les colonnes restent égales.
-        rCard.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-
-        # Les indications utiles ressortent en couleur : intérêt pour les offres
-        # en bleu, révisions dues en orange.
-        def highlight(pText, pTone):
-            rHtml = (
-                f'<span style="color: {COLORS[pTone]}; font-weight: 600;">'
-                f"{escape(pText)}</span>"
-            )
-
-            return rHtml
-
-        vParts = [escape(f"{pTheme['correct']} / {pTheme['total']} acquises")]
-
-        if pTheme["to_review"]:
-            vParts.append(escape(f"{pTheme['to_review']} ratée(s)"))
-
-        if pTheme["due"]:
-            vParts.append(highlight(f"{pTheme['due']} à revoir aujourd'hui", "warning"))
-
-        vParts.append(
-            highlight(f"demandé dans {pTheme['offer_count']} offre(s)", "primary")
+        # Pastilles : intérêt pour les offres en bleu, révisions dues en orange.
+        vPills = FlowLayout()
+        vPills.addWidget(
+            create_pill(f"Demandé dans {pTheme['offer_count']} offre(s)", "primary")
             if pTheme["offer_count"]
-            else escape("pas encore demandé dans vos offres")
+            else create_pill("Pas encore dans vos offres", "muted")
         )
 
-        vInfo = QLabel(" · ".join(vParts))
-        vInfo.setTextFormat(Qt.TextFormat.RichText)
-        vInfo.setObjectName("cardSubtitle")
-        vInfo.setWordWrap(True)
+        if pTheme["due"]:
+            vPills.addWidget(
+                create_pill(f"{pTheme['due']} à revoir aujourd'hui", "warning")
+            )
+
+        vLayout.addLayout(vPills)
 
         vProgress = QProgressBar()
         vProgress.setTextVisible(False)
         vProgress.setValue(pTheme["score"])
+
+        vScore = QLabel(f"{pTheme['score']} %")
+        vScore.setObjectName("cardSubtitle")
+
+        vProgressRow = QHBoxLayout()
+        vProgressRow.setSpacing(8)
+        vProgressRow.addWidget(vProgress, 1)
+        vProgressRow.addWidget(vScore)
+        vLayout.addLayout(vProgressRow)
 
         vStart = create_button("Réviser", pObjectName="primaryButton")
         vStart.setToolTip(
@@ -590,7 +659,8 @@ class QuizPage(QWidget):
         vButtons.addWidget(vStart)
 
         if pTheme["to_review"]:
-            vReview = create_button("Revoir les erreurs")
+            vReview = create_button("Erreurs", "history", pIconColor=COLORS["primary"])
+            vReview.setToolTip("Revoir les questions ratées")
             vReview.clicked.connect(lambda: self.start(pTheme["key"], "review"))
             vButtons.addWidget(vReview)
 
@@ -600,9 +670,6 @@ class QuizPage(QWidget):
             vButtons.addWidget(vGuide)
 
         vButtons.addStretch()
-
-        vLayout.addWidget(vInfo)
-        vLayout.addWidget(vProgress)
         vLayout.addLayout(vButtons)
 
         return rCard
@@ -676,7 +743,7 @@ class QuizPage(QWidget):
             vButton.clicked.connect(
                 lambda _=False, pName=vGuide["name"]: self.show_guide(pName)
             )
-            self.guides_layout.addWidget(vButton, *divmod(vIndex, THEME_COLUMNS))
+            self.guides_layout.addWidget(vButton, *divmod(vIndex, self.theme_columns))
 
         self.guides_card.setVisible(bool(vGuides))
 
@@ -760,17 +827,31 @@ class QuizPage(QWidget):
 
     def start_exam(self):
         """Reprend l'examen en cours, ou en commence un sur le domaine choisi."""
+        self.begin_exam(
+            lambda pQuiz: start_exam(
+                self.database_file,
+                pQuiz,
+                self.domain,
+                datetime.now(),
+                pSubdomain=self.subdomain,
+            )
+        )
+
+    def start_offer_exam(self, pOffer):
+        """Reprend l'examen en cours, ou commence l'examen blanc d'une offre."""
+        self.begin_exam(
+            lambda pQuiz: start_offer_exam(
+                self.database_file, pQuiz, pOffer, datetime.now()
+            )
+        )
+
+    def begin_exam(self, pStart):
+        """Reprend l'examen en cours ; sinon en commence un avec la fonction donnée."""
         vExam = load_exam(self.database_file)
 
         if not vExam or vExam["finished_at"]:
             try:
-                start_exam(
-                    self.database_file,
-                    load_active_quiz(self.database_file),
-                    self.domain,
-                    datetime.now(),
-                    pSubdomain=self.subdomain,
-                )
+                pStart(load_active_quiz(self.database_file))
 
             except ValueError as vException:
                 show_message(self.message_label, str(vException), "warning")
@@ -800,7 +881,8 @@ class QuizPage(QWidget):
         self.display_question(
             vQuestion,
             (
-                f"Examen · question {vQuestion['position']} / {vQuestion['count']} · "
+                f"{vExam.get('title') or 'Examen'} · question "
+                f"{vQuestion['position']} / {vQuestion['count']} · "
                 f"{vQuestion['theme_label']} · {vQuestion['level']}"
                 if vQuestion
                 else "Examen"

@@ -262,7 +262,7 @@ def test_domain_filter_zero_offers_and_scroll(qt_application, tmp_path):
     vPage = create_page(tmp_path / "scraper.db")
     vScroll = vPage.findChild(quiz_page.QScrollArea)
 
-    assert vPage.category_buttons[(None, None)].text().startswith("Tous les thèmes")
+    assert vPage.category_buttons[(None, None)].title_label.text() == "Tous les thèmes"
 
     vPage.select_domain("Informatique")
 
@@ -276,7 +276,7 @@ def test_domain_filter_zero_offers_and_scroll(qt_application, tmp_path):
 
     assert any(vText.startswith("Développement · ") for vText in vLabels)
     assert any("questions acquises" in vText for vText in vLabels)
-    assert any("pas encore demandé dans vos offres" in vText for vText in vLabels)
+    assert "Pas encore dans vos offres" in vLabels
 
     vScroll.verticalScrollBar().setMaximum(1000)
     vScroll.verticalScrollBar().setValue(500)

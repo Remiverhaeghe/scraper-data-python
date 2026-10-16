@@ -180,6 +180,37 @@
             {% endif %}
         </details>
 
+        {# Thèmes de révision dont l'offre demande les compétences (job/interview_revision.py). #}
+        <details class="card preparation">
+            <summary><h2>{{ icon("graduation-cap") }} Réviser pour l'entretien</h2></summary>
+            {% if revision and revision.themes %}
+            <p class="muted">Thèmes dont l'offre demande les compétences, les moins maîtrisés d'abord.</p>
+            <table class="table category-progress">
+                <thead><tr><th scope="col">Thème</th><th scope="col">Compétences de l'offre</th><th scope="col">Maîtrise</th><th scope="col">Questions</th></tr></thead>
+                <tbody>
+                    {% for theme_item in revision.themes %}
+                    <tr>
+                        <td>{% if theme_item.status %}{% set status = theme_statuses[theme_item.status] %}<span class="tone-{{ status[1] }}" title="{{ status[2] }}">{{ icon(status[0], 16) }}</span> {% endif %}{{ theme_item.label }}</td>
+                        <td>{{ theme_item.matched | join(", ") }}</td>
+                        <td><div class="quiz-progress" role="progressbar" aria-valuenow="{{ theme_item.score }}" aria-valuemin="0" aria-valuemax="100" aria-label="Maîtrise {{ theme_item.label }}"><span style="width: {{ theme_item.score }}%"></span></div> <small class="muted">{{ theme_item.score }} %</small></td>
+                        <td><a href="{{ url_for('show_quiz').path }}?theme={{ theme_item.key | urlencode }}">Réviser les {{ theme_item.total }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <form method="post" action="{{ url_for('begin_quiz_exam').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <input type="hidden" name="source" value="{{ offer.source }}">
+                <input type="hidden" name="id" value="{{ offer.source_id }}">
+                <button class="button button-primary" type="submit">{{ icon("timer", 16) }} Examen blanc ({{ revision.exam_count }} questions)</button>
+            </form>
+            {% elif revision %}
+            <p class="muted">Aucun thème de révision ne correspond aux compétences de cette offre. Importez des questions sur ces sujets depuis la page Révision.</p>
+            {% else %}
+            <p class="muted">La révision n'a pas pu être préparée : le détail est dans les journaux.</p>
+            {% endif %}
+        </details>
+
         {# Demandes à coller dans ChatGPT avec son propre compte : aucune API payante. #}
         <details class="card preparation">
             <summary><h2>{{ icon("bot") }} Préparer avec ChatGPT</h2></summary>

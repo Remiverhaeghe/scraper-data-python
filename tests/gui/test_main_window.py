@@ -1,7 +1,9 @@
 """Tests de la fenêtre principale"""
 
+import gui.offer_detail as offer_detail
 from gui.main_window import MainWindow
 from job.presentation import FOLLOW_UP_FILTER
+from job.quiz_exam import load_exam
 from job.schedule import load_schedule
 from storage.database import initialize_database
 
@@ -95,3 +97,31 @@ def test_reset_rebuilds_pages_with_message(qt_application, tmp_path):
     assert vWindow.settings_page is not vOldSettingsPage
     assert vWindow.pages.currentWidget() is vWindow.settings_page
     assert vWindow.settings_page.reset_message.text() == "Données réinitialisées."
+
+
+def test_offer_mock_exam_opens_quiz_page(qt_application, tmp_path, monkeypatch):
+    """Vérifie que l'examen blanc d'une offre ouvre la révision sur l'examen."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vWindow = MainWindow(vDatabaseFile, "Test")
+    vPanel = vWindow.offers_page.detail_panel
+    vPanel.offer = {
+        "source": "adzuna",
+        "source_id": "42",
+        "title": "Développeur Python",
+        "description": "API FastAPI et base PostgreSQL.",
+    }
+    monkeypatch.setattr(
+        offer_detail.QMessageBox,
+        "question",
+        lambda *pArgs: offer_detail.QMessageBox.StandardButton.Yes,
+    )
+
+    vPanel.request_exam()
+
+    assert vWindow.pages.currentWidget() is vWindow.quiz_page
+    assert vWindow.quiz_page.mode == "exam"
+    assert load_exam(vDatabaseFile)["title"] == "Entretien : Développeur Python"

@@ -21,8 +21,8 @@ def test_format_level():
 
     vLevel = {"title": "Fusion", "series": "Bases", "par": 1, "best": None}
 
-    assert format_level(vLevel) == "Fusion\nBases · 1 commande(s) attendue(s)"
-    assert format_level({**vLevel, "best": 2}).endswith("✓ 2/1 commande(s)")
+    assert format_level(vLevel) == "1 commande(s) attendue(s)"
+    assert format_level({**vLevel, "best": 2}) == "Réussi en 2 commande(s), référence 1"
 
 
 def test_level_is_played_undone_and_solved(qt_application, tmp_path):
@@ -68,11 +68,11 @@ def test_level_is_played_undone_and_solved(qt_application, tmp_path):
 
     assert vPage.message_label.text().endswith("parcours optimal.")
     assert not vPage.command_edit.isEnabled()
-    assert (
-        vPage.level_buttons["premiers-commits"]
-        .text()
-        .startswith("Enregistrer son travail\nBases · ✓ 2/2")
-    )
+    vTile = vPage.level_buttons["premiers-commits"]
+
+    assert vTile.done
+    assert vTile.isChecked()
+    assert vTile.detail_label.text() == "Réussi en 2 commande(s), référence 2"
     assert not vPage.next_button.isHidden()
 
     vPage.open_next_level()

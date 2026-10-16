@@ -1,13 +1,15 @@
 """Composants graphiques partagés entre les pages"""
 
-from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtCore import QPoint, QRect, QSettings, QSize, Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -98,6 +100,102 @@ def create_card(pTitle=None, pSubtitle=None):
     rCard = (vCard, vLayout)
 
     return rCard
+
+
+def create_collapsible_card(pTitle, pSubtitle=None, pIcon=None, pKey=None):
+    """Crée une carte repliable par son titre et retourne la carte et son contenu.
+
+    Avec pKey, l'état replié est mémorisé d'une ouverture à l'autre (QSettings).
+    """
+
+    vCard, vCardLayout = create_card()
+
+    vTitle = QPushButton(pTitle)
+    vTitle.setObjectName("collapsibleTitle")
+    vTitle.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    if pIcon:
+        vTitle.setIcon(get_icon(pIcon, COLORS["primary"], 20))
+        vTitle.setIconSize(QSize(20, 20))
+
+    vToggle = QToolButton()
+    vToggle.setObjectName("collapsibleToggle")
+    vToggle.setAutoRaise(True)
+    vToggle.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    vHeader = QHBoxLayout()
+    vHeader.addWidget(vTitle)
+    vHeader.addStretch(1)
+    vHeader.addWidget(vToggle)
+    vCardLayout.addLayout(vHeader)
+
+    if pSubtitle is not None:
+        vSubtitle = QLabel(pSubtitle)
+        vSubtitle.setObjectName("cardSubtitle")
+        vSubtitle.setWordWrap(True)
+        vCardLayout.addWidget(vSubtitle)
+
+    vContent = QWidget()
+    vContentLayout = QVBoxLayout(vContent)
+    vContentLayout.setContentsMargins(0, 0, 0, 0)
+    vContentLayout.setSpacing(10)
+    vCardLayout.addWidget(vContent)
+
+    def set_open(pOpen):
+        """Affiche ou replie le contenu, et met à jour le chevron."""
+        vContent.setHidden(not pOpen)
+        vToggle.setIcon(
+            get_icon("chevron-up" if pOpen else "chevron-down", COLORS["muted"], 18)
+        )
+        vToggle.setToolTip("Réduire" if pOpen else "Afficher")
+
+    def toggle():
+        """Inverse l'état du contenu et le mémorise."""
+        set_open(vContent.isHidden())
+
+        if pKey:
+            QSettings().setValue(f"collapsed/{pKey}", vContent.isHidden())
+
+    vTitle.clicked.connect(toggle)
+    vToggle.clicked.connect(toggle)
+    set_open(not (pKey and QSettings().value(f"collapsed/{pKey}", False, type=bool)))
+
+    rCard = (vCard, vContentLayout)
+
+    return rCard
+
+
+def add_tile_group(pLayout, pRow, pTitle, pIcon, pTiles, pColumns):
+    """Ajoute à une grille un titre de groupe et ses tuiles ; retourne la ligne suivante."""
+
+    vHeader = QWidget()
+    vHeaderLayout = QHBoxLayout(vHeader)
+    vHeaderLayout.setContentsMargins(0, 0, 0, 0)
+    vHeaderLayout.setSpacing(8)
+    vHeaderLayout.addWidget(create_icon_label(pIcon, COLORS["primary"], 18))
+
+    vTitle = QLabel(pTitle)
+    vTitle.setObjectName("tileGroup")
+    vHeaderLayout.addWidget(vTitle, 1)
+
+    pLayout.addWidget(vHeader, pRow, 0, 1, pColumns)
+
+    for vIndex, vTile in enumerate(pTiles):
+        pLayout.addWidget(vTile, pRow + 1 + vIndex // pColumns, vIndex % pColumns)
+
+    rRow = pRow + 1 + (len(pTiles) + pColumns - 1) // pColumns
+
+    return rRow
+
+
+def create_pill(pText, pTone):
+    """Crée une pastille de texte colorée : primary, warning, success ou muted."""
+
+    rPill = QLabel(pText)
+    rPill.setObjectName("pill")
+    rPill.setProperty("tone", pTone)
+
+    return rPill
 
 
 def create_icon_label(pIcon, pColor, pSize=20):
@@ -223,3 +321,216 @@ def show_message(pLabel, pText, pTone="success"):
     pLabel.setStyleSheet(
         f"color: {COLORS[pTone]}; font-weight: 600;" if pText and pTone else ""
     )
+
+
+class TileButton(QFrame):
+    """Tuile cliquable d'une liste : icône colorée, titre, détail et badge à droite.
+
+    Une tuile réussie passe en vert ; la tuile sélectionnée est encadrée.
+    """
+
+    clicked = Signal()
+
+    def __init__(self, pTitle, pDetail, pIcon, pAccent="blue", pBadge=""):
+        """Construit la tuile, non sélectionnée et non réussie."""
+        super().__init__()
+
+        self.setObjectName("tile")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setAccessibleName(pTitle)
+        self.checked = False
+        self.done = False
+        self.icon_name = pIcon
+        self.accent = pAccent
+
+        self.icon_label = QLabel()
+        self.icon_label.setObjectName("tileIcon")
+        self.icon_label.setFixedSize(40, 40)
+        self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.title_label = QLabel(pTitle)
+        self.title_label.setObjectName("tileTitle")
+        self.title_label.setWordWrap(True)
+
+        self.detail_label = QLabel(pDetail)
+        self.detail_label.setObjectName("tileDetail")
+        self.detail_label.setWordWrap(True)
+
+        self.badge_label = QLabel(pBadge)
+        self.badge_label.setObjectName("tileBadge")
+
+        vText = QVBoxLayout()
+        vText.setSpacing(2)
+        vText.addWidget(self.title_label)
+        vText.addWidget(self.detail_label)
+
+        vLayout = QHBoxLayout(self)
+        vLayout.setContentsMargins(12, 10, 12, 10)
+        vLayout.setSpacing(12)
+        vLayout.addWidget(self.icon_label)
+        vLayout.addLayout(vText, 1)
+        vLayout.addWidget(self.badge_label, 0, Qt.AlignmentFlag.AlignTop)
+
+        self.update_style()
+
+    def setChecked(self, pChecked):  # pylint: disable=invalid-name
+        """Sélectionne ou désélectionne la tuile, comme un bouton à cocher."""
+        self.checked = pChecked
+        self.update_style()
+
+    def isChecked(self):  # pylint: disable=invalid-name
+        """Indique si la tuile est sélectionnée."""
+        rChecked = self.checked
+
+        return rChecked
+
+    def set_done(self, pDone):
+        """Marque la tuile comme réussie : fond et icône verts."""
+        self.done = pDone
+        self.update_style()
+
+    def update_style(self):
+        """Applique les couleurs selon l'état : réussie, sélectionnée ou neutre."""
+        vColor, vBackground = (
+            (COLORS["success"], COLORS["success_light"])
+            if self.done
+            else ACCENTS[self.accent]
+        )
+
+        self.icon_label.setPixmap(
+            get_icon(
+                "circle-check" if self.done else self.icon_name, vColor, 20
+            ).pixmap(20, 20)
+        )
+        self.icon_label.setStyleSheet(
+            f"background: {vBackground}; border-radius: 10px;"
+        )
+        self.setProperty("done", self.done)
+        self.setProperty("checked", self.checked)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+    def mouseReleaseEvent(self, pEvent):  # pylint: disable=invalid-name
+        """Émet clicked au relâchement du bouton gauche sur la tuile."""
+        if pEvent.button() == Qt.MouseButton.LeftButton and self.rect().contains(
+            pEvent.position().toPoint()
+        ):
+            self.clicked.emit()
+
+        super().mouseReleaseEvent(pEvent)
+
+    def keyPressEvent(self, pEvent):  # pylint: disable=invalid-name
+        """Ouvre la tuile au clavier, avec Entrée ou Espace."""
+        if pEvent.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+            self.clicked.emit()
+        else:
+            super().keyPressEvent(pEvent)
+
+
+class FlowLayout(QLayout):
+    """Range les éléments en ligne et passe à la ligne suivante faute de place.
+
+    Repris de l'exemple « Flow Layout » de la documentation Qt : pastilles et
+    filtres s'adaptent à la largeur au lieu d'élargir la page.
+    """
+
+    def __init__(self, pSpacing=6):
+        """Crée une mise en page vide, avec l'espacement donné entre éléments."""
+        super().__init__()
+
+        self.items = []
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setSpacing(pSpacing)
+
+    def addItem(self, pItem):  # pylint: disable=invalid-name
+        """Ajoute un élément à la fin."""
+        self.items.append(pItem)
+
+    def count(self):
+        """Retourne le nombre d'éléments."""
+        rCount = len(self.items)
+
+        return rCount
+
+    def itemAt(self, pIndex):  # pylint: disable=invalid-name
+        """Retourne l'élément à cette position, ou None."""
+        rItem = self.items[pIndex] if 0 <= pIndex < len(self.items) else None
+
+        return rItem
+
+    def takeAt(self, pIndex):  # pylint: disable=invalid-name
+        """Retire et retourne l'élément à cette position, ou None."""
+        rItem = self.items.pop(pIndex) if 0 <= pIndex < len(self.items) else None
+
+        return rItem
+
+    def expandingDirections(self):  # pylint: disable=invalid-name
+        """Ne réclame aucune place supplémentaire."""
+        rDirections = Qt.Orientation(0)
+
+        return rDirections
+
+    def hasHeightForWidth(self):  # pylint: disable=invalid-name
+        """Indique que la hauteur dépend de la largeur disponible."""
+        return True
+
+    def heightForWidth(self, pWidth):  # pylint: disable=invalid-name
+        """Retourne la hauteur nécessaire pour cette largeur."""
+        rHeight = self.arrange(QRect(0, 0, pWidth, 0), pApply=False)
+
+        return rHeight
+
+    def setGeometry(self, pRect):  # pylint: disable=invalid-name
+        """Place les éléments dans le rectangle donné."""
+        super().setGeometry(pRect)
+        self.arrange(pRect, pApply=True)
+
+    def sizeHint(self):  # pylint: disable=invalid-name
+        """Retourne la taille souhaitée : celle du plus grand élément."""
+        rSize = self.minimumSize()
+
+        return rSize
+
+    def minimumSize(self):  # pylint: disable=invalid-name
+        """Retourne la taille minimale : un seul élément par ligne suffit."""
+        vSize = QSize()
+
+        for vItem in self.items:
+            vSize = vSize.expandedTo(vItem.minimumSize())
+
+        vMargins = self.contentsMargins()
+        rSize = vSize + QSize(
+            vMargins.left() + vMargins.right(), vMargins.top() + vMargins.bottom()
+        )
+
+        return rSize
+
+    def arrange(self, pRect, pApply):
+        """Calcule la position des éléments ligne par ligne et retourne la hauteur."""
+        vMargins = self.contentsMargins()
+        vArea = pRect.adjusted(
+            vMargins.left(), vMargins.top(), -vMargins.right(), -vMargins.bottom()
+        )
+        vX, vY = vArea.x(), vArea.y()
+        vLineHeight = 0
+
+        for vItem in self.items:
+            vSize = vItem.sizeHint()
+            vNextX = vX + vSize.width() + self.spacing()
+
+            if vNextX - self.spacing() > vArea.right() + 1 and vLineHeight:
+                vX = vArea.x()
+                vY += vLineHeight + self.spacing()
+                vNextX = vX + vSize.width() + self.spacing()
+                vLineHeight = 0
+
+            if pApply:
+                vItem.setGeometry(QRect(QPoint(vX, vY), vSize))
+
+            vX = vNextX
+            vLineHeight = max(vLineHeight, vSize.height())
+
+        rHeight = vY + vLineHeight - pRect.y() + vMargins.bottom()
+
+        return rHeight

@@ -630,8 +630,12 @@ def test_logs_can_be_downloaded_and_cleared(client, monkeypatch):
 
     vCleared = []
 
-    monkeypatch.setattr("web.routes.monitoring.export_logs", lambda: "ligne de journal\n")
-    monkeypatch.setattr("web.routes.monitoring.clear_logs", lambda: vCleared.append(True))
+    monkeypatch.setattr(
+        "web.routes.monitoring.export_logs", lambda: "ligne de journal\n"
+    )
+    monkeypatch.setattr(
+        "web.routes.monitoring.clear_logs", lambda: vCleared.append(True)
+    )
 
     vDownload = client.get("/logs/download")
 
@@ -1799,3 +1803,27 @@ def test_schema_question_is_built_and_graded_on_the_web(client):
 
     assert "Bonne réponse" in vRight.text
     assert "schema-expected" in vRight.text and ">Votre schéma</text>" in vRight.text
+
+
+def test_offer_revision_and_mock_exam(client):
+    """Vérifie les thèmes à revoir sur la fiche d'offre et l'examen blanc associé."""
+
+    vPage = client.get("/offer", params={"source": "adzuna", "id": "new"}).text
+
+    assert "Réviser pour l'entretien" in vPage
+    assert "Examen blanc (16 questions)" in vPage
+    assert 'name="id" value="new"' in vPage
+
+    vStart = client.post("/quiz/exam/start", data={"source": "adzuna", "id": "new"})
+
+    assert "Entretien : Développeur Python new chez Entreprise A" in vStart.text
+    assert "Question 1 / 16" in vStart.text
+
+    client.post("/quiz/exam/stop")
+
+    assert (
+        client.post(
+            "/quiz/exam/start", data={"source": "adzuna", "id": "inconnue"}
+        ).status_code
+        == 404
+    )

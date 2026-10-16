@@ -21,7 +21,13 @@ from PySide6.QtWidgets import (
 
 from gui.dialogs import show_text_dialog
 from gui.theme import COLORS
-from gui.widgets import clear_layout, create_button, create_card, show_message
+from gui.widgets import (
+    FlowLayout,
+    clear_layout,
+    create_button,
+    create_card,
+    show_message,
+)
 from job.assistant import CHATGPT_URL
 from job.quiz import load_active_quiz
 from job.quiz_generation import (
@@ -159,7 +165,8 @@ class QuizImportPanel(QWidget):
         self.import_message.setObjectName("cardSubtitle")
         self.import_message.setWordWrap(True)
 
-        vActions = QHBoxLayout()
+        # Boutons en ligne, repliés sur plusieurs lignes dans une fenêtre étroite
+        vActions = FlowLayout()
         vActions.addWidget(vPasteButton)
         vActions.addWidget(vFileButton)
         vActions.addWidget(self.packs_button)
@@ -177,7 +184,6 @@ class QuizImportPanel(QWidget):
         )
         vClearButton.clicked.connect(self.confirm_clear_questions)
         vActions.addWidget(vClearButton)
-        vActions.addWidget(self.import_message, 1)
 
         # Le message reste court ; le détail d'un gros import s'ouvre à part.
         self.import_details = ""
@@ -210,6 +216,7 @@ class QuizImportPanel(QWidget):
         vLayout.addLayout(vOptions)
         vLayout.addWidget(self.import_edit)
         vLayout.addLayout(vActions)
+        vLayout.addWidget(self.import_message)
 
         return vCard
 
@@ -305,6 +312,8 @@ class QuizImportPanel(QWidget):
                 f"demandé dans {vTheme['offer_count']} offre(s)</span>"
                 f" · {vTheme['questions']} question(s)"
             )
+            vTitle.setWordWrap(True)
+            vDetail.setWordWrap(True)
             vButton = create_button(
                 "Préparer la demande", "bot", pIconColor=COLORS["primary"]
             )

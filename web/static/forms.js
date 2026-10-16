@@ -33,4 +33,26 @@
             window.open(vButton.dataset.open, "_blank", "noopener");
         }
     });
+
+    // Blocs repliables : l'état choisi est gardé d'une page à l'autre, quand le
+    // navigateur le permet (navigation privée, stockage bloqué).
+    document.querySelectorAll("details[data-remember]").forEach(function (pDetails) {
+        var vKey = "collapsed:" + pDetails.dataset.remember;
+
+        try {
+            if (localStorage.getItem(vKey) === "1") {
+                pDetails.open = false;
+            }
+        } catch (pError) {
+            return;
+        }
+
+        pDetails.addEventListener("toggle", function () {
+            try {
+                localStorage.setItem(vKey, pDetails.open ? "0" : "1");
+            } catch (pError) {
+                // Stockage indisponible : le bloc se rouvrira au prochain affichage.
+            }
+        });
+    });
 })();

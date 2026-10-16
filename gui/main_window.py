@@ -91,6 +91,7 @@ class MainWindow(QMainWindow):
         self.search_page = SearchPage(pDatabaseFile=vDatabaseFile)
         self.offers_page = OffersPage(vDatabaseFile)
         self.applications_page = ApplicationsPage(vDatabaseFile)
+        self.quiz_page = QuizPage(vDatabaseFile)
 
         # L'ordre d'ajout fixe l'ordre du menu ; la clé sert à navigate().
         self.add_page("home", "Accueil", "house", self.home_page)
@@ -98,7 +99,7 @@ class MainWindow(QMainWindow):
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
         self.add_page("applications", "Candidatures", "send", self.applications_page)
         self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
-        self.add_page("quiz", "Révision", "graduation-cap", QuizPage(vDatabaseFile))
+        self.add_page("quiz", "Révision", "graduation-cap", self.quiz_page)
         self.add_page("challenges", "Défis", "trophy", ChallengesPage(vDatabaseFile))
         self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
@@ -116,6 +117,7 @@ class MainWindow(QMainWindow):
         self.home_page.navigation_requested.connect(self.navigate)
         self.home_page.offer_requested.connect(self.show_search_results)
         self.applications_page.offer_requested.connect(self.show_search_results)
+        self.offers_page.detail_panel.exam_requested.connect(self.start_offer_exam)
         self.search_page.show_offers_requested.connect(self.show_search_results)
         self.search_page.search_started.connect(self.on_search_started)
         self.search_page.search_ended.connect(self.on_search_ended)
@@ -289,6 +291,11 @@ class MainWindow(QMainWindow):
         """Ouvre la page des offres restreinte aux résultats d'une recherche."""
         self.offers_page.apply_preset("offers", pKeys, pDescription)
         self.navigation.setCurrentRow(self.page_rows["offers"])
+
+    def start_offer_exam(self, pOffer):
+        """Ouvre la page Révision sur l'examen blanc d'une offre."""
+        self.navigate("quiz")
+        self.quiz_page.start_offer_exam(pOffer)
 
     def show_page(self, pIndex):
         """Affiche la page choisie et rafraîchit ses données si elle le permet."""

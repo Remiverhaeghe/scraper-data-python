@@ -8,7 +8,7 @@ import pytest
 # Les tests tournent sans écran, en local comme sur la CI.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QEvent  # noqa: E402
+from PySide6.QtCore import QEvent, QSettings  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 
@@ -30,6 +30,16 @@ def qt_application():
     rApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     gc.collect()
     rApplication.shutdown()
+
+
+@pytest.fixture(autouse=True)
+def isolated_settings(tmp_path):
+    """Écrit les préférences de l'interface (QSettings) dans un dossier temporaire."""
+
+    QSettings.setDefaultFormat(QSettings.Format.IniFormat)
+    QSettings.setPath(
+        QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(tmp_path)
+    )
 
 
 @pytest.fixture(autouse=True)

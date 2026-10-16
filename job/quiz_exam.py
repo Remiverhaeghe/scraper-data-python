@@ -49,9 +49,19 @@ def save_exam(pDatabaseFile, pExam):
     )
 
 
-def start_exam(pDatabaseFile, pQuiz, pDomain, pNow, pRandom=random, pSubdomain=None):
+def start_exam(
+    pDatabaseFile,
+    pQuiz,
+    pDomain,
+    pNow,
+    pRandom=random,
+    pSubdomain=None,
+    pThemeKeys=None,
+    pTitle=None,
+):
     """Tire les questions d'une catégorie, ou de toutes, et commence l'examen.
 
+    pThemeKeys restreint le tirage à certains thèmes, ceux d'une offre par exemple.
     Lève ValueError si le domaine ne contient aucune question.
     """
 
@@ -60,6 +70,7 @@ def start_exam(pDatabaseFile, pQuiz, pDomain, pNow, pRandom=random, pSubdomain=N
         for vTheme in build_quiz_overview(pDatabaseFile, pQuiz)
         if (not pDomain or vTheme["domain"] == pDomain)
         and (not pSubdomain or vTheme["subdomain"] == pSubdomain)
+        and (pThemeKeys is None or vTheme["key"] in pThemeKeys)
     }
     vQuestions = [
         vQuestion["id"] for vKey in vThemes for vQuestion in pQuiz[vKey]["questions"]
@@ -76,6 +87,7 @@ def start_exam(pDatabaseFile, pQuiz, pDomain, pNow, pRandom=random, pSubdomain=N
     rExam = {
         "domain": pDomain,
         "subdomain": pSubdomain,
+        "title": pTitle,
         "ids": vIds,
         "index": 0,
         "correct": 0,
@@ -170,7 +182,7 @@ def summarize_exam(pQuiz, pExam):
 
     vThemes = {}
 
-    for vKey, vTheme in pQuiz.items():
+    for vTheme in pQuiz.values():
         for vQuestion in vTheme["questions"]:
             if vQuestion["id"] in pExam["wrong"]:
                 vThemes[vTheme["label"]] = vThemes.get(vTheme["label"], 0) + 1

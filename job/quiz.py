@@ -315,8 +315,11 @@ def count_offers_by_text(pDatabaseFile, pThemes):
                 if len(vFound & vSkills) >= min(MIN_MATCHED_SKILLS, len(vSkills)):
                     rCounts[vTheme] += 1
 
-        # Un seul état gardé : la base a changé, l'ancien compte ne sert plus.
-        TEXT_COUNTS_CACHE.clear()
+        # Plusieurs jeux de thèmes sont comptés pour un même état des offres : seuls
+        # les comptes d'un autre état (base ou offres modifiées) sont oubliés.
+        for vOldKey in [vOld for vOld in TEXT_COUNTS_CACHE if vOld[:2] != vKey[:2]]:
+            del TEXT_COUNTS_CACHE[vOldKey]
+
         TEXT_COUNTS_CACHE[vKey] = rCounts
 
     rCounts = TEXT_COUNTS_CACHE[vKey]

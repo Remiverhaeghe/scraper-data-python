@@ -9,8 +9,10 @@ from job.quality import (
     build_quality_export,
     describe_problems,
     find_problems,
+    get_average,
     get_quality_report,
     get_rate_tone,
+    summarize_quality,
 )
 from storage.database import initialize_database
 from storage.job_offers import save_offers
@@ -100,3 +102,21 @@ def test_build_quality_export_lists_problems_safely(database_file):
     assert vLines[0].startswith("source;source_id;problems")
     assert len(vLines) == 2
     assert ";'=Data | Remote | France;" in vLines[1]
+
+
+def test_average_and_summary():
+    """Vérifie la moyenne d'une source, le champ le moins rempli et la meilleure source."""
+
+    vRates = [{"rate": 100, "tone": "success"}, {"rate": 30, "tone": "danger"}]
+    vRows = [
+        {"source": "A", "average": get_average(vRates)},
+        {"source": "B", "average": {"rate": 90, "tone": "success"}},
+    ]
+
+    assert get_average(vRates) == {"rate": 65, "tone": "warning"}
+    assert get_average([]) == {"rate": 0, "tone": "danger"}
+    assert summarize_quality(["Titre", "Salaire"], vRows, vRates) == {
+        "weakest": ("Salaire", 30),
+        "best": ("B", 90),
+    }
+    assert summarize_quality([], [], []) == {"weakest": None, "best": None}

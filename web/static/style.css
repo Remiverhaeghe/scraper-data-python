@@ -1407,6 +1407,72 @@ textarea.companies-preferred {
     border-color: var(--primary);
 }
 
+.challenge-item.is-done {
+    border-color: var(--success);
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+}
+
+.challenge-item.is-done strong {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    color: var(--success);
+}
+
+.challenge-item.is-done.is-active {
+    box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* Séries de niveaux du bac à sable Git */
+.level-series {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 18px 0 8px;
+    font-size: 1rem;
+}
+
+/* Blocs repliables : titre cliquable et chevron, état gardé par forms.js */
+.collapsible > summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    align-items: baseline;
+    cursor: pointer;
+    list-style: none;
+}
+
+.collapsible > summary::-webkit-details-marker {
+    display: none;
+}
+
+.collapsible > summary h2 {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    margin: 0;
+}
+
+.collapsible > summary::after {
+    content: "";
+    align-self: center;
+    width: 8px;
+    height: 8px;
+    margin-left: auto;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg);
+    transition: transform 0.2s;
+}
+
+.collapsible:not([open]) > summary::after {
+    transform: rotate(-45deg);
+}
+
+.collapsible[open] > summary {
+    margin-bottom: 12px;
+}
+
 .challenge-stars {
     color: var(--warning);
     letter-spacing: 2px;

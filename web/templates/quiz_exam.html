@@ -6,7 +6,7 @@
 {% block title %}Examen{% endblock %}
 
 {% block content %}
-{{ ui.page_header("Examen", "Questions tirées au hasard, notées et chronométrées", "timer") }}
+{{ ui.page_header("Examen", exam.title or "Questions tirées au hasard, notées et chronométrées", "timer") }}
 
 <article class="card quiz-card">
     {% if summary %}

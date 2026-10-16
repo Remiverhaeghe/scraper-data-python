@@ -27,16 +27,27 @@ def lower_first(pText):
     return rText
 
 
-def get_offer_skills(pOffer):
-    """Retourne les compétences demandées : celles de la source et celles du texte."""
+def get_offer_text(pOffer):
+    """Retourne le texte d'une offre où chercher les compétences demandées."""
 
-    vText = " ".join(
+    rText = " ".join(
         str(pOffer.get(vColumn) or "")
         for vColumn in ("title", "description", "missions", "requirements")
     )
 
+    return rText
+
+
+def get_offer_skills(pOffer):
+    """Retourne les compétences demandées : celles de la source et celles du texte."""
+
     rSkills = list(
-        dict.fromkeys([*(to_list(pOffer.get("skills")) or []), *detect_skills(vText)])
+        dict.fromkeys(
+            [
+                *(to_list(pOffer.get("skills")) or []),
+                *detect_skills(get_offer_text(pOffer)),
+            ]
+        )
     )
 
     return rSkills

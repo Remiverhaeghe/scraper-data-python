@@ -8,19 +8,21 @@
 {% block content %}
 {{ ui.page_header("Défis", "Des problèmes à résoudre avec votre propre code, dans le langage de votre choix : seule la réponse est vérifiée", "trophy") }}
 
-<article class="card">
-    <h2>Les défis</h2>
-    <p class="card-subtitle">Deux parties par défi, une étoile par partie réussie</p>
+<details class="card collapsible" data-remember="challenges" open>
+    <summary>
+        <h2>{{ icon("trophy") }} Les défis</h2>
+        <span class="card-subtitle">Deux parties par défi, une étoile par partie réussie</span>
+    </summary>
     <div class="challenge-list">
         {% for item in challenges %}
-        <a class="challenge-item{% if view and view.id == item.id %} is-active{% endif %}" href="{{ url_for('show_challenge', pChallengeId=item.id).path }}">
+        <a class="challenge-item{% if item.stars == 2 %} is-done{% endif %}{% if view and view.id == item.id %} is-active{% endif %}" href="{{ url_for('show_challenge', pChallengeId=item.id).path }}">
             <span class="challenge-stars" aria-label="{{ item.stars }} étoile(s) sur 2">{{ "★" * item.stars }}{{ "☆" * (2 - item.stars) }}</span>
             <strong>{{ item.title }}</strong>
             <span class="card-subtitle">{{ item.series }} · {{ item.level }}</span>
         </a>
         {% endfor %}
     </div>
-</article>
+</details>
 
 {% if view %}
 <article class="card section-gap" id="challenge">

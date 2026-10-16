@@ -87,6 +87,34 @@ def count_problems(pDatabaseFile):
     return rProblems
 
 
+def get_average(pRates):
+    """Retourne le taux moyen d'une liste de taux, avec sa tonalité."""
+
+    vAverage = (
+        round(sum(vRate["rate"] for vRate in pRates) / len(pRates)) if pRates else 0
+    )
+
+    rAverage = {"rate": vAverage, "tone": get_rate_tone(vAverage)}
+
+    return rAverage
+
+
+def summarize_quality(pColumns, pRows, pTotalRates):
+    """Retourne le champ le moins rempli et la source la plus complète."""
+
+    vWeakest = min(
+        zip(pColumns, pTotalRates), key=lambda pItem: pItem[1]["rate"], default=None
+    )
+    vBest = max(pRows, key=lambda pRow: pRow["average"]["rate"], default=None)
+
+    rSummary = {
+        "weakest": (vWeakest[0], vWeakest[1]["rate"]) if vWeakest else None,
+        "best": (vBest["source"], vBest["average"]["rate"]) if vBest else None,
+    }
+
+    return rSummary
+
+
 def get_quality_report(pDatabaseFile):
     """Retourne le remplissage de chaque colonne, par source puis toutes sources."""
 
@@ -101,16 +129,27 @@ def get_quality_report(pDatabaseFile):
         for vSource, vTotal, vFilled in vCounts
     ]
 
+    for vRow in vRows:
+        vRow["average"] = get_average(vRow["rates"])
+
     vTotal = sum(vCount for _, vCount, _ in vCounts)
     vAllFilled = {
         vColumn: sum(vFilled[vColumn] for _, _, vFilled in vCounts)
         for vColumn in QUALITY_COLUMNS
     }
 
+    vColumns = [QUALITY_LABELS[vColumn] for vColumn in QUALITY_COLUMNS]
+    vTotalRates = build_rates(vTotal, vAllFilled)
+
     rReport = {
-        "columns": [QUALITY_LABELS[vColumn] for vColumn in QUALITY_COLUMNS],
+        "columns": vColumns,
         "rows": vRows,
-        "total": {"count": vTotal, "rates": build_rates(vTotal, vAllFilled)},
+        "total": {
+            "count": vTotal,
+            "rates": vTotalRates,
+            "average": get_average(vTotalRates),
+        },
+        "summary": summarize_quality(vColumns, vRows, vTotalRates),
         # Offres sans titre ni description, écartées avant l'enregistrement
         "rejected": sum(
             (vEntry.parameters or {}).get("rejected", 0)

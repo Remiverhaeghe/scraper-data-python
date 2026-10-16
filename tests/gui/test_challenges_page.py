@@ -107,7 +107,8 @@ def test_full_solution_shows_the_note(qt_application, tmp_path):
     assert vPage.answer_message.text().startswith("Bonne réponse : défi terminé")
     assert not vPage.answer_edit.isEnabled()
     assert "Solution commentée" in vPage.note_label.text()
-    assert vPage.challenge_buttons["pieces-bonnes"].text().startswith("★★")
+    assert vPage.challenge_buttons["pieces-bonnes"].badge_label.text() == "★★"
+    assert vPage.challenge_buttons["pieces-bonnes"].done
 
     vPage.submit()
 

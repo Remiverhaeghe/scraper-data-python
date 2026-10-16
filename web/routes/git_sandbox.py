@@ -8,6 +8,7 @@ from markupsafe import Markup
 
 from job.git_levels import (
     build_level_list,
+    group_levels,
     build_level_view,
     get_level,
     run_level_command,
@@ -36,7 +37,7 @@ def render_git(
         "git.html",
         {
             "active_page": "git",
-            "levels": build_level_list(pDatabaseFile),
+            "level_groups": group_levels(build_level_list(pDatabaseFile)),
             "view": vView,
             "commands": SUPPORTED_COMMANDS,
             # SVG construit par job/git_graph.py, textes échappés : HTML sûr.

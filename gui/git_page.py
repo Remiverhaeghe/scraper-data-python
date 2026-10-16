@@ -10,21 +10,28 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
 from gui.theme import COLORS
 from gui.widgets import (
+    TileButton,
+    add_tile_group,
     clear_layout,
     create_button,
     create_card,
+    create_collapsible_card,
     create_page_header,
     create_scroll_content,
     show_message,
 )
-from job.git_levels import build_level_list, build_level_view, run_level_command
+from job.git_levels import (
+    build_level_list,
+    build_level_view,
+    group_levels,
+    run_level_command,
+)
 from job.git_sandbox import SUPPORTED_COMMANDS
 from utils.logger import get_logger
 from utils.markdown import render_markdown
@@ -32,19 +39,16 @@ from utils.markdown import render_markdown
 logger = get_logger(__name__)
 
 LIST_COLUMNS = 3
-DONE_MARK = "✓"
 
 
 def format_level(pLevel):
-    """Retourne le libellé d'un niveau dans la liste, avec son meilleur résultat."""
+    """Retourne le détail d'un niveau dans la liste : son meilleur résultat."""
 
-    vResult = (
-        f"{DONE_MARK} {pLevel['best']}/{pLevel['par']} commande(s)"
+    rText = (
+        f"Réussi en {pLevel['best']} commande(s), référence {pLevel['par']}"
         if pLevel["best"]
         else f"{pLevel['par']} commande(s) attendue(s)"
     )
-
-    rText = f"{pLevel['title']}\n{pLevel['series']} · {vResult}"
 
     return rText
 
@@ -92,8 +96,11 @@ class GitPage(QWidget):
             pIcon="git-branch",
         )
 
-        self.list_card, vListLayout = create_card(
-            "Les niveaux", "Atteindre l'objectif, si possible en peu de commandes"
+        self.list_card, vListLayout = create_collapsible_card(
+            "Les niveaux",
+            "Atteindre l'objectif, si possible en peu de commandes",
+            "list-checks",
+            "git-levels",
         )
         self.list_layout = QGridLayout()
         self.list_layout.setSpacing(8)
@@ -233,15 +240,28 @@ class GitPage(QWidget):
         clear_layout(self.list_layout)
         self.level_buttons = {}
 
-        for vIndex, vLevel in enumerate(vLevels):
-            vButton = QPushButton(format_level(vLevel))
-            vButton.setObjectName("categoryButton")
-            vButton.setCheckable(True)
-            vButton.setChecked(vLevel["id"] == self.level_id)
-            vButton.clicked.connect(lambda _, pId=vLevel["id"]: self.open_level(pId))
-            self.level_buttons[vLevel["id"]] = vButton
-            self.list_layout.addWidget(
-                vButton, vIndex // LIST_COLUMNS, vIndex % LIST_COLUMNS
+        vRow = 0
+
+        for vGroup in group_levels(vLevels):
+            vTiles = []
+
+            for vLevel in vGroup["levels"]:
+                vTile = TileButton(
+                    vLevel["title"], format_level(vLevel), vGroup["icon"]
+                )
+                vTile.set_done(bool(vLevel["best"]))
+                vTile.setChecked(vLevel["id"] == self.level_id)
+                vTile.clicked.connect(lambda pId=vLevel["id"]: self.open_level(pId))
+                self.level_buttons[vLevel["id"]] = vTile
+                vTiles.append(vTile)
+
+            vRow = add_tile_group(
+                self.list_layout,
+                vRow,
+                f"{vGroup['label']} · {vGroup['done']} / {len(vTiles)} réussi(s)",
+                vGroup["icon"],
+                vTiles,
+                LIST_COLUMNS,
             )
 
         if self.level_id:

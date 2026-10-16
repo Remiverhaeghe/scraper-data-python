@@ -51,6 +51,25 @@ CHALLENGES = (
 )
 PARTS = (1, 2)
 
+# Icône de chaque série, et icône des niveaux dans l'ordre de difficulté
+SERIES_ICONS = {
+    "Algorithmique": "code",
+    "Automatisme": "cpu",
+    "Électricité": "zap",
+    "Exploitation": "server",
+    "Industrie": "settings",
+    "Instrumentation": "timer",
+    "Maintenance": "wrench",
+    "Mathématiques": "scale",
+    "Réseau": "network",
+    "Réseaux industriels": "network",
+}
+LEVEL_ICONS = {
+    "débutant": "sparkles",
+    "intermédiaire": "zap",
+    "confirmé": "trophy",
+}
+
 MAX_SEED = 2**31
 
 
@@ -241,6 +260,7 @@ def build_challenge_list(pDatabaseFile, pNow):
             "title": vChallenge.TITLE,
             "series": vChallenge.SERIES,
             "level": vChallenge.LEVEL,
+            "icon": SERIES_ICONS.get(vChallenge.SERIES, "trophy"),
             "stars": len(vProgress[vChallenge.ID]["solved"]),
             "attempts": vProgress[vChallenge.ID]["attempts"],
         }
@@ -248,6 +268,23 @@ def build_challenge_list(pDatabaseFile, pNow):
     ]
 
     return rChallenges
+
+
+def group_challenges(pChallenges):
+    """Regroupe les défis par niveau de difficulté, du plus facile au plus dur."""
+
+    rGroups = [
+        {
+            "label": vLevel,
+            "icon": vIcon,
+            "challenges": vChallenges,
+            "done": sum(1 for vItem in vChallenges if vItem["stars"] == len(PARTS)),
+        }
+        for vLevel, vIcon in LEVEL_ICONS.items()
+        if (vChallenges := [vItem for vItem in pChallenges if vItem["level"] == vLevel])
+    ]
+
+    return rGroups
 
 
 def build_challenge_view(pDatabaseFile, pChallengeId, pNow):

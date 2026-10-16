@@ -26,6 +26,16 @@ class GitLevel:
     hint: str
 
 
+# Icône de chaque série de niveaux, dans l'ordre de progression
+SERIES_ICONS = {
+    "Bases": "git-commit-horizontal",
+    "Se déplacer": "move",
+    "Réécrire": "pencil",
+    "Intégrer": "git-merge",
+    "Travailler à plusieurs": "users",
+}
+
+
 LEVELS = (
     GitLevel(
         "premiers-commits",
@@ -391,6 +401,27 @@ def build_level_list(pDatabaseFile):
     ]
 
     return rLevels
+
+
+def group_levels(pLevels):
+    """Regroupe les niveaux par série, avec son icône et le nombre de niveaux réussis."""
+
+    vSeries = {}
+
+    for vLevel in pLevels:
+        vSeries.setdefault(vLevel["series"], []).append(vLevel)
+
+    rGroups = [
+        {
+            "label": vLabel,
+            "icon": SERIES_ICONS.get(vLabel, "git-branch"),
+            "levels": vLevels,
+            "done": sum(1 for vLevel in vLevels if vLevel["best"]),
+        }
+        for vLabel, vLevels in vSeries.items()
+    ]
+
+    return rGroups
 
 
 def require_level(pLevelId):

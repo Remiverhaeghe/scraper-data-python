@@ -8,6 +8,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFileDialog,
+    QHBoxLayout,
     QHeaderView,
     QLabel,
     QTableWidget,
@@ -19,9 +20,11 @@ from PySide6.QtWidgets import (
 from gui.chart import BarChart
 from gui.theme import COLORS
 from gui.widgets import (
+    StatisticCard,
     create_button,
     create_card,
     create_page_header,
+    create_scroll_content,
     show_message,
 )
 from job.quality import (
@@ -34,15 +37,48 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Hauteur du graphique : barres et noms des champs lisibles sans se chevaucher
+CHART_HEIGHT = 300
+
+
+def set_bold(pItem, pBold):
+    """Met en gras une cellule du tableau, pour la ligne du total par exemple."""
+
+    vFont = pItem.font()
+    vFont.setBold(pBold)
+    pItem.setFont(vFont)
+
 
 class QualityPage(QWidget):
     """Montre quels champs les sources remplissent, pour repérer les manques."""
 
     def __init__(self, pDatabaseFile):
-        """Construit le graphique, le tableau et l'export ; les données par refresh."""
+        """Construit les chiffres clés, le graphique et le tableau ; données par refresh."""
         super().__init__()
 
         self.database_file = pDatabaseFile
+
+        self.statistic_cards = {
+            "count": StatisticCard("Offres analysées", "inbox", "blue"),
+            "average": StatisticCard("Remplissage moyen", "list-checks", "green"),
+            "weakest": StatisticCard("Champ le moins rempli", "circle-alert", "amber"),
+            "best": StatisticCard("Source la plus complète", "trophy", "purple"),
+        }
+
+        vStatistics = QHBoxLayout()
+        vStatistics.setSpacing(12)
+
+        for vCard in self.statistic_cards.values():
+            vStatistics.addWidget(vCard)
+
+        self.chart = BarChart()
+        self.chart.setMinimumHeight(CHART_HEIGHT)
+
+        vChartCard, vChartLayout = create_card(
+            "Remplissage global",
+            "Part des offres en base dont le champ est renseigné, toutes sources",
+        )
+        vChartLayout.addWidget(self.chart)
 
         self.export_button = create_button(
             "Exporter les offres à vérifier", "download", pIconColor=COLORS["primary"]
@@ -52,6 +88,14 @@ class QualityPage(QWidget):
         )
         self.export_button.clicked.connect(self.export_problems)
 
+        vProblemsTitle = QLabel("Offres à vérifier")
+        vProblemsTitle.setObjectName("cardTitle")
+
+        vProblemsHeader = QHBoxLayout()
+        vProblemsHeader.addWidget(vProblemsTitle)
+        vProblemsHeader.addStretch(1)
+        vProblemsHeader.addWidget(self.export_button)
+
         self.problems_label = QLabel()
         self.problems_label.setObjectName("activityTitle")
         self.problems_label.setWordWrap(True)
@@ -60,22 +104,15 @@ class QualityPage(QWidget):
         vProblemsHelp.setObjectName("cardSubtitle")
         vProblemsHelp.setWordWrap(True)
 
-        vProblemsCard, vProblemsLayout = create_card("Offres à vérifier")
+        vProblemsCard, vProblemsLayout = create_card()
+        vProblemsLayout.addLayout(vProblemsHeader)
         vProblemsLayout.addWidget(self.problems_label)
         vProblemsLayout.addWidget(vProblemsHelp)
-
-        self.chart = BarChart()
-        self.chart.setMinimumHeight(220)
-
-        vChartCard, vChartLayout = create_card(
-            "Remplissage global",
-            "Part des offres en base dont le champ est renseigné, toutes sources",
-        )
-        vChartLayout.addWidget(self.chart, 1)
 
         self.table = QTableWidget()
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table.verticalHeader().hide()
         self.table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
@@ -83,15 +120,17 @@ class QualityPage(QWidget):
 
         vTableCard, vTableLayout = create_card(
             "Par source",
-            "Vert : 80 % et plus · orange : 40 % et plus · rouge : en dessous",
+            "Vert : 80 % et plus · orange : 40 % et plus · rouge : en dessous. "
+            "Les sources les mieux remplies d'abord.",
         )
-        vTableLayout.addWidget(self.table, 1)
+        vTableLayout.addWidget(self.table)
 
         self.message_label = QLabel()
         self.message_label.setObjectName("pageSubtitle")
         self.message_label.setWordWrap(True)
 
-        vLayout = QVBoxLayout(self)
+        # Zone défilante : les cartes gardent leur hauteur dans une petite fenêtre.
+        vLayout = QVBoxLayout(create_scroll_content(self))
         vLayout.setContentsMargins(32, 28, 32, 28)
         vLayout.setSpacing(14)
 
@@ -99,14 +138,15 @@ class QualityPage(QWidget):
             vLayout,
             "Qualité des données",
             "Les informations fournies par chaque source, pour voir ce qui manque",
-            [self.export_button],
             pIcon="list-checks",
         )
 
+        vLayout.addLayout(vStatistics)
         vLayout.addWidget(vChartCard)
         vLayout.addWidget(vProblemsCard)
-        vLayout.addWidget(vTableCard, 1)
+        vLayout.addWidget(vTableCard)
         vLayout.addWidget(self.message_label)
+        vLayout.addStretch(1)
 
     def refresh(self):
         """Relit le remplissage des champs en base."""
@@ -125,8 +165,70 @@ class QualityPage(QWidget):
         else:
             self.show_report(vReport)
 
+    def show_statistics(self, pReport):
+        """Affiche les chiffres clés : volume, moyenne, champ faible, meilleure source."""
+        vSummary = pReport["summary"]
+
+        self.statistic_cards["count"].set_value(str(pReport["total"]["count"]))
+        self.statistic_cards["average"].set_value(
+            f"{pReport['total']['average']['rate']} %"
+        )
+
+        for vKey, vLabel in (
+            ("weakest", "Champ le moins rempli"),
+            ("best", "Source la plus complète"),
+        ):
+            vValue = vSummary[vKey]
+            self.statistic_cards[vKey].set_value(f"{vValue[1]} %" if vValue else "-")
+            self.statistic_cards[vKey].set_label(
+                f"{vLabel} : {vValue[0]}" if vValue else vLabel
+            )
+
+    def set_rate_item(self, pRow, pColumn, pRate, pBold=False):
+        """Place un taux dans le tableau, sur un fond teinté selon sa tonalité."""
+        vItem = QTableWidgetItem(f"{pRate['rate']} %")
+        vItem.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        vItem.setForeground(QColor(COLORS[pRate["tone"]]))
+        vItem.setBackground(QColor(COLORS[f"{pRate['tone']}_light"]))
+        set_bold(vItem, pBold)
+        self.table.setItem(pRow, pColumn, vItem)
+
+    def show_table(self, pReport):
+        """Remplit le tableau par source, moyenne en tête et total en dernière ligne."""
+        vRows = sorted(pReport["rows"], key=lambda pRow: -pRow["average"]["rate"])
+        vRows.append({**pReport["total"], "source": "Toutes sources"})
+
+        self.table.setColumnCount(len(pReport["columns"]) + 3)
+        self.table.setHorizontalHeaderLabels(
+            ["Source", "Offres", "Moyenne"] + pReport["columns"]
+        )
+        self.table.setRowCount(len(vRows))
+
+        for vRow, vSource in enumerate(vRows):
+            vTotal = vRow == len(vRows) - 1
+
+            for vColumn, vText in enumerate((vSource["source"], str(vSource["count"]))):
+                vItem = QTableWidgetItem(vText)
+                set_bold(vItem, vTotal)
+                self.table.setItem(vRow, vColumn, vItem)
+
+            self.set_rate_item(vRow, 2, vSource["average"], pBold=True)
+
+            for vColumn, vRate in enumerate(vSource["rates"], start=3):
+                self.set_rate_item(vRow, vColumn, vRate, pBold=vTotal)
+
+        # Toutes les lignes visibles : c'est la page qui défile, pas le tableau.
+        self.table.resizeRowsToContents()
+        self.table.setFixedHeight(
+            self.table.horizontalHeader().sizeHint().height()
+            + sum(self.table.rowHeight(vRow) for vRow in range(len(vRows)))
+            + 2 * self.table.frameWidth()
+        )
+
     def show_report(self, pReport):
-        """Affiche le graphique global et le tableau par source."""
+        """Affiche les chiffres clés, le graphique global et le tableau par source."""
+        self.show_statistics(pReport)
+
         self.chart.set_series(
             pReport["columns"],
             [
@@ -142,19 +244,7 @@ class QualityPage(QWidget):
             pFillWidth=True,
         )
 
-        self.table.setColumnCount(len(pReport["columns"]) + 2)
-        self.table.setHorizontalHeaderLabels(["Source", "Offres"] + pReport["columns"])
-        self.table.setRowCount(len(pReport["rows"]))
-
-        for vRow, vSource in enumerate(pReport["rows"]):
-            self.table.setItem(vRow, 0, QTableWidgetItem(vSource["source"]))
-            self.table.setItem(vRow, 1, QTableWidgetItem(str(vSource["count"])))
-
-            for vColumn, vRate in enumerate(vSource["rates"], start=2):
-                vItem = QTableWidgetItem(f"{vRate['rate']} %")
-                vItem.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                vItem.setForeground(QColor(COLORS[vRate["tone"]]))
-                self.table.setItem(vRow, vColumn, vItem)
+        self.show_table(pReport)
 
         vProblems = pReport["problems"]
 

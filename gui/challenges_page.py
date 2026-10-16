@@ -12,24 +12,28 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPlainTextEdit,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
 from gui.theme import COLORS
 from gui.widgets import (
+    TileButton,
+    add_tile_group,
     clear_layout,
     create_button,
     create_card,
+    create_collapsible_card,
     create_page_header,
     create_scroll_content,
     show_message,
 )
 from job.challenges import (
+    PARTS,
     build_challenge_list,
     build_challenge_view,
     get_challenge_input,
+    group_challenges,
     submit_answer,
 )
 from utils.logger import get_logger
@@ -39,7 +43,10 @@ logger = get_logger(__name__)
 
 STAR = "★"
 EMPTY_STAR = "☆"
-LIST_COLUMNS = 2
+LIST_COLUMNS = 3
+
+# Couleur de l'icône d'un défi selon sa difficulté
+LEVEL_ACCENTS = {"débutant": "blue", "intermédiaire": "amber", "confirmé": "purple"}
 
 
 def format_stars(pStars):
@@ -75,8 +82,11 @@ class ChallengesPage(QWidget):
             pIcon="trophy",
         )
 
-        self.list_card, vListLayout = create_card(
-            "Les défis", "Deux parties par défi, une étoile par partie réussie"
+        self.list_card, vListLayout = create_collapsible_card(
+            "Les défis",
+            "Deux parties par défi, une étoile par partie réussie",
+            "trophy",
+            "challenges",
         )
         self.list_layout = QGridLayout()
         self.list_layout.setSpacing(8)
@@ -171,20 +181,35 @@ class ChallengesPage(QWidget):
         clear_layout(self.list_layout)
         self.challenge_buttons = {}
 
-        for vIndex, vChallenge in enumerate(vChallenges):
-            vButton = QPushButton(
-                f"{format_stars(vChallenge['stars'])}   {vChallenge['title']}\n"
-                f"{vChallenge['series']} · {vChallenge['level']}"
-            )
-            vButton.setObjectName("categoryButton")
-            vButton.setCheckable(True)
-            vButton.setChecked(vChallenge["id"] == self.challenge_id)
-            vButton.clicked.connect(
-                lambda _, pId=vChallenge["id"]: self.open_challenge(pId)
-            )
-            self.challenge_buttons[vChallenge["id"]] = vButton
-            self.list_layout.addWidget(
-                vButton, vIndex // LIST_COLUMNS, vIndex % LIST_COLUMNS
+        vRow = 0
+
+        for vGroup in group_challenges(vChallenges):
+            vTiles = []
+
+            for vChallenge in vGroup["challenges"]:
+                vTile = TileButton(
+                    vChallenge["title"],
+                    vChallenge["series"],
+                    vChallenge["icon"],
+                    LEVEL_ACCENTS.get(vChallenge["level"], "blue"),
+                    format_stars(vChallenge["stars"]),
+                )
+                vTile.set_done(vChallenge["stars"] == len(PARTS))
+                vTile.setChecked(vChallenge["id"] == self.challenge_id)
+                vTile.clicked.connect(
+                    lambda pId=vChallenge["id"]: self.open_challenge(pId)
+                )
+                self.challenge_buttons[vChallenge["id"]] = vTile
+                vTiles.append(vTile)
+
+            vRow = add_tile_group(
+                self.list_layout,
+                vRow,
+                f"{vGroup['label'].capitalize()} · {vGroup['done']} / "
+                f"{len(vTiles)} terminé(s)",
+                vGroup["icon"],
+                vTiles,
+                LIST_COLUMNS,
             )
 
         if self.challenge_id:

@@ -179,6 +179,117 @@ QPushButton#categoryChildButton:checked {
     color: $primary;
 }
 
+QFrame#tile {
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: 12px;
+}
+
+QFrame#tile:hover,
+QFrame#tile:focus {
+    border-color: $primary;
+}
+
+QFrame#tile[done="true"] {
+    background: $success_light;
+    border-color: $success;
+}
+
+QFrame#tile[checked="true"] {
+    border: 2px solid $primary;
+}
+
+QLabel#tileTitle {
+    color: $heading;
+    font-weight: 600;
+}
+
+QFrame#tile[done="true"] QLabel#tileTitle {
+    color: $success;
+}
+
+QLabel#tileDetail {
+    color: $muted;
+}
+
+QLabel#tileBadge {
+    color: $warning;
+    font-size: 16px;
+    letter-spacing: 2px;
+}
+
+QLabel#tileGroup {
+    color: $heading;
+    font-weight: 600;
+    padding-top: 6px;
+}
+
+QPushButton#chipButton {
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: 14px;
+    padding: 4px 12px;
+    text-align: left;
+    color: $text;
+}
+
+QPushButton#chipButton:hover {
+    border-color: $primary;
+}
+
+QPushButton#chipButton:checked {
+    background: $primary_light;
+    border-color: $primary;
+    color: $primary;
+    font-weight: 600;
+}
+
+QLabel#pill {
+    border-radius: 10px;
+    padding: 2px 10px;
+    font-weight: 600;
+}
+
+QLabel#pill[tone="primary"] {
+    background: $primary_light;
+    color: $primary;
+}
+
+QLabel#pill[tone="warning"] {
+    background: $warning_light;
+    color: $warning;
+}
+
+QLabel#pill[tone="success"] {
+    background: $success_light;
+    color: $success;
+}
+
+QLabel#pill[tone="muted"] {
+    background: $surface_alt;
+    color: $muted;
+}
+
+QPushButton#collapsibleTitle {
+    background: transparent;
+    border: none;
+    padding: 0;
+    text-align: left;
+    color: $heading;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+QToolButton#collapsibleToggle {
+    border: none;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+QToolButton#collapsibleToggle:hover {
+    background: $surface_alt;
+}
+
 QTreeWidget#progressTree {
     background: $surface;
     border: 1px solid $border;

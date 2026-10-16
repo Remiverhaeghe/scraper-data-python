@@ -38,6 +38,7 @@ from job.quiz import (
     load_active_quiz,
     pick_question,
 )
+from job.interview_revision import start_offer_exam
 from job.quiz_domains import (
     DOMAIN_ICONS,
     build_category_progress,
@@ -77,6 +78,7 @@ from job.quiz_import import (
 )
 from job.quiz_packs import import_validated_packs, list_validated_packs
 from job.quiz_types import build_response, prepare_question
+from storage.job_offers import get_offer
 from storage.quiz_answers import get_last_answers
 from storage.quiz_questions import get_quiz_asset, get_quiz_guide, get_quiz_guides
 from utils.markdown import render_markdown
@@ -510,21 +512,32 @@ def begin_quiz_exam(
     request: Request,
     pDomain: str = Form("", alias="domain"),
     pSubdomain: str = Form("", alias="subdomain"),
+    pSource: str = Form("", alias="source"),
+    pSourceId: str = Form("", alias="id"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Commence un examen sur une catégorie, ou reprend celui en cours."""
+    """Commence un examen sur une catégorie ou une offre, ou reprend celui en cours."""
 
     vExam = load_exam(pDatabaseFile)
+    vOffer = get_offer(pDatabaseFile, pSource, pSourceId) if pSource else None
+
+    if pSource and vOffer is None:
+        raise HTTPException(status_code=404, detail="Offre introuvable.")
 
     if not vExam or vExam["finished_at"]:
         try:
-            start_exam(
-                pDatabaseFile,
-                load_active_quiz(pDatabaseFile),
-                pDomain or None,
-                datetime.now(),
-                pSubdomain=pSubdomain or None,
-            )
+            vQuiz = load_active_quiz(pDatabaseFile)
+
+            if vOffer:
+                start_offer_exam(pDatabaseFile, vQuiz, vOffer, datetime.now())
+            else:
+                start_exam(
+                    pDatabaseFile,
+                    vQuiz,
+                    pDomain or None,
+                    datetime.now(),
+                    pSubdomain=pSubdomain or None,
+                )
 
         except ValueError as vException:
             return render_quiz(
