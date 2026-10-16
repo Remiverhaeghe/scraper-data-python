@@ -184,6 +184,30 @@ COMPONENT_TYPES = (
         '<line x1="40" y1="82" x2="40" y2="100"/></g>',
         pSymmetric=False,
     ),
+    ComponentType(
+        "moteur_six_bornes",
+        "Moteur asynchrone à six bornes",
+        ELECTRICAL,
+        (("débuts", TOP), ("fins", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="22"/>'
+        '<circle cx="40" cy="50" r="28"/><line x1="40" y1="78" x2="40" '
+        'y2="100"/></g>'
+        '<text x="40" y="50" text-anchor="middle" font-size="16" '
+        'font-weight="bold" fill="#0f172a">M</text>'
+        '<text x="40" y="66" text-anchor="middle" font-size="11" '
+        'font-weight="bold" fill="#0f172a">3~</text>'
+        '<text x="46" y="12" font-size="9" fill="#475569">U1 V1 W1</text>'
+        '<text x="46" y="96" font-size="9" fill="#475569">U2 V2 W2</text>',
+    ),
+    one_terminal(
+        "point_etoile",
+        "Point étoile",
+        ELECTRICAL,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="50"/>'
+        '<line x1="40" y1="50" x2="20" y2="74"/><line x1="40" y1="50" x2="60" '
+        'y2="74"/><line x1="40" y1="50" x2="40" y2="80"/></g>',
+        "liaison",
+    ),
     one_terminal(
         "source_air",
         "Source d'air comprimé",
@@ -457,6 +481,32 @@ COMPONENT_TYPES = (
         '<line x1="28" y1="60" x2="52" y2="60"/>'
         '<line x1="36" y1="70" x2="44" y2="70"/></g>',
         "masse",
+    ),
+    ComponentType(
+        "pont_diodes",
+        "Pont de diodes",
+        ELECTRONIC,
+        (("alternatif", TOP), ("+", (24, 100)), ("−", (56, 100))),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="20"/>'
+        '<polygon points="40,20 68,50 40,80 12,50"/>'
+        '<polygon points="32,44 48,44 40,58" fill="#0f172a"/>'
+        '<line x1="32" y1="58" x2="48" y2="58"/>'
+        '<line x1="24" y1="64" x2="24" y2="100"/>'
+        '<line x1="56" y1="64" x2="56" y2="100"/></g>'
+        '<text x="12" y="96" font-size="12" font-weight="bold" '
+        'fill="#0f172a">+</text>',
+    ),
+    ComponentType(
+        "regulateur",
+        "Régulateur de tension",
+        ELECTRONIC,
+        (("entrée", TOP), ("sortie", BOTTOM), ("masse", (78, 60))),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="28"/>'
+        '<rect x="14" y="28" width="52" height="44"/>'
+        '<line x1="40" y1="72" x2="40" y2="100"/>'
+        '<line x1="66" y1="60" x2="78" y2="60"/></g>'
+        '<text x="40" y="55" text-anchor="middle" font-size="12" '
+        'font-weight="bold" fill="#0f172a">REG</text>',
     ),
     network_device("internet", "Internet", "Internet"),
     network_device("routeur", "Routeur", "Routeur"),

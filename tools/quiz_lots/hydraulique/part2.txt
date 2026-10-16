@@ -67,12 +67,28 @@ U: kW
 E: Toute l'huile passe par le limiteur sans produire de travail : P = 160 × 30 / 600 = 8 kW de chaleur, autant qu'un gros radiateur. C'est pourquoi on évite de laisser une pompe fixe débiter sur le limiteur pendant les arrêts.
 
 @060
-Q: Pourquoi installe-t-on un échangeur de refroidissement sur une centrale ?
-C: Évacuer la chaleur des pertes et garder la viscosité
-W: Augmenter la pression de réglage du limiteur
-W: Remplacer le filtre de retour par un by-pass
-W: Réchauffer l'huile pour démarrer plus vite
-E: Toute puissance perdue, dans le limiteur, les étrangleurs ou les fuites internes, chauffe l'huile. L'échangeur air-huile ou eau-huile garde l'huile dans sa plage de 40 à 60 °C, où sa viscosité et sa durée de vie restent bonnes.
+Q: Construire une centrale à accumulateur qui alimente un vérin double effet par un distributeur 4/3 : un clapet doit empêcher l'accumulateur de se vider dans la pompe, un limiteur protège la pompe, et le retour passe par un filtre.
+S: v1 = verin_double @ 1 0 | Vérin
+S: distributeur_43 @ 1 1
+S: filtre @ 2 2
+S: clapet @ 0 2
+S: accumulateur @ 1 2
+S: pompe @ 0 3
+S: limiteur @ 1 3
+S: reservoir @ 0 4
+L: reservoir.aspiration - pompe.aspiration
+L: pompe.refoulement - limiteur.entrée
+L: limiteur.réservoir - reservoir.retour
+L: pompe.refoulement - clapet.entrée
+L: clapet.sortie - accumulateur.raccord
+L: clapet.sortie - distributeur_43.P
+L: distributeur_43.A - v1.fond
+L: distributeur_43.B - v1.tige
+L: distributeur_43.T - filtre.1
+L: filtre.2 - reservoir.retour
+D: moteur_hydraulique
+D: manometre
+E: Le clapet laisse passer l'huile de la pompe vers l'accumulateur et le distributeur, mais l'empêche de revenir : pompe arrêtée, l'accumulateur garde sa pression et peut assurer des mouvements de secours. Le limiteur protège la pompe, en amont du clapet. C'est aussi pourquoi l'accumulateur doit être vidangé avant toute intervention.
 
 @061
 Q: Quel est l'intérêt d'analyser régulièrement l'huile d'une machine ?

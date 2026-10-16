@@ -222,12 +222,26 @@ T: 1
 E: La tension moyenne vaut rapport cyclique × tension : 0,4 × 12 = 4,8 V. Un moteur à courant continu réagit à cette moyenne grâce à son inertie, une LED semble moins lumineuse parce que l'œil intègre les impulsions.
 
 @030
-Q: Quel montage transforme une tension alternative en tension continue pulsée sur les deux alternances ?
-C: Un pont de diodes
-W: Un diviseur de tension
-W: Un filtre passe-haut RC
-W: Un amplificateur suiveur
-E: Le pont de quatre diodes oriente les deux alternances dans le même sens : on obtient une tension toujours positive, qui ondule encore. Un condensateur de filtrage la lisse ensuite, puis un régulateur la stabilise. Le diviseur ne fait qu'abaisser une tension.
+Q: Construire, en représentation simplifiée, une alimentation linéaire 5 V à partir du réseau : abaisser la tension, la redresser sur les deux alternances, la lisser, puis la stabiliser pour la charge.
+S: reseau @ 0 0
+S: transformateur @ 0 1
+S: pont_diodes @ 0 2
+S: condensateur @ 1 3 | Condensateur de filtrage
+S: regulateur @ 0 3
+S: r1 = resistance @ 0 4 | Charge alimentée en 5 V
+S: masse @ 1 5
+L: reseau.sortie - transformateur.1
+L: transformateur.2 - pont_diodes.alternatif
+L: pont_diodes.+ - regulateur.entrée
+L: pont_diodes.+ - condensateur.1
+L: condensateur.2 - masse.masse
+L: pont_diodes.− - masse.masse
+L: regulateur.sortie - r1.1
+L: r1.2 - masse.masse
+L: regulateur.masse - masse.masse
+D: led
+D: transistor_npn
+E: Le transformateur abaisse la tension du réseau, le pont de diodes la redresse sur les deux alternances, le condensateur la lisse et le régulateur fournit 5 V stables à la charge. Le condensateur se place en parallèle, entre le + redressé et la masse : en série, il bloquerait le courant continu.
 
 @031
 Q: Remettre dans l'ordre les étages d'une alimentation linéaire classique.

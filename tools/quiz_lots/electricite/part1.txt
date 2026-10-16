@@ -307,12 +307,28 @@ T: 1
 E: Le glissement vaut g = (ns - n) / ns = (1 500 - 1 440) / 1 500 = 0,04, soit 4 %. Il augmente avec la charge : c'est ce décalage entre le champ tournant et le rotor qui induit les courants rotoriques et donc le couple.
 
 @040
-Q: Quel démarrage divise par trois le courant d'appel d'un moteur prévu pour fonctionner en triangle ?
-C: Le démarrage étoile-triangle
-W: Le démarrage direct sur le réseau
-W: Le démarrage par contacteur inverseur
-W: Le freinage par injection de continu
-E: Couplé d'abord en étoile, chaque enroulement ne reçoit que la tension simple, soit 1/√3 de la tension nominale : courant et couple de démarrage sont divisés par trois. On passe ensuite en triangle. Le contacteur inverseur change le sens de rotation, l'injection de courant continu freine le moteur.
+Q: Construire, en représentation unifilaire, le démarrage étoile-triangle d'un moteur à six bornes : un contacteur de ligne, un contacteur qui relie les fins d'enroulements en étoile, un contacteur qui les ramène sur la ligne en triangle, et la protection habituelle du départ.
+S: reseau @ 0 0
+S: sectionneur @ 0 1
+S: fusible @ 0 2
+S: km1 = contacteur @ 0 3 | KM1 contacteur de ligne
+S: relais_thermique @ 0 4
+S: moteur_six_bornes @ 0 5
+S: km3 = contacteur @ 1 5 | KM3 contacteur triangle
+S: km2 = contacteur @ 2 5 | KM2 contacteur étoile
+S: point_etoile @ 2 6
+L: reseau.sortie - sectionneur.1
+L: sectionneur.2 - fusible.1
+L: fusible.2 - km1.1
+L: km1.2 - relais_thermique.1
+L: relais_thermique.2 - moteur_six_bornes.débuts
+L: moteur_six_bornes.fins - km2.1
+L: km2.2 - point_etoile.liaison
+L: moteur_six_bornes.fins - km3.1
+L: km3.2 - relais_thermique.2
+D: differentiel
+D: transformateur
+E: Au démarrage, KM1 et KM2 sont fermés : les fins U2 V2 W2 sont reliées entre elles au point étoile et chaque enroulement ne reçoit que la tension simple. Après la temporisation, KM2 s'ouvre puis KM3 se ferme : les fins reviennent sur la ligne, c'est le triangle. KM2 et KM3 ne doivent jamais être fermés ensemble, d'où leur verrouillage électrique et mécanique.
 
 @041
 Q: Remettre dans l'ordre la séquence d'un démarrage étoile-triangle.
