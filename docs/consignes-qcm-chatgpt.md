@@ -88,6 +88,14 @@ Un lot peut aussi s'écrire directement dans `tools/quiz_lots/<thème>/` : des f
 python -m tools.quiz_lot build <thème>
 ```
 
+Un lot écrit peut mêler aux QCM des questions interactives (calcul, remise en ordre,
+association, code à compléter), dont les champs sont décrits au même endroit. Dans
+`lot.json`, un schéma se rattache à des questions par leur numéro ; il s'affiche avec la
+correction, sauf avec `"on_question": true`, pour un symbole ou un schéma qu'il faut lire
+pour répondre (planche de symboles numérotés, par exemple). Les schémas dessinés à la main
+se rangent dans `tools/quiz_lots/<thème>/schemas/`, sans commentaire qui trahirait la
+réponse.
+
 Une question peut citer une ou deux références, ligne `R: Titre | https://…`. Avant de les
 garder, on vérifie que les pages existent (accès réseau, à la demande seulement) ; le code de
 retour vaut 1 si une page est retirée :

@@ -36,6 +36,11 @@
     <p class="muted">{{ themes_by_key[question.theme_key].label }} · {{ question.level }} · {{ question.type_label }} · {{ modes[mode] }}</p>
     <h2>{{ question.question }}</h2>
     {% if question.code %}<pre class="quiz-code"><code>{{ question.code }}</code></pre>{% endif %}
+    {% if question.visual and question.visual.show == "question" %}
+    <figure class="quiz-visual">
+        <img src="{{ url_for('show_quiz_asset', pName=question.visual.asset).path }}" alt="{{ question.visual.alt }}">
+    </figure>
+    {% endif %}
     <form class="quiz-form" method="post" action="{{ url_for('answer_quiz').path }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
         <input type="hidden" name="question_id" value="{{ question.id }}">

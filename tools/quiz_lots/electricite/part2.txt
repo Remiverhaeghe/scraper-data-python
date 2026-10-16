@@ -1,0 +1,385 @@
+@051
+Q: Entre quelles valeurs se situe le déclenchement magnétique d'un disjoncteur de courbe C ?
+C: Entre 5 et 10 fois In
+W: Entre 3 et 5 fois In
+W: Entre 10 et 20 fois In
+W: Entre 1,13 et 1,45 fois In
+E: La courbe C déclenche magnétiquement entre 5 et 10 fois le courant assigné In : c'est la courbe d'usage général. La courbe B agit entre 3 et 5 In, la courbe D entre 10 et 20 In. Les valeurs 1,13 et 1,45 In sont les seuils conventionnels de non-déclenchement et de déclenchement du thermique.
+
+@052
+Q: Associer chaque courbe de disjoncteur à son usage typique.
+P: Courbe B => grandes longueurs de câble, faibles appels de courant
+P: Courbe C => usage général, éclairage et prises
+P: Courbe D => moteurs et transformateurs à fort courant d'appel
+E: Plus la courbe est haute, plus elle tolère de courant d'appel avant de couper. La courbe B coupe tôt, utile quand le courant de court-circuit est faible en bout de longue ligne. La courbe D laisse passer la pointe de mise sous tension d'un transformateur ou d'un moteur sans déclencher.
+
+@053
+Q: Un circuit monophasé résistif de 40 m (longueur aller) en 2,5 mm² est parcouru par 16 A. Avec ρ = 0,0225 Ω·mm²/m, quelle est la chute de tension ?
+N: 11.52
+U: V
+T: 2
+E: Le courant fait l'aller et le retour : ΔU = 2 × ρ × L × I / S = 2 × 0,0225 × 40 × 16 / 2,5 = 11,52 V. La résistivité de 0,0225 tient compte de l'échauffement du cuivre en service, plus forte que les 0,0175 à 20 °C.
+
+@054
+Q: Le circuit précédent, alimenté en 230 V, subit une chute de tension de 11,52 V. Que représente-t-elle en % ?
+N: 5
+U: %
+T: 2
+E: La chute relative vaut 11,52 / 230 ≈ 0,050, soit 5 %. C'est la limite admise pour un circuit d'usage général alimenté par le réseau public ; pour de l'éclairage, il faudrait passer en 4 mm² ou raccourcir la ligne.
+
+@055
+Q: Quelle chute de tension maximale la NF C 15-100 admet-elle pour un circuit d'éclairage alimenté par le réseau public basse tension ?
+C: 3 %
+W: 5 %
+W: 8 %
+W: 10 %
+E: Depuis le point de livraison, la chute de tension ne doit pas dépasser 3 % pour l'éclairage et 5 % pour les autres usages. Les valeurs de 6 % et 8 % s'appliquent aux installations alimentées par un poste privé HTA/BT. Une chute excessive fait chauffer les câbles et gêne les récepteurs.
+
+@056
+Q: Quel est le rôle d'un sectionneur ?
+C: Isoler un circuit hors charge, coupure visible
+W: Couper un court-circuit sous pleine charge du circuit
+W: Commander un moteur souvent et à distance
+W: Détecter une fuite de courant vers la terre
+E: Le sectionneur assure la séparation : il isole un circuit de sa source avec une coupure certaine, visible ou signalée de façon fiable, et se condamne en position ouverte. Il se manœuvre hors charge ; couper un courant est le rôle d'un interrupteur, d'un disjoncteur ou d'un contacteur.
+
+@057
+Q: Remettre dans l'ordre les étapes d'une remise sous tension après travaux.
+O: Annoncer la fin des travaux et regrouper le personnel
+O: Retirer la mise à la terre et en court-circuit
+O: Retirer la condamnation de l'organe de séparation
+O: Refermer l'organe de séparation
+E: La déconsignation suit l'ordre inverse de la consignation. On s'assure d'abord que plus personne ne travaille sur l'ouvrage, puis on retire la mise à la terre et en court-circuit, on enlève la condamnation et seulement alors on referme. Remettre sous tension avec la mise à la terre en place provoquerait un court-circuit.
+
+@058
+Q: Qu'appelle-t-on le pouvoir de coupure d'un disjoncteur ?
+C: Le plus fort courant de court-circuit qu'il sait couper
+W: Le courant qu'il laisse passer en permanence
+W: Le courant de fuite qui le fait déclencher
+W: La tension maximale tenue entre ses bornes
+E: Le pouvoir de coupure, exprimé en kA, est le courant de court-circuit maximal que le disjoncteur interrompt sans être détruit. Le courant qu'il laisse passer en permanence est son calibre In ; le courant de fuite concerne le différentiel ; la tenue en tension est une autre caractéristique.
+
+@059
+Q: L'impédance de la boucle phase-neutre au bout d'un circuit vaut 0,46 Ω sous 230 V. Quel courant de court-circuit peut-on y attendre ?
+N: 500
+U: A
+T: 2
+E: Le courant de court-circuit vaut Icc = U / Z = 230 / 0,46 = 500 A. Avec un disjoncteur courbe C de 32 A, le magnétique déclenche au plus à 10 × 32 = 320 A : ce défaut sera coupé instantanément.
+
+@060
+Q: Dans un immeuble, après des travaux sur le réseau, des ampoules grillent chez certains habitants et des appareils fonctionnent mal chez d'autres. Le neutre commun a été coupé : qu'est-ce qui explique ces dégâts ?
+C: Certaines prises reçoivent une surtension
+W: Toutes les charges s'arrêtent sans danger
+W: Le différentiel coupe aussitôt l'installation
+W: La tension est divisée par deux partout
+E: Sans neutre, les charges de deux phases se retrouvent en série sous 400 V et se partagent cette tension selon leurs impédances : la phase la moins chargée peut dépasser 300 V et détruire des appareils. Le différentiel ne voit aucune fuite et ne réagit pas, d'où l'interdiction de couper le neutre seul.
+
+@061
+Q: La plaque d'un moteur indique 400/690 V. Comment le coupler sur un réseau 230/400 V ?
+C: En triangle
+W: En étoile
+W: En étoile-triangle obligatoirement
+W: Il faut un transformateur abaisseur
+E: Chaque enroulement supporte la plus petite tension de la plaque, 400 V. En triangle, il reçoit la tension entre phases du réseau, 400 V : c'est le bon couplage. En étoile, il ne recevrait que 230 V et manquerait de couple. Ce moteur se prête justement au démarrage étoile-triangle, sans l'imposer.
+
+@062
+Q: Un moteur triphasé 400 V fournit 7,5 kW avec un rendement de 0,9 et un cos φ de 0,85. Quel courant absorbe-t-il ?
+N: 14.15
+U: A
+T: 2
+E: La puissance de plaque est la puissance utile ; la puissance absorbée vaut 7 500 / 0,9 ≈ 8 333 W. Le courant vaut alors I = P / (√3 × U × cos φ) = 8 333 / (1,732 × 400 × 0,85) ≈ 14,15 A. Oublier le rendement sous-estimerait le courant d'environ 10 %.
+
+@063
+Q: Comment un variateur de fréquence fait-il varier la vitesse d'un moteur asynchrone ?
+C: En faisant varier la fréquence et la tension appliquées
+W: En changeant le nombre de pôles du moteur en marche
+W: En augmentant la puissance nominale du moteur
+W: En remplaçant la protection contre les courts-circuits
+E: La vitesse de synchronisme est proportionnelle à la fréquence : le variateur redresse le réseau puis reconstruit une tension de fréquence réglable par son onduleur. Le nombre de pôles est fixé à la construction, sauf moteurs spéciaux. Le variateur ne dispense pas des protections en amont.
+
+@064
+Q: Pourquoi un variateur maintient-il le rapport U/f constant en dessous de la vitesse nominale ?
+C: Pour garder le flux, donc le couple disponible
+W: Pour réduire les harmoniques injectés au réseau
+W: Pour garder la vitesse fixe quelle que soit la charge
+W: Pour limiter la tension du bus continu interne
+E: Le flux dans le moteur est proportionnel à U/f : en baissant la tension avec la fréquence, on garde le flux nominal et le moteur peut fournir son couple nominal à basse vitesse. Si l'on baissait la fréquence seule, le moteur saturerait et chaufferait. Au-delà de 50 Hz, la tension plafonne et le couple diminue.
+
+@065
+Q: Associer chaque repère de schéma à l'organe qu'il désigne habituellement.
+P: KM => contacteur de puissance
+P: KA => relais auxiliaire de commande
+P: Q => sectionneur ou disjoncteur
+P: S => bouton-poussoir ou interrupteur
+P: M => moteur
+E: Ces lettres repères permettent de retrouver un organe entre le schéma et l'armoire : KM1 est le contacteur du premier moteur, KA un relais de l'automatisme, Q l'appareil de sectionnement ou de protection, S un organe de commande manuelle et M le moteur. Les protections comme les fusibles ou relais thermiques portent la lettre F.
+
+@066
+Q: Que signifie la sélectivité entre protections ?
+C: Seule la protection juste en amont du défaut coupe
+W: Toutes les protections coupent ensemble par sûreté
+W: La protection générale coupe toujours la première
+W: Les protections se réenclenchent après chaque défaut
+E: La sélectivité limite la coupure au seul départ en défaut : le reste de l'installation continue de fonctionner. Si le disjoncteur général coupait, tout l'atelier s'arrêterait pour un défaut sur une seule machine. Le réenclenchement automatique est une fonction distincte, rare en basse tension.
+
+@067
+Q: Quelle condition permet une sélectivité ampèremétrique entre deux disjoncteurs ?
+C: Des seuils amont nettement plus hauts qu'en aval
+W: Des seuils amont plus bas pour couper en premier
+W: Des calibres identiques en amont et en aval
+W: Des différentiels de même sensibilité partout
+E: La sélectivité ampèremétrique repose sur l'écart de seuils : un défaut en aval atteint le seuil du petit disjoncteur sans atteindre celui du gros. Elle est souvent partielle, valable jusqu'à un certain courant de court-circuit ; au-delà, on ajoute un retard sur la protection amont, c'est la sélectivité chronométrique.
+
+@068
+Q: Comment assurer la sélectivité entre deux dispositifs différentiels en cascade ?
+C: Sensibilité et retard plus grands en amont
+W: 30 mA en amont et 300 mA en aval
+W: Deux différentiels instantanés identiques
+W: Supprimer le différentiel placé en aval
+E: Pour que le différentiel aval coupe seul, l'amont doit être moins sensible, en pratique trois fois au moins, et retardé, par exemple un type S. Avec deux appareils identiques, les deux couperaient ensemble. Mettre 30 mA en amont inverserait la logique et ferait tout couper au moindre défaut.
+
+@069
+Q: Un transformateur de 630 kVA, 400 V au secondaire, a une tension de court-circuit ucc de 4 %. Quel courant de court-circuit délivre-t-il à ses bornes ?
+N: 22733
+U: A
+T: 2
+E: Le courant nominal vaut In = S / (√3 × U) = 630 000 / (1,732 × 400) ≈ 909 A. Le courant de court-circuit aux bornes vaut In / ucc = 909 / 0,04 ≈ 22 700 A, soit 22,7 kA : les disjoncteurs du TGBT doivent avoir un pouvoir de coupure au moins égal.
+
+@070
+Q: Dans un TGBT proche d'un transformateur de 630 kVA, où l'Icc atteint 23 kA, un collègue propose un disjoncteur de pouvoir de coupure 10 kA. Pourquoi est-ce interdit ?
+C: Il n'éteindrait pas l'arc sans être détruit
+W: Il déclencherait à chaque démarrage moteur
+W: Le différentiel placé en amont ne pourrait plus agir
+W: La chute de tension dépasserait la limite
+E: Face à un courant supérieur à son pouvoir de coupure, le disjoncteur ne parvient pas à éteindre l'arc entre ses contacts : il peut exploser ou se souder, et le défaut n'est pas coupé. Le déclenchement au démarrage dépend du seuil magnétique, et la chute de tension de la section des câbles.
+
+@071
+Q: Quel récepteur produit le plus de courants harmoniques ?
+C: Un variateur de vitesse à redresseur
+W: Un radiateur à résistance
+W: Une lampe à incandescence
+W: Un moteur asynchrone en direct
+E: Un redresseur à diodes suivi de condensateurs n'absorbe du courant qu'aux sommets de la tension : ce courant très déformé est riche en harmoniques. Une résistance ou une lampe à incandescence absorbe un courant sinusoïdal, et un moteur alimenté directement reste proche de la sinusoïde.
+
+@072
+Q: Pourquoi le neutre peut-il surchauffer dans une installation triphasée alimentant beaucoup d'électronique ?
+C: Les harmoniques de rang 3 s'y additionnent
+W: Le neutre transporte la somme des tensions
+W: Le différentiel renvoie les fuites au neutre
+W: Le neutre est toujours deux fois plus fin
+E: Les courants fondamentaux des trois phases s'annulent dans le neutre, mais les harmoniques de rang 3 sont en phase et s'additionnent : le neutre peut porter plus de courant qu'une phase. On le dimensionne alors au moins comme les phases, et on ne réduit jamais sa section dans ce cas.
+
+@073
+Q: Une installation absorbe 50 kW ; on veut faire passer tan φ de 1,02 à 0,40. Quelle puissance de condensateurs faut-il installer, en kvar ?
+N: 31
+U: kvar
+T: 2
+E: La puissance réactive à fournir vaut Qc = P × (tan φ1 - tan φ2) = 50 × (1,02 - 0,40) = 31 kvar. Le cos φ passe ainsi d'environ 0,70 à 0,93 ; le courant appelé au réseau baisse d'un quart environ pour la même puissance active.
+
+@074
+Q: Remettre dans l'ordre une mesure d'isolement sur un moteur.
+O: Consigner l'alimentation du moteur
+O: Déconnecter les câbles du moteur
+O: Appliquer la tension d'essai entre enroulements et masse
+O: Décharger les enroulements avant de les toucher
+E: La mesure se fait hors tension, moteur consigné. On déconnecte les câbles pour ne mesurer que le moteur et ne pas endommager un variateur sensible à la tension d'essai. Après la mesure, les enroulements restent chargés comme un condensateur : on les décharge avant toute manipulation.
+
+@075
+Q: Une thermographie révèle un point chaud sur une borne de tableau. Quelle en est la cause la plus probable ?
+C: Un serrage insuffisant ou un contact oxydé
+W: Un différentiel réglé trop sensible
+W: Une tension de réseau trop faible
+W: Un conducteur de protection absent
+E: Un contact mal serré ou oxydé présente une résistance élevée : le courant y dissipe de la chaleur par effet Joule, ce que la caméra thermique repère. Laissé tel quel, il peut provoquer un incendie. Le différentiel, la tension et le conducteur de protection ne créent pas d'échauffement localisé à une borne.
+
+@076
+Q: Une installation absorbe une puissance active de 40 kW et une puissance réactive de 30 kvar. Quelle est sa puissance apparente ?
+N: 50
+U: kVA
+E: Les puissances forment un triangle rectangle : S = √(P² + Q²) = √(40² + 30²) = √2 500 = 50 kVA. On n'additionne jamais directement puissance active et réactive, qui sont en quadrature.
+
+@077
+Q: Associer chaque repère du schéma de puissance au composant qu'il représente.
+P: Repère 1 => fusible
+P: Repère 2 => sectionneur
+P: Repère 3 => relais thermique
+P: Repère 4 => moteur asynchrone triphasé
+P: Repère 5 => prise de terre
+E: Le fusible est un rectangle traversé par le conducteur ; le sectionneur, un contact dont l'extrémité fixe porte un petit trait. Le relais thermique se reconnaît au créneau de son bilame, le moteur au cercle marqué M et 3~, la terre aux traits horizontaux de longueur décroissante. On retrouve cet ordre sur un vrai départ moteur, du haut vers le bas.
+
+@078
+Q: À quoi sert le contact d'auto-maintien d'un contacteur ?
+C: Garder la bobine alimentée après l'appui
+W: Couper le moteur lors d'une surcharge
+W: Inverser le sens de rotation du moteur
+W: Signaler un défaut d'isolement au pupitre
+E: Un contact auxiliaire du contacteur, placé en parallèle sur le bouton marche, continue d'alimenter la bobine quand on relâche le bouton. Le bouton arrêt, en série, coupe cette alimentation. Après une coupure de courant, le contacteur retombe et ne redémarre pas seul, ce qui est une sécurité.
+
+@079
+Q: Pourquoi verrouille-t-on électriquement les deux contacteurs d'un inverseur de sens de marche ?
+C: Pour empêcher un court-circuit entre phases
+W: Pour démarrer le moteur plus rapidement
+W: Pour réduire la consommation des bobines
+W: Pour éviter les harmoniques du moteur
+E: L'inversion du sens se fait en permutant deux phases : si les deux contacteurs se fermaient ensemble, ces deux phases seraient reliées directement, d'où un court-circuit. Un contact à ouverture de chaque contacteur dans la bobine de l'autre l'empêche, souvent doublé d'un verrouillage mécanique.
+
+@080
+Q: Que permet l'habilitation BR ?
+C: Les interventions générales en basse tension
+W: Les consignations en basse tension
+W: Les travaux hors tension comme exécutant
+W: La direction d'un chantier hors tension
+E: Le BR est le chargé d'intervention générale : dépannage, remplacement, mise en service partielle et mesurage en basse tension. La consignation relève du BC, l'exécution de travaux hors tension du B1 et la direction de ces travaux du B2. Chaque habilitation correspond à des opérations précises, délivrées par l'employeur.
+
+@081
+Q: Associer chaque symbole d'habilitation à ce qu'il autorise.
+P: B0 => travaux non électriques dans un local électrique
+P: B1V => exécution de travaux, y compris au voisinage
+P: B2 => direction de travaux hors tension
+P: BC => consignation d'un ouvrage
+P: BE Mesurage => mesures sur une installation
+E: Le chiffre indique le rôle (0 non électricien, 1 exécutant, 2 chargé de travaux) et la lettre V l'autorisation de travailler au voisinage de pièces nues sous tension. BC est réservé à la consignation et BE précise une opération spécifique, ici le mesurage.
+
+@082
+Q: Un moteur fournit 11 kW avec un rendement de 0,9. Quelle puissance électrique absorbe-t-il ?
+N: 12222
+U: W
+T: 1
+E: Le rendement est le rapport puissance utile sur puissance absorbée : Pa = Pu / η = 11 000 / 0,9 ≈ 12 222 W. Les 1,2 kW d'écart sont des pertes, cuivre, fer et mécaniques, transformées en chaleur que le ventilateur du moteur évacue.
+
+@083
+Q: Un convoyeur piloté par variateur tourne toute la journée à 15 Hz ; son moteur standard est brûlant au toucher. Quelle en est la cause ?
+C: Son ventilateur, monté sur l'arbre, refroidit moins
+W: La tension augmente quand la vitesse diminue
+W: Le courant de démarrage se répète en permanence
+W: Le cos φ du réseau devient alors négatif
+E: Un moteur autoventilé porte son ventilateur sur l'arbre : à basse vitesse, le débit d'air chute alors que le courant reste élevé si le couple est maintenu. On ajoute une ventilation forcée ou on choisit un moteur adapté. La tension, elle, baisse avec la fréquence.
+
+@084
+Q: Pourquoi raccorde-t-on le blindage du câble moteur d'un variateur à la masse sur 360° aux deux extrémités ?
+C: Pour limiter les perturbations électromagnétiques
+W: Pour augmenter le courant admissible du câble
+W: Pour remplacer le conducteur de protection
+W: Pour réduire la chute de tension en ligne
+E: L'onduleur du variateur commute très vite et le câble moteur rayonne des parasites haute fréquence. Le blindage relié sur tout son pourtour, par des colliers ou presse-étoupes CEM, renvoie ces courants vers la masse. Il ne remplace pas le conducteur de protection et ne change ni le courant admissible ni la chute de tension.
+
+@085
+Q: Remettre dans l'ordre la distribution de l'énergie d'un site industriel, de la source au récepteur.
+O: Poste de transformation HTA/BT
+O: Tableau général basse tension (TGBT)
+O: Tableau divisionnaire d'atelier
+O: Coffret de départ moteur
+O: Moteur de la machine
+E: Le poste abaisse la haute tension du distributeur, puis le TGBT répartit l'énergie vers les ateliers. Chaque atelier a son tableau divisionnaire, d'où partent les coffrets qui protègent et commandent chaque moteur. Cette arborescence est celle que suit la sélectivité, du plus gros calibre au plus petit.
+
+@086
+Q: Dans un schéma TN-S, que provoque un défaut d'isolement franc entre une phase et une masse ?
+C: Un courant de court-circuit qui fait couper le disjoncteur
+W: Un faible courant seulement signalé par le contrôleur d'isolement
+W: Aucun courant tant qu'un second défaut n'apparaît pas
+W: Une coupure assurée par le seul différentiel 30 mA
+E: En TN, les masses sont reliées au neutre du transformateur par le conducteur de protection : un défaut franc devient un court-circuit phase-PE, coupé par la protection contre les surintensités si la boucle est assez courte. Le contrôleur d'isolement et le premier défaut sans courant caractérisent l'IT.
+
+@087
+Q: En schéma IT, que se passe-t-il si un second défaut apparaît sur une autre phase avant la réparation du premier ?
+C: Un court-circuit entre phases qu'il faut couper
+W: Rien, le contrôleur d'isolement le signale
+W: L'installation bascule toute seule en TT
+W: Le neutre se remet à la terre sans coupure
+E: Le premier défaut a relié une phase à la masse ; le second relie une autre phase à une masse, et le courant passe d'une phase à l'autre par les masses : c'est un court-circuit, coupé par les protections comme en TN. D'où l'obligation de rechercher et réparer rapidement le premier défaut.
+
+@088
+Q: En TT, un défaut franc met une masse sous tension. Avec RA = 50 Ω pour les masses, RB = 10 Ω pour le neutre et 230 V de tension simple, quelle tension de contact apparaît ?
+N: 191.7
+U: V
+T: 1
+E: Le courant de défaut traverse les deux prises de terre : Id = 230 / (50 + 10) ≈ 3,83 A. La masse monte à Uc = RA × Id ≈ 191,7 V, bien au-delà des 50 V admissibles : le disjoncteur ne voit pas ce faible courant, seul un différentiel peut couper ce défaut.
+
+@089
+Q: En TT, avec un différentiel de 500 mA en tête, quelle résistance maximale de prise de terre garantit une tension de contact d'au plus 50 V ?
+N: 100
+U: Ω
+E: La condition de protection est RA × IΔn ≤ 50 V, soit RA ≤ 50 / 0,5 = 100 Ω. Avec un différentiel 30 mA, la terre pourrait atteindre 1 667 Ω, ce qui explique pourquoi les logements, aux terres souvent médiocres, sont protégés en 30 mA.
+
+@090
+Q: Pourquoi faut-il parfois un différentiel de type B sur un variateur triphasé ?
+C: Le variateur peut fuir en courant continu lisse
+W: Le type B coupe plus vite que tous les autres
+W: Le type B n'exige aucun essai périodique
+W: Le type B résiste aux surtensions de foudre
+E: Un défaut en aval du redresseur triphasé peut produire une fuite en courant continu lisse : un différentiel AC ou A risque de ne pas la détecter, et même d'être aveuglé pour d'autres défauts. Le type B détecte ces fuites continues. Sa rapidité, son entretien et sa tenue à la foudre ne sont pas la raison de ce choix.
+
+@091
+Q: Un transformateur a des pertes cuivre de 6 500 W à pleine charge. Que valent-elles à mi-charge ?
+N: 1625
+U: W
+E: Les pertes cuivre suivent le carré du courant : à mi-charge, elles valent 6 500 × 0,5² = 1 625 W. Les pertes fer, elles, restent constantes dès que le transformateur est sous tension, quelle que soit la charge.
+
+@092
+Q: À quelle condition le rendement d'un transformateur est-il maximal ?
+C: Quand pertes cuivre et pertes fer sont égales
+W: Quand le secondaire fonctionne à vide
+W: Quand le facteur de puissance est nul
+W: Quand la tension primaire est la plus basse
+E: Les pertes fer sont fixes et les pertes cuivre croissent avec le carré de la charge : le rendement passe par un maximum quand elles s'égalisent, souvent entre 40 et 60 % de la charge nominale. À vide, la puissance utile est nulle et le rendement aussi ; un cos φ nul ne transmet aucune puissance active.
+
+@093
+Q: Lors du freinage d'une charge entraînante, comment un variateur standard évacue-t-il l'énergie renvoyée par le moteur ?
+C: Par une résistance de freinage sur le bus continu
+W: En la renvoyant toujours au réseau par le redresseur
+W: En recouplant le moteur en étoile pendant la descente
+W: En inversant l'ordre des phases du réseau d'entrée
+E: Un redresseur à diodes ne laisse passer l'énergie que dans un sens : celle que renvoie le moteur fait monter la tension du bus continu. Un hacheur la dirige alors vers une résistance de freinage qui la dissipe. Renvoyer l'énergie au réseau demande un variateur régénératif, plus coûteux.
+
+@094
+Q: Associer chaque type de différentiel aux courants de fuite qu'il détecte.
+P: Type AC => fuites alternatives sinusoïdales uniquement
+P: Type A => alternatif et continu pulsé
+P: Type F => en plus, fréquences mixtes d'un variateur monophasé
+P: Type B => en plus, courant continu lisse
+E: Chaque type ajoute des formes de courant au précédent. Le type A convient aux appareils à électronique monophasée comme les plaques à induction ; le type F aux variateurs monophasés, comme ceux des lave-linge ; le type B aux variateurs triphasés et bornes de recharge pouvant fuir en continu lisse.
+
+@095
+Q: Un four triphasé résistif de 27 kW est alimenté en 400 V. Quel est son courant d'emploi ?
+N: 38.97
+U: A
+T: 1
+E: Pour une charge résistive, cos φ = 1 : Ib = P / (√3 × U) = 27 000 / (1,732 × 400) ≈ 38,97 A. C'est ce courant d'emploi qui guide le choix du calibre de la protection et de la section des conducteurs.
+
+@096
+Q: Comment choisit-on le calibre In du disjoncteur qui protège un câble ?
+C: Entre le courant d'emploi et le courant admissible du câble
+W: Égal au courant de court-circuit présumé du circuit
+W: Supérieur au courant admissible du câble protégé
+W: Inférieur au courant d'emploi du circuit à protéger
+E: La règle est Ib ≤ In ≤ Iz : le calibre doit laisser passer le courant d'emploi sans déclencher, mais rester sous le courant que le câble supporte en permanence. Au-dessus de Iz, le câble pourrait chauffer sans que la protection réagisse ; sous Ib, elle déclencherait en service normal.
+
+@097
+Q: À quoi servent les facteurs de correction appliqués au courant admissible d'un câble ?
+C: Réduire Iz selon la pose, la chaleur et le groupement
+W: Augmenter le pouvoir de coupure du disjoncteur de tête
+W: Donner le nombre de conducteurs actifs du câble
+W: Corriger directement la chute de tension en %
+E: Le courant admissible des tables suppose des conditions de référence. Un câble posé dans un local chaud, enterré ou regroupé avec d'autres se refroidit moins bien : on multiplie Iz par des facteurs inférieurs à 1. Ils ne concernent ni le pouvoir de coupure, ni la chute de tension, calculée à part.
+
+@098
+Q: Un câble a un courant admissible de 32 A dans les tables ; les facteurs de correction donnent un produit de 0,7. Quel est son courant admissible réel ?
+N: 22.4
+U: A
+E: Le courant admissible corrigé vaut Iz = 32 × 0,7 = 22,4 A. Un disjoncteur de 25 A ne le protégerait plus correctement ; il faut descendre à 20 A ou augmenter la section du câble pour garder le calibre prévu.
+
+@099
+Q: Remettre dans l'ordre la recherche d'un défaut d'isolement en schéma IT.
+O: Le contrôleur permanent d'isolement signale le défaut
+O: Lancer l'injection du signal de recherche
+O: Suivre le signal départ par départ avec la pince de détection
+O: Isoler et réparer le départ en défaut
+E: Le contrôleur d'isolement alerte dès le premier défaut, sans couper. On injecte alors un signal basse fréquence entre le réseau et la terre ; une pince ou des tores sur les départs le repèrent pour localiser le circuit fautif sans arrêter les autres. La réparation doit intervenir avant un second défaut.
+
+@100
+Q: Une pompe de forage est alimentée par 150 m de câble. Lors d'un court-circuit au moteur, le disjoncteur n'a pas coupé instantanément. Que fallait-il vérifier à l'étude ?
+C: Que l'Icc en bout dépasse le seuil magnétique
+W: Que le pouvoir de coupure couvre l'Icc en bout
+W: Que le thermique soit réglé sous le courant d'emploi
+W: Que le différentiel amont soit de type S
+E: Plus la ligne est longue, plus son impédance réduit le courant de court-circuit en bout : s'il tombe sous le seuil magnétique, le défaut ne serait coupé que lentement par le thermique, voire pas du tout. Le pouvoir de coupure se choisit au contraire avec le courant de court-circuit maximal, en tête de ligne.

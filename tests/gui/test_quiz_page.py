@@ -12,7 +12,7 @@ import gui.quiz_page as quiz_page
 import job.quiz_packs as quiz_packs
 from gui.quiz_page import QuizPage
 from job.quiz_generation import MIN_QUALITY_SAMPLE
-from job.quiz_import import import_questions
+from job.quiz_import import import_questions, import_questions_file
 from job.quiz_types import prepare_question
 from storage.database import initialize_database
 from storage.job_offers import save_offers
@@ -528,3 +528,37 @@ def test_typed_questions_are_answered_on_the_desktop(qt_application, tmp_path):
     vPage.validate()
 
     assert vPage.verdict_label.text() == "Bonne réponse."
+
+
+def test_symbol_is_shown_with_the_question(qt_application, tmp_path):
+    """Vérifie qu'un symbole à reconnaître s'affiche avant la réponse, un schéma après."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile)
+    import_questions_file(
+        vDatabaseFile, "", *build_lot_pack("electricite"), datetime.now()
+    )
+    vQuestions = {
+        vQuestion["id"][-3:]: vQuestion
+        for vQuestion in quiz_page.load_active_quiz(vDatabaseFile)["electricite"][
+            "questions"
+        ]
+    }
+    vPage.mode = "discover"
+
+    for vNumber, vOnQuestion in (("024", True), ("088", False)):
+        vPage.display_question(
+            {
+                **prepare_question(vQuestions[vNumber], random.Random(1)),
+                "theme_key": "electricite",
+            },
+            "Électricité",
+            "",
+        )
+
+        assert vPage.question_visual_widget.isHidden() is not vOnQuestion
+
+    vPage.answer_widgets[0].setText("192 V")
+    vPage.validate()
+
+    assert not vPage.visual_widget.isHidden()

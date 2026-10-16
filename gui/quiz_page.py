@@ -259,6 +259,15 @@ class QuizPage(QWidget):
         self.visual_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.visual_widget.setStyleSheet("background: #ffffff; border-radius: 8px;")
         self.visual_widget.hide()
+        # Symbole ou schéma à lire pour répondre, montré sous l'énoncé
+        self.question_visual_widget = QSvgWidget()
+        self.question_visual_widget.setAttribute(
+            Qt.WidgetAttribute.WA_StyledBackground, True
+        )
+        self.question_visual_widget.setStyleSheet(
+            "background: #ffffff; border-radius: 8px;"
+        )
+        self.question_visual_widget.hide()
 
         self.references_label = QLabel()
         self.references_label.setTextFormat(Qt.TextFormat.RichText)
@@ -295,6 +304,7 @@ class QuizPage(QWidget):
         vLayout.addWidget(self.meta_label)
         vLayout.addWidget(self.question_label)
         vLayout.addWidget(self.code_edit)
+        vLayout.addWidget(self.question_visual_widget)
         vLayout.addLayout(self.choices_layout)
         vLayout.addWidget(self.verdict_label)
         vLayout.addWidget(self.explanation_label)
@@ -1156,28 +1166,37 @@ class QuizPage(QWidget):
 
         return rCard
 
-    def show_extras(self, pQuestion):
-        """Affiche le schéma et les références d'une question, s'il y en a."""
-        vVisual = pQuestion.get("visual")
+    def load_visual(self, pWidget, pVisual):
+        """Affiche un schéma dans pWidget, ou le masque s'il n'y en a pas."""
         vContent = (
-            get_quiz_asset(self.database_file, vVisual["asset"]) if vVisual else None
+            get_quiz_asset(self.database_file, pVisual["asset"]) if pVisual else None
         )
 
         if vContent:
-            self.visual_widget.load(QByteArray(vContent.encode("utf-8")))
-            self.visual_widget.setToolTip(vVisual["alt"])
+            pWidget.load(QByteArray(vContent.encode("utf-8")))
+            pWidget.setToolTip(pVisual["alt"])
 
             # Chaque chargement remet le rendu à zéro : proportions et taille
             # d'origine sont réappliquées, à une hauteur fixe.
-            vRenderer = self.visual_widget.renderer()
+            vRenderer = pWidget.renderer()
             vRenderer.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
             vSize = vRenderer.defaultSize()
-            self.visual_widget.setFixedSize(
+            pWidget.setFixedSize(
                 round(VISUAL_HEIGHT * vSize.width() / max(vSize.height(), 1)),
                 VISUAL_HEIGHT,
             )
 
-        self.visual_widget.setVisible(bool(vContent))
+        pWidget.setVisible(bool(vContent))
+
+    def show_extras(self, pQuestion):
+        """Affiche le schéma et les références d'une question, s'il y en a."""
+        vVisual = pQuestion.get("visual")
+
+        # Un schéma déjà montré avec l'énoncé n'est pas répété sous la correction.
+        self.load_visual(
+            self.visual_widget,
+            vVisual if vVisual and vVisual.get("show") != "question" else None,
+        )
 
         vLinks = [
             f'<a href="{escape(vReference["url"])}">{escape(vReference["title"])}</a>'
@@ -1254,6 +1273,7 @@ class QuizPage(QWidget):
         self.verdict_label.clear()
         self.explanation_label.clear()
         self.visual_widget.hide()
+        self.question_visual_widget.hide()
         self.references_label.hide()
         self.next_button.hide()
         self.next_button.setText("Question suivante")
@@ -1278,6 +1298,11 @@ class QuizPage(QWidget):
         self.code_edit.setVisible(bool(pQuestion.get("code")))
         self.validate_button.show()
         self.flag_button.setVisible(self.mode != EXAM_MODE)
+
+        vVisual = pQuestion.get("visual")
+
+        if vVisual and vVisual.get("show") == "question":
+            self.load_visual(self.question_visual_widget, vVisual)
 
         self.add_answer_widgets(pQuestion)
 

@@ -1,0 +1,100 @@
+{
+  "lot": 1,
+  "seed": 1717230593,
+  "skills": [
+    "électricité",
+    "électrotechnique",
+    "électricien",
+    "câblage",
+    "habilitation électrique",
+    "moteur asynchrone",
+    "régime de neutre"
+  ],
+  "schemas": [
+    {
+      "name": "electricite-symboles-commande.svg",
+      "questions": ["024"],
+      "alt": "Cinq symboles numérotés d'un schéma de commande",
+      "file": "schemas/symboles-commande.svg",
+      "on_question": true
+    },
+    {
+      "name": "electricite-symboles-puissance.svg",
+      "questions": ["021", "077"],
+      "alt": "Cinq symboles numérotés d'un schéma de puissance",
+      "file": "schemas/symboles-puissance.svg",
+      "on_question": true
+    },
+    {
+      "name": "electricite-boucle-defaut-tt.svg",
+      "questions": ["013", "088", "089"],
+      "alt": "Boucle du courant de défaut en schéma TT, à travers les prises de terre RA et RB",
+      "file": "schemas/boucle-defaut-tt.svg"
+    },
+    {
+      "name": "electricite-plaque-bornes.svg",
+      "questions": ["040", "041", "061"],
+      "alt": "Plaque à bornes d'un moteur triphasé couplée en étoile et en triangle",
+      "file": "schemas/plaque-bornes.svg"
+    },
+    {
+      "name": "electricite-trajet-energie.svg",
+      "questions": ["017"],
+      "diagram": {
+        "title": "Du réseau à la prise d'un logement",
+        "nodes": [
+          "Compteur",
+          "Disjoncteur de branchement",
+          "Interrupteur différentiel",
+          "Disjoncteur divisionnaire",
+          "Prise de courant"
+        ],
+        "note": "Chaque appareil protège ce qui se trouve après lui"
+      }
+    },
+    {
+      "name": "electricite-consignation.svg",
+      "questions": ["026", "057"],
+      "diagram": {
+        "title": "Consignation électrique (NF C 18-510)",
+        "nodes": [
+          "Séparer",
+          "Condamner",
+          "Identifier",
+          "Vérifier l'absence de tension",
+          "Mettre à la terre et en court-circuit"
+        ],
+        "note": "La remise sous tension suit l'ordre inverse, après le retrait du personnel"
+      }
+    },
+    {
+      "name": "electricite-distribution-site.svg",
+      "questions": ["085", "096"],
+      "diagram": {
+        "title": "Distribution d'un site industriel",
+        "nodes": [
+          "Poste HTA/BT",
+          "TGBT",
+          "Tableau d'atelier",
+          "Départ moteur",
+          "Moteur"
+        ],
+        "note": "Calibres décroissants de la source au récepteur : Ib ≤ In ≤ Iz sur chaque départ"
+      }
+    },
+    {
+      "name": "electricite-selectivite.svg",
+      "questions": ["066", "067", "068"],
+      "diagram": {
+        "title": "Sélectivité : seul le départ en défaut doit couper",
+        "nodes": [
+          "Disjoncteur général 630 A",
+          "Départ atelier 125 A",
+          "Départ machine 16 A",
+          "Défaut sur la machine"
+        ],
+        "note": "Seul le 16 A s'ouvre : l'atelier et le reste du site continuent de tourner"
+      }
+    }
+  ]
+}

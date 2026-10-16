@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="360" viewBox="0 0 820 360" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="fleche-defaut" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+  <rect width="820" height="360" fill="#ffffff"/>
+  <text x="410" y="28" text-anchor="middle" font-size="17" font-weight="bold" fill="#0f172a">Schéma TT : boucle du courant de défaut</text>
+  <g stroke="#0f172a" stroke-width="2.5" fill="none">
+    <rect x="40" y="70" width="150" height="110" rx="8" fill="#e0f2fe" stroke="#0369a1"/>
+    <line x1="190" y1="95" x2="560" y2="95"/>
+    <line x1="190" y1="155" x2="300" y2="155"/>
+    <line x1="300" y1="155" x2="300" y2="250"/>
+    <rect x="288" y="250" width="24" height="44"/>
+    <line x1="300" y1="294" x2="300" y2="320"/>
+    <line x1="300" y1="320" x2="690" y2="320" stroke-dasharray="8 6" stroke="#64748b"/>
+    <rect x="560" y="70" width="190" height="130" rx="8" fill="#f1f5f9" stroke="#334155"/>
+    <line x1="690" y1="200" x2="690" y2="250"/>
+    <rect x="678" y="250" width="24" height="44"/>
+    <line x1="690" y1="294" x2="690" y2="320"/>
+    <polyline points="600,95 612,120 596,130 620,165" stroke="#dc2626" stroke-width="3"/>
+  </g>
+  <g stroke="#dc2626" stroke-width="2.5" fill="none">
+    <line x1="420" y1="80" x2="520" y2="80" marker-end="url(#fleche-defaut)"/>
+    <line x1="710" y1="225" x2="710" y2="275" marker-end="url(#fleche-defaut)"/>
+    <line x1="600" y1="338" x2="400" y2="338" marker-end="url(#fleche-defaut)"/>
+    <line x1="280" y1="290" x2="280" y2="240" marker-end="url(#fleche-defaut)"/>
+  </g>
+  <g font-size="15" fill="#0f172a" text-anchor="middle">
+    <text x="115" y="120">Transformateur</text>
+    <text x="115" y="140">du distributeur</text>
+    <text x="655" y="120">Appareil :</text>
+    <text x="655" y="140">masse métallique</text>
+    <text x="300" y="88">Phase</text>
+    <text x="245" y="148">Neutre</text>
+    <text x="232" y="276">RB = 10 Ω</text>
+    <text x="768" y="276">RA = 50 Ω</text>
+    <text x="495" y="314" fill="#64748b">Terre</text>
+  </g>
+  <g font-size="15" fill="#dc2626" text-anchor="middle" font-weight="bold">
+    <text x="470" y="68">Id</text>
+    <text x="655" y="185">Défaut d'isolement</text>
+    <text x="500" y="355">Id = 230 / (RA + RB) ≈ 3,8 A   ·   Uc = RA × Id ≈ 192 V</text>
+  </g>
+</svg>

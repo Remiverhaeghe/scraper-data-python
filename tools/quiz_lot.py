@@ -273,6 +273,9 @@ def build_questions(pTheme, pConfig, pQuestions):
                 "path": f"../assets/schemas/{vVisuals[vNumber]['name']}",
             }
 
+            if vVisuals[vNumber].get("on_question"):
+                vQuestion["visual"]["show"] = "question"
+
         rQuestions.append(vQuestion)
 
     return rQuestions

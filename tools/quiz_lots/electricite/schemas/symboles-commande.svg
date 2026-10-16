@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="230" viewBox="0 0 760 230" font-family="Arial, sans-serif">
+  <rect width="760" height="230" fill="#ffffff"/>
+  <text x="380" y="26" text-anchor="middle" font-size="17" font-weight="bold" fill="#0f172a">Symboles d'un schéma de commande</text>
+  <g stroke="#0f172a" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <line x1="80" y1="50" x2="80" y2="90"/>
+    <line x1="80" y1="140" x2="80" y2="180"/>
+    <line x1="80" y1="140" x2="58" y2="96"/>
+    <line x1="230" y1="50" x2="230" y2="90"/>
+    <line x1="230" y1="90" x2="246" y2="90"/>
+    <line x1="230" y1="140" x2="230" y2="180"/>
+    <line x1="230" y1="140" x2="250" y2="84"/>
+    <line x1="400" y1="50" x2="400" y2="90"/>
+    <line x1="400" y1="140" x2="400" y2="180"/>
+    <line x1="400" y1="140" x2="378" y2="96"/>
+    <line x1="388" y1="118" x2="350" y2="118" stroke-dasharray="5 4"/>
+    <line x1="350" y1="106" x2="350" y2="130"/>
+    <line x1="350" y1="106" x2="356" y2="106"/>
+    <line x1="350" y1="130" x2="356" y2="130"/>
+    <line x1="550" y1="50" x2="550" y2="100"/>
+    <rect x="526" y="100" width="48" height="30"/>
+    <line x1="550" y1="130" x2="550" y2="180"/>
+    <line x1="690" y1="50" x2="690" y2="97"/>
+    <circle cx="690" cy="115" r="18"/>
+    <line x1="677" y1="102" x2="703" y2="128"/>
+    <line x1="703" y1="102" x2="677" y2="128"/>
+    <line x1="690" y1="133" x2="690" y2="180"/>
+  </g>
+  <g font-size="20" font-weight="bold" fill="#0369a1" text-anchor="middle">
+    <text x="80" y="214">1</text>
+    <text x="230" y="214">2</text>
+    <text x="390" y="214">3</text>
+    <text x="550" y="214">4</text>
+    <text x="690" y="214">5</text>
+  </g>
+</svg>

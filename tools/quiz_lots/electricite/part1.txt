@@ -1,0 +1,372 @@
+@001
+Q: Associer chaque grandeur électrique à son unité.
+P: Tension => volt (V)
+P: Intensité => ampère (A)
+P: Résistance => ohm (Ω)
+P: Puissance => watt (W)
+P: Énergie => wattheure (Wh)
+E: La tension se mesure en volts, l'intensité en ampères, la résistance en ohms et la puissance en watts. L'énergie est une puissance maintenue pendant une durée : le wattheure, et surtout le kilowattheure, sont les unités de la facture d'électricité.
+
+@002
+Q: Comment branche-t-on un ampèremètre pour mesurer un courant ?
+C: En série, le courant le traverse
+W: En parallèle, aux bornes du récepteur
+W: Entre la phase et la terre
+W: Sur le circuit hors tension
+E: Pour mesurer un courant, il faut que ce courant traverse l'appareil : on ouvre le circuit et on insère l'ampèremètre en série. Branché en parallèle, il ferait un court-circuit car sa résistance interne est très faible. La pince ampèremétrique évite d'ouvrir le circuit en mesurant le champ autour d'un conducteur.
+
+@003
+Q: Comment branche-t-on un voltmètre pour mesurer la tension d'un récepteur ?
+C: En parallèle, aux bornes du récepteur
+W: En série, à la place d'un fusible
+W: En série, entre le récepteur et le neutre
+W: Uniquement entre une phase et la terre
+E: Une tension est une différence de potentiel entre deux points : le voltmètre se place aux bornes du récepteur, en parallèle. Sa résistance interne très élevée ne perturbe presque pas le circuit. Monté en série, il bloquerait le courant et le récepteur ne fonctionnerait plus.
+
+@004
+Q: Une résistance de 47 Ω est parcourue par un courant de 0,2 A. Quelle est la tension à ses bornes ?
+N: 9.4
+U: V
+E: La loi d'Ohm donne U = R × I = 47 × 0,2 = 9,4 V. Elle relie les trois grandeurs : connaissant deux d'entre elles, on calcule la troisième, par exemple I = U / R ou R = U / I.
+
+@005
+Q: Une lampe alimentée en 12 V absorbe un courant de 2,5 A. Quelle puissance consomme-t-elle ?
+N: 30
+U: W
+E: Pour un récepteur résistif en courant continu, la puissance vaut P = U × I = 12 × 2,5 = 30 W. En alternatif, un facteur de puissance s'ajoute pour les récepteurs inductifs comme les moteurs.
+
+@006
+Q: Que signifie la fréquence de 50 Hz du réseau électrique français ?
+C: La tension fait 50 cycles complets par seconde
+W: La tension crête du réseau vaut 50 V
+W: Le courant change de sens toutes les 50 secondes
+W: Le courant est limité à 50 ampères
+E: Un hertz est un cycle par seconde : la tension alternative décrit 50 sinusoïdes complètes chaque seconde, donc change de sens 100 fois. La valeur crête du réseau domestique est d'environ 325 V, et la limite de courant dépend de l'abonnement et des protections, pas de la fréquence.
+
+@007
+Q: Quelle est la tension efficace entre phase et neutre du réseau domestique français ?
+C: 230 V
+W: 400 V
+W: 325 V
+W: 110 V
+E: Le réseau basse tension délivre 230 V entre une phase et le neutre, en valeur efficace. 400 V est la tension entre deux phases d'un réseau triphasé ; 325 V est la valeur crête de la sinusoïde (230 × √2) ; 110 V est utilisé dans d'autres pays ou sur des chantiers en très basse tension de sécurité.
+
+@008
+Q: Deux résistances de 100 Ω et 220 Ω sont montées en série. Quelle est la résistance équivalente ?
+N: 320
+U: Ω
+E: En série, le même courant traverse les deux résistances et les tensions s'additionnent : les résistances s'additionnent aussi, R = 100 + 220 = 320 Ω. La résistance équivalente est toujours plus grande que la plus grande des deux.
+
+@009
+Q: Deux résistances de 100 Ω sont montées en parallèle. Quelle est la résistance équivalente ?
+N: 50
+U: Ω
+E: En parallèle, ce sont les inverses qui s'additionnent : 1/R = 1/100 + 1/100, soit R = 50 Ω. Pour deux résistances identiques, on obtient la moitié de l'une d'elles ; la résistance équivalente est toujours plus petite que la plus petite.
+
+@010
+Q: Quel est le rôle principal d'un disjoncteur divisionnaire ?
+C: Couper le circuit en surcharge ou court-circuit
+W: Détecter seul une fuite de courant vers la terre
+W: Stabiliser la tension délivrée au circuit
+W: Compter l'énergie consommée par le circuit
+E: Le disjoncteur protège les conducteurs : son déclencheur thermique coupe une surcharge prolongée, son déclencheur magnétique coupe instantanément un court-circuit. La détection des fuites à la terre est le rôle du dispositif différentiel ; le comptage est celui du compteur, et aucun des deux ne régule la tension.
+
+@011
+Q: Quel est le rôle d'un dispositif différentiel 30 mA ?
+C: Couper si une fuite à la terre dépasse 30 mA
+W: Couper si le courant du circuit dépasse 30 A
+W: Limiter la tension de contact à 30 V
+W: Retarder la coupure de 30 millisecondes
+E: Le différentiel compare le courant qui part par la phase et celui qui revient par le neutre. Un écart signifie qu'une partie du courant fuit, par exemple à travers une personne : au-delà de 30 mA, il coupe. Il ne protège pas contre les surcharges, qui sont l'affaire du disjoncteur.
+
+@012
+Q: Associer chaque conducteur à sa couleur réglementaire dans une installation domestique.
+P: Conducteur de protection => vert et jaune
+P: Neutre => bleu clair
+P: Phase => une autre couleur, souvent marron ou noir
+E: La norme réserve le vert et jaune au conducteur de protection et le bleu clair au neutre. Les phases prennent n'importe quelle autre couleur ; le marron, le noir et le rouge sont les plus courants. Ces couleurs ne dispensent jamais de vérifier l'absence de tension.
+
+@013
+Q: Un lave-linge dont un fil dénudé touche la carcasse fait aussitôt déclencher le différentiel. Pourquoi ses masses métalliques sont-elles reliées à la terre ?
+C: Pour faire couper la protection en cas de défaut
+W: Pour améliorer le rendement des appareils
+W: Pour réduire la consommation électrique du logement
+W: Pour supprimer les parasites des appareils
+E: Si un fil sous tension touche la carcasse d'un appareil, la liaison à la terre permet au courant de défaut de s'écouler : le différentiel le détecte et coupe avant qu'une personne ne touche la masse. Le rendement, la consommation et les parasites n'ont rien à voir avec cette liaison de sécurité.
+
+@014
+Q: Un radiateur de 1 500 W fonctionne pendant 4 heures. Quelle énergie consomme-t-il ?
+N: 6
+U: kWh
+E: L'énergie vaut la puissance multipliée par la durée : E = 1,5 kW × 4 h = 6 kWh. C'est cette énergie, et non la puissance, que facture le fournisseur ; la puissance souscrite limite seulement ce qu'on peut appeler en même temps.
+
+@015
+Q: On double la tension aux bornes d'une même résistance. Que devient l'intensité ?
+C: Elle double
+W: Elle est divisée par deux
+W: Elle reste identique
+W: Elle est multipliée par quatre
+E: D'après la loi d'Ohm, I = U / R : avec une résistance inchangée, l'intensité est proportionnelle à la tension et double donc aussi. C'est la puissance, P = U × I, qui est multipliée par quatre puisque tension et courant doublent ensemble.
+
+@016
+Q: Qu'est-ce qui caractérise un court-circuit par rapport à une surcharge ?
+C: Un courant très élevé dès l'instant du défaut
+W: Un courant un peu trop fort pendant longtemps
+W: Une fuite de courant vers la terre
+W: Une baisse de tension sur le réseau
+E: Un court-circuit met deux conducteurs en contact sans récepteur entre eux : le courant devient immédiatement très élevé et doit être coupé en quelques millisecondes. La surcharge est un excès modéré et durable, comme trop d'appareils sur une prise multiple. La fuite à la terre relève du différentiel.
+
+@017
+Q: Remettre dans l'ordre le trajet de l'énergie, du réseau jusqu'à une prise du logement.
+O: Compteur
+O: Disjoncteur de branchement
+O: Interrupteur différentiel du tableau
+O: Disjoncteur divisionnaire du circuit
+O: Prise de courant
+E: Le compteur mesure l'énergie ; le disjoncteur de branchement, souvent juste à côté, limite la puissance souscrite et isole le logement. Au tableau, l'interrupteur différentiel protège un groupe de circuits contre les fuites, puis chaque circuit a son disjoncteur divisionnaire avant d'arriver aux prises.
+
+@018
+Q: Quelle section de cuivre utilise-t-on couramment pour un circuit d'éclairage protégé à 16 A ?
+C: 1,5 mm²
+W: 0,75 mm²
+W: 6 mm²
+W: 10 mm²
+E: Le circuit d'éclairage se câble en 1,5 mm², compatible avec une protection de 16 A. Le 0,75 mm² est réservé aux cordons souples des appareils, trop faible pour un circuit fixe. Le 6 mm² sert par exemple aux plaques de cuisson et le 10 mm² aux liaisons de forte puissance.
+
+@019
+Q: Pourquoi un fusible fond-il lors d'un court-circuit ?
+C: Le courant échauffe son fil jusqu'à la fusion
+W: La tension a dépassé la valeur nominale du fusible
+W: Une fuite vers la terre est détectée
+W: Le neutre est coupé en amont du fusible
+E: Le fusible exploite l'effet Joule : son élément calibré chauffe en proportion du carré du courant et fond lorsqu'il dépasse sa valeur prévue, ouvrant le circuit. Il est sensible au courant, pas à la tension, et ne voit pas une fuite à la terre de quelques milliampères.
+
+@020
+Q: Une bouilloire de 2 300 W est branchée sur 230 V. Quel courant absorbe-t-elle ?
+N: 10
+U: A
+E: Pour un appareil résistif, I = P / U = 2 300 / 230 = 10 A. Ce calcul rapide sert à vérifier qu'un circuit protégé à 16 A peut alimenter les appareils prévus, sans faire déclencher le disjoncteur.
+
+@021
+Q: Sur ce départ moteur, quel repère désigne l'appareil qui protège le moteur contre les surcharges ?
+C: Le repère 3
+W: Le repère 1
+W: Le repère 2
+W: Le repère 4
+E: Le repère 3 est un relais thermique : le créneau dessiné dans son cadre rappelle son bilame qui chauffe avec le courant. Le repère 1 est un fusible, qui protège surtout contre les courts-circuits ; le 2 un sectionneur, qui isole sans protéger ; le 4 le moteur triphasé lui-même.
+
+@022
+Q: Quel appareil mesure la résistance d'isolement d'un câble ?
+C: Un mégohmmètre
+W: Une pince ampèremétrique
+W: Un wattmètre
+W: Un luxmètre
+E: Le mégohmmètre applique une tension continue de 250 à 1 000 V entre conducteurs, ou entre conducteur et terre, et mesure des résistances de plusieurs mégohms. Un isolement trop faible signale un câble abîmé ou humide. La pince mesure un courant, le wattmètre une puissance et le luxmètre un éclairement.
+
+@023
+Q: Associer chaque appareil à ce qu'il assure dans un tableau électrique.
+P: Disjoncteur => protection contre surcharges et courts-circuits
+P: Interrupteur différentiel => protection contre les fuites à la terre
+P: Parafoudre => protection contre les surtensions de foudre
+P: Contacteur => commande d'un circuit à distance
+E: Chaque appareil a son rôle : le disjoncteur protège les câbles, le différentiel protège les personnes en détectant les fuites, le parafoudre écoule les surtensions vers la terre, et le contacteur, commandé par une bobine, ouvre ou ferme un circuit de puissance, par exemple pour un chauffe-eau en heures creuses.
+
+@024
+Q: Associer chaque repère du schéma de commande au composant qu'il représente.
+P: Repère 1 => contact à fermeture
+P: Repère 2 => contact à ouverture
+P: Repère 3 => bouton-poussoir à fermeture
+P: Repère 4 => bobine de contacteur ou de relais
+P: Repère 5 => voyant lumineux
+E: Les contacts se dessinent au repos : le contact à fermeture est ouvert, le contact à ouverture est fermé, sa lame passe au-delà du crochet. Le bouton-poussoir est un contact commandé par un organe manuel relié en pointillés. Le rectangle est une bobine, le cercle barré d'une croix un voyant. Savoir les reconnaître est le premier pas pour dépanner une armoire.
+
+@025
+Q: Une batterie de 12 V a une capacité de 60 Ah. Quelle énergie stocke-t-elle ?
+N: 720
+U: Wh
+E: L'énergie vaut tension × capacité : 12 V × 60 Ah = 720 Wh. La capacité en ampères-heures seule ne suffit pas à comparer deux batteries de tensions différentes ; l'énergie en wattheures, si.
+
+@026
+Q: Remettre dans l'ordre les étapes d'une consignation électrique.
+O: Séparer l'ouvrage de toute source de tension
+O: Condamner l'organe de séparation
+O: Identifier l'ouvrage sur le lieu de travail
+O: Vérifier l'absence de tension
+O: Mettre à la terre et en court-circuit
+E: La norme NF C 18-510 impose cet ordre : on sépare puis on condamne en position ouverte, avec cadenas et signalisation. On identifie ensuite l'ouvrage là où l'on va travailler, on vérifie l'absence de tension avec un VAT, et seulement alors on pose la mise à la terre et en court-circuit.
+
+@027
+Q: Un moteur monophasé est alimenté en 230 V, absorbe 8 A et a un cos φ de 0,8. Quelle est sa puissance active ?
+N: 1472
+U: W
+E: En alternatif monophasé, P = U × I × cos φ = 230 × 8 × 0,8 = 1 472 W. Sans le cos φ, on obtiendrait la puissance apparente, 1 840 VA, qui dimensionne les câbles et les protections.
+
+@028
+Q: Un moteur triphasé 400 V absorbe 10 A par phase avec un cos φ de 0,85. Quelle est sa puissance active ?
+N: 5889
+U: W
+T: 1
+E: En triphasé équilibré, P = √3 × U × I × cos φ = 1,732 × 400 × 10 × 0,85 ≈ 5 889 W. Le facteur √3 vient de la tension composée U entre phases ; avec la tension simple de 230 V, on écrirait P = 3 × V × I × cos φ, ce qui donne le même résultat.
+
+@029
+Q: Quelle est la tension entre deux phases d'un réseau triphasé 230/400 V ?
+C: 400 V
+W: 230 V
+W: 460 V
+W: 690 V
+E: Dans un réseau 230/400 V, la tension simple entre phase et neutre vaut 230 V et la tension composée entre deux phases vaut 230 × √3 ≈ 400 V. Les phases étant décalées de 120°, on ne double pas la tension : 460 V serait faux. 690 V est la tension composée d'un réseau 400/690 V.
+
+@030
+Q: Que représente le facteur de puissance cos φ d'une installation ?
+C: Le rapport puissance active / puissance apparente
+W: Le rapport puissance utile / puissance absorbée
+W: Le rapport tension simple / tension composée
+W: Le rapport courant de démarrage / nominal
+E: Le cos φ indique quelle part de la puissance apparente devient puissance active. Un cos φ faible signifie beaucoup de courant pour peu de travail utile. Le rapport utile sur absorbée est le rendement ; le rapport des tensions vaut 1/√3 ; le rapport des courants caractérise le démarrage d'un moteur.
+
+@031
+Q: Associer chaque puissance à son unité.
+P: Puissance active => watt (W)
+P: Puissance réactive => voltampère réactif (var)
+P: Puissance apparente => voltampère (VA)
+E: Trois unités distinguent trois puissances : le watt pour la puissance active réellement transformée, le var pour la puissance réactive échangée avec les bobinages et condensateurs, le voltampère pour la puissance apparente, produit de la tension par le courant, qui dimensionne transformateurs et câbles.
+
+@032
+Q: Un récepteur triphasé 400 V absorbe 10 A par phase. Quelle est sa puissance apparente ?
+N: 6928
+U: VA
+T: 1
+E: La puissance apparente vaut S = √3 × U × I = 1,732 × 400 × 10 ≈ 6 928 VA, soit environ 6,9 kVA. Elle ne dépend pas du cos φ : c'est elle qui sert à choisir un transformateur ou un groupe électrogène.
+
+@033
+Q: La facture d'électricité d'un atelier de mécanique comporte des pénalités d'énergie réactive. Pourquoi y installe-t-on des condensateurs ?
+C: Pour réduire le courant appelé et les pénalités
+W: Pour augmenter la puissance utile des moteurs
+W: Pour protéger l'atelier contre la foudre
+W: Pour stocker l'énergie des heures creuses
+E: Les moteurs consomment de l'énergie réactive ; les condensateurs la fournissent localement, ce qui relève le cos φ. Le courant appelé au réseau baisse, les câbles chauffent moins et le fournisseur ne facture plus de pénalités. La puissance mécanique des moteurs reste la même.
+
+@034
+Q: Une verrerie ne peut pas arrêter ses fours pour un simple défaut d'isolement. Quel régime de neutre permet de continuer l'exploitation au premier défaut ?
+C: IT
+W: TT
+W: TN-C
+W: TN-S
+E: En IT, le neutre est isolé ou relié par une forte impédance : un premier défaut ne fait circuler qu'un courant très faible, signalé par un contrôleur permanent d'isolement sans coupure. On l'utilise là où l'arrêt est coûteux, comme en industrie continue ou à l'hôpital. En TT et en TN, le premier défaut provoque la coupure.
+
+@035
+Q: Associer chaque régime de neutre à sa description.
+P: TT => neutre à la terre, masses reliées à une terre locale
+P: TN-C => neutre et protection réunis dans un conducteur PEN
+P: TN-S => neutre et conducteur de protection séparés
+P: IT => neutre isolé ou relié par une impédance
+E: La première lettre décrit le neutre (T relié à la terre, I isolé), la seconde les masses (T à une terre locale, N au neutre). En TN-C, un seul conducteur PEN assure neutre et protection ; en TN-S, ils sont séparés. Le TT est le régime des logements raccordés au réseau public.
+
+@036
+Q: Quelle est la résistance d'un conducteur en cuivre de 100 m et de 2,5 mm² (ρ = 0,0175 Ω·mm²/m) ?
+N: 0.7
+U: Ω
+T: 1
+E: La résistance d'un conducteur vaut R = ρ × L / S = 0,0175 × 100 / 2,5 = 0,7 Ω. Elle augmente avec la longueur et diminue avec la section : c'est pourquoi une grande longueur de câble impose une section plus forte pour limiter la chute de tension.
+
+@037
+Q: Pourquoi le courant de démarrage direct d'un moteur asynchrone est-il élevé ?
+C: Le rotor arrêté agit comme un court-circuit
+W: La tension du réseau augmente au moment du démarrage
+W: Le condensateur interne se décharge d'un coup
+W: Le frein mécanique reste serré au démarrage
+E: À l'arrêt, le rotor ne crée aucune force contre-électromotrice : le moteur se comporte comme un transformateur au secondaire en court-circuit et appelle 5 à 8 fois son courant nominal. Ce courant baisse à mesure que la vitesse monte. Les procédés de démarrage progressif servent à le limiter.
+
+@038
+Q: Quelle est la vitesse de synchronisme d'un moteur asynchrone à 4 pôles alimenté en 50 Hz ?
+N: 1500
+U: tr/min
+E: La vitesse de synchronisme vaut ns = 60 × f / p, avec p le nombre de paires de pôles : 60 × 50 / 2 = 1 500 tr/min. Un moteur à 2 pôles tourne vers 3 000 tr/min, un moteur à 6 pôles vers 1 000 tr/min, un peu moins en réalité à cause du glissement.
+
+@039
+Q: Un moteur de vitesse de synchronisme 1 500 tr/min tourne à 1 440 tr/min. Quel est son glissement, en % ?
+N: 4
+U: %
+T: 1
+E: Le glissement vaut g = (ns - n) / ns = (1 500 - 1 440) / 1 500 = 0,04, soit 4 %. Il augmente avec la charge : c'est ce décalage entre le champ tournant et le rotor qui induit les courants rotoriques et donc le couple.
+
+@040
+Q: Quel démarrage divise par trois le courant d'appel d'un moteur prévu pour fonctionner en triangle ?
+C: Le démarrage étoile-triangle
+W: Le démarrage direct sur le réseau
+W: Le démarrage par contacteur inverseur
+W: Le freinage par injection de continu
+E: Couplé d'abord en étoile, chaque enroulement ne reçoit que la tension simple, soit 1/√3 de la tension nominale : courant et couple de démarrage sont divisés par trois. On passe ensuite en triangle. Le contacteur inverseur change le sens de rotation, l'injection de courant continu freine le moteur.
+
+@041
+Q: Remettre dans l'ordre la séquence d'un démarrage étoile-triangle.
+O: Fermer le contacteur de ligne et le contacteur étoile
+O: Laisser le moteur accélérer pendant la temporisation
+O: Ouvrir le contacteur étoile
+O: Fermer le contacteur triangle
+E: Le moteur démarre en étoile sous tension réduite ; une temporisation de quelques secondes lui laisse atteindre presque sa vitesse. Le contacteur étoile s'ouvre avant que le triangle se ferme : les deux ne doivent jamais être fermés ensemble, d'où un verrouillage électrique et souvent mécanique entre eux.
+
+@042
+Q: Le moteur d'une pompe s'arrête après vingt minutes de marche : le relais thermique a déclenché. Quel est le rôle de cet appareil ?
+C: Protéger le moteur des surcharges prolongées
+W: Protéger le moteur contre les courts-circuits
+W: Inverser le sens de rotation de l'arbre
+W: Limiter le courant d'appel au démarrage du moteur
+E: Le relais thermique chauffe comme le moteur : si le courant reste trop longtemps au-dessus du réglage, il ouvre le circuit de commande et le contacteur coupe. Il est trop lent pour un court-circuit, confié au disjoncteur ou aux fusibles en amont. Il ne limite pas le courant de démarrage.
+
+@043
+Q: Que signifie l'indice de protection IP54 d'un coffret ?
+C: Protégé de la poussière et des projections d'eau
+W: Totalement étanche à une immersion prolongée dans l'eau
+W: Résistant à un choc mécanique de 54 joules
+W: Isolation renforcée de classe II garantie
+E: Le premier chiffre de l'indice IP concerne les solides : 5 signifie protégé contre la poussière. Le second concerne les liquides : 4 signifie protégé contre les projections d'eau de toutes directions. L'immersion prolongée correspond à IPX8 ; la résistance aux chocs est donnée par l'indice IK.
+
+@044
+Q: Associer chaque classe d'appareil à sa protection contre les chocs électriques.
+P: Classe I => masse reliée au conducteur de protection
+P: Classe II => double isolation, sans liaison à la terre
+P: Classe III => alimentation en très basse tension de sécurité
+E: Un appareil de classe I a une carcasse métallique à relier à la terre, d'où la prise à broche. La classe II, signalée par un double carré, repose sur une isolation renforcée et n'a pas de borne de terre. La classe III fonctionne en très basse tension de sécurité, sans danger au contact.
+
+@045
+Q: Un transformateur a 1 000 spires au primaire, alimenté en 230 V, et 100 spires au secondaire. Quelle est la tension secondaire à vide ?
+N: 23
+U: V
+E: Le rapport des tensions est celui des nombres de spires : U2 = U1 × N2 / N1 = 230 × 100 / 1 000 = 23 V. Le courant suit le rapport inverse : en négligeant les pertes, le secondaire peut débiter dix fois plus de courant que le primaire n'en absorbe.
+
+@046
+Q: Pourquoi transporte-t-on l'énergie électrique en haute tension ?
+C: À puissance égale, le courant et les pertes baissent
+W: La haute tension traverse plus facilement les isolants
+W: Les câbles haute tension n'ont aucune résistance
+W: Les compteurs ne mesurent que la haute tension
+E: À puissance égale, élever la tension fait baisser le courant. Or les pertes dans les lignes valent R × I² : diviser le courant par dix divise les pertes par cent. Les câbles ont toujours une résistance, et l'isolation devient au contraire plus exigeante quand la tension augmente.
+
+@047
+Q: Un câble de résistance 0,5 Ω est parcouru par 20 A. Quelle puissance perd-il par effet Joule ?
+N: 200
+U: W
+E: Les pertes Joule valent P = R × I² = 0,5 × 20² = 0,5 × 400 = 200 W. Le courant intervient au carré : doubler le courant multiplie les pertes par quatre, ce qui explique l'échauffement rapide d'un câble sous-dimensionné.
+
+@048
+Q: Que contrôle-t-on avec un vérificateur d'absence de tension (VAT) ?
+C: L'absence de tension sur chaque conducteur
+W: La continuité du conducteur de protection
+W: La valeur de la résistance de la prise de terre
+W: Le bon serrage des bornes du tableau
+E: Le VAT sert uniquement à s'assurer qu'aucun conducteur n'est sous tension avant d'intervenir, en testant entre tous les conducteurs et entre chacun et la terre. La continuité et la résistance de terre se mesurent avec un contrôleur d'installation ; le serrage se vérifie à la clé dynamométrique.
+
+@049
+Q: Que faut-il faire juste avant et juste après une vérification d'absence de tension ?
+C: Tester le VAT sur une source sous tension connue
+W: Régler le VAT sur son calibre ohmmètre
+W: Relier le VAT au conducteur de terre
+W: Laisser le VAT chauffer quelques minutes avant usage
+E: Un VAT défectueux afficherait une absence de tension trompeuse. On le teste donc sur une source connue avant la mesure, pour s'assurer qu'il fonctionne, et après, pour vérifier qu'il n'est pas tombé en panne pendant. Un VAT n'a pas de calibre ohmmètre et ne demande aucun préchauffage.
+
+@050
+Q: Quelle est la constante de temps d'un circuit RC avec R = 10 kΩ et C = 100 µF ?
+N: 1
+U: s
+E: La constante de temps vaut τ = R × C = 10 000 × 0,000 1 = 1 s. Au bout de τ, le condensateur est chargé à 63 % environ ; on le considère pratiquement chargé après 5 τ, soit 5 secondes ici. Ce calcul sert à régler une temporisation ou un filtre.

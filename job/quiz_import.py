@@ -63,6 +63,8 @@ MAX_ZIP_BYTES = 20 * 1024 * 1024
 # Archives contenues dans l'archive importée : un seul niveau est ouvert.
 MAX_ZIP_DEPTH = 1
 MAX_SVG_BYTES = 300 * 1024
+# Schéma montré avec l'énoncé, et non avec la correction
+VISUAL_ON_QUESTION = "question"
 MAX_GUIDE_BYTES = 200 * 1024
 
 # Dossier des schémas dans un pack exporté, comme dans ceux de ChatGPT
@@ -290,6 +292,10 @@ def normalize_question(pQuestion, pLabel, pVisuals):
             "asset": pVisuals[vVisual["path"]],
             "alt": str(vVisual.get("alt") or "Schéma de la question")[:200],
         }
+
+        # Un symbole à reconnaître se montre avec la question, pas à la correction.
+        if vVisual.get("show") == VISUAL_ON_QUESTION:
+            rQuestion["visual"]["show"] = VISUAL_ON_QUESTION
 
     return rQuestion
 

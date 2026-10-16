@@ -20,7 +20,8 @@ from job.schedule import (
 )
 from job.profile import build_profile, save_profile
 from job.challenges import get_expected_answers, get_seed
-from job.quiz_import import import_questions
+from job.quiz_import import import_questions, import_questions_file
+from tools.quiz_lot import build_pack as build_lot_pack
 from tests.job.test_quiz_types import NUMERIC, ORDER, PAIRS
 from job.quiz_generation import MIN_QUALITY_SAMPLE
 from storage.job_offers import get_offer, save_offers, set_availability
@@ -1709,3 +1710,22 @@ def test_typed_quiz_questions_on_the_web(client):
         ).status_code
         == 400
     )
+
+
+def test_symbol_question_shows_its_visual_on_the_web(client):
+    """Vérifie qu'un symbole à reconnaître est montré avec la question sur le web."""
+
+    import_questions_file(
+        app.dependency_overrides[get_database_file](),
+        "",
+        *build_lot_pack("electricite"),
+        datetime.now(),
+    )
+
+    vPage = client.post(
+        "/quiz/answer",
+        data={"question_id": "electricite-l1-024", "indexes": ["0"]},
+    ).text
+
+    assert "Réponse incomplète" in vPage
+    assert "electricite-symboles-commande.svg" in vPage
