@@ -144,9 +144,14 @@ def read_answer(pResponse):
         if not isinstance(vItem, dict) or vItem.get("type") not in COMPONENTS:
             raise ValueError("Schéma illisible.")
 
-        vPositions[vItem["type"]] = (
-            vItem.get("x") if isinstance(vItem.get("x"), int) else 0,
-            vItem.get("y") if isinstance(vItem.get("y"), int) else 0,
+        # Case bornée à la grille : un envoi forgé ne grossit pas le dessin.
+        vPositions[vItem["type"]] = tuple(
+            (
+                min(max(vItem[vAxis], 0), GRID_SIZE - 1)
+                if isinstance(vItem.get(vAxis), int)
+                else 0
+            )
+            for vAxis in ("x", "y")
         )
 
     if len(vPositions) != len(vComponents) or not all(
@@ -179,8 +184,8 @@ def build_edges(pConnections, pSwapped=frozenset()):
     return rEdges
 
 
-def compare_edges(pExpected, pAnswer, pTypes):
-    """Retourne (liaisons manquantes, liaisons en trop) au plus près de l'attendu.
+def find_best_match(pExpected, pAnswer, pTypes):
+    """Retourne (composants retournés, manquantes, en trop) au plus près de l'attendu.
 
     Un composant symétrique peut avoir été branché à l'envers : on essaie les
     deux sens de chacun et l'on garde la variante la plus proche.
@@ -188,22 +193,45 @@ def compare_edges(pExpected, pAnswer, pTypes):
 
     vExpected = build_edges(pExpected)
     vSymmetric = sorted(vType for vType in pTypes if COMPONENTS[vType].symmetric)
-    rBest = None
+    vMatches = []
 
     for vChoices in product((False, True), repeat=len(vSymmetric)):
         vSwapped = frozenset(
             vType for vType, vSwap in zip(vSymmetric, vChoices) if vSwap
         )
         vAnswer = build_edges(pAnswer, vSwapped)
-        vGap = (vExpected - vAnswer, vAnswer - vExpected)
+        vMatches.append((vSwapped, vExpected - vAnswer, vAnswer - vExpected))
 
-        if rBest is None or sum(map(len, vGap)) < sum(map(len, rBest)):
-            rBest = vGap
-
-        if not any(vGap):
-            break
+    rBest = min(vMatches, key=lambda pMatch: len(pMatch[1]) + len(pMatch[2]))
 
     return rBest
+
+
+def compare_edges(pExpected, pAnswer, pTypes):
+    """Retourne (liaisons manquantes, liaisons en trop) au plus près de l'attendu."""
+
+    _, vMissing, vExtra = find_best_match(pExpected, pAnswer, pTypes)
+
+    rGap = (vMissing, vExtra)
+
+    return rGap
+
+
+def find_wrong_wires(pQuestion, pWires, pTypes):
+    """Retourne les indices des fils d'une réponse absents du schéma attendu."""
+
+    vExpectedTypes = {vItem["type"] for vItem in pQuestion["components"]}
+    vSwapped, _, vExtra = find_best_match(
+        pQuestion["connections"], pWires, pTypes | vExpectedTypes
+    )
+
+    rIndexes = {
+        vIndex
+        for vIndex, vWire in enumerate(pWires)
+        if build_edges([vWire], vSwapped) <= vExtra
+    }
+
+    return rIndexes
 
 
 def describe_end(pType, pPort):

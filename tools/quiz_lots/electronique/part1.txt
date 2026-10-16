@@ -61,12 +61,17 @@ U: Ω
 E: La résistance supporte la tension restante, 5 - 2 = 3 V, et laisse passer 20 mA : R = 3 / 0,02 = 150 Ω. On choisit la valeur normalisée la plus proche, 150 Ω justement dans la série E12.
 
 @009
-Q: Dans quel sens une diode laisse-t-elle passer le courant ?
-C: De l'anode vers la cathode
-W: De la cathode vers l'anode, dans tous les cas
-W: Dans les deux sens, comme une résistance ordinaire
-W: Dans aucun sens tant qu'elle n'est pas éclairée
-E: La diode conduit quand l'anode est plus positive que la cathode d'environ 0,6 à 0,7 V pour le silicium, et bloque dans l'autre sens. La cathode est repérée par la barre du symbole et par un anneau sur le boîtier.
+Q: Construire le montage qui allume une LED à partir d'une source de tension continue, en limitant son courant.
+S: pile @ 0 0
+S: resistance @ 1 0
+S: led @ 1 1
+L: pile.+ - resistance.1
+L: resistance.2 - led.anode
+L: led.cathode - pile.−
+D: condensateur
+D: diode
+D: transistor_npn
+E: Le courant part du + de la source, traverse la résistance qui le limite, entre dans la LED par l'anode et ressort par la cathode vers le − de la source. Montée à l'envers, la LED bloque le courant et reste éteinte. Sans résistance, son courant s'emballerait et la détruirait.
 
 @010
 Q: Quelle tension de seuil retient-on pour une diode au silicium qui conduit ?
@@ -256,12 +261,26 @@ W: Le microcontrôleur réclame une tension de 12 V
 E: Le 7805 transforme en chaleur toute la tension en trop multipliée par le courant. Trop chaud, il se coupe par sa protection thermique, puis repart en refroidissant. On ajoute un dissipateur, on baisse la tension d'entrée ou on passe à un régulateur à découpage.
 
 @035
-Q: Pourquoi monte-t-on une diode en parallèle sur la bobine d'un relais commandé par un transistor ?
-C: Absorber la surtension créée à la coupure de la bobine
-W: Empêcher le relais de coller quand la tension est trop basse
-W: Allumer un voyant quand le relais est enclenché
-W: Augmenter la force de collage du relais
-E: À la coupure, la bobine s'oppose à la variation du courant et crée une pointe de tension de plusieurs dizaines de volts, capable de détruire le transistor. La diode de roue libre, montée en inverse, laisse ce courant tourner dans la bobine jusqu'à s'éteindre.
+Q: Construire la commande d'un relais par un transistor NPN : un interrupteur, à travers une résistance de base, fait conduire le transistor qui alimente la bobine ; une diode protège le transistor à la coupure.
+S: pile @ 0 0
+S: bobine_relais @ 1 0
+S: diode @ 2 0
+S: interrupteur @ 0 1
+S: transistor_npn @ 1 1
+S: resistance @ 0 2
+S: masse @ 1 2
+L: pile.+ - bobine_relais.1
+L: pile.+ - interrupteur.1
+L: interrupteur.2 - resistance.1
+L: resistance.2 - transistor_npn.base
+L: bobine_relais.2 - transistor_npn.collecteur
+L: transistor_npn.émetteur - masse.masse
+L: pile.− - masse.masse
+L: diode.cathode - bobine_relais.1
+L: diode.anode - bobine_relais.2
+D: condensateur
+D: led
+E: La bobine se branche entre le + et le collecteur, l'émetteur va à la masse : quand l'interrupteur fournit un courant de base à travers la résistance, le transistor conduit et le relais colle. La diode de roue libre, cathode côté +, est en inverse sur la bobine : elle absorbe la surtension à la coupure. Montée à l'envers, elle court-circuiterait la bobine dès la mise sous tension.
 
 @036
 Q: Un transistor qui commande un relais claque après quelques jours de fonctionnement. Que manque-t-il probablement ?

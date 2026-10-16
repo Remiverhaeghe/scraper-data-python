@@ -11,7 +11,12 @@ from job.quiz_types import (
     prepare_question,
 )
 from job.schema_building import compare_edges, read_answer
-from job.schema_drawing import render_expected, route_wire, wrap_label
+from job.schema_drawing import (
+    render_correction,
+    render_expected,
+    route_wire,
+    wrap_label,
+)
 from job.schema_library import COMPONENT_TYPES, COMPONENTS, HEIGHT, WIDTH, build_icon
 
 MOTOR_FEEDER = {
@@ -239,3 +244,22 @@ def test_facing_terminals_are_joined_by_a_short_bend():
     """Vérifie le coude direct entre deux bornes proches et face à face."""
 
     assert route_wire(((100, 320), -1), ((60, 270), 1), 30) == "M100,320 V295 H60 V270"
+
+
+def test_correction_draws_both_schemas_and_marks_wrong_wires():
+    """Vérifie la correction : schéma construit à côté de l'attendu, fil faux en rouge."""
+
+    vResponse = answer(
+        EXPECTED_TYPES,
+        [
+            ["reseau", "sortie", "sectionneur", "1"],
+            ["reseau", "sortie", "moteur", "entrée"],
+        ],
+    )
+    vResponse["components"][0]["x"] = 500
+
+    vSvg = render_correction(MOTOR_FEEDER, vResponse)
+
+    assert ">Votre schéma</text>" in vSvg and ">Schéma attendu</text>" in vSvg
+    assert vSvg.count('stroke="#dc2626"') == 1
+    assert read_answer(vResponse)[1]["reseau"] == (9, 0)

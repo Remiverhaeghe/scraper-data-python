@@ -7,6 +7,7 @@ horizontal accueille les fils : ils ne traversent ni symbole ni libellé.
 
 from html import escape
 
+from job.schema_building import find_wrong_wires, read_answer
 from job.schema_library import COMPONENTS, HEIGHT, WIDTH
 
 # Taille de la grille des éditeurs, au bureau comme sur le web
@@ -14,7 +15,8 @@ GRID_COLUMNS = 4
 GRID_ROWS = 6
 CELL_WIDTH = 240
 CELL_HEIGHT = 150
-MARGIN = 20
+# Au moins la sortie d'un fil et son décalage le plus grand, pour ne rien couper
+MARGIN = 36
 # Place du symbole dans sa case, après le couloir vertical des fils
 SYMBOL_OFFSET = 24
 CORRIDOR_OFFSET = 8
@@ -22,6 +24,11 @@ LABEL_GAP = 12
 LABEL_WIDTH = 17
 LABEL_LINE_HEIGHT = 14
 WIRE_COLOR = "#2563eb"
+# Fil d'une réponse absent du schéma attendu
+WRONG_WIRE_COLOR = "#dc2626"
+# Place des titres au-dessus des deux schémas de la correction
+HEADING_HEIGHT = 30
+COLUMN_GAP = 30
 # Distance entre une borne et le couloir où le fil change de direction
 WIRE_EXIT = 14
 # Décalage entre fils voisins, pour qu'ils ne se superposent pas
@@ -89,7 +96,7 @@ def route_wire(pStart, pEnd, pCorridorX, pLane=0):
     return rPath
 
 
-def draw_wire(pEndA, pEndB, pLane=0):
+def draw_wire(pEndA, pEndB, pLane=0, pWrong=False):
     """Retourne le fil entre deux bornes, et les points qui marquent ses extrémités.
 
     Chaque extrémité est un triplet (type, borne, origine du symbole). Le fil
@@ -106,10 +113,14 @@ def draw_wire(pEndA, pEndB, pLane=0):
         pLane,
     )
 
+    vColor = WRONG_WIRE_COLOR if pWrong else WIRE_COLOR
+    vDash = ' stroke-dasharray="7 4"' if pWrong else ""
+
     rSvg = (
-        f'<path d="{vPath}" fill="none" stroke="{WIRE_COLOR}" stroke-width="2.5"/>'
+        f'<path d="{vPath}" fill="none" stroke="{vColor}" stroke-width="2.5"'
+        f"{vDash}/>"
         + "".join(
-            f'<circle cx="{vX:g}" cy="{vY:g}" r="3.5" fill="{WIRE_COLOR}"/>'
+            f'<circle cx="{vX:g}" cy="{vY:g}" r="3.5" fill="{vColor}"/>'
             for vX, vY in (vStart, vEnd)
         )
     )
@@ -147,22 +158,25 @@ def draw_label(pType, pOrigin):
     return rSvg
 
 
-def render_schema(pPositions, pConnections, pTitle):
-    """Retourne le SVG d'un schéma : pPositions associe chaque type à sa case (x, y)."""
+def draw_schema(pPositions, pConnections, pWrong=frozenset()):
+    """Retourne (largeur, hauteur, contenu SVG) d'un schéma, sans son cadre.
+
+    pPositions associe chaque type à sa case (x, y) ; les fils dont l'indice est
+    dans pWrong sont dessinés en rouge pointillé.
+    """
 
     vOrigins = {
         vType: get_origin(*vPosition) for vType, vPosition in pPositions.items()
     }
     vColumns = max(vX for vX, _ in pPositions.values()) + 1
     vRows = max(vY for _, vY in pPositions.values()) + 1
-    vWidth = 2 * MARGIN + vColumns * CELL_WIDTH
-    vHeight = 2 * MARGIN + vRows * CELL_HEIGHT
 
     vParts = [
         draw_wire(
             (vTypeA, vPortA, vOrigins[vTypeA]),
             (vTypeB, vPortB, vOrigins[vTypeB]),
             vIndex % LANE_COUNT,
+            vIndex in pWrong,
         )
         for vIndex, (vTypeA, vPortA, vTypeB, vPortB) in enumerate(pConnections)
         if vTypeA in vOrigins and vTypeB in vOrigins
@@ -173,13 +187,68 @@ def render_schema(pPositions, pConnections, pTitle):
         for vType, (vX, vY) in vOrigins.items()
     ]
 
+    rSchema = (
+        2 * MARGIN + vColumns * CELL_WIDTH,
+        2 * MARGIN + vRows * CELL_HEIGHT,
+        "".join(vParts),
+    )
+
+    return rSchema
+
+
+def wrap_svg(pWidth, pHeight, pContent, pTitle):
+    """Entoure un contenu dessiné d'un SVG autonome sur fond blanc."""
+
     rSvg = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{vWidth}" '
-        f'height="{vHeight}" viewBox="0 0 {vWidth} {vHeight}" role="img" '
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{pWidth}" '
+        f'height="{pHeight}" viewBox="0 0 {pWidth} {pHeight}" role="img" '
         f'font-family="Arial, sans-serif"><title>{escape(pTitle)}</title>'
-        f'<rect width="{vWidth}" height="{vHeight}" fill="#ffffff"/>'
-        + "".join(vParts)
-        + "</svg>"
+        f'<rect width="{pWidth}" height="{pHeight}" fill="#ffffff"/>'
+        f"{pContent}</svg>"
+    )
+
+    return rSvg
+
+
+def render_schema(pPositions, pConnections, pTitle):
+    """Retourne le SVG d'un schéma : pPositions associe chaque type à sa case (x, y)."""
+
+    vWidth, vHeight, vContent = draw_schema(pPositions, pConnections)
+
+    rSvg = wrap_svg(vWidth, vHeight, vContent, pTitle)
+
+    return rSvg
+
+
+def render_correction(pQuestion, pResponse):
+    """Retourne côte à côte le schéma construit et le schéma attendu.
+
+    Les fils construits absents du schéma attendu sont en rouge pointillé.
+    """
+
+    vTypes, vPositions, vWires = read_answer(pResponse)
+    vAnswer = draw_schema(
+        vPositions, vWires, find_wrong_wires(pQuestion, vWires, vTypes)
+    )
+    vExpected = draw_schema(
+        {vItem["type"]: (vItem["x"], vItem["y"]) for vItem in pQuestion["components"]},
+        pQuestion["connections"],
+    )
+    vShift = vAnswer[0] + COLUMN_GAP
+    vWidth = vShift + vExpected[0]
+    vHeight = HEADING_HEIGHT + max(vAnswer[1], vExpected[1])
+
+    rSvg = wrap_svg(
+        vWidth,
+        vHeight,
+        f'<g font-size="15" font-weight="bold" fill="#0f172a">'
+        f'<text x="{MARGIN}" y="22">Votre schéma</text>'
+        f'<text x="{vShift + MARGIN}" y="22">Schéma attendu</text></g>'
+        f'<line x1="{vShift - COLUMN_GAP / 2:g}" y1="8" x2="{vShift - COLUMN_GAP / 2:g}" '
+        f'y2="{vHeight - 8}" stroke="#cbd5e1" stroke-width="1.5"/>'
+        f'<g transform="translate(0,{HEADING_HEIGHT})">{vAnswer[2]}</g>'
+        f'<g transform="translate({vShift},{HEADING_HEIGHT})">{vExpected[2]}</g>',
+        "Votre schéma et schéma attendu",
     )
 
     return rSvg

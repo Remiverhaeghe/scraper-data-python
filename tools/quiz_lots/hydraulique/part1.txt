@@ -139,12 +139,21 @@ U: l/min
 E: Le débit théorique vaut cylindrée × vitesse : 10 × 1 500 = 15 000 cm³/min, soit 15 l/min. Le débit réel est un peu plus faible à cause des fuites internes, ce que traduit le rendement volumétrique.
 
 @019
-Q: Que fait un clapet anti-retour monté en sortie de pompe ?
-C: Il empêche l'huile de refluer vers la pompe
-W: Il augmente la pression disponible pour le vérin
-W: Il filtre l'huile envoyée vers le distributeur
-W: Il règle le débit de la pompe selon la charge
-E: À l'arrêt, ou quand un accumulateur est en charge, le clapet empêche l'huile sous pression de revenir à travers la pompe, ce qui la ferait tourner à l'envers et viderait le circuit. Il ne change ni la pression, ni le débit.
+Q: Construire le circuit d'un moteur hydraulique qui tourne dans un seul sens : la pompe aspire au réservoir et alimente le moteur, un limiteur protège contre la surpression et l'huile revient au réservoir à travers un filtre.
+S: moteur_hydraulique @ 0 1
+S: limiteur @ 1 1
+S: pompe @ 0 2
+S: filtre @ 1 2
+S: reservoir @ 0 3
+L: reservoir.aspiration - pompe.aspiration
+L: pompe.refoulement - moteur_hydraulique.2
+L: pompe.refoulement - limiteur.entrée
+L: limiteur.réservoir - reservoir.retour
+L: moteur_hydraulique.1 - filtre.1
+L: filtre.2 - reservoir.retour
+D: distributeur_43
+D: accumulateur
+E: La pompe aspire dans le réservoir et refoule vers le moteur. Le limiteur se branche en dérivation sur le refoulement : au-delà de son réglage, il renvoie l'huile au réservoir. Le retour du moteur passe par le filtre avant de rejoindre le réservoir. Sans distributeur, le moteur tourne dès que la pompe démarre.
 
 @020
 Q: Associer chaque type de trait d'un schéma hydraulique à la conduite qu'il représente.
@@ -340,12 +349,25 @@ T: 2
 E: La surface vaut π × 40² ≈ 5 026,5 mm². La pression vaut F / S = 60 000 / 5 026,5 ≈ 11,94 N/mm², soit 119,4 bar. On règle ensuite le limiteur un peu au-dessus, en gardant une marge pour les pertes de charge.
 
 @045
-Q: Que provoque un flexible de diamètre trop petit pour le débit qu'il transporte ?
-C: Des pertes de charge et un échauffement de l'huile
-W: Une hausse de la force disponible au niveau du vérin
-W: Une baisse du bruit de la pompe et des vibrations
-W: Une meilleure filtration de l'huile qui le traverse
-E: Dans un tuyau trop fin, l'huile circule trop vite : elle frotte, perd de la pression et transforme cette énergie en chaleur. Le vérin reçoit moins de pression et la centrale chauffe. On dimensionne les conduites pour une vitesse d'huile raisonnable.
+Q: Construire le circuit d'un vérin double effet commandé par un distributeur 4/3 à centre fermé, avec limiteur de protection et retour au réservoir à travers un filtre.
+S: verin_double @ 1 0
+S: limiteur @ 0 1
+S: distributeur_43 @ 1 1
+S: pompe @ 0 2
+S: filtre @ 1 2
+S: reservoir @ 0 3
+L: reservoir.aspiration - pompe.aspiration
+L: pompe.refoulement - distributeur_43.P
+L: pompe.refoulement - limiteur.entrée
+L: limiteur.réservoir - reservoir.retour
+L: distributeur_43.A - verin_double.fond
+L: distributeur_43.B - verin_double.tige
+L: distributeur_43.T - filtre.1
+L: filtre.2 - reservoir.retour
+D: accumulateur
+D: moteur_hydraulique
+D: clapet
+E: La pompe alimente l'orifice P du distributeur, A et B vont aux deux chambres du vérin, T retourne au réservoir à travers le filtre. Le limiteur, en dérivation sur le refoulement, est indispensable avec un centre fermé : au neutre, toute l'huile de la pompe passe par lui, d'où l'échauffement qu'il faut surveiller.
 
 @046
 Q: Associer chaque conduite à la vitesse d'huile habituellement recommandée.

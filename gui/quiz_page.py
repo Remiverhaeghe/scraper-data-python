@@ -54,7 +54,7 @@ from job.quiz_domains import (
     filter_guides,
     group_themes,
 )
-from job.schema_drawing import render_expected
+from job.schema_drawing import render_correction
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
     answer_exam,
@@ -618,8 +618,11 @@ class QuizPage(QWidget):
 
         pWidget.setVisible(bool(vContent))
 
-    def show_extras(self, pQuestion):
-        """Affiche le schéma et les références d'une question, s'il y en a."""
+    def show_extras(self, pQuestion, pResponse=None):
+        """Affiche le schéma et les références d'une question, s'il y en a.
+
+        Pour un schéma à construire, pResponse est redessiné à côté de l'attendu.
+        """
         vVisual = pQuestion.get("visual")
 
         # Un schéma déjà montré avec l'énoncé n'est pas répété sous la correction.
@@ -628,11 +631,11 @@ class QuizPage(QWidget):
             vVisual if vVisual and vVisual.get("show") != "question" else None,
         )
 
-        if pQuestion.get("type") == "construction":
+        if pQuestion.get("type") == "construction" and pResponse:
             show_svg(
                 self.visual_widget,
-                render_expected(pQuestion),
-                "Schéma attendu",
+                render_correction(pQuestion, pResponse),
+                "Votre schéma et schéma attendu",
                 EXPECTED_SCHEMA_HEIGHT,
                 pShrinkOnly=True,
             )
@@ -869,7 +872,7 @@ class QuizPage(QWidget):
             f"Réponse attendue : {vResult['answer']}"
         )
         self.explanation_label.setText(vResult["explanation"])
-        self.show_extras(vResult["question"])
+        self.show_extras(vResult["question"], vResult.get("response"))
 
         for vWidget in self.answer_widgets:
             vWidget.setEnabled(False)

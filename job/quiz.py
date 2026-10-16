@@ -622,6 +622,8 @@ def answer_question(pDatabaseFile, pQuiz, pQuestionId, pResponse, pNow):
         "chosen": vChosen,
         "answer": vExpected,
         "explanation": vQuestion["explanation"],
+        # Réponse brute, pour redessiner un schéma construit à la correction
+        "response": pResponse,
     }
 
     return rResult

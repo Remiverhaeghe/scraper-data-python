@@ -688,4 +688,4 @@ def test_schema_is_built_and_graded_on_the_desktop(qt_application, tmp_path):
     assert vPage.verdict_label.text() == "Bonne réponse."
     assert not vEditor.isEnabled()
     assert not vPage.visual_widget.isHidden()
-    assert vPage.visual_widget.toolTip() == "Schéma attendu"
+    assert vPage.visual_widget.toolTip() == "Votre schéma et schéma attendu"

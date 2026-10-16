@@ -20,7 +20,7 @@
     <p><strong>Réponse : {{ result.answer }}</strong></p>
     <p>{{ result.explanation }}</p>
     {% if result.question.type == "construction" %}
-    <figure class="quiz-visual schema-expected">{{ expected_schema(result.question) }}</figure>
+    <figure class="quiz-visual schema-expected">{{ correction_schema(result.question, result.response) }}</figure>
     {% endif %}
     {% if result.question.visual %}
     <figure class="quiz-visual">

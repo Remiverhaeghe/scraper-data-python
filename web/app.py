@@ -70,7 +70,7 @@ from job.schema_drawing import (
     GRID_COLUMNS,
     GRID_ROWS,
     build_editor_config,
-    render_expected,
+    render_correction,
 )
 from job.schema_library import COMPONENTS, build_icon
 from job.challenges import (
@@ -505,11 +505,11 @@ def render_schema_icon(pType):
     return rIcon
 
 
-def render_expected_schema(pQuestion):
-    """Retourne le schéma attendu d'une question à construire, à la correction."""
+def render_correction_schema(pQuestion, pResponse):
+    """Retourne le schéma construit à côté du schéma attendu, à la correction."""
 
     # Dessin construit par job/schema_drawing.py, libellés échappés : HTML sûr.
-    rSchema = Markup(render_expected(pQuestion))  # nosec B704
+    rSchema = Markup(render_correction(pQuestion, pResponse))  # nosec B704
 
     return rSchema
 
@@ -537,7 +537,7 @@ templates.env.globals.update(
     schema_icon=render_schema_icon,
     schema_label=lambda pType: COMPONENTS[pType].label,
     schema_config=get_schema_config,
-    expected_schema=render_expected_schema,
+    correction_schema=render_correction_schema,
 )
 
 

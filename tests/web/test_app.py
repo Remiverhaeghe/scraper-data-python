@@ -1798,7 +1798,4 @@ def test_schema_question_is_built_and_graded_on_the_web(client):
     )
 
     assert "Bonne réponse" in vRight.text
-    assert (
-        "schema-expected" in vRight.text
-        and "<title>Schéma attendu</title>" in vRight.text
-    )
+    assert "schema-expected" in vRight.text and ">Votre schéma</text>" in vRight.text

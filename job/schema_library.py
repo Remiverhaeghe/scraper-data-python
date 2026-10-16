@@ -63,6 +63,8 @@ CONTACT = (
 
 ELECTRICAL = "Électricité"
 PNEUMATIC = "Pneumatique"
+HYDRAULIC = "Hydraulique"
+ELECTRONIC = "Électronique"
 NETWORK = "Réseau"
 
 
@@ -283,6 +285,178 @@ COMPONENT_TYPES = (
         '<circle cx="40" cy="56" r="24"/><line x1="28" y1="68" x2="52" '
         'y2="44"/></g>',
         "prise",
+    ),
+    ComponentType(
+        "reservoir",
+        "Réservoir d'huile",
+        HYDRAULIC,
+        (("aspiration", (26, 30)), ("retour", (54, 30))),
+        f'<g {STROKE}><polyline points="10,40 10,84 70,84 70,40"/>'
+        '<line x1="26" y1="30" x2="26" y2="74"/><line x1="54" y1="30" x2="54" '
+        'y2="74"/></g>',
+        node=True,
+    ),
+    ComponentType(
+        "pompe",
+        "Pompe hydraulique",
+        HYDRAULIC,
+        (("refoulement", TOP), ("aspiration", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="22"/>'
+        '<circle cx="40" cy="50" r="28"/>'
+        '<polygon points="40,24 31,40 49,40" fill="#0f172a"/>'
+        '<line x1="40" y1="78" x2="40" y2="100"/></g>',
+    ),
+    ComponentType(
+        "limiteur",
+        "Limiteur de pression",
+        HYDRAULIC,
+        (("réservoir", TOP), ("entrée", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="24"/>'
+        '<rect x="24" y="24" width="32" height="52"/>'
+        '<line x1="40" y1="76" x2="40" y2="100"/>'
+        '<line x1="47" y1="70" x2="47" y2="32"/>'
+        '<polygon points="47,30 43,38 51,38" fill="#0f172a"/>'
+        '<polyline points="56,50 60,44 64,56 68,44 72,50"/>'
+        '<polyline points="40,90 14,90 14,50 24,50" stroke-dasharray="5 3"/></g>',
+    ),
+    ComponentType(
+        "distributeur_43",
+        "Distributeur 4/3 à centre fermé",
+        HYDRAULIC,
+        (("A", (34, 0)), ("B", (46, 0)), ("P", (34, 100)), ("T", (46, 100))),
+        f'<g {STROKE}><rect x="4" y="34" width="24" height="32"/>'
+        '<rect x="28" y="34" width="24" height="32"/>'
+        '<rect x="52" y="34" width="24" height="32"/>'
+        '<line x1="34" y1="0" x2="34" y2="34"/><line x1="46" y1="0" x2="46" '
+        'y2="34"/><line x1="34" y1="66" x2="34" y2="100"/><line x1="46" y1="66" '
+        'x2="46" y2="100"/>'
+        '<line x1="30" y1="40" x2="38" y2="40"/><line x1="42" y1="40" x2="50" '
+        'y2="40"/><line x1="30" y1="60" x2="38" y2="60"/><line x1="42" y1="60" '
+        'x2="50" y2="60"/>'
+        '<line x1="10" y1="62" x2="10" y2="38"/><line x1="22" y1="38" x2="22" '
+        'y2="62"/><line x1="58" y1="62" x2="70" y2="38"/><line x1="58" y1="38" '
+        'x2="70" y2="62"/></g>',
+    ),
+    ComponentType(
+        "clapet",
+        "Clapet anti-retour",
+        HYDRAULIC,
+        (("sortie", TOP), ("entrée", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="40"/>'
+        '<circle cx="40" cy="48" r="9"/><polyline points="26,54 40,68 54,54"/>'
+        '<line x1="40" y1="68" x2="40" y2="100"/></g>',
+    ),
+    two_terminals(
+        "filtre",
+        "Filtre",
+        HYDRAULIC,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="22"/>'
+        '<polygon points="40,22 66,50 40,78 14,50"/>'
+        '<line x1="16" y1="50" x2="64" y2="50" stroke-dasharray="5 3"/>'
+        '<line x1="40" y1="78" x2="40" y2="100"/></g>',
+    ),
+    two_terminals(
+        "moteur_hydraulique",
+        "Moteur hydraulique",
+        HYDRAULIC,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="22"/>'
+        '<circle cx="40" cy="50" r="28"/>'
+        '<polygon points="31,26 49,26 40,42" fill="#0f172a"/>'
+        '<line x1="40" y1="78" x2="40" y2="100"/></g>',
+    ),
+    one_terminal(
+        "accumulateur",
+        "Accumulateur",
+        HYDRAULIC,
+        f'<g {STROKE}><rect x="24" y="8" width="32" height="66" rx="16"/>'
+        '<line x1="24" y1="40" x2="56" y2="40"/>'
+        '<line x1="40" y1="74" x2="40" y2="100"/></g>',
+        "raccord",
+        BOTTOM,
+    ),
+    ComponentType(
+        "pile",
+        "Source de tension continue",
+        ELECTRONIC,
+        (("+", TOP), ("−", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="42"/>'
+        '<line x1="18" y1="42" x2="62" y2="42"/>'
+        '<line x1="30" y1="54" x2="50" y2="54" stroke-width="5"/>'
+        '<line x1="40" y1="54" x2="40" y2="100"/></g>'
+        '<text x="66" y="38" font-size="14" font-weight="bold" '
+        'fill="#0f172a">+</text>',
+    ),
+    two_terminals(
+        "resistance",
+        "Résistance",
+        ELECTRONIC,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="22"/>'
+        '<rect x="30" y="22" width="20" height="56"/>'
+        '<line x1="40" y1="78" x2="40" y2="100"/></g>',
+    ),
+    ComponentType(
+        "diode",
+        "Diode",
+        ELECTRONIC,
+        (("anode", TOP), ("cathode", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="34"/>'
+        '<polygon points="22,34 58,34 40,64" fill="#0f172a"/>'
+        '<line x1="22" y1="64" x2="58" y2="64"/>'
+        '<line x1="40" y1="64" x2="40" y2="100"/></g>',
+    ),
+    ComponentType(
+        "led",
+        "Diode électroluminescente (LED)",
+        ELECTRONIC,
+        (("anode", TOP), ("cathode", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="34"/>'
+        '<polygon points="22,34 58,34 40,64" fill="#0f172a"/>'
+        '<line x1="22" y1="64" x2="58" y2="64"/>'
+        '<line x1="40" y1="64" x2="40" y2="100"/>'
+        '<line x1="60" y1="46" x2="74" y2="34"/><line x1="60" y1="58" x2="74" '
+        'y2="46"/><polyline points="68,34 74,34 74,40"/>'
+        '<polyline points="68,46 74,46 74,52"/></g>',
+    ),
+    two_terminals(
+        "condensateur",
+        "Condensateur",
+        ELECTRONIC,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="44"/>'
+        '<line x1="18" y1="44" x2="62" y2="44"/>'
+        '<line x1="18" y1="56" x2="62" y2="56"/>'
+        '<line x1="40" y1="56" x2="40" y2="100"/></g>',
+    ),
+    ComponentType(
+        "transistor_npn",
+        "Transistor NPN",
+        ELECTRONIC,
+        (("collecteur", (56, 0)), ("base", (0, 50)), ("émetteur", (56, 100))),
+        f'<g {STROKE}><circle cx="44" cy="50" r="28"/>'
+        '<line x1="0" y1="50" x2="34" y2="50"/>'
+        '<line x1="34" y1="34" x2="34" y2="66"/>'
+        '<line x1="34" y1="42" x2="56" y2="26"/><line x1="56" y1="26" x2="56" '
+        'y2="0"/><line x1="34" y1="58" x2="56" y2="74"/>'
+        '<line x1="56" y1="74" x2="56" y2="100"/>'
+        '<polygon points="56,74 46,72 51,65" fill="#0f172a"/></g>',
+    ),
+    two_terminals(
+        "bobine_relais",
+        "Bobine de relais",
+        ELECTRONIC,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="34"/>'
+        '<rect x="18" y="34" width="44" height="32"/>'
+        '<line x1="40" y1="66" x2="40" y2="100"/></g>',
+    ),
+    two_terminals("interrupteur", "Interrupteur de commande", ELECTRONIC, CONTACT),
+    one_terminal(
+        "masse",
+        "Masse",
+        ELECTRONIC,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="50"/>'
+        '<line x1="20" y1="50" x2="60" y2="50"/>'
+        '<line x1="28" y1="60" x2="52" y2="60"/>'
+        '<line x1="36" y1="70" x2="44" y2="70"/></g>',
+        "masse",
     ),
     network_device("internet", "Internet", "Internet"),
     network_device("routeur", "Routeur", "Routeur"),
