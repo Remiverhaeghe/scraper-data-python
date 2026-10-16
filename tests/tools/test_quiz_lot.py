@@ -325,3 +325,31 @@ def test_typed_questions_refuse_mixed_or_malformed_fields(pText, pMessage):
 
     with pytest.raises(ValueError, match=pMessage):
         parse_lot_text(pText)
+
+
+def test_zone_question_is_read_and_built():
+    """Vérifie la lecture d'une zone à désigner et le refus d'une zone mal écrite."""
+
+    vSource = parse_lot_text(
+        "@001\nQ: Cliquez sur le fusible.\nK: Fusible | 55 45 50 140\n"
+        "Z: Moteur | 515 45 70 140\nE: Le fusible est un rectangle traversé.\n"
+    )
+    vQuestion = build_questions("electricite", {"lot": 1, "seed": 3}, vSource)[0]
+
+    assert vQuestion["type"] == "zone" and vQuestion["answer"] == 0
+    assert vQuestion["zones"][1] == {
+        "label": "Moteur",
+        "rect": [515.0, 45.0, 70.0, 140.0],
+    }
+
+    for vText in (
+        "@001\nQ: Zone ?\nK: Fusible 55 45 50 140\nE: Explication.",
+        "@001\nQ: Zone ?\nK: Fusible | 55 45 50\nE: Explication.",
+    ):
+        with pytest.raises(ValueError, match="zone mal écrite"):
+            parse_lot_text(vText)
+
+    with pytest.raises(ValueError, match="champs incomplets"):
+        parse_lot_text(
+            "@001\nQ: Ordre ?\nO: A\nO: B\nO: C\nZ: Moteur | 1 1 2 2\nE: Explication."
+        )

@@ -2,42 +2,31 @@
 
 from datetime import datetime
 from html import escape
-from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QSize, Qt, QUrl
-from PySide6.QtGui import QColor, QDesktopServices, QFontDatabase
+from PySide6.QtCore import QByteArray, Qt
+from PySide6.QtGui import QFontDatabase
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (
-    QApplication,
     QButtonGroup,
-    QComboBox,
-    QFileDialog,
     QGridLayout,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
-    QLineEdit,
-    QListWidget,
-    QListWidgetItem,
     QMessageBox,
     QPlainTextEdit,
     QProgressBar,
-    QRadioButton,
     QScrollArea,
     QFrame,
     QSizePolicy,
-    QTreeWidget,
-    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
-from gui.chart import BarChart
 from gui.dialogs import show_text_dialog
-from gui.icons import get_icon
+from gui.quiz_answer import ClickableSvgWidget, add_answer_widgets, read_response
+from gui.quiz_import_panel import QuizImportPanel
+from gui.quiz_statistics_card import QuizStatisticsCard
 from gui.theme import COLORS
 from gui.widgets import (
-    StatisticCard,
     clear_layout,
     create_button,
     create_card,
@@ -46,8 +35,6 @@ from gui.widgets import (
     create_scroll_content,
     show_message,
 )
-from job.assistant import CHATGPT_URL
-from job.quiz_types import BLANK, DEFAULT_TOLERANCE, format_number
 from job.quiz import (
     DEFAULT_MODE,
     QUIZ_MODES,
@@ -64,7 +51,6 @@ from job.quiz import (
 )
 from job.quiz_domains import (
     DOMAIN_ICONS,
-    build_category_progress,
     filter_guides,
     group_themes,
 )
@@ -78,29 +64,6 @@ from job.quiz_exam import (
     stop_exam,
     summarize_exam,
 )
-from job.quiz_generation import (
-    DEFAULT_GENERATION_COUNT,
-    GENERATION_COUNTS,
-    GENERATION_LEVELS,
-    MIXED_LEVEL,
-    TARGET_QUESTIONS,
-    build_priority_themes,
-    build_correction_prompt,
-    build_generation_prompt,
-    list_generation_themes,
-)
-from job.quiz_import import (
-    IMPORT_EXTENSIONS,
-    clear_imported_questions,
-    describe_import_details,
-    describe_quiz_import,
-    get_import_tone,
-    export_quiz_pack,
-    import_questions,
-    import_questions_file,
-)
-from job.presentation import CHART_PALETTE
-from job.quiz_packs import import_validated_packs, list_validated_packs
 from storage.quiz_answers import get_last_answers
 from storage.quiz_questions import get_quiz_asset, get_quiz_guide, get_quiz_guides
 from utils.markdown import render_markdown
@@ -112,11 +75,6 @@ THEME_COLUMNS = 3
 
 # Mode de la page pendant un examen, à côté des modes de révision
 EXAM_MODE = "exam"
-
-# Colonnes du tableau de progression par catégorie
-PROGRESS_COLUMNS = ["Catégorie", "Thèmes", "Acquises", "Progression", "À revoir"]
-PROGRESS_BAR_WIDTH = 140
-PROGRESS_BAR_HEIGHT = 14
 
 # Largeur du panneau des catégories, à gauche des thèmes
 CATEGORY_WIDTH = 270
@@ -214,10 +172,14 @@ class QuizPage(QWidget):
         vGuidesLayout.addLayout(self.guides_layout)
         self.guides_card.hide()
 
+        self.import_panel = QuizImportPanel(pDatabaseFile)
+        self.import_panel.questions_changed.connect(self.refresh)
+        self.import_panel.questions_cleared.connect(self.forget_question)
+        self.statistics_card = QuizStatisticsCard()
+
         vLayout.addWidget(self.guides_card)
-        vLayout.addWidget(self.create_priority_card())
-        vLayout.addWidget(self.create_import_card())
-        vLayout.addWidget(self.create_statistics_card())
+        vLayout.addWidget(self.import_panel)
+        vLayout.addWidget(self.statistics_card)
         # Facteur 1 : la place libre d'une page courte va ici, et non aux cartes
         # qui contiennent une zone de texte extensible.
         vLayout.addStretch(1)
@@ -259,8 +221,11 @@ class QuizPage(QWidget):
         self.visual_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.visual_widget.setStyleSheet("background: #ffffff; border-radius: 8px;")
         self.visual_widget.hide()
-        # Symbole ou schéma à lire pour répondre, montré sous l'énoncé
-        self.question_visual_widget = QSvgWidget()
+        # Symbole ou schéma à lire pour répondre, montré sous l'énoncé ; pour une
+        # question « zone », c'est sur lui que l'on clique.
+        self.zone_point = None
+        self.question_visual_widget = ClickableSvgWidget()
+        self.question_visual_widget.clicked.connect(self.choose_point)
         self.question_visual_widget.setAttribute(
             Qt.WidgetAttribute.WA_StyledBackground, True
         )
@@ -314,416 +279,6 @@ class QuizPage(QWidget):
 
         return self.question_card
 
-    def create_import_card(self):
-        """Construit la génération de questions avec ChatGPT et leur import."""
-        self.theme_combo = QComboBox()
-        self.theme_combo.setEditable(True)
-        self.theme_combo.setToolTip(
-            "Thème du catalogue, existant ou nouveau, par exemple Kafka"
-        )
-
-        self.level_combo = QComboBox()
-
-        for vLevel, vLabel in GENERATION_LEVELS.items():
-            self.level_combo.addItem(vLabel, vLevel)
-
-        self.count_combo = QComboBox()
-
-        for vCount in GENERATION_COUNTS:
-            self.count_combo.addItem(f"{vCount} questions", vCount)
-
-        self.count_combo.setCurrentIndex(
-            self.count_combo.findData(DEFAULT_GENERATION_COUNT)
-        )
-
-        vGenerateButton = create_button(
-            "Générer avec ChatGPT", "bot", "primaryButton", COLORS["on_primary"]
-        )
-        vGenerateButton.setToolTip(
-            "Copie une demande au format attendu et ouvre ChatGPT"
-        )
-        vGenerateButton.clicked.connect(self.copy_generation_prompt)
-
-        vOptions = QHBoxLayout()
-        vOptions.addWidget(self.theme_combo, 2)
-        vOptions.addWidget(self.level_combo, 1)
-        vOptions.addWidget(self.count_combo, 1)
-        vOptions.addWidget(vGenerateButton)
-
-        self.import_edit = QPlainTextEdit()
-        self.import_edit.setPlaceholderText(
-            "Collez ici la réponse de ChatGPT (JSON), puis importez"
-        )
-        self.import_edit.setMaximumHeight(110)
-
-        vPasteButton = create_button(
-            "Importer le texte collé", "download", pIconColor=COLORS["primary"]
-        )
-        vPasteButton.clicked.connect(self.import_pasted_questions)
-
-        vFileButton = create_button(
-            "Importer un fichier…", "upload", pIconColor=COLORS["primary"]
-        )
-        vFileButton.setToolTip("Fichier .json, ou archive .zip de fichiers .json")
-        vFileButton.clicked.connect(self.choose_questions_file)
-
-        # Lots déjà contrôlés, déposés dans data/packs : un clic les importe tous.
-        self.packs_button = create_button(
-            "Importer les lots validés", "list-checks", pIconColor=COLORS["primary"]
-        )
-        self.packs_button.setToolTip(
-            "Importe les archives « -valide.zip » du dossier des lots ; "
-            "une archive déjà importée ne change rien"
-        )
-        self.packs_button.clicked.connect(self.import_packs)
-        self.packs_button.hide()
-
-        vExportButton = create_button(
-            "Exporter mes questions…", "download", pIconColor=COLORS["primary"]
-        )
-        vExportButton.setToolTip(
-            "Pack .zip des questions importées, schémas et guides, réimportable"
-        )
-        vExportButton.clicked.connect(self.choose_export_file)
-
-        self.import_message = QLabel()
-        self.import_message.setObjectName("cardSubtitle")
-        self.import_message.setWordWrap(True)
-
-        vActions = QHBoxLayout()
-        vActions.addWidget(vPasteButton)
-        vActions.addWidget(vFileButton)
-        vActions.addWidget(self.packs_button)
-        vActions.addWidget(vExportButton)
-
-        vClearButton = create_button(
-            "Supprimer les questions importées",
-            "trash-2",
-            "dangerButton",
-            COLORS["danger"],
-        )
-        vClearButton.setToolTip(
-            "Efface les questions importées, leurs schémas, guides et réponses ; "
-            "les questions livrées sont gardées"
-        )
-        vClearButton.clicked.connect(self.confirm_clear_questions)
-        vActions.addWidget(vClearButton)
-        vActions.addWidget(self.import_message, 1)
-
-        # Le message reste court ; le détail d'un gros import s'ouvre à part.
-        self.import_details = ""
-        self.details_button = create_button("Voir le détail", "file-text")
-        self.details_button.clicked.connect(
-            lambda: show_text_dialog(
-                self, "Détail de l'import", pText=self.import_details
-            )
-        )
-        self.details_button.hide()
-        vActions.addWidget(self.details_button)
-
-        # Un lot qui ne respecte pas la demande repart chez ChatGPT, alertes jointes.
-        self.import_review = []
-        self.correction_button = create_button(
-            "Faire corriger par ChatGPT", "bot", pIconColor=COLORS["warning"]
-        )
-        self.correction_button.setToolTip(
-            "Copie une demande de correction des questions signalées et ouvre ChatGPT"
-        )
-        self.correction_button.clicked.connect(self.copy_correction_prompt)
-        self.correction_button.hide()
-        vActions.addWidget(self.correction_button)
-
-        vCard, vLayout = create_card(
-            "Ajouter des questions",
-            "Générées avec votre compte ChatGPT, puis vérifiées une à une à "
-            "l'import : une question incomplète ou en double est écartée.",
-        )
-        vLayout.addLayout(vOptions)
-        vLayout.addWidget(self.import_edit)
-        vLayout.addLayout(vActions)
-
-        return vCard
-
-    def copy_generation_prompt(self):
-        """Copie la demande de questions pour ChatGPT puis ouvre le site."""
-        vTheme = self.theme_combo.currentText().strip()
-
-        if not vTheme:
-            show_message(
-                self.import_message, "Choisissez ou saisissez un thème.", "warning"
-            )
-            return
-
-        QApplication.clipboard().setText(
-            build_generation_prompt(
-                load_active_quiz(self.database_file),
-                vTheme,
-                self.level_combo.currentData(),
-                self.count_combo.currentData(),
-            )
-        )
-        QDesktopServices.openUrl(QUrl(CHATGPT_URL))
-
-        show_message(
-            self.import_message,
-            "Demande copiée : collez-la dans ChatGPT, puis sa réponse ci-dessus.",
-        )
-
-    def copy_correction_prompt(self):
-        """Copie la demande de correction du dernier lot importé puis ouvre ChatGPT."""
-        QApplication.clipboard().setText(build_correction_prompt(self.import_review))
-        QDesktopServices.openUrl(QUrl(CHATGPT_URL))
-
-        show_message(
-            self.import_message,
-            "Demande de correction copiée : importez ensuite le lot corrigé, "
-            "il remplacera les questions signalées.",
-        )
-
-    def create_priority_card(self):
-        """Construit la liste des thèmes à compléter en priorité."""
-        vCard, vLayout = create_card(
-            "À compléter en priorité",
-            "Thèmes les plus demandés dans vos offres, encore loin de "
-            f"{TARGET_QUESTIONS} questions",
-        )
-        self.priority_message = QLabel()
-        self.priority_message.setObjectName("cardSubtitle")
-        self.priority_message.setWordWrap(True)
-        self.priority_layout = QGridLayout()
-        self.priority_layout.setHorizontalSpacing(12)
-        self.priority_layout.setColumnStretch(0, 1)
-
-        vLayout.addWidget(self.priority_message)
-        vLayout.addLayout(self.priority_layout)
-
-        return vCard
-
-    def show_priorities(self):
-        """Affiche les thèmes prioritaires, chacun avec sa demande ChatGPT."""
-        clear_layout(self.priority_layout)
-
-        try:
-            vPriorities = build_priority_themes(
-                self.database_file, load_active_quiz(self.database_file)
-            )
-
-        except Exception:
-            logger.exception("Impossible de calculer les thèmes prioritaires")
-
-            show_message(
-                self.priority_message,
-                "Les priorités n'ont pas pu être calculées.",
-                "danger",
-            )
-            return
-
-        show_message(
-            self.priority_message,
-            (
-                ""
-                if vPriorities
-                else "Aucun thème n'est encore demandé dans vos offres : lancez une "
-                "recherche pour mesurer la demande."
-            ),
-            None,
-        )
-
-        for vRow, vTheme in enumerate(vPriorities):
-            vTitle = QLabel(f"<b>{escape(vTheme['label'])}</b>")
-            vDetail = QLabel(
-                f"<span style='color:{COLORS['primary']}; font-weight:600'>"
-                f"demandé dans {vTheme['offer_count']} offre(s)</span>"
-                f" · {vTheme['questions']} question(s)"
-            )
-            vButton = create_button(
-                "Préparer la demande", "bot", pIconColor=COLORS["primary"]
-            )
-            vButton.setToolTip(
-                f"Copie la demande de {TARGET_QUESTIONS} questions pour ce thème "
-                "et ouvre ChatGPT"
-            )
-            vButton.clicked.connect(
-                lambda _, pLabel=vTheme["label"]: self.prepare_priority(pLabel)
-            )
-
-            self.priority_layout.addWidget(vTitle, vRow, 0)
-            self.priority_layout.addWidget(vDetail, vRow, 1)
-            self.priority_layout.addWidget(vButton, vRow, 2)
-
-    def prepare_priority(self, pThemeLabel):
-        """Prépare la demande d'un lot complet pour un thème prioritaire."""
-        self.theme_combo.setCurrentText(pThemeLabel)
-        self.level_combo.setCurrentIndex(self.level_combo.findData(MIXED_LEVEL))
-        self.count_combo.setCurrentIndex(
-            self.count_combo.findData(DEFAULT_GENERATION_COUNT)
-        )
-        self.copy_generation_prompt()
-
-    def import_packs(self):
-        """Importe d'un coup toutes les archives validées du dossier des lots."""
-        self.run_import(
-            lambda: import_validated_packs(self.database_file, datetime.now())
-        )
-
-    def refresh_packs_button(self):
-        """Affiche le nombre d'archives validées prêtes à importer."""
-        vCount = len(list_validated_packs())
-
-        self.packs_button.setText(f"Importer les lots validés ({vCount})")
-        self.packs_button.setVisible(bool(vCount))
-
-    def import_pasted_questions(self):
-        """Importe les questions collées dans la zone de texte."""
-        self.run_import(
-            lambda: import_questions(
-                self.database_file,
-                self.theme_combo.currentText(),
-                self.import_edit.toPlainText(),
-                datetime.now(),
-            )
-        )
-
-    def choose_questions_file(self):
-        """Demande le fichier de questions à importer."""
-        vPath, _ = QFileDialog.getOpenFileName(
-            self,
-            "Importer des questions",
-            str(Path.home()),
-            "Questions ("
-            + " ".join(f"*{vExtension}" for vExtension in IMPORT_EXTENSIONS)
-            + ")",
-        )
-
-        if vPath:
-            self.run_import(
-                lambda: import_questions_file(
-                    self.database_file,
-                    self.theme_combo.currentText(),
-                    vPath,
-                    Path(vPath).read_bytes(),
-                    datetime.now(),
-                )
-            )
-
-    def choose_export_file(self):
-        """Demande où enregistrer le pack de questions, puis l'écrit."""
-        vPath, _ = QFileDialog.getSaveFileName(
-            self,
-            "Exporter mes questions",
-            str(Path.home() / f"questions-revision-{datetime.now():%Y%m%d}.zip"),
-            "Archive (*.zip)",
-        )
-
-        if vPath:
-            self.export_questions(vPath)
-
-    def export_questions(self, pPath):
-        """Écrit les questions importées dans un pack réimportable."""
-        try:
-            vCount = export_quiz_pack(self.database_file, pPath)
-
-        except ValueError as vException:
-            show_message(self.import_message, str(vException), "warning")
-
-        except Exception:
-            logger.exception("Échec de l'export des questions de révision")
-
-            show_message(
-                self.import_message, "L'export a échoué. Voir les journaux.", "danger"
-            )
-
-        else:
-            show_message(
-                self.import_message,
-                f"{vCount} question(s) exportée(s) : {Path(pPath).name}",
-            )
-
-    def confirm_clear_questions(self):
-        """Demande confirmation, puis efface toutes les questions importées."""
-        vDialog = QMessageBox(self)
-        vDialog.setIcon(QMessageBox.Icon.Warning)
-        vDialog.setWindowTitle("Supprimer les questions importées")
-        vDialog.setText("Toutes les questions importées vont être effacées.")
-        vDialog.setInformativeText(
-            "Avec leurs thèmes, schémas, guides et vos réponses à ces questions. "
-            "Les questions livrées avec l'application sont gardées. Une sauvegarde "
-            "de la base est faite avant ; « Exporter mes questions » permet aussi de "
-            "les garder dans un fichier. Continuer ?"
-        )
-
-        vConfirmButton = vDialog.addButton(
-            "Supprimer", QMessageBox.ButtonRole.DestructiveRole
-        )
-        vCancelButton = vDialog.addButton("Annuler", QMessageBox.ButtonRole.RejectRole)
-
-        # Par sécurité, Entrée annule : il faut cliquer sur Supprimer.
-        vDialog.setDefaultButton(vCancelButton)
-        vDialog.exec()
-
-        if vDialog.clickedButton() is vConfirmButton:
-            self.clear_questions()
-
-    def clear_questions(self):
-        """Efface les questions importées après sauvegarde, puis met la page à jour."""
-        try:
-            vCount, vBackupFile = clear_imported_questions(
-                self.database_file, datetime.now()
-            )
-
-        except Exception:
-            logger.exception("Échec de l'effacement des questions importées")
-
-            show_message(
-                self.import_message,
-                "L'effacement a échoué ; rien n'a été effacé sans sauvegarde. "
-                "Voir les journaux.",
-                "danger",
-            )
-            return
-
-        self.mode = None
-        self.question_card.hide()
-        self.refresh()
-
-        show_message(
-            self.import_message,
-            f"{vCount} question(s) importée(s) effacée(s). Sauvegarde : "
-            f"{vBackupFile.name}",
-        )
-
-    def run_import(self, pImport):
-        """Lance un import, affiche son bilan et met à jour les thèmes."""
-        try:
-            vReport = pImport()
-
-        except ValueError as vException:
-            show_message(self.import_message, str(vException), "warning")
-            return
-
-        except Exception:
-            logger.exception("Échec de l'import de questions de révision")
-
-            show_message(
-                self.import_message, "L'import a échoué. Voir les journaux.", "danger"
-            )
-            return
-
-        show_message(
-            self.import_message,
-            describe_quiz_import(vReport),
-            get_import_tone(vReport),
-        )
-        self.import_details = describe_import_details(vReport)
-        self.details_button.setVisible(bool(self.import_details))
-        self.import_review = vReport["review"]
-        self.correction_button.setVisible(bool(self.import_review))
-
-        if vReport["added"]:
-            self.import_edit.clear()
-
-        self.refresh()
-
     def flag_current_question(self):
         """Retire la question affichée des tirages, après confirmation."""
         if (
@@ -741,153 +296,22 @@ class QuizPage(QWidget):
         self.refresh()
         self.start(self.theme_key, self.mode)
 
-    def create_statistics_card(self):
-        """Construit les chiffres de la révision et le graphique des derniers jours."""
-        self.statistic_cards = {
-            "acquired": StatisticCard("Questions acquises", "circle-check", "green"),
-            "answers": StatisticCard("Réponses données", "graduation-cap", "blue"),
-            "rate": StatisticCard("Bonnes réponses", "sparkles", "purple"),
-            "streak": StatisticCard("Jours de révision d'affilée", "calendar", "amber"),
-        }
-
-        vCards = QHBoxLayout()
-        vCards.setSpacing(16)
-
-        for vCard in self.statistic_cards.values():
-            vCards.addWidget(vCard, 1)
-
-        self.statistics_chart = BarChart()
-
-        # Progression par catégorie : domaines puis sous-domaines, sans le détail
-        # des thèmes pour rester lisible.
-        self.progress_tree = QTreeWidget()
-        self.progress_tree.setObjectName("progressTree")
-        self.progress_tree.setColumnCount(len(PROGRESS_COLUMNS))
-        self.progress_tree.setHeaderLabels(PROGRESS_COLUMNS)
-        self.progress_tree.setIconSize(QSize(16, 16))
-        self.progress_tree.setUniformRowHeights(True)
-        self.progress_tree.setRootIsDecorated(True)
-        self.progress_tree.setVerticalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
-        self.progress_tree.header().setStretchLastSection(False)
-        self.progress_tree.header().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
-
-        for vColumn in range(1, len(PROGRESS_COLUMNS)):
-            self.progress_tree.header().setSectionResizeMode(
-                vColumn, QHeaderView.ResizeMode.ResizeToContents
-            )
-
-        vProgressTitle = QLabel("Progression par catégorie")
-        vProgressTitle.setObjectName("fieldLabel")
-
-        vCard, vLayout = create_card(
-            "Mes statistiques", "Progression globale et réponses des 14 derniers jours"
-        )
-        vLayout.addLayout(vCards)
-        vLayout.addWidget(vProgressTitle)
-        vLayout.addWidget(self.progress_tree)
-        vLayout.addWidget(self.statistics_chart)
-
-        return vCard
-
-    def show_category_progress(self, pThemes):
-        """Remplit le tableau de progression par domaine et sous-domaine."""
-        self.progress_tree.clear()
-
-        vDomainItem = None
-
-        for vRow in build_category_progress(pThemes):
-            vItem = QTreeWidgetItem(
-                [
-                    vRow["label"],
-                    str(vRow["themes"]),
-                    f"{vRow['correct']} / {vRow['total']}",
-                    "",
-                    str(vRow["due"]) if vRow["due"] else "",
-                ]
-            )
-            vItem.setIcon(
-                0,
-                get_icon(
-                    vRow["icon"],
-                    COLORS["primary"] if vRow["level"] == 0 else COLORS["muted"],
-                    16,
-                ),
-            )
-            vItem.setForeground(4, QColor(COLORS["warning"]))
-
-            if vRow["level"] == 0:
-                vFont = vItem.font(0)
-                vFont.setBold(True)
-                vItem.setFont(0, vFont)
-                self.progress_tree.addTopLevelItem(vItem)
-                vDomainItem = vItem
-            else:
-                vDomainItem.addChild(vItem)
-
-            vBar = QProgressBar()
-            vBar.setValue(vRow["score"])
-            vBar.setFormat(f"{vRow['score']} %")
-            vBar.setFixedSize(PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT)
-            self.progress_tree.setItemWidget(vItem, 3, vBar)
-
-        self.progress_tree.expandAll()
-
-        # Toutes les lignes visibles : la page défile, pas le tableau.
-        vRows = sum(
-            1 + self.progress_tree.topLevelItem(vIndex).childCount()
-            for vIndex in range(self.progress_tree.topLevelItemCount())
-        )
-        self.progress_tree.setFixedHeight(
-            self.progress_tree.header().sizeHint().height()
-            + vRows * self.progress_tree.sizeHintForRow(0)
-            + 8
-        )
-
-    def show_statistics(self, pStatistics):
-        """Affiche les chiffres de la révision et le graphique des derniers jours."""
-        vCards = self.statistic_cards
-
-        vCards["acquired"].set_value(
-            f"{pStatistics['acquired']} / {pStatistics['total']}"
-        )
-        vCards["answers"].set_value(str(pStatistics["answers"]))
-        vCards["rate"].set_value(
-            "-" if pStatistics["rate"] is None else f"{pStatistics['rate']} %"
-        )
-        vCards["streak"].set_value(str(pStatistics["streak"]))
-
-        self.statistics_chart.set_series(
-            [f"{vDay:%d/%m}" for vDay, _, _ in pStatistics["days"]],
-            [
-                (
-                    "Réponses",
-                    CHART_PALETTE[0],
-                    [vCount for _, vCount, _ in pStatistics["days"]],
-                ),
-                (
-                    "Bonnes réponses",
-                    CHART_PALETTE[1],
-                    [vCorrect for _, _, vCorrect in pStatistics["days"]],
-                ),
-            ],
-            pAxes=("Jour", "Réponses par jour"),
-            pEmptyText="Aucune réponse ces 14 derniers jours",
-        )
+    def forget_question(self):
+        """Referme la question affichée, qui n'existe peut-être plus, et relit tout."""
+        self.mode = None
+        self.question_card.hide()
+        self.refresh()
 
     def refresh(self):
         """Relit la progression et reconstruit les cartes des thèmes."""
-        self.refresh_packs_button()
+        self.import_panel.refresh_packs_button()
 
         try:
             vThemes = build_quiz_overview(
                 self.database_file, load_active_quiz(self.database_file)
             )
-            self.show_statistics(
-                build_quiz_statistics(self.database_file, vThemes, datetime.now())
+            vStatistics = build_quiz_statistics(
+                self.database_file, vThemes, datetime.now()
             )
 
         except Exception:
@@ -901,14 +325,9 @@ class QuizPage(QWidget):
             self.message_label.show()
             return
 
-        vCurrent = self.theme_combo.currentText()
-        self.theme_combo.clear()
-        self.theme_combo.addItems(list_generation_themes(vThemes))
-        self.theme_combo.setCurrentText(vCurrent)
-
         self.themes = vThemes
-        self.show_category_progress(vThemes)
-        self.show_priorities()
+        self.statistics_card.show_progress(vThemes, vStatistics)
+        self.import_panel.refresh(vThemes)
         self.select_category(self.domain, self.subdomain)
 
     def refresh_categories(self):
@@ -1282,6 +701,8 @@ class QuizPage(QWidget):
 
         clear_layout(self.choices_layout)
         self.answer_widgets = []
+        self.zone_point = None
+        self.question_visual_widget.set_clickable(False)
 
         for vButton in self.choices_group.buttons():
             self.choices_group.removeButton(vButton)
@@ -1303,92 +724,15 @@ class QuizPage(QWidget):
 
         if vVisual and vVisual.get("show") == "question":
             self.load_visual(self.question_visual_widget, vVisual)
+            self.question_visual_widget.set_clickable(pQuestion["type"] == "zone")
 
-        self.add_answer_widgets(pQuestion)
+        self.answer_widgets = add_answer_widgets(
+            pQuestion, self.choices_layout, self.choices_group, self.validate
+        )
 
-    def add_answer_widgets(self, pQuestion):
-        """Ajoute la zone de réponse propre au type de la question."""
-        vType = pQuestion["type"]
-
-        if vType in ("numerique", "saisie"):
-            vEdit = QLineEdit()
-            vEdit.returnPressed.connect(self.validate)
-
-            if vType == "saisie":
-                vEdit.setPlaceholderText(f"Ce qui remplace {BLANK}")
-                vEdit.setFont(
-                    QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
-                )
-            else:
-                vUnit = pQuestion.get("unit", "")
-                vEdit.setPlaceholderText(f"Votre résultat, par exemple 2,5 {vUnit}")
-                vEdit.setToolTip(
-                    f"Tolérance "
-                    f"{format_number(pQuestion.get('tolerance', DEFAULT_TOLERANCE))} %"
-                    + (f", préfixes m, k, µ… acceptés devant {vUnit}" if vUnit else "")
-                )
-
-            self.answer_widgets = [vEdit]
-        elif vType == "ordre":
-            vList = QListWidget()
-            vList.setDragDropMode(QListWidget.DragDropMode.InternalMove)
-            vList.setToolTip("Glissez les éléments pour les remettre dans l'ordre")
-
-            for vIndex, vItem in pQuestion["shuffled"]:
-                vListItem = QListWidgetItem(vItem)
-                vListItem.setData(Qt.ItemDataRole.UserRole, vIndex)
-                vList.addItem(vListItem)
-
-            vList.setFixedHeight(vList.sizeHintForRow(0) * vList.count() + 8)
-            self.answer_widgets = [vList]
-        elif vType == "association":
-            vContainer = QWidget()
-            vGrid = QGridLayout(vContainer)
-            vGrid.setContentsMargins(0, 0, 0, 0)
-
-            for vRow, (vLeft, _) in enumerate(pQuestion["pairs"]):
-                vCombo = QComboBox()
-                vCombo.addItem("Choisir…", None)
-
-                for vIndex, vRight in pQuestion["shuffled"]:
-                    vCombo.addItem(vRight, vIndex)
-
-                vGrid.addWidget(QLabel(vLeft), vRow, 0)
-                vGrid.addWidget(vCombo, vRow, 1)
-                self.answer_widgets.append(vCombo)
-
-            self.choices_layout.addWidget(vContainer)
-            return
-
-        # L'identifiant du bouton est l'indice d'origine du choix, avant mélange.
-        for vIndex, vChoice in pQuestion["shuffled"]:
-            vButton = QRadioButton(vChoice)
-            self.choices_group.addButton(vButton, vIndex)
-            self.answer_widgets.append(vButton)
-
-        for vWidget in self.answer_widgets:
-            self.choices_layout.addWidget(vWidget)
-
-    def read_response(self):
-        """Retourne la réponse saisie selon le type, ou None si elle est incomplète."""
-        vType = self.question["type"]
-
-        if vType in ("numerique", "saisie"):
-            rResponse = self.answer_widgets[0].text().strip() or None
-        elif vType == "ordre":
-            vList = self.answer_widgets[0]
-            rResponse = [
-                vList.item(vRow).data(Qt.ItemDataRole.UserRole)
-                for vRow in range(vList.count())
-            ]
-        elif vType == "association":
-            rResponse = [vCombo.currentData() for vCombo in self.answer_widgets]
-            rResponse = None if None in rResponse else rResponse
-        else:
-            rResponse = self.choices_group.checkedId()
-            rResponse = None if rResponse < 0 else rResponse
-
-        return rResponse
+    def choose_point(self, pX, pY):
+        """Retient le point cliqué sur le schéma d'une question « zone »."""
+        self.zone_point = (pX, pY)
 
     def start_exam(self):
         """Reprend l'examen en cours, ou en commence un sur le domaine choisi."""
@@ -1457,7 +801,9 @@ class QuizPage(QWidget):
 
     def validate(self):
         """Corrige la réponse choisie et affiche l'explication."""
-        vResponse = self.read_response()
+        vResponse = read_response(
+            self.question, self.answer_widgets, self.choices_group, self.zone_point
+        )
 
         if vResponse is None:
             show_message(self.verdict_label, "Complétez votre réponse.", "warning")
@@ -1506,6 +852,8 @@ class QuizPage(QWidget):
 
         for vWidget in self.answer_widgets:
             vWidget.setEnabled(False)
+
+        self.question_visual_widget.set_clickable(False, pKeepPoint=True)
 
         self.validate_button.hide()
         self.next_button.show()

@@ -293,9 +293,13 @@ def normalize_question(pQuestion, pLabel, pVisuals):
             "alt": str(vVisual.get("alt") or "Schéma de la question")[:200],
         }
 
-        # Un symbole à reconnaître se montre avec la question, pas à la correction.
-        if vVisual.get("show") == VISUAL_ON_QUESTION:
+        # Un symbole à reconnaître, ou un schéma où cliquer, se montre avec la
+        # question et non à la correction.
+        if vVisual.get("show") == VISUAL_ON_QUESTION or vType == "zone":
             rQuestion["visual"]["show"] = VISUAL_ON_QUESTION
+
+    if vType == "zone" and "visual" not in rQuestion:
+        raise ValueError(f"{pLabel}, question {vId} : schéma où cliquer manquant")
 
     return rQuestion
 

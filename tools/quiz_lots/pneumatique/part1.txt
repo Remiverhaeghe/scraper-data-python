@@ -218,12 +218,13 @@ P: Repère 5 => manomètre
 E: Un distributeur se lit case par case : chaque carré est une position, les flèches montrent le passage de l'air, les T les orifices bouchés ; on compte les orifices sur la case de repos, celle où arrivent les conduites. Le clapet est une bille sur son siège, le réducteur unidirectionnel associe un étranglement réglable et un clapet en parallèle, le manomètre est un cercle traversé d'une flèche.
 
 @029
-Q: Sur cette planche, quel repère représente un clapet anti-retour seul ?
-C: Le repère 3
-W: Le repère 1
-W: Le repère 4
-W: Le repère 5
-E: Le repère 3 montre la bille posée sur son siège en V : l'air venant du bas soulève la bille et passe, l'air venant du haut la plaque sur le siège. Le repère 4 contient aussi un clapet, mais associé à un étranglement réglable : c'est un réducteur de débit unidirectionnel. Le 1 est un distributeur et le 5 un manomètre.
+Q: Sur cette planche, cliquez sur le clapet anti-retour seul.
+K: Clapet anti-retour | 495 45 50 140
+Z: Distributeur 3/2 | 45 50 140 125
+Z: Distributeur 5/2 | 250 50 155 125
+Z: Réducteur de débit unidirectionnel | 618 45 94 140
+Z: Manomètre | 780 80 60 105
+E: Le clapet seul est la bille posée sur son siège en V : l'air venant du bas soulève la bille et passe, l'air venant du haut la plaque sur le siège. Le réducteur de débit unidirectionnel contient aussi un clapet, mais associé à un étranglement réglable dans un cadre en pointillés : ce n'est pas un clapet seul.
 
 @030
 Q: Où place-t-on habituellement les réducteurs de débit pour régler la vitesse d'un vérin double effet ?

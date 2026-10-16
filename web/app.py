@@ -1304,6 +1304,14 @@ def show_quiz(
     return rResponse
 
 
+def read_point(pX, pY):
+    """Retourne le point cliqué sur l'image d'une question « zone », ou None."""
+
+    rPoint = (pX, pY) if pX is not None and pY is not None else None
+
+    return rPoint
+
+
 @app.post(
     "/quiz/answer", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
 )
@@ -1313,6 +1321,8 @@ def answer_quiz(
     pChoice: int | None = Form(None, alias="choice"),
     pText: str = Form("", alias="text"),
     pIndexes: list[int] = Form([], alias="indexes"),
+    pPointX: int | None = Form(None, alias="point.x"),
+    pPointY: int | None = Form(None, alias="point.y"),
     pMode: str = Form(DEFAULT_MODE, alias="mode"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
@@ -1329,7 +1339,9 @@ def answer_quiz(
             pDatabaseFile,
             vQuiz,
             pQuestionId,
-            build_response(vQuestion, pChoice, pText, pIndexes),
+            build_response(
+                vQuestion, pChoice, pText, pIndexes, read_point(pPointX, pPointY)
+            ),
             datetime.now(),
         )
 
@@ -1640,6 +1652,8 @@ def answer_quiz_exam(
     pChoice: int | None = Form(None, alias="choice"),
     pText: str = Form("", alias="text"),
     pIndexes: list[int] = Form([], alias="indexes"),
+    pPointX: int | None = Form(None, alias="point.x"),
+    pPointY: int | None = Form(None, alias="point.y"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Corrige la réponse à la question en cours ; une saisie illisible est reposée."""
@@ -1656,7 +1670,13 @@ def answer_quiz_exam(
         vResult, _ = answer_exam(
             pDatabaseFile,
             vQuiz,
-            build_response(vQuestion or {}, pChoice, pText, pIndexes),
+            build_response(
+                vQuestion or {},
+                pChoice,
+                pText,
+                pIndexes,
+                read_point(pPointX, pPointY),
+            ),
             datetime.now(),
         )
 

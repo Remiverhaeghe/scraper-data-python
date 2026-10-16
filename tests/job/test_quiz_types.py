@@ -282,3 +282,67 @@ def test_quality_measures_skip_interactive_questions():
 
     assert vQuality["summary"] == "4 question(s) interactive(s), sans choix à mesurer"
     assert vQuality["warnings"] == []
+
+
+ZONE = {
+    "id": "depart-moteur-zone",
+    "level": "débutant",
+    "type": "zone",
+    "question": "Cliquez sur le relais thermique.",
+    "zones": [
+        {"label": "Relais thermique", "rect": [355, 45, 70, 140]},
+        {"label": "Fusible", "rect": [55, 45, 50, 140]},
+    ],
+    "answer": 0,
+    "explanation": "Le relais thermique protège le moteur contre les surcharges.",
+}
+
+
+def test_zone_question_is_checked_and_graded():
+    """Vérifie une zone à désigner : zones valides, clic juste, faux ou à côté."""
+
+    assert check_typed_fields(ZONE) == ""
+    assert grade_answer(ZONE, [390, 100]) == (
+        True,
+        "Relais thermique",
+        "Relais thermique",
+    )
+    assert grade_answer(ZONE, (80, 100))[:2] == (False, "Fusible")
+    assert grade_answer(ZONE, [5, 5])[1] == "un endroit sans composant"
+    assert build_response(ZONE, None, "", [], (390, 100)) == [390, 100]
+    assert build_response(ZONE, None, "", [], None) is None
+
+    with pytest.raises(ValueError, match="Cliquez sur le schéma"):
+        grade_answer(ZONE, None)
+
+
+@pytest.mark.parametrize(
+    ("pChange", "pMessage"),
+    [
+        ({"zones": [{"label": "Seule", "rect": [0, 0, 10, 10]}]}, "2 à 8 zones"),
+        ({"zones": [{"label": "A", "rect": [0, 0, 0, 10]}] * 2}, "2 à 8 zones"),
+        ({"zones": [{"label": " ", "rect": [0, 0, 5, 5]}] * 2}, "2 à 8 zones"),
+        ({"answer": 2}, "réponse hors des zones"),
+    ],
+)
+def test_malformed_zone_question_is_refused(pChange, pMessage):
+    """Vérifie le refus d'une zone mal décrite ou d'une réponse hors des zones."""
+
+    assert pMessage in check_typed_fields({**ZONE, **pChange})
+
+
+def test_zone_question_needs_a_visual_to_click(tmp_path):
+    """Vérifie qu'une zone sans schéma est écartée à l'import."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+
+    vReport = import_questions(
+        vDatabaseFile,
+        "",
+        json.dumps({"theme": "Électricité", "questions": [ZONE]}),
+        NOW,
+    )
+
+    assert vReport["added"] == 0
+    assert "schéma où cliquer manquant" in " ".join(vReport["rejected"])

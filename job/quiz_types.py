@@ -2,8 +2,9 @@
 
 Chaque type a ses propres champs et sa propre forme de réponse : l'indice d'un
 choix pour un QCM, un texte pour une valeur ou un code à compléter, une liste
-d'indices pour un ordre ou une association. Le reste de la révision (tirage,
-progression, examen) ne dépend pas du type.
+d'indices pour un ordre ou une association, un point cliqué sur le schéma pour
+une zone à désigner. Le reste de la révision (tirage, progression, examen) ne
+dépend pas du type.
 """
 
 import math
@@ -17,6 +18,7 @@ TYPE_FIELDS = {
     "ordre": ("items",),
     "association": ("pairs",),
     "saisie": ("code", "accepted"),
+    "zone": ("zones", "answer"),
 }
 OPTIONAL_FIELDS = ("code", "unit", "tolerance")
 QUESTION_TYPES = tuple(TYPE_FIELDS)
@@ -27,7 +29,11 @@ TYPE_LABELS = {
     "ordre": "Remise en ordre",
     "association": "Association",
     "saisie": "Code à compléter",
+    "zone": "Zone à désigner",
 }
+
+# Libellé du point cliqué en dehors de toutes les zones d'une question « zone »
+OUTSIDE_ZONES = "un endroit sans composant"
 
 # Repère du trou à compléter dans l'extrait d'une question « saisie »
 BLANK = "____"
@@ -162,12 +168,45 @@ def check_completion(pQuestion):
     return ""
 
 
+def check_zones(pQuestion):
+    """Vérifie une zone à désigner ; retourne le défaut trouvé, ou ""."""
+
+    vZones = pQuestion["zones"]
+
+    if (
+        not isinstance(vZones, list)
+        or not 2 <= len(vZones) <= 8
+        or not all(
+            isinstance(vZone, dict)
+            and isinstance(vZone.get("label"), str)
+            and vZone["label"].strip()
+            and isinstance(vZone.get("rect"), list)
+            and len(vZone["rect"]) == 4
+            and all(is_number(vValue) and vValue >= 0 for vValue in vZone["rect"])
+            and vZone["rect"][2] > 0
+            and vZone["rect"][3] > 0
+            for vZone in vZones
+        )
+    ):
+        return "2 à 8 zones {label, rect [x, y, largeur, hauteur]} attendues"
+
+    if (
+        not isinstance(pQuestion["answer"], int)
+        or isinstance(pQuestion["answer"], bool)
+        or not 0 <= pQuestion["answer"] < len(vZones)
+    ):
+        return "réponse hors des zones"
+
+    return ""
+
+
 CHECKS = {
     "qcm": check_choices,
     "numerique": check_numeric,
     "ordre": check_order,
     "association": check_pairs,
     "saisie": check_completion,
+    "zone": check_zones,
 }
 
 
@@ -377,7 +416,45 @@ def grade_completion(pQuestion, pResponse):
     return rGrade
 
 
-def build_response(pQuestion, pChoice, pText, pIndexes):
+def find_zone(pZones, pX, pY):
+    """Retourne l'indice de la zone qui contient le point, ou None."""
+
+    rIndex = next(
+        (
+            vIndex
+            for vIndex, vZone in enumerate(pZones)
+            if vZone["rect"][0] <= pX <= vZone["rect"][0] + vZone["rect"][2]
+            and vZone["rect"][1] <= pY <= vZone["rect"][1] + vZone["rect"][3]
+        ),
+        None,
+    )
+
+    return rIndex
+
+
+def grade_zone(pQuestion, pResponse):
+    """Corrige une zone à désigner : pResponse est le point cliqué [x, y]."""
+
+    if (
+        not isinstance(pResponse, (list, tuple))
+        or len(pResponse) != 2
+        or not all(is_number(vValue) for vValue in pResponse)
+    ):
+        raise ValueError("Cliquez sur le schéma pour répondre.")
+
+    vZones = pQuestion["zones"]
+    vIndex = find_zone(vZones, *pResponse)
+
+    rGrade = (
+        vIndex == pQuestion["answer"],
+        OUTSIDE_ZONES if vIndex is None else vZones[vIndex]["label"],
+        vZones[pQuestion["answer"]]["label"],
+    )
+
+    return rGrade
+
+
+def build_response(pQuestion, pChoice, pText, pIndexes, pPoint=None):
     """Retourne, parmi les champs d'un formulaire, la réponse attendue par le type."""
 
     vType = get_type(pQuestion)
@@ -386,6 +463,8 @@ def build_response(pQuestion, pChoice, pText, pIndexes):
         rResponse = pChoice
     elif vType in ("numerique", "saisie"):
         rResponse = pText
+    elif vType == "zone":
+        rResponse = list(pPoint) if pPoint else None
     else:
         rResponse = list(pIndexes)
 
@@ -398,6 +477,7 @@ GRADERS = {
     "ordre": grade_order,
     "association": grade_pairs,
     "saisie": grade_completion,
+    "zone": grade_zone,
 }
 
 

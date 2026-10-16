@@ -36,7 +36,7 @@
     <p class="muted">{{ themes_by_key[question.theme_key].label }} · {{ question.level }} · {{ question.type_label }} · {{ modes[mode] }}</p>
     <h2>{{ question.question }}</h2>
     {% if question.code %}<pre class="quiz-code"><code>{{ question.code }}</code></pre>{% endif %}
-    {% if question.visual and question.visual.show == "question" %}
+    {% if question.visual and question.visual.show == "question" and question.type != "zone" %}
     <figure class="quiz-visual">
         <img src="{{ url_for('show_quiz_asset', pName=question.visual.asset).path }}" alt="{{ question.visual.alt }}">
     </figure>
@@ -46,7 +46,7 @@
         <input type="hidden" name="question_id" value="{{ question.id }}">
         <input type="hidden" name="mode" value="{{ mode }}">
         {% include "_quiz_answer.html" %}
-        <button class="button button-primary" type="submit">Valider</button>
+        {% if question.type != "zone" %}<button class="button button-primary" type="submit">Valider</button>{% endif %}
     </form>
     <form class="quiz-flag" method="post" action="{{ url_for('flag_quiz_question').path }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">

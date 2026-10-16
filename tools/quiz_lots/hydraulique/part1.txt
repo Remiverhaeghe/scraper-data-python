@@ -215,12 +215,13 @@ P: Repère 5 => étrangleur réglable
 E: Le distributeur 4/3 a trois cases, les orifices sont bouchés dans la case centrale, et ses électroaimants se dessinent comme des rectangles barrés. Le limiteur est un cadre dont la flèche est décalée des orifices, retenue par un ressort réglable et pilotée par la pression d'entrée en pointillés. Le filtre est un losange traversé de pointillés, l'étrangleur un rétrécissement barré d'une flèche de réglage.
 
 @029
-Q: Sur cette planche, quel repère protège le circuit contre une surpression ?
-C: Le repère 2
-W: Le repère 1
-W: Le repère 3
-W: Le repère 4
-E: Le repère 2 est un limiteur de pression : la flèche décalée montre qu'il est fermé au repos, la ligne pointillée applique la pression d'entrée contre le ressort réglable, et il s'ouvre vers le réservoir quand elle dépasse le réglage. Le 1 est un distributeur, le 3 un filtre, le 4 un clapet anti-retour.
+Q: Sur cette planche, cliquez sur le composant qui protège le circuit contre une surpression.
+K: Limiteur de pression | 318 45 104 140
+Z: Distributeur 4/3 à centre fermé | 50 55 195 115
+Z: Filtre | 482 45 76 140
+Z: Clapet anti-retour taré | 640 45 42 140
+Z: Étrangleur réglable | 772 45 54 140
+E: Le limiteur de pression se reconnaît à sa flèche décalée des orifices, fermée au repos, au ressort réglable et à la ligne pointillée qui applique la pression d'entrée contre ce ressort : au-delà du réglage, il s'ouvre vers le réservoir. Le distributeur oriente l'huile, le filtre la nettoie, le clapet impose un sens et l'étrangleur règle un débit.
 
 @030
 Q: Un distributeur 4/3 à centre fermé est au neutre, la pompe tournant. Que se passe-t-il ?

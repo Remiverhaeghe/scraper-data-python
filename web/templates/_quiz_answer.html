@@ -1,12 +1,20 @@
 {# Champs de réponse d'une question, selon son type (job/quiz_types.py) :
    choice pour un QCM, text pour un calcul ou un code, indexes pour un ordre
-   ou une association. Partagé par la révision et l'examen. #}
+   ou une association, point.x et point.y pour une zone. Partagé par la
+   révision et l'examen. #}
 {% if retry_message %}<p class="application-message tone-warning" role="status">{{ retry_message }}</p>{% endif %}
 {% if question.type == "numerique" %}
 <label class="quiz-typed">Votre résultat
     <input type="text" name="text" inputmode="decimal" placeholder="{{ ('par exemple 2,5 ' ~ question.unit) if question.unit else 'par exemple 2,5' }}" autocomplete="off" required>
 </label>
 {% if question.unit %}<p class="muted">Unité attendue : {{ question.unit }}, préfixes acceptés (m, k, µ…) ; tolérance {{ question.tolerance | default(1) }} %</p>{% endif %}
+{% elif question.type == "zone" %}
+{# Le clic sur l'image envoie le formulaire avec ses coordonnées, sans script :
+   l'image reste à sa taille d'origine pour qu'elles valent celles du dessin. #}
+<div class="quiz-zone">
+    <input class="quiz-zone-image" type="image" name="point" src="{{ url_for('show_quiz_asset', pName=question.visual.asset).path }}" alt="{{ question.visual.alt }}">
+</div>
+<p class="muted">Cliquez directement sur le schéma, à l'endroit demandé : le clic vaut réponse.</p>
 {% elif question.type == "saisie" %}
 <label class="quiz-typed">Ce qui remplace ____
     <input class="quiz-code-input" type="text" name="text" autocomplete="off" autocapitalize="off" spellcheck="false" required>

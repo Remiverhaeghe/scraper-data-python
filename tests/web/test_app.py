@@ -1729,3 +1729,34 @@ def test_symbol_question_shows_its_visual_on_the_web(client):
 
     assert "Réponse incomplète" in vPage
     assert "electricite-symboles-commande.svg" in vPage
+
+
+def test_zone_question_is_answered_by_clicking_the_image(client):
+    """Vérifie une zone sur le web : image cliquable, coordonnées reçues et corrigées."""
+
+    import_questions_file(
+        app.dependency_overrides[get_database_file](),
+        "",
+        *build_lot_pack("electricite"),
+        datetime.now(),
+    )
+
+    vRetry = client.post("/quiz/answer", data={"question_id": "electricite-l1-021"})
+
+    assert vRetry.status_code == 400
+    assert 'type="image" name="point"' in vRetry.text
+    assert "Valider</button>" not in vRetry.text.split("quiz-flag")[0]
+
+    vRight = client.post(
+        "/quiz/answer",
+        data={"question_id": "electricite-l1-021", "point.x": "390", "point.y": "115"},
+    )
+
+    assert "Bonne réponse" in vRight.text
+
+    vWrong = client.post(
+        "/quiz/answer",
+        data={"question_id": "electricite-l1-021", "point.x": "80", "point.y": "115"},
+    )
+
+    assert "Votre réponse : Fusible" in vWrong.text

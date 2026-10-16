@@ -31,6 +31,8 @@ Les questions interactives remplacent C et W par leurs propres champs :
     O: Étape                  remise en ordre : une ligne par étape, dans l'ordre
     P: Élément => Unité        association : une ligne par paire
     A: length                  code à compléter : réponse acceptée au trou ____
+    K: Fusible | 55 45 50 140  zone à désigner sur le schéma : libellé | x y l h
+    Z: Moteur | 515 45 70 140  autre zone du schéma, nommée à la correction
 """
 
 import argparse
@@ -68,9 +70,11 @@ LEVEL_LAYOUT = (
 )
 LOT_SIZE = sum(vCount for _, vCount in LEVEL_LAYOUT)
 
-FIELD_PATTERN = re.compile(r"([QCWERNUTOPA]): (.*)")
-# Champs répétables : mauvaises réponses, références, étapes, paires, réponses
-LIST_FIELDS = "WROPA"
+FIELD_PATTERN = re.compile(r"([QCWERNUTOPAKZ]): (.*)")
+# Champs répétables : mauvaises réponses, références, étapes, paires, réponses,
+# autres zones d'un schéma
+LIST_FIELDS = "WROPAZ"
+ZONE_SEPARATOR = " | "
 PAIR_SEPARATOR = " => "
 # Le premier champ présent fixe le type d'une question qui n'est pas un QCM.
 TYPE_MARKERS = (
@@ -78,6 +82,7 @@ TYPE_MARKERS = (
     ("P", "association"),
     ("N", "numerique"),
     ("A", "saisie"),
+    ("K", "zone"),
 )
 
 # Une référence s'écrit « Titre | adresse » ; le contrôle d'import garde les sûres.
@@ -86,6 +91,20 @@ MAX_REFERENCES = 2
 
 # Libellés des états renvoyés par la vérification d'un lien
 LINK_STATUSES = {"available": "en ligne", "expired": "retirée", None: "indéterminée"}
+
+
+def parse_zone(pText):
+    """Lit « Libellé | x y largeur hauteur » ; lève ValueError si mal écrit."""
+
+    vLabel, vSeparator, vRect = pText.partition(ZONE_SEPARATOR)
+    vValues = [float(vValue) for vValue in vRect.split()]
+
+    if not vSeparator or not vLabel.strip() or len(vValues) != 4:
+        raise ValueError(f"zone mal écrite : {pText}")
+
+    rZone = {"label": vLabel.strip(), "rect": vValues}
+
+    return rZone
 
 
 def parse_lot_text(pText):
@@ -135,6 +154,19 @@ def parse_lot_text(pText):
 
         if any(PAIR_SEPARATOR not in vPair for vPair in vFields["P"]):
             raise ValueError(f"question {vNumber.strip()} : paire mal écrite")
+
+        if vFields["Z"] and vFields["type"] != "zone":
+            raise ValueError(f"question {vNumber.strip()} : champs incomplets")
+
+        if vFields["type"] == "zone":
+            try:
+                for vZone in [vFields["K"], *vFields["Z"]]:
+                    parse_zone(vZone)
+
+            except ValueError:
+                raise ValueError(
+                    f"question {vNumber.strip()} : zone mal écrite"
+                ) from None
 
         if len(vFields["R"]) > MAX_REFERENCES or any(
             REFERENCE_SEPARATOR not in vReference for vReference in vFields["R"]
@@ -217,6 +249,12 @@ def build_typed_fields(pSource, pPosition):
         }
     elif vType == "saisie":
         rFields = {"accepted": list(pSource["A"])}
+    elif vType == "zone":
+        # La zone à désigner vient en premier : l'ordre n'est jamais montré.
+        rFields = {
+            "zones": [parse_zone(vZone) for vZone in [pSource["K"], *pSource["Z"]]],
+            "answer": 0,
+        }
     else:
         vChoices = list(pSource["W"])
         vChoices.insert(pPosition, pSource["C"])

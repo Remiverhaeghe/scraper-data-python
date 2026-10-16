@@ -17,12 +17,13 @@ P: Repère 5 => amplificateur opérationnel
 E: La diode est un triangle qui pointe vers une barre : le courant passe dans le sens de la flèche, de l'anode vers la cathode. Les deux flèches sortantes signalent une LED, la barre aux extrémités repliées une Zener. Le transistor NPN a sa flèche d'émetteur dirigée vers l'extérieur ; l'amplificateur opérationnel est un triangle à deux entrées, moins et plus.
 
 @003
-Q: Sur la planche des semi-conducteurs, quel repère désigne le composant qui émet de la lumière ?
-C: Le repère 2
-W: Le repère 1
-W: Le repère 3
-W: Le repère 4
-E: Les deux flèches qui partent du repère 2 représentent la lumière émise : c'est une LED. Des flèches dirigées vers le composant signaleraient au contraire un composant sensible à la lumière, comme une photodiode. Le repère 1 est une diode ordinaire et le 3 une diode Zener.
+Q: Sur la planche des semi-conducteurs, cliquez sur le composant qui émet de la lumière.
+K: Diode électroluminescente (LED) | 195 55 125 95
+Z: Diode | 25 60 125 90
+Z: Diode Zener | 365 60 125 90
+Z: Transistor NPN | 545 50 100 110
+Z: Amplificateur opérationnel | 685 60 160 90
+E: Les deux flèches qui partent du symbole représentent la lumière émise : c'est une LED. Des flèches dirigées vers le composant signaleraient au contraire un composant sensible à la lumière, comme une photodiode. La diode simple n'a pas de flèches, la Zener a une barre aux extrémités repliées.
 
 @004
 Q: Associer chaque couleur de l'anneau d'une résistance au chiffre qu'elle code.

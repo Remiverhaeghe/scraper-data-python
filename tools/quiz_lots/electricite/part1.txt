@@ -148,12 +148,13 @@ U: A
 E: Pour un appareil résistif, I = P / U = 2 300 / 230 = 10 A. Ce calcul rapide sert à vérifier qu'un circuit protégé à 16 A peut alimenter les appareils prévus, sans faire déclencher le disjoncteur.
 
 @021
-Q: Sur ce départ moteur, quel repère désigne l'appareil qui protège le moteur contre les surcharges ?
-C: Le repère 3
-W: Le repère 1
-W: Le repère 2
-W: Le repère 4
-E: Le repère 3 est un relais thermique : le créneau dessiné dans son cadre rappelle son bilame qui chauffe avec le courant. Le repère 1 est un fusible, qui protège surtout contre les courts-circuits ; le 2 un sectionneur, qui isole sans protéger ; le 4 le moteur triphasé lui-même.
+Q: Sur ce départ moteur, cliquez sur l'appareil qui protège le moteur contre les surcharges.
+K: Relais thermique | 355 45 70 140
+Z: Fusible | 55 45 50 140
+Z: Sectionneur | 195 45 60 140
+Z: Moteur asynchrone triphasé | 515 45 70 140
+Z: Prise de terre | 655 45 70 140
+E: C'est le relais thermique : le créneau dessiné dans son cadre rappelle son bilame, qui chauffe avec le courant et déclenche sur une surcharge prolongée. Le fusible protège surtout contre les courts-circuits, le sectionneur isole sans protéger, et le moteur est l'appareil protégé lui-même.
 
 @022
 Q: Quel appareil mesure la résistance d'isolement d'un câble ?

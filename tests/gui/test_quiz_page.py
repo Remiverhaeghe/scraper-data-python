@@ -8,6 +8,10 @@ import pandas as pd
 
 import pytest
 
+from PySide6.QtCore import QPoint
+from PySide6.QtTest import QTest
+
+import gui.quiz_import_panel as quiz_import_panel
 import gui.quiz_page as quiz_page
 import job.quiz_packs as quiz_packs
 from gui.quiz_page import QuizPage
@@ -98,27 +102,31 @@ def test_questions_are_generated_imported_and_flagged(
 
     vPage = create_page(tmp_path / "scraper.db")
     vOpened = []
-    monkeypatch.setattr(quiz_page.QDesktopServices, "openUrl", vOpened.append)
+    monkeypatch.setattr(quiz_import_panel.QDesktopServices, "openUrl", vOpened.append)
 
-    vPage.theme_combo.setCurrentText("")
-    vPage.copy_generation_prompt()
+    vPage.import_panel.theme_combo.setCurrentText("")
+    vPage.import_panel.copy_generation_prompt()
 
-    assert vPage.import_message.text() == "Choisissez ou saisissez un thème."
+    assert (
+        vPage.import_panel.import_message.text() == "Choisissez ou saisissez un thème."
+    )
 
-    vPage.theme_combo.setCurrentText("Kafka")
-    vPage.copy_generation_prompt()
+    vPage.import_panel.theme_combo.setCurrentText("Kafka")
+    vPage.import_panel.copy_generation_prompt()
 
     assert "Thème : Kafka. Lot n° 1.\n100 questions" in (
-        quiz_page.QApplication.clipboard().text()
+        quiz_import_panel.QApplication.clipboard().text()
     )
     assert len(vOpened) == 1
 
-    vPage.import_edit.setPlainText(QUESTIONS_JSON)
-    vPage.import_pasted_questions()
+    vPage.import_panel.import_edit.setPlainText(QUESTIONS_JSON)
+    vPage.import_panel.import_pasted_questions()
 
-    assert vPage.import_message.text() == "1 question(s) ajoutée(s) : Kafka."
-    assert vPage.import_edit.toPlainText() == ""
-    assert vPage.theme_combo.findText("Kafka") >= 0
+    assert (
+        vPage.import_panel.import_message.text() == "1 question(s) ajoutée(s) : Kafka."
+    )
+    assert vPage.import_panel.import_edit.toPlainText() == ""
+    assert vPage.import_panel.theme_combo.findText("Kafka") >= 0
 
     monkeypatch.setattr(
         quiz_page.QMessageBox,
@@ -139,23 +147,30 @@ def test_questions_file_import_and_errors(qt_application, tmp_path, monkeypatch)
     vFile = tmp_path / "kafka.json"
     vFile.write_text(QUESTIONS_JSON, encoding="utf-8")
 
-    vPage.import_pasted_questions()
+    vPage.import_panel.import_pasted_questions()
 
-    assert vPage.import_message.text().startswith("Aucune question")
+    assert vPage.import_panel.import_message.text().startswith("Aucune question")
 
     monkeypatch.setattr(
-        quiz_page.QFileDialog, "getOpenFileName", lambda *pArgs: (str(vFile), "")
+        quiz_import_panel.QFileDialog,
+        "getOpenFileName",
+        lambda *pArgs: (str(vFile), ""),
     )
-    vPage.choose_questions_file()
+    vPage.import_panel.choose_questions_file()
 
-    assert vPage.import_message.text() == "1 question(s) ajoutée(s) : Kafka."
+    assert (
+        vPage.import_panel.import_message.text() == "1 question(s) ajoutée(s) : Kafka."
+    )
 
     def fail():
         raise OSError("disque")
 
-    vPage.run_import(fail)
+    vPage.import_panel.run_import(fail)
 
-    assert vPage.import_message.text() == "L'import a échoué. Voir les journaux."
+    assert (
+        vPage.import_panel.import_message.text()
+        == "L'import a échoué. Voir les journaux."
+    )
 
 
 def test_pack_question_shows_visual_references_and_guide(
@@ -169,12 +184,16 @@ def test_pack_question_shows_visual_references_and_guide(
     vOpened = []
 
     monkeypatch.setattr(
-        quiz_page.QFileDialog, "getOpenFileName", lambda *pArgs: (str(vPack), "")
+        quiz_import_panel.QFileDialog,
+        "getOpenFileName",
+        lambda *pArgs: (str(vPack), ""),
     )
     monkeypatch.setattr(
-        quiz_page, "show_text_dialog", lambda *pArgs, **pKwargs: vOpened.append(pKwargs)
+        quiz_page,
+        "show_text_dialog",
+        lambda *pArgs, **pKwargs: vOpened.append(pKwargs),
     )
-    vPage.choose_questions_file()
+    vPage.import_panel.choose_questions_file()
 
     assert not vPage.guides_card.isHidden()
 
@@ -208,22 +227,33 @@ def test_questions_are_exported(qt_application, tmp_path, monkeypatch):
     vExport = tmp_path / "export.zip"
 
     monkeypatch.setattr(
-        quiz_page.QFileDialog, "getSaveFileName", lambda *pArgs: (str(vExport), "")
+        quiz_import_panel.QFileDialog,
+        "getSaveFileName",
+        lambda *pArgs: (str(vExport), ""),
     )
-    vPage.choose_export_file()
+    vPage.import_panel.choose_export_file()
 
-    assert vPage.import_message.text() == "Aucune question importée à exporter."
+    assert (
+        vPage.import_panel.import_message.text()
+        == "Aucune question importée à exporter."
+    )
 
-    vPage.import_edit.setPlainText(QUESTIONS_JSON)
-    vPage.import_pasted_questions()
-    vPage.choose_export_file()
+    vPage.import_panel.import_edit.setPlainText(QUESTIONS_JSON)
+    vPage.import_panel.import_pasted_questions()
+    vPage.import_panel.choose_export_file()
 
-    assert vPage.import_message.text() == "1 question(s) exportée(s) : export.zip"
+    assert (
+        vPage.import_panel.import_message.text()
+        == "1 question(s) exportée(s) : export.zip"
+    )
     assert vExport.exists()
 
-    vPage.export_questions(str(tmp_path / "absent" / "export.zip"))
+    vPage.import_panel.export_questions(str(tmp_path / "absent" / "export.zip"))
 
-    assert vPage.import_message.text() == "L'export a échoué. Voir les journaux."
+    assert (
+        vPage.import_panel.import_message.text()
+        == "L'export a échoué. Voir les journaux."
+    )
 
 
 def test_domain_filter_zero_offers_and_scroll(qt_application, tmp_path):
@@ -346,8 +376,8 @@ def test_imported_questions_can_be_cleared(
     """Vérifie l'effacement des questions importées, seulement après confirmation."""
 
     vPage = create_page(tmp_path / "scraper.db")
-    vPage.import_edit.setPlainText(QUESTIONS_JSON)
-    vPage.import_pasted_questions()
+    vPage.import_panel.import_edit.setPlainText(QUESTIONS_JSON)
+    vPage.import_panel.import_pasted_questions()
 
     def fake_exec(pDialog):
         vButtons = {vButton.text(): vButton for vButton in pDialog.buttons()}
@@ -356,24 +386,24 @@ def test_imported_questions_can_be_cleared(
         ]
 
     monkeypatch.setattr(quiz_page.QMessageBox, "exec", fake_exec)
-    vPage.confirm_clear_questions()
+    vPage.import_panel.confirm_clear_questions()
 
     vKeys = {vTheme["key"] for vTheme in vPage.themes}
 
     assert ("kafka" in vKeys) is not pConfirmed
 
     if pConfirmed:
-        assert vPage.import_message.text().startswith(
+        assert vPage.import_panel.import_message.text().startswith(
             "1 question(s) importée(s) effacée(s)"
         )
 
     def fail(*pArgs):
         raise OSError("disque plein")
 
-    monkeypatch.setattr(quiz_page, "clear_imported_questions", fail)
-    vPage.clear_questions()
+    monkeypatch.setattr(quiz_import_panel, "clear_imported_questions", fail)
+    vPage.import_panel.clear_questions()
 
-    assert vPage.import_message.text().startswith("L'effacement a échoué")
+    assert vPage.import_panel.import_message.text().startswith("L'effacement a échoué")
 
 
 def test_biased_lot_offers_a_correction(qt_application, tmp_path, monkeypatch):
@@ -381,9 +411,9 @@ def test_biased_lot_offers_a_correction(qt_application, tmp_path, monkeypatch):
 
     vPage = create_page(tmp_path / "scraper.db")
     vOpened = []
-    monkeypatch.setattr(quiz_page.QDesktopServices, "openUrl", vOpened.append)
+    monkeypatch.setattr(quiz_import_panel.QDesktopServices, "openUrl", vOpened.append)
 
-    vPage.import_edit.setPlainText(
+    vPage.import_panel.import_edit.setPlainText(
         build_lot_text(
             [
                 build_question(vIndex, pAnswer=1, pLongest=True)
@@ -391,18 +421,20 @@ def test_biased_lot_offers_a_correction(qt_application, tmp_path, monkeypatch):
             ]
         )
     )
-    vPage.import_pasted_questions()
+    vPage.import_panel.import_pasted_questions()
 
-    assert "alerte(s) de qualité" in vPage.import_message.text()
-    assert not vPage.correction_button.isHidden()
+    assert "alerte(s) de qualité" in vPage.import_panel.import_message.text()
+    assert not vPage.import_panel.correction_button.isHidden()
 
-    vPage.copy_correction_prompt()
+    vPage.import_panel.copy_correction_prompt()
 
     assert "Questions concernées : grafcet-l1-000" in (
-        quiz_page.QApplication.clipboard().text()
+        quiz_import_panel.QApplication.clipboard().text()
     )
     assert len(vOpened) == 1
-    assert vPage.import_message.text().startswith("Demande de correction copiée")
+    assert vPage.import_panel.import_message.text().startswith(
+        "Demande de correction copiée"
+    )
 
 
 def test_validated_packs_are_imported_in_one_click(
@@ -416,18 +448,20 @@ def test_validated_packs_are_imported_in_one_click(
 
     vPage = create_page(tmp_path / "scraper.db")
 
-    assert vPage.packs_button.isHidden()
+    assert vPage.import_panel.packs_button.isHidden()
 
     vName, vContent = build_lot_pack("grafcet")
     (vFolder / vName).write_bytes(vContent)
     vPage.refresh()
 
-    assert vPage.packs_button.text() == "Importer les lots validés (1)"
-    assert not vPage.packs_button.isHidden()
+    assert vPage.import_panel.packs_button.text() == "Importer les lots validés (1)"
+    assert not vPage.import_panel.packs_button.isHidden()
 
-    vPage.import_packs()
+    vPage.import_panel.import_packs()
 
-    assert vPage.import_message.text().startswith("100 question(s) ajoutée(s)")
+    assert vPage.import_panel.import_message.text().startswith(
+        "100 question(s) ajoutée(s)"
+    )
 
 
 def test_priority_card_prepares_a_full_lot(qt_application, tmp_path, monkeypatch):
@@ -436,7 +470,7 @@ def test_priority_card_prepares_a_full_lot(qt_application, tmp_path, monkeypatch
     vDatabaseFile = tmp_path / "scraper.db"
     vPage = create_page(vDatabaseFile)
 
-    assert vPage.priority_message.text().startswith("Aucun thème")
+    assert vPage.import_panel.priority_message.text().startswith("Aucun thème")
 
     save_offers(
         vDatabaseFile,
@@ -453,14 +487,17 @@ def test_priority_card_prepares_a_full_lot(qt_application, tmp_path, monkeypatch
         datetime(2026, 10, 15),
     )
     vPage.refresh()
-    monkeypatch.setattr(quiz_page.QDesktopServices, "openUrl", lambda _: None)
+    monkeypatch.setattr(quiz_import_panel.QDesktopServices, "openUrl", lambda _: None)
 
-    assert vPage.priority_message.text() == ""
-    assert vPage.priority_layout.count() == 3
+    assert vPage.import_panel.priority_message.text() == ""
+    assert vPage.import_panel.priority_layout.count() == 3
 
-    vPage.prepare_priority("Supervision, SCADA et IHM")
+    vPage.import_panel.prepare_priority("Supervision, SCADA et IHM")
 
-    assert "100 questions : 25 débutant" in quiz_page.QApplication.clipboard().text()
+    assert (
+        "100 questions : 25 débutant"
+        in quiz_import_panel.QApplication.clipboard().text()
+    )
 
 
 def test_typed_questions_are_answered_on_the_desktop(qt_application, tmp_path):
@@ -562,3 +599,49 @@ def test_symbol_is_shown_with_the_question(qt_application, tmp_path):
     vPage.validate()
 
     assert not vPage.visual_widget.isHidden()
+
+
+def test_zone_is_answered_by_clicking_the_drawing(qt_application, tmp_path):
+    """Vérifie une zone : clic converti en coordonnées du dessin, marque et correction."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile)
+    import_questions_file(
+        vDatabaseFile, "", *build_lot_pack("electricite"), datetime.now()
+    )
+    vQuestion = next(
+        vItem
+        for vItem in quiz_page.load_active_quiz(vDatabaseFile)["electricite"][
+            "questions"
+        ]
+        if vItem["id"].endswith("-021")
+    )
+    vPage.mode = "discover"
+    vPage.display_question(
+        {**prepare_question(vQuestion, random.Random(1)), "theme_key": "electricite"},
+        "Électricité",
+        "",
+    )
+    vWidget = vPage.question_visual_widget
+
+    assert not vWidget.isHidden() and vWidget.clickable
+
+    vPage.validate()
+
+    assert vPage.verdict_label.text() == "Complétez votre réponse."
+
+    # Le dessin fait 760 × 230 : le centre du relais thermique est vers (390, 115).
+    vScale = vWidget.width() / 760
+    QTest.mouseClick(
+        vWidget,
+        quiz_page.Qt.MouseButton.LeftButton,
+        pos=QPoint(round(390 * vScale), round(115 * vScale)),
+    )
+
+    assert vPage.zone_point[0] == pytest.approx(390, abs=3)
+    assert vWidget.point is not None
+
+    vPage.validate()
+
+    assert vPage.verdict_label.text() == "Bonne réponse."
+    assert not vWidget.clickable and vWidget.point is not None

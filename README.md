@@ -316,7 +316,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 Page Révision du bureau et du web (installable sur le téléphone), sans service payant :
 
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
-- [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile ne reçoit que les QCM
+- [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter, zone à désigner en cliquant sur un schéma ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile ne reçoit que les QCM
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande reprenant le modèle complet d'un pack (domaine, niveaux répartis ou au choix, schémas et guides facultatifs), import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
 - [x] Catalogue de 90 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
@@ -582,7 +582,10 @@ scraper-data-python/
 │   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
 │   ├── offer_form.py                          # Saisie manuelle d'une offre
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
-│   ├── quiz_page.py                           # Révision technique par QCM
+│   ├── quiz_page.py                           # Révision technique : thèmes, questions et examen
+│   ├── quiz_answer.py                         # Zones de réponse selon le type, schéma cliquable
+│   ├── quiz_import_panel.py                   # Ajout de questions : priorités, ChatGPT, import, export
+│   ├── quiz_statistics_card.py                # Statistiques et progression de la révision
 │   ├── challenges_page.py                     # Défis de programmation
 │   ├── git_page.py                            # Bac à sable Git
 │   ├── history_page.py                        # Historique des exécutions
