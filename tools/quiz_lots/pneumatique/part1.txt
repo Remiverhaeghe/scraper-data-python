@@ -1,0 +1,387 @@
+@001
+Q: Quelle énergie un système pneumatique utilise-t-il pour produire un mouvement ?
+C: L'air comprimé
+W: L'huile sous pression
+W: Le courant continu
+W: La vapeur d'eau
+E: La pneumatique transforme l'énergie de l'air comprimé en mouvement, le plus souvent linéaire avec un vérin. L'huile sous pression est le domaine de l'hydraulique, qui obtient des efforts bien plus grands. La vapeur se rencontre dans les turbines et le chauffage, pas dans l'automatisme courant.
+
+@002
+Q: Associer chaque grandeur pneumatique à son unité usuelle.
+P: Pression => bar
+P: Force => newton (N)
+P: Débit d'air => litre par minute (l/min)
+P: Surface de piston => millimètre carré (mm²)
+E: En atelier, la pression se lit en bar sur les manomètres, l'effort d'un vérin se calcule en newtons, la consommation se compte en litres par minute d'air libre et la surface du piston en mm². Avec 1 bar = 0,1 N/mm², on passe directement de la pression à l'effort.
+
+@003
+Q: Combien de pascals représente une pression de 6 bar ?
+N: 600000
+U: Pa
+E: Un bar vaut 100 000 Pa, soit 100 kPa ou 0,1 MPa : 6 bar font 600 000 Pa. Les fiches techniques européennes donnent souvent les pressions en MPa ; 6 bar s'y écrivent 0,6 MPa.
+
+@004
+Q: Qu'est-ce qui distingue un vérin simple effet d'un vérin double effet ?
+C: Le simple effet revient grâce à un ressort
+W: Le double effet n'a qu'un seul orifice d'air
+W: Le simple effet a deux tiges opposées
+W: Le double effet travaille sans air comprimé
+E: Le vérin simple effet ne reçoit l'air que d'un côté : un ressort intégré le ramène quand on met la chambre à l'échappement. Le double effet a deux orifices et l'air pousse dans les deux sens, ce qui donne un effort sur la course aller et retour. Les deux fonctionnent à l'air comprimé.
+
+@005
+Q: Associer chaque repère de la planche au composant pneumatique qu'il représente.
+P: Repère 1 => vérin simple effet à rappel par ressort
+P: Repère 2 => vérin double effet
+P: Repère 3 => compresseur
+P: Repère 4 => moteur pneumatique
+P: Repère 5 => réservoir d'air
+E: Le vérin se dessine comme un cylindre traversé par le piston et sa tige ; le ressort dessiné dans la chambre signale le simple effet, les deux orifices le double effet. Compresseur et moteur sont deux cercles : le triangle pointe vers l'extérieur quand l'énergie sort (compresseur), vers l'intérieur quand elle entre (moteur). Le réservoir est un cadre aux bouts arrondis.
+
+@006
+Q: Quel est le rôle d'un distributeur dans un circuit pneumatique ?
+C: Diriger l'air vers les orifices de l'actionneur
+W: Produire l'air comprimé utilisé par le réseau
+W: Stocker l'air comprimé pour les pointes de consommation
+W: Mesurer la pression d'air dans la conduite
+E: Le distributeur est l'aiguillage du circuit : selon sa position, il envoie l'air vers une chambre du vérin et met l'autre à l'échappement. La production est le rôle du compresseur, le stockage celui du réservoir et la mesure celui du manomètre.
+
+@007
+Q: Que signifie l'appellation « 5/2 » d'un distributeur ?
+C: 5 orifices et 2 positions
+W: 5 positions et 2 orifices
+W: 5 bar et 2 vérins pilotés
+W: 5 mm de passage et 2 sorties
+E: Le premier chiffre compte les orifices (alimentation, deux sorties, deux échappements), le second les positions stables ou commandées. Un 5/2 commande un vérin double effet ; un 3/2 suffit pour un simple effet ; un 5/3 ajoute une position centrale.
+
+@008
+Q: Quel est le rôle du réservoir placé après le compresseur ?
+C: Stocker l'air et lisser les variations de pression
+W: Augmenter la pression au-delà de celle du compresseur
+W: Remplacer le sécheur dans le réseau d'air
+W: Lubrifier les vérins de l'atelier
+E: Le réservoir constitue une réserve qui absorbe les pointes de consommation et espace les démarrages du compresseur. Il ne peut pas dépasser la pression produite. L'air s'y refroidit et une partie de l'eau s'y condense, d'où la purge régulière, mais il ne remplace pas un sécheur.
+
+@009
+Q: Quelle force de sortie développe un vérin de diamètre 32 mm alimenté à 6 bar ?
+N: 482.5
+U: N
+T: 2
+E: La surface du piston vaut S = π × 16² ≈ 804,2 mm². Avec 6 bar = 0,6 N/mm², la force théorique vaut F = 0,6 × 804,2 ≈ 482,5 N, soit l'équivalent d'environ 49 kg. Les frottements en retirent une partie en pratique.
+
+@010
+Q: Pourquoi faut-il sécher l'air comprimé avant de le distribuer ?
+C: L'eau condensée corrode et grippe les composants
+W: L'air sec se comprime plus vite dans le réseau de l'atelier
+W: L'humidité fait monter la pression du réseau
+W: L'eau remplace utilement le lubrifiant
+E: L'air aspiré contient de la vapeur d'eau qui se condense en se refroidissant après compression. Cette eau rouille les conduites, lessive la graisse des vérins et peut geler à l'extérieur. Le sécheur et les purges l'éliminent ; l'humidité ne change pas la pression.
+
+@011
+Q: Associer chaque numéro d'orifice d'un distributeur à sa fonction (ISO 5599).
+P: 1 => alimentation en air comprimé
+P: 2 et 4 => sorties vers l'actionneur
+P: 3 et 5 => échappements
+P: 12 et 14 => pilotages
+E: La numérotation est normalisée : 1 pour l'alimentation, nombres pairs pour les sorties, impairs pour les échappements. Un pilotage porte deux chiffres : 14 commande la liaison entre 1 et 4, 12 la liaison entre 1 et 2. Ce code permet de câbler correctement sans connaître la marque.
+
+@012
+Q: Un vérin sort trop brutalement et cogne en fin de course. Quel réglage simple faut-il essayer ?
+C: Freiner l'échappement avec un réducteur de débit
+W: Augmenter la pression du réseau d'un bar supplémentaire
+W: Remplacer le vérin par un simple effet
+W: Retirer le silencieux d'échappement
+E: Pour ralentir un vérin, on limite le débit de l'air qui sort de la chambre opposée : le piston est alors retenu par une contre-pression et avance régulièrement. Monter la pression l'accélérerait encore. Les amortissements réglables de fin de course complètent ce réglage sur les derniers millimètres.
+
+@013
+Q: À quoi sert un silencieux monté sur l'échappement d'un distributeur ?
+C: Réduire le bruit de l'air qui s'échappe
+W: Régler la pression d'alimentation du vérin
+W: Empêcher l'air de revenir dans le réseau
+W: Filtrer l'air avant son entrée au distributeur
+E: L'air qui s'échappe brutalement produit un claquement bruyant ; le silencieux, en bronze fritté ou en plastique poreux, le diffuse. Encrassé, il freine l'échappement et ralentit le vérin : c'est une cause classique de vérin devenu lent.
+
+@014
+Q: Remettre dans l'ordre le chemin de l'air, de sa production jusqu'au mouvement.
+O: Compresseur
+O: Réservoir
+O: Unité FRL de la machine
+O: Distributeur
+O: Vérin
+E: Le compresseur produit l'air, le réservoir le stocke et stabilise la pression du réseau. À l'entrée de chaque machine, l'unité FRL filtre l'air et règle sa pression ; le distributeur l'envoie ensuite vers la bonne chambre du vérin. Un sécheur se place en général entre le réservoir et le réseau.
+
+@015
+Q: Que signifie le sigle FRL d'une unité de traitement d'air ?
+C: Filtre, régulateur, lubrificateur
+W: Fusible, relais, limiteur
+W: Frein, ressort, levier
+W: Filtre, réservoir, limiteur
+E: L'unité FRL se monte à l'entrée de chaque machine : le filtre retient l'eau et les particules, le régulateur fixe la pression de travail, le lubrificateur ajoute un brouillard d'huile si les composants en ont besoin. Beaucoup de machines récentes n'utilisent plus que filtre et régulateur.
+
+@016
+Q: Un manomètre indique 6 bar. Avec une pression atmosphérique de 1 bar, quelle est la pression absolue ?
+N: 7
+U: bar
+E: Le manomètre affiche la pression relative, au-dessus de l'atmosphère. La pression absolue ajoute la pression atmosphérique : 6 + 1 = 7 bar. C'est elle qui compte pour calculer le volume d'air libre consommé.
+
+@017
+Q: Que mesure le manomètre d'une installation pneumatique ?
+C: La pression relative à l'atmosphère
+W: La pression absolue de l'air du réseau
+W: Le débit d'air consommé
+W: La température de l'air
+E: Les manomètres d'atelier indiquent la pression relative : ils affichent 0 bar à l'air libre. Pour la pression absolue, il faut ajouter environ 1 bar. Le débit se mesure avec un débitmètre et la température avec un thermomètre ou une sonde.
+
+@018
+Q: Quel est le rôle d'un clapet anti-retour ?
+C: Laisser passer l'air dans un seul sens
+W: Limiter la pression maximale du circuit
+W: Régler la vitesse dans les deux sens
+W: Couper l'air lors d'un arrêt d'urgence
+E: Le clapet anti-retour s'ouvre quand l'air arrive dans le bon sens et se ferme dans l'autre, la bille ou le clapet revenant sur son siège. On le trouve dans les réducteurs de débit unidirectionnels et pour maintenir une pression. La limitation de pression revient à une soupape.
+
+@019
+Q: Une fuite d'air siffle sur un raccord de machine. Pourquoi faut-il la réparer sans attendre ?
+C: L'air comprimé coûte cher à produire
+W: Le sifflement fait monter la pression
+W: La fuite gèle toujours le raccord
+W: Elle inverse le sens des vérins
+E: L'air comprimé est l'une des énergies les plus chères de l'usine : environ dix fois plus que l'électricité utilisée directement. Une fuite de quelques millimètres coûte plusieurs centaines d'euros par an, et les fuites représentent souvent 20 à 30 % de l'air produit.
+
+@020
+Q: Un manomètre d'origine américaine indique 87 psi. À combien de bar cela correspond-il (1 bar ≈ 14,5 psi) ?
+N: 6
+U: bar
+T: 1
+E: Il suffit de diviser par 14,5 : 87 / 14,5 = 6 bar. Les matériels importés affichent souvent les deux échelles ; savoir convertir évite de régler un détendeur à une pression fantaisiste.
+
+@021
+Q: Quel est le principal atout de la pneumatique pour des mouvements simples de machine ?
+C: Simplicité et rapidité des mouvements linéaires
+W: Positionnement au dixième de millimètre près en milieu de course
+W: Meilleur rendement qu'un moteur électrique
+W: Efforts plus grands que l'hydraulique
+E: Un vérin, un distributeur et deux capteurs suffisent à faire un mouvement rapide, robuste et peu coûteux. En revanche, la pneumatique a un mauvais rendement énergétique, positionne mal en course intermédiaire et reste loin des efforts de l'hydraulique, qui travaille à 100 bar et plus.
+
+@022
+Q: Pourquoi est-il difficile d'arrêter précisément un vérin pneumatique au milieu de sa course ?
+C: L'air se comprime et ne bloque pas la tige
+W: Le distributeur n'a jamais que deux positions
+W: Le ressort ramène toujours la tige au repos
+W: La pression est trop faible pour freiner
+E: L'air est compressible : même chambres fermées, la tige bouge si l'effort change, comme un ressort. C'est pourquoi on travaille surtout en butée de fin de course. Pour des positions intermédiaires précises, on choisit un axe électrique ou un vérin avec bloqueur de tige.
+
+@023
+Q: Que signifie « normalement fermé » (NF) pour un distributeur 3/2 ?
+C: Au repos, l'air ne passe pas vers la sortie
+W: Au repos, la sortie est alimentée en air
+W: Il se ferme seulement en cas de coupure
+W: Il ne fonctionne que sous une faible pression d'air
+E: Au repos, sans commande, l'alimentation 1 est bloquée et la sortie 2 est reliée à l'échappement 3 : rien ne bouge. Commandé, il relie 1 à 2. Un 3/2 normalement ouvert fait l'inverse et alimente la sortie au repos, ce qui sert par exemple pour un serrage maintenu.
+
+@024
+Q: Quelle est la surface d'un piston de diamètre 40 mm ?
+N: 1256.6
+U: mm²
+T: 1
+E: La surface d'un disque vaut S = π × D² / 4 = π × 40² / 4 = π × 400 ≈ 1 256,6 mm², soit 12,57 cm². Doubler le diamètre multiplie la surface, donc l'effort, par quatre.
+
+@025
+Q: Associer chaque organe de commande d'un distributeur à son principe.
+P: Bouton-poussoir => commande manuelle
+P: Pilotage pneumatique => commande par un signal d'air
+P: Électro-aimant => commande électrique par bobine
+P: Ressort => rappel en position de repos
+E: Un distributeur se commande par la main, par un signal d'air venu d'un autre composant, ou par une bobine pilotée par un automate. Le ressort ne commande rien : il ramène le distributeur au repos quand la commande disparaît, ce qui définit un distributeur monostable.
+
+@026
+Q: Un vérin de diamètre 50 mm a une tige de 20 mm. Quelle force développe-t-il en rentrée sous 6 bar ?
+N: 989.6
+U: N
+T: 2
+E: En rentrée, l'air pousse sur la couronne autour de la tige : S = π × (25² - 10²) = π × 525 ≈ 1 649,3 mm². La force vaut 0,6 × 1 649,3 ≈ 989,6 N, contre 1 178 N en sortie. Il faut en tenir compte si le vérin doit tirer une charge.
+
+@027
+Q: Pourquoi la force de rentrée d'un vérin double effet est-elle plus faible que sa force de sortie ?
+C: La tige réduit la surface utile côté rentrée
+W: Le ressort interne s'oppose au mouvement de rentrée
+W: La pression baisse quand la tige rentre
+W: L'échappement freine toujours la rentrée
+E: Côté tige, l'air ne pousse que sur la surface du piston moins celle de la tige : à pression égale, l'effort est plus faible. Un vérin double effet n'a pas de ressort, et la pression d'alimentation est la même dans les deux sens.
+
+@028
+Q: Associer chaque repère de la planche au composant qu'il représente.
+P: Repère 1 => distributeur 3/2 à poussoir, rappel par ressort
+P: Repère 2 => distributeur 5/2 à poussoir, rappel par ressort
+P: Repère 3 => clapet anti-retour
+P: Repère 4 => réducteur de débit unidirectionnel
+P: Repère 5 => manomètre
+E: Un distributeur se lit case par case : chaque carré est une position, les flèches montrent le passage de l'air, les T les orifices bouchés ; on compte les orifices sur la case de repos, celle où arrivent les conduites. Le clapet est une bille sur son siège, le réducteur unidirectionnel associe un étranglement réglable et un clapet en parallèle, le manomètre est un cercle traversé d'une flèche.
+
+@029
+Q: Sur cette planche, quel repère représente un clapet anti-retour seul ?
+C: Le repère 3
+W: Le repère 1
+W: Le repère 4
+W: Le repère 5
+E: Le repère 3 montre la bille posée sur son siège en V : l'air venant du bas soulève la bille et passe, l'air venant du haut la plaque sur le siège. Le repère 4 contient aussi un clapet, mais associé à un étranglement réglable : c'est un réducteur de débit unidirectionnel. Le 1 est un distributeur et le 5 un manomètre.
+
+@030
+Q: Où place-t-on habituellement les réducteurs de débit pour régler la vitesse d'un vérin double effet ?
+C: Sur l'échappement de chaque chambre
+W: Sur l'alimentation générale de la machine
+W: Sur l'orifice de pilotage du distributeur
+W: Sur la sortie du réservoir du compresseur
+E: On freine l'air qui sort du vérin : le clapet laisse entrer l'air librement et l'étranglement retient l'air qui s'échappe. Le piston, coincé entre deux pressions, avance de façon régulière même si la charge varie. Freiner l'alimentation donne un mouvement saccadé.
+
+@031
+Q: Remettre dans l'ordre la mise en sécurité d'une machine pneumatique avant une intervention.
+O: Fermer la vanne de sectionnement d'air
+O: Condamner la vanne par un cadenas
+O: Purger l'air resté dans les circuits
+O: Vérifier l'absence de pression au manomètre
+O: Intervenir sur le vérin
+E: Comme pour l'électricité, on sépare l'énergie, on condamne l'organe de séparation puis on dissipe l'énergie résiduelle : l'air piégé dans les conduites et les vérins peut encore faire bouger une tige. La vérification au manomètre confirme l'absence de pression avant de mettre les mains dans la machine.
+
+@032
+Q: Pourquoi faut-il purger l'air d'une machine même après avoir fermé la vanne d'arrivée ?
+C: L'air piégé peut encore faire bouger un vérin
+W: L'air resté dans le circuit corrode les joints
+W: La purge refroidit le compresseur du réseau
+W: Elle rétablit la bonne pression de réseau
+E: Fermer la vanne n'évacue pas l'air déjà présent : un vérin peut rester sous pression et bouger dès qu'on desserre un raccord ou qu'un distributeur commute. Les vannes de sectionnement de sécurité intègrent une mise à l'échappement pour cette raison.
+
+@033
+Q: Quel volume d'air sous pression remplit la chambre côté fond d'un vérin de diamètre 50 mm et de course 200 mm ?
+N: 0.3927
+U: l
+T: 2
+E: Le volume vaut surface × course : π × 25² × 200 ≈ 1 963,5 × 200 = 392 700 mm³, soit 0,393 litre (1 litre = 1 000 000 mm³). C'est le volume de la chambre, rempli d'air comprimé à chaque sortie.
+
+@034
+Q: Cette chambre de 0,3927 litre est remplie à 6 bar relatifs. Quel volume d'air libre, à pression atmosphérique, consomme-t-elle ?
+N: 2.75
+U: l
+T: 2
+E: L'air comprimé à 6 bar relatifs, soit 7 bar absolus, occupe sept fois moins de place qu'à l'air libre : 0,3927 × 7 ≈ 2,75 litres d'air libre par sortie. C'est ce volume d'air libre que doit fournir le compresseur, d'où l'intérêt de raisonner en pression absolue.
+
+@035
+Q: Quel est le rôle du régulateur, ou détendeur, d'une unité FRL ?
+C: Maintenir une pression de sortie stable et réglée
+W: Augmenter la pression de sortie au-delà de celle du réseau
+W: Retirer l'eau et les particules de l'air
+W: Ajouter un brouillard d'huile dans l'air
+E: Le détendeur abaisse la pression du réseau à la valeur choisie pour la machine et la maintient malgré les variations en amont. Il ne peut pas l'augmenter : il faudrait un surpresseur. Le filtre retire l'eau et les particules, le lubrificateur ajoute l'huile.
+
+@036
+Q: Pourquoi de nombreux composants pneumatiques récents fonctionnent-ils sans lubrificateur ?
+C: Ils sont graissés à vie en usine
+W: L'air sec lubrifie naturellement les joints
+W: L'huile détruirait toujours le réservoir
+W: La pression du réseau suffit à les graisser
+E: Les vérins et distributeurs modernes reçoivent une graisse de montage qui dure toute leur vie. Attention : une fois qu'on a envoyé de l'huile, elle lessive cette graisse et il faut continuer à lubrifier. Supprimer l'huile évite aussi de la rejeter dans l'atelier par les échappements.
+
+@037
+Q: Associer chaque élément d'une unité FRL à son rôle.
+P: Filtre => retenir l'eau et les particules
+P: Régulateur => fixer la pression de travail
+P: Lubrificateur => ajouter un brouillard d'huile
+E: L'ordre de montage suit la logique de traitement : on nettoie l'air d'abord, on règle sa pression ensuite, puis on lubrifie si nécessaire. Le filtre se purge, manuellement ou automatiquement, quand son bol se remplit d'eau.
+
+@038
+Q: Sur une petite presse pneumatique, l'opérateur doit appuyer sur deux boutons en même temps. Pourquoi ?
+C: Garder ses deux mains hors de la zone dangereuse
+W: Doubler la pression envoyée au vérin de la presse à chaque cycle
+W: Économiser l'air comprimé à chaque cycle
+W: Contrôler en continu l'état des deux boutons
+E: La commande bimanuelle impose d'appuyer sur deux boutons éloignés, presque simultanément, et de les maintenir pendant le mouvement dangereux : les deux mains sont occupées loin de l'outil. Elle ne modifie ni la pression, ni la consommation d'air.
+
+@039
+Q: Quel composant ne laisse passer l'air que si ses deux entrées sont alimentées ?
+C: Le clapet de simultanéité, fonction ET
+W: Le sélecteur de circuit, fonction OU
+W: Le clapet anti-retour simple
+W: Le réducteur de débit unidirectionnel
+E: Le clapet de simultanéité ne délivre une sortie que si les deux entrées sont sous pression : c'est la fonction logique ET, utile pour une commande à deux conditions. Le sélecteur de circuit délivre une sortie dès qu'une entrée est alimentée : c'est le OU.
+
+@040
+Q: Associer chaque composant pneumatique à la fonction logique qu'il réalise.
+P: Sélecteur de circuit => fonction OU
+P: Clapet de simultanéité => fonction ET
+P: Distributeur 3/2 normalement ouvert piloté => fonction NON
+E: Avant les automates, on réalisait toute la logique d'une machine en pneumatique. Un 3/2 normalement ouvert délivre de l'air tant qu'il n'est pas piloté et le coupe quand il l'est : il inverse le signal, c'est le NON. Ces composants se rencontrent encore sur les machines en atmosphère explosive.
+
+@041
+Q: Un vérin de diamètre 63 mm doit pousser une charge de 1 200 N. Quelle pression minimale théorique faut-il ?
+N: 3.85
+U: bar
+T: 2
+E: La surface vaut π × 31,5² ≈ 3 117 mm². La pression nécessaire vaut P = F / S = 1 200 / 3 117 ≈ 0,385 N/mm², soit 3,85 bar. En pratique, on prévoit une marge pour les frottements et la vitesse, ce qui conduit à régler vers 5 ou 6 bar.
+
+@042
+Q: Pourquoi ne fait-on travailler un vérin qu'à 50 à 70 % de son effort théorique ?
+C: Pour couvrir frottements et garder de la vitesse
+W: Pour réduire de moitié la consommation d'air du vérin
+W: Pour supprimer le besoin d'amortissement
+W: Pour pouvoir baisser la pression à 1 bar
+E: Le taux de charge garde une réserve d'effort : une partie de la force sert à vaincre les frottements des joints et à accélérer la charge. Un vérin chargé à 100 % avancerait lentement, voire calerait. On choisit donc un diamètre supérieur au strict calcul.
+
+@043
+Q: Qu'est-ce qui caractérise un distributeur bistable ?
+C: Il garde sa position quand la commande disparaît
+W: Il revient au repos grâce à un ressort
+W: Il n'a qu'une seule position stable
+W: Il exige une alimentation électrique permanente de sa bobine
+E: Le bistable a deux commandes, une pour chaque position, et reste dans la dernière position commandée : c'est une mémoire. Le monostable, rappelé par ressort, n'a qu'une position stable et y revient dès que la commande cesse. Un bistable à pilotage électrique se contente d'impulsions.
+
+@044
+Q: Lors d'une coupure de courant, quel distributeur ramène de lui-même le vérin en position de repos ?
+C: Un distributeur monostable à rappel par ressort
+W: Un distributeur bistable à double pilotage électrique
+W: Un distributeur 5/3 à centre fermé
+W: Un sélecteur de circuit à deux entrées
+E: Sans courant, la bobine du monostable n'est plus alimentée : le ressort le ramène au repos et le vérin rejoint sa position de repos. Le bistable garde sa dernière position et le 5/3 à centre fermé bloque le vérin là où il est. Le choix dépend de la position sûre de la machine.
+
+@045
+Q: À quoi sert un distributeur 5/3 à centre fermé ?
+C: Bloquer le vérin en position intermédiaire
+W: Faire sortir le vérin plus rapidement
+W: Mettre les deux chambres à l'échappement
+W: Doubler la force de sortie du vérin
+E: En position centrale, tous les orifices sont fermés : l'air reste piégé dans les deux chambres et le vérin s'arrête, avec un maintien approximatif puisque l'air est compressible. Le centre à l'échappement met au contraire les deux chambres à l'air libre, la tige devenant libre.
+
+@046
+Q: Associer chaque position centrale d'un distributeur 5/3 à son effet sur le vérin.
+P: Centre fermé => les deux chambres restent bloquées
+P: Centre à l'échappement => les deux chambres à l'air libre
+P: Centre sous pression => les deux chambres alimentées
+E: La position centrale choisit le comportement à l'arrêt : bloquer la charge, libérer la tige pour la déplacer à la main, ou équilibrer les pressions. Le centre sous pression fait sortir lentement un vérin à tige simple, la surface côté fond étant plus grande.
+
+@047
+Q: Un vérin parcourt une course de 300 mm à la vitesse moyenne de 0,5 m/s. Quelle est la durée du mouvement ?
+N: 0.6
+U: s
+E: Le temps vaut course / vitesse = 0,3 m / 0,5 m/s = 0,6 s. Ce calcul sert à estimer une cadence de machine : avec une sortie et une rentrée, plus les temps de réaction, ce vérin ne dépassera pas une cinquantaine de cycles par minute.
+
+@048
+Q: Comment détecte-t-on habituellement la position du piston d'un vérin pneumatique ?
+C: Un capteur magnétique repère l'aimant du piston
+W: Un capteur de pression mesure la course parcourue
+W: Un fin de course optique lit la position de la tige
+W: Le distributeur signale lui-même la position
+E: La plupart des vérins ont un aimant annulaire dans le piston : un capteur magnétique, à lame souple ou électronique, fixé dans la rainure du tube détecte son passage. On le place en fin de course, voire en position intermédiaire. Le distributeur ignore où se trouve réellement le vérin.
+
+@049
+Q: Un vérin ne sort plus, alors que le distributeur commute bien et qu'on entend l'échappement. Que vérifier en premier ?
+C: Un réducteur de débit fermé ou un flexible pincé
+W: La tension d'alimentation du moteur du compresseur
+W: Le réglage du capteur de fin de course
+W: Le niveau d'huile du lubrificateur
+E: Si le distributeur commute, l'air part bien vers le vérin : le blocage se situe entre les deux. Un réducteur de débit vissé à fond, un flexible écrasé ou plié, un raccord obstrué empêchent l'air d'arriver. Le capteur ne fait que signaler la position et n'empêche pas le mouvement.
+
+@050
+Q: Remettre dans l'ordre le cycle d'un poste de perçage, la pièce étant bridée par le vérin A et percée par le vérin B.
+O: Brider la pièce (A sort)
+O: Descendre le foret (B sort)
+O: Remonter le foret (B rentre)
+O: Débrider la pièce (A rentre)
+E: La pièce reste bridée pendant tout le perçage : on ne débride qu'une fois le foret remonté. Ce cycle s'écrit A+ B+ B- A- ; chaque étape attend le capteur de fin de course de l'étape précédente, ce qui garantit la sécurité de la séquence.

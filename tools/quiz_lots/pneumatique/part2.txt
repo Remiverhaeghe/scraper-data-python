@@ -1,0 +1,387 @@
+@051
+Q: Quelle est la pression de service la plus courante d'un réseau d'air comprimé industriel ?
+C: 6 à 7 bar
+W: 0,5 à 1 bar
+W: 25 à 30 bar
+W: 150 à 200 bar
+E: Les composants pneumatiques standard sont dimensionnés pour 6 bar environ : le compresseur produit souvent 7 à 8 bar pour couvrir les pertes du réseau. Les pressions de plusieurs dizaines de bar concernent des usages spéciaux, et les centaines de bar l'hydraulique ou les bouteilles de gaz.
+
+@052
+Q: Une fuite consomme 300 l/min d'air libre pendant 6 000 heures par an. Produire 1 m³ d'air libre coûte 0,02 €. Combien coûte cette fuite par an ?
+N: 2160
+U: €
+T: 1
+E: 300 l/min font 18 m³ par heure, donc 108 000 m³ sur 6 000 heures. À 0,02 € le m³, la fuite coûte 2 160 € par an. Une campagne de recherche de fuites est souvent l'action d'économie la plus rentable d'un atelier.
+
+@053
+Q: Comment fonctionne un sécheur d'air frigorifique ?
+C: Il refroidit l'air pour condenser l'eau puis la purger
+W: Il chauffe l'air pour évaporer l'huile et l'eau qu'il contient
+W: Il comprime l'air une seconde fois pour le sécher
+W: Il filtre l'air au charbon actif pour retenir l'eau
+E: Le sécheur frigorifique refroidit l'air vers 3 °C : la vapeur d'eau se condense et une purge l'évacue, puis l'air se réchauffe avant de repartir. Il suffit pour un atelier abrité. Pour un air plus sec, au-dessous de 0 °C, on utilise un sécheur par adsorption. Le charbon actif retient les vapeurs d'huile, pas l'eau.
+
+@054
+Q: Que désigne le point de rosée sous pression d'un air comprimé ?
+C: La température où son eau commence à se condenser
+W: La pression à laquelle le compresseur s'arrête
+W: La température maximale admise par la cuve du réservoir
+W: L'humidité relative affichée au manomètre
+E: Plus le point de rosée est bas, plus l'air est sec : un air au point de rosée de 3 °C ne condensera pas tant que les conduites restent au-dessus de cette température. En extérieur l'hiver, il faut un point de rosée négatif, sinon l'eau gèle dans les flexibles.
+
+@055
+Q: Pourquoi faut-il purger régulièrement le réservoir d'air comprimé ?
+C: Pour évacuer l'eau condensée qui s'y accumule
+W: Pour faire baisser la pression maximale du réseau
+W: Pour ajouter de l'huile au compresseur
+W: Pour tester la soupape de sécurité du réservoir
+E: L'air se refroidit dans le réservoir et y dépose une grande partie de son eau. Non purgée, elle réduit le volume utile, corrode la cuve et repart dans le réseau. Une purge automatique, temporisée ou à détection de niveau, évite l'oubli.
+
+@056
+Q: Associer chaque équipement d'un réservoir d'air à son rôle.
+P: Soupape de sécurité => limite la pression maximale
+P: Purgeur => évacue l'eau condensée
+P: Manomètre => affiche la pression
+P: Pressostat => commande l'arrêt et le redémarrage du compresseur
+E: Le pressostat arrête le compresseur à la pression haute et le relance à la pression basse ; si ce réglage défaille, la soupape s'ouvre et protège la cuve. Le réservoir est un appareil sous pression soumis à des contrôles réglementaires périodiques.
+
+@057
+Q: À quoi sert l'amortissement réglable de fin de course d'un vérin ?
+C: Freiner le piston juste avant la butée
+W: Régler la vitesse sur toute la course
+W: Bloquer la tige en position intermédiaire
+W: Limiter la pression dans les chambres
+E: En fin de course, un tampon sur le piston ferme la sortie directe de l'air, qui doit passer par une petite vis de réglage : le piston ralentit sur les derniers millimètres et ne cogne plus. La vitesse sur toute la course se règle avec les réducteurs de débit.
+
+@058
+Q: Un compresseur de 15 kW tourne 4 000 heures par an à pleine charge ; l'électricité coûte 0,15 €/kWh. Quelle est sa facture annuelle ?
+N: 9000
+U: €
+T: 1
+E: L'énergie consommée vaut 15 kW × 4 000 h = 60 000 kWh, soit 60 000 × 0,15 = 9 000 € par an. Sur la durée de vie d'un compresseur, l'électricité représente bien plus que son prix d'achat.
+
+@059
+Q: Pourquoi abaisser la pression d'un réseau de 7 à 6 bar permet-il d'économiser de l'énergie ?
+C: Le compresseur fournit moins de travail
+W: L'air à 6 bar contient plus d'oxygène
+W: Les vérins vont plus vite à 6 bar
+W: Les fuites augmentent à basse pression
+E: Comprimer moins haut demande moins de travail : on estime l'économie à environ 7 % par bar. En prime, les fuites débitent moins à pression plus basse. Il faut seulement vérifier que les vérins gardent une marge d'effort suffisante.
+
+@060
+Q: Qu'appelle-t-on un électrodistributeur ?
+C: Un distributeur piloté par une bobine électrique
+W: Un distributeur qui transforme l'air en courant
+W: Un capteur qui mesure la pression du vérin
+W: Un compresseur d'atelier entraîné par un moteur électrique
+E: L'électrodistributeur fait le lien entre l'automate et la pneumatique : une sortie d'automate alimente la bobine, en 24 V continu le plus souvent, et le distributeur commute. On le reconnaît au rectangle de bobine dessiné contre la case du distributeur.
+
+@061
+Q: Pourquoi la plupart des électrodistributeurs sont-ils servopilotés ?
+C: Une petite bobine suffit à commuter un gros débit
+W: L'air rend la bobine étanche à l'eau
+W: Ils fonctionnent sans alimentation en air
+W: La bobine produit elle-même l'air de pilotage du tiroir
+E: La bobine ne commande qu'un petit clapet pilote ; c'est l'air du circuit qui déplace ensuite le tiroir principal. On obtient de gros débits avec une bobine de quelques watts. Il faut en contrepartie une pression minimale, souvent 2 à 3 bar, pour que le distributeur commute.
+
+@062
+Q: Associer chaque sigle à sa signification.
+P: FRL => filtre, régulateur, lubrificateur
+P: NF => normalement fermé
+P: NO => normalement ouvert
+P: ILS => interrupteur à lame souple
+P: API => automate programmable industriel
+E: Ces sigles reviennent sur tous les schémas et documentations : l'ILS est le capteur magnétique historique des vérins, l'API commande les électrodistributeurs, NF et NO décrivent l'état d'un distributeur ou d'un contact au repos.
+
+@063
+Q: Un vérin de diamètre 80 mm doit fournir 2 500 N avec un taux de charge de 0,7. Quelle pression faut-il ?
+N: 7.1
+U: bar
+T: 2
+E: La surface vaut π × 40² ≈ 5 026,5 mm². Avec un taux de charge de 0,7, la pression doit être P = F / (S × 0,7) = 2 500 / 3 518,6 ≈ 0,71 N/mm², soit 7,1 bar. Sur un réseau à 6 bar, ce vérin est trop petit : il faut passer au diamètre 100.
+
+@064
+Q: À la remise en air d'une machine, la porte pilotée par un vérin s'est refermée brutalement. Quel composant évite ce démarrage brutal ?
+C: Un démarreur progressif de mise en pression
+W: Un silencieux sur l'échappement du vérin
+W: Un sélecteur de circuit sur la commande
+W: Un lubrificateur à l'entrée de la machine
+E: À la remise en air, les chambres sont vides : les réducteurs à l'échappement ne freinent plus et le vérin part d'un coup. Le démarreur progressif laisse monter la pression lentement à travers un étranglement, puis s'ouvre en grand. On le monte après la vanne de sectionnement de la machine.
+
+@065
+Q: Remettre dans l'ordre le remplacement des joints d'un vérin installé sur une machine.
+O: Consigner la machine et purger l'air
+O: Repérer puis débrancher les flexibles
+O: Déposer le vérin de la machine
+O: Remplacer les joints puis remonter le vérin
+E: La consignation et la purge viennent toujours en premier. Repérer les flexibles avant de les débrancher évite d'inverser les chambres au remontage, erreur classique qui fait sortir un vérin au lieu de le rentrer. Après remontage, on refait les réglages de vitesse et des capteurs.
+
+@066
+Q: À très faible vitesse, la tige d'un vérin avance par à-coups. Quelle en est la cause ?
+C: Les frottements et la compressibilité de l'air
+W: Une pression de réseau beaucoup trop élevée pour le vérin
+W: Un distributeur de trop grande taille
+W: Un silencieux d'échappement trop neuf
+E: Le joint colle, la pression monte jusqu'à le décoller, la tige bondit, la pression chute et le joint colle de nouveau : c'est le broutement. Il apparaît sous quelques millimètres par seconde. On le réduit avec des joints bas frottement, un freinage à l'échappement ou un vérin hydropneumatique.
+
+@067
+Q: Pourquoi freine-t-on un vérin double effet à l'échappement plutôt qu'à l'alimentation ?
+C: La contre-pression stabilise le mouvement du piston
+W: L'alimentation du vérin n'accepte aucun réducteur de débit
+W: Cela économise la moitié de l'air consommé
+W: Le vérin développe alors un effort plus grand
+E: Freiné à l'échappement, le piston est tenu entre la pression d'alimentation et une contre-pression : il ne peut pas s'emballer si la charge l'entraîne. Freiné à l'alimentation, la chambre se remplit lentement par à-coups. Le freinage à l'alimentation reste la règle pour un vérin simple effet.
+
+@068
+Q: Un vérin vertical soulève une masse de 50 kg. Quelle force doit-il fournir au minimum (g = 9,81 m/s²) ?
+N: 490.5
+U: N
+T: 1
+E: Le poids vaut m × g = 50 × 9,81 = 490,5 N. C'est le minimum pour tenir la charge immobile ; pour la soulever avec une accélération et vaincre les frottements, on applique le taux de charge et on choisit un vérin nettement plus fort.
+
+@069
+Q: Un vérin doit fournir 1 500 N sous 6 bar avec un taux de charge de 0,7. Quel diamètre minimal de piston le calcul donne-t-il ?
+N: 67.4
+U: mm
+T: 2
+E: La surface nécessaire vaut S = F / (P × 0,7) = 1 500 / 0,42 ≈ 3 571 mm². Le diamètre vaut D = √(4 × S / π) ≈ 67,4 mm. Ce n'est pas un diamètre normalisé : il faut choisir le diamètre du catalogue juste au-dessus.
+
+@070
+Q: Le calcul donne un diamètre minimal de 67,4 mm. Quel vérin normalisé faut-il choisir ?
+C: 80 mm
+W: 63 mm
+W: 50 mm
+W: 32 mm
+E: Les diamètres normalisés courants sont 32, 40, 50, 63, 80 et 100 mm. Le 63 serait trop faible : sa surface de 3 117 mm² est inférieure aux 3 571 mm² nécessaires. On prend donc le diamètre supérieur, 80 mm, sans jamais arrondir vers le bas.
+
+@071
+Q: Un vérin à longue course pousse une charge et sa tige se met à fléchir. Que faut-il faire ?
+C: Choisir une tige plus grosse ou guider la charge
+W: Augmenter la pression du réseau d'alimentation de la machine
+W: Remplacer le vérin par un modèle simple effet
+W: Réduire le diamètre du piston du vérin
+E: Une tige longue et fine qui pousse risque le flambage, comme une règle qu'on comprime. On vérifie la course maximale admise dans le catalogue, on choisit une tige renforcée ou on guide la charge par des rails. Augmenter la pression aggraverait le problème.
+
+@072
+Q: Pourquoi faut-il éviter les efforts latéraux sur la tige d'un vérin ?
+C: Ils usent le palier et le joint de tige
+W: Ils font chuter la pression du réseau
+W: Ils inversent le sens de déplacement
+W: Ils bloquent le tiroir du distributeur
+E: Le vérin est conçu pour un effort dans l'axe : une charge en porte-à-faux appuie la tige sur son palier, ovalise le guidage et use le joint, d'où des fuites. On guide la charge séparément et on relie la tige par une chape à rotule qui absorbe les défauts d'alignement.
+
+@073
+Q: Associer chaque composant de préhension par le vide à son rôle.
+P: Éjecteur à effet Venturi => crée le vide à partir d'air comprimé
+P: Ventouse => saisit la pièce par dépression
+P: Vacuostat => confirme que le vide est atteint
+E: L'éjecteur accélère l'air comprimé dans un col étroit, ce qui aspire l'air de la ventouse. La ventouse plaquée sur la pièce la retient par la différence de pression. Le vacuostat informe l'automate que la pièce est bien saisie avant d'autoriser le déplacement.
+
+@074
+Q: Une ventouse lâche régulièrement des cartons d'emballage poussiéreux. Quelle est la cause probable ?
+C: Des fuites d'air à travers le carton poreux
+W: Une pression de réseau réglée trop haut
+W: Un silencieux trop gros sur l'éjecteur
+W: Un régulateur réglé exactement à 6 bar
+E: Le carton laisse passer l'air et la poussière empêche la lèvre de la ventouse de rester étanche : le vide s'effondre. On choisit une ventouse à lèvre souple, un éjecteur à plus fort débit d'aspiration, et on nettoie ou change régulièrement les filtres de vide.
+
+@075
+Q: Quelle force de maintien théorique offre une ventouse de diamètre 40 mm sous un vide de -0,6 bar ?
+N: 75.4
+U: N
+T: 2
+E: La surface vaut π × 20² ≈ 1 256,6 mm². Une dépression de 0,6 bar vaut 0,06 N/mm² : F = 0,06 × 1 256,6 ≈ 75,4 N, soit environ 7,7 kg. On applique ensuite un coefficient de sécurité de 2 à 4 selon les accélérations du mouvement.
+
+@076
+Q: Pourquoi une machine fiable attend-elle le signal d'un capteur de fin de course plutôt qu'une temporisation ?
+C: Le capteur confirme la position réellement atteinte
+W: La temporisation consomme davantage d'air comprimé à chaque cycle
+W: Le capteur fait avancer le vérin plus rapidement
+W: La temporisation use prématurément le distributeur
+E: Une temporisation suppose que le vérin est arrivé ; si une pièce bloque ou si la pression baisse, la suite du cycle s'enchaîne quand même et peut casser l'outillage. Le capteur confirme le mouvement réel et permet de signaler un défaut quand il n'arrive pas à temps.
+
+@077
+Q: Remettre dans l'ordre une campagne de lutte contre les fuites d'air.
+O: Mesurer la chute de pression, production arrêtée
+O: Localiser les fuites au détecteur à ultrasons
+O: Étiqueter puis réparer chaque fuite
+O: Refaire la mesure pour chiffrer le gain
+E: La première mesure, compresseurs arrêtés et machines à l'arrêt, chiffre les fuites de tout le réseau. La recherche aux ultrasons les localise, l'étiquetage permet de planifier les réparations, et la mesure finale prouve le gain. Une campagne par an évite que les fuites ne reviennent.
+
+@078
+Q: Un réseau et ses réservoirs font 2 000 litres. Production arrêtée, la pression chute de 7 à 6 bar en 5 minutes. Quel débit de fuite, en air libre, cela représente-t-il ?
+N: 400
+U: l/min
+T: 2
+E: Perdre 1 bar dans 2 000 litres revient à perdre 2 000 litres d'air libre (volume × chute de pression / pression atmosphérique). Sur 5 minutes, le débit de fuite vaut 2 000 / 5 = 400 l/min, soit environ 2,5 kW de compresseur gaspillés en permanence.
+
+@079
+Q: Pourquoi utilise-t-on un détecteur à ultrasons pour trouver les fuites d'air ?
+C: Le sifflement des fuites contient des ultrasons repérables
+W: Les ultrasons bouchent les petites fuites d'air
+W: L'appareil mesure la pression du réseau à distance, sans raccord
+W: Il chauffe l'air qui fuit pour le rendre visible
+E: Une fuite émet un bruit riche en ultrasons, inaudible dans le vacarme de l'atelier mais facile à isoler par l'appareil, qui le ramène dans le casque. On localise ainsi les fuites machines en marche, sans arrêter la production.
+
+@080
+Q: Quel critère détermine principalement la taille d'un distributeur pour un vérin ?
+C: Son débit, qui doit permettre la vitesse visée
+W: Le diamètre de piston du vérin, à reprendre tel quel
+W: La tension de sa bobine, qui fixe la vitesse
+W: La seule pression du réseau, sans le débit
+E: Un vérin de gros diamètre qui doit aller vite consomme un grand débit : un distributeur trop petit le bride. On compare le débit nominal du distributeur, Qn, au besoin calculé à partir du volume et du temps de mouvement. La tension de bobine n'a pas d'effet sur la vitesse.
+
+@081
+Q: Associer chaque coefficient de débit à sa définition.
+P: Qn => débit d'air sous 6 bar avec 1 bar de chute
+P: Cv => coefficient de débit d'origine américaine
+P: Kv => débit d'eau en m³/h sous 1 bar de chute
+E: Ces coefficients permettent de comparer des composants de marques différentes. Le Qn, en l/min, est le plus parlant en pneumatique ; le Kv vient de la robinetterie et le Cv des catalogues anglo-saxons, en gallons par minute. Des tables de conversion permettent de passer de l'un à l'autre.
+
+@082
+Q: Quel est l'intérêt d'un vérin sans tige ?
+C: Gagner de la place pour une longue course
+W: Doubler la force de poussée du piston
+W: Se passer complètement d'air comprimé
+W: Fonctionner sans aucun distributeur
+E: Un vérin à tige occupe au moins deux fois sa course en encombrement, tige sortie. Le vérin sans tige transmet le mouvement à un chariot qui se déplace le long du tube : l'encombrement est à peine supérieur à la course, idéal pour un transfert de plusieurs mètres.
+
+@083
+Q: En hiver, les vérins d'une ligne extérieure ralentissent et l'eau gèle dans un flexible. Que manque-t-il à l'installation ?
+C: Un séchage adapté à un point de rosée négatif
+W: Un lubrificateur de plus grande capacité
+W: Un silencieux sur chacun des vérins
+W: Une pression de réseau plus faible
+E: Un sécheur frigorifique sèche l'air jusqu'à 3 °C environ : à l'extérieur, sous 0 °C, l'eau restante se condense puis gèle. Il faut un sécheur par adsorption donnant un point de rosée de -20 °C ou -40 °C pour les conduites exposées au froid.
+
+@084
+Q: Pourquoi une presse pneumatique utilise-t-elle un distributeur de sécurité à double clapet surveillé ?
+C: Une seule panne ne doit pas faire descendre l'outil
+W: Il double la vitesse de descente de l'outil
+W: Il économise l'air consommé par la presse
+W: Il remplace à lui seul la commande bimanuelle de la presse
+E: Les fonctions de sécurité doivent résister à une défaillance : si un clapet reste collé, le second coupe quand même, et la surveillance détecte la panne pour interdire le cycle suivant. Ce principe de redondance surveillée vient de la norme ISO 13849-1 ; il complète la commande bimanuelle sans la remplacer.
+
+@085
+Q: Un vérin double effet de diamètre 32 mm, tige 10 mm, course 100 mm, fait 10 cycles par minute sous 6 bar. Quelle consommation d'air libre en l/min ?
+N: 10.71
+U: l/min
+T: 2
+E: Volume par cycle : côté fond 804,2 × 100 ≈ 80 400 mm³, côté tige (804,2 - 78,5) × 100 ≈ 72 600 mm³, soit 0,153 litre. En air libre à 7 bar absolus : 0,153 × 7 ≈ 1,07 litre par cycle, et 10,7 l/min à 10 cycles par minute, sans compter les volumes morts des flexibles.
+
+@086
+Q: Pourquoi exprime-t-on la consommation d'une machine en litres d'air libre (Nl) ?
+C: Pour comparer des débits pris à des pressions différentes
+W: Parce que les compresseurs comptent la masse d'air aspirée en kilogrammes
+W: Parce que l'air comprimé n'a pas de volume défini
+W: Parce que la norme interdit d'utiliser le bar
+E: Un litre d'air à 6 bar ne contient pas la même quantité d'air qu'un litre à 2 bar. Ramener tous les volumes aux conditions atmosphériques, en normolitres, permet d'additionner les consommations des machines et de les comparer au débit annoncé par le compresseur.
+
+@087
+Q: Pendant un arrêt de 30 s du compresseur, la machine consomme 1 500 l/min d'air libre et l'on accepte une baisse de pression de 1 bar. Quel volume de réservoir faut-il ?
+N: 750
+U: l
+T: 2
+E: L'air à fournir vaut 1 500 × 0,5 = 750 litres d'air libre. Un réservoir de volume V libère V litres d'air libre par bar de baisse : il faut donc V = 750 / 1 = 750 litres. Accepter 2 bar de baisse diviserait le volume par deux.
+
+@088
+Q: En fin de journée, les machines en bout de réseau ont des défauts de serrage alors que le compresseur affiche 7 bar. Quelle est la cause probable ?
+C: Des pertes de charge dans un réseau sous-dimensionné
+W: Un pressostat de compresseur réglé trop haut sur le réservoir
+W: Un sécheur d'air beaucoup trop efficace
+W: Des vérins de diamètre trop important
+E: Quand la consommation est forte, l'air frotte dans des conduites trop fines, des coudes et des raccords rapides : la pression baisse le long du réseau et les derniers postes manquent d'effort. On mesure la pression au poste, puis on agrandit les conduites ou on boucle le réseau.
+
+@089
+Q: Pourquoi distribue-t-on l'air d'un atelier par un réseau en boucle plutôt qu'en antenne ?
+C: L'air arrive par deux chemins, les pertes baissent
+W: La boucle supprime le besoin de réservoir
+W: Elle augmente la pression en sortie de compresseur
+W: Elle empêche toute condensation dans les tuyaux
+E: Dans une boucle, chaque poste est alimenté par les deux côtés : le débit se partage et les pertes de charge chutent, ce qui stabilise la pression même aux postes éloignés. Elle ne remplace ni le réservoir, ni le séchage de l'air.
+
+@090
+Q: Pourquoi les piquages sont-ils pris sur le dessus de la conduite principale ?
+C: Pour ne pas entraîner l'eau qui coule au fond
+W: Pour réduire le bruit de l'air dans le réseau
+W: Pour augmenter le débit disponible au poste
+W: Pour faciliter le montage des unités FRL
+E: L'eau qui reste malgré le séchage ruisselle au fond des conduites, posées avec une légère pente vers des points de purge. Un piquage en col de cygne, par le dessus, laisse cette eau dans la conduite au lieu de l'envoyer vers les machines.
+
+@091
+Q: Associer chaque norme à son domaine.
+P: ISO 1219 => symboles des schémas pneumatiques et hydrauliques
+P: ISO 8573-1 => classes de qualité de l'air comprimé
+P: ISO 15552 => dimensions normalisées des vérins
+P: ISO 13849-1 => sécurité des parties de commande des machines
+E: Ces normes rendent le matériel interchangeable et les schémas lisibles partout : un vérin ISO 15552 se remplace par celui d'une autre marque, une classe ISO 8573-1 fixe les teneurs en particules, eau et huile, et l'ISO 13849-1 encadre la conception des fonctions de sécurité.
+
+@092
+Q: Un compresseur produit 10 m³/min d'air libre et absorbe 60 kW. Quelle est son énergie spécifique, en kWh par m³ ?
+N: 0.1
+U: kWh/m³
+T: 2
+E: Il produit 600 m³ par heure pour 60 kWh consommés : 60 / 600 = 0,1 kWh/m³. Cet indicateur compare les compresseurs et suit l'efficacité d'une installation : il se dégrade avec les fuites, une pression excessive ou une marche à vide prolongée.
+
+@093
+Q: Quelle part de l'énergie électrique absorbée par un compresseur peut être récupérée sous forme de chaleur ?
+C: Jusqu'à environ 90 %
+W: Moins de 5 %
+W: Environ 25 %
+W: Aucune, elle part dans l'air
+E: Presque toute l'énergie absorbée se transforme en chaleur dans le compresseur. Un échangeur sur le circuit d'huile ou d'air de refroidissement peut chauffer de l'eau ou des locaux et récupérer jusqu'à 90 % de cette énergie, un gain important en hiver.
+
+@094
+Q: Quel est l'intérêt d'un compresseur à vitesse variable ?
+C: Adapter le débit à la demande sans marche à vide
+W: Atteindre une pression plus élevée en sortie de compresseur
+W: Se passer de sécheur et de filtration
+W: Réduire le bruit des vérins de l'atelier
+E: Un compresseur à vitesse fixe alterne charge et marche à vide, où il consomme encore 20 à 30 % de sa puissance sans rien produire. Le variateur ajuste la vitesse au besoin réel et tient une pression stable. Le gain est grand quand la consommation varie beaucoup.
+
+@095
+Q: Pourquoi la mise à l'échappement d'une machine lors d'un arrêt d'urgence peut-elle être dangereuse ?
+C: Une charge verticale peut retomber faute de pression
+W: Le réseau d'air de l'usine se vide aussitôt
+W: Le compresseur se met alors à s'emballer
+W: Les capteurs de position perdent leur réglage
+E: Vider les vérins supprime l'effort qui retient une charge : un outil de presse ou un bras vertical descend sous son propre poids. L'analyse de risques choisit, mouvement par mouvement, entre mise à l'échappement et blocage de la charge par des clapets pilotés ou un frein de tige.
+
+@096
+Q: Comment maintenir en place une charge verticale lors d'une coupure d'air ?
+C: Par des clapets pilotés ou un bloqueur de tige
+W: En laissant le distributeur en position centrale ouverte
+W: En augmentant le réglage du régulateur de pression
+W: En retirant le silencieux d'échappement du vérin
+E: Des clapets anti-retour pilotés montés directement sur le vérin emprisonnent l'air dans les chambres quand la pression de commande disparaît ; un bloqueur de tige serre mécaniquement la tige. Un centre ouvert ferait au contraire tomber la charge.
+
+@097
+Q: Un vérin de diamètre 100 mm et de course 500 mm doit sortir en 1 seconde. Quel volume d'air sous pression le distributeur doit-il faire passer chaque seconde, en l/s ?
+N: 3.927
+U: l/s
+T: 2
+E: Le volume de la chambre vaut π × 50² × 500 ≈ 3 927 000 mm³, soit 3,93 litres à remplir en une seconde : 3,93 l/s sous pression, ou environ 27,5 l/s d'air libre à 7 bar absolus. C'est ce débit qui sert à choisir le distributeur et la section des flexibles.
+
+@098
+Q: À quoi sert un régulateur pneumatique proportionnel ?
+C: Régler une pression en continu selon un signal électrique
+W: Doubler la pression disponible sur le réseau
+W: Remplacer les capteurs magnétiques de position de tous les vérins
+W: Fonctionner sans aucune alimentation en air
+E: Le régulateur proportionnel reçoit une consigne, par exemple 0-10 V ou 4-20 mA, et ajuste la pression de sortie en conséquence : l'automate peut faire varier l'effort de serrage ou de pressage selon la pièce. Il ne crée pas de pression au-delà de celle du réseau.
+
+@099
+Q: Une machine doit positionner une pièce en dix positions différentes, au dixième de millimètre. Quel actionneur faut-il choisir ?
+C: Un axe électrique avec servomoteur
+W: Un vérin pneumatique simple effet
+W: Un vérin pneumatique double effet
+W: Un vérin pneumatique à double tige
+E: L'air compressible ne permet pas de tenir une position intermédiaire précise : un vérin est fait pour aller d'une butée à l'autre. Un axe électrique, vis à billes ou courroie piloté par un servomoteur, atteint n'importe quelle position avec précision et répétabilité.
+
+@100
+Q: Un audit montre que 30 % de l'air produit part en fuites. Quelle action a le meilleur retour sur investissement ?
+C: Une campagne de recherche et de réparation des fuites
+W: L'achat d'un compresseur plus puissant
+W: Une hausse de la pression du réseau d'un bar pour compenser les pertes
+W: L'ajout d'un second réservoir d'air
+E: Réparer les fuites coûte quelques raccords et quelques heures, pour un gain immédiat de près d'un tiers de la facture d'air. Un compresseur plus gros produirait plus d'air perdu, et monter la pression ferait fuir davantage. La recherche de fuites doit devenir une routine de maintenance.

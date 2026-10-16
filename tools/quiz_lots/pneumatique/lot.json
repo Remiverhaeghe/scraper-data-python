@@ -1,0 +1,109 @@
+{
+  "lot": 1,
+  "seed": 905172604,
+  "skills": [
+    "pneumatique",
+    "vérin",
+    "distributeur pneumatique",
+    "air comprimé",
+    "électrodistributeur",
+    "FRL"
+  ],
+  "schemas": [
+    {
+      "name": "pneumatique-symboles-actionneurs.svg",
+      "questions": ["005"],
+      "alt": "Cinq symboles pneumatiques numérotés : actionneurs et production d'énergie",
+      "file": "schemas/symboles-actionneurs.svg",
+      "on_question": true
+    },
+    {
+      "name": "pneumatique-symboles-distribution.svg",
+      "questions": ["028", "029"],
+      "alt": "Cinq symboles pneumatiques numérotés : distribution et contrôle de l'air",
+      "file": "schemas/symboles-distribution.svg",
+      "on_question": true
+    },
+    {
+      "name": "pneumatique-effort-verin.svg",
+      "questions": ["009", "026", "027", "041"],
+      "alt": "Coupe d'un vérin double effet : surfaces côté fond et côté tige, F = P × S",
+      "file": "schemas/effort-verin.svg"
+    },
+    {
+      "name": "pneumatique-production-air.svg",
+      "questions": ["008", "014", "053", "055"],
+      "diagram": {
+        "title": "De la production de l'air à la machine",
+        "nodes": [
+          "Compresseur",
+          "Réservoir",
+          "Sécheur",
+          "Réseau en boucle",
+          "Unité FRL",
+          "Distributeur et vérin"
+        ],
+        "note": "L'eau se condense dans le réservoir et le sécheur : purges automatiques indispensables"
+      }
+    },
+    {
+      "name": "pneumatique-frl.svg",
+      "questions": ["015", "035", "037"],
+      "diagram": {
+        "title": "Unité de traitement de l'air (FRL)",
+        "nodes": [
+          "Air du réseau",
+          "Filtre : eau et particules",
+          "Régulateur : pression de travail",
+          "Lubrificateur, si nécessaire",
+          "Machine"
+        ]
+      }
+    },
+    {
+      "name": "pneumatique-vitesse-verin.svg",
+      "questions": ["012", "030", "067"],
+      "diagram": {
+        "title": "Réglage de vitesse d'un vérin double effet",
+        "nodes": [
+          "Distributeur 5/2",
+          "Clapet : l'air entre librement",
+          "Vérin double effet",
+          "Étranglement : l'air sortant est freiné",
+          "Silencieux"
+        ],
+        "note": "Freiner l'air qui sort crée une contre-pression : mouvement régulier même si la charge varie"
+      }
+    },
+    {
+      "name": "pneumatique-consignation.svg",
+      "questions": ["031", "032", "065"],
+      "diagram": {
+        "title": "Mise en sécurité pneumatique avant intervention",
+        "nodes": [
+          "Fermer la vanne",
+          "Condamner",
+          "Purger l'air résiduel",
+          "Vérifier 0 bar",
+          "Intervenir"
+        ],
+        "note": "L'air piégé dans un vérin reste une énergie dangereuse tant qu'il n'est pas purgé"
+      }
+    },
+    {
+      "name": "pneumatique-cycle-percage.svg",
+      "questions": ["050", "076"],
+      "diagram": {
+        "title": "Cycle du poste de perçage : A+ B+ B- A-",
+        "nodes": [
+          "A+ brider",
+          "B+ percer",
+          "B- remonter",
+          "A- débrider"
+        ],
+        "feedback": [3, 0, "pièce suivante"],
+        "note": "Chaque étape attend le capteur de fin de course de la précédente"
+      }
+    }
+  ]
+}

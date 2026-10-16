@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="330" viewBox="0 0 860 330" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="fleche-effort" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 z" fill="#b45309"/>
+    </marker>
+  </defs>
+  <rect width="860" height="330" fill="#ffffff"/>
+  <text x="430" y="28" text-anchor="middle" font-size="17" font-weight="bold" fill="#0f172a">Effort d'un vérin double effet : F = P × S</text>
+  <rect x="120" y="90" width="400" height="110" fill="#e0f2fe" stroke="#0369a1" stroke-width="2.5"/>
+  <rect x="300" y="90" width="18" height="110" fill="#94a3b8" stroke="#0f172a" stroke-width="2"/>
+  <rect x="318" y="131" width="420" height="28" fill="#cbd5e1" stroke="#0f172a" stroke-width="2"/>
+  <g stroke="#0f172a" stroke-width="2.5">
+    <line x1="150" y1="200" x2="150" y2="240"/>
+    <line x1="490" y1="200" x2="490" y2="240"/>
+  </g>
+  <g stroke="#b45309" stroke-width="3" fill="none">
+    <line x1="745" y1="145" x2="820" y2="145" marker-end="url(#fleche-effort)"/>
+    <line x1="190" y1="145" x2="285" y2="145" marker-end="url(#fleche-effort)"/>
+  </g>
+  <g font-size="15" fill="#0f172a" text-anchor="middle">
+    <text x="210" y="80">Chambre côté fond</text>
+    <text x="210" y="122">surface S = π × D² / 4</text>
+    <text x="420" y="80">Chambre côté tige</text>
+    <text x="420" y="122">surface S − s</text>
+    <text x="150" y="258">orifice fond</text>
+    <text x="490" y="258">orifice tige</text>
+    <text x="640" y="125">tige : surface s = π × d² / 4</text>
+  </g>
+  <g font-size="15" fill="#b45309" text-anchor="middle" font-weight="bold">
+    <text x="240" y="170">P</text>
+    <text x="790" y="132">F</text>
+  </g>
+  <g font-size="15" fill="#334155">
+    <text x="40" y="290">Sortie de tige : F = P × S        Rentrée : F = P × (S − s), plus faible</text>
+    <text x="40" y="314">Unités pratiques : 1 bar = 0,1 N/mm², donc 6 bar = 0,6 N/mm²</text>
+  </g>
+</svg>

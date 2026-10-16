@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="230" viewBox="0 0 900 230" font-family="Arial, sans-serif">
+  <rect width="900" height="230" fill="#ffffff"/>
+  <text x="450" y="26" text-anchor="middle" font-size="17" font-weight="bold" fill="#0f172a">Symboles pneumatiques : actionneurs et production d'énergie</text>
+  <g stroke="#0f172a" stroke-width="2.5" fill="none" stroke-linejoin="round">
+    <rect x="45" y="95" width="110" height="36"/>
+    <line x1="70" y1="95" x2="70" y2="131"/>
+    <line x1="70" y1="113" x2="185" y2="113"/>
+    <polyline points="76,98 84,128 92,98 100,128 108,98 116,128 124,98 132,128 140,98 148,128" stroke-width="1.8"/>
+    <line x1="55" y1="131" x2="55" y2="170"/>
+    <rect x="235" y="95" width="110" height="36"/>
+    <line x1="275" y1="95" x2="275" y2="131"/>
+    <line x1="275" y1="113" x2="375" y2="113"/>
+    <line x1="245" y1="131" x2="245" y2="170"/>
+    <line x1="335" y1="131" x2="335" y2="170"/>
+    <circle cx="470" cy="113" r="26"/>
+    <polygon points="470,89 461,104 479,104"/>
+    <line x1="470" y1="87" x2="470" y2="50"/>
+    <circle cx="630" cy="113" r="26"/>
+    <polygon points="621,92 639,92 630,107"/>
+    <line x1="630" y1="87" x2="630" y2="50"/>
+    <rect x="745" y="95" width="80" height="36" rx="18"/>
+    <line x1="785" y1="95" x2="785" y2="50"/>
+  </g>
+  <g font-size="20" font-weight="bold" fill="#0369a1" text-anchor="middle">
+    <text x="105" y="214">1</text>
+    <text x="300" y="214">2</text>
+    <text x="470" y="214">3</text>
+    <text x="630" y="214">4</text>
+    <text x="785" y="214">5</text>
+  </g>
+</svg>
