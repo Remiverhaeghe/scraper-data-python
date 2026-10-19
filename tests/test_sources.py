@@ -6,9 +6,31 @@ from pathlib import Path
 PROJECT_DIRECTORY = Path(__file__).resolve().parents[1]
 
 # Dossiers écrits par l'application ou les outils, hors du code relu
-IGNORED_DIRECTORIES = {".git", ".venv", "venv", "data", "logs", "output", "__pycache__"}
+IGNORED_DIRECTORIES = {
+    ".git",
+    ".venv",
+    "venv",
+    "data",
+    "logs",
+    "output",
+    "__pycache__",
+    # Fichiers générés par Flutter
+    ".dart_tool",
+    "build",
+}
 
-CHECKED_SUFFIXES = {".py", ".html", ".css", ".js", ".json", ".md", ".txt", ".qss"}
+CHECKED_SUFFIXES = {
+    ".py",
+    ".html",
+    ".css",
+    ".js",
+    ".json",
+    ".md",
+    ".txt",
+    ".qss",
+    ".dart",
+    ".yaml",
+}
 
 # Caractères de contrôle, sauf tabulation et fins de ligne : une séquence mal
 # échappée dans un script devient ainsi un caractère invisible.

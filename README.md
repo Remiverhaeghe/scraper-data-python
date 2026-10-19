@@ -318,6 +318,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Accès au tableau de bord web à distance sans ouvrir de port sur Internet, par un réseau privé (procédure Tailscale ci-dessous)
 - [x] Lancement d'une recherche depuis le web, avec la même file d'exécution que le planificateur
 - [x] Application installable sur l'écran d'accueil (manifeste web et icône)
+- [x] Application mobile Flutter de révision hors ligne (`mobile/`) : QCM, calculs, remises en ordre, associations, schémas et guides, répétition espacée, réponses envoyées au retour du réseau
 
 ### Hébergement et sécurité
 
@@ -438,8 +439,9 @@ Internet, ce que l'accès par Tailscale évite justement.
 
 ### API de l'application mobile de révision
 
-Une application mobile séparée peut réviser hors ligne puis envoyer ses réponses. Le jeton
-se crée dans Paramètres, « Application mobile », avec l'adresse à saisir dans l'application.
+L'application Flutter du dossier `mobile/` révise hors ligne puis envoie ses réponses :
+installation, compilation et premier lancement dans [mobile/README.md](mobile/README.md). Le
+jeton se crée dans Paramètres, « Application mobile », avec l'adresse à saisir dans l'application.
 Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune session n'est utilisée.
 
 | Méthode | Adresse | Rôle |
@@ -759,6 +761,8 @@ scraper-data-python/
 │       ├── catalog.json                       # Catalogue des thèmes par domaine, avec les mots des offres
 │       ├── prompt.txt                         # Texte et règles de la demande
 │       └── correction.txt                     # Demande de correction d'un lot signalé
+│
+├── mobile/                                    # Application mobile Flutter de révision (mobile/README.md)
 │
 ├── docs/                                      # Documentation complémentaire
 │   └── consignes-qcm-chatgpt.md               # Génération des QCM avec ChatGPT et évolution du catalogue

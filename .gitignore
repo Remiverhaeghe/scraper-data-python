@@ -206,6 +206,19 @@ logs/
 .env.*
 !.env.example
 
+# Application mobile Flutter : fichiers générés et propres au poste
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/**/*.iml
+mobile/.idea/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/android/app/*.jks
+mobile/android/app/*.keystore
+
 # Configuration locale de l'éditeur
 CLAUDE.md
 .claude/

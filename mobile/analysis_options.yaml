@@ -1,0 +1,8 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Les journaux passent par dart:developer, jamais par print.
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_final_locals: true
