@@ -1,5 +1,6 @@
 """Configuration générale de l'application"""
 
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -45,9 +46,9 @@ MAX_RESPONSE_SIZE_MB = 5.0
 # Ratio brut vers net avant impôt, valeur prudente correspondant au statut cadre
 NET_SALARY_RATIO = 0.75
 
-# Tableau de bord web : écoute locale uniquement tant qu'aucune authentification
-# n'est en place
-WEB_HOST = "127.0.0.1"
+# Tableau de bord web : écoute locale par défaut. WEB_HOST dans .env l'ouvre au
+# réseau, par exemple l'adresse Wi-Fi du PC pour l'application mobile.
+WEB_HOST = os.getenv("WEB_HOST") or "127.0.0.1"
 WEB_PORT = 8000
 
 # Une offre est signalée comme nouvelle pendant ce nombre de jours

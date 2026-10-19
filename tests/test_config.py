@@ -1,6 +1,11 @@
 """Tests de la configuration générale de l'application"""
 
-from config import DATABASE_FILE, WEB_HOST
+import importlib
+
+import pytest
+
+import config
+from config import DATABASE_FILE
 
 
 def test_database_file_is_configured():
@@ -9,7 +14,21 @@ def test_database_file_is_configured():
     assert DATABASE_FILE == "data/scraper.db"
 
 
-def test_web_dashboard_listens_locally():
-    """Vérifie que le tableau de bord n'écoute que sur ce poste par défaut."""
+@pytest.mark.parametrize(
+    "pValue, pExpected", [("", "127.0.0.1"), ("192.168.1.80", "192.168.1.80")]
+)
+def test_web_host_defaults_to_this_computer(monkeypatch, pValue, pExpected):
+    """Vérifie l'écoute locale par défaut, et l'adresse choisie dans .env sinon.
 
-    assert WEB_HOST == "127.0.0.1"
+    La variable est fixée avant le rechargement : load_dotenv ne remplace pas une
+    variable déjà définie, le .env du poste n'influence donc pas le test.
+    """
+
+    monkeypatch.setenv("WEB_HOST", pValue)
+
+    try:
+        assert importlib.reload(config).WEB_HOST == pExpected
+
+    finally:
+        monkeypatch.undo()
+        importlib.reload(config)

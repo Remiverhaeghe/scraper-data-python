@@ -395,9 +395,19 @@ sans exposer ce PC sur Internet, un réseau privé chiffré relie le téléphone
 
 1. Installer Tailscale (offre gratuite personnelle) sur le PC et sur le téléphone, avec le même compte.
 2. Sur le PC, lancer le tableau de bord en écoutant sur l'adresse Tailscale du PC (100.x.y.z,
-   visible dans l'application Tailscale) : modifier `WEB_HOST` dans `config.py`, ou
-   lancer `uvicorn web.app:app --host 100.x.y.z --port 8000`.
+   visible dans l'application Tailscale) : `WEB_HOST=100.x.y.z` dans `.env`, puis
+   `python -m web`.
 3. Depuis le téléphone, ouvrir `http://100.x.y.z:8000`, puis se connecter.
+
+Sur le Wi-Fi de la maison, sans Tailscale :
+
+1. `WEB_HOST` dans `.env` reçoit l'adresse Wi-Fi du PC (`ipconfig`, carte Wi-Fi), par
+   exemple `192.168.1.80`. Le serveur n'écoute plus alors que sur cette adresse :
+   depuis le PC aussi, le tableau de bord s'ouvre à `http://192.168.1.80:8000`.
+2. Le Wi-Fi est en réseau « Privé » dans Windows, et le pare-feu autorise le port 8000
+   sur les réseaux privés seulement : sur un Wi-Fi public, le PC reste fermé.
+3. L'adresse du PC peut changer au redémarrage de la box : la réserver pour le PC dans
+   les réglages de la box (bail DHCP fixe) évite de la ressaisir.
 
 Aucun port n'est ouvert sur la box : seuls les appareils de votre compte Tailscale
 atteignent le PC. L'authentification du tableau de bord reste obligatoire. Pour lancer une
