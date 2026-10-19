@@ -24,7 +24,18 @@ flutter doctor
 
 `flutter doctor` doit valider Flutter et la chaîne Android.
 
-## Création des dossiers Android (une fois)
+Sur le poste de développement, l'installation est faite sans Android Studio :
+Flutter dans `C:\flutter`, SDK Android dans `C:\Android\sdk` (`ANDROID_HOME`) et
+JDK 17 dans `C:\Android\jdk17`. Ce JDK est indiqué à Flutter seul
+(`flutter config --jdk-dir C:\Android\jdk17`) : le `JAVA_HOME` du système, en
+Java 8, reste inchangé pour les autres programmes.
+
+Le nom d'utilisateur Windows contient un accent : les outils de compilation C++
+d'un paquet natif échouent sur un tel chemin. Les caches sont donc placés hors du
+dossier utilisateur, par les variables `PUB_CACHE=C:\Android\pub-cache` et
+`GRADLE_USER_HOME=C:\Android\gradle`.
+
+## Création des dossiers Android (déjà faite)
 
 Le code Dart est dans le dépôt ; les dossiers propres à chaque plateforme sont
 générés par Flutter, sans toucher aux fichiers existants :
@@ -38,7 +49,7 @@ git status
 Vérifier avec `git status` qu'aucun fichier de `lib/` ou `test/` n'a été modifié ;
 sinon le rétablir avec `git checkout -- <fichier>`.
 
-Puis, dans `android/app/src/main/AndroidManifest.xml` :
+Dans `android/app/src/main/AndroidManifest.xml`, déjà modifié :
 
 - ajouter `<uses-permission android:name="android.permission.INTERNET"/>` juste
   avant la balise `<application>` : sans elle, la version installée n'accède pas
