@@ -34,6 +34,48 @@
         }
     });
 
+    // Cartes titrées : un chevron dans le titre replie la carte. L'état est gardé
+    // par page et par titre ; sans JavaScript, les cartes restent ouvertes.
+    document.querySelectorAll("article.card > h2:first-child").forEach(function (pTitle) {
+        var vCard = pTitle.parentElement;
+        var vKey = "card:" + location.pathname + ":" + pTitle.textContent.trim();
+        var vButton = document.createElement("button");
+
+        vButton.type = "button";
+        vButton.className = "card-toggle";
+
+        function setOpen(pOpen) {
+            vCard.classList.toggle("is-collapsed", !pOpen);
+            vButton.setAttribute("aria-expanded", pOpen ? "true" : "false");
+            vButton.setAttribute("aria-label", pOpen ? "Réduire" : "Afficher");
+            vButton.title = pOpen ? "Réduire" : "Afficher";
+        }
+
+        var vOpen = true;
+
+        try {
+            vOpen = localStorage.getItem(vKey) !== "1";
+        } catch (pError) {
+            vOpen = true;
+        }
+
+        setOpen(vOpen);
+        pTitle.classList.add("card-title");
+        pTitle.appendChild(vButton);
+
+        vButton.addEventListener("click", function () {
+            var vNowOpen = vCard.classList.contains("is-collapsed");
+
+            setOpen(vNowOpen);
+
+            try {
+                localStorage.setItem(vKey, vNowOpen ? "0" : "1");
+            } catch (pError) {
+                // Stockage indisponible : la carte se rouvrira au prochain affichage.
+            }
+        });
+    });
+
     // Blocs repliables : l'état choisi est gardé d'une page à l'autre, quand le
     // navigateur le permet (navigation privée, stockage bloqué).
     document.querySelectorAll("details[data-remember]").forEach(function (pDetails) {

@@ -33,6 +33,7 @@ SERIES_ICONS = {
     "Réécrire": "pencil",
     "Intégrer": "git-merge",
     "Travailler à plusieurs": "users",
+    "Cas de la vraie vie": "briefcase",
 }
 
 
@@ -311,6 +312,77 @@ LEVELS = (
         ("git commit", "@clone"),
         ("git switch -c revue", "git commit", "git push origin revue"),
         "Trois commandes : créer et se placer, valider, envoyer.",
+    ),
+    GitLevel(
+        "mauvaise-branche",
+        "Un commit sur la mauvaise branche",
+        "Cas de la vraie vie",
+        "Vous avez validé C2 sur `main` alors qu'il devait ouvrir la branche "
+        "`fonction`. Rien n'est encore envoyé : on peut réécrire l'historique local. "
+        "Une étiquette posée sur C2 le garde, puis `main` recule d'un cran.\n\n"
+        "Objectif : C2 sur la branche `fonction`, `main` revenu sur C1, et vous "
+        "placé sur `fonction` pour continuer.",
+        ("git commit", "git commit"),
+        ("git branch fonction", "git reset HEAD~1", "git switch fonction"),
+        "Créez d'abord la branche sur C2, sinon le reset le rendrait introuvable.",
+    ),
+    GitLevel(
+        "correctif-urgent",
+        "Un correctif urgent",
+        "Cas de la vraie vie",
+        "La production, sur `main`, a un bogue. Vous êtes sur `develop`, avec deux "
+        "commits pas encore prêts. Le correctif doit partir de `main`, sans votre "
+        "travail en cours, puis rejoindre aussi `develop` pour ne pas réapparaître "
+        "à la prochaine version.\n\n"
+        "Objectif : une branche `correctif` partie de `main` avec un commit, fusionnée "
+        "dans `main`, puis `main` fusionnée dans `develop`.",
+        ("git commit", "git switch -c develop", "git commit", "git commit"),
+        (
+            "git switch main",
+            "git switch -c correctif",
+            "git commit",
+            "git switch main",
+            "git merge correctif",
+            "git switch develop",
+            "git merge main",
+        ),
+        "Revenez sur main avant de créer la branche du correctif.",
+    ),
+    GitLevel(
+        "reporter-correctif",
+        "Reporter un correctif sur une version maintenue",
+        "Cas de la vraie vie",
+        "La version 1 est livrée et maintenue sur la branche `version-1`. Depuis, "
+        "`main` a reçu une évolution (C2) puis un correctif de sécurité (C3). Les "
+        "clients de la version 1 ont besoin du correctif, pas de l'évolution.\n\n"
+        "Objectif : une copie de C3 seule sur `version-1`.",
+        ("git commit", "git branch version-1", "git commit", "git commit"),
+        ("git switch version-1", "git cherry-pick C3"),
+        "Placez-vous sur la branche qui doit recevoir la copie.",
+    ),
+    GitLevel(
+        "corriger-avant-envoi",
+        "Corriger avant d'envoyer",
+        "Cas de la vraie vie",
+        "Votre dernier commit, C2, contient une faute dans son message, mais il "
+        "n'est pas encore envoyé : on peut le remplacer sans gêner personne. Une fois "
+        "envoyé, il faudrait au contraire le laisser tel quel.\n\n"
+        "Objectif : remplacer C2 par sa version corrigée, puis l'envoyer au serveur.",
+        ("git commit", "@clone", "git commit"),
+        ("git commit --amend", "git push"),
+        "Corrigez d'abord en local, envoyez ensuite.",
+    ),
+    GitLevel(
+        "defaire-un-envoi",
+        "Défaire un commit déjà envoyé",
+        "Cas de la vraie vie",
+        "C2 est sur le serveur et casse l'application. Vos collègues l'ont peut-être "
+        "déjà récupéré : un reset suivi d'un envoi forcé leur ferait perdre "
+        "l'historique. On ajoute plutôt un commit qui l'annule.\n\n"
+        "Objectif : annuler C2 par un nouveau commit, puis l'envoyer.",
+        ("git commit", "@clone", "git commit", "git push"),
+        ("git revert C2", "git push"),
+        "Ce qui est partagé s'annule par revert, jamais par reset.",
     ),
 )
 

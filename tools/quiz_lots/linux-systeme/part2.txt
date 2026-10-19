@@ -1,0 +1,455 @@
+@051
+Q: Que fait set -euo pipefail en tête d'un script bash ?
+C: Il stoppe le script à la moindre erreur
+W: Il affiche chaque commande avant de l'exécuter
+W: Il interdit au script de modifier des fichiers
+W: Il lance le script avec les droits de root
+E: -e arrête à la première commande en échec ; -u refuse une variable non définie, ce qui évite un rm -rf "$DOSSIER/" avec DOSSIER vide ; pipefail fait échouer un tube si une de ses commandes échoue, pas seulement la dernière. set -x, lui, affiche les commandes exécutées.
+
+@052
+Q: Pourquoi cette commande est-elle dangereuse si la variable CIBLE est vide ?
+C: Elle devient rm -rf /*, qui efface tout le système
+W: Elle ne fait rien, rm ignore les chemins vides
+W: Elle efface seulement le dossier courant
+W: Elle demande une confirmation avant d'effacer
+E: Avec CIBLE vide, le chemin devient /* : toute la racine. set -u ou la forme ${CIBLE:?} arrêtent le script si la variable est vide. Des incidents réels ont effacé des serveurs pour cette raison. On teste aussi les scripts destructeurs avec un echo devant la commande.
+```bash
+rm -rf "$CIBLE"/*
+```
+
+@053
+Q: Qu'affiche ce script si le fichier /etc/app.conf n'existe pas ?
+C: Configuration absente
+W: Configuration trouvée
+W: Rien, le test est ignoré
+W: Une erreur de syntaxe
+E: [ -f fichier ] est vrai si le fichier existe et est un fichier ordinaire ; -d teste un dossier, -e n'importe quel élément. Les espaces autour des crochets sont obligatoires : [-f ...] provoque une erreur « commande introuvable ». En bash, [[ ]] offre une syntaxe plus souple.
+```bash
+if [ -f /etc/app.conf ]; then
+  echo "Configuration trouvée"
+else
+  echo "Configuration absente"
+fi
+```
+
+@054
+Q: Que vaut $# dans un script lancé par ./deploy.sh prod 2.4 ?
+N: 2
+E: $# donne le nombre d'arguments, ici prod et 2.4 ; $1 vaut prod, $2 vaut 2.4, et "$@" les liste tous en gardant chacun intact. Un script robuste vérifie $# au départ et affiche son usage si les arguments manquent.
+
+@055
+Q: À quoi sert la fonction trap dans ce script ?
+C: À supprimer le dossier temporaire à la sortie
+W: À intercepter les erreurs pour les cacher à l'utilisateur
+W: À créer le dossier temporaire avant chaque commande
+W: À empêcher l'utilisateur d'interrompre le script avec Ctrl+C
+E: trap ... EXIT exécute la commande quand le script se termine, normalement, sur erreur avec set -e ou sur interruption. mktemp -d crée un dossier au nom unique, sans collision avec un autre script. Le ménage est ainsi garanti sans le répéter à chaque sortie.
+```bash
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+```
+
+@056
+Q: Comment écrire un fichier d'unité systemd pour lancer une application Python au démarrage ?
+C: Une section [Service] avec ExecStart, et [Install]
+W: Une ligne @reboot dans le fichier /etc/fstab
+W: Un script placé dans /etc/passwd avec le nom du service
+W: Une entrée dans /etc/hosts qui pointe vers le script
+E: Le fichier /etc/systemd/system/app.service décrit la commande (ExecStart), l'utilisateur (User), la politique de redémarrage (Restart=on-failure) et quand l'activer (WantedBy=multi-user.target). Puis systemctl daemon-reload et systemctl enable --now app. systemd redémarre l'application si elle plante.
+
+@057
+Q: Que fait la ligne Restart=on-failure de cette unité ?
+C: Elle relance l'application si elle s'arrête en erreur
+W: Elle relance l'application chaque nuit à heure fixe
+W: Elle empêche l'application de s'arrêter un jour
+W: Elle redémarre le serveur entier si l'application plante
+E: Si le processus se termine avec un code d'erreur ou un signal, systemd le relance après RestartSec. Restart=always relancerait aussi après un arrêt normal. Si l'application plante en boucle, systemd finit par abandonner selon StartLimitBurst, et status l'indique.
+```ini
+[Service]
+User=app
+ExecStart=/opt/app/venv/bin/python -m app
+Restart=on-failure
+RestartSec=5
+```
+
+@058
+Q: Pourquoi faire tourner une application sous un utilisateur dédié plutôt qu'en root ?
+C: Une faille ne donne pas la main sur tout le serveur
+W: Les applications vont plus vite sous un utilisateur normal
+W: root ne peut pas écouter sur un port réseau
+W: Les journaux ne s'écrivent pas quand le service tourne en root
+E: Un attaquant qui exploite une faille obtient les droits du processus : en root, tout le serveur ; sous un utilisateur app, seulement ses fichiers. On combine avec des droits de fichiers stricts et, dans systemd, des options de cloisonnement comme ProtectSystem ou NoNewPrivileges.
+
+@059
+Q: Quelle commande donne la charge moyenne du système sur 1, 5 et 15 minutes ?
+C: uptime
+W: date
+W: whoami
+W: hostname
+E: uptime affiche depuis quand le serveur tourne, le nombre de sessions et la charge moyenne : le nombre moyen de processus actifs ou en attente. Sur 4 processeurs, une charge durable au-dessus de 4 indique une saturation. top affiche les mêmes chiffres en en-tête.
+
+@060
+Q: Un serveur a 4 cœurs et uptime affiche une charge de 12 sur 15 minutes. Que conclure ?
+C: Le serveur est saturé depuis un bon moment
+W: Le serveur est presque inactif sur cette période
+W: Le serveur a redémarré 12 fois en un quart d'heure
+W: Douze utilisateurs sont connectés en même temps
+E: La charge compte les processus qui tournent ou attendent le processeur, ou un disque. 12 pour 4 cœurs signifie en moyenne trois fois plus de demandes que de capacité, sur 15 minutes : un problème durable, pas un pic. On regarde ensuite top pour le processus en cause, et iostat si l'attente vient du disque.
+
+@061
+Q: Que montre la commande free -h ?
+C: La mémoire vive et le swap utilisés et disponibles
+W: L'espace libre sur chaque disque du serveur
+W: Les processus qui consomment le plus de mémoire
+W: La vitesse de la mémoire en gigahertz
+E: free indique la mémoire totale, utilisée, en cache et disponible. Linux utilise la mémoire libre comme cache disque : la colonne available, et non free, dit ce qui reste vraiment pour les applications. Un swap très sollicité signale un manque de mémoire.
+
+@062
+Q: Que s'est-il passé d'après ce message du noyau ?
+C: Le système, à court de mémoire, a tué le processus java
+W: Le processus java s'est arrêté normalement à la fin de sa tâche
+W: Le disque est plein et java ne peut plus écrire ses fichiers
+W: Un administrateur a arrêté java avec la commande kill
+E: L'OOM killer intervient quand la mémoire est épuisée : il choisit un processus, souvent le plus gros, et le tue pour sauver le système. On le trouve avec dmesg ou journalctl -k. La correction passe par une limite de mémoire de l'application, comme -Xmx pour Java, ou plus de mémoire.
+```
+Out of memory: Killed process 2314 (java) total-vm:8123456kB, anon-rss:3876543kB
+```
+
+@063
+Q: Le disque est plein à 100 %, mais du ne trouve pas les fichiers responsables. Quelle est une cause fréquente ?
+C: Un fichier supprimé est encore ouvert par un processus
+W: Le disque est défectueux et affiche une taille fausse
+W: Les fichiers cachés ne sont jamais comptés par df
+W: Le système de fichiers est monté en lecture seule
+E: Un journal supprimé pendant qu'une application l'écrit reste sur le disque tant que le processus le garde ouvert : df le compte, du ne le voit plus. lsof +L1 liste ces fichiers. Redémarrer ou faire rouvrir ses journaux au processus libère l'espace ; on vide plutôt un journal avec truncate.
+
+@064
+Q: Quelle commande vide un journal en cours d'écriture sans le supprimer ?
+C: truncate -s 0 /var/log/app.log
+W: rm /var/log/app.log
+W: mv /var/log/app.log /tmp
+W: chmod 000 /var/log/app.log
+E: truncate ramène la taille du fichier à zéro ; le processus continue d'écrire dans le même fichier et l'espace est libéré aussitôt. rm ou mv laisseraient l'espace occupé tant que le processus garde le fichier ouvert. chmod ne libère rien et peut faire planter l'application.
+
+@065
+Q: À quoi sert logrotate ?
+C: Faire tourner, compresser et supprimer les vieux journaux
+W: Transférer les journaux vers un serveur distant en continu
+W: Chiffrer les journaux qui contiennent des données sensibles
+W: Lire les journaux et envoyer une alerte en cas d'erreur
+E: logrotate, lancé chaque jour, renomme app.log en app.log.1, compresse les plus anciens et supprime au-delà d'un nombre de rotations. Ses règles sont dans /etc/logrotate.d/. Sans lui, un journal grossit jusqu'à remplir le disque. copytruncate convient aux applications qui ne rouvrent pas leur fichier.
+
+@066
+Q: Que fait cette configuration logrotate ?
+C: Une rotation par jour, 14 archives gardées et compressées
+W: Une rotation tous les 14 jours, une seule archive gardée
+W: Une suppression des journaux de plus de 14 heures
+W: Une copie quotidienne vers 14 serveurs différents
+E: daily déclenche une rotation par jour ; rotate 14 garde quatorze anciennes versions ; compress les compresse ; delaycompress laisse la plus récente non compressée, pratique pour la consulter ; missingok et notifempty évitent les erreurs et les rotations inutiles.
+```
+/var/log/app/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+}
+```
+
+@067
+Q: Remettre dans l'ordre l'ajout d'un disque de données sur un serveur.
+O: Repérer le nouveau disque avec lsblk
+O: Créer un système de fichiers avec mkfs.ext4
+O: Le monter sur /srv/donnees avec mount
+O: L'ajouter à /etc/fstab par son UUID pour le montage au démarrage
+E: lsblk liste les disques et partitions ; mkfs formate, ce qui efface le disque : on vérifie deux fois le nom. On monte, on teste, puis on ajoute la ligne à fstab avec l'UUID donné par blkid, plus stable qu'un nom comme /dev/sdb qui peut changer. mount -a vérifie fstab avant un redémarrage.
+
+@068
+Q: Pourquoi désigner un disque par son UUID plutôt que par /dev/sdb dans /etc/fstab ?
+C: Le nom /dev/sdb peut changer d'un démarrage à l'autre
+W: L'UUID rend le disque plus rapide à monter
+W: /dev/sdb n'est accepté que par les anciens noyaux
+W: L'UUID chiffre le disque automatiquement
+E: Les noms sdX dépendent de l'ordre de détection : ajouter un disque ou changer de contrôleur peut les décaler, et un mauvais disque serait monté, ou aucun. L'UUID est inscrit dans le système de fichiers et ne change pas. blkid ou lsblk -f l'affichent.
+
+@069
+Q: Que fait la commande ip a ?
+C: Elle affiche les interfaces et leurs adresses
+W: Elle attribue une nouvelle adresse IP au serveur
+W: Elle affiche la table de routage du serveur
+W: Elle teste la connexion vers une adresse distante
+E: ip address (abrégé ip a) liste les interfaces, leur état et leurs adresses IPv4 et IPv6. ip route affiche la table de routage, ping teste une connexion. La commande ancienne ifconfig n'est plus installée par défaut sur beaucoup de distributions.
+
+@070
+Q: Le serveur joint 8.8.8.8 mais pas google.com. Où chercher en priorité ?
+C: Dans la résolution DNS, par exemple /etc/resolv.conf
+W: Dans la configuration du pare-feu entrant
+W: Dans la table de routage, la route par défaut manque
+W: Dans le câble réseau, mal branché
+E: Une adresse IP joignable prouve que le réseau et la route fonctionnent ; c'est la traduction du nom qui échoue. On vérifie le serveur DNS configuré, souvent géré par systemd-resolved, et on teste avec dig google.com ou resolvectl query google.com.
+
+@071
+Q: Que teste la commande curl -I https://exemple.fr ?
+C: Elle récupère les en-têtes de la réponse HTTP du site
+W: Elle télécharge le site entier dans le dossier courant
+W: Elle mesure le débit de la connexion Internet
+W: Elle vérifie que le port 22 du serveur est ouvert
+E: -I envoie une requête HEAD et affiche le code de statut et les en-têtes : 200, une redirection 301, un 503. C'est le premier test d'un site depuis le serveur lui-même. -v détaille la négociation TLS, -L suit les redirections, -o enregistre le contenu.
+
+@072
+Q: Que fait ce pare-feu configuré avec ufw ?
+C: Il refuse tout en entrée sauf SSH et HTTPS
+W: Il autorise tout en entrée sauf SSH et HTTPS
+W: Il bloque toute sortie du serveur vers Internet
+W: Il redirige le port 443 vers le port 22
+E: La politique par défaut refuse les connexions entrantes ; les règles ouvrent SSH (22) et HTTPS (443). On autorise SSH avant d'activer, sinon on se coupe soi-même du serveur. ufw est une interface simple à nftables sur Ubuntu ; firewalld joue ce rôle sur RHEL.
+```
+ufw default deny incoming
+ufw allow 22/tcp
+ufw allow 443/tcp
+ufw enable
+```
+
+@073
+Q: Que fait la variable PATH ?
+C: Elle liste les dossiers où chercher les commandes
+W: Elle contient le chemin du dossier courant
+W: Elle définit le dossier personnel de l'utilisateur
+W: Elle indique où sont rangés les journaux
+E: Quand on tape python3, le shell parcourt les dossiers de PATH dans l'ordre, comme /usr/local/bin puis /usr/bin. Un script du dossier courant ne s'y trouve pas, d'où le ./ devant. Dans une tâche cron, PATH est réduit : on y écrit des chemins complets.
+
+@074
+Q: Pourquoi un script qui marche en ligne de commande échoue-t-il souvent dans cron ?
+C: cron l'exécute avec un environnement réduit, PATH compris
+W: cron ne peut pas exécuter de script bash
+W: cron lance toujours les scripts en root
+W: cron ignore les scripts qui écrivent dans un fichier
+E: cron ne charge pas le .bashrc : PATH est minimal, les variables de l'utilisateur absentes, le dossier courant est le dossier personnel. On utilise des chemins absolus, on définit les variables en tête de crontab ou du script, et on redirige la sortie vers un journal pour voir l'erreur.
+
+@075
+Q: Que fait la commande suivante ?
+C: Elle synchronise le dossier vers le serveur distant en ne copiant que les différences
+W: Elle supprime sur le serveur distant tous les fichiers absents du poste, sans rien copier
+W: Elle copie le serveur distant vers le dossier local
+W: Elle compresse le dossier et l'envoie par courriel
+E: -a garde droits, dates et liens ; -v affiche les fichiers ; -z compresse pendant le transfert ; --delete supprime à l'arrivée ce qui n'existe plus au départ. rsync passe par SSH et ne transfère que ce qui a changé. --dry-run montre ce qui serait fait : utile avec --delete.
+```
+rsync -avz --delete /srv/site/ deploy@192.0.2.10:/srv/site/
+```
+
+@076
+Q: Pourquoi la barre oblique finale de /srv/site/ compte-t-elle dans une commande rsync ?
+C: Avec elle, le contenu est copié ; sans, le dossier
+W: Elle active la compression pendant le transfert
+W: Elle force une copie complète au lieu des différences
+W: Elle n'a aucun effet, rsync l'ignore toujours
+E: rsync /srv/site/ dest/ copie le contenu de site dans dest ; rsync /srv/site dest/ crée dest/site. Une erreur ici, combinée à --delete, peut effacer tout le contenu de la destination. On vérifie avec --dry-run avant la vraie commande.
+
+@077
+Q: Que fait la commande awk -F, '{s += $3} END {print s}' ventes.csv ?
+C: Elle additionne la troisième colonne du CSV
+W: Elle affiche la troisième ligne du fichier CSV
+W: Elle trie le fichier selon la troisième colonne
+W: Elle supprime la troisième colonne du fichier
+E: -F, fixe la virgule comme séparateur ; pour chaque ligne, $3 est ajouté à s ; le bloc END s'exécute à la fin et affiche le total. awk traite des volumes importants très vite, sans tableur. Une ligne d'en-tête contenant du texte compte pour zéro.
+
+@078
+Q: Qu'affiche ce script avec le fichier serveurs.txt qui contient web1 et web2 ?
+C: Il teste la connexion SSH vers web1 puis web2
+W: Il crée deux fichiers nommés web1 et web2
+W: Il affiche « web1 web2 » sur une seule ligne
+W: Il s'arrête après web1 à cause de la boucle
+E: while read lit le fichier ligne par ligne ; IFS= et -r gardent chaque ligne intacte. Mais ssh lit lui aussi l'entrée standard et peut avaler les lignes suivantes : on ajoute -n à ssh, ou on redirige son entrée depuis /dev/null. Un classique des scripts qui s'arrêtent après le premier serveur.
+```bash
+while IFS= read -r serveur; do
+  ssh -n "$serveur" uptime
+done < serveurs.txt
+```
+
+@079
+Q: Que fait sudo -l ?
+C: Elle liste les commandes permises par sudo
+W: Elle verrouille le compte root jusqu'au prochain démarrage
+W: Elle affiche les dernières commandes lancées avec sudo
+W: Elle ouvre un shell root sans demander de mot de passe
+E: sudo -l montre les règles de /etc/sudoers qui s'appliquent à l'utilisateur courant. Utile pour savoir ce qu'on a le droit de faire, et pour un auditeur pour repérer des droits trop larges, comme un accès à vi ou à find en root, qui permettent d'obtenir un shell.
+
+@080
+Q: Pourquoi modifier /etc/sudoers avec visudo plutôt qu'avec un éditeur ordinaire ?
+C: visudo vérifie la syntaxe avant d'enregistrer
+W: visudo donne automatiquement les droits sudo à l'utilisateur
+W: visudo chiffre le fichier pour le protéger
+W: Un éditeur ordinaire ne peut pas ouvrir ce fichier
+E: Une erreur de syntaxe dans sudoers peut bloquer sudo pour tout le monde, et donc l'administration du serveur. visudo verrouille le fichier, vérifie la syntaxe et refuse d'enregistrer un fichier invalide. On préfère ajouter un fichier dans /etc/sudoers.d/ plutôt que modifier le fichier principal.
+
+@081
+Q: Que signifie le droit s dans -rwsr-xr-x d'un exécutable ?
+C: Il s'exécute avec les droits de son propriétaire
+W: Le programme est chiffré et ne peut pas être lu
+W: Le fichier est un lien symbolique vers un autre
+W: Le programme ne peut être lancé qu'une seule fois
+E: Le bit setuid fait qu'un programme lancé par n'importe qui tourne avec les droits de son propriétaire : passwd en a besoin pour écrire /etc/shadow. Un programme setuid root vulnérable donne root à un attaquant : find / -perm -4000 les liste, et on n'en ajoute jamais à la légère.
+
+@082
+Q: Que fait la commande lsof -i :443 ?
+C: Elle liste les processus qui utilisent le port 443
+W: Elle ferme toutes les connexions sur le port 443
+W: Elle ouvre le port 443 dans le pare-feu
+W: Elle mesure le débit du port 443
+E: lsof liste les fichiers ouverts, et sous Linux une connexion réseau en est un. -i :443 filtre sur le port. On voit le programme, son PID et l'utilisateur. ss -tnp donne une information proche, plus rapidement sur un serveur chargé.
+
+@083
+Q: Quelle commande montre les appels système d'un processus bloqué, PID 2314 ?
+C: strace -p 2314
+W: kill -9 2314
+W: renice 10 2314
+W: nohup 2314
+E: strace s'attache au processus et affiche ses appels au noyau : on voit s'il attend une lecture réseau, un verrou de fichier ou un disque lent. Outil précieux quand les journaux sont muets. kill l'arrêterait, renice changerait sa priorité, nohup lance une commande qui survit à la déconnexion.
+
+@084
+Q: À quoi sert nohup ou un service systemd pour un long traitement lancé en SSH ?
+C: À ce que le traitement continue après la déconnexion
+W: À ce que le traitement s'exécute plus vite
+W: À masquer le traitement aux autres utilisateurs
+W: À ce que le traitement redémarre le serveur à la fin
+E: À la fermeture de la session SSH, les processus reçoivent un signal HUP et s'arrêtent. nohup l'ignore ; tmux ou screen gardent une session qu'on retrouve plus tard ; un service ou systemd-run gère le traitement proprement, avec ses journaux. Lancer un long import sans précaution, c'est le perdre à la première coupure Wi-Fi.
+
+@085
+Q: Associer chaque niveau de journal syslog à sa gravité.
+P: err => une erreur à traiter
+P: warning => une situation anormale sans échec
+P: info => un fonctionnement normal à tracer
+P: debug => un détail utile au développement seulement
+E: Ces niveaux, communs à syslog et à journald, permettent de filtrer : journalctl -p err ne garde que les erreurs et plus grave. En production, on journalise info et au-dessus ; debug, trop bavard, sert le temps d'un diagnostic.
+
+@086
+Q: Quel est l'effet de cette ligne dans /etc/ssh/sshd_config, après rechargement de sshd ?
+C: Plus de connexion SSH directe en root
+W: root peut se connecter sans mot de passe par SSH
+W: Seul root peut se connecter par SSH au serveur
+W: Le service SSH est désactivé au prochain démarrage
+E: On se connecte avec un compte nominatif puis on utilise sudo : chaque action est attribuée à une personne et le compte root n'est pas une cible directe. On complète avec PasswordAuthentication no, pour n'accepter que les clés. On teste une nouvelle connexion avant de fermer la session ouverte.
+```
+PermitRootLogin no
+```
+
+@087
+Q: Pourquoi garder une session SSH ouverte quand on modifie la configuration SSH ou le pare-feu d'un serveur distant ?
+C: Pour pouvoir corriger si la nouvelle configuration bloque l'accès
+W: Parce que sshd refuse de recharger s'il n'y a aucune session
+W: Pour que les changements s'appliquent aussi à cette session
+W: Parce que le pare-feu ne s'active qu'avec deux sessions
+E: Les sessions déjà ouvertes ne sont pas coupées par un rechargement : on teste depuis une seconde fenêtre, et on corrige depuis la première si la connexion échoue. Sans cela, il ne reste que la console du fournisseur ou un déplacement. sshd -t vérifie la syntaxe avant de recharger.
+
+@088
+Q: Que fait la commande ssh -L 5432:localhost:5432 bastion ?
+C: Elle rend la base du bastion accessible en local
+W: Elle ouvre le port 5432 du bastion à tout Internet
+W: Elle copie la base de données du bastion sur le poste
+W: Elle redirige le port SSH vers le port 5432
+E: Le tunnel transfère les connexions faites au port local 5432 vers localhost:5432 vu depuis le bastion, à travers SSH chiffré. On accède ainsi à une base qui n'écoute qu'en local, sans l'exposer. Le nom après le second deux-points est résolu par le serveur SSH, pas par le poste.
+
+@089
+Q: Pourquoi le script ci-dessous ne détecte-t-il pas l'échec de curl ?
+C: Sans pipefail, seul compte le code de grep
+W: curl ne renvoie jamais de code d'erreur, même en cas d'échec
+W: grep s'arrête avant que curl ait fini de télécharger
+W: set -e est ignoré dans les scripts lancés par cron
+E: Si curl échoue, grep reçoit un flux vide et renvoie lui aussi une erreur, ou un succès selon le motif : le résultat ne reflète plus curl. set -o pipefail fait échouer le tube dès qu'une commande échoue. curl -f fait en plus échouer curl sur une réponse HTTP 4xx ou 5xx.
+```bash
+set -e
+curl -s https://exemple.fr/sante | grep -q "ok"
+```
+
+@090
+Q: Combien d'octets représentent 4 Kio, unité de bloc courante d'un système de fichiers ?
+N: 4096
+E: 1 Kio vaut 1024 octets, donc 4 Kio valent 4096 octets. Un fichier d'un seul octet occupe pourtant un bloc entier sur le disque : des millions de petits fichiers gaspillent de la place, et peuvent aussi épuiser les inodes avant l'espace, ce que df -i révèle.
+
+@091
+Q: df -h indique de l'espace libre, mais on ne peut plus créer de fichier. Que vérifier ?
+C: Le nombre d'inodes libres, avec df -i
+W: La mémoire vive libre, avec free -h
+W: La charge du processeur, avec uptime
+W: Les droits du dossier, avec ls -l
+E: Chaque fichier consomme un inode ; leur nombre est fixé à la création du système de fichiers ext4. Des millions de petits fichiers de cache ou de session les épuisent alors qu'il reste des gigaoctets. On trouve le dossier responsable avec find et on fait le ménage.
+
+@092
+Q: Que permet la commande suivante sur un serveur avec systemd ?
+C: Lister les unités qui ont échoué
+W: Redémarrer toutes les unités du serveur
+W: Désactiver les unités au démarrage
+W: Supprimer les journaux des unités
+E: Après un redémarrage ou une mise à jour, c'est la première vérification : quels services n'ont pas démarré ? On examine chacun avec systemctl status et journalctl -u. Une unité en échec reste signalée jusqu'à son redémarrage réussi ou systemctl reset-failed.
+```
+systemctl --failed
+```
+
+@093
+Q: Que fait un timer systemd associé à un service, par rapport à une ligne de cron ?
+C: Il planifie le service avec les outils de systemd
+W: Il exécute le service plus souvent que ne le permet cron
+W: Il exécute le service sur plusieurs serveurs à la fois
+W: Il remplace le service par un script shell
+E: Un timer déclenche une unité de service selon OnCalendar. On profite des journaux dans journalctl, des limites de ressources, de Persistent=true pour rattraper une exécution manquée serveur éteint, et de systemctl list-timers pour voir les prochaines échéances.
+
+@094
+Q: Que signifie la valeur OnCalendar=Mon..Fri 07:00 dans un timer systemd ?
+C: Du lundi au vendredi à 7 h
+W: Tous les jours sauf le lundi et le vendredi à 7 h
+W: Toutes les 7 heures du lundi au vendredi
+W: Le 7 de chaque mois, du lundi au vendredi
+E: La syntaxe se lit jour de semaine, puis date, puis heure : Mon..Fri désigne la plage du lundi au vendredi. systemd-analyze calendar "Mon..Fri 07:00" affiche les prochaines échéances, pratique pour vérifier avant d'activer le timer.
+
+@095
+Q: Pourquoi une mise à jour du noyau n'est-elle pas active tant que le serveur n'a pas redémarré ?
+C: Le noyau en mémoire reste l'ancien jusqu'au redémarrage
+W: Le nouveau noyau doit d'abord être compilé par l'administrateur
+W: Les paquets du noyau ne s'installent qu'au démarrage
+W: Le noyau ne se met à jour que tous les mois
+E: Le paquet installe le nouveau noyau sur le disque, mais celui qui tourne reste en mémoire. uname -r montre la version active ; le fichier /var/run/reboot-required le signale sur Ubuntu. Les correctifs de sécurité du noyau demandent donc une fenêtre de redémarrage, ou un service de correctif à chaud.
+
+@096
+Q: Remettre dans l'ordre l'analyse d'une compromission suspectée d'un serveur.
+O: Isoler le serveur du réseau sans l'éteindre
+O: Copier journaux et preuves vers un support sûr
+O: Rechercher le point d'entrée et ce qui a été modifié
+O: Reconstruire le serveur à partir d'une base saine
+E: Éteindre ferait perdre la mémoire et les processus en cours ; laisser connecté permet à l'attaquant de continuer. Les journaux peuvent avoir été modifiés : on les copie vite. Un serveur compromis ne se « nettoie » pas de façon fiable : on le reconstruit, après avoir corrigé la faille d'entrée.
+
+@097
+Q: Quel est l'effet de ce paramètre du noyau appliqué avec sysctl ?
+C: Le serveur route les paquets entre ses interfaces
+W: Le serveur refuse tout paquet venant d'une autre interface
+W: Le serveur désactive IPv4 au profit d'IPv6
+W: Le serveur augmente la taille de ses tampons réseau
+E: ip_forward à 1 active le routage IPv4, nécessaire pour un serveur passerelle, un VPN ou les conteneurs. Appliqué avec sysctl -w, il disparaît au redémarrage ; on l'écrit dans /etc/sysctl.d/ pour le rendre permanent. Sur un serveur ordinaire, on le laisse à 0.
+```
+sysctl -w net.ipv4.ip_forward=1
+```
+
+@098
+Q: Un script contient la ligne ci-dessous. Combien de minutes s'écoulent entre deux sauvegardes ?
+N: 360
+U: min
+E: */6 dans le champ des heures signifie toutes les 6 heures, à la minute 0 : à 0 h, 6 h, 12 h et 18 h. 6 × 60 = 360 minutes. On vérifie la fréquence avec le volume des sauvegardes : quatre par jour, gardées une semaine, font 28 sauvegardes à stocker.
+```
+0 */6 * * * /opt/scripts/sauvegarde.sh
+```
+
+@099
+Q: Pourquoi limiter la mémoire d'un service avec MemoryMax dans son unité systemd ?
+C: Pour qu'une fuite n'affame pas les autres services
+W: Pour accélérer le service en réservant sa mémoire à l'avance
+W: Pour empêcher le service d'écrire dans le swap
+W: Pour que le service se relance tous les jours à minuit
+E: systemd place chaque service dans un cgroup ; MemoryMax=2G en fixe la limite. En cas de dépassement, seul ce service est tué et relancé si Restart l'indique, au lieu que l'OOM killer frappe au hasard sur le serveur. CPUQuota limite de même le processeur.
+
+@100
+Q: Quelle différence entre une sauvegarde et une copie synchronisée comme rsync --delete vers un second disque ?
+C: La sauvegarde garde l'historique, la copie suit les dégâts
+W: La copie synchronisée garde toutes les versions, la sauvegarde seulement la dernière
+W: Aucune, une copie synchronisée est une sauvegarde complète
+W: La sauvegarde est forcément sur bande, la copie sur disque
+E: Un fichier effacé ou chiffré par un rançongiciel est effacé ou chiffré aussi dans la copie au prochain passage. Une sauvegarde garde plusieurs points dans le temps, idéalement hors ligne ou immuables, selon la règle 3-2-1 : trois copies, deux supports, une hors site. Et on teste les restaurations.

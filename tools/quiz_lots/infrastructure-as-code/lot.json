@@ -1,0 +1,36 @@
+{
+  "lot": 1,
+  "seed": 2026101602,
+  "skills": ["Terraform", "Ansible", "infrastructure as code", "Packer", "OpenTofu"],
+  "schemas": [
+    {
+      "name": "iac-cycle.svg",
+      "questions": ["005", "006", "066"],
+      "diagram": {
+        "title": "Cycle d'un changement Terraform",
+        "nodes": [
+          "Code .tf modifié",
+          "terraform plan",
+          "Relecture du plan",
+          "terraform apply",
+          "État mis à jour"
+        ],
+        "note": "On applique le plan relu, pas un plan recalculé entre-temps"
+      }
+    },
+    {
+      "name": "iac-outils.svg",
+      "questions": ["002", "085", "097"],
+      "diagram": {
+        "title": "Qui fait quoi",
+        "nodes": [
+          "Packer : image système",
+          "Terraform : réseau, machines, bases",
+          "Ansible : configuration des serveurs",
+          "Application en service"
+        ],
+        "note": "Chaque outil couvre une étape ; ils s'enchaînent dans un pipeline"
+      }
+    }
+  ]
+}

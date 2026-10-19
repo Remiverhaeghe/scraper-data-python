@@ -1,0 +1,390 @@
+@051
+Q: Que mesure le taux de maintenance préventive d'un service ?
+C: La part du temps passée en préventif
+W: Le nombre de machines équipées de capteurs
+W: Le coût moyen d'une panne pour l'entreprise
+W: Le nombre de techniciens par équipe
+E: Un service qui passe 80 % de son temps en dépannage subit ses machines ; on vise souvent plus de la moitié du temps en préventif planifié. Ce taux se calcule à partir des bons de travail de la GMAO, d'où l'importance de les saisir.
+
+@052
+Q: Un service a passé 600 heures en maintenance sur le mois, dont 240 en préventif. Quel est le taux de préventif en pourcentage ?
+N: 40
+U: %
+E: 240 / 600 = 0,4, soit 40 %. Augmenter ce taux réduit en général le correctif, mais seulement si le préventif est utile : remplacer des pièces encore bonnes coûte sans rien apporter. On pilote aussi le nombre de pannes.
+
+@053
+Q: Qu'est-ce qu'un « équipement goulot » dans une usine ?
+C: L'équipement qui limite toute la ligne
+W: L'équipement le plus ancien de l'atelier
+W: L'équipement le plus cher à entretenir
+W: Le dernier équipement de la ligne
+E: La ligne ne peut produire plus vite que son étape la plus lente : une heure perdue sur le goulot est une heure perdue pour toute l'usine. La maintenance y concentre ses efforts : préventif renforcé, pièces en stock, interventions hors des heures de production.
+
+@054
+Q: Pourquoi planifier les grosses interventions pendant les arrêts programmés ?
+C: Pour ne pas arrêter la production en plus
+W: Parce que les techniciens sont moins chers ces jours-là
+W: Parce que les machines arrêtées ne s'usent plus
+W: Pour pouvoir changer toutes les pièces sans réfléchir
+E: Un arrêt programmé, une fermeture d'été par exemple, se prépare des semaines à l'avance : liste des travaux, pièces commandées, entreprises extérieures, permis, ordre des interventions. Un arrêt mal préparé déborde et retarde le redémarrage.
+
+@055
+Q: Associer chaque document technique à son contenu.
+P: Schéma électrique => le câblage et les repères des composants
+P: Nomenclature => la liste des pièces d'un ensemble
+P: Plan de maintenance => les opérations planifiées
+P: Analyse de risques => les dangers et leurs mesures
+E: Un technicien qui dépanne une armoire sans schéma à jour perd un temps précieux et risque l'erreur. Une modification non reportée sur les plans est un piège pour le suivant. La mise à jour de la documentation fait partie de chaque intervention.
+
+@056
+Q: Pourquoi faut-il mettre à jour les schémas électriques après une modification ?
+C: Le prochain dépanneur se fierait à un schéma faux
+W: Pour que l'armoire consomme moins d'électricité
+W: Parce que l'automate lit les schémas pour fonctionner
+W: Pour que le constructeur prolonge la garantie
+E: Un fil ajouté, un relais déplacé ou un repère changé non reportés font perdre des heures, voire créent un danger : on peut croire un circuit coupé alors qu'il est alimenté par ailleurs. On annote au moins le schéma papier de l'armoire aussitôt.
+
+@057
+Q: Qu'est-ce qu'une habilitation électrique ?
+C: La reconnaissance d'aptitude par l'employeur
+W: Un diplôme d'État en électrotechnique
+W: Un certificat de conformité d'une installation
+W: Une assurance obligatoire pour les électriciens
+E: L'employeur délivre l'habilitation après une formation adaptée et une vérification de l'aptitude ; elle précise les opérations autorisées. Sans elle, on ne doit pas intervenir sur un équipement électrique, même simple. Elle se recycle régulièrement.
+
+@058
+Q: Associer chaque symbole d'habilitation électrique à son domaine.
+P: B1 => travaux d'ordre électrique hors tension en basse tension
+P: BR => interventions générales de dépannage en basse tension
+P: BC => consignation en basse tension
+P: H0 => travaux non électriques au voisinage de la haute tension
+E: La lettre indique le domaine de tension (B pour basse, H pour haute), le chiffre ou la lettre suivante la nature des opérations. Un électricien de maintenance détient souvent BR et BC. La norme NF C 18-510 définit ces habilitations.
+
+@059
+Q: Que doit faire un technicien non habilité qui constate un défaut dans une armoire électrique ?
+C: Ne pas intervenir et faire appel à une personne habilitée
+W: Réparer prudemment en coupant le disjoncteur général
+W: Remplacer le composant défectueux sans ouvrir l'armoire
+W: Signaler la panne seulement s'il n'arrive pas à la réparer
+E: Sans habilitation, on ne touche pas à l'électricité, même pour un geste qui semble simple. On sécurise la zone si nécessaire et on alerte. Beaucoup d'accidents électriques arrivent à des personnes compétentes dans leur métier mais pas en électricité.
+
+@060
+Q: Pourquoi vérifier un appareil de mesure avant et après la vérification d'absence de tension ?
+C: Pour s'assurer qu'il marchait
+W: Pour l'étalonner avant chaque utilisation
+W: Pour recharger sa pile entre deux mesures
+W: Pour noter son numéro dans le registre
+E: Un appareil en panne affiche 0 V même sur un conducteur sous tension : on le teste sur une source connue avant, puis après la mesure. C'est la seule façon de se fier à un « absence de tension ». On utilise un vérificateur d'absence de tension, conçu pour cela.
+
+@061
+Q: Qu'est-ce qu'un espace confiné ?
+C: Un lieu clos à l'air peu renouvelé, comme une cuve
+W: Un atelier fermé à clé en dehors des heures
+W: Une armoire électrique de petite taille
+W: Un local réservé aux produits chimiques
+E: Cuves, silos, regards, fosses : l'air peut y manquer d'oxygène ou contenir des gaz toxiques ou explosifs. On n'y entre qu'avec un permis, une mesure de l'atmosphère, une ventilation, un surveillant à l'extérieur et un moyen de secours. Beaucoup de victimes sont des sauveteurs improvisés.
+
+@062
+Q: Remettre dans l'ordre l'entrée dans une cuve pour inspection.
+O: Établir le permis et consigner les énergies et les fluides
+O: Ventiler la cuve
+O: Mesurer l'oxygène et les gaz avant d'entrer
+O: Entrer avec un surveillant à l'extérieur et un moyen d'alerte
+O: Continuer la mesure de l'atmosphère pendant le travail
+E: Isoler les tuyauteries par des obturateurs, pas seulement par des vannes, évite l'arrivée d'un produit. La mesure se fait avant d'entrer et en continu, car l'atmosphère peut changer pendant le travail. Le surveillant ne descend jamais secourir sans protection.
+
+@063
+Q: Qu'est-ce qu'un « CACES » ?
+C: Un certificat de conduite en sécurité d'engins
+W: Un contrôle annuel des chaudières et des échangeurs
+W: Un certificat de conformité d'une armoire électrique
+W: Un cahier des charges d'un équipement spécial
+E: Le CACES atteste qu'un conducteur sait utiliser en sécurité un chariot élévateur, une nacelle ou une grue. Il sert de base à l'autorisation de conduite que délivre l'employeur. Un technicien de maintenance utilise souvent une nacelle : il lui faut la catégorie correspondante.
+
+@064
+Q: Pourquoi les appareils de levage sont-ils soumis à des vérifications périodiques ?
+C: Pour détecter usures et défauts avant un accident
+W: Pour obtenir une remise sur l'assurance
+W: Pour mesurer leur consommation d'électricité
+W: Parce qu'ils deviennent obsolètes chaque année
+E: Câbles, crochets, freins et fins de course s'usent : une rupture sous charge est grave. Le Code du travail impose des vérifications périodiques, souvent tous les six mois ou un an selon l'appareil, et un examen avant la remise en service. Un registre les consigne.
+
+@065
+Q: Quel est le rôle d'une fin de course sur un pont roulant ?
+C: Arrêter le mouvement en bout de course
+W: Mesurer la charge soulevée
+W: Signaler la présence d'une personne sous la charge
+W: Ralentir le pont dans les virages
+E: La fin de course coupe le mouvement avant que le crochet ou le chariot n'arrivent en butée, ce qui éviterait un choc ou une rupture du câble. Elle se teste régulièrement. Un limiteur de charge, lui, empêche de soulever plus que la capacité.
+
+@066
+Q: Une courroie de transmission patine et siffle au démarrage. Quelle cause vérifier d'abord ?
+C: La tension et l'usure de la courroie
+W: La puissance électrique du moteur
+W: La couleur de la peinture des poulies
+W: Le réglage du relais thermique
+E: Une courroie détendue ou glacée glisse sur les poulies, surtout au démarrage où le couple est le plus fort. On contrôle la tension selon la préconisation, l'état de la courroie et des gorges de poulies, et l'alignement. Une courroie trop tendue, elle, use les roulements.
+
+@067
+Q: Pourquoi remplace-t-on toutes les courroies d'une même transmission en même temps ?
+C: Des courroies d'usure inégale portent mal l'effort
+W: Parce que les courroies ne se vendent que par lots
+W: Pour que la transmission tourne dans l'autre sens
+W: Parce qu'une courroie neuve abîme les anciennes
+E: Une courroie neuve, plus courte qu'une usée qui s'est allongée, porte presque tout l'effort et s'use vite, tandis que les autres patinent. On remplace le jeu complet, avec des courroies appariées, et on retend après rodage.
+
+@068
+Q: Que signifie un bruit de cognement régulier dans une pompe centrifuge, accompagné d'une baisse de débit ?
+C: Une cavitation, l'aspiration est insuffisante
+W: Un fonctionnement normal à pleine charge
+W: Un moteur trop puissant pour la pompe
+W: Une température trop basse du liquide
+E: Quand la pression d'aspiration est trop faible, des bulles de vapeur se forment puis implosent, ce qui fait un bruit de graviers et ronge la roue. On vérifie le filtre d'aspiration, le niveau de la bâche, les vannes et la température du liquide.
+
+@069
+Q: Associer chaque symptôme de pompe à sa cause probable.
+P: Bruit de graviers et débit en baisse => cavitation
+P: Fuite le long de l'arbre => garniture mécanique usée
+P: Vibrations et roulements chauds => désalignement ou balourd
+P: Débit nul et moteur qui tourne => pompe désamorcée
+E: Chaque symptôme oriente le diagnostic, mais on vérifie toujours par des mesures : pression d'aspiration, vibrations, intensité du moteur. Une pompe désamorcée tourne à vide et peut détruire sa garniture en quelques minutes.
+
+@070
+Q: Pourquoi une pompe ne doit-elle pas tourner longtemps vanne de refoulement fermée ?
+C: Le liquide s'échauffe dans la pompe et l'abîme
+W: La pompe consomme alors deux fois plus d'énergie utile
+W: Le moteur tourne plus vite et perd sa protection
+W: La vanne se met à fuir en quelques secondes
+E: Sans débit, l'énergie fournie par la roue chauffe le liquide enfermé, jusqu'à l'ébullition : garniture et roue sont endommagées. On démarre parfois vanne presque fermée pour limiter l'appel de courant, mais on l'ouvre aussitôt.
+
+@071
+Q: Qu'est-ce qu'un balourd sur une pièce tournante ?
+C: Une masse répartie inégalement autour de l'axe
+W: Un défaut de couleur sur la pièce
+W: Une pièce trop légère pour sa fonction
+W: Un jeu excessif entre deux engrenages
+E: Une masse décentrée crée une force qui tourne avec la pièce, d'où une vibration à la fréquence de rotation. Encrassement d'un ventilateur, pale abîmée ou ajout d'une pièce en sont des causes. On nettoie, puis on équilibre en ajoutant ou retirant de la masse.
+
+@072
+Q: Un ventilateur tourne à 1 500 tr/min. À quelle fréquence, en hertz, apparaît une vibration due à un balourd ?
+N: 25
+U: Hz
+E: 1 500 tr/min / 60 = 25 tours par seconde, soit 25 Hz. Un balourd se repère par un pic à la fréquence de rotation dans le spectre vibratoire. Un défaut de roulement donne des fréquences propres, non multiples simples de la rotation.
+
+@073
+Q: Que signifie le sigle HSE dans une entreprise industrielle ?
+C: Hygiène, sécurité et environnement
+W: Haute sécurité électrique
+W: Heures supplémentaires effectuées
+W: Habilitation des services d'entretien
+E: Le service HSE pilote la prévention des risques professionnels, la conformité environnementale et les plans d'action après accident. La maintenance travaille avec lui sur la consignation, les permis, les produits chimiques et les déchets.
+
+@074
+Q: Pourquoi analyser un « presque accident » ?
+C: Il révèle un danger avant qu'il ne blesse
+W: Pour sanctionner la personne concernée
+W: Parce que la loi l'exige pour tous les incidents mineurs
+W: Pour évaluer la vitesse de réaction de l'équipe
+E: Pour un accident grave, il y a de nombreux presque accidents qui suivent la même cause. Les signaler sans crainte de sanction et les analyser permet d'agir à temps. Une culture qui punit le signalement fait disparaître ces alertes précieuses.
+
+@075
+Q: Que contient une fiche de données de sécurité d'un produit chimique ?
+C: Les dangers, les précautions et les secours
+W: Le prix et le fournisseur du produit
+W: La date de fabrication du produit
+W: Le mode d'emploi commercial du produit
+E: La FDS, en seize rubriques, décrit dangers, composition, premiers secours, lutte contre l'incendie, manipulation, stockage, protections individuelles et élimination. Avant d'utiliser un dégraissant ou une résine, on la consulte et on applique ses mesures.
+
+@076
+Q: Pourquoi faut-il trier les déchets de maintenance comme les huiles usagées ?
+C: Ce sont des déchets dangereux soumis à une filière
+W: Pour pouvoir les revendre plus cher
+W: Parce qu'ils sont tous recyclables à l'identique
+W: Pour réduire la taille des poubelles de l'atelier
+E: Huiles usagées, chiffons souillés, solvants et batteries sont des déchets dangereux : on les stocke à part, sur rétention, et on les confie à une filière agréée avec un bordereau de suivi. Un litre d'huile peut polluer des milliers de mètres cubes d'eau.
+
+@077
+Q: Qu'est-ce que la maintenance améliorative ?
+C: Modifier la machine pour supprimer une panne
+W: Réparer plus vite que la dernière fois
+W: Remplacer une machine par un modèle identique
+W: Repeindre les machines pour mieux les voir
+E: Quand une panne revient malgré le préventif, on modifie : roulement mieux dimensionné, capteur plus robuste, point de graissage accessible. L'analyse des pannes répétitives dans la GMAO en fournit les candidats. Toute modification se documente et se vérifie.
+
+@078
+Q: Qu'est-ce que le SMED ?
+C: Une méthode pour raccourcir les changements de série
+W: Un système de mesure de l'énergie disponible
+W: Une méthode de nettoyage des machines
+W: Un logiciel de planification de la maintenance
+E: Le SMED sépare les opérations faites machine arrêtée de celles qui peuvent se préparer en marche, puis réduit les premières : outils prêts, fixations rapides, réglages repérés. Un changement de série d'une heure peut passer à quelques minutes, ce qui améliore la disponibilité.
+
+@079
+Q: Un changement de série dure 60 minutes, dont 25 de préparation faisable machine en marche. Combien de minutes d'arrêt reste-t-il après les avoir sorties de l'arrêt ?
+N: 35
+U: min
+E: 60 - 25 = 35 minutes d'arrêt. C'est la première étape du SMED : externaliser la préparation. On réduit ensuite les 35 minutes restantes, par exemple en remplaçant des vis par des systèmes de serrage rapide.
+
+@080
+Q: Que signifie la méthode 5S ?
+C: Une démarche d'ordre et de propreté
+W: Cinq contrôles de sécurité avant de démarrer
+W: Cinq niveaux de maintenance des équipements
+W: Une norme de qualité des soudures
+E: Les 5S japonais se traduisent par trier, ranger, nettoyer, standardiser et faire durer. Un atelier de maintenance rangé fait gagner un temps précieux pendant une panne : l'outil et la pièce sont à leur place. Le nettoyage révèle aussi fuites et fissures.
+
+@081
+Q: Pourquoi le nettoyage d'une machine fait-il partie de son inspection ?
+C: Il révèle fuites et fissures
+W: Il remplace le graissage des roulements
+W: Il augmente la vitesse de la machine
+W: Il évite de consigner la machine
+E: Sous la poussière et l'huile, une fuite naissante, une vis desserrée ou une fissure passent inaperçues. Nettoyer, c'est regarder de près chaque recoin. La TPM en fait la première étape de l'entretien autonome par les opérateurs.
+
+@082
+Q: Qu'est-ce que le coût global de possession d'un équipement ?
+C: Achat, énergie, maintenance et fin de vie réunis
+W: Le seul prix d'achat de l'équipement
+W: Le coût des pannes de la première année
+W: Le prix de revente de l'équipement d'occasion
+E: Une machine bon marché mais gourmande en énergie et en pannes coûte souvent plus cher sur sa vie qu'une machine plus chère et fiable. La maintenance apporte ses données (pannes, pièces, temps) aux décisions d'achat et de remplacement.
+
+@083
+Q: Quand remplacer un équipement plutôt que continuer à le réparer ?
+C: Quand la garder coûte plus que la remplacer
+W: Dès sa dixième année de service
+W: À la première panne importante
+W: Quand le constructeur sort un nouveau modèle
+E: On compare les coûts de réparation, d'arrêt et d'énergie à venir avec ceux d'un équipement neuf, en tenant compte des pièces devenues introuvables et des exigences de sécurité. L'historique de la GMAO rend cette comparaison chiffrée plutôt qu'intuitive.
+
+@084
+Q: Qu'est-ce que l'obsolescence d'un composant en maintenance ?
+C: Un composant qui n'est plus fabriqué ni vendu
+W: Un composant usé après de longues années
+W: Un composant qui consomme trop d'énergie
+W: Un composant jamais remplacé depuis l'installation
+E: Un automate ou une carte électronique arrêtés par le fabricant deviennent introuvables : la prochaine panne peut immobiliser la ligne pour des semaines. On recense les composants obsolètes, on achète des pièces de secours ou on planifie une migration avant la panne.
+
+@085
+Q: Pourquoi sauvegarder les programmes des automates et les paramètres des variateurs ?
+C: Pour remettre en route vite après un échange
+W: Pour pouvoir les vendre à d'autres entreprises
+W: Parce que les automates s'effacent chaque nuit
+W: Pour accélérer le fonctionnement des machines
+E: Un automate ou un variateur remplacé arrive vide ou avec ses réglages d'usine. Sans sauvegarde à jour, il faut reconstituer programme et paramètres, parfois sans la documentation. Une sauvegarde après chaque modification, rangée hors de la machine, évite des jours d'arrêt.
+
+@086
+Q: Qu'est-ce qu'une « consigne » de remise en service après intervention ?
+C: Les contrôles faits avant de redémarrer
+W: Le nombre de pièces à produire après la panne
+W: La procédure de facturation de l'intervention
+W: L'ordre de démarrage des machines de l'atelier
+E: Outils retirés, carters remontés, sécurités testées, personnes hors de la zone, cadenas retirés par chacun : la remise en service suit une liste, sinon la machine peut blesser ou se détruire dès le redémarrage. Un essai en présence de l'opérateur clôt l'intervention.
+
+@087
+Q: Pourquoi faire participer l'opérateur à l'essai après une réparation ?
+C: Il confirme que la machine fonctionne comme avant
+W: Pour qu'il apprenne à réparer la machine seul
+W: Parce que le technicien n'a pas le droit de démarrer
+W: Pour qu'il signe la facture de l'intervention
+E: L'opérateur connaît le comportement normal de sa machine : bruit, cadence, qualité des pièces. Son retour confirme que la réparation est complète et qu'un réglage n'a pas été oublié. C'est aussi un moment pour expliquer la cause de la panne.
+
+@088
+Q: Que signifie un indicateur de « taux de pannes » qui suit une courbe en baignoire au cours de la vie d'un équipement ?
+C: Pannes de jeunesse, période stable, puis usure
+W: Les pannes augmentent sans arrêt depuis la mise en service
+W: Les pannes sont les mêmes tout au long de la vie
+W: Les pannes diminuent toujours avec l'âge de l'équipement
+E: Au début, des défauts de montage ou de fabrication provoquent des pannes ; puis vient une longue période à taux faible et aléatoire ; enfin l'usure les fait remonter. Le préventif systématique est utile surtout dans la phase d'usure, peu dans la période aléatoire.
+
+@089
+Q: Pourquoi le remplacement systématique est-il peu utile pour des pannes purement aléatoires ?
+C: Une pièce neuve n'est pas moins susceptible de tomber en panne
+W: Parce que les pièces aléatoires ne peuvent pas être remplacées
+W: Parce que les pannes aléatoires ne coûtent rien
+W: Parce que le préventif aggrave toujours les pannes
+E: Si le risque de panne ne dépend pas de l'âge, comme pour beaucoup de composants électroniques, changer la pièce à date fixe ne réduit pas les pannes : on peut même introduire des défauts de montage. Pour ces composants, la surveillance ou la redondance conviennent mieux.
+
+@090
+Q: Remettre dans l'ordre la mise en place d'une maintenance conditionnelle sur un moteur critique.
+O: Choisir l'indicateur, par exemple la vibration du roulement
+O: Mesurer l'état de référence en bon fonctionnement
+O: Fixer un seuil d'alerte et un seuil d'intervention
+O: Mesurer régulièrement et suivre la tendance
+O: Intervenir quand le seuil est atteint, puis analyser
+E: Sans valeur de référence, une mesure isolée ne dit rien. La tendance compte plus que la valeur : une hausse rapide alerte même sous le seuil. Les capteurs connectés permettent aujourd'hui un suivi continu des équipements critiques.
+
+@091
+Q: Une vibration mesurée passe de 2 mm/s à 3,5 mm/s en un mois. De combien de pourcents a-t-elle augmenté ?
+N: 75
+U: %
+E: (3,5 - 2) / 2 = 0,75, soit 75 % de hausse. Même sous le seuil d'alerte, une telle évolution justifie une mesure plus rapprochée et une analyse du spectre pour trouver la cause avant la panne.
+
+@092
+Q: Qu'est-ce qu'un système redondant en maintenance ?
+C: Un équipement doublé, l'un relaie l'autre
+W: Un équipement entretenu deux fois plus souvent
+W: Un équipement inutile qu'on garde par habitude
+W: Un équipement surdimensionné pour sa tâche
+E: Deux pompes dont une en secours, deux alimentations : la panne de l'une n'arrête pas le service. Encore faut-il tester régulièrement le secours, souvent en alternant les deux : une pompe de secours jamais démarrée risque d'être grippée le jour où l'on en a besoin.
+
+@093
+Q: Pourquoi alterner régulièrement le fonctionnement d'une pompe principale et de sa pompe de secours ?
+C: Pour vérifier le secours et répartir l'usure
+W: Pour réduire la consommation électrique totale
+W: Parce que deux pompes ne peuvent pas tourner ensemble
+W: Pour éviter de graisser les deux pompes
+E: Une pompe jamais utilisée peut gripper, ses joints sécher ou son clapet coller. L'alternance prouve qu'elle démarre et répartit les heures de fonctionnement. Une panne cachée du secours n'apparaît sinon qu'au pire moment.
+
+@094
+Q: Qu'est-ce qu'un « retour d'expérience » après une panne majeure ?
+C: Une analyse partagée de ce qui s'est passé et des leçons
+W: Le retour au service d'un technicien après un congé
+W: Le renvoi d'une pièce défectueuse au fournisseur
+W: Un questionnaire de satisfaction des clients
+E: On reconstitue les faits sans chercher de coupable, on identifie les causes, y compris d'organisation, et on décide des actions : préventif, pièces en stock, procédure, formation. Partagé avec les autres sites, il évite de revivre la même panne ailleurs.
+
+@095
+Q: Associer chaque indicateur de maintenance à ce qu'il mesure.
+P: MTBF => fiabilité
+P: MTTR => maintenabilité
+P: Disponibilité => part du temps où l'équipement peut produire
+P: Taux de préventif => organisation du service
+E: Un indicateur seul trompe : un MTBF qui monte avec un MTTR qui explose ne signifie pas une amélioration. On suit quelques indicateurs complémentaires, définis de la même façon dans le temps, et on regarde leur tendance.
+
+@096
+Q: Un équipement a un MTBF de 400 heures. Combien de pannes faut-il prévoir sur 6 000 heures de fonctionnement ?
+N: 15
+E: 6 000 / 400 = 15 pannes en moyenne. Cette estimation sert à dimensionner le stock de pièces et le temps de maintenance à prévoir. Ce n'est qu'une moyenne : les pannes réelles se répartissent irrégulièrement.
+
+@097
+Q: Pourquoi former plusieurs techniciens sur chaque équipement critique ?
+C: Pour ne pas dépendre d'une seule personne
+W: Pour que les réparations se fassent toujours à plusieurs
+W: Parce que la loi impose deux techniciens par machine
+W: Pour réduire le nombre de pièces de rechange
+E: Si un seul technicien connaît une machine, son absence prolonge chaque panne. La polyvalence, la documentation et les fiches de dépannage partagent ce savoir. Le départ en retraite d'un expert sans transmission est un risque réel pour une usine.
+
+@098
+Q: À quoi sert une fiche de dépannage affichée près d'une machine ?
+C: À guider les premiers contrôles d'une panne
+W: À remplacer la formation des techniciens
+W: À indiquer le prix de la machine
+W: À lister les opérateurs autorisés
+E: Pour les pannes fréquentes, une fiche indique les symptômes, les vérifications dans l'ordre et les gestes autorisés à chaque niveau. Le dépannage commence plus vite, de façon homogène d'une équipe à l'autre, et les cas inhabituels sont transmis au bon niveau.
+
+@099
+Q: Quel est l'intérêt des capteurs connectés (IoT) en maintenance ?
+C: Suivre l'état des équipements en continu, à distance
+W: Supprimer le besoin de techniciens de maintenance
+W: Réparer automatiquement les machines en panne
+W: Remplacer les contrôles réglementaires obligatoires
+E: Vibration, température, intensité ou pression remontent en continu vers un tableau de bord qui alerte à la dérive. On passe d'une tournée de mesures mensuelle à une surveillance permanente des équipements critiques. Les données ne valent que si quelqu'un les analyse et agit.
+
+@100
+Q: Pourquoi la maintenance doit-elle travailler avec la production plutôt que contre elle ?
+C: Les deux partagent l'objectif de produire sans panne
+W: Parce que la production décide seule des réparations
+W: Pour que la maintenance travaille uniquement la nuit
+W: Parce que la production paie les techniciens
+E: La production accorde des créneaux pour le préventif, signale tôt les anomalies et participe au premier niveau ; la maintenance planifie ses interventions selon le programme et explique ses besoins. Un préventif sans cesse repoussé finit en panne au pire moment.

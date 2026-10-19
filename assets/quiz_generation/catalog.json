@@ -21,7 +21,9 @@
       {"id": "c-cpp-embarque", "label": "C, C++ et systèmes embarqués", "skills": ["C++", "langage C", "embarqué", "microcontrôleur", "RTOS"]}
     ],
     "Données": [
-      {"id": "sql", "label": "SQL", "skills": ["SQL", "PostgreSQL", "MySQL", "SQL Server", "Oracle"]},
+      {"id": "sql", "label": "SQL", "skills": ["SQL", "PostgreSQL", "Oracle"]},
+      {"id": "sql-server", "label": "SQL Server et T-SQL", "skills": ["SQL Server", "T-SQL", "MSSQL", "SSMS"]},
+      {"id": "mysql", "label": "MySQL et MariaDB", "skills": ["MySQL", "MariaDB", "InnoDB"]},
       {"id": "sql-diagnostic", "label": "SQL et diagnostic de performance", "skills": ["optimisation SQL", "plan d'exécution", "index", "tuning"]},
       {"id": "bases-de-donnees", "label": "Modélisation et bases NoSQL", "skills": ["MongoDB", "NoSQL", "modélisation de données", "Redis"]},
       {"id": "analyse-donnees", "label": "Analyse de données avec Python (Pandas)", "skills": ["analyse de données", "pandas", "Excel", "data analyst"]},

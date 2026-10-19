@@ -1,0 +1,36 @@
+{
+  "lot": 1,
+  "seed": 2026101603,
+  "skills": ["Linux", "Bash", "shell", "Unix", "systemd"],
+  "schemas": [
+    {
+      "name": "linux-droits.svg",
+      "questions": ["005", "006", "007"],
+      "diagram": {
+        "title": "Lire une ligne de droits : drwxr-x---",
+        "nodes": [
+          "d : type (dossier)",
+          "rwx : propriétaire",
+          "r-x : groupe",
+          "--- : autres"
+        ],
+        "note": "r = 4, w = 2, x = 1 : rwxr-x--- s'écrit 750"
+      }
+    },
+    {
+      "name": "linux-diagnostic.svg",
+      "questions": ["050", "060", "063"],
+      "diagram": {
+        "title": "Un service ne répond plus",
+        "nodes": [
+          "systemctl status",
+          "journalctl -u",
+          "df -h et df -i",
+          "free -h et uptime",
+          "Corriger, puis redémarrer"
+        ],
+        "note": "Redémarrer sans comprendre fait revenir la panne"
+      }
+    }
+  ]
+}

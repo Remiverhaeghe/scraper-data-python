@@ -1,0 +1,50 @@
+{
+  "lot": 1,
+  "seed": 2026101601,
+  "skills": ["AWS", "Azure", "GCP", "cloud", "S3", "EC2", "Lambda"],
+  "schemas": [
+    {
+      "name": "cloud-modeles.svg",
+      "questions": ["001", "002"],
+      "diagram": {
+        "title": "Ce que gère le client selon le modèle",
+        "nodes": [
+          "Sur site : tout, du bâtiment aux données",
+          "IaaS : système, logiciels et données",
+          "PaaS : code et données",
+          "SaaS : données et utilisateurs"
+        ],
+        "note": "À chaque étape, le fournisseur prend en charge une couche de plus"
+      }
+    },
+    {
+      "name": "cloud-requete.svg",
+      "questions": ["023", "030", "031"],
+      "diagram": {
+        "title": "Trajet d'une requête dans un VPC",
+        "nodes": [
+          "Visiteur",
+          "DNS",
+          "Load balancer (sous-réseau public)",
+          "Instances (sous-réseau privé)",
+          "Base gérée (sous-réseau privé)"
+        ],
+        "note": "Les instances privées sortent vers Internet par la passerelle NAT"
+      }
+    },
+    {
+      "name": "cloud-reprise.svg",
+      "questions": ["066", "067", "100"],
+      "diagram": {
+        "title": "Stratégies de reprise, de la moins chère à la plus rapide",
+        "nodes": [
+          "Sauvegarde et restauration : heures",
+          "Veilleuse : dizaines de minutes",
+          "Secours tiède : minutes",
+          "Actif-actif : quasi immédiat"
+        ],
+        "note": "Le choix suit le RTO et le RPO exigés par le métier"
+      }
+    }
+  ]
+}

@@ -1,0 +1,512 @@
+@051
+Q: Dans quel ordre Terraform crée-t-il ces deux ressources, et pourquoi ?
+C: Le réseau d'abord, car le sous-réseau y fait référence
+W: Le sous-réseau d'abord, car il est écrit en second
+W: Les deux en même temps, sans aucun ordre garanti
+W: Dans l'ordre alphabétique des noms de ressources
+E: La référence aws_vpc.principal.id crée une dépendance implicite : Terraform construit un graphe et attend que le VPC existe pour connaître son identifiant. Les ressources indépendantes sont créées en parallèle. L'ordre d'écriture dans les fichiers n'a aucune importance.
+```hcl
+resource "aws_subnet" "prive" {
+  vpc_id     = aws_vpc.principal.id
+  cidr_block = "10.0.1.0/24"
+}
+
+resource "aws_vpc" "principal" {
+  cidr_block = "10.0.0.0/16"
+}
+```
+
+@052
+Q: Quand faut-il écrire un depends_on explicite ?
+C: Quand le lien n'apparaît dans aucune référence
+W: Systématiquement, sur chaque ressource du projet
+W: Uniquement pour les ressources d'un même module
+W: Jamais, Terraform l'ignore depuis la version 1.0
+E: Dans la plupart des cas, les références suffisent. depends_on sert quand le lien est caché : une application qui a besoin qu'une politique IAM soit attachée avant de démarrer, sans utiliser son identifiant. Trop de depends_on ralentissent le plan et rendent le graphe confus.
+
+@053
+Q: Que protège ce bloc lifecycle ?
+C: Il bloque toute destruction de la base par Terraform
+W: Il empêche la base de redémarrer en cas de panne
+W: Il interdit à quiconque de modifier la base à la main
+W: Il sauvegarde la base avant chaque apply
+E: Avec prevent_destroy, un plan qui détruirait la ressource, par destroy ou par remplacement, échoue avec une erreur. C'est un garde-fou contre une modification qui forcerait la recréation d'une base de production. Pour la supprimer volontairement, il faut d'abord retirer ce réglage du code.
+```hcl
+resource "aws_db_instance" "production" {
+  # ...
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+```
+
+@054
+Q: À quoi sert create_before_destroy dans un bloc lifecycle ?
+C: Créer la remplaçante avant de supprimer l'ancienne ressource
+W: Créer une sauvegarde de la ressource avant toute modification
+W: Interdire la destruction de la ressource tant qu'elle sert
+W: Recréer la ressource à chaque apply, même sans changement
+E: Par défaut, un remplacement détruit puis crée : pendant ce temps, la ressource manque. Avec create_before_destroy, la nouvelle version existe avant que l'ancienne disparaisse, par exemple un certificat ou un groupe de lancement. Il faut que deux exemplaires puissent coexister, ce qui impose souvent un nom généré.
+
+@055
+Q: Pourquoi utiliser ignore_changes sur l'attribut desired_count d'un service géré par l'autoscaling ?
+C: Pour que Terraform ne remette pas le nombre fixé dans le code
+W: Pour que l'autoscaling ne puisse plus jamais modifier ce nombre
+W: Pour que la ressource soit retirée de l'état à chaque apply
+W: Pour masquer la valeur dans les journaux de l'intégration continue
+E: L'autoscaling change le nombre de tâches selon la charge ; sans ignore_changes, chaque apply le ramènerait à la valeur du code. ignore_changes indique à Terraform de ne pas corriger cet écart. À utiliser avec parcimonie : un attribut ignoré n'est plus du tout piloté par le code.
+
+@056
+Q: À quoi servent les locals dans Terraform ?
+C: Nommer une valeur calculée pour la réutiliser
+W: Déclarer des variables saisies au lancement
+W: Stocker l'état sur le poste plutôt qu'à distance
+W: Exécuter une commande sur la machine locale
+E: Un local, comme local.prefixe = "${var.projet}-${var.environnement}", évite de répéter une expression et lui donne un nom. Contrairement à une variable, il ne se règle pas de l'extérieur. On s'en sert pour des étiquettes communes ou des noms construits.
+
+@057
+Q: Que vaut local.nom si var.projet vaut « crm » et var.environnement « prod » ?
+C: crm-prod
+W: prod-crm
+W: ${var.projet}-${var.environnement}
+W: crm_prod
+E: L'interpolation ${...} insère la valeur des expressions dans la chaîne, dans l'ordre écrit : crm-prod. On l'utilise souvent pour des noms de ressources cohérents. format("%s-%s", var.projet, var.environnement) donnerait le même résultat.
+```hcl
+locals {
+  nom = "${var.projet}-${var.environnement}"
+}
+```
+
+@058
+Q: Que permet le bloc moved introduit dans Terraform 1.1 ?
+C: Renommer une ressource dans le code sans la recréer
+W: Déplacer une ressource vers une autre région du fournisseur
+W: Transférer l'état local vers un backend distant
+W: Déplacer un fichier .tf dans un autre dossier du projet
+E: Renommer aws_instance.web en aws_instance.frontal ferait détruire puis recréer l'instance. Un bloc moved from/to indique à Terraform qu'il s'agit de la même ressource ; le plan affiche alors un simple déplacement dans l'état. Il sert aussi à ranger des ressources dans un module.
+```hcl
+moved {
+  from = aws_instance.web
+  to   = aws_instance.frontal
+}
+```
+
+@059
+Q: Pourquoi déconseille-t-on les provisioners (remote-exec) pour configurer une machine créée par Terraform ?
+C: Ils sont fragiles ; une image ou cloud-init fait mieux
+W: Ils ne fonctionnent qu'avec des machines Windows
+W: Ils suppriment la machine si la commande réussit
+W: Ils ne sont plus disponibles dans aucune version récente
+E: Un provisioner ne s'exécute qu'à la création, échoue sur un réseau capricieux et laisse une ressource dite tainted ; Terraform ne sait pas ce qu'il a fait. On préfère une image préparée avec Packer, des données utilisateur cloud-init ou Ansible lancé après coup. HashiCorp les présente comme un dernier recours.
+
+@060
+Q: Que fait cette tâche Ansible ?
+C: Elle crée les trois comptes listés s'ils manquent
+W: Elle crée un seul utilisateur nommé item
+W: Elle supprime les utilisateurs absents de la liste
+W: Elle affiche la liste des utilisateurs sans rien créer
+E: loop répète la tâche pour chaque élément ; item prend tour à tour chaque valeur. Le module user crée l'utilisateur s'il manque et ne fait rien sinon. Les utilisateurs non listés restent en place : pour en supprimer, il faut une tâche avec state: absent.
+```yaml
+- name: Comptes de l'équipe
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - alice
+    - bruno
+    - chloe
+```
+
+@061
+Q: Sur quels serveurs cette tâche s'exécute-t-elle ?
+C: Seulement sur ceux dont la distribution est Debian
+W: Sur tous les serveurs, puis elle échoue hors Debian
+W: Sur la machine qui lance Ansible uniquement
+W: Sur aucun, ansible_os_family n'existe pas
+E: when évalue une condition par hôte avec les faits collectés : ansible_os_family vaut Debian pour Debian et Ubuntu, RedHat pour RHEL ou Rocky. Ailleurs, la tâche est marquée skipped. On écrit ainsi un même rôle pour plusieurs familles de distributions.
+```yaml
+- name: Installer avec apt
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+  when: ansible_os_family == "Debian"
+```
+
+@062
+Q: À quoi sert register dans une tâche Ansible ?
+C: Garder le résultat d'une tâche pour l'utiliser ensuite
+W: Inscrire le serveur dans l'inventaire de façon permanente
+W: Enregistrer le playbook dans le catalogue de Galaxy
+W: Déclarer un nouveau handler à notifier plus tard
+E: register stocke la sortie d'une tâche dans une variable : code retour, texte affiché, indicateur changed. Une tâche suivante peut tester result.rc ou result.stdout dans un when. C'est la manière de réagir à ce qu'une commande a trouvé sur le serveur.
+
+@063
+Q: Pourquoi l'argument creates rend-il cette tâche idempotente ?
+C: Elle n'est lancée que si le fichier indiqué n'existe pas
+W: Il crée le fichier avant de lancer la commande
+W: Il annule la commande si elle a déjà échoué une fois
+W: Il force Ansible à relancer la commande à chaque fois
+E: Le module command est toujours compté comme un changement. Avec creates, Ansible vérifie d'abord la présence du fichier produit par la commande et saute la tâche s'il existe. Le script d'installation ne tourne donc qu'une fois, et les exécutions suivantes affichent ok.
+```yaml
+- name: Installer l'agent
+  ansible.builtin.command:
+    cmd: /opt/agent/install.sh
+    creates: /opt/agent/installe.flag
+```
+
+@064
+Q: Où placer les variables communes à tous les serveurs du groupe web ?
+C: Dans group_vars/web.yml
+W: Dans host_vars/web.yml
+W: Dans roles/web/handlers.yml
+W: Dans le fichier ansible.cfg
+E: group_vars/web.yml s'applique à chaque hôte du groupe web ; host_vars/nom-du-serveur.yml à un seul hôte, et l'emporte. Les handlers d'un rôle vont dans handlers/main.yml. ansible.cfg règle le comportement d'Ansible lui-même, pas les variables des hôtes.
+
+@065
+Q: Associer chaque emplacement de variable Ansible à sa portée.
+P: defaults/main.yml d'un rôle => valeur par défaut, la plus facile à surcharger
+P: group_vars/ => valeurs d'un groupe d'hôtes
+P: host_vars/ => valeurs d'un seul hôte
+P: -e en ligne de commande => valeur qui l'emporte sur toutes les autres
+E: Ansible a une vingtaine de niveaux de priorité ; ces quatre-là suffisent au quotidien. Les defaults d'un rôle sont faits pour être surchargés ; les variables d'hôte l'emportent sur celles de groupe ; une extra var passée avec -e gagne toujours, pratique pour un essai ponctuel.
+
+@066
+Q: Pourquoi lancer terraform plan dans l'intégration continue à chaque demande de fusion ?
+C: Pour que les relecteurs voient l'effet réel du changement avant d'appliquer
+W: Pour appliquer les changements sur la production dès l'ouverture de la demande
+W: Pour réduire la facture du fournisseur pendant la relecture
+W: Pour remplacer les tests unitaires de l'application
+E: Le plan joint à la demande montre ce qui sera créé, modifié ou détruit : un « -/+ » sur une base saute aux yeux. On applique ensuite après fusion, idéalement le plan relu. Le pipeline s'authentifie de préférence par fédération OIDC, sans clé stockée.
+
+@067
+Q: Remettre dans l'ordre un pipeline Terraform sûr pour la production.
+O: terraform fmt -check et terraform validate
+O: Analyse de sécurité du code, par exemple avec Checkov ou Trivy
+O: terraform plan -out=plan.tfplan, joint à la demande de fusion
+O: Relecture et approbation par un second membre de l'équipe
+O: terraform apply plan.tfplan après la fusion
+E: Les contrôles rapides arrivent d'abord et bloquent un code mal formé. L'analyse repère un bucket public ou un groupe de sécurité trop ouvert. Appliquer le plan enregistré garantit qu'on exécute exactement ce qui a été relu, et pas un plan recalculé entre-temps.
+
+@068
+Q: Que signale un outil comme Checkov sur ce code ?
+C: Un accès SSH ouvert à tout Internet
+W: Un nom de ressource trop long pour AWS
+W: Une version de provider non fixée dans le bloc
+W: Une erreur de syntaxe dans le bloc ingress
+E: Les analyseurs de configuration repèrent des règles connues : port 22 ouvert à 0.0.0.0/0, bucket sans chiffrement, base publique. Ils s'exécutent avant le plan, sans accès au cloud, et peuvent bloquer la fusion. On limite ici la source au réseau de l'entreprise ou on utilise un accès sans SSH.
+```hcl
+resource "aws_security_group" "admin" {
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+```
+
+@069
+Q: Que produit ce bloc dynamic ?
+C: Une règle ingress par port de la liste, soit 80 et 443
+W: Une seule règle ouvrant tous les ports de 80 à 443
+W: Deux groupes de sécurité distincts, un par port
+W: Une erreur, ingress ne peut pas être répété
+E: dynamic génère des blocs imbriqués répétés à partir d'une collection : ici deux blocs ingress, le premier pour 80, le second pour 443. ingress.value donne l'élément courant. On l'utilise quand le nombre de blocs dépend d'une variable ; sinon, des blocs écrits à la main restent plus lisibles.
+```hcl
+dynamic "ingress" {
+  for_each = [80, 443]
+  content {
+    from_port   = ingress.value
+    to_port     = ingress.value
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+```
+
+@070
+Q: Combien d'éléments contient setproduct(["eu-west-3", "eu-central-1"], ["web", "api", "batch"]) ?
+N: 6
+E: setproduct forme toutes les combinaisons : 2 régions × 3 rôles = 6 paires, de [eu-west-3, web] à [eu-central-1, batch]. On s'en sert pour créer une ressource par combinaison avec for_each, après avoir transformé chaque paire en clé unique.
+
+@071
+Q: Comment un module de réseau doit-il exposer l'identifiant du VPC à l'application qui l'utilise ?
+C: Par un output, lu ensuite sous la forme module.reseau.vpc_id
+W: Par une variable globale partagée entre tous les modules
+W: En écrivant l'identifiant dans un fichier texte du dépôt
+W: Par une ressource data qui relit l'état du module à chaque plan
+E: Un module est une boîte : seuls ses outputs sont visibles de l'extérieur. Le module appelant les lit avec module.<nom>.<output> et les passe à d'autres modules. Terraform n'a pas de variable globale ; un fichier texte casserait le graphe de dépendances.
+
+@072
+Q: Pourquoi fixer la version d'un module récupéré d'un registre ou d'un dépôt Git ?
+C: Pour qu'une nouvelle version n'arrive jamais par surprise
+W: Parce qu'un module sans version ne peut pas être téléchargé
+W: Pour que le module s'exécute plus vite au moment du plan
+W: Pour pouvoir le modifier directement dans le dossier .terraform
+E: version = "~> 3.2" pour un registre, ou ?ref=v3.2.1 pour une source Git, garantit que tout le monde utilise le même code. Une mise à jour du module devient un changement volontaire, relu avec son plan, plutôt qu'une surprise au prochain init.
+
+@073
+Q: Comment créer avec un même code des ressources dans deux régions AWS ?
+C: Avec deux blocs provider aws, dont un muni d'un alias
+W: En lançant terraform apply deux fois en changeant la région à la main
+W: En écrivant region = ["eu-west-3", "us-east-1"] dans le provider
+W: C'est impossible, une configuration ne vise qu'une région
+E: On déclare un provider par défaut et un second avec alias = "virginie" et sa région ; une ressource choisit le sien avec provider = aws.virginie. C'est courant pour un certificat de CloudFront, qui doit être créé en us-east-1, à côté d'une infrastructure en Europe.
+
+@074
+Q: Quel risque présente cet appel au module ?
+C: La clé du module suit main et peut changer à chaque init
+W: Les modules hébergés sur GitHub ne sont pas acceptés
+W: La branche main ne contient jamais de module valide
+W: Le module sera copié dans l'état à chaque plan
+E: Une source qui pointe vers une branche suit ses évolutions : un collègue qui lance init demain peut obtenir un code différent. On vise une étiquette immuable, comme ?ref=v2.4.0, voire un identifiant de commit, et on met à jour volontairement.
+```hcl
+module "reseau" {
+  source = "git::https://github.com/acme/terraform-reseau.git?ref=main"
+}
+```
+
+@075
+Q: Que permettent les workspaces de Terraform ?
+C: Plusieurs états distincts pour une même configuration
+W: Plusieurs configurations différentes dans un même état
+W: Travailler à plusieurs sur un même fichier en temps réel
+W: Remplacer le backend distant par un dossier partagé
+E: terraform workspace new recette crée un état séparé ; terraform.workspace donne le nom courant, utilisable dans les noms de ressources. Pratique pour des environnements identiques. Pour des environnements qui divergent, avec des droits séparés, on préfère des dossiers ou des comptes distincts.
+
+@076
+Q: Pourquoi un mot de passe de base généré par random_password n'est-il pas « secret » une fois dans Terraform ?
+C: Il est stocké en clair dans le fichier d'état
+W: Il est affiché en clair à chaque terraform plan
+W: Il est envoyé au registre public de Terraform
+W: Il est écrit dans le fichier .terraform.lock.hcl
+E: Toute valeur générée ou lue par Terraform finit dans l'état, même marquée sensitive. Il faut donc protéger l'état comme un secret : backend chiffré, accès restreint. Autre option : laisser le service générer et gérer le mot de passe lui-même, comme le mot de passe principal géré de RDS stocké dans Secrets Manager.
+
+@077
+Q: Que vérifie ce test écrit pour terraform test ?
+C: Que le bucket créé porte bien le nom attendu
+W: Que le bucket contient au moins un fichier après apply
+W: Que la facture du bucket reste sous un montant
+W: Que le provider AWS est à la dernière version
+E: terraform test, disponible depuis la version 1.6, exécute un plan ou un apply dans un environnement de test et vérifie des assertions. Ici, command = plan suffit : on teste le nom calculé sans rien créer. On attrape ainsi les erreurs de logique d'un module avant qu'elles arrivent en production.
+```hcl
+run "nom_du_bucket" {
+  command = plan
+  assert {
+    condition     = aws_s3_bucket.rapports.bucket == "acme-rapports-test"
+    error_message = "Nom de bucket inattendu"
+  }
+}
+```
+
+@078
+Q: Qu'est-ce qu'OpenTofu ?
+C: Un fork libre de Terraform, géré par la fondation Linux
+W: Un module officiel de HashiCorp pour Kubernetes
+W: L'interface graphique de Terraform Cloud
+W: Un langage qui remplace HCL dans Terraform 2
+E: En 2023, HashiCorp a passé Terraform sous licence BSL, qui restreint certains usages concurrents. OpenTofu en est un fork sous licence MPL, compatible avec la configuration HCL et les providers. Pour un projet, les deux se valent à quelques fonctionnalités près ; le choix tient souvent à la politique de licence de l'entreprise.
+
+@079
+Q: Pourquoi Ansible propose-t-il l'option serial dans un play qui met à jour des serveurs web ?
+C: Pour traiter les serveurs par lots et garder le service en ligne
+W: Pour exécuter les tâches d'un serveur dans un ordre aléatoire
+W: Pour numéroter les serveurs de l'inventaire automatiquement
+W: Pour limiter le nombre de tâches d'un playbook à dix
+E: Avec serial: 2, Ansible met à jour deux serveurs, termine le play sur eux, puis passe aux deux suivants. Les autres continuent de servir derrière le load balancer : c'est une mise à jour progressive. Avec max_fail_percentage, le déploiement s'arrête si trop de lots échouent.
+
+@080
+Q: À quoi sert delegate_to dans cette tâche ?
+C: À la lancer sur lb1 pour le serveur en cours
+W: À copier la tâche sur tous les serveurs du groupe lb
+W: À donner les droits root au serveur courant
+W: À sauter la tâche si le load balancer est injoignable
+E: Le play tourne sur chaque serveur web, mais cette tâche s'exécute sur lb1 : elle retire le serveur courant du pool avant sa mise à jour. inventory_hostname désigne toujours le serveur traité. Combiné avec serial, on obtient un déploiement sans coupure.
+```yaml
+- name: Retirer le serveur du pool
+  ansible.builtin.command:
+    cmd: /usr/local/bin/pool retirer {{ inventory_hostname }}
+  delegate_to: lb1
+```
+
+@081
+Q: Que permet Molecule pour un rôle Ansible ?
+C: Tester le rôle dans des conteneurs ou des VM jetables
+W: Publier le rôle sur Galaxy après chaque commit
+W: Chiffrer les variables sensibles du rôle
+W: Convertir le rôle en module Terraform
+E: Molecule crée une instance de test, applique le rôle, le rejoue pour vérifier l'idempotence, lance des vérifications puis détruit l'instance. Avec ansible-lint dans l'intégration continue, on attrape les erreurs avant qu'elles touchent un vrai serveur.
+
+@082
+Q: Pourquoi le second passage d'un playbook doit-il afficher changed=0 ?
+C: Il prouve que le playbook est idempotent
+W: Il indique que le serveur est tombé en panne
+W: Il signifie que les tâches ont toutes été sautées
+W: Il montre que l'inventaire est vide
+E: Si l'état voulu est atteint dès le premier passage, le second ne doit rien modifier. Une tâche encore changed révèle une commande shell sans garde ou un modèle qui varie, comme un horodatage. Molecule vérifie justement ce point avec son étape idempotence.
+
+@083
+Q: Que fait ignore_errors: true placé sur une tâche de vérification ?
+C: Le play continue même si la tâche échoue
+W: La tâche n'est jamais exécutée sur les serveurs
+W: L'erreur est corrigée automatiquement par Ansible
+W: Le serveur est retiré de l'inventaire en cas d'erreur
+E: Sans ignore_errors, une tâche en échec arrête le play pour cet hôte. On l'utilise avec register pour tester une situation et réagir ensuite. L'abuser masque de vraies pannes : on préfère failed_when, qui définit précisément ce qui compte comme un échec.
+
+@084
+Q: Que fait la commande suivante ?
+C: Elle teste la connexion d'Ansible aux serveurs web
+W: Elle envoie un paquet ICMP à chaque serveur du groupe web
+W: Elle installe Python sur les serveurs du groupe web
+W: Elle redémarre le service réseau des serveurs web
+E: Le module ping d'Ansible n'envoie pas d'ICMP : il se connecte en SSH, vérifie que Python est utilisable et répond pong. C'est le premier test après la création d'un inventaire. -m désigne le module, web le groupe visé.
+```
+ansible web -i inventaire.ini -m ansible.builtin.ping
+```
+
+@085
+Q: Associer chaque besoin à l'outil le plus adapté.
+P: Créer un réseau, des sous-réseaux et une base gérée => Terraform
+P: Installer et configurer un logiciel sur des serveurs existants => Ansible
+P: Préparer une image système avec les paquets de base => Packer
+P: Déployer une application dans un cluster Kubernetes => Helm
+E: Chaque outil couvre une étape : Packer prépare l'image, Terraform crée l'infrastructure qui l'utilise, Ansible configure ce qui ne peut pas être figé, Helm installe l'application dans Kubernetes. Vouloir tout faire avec un seul outil mène à des contournements fragiles.
+
+@086
+Q: Une ressource gérée par Terraform a été supprimée à la main dans la console. Que propose le plan suivant ?
+C: De la recréer pour revenir à l'état décrit par le code
+W: De la retirer du code pour suivre la réalité
+W: De restaurer la ressource et ses données d'origine
+W: Rien, car la ressource a disparu de l'état
+E: Au plan, Terraform rafraîchit l'état, constate que la ressource n'existe plus et propose de la créer. Il recrée une ressource vide : les données d'une base supprimée ne reviennent pas. D'où l'intérêt de prevent_destroy, des sauvegardes et d'interdire les modifications manuelles en production.
+
+@087
+Q: Pourquoi ce bloc import est-il plus sûr que la commande terraform import ?
+C: L'import apparaît dans le plan et passe par la revue de code
+W: Il supprime la ressource existante avant de la recréer
+W: Il fonctionne sans écrire le bloc resource correspondant
+W: Il copie la ressource dans une nouvelle région
+E: La commande modifie l'état immédiatement, hors de toute revue. Le bloc import, depuis Terraform 1.5, fait partie du code : le plan montre l'import à venir, la relecture le valide, apply l'exécute. On peut retirer le bloc une fois l'import fait.
+```hcl
+import {
+  to = aws_s3_bucket.archives
+  id = "acme-archives"
+}
+```
+
+@088
+Q: Que fait la commande terraform plan -refresh-only ?
+C: Elle montre l'écart entre état et réalité, sans rien changer
+W: Elle recrée toutes les ressources pour qu'elles correspondent au code
+W: Elle met à jour le code .tf à partir des ressources réelles
+W: Elle vide l'état puis le reconstruit depuis le fournisseur
+E: -refresh-only compare l'état à la réalité et propose seulement de mettre l'état à jour, sans toucher aux ressources. C'est la façon d'accepter une modification faite hors de Terraform, par exemple une étiquette ajoutée par un outil, avant de décider de la reporter dans le code.
+
+@089
+Q: Pourquoi découper une grosse infrastructure en plusieurs états plutôt qu'un seul ?
+C: Pour réduire la durée des plans et le périmètre d'une erreur
+W: Parce qu'un état ne peut pas dépasser mille ressources
+W: Parce que chaque état est facturé au même prix
+W: Pour que les ressources puissent changer de fournisseur
+E: Un état unique de milliers de ressources rend chaque plan lent et chaque apply risqué : une erreur sur le DNS peut toucher la base. On découpe par couche (réseau, données, applications) et par environnement. Les couches échangent des valeurs par des sources de données ou des outputs lus à distance.
+
+@090
+Q: Que lit ce bloc dans une configuration d'application ?
+C: Les outputs de la configuration réseau, depuis son état distant
+W: Le code source de la configuration réseau, depuis Git
+W: Les ressources réseau, pour les recréer dans l'application
+W: Les variables saisies par l'équipe réseau
+E: terraform_remote_state lit les outputs d'un autre état, ici celui du réseau, utilisables comme data.terraform_remote_state.reseau.outputs.vpc_id. Il faut un droit de lecture sur tout l'état distant, avec ses éventuels secrets : beaucoup d'équipes préfèrent publier les valeurs dans un magasin de paramètres.
+```hcl
+data "terraform_remote_state" "reseau" {
+  backend = "s3"
+  config = {
+    bucket = "acme-terraform-etat"
+    key    = "production/reseau.tfstate"
+    region = "eu-west-3"
+  }
+}
+```
+
+@091
+Q: Que garantit une politique écrite avec OPA ou Sentinel dans un pipeline Terraform ?
+C: Qu'un plan contraire aux règles de l'entreprise soit refusé avant apply
+W: Que l'infrastructure coûte toujours moins qu'un budget fixé à l'avance
+W: Que le code soit formaté selon les conventions de HashiCorp
+W: Que toutes les ressources soient créées dans la même région
+E: Le plan, exporté en JSON, est évalué par des règles : pas de base publique, étiquettes obligatoires, types d'instance autorisés, région imposée. Un plan non conforme bloque le pipeline. On codifie ainsi des exigences de sécurité ou de coût plutôt que de compter sur la relecture.
+
+@092
+Q: Pourquoi les identifiants de l'intégration continue qui lance terraform apply en production doivent-ils être particulièrement protégés ?
+C: Ils permettent de modifier ou détruire toute l'infrastructure
+W: Ils servent aussi de mot de passe à la console du fournisseur
+W: Ils sont publiés dans le plan joint à chaque demande de fusion
+W: Ils expirent dès que le pipeline a terminé son travail
+E: Le pipeline de production a des droits très larges : qui contrôle ses identifiants contrôle l'infrastructure. On utilise une fédération OIDC limitée à la branche principale, un rôle séparé pour le plan en lecture seule et pour l'apply, et une approbation humaine avant l'apply.
+
+@093
+Q: Remettre dans l'ordre le renommage sans recréation d'une ressource déplacée dans un module.
+O: Créer le module et y déplacer le bloc resource
+O: Ajouter un bloc moved de l'ancienne adresse vers module.x.y
+O: Lancer terraform plan et vérifier qu'il n'affiche que des déplacements
+O: Appliquer, puis retirer le bloc moved une fois tous les états migrés
+E: Sans bloc moved, Terraform verrait une ressource supprimée et une autre créée. Le plan doit annoncer « has moved to » et aucun remplacement. On garde le bloc tant que d'autres environnements ou modules appelants n'ont pas appliqué la migration.
+
+@094
+Q: Combien de ressources seront détruites d'après ce résumé de plan ?
+N: 2
+E: Le résumé « Plan: 3 to add, 1 to change, 2 to destroy » se lit ainsi : trois créations, une modification sur place, deux destructions. Un remplacement compte à la fois dans add et dans destroy. On remonte toujours dans le détail pour savoir lesquelles sont détruites avant d'appliquer.
+```
+Plan: 3 to add, 1 to change, 2 to destroy.
+```
+
+@095
+Q: Pourquoi utiliser une collection Ansible avec une version fixée dans requirements.yml ?
+C: Pour que chacun installe exactement les mêmes modules
+W: Pour que les playbooks s'exécutent sans connexion SSH
+W: Pour remplacer l'inventaire par une liste de collections
+W: Pour que les rôles soient chiffrés par ansible-vault
+E: Les modules comme amazon.aws ou community.general vivent dans des collections installées par ansible-galaxy collection install -r requirements.yml. Fixer leur version évite qu'une mise à jour change le comportement d'un module entre deux exécutions, comme le fichier de verrouillage de Terraform.
+
+@096
+Q: Que fait cette commande ?
+C: Elle simule site.yml sur web1 et affiche les écarts
+W: Elle applique site.yml à tous les serveurs sauf web1
+W: Elle supprime web1 de l'inventaire puis lance site.yml
+W: Elle applique site.yml à web1 sans vérification ni affichage
+E: --limit restreint le play à un hôte ou un groupe ; --check simule ; --diff affiche les lignes qui changeraient dans les fichiers. C'est la bonne manière de vérifier l'effet d'une modification de rôle sur un serveur avant de l'appliquer partout.
+```
+ansible-playbook -i inventaire.ini site.yml --limit web1 --check --diff
+```
+
+@097
+Q: Pourquoi préférer une image construite par Packer à un playbook Ansible lancé à chaque démarrage d'instance dans un groupe Auto Scaling ?
+C: Les nouvelles instances démarrent vite et toutes identiques
+W: Packer installe les logiciels sans aucun accès réseau
+W: Ansible ne sait pas configurer des instances cloud
+W: Une image ne peut jamais contenir de faille de sécurité
+E: Lors d'un pic de charge, chaque minute de configuration au démarrage retarde l'arrivée de capacité, et un dépôt de paquets indisponible peut faire échouer la mise en service. Une image prête démarre en secondes, testée une fois. Ansible peut d'ailleurs servir à construire cette image, appelé par Packer.
+
+@098
+Q: Quelle différence entre count = var.actif ? 1 : 0 et une ressource toujours créée ?
+C: La ressource n'existe que si actif vaut vrai, sinon elle est supprimée
+W: La ressource est créée deux fois quand actif vaut vrai
+W: La ressource est créée mais reste arrêtée quand actif vaut faux
+W: Terraform refuse les conditions dans count
+E: Ce motif rend une ressource facultative : avec 0 exemplaire, elle n'est pas créée, ou elle est détruite si elle existait. On y fait référence avec un index, aws_instance.bastion[0], ou avec one(aws_instance.bastion[*].id) pour obtenir null quand elle est absente.
+
+@099
+Q: Une équipe veut qu'Ansible configure des instances qui apparaissent et disparaissent avec l'autoscaling. Quel type d'inventaire convient ?
+C: Un inventaire dynamique qui interroge l'API du fournisseur
+W: Un fichier INI mis à jour à la main chaque matin
+W: Un inventaire vide, Ansible trouve seul les instances
+W: La liste des adresses IP écrite dans le playbook
+E: Un plugin d'inventaire comme amazon.aws.aws_ec2 ou azure.azcollection.azure_rm interroge l'API au lancement et forme des groupes à partir des étiquettes, par exemple role=web. Plus de liste à maintenir : une instance créée par l'autoscaling est prise en compte au prochain passage.
+
+@100
+Q: Pourquoi une revue de plan Terraform doit-elle porter une attention particulière aux changements sur les ressources IAM ?
+C: Un droit trop large passe vite inaperçu et ouvre l'accès à tout le compte
+W: Les ressources IAM sont les plus chères de la facture du fournisseur
+W: Terraform ne peut pas revenir en arrière sur une ressource IAM
+W: Les ressources IAM ne s'affichent jamais dans le plan
+E: Une ligne comme "Action": "*" ou un principal trop ouvert dans une politique de confiance donne un pouvoir considérable, sans rien changer de visible au fonctionnement. Ces changements méritent une relecture par un second regard et, idéalement, une règle de politique qui refuse les jokers en production.

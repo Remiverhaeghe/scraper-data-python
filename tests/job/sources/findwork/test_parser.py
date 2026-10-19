@@ -80,3 +80,16 @@ def test_guess_title_from_first_line(pText, pTitle):
     """Vérifie le titre tiré de la première ligne quand le poste manque."""
 
     assert guess_title(pText) == pTitle
+
+
+def test_parse_jobs_drops_offers_without_title():
+    """Vérifie qu'une offre sans poste, même deviné, est écartée."""
+
+    rJobs = parse_jobs(
+        [
+            build_job(),
+            build_job(id=2, role=None, text="<p>Location: Bangalore</p>"),
+        ]
+    )
+
+    assert rJobs["source_id"].tolist() == ["12345"]

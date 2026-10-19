@@ -1,0 +1,42 @@
+{
+  "lot": 1,
+  "seed": 2026101608,
+  "skills": [
+    "maintenance industrielle",
+    "maintenance préventive",
+    "maintenance curative",
+    "dépannage",
+    "GMAO"
+  ],
+  "schemas": [
+    {
+      "name": "maintenance-types.svg",
+      "questions": ["001", "002"],
+      "diagram": {
+        "title": "Types de maintenance",
+        "nodes": [
+          "Corrective : après la panne",
+          "Préventive systématique : à intervalle fixe",
+          "Conditionnelle : selon l'état mesuré",
+          "Prévisionnelle : selon la tendance"
+        ],
+        "note": "Du moins anticipé au plus anticipé"
+      }
+    },
+    {
+      "name": "maintenance-consignation.svg",
+      "questions": ["010", "011", "012"],
+      "diagram": {
+        "title": "Consignation d'une machine",
+        "nodes": [
+          "Séparer",
+          "Condamner (cadenas)",
+          "Identifier (étiquette)",
+          "Vérifier l'absence de tension",
+          "Mettre à la terre"
+        ],
+        "note": "Toutes les énergies : électrique, hydraulique, pneumatique, mécanique"
+      }
+    }
+  ]
+}

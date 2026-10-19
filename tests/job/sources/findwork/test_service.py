@@ -16,7 +16,10 @@ def mock_get_jobs(pPageSizes, pCalls):
         vCount = pPageSizes[pPage - 1]
 
         rData = {
-            "results": [{"id": f"{pPage}-{vIndex}"} for vIndex in range(vCount)],
+            "results": [
+                {"id": f"{pPage}-{vIndex}", "role": "Développeur Python"}
+                for vIndex in range(vCount)
+            ],
             "next": "page suivante" if pPage < len(pPageSizes) else None,
         }
 

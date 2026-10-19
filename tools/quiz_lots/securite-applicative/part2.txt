@@ -1,0 +1,435 @@
+@051
+Q: Qu'est-ce qu'une faille XSS « stockée » par rapport à une XSS « réfléchie » ?
+C: Le script est enregistré par le site et servi à tous
+W: Le script est stocké sur le poste de l'attaquant seulement
+W: Le script est chiffré avant d'être enregistré
+W: La faille stockée ne concerne que les administrateurs
+E: Une XSS réfléchie renvoie un paramètre de l'adresse dans la page : il faut faire cliquer la victime sur un lien piégé. Une XSS stockée, dans un commentaire ou un nom de profil, frappe chaque visiteur de la page. Les deux se corrigent par l'échappement à l'affichage.
+
+@052
+Q: Quel est le défaut de ce code JavaScript ?
+C: innerHTML interprète le nom comme du HTML
+W: Le nom est affiché sans majuscule initiale
+W: La page est rechargée à chaque affichage
+W: Le nom est envoyé au serveur en clair
+E: Un nom comme <img src=x onerror=alert(1)> exécute du code. textContent affiche le texte tel quel, sans l'interpréter. Les frameworks comme React échappent par défaut ; dangerouslySetInnerHTML ou v-html contournent cette protection.
+```javascript
+const nom = new URLSearchParams(location.search).get("nom");
+document.getElementById("bienvenue").innerHTML = "Bonjour " + nom;
+```
+
+@053
+Q: Quel risque représente un lien de redirection comme /connexion?suite=https://site-pirate.example ?
+C: Une redirection ouverte qui sert l'hameçonnage
+W: Une injection SQL dans le paramètre suite
+W: Un déni de service sur la page de connexion
+W: Une fuite du mot de passe dans l'adresse
+E: Après la connexion, la victime est envoyée vers un faux site qui imite le vrai et redemande ses informations ; le lien de départ portait le nom de domaine de confiance. On n'accepte que des chemins relatifs internes ou une liste de destinations connues.
+
+@054
+Q: Qu'est-ce qu'une injection NoSQL, par exemple avec MongoDB ?
+C: Une saisie transformée en opérateur de requête
+W: Une base NoSQL qui accepte des requêtes SQL
+W: Une copie d'une base vers un autre serveur
+W: Une requête trop longue pour être traitée
+E: Si l'application passe un objet JSON reçu directement dans la requête, {"password": {"$ne": null}} correspond à tout mot de passe non nul : l'authentification tombe. On valide le type des champs (une chaîne doit rester une chaîne) et on n'insère jamais d'objet utilisateur brut dans un filtre.
+
+@055
+Q: Quel est le danger de ce code Python ?
+C: La saisie est exécutée comme du code Python
+W: Le calcul est arrondi à l'entier inférieur
+W: La saisie est limitée à cinquante caractères
+W: Le résultat est affiché sans conversion en texte
+E: eval exécute n'importe quelle expression Python : __import__('os').system('...') prend le contrôle du serveur. Pour une calculatrice, on analyse l'expression avec un analyseur dédié ; pour des données, on utilise json.loads ou ast.literal_eval, limité aux valeurs littérales.
+```python
+expression = request.args["calcul"]
+resultat = eval(expression)
+```
+
+@056
+Q: Qu'est-ce qu'une attaque XXE ?
+C: Un document XML qui fait lire un fichier du serveur
+W: Un fichier XML trop volumineux pour être lu
+W: Une signature XML falsifiée par l'attaquant
+W: Un encodage XML incompatible avec l'application
+E: Une entité externe déclarée dans le XML, comme <!ENTITY x SYSTEM "file:///etc/passwd">, est remplacée par le contenu du fichier si l'analyseur l'autorise. On désactive les entités externes et les DTD dans la configuration de l'analyseur ; en Python, defusedxml le fait.
+
+@057
+Q: Pourquoi chiffrer les données sensibles au repos, en plus du HTTPS ?
+C: Pour qu'un disque volé reste illisible
+W: Pour que les requêtes SQL soient plus rapides
+W: Parce que le HTTPS ne chiffre pas les mots de passe
+W: Pour éviter d'utiliser un pare-feu
+E: Le HTTPS protège le transport ; une sauvegarde copiée sur un support égaré, un disque recyclé ou un accès au stockage cloud exposent les données au repos. Chiffrement du disque, de la base ou de colonnes précises selon la sensibilité, avec des clés gérées à part.
+
+@058
+Q: Pourquoi utiliser un algorithme reconnu plutôt qu'un chiffrement maison ?
+C: Les algorithmes publics ont résisté à des années d'analyse
+W: Un chiffrement maison est interdit par la loi
+W: Les algorithmes reconnus sont toujours plus rapides
+W: Un chiffrement maison ne peut pas chiffrer du texte
+E: La sécurité d'AES ou de ChaCha20 tient à des années d'attaques publiques infructueuses ; un algorithme inventé seul a presque toujours un défaut. On utilise des bibliothèques établies, comme cryptography en Python, avec leurs réglages recommandés, sans assembler soi-même les briques.
+
+@059
+Q: Quel est le défaut de ce chiffrement AES en mode ECB ?
+C: Deux blocs identiques donnent le même chiffré
+W: ECB ne peut pas chiffrer plus de 16 octets
+W: ECB exige une clé de 1 024 bits
+W: ECB ne permet pas de déchiffrer
+E: En ECB, chaque bloc est chiffré séparément : les motifs du texte clair restent visibles, la fameuse image de Tux chiffrée le montre. On utilise un mode authentifié comme AES-GCM, avec un nonce unique par message, qui protège aussi contre la modification.
+```python
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+chiffreur = Cipher(algorithms.AES(cle), modes.ECB()).encryptor()
+```
+
+@060
+Q: Que garantit un chiffrement authentifié comme AES-GCM, en plus de la confidentialité ?
+C: Qu'un message modifié est détecté au déchiffrement
+W: Que le message arrive plus vite à destination
+W: Que l'expéditeur peut toujours lire le message
+W: Que la clé n'a jamais besoin d'être changée
+E: Un chiffrement seul n'empêche pas un attaquant de modifier des bits du message chiffré, parfois avec des effets prévisibles. Le mode authentifié ajoute une étiquette vérifiée au déchiffrement : la moindre modification fait échouer l'opération.
+
+@061
+Q: Qu'est-ce qu'une attaque par force brute en ligne contre une API d'authentification ?
+C: Des essais automatisés de mots de passe sur l'API
+W: Une saturation du serveur par des requêtes vides
+W: La lecture du trafic réseau entre le client et l'API
+W: Un vol de base de données suivi d'un déchiffrement
+E: Sans limitation, un robot essaie des milliers de mots de passe par minute. L'API doit appliquer les mêmes protections que le formulaire web : limitation par compte et par adresse, délai croissant, alerte. Les API sont souvent oubliées alors qu'elles mènent aux mêmes comptes.
+
+@062
+Q: Qu'apporte l'authentification multifacteur par application TOTP par rapport au SMS ?
+C: Elle ne dépend pas du réseau téléphonique
+W: Elle ne nécessite aucun téléphone
+W: Elle fonctionne sans aucun mot de passe
+W: Elle supprime le besoin de sauvegarder le compte
+E: Les SMS peuvent être détournés par échange frauduleux de carte SIM ou interception. Une application TOTP génère le code localement à partir d'un secret partagé. Les clés physiques et passkeys FIDO2 vont plus loin : elles résistent même à l'hameçonnage.
+
+@063
+Q: Pourquoi les passkeys résistent-elles à l'hameçonnage ?
+C: La signature est liée au vrai nom de domaine du site
+W: Elles changent de mot de passe à chaque connexion
+W: Elles bloquent les courriels suspects
+W: Elles exigent une connexion depuis le bureau
+E: Une passkey, standard FIDO2, signe un défi avec une clé privée qui ne quitte pas l'appareil, et le navigateur l'associe au domaine réel. Sur un faux site, la clé ne correspond pas : rien à voler, rien à rejouer. Aucun secret partagé n'est stocké chez le site.
+
+@064
+Q: Que faut-il vérifier côté serveur lors d'un paiement en ligne, même si le prix est envoyé par le formulaire ?
+C: Le prix réel du produit, recalculé côté serveur
+W: Que le prix reçu comporte bien deux décimales
+W: Que le prix reçu est positif
+W: Que le navigateur affiche le même prix
+E: Un attaquant modifie le champ caché ou la requête et paie un téléviseur un euro. Le serveur recalcule le montant à partir de son catalogue et des quantités, applique lui-même les remises, et ignore le prix envoyé. C'est une faille de logique métier, invisible aux scanners.
+
+@065
+Q: Quelle faille de logique présente ce code d'application de coupon ?
+C: Le même coupon peut être appliqué plusieurs fois
+W: Le coupon est appliqué au mauvais client
+W: La remise est arrondie à l'euro supérieur
+W: Le coupon est refusé s'il contient des chiffres
+E: Rien n'empêche de rappeler la route avec le même code, chaque fois avec une remise de plus. On enregistre l'usage du coupon, on vérifie qu'il n'est pas déjà appliqué à la commande, et on traite deux requêtes simultanées par une contrainte d'unicité en base.
+```python
+def appliquer_coupon(commande, code):
+    coupon = Coupon.query.filter_by(code=code, actif=True).first()
+    if coupon:
+        commande.total -= coupon.remise
+```
+
+@066
+Q: Qu'est-ce qu'une situation de concurrence (race condition) exploitée sur un solde ?
+C: Deux requêtes simultanées dépensent le même solde
+W: Un serveur plus rapide que l'autre dans un cluster
+W: Un utilisateur qui clique deux fois sur un lien
+W: Une requête qui expire avant sa réponse
+E: Deux retraits envoyés au même instant lisent tous deux un solde de 100, le jugent suffisant et retirent chacun 100. On protège par une transaction avec verrou, ou une mise à jour conditionnelle (solde = solde - 100 WHERE solde >= 100) dont on vérifie le nombre de lignes modifiées.
+
+@067
+Q: Pourquoi un pare-feu applicatif (WAF) ne remplace-t-il pas un code sûr ?
+C: Il bloque des motifs connus mais se contourne
+W: Il ralentit tellement le site qu'on le désactive toujours
+W: Il ne fonctionne qu'en HTTP et jamais en HTTPS
+W: Il est interdit sur les sites publics
+E: Un WAF filtre des signatures d'attaques courantes : une bonne défense d'appoint, qui gagne du temps face à une faille connue. Mais des encodages, une logique métier ou une faille nouvelle passent à travers. La correction du code reste indispensable.
+
+@068
+Q: Qu'est-ce qu'un « secret » dans la configuration d'une intégration continue ?
+C: Une valeur chiffrée injectée à l'exécution
+W: Une branche cachée du dépôt Git
+W: Un test désactivé temporairement
+W: Un fichier ignoré par .gitignore
+E: GitHub Actions, GitLab CI et les autres stockent les secrets chiffrés et les masquent dans les journaux. Il faut éviter de les afficher volontairement, limiter les branches et les workflows qui y accèdent, et préférer une fédération d'identité qui évite les secrets permanents.
+
+@069
+Q: Quel risque présente ce workflow d'intégration continue sur un dépôt public ?
+C: Une demande de fusion externe peut lire les secrets
+W: Le workflow ne se lance jamais sur la branche principale
+W: Les tests sont exécutés deux fois inutilement
+W: Les dépendances sont téléchargées sans cache
+E: pull_request_target exécute le workflow avec les secrets du dépôt ; en récupérant le code de la demande de fusion, on exécute le code d'un inconnu avec ces secrets. On n'utilise pull_request_target que pour des actions qui ne lancent pas le code proposé.
+```yaml
+on: pull_request_target
+jobs:
+  tests:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: npm install && npm test
+```
+
+@070
+Q: Pourquoi fixer les actions GitHub par un identifiant de commit plutôt que par une étiquette comme @v4 ?
+C: Une étiquette peut être déplacée vers un code malveillant
+W: Les étiquettes ne fonctionnent pas sur les dépôts privés
+W: Un identifiant de commit rend le workflow plus rapide
+W: GitHub refuse les étiquettes depuis 2024
+E: Si le dépôt d'une action est compromis, l'attaquant peut déplacer l'étiquette v4 vers un code qui vole les secrets, comme lors de l'incident tj-actions en 2025. Un identifiant de commit est immuable. Dependabot sait mettre à jour ces identifiants.
+
+@071
+Q: Qu'est-ce qu'une attaque de la chaîne d'approvisionnement logicielle ?
+C: Piéger un composant tiers et ses utilisateurs
+W: Voler des marchandises pendant leur livraison
+W: Saturer le site d'un fournisseur de requêtes
+W: Copier le code d'une application concurrente
+E: Un paquet populaire piraté, une mise à jour d'outil modifiée ou un nom de paquet trompeur installent un code malveillant chez des milliers d'utilisateurs. Parades : versions verrouillées, vérification des empreintes, revue des nouvelles dépendances, droits limités dans l'intégration continue.
+
+@072
+Q: Qu'est-ce que le « typosquatting » de paquets ?
+C: Publier un paquet au nom proche d'un paquet connu
+W: Réserver un nom de domaine proche d'une marque
+W: Corriger les fautes de frappe d'un paquet existant
+W: Publier deux versions d'un paquet le même jour
+E: Un paquet nommé reqeusts au lieu de requests, ou python-dateutils, attend une faute de frappe dans une installation. Il exécute son code à l'installation. On vérifie le nom exact, l'éditeur et la popularité avant d'ajouter une dépendance.
+
+@073
+Q: Que permet un fichier de verrouillage comme package-lock.json ou poetry.lock ?
+C: Installer exactement les mêmes versions partout
+W: Empêcher toute mise à jour des dépendances
+W: Chiffrer les dépendances téléchargées
+W: Vérifier les licences des bibliothèques
+E: Le fichier fige les versions exactes et leurs empreintes, dépendances indirectes comprises : l'intégration continue et la production installent ce qui a été testé. Une version publiée hier, peut-être compromise, n'entre pas sans mise à jour volontaire et relue.
+
+@074
+Q: Qu'est-ce qu'un SBOM ?
+C: L'inventaire des composants logiciels
+W: Un scanner de vulnérabilités du réseau
+W: Un format de journal de sécurité
+W: Une norme de chiffrement des sauvegardes
+E: La nomenclature logicielle liste bibliothèques et versions. Quand une faille comme Log4Shell est publiée, on sait en minutes quelles applications sont touchées. Des formats comme CycloneDX et SPDX se génèrent automatiquement au moment de la construction.
+
+@075
+Q: Remettre dans l'ordre le traitement d'une vulnérabilité publiée dans une dépendance.
+O: Vérifier si la version utilisée est concernée
+O: Évaluer si la fonction vulnérable est réellement utilisée
+O: Mettre à jour la dépendance et relancer les tests
+O: Déployer, puis vérifier l'absence d'exploitation passée
+E: L'outil d'audit signale beaucoup de failles ; toutes ne sont pas exploitables dans le contexte. On priorise par gravité et exposition, mais on ne laisse pas traîner les mises à jour : une version obsolète finit par cumuler des failles critiques.
+
+@076
+Q: Que signifie un score CVSS de 9,8 pour une vulnérabilité ?
+C: Une gravité critique, souvent exploitable à distance
+W: 98 % des applications sont touchées
+W: La faille sera corrigée dans 9,8 jours
+W: La faille ne concerne que les anciennes versions
+E: Le CVSS note la gravité de 0 à 10 selon le vecteur d'attaque, la complexité, les privilèges requis et l'impact. Au-dessus de 9, la faille est critique. Le catalogue des failles activement exploitées, comme celui de la CISA, aide à prioriser au-delà du score.
+
+@077
+Q: Dans quel délai maximal, en heures, faut-il notifier à la CNIL une violation de données personnelles ?
+N: 72
+U: h
+E: Le RGPD impose de notifier l'autorité dans les 72 heures après avoir pris connaissance de la violation, sauf si elle ne présente pas de risque pour les personnes. Si le risque est élevé, il faut aussi prévenir les personnes concernées. Un journal des incidents est obligatoire dans tous les cas.
+
+@078
+Q: Qu'est-ce que la « privacy by design » appliquée à une application ?
+C: Collecter le minimum, protéger dès le départ
+W: Chiffrer l'application après sa mise en production
+W: Afficher une bannière de cookies sur chaque page
+W: Interdire l'accès de l'application aux mineurs
+E: Le RGPD demande de penser la protection des données dès le départ : minimiser les champs collectés, limiter la durée de conservation, cloisonner les accès, pseudonymiser quand c'est possible. Une donnée jamais collectée ne peut pas fuir.
+
+@079
+Q: Pourquoi pseudonymiser les données d'une base de test copiée de la production ?
+C: Pour éviter de vraies données en test
+W: Pour que les tests s'exécutent plus vite
+W: Parce que les bases de test refusent les vrais noms
+W: Pour réduire la taille de la base de test
+E: Les environnements de test sont moins protégés, plus partagés, parfois chez des prestataires. Copier la production telle quelle y expose les données des clients. On remplace noms, adresses et téléphones par des valeurs fictives cohérentes, ou on génère des jeux de données.
+
+@080
+Q: Qu'est-ce qu'un test d'intrusion ?
+C: Une attaque simulée et autorisée
+W: Un test qui mesure la charge maximale du site
+W: Un audit de la documentation de sécurité
+W: Une revue des droits des utilisateurs
+E: Des experts tentent de compromettre l'application ou le système dans un périmètre convenu par écrit, puis remettent un rapport avec les failles et leurs corrections. Sans autorisation écrite, la même démarche est une intrusion punie par la loi.
+
+@081
+Q: Associer chaque outil à son usage.
+P: OWASP ZAP => tester une application web en fonctionnement
+P: Bandit => analyser le code Python
+P: pip-audit => repérer les dépendances vulnérables
+P: Trivy => analyser une image de conteneur
+E: Ces outils couvrent des moments différents : le code, les dépendances, l'image construite, l'application qui tourne. Les intégrer à l'intégration continue attrape les problèmes avant la production, à moindre coût.
+
+@082
+Q: Pourquoi faire tourner un conteneur avec un utilisateur non root ?
+C: Une évasion du conteneur donne moins de droits
+W: Les conteneurs root ne peuvent pas accéder au réseau
+W: Pour que l'image soit plus légère
+W: Parce que Docker refuse les conteneurs root
+E: Une faille de l'application ou du noyau qui permet de sortir du conteneur donne les droits de l'utilisateur : root, c'est souvent la machine entière. La ligne USER app dans le Dockerfile, un système de fichiers en lecture seule et des capacités retirées limitent fortement le risque.
+
+@083
+Q: Que corrige cette ligne ajoutée à un Dockerfile ?
+C: L'application ne tourne plus en root
+W: L'image est construite plus rapidement
+W: Le conteneur n'a plus accès au réseau
+W: Les secrets sont chiffrés dans l'image
+E: Par défaut, les processus d'un conteneur tournent en root. USER fait tourner la suite avec un utilisateur créé pour l'occasion. On prévoit les droits sur les dossiers où l'application écrit, et un port d'écoute supérieur à 1024.
+```dockerfile
+RUN useradd --create-home app
+USER app
+```
+
+@084
+Q: Pourquoi ne pas mettre de secret dans une image de conteneur, même dans une couche supprimée ensuite ?
+C: Les couches précédentes restent lisibles dans l'image
+W: Le secret ralentit le démarrage du conteneur
+W: Les registres refusent les images avec des secrets
+W: Le secret est effacé au premier lancement
+E: Une image est un empilement de couches : un fichier ajouté puis supprimé reste dans la couche où il a été ajouté, lisible par docker history ou en extrayant l'image. On passe les secrets à l'exécution, ou au moment de la construction par un montage secret qui ne laisse rien.
+
+@085
+Q: Qu'est-ce qu'un « security.txt » publié sur un site ?
+C: Un fichier qui indique où signaler une faille
+W: La liste des failles connues du site
+W: Le certificat HTTPS au format texte
+W: Les règles du pare-feu applicatif
+E: Publié dans /.well-known/security.txt, il donne un contact, une clé de chiffrement et une politique de divulgation. Un chercheur qui trouve une faille sait à qui écrire, au lieu de la publier ou de renoncer. C'est simple et largement adopté.
+
+@086
+Q: Pourquoi la liste blanche est-elle préférable à la liste noire pour valider une saisie ?
+C: Elle n'accepte que ce qui est prévu, l'inconnu est refusé
+W: Elle est plus courte à écrire que la liste noire
+W: Elle fonctionne aussi pour les mots de passe
+W: Elle évite de valider côté serveur
+E: Une liste noire de caractères dangereux oublie toujours un encodage ou une variante. Vérifier qu'un code postal compte cinq chiffres, qu'un tri porte sur une colonne d'une liste connue ou qu'un identifiant est un entier ferme la porte à tout le reste.
+
+@087
+Q: Quel est le défaut de ce tri construit à partir d'un paramètre ?
+C: Le nom de colonne peut injecter du SQL
+W: Le tri est toujours croissant, jamais décroissant
+W: La requête renvoie les lignes en double
+W: Le paramètre est ignoré par la base
+E: Un nom de colonne ne se passe pas en paramètre de requête : on le colle dans la chaîne, et une saisie comme « nom; DROP TABLE produit » passe. On compare la valeur à une liste de colonnes autorisées et on refuse le reste.
+```python
+tri = request.args.get("tri", "nom")
+cursor.execute(f"SELECT * FROM produit ORDER BY {tri}")
+```
+
+@088
+Q: Que corrige cette version du tri ?
+C: Seules les colonnes prévues sont acceptées
+W: Le tri devient insensible à la casse
+W: La requête est mise en cache pour aller plus vite
+W: Le paramètre est chiffré avant la requête
+E: La liste blanche garantit que le nom de colonne collé dans la requête est l'un des trois prévus. Une valeur inconnue retombe sur « nom ». C'est le cas où la liste blanche est la seule solution, puisque les identifiants SQL ne se paramètrent pas.
+```python
+COLONNES = {"nom", "prix", "date_ajout"}
+tri = request.args.get("tri", "nom")
+tri = tri if tri in COLONNES else "nom"
+```
+
+@089
+Q: Pourquoi une application qui tourne dans le cloud doit-elle bloquer l'accès à l'adresse 169.254.169.254 depuis ses fonctions de téléchargement d'URL ?
+C: Elle peut livrer des identifiants cloud
+W: C'est l'adresse du serveur DNS du fournisseur
+W: C'est l'adresse de diffusion du réseau privé
+W: C'est l'adresse réservée aux tests de charge
+E: Le service de métadonnées des instances renvoie la configuration, et souvent des identifiants temporaires du rôle de l'instance. Une faille SSRF qui l'atteint livre ces droits. IMDSv2 sur AWS exige un jeton obtenu par une requête PUT, ce qui bloque la plupart des SSRF simples.
+
+@090
+Q: Remettre dans l'ordre une démarche de modélisation des menaces d'une nouvelle fonctionnalité.
+O: Décrire la fonctionnalité et ses flux de données
+O: Lister ce qui peut mal tourner, par exemple avec STRIDE
+O: Choisir une parade pour chaque menace retenue
+O: Vérifier les parades par des tests
+E: On se pose quatre questions : sur quoi travaille-t-on, qu'est-ce qui peut mal tourner, que fait-on, et l'a-t-on bien fait. STRIDE liste usurpation, falsification, répudiation, fuite d'information, déni de service et élévation de privilèges. Une heure de cet exercice évite souvent une faille de conception.
+
+@091
+Q: Associer chaque lettre de STRIDE à la menace qu'elle désigne.
+P: S => usurpation d'identité
+P: T => falsification de données
+P: I => fuite d'informations
+P: E => élévation de privilèges
+E: STRIDE comprend aussi R, la répudiation (nier une action faute de traces), et D, le déni de service. Chaque menace a sa famille de parades : authentification contre S, intégrité et signatures contre T, chiffrement et contrôle d'accès contre I, autorisation stricte contre E.
+
+@092
+Q: Pourquoi des noms d'utilisateur prévisibles et des identifiants séquentiels facilitent-ils certaines attaques ?
+C: Ils permettent d'énumérer comptes et ressources
+W: Ils empêchent l'utilisation du HTTPS
+W: Ils obligent à stocker les mots de passe en clair
+W: Ils rendent la base de données plus lente
+E: Avec /facture/1043, un attaquant essaie 1042 et 1044 ; avec des adresses e-mail devinables, il cible des comptes précis. L'identifiant aléatoire n'est pas une protection suffisante, le contrôle d'accès reste indispensable, mais il complique l'énumération.
+
+@093
+Q: Pourquoi une politique de mots de passe moderne privilégie-t-elle la longueur à la complexité imposée ?
+C: Une phrase longue est plus robuste et plus facile à retenir
+W: Les caractères spéciaux ne sont plus acceptés par les sites
+W: La complexité ralentit le hachage des mots de passe
+W: Les mots de passe longs ne peuvent pas être volés
+E: Les recommandations actuelles, comme celles du NIST, préfèrent une longueur minimale, la vérification contre les listes de fuites et l'absence de changement forcé sans raison. Les règles de complexité produisent des « Motdepasse1! » prévisibles et des mots de passe notés sur un papier.
+
+@094
+Q: Combien de combinaisons offre un code PIN de 6 chiffres ?
+N: 1000000
+E: Chaque chiffre a 10 valeurs : 10^6 = 1 000 000 combinaisons. C'est peu face à un robot sans limitation, d'où le blocage après quelques essais. Un mot de passe de 12 caractères parmi 70 offre environ 10^22 combinaisons.
+
+@095
+Q: Pourquoi la déconnexion doit-elle invalider la session côté serveur, et pas seulement supprimer le cookie ?
+C: Un cookie copié resterait sinon utilisable
+W: Pour libérer de la place dans le navigateur
+W: Parce que le navigateur refuse de supprimer les cookies
+W: Pour que l'utilisateur se reconnecte plus vite
+E: Si le serveur considère toujours la session valide, un cookie volé auparavant continue de fonctionner. La déconnexion supprime la session côté serveur ; un changement de mot de passe ferme toutes les sessions ouvertes. Avec des JWT, cela demande une liste de révocation ou une courte durée de vie.
+
+@096
+Q: Que doit faire une application quand une erreur survient pendant la vérification d'un droit d'accès ?
+C: Refuser l'accès par défaut
+W: Autoriser l'accès pour ne pas bloquer l'utilisateur
+W: Réessayer indéfiniment jusqu'à la réussite
+W: Désactiver la vérification pour cet utilisateur
+E: Un contrôle qui échoue « ouvert » transforme une panne d'annuaire ou une exception en faille. Le principe de refus par défaut veut qu'en cas de doute ou d'erreur, l'accès soit refusé et l'erreur journalisée.
+
+@097
+Q: Pourquoi séparer les comptes d'administration des comptes utilisés au quotidien ?
+C: Un poste ou un compte piégé n'obtient pas les droits élevés
+W: Pour que l'administrateur ait deux boîtes aux lettres
+W: Parce que les comptes d'administration ne peuvent pas lire leurs courriels
+W: Pour payer moins de licences logicielles
+E: En naviguant et lisant ses courriels avec un compte ordinaire, l'administrateur limite l'effet d'un hameçonnage ou d'un logiciel piégé. Le compte d'administration, avec un second facteur fort, ne sert qu'aux tâches qui le demandent.
+
+@098
+Q: Qu'est-ce qu'un programme de « bug bounty » ?
+C: Une récompense offerte aux chercheurs qui signalent des failles
+W: Une prime versée aux développeurs qui corrigent le plus de bogues
+W: Une amende infligée en cas de faille découverte
+W: Un concours de programmation entre équipes
+E: L'entreprise définit un périmètre, des règles et des récompenses ; des chercheurs du monde entier testent et signalent leurs trouvailles. C'est un complément aux audits, pertinent une fois les failles de base corrigées, sinon les signalements submergent l'équipe.
+
+@099
+Q: Pourquoi faut-il tester aussi les applications internes, non exposées sur Internet ?
+C: Un attaquant entré sur le réseau les vise ensuite
+W: Parce qu'elles deviennent publiques automatiquement
+W: Parce qu'elles n'ont pas de mot de passe
+W: Parce qu'elles sont plus lentes que les sites publics
+E: Après un hameçonnage réussi, l'attaquant est à l'intérieur : les applications internes mal protégées, réputées sûres, deviennent ses cibles pour progresser. Le modèle « zéro confiance » applique les mêmes exigences d'authentification et de chiffrement partout.
+
+@100
+Q: Que résume l'approche « zéro confiance » (zero trust) ?
+C: Ne jamais accorder d'accès sur le seul critère du réseau
+W: N'accorder aucun accès à personne, en aucun cas
+W: Faire confiance à tous les postes du réseau interne
+W: Supprimer les mots de passe de toutes les applications
+E: Être sur le réseau de l'entreprise ne prouve rien : chaque accès vérifie l'identité, l'état de l'appareil et le droit précis, et se limite au nécessaire. Cette approche suit la réalité du télétravail et du cloud, où il n'y a plus de périmètre clair à défendre.

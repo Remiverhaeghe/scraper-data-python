@@ -43,6 +43,15 @@ def isolated_settings(tmp_path):
 
 
 @pytest.fixture(autouse=True)
+def no_cache_warm_up(monkeypatch):
+    """Coupe le calcul anticipé du démarrage : il tournerait sur une base supprimée."""
+
+    monkeypatch.setattr(
+        "gui.main_window.prepare_quiz_caches", lambda pDatabaseFile: None
+    )
+
+
+@pytest.fixture(autouse=True)
 def close_windows():
     """Détruit les fenêtres laissées par un test, pour que les suivants restent rapides.
 

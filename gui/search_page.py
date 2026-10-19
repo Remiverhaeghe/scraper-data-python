@@ -278,11 +278,6 @@ class SearchPage(QWidget):
 
     def create_sources_card(self):
         """Construit la sélection des sources sous forme de pastilles."""
-        vCard, vLayout = create_card()
-
-        vTitle = QLabel("Sources")
-        vTitle.setObjectName("cardTitle")
-
         self.source_count_label = QLabel()
         self.source_count_label.setObjectName("cardSubtitle")
 
@@ -294,13 +289,9 @@ class SearchPage(QWidget):
         vNoneButton.setObjectName("linkButton")
         vNoneButton.clicked.connect(lambda: self.check_sources(False))
 
-        vHeader = QHBoxLayout()
-        vHeader.setSpacing(12)
-        vHeader.addWidget(vTitle)
-        vHeader.addWidget(self.source_count_label)
-        vHeader.addStretch()
-        vHeader.addWidget(vAllButton)
-        vHeader.addWidget(vNoneButton)
+        vCard, vLayout = create_card(
+            "Sources", pActions=[self.source_count_label, vAllButton, vNoneButton]
+        )
 
         vGrid = QGridLayout()
         vGrid.setSpacing(10)
@@ -312,7 +303,6 @@ class SearchPage(QWidget):
 
             vGrid.addWidget(vButton, *divmod(vIndex, SOURCE_COLUMNS))
 
-        vLayout.addLayout(vHeader)
         vLayout.addLayout(vGrid)
 
         return vCard

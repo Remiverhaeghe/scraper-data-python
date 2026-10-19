@@ -1,0 +1,34 @@
+{
+  "lot": 1,
+  "seed": 2026101605,
+  "skills": ["MySQL", "MariaDB", "InnoDB"],
+  "schemas": [
+    {
+      "name": "mysql-replication.svg",
+      "questions": ["059", "060", "061"],
+      "diagram": {
+        "title": "Réplication MySQL",
+        "nodes": [
+          "Application : écritures",
+          "Source : binlog",
+          "Réplica : rejoue le binlog",
+          "Lectures et rapports"
+        ],
+        "note": "Asynchrone : le réplica peut avoir un léger retard"
+      }
+    },
+    {
+      "name": "mysql-index-composite.svg",
+      "questions": ["055", "080"],
+      "diagram": {
+        "title": "Index composite (nom, prénom)",
+        "nodes": [
+          "WHERE nom = … : utilise l'index",
+          "WHERE nom = … AND prenom = … : utilise l'index",
+          "WHERE prenom = … seul : parcours complet"
+        ],
+        "note": "Règle du préfixe le plus à gauche, comme un annuaire"
+      }
+    }
+  ]
+}

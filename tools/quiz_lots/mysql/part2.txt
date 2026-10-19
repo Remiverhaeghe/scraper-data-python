@@ -1,0 +1,435 @@
+@051
+Q: Quel est le niveau d'isolation par défaut d'InnoDB ?
+C: REPEATABLE READ
+W: READ COMMITTED
+W: READ UNCOMMITTED
+W: SERIALIZABLE
+E: En REPEATABLE READ, une transaction relit toujours les mêmes valeurs grâce à une vue cohérente prise à sa première lecture. InnoDB y ajoute des verrous d'intervalle (gap locks) qui empêchent la plupart des lignes fantômes. Beaucoup d'autres bases, comme PostgreSQL ou SQL Server, sont en READ COMMITTED par défaut.
+
+@052
+Q: Que fait cette requête dans une transaction ?
+C: Elle verrouille la ligne lue jusqu'au COMMIT
+W: Elle met à jour la ligne après l'avoir lue
+W: Elle lit la ligne sans aucun verrou
+W: Elle copie la ligne dans une table temporaire
+E: La ligne lue est verrouillée en écriture : une autre transaction qui veut la modifier, ou la lire avec FOR UPDATE, attend. On l'utilise pour réserver un stock : lire la quantité, vérifier, décrémenter, sans qu'une commande concurrente passe entre les deux. Depuis MySQL 8.0, NOWAIT et SKIP LOCKED évitent d'attendre.
+```sql
+START TRANSACTION;
+SELECT quantite FROM stock WHERE produit_id = 12 FOR UPDATE;
+```
+
+@053
+Q: Deux commandes simultanées lisent le stock (1 article), le jugent suffisant et le décrémentent. Que manque-t-il ?
+C: Un verrou, ou une mise à jour conditionnelle
+W: Un index sur la colonne quantité du stock
+W: Une clé étrangère entre commande et produit
+W: Un niveau d'isolation READ UNCOMMITTED
+E: Sans verrou, les deux lisent 1, valident et vendent deux fois le même article. SELECT ... FOR UPDATE sérialise les deux transactions ; UPDATE stock SET qte = qte - 1 WHERE id = 12 AND qte > 0 fait la vérification et l'écriture en une instruction atomique, et on vérifie le nombre de lignes modifiées.
+
+@054
+Q: Quelle commande affiche le dernier interblocage détecté par InnoDB ?
+C: SHOW ENGINE INNODB STATUS
+W: SHOW PROCESSLIST
+W: SHOW DEADLOCKS
+W: SHOW INDEX FROM commande
+E: La section LATEST DETECTED DEADLOCK montre les deux transactions, leurs requêtes et les verrous en conflit. innodb_print_all_deadlocks=ON les écrit tous dans le journal d'erreurs. InnoDB annule l'une des transactions, qui reçoit l'erreur 1213 et doit être relancée.
+
+@055
+Q: Pourquoi un index composite (nom, prenom) sert-il à WHERE nom = 'Durand' mais pas à WHERE prenom = 'Léa' seul ?
+C: L'index est trié d'abord par nom
+W: Un index composite ne sert qu'à l'ordre exact du SELECT
+W: MySQL n'utilise jamais un index de deux colonnes
+W: prenom est une colonne trop courte pour être indexée
+E: Comme un annuaire trié par nom puis prénom : on trouve vite tous les Durand, ou Durand Léa, mais chercher tous les prénoms Léa oblige à tout parcourir. C'est la règle du préfixe le plus à gauche. On ordonne les colonnes selon les requêtes les plus fréquentes.
+
+@056
+Q: Que signifie « Using index » dans la colonne Extra d'un EXPLAIN ?
+C: La requête est servie par l'index seul
+W: Un index est en cours de création sur la table
+W: Tous les index de la table sont utilisés
+W: L'index est ignoré au profit d'un parcours
+E: Quand toutes les colonnes demandées sont dans l'index, MySQL n'a pas besoin de lire les lignes : c'est un index couvrant, très rapide. En InnoDB, chaque index secondaire contient aussi la clé primaire, ce qui couvre souvent plus de requêtes qu'on ne le pense.
+
+@057
+Q: Que signale « Using filesort » dans un EXPLAIN ?
+C: Un tri supplémentaire faute d'index utilisable
+W: Un tri écrit obligatoirement dans un fichier
+W: Une lecture de la table depuis un fichier CSV
+W: Une erreur de tri due au jeu de caractères
+E: MySQL doit trier les lignes lui-même, en mémoire ou sur disque selon le volume, car aucun index ne fournit l'ordre du ORDER BY. Sur beaucoup de lignes, c'est coûteux. Un index qui couvre le WHERE puis le ORDER BY évite ce tri.
+
+@058
+Q: Pourquoi cette requête de pagination est-elle lente sur une grande table ?
+C: MySQL lit 200 020 lignes pour en jeter 200 000
+W: OFFSET désactive tous les index de la requête
+W: MySQL interdit un OFFSET supérieur à 100 000
+W: LIMIT force un tri de toute la table sur disque
+E: OFFSET ne saute pas magiquement : les lignes sont lues puis écartées. Pour une pagination profonde, on retient la dernière clé vue : WHERE id > 200345 ORDER BY id LIMIT 20, qui va directement au bon endroit grâce à l'index.
+```sql
+SELECT * FROM journal ORDER BY id LIMIT 20 OFFSET 200000;
+```
+
+@059
+Q: Associer chaque réglage de réplication MySQL à son rôle.
+P: Source => reçoit les écritures et les écrit dans le binlog
+P: Réplica => rejoue le binlog de la source
+P: GTID => identifie chaque transaction de façon unique
+E: Avec les GTID, un réplica sait exactement quelles transactions il a appliquées : changer de source après une panne devient simple. La réplication asynchrone peut perdre les dernières transactions si la source tombe ; la semi-synchrone attend qu'un réplica les ait reçues.
+
+@060
+Q: Que mesure Seconds_Behind_Source dans SHOW REPLICA STATUS ?
+C: Le retard du réplica sur la source
+W: Le temps depuis le dernier redémarrage
+W: La durée moyenne d'une requête sur le réplica
+W: Le délai avant la prochaine sauvegarde
+E: Une valeur qui grandit signale que le réplica n'arrive plus à suivre : requête lourde, disque lent, grosse transaction. Une application qui lit sur un réplica en retard voit des données anciennes, par exemple une commande qu'elle vient de créer et qui « n'existe pas ».
+
+@061
+Q: Pourquoi une application qui écrit sur la source et relit aussitôt sur un réplica peut-elle afficher une donnée ancienne ?
+C: La réplication est asynchrone et prend du retard
+W: Les réplicas refusent toute lecture récente
+W: La source supprime les données après les avoir envoyées
+W: Le binlog n'est transmis qu'une fois par heure
+E: L'écriture est validée sur la source avant d'être appliquée sur le réplica. Pour lire ses propres écritures, on lit sur la source juste après une modification, ou on attend que le réplica ait appliqué le GTID de la transaction. Les tableaux de bord peuvent, eux, tolérer un léger retard.
+
+@062
+Q: Quel format de binlog est recommandé pour une réplication fiable ?
+C: ROW
+W: STATEMENT
+W: MIXED
+W: TEXT
+E: En format ROW, le binlog contient les lignes modifiées, pas la requête : une requête non déterministe, comme UPDATE ... LIMIT 1 sans ORDER BY ou avec NOW(), donne le même résultat sur le réplica. C'est le défaut depuis MySQL 5.7.7, au prix d'un binlog plus volumineux.
+
+@063
+Q: Que permet une fonction de fenêtrage comme ROW_NUMBER, disponible depuis MySQL 8.0 ?
+C: Numéroter les lignes dans chaque groupe
+W: Compter le nombre de fenêtres ouvertes
+W: Afficher le résultat dans une fenêtre de MySQL Workbench
+W: Diviser une table en plusieurs fichiers
+E: ROW_NUMBER() OVER (PARTITION BY client_id ORDER BY date_commande DESC) numérote les commandes de chaque client, la plus récente d'abord. Avant MySQL 8.0, il fallait des variables utilisateur ou des auto-jointures, plus lentes et moins lisibles.
+
+@064
+Q: Que renvoie cette requête ?
+C: La dernière commande de chaque client
+W: Le nombre de commandes de chaque client
+W: La première commande passée sur le site
+W: Une erreur, WITH n'existe pas en MySQL
+E: La CTE numérote les commandes par client, la plus récente en premier ; la requête garde le numéro 1. Les CTE et fonctions de fenêtrage existent depuis MySQL 8.0 et MariaDB 10.2. Une fonction de fenêtrage ne s'utilise pas directement dans le WHERE, d'où la CTE.
+```sql
+WITH classees AS (
+    SELECT c.*, ROW_NUMBER() OVER (
+        PARTITION BY client_id ORDER BY date_commande DESC) AS rang
+    FROM commande c
+)
+SELECT * FROM classees WHERE rang = 1;
+```
+
+@065
+Q: Que renvoie cette requête sur une colonne JSON ?
+C: La ville de chaque client, sans guillemets
+W: La ville de chaque client, entre guillemets
+W: Le document JSON complet de chaque client
+W: Une erreur, MySQL ne lit pas le JSON
+E: ->> extrait une valeur et retire les guillemets JSON, équivalent de JSON_UNQUOTE(JSON_EXTRACT(...)) ; -> la renverrait entre guillemets. MySQL valide le JSON à l'écriture. Pour chercher vite par ville, on ajoute une colonne générée indexée.
+```sql
+SELECT nom, adresse->>'$.ville' AS ville FROM client;
+```
+
+@066
+Q: À quoi sert une colonne générée stockée, indexée, sur un champ JSON ?
+C: À rechercher vite une valeur du document JSON
+W: À compresser le document JSON sur le disque
+W: À valider le document JSON à chaque lecture
+W: À convertir le JSON en XML pour l'export
+E: ville VARCHAR(100) AS (adresse->>'$.ville') STORED crée une colonne calculée à partir du JSON ; un index dessus rend la recherche par ville rapide. Les colonnes virtuelles, non stockées, s'indexent aussi en InnoDB. On garde la souplesse du JSON sans perdre les performances.
+
+@067
+Q: Que garantit le mode SQL strict (STRICT_TRANS_TABLES) ?
+C: Une valeur invalide est refusée, pas tronquée en silence
+W: Les requêtes sont exécutées dans un ordre strict
+W: Seuls les administrateurs peuvent écrire dans les tables
+W: Les tables doivent toutes avoir une clé primaire
+E: Sans mode strict, insérer « abc » dans un INT donne 0 avec un simple avertissement, et un texte trop long est coupé. Le mode strict renvoie une erreur : les données restent justes. Il est actif par défaut depuis MySQL 5.7 ; certaines vieilles applications le désactivent, à leurs risques.
+
+@068
+Q: Pourquoi WHERE nom = 'durand' trouve-t-il « Durand » ?
+C: La collation par défaut ignore la casse
+W: MySQL convertit toujours les chaînes en majuscules
+W: L'index sur nom stocke les noms en minuscules
+W: La comparaison de chaînes utilise la phonétique
+E: La collation utf8mb4_0900_ai_ci est insensible aux accents (ai) et à la casse (ci) : « Durand », « durand » et « DURAND » sont égaux, « é » et « e » aussi. Pour une comparaison exacte, on utilise une collation _bin ou _cs, par exemple pour des codes ou des mots de passe hachés.
+
+@069
+Q: Un texte enregistré « Café » s'affiche « CafÃ© » dans l'application. Quelle est la cause la plus probable ?
+C: Un jeu de caractères de connexion différent
+W: Une colonne trop courte qui tronque les accents
+W: Un index corrompu sur la colonne de texte
+W: Un pilote MySQL trop récent pour la base
+E: Du texte UTF-8 lu comme du latin1, ou l'inverse, donne ce « mojibake ». On aligne tout en utf8mb4 : la table, la connexion (charset=utf8mb4 dans la chaîne de connexion ou SET NAMES utf8mb4) et l'application. Réparer des données déjà mal converties demande une conversion prudente, sur une copie.
+
+@070
+Q: Comment modifier une grosse table en production sans la bloquer pendant des heures ?
+C: Avec ALGORITHM=INSTANT, ou un outil comme gh-ost
+W: En désactivant le binlog pendant la modification
+W: En redémarrant MySQL en mode lecture seule
+W: En supprimant tous les index avant la modification
+E: MySQL 8.0 ajoute instantanément une colonne en fin de table ; d'autres changements se font en ligne (ALGORITHM=INPLACE, LOCK=NONE). Sinon, gh-ost ou pt-online-schema-change copient la table vers une nouvelle version en arrière-plan, puis basculent en un instant.
+
+@071
+Q: À quoi sert la commande mysql_secure_installation après une installation ?
+C: À retirer les comptes et bases de test et sécuriser root
+W: À chiffrer tous les fichiers de données du serveur
+W: À installer un certificat TLS signé par une autorité
+W: À créer automatiquement les comptes des applications
+E: Le script propose de définir le mot de passe de root, supprimer les utilisateurs anonymes, interdire la connexion distante de root et supprimer la base test. C'est la première chose à faire sur un serveur installé à la main.
+
+@072
+Q: Pourquoi régler bind-address = 127.0.0.1 sur un serveur MySQL utilisé seulement en local ?
+C: Pour qu'il n'écoute pas sur le réseau
+W: Pour que les requêtes s'exécutent plus vite
+W: Pour obliger les utilisateurs à saisir un mot de passe
+W: Pour activer le chiffrement des connexions
+E: Une base que seule l'application du même serveur utilise n'a pas à être joignable depuis le réseau : un port 3306 ouvert sur Internet est scanné en permanence. Si des serveurs d'application distants doivent s'y connecter, on écoute sur l'interface privée et on filtre par pare-feu.
+
+@073
+Q: Quel plugin d'authentification est utilisé par défaut dans MySQL 8 ?
+C: caching_sha2_password
+W: mysql_native_password
+W: sha256_password
+W: auth_socket
+E: caching_sha2_password remplace mysql_native_password, basé sur SHA-1. Certains vieux pilotes ne le gèrent pas, d'où l'erreur « authentication plugin caching_sha2_password cannot be loaded » : on met à jour le pilote plutôt que de revenir à l'ancien plugin.
+
+@074
+Q: À quoi sert l'option secure_file_priv ?
+C: À limiter les dossiers lus par LOAD DATA INFILE
+W: À chiffrer les fichiers de données de MySQL
+W: À protéger le fichier de configuration my.cnf
+W: À sauvegarder les fichiers des tables dans un dossier sûr
+E: LOAD DATA INFILE et SELECT ... INTO OUTFILE lisent et écrivent des fichiers sur le serveur. secure_file_priv restreint ces opérations à un dossier, ou les interdit. Sans elle, un compte avec le droit FILE pourrait lire des fichiers sensibles du serveur.
+
+@075
+Q: Quelle commande charge rapidement un fichier CSV de 2 millions de lignes dans une table ?
+C: LOAD DATA INFILE
+W: INSERT INTO ... SELECT
+W: SOURCE fichier.csv
+W: IMPORT TABLE ... FROM CSV
+E: LOAD DATA lit le fichier en bloc, bien plus vite que des millions d'INSERT. On précise séparateur, guillemets et première ligne à ignorer. LOCAL lit le fichier sur le poste client. SOURCE exécute un script SQL, pas un CSV.
+
+@076
+Q: Pourquoi une transaction qui reste ouverte des heures pose-t-elle problème à InnoDB ?
+C: Elle empêche la purge des anciennes versions de lignes
+W: Elle bloque toutes les lectures de la base
+W: Elle désactive la réplication vers les réplicas
+W: Elle remplit le journal des requêtes lentes
+E: InnoDB garde les anciennes versions des lignes tant qu'une transaction peut encore les lire : la liste d'historique (history list length) grossit, l'espace undo aussi, et les requêtes ralentissent. On cherche ces transactions dans information_schema.innodb_trx, souvent une session de console oubliée.
+
+@077
+Q: Que contient la table information_schema.innodb_trx ?
+C: Les transactions InnoDB en cours
+W: L'historique des transactions validées
+W: Les verrous posés par les sauvegardes
+W: Les tables qui utilisent le moteur InnoDB
+E: On y voit chaque transaction ouverte, son début, son état et le thread associé. Une transaction démarrée il y a trois heures et inactive est suspecte. performance_schema.data_locks montre les verrous qu'elle détient et ceux qu'elle attend.
+
+@078
+Q: À quoi sert un pool de connexions dans l'application ?
+C: Réutiliser des connexions ouvertes au lieu d'en créer une par requête
+W: Répartir automatiquement les tables entre plusieurs serveurs
+W: Garder en mémoire les résultats des requêtes fréquentes
+W: Ouvrir une connexion par utilisateur du site
+E: Ouvrir une connexion coûte une négociation réseau et une authentification. Un pool, comme HikariCP en Java, garde quelques connexions prêtes. Bien dimensionné, il évite aussi d'atteindre max_connections : vingt connexions bien utilisées valent mieux que cinq cents qui attendent.
+
+@079
+Q: Que fait la commande suivante ?
+C: Elle affiche les index de la table commande
+W: Elle crée un index sur chaque colonne de commande
+W: Elle reconstruit les index de la table commande
+W: Elle supprime les index inutilisés de commande
+E: SHOW INDEX liste chaque index avec ses colonnes, leur ordre, l'unicité et la cardinalité estimée. On repère ainsi les index en double, comme (client_id) et (client_id, date_commande), dont le premier est inutile puisque le second commence par la même colonne.
+```sql
+SHOW INDEX FROM commande;
+```
+
+@080
+Q: Pourquoi l'index (client_id) est-il redondant si l'index (client_id, date_commande) existe ?
+C: Le second sert déjà les recherches sur client_id seul
+W: Deux index ne peuvent pas porter sur la même colonne
+W: Le premier est plus lent car il a moins de colonnes
+W: MySQL fusionne automatiquement les deux index
+E: Par la règle du préfixe le plus à gauche, l'index composite répond aux recherches sur client_id. Le simple index ne fait qu'alourdir chaque insertion. La vue sys.schema_redundant_indexes liste ces cas ; sys.schema_unused_indexes les index jamais utilisés.
+
+@081
+Q: Quelle différence entre un cluster Galera de MariaDB et une réplication classique ?
+C: Galera écrit sur tous les nœuds et valide de façon synchrone
+W: Galera ne réplique que les tables MyISAM
+W: Galera exige un seul serveur en écriture et des copies en lecture
+W: Galera recopie la base entière toutes les heures
+E: Avec Galera, une transaction est certifiée par tous les nœuds avant d'être validée : pas de perte à la panne d'un nœud, écritures possibles partout. En contrepartie, chaque validation attend le réseau et les conflits entre nœuds font échouer des transactions. MySQL propose une approche voisine avec Group Replication.
+
+@082
+Q: Pourquoi un cluster Galera compte-t-il de préférence trois nœuds plutôt que deux ?
+C: Pour qu'une majorité subsiste si un nœud tombe
+W: Parce que Galera refuse de démarrer avec deux nœuds
+W: Pour tripler la capacité d'écriture du cluster
+W: Pour garder une sauvegarde sur le troisième nœud
+E: Après une coupure réseau, seul le groupe majoritaire continue d'accepter des écritures, pour éviter que deux moitiés divergent. Avec deux nœuds, aucun n'a la majorité seul. Avec trois, la perte d'un nœud laisse une majorité de deux. Un arbitre (garbd) peut servir de troisième voix.
+
+@083
+Q: Que fait un déclencheur BEFORE INSERT sur la table client ?
+C: Il s'exécute avant chaque ligne insérée et peut modifier NEW
+W: Il s'exécute une fois avant toute insertion de la journée
+W: Il empêche toute insertion dans la table client
+W: Il s'exécute après la validation de la transaction
+E: En MySQL, les déclencheurs sont FOR EACH ROW : ils s'exécutent pour chaque ligne. Dans un BEFORE INSERT, on peut corriger NEW.email en minuscules ou refuser la ligne avec SIGNAL. Trop de logique dans les déclencheurs rend le comportement difficile à suivre.
+
+@084
+Q: Que fait ce déclencheur ?
+C: Il enregistre l'ancien et le nouveau prix à chaque changement
+W: Il empêche toute modification du prix d'un produit
+W: Il enregistre seulement les nouveaux produits
+W: Il recalcule le prix de tous les produits
+E: OLD et NEW donnent les valeurs avant et après la modification de chaque ligne. La condition évite de journaliser une mise à jour qui ne change pas le prix. Une table temporelle, chez MariaDB, ou le binlog, offrent d'autres moyens de garder l'historique.
+```sql
+CREATE TRIGGER historique_prix AFTER UPDATE ON produit
+FOR EACH ROW
+BEGIN
+    IF OLD.prix <> NEW.prix THEN
+        INSERT INTO prix_historique (produit_id, ancien, nouveau, modifie_le)
+        VALUES (NEW.id, OLD.prix, NEW.prix, NOW());
+    END IF;
+END;
+```
+
+@085
+Q: Quelle fonction MariaDB propose-t-elle sans équivalent direct dans MySQL ?
+C: Les tables versionnées par le système
+W: Les fonctions de fenêtrage
+W: Les expressions de table communes
+W: Le moteur InnoDB
+E: MariaDB permet WITH SYSTEM VERSIONING : chaque modification garde l'ancienne version, consultable avec FOR SYSTEM_TIME AS OF. Elle propose aussi des séquences. Les fonctions de fenêtrage, les CTE et InnoDB existent des deux côtés. Ces différences comptent avant de migrer de l'un à l'autre.
+
+@086
+Q: Une table InnoDB n'a pas de clé primaire. Quel problème cela pose-t-il ?
+C: Une clé cachée est créée, et la réplication en ROW souffre
+W: La table refuse toute insertion de lignes
+W: Les index secondaires sont interdits sur la table
+W: La table est automatiquement convertie en MyISAM
+E: InnoDB organise chaque table selon sa clé primaire ; sans elle, il en génère une invisible. En réplication ROW, appliquer une mise à jour sur une table sans clé oblige le réplica à parcourir toute la table pour chaque ligne : le retard explose. On donne toujours une clé primaire à chaque table.
+
+@087
+Q: Pourquoi une clé primaire UUID aléatoire ralentit-elle les insertions massives en InnoDB ?
+C: Chaque ligne s'insère au hasard dans l'index trié
+W: Les UUID ne peuvent pas être indexés
+W: Les UUID occupent moins de place qu'un entier
+W: InnoDB recalcule tous les UUID à chaque insertion
+E: La table étant rangée selon sa clé primaire, des valeurs aléatoires forcent des insertions partout, des pages découpées et plus d'écritures disque. Un entier croissant ajoute en fin d'index. Si un UUID est nécessaire, une version ordonnée dans le temps, comme UUIDv7, stockée en BINARY(16), limite le problème.
+
+@088
+Q: À quoi sert le partitionnement par plage d'une table de journaux par mois ?
+C: Supprimer un mois d'un coup et lire moins
+W: Répartir la table sur plusieurs serveurs MySQL
+W: Chiffrer chaque mois avec une clé différente
+W: Dupliquer les journaux pour les lire plus vite
+E: ALTER TABLE journal DROP PARTITION p202501 supprime un mois en une fraction de seconde, au lieu d'un DELETE massif. Les requêtes filtrées sur la date ne lisent que les partitions concernées. Toute clé unique doit alors inclure la colonne de partitionnement.
+
+@089
+Q: Combien de partitions mensuelles faut-il pour garder 2 ans de journaux, plus une partition pour le mois à venir ?
+N: 25
+E: 24 mois d'historique plus le mois à venir font 25 partitions. Chaque mois, une tâche crée la partition suivante et supprime la plus ancienne. Sans partition prête pour le mois à venir, les insertions échouent ou tombent dans une partition fourre-tout.
+
+@090
+Q: Que fait cette instruction ?
+C: Elle purge chaque jour les journaux de plus de 90 jours
+W: Elle purge une seule fois les journaux de plus de 90 jours
+W: Elle archive les journaux dans une table chaque jour
+W: Elle crée une table journal vidée tous les 90 jours
+E: Le planificateur d'événements exécute la requête chaque jour, sans cron, à condition que event_scheduler soit actif. Les événements sont pratiques mais moins visibles qu'une tâche externe : on les documente et on surveille leurs erreurs. Un partitionnement par mois rendrait cette purge instantanée.
+```sql
+CREATE EVENT purge_journal
+ON SCHEDULE EVERY 1 DAY
+DO DELETE FROM journal WHERE cree_le < NOW() - INTERVAL 90 DAY;
+```
+
+@091
+Q: Remettre dans l'ordre la mise à niveau d'un serveur MySQL 5.7 vers 8.0.
+O: Vérifier la compatibilité avec l'outil de contrôle de MySQL Shell
+O: Faire une sauvegarde complète testée
+O: Mettre à niveau un réplica et y tester l'application
+O: Basculer l'application vers le réplica mis à niveau
+O: Mettre à niveau l'ancienne source et la remettre en réplica
+E: util.checkForServerUpgrade() de MySQL Shell signale mots réservés, jeux de caractères et options obsolètes. Passer par un réplica limite l'interruption à la bascule et garde un retour arrière possible. On teste notamment l'authentification des pilotes et les modes SQL.
+
+@092
+Q: Que montre la vue sys.statements_with_full_table_scans ?
+C: Les requêtes qui parcourent des tables entières
+W: Les tables jamais lues depuis le démarrage
+W: Les index utilisés par toutes les requêtes
+W: Les requêtes refusées par le mode strict
+E: Le schéma sys, construit sur performance_schema, résume l'activité : requêtes sans index, index jamais utilisés, attentes, entrées-sorties par table. C'est une liste de travail prête pour l'optimisation, sans outil externe.
+
+@093
+Q: Quelle commande dans MySQL Shell sauvegarde une instance avec plusieurs threads en parallèle ?
+C: util.dumpInstance()
+W: mysqldump --threads
+W: SHOW BACKUP
+W: BACKUP DATABASE
+E: util.dumpInstance et util.dumpSchemas exportent en parallèle et compressent ; util.loadDump recharge en parallèle aussi, bien plus vite que mysqldump sur de gros volumes. BACKUP DATABASE est la syntaxe de SQL Server. Pour une sauvegarde physique à chaud, il existe aussi XtraBackup.
+
+@094
+Q: Pourquoi stocker les mots de passe des utilisateurs du site avec un hachage lent comme bcrypt ou Argon2, et non en MD5 ?
+C: Pour rendre les essais massifs très coûteux après une fuite
+W: Parce que MD5 n'est pas disponible dans MySQL
+W: Pour pouvoir retrouver le mot de passe d'origine
+W: Pour que la colonne prenne moins de place
+E: MD5 se calcule par milliards par seconde sur une carte graphique : une base fuitée livre vite la plupart des mots de passe. bcrypt et Argon2 sont lents à dessein et salés. Le hachage se fait dans l'application, pas avec les fonctions SQL, pour que le mot de passe ne passe jamais en clair dans les requêtes.
+
+@095
+Q: Que trouve cette requête dans la table client ?
+C: Les e-mails présents en plusieurs exemplaires
+W: Les clients qui n'ont pas d'e-mail
+W: Le nombre total d'e-mails différents
+W: Les deux premiers clients par ordre alphabétique
+E: Le regroupement par e-mail puis le filtre sur les groupes de plus d'une ligne isolent les doublons. DISTINCT les masquerait au lieu de les montrer. Une fois nettoyés, un index UNIQUE empêche qu'ils reviennent. La collation insensible à la casse compte « A@x.fr » et « a@x.fr » comme un doublon.
+```sql
+SELECT email, COUNT(*) AS nb
+FROM client
+GROUP BY email
+HAVING COUNT(*) > 1;
+```
+
+@096
+Q: Un rapport lit des millions de lignes et ralentit le site. Quelle solution déporte cette charge ?
+C: Exécuter le rapport sur un réplica en lecture
+W: Augmenter max_connections de la source
+W: Désactiver le binlog pendant le rapport
+W: Convertir les tables du rapport en MyISAM
+E: Un réplica dédié aux rapports absorbe les lectures lourdes sans peser sur la source qui sert le site. Il faut accepter un léger retard des données. Pour beaucoup de rapports, un entrepôt de données ou des tables de synthèse calculées la nuit sont encore plus efficaces.
+
+@097
+Q: Quelle commande donne la liste des requêtes les plus coûteuses depuis le démarrage, grâce au schéma sys ?
+C: SELECT * FROM sys.statement_analysis;
+W: SHOW SLOW QUERIES;
+W: SELECT * FROM mysql.slow;
+W: EXPLAIN ALL;
+E: sys.statement_analysis regroupe les requêtes normalisées avec leur nombre d'exécutions, leur temps total et moyen, les lignes lues et renvoyées. Trier par temps total montre ce qui coûte le plus au serveur, souvent une petite requête exécutée des millions de fois plutôt qu'un gros rapport.
+
+@098
+Q: Une requête renvoie 50 lignes mais en examine 4 millions d'après le journal des requêtes lentes. Que conclure ?
+C: Un index adapté manque, la requête lit presque tout
+W: Le serveur manque de mémoire pour envoyer 50 lignes
+W: Le réseau est trop lent entre l'application et MySQL
+W: La table est corrompue et doit être réparée
+E: Le rapport entre lignes examinées et renvoyées est le premier indicateur : 4 millions pour 50 signale un parcours. EXPLAIN montre quel accès est choisi ; un index sur les colonnes du WHERE, dans le bon ordre, ramène la lecture à quelques dizaines de lignes.
+
+@099
+Q: Combien de lignes examinées par ligne renvoyée dans le cas précédent ?
+N: 80000
+E: 4 000 000 / 50 = 80 000 lignes lues pour chaque ligne utile. Un bon index vise un rapport proche de 1 à 10. Ce ratio, affiché par pt-query-digest ou sys.statement_analysis, oriente vers les requêtes où un index rapporte le plus.
+
+@100
+Q: Pourquoi chiffrer les connexions à MySQL quand l'application et la base sont sur des serveurs différents ?
+C: Pour que requêtes et données ne circulent pas en clair
+W: Pour accélérer le transfert des résultats volumineux
+W: Parce que MySQL refuse toute connexion distante non chiffrée
+W: Pour que le mot de passe ne soit plus nécessaire
+E: Sans TLS, un attaquant sur le réseau lit les requêtes, les résultats et parfois l'authentification. require_secure_transport=ON refuse les connexions non chiffrées ; on crée les comptes avec REQUIRE SSL. Le coût en performance est faible avec les processeurs actuels.

@@ -3,6 +3,7 @@
 import json
 import random
 import re
+import threading
 import unicodedata
 from datetime import date, datetime, timedelta
 from functools import lru_cache
@@ -256,27 +257,101 @@ MIN_MATCHED_SKILLS = 2
 # Comptes par texte, gardés tant que les offres en base ne changent pas
 TEXT_COUNTS_CACHE = {}
 
+# Le calcul peut tourner en arrière-plan au démarrage : un seul à la fois, la
+# page qui le demande en même temps attend son résultat au lieu de le refaire.
+TEXT_COUNTS_LOCK = threading.Lock()
 
-def build_skills_pattern(pSkills):
-    """Retourne le motif qui repère les compétences, en mots entiers, ou None."""
 
-    vParts = [
-        (
-            re.escape(vSkill)
-            if len(vSkill) < MIN_INSENSITIVE_LENGTH
-            else f"(?i:{re.escape(vSkill)})"
+# Mots d'un texte pour le tri rapide des compétences candidates
+TOKEN_PATTERN = re.compile(r"\w+")
+
+
+def get_tokens(pText):
+    """Retourne les mots d'un texte, en minuscules."""
+
+    rTokens = frozenset(TOKEN_PATTERN.findall(pText.lower()))
+
+    return rTokens
+
+
+@lru_cache(maxsize=4096)
+def get_skill_tokens(pSkill):
+    """Retourne les mots d'une compétence, calculés une seule fois."""
+
+    rTokens = get_tokens(pSkill)
+
+    return rTokens
+
+
+# Caractère qui colle un mot à un autre : lettre, chiffre ou trait d'union
+WORD_CHARACTER = re.compile(r"[\w-]")
+
+
+def contains_word(pText, pWord):
+    """Indique si le texte cite le mot entier, sans lettre ni trait d'union collé.
+
+    Même règle qu'une expression régulière de mot entier, mais str.find va
+    directement aux occurrences : bien plus rapide sur un long texte.
+    """
+
+    vStart = pText.find(pWord)
+
+    while vStart != -1:
+        vEnd = vStart + len(pWord)
+
+        if not (vStart and WORD_CHARACTER.match(pText, vStart - 1)) and not (
+            WORD_CHARACTER.match(pText, vEnd)
+        ):
+            return True
+
+        vStart = pText.find(pWord, vStart + 1)
+
+    return False
+
+
+def index_skills(pSkills):
+    """Range les compétences par mot, pour retrouver vite celles d'un texte."""
+
+    rIndex = {}
+
+    for vSkill in pSkills:
+        # Une compétence sans mot (« ++ ») est toujours candidate, clé vide.
+        for vToken in get_skill_tokens(vSkill) or {""}:
+            rIndex.setdefault(vToken, set()).add(vSkill)
+
+    return rIndex
+
+
+def find_skills_in_text(pText, pIndex):
+    """Retourne les compétences de l'index citées dans le texte.
+
+    Le tri rapide ne garde que les compétences dont tous les mots figurent dans
+    le texte ; la recherche exacte (mot entier, sigle court en majuscules)
+    tranche ensuite pour ces quelques candidates.
+    """
+
+    vLowerText = pText.lower()
+    vTokens = frozenset(TOKEN_PATTERN.findall(vLowerText))
+    vCandidates = {
+        vSkill
+        for vToken in vTokens | {""}
+        for vSkill in pIndex.get(vToken, ())
+        if get_skill_tokens(vSkill) <= vTokens
+    }
+
+    # Une compétence longue est cherchée sans tenir compte de la casse ; un sigle
+    # court (« GC », « SSO ») seulement tel quel, pour ne pas reconnaître un mot.
+    rFound = {
+        vSkill
+        for vSkill in vCandidates
+        if (
+            contains_word(vLowerText, vSkill.lower())
+            if len(vSkill) >= MIN_INSENSITIVE_LENGTH
+            else contains_word(pText, vSkill)
         )
-        for vSkill in sorted(pSkills, key=len, reverse=True)
-        if vSkill.strip()
-    ]
+    }
 
-    rPattern = (
-        re.compile(r"(?<![\w-])(?:" + "|".join(vParts) + r")(?![\w-])")
-        if vParts
-        else None
-    )
-
-    return rPattern
+    return rFound
 
 
 def count_offers_by_text(pDatabaseFile, pThemes):
@@ -302,25 +377,33 @@ def count_offers_by_text(pDatabaseFile, pThemes):
         ),
     )
 
-    if vKey not in TEXT_COUNTS_CACHE:
-        vPattern = build_skills_pattern(
-            {vSkill for vTheme in pThemes for vSkill in vTheme["skills"]}
-        )
-        rCounts = dict.fromkeys(vThemeSkills, 0)
+    with TEXT_COUNTS_LOCK:
+        if vKey not in TEXT_COUNTS_CACHE:
+            vIndex = index_skills(
+                {
+                    vSkill.strip()
+                    for vTheme in pThemes
+                    for vSkill in vTheme["skills"]
+                    if vSkill.strip()
+                }
+            )
+            rCounts = dict.fromkeys(vThemeSkills, 0)
 
-        for vText in get_offer_texts(pDatabaseFile) if vPattern else []:
-            vFound = {vMatch.lower() for vMatch in vPattern.findall(vText)}
+            for vText in get_offer_texts(pDatabaseFile) if vIndex else []:
+                vFound = {
+                    vSkill.lower() for vSkill in find_skills_in_text(vText, vIndex)
+                }
 
-            for vTheme, vSkills in vThemeSkills.items():
-                if len(vFound & vSkills) >= min(MIN_MATCHED_SKILLS, len(vSkills)):
-                    rCounts[vTheme] += 1
+                for vTheme, vSkills in vThemeSkills.items():
+                    if len(vFound & vSkills) >= min(MIN_MATCHED_SKILLS, len(vSkills)):
+                        rCounts[vTheme] += 1
 
-        # Plusieurs jeux de thèmes sont comptés pour un même état des offres : seuls
-        # les comptes d'un autre état (base ou offres modifiées) sont oubliés.
-        for vOldKey in [vOld for vOld in TEXT_COUNTS_CACHE if vOld[:2] != vKey[:2]]:
-            del TEXT_COUNTS_CACHE[vOldKey]
+            # Plusieurs jeux de thèmes sont comptés pour un même état des offres : seuls
+            # les comptes d'un autre état (base ou offres modifiées) sont oubliés.
+            for vOldKey in [vOld for vOld in TEXT_COUNTS_CACHE if vOld[:2] != vKey[:2]]:
+                del TEXT_COUNTS_CACHE[vOldKey]
 
-        TEXT_COUNTS_CACHE[vKey] = rCounts
+            TEXT_COUNTS_CACHE[vKey] = rCounts
 
     rCounts = TEXT_COUNTS_CACHE[vKey]
 

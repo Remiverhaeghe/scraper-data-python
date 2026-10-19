@@ -1,0 +1,429 @@
+@001
+Q: Qu'est-ce que l'OWASP Top 10 ?
+C: Un classement des risques majeurs des applications web
+W: Une norme obligatoire pour les sites publics européens
+W: Un antivirus libre pour serveurs web
+W: La liste des dix langages les plus sûrs
+E: L'OWASP, fondation à but non lucratif, publie régulièrement ce classement à partir de données réelles : contrôle d'accès défaillant, injections, mauvaise configuration, composants vulnérables. Ce n'est pas une norme mais une base partagée pour former, auditer et prioriser.
+
+@002
+Q: Qu'est-ce qu'une injection SQL ?
+C: Une saisie interprétée comme du code SQL
+W: Une requête trop lente qui bloque la base
+W: Une base de données copiée sans autorisation
+W: Un mot de passe stocké en clair dans une table
+E: Quand l'application concatène une saisie dans une requête, un attaquant peut écrire ' OR 1=1 -- et contourner une authentification, ou lire toute la base. La parade principale est la requête paramétrée, où la saisie reste une simple valeur.
+
+@003
+Q: Quel est le défaut de ce code Python ?
+C: La saisie est concaténée dans la requête
+W: La requête n'utilise pas de transaction
+W: La connexion n'est jamais refermée
+W: Le nom de la table est écrit en minuscules
+E: Avec nom = "x' OR '1'='1", la requête renvoie tous les clients. On écrit cursor.execute("SELECT * FROM client WHERE nom = %s", (nom,)) : le pilote transmet la valeur séparément du code. Échapper à la main reste fragile et ne couvre pas tous les cas.
+```python
+nom = request.args["nom"]
+cursor.execute(f"SELECT * FROM client WHERE nom = '{nom}'")
+```
+
+@004
+Q: Qu'est-ce qu'une faille XSS ?
+C: Un script injecté exécuté dans le navigateur des visiteurs
+W: Un serveur saturé par un trop grand nombre de requêtes
+W: Un mot de passe deviné par essais successifs
+W: Un fichier envoyé trop volumineux pour le serveur
+E: Le cross-site scripting survient quand une donnée fournie par un utilisateur s'affiche sans échappement : un commentaire contenant <script> s'exécute chez chaque lecteur, avec ses droits et ses cookies accessibles. On échappe à l'affichage et on ajoute une politique CSP.
+
+@005
+Q: Pourquoi ce gabarit est-il vulnérable ?
+C: Le filtre safe désactive l'échappement du commentaire
+W: Jinja interdit d'afficher des variables dans une div
+W: Le commentaire est affiché deux fois sur la page
+W: La balise div n'accepte pas de texte libre
+E: Jinja échappe par défaut les caractères comme < et > ; safe déclare le contenu sûr et l'affiche tel quel. Un commentaire contenant un script s'exécute alors chez tous les lecteurs. On ne marque safe qu'un HTML produit par l'application, jamais une saisie.
+```html
+<div class="commentaire">{{ commentaire | safe }}</div>
+```
+
+@006
+Q: Qu'est-ce qu'une attaque CSRF ?
+C: Une action déclenchée à l'insu d'un utilisateur connecté
+W: Un vol de mot de passe par une fausse page de connexion
+W: Une injection de code dans la base de données
+W: Un déni de service sur le formulaire de connexion
+E: Un site piégé fait envoyer au navigateur de la victime un formulaire vers votre site : le navigateur joint les cookies de session et l'action passe. Un jeton anti-CSRF dans chaque formulaire, et les cookies SameSite, empêchent ces requêtes forgées.
+
+@007
+Q: Comment un jeton anti-CSRF protège-t-il un formulaire ?
+C: Le site exige un secret qu'un autre site ne peut pas lire
+W: Il chiffre les champs du formulaire avant l'envoi
+W: Il remplace le mot de passe pendant la session
+W: Il empêche le navigateur d'envoyer des cookies
+E: Le serveur place un jeton aléatoire dans le formulaire et le vérifie à la réception. Un site tiers peut faire envoyer un formulaire, mais ne peut pas lire le jeton de la page : sa requête est refusée. Les frameworks web le gèrent souvent tout seuls.
+
+@008
+Q: Associer chaque attribut de cookie à sa protection.
+P: HttpOnly => illisible par le JavaScript de la page
+P: Secure => envoyé seulement en HTTPS
+P: SameSite=Lax => non envoyé par la plupart des requêtes d'autres sites
+E: Un cookie de session HttpOnly ne peut pas être volé par un script injecté ; Secure l'empêche de circuler en clair ; SameSite limite le CSRF. Ces trois attributs sont le minimum pour un cookie de session.
+
+@009
+Q: Qu'est-ce qu'un contrôle d'accès défaillant ?
+C: Un utilisateur qui lit les données d'un autre
+W: Un mot de passe trop court accepté à l'inscription
+W: Un serveur web lent à répondre aux requêtes
+W: Un certificat HTTPS expiré sur le site
+E: C'est le premier risque du Top 10 2021. Exemple : /facture/1043 affiche la facture d'un autre client si l'application ne vérifie pas qu'elle lui appartient. Chaque accès doit vérifier côté serveur les droits de l'utilisateur sur la ressource précise.
+
+@010
+Q: Quel est le défaut de cette route ?
+C: Elle ne vérifie pas le propriétaire
+W: Elle n'affiche pas la date de la facture
+W: Elle utilise un identifiant numérique trop court
+W: Elle renvoie la facture sans la compresser
+E: Il suffit de changer le numéro dans l'adresse pour lire les factures des autres : c'est une référence directe non sécurisée (IDOR). On filtre par l'utilisateur connecté, par exemple Facture.query.filter_by(id=id, client_id=current_user.id), et on renvoie 404 sinon.
+```python
+@app.get("/facture/<int:id>")
+@login_required
+def facture(id):
+    return render(Facture.query.get_or_404(id))
+```
+
+@011
+Q: Pourquoi masquer un bouton d'administration dans l'interface ne suffit-il pas ?
+C: L'adresse reste appelable directement
+W: Le bouton masqué reste visible sur mobile
+W: Les navigateurs affichent les boutons masqués
+W: Le serveur ignore les boutons masqués
+E: Un attaquant n'utilise pas l'interface : il appelle /admin/supprimer-utilisateur directement. Le contrôle doit être fait côté serveur, sur chaque route sensible. Masquer le bouton améliore l'ergonomie, pas la sécurité.
+
+@012
+Q: Comment stocker les mots de passe des utilisateurs ?
+C: Avec un hachage lent et salé, comme Argon2 ou bcrypt
+W: Chiffrés avec AES et une clé gardée sur le serveur
+W: Hachés avec MD5 pour aller plus vite
+W: En clair, dans une table protégée par un mot de passe
+E: Un hachage n'est pas réversible ; un sel unique par compte empêche les tables précalculées, et un algorithme lent rend les essais massifs coûteux. Le chiffrement, lui, se déchiffre : une clé volée livre tous les mots de passe. MD5 et SHA-1 seuls sont bien trop rapides.
+
+@013
+Q: Pourquoi un sel différent pour chaque mot de passe ?
+C: Deux mots de passe égaux, deux empreintes
+W: Pour pouvoir retrouver le mot de passe d'origine
+W: Pour raccourcir l'empreinte stockée en base
+W: Pour accélérer la vérification à la connexion
+E: Sans sel, tous les comptes qui utilisent « Soleil2026 » ont la même empreinte : en casser une les révèle tous, et des tables précalculées suffisent. Avec un sel aléatoire stocké avec l'empreinte, chaque compte doit être attaqué séparément. bcrypt et Argon2 l'intègrent d'office.
+
+@014
+Q: Que doit afficher une page de connexion après un échec ?
+C: Un message unique, sans préciser l'erreur
+W: Le mot de passe attendu pour aider l'utilisateur
+W: Un message distinct si l'adresse e-mail n'existe pas
+W: La liste des comptes proches de la saisie
+E: « Adresse inconnue » permet à un attaquant de savoir quels comptes existent, puis de les cibler. Un message unique « identifiants incorrects » ne révèle rien. Le même soin vaut pour la réinitialisation du mot de passe : « si le compte existe, un courriel a été envoyé ».
+
+@015
+Q: Quelle mesure freine le mieux les essais massifs de mots de passe sur un formulaire de connexion ?
+C: Limiter les tentatives et ajouter un second facteur
+W: Exiger un mot de passe de plus de 40 caractères
+W: Changer l'adresse de la page de connexion chaque mois
+W: Afficher un message d'erreur plus vague
+E: Une limitation par compte et par adresse IP, avec délai croissant, rend le bourrage d'identifiants très lent ; l'authentification multifacteur bloque même un mot de passe volé. Masquer l'adresse de connexion ne gêne pas longtemps un attaquant.
+
+@016
+Q: Qu'est-ce que le « credential stuffing » ?
+C: Réessayer sur un site des identifiants volés ailleurs
+W: Remplir un formulaire avec des données aléatoires
+W: Stocker trop de mots de passe dans un même coffre
+W: Partager un compte entre plusieurs collègues
+E: Des milliards d'identifiants fuités circulent ; beaucoup de gens réutilisent leur mot de passe. Les attaquants les testent en masse sur d'autres sites. Parades : second facteur, limitation des tentatives, détection des connexions inhabituelles, et vérification des mots de passe contre les listes de fuites connues.
+
+@017
+Q: Pourquoi le HTTPS est-il indispensable même pour un site sans paiement ?
+C: Il protège identifiants et cookies en transit
+W: Il rend le site plus rapide pour les moteurs de recherche
+W: Il empêche les injections SQL dans les formulaires
+W: Il est seulement exigé par les navigateurs pour le paiement
+E: En HTTP, n'importe qui sur le même Wi-Fi lit les mots de passe et les cookies de session, ou modifie les pages au passage. TLS chiffre et authentifie le serveur. Il ne protège pas pour autant contre les failles de l'application elle-même.
+
+@018
+Q: Que demande l'en-tête Strict-Transport-Security (HSTS) au navigateur ?
+C: De n'utiliser que HTTPS pour ce site
+W: De vérifier deux fois le certificat du site
+W: De bloquer les scripts venant d'autres domaines
+W: De supprimer les cookies à la fermeture
+E: Après une première visite, le navigateur refuse de revenir en HTTP, même si l'on tape http:// : une attaque qui rabat la connexion vers HTTP ne fonctionne plus. max-age fixe la durée ; includeSubDomains l'étend aux sous-domaines. On le teste avant de l'allonger.
+
+@019
+Q: À quoi sert l'en-tête Content-Security-Policy ?
+C: À limiter les sources de scripts permises
+W: À chiffrer le contenu de la page avant envoi
+W: À compresser les ressources pour le navigateur
+W: À indiquer la langue du contenu de la page
+E: Avec script-src 'self', le navigateur refuse les scripts venant d'ailleurs et les scripts en ligne : un XSS injecté ne s'exécute plus. C'est une seconde ligne de défense, qui suppose de ne pas écrire de JavaScript dans les attributs onclick des pages.
+
+@020
+Q: Quel est le risque d'un message d'erreur détaillé affiché aux visiteurs en production ?
+C: Il révèle la structure interne à un attaquant
+W: Il ralentit le chargement de la page d'erreur
+W: Il oblige l'utilisateur à recharger la page
+W: Il empêche le site d'enregistrer l'erreur
+E: Une trace de pile montre chemins de fichiers, versions, requêtes SQL, parfois des secrets : de quoi cibler une attaque. En production, on affiche un message générique et on journalise le détail côté serveur. Le mode debug d'un framework ne doit jamais rester actif.
+
+@021
+Q: Associer chaque risque à sa parade principale.
+P: Injection SQL => requêtes paramétrées
+P: XSS => échappement à l'affichage et CSP
+P: CSRF => jeton dans les formulaires et cookies SameSite
+P: Mots de passe volés en base => hachage lent et salé
+E: Aucune parade unique ne suffit : chaque risque a la sienne. Les frameworks modernes en fournissent la plupart par défaut ; l'essentiel est de ne pas les contourner, par exemple par une requête construite à la main ou un filtre safe.
+
+@022
+Q: Pourquoi ne faut-il jamais faire confiance à une validation faite seulement en JavaScript dans le navigateur ?
+C: L'attaquant peut envoyer la requête sans passer par la page
+W: Le JavaScript est désactivé sur tous les téléphones
+W: Les navigateurs modifient les valeurs validées
+W: La validation en JavaScript ralentit le serveur
+E: La validation côté client améliore l'ergonomie ; un attaquant utilise curl ou un proxy et envoie ce qu'il veut. Tout contrôle de format, de quantité ou de droit doit être refait côté serveur, qui seul est maître des règles.
+
+@023
+Q: Quel risque présente ce code d'envoi de fichier ?
+C: Un fichier exécutable peut être déposé et appelé ensuite
+W: Le fichier est enregistré avec une date erronée
+W: Le nom du fichier est converti en majuscules
+W: Le fichier est compressé deux fois sur le disque
+E: Un attaquant envoie shell.php dans un dossier servi par le serveur web, puis l'appelle : il exécute du code. On vérifie l'extension et le type réel, on renomme le fichier, on le stocke hors de la racine web et on limite sa taille. Le nom fourni peut aussi contenir ../ pour sortir du dossier.
+```python
+fichier = request.files["document"]
+fichier.save(f"static/uploads/{fichier.filename}")
+```
+
+@024
+Q: Qu'est-ce qu'une traversée de répertoire (path traversal) ?
+C: Un chemin avec ../ qui sort du dossier prévu
+W: Un parcours rapide de tous les fichiers d'un dossier
+W: Une copie d'un dossier vers un autre serveur
+W: Un lien symbolique vers le dossier personnel
+E: /telecharger?fichier=../../etc/passwd peut lire n'importe quel fichier du serveur si l'application colle le paramètre au chemin. On résout le chemin final et on vérifie qu'il reste dans le dossier autorisé, ou mieux, on n'accepte qu'un identifiant associé à un fichier connu.
+
+@025
+Q: Pourquoi les dépendances d'un projet sont-elles un risque de sécurité ?
+C: Une bibliothèque vulnérable expose toute l'application
+W: Elles ralentissent toujours le démarrage de l'application
+W: Elles sont interdites dans les applications publiques
+W: Elles empêchent de mettre à jour le langage
+E: Une faille comme Log4Shell, en 2021, a touché des milliers d'applications qui utilisaient Log4j sans le savoir. On liste les dépendances, on les analyse avec pip-audit, npm audit ou Dependabot, et on les met à jour régulièrement.
+
+@026
+Q: Que fait la commande pip-audit sur un projet Python ?
+C: Elle signale les dépendances vulnérables
+W: Elle supprime les paquets inutilisés du projet
+W: Elle vérifie le style du code selon PEP 8
+W: Elle mesure la couverture des tests
+E: pip-audit compare les versions installées aux bases de vulnérabilités publiques et indique la version corrigée. npm audit fait de même pour JavaScript, OWASP Dependency-Check pour Java. Lancé dans l'intégration continue, il bloque une version vulnérable avant la mise en production.
+
+@027
+Q: Où ne faut-il jamais stocker une clé d'API ou un mot de passe d'une application ?
+C: Dans le code source versionné
+W: Dans une variable d'environnement du serveur
+W: Dans un gestionnaire de secrets
+W: Dans un fichier .env exclu de Git
+E: Un secret dans le dépôt est lu par tous ceux qui y ont accès, reste dans l'historique et finit souvent publié. On le passe par une variable d'environnement, un fichier .env exclu par .gitignore, ou un coffre comme Vault. Un secret publié par erreur se révoque aussitôt.
+
+@028
+Q: Qu'est-ce que le principe du moindre privilège pour un compte de base de données d'application ?
+C: Ne lui donner que les droits dont l'application a besoin
+W: Lui donner les droits administrateur pour éviter les erreurs
+W: Partager le compte entre toutes les applications
+W: Changer son mot de passe à chaque requête
+E: Si l'application est compromise, l'attaquant hérite des droits du compte : lecture et écriture de ses tables, pas la suppression de bases ni l'accès au système. Un compte par application, aux droits limités, réduit fortement les dégâts.
+
+@029
+Q: Quel risque présente ce code Node.js ?
+C: Une injection de commande système
+W: Une fuite de mémoire du serveur
+W: Un affichage incorrect des accents
+W: Une boucle infinie à chaque appel
+E: exec passe la chaîne à un shell : hote = "exemple.fr; rm -rf /" exécute la seconde commande. On utilise execFile avec un tableau d'arguments, qui n'invoque pas de shell, et on valide l'entrée contre un format attendu. Le même risque existe en Python avec os.system ou shell=True.
+```javascript
+const hote = req.query.hote;
+exec(`ping -c 1 ${hote}`, (err, sortie) => res.send(sortie));
+```
+
+@030
+Q: Qu'est-ce qu'une attaque SSRF ?
+C: Faire appeler au serveur des cibles internes
+W: Surcharger le serveur par des requêtes en masse
+W: Voler la session d'un utilisateur par un cookie
+W: Injecter un script dans une page affichée
+E: Une fonction qui télécharge une image depuis une URL fournie peut être détournée vers http://169.254.169.254, l'adresse des métadonnées d'une instance cloud, et livrer ses identifiants. On limite les destinations autorisées, on refuse les adresses privées et on bloque les redirections.
+
+@031
+Q: Remettre dans l'ordre la réaction à une faille signalée par un chercheur sur un site en production.
+O: Accuser réception et reproduire la faille
+O: Évaluer la gravité et les données exposées
+O: Corriger, tester et déployer le correctif
+O: Vérifier dans les journaux si la faille a été exploitée
+O: Informer les personnes concernées si des données ont fuité
+E: Une politique de divulgation, avec un contact security.txt, encourage les signalements. Le RGPD impose de notifier la CNIL sous 72 heures en cas de violation de données personnelles. Remercier le chercheur et publier un bilan entretient la confiance.
+
+@032
+Q: Pourquoi journaliser les connexions réussies et échouées d'une application ?
+C: Pour détecter une attaque et enquêter après un incident
+W: Pour accélérer la connexion des utilisateurs fréquents
+W: Pour pouvoir retrouver les mots de passe oubliés
+W: Pour réduire le nombre de comptes inactifs
+E: Une vague d'échecs signale un bourrage d'identifiants ; une connexion réussie depuis un pays inhabituel, un compte volé. Sans journaux, on ne sait ni quand ni comment une intrusion a eu lieu. On n'y écrit jamais les mots de passe ni les jetons.
+
+@033
+Q: Quelles informations ne doivent jamais apparaître dans les journaux d'une application ?
+C: Mots de passe, jetons et cartes
+W: Date et heure de chaque requête
+W: Identifiant de l'utilisateur connecté
+W: Code de retour HTTP de chaque requête
+E: Les journaux sont copiés, centralisés, consultés par beaucoup de monde : un mot de passe ou un jeton y devient une fuite. On masque les champs sensibles avant d'écrire, y compris dans les traces d'erreur qui recopient les paramètres des requêtes.
+
+@034
+Q: Qu'est-ce qu'un jeton JWT ?
+C: Un jeton signé qui décrit l'utilisateur
+W: Un mot de passe à usage unique envoyé par SMS
+W: Un certificat qui chiffre la connexion HTTPS
+W: Une clé de chiffrement de base de données
+E: Un JWT contient un en-tête, des données (identifiant, rôles, expiration) et une signature. Le serveur vérifie la signature sans base de données. Les données sont seulement encodées en base64, pas chiffrées : n'importe qui peut les lire, on n'y met rien de secret.
+
+@035
+Q: Quel est le défaut de cette vérification d'un JWT ?
+C: Elle décode le jeton sans vérifier sa signature
+W: Elle vérifie la signature deux fois de suite
+W: Elle refuse les jetons qui ont une date d'expiration
+W: Elle ne fonctionne qu'avec des jetons chiffrés
+E: Sans vérification, un attaquant fabrique un jeton avec role: admin et l'application le croit. On appelle jwt.decode(jeton, cle, algorithms=["HS256"]) qui vérifie signature et expiration, en fixant la liste des algorithmes acceptés pour éviter le piège de l'algorithme « none ».
+```python
+donnees = jwt.decode(jeton, options={"verify_signature": False})
+if donnees["role"] == "admin":
+    autoriser()
+```
+
+@036
+Q: Pourquoi donner une courte durée de vie aux jetons d'accès ?
+C: Un jeton volé ne sert que peu de temps
+W: Pour que les utilisateurs se reconnectent plus souvent
+W: Parce qu'un jeton long ne peut pas être signé
+W: Pour réduire la taille des cookies
+E: Un jeton signé reste valable jusqu'à son expiration, même si l'utilisateur se déconnecte. Avec quelques minutes de validité et un jeton de rafraîchissement révocable, on limite la fenêtre d'abus. Les sessions côté serveur, elles, se révoquent immédiatement.
+
+@037
+Q: Qu'est-ce que le chiffrement de bout en bout du point de vue d'une application ?
+C: Seuls les interlocuteurs peuvent lire, pas le serveur qui transmet
+W: Le serveur chiffre les données sur ses disques
+W: La connexion entre le navigateur et le serveur est en HTTPS
+W: Les sauvegardes sont chiffrées avant d'être envoyées
+E: En HTTPS, le serveur déchiffre et lit tout ; de bout en bout, comme dans Signal, les clés restent sur les appareils et le serveur ne voit que des données chiffrées. C'est plus protecteur mais plus complexe : recherche, sauvegarde et récupération de compte deviennent difficiles.
+
+@038
+Q: Pourquoi limiter la taille des requêtes et des fichiers acceptés par une API ?
+C: Pour éviter qu'un envoi énorme sature le serveur
+W: Pour que les réponses soient toujours plus courtes
+W: Parce que HTTP interdit les requêtes de plus de 1 Mo
+W: Pour empêcher les injections SQL
+E: Une requête de plusieurs gigaoctets, ou des milliers en parallèle, peuvent épuiser mémoire ou disque : c'est un déni de service bon marché. On fixe une taille maximale au proxy et dans l'application, et on limite le débit par client.
+
+@039
+Q: Que vérifie un test de sécurité « boîte noire » d'une application web ?
+C: Ce qu'un attaquant externe peut faire
+W: La qualité du code source ligne par ligne
+W: Les performances sous une forte charge
+W: La conformité des textes au RGPD
+E: Le testeur se place comme un attaquant : il cartographie les pages, essaie injections, contournements d'accès, manipulation des paramètres. Un audit de code, en boîte blanche, trouve d'autres failles. Les deux se complètent, avec des outils comme OWASP ZAP ou Burp Suite.
+
+@040
+Q: À quoi sert un analyseur statique de sécurité (SAST) comme Bandit ou Semgrep ?
+C: À repérer du code dangereux
+W: À attaquer l'application en production
+W: À chiffrer le code avant sa compilation
+W: À vérifier les licences des bibliothèques
+E: Bandit signale en Python un subprocess avec shell=True, un pickle sur des données externes, un mot de passe écrit en dur. Ces outils produisent des faux positifs à trier, mais attrapent tôt des erreurs classiques, dans l'éditeur ou l'intégration continue.
+
+@041
+Q: Quel risque présente la désérialisation de données reçues avec pickle en Python ?
+C: L'exécution de code choisi par l'attaquant
+W: Une perte de précision sur les nombres décimaux
+W: Une conversion des chaînes en majuscules
+W: Un ralentissement de l'affichage des pages
+E: Un objet pickle peut indiquer une fonction à appeler pendant le chargement : charger un pickle forgé exécute du code. On ne désérialise que des données de confiance, et on préfère JSON pour les échanges. Java, PHP et .NET connaissent le même problème avec leurs sérialisations natives.
+
+@042
+Q: Qu'est-ce que le CORS ?
+C: La règle des sites autorisés à lire une API
+W: Un protocole de chiffrement des échanges d'API
+W: Une méthode d'authentification par certificat
+W: Un format de journal des erreurs d'API
+E: Par défaut, un navigateur interdit à une page d'un site de lire les réponses d'un autre. L'en-tête Access-Control-Allow-Origin assouplit cette règle pour des origines précises. Le mettre à * avec des cookies de session ouvrirait l'API à n'importe quel site.
+
+@043
+Q: Quel est le problème de cette réponse d'API ?
+C: N'importe quel site lit avec les identifiants
+W: Elle bloque toutes les requêtes du navigateur
+W: Elle oblige le navigateur à vider ses cookies
+W: Elle chiffre la réponse sans prévenir le client
+E: Renvoyer comme origine autorisée celle de la requête, quelle qu'elle soit, avec les identifiants permis, revient à laisser tout site lire les données de l'utilisateur connecté. On compare l'origine à une liste blanche de domaines connus.
+```
+Access-Control-Allow-Origin: https://site-quelconque.example
+Access-Control-Allow-Credentials: true
+```
+
+@044
+Q: Pourquoi une application ne doit-elle pas afficher sa version exacte et celle de son serveur dans les en-têtes HTTP ?
+C: Pour ne pas aider à cibler une faille connue
+W: Parce que les navigateurs rejettent ces en-têtes
+W: Pour réduire la taille de chaque réponse
+W: Parce que le RGPD l'interdit
+E: Server: Apache/2.4.49 indique précisément quelle faille publique essayer. Masquer la version ne corrige rien, mais retire une information gratuite ; la vraie protection reste la mise à jour. C'est une mesure d'hygiène, pas une défense en soi.
+
+@045
+Q: Qu'est-ce que la défense en profondeur ?
+C: Plusieurs barrières successives
+W: Un pare-feu placé au plus profond du réseau
+W: Un chiffrement appliqué plusieurs fois de suite
+W: Une sauvegarde gardée dans un coffre souterrain
+E: Requêtes paramétrées, compte de base aux droits limités, pare-feu applicatif, chiffrement, surveillance : si l'une cède, les autres limitent les dégâts. On ne compte jamais sur une seule barrière, car elles finissent toutes par avoir un défaut.
+
+@046
+Q: Quelle donnée peut-on placer dans un cookie de session sans danger ?
+C: Un identifiant aléatoire qui renvoie aux données côté serveur
+W: Le rôle de l'utilisateur, lu tel quel par le serveur
+W: Le mot de passe de l'utilisateur, pour la reconnexion
+W: Le prix du panier, pour éviter un calcul côté serveur
+E: Tout ce que contient un cookie peut être modifié par l'utilisateur. Un identifiant de session long et aléatoire ne révèle rien ; le serveur y associe les vraies données. Un cookie qui porte des données doit être signé, et ne doit pas contenir de secret.
+
+@047
+Q: Que faut-il faire de l'identifiant de session au moment de la connexion ?
+C: En générer un nouveau
+W: Garder celui d'avant la connexion
+W: L'afficher dans l'adresse de la page
+W: Le transmettre au serveur par e-mail
+E: Si l'identifiant reste le même, un attaquant qui a fait adopter à la victime un identifiant connu récupère sa session une fois connectée : c'est la fixation de session. Les frameworks régénèrent l'identifiant à la connexion ; on vérifie que c'est bien le cas.
+
+@048
+Q: Pourquoi utiliser un générateur aléatoire cryptographique pour créer un jeton de réinitialisation de mot de passe ?
+C: Un générateur ordinaire peut être prédit
+W: Il produit des jetons plus courts à saisir
+W: Il fonctionne sans connexion Internet
+W: Il évite d'enregistrer le jeton en base
+E: random de Python est fait pour les simulations : sa suite se prédit à partir de quelques valeurs. secrets.token_urlsafe() utilise la source du système, imprévisible. Le jeton doit aussi expirer vite et ne servir qu'une fois.
+
+@049
+Q: Quel module Python génère un jeton imprévisible pour un lien de réinitialisation ?
+C: secrets
+W: random
+W: uuid1
+W: hashlib.md5
+E: secrets.token_urlsafe(32) produit un jeton de 32 octets aléatoires, adapté aux URL. random est prédictible, uuid1 contient l'heure et l'adresse de la machine, et une empreinte MD5 de l'e-mail se recalcule. Le jeton s'enregistre haché, comme un mot de passe.
+
+@050
+Q: Pourquoi une adresse de réinitialisation de mot de passe doit-elle expirer rapidement et ne servir qu'une fois ?
+C: Un lien retrouvé plus tard ne doit plus ouvrir le compte
+W: Pour que l'utilisateur change souvent de mot de passe
+W: Parce que les courriels sont supprimés après une heure
+W: Pour réduire la taille de la base de données
+E: Le lien reste dans la boîte de réception, parfois transférée ou piratée des mois plus tard. Une validité courte, une heure par exemple, et une invalidation après usage ferment cette porte. Changer de mot de passe doit aussi fermer les autres sessions ouvertes.

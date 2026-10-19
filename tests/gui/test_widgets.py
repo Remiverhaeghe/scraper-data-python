@@ -2,28 +2,26 @@
 
 from PySide6.QtCore import QEvent, QSettings, Qt
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QLabel, QPushButton
+from PySide6.QtWidgets import QLabel
 
-from gui.widgets import TileButton, create_collapsible_card
+from gui.widgets import CardHeader, TileButton, create_card
 
 
 def test_collapsible_card_remembers_state(qt_application):
     """Vérifie que la carte se replie par son titre et garde cet état."""
 
-    vCard, vLayout = create_collapsible_card(
-        "Niveaux", "Sous-titre", "list-checks", "test"
-    )
+    vCard, vLayout = create_card("Niveaux", "Sous-titre", "list-checks", "test")
     vLayout.addWidget(QLabel("Contenu"))
     vContent = vLayout.parentWidget()
 
     assert not vContent.isHidden()
 
-    vCard.findChild(QPushButton, "collapsibleTitle").click()
+    vCard.findChild(CardHeader).clicked.emit()
 
     assert vContent.isHidden()
     assert QSettings().value("collapsed/test", False, type=bool)
 
-    _, vOtherLayout = create_collapsible_card("Niveaux", pKey="test")
+    _, vOtherLayout = create_card("Niveaux", pKey="test")
 
     assert vOtherLayout.parentWidget().isHidden()
 
@@ -53,3 +51,23 @@ def test_tile_button_states_and_keyboard(qt_application):
     )
 
     assert vClicks == [True]
+
+
+def test_untitled_card_is_not_collapsible(qt_application):
+    """Vérifie qu'une carte sans titre n'a pas d'en-tête et garde son layout."""
+
+    vCard, vLayout = create_card()
+
+    assert vCard.findChild(CardHeader) is None
+    assert vLayout.parentWidget() is vCard
+
+
+def test_card_title_stays_a_label(qt_application):
+    """Vérifie que le titre reste un QLabel « cardTitle » modifiable."""
+
+    vCard, _ = create_card("Candidatures")
+    vTitle = vCard.findChild(QLabel, "cardTitle")
+
+    vTitle.setText("Candidatures (3)")
+
+    assert vTitle.text() == "Candidatures (3)"

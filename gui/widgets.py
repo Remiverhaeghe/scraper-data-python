@@ -75,8 +75,65 @@ def create_button(pText, pIcon=None, pObjectName=None, pIconColor=None):
     return rButton
 
 
-def create_card(pTitle=None, pSubtitle=None):
-    """Crée une carte blanche et retourne la carte et son layout de contenu."""
+class CardHeader(QWidget):
+    """En-tête cliquable d'une carte : icône, titre et chevron pour la replier."""
+
+    clicked = Signal()
+
+    def __init__(self, pTitle, pIcon=None, pActions=()):
+        """Construit l'en-tête ; le titre reste un QLabel « cardTitle » modifiable.
+
+        pActions place des éléments entre le titre et le chevron : un clic sur
+        un bouton déclenche son action, pas le repli de la carte.
+        """
+        super().__init__()
+
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        self.title_label = QLabel(pTitle)
+        self.title_label.setObjectName("cardTitle")
+
+        self.toggle_button = QToolButton()
+        self.toggle_button.setObjectName("collapsibleToggle")
+        self.toggle_button.setAutoRaise(True)
+        self.toggle_button.clicked.connect(self.clicked.emit)
+
+        vLayout = QHBoxLayout(self)
+        vLayout.setContentsMargins(0, 0, 0, 0)
+        vLayout.setSpacing(8)
+
+        if pIcon:
+            vLayout.addWidget(create_icon_label(pIcon, COLORS["primary"], 20))
+
+        vLayout.addWidget(self.title_label)
+        vLayout.addStretch(1)
+
+        for vAction in pActions:
+            vLayout.addWidget(vAction)
+
+        vLayout.addWidget(self.toggle_button)
+
+    def set_open(self, pOpen):
+        """Oriente le chevron selon que la carte est ouverte ou repliée."""
+        self.toggle_button.setIcon(
+            get_icon("chevron-up" if pOpen else "chevron-down", COLORS["muted"], 18)
+        )
+        self.toggle_button.setToolTip("Réduire" if pOpen else "Afficher")
+
+    def mouseReleaseEvent(self, pEvent):  # pylint: disable=invalid-name
+        """Replie ou ouvre la carte d'un clic sur son en-tête."""
+        if pEvent.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+
+        super().mouseReleaseEvent(pEvent)
+
+
+def create_card(pTitle=None, pSubtitle=None, pIcon=None, pKey=None, pActions=()):
+    """Crée une carte blanche et retourne la carte et le layout de son contenu.
+
+    Une carte titrée se replie d'un clic sur son en-tête ; l'état est mémorisé
+    d'une ouverture à l'autre (QSettings), sous pKey ou à défaut sous le titre.
+    """
 
     vCard = QFrame()
     vCard.setObjectName("card")
@@ -85,84 +142,55 @@ def create_card(pTitle=None, pSubtitle=None):
     vLayout.setContentsMargins(20, 18, 20, 18)
     vLayout.setSpacing(10)
 
-    if pTitle is not None:
-        vTitle = QLabel(pTitle)
-        vTitle.setObjectName("cardTitle")
-        vLayout.addWidget(vTitle)
+    if pTitle is None:
+        if pSubtitle is not None:
+            vLayout.addWidget(create_subtitle(pSubtitle))
+
+        rCard = (vCard, vLayout)
+
+        return rCard
+
+    vHeader = CardHeader(pTitle, pIcon, pActions)
+    vLayout.addWidget(vHeader)
 
     if pSubtitle is not None:
-        vSubtitle = QLabel(pSubtitle)
-        vSubtitle.setObjectName("cardSubtitle")
-        # Retour à la ligne : un long sous-titre ne force pas la largeur de la carte.
-        vSubtitle.setWordWrap(True)
-        vLayout.addWidget(vSubtitle)
-
-    rCard = (vCard, vLayout)
-
-    return rCard
-
-
-def create_collapsible_card(pTitle, pSubtitle=None, pIcon=None, pKey=None):
-    """Crée une carte repliable par son titre et retourne la carte et son contenu.
-
-    Avec pKey, l'état replié est mémorisé d'une ouverture à l'autre (QSettings).
-    """
-
-    vCard, vCardLayout = create_card()
-
-    vTitle = QPushButton(pTitle)
-    vTitle.setObjectName("collapsibleTitle")
-    vTitle.setCursor(Qt.CursorShape.PointingHandCursor)
-
-    if pIcon:
-        vTitle.setIcon(get_icon(pIcon, COLORS["primary"], 20))
-        vTitle.setIconSize(QSize(20, 20))
-
-    vToggle = QToolButton()
-    vToggle.setObjectName("collapsibleToggle")
-    vToggle.setAutoRaise(True)
-    vToggle.setCursor(Qt.CursorShape.PointingHandCursor)
-
-    vHeader = QHBoxLayout()
-    vHeader.addWidget(vTitle)
-    vHeader.addStretch(1)
-    vHeader.addWidget(vToggle)
-    vCardLayout.addLayout(vHeader)
-
-    if pSubtitle is not None:
-        vSubtitle = QLabel(pSubtitle)
-        vSubtitle.setObjectName("cardSubtitle")
-        vSubtitle.setWordWrap(True)
-        vCardLayout.addWidget(vSubtitle)
+        vLayout.addWidget(create_subtitle(pSubtitle))
 
     vContent = QWidget()
     vContentLayout = QVBoxLayout(vContent)
     vContentLayout.setContentsMargins(0, 0, 0, 0)
     vContentLayout.setSpacing(10)
-    vCardLayout.addWidget(vContent)
+    vLayout.addWidget(vContent, 1)
+
+    vSettingKey = f"collapsed/{pKey or pTitle}"
 
     def set_open(pOpen):
-        """Affiche ou replie le contenu, et met à jour le chevron."""
+        """Affiche ou replie le contenu de la carte."""
         vContent.setHidden(not pOpen)
-        vToggle.setIcon(
-            get_icon("chevron-up" if pOpen else "chevron-down", COLORS["muted"], 18)
-        )
-        vToggle.setToolTip("Réduire" if pOpen else "Afficher")
+        vHeader.set_open(pOpen)
 
     def toggle():
         """Inverse l'état du contenu et le mémorise."""
         set_open(vContent.isHidden())
+        QSettings().setValue(vSettingKey, vContent.isHidden())
 
-        if pKey:
-            QSettings().setValue(f"collapsed/{pKey}", vContent.isHidden())
-
-    vTitle.clicked.connect(toggle)
-    vToggle.clicked.connect(toggle)
-    set_open(not (pKey and QSettings().value(f"collapsed/{pKey}", False, type=bool)))
+    vHeader.clicked.connect(toggle)
+    set_open(not QSettings().value(vSettingKey, False, type=bool))
 
     rCard = (vCard, vContentLayout)
 
     return rCard
+
+
+def create_subtitle(pText):
+    """Crée le sous-titre d'une carte, qui passe à la ligne s'il est long."""
+
+    rSubtitle = QLabel(pText)
+    rSubtitle.setObjectName("cardSubtitle")
+    # Retour à la ligne : un long sous-titre ne force pas la largeur de la carte.
+    rSubtitle.setWordWrap(True)
+
+    return rSubtitle
 
 
 def add_tile_group(pLayout, pRow, pTitle, pIcon, pTiles, pColumns):

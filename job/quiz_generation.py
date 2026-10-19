@@ -7,6 +7,7 @@ est ensuite mesuré, pour repérer un lot qui ne respecte pas la demande.
 
 import json
 import re
+import time
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
@@ -15,8 +16,10 @@ from string import Template
 from config import QUIZ_GENERATION_DIRECTORY
 from job.quiz import (
     QUIZ_LEVELS,
+    build_quiz_overview,
     count_theme_offers,
     find_theme,
+    load_active_quiz,
     load_quiz,
     slugify,
 )
@@ -157,6 +160,30 @@ def list_generation_themes(pThemes):
     rLabels = sorted(vLabels, key=str.casefold)
 
     return rLabels
+
+
+def prepare_quiz_caches(pDatabaseFile):
+    """Calcule d'avance les offres par thème, pour un premier affichage immédiat.
+
+    Lancée en arrière-plan au démarrage : une erreur est journalisée sans gêner
+    l'application, la page Révision refera alors le calcul elle-même.
+    """
+
+    vStart = time.perf_counter()
+
+    try:
+        vQuiz = load_active_quiz(pDatabaseFile)
+        build_quiz_overview(pDatabaseFile, vQuiz)
+        build_priority_themes(pDatabaseFile, vQuiz)
+
+    except Exception:
+        logger.exception("Échec du calcul anticipé des offres par thème")
+
+    else:
+        logger.info(
+            "Offres par thème calculées d'avance en %.1f s",
+            time.perf_counter() - vStart,
+        )
 
 
 def build_priority_themes(pDatabaseFile, pQuiz, pLimit=PRIORITY_LIMIT):

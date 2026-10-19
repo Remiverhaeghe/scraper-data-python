@@ -1,0 +1,433 @@
+@051
+Q: Que renvoie cette requête ?
+C: La commande la plus récente de chaque client
+W: Le nombre de commandes de chaque client
+W: Les clients classés par date de leur première commande
+W: Toutes les commandes, numérotées de 1 à n
+E: ROW_NUMBER numérote les commandes de chaque client (PARTITION BY) de la plus récente à la plus ancienne ; on garde le numéro 1. La CTE est nécessaire car une fonction de fenêtrage ne s'utilise pas directement dans le WHERE.
+```sql
+WITH Classees AS (
+    SELECT *, ROW_NUMBER() OVER (
+        PARTITION BY ClientId ORDER BY DateCommande DESC) AS Rang
+    FROM Commande
+)
+SELECT * FROM Classees WHERE Rang = 1;
+```
+
+@052
+Q: Quelle différence entre ROW_NUMBER, RANK et DENSE_RANK pour deux ex aequo en tête ?
+C: ROW_NUMBER donne 1 et 2, RANK et DENSE_RANK donnent 1 et 1
+W: Les trois donnent 1 et 2, l'ordre étant tiré au hasard
+W: ROW_NUMBER donne 1 et 1, RANK et DENSE_RANK donnent 1 et 2
+W: Seul DENSE_RANK accepte des valeurs égales
+E: ROW_NUMBER ne connaît pas l'égalité : il numérote 1, 2, 3. RANK donne 1, 1, puis saute à 3 ; DENSE_RANK donne 1, 1, puis 2. On choisit selon le besoin : un classement sportif utilise RANK, une pagination ROW_NUMBER.
+
+@053
+Q: Que calcule cette fonction de fenêtrage ?
+C: Le cumul des ventes de chaque mois depuis le début de l'année
+W: La moyenne des ventes sur toute l'année, répétée sur chaque ligne
+W: Les ventes du mois précédent, pour comparaison
+W: Le rang de chaque mois selon le montant des ventes
+E: SUM ... OVER (ORDER BY Mois) additionne les lignes de la première jusqu'à la ligne courante : c'est un total cumulé. Préciser ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW évite le cadre RANGE par défaut, plus lent. LAG(Ventes) donnerait le mois précédent.
+```sql
+SELECT Mois, Ventes,
+       SUM(Ventes) OVER (ORDER BY Mois
+           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS Cumul
+FROM VentesMensuelles;
+```
+
+@054
+Q: Quelle fonction renvoie la valeur de la ligne précédente dans un ordre donné ?
+C: LAG
+W: LEAD
+W: FIRST
+W: PRIOR
+E: LAG(Ventes) OVER (ORDER BY Mois) donne les ventes du mois précédent, LEAD celles du mois suivant. On calcule ainsi une évolution d'un mois à l'autre sans auto-jointure. La première ligne n'a pas de précédent : LAG renvoie NULL, ou la valeur par défaut passée en troisième argument.
+
+@055
+Q: À quoi sert une CTE (WITH ... AS) ?
+C: À nommer une sous-requête pour la réutiliser lisiblement
+W: À créer une table permanente le temps d'une session
+W: À verrouiller une table pendant toute une transaction
+W: À exécuter une requête en parallèle sur plusieurs cœurs
+E: Une CTE n'existe que pour la requête qui la suit. Elle découpe une requête complexe en étapes nommées et permet la récursivité. Elle ne stocke rien : si elle est référencée deux fois, elle peut être calculée deux fois ; une table temporaire évite alors le double calcul.
+
+@056
+Q: Que produit cette CTE récursive sur une table d'employés ?
+C: La chaîne hiérarchique sous le directeur, avec le niveau de chacun
+W: La liste des directeurs, sans leurs subordonnés
+W: Une boucle infinie, la récursivité étant interdite en T-SQL
+W: Le nombre d'employés de chaque service
+E: Le premier SELECT, l'ancre, part du directeur sans responsable ; le second rejoint les employés dont le responsable est déjà trouvé, niveau après niveau. La récursion s'arrête quand plus aucune ligne n'est ajoutée, ou à 100 niveaux par défaut (MAXRECURSION).
+```sql
+WITH Hierarchie AS (
+    SELECT Id, Nom, 0 AS Niveau FROM Employe WHERE ResponsableId IS NULL
+    UNION ALL
+    SELECT e.Id, e.Nom, h.Niveau + 1
+    FROM Employe e JOIN Hierarchie h ON e.ResponsableId = h.Id
+)
+SELECT * FROM Hierarchie;
+```
+
+@057
+Q: Quelle différence entre UNION et UNION ALL ?
+C: UNION supprime les doublons, UNION ALL les garde
+W: UNION ALL supprime les doublons, UNION les garde
+W: UNION trie le résultat, UNION ALL le mélange au hasard
+W: UNION ALL exige des tables de même nom
+E: UNION doit comparer toutes les lignes pour retirer les doublons, ce qui coûte un tri ou un hachage. Quand on sait qu'il n'y en a pas, ou qu'on veut les garder, UNION ALL est plus rapide. Dans les deux cas, les colonnes doivent correspondre en nombre et en type.
+
+@058
+Q: Que fait l'instruction MERGE ?
+C: Insérer, modifier ou supprimer d'après une source
+W: Fusionner deux bases de données en une seule
+W: Concaténer deux colonnes de texte dans une troisième
+W: Combiner deux index en un seul index cluster
+E: MERGE compare une cible et une source : WHEN MATCHED pour mettre à jour, WHEN NOT MATCHED pour insérer, WHEN NOT MATCHED BY SOURCE pour supprimer. Pratique pour synchroniser une table depuis un import. Il faut toujours le terminer par un point-virgule et surveiller la concurrence, avec HOLDLOCK.
+
+@059
+Q: Qu'est-ce qu'un interblocage (deadlock) ?
+C: Deux transactions qui attendent chacune un verrou tenu par l'autre
+W: Une requête bloquée par un disque plein pendant l'écriture
+W: Un utilisateur qui ne peut plus se connecter faute de licence
+W: Une table qui ne peut plus recevoir d'insertion
+E: A verrouille la table 1 puis demande la 2, B verrouille la 2 puis demande la 1 : aucune ne peut avancer. SQL Server détecte le cycle, annule une des transactions (erreur 1205) et laisse l'autre continuer. Accéder aux tables toujours dans le même ordre et garder les transactions courtes réduit le risque.
+
+@060
+Q: Que doit faire une application qui reçoit l'erreur 1205 (victime d'interblocage) ?
+C: Relancer la transaction, idéalement après une courte attente
+W: Redémarrer le service SQL Server pour libérer les verrous
+W: Afficher une erreur définitive et abandonner l'opération
+W: Supprimer les verrous de la table avec une commande KILL
+E: La transaction victime a été entièrement annulée : la rejouer est sûr et réussit en général. On limite le nombre de tentatives et on journalise les occurrences : des interblocages fréquents révèlent un problème d'ordre d'accès ou d'index manquant.
+
+@061
+Q: Pourquoi l'indication WITH (NOLOCK) est-elle risquée ?
+C: Elle peut lire des données non validées, en double ou manquantes
+W: Elle bloque toutes les autres requêtes sur la table
+W: Elle désactive les index de la table pendant la lecture
+W: Elle oblige SQL Server à relire la table depuis le disque
+E: NOLOCK équivaut à READ UNCOMMITTED : on lit des modifications qui seront peut-être annulées, et un déplacement de page peut faire lire une ligne deux fois ou pas du tout. Pour éviter que les lecteurs bloquent les écrivains, READ COMMITTED SNAPSHOT est la bonne solution.
+
+@062
+Q: Que change l'option READ_COMMITTED_SNAPSHOT activée sur une base ?
+C: Les lectures voient la version validée sans attendre
+W: Les lectures deviennent impossibles pendant une écriture
+W: Chaque requête lit une copie de la base prise la nuit précédente
+W: Les écritures deviennent asynchrones et peuvent être perdues
+E: SQL Server garde dans tempdb les versions précédentes des lignes modifiées ; un lecteur lit la version validée au début de son instruction au lieu d'attendre. Les blocages lecteurs-écrivains disparaissent, au prix d'un peu d'activité dans tempdb. C'est le comportement par défaut d'Azure SQL Database.
+
+@063
+Q: Quelle vue système montre les requêtes en cours et ce qu'elles attendent ?
+C: sys.dm_exec_requests
+W: sys.tables
+W: sys.databases
+W: sys.columns
+E: sys.dm_exec_requests liste les requêtes en exécution avec leur session, leur état, le type d'attente et la session qui les bloque (blocking_session_id). On la joint à sys.dm_exec_sql_text pour lire le texte de la requête. sp_who2 donne une vue plus sommaire.
+
+@064
+Q: Pourquoi des statistiques périmées peuvent-elles ralentir une requête qui était rapide ?
+C: L'optimiseur estime mal le nombre de lignes et choisit un mauvais plan
+W: Les statistiques bloquent la table pendant leur recalcul
+W: SQL Server refuse d'utiliser un index sans statistiques à jour
+W: Les statistiques occupent de la mémoire au détriment des données
+E: L'optimiseur choisit jointures et accès selon le nombre de lignes estimé, tiré des statistiques. Après un gros chargement, il peut croire qu'une table contient 10 lignes alors qu'elle en a un million, et choisir une boucle imbriquée désastreuse. UPDATE STATISTICS ou un plan de maintenance règle le problème.
+
+@065
+Q: Que contient la clause INCLUDE de cet index ?
+C: Des colonnes lues sans revenir à la table
+W: Des colonnes de tri supplémentaires de l'index
+W: Les colonnes à exclure de l'index
+W: Un filtre qui limite les lignes indexées
+E: Un index couvrant contient toutes les colonnes d'une requête fréquente : la requête est servie par l'index seul, sans recherche dans la table (Key Lookup). Les colonnes INCLUDE ne servent pas à chercher mais sont disponibles. On évite d'en inclure trop : l'index grossit.
+```sql
+CREATE INDEX IX_Commande_ClientId
+ON dbo.Commande (ClientId)
+INCLUDE (DateCommande, Montant);
+```
+
+@066
+Q: Qu'est-ce qu'un index filtré ?
+C: Un index limité aux lignes d'une condition
+W: Un index qui refuse les valeurs en double
+W: Un index recalculé à chaque requête
+W: Un index qui exclut les colonnes NULL du tri
+E: CREATE INDEX ... WHERE Statut = 'EnCours' n'indexe que les commandes en cours, souvent une petite fraction : l'index est petit, rapide et peu coûteux à maintenir. Il ne sert qu'aux requêtes dont la condition correspond. Il permet aussi une unicité partielle, par exemple un e-mail unique parmi les comptes actifs.
+
+@067
+Q: Quelle différence entre REORGANIZE et REBUILD d'un index fragmenté ?
+C: REORGANIZE réordonne, REBUILD recrée l'index
+W: REORGANIZE supprime l'index, REBUILD le recrée avec un autre nom
+W: REBUILD est toujours en ligne, REORGANIZE bloque toujours la table
+W: Les deux sont identiques, REBUILD est l'ancien nom
+E: REORGANIZE, léger et toujours en ligne, convient à une fragmentation modérée ; REBUILD reconstruit l'index et met à jour ses statistiques, en ligne seulement avec l'option ONLINE des éditions qui la proposent. Sur des disques SSD, la fragmentation pèse moins qu'autrefois : on mesure avant d'agir.
+
+@068
+Q: Qu'est-ce que le « parameter sniffing » ?
+C: Un plan compilé pour une valeur, réutilisé partout
+W: Une attaque qui lit les paramètres transmis à une procédure
+W: La vérification du type des paramètres avant l'exécution
+W: L'enregistrement des paramètres dans le journal de transactions
+E: À la première exécution, SQL Server optimise pour la valeur reçue, par exemple un client avec 3 commandes, et met le plan en cache. Pour un client avec 3 millions de commandes, ce plan est désastreux. Remèdes : OPTION (RECOMPILE), OPTIMIZE FOR, ou la gestion des plans variables de SQL Server 2022.
+
+@069
+Q: À quoi sert le Query Store ?
+C: L'historique des requêtes et de leurs plans
+W: Stocker les résultats des requêtes pour les servir plus vite
+W: Conserver une copie des procédures stockées supprimées
+W: Mettre en file d'attente les requêtes en période de charge
+E: Activé par base, le Query Store enregistre les plans successifs et les temps d'exécution. Après une régression, on voit quel plan a changé et on peut forcer l'ancien. C'est l'outil de diagnostic de performance le plus utile depuis SQL Server 2016, activé par défaut depuis 2022.
+
+@070
+Q: Pourquoi ajouter SET NOCOUNT ON en tête d'une procédure ?
+C: Pour taire les messages « n lignes affectées »
+W: Pour empêcher la procédure de compter les lignes dans ses requêtes
+W: Pour désactiver les statistiques de la base pendant l'exécution
+W: Pour que COUNT(*) renvoie toujours zéro dans la procédure
+E: Sans NOCOUNT, chaque instruction envoie un message au client : du trafic inutile, et certains pilotes interprètent ces messages comme des résultats. @@ROWCOUNT reste disponible. C'est une ligne présente dans la plupart des modèles de procédure.
+
+@071
+Q: Que contiennent les pseudo-tables inserted et deleted dans un déclencheur UPDATE ?
+C: deleted les valeurs avant modification, inserted les valeurs après
+W: inserted les nouvelles lignes, deleted les lignes supprimées de la base
+W: Les deux contiennent les valeurs après la modification
+W: Elles sont vides dans un déclencheur UPDATE
+E: Pour un UPDATE, deleted contient les anciennes valeurs et inserted les nouvelles : on les joint par la clé pour journaliser un changement de prix. Un déclencheur s'exécute une fois par instruction, pas par ligne : il doit traiter plusieurs lignes à la fois.
+
+@072
+Q: Pourquoi ce déclencheur est-il faux ?
+C: Il ne traite qu'une ligne sur plusieurs
+W: Un déclencheur ne peut pas lire la table inserted
+W: Les variables sont interdites dans un déclencheur
+W: Il manque un COMMIT à la fin du déclencheur
+E: Si un UPDATE modifie cent produits, SELECT @Id = Id FROM inserted ne garde qu'une ligne au hasard : les 99 autres ne sont pas journalisées. On écrit un INSERT ... SELECT qui joint inserted et deleted, et traite toutes les lignes d'un coup.
+```sql
+CREATE TRIGGER trg_Prix ON dbo.Produit AFTER UPDATE AS
+BEGIN
+    DECLARE @Id INT;
+    SELECT @Id = Id FROM inserted;
+    INSERT INTO HistoriquePrix (ProduitId) VALUES (@Id);
+END;
+```
+
+@073
+Q: À quoi sert SQL Server Agent ?
+C: Planifier des tâches et alerter en cas d'échec
+W: Répartir les requêtes entre plusieurs serveurs SQL
+W: Traduire les requêtes MySQL en T-SQL
+W: Mettre à jour automatiquement SQL Server chaque nuit
+E: L'Agent exécute des travaux planifiés : sauvegardes, maintenance des index, imports, scripts. Chaque travail a un historique et peut prévenir un opérateur par courriel. Il n'existe pas dans l'édition Express ni dans Azure SQL Database, où l'on utilise d'autres planificateurs.
+
+@074
+Q: Quel est l'intérêt d'un groupe de disponibilité Always On ?
+C: Répliquer des bases et basculer en cas de panne
+W: Sauvegarder les bases vers un stockage cloud chaque heure
+W: Compresser les bases pour qu'elles restent toujours en mémoire
+W: Partager une même base entre plusieurs éditions de SQL Server
+E: Un groupe de disponibilité réplique une ou plusieurs bases vers des réplicas secondaires, de façon synchrone pour une bascule sans perte, ou asynchrone pour un site distant. Les secondaires peuvent servir des lectures et des sauvegardes. Il demande un cluster et des licences adaptées.
+
+@075
+Q: Une base est en mode FULL avec une sauvegarde du journal toutes les 15 minutes. Quelle perte maximale de données faut-il prévoir si le serveur est détruit, sans sauvegarde de fin de journal possible ?
+N: 15
+U: min
+E: Les transactions écrites depuis la dernière sauvegarde du journal sont perdues avec le serveur : jusqu'à 15 minutes. C'est le RPO de cette stratégie. Pour le réduire, on sauvegarde plus souvent, on copie les sauvegardes hors du serveur aussitôt, ou on réplique vers un autre serveur.
+
+@076
+Q: Pourquoi régler « max server memory » sur un serveur SQL ?
+C: Pour laisser de la mémoire au système
+W: Pour forcer SQL Server à utiliser toute la mémoire disponible
+W: Pour que SQL Server libère sa mémoire après chaque requête
+W: Pour limiter la taille maximale des bases de données
+E: Par défaut, SQL Server prend autant de mémoire qu'il peut pour son cache ; le système d'exploitation peut alors manquer et se mettre à paginer. On laisse quelques gigaoctets au système, davantage si d'autres services tournent sur la machine.
+
+@077
+Q: Que vérifie la commande DBCC CHECKDB ?
+C: L'intégrité physique et logique de la base
+W: La validité des mots de passe des utilisateurs
+W: La conformité des requêtes au standard SQL
+W: L'espace libre restant sur les disques
+E: CHECKDB parcourt pages, index et allocations et signale toute corruption, souvent due à un problème de disque. On l'exécute régulièrement, idéalement sur une restauration de la sauvegarde pour ne pas charger la production. Une corruption détectée tôt se répare par restauration, sans perte.
+
+@078
+Q: Qu'apporte TDE (Transparent Data Encryption) ?
+C: Le chiffrement des fichiers de la base et des sauvegardes au repos
+W: Le chiffrement des données pendant leur transport sur le réseau
+W: Le masquage des numéros de carte pour les utilisateurs non autorisés
+W: Le chiffrement des colonnes sensibles côté application
+E: TDE chiffre les fichiers de données, le journal et les sauvegardes : un disque ou une sauvegarde volés sont illisibles sans le certificat. Les données restent en clair pour qui se connecte à la base. Il faut sauvegarder le certificat, sans lequel la restauration est impossible.
+
+@079
+Q: Que permet Always Encrypted par rapport à TDE ?
+C: Chiffrer des colonnes illisibles même du DBA
+W: Chiffrer la base sans aucun impact sur les applications
+W: Remplacer les sauvegardes par une réplication chiffrée
+W: Accélérer les requêtes sur des colonnes chiffrées
+E: Avec Always Encrypted, les clés restent côté client : le serveur ne voit que des données chiffrées. Un DBA ou un attaquant avec accès au serveur ne lit pas les numéros de sécurité sociale. En contrepartie, les recherches sur ces colonnes sont limitées et le pilote client doit être configuré.
+
+@080
+Q: Que fait le masquage dynamique des données (Dynamic Data Masking) ?
+C: Il masque la valeur à qui n'a pas UNMASK
+W: Il chiffre définitivement la colonne sur le disque
+W: Il supprime la colonne pour certains utilisateurs
+W: Il remplace la valeur stockée par des étoiles
+E: Un e-mail s'affiche aXXX@XXXX.com pour un utilisateur ordinaire ; la valeur stockée ne change pas. C'est une protection d'affichage, pas une sécurité forte : un utilisateur qui peut écrire des requêtes peut déduire les valeurs par des filtres. Pour un vrai secret, on chiffre.
+
+@081
+Q: À quoi sert la sécurité au niveau des lignes (Row-Level Security) ?
+C: Filtrer les lignes visibles selon l'utilisateur
+W: Chiffrer chaque ligne avec une clé différente
+W: Empêcher deux utilisateurs de modifier la même ligne
+W: Compter les lignes lues par chaque utilisateur
+E: Une fonction de prédicat ajoutée par une politique de sécurité filtre automatiquement les lignes : un commercial ne voit que ses clients, même avec SELECT * FROM Client. La règle est appliquée dans la base, quelle que soit l'application qui interroge.
+
+@082
+Q: Quand un index columnstore est-il intéressant ?
+C: Pour agréger des millions de lignes
+W: Pour lire une ligne précise par sa clé primaire
+W: Pour des tables de quelques centaines de lignes
+W: Pour des colonnes de texte qu'on recherche par mot
+E: Un columnstore stocke les données par colonne, très compressées, et les traite par lots : une somme sur 100 millions de lignes passe de minutes à secondes. Il convient aux entrepôts et rapports ; pour lire une commande par son identifiant, l'index classique reste meilleur.
+
+@083
+Q: Que permet une table temporelle (system-versioned) ?
+C: Retrouver l'état d'une ligne à n'importe quelle date passée
+W: Supprimer automatiquement les lignes après une durée
+W: Stocker des données uniquement le temps d'une session
+W: Planifier l'insertion d'une ligne à une date future
+E: SQL Server garde dans une table d'historique chaque version des lignes avec ses dates de validité. FOR SYSTEM_TIME AS OF '2026-09-01' renvoie la table telle qu'elle était à cette date. Idéal pour l'audit ou pour comprendre une modification, sans déclencheur à écrire.
+
+@084
+Q: Que renvoie cette requête ?
+C: Une ligne typée par élément du tableau
+W: Le tableau JSON entier converti en une seule chaîne
+W: Une erreur, SQL Server ne sait pas lire le JSON
+W: Le nombre d'éléments du tableau JSON
+E: OPENJSON transforme du JSON en lignes, la clause WITH fixe les colonnes et leurs types. FOR JSON fait l'inverse et produit du JSON à partir d'une requête. JSON_VALUE extrait une valeur simple. SQL Server 2025 ajoute un vrai type de données json.
+```sql
+SELECT *
+FROM OPENJSON(N'[{"id":1,"nom":"Clavier"},{"id":2,"nom":"Souris"}]')
+WITH (id INT, nom NVARCHAR(50));
+```
+
+@085
+Q: Quelle fonction concatène les noms des produits d'une commande, séparés par des virgules ?
+C: STRING_AGG(Nom, ', ')
+W: CONCAT_WS(Nom, ', ')
+W: STRING_SPLIT(Nom, ', ')
+W: GROUP_CONCAT(Nom, ', ')
+E: STRING_AGG, depuis SQL Server 2017, agrège les valeurs d'un groupe en une chaîne ; WITHIN GROUP (ORDER BY Nom) fixe l'ordre. STRING_SPLIT fait l'inverse. GROUP_CONCAT est l'équivalent de MySQL ; CONCAT_WS concatène des colonnes d'une même ligne.
+
+@086
+Q: Pourquoi cette jointure entre une colonne VARCHAR et une colonne NVARCHAR peut-elle devenir lente ?
+C: La conversion implicite peut empêcher l'usage de l'index
+W: Les colonnes de types différents ne peuvent pas être jointes
+W: NVARCHAR est toujours deux fois plus lent que VARCHAR
+W: La jointure renvoie des doublons à cause de l'encodage
+E: SQL Server convertit le VARCHAR en NVARCHAR, de priorité supérieure ; si la colonne convertie est indexée, la recherche devient un parcours. Le plan affiche un avertissement CONVERT_IMPLICIT. On aligne les types des colonnes liées, et des paramètres envoyés par l'application.
+
+@087
+Q: Une application envoie ses paramètres texte en NVARCHAR alors que la colonne indexée Reference est en VARCHAR. Quel symptôme en découle ?
+C: Un parcours de l'index au lieu d'une recherche, bien plus lent
+W: Une erreur de conversion à chaque exécution
+W: Des caractères accentués supprimés dans le résultat
+W: Aucun effet, l'optimiseur ignore le type des paramètres
+E: Comparer une colonne VARCHAR à un paramètre NVARCHAR force la conversion de la colonne, ligne par ligne, selon le classement. C'est un piège classique des pilotes Java et .NET, qui envoient les chaînes en Unicode par défaut. On règle le type du paramètre ou l'option du pilote, comme sendStringParametersAsUnicode=false.
+
+@088
+Q: Pourquoi tempdb doit-il être surveillé et bien dimensionné ?
+C: Il sert de zone de travail à tout le serveur
+W: tempdb contient la copie de sauvegarde de toutes les bases
+W: tempdb garde l'historique des connexions des utilisateurs
+W: tempdb est recréé vide à chaque requête exécutée
+E: tempdb est partagé par toutes les bases : tables #, variables table, tris et hachages qui débordent de la mémoire, versions de READ COMMITTED SNAPSHOT. Plusieurs fichiers de même taille réduisent la contention. Il est recréé vide au redémarrage du service.
+
+@089
+Q: Quelle différence entre Azure SQL Database et Azure SQL Managed Instance ?
+C: La Managed Instance est une instance quasi complète
+W: Azure SQL Database est payante, la Managed Instance gratuite
+W: La Managed Instance ne prend en charge que les bases en lecture seule
+W: Azure SQL Database ne permet pas d'exécuter de requêtes T-SQL
+E: Azure SQL Database fournit une base gérée isolée, idéale pour une nouvelle application. La Managed Instance reproduit presque une instance SQL Server : SQL Agent, requêtes inter-bases, CLR, facilitant la migration d'applications existantes. Les deux sont gérées par Microsoft : correctifs et sauvegardes automatiques.
+
+@090
+Q: Remettre dans l'ordre l'analyse d'une requête devenue lente.
+O: Mesurer sa durée et ses lectures avec SET STATISTICS IO, TIME ON
+O: Lire le plan d'exécution réel et repérer l'opération la plus coûteuse
+O: Comparer lignes estimées et réelles pour juger les statistiques
+O: Ajouter ou ajuster un index, ou réécrire la requête
+O: Mesurer à nouveau pour confirmer le gain
+E: On part de mesures, pas d'intuitions : le nombre de pages lues est plus stable que la durée. Le plan montre un parcours inattendu ou une recherche de clé répétée. Après la correction, on vérifie aussi les autres requêtes : un nouvel index ralentit les écritures.
+
+@091
+Q: Que signifie un avertissement « Key Lookup » répété des milliers de fois dans un plan ?
+C: Chaque ligne relit la table pour ses colonnes
+W: Une clé primaire manque et la table n'a aucun index
+W: Une clé étrangère est violée par certaines lignes
+W: Le serveur recherche la clé de chiffrement des données
+E: L'index non cluster trouve les lignes mais ne contient pas toutes les colonnes demandées : pour chacune, un accès à l'index cluster. Peu de lignes, peu importe ; des milliers, c'est lent. Un index couvrant, avec INCLUDE, supprime ces recherches.
+
+@092
+Q: Pourquoi des transactions imbriquées avec BEGIN TRANSACTION dans une procédure appelée posent-elles problème au ROLLBACK ?
+C: Un ROLLBACK annule toute la transaction externe, pas seulement l'interne
+W: Un ROLLBACK interne n'annule rien tant que l'externe n'est pas validée
+W: SQL Server refuse un BEGIN TRANSACTION dans une procédure
+W: Chaque niveau est validé séparément par un COMMIT
+E: SQL Server n'a pas de vraies transactions imbriquées : @@TRANCOUNT augmente à chaque BEGIN, mais un ROLLBACK, où qu'il soit, annule tout et remet le compteur à zéro. La procédure appelante reçoit alors une erreur de compteur incohérent. On teste @@TRANCOUNT et on utilise des points de sauvegarde (SAVE TRANSACTION) si besoin.
+
+@093
+Q: Que permet un point de sauvegarde (SAVE TRANSACTION) ?
+C: Annuler une partie de la transaction sans annuler le reste
+W: Sauvegarder la base pendant une transaction en cours
+W: Valider la transaction en deux fois pour aller plus vite
+W: Reprendre une transaction après un redémarrage du serveur
+E: SAVE TRANSACTION Etape1 marque un point ; ROLLBACK TRANSACTION Etape1 annule ce qui suit sans toucher à ce qui précède, et la transaction continue. Utile pour une procédure qui tente une étape facultative. Un ROLLBACK sans nom annule toujours tout.
+
+@094
+Q: Une table de 120 millions de lignes doit être purgée des données de plus de 5 ans. Pourquoi supprimer par lots ?
+C: Pour éviter un journal énorme et de longs blocages
+W: Parce que DELETE ne peut pas traiter plus d'un million de lignes
+W: Pour que les lignes supprimées restent récupérables
+W: Parce que les index interdisent les suppressions massives
+E: Un seul DELETE de 50 millions de lignes remplit le journal de transactions, verrouille longtemps la table et, s'il échoue, met aussi longtemps à s'annuler. Une boucle DELETE TOP (10000) ... jusqu'à @@ROWCOUNT = 0 garde des transactions courtes. Le partitionnement permet même d'éliminer une partition entière instantanément.
+
+@095
+Q: Combien de lots de 10 000 lignes faut-il pour supprimer 2,5 millions de lignes ?
+N: 250
+E: 2 500 000 / 10 000 = 250 lots. Chaque lot est une transaction courte : les autres utilisateurs peuvent travailler entre deux, et en mode FULL, une sauvegarde du journal pendant la purge évite qu'il grossisse trop. On ajoute parfois une courte pause entre les lots.
+
+@096
+Q: À quoi sert le partitionnement d'une table de commandes par année ?
+C: Gérer chaque année à part et lire moins
+W: Répartir la table entre plusieurs serveurs différents
+W: Chiffrer chaque année avec une clé différente
+W: Dupliquer les commandes pour accélérer les lectures
+E: Une fonction et un schéma de partition rangent les lignes par année. Une requête filtrée sur une année ne lit que sa partition ; archiver une année se fait par SWITCH, instantané, au lieu d'un DELETE massif. Ce n'est pas un remède universel : mal choisi, il peut ralentir des requêtes.
+
+@097
+Q: Pourquoi éviter SELECT * dans le code d'une application ?
+C: Il lit trop et casse quand la table change
+W: Il est interdit dans les procédures stockées
+W: Il ne renvoie que la première colonne de la table
+W: Il verrouille la table entière pendant la lecture
+E: SELECT * transporte des colonnes dont on n'a pas besoin, parfois volumineuses, et empêche un index couvrant de servir. L'ajout d'une colonne change le résultat et peut casser un code qui lit par position. On liste les colonnes utiles, ce qui documente aussi l'intention.
+
+@098
+Q: Que vaut @@TRANCOUNT après deux BEGIN TRANSACTION successifs sans COMMIT ?
+N: 2
+E: Chaque BEGIN TRANSACTION incrémente @@TRANCOUNT, chaque COMMIT le décrémente ; seul le COMMIT qui le ramène à 0 valide réellement. Un ROLLBACK le remet à 0 d'un coup. Vérifier IF @@TRANCOUNT > 0 avant un ROLLBACK évite une erreur quand rien n'est ouvert.
+
+@099
+Q: Associer chaque niveau d'isolation au phénomène qu'il autorise encore.
+P: READ UNCOMMITTED => lectures de données non validées
+P: READ COMMITTED => une relecture peut voir une valeur changée
+P: REPEATABLE READ => de nouvelles lignes peuvent apparaître
+P: SERIALIZABLE => aucun des trois
+E: Plus le niveau est strict, plus les verrous durent et plus la concurrence baisse. READ COMMITTED est le niveau par défaut. SNAPSHOT offre une vue cohérente de toute la transaction sans bloquer les écrivains, grâce aux versions de lignes dans tempdb.
+
+@100
+Q: Pourquoi tester régulièrement la restauration des sauvegardes sur un autre serveur ?
+C: Pour prouver qu'elles servent et chronométrer la reprise
+W: Parce qu'une sauvegarde non restaurée expire au bout d'un mois
+W: Pour libérer de la place sur le serveur de production
+W: Parce que SQL Server l'exige pour accepter la sauvegarde suivante
+E: Une sauvegarde peut être corrompue, incomplète ou dépendre d'un certificat perdu, comme avec TDE. Seule une restauration réelle le révèle, et elle donne le temps de reprise effectif à comparer au RTO promis. On y lance aussi DBCC CHECKDB, sans charger la production.

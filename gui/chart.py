@@ -15,6 +15,10 @@ LEGEND_ROW_HEIGHT = 18
 # Hauteur réservée au titre d'un camembert, au-dessus de l'anneau
 PIE_TITLE_HEIGHT = 22
 
+# Diamètre minimal de l'anneau et écart avant sa légende
+MIN_PIE_DIAMETER = 90
+LEGEND_GAP = 20
+
 # En dessous de cette largeur par groupe de barres, un libellé sur deux est affiché
 MIN_LABEL_WIDTH = 40
 
@@ -314,7 +318,25 @@ class PieChart(QWidget):
         vTotal = sum(vValue for _, vValue, _ in self.shares)
         vTop = PIE_TITLE_HEIGHT if self.title else 0
         vHeight = self.height() - vTop
-        vDiameter = min(vHeight - 8, self.width() / 2)
+        vLegend = [
+            (
+                f"{vLabel}  ·  {vValue} "
+                f"({round(100 * vValue / vTotal) if vTotal else 0} %)",
+                vColor,
+            )
+            for vLabel, vValue, vColor in self.shares
+        ]
+
+        # La légende est mesurée d'abord : l'anneau prend la place qui reste,
+        # sans descendre sous une taille lisible.
+        vLegendWidth = max(
+            (vPainter.fontMetrics().horizontalAdvance(vText) for vText, _ in vLegend),
+            default=0,
+        )
+        vDiameter = max(
+            MIN_PIE_DIAMETER,
+            min(vHeight - 8, self.width() - vLegendWidth - LEGEND_GAP - 22),
+        )
         vRing = QRectF(4, vTop + (vHeight - vDiameter) / 2, vDiameter, vDiameter)
 
         if self.title:
@@ -325,8 +347,13 @@ class PieChart(QWidget):
             vFont.setBold(True)
             vPainter.setFont(vFont)
 
+            # Centré sur l'anneau, ou élargi vers la droite s'il est plus long.
+            vTitleWidth = max(
+                vRing.width(),
+                vPainter.fontMetrics().horizontalAdvance(self.title) + 8,
+            )
             vPainter.drawText(
-                QRectF(vRing.left(), 0, vRing.width(), PIE_TITLE_HEIGHT),
+                QRectF(vRing.left(), 0, vTitleWidth, PIE_TITLE_HEIGHT),
                 Qt.AlignmentFlag.AlignCenter,
                 self.title,
             )
@@ -363,31 +390,40 @@ class PieChart(QWidget):
         vFont = vPainter.font()
         vFont.setBold(True)
         scale_font(vFont, 1.4)
-
         vPainter.setFont(vFont)
+
+        # Dans un petit anneau, le total est réduit pour tenir dans le trou.
+        vAvailable = vHole.width() * 0.85
+        vNeeded = vPainter.fontMetrics().horizontalAdvance(str(vTotal))
+
+        if vNeeded > vAvailable:
+            scale_font(vFont, vAvailable / vNeeded)
+            vPainter.setFont(vFont)
+
         vPainter.drawText(vHole, Qt.AlignmentFlag.AlignCenter, str(vTotal))
         vPainter.restore()
 
-        vLegendLeft = vRing.right() + 20
+        vLegendLeft = vRing.right() + LEGEND_GAP
         vRowHeight = 22
         vLegendTop = vTop + (vHeight - vRowHeight * len(self.shares)) / 2
 
-        for vIndex, (vLabel, vValue, vColor) in enumerate(self.shares):
+        vTextWidth = self.width() - vLegendLeft - 18
+
+        for vIndex, (vText, vColor) in enumerate(vLegend):
             vTop = vLegendTop + vIndex * vRowHeight
 
             vPainter.setPen(Qt.PenStyle.NoPen)
             vPainter.setBrush(QColor(vColor))
             vPainter.drawRoundedRect(QRectF(vLegendLeft, vTop + 5, 10, 10), 3, 3)
 
-            vPercent = round(100 * vValue / vTotal) if vTotal else 0
-
+            # Fenêtre vraiment trop étroite : le texte est abrégé, jamais coupé net.
             vPainter.setPen(QColor(COLORS["text"]))
             vPainter.drawText(
-                QRectF(
-                    vLegendLeft + 18, vTop, self.width() - vLegendLeft - 18, vRowHeight
-                ),
+                QRectF(vLegendLeft + 18, vTop, vTextWidth, vRowHeight),
                 Qt.AlignmentFlag.AlignVCenter,
-                f"{vLabel}  ·  {vValue} ({vPercent} %)",
+                vPainter.fontMetrics().elidedText(
+                    vText, Qt.TextElideMode.ElideRight, int(vTextWidth)
+                ),
             )
 
         vPainter.end()

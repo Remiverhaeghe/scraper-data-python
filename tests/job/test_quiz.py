@@ -10,6 +10,9 @@ import pandas as pd
 import pytest
 
 from job.quiz import (
+    contains_word,
+    find_skills_in_text,
+    index_skills,
     answer_question,
     build_quiz_overview,
     build_quiz_statistics,
@@ -482,3 +485,23 @@ def test_overview_counts_questions_due_today(database_file):
     )
 
     assert vJava["due"] == 1
+
+
+def test_find_skills_in_text_cases():
+    """Vérifie la recherche des compétences : mots entiers, symboles et sigles courts."""
+
+    vIndex = index_skills(
+        {"C++", ".NET", "CI/CD", "Java", "Spring", "Spring Boot", "GC", "React"}
+    )
+
+    assert find_skills_in_text(
+        "Stack : C++, ASP.NET Core, CI/CD et Spring Boot.", vIndex
+    ) == {"C++", "CI/CD", "Spring", "Spring Boot"}
+    assert find_skills_in_text("JavaScript et react-native, gc", vIndex) == set()
+    assert find_skills_in_text("Java 21, réglage du GC, React.", vIndex) == {
+        "Java",
+        "GC",
+        "React",
+    }
+    assert contains_word("a-java java", "java")
+    assert not contains_word("javas", "java")

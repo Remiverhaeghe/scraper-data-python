@@ -9,7 +9,7 @@ from job.skills_dashboard import (
     build_skill_rows,
     build_skills_dashboard,
     count_skill_demand,
-    find_catalog_label,
+    find_catalog_theme,
     get_skill_status,
     summarize_skills,
 )
@@ -22,11 +22,21 @@ THEMES = [
     {
         "key": "python",
         "label": "Python",
+        "domain": "Informatique",
+        "subdomain": "Développement",
         "skills": ["Python"],
         "correct": 9,
         "total": 10,
     },
-    {"key": "sql", "label": "SQL", "skills": ["SQL"], "correct": 1, "total": 10},
+    {
+        "key": "sql",
+        "label": "SQL",
+        "domain": "Informatique",
+        "subdomain": "Données",
+        "skills": ["SQL"],
+        "correct": 1,
+        "total": 10,
+    },
 ]
 
 
@@ -52,7 +62,14 @@ def test_get_skill_status():
 def test_rows_and_summary():
     """Vérifie l'ordre, le score des thèmes, le profil, le catalogue et la synthèse."""
 
-    vCatalog = [{"label": "Cloud et infrastructure", "skills": ("AWS", "Azure")}]
+    vCatalog = [
+        {
+            "label": "Cloud et infrastructure",
+            "domain": "Informatique",
+            "subdomain": "Exploitation et DevOps",
+            "skills": ("AWS", "Azure"),
+        }
+    ]
     vRows = build_skill_rows(
         {"SQL": 5, "Python": 8, "AWS": 6}, 20, THEMES, ["python"], vCatalog
     )
@@ -66,7 +83,9 @@ def test_rows_and_summary():
         "Cloud et infrastructure",
     )
     assert vRows[2]["themes"] == [("sql", "SQL")]
-    assert find_catalog_label(vCatalog, "Rust") == "Rust"
+    assert find_catalog_theme(vCatalog, "Rust") is None
+    assert vRows[1]["icon"] == "server"
+    assert vRows[0]["icon"] == "code"
 
     assert summarize_skills(vRows) == {
         "skills": 3,

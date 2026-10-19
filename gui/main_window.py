@@ -1,5 +1,7 @@
 """Fenêtre principale : menu latéral et pages de l'application"""
 
+import threading
+
 from PySide6.QtCore import QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
@@ -35,6 +37,7 @@ from gui.settings_page import SettingsPage
 from gui.theme import COLORS
 from gui.widgets import show_message
 from job.quiz import DEFAULT_MODE
+from job.quiz_generation import prepare_quiz_caches
 from job.schedule import save_scheduled_search
 from utils.logger import get_logger
 
@@ -72,6 +75,12 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1180, 760)
 
         self.build_content()
+
+        # Les comptes d'offres par thème sont longs à calculer : faits d'avance,
+        # la page Révision s'ouvre aussitôt. Sans attente ni effet sur l'interface.
+        threading.Thread(
+            target=prepare_quiz_caches, args=(pDatabaseFile,), daemon=True
+        ).start()
 
     def build_content(self):
         """Construit le menu latéral et les pages.

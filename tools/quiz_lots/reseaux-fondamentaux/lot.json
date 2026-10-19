@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026101606,
+  "skills": ["TCP/IP", "réseau", "adressage IP", "DNS", "DHCP"],
+  "schemas": [
+    {
+      "name": "reseau-osi.svg",
+      "questions": ["001", "002"],
+      "diagram": {
+        "title": "Modèle OSI et exemples",
+        "nodes": [
+          "1 Physique : câble, radio",
+          "2 Liaison : Ethernet, MAC",
+          "3 Réseau : IP, routeur",
+          "4 Transport : TCP, UDP",
+          "5 à 7 : HTTP, DNS"
+        ],
+        "note": "Un diagnostic remonte les couches de bas en haut"
+      }
+    },
+    {
+      "name": "reseau-diagnostic.svg",
+      "questions": ["035", "048"],
+      "diagram": {
+        "title": "Diagnostic d'un poste sans accès",
+        "nodes": [
+          "Lien : câble ou Wi-Fi",
+          "Adresse et passerelle (ipconfig)",
+          "ping de la passerelle",
+          "ping d'une adresse publique",
+          "nslookup du nom"
+        ],
+        "note": "La première étape en échec localise la panne"
+      }
+    }
+  ]
+}

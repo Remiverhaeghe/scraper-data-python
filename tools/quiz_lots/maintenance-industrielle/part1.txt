@@ -1,0 +1,389 @@
+@001
+Q: Associer chaque type de maintenance à sa définition.
+P: Corrective => intervenir après la panne
+P: Préventive systématique => intervenir à intervalle fixe
+P: Préventive conditionnelle => intervenir selon l'état mesuré
+P: Prévisionnelle => intervenir selon l'évolution prévue de l'état
+E: La corrective répare ; la systématique remplace à date ou à compteur, même une pièce encore bonne ; la conditionnelle surveille un indicateur, comme la vibration, et agit au seuil ; la prévisionnelle extrapole la tendance pour planifier l'intervention avant le seuil.
+
+@002
+Q: Quelle différence entre maintenance curative et maintenance palliative ?
+C: La curative répare, la palliative dépanne
+W: La curative est préventive, la palliative est corrective
+W: La palliative est toujours plus coûteuse que la curative
+W: Il n'y a aucune différence entre les deux termes
+E: Toutes deux sont correctives. Un dépannage palliatif remet la machine en route au plus vite, par exemple en pontant un capteur défaillant ; il doit être suivi d'une réparation curative, qui traite la cause. Un palliatif qui dure devient un risque.
+
+@003
+Q: Qu'est-ce qu'une GMAO ?
+C: Un logiciel de gestion de la maintenance
+W: Un appareil de mesure des vibrations
+W: Une norme de sécurité des machines
+W: Un type de graisse pour roulements
+E: La gestion de maintenance assistée par ordinateur recense les équipements, planifie les interventions préventives, enregistre les pannes et les pièces utilisées, et gère le stock. Ses historiques fournissent les indicateurs comme le MTBF. Elle ne vaut que si les techniciens y saisissent leurs interventions.
+
+@004
+Q: Que signifie l'indicateur MTBF ?
+C: Le temps moyen de bon fonctionnement entre deux pannes
+W: Le temps moyen nécessaire pour réparer une panne
+W: Le temps moyen avant la première panne d'un appareil neuf
+W: Le nombre de pannes par mois d'un équipement
+E: Mean Time Between Failures : on divise le temps de fonctionnement par le nombre de pannes. Plus il est élevé, plus l'équipement est fiable. Le MTTR mesure le temps de réparation, le MTTF le temps avant la panne d'un équipement non réparable.
+
+@005
+Q: Une machine a fonctionné 1 800 heures et subi 6 pannes sur la période. Quel est son MTBF en heures ?
+N: 300
+U: h
+E: MTBF = temps de bon fonctionnement / nombre de pannes = 1 800 / 6 = 300 heures. On ne compte pas les temps d'arrêt dans le numérateur. Un MTBF qui baisse d'un mois sur l'autre signale une dégradation à analyser.
+
+@006
+Q: Que mesure le MTTR ?
+C: Le temps moyen de réparation après une panne
+W: Le temps moyen entre deux pannes
+W: Le taux de pannes par heure de fonctionnement
+W: Le temps total d'arrêt planifié sur un mois
+E: Mean Time To Repair : la durée moyenne depuis l'arrêt jusqu'à la remise en service, diagnostic, attente des pièces et essais compris. Pièces en stock, documentation à jour et techniciens formés le réduisent. Il mesure la maintenabilité.
+
+@007
+Q: Six pannes ont demandé au total 9 heures de réparation. Quel est le MTTR en heures ?
+N: 1,5
+U: h
+E: MTTR = temps total de réparation / nombre de pannes = 9 / 6 = 1,5 heure. Avec un MTBF de 300 heures, la disponibilité vaut 300 / (300 + 1,5), soit environ 99,5 %.
+
+@008
+Q: Comment calcule-t-on la disponibilité d'un équipement à partir du MTBF et du MTTR ?
+C: MTBF / (MTBF + MTTR)
+W: MTTR / (MTBF + MTTR)
+W: MTBF × MTTR
+W: MTBF - MTTR
+E: La disponibilité est la part du temps où l'équipement peut produire. On l'améliore en espaçant les pannes, ce qui augmente le MTBF, ou en réparant plus vite, ce qui diminue le MTTR. Les deux leviers relèvent de métiers différents : fiabilité et maintenabilité.
+
+@009
+Q: Un équipement a un MTBF de 190 heures et un MTTR de 10 heures. Quelle est sa disponibilité en pourcentage ?
+N: 95
+U: %
+E: 190 / (190 + 10) = 0,95, soit 95 %. Sur une semaine de 168 heures, cela représente environ 8 heures d'arrêt pour panne. Diviser le MTTR par deux ferait passer la disponibilité à 97,4 %.
+
+@010
+Q: Remettre dans l'ordre les étapes de la consignation électrique d'une machine.
+O: Séparer la machine de toute source d'énergie
+O: Condamner le sectionneur en position ouverte avec un cadenas
+O: Identifier l'équipement consigné par une étiquette
+O: Vérifier l'absence de tension sur place
+O: Mettre à la terre et en court-circuit si nécessaire
+E: La séparation sans condamnation ne suffit pas : quelqu'un peut refermer. Le cadenas personnel, dont l'intervenant garde la clé, l'en empêche. La vérification d'absence de tension, avec un appareil testé avant et après, est indispensable : on ne se fie jamais à la position d'une poignée.
+
+@011
+Q: Pourquoi chaque intervenant pose-t-il son propre cadenas sur le sectionneur ?
+C: Personne ne peut remettre l'énergie tant qu'il travaille
+W: Pour que le responsable sache combien de personnes travaillent
+W: Pour remplacer la vérification d'absence de tension
+W: Parce que le sectionneur ne tient fermé qu'avec plusieurs cadenas
+E: Avec une pince multi-cadenas, chacun ajoute le sien et ne le retire qu'à la fin de son travail : la machine ne peut être remise en service qu'une fois tous les cadenas retirés. C'est la base du LOTO (lockout-tagout), qui s'applique aussi aux énergies pneumatique, hydraulique et mécanique.
+
+@012
+Q: Quelles énergies faut-il consigner avant d'intervenir sur une presse hydraulique ?
+C: Toutes : électricité, pression hydraulique et énergie mécanique
+W: Seulement l'électricité, qui commande tout le reste
+W: Seulement la pression hydraulique, qui fait bouger le vérin
+W: Aucune, si la presse est à l'arrêt
+E: Couper le moteur ne vide pas un accumulateur ni un vérin sous charge : un coulisseau peut descendre par son propre poids. On consigne chaque énergie, on purge les pressions résiduelles et on bloque mécaniquement les masses en hauteur. L'oubli d'une énergie est une cause classique d'accident grave.
+
+@013
+Q: Qu'est-ce qu'un permis de travail ?
+C: Une autorisation écrite fixant risques et précautions
+W: Le diplôme qui autorise un technicien à travailler
+W: Le contrat de travail d'un intérimaire en maintenance
+W: Le planning hebdomadaire des interventions
+E: Pour un travail dangereux, en hauteur, en espace confiné ou à chaud, le permis précise la zone, les risques, les mesures (consignation, détection de gaz, surveillance), la durée et les signataires. Il garantit que chacun sait ce qui est fait et ce qui est interdit.
+
+@014
+Q: Que signifie un « permis de feu » ?
+C: Une autorisation pour un travail par point chaud
+W: Un document qui autorise à allumer un barbecue sur le site
+W: Le certificat de conformité des extincteurs
+W: L'autorisation de stocker des produits inflammables
+E: Soudage, meulage ou découpage au chalumeau produisent étincelles et chaleur. Le permis impose d'éloigner ou protéger les matières combustibles, d'avoir un extincteur à portée et de surveiller la zone après le travail, souvent pendant au moins une heure, car un feu couvant peut démarrer plus tard.
+
+@015
+Q: Associer chaque équipement de protection individuelle à son risque.
+P: Lunettes de protection => projections dans les yeux
+P: Protections auditives => bruit au-delà de 85 dB(A)
+P: Gants isolants => contact électrique
+P: Harnais antichute => chute de hauteur
+E: Les EPI sont le dernier rempart, après la suppression du risque et les protections collectives. Ils doivent être adaptés, en bon état et portés. Des gants isolants se vérifient avant chaque usage, par un test de gonflage, car un trou invisible les rend inutiles.
+
+@016
+Q: Quel est l'ordre de priorité des mesures de prévention d'un risque ?
+C: Supprimer, puis protéger collectivement, puis individuellement
+W: Équiper chacun d'EPI, puis supprimer le risque si possible
+W: Former le personnel, puis attendre le premier incident
+W: Afficher une consigne, puis protéger collectivement
+E: Les principes généraux de prévention placent la suppression du risque en tête, puis la protection collective, comme un carter ou une barrière, et seulement ensuite la protection individuelle. Un carter protège tout le monde en permanence ; des lunettes, seulement celui qui les porte.
+
+@017
+Q: Pourquoi ne faut-il jamais shunter un dispositif de sécurité pour dépanner une machine ?
+C: La machine peut blesser sans plus rien pour l'arrêter
+W: Le shunt fait consommer plus d'électricité à la machine
+W: Le shunt annule la garantie du constructeur
+W: La machine refuse de redémarrer avec un shunt
+E: Un capteur de porte ou une barrière immatérielle contournés « pour gagner du temps » ne protègent plus personne, et le contournement est souvent oublié. Un dépannage avec sécurité neutralisée exige une procédure, des mesures compensatoires et une remise en état vérifiée.
+
+@018
+Q: Que doit contenir un bon de travail de maintenance ?
+C: La machine, la demande, le travail et les pièces
+W: Seulement le nom du technicien et l'heure de fin
+W: Le prix de vente du produit fabriqué par la machine
+W: Le planning de production de la semaine suivante
+E: Le bon de travail alimente l'historique de la GMAO : sans description précise de la panne, de la cause et de la solution, impossible d'analyser les pannes répétitives ou de calculer les indicateurs. « Réparé » ne suffit pas ; « courroie remplacée, usée par désalignement » est utile.
+
+@019
+Q: Que signifie le sigle TRS ?
+C: Taux de rendement synthétique
+W: Temps réel de service
+W: Taux de remplacement des stocks
+W: Temps de réparation standard
+E: Le TRS mesure l'efficacité réelle d'un équipement : il multiplie le taux de disponibilité, le taux de performance et le taux de qualité. Un TRS de 60 % signifie que la machine ne produit l'équivalent que de 60 % de son temps requis à pleine cadence et sans défaut.
+
+@020
+Q: Une ligne a une disponibilité de 90 %, une performance de 80 % et une qualité de 95 %. Quel est son TRS en pourcentage ?
+N: 68,4
+U: %
+T: 1
+E: TRS = 0,90 × 0,80 × 0,95 = 0,684, soit 68,4 %. Les trois pertes se cumulent : arrêts, ralentissements et rebuts. On cherche d'abord la plus grande des trois pour savoir où agir.
+
+@021
+Q: Associer chaque perte à la composante du TRS qu'elle dégrade.
+P: Panne d'un moteur => disponibilité
+P: Cadence réduite pour éviter des bourrages => performance
+P: Pièces rebutées au contrôle => qualité
+E: Les six grandes pertes du TPM se rangent dans ces trois familles. Pannes et changements de série sont des arrêts, donc des pertes de disponibilité ; les micro-arrêts et ralentissements touchent la performance ; les rebuts et retouches la qualité.
+
+@022
+Q: Qu'est-ce qu'un plan de maintenance préventive ?
+C: Les opérations planifiées de chaque équipement
+W: Le plan d'implantation des machines dans l'atelier
+W: Le budget annuel du service maintenance
+W: La procédure à suivre après chaque panne
+E: Pour chaque équipement, le plan liste les opérations (graissage, contrôle, remplacement), leur fréquence ou leur compteur, la durée et les pièces. On le bâtit à partir des préconisations du constructeur, puis on l'ajuste selon l'historique des pannes.
+
+@023
+Q: Pourquoi un graissage excessif d'un roulement peut-il le faire chauffer ?
+C: La graisse en trop est brassée et échauffe le roulement
+W: La graisse en trop refroidit trop le roulement
+W: La graisse en trop isole électriquement le moteur
+W: Un excès de graisse n'a aucun effet sur un roulement
+E: Un roulement rempli à ras brasse la graisse, qui s'échauffe, se dégrade et peut faire sauter les joints. On respecte la quantité et la fréquence préconisées, souvent calculées selon la taille et la vitesse. Trop ou pas assez, les deux usent le roulement prématurément.
+
+@024
+Q: Quel signe indique souvent un roulement en début de dégradation ?
+C: Une hausse des vibrations et du bruit
+W: Une baisse de la consommation électrique du moteur
+W: Un changement de couleur de la carcasse du moteur
+W: Une accélération de la vitesse de rotation
+E: Les défauts de roulement apparaissent d'abord en vibrations à haute fréquence, longtemps avant d'être audibles ou de faire chauffer. Une analyse vibratoire régulière repère la dégradation des semaines à l'avance et permet de planifier le remplacement.
+
+@025
+Q: Remettre dans l'ordre les étapes d'un diagnostic de panne méthodique.
+O: Recueillir les informations : symptômes, circonstances, messages
+O: Vérifier les éléments simples : alimentation, sécurités, réglages
+O: Formuler des hypothèses à partir du fonctionnement de la machine
+O: Tester chaque hypothèse par des mesures
+O: Réparer, essayer, puis consigner la cause dans le bon de travail
+E: Le premier réflexe est d'écouter l'opérateur : quand, comment, après quoi ? Beaucoup de pannes viennent d'une sécurité déclenchée ou d'un disjoncteur. Changer des pièces au hasard coûte cher et masque la vraie cause, qui reviendra.
+
+@026
+Q: Un moteur s'arrête et son relais thermique a déclenché. Que faire avant de réarmer ?
+C: Chercher la cause de la surcharge
+W: Augmenter le réglage du relais thermique
+W: Réarmer aussitôt et laisser le moteur repartir
+W: Remplacer le moteur par un modèle plus puissant
+E: Le relais thermique protège le moteur d'une surintensité prolongée : roulement grippé, mécanique bloquée, phase manquante, réglage trop bas. Réarmer sans chercher fait repartir sur le même défaut ; augmenter le réglage expose le moteur à brûler. On mesure les intensités et on vérifie la charge.
+
+@027
+Q: Quel appareil mesure l'intensité d'un moteur sans ouvrir le circuit ?
+C: Une pince ampèremétrique
+W: Un multimètre en mode ohmmètre
+W: Un mégohmmètre
+W: Un tachymètre
+E: La pince enserre un seul conducteur et mesure le courant par le champ magnétique, sans couper le câble. On compare les trois phases d'un moteur triphasé : un déséquilibre signale un défaut d'alimentation ou de bobinage. Le mégohmmètre mesure l'isolement, à circuit consigné.
+
+@028
+Q: À quoi sert un mégohmmètre en maintenance électrique ?
+C: À mesurer l'isolement d'un moteur ou d'un câble
+W: À mesurer la tension du réseau sous charge
+W: À mesurer la vitesse de rotation d'un moteur
+W: À mesurer la température d'un roulement
+E: Il applique une tension continue de 500 ou 1 000 V et mesure la résistance d'isolement, en mégohms. Une valeur faible révèle un bobinage humide ou dégradé, avant qu'il ne claque. La mesure se fait hors tension, en déconnectant l'électronique sensible comme un variateur.
+
+@029
+Q: Un moteur triphasé tourne à l'envers après un remplacement. Quelle est la cause la plus probable ?
+C: Deux phases ont été inversées au raccordement
+W: Le moteur est trop puissant pour la machine
+W: Le relais thermique est mal réglé
+W: Les roulements ont été montés à l'envers
+E: Inverser deux des trois phases inverse le sens du champ tournant, donc de rotation. On permute deux fils au bornier. Sur une pompe ou un ventilateur, un sens inversé passe parfois inaperçu mais réduit fortement le débit : on vérifie toujours le sens au démarrage.
+
+@030
+Q: Pourquoi l'alignement entre un moteur et une pompe est-il important ?
+C: Un désalignement use roulements et accouplement
+W: Il ne sert qu'à l'esthétique de l'installation
+W: Il permet au moteur de tourner plus vite
+W: Il réduit la consommation d'eau de la pompe
+E: Un désalignement de quelques dixièmes de millimètre crée des efforts qui usent prématurément roulements, garnitures et accouplement, et augmente les vibrations. Un alignement au laser après chaque intervention prolonge nettement la durée de vie de l'ensemble.
+
+@031
+Q: Qu'est-ce que l'analyse vibratoire ?
+C: Mesurer les vibrations pour trouver les défauts
+W: Le contrôle de la tension des courroies à la main
+W: La vérification du niveau sonore d'un atelier
+W: Le test de la résistance d'une machine aux secousses
+E: Un capteur, souvent un accéléromètre, mesure les vibrations ; leur spectre révèle balourd, désalignement, défaut de roulement ou d'engrènement, chacun à une fréquence caractéristique. Suivie dans le temps, elle permet une maintenance conditionnelle.
+
+@032
+Q: À quoi sert une caméra thermique en maintenance ?
+C: À repérer les points chauds anormaux
+W: À mesurer la vitesse des moteurs
+W: À détecter les fuites d'huile froides
+W: À photographier les plaques signalétiques
+E: Une connexion desserrée dans une armoire, un roulement qui chauffe ou un fusible surchargé apparaissent comme des points chauds, avant la panne ou l'incendie. La thermographie se fait sous charge, à distance, sans arrêter l'installation, et demande d'interpréter correctement l'émissivité.
+
+@033
+Q: Une borne d'armoire électrique est à 85 °C alors que ses voisines sont à 35 °C, sous la même charge. Que faut-il suspecter ?
+C: Une connexion desserrée ou oxydée
+W: Un fonctionnement normal pour une borne
+W: Une température extérieure trop basse
+W: Un câble trop gros pour la borne
+E: Une mauvaise connexion présente une résistance anormale qui chauffe par effet Joule ; l'écart avec les bornes voisines de même charge est le meilleur indice. On planifie un resserrage au couple, après consignation, et on vérifie l'état des conducteurs.
+
+@034
+Q: Quel est l'écart de température, en degrés, entre cette borne et ses voisines ?
+N: 50
+U: °C
+E: 85 - 35 = 50 °C. Les guides de thermographie classent souvent un écart de plus de 40 °C entre composants comparables comme une anomalie majeure, à traiter rapidement. Un écart de quelques degrés relève plutôt de la surveillance.
+
+@035
+Q: Qu'est-ce qu'une analyse d'huile en maintenance ?
+C: L'analyse de l'huile pour juger l'usure
+W: Le remplacement systématique de l'huile chaque année
+W: Le contrôle visuel du niveau d'huile dans le carter
+W: Le choix d'une huile moins chère pour la machine
+E: Un laboratoire mesure viscosité, eau, acidité et particules d'usure. Des particules de fer en hausse signalent l'usure d'engrenages ; de l'eau, un joint défaillant. On vidange quand l'huile est usée plutôt qu'à date fixe, et on détecte l'usure avant la casse.
+
+@036
+Q: Pourquoi tenir un stock de pièces de rechange critiques ?
+C: Pour éviter un long arrêt en attendant une pièce
+W: Pour pouvoir revendre les pièces plus tard
+W: Parce que les fournisseurs l'exigent
+W: Pour ne jamais avoir à réparer les pièces
+E: Un roulement spécial ou une carte électronique livrés en six semaines transforment une panne d'une heure en arrêt de production prolongé. On identifie les pièces critiques selon l'impact de l'arrêt et le délai d'approvisionnement, et on équilibre ce coût avec celui du stock immobilisé.
+
+@037
+Q: Qu'est-ce qu'une pièce « critique » pour le stock de maintenance ?
+C: Une pièce dont l'absence arrête longtemps
+W: Une pièce qui coûte plus de mille euros
+W: Une pièce qui casse très souvent
+W: Une pièce fabriquée par un seul fournisseur
+E: La criticité combine l'effet de l'arrêt (production, sécurité, qualité), la probabilité de panne et le délai d'obtention. Une pièce bon marché peut être critique si sa machine est un goulot ; une pièce chère d'une machine doublée peut ne pas l'être.
+
+@038
+Q: Que signifie AMDEC ?
+C: Analyse des modes de défaillance, de leurs effets et de leur criticité
+W: Analyse mensuelle des dépenses et des coûts
+W: Atelier de maintenance des équipements critiques
+W: Autorisation de mise en service des équipements
+E: L'AMDEC recense pour chaque composant comment il peut défaillir, ce que cela provoque et pourquoi. On note gravité, fréquence et détection pour calculer une criticité, puis on traite les modes les plus critiques en priorité. C'est la base d'un plan de maintenance réfléchi.
+
+@039
+Q: Dans une AMDEC, comment calcule-t-on souvent la criticité d'un mode de défaillance ?
+C: Gravité × fréquence × non-détection
+W: Gravité + fréquence + non-détection
+W: Coût de la pièce × nombre de pannes
+W: MTBF / MTTR
+E: Chaque critère est noté, par exemple de 1 à 10 ; le produit donne l'indice de priorité. Un mode grave, fréquent et difficile à détecter ressort en tête. On fixe un seuil au-delà duquel une action est obligatoire, puis on recalcule après l'action.
+
+@040
+Q: Un mode de défaillance a une gravité de 8, une fréquence de 3 et une non-détection de 4. Quelle est sa criticité ?
+N: 96
+E: 8 × 3 × 4 = 96. Si le seuil d'action est 80, ce mode doit être traité : on peut réduire la fréquence par un préventif, ou améliorer la détection par une surveillance, ce qui fait baisser l'indice. La gravité, elle, ne baisse souvent qu'en modifiant la conception.
+
+@041
+Q: Que signifie la méthode des « 5 pourquoi » ?
+C: Remonter à la cause par des « pourquoi »
+W: Interroger cinq personnes sur la même panne
+W: Analyser cinq pannes avant de décider
+W: Remplacer cinq pièces pour être sûr de réparer
+E: La pompe s'est arrêtée ; pourquoi ? Le moteur a chauffé ; pourquoi ? Le roulement a grippé ; pourquoi ? Il manquait de graisse ; pourquoi ? Le point de graissage est inaccessible ; pourquoi ? Il est derrière un carter fixe. On agit sur la dernière cause, pas sur la première.
+
+@042
+Q: Associer chaque famille du diagramme d'Ishikawa à un exemple de cause.
+P: Matière => lot de pièces brutes hors tolérance
+P: Méthode => procédure de réglage incomplète
+P: Main-d'œuvre => opérateur non formé au poste
+P: Milieu => température de l'atelier trop élevée
+P: Machine => broche usée
+E: Le diagramme en arête de poisson, ou 5M, classe les causes possibles d'un problème pour n'en oublier aucune famille. Il sert en groupe, avant de vérifier chaque hypothèse par des faits. On y ajoute parfois Mesure et Management.
+
+@043
+Q: Qu'est-ce qu'une panne « intermittente » et pourquoi est-elle difficile ?
+C: Une panne qui va et vient
+W: Une panne qui survient à heure fixe chaque jour
+W: Une panne qui ne touche qu'une seule pièce
+W: Une panne réparée par un redémarrage définitif
+E: Le défaut, souvent une connexion qui vibre ou un composant sensible à la chaleur, a disparu quand le technicien arrive. On recueille précisément les circonstances, on enregistre les signaux avec un appareil sur la durée et on reproduit les conditions, comme une machine chaude ou une vibration.
+
+@044
+Q: Pourquoi documenter la cause et la solution de chaque panne dans la GMAO ?
+C: Pour repérer les pannes répétitives et dépanner plus vite
+W: Pour justifier le salaire des techniciens
+W: Parce que la loi impose de garder chaque bon pendant 30 ans
+W: Pour pouvoir facturer la panne au client
+E: Une panne qui revient tous les mois sur la même machine n'apparaît que dans un historique bien renseigné. Le technicien suivant retrouve la solution en minutes. C'est aussi la matière première des analyses de fiabilité.
+
+@045
+Q: Que signifie TPM ?
+C: Maintenance productive totale
+W: Temps de panne moyen
+W: Taux de pièces manquantes
+W: Traitement préventif mensuel
+E: La TPM associe les opérateurs à l'entretien de leur machine : nettoyage, inspection, graissage simple. Ils repèrent tôt les anomalies, et la maintenance se concentre sur les tâches techniques. Elle vise zéro panne, zéro défaut et zéro accident.
+
+@046
+Q: Qu'est-ce que la maintenance de premier niveau confiée aux opérateurs ?
+C: Des tâches simples : nettoyage, contrôles, niveaux
+W: La réparation complète des moteurs de la ligne
+W: Le remplacement des cartes électroniques
+W: La modification des programmes des automates
+E: Vérifier un niveau d'huile, nettoyer un capteur, signaler un bruit anormal ou une fuite : ces gestes simples, encadrés par des fiches visuelles, évitent bien des pannes. Les opérateurs connaissent leur machine mieux que personne et voient les dérives en premier.
+
+@047
+Q: Pourquoi une fuite d'air comprimé est-elle un vrai coût ?
+C: Le compresseur tourne pour rien
+W: L'air comprimé est gratuit, la fuite ne coûte rien
+W: La fuite abîme seulement les tuyaux en plastique
+W: La fuite rend l'air de l'atelier plus humide
+E: L'air comprimé est l'une des énergies les plus chères d'une usine : une seule fuite de 3 mm peut coûter plusieurs milliers d'euros par an. Une campagne de détection par ultrasons, puis la réparation, est souvent l'action d'économie la plus rentable d'un site.
+
+@048
+Q: Quel outil repère les fuites d'air comprimé dans un atelier bruyant ?
+C: Un détecteur à ultrasons
+W: Un multimètre
+W: Un pied à coulisse
+W: Une clé dynamométrique
+E: Une fuite émet des ultrasons inaudibles mais bien distincts du bruit de l'atelier. Le détecteur les capte et les rend audibles, ce qui permet de localiser les fuites en marche normale. On les marque, on les répare et on mesure le gain sur le compresseur.
+
+@049
+Q: Qu'est-ce que le serrage au couple d'une vis ?
+C: Un serrage à la valeur prescrite, avec une clé dynamométrique
+W: Un serrage le plus fort possible pour éviter le desserrage
+W: Un serrage à la main sans aucun outil
+W: Un serrage alterné de deux vis voisines
+E: Trop peu serrée, une vis se desserre ; trop serrée, elle s'allonge au-delà de sa limite ou abîme la pièce. La valeur prescrite par le constructeur, appliquée avec une clé dynamométrique et dans l'ordre indiqué pour une bride, garantit un assemblage fiable.
+
+@050
+Q: Pourquoi serre-t-on les vis d'une bride en croix plutôt qu'à la suite ?
+C: Pour comprimer le joint uniformément
+W: Pour aller plus vite qu'en tournant autour
+W: Pour économiser des vis sur la bride
+W: Parce que les vis voisines ne peuvent pas être serrées ensemble
+E: Serrer à la suite plaque un côté avant l'autre : le joint est écrasé de travers et la bride fuit. En croix, et en plusieurs passes à couple croissant, le joint se comprime également sur tout le tour.

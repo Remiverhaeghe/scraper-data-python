@@ -1,0 +1,467 @@
+@001
+Q: Quel est le nom du langage SQL propre à Microsoft SQL Server ?
+C: T-SQL
+W: PL/SQL
+W: PL/pgSQL
+W: SQL/PSM
+E: Transact-SQL ajoute au SQL standard des variables, des blocs de contrôle, la gestion d'erreurs TRY...CATCH et de nombreuses fonctions. PL/SQL est le langage d'Oracle, PL/pgSQL celui de PostgreSQL. Un script T-SQL ne s'exécute donc pas tel quel sur une autre base.
+
+@002
+Q: Quel outil graphique de Microsoft sert à administrer SQL Server et à écrire des requêtes ?
+C: SQL Server Management Studio
+W: SQL Server Data Mover
+W: Visual Basic Query Builder
+W: Windows Database Console
+E: SSMS, gratuit, permet de parcourir les bases, écrire et exécuter des requêtes, voir les plans d'exécution, gérer sécurité, sauvegardes et tâches planifiées. Azure Data Studio et l'extension SQL Server de VS Code sont des alternatives multiplateformes pour l'écriture de requêtes.
+
+@003
+Q: Que renvoie cette requête ?
+C: Les 10 premières lignes de la table Client
+W: Les clients dont l'identifiant vaut 10
+W: Les 10 dernières lignes de la table Client
+W: Une erreur, TOP n'existe pas en T-SQL
+E: TOP limite le nombre de lignes renvoyées ; c'est l'équivalent de LIMIT en MySQL ou PostgreSQL. Sans ORDER BY, l'ordre n'est pas garanti : on obtient « 10 lignes », pas forcément les 10 premières créées. On écrit TOP 10 ... ORDER BY DateCreation pour un résultat stable.
+```sql
+SELECT TOP 10 * FROM Client;
+```
+
+@004
+Q: Associer chaque type de données SQL Server à son usage.
+P: INT => entier, comme un identifiant
+P: NVARCHAR(100) => texte Unicode de longueur variable
+P: DATETIME2 => date et heure précises
+P: DECIMAL(10,2) => montant exact avec deux décimales
+E: NVARCHAR stocke l'Unicode, indispensable pour les accents et les langues non latines ; VARCHAR, sans N, dépend du classement. DATETIME2 remplace avantageusement DATETIME, plus précis et plus large. Pour l'argent, DECIMAL évite les arrondis des types flottants comme FLOAT.
+
+@005
+Q: Pourquoi préfixer une chaîne par N, comme N'Élodie', dans une requête ?
+C: Pour la traiter comme du texte Unicode
+W: Pour la rendre insensible à la casse
+W: Pour indiquer qu'elle peut être NULL
+W: Pour la convertir en nombre si possible
+E: N désigne une constante NVARCHAR. Sans lui, la chaîne est convertie selon la page de codes du classement, et des caractères peuvent devenir des « ? ». Comparer une colonne VARCHAR à une constante N peut aussi empêcher l'usage d'un index, par conversion implicite.
+
+@006
+Q: Quelle fonction T-SQL renvoie la date et l'heure courantes du serveur ?
+C: GETDATE()
+W: NOW()
+W: SYSDATE
+W: CURRENT_TIME()
+E: GETDATE() renvoie un DATETIME ; SYSDATETIME() un DATETIME2 plus précis ; GETUTCDATE() l'heure UTC. NOW() existe en MySQL, SYSDATE en Oracle. CURRENT_TIMESTAMP, standard, fonctionne aussi en SQL Server et équivaut à GETDATE().
+
+@007
+Q: Que fait ISNULL(Telephone, 'inconnu') dans un SELECT ?
+C: Il remplace un téléphone NULL par « inconnu »
+W: Il filtre les lignes où le téléphone est NULL
+W: Il renvoie vrai si le téléphone est NULL
+W: Il supprime les téléphones égaux à « inconnu »
+E: ISNULL(valeur, remplacement) renvoie la valeur, ou le remplacement si elle est NULL. COALESCE, standard, accepte plusieurs arguments et renvoie le premier non NULL. Pour filtrer, on écrit WHERE Telephone IS NULL ; = NULL ne fonctionne jamais.
+
+@008
+Q: Pourquoi la condition WHERE Remise = NULL ne renvoie-t-elle aucune ligne ?
+C: Comparer à NULL ne donne jamais vrai
+W: NULL est converti en 0 avant la comparaison
+W: Le moteur trie d'abord les NULL en fin de table
+W: Remise doit être déclarée NOT NULL pour être lue
+E: NULL représente une valeur inconnue : toute comparaison avec lui, même NULL = NULL, est inconnue et la ligne n'est pas retenue. On écrit WHERE Remise IS NULL, ou IS NOT NULL. C'est une source fréquente de lignes « disparues » dans les rapports.
+
+@009
+Q: Que renvoie cette requête ?
+C: Le nombre de commandes de chaque client
+W: Le nombre total de clients de la base
+W: Les clients sans aucune commande
+W: La première commande de chaque client
+E: GROUP BY regroupe les lignes par client et COUNT(*) compte les lignes de chaque groupe. Toute colonne du SELECT doit être dans le GROUP BY ou dans une fonction d'agrégat, sinon SQL Server refuse la requête, contrairement à l'ancien comportement permissif de MySQL.
+```sql
+SELECT ClientId, COUNT(*) AS NbCommandes
+FROM Commande
+GROUP BY ClientId;
+```
+
+@010
+Q: Quelle différence entre WHERE et HAVING ?
+C: WHERE filtre les lignes, HAVING filtre les groupes
+W: WHERE filtre les groupes, HAVING filtre les lignes
+W: HAVING remplace WHERE dans les requêtes récentes
+W: WHERE ne s'utilise qu'avec des jointures
+E: WHERE s'applique avant le regroupement, sur chaque ligne ; HAVING après, sur les résultats d'agrégat, par exemple HAVING COUNT(*) > 5. On filtre le plus tôt possible avec WHERE : moins de lignes à regrouper, requête plus rapide.
+
+@011
+Q: Associer chaque jointure au résultat qu'elle donne.
+P: INNER JOIN => seulement les lignes présentes des deux côtés
+P: LEFT JOIN => toutes les lignes de gauche, NULL si pas de correspondance
+P: FULL OUTER JOIN => toutes les lignes des deux côtés
+P: CROSS JOIN => toutes les combinaisons des deux tables
+E: Les clients sans commande disparaissent d'un INNER JOIN avec les commandes ; un LEFT JOIN les garde avec des colonnes de commande à NULL. CROSS JOIN produit le produit cartésien : 100 clients × 50 produits = 5 000 lignes, rarement voulu.
+
+@012
+Q: Comment lister les clients qui n'ont passé aucune commande ?
+C: Un LEFT JOIN puis WHERE Commande.Id IS NULL
+W: Un INNER JOIN puis WHERE Commande.Id IS NULL
+W: Un CROSS JOIN puis WHERE Commande.Id = 0
+W: Un GROUP BY ClientId sans fonction d'agrégat
+E: Le LEFT JOIN garde tous les clients ; ceux sans commande ont les colonnes de commande à NULL, que le WHERE retient. NOT EXISTS (SELECT 1 FROM Commande WHERE ClientId = c.Id) donne le même résultat et se lit souvent plus clairement.
+
+@013
+Q: Que fait la commande suivante ?
+C: Elle crée une table avec un identifiant numéroté automatiquement
+W: Elle crée une table dont l'identifiant doit être saisi à la main
+W: Elle ajoute une colonne Id à une table existante
+W: Elle crée une vue qui numérote les lignes de Produit
+E: IDENTITY(1,1) démarre à 1 et ajoute 1 à chaque insertion ; on n'insère pas l'Id soi-même. PRIMARY KEY rend la colonne unique et non nulle, et crée par défaut un index cluster. SCOPE_IDENTITY() renvoie l'identifiant généré par la dernière insertion.
+```sql
+CREATE TABLE Produit (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Nom NVARCHAR(100) NOT NULL,
+    Prix DECIMAL(10,2) NOT NULL
+);
+```
+
+@014
+Q: Quelle fonction renvoie l'identifiant que la dernière insertion vient de générer, dans la même portée ?
+C: SCOPE_IDENTITY()
+W: @@ROWCOUNT
+W: NEWID()
+W: IDENT_INCR()
+E: SCOPE_IDENTITY() se limite à la portée courante. @@IDENTITY renverrait l'identifiant généré par un déclencheur qui insère ailleurs, source de bugs. @@ROWCOUNT donne le nombre de lignes touchées ; NEWID() génère un GUID. La clause OUTPUT est une autre solution, qui gère aussi plusieurs lignes.
+
+@015
+Q: Que fait la clause ORDER BY Prix DESC ?
+C: Elle trie du prix le plus élevé au plus bas
+W: Elle trie du prix le plus bas au plus élevé
+W: Elle supprime les doublons de prix
+W: Elle groupe les produits par prix
+E: DESC trie par ordre décroissant, ASC, implicite, par ordre croissant. On peut trier sur plusieurs colonnes : ORDER BY Categorie, Prix DESC. Sans ORDER BY, aucun ordre n'est garanti, même s'il semble stable sur une petite table.
+
+@016
+Q: Quelle requête paginée affiche la troisième page de 20 produits, triés par nom ?
+C: ORDER BY Nom OFFSET 40 ROWS FETCH NEXT 20 ROWS ONLY
+W: ORDER BY Nom OFFSET 60 ROWS FETCH NEXT 20 ROWS ONLY
+W: ORDER BY Nom LIMIT 20 OFFSET 40
+W: TOP 20 SKIP 40 ORDER BY Nom
+E: La page 3 commence après 2 × 20 = 40 lignes. OFFSET ... FETCH, depuis SQL Server 2012, exige un ORDER BY. LIMIT n'existe pas en T-SQL. Pour de grandes tables, la pagination par clé (WHERE Nom > dernier nom vu) évite de relire toutes les lignes sautées.
+
+@017
+Q: Combien de lignes saute OFFSET pour afficher la page 5 avec 25 lignes par page ?
+N: 100
+E: Les pages 1 à 4 contiennent 4 × 25 = 100 lignes, à sauter. La formule générale est (numéro de page - 1) × taille de page. Plus la page est lointaine, plus le serveur lit de lignes pour rien : au-delà de quelques pages, on préfère paginer par clé.
+
+@018
+Q: À quoi sert une clé étrangère ?
+C: Garantir qu'une valeur existe dans la table référencée
+W: Accélérer toutes les requêtes de la table qui la porte
+W: Chiffrer la colonne qui fait référence à une autre table
+W: Créer automatiquement une copie de la table référencée
+E: Une clé étrangère Commande.ClientId vers Client.Id refuse une commande pour un client inexistant et empêche de supprimer un client qui a des commandes, sauf ON DELETE CASCADE. Elle ne crée pas d'index sur la colonne : on l'ajoute soi-même pour les jointures.
+
+@019
+Q: Que se passe-t-il à l'exécution de cette instruction ?
+C: Toutes les lignes de la table Commande sont supprimées
+W: Seule la dernière commande insérée est supprimée
+W: La table Commande elle-même est supprimée
+W: Rien, DELETE exige toujours une clause WHERE
+E: Un DELETE sans WHERE vide toute la table, et c'est permis. On vérifie toujours le WHERE avec un SELECT avant, ou on travaille dans une transaction qu'on peut annuler. DROP TABLE supprimerait la table entière, structure comprise.
+```sql
+DELETE FROM Commande;
+```
+
+@020
+Q: Quelle différence entre DELETE FROM Journal et TRUNCATE TABLE Journal ?
+C: TRUNCATE vide la table d'un coup et remet le compteur IDENTITY à zéro
+W: TRUNCATE supprime la table et sa structure, DELETE seulement les lignes
+W: DELETE est toujours plus rapide que TRUNCATE sur une grande table
+W: TRUNCATE accepte une clause WHERE, DELETE non
+E: TRUNCATE libère les pages de données sans journaliser chaque ligne : très rapide. Il réinitialise IDENTITY et refuse une table référencée par une clé étrangère. DELETE supprime ligne à ligne, accepte un WHERE et déclenche les triggers. Les deux laissent la table en place.
+
+@021
+Q: Remettre dans l'ordre les clauses d'une requête SELECT telles qu'on les écrit.
+O: SELECT
+O: FROM
+O: WHERE
+O: GROUP BY
+O: HAVING
+O: ORDER BY
+E: C'est l'ordre d'écriture imposé. L'ordre logique d'évaluation est différent : FROM, WHERE, GROUP BY, HAVING, SELECT puis ORDER BY. C'est pourquoi un alias défini dans le SELECT est utilisable dans ORDER BY mais pas dans WHERE.
+
+@022
+Q: Pourquoi cet alias déclenche-t-il une erreur dans le WHERE ?
+C: Le WHERE est évalué avant le SELECT qui définit l'alias
+W: Les alias ne peuvent pas contenir de majuscules
+W: Un alias doit toujours être écrit entre crochets
+W: Les opérations arithmétiques sont interdites dans un SELECT
+E: L'ordre logique évalue le WHERE avant le SELECT : Total n'existe pas encore. On répète l'expression dans le WHERE, ou on l'enveloppe dans une sous-requête ou une CTE. ORDER BY, évalué après, accepte l'alias.
+```sql
+SELECT Quantite * PrixUnitaire AS Total
+FROM LigneCommande
+WHERE Total > 100;
+```
+
+@023
+Q: Que fait l'instruction UPDATE suivante ?
+C: Elle augmente de 5 % le prix des produits de la catégorie 3
+W: Elle fixe à 1,05 € le prix des produits de la catégorie 3
+W: Elle augmente de 5 % le prix de tous les produits
+W: Elle ajoute un produit de prix 1,05 à la catégorie 3
+E: Prix * 1.05 multiplie le prix actuel ; le WHERE limite aux produits de la catégorie 3. Sans le WHERE, tous les prix augmenteraient. @@ROWCOUNT, juste après, indique combien de lignes ont été modifiées : une bonne vérification.
+```sql
+UPDATE Produit
+SET Prix = Prix * 1.05
+WHERE CategorieId = 3;
+```
+
+@024
+Q: Que signifie une base en mode de récupération complet (FULL) ?
+C: Le journal garde tout jusqu'à sa sauvegarde
+W: La base est sauvegardée intégralement chaque nuit
+W: La base ne peut plus être modifiée, seulement lue
+W: Le journal est vidé après chaque transaction
+E: En mode FULL, les sauvegardes du journal permettent de restaurer à une minute près. En contrepartie, sans sauvegarde régulière du journal, celui-ci grossit indéfiniment. En mode SIMPLE, le journal se vide seul mais on ne restaure qu'à la dernière sauvegarde complète ou différentielle.
+
+@025
+Q: Associer chaque type de sauvegarde SQL Server à ce qu'il contient.
+P: Complète => toute la base à un instant donné
+P: Différentielle => ce qui a changé depuis la dernière complète
+P: Journal => les transactions depuis la dernière sauvegarde du journal
+E: Une stratégie courante : complète le dimanche, différentielle chaque nuit, journal toutes les 15 minutes. Pour restaurer, on applique la complète, la dernière différentielle, puis les journaux dans l'ordre. Une sauvegarde jamais restaurée en test n'est pas une sauvegarde fiable.
+
+@026
+Q: Remettre dans l'ordre la restauration d'une base à 14 h 37, en mode FULL.
+O: Sauvegarder la fin du journal si la base est encore accessible
+O: Restaurer la dernière sauvegarde complète avec NORECOVERY
+O: Restaurer la dernière différentielle avec NORECOVERY
+O: Restaurer les journaux suivants, le dernier avec STOPAT 14 h 37
+O: Mettre la base en ligne avec RECOVERY
+E: NORECOVERY laisse la base en attente d'autres sauvegardes ; RECOVERY la rend utilisable et clôt la restauration. STOPAT arrête l'application du journal juste avant l'erreur, par exemple un DELETE malheureux à 14 h 38. La sauvegarde de fin de journal évite de perdre les dernières minutes.
+
+@027
+Q: Qu'est-ce qu'une transaction ?
+C: Un ensemble d'opérations validé ou annulé en bloc
+W: Une requête qui s'exécute plus vite qu'une autre
+W: Une copie de la base gardée en mémoire vive
+W: Un déclencheur qui s'exécute à heure fixe
+E: Entre BEGIN TRANSACTION et COMMIT, toutes les modifications sont validées ensemble ; ROLLBACK les annule toutes. Un virement débite un compte et en crédite un autre : sans transaction, une panne entre les deux ferait disparaître de l'argent.
+
+@028
+Q: Que garantit ce bloc si le second UPDATE échoue ?
+C: Le premier UPDATE est annulé, aucun compte n'est modifié
+W: Le premier UPDATE reste appliqué, seul le second est perdu
+W: Les deux UPDATE sont rejoués jusqu'à ce qu'ils réussissent
+W: La base est restaurée à la dernière sauvegarde complète
+E: Une erreur dans le TRY saute au CATCH, qui annule la transaction : le virement est tout ou rien. XACT_ABORT ON garantit en plus l'annulation sur les erreurs qui ne passent pas par le CATCH. THROW renvoie l'erreur à l'application, qui doit savoir que l'opération a échoué.
+```sql
+SET XACT_ABORT ON;
+BEGIN TRY
+    BEGIN TRANSACTION;
+    UPDATE Compte SET Solde = Solde - 100 WHERE Id = 1;
+    UPDATE Compte SET Solde = Solde + 100 WHERE Id = 2;
+    COMMIT;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0 ROLLBACK;
+    THROW;
+END CATCH;
+```
+
+@029
+Q: Associer chaque propriété ACID à sa garantie.
+P: Atomicité => tout ou rien
+P: Cohérence => les règles de la base sont respectées
+P: Isolation => les transactions ne se gênent pas
+P: Durabilité => ce qui est validé survit à une panne
+E: SQL Server assure la durabilité en écrivant d'abord dans le journal avant de confirmer le COMMIT. L'isolation se règle par les niveaux d'isolation, du plus permissif (READ UNCOMMITTED) au plus strict (SERIALIZABLE), avec un compromis entre cohérence et concurrence.
+
+@030
+Q: Qu'est-ce qu'une procédure stockée ?
+C: Un programme T-SQL enregistré dans la base et appelé par son nom
+W: Une table temporaire gardée jusqu'au redémarrage du serveur
+W: Une sauvegarde automatique déclenchée à chaque modification
+W: Une vue indexée qui stocke le résultat d'une requête
+E: Une procédure accepte des paramètres, contient plusieurs instructions et se lance avec EXEC. Elle centralise une logique, limite les droits (on autorise EXEC sans accès direct aux tables) et son plan d'exécution est réutilisé. Le code applicatif reste toutefois plus simple à tester et à versionner.
+
+@031
+Q: Que fait cet appel ?
+C: Elle lance la procédure pour le client 42
+W: Il crée une procédure nommée ClientId qui vaut 42
+W: Il supprime le client numéro 42 de la base
+W: Il déclare une variable globale @ClientId
+E: EXEC lance une procédure ; les paramètres nommés (@ClientId = 42) restent lisibles et indépendants de leur ordre. Une procédure bien écrite valide ses paramètres et renvoie un code ou une erreur explicite plutôt qu'un résultat vide silencieux.
+```sql
+EXEC dbo.ListerCommandes @ClientId = 42;
+```
+
+@032
+Q: Pourquoi une requête paramétrée protège-t-elle de l'injection SQL ?
+C: La valeur transmise n'est jamais interprétée comme du code SQL
+W: Elle chiffre la requête avant de l'envoyer au serveur
+W: Elle refuse tous les caractères spéciaux dans la saisie
+W: Elle n'exécute la requête qu'avec un compte administrateur
+E: Avec un paramètre, le texte saisi « ' OR 1=1 -- » est comparé comme une simple valeur ; concaténé dans la chaîne, il deviendrait du code. En C#, on utilise SqlParameter ; en T-SQL dynamique, sp_executesql avec des paramètres, jamais EXEC(@chaine) avec une saisie concaténée.
+
+@033
+Q: Quel risque présente ce code d'une procédure ?
+C: Une injection SQL par le paramètre @Nom
+W: Une erreur de syntaxe à chaque exécution
+W: Une conversion automatique du nom en majuscules
+W: Aucun risque, EXEC protège les paramètres
+E: La valeur de @Nom est concaténée dans la requête puis exécutée : un nom contenant une apostrophe peut injecter du SQL. On réécrit avec sp_executesql N'... WHERE Nom = @Nom', N'@Nom NVARCHAR(100)', @Nom = @Nom. QUOTENAME protège un nom de table ou de colonne dynamique.
+```sql
+DECLARE @Sql NVARCHAR(MAX) =
+    N'SELECT * FROM Client WHERE Nom = ''' + @Nom + N'''';
+EXEC (@Sql);
+```
+
+@034
+Q: Qu'est-ce qu'une vue ?
+C: Une requête enregistrée qu'on interroge comme une table
+W: Une copie physique d'une table mise à jour chaque nuit
+W: Un index qui accélère toutes les requêtes d'une table
+W: Un écran de SSMS qui affiche les données d'une table
+E: Une vue ne stocke rien : chaque lecture exécute sa requête. Elle simplifie des jointures répétées, masque des colonnes sensibles et sert de point d'accès stable si les tables évoluent. Une vue indexée, elle, stocke son résultat, au prix d'écritures plus lentes.
+
+@035
+Q: Que fait cette expression CASE ?
+C: Elle classe chaque commande selon son montant
+W: Elle supprime les commandes de moins de 100 €
+W: Elle trie les commandes par montant décroissant
+W: Elle renvoie une erreur si le montant est NULL
+E: CASE renvoie la valeur de la première condition vraie, sinon celle du ELSE. Un montant NULL ne vérifie aucune condition et tombe dans ELSE : « Petite ». Pour le traiter à part, on ajoute WHEN Montant IS NULL en premier.
+```sql
+SELECT Id,
+       CASE
+           WHEN Montant >= 1000 THEN 'Grande'
+           WHEN Montant >= 100 THEN 'Moyenne'
+           ELSE 'Petite'
+       END AS Taille
+FROM Commande;
+```
+
+@036
+Q: Quelle fonction renvoie le nombre de jours entre deux dates en T-SQL ?
+C: DATEDIFF(day, Debut, Fin)
+W: DATEADD(day, Debut, Fin)
+W: DATEPART(day, Debut - Fin)
+W: DAYS_BETWEEN(Debut, Fin)
+E: DATEDIFF compte les franchissements de frontière d'unité : du 31 décembre 23 h au 1er janvier 1 h, il compte 1 jour. DATEADD ajoute une durée à une date ; DATEPART extrait une partie, comme le mois. DATEDIFF_BIG existe pour les grands écarts en millisecondes.
+
+@037
+Q: Combien de jours renvoie DATEDIFF(day, '2026-10-01', '2026-10-16') ?
+N: 15
+E: Du 1er au 16 octobre, il y a 15 franchissements de minuit. DATEDIFF ne compte pas les jours « inclus » : pour une durée de séjour du 1er au 16 inclus, il faudrait ajouter 1. Attention aussi aux heures : seules les frontières de date comptent.
+
+@038
+Q: Que fait la fonction CONVERT(VARCHAR(10), GETDATE(), 103) ?
+C: Elle formate la date du jour en jj/mm/aaaa
+W: Elle formate la date du jour en aaaa-mm-jj
+W: Elle convertit la date en nombre de jours
+W: Elle ajoute 103 jours à la date du jour
+E: Le style 103 est le format britannique et français jj/mm/aaaa ; 120 donne aaaa-mm-jj hh:mi:ss. FORMAT(GETDATE(), 'dd/MM/yyyy') est plus lisible mais nettement plus lent sur de gros volumes. Idéalement, le formatage se fait dans l'application, pas en SQL.
+
+@039
+Q: À quoi sert la clause OUTPUT dans cet INSERT ?
+C: À renvoyer l'identifiant de la ligne insérée
+W: À afficher un message dans l'onglet des messages
+W: À écrire la ligne insérée dans un fichier texte
+W: À insérer la ligne dans une seconde table
+E: OUTPUT renvoie des colonnes des lignes insérées, modifiées ou supprimées, via les pseudo-tables inserted et deleted. Plus fiable que SCOPE_IDENTITY() pour plusieurs lignes, et utile pour journaliser un UPDATE : OUTPUT deleted.Prix, inserted.Prix.
+```sql
+INSERT INTO Produit (Nom, Prix)
+OUTPUT inserted.Id
+VALUES (N'Clavier', 49.90);
+```
+
+@040
+Q: Que signifie le préfixe dbo dans dbo.Client ?
+C: Le schéma auquel appartient la table
+W: Le nom de la base qui contient la table
+W: Le propriétaire du serveur SQL
+W: Le type de la table, ici une table de données
+E: Un schéma regroupe des objets d'une base : dbo est celui par défaut. On peut créer des schémas Ventes, Compta, et y donner des droits globalement. Toujours qualifier les objets par leur schéma évite des ambiguïtés et des recompilations inutiles des plans.
+
+@041
+Q: Quelle différence entre une connexion (login) et un utilisateur dans SQL Server ?
+C: Le login ouvre le serveur, l'utilisateur donne accès à une base
+W: Le login est réservé aux administrateurs, l'utilisateur aux autres
+W: Ce sont deux noms pour la même chose selon la version
+W: L'utilisateur ouvre le serveur, le login donne accès à une base
+E: Un login, SQL ou Windows, s'authentifie au niveau du serveur ; dans chaque base, il est associé à un utilisateur qui reçoit des droits. Un login sans utilisateur dans une base ne peut pas y entrer. Les bases autonomes ou Azure SQL permettent des utilisateurs sans login serveur.
+
+@042
+Q: Pourquoi préférer l'authentification Windows à l'authentification SQL quand c'est possible ?
+C: Pas de mot de passe SQL, l'annuaire s'applique
+W: Elle rend les requêtes plus rapides grâce au cache de Windows
+W: Elle donne automatiquement les droits sysadmin à l'utilisateur
+W: Elle est la seule à fonctionner avec SSMS
+E: L'authentification Windows s'appuie sur Active Directory : verrouillage, expiration, désactivation au départ d'un salarié. Une chaîne de connexion avec Integrated Security=True ne contient pas de mot de passe. L'authentification SQL reste utile pour des clients hors domaine.
+
+@043
+Q: Que fait la commande suivante ?
+C: Elle autorise l'utilisateur rapport à lire la table Commande
+W: Elle autorise l'utilisateur rapport à modifier la table Commande
+W: Elle retire à rapport tous ses droits sur Commande
+W: Elle crée un utilisateur rapport dans la base
+E: GRANT SELECT donne le droit de lecture ; INSERT, UPDATE et DELETE restent interdits. REVOKE retire un droit accordé, DENY interdit explicitement, même si un rôle l'accorde. On attribue plutôt les droits à des rôles, puis on y place les utilisateurs.
+```sql
+GRANT SELECT ON dbo.Commande TO rapport;
+```
+
+@044
+Q: Associer chaque rôle fixe de base de données à ses droits.
+P: db_datareader => lire toutes les tables
+P: db_datawriter => modifier les données de toutes les tables
+P: db_owner => tout faire dans la base
+E: Ces rôles prédéfinis évitent d'attribuer les droits table par table. Une application n'a presque jamais besoin de db_owner : lecture et écriture, voire EXEC sur des procédures, suffisent. Le rôle serveur sysadmin, lui, donne tous les droits sur l'instance entière.
+
+@045
+Q: Quelle commande affiche le plan d'exécution estimé d'une requête dans SSMS ?
+C: Ctrl+L, le plan estimé
+W: Ctrl+P, qui imprime la requête et son plan
+W: F5, qui exécute la requête sans afficher de plan
+W: Ctrl+S, qui enregistre le plan dans un fichier
+E: Le plan estimé s'affiche sans exécuter la requête ; Ctrl+M active le plan réel, affiché après l'exécution avec les nombres de lignes vraiment lus. Un grand écart entre lignes estimées et réelles signale souvent des statistiques périmées.
+
+@046
+Q: Pourquoi un index accélère-t-il une recherche par nom de client ?
+C: Le moteur trouve les lignes sans parcourir toute la table
+W: L'index copie la table en mémoire vive en permanence
+W: L'index supprime les doublons de la colonne indexée
+W: L'index compresse la table pour qu'elle se lise plus vite
+E: Un index est une structure triée, un arbre B, qui mène directement aux lignes cherchées, comme l'index d'un livre. Sans index, SQL Server lit toute la table (Table Scan ou Clustered Index Scan). Chaque index ralentit en revanche les insertions et mises à jour.
+
+@047
+Q: Quelle différence entre un index cluster et un index non cluster ?
+C: Le cluster ordonne la table, l'autre est à part
+W: Le cluster est stocké sur un autre serveur, le non cluster en local
+W: Le non cluster ordonne la table, le cluster est une copie
+W: Une table peut avoir plusieurs index cluster et un seul non cluster
+E: Une table n'a qu'un index cluster, souvent la clé primaire : ses feuilles sont les lignes de données. Les index non cluster, jusqu'à 999, contiennent les colonnes indexées et un pointeur vers la ligne. Un identifiant croissant fait un bon index cluster : les insertions vont à la fin.
+
+@048
+Q: Que fait cette commande ?
+C: Elle crée un index sur la colonne Nom de la table Client
+W: Elle crée une colonne Nom indexée dans la table Client
+W: Elle trie physiquement la table Client par nom
+W: Elle crée une contrainte d'unicité sur le nom
+E: CREATE INDEX crée par défaut un index non cluster ; il accélère les recherches et tris sur Nom. Pour interdire les doublons, on écrit CREATE UNIQUE INDEX. Le nom IX_Table_Colonne est une convention courante qui aide à s'y retrouver.
+```sql
+CREATE INDEX IX_Client_Nom ON dbo.Client (Nom);
+```
+
+@049
+Q: Pourquoi cette requête ne peut-elle pas utiliser l'index sur DateCommande ?
+C: La fonction appliquée à la colonne empêche la recherche dans l'index
+W: Les index ne fonctionnent jamais sur des colonnes de type date
+W: YEAR() renvoie une chaîne et non un nombre entier
+W: L'index n'est utilisé que si la requête trie par date
+E: Une fonction sur la colonne indexée rend la condition non « sargable » : le moteur doit calculer YEAR() pour chaque ligne. On réécrit en intervalle : WHERE DateCommande >= '2026-01-01' AND DateCommande < '2027-01-01', qui permet une recherche dans l'index (Index Seek).
+```sql
+SELECT * FROM Commande
+WHERE YEAR(DateCommande) = 2026;
+```
+
+@050
+Q: Qu'est-ce qu'une table temporaire #Panier ?
+C: Une table de tempdb propre à la session
+W: Une table partagée par toutes les sessions jusqu'au redémarrage
+W: Une table supprimée dès la fin de chaque instruction
+W: Une vue en lecture seule sur une table existante
+E: Une table #locale disparaît à la fin de la session ou de la procédure qui l'a créée ; ##globale est visible de toutes les sessions. Elle accepte index et statistiques, utile pour découper un traitement complexe. Une variable table @t, plus légère, n'a pas de statistiques complètes.

@@ -154,6 +154,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 
 - [x] Fenêtre principale avec menu latéral
 - [x] Identité visuelle : logo, icônes, bannière avec actions, cartes colorées, activité récente
+- [x] Cartes repliables d'un clic sur leur titre, sur le bureau et le web ; l'état replié est gardé d'une ouverture à l'autre
 - [x] Messages colorés sur toutes les pages : vert pour une réussite, orange pour une saisie à corriger, rouge pour une erreur
 - [x] Accueil : offres, nouveautés, candidatures, relances et dernière exécution
 - [x] Recherche : sources, filtres, options avancées, progression et arrêt
@@ -274,6 +275,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Rejet des offres inexploitables (ni titre ni description), compté dans la qualité des données
 - [x] Analyse des offres exportées depuis « Qualité des données » pour ajouter des règles de découpage : milliers avec décimales, taux horaires, titres en plusieurs segments, devises en code (EUR, USD, GBP), montants à l'anglaise (« $175,000 »), salaires mensuels
 - [x] Entreprise des offres Greenhouse, date des offres Jooble et titre des annonces Findwork sans poste renseigné
+- [x] Hacker News : seuls les messages en forme d'offre sont gardés (en-tête « Entreprise | Poste | Lieu », lignes « Company: » ou annonce explicite), lieu placé à la place du poste reconnu, poste cherché dans le texte s'il manque à l'en-tête ; offres Findwork sans poste écartées, leur message Hacker News étant déjà collecté
 
 ### Aide à la candidature, à base de règles et sans service payant
 
@@ -320,8 +322,9 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
 - [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter, zone à désigner en cliquant sur un schéma, schéma à construire (49 symboles d'électricité, électronique, pneumatique, hydraulique et réseau ; placement sur une grille, câblage des bornes à la souris, plusieurs exemplaires d'un même composant (deux vérins, des lampes en parallèle, des postes en étoile) ; correction par comparaison des liaisons, schéma construit dessiné à côté du schéma attendu, fils en trop en rouge) ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile ne reçoit que les QCM
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
+- [x] Lots écrits de 100 questions (tools/quiz_lots) : cloud (AWS, Azure, GCP), Terraform et Ansible, Linux et shell, SQL Server, MySQL et MariaDB, réseaux TCP/IP, sécurité applicative (OWASP), maintenance industrielle, en plus des lots d'automatisme, d'électricité, d'électronique, de fluides et de sigles
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande reprenant le modèle complet d'un pack (domaine, niveaux répartis ou au choix, schémas et guides facultatifs), import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
-- [x] Catalogue de 90 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
+- [x] Catalogue de 92 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
 - [x] Contrôle de chaque lot importé, mesuré en entier même livré en plusieurs fichiers ou archives : bonne réponse trop souvent la plus longue, la plus courte ou à la même position, fins de choix répétées (remplissage), quasi-doublons dans le lot ou avec le thème, domaine inconnu, explications trop courtes, moins de 15 % de cas concrets avec code pour un thème technique, choix coupés par « … », extraits de code que l'énoncé ne cite pas ; bilan en orange, mesures par thème et demande de correction pour ChatGPT citant les questions concernées
 - [x] Lot corrigé réimporté : une question importée revenant avec le même identifiant est remplacée, réponses et schémas gardés ; une question livrée n'est jamais remplacée ; une question identique est comptée inchangée, sans lever son signalement
 - [x] Navigation par onglets de domaine et pastilles de sous-domaine ; toutes les rubriques du classement sont montrées, une rubrique vide propose ses thèmes du catalogue à préparer avec ChatGPT ; schémas réduits à la largeur de la page
@@ -390,7 +393,8 @@ Page Git du bureau et du web, pour s'exercer aux branches sans risque :
 - [x] Dépôt simulé (commits, branches, HEAD) : commit, branch, switch, checkout, merge, rebase, reset, revert, cherry-pick, références relatives ^ et ~
 - [x] Serveur origin simulé : fetch, pull (avec --rebase), push refusé tant que le travail de l'équipe n'est pas intégré, graphe du serveur à côté du dépôt local
 - [x] Graphe des commits en SVG, à côté de l'objectif ; commits perdus estompés
-- [x] Dix-neuf niveaux progressifs, du premier commit au travail à plusieurs, objectif comparé par la forme du graphe : un autre chemin vers le même résultat est accepté
+- [x] Vingt-quatre niveaux progressifs, du premier commit au travail à plusieurs, objectif comparé par la forme du graphe : un autre chemin vers le même résultat est accepté
+- [x] Série « Cas de la vraie vie » : commit sur la mauvaise branche, correctif urgent, report d'un correctif sur une version maintenue, correction avant envoi, annulation d'un commit déjà envoyé
 - [x] Annulation de la dernière commande, indice, solution de référence et meilleur nombre de commandes enregistré
 - [x] Aucune commande transmise au système : seul l'historique est simulé
 

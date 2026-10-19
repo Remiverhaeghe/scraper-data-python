@@ -23,7 +23,6 @@ from gui.widgets import (
     clear_layout,
     create_button,
     create_card,
-    create_collapsible_card,
     create_page_header,
     create_scroll_content,
     show_message,
@@ -82,7 +81,7 @@ class ChallengesPage(QWidget):
             pIcon="trophy",
         )
 
-        self.list_card, vListLayout = create_collapsible_card(
+        self.list_card, vListLayout = create_card(
             "Les défis",
             "Deux parties par défi, une étoile par partie réussie",
             "trophy",

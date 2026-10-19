@@ -194,6 +194,24 @@ def test_theme_choice_is_remembered(page):
     assert page.evaluate("document.documentElement.dataset.theme") == "dark"
 
 
+def test_card_collapse_is_remembered(page):
+    """Vérifie qu'une carte repliée cache son contenu et le reste au rechargement."""
+
+    page.goto("/quality")
+    vCard = page.locator("article.card", has=page.locator("h2", has_text="Par source"))
+
+    assert vCard.locator("p.card-subtitle").first.is_visible()
+
+    vCard.locator(".card-toggle").click()
+
+    assert not vCard.locator("p.card-subtitle").first.is_visible()
+
+    page.reload()
+
+    assert not vCard.locator("p.card-subtitle").first.is_visible()
+    assert vCard.locator("h2").is_visible()
+
+
 def test_calendar_address_is_created_and_served(page, server_url, browser):
     """Vérifie la création de l'adresse d'agenda et sa lecture sans session."""
 

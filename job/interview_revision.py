@@ -7,7 +7,12 @@ comme pour le classement des thèmes conseillés de la page Révision.
 import random
 
 from job.preparation import get_offer_skills, get_offer_text
-from job.quiz import MIN_MATCHED_SKILLS, build_quiz_overview, build_skills_pattern
+from job.quiz import (
+    MIN_MATCHED_SKILLS,
+    build_quiz_overview,
+    find_skills_in_text,
+    index_skills,
+)
 from job.quiz_exam import EXAM_QUESTION_COUNT, start_exam
 from utils.logger import get_logger
 
@@ -22,14 +27,17 @@ def find_offer_themes(pQuiz, pOffer):
     """
 
     vDetected = {vSkill.lower() for vSkill in get_offer_skills(pOffer)}
-    vPattern = build_skills_pattern(
-        {vSkill for vTheme in pQuiz.values() for vSkill in vTheme["skills"]}
+    vIndex = index_skills(
+        {
+            vSkill.strip()
+            for vTheme in pQuiz.values()
+            for vSkill in vTheme["skills"]
+            if vSkill.strip()
+        }
     )
-    vFound = (
-        {vMatch.lower() for vMatch in vPattern.findall(get_offer_text(pOffer))}
-        if vPattern
-        else set()
-    )
+    vFound = {
+        vSkill.lower() for vSkill in find_skills_in_text(get_offer_text(pOffer), vIndex)
+    }
 
     rThemes = {}
 

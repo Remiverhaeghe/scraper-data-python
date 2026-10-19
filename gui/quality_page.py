@@ -88,14 +88,6 @@ class QualityPage(QWidget):
         )
         self.export_button.clicked.connect(self.export_problems)
 
-        vProblemsTitle = QLabel("Offres à vérifier")
-        vProblemsTitle.setObjectName("cardTitle")
-
-        vProblemsHeader = QHBoxLayout()
-        vProblemsHeader.addWidget(vProblemsTitle)
-        vProblemsHeader.addStretch(1)
-        vProblemsHeader.addWidget(self.export_button)
-
         self.problems_label = QLabel()
         self.problems_label.setObjectName("activityTitle")
         self.problems_label.setWordWrap(True)
@@ -104,8 +96,9 @@ class QualityPage(QWidget):
         vProblemsHelp.setObjectName("cardSubtitle")
         vProblemsHelp.setWordWrap(True)
 
-        vProblemsCard, vProblemsLayout = create_card()
-        vProblemsLayout.addLayout(vProblemsHeader)
+        vProblemsCard, vProblemsLayout = create_card(
+            "Offres à vérifier", pActions=[self.export_button]
+        )
         vProblemsLayout.addWidget(self.problems_label)
         vProblemsLayout.addWidget(vProblemsHelp)
 

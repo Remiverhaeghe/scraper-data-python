@@ -6,6 +6,9 @@ import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
 from utils.helpers import html_to_text, join_values
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Sans poste renseigné, la première ligne de l'annonce sert de titre si elle en a
 # la forme : courte, sans « Clé : valeur » ni lien (« Remote: Yes », « https:// »).
@@ -98,9 +101,19 @@ def parse_job(pJob):
 
 
 def parse_jobs(pJobs):
-    """Transforme plusieurs offres Findwork en DataFrame normalisé."""
+    """Transforme plusieurs offres Findwork en DataFrame normalisé.
 
-    vJobs = [parse_job(vJob) for vJob in pJobs]
+    Une offre sans poste, même deviné, est écartée : Findwork reprend alors un
+    message du fil Hacker News, déjà collecté par sa propre source.
+    """
+
+    vParsed = [parse_job(vJob) for vJob in pJobs]
+    vJobs = [vJob for vJob in vParsed if vJob["title"]]
+
+    if len(vJobs) < len(vParsed):
+        logger.info(
+            "Findwork : %s offre(s) sans poste écartée(s)", len(vParsed) - len(vJobs)
+        )
 
     vDataFrame = pd.DataFrame(vJobs, columns=JOB_COLUMNS)
 

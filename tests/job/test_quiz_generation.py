@@ -7,6 +7,9 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
+import job.quiz as quiz
+import job.quiz_generation as quiz_generation
+
 from job.quiz import (
     QUESTION_ID_PATTERN,
     QUIZ_LEVELS,
@@ -17,6 +20,7 @@ from job.quiz import (
 )
 from job.quiz_domains import DOMAIN_ORDER
 from job.quiz_generation import (
+    prepare_quiz_caches,
     MIN_QUALITY_SAMPLE,
     assess_questions,
     build_correction_prompt,
@@ -616,3 +620,23 @@ def test_calculations_with_other_values_are_not_duplicates():
     vSecond["question"] = "Quelle pression donne un courant de 16 mA sur 0 à 10 bar ?"
 
     assert assess_questions([vFirst, vSecond])["issues"] == []
+
+
+def test_prepare_quiz_caches_fills_the_cache(tmp_path, monkeypatch):
+    """Vérifie que le calcul anticipé remplit le cache, puis qu'une erreur est tolérée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+    quiz.TEXT_COUNTS_CACHE.clear()
+
+    prepare_quiz_caches(vDatabaseFile)
+
+    assert quiz.TEXT_COUNTS_CACHE
+
+    def fail(pDatabaseFile):
+        raise RuntimeError(f"Base illisible : {pDatabaseFile}")
+
+    monkeypatch.setattr(quiz_generation, "load_active_quiz", fail)
+
+    prepare_quiz_caches(vDatabaseFile)

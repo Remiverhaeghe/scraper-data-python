@@ -54,7 +54,7 @@ thèmes à traiter ensuite, un thème par demande.
 | 5. Diagnostic et exploitation | `linux-systeme`, `windows-server`, `reseaux-fondamentaux`, `reseaux-diagnostic`, `reseau-prod`, `wifi`, `pare-feu-vpn`, `observabilite`, `sql-diagnostic`, `telephonie-ip`, `serveurs-web`, `sauvegarde-pra` |
 | 6. DevOps et cloud | `docker`, `ci-cd`, `kubernetes`, `cloud`, `infrastructure-as-code`, `virtualisation` |
 | 7. Développement | `python`, `java`, `spring`, `javascript`, `typescript`, `csharp-dotnet`, `web-html-css`, `react-frontend`, `api-rest`, `architecture-logicielle`, `microservices`, `algorithmique`, `performance`, `kotlin`, `php`, `golang`, `android`, `c-cpp-embarque` |
-| 8. Données | `sql`, `bases-de-donnees`, `analyse-donnees`, `data-engineering`, `bi-reporting`, `ia-machine-learning`, `hibernate-jpa` |
+| 8. Données | `sql`, `sql-server`, `mysql`, `bases-de-donnees`, `analyse-donnees`, `data-engineering`, `bi-reporting`, `ia-machine-learning`, `hibernate-jpa` |
 | 9. Sécurité | `securite-applicative`, `identite-acces`, `cryptographie`, `securite-systemes`, `rgpd`, `cybersecurite-industrielle` |
 | 10. Outils et méthodes | `git`, `tests-logiciels`, `agile`, `itil-support` |
 

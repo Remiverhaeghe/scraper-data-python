@@ -7,6 +7,7 @@ scores de révision, pour voir où porter l'effort avant les entretiens.
 from job.enrichment import SKILLS
 from job.profile import load_profile
 from job.quiz import build_quiz_overview
+from job.quiz_domains import DOMAIN_ICONS, classify_theme
 from job.quiz_generation import load_catalog
 from storage.job_offers import get_skill_lists
 
@@ -71,19 +72,38 @@ def get_skill_status(pThemes, pScore):
     return rStatus
 
 
-def find_catalog_label(pCatalog, pSkill):
-    """Retourne le thème du catalogue qui couvre une compétence, ou la compétence."""
+def find_catalog_theme(pCatalog, pSkill):
+    """Retourne le thème du catalogue qui couvre une compétence, ou None."""
 
-    rLabel = next(
+    rTheme = next(
         (
-            vTheme["label"]
+            vTheme
             for vTheme in pCatalog
             if pSkill.lower() in {vItem.lower() for vItem in vTheme["skills"]}
         ),
-        pSkill,
+        None,
     )
 
-    return rLabel
+    return rTheme
+
+
+def get_skill_icon(pSkill, pThemes, pCatalogTheme):
+    """Retourne l'icône d'une compétence : celle de son sous-domaine de révision.
+
+    Le thème de révision décide d'abord, puis le thème du catalogue, puis le
+    classement par mots-clés.
+    """
+
+    if pThemes:
+        vDomain, vSubdomain = pThemes[0]["domain"], pThemes[0]["subdomain"]
+    elif pCatalogTheme:
+        vDomain, vSubdomain = pCatalogTheme["domain"], pCatalogTheme["subdomain"]
+    else:
+        vDomain, vSubdomain = classify_theme(pSkill, [pSkill])
+
+    rIcon = DOMAIN_ICONS.get(vSubdomain) or DOMAIN_ICONS.get(vDomain) or "tag"
+
+    return rIcon
 
 
 def build_skill_rows(pCounts, pOfferCount, pThemes, pProfileSkills, pCatalog=()):
@@ -104,6 +124,7 @@ def build_skill_rows(pCounts, pOfferCount, pThemes, pProfileSkills, pCatalog=())
             if vSkill.lower() in {vItem.lower() for vItem in vTheme["skills"]}
         ]
         vTotal = sum(vTheme["total"] for vTheme in vThemes)
+        vCatalogTheme = find_catalog_theme(pCatalog, vSkill)
         vScore = (
             round(100 * sum(vTheme["correct"] for vTheme in vThemes) / vTotal)
             if vTotal
@@ -120,7 +141,8 @@ def build_skill_rows(pCounts, pOfferCount, pThemes, pProfileSkills, pCatalog=())
                 "questions": vTotal,
                 "score": vScore,
                 "status": get_skill_status(vThemes, vScore),
-                "catalog_label": find_catalog_label(pCatalog, vSkill),
+                "catalog_label": (vCatalogTheme or {}).get("label", vSkill),
+                "icon": get_skill_icon(vSkill, vThemes, vCatalogTheme),
             }
         )
 

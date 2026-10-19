@@ -1,0 +1,412 @@
+@051
+Q: Combien d'adresses de machines offre un sous-réseau en /27 ?
+N: 30
+E: 32 - 27 = 5 bits machine, soit 32 adresses, moins le réseau et la diffusion : 30 machines. Les /27 avancent de 32 en 32 : .0, .32, .64, etc. On choisit la taille d'un sous-réseau selon le nombre d'appareils prévu, avec une marge.
+
+@052
+Q: Pourquoi utilise-t-on souvent un /30 pour relier deux routeurs ?
+C: Il offre juste deux adresses utilisables
+W: Il est le seul masque accepté par les routeurs
+W: Il double le débit de la liaison
+W: Il évite d'avoir à configurer une passerelle
+E: Un /30 contient quatre adresses : le réseau, deux pour les extrémités, la diffusion. Pour une liaison point à point, on ne gaspille pas un /24. Beaucoup d'équipements acceptent aussi un /31, sans adresse réseau ni diffusion, qui économise encore deux adresses.
+
+@053
+Q: Quelle est l'adresse réseau de 10.20.37.200/20 ?
+C: 10.20.32.0
+W: 10.20.37.0
+W: 10.20.0.0
+W: 10.20.36.0
+E: Un /20 laisse 4 bits réseau dans le troisième octet : les blocs avancent de 16 en 16 (0, 16, 32, 48). 37 est entre 32 et 47, donc le réseau est 10.20.32.0 et la diffusion 10.20.47.255. Repérer l'octet « intéressant » et la taille de bloc évite les calculs en binaire.
+
+@054
+Q: Combien de réseaux /24 tiennent dans un /16 ?
+N: 256
+E: Passer de /16 à /24 ajoute 8 bits de sous-réseau : 2^8 = 256 réseaux /24, de x.y.0.0/24 à x.y.255.0/24. C'est la logique d'un plan d'adressage : un /16 par site, un /24 par étage ou par usage.
+
+@055
+Q: Quel préfixe résume les réseaux 192.168.0.0/24 à 192.168.3.0/24 en une seule route ?
+C: 192.168.0.0/22
+W: 192.168.0.0/24
+W: 192.168.0.0/16
+W: 192.168.3.0/22
+E: Quatre /24 consécutifs alignés forment un /22 (2 bits de moins). Annoncer une route résumée plutôt que quatre allège les tables de routage. 192.168.0.0/16 couvrirait aussi les réseaux .4 à .255, qui ne sont pas forcément là.
+
+@056
+Q: Un routeur connaît une route vers 10.0.0.0/8 et une autre vers 10.1.2.0/24. Laquelle utilise-t-il pour 10.1.2.50 ?
+C: La route en /24, la plus précise
+W: La route en /8, la plus large
+W: Les deux, en alternance
+W: Celle ajoutée en premier
+E: Le routage choisit la correspondance la plus longue (longest prefix match) : la route la plus spécifique gagne. C'est ce qui permet une route par défaut 0.0.0.0/0 qui ne sert que lorsqu'aucune route plus précise n'existe.
+
+@057
+Q: Quelle différence entre routage statique et routage dynamique ?
+C: Statique à la main, dynamique entre routeurs
+W: Le statique est plus rapide, le dynamique plus sûr
+W: Le statique ne sert qu'en IPv6, le dynamique qu'en IPv4
+W: Le dynamique change l'adresse IP des routeurs
+E: Une route statique ne s'adapte pas : si le lien tombe, le trafic s'y perd. Un protocole comme OSPF, dans une entreprise, ou BGP, entre opérateurs, recalcule les chemins quand la topologie change. Les petits réseaux se contentent souvent de routes statiques.
+
+@058
+Q: Associer chaque protocole de routage à son usage typique.
+P: OSPF => routage interne d'une entreprise
+P: BGP => routage entre opérateurs sur Internet
+P: Route statique => petit réseau ou route par défaut
+E: OSPF calcule le plus court chemin à l'intérieur d'un domaine qu'on administre. BGP échange les routes entre systèmes autonomes et applique des politiques commerciales ; une erreur de configuration BGP peut couper de grands services d'Internet. Les petits sites n'en ont pas besoin.
+
+@059
+Q: Qu'est-ce que le PAT, forme courante du NAT ?
+C: Une adresse publique partagée grâce aux ports
+W: Chaque machine reçoit sa propre adresse publique
+W: Les paquets sont chiffrés avant de sortir du réseau
+W: Les ports sont fermés pour toutes les machines
+E: La box remplace l'adresse et le port source par son adresse publique et un port qu'elle choisit, et garde la correspondance. Des centaines d'appareils sortent ainsi avec une seule adresse. Les opérateurs mobiles font de même à grande échelle (CGNAT), ce qui complique l'hébergement chez soi.
+
+@060
+Q: Comment un client distingue-t-il ses différentes connexions vers le même serveur web ?
+C: Par un port source différent pour chaque connexion
+W: Par une adresse IP différente pour chaque onglet
+W: Par une adresse MAC différente pour chaque connexion
+W: Par un numéro de serveur DNS différent
+E: Le système choisit pour chaque connexion un port source éphémère, au-dessus de 49152 sous Windows ou de 32768 sous Linux. La combinaison adresse et port source, adresse et port destination rend chaque connexion unique, même vers le même port 443.
+
+@061
+Q: Que signifie l'état TIME_WAIT d'une connexion TCP ?
+C: La connexion est fermée et attend avant de libérer le port
+W: La connexion attend que le serveur accepte la poignée de main
+W: Le serveur est surchargé et met la connexion en file
+W: La connexion est suspendue faute de réseau
+E: Après une fermeture, le côté qui a fermé en premier garde l'association quelques dizaines de secondes, pour absorber des paquets en retard. Des milliers de TIME_WAIT sur un serveur qui ouvre beaucoup de connexions courtes vers une base peuvent épuiser les ports : un pool de connexions règle le problème.
+
+@062
+Q: Pourquoi la vidéo en direct ou la voix sur IP utilisent-elles souvent UDP ?
+C: Une donnée en retard ne sert plus à rien
+W: UDP chiffre automatiquement la voix et la vidéo
+W: TCP ne peut pas transporter de son ni d'image
+W: UDP garantit que chaque paquet arrive dans l'ordre
+E: Réémettre un morceau de voix perdu il y a une seconde n'a aucun intérêt : mieux vaut un bref grésillement qu'un retard qui s'accumule. UDP laisse l'application gérer ses pertes. QUIC, utilisé par HTTP/3, bâtit lui aussi sa fiabilité au-dessus d'UDP.
+
+@063
+Q: Associer chaque message ICMP à sa signification.
+P: Echo Request et Echo Reply => le ping
+P: Destination Unreachable => la destination ne peut pas être atteinte
+P: Time Exceeded => le TTL est arrivé à zéro
+E: ICMP transporte les messages de contrôle d'IP. Time Exceeded fait fonctionner traceroute. Bloquer tout l'ICMP sur un pare-feu casse aussi la découverte de la MTU du chemin, ce qui produit des connexions qui se bloquent sur les gros paquets.
+
+@064
+Q: Une connexion VPN s'établit, les petites pages passent, mais les gros transferts restent bloqués. Quelle cause est probable ?
+C: Une MTU trop grande pour le tunnel
+W: Un serveur DNS injoignable
+W: Une adresse IP en conflit
+W: Une passerelle par défaut absente
+E: Le tunnel ajoute ses en-têtes : un paquet de 1 500 octets ne passe plus. Si les messages ICMP qui le signalent sont bloqués, les gros paquets disparaissent sans bruit. On réduit la MTU de l'interface ou on ajuste le MSS TCP sur le routeur.
+
+@065
+Q: Quelle taille maximale de données TCP (MSS) correspond à une MTU de 1500 octets, avec 20 octets d'en-tête IP et 20 d'en-tête TCP ?
+N: 1460
+E: 1500 - 20 - 20 = 1460 octets de données utiles par segment. Les options TCP, comme l'horodatage, réduisent encore cette valeur en pratique. Dans un tunnel, on retire aussi les en-têtes du tunnel.
+
+@066
+Q: À quoi sert la ligne ip helper-address de cette configuration de routeur ?
+C: À relayer les demandes DHCP vers le serveur central
+W: À attribuer elle-même les adresses du VLAN 20
+W: À bloquer les diffusions sur le VLAN 20
+W: À définir le serveur DNS des postes du VLAN 20
+E: Une demande DHCP est une diffusion, arrêtée par le routeur. Le relais la reçoit sur l'interface du VLAN 20 et la renvoie au serveur 10.0.0.5, en indiquant le réseau d'origine pour qu'il choisisse la bonne étendue. Un seul serveur DHCP sert ainsi tous les VLAN.
+```
+interface Vlan20
+ ip address 192.168.20.1 255.255.255.0
+ ip helper-address 10.0.0.5
+```
+
+@067
+Q: Quelle différence entre un serveur DNS récursif et un serveur DNS faisant autorité ?
+C: Le récursif cherche la réponse pour le client, l'autre détient la zone
+W: Le récursif détient la zone, celui faisant autorité interroge les autres
+W: Le récursif ne sert qu'en IPv6, l'autre en IPv4
+W: Il n'y a aucune différence entre les deux
+E: Le résolveur récursif de la box ou de l'entreprise interroge la chaîne racine, .fr, puis le serveur faisant autorité de exemple.fr, et met la réponse en cache. Le serveur faisant autorité connaît les enregistrements d'un domaine. Un même serveur peut jouer les deux rôles.
+
+@068
+Q: Pourquoi baisser le TTL d'un enregistrement DNS quelques jours avant de changer l'adresse d'un serveur ?
+C: Pour que les caches oublient vite l'ancienne adresse
+W: Pour accélérer le chargement du site après le changement
+W: Pour bloquer les visiteurs pendant la migration
+W: Parce que le changement d'adresse l'exige techniquement
+E: Avec un TTL de 24 heures, certains visiteurs iraient encore vers l'ancien serveur un jour après la bascule. On le baisse à quelques minutes avant, on bascule, puis on le remonte. C'est la base de toute migration de serveur ou de site.
+
+@069
+Q: À quoi sert un enregistrement PTR dans le DNS ?
+C: À retrouver le nom à partir d'une adresse IP
+W: À rediriger un nom vers un autre nom
+W: À désigner le serveur de messagerie d'un domaine
+W: À publier la clé de signature des courriels
+E: La résolution inverse associe une adresse à un nom. Les serveurs de messagerie vérifient souvent que l'adresse d'envoi a un PTR cohérent ; sans lui, les courriels partent en indésirables. Le PTR se configure chez celui qui gère l'adresse IP, souvent l'hébergeur.
+
+@070
+Q: Quelle est l'adresse IPv6 qu'une interface se donne toujours sur son lien local ?
+C: Une adresse commençant par fe80::
+W: Une adresse commençant par 2001::
+W: L'adresse ::1
+W: Une adresse commençant par ff02::
+E: Chaque interface IPv6 a une adresse de lien local fe80::/10, valable seulement sur son segment, qui sert notamment à découvrir les routeurs. ::1 est la boucle locale, ff02:: une adresse de multidiffusion, 2001:db8:: la plage d'exemple.
+
+@071
+Q: Comment un poste IPv6 obtient-il souvent son adresse sans serveur DHCP ?
+C: Par l'annonce du préfixe du routeur
+W: En recopiant l'adresse IPv4 du poste
+W: En demandant au serveur DNS
+W: Il n'en obtient jamais sans DHCPv6
+E: Avec SLAAC, le routeur annonce le préfixe du réseau, par exemple 2001:db8:1:2::/64, et le poste complète la seconde moitié lui-même. Le DNS peut aussi être annoncé. DHCPv6 reste utilisé quand on veut contrôler précisément les adresses.
+
+@072
+Q: Que signifie « double pile » (dual stack) ?
+C: Un équipement qui parle IPv4 et IPv6 en même temps
+W: Un réseau doté de deux routeurs pour la redondance
+W: Un poste équipé de deux cartes réseau
+W: Un serveur qui héberge deux sites web
+E: La double pile est la transition la plus courante : chaque appareil a une adresse IPv4 et une adresse IPv6, et utilise IPv6 quand la destination le permet. Il faut alors un pare-feu pour chacun des deux protocoles, sous peine de laisser IPv6 grand ouvert.
+
+@073
+Q: Pourquoi une boucle entre deux switchs sans protection peut-elle paralyser un réseau ?
+C: Les diffusions tournent sans fin et saturent le réseau
+W: Les deux switchs se partagent alors les mêmes adresses IP
+W: Les câbles chauffent et coupent la liaison
+W: Les postes perdent leur adresse MAC
+E: Une trame de diffusion est recopiée sur tous les ports, revient par l'autre câble et repart, à l'infini : c'est une tempête de diffusion, en quelques secondes. Le protocole Spanning Tree (STP) bloque les liens redondants et ne les active qu'en cas de panne.
+
+@074
+Q: Que réalise cette configuration sur deux ports d'un switch ?
+C: Elle regroupe deux câbles en un seul lien LACP
+W: Elle relie deux VLAN sans routeur
+W: Elle chiffre le trafic entre deux switchs
+W: Elle alimente les appareils par le câble réseau
+E: channel-group 1 mode active place les deux ports dans un agrégat négocié par LACP : 2 Gbit/s au total et continuité si un câble est coupé. Une connexion donnée passe toutefois par un seul lien. Sans agrégation, ces deux câbles formeraient une boucle.
+```
+interface range GigabitEthernet0/1 - 2
+ channel-group 1 mode active
+```
+
+@075
+Q: Que protège cette configuration de switch ?
+C: Contre un faux serveur DHCP sur le VLAN 10
+W: Contre l'épuisement des adresses IP publiques
+W: Contre le vol des mots de passe Wi-Fi
+W: Contre les virus transmis par clé USB
+E: Le DHCP snooping n'accepte les réponses DHCP que sur les ports déclarés de confiance, ici celui qui mène au vrai serveur. Une box personnelle branchée par erreur, ou un attaquant, ne peut plus distribuer de fausse passerelle. Le switch construit aussi une table utile contre l'usurpation ARP.
+```
+ip dhcp snooping
+ip dhcp snooping vlan 10
+interface GigabitEthernet0/1
+ ip dhcp snooping trust
+```
+
+@076
+Q: Que fait la commande suivante ?
+C: Elle capture le trafic DNS de l'interface eth0
+W: Elle bloque le trafic DNS sur l'interface eth0
+W: Elle redémarre le service DNS du serveur
+W: Elle affiche la configuration DNS de eth0
+E: tcpdump capture les paquets qui correspondent au filtre, ici le port 53. -n évite de résoudre les adresses, ce qui ajouterait du trafic DNS à la capture. -w capture.pcap enregistrerait les paquets pour les ouvrir dans Wireshark.
+```
+tcpdump -i eth0 -n port 53
+```
+
+@077
+Q: Quel filtre d'affichage Wireshark montre seulement le trafic HTTP vers 192.168.1.20 ?
+C: ip.dst == 192.168.1.20 && http
+W: dst 192.168.1.20 and port 80
+W: filter http to 192.168.1.20
+W: ip.addr = 192.168.1.20 || tcp
+E: Les filtres d'affichage de Wireshark utilisent des champs comme ip.dst, tcp.port ou http, et les opérateurs ==, && et ||. La syntaxe dst ... and port est celle des filtres de capture, communs à tcpdump. Confondre les deux est fréquent.
+
+@078
+Q: Une capture montre de nombreux SYN vers un serveur, sans jamais de SYN-ACK en retour. Que conclure ?
+C: Les paquets sont bloqués ou sans réponse
+W: La connexion TCP est établie normalement
+W: Le serveur refuse explicitement la connexion
+W: Le client a fermé la connexion trop tôt
+E: Un port fermé répond par un RST, immédiat ; une absence totale de réponse signale un pare-feu qui jette les paquets, une mauvaise route ou un serveur éteint. Le client retente plusieurs fois avant d'abandonner, d'où les délais d'attente de plusieurs secondes.
+
+@079
+Q: Pourquoi un pare-feu qui « jette » les paquets rend-il un diagnostic plus lent qu'un pare-feu qui les « rejette » ?
+C: Le client attend l'expiration au lieu d'un refus
+W: Les paquets jetés sont renvoyés à l'expéditeur plusieurs fois
+W: Un pare-feu qui rejette ralentit tout le réseau
+W: Les deux comportements sont identiques pour le client
+E: DROP ne répond rien : le client patiente puis abandonne au bout de plusieurs secondes. REJECT renvoie un refus immédiat. Vers Internet, on préfère souvent DROP pour ne pas renseigner un attaquant ; en interne, REJECT rend les erreurs plus claires.
+
+@080
+Q: À quoi sert un serveur mandataire (proxy) web dans une entreprise ?
+C: À relayer, filtrer et tracer les accès web
+W: À héberger le site web public de l'entreprise
+W: À attribuer les adresses IP des postes
+W: À répartir l'électricité entre les équipements
+E: Les postes passent par le proxy pour sortir ; il applique des règles de filtrage, garde des traces et peut mettre en cache. Un reverse proxy fait l'inverse, devant des serveurs : il reçoit les visiteurs, termine le HTTPS et répartit la charge.
+
+@081
+Q: Qu'est-ce que l'anycast, utilisé par de grands services DNS comme 1.1.1.1 ?
+C: Une adresse annoncée en plusieurs lieux
+W: Une adresse qui envoie chaque paquet à tous les serveurs
+W: Une adresse attribuée au hasard à chaque requête
+W: Une adresse privée qui ne fonctionne qu'en local
+E: Plusieurs centres annoncent la même adresse par BGP ; Internet achemine chaque utilisateur vers le centre le plus proche selon le routage. On obtient faible latence et résistance aux pannes et aux attaques. Le multicast, lui, envoie un paquet à un groupe d'abonnés.
+
+@082
+Q: Que signifie un QoS qui marque la voix avec une priorité DSCP élevée ?
+C: La voix passe en premier en cas d'encombrement
+W: La voix est compressée deux fois plus que le reste
+W: La voix passe par un câble réservé
+W: Les appels sont chiffrés par les switchs
+E: Quand un lien sature, les routeurs servent d'abord les paquets prioritaires : la voix reste claire pendant un gros téléchargement. La QoS ne crée pas de débit ; elle répartit l'existant. Elle ne fonctionne que si tous les équipements du chemin respectent le marquage.
+
+@083
+Q: Quelle commande teste si le port 443 d'un serveur accepte les connexions, depuis Windows ?
+C: Test-NetConnection serveur -Port 443
+W: ping serveur -port 443
+W: ipconfig serveur 443
+W: nslookup serveur 443
+E: Test-NetConnection, en PowerShell, tente une connexion TCP et indique TcpTestSucceeded. ping n'utilise pas de port, il ne prouve rien sur un service. Sous Linux, nc -vz serveur 443 ou curl jouent ce rôle.
+
+@084
+Q: Que montre ce résultat de traceroute ?
+C: Le chemin s'arrête après le troisième routeur
+W: La destination a répondu au quatrième saut
+W: Le poste n'a aucune adresse IP valide
+W: Le serveur DNS ne répond plus
+E: Les trois premiers routeurs répondent, puis plus rien : la perte se situe après 203.0.113.1, chez l'opérateur ou sur le chemin. Attention, certains routeurs ne répondent jamais à traceroute tout en transmettant le trafic : des étoiles isolées au milieu d'un chemin qui aboutit ne sont pas une panne.
+```
+ 1  192.168.1.1     1.1 ms
+ 2  10.24.0.1       8.4 ms
+ 3  203.0.113.1    12.9 ms
+ 4  * * *
+ 5  * * *
+```
+
+@085
+Q: Quel débit utile obtient-on au mieux sur un lien de 1 Gbit/s, en mégaoctets par seconde ?
+N: 125
+U: Mo/s
+T: 2
+E: 1 000 Mbit/s divisés par 8 bits par octet donnent 125 Mo/s, avant les en-têtes. En pratique, on observe autour de 110 Mo/s pour un gros transfert. Un disque plus lent ou un protocole bavard limite souvent avant le réseau.
+
+@086
+Q: Un serveur de fichiers répond lentement depuis un site distant, rapidement en local. Le débit est bon. Quelle cause est probable ?
+C: La latence, avec beaucoup d'allers-retours
+W: Un câble défectueux sur le serveur de fichiers
+W: Une adresse IP en conflit sur le site distant
+W: Un serveur DNS trop lent pour le site distant
+E: Certains protocoles, comme le partage de fichiers Windows sur de petits fichiers, enchaînent des milliers d'échanges : 1 ms de latence en local, 30 ms à distance, et chaque opération est trente fois plus lente. On réduit les allers-retours, on rapproche les données ou on passe par un accès web.
+
+@087
+Q: Pourquoi segmenter un réseau d'entreprise en VLAN pour les postes, les serveurs, les invités et les caméras ?
+C: Pour filtrer entre zones et limiter une intrusion
+W: Pour multiplier le débit de chaque poste par quatre
+W: Pour supprimer le besoin de pare-feu
+W: Pour que chaque zone ait sa propre connexion Internet
+E: Un poste compromis ne voit plus directement les serveurs ni les caméras : le passage entre VLAN se fait par un pare-feu qui n'autorise que le nécessaire. Le Wi-Fi invités ne mène qu'à Internet. C'est la base d'une défense en profondeur.
+
+@088
+Q: Remettre dans l'ordre les étapes d'une requête HTTPS vers un site, côté réseau.
+O: Résolution DNS du nom du site
+O: Établissement de la connexion TCP sur le port 443
+O: Négociation TLS et vérification du certificat
+O: Envoi de la requête HTTP chiffrée
+O: Réception de la réponse du serveur
+E: Chaque étape a ses pannes : DNS qui ne répond pas, port filtré, certificat expiré ou ne correspondant pas au nom, erreur 500 du serveur. Les outils de développement du navigateur détaillent la durée de chaque étape, utile pour savoir où passe le temps.
+
+@089
+Q: Qu'indique une réponse HTTP 502 renvoyée par un reverse proxy ?
+C: Le serveur derrière le proxy a mal répondu
+W: La page demandée n'existe pas sur le site
+W: L'utilisateur n'est pas autorisé à voir la page
+W: Le certificat du site a expiré
+E: 502 Bad Gateway signifie que le proxy ou le load balancer n'a pas obtenu de réponse valable de l'application : service arrêté, mauvais port, application qui plante. 504 signale un délai dépassé, 404 une page inexistante, 403 un refus d'accès.
+
+@090
+Q: Pourquoi un même réseau IP ne doit-il pas se trouver de part et d'autre d'un VPN entre deux sites ?
+C: Les routes deviennent ambiguës
+W: Le VPN refuse les réseaux qui commencent par 192.168
+W: Les adresses en double ralentissent le chiffrement
+W: Les deux sites partagent alors le même serveur DHCP
+E: Si les deux sites utilisent 192.168.1.0/24, un poste ne sait pas si 192.168.1.20 est local ou distant. On prévoit un plan d'adressage unique pour toute l'entreprise, ou on recourt à une traduction d'adresses dans le VPN, plus complexe à maintenir.
+
+@091
+Q: Combien d'adresses utilisables offre un réseau en /20 ?
+N: 4094
+E: 32 - 20 = 12 bits machine, soit 4 096 adresses, moins le réseau et la diffusion : 4 094. Un /20 se découpe en seize /24. On évite toutefois les très grands réseaux plats : trop de diffusions et une panne qui touche trop de monde.
+
+@092
+Q: Que provoque cette configuration d'un poste ?
+C: Il joint son réseau local, mais aucun autre réseau
+W: Tout fonctionne, la passerelle peut être n'importe où
+W: Il ne joint même plus son réseau local
+W: Le DHCP corrige seul la passerelle au démarrage
+E: La passerelle doit se trouver dans le réseau du poste pour être jointe directement : 192.168.2.1 est hors de 192.168.1.0/24. Les échanges locaux fonctionnent, Internet non. C'est une erreur classique de saisie manuelle.
+```
+Adresse IPv4 . . . . . . . : 192.168.1.50
+Masque de sous-réseau. . . : 255.255.255.0
+Passerelle par défaut. . . : 192.168.2.1
+```
+
+@093
+Q: Que signifie un « split DNS » ?
+C: Un même nom résolu différemment en interne et sur Internet
+W: Un nom de domaine découpé en plusieurs sous-domaines
+W: Deux serveurs DNS qui se partagent la charge
+W: Un cache DNS séparé pour chaque navigateur
+E: intranet.exemple.fr donne une adresse privée aux postes de l'entreprise et une adresse publique, ou rien, depuis Internet. Les deux zones doivent rester cohérentes, sinon un service marche au bureau et pas en télétravail, une panne déroutante.
+
+@094
+Q: Quel risque présente l'ARP spoofing sur un réseau local ?
+C: On intercepte le trafic en imitant la passerelle
+W: Les adresses IP des postes sont effacées
+W: Le serveur DHCP distribue des adresses en double
+W: Les câbles réseau deviennent inutilisables
+E: L'attaquant envoie de fausses réponses ARP : les postes croient que la passerelle a son adresse MAC et lui envoient leur trafic, qu'il relaie en le lisant. HTTPS protège le contenu, d'où son importance même en interne. L'inspection ARP dynamique des switchs bloque ces fausses réponses.
+
+@095
+Q: Que fait un load balancer de couche 4 par rapport à un load balancer de couche 7 ?
+C: Il répartit les connexions TCP sans lire le contenu HTTP
+W: Il lit les URL pour envoyer chaque page au bon serveur
+W: Il chiffre le trafic entre le client et le serveur
+W: Il ne fonctionne qu'avec des adresses IPv6
+E: En couche 4, le répartiteur ne voit que les adresses et ports : rapide et utilisable pour tout protocole. En couche 7, il lit les requêtes HTTP et peut router /api vers un groupe de serveurs et /images vers un autre, au prix de plus de traitement.
+
+@096
+Q: Associer chaque outil à ce qu'il permet de vérifier.
+P: ping => la machine répond-elle ?
+P: traceroute => par où passe le trafic ?
+P: nslookup => le nom se résout-il ?
+P: tcpdump => quels paquets circulent vraiment ?
+E: Chaque outil répond à une question précise. Sans réponse au ping, traceroute montre où le chemin s'arrête ; si le chemin est bon mais l'application échoue, une capture montre ce qui se passe réellement : poignée de main TCP, refus, retransmissions.
+
+@097
+Q: Combien de sous-réseaux /26 tiennent dans un /24 ?
+N: 4
+E: Passer de /24 à /26 ajoute 2 bits de sous-réseau : 2^2 = 4 sous-réseaux de 64 adresses. Par exemple, un /26 pour les postes, un pour les téléphones, un pour les imprimantes et un de réserve. Le découpage doit anticiper la croissance.
+
+@098
+Q: Pourquoi un serveur joignable par son adresse IP mais pas par son nom depuis certains postes seulement oriente-t-il vers le cache DNS ?
+C: Une ancienne réponse en cache sur ces postes
+W: Les postes concernés ont un câble défectueux
+W: Le serveur refuse les postes qui utilisent son nom
+W: Le nom d'un serveur ne fonctionne qu'en IPv6
+E: Une réponse DNS reste en cache pendant son TTL, sur le poste et sur le résolveur. Après un changement d'adresse, les postes qui ont interrogé récemment gardent l'ancienne. ipconfig /flushdns sur le poste, ou l'attente de l'expiration, règle la question.
+
+@099
+Q: Que permet le protocole SNMP sur des équipements réseau ?
+C: Superviser leur état et leurs compteurs à distance
+W: Attribuer les adresses IP aux équipements
+W: Chiffrer les échanges entre deux équipements
+W: Mettre à jour automatiquement leur micrologiciel
+E: Un outil de supervision interroge les équipements par SNMP : charge des interfaces, erreurs, température, état des ports. On repère ainsi un lien saturé ou un port en erreur avant les utilisateurs. On préfère SNMPv3, authentifié et chiffré, aux versions 1 et 2c.
+
+@100
+Q: Pourquoi documenter le plan d'adressage et les VLAN d'un réseau d'entreprise ?
+C: Pour éviter les conflits et accélérer chaque diagnostic
+W: Parce que les switchs refusent de démarrer sans plan
+W: Pour que les adresses IP changent moins souvent
+W: Parce que le DHCP en a besoin pour fonctionner
+E: Sans plan à jour, on attribue une adresse déjà prise, on crée un réseau qui chevauche un site distant, et chaque panne commence par une enquête. Un tableau des réseaux, VLAN, passerelles et réservations, tenu à jour, fait gagner des heures.

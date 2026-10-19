@@ -298,16 +298,6 @@ QLabel#pill[tone="muted"] {
     color: $muted;
 }
 
-QPushButton#collapsibleTitle {
-    background: transparent;
-    border: none;
-    padding: 0;
-    text-align: left;
-    color: $heading;
-    font-size: 16px;
-    font-weight: 700;
-}
-
 QToolButton#collapsibleToggle {
     border: none;
     border-radius: 8px;

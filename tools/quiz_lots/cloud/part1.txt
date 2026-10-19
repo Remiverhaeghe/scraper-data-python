@@ -1,0 +1,439 @@
+@001
+Q: Associer chaque modèle de service cloud à ce que le client gère encore lui-même.
+P: IaaS => système d'exploitation, logiciels et données
+P: PaaS => code de l'application et données
+P: SaaS => données et comptes des utilisateurs
+E: En IaaS, on loue des machines virtuelles : le fournisseur gère le matériel et la virtualisation, le client tout le reste à partir du système. En PaaS, la plateforme fournit l'environnement d'exécution, le client déploie son code. En SaaS, le logiciel est prêt à l'emploi : il ne reste que les données et les comptes à administrer.
+
+@002
+Q: Une équipe veut déployer son application web sans gérer de serveur, de système ni de correctifs, en ne fournissant que son code. Quel modèle lui correspond ?
+C: PaaS, comme App Service, Elastic Beanstalk ou App Engine
+W: IaaS, avec une machine virtuelle à installer et à maintenir
+W: SaaS, puisque l'application sera utilisée par un navigateur
+W: Un serveur physique hébergé dans le centre de données du fournisseur
+E: Le PaaS prend en charge système, environnement d'exécution, mise à l'échelle et correctifs : l'équipe ne livre que son code. Une machine virtuelle relève de l'IaaS et laisse le système à maintenir. Le SaaS désigne un logiciel fini qu'on utilise, pas une plateforme où l'on déploie le sien.
+
+@003
+Q: Que désigne une région chez un fournisseur de cloud comme AWS ?
+C: Une zone géographique de plusieurs centres de données isolés
+W: Un seul grand centre de données, unique pour tout un continent
+W: Un réseau privé virtuel créé par le client dans son compte
+W: Un niveau de tarification qui varie selon le pays de facturation
+E: Une région, par exemple eu-west-3 à Paris, regroupe plusieurs zones de disponibilité, chacune faite d'un ou plusieurs centres de données indépendants. Le choix de la région fixe l'emplacement des données, la latence pour les utilisateurs et parfois les prix. Le réseau privé du client est un VPC, pas une région.
+
+@004
+Q: Pourquoi répartir des serveurs sur plusieurs zones de disponibilité d'une même région ?
+C: Pour que la panne d'un centre de données n'arrête pas le service
+W: Pour diviser le prix des machines virtuelles par le nombre de zones
+W: Pour rapprocher les serveurs de chacun des utilisateurs du monde
+W: Pour contourner le quota de machines autorisé dans une seule zone
+E: Les zones d'une région sont alimentées, refroidies et raccordées séparément, mais reliées par un réseau rapide. Si une zone tombe, les instances des autres continuent de servir. Se rapprocher des utilisateurs du monde entier demande plusieurs régions ou un CDN, pas plusieurs zones voisines.
+
+@005
+Q: Associer chaque service de stockage objet à son fournisseur.
+P: Amazon S3 => AWS
+P: Blob Storage => Azure
+P: Cloud Storage => Google Cloud
+E: Les trois services stockent des fichiers sous forme d'objets dans des conteneurs appelés bucket chez AWS et Google, container chez Azure. On y accède par une API HTTP, sans système de fichiers à monter. Ils servent aux sauvegardes, aux fichiers statiques d'un site, aux journaux et aux données d'analyse.
+
+@006
+Q: Associer chaque service de machines virtuelles à son fournisseur.
+P: EC2 => AWS
+P: Virtual Machines => Azure
+P: Compute Engine => Google Cloud
+E: EC2 signifie Elastic Compute Cloud. Les trois services louent des machines virtuelles à la seconde ou à l'heure, avec un choix de tailles (processeurs, mémoire) et d'images système. C'est le service IaaS de base de chaque fournisseur, sur lequel s'appuient beaucoup d'autres.
+
+@007
+Q: Que signifie le modèle de responsabilité partagée du cloud ?
+C: Le fournisseur sécurise l'infrastructure, le client ce qu'il y déploie
+W: Le fournisseur reste seul responsable de toute la sécurité du compte
+W: Le client doit lui-même sécuriser les centres de données du fournisseur
+W: Les deux partagent le mot de passe administrateur du compte cloud
+E: Le fournisseur répond des bâtiments, du matériel, du réseau et de la virtualisation. Le client répond de ses comptes, de ses droits d'accès, de ses données, de la configuration de ses services et, en IaaS, du système. Un bucket laissé public est une erreur du client, pas du fournisseur.
+
+@008
+Q: Pourquoi ne faut-il pas utiliser le compte racine (root) d'un compte AWS pour le travail courant ?
+C: Il a tous les droits, sans restriction possible
+W: Il ne peut créer aucune ressource, seulement consulter la facture
+W: Il est supprimé automatiquement après trente jours d'inactivité
+W: Il ne fonctionne que depuis la console et jamais avec la CLI
+E: Le compte racine peut tout faire, y compris fermer le compte, et aucune politique IAM ne le restreint. On le protège par une authentification multifacteur et on le réserve à quelques tâches rares. Le travail courant passe par des utilisateurs ou des rôles IAM qui n'ont que les droits nécessaires.
+
+@009
+Q: Que permet l'élasticité d'un service cloud ?
+C: Ajuster les ressources à la charge, à la hausse comme à la baisse
+W: Garantir que le prix mensuel ne change jamais quelle que soit la charge
+W: Déplacer les données d'un fournisseur à l'autre sans aucune migration
+W: Augmenter la taille d'un disque sans jamais pouvoir la réduire
+E: On ajoute des instances aux heures de pointe et on les retire ensuite, souvent automatiquement. On ne paie que ce qui tourne : c'est l'intérêt principal par rapport à un serveur dimensionné pour le pic. Le prix varie donc avec l'usage, et changer de fournisseur reste une vraie migration.
+
+@010
+Q: Que fait cette commande ?
+C: Elle liste le contenu du bucket factures, préfixe 2026 compris
+W: Elle crée un bucket nommé factures dans la région par défaut
+W: Elle supprime les fichiers de 2026 dans le bucket factures
+W: Elle copie le bucket factures sur le poste dans un dossier 2026
+E: aws s3 ls affiche les objets d'un bucket ou d'un préfixe ; --recursive descend dans tous les sous-préfixes. Créer un bucket se fait avec aws s3 mb, supprimer avec aws s3 rm, copier vers le poste avec aws s3 cp ou aws s3 sync. Le préfixe joue le rôle d'un dossier dans le nom des objets.
+```
+aws s3 ls s3://factures/2026/ --recursive
+```
+
+@011
+Q: Quelle commande copie le dossier local site/ vers le bucket vitrine en n'envoyant que les fichiers modifiés ?
+C: aws s3 sync site/ s3://vitrine/
+W: aws s3 ls site/ s3://vitrine/
+W: aws s3 mb site/ s3://vitrine/
+W: aws s3 rb site/ s3://vitrine/
+E: sync compare la source et la destination et ne transfère que ce qui a changé, ce qui convient pour publier un site statique. ls liste un contenu, mb crée un bucket et rb le supprime. Avec --delete, sync supprime aussi dans le bucket les fichiers qui n'existent plus en local.
+
+@012
+Q: Dans une facture cloud, que signifie « paiement à l'usage » ?
+C: On paie la durée et le volume réellement consommés
+W: On paie un forfait fixe par mois quel que soit le nombre de serveurs
+W: On paie uniquement au moment de la création de chaque ressource
+W: On paie selon le nombre de personnes qui se connectent à la console
+E: Une machine virtuelle est facturée à la seconde ou à l'heure, le stockage au gigaoctet par mois, le trafic sortant au gigaoctet transféré. Une ressource oubliée continue donc de coûter : arrêter les environnements de test la nuit et supprimer ce qui ne sert plus fait vite baisser la facture.
+
+@013
+Q: Une machine virtuelle de test coûte 0,10 € de l'heure. Combien coûte-t-elle sur un mois de 30 jours si elle tourne en continu ?
+N: 72
+U: €
+T: 1
+E: 0,10 € × 24 heures × 30 jours = 72 €. Si on l'arrête la nuit et le week-end, en ne la gardant que 10 heures par jour ouvré, soit environ 220 heures par mois, la facture tombe à 22 €. Les environnements de test sont la première source d'économies faciles.
+
+@014
+Q: À quoi sert un groupe de sécurité (security group) sur AWS ?
+C: Filtrer le trafic entrant et sortant d'une instance, par port et par source
+W: Regrouper les utilisateurs IAM qui partagent les mêmes droits
+W: Chiffrer les disques des instances qui appartiennent au groupe
+W: Répartir la charge entre plusieurs instances d'un même service
+E: Un groupe de sécurité est un pare-feu virtuel attaché à l'instance : on autorise par exemple le port 443 depuis Internet et le port 22 depuis l'adresse du bureau seulement. Tout ce qui n'est pas autorisé est refusé. Les droits des utilisateurs relèvent d'IAM, la répartition de charge d'un load balancer.
+
+@015
+Q: Quel risque présente cette règle de groupe de sécurité ?
+C: Le port SSH est ouvert à toute adresse d'Internet
+W: Le port web est fermé et le site devient inaccessible
+W: La base de données est exposée sur son port standard
+W: Aucun : 0.0.0.0/0 désigne uniquement le réseau local
+E: Le port 22 est celui de SSH et 0.0.0.0/0 désigne toutes les adresses IPv4 : n'importe qui peut tenter de se connecter, et les robots le font en permanence. On limite la source à l'adresse du bureau ou d'un VPN, ou on passe par un service d'accès comme Session Manager sans ouvrir de port.
+```
+Type : SSH
+Protocole : TCP
+Port : 22
+Source : 0.0.0.0/0
+```
+
+@016
+Q: Pourquoi un CDN comme CloudFront ou Azure Front Door accélère-t-il un site pour des visiteurs lointains ?
+C: Il sert des copies des fichiers depuis des serveurs proches d'eux
+W: Il compresse la base de données pour réduire le temps des requêtes
+W: Il augmente la puissance du serveur d'origine aux heures de pointe
+W: Il convertit le site en application mobile plus rapide à charger
+E: Un CDN met en cache images, scripts et pages dans des serveurs répartis dans le monde. Le visiteur de Tokyo est servi depuis Tokyo, pas depuis Paris : moins de latence, et moins de charge sur le serveur d'origine. Les contenus dynamiques non cachés font toujours l'aller-retour jusqu'à l'origine.
+
+@017
+Q: Que garantit un SLA de disponibilité de 99,9 % par mois ?
+C: Au plus 43 minutes de coupure par mois, sinon un avoir
+W: Que le service ne tombera jamais plus de 99 secondes d'affilée
+W: Que 99,9 % des données seront récupérables après une panne
+W: Que le service sera remboursé intégralement à la moindre coupure
+E: 0,1 % d'un mois de 30 jours représente 43,2 minutes. Le SLA est un engagement contractuel : au-delà, le fournisseur accorde un avoir sur la facture, pas un remboursement complet. Il ne dit rien de la durabilité des données, qui fait l'objet d'un autre engagement.
+
+@018
+Q: Combien de minutes d'indisponibilité par mois de 30 jours autorise un SLA de 99,95 % ?
+N: 21,6
+U: min
+T: 2
+E: 30 jours × 24 h × 60 min = 43 200 minutes ; 0,05 % de 43 200 donne 21,6 minutes. Chaque « 9 » supplémentaire divise l'indisponibilité tolérée par dix : 99,99 % ne laisse plus que 4,3 minutes par mois, ce qui impose plusieurs zones et une bascule automatique.
+
+@019
+Q: À quoi sert Amazon RDS, ou Azure SQL Database, par rapport à une base installée soi-même sur une machine virtuelle ?
+C: Le fournisseur gère correctifs, sauvegardes et bascule
+W: Il remplace la base relationnelle par un stockage de fichiers plat
+W: Il permet d'éviter d'écrire des requêtes SQL dans l'application
+W: Il rend la base accessible sans aucun réseau ni mot de passe
+E: Une base gérée évite l'administration courante : mises à jour, sauvegardes automatiques avec restauration à un instant donné, réplica dans une autre zone. On garde la main sur le schéma, les requêtes, les index et les accès. Installer soi-même la base sur une VM laisse tout cela à faire.
+
+@020
+Q: Qu'est-ce qu'une fonction serverless comme AWS Lambda ou Azure Functions ?
+C: Un code exécuté à la demande, sans serveur à gérer, facturé à l'exécution
+W: Une machine virtuelle sans disque qui démarre à chaque connexion SSH
+W: Un service qui fonctionne sans aucun serveur, y compris chez le fournisseur
+W: Un script planifié sur le poste du développeur et synchronisé au cloud
+E: Le code se déclenche sur un événement : requête HTTP, fichier déposé, message, horaire. Le fournisseur lance l'exécution et ajuste le nombre d'instances ; on paie le nombre d'appels et la durée. Il y a bien des serveurs, mais on ne les voit ni ne les administre.
+
+@021
+Q: Remettre dans l'ordre la publication d'un site statique sur un bucket avec un CDN.
+O: Créer le bucket et y déposer les fichiers du site
+O: Créer la distribution CDN avec le bucket comme origine
+O: Faire pointer le nom de domaine vers la distribution
+O: Après une mise à jour, invalider le cache du CDN
+E: Le bucket contient les fichiers, la distribution CDN les sert au monde entier, le DNS relie le nom du site à la distribution. Après une nouvelle version, le CDN garde l'ancienne en cache jusqu'à expiration : on l'invalide, ou on publie des fichiers dont le nom change à chaque version.
+
+@022
+Q: Que signifie le sigle VPC ?
+C: Virtual Private Cloud, réseau privé isolé dans le cloud
+W: Virtual Processing Core, cœur de processeur virtuel loué
+W: Verified Public Certificate, certificat public vérifié
+W: Volume Persistent Container, disque attaché à un conteneur
+E: Un VPC est le réseau privé du client chez AWS ou Google Cloud ; Azure parle de VNet. On y définit des plages d'adresses, des sous-réseaux publics et privés, des tables de routage et des passerelles. Les instances y communiquent entre elles sans passer par Internet.
+
+@023
+Q: Quelle différence entre un sous-réseau public et un sous-réseau privé dans un VPC ?
+C: Seul le public a une route vers Internet
+W: Seul le privé peut contenir des machines virtuelles
+W: Le public est gratuit, le privé est facturé à l'heure
+W: Le privé n'a aucune adresse IP, même interne
+E: Un sous-réseau est public quand sa table de routage envoie le trafic vers Internet par une passerelle Internet. On y place le load balancer ou un bastion. Les serveurs d'application et les bases vont dans des sous-réseaux privés, injoignables depuis Internet ; ils sortent si besoin par une passerelle NAT.
+
+@024
+Q: Associer chaque service à sa catégorie.
+P: Amazon RDS => base de données relationnelle gérée
+P: Amazon S3 => stockage objet
+P: AWS Lambda => fonctions serverless
+P: Amazon CloudWatch => métriques, journaux et alertes
+E: RDS gère MySQL, PostgreSQL, SQL Server ou Oracle ; S3 stocke des fichiers à grande échelle ; Lambda exécute du code sur événement ; CloudWatch collecte métriques et journaux et déclenche des alarmes. Connaître ces briques permet de lire une architecture AWS et de dialoguer avec une équipe d'exploitation.
+
+@025
+Q: Pourquoi activer l'authentification multifacteur sur les comptes de la console cloud ?
+C: Un mot de passe volé ne suffit plus pour entrer
+W: Elle accélère la connexion en évitant de saisir le mot de passe
+W: Elle chiffre toutes les données stockées dans le compte
+W: Elle remplace les politiques de droits de chaque utilisateur
+E: Un compte cloud compromis permet de lancer des machines à vos frais, de lire ou de supprimer des données. Le second facteur, application ou clé physique, bloque l'attaquant qui n'a que le mot de passe. Les droits restent à limiter par ailleurs, et le chiffrement des données est un autre réglage.
+
+@026
+Q: Que fait cette politique IAM attachée à un utilisateur ?
+C: Elle permet de lire les objets du bucket rapports, sans rien y écrire
+W: Elle donne tous les droits sur tous les buckets du compte
+W: Elle permet d'écrire dans le bucket rapports, sans le lire
+W: Elle rend le bucket rapports public pour tout Internet
+E: s3:GetObject autorise le téléchargement des objets, et la ressource arn:aws:s3:::rapports/* limite le droit aux objets de ce bucket. Aucune action d'écriture comme s3:PutObject n'est accordée. La politique s'applique à l'utilisateur qui la porte, elle ne rend rien public.
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::rapports/*"
+  }]
+}
+```
+
+@027
+Q: Pourquoi cette politique ne permet-elle pas de lister le contenu du bucket rapports ?
+C: Lister exige s3:ListBucket sur le bucket, pas sur ses objets
+W: Le mot Allow doit être écrit en minuscules pour être reconnu
+W: La version 2012-10-17 est trop ancienne pour le service S3
+W: Un utilisateur IAM ne peut jamais lister le contenu d'un bucket
+E: s3:ListBucket porte sur la ressource arn:aws:s3:::rapports, sans /*, alors que s3:GetObject porte sur les objets arn:aws:s3:::rapports/*. Il faut donc deux déclarations, une par ressource. La version 2012-10-17 est la version actuelle du langage des politiques, à utiliser telle quelle.
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["s3:GetObject", "s3:ListBucket"],
+    "Resource": "arn:aws:s3:::rapports/*"
+  }]
+}
+```
+
+@028
+Q: Qu'est-ce que le principe du moindre privilège appliqué à IAM ?
+C: N'accorder que les actions et ressources dont chacun a besoin
+W: Donner les droits administrateur au plus petit nombre de comptes
+W: Attribuer moins de droits aux nouveaux arrivants qu'aux anciens
+W: Retirer tous les droits et les rétablir à chaque demande
+E: Une application qui lit un bucket reçoit s3:GetObject sur ce bucket, pas s3:* sur tout le compte. Si ses accès fuient, les dégâts restent limités. On part du minimum et on ajoute au besoin, en s'aidant des outils qui montrent les droits réellement utilisés.
+
+@029
+Q: Pourquoi attribuer un rôle IAM à une instance EC2 plutôt que d'y copier des clés d'accès ?
+C: Elle reçoit des identifiants temporaires, sans clé stockée
+W: Les rôles donnent automatiquement les droits administrateur à l'instance
+W: Les clés d'accès ne fonctionnent pas depuis une machine virtuelle
+W: Un rôle permet de se connecter à l'instance sans mot de passe
+E: Avec un rôle, le SDK obtient des identifiants temporaires auprès du service de métadonnées, renouvelés automatiquement. Aucune clé ne traîne sur le disque, dans une image ou dans un dépôt Git. Les droits du rôle restent à limiter au strict besoin de l'application.
+
+@030
+Q: Une instance doit télécharger des correctifs depuis Internet mais ne doit pas être joignable depuis Internet. Que faut-il ?
+C: La placer en privé, avec sortie par passerelle NAT
+W: La placer en sous-réseau public avec une adresse IP publique
+W: Lui retirer toute route, y compris vers le reste du VPC
+W: Ouvrir tous les ports entrants du groupe de sécurité
+E: La passerelle NAT, placée en sous-réseau public, laisse sortir les connexions initiées par les instances privées et refuse celles qui viennent de l'extérieur. Une adresse publique rendrait l'instance joignable. Sans aucune route, l'instance ne pourrait même plus parler aux autres serveurs.
+
+@031
+Q: Remettre dans l'ordre le trajet d'une requête d'un visiteur vers une application en sous-réseau privé.
+O: Le nom du site est résolu par le DNS
+O: La requête arrive sur le load balancer en sous-réseau public
+O: Le load balancer la transmet à une instance en sous-réseau privé
+O: L'instance interroge la base gérée, elle aussi privée
+E: Seul le load balancer est exposé à Internet. Il répartit les requêtes entre les instances saines de plusieurs zones. Les instances et la base restent privées ; leurs groupes de sécurité n'acceptent que le trafic venant du load balancer, puis des instances.
+
+@032
+Q: À quoi sert un groupe Auto Scaling sur AWS ?
+C: Ajuster le nombre d'instances à la charge et remplacer les instances défaillantes
+W: Augmenter la taille du disque d'une instance quand il est plein
+W: Programmer l'arrêt des instances de test chaque soir à heure fixe
+W: Copier automatiquement les instances dans une autre région
+E: Le groupe maintient un nombre d'instances entre un minimum et un maximum, ajoute des instances quand une métrique dépasse un seuil, comme le processeur, et en retire quand elle baisse. Une instance qui échoue aux contrôles de santé est remplacée. Il fonctionne avec un load balancer qui répartit le trafic.
+
+@033
+Q: Que se passe-t-il au démarrage d'une instance créée avec ce script dans ses données utilisateur ?
+C: Nginx est installé, démarré et activé au démarrage du système
+W: Le script s'exécute à chaque connexion SSH d'un administrateur
+W: Nginx est installé mais il faut le démarrer à la main ensuite
+W: Le script est ignoré car il ne porte pas l'extension .sh
+E: Les données utilisateur (user data) sont exécutées par cloud-init au premier démarrage de l'instance. Ici, le script installe Nginx, puis systemctl enable --now le démarre et l'active pour les redémarrages suivants. Pour une configuration plus riche, on préfère une image préparée ou un outil comme Ansible.
+```bash
+#!/bin/bash
+dnf install -y nginx
+systemctl enable --now nginx
+```
+
+@034
+Q: Associer chaque classe de stockage S3 à son usage typique.
+P: S3 Standard => données lues souvent, comme les images d'un site
+P: S3 Standard-IA => sauvegardes lues rarement mais vite si besoin
+P: S3 Glacier Deep Archive => archives légales gardées des années
+E: Standard coûte le plus cher au stockage mais n'a pas de frais de récupération. Standard-IA, pour accès peu fréquent, est moins cher au stockage mais facture chaque lecture. Deep Archive est très bon marché mais la restauration prend des heures. Une règle de cycle de vie fait passer les objets d'une classe à l'autre avec l'âge.
+
+@035
+Q: Que fait cette règle de cycle de vie sur un bucket de journaux ?
+C: Elle archive les journaux après 30 jours et les supprime après un an
+W: Elle supprime les journaux après 30 jours et les archive après un an
+W: Elle copie les journaux dans un autre bucket tous les 30 jours
+W: Elle chiffre les journaux après 30 jours avec une clé tournante
+E: La transition fait passer les objets du préfixe logs/ en classe Glacier 30 jours après leur création ; l'expiration les supprime au bout de 365 jours. On paie ainsi le prix fort seulement le premier mois, puis presque rien, et les journaux ne s'accumulent pas indéfiniment.
+```json
+{
+  "Rules": [{
+    "Filter": {"Prefix": "logs/"},
+    "Status": "Enabled",
+    "Transitions": [{"Days": 30, "StorageClass": "GLACIER"}],
+    "Expiration": {"Days": 365}
+  }]
+}
+```
+
+@036
+Q: Pourquoi le trafic sortant vers Internet est-il un poste de coût à surveiller ?
+C: Les données sortantes se paient, les entrantes rarement
+W: Chaque requête entrante est facturée au prix d'une heure de serveur
+W: Le trafic sortant ralentit toujours les machines du compte
+W: Les données qui sortent sont recopiées dans toutes les régions
+E: Envoyer des données vers le cloud est en général gratuit ; les faire sortir, vers les visiteurs ou un autre fournisseur, se paie au gigaoctet. Un site qui sert de grosses vidéos ou une sauvegarde rapatriée chaque nuit peut coûter cher. Un CDN réduit souvent la facture tout en accélérant le site.
+
+@037
+Q: Quelle est la principale différence entre une instance Spot et une instance à la demande sur AWS ?
+C: Spot coûte bien moins cher mais peut être interrompue
+W: Spot est plus chère mais garantie sans interruption pendant un an
+W: Spot ne peut exécuter que des conteneurs, pas des machines virtuelles
+W: Spot n'existe que dans les régions américaines du fournisseur
+E: Les instances Spot utilisent la capacité inoccupée du fournisseur, avec de fortes remises, mais elles peuvent être interrompues avec deux minutes de préavis. Elles conviennent aux calculs par lots, aux rendus, aux tests qui peuvent reprendre ; pas à une base de données ou à un service qui doit rester disponible.
+
+@038
+Q: Une application tourne en continu toute l'année sur la même taille de serveur. Quelle option réduit le plus simplement sa facture ?
+C: Un engagement d'un ou trois ans, réservation ou Savings Plan
+W: Des instances Spot, interrompues dès que le fournisseur le décide
+W: Un passage en serverless, quel que soit le code de l'application
+W: Une région plus éloignée, toujours moins chère que les autres
+E: S'engager sur un niveau d'utilisation pour un ou trois ans apporte une remise importante sur le prix à la demande, sans rien changer à l'application. Les instances Spot ne conviennent pas à un service permanent. Réécrire en serverless est un vrai projet, et le prix des régions varie sans règle simple.
+
+@039
+Q: Que contient le fichier de configuration créé par aws configure ?
+C: La région et le format par défaut ; les clés vont dans le fichier credentials
+W: Le mot de passe de la console et le code multifacteur du compte
+W: La liste des instances du compte, mise à jour à chaque commande
+W: Les politiques IAM de l'utilisateur, copiées depuis le compte
+E: aws configure enregistre dans ~/.aws/credentials la clé d'accès et la clé secrète, et dans ~/.aws/config la région et le format de sortie. Ces fichiers ne doivent jamais entrer dans un dépôt Git. On préfère aujourd'hui des identifiants temporaires, par exemple avec aws sso login.
+
+@040
+Q: Quelle commande Azure CLI crée un groupe de ressources nommé rg-demo en France Centre ?
+C: az group create --name rg-demo --location francecentral
+W: az vm create --name rg-demo --location francecentral
+W: az group list --name rg-demo --location francecentral
+W: az storage create --name rg-demo --location francecentral
+E: Sur Azure, chaque ressource appartient à un groupe de ressources, qui sert à les gérer, les facturer et les supprimer ensemble. az group create le crée dans une région ; az group list liste les groupes existants. Supprimer le groupe supprime toutes les ressources qu'il contient, pratique pour un environnement de test.
+
+@041
+Q: Sur Azure, à quoi sert un groupe de ressources ?
+C: Regrouper des ressources d'un même projet pour les gérer et les supprimer ensemble
+W: Définir les utilisateurs autorisés à se connecter à la console Azure
+W: Répartir le trafic réseau entre plusieurs machines virtuelles
+W: Fixer la région unique de toutes les ressources de l'abonnement
+E: Un groupe de ressources rassemble par exemple l'application, sa base et son stockage. On y attribue des droits, on suit son coût, et sa suppression nettoie tout d'un coup. Les ressources d'un groupe peuvent être dans des régions différentes ; la répartition de charge est le rôle d'un load balancer.
+
+@042
+Q: Associer chaque notion de droits d'accès à son fournisseur.
+P: Politique IAM attachée à un rôle => AWS
+P: Rôle RBAC attribué sur une étendue => Azure
+P: Rôle IAM accordé sur un projet => Google Cloud
+E: Les trois fournisseurs suivent la même idée : un principal, utilisateur ou application, reçoit des droits sur un périmètre. AWS décrit les droits dans des politiques JSON ; Azure attribue des rôles RBAC sur un abonnement, un groupe ou une ressource ; Google accorde des rôles sur une organisation, un dossier ou un projet.
+
+@043
+Q: Quelle commande gcloud affiche les machines virtuelles du projet courant ?
+C: gcloud compute instances list
+W: gcloud storage buckets list
+W: gcloud projects list
+W: gcloud config list
+E: gcloud compute instances list affiche les instances Compute Engine avec leur zone, leur type et leur état. gcloud storage buckets list liste les buckets, gcloud projects list les projets accessibles, gcloud config list la configuration active du poste, dont le projet par défaut.
+
+@044
+Q: Pourquoi étiqueter (tags, labels) les ressources cloud avec le projet et l'environnement ?
+C: Pour répartir les coûts et retrouver ce qui appartient à quoi
+W: Pour accélérer les machines virtuelles de l'environnement de production
+W: Pour chiffrer automatiquement les ressources marquées
+W: Pour éviter la facturation des ressources de test
+E: Des étiquettes comme projet=crm ou env=test permettent de filtrer la facture par projet, de retrouver le propriétaire d'une ressource oubliée et d'automatiser des règles, comme l'arrêt nocturne des environnements de test. Elles ne changent ni les performances ni le prix des ressources.
+
+@045
+Q: À quoi sert une alerte de budget dans la console de facturation ?
+C: Prévenir quand la dépense réelle ou prévue dépasse un montant
+W: Bloquer automatiquement toutes les ressources au premier euro dépassé
+W: Négocier une remise avec le fournisseur à partir d'un certain montant
+W: Répartir la facture entre les membres d'une équipe
+E: Une alerte de budget envoie un message, par exemple à 80 % puis 100 % du budget mensuel, ou dès que la prévision dépasse le montant. Par défaut elle ne coupe rien : une boucle qui lance des instances ou un bucket très téléchargé se détecte ainsi en jours plutôt qu'à la facture de fin de mois.
+
+@046
+Q: Qu'est-ce qu'un instantané (snapshot) d'un disque de machine virtuelle ?
+C: Une copie à un instant donné, qui permet de restaurer ou recréer le disque
+W: Une capture d'écran de la console de la machine virtuelle
+W: Une copie en temps réel du disque vers une autre région
+W: Un relevé de l'utilisation du processeur sur la dernière heure
+E: Un snapshot fige l'état du disque ; on peut en recréer un volume ou une machine. Les snapshots suivants ne stockent que les blocs modifiés. Ils servent avant une mise à jour risquée ou en sauvegarde régulière, mais une base de données doit être cohérente au moment de la prise, sinon la restauration est hasardeuse.
+
+@047
+Q: Remettre dans l'ordre les étapes d'une restauration d'instance à partir d'un snapshot.
+O: Choisir le snapshot pris avant l'incident
+O: Créer un nouveau volume à partir de ce snapshot
+O: Arrêter l'instance et détacher l'ancien volume
+O: Attacher le nouveau volume puis redémarrer l'instance
+E: On ne restaure pas un snapshot sur place : on crée un volume neuf à partir de lui, dans la même zone que l'instance. On garde l'ancien volume le temps de vérifier que tout est revenu, puis on le supprime. Pour un disque système, on peut aussi recréer l'instance à partir d'une image.
+
+@048
+Q: Pourquoi est-il dangereux de rendre public un bucket qui contient des exports clients ?
+C: Quiconque devine l'adresse peut télécharger les fichiers
+W: Le bucket devient plus lent car il est partagé avec d'autres clients
+W: Le fournisseur supprime les buckets publics au bout de quelques jours
+W: Les fichiers publics ne sont plus sauvegardés par le fournisseur
+E: Les fuites de données venant de buckets publics par erreur sont fréquentes ; des robots parcourent les noms de buckets courants. On bloque l'accès public au niveau du compte, et on partage un fichier au besoin par une URL présignée, qui expire. Un export clients tombe en plus sous le RGPD.
+
+@049
+Q: Que fait cette commande ?
+C: Elle crée un lien de téléchargement valable une heure
+W: Elle rend le bucket public pendant une heure, puis le referme
+W: Elle copie le fichier dans un bucket public pendant une heure
+W: Elle supprime le fichier une heure après son téléchargement
+E: Une URL présignée contient une signature calculée avec les droits de celui qui la génère : quiconque a le lien peut télécharger cet objet jusqu'à l'expiration, ici 3600 secondes. Le bucket reste privé et les autres objets inaccessibles. C'est la façon propre de partager un fichier ponctuellement.
+```
+aws s3 presign s3://exports/clients-2026.csv --expires-in 3600
+```
+
+@050
+Q: Quel service AWS utiliser pour stocker le mot de passe de la base, plutôt que de l'écrire dans le code ?
+C: AWS Secrets Manager, ou un paramètre chiffré de Parameter Store
+W: Un fichier texte placé dans le bucket des fichiers statiques
+W: Une étiquette posée sur l'instance qui exécute l'application
+W: Une variable écrite en dur dans l'image de la machine virtuelle
+E: Secrets Manager stocke le secret chiffré, contrôle qui peut le lire par IAM et sait faire tourner le mot de passe de la base. L'application le lit au démarrage grâce à son rôle. Un mot de passe dans le code, une image ou une étiquette finit tôt ou tard dans un dépôt ou une capture.

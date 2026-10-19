@@ -6,6 +6,9 @@ import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
 from utils.helpers import html_to_text
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 ITEM_URL = "https://news.ycombinator.com/item?id={id}"
 
@@ -31,6 +34,46 @@ EMPLOYMENT_SEGMENT = re.compile(
 )
 SALARY_SEGMENT = re.compile(r"[$€£]\s?\d|\d\s?k\b", re.IGNORECASE)
 VISA_SEGMENT = re.compile(r"\bvisa\b", re.IGNORECASE)
+
+# Mot qui désigne un poste : sert à reconnaître un titre parmi d'autres segments
+ROLE_PATTERN = re.compile(
+    r"\b(engineers?|developers?|designers?|managers?|scientists?|analysts?"
+    r"|architects?|leads?|devops|sre|interns?|researchers?|recruiters?"
+    r"|consultants?|administrators?|technicians?|cto|head of)\b",
+    re.IGNORECASE,
+)
+
+# Lieu placé là où on attend le poste : « San Francisco, CA (Onsite) »
+LOCATION_HINT = re.compile(
+    r"\((remote|on-?site|hybrid|in[\s-](office|person))[^)]*\)"
+    r"|\b(on-?site|in[\s-]person)\b",
+    re.IGNORECASE,
+)
+
+# En-tête rédigé en lignes étiquetées : « Company: … », « Location: … »
+LABELED_LINE = re.compile(
+    r"^\s*(company|location|role|roles|position|positions|title|job"
+    r"|salary|compensation)\s*:\s*(.+?)\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
+LABELED_FIELDS = {
+    "company": "company",
+    "location": "location",
+    "role": "title",
+    "roles": "title",
+    "position": "title",
+    "positions": "title",
+    "title": "title",
+    "job": "title",
+    "salary": "salary",
+    "compensation": "salary",
+}
+
+# Annonce sans séparateur mais explicite : « We're hiring… », « X is hiring… »
+HIRING_PATTERN = re.compile(r"\b(we'?re|we are|is|are)\s+hiring\b", re.IGNORECASE)
+
+# Longueur maximale d'une ligne du texte reprise comme titre de poste
+MAX_ROLE_LINE_LENGTH = 100
 
 # Après le poste, un segment plus long est le début du texte de l'annonce, collé à
 # l'en-tête faute de saut de paragraphe.
@@ -65,7 +108,9 @@ def classify_segments(pSegments):
         if vTitles and len(vSegment) > MAX_SEGMENT_LENGTH:
             continue
 
-        if WORK_MODE_SEGMENT.match(vSegment):
+        if WORK_MODE_SEGMENT.match(vSegment) or (
+            LOCATION_HINT.search(vSegment) and not ROLE_PATTERN.search(vSegment)
+        ):
             vLocations.append(vSegment)
         elif EMPLOYMENT_SEGMENT.match(vSegment):
             vEmployments.append(vSegment)
@@ -107,6 +152,52 @@ def parse_header(pHeader):
     return rHeader
 
 
+def parse_labeled_lines(pText):
+    """Retourne les champs d'un en-tête en lignes « Étiquette: valeur »."""
+
+    rFields = {}
+
+    for vLabel, vValue in LABELED_LINE.findall(pText):
+        rFields.setdefault(LABELED_FIELDS[vLabel.lower()], vValue[:200])
+
+    return rFields
+
+
+def find_role_line(pText):
+    """Retourne la première ligne courte du texte qui nomme un poste, ou None."""
+
+    rLine = next(
+        (
+            vLine.strip()
+            for vLine in pText.splitlines()
+            if 0 < len(vLine.strip()) <= MAX_ROLE_LINE_LENGTH
+            and ROLE_PATTERN.search(vLine)
+        ),
+        None,
+    )
+
+    return rLine
+
+
+def is_job_post(pComment):
+    """Indique si un commentaire de premier niveau est une offre d'emploi.
+
+    Une offre suit la convention « Entreprise | Poste | Lieu », ou étiquette
+    ses lignes, ou annonce explicitement un recrutement. Les autres messages
+    (remarques sur le fil, candidats qui se présentent, publicités) sont écartés.
+    """
+
+    vHeader, _ = split_header(pComment.get("text"))
+
+    rJobPost = bool(
+        len(HEADER_SEPARATOR.split(vHeader)) > 1
+        or {"company", "location"} & set(parse_labeled_lines(vHeader))
+        or HIRING_PATTERN.search(vHeader)
+    )
+
+    return rJobPost
+
+
 def parse_job(pComment):
     """Transforme un commentaire du fil « Who is hiring? » en dictionnaire Job.
 
@@ -115,7 +206,26 @@ def parse_job(pComment):
     """
 
     vHeader, vBody = split_header(pComment.get("text"))
+    # Une ligne par paragraphe : html_to_text les réunirait en une seule.
+    vBodyLines = "\n".join(
+        html_to_text(vParagraph) or "" for vParagraph in vBody.split("<p>")
+    )
     vDetails = parse_header(vHeader)
+    vLabeled = parse_labeled_lines(f"{vHeader}\n{vBodyLines}")
+
+    # En-tête étiqueté : les étiquettes remplacent le découpage par séparateurs.
+    if {"company", "location"} & set(parse_labeled_lines(vHeader)):
+        vDetails = {
+            **vDetails,
+            "title": vLabeled.get("title"),
+            "company": vLabeled.get("company"),
+            "location": vLabeled.get("location"),
+            "salary": vLabeled.get("salary") or vDetails["salary"],
+        }
+
+    # Poste absent de l'en-tête : il est souvent nommé en tête du texte.
+    if not vDetails["title"]:
+        vDetails["title"] = vLabeled.get("title") or find_role_line(vBodyLines)
 
     vJob = {
         # Identification
@@ -175,10 +285,20 @@ def parse_job(pComment):
 def parse_jobs(pComments):
     """Transforme les offres d'un fil en DataFrame normalisé.
 
-    Les commentaires supprimés n'ont pas de texte et sont ignorés.
+    Les commentaires supprimés n'ont pas de texte et sont ignorés, comme ceux
+    qui n'ont pas la forme d'une offre.
     """
 
-    vJobs = [parse_job(vComment) for vComment in pComments if vComment.get("text")]
+    vComments = [vComment for vComment in pComments if vComment.get("text")]
+    vPosts = [vComment for vComment in vComments if is_job_post(vComment)]
+
+    if len(vPosts) < len(vComments):
+        logger.info(
+            "Hacker News : %s commentaire(s) écarté(s), sans forme d'offre",
+            len(vComments) - len(vPosts),
+        )
+
+    vJobs = [parse_job(vComment) for vComment in vPosts]
 
     vDataFrame = pd.DataFrame(vJobs, columns=JOB_COLUMNS)
 

@@ -1,0 +1,31 @@
+{
+  "lot": 1,
+  "seed": 2026101604,
+  "skills": ["SQL Server", "T-SQL", "MSSQL", "SSMS"],
+  "schemas": [
+    {
+      "name": "sqlserver-restauration.svg",
+      "questions": ["024", "025", "026", "075"],
+      "diagram": {
+        "title": "Restaurer une base à un instant précis",
+        "nodes": [
+          "Sauvegarde complète",
+          "Dernière différentielle",
+          "Journaux dans l'ordre",
+          "Arrêt à l'heure voulue (STOPAT)",
+          "Base en ligne (RECOVERY)"
+        ],
+        "note": "NORECOVERY à chaque étape, sauf la dernière"
+      }
+    },
+    {
+      "name": "sqlserver-ordre-logique.svg",
+      "questions": ["021", "022"],
+      "diagram": {
+        "title": "Ordre logique d'évaluation d'un SELECT",
+        "nodes": ["FROM et JOIN", "WHERE", "GROUP BY", "HAVING", "SELECT", "ORDER BY"],
+        "note": "Un alias du SELECT n'existe pas encore dans le WHERE"
+      }
+    }
+  ]
+}

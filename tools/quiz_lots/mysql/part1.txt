@@ -1,0 +1,432 @@
+@001
+Q: Qu'est-ce que MariaDB par rapport à MySQL ?
+C: Un fork libre de MySQL, largement compatible
+W: Une interface graphique officielle pour administrer MySQL
+W: L'ancien nom de MySQL avant son rachat par Oracle
+W: Une extension de MySQL réservée au stockage de documents JSON
+E: MariaDB est né en 2009 d'une partie de l'équipe d'origine de MySQL, après le rachat de Sun par Oracle. Les deux restent très proches pour le SQL courant et les outils, mais divergent sur certaines fonctions avancées. Beaucoup de distributions Linux installent MariaDB sous le nom de paquet mysql.
+
+@002
+Q: Quel moteur de stockage MySQL utilise-t-il par défaut, avec transactions et clés étrangères ?
+C: InnoDB
+W: MyISAM
+W: MEMORY
+W: CSV
+E: InnoDB est le moteur par défaut depuis MySQL 5.5 : transactions, verrous par ligne, clés étrangères et reprise après plantage. MyISAM, l'ancien moteur, n'a ni transactions ni clés étrangères et verrouille la table entière. MEMORY garde les données en mémoire seulement.
+
+@003
+Q: Quelle commande liste les bases du serveur dans le client mysql ?
+C: SHOW DATABASES;
+W: LIST DATABASES;
+W: SELECT DATABASES;
+W: \l
+E: SHOW DATABASES liste les bases visibles par l'utilisateur ; USE boutique; choisit la base courante ; SHOW TABLES; liste ses tables ; DESCRIBE client; montre les colonnes. \l est la commande équivalente du client psql de PostgreSQL.
+
+@004
+Q: Comment se connecter en ligne de commande à la base boutique avec l'utilisateur app ?
+C: mysql -u app -p boutique
+W: mysql --user app --password=boutique
+W: mysql -h app -d boutique
+W: psql -U app boutique
+E: -u donne l'utilisateur, -p demande le mot de passe sans l'afficher, le dernier argument est la base. Mettre le mot de passe directement après -p le laisse dans l'historique du shell : on le saisit à la demande, ou on utilise un fichier d'options protégé.
+
+@005
+Q: Que renvoie cette requête ?
+C: Les dix produits les plus chers
+W: Les produits dont le prix dépasse 10
+W: Les dix premiers produits ajoutés
+W: Une erreur, LIMIT n'existe pas en MySQL
+E: ORDER BY prix DESC trie du plus cher au moins cher et LIMIT 10 garde les dix premières lignes. LIMIT 10 OFFSET 20 sauterait les vingt premières, pour paginer. Sans ORDER BY, LIMIT renvoie dix lignes quelconques.
+```sql
+SELECT nom, prix FROM produit ORDER BY prix DESC LIMIT 10;
+```
+
+@006
+Q: Associer chaque type MySQL à son usage.
+P: INT UNSIGNED => entier positif, comme un identifiant
+P: VARCHAR(255) => texte court de longueur variable
+P: DECIMAL(10,2) => montant exact
+P: DATETIME => date et heure sans fuseau
+E: UNSIGNED double la plage des entiers positifs. DECIMAL évite les arrondis des types FLOAT et DOUBLE pour l'argent. TIMESTAMP, contrairement à DATETIME, est converti selon le fuseau de la session et limité à 2038 dans les anciennes versions.
+
+@007
+Q: Que fait AUTO_INCREMENT sur une colonne id ?
+C: Il attribue un nombre croissant à chaque insertion
+W: Il ajoute 1 à la valeur à chaque lecture de la ligne
+W: Il trie la table par identifiant après chaque insertion
+W: Il crée un index en double sur la colonne id
+E: MySQL attribue la valeur suivante si on n'en fournit pas ; LAST_INSERT_ID() renvoie celle générée par la dernière insertion de la connexion. Les valeurs ne sont pas forcément consécutives : un rollback ou une insertion en échec laisse des trous, ce qui est normal.
+
+@008
+Q: Quel jeu de caractères choisir pour stocker tout l'Unicode, émojis compris ?
+C: utf8mb4
+W: utf8mb3
+W: latin1
+W: ascii
+E: L'ancien « utf8 » de MySQL, en réalité utf8mb3, ne stocke que trois octets par caractère : les émojis et certains idéogrammes provoquent une erreur ou disparaissent. utf8mb4 est la vraie UTF-8 et le défaut depuis MySQL 8.0. latin1 se limite aux langues d'Europe de l'Ouest.
+
+@009
+Q: Que fait la fonction NOW() ?
+C: Elle renvoie la date et l'heure courantes
+W: Elle renvoie seulement la date du jour
+W: Elle renvoie le nombre de secondes depuis 1970
+W: Elle fige la date de la ligne à sa création
+E: NOW() renvoie la date et l'heure de début de l'instruction, CURDATE() la date seule, UNIX_TIMESTAMP() les secondes depuis 1970. Pour remplir automatiquement une date de création, on déclare la colonne DEFAULT CURRENT_TIMESTAMP.
+
+@010
+Q: Que renvoie IFNULL(remise, 0) quand remise est NULL ?
+C: 0
+W: NULL
+W: Une erreur
+W: Une chaîne vide
+E: IFNULL renvoie le second argument quand le premier est NULL. COALESCE, standard, accepte plusieurs arguments. Sans lui, prix - remise donnerait NULL dès que la remise manque, car toute opération avec NULL donne NULL.
+
+@011
+Q: Comment trouver les clients sans adresse e-mail renseignée ?
+C: WHERE email IS NULL
+W: WHERE email = NULL
+W: WHERE email == NULL
+W: WHERE NULL(email)
+E: Une comparaison avec = NULL est toujours inconnue et ne retient aucune ligne. IS NULL et IS NOT NULL sont les seuls tests valables. Si les e-mails absents sont parfois des chaînes vides, on ajoute OR email = '' : ce sont deux choses différentes.
+
+@012
+Q: Que renvoie cette requête ?
+C: Le chiffre d'affaires de chaque client
+W: Le chiffre d'affaires total de la boutique
+W: Le montant de la dernière commande de chaque client
+W: Le nombre de clients qui ont commandé
+E: GROUP BY client_id forme un groupe par client, et SUM additionne les montants de chaque groupe. Depuis MySQL 5.7, le mode ONLY_FULL_GROUP_BY refuse une colonne du SELECT qui n'est ni groupée ni agrégée, comme le standard SQL.
+```sql
+SELECT client_id, SUM(montant) AS total
+FROM commande
+GROUP BY client_id;
+```
+
+@013
+Q: Quelle clause garde seulement les clients dont le total dépasse 1 000 € ?
+C: HAVING SUM(montant) > 1000
+W: WHERE SUM(montant) > 1000
+W: LIMIT SUM(montant) > 1000
+W: ORDER BY SUM(montant) > 1000
+E: WHERE filtre les lignes avant le regroupement et ne peut pas contenir d'agrégat ; HAVING filtre les groupes après. On combine les deux : WHERE pour ne garder que l'année 2026, HAVING pour les gros clients de cette année.
+
+@014
+Q: Associer chaque jointure à son résultat.
+P: INNER JOIN => les lignes présentes des deux côtés
+P: LEFT JOIN => toutes celles de gauche, NULL sans correspondance
+P: RIGHT JOIN => toutes celles de droite, NULL sans correspondance
+E: MySQL n'a pas de FULL OUTER JOIN : on l'obtient par un UNION entre un LEFT JOIN et un RIGHT JOIN. Un LEFT JOIN suivi de WHERE droite.id IS NULL trouve les lignes sans correspondance, comme les clients sans commande.
+
+@015
+Q: Que fait cette commande ?
+C: Elle crée la table client en InnoDB et en utf8mb4
+W: Elle crée la base client avec deux tables
+W: Elle modifie la table client si elle existe
+W: Elle crée une vue client en lecture seule
+E: La clé primaire en AUTO_INCREMENT identifie chaque client ; UNIQUE sur l'e-mail interdit les doublons et crée un index. Préciser le moteur et le jeu de caractères évite de dépendre de la configuration du serveur.
+```sql
+CREATE TABLE client (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+@016
+Q: Que fait ALTER TABLE client ADD COLUMN telephone VARCHAR(20); ?
+C: Elle ajoute une colonne téléphone à la table
+W: Elle crée une table telephone liée à client
+W: Elle renomme la colonne nom en telephone
+W: Elle ajoute une ligne avec un téléphone vide
+E: ALTER TABLE modifie la structure : ajout, suppression ou modification de colonnes, d'index, de contraintes. Les lignes existantes reçoivent NULL ou la valeur par défaut. Depuis MySQL 8.0, ajouter une colonne en fin de table est souvent instantané, sans recopier la table.
+
+@017
+Q: Quelle commande supprime définitivement la table journal et ses données ?
+C: DROP TABLE journal;
+W: DELETE TABLE journal;
+W: REMOVE TABLE journal;
+W: TRUNCATE journal DROP;
+E: DROP TABLE supprime la structure et les données ; il n'y a pas de corbeille. TRUNCATE TABLE vide la table en gardant sa structure et remet l'AUTO_INCREMENT à zéro. DELETE FROM journal; supprime les lignes une par une, avec un WHERE possible.
+
+@018
+Q: Pourquoi faut-il toujours vérifier le WHERE d'un UPDATE avant de l'exécuter ?
+C: Sans WHERE, toutes les lignes sont modifiées
+W: Sans WHERE, la requête est refusée par MySQL
+W: Le WHERE accélère seulement la requête
+W: Un UPDATE sans WHERE ne touche que la première ligne
+E: UPDATE produit SET prix = 0; met tous les prix à zéro. L'option --safe-updates du client mysql refuse justement les UPDATE et DELETE sans WHERE sur une clé. On teste avec un SELECT du même WHERE, ou dans une transaction qu'on peut annuler.
+
+@019
+Q: Que fait INSERT ... ON DUPLICATE KEY UPDATE ?
+C: Il insère la ligne ou met à jour celle qui existe déjà
+W: Il insère la ligne en double sous un autre identifiant
+W: Il refuse l'insertion et renvoie toujours une erreur
+W: Il supprime la ligne existante avant d'insérer
+E: Si l'insertion viole une clé primaire ou unique, MySQL applique la clause UPDATE à la ligne existante. Pratique pour un compteur ou une synchronisation. REPLACE fait autrement : il supprime puis réinsère, ce qui déclenche les suppressions en cascade et change l'identifiant.
+```sql
+INSERT INTO stock (produit_id, quantite) VALUES (12, 5)
+ON DUPLICATE KEY UPDATE quantite = quantite + 5;
+```
+
+@020
+Q: Qu'est-ce qu'une transaction ?
+C: Des opérations validées ou annulées ensemble
+W: Une requête lancée sur deux bases à la fois
+W: Un journal des requêtes lentes du serveur
+W: Une copie de la table prise avant chaque écriture
+E: Entre START TRANSACTION et COMMIT, les modifications sont invisibles aux autres sessions puis validées d'un coup ; ROLLBACK les annule. En InnoDB, chaque instruction hors transaction explicite est validée aussitôt (autocommit). MyISAM ne gère pas les transactions du tout.
+
+@021
+Q: Que se passe-t-il si la connexion coupe entre ces deux UPDATE ?
+C: Rien n'est validé, les deux soldes restent inchangés
+W: Le premier compte est débité, le second n'est pas crédité
+W: Les deux UPDATE sont rejoués à la reconnexion
+W: La base est verrouillée jusqu'au redémarrage du serveur
+E: Une transaction non validée est annulée quand la connexion se ferme. Le virement est tout ou rien, ce qui est le but. Sans transaction, en autocommit, le premier UPDATE serait validé seul et l'argent disparaîtrait.
+```sql
+START TRANSACTION;
+UPDATE compte SET solde = solde - 100 WHERE id = 1;
+UPDATE compte SET solde = solde + 100 WHERE id = 2;
+COMMIT;
+```
+
+@022
+Q: Qu'est-ce qu'une clé étrangère en InnoDB ?
+C: Une contrainte qui exige une valeur existante ailleurs
+W: Une clé de chiffrement venant d'un autre serveur
+W: Un index qui trie la table selon une autre table
+W: Une colonne remplie automatiquement par MySQL
+E: commande.client_id REFERENCES client(id) refuse une commande pour un client inexistant. ON DELETE CASCADE supprimerait les commandes avec le client, ON DELETE RESTRICT empêche la suppression. InnoDB crée un index sur la colonne si aucun n'existe.
+
+@023
+Q: Pourquoi un index accélère-t-il une recherche par e-mail ?
+C: Il mène aux lignes sans lire toute la table
+W: Il garde la table entière en mémoire vive
+W: Il trie la table sur le disque à chaque lecture
+W: Il compresse la colonne pour la lire plus vite
+E: Un index B-tree est trié : MySQL descend dans l'arbre jusqu'à la valeur cherchée en quelques lectures, au lieu de parcourir des millions de lignes. En contrepartie, chaque insertion ou mise à jour doit aussi mettre l'index à jour.
+
+@024
+Q: Que montre EXPLAIN devant une requête SELECT ?
+C: Le plan choisi : index utilisés et lignes estimées
+W: Le résultat de la requête avec un commentaire
+W: La liste des utilisateurs qui ont lancé la requête
+W: Le temps exact d'exécution de chaque ligne
+E: EXPLAIN indique pour chaque table le type d'accès (ALL pour un parcours complet, ref ou range avec un index), l'index choisi et le nombre de lignes estimé. EXPLAIN ANALYZE, depuis MySQL 8.0.18, exécute vraiment la requête et donne les temps réels.
+
+@025
+Q: Dans un EXPLAIN, que signale type: ALL sur une grande table ?
+C: Un parcours complet de la table
+W: Toutes les colonnes sont indexées
+W: La requête renvoie toutes les lignes
+W: Tous les index sont utilisés en même temps
+E: ALL signifie que MySQL lit toute la table pour trouver les lignes : acceptable sur une petite table, lent sur une grande. On cherche alors un index sur les colonnes du WHERE ou de la jointure. Les types const, eq_ref, ref et range sont, dans l'ordre, de plus en plus larges.
+
+@026
+Q: Que fait cette commande ?
+C: Elle crée un index sur la colonne email
+W: Elle crée une colonne email indexée
+W: Elle trie la table client par e-mail
+W: Elle interdit les e-mails en double
+E: CREATE INDEX crée un index secondaire. Pour interdire les doublons, on écrit CREATE UNIQUE INDEX. Sur une grande table, la création peut prendre du temps ; InnoDB la fait en ligne, les écritures continuent pendant la construction.
+```sql
+CREATE INDEX idx_client_email ON client (email);
+```
+
+@027
+Q: Pourquoi cette requête n'utilise-t-elle pas l'index sur date_commande ?
+C: La fonction appliquée à la colonne bloque l'index
+W: Les index ne fonctionnent pas sur les dates
+W: YEAR() renvoie un texte et non un nombre
+W: L'index ne sert que pour un ORDER BY
+E: MySQL doit calculer YEAR() pour chaque ligne avant de comparer. On réécrit en intervalle : WHERE date_commande >= '2026-01-01' AND date_commande < '2027-01-01'. Depuis MySQL 8.0.13, un index fonctionnel sur YEAR(date_commande) est aussi possible.
+```sql
+SELECT * FROM commande WHERE YEAR(date_commande) = 2026;
+```
+
+@028
+Q: Pourquoi cette recherche ne profite-t-elle pas de l'index sur nom ?
+C: Le joker en tête empêche de chercher dans l'index trié
+W: LIKE n'utilise jamais aucun index en MySQL
+W: Les index ignorent les lettres minuscules
+W: Le symbole % est interdit dans une condition
+E: Un index trié sert à chercher par le début : LIKE 'dup%' l'utilise, LIKE '%dupont' non, il faut tout lire. Pour chercher des mots dans du texte, on utilise un index FULLTEXT avec MATCH ... AGAINST, ou un moteur de recherche dédié.
+```sql
+SELECT * FROM client WHERE nom LIKE '%dupont';
+```
+
+@029
+Q: Que fait la commande mysqldump boutique > boutique.sql ?
+C: Elle exporte la base en script SQL
+W: Elle supprime la base après l'avoir copiée
+W: Elle importe le fichier dans la base
+W: Elle compresse les fichiers de la base
+E: mysqldump écrit les CREATE TABLE et INSERT qui permettent de recréer la base ; on restaure avec mysql boutique < boutique.sql. --single-transaction donne une copie cohérente des tables InnoDB sans les bloquer. Pour de grosses bases, des outils physiques comme mariabackup ou XtraBackup sont plus rapides.
+
+@030
+Q: Pourquoi ajouter --single-transaction à mysqldump sur une base InnoDB en production ?
+C: Pour une copie cohérente sans bloquer les écritures
+W: Pour exporter chaque table dans une transaction séparée
+W: Pour limiter l'export à une seule table
+W: Pour annuler l'export en cas d'erreur
+E: L'option démarre une transaction en lecture cohérente : toutes les tables sont lues telles qu'elles étaient au même instant, sans verrou bloquant. Sans elle, mysqldump verrouille les tables pendant l'export, ou produit une copie incohérente entre tables.
+
+@031
+Q: Associer chaque commande de gestion des droits à son effet.
+P: CREATE USER => crée un compte
+P: GRANT => accorde des droits
+P: REVOKE => retire des droits
+P: SHOW GRANTS => affiche les droits d'un compte
+E: Un compte MySQL est un couple utilisateur et hôte : 'app'@'10.0.%' n'est pas le même compte que 'app'@'localhost'. On donne à l'application seulement SELECT, INSERT, UPDATE et DELETE sur sa base, jamais ALL sur *.*.
+
+@032
+Q: Que fait cette commande ?
+C: Elle lui donne lecture et écriture sur boutique
+W: Elle donne à app tous les droits sur le serveur
+W: Elle crée la base boutique pour l'utilisateur app
+W: Elle autorise app à se connecter depuis n'importe où
+E: Les droits portent sur boutique.*, toutes les tables de cette base, et seulement les quatre opérations listées : pas de DROP, pas d'ALTER. Le compte n'est valable que depuis l'hôte précisé. Le moindre privilège limite les dégâts d'une injection SQL.
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON boutique.* TO 'app'@'10.0.0.%';
+```
+
+@033
+Q: Pourquoi utiliser des requêtes préparées dans le code PHP, Java ou Python ?
+C: Pour qu'une saisie ne soit jamais exécutée comme du SQL
+W: Pour que les requêtes s'exécutent dans un ordre fixe
+W: Pour chiffrer la connexion entre l'application et MySQL
+W: Pour garder la requête en cache sur le poste client
+E: Avec un paramètre, ' OR 1=1 -- reste une valeur et non du code. En PHP, PDO avec prepare et execute ; en Python, cursor.execute(sql, (valeur,)). Concaténer une saisie dans une chaîne SQL est la cause classique d'injection, même avec un échappement fait à la main.
+
+@034
+Q: Quel risque présente ce code PHP ?
+C: Une injection SQL par le paramètre id
+W: Une fuite de mémoire du serveur web
+W: Un blocage de la table produit
+W: Aucun, $_GET est filtré par PHP
+E: La valeur de l'adresse est insérée telle quelle : ?id=1 OR 1=1 renvoie tous les produits, et pire avec UNION. On écrit $pdo->prepare('SELECT * FROM produit WHERE id = ?') puis execute([$_GET['id']]). Valider que l'identifiant est un entier ajoute une défense.
+```php
+$sql = "SELECT * FROM produit WHERE id = " . $_GET['id'];
+$resultat = $pdo->query($sql);
+```
+
+@035
+Q: Que fait la fonction GROUP_CONCAT ?
+C: Elle concatène les valeurs d'un groupe en une chaîne
+W: Elle fusionne deux tables en une seule
+W: Elle compte le nombre de groupes distincts
+W: Elle découpe une chaîne en plusieurs lignes
+E: GROUP_CONCAT(nom ORDER BY nom SEPARATOR ', ') produit par exemple la liste des produits d'une commande. Le résultat est tronqué à group_concat_max_len, 1 024 caractères par défaut : une limite à connaître. SQL Server propose STRING_AGG pour le même besoin.
+
+@036
+Q: Que vaut DATEDIFF('2026-10-16', '2026-10-01') en MySQL ?
+N: 15
+E: En MySQL, DATEDIFF(fin, début) renvoie le nombre de jours, dans cet ordre-là : l'inverse de SQL Server, qui prend l'unité en premier. TIMESTAMPDIFF(MONTH, debut, fin) calcule dans d'autres unités. Confondre l'ordre donne un résultat négatif.
+
+@037
+Q: Quelle fonction formate une date en jj/mm/aaaa ?
+C: DATE_FORMAT(d, '%d/%m/%Y')
+W: FORMAT(d, 'dd/MM/yyyy')
+W: TO_CHAR(d, 'DD/MM/YYYY')
+W: CONVERT(d, 103)
+E: DATE_FORMAT utilise des codes précédés de % : %d le jour, %m le mois, %Y l'année sur quatre chiffres. FORMAT avec des lettres est la syntaxe de SQL Server, TO_CHAR celle de PostgreSQL et d'Oracle. STR_TO_DATE fait la conversion inverse.
+
+@038
+Q: Où MySQL enregistre-t-il les requêtes qui dépassent une durée donnée ?
+C: Dans le journal des requêtes lentes
+W: Dans le journal binaire
+W: Dans le journal des erreurs
+W: Dans la table information_schema.tables
+E: slow_query_log=1 et long_query_time=1 journalisent les requêtes de plus d'une seconde. L'outil mysqldumpslow ou pt-query-digest les regroupe pour trouver celles qui coûtent le plus au total. C'est le point de départ de toute optimisation.
+
+@039
+Q: À quoi sert le journal binaire (binlog) ?
+C: À répliquer et à restaurer à un instant précis
+W: À enregistrer les requêtes lentes du serveur
+W: À stocker les mots de passe des utilisateurs
+W: À garder une copie compressée des tables
+E: Le binlog enregistre chaque modification validée. Les réplicas le rejouent pour rester à jour ; après restauration d'une sauvegarde, on rejoue le binlog avec mysqlbinlog jusqu'à juste avant l'erreur. Il est activé par défaut depuis MySQL 8.0 ; on règle sa durée de conservation.
+
+@040
+Q: Remettre dans l'ordre la restauration d'une base juste avant une suppression accidentelle à 14 h 37.
+O: Restaurer la dernière sauvegarde complète
+O: Repérer dans le binlog la position de la suppression
+O: Rejouer le binlog depuis la sauvegarde jusqu'à cette position
+O: Vérifier les données, puis rouvrir l'accès à l'application
+E: La sauvegarde ramène à son instant ; le binlog rejoue tout ce qui a suivi. mysqlbinlog --stop-datetime ou --stop-position s'arrête juste avant le DELETE fautif. On travaille sur une copie si possible, pour ne pas aggraver la situation.
+
+@041
+Q: Quel fichier de configuration lit habituellement un serveur MySQL sous Linux ?
+C: /etc/mysql/my.cnf
+W: /etc/mysql/pg_hba.conf
+W: /var/lib/mysql/config.ini
+W: /etc/mysqld.json
+E: Le serveur lit my.cnf, souvent avec des fichiers inclus dans /etc/mysql/conf.d/ ou /etc/my.cnf.d/ selon la distribution. mysqld --verbose --help | grep -A1 "Default options" indique l'ordre de lecture. pg_hba.conf appartient à PostgreSQL.
+
+@042
+Q: Quel paramètre fixe la mémoire du cache des données InnoDB ?
+C: innodb_buffer_pool_size
+W: max_connections
+W: query_cache_size
+W: table_open_cache
+E: Le buffer pool garde en mémoire les pages de données et d'index : c'est le réglage le plus important. Sur un serveur dédié, on lui donne souvent 50 à 75 % de la mémoire. Le query cache a été supprimé dans MySQL 8.0 : il gênait plus qu'il n'aidait.
+
+@043
+Q: Un serveur dédié a 32 Go de mémoire. Combien de Go donner au buffer pool en visant 70 % ?
+N: 22,4
+U: Go
+T: 3
+E: 32 × 0,7 = 22,4 Go, en pratique 22 Go. Le reste sert au système, aux connexions et aux tampons de tri. Trop grand, le buffer pool pousse le système à utiliser le swap, ce qui est pire qu'un cache plus petit.
+
+@044
+Q: Que fait SHOW PROCESSLIST ?
+C: Il liste les connexions et leur requête en cours
+W: Il liste les processus Linux du serveur
+W: Il affiche l'historique des requêtes de la journée
+W: Il arrête les requêtes qui durent trop longtemps
+E: On y voit pour chaque connexion l'utilisateur, la base, l'état et la durée de la requête. Une requête bloquée depuis 600 secondes saute aux yeux. KILL <id> l'interrompt. performance_schema donne des informations plus détaillées.
+
+@045
+Q: Que signifie l'erreur « Too many connections » ?
+C: Le nombre maximal de connexions est atteint
+W: Le serveur n'a plus d'espace disque
+W: Le même utilisateur s'est connecté deux fois
+W: Une requête a renvoyé trop de lignes
+E: max_connections, 151 par défaut, est atteint. Souvent, l'application ouvre une connexion par requête sans la fermer, ou des requêtes lentes s'accumulent. On utilise un pool de connexions côté application et on cherche la cause avant d'augmenter la limite.
+
+@046
+Q: Que contient la base information_schema ?
+C: Les métadonnées : tables, colonnes, index, droits
+W: Les données des tables de chaque application
+W: Les journaux d'erreurs du serveur
+W: Les sauvegardes automatiques des bases
+E: information_schema est une vue en lecture seule du catalogue, standard SQL. SELECT table_name, table_rows FROM information_schema.tables WHERE table_schema = 'boutique' liste les tables d'une base. On y trouve aussi la taille des tables et des index.
+
+@047
+Q: Quelle requête donne la taille de chaque table de la base boutique ?
+C: Une requête sur information_schema.tables
+W: Une requête sur la table mysql.user
+W: La commande SHOW PROCESSLIST
+W: La commande mysqldump --size
+E: data_length + index_length, dans information_schema.tables, donne la place occupée par les données et les index de chaque table. Les valeurs sont des estimations pour InnoDB, suffisantes pour repérer la table qui grossit.
+
+@048
+Q: Pourquoi une colonne VARCHAR(255) en utf8mb4 indexée peut-elle poser problème sur une ancienne version ?
+C: L'index dépasse la taille maximale d'une clé
+W: utf8mb4 ne permet pas d'indexer du texte
+W: VARCHAR ne peut pas dépasser 191 caractères
+W: Les index sont limités à une colonne
+E: utf8mb4 réserve jusqu'à 4 octets par caractère : 255 × 4 = 1 020 octets, au-delà de l'ancienne limite de 767 octets. D'où les VARCHAR(191) des vieux schémas. Le format de ligne DYNAMIC des versions récentes porte la limite à 3 072 octets.
+
+@049
+Q: Combien d'octets au plus réserve un VARCHAR(191) en utf8mb4 pour un index ?
+N: 764
+E: 191 × 4 = 764 octets, juste sous l'ancienne limite de 767. C'est l'origine de ce nombre étrange dans les migrations Laravel ou WordPress d'autrefois. Avec MySQL 5.7 et plus, le format DYNAMIC rend ce contournement inutile.
+
+@050
+Q: Que fait la commande OPTIMIZE TABLE journal; sur une table InnoDB ?
+C: Elle reconstruit la table pour récupérer l'espace libre
+W: Elle crée automatiquement les index manquants
+W: Elle réécrit les requêtes lentes qui lisent la table
+W: Elle supprime les lignes en double de la table
+E: Après la suppression de nombreuses lignes, le fichier de la table garde l'espace. OPTIMIZE TABLE la reconstruit et le rend au système. Sur une grande table, c'est long et lourd : on le planifie en heure creuse, ou on purge par partitions.

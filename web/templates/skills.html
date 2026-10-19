@@ -32,7 +32,7 @@
                 {% for row in dashboard.rows %}
                 {% set status = statuses[row.status] %}
                 <tr>
-                    <td><strong>{{ row.skill }}</strong></td>
+                    <td class="nowrap"><span class="tone-primary">{{ icon(row.icon, 16) }}</span> <strong>{{ row.skill }}</strong></td>
                     <td>{{ row.offers }} <small class="muted">({{ row.share }} %)</small></td>
                     <td>{{ "Oui" if row.in_profile else "Non" }}</td>
                     <td>{% for key, label in row.themes %}{{ label }}{% if not loop.last %}, {% endif %}{% else %}<span class="muted">Aucun thème</span>{% endfor %}</td>

@@ -1,0 +1,499 @@
+@001
+Q: Que signifie « infrastructure as code » ?
+C: Décrire serveurs et réseaux dans des fichiers versionnés
+W: Écrire le code applicatif directement sur les serveurs de production
+W: Remplacer les serveurs physiques par des scripts lancés à la main
+W: Générer automatiquement la documentation des serveurs déjà installés
+E: L'infrastructure est décrite dans des fichiers texte, relus, versionnés dans Git et appliqués par un outil. On recrée un environnement identique en une commande, on voit qui a changé quoi, et on évite les configurations faites à la main que personne ne sait reproduire.
+
+@002
+Q: Associer chaque outil à son rôle principal.
+P: Terraform => créer et modifier les ressources d'infrastructure
+P: Ansible => configurer les serveurs et y déployer des logiciels
+P: Packer => fabriquer des images de machines prêtes à l'emploi
+E: Terraform provisionne : réseaux, machines virtuelles, bases gérées, DNS. Ansible configure : paquets, fichiers, services, utilisateurs. Packer construit des images que Terraform utilise ensuite pour lancer les machines. Les rôles se recouvrent un peu, mais chaque outil excelle dans le sien.
+
+@003
+Q: Quelle différence entre une approche déclarative et une approche impérative ?
+C: Déclarative : on décrit l'état voulu, l'outil trouve comment l'atteindre
+W: Déclarative : on liste chaque commande à lancer, dans l'ordre exact
+W: Impérative : l'outil devine seul ce qu'il faut créer ou supprimer
+W: Les deux termes désignent la même chose avec un vocabulaire différent
+E: Avec Terraform, on écrit « il faut trois machines » ; l'outil compare à l'existant et décide de créer, modifier ou supprimer. Un script impératif enchaîne des commandes : relancé, il risque de créer trois machines de plus. Ansible est déclaratif au niveau de chaque tâche, mais exécute ses tâches dans l'ordre.
+
+@004
+Q: Qu'est-ce que l'idempotence d'une opération d'infrastructure ?
+C: La relancer ne change rien si l'état voulu est déjà atteint
+W: Elle s'exécute toujours en moins d'une minute, quel que soit le volume
+W: Elle ne peut être lancée qu'une seule fois sur un même serveur
+W: Elle supprime tout et recrée l'infrastructure à chaque exécution
+E: Un playbook Ansible ou un terraform apply relancé sur une infrastructure déjà conforme ne fait rien. On peut donc les rejouer sans crainte, par exemple pour corriger une dérive. Un script qui ajoute une ligne à un fichier à chaque passage n'est pas idempotent : la ligne finit répétée.
+
+@005
+Q: Remettre dans l'ordre le cycle de travail habituel avec Terraform.
+O: terraform init
+O: terraform plan
+O: terraform apply
+O: terraform destroy, quand l'environnement ne sert plus
+E: init télécharge les fournisseurs et prépare le backend d'état ; plan montre ce qui va changer ; apply applique après confirmation ; destroy supprime tout ce que la configuration a créé, utile pour un environnement de test. On relit toujours le plan avant d'appliquer.
+
+@006
+Q: Que fait la commande terraform plan ?
+C: Elle affiche les changements prévus sans rien modifier
+W: Elle applique les changements sans demander de confirmation
+W: Elle télécharge les fournisseurs nécessaires à la configuration
+W: Elle supprime les ressources qui ne sont plus dans le code
+E: plan compare la configuration, l'état enregistré et la réalité, puis liste les créations (+), modifications (~) et destructions (-). Rien n'est touché. On le relit, dans une revue de code par exemple, avant de lancer apply. init télécharge les fournisseurs ; apply et destroy modifient l'infrastructure.
+
+@007
+Q: Que crée ce bloc Terraform ?
+C: Un bucket S3 nommé acme-rapports-2026
+W: Un fournisseur AWS nommé rapports
+W: Une variable nommée acme-rapports-2026
+W: Un fichier local appelé rapports
+E: Un bloc resource déclare un objet d'infrastructure : son type (aws_s3_bucket), un nom local (rapports) qui sert à y faire référence dans le code, et ses arguments. Le nom réel du bucket est acme-rapports-2026 ; le nom local n'existe que dans Terraform, sous la forme aws_s3_bucket.rapports.
+```hcl
+resource "aws_s3_bucket" "rapports" {
+  bucket = "acme-rapports-2026"
+}
+```
+
+@008
+Q: Quel est le rôle d'un provider dans Terraform ?
+C: Faire le lien avec une plateforme, comme AWS ou Azure
+W: Stocker l'état de l'infrastructure dans un bucket
+W: Fournir des machines virtuelles gratuites pour les tests
+W: Vérifier la syntaxe des fichiers avant leur exécution
+E: Un provider traduit les ressources Terraform en appels d'API d'une plateforme : aws, azurerm, google, mais aussi kubernetes, github ou datadog. terraform init les télécharge selon les versions demandées. L'état est stocké par un backend, et terraform validate vérifie la syntaxe.
+
+@009
+Q: Quelle extension portent les fichiers de configuration Terraform ?
+C: .tf
+W: .yml
+W: .tfstate
+W: .hcl.json
+E: La configuration s'écrit en HCL dans des fichiers .tf ; Terraform lit tous les .tf d'un dossier ensemble, l'ordre des fichiers n'a pas d'importance. Le fichier .tfstate contient l'état, pas la configuration. Ansible, lui, utilise des fichiers YAML en .yml.
+
+@010
+Q: À quoi sert une variable déclarée ainsi ?
+C: À paramétrer la région sans toucher au code
+W: À fixer définitivement la région, impossible à changer ensuite
+W: À stocker un mot de passe chiffré dans l'état de Terraform
+W: À créer une région supplémentaire dans le compte du fournisseur
+E: On utilise ensuite var.region dans la configuration. La valeur se change sans toucher au code : fichier terraform.tfvars, option -var ou variable d'environnement TF_VAR_region. La même configuration sert ainsi à plusieurs environnements. La valeur par défaut s'applique si rien n'est fourni.
+```hcl
+variable "region" {
+  type    = string
+  default = "eu-west-3"
+}
+```
+
+@011
+Q: À quoi sert un bloc output ?
+C: Afficher une valeur après apply, ou la passer à un autre module
+W: Rediriger les journaux de Terraform vers un fichier
+W: Exporter la facture du fournisseur au format CSV
+W: Lister les ressources qui seront supprimées au prochain plan
+E: Un output expose une valeur calculée, comme l'adresse d'un load balancer ou l'identifiant d'un réseau. Terraform l'affiche après apply et terraform output la relit. Un module s'en sert pour fournir des valeurs au module qui l'appelle.
+
+@012
+Q: Que contient le fichier terraform.tfstate ?
+C: La correspondance entre le code et les ressources réelles
+W: La liste des commandes Terraform lancées par chaque utilisateur
+W: Le code source des providers téléchargés par terraform init
+W: Les mots de passe des comptes, chiffrés par le fournisseur
+E: L'état mémorise, pour chaque ressource du code, son identifiant réel et ses attributs : c'est ainsi que Terraform sait quoi modifier au lieu de tout recréer. Il peut contenir des valeurs sensibles en clair, comme un mot de passe de base généré : il ne doit jamais aller dans Git.
+
+@013
+Q: Pourquoi ne faut-il pas versionner terraform.tfstate dans Git ?
+C: Il contient des secrets en clair et se partage mal à plusieurs
+W: Git refuse les fichiers qui portent l'extension .tfstate
+W: Il est recréé à l'identique à chaque terraform plan
+W: Il est trop volumineux pour un dépôt Git classique
+E: L'état peut contenir mots de passe et clés générés. Partagé par Git, deux personnes appliqueraient avec des états différents et provoqueraient des conflits ou des doublons. On le stocke dans un backend distant, chiffré, avec un verrou. Le .gitignore exclut *.tfstate et le dossier .terraform.
+
+@014
+Q: Quel fichier ajouter au .gitignore d'un projet Terraform ?
+C: .terraform/ et les fichiers *.tfstate
+W: main.tf et variables.tf
+W: Le fichier .terraform.lock.hcl
+W: Tous les fichiers .tf du dossier
+E: Le dossier .terraform contient les providers téléchargés, recréés par init ; l'état ne va pas dans Git. Au contraire, .terraform.lock.hcl doit être versionné : il fige les versions exactes des providers pour toute l'équipe. Les fichiers .tf sont le code lui-même.
+
+@015
+Q: Qu'est-ce qu'un module Terraform ?
+C: Un ensemble de ressources réutilisable, appelé avec des paramètres
+W: Un plugin écrit en Go qui ajoute un nouveau fournisseur cloud
+W: Une copie de sauvegarde de l'état prise avant chaque apply
+W: Une commande qui découpe un gros fichier .tf en plusieurs fichiers
+E: Un module regroupe par exemple un réseau complet ou une application avec sa base. On l'appelle avec un bloc module et des variables, depuis un dossier local, un dépôt Git ou un registre. On évite ainsi de recopier les mêmes blocs pour chaque environnement.
+
+@016
+Q: Quel format de fichier utilise un playbook Ansible ?
+C: YAML
+W: JSON
+W: HCL
+W: XML
+E: Un playbook est un fichier YAML qui liste des plays : sur quels hôtes agir, et quelles tâches y exécuter. L'indentation compte, comme dans tout fichier YAML. Terraform utilise HCL ; Ansible sait lire du JSON mais on écrit presque toujours en YAML.
+
+@017
+Q: Comment Ansible se connecte-t-il habituellement aux serveurs Linux à configurer ?
+C: Par SSH, sans agent à installer
+W: Par un agent Ansible installé sur chaque serveur
+W: Par le port 3389 du bureau à distance
+W: Par une API cloud propre à chaque serveur
+E: Ansible pousse ses modules par SSH et les exécute avec le Python du serveur, puis les supprime. Il suffit d'un accès SSH et d'un utilisateur autorisé. Pour Windows, il passe par WinRM ou SSH. D'autres outils, comme Puppet ou Chef, reposent sur un agent.
+
+@018
+Q: Que fait ce playbook sur les serveurs du groupe web ?
+C: Il installe Nginx avec les droits root et s'assure qu'il tourne
+W: Il désinstalle Nginx puis redémarre tous les serveurs du groupe
+W: Il installe Nginx uniquement sur la machine qui lance Ansible
+W: Il vérifie Nginx sans rien modifier, comme un simple test
+E: hosts: web vise le groupe web de l'inventaire ; become: true élève les droits avec sudo. Le module apt installe le paquet s'il manque, le module service le démarre et l'active au démarrage. Relancé, le playbook ne change rien si tout est déjà conforme.
+```yaml
+- hosts: web
+  become: true
+  tasks:
+    - name: Installer Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+    - name: Démarrer Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+```
+
+@019
+Q: À quoi sert l'inventaire d'Ansible ?
+C: Lister les serveurs et les ranger en groupes
+W: Stocker l'historique des playbooks déjà exécutés
+W: Recenser les paquets installés sur chaque serveur
+W: Décrire l'état attendu de chaque ressource cloud
+E: L'inventaire, en INI ou en YAML, liste les hôtes et les groupes, comme web ou bdd, avec des variables par hôte ou par groupe. Il peut aussi être dynamique et interroger AWS ou Azure pour trouver les machines selon leurs étiquettes.
+
+@020
+Q: Que signifie become: true dans un playbook ?
+C: Exécuter les tâches avec des droits élevés, par sudo
+W: Transformer le playbook en rôle réutilisable
+W: Créer un utilisateur si celui-ci n'existe pas encore
+W: Rendre la tâche facultative en cas d'erreur
+E: become active l'élévation de privilèges, sudo par défaut, pour les tâches qui modifient le système : installer un paquet, écrire dans /etc. On peut le placer au niveau du play ou d'une seule tâche, ce qui limite les actions faites en root.
+
+@021
+Q: Quelle commande lance un playbook site.yml sur l'inventaire inventaire.ini ?
+C: ansible-playbook -i inventaire.ini site.yml
+W: ansible -i inventaire.ini site.yml --apply
+W: terraform apply -i inventaire.ini site.yml
+W: ansible-galaxy run inventaire.ini site.yml
+E: ansible-playbook exécute un playbook ; -i désigne l'inventaire. La commande ansible seule lance une tâche ponctuelle, par exemple ansible web -m ping. ansible-galaxy installe des rôles et des collections partagés. Terraform n'exécute pas de playbook.
+
+@022
+Q: Pourquoi utiliser le module apt plutôt que la tâche shell « apt-get install -y nginx » ?
+C: Le module est idempotent et signale ses changements
+W: Le module shell n'existe pas sur les serveurs Debian
+W: Le module apt installe les paquets sans accès Internet
+W: La tâche shell s'exécute sur le poste de l'administrateur
+E: Le module apt vérifie l'état du paquet et ne fait rien s'il est déjà installé : le compte rendu indique ok au lieu de changed. Une tâche shell est toujours comptée comme un changement et peut casser l'idempotence. On réserve shell et command aux cas où aucun module ne convient.
+
+@023
+Q: Associer chaque commande Terraform à son effet.
+P: terraform fmt => remet le code au format standard
+P: terraform validate => vérifie la syntaxe et la cohérence
+P: terraform output => affiche les valeurs exposées
+P: terraform show => montre le contenu de l'état ou d'un plan
+E: fmt et validate s'utilisent avant tout plan, souvent dans l'intégration continue. output relit les valeurs exposées sans relancer apply. show affiche l'état courant ou un plan enregistré avec terraform plan -out.
+
+@024
+Q: Pourquoi relire attentivement une ligne « -/+ » dans un plan Terraform ?
+C: La ressource sera détruite puis recréée, avec ses données
+W: La ressource sera seulement renommée, sans autre effet
+W: La ressource sera dupliquée dans une seconde région
+W: La ressource sera ignorée lors du prochain apply
+E: Certains arguments ne se modifient pas sur place, comme le moteur d'une base ou la zone d'une machine : Terraform doit remplacer la ressource. Pour une base de données, cela signifie la perte des données si rien n'est prévu. Le plan indique quel argument force le remplacement.
+
+@025
+Q: Remettre dans l'ordre l'exécution d'un playbook Ansible sur un serveur.
+O: Ansible lit l'inventaire et choisit les hôtes visés
+O: Il se connecte en SSH et collecte les informations du système
+O: Il exécute les tâches dans l'ordre, l'une après l'autre
+O: Il lance les handlers notifiés, puis affiche le compte rendu
+E: La collecte des faits (gather_facts) donne la distribution, les interfaces, la mémoire, utilisables dans les tâches. Les tâches s'enchaînent dans l'ordre, sur plusieurs hôtes en parallèle. Les handlers, comme un redémarrage de service, ne s'exécutent qu'à la fin et une seule fois, s'ils ont été notifiés.
+
+@026
+Q: Que crée ce bloc grâce à count ?
+C: Trois instances, nommées web-0, web-1 et web-2
+W: Une instance qui démarre trois fois de suite
+W: Trois copies de l'image ami-0abc dans le compte
+W: Une instance avec trois processeurs virtuels
+E: count crée autant d'exemplaires de la ressource ; count.index vaut 0, 1 puis 2. On y fait référence avec aws_instance.web[0]. Retirer un élément au milieu décale les index : for_each, qui identifie chaque exemplaire par une clé, évite ces recréations en cascade.
+```hcl
+resource "aws_instance" "web" {
+  count         = 3
+  ami           = "ami-0abc"
+  instance_type = "t3.micro"
+  tags = {
+    Name = "web-${count.index}"
+  }
+}
+```
+
+@027
+Q: Pourquoi préférer for_each à count pour créer un bucket par équipe ?
+C: Chaque bucket est repéré par sa clé, pas par sa position
+W: for_each crée les ressources en parallèle et count une par une
+W: count ne fonctionne qu'avec des machines virtuelles
+W: for_each supprime automatiquement les buckets vides
+E: Avec count, retirer l'équipe du milieu de la liste décale les index : Terraform voudrait détruire et recréer les buckets suivants. Avec for_each sur un ensemble de noms, chaque bucket a son adresse, comme aws_s3_bucket.equipe["compta"], et seul celui retiré est supprimé.
+
+@028
+Q: Combien de ressources ce code crée-t-il ?
+N: 4
+E: for_each parcourt l'ensemble des quatre noms : chaque élément donne une ressource, adressée par sa clé, par exemple aws_s3_bucket.equipe["rh"]. each.key vaut ici le nom de l'équipe. toset transforme la liste en ensemble, ce que for_each exige pour une liste de chaînes.
+```hcl
+resource "aws_s3_bucket" "equipe" {
+  for_each = toset(["rh", "compta", "ventes", "it"])
+  bucket   = "acme-${each.key}"
+}
+```
+
+@029
+Q: À quoi sert un bloc data dans Terraform ?
+C: Lire une ressource existante, sans la gérer ni la modifier
+W: Stocker les données de l'application dans une base gérée
+W: Importer définitivement une ressource dans l'état Terraform
+W: Chiffrer les valeurs sensibles avant leur écriture dans l'état
+E: Une source de données récupère une information existante, comme la dernière image Ubuntu ou un réseau créé par une autre équipe, pour l'utiliser dans la configuration. Terraform la lit à chaque plan mais ne la crée ni ne la supprime. Pour prendre en main une ressource existante, on l'importe.
+
+@030
+Q: Que récupère ce bloc ?
+C: L'image Ubuntu 24.04 la plus récente publiée par Canonical
+W: Une nouvelle image Ubuntu créée à chaque terraform apply
+W: Toutes les images du compte, dont celles d'autres éditeurs
+W: L'image utilisée par la dernière instance lancée à la main
+E: most_recent garde la plus récente des images qui correspondent au filtre de nom ; owners limite aux images publiées par Canonical, dont 099720109477 est le compte. On l'utilise ensuite avec data.aws_ami.ubuntu.id. Attention : une nouvelle image publiée provoque le remplacement des instances qui l'utilisent au prochain apply.
+```hcl
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"]
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+  }
+}
+```
+
+@031
+Q: Pourquoi stocker l'état dans un backend distant, comme un bucket S3 ou un compte de stockage Azure ?
+C: Pour partager l'état et le verrouiller pendant un apply
+W: Pour que Terraform s'exécute plus vite sur le poste local
+W: Pour éviter de télécharger les providers à chaque init
+W: Pour rendre l'état lisible par tout le monde sur Internet
+E: Un backend distant donne à toute l'équipe, et à l'intégration continue, le même état. Le verrouillage empêche deux apply simultanés d'écrire chacun leur version. On active le chiffrement et le versionnage du bucket pour pouvoir revenir à un état antérieur.
+
+@032
+Q: Que configure ce bloc ?
+C: Un état stocké dans S3, chiffré et verrouillé pendant les apply
+W: Un bucket S3 que Terraform crée lors du prochain apply
+W: Une copie locale de l'état synchronisée chaque nuit avec S3
+W: Une table DynamoDB qui remplace le fichier d'état
+E: Le bloc backend indique où stocker l'état ; le bucket doit exister avant terraform init. encrypt chiffre l'état au repos. use_lockfile active le verrouillage par un fichier dans S3, disponible depuis Terraform 1.10 ; les versions antérieures utilisaient une table DynamoDB pour le verrou.
+```hcl
+terraform {
+  backend "s3" {
+    bucket       = "acme-terraform-etat"
+    key          = "production/reseau.tfstate"
+    region       = "eu-west-3"
+    encrypt      = true
+    use_lockfile = true
+  }
+}
+```
+
+@033
+Q: Que se passe-t-il si deux personnes lancent terraform apply en même temps sur un état verrouillé ?
+C: La seconde attend ou échoue tant que le verrou est pris
+W: Les deux apply fusionnent leurs changements dans l'état
+W: La seconde écrase l'état de la première sans prévenir
+W: Terraform répartit les ressources entre les deux personnes
+E: Le premier apply prend le verrou ; le second reçoit une erreur indiquant qui le détient, ou attend avec -lock-timeout. Sans verrou, deux écritures concurrentes peuvent corrompre l'état ou créer des ressources en double. force-unlock existe pour un verrou orphelin après un plantage, à manier avec prudence.
+
+@034
+Q: Pourquoi fixer la version du provider comme ci-dessous ?
+C: Pour accepter les correctifs 5.x sans passer seul à la 6
+W: Pour interdire toute mise à jour, même de correctif
+W: Pour forcer la toute dernière version à chaque init
+W: Pour télécharger le provider sans accès à Internet
+E: L'opérateur ~> 5.0 accepte 5.1, 5.40 ou 5.99 mais pas 6.0, qui peut casser la configuration. Le fichier .terraform.lock.hcl fige ensuite la version exacte choisie ; terraform init -upgrade la fait évoluer volontairement dans la plage autorisée.
+```hcl
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+```
+
+@035
+Q: Qu'est-ce qu'une dérive (drift) de l'infrastructure ?
+C: Un écart entre l'état réel et ce que décrit le code
+W: Un ralentissement du réseau entre deux régions du fournisseur
+W: Une version de Terraform plus ancienne que celle de l'équipe
+W: Un module qui n'est plus maintenu par son auteur
+E: Quelqu'un modifie à la main une règle de pare-feu dans la console : la réalité ne correspond plus au code. Le prochain plan le montre et propose de revenir à l'état décrit. On détecte la dérive par un plan régulier, et on la limite en interdisant les modifications manuelles en production.
+
+@036
+Q: Quelle commande prend en main avec Terraform un bucket créé autrefois à la main ?
+C: terraform import, ou un bloc import, puis du code correspondant
+W: terraform apply, qui retrouve seul les ressources existantes
+W: terraform refresh, qui écrit le code manquant automatiquement
+W: terraform state rm, qui rattache le bucket à la configuration
+E: On écrit le bloc resource correspondant, puis on importe l'identifiant réel dans l'état. Depuis Terraform 1.5, un bloc import dans le code permet de le faire au plan, et terraform plan -generate-config-out propose même le code. Sans import, apply tenterait de créer un second bucket du même nom et échouerait.
+
+@037
+Q: Quelle commande retire une ressource de l'état sans la supprimer réellement ?
+C: terraform state rm
+W: terraform destroy
+W: terraform taint
+W: terraform state mv
+E: state rm fait oublier la ressource à Terraform : elle continue d'exister mais n'est plus gérée, utile pour la confier à une autre configuration. destroy la supprimerait vraiment. taint, remplacé aujourd'hui par apply -replace, forçait sa recréation. state mv la renomme ou la déplace dans l'état.
+
+@038
+Q: Comment forcer la recréation d'une seule instance défaillante avec Terraform ?
+C: terraform apply -replace="aws_instance.web[1]"
+W: terraform destroy puis réécrire toute la configuration
+W: terraform state rm aws_instance.web[1]
+W: terraform plan -refresh-only sur l'instance
+E: -replace marque la ressource pour qu'elle soit détruite et recréée au prochain apply, sans toucher au reste. state rm ferait oublier l'instance sans la remplacer. -refresh-only met seulement l'état à jour à partir de la réalité.
+
+@039
+Q: Pourquoi déclarer une sortie ou une variable avec sensitive = true ?
+C: Pour masquer sa valeur dans les plans et les journaux
+W: Pour chiffrer la valeur dans le fichier d'état
+W: Pour interdire sa lecture par les autres modules
+W: Pour la faire disparaître de l'état après l'apply
+E: Terraform remplace la valeur par (sensitive value) dans la sortie de plan et d'apply, ce qui évite de la voir apparaître dans les journaux de l'intégration continue. Elle reste en clair dans l'état : c'est pourquoi l'état doit être stocké chiffré et son accès limité.
+
+@040
+Q: Que fait cette tâche Ansible à chaque modification du fichier de configuration ?
+C: Elle copie le fichier, puis Nginx est rechargé par le handler
+W: Elle recharge Nginx à chaque exécution, même sans changement
+W: Elle copie le fichier sans jamais recharger le service
+W: Elle supprime le fichier existant et arrête Nginx
+E: notify n'appelle le handler que si la tâche a réellement changé quelque chose : fichier modifié, Nginx rechargé ; fichier identique, rien ne se passe. Les handlers s'exécutent à la fin du play, une seule fois même si plusieurs tâches les notifient.
+```yaml
+tasks:
+  - name: Configuration du site
+    ansible.builtin.template:
+      src: site.conf.j2
+      dest: /etc/nginx/conf.d/site.conf
+    notify: Recharger Nginx
+
+handlers:
+  - name: Recharger Nginx
+    ansible.builtin.service:
+      name: nginx
+      state: reloaded
+```
+
+@041
+Q: À quoi sert un fichier .j2 utilisé par le module template ?
+C: C'est un modèle Jinja2 dont les variables sont remplacées
+W: C'est un fichier Java compilé pour l'agent d'Ansible
+W: C'est une archive contenant plusieurs rôles Ansible
+W: C'est un journal des tâches exécutées sur le serveur
+E: Le module template lit le modèle, remplace {{ variable }} par les valeurs de l'inventaire ou des variables, évalue les boucles et conditions, puis écrit le résultat sur le serveur. Un même modèle produit ainsi une configuration adaptée à chaque hôte ou environnement.
+
+@042
+Q: Que fait cette ligne d'un modèle Jinja2 si http_port vaut 8080 ?
+C: Elle produit « listen 8080; »
+W: Elle produit « listen {{ http_port }}; »
+W: Elle produit « listen http_port; »
+W: Elle provoque une erreur de syntaxe Nginx
+E: Les doubles accolades sont remplacées par la valeur de la variable au moment où le module template écrit le fichier. La configuration générée contient donc listen 8080;. Si la variable n'est définie nulle part, Ansible arrête la tâche avec une erreur.
+```
+listen {{ http_port }};
+```
+
+@043
+Q: Qu'est-ce qu'un rôle Ansible ?
+C: Une arborescence réutilisable de tâches et de modèles
+W: Un utilisateur Linux créé par Ansible pour se connecter
+W: Un groupe de serveurs défini dans l'inventaire
+W: Le droit d'exécuter un playbook sur la production
+E: Un rôle range les tâches dans tasks/, les modèles dans templates/, les valeurs par défaut dans defaults/, les handlers dans handlers/. Un playbook l'applique en une ligne. On le partage entre projets ou on récupère ceux de la communauté avec ansible-galaxy.
+
+@044
+Q: Comment Ansible protège-t-il un mot de passe stocké dans un fichier de variables du dépôt ?
+C: Avec ansible-vault, qui chiffre le fichier
+W: Avec become, qui cache les variables sensibles
+W: Avec l'inventaire, qui ne transmet pas les secrets
+W: Avec gather_facts, qui masque les mots de passe
+E: ansible-vault chiffre un fichier ou une valeur avec un mot de passe ou une clé ; le dépôt peut alors contenir le fichier chiffré. Au lancement, on fournit le mot de passe du coffre, par exemple avec --ask-vault-pass ou un fichier protégé. Une autre option est de lire les secrets depuis un coffre externe.
+
+@045
+Q: Que fait l'option --check de ansible-playbook ?
+C: Elle simule l'exécution et montre ce qui changerait
+W: Elle vérifie que la syntaxe YAML est correcte, sans rien d'autre
+W: Elle applique les changements puis les annule automatiquement
+W: Elle teste la connexion SSH sans lancer aucune tâche
+E: En mode check, les modules qui le permettent indiquent ce qu'ils changeraient sans agir, un peu comme terraform plan. Avec --diff, on voit en plus les lignes modifiées dans les fichiers. Certaines tâches shell ne savent pas simuler et sont sautées.
+
+@046
+Q: Pourquoi séparer les environnements de test et de production dans des états Terraform différents ?
+C: Une erreur en test ne peut pas toucher la production
+W: Terraform ne gère qu'un seul environnement par compte
+W: Un même état ne peut pas contenir plus de cent ressources
+W: Les providers diffèrent toujours entre test et production
+E: Avec un état par environnement, un apply raté sur le test ou un destroy mal ciblé n'affecte pas la production. On sépare par dossiers appelant les mêmes modules, ou par workspaces. Beaucoup d'équipes isolent aussi les comptes cloud, avec des droits différents pour chaque environnement.
+
+@047
+Q: Associer chaque emplacement d'un projet Terraform à son contenu habituel.
+P: main.tf => les ressources principales
+P: variables.tf => les déclarations de variables
+P: outputs.tf => les valeurs exposées
+P: terraform.tfvars => les valeurs des variables d'un environnement
+E: Ce découpage est une convention, Terraform lit tous les .tf d'un dossier ensemble. Elle aide à s'y retrouver. Un fichier .tfvars qui contient des secrets ne doit pas être versionné ; on les passe plutôt par des variables d'environnement ou un coffre.
+
+@048
+Q: Quelle valeur prend environnement dans ce code si on lance terraform apply -var="environnement=prod" ?
+C: prod
+W: test
+W: prod et test, selon le module
+W: Une erreur, la valeur par défaut est obligatoire
+E: Une valeur passée en ligne de commande remplace la valeur par défaut. L'ordre de priorité va de la valeur par défaut, aux fichiers .tfvars, puis aux options -var ou -var-file, les dernières l'emportant. Une variable sans valeur par défaut doit recevoir une valeur, sinon Terraform la demande.
+```hcl
+variable "environnement" {
+  type    = string
+  default = "test"
+}
+```
+
+@049
+Q: Pourquoi le bloc validation de cette variable est-il utile ?
+C: Elle refuse une valeur hors liste dès le plan
+W: Elle remplace la valeur saisie par la plus proche de la liste
+W: Elle crée automatiquement les trois environnements à la fois
+W: Elle empêche la variable d'être modifiée par l'équipe
+E: Une faute de frappe comme « prd » est rejetée avant toute modification, avec le message d'erreur indiqué. contains vérifie que la valeur fait partie de la liste. Ces contrôles évitent des ressources mal nommées ou déployées dans le mauvais environnement.
+```hcl
+variable "environnement" {
+  type = string
+  validation {
+    condition     = contains(["test", "recette", "prod"], var.environnement)
+    error_message = "Environnement inconnu."
+  }
+}
+```
+
+@050
+Q: Que fait l'option -auto-approve de terraform apply ?
+C: Elle applique le plan sans demander de confirmation
+W: Elle approuve la facture du fournisseur à la place du client
+W: Elle valide la syntaxe avant d'appliquer les changements
+W: Elle relance apply automatiquement en cas d'échec
+E: Sans l'option, apply affiche le plan et attend « yes ». -auto-approve sert dans une chaîne automatisée, de préférence en appliquant un plan enregistré et relu auparavant (terraform apply plan.out). Sur un poste, l'utiliser par habitude fait sauter le dernier garde-fou.

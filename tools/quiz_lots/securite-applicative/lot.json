@@ -1,0 +1,38 @@
+{
+  "lot": 1,
+  "seed": 2026101607,
+  "skills": ["OWASP", "sécurité applicative", "pentest", "XSS", "injection SQL"],
+  "schemas": [
+    {
+      "name": "securite-parades.svg",
+      "questions": ["021", "045"],
+      "diagram": {
+        "title": "Défense en profondeur d'une application web",
+        "nodes": [
+          "HTTPS et HSTS",
+          "Pare-feu applicatif",
+          "Contrôle d'accès côté serveur",
+          "Requêtes paramétrées",
+          "Compte de base limité"
+        ],
+        "note": "Si une barrière cède, les suivantes limitent les dégâts"
+      }
+    },
+    {
+      "name": "securite-stride.svg",
+      "questions": ["090", "091"],
+      "diagram": {
+        "title": "STRIDE",
+        "nodes": [
+          "Usurpation",
+          "Falsification",
+          "Répudiation",
+          "Fuite d'informations",
+          "Déni de service",
+          "Élévation de privilèges"
+        ],
+        "note": "Une liste pour se demander ce qui peut mal tourner"
+      }
+    }
+  ]
+}

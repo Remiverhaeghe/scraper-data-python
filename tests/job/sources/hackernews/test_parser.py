@@ -119,3 +119,62 @@ def test_parse_jobs_ignores_deleted_comments():
 
     assert list(rJobs.columns) == JOB_COLUMNS
     assert rJobs["source_id"].tolist() == ["49922609"]
+
+
+def test_parse_jobs_keeps_only_job_posts():
+    """Vérifie que les remarques, candidatures et publicités du fil sont écartées."""
+
+    vComments = [
+        build_comment(id=1),
+        build_comment(id=2, text="there used to be 800+ posts here :("),
+        build_comment(
+            id=3,
+            text="So people are basically only interested in hiring seniors ?",
+        ),
+        build_comment(
+            id=4,
+            text="We're hiring software engineers at the IRS!<p>Apply online.</p>",
+        ),
+        build_comment(
+            id=5,
+            text="Company: esumry.com<br>Location: Austin TX<p>Role: Backend Engineer</p>",
+        ),
+    ]
+
+    vJobs = parse_jobs(vComments)
+
+    assert vJobs["source_id"].tolist() == ["1", "4", "5"]
+
+
+def test_parse_job_reads_labeled_header():
+    """Vérifie un en-tête en lignes « Company: » et « Location: »."""
+
+    rJob = parse_job(
+        build_comment(
+            text="Company: esumry.com\nLocation: West Austin TX ONSITE"
+            "<p>Role: Senior Backend Engineer</p><p>Python, Postgres.</p>"
+        )
+    )
+
+    assert (rJob["company"], rJob["location"], rJob["title"]) == (
+        "esumry.com",
+        "West Austin TX ONSITE",
+        "Senior Backend Engineer",
+    )
+
+
+def test_parse_job_finds_location_and_role_out_of_place():
+    """Vérifie un lieu à la place du poste, et un poste nommé dans le texte."""
+
+    rJob = parse_job(
+        build_comment(
+            text="Mechanize | San Francisco, CA (Onsite)"
+            "<p>Founding Software Engineer</p><p>We build tools.</p>"
+        )
+    )
+
+    assert (rJob["company"], rJob["location"], rJob["title"]) == (
+        "Mechanize",
+        "San Francisco, CA (Onsite)",
+        "Founding Software Engineer",
+    )

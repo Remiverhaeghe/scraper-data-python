@@ -119,6 +119,7 @@ SKILLS = {
     "SQL": r"\bsql\b",
     "PostgreSQL": r"postgre(?:s|sql)",
     "MySQL": r"mysql",
+    "SQL Server": r"\bsql\s*server\b|\bmssql\b",
     "MongoDB": r"mongo(?:db)?",
     "React": r"\breact(?:\.js|js)?\b",
     "Angular": r"\bangular\b",

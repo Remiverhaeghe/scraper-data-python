@@ -34,6 +34,10 @@ logger = get_logger(__name__)
 CHART_SKILLS = 10
 CHART_HEIGHT = 260
 
+# Marge verticale d'une cellule (QTableView::item dans theme.qss : 6 px en haut
+# et en bas, plus la bordure) : elle s'applique aussi au bouton placé dedans.
+CELL_PADDING = 16
+
 COLUMNS = (
     "Compétence",
     "Offres",
@@ -202,6 +206,10 @@ class SkillsPage(QWidget):
             for vColumn, vText in enumerate(vTexts):
                 self.table.setItem(vRow, vColumn, QTableWidgetItem(vText))
 
+            self.table.item(vRow, 0).setIcon(
+                get_icon(vSkill["icon"], COLORS["primary"], 16)
+            )
+
             vStatus = QTableWidgetItem(get_icon(vIcon, COLORS[vTone], 16), vLabel)
             vStatus.setForeground(QColor(COLORS[vTone]))
             self.table.setItem(vRow, 5, vStatus)
@@ -209,6 +217,24 @@ class SkillsPage(QWidget):
 
         # Toutes les lignes visibles : c'est la page qui défile, pas le tableau.
         self.table.resizeRowsToContents()
+
+        # La hauteur calculée ne tient compte que du texte : le bouton serait rogné.
+        # Il est mesuré une fois sa feuille de style appliquée, marges comprises.
+        for vRow in range(len(pRows)):
+            vCell = self.table.cellWidget(vRow, 6)
+            vCell.ensurePolished()
+
+            for vChild in vCell.findChildren(QWidget):
+                vChild.ensurePolished()
+
+            self.table.setRowHeight(
+                vRow,
+                max(
+                    self.table.rowHeight(vRow),
+                    vCell.sizeHint().height() + CELL_PADDING,
+                ),
+            )
+
         self.table.setFixedHeight(
             self.table.horizontalHeader().sizeHint().height()
             + sum(self.table.rowHeight(vRow) for vRow in range(len(pRows)))

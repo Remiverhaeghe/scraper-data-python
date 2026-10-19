@@ -1432,6 +1432,49 @@ textarea.companies-preferred {
     font-size: 1rem;
 }
 
+/* Cartes titrées repliables : chevron ajouté au titre par forms.js */
+.card-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.card-toggle {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    margin-left: auto;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.card-toggle::before {
+    display: block;
+    width: 8px;
+    height: 8px;
+    margin: 0 auto;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    content: "";
+    transform: rotate(-135deg);
+    transition: transform 0.2s;
+}
+
+.card-toggle:hover {
+    background: var(--surface-alt);
+}
+
+.card.is-collapsed .card-toggle::before {
+    transform: rotate(45deg);
+}
+
+.card.is-collapsed > :not(h2) {
+    display: none;
+}
+
 /* Blocs repliables : titre cliquable et chevron, état gardé par forms.js */
 .collapsible > summary {
     display: flex;

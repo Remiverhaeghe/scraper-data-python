@@ -49,3 +49,23 @@ def test_skills_page_shows_rows_and_actions(qt_application, tmp_path):
 
     assert vRevised == ["python"]
     assert vPrepared == ["Cloud et infrastructure (AWS, Azure)"]
+
+
+def test_skills_rows_fit_their_button(qt_application, tmp_path):
+    """Vérifie que chaque ligne est assez haute pour son bouton d'action."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [{"source": "a", "source_id": "1", "title": "Dev", "skills": '["AWS"]'}]
+        ),
+        datetime(2026, 10, 16),
+    )
+
+    vPage = SkillsPage(vDatabaseFile)
+    vPage.refresh()
+
+    assert vPage.table.rowHeight(0) >= vPage.table.cellWidget(0, 6).sizeHint().height()

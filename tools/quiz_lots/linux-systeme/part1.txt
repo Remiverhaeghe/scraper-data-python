@@ -1,0 +1,431 @@
+@001
+Q: Associer chaque commande à son rôle.
+P: pwd => afficher le dossier courant
+P: ls -l => lister les fichiers avec leurs détails
+P: cd /var/log => aller dans le dossier des journaux
+P: mkdir sauvegardes => créer un dossier
+E: pwd (print working directory) dit où l'on est ; ls -l affiche droits, propriétaire, taille et date ; cd change de dossier ; mkdir en crée un, mkdir -p crée aussi les dossiers parents manquants. Ces quatre commandes servent à chaque connexion sur un serveur.
+
+@002
+Q: Que désigne le chemin ~/rapports ?
+C: Le dossier rapports du dossier personnel
+W: Le dossier rapports à la racine du système de fichiers
+W: Un dossier caché nommé ~rapports dans le dossier courant
+W: Le dossier rapports de l'utilisateur root uniquement
+E: Le tilde est remplacé par le shell par le dossier personnel, par exemple /home/alice. Un chemin qui commence par / part de la racine ; un chemin sans / part du dossier courant. Les fichiers cachés commencent par un point, comme ~/.bashrc.
+
+@003
+Q: Quelle commande affiche les 20 dernières lignes d'un journal et continue d'afficher les nouvelles ?
+C: tail -n 20 -f /var/log/syslog
+W: head -n 20 -f /var/log/syslog
+W: cat -n 20 /var/log/syslog
+W: less -20 /var/log/syslog
+E: tail affiche la fin d'un fichier, -n 20 le nombre de lignes, -f suit l'ajout des nouvelles lignes jusqu'à Ctrl+C. head affiche le début ; cat tout le fichier ; less permet de parcourir, et Maj+F y suit aussi le fichier. Sur un système avec systemd, journalctl -f joue le même rôle.
+
+@004
+Q: Que fait la commande grep -i erreur app.log ?
+C: Elle affiche les lignes avec « erreur », casse ignorée
+W: Elle supprime les lignes contenant « erreur » du fichier
+W: Elle compte les fichiers qui contiennent le mot « erreur »
+W: Elle remplace « erreur » par « ERREUR » dans tout le fichier
+E: grep filtre les lignes qui correspondent à un motif ; -i ignore les majuscules, donc ERREUR et Erreur sont trouvées aussi. -c compterait les lignes, -v afficherait celles qui ne correspondent pas, -r chercherait dans tout un dossier. grep ne modifie jamais le fichier.
+
+@005
+Q: Associer chaque élément de la ligne de droits à sa signification.
+P: d => c'est un dossier
+P: rwx => le propriétaire peut lire, écrire et traverser
+P: r-x => le groupe peut lire et traverser
+P: --- => les autres n'ont aucun droit
+E: La ligne drwxr-x--- se lit par blocs : le type, puis trois triplets pour le propriétaire, le groupe et les autres. Sur un dossier, x permet d'y entrer ; sur un fichier, de l'exécuter. Les autres utilisateurs ne peuvent ici ni lister ni ouvrir le dossier.
+
+@006
+Q: Quels droits donne chmod 640 sur un fichier ?
+C: Lecture-écriture au propriétaire, lecture au groupe
+W: Lecture au propriétaire, écriture au groupe, rien aux autres
+W: Tous les droits au propriétaire, lecture au groupe et aux autres
+W: Lecture et écriture à tout le monde, exécution au propriétaire
+E: Chaque chiffre additionne lecture (4), écriture (2) et exécution (1) : 6 = 4 + 2 pour le propriétaire, 4 pour le groupe, 0 pour les autres. C'est un réglage courant pour un fichier de configuration contenant un mot de passe, lisible par le groupe du service.
+
+@007
+Q: Quelle valeur octale correspond aux droits rwxr-xr-x ?
+N: 755
+E: rwx = 4 + 2 + 1 = 7 pour le propriétaire ; r-x = 4 + 1 = 5 pour le groupe et pour les autres. 755 est le réglage habituel d'un script exécutable ou d'un dossier partagé en lecture. Un fichier de données privé sera plutôt en 600 ou 640.
+
+@008
+Q: Pourquoi ce script ne se lance-t-il pas avec ./sauvegarde.sh ?
+C: Il n'a pas le droit d'exécution, à donner avec chmod +x
+W: Les scripts ne peuvent se lancer qu'avec le compte root
+W: Le nom du fichier ne doit pas contenir de point
+W: Un script doit être placé dans /etc pour s'exécuter
+E: Le droit x manque : le shell répond « Permission non accordée ». chmod +x sauvegarde.sh l'ajoute, ou on lance bash sauvegarde.sh. Le ./ indique de chercher le script dans le dossier courant, qui n'est pas dans le PATH.
+```
+$ ls -l sauvegarde.sh
+-rw-r--r-- 1 alice alice 312 oct. 16 09:12 sauvegarde.sh
+```
+
+@009
+Q: À quoi sert sudo ?
+C: Lancer une commande avec d'autres droits, root par défaut
+W: Se connecter à un serveur distant de manière chiffrée
+W: Afficher la liste des utilisateurs connectés au système
+W: Créer un nouvel utilisateur et lui donner un mot de passe
+E: sudo exécute une seule commande en root si l'utilisateur y est autorisé dans /etc/sudoers, et journalise l'action. On évite ainsi de travailler en permanence en root. ssh connecte à un serveur distant, who liste les sessions, useradd crée un compte.
+
+@010
+Q: Que fait le caractère | entre deux commandes ?
+C: Il envoie la sortie de la première commande à l'entrée de la seconde
+W: Il lance les deux commandes en même temps, sans lien entre elles
+W: Il exécute la seconde commande seulement si la première échoue
+W: Il écrit la sortie de la première commande dans un fichier
+E: Le tube (pipe) enchaîne des commandes simples : ps aux | grep nginx filtre la liste des processus. C'est l'idée centrale du shell Unix. || exécute la seconde commande en cas d'échec, > écrit dans un fichier, & lance en arrière-plan.
+
+@011
+Q: Quelle différence entre > et >> dans une commande ?
+C: > écrase le fichier, >> ajoute à la fin
+W: > ajoute à la fin, >> écrase le fichier
+W: > écrit les erreurs, >> écrit la sortie normale
+W: Les deux sont identiques, >> est une ancienne écriture
+E: echo "texte" > notes.txt remplace tout le contenu ; echo "texte" >> notes.txt ajoute une ligne. Une redirection > dirigée par erreur vers un fichier important le vide aussitôt : le réglage set -o noclobber protège contre cette erreur.
+
+@012
+Q: Que fait cette commande ?
+C: Elle compte le nombre de lignes du fichier acces.log
+W: Elle compte le nombre de mots du fichier acces.log
+W: Elle affiche la dernière ligne du fichier acces.log
+W: Elle supprime les lignes vides du fichier acces.log
+E: wc (word count) compte lignes, mots et octets ; -l limite aux lignes. Pour un journal d'accès, une ligne correspond à une requête : cette commande donne donc le nombre de requêtes du fichier. wc -w compterait les mots.
+```
+wc -l acces.log
+```
+
+@013
+Q: Quelle commande affiche l'espace libre sur les systèmes de fichiers, en unités lisibles ?
+C: df -h
+W: du -h
+W: free -h
+W: ls -h
+E: df (disk free) donne la taille, l'espace utilisé et libre de chaque système de fichiers ; -h affiche en Go et Mo. du mesure la place occupée par un dossier, free la mémoire vive. Un disque plein à 100 % est une cause fréquente de panne de service.
+
+@014
+Q: Quelle commande montre quels dossiers occupent le plus de place dans /var ?
+C: du -sh /var/* | sort -h
+W: df -h /var
+W: ls -lh /var
+W: free -h /var
+E: du -s donne le total de chaque élément, -h en unités lisibles, et sort -h trie ces tailles du plus petit au plus grand. On trouve ainsi le dossier qui a grossi, souvent des journaux. df indique seulement que le disque est plein, pas ce qui le remplit.
+
+@015
+Q: Que fait la commande systemctl status nginx ?
+C: Elle affiche l'état du service et ses derniers messages
+W: Elle redémarre le service, puis affiche son état
+W: Elle installe le service s'il est absent du serveur
+W: Elle supprime le service et sa configuration
+E: status indique si le service est actif, depuis quand, son processus principal et ses dernières lignes de journal. start, stop et restart le pilotent ; enable le lance au démarrage du système. C'est la première commande à taper quand un service ne répond plus.
+
+@016
+Q: Associer chaque commande systemctl à son effet.
+P: systemctl start => démarrer le service maintenant
+P: systemctl enable => le lancer à chaque démarrage du système
+P: systemctl restart => l'arrêter puis le relancer
+P: systemctl reload => relire sa configuration sans l'arrêter
+E: start et enable sont indépendants : un service peut être démarré sans l'être au prochain démarrage, et l'inverse. enable --now fait les deux. reload évite une coupure quand le service le permet, comme Nginx ; restart coupe les connexions en cours.
+
+@017
+Q: Quelle commande affiche les processus en cours avec leur consommation, mise à jour en continu ?
+C: top
+W: ps
+W: kill
+W: jobs
+E: top affiche en temps réel les processus triés par processeur, avec la mémoire et la charge du système ; htop en est une version plus lisible. ps donne une photo à un instant, kill envoie un signal à un processus, jobs liste les tâches du shell courant.
+
+@018
+Q: Que fait la commande kill 4321 ?
+C: Elle demande poliment au processus 4321 de s'arrêter
+W: Elle arrête immédiatement le processus 4321 sans qu'il puisse réagir
+W: Elle supprime le fichier exécutable du processus 4321
+W: Elle redémarre le processus 4321 avec les mêmes options
+E: Par défaut, kill envoie le signal TERM : le programme peut finir proprement, fermer ses fichiers, libérer ses ressources. Si rien ne se passe, kill -9 envoie KILL, qui l'arrête brutalement sans nettoyage. On réserve -9 au dernier recours.
+
+@019
+Q: Comment se connecter en SSH au serveur 192.0.2.10 avec l'utilisateur deploy ?
+C: ssh deploy@192.0.2.10
+W: ssh 192.0.2.10@deploy
+W: ssh -u deploy 192.0.2.10:22
+W: sftp deploy 192.0.2.10
+E: La forme utilisateur@hôte est la plus courante ; -p précise un autre port que 22. sftp sert au transfert de fichiers interactif. On préfère une authentification par clé, plus sûre et plus pratique qu'un mot de passe.
+
+@020
+Q: Pourquoi se connecter en SSH avec une clé plutôt qu'avec un mot de passe ?
+C: Une clé ne se devine pas, et la partie privée ne quitte jamais le poste
+W: La clé est envoyée au serveur à chaque connexion pour vérification
+W: Les clés permettent de se connecter sans aucune vérification du serveur
+W: Les mots de passe ne fonctionnent pas avec le protocole SSH
+E: Le serveur garde la clé publique dans ~/.ssh/authorized_keys ; le client prouve qu'il détient la clé privée sans la transmettre. Les robots qui essaient des mots de passe n'ont aucune prise. On protège la clé privée par une phrase de passe et on désactive l'authentification par mot de passe.
+
+@021
+Q: Quelle commande copie le fichier rapport.pdf vers le dossier /tmp d'un serveur distant ?
+C: scp rapport.pdf deploy@192.0.2.10:/tmp/
+W: cp rapport.pdf deploy@192.0.2.10:/tmp/
+W: ssh rapport.pdf deploy@192.0.2.10 /tmp/
+W: mv rapport.pdf /tmp/ deploy@192.0.2.10
+E: scp copie par SSH, avec la même authentification. cp et mv ne travaillent qu'en local. Pour synchroniser des dossiers entiers en ne transférant que les différences, rsync -av est plus efficace et peut reprendre un transfert interrompu.
+
+@022
+Q: Que fait la ligne #!/bin/bash au début d'un script ?
+C: Elle indique l'interpréteur qui exécutera le script
+W: Elle met en commentaire tout le reste du fichier
+W: Elle donne les droits root au script au lancement
+W: Elle charge les variables de l'utilisateur courant
+E: Le shebang dit au système quel programme lancer pour exécuter le fichier : /bin/bash, /usr/bin/env python3, etc. Sans lui, le script est lancé par le shell courant, qui n'est pas forcément bash. Il ne donne aucun droit particulier.
+
+@023
+Q: Qu'affiche ce script ?
+C: Bonjour alice
+W: Bonjour $nom
+W: Bonjour nom
+W: Rien, la variable n'est pas définie
+E: On affecte une variable sans espace autour du signe =, et on la lit avec $nom. Les guillemets doubles laissent le shell remplacer la variable ; des guillemets simples afficheraient Bonjour $nom tel quel. nom = alice, avec des espaces, provoquerait une erreur.
+```bash
+nom=alice
+echo "Bonjour $nom"
+```
+
+@024
+Q: Que contient la variable $? juste après une commande ?
+C: Le code de retour, 0 si tout va bien
+W: Le nombre d'arguments passés au script
+W: L'identifiant du processus de la commande
+W: Le texte affiché par la commande
+E: Par convention, une commande renvoie 0 si elle a réussi et un autre nombre en cas d'erreur. Les scripts s'en servent pour décider de la suite, et && enchaîne une commande seulement si la précédente a réussi. $# donne le nombre d'arguments, $$ l'identifiant du shell.
+
+@025
+Q: Que fait cmd1 && cmd2 ?
+C: Elle lance cmd2 seulement si cmd1 a réussi
+W: Elle lance cmd2 seulement si cmd1 a échoué
+W: Elle lance les deux commandes en parallèle
+W: Elle envoie la sortie de cmd1 vers cmd2
+E: && teste le code de retour : apt update && apt upgrade ne met à jour que si la liste des paquets a été rafraîchie. || fait l'inverse, ; enchaîne sans condition, | relie la sortie à l'entrée. C'est une façon compacte d'écrire une condition.
+
+@026
+Q: Que fait ce script sauvegarde.sh lancé avec ./sauvegarde.sh /srv/app ?
+C: Il crée une archive datée du dossier passé en argument
+W: Il supprime le dossier passé en argument après l'avoir lu
+W: Il copie le script lui-même dans le dossier /srv/app
+W: Il affiche le contenu du dossier sans rien créer
+E: $1 contient le premier argument, ici /srv/app ; $(date +%F) insère la date du jour au format 2026-10-16. tar -czf crée une archive compressée. set -e arrête le script à la première erreur, ce qui évite de continuer sur une archive incomplète.
+```bash
+#!/bin/bash
+set -e
+dossier="$1"
+tar -czf "/sauvegardes/app-$(date +%F).tar.gz" "$dossier"
+```
+
+@027
+Q: Pourquoi entourer "$dossier" de guillemets dans un script ?
+C: Pour qu'un chemin avec espaces reste un seul argument
+W: Pour que la variable soit lue plus vite par le shell
+W: Pour empêcher le script de modifier la variable
+W: Pour transformer le chemin en chemin absolu
+E: Sans guillemets, /srv/mes documents serait coupé en deux arguments, /srv/mes et documents, avec des effets imprévus, y compris sur un rm. Mettre les variables entre guillemets doubles est le premier réflexe d'un script robuste ; shellcheck signale les oublis.
+
+@028
+Q: Que fait cette boucle ?
+C: Elle compresse chacun des fichiers .log du dossier courant
+W: Elle compresse le dossier courant en un seul fichier .log
+W: Elle affiche le nom des fichiers .log sans les modifier
+W: Elle supprime les fichiers .log qui sont vides
+E: Le motif *.log est remplacé par la liste des fichiers correspondants ; la boucle traite chacun, et gzip le remplace par sa version compressée .log.gz. Les guillemets autour de "$f" protègent les noms qui contiendraient des espaces.
+```bash
+for f in *.log; do
+  gzip "$f"
+done
+```
+
+@029
+Q: Que fait la commande find /var/log -name "*.gz" -mtime +30 ?
+C: Elle liste les archives .gz de plus de 30 jours
+W: Elle supprime les archives .gz de plus de 30 jours
+W: Elle liste les archives .gz de moins de 30 jours
+W: Elle compresse les fichiers modifiés depuis 30 jours
+E: find parcourt l'arborescence ; -name filtre sur le nom, -mtime +30 garde les fichiers modifiés il y a plus de 30 jours. Ajouter -delete les supprimerait : on vérifie toujours la liste avant d'ajouter cette option. logrotate fait ce ménage automatiquement pour les journaux.
+
+@030
+Q: Qu'affiche cette commande à partir de /etc/passwd ?
+C: Le nom de chaque utilisateur, un par ligne
+W: Le mot de passe de chaque utilisateur, en clair
+W: Le nombre total d'utilisateurs du système
+W: Le dossier personnel de chaque utilisateur
+E: cut découpe chaque ligne selon le séparateur « : » et garde le premier champ, le nom d'utilisateur. /etc/passwd ne contient plus de mot de passe depuis longtemps : les empreintes sont dans /etc/shadow, lisible par root seulement. -f6 donnerait le dossier personnel.
+```
+cut -d: -f1 /etc/passwd
+```
+
+@031
+Q: Combien de lignes contient /var/log/nginx/access.log si cette commande renvoie 1532 ?
+N: 1532
+E: wc -l compte les fins de ligne du flux qu'il reçoit ; cat transmet le fichier tel quel. wc -l < access.log, ou wc -l access.log, donnent le même compte sans passer par cat. Pour un journal d'accès, c'est le nombre de requêtes enregistrées dans ce fichier.
+```
+cat /var/log/nginx/access.log | wc -l
+```
+
+@032
+Q: Que fait cette commande sur un journal d'accès Nginx ?
+C: Elle liste les dix adresses IP qui font le plus de requêtes
+W: Elle supprime les dix adresses IP les plus actives du journal
+W: Elle affiche les dix dernières lignes du journal d'accès
+W: Elle bloque les dix adresses IP qui font le plus de requêtes
+E: awk extrait le premier champ, l'adresse IP ; sort regroupe les identiques ; uniq -c compte chaque adresse ; sort -rn trie par nombre décroissant ; head garde les dix premières. Cet enchaînement repère en quelques secondes un robot ou une attaque dans un journal.
+```
+awk '{print $1}' access.log | sort | uniq -c | sort -rn | head
+```
+
+@033
+Q: Quelle commande remplace « http:// » par « https:// » dans tout le fichier config.ini, sur place ?
+C: sed -i 's#http://#https://#g' config.ini
+W: grep -i 's#http://#https://#g' config.ini
+W: awk -i 'http://' 'https://' config.ini
+W: cut -i 's#http://#https://#g' config.ini
+E: sed applique une substitution s/ancien/nouveau/ ; g remplace toutes les occurrences de chaque ligne ; -i modifie le fichier sur place. Le séparateur # évite d'échapper les barres obliques. On teste d'abord sans -i, ou avec -i.bak pour garder une copie.
+
+@034
+Q: À quoi sert le fichier /etc/fstab ?
+C: Décrire les systèmes de fichiers à monter au démarrage
+W: Lister les utilisateurs autorisés à utiliser sudo
+W: Configurer l'adresse IP de chaque interface réseau
+W: Planifier les tâches à exécuter à heure fixe
+E: Chaque ligne indique un disque ou un partage, son point de montage, son type et ses options. Une erreur dans fstab peut empêcher le serveur de démarrer : on vérifie avec mount -a, et on utilise l'option nofail pour un disque non indispensable. sudo se règle dans /etc/sudoers.
+
+@035
+Q: Que fait cette ligne de crontab ?
+C: Elle lance la sauvegarde chaque jour à 2 h 30
+W: Elle lance la sauvegarde toutes les 30 minutes
+W: Elle lance la sauvegarde le 2 du mois à 30 minutes
+W: Elle lance la sauvegarde le 30 de chaque mois
+E: Les cinq champs sont minute, heure, jour du mois, mois et jour de la semaine : 30 2 * * * signifie 2 h 30 tous les jours. La sortie est ajoutée au journal, et 2>&1 y envoie aussi les erreurs, sinon cron les envoie par courrier, souvent perdu.
+```
+30 2 * * * /opt/scripts/sauvegarde.sh >> /var/log/sauvegarde.log 2>&1
+```
+
+@036
+Q: Quelle expression cron déclenche une tâche toutes les 15 minutes ?
+C: */15 * * * *
+W: 15 * * * *
+W: * 15 * * *
+W: 0 */15 * * *
+E: */15 dans le champ des minutes signifie toutes les 15 minutes : 0, 15, 30, 45. 15 * * * * lance à la minute 15 de chaque heure seulement ; * 15 * * * chaque minute de 15 h à 15 h 59. Le site crontab.guru aide à vérifier une expression.
+
+@037
+Q: Que signifie 2>&1 à la fin d'une commande ?
+C: Envoyer les erreurs au même endroit que la sortie normale
+W: Lancer la commande deux fois de suite
+W: Ignorer les erreurs et les supprimer
+W: Envoyer la sortie normale vers les erreurs uniquement
+E: Le descripteur 1 est la sortie standard, 2 la sortie d'erreur. 2>&1 redirige les erreurs vers l'endroit où va déjà la sortie : un fichier de journal, par exemple. 2>/dev/null, lui, jetterait les erreurs.
+
+@038
+Q: Que fait la commande journalctl -u nginx --since today ?
+C: Elle affiche les messages du service nginx depuis minuit
+W: Elle supprime les messages du service nginx du jour
+W: Elle affiche les messages de tous les services sauf nginx
+W: Elle redémarre nginx et affiche ses messages
+E: journalctl lit le journal de systemd ; -u filtre sur une unité, --since sur une date ou une durée comme « 1 hour ago ». -f suit les nouveaux messages, -p err ne garde que les erreurs. C'est souvent plus rapide que de chercher le bon fichier dans /var/log.
+
+@039
+Q: Quelle commande indique quel processus écoute sur le port 8080 ?
+C: ss -ltnp | grep 8080
+W: ping 8080
+W: df -h 8080
+W: chmod 8080
+E: ss liste les sockets : -l celles en écoute, -t en TCP, -n sans résoudre les noms, -p avec le processus. Le grep isole le port. Quand un service refuse de démarrer car « Address already in use », cette commande trouve le coupable. netstat -ltnp, plus ancien, fait la même chose.
+
+@040
+Q: Pourquoi ce serveur répond-il « Permission denied » pour lire /var/log/auth.log ?
+C: Le fichier n'est lisible que par root et le groupe adm
+W: Le fichier est vide, ce qui provoque cette erreur
+W: Le disque est plein et bloque toute lecture
+W: Le fichier est compressé et doit être décompressé
+E: Les droits rw-r----- donnent la lecture au propriétaire root et au groupe adm ; les autres n'ont rien. On lit avec sudo, ou on ajoute l'utilisateur au groupe adm, qui sert à consulter les journaux. Ces journaux contiennent les connexions et ne doivent pas être publics.
+```
+$ ls -l /var/log/auth.log
+-rw-r----- 1 syslog adm 48211 oct. 16 10:02 /var/log/auth.log
+```
+
+@041
+Q: Associer chaque famille de distributions à son gestionnaire de paquets.
+P: Debian et Ubuntu => apt
+P: RHEL, Rocky et Fedora => dnf
+P: Alpine => apk
+P: Arch => pacman
+E: Chaque gestionnaire installe, met à jour et supprime des paquets en gérant leurs dépendances. Les noms de paquets diffèrent parfois d'une famille à l'autre, comme apache2 sous Debian et httpd sous RHEL. Alpine est très répandue dans les images Docker pour sa petite taille.
+
+@042
+Q: Pourquoi lancer apt update avant apt install ?
+C: Pour rafraîchir la liste des paquets
+W: Pour mettre à jour tous les paquets déjà installés
+W: Pour redémarrer le serveur après l'installation
+W: Pour supprimer les paquets qui ne servent plus
+E: apt update télécharge les index des dépôts ; sans lui, apt install peut chercher une version qui n'existe plus et échouer. apt upgrade met à jour les paquets installés, apt autoremove supprime les dépendances inutiles. On combine souvent apt update && apt install -y paquet.
+
+@043
+Q: Que fait la commande chown www-data:www-data /srv/site -R ?
+C: Elle donne le dossier et son contenu à www-data
+W: Elle donne les droits d'écriture à tout le monde sur /srv/site
+W: Elle supprime le dossier /srv/site et le recrée vide
+W: Elle copie /srv/site dans le dossier personnel de www-data
+E: chown change le propriétaire et, après les deux-points, le groupe ; -R s'applique récursivement. Le serveur web, qui tourne sous www-data, peut alors lire et écrire ses fichiers. chmod change les droits, chown change à qui ils s'appliquent.
+
+@044
+Q: Quelle commande crée l'utilisateur deploy avec un dossier personnel ?
+C: useradd -m deploy
+W: usermod -m deploy
+W: passwd -m deploy
+W: groupadd -m deploy
+E: useradd -m crée le compte et son dossier /home/deploy ; on ajoute -s /bin/bash pour le shell, puis passwd deploy pour un mot de passe. Sur Debian, adduser fait tout en mode interactif. usermod modifie un compte existant, groupadd crée un groupe.
+
+@045
+Q: Comment ajouter l'utilisateur alice au groupe docker sans lui retirer ses autres groupes ?
+C: usermod -aG docker alice
+W: usermod -G docker alice
+W: useradd -G docker alice
+W: chgrp docker alice
+E: -G seul remplace la liste des groupes secondaires : alice perdrait sudo, par exemple. -a (append) ajoute sans retirer. Le changement prend effet à la prochaine connexion. Attention, le groupe docker donne en pratique les droits root sur la machine.
+
+@046
+Q: Quel fichier contient les empreintes des mots de passe des utilisateurs ?
+C: /etc/shadow
+W: /etc/passwd
+W: /etc/group
+W: /etc/sudoers
+E: /etc/shadow n'est lisible que par root et contient les empreintes, calculées avec un algorithme comme yescrypt ou SHA-512, ainsi que les règles d'expiration. /etc/passwd liste les comptes, /etc/group les groupes, /etc/sudoers les droits sudo.
+
+@047
+Q: Que fait ln -s /opt/app-2.4 /opt/app ?
+C: Elle crée un lien /opt/app vers /opt/app-2.4
+W: Elle copie /opt/app-2.4 dans un nouveau dossier /opt/app
+W: Elle renomme /opt/app-2.4 en /opt/app
+W: Elle compresse /opt/app-2.4 dans le fichier /opt/app
+E: Un lien symbolique est un raccourci : /opt/app mène à la version 2.4. Pour déployer la 2.5, on change le lien, et on revient en arrière tout aussi vite. Supprimer le lien ne touche pas au dossier cible ; supprimer la cible laisse un lien cassé.
+
+@048
+Q: Que fait la commande tar -xzf archive.tar.gz -C /srv ?
+C: Elle extrait l'archive compressée dans le dossier /srv
+W: Elle crée une archive compressée du dossier /srv
+W: Elle liste le contenu de l'archive sans l'extraire
+W: Elle compresse /srv puis supprime l'original
+E: -x extrait, -z gère la compression gzip, -f désigne le fichier, -C choisit le dossier de destination. -c créerait une archive, -t listerait son contenu. On retient : c pour create, x pour extract, t pour table.
+
+@049
+Q: Que fait la commande ps aux | grep java ?
+C: Elle affiche les processus dont la ligne contient « java »
+W: Elle lance une machine virtuelle Java en arrière-plan
+W: Elle arrête tous les processus Java du serveur
+W: Elle affiche la version de Java installée
+E: ps aux liste tous les processus de tous les utilisateurs avec leur commande ; grep filtre. La ligne du grep lui-même apparaît aussi : pgrep -a java évite ce bruit. java -version afficherait la version installée.
+
+@050
+Q: Remettre dans l'ordre le diagnostic d'un serveur web qui ne répond plus.
+O: Vérifier l'état du service avec systemctl status
+O: Lire ses derniers messages avec journalctl
+O: Vérifier l'espace disque et la mémoire
+O: Corriger la cause, puis redémarrer le service
+E: On commence par le plus direct : le service tourne-t-il, et que dit son journal ? Un disque plein ou une mémoire saturée expliquent souvent un arrêt. Redémarrer sans comprendre fait revenir la panne ; on note la cause pour l'éviter la fois suivante.

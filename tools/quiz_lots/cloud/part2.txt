@@ -1,0 +1,463 @@
+@051
+Q: Que se passe-t-il quand un utilisateur porte ces deux déclarations et tente de supprimer un objet du bucket archives ?
+C: La suppression est refusée : un refus explicite l'emporte toujours
+W: La suppression est acceptée : la première déclaration s'applique seule
+W: La suppression est acceptée car s3:* contient s3:DeleteObject
+W: La politique est rejetée à l'enregistrement car elle se contredit
+E: Dans l'évaluation IAM, un Deny explicite gagne sur n'importe quel Allow, quel que soit l'ordre. Ici l'utilisateur garde tous les autres droits sur S3 mais ne peut pas supprimer dans archives. Ce mécanisme sert à poser des garde-fous qu'aucune autre politique ne peut lever.
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {"Effect": "Allow", "Action": "s3:*", "Resource": "*"},
+    {"Effect": "Deny", "Action": "s3:DeleteObject",
+     "Resource": "arn:aws:s3:::archives/*"}
+  ]
+}
+```
+
+@052
+Q: Un utilisateur sans aucune politique attachée tente de lancer une instance EC2. Que se passe-t-il ?
+C: L'action est refusée : par défaut, rien n'est autorisé
+W: L'action est acceptée : par défaut, tout est autorisé sauf les suppressions
+W: L'action est acceptée pour une petite instance seulement
+W: L'action est mise en attente de validation par le compte racine
+E: IAM part d'un refus implicite : une action n'est permise que si une politique l'autorise explicitement, et aucun refus explicite ne s'y oppose. C'est ce qui rend le moindre privilège possible : on ajoute des droits, on n'en retire pas d'un ensemble ouvert.
+
+@053
+Q: À quoi sert la condition de cette politique ?
+C: Lecture permise seulement depuis 203.0.113.0/24
+W: Elle autorise la lecture depuis partout sauf 203.0.113.0/24
+W: Elle limite la lecture aux objets de moins de 24 mégaoctets
+W: Elle impose le chiffrement des objets lus par l'utilisateur
+E: La clé de condition aws:SourceIp compare l'adresse d'origine de la requête au bloc indiqué : depuis une autre adresse, l'Allow ne s'applique pas et la lecture est refusée. Attention, une requête qui passe par un point de terminaison de VPC n'a pas d'adresse publique : on utilise alors aws:SourceVpce.
+```json
+{
+  "Effect": "Allow",
+  "Action": "s3:GetObject",
+  "Resource": "arn:aws:s3:::rapports/*",
+  "Condition": {"IpAddress": {"aws:SourceIp": "203.0.113.0/24"}}
+}
+```
+
+@054
+Q: Qu'est-ce qu'une identité managée sur Azure ?
+C: Une identité donnée à une ressource, sans secret à stocker
+W: Un compte utilisateur créé et administré par le support d'Azure
+W: Un mot de passe partagé par toutes les applications de l'abonnement
+W: Un certificat à copier sur chaque machine virtuelle à la main
+E: Comme un rôle IAM sur une instance AWS, une identité managée permet à une application Azure d'obtenir des jetons auprès d'Entra ID, par exemple pour lire un Key Vault ou un compte de stockage. Azure gère et renouvelle les identifiants ; on n'attribue que les rôles nécessaires.
+
+@055
+Q: Associer chaque moyen d'authentification d'une application au fournisseur qui le propose.
+P: Rôle IAM porté par une instance => AWS
+P: Identité managée d'une ressource => Azure
+P: Compte de service attaché à une VM => Google Cloud
+E: Les trois mécanismes évitent de stocker une clé : la plateforme fournit à l'application des jetons temporaires. Sur Google Cloud, on évite aussi de télécharger des clés JSON de compte de service, qui finissent trop souvent dans un dépôt. Les droits restent attribués au plus juste.
+
+@056
+Q: Pourquoi utiliser un point de terminaison de VPC (VPC endpoint) pour accéder à S3 depuis des instances privées ?
+C: Le trafic reste sur le réseau du fournisseur et évite la passerelle NAT payante
+W: Il rend le bucket accessible depuis Internet sans authentification
+W: Il copie le bucket dans le VPC pour des lectures plus rapides
+W: Il remplace les politiques IAM par des règles de pare-feu
+E: Sans endpoint, les instances privées joignent S3 par la passerelle NAT, facturée au gigaoctet traité. Un endpoint de type passerelle pour S3 est gratuit et garde le trafic privé. On peut en plus restreindre la politique du bucket aux requêtes qui passent par cet endpoint.
+
+@057
+Q: Deux VPC de la même entreprise doivent communiquer en adresses privées. Quelle condition faut-il vérifier avant de les relier par peering ?
+C: Que leurs plages d'adresses ne se chevauchent pas
+W: Qu'ils utilisent le même type d'instance dans les deux VPC
+W: Qu'ils appartiennent forcément au même compte et à la même région
+W: Qu'ils aient chacun une passerelle Internet active
+E: Le peering relie deux réseaux par routage : si les deux utilisent 10.0.0.0/16, les routes seraient ambiguës et le peering est refusé. D'où l'intérêt d'un plan d'adressage dès le départ. Le peering fonctionne aussi entre comptes et entre régions, et n'a pas besoin d'Internet.
+
+@058
+Q: Combien d'adresses IP contient un sous-réseau en /24, avant les adresses réservées par le fournisseur ?
+N: 256
+E: Un /24 laisse 32 - 24 = 8 bits pour les hôtes, soit 2^8 = 256 adresses. AWS en réserve 5 dans chaque sous-réseau (réseau, routeur, DNS, une réservée, diffusion), il en reste donc 251 utilisables. Un VPC en /16 contient 65 536 adresses à découper en sous-réseaux.
+
+@059
+Q: Quelle différence principale entre un load balancer applicatif (ALB) et un load balancer réseau (NLB) sur AWS ?
+C: L'ALB route le HTTP selon le chemin, le NLB transmet du TCP
+W: L'ALB ne fonctionne qu'en interne, le NLB seulement depuis Internet
+W: L'ALB est gratuit, le NLB est facturé à chaque requête traitée
+W: L'ALB répartit entre zones, le NLB uniquement dans une seule zone
+E: L'ALB travaille en couche 7 : il termine le TLS, route /api vers un groupe et /images vers un autre, ajoute des en-têtes. Le NLB travaille en couche 4, à très faible latence, garde l'adresse IP source et accepte des protocoles non HTTP. Les deux existent en interne ou exposés, et répartissent entre zones.
+
+@060
+Q: Pourquoi le load balancer retire-t-il une instance de la rotation alors qu'elle tourne toujours ?
+C: Elle échoue au contrôle de santé du load balancer
+W: Elle a dépassé la durée maximale de fonctionnement fixée par AWS
+W: Elle consomme moins de processeur que les autres instances
+W: Son adresse IP privée a changé depuis son lancement
+E: Le load balancer interroge régulièrement chaque cible, ici sur /sante, et n'envoie plus de trafic à celle qui répond mal plusieurs fois de suite. Une bonne route de santé vérifie ce dont l'application a besoin, comme la base, sans être trop lourde. Avec Auto Scaling, l'instance malade est ensuite remplacée.
+
+@061
+Q: Pourquoi placer une file de messages (SQS, Service Bus, Pub/Sub) entre un site de commande et le service de facturation ?
+C: Le site prend la commande même si la facturation est en panne
+W: Pour que la facturation traite les commandes dans un ordre aléatoire
+W: Pour supprimer les commandes qui n'ont pas été traitées en une minute
+W: Pour que le site attende la facture avant de répondre au client
+E: La file découple les deux services : le site dépose un message et répond aussitôt ; la facturation consomme à son rythme et reprend après une panne. Les pics de commandes sont absorbés par la file. Il faut en revanche gérer les messages en double et ceux qui échouent, souvent dans une file dédiée.
+
+@062
+Q: Quelle différence entre SQS et SNS sur AWS ?
+C: SQS est une file lue par un consommateur, SNS diffuse un message à plusieurs abonnés
+W: SQS envoie des SMS aux clients, SNS stocke des fichiers volumineux
+W: SQS fonctionne seulement entre régions, SNS seulement dans une région
+W: SQS est réservé aux fonctions Lambda, SNS aux machines virtuelles
+E: Un message de SQS est traité par un seul consommateur puis supprimé ; SNS publie un événement vers tous ses abonnés, files, fonctions, adresses e-mail ou HTTP. On les combine souvent : SNS diffuse « commande créée » vers plusieurs files SQS, une par service intéressé.
+
+@063
+Q: Que fait cette fonction Lambda à chaque fichier déposé dans le bucket qui la déclenche ?
+C: Elle journalise le nom du bucket et la clé de chaque objet reçu
+W: Elle supprime chaque objet aussitôt après l'avoir lu
+W: Elle copie chaque objet dans un autre bucket nommé records
+W: Elle renvoie une erreur car un événement ne contient qu'un objet
+E: Un événement S3 contient une liste Records : souvent un seul élément, mais il faut la parcourir. Chaque élément donne le bucket et la clé de l'objet. Le print part dans les journaux de la fonction, consultables dans CloudWatch Logs. Les droits de lecture sur le bucket viennent du rôle de la fonction.
+```python
+def handler(event, context):
+    for record in event["Records"]:
+        bucket = record["s3"]["bucket"]["name"]
+        key = record["s3"]["object"]["key"]
+        print(f"Nouveau fichier : {bucket}/{key}")
+```
+
+@064
+Q: Qu'est-ce qu'un démarrage à froid (cold start) d'une fonction serverless ?
+C: Le délai de préparation d'un nouvel environnement d'exécution
+W: Le temps nécessaire pour démarrer le centre de données du fournisseur
+W: L'arrêt volontaire de la fonction quand la température monte
+W: La première exécution de la journée, facturée au double du tarif
+E: Quand aucune instance n'est prête, la plateforme crée un environnement, charge le code et ses dépendances, puis initialise le programme : quelques centaines de millisecondes, parfois plus avec une JVM. Les appels suivants réutilisent l'environnement. On réduit l'effet avec un paquet léger ou de la concurrence provisionnée.
+
+@065
+Q: Quelle est la durée maximale d'exécution d'une fonction AWS Lambda ?
+C: 15 minutes
+W: 30 secondes
+W: 1 heure
+W: Sans limite tant que la fonction répond
+E: Une invocation Lambda est arrêtée au-delà de 15 minutes. Un traitement plus long se découpe en étapes, orchestrées par exemple par Step Functions, ou s'exécute dans un conteneur ou un traitement par lots. Une API exposée par API Gateway doit en revanche répondre en 29 secondes par défaut : un long traitement s'y lance de façon asynchrone.
+
+@066
+Q: Associer chaque stratégie de reprise après sinistre à sa description.
+P: Sauvegarde et restauration => tout se reconstruit depuis les sauvegardes
+P: Veilleuse (pilot light) => seule la base est répliquée, le reste démarre au besoin
+P: Secours tiède (warm standby) => une copie réduite tourne et grossit en cas de sinistre
+P: Actif-actif => plusieurs régions servent le trafic en permanence
+E: Ces stratégies vont de la moins chère et la plus lente à la plus coûteuse et la plus rapide. La sauvegarde-restauration peut prendre des heures ; l'actif-actif reprend presque sans interruption. On choisit selon le RTO et le RPO exigés par le métier, pas selon la technique.
+
+@067
+Q: Qu'expriment le RPO et le RTO d'un service ?
+C: La perte de données tolérée et la durée d'interruption tolérée
+W: Le nombre de régions utilisées et le nombre de zones par région
+W: Le coût mensuel maximal et le délai de paiement de la facture
+W: La taille maximale d'une sauvegarde et sa durée de conservation
+E: Un RPO d'une heure signifie qu'on accepte de perdre au plus une heure de données : il faut sauvegarder ou répliquer au moins aussi souvent. Un RTO de quatre heures signifie que le service doit être revenu dans ce délai. Plus ils sont courts, plus l'architecture coûte cher.
+
+@068
+Q: Deux instances identiques, chacune disponible 99 % du temps, sont derrière un load balancer dans deux zones. Si les pannes sont indépendantes, quelle est la disponibilité de l'ensemble en pourcentage ?
+N: 99,99
+U: %
+T: 0,01
+E: Le service ne tombe que si les deux instances sont en panne en même temps : 1 % × 1 % = 0,01 %. La disponibilité vaut donc 99,99 %. C'est l'intérêt de la redondance, à condition que les pannes soient vraiment indépendantes, ce que garantissent des zones distinctes mieux qu'une même zone.
+
+@069
+Q: Un service web disponible à 99,9 % appelle une base disponible à 99,95 %. Les deux sont nécessaires. Quelle est la disponibilité de l'ensemble en pourcentage ?
+N: 99,85
+U: %
+T: 0,01
+E: En série, les disponibilités se multiplient : 0,999 × 0,9995 ≈ 0,9985, soit 99,85 %. L'ensemble est toujours moins disponible que son maillon le plus faible. Chaque dépendance indispensable ajoutée fait baisser la disponibilité, d'où l'intérêt de la redondance et des modes dégradés.
+
+@070
+Q: Quelle est la différence entre une base RDS Multi-AZ et un réplica en lecture ?
+C: Multi-AZ assure la bascule en cas de panne, le réplica sert à répartir les lectures
+W: Multi-AZ double la capacité d'écriture, le réplica celle de stockage
+W: Multi-AZ fonctionne entre régions, le réplica seulement dans une zone
+W: Multi-AZ est une sauvegarde quotidienne, le réplica une sauvegarde horaire
+E: En Multi-AZ, une copie synchrone attend dans une autre zone et prend le relais automatiquement ; elle ne reçoit pas de trafic. Un réplica en lecture, asynchrone, absorbe les requêtes de lecture ; il peut avoir un léger retard et ne bascule pas seul. On combine souvent les deux.
+
+@071
+Q: Pourquoi activer le versionnage sur un bucket qui contient des documents importants ?
+C: La version précédente reste récupérable après une erreur
+W: Le versionnage compresse les fichiers pour réduire la facture
+W: Le versionnage empêche tout utilisateur de lire les anciens fichiers
+W: Le versionnage copie automatiquement le bucket dans une autre région
+E: Avec le versionnage, une écriture crée une nouvelle version et une suppression pose un marqueur : l'ancienne version reste là et se restaure. Chaque version est facturée, d'où une règle de cycle de vie pour purger les anciennes. Contre un rançongiciel, on ajoute le verrouillage d'objets, qui interdit toute suppression pendant une durée.
+
+@072
+Q: Qu'est-ce que le chiffrement d'enveloppe utilisé par KMS ?
+C: Les données sont chiffrées par une clé, elle-même chiffrée par une clé maîtresse
+W: Les données sont chiffrées deux fois de suite avec le même mot de passe
+W: Le fichier est placé dans une archive zip protégée par mot de passe
+W: Seul le nom du fichier est chiffré, pas son contenu
+E: Une clé de données chiffre localement le contenu ; elle est ensuite chiffrée par la clé maîtresse qui ne quitte jamais KMS et stockée avec les données. Pour lire, on demande à KMS de déchiffrer la clé de données, ce qui passe par IAM et laisse une trace. On chiffre ainsi de gros volumes sans les envoyer à KMS.
+
+@073
+Q: À quoi sert AWS CloudTrail ?
+C: Enregistrer qui a fait quel appel d'API, quand et depuis où
+W: Mesurer le processeur et la mémoire des instances en temps réel
+W: Répartir le trafic web entre plusieurs régions selon la latence
+W: Sauvegarder chaque nuit les disques de toutes les instances
+E: CloudTrail journalise les actions sur le compte : création d'instance, changement de politique, suppression de bucket, avec l'identité et l'adresse d'origine. Indispensable pour enquêter après un incident ou pour un audit. Les métriques des instances relèvent de CloudWatch.
+
+@074
+Q: Remettre dans l'ordre la réaction à une clé d'accès AWS publiée par erreur dans un dépôt public.
+O: Désactiver la clé tout de suite dans IAM
+O: Consulter CloudTrail pour voir ce qu'elle a servi à faire
+O: Supprimer les ressources lancées par un tiers et révoquer ses accès
+O: Créer une nouvelle clé, ou mieux un rôle, et purger l'historique du dépôt
+E: Des robots repèrent les clés publiées en quelques minutes et lancent des machines de minage. La priorité est de couper l'accès ; puis de mesurer les dégâts avec CloudTrail ; puis de nettoyer. Retirer la clé du dernier commit ne suffit pas : elle reste dans l'historique et dans les copies déjà faites.
+
+@075
+Q: Quel est le défaut de cette politique de bucket ?
+C: Elle rend tous les objets du bucket lisibles par n'importe qui
+W: Elle empêche le propriétaire du compte de lire ses propres objets
+W: Elle autorise tout le monde à supprimer les objets du bucket
+W: Elle ne s'applique qu'aux utilisateurs de la même région
+E: Le principal « * » désigne tout le monde, authentifié ou non. Ce peut être voulu pour un site statique public, jamais pour des données internes. Le blocage de l'accès public au niveau du compte empêche ce genre de politique d'être appliquée par erreur ; pour un site, on préfère un CDN avec un accès réservé.
+```json
+{
+  "Effect": "Allow",
+  "Principal": "*",
+  "Action": "s3:GetObject",
+  "Resource": "arn:aws:s3:::interne/*"
+}
+```
+
+@076
+Q: Quelle différence entre Amazon ECS et Amazon EKS ?
+C: ECS est l'orchestrateur maison d'AWS, EKS un Kubernetes géré
+W: ECS exécute des machines virtuelles, EKS uniquement des fonctions
+W: ECS est réservé aux conteneurs Windows, EKS aux conteneurs Linux
+W: ECS fonctionne sans réseau, EKS exige une passerelle Internet
+E: ECS est plus simple et propre à AWS ; EKS fournit un Kubernetes standard, portable vers AKS sur Azure ou GKE sur Google Cloud, au prix d'une plus grande complexité. Les deux peuvent faire tourner les conteneurs sur des instances gérées par le client ou sur Fargate, sans serveur à gérer.
+
+@077
+Q: Associer chaque service Kubernetes géré à son fournisseur.
+P: EKS => AWS
+P: AKS => Azure
+P: GKE => Google Cloud
+E: Dans les trois cas, le fournisseur gère le plan de contrôle de Kubernetes, sa disponibilité et ses mises à jour ; le client gère ses nœuds, ou les délègue avec des modes gérés comme GKE Autopilot. Les manifestes Kubernetes restent les mêmes d'un fournisseur à l'autre, à quelques annotations près.
+
+@078
+Q: Pourquoi déployer les serveurs à partir d'images préparées plutôt que de les modifier à la main en production ?
+C: Les serveurs restent identiques et se remplacent sans surprise
+W: Les images préparées sont gratuites alors que les serveurs sont payants
+W: Une image interdit toute connexion au serveur, même pour le support
+W: Les modifications manuelles sont impossibles sur une instance cloud
+E: Une infrastructure immuable se met à jour en déployant une nouvelle image et en remplaçant les instances, pas en les modifiant. Plus de serveur différent des autres après des mois de corrections manuelles, et un retour arrière simple vers l'image précédente. Auto Scaling et les images s'y prêtent bien.
+
+@079
+Q: Comment se déroule un déploiement bleu-vert ?
+C: La nouvelle version tourne à côté de l'ancienne, puis le trafic bascule d'un coup
+W: Les serveurs sont mis à jour un par un pendant que le site est arrêté
+W: La nouvelle version reçoit 1 % du trafic pendant plusieurs semaines
+W: On teste la nouvelle version uniquement sur les postes des développeurs
+E: L'environnement vert reçoit la nouvelle version et ses tests ; on bascule le load balancer ou le DNS de bleu vers vert. En cas de problème, on rebascule vers bleu, resté intact. Il faut gérer la base partagée : ses évolutions doivent rester compatibles avec les deux versions pendant la bascule.
+
+@080
+Q: Quel type de routage de DNS (Route 53, Traffic Manager, Cloud DNS) permet d'envoyer le trafic vers une région de secours si la région principale tombe ?
+C: Le routage par basculement, avec contrôle de santé
+W: Le routage simple, qui renvoie toujours la même adresse
+W: Le routage pondéré à parts égales entre les deux régions
+W: Le routage par géolocalisation selon le pays du visiteur
+E: Le DNS répond avec l'adresse principale tant que son contrôle de santé est bon, puis avec l'adresse de secours. La bascule dépend de la durée de vie des enregistrements (TTL) : on la garde courte, une minute par exemple. Le pondéré sert au déploiement progressif, la géolocalisation au droit ou à la langue.
+
+@081
+Q: Pourquoi une table DynamoDB, Cosmos DB ou Firestore plutôt qu'une base relationnelle pour stocker des paniers d'achat ?
+C: Un accès par clé très rapide, même à grande échelle
+W: Les bases NoSQL gèrent mieux les rapports comptables avec jointures
+W: Une base NoSQL n'a besoin d'aucune clé pour retrouver un élément
+W: Les bases relationnelles ne peuvent pas stocker de données de session
+E: Un panier se lit et s'écrit par son identifiant, avec des pics de charge : une base clé-valeur gérée répond en millisecondes quel que soit le volume et s'ajuste seule. On conçoit la table autour des accès prévus. Pour des requêtes ad hoc, des jointures et des transactions complexes, une base relationnelle reste le bon choix.
+
+@082
+Q: Que signifie qu'une lecture est « à cohérence à terme » (eventually consistent) ?
+C: Juste après une écriture, une lecture peut voir l'ancienne valeur
+W: La donnée est perdue si elle n'est pas lue avant la fin de la journée
+W: La lecture attend toujours que toutes les copies soient identiques
+W: La donnée n'est écrite qu'après la fermeture de la session
+E: La donnée est répliquée sur plusieurs copies ; une lecture peut tomber sur une copie pas encore à jour, puis toutes convergent en quelques millisecondes. DynamoDB propose des lectures fortement cohérentes, plus chères. S3, lui, garantit la cohérence forte des lectures après écriture depuis 2020.
+
+@083
+Q: Pourquoi le code ci-dessous fait-il exploser le nombre de connexions à la base quand la fonction Lambda monte en charge ?
+C: Chaque appel ouvre sa propre connexion, sans réutilisation
+W: Lambda ferme toujours la base après chaque requête SQL exécutée
+W: La base RDS n'accepte qu'une seule connexion à la fois
+W: Le mot de passe est relu à chaque appel, ce qui crée un verrou
+E: Chaque instance de fonction ouvre ici une nouvelle connexion à chaque appel, et des centaines d'instances tournent en parallèle à la montée en charge. On ouvre la connexion hors du gestionnaire pour la réutiliser entre appels, et on place un proxy de connexions comme RDS Proxy devant la base.
+```python
+import psycopg
+
+def handler(event, context):
+    conn = psycopg.connect(DSN)
+    with conn.cursor() as cur:
+        cur.execute("SELECT stock FROM produit WHERE id = %s", (event["id"],))
+        return cur.fetchone()[0]
+```
+
+@084
+Q: Que fait cette commande Azure CLI ?
+C: Elle attribue le rôle de lecteur de blobs à une identité sur un compte de stockage
+W: Elle crée un compte de stockage nommé Storage Blob Data Reader
+W: Elle supprime les droits de lecture de l'identité sur tout l'abonnement
+W: Elle copie les blobs du compte de stockage vers l'identité indiquée
+E: az role assignment create donne un rôle RBAC à un principal, ici l'identifiant d'une identité managée, sur une étendue précise : un seul compte de stockage. Le rôle Storage Blob Data Reader permet de lire les blobs sans pouvoir les modifier. Une étendue étroite applique le moindre privilège.
+```
+az role assignment create \
+  --assignee 5f2c9e1a-1234-4c3d-9e8f-0a1b2c3d4e5f \
+  --role "Storage Blob Data Reader" \
+  --scope /subscriptions/abcd/resourceGroups/rg-demo/providers/Microsoft.Storage/storageAccounts/stdemo
+```
+
+@085
+Q: Pourquoi une passerelle NAT par zone de disponibilité, plutôt qu'une seule pour tout le VPC ?
+C: Pour qu'une panne de zone ne prive pas les autres de sortie
+W: Parce qu'une passerelle NAT ne peut servir qu'une seule instance
+W: Parce qu'une seule passerelle coûte plus cher que trois
+W: Pour que chaque zone ait une adresse IP privée différente
+E: La passerelle NAT vit dans une zone : si elle est seule et que sa zone tombe, les instances des autres zones perdent l'accès sortant. Une passerelle par zone, avec des routes propres à chaque zone, supprime ce point unique de défaillance. En contrepartie, chaque passerelle est facturée à l'heure.
+
+@086
+Q: Une organisation AWS veut empêcher tous ses comptes, administrateurs compris, d'utiliser d'autres régions que l'Europe. Quel mécanisme convient ?
+C: Une politique de contrôle de service (SCP) au niveau de l'organisation
+W: Une politique IAM ajoutée à chaque utilisateur administrateur
+W: Une alerte de budget envoyée quand une région hors d'Europe est utilisée
+W: Une étiquette « europe » posée sur toutes les ressources des comptes
+E: Une SCP fixe la limite maximale des droits d'un compte membre : même un administrateur du compte ne peut la dépasser. Un Deny conditionné sur aws:RequestedRegion bloque les autres régions, en exemptant les services globaux comme IAM. Une politique par utilisateur se contourne en créant un autre utilisateur.
+
+@087
+Q: Comment GitHub Actions peut-il déployer sur AWS sans stocker de clé d'accès permanente dans les secrets du dépôt ?
+C: Par fédération OIDC vers un rôle temporaire
+W: En copiant la clé du compte racine dans une variable chiffrée
+W: En ouvrant le port 22 du serveur de production à GitHub
+W: En créant un utilisateur IAM sans mot de passe pour le dépôt
+E: GitHub émet un jeton OIDC signé décrivant le dépôt et la branche ; AWS, configuré pour faire confiance à ce fournisseur, l'échange contre les identifiants temporaires d'un rôle dont la politique de confiance n'accepte que ce dépôt et cette branche. Plus de clé à faire tourner ni à fuir. Azure et Google Cloud proposent le même mécanisme.
+
+@088
+Q: Que limite la politique de confiance de ce rôle ?
+C: Seule la branche main du dépôt acme/site peut l'assumer
+W: Tous les dépôts GitHub publics peuvent assumer le rôle
+W: Seuls les administrateurs AWS peuvent assumer le rôle depuis GitHub
+W: Le rôle ne peut être assumé que le dimanche, jour de déploiement
+E: La politique de confiance dit qui peut assumer le rôle. Le principal fédéré est le fournisseur OIDC de GitHub, et la condition sur le champ sub du jeton n'accepte que le dépôt acme/site sur la branche main. Sans cette condition, n'importe quel dépôt GitHub pourrait obtenir les droits du rôle.
+```json
+{
+  "Effect": "Allow",
+  "Principal": {"Federated": "arn:aws:iam::111122223333:oidc-provider/token.actions.githubusercontent.com"},
+  "Action": "sts:AssumeRoleWithWebIdentity",
+  "Condition": {
+    "StringEquals": {
+      "token.actions.githubusercontent.com:sub": "repo:acme/site:ref:refs/heads/main"
+    }
+  }
+}
+```
+
+@089
+Q: Pourquoi des instances à processeur ARM (Graviton, Ampere, Cobalt) peuvent-elles réduire la facture d'une application Java ou Python ?
+C: Elles offrent souvent un meilleur rapport performance-prix, sans changer le code
+W: Elles ne sont facturées qu'à la moitié du temps d'utilisation réel
+W: Elles exécutent le code sans système d'exploitation, donc plus vite
+W: Elles sont réservées aux fonctions serverless, moins chères par nature
+E: Les instances ARM coûtent en général moins cher que leurs équivalents x86 pour une performance comparable. Un code Java, Python ou Node.js tourne tel quel ; il faut seulement des images de conteneurs et des dépendances natives compilées pour ARM. On mesure sur sa charge réelle avant de basculer.
+
+@090
+Q: Une instance de production affiche 8 % de processeur en moyenne sur un mois, avec des pics à 20 %. Que suggère une revue de coûts ?
+C: La redimensionner vers un type plus petit, après vérification de la mémoire
+W: La passer en instance Spot pour profiter d'une remise immédiate
+W: Doubler sa taille pour absorber de futurs pics de charge
+W: La supprimer, car une instance si peu chargée est inutile
+E: Une instance surdimensionnée coûte sans servir : le redimensionnement (rightsizing) divise souvent la facture par deux. On vérifie d'abord la mémoire et le disque, que le processeur ne montre pas, et on garde une marge pour les pics. Spot ne convient pas à une production qui doit rester disponible.
+
+@091
+Q: Pourquoi une architecture multi-cloud n'est-elle pas automatiquement plus résiliente qu'une architecture sur un seul fournisseur bien répartie ?
+C: Elle ajoute complexité et compétences sans garantie de gain
+W: Parce que deux fournisseurs ne peuvent pas être joints par Internet
+W: Parce que les données ne peuvent jamais être copiées entre fournisseurs
+W: Parce qu'un seul fournisseur garantit 100 % de disponibilité
+E: Plusieurs régions d'un même fournisseur couvrent déjà la plupart des pannes. Le multi-cloud double les outils, les réseaux, la sécurité et les compétences, et oblige à se limiter aux services communs. Il répond plutôt à des contraintes de négociation, de réglementation ou de dépendance à un fournisseur.
+
+@092
+Q: Associer chaque pilier du cadre « Well-Architected » à sa préoccupation.
+P: Fiabilité => reprendre après une panne et absorber la charge
+P: Sécurité => protéger données, accès et systèmes
+P: Optimisation des coûts => ne payer que ce qui apporte de la valeur
+P: Excellence opérationnelle => exploiter, observer et améliorer en continu
+E: AWS, Azure et Google publient chacun un cadre de ce type, avec en plus l'efficacité des performances et la durabilité. Il sert de grille de revue : on passe une architecture au crible de chaque pilier et on arbitre, car renforcer la fiabilité coûte souvent plus cher.
+
+@093
+Q: Remettre dans l'ordre une migration d'application vers le cloud avec le moins de risque.
+O: Inventorier l'application, ses dépendances et ses flux
+O: Construire l'environnement cible et y répliquer les données
+O: Tester l'application complète dans le cloud
+O: Basculer le trafic et garder l'ancien site prêt au retour arrière
+O: Décommissionner l'ancien environnement après une période d'observation
+E: Les migrations échouent surtout sur une dépendance oubliée : un partage de fichiers, une tâche planifiée, une IP autorisée chez un partenaire. La réplication continue des données réduit l'interruption à la bascule. On garde l'ancien environnement jusqu'à être sûr, puis on l'éteint pour ne pas payer deux fois.
+
+@094
+Q: Une équipe stocke 50 To de sauvegardes en S3 Standard à 0,023 $ le Go par mois. Combien économise-t-elle par mois en les passant en Glacier Deep Archive à 0,001 $ le Go, avec 1 To = 1 000 Go ?
+N: 1100
+U: $
+T: 1
+E: 50 000 Go × 0,023 $ = 1 150 $ par mois en Standard ; 50 000 Go × 0,001 $ = 50 $ en Deep Archive. L'économie atteint 1 100 $ par mois. En contrepartie, une restauration prend jusqu'à douze heures et se paie au volume : ce choix convient à des sauvegardes de conformité qu'on espère ne jamais relire.
+
+@095
+Q: Pourquoi des journaux applicatifs envoyés en masse vers un service géré (CloudWatch Logs, Log Analytics) peuvent-ils coûter plus cher que les serveurs eux-mêmes ?
+C: L'ingestion se facture au gigaoctet, et le niveau DEBUG en produit énormément
+W: Chaque ligne de journal ralentit le serveur et augmente sa taille
+W: Les journaux sont copiés automatiquement dans toutes les régions
+W: Le fournisseur facture chaque consultation d'une ligne de journal
+E: Les services de journaux facturent surtout le volume ingéré puis stocké. Une application laissée en DEBUG en production, ou qui journalise chaque requête en entier, multiplie la facture. On fixe le bon niveau, on échantillonne et on limite la rétention, quitte à archiver ailleurs ce qui doit être gardé.
+
+@096
+Q: Une instance privée n'arrive pas à joindre Internet malgré la passerelle NAT. La table de routage du sous-réseau privé contient ces routes. Quelle est la cause la plus probable ?
+C: La route par défaut pointe vers la passerelle Internet au lieu de la passerelle NAT
+W: La route locale 10.0.0.0/16 bloque le trafic sortant de l'instance
+W: Une instance privée ne peut jamais utiliser de route par défaut
+W: La passerelle NAT ne fonctionne qu'avec des adresses IPv6
+E: Dans un sous-réseau privé, la route 0.0.0.0/0 doit viser la passerelle NAT. Vers une passerelle Internet, le trafic sort sans adresse publique et ne revient pas : l'instance reste coupée. La route locale permet seulement la communication à l'intérieur du VPC et ne gêne rien.
+```
+Destination      Cible
+10.0.0.0/16      local
+0.0.0.0/0        igw-0a1b2c3d
+```
+
+@097
+Q: Pourquoi le trafic entre deux zones de disponibilité peut-il apparaître sur la facture d'une application très bavarde ?
+C: Les données qui traversent les zones sont facturées au gigaoctet
+W: Chaque zone facture l'électricité consommée par les autres zones
+W: Le trafic entre zones passe toujours par Internet, donc par la NAT
+W: Une même application ne peut pas être répartie sur plusieurs zones
+E: Chez AWS notamment, le transfert entre zones d'une même région est facturé dans chaque sens. Des services qui s'appellent sans cesse entre zones, ou une réplication volumineuse, finissent par coûter. On garde la répartition entre zones pour la résilience, mais on surveille les flux et on évite les allers-retours inutiles.
+
+@098
+Q: Une fonction serverless appelée 3 millions de fois par mois dure 200 ms avec 512 Mo de mémoire. Combien de Go-secondes consomme-t-elle par mois ?
+N: 300000
+T: 1
+E: Chaque appel consomme 0,5 Go × 0,2 s = 0,1 Go-seconde ; 3 millions d'appels donnent 300 000 Go-secondes. Au tarif d'environ 0,0000167 $ le Go-seconde, cela fait à peu près 5 $, plus le prix des requêtes. Réduire la mémoire ou la durée réduit la facture proportionnellement.
+
+@099
+Q: Que fait ce rôle Kubernetes annoté sur EKS ?
+C: Il associe le compte de service Kubernetes à un rôle IAM, pour des droits AWS par pod
+W: Il donne au cluster entier les droits administrateur du compte AWS
+W: Il crée un utilisateur IAM avec une clé d'accès pour chaque pod
+W: Il ouvre le port 443 du cluster sur Internet pour les pods
+E: Avec IRSA, ou EKS Pod Identity, les pods qui utilisent le compte de service facturation reçoivent les identifiants temporaires du rôle indiqué, et seulement eux. Sans cela, tous les pods d'un nœud partagent le rôle de l'instance. GKE propose la même idée avec Workload Identity, AKS avec Workload Identity d'Entra ID.
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: facturation
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/facturation-s3
+```
+
+@100
+Q: Un service doit rester disponible même si une région entière tombe, avec un RPO de quelques secondes. Quelle base de données convient ?
+C: Une base répliquée en continu vers une autre région
+W: Une base RDS Multi-AZ, qui couvre aussi la perte de la région
+W: Une sauvegarde quotidienne copiée dans une autre région
+W: Un snapshot horaire du disque d'une base installée sur une VM
+E: Multi-AZ protège d'une panne de zone, pas de région. Une sauvegarde quotidienne donne un RPO d'un jour, un snapshot horaire d'une heure. Une base globale réplique de façon continue vers une autre région avec un retard de l'ordre de la seconde, et permet d'y promouvoir la copie en écriture en cas de sinistre.

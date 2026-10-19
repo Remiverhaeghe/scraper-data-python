@@ -1,0 +1,435 @@
+@001
+Q: Remettre dans l'ordre les couches du modèle OSI, de la plus basse à la plus haute.
+O: Physique
+O: Liaison de données
+O: Réseau
+O: Transport
+O: Session
+O: Présentation
+O: Application
+E: Chaque couche rend un service à celle du dessus : la couche 1 transporte des bits, la 2 des trames entre voisins, la 3 des paquets d'un réseau à l'autre, la 4 des segments entre applications. Le modèle TCP/IP, utilisé en pratique, regroupe les trois couches hautes en une seule.
+
+@002
+Q: Associer chaque protocole ou équipement à sa couche OSI.
+P: Câble et Wi-Fi radio => 1 Physique
+P: Ethernet et adresse MAC => 2 Liaison
+P: IP et routeur => 3 Réseau
+P: TCP et UDP => 4 Transport
+P: HTTP et DNS => 7 Application
+E: Situer un problème dans une couche guide le diagnostic : un câble débranché est en couche 1, une erreur de VLAN en 2, une route manquante en 3, un port fermé en 4, une mauvaise URL en 7. On teste en général de bas en haut.
+
+@003
+Q: Qu'est-ce qu'une adresse MAC ?
+C: L'identifiant matériel d'une carte réseau
+W: L'adresse IP publique d'une box Internet
+W: Le nom d'un ordinateur sur le réseau local
+W: Le numéro de port d'un service web
+E: L'adresse MAC, sur 48 bits, s'écrit en hexadécimal, comme 3c:22:fb:12:a0:4e. Elle sert à livrer les trames sur le réseau local, en couche 2. Elle ne traverse pas les routeurs : de réseau en réseau, c'est l'adresse IP qui guide le paquet.
+
+@004
+Q: Combien de bits contient une adresse IPv4 ?
+N: 32
+E: Une adresse IPv4 compte 32 bits, écrits en quatre octets décimaux de 0 à 255, comme 192.168.1.10. Cela fait environ 4,3 milliards d'adresses, épuisées depuis longtemps, d'où le NAT et IPv6, dont les adresses comptent 128 bits.
+
+@005
+Q: Quelles plages d'adresses IPv4 sont réservées aux réseaux privés ?
+C: 10.0.0.0/8, 172.16.0.0/12 et 192.168.0.0/16
+W: 10.0.0.0/8, 100.0.0.0/8 et 192.0.0.0/8
+W: 127.0.0.0/8, 169.254.0.0/16 et 224.0.0.0/4
+W: Toutes les adresses qui commencent par 192
+E: Ces plages, définies par la RFC 1918, ne sont pas routées sur Internet : tout le monde peut les utiliser chez soi. 127.0.0.0/8 désigne la machine elle-même, 169.254.0.0/16 l'adresse automatique faute de DHCP, 224.0.0.0/4 la multidiffusion. 192.0.2.0/24 sert d'exemple dans les documentations.
+
+@006
+Q: Que désigne l'adresse 127.0.0.1 ?
+C: La machine elle-même
+W: Le routeur par défaut du réseau
+W: Le serveur DNS du fournisseur d'accès
+W: La première machine du réseau local
+E: localhost, ou boucle locale, permet à une machine de se parler sans passer par le réseau : un serveur web en développement écoute souvent sur 127.0.0.1:8000, inaccessible depuis les autres postes. En IPv6, l'équivalent est ::1.
+
+@007
+Q: Que signifie la notation /24 dans 192.168.1.0/24 ?
+C: Les 24 premiers bits désignent le réseau
+W: Le réseau contient 24 machines au maximum
+W: Le réseau est le 24e du site
+W: Le masque est 255.255.255.24
+E: /24 correspond au masque 255.255.255.0 : les trois premiers octets identifient le réseau, le dernier les machines. 192.168.1.10 et 192.168.1.200 sont dans le même réseau, 192.168.2.10 non. Cette notation s'appelle CIDR.
+
+@008
+Q: Combien d'adresses utilisables pour des machines offre un réseau en /24 ?
+N: 254
+E: 2^8 = 256 adresses, moins l'adresse du réseau (192.168.1.0) et celle de diffusion (192.168.1.255) : 254 machines. Le routeur prend en général l'une d'elles, souvent .1 ou .254. Un /25 n'en offrirait plus que 126.
+
+@009
+Q: Quel masque correspond à la notation /24 ?
+C: 255.255.255.0
+W: 255.255.0.0
+W: 255.255.255.255
+W: 255.0.0.0
+E: 24 bits à 1 donnent trois octets à 255 et un dernier à 0. /16 donne 255.255.0.0, /8 donne 255.0.0.0, /32 désigne une seule adresse. Savoir passer de l'un à l'autre est indispensable pour lire une configuration réseau.
+
+@010
+Q: À quoi sert la passerelle par défaut d'un poste ?
+C: À envoyer les paquets destinés aux autres réseaux
+W: À attribuer une adresse IP au poste au démarrage
+W: À traduire les noms de sites en adresses IP
+W: À filtrer les sites web interdits par l'entreprise
+E: Pour une adresse de son réseau, le poste parle directement à la machine ; pour toute autre adresse, Internet compris, il confie le paquet au routeur, sa passerelle par défaut. Sans elle, le poste joint son réseau local mais rien d'autre.
+
+@011
+Q: Associer chaque service réseau à son rôle.
+P: DHCP => attribue automatiquement adresse, masque et passerelle
+P: DNS => traduit un nom en adresse IP
+P: NAT => fait partager une adresse publique à un réseau privé
+P: ARP => trouve l'adresse MAC d'une adresse IP locale
+E: Au branchement d'un poste, DHCP lui donne sa configuration ; DNS traduit www.exemple.fr ; ARP trouve la carte réseau de la passerelle ; la box traduit les adresses privées en son adresse publique par NAT. Une panne de l'un de ces services se traduit par des symptômes très différents.
+
+@012
+Q: Remettre dans l'ordre les échanges DHCP d'un poste qui arrive sur le réseau.
+O: Discover : le poste cherche un serveur DHCP
+O: Offer : un serveur propose une adresse
+O: Request : le poste demande cette adresse
+O: Ack : le serveur confirme et fixe la durée du bail
+E: Le poste n'a pas encore d'adresse : il diffuse sa demande à tout le réseau. On retient DORA. À l'expiration du bail, il renouvelle. Faute de réponse, Windows et Linux s'attribuent une adresse en 169.254.x.x, signe d'un serveur DHCP injoignable.
+
+@013
+Q: Que faut-il conclure de ce résultat d'ipconfig ?
+C: Le poste n'a reçu aucune réponse DHCP
+W: Le poste est connecté directement à Internet
+W: Le poste a une adresse publique de son opérateur
+W: Le serveur DNS du poste ne répond plus
+E: La plage 169.254.0.0/16 est attribuée par le poste lui-même quand DHCP ne répond pas, d'où l'absence de passerelle. On vérifie le câble ou le Wi-Fi, le VLAN du port, puis le serveur DHCP et son étendue d'adresses, qui est peut-être pleine.
+```
+Carte Ethernet Ethernet :
+   Adresse IPv4. . . . . . . . . . . . . .: 169.254.32.17
+   Masque de sous-réseau. . . . . . . . . : 255.255.0.0
+   Passerelle par défaut. . . . . . . . . :
+```
+
+@014
+Q: Que fait la commande ping 192.168.1.1 ?
+C: Elle teste la réponse et mesure le délai
+W: Elle affiche la route suivie jusqu'à la machine
+W: Elle ouvre une connexion sur le port web
+W: Elle attribue l'adresse au poste
+E: ping envoie des requêtes ICMP Echo et mesure le temps de réponse. Une absence de réponse ne prouve pas que la machine est éteinte : un pare-feu peut bloquer l'ICMP. traceroute, ou tracert sous Windows, montre les routeurs traversés.
+
+@015
+Q: Quelle commande affiche les routeurs traversés jusqu'à une destination ?
+C: traceroute (tracert)
+W: nslookup
+W: arp -a
+W: ipconfig /release
+E: traceroute envoie des paquets à durée de vie croissante ; chaque routeur qui les abandonne se signale. On voit où le chemin s'arrête ou où le délai explose. nslookup interroge le DNS, arp -a affiche la table ARP, ipconfig /release libère l'adresse DHCP.
+
+@016
+Q: Quelle est la passerelle par défaut de ce poste ?
+C: 192.168.1.1
+W: 192.168.1.42
+W: 255.255.255.0
+W: 192.168.1.255
+E: ipconfig affiche l'adresse du poste, son masque et sa passerelle ; ipconfig /all ajoute l'adresse MAC, les serveurs DNS et le bail DHCP. 192.168.1.255 serait l'adresse de diffusion de ce réseau. Sous Linux, ip a et ip route donnent les mêmes informations.
+```
+Carte Ethernet Ethernet :
+   Adresse IPv4. . . . . . . . . . . . . .: 192.168.1.42
+   Masque de sous-réseau. . . . . . . . . : 255.255.255.0
+   Passerelle par défaut. . . . . . . . . : 192.168.1.1
+```
+
+@017
+Q: Quelle différence principale entre TCP et UDP ?
+C: TCP garantit la livraison dans l'ordre, UDP non
+W: UDP garantit la livraison dans l'ordre, TCP non
+W: TCP est réservé aux réseaux locaux, UDP à Internet
+W: UDP chiffre les données, TCP les envoie en clair
+E: TCP établit une connexion, numérote les segments, réémet les pertes et remet les données dans l'ordre : idéal pour le web ou les fichiers. UDP envoie sans connexion ni garantie, plus léger : la voix, la vidéo en direct ou le DNS préfèrent une donnée perdue à une donnée en retard.
+
+@018
+Q: Remettre dans l'ordre l'établissement d'une connexion TCP.
+O: Le client envoie SYN
+O: Le serveur répond SYN-ACK
+O: Le client confirme par ACK
+E: Cette poignée de main en trois temps synchronise les numéros de séquence des deux côtés. Un SYN sans réponse signale un serveur éteint ou un pare-feu qui jette les paquets ; un RST immédiat, un port fermé. Une capture Wireshark montre ces trois paquets en tête de chaque connexion.
+
+@019
+Q: Associer chaque port à son service habituel.
+P: 22 => SSH
+P: 53 => DNS
+P: 80 => HTTP
+P: 443 => HTTPS
+P: 3389 => Bureau à distance (RDP)
+E: Les ports de 0 à 1023 sont dits bien connus. Un service peut écouter sur un autre port, mais ces valeurs sont celles qu'on attend par défaut et celles que filtrent les pare-feu. Exposer 3389 sur Internet est une cause fréquente d'intrusion.
+
+@020
+Q: Sur quel port et quel protocole répond habituellement un serveur DNS ?
+C: 53, en UDP et en TCP
+W: 53, en TCP seulement
+W: 80, en UDP seulement
+W: 443, en TCP seulement
+E: Les requêtes DNS courantes passent en UDP sur le port 53 ; TCP sert aux grandes réponses et aux transferts de zone. Un pare-feu qui n'ouvre que l'UDP casse certaines résolutions. DNS over HTTPS utilise, lui, le port 443.
+
+@021
+Q: Qu'est-ce qu'un socket au sens réseau ?
+C: Une adresse IP associée à un numéro de port
+W: Un câble réseau branché sur un commutateur
+W: Une carte réseau virtuelle d'une machine
+W: Un paquet de données en attente d'envoi
+E: 192.168.1.10:443 désigne le service HTTPS d'une machine. Une connexion TCP est identifiée par quatre valeurs : adresse et port source, adresse et port destination. C'est ainsi qu'un serveur distingue des milliers de clients connectés au même port 443.
+
+@022
+Q: Que fait un commutateur (switch) sur un réseau local ?
+C: Il transmet chaque trame au seul port de la machine visée
+W: Il relie le réseau local à Internet par une adresse publique
+W: Il attribue les adresses IP aux machines branchées
+W: Il traduit les noms de machines en adresses IP
+E: Le switch apprend quelles adresses MAC se trouvent derrière chaque port et n'envoie une trame qu'au bon port. Il travaille en couche 2. Relier deux réseaux IP différents est le rôle du routeur, en couche 3 ; un switch dit « de niveau 3 » sait aussi router.
+
+@023
+Q: Quelle différence entre un switch et un routeur ?
+C: Le switch relie des machines, le routeur des réseaux
+W: Le switch relie des réseaux, le routeur relie des machines
+W: Le routeur est un switch avec plus de ports
+W: Il n'y a aucune différence sur un réseau moderne
+E: Le switch, en couche 2, travaille avec les adresses MAC à l'intérieur d'un réseau. Le routeur, en couche 3, lit l'adresse IP de destination et choisit par où envoyer le paquet vers un autre réseau. La box d'un particulier combine routeur, switch, point d'accès Wi-Fi et NAT.
+
+@024
+Q: Pourquoi une box Internet fait-elle du NAT ?
+C: Pour partager une adresse publique
+W: Pour chiffrer toutes les connexions vers Internet
+W: Pour accélérer le téléchargement des fichiers
+W: Pour attribuer une adresse MAC à chaque appareil
+E: Les adresses privées ne sont pas routées sur Internet. La box remplace l'adresse source privée par son adresse publique et retient la correspondance pour renvoyer les réponses au bon appareil. Une connexion entrante, elle, ne sait pas à quel appareil aller sans redirection de port.
+
+@025
+Q: Que faut-il configurer sur la box pour qu'un serveur interne soit joignable depuis Internet ?
+C: Une redirection du port vers le serveur
+W: Une seconde adresse MAC pour le serveur
+W: Un bail DHCP plus long pour le serveur
+W: Une adresse 127.0.0.1 sur le serveur
+E: La redirection de port, ou NAT entrant, envoie par exemple le port 443 public vers 192.168.1.20:443. Le serveur doit avoir une adresse fixe, réservée dans le DHCP. Exposer un service sur Internet impose de le maintenir à jour : un VPN est souvent plus sûr.
+
+@026
+Q: Quelle est l'adresse de diffusion du réseau 192.168.10.0/24 ?
+C: 192.168.10.255
+W: 192.168.10.0
+W: 192.168.10.1
+W: 255.255.255.0
+E: Dans un réseau, l'adresse avec tous les bits machine à 1 est la diffusion : un paquet envoyé à 192.168.10.255 atteint toutes les machines du réseau. Celle avec tous les bits à 0, 192.168.10.0, désigne le réseau lui-même. Aucune des deux ne s'attribue à une machine.
+
+@027
+Q: Combien d'adresses contient un réseau en /26, adresses réseau et diffusion comprises ?
+N: 64
+E: 32 - 26 = 6 bits pour les machines, soit 2^6 = 64 adresses, dont 62 utilisables. Un /24 découpé en /26 donne quatre sous-réseaux : .0 à .63, .64 à .127, .128 à .191 et .192 à .255.
+
+@028
+Q: Dans quel sous-réseau /26 se trouve l'adresse 192.168.1.150 ?
+C: 192.168.1.128/26
+W: 192.168.1.64/26
+W: 192.168.1.150/26
+W: 192.168.1.192/26
+E: Les /26 avancent de 64 en 64 : 0, 64, 128, 192. 150 est entre 128 et 191, donc dans 192.168.1.128/26, dont la diffusion est 192.168.1.191. Une adresse ne définit jamais un réseau à elle seule : on applique le masque.
+
+@029
+Q: Deux postes, 192.168.1.10/24 et 192.168.2.10/24, sont branchés sur le même switch sans routeur. Peuvent-ils se joindre ?
+C: Non, ils sont dans deux réseaux IP différents
+W: Oui, le switch fait le lien automatiquement
+W: Oui, car ils partagent le même dernier octet
+W: Seulement si l'un des deux redémarre
+E: Chaque poste voit l'autre hors de son réseau et confie le paquet à sa passerelle ; sans routeur, rien ne passe, même sur le même switch. Il faut les mettre dans le même réseau, ou ajouter un routeur entre les deux réseaux.
+
+@030
+Q: Qu'est-ce qu'un VLAN ?
+C: Un réseau local virtuel isolé sur les mêmes switchs
+W: Un réseau privé chiffré sur Internet
+W: Un câble réseau plus rapide que l'Ethernet
+W: Une adresse IP attribuée à un appareil virtuel
+E: Les VLAN séparent logiquement un même équipement physique : postes, téléphones, invités et caméras sont isolés comme s'ils étaient sur des switchs distincts. Passer d'un VLAN à l'autre exige un routeur ou un pare-feu, qui peut filtrer. Le VPN est une autre notion.
+
+@031
+Q: Que configure cette interface de switch Cisco ?
+C: Un lien qui transporte les VLAN 10, 20 et 30
+W: Un port d'accès réservé au VLAN 10
+W: Un port coupé pour les VLAN 10, 20 et 30
+W: Une agrégation de trois câbles en un seul lien
+E: Un port en mode trunk transporte plusieurs VLAN, chaque trame portant une étiquette 802.1Q. La liste autorisée limite les VLAN qui passent. Un port d'accès, au contraire, appartient à un seul VLAN et le poste ne voit aucune étiquette.
+```
+interface GigabitEthernet0/24
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30
+```
+
+@032
+Q: Que se passe-t-il quand on tape www.exemple.fr dans un navigateur, côté DNS ?
+C: Le poste demande l'adresse IP du nom à son serveur DNS
+W: Le navigateur télécharge la liste de tous les sites du monde
+W: Le routeur devine l'adresse à partir du nom
+W: Le site envoie lui-même son adresse au poste
+E: Le résolveur cherche d'abord dans son cache, puis interroge les serveurs racine, ceux de .fr, puis ceux du domaine exemple.fr, qui donnent l'adresse. La réponse est gardée en cache pendant sa durée de vie (TTL). nslookup ou dig montrent le résultat.
+
+@033
+Q: Associer chaque type d'enregistrement DNS à son rôle.
+P: A => adresse IPv4 d'un nom
+P: AAAA => adresse IPv6 d'un nom
+P: CNAME => alias vers un autre nom
+P: MX => serveur de messagerie du domaine
+P: TXT => texte libre, comme SPF ou une vérification
+E: Un site a un enregistrement A, et AAAA s'il est accessible en IPv6 ; www peut être un CNAME vers un autre nom. MX dit où livrer le courrier. Les enregistrements TXT portent SPF, DKIM et les preuves de propriété demandées par de nombreux services.
+
+@034
+Q: Que montre ce résultat de nslookup ?
+C: Le nom se résout en 203.0.113.80
+W: Le site est hors ligne
+W: Le serveur DNS est injoignable
+W: Le site n'a pas d'adresse IPv4
+E: La première partie indique le serveur DNS interrogé, la seconde la réponse : www.exemple.fr a l'adresse 203.0.113.80. « Réponse ne faisant pas autorité » signifie qu'elle vient d'un cache, ce qui est normal. Si le site ne répond pas, la cause est ailleurs que dans le DNS.
+```
+Serveur :   box.home
+Address:  192.168.1.1
+
+Réponse ne faisant pas autorité :
+Nom :    www.exemple.fr
+Address:  203.0.113.80
+```
+
+@035
+Q: Un poste joint 8.8.8.8 par ping mais pas www.exemple.fr. Où est le problème le plus probable ?
+C: Dans la résolution DNS du poste
+W: Dans le câble réseau du poste
+W: Dans la passerelle par défaut
+W: Dans le serveur web du site
+E: Joindre une adresse IP publique prouve que le câble, l'adresse, la passerelle et Internet fonctionnent. Ce qui manque, c'est la traduction du nom : serveur DNS mal configuré ou injoignable. On vérifie avec ipconfig /all, puis nslookup.
+
+@036
+Q: Que contient ce résultat de la commande arp -a ?
+C: Les adresses MAC des voisins IP récemment joints
+W: Les adresses IP publiques des sites visités
+W: La liste des ports ouverts sur le poste
+W: Les routes vers les autres réseaux
+E: Le cache ARP associe adresses IP locales et adresses MAC : ici la passerelle et un serveur. Pour joindre une machine du réseau local, le poste a d'abord diffusé « qui a 192.168.1.1 ? ». Deux adresses IP avec la même MAC peuvent signaler un proxy ARP ou une usurpation.
+```
+Interface : 192.168.1.42 --- 0x5
+  Adresse Internet      Adresse physique      Type
+  192.168.1.1           3c-22-fb-12-a0-4e     dynamique
+  192.168.1.20          00-15-5d-01-02-03     dynamique
+```
+
+@037
+Q: Combien d'octets transporte au plus une trame Ethernet standard dans sa partie données (MTU) ?
+N: 1500
+E: La MTU d'Ethernet est de 1500 octets. Un paquet plus grand est fragmenté ou rejeté. Un tunnel VPN ajoute des en-têtes et réduit la MTU utile : des connexions qui s'établissent mais bloquent sur les gros transferts signalent souvent un problème de MTU.
+
+@038
+Q: À quoi sert le champ TTL d'un paquet IP ?
+C: À limiter le nombre de routeurs traversés
+W: À indiquer la durée de validité d'un nom DNS
+W: À fixer la vitesse de transmission du paquet
+W: À chiffrer le contenu du paquet
+E: Chaque routeur diminue le TTL de 1 ; à 0, le paquet est détruit et un message ICMP revient à l'émetteur. Cela évite qu'un paquet tourne indéfiniment en cas de boucle de routage. traceroute exploite justement ce mécanisme. Le TTL du DNS est une notion différente, une durée de cache.
+
+@039
+Q: Quelle commande Linux affiche la table de routage ?
+C: ip route
+W: ip link
+W: ip neigh
+W: ip addr flush
+E: ip route liste les routes, dont la route par défaut « default via 192.168.1.1 ». ip link montre les interfaces, ip neigh la table ARP. ip addr flush supprimerait les adresses d'une interface : à éviter sur un serveur distant.
+
+@040
+Q: Qu'affiche cette table de routage d'un poste ?
+C: Hors du réseau local, tout part vers 192.168.1.1
+W: Le poste n'a aucun accès à Internet
+W: Le poste est lui-même le routeur du réseau
+W: Le réseau local est en 192.168.0.0/16
+E: La ligne default est la route par défaut : la passerelle 192.168.1.1. La seconde indique que le réseau 192.168.1.0/24 est joignable directement par l'interface eth0. Le poste a donc une configuration classique.
+```
+default via 192.168.1.1 dev eth0
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.42
+```
+
+@041
+Q: Quelle différence entre une adresse IP statique et une adresse obtenue par DHCP ?
+C: L'une est fixée à la main, l'autre automatique
+W: La statique est publique, l'adresse DHCP est toujours privée
+W: La statique change chaque jour, l'adresse DHCP jamais
+W: Seule l'adresse DHCP permet d'accéder à Internet
+E: Les postes utilisent DHCP ; les serveurs, imprimantes et équipements réseau ont besoin d'une adresse stable. Plutôt qu'une saisie manuelle, on crée une réservation DHCP liée à l'adresse MAC : l'adresse est fixe et reste gérée au même endroit, sans risque de conflit.
+
+@042
+Q: Que provoque un conflit d'adresse IP sur un réseau ?
+C: Deux appareils se disputent l'adresse
+W: Le réseau entier s'arrête jusqu'au redémarrage du routeur
+W: Les deux appareils fusionnent en un seul
+W: Le serveur DHCP attribue une adresse publique
+E: Les autres machines associent l'adresse tantôt à l'une, tantôt à l'autre carte, selon la dernière réponse ARP : connexions coupées par intermittence. Windows signale le conflit. La cause habituelle est une adresse fixée à la main dans la plage distribuée par DHCP.
+
+@043
+Q: Quel est l'avantage principal d'IPv6 ?
+C: Un espace d'adresses immense, qui rend le NAT inutile
+W: Des adresses plus courtes et plus faciles à retenir
+W: Un chiffrement obligatoire de tous les paquets
+W: Une vitesse de transmission dix fois supérieure
+E: Avec 128 bits, IPv6 offre assez d'adresses pour attribuer des réseaux entiers à chaque client. Les adresses s'écrivent en hexadécimal, comme 2001:db8::1, avec :: pour une suite de zéros. Le NAT disparaît, mais le pare-feu reste indispensable.
+
+@044
+Q: Comment s'abrège l'adresse IPv6 2001:0db8:0000:0000:0000:0000:0000:0001 ?
+C: 2001:db8::1
+W: 2001:db8:1
+W: 2001::db8::1
+W: 21:db8::1
+E: On supprime les zéros en tête de chaque groupe (0db8 devient db8), puis on remplace une seule suite de groupes nuls par :: . Deux :: dans une adresse seraient ambigus, donc interdits. 2001:db8::/32 est la plage réservée aux exemples.
+
+@045
+Q: Quelle commande Windows vide le cache DNS du poste ?
+C: ipconfig /flushdns
+W: ipconfig /release
+W: nslookup /clear
+W: ping /flush
+E: Après un changement d'adresse d'un serveur, le poste peut garder l'ancienne réponse en cache jusqu'à la fin de son TTL. ipconfig /flushdns force une nouvelle résolution. Le navigateur a parfois son propre cache, à vider aussi.
+
+@046
+Q: Que montre la première ligne de ce résultat de netstat -an ?
+C: Un service écoute sur le port 443 de toutes les interfaces
+W: Le poste est connecté au port 443 d'un serveur distant
+W: Le port 443 est bloqué par le pare-feu du poste
+W: Le port 443 attend une adresse DHCP
+E: LISTENING sur 0.0.0.0:443 signale un service en écoute sur toutes les adresses. La seconde ligne, ESTABLISHED, est une connexion du poste vers un serveur web distant, depuis un port source éphémère. ss -tan sous Linux affiche les mêmes informations.
+```
+  TCP    0.0.0.0:443           0.0.0.0:0              LISTENING
+  TCP    192.168.1.42:52114    203.0.113.80:443       ESTABLISHED
+```
+
+@047
+Q: D'après ce résultat, pourquoi les autres postes n'atteignent-ils pas le service sur le port 8080 ?
+C: Il n'écoute que sur la boucle locale
+W: Le port 8080 est interdit sur un réseau local
+W: Les autres postes doivent utiliser le port 80
+W: Il faut redémarrer le serveur DHCP
+E: 127.0.0.1 n'est joignable que depuis la machine elle-même. Pour être accessible depuis le réseau, le service doit écouter sur l'adresse de sa carte ou sur 0.0.0.0. Les serveurs de développement écoutent souvent en local par prudence.
+```
+$ ss -ltn
+State   Recv-Q  Send-Q  Local Address:Port
+LISTEN  0       128         127.0.0.1:8080
+```
+
+@048
+Q: Remettre dans l'ordre un diagnostic réseau méthodique d'un poste sans accès à un site.
+O: Vérifier le lien : câble ou Wi-Fi connecté
+O: Vérifier l'adresse IP et la passerelle avec ipconfig
+O: Pinguer la passerelle
+O: Pinguer une adresse publique, comme 1.1.1.1
+O: Tester la résolution du nom avec nslookup
+E: On remonte les couches : physique, adresse, réseau local, Internet, puis DNS. La première étape qui échoue localise la panne. Commencer par le DNS ou le site, c'est risquer de chercher longtemps au mauvais endroit.
+
+@049
+Q: Qu'est-ce que la latence d'une connexion ?
+C: Le délai d'un aller-retour entre deux machines
+W: Le volume maximal de données par seconde
+W: Le nombre de paquets perdus en route
+W: Le nombre de routeurs traversés
+E: La latence se mesure en millisecondes, par ping : quelques ms en local, une dizaine en fibre vers un serveur proche, plus de 100 vers l'autre bout du monde. Le débit, en Mbit/s, est le volume transportable. Une application bavarde souffre de la latence, un gros téléchargement du débit.
+
+@050
+Q: Combien de secondes faut-il au minimum pour transférer un fichier de 100 mégaoctets sur une liaison de 100 mégabits par seconde ?
+N: 8
+U: s
+E: 100 Mo = 800 Mbit, car un octet vaut 8 bits ; à 100 Mbit/s, il faut 8 secondes, sans compter les en-têtes et la latence. Confondre mégabits et mégaoctets est l'erreur classique : un abonnement « 1 Gbit/s » télécharge au mieux 125 Mo par seconde.
