@@ -4,15 +4,21 @@ Croise les compétences citées par les offres en base avec le profil et les
 scores de révision, pour voir où porter l'effort avant les entretiens.
 """
 
+from datetime import date, timedelta
+
 from job.enrichment import SKILLS
 from job.profile import load_profile
 from job.quiz import build_quiz_overview
 from job.quiz_domains import DOMAIN_ICONS, classify_theme
 from job.quiz_generation import load_catalog
 from storage.job_offers import get_skill_lists
+from storage.quiz_answers import get_answer_history
 
 # Nombre de compétences affichées, les plus demandées d'abord
 MAX_SKILLS = 20
+
+# Semaines retracées par la courbe de préparation
+HISTORY_WEEKS = 12
 
 # Seuils de maîtrise d'une compétence, d'après le score de ses thèmes
 MASTERED_SCORE = 80
@@ -175,7 +181,59 @@ def summarize_skills(pRows):
     return rSummary
 
 
-def build_skills_dashboard(pDatabaseFile, pQuiz):
+def get_readiness(pRows, pThemeIds, pAnswers):
+    """Retourne la préparation pondérée par la demande, d'après des réponses données."""
+
+    vDemand = 0
+    vWeighted = 0
+
+    for vRow in pRows:
+        vIds = [vId for vKey, _ in vRow["themes"] for vId in pThemeIds.get(vKey, ())]
+        vScore = (
+            100 * sum(1 for vId in vIds if pAnswers.get(vId)) / len(vIds) if vIds else 0
+        )
+        vDemand += vRow["offers"]
+        vWeighted += vRow["offers"] * vScore
+
+    rReadiness = round(vWeighted / vDemand) if vDemand else 0
+
+    return rReadiness
+
+
+def build_readiness_history(pHistory, pQuiz, pRows, pToday, pWeeks=HISTORY_WEEKS):
+    """Retourne la préparation pondérée à la fin de chacune des dernières semaines.
+
+    Les réponses sont rejouées dans l'ordre : à chaque fin de semaine, seule la
+    dernière réponse de chaque question compte, comme pour le score actuel.
+    """
+
+    vThemeIds = {
+        vKey: [vQuestion["id"] for vQuestion in vTheme["questions"]]
+        for vKey, vTheme in pQuiz.items()
+    }
+    vAnswers = {}
+    vIndex = 0
+    rHistory = []
+
+    for vWeek in range(pWeeks - 1, -1, -1):
+        vEnd = pToday - timedelta(days=7 * vWeek)
+
+        while vIndex < len(pHistory) and pHistory[vIndex][2][:10] <= vEnd.isoformat():
+            vQuestionId, vCorrect, _ = pHistory[vIndex]
+            vAnswers[vQuestionId] = vCorrect
+            vIndex += 1
+
+        rHistory.append(
+            {
+                "label": vEnd.strftime("%d/%m"),
+                "readiness": get_readiness(pRows, vThemeIds, vAnswers),
+            }
+        )
+
+    return rHistory
+
+
+def build_skills_dashboard(pDatabaseFile, pQuiz, pToday=None):
     """Retourne les compétences les plus demandées croisées avec la préparation."""
 
     vSkillLists = get_skill_lists(pDatabaseFile)
@@ -194,6 +252,9 @@ def build_skills_dashboard(pDatabaseFile, pQuiz):
         "offer_count": len(vSkillLists),
         "rows": vRows,
         "summary": summarize_skills(vRows),
+        "history": build_readiness_history(
+            get_answer_history(pDatabaseFile), pQuiz, vRows, pToday or date.today()
+        ),
     }
 
     return rDashboard

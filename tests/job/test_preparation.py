@@ -12,6 +12,7 @@ from job.preparation import (
 )
 from job.profile import (
     MAX_TEXT_LENGTH,
+    add_profile_skill,
     build_profile,
     is_profile_empty,
     load_profile,
@@ -206,3 +207,17 @@ def test_filter_by_match_keeps_close_offers():
     assert [vOffer["title"] for vOffer in filter_by_match(vOffers, 50)] == ["A"]
     assert filter_by_match(vOffers, 0) == vOffers
     assert filter_by_match([{"match_score": None}], 70) == [{"match_score": None}]
+
+
+def test_add_profile_skill(tmp_path):
+    """Vérifie l'ajout d'une compétence, sans doublon de casse ni valeur vide."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    assert add_profile_skill(vDatabaseFile, " Python ")
+    assert not add_profile_skill(vDatabaseFile, "python")
+    assert not add_profile_skill(vDatabaseFile, "  ")
+    assert add_profile_skill(vDatabaseFile, "Docker")
+    assert load_profile(vDatabaseFile)["skills"] == ["Python", "Docker"]

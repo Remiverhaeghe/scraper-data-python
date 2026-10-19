@@ -48,6 +48,12 @@ SOURCE_COLUMNS = 6
 
 DEFAULT_MAX_ITEMS = 100
 
+NO_KEYWORD_WARNING = (
+    "Recherche sans mot-clé : Adzuna et Jooble renvoient les offres de tous les "
+    "métiers. Un mot-clé, ou des mots à exclure, garde la base centrée sur vos "
+    "recherches."
+)
+
 # Icône et couleur du message d'état selon sa nature
 STATUS_STYLES = {
     "idle": ("search", "muted"),
@@ -537,6 +543,13 @@ class SearchPage(QWidget):
             self.progress_bar.setValue(0)
             self.set_status("running", "Démarrage de la recherche...")
             self.set_running(True)
+
+            # Sans mot-clé, les sources généralistes renvoient tous les métiers.
+            if not self.keyword_edit.text().strip() and (
+                {"adzuna", "jooble"} & set(vSources)
+            ):
+                self.warning_label.setText(NO_KEYWORD_WARNING)
+                self.warning_label.show()
 
             # La recherche tourne dans un QThread : interroger les sources dans le
             # thread de l'interface figerait la fenêtre pendant toute la recherche.

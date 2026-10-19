@@ -5,13 +5,16 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
+import gui.offer_assistant as offer_assistant
+import gui.offer_attachments as offer_attachments
 import gui.offer_detail as offer_detail
 import gui.offers_page as offers_page_module
 from gui.offer_form import ManualOfferDialog
 from job.companies import load_company_rules
 from job.manual_offers import add_manual_offer
 from job.profile import build_profile, save_profile
-from gui.offer_detail import describe_application, summarize_values
+from gui.offer_application import describe_application
+from gui.offer_detail import summarize_values
 from gui.offers_model import format_cell, get_cell_color
 from gui.theme import COLORS
 from gui.offers_page import OffersPage
@@ -112,9 +115,11 @@ def test_saving_application_keeps_selection(offers_page, database_file):
     offers_page.select_offer(("lever", "1"))
 
     vPanel = offers_page.detail_panel
-    vPanel.status_combo.setCurrentIndex(vPanel.status_combo.findData("APPLIED"))
-    vPanel.notes_edit.setPlainText("Contact : RH")
-    vPanel.save()
+    vPanel.application.status_combo.setCurrentIndex(
+        vPanel.application.status_combo.findData("APPLIED")
+    )
+    vPanel.application.notes_edit.setPlainText("Contact : RH")
+    vPanel.application.save()
 
     vApplication = get_application(database_file, "lever", "1")
 
@@ -122,7 +127,7 @@ def test_saving_application_keeps_selection(offers_page, database_file):
     assert vApplication["notes"] == "Contact : RH"
     assert vApplication["follow_up_date"] is not None
     assert vPanel.offer["source_id"] == "1"
-    assert vPanel.follow_up_button.isVisibleTo(vPanel)
+    assert vPanel.application.follow_up_button.isVisibleTo(vPanel)
 
 
 def test_removing_status_deletes_application(offers_page, database_file):
@@ -131,8 +136,8 @@ def test_removing_status_deletes_application(offers_page, database_file):
     save_application(database_file, "lever", "2", "INTERESTED")
 
     offers_page.select_offer(("lever", "2"))
-    offers_page.detail_panel.status_combo.setCurrentIndex(0)
-    offers_page.detail_panel.save()
+    offers_page.detail_panel.application.status_combo.setCurrentIndex(0)
+    offers_page.detail_panel.application.save()
 
     assert get_application(database_file, "lever", "2") is None
 
@@ -278,14 +283,15 @@ def test_detail_checks_availability(
 ):
     """Vérifie la vérification du lien depuis le détail et l'enregistrement."""
 
-    monkeypatch.setattr(offer_detail, "check_offer_link", lambda pUrl: pResult)
+    monkeypatch.setattr(offer_assistant, "check_offer_link", lambda pUrl: pResult)
 
     offers_page.select_offer(("lever", "1"))
-    offers_page.detail_panel.check_availability()
+    offers_page.detail_panel.assistant.check_availability()
 
-    assert pText in offers_page.detail_panel.availability_label.text()
+    assert pText in offers_page.detail_panel.assistant.availability_label.text()
     assert (
-        "font-weight: 600" in offers_page.detail_panel.availability_label.styleSheet()
+        "font-weight: 600"
+        in offers_page.detail_panel.assistant.availability_label.styleSheet()
     )
     assert get_offer(database_file, "lever", "1")["availability"] == pSaved
 
@@ -420,27 +426,31 @@ def test_attachments_are_added_and_deleted(
     vWarnings = []
 
     monkeypatch.setattr(
-        offer_detail.QMessageBox,
+        offer_attachments.QMessageBox,
         "warning",
         lambda pParent, pTitle, pText: vWarnings.append(pText),
     )
     monkeypatch.setattr(
-        offer_detail.QMessageBox,
+        offer_attachments.QMessageBox,
         "question",
-        lambda *pArgs: offer_detail.QMessageBox.StandardButton.Yes,
+        lambda *pArgs: offer_attachments.QMessageBox.StandardButton.Yes,
     )
 
-    vPanel.attach_file(str(vCv))
-    vPanel.attach_file(str(vRefused))
+    vPanel.application.attachments.attach_file(str(vCv))
+    vPanel.application.attachments.attach_file(str(vRefused))
 
-    assert vPanel.attachments_list.count() == 1
-    assert vPanel.attachments_list.item(0).text().startswith("CV.pdf · ")
+    assert vPanel.application.attachments.attachments_list.count() == 1
+    assert (
+        vPanel.application.attachments.attachments_list.item(0)
+        .text()
+        .startswith("CV.pdf · ")
+    )
     assert vWarnings[0].startswith("Type de fichier non accepté")
 
-    vPanel.attachments_list.setCurrentRow(0)
-    vPanel.delete_attachment()
+    vPanel.application.attachments.attachments_list.setCurrentRow(0)
+    vPanel.application.attachments.delete_attachment()
 
-    assert vPanel.attachments_list.count() == 0
+    assert vPanel.application.attachments.attachments_list.count() == 0
 
 
 def test_add_offer_selects_created_offer(offers_page, monkeypatch):
@@ -502,14 +512,16 @@ def test_attachment_dialogs(offers_page, tmp_path, monkeypatch):
     vOpened = []
 
     monkeypatch.setattr(
-        offer_detail.QFileDialog, "getOpenFileName", lambda *pArgs: (str(vCv), "")
+        offer_attachments.QFileDialog, "getOpenFileName", lambda *pArgs: (str(vCv), "")
     )
     monkeypatch.setattr(
-        offer_detail.QDesktopServices, "openUrl", lambda pUrl: vOpened.append(pUrl)
+        offer_attachments.QDesktopServices, "openUrl", lambda pUrl: vOpened.append(pUrl)
     )
 
-    vPanel.add_attachment()
-    vPanel.open_attachment(vPanel.attachments_list.item(0))
+    vPanel.application.attachments.add_attachment()
+    vPanel.application.attachments.open_attachment(
+        vPanel.application.attachments.attachments_list.item(0)
+    )
 
     assert vOpened[0].toLocalFile().endswith(".pdf")
 
@@ -553,10 +565,10 @@ def test_chatgpt_prompt_and_company_info(offers_page, database_file, monkeypatch
     vDialogs = []
 
     monkeypatch.setattr(
-        offer_detail.QDesktopServices, "openUrl", lambda pUrl: vOpened.append(pUrl)
+        offer_assistant.QDesktopServices, "openUrl", lambda pUrl: vOpened.append(pUrl)
     )
     monkeypatch.setattr(
-        offer_detail,
+        offer_assistant,
         "lookup_company",
         lambda pName: [
             {
@@ -575,20 +587,20 @@ def test_chatgpt_prompt_and_company_info(offers_page, database_file, monkeypatch
         ],
     )
     monkeypatch.setattr(
-        offer_detail,
+        offer_assistant,
         "show_text_dialog",
         lambda pParent, pTitle, pHtml: vDialogs.append(pHtml),
     )
 
-    vPanel.show_company_info()
-    vPanel.copy_prompt("company")
+    vPanel.assistant.show_company_info()
+    vPanel.assistant.copy_prompt("company")
 
     assert "https://annuaire.example/123456789" in vDialogs[0]
     assert vOpened[0].toString() == "https://chatgpt.com/"
     assert "Informations publiques déjà trouvées : GLOBEX" in (
-        offer_detail.QApplication.clipboard().text()
+        offer_assistant.QApplication.clipboard().text()
     )
-    assert vPanel.assistant_label.text().startswith(
+    assert vPanel.assistant.assistant_label.text().startswith(
         "Demande « Comprendre l'entreprise » copiée"
     )
 
@@ -616,9 +628,11 @@ def test_interview_score_and_france_filter(offers_page, database_file):
     assert format_cell(vOffer, "match_score") == "50 %"
     assert vOffer["country"] == "France"
 
-    vPanel.status_combo.setCurrentIndex(vPanel.status_combo.findData("INTERVIEW"))
-    vPanel.interview_check.setChecked(True)
-    vPanel.save()
+    vPanel.application.status_combo.setCurrentIndex(
+        vPanel.application.status_combo.findData("INTERVIEW")
+    )
+    vPanel.application.interview_check.setChecked(True)
+    vPanel.application.save()
 
     assert get_application(database_file, "manual", vSourceId)["interview_at"]
 
@@ -666,7 +680,7 @@ def test_detail_offers_translation_and_limits_company_info(
     vPanel = offers_page.detail_panel
 
     assert not vPanel.translate_button.isHidden()
-    assert not vPanel.company_info_button.isEnabled()
+    assert not vPanel.assistant.company_info_button.isEnabled()
 
     vPanel.translate_button.click()
 

@@ -1,11 +1,12 @@
 """Tests du tableau de bord des compétences"""
 
-from datetime import datetime
+from datetime import date, datetime
 
 import pandas as pd
 
 from job.quiz import load_quiz
 from job.skills_dashboard import (
+    build_readiness_history,
     build_skill_rows,
     build_skills_dashboard,
     count_skill_demand,
@@ -124,3 +125,30 @@ def test_build_skills_dashboard(tmp_path):
     assert vDashboard["offer_count"] == 2
     assert {vRow["skill"] for vRow in vDashboard["rows"]} == {"Python", "AWS"}
     assert vDashboard["summary"]["covered"] == 1
+
+
+def test_readiness_history_replays_answers_week_by_week():
+    """Vérifie la préparation pondérée à la fin de chaque semaine."""
+
+    vQuiz = {"t": {"questions": [{"id": "q1"}, {"id": "q2"}]}}
+    vRows = [
+        {"offers": 10, "themes": [("t", "Thème")]},
+        {"offers": 10, "themes": []},
+    ]
+    vHistory = [
+        ("q1", True, "2026-10-05T10:00:00"),
+        ("q2", True, "2026-10-15T09:00:00"),
+    ]
+
+    vPoints = build_readiness_history(
+        vHistory, vQuiz, vRows, date(2026, 10, 19), pWeeks=3
+    )
+
+    assert vPoints == [
+        {"label": "05/10", "readiness": 25},
+        {"label": "12/10", "readiness": 25},
+        {"label": "19/10", "readiness": 50},
+    ]
+    assert build_readiness_history([], vQuiz, [], date(2026, 10, 19), pWeeks=1) == [
+        {"label": "19/10", "readiness": 0}
+    ]

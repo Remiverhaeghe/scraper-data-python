@@ -1852,3 +1852,14 @@ def test_skills_page(client):
     vPrompt = client.post("/quiz/prompt", data={"theme": "Cloud et infrastructure"})
 
     assert vPrompt.status_code == 200
+
+
+def test_skill_is_added_to_profile_from_the_web(client):
+    """Vérifie le formulaire d'ajout d'une compétence au profil."""
+
+    vResponse = client.post("/skills/profile", data={"skill": "Python"})
+    vPage = client.get("/skills").text
+
+    assert vResponse.status_code == 200
+    assert 'name="skill" value="Python"' not in vPage
+    assert 'name="skill" value="Django"' in vPage

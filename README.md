@@ -275,6 +275,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Rejet des offres inexploitables (ni titre ni description), compté dans la qualité des données
 - [x] Analyse des offres exportées depuis « Qualité des données » pour ajouter des règles de découpage : milliers avec décimales, taux horaires, titres en plusieurs segments, devises en code (EUR, USD, GBP), montants à l'anglaise (« $175,000 »), salaires mensuels
 - [x] Entreprise des offres Greenhouse, date des offres Jooble et titre des annonces Findwork sans poste renseigné
+- [x] Mots exclus d'un seul mot transmis à Adzuna, pour que ses pages servent à des offres utiles ; avertissement d'une recherche sans mot-clé sur Adzuna et Jooble
 - [x] Hacker News : seuls les messages en forme d'offre sont gardés (en-tête « Entreprise | Poste | Lieu », lignes « Company: » ou annonce explicite), lieu placé à la place du poste reconnu, poste cherché dans le texte s'il manque à l'en-tête ; offres Findwork sans poste écartées, leur message Hacker News étant déjà collecté
 
 ### Aide à la candidature, à base de règles et sans service payant
@@ -285,6 +286,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] CV conseillé selon l'offre
 - [x] Préparation d'entretien : expériences à citer, questions à poser
 - [x] Révision ciblée sur une offre : thèmes dont l'offre demande les compétences, les moins maîtrisés d'abord, puis examen blanc limité à ces thèmes (bureau et web)
+- [x] Ajout d'une compétence au profil d'un clic depuis le tableau des compétences ; courbe de la préparation pondérée sur les douze dernières semaines
 - [x] Tableau de bord des compétences : les 20 compétences les plus demandées dans les offres, croisées avec le profil et les scores de révision ; préparation pondérée par la demande, compétence prioritaire, et pour chacune « Réviser » ou « Préparer » la demande de questions ChatGPT quand elle n'en a pas (bureau et web)
 - [x] Pistes de réponse aux questions classiques : présentation, pourquoi l'entreprise, réussite (méthode STAR), point faible, prétentions salariales
 - [x] Brouillon de lettre de motivation
@@ -591,7 +593,10 @@ scraper-data-python/
 │   ├── search_worker.py                       # Exécute la recherche dans un QThread
 │   ├── offers_page.py                         # Filtres et tableau des offres en base
 │   ├── offers_model.py                        # Modèle Qt du tableau des offres
-│   ├── offer_detail.py                        # Détail d'une offre et suivi de candidature
+│   ├── offer_detail.py                        # Détail d'une offre : résumé et description
+│   ├── offer_assistant.py                     # Aide : préparation, examen blanc, ChatGPT, lien
+│   ├── offer_application.py                   # Suivi de candidature : statut, relance, entretien
+│   ├── offer_attachments.py                   # Pièces jointes d'une offre
 │   ├── offer_form.py                          # Saisie manuelle d'une offre
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
 │   ├── quiz_page.py                           # Révision technique : thèmes, questions et examen

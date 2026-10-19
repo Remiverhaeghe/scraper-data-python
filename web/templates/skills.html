@@ -16,6 +16,12 @@
 </section>
 
 <article class="card section-gap">
+    <h2>Évolution de la préparation</h2>
+    <p class="card-subtitle">Préparation pondérée par la demande à la fin de chaque semaine, d'après vos réponses de révision</p>
+    {{ ui.bar_chart(history_chart, "Préparation par semaine") }}
+</article>
+
+<article class="card section-gap">
     <h2>Demande des offres</h2>
     <p class="card-subtitle">Les compétences les plus citées, colorées selon votre préparation : vert maîtrisé, bleu en cours, orange à réviser, rouge sans question</p>
     {{ ui.bar_chart(chart, "Offres par compétence") }}
@@ -34,7 +40,15 @@
                 <tr>
                     <td class="nowrap"><span class="tone-primary">{{ icon(row.icon, 16) }}</span> <strong>{{ row.skill }}</strong></td>
                     <td>{{ row.offers }} <small class="muted">({{ row.share }} %)</small></td>
-                    <td>{{ "Oui" if row.in_profile else "Non" }}</td>
+                    <td>
+                        {% if row.in_profile %}Oui{% else %}
+                        <form method="post" action="{{ url_for('add_skill_to_profile').path }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                            <input type="hidden" name="skill" value="{{ row.skill }}">
+                            <button class="button" type="submit" title="Ajouter {{ row.skill }} à mon profil">{{ icon("user", 16) }} Ajouter</button>
+                        </form>
+                        {% endif %}
+                    </td>
                     <td>{% for key, label in row.themes %}{{ label }}{% if not loop.last %}, {% endif %}{% else %}<span class="muted">Aucun thème</span>{% endfor %}</td>
                     <td>{% if row.themes %}<div class="quiz-progress" role="progressbar" aria-valuenow="{{ row.score }}" aria-valuemin="0" aria-valuemax="100" aria-label="Maîtrise {{ row.skill }}"><span style="width: {{ row.score }}%"></span></div> <small class="muted">{{ row.score }} %</small>{% else %}-{% endif %}</td>
                     <td class="tone-{{ status[2] }}">{{ icon(status[1], 16) }} {{ status[0] }}</td>

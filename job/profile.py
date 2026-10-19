@@ -157,6 +157,22 @@ def save_profile(pDatabaseFile, pProfile):
     )
 
 
+def add_profile_skill(pDatabaseFile, pSkill):
+    """Ajoute une compétence au profil, sauf si elle y est déjà ; retourne si ajoutée."""
+
+    vProfile = load_profile(pDatabaseFile)
+    vSkill = pSkill.strip()
+    rAdded = bool(vSkill) and vSkill.lower() not in {
+        vItem.lower() for vItem in vProfile["skills"]
+    }
+
+    if rAdded:
+        vProfile["skills"] = [*vProfile["skills"], vSkill]
+        save_profile(pDatabaseFile, vProfile)
+
+    return rAdded
+
+
 def is_profile_empty(pProfile):
     """Indique si le profil ne contient encore aucune compétence ni expérience."""
 

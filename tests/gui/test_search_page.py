@@ -390,3 +390,26 @@ def test_saved_search_reports_invalid_name(saved_search_page, monkeypatch):
     assert (
         saved_search_page.saved_message_label.text() == "Donnez un nom à la recherche."
     )
+
+
+def test_search_without_keyword_warns_for_general_sources(search_page):
+    """Vérifie l'avertissement d'une recherche Adzuna sans mot-clé."""
+
+    use_fake_controller(search_page)
+    search_page.check_sources(False)
+    search_page.source_buttons["adzuna"].setChecked(True)
+    search_page.keyword_edit.clear()
+
+    search_page.start_search()
+
+    assert search_page.warning_label.text() == search_page_module.NO_KEYWORD_WARNING
+    assert not search_page.warning_label.isHidden()
+
+    wait_until(lambda: not search_page.is_running())
+
+    search_page.keyword_edit.setText("automaticien")
+    search_page.start_search()
+
+    assert search_page.warning_label.isHidden()
+
+    wait_until(lambda: not search_page.is_running())

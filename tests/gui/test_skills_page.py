@@ -69,3 +69,31 @@ def test_skills_rows_fit_their_button(qt_application, tmp_path):
     vPage.refresh()
 
     assert vPage.table.rowHeight(0) >= vPage.table.cellWidget(0, 6).sizeHint().height()
+
+
+def test_skill_is_added_to_profile_from_the_table(qt_application, tmp_path):
+    """Vérifie le bouton « Ajouter à mon profil » d'une compétence."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [{"source": "a", "source_id": "1", "title": "Dev", "skills": '["AWS"]'}]
+        ),
+        datetime(2026, 10, 19),
+    )
+
+    vPage = SkillsPage(vDatabaseFile)
+    vPage.refresh()
+
+    assert vPage.table.item(0, 2).text() == "Non"
+
+    vPage.table.cellWidget(0, 6).findChild(QPushButton, "profileSkillButton").click()
+
+    assert vPage.table.item(0, 2).text() == "Oui"
+    assert (
+        vPage.table.cellWidget(0, 6).findChild(QPushButton, "profileSkillButton")
+        is None
+    )

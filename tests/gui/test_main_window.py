@@ -1,6 +1,6 @@
 """Tests de la fenêtre principale"""
 
-import gui.offer_detail as offer_detail
+import gui.offer_assistant as offer_assistant
 from gui.main_window import MainWindow
 from job.presentation import FOLLOW_UP_FILTER
 from job.quiz_exam import load_exam
@@ -107,7 +107,7 @@ def test_offer_mock_exam_opens_quiz_page(qt_application, tmp_path, monkeypatch):
     initialize_database(vDatabaseFile)
 
     vWindow = MainWindow(vDatabaseFile, "Test")
-    vPanel = vWindow.offers_page.detail_panel
+    vPanel = vWindow.offers_page.detail_panel.assistant
     vPanel.offer = {
         "source": "adzuna",
         "source_id": "42",
@@ -115,9 +115,9 @@ def test_offer_mock_exam_opens_quiz_page(qt_application, tmp_path, monkeypatch):
         "description": "API FastAPI et base PostgreSQL.",
     }
     monkeypatch.setattr(
-        offer_detail.QMessageBox,
+        offer_assistant.QMessageBox,
         "question",
-        lambda *pArgs: offer_detail.QMessageBox.StandardButton.Yes,
+        lambda *pArgs: offer_assistant.QMessageBox.StandardButton.Yes,
     )
 
     vPanel.request_exam()

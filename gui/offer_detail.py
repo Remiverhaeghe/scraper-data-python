@@ -1,28 +1,21 @@
-"""Panneau de détail d'une offre et de son suivi de candidature"""
+"""Panneau de détail d'une offre : résumé, description, aide et suivi
+
+Le panneau assemble trois parties autonomes : l'aide à la candidature
+(gui/offer_assistant.py), le suivi (gui/offer_application.py) et ses pièces
+jointes (gui/offer_attachments.py).
+"""
 
 from datetime import datetime
 from html import escape
-from pathlib import Path
 
-from PySide6.QtCore import QDate, QDateTime, Qt, QTime, QUrl, Signal
+from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QTextBlockFormat, QTextCursor
 from PySide6.QtWidgets import (
-    QApplication,
-    QCheckBox,
-    QComboBox,
-    QDateEdit,
-    QDateTimeEdit,
     QFrame,
     QGroupBox,
-    QGridLayout,
     QHBoxLayout,
-    QFileDialog,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
-    QMenu,
     QMessageBox,
-    QPlainTextEdit,
     QPushButton,
     QScrollArea,
     QStackedWidget,
@@ -31,56 +24,24 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.dialogs import show_preparation, show_text_dialog
+from gui.offer_application import ApplicationPanel
+from gui.offer_assistant import OfferAssistantPanel
 from gui.theme import COLORS
-from gui.widgets import (
-    align_spin_box,
-    create_button,
-    create_card,
-    create_icon_label,
-)
-from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
-from job.company_info import lookup_company, summarize_company
+from gui.widgets import create_button, create_card, create_icon_label
 from job.companies import (
     add_company_rule,
     describe_company_applications,
     find_company_applications,
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
-from job.interview_revision import build_offer_revision
-from job.preparation import prepare_application
 from job.presentation import (
-    AVAILABILITY_LABELS,
-    AVAILABILITY_HELP,
-    AVAILABILITY_MESSAGES,
-    AVAILABILITY_TONES,
     build_translate_url,
-    can_lookup_company,
-    STATUS_LABELS,
     format_date,
     format_net_salary,
     prepare_offer,
     safe_url,
 )
-from job.profile import is_profile_empty, load_profile
-from job.quiz import load_active_quiz
-from job.settings import load_settings
-from storage.job_applications import (
-    delete_application,
-    get_application,
-    record_follow_up,
-    save_application,
-)
-from storage.attachments import (
-    ALLOWED_EXTENSIONS,
-    add_attachment,
-    delete_attachment,
-    get_attachment,
-    get_attachments,
-)
 from storage.duplicates import save_decision
-from storage.job_offers import FOLLOW_UP_STATUSES, set_availability
-from utils.link_checker import check_offer_link
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -108,27 +69,6 @@ INFO_ROWS = (
 DESCRIPTION_LINE_HEIGHT = 145
 
 
-def describe_application(pApplication):
-    """Résume les dates de candidature et de relance."""
-
-    vParts = []
-
-    if pApplication and pApplication.get("applied_at"):
-        vParts.append(
-            f"Candidature envoyée le {format_date(pApplication['applied_at'])}."
-        )
-
-    if pApplication and pApplication.get("follow_up_count"):
-        vParts.append(
-            f"{pApplication['follow_up_count']} relance(s), la dernière le "
-            f"{format_date(pApplication['last_follow_up_at'])}."
-        )
-
-    rDescription = " ".join(vParts)
-
-    return rDescription
-
-
 def summarize_values(pValues, pLimit=MAX_LIST_VALUES):
     """Résume une liste en ses premières valeurs suivies du nombre restant."""
 
@@ -140,49 +80,6 @@ def summarize_values(pValues, pLimit=MAX_LIST_VALUES):
         rText += f" +{len(vValues) - pLimit}"
 
     return rText
-
-
-def describe_availability(pOffer):
-    """Résume la disponibilité connue d'une offre, sous le bouton de vérification."""
-
-    rText = ""
-
-    if pOffer.get("availability_checked_at"):
-        rText = (
-            f"Vérifiée le {format_date(pOffer['availability_checked_at'])} : "
-            f"{AVAILABILITY_LABELS[pOffer['availability']]}"
-        )
-    elif pOffer.get("is_expired"):
-        rText = "Probablement expirée : plus vue dans les recherches récentes."
-
-    return rText
-
-
-def describe_companies_html(pCompanies):
-    """Présente les entreprises trouvées, avec le lien vers leur fiche officielle."""
-
-    vItems = []
-
-    for vCompany in pCompanies:
-        # Textes reçus d'un service extérieur : échappés avant d'être affichés en HTML.
-        vLink = (
-            f"<br><a href='{escape(vCompany['url'])}'>Fiche sur l'Annuaire des "
-            "entreprises</a>"
-            if vCompany["url"]
-            else ""
-        )
-        vItems.append(
-            f"<li><b>{escape(vCompany['name'])}</b><br>"
-            f"{escape(summarize_company(vCompany).split(' : ', 1)[-1])}{vLink}</li>"
-        )
-
-    rHtml = (
-        "<p>Plusieurs sociétés portent souvent le même nom (groupe, filiales) : "
-        "vérifiez la bonne avant l'entretien.</p>"
-        f"<ul>{''.join(vItems)}</ul>"
-    )
-
-    return rHtml
 
 
 def describe_duplicates(pGroup):
@@ -220,7 +117,7 @@ def describe_duplicates(pGroup):
 
 
 class OfferDetailPanel(QWidget):
-    """Affiche une offre et permet de mettre à jour son suivi."""
+    """Affiche une offre et rassemble son aide à la candidature et son suivi."""
 
     application_changed = Signal()
     exam_requested = Signal(dict)
@@ -231,8 +128,13 @@ class OfferDetailPanel(QWidget):
 
         self.database_file = pDatabaseFile
         self.offer = None
-        self.attachments_list = None
-        self.company_summary = None
+
+        self.assistant = OfferAssistantPanel(pDatabaseFile)
+        self.assistant.exam_requested.connect(self.exam_requested)
+
+        self.application = ApplicationPanel(pDatabaseFile)
+        self.application.setFixedWidth(340)
+        self.application.changed.connect(self.application_changed)
 
         self.title_label = QLabel()
         self.title_label.setObjectName("offerTitle")
@@ -299,14 +201,11 @@ class OfferDetailPanel(QWidget):
         vSummary.addWidget(self.company_warning)
         vSummary.addLayout(self.create_company_row())
         vSummary.addWidget(self.open_button)
-        vSummary.addLayout(self.create_availability_row())
+        vSummary.addWidget(self.assistant)
         vSummary.addWidget(self.create_duplicates_group())
         vSummary.addSpacing(6)
         vSummary.addLayout(vInfos)
         vSummary.addStretch()
-
-        vApplicationGroup = self.create_application_group()
-        vApplicationGroup.setFixedWidth(340)
 
         vContent = QWidget()
 
@@ -326,7 +225,7 @@ class OfferDetailPanel(QWidget):
 
         vContentLayout.addWidget(vSummaryScroll)
         vContentLayout.addWidget(vDescriptionCard, 1)
-        vContentLayout.addWidget(vApplicationGroup)
+        vContentLayout.addWidget(self.application)
 
         # Page 0 : aucune offre choisie, page 1 : détail de l'offre
         self.stack = QStackedWidget()
@@ -390,16 +289,6 @@ class OfferDetailPanel(QWidget):
     def show_company(self, pOffer):
         """Affiche l'avertissement de candidature déjà envoyée et l'état de l'entreprise."""
         vHasCompany = bool(pOffer.get("company"))
-
-        self.company_summary = None
-        self.assistant_label.clear()
-        vLookup = can_lookup_company(pOffer)
-        self.company_info_button.setEnabled(vLookup)
-        self.company_info_button.setToolTip(
-            "L'annuaire public ne couvre que les entreprises françaises"
-            if vHasCompany and not vLookup
-            else "Activité, taille et siège, depuis l'annuaire public des entreprises"
-        )
         vText = None
 
         if pOffer and vHasCompany:
@@ -418,217 +307,6 @@ class OfferDetailPanel(QWidget):
 
         self.company_buttons["preferred"].setVisible(vHasCompany and not vPreferred)
         self.company_buttons["excluded"].setVisible(vHasCompany)
-
-    def create_availability_row(self):
-        """Construit la vérification du lien et son résultat."""
-        self.availability_button = create_button(
-            "Vérifier la disponibilité", "circle-check", pIconColor=COLORS["primary"]
-        )
-        self.availability_button.setToolTip(AVAILABILITY_HELP)
-        self.availability_button.clicked.connect(self.check_availability)
-
-        self.availability_label = QLabel()
-        self.availability_label.setObjectName("cardSubtitle")
-        self.availability_label.setWordWrap(True)
-
-        self.prepare_button = create_button(
-            "Préparer ma candidature", "sparkles", pIconColor=COLORS["primary"]
-        )
-        self.prepare_button.clicked.connect(self.open_preparation)
-
-        # Examen blanc sur les thèmes de révision dont l'offre demande les compétences
-        self.exam_button = create_button(
-            "Examen blanc pour l'entretien", "timer", pIconColor=COLORS["primary"]
-        )
-        self.exam_button.setToolTip(
-            "Questions tirées dans les thèmes de révision demandés par l'offre"
-        )
-        self.exam_button.clicked.connect(self.request_exam)
-
-        # Demandes à coller dans ChatGPT : aucune API payante n'est appelée.
-        self.chatgpt_button = create_button(
-            "Préparer avec ChatGPT", "bot", pIconColor=COLORS["primary"]
-        )
-        self.chatgpt_button.setToolTip(
-            "Copie une demande complète et ouvre ChatGPT : collez-la avec Ctrl+V"
-        )
-
-        vMenu = QMenu(self.chatgpt_button)
-
-        for vKind, vLabel in PROMPT_KINDS.items():
-            vMenu.addAction(vLabel, lambda pKind=vKind: self.copy_prompt(pKind))
-
-        self.chatgpt_button.setMenu(vMenu)
-
-        self.company_info_button = create_button(
-            "Infos sur l'entreprise (France)", "globe", pIconColor=COLORS["primary"]
-        )
-        self.company_info_button.setToolTip(
-            "Activité, taille et siège, depuis l'annuaire public des entreprises"
-        )
-        self.company_info_button.clicked.connect(self.show_company_info)
-
-        self.assistant_label = QLabel()
-        self.assistant_label.setObjectName("cardSubtitle")
-        self.assistant_label.setWordWrap(True)
-
-        rLayout = QVBoxLayout()
-        rLayout.setSpacing(4)
-        rLayout.addWidget(self.prepare_button)
-        rLayout.addWidget(self.exam_button)
-        rLayout.addWidget(self.chatgpt_button)
-        rLayout.addWidget(self.company_info_button)
-        rLayout.addWidget(self.assistant_label)
-        rLayout.addWidget(self.availability_button)
-        rLayout.addWidget(self.availability_label)
-
-        return rLayout
-
-    def open_preparation(self):
-        """Ouvre la préparation de candidature, ou invite à remplir le profil."""
-        if self.offer is None:
-            return
-
-        vProfile = load_profile(self.database_file)
-
-        if is_profile_empty(vProfile):
-            QMessageBox.information(
-                self,
-                "Préparer ma candidature",
-                "Renseignez d'abord vos compétences et expériences dans la page Profil.",
-            )
-        else:
-            show_preparation(
-                self,
-                self.offer.get("title") or "offre",
-                prepare_application(vProfile, self.offer),
-            )
-
-    def request_exam(self):
-        """Montre les thèmes à revoir pour l'offre, puis propose l'examen blanc."""
-        if self.offer is None:
-            return
-
-        vRevision = build_offer_revision(
-            self.database_file, load_active_quiz(self.database_file), self.offer
-        )
-
-        if not vRevision["themes"]:
-            QMessageBox.information(
-                self,
-                "Examen blanc",
-                "Aucun thème de révision ne correspond aux compétences de cette "
-                "offre. Importez des questions sur ces sujets depuis la page Révision.",
-            )
-            return
-
-        vThemes = "\n".join(
-            f"• {vTheme['label']} : {vTheme['score']} % acquis "
-            f"({', '.join(vTheme['matched'])})"
-            for vTheme in vRevision["themes"]
-        )
-        vAnswer = QMessageBox.question(
-            self,
-            "Examen blanc",
-            "Thèmes demandés par l'offre, les moins maîtrisés d'abord :\n\n"
-            f"{vThemes}\n\nCommencer un examen blanc de "
-            f"{vRevision['exam_count']} questions ?",
-        )
-
-        if vAnswer == QMessageBox.StandardButton.Yes:
-            self.exam_requested.emit(self.offer)
-
-    def copy_prompt(self, pKind):
-        """Copie une demande préparée pour ChatGPT puis ouvre le site."""
-        vPrompt = build_prompts(
-            load_profile(self.database_file), self.offer, self.company_summary
-        )[pKind]
-
-        QApplication.clipboard().setText(vPrompt)
-        QDesktopServices.openUrl(QUrl(CHATGPT_URL))
-
-        self.assistant_label.setText(
-            f"Demande « {PROMPT_KINDS[pKind]} » copiée : collez-la dans ChatGPT "
-            "(Ctrl+V) et relisez-la avant de l'envoyer."
-        )
-
-        logger.info("Demande ChatGPT copiée : %s", pKind)
-
-    def show_company_info(self):
-        """Affiche les entreprises trouvées dans l'annuaire public sous ce nom."""
-        vCompanyName = self.offer.get("company")
-
-        vCompanies = None
-        vMessage = None
-
-        # Requête courte mais bloquante : le curseur signale l'attente.
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-
-        try:
-            vCompanies = lookup_company(vCompanyName)
-
-        except ValueError as vException:
-            vMessage = str(vException)
-
-        finally:
-            QApplication.restoreOverrideCursor()
-
-        if vCompanies is None:
-            QMessageBox.warning(self, "Infos sur l'entreprise", vMessage)
-
-        elif not vCompanies:
-            QMessageBox.information(
-                self,
-                "Infos sur l'entreprise",
-                f"Aucune entreprise française trouvée sous le nom « {vCompanyName} ».",
-            )
-
-        else:
-            # Les résultats possibles sont repris dans la demande « Comprendre
-            # l'entreprise » : ChatGPT peut reconnaître la bonne société.
-            self.company_summary = " ; ".join(
-                summarize_company(vCompany) for vCompany in vCompanies
-            )
-            show_text_dialog(
-                self,
-                f"Entreprises trouvées pour « {vCompanyName} »",
-                pHtml=describe_companies_html(vCompanies),
-            )
-
-    def check_availability(self):
-        """Vérifie le lien de l'offre et enregistre un résultat net."""
-        if self.offer is None:
-            return
-
-        # Requête courte mais bloquante : le curseur signale l'attente.
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-
-        try:
-            vAvailability = check_offer_link(self.offer.get("url") or "")
-
-            if vAvailability is not None:
-                set_availability(
-                    self.database_file,
-                    self.offer["source"],
-                    self.offer["source_id"],
-                    vAvailability,
-                    datetime.now(),
-                )
-                self.offer["availability"] = vAvailability
-
-        finally:
-            QApplication.restoreOverrideCursor()
-
-        self.show_availability(AVAILABILITY_MESSAGES[vAvailability], vAvailability)
-
-    def show_availability(self, pText, pAvailability):
-        """Affiche le résultat de la vérification, en gras et en couleur."""
-        self.availability_label.setText(pText)
-        self.availability_label.setStyleSheet(
-            f"color: {COLORS[AVAILABILITY_TONES[pAvailability]]}; font-weight: 600;"
-            if pText
-            else ""
-        )
 
     def create_duplicates_group(self):
         """Construit la comparaison des annonces d'une offre publiée plusieurs fois."""
@@ -722,189 +400,6 @@ class OfferDetailPanel(QWidget):
 
         return rCard
 
-    def create_application_group(self):
-        """Construit le formulaire de suivi de candidature."""
-        self.status_combo = QComboBox()
-        self.status_combo.addItem("Aucun suivi", None)
-
-        for vStatus, vLabel in STATUS_LABELS.items():
-            self.status_combo.addItem(vLabel, vStatus)
-
-        self.follow_up_check = QCheckBox("Relance prévue le")
-
-        self.follow_up_edit = align_spin_box(QDateEdit())
-        self.follow_up_edit.setCalendarPopup(True)
-        self.follow_up_edit.setDisplayFormat("dd/MM/yyyy")
-        self.follow_up_edit.calendarWidget().setMinimumSize(320, 240)
-
-        self.follow_up_check.toggled.connect(self.follow_up_edit.setEnabled)
-
-        self.interview_check = QCheckBox("Entretien le")
-
-        self.interview_edit = align_spin_box(QDateTimeEdit())
-        self.interview_edit.setCalendarPopup(True)
-        self.interview_edit.setDisplayFormat("dd/MM/yyyy HH:mm")
-        self.interview_edit.calendarWidget().setMinimumSize(320, 240)
-
-        self.interview_check.toggled.connect(self.interview_edit.setEnabled)
-
-        # Les deux dates partagent une colonne : même largeur, sans texte coupé.
-        vDates = QGridLayout()
-        vDates.setHorizontalSpacing(8)
-        vDates.addWidget(self.follow_up_check, 0, 0)
-        vDates.addWidget(self.follow_up_edit, 0, 1)
-        vDates.addWidget(self.interview_check, 1, 0)
-        vDates.addWidget(self.interview_edit, 1, 1)
-        vDates.setColumnStretch(1, 1)
-
-        self.notes_edit = QPlainTextEdit()
-        self.notes_edit.setPlaceholderText("Notes")
-
-        vSaveButton = create_button("Enregistrer", pObjectName="primaryButton")
-        vSaveButton.clicked.connect(self.save)
-
-        self.follow_up_button = QPushButton("J'ai relancé aujourd'hui")
-        self.follow_up_button.clicked.connect(self.add_follow_up)
-
-        vButtons = QHBoxLayout()
-        vButtons.addWidget(vSaveButton)
-        vButtons.addWidget(self.follow_up_button)
-        vButtons.addStretch()
-
-        self.application_label = QLabel()
-        self.application_label.setObjectName("pageSubtitle")
-        self.application_label.setWordWrap(True)
-
-        rGroup = QGroupBox("Suivi")
-
-        vLayout = QVBoxLayout(rGroup)
-        vLayout.addWidget(self.status_combo)
-        vLayout.addLayout(vDates)
-        vLayout.addWidget(self.notes_edit)
-        vLayout.addLayout(vButtons)
-        vLayout.addWidget(self.application_label)
-        vLayout.addLayout(self.create_attachments_row())
-
-        return rGroup
-
-    def create_attachments_row(self):
-        """Construit la liste des pièces jointes et ses boutons."""
-        vTitle = QLabel("Pièces jointes")
-        vTitle.setObjectName("fieldLabel")
-
-        self.attachments_list = QListWidget()
-        self.attachments_list.setMaximumHeight(90)
-        self.attachments_list.setToolTip("Double-clic pour ouvrir le fichier")
-        self.attachments_list.itemDoubleClicked.connect(self.open_attachment)
-
-        vAddButton = QPushButton("Joindre un fichier…")
-        vAddButton.setObjectName("linkButton")
-        vAddButton.setToolTip(
-            "CV envoyé, lettre : " + ", ".join(ALLOWED_EXTENSIONS) + ", 10 Mo maximum"
-        )
-        vAddButton.clicked.connect(self.add_attachment)
-
-        vDeleteButton = QPushButton("Supprimer")
-        vDeleteButton.setObjectName("linkButton")
-        vDeleteButton.clicked.connect(self.delete_attachment)
-
-        vButtons = QHBoxLayout()
-        vButtons.addWidget(vAddButton)
-        vButtons.addWidget(vDeleteButton)
-        vButtons.addStretch()
-
-        rLayout = QVBoxLayout()
-        rLayout.setSpacing(4)
-        rLayout.addWidget(vTitle)
-        rLayout.addWidget(self.attachments_list)
-        rLayout.addLayout(vButtons)
-
-        return rLayout
-
-    def load_attachments(self):
-        """Affiche les pièces jointes de l'offre."""
-        self.attachments_list.clear()
-
-        if self.offer is None:
-            return
-
-        try:
-            vAttachments = get_attachments(
-                self.database_file, self.offer["source"], self.offer["source_id"]
-            )
-
-        except Exception:
-            logger.exception("Impossible de lire les pièces jointes")
-            vAttachments = []
-
-        for vAttachment in vAttachments:
-            vItem = QListWidgetItem(
-                f"{vAttachment['file_name']} · {format_date(vAttachment['added_at'])}"
-            )
-            vItem.setData(Qt.ItemDataRole.UserRole, vAttachment["id"])
-            self.attachments_list.addItem(vItem)
-
-    def add_attachment(self):
-        """Joint un fichier choisi sur le disque à l'offre affichée."""
-        vFilter = " ".join(f"*{vExtension}" for vExtension in ALLOWED_EXTENSIONS)
-
-        vPath, _ = QFileDialog.getOpenFileName(
-            self, "Joindre un fichier", str(Path.home()), f"Documents ({vFilter})"
-        )
-
-        if vPath:
-            self.attach_file(vPath)
-
-    def attach_file(self, pPath):
-        """Range le fichier avec l'offre, ou explique pourquoi il est refusé."""
-        try:
-            add_attachment(
-                self.database_file,
-                self.offer["source"],
-                self.offer["source_id"],
-                Path(pPath).name,
-                Path(pPath).read_bytes(),
-                datetime.now(),
-            )
-
-        except ValueError as vException:
-            QMessageBox.warning(self, "Pièce jointe refusée", str(vException))
-
-        except Exception:
-            logger.exception("Échec de l'ajout de la pièce jointe")
-
-            QMessageBox.warning(
-                self, "Pièce jointe", "Le fichier n'a pas pu être joint."
-            )
-
-        self.load_attachments()
-
-    def open_attachment(self, pItem):
-        """Ouvre une pièce jointe avec l'application associée à son type."""
-        vAttachment = get_attachment(
-            self.database_file, pItem.data(Qt.ItemDataRole.UserRole)
-        )
-
-        if vAttachment is not None and vAttachment["path"].exists():
-            QDesktopServices.openUrl(QUrl.fromLocalFile(str(vAttachment["path"])))
-        else:
-            QMessageBox.warning(self, "Pièce jointe", "Le fichier est introuvable.")
-
-    def delete_attachment(self):
-        """Supprime la pièce jointe sélectionnée, après confirmation."""
-        vItem = self.attachments_list.currentItem()
-
-        if vItem is None:
-            return
-
-        vAnswer = QMessageBox.question(
-            self, "Supprimer la pièce jointe", f"Supprimer « {vItem.text()} » ?"
-        )
-
-        if vAnswer == QMessageBox.StandardButton.Yes:
-            delete_attachment(self.database_file, vItem.data(Qt.ItemDataRole.UserRole))
-            self.load_attachments()
-
     def show_offer(self, pOffer):
         """Affiche une offre préparée par prepare_offer, ou vide le panneau."""
         self.offer = pOffer
@@ -923,15 +418,6 @@ class OfferDetailPanel(QWidget):
             )
         )
         self.open_button.setEnabled(safe_url(vOffer.get("url")) != "#")
-        self.availability_button.setEnabled(safe_url(vOffer.get("url")) != "#")
-        self.show_availability(
-            describe_availability(vOffer),
-            (
-                vOffer.get("availability")
-                if vOffer.get("availability_checked_at")
-                else None
-            ),
-        )
 
         self.translate_url = build_translate_url(vOffer.get("description"))
         self.translate_button.setVisible(self.translate_url is not None)
@@ -968,7 +454,8 @@ class OfferDetailPanel(QWidget):
 
         self.show_description(vOffer.get("description"))
 
-        self.load_application()
+        self.assistant.set_offer(pOffer)
+        self.application.set_offer(pOffer)
 
     def show_description(self, pDescription):
         """Affiche la description en texte brut, avec un interligne aéré."""
@@ -985,124 +472,6 @@ class OfferDetailPanel(QWidget):
         vCursor = QTextCursor(self.description.document())
         vCursor.select(QTextCursor.SelectionType.Document)
         vCursor.setBlockFormat(vFormat)
-
-    def load_application(self):
-        """Remplit le formulaire de suivi à partir de la base."""
-        vApplication = None
-
-        if self.offer is not None:
-            vApplication = get_application(
-                self.database_file, self.offer["source"], self.offer["source_id"]
-            )
-
-        vApplication = vApplication or {}
-
-        self.status_combo.setCurrentIndex(
-            max(self.status_combo.findData(vApplication.get("status")), 0)
-        )
-
-        vFollowUpDate = vApplication.get("follow_up_date")
-
-        self.follow_up_check.setChecked(bool(vFollowUpDate))
-        self.follow_up_edit.setEnabled(bool(vFollowUpDate))
-        self.follow_up_edit.setDate(
-            QDate.fromString(vFollowUpDate[:10], "yyyy-MM-dd")
-            if vFollowUpDate
-            else QDate.currentDate().addDays(self.get_follow_up_days())
-        )
-
-        vInterviewAt = vApplication.get("interview_at")
-
-        self.interview_check.setChecked(bool(vInterviewAt))
-        self.interview_edit.setEnabled(bool(vInterviewAt))
-        self.interview_edit.setDateTime(
-            QDateTime.fromString(vInterviewAt, "yyyy-MM-ddTHH:mm")
-            if vInterviewAt
-            else QDateTime(QDate.currentDate().addDays(7), QTime(10, 0))
-        )
-
-        self.notes_edit.setPlainText(vApplication.get("notes") or "")
-        self.follow_up_button.setVisible(
-            vApplication.get("status") in FOLLOW_UP_STATUSES
-        )
-        self.application_label.setText(describe_application(vApplication))
-        self.load_attachments()
-
-    def get_follow_up_days(self):
-        """Retourne le délai de relance défini dans les paramètres."""
-        rDays = load_settings(self.database_file)["follow_up_days"]
-
-        return rDays
-
-    def get_follow_up_date(self):
-        """Retourne la date de relance saisie, ou None si aucune n'est prévue."""
-        rDate = None
-
-        if self.follow_up_check.isChecked():
-            vDate = self.follow_up_edit.date()
-            rDate = datetime(vDate.year(), vDate.month(), vDate.day())
-
-        return rDate
-
-    def get_interview_at(self):
-        """Retourne la date et l'heure d'entretien saisies, ou None."""
-        rInterviewAt = None
-
-        if self.interview_check.isChecked():
-            vValue = self.interview_edit.dateTime()
-            rInterviewAt = datetime(
-                vValue.date().year(),
-                vValue.date().month(),
-                vValue.date().day(),
-                vValue.time().hour(),
-                vValue.time().minute(),
-            )
-
-        return rInterviewAt
-
-    def save(self):
-        """Enregistre le suivi, ou le supprime si aucun statut n'est choisi."""
-        vStatus = self.status_combo.currentData()
-        vSource = self.offer["source"]
-        vSourceId = self.offer["source_id"]
-
-        try:
-            if vStatus is None:
-                delete_application(self.database_file, vSource, vSourceId)
-            else:
-                save_application(
-                    self.database_file,
-                    vSource,
-                    vSourceId,
-                    vStatus,
-                    pFollowUpDate=self.get_follow_up_date(),
-                    pNotes=self.notes_edit.toPlainText().strip(),
-                    pFollowUpDays=self.get_follow_up_days(),
-                    pInterviewAt=self.get_interview_at(),
-                )
-
-        except Exception:
-            logger.exception(
-                "Échec de l'enregistrement du suivi %s %s", vSource, vSourceId
-            )
-
-            self.application_label.setText("Le suivi n'a pas pu être enregistré.")
-
-        else:
-            self.load_application()
-            self.application_changed.emit()
-
-    def add_follow_up(self):
-        """Enregistre une relance faite aujourd'hui et programme la suivante."""
-        record_follow_up(
-            self.database_file,
-            self.offer["source"],
-            self.offer["source_id"],
-            pFollowUpDays=self.get_follow_up_days(),
-        )
-
-        self.load_application()
-        self.application_changed.emit()
 
     def open_offer(self):
         """Ouvre l'offre dans le navigateur, uniquement en http ou https."""

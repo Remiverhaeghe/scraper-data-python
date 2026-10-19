@@ -1,7 +1,7 @@
 """Tests de la page du profil et de la préparation de candidature"""
 
 import gui.dialogs as dialogs
-import gui.offer_detail as offer_detail
+import gui.offer_assistant as offer_assistant
 import gui.profile_page as profile_page
 from gui.profile_page import ProfilePage
 from gui.theme import COLORS
@@ -56,15 +56,17 @@ def test_preparation_needs_a_profile_then_opens(qt_application, tmp_path, monkey
 
     initialize_database(vDatabaseFile)
     monkeypatch.setattr(
-        offer_detail.QMessageBox, "information", lambda *pArgs: vInformed.append(True)
+        offer_assistant.QMessageBox,
+        "information",
+        lambda *pArgs: vInformed.append(True),
     )
     monkeypatch.setattr(
-        offer_detail,
+        offer_assistant,
         "show_preparation",
         lambda pParent, pTitle, pPreparation: vShown.append(pPreparation),
     )
 
-    vPanel = offer_detail.OfferDetailPanel(vDatabaseFile)
+    vPanel = offer_assistant.OfferAssistantPanel(vDatabaseFile)
     vPanel.offer = {"title": "Développeur Java", "description": "Java et Kafka"}
     vPanel.open_preparation()
 

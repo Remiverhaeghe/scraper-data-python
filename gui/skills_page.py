@@ -24,6 +24,7 @@ from gui.widgets import (
     create_scroll_content,
     show_message,
 )
+from job.profile import add_profile_skill
 from job.quiz import load_active_quiz
 from job.skills_dashboard import SKILL_STATUSES, build_skills_dashboard
 from utils.logger import get_logger
@@ -33,6 +34,7 @@ logger = get_logger(__name__)
 # Compétences reprises dans le graphique : au-delà, les libellés se chevauchent
 CHART_SKILLS = 10
 CHART_HEIGHT = 260
+HISTORY_CHART_HEIGHT = 220
 
 # Marge verticale d'une cellule (QTableView::item dans theme.qss : 6 px en haut
 # et en bas, plus la bordure) : elle s'applique aussi au bouton placé dedans.
@@ -85,6 +87,16 @@ class SkillsPage(QWidget):
         self.chart = BarChart()
         self.chart.setMinimumHeight(CHART_HEIGHT)
 
+        self.history_chart = BarChart()
+        self.history_chart.setMinimumHeight(HISTORY_CHART_HEIGHT)
+
+        vHistoryCard, vHistoryLayout = create_card(
+            "Évolution de la préparation",
+            "Préparation pondérée par la demande à la fin de chaque semaine, "
+            "d'après vos réponses de révision",
+        )
+        vHistoryLayout.addWidget(self.history_chart)
+
         vChartCard, vChartLayout = create_card(
             "Demande des offres",
             "Les compétences les plus citées, colorées selon votre préparation",
@@ -127,6 +139,7 @@ class SkillsPage(QWidget):
         )
 
         vLayout.addLayout(vStatistics)
+        vLayout.addWidget(vHistoryCard)
         vLayout.addWidget(vChartCard)
         vLayout.addWidget(vTableCard)
         vLayout.addWidget(self.message_label)
@@ -164,6 +177,20 @@ class SkillsPage(QWidget):
             f"{vSummary['in_profile']} / {vSummary['skills']}"
         )
         self.statistic_cards["priority"].set_value(vSummary["priority"] or "-")
+
+        self.history_chart.set_series(
+            [vPoint["label"] for vPoint in pDashboard["history"]],
+            [
+                (
+                    "Préparation",
+                    COLORS["primary"],
+                    [vPoint["readiness"] for vPoint in pDashboard["history"]],
+                )
+            ],
+            pAxes=("Semaine", "% de préparation"),
+            pEmptyText="Aucune réponse de révision pour le moment",
+            pFillWidth=True,
+        )
 
         vChartRows = vRows[:CHART_SKILLS]
         self.chart.set_series(
@@ -241,6 +268,23 @@ class SkillsPage(QWidget):
             + 2 * self.table.frameWidth()
         )
 
+    def add_to_profile(self, pSkill):
+        """Ajoute une compétence au profil puis rafraîchit le tableau."""
+        try:
+            add_profile_skill(self.database_file, pSkill)
+
+        except Exception:
+            logger.exception("Impossible d'ajouter la compétence au profil")
+
+            show_message(
+                self.message_label,
+                "La compétence n'a pas pu être ajoutée au profil.",
+                "danger",
+            )
+
+        else:
+            self.refresh()
+
     def create_action(self, pSkill):
         """Crée le bouton d'une compétence : réviser son thème ou préparer des questions."""
         if pSkill["themes"]:
@@ -261,10 +305,18 @@ class SkillsPage(QWidget):
                 lambda: self.generation_requested.emit(pSkill["catalog_label"])
             )
 
-        # Bouton centré dans sa cellule : il garde sa hauteur dans une ligne haute.
+        # Boutons centrés dans leur cellule : ils gardent leur hauteur.
         rCell = QWidget()
         vLayout = QHBoxLayout(rCell)
         vLayout.setContentsMargins(4, 2, 4, 2)
+        vLayout.setSpacing(6)
         vLayout.addWidget(vButton, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        if not pSkill["in_profile"]:
+            vProfileButton = create_button("", "user", pIconColor=COLORS["primary"])
+            vProfileButton.setObjectName("profileSkillButton")
+            vProfileButton.setToolTip(f"Ajouter {pSkill['skill']} à mon profil")
+            vProfileButton.clicked.connect(lambda: self.add_to_profile(pSkill["skill"]))
+            vLayout.addWidget(vProfileButton, 0, Qt.AlignmentFlag.AlignVCenter)
 
         return rCell

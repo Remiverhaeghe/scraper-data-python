@@ -1,11 +1,12 @@
 """Page des compétences : demande des offres croisée avec la préparation"""
 
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Form, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 
+from job.profile import add_profile_skill
 from job.quiz import load_active_quiz
 from job.skills_dashboard import SKILL_STATUSES, build_skills_dashboard
-from web.dependencies import get_database_file
+from web.dependencies import get_database_file, require_csrf
 from web.rendering import build_bar_chart, templates
 
 router = APIRouter()
@@ -31,6 +32,19 @@ def show_skills(
             "active_page": "skills",
             "dashboard": vDashboard,
             "statuses": SKILL_STATUSES,
+            "history_chart": build_bar_chart(
+                [vPoint["label"] for vPoint in vDashboard["history"]],
+                [
+                    (
+                        "Préparation",
+                        "var(--primary)",
+                        [vPoint["readiness"] for vPoint in vDashboard["history"]],
+                    )
+                ],
+                pAxes=("Semaine", "% de préparation"),
+                pEmptyText="Aucune réponse de révision pour le moment",
+                pFillWidth=True,
+            ),
             "chart": build_bar_chart(
                 [vRow["skill"] for vRow in vChartRows],
                 [
@@ -49,5 +63,19 @@ def show_skills(
             ),
         },
     )
+
+    return rResponse
+
+
+@router.post("/skills/profile", dependencies=[Depends(require_csrf)])
+def add_skill_to_profile(
+    pSkill: str = Form(..., alias="skill"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Ajoute une compétence au profil, puis revient au tableau des compétences."""
+
+    add_profile_skill(pDatabaseFile, pSkill[:100])
+
+    rResponse = RedirectResponse(router.url_path_for("show_skills"), status_code=303)
 
     return rResponse

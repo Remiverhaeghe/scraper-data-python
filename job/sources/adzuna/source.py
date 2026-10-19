@@ -10,6 +10,8 @@ def build_params(pJobConfig):
 
     Le salaire n'est pas transmis : Adzuna filtre sur un brut annuel qui
     peut être estimé, alors que le filtre de l'application porte sur le net.
+    Les mots exclus d'un seul mot le sont dès la recherche : les pages
+    récupérées servent à des offres utiles.
     """
 
     vParams = {"sort_by": "date"}
@@ -22,6 +24,17 @@ def build_params(pJobConfig):
 
     if pJobConfig.max_distance_km is not None:
         vParams["distance"] = round(pJobConfig.max_distance_km)
+
+    # Adzuna exclut chaque mot séparément : « agent de sécurité » exclurait toute
+    # offre contenant « de ». Les expressions restent filtrées par l'application.
+    vWords = [
+        vWord
+        for vWord in pJobConfig.exclude_keywords or []
+        if vWord.strip() and " " not in vWord.strip()
+    ]
+
+    if vWords:
+        vParams["what_exclude"] = " ".join(vWords)
 
     rParams = vParams
 
