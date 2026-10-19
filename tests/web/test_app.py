@@ -679,6 +679,23 @@ def test_quality_page_and_export(client):
     assert vExport.text.lstrip("﻿").startswith("source;source_id;problems")
 
 
+def test_quality_purge_previews_then_deletes(client):
+    """Vérifie l'aperçu, la confirmation exigée et la suppression des offres."""
+
+    vShort = client.post("/quality/purge/preview", data={"words": "it"})
+    vPreview = client.post("/quality/purge/preview", data={"words": "java, script"})
+    vRefused = client.post("/quality/purge", data={"words": "java"})
+    vDeleted = client.post("/quality/purge", data={"words": "java", "confirm": "1"})
+
+    assert vShort.status_code == 400
+    assert "Mots trop courts" in vShort.text
+    assert "2 offre(s) seraient supprimées." in vPreview.text
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in vPreview.text
+    assert vRefused.status_code == 400
+    assert "1 offre(s) supprimée(s), sauvegarde" in vDeleted.text
+    assert "2 offres" in client.get("/offers").text
+
+
 def test_offers_show_colored_badges(client):
     """Vérifie les badges de contrat et d'avantages, aux couleurs partagées."""
 
@@ -1828,6 +1845,7 @@ def test_offer_revision_and_mock_exam(client):
 
     assert "Entretien : Développeur Python new chez Entreprise A" in vStart.text
     assert "Question 1 / 16" in vStart.text
+    assert 'data-remaining="960"' in vStart.text or "Temps restant : 15:" in vStart.text
 
     client.post("/quiz/exam/stop")
 
@@ -1863,3 +1881,47 @@ def test_skill_is_added_to_profile_from_the_web(client):
     assert vResponse.status_code == 200
     assert 'name="skill" value="Python"' not in vPage
     assert 'name="skill" value="Django"' in vPage
+
+
+def test_week_follow_ups_on_applications_page(client):
+    """Vérifie le brouillon de relance affiché et la relance notée."""
+
+    client.post(
+        "/offer/application",
+        data={
+            "source": "adzuna",
+            "id": "new",
+            "status": "APPLIED",
+            "follow_up_date": datetime.now().date().isoformat(),
+        },
+    )
+
+    vPage = client.get("/applications")
+    vMissing = client.post(
+        "/applications/follow-up", data={"source": "adzuna", "id": "old"}
+    )
+    vDone = client.post(
+        "/applications/follow-up",
+        data={"source": "adzuna", "id": "new"},
+        follow_redirects=False,
+    )
+
+    assert "Relances de la semaine" in vPage.text
+    assert "Objet : ma candidature au poste de" in vPage.text
+    assert vMissing.status_code == 400
+    assert vDone.status_code == 303
+    assert "1 relance(s) déjà faite(s)" in client.get("/applications").text
+
+
+def test_profile_star_answers(client):
+    """Vérifie l'enregistrement d'une réponse STAR et son refus si invalide."""
+
+    vSaved = client.post(
+        "/profile/star",
+        data={"question": "echec", "experience": "", "action": "Revu les tests"},
+    )
+    vRefused = client.post("/profile/star", data={"question": "inconnue"})
+
+    assert "Réponse enregistrée." in vSaved.text
+    assert "1 réponse(s) préparée(s) sur 7" in vSaved.text
+    assert vRefused.status_code == 400

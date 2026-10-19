@@ -23,6 +23,10 @@ CV_FIELDS = ("name", "skills")
 # Au-delà, une saisie est probablement une erreur de copier-coller.
 MAX_TEXT_LENGTH = 20000
 
+# Au-delà, un intitulé est une phrase plutôt qu'un mot-clé de recherche.
+MAX_KEYWORD_LENGTH = 40
+MAX_KEYWORD_SUGGESTIONS = 8
+
 EMPTY_PROFILE = {
     "name": "",
     "headline": "",
@@ -171,6 +175,34 @@ def add_profile_skill(pDatabaseFile, pSkill):
         save_profile(pDatabaseFile, vProfile)
 
     return rAdded
+
+
+def suggest_keywords(pProfile, pLimit=MAX_KEYWORD_SUGGESTIONS):
+    """Propose des mots-clés de recherche : intitulés d'expérience puis compétences."""
+
+    vCandidates = [
+        *(vExperience.get("title") for vExperience in pProfile["experiences"]),
+        *pProfile["skills"],
+    ]
+
+    vSeen = set()
+
+    rKeywords = []
+
+    for vCandidate in vCandidates:
+        vKeyword = (vCandidate or "").strip()
+
+        if (
+            vKeyword
+            and len(vKeyword) <= MAX_KEYWORD_LENGTH
+            and vKeyword.casefold() not in vSeen
+        ):
+            vSeen.add(vKeyword.casefold())
+            rKeywords.append(vKeyword)
+
+    rKeywords = rKeywords[:pLimit]
+
+    return rKeywords
 
 
 def is_profile_empty(pProfile):

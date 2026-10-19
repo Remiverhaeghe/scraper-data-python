@@ -1,6 +1,7 @@
 """Fenêtre principale : menu latéral et pages de l'application"""
 
 import threading
+from datetime import datetime
 
 from PySide6.QtCore import QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
@@ -39,6 +40,7 @@ from gui.widgets import show_message
 from job.quiz import DEFAULT_MODE
 from job.quiz_generation import prepare_quiz_caches
 from job.schedule import save_scheduled_search
+from storage.backup import run_due_backup
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -80,6 +82,11 @@ class MainWindow(QMainWindow):
         # la page Révision s'ouvre aussitôt. Sans attente ni effet sur l'interface.
         threading.Thread(
             target=prepare_quiz_caches, args=(pDatabaseFile,), daemon=True
+        ).start()
+
+        # Une sauvegarde par jour au plus, sans attendre qu'elle soit finie.
+        threading.Thread(
+            target=run_due_backup, args=(pDatabaseFile, datetime.now()), daemon=True
         ).start()
 
     def build_content(self):

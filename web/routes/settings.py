@@ -20,6 +20,7 @@ from job.companies import load_company_rules, save_company_rules
 from job.mobile_sync import API_PREFIX, get_mobile_token, renew_mobile_token
 from job.schedule import (
     MIN_SCORE_CHOICES,
+    describe_extra_searches,
     describe_schedule_runs,
     describe_scheduled_search,
     format_interval,
@@ -80,6 +81,7 @@ def render_settings(
             "schedule": {
                 "search": vSearch,
                 "sources": vSearchSources,
+                "extra": describe_extra_searches(vSchedule),
                 "enabled": vSchedule["enabled"],
                 "interval": format_interval(vSchedule["interval_hours"]),
                 "runs": describe_schedule_runs(vSchedule, datetime.now()),

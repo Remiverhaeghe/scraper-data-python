@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.follow_ups_panel import FollowUpsPanel
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -36,6 +37,7 @@ from job.application_tracking import (
     BOARD_STATUSES,
     build_application_statistics,
     build_board,
+    get_week_follow_ups,
 )
 from job.calendar import build_calendar
 from job.presentation import STATUS_LABELS
@@ -44,7 +46,11 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-STATISTIC_HEADERS = ["", "Envoyées", "Réponses", "Taux"]
+STATISTIC_HEADERS = ["", "Envoyées", "Réponses", "Taux", "Délai moyen"]
+
+# Tableaux par dimension : source, poste, correspondance, contrat, société
+MAX_STATISTIC_TABLES = 5
+STATISTIC_COLUMNS = 3
 
 
 class ApplicationsPage(QWidget):
@@ -86,6 +92,7 @@ class ApplicationsPage(QWidget):
             "answered": StatisticCard("Réponses reçues", "circle-check", "green"),
             "interviews": StatisticCard("Entretiens obtenus", "calendar", "amber"),
             "rate": StatisticCard("Taux de réponse", "sparkles", "purple"),
+            "delay": StatisticCard("Délai de réponse moyen", "timer", "blue"),
         }
 
         vStatistics = QHBoxLayout()
@@ -100,6 +107,10 @@ class ApplicationsPage(QWidget):
 
         vLayout.addLayout(vStatistics)
         vLayout.addWidget(self.message_label)
+        self.follow_ups_panel = FollowUpsPanel(pDatabaseFile)
+        self.follow_ups_panel.changed.connect(self.refresh)
+
+        vLayout.addWidget(self.follow_ups_panel)
         vLayout.addLayout(self.create_board())
         vLayout.addLayout(self.create_statistic_tables())
         vLayout.addStretch()
@@ -174,7 +185,7 @@ class ApplicationsPage(QWidget):
         rLayout = QGridLayout()
         rLayout.setSpacing(16)
 
-        for vColumn in range(3):
+        for vIndex in range(MAX_STATISTIC_TABLES):
             vTable = QTableWidget(0, len(STATISTIC_HEADERS))
             vTable.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             vTable.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
@@ -192,7 +203,9 @@ class ApplicationsPage(QWidget):
             vCardLayout.addWidget(vTable, 1)
 
             self.statistic_tables.append((vCard, vTable))
-            rLayout.addWidget(vCard, 0, vColumn)
+            rLayout.addWidget(
+                vCard, vIndex // STATISTIC_COLUMNS, vIndex % STATISTIC_COLUMNS
+            )
 
         return rLayout
 
@@ -201,6 +214,7 @@ class ApplicationsPage(QWidget):
         try:
             vBoard = build_board(self.database_file, datetime.now())
             vStatistics = build_application_statistics(self.database_file)
+            vFollowUps = get_week_follow_ups(self.database_file, datetime.now())
 
         except Exception:
             logger.exception("Impossible de charger les candidatures")
@@ -223,6 +237,7 @@ class ApplicationsPage(QWidget):
 
             vCard.set_value(vValue)
 
+        self.follow_ups_panel.set_follow_ups(vFollowUps)
         self.show_board(vBoard)
         self.show_statistics(vStatistics["tables"])
 
@@ -326,6 +341,10 @@ class ApplicationsPage(QWidget):
 
     def show_statistics(self, pTables):
         """Remplit les tableaux de taux de réponse."""
+        # Le tableau par correspondance n'existe qu'avec des compétences au profil.
+        for vIndex, (vCard, _) in enumerate(self.statistic_tables):
+            vCard.setVisible(vIndex < len(pTables))
+
         for (vCard, vTable), (vTitle, vRows) in zip(self.statistic_tables, pTables):
             vCard.findChild(QLabel, "cardTitle").setText(vTitle)
 
@@ -339,6 +358,7 @@ class ApplicationsPage(QWidget):
                         vValues["sent"],
                         vValues["answered"],
                         f"{vValues['rate']} %",
+                        vValues["delay"],
                     )
                 ):
                     vTable.setItem(vRow, vColumn, QTableWidgetItem(str(vValue)))

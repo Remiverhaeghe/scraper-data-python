@@ -13,6 +13,7 @@ from job.profile import build_profile, save_profile
 from job.schedule import (
     load_schedule,
     request_immediate_run,
+    save_extra_searches,
     save_notification_email,
     save_schedule_options,
     save_scheduled_search,
@@ -21,6 +22,7 @@ from job.sources.aggregator import ScrapingCancelled
 from storage.database import initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import save_offers
+from storage.saved_searches import save_search
 
 NOW = datetime(2026, 10, 10, 12, 0)
 
@@ -142,11 +144,17 @@ def test_run_forever_survives_errors_until_stop(monkeypatch, pError):
 
         raise pError
 
+    vBackups = []
+
     monkeypatch.setattr(runner, "run_due_search", fake_run)
+    monkeypatch.setattr(
+        runner, "run_due_backup", lambda pDatabaseFile, pNow: vBackups.append(pNow)
+    )
 
     runner.run_forever("scraper.db", vStopEvent, pPollSeconds=0)
 
     assert len(vCalls) == 2
+    assert len(vBackups) == 2
 
 
 def test_run_due_search_handles_web_request(database_file, monkeypatch, sent_emails):
@@ -254,3 +262,53 @@ def test_notify_new_offers_ignores_min_score_without_profile(
     assert runner.notify_new_offers(database_file, vSchedule, build_scored_items())
     assert "3 nouvelle(s) offre(s)" in sent_emails[0][1]
     assert "aucune compétence dans le profil" in caplog.text
+
+
+def test_run_due_search_runs_extra_searches(database_file, monkeypatch, sent_emails):
+    """Vérifie l'enchaînement des recherches, l'échec isolé et un seul e-mail."""
+
+    save_search(database_file, "Python", ["remotive"], {"keyword": "Python"}, NOW)
+    save_search(database_file, "Go", ["remotive"], {"keyword": "Go"}, NOW)
+    save_extra_searches(database_file, ["Python", "Go"])
+
+    vKeywords = []
+
+    def fake_process_jobs(pConfig, pCancelEvent=None, pTrigger=None):
+        vKeywords.append(pConfig.keyword)
+
+        if pConfig.keyword == "Python":
+            raise RuntimeError("source en panne")
+
+        return SimpleNamespace(
+            items=pd.DataFrame(
+                [{"title": f"Offre {pConfig.keyword}", "url": None, "is_new": True}]
+            )
+        )
+
+    monkeypatch.setattr(runner, "process_jobs", fake_process_jobs)
+
+    rResults = runner.run_due_search(database_file, NOW)
+
+    assert vKeywords == ["Java", "Python", "Go"]
+    assert len(rResults) == 2
+    assert len(sent_emails) == 1
+    assert "2 nouvelle(s) offre(s)" in sent_emails[0][1]
+
+
+def test_merge_items_keeps_the_new_version():
+    """Vérifie qu'une offre trouvée deux fois garde sa version nouvelle."""
+
+    vFirst = pd.DataFrame(
+        [{"title": "A", "url": "https://a", "is_new": False}],
+    )
+    vSecond = pd.DataFrame(
+        [
+            {"title": "A", "url": "https://a", "is_new": True},
+            {"title": "B", "url": "https://b", "is_new": True},
+        ]
+    )
+
+    rItems = runner.merge_items([vFirst, pd.DataFrame(), vSecond])
+
+    assert rItems["title"].tolist() == ["A", "B"]
+    assert rItems["is_new"].tolist() == [True, True]

@@ -24,7 +24,9 @@ from PySide6.QtWidgets import (
 
 from gui.theme import COLORS, THEME_CHOICES, is_dark_theme
 from gui.widgets import (
+    FlowLayout,
     align_spin_box,
+    clear_layout,
     create_button,
     create_card,
     create_icon_label,
@@ -45,11 +47,13 @@ from job.schedule import (
     MIN_SCORE_CHOICES,
     SCHEDULE_INTERVALS,
     clear_scheduled_search,
+    describe_extra_searches,
     describe_schedule_runs,
     describe_scheduled_search,
     format_interval,
     format_min_score,
     load_schedule,
+    save_extra_searches,
     save_min_score,
     save_notification_email,
     save_schedule_options,
@@ -389,6 +393,17 @@ class SettingsPage(QWidget):
             "Remplace la recherche planifiée à l'enregistrement"
         )
 
+        self.extra_searches_title = QLabel("Lancer aussi ces recherches enregistrées")
+        self.extra_searches_title.setObjectName("cardSubtitle")
+
+        self.extra_searches_layout = FlowLayout(12)
+        self.extra_search_checks = {}
+
+        self.schedule_extra_label = QLabel()
+        self.schedule_extra_label.setObjectName("cardSubtitle")
+        self.schedule_extra_label.setWordWrap(True)
+        vSearchTexts.addWidget(self.schedule_extra_label)
+
         self.schedule_check = QCheckBox("Activer la recherche planifiée")
 
         self.interval_combo = QComboBox()
@@ -419,6 +434,8 @@ class SettingsPage(QWidget):
 
         vLayout.addLayout(vSearch)
         vLayout.addWidget(self.schedule_search_combo)
+        vLayout.addWidget(self.extra_searches_title)
+        vLayout.addLayout(self.extra_searches_layout)
         vLayout.addLayout(vOptions)
         vLayout.addWidget(self.schedule_runs_label)
         vLayout.addLayout(vActions)
@@ -621,6 +638,17 @@ class SettingsPage(QWidget):
         for vName in self.saved_searches:
             self.schedule_search_combo.addItem(f"Planifier « {vName} »", vName)
 
+        clear_layout(self.extra_searches_layout)
+
+        self.extra_search_checks = {
+            vName: QCheckBox(vName) for vName in self.saved_searches
+        }
+
+        for vCheck in self.extra_search_checks.values():
+            self.extra_searches_layout.addWidget(vCheck)
+
+        self.extra_searches_title.setVisible(bool(self.saved_searches))
+
     def refresh_schedule(self):
         """Relit la planification et l'adresse de notification en base."""
         self.refresh_saved_searches()
@@ -639,6 +667,14 @@ class SettingsPage(QWidget):
             self.schedule_search_label.setText(vSearch)
             self.schedule_sources_label.setText(vSources)
             self.schedule_sources_label.setVisible(bool(vSources))
+
+            vExtra = describe_extra_searches(vSchedule)
+
+            self.schedule_extra_label.setText(vExtra)
+            self.schedule_extra_label.setVisible(bool(vExtra))
+
+            for vName, vCheck in self.extra_search_checks.items():
+                vCheck.setChecked(vName in vSchedule["extra_searches"])
             self.schedule_check.setChecked(vSchedule["enabled"])
             self.remove_schedule_button.setVisible(vSchedule["search"] is not None)
             self.interval_combo.setCurrentIndex(
@@ -669,6 +705,16 @@ class SettingsPage(QWidget):
                 self.schedule_check.isChecked(),
                 self.interval_combo.currentData(),
             )
+
+            if not vErrors:
+                save_extra_searches(
+                    self.database_file,
+                    [
+                        vName
+                        for vName, vCheck in self.extra_search_checks.items()
+                        if vCheck.isChecked()
+                    ],
+                )
 
         except Exception:
             logger.exception("Échec de l'enregistrement de la planification")

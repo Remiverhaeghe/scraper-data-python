@@ -64,3 +64,7 @@ CHALLENGE_WAIT_SECONDS = 30
 
 # Nombre de sauvegardes de la base conservées dans data/backups, les plus récentes
 BACKUP_KEEP_COUNT = 10
+
+# Sauvegardes automatiques : une par jour au plus, une semaine gardée
+AUTO_BACKUP_KEEP_COUNT = 7
+AUTO_BACKUP_INTERVAL_HOURS = 24

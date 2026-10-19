@@ -1,18 +1,27 @@
 """Suivi des candidatures par colonnes et statistiques de réponse"""
 
 import re
+from datetime import datetime, timedelta
 
 from job.fingerprint import normalize
+from job.preparation import score_offers
 from job.presentation import (
     STATUS_LABELS,
     format_date,
     get_source_label,
 )
+from job.profile import load_profile
+from job.settings import load_settings
 from storage.job_applications import (
+    ANSWERED_STATUSES,
     SENT_STATUSES,
     get_applications_with_offers,
+    record_follow_up,
 )
 from storage.job_offers import FOLLOW_UP_STATUSES
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Colonnes du tableau de suivi et statuts qu'elles regroupent
 BOARD_COLUMNS = (
@@ -32,8 +41,15 @@ BOARD_STATUSES = (
     "CLOSED",
 )
 
-# Une candidature a reçu une réponse dès qu'elle a quitté le statut « Postulé ».
-ANSWERED_STATUSES = ("INTERVIEW", "ACCEPTED", "REJECTED")
+# Horizon de la vue des relances, en jours : la semaine à venir
+FOLLOW_UP_HORIZON_DAYS = 7
+
+# Niveaux de correspondance avec le profil, du plus exigeant au moins exigeant
+MATCH_LEVELS = (
+    (70, "Forte, 70 % et plus"),
+    (40, "Moyenne, de 40 à 69 %"),
+    (0, "Faible, moins de 40 %"),
+)
 
 # Familles de poste reconnues dans le titre normalisé, la première trouvée l'emporte :
 # « Data engineer » est rangé en Data plutôt qu'en Développement.
@@ -115,31 +131,86 @@ def build_board(pDatabaseFile, pNow):
     return rBoard
 
 
-def count_by(pApplications, pGetLabel):
-    """Compte envois et réponses par libellé ; retourne les lignes les plus fournies."""
+def get_response_days(pApplication):
+    """Retourne le nombre de jours entre l'envoi et la première réponse, ou None."""
 
-    vCounts = {}
+    vAppliedAt = pApplication.get("applied_at")
+    vRespondedAt = pApplication.get("responded_at")
+
+    rDays = None
+
+    # La date de réponse n'est notée que depuis la version 19 de la base.
+    if vAppliedAt and vRespondedAt:
+        rDays = max(
+            (
+                datetime.fromisoformat(vRespondedAt)
+                - datetime.fromisoformat(vAppliedAt)
+            ).days,
+            0,
+        )
+
+    return rDays
+
+
+def get_average_delay(pApplications):
+    """Retourne le délai de réponse moyen en jours, ou None s'il est inconnu."""
+
+    vDays = [
+        vDays for vDays in map(get_response_days, pApplications) if vDays is not None
+    ]
+
+    rDelay = round(sum(vDays) / len(vDays)) if vDays else None
+
+    return rDelay
+
+
+def format_delay(pDays):
+    """Décrit un délai de réponse en jours, ou un tiret s'il est inconnu."""
+
+    rText = "—" if pDays is None else f"{pDays} j"
+
+    return rText
+
+
+def get_match_level(pScore):
+    """Retourne le libellé du niveau de correspondance d'un score."""
+
+    # Score absent : l'offre ne cite aucune compétence reconnue.
+    rLevel = (
+        "Compétences non détectées"
+        if pScore is None
+        else next(vLabel for vMinimum, vLabel in MATCH_LEVELS if pScore >= vMinimum)
+    )
+
+    return rLevel
+
+
+def count_by(pApplications, pGetLabel):
+    """Compte envois, réponses et délai par libellé ; garde les lignes les plus fournies."""
+
+    vGroups = {}
 
     for vApplication in pApplications:
-        vLabel = pGetLabel(vApplication)
-        vSent, vAnswered = vCounts.get(vLabel, (0, 0))
+        vGroups.setdefault(pGetLabel(vApplication), []).append(vApplication)
 
-        vCounts[vLabel] = (
-            vSent + 1,
-            vAnswered + (vApplication["status"] in ANSWERED_STATUSES),
+    vRows = []
+
+    for vLabel, vGroup in sorted(
+        vGroups.items(), key=lambda pItem: (-len(pItem[1]), pItem[0])
+    ):
+        vAnswered = sum(
+            vApplication["status"] in ANSWERED_STATUSES for vApplication in vGroup
         )
 
-    vRows = [
-        {
-            "label": vLabel,
-            "sent": vSent,
-            "answered": vAnswered,
-            "rate": round(100 * vAnswered / vSent),
-        }
-        for vLabel, (vSent, vAnswered) in sorted(
-            vCounts.items(), key=lambda pItem: (-pItem[1][0], pItem[0])
+        vRows.append(
+            {
+                "label": vLabel,
+                "sent": len(vGroup),
+                "answered": vAnswered,
+                "rate": round(100 * vAnswered / len(vGroup)),
+                "delay": format_delay(get_average_delay(vGroup)),
+            }
         )
-    ]
 
     rRows = vRows[:MAX_STATISTIC_ROWS]
 
@@ -147,9 +218,11 @@ def count_by(pApplications, pGetLabel):
 
 
 def build_application_statistics(pDatabaseFile):
-    """Calcule le taux de réponse global, par source, par famille de poste et par société."""
+    """Calcule taux et délai de réponse, globalement puis par dimension."""
 
     vApplications = get_applications_with_offers(pDatabaseFile, SENT_STATUSES)
+
+    score_offers(vApplications, load_profile(pDatabaseFile))
 
     vAnswered = sum(
         vApplication["status"] in ANSWERED_STATUSES for vApplication in vApplications
@@ -163,6 +236,7 @@ def build_application_statistics(pDatabaseFile):
             for vApplication in vApplications
         ),
         "rate": round(100 * vAnswered / len(vApplications)) if vApplications else None,
+        "delay": format_delay(get_average_delay(vApplications)),
         "tables": [
             (
                 "Par source",
@@ -179,6 +253,13 @@ def build_application_statistics(pDatabaseFile):
                 ),
             ),
             (
+                "Par contrat",
+                count_by(
+                    vApplications,
+                    lambda pApplication: pApplication["contract"] or "Non précisé",
+                ),
+            ),
+            (
                 "Par société",
                 count_by(
                     vApplications,
@@ -187,6 +268,19 @@ def build_application_statistics(pDatabaseFile):
             ),
         ],
     }
+
+    # Sans compétence dans le profil, aucun score n'est calculé.
+    if any(vApplication["match_score"] is not None for vApplication in vApplications):
+        rStatistics["tables"].insert(
+            2,
+            (
+                "Par correspondance au profil",
+                count_by(
+                    vApplications,
+                    lambda pApplication: get_match_level(pApplication["match_score"]),
+                ),
+            ),
+        )
 
     return rStatistics
 
@@ -207,3 +301,64 @@ def get_due_follow_ups(pDatabaseFile, pNow):
     )
 
     return rFollowUps
+
+
+def build_follow_up_draft(pApplication, pName):
+    """Rédige un message de relance à relire, à partir de la candidature."""
+
+    vTitle = pApplication.get("title") or "proposé"
+    vCompany = pApplication.get("company")
+    vAppliedAt = pApplication.get("applied_at")
+
+    vContext = f"ma candidature au poste de {vTitle}"
+
+    if vCompany:
+        vContext += f" chez {vCompany}"
+
+    if vAppliedAt:
+        vContext += f", envoyée le {format_date(vAppliedAt)}"
+
+    rDraft = (
+        f"Objet : ma candidature au poste de {vTitle}\n\n"
+        "Bonjour,\n\n"
+        f"Je me permets de revenir vers vous au sujet de {vContext}.\n\n"
+        "Ce poste m'intéresse toujours et je reste disponible pour un échange "
+        "à votre convenance.\n\n"
+        f"Bien cordialement,\n{pName}"
+    ).rstrip()
+
+    return rDraft
+
+
+def get_week_follow_ups(pDatabaseFile, pNow):
+    """Retourne les relances en retard ou prévues dans la semaine, avec un brouillon."""
+
+    vLimit = (pNow + timedelta(days=FOLLOW_UP_HORIZON_DAYS)).isoformat()
+    vName = load_profile(pDatabaseFile)["name"]
+
+    rFollowUps = []
+
+    for vApplication in get_applications_with_offers(pDatabaseFile, FOLLOW_UP_STATUSES):
+        vCard = prepare_card(vApplication, pNow)
+
+        if vCard["follow_up_date"] and vCard["follow_up_date"] <= vLimit:
+            vCard["draft"] = build_follow_up_draft(vCard, vName)
+            rFollowUps.append(vCard)
+
+    rFollowUps.sort(key=lambda pCard: pCard["follow_up_date"])
+
+    return rFollowUps
+
+
+def mark_followed_up(pDatabaseFile, pSource, pSourceId, pNow):
+    """Note une relance faite et programme la suivante selon les paramètres."""
+
+    record_follow_up(
+        pDatabaseFile,
+        pSource,
+        pSourceId,
+        pNow,
+        load_settings(pDatabaseFile)["follow_up_days"],
+    )
+
+    logger.info("Relance notée : %s %s", pSource, pSourceId)

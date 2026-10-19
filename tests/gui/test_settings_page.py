@@ -156,6 +156,26 @@ def test_schedule_uses_a_saved_search(qt_application, tmp_path, monkeypatch):
     assert vPage.schedule_search_label.text() == "Python"
 
 
+def test_extra_searches_are_saved_from_the_page(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'ajout d'une recherche enregistrée à la planification."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile, monkeypatch)
+
+    save_search(
+        vDatabaseFile, "Python", ["remotive"], {"keyword": "Python"}, datetime.now()
+    )
+    vPage.refresh()
+
+    vPage.schedule_search_combo.setCurrentIndex(1)
+    vPage.extra_search_checks["Python"].setChecked(True)
+    vPage.save_schedule()
+
+    assert load_schedule(vDatabaseFile)["extra_searches"] == ["Python"]
+    assert vPage.extra_search_checks["Python"].isChecked()
+    assert "Python" in vPage.schedule_extra_label.text()
+
+
 @pytest.mark.parametrize(
     "pEmail, pMessage, pSaved",
     [

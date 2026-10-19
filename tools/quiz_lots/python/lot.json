@@ -1,0 +1,34 @@
+{
+  "lot": 1,
+  "seed": 2026101901,
+  "skills": ["Python", "Django", "Flask", "FastAPI", "pandas"],
+  "schemas": [
+    {
+      "name": "python-references.svg",
+      "questions": ["001", "052", "053"],
+      "diagram": {
+        "title": "Noms et objets en Python",
+        "nodes": [
+          "a = [1, 2, 3]",
+          "b = a : même liste",
+          "b = a.copy() : nouvelle liste",
+          "deepcopy : copie des objets imbriqués"
+        ],
+        "note": "Une affectation ne copie jamais : elle donne un second nom au même objet"
+      }
+    },
+    {
+      "name": "python-parallelisme.svg",
+      "questions": ["064", "065", "066"],
+      "diagram": {
+        "title": "Choisir son parallélisme",
+        "nodes": [
+          "Attente réseau, beaucoup de tâches : asyncio",
+          "Attente réseau, code bloquant : threads",
+          "Calcul lourd : processus"
+        ],
+        "note": "Le GIL empêche les threads de calculer en même temps"
+      }
+    }
+  ]
+}

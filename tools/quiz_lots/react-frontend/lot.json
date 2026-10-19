@@ -1,0 +1,32 @@
+{
+  "lot": 1,
+  "seed": 2026101903,
+  "skills": ["React", "Angular", "Vue.js", "Redux"],
+  "schemas": [
+    {
+      "name": "react-mise-a-jour.svg",
+      "questions": ["020", "025", "026"],
+      "diagram": {
+        "title": "Mise à jour d'un composant React",
+        "nodes": [
+          "Événement",
+          "Modification du state",
+          "Nouveau rendu",
+          "Comparaison",
+          "DOM mis à jour",
+          "Effets"
+        ],
+        "note": "Le rendu calcule, les effets viennent après l'affichage"
+      }
+    },
+    {
+      "name": "react-donnees-serveur.svg",
+      "questions": ["036", "056", "096"],
+      "diagram": {
+        "title": "Données serveur dans un écran",
+        "nodes": ["Requête avec clé de cache", "Chargement", "Données ou erreur", "Affichage"],
+        "note": "Gérer aussi l'annulation et les réponses obsolètes"
+      }
+    }
+  ]
+}

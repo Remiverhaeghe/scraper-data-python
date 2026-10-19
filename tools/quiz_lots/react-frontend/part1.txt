@@ -1,0 +1,463 @@
+@001
+Q: Qu'est-ce qu'un composant React ?
+C: Une fonction qui renvoie de l'interface
+W: Un fichier CSS associé à une page HTML
+W: Une table de la base de données du navigateur
+W: Un serveur web livré avec la bibliothèque
+E: Un composant reçoit des propriétés et renvoie du JSX qui décrit ce qu'il faut afficher. On assemble l'interface en composants réutilisables : Bouton, CarteOffre, ListeOffres.
+
+@002
+Q: Qu'est-ce que le JSX ?
+C: Une syntaxe proche du HTML dans le JavaScript
+W: Un langage de requêtes pour les bases de données
+W: Un format d'échange de données entre serveurs
+W: Une extension du CSS pour les animations
+E: <h1>{titre}</h1> est traduit en appels de fonction par le compilateur. Les accolades insèrent une expression JavaScript. class devient className, car class est un mot réservé du langage.
+
+@003
+Q: Quelle est la différence entre props et state ?
+C: Les props viennent du parent, le state est interne
+W: Les props sont modifiables, le state ne l'est jamais
+W: Le state est partagé entre tous les composants de l'application
+W: Les props ne servent qu'aux composants de classe
+E: Un composant ne modifie pas ses props : elles appartiennent au parent. Son state lui appartient, et le modifier provoque un nouveau rendu. Quand deux composants doivent partager une donnée, on remonte le state dans leur parent commun.
+
+@004
+Q: Que renvoie useState(0) ?
+C: La valeur et une fonction pour la modifier
+W: Un objet avec les méthodes get et set
+W: Un nombre qui se met à jour tout seul
+W: Une promesse qui donne la valeur initiale
+E: const [compteur, setCompteur] = useState(0) : compteur vaut la valeur courante, setCompteur demande un nouveau rendu avec la nouvelle valeur. Modifier compteur directement n'a aucun effet sur l'affichage.
+
+@005
+Q: Que fait ce composant au clic sur le bouton ?
+C: Il affiche le compteur augmenté de 1
+W: Il ne se passe rien, le state est figé
+W: Il augmente le compteur de 2 à chaque clic
+W: Il recharge entièrement la page du navigateur
+E: setCompteur demande un rendu avec la nouvelle valeur ; React met à jour seulement le texte du bouton dans le DOM. onClick reçoit une fonction, pas un appel : onClick={augmenter()} l'exécuterait à chaque rendu.
+```jsx
+function Compteur() {
+  const [compteur, setCompteur] = useState(0);
+  return <button onClick={() => setCompteur(compteur + 1)}>{compteur}</button>;
+}
+```
+
+@006
+Q: Pourquoi faut-il une prop key sur les éléments d'une liste ?
+C: Pour identifier chaque élément entre deux rendus
+W: Pour trier automatiquement les éléments affichés
+W: Pour chiffrer les données de chaque élément
+W: Pour rendre chaque élément cliquable par défaut
+E: React compare l'ancienne et la nouvelle liste grâce aux clés : il sait quel élément a été ajouté, supprimé ou déplacé. Une clé stable, comme l'identifiant de l'offre, évite de mélanger l'état des éléments.
+
+@007
+Q: Quel problème pose l'index du tableau comme key ?
+C: L'état se mélange si l'ordre change
+W: React refuse d'afficher la liste avec un index
+W: Les éléments sont affichés deux fois
+W: Le tableau est trié par ordre alphabétique
+E: Si un élément est inséré en tête, tous les index décalent : React croit que chaque élément a changé de contenu, et un champ de saisie garde la valeur d'une autre ligne. L'index ne convient qu'à une liste statique.
+```jsx
+{offres.map((offre, index) => <LigneOffre key={index} offre={offre} />)}
+```
+
+@008
+Q: Comment afficher un élément seulement si une condition est vraie ?
+C: {condition && <Element />}
+W: <if condition><Element /></if>
+W: {Element.show(condition)}
+W: <Element visible="condition" />
+E: L'opérateur && renvoie le second terme si le premier est vrai. Attention avec un nombre : {liste.length && <Liste />} affiche 0 quand la liste est vide. On écrit plutôt liste.length > 0 &&.
+
+@009
+Q: Qu'affiche ce code quand la liste est vide ?
+C: Le chiffre 0
+W: Rien du tout
+W: Le mot false
+W: Une erreur de rendu
+E: liste.length vaut 0, valeur fausse mais affichable : && renvoie 0 et React l'écrit. Les valeurs false, null et undefined ne s'affichent pas, mais 0 oui. On compare explicitement : liste.length > 0.
+```jsx
+{offres.length && <ListeOffres offres={offres} />}
+```
+
+@010
+Q: À quoi sert useEffect ?
+C: À synchroniser le composant avec l'extérieur
+W: À calculer une valeur dérivée d'une prop
+W: À déclarer le style CSS d'un composant
+W: À créer une route dans l'application
+E: Abonnement, minuterie, appel réseau, titre de la page : ce qui sort du rendu va dans un effet. Il s'exécute après l'affichage. Une valeur calculée à partir des props se calcule pendant le rendu, sans effet.
+
+@011
+Q: Quand s'exécute un effet avec un tableau de dépendances vide ?
+C: Une seule fois, après le premier rendu
+W: À chaque rendu du composant
+W: Jamais, l'effet est désactivé
+W: Avant le premier rendu seulement
+E: Les dépendances disent quand relancer l'effet : [] signifie aucune. En mode strict de développement, React monte, démonte et remonte le composant pour vérifier que le nettoyage est correct : l'effet s'exécute alors deux fois.
+
+@012
+Q: Pourquoi cet effet doit-il renvoyer une fonction ?
+C: Pour arrêter la minuterie au démontage
+W: Pour renvoyer la valeur du compteur au parent
+W: Parce qu'un effet doit toujours renvoyer quelque chose
+W: Pour relancer la minuterie deux fois plus vite
+E: La fonction renvoyée est le nettoyage : React l'appelle au démontage et avant de relancer l'effet. Sans elle, la minuterie continue après la disparition du composant et provoque une fuite.
+```jsx
+useEffect(() => {
+  const minuterie = setInterval(rafraichir, 60000);
+  return () => clearInterval(minuterie);
+}, []);
+```
+
+@013
+Q: Qu'est-ce qu'un composant contrôlé ?
+C: Un champ dont la valeur vient du state
+W: Un composant testé automatiquement
+W: Un composant réservé aux administrateurs
+W: Un champ qui ne peut pas être modifié
+E: value={email} et onChange={e => setEmail(e.target.value)} : React est la source de vérité. On peut valider ou transformer la saisie à chaque frappe. Un champ non contrôlé garde sa valeur dans le DOM, lue avec une ref.
+
+@014
+Q: Que se passe-t-il pour ce champ ?
+C: La saisie est bloquée, rien ne change
+W: Le champ fonctionne normalement
+W: Le texte s'efface après chaque frappe
+W: Le navigateur affiche une erreur de syntaxe
+E: value impose la valeur à chaque rendu, et sans onChange le state ne change jamais : le champ reste figé. React affiche d'ailleurs un avertissement dans la console. On ajoute onChange, ou defaultValue pour un champ non contrôlé.
+```jsx
+<input value={recherche} />
+```
+
+@015
+Q: Comment un enfant prévient-il son parent d'une action ?
+C: En appelant une fonction reçue en prop
+W: En modifiant directement les props du parent
+W: En émettant un événement global du navigateur
+W: En écrivant dans le state du parent
+E: Le parent passe onSupprimer={supprimerOffre}, l'enfant appelle onSupprimer(offre.id). Les données descendent par les props, les actions remontent par des fonctions : c'est le flux à sens unique de React.
+
+@016
+Q: Que contient la prop children ?
+C: Ce qui est placé entre les balises du composant
+W: La liste des composants enfants du state
+W: Les composants importés dans le fichier
+W: Les éléments HTML du composant parent
+E: <Carte><p>Texte</p></Carte> : la carte reçoit le paragraphe dans children et choisit où l'afficher. C'est le moyen le plus simple de faire des composants d'encadrement réutilisables.
+
+@017
+Q: Quel outil crée un projet React moderne rapidement ?
+C: Vite
+W: Webpack Dev Tools
+W: React Builder
+W: npm init page
+E: npm create vite@latest propose un modèle React, avec ou sans TypeScript, et un serveur de développement très rapide. Create React App, longtemps l'outil officiel, n'est plus maintenu. Les frameworks comme Next.js sont recommandés pour une application complète.
+
+@018
+Q: Pourquoi ne faut-il pas modifier un tableau du state avec push ?
+C: React ne détecte pas le changement
+W: push est interdit en JavaScript moderne
+W: Le tableau est automatiquement copié deux fois
+W: push supprime les éléments existants
+E: React compare les références : le même tableau modifié semble inchangé, et le rendu n'a pas lieu. On crée un nouveau tableau : setOffres([...offres, nouvelle]). Pour retirer : filter ; pour modifier : map.
+
+@019
+Q: Quelle écriture ajoute correctement une offre au state ?
+C: setOffres([...offres, offre])
+W: offres.push(offre)
+W: setOffres(offres.push(offre))
+W: offres = [...offres, offre]
+E: La décomposition crée un nouveau tableau avec l'ancien contenu et l'offre ajoutée. setOffres(offres.push(offre)) passerait la nouvelle longueur du tableau, un nombre, à la place du tableau.
+
+@020
+Q: Que fait React quand le state d'un composant change ?
+C: Il refait le rendu du composant et de ses enfants
+W: Il recharge la page entière du navigateur
+W: Il recrée tout le DOM depuis le début
+W: Il refait le rendu de toute l'application
+E: React relance la fonction du composant, compare le résultat au précédent et n'applique au DOM que les différences. Les enfants sont rendus aussi, sauf s'ils sont mémorisés avec memo et que leurs props n'ont pas changé.
+
+@021
+Q: Associer chaque hook à son usage.
+P: useState => Mémoriser une valeur qui change l'affichage
+P: useEffect => Se synchroniser avec un système extérieur
+P: useRef => Garder une valeur sans provoquer de rendu
+P: useContext => Lire une valeur partagée sans passer par les props
+E: Ces quatre hooks couvrent la plupart des besoins. Les hooks s'appellent toujours au début du composant, jamais dans une condition ou une boucle : React les identifie par leur ordre d'appel.
+
+@022
+Q: Pourquoi ce code est-il interdit ?
+C: Un hook ne doit pas être appelé dans une condition
+W: useState ne peut pas recevoir de chaîne vide
+W: Les composants ne peuvent pas avoir de prop
+W: Les conditions sont interdites dans un composant
+E: React retrouve chaque state par l'ordre d'appel des hooks. Si un appel disparaît selon une condition, tous les suivants sont décalés. La règle rules-of-hooks d'ESLint signale ce cas.
+```jsx
+function Filtre({ actif }) {
+  if (actif) {
+    const [texte, setTexte] = useState("");
+  }
+}
+```
+
+@023
+Q: À quoi sert useRef pour un élément du DOM ?
+C: À piloter l'élément, son focus
+W: À copier l'élément dans le state
+W: À créer un nouvel élément HTML
+W: À supprimer l'élément après le rendu
+E: const champ = useRef(null) puis <input ref={champ} /> : après le rendu, champ.current est l'élément. On s'en sert pour le focus, la mesure ou une bibliothèque qui manipule le DOM. Modifier current ne déclenche pas de rendu.
+
+@024
+Q: Qu'est-ce que le DOM virtuel ?
+C: Une représentation en mémoire de l'interface
+W: Un navigateur intégré à React
+W: Une copie du serveur dans le navigateur
+W: Un moteur CSS propre à React
+E: React construit un arbre d'objets décrivant l'interface, le compare au précédent, puis applique les seules différences au vrai DOM. Cette réconciliation évite d'écrire soi-même les mises à jour du DOM.
+
+@025
+Q: Remettre dans l'ordre le cycle d'une mise à jour React.
+O: Un événement appelle la fonction de modification du state
+O: React relance le rendu du composant
+O: Il compare le nouveau résultat au précédent
+O: Il applique les différences au DOM
+O: Les effets concernés s'exécutent
+E: Le rendu calcule, le DOM est mis à jour ensuite, et les effets viennent en dernier, une fois l'affichage fait. C'est pourquoi un effet ne doit pas servir à calculer ce qui s'affiche.
+
+@026
+Q: Pourquoi ce compteur n'augmente-t-il que de 1 ?
+C: compteur garde la même valeur pendant ce rendu
+W: setCompteur ne peut être appelé qu'une fois
+W: Le second appel annule le premier par sécurité
+W: Les nombres sont arrondis par React
+E: Les deux appels calculent 0 + 1 avec la valeur du rendu courant. La forme fonctionnelle s'appuie sur la valeur la plus récente : setCompteur(c => c + 1) deux fois donne bien 2.
+```jsx
+function doubler() {
+  setCompteur(compteur + 1);
+  setCompteur(compteur + 1);
+}
+```
+
+@027
+Q: Quand utiliser la forme setValeur(ancienne => nouvelle) ?
+C: Quand la valeur dépend de la précédente
+W: Uniquement pour les tableaux
+W: Quand la valeur vient d'une prop
+W: Jamais, elle est dépréciée
+E: La fonction reçoit la valeur la plus récente, même si plusieurs mises à jour sont en attente ou si l'appel a lieu dans un rappel créé lors d'un rendu antérieur. C'est la solution aux valeurs figées dans les minuteries.
+
+@028
+Q: Qu'est-ce qu'une « fermeture figée » dans un effet ?
+C: Un rappel qui lit une valeur d'un ancien rendu
+W: Un composant qui ne se démonte jamais
+W: Une boucle infinie de rendus
+W: Un effet qui s'exécute avant le rendu
+E: Un setInterval créé au premier rendu voit toujours les valeurs de ce rendu. On ajoute la valeur aux dépendances, on utilise la forme fonctionnelle du setter, ou une ref pour la dernière valeur.
+
+@029
+Q: Pourquoi cet effet tourne-t-il en boucle ?
+C: Il modifie une dépendance qu'il surveille
+W: Un effet tourne toujours en boucle par défaut
+W: fetch est appelé avant le montage
+W: setFiltres n'existe pas dans un effet
+E: L'effet crée un nouvel objet filtres, ce qui change la dépendance, ce qui relance l'effet. On calcule la valeur pendant le rendu, ou on ne dépend que des valeurs simples qui changent vraiment.
+```jsx
+useEffect(() => {
+  setFiltres({ ...filtres, page: 1 });
+}, [filtres]);
+```
+
+@030
+Q: Qu'est-ce que le « prop drilling » ?
+C: Transmettre une prop par des intermédiaires
+W: Tester les props d'un composant une à une
+W: Convertir des props en state local
+W: Supprimer les props inutilisées d'un composant
+E: Quand une donnée doit descendre de cinq niveaux, chaque intermédiaire la reçoit seulement pour la transmettre. Le contexte, la composition par children ou un gestionnaire d'état comme Redux règlent le problème.
+
+@031
+Q: Comment fournir une valeur à tout un sous-arbre de composants ?
+C: Avec un Provider de contexte
+W: Avec une variable globale window
+W: Avec un attribut data-* sur la racine
+W: Avec la prop key du parent
+E: <ThemeContext.Provider value={theme}> enveloppe l'arbre, et useContext(ThemeContext) lit la valeur n'importe où dessous. Chaque changement de valeur refait le rendu de tous les consommateurs : on évite d'y mettre des données qui changent très souvent.
+
+@032
+Q: Que fait useMemo ?
+C: Il mémorise un calcul entre les rendus
+W: Il enregistre une valeur dans le stockage local
+W: Il supprime le composant de la mémoire
+W: Il retarde le rendu d'un composant
+E: useMemo(() => trier(offres), [offres]) ne refait le tri que si offres change. Utile pour un calcul coûteux ou pour garder la même référence d'objet passée à un enfant mémorisé ; inutile pour une addition.
+
+@033
+Q: À quoi sert useCallback ?
+C: À garder la même fonction entre les rendus
+W: À appeler une fonction après un délai
+W: À transformer une fonction en promesse
+W: À exécuter une fonction une seule fois
+E: Une fonction déclarée dans un composant est recréée à chaque rendu. useCallback garde la même référence tant que ses dépendances ne changent pas, ce qui compte quand elle est passée à un enfant mémorisé ou utilisée en dépendance d'effet.
+
+@034
+Q: Que fait React.memo sur un composant ?
+C: Il évite le rendu si les props sont identiques
+W: Il garde le composant en cache dans le navigateur
+W: Il rend le composant une seule fois au total
+W: Il enregistre les props dans le state
+E: memo compare les props avec une égalité superficielle : un objet ou une fonction recréés à chaque rendu du parent cassent la mémorisation. D'où l'usage conjoint de useMemo et useCallback.
+
+@035
+Q: Pourquoi ce composant mémorisé se rend-il quand même à chaque fois ?
+C: L'objet style est recréé à chaque rendu
+W: memo ne fonctionne pas avec les styles
+W: Les composants mémorisés se rendent toujours deux fois
+W: La prop style est interdite sur un composant
+E: { color: "red" } est un nouvel objet à chaque rendu du parent : la comparaison par référence échoue. On sort la constante du composant ou on utilise useMemo.
+```jsx
+<Ligne offre={offre} style={{ color: "red" }} />
+```
+
+@036
+Q: Comment charger des données d'une API au montage d'un composant ?
+C: Dans un effet, erreur comprise
+W: Directement dans le corps du composant
+W: Dans le constructeur de la page HTML
+W: Dans la prop key de l'élément racine
+E: Un appel dans le corps serait relancé à chaque rendu. Dans un effet, on gère trois états : chargement, données, erreur. En pratique, une bibliothèque comme TanStack Query gère aussi le cache, les relances et l'annulation.
+
+@037
+Q: Quel problème de concurrence a ce chargement ?
+C: Une réponse lente peut écraser une plus récente
+W: fetch ne fonctionne pas dans un effet
+W: La recherche est envoyée deux fois au serveur
+W: Les données sont chiffrées par le navigateur
+E: Si l'utilisateur tape vite, la réponse de « re » peut arriver après celle de « react » et l'écraser. Le nettoyage de l'effet doit ignorer les réponses obsolètes, par un drapeau ou un AbortController.
+```jsx
+useEffect(() => {
+  fetch(`/api/offres?q=${recherche}`)
+    .then((reponse) => reponse.json())
+    .then(setOffres);
+}, [recherche]);
+```
+
+@038
+Q: À quoi sert un AbortController dans le nettoyage d'un effet ?
+C: À annuler la requête devenue inutile
+W: À relancer la requête en cas d'échec
+W: À chiffrer la requête envoyée
+W: À limiter le nombre de rendus
+E: On passe controller.signal à fetch, et le nettoyage appelle controller.abort() : la requête est annulée si la dépendance change ou si le composant disparaît. L'erreur AbortError qui en résulte doit être ignorée, pas affichée.
+
+@039
+Q: Comment éviter une faille XSS en affichant un texte reçu d'une API ?
+C: L'afficher normalement entre accolades
+W: L'insérer avec dangerouslySetInnerHTML
+W: Le placer dans un attribut href directement
+W: Le convertir en JSX avec eval
+E: React échappe le texte inséré par {texte} : une balise script s'affiche comme du texte. dangerouslySetInnerHTML court-circuite cette protection ; on ne l'utilise qu'avec du HTML nettoyé, par DOMPurify par exemple.
+
+@040
+Q: Pourquoi un href venant de l'utilisateur doit-il être vérifié ?
+C: Il peut exécuter du code javascript:
+W: Les liens sont limités à 50 caractères
+W: React refuse les liens externes
+W: Un lien invalide fait planter le rendu
+E: React échappe le texte, mais un lien javascript:alert(1) s'exécute au clic. On n'accepte que les schémas http et https, après analyse avec new URL.
+
+@041
+Q: Qu'est-ce qu'un hook personnalisé ?
+C: Une fonction use… qui regroupe d'autres hooks
+W: Un hook fourni par une bibliothèque payante
+W: Un composant qui ne renvoie rien
+W: Une méthode ajoutée au prototype de React
+E: useOffres(recherche) peut contenir le state, l'effet de chargement et l'annulation, puis renvoyer { offres, chargement, erreur }. La logique est partagée entre composants, chacun gardant son propre state.
+
+@042
+Q: Que renvoie ce hook personnalisé ?
+C: La valeur, après 300 ms sans frappe
+W: La valeur saisie, immédiatement
+W: Une promesse résolue après 300 ms
+W: Le nombre de frappes de l'utilisateur
+E: Chaque nouvelle valeur annule la minuterie précédente : la valeur retardée ne change qu'après une pause. On évite ainsi une requête à chaque lettre tapée dans un champ de recherche.
+```jsx
+function useRetard(valeur, delai = 300) {
+  const [retardee, setRetardee] = useState(valeur);
+  useEffect(() => {
+    const minuterie = setTimeout(() => setRetardee(valeur), delai);
+    return () => clearTimeout(minuterie);
+  }, [valeur, delai]);
+  return retardee;
+}
+```
+
+@043
+Q: À quoi sert React Router ?
+C: À associer des adresses à des composants
+W: À envoyer des requêtes HTTP au serveur
+W: À gérer les droits des utilisateurs
+W: À router les paquets réseau de l'application
+E: <Route path="/offres/:id" element={<DetailOffre />} /> affiche le détail pour cette adresse, et useParams lit l'identifiant. La navigation change l'adresse sans recharger la page.
+
+@044
+Q: Pourquoi utiliser <Link to="/offres"> plutôt que <a href="/offres"> ?
+C: Link ne recharge pas l'application
+W: Link est plus rapide à écrire
+W: Les balises a sont interdites en React
+W: Link chiffre l'adresse de la page
+E: Une balise a recharge tout le document : l'état de l'application est perdu et tout est retéléchargé. Link intercepte le clic et met à jour l'historique du navigateur. Pour un site externe, on garde une balise a.
+
+@045
+Q: Quel outil teste un composant comme le ferait un utilisateur ?
+C: React Testing Library
+W: React DevTools
+W: Redux Toolkit
+W: Storybook Router
+E: On cherche les éléments par leur rôle ou leur texte, screen.getByRole("button", { name: "Valider" }), et on simule les actions avec user-event. Les tests ne dépendent pas des détails internes du composant.
+
+@046
+Q: Que vérifie ce test ?
+C: Que le message apparaît après le clic
+W: Que le bouton a la bonne couleur
+W: Que le composant a un state nommé envoye
+W: Que le serveur reçoit la requête
+E: Le test agit et observe comme un utilisateur : un clic, puis la présence d'un texte. findByText attend son apparition, ce qui gère les mises à jour asynchrones. Changer l'implémentation interne ne casse pas ce test.
+```jsx
+await user.click(screen.getByRole("button", { name: "Envoyer" }));
+expect(await screen.findByText("Candidature envoyée")).toBeInTheDocument();
+```
+
+@047
+Q: Que représente un composant Angular ?
+C: Une classe avec un gabarit et des styles
+W: Une fonction qui renvoie du JSX
+W: Un fichier de configuration du routeur
+W: Un service partagé de toute l'application
+E: Le décorateur @Component associe la classe à un sélecteur, un gabarit HTML et des styles. Depuis Angular 17, les composants autonomes (standalone) sont la norme, sans NgModule obligatoire.
+
+@048
+Q: Comment Vue.js lie-t-il un champ à une donnée dans les deux sens ?
+C: Avec v-model
+W: Avec v-bind:once
+W: Avec la prop key
+W: Avec un watch global
+E: <input v-model="recherche" /> met à jour la donnée à la saisie, et le champ quand la donnée change. C'est un raccourci pour :value et @input. Angular a l'équivalent avec [(ngModel)].
+
+@049
+Q: Qu'est-ce que Redux ?
+C: Un gestionnaire d'état global prévisible
+W: Un routeur pour les applications React
+W: Un outil de test des composants
+W: Une bibliothèque de composants graphiques
+E: Tout l'état partagé est dans un store unique ; on le modifie en envoyant des actions traitées par des reducers, des fonctions pures. Redux Toolkit est la manière recommandée de l'écrire aujourd'hui.
+
+@050
+Q: Quelle règle doit respecter un reducer Redux ?
+C: Être une fonction pure sans effet de bord
+W: Envoyer une requête HTTP à chaque action
+W: Modifier directement l'état reçu
+W: Renvoyer toujours le même état
+E: Même entrée, même sortie, sans appel réseau ni aléatoire : c'est ce qui rend l'état prévisible et rejouable dans les outils de débogage. Redux Toolkit permet d'écrire des mutations, converties en copies par Immer.

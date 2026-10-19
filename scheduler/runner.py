@@ -3,6 +3,8 @@
 import smtplib
 from datetime import datetime
 
+import pandas as pd
+
 from job.application import process_jobs
 from job.application_tracking import get_due_follow_ups
 from job.notification import build_follow_ups_email, build_new_offers_email
@@ -11,13 +13,16 @@ from job.presentation import SCHEDULED_TRIGGER, clean_missing_values
 from job.profile import load_profile
 from job.schedule import (
     FOLLOW_UP_REMINDER_KEY,
+    describe_extra_searches,
     describe_scheduled_search,
+    get_scheduled_searches,
     is_schedule_due,
     load_schedule,
     mark_schedule_run,
 )
 from job.sources.aggregator import ScrapingCancelled
 from job.sources.configuration import build_job_config, build_search_arguments
+from storage.backup import run_due_backup
 from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
 from utils.mailer import send_email
@@ -92,7 +97,12 @@ def notify_new_offers(pDatabaseFile, pSchedule, pItems):
         vSubject, vText, vHtml = build_new_offers_email(
             vOffers,
             " · ".join(
-                vPart for vPart in describe_scheduled_search(pSchedule) if vPart
+                vPart
+                for vPart in (
+                    *describe_scheduled_search(pSchedule),
+                    describe_extra_searches(pSchedule),
+                )
+                if vPart
             ),
         )
 
@@ -155,25 +165,75 @@ def run_due_search(pDatabaseFile, pNow, pCancelEvent=None):
         # chaque vérification, mais à la prochaine échéance.
         mark_schedule_run(pDatabaseFile, pNow)
 
-        vSearch = vSchedule["search"]
+        rResult = []
 
-        logger.info(
-            "Lancement de la recherche planifiée sur %s source(s)",
-            len(vSearch["sources"]),
+        for vSearch in get_scheduled_searches(pDatabaseFile, vSchedule):
+            vResult = run_search(vSearch, pCancelEvent)
+
+            if vResult is not None:
+                rResult.append(vResult)
+
+        notify_new_offers(
+            pDatabaseFile,
+            vSchedule,
+            merge_items([vResult.items for vResult in rResult]),
         )
+        notify_follow_ups(pDatabaseFile, vSchedule, pNow)
 
-        vConfig = build_job_config(
-            build_search_arguments(vSearch["sources"], vSearch.get("criteria", {}))
-        )
+    return rResult
 
+
+def run_search(pSearch, pCancelEvent):
+    """Lance une recherche ; retourne son résultat, ou None si elle a échoué."""
+
+    logger.info(
+        "Lancement de « %s » sur %s source(s)",
+        pSearch["name"],
+        len(pSearch["sources"]),
+    )
+
+    vConfig = build_job_config(
+        build_search_arguments(pSearch["sources"], pSearch.get("criteria", {}))
+    )
+
+    rResult = None
+
+    # Une recherche en échec n'empêche pas les suivantes ni la notification.
+    try:
         rResult = process_jobs(
             vConfig, pCancelEvent=pCancelEvent, pTrigger=SCHEDULED_TRIGGER
         )
 
-        notify_new_offers(pDatabaseFile, vSchedule, rResult.items)
-        notify_follow_ups(pDatabaseFile, vSchedule, pNow)
+    except ScrapingCancelled:
+        raise
+
+    except Exception:
+        logger.exception("Échec de la recherche planifiée « %s »", pSearch["name"])
 
     return rResult
+
+
+def merge_items(pItemsList):
+    """Rassemble les offres de plusieurs recherches, chaque adresse une seule fois."""
+
+    vItemsList = [vItems for vItems in pItemsList if not vItems.empty]
+
+    rItems = pd.DataFrame()
+
+    if len(vItemsList) == 1:
+        rItems = vItemsList[0]
+
+    elif vItemsList:
+        # Une offre nouvelle pour la première recherche est déjà connue de la
+        # suivante : la version nouvelle passe en tête pour être gardée.
+        vItems = pd.concat(vItemsList, ignore_index=True).sort_values(
+            "is_new", ascending=False, kind="stable"
+        )
+        vDuplicated = vItems["url"].notna() & vItems.duplicated("url")
+
+        rItems = vItems[~vDuplicated].sort_index()
+
+    return rItems
 
 
 def run_forever(pDatabaseFile, pStopEvent, pPollSeconds=POLL_SECONDS):
@@ -182,6 +242,8 @@ def run_forever(pDatabaseFile, pStopEvent, pPollSeconds=POLL_SECONDS):
     logger.info("Planificateur démarré, vérification toutes les %s s", pPollSeconds)
 
     while not pStopEvent.is_set():
+        run_due_backup(pDatabaseFile, datetime.now())
+
         try:
             run_due_search(pDatabaseFile, datetime.now(), pStopEvent)
 

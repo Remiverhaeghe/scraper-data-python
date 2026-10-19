@@ -1,0 +1,510 @@
+@051
+Q: Qu'affiche ce code ?
+C: [2, 2, 2]
+W: [0, 1, 2]
+W: [0, 0, 0]
+W: Une erreur
+E: Les fonctions lambda capturent la variable i, pas sa valeur : quand on les appelle, la boucle est finie et i vaut 2 pour toutes. On fige la valeur avec un argument par défaut, lambda i=i: i, ou avec functools.partial.
+```python
+fonctions = [lambda: i for i in range(3)]
+print([f() for f in fonctions])
+```
+
+@052
+Q: Quelle différence entre copy.copy et copy.deepcopy ?
+C: deepcopy copie aussi les objets imbriqués
+W: copy copie aussi les objets imbriqués
+W: deepcopy ne copie que les listes
+W: Les deux sont identiques depuis Python 3
+E: Une copie superficielle crée un nouveau conteneur mais partage les objets qu'il contient : modifier une liste imbriquée se voit dans l'original. deepcopy recopie récursivement tout. Elle est plus lente et rarement nécessaire si l'on préfère des données immuables.
+
+@053
+Q: Qu'affiche ce code ?
+C: [[1, 'x'], [2]]
+W: [[1], [2]]
+W: [[1, 'x'], [2, 'x']]
+W: Une erreur
+E: copy.copy duplique la liste extérieure, mais les deux listes partagent les mêmes listes intérieures : ajouter à b[0] modifie aussi a[0]. deepcopy aurait copié les listes intérieures, et a serait resté intact.
+```python
+import copy
+a = [[1], [2]]
+b = copy.copy(a)
+b[0].append("x")
+print(a)
+```
+
+@054
+Q: À quoi sert functools.lru_cache ?
+C: À mémoriser les résultats selon les arguments
+W: À vider la mémoire inutilisée du programme
+W: À exécuter une fonction en parallèle
+W: À limiter le nombre d'appels par seconde
+E: Un appel déjà fait avec les mêmes arguments renvoie le résultat mémorisé : une récursion comme Fibonacci passe d'exponentielle à linéaire. Les arguments doivent être hachables, et la fonction ne doit pas dépendre d'un état qui change.
+
+@055
+Q: Qu'affiche ce code, avec l'opérateur morse := ?
+C: 5 caractères
+W: Rien
+W: 5
+W: Une erreur de syntaxe
+E: := affecte une valeur dans une expression, depuis Python 3.8 : on calcule len(texte) une fois et on l'utilise dans la condition et dans le message. Pratique dans un while qui lit des blocs, à utiliser avec mesure pour garder un code lisible.
+```python
+texte = "bravo"
+if (n := len(texte)) > 3:
+    print(f"{n} caractères")
+```
+
+@056
+Q: Qu'affiche cette instruction match de Python 3.10 ?
+C: Déplacement vers 3, 4
+W: Commande inconnue
+W: Arrêt
+W: Une erreur
+E: match compare la structure de la valeur aux motifs : le tuple ("aller", 3, 4) correspond au deuxième motif, qui capture x et y. Le motif _ attrape tout le reste. C'est plus qu'un switch : on peut filtrer des dictionnaires, des classes et des longueurs de séquence.
+```python
+commande = ("aller", 3, 4)
+match commande:
+    case ("stop",):
+        print("Arrêt")
+    case ("aller", x, y):
+        print(f"Déplacement vers {x}, {y}")
+    case _:
+        print("Commande inconnue")
+```
+
+@057
+Q: Pourquoi tester l'appartenance dans un set plutôt que dans une liste de 100 000 éléments ?
+C: Le set répond aussitôt, la liste parcourt tout
+W: Le set occupe moins de mémoire que la liste
+W: La liste ne permet pas l'opérateur in
+W: Le set garde l'ordre d'insertion des éléments
+E: x in liste parcourt les éléments un à un ; x in ensemble calcule un hachage et répond presque immédiatement. Dans une boucle de 100 000 tests, la différence passe de plusieurs minutes à une fraction de seconde. Un dictionnaire offre la même rapidité sur ses clés.
+
+@058
+Q: Que fait @property sur une méthode ?
+C: Elle se lit comme un attribut, sans parenthèses
+W: Elle devient privée et inaccessible de l'extérieur
+W: Elle est appelée une seule fois puis mémorisée
+W: Elle devient une méthode de classe
+E: commande.total, défini par @property, calcule la valeur à chaque lecture comme un attribut. On peut ajouter un setter pour valider une affectation. On garde ainsi une interface simple tout en contrôlant l'accès.
+
+@059
+Q: Quelle différence entre @staticmethod et @classmethod ?
+C: classmethod reçoit la classe, staticmethod ne reçoit rien
+W: staticmethod reçoit la classe, classmethod ne reçoit rien
+W: Les deux reçoivent l'instance en premier argument
+W: classmethod ne s'utilise qu'avec l'héritage
+E: Une méthode de classe reçoit cls et sert souvent de constructeur alternatif, comme Date.depuis_texte("2026-10-19"), qui fonctionne aussi pour les sous-classes. Une méthode statique est une simple fonction rangée dans la classe.
+
+@060
+Q: Que renvoie next sur ce zip de deux listes ?
+C: (1, 2)
+W: [1, 2]
+W: 1 2
+W: Une erreur
+E: zip associe les éléments de même rang ; next prend la première paire, un tuple. zip s'arrête à la séquence la plus courte : des données perdues passent inaperçues. Depuis Python 3.10, zip(..., strict=True) lève une erreur si les longueurs diffèrent.
+```python
+print(next(zip([1, 3], [2, 4])))
+```
+
+@061
+Q: Que fait la fonction pytest suivante ?
+C: Elle teste la fonction carre avec trois jeux de valeurs
+W: Elle exécute carre trois fois sans vérifier le résultat
+W: Elle teste uniquement le premier jeu de valeurs
+W: Elle crée trois fonctions carre différentes
+E: parametrize lance le test une fois par tuple, avec son propre nom dans le rapport : un échec indique précisément quel cas a cassé. Cela évite d'écrire trois tests presque identiques ou une boucle qui s'arrête au premier échec.
+```python
+import pytest
+
+@pytest.mark.parametrize("valeur, attendu", [(2, 4), (3, 9), (-1, 1)])
+def test_carre(valeur, attendu):
+    assert carre(valeur) == attendu
+```
+
+@062
+Q: À quoi sert une fixture pytest ?
+C: À préparer un contexte commun à des tests
+W: À corriger automatiquement les tests en échec
+W: À exécuter les tests dans un ordre précis
+W: À ignorer les tests trop lents
+E: Une fixture fournit par exemple une base temporaire ou un client HTTP : un test la reçoit en déclarant un paramètre du même nom. tmp_path, monkeypatch et capsys sont des fixtures intégrées. yield permet de nettoyer après le test.
+
+@063
+Q: Que fait monkeypatch.setattr(module, "envoyer", faux) dans un test ?
+C: Il remplace temporairement la fonction le temps du test
+W: Il supprime définitivement la fonction du module
+W: Il envoie un vrai message pour vérifier le réseau
+W: Il recopie le module dans le dossier de test
+E: On remplace un appel réseau, une date ou un envoi de courriel par une version maîtrisée : le test devient rapide et reproductible. pytest rétablit l'original à la fin. On remplace l'attribut là où il est utilisé, pas forcément là où il est défini.
+
+@064
+Q: Qu'est-ce que le GIL de CPython ?
+C: Un verrou qui sérialise les threads Python
+W: Un compilateur qui transforme Python en code natif
+W: Un gestionnaire de paquets intégré à l'interpréteur
+W: Un système de typage vérifié à l'exécution
+E: Le Global Interpreter Lock fait que des threads n'accélèrent pas un calcul pur en Python ; ils restent utiles pour les attentes d'entrées-sorties. Pour du calcul sur plusieurs cœurs, on utilise des processus. Python 3.13 propose une version expérimentale sans GIL.
+
+@065
+Q: Que choisir pour accélérer un calcul lourd en Python sur 8 cœurs ?
+C: Des processus, pas des threads
+W: Des threads, avec ThreadPoolExecutor
+W: asyncio, avec des coroutines
+W: Une boucle for plus courte
+E: Chaque processus a son propre interpréteur et son propre GIL : 8 processus utilisent 8 cœurs. Les threads et asyncio conviennent aux attentes réseau ou disque. Des bibliothèques comme NumPy relâchent le GIL et calculent déjà en code natif.
+
+@066
+Q: Qu'affiche ce programme asyncio ?
+C: Les deux téléchargements finissent en environ 1 seconde
+W: Les deux téléchargements prennent environ 2 secondes
+W: Une erreur, await est interdit hors d'une classe
+W: Rien, les coroutines ne sont jamais lancées
+E: gather lance les deux coroutines ensemble ; pendant que l'une attend, l'autre avance : 1 seconde au total au lieu de 2. asyncio sleep simule une attente réseau. Un time.sleep bloquant, à la place, figerait toute la boucle.
+```python
+import asyncio
+
+async def telecharger(nom):
+    await asyncio.sleep(1)
+    return nom
+
+async def main():
+    return await asyncio.gather(telecharger("a"), telecharger("b"))
+
+asyncio.run(main())
+```
+
+@067
+Q: Pourquoi ne faut-il pas appeler time.sleep dans une coroutine asyncio ?
+C: Il bloque toute la boucle d'événements
+W: Il est interdit par la syntaxe de Python
+W: Il ne dure que la moitié du temps demandé
+W: Il crée un nouveau thread à chaque appel
+E: asyncio repose sur une seule boucle qui alterne entre les coroutines quand elles attendent avec await. time.sleep, ou un appel réseau bloquant comme requests, arrête tout le monde. On utilise asyncio.sleep et des bibliothèques asynchrones comme httpx.
+
+@068
+Q: Combien d'appels à la base fait ce code Django pour 100 commandes ?
+N: 101
+E: Une requête pour les commandes, puis une par commande pour lire son client : c'est le problème N+1. select_related("client") fait une jointure et ramène tout en une requête. La barre de débogage Django ou les journaux SQL révèlent ce schéma.
+```python
+for commande in Commande.objects.all():
+    print(commande.client.nom)
+```
+
+@069
+Q: Quelle correction réduit ce code Django à une seule requête ?
+C: Commande.objects.select_related("client")
+W: Commande.objects.all().count()
+W: Commande.objects.filter(client=None)
+W: Commande.objects.values()
+E: select_related suit une clé étrangère par une jointure SQL. Pour une relation inverse ou plusieurs-à-plusieurs, prefetch_related fait une seconde requête groupée. Les deux suppriment le problème N+1.
+
+@070
+Q: Que valide automatiquement FastAPI grâce à ce modèle Pydantic ?
+C: Le type et la présence de nom et prix
+W: L'existence du produit dans la base de données
+W: L'authentification de l'utilisateur
+W: Le format de la réponse HTML renvoyée
+E: FastAPI lit le corps JSON, le valide avec le modèle et renvoie une erreur 422 détaillée si un champ manque ou n'a pas le bon type. Le même modèle produit la documentation OpenAPI. La logique métier reste à écrire.
+```python
+from pydantic import BaseModel
+
+class Produit(BaseModel):
+    nom: str
+    prix: float
+
+@app.post("/produits")
+def creer(produit: Produit):
+    return produit
+```
+
+@071
+Q: Quel code d'erreur HTTP renvoie FastAPI quand le corps ne respecte pas le modèle Pydantic ?
+N: 422
+E: 422 Unprocessable Entity indique une requête bien formée mais invalide ; la réponse détaille chaque champ en faute. Un client mal écrit reçoit ainsi un message exploitable au lieu d'une erreur 500 au milieu du traitement.
+
+@072
+Q: Que fait cette ligne pandas ?
+C: Elle calcule le salaire moyen par ville
+W: Elle trie les salaires par ville
+W: Elle compte les villes distinctes
+W: Elle supprime les lignes sans salaire
+E: groupby regroupe les lignes par ville, et mean calcule la moyenne de la colonne salaire dans chaque groupe. Le résultat est une Series indexée par ville. agg permet plusieurs calculs à la fois, comme moyenne et nombre.
+```python
+df.groupby("ville")["salaire"].mean()
+```
+
+@073
+Q: Pourquoi éviter de parcourir un DataFrame pandas ligne par ligne avec iterrows ?
+C: Les opérations vectorisées sont bien plus rapides
+W: iterrows modifie les données du DataFrame
+W: iterrows ne fonctionne qu'avec des nombres
+W: iterrows trie les lignes avant de les parcourir
+E: df["ttc"] = df["ht"] * 1.2 calcule toute la colonne en code natif ; une boucle Python sur un million de lignes est des centaines de fois plus lente. On cherche toujours une opération sur colonnes avant d'écrire une boucle.
+
+@074
+Q: Que fait pd.merge(commandes, clients, on="client_id", how="left") ?
+C: Il garde les commandes et ajoute le client
+W: Il garde seulement les clients sans commande
+W: Il empile les deux tables l'une sous l'autre
+W: Il supprime les commandes sans client
+E: C'est l'équivalent d'un LEFT JOIN SQL : chaque commande reçoit les colonnes de son client, NaN s'il n'existe pas. how="inner" ne garderait que les correspondances. Une clé en double côté clients multiplierait les lignes : on vérifie avec validate="many_to_one".
+
+@075
+Q: Quel risque présente ce code avec sqlite3 ?
+C: Une injection SQL par la variable nom
+W: Une connexion jamais ouverte à la base
+W: Une transaction validée deux fois
+W: Aucun, sqlite3 protège les chaînes
+E: L'f-string insère la saisie dans la requête : nom = "x' OR '1'='1" renvoie tous les clients. On écrit cur.execute("SELECT * FROM client WHERE nom = ?", (nom,)) : le pilote transmet la valeur séparément.
+```python
+cur.execute(f"SELECT * FROM client WHERE nom = '{nom}'")
+```
+
+@076
+Q: Que fait une transaction avec le gestionnaire de contexte de sqlite3 (with connexion:) ?
+C: Elle valide en sortie, ou annule en cas d'exception
+W: Elle ferme la connexion à la fin du bloc
+W: Elle verrouille la base pour tous les autres programmes
+W: Elle sauvegarde la base dans un fichier séparé
+E: with connexion: fait un commit si le bloc se termine bien et un rollback en cas d'exception. Attention, il ne ferme pas la connexion : on la ferme à part, ou avec contextlib.closing.
+
+@077
+Q: Qu'affiche ce code ?
+C: ValueError, avec la cause KeyError
+W: KeyError seulement
+W: ValueError seulement, sans cause
+W: Rien
+E: raise ... from erreur chaîne les exceptions : la trace montre l'erreur d'origine puis la nouvelle, avec « The above exception was the direct cause ». On garde ainsi le contexte technique tout en levant une erreur adaptée à l'appelant.
+```python
+try:
+    {}["prix"]
+except KeyError as erreur:
+    raise ValueError("Prix absent") from erreur
+```
+
+@078
+Q: À quoi sert un fichier pyproject.toml ?
+C: À décrire le projet, ses dépendances et ses outils
+W: À stocker les mots de passe du projet
+W: À lister les fichiers à exclure de Git
+W: À configurer le serveur web de production
+E: pyproject.toml, standard depuis PEP 518 et 621, centralise le nom, la version, les dépendances et la configuration d'outils comme pytest, Black ou Ruff. Il remplace progressivement setup.py et setup.cfg.
+
+@079
+Q: Que mesure cProfile sur un programme Python ?
+C: Le temps passé dans chaque fonction
+W: La mémoire utilisée par chaque variable
+W: La couverture des tests
+W: Le nombre de lignes du programme
+E: python -m cProfile -s cumtime script.py liste les fonctions par temps cumulé : on voit où optimiser au lieu de deviner. Souvent, une seule fonction coûte l'essentiel, par exemple une requête dans une boucle. tracemalloc mesure la mémoire.
+
+@080
+Q: Que produit ce parcours avec enumerate et start=1 ?
+C: 1 Ana puis 2 Bob
+W: 0 Ana puis 1 Bob
+W: Ana 1 puis Bob 2
+W: Une erreur
+E: enumerate donne l'indice et l'élément ; start=1 fait commencer la numérotation à 1, pratique pour un affichage destiné à un humain. On évite ainsi un compteur géré à la main, source d'oublis d'incrémentation.
+```python
+for numero, nom in enumerate(["Ana", "Bob"], start=1):
+    print(numero, nom)
+```
+
+@081
+Q: Que fait __slots__ dans une classe ?
+C: Il fixe les attributs permis et réduit la mémoire
+W: Il rend la classe impossible à hériter
+W: Il trie les attributs par ordre alphabétique
+W: Il rend les attributs publics
+E: Sans __slots__, chaque instance a un dictionnaire d'attributs ; avec, les attributs sont stockés dans des emplacements fixes, ce qui économise de la mémoire sur des millions d'objets et interdit les attributs non prévus. @dataclass(slots=True) le génère.
+
+@082
+Q: Qu'est-ce qu'un Protocol du module typing ?
+C: Un type défini par les méthodes qu'un objet doit avoir
+W: Un protocole réseau intégré à Python
+W: Une classe de base obligatoire à hériter
+W: Un décorateur qui vérifie les types à l'exécution
+E: Un Protocol décrit une forme : toute classe qui a les bonnes méthodes le satisfait, sans hériter de lui. C'est le typage structurel, le « duck typing » vérifié par mypy. On découple ainsi un code de ses dépendances concrètes.
+
+@083
+Q: Qu'affiche ce code ?
+C: [('a', 1), ('b', 2)]
+W: {'a': 1, 'b': 2}
+W: ['a', 'b']
+W: Une erreur
+E: items renvoie des paires clé-valeur ; list les matérialise en liste de tuples. On parcourt souvent un dictionnaire avec for cle, valeur in d.items(). Modifier la taille du dictionnaire pendant ce parcours lève une erreur.
+```python
+d = {"a": 1, "b": 2}
+print(list(d.items()))
+```
+
+@084
+Q: Que fait itertools.chain(a, b) ?
+C: Il parcourt a puis b comme une seule séquence
+W: Il associe les éléments de a et b par paires
+W: Il trie a et b ensemble
+W: Il supprime les doublons de a et b
+E: chain enchaîne plusieurs itérables sans créer de nouvelle liste en mémoire. itertools propose aussi islice pour prendre une partie d'un générateur, groupby pour des groupes consécutifs et product pour des combinaisons.
+
+@085
+Q: Que renvoie sorted("banane", key=str.lower) == sorted("banane") ?
+C: True
+W: False
+W: Une erreur
+W: None
+E: La chaîne est déjà en minuscules : la clé ne change rien et les deux tris sont identiques. key=str.lower sert surtout à trier sans tenir compte de la casse : sorted(["b", "A", "c"], key=str.lower) donne A, b, c.
+
+@086
+Q: Pourquoi le code suivant est-il lent sur une grande liste ?
+C: Chaque concaténation recopie toute la chaîne
+W: Les chaînes Python ne supportent pas l'opérateur +=
+W: La boucle s'exécute deux fois par élément
+W: str() convertit chaque nombre en binaire
+E: Une chaîne est immuable : += crée une nouvelle chaîne à chaque tour, d'où un coût qui croît avec la longueur. "".join(str(n) for n in nombres) construit le résultat en une fois. CPython optimise parfois ce cas, mais on ne s'y fie pas.
+```python
+texte = ""
+for n in nombres:
+    texte += str(n)
+```
+
+@087
+Q: Que fait la bibliothèque standard concurrent.futures ?
+C: Elle exécute des tâches dans un pool
+W: Elle planifie des tâches à une date future
+W: Elle compile du code Python pour l'accélérer
+W: Elle remplace asyncio dans les versions récentes
+E: ThreadPoolExecutor ou ProcessPoolExecutor exécutent des fonctions en parallèle ; submit renvoie un Future dont result() attend la valeur, map applique une fonction à une liste. C'est la façon la plus simple de paralléliser des téléchargements ou des calculs.
+
+@088
+Q: Qu'affiche ce code ?
+C: 15
+W: 10
+W: 5
+W: Une erreur
+E: La fermeture compteur garde la variable total de la fonction extérieure ; nonlocal permet de la modifier. Chaque appel ajoute la valeur reçue : 10 puis 5, soit 15. Sans nonlocal, l'affectation créerait une variable locale et lèverait UnboundLocalError.
+```python
+def creer_compteur():
+    total = 0
+    def ajouter(n):
+        nonlocal total
+        total += n
+        return total
+    return ajouter
+
+compteur = creer_compteur()
+compteur(10)
+print(compteur(5))
+```
+
+@089
+Q: Combien d'éléments produit itertools.product([1, 2, 3], ["a", "b"]) ?
+N: 6
+E: product forme toutes les combinaisons, comme deux boucles imbriquées : 3 × 2 = 6 paires. repeat=2 ferait le produit d'une liste avec elle-même. permutations et combinations comptent les arrangements avec ou sans ordre.
+
+@090
+Q: Pourquoi définir __repr__ dans une classe ?
+C: Pour un affichage utile au débogage
+W: Pour pouvoir comparer deux instances avec ==
+W: Pour rendre la classe utilisable dans un for
+W: Pour accélérer la création des instances
+E: Sans __repr__, un objet s'affiche <Commande object at 0x7f...>, inutile dans une trace. Un repr comme Commande(id=42, statut='payée') fait gagner du temps. @dataclass le génère automatiquement.
+
+@091
+Q: Que fait la commande pip-audit sur un projet ?
+C: Elle signale les dépendances vulnérables
+W: Elle met à jour toutes les dépendances
+W: Elle supprime les paquets inutilisés
+W: Elle mesure la couverture des tests
+E: pip-audit compare les versions installées aux bases publiques de vulnérabilités et indique la version corrigée. Lancé dans l'intégration continue, il empêche de livrer une dépendance vulnérable. Bandit, lui, analyse le code du projet.
+
+@092
+Q: Que donne la fusion des deux dictionnaires avec l'opérateur | ?
+C: {'a': 1, 'b': 3, 'c': 4}
+W: {'a': 1, 'b': 2, 'c': 4}
+W: {'a': 1, 'b': 2, 'b': 3, 'c': 4}
+W: Une erreur
+E: L'opérateur | fusionne deux dictionnaires depuis Python 3.9 : en cas de clé commune, la valeur de droite gagne. {**d1, **d2} donne le même résultat dans les versions antérieures. |= met à jour le dictionnaire de gauche en place.
+```python
+d1 = {"a": 1, "b": 2}
+d2 = {"b": 3, "c": 4}
+print(d1 | d2)
+```
+
+@093
+Q: Pourquoi utiliser Decimal plutôt que float pour des montants ?
+C: Decimal calcule exactement en base 10
+W: Decimal est plus rapide que float
+W: float ne permet pas de décimales
+W: Decimal occupe moins de mémoire
+E: 0.1 + 0.2 donne 0.30000000000000004 en float, car ces nombres n'ont pas de représentation binaire exacte. Decimal("0.1") + Decimal("0.2") donne exactement 0.3. On construit les Decimal à partir de chaînes, pas de float, pour éviter d'importer l'erreur.
+
+@094
+Q: Qu'affiche ce code ?
+C: False
+W: True
+W: 0.3
+W: Une erreur
+E: Les flottants binaires ne représentent pas 0,1 et 0,2 exactement : la somme vaut 0.30000000000000004. On compare des flottants avec math.isclose, et on calcule les montants avec Decimal ou en centimes entiers.
+```python
+print(0.1 + 0.2 == 0.3)
+```
+
+@095
+Q: À quoi sert la bibliothèque standard secrets ?
+C: À générer des jetons et mots de passe imprévisibles
+W: À stocker les mots de passe chiffrés sur le disque
+W: À cacher les variables d'un module
+W: À vérifier la force d'un mot de passe
+E: secrets.token_urlsafe(32) produit un jeton pour un lien de réinitialisation ou une clé d'API. random, prévu pour les simulations, est prédictible et ne doit pas servir à la sécurité.
+
+@096
+Q: Remettre dans l'ordre l'analyse d'un programme Python devenu lent.
+O: Reproduire la lenteur avec des données représentatives
+O: Mesurer avec cProfile pour trouver la fonction coûteuse
+O: Corriger, par exemple un algorithme ou une requête en boucle
+O: Mesurer de nouveau pour confirmer le gain
+E: On mesure avant d'optimiser : l'intuition se trompe souvent sur l'endroit du problème. Les gains les plus forts viennent d'un meilleur algorithme ou d'une structure de données adaptée, rarement de micro-optimisations.
+
+@097
+Q: Qu'affiche ce code ?
+C: 2
+W: 1
+W: 3
+W: Une erreur
+E: La compréhension de dictionnaire construit {mot: len(mot)} ; deux mots identiques donnent une seule clé, la dernière valeur gagne. Il reste donc deux clés, « chat » et « chien ».
+```python
+mots = ["chat", "chien", "chat"]
+print(len({mot: len(mot) for mot in mots}))
+```
+
+@098
+Q: Quelle commande lance les tests pytest en s'arrêtant au premier échec ?
+C: pytest -x
+W: pytest -q
+W: pytest --all
+W: pytest -s
+E: -x arrête au premier échec, pratique pour corriger pas à pas. -q réduit l'affichage, -s montre les print, -k filtre par nom de test, --lf relance seulement les tests qui ont échoué la dernière fois.
+
+@099
+Q: Que permet ce test avec pytest.raises ?
+C: Vérifier que la fonction lève bien ValueError
+W: Ignorer l'erreur ValueError pendant le test
+W: Corriger automatiquement la fonction
+W: Relancer le test jusqu'à ce qu'il réussisse
+E: Le test échoue si aucune exception n'est levée, ou si c'en est une autre. match vérifie aussi le message avec une expression régulière. Tester les cas d'erreur est aussi important que tester le cas normal.
+```python
+import pytest
+
+def test_age_negatif():
+    with pytest.raises(ValueError, match="négatif"):
+        creer_personne(age=-1)
+```
+
+@100
+Q: Pourquoi typer et tester un code Python destiné à durer ?
+C: Pour détecter les erreurs avant la production
+W: Parce que Python refuse un code sans annotation
+W: Pour que le programme s'exécute plus vite
+W: Parce que les tests remplacent la documentation
+E: Python découvre les erreurs de type à l'exécution, parfois des mois plus tard sur un chemin rare. Les annotations vérifiées par mypy et des tests automatiques les attrapent tôt, et rendent un changement moins risqué. Ils documentent aussi le comportement attendu.

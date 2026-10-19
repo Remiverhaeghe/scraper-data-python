@@ -1,0 +1,25 @@
+{
+  "lot": 1,
+  "seed": 2026101904,
+  "skills": ["Kubernetes", "Helm", "OpenShift"],
+  "schemas": [
+    {
+      "name": "kubernetes-acces.svg",
+      "questions": ["006", "019", "046"],
+      "diagram": {
+        "title": "Accès HTTP à une application",
+        "nodes": ["Utilisateur", "Ingress", "Service", "Pods prêts"],
+        "note": "Le Service sélectionne les Pods par leurs étiquettes"
+      }
+    },
+    {
+      "name": "kubernetes-diagnostic.svg",
+      "questions": ["014", "025", "055"],
+      "diagram": {
+        "title": "Diagnostic d'un Pod en échec",
+        "nodes": ["kubectl get pods", "kubectl describe", "kubectl logs --previous", "Correction et apply"],
+        "note": "Les événements donnent la cause côté cluster, les journaux côté application"
+      }
+    }
+  ]
+}

@@ -299,6 +299,8 @@ def test_exam_is_run_resumed_and_closed(qt_application, tmp_path):
     assert vPage.meta_label.text().startswith("Examen · question 1 / 20")
     assert not vPage.stop_exam_button.isHidden()
     assert vPage.flag_button.isHidden()
+    assert vPage.exam_timer.isActive()
+    assert vPage.timer_label.text().startswith("Temps restant : ")
 
     vPage.refresh()
     vResume = vPage.exam_button
@@ -319,6 +321,8 @@ def test_exam_is_run_resumed_and_closed(qt_application, tmp_path):
     assert vPage.meta_label.text() == "Examen terminé"
     assert vPage.question_label.text().startswith("Note : 20 / 20 (100 %)")
     assert vPage.stop_exam_button.text() == "Fermer l'examen"
+    assert not vPage.exam_timer.isActive()
+    assert vPage.timer_label.isHidden()
 
     vPage.stop_exam_button.click()
 

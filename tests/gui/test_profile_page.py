@@ -6,6 +6,7 @@ import gui.profile_page as profile_page
 from gui.profile_page import ProfilePage
 from gui.theme import COLORS
 from job.profile import build_profile, load_profile, save_profile
+from job.star_answers import load_star_answers
 from storage.database import initialize_database
 
 
@@ -149,3 +150,32 @@ def test_cv_import_reports_refused_file(qt_application, tmp_path):
     vPage.import_cv(str(tmp_path / "absent.pdf"))
 
     assert vPage.message_label.text() == "Le CV n'a pas pu être ouvert."
+
+
+def test_star_answer_is_prefilled_and_saved(qt_application, tmp_path):
+    """Vérifie le pré-remplissage depuis une expérience et l'enregistrement."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+    save_profile(
+        vDatabaseFile,
+        build_profile("", "", "Java", "Développeur | Java | Livré la V2", ""),
+    )
+
+    vPage = ProfilePage(vDatabaseFile)
+    vPage.refresh()
+    vPanel = vPage.star_panel
+
+    vPanel.experience_combo.setCurrentIndex(1)
+    vPanel.field_edits["action"].setPlainText("Découpé le chantier")
+    vPanel.prefill()
+
+    assert vPanel.field_edits["result"].toPlainText() == "Livré la V2"
+    assert vPanel.field_edits["action"].toPlainText() == "Découpé le chantier"
+
+    vPanel.save()
+
+    assert load_star_answers(vDatabaseFile)["reussite"]["experience"] == "Développeur"
+    assert vPanel.question_combo.currentText().endswith("(préparée)")
+    assert vPanel.message_label.text() == "1 réponse(s) préparée(s) sur 7."

@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.star_answers_panel import StarAnswersPanel
 from gui.theme import COLORS
 from gui.widgets import (
     create_button,
@@ -157,10 +158,15 @@ class ProfilePage(QWidget):
             pIcon="user",
         )
 
+        self.star_panel = StarAnswersPanel(pDatabaseFile)
+
         vLayout.addWidget(vCard, 1)
+        vLayout.addWidget(self.star_panel)
 
     def refresh(self):
         """Remplit le formulaire avec le profil enregistré."""
+        self.star_panel.refresh()
+
         try:
             vTexts = profile_to_texts(load_profile(self.database_file))
 
@@ -274,3 +280,4 @@ class ProfilePage(QWidget):
                 f"{len(vProfile['experiences'])} expérience(s), "
                 f"{len(vProfile['cv_variants'])} CV.",
             )
+            self.star_panel.refresh()

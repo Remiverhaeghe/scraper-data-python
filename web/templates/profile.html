@@ -50,4 +50,34 @@
         </div>
     </form>
 </article>
+
+<article class="card section-gap">
+    <h2>Réponses STAR</h2>
+    <p class="card-subtitle">Situation, tâche, action, résultat : une histoire vécue par question comportementale. Elles sont reprises dans la préparation de chaque offre. {{ star_answers | length }} réponse(s) préparée(s) sur {{ star_questions | length }}.</p>
+    {% for key, question in star_questions.items() %}
+    {% set answer = star_answers.get(key, {}) %}
+    <details class="star-answer">
+        <summary>{{ question }}{% if answer %} <span class="badge badge-success">Préparée</span>{% endif %}</summary>
+        <form class="rules-form" method="post" action="{{ url_for('update_star_answer').path }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <input type="hidden" name="question" value="{{ key }}">
+            <label>Expérience liée
+                <select name="experience">
+                    <option value="">Sans expérience liée</option>
+                    {% for title in experiences %}
+                    <option value="{{ title }}" {% if answer.experience == title %}selected{% endif %}>{{ title }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            {% for name, label in star_fields.items() %}
+            <label>{{ label }}
+                <textarea name="{{ name }}" rows="2">{{ answer.get(name, "") }}</textarea>
+            </label>
+            {% endfor %}
+            <button class="button button-primary" type="submit">Enregistrer la réponse</button>
+        </form>
+    </details>
+    {% endfor %}
+    {% if star_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ star_message }}</p>{% endif %}
+</article>
 {% endblock %}

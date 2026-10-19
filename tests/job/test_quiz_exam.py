@@ -9,9 +9,13 @@ from job.quiz import load_quiz
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
     answer_exam,
+    describe_exam_results,
     describe_exam_summary,
+    format_countdown,
     get_exam_question,
+    get_remaining_seconds,
     load_exam,
+    load_exam_results,
     start_exam,
     stop_exam,
     summarize_exam,
@@ -111,3 +115,42 @@ def test_unreadable_exam_is_ignored(database_file, caplog):
 
     assert load_exam(database_file) is None
     assert "illisible" in caplog.text
+
+
+def test_finished_exam_is_kept_with_its_offer(database_file):
+    """Vérifie la note gardée pour l'offre et le compte à rebours."""
+
+    vQuiz = load_quiz()
+    vExam = start_exam(
+        database_file,
+        vQuiz,
+        "Informatique",
+        NOW,
+        random.Random(2),
+        pTitle="Entretien : Dev",
+        pOfferKey=("remotive", "7"),
+    )
+
+    assert get_remaining_seconds(vExam, NOW + timedelta(minutes=5)) == 15 * 60
+    assert format_countdown(15 * 60 + 5) == "Temps restant : 15:05"
+    assert format_countdown(-61) == "Temps dépassé de 01:01"
+
+    for vIndex in range(EXAM_QUESTION_COUNT):
+        vQuestion = get_exam_question(vQuiz, load_exam(database_file))
+        answer_exam(
+            database_file,
+            vQuiz,
+            vQuestion["answer"],
+            NOW + timedelta(minutes=vIndex + 1),
+        )
+
+    vResults = load_exam_results(database_file, ("remotive", "7"))
+
+    assert len(vResults) == 1
+    assert (vResults[0]["score"], vResults[0]["seconds"]) == (100, 20 * 60)
+    assert load_exam_results(database_file, ("remotive", "8")) == []
+    assert describe_exam_results(vResults) == (
+        "Examens blancs : meilleure note 100 %, dernière 100 % le 12/10/2026 "
+        "(1 examen(s))."
+    )
+    assert describe_exam_results([]) == ""

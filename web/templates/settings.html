@@ -53,6 +53,13 @@
                 <strong>{{ schedule.search }}</strong>
                 <span class="muted">{{ schedule.sources }}</span>
             </div>
+            {% if schedule.extra %}
+            <div class="source-state">
+                <span class="tone-primary">{{ icon("list-checks") }}</span>
+                <strong>Recherches ajoutées</strong>
+                <span class="muted">{{ schedule.extra }}</span>
+            </div>
+            {% endif %}
             <div class="source-state">
                 <span class="{% if schedule.enabled %}tone-success{% else %}tone-muted{% endif %}">{{ icon("calendar") }}</span>
                 <strong>{% if schedule.enabled %}Activée{% else %}Désactivée{% endif %}</strong>

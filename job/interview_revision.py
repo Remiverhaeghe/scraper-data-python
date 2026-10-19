@@ -115,6 +115,7 @@ def start_offer_exam(pDatabaseFile, pQuiz, pOffer, pNow, pRandom=random):
         pRandom,
         pThemeKeys=set(vKeys),
         pTitle=describe_offer_exam(pOffer),
+        pOfferKey=(pOffer.get("source"), str(pOffer.get("source_id"))),
     )
 
     return rExam

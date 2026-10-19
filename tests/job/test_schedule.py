@@ -6,21 +6,25 @@ import pytest
 
 from job.schedule import (
     DEFAULT_INTERVAL_HOURS,
+    describe_extra_searches,
     describe_schedule_runs,
     describe_scheduled_search,
     format_interval,
     format_min_score,
     get_next_run,
+    get_scheduled_searches,
     is_schedule_due,
     load_schedule,
     mark_schedule_run,
     request_immediate_run,
+    save_extra_searches,
     save_min_score,
     save_notification_email,
     save_schedule_options,
     save_scheduled_search,
 )
 from storage.database import initialize_database
+from storage.saved_searches import save_search
 from storage.settings_repository import save_setting_values
 
 NOW = datetime(2026, 10, 10, 12, 0)
@@ -60,6 +64,7 @@ def test_load_schedule_returns_defaults(database_file):
         "enabled": False,
         "interval_hours": DEFAULT_INTERVAL_HOURS,
         "search": None,
+        "extra_searches": [],
         "last_run": None,
         "email": None,
         "min_score": 0,
@@ -261,3 +266,34 @@ def test_save_min_score(database_file):
     assert load_schedule(database_file)["min_score"] == 0
     assert format_min_score(0) == "Toutes les nouvelles offres"
     assert format_min_score(70) == "Offres à 70 % de correspondance ou plus"
+
+
+def test_extra_searches_follow_the_scheduled_one(database_file, caplog):
+    """Vérifie l'ordre des recherches lancées et l'oubli d'un nom supprimé."""
+
+    save_scheduled_search(database_file, ["remotive"], {"keyword": "Java"})
+    save_search(database_file, "Python", ["jooble"], {"keyword": "Python"}, NOW)
+    save_extra_searches(database_file, ["Python", "Supprimée", "Python"])
+
+    vSchedule = load_schedule(database_file)
+    vSearches = get_scheduled_searches(database_file, vSchedule)
+
+    assert vSchedule["extra_searches"] == ["Python", "Supprimée"]
+    assert [vSearch["name"] for vSearch in vSearches] == [
+        "Recherche planifiée",
+        "Python",
+    ]
+    assert vSearches[1]["criteria"] == {"keyword": "Python"}
+    assert "introuvable, ignorée : Supprimée" in caplog.text
+    assert describe_extra_searches(vSchedule) == (
+        "Avec 2 recherche(s) enregistrée(s) : Python, Supprimée"
+    )
+
+
+@pytest.mark.parametrize("pValue", ["pas du json", '{"nom": "Python"}'])
+def test_unreadable_extra_searches_are_ignored(database_file, pValue):
+    """Vérifie qu'une liste illisible ne bloque pas la planification."""
+
+    save_setting_values(database_file, {"schedule_extra_searches": pValue})
+
+    assert load_schedule(database_file)["extra_searches"] == []

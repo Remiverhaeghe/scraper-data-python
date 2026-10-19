@@ -1,6 +1,6 @@
 """Tests du tableau de suivi et des statistiques de candidature"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
@@ -8,8 +8,12 @@ import pytest
 from job.application_tracking import (
     build_application_statistics,
     build_board,
+    build_follow_up_draft,
     get_job_family,
+    get_week_follow_ups,
+    mark_followed_up,
 )
+from job.profile import build_profile, save_profile
 from storage.database import initialize_database
 from storage.job_applications import (
     get_application,
@@ -122,8 +126,8 @@ def test_build_application_statistics(database_file):
     vTables = dict(vStatistics["tables"])
 
     assert vTables["Par source"] == [
-        {"label": "Remotive", "sent": 2, "answered": 1, "rate": 50},
-        {"label": "Adzuna", "sent": 1, "answered": 1, "rate": 100},
+        {"label": "Remotive", "sent": 2, "answered": 1, "rate": 50, "delay": "—"},
+        {"label": "Adzuna", "sent": 1, "answered": 1, "rate": 100, "delay": "—"},
     ]
     assert [vRow["label"] for vRow in vTables["Par type de poste"]] == [
         "Data et IA",
@@ -135,6 +139,7 @@ def test_build_application_statistics(database_file):
         "sent": 2,
         "answered": 1,
         "rate": 50,
+        "delay": "—",
     }
 
 
@@ -144,3 +149,102 @@ def test_statistics_without_application(tmp_path):
     initialize_database(tmp_path / "scraper.db")
 
     assert build_application_statistics(tmp_path / "scraper.db")["rate"] is None
+
+
+def test_statistics_measure_first_response_delay(database_file):
+    """Vérifie le délai jusqu'à la première réponse et le tableau par correspondance."""
+
+    save_offers(
+        database_file,
+        pd.DataFrame(
+            [{"source": "remotive", "source_id": "d", "title": "Développeur Python"}]
+        ),
+        NOW,
+    )
+    save_application(database_file, "remotive", "d", "APPLIED", pNow=NOW)
+    update_application_status(
+        database_file, "remotive", "d", "INTERVIEW", pNow=NOW + timedelta(days=5)
+    )
+    save_application(
+        database_file, "remotive", "d", "REJECTED", pNow=NOW + timedelta(days=9)
+    )
+    save_profile(database_file, build_profile("", "", "Python", "", ""))
+
+    vStatistics = build_application_statistics(database_file)
+    vTables = dict(vStatistics["tables"])
+
+    assert vStatistics["delay"] == "5 j"
+    assert vTables["Par source"][0]["delay"] == "5 j"
+    assert "Forte, 70 % et plus" in [
+        vRow["label"] for vRow in vTables["Par correspondance au profil"]
+    ]
+    assert "Par contrat" in vTables
+
+
+def test_week_follow_ups_and_drafts(database_file):
+    """Vérifie la fenêtre de sept jours, le brouillon et la relance notée."""
+
+    save_offers(
+        database_file,
+        pd.DataFrame(
+            [
+                {"source": "remotive", "source_id": "r1", "title": "Dev Go"},
+                {"source": "remotive", "source_id": "r2", "title": "Dev Rust"},
+            ]
+        ),
+        NOW,
+    )
+    save_application(
+        database_file,
+        "remotive",
+        "r1",
+        "APPLIED",
+        pFollowUpDate=NOW - timedelta(days=1),
+        pNow=NOW - timedelta(days=8),
+    )
+    save_application(
+        database_file,
+        "remotive",
+        "r2",
+        "APPLIED",
+        pFollowUpDate=NOW + timedelta(days=10),
+        pNow=NOW,
+    )
+    save_profile(database_file, build_profile("Camille D.", "", "", "", ""))
+
+    vFollowUps = get_week_follow_ups(database_file, NOW)
+    vTitles = [vFollowUp["title"] for vFollowUp in vFollowUps]
+
+    assert "Dev Go" in vTitles
+    assert "Dev Rust" not in vTitles
+
+    vGo = vFollowUps[vTitles.index("Dev Go")]
+
+    assert vGo["follow_up_due"]
+    assert "poste de Dev Go, envoyée le 03/10/2026." in vGo["draft"]
+    assert vGo["draft"].endswith("Bien cordialement,\nCamille D.")
+
+    mark_followed_up(database_file, "remotive", "r1", NOW)
+
+    vGo = next(
+        vFollowUp
+        for vFollowUp in get_week_follow_ups(database_file, NOW)
+        if vFollowUp["title"] == "Dev Go"
+    )
+
+    assert not vGo["follow_up_due"]
+    assert vGo["follow_up_count"] == 1
+
+
+def test_follow_up_draft_without_company_or_name():
+    """Vérifie un brouillon minimal, sans entreprise, date ni nom."""
+
+    assert build_follow_up_draft({"title": None}, "") == (
+        "Objet : ma candidature au poste de proposé\n\n"
+        "Bonjour,\n\n"
+        "Je me permets de revenir vers vous au sujet de ma candidature au poste "
+        "de proposé.\n\n"
+        "Ce poste m'intéresse toujours et je reste disponible pour un échange "
+        "à votre convenance.\n\n"
+        "Bien cordialement,"
+    )

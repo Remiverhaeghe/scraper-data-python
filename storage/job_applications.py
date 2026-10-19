@@ -22,6 +22,9 @@ APPLICATION_STATUSES = (
     "CLOSED",
 )
 
+# Statuts qui signalent une réponse de l'entreprise, positive ou non
+ANSWERED_STATUSES = ("INTERVIEW", "REJECTED", "ACCEPTED")
+
 
 def create_application(
     pDatabaseFile,
@@ -79,7 +82,8 @@ def update_application_status(
     """Modifie le statut d'une candidature, notes et dates déjà saisies conservées.
 
     Au passage au statut APPLIED, la date de candidature et la relance par défaut
-    sont fixées si elles manquent, comme dans save_application.
+    sont fixées si elles manquent, comme dans save_application ; de même pour la
+    date de première réponse.
     """
 
     if pStatus not in APPLICATION_STATUSES:
@@ -96,7 +100,8 @@ def update_application_status(
             UPDATE job_application
             SET status = ?,
                 applied_at = COALESCE(applied_at, ?),
-                follow_up_date = COALESCE(follow_up_date, ?)
+                follow_up_date = COALESCE(follow_up_date, ?),
+                responded_at = COALESCE(responded_at, ?)
             WHERE source = ?
             AND source_id = ?
             """,
@@ -108,6 +113,7 @@ def update_application_status(
                     if vApplied
                     else None
                 ),
+                vNow.isoformat() if pStatus in ANSWERED_STATUSES else None,
                 pSource,
                 str(pSourceId),
             ),
@@ -236,6 +242,7 @@ def save_application(
     # Les dates sont stockées au format ISO : comparées comme du texte, elles
     # restent triées dans l'ordre chronologique.
     vAppliedAt = vNow.isoformat() if pStatus == "APPLIED" else None
+    vRespondedAt = vNow.isoformat() if pStatus in ANSWERED_STATUSES else None
 
     vFollowUpDate = pFollowUpDate
 
@@ -255,9 +262,10 @@ def save_application(
                 follow_up_date,
                 follow_up_count,
                 notes,
-                interview_at
+                interview_at,
+                responded_at
             )
-            VALUES (?, ?, ?, ?, ?, 0, ?, ?)
+            VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)
             ON CONFLICT(source, source_id)
             DO UPDATE SET
                 status = excluded.status,
@@ -266,7 +274,11 @@ def save_application(
                 applied_at = COALESCE(job_application.applied_at, excluded.applied_at),
                 follow_up_date = excluded.follow_up_date,
                 notes = excluded.notes,
-                interview_at = excluded.interview_at
+                interview_at = excluded.interview_at,
+                -- Seule la première réponse compte pour le délai de réponse.
+                responded_at = COALESCE(
+                    job_application.responded_at, excluded.responded_at
+                )
             """,
             (
                 pSource,
@@ -276,6 +288,7 @@ def save_application(
                 vFollowUpDate.isoformat() if vFollowUpDate else None,
                 pNotes or None,
                 pInterviewAt.isoformat(timespec="minutes") if pInterviewAt else None,
+                vRespondedAt,
             ),
         )
 
@@ -427,8 +440,9 @@ def get_applications_with_offers(pDatabaseFile, pStatuses):
             f"""
             SELECT
                 o.source, o.source_id, o.title, o.company, o.location, o.contract,
-                o.url, a.status, a.applied_at, a.follow_up_date, a.follow_up_count,
-                a.interview_at
+                o.url, o.description, o.missions, o.requirements, o.skills,
+                a.status, a.applied_at, a.follow_up_date, a.follow_up_count,
+                a.interview_at, a.responded_at
             FROM job_application a
             JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id
             WHERE a.status IN ({", ".join("?" for _ in pStatuses)})

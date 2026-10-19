@@ -97,4 +97,30 @@
             }
         });
     });
+
+    // Compte à rebours de l'examen : même texte que format_countdown côté serveur.
+    document.querySelectorAll(".exam-timer[data-remaining]").forEach(function (pTimer) {
+        var vRemaining = parseInt(pTimer.dataset.remaining, 10);
+
+        function pad(pValue) {
+            return String(pValue).padStart(2, "0");
+        }
+
+        function show() {
+            var vSeconds = Math.abs(vRemaining);
+            var vText = pad(Math.floor(vSeconds / 60)) + ":" + pad(vSeconds % 60);
+
+            pTimer.textContent = vRemaining >= 0
+                ? "Temps restant : " + vText
+                : "Temps dépassé de " + vText;
+            pTimer.classList.toggle("tone-success", vRemaining >= 60);
+            pTimer.classList.toggle("tone-warning", vRemaining >= 0 && vRemaining < 60);
+            pTimer.classList.toggle("tone-danger", vRemaining < 0);
+        }
+
+        window.setInterval(function () {
+            vRemaining -= 1;
+            show();
+        }, 1000);
+    });
 })();

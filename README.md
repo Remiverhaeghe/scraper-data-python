@@ -128,6 +128,10 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Détection des nouvelles offres
 - [x] Suivi des candidatures
 - [x] Relances
+- [x] Relances de la semaine : brouillon de message par candidature, à copier, et relance notée d'un clic (bureau et web)
+- [x] Statistiques de réponse : taux et délai moyen jusqu'à la première réponse, par source, type de poste, correspondance au profil, contrat et société
+- [x] Purge des offres hors sujet déjà en base, par mots du titre, avec aperçu, sauvegarde préalable et offres suivies protégées (bureau et web)
+- [x] Recherche planifiée complétée par des recherches enregistrées, lancées à la suite avec un seul e-mail récapitulatif
 
 ### ⚙️ Fonctionnalités communes
 
@@ -149,6 +153,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Arrêt d'une exécution en cours (recherche d'offres)
 - [x] Consultation des logs depuis le bureau et le web, filtres par niveau et texte
 - [x] Réinitialisation des données après confirmation, avec sauvegarde préalable de la base
+- [x] Sauvegarde automatique quotidienne de la base au démarrage du bureau et par le planificateur, sept jours gardés, sans évincer les sauvegardes faites avant une opération risquée
 
 ### 🖥️ Interface graphique
 
@@ -290,6 +295,9 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Tableau de bord des compétences : les 20 compétences les plus demandées dans les offres, croisées avec le profil et les scores de révision ; préparation pondérée par la demande, compétence prioritaire, et pour chacune « Réviser » ou « Préparer » la demande de questions ChatGPT quand elle n'en a pas (bureau et web)
 - [x] Pistes de réponse aux questions classiques : présentation, pourquoi l'entreprise, réussite (méthode STAR), point faible, prétentions salariales
 - [x] Brouillon de lettre de motivation
+- [x] Réponses STAR aux sept questions comportementales courantes, reliées à une expérience du profil et reprises dans la préparation de chaque offre, celles qui couvrent ses compétences en tête (bureau et web)
+- [x] Mots-clés de recherche proposés à partir des intitulés d'expérience et des compétences du profil
+- [x] Examen blanc chronométré par offre : compte à rebours, note conservée et rappelée sur la fiche de l'offre
 
 ### Utilisation depuis un téléphone
 
@@ -322,9 +330,9 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 Page Révision du bureau et du web (installable sur le téléphone), sans service payant :
 
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
-- [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter, zone à désigner en cliquant sur un schéma, schéma à construire (49 symboles d'électricité, électronique, pneumatique, hydraulique et réseau ; placement sur une grille, câblage des bornes à la souris, plusieurs exemplaires d'un même composant (deux vérins, des lampes en parallèle, des postes en étoile) ; correction par comparaison des liaisons, schéma construit dessiné à côté du schéma attendu, fils en trop en rouge) ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile ne reçoit que les QCM
+- [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter, zone à désigner en cliquant sur un schéma, schéma à construire (49 symboles d'électricité, électronique, pneumatique, hydraulique et réseau ; placement sur une grille, câblage des bornes à la souris, plusieurs exemplaires d'un même composant (deux vérins, des lampes en parallèle, des postes en étoile) ; correction par comparaison des liaisons, schéma construit dessiné à côté du schéma attendu, fils en trop en rouge) ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile reçoit les QCM, les calculs, les remises en ordre et les associations
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
-- [x] Lots écrits de 100 questions (tools/quiz_lots) : cloud (AWS, Azure, GCP), Terraform et Ansible, Linux et shell, SQL Server, MySQL et MariaDB, réseaux TCP/IP, sécurité applicative (OWASP), maintenance industrielle, en plus des lots d'automatisme, d'électricité, d'électronique, de fluides et de sigles
+- [x] Lots écrits de 100 questions (tools/quiz_lots) : cloud (AWS, Azure, GCP), Terraform et Ansible, Linux et shell, SQL Server, MySQL et MariaDB, réseaux TCP/IP, sécurité applicative (OWASP), maintenance industrielle, Python, TypeScript, frameworks frontend (React, Angular, Vue), Kubernetes et Helm, en plus des lots d'automatisme, d'électricité, d'électronique, de fluides et de sigles
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande reprenant le modèle complet d'un pack (domaine, niveaux répartis ou au choix, schémas et guides facultatifs), import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
 - [x] Catalogue de 92 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
 - [x] Contrôle de chaque lot importé, mesuré en entier même livré en plusieurs fichiers ou archives : bonne réponse trop souvent la plus longue, la plus courte ou à la même position, fins de choix répétées (remplissage), quasi-doublons dans le lot ou avec le thème, domaine inconnu, explications trop courtes, moins de 15 % de cas concrets avec code pour un thème technique, choix coupés par « … », extraits de code que l'énoncé ne cite pas ; bilan en orange, mesures par thème et demande de correction pour ChatGPT citant les questions concernées
@@ -423,7 +431,13 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 |---|---|---|
 | GET | `/api/v1/quiz` | Thèmes, questions (réponse et explication comprises), schémas et guides ; `ETag` : 304 si rien n'a changé |
 | GET | `/api/v1/progress` | Boîte et date de révision de chaque question, chiffres d'ensemble |
-| POST | `/api/v1/answers` | Réponses faites hors ligne : `{"answers": [{"id", "question_id", "choice", "answered_at"}]}` |
+| POST | `/api/v1/answers` | Réponses faites hors ligne : `{"answers": [{"id", "question_id", "choice" ou "response", "answered_at"}]}` |
+
+Les QCM sont dans `questions`. Les calculs, remises en ordre et associations sont dans
+`interactive_questions`, avec leur `type` : une application qui ne les connaît pas encore les
+ignore. Leurs éléments sont dans l'ordre correct, à mélanger à l'affichage. Une réponse porte
+alors `response` : texte du calcul (« 2,3 mA »), ou liste d'indices d'origine pour l'ordre et
+l'association.
 
 Le téléphone corrige lui-même avec le contenu téléchargé ; à l'envoi, le serveur recalcule
 chaque correction, ignore une réponse déjà reçue (même `id`) et refuse une date hors limites.
@@ -461,6 +475,8 @@ scraper-data-python/
 │   ├── deduplication.py                       # Regroupe les annonces d'une même offre
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
+│   ├── star_answers.py                        # Réponses STAR aux questions comportementales
+│   ├── offer_purge.py                         # Purge des offres hors sujet, avec aperçu
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
 │   ├── completion.py                          # Complétion commune avant enregistrement des offres
@@ -590,12 +606,14 @@ scraper-data-python/
 │   ├── main_window.py                         # Fenêtre principale, menu latéral et pages
 │   ├── home_page.py                           # Accueil et indicateurs
 │   ├── search_page.py                         # Critères, sources, progression et arrêt
+│   ├── keyword_suggestions.py                 # Mots-clés proposés à partir du profil
 │   ├── search_worker.py                       # Exécute la recherche dans un QThread
 │   ├── offers_page.py                         # Filtres et tableau des offres en base
 │   ├── offers_model.py                        # Modèle Qt du tableau des offres
 │   ├── offer_detail.py                        # Détail d'une offre : résumé et description
 │   ├── offer_assistant.py                     # Aide : préparation, examen blanc, ChatGPT, lien
 │   ├── offer_application.py                   # Suivi de candidature : statut, relance, entretien
+│   ├── follow_ups_panel.py                    # Relances de la semaine et brouillons
 │   ├── offer_attachments.py                   # Pièces jointes d'une offre
 │   ├── offer_form.py                          # Saisie manuelle d'une offre
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
@@ -610,7 +628,9 @@ scraper-data-python/
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
 │   ├── quality_page.py                        # Qualité des données et offres à vérifier
+│   ├── offer_purge_panel.py                   # Aperçu et suppression des offres hors sujet
 │   ├── profile_page.py                        # Saisie du profil du candidat
+│   ├── star_answers_panel.py                  # Saisie des réponses STAR
 │   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
 │   ├── dialogs.py                             # Fenêtres des mentions légales et de la licence
 │   ├── chart.py                               # Histogramme et camembert dessinés avec QPainter
@@ -741,7 +761,7 @@ scraper-data-python/
 │   ├── quiz_questions.py                      # Questions, thèmes, schémas et guides importés
 │   ├── challenges.py                          # Graines et essais des défis
 │   ├── git_levels.py                          # Meilleur résultat des niveaux Git
-│   ├── maintenance.py                         # Réinitialisation de la base, après sauvegarde
+│   ├── maintenance.py                         # Réinitialisation et purge de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
 │   └── job_offers.py                          # Enregistre les offres et détecte les nouvelles
@@ -766,6 +786,8 @@ scraper-data-python/
 │   │   ├── test_enrichment.py                 # Teste l'enrichissement depuis la description
 │   │   ├── test_deduplication.py              # Teste l'empreinte et le regroupement des annonces
 │   │   ├── test_preparation.py                # Teste le profil et la préparation de candidature
+│   │   ├── test_star_answers.py               # Teste les réponses STAR
+│   │   ├── test_offer_purge.py                # Teste la purge des offres hors sujet
 │   │   ├── test_interview_revision.py         # Teste la révision ciblée et l'examen blanc d'une offre
 │   │   ├── test_manual_offers.py              # Teste l'ajout manuel et l'import d'offres
 │   │   ├── test_companies.py                  # Teste les listes d'entreprises et l'avertissement
@@ -880,6 +902,7 @@ scraper-data-python/
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
 │   │   ├── test_main_window.py                 # Teste la navigation et l'état du menu
+│   │   ├── test_parcours.py                    # Teste les parcours de bout en bout du bureau
 │   │   ├── test_offers_model.py                # Teste le modèle du tableau des offres
 │   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
 │   │   ├── test_applications_page.py           # Teste la page des candidatures

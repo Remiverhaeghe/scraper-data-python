@@ -1,4 +1,4 @@
-"""Réinitialisation de la base de données, après sauvegarde"""
+"""Réinitialisation de la base et purge des offres, après sauvegarde"""
 
 from storage.attachments import get_attachment_directory
 from storage.backup import BACKUP_DIRECTORY_NAME, backup_database
@@ -81,6 +81,73 @@ def reset_database(pDatabaseFile, pNow):
     logger.warning(
         "Base réinitialisée, toutes les données ont été effacées ; sauvegarde : %s",
         rBackupFile.name,
+    )
+
+    return rBackupFile
+
+
+def get_purgeable_offers(pDatabaseFile):
+    """Retourne les offres sans candidature, relance ni pièce jointe."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vRows = vConnection.execute("""
+            SELECT source, source_id, title, company, first_seen_at
+            FROM job_offer AS o
+            WHERE NOT EXISTS (
+                SELECT 1 FROM job_application AS a
+                WHERE a.source = o.source AND a.source_id = o.source_id
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM job_follow_up AS f
+                WHERE f.source = o.source AND f.source_id = o.source_id
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM job_attachment AS j
+                WHERE j.source = o.source AND j.source_id = o.source_id
+            )
+            ORDER BY first_seen_at DESC
+            """).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rOffers = [
+        {
+            "source": vSource,
+            "source_id": vSourceId,
+            "title": vTitle,
+            "company": vCompany,
+            "first_seen_at": vFirstSeenAt,
+        }
+        for vSource, vSourceId, vTitle, vCompany, vFirstSeenAt in vRows
+    ]
+
+    return rOffers
+
+
+def delete_offers(pDatabaseFile, pKeys, pNow):
+    """Sauvegarde la base puis supprime les offres ; retourne la sauvegarde.
+
+    Sans sauvegarde réussie, rien n'est supprimé.
+    """
+
+    rBackupFile = backup_database(pDatabaseFile, pNow, "avant-purge")
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vConnection.executemany(
+            "DELETE FROM job_offer WHERE source = ? AND source_id = ?", list(pKeys)
+        )
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    logger.info(
+        "%s offre(s) supprimée(s) après sauvegarde : %s", len(pKeys), rBackupFile.name
     )
 
     return rBackupFile

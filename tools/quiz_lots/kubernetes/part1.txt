@@ -1,0 +1,481 @@
+@001
+Q: Qu'est-ce que Kubernetes ?
+C: Un orchestrateur de conteneurs
+W: Un moteur de base de données distribuée
+W: Un langage de programmation pour le cloud
+W: Un système d'exploitation pour serveurs physiques
+E: Kubernetes place les conteneurs sur des machines, les redémarre en cas de panne, les met à l'échelle et les relie par le réseau. On décrit l'état voulu ; le cluster s'efforce de l'atteindre en permanence.
+
+@002
+Q: Qu'est-ce qu'un Pod ?
+C: La plus petite unité déployable
+W: Un serveur physique du cluster Kubernetes
+W: Un fichier de configuration pour une application
+W: Un registre où sont stockées les images Docker
+E: Les conteneurs d'un Pod partagent la même adresse IP et peuvent partager des volumes. Le plus souvent, un Pod contient un seul conteneur applicatif. Un Pod est éphémère : on ne le crée presque jamais directement.
+
+@003
+Q: Quel outil en ligne de commande pilote un cluster Kubernetes ?
+C: kubectl
+W: kubeadm-cli
+W: k8sctl
+W: dockerctl
+E: kubectl get pods liste les Pods, kubectl apply -f fichier.yaml applique une configuration, kubectl logs affiche les journaux. kubeadm sert à installer un cluster, pas à l'utiliser au quotidien.
+
+@004
+Q: Que fait un Deployment ?
+C: Il maintient un nombre de Pods identiques
+W: Il copie l'image dans le registre public
+W: Il ouvre un port sur la machine hôte
+W: Il sauvegarde la base de données du cluster
+E: Le Deployment crée un ReplicaSet qui garde le nombre de réplicas demandé : un Pod supprimé ou planté est remplacé. Il gère aussi les mises à jour progressives d'une version à l'autre.
+
+@005
+Q: Combien de Pods ce Deployment maintient-il ?
+N: 3
+E: replicas fixe le nombre de Pods voulus. Si un nœud tombe, ses Pods sont recréés ailleurs pour revenir à trois. On change ce nombre avec kubectl scale ou automatiquement avec un HorizontalPodAutoscaler.
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-offres
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-offres
+```
+
+@006
+Q: À quoi sert un Service ?
+C: À donner une adresse stable à un groupe de Pods
+W: À démarrer les Pods dans le bon ordre
+W: À stocker les fichiers de l'application
+W: À planifier des tâches répétées
+E: Les Pods changent d'adresse IP à chaque recréation. Le Service sélectionne les Pods par leurs étiquettes et répartit le trafic entre eux, avec un nom DNS stable : api-offres.mon-espace.svc.
+
+@007
+Q: Comment un Service trouve-t-il ses Pods ?
+C: Par un sélecteur d'étiquettes
+W: Par le nom exact de chaque Pod
+W: Par l'adresse IP de chaque nœud
+W: Par l'ordre de création des Pods
+E: selector: app: api-offres cible tous les Pods portant cette étiquette. Une faute de frappe dans l'étiquette donne un Service sans destination : kubectl get endpoints le montre vide.
+
+@008
+Q: Qu'est-ce qu'un nœud (node) ?
+C: Une machine qui exécute des Pods
+W: Un conteneur qui contient d'autres conteneurs
+W: Un fichier YAML du cluster
+W: Une adresse réseau publique du cluster
+E: Une machine virtuelle ou physique avec le kubelet, qui lance les conteneurs, et un moteur d'exécution comme containerd. Le plan de contrôle décide quel Pod va sur quel nœud.
+
+@009
+Q: À quoi sert un Namespace ?
+C: À séparer les ressources d'un cluster
+W: À nommer les conteneurs d'un Pod
+W: À chiffrer le trafic entre les Pods
+W: À choisir le registre des images
+E: On sépare les équipes ou les environnements : recette et production. Les droits, les quotas et les politiques réseau s'appliquent par espace de noms. Ce n'est pas une isolation forte de sécurité à lui seul.
+
+@010
+Q: Que fait la commande kubectl apply -f deploiement.yaml ?
+C: Elle crée ou met à jour les ressources décrites
+W: Elle supprime toutes les ressources du fichier
+W: Elle vérifie la syntaxe sans rien modifier
+W: Elle télécharge le fichier depuis le cluster
+E: apply compare l'état décrit à l'état existant et applique les différences : c'est l'approche déclarative. On garde ces fichiers dans Git pour savoir ce qui est déployé et pourquoi.
+
+@011
+Q: Quelle commande affiche les journaux d'un Pod ?
+C: kubectl logs nom-du-pod
+W: kubectl show nom-du-pod
+W: kubectl journal nom-du-pod
+W: kubectl get logs
+E: Ajouter -f suit les journaux en direct, --previous montre ceux du conteneur précédent après un plantage, -c choisit un conteneur dans un Pod qui en a plusieurs.
+
+@012
+Q: Quelle commande donne le détail et les événements d'un Pod ?
+C: kubectl describe pod nom-du-pod
+W: kubectl explain pod nom-du-pod
+W: kubectl inspect pod nom-du-pod
+W: kubectl status pod nom-du-pod
+E: La section Events en bas explique souvent le problème : image introuvable, mémoire insuffisante, sonde en échec. C'est le premier réflexe quand un Pod ne démarre pas.
+
+@013
+Q: Que signifie l'état ImagePullBackOff ?
+C: L'image n'a pas pu être téléchargée
+W: Le conteneur a consommé trop de mémoire
+W: Le Pod attend un volume de stockage
+W: L'application répond trop lentement
+E: Nom ou étiquette d'image erroné, registre privé sans identifiants, ou registre inaccessible. Kubernetes réessaie avec des délais croissants. kubectl describe donne le message exact.
+
+@014
+Q: Que signifie l'état CrashLoopBackOff ?
+C: Le conteneur redémarre et plante en boucle
+W: L'image est absente du registre
+W: Le nœud a été arrêté par l'administrateur
+W: Le Service n'a aucun Pod associé
+E: L'application démarre puis s'arrête : configuration manquante, base inaccessible, erreur de code. kubectl logs --previous montre les journaux du conteneur qui vient de planter.
+
+@015
+Q: À quoi sert une ConfigMap ?
+C: À fournir une configuration non sensible aux Pods
+W: À stocker les mots de passe de façon chiffrée
+W: À décrire l'architecture du cluster
+W: À limiter la mémoire des conteneurs
+E: Adresse d'une API, niveau de journalisation, fichier de configuration : la ConfigMap s'injecte en variables d'environnement ou en fichiers. La même image sert ainsi en recette et en production.
+
+@016
+Q: Pourquoi un Secret Kubernetes n'est-il pas chiffré par défaut ?
+C: Ses valeurs sont seulement encodées en base64
+W: Il est chiffré avec la clé publique du cluster
+W: Il est stocké uniquement en mémoire vive
+W: Il est supprimé après chaque lecture
+E: base64 est un encodage, pas un chiffrement : echo valeur | base64 -d le décode. On active le chiffrement au repos d'etcd, on restreint l'accès aux Secrets par RBAC et on ne les committe jamais en clair.
+
+@017
+Q: Quel problème pose ce manifeste ?
+C: Le mot de passe est écrit en clair
+W: Les variables d'environnement sont interdites
+W: Le nom de la variable est trop long
+W: Le conteneur n'a pas de port déclaré
+E: Le fichier finit dans Git et dans les journaux de déploiement. On place la valeur dans un Secret référencé par valueFrom.secretKeyRef, géré par un outil comme Sealed Secrets ou un coffre-fort externe.
+```yaml
+env:
+  - name: DB_PASSWORD
+    value: "MotDePasse2026"
+```
+
+@018
+Q: Associer chaque ressource à son rôle.
+P: Deployment => Maintenir des Pods sans état
+P: Service => Exposer un groupe de Pods
+P: ConfigMap => Fournir une configuration
+P: Secret => Fournir une donnée sensible
+E: Ces quatre ressources suffisent pour déployer une application web simple. On y ajoute un Ingress pour l'accès HTTP depuis l'extérieur.
+
+@019
+Q: À quoi sert un Ingress ?
+C: À router le trafic HTTP externe vers des Services
+W: À installer des paquets dans un conteneur
+W: À répliquer les données entre nœuds
+W: À surveiller la consommation des Pods
+E: Un Ingress associe des noms de domaine et des chemins à des Services, et gère souvent le certificat TLS. Il faut un contrôleur, comme ingress-nginx, pour qu'il fonctionne. Gateway API en est le successeur.
+
+@020
+Q: Que décrit cette partie d'un conteneur ?
+C: Les ressources réservées et maximales
+W: Le nombre de réplicas du Deployment
+W: La taille de l'image du conteneur
+W: Le débit réseau maximal du Pod
+E: requests sert à placer le Pod sur un nœud qui a la capacité ; limits plafonne la consommation. 250m signifie un quart de processeur. Au-delà de la limite mémoire, le conteneur est tué.
+```yaml
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+```
+
+@021
+Q: Que signifie OOMKilled dans l'état d'un conteneur ?
+C: Il a dépassé sa limite de mémoire
+W: Il a été arrêté par un administrateur
+W: Son image était corrompue
+W: Son disque était plein
+E: Out Of Memory : le noyau a tué le processus. On vérifie la consommation réelle, une fuite éventuelle, puis on ajuste la limite. Pour une JVM, la taille du tas doit tenir compte de cette limite.
+
+@022
+Q: À quoi sert une sonde de disponibilité (readinessProbe) ?
+C: À n'envoyer du trafic qu'aux Pods prêts
+W: À redémarrer un conteneur bloqué
+W: À mesurer le temps de démarrage de l'image
+W: À vérifier la signature de l'image
+E: Tant que la sonde échoue, le Pod est retiré du Service : pas de requêtes pendant le démarrage ou une surcharge. La sonde de vie, livenessProbe, redémarre quant à elle un conteneur bloqué.
+```yaml
+readinessProbe:
+  httpGet:
+    path: /sante/pret
+    port: 8080
+  periodSeconds: 5
+```
+
+@023
+Q: Quel risque présente une sonde de vie qui vérifie la base de données ?
+C: Une panne de base fait redémarrer tous les Pods
+W: La base est sauvegardée à chaque vérification
+W: La sonde ne peut pas joindre la base
+W: La base refuse les connexions des sondes
+E: Si la base tombe, les sondes de vie échouent partout et Kubernetes redémarre tous les Pods, ce qui n'arrange rien. La sonde de vie vérifie le processus lui-même ; les dépendances relèvent de la disponibilité.
+
+@024
+Q: Quelle commande ouvre un tunnel local vers un Pod pour le tester ?
+C: kubectl port-forward
+W: kubectl expose-local
+W: kubectl tunnel
+W: kubectl connect
+E: kubectl port-forward pod/api 8080:80 rend le port 80 du Pod accessible sur localhost:8080, sans rien exposer publiquement. Pratique pour diagnostiquer, pas pour un accès permanent.
+
+@025
+Q: Remettre dans l'ordre le diagnostic d'un Pod qui ne démarre pas.
+O: Lister les Pods et lire leur état
+O: Lire les événements avec kubectl describe
+O: Lire les journaux, y compris du conteneur précédent
+O: Corriger la configuration et réappliquer
+E: L'état oriente la recherche : ImagePullBackOff, CrashLoopBackOff, Pending. Les événements donnent la cause côté cluster, les journaux la cause côté application.
+
+@026
+Q: Que signifie un Pod resté en état Pending ?
+C: Il ne trouve pas de nœud pour s'exécuter
+W: Il attend la fin de son traitement
+W: Il est en cours de suppression
+W: Il attend une connexion entrante
+E: Ressources demandées trop élevées, sélecteur de nœud sans correspondance, volume non disponible : le planificateur l'explique dans les événements, par exemple « 0/3 nodes are available: insufficient memory ».
+
+@027
+Q: Comment se déroule une mise à jour progressive (rolling update) ?
+C: Les anciens Pods sont remplacés peu à peu
+W: Tous les Pods sont arrêtés puis recréés
+W: La nouvelle version tourne sur un autre cluster
+W: Les Pods sont mis à jour sans redémarrage
+E: maxSurge et maxUnavailable règlent le rythme. Combinée à une sonde de disponibilité, la mise à jour s'arrête si les nouveaux Pods ne deviennent jamais prêts : l'ancienne version continue de servir.
+
+@028
+Q: Quelle commande revient à la version précédente d'un Deployment ?
+C: kubectl rollout undo deployment/api
+W: kubectl revert deployment/api
+W: kubectl rollback api --last
+W: kubectl apply --previous
+E: Kubernetes garde l'historique des ReplicaSets. kubectl rollout history liste les révisions, rollout status suit un déploiement en cours. Corriger ensuite le manifeste dans Git, sinon le prochain apply remet la version fautive.
+
+@029
+Q: Pourquoi éviter l'étiquette d'image latest en production ?
+C: On ne sait plus quelle version tourne
+W: latest est interdite par Kubernetes
+W: latest télécharge toujours la plus ancienne version
+W: latest rend l'image plus volumineuse
+E: latest change de contenu sans changer de nom : deux Pods peuvent exécuter deux versions, et un retour arrière est impossible. On utilise une version précise, voire l'empreinte sha256 de l'image.
+
+@030
+Q: Quelle différence entre un Deployment et un StatefulSet ?
+C: Chaque Pod garde une identité stable
+W: Le StatefulSet n'a jamais qu'un seul Pod
+W: Le Deployment ne peut pas avoir de volume
+W: Le StatefulSet est réservé à OpenShift
+E: Les Pods d'un StatefulSet s'appellent base-0, base-1, gardent leur volume et démarrent dans l'ordre : c'est ce qu'il faut pour une base de données répliquée. Un Deployment traite ses Pods comme interchangeables.
+
+@031
+Q: À quoi sert un DaemonSet ?
+C: À exécuter un Pod sur chaque nœud
+W: À lancer un service en arrière-plan sur un seul nœud
+W: À planifier des tâches nocturnes
+W: À sauvegarder les nœuds du cluster
+E: Collecte des journaux, agent de supervision, composant réseau : un Pod par nœud, ajouté automatiquement quand un nœud rejoint le cluster.
+
+@032
+Q: À quoi sert un CronJob ?
+C: À lancer un traitement selon un planning
+W: À redémarrer les nœuds chaque nuit
+W: À surveiller l'horloge des conteneurs
+W: À limiter la durée de vie des Pods
+E: schedule: "0 2 * * *" lance un Job chaque nuit à 2 h. concurrencyPolicy: Forbid empêche deux exécutions simultanées si la précédente dure trop longtemps.
+```yaml
+kind: CronJob
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+```
+
+@033
+Q: À quoi sert un PersistentVolumeClaim ?
+C: À demander un stockage qui survit au Pod
+W: À réserver de la mémoire vive pour un Pod
+W: À sauvegarder l'image du conteneur
+W: À partager le réseau entre deux Pods
+E: Le Pod demande « 10 Gi en lecture-écriture », et une StorageClass fournit le disque. Les fichiers écrits dans le conteneur lui-même disparaissent à sa recréation.
+
+@034
+Q: Qu'est-ce que Helm ?
+C: Un gestionnaire de paquets pour Kubernetes
+W: Un outil de supervision des nœuds
+W: Un registre d'images officiel
+W: Une distribution Linux pour les clusters
+E: Un chart regroupe des modèles de manifestes et des valeurs par défaut. helm install et helm upgrade déploient une version, helm rollback revient en arrière. On l'utilise pour installer des logiciels tiers ou ses propres applications.
+
+@035
+Q: Que fait le fichier values.yaml d'un chart Helm ?
+C: Il fournit les valeurs injectées dans les modèles
+W: Il liste les images du registre
+W: Il décrit les droits des utilisateurs
+W: Il contient les journaux des déploiements
+E: Les modèles contiennent {{ .Values.replicas }} ; on surcharge par environnement avec -f values-prod.yaml. Un même chart sert ainsi à la recette et à la production.
+```yaml
+spec:
+  replicas: {{ .Values.replicas }}
+  template:
+    spec:
+      containers:
+        - image: "{{ .Values.image.nom }}:{{ .Values.image.version }}"
+```
+
+@036
+Q: Quelle commande affiche les manifestes produits par un chart sans les appliquer ?
+C: helm template
+W: helm show values
+W: helm inspect
+W: helm render --apply
+E: helm template génère le YAML final en local : on vérifie ce qui sera déployé, on le relit en revue ou on le valide avec un outil d'analyse. helm upgrade --dry-run fait de même avec le contexte du cluster.
+
+@037
+Q: Qu'est-ce qu'OpenShift ?
+C: Une distribution Kubernetes de Red Hat
+W: Un concurrent de Kubernetes sans conteneurs
+W: Un outil de création d'images Docker
+W: Un service de stockage objet
+E: OpenShift ajoute à Kubernetes des outils de construction d'images, une console, des routes et des règles de sécurité plus strictes. La commande oc reprend celle de kubectl avec des ajouts.
+
+@038
+Q: Pourquoi une image qui tourne en root échoue-t-elle souvent sur OpenShift ?
+C: OpenShift impose un utilisateur non root
+W: OpenShift ne prend pas en charge Docker
+W: Les images root sont trop volumineuses
+W: OpenShift interdit les ports supérieurs à 1024
+E: Les contraintes de sécurité attribuent un identifiant utilisateur aléatoire : l'image doit fonctionner sans root et avec des dossiers accessibles en écriture au groupe 0. C'est une bonne pratique partout.
+
+@039
+Q: Quel réglage manque à ce conteneur pour respecter les bonnes pratiques de sécurité ?
+C: L'interdiction de tourner en root
+W: Le nombre de réplicas
+W: La version de Kubernetes
+W: Le nom du Namespace
+E: runAsNonRoot: true refuse de démarrer un conteneur root. On ajoute allowPrivilegeEscalation: false, readOnlyRootFilesystem: true et on retire les capacités Linux inutiles.
+```yaml
+containers:
+  - name: api
+    image: registre/api:1.4.2
+    securityContext:
+      allowPrivilegeEscalation: false
+```
+
+@040
+Q: À quoi sert RBAC dans Kubernetes ?
+C: À contrôler qui peut faire quoi dans le cluster
+W: À répartir la charge entre les nœuds
+W: À compresser les images des conteneurs
+W: À sauvegarder la configuration du cluster
+E: Un Role liste des actions sur des ressources, un RoleBinding l'attribue à un utilisateur ou un compte de service. On applique le moindre privilège : une application n'a presque jamais besoin de lister les Secrets.
+
+@041
+Q: Qu'est-ce qu'un ServiceAccount ?
+C: L'identité d'un Pod auprès de l'API
+W: Un compte de facturation du cluster
+W: Un utilisateur Linux dans le conteneur
+W: Un compte d'administrateur du nœud
+E: Les Pods qui appellent l'API Kubernetes s'authentifient avec leur compte de service. On crée un compte par application avec des droits précis, et automountServiceAccountToken: false pour ceux qui n'en ont pas besoin.
+
+@042
+Q: Que fait une NetworkPolicy ?
+C: Elle filtre le trafic réseau entre Pods
+W: Elle limite le débit de chaque Pod
+W: Elle chiffre les données sur le disque
+W: Elle attribue des adresses IP publiques
+E: Par défaut, tous les Pods se parlent. Une politique peut n'autoriser vers la base que les Pods de l'API. Elle exige un plugin réseau qui la prend en charge, comme Calico ou Cilium.
+```yaml
+kind: NetworkPolicy
+spec:
+  podSelector:
+    matchLabels:
+      app: base
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api-offres
+```
+
+@043
+Q: Quelle commande ouvre un terminal dans un conteneur en cours d'exécution ?
+C: kubectl exec -it nom-du-pod -- sh
+W: kubectl ssh nom-du-pod
+W: kubectl attach --shell nom-du-pod
+W: kubectl run -it nom-du-pod
+E: Utile pour diagnostiquer, mais les modifications faites à la main sont perdues au prochain redémarrage. Une image minimale peut ne pas avoir de shell : kubectl debug ajoute alors un conteneur outillé.
+
+@044
+Q: Que fait un HorizontalPodAutoscaler ?
+C: Il ajuste le nombre de Pods selon la charge
+W: Il augmente la mémoire de chaque Pod
+W: Il ajoute des nœuds au cluster
+W: Il répartit les Pods entre les zones
+E: Il compare une mesure, souvent l'utilisation processeur, à une cible et change le nombre de réplicas entre un minimum et un maximum. Il a besoin des requests pour calculer un pourcentage d'utilisation.
+```yaml
+kind: HorizontalPodAutoscaler
+spec:
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+```
+
+@045
+Q: Pourquoi ce Pod ne sera-t-il jamais ajouté au Service ?
+C: Les étiquettes ne correspondent pas
+W: Le port du Service est trop élevé
+W: Un Service ne peut cibler qu'un Pod
+W: Les Services ne lisent pas les étiquettes
+E: Le Service cherche app: api-offres, le Pod porte app: api-offre. kubectl get endpoints api-offres renvoie une liste vide, signe d'un sélecteur sans correspondance.
+```yaml
+# Service
+selector:
+  app: api-offres
+# Pod
+labels:
+  app: api-offre
+```
+
+@046
+Q: Quel type de Service n'est accessible qu'à l'intérieur du cluster ?
+C: ClusterIP
+W: LoadBalancer
+W: NodePort
+W: ExternalName
+E: ClusterIP est le type par défaut. NodePort ouvre un port sur chaque nœud, LoadBalancer demande un répartiteur au fournisseur cloud. On expose généralement une application web par un Ingress devant un ClusterIP.
+
+@047
+Q: À quoi sert le fichier kubeconfig ?
+C: À définir clusters et identifiants
+W: À configurer les conteneurs d'un Pod
+W: À lister les images autorisées
+W: À décrire les règles réseau
+E: Il contient l'adresse des clusters et les identifiants : on le protège comme un mot de passe. kubectl config use-context bascule entre clusters ; vérifier le contexte avant une commande évite de modifier la production par erreur.
+
+@048
+Q: Quelle commande affiche la consommation de processeur et de mémoire des Pods ?
+C: kubectl top pods
+W: kubectl stats pods
+W: kubectl usage pods
+W: kubectl get metrics
+E: Elle s'appuie sur metrics-server, qui doit être installé. Pour un historique, on utilise Prometheus et Grafana ; top ne donne qu'un instantané.
+
+@049
+Q: Où est stocké l'état d'un cluster Kubernetes ?
+C: Dans etcd
+W: Dans chaque kubelet
+W: Dans le registre d'images
+W: Dans un fichier sur chaque Pod
+E: etcd est une base clé-valeur répliquée qui contient toutes les ressources, Secrets compris. Sa sauvegarde est indispensable pour restaurer un cluster autogéré ; les services managés s'en chargent.
+
+@050
+Q: Que fait une image construite en plusieurs étapes (multi-stage) ?
+C: Elle ne garde que le nécessaire à l'exécution
+W: Elle exécute plusieurs applications à la fois
+W: Elle se met à jour toute seule en production
+W: Elle se déploie sur plusieurs clusters
+E: La première étape compile avec tous les outils, la dernière ne copie que le résultat dans une image minimale. Moins de paquets, c'est une image plus légère et moins de vulnérabilités.

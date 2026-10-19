@@ -10,6 +10,7 @@ from PySide6.QtCore import QCoreApplication, QSettings
 import gui.search_page as search_page_module
 from gui.search_page import SearchPage
 from gui.search_worker import SearchWorker
+from job.profile import build_profile, save_profile
 from job.sources.aggregator import ScrapingCancelled
 from storage.database import initialize_database
 
@@ -413,3 +414,32 @@ def test_search_without_keyword_warns_for_general_sources(search_page):
     assert search_page.warning_label.isHidden()
 
     wait_until(lambda: not search_page.is_running())
+
+
+def test_profile_keywords_are_suggested(saved_search_page):
+    """Vérifie les pastilles tirées du profil et la reprise du mot-clé au clic."""
+
+    vSuggestions = saved_search_page.suggestions
+
+    assert not vSuggestions.isVisibleTo(saved_search_page)
+
+    save_profile(
+        saved_search_page.database_file,
+        build_profile("", "", "Python, SQL", "Data engineer | Python | ", ""),
+    )
+    saved_search_page.refresh()
+
+    vButtons = [
+        vSuggestions.chips_layout.itemAt(vIndex).widget()
+        for vIndex in range(vSuggestions.chips_layout.count())
+    ]
+
+    assert [vButton.text() for vButton in vButtons] == [
+        "Data engineer",
+        "Python",
+        "SQL",
+    ]
+
+    vButtons[0].click()
+
+    assert saved_search_page.keyword_edit.text() == "Data engineer"

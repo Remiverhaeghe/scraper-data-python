@@ -13,14 +13,30 @@ from job.cv_import import (
     read_cv_text,
 )
 from job.profile import build_profile, load_profile, profile_to_texts, save_profile
+from job.star_answers import (
+    BEHAVIORAL_QUESTIONS,
+    STAR_FIELDS,
+    load_star_answers,
+    save_star_answer,
+)
 from web.dependencies import get_database_file, require_csrf
 from web.rendering import get_message_tone, templates
 
 router = APIRouter()
 
 
-def render_profile(pRequest, pTexts, pMessage=None, pStatusCode=200, pCvPrompt=None):
-    """Affiche le formulaire du profil avec les textes donnés."""
+def render_profile(
+    pRequest,
+    pDatabaseFile,
+    pTexts,
+    pMessage=None,
+    pStatusCode=200,
+    pCvPrompt=None,
+    pStarMessage=None,
+):
+    """Affiche le formulaire du profil avec les textes donnés et les réponses STAR."""
+
+    vAnswers = load_star_answers(pDatabaseFile)
 
     rResponse = templates.TemplateResponse(
         pRequest,
@@ -33,6 +49,14 @@ def render_profile(pRequest, pTexts, pMessage=None, pStatusCode=200, pCvPrompt=N
             "cv_prompt": pCvPrompt,
             "cv_extensions": ",".join(CV_EXTENSIONS),
             "chatgpt_url": CHATGPT_URL,
+            "star_questions": BEHAVIORAL_QUESTIONS,
+            "star_fields": STAR_FIELDS,
+            "star_answers": vAnswers,
+            "star_message": pStarMessage,
+            "experiences": [
+                vExperience["title"]
+                for vExperience in load_profile(pDatabaseFile)["experiences"]
+            ],
         },
         status_code=pStatusCode,
     )
@@ -44,7 +68,9 @@ def render_profile(pRequest, pTexts, pMessage=None, pStatusCode=200, pCvPrompt=N
 def show_profile(request: Request, pDatabaseFile: str = Depends(get_database_file)):
     """Affiche le profil du candidat."""
 
-    rResponse = render_profile(request, profile_to_texts(load_profile(pDatabaseFile)))
+    rResponse = render_profile(
+        request, pDatabaseFile, profile_to_texts(load_profile(pDatabaseFile))
+    )
 
     return rResponse
 
@@ -75,13 +101,14 @@ def update_profile(
         vProfile = build_profile(pName, pHeadline, pSkills, pExperiences, pCvVariants)
 
     except ValueError as vException:
-        rResponse = render_profile(request, vTexts, str(vException), 400)
+        rResponse = render_profile(request, pDatabaseFile, vTexts, str(vException), 400)
 
     else:
         save_profile(pDatabaseFile, vProfile)
 
         rResponse = render_profile(
             request,
+            pDatabaseFile,
             profile_to_texts(vProfile),
             f"Profil enregistré : {len(vProfile['skills'])} compétence(s), "
             f"{len(vProfile['experiences'])} expérience(s), "
@@ -108,18 +135,56 @@ def import_cv(
         vText = read_cv_text(pFile.filename, pFile.file.read(MAX_CV_BYTES + 1))
 
     except ValueError as vException:
-        rResponse = render_profile(request, vTexts, str(vException), 400)
+        rResponse = render_profile(request, pDatabaseFile, vTexts, str(vException), 400)
 
     else:
         vExtracted = extract_profile(vText)
 
         rResponse = render_profile(
             request,
+            pDatabaseFile,
             merge_profile_texts(vTexts, vExtracted),
             f"CV importé : {len(vExtracted['skills'])} compétence(s) repérée(s). "
             "Pour les expériences, copiez la demande pour ChatGPT ci-dessous et "
             "collez sa réponse dans le formulaire. Vérifiez puis enregistrez.",
             pCvPrompt=build_cv_prompt(vText),
+        )
+
+    return rResponse
+
+
+@router.post(
+    "/profile/star", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+async def update_star_answer(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre la réponse STAR d'une question ; vide, elle est retirée."""
+
+    vForm = await request.form()
+    vTexts = profile_to_texts(load_profile(pDatabaseFile))
+
+    try:
+        save_star_answer(
+            pDatabaseFile,
+            vForm.get("question"),
+            vForm.get("experience"),
+            {vName: vForm.get(vName) for vName in STAR_FIELDS},
+        )
+
+    except ValueError as vException:
+        rResponse = render_profile(
+            request,
+            pDatabaseFile,
+            vTexts,
+            pStatusCode=400,
+            pStarMessage=str(vException),
+        )
+
+    else:
+        rResponse = render_profile(
+            request, pDatabaseFile, vTexts, pStarMessage="Réponse enregistrée."
         )
 
     return rResponse

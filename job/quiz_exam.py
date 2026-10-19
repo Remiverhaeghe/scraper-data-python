@@ -19,6 +19,11 @@ logger = get_logger(__name__)
 EXAM_KEY = "quiz_exam"
 EXAM_QUESTION_COUNT = 20
 
+# Notes des examens terminés, les plus récentes en tête ; au-delà, les plus
+# anciennes sont oubliées.
+EXAM_RESULTS_KEY = "quiz_exam_results"
+MAX_EXAM_RESULTS = 100
+
 # Durée conseillée : une minute par question, comme dans beaucoup de tests
 # techniques de recrutement.
 SECONDS_PER_QUESTION = 60
@@ -58,10 +63,12 @@ def start_exam(
     pSubdomain=None,
     pThemeKeys=None,
     pTitle=None,
+    pOfferKey=None,
 ):
     """Tire les questions d'une catégorie, ou de toutes, et commence l'examen.
 
-    pThemeKeys restreint le tirage à certains thèmes, ceux d'une offre par exemple.
+    pThemeKeys restreint le tirage à certains thèmes, ceux d'une offre par exemple ;
+    pOfferKey, couple (source, identifiant), rattache alors la note à cette offre.
     Lève ValueError si le domaine ne contient aucune question.
     """
 
@@ -88,6 +95,7 @@ def start_exam(
         "domain": pDomain,
         "subdomain": pSubdomain,
         "title": pTitle,
+        "offer": list(pOfferKey) if pOfferKey else None,
         "ids": vIds,
         "index": 0,
         "correct": 0,
@@ -166,6 +174,8 @@ def answer_exam(pDatabaseFile, pQuiz, pResponse, pNow):
 
         logger.info("Examen terminé : %s / %s", vExam["correct"], len(vExam["ids"]))
 
+        record_exam_result(pDatabaseFile, vExam)
+
     save_exam(pDatabaseFile, vExam)
 
     return rResult, vExam
@@ -237,3 +247,104 @@ def stop_exam(pDatabaseFile):
     save_exam(pDatabaseFile, None)
 
     logger.info("Examen refermé")
+
+
+def get_elapsed_seconds(pExam, pNow):
+    """Retourne la durée de l'examen, jusqu'à sa fin ou jusqu'à maintenant."""
+
+    vEnd = (
+        datetime.fromisoformat(pExam["finished_at"]) if pExam["finished_at"] else pNow
+    )
+
+    rSeconds = int((vEnd - datetime.fromisoformat(pExam["started_at"])).total_seconds())
+
+    return rSeconds
+
+
+def get_remaining_seconds(pExam, pNow):
+    """Retourne le temps conseillé restant, négatif une fois dépassé."""
+
+    rSeconds = len(pExam["ids"]) * SECONDS_PER_QUESTION - get_elapsed_seconds(
+        pExam, pNow
+    )
+
+    return rSeconds
+
+
+def format_countdown(pSeconds):
+    """Décrit le temps restant, ou le dépassement, en minutes et secondes."""
+
+    vMinutes, vSeconds = divmod(abs(pSeconds), 60)
+
+    rText = (
+        f"Temps restant : {vMinutes:02d}:{vSeconds:02d}"
+        if pSeconds >= 0
+        else f"Temps dépassé de {vMinutes:02d}:{vSeconds:02d}"
+    )
+
+    return rText
+
+
+def load_exam_results(pDatabaseFile, pOfferKey=None):
+    """Retourne les notes enregistrées, les plus récentes en tête.
+
+    pOfferKey ne garde que les examens blancs de cette offre.
+    """
+
+    vValue = get_setting_values(pDatabaseFile).get(EXAM_RESULTS_KEY)
+
+    try:
+        vResults = json.loads(vValue) if vValue else []
+
+    except ValueError:
+        logger.warning("Historique des examens illisible : ignoré")
+
+        vResults = []
+
+    rResults = [
+        vResult
+        for vResult in vResults
+        if pOfferKey is None or vResult.get("offer") == list(pOfferKey)
+    ]
+
+    return rResults
+
+
+def record_exam_result(pDatabaseFile, pExam):
+    """Ajoute la note d'un examen terminé à l'historique."""
+
+    vCount = len(pExam["ids"])
+    vResult = {
+        "title": pExam.get("title"),
+        "offer": pExam.get("offer"),
+        "finished_at": pExam["finished_at"],
+        "correct": pExam["correct"],
+        "count": vCount,
+        "score": round(100 * pExam["correct"] / vCount) if vCount else 0,
+        "seconds": get_elapsed_seconds(pExam, None),
+    }
+
+    vResults = [vResult, *load_exam_results(pDatabaseFile)][:MAX_EXAM_RESULTS]
+
+    save_setting_values(
+        pDatabaseFile,
+        {EXAM_RESULTS_KEY: json.dumps(vResults, ensure_ascii=False)},
+    )
+
+
+def describe_exam_results(pResults):
+    """Résume les notes d'une offre : meilleure, dernière et nombre d'examens."""
+
+    rText = ""
+
+    if pResults:
+        vLast = pResults[0]
+
+        rText = (
+            f"Examens blancs : meilleure note {max(vItem['score'] for vItem in pResults)} %"
+            f", dernière {vLast['score']} % le "
+            f"{datetime.fromisoformat(vLast['finished_at']):%d/%m/%Y} "
+            f"({len(pResults)} examen(s))."
+        )
+
+    return rText

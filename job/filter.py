@@ -88,7 +88,7 @@ def filter_jobs(pJobs, pConfig):
     if pConfig.exclude_keywords:
         vJobs = keep_matching(
             vJobs,
-            lambda pJob: not _contains_any(pJob.get("title"), pConfig.exclude_keywords),
+            lambda pJob: not contains_any(pJob.get("title"), pConfig.exclude_keywords),
         )
 
     if pConfig.missions:
@@ -235,8 +235,8 @@ def _matches_text(pText, pExpectedText):
     return rMatches
 
 
-def _contains_any(pText, pWords):
-    """Indique si l'un des mots figure dans le texte."""
+def contains_any(pText, pWords):
+    """Indique si l'un des mots figure dans le texte, sans tenir compte de la casse."""
 
     vText = str(pText or "").lower()
 

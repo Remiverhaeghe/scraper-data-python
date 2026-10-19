@@ -49,9 +49,13 @@ from job.quiz_domains import (
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
     answer_exam,
+    describe_exam_results,
     describe_exam_summary,
+    format_countdown,
     get_exam_question,
+    get_remaining_seconds,
     load_exam,
+    load_exam_results,
     start_exam,
     stop_exam,
     summarize_exam,
@@ -566,6 +570,17 @@ def render_exam(pRequest, pDatabaseFile, pResult=None, pMessage=None):
 
     vQuiz = load_active_quiz(pDatabaseFile)
     vExam = load_exam(pDatabaseFile)
+    vRemaining = get_remaining_seconds(vExam, datetime.now())
+
+    vSummary = None
+
+    if vExam["finished_at"] and not pResult:
+        vSummary = describe_exam_summary(summarize_exam(vQuiz, vExam))
+
+        if vExam.get("offer"):
+            vSummary += " " + describe_exam_results(
+                load_exam_results(pDatabaseFile, vExam["offer"])
+            )
 
     rResponse = templates.TemplateResponse(
         pRequest,
@@ -573,14 +588,12 @@ def render_exam(pRequest, pDatabaseFile, pResult=None, pMessage=None):
         {
             "active_page": "quiz",
             "exam": vExam,
+            "remaining": vRemaining,
+            "countdown": format_countdown(vRemaining),
             "result": pResult,
             "question": None if pResult else get_exam_question(vQuiz, vExam),
             "retry_message": pMessage,
-            "summary": (
-                describe_exam_summary(summarize_exam(vQuiz, vExam))
-                if vExam["finished_at"] and not pResult
-                else None
-            ),
+            "summary": vSummary,
         },
     )
 

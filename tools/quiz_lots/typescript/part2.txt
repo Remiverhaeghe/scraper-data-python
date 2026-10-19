@@ -1,0 +1,443 @@
+@051
+Q: Que garantit une fonction de garde de type écrite avec valeur is Commande ?
+C: Le type est rétréci quand elle renvoie true
+W: La valeur est convertie en Commande à l'exécution
+W: Le compilateur vérifie le corps de la fonction
+W: La fonction renvoie une Commande neuve
+E: Une garde personnalisée renvoie un booléen ; le type de retour valeur is Commande indique au compilateur de rétrécir le type quand elle renvoie true. Sa justesse dépend du code écrit : une garde fausse trompe le compilateur.
+```typescript
+function estCommande(valeur: unknown): valeur is Commande {
+  return typeof valeur === "object" && valeur !== null && "id" in valeur;
+}
+```
+
+@052
+Q: Quel type a l'erreur attrapée dans un catch avec l'option useUnknownInCatchVariables ?
+C: unknown
+W: Error
+W: any
+W: string
+E: N'importe quelle valeur peut être lancée en JavaScript, pas seulement des Error. Avec unknown, on vérifie avant usage : if (erreur instanceof Error) console.error(erreur.message). Cette option fait partie de strict depuis TypeScript 4.4.
+
+@053
+Q: Que produit ce type conditionnel pour Est<string> ?
+C: "oui"
+W: "non"
+W: boolean
+W: string
+E: T extends string ? "oui" : "non" fonctionne comme un ternaire sur les types : string étend string, d'où "oui". Les types conditionnels servent à écrire des utilitaires comme NonNullable ou ReturnType.
+```typescript
+type Est<T> = T extends string ? "oui" : "non";
+type Resultat = Est<string>;
+```
+
+@054
+Q: Que fait le mot-clé infer dans un type conditionnel ?
+C: Il capture une partie du type pour la réutiliser
+W: Il force TypeScript à deviner le type d'une variable
+W: Il convertit un type en valeur à l'exécution
+W: Il désactive la vérification sur le type
+E: type Contenu<T> = T extends Promise<infer U> ? U : T extrait le type promis : Contenu<Promise<number>> vaut number. C'est ainsi qu'est défini l'utilitaire Awaited, qui gère aussi les Promise imbriquées.
+
+@055
+Q: Que construit ce type mappé ?
+C: Un type dont chaque propriété devient facultative
+W: Un tableau des noms de propriétés de T
+W: Un type dont chaque propriété devient obligatoire
+W: Une copie de T sans aucune propriété
+E: [K in keyof T] parcourt chaque clé, et ? la rend facultative : c'est la définition de Partial. En changeant le modificateur ou le type de valeur, on obtient Readonly, Required ou des transformations sur mesure.
+```typescript
+type Facultatif<T> = { [K in keyof T]?: T[K] };
+```
+
+@056
+Q: Quel type produit ce type de gabarit littéral ?
+C: "get_nom" | "get_age"
+W: string
+W: "nom" | "age"
+W: "get_" | "nom" | "age"
+E: Les types de gabarit combinent des littéraux comme des chaînes : appliqués à une union, ils produisent toutes les combinaisons. On s'en sert pour typer des noms d'événements, de routes ou de méthodes générés à partir d'une liste.
+```typescript
+type Champ = "nom" | "age";
+type Accesseur = `get_${Champ}`;
+```
+
+@057
+Q: Pourquoi TypeScript accepte-t-il un objet avec une propriété en trop passé par une variable, mais le refuse en littéral direct ?
+C: Le contrôle des propriétés en trop ne vise que les littéraux
+W: Les variables ne sont jamais vérifiées
+W: Les littéraux ne peuvent pas avoir de propriétés facultatives
+W: C'est une erreur du compilateur corrigée en version 5
+E: Un littéral passé directement avec une propriété inconnue signale probablement une faute de frappe : le compilateur le refuse. Via une variable, le typage structurel accepte un objet qui a au moins les propriétés attendues. Il faut connaître ce comportement pour ne pas se croire protégé.
+
+@058
+Q: Qu'est-ce qu'un type « marqué » (branded) comme type IdClient = number & { __marque: "IdClient" } ?
+C: Un type qui sépare deux identifiants numériques
+W: Un type qui ajoute une propriété visible à l'exécution
+W: Un type réservé aux classes abstraites
+W: Un type qui chiffre la valeur de l'identifiant
+E: Deux number sont interchangeables : passer un IdCommande là où l'on attend un IdClient passerait inaperçu. La marque, qui n'existe que pour le compilateur, rend les deux types incompatibles. On crée les valeurs marquées par une fonction de validation.
+
+@059
+Q: Que fait une fonction d'assertion déclarée asserts valeur is string ?
+C: Elle rétrécit le type ou lève une erreur
+W: Elle renvoie true si la valeur est une chaîne
+W: Elle convertit la valeur en chaîne
+W: Elle désactive la vérification de la valeur
+E: Après l'appel, le compilateur sait que valeur est une chaîne, sans if autour : si ce n'était pas le cas, la fonction a levé une erreur. Pratique pour valider des invariants en tête de fonction.
+
+@060
+Q: Que permet la surcharge de fonction en TypeScript ?
+C: Plusieurs signatures pour une même implémentation
+W: Plusieurs implémentations d'une même fonction
+W: Changer le nom d'une fonction selon ses arguments
+W: Appeler une fonction plus vite selon le type
+E: On déclare plusieurs signatures, puis une seule implémentation compatible avec toutes : formater(date: Date): string et formater(texte: string): Date, par exemple. L'appelant voit le type de retour exact selon l'argument.
+
+@061
+Q: À quoi sert import type { Commande } from "./modeles" ?
+C: À importer un type seul, effacé à la compilation
+W: À importer une classe et l'instancier aussitôt
+W: À importer un fichier JSON comme un type
+W: À vérifier le type du module importé à l'exécution
+E: import type garantit que l'import disparaît du JavaScript produit : pas de module chargé pour rien, pas de dépendance circulaire à l'exécution. Avec isolatedModules, ou verbatimModuleSyntax, il est même nécessaire pour les imports purement typés.
+
+@062
+Q: Pourquoi l'option isolatedModules est-elle recommandée avec esbuild ou Vite ?
+C: Elle signale le code intraduisible isolément
+W: Elle accélère la vérification des types
+W: Elle isole chaque module dans un processus séparé
+W: Elle interdit les dépendances externes
+E: Ces outils transforment chaque fichier sans connaître les autres : réexporter un type sans export type, ou utiliser un const enum, ne peut pas être traduit ainsi. isolatedModules fait remonter ces cas dès la compilation.
+
+@063
+Q: À quoi sert l'option paths du tsconfig ?
+C: À définir des alias d'import comme @/composants
+W: À lister les fichiers à compiler
+W: À choisir le dossier des fichiers produits
+W: À indiquer les chemins des tests
+E: "@/*": ["src/*"] permet d'écrire import { Bouton } from "@/composants/Bouton" au lieu d'une suite de ../. L'outil de construction doit connaître les mêmes alias, sinon le code compile mais ne se lance pas.
+
+@064
+Q: Pourquoi utiliser un schéma Zod pour une donnée reçue d'une API ?
+C: Il valide à l'exécution et en déduit le type
+W: Il remplace complètement le compilateur
+W: Il chiffre les données échangées
+W: Il génère automatiquement l'API côté serveur
+E: Un schéma décrit la forme attendue, parse lève une erreur si la donnée ne correspond pas, et z.infer<typeof schema> en tire le type : une seule source de vérité pour le type et la validation. C'est la réponse au fait que les types disparaissent à l'exécution.
+
+@065
+Q: Que donne ce code avec Zod ?
+C: Le type Produit et sa validation
+W: Un objet Produit vide prêt à être rempli
+W: Une erreur, Zod ne gère pas les nombres
+W: Un type Produit sans validation
+E: z.object décrit les champs, z.infer en déduit le type statique, et Produit.parse(donnee) vérifie une donnée reçue. positive refuse un prix négatif, ce que le type number seul ne sait pas exprimer.
+```typescript
+import { z } from "zod";
+
+const ProduitSchema = z.object({ nom: z.string(), prix: z.number().positive() });
+type Produit = z.infer<typeof ProduitSchema>;
+```
+
+@066
+Q: Que renvoie Promise.all sur [Promise<number>, Promise<string>] ?
+C: Promise<[number, string]>
+W: Promise<number | string>
+W: Promise<any[]>
+W: [number, string]
+E: TypeScript garde le type de chaque position grâce aux tuples : const [total, nom] = await Promise.all([...]) donne un number et un string. Promise.allSettled renvoie des résultats avec un statut, utile pour ne pas tout perdre si une promesse échoue.
+
+@067
+Q: Que vaut Awaited<Promise<Promise<number>>> ?
+C: number
+W: Promise<number>
+W: Promise<Promise<number>>
+W: unknown
+E: Awaited déroule les promesses imbriquées, comme le fait await à l'exécution. C'est le type utilisé pour le résultat d'une fonction async ou de Promise.all.
+
+@068
+Q: Pourquoi readonly string[] protège-t-il mieux un paramètre que string[] ?
+C: La fonction ne peut pas le modifier
+W: Le tableau est copié automatiquement
+W: Le tableau devient plus rapide à parcourir
+W: Les éléments sont convertis en chaînes
+E: Avec readonly, push, sort ou splice sont refusés : l'appelant sait que son tableau ne sera pas modifié. Un string[] est accepté là où l'on attend un readonly string[], l'inverse non. On l'utilise pour les paramètres et les données partagées.
+
+@069
+Q: Que signale TypeScript sur ce tri ?
+C: sort n'existe pas sur un tableau en lecture seule
+W: sort attend une fonction de comparaison obligatoire
+W: Les tableaux de chaînes ne se trient pas
+W: Rien, le tri est autorisé
+E: sort modifie le tableau en place, ce que readonly interdit. On trie une copie : [...noms].sort() ou noms.toSorted(), disponible depuis ES2023, qui renvoie un nouveau tableau sans toucher l'original.
+```typescript
+function trier(noms: readonly string[]) {
+  return noms.sort();
+}
+```
+
+@070
+Q: Quelle valeur de module convient à un projet Node.js récent en modules ES ?
+C: NodeNext
+W: AMD
+W: UMD
+W: System
+E: NodeNext suit la résolution de Node.js : il respecte "type": "module" du package.json et exige les extensions dans les imports relatifs. AMD, UMD et System sont des formats anciens destinés aux navigateurs d'avant les modules natifs.
+
+@071
+Q: Pourquoi un import relatif doit-il porter l'extension .js en module NodeNext, même depuis un fichier .ts ?
+C: Node.js charge le .js produit, pas le .ts
+W: Le compilateur ne connaît pas les fichiers .ts
+W: Les extensions .ts sont interdites par le navigateur
+W: C'est une erreur corrigée par l'option strict
+E: TypeScript ne réécrit pas les chemins d'import : import { f } from "./outils.js" désigne le fichier qui existera après compilation. Cela surprend, mais c'est ce qui permet au code produit de fonctionner tel quel dans Node.js.
+
+@072
+Q: Associer chaque utilitaire de type à son résultat.
+P: NonNullable<string | null> => string
+P: Exclude<"a" | "b", "a"> => "b"
+P: Extract<"a" | "b", "a"> => "a"
+P: Parameters<(x: number) => void> => [x: number]
+E: Ces utilitaires sont des types conditionnels prédéfinis. Exclude retire des membres d'une union, Extract les garde, NonNullable retire null et undefined. Ils évitent de réécrire des types dérivés à la main.
+
+@073
+Q: Que se passe-t-il à la compilation avec une classe abstraite ?
+C: On peut en hériter, pas l'instancier
+W: Elle est supprimée du JavaScript produit
+W: Toutes ses méthodes doivent être statiques
+W: Elle ne peut pas avoir de constructeur
+E: abstract class Forme définit une base commune et des méthodes abstract que chaque sous-classe doit implémenter. new Forme() est refusé. Contrairement à une interface, elle existe à l'exécution et peut contenir du code partagé.
+
+@074
+Q: Pourquoi typer une fonction utilitaire de requêtes avec un générique comme requete<T>(url): Promise<T> reste trompeur sans validation ?
+C: Le générique affirme le type sans vérifier la réponse
+W: Les génériques sont interdits dans les fonctions async
+W: fetch ne fonctionne pas avec des génériques
+W: T est toujours remplacé par any
+E: requete<Utilisateur>("/api/moi") annonce un Utilisateur, mais rien ne contrôle ce que le serveur renvoie. On passe plutôt un schéma de validation en paramètre, et le type se déduit de lui : le contrôle et le type restent alignés.
+
+@075
+Q: Quel risque présente cette fonction ?
+C: Elle accepte des clés inexistantes
+W: Elle renvoie toujours undefined
+W: Elle modifie l'objet passé en paramètre
+W: Elle ne compile pas en mode strict
+E: cle: string accepte n'importe quel texte, et la valeur renvoyée est any. La version générique function lire<T, K extends keyof T>(o: T, cle: K): T[K] refuse une clé inexistante et renvoie le type exact de la propriété.
+```typescript
+function lire(objet: any, cle: string) {
+  return objet[cle];
+}
+```
+
+@076
+Q: Que permet l'augmentation de module (declare module) ?
+C: Compléter les types d'une bibliothèque
+W: Modifier le code JavaScript d'une bibliothèque
+W: Charger un module seulement en production
+W: Renommer un module à l'import
+E: On ajoute par exemple une propriété utilisateur au type Request d'Express, posée par un middleware d'authentification. Le code de la bibliothèque n'est pas modifié, seulement la vision qu'en a le compilateur.
+
+@077
+Q: Combien de types peut prendre la variable de ce type union ?
+N: 3
+E: L'union contient trois membres : string, number et null. Pour utiliser la valeur, il faut d'abord tester lequel des trois elle est. Plus une union est large, plus il y a de cas à traiter : on la garde aussi étroite que possible.
+```typescript
+let valeur: string | number | null;
+```
+
+@078
+Q: Pourquoi le compilateur refuse-t-il d'appeler toFixed sur valeur de type string | number ?
+C: toFixed n'existe que sur number
+W: toFixed n'existe sur aucun des deux types
+W: Les unions interdisent tout appel de méthode
+W: toFixed exige un argument de type string
+E: Sur une union, on ne peut utiliser que ce qui est commun à tous les membres. Après un test typeof valeur === "number", le type est rétréci et toFixed devient disponible.
+
+@079
+Q: Que fait l'opérateur ! dans utilisateur!.nom ?
+C: Il affirme sans vérifier que la valeur existe
+W: Il vérifie que la valeur n'est pas null à l'exécution
+W: Il inverse la valeur booléenne de nom
+W: Il rend la propriété obligatoire
+E: L'assertion non nulle fait taire le compilateur, mais ne protège de rien : si utilisateur vaut null, l'erreur survient à l'exécution. On la réserve aux cas où une autre logique garantit la valeur, avec un commentaire qui l'explique.
+
+@080
+Q: Remettre dans l'ordre le traitement sûr d'une donnée reçue d'une API.
+O: Recevoir la réponse comme unknown
+O: La valider avec un schéma
+O: Traiter l'erreur de validation, journalisée et signalée
+O: Utiliser la donnée avec son type déduit du schéma
+E: La donnée reste unknown tant qu'elle n'est pas validée : le compilateur interdit de s'en servir. Une erreur de validation est un incident à journaliser, pas une donnée à afficher à moitié. Ensuite seulement, le type est fiable.
+
+@081
+Q: Que contrôle la règle ESLint @typescript-eslint/no-floating-promises ?
+C: Une promesse ni attendue ni traitée
+W: Une promesse qui dure plus d'une seconde
+W: Un nombre décimal mal arrondi
+W: Une variable déclarée sans type
+E: Appeler une fonction async sans await ni .catch laisse une erreur éventuelle sans traitement : elle passe inaperçue ou fait planter le processus Node.js. La règle signale ces oublis, fréquents dans les gestionnaires d'événements.
+
+@082
+Q: Pourquoi une fonction qui renvoie Promise<void> appelée sans await dans un test peut-elle laisser passer un échec ?
+C: Le test se termine avant que la promesse échoue
+W: Les promesses ne peuvent pas échouer dans un test
+W: void empêche toute erreur d'être levée
+W: Le moteur de test ignore les fonctions async
+E: Sans await, l'assertion ou l'exception arrive après la fin du test, qui est déjà marqué réussi. On écrit await et on rend la fonction de test async. La règle no-floating-promises signale ce piège.
+
+@083
+Q: Que décrit ce type ?
+C: Une fonction Node.js à rappel erreur-résultat
+W: Un objet avec deux méthodes
+W: Une promesse qui renvoie une erreur
+W: Une classe avec un constructeur à deux arguments
+E: C'est le style de rappel de Node.js : le premier argument du rappel est l'erreur, null en cas de succès. On le convertit en promesse avec util.promisify pour l'utiliser avec async et await.
+```typescript
+type Lire = (nom: string, rappel: (erreur: Error | null, contenu?: string) => void) => void;
+```
+
+@084
+Q: Pourquoi l'option exactOptionalPropertyTypes est-elle plus stricte ?
+C: Absent et undefined ne sont plus confondus
+W: Toutes les propriétés deviennent obligatoires
+W: Les propriétés facultatives sont interdites
+W: undefined devient un type invalide partout
+E: Par défaut, email?: string accepte { email: undefined }. Avec cette option, absent et undefined ne sont plus confondus, ce qui compte pour une API où « non renseigné » et « effacé » n'ont pas le même sens.
+
+@085
+Q: Quel outil exécute directement un fichier .ts dans Node.js pendant le développement ?
+C: tsx ou ts-node
+W: tsc --run
+W: node --ts
+W: npm start-ts
+E: tsx transforme le fichier à la volée et le lance, sans étape de compilation ; ts-node fait de même, en plus lent mais avec vérification optionnelle. Les versions récentes de Node.js savent aussi retirer les types elles-mêmes, sans les vérifier.
+
+@086
+Q: Pourquoi déclarer le type de retour des fonctions exportées d'un module ?
+C: Pour figer le contrat de la fonction
+W: Parce que TypeScript ne sait pas inférer les retours
+W: Pour accélérer le JavaScript produit
+W: Parce que les retours non typés sont refusés
+E: Sans annotation, le type de retour suit l'implémentation : une modification peut changer le contrat de la fonction sans que personne ne s'en aperçoive, jusqu'aux appelants. Déclaré, le retour fait échouer la compilation à l'endroit fautif.
+
+@087
+Q: Quel est le défaut de cet usage de as ?
+C: Il masque une vraie incompatibilité
+W: Il rend la variable en lecture seule
+W: Il transforme le nombre en chaîne
+W: Il crée une copie inutile de l'objet
+E: La double assertion par unknown force le compilateur à accepter n'importe quoi : c'est un signal d'alarme en revue de code. Si les types sont vraiment incompatibles, il faut convertir la donnée, pas la renommer.
+```typescript
+const prix = "12,50" as unknown as number;
+```
+
+@088
+Q: Que fait la commande tsc --build dans un dépôt avec références de projets ?
+C: Elle compile les projets selon leurs dépendances
+W: Elle compile tous les fichiers en un seul bundle
+W: Elle supprime les fichiers produits avant de compiler
+W: Elle exécute les tests de chaque projet
+E: Les références de projets découpent un grand dépôt en sous-projets ; tsc -b ne recompile que ce qui a changé, dans le bon ordre. C'est utile dans un monorepo pour garder des temps de compilation raisonnables.
+
+@089
+Q: Combien de membres contient le type Exclude<"a" | "b" | "c", "a" | "c"> ?
+N: 1
+E: Exclude retire de la première union les membres présents dans la seconde : il ne reste que "b". Exclude sert par exemple à retirer un statut d'une liste : Exclude<Statut, "archivee">.
+
+@090
+Q: Pourquoi déclarer let total = 0 puis total = "zéro" est-il refusé ?
+C: total a été inféré comme number à sa création
+W: Une variable let ne peut jamais changer de valeur
+W: Les chaînes ne peuvent pas contenir de lettres accentuées
+W: Le compilateur exige un type explicite pour let
+E: Le type d'une variable est fixé à sa déclaration, par l'annotation ou l'inférence. Changer de type en cours de route est presque toujours une erreur. Si une variable doit accepter deux types, on le déclare : let total: number | string.
+
+@091
+Q: Que vérifie l'option noUnusedLocals ?
+C: Les variables locales jamais utilisées
+W: Les modules jamais importés dans le projet
+W: Les fonctions jamais testées
+W: Les dépendances inutiles du package.json
+E: Une variable inutilisée trahit souvent un oubli, comme un résultat calculé puis ignoré. noUnusedParameters fait de même pour les paramètres ; on préfixe par _ un paramètre volontairement ignoré.
+
+@092
+Q: Quelle syntaxe déclare un tuple d'une chaîne suivie d'un nombre ?
+C: [string, number]
+W: (string, number)
+W: Array<string, number>
+W: {string, number}
+E: Un tuple fixe la longueur et le type de chaque position. useState renvoie par exemple un tuple [valeur, modificateur]. Des éléments nommés, [nom: string, age: number], améliorent la lisibilité dans l'éditeur.
+
+@093
+Q: Pourquoi ce gestionnaire de clic est-il mal typé ?
+C: event est implicitement any et rien n'est vérifié
+W: Les gestionnaires de clic ne prennent pas de paramètre
+W: target n'existe pas sur un événement
+W: addEventListener exige une fonction async
+E: Sans type, event est implicitement any : une faute sur target.valeur passe. En passant la fonction directement à addEventListener, TypeScript infère MouseEvent. Avec noImplicitAny, ce code est refusé.
+```typescript
+function clic(event) {
+  console.log(event.target.valeur);
+}
+```
+
+@094
+Q: Que permet la commande tsc --init ?
+C: Créer un fichier tsconfig.json commenté
+W: Installer TypeScript dans le projet
+W: Compiler le projet pour la première fois
+W: Convertir tous les .js en .ts
+E: Le fichier généré liste les options principales, avec un commentaire pour chacune ; on active strict et on règle target, module et outDir. TypeScript s'installe à part, en dépendance de développement.
+
+@095
+Q: Quel est l'intérêt des types pour le refactoring d'une grande base de code ?
+C: Le compilateur liste chaque endroit à adapter
+W: Les types renomment automatiquement les fichiers
+W: Les types empêchent toute régression
+W: Les types remplacent les tests de bout en bout
+E: Renommer une propriété ou changer une signature fait apparaître toutes les erreurs de compilation : rien n'est oublié, contrairement à une recherche textuelle. Les tests restent nécessaires pour le comportement, que les types ne décrivent pas.
+
+@096
+Q: Remettre dans l'ordre la migration d'un fichier JavaScript vers TypeScript.
+O: Renommer le fichier en .ts
+O: Corriger les erreurs signalées par le compilateur
+O: Typer les paramètres et les retours des fonctions exportées
+O: Remplacer les any restants par des types précis
+E: Le renommage révèle les erreurs ; on corrige d'abord ce qui casse la compilation, puis on type les frontières du module, les plus utiles aux autres fichiers. Les any restants sont une dette à résorber progressivement.
+
+@097
+Q: Pourquoi un générique avec contrainte, <T extends { id: number }>, est-il utile ?
+C: Il garantit que T possède la propriété id
+W: Il force T à être exactement { id: number }
+W: Il interdit les objets avec d'autres propriétés
+W: Il convertit T en nombre
+E: La contrainte permet d'utiliser item.id dans la fonction tout en gardant le type complet de l'objet reçu : une fonction indexer<T extends { id: number }>(liste: T[]) renvoie des éléments du type précis, pas un simple { id: number }.
+
+@098
+Q: Quel type obtient-on avec typeof sur cet objet de configuration ?
+C: { port: number; hote: string }
+W: object
+W: Config
+W: { port: 8080; hote: "localhost" }
+E: typeof utilisé dans une position de type donne le type d'une valeur ; les littéraux sont élargis en number et string, sauf avec as const. On évite ainsi d'écrire deux fois la même structure, valeur et type.
+```typescript
+const config = { port: 8080, hote: "localhost" };
+type Config = typeof config;
+```
+
+@099
+Q: Pourquoi activer strict dès le début d'un projet plutôt que plus tard ?
+C: Plus tard, les erreurs arrivent par centaines
+W: strict ne peut être activé qu'à la création du projet
+W: strict rend le code plus rapide
+W: strict est obligatoire pour publier sur npm
+E: Sur un projet neuf, chaque erreur de null ou d'any implicite est corrigée au fil de l'eau. Ajouté sur un gros projet, strict en révèle des centaines, et l'on finit souvent par le désactiver. On peut aussi activer ses options une à une.
+
+@100
+Q: Que ne peut pas garantir TypeScript, même en mode strict ?
+C: La justesse des données reçues à l'exécution
+W: La cohérence des types entre fichiers du projet
+W: L'absence d'appel sur une valeur null connue
+W: Le respect des signatures des fonctions
+E: Le compilateur vérifie le code, pas le monde extérieur : une API, un fichier JSON ou un formulaire peuvent renvoyer n'importe quoi. On valide ces entrées aux frontières, et les types garantissent ensuite la cohérence à l'intérieur de l'application.

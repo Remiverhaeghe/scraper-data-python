@@ -44,10 +44,13 @@ def isolated_settings(tmp_path):
 
 @pytest.fixture(autouse=True)
 def no_cache_warm_up(monkeypatch):
-    """Coupe le calcul anticipé du démarrage : il tournerait sur une base supprimée."""
+    """Coupe le calcul anticipé et la sauvegarde du démarrage, faits sur une base supprimée."""
 
     monkeypatch.setattr(
         "gui.main_window.prepare_quiz_caches", lambda pDatabaseFile: None
+    )
+    monkeypatch.setattr(
+        "gui.main_window.run_due_backup", lambda pDatabaseFile, pNow: None
     )
 
 

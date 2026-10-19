@@ -9,6 +9,10 @@
 {{ ui.page_header("Examen", exam.title or "Questions tirées au hasard, notées et chronométrées", "timer") }}
 
 <article class="card quiz-card">
+    {% if not exam.finished_at %}
+    {# forms.js décompte chaque seconde à partir de data-remaining. #}
+    <p class="exam-timer {{ 'tone-success' if remaining >= 60 else 'tone-warning' if remaining >= 0 else 'tone-danger' }}" data-remaining="{{ remaining }}" role="timer">{{ countdown }}</p>
+    {% endif %}
     {% if summary %}
     <h2>Examen terminé</h2>
     <p>{{ summary }}</p>

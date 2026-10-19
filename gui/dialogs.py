@@ -110,6 +110,17 @@ def describe_preparation(pPreparation):
         for vAnswer in vInterview["answers"]
     )
 
+    vStar = "".join(
+        f"<li><b>{escape(vAnswer['question'])}</b>"
+        + (
+            f" <i>({escape(', '.join(vAnswer['skills']))})</i>"
+            if vAnswer["skills"]
+            else ""
+        )
+        + f"<br>{escape(vAnswer['text']).replace(chr(10), '<br>')}</li>"
+        for vAnswer in vInterview.get("star", [])
+    )
+
     rHtml = (
         f"<h3>Correspondance</h3><p>{escape(vScore)}</p>"
         f"<p>Couvertes : {escape(', '.join(vMatch['covered']) or 'aucune')}<br>"
@@ -126,6 +137,8 @@ def describe_preparation(pPreparation):
         f"<h3>Points forts à citer</h3><ul>{vStrengths or '<li>À compléter</li>'}</ul>"
         f"<h3>Points à préparer</h3><ul>{items(vInterview['gaps']) or '<li>Aucun</li>'}</ul>"
         f"<h3>Questions du recruteur</h3><ul>{vAnswers}</ul>"
+        f"<h3>Vos réponses STAR</h3><ul>"
+        f"{vStar or '<li>À préparer dans la page Profil</li>'}</ul>"
         f"<h3>Questions à poser</h3><ul>{items(vInterview['questions'])}</ul>"
     )
 

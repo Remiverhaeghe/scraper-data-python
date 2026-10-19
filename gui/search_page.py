@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.icons import get_icon
+from gui.keyword_suggestions import KeywordSuggestions
 from gui.search_worker import SearchWorker
 from gui.theme import COLORS
 from gui.widgets import (
@@ -203,6 +204,7 @@ class SearchPage(QWidget):
         self.layout().addWidget(vActions)
 
         self.restore_settings()
+        self.refresh()
 
     def create_criteria_card(self):
         """Construit les critères de recherche et les filtres sur deux lignes."""
@@ -277,10 +279,19 @@ class SearchPage(QWidget):
         vOptions.addWidget(self.advanced_button)
         vOptions.addStretch()
 
+        self.suggestions = KeywordSuggestions()
+        self.suggestions.keyword_chosen.connect(self.keyword_edit.setText)
+
         vLayout.addLayout(vGrid)
+        vLayout.addWidget(self.suggestions)
         vLayout.addLayout(vOptions)
 
         return vCard
+
+    def refresh(self):
+        """Relit le profil pour proposer ses mots-clés à l'affichage de la page."""
+        if self.database_file is not None:
+            self.suggestions.refresh(self.database_file)
 
     def create_sources_card(self):
         """Construit la sélection des sources sous forme de pastilles."""

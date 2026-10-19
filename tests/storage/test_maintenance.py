@@ -8,7 +8,7 @@ import pytest
 
 import storage.database as database
 import storage.maintenance as maintenance
-from storage.backup import backup_database, purge_backups
+from storage.backup import backup_database, purge_backups, run_due_backup
 from job.quiz import FLAGGED_KEY, flag_question, load_active_quiz
 from job.quiz_import import import_questions_file
 from job.schedule import load_schedule, save_notification_email
@@ -85,6 +85,39 @@ def test_purge_backups_keeps_the_latest(tmp_path):
         "scraper-20261004-090000.db",
         "scraper-20261005-090000.db",
     ]
+
+
+def test_automatic_backup_runs_once_a_day(database_file, monkeypatch):
+    """Vérifie l'échéance quotidienne et la rotation séparée des sauvegardes auto."""
+
+    monkeypatch.setattr("storage.backup.AUTO_BACKUP_KEEP_COUNT", 2)
+
+    vBackups = database_file.parent / "backups"
+    vManual = backup_database(database_file, NOW, "avant-purge")
+
+    vFirst = run_due_backup(database_file, NOW)
+
+    assert vFirst.name == "scraper-20261011-093015-auto.db"
+    assert run_due_backup(database_file, NOW.replace(hour=20)) is None
+
+    for vDay in (12, 13, 14):
+        assert run_due_backup(database_file, NOW.replace(day=vDay)) is not None
+
+    assert sorted(vFile.name for vFile in vBackups.iterdir()) == [
+        vManual.name,
+        "scraper-20261013-093015-auto.db",
+        "scraper-20261014-093015-auto.db",
+    ]
+
+
+def test_automatic_backup_failure_is_logged(tmp_path, caplog):
+    """Vérifie qu'un échec est journalisé sans lever d'exception."""
+
+    vDatabaseFile = tmp_path / "absent" / "scraper.db"
+    (tmp_path / "absent").write_text("fichier à la place du dossier")
+
+    assert run_due_backup(vDatabaseFile, NOW) is None
+    assert "Échec de la sauvegarde automatique" in caplog.text
 
 
 def test_migration_backs_up_existing_database(database_file, monkeypatch):

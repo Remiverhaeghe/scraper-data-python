@@ -1,4 +1,4 @@
-"""Page de qualité des données : remplissage des champs et offres à vérifier"""
+"""Page de qualité des données : remplissage, offres à vérifier et hors sujet"""
 
 from datetime import date
 from pathlib import Path
@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.chart import BarChart
+from gui.offer_purge_panel import OfferPurgePanel
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -118,6 +119,9 @@ class QualityPage(QWidget):
         )
         vTableLayout.addWidget(self.table)
 
+        self.purge_panel = OfferPurgePanel(pDatabaseFile)
+        self.purge_panel.purged.connect(lambda _: self.refresh())
+
         self.message_label = QLabel()
         self.message_label.setObjectName("pageSubtitle")
         self.message_label.setWordWrap(True)
@@ -138,6 +142,7 @@ class QualityPage(QWidget):
         vLayout.addWidget(vChartCard)
         vLayout.addWidget(vProblemsCard)
         vLayout.addWidget(vTableCard)
+        vLayout.addWidget(self.purge_panel)
         vLayout.addWidget(self.message_label)
         vLayout.addStretch(1)
 

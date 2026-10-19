@@ -1,0 +1,30 @@
+{
+  "lot": 1,
+  "seed": 2026101902,
+  "skills": ["TypeScript", "tsconfig", "Zod"],
+  "schemas": [
+    {
+      "name": "typescript-compilation.svg",
+      "questions": ["001", "011", "038"],
+      "diagram": {
+        "title": "Du TypeScript au JavaScript",
+        "nodes": [
+          "Code .ts avec types",
+          "tsc : vérification des types",
+          "JavaScript sans types",
+          "Exécution dans Node.js ou le navigateur"
+        ],
+        "note": "Les types disparaissent : on valide les données reçues à l'exécution"
+      }
+    },
+    {
+      "name": "typescript-frontiere.svg",
+      "questions": ["021", "064", "080"],
+      "diagram": {
+        "title": "Donnée reçue d'une API",
+        "nodes": ["unknown", "Validation par schéma", "Type déduit du schéma", "Usage sûr"],
+        "note": "Un as ne vérifie rien : il affirme"
+      }
+    }
+  ]
+}

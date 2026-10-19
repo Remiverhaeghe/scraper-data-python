@@ -611,6 +611,12 @@ def migrate_to_v18(pConnection):
         """)
 
 
+def migrate_to_v19(pConnection):
+    """Ajoute la date de la première réponse, pour le délai de réponse moyen."""
+
+    pConnection.execute("ALTER TABLE job_application ADD COLUMN responded_at TEXT")
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -630,6 +636,7 @@ MIGRATIONS = [
     migrate_to_v16,
     migrate_to_v17,
     migrate_to_v18,
+    migrate_to_v19,
 ]
 
 

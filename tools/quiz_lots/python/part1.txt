@@ -1,0 +1,522 @@
+@001
+Q: Que contient la liste a après cet ajout fait par le nom b ?
+C: [1, 2, 3, 4]
+W: [1, 2, 3]
+W: [4]
+W: Une erreur
+E: a et b désignent la même liste : append la modifie en place, et le changement se voit par les deux noms. Pour une copie indépendante, on écrit b = a.copy() ou b = list(a). C'est une source fréquente de bogues quand on passe une liste à une fonction.
+```python
+a = [1, 2, 3]
+b = a
+b.append(4)
+print(a)
+```
+
+@002
+Q: Associer chaque type Python à sa nature.
+P: list => séquence modifiable
+P: tuple => séquence non modifiable
+P: dict => table clé-valeur
+P: set => ensemble sans doublon
+E: Une liste se modifie en place ; un tuple non, ce qui lui permet de servir de clé de dictionnaire. Depuis Python 3.7, un dictionnaire garde l'ordre d'insertion. Un ensemble élimine les doublons et teste l'appartenance très vite.
+
+@003
+Q: Qu'affiche ce code ?
+C: 3
+W: 3.5
+W: 4
+W: 3.0
+E: // est la division entière : elle arrondit vers le bas, 7 // 2 donne 3. / donne toujours un flottant, 7 / 2 vaut 3.5. Attention, -7 // 2 vaut -4, car l'arrondi se fait vers moins l'infini, pas vers zéro.
+```python
+print(7 // 2)
+```
+
+@004
+Q: Que renvoie len("héllo") ?
+N: 5
+E: En Python 3, une chaîne est une suite de caractères Unicode : « é » compte pour un caractère. En octets UTF-8, la même chaîne en occuperait 6, car « é » en prend deux : len("héllo".encode()) vaut 6.
+
+@005
+Q: Que donne la tranche "Python"[1:4] ?
+C: "yth"
+W: "Pyth"
+W: "ytho"
+W: "yt"
+E: Une tranche [début:fin] va du début inclus à la fin exclue : indices 1, 2 et 3, soit « y », « t », « h ». [:3] donne les trois premiers caractères, [-2:] les deux derniers, [::-1] la chaîne à l'envers.
+
+@006
+Q: Qu'affiche ce code ?
+C: ['a', 'b']
+W: ['a']
+W: ['a', 'b', 'a', 'b']
+W: Une erreur
+E: La valeur par défaut [] est créée une seule fois, à la définition de la fonction : elle est partagée entre tous les appels et accumule les éléments. On écrit pListe=None puis, dans la fonction, pListe = [] si pListe is None.
+```python
+def ajouter(pValeur, pListe=[]):
+    pListe.append(pValeur)
+    return pListe
+
+ajouter("a")
+print(ajouter("b"))
+```
+
+@007
+Q: Quelle différence entre == et is ?
+C: == compare les valeurs, is compare l'identité
+W: == compare l'identité, is compare les valeurs
+W: is est réservé aux nombres entiers
+W: Les deux sont équivalents en Python 3
+E: [1] == [1] est vrai, deux listes égales ; [1] is [1] est faux, deux objets distincts. On utilise is seulement pour None, True et False : if valeur is None. Comparer des chaînes ou des nombres avec is fonctionne parfois par hasard, à cause du cache de l'interpréteur.
+
+@008
+Q: Qu'affiche cette compréhension de liste ?
+C: [0, 4, 16]
+W: [0, 1, 4, 9, 16]
+W: [0, 2, 4]
+W: [1, 9]
+E: On parcourt 0 à 4, on garde les pairs (0, 2, 4) et on prend leur carré. La compréhension est plus lisible et plus rapide qu'une boucle avec append pour construire une liste simple.
+```python
+print([x * x for x in range(5) if x % 2 == 0])
+```
+
+@009
+Q: Que fait la méthode get d'un dictionnaire, comme d.get("ville", "inconnue") ?
+C: Elle renvoie la valeur, ou « inconnue » si la clé manque
+W: Elle ajoute la clé « ville » avec la valeur « inconnue »
+W: Elle lève une erreur si la clé manque
+W: Elle supprime la clé « ville » du dictionnaire
+E: d["ville"] lève KeyError si la clé est absente ; get renvoie une valeur par défaut, None si on n'en donne pas. setdefault, lui, ajoute la clé si elle manque. Pour compter, collections.Counter évite ces tests.
+
+@010
+Q: Que fait le bloc with open(...) as f ?
+C: Il ferme le fichier automatiquement en sortie
+W: Il ouvre le fichier en lecture seule obligatoirement
+W: Il charge tout le fichier en mémoire
+W: Il crée le fichier s'il n'existe pas
+E: Le gestionnaire de contexte garantit la fermeture, même si une exception survient dans le bloc. On précise encoding="utf-8" : sinon l'encodage dépend du système, et un fichier lu sous Windows peut mal afficher les accents.
+
+@011
+Q: Qu'affiche ce code ?
+C: Erreur : division par zéro
+W: Rien, l'erreur est ignorée
+W: ZeroDivisionError suivi de la trace
+W: 0
+E: L'exception est attrapée par le bloc except qui correspond à son type. On attrape des exceptions précises : un except nu, ou except Exception sans traitement, cache des bogues. finally s'exécute dans tous les cas, pour libérer une ressource.
+```python
+try:
+    print(1 / 0)
+except ZeroDivisionError:
+    print("Erreur : division par zéro")
+```
+
+@012
+Q: Qu'est-ce qu'un environnement virtuel Python ?
+C: Un dossier d'installation propre à un projet
+W: Une machine virtuelle qui exécute Python
+W: Un éditeur de code en ligne
+W: Un serveur qui héberge les paquets
+E: python -m venv .venv crée un environnement isolé : les paquets installés avec pip y restent, sans conflit entre projets ni avec le système. On l'active, puis on fige les versions dans un fichier requirements.txt ou pyproject.toml.
+
+@013
+Q: Quelle commande installe les dépendances listées dans requirements.txt ?
+C: pip install -r requirements.txt
+W: pip install requirements.txt
+W: python requirements.txt
+W: pip freeze requirements.txt
+E: -r lit la liste dans le fichier. pip freeze fait l'inverse : il écrit les versions installées. Sans -r, pip chercherait un paquet nommé requirements.txt sur PyPI. On l'exécute dans l'environnement virtuel activé.
+
+@014
+Q: Qu'affiche ce code ?
+C: Bonjour Léa, 30 ans
+W: Bonjour {nom}, {age} ans
+W: Bonjour nom, age ans
+W: Une erreur de syntaxe
+E: Une f-string remplace les expressions entre accolades par leur valeur. On peut y formater : f"{prix:.2f}" donne deux décimales, f"{n:,}" sépare les milliers. Elles remplacent avantageusement format et l'opérateur %.
+```python
+nom = "Léa"
+age = 30
+print(f"Bonjour {nom}, {age} ans")
+```
+
+@015
+Q: Que renvoie cette fonction sans instruction return ?
+C: None
+W: 0
+W: Une chaîne vide
+W: Une erreur
+E: Une fonction sans return, ou avec un return seul, renvoie None. Oublier le return est une erreur courante : le résultat est calculé puis perdu, et l'appelant reçoit None, ce qui provoque plus loin un « NoneType has no attribute ».
+```python
+def doubler(x):
+    x * 2
+
+print(doubler(3))
+```
+
+@016
+Q: Associer chaque fonction intégrée à son effet.
+P: enumerate => donne l'indice et l'élément
+P: zip => parcourt plusieurs séquences ensemble
+P: sorted => renvoie une copie triée
+P: any => vrai si au moins un élément est vrai
+E: for i, nom in enumerate(noms) évite de gérer un compteur à la main ; zip(noms, ages) associe deux listes élément par élément. sorted ne modifie pas la liste d'origine, contrairement à list.sort().
+
+@017
+Q: Quelle est la différence entre une liste et un tuple pour servir de clé de dictionnaire ?
+C: Seul le tuple peut servir de clé
+W: Seule la liste peut servir de clé
+W: Les deux peuvent servir de clé
+W: Aucun des deux ne peut servir de clé
+E: Une clé de dictionnaire doit être hachable, donc immuable : un tuple de valeurs immuables l'est, une liste non. d[(2026, 10)] = "octobre" fonctionne ; d[[2026, 10]] lève TypeError: unhashable type: 'list'.
+
+@018
+Q: Combien d'éléments garde l'ensemble construit à partir de cette liste ?
+C: 3
+W: 6
+W: [1, 2, 3]
+W: Une erreur
+E: Un ensemble ne garde qu'un exemplaire de chaque valeur : set([1, 2, 2, 3, 3, 3]) contient 1, 2 et 3. C'est la façon la plus simple de dédoublonner, mais l'ordre d'origine n'est pas garanti ; dict.fromkeys(liste) le conserve.
+```python
+print(len(set([1, 2, 2, 3, 3, 3])))
+```
+
+@019
+Q: Qu'est-ce que PEP 8 ?
+C: Le guide de style officiel du code Python
+W: La version 8 du langage Python
+W: Un gestionnaire de paquets Python
+W: Le format des fichiers de configuration
+E: PEP 8 fixe les conventions : quatre espaces d'indentation, noms en snake_case pour les fonctions, en CapWords pour les classes, lignes courtes. Des outils comme Black, Ruff ou flake8 les appliquent automatiquement.
+
+@020
+Q: À quoi sert la condition if __name__ == "__main__" ?
+C: À n'exécuter du code que si le fichier est lancé directement
+W: À empêcher l'import du fichier par un autre module
+W: À définir la fonction principale obligatoire
+W: À exécuter le code deux fois de suite
+E: Lancé avec python script.py, le module s'appelle « __main__ » et le bloc s'exécute ; importé par un autre module, il porte son nom de fichier et le bloc est ignoré. On peut ainsi réutiliser les fonctions d'un script sans déclencher son traitement.
+
+@021
+Q: Quelles valeurs la boucle sur range affiche-t-elle ici ?
+C: 1 2 3
+W: 1 2 3 4
+W: 0 1 2
+W: Une erreur
+E: range(1, 4) va de 1 inclus à 4 exclu. end=" " remplace le retour à la ligne de print par un espace. range ne crée pas de liste en mémoire : il produit les valeurs à la demande, même pour range(10**9).
+```python
+for i in range(1, 4):
+    print(i, end=" ")
+```
+
+@022
+Q: Que fait l'instruction import json ?
+C: Elle charge le module json de la bibliothèque standard
+W: Elle installe le paquet json depuis Internet
+W: Elle convertit le fichier courant en JSON
+W: Elle crée un fichier json.py dans le dossier
+E: La bibliothèque standard fournit json, csv, pathlib, datetime, logging et bien d'autres, sans installation. json.loads lit une chaîne JSON, json.dumps en produit une. Un fichier local nommé json.py masquerait le module standard : on évite ces noms.
+
+@023
+Q: Qu'affiche ce code ?
+C: {"nom": "Léa"}
+W: {'nom': 'Léa'}
+W: {"nom": "Léa"}
+W: Une erreur
+E: json.dumps produit du JSON avec des guillemets doubles ; ensure_ascii=False garde les caractères accentués tels quels. Sans cette option, « é » devient é, du JSON valide mais moins lisible.
+```python
+import json
+print(json.dumps({"nom": "Léa"}, ensure_ascii=False))
+```
+
+@024
+Q: Quel module de la bibliothèque standard manipule les chemins de fichiers de façon portable ?
+C: pathlib
+W: os.system
+W: shutil.path
+W: sys.files
+E: Path("donnees") / "rapport.csv" construit un chemin valable sous Windows comme sous Linux ; Path offre read_text, exists, glob ou mkdir. C'est plus lisible que les chaînes concaténées et os.path.
+
+@025
+Q: Remettre dans l'ordre le démarrage d'un nouveau projet Python.
+O: Créer l'environnement virtuel avec python -m venv .venv
+O: Activer l'environnement
+O: Installer les dépendances avec pip
+O: Figer les versions dans un fichier de dépendances
+E: L'environnement isole le projet ; les versions figées permettent à un collègue ou au serveur de reproduire exactement l'installation. On ajoute .venv au .gitignore : il se recrée, il ne se versionne pas.
+
+@026
+Q: Qu'affiche ce code ?
+C: ['Ana', 'Bob', 'Zoé']
+W: ['Zoé', 'Bob', 'Ana']
+W: ['Bob', 'Ana', 'Zoé']
+W: None
+E: sorted renvoie une nouvelle liste triée, ici par ordre alphabétique. list.sort() trierait en place et renverrait None : écrire noms = noms.sort() est une erreur classique qui remplace la liste par None.
+```python
+noms = ["Zoé", "Ana", "Bob"]
+print(sorted(noms))
+```
+
+@027
+Q: Comment trier une liste de dictionnaires par la clé « age » ?
+C: sorted(personnes, key=lambda p: p["age"])
+W: sorted(personnes, "age")
+W: personnes.sort("age")
+W: sorted(personnes.age)
+E: key reçoit une fonction qui donne la valeur de tri de chaque élément. operator.itemgetter("age") fait la même chose, un peu plus vite. reverse=True inverse l'ordre ; le tri de Python est stable, l'ordre des ex aequo est conservé.
+
+@028
+Q: Qu'affiche ce code ?
+C: 10
+W: 20
+W: 30
+W: Une erreur
+E: La variable total de la fonction est locale : l'affecter ne touche pas le total global. Le code affiche donc la valeur globale, inchangée. On évite les variables globales modifiées ; une fonction renvoie plutôt sa valeur.
+```python
+total = 10
+
+def ajouter():
+    total = 20
+
+ajouter()
+print(total)
+```
+
+@029
+Q: Que contient args dans une fonction définie avec def f(*args) ?
+C: Un tuple des arguments positionnels reçus
+W: Une liste des noms des arguments
+W: Un dictionnaire des arguments nommés
+W: Le premier argument seulement
+E: *args récupère un nombre variable d'arguments positionnels dans un tuple ; **kwargs récupère les arguments nommés dans un dictionnaire. f(1, 2, 3) donne args = (1, 2, 3). À l'appel, * et ** dépaquettent une séquence ou un dictionnaire.
+
+@030
+Q: Que valent a, b et reste après ce dépaquetage étendu ?
+C: 1 2 [3, 4, 5]
+W: 1 2 3
+W: [1, 2] 3 [4, 5]
+W: Une erreur
+E: Le dépaquetage étendu affecte les premiers éléments aux variables nommées et le reste, sous forme de liste, à la variable étoilée. On écrit aussi premier, *_ = valeurs pour ignorer la suite.
+```python
+a, b, *reste = [1, 2, 3, 4, 5]
+print(a, b, reste)
+```
+
+@031
+Q: Qu'est-ce qu'une classe en Python ?
+C: Un modèle d'objets : données et comportements
+W: Un fichier qui regroupe plusieurs fonctions
+W: Un type de boucle pour parcourir des objets
+W: Un module réservé aux interfaces graphiques
+E: Une classe décrit des attributs et des méthodes ; chaque objet créé est une instance avec ses propres valeurs. __init__ initialise l'instance, self désigne l'instance courante dans les méthodes.
+
+@032
+Q: Qu'affiche ce code ?
+C: Rex fait wouf
+W: Chien fait wouf
+W: self fait wouf
+W: Une erreur
+E: __init__ enregistre le nom dans l'instance ; la méthode y accède par self.nom. Oublier self en paramètre d'une méthode provoque « takes 0 positional arguments but 1 was given », car Python passe l'instance automatiquement.
+```python
+class Chien:
+    def __init__(self, nom):
+        self.nom = nom
+
+    def aboyer(self):
+        return f"{self.nom} fait wouf"
+
+print(Chien("Rex").aboyer())
+```
+
+@033
+Q: À quoi sert le décorateur @dataclass ?
+C: À générer __init__, __repr__ et __eq__ d'une classe
+W: À rendre une classe impossible à instancier
+W: À stocker automatiquement la classe en base de données
+W: À chiffrer les attributs de la classe
+E: @dataclass écrit le code répétitif d'une classe de données à partir de ses annotations. frozen=True rend les instances immuables, donc utilisables comme clés. Pour la validation de données externes, des bibliothèques comme Pydantic vont plus loin.
+
+@034
+Q: Qu'affiche ce code ?
+C: True
+W: False
+W: Une erreur
+W: None
+E: @dataclass génère __eq__ qui compare les champs : deux points de mêmes coordonnées sont égaux. Sans dataclass, == comparerait l'identité des objets et renverrait False.
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Point:
+    x: int
+    y: int
+
+print(Point(1, 2) == Point(1, 2))
+```
+
+@035
+Q: Que signifie l'héritage class Admin(Utilisateur) ?
+C: Admin reprend les attributs et méthodes d'Utilisateur
+W: Admin remplace la classe Utilisateur partout
+W: Utilisateur reprend les méthodes d'Admin
+W: Admin et Utilisateur partagent les mêmes instances
+E: Admin hérite de tout ce que définit Utilisateur et peut ajouter ou redéfinir des méthodes ; super().__init__() appelle l'initialisation du parent. On préfère souvent la composition à des hiérarchies profondes, plus difficiles à faire évoluer.
+
+@036
+Q: Que contient le résultat de str.split(",") sur "a,b,,c" ?
+C: ['a', 'b', '', 'c']
+W: ['a', 'b', 'c']
+W: ['a,b,,c']
+W: ['a', 'b', ',', 'c']
+E: split découpe à chaque séparateur, et deux virgules consécutives donnent une chaîne vide. split() sans argument découpe sur les espaces et ignore les vides. Pour un vrai fichier CSV, avec guillemets et virgules dans les valeurs, on utilise le module csv.
+
+@037
+Q: Quelle méthode retire les espaces au début et à la fin d'une chaîne ?
+C: strip
+W: trim
+W: clean
+W: cut
+E: strip enlève espaces, tabulations et retours à la ligne aux deux bouts ; lstrip et rstrip un seul côté. strip("\n") retire seulement les retours à la ligne. trim existe dans d'autres langages, pas en Python.
+
+@038
+Q: Qu'affiche ce code ?
+C: Durand, Léa
+W: Léa, Durand
+W: DurandLéa
+W: Une erreur
+E: join assemble les éléments d'un itérable avec la chaîne comme séparateur : ", ".join(...) place une virgule et un espace entre chaque élément. C'est bien plus efficace que de concaténer avec + dans une boucle.
+```python
+print(", ".join(["Durand", "Léa"]))
+```
+
+@039
+Q: Que fait la fonction ci-dessous ?
+C: Elle compte les occurrences de chaque mot
+W: Elle supprime les mots en double
+W: Elle trie les mots par ordre alphabétique
+W: Elle renvoie le mot le plus long
+E: Counter crée un dictionnaire mot -> nombre d'apparitions ; most_common(3) donnerait les trois plus fréquents. C'est l'outil le plus simple pour un comptage, sans boucle ni test d'existence de la clé.
+```python
+from collections import Counter
+
+def compter(texte):
+    return Counter(texte.split())
+```
+
+@040
+Q: Qu'affiche ce code ?
+C: {'fruits': ['pomme', 'poire']}
+W: {'fruits': 'poire'}
+W: {'fruits': ['poire']}
+W: Une erreur
+E: defaultdict(list) crée automatiquement une liste vide pour une clé absente : on peut appeler append sans tester. Le résultat regroupe les éléments par clé. Un dict ordinaire lèverait KeyError au premier append.
+```python
+from collections import defaultdict
+
+groupes = defaultdict(list)
+groupes["fruits"].append("pomme")
+groupes["fruits"].append("poire")
+print(dict(groupes))
+```
+
+@041
+Q: Que fait le mot-clé yield dans une fonction ?
+C: Il en fait un générateur qui produit les valeurs une à une
+W: Il arrête définitivement la fonction
+W: Il renvoie toutes les valeurs dans une liste
+W: Il met la fonction en pause pour une durée donnée
+E: Un générateur ne calcule une valeur qu'à la demande et garde son état entre deux : on peut parcourir un fichier de plusieurs gigaoctets ligne par ligne sans tout charger. Une fois épuisé, il ne se rejoue pas.
+
+@042
+Q: Qu'affiche ce code ?
+C: [1, 2, 3] puis []
+W: [1, 2, 3] puis [1, 2, 3]
+W: [] puis []
+W: Une erreur
+E: Une expression génératrice ne se parcourt qu'une fois : list() la consomme entièrement, et le second list() la trouve vide. Si l'on a besoin des valeurs plusieurs fois, on les met dans une liste dès le départ.
+```python
+g = (x for x in [1, 2, 3])
+print(list(g))
+print(list(g))
+```
+
+@043
+Q: Qu'est-ce qu'un décorateur Python ?
+C: Une fonction qui enveloppe une autre fonction
+W: Un commentaire spécial qui documente une fonction
+W: Un type de classe réservé à l'affichage
+W: Une annotation de type obligatoire
+E: @journaliser au-dessus de def f équivaut à f = journaliser(f) : la fonction d'origine est remplacée par une enveloppe qui ajoute un comportement, comme la mesure du temps ou un contrôle d'accès. functools.wraps conserve le nom et la documentation de la fonction d'origine.
+
+@044
+Q: Qu'affiche ce code ?
+C: avant, f, après
+W: f, avant, après
+W: avant, après, f
+W: f
+E: Le décorateur remplace f par enveloppe : l'appel exécute le code avant, la fonction d'origine, puis le code après. C'est le principe des décorateurs @app.route de Flask ou @login_required, qui ajoutent un traitement autour de chaque vue.
+```python
+def tracer(pFonction):
+    def enveloppe():
+        print("avant")
+        pFonction()
+        print("après")
+    return enveloppe
+
+@tracer
+def f():
+    print("f")
+
+f()
+```
+
+@045
+Q: Que signifie l'annotation def total(pPrix: float) -> float ?
+C: Une indication de types, non vérifiée à l'exécution
+W: Une conversion automatique de l'argument en float
+W: Une erreur levée si l'argument n'est pas un float
+W: Une contrainte imposée par l'interpréteur
+E: Les annotations documentent les types attendus ; Python ne les vérifie pas en exécutant. Un outil comme mypy ou Pyright les contrôle statiquement et repère des erreurs avant l'exécution. Les éditeurs s'en servent pour l'autocomplétion.
+
+@046
+Q: Quel module écrit des messages de journal avec des niveaux comme INFO ou ERROR ?
+C: logging
+W: print
+W: sys.stderr
+W: warnings
+E: logging permet de régler le niveau, la destination (fichier, console) et le format, sans toucher au code. En production, on remplace les print par logger.info ou logger.exception, qui ajoute la trace de l'exception en cours.
+
+@047
+Q: Pourquoi utiliser logger.exception dans un bloc except ?
+C: Il ajoute automatiquement la trace de l'exception
+W: Il relance l'exception après l'avoir écrite
+W: Il envoie un courriel à l'administrateur
+W: Il ignore l'exception sans rien écrire
+E: logger.exception écrit le message au niveau ERROR avec la pile d'appels complète, indispensable pour comprendre où l'erreur est née. On l'appelle seulement dans un except ; ailleurs, logger.error suffit.
+
+@048
+Q: Qu'affiche ce code ?
+C: 2026-10-19
+W: 19/10/2026
+W: 2026-10-19 00:00:00
+W: Une erreur
+E: date.isoformat renvoie la forme aaaa-mm-jj, idéale pour stocker ou trier. strftime("%d/%m/%Y") donnerait le format français. date.today() donne la date du jour, datetime.now() la date et l'heure.
+```python
+from datetime import date
+print(date(2026, 10, 19).isoformat())
+```
+
+@049
+Q: Combien de jours entre le 1er et le 19 octobre selon ce calcul ?
+N: 18
+E: Soustraire deux dates donne un timedelta, dont days vaut 18. Pour ajouter une durée, on écrit date + timedelta(days=7). Avec des datetime, on prend garde aux fuseaux horaires : comparer un datetime avec fuseau et un sans lève une erreur.
+```python
+from datetime import date
+print((date(2026, 10, 19) - date(2026, 10, 1)).days)
+```
+
+@050
+Q: Quelle bibliothèque est la plus utilisée pour envoyer des requêtes HTTP simplement en Python ?
+C: requests
+W: urllib3.web
+W: httpclient
+W: socketserver
+E: requests.get(url, timeout=10) envoie une requête et renvoie une réponse avec status_code, json() et text. On fixe toujours un timeout : sans lui, une requête peut attendre indéfiniment. httpx offre la même interface, avec l'asynchrone en plus.

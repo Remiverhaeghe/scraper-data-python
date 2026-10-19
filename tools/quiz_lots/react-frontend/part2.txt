@@ -1,0 +1,448 @@
+@051
+Q: Que génère createSlice de Redux Toolkit ?
+C: Le reducer et ses créateurs d'actions
+W: Un composant React relié au store
+W: Une base de données locale du navigateur
+W: Un routeur pour les pages de l'application
+E: On décrit l'état initial et les cas de modification ; createSlice produit le reducer et une fonction par action, comme ajouterOffre(offre). Plus besoin d'écrire les types d'action et les switch à la main.
+
+@052
+Q: Pourquoi cette « mutation » est-elle autorisée dans un reducer Redux Toolkit ?
+C: Immer la convertit en nouvel état immuable
+W: Redux Toolkit autorise les mutations partout
+W: Le tableau offres est copié par JavaScript
+W: Les reducers ne vérifient pas l'immutabilité
+E: Dans createSlice, state est un brouillon Immer : les modifications sont enregistrées puis appliquées sur une copie. Hors de ces reducers, modifier l'état du store reste une erreur.
+```javascript
+ajouterOffre(state, action) {
+  state.offres.push(action.payload);
+}
+```
+
+@053
+Q: Que fait useSelector dans un composant ?
+C: Il lit une partie du store et s'y abonne
+W: Il modifie l'état global du store
+W: Il sélectionne un élément du DOM
+W: Il choisit le reducer à exécuter
+E: useSelector(state => state.offres.liste) renvoie la valeur et refait le rendu quand elle change. Un sélecteur qui crée un nouvel objet à chaque appel provoque des rendus inutiles : on mémorise avec createSelector.
+
+@054
+Q: À quoi sert useDispatch ?
+C: À envoyer des actions au store
+W: À lire l'état du store
+W: À répartir les rendus entre composants
+W: À créer un nouveau store
+E: const dispatch = useDispatch() puis dispatch(ajouterOffre(offre)) : l'action est traitée par les reducers et les composants abonnés sont mis à jour. Le composant ne connaît pas la logique de modification.
+
+@055
+Q: Associer chaque besoin à la solution la plus adaptée.
+P: Valeur d'un champ de formulaire => State local du composant
+P: Thème clair ou sombre partagé => Contexte React
+P: Données d'une API avec cache => TanStack Query ou RTK Query
+P: État métier complexe partagé => Redux Toolkit
+E: Tout mettre dans Redux alourdit le code ; tout mettre en state local multiplie le prop drilling. Les données serveur ont leurs propres besoins, cache et invalidation, couverts par une bibliothèque dédiée.
+
+@056
+Q: Qu'apporte TanStack Query par rapport à un fetch dans un effet ?
+C: Cache, relances et invalidation intégrés
+W: Le chiffrement des réponses de l'API
+W: La génération des composants d'affichage
+W: Un serveur d'API intégré au navigateur
+E: useQuery({ queryKey: ["offres", recherche], queryFn }) partage les données entre composants, évite les requêtes en double et rafraîchit en arrière-plan. Les problèmes de concurrence de l'effet manuel disparaissent.
+
+@057
+Q: Que fait invalidateQueries après une mutation ?
+C: Il recharge les données périmées
+W: Il supprime les données du serveur
+W: Il annule la mutation déjà envoyée
+W: Il vide tout le stockage local
+E: Après l'ajout d'une candidature, invalidateQueries({ queryKey: ["candidatures"] }) marque la liste comme périmée : elle est rechargée, et l'affichage reflète l'état réel du serveur.
+
+@058
+Q: À quoi sert useReducer ?
+C: À gérer un state aux transitions multiples
+W: À réduire la taille du code produit
+W: À connecter le composant à Redux
+W: À diminuer le nombre de rendus
+E: const [etat, dispatch] = useReducer(reducer, initial) centralise les transitions d'un formulaire en plusieurs étapes, par exemple. Le reducer se teste seul, sans afficher le composant.
+
+@059
+Q: Que fait React.lazy avec Suspense ?
+C: Il charge un composant seulement quand il s'affiche
+W: Il retarde tous les rendus d'une seconde
+W: Il désactive le composant en production
+W: Il précharge toutes les pages au démarrage
+E: const Statistiques = lazy(() => import("./Statistiques")) crée un fichier séparé, téléchargé au premier affichage ; <Suspense fallback={<Chargement />}> montre un indicateur en attendant. Le premier chargement de l'application est plus léger.
+
+@060
+Q: Que fait une frontière d'erreur (error boundary) ?
+C: Elle affiche un repli si un enfant plante au rendu
+W: Elle attrape les erreurs des requêtes fetch
+W: Elle empêche toutes les exceptions JavaScript
+W: Elle journalise les erreurs du serveur
+E: Sans frontière, une erreur de rendu démonte toute l'application. La frontière isole la zone fautive et peut journaliser l'erreur. Elle n'attrape pas les erreurs des gestionnaires d'événements ni des promesses.
+
+@061
+Q: Pourquoi ce composant doit-il recevoir une clé pour se réinitialiser ?
+C: Changer la key recrée le composant et son state
+W: La key accélère le rendu du formulaire
+W: Sans key, le formulaire ne peut pas être soumis
+W: La key sert à valider les champs saisis
+E: En passant d'une offre à l'autre, React garde le même composant et son state : le brouillon de l'offre précédente resterait affiché. Avec key={offre.id}, chaque offre a son propre formulaire neuf.
+```jsx
+<FormulaireCandidature key={offre.id} offre={offre} />
+```
+
+@062
+Q: À quoi sert un portail React (createPortal) ?
+C: À afficher un élément ailleurs dans le DOM
+W: À ouvrir une nouvelle fenêtre du navigateur
+W: À charger un composant d'un autre site
+W: À partager le state entre deux onglets
+E: Une fenêtre modale rendue dans document.body échappe aux overflow: hidden et aux z-index de ses parents. Elle reste dans l'arbre React : contexte et propagation des événements fonctionnent normalement.
+
+@063
+Q: Que fait le mode strict de React en développement ?
+C: Il révèle les effets mal nettoyés
+W: Il interdit les composants de classe
+W: Il active TypeScript automatiquement
+W: Il ralentit l'application en production
+E: StrictMode rend deux fois les composants et relance les effets une fois : un abonnement sans nettoyage ou un rendu impur se voit tout de suite. Rien de cela n'a lieu en production.
+
+@064
+Q: Combien de fois s'exécute un effet avec [] au montage, en mode strict de développement ?
+N: 2
+E: React monte, démonte puis remonte le composant : l'effet, son nettoyage, puis l'effet à nouveau. Si cela pose problème, c'est le signe d'un nettoyage incomplet, qui poserait aussi problème en navigation réelle.
+
+@065
+Q: Comment rendre une fenêtre modale accessible au clavier ?
+C: Gérer le focus et la touche Échap
+W: Lui donner une couleur très contrastée
+W: Désactiver la touche Tab dans la page
+W: L'afficher seulement à la souris
+E: À l'ouverture, le focus va dans la modale et y reste ; Échap la ferme ; à la fermeture, le focus revient au bouton déclencheur. role="dialog" et aria-modal informent les lecteurs d'écran. L'élément natif dialog fait une partie de ce travail.
+
+@066
+Q: Que fait useTransition ?
+C: Il marque une mise à jour comme non urgente
+W: Il anime le passage entre deux pages
+W: Il convertit le state en promesse
+W: Il retarde l'effet d'une seconde
+E: startTransition(() => setFiltre(texte)) laisse la saisie réactive pendant que la liste filtrée se calcule ; isPending permet d'afficher un indicateur. Utile pour un rendu lourd déclenché par l'utilisateur.
+
+@067
+Q: Quelle différence entre useDeferredValue et un retard par minuterie ?
+C: React ajuste le délai à la charge réelle
+W: useDeferredValue attend toujours 300 ms
+W: La minuterie est gérée par le navigateur
+W: Aucune, les deux sont identiques
+E: useDeferredValue fournit une version de la valeur qui peut avoir un rendu de retard, sans délai fixe : sur un poste rapide, pas d'attente. Une minuterie reste préférable pour limiter les requêtes réseau.
+
+@068
+Q: Qu'est-ce que l'hydratation en rendu côté serveur ?
+C: Rattacher React au HTML déjà produit par le serveur
+W: Recharger les données de l'API toutes les minutes
+W: Compresser le JavaScript envoyé au client
+W: Convertir le JSX en HTML dans le navigateur
+E: Le serveur envoie un HTML affichable tout de suite ; le JavaScript se charge ensuite et attache les gestionnaires d'événements. Si le rendu client diffère du HTML serveur, React signale une erreur d'hydratation.
+
+@069
+Q: Pourquoi ce composant provoque-t-il une erreur d'hydratation ?
+C: L'heure diffère entre le serveur et le client
+W: Date ne fonctionne pas dans un composant
+W: Le serveur ne sait pas afficher une heure
+W: Les paragraphes sont interdits en rendu serveur
+E: Le HTML serveur contient l'heure du serveur, le premier rendu client une autre : le contenu ne correspond pas. On affiche la valeur variable après le montage, dans un effet, ou on la fournit identique aux deux côtés.
+```jsx
+function Horloge() {
+  return <p>{new Date().toLocaleTimeString()}</p>;
+}
+```
+
+@070
+Q: Que sont les composants serveur (React Server Components) ?
+C: Des composants exécutés seulement sur le serveur
+W: Des composants qui hébergent un serveur web
+W: Des composants rendus deux fois pour la sécurité
+W: Des composants réservés aux API REST
+E: Leur code n'est pas envoyé au navigateur : ils peuvent lire la base ou des fichiers directement. Ils ne peuvent pas utiliser useState ni d'événements ; les parties interactives sont des composants clients, marqués "use client".
+
+@071
+Q: Quel risque présente ce composant serveur ?
+C: Il envoie le mot de passe haché au client
+W: Il ne peut pas lire la base de données
+W: Il provoque une boucle de rendus
+W: Il expose la requête SQL dans le HTML
+E: Les props passées à un composant client sont sérialisées et visibles dans le navigateur. On ne transmet que les champs nécessaires, ici le nom, jamais l'objet complet issu de la base.
+```jsx
+const utilisateur = await lireUtilisateur(id);
+return <Profil utilisateur={utilisateur} />;
+```
+
+@072
+Q: Associer chaque mode de rendu à sa description.
+P: CSR => Le navigateur construit la page en JavaScript
+P: SSR => Le serveur produit le HTML à chaque requête
+P: SSG => Le HTML est produit à la construction du site
+P: ISR => Les pages statiques sont régénérées périodiquement
+E: Le choix dépend de la fraîcheur des données et du référencement : une documentation se prête au SSG, un tableau de bord personnel au CSR, une page d'offres publique au SSR ou à l'ISR.
+
+@073
+Q: Comment repérer les rendus coûteux d'une application React ?
+C: Avec le Profiler des React DevTools
+W: Avec la console réseau du navigateur
+W: Avec un console.log dans chaque composant
+W: En désactivant le mode strict
+E: Le Profiler enregistre une interaction et montre chaque composant rendu, sa durée et la raison du rendu. On mesure avant d'ajouter memo ou useMemo, sinon on optimise au hasard.
+
+@074
+Q: Pourquoi virtualiser une liste de 10 000 offres ?
+C: Pour n'afficher que les lignes visibles
+W: Pour charger les offres depuis un serveur virtuel
+W: Pour trier la liste plus rapidement
+W: Pour compresser les offres en mémoire
+E: 10 000 lignes dans le DOM rendent le défilement lent. TanStack Virtual ou react-window ne créent que la cinquantaine de lignes visibles et les recyclent au défilement.
+
+@075
+Q: Remettre dans l'ordre une démarche d'optimisation d'un écran lent.
+O: Reproduire la lenteur avec une mesure
+O: Profiler pour trouver le composant en cause
+O: Corriger la cause : mémorisation, virtualisation ou découpage
+O: Mesurer à nouveau pour confirmer le gain
+E: Sans mesure, on mémorise tout au hasard et le code devient plus complexe sans gain. Une mesure avant et après rend le progrès vérifiable.
+
+@076
+Q: Que fait le hook useOptimistic de React 19 ?
+C: Il affiche le résultat attendu avant la réponse
+W: Il relance automatiquement les requêtes échouées
+W: Il optimise la taille du code produit
+W: Il supprime les rendus inutiles
+E: Un message envoyé apparaît tout de suite dans la liste ; si le serveur refuse, l'affichage revient à l'état réel. L'interface semble instantanée sans mentir durablement.
+
+@077
+Q: Qu'est-ce qu'un signal dans Angular ?
+C: Une valeur réactive qui prévient ses lecteurs
+W: Un événement envoyé au serveur
+W: Un service injecté dans les composants
+W: Une alerte du compilateur Angular
+E: const compteur = signal(0), compteur.set(1), et computed(() => compteur() * 2) se met à jour seul. Angular sait précisément quoi rafraîchir, sans parcourir tout l'arbre.
+
+@078
+Q: À quoi sert l'injection de dépendances dans Angular ?
+C: À fournir des services aux composants
+W: À insérer du HTML dans un gabarit
+W: À charger un module en différé
+W: À injecter du CSS dans la page
+E: Un service @Injectable({ providedIn: "root" }) est créé une fois et fourni à qui le demande, par le constructeur ou inject(). Dans les tests, on fournit un faux service sans modifier le composant.
+
+@079
+Q: Pourquoi cet abonnement RxJS dans un composant Angular pose-t-il problème ?
+C: Il n'est jamais désabonné
+W: subscribe n'existe pas dans Angular
+W: Les offres sont chargées deux fois
+W: interval est interdit dans un composant
+E: À chaque ouverture de l'écran, un nouvel abonnement s'ajoute et continue après la destruction du composant : fuite de mémoire et requêtes en double. takeUntilDestroyed ou le tube async gèrent le désabonnement.
+```typescript
+ngOnInit() {
+  interval(30000).subscribe(() => this.chargerOffres());
+}
+```
+
+@080
+Q: Que change la stratégie OnPush dans Angular ?
+C: Le composant n'est vérifié qu'à certains changements
+W: Le composant est rendu côté serveur
+W: Les données sont envoyées au serveur en continu
+W: Le composant est chargé en différé
+E: Avec OnPush, Angular ne vérifie le composant que si une entrée change de référence, si un événement s'y produit ou si un signal lu change. Les objets doivent alors être remplacés, pas modifiés.
+
+@081
+Q: Qu'apporte l'API de composition de Vue 3 ?
+C: Regrouper la logique par fonctionnalité
+W: Écrire les composants en JSX uniquement
+W: Supprimer le besoin d'un gabarit HTML
+W: Remplacer Vue Router par un autre outil
+E: Dans setup, ref, computed et watch se regroupent par fonctionnalité au lieu d'être répartis dans data, methods et computed. La logique se partage dans des fonctions use…, comme les hooks React.
+
+@082
+Q: Que vaut total après la modification de prix ?
+N: 30
+E: computed recalcule sa valeur quand une donnée réactive qu'il lit change : 15 × 2 = 30. On lit et modifie une ref par .value dans le script ; dans le gabarit, .value est implicite.
+```javascript
+const prix = ref(10);
+const quantite = ref(2);
+const total = computed(() => prix.value * quantite.value);
+prix.value = 15;
+```
+
+@083
+Q: Quel est le gestionnaire d'état officiel de Vue 3 ?
+C: Pinia
+W: Vuex Next
+W: Redux Vue
+W: VueStore
+E: Pinia remplace Vuex : des stores définis avec defineStore, sans mutations séparées, et bien typés avec TypeScript. Chaque store est indépendant et chargé seulement s'il est utilisé.
+
+@084
+Q: Pourquoi intercepter les requêtes réseau avec MSW dans les tests de composants ?
+C: Pour tester avec de fausses réponses réalistes
+W: Pour accélérer le vrai serveur d'API
+W: Pour chiffrer les échanges de test
+W: Pour enregistrer le trafic de production
+E: Mock Service Worker répond aux requêtes au niveau réseau : le composant appelle fetch normalement, sans savoir qu'il est testé. On simule aussi les erreurs 500 ou les lenteurs, rarement testées sinon.
+
+@085
+Q: Pourquoi ce composant a-t-il un problème d'accessibilité ?
+C: Une div cliquable n'est pas atteignable au clavier
+W: onClick n'existe pas sur une div
+W: Les div ne peuvent pas contenir de texte
+W: Le texte Supprimer est trop long
+E: Une div ne reçoit pas le focus et ne réagit pas à Entrée : l'action est inaccessible sans souris. Un vrai élément button gère tout cela, et est annoncé comme bouton aux lecteurs d'écran.
+```jsx
+<div onClick={supprimer}>Supprimer</div>
+```
+
+@086
+Q: Pourquoi stocker un jeton d'authentification dans localStorage est-il risqué ?
+C: Tout script injecté peut le lire
+W: localStorage est effacé à chaque rendu
+W: Le jeton dépasse la taille autorisée
+W: React chiffre mal le stockage local
+E: Une faille XSS, même dans une dépendance, suffit à voler le jeton. Un cookie HttpOnly, Secure et SameSite n'est pas lisible en JavaScript ; la protection CSRF devient alors nécessaire.
+
+@087
+Q: Que fait le découpage du code (code splitting) ?
+C: Il sépare le JavaScript en morceaux chargés au besoin
+W: Il répartit le code entre plusieurs dépôts
+W: Il découpe chaque composant en deux fichiers
+W: Il supprime les fonctions non utilisées
+E: Avec des import() dynamiques, souvent par route, l'utilisateur ne télécharge que ce qu'il consulte. La suppression du code mort est une autre optimisation, le tree shaking.
+
+@088
+Q: Que mesure la métrique INP (Interaction to Next Paint) ?
+C: La latence d'une interaction
+W: Le temps de chargement des images
+W: Le nombre de requêtes de la page
+W: La taille du JavaScript téléchargé
+E: Un clic suivi d'un rendu React long donne un mauvais INP. On découpe les tâches longues, on utilise les transitions et on évite les rendus inutiles. INP a remplacé FID parmi les Core Web Vitals.
+
+@089
+Q: Pourquoi ce contexte provoque-t-il des rendus inutiles ?
+C: La valeur est un nouvel objet à chaque rendu
+W: Un contexte ne peut contenir qu'une valeur simple
+W: useState est interdit dans un Provider
+W: Les consommateurs se rendent toujours deux fois
+E: { utilisateur, setUtilisateur } est recréé à chaque rendu du Provider : tous les consommateurs se rendent, même si l'utilisateur n'a pas changé. On mémorise la valeur avec useMemo, ou on sépare les contextes de lecture et d'écriture.
+```jsx
+function SessionProvider({ children }) {
+  const [utilisateur, setUtilisateur] = useState(null);
+  return (
+    <Session.Provider value={{ utilisateur, setUtilisateur }}>{children}</Session.Provider>
+  );
+}
+```
+
+@090
+Q: Pourquoi éviter un state dérivé qui copie une prop ?
+C: Il se désynchronise quand la prop change
+W: Les props ne peuvent pas initialiser un state
+W: Le composant ne se rend plus du tout
+W: React interdit deux variables de même valeur
+E: useState(props.offre.titre) ne lit la prop qu'au premier rendu : si le parent change d'offre, le state garde l'ancien titre. On calcule la valeur pendant le rendu, ou on réinitialise par une key.
+
+@091
+Q: Qu'est-ce qu'une Server Action dans React 19 et Next.js ?
+C: Une fonction serveur appelée depuis un formulaire
+W: Un composant qui s'exécute deux fois
+W: Une action Redux envoyée au serveur
+W: Un script lancé au démarrage du serveur
+E: Marquée "use server", elle reçoit les données du formulaire sans écrire de route d'API. C'est un point d'entrée public : il faut y vérifier l'authentification, les droits et valider les données comme pour toute API.
+
+@092
+Q: Combien de rendus provoque ce gestionnaire de clic en React 18 et plus ?
+N: 1
+E: React regroupe automatiquement les mises à jour d'un même événement, et depuis la version 18 aussi dans les promesses et les minuteries. Les trois setters donnent un seul rendu.
+```jsx
+function valider() {
+  setEnvoi(true);
+  setErreur(null);
+  setTentatives((t) => t + 1);
+}
+```
+
+@093
+Q: Pourquoi structurer un gros projet frontend par fonctionnalité plutôt que par type de fichier ?
+C: Le code d'une fonctionnalité reste au même endroit
+W: Les outils de construction l'exigent
+W: Cela supprime le besoin de tests
+W: Les fichiers sont plus petits à télécharger
+E: Un dossier offres/ avec ses composants, hooks, appels d'API et tests se modifie sans parcourir dix dossiers components/, hooks/ et services/. Il expose une interface réduite au reste de l'application.
+
+@094
+Q: Quel est le défaut de ce test ?
+C: Il vérifie un détail interne, pas le comportement
+W: Il n'importe pas React
+W: Il est trop rapide pour être fiable
+W: Il teste le serveur au lieu du composant
+E: Vérifier le nom d'un state ou d'une méthode interne casse le test à chaque refactoring, sans détecter de vrai problème. On vérifie ce que voit l'utilisateur : le texte affiché, l'état des boutons, les appels réseau.
+```jsx
+expect(composant.state("chargement")).toBe(false);
+```
+
+@095
+Q: Pourquoi définir un composant à l'intérieur d'un autre est-il une erreur ?
+C: Il est recréé à chaque rendu et perd son state
+W: JavaScript interdit les fonctions imbriquées
+W: Le composant imbriqué n'est jamais affiché
+W: Il est rendu côté serveur seulement
+E: À chaque rendu du parent, Ligne est une nouvelle fonction : React y voit un autre type de composant, démonte l'ancien et monte le nouveau. Le focus et le state des champs sont perdus. On le déclare au niveau du module.
+```jsx
+function Liste({ offres }) {
+  function Ligne({ offre }) {
+    return <input defaultValue={offre.titre} />;
+  }
+  return offres.map((offre) => <Ligne key={offre.id} offre={offre} />);
+}
+```
+
+@096
+Q: Remettre dans l'ordre l'intégration d'une donnée serveur dans un écran.
+O: Définir le type ou le schéma de la réponse
+O: Écrire le hook de requête avec sa clé de cache
+O: Gérer le chargement, l'erreur et le cas vide
+O: Afficher les données dans le composant
+O: Tester l'écran avec des réponses simulées
+E: Le schéma garantit la forme des données ; le hook centralise la requête ; les trois états non nominaux évitent un écran blanc. Les réponses simulées, y compris en erreur, vérifient chaque cas.
+
+@097
+Q: Pourquoi le rendu d'un composant doit-il rester pur ?
+C: React peut le rendre plusieurs fois ou l'interrompre
+W: Les fonctions impures sont interdites en JavaScript
+W: Un rendu impur n'affiche rien
+W: Les composants purs n'ont pas de props
+E: Le rendu concurrent peut commencer un rendu, l'abandonner, puis le refaire. Un appel réseau ou une modification de variable globale dans le rendu serait alors répété. Les effets de bord vont dans les gestionnaires d'événements ou les effets.
+
+@098
+Q: Associer chaque framework à son mécanisme de réactivité.
+P: React => Nouveau rendu du composant au changement de state
+P: Angular => Signaux et détection des changements
+P: Vue => Proxys qui suivent les lectures de données
+P: Svelte => Compilation des mises à jour au build
+E: React relance la fonction du composant et compare ; Vue et les signaux savent précisément quelle donnée a changé ; Svelte génère le code de mise à jour à la compilation. Les concepts de composant et de flux de données restent communs.
+
+@099
+Q: Quel critère compte le plus pour choisir entre React, Angular et Vue en équipe ?
+C: L'équipe et le besoin du projet
+W: Le nombre d'étoiles sur GitHub
+W: Le framework le plus récent
+W: La taille du logo de la documentation
+E: Angular fournit un cadre complet et imposé, apprécié des grandes équipes ; React laisse choisir chaque brique ; Vue est réputé progressif. La maintenance sur des années et le recrutement comptent plus que les modes.
+
+@100
+Q: Que faut-il vérifier avant de mettre en production une application React ?
+C: Build, erreurs et accessibilité
+W: Que le mode développement est activé
+W: Que les sources sont lisibles en clair
+W: Que les tests sont désactivés
+E: Le build de production retire les contrôles de développement et minifie le code. On vérifie aussi la remontée des erreurs, les performances mesurées et l'accessibilité. Publier les cartes de sources expose le code d'origine : c'est un choix à faire en connaissance de cause.

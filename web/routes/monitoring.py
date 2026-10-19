@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import (
     HTMLResponse,
     PlainTextResponse,
@@ -10,6 +10,7 @@ from fastapi.responses import (
     Response,
 )
 
+from job.offer_purge import find_offers_to_purge, parse_purge_words, purge_offers
 from job.presentation import (
     CHART_PALETTE,
     EXECUTION_STATUS_LABELS,
@@ -41,9 +42,17 @@ from utils.log_reader import (
     export_logs,
     read_log_entries,
 )
-from utils.logger import get_retention_days
+from utils.logger import get_logger, get_retention_days
 from web.dependencies import get_database_file, require_csrf
-from web.rendering import TONE_ICONS, build_bar_chart, build_pie, templates
+from web.rendering import (
+    TONE_ICONS,
+    build_bar_chart,
+    build_pie,
+    get_message_tone,
+    templates,
+)
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -51,20 +60,18 @@ router = APIRouter()
 MAX_DISPLAYED_EXECUTIONS = 200
 
 
-@router.get("/quality", response_class=HTMLResponse)
-def show_quality(
-    request: Request,
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Affiche le remplissage des champs, globalement puis par source."""
+def render_quality(pRequest, pDatabaseFile, pPurge=None, pStatusCode=200):
+    """Affiche le remplissage des champs, puis la purge des offres hors sujet."""
 
     vReport = get_quality_report(pDatabaseFile)
 
     rResponse = templates.TemplateResponse(
-        request,
+        pRequest,
         "quality.html",
         {
             "active_page": "quality",
+            "purge": pPurge or {"words": "", "offers": None, "message": None},
+            "message_tone": get_message_tone(pStatusCode),
             "report": vReport,
             "problems_text": describe_problems(vReport["problems"]),
             "problems_help": PROBLEMS_HELP,
@@ -85,7 +92,115 @@ def show_quality(
                 pFillWidth=True,
             ),
         },
+        status_code=pStatusCode,
     )
+
+    return rResponse
+
+
+@router.get("/quality", response_class=HTMLResponse)
+def show_quality(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche la page de qualité des données."""
+
+    rResponse = render_quality(request, pDatabaseFile)
+
+    return rResponse
+
+
+@router.post(
+    "/quality/purge/preview",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def preview_purge(
+    request: Request,
+    pWords: str = Form("", alias="words"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Liste les offres hors sujet qui seraient supprimées."""
+
+    try:
+        vOffers = find_offers_to_purge(pDatabaseFile, parse_purge_words(pWords))
+
+    except ValueError as vException:
+        rResponse = render_quality(
+            request,
+            pDatabaseFile,
+            {"words": pWords, "offers": None, "message": str(vException)},
+            400,
+        )
+
+    else:
+        rResponse = render_quality(
+            request,
+            pDatabaseFile,
+            {
+                "words": pWords,
+                "offers": vOffers,
+                "message": (
+                    f"{len(vOffers)} offre(s) seraient supprimées."
+                    if vOffers
+                    else "Aucune offre à supprimer pour ces mots."
+                ),
+            },
+        )
+
+    return rResponse
+
+
+@router.post(
+    "/quality/purge",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def run_purge(
+    request: Request,
+    pWords: str = Form("", alias="words"),
+    pConfirm: str = Form("", alias="confirm"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Supprime les offres hors sujet, après confirmation et sauvegarde."""
+
+    vPurge = {"words": pWords, "offers": None}
+
+    try:
+        vWords = parse_purge_words(pWords)
+
+        if pConfirm != "1":
+            raise ValueError("Cochez la case de confirmation pour supprimer.")
+
+        vCount, vBackupFile = purge_offers(pDatabaseFile, vWords, datetime.now())
+
+    except ValueError as vException:
+        rResponse = render_quality(
+            request, pDatabaseFile, {**vPurge, "message": str(vException)}, 400
+        )
+
+    except Exception:
+        logger.exception("Échec de la purge des offres depuis le web")
+
+        rResponse = render_quality(
+            request,
+            pDatabaseFile,
+            {**vPurge, "message": "La suppression a échoué. Voir les journaux."},
+            500,
+        )
+
+    else:
+        rResponse = render_quality(
+            request,
+            pDatabaseFile,
+            {
+                **vPurge,
+                "message": f"{vCount} offre(s) supprimée(s)"
+                + (f", sauvegarde : {vBackupFile.name}" if vBackupFile else "")
+                + ". Ajoutez ces mots aux mots à exclure de vos recherches pour "
+                "qu'elles ne reviennent pas.",
+            },
+        )
 
     return rResponse
 

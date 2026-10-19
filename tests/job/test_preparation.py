@@ -18,6 +18,7 @@ from job.profile import (
     load_profile,
     profile_to_texts,
     save_profile,
+    suggest_keywords,
 )
 from storage.database import initialize_database
 
@@ -221,3 +222,19 @@ def test_add_profile_skill(tmp_path):
     assert not add_profile_skill(vDatabaseFile, "  ")
     assert add_profile_skill(vDatabaseFile, "Docker")
     assert load_profile(vDatabaseFile)["skills"] == ["Python", "Docker"]
+
+
+def test_suggest_keywords(profile):
+    """Vérifie l'ordre des suggestions, sans doublon ni intitulé trop long."""
+
+    profile["experiences"].append({"title": "Responsable " + "x" * 40})
+
+    assert suggest_keywords(profile) == [
+        "Développeur backend",
+        "Tech lead",
+        "Java",
+        "Spring",
+        "SQL",
+        "Docker",
+    ]
+    assert suggest_keywords(profile, 2) == ["Développeur backend", "Tech lead"]

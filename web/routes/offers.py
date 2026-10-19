@@ -46,6 +46,7 @@ from job.manual_offers import (
 )
 from job.interview_revision import build_offer_revision
 from job.quiz import THEME_STATUSES, load_active_quiz
+from job.quiz_exam import describe_exam_results, load_exam_results
 from job.preparation import (
     MATCH_FILTERS,
     filter_by_match,
@@ -75,6 +76,7 @@ from job.presentation import (
     prepare_offer,
 )
 from job.profile import is_profile_empty, load_profile
+from job.star_answers import load_star_answers
 from job.schedule import request_immediate_run
 from job.settings import load_settings
 from job.sources.registry import SOURCES
@@ -472,6 +474,9 @@ def show_offer(
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
             "preparation": build_preparation(pDatabaseFile, vPrepared),
             "revision": build_revision(pDatabaseFile, vPrepared),
+            "exam_results": describe_exam_results(
+                load_exam_results(pDatabaseFile, (pSource, str(pSourceId)))
+            ),
             "theme_statuses": THEME_STATUSES,
             "compared_fields": COMPARED_FIELDS,
             "application": get_application(pDatabaseFile, pSource, pSourceId),
@@ -791,7 +796,9 @@ def build_preparation(pDatabaseFile, pOffer):
     vProfile = load_profile(pDatabaseFile)
 
     rPreparation = (
-        None if is_profile_empty(vProfile) else prepare_application(vProfile, pOffer)
+        None
+        if is_profile_empty(vProfile)
+        else prepare_application(vProfile, pOffer, load_star_answers(pDatabaseFile))
     )
 
     return rPreparation

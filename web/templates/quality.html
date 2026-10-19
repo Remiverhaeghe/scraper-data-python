@@ -68,5 +68,32 @@
     {% endif %}
 </article>
 
+<article class="card">
+    <h2>Offres hors sujet</h2>
+    <p class="card-subtitle">Supprime les offres dont le titre contient l'un des mots. Les offres avec candidature, relance ou pièce jointe sont toujours gardées, et la base est sauvegardée avant suppression.</p>
+    <form class="inline-form" method="post" action="{{ url_for('preview_purge').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="text" name="words" value="{{ purge.words }}" placeholder="Ex. stage, alternance, commercial" aria-label="Mots à rechercher dans le titre" required>
+        <button class="button" type="submit">{{ icon("search", 16) }} Aperçu</button>
+    </form>
+    {% if purge.offers %}
+    <ul class="purge-list">
+        {% for offer in purge.offers %}
+        <li>{{ offer.title }}{% if offer.company %} · {{ offer.company }}{% endif %} <span class="muted">· {{ offer.source }}</span></li>
+        {% endfor %}
+    </ul>
+    <form class="reset-form" method="post" action="{{ url_for('run_purge').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="words" value="{{ purge.words }}">
+        <label class="check">
+            <input type="checkbox" name="confirm" value="1" required>
+            Je confirme la suppression de ces {{ purge.offers | length }} offre(s)
+        </label>
+        <button class="button button-danger" type="submit">{{ icon("trash-2", 16) }} Supprimer</button>
+    </form>
+    {% endif %}
+    {% if purge.message %}<p class="application-message tone-{{ message_tone if message_tone != 'success' or not purge.offers else 'warning' }}" role="status">{{ purge.message }}</p>{% endif %}
+</article>
+
 <p class="muted">{{ report.total.count }} offre(s) analysée(s), {{ report.rejected }} écartée(s) faute de titre et de description.</p>
 {% endblock %}

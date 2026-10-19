@@ -5,6 +5,7 @@ import re
 from datetime import datetime, timedelta
 
 from job.presentation import describe_search, describe_sources
+from storage.saved_searches import get_saved_searches
 from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
 
@@ -26,6 +27,9 @@ MIN_SCORE_CHOICES = (0, 30, 50, 70, 90)
 
 # Demande de recherche immédiate déposée depuis le web, traitée par le planificateur
 RUN_REQUEST_KEY = "schedule_run_requested"
+
+# Noms des recherches enregistrées lancées en plus de la recherche planifiée
+EXTRA_SEARCHES_KEY = "schedule_extra_searches"
 
 # Jour du dernier rappel de relances envoyé : un seul e-mail par jour
 FOLLOW_UP_REMINDER_KEY = "follow_up_reminder_sent"
@@ -79,6 +83,28 @@ def parse_search(pValue):
     return rSearch
 
 
+def parse_names(pValue):
+    """Retourne la liste de noms enregistrée, vide si elle est absente ou illisible."""
+
+    rNames = []
+
+    if pValue:
+        try:
+            vNames = json.loads(pValue)
+
+        except ValueError:
+            vNames = None
+
+        if isinstance(vNames, list):
+            rNames = [vName for vName in vNames if isinstance(vName, str)]
+        else:
+            logger.warning(
+                "Recherches supplémentaires planifiées illisibles : ignorées"
+            )
+
+    return rNames
+
+
 def parse_date(pValue):
     """Retourne la date enregistrée, ou None si elle est absente ou illisible."""
 
@@ -100,6 +126,7 @@ def load_schedule(pDatabaseFile):
         "enabled": vValues.get(ENABLED_KEY) == "1",
         "interval_hours": parse_interval(vValues.get(INTERVAL_KEY)),
         "search": parse_search(vValues.get(SEARCH_KEY)),
+        "extra_searches": parse_names(vValues.get(EXTRA_SEARCHES_KEY)),
         "last_run": parse_date(vValues.get(LAST_RUN_KEY)),
         "email": vValues.get(EMAIL_KEY) or None,
         "min_score": parse_min_score(vValues.get(MIN_SCORE_KEY)),
@@ -126,6 +153,57 @@ def save_scheduled_search(pDatabaseFile, pSources, pCriteria):
     )
 
     logger.info("Recherche planifiée enregistrée sur %s source(s)", len(pSources))
+
+
+def save_extra_searches(pDatabaseFile, pNames):
+    """Enregistre les recherches enregistrées que le planificateur lance en plus."""
+
+    vNames = list(dict.fromkeys(pNames))
+
+    save_setting_values(
+        pDatabaseFile,
+        {EXTRA_SEARCHES_KEY: json.dumps(vNames, ensure_ascii=False)},
+    )
+
+    logger.info("%s recherche(s) supplémentaire(s) planifiée(s)", len(vNames))
+
+
+def get_scheduled_searches(pDatabaseFile, pSchedule):
+    """Retourne la recherche planifiée suivie des recherches enregistrées ajoutées."""
+
+    rSearches = []
+
+    if pSchedule["search"] is not None:
+        rSearches.append({"name": "Recherche planifiée", **pSchedule["search"]})
+
+    if pSchedule.get("extra_searches"):
+        vSaved = {
+            vSearch["name"]: vSearch for vSearch in get_saved_searches(pDatabaseFile)
+        }
+
+        for vName in pSchedule["extra_searches"]:
+            if vName in vSaved:
+                rSearches.append(vSaved[vName])
+            else:
+                logger.warning(
+                    "Recherche enregistrée planifiée introuvable, ignorée : %s", vName
+                )
+
+    return rSearches
+
+
+def describe_extra_searches(pSchedule):
+    """Résume les recherches enregistrées lancées en plus, ou une chaîne vide."""
+
+    vNames = pSchedule.get("extra_searches")
+
+    rText = (
+        f"Avec {len(vNames)} recherche(s) enregistrée(s) : {', '.join(vNames)}"
+        if vNames
+        else ""
+    )
+
+    return rText
 
 
 def clear_scheduled_search(pDatabaseFile):

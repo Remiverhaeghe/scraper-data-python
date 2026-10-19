@@ -22,7 +22,12 @@ from job.quiz import (
     load_active_quiz,
 )
 from job.quiz_domains import DOMAIN_ICONS
-from job.quiz_types import DEFAULT_TYPE, get_type
+from job.quiz_types import (
+    DEFAULT_TYPE,
+    MAX_TEXT_ANSWER_LENGTH,
+    get_type,
+    grade_answer,
+)
 from storage.quiz_answers import get_last_answers, save_synced_answers
 from storage.quiz_questions import get_quiz_assets, get_quiz_guide, get_quiz_guides
 from utils.logger import get_logger
@@ -43,6 +48,10 @@ MAX_SYNC_ANSWERS = 500
 
 # Identifiant de réponse choisi par le téléphone, par exemple un UUID
 CLIENT_ID_PATTERN = re.compile(r"[A-Za-z0-9-]{8,64}")
+
+# Types interactifs envoyés au téléphone, à part des QCM : une application qui ne
+# les connaît pas encore ignore simplement la liste qui les contient.
+MOBILE_INTERACTIVE_TYPES = ("numerique", "ordre", "association")
 
 # Une réponse datée de plus loin est refusée : horloge du téléphone déréglée.
 MAX_CLOCK_DRIFT = timedelta(days=1)
@@ -100,13 +109,20 @@ def build_quiz_package(pDatabaseFile, pNow):
             }
             for vKey, vTheme in vQuiz.items()
         ],
-        # L'application mobile ne sait afficher que les QCM.
         "questions": [
             {**vQuestion, "theme": vKey}
             for vKey, vTheme in vQuiz.items()
             for vQuestion in vTheme["questions"]
             if get_type(vQuestion) == DEFAULT_TYPE
         ],
+        # Éléments dans l'ordre correct : le téléphone les mélange à l'affichage.
+        "interactive_questions": [
+            {**vQuestion, "theme": vKey, "type": get_type(vQuestion)}
+            for vKey, vTheme in vQuiz.items()
+            for vQuestion in vTheme["questions"]
+            if get_type(vQuestion) in MOBILE_INTERACTIVE_TYPES
+        ],
+        "interactive_types": list(MOBILE_INTERACTIVE_TYPES),
         "assets": get_quiz_assets(pDatabaseFile),
         "guides": [
             get_quiz_guide(pDatabaseFile, vGuide["name"])
@@ -167,6 +183,30 @@ def build_progress(pDatabaseFile, pNow):
     return rProgress
 
 
+def grade_synced_response(pQuestion, pResponse, pClientId):
+    """Corrige la réponse du téléphone à une question interactive ; retourne si elle est juste."""
+
+    # Calcul : texte court ou nombre ; ordre et association : liste d'indices.
+    vReadable = (
+        isinstance(pResponse, (str, int, float))
+        and not isinstance(pResponse, bool)
+        and len(str(pResponse)) <= MAX_TEXT_ANSWER_LENGTH
+        if get_type(pQuestion) == "numerique"
+        else isinstance(pResponse, list)
+    )
+
+    if not vReadable:
+        raise ValueError(f"{pClientId} : réponse illisible")
+
+    try:
+        rCorrect = grade_answer(pQuestion, pResponse)[0]
+
+    except ValueError as vException:
+        raise ValueError(f"{pClientId} : réponse illisible") from vException
+
+    return rCorrect
+
+
 def check_synced_answer(pQuiz, pAnswer, pNow):
     """Vérifie une réponse du téléphone ; retourne la ligne à enregistrer.
 
@@ -183,17 +223,25 @@ def check_synced_answer(pQuiz, pAnswer, pNow):
 
     vQuestion, vThemeKey = find_question(pQuiz, pAnswer.get("question_id"))
 
-    if vQuestion is None or get_type(vQuestion) != DEFAULT_TYPE:
+    vType = None if vQuestion is None else get_type(vQuestion)
+
+    if vType not in (DEFAULT_TYPE, *MOBILE_INTERACTIVE_TYPES):
         raise ValueError(f"{vClientId} : question inconnue")
 
-    vChoice = pAnswer.get("choice")
+    if vType == DEFAULT_TYPE:
+        vChoice = pAnswer.get("choice")
 
-    if (
-        not isinstance(vChoice, int)
-        or isinstance(vChoice, bool)
-        or not 0 <= vChoice < len(vQuestion["choices"])
-    ):
-        raise ValueError(f"{vClientId} : choix hors des réponses proposées")
+        if (
+            not isinstance(vChoice, int)
+            or isinstance(vChoice, bool)
+            or not 0 <= vChoice < len(vQuestion["choices"])
+        ):
+            raise ValueError(f"{vClientId} : choix hors des réponses proposées")
+
+        vCorrect = vChoice == vQuestion["answer"]
+
+    else:
+        vCorrect = grade_synced_response(vQuestion, pAnswer.get("response"), vClientId)
 
     try:
         vAnsweredAt = datetime.fromisoformat(str(pAnswer.get("answered_at")))
@@ -211,7 +259,7 @@ def check_synced_answer(pQuiz, pAnswer, pNow):
         vClientId,
         vQuestion["id"],
         vThemeKey,
-        vChoice == vQuestion["answer"],
+        vCorrect,
         vAnsweredAt.isoformat(timespec="seconds"),
     )
 

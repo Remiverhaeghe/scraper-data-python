@@ -32,6 +32,8 @@ from job.presentation import (
 )
 from job.profile import is_profile_empty, load_profile
 from job.quiz import load_active_quiz
+from job.quiz_exam import describe_exam_results, load_exam_results
+from job.star_answers import load_star_answers
 from storage.job_offers import set_availability
 from utils.link_checker import check_offer_link
 from utils.logger import get_logger
@@ -132,6 +134,11 @@ class OfferAssistantPanel(QWidget):
         )
         self.company_info_button.clicked.connect(self.show_company_info)
 
+        self.exam_results_label = QLabel()
+        self.exam_results_label.setObjectName("cardSubtitle")
+        self.exam_results_label.setWordWrap(True)
+        self.exam_results_label.hide()
+
         self.assistant_label = QLabel()
         self.assistant_label.setObjectName("cardSubtitle")
         self.assistant_label.setWordWrap(True)
@@ -151,6 +158,7 @@ class OfferAssistantPanel(QWidget):
         vLayout.setSpacing(4)
         vLayout.addWidget(self.prepare_button)
         vLayout.addWidget(self.exam_button)
+        vLayout.addWidget(self.exam_results_label)
         vLayout.addWidget(self.chatgpt_button)
         vLayout.addWidget(self.company_info_button)
         vLayout.addWidget(self.assistant_label)
@@ -174,6 +182,7 @@ class OfferAssistantPanel(QWidget):
             else "Activité, taille et siège, depuis l'annuaire public des entreprises"
         )
         self.availability_button.setEnabled(safe_url(vOffer.get("url")) != "#")
+        self.show_exam_results(vOffer)
         self.show_availability(
             describe_availability(vOffer),
             (
@@ -200,8 +209,29 @@ class OfferAssistantPanel(QWidget):
             show_preparation(
                 self,
                 self.offer.get("title") or "offre",
-                prepare_application(vProfile, self.offer),
+                prepare_application(
+                    vProfile, self.offer, load_star_answers(self.database_file)
+                ),
             )
+
+    def show_exam_results(self, pOffer):
+        """Rappelle les notes des examens blancs déjà passés sur l'offre."""
+        vText = ""
+
+        if pOffer.get("source"):
+            try:
+                vText = describe_exam_results(
+                    load_exam_results(
+                        self.database_file,
+                        (pOffer["source"], str(pOffer.get("source_id"))),
+                    )
+                )
+
+            except Exception:
+                logger.exception("Impossible de lire les notes des examens blancs")
+
+        self.exam_results_label.setText(vText)
+        self.exam_results_label.setVisible(bool(vText))
 
     def request_exam(self):
         """Montre les thèmes à revoir pour l'offre, puis propose l'examen blanc."""

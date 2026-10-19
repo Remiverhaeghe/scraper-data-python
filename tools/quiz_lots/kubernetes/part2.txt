@@ -1,0 +1,440 @@
+@051
+Q: Pourquoi un Pod en arrêt doit-il gérer le signal SIGTERM ?
+C: Pour finir ses requêtes avant d'être tué
+W: Pour redémarrer plus vite sur un autre nœud
+W: Pour sauvegarder l'image du conteneur
+W: Pour prévenir l'administrateur par courriel
+E: Kubernetes envoie SIGTERM, attend terminationGracePeriodSeconds, 30 s par défaut, puis SIGKILL. Une application qui ignore le signal coupe des requêtes en cours à chaque déploiement.
+
+@052
+Q: Quelle commande relance tous les Pods d'un Deployment sans changer sa configuration ?
+C: kubectl rollout restart deployment/api
+W: kubectl restart deployment/api
+W: kubectl delete deployment/api --soft
+W: kubectl reload deployment/api
+E: Elle ajoute une annotation datée qui déclenche une mise à jour progressive, sans interruption. Utile après la modification d'un Secret lu seulement au démarrage.
+
+@053
+Q: Pourquoi un Pod ne voit-il pas la nouvelle valeur d'une ConfigMap injectée en variable d'environnement ?
+C: Les variables sont lues au démarrage seulement
+W: Les ConfigMaps ne peuvent pas être modifiées
+W: La ConfigMap est mise en cache par le registre
+W: Les variables sont chiffrées dans le Pod
+E: Il faut redémarrer les Pods. Montée en fichier, la ConfigMap est mise à jour au bout d'un moment, mais l'application doit relire le fichier. Inclure une empreinte de la configuration dans les annotations déclenche le redémarrage automatiquement.
+
+@054
+Q: À quoi servent les teintes (taints) et tolérances ?
+C: À réserver des nœuds à certains Pods
+W: À colorer les Pods dans la console
+W: À marquer les images vulnérables
+W: À signaler les Pods en erreur
+E: Un nœud teinté refuse les Pods sans tolérance correspondante : on réserve ainsi des nœuds avec GPU ou ceux du plan de contrôle. Pour attirer un Pod vers un nœud, on utilise l'affinité.
+
+@055
+Q: Associer chaque état ou motif à sa cause la plus probable.
+P: ImagePullBackOff => Image ou identifiants de registre erronés
+P: CrashLoopBackOff => Application qui s'arrête au démarrage
+P: Pending => Aucun nœud ne peut accueillir le Pod
+P: OOMKilled => Limite de mémoire dépassée
+E: Ces quatre motifs couvrent la majorité des Pods en échec. Le premier réflexe reste kubectl describe pour lire les événements, puis kubectl logs --previous.
+
+@056
+Q: Que garantit un PodDisruptionBudget ?
+C: Un minimum de Pods pendant une maintenance
+W: Un budget de facturation pour le cluster
+W: Un délai maximal de démarrage des Pods
+W: Une limite de mémoire pour tout le Namespace
+E: minAvailable: 2 empêche de vider un nœud si cela laisserait moins de deux Pods disponibles. Il protège des interruptions volontaires, comme les mises à jour de nœuds, pas des pannes.
+
+@057
+Q: Que vérifie cette commande avant une action ?
+C: Le droit de supprimer des Pods
+W: Si les Pods sont supprimables sans perte
+W: Si le cluster est joignable
+W: Si le Namespace existe
+E: kubectl auth can-i interroge RBAC : yes ou no. Avec --as=system:serviceaccount:espace:compte, on vérifie les droits d'un compte de service, utile pour diagnostiquer une erreur Forbidden.
+```bash
+kubectl auth can-i delete pods -n production
+```
+
+@058
+Q: Quelle est la bonne pratique pour fournir des secrets d'un coffre-fort externe aux Pods ?
+C: Un opérateur qui synchronise les secrets
+W: Copier les secrets dans l'image au build
+W: Écrire les secrets dans la ConfigMap
+W: Passer les secrets en argument de kubectl
+E: External Secrets Operator ou le pilote CSI des coffres lisent Vault ou le coffre du cloud et créent les Secrets Kubernetes. Les valeurs ne passent jamais par Git ni par l'image.
+
+@059
+Q: Que fait la commande helm upgrade --install ?
+C: Elle installe la release ou la met à jour
+W: Elle met à jour Helm lui-même
+W: Elle installe tous les charts du dépôt
+W: Elle force la suppression puis la réinstallation
+E: La même commande sert au premier déploiement et aux suivants : pratique en intégration continue. --atomic annule automatiquement la mise à jour si elle échoue.
+
+@060
+Q: Combien de Pods au maximum peuvent tourner pendant cette mise à jour, avec 4 réplicas ?
+N: 5
+E: maxSurge: 1 autorise un Pod de plus que les 4 demandés ; maxUnavailable: 0 interdit de descendre sous 4 Pods prêts. La mise à jour se fait un Pod à la fois, sans perte de capacité.
+```yaml
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+```
+
+@061
+Q: Qu'est-ce qu'une Route dans OpenShift ?
+C: L'exposition HTTP propre à OpenShift
+W: Une règle de routage entre deux nœuds
+W: Un chemin dans le registre d'images
+W: Une table de routage IP du cluster
+E: La Route existait avant l'Ingress et joue le même rôle, avec gestion TLS intégrée. OpenShift accepte aussi les Ingress, convertis en Routes.
+
+@062
+Q: Qu'est-ce qu'un conteneur d'initialisation (initContainer) ?
+C: Un conteneur exécuté avant ceux de l'application
+W: Le premier conteneur créé dans le cluster
+W: Un conteneur qui installe Kubernetes
+W: Un conteneur qui démarre les nœuds
+E: Il attend une dépendance, applique une migration ou prépare des fichiers, puis se termine. Les conteneurs applicatifs ne démarrent qu'après son succès.
+
+@063
+Q: Pourquoi limiter le nombre de ressources d'un Namespace avec un ResourceQuota ?
+C: Pour qu'une équipe ne sature pas le cluster
+W: Pour accélérer le démarrage des Pods
+W: Pour chiffrer les ressources de l'espace
+W: Pour supprimer les Pods inutilisés
+E: Le quota plafonne processeur, mémoire, nombre de Pods ou de volumes par espace. Avec une LimitRange, chaque conteneur reçoit des valeurs par défaut s'il n'en déclare pas.
+
+@064
+Q: Que fait la commande kubectl diff -f deploiement.yaml ?
+C: Elle montre ce qu'apply changerait
+W: Elle compare deux clusters entre eux
+W: Elle compare deux images de conteneur
+W: Elle annule les dernières modifications
+E: Relire le diff avant d'appliquer évite les surprises, notamment quand quelqu'un a modifié la ressource à la main. C'est la même idée que terraform plan.
+```bash
+kubectl diff -f deploiement.yaml
+kubectl apply -f deploiement.yaml
+```
+
+@065
+Q: Remettre dans l'ordre le déploiement d'une nouvelle version d'une application.
+O: Construire et pousser l'image avec une version précise
+O: Mettre à jour la version dans le manifeste ou les valeurs Helm
+O: Appliquer et suivre la mise à jour progressive
+O: Vérifier les sondes, les journaux et les métriques
+O: Revenir en arrière si les indicateurs se dégradent
+E: Le suivi avec kubectl rollout status et les métriques transforme le déploiement en opération contrôlée. Le retour arrière doit être prêt avant de commencer.
+
+@066
+Q: Quel est le rôle du plan de contrôle (control plane) ?
+C: Décider et maintenir l'état du cluster
+W: Exécuter les conteneurs applicatifs
+W: Stocker les images des applications
+W: Servir les pages web des utilisateurs
+E: L'API server reçoit les demandes, etcd stocke l'état, le scheduler place les Pods, les contrôleurs corrigent les écarts entre l'état voulu et l'état réel. Les nœuds de travail exécutent les Pods.
+
+@067
+Q: Qu'est-ce qu'une boucle de réconciliation ?
+C: Un contrôleur qui corrige l'écart à l'état voulu
+W: Un Pod qui redémarre en boucle
+W: Une sauvegarde périodique d'etcd
+W: Un test de charge répété sur le cluster
+E: Chaque contrôleur observe l'état réel, le compare à l'état déclaré et agit : recréer un Pod, ajuster des réplicas. C'est pourquoi une modification manuelle sur un Pod géré est vite écrasée.
+
+@068
+Q: Qu'est-ce qu'un opérateur Kubernetes ?
+C: Un contrôleur qui automatise une application
+W: Un administrateur certifié du cluster
+W: Une commande kubectl avancée
+W: Un nœud réservé à la supervision
+E: Un opérateur ajoute une ressource personnalisée, comme PostgresCluster, et un contrôleur qui sait installer, sauvegarder, mettre à jour ou basculer la base. Il code le savoir-faire d'un administrateur.
+
+@069
+Q: Pourquoi définir les requests est-il important pour le placement des Pods ?
+C: Le scheduler place les Pods selon les requests
+W: Les requests fixent le nombre de réplicas
+W: Sans requests, le Pod est refusé
+W: Les requests réservent une adresse IP
+E: Le planificateur additionne les requests des Pods d'un nœud. Sans elles, il entasse les Pods, qui se gênent ensuite. Elles servent aussi au calcul de l'autoscaling et à la priorité d'éviction.
+
+@070
+Q: Que se passe-t-il quand un conteneur dépasse sa limite de processeur ?
+C: Il est ralenti, pas tué
+W: Il est tué immédiatement
+W: Il est déplacé sur un autre nœud
+W: Il reçoit plus de processeur automatiquement
+E: Le processeur est une ressource compressible : le noyau limite le temps accordé, ce qui augmente les temps de réponse. La mémoire ne l'est pas : son dépassement tue le conteneur.
+
+@071
+Q: Quel problème pose cette image ?
+C: Elle garde sources et outils de build
+W: Elle ne peut pas tourner sur Kubernetes
+W: Elle utilise un port interdit
+W: Elle n'a pas de nom de version
+E: L'image finale contient le JDK, Maven et les sources : plus lourde et plus de vulnérabilités. Une construction en plusieurs étapes ne garde que le .jar et un environnement d'exécution minimal.
+```dockerfile
+FROM maven:3.9-eclipse-temurin-21
+COPY . /app
+RUN mvn -f /app/pom.xml package
+CMD ["java", "-jar", "/app/target/api.jar"]
+```
+
+@072
+Q: Que vérifie un outil comme Trivy dans une chaîne d'intégration ?
+C: Les vulnérabilités connues d'une image
+W: La vitesse de démarrage d'un Pod
+W: La syntaxe des fichiers YAML seulement
+W: La consommation de mémoire en production
+E: Trivy compare les paquets de l'image aux bases de vulnérabilités et analyse aussi les manifestes. On bloque le pipeline sur les failles critiques corrigibles.
+
+@073
+Q: Qu'est-ce que l'approche GitOps ?
+C: Git décrit l'état voulu, un agent l'applique
+W: Les développeurs se connectent au cluster par Git
+W: Les images sont stockées dans Git
+W: Les journaux du cluster sont commités dans Git
+E: Argo CD ou Flux comparent en continu le cluster au dépôt et corrigent les écarts. Chaque changement passe par une revue, l'historique Git devient l'historique des déploiements, et personne n'a besoin d'accès direct en écriture.
+
+@074
+Q: Pourquoi une politique réseau « tout refuser » par défaut est-elle recommandée ?
+C: Un Pod compromis reste confiné
+W: Elle accélère le réseau entre les Pods
+W: Elle est obligatoire pour démarrer un Pod
+W: Elle réduit la consommation des nœuds
+E: On refuse tout dans l'espace, puis on autorise les flux nécessaires : Ingress vers l'API, API vers la base. Un attaquant qui prend un Pod reste confiné. Penser à autoriser le DNS.
+
+@075
+Q: Que contrôle Pod Security Admission ?
+C: Le niveau de sécurité des Pods d'un espace
+W: L'accès des utilisateurs à la console
+W: Le chiffrement des volumes persistants
+W: La signature des charts Helm
+E: Trois niveaux : privileged, baseline et restricted, appliqués par une étiquette sur le Namespace. restricted refuse les conteneurs root, privilégiés ou avec escalade de privilèges. Il remplace les PodSecurityPolicy.
+
+@076
+Q: Pourquoi ce compte de service est-il dangereux ?
+C: Il donne des droits d'administrateur
+W: Il empêche l'application de démarrer
+W: Il expose l'application sur Internet
+W: Il supprime les Secrets à chaque démarrage
+E: cluster-admin permet tout sur tout le cluster : une faille dans l'application devient une prise de contrôle complète. On crée un Role limité aux ressources et actions nécessaires, dans un seul espace.
+```yaml
+kind: ClusterRoleBinding
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: api-offres
+```
+
+@077
+Q: Combien de Pods prêts au minimum restent pendant le vidage d'un nœud avec 3 réplicas et minAvailable: 2 ?
+N: 2
+E: Le PodDisruptionBudget bloque l'éviction tant qu'elle ferait passer sous deux Pods disponibles. kubectl drain attend que le remplaçant soit prêt avant de déplacer le suivant.
+
+@078
+Q: Comment répartir les réplicas d'une application sur plusieurs zones de disponibilité ?
+C: Avec topologySpreadConstraints
+W: Avec un Service de type ExternalName
+W: Avec plusieurs ConfigMaps
+W: Avec une étiquette latest
+E: topologyKey: topology.kubernetes.io/zone et maxSkew: 1 répartissent les Pods équitablement : la perte d'une zone n'arrête pas l'application. L'anti-affinité entre Pods donne un résultat proche, moins finement.
+
+@079
+Q: Pourquoi externaliser l'état d'une application plutôt que l'écrire sur le disque du Pod ?
+C: Les Pods sont remplaçables à tout moment
+W: Les disques des Pods sont en lecture seule
+W: Kubernetes interdit l'écriture de fichiers
+W: Les fichiers ralentissent le réseau
+E: Un Pod peut être recréé ailleurs à chaque déploiement, panne ou mise à l'échelle. Sessions et fichiers vont dans une base, un cache partagé ou un stockage objet. Les Pods sans état se mettent à l'échelle librement.
+
+@080
+Q: Que fait la commande helm rollback api 3 ?
+C: Elle rétablit la révision 3 de la release
+W: Elle supprime les trois dernières versions
+W: Elle relance trois Pods de l'application
+W: Elle met à jour le chart en version 3
+E: helm history api liste les révisions. Le retour arrière crée une nouvelle révision identique à la 3. Les migrations de base de données, elles, ne sont pas annulées : elles doivent rester compatibles avec la version précédente.
+
+@081
+Q: Que fait le scheduler quand un nœud a assez de processeur mais pas assez de mémoire pour un Pod ?
+C: Il ne place pas le Pod sur ce nœud
+W: Il place le Pod et réduit sa mémoire
+W: Il ajoute de la mémoire au nœud
+W: Il supprime un autre Pod du nœud
+E: Toutes les requests doivent tenir. Si aucun nœud ne convient, le Pod reste Pending, sauf si un autoscaler de cluster ajoute un nœud. La préemption peut évincer des Pods de priorité inférieure.
+
+@082
+Q: Quel outil vérifie les manifestes Kubernetes contre des règles de bonnes pratiques ?
+C: kube-linter ou Kyverno
+W: kubectl top
+W: helm repo
+W: etcdctl
+E: kube-linter signale en revue les conteneurs root, sans limites ou sans sondes. Kyverno ou OPA Gatekeeper appliquent des règles à l'admission : le cluster refuse les manifestes non conformes.
+
+@083
+Q: Que garantit la signature des images avec Cosign ?
+C: L'image vient bien de la chaîne de build
+W: L'image ne contient aucune vulnérabilité
+W: L'image est plus petite après signature
+W: L'image tourne sans privilèges
+E: Le pipeline signe l'image ; une règle d'admission refuse les images non signées. Une image poussée à la main ou par un attaquant dans le registre ne peut pas être déployée.
+
+@084
+Q: Associer chaque outil à son usage.
+P: Helm => Paquets et versions de manifestes
+P: Kustomize => Variantes par superposition de YAML
+P: Argo CD => Déploiement continu par GitOps
+P: Prometheus => Collecte des métriques
+E: Kustomize, intégré à kubectl avec -k, adapte une base par environnement sans modèles. Helm convient mieux à la distribution d'un logiciel paramétrable. Les deux sont souvent déployés par Argo CD.
+
+@085
+Q: Pourquoi ne pas monter le socket Docker de l'hôte dans un Pod ?
+C: Il donne un contrôle total sur le nœud
+W: Il ralentit le démarrage du Pod
+W: Il empêche les journaux de fonctionner
+W: Il n'existe pas sur Linux
+E: Accéder au moteur de conteneurs permet de lancer un conteneur privilégié avec le disque de l'hôte : c'est l'équivalent d'un accès root au nœud. Pour construire des images, on utilise Kaniko ou Buildah sans privilèges.
+
+@086
+Q: Comment diagnostiquer qu'un Service ne répond pas alors que les Pods tournent ?
+C: Vérifier endpoints, ports et sondes
+W: Redémarrer tous les nœuds du cluster
+W: Supprimer le Namespace et le recréer
+W: Passer l'image en version latest
+E: kubectl get endpoints vide : sélecteur faux ou Pods non prêts. Endpoints présents : vérifier que targetPort correspond au port réel de l'application, puis tester depuis un Pod avec curl et le nom DNS du Service.
+
+@087
+Q: Pourquoi ce Service ne transmet-il rien à l'application ?
+C: targetPort ne vise pas le bon port
+W: Le port 80 est interdit dans un Service
+W: Un Service ne peut avoir qu'un port
+W: Le protocole TCP n'est pas pris en charge
+E: Le Service reçoit sur 80 et envoie vers le port 80 du Pod, mais l'application écoute sur 8080. Les endpoints sont bien présents, ce qui trompe le diagnostic : il faut targetPort: 8080.
+```yaml
+ports:
+  - port: 80
+    targetPort: 80
+# Application : écoute sur 8080
+```
+
+@088
+Q: Que fait l'autoscaler de cluster (Cluster Autoscaler ou Karpenter) ?
+C: Il ajuste le nombre de nœuds
+W: Il augmente la mémoire des Pods existants
+W: Il change la version de Kubernetes
+W: Il répartit les Services entre clusters
+E: Des Pods Pending faute de place déclenchent l'ajout d'un nœud ; des nœuds sous-utilisés sont vidés et retirés. Le HorizontalPodAutoscaler ajuste les Pods, l'autoscaler de cluster ajuste les machines.
+
+@089
+Q: Pourquoi des requests très inférieures à la consommation réelle posent-elles problème ?
+C: Les nœuds sont surchargés
+W: Les Pods démarrent plus lentement
+W: Les images sont téléchargées deux fois
+W: Les Services perdent leurs endpoints
+E: Le planificateur croit qu'il reste de la place et entasse les Pods, qui se disputent la mémoire : évictions et OOMKilled en cascade. On règle les requests sur la consommation mesurée, avec une marge.
+
+@090
+Q: Combien de nœuds peuvent tomber dans un cluster etcd de 5 membres sans perdre le quorum ?
+N: 2
+E: Le quorum exige une majorité, ici 3 sur 5 ; deux membres peuvent tomber. Un nombre impair de membres est recommandé : avec 4, on ne tolère qu'une panne, comme avec 3.
+
+@091
+Q: Pourquoi séparer la recette et la production dans deux clusters plutôt que deux Namespaces ?
+C: Pour isoler les pannes et les droits
+W: Kubernetes interdit deux environnements par cluster
+W: Les Namespaces ne gèrent pas les Secrets
+W: Un cluster ne peut avoir qu'un Ingress
+E: Une mise à jour du cluster, une erreur de configuration globale ou un Pod qui sature un nœud n'affectent alors que la recette. Les Namespaces conviennent pour séparer des équipes dans un même environnement.
+
+@092
+Q: Que révèle cette sortie ?
+C: Le Pod a été tué pour dépassement de mémoire
+W: L'image est introuvable dans le registre
+W: Le Pod n'a jamais démarré
+W: Le nœud a perdu sa connexion réseau
+E: Exit Code 137 correspond à SIGKILL, et Reason: OOMKilled le confirme. Le nombre de redémarrages indique que le problème se répète : fuite mémoire ou limite trop basse.
+```text
+Last State:     Terminated
+  Reason:       OOMKilled
+  Exit Code:    137
+Restart Count:  6
+```
+
+@093
+Q: Pourquoi faut-il des sondes de démarrage (startupProbe) pour une application lente à démarrer ?
+C: Pour ne pas la tuer pendant son démarrage
+W: Pour accélérer son démarrage
+W: Pour la démarrer sur un nœud plus puissant
+W: Pour sauter les sondes de disponibilité
+E: Sans elle, la sonde de vie échoue pendant les deux minutes de démarrage d'une grosse application et la redémarre en boucle. La sonde de démarrage suspend les autres sondes jusqu'à son premier succès.
+
+@094
+Q: Qu'est-ce qu'un service mesh comme Istio ou Linkerd apporte ?
+C: Chiffrement et observabilité entre services
+W: Un stockage partagé entre les Pods
+W: Un registre d'images intégré
+W: Un remplacement du plan de contrôle
+E: Le maillage gère le chiffrement mTLS, les relances, les délais et les métriques de chaque appel, sans modifier le code. Il ajoute de la complexité : il se justifie avec de nombreux services.
+
+@095
+Q: Remettre dans l'ordre une montée de version de Kubernetes sur un cluster managé.
+O: Lire les notes de version et les API supprimées
+O: Mettre à jour les manifestes qui utilisent ces API
+O: Monter la version du plan de contrôle
+O: Remplacer les nœuds par groupes, avec des PodDisruptionBudgets
+O: Vérifier les applications et les métriques
+E: Une API retirée fait échouer les déploiements suivants. Le plan de contrôle d'abord, les nœuds ensuite, car les nœuds ne doivent pas être plus récents que lui. Les PodDisruptionBudgets évitent l'interruption pendant le remplacement.
+
+@096
+Q: Quel est l'intérêt d'un système de fichiers racine en lecture seule pour un conteneur ?
+C: Un attaquant ne peut pas modifier les binaires
+W: Le conteneur démarre deux fois plus vite
+W: Les journaux sont automatiquement conservés
+W: L'image est plus légère dans le registre
+E: readOnlyRootFilesystem: true empêche d'installer un outil ou de modifier l'application. Les dossiers où l'application doit écrire, comme /tmp, sont montés en volumes emptyDir.
+```yaml
+securityContext:
+  readOnlyRootFilesystem: true
+volumeMounts:
+  - name: temporaire
+    mountPath: /tmp
+```
+
+@097
+Q: Pourquoi définir une PriorityClass pour les applications critiques ?
+C: Elles passent avant les autres en cas de manque
+W: Elles reçoivent plus de processeur en permanence
+W: Elles sont déployées sur un cluster séparé
+W: Elles ignorent les limites de mémoire
+E: En cas de manque de ressources, le planificateur peut évincer des Pods de priorité basse pour placer les critiques. Les traitements par lots reçoivent une priorité faible.
+
+@098
+Q: Pourquoi les journaux d'une application dans Kubernetes doivent-ils aller sur la sortie standard ?
+C: Le cluster les collecte et les centralise
+W: Les fichiers sont interdits dans un conteneur
+W: La sortie standard est chiffrée automatiquement
+W: Les journaux sur disque ralentissent le réseau
+E: Un agent par nœud, Fluent Bit par exemple, collecte la sortie des conteneurs et l'envoie à Loki ou Elasticsearch. Un fichier dans le conteneur disparaît avec lui. On écrit en JSON pour faciliter la recherche.
+
+@099
+Q: Quel risque présente kubectl edit en production ?
+C: La modification n'est pas tracée dans Git
+W: Elle supprime toujours la ressource
+W: Elle redémarre tout le cluster
+W: Elle n'a aucun effet sur la ressource
+E: La ressource diffère du dépôt : le prochain déploiement l'écrase, ou personne ne sait pourquoi elle a changé. En urgence, on reporte immédiatement la correction dans Git. Avec GitOps, l'agent annule la modification.
+
+@100
+Q: Quand Kubernetes est-il un mauvais choix ?
+C: Pour une petite application sans équipe d'exploitation
+W: Pour des applications en conteneurs
+W: Pour une application avec plusieurs services
+W: Pour un besoin de mise à l'échelle automatique
+E: Kubernetes demande des compétences, de la supervision et des mises à jour régulières. Une petite application se déploie plus simplement sur une plateforme managée ou un serveur avec Docker Compose. Le choix suit le besoin, pas la mode.

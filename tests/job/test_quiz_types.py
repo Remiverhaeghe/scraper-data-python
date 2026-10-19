@@ -227,7 +227,7 @@ def test_build_response_picks_the_field_of_the_type():
     assert build_response(ORDER, None, "", [2, 1, 0, 3]) == [2, 1, 0, 3]
 
 
-def test_typed_questions_are_imported_answered_and_kept_off_mobile(database_file):
+def test_typed_questions_are_imported_answered_and_sent_to_mobile(database_file):
     """Vérifie l'import, une réponse illisible non comptée et le contenu mobile."""
 
     vQuiz = load_active_quiz(database_file)
@@ -241,21 +241,71 @@ def test_typed_questions_are_imported_answered_and_kept_off_mobile(database_file
 
     assert vResult["correct"] and vResult["answer"] == "0,0023 A"
 
-    vMobileIds = {
-        vQuestion["id"]
-        for vQuestion in build_quiz_package(database_file, NOW)["questions"]
+    vPackage = build_quiz_package(database_file, NOW)
+    vMobileIds = {vQuestion["id"] for vQuestion in vPackage["questions"]}
+    vInteractive = {
+        vQuestion["id"]: vQuestion["type"]
+        for vQuestion in vPackage["interactive_questions"]
     }
 
     assert "unite-tension" in vMobileIds
     assert not vMobileIds & {"ohm-courant", "consignation-ordre", "java-boucle"}
+    assert vInteractive["ohm-courant"] == "numerique"
+    assert vInteractive["consignation-ordre"] == "ordre"
+    assert vInteractive["grandeurs-unites"] == "association"
+    assert "java-boucle" not in vInteractive
 
-    with pytest.raises(ValueError, match="question inconnue"):
+
+@pytest.mark.parametrize(
+    "pQuestionId, pResponse, pCorrect",
+    [
+        ("ohm-courant", "2,3 mA", True),
+        ("ohm-courant", 0.5, False),
+        ("consignation-ordre", [0, 1, 2, 3], True),
+        ("consignation-ordre", [1, 0, 2, 3], False),
+    ],
+)
+def test_mobile_interactive_answers_are_graded(
+    database_file, pQuestionId, pResponse, pCorrect
+):
+    """Vérifie la correction serveur des réponses interactives du téléphone."""
+
+    vRow = check_synced_answer(
+        load_active_quiz(database_file),
+        {
+            "id": "a" * 16,
+            "question_id": pQuestionId,
+            "response": pResponse,
+            "answered_at": NOW.isoformat(),
+        },
+        NOW,
+    )
+
+    assert vRow[3] is pCorrect
+
+
+@pytest.mark.parametrize(
+    "pQuestionId, pResponse, pMessage",
+    [
+        ("java-boucle", "length", "question inconnue"),
+        ("ohm-courant", None, "réponse illisible"),
+        ("ohm-courant", "9" * 300, "réponse illisible"),
+        ("consignation-ordre", [0, 0, 1, 2], "réponse illisible"),
+        ("consignation-ordre", "0,1,2,3", "réponse illisible"),
+    ],
+)
+def test_mobile_interactive_answers_are_checked(
+    database_file, pQuestionId, pResponse, pMessage
+):
+    """Vérifie le refus d'une réponse interactive illisible ou d'un type non pris en charge."""
+
+    with pytest.raises(ValueError, match=pMessage):
         check_synced_answer(
-            vQuiz,
+            load_active_quiz(database_file),
             {
                 "id": "a" * 16,
-                "question_id": "ohm-courant",
-                "choice": 0,
+                "question_id": pQuestionId,
+                "response": pResponse,
                 "answered_at": NOW.isoformat(),
             },
             NOW,

@@ -3,7 +3,7 @@
 from datetime import datetime
 from html import escape
 
-from PySide6.QtCore import QByteArray, Qt
+from PySide6.QtCore import QByteArray, Qt, QTimer
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (
@@ -63,9 +63,13 @@ from job.schema_drawing import render_correction
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
     answer_exam,
+    describe_exam_results,
     describe_exam_summary,
+    format_countdown,
     get_exam_question,
+    get_remaining_seconds,
     load_exam,
+    load_exam_results,
     start_exam,
     stop_exam,
     summarize_exam,
@@ -84,6 +88,9 @@ MAX_THEME_COLUMNS = 3
 
 # Mode de la page pendant un examen, à côté des modes de révision
 EXAM_MODE = "exam"
+
+# Sous cette marge, le minuteur passe à l'orange
+TIMER_WARNING_SECONDS = 60
 
 # Hauteur d'affichage des schémas des questions importées
 VISUAL_HEIGHT = 280
@@ -286,6 +293,16 @@ class QuizPage(QWidget):
         self.stop_exam_button.clicked.connect(self.close_exam)
         self.stop_exam_button.hide()
 
+        # Compte à rebours de l'examen, sur la durée conseillée d'une minute par
+        # question : dépassé, il continue en négatif sans arrêter l'examen.
+        self.current_exam = None
+        self.timer_label = QLabel()
+        self.timer_label.hide()
+
+        self.exam_timer = QTimer(self)
+        self.exam_timer.setInterval(1000)
+        self.exam_timer.timeout.connect(self.update_exam_timer)
+
         # Une question importée peut être fausse : elle sort des tirages.
         self.flag_button = create_button(
             "Question douteuse", "circle-alert", pIconColor=COLORS["warning"]
@@ -297,6 +314,7 @@ class QuizPage(QWidget):
         vButtons.addWidget(self.validate_button)
         vButtons.addWidget(self.next_button)
         vButtons.addStretch()
+        vButtons.addWidget(self.timer_label)
         vButtons.addWidget(self.stop_exam_button)
         vButtons.addWidget(self.flag_button)
 
@@ -901,18 +919,27 @@ class QuizPage(QWidget):
         vQuiz = load_active_quiz(self.database_file)
         vExam = load_exam(self.database_file)
 
+        self.current_exam = vExam
+
         if vExam and vExam["finished_at"]:
-            self.display_question(
-                None,
-                "Examen terminé",
-                describe_exam_summary(summarize_exam(vQuiz, vExam)),
-            )
+            vSummary = describe_exam_summary(summarize_exam(vQuiz, vExam))
+
+            if vExam.get("offer"):
+                vSummary += " " + describe_exam_results(
+                    load_exam_results(self.database_file, vExam["offer"])
+                )
+
+            self.display_question(None, "Examen terminé", vSummary)
             self.stop_exam_button.setText("Fermer l'examen")
+            self.update_exam_timer()
             return
+
+        self.exam_timer.start()
 
         vQuestion = get_exam_question(vQuiz, vExam)
 
         self.stop_exam_button.setText("Abandonner l'examen")
+        self.update_exam_timer()
         self.display_question(
             vQuestion,
             (
@@ -925,9 +952,33 @@ class QuizPage(QWidget):
             "Cette question n'existe plus : passez à la suivante.",
         )
 
+    def update_exam_timer(self):
+        """Affiche le temps restant de l'examen en cours, ou masque le minuteur."""
+        vExam = self.current_exam
+
+        if self.mode != EXAM_MODE or not vExam or vExam["finished_at"]:
+            self.exam_timer.stop()
+            self.timer_label.hide()
+            return
+
+        vRemaining = get_remaining_seconds(vExam, datetime.now())
+
+        if vRemaining >= TIMER_WARNING_SECONDS:
+            vTone = "success"
+        elif vRemaining >= 0:
+            vTone = "warning"
+        else:
+            vTone = "danger"
+
+        show_message(self.timer_label, format_countdown(vRemaining), vTone)
+        self.timer_label.show()
+
     def close_exam(self):
         """Abandonne ou referme l'examen, puis revient à la liste des thèmes."""
         stop_exam(self.database_file)
+
+        self.current_exam = None
+        self.update_exam_timer()
 
         self.mode = None
         self.question_card.hide()

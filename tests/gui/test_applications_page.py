@@ -155,3 +155,28 @@ def test_calendar_export(qt_application, tmp_path, monkeypatch):
 
     assert vPath.read_bytes().startswith(b"BEGIN:VCALENDAR\r\n")
     assert vShown == ["Export terminé"]
+
+
+def test_week_follow_ups_are_copied_and_marked(qt_application, tmp_path):
+    """Vérifie le brouillon copié et la relance notée depuis la page."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vPanel = vPage.follow_ups_panel
+
+    assert [vFollowUp["title"] for vFollowUp in vPanel.follow_ups] == ["Java"]
+
+    vPanel.copy_all()
+
+    assert (
+        qt_application.clipboard()
+        .text()
+        .startswith("Objet : ma candidature au poste de Java")
+    )
+
+    vPanel.mark_done(vPanel.follow_ups[0])
+
+    assert (
+        get_application(tmp_path / "scraper.db", "remotive", "1")["follow_up_count"]
+        == 1
+    )
+    assert not vPanel.follow_ups[0]["follow_up_due"]
