@@ -1,9 +1,9 @@
-"""Pages des offres : tableau de bord, liste, fiche, pièces jointes et recherche"""
+"""Pages des offres : liste, saisie, import, fiche, disponibilité, entreprise et doublons"""
 
-import io
 from datetime import datetime, timedelta
+import io
 from pathlib import Path
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 
 from fastapi import (
     APIRouter,
@@ -15,7 +15,7 @@ from fastapi import (
     Request,
     UploadFile,
 )
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
 from job.companies import (
@@ -37,6 +37,8 @@ from job.deduplication import (
     group_offers,
 )
 from job.freshness import add_freshness
+from job.interview_journal import collect_asked_questions
+from job.interview_revision import build_offer_revision
 from job.manual_offers import (
     IMPORT_FORMATS,
     MAX_IMPORT_BYTES,
@@ -45,20 +47,7 @@ from job.manual_offers import (
     import_offers_file,
     list_import_problems,
 )
-from job.interview_revision import build_offer_revision
-from job.quiz import THEME_STATUSES, load_active_quiz
-from job.quiz_exam import (
-    build_exam_history,
-    describe_exam_results,
-    load_exam_results,
-)
-from job.interview_journal import collect_asked_questions, record_interview
-from job.offer_comparison import (
-    build_comparison,
-    clear_comparison,
-    load_comparison_keys,
-    toggle_comparison,
-)
+from job.offer_comparison import load_comparison_keys
 from job.preparation import (
     MATCH_FILTERS,
     filter_by_match,
@@ -72,7 +61,6 @@ from job.presentation import (
     AVAILABILITY_LABELS,
     AVAILABILITY_MESSAGES,
     AVAILABILITY_TONES,
-    CHART_PALETTE,
     CONTRACT_TONES,
     DEFAULT_AVAILABILITY,
     FOLLOW_UP_FILTER,
@@ -84,45 +72,25 @@ from job.presentation import (
     build_offer_filters,
     build_translate_url,
     can_lookup_company,
-    describe_execution,
     get_score_tone,
     prepare_offer,
 )
 from job.profile import is_profile_empty, load_profile
-from job.star_answers import load_star_answers
-from job.schedule import request_immediate_run
+from job.quiz import THEME_STATUSES, load_active_quiz
+from job.quiz_exam import build_exam_history, describe_exam_results, load_exam_results
 from job.settings import load_settings
 from job.sources.registry import SOURCES
-from job.statistics import (
-    ACTIVITY_AXES,
-    ACTIVITY_SERIES,
-    EMPTY_CHART_TEXT,
-    count_ready_sources,
-    load_statistics,
-)
-from storage.attachments import (
-    ALLOWED_EXTENSIONS,
-    MAX_ATTACHMENT_BYTES,
-    add_attachment,
-    delete_attachment,
-    get_attachment,
-    get_attachments,
-)
+from job.star_answers import load_star_answers
+from storage.attachments import ALLOWED_EXTENSIONS, get_attachments
 from storage.duplicates import get_decisions, save_decision
-from storage.job_applications import (
-    APPLICATION_STATUSES,
-    delete_application,
-    get_application,
-    record_follow_up,
-    save_application,
-)
 from storage.interview_notes import get_interview_notes
+from storage.job_applications import get_application
 from storage.job_offers import get_offer, get_offers, set_availability
 from utils.link_checker import check_offer_link
 from utils.logger import get_logger
 from web.dependencies import get_database_file, require_csrf
-from web.forms import parse_amount, parse_date, parse_published_days
-from web.rendering import TONE_ICONS, build_bar_chart, get_message_tone, templates
+from web.forms import parse_amount, parse_published_days
+from web.rendering import build_bar_chart, templates
 
 logger = get_logger(__name__)
 
@@ -131,57 +99,6 @@ router = APIRouter()
 
 # Au-delà, l'utilisateur affine sa recherche plutôt que de parcourir la liste.
 MAX_DISPLAYED_OFFERS = 300
-
-
-# Pages principales. Les données et leur mise en forme viennent de job/,
-# partagé avec l'application de bureau : une différence d'affichage entre les
-# deux interfaces se corrige d'abord là.
-@router.get("/", response_class=HTMLResponse)
-def show_dashboard(
-    request: Request,
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Affiche le tableau de bord : indicateurs, graphique et activité récente."""
-
-    vStatistics = load_statistics(pDatabaseFile)
-
-    rResponse = templates.TemplateResponse(
-        request,
-        "dashboard.html",
-        {
-            "active_page": "dashboard",
-            "statistics": vStatistics,
-            "ready_sources": count_ready_sources(),
-            "new_offer_days": vStatistics["new_offer_days"],
-            "chart": build_bar_chart(
-                [
-                    f"{vDay:%d/%m}"
-                    for vDay, _ in vStatistics["daily_activity"]["new_offers"]
-                ],
-                [
-                    (
-                        ACTIVITY_SERIES[vName][0],
-                        CHART_PALETTE[vIndex],
-                        [vCount for _, vCount in vCounts],
-                    )
-                    for vIndex, (vName, vCounts) in enumerate(
-                        vStatistics["daily_activity"].items()
-                    )
-                ],
-                pIndependentScales=True,
-                pAxes=ACTIVITY_AXES,
-                pEmptyText=EMPTY_CHART_TEXT,
-            ),
-            "activities": [
-                describe_execution(vEntry) for vEntry in vStatistics["executions"]
-            ],
-            "tone_icons": TONE_ICONS,
-            "follow_up_filter": FOLLOW_UP_FILTER,
-            "now_iso": datetime.now().isoformat(),
-        },
-    )
-
-    return rResponse
 
 
 @router.get("/offers", response_class=HTMLResponse)
@@ -321,25 +238,6 @@ def get_existing_offer(pDatabaseFile, pSource, pSourceId):
         raise HTTPException(status_code=404, detail="Offre introuvable")
 
     return rOffer
-
-
-def render_application(pRequest, pDatabaseFile, pOffer, pMessage=None):
-    """Affiche le bloc de suivi d'une offre."""
-
-    vApplication = get_application(pDatabaseFile, pOffer["source"], pOffer["source_id"])
-
-    rResponse = templates.TemplateResponse(
-        pRequest,
-        "_application.html",
-        {
-            "offer": pOffer,
-            "application": vApplication,
-            "statuses": STATUS_LABELS,
-            "message": pMessage,
-        },
-    )
-
-    return rResponse
 
 
 def render_new_offer(pRequest, pFields=None, pMessage=None, pReport=None, pStatus=200):
@@ -516,175 +414,6 @@ def show_offer(
     return rResponse
 
 
-@router.post(
-    "/offer/application",
-    response_class=HTMLResponse,
-    dependencies=[Depends(require_csrf)],
-)
-def update_application(
-    request: Request,
-    pSource: str = Form(..., alias="source"),
-    pSourceId: str = Form(..., alias="id"),
-    pStatus: str = Form("", alias="status"),
-    pFollowUpDate: str = Form("", alias="follow_up_date"),
-    pNotes: str = Form("", alias="notes"),
-    pInterviewAt: str = Form("", alias="interview_at"),
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Enregistre le suivi d'une offre, ou le supprime si aucun statut n'est choisi."""
-
-    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
-
-    if pStatus and pStatus not in APPLICATION_STATUSES:
-        raise HTTPException(status_code=400, detail="Statut inconnu")
-
-    if pStatus:
-        save_application(
-            pDatabaseFile,
-            pSource,
-            pSourceId,
-            pStatus,
-            pFollowUpDate=parse_date(pFollowUpDate),
-            pNotes=pNotes.strip(),
-            pFollowUpDays=load_settings(pDatabaseFile)["follow_up_days"],
-            pInterviewAt=parse_date(pInterviewAt, "%Y-%m-%dT%H:%M"),
-        )
-
-    else:
-        delete_application(pDatabaseFile, pSource, pSourceId)
-
-    rResponse = render_application(request, pDatabaseFile, vOffer, "Suivi enregistré")
-
-    return rResponse
-
-
-@router.post(
-    "/offer/follow-up",
-    response_class=HTMLResponse,
-    dependencies=[Depends(require_csrf)],
-)
-def add_follow_up(
-    request: Request,
-    pSource: str = Form(..., alias="source"),
-    pSourceId: str = Form(..., alias="id"),
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Enregistre une relance effectuée aujourd'hui."""
-
-    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
-
-    if get_application(pDatabaseFile, pSource, pSourceId) is None:
-        raise HTTPException(status_code=400, detail="Aucun suivi pour cette offre")
-
-    record_follow_up(
-        pDatabaseFile,
-        pSource,
-        pSourceId,
-        pFollowUpDays=load_settings(pDatabaseFile)["follow_up_days"],
-    )
-
-    rResponse = render_application(
-        request, pDatabaseFile, vOffer, "Relance enregistrée"
-    )
-
-    return rResponse
-
-
-@router.post("/offer/compare", dependencies=[Depends(require_csrf)])
-def toggle_offer_comparison(
-    pSource: str = Form(..., alias="source"),
-    pSourceId: str = Form(..., alias="id"),
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Ajoute l'offre à la comparaison, ou l'en retire, puis revient à sa fiche."""
-
-    get_existing_offer(pDatabaseFile, pSource, pSourceId)
-    toggle_comparison(pDatabaseFile, pSource, pSourceId)
-
-    rResponse = RedirectResponse(
-        f"{router.url_path_for('show_offer')}?{urlencode({'source': pSource, 'id': pSourceId})}",
-        status_code=303,
-    )
-
-    return rResponse
-
-
-@router.get("/compare", response_class=HTMLResponse)
-def show_comparison(
-    request: Request,
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Affiche les offres comparées côte à côte."""
-
-    rResponse = templates.TemplateResponse(
-        request,
-        "compare.html",
-        {
-            "active_page": "offers",
-            "comparison": build_comparison(pDatabaseFile, datetime.now()),
-        },
-    )
-
-    return rResponse
-
-
-@router.post("/compare/clear", dependencies=[Depends(require_csrf)])
-def clear_offer_comparison(pDatabaseFile: str = Depends(get_database_file)):
-    """Vide la comparaison, puis revient à la page de comparaison."""
-
-    clear_comparison(pDatabaseFile)
-
-    rResponse = RedirectResponse(
-        router.url_path_for("show_comparison"), status_code=303
-    )
-
-    return rResponse
-
-
-@router.post(
-    "/offer/interview-note",
-    response_class=HTMLResponse,
-    dependencies=[Depends(require_csrf)],
-)
-def add_interview_journal_note(
-    request: Request,
-    pSource: str = Form(..., alias="source"),
-    pSourceId: str = Form(..., alias="id"),
-    pQuestions: str = Form("", alias="questions"),
-    pImpressions: str = Form("", alias="impressions"),
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Ajoute une entrée au journal d'entretien et renvoie le bloc mis à jour."""
-
-    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
-    vStatusCode = 200
-
-    try:
-        record_interview(
-            pDatabaseFile, pSource, pSourceId, datetime.now(), pQuestions, pImpressions
-        )
-
-    except ValueError as vException:
-        vMessage, vStatusCode = str(vException), 400
-
-    else:
-        vMessage = "Entrée ajoutée au journal."
-
-    rResponse = templates.TemplateResponse(
-        request,
-        "_interview_journal.html",
-        {
-            "offer": vOffer,
-            "interview_notes": get_interview_notes(pDatabaseFile, pSource, pSourceId),
-            "journal_message": vMessage,
-            "journal_tone": get_message_tone(vStatusCode),
-        },
-        status_code=vStatusCode,
-    )
-
-    return rResponse
-
-
 # Qualité des données et journaux : lecture seule, sauf la remise à zéro des
 # journaux, protégée par le jeton CSRF.
 @router.post(
@@ -765,78 +494,6 @@ def build_offer_url(pSource, pSourceId):
     return rUrl
 
 
-@router.post("/offer/attachments", dependencies=[Depends(require_csrf)])
-def upload_attachment(
-    pSource: str = Form(alias="source"),
-    pSourceId: str = Form(alias="id"),
-    pFile: UploadFile = File(alias="file"),
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Joint un fichier envoyé à une offre, puis rouvre sa fiche."""
-
-    get_existing_offer(pDatabaseFile, pSource, pSourceId)
-
-    # Un octet de plus que la limite suffit à savoir qu'elle est dépassée.
-    vContent = pFile.file.read(MAX_ATTACHMENT_BYTES + 1)
-
-    try:
-        add_attachment(
-            pDatabaseFile, pSource, pSourceId, pFile.filename, vContent, datetime.now()
-        )
-
-    except ValueError as vException:
-        raise HTTPException(status_code=400, detail=str(vException)) from vException
-
-    rResponse = RedirectResponse(build_offer_url(pSource, pSourceId), status_code=303)
-
-    return rResponse
-
-
-@router.get("/attachment")
-def download_attachment(
-    pAttachmentId: int = Query(alias="id"),
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Renvoie une pièce jointe en téléchargement, sous son nom d'origine."""
-
-    vAttachment = get_attachment(pDatabaseFile, pAttachmentId)
-
-    if vAttachment is None or not vAttachment["path"].is_file():
-        raise HTTPException(status_code=404, detail="Pièce jointe introuvable.")
-
-    # Téléchargé plutôt qu'affiché : un fichier joint n'est jamais interprété
-    # par le navigateur comme une page du site.
-    rResponse = FileResponse(
-        vAttachment["path"],
-        filename=vAttachment["file_name"],
-        content_disposition_type="attachment",
-    )
-
-    return rResponse
-
-
-@router.post("/attachment/delete", dependencies=[Depends(require_csrf)])
-def remove_attachment(
-    pAttachmentId: int = Form(alias="id"),
-    pDatabaseFile: str = Depends(get_database_file),
-):
-    """Supprime une pièce jointe puis rouvre la fiche de son offre."""
-
-    vAttachment = get_attachment(pDatabaseFile, pAttachmentId)
-
-    if vAttachment is None:
-        raise HTTPException(status_code=404, detail="Pièce jointe introuvable.")
-
-    delete_attachment(pDatabaseFile, pAttachmentId)
-
-    rResponse = RedirectResponse(
-        build_offer_url(vAttachment["source"], vAttachment["source_id"]),
-        status_code=303,
-    )
-
-    return rResponse
-
-
 @router.post("/offer/company", dependencies=[Depends(require_csrf)])
 def update_company_rule(
     request: Request,
@@ -887,23 +544,6 @@ def decide_duplicates(
     save_decision(pDatabaseFile, vOffer["fingerprint"], pDecision, datetime.now())
 
     rResponse = RedirectResponse(build_offer_url(pSource, pSourceId), status_code=303)
-
-    return rResponse
-
-
-@router.post(
-    "/search/run", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
-)
-def request_search(pDatabaseFile: str = Depends(get_database_file)):
-    """Demande au planificateur de lancer la recherche enregistrée."""
-
-    vErrors = request_immediate_run(pDatabaseFile, datetime.now())
-
-    rResponse = HTMLResponse(
-        " ".join(vErrors)
-        or "Recherche demandée : le planificateur la lance dans la minute. "
-        "Les nouvelles offres apparaîtront ensuite dans la liste."
-    )
 
     return rResponse
 

@@ -144,24 +144,19 @@ def test_run_forever_survives_errors_until_stop(monkeypatch, pError):
 
         raise pError
 
-    vBackups = []
+    vTasks = []
 
     monkeypatch.setattr(runner, "run_due_search", fake_run)
     monkeypatch.setattr(
-        runner, "run_due_backup", lambda pDatabaseFile, pNow: vBackups.append(pNow)
-    )
-    monkeypatch.setattr(
-        runner, "check_followed_offers_daily", lambda pDatabaseFile, pNow: False
-    )
-    monkeypatch.setattr(runner, "send_weekly_digest", lambda pDatabaseFile, pNow: False)
-    monkeypatch.setattr(
-        runner, "send_interview_reminders", lambda pDatabaseFile, pNow: 0
+        runner,
+        "BACKGROUND_TASKS",
+        (("test", lambda pDatabaseFile, pNow: vTasks.append(pNow)),),
     )
 
     runner.run_forever("scraper.db", vStopEvent, pPollSeconds=0)
 
     assert len(vCalls) == 2
-    assert len(vBackups) == 2
+    assert len(vTasks) == 2
 
 
 def test_run_due_search_handles_web_request(database_file, monkeypatch, sent_emails):
@@ -319,3 +314,21 @@ def test_merge_items_keeps_the_new_version():
 
     assert rItems["title"].tolist() == ["A", "B"]
     assert rItems["is_new"].tolist() == [True, True]
+
+
+def test_failing_task_does_not_stop_the_others(caplog):
+    """Vérifie qu'une tâche en échec est journalisée et que la suivante s'exécute."""
+
+    vCalls = []
+
+    def fail(pDatabaseFile, pNow):
+        raise OSError("disque plein")
+
+    runner.run_background_tasks(
+        "base",
+        NOW,
+        (("en échec", fail), ("suivante", lambda *pArgs: vCalls.append(pArgs))),
+    )
+
+    assert vCalls == [("base", NOW)]
+    assert "Échec de la tâche « en échec » : disque plein" in caplog.text

@@ -257,18 +257,14 @@ def check_followed_offers_daily(pDatabaseFile, pNow):
 
     rSent = False
 
-    try:
-        vExpired = run_due_followed_check(pDatabaseFile, pNow)
-        vEmail = load_schedule(pDatabaseFile)["email"]
+    vExpired = run_due_followed_check(pDatabaseFile, pNow)
+    vEmail = load_schedule(pDatabaseFile)["email"]
 
-        if vExpired and vEmail:
-            send_email(vEmail, *build_expired_offers_email(vExpired))
-            rSent = True
+    if vExpired and vEmail:
+        send_email(vEmail, *build_expired_offers_email(vExpired))
+        rSent = True
 
-            logger.info("Alerte envoyée pour %s offre(s) retirée(s)", len(vExpired))
-
-    except (OSError, sqlite3.Error, smtplib.SMTPException, ValueError) as vException:
-        logger.error("Échec de l'alerte des offres suivies retirées : %s", vException)
+        logger.info("Alerte envoyée pour %s offre(s) retirée(s)", len(vExpired))
 
     return rSent
 
@@ -278,18 +274,14 @@ def send_weekly_digest(pDatabaseFile, pNow):
 
     rSent = False
 
-    try:
-        vEmail = load_schedule(pDatabaseFile)["email"]
+    vEmail = load_schedule(pDatabaseFile)["email"]
 
-        if vEmail and is_digest_due(pDatabaseFile, pNow):
-            send_email(
-                vEmail, *build_digest_email(build_weekly_digest(pDatabaseFile, pNow))
-            )
-            mark_digest_sent(pDatabaseFile, pNow)
-            rSent = True
-
-    except (OSError, sqlite3.Error, smtplib.SMTPException, ValueError) as vException:
-        logger.error("Échec de l'envoi du récapitulatif hebdomadaire : %s", vException)
+    if vEmail and is_digest_due(pDatabaseFile, pNow):
+        send_email(
+            vEmail, *build_digest_email(build_weekly_digest(pDatabaseFile, pNow))
+        )
+        mark_digest_sent(pDatabaseFile, pNow)
+        rSent = True
 
     return rSent
 
@@ -299,26 +291,44 @@ def send_interview_reminders(pDatabaseFile, pNow):
 
     rCount = 0
 
-    try:
-        vEmail = load_schedule(pDatabaseFile)["email"]
+    vEmail = load_schedule(pDatabaseFile)["email"]
 
-        for vApplication in (
-            get_interviews_to_remind(pDatabaseFile, pNow) if vEmail else []
-        ):
-            send_email(vEmail, *build_reminder_email(pDatabaseFile, vApplication))
-            mark_reminded(pDatabaseFile, vApplication)
-            rCount += 1
+    for vApplication in get_interviews_to_remind(pDatabaseFile, pNow) if vEmail else []:
+        send_email(vEmail, *build_reminder_email(pDatabaseFile, vApplication))
+        mark_reminded(pDatabaseFile, vApplication)
+        rCount += 1
 
-            logger.info(
-                "Rappel d'entretien envoyé : %s %s",
-                vApplication["source"],
-                vApplication["source_id"],
-            )
-
-    except (OSError, sqlite3.Error, smtplib.SMTPException, ValueError) as vException:
-        logger.error("Échec du rappel d'entretien : %s", vException)
+        logger.info(
+            "Rappel d'entretien envoyé : %s %s",
+            vApplication["source"],
+            vApplication["source_id"],
+        )
 
     return rCount
+
+
+# Tâches de chaque tour du planificateur, avant la recherche : chacune vérifie
+# elle-même son échéance. Une nouvelle tâche s'ajoute ici, sans toucher la boucle.
+BACKGROUND_TASKS = (
+    ("sauvegarde automatique", run_due_backup),
+    ("vérification des offres suivies", check_followed_offers_daily),
+    ("récapitulatif hebdomadaire", send_weekly_digest),
+    ("rappels d'entretien", send_interview_reminders),
+)
+
+# Erreurs attendues d'une tâche : disque, base, envoi d'e-mail ou réglage invalide
+TASK_ERRORS = (OSError, sqlite3.Error, smtplib.SMTPException, ValueError)
+
+
+def run_background_tasks(pDatabaseFile, pNow, pTasks=None):
+    """Exécute les tâches de fond ; une tâche en échec n'empêche pas les suivantes."""
+
+    for vName, vTask in BACKGROUND_TASKS if pTasks is None else pTasks:
+        try:
+            vTask(pDatabaseFile, pNow)
+
+        except TASK_ERRORS as vException:
+            logger.error("Échec de la tâche « %s » : %s", vName, vException)
 
 
 def run_forever(pDatabaseFile, pStopEvent, pPollSeconds=POLL_SECONDS):
@@ -327,10 +337,7 @@ def run_forever(pDatabaseFile, pStopEvent, pPollSeconds=POLL_SECONDS):
     logger.info("Planificateur démarré, vérification toutes les %s s", pPollSeconds)
 
     while not pStopEvent.is_set():
-        run_due_backup(pDatabaseFile, datetime.now())
-        check_followed_offers_daily(pDatabaseFile, datetime.now())
-        send_weekly_digest(pDatabaseFile, datetime.now())
-        send_interview_reminders(pDatabaseFile, datetime.now())
+        run_background_tasks(pDatabaseFile, datetime.now())
 
         try:
             run_due_search(pDatabaseFile, datetime.now(), pStopEvent)

@@ -675,7 +675,7 @@ scraper-data-python/
 ├── scheduler/                                 # Planificateur de la recherche automatique
 │   ├── __init__.py                            # Initialise le package Scheduler
 │   ├── __main__.py                            # Lance le planificateur avec python -m scheduler
-│   └── runner.py                              # Échéance, recherche et e-mail des nouveautés
+│   └── runner.py                              # Recherche planifiée, e-mails et tâches de fond
 │
 ├── web/                                       # Tableau de bord web
 │   ├── __init__.py                            # Initialise le package Web
@@ -689,7 +689,10 @@ scraper-data-python/
 │   ├── forms.py                               # Lecture des montants, durées et dates
 │   ├── routes/                                # Routes du tableau de bord, par domaine
 │   │   ├── __init__.py                        # Initialise le package des routes
-│   │   ├── offers.py                          # Tableau de bord, offres et pièces jointes
+│   │   ├── dashboard.py                       # Tableau de bord et lancement d'une recherche
+│   │   ├── offers.py                          # Liste, saisie, import et fiche des offres
+│   │   ├── offer_tracking.py                  # Suivi, relance, journal et pièces jointes d'une offre
+│   │   ├── comparison.py                      # Comparaison des offres
 │   │   ├── applications.py                    # Candidatures, statut et agenda
 │   │   ├── quiz.py                            # Révision, examen et import des questions
 │   │   ├── skills.py                          # Compétences demandées et préparation
