@@ -9,9 +9,10 @@ from job.presentation import (
     build_offer_filters,
     build_translate_url,
     can_lookup_company,
-    is_french,
     describe_search,
     describe_sources,
+    get_score_tone,
+    is_french,
     prepare_offer,
     summarize_history,
 )
@@ -193,3 +194,18 @@ def test_can_lookup_company(pOffer, pPossible):
     """Vérifie que l'annuaire n'est proposé que pour une entreprise française."""
 
     assert can_lookup_company(pOffer) is pPossible
+
+
+@pytest.mark.parametrize(
+    "pScore, pLowTone, pExpected",
+    [
+        (70, "muted", "success"),
+        (40, "muted", "warning"),
+        (39, "muted", "muted"),
+        (10, "danger", "danger"),
+    ],
+)
+def test_get_score_tone(pScore, pLowTone, pExpected):
+    """Vérifie les seuils communs de couleur des scores."""
+
+    assert get_score_tone(pScore, pLowTone) == pExpected

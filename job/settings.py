@@ -82,6 +82,14 @@ SETTING_DEFINITIONS = {
         5,
         "s",
     ),
+    "weekly_application_goal": SettingDefinition(
+        "Objectif de la semaine",
+        "Candidatures à envoyer chaque semaine, suivies sur l'accueil. 0 : aucun.",
+        0,
+        50,
+        1,
+        "candidatures",
+    ),
 }
 
 # Réglages dont la modification change le net des offres déjà enregistrées
@@ -106,6 +114,7 @@ def get_default_settings():
         "expiry_days": EXPIRY_DAYS,
         "follow_up_days": FOLLOW_UP_DAYS,
         "challenge_wait_seconds": CHALLENGE_WAIT_SECONDS,
+        "weekly_application_goal": 0,
     }
 
     return rSettings

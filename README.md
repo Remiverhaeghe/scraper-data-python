@@ -132,9 +132,14 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Statistiques de réponse : taux et délai moyen jusqu'à la première réponse, par source, type de poste, correspondance au profil, contrat et société
 - [x] Purge des offres hors sujet déjà en base, par mots du titre, avec aperçu, sauvegarde préalable et offres suivies protégées (bureau et web)
 - [x] Mots exclus de toutes les recherches, ajoutés lors d'une purge : les offres concernées sont écartées dès leur récupération
-- [x] Vérification quotidienne des liens des offres suivies par le planificateur : offre retirée signalée sur sa carte et par e-mail
+- [x] Vérification quotidienne des liens des offres suivies par le planificateur, deux minutes au plus par passage : offre retirée signalée sur sa carte et par e-mail
 - [x] Score de fraîcheur des offres (ancienneté et nombre de sources qui les publient), colonne triable et tri « Les plus fraîches »
 - [x] Entonnoir des candidatures : envoyées, réponses, entretiens, acceptées, avec le passage d'une étape à l'autre
+- [x] Comparaison de trois offres au plus côte à côte : salaire net, télétravail, distance, correspondance, compétences manquantes, fraîcheur, suivi (bureau et web)
+- [x] Objectif de candidatures par semaine, réglable dans les règles de calcul, et sa progression sur l'accueil
+- [x] Alertes dans le menu : relances dues et offres suivies retirées, à côté de « Candidatures » (bureau et web)
+- [x] Récapitulatif hebdomadaire par e-mail : offres de la semaine les mieux notées, relances, entretiens à venir et préparation
+- [x] Rappel par e-mail la veille d'un entretien : questions probables, réponses STAR, questions déjà posées et thèmes à revoir
 - [x] Recherche planifiée complétée par des recherches enregistrées, lancées à la suite avec un seul e-mail récapitulatif
 
 ### ⚙️ Fonctionnalités communes
@@ -306,6 +311,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Examen blanc chronométré par offre : compte à rebours, note conservée, graphique des notes successives sur la fiche de l'offre, puis examen limité aux questions ratées
 - [x] Journal d'entretien : questions posées et impressions par offre, questions reprises dans la préparation des autres offres et sous les réponses STAR
 - [x] Questions comportementales probables repérées dans le texte de l'offre (équipe, délais, autonomie, veille, priorités, clients), avec l'état de leur réponse STAR
+- [x] Entraînement à l'oral : réponses STAR et questions vécues revues par répétition espacée, réponse révélée puis auto-évaluée (bureau et web)
 
 ### Utilisation depuis un téléphone
 
@@ -340,6 +346,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
 - [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter, zone à désigner en cliquant sur un schéma, schéma à construire (49 symboles d'électricité, électronique, pneumatique, hydraulique et réseau ; placement sur une grille, câblage des bornes à la souris, plusieurs exemplaires d'un même composant (deux vérins, des lampes en parallèle, des postes en étoile) ; correction par comparaison des liaisons, schéma construit dessiné à côté du schéma attendu, fils en trop en rouge) ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile reçoit les QCM, les calculs, les remises en ordre et les associations
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
+- [x] Thèmes demandés par les offres et encore sans question mis en avant en haut de la Révision, demande ChatGPT prête
 - [x] Lots écrits de 100 questions (tools/quiz_lots) : cloud (AWS, Azure, GCP), Terraform et Ansible, Linux et shell, SQL Server, MySQL et MariaDB, réseaux TCP/IP, sécurité applicative (OWASP), maintenance industrielle, Python, TypeScript, frameworks frontend (React, Angular, Vue), Kubernetes et Helm, en plus des lots d'automatisme, d'électricité, d'électronique, de fluides et de sigles
 - [x] Questions supplémentaires générées avec son compte ChatGPT : demande reprenant le modèle complet d'un pack (domaine, niveaux répartis ou au choix, schémas et guides facultatifs), import du texte collé, d'un fichier .json ou d'une archive .zip ; chaque question est vérifiée et les doublons écartés
 - [x] Catalogue de 92 thèmes (informatique, réseau, industrie) et lots numérotés jusqu'à 100 questions, demande et catalogue modifiables sans toucher au code : [docs/consignes-qcm-chatgpt.md](docs/consignes-qcm-chatgpt.md)
@@ -489,6 +496,10 @@ scraper-data-python/
 │   ├── freshness.py                           # Score de fraîcheur des offres
 │   ├── interview_journal.py                   # Journal d'entretien : questions posées
 │   ├── health.py                              # État de santé de l'application
+│   ├── offer_comparison.py                    # Comparaison des offres côte à côte
+│   ├── weekly_digest.py                       # Récapitulatif hebdomadaire par e-mail
+│   ├── interview_reminder.py                  # Rappel la veille d'un entretien
+│   ├── interview_drill.py                     # Entraînement à l'oral, répétition espacée
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
 │   ├── completion.py                          # Complétion commune avant enregistrement des offres
@@ -637,6 +648,7 @@ scraper-data-python/
 │   ├── skills_page.py                         # Compétences demandées et préparation
 │   ├── quiz_answer.py                         # Zones de réponse selon le type, schéma cliquable
 │   ├── quiz_import_panel.py                   # Ajout de questions : priorités, ChatGPT, import, export
+│   ├── quiz_priority_banner.py                # Thèmes vides demandés par les offres
 │   ├── quiz_statistics_card.py                # Statistiques et progression de la révision
 │   ├── schema_editor.py                       # Éditeur de schéma : palette, grille et câblage
 │   ├── challenges_page.py                     # Défis de programmation
@@ -647,6 +659,7 @@ scraper-data-python/
 │   ├── quality_page.py                        # Qualité des données et offres à vérifier
 │   ├── offer_purge_panel.py                   # Aperçu et suppression des offres hors sujet
 │   ├── profile_page.py                        # Saisie du profil du candidat
+│   ├── interview_drill_panel.py               # Entraînement à l'oral
 │   ├── star_answers_panel.py                  # Saisie des réponses STAR
 │   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
 │   ├── token_access_panel.py                  # Accès secret : adresse d'agenda ou jeton
@@ -693,7 +706,9 @@ scraper-data-python/
 │   │   ├── offers.html                        # Liste des offres et filtres
 │   │   ├── _offers_table.html                 # Tableau rechargé par HTMX
 │   │   ├── offer.html                         # Fiche détaillée d'une offre
+│   │   ├── compare.html                       # Comparaison des offres
 │   │   ├── _application.html                  # Bloc de suivi d'une candidature
+│   │   ├── _interview_journal.html            # Journal d'entretien d'une offre
 │   │   ├── _attachments.html                  # Pièces jointes d'une offre
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
@@ -809,6 +824,10 @@ scraper-data-python/
 │   │   ├── test_star_answers.py               # Teste les réponses STAR
 │   │   ├── test_offer_purge.py                # Teste la purge des offres hors sujet
 │   │   ├── test_followed_availability.py      # Teste la vérification des offres suivies
+│   │   ├── test_weekly_digest.py              # Teste le récapitulatif hebdomadaire
+│   │   ├── test_interview_reminder.py         # Teste le rappel d'entretien
+│   │   ├── test_offer_comparison.py           # Teste la comparaison des offres
+│   │   ├── test_interview_drill.py            # Teste l'entraînement à l'oral
 │   │   ├── test_freshness.py                  # Teste le score de fraîcheur
 │   │   ├── test_interview_journal.py          # Teste le journal d'entretien
 │   │   ├── test_health.py                     # Teste l'état de santé de l'application
@@ -930,6 +949,7 @@ scraper-data-python/
 │   │   ├── test_parcours.py                    # Teste les parcours de bout en bout du bureau
 │   │   ├── test_offers_model.py                # Teste le modèle du tableau des offres
 │   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
+│   │   ├── test_offer_assistant_comparison.py  # Teste la comparaison depuis l'assistant
 │   │   ├── test_applications_page.py           # Teste la page des candidatures
 │   │   ├── test_quiz_page.py                   # Teste la page de révision
 │   │   ├── test_challenges_page.py             # Teste la page des défis
@@ -984,7 +1004,8 @@ scraper-data-python/
 │   │   └── test_password.py                    # Teste la génération de l'empreinte
 │   │
 │   ├── conftest.py                             # Bloque l'accès réseau, SMTP et à la base réelle
-│   ├── test_isolation.py                       # Teste le blocage de la base réelle pendant les tests
+│   ├── test_isolation.py                       # Teste le blocage des bases du projet pendant les tests
+│   ├── test_sources.py                         # Teste l'absence de caractères de contrôle
 │   ├── test_api_client.py                      # Teste les appels sécurisés aux API
 │   ├── test_config.py                          # Teste la configuration générale
 │   ├── test_helpers.py                         # Teste les fonctions utilitaires

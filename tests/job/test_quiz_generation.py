@@ -25,6 +25,7 @@ from job.quiz_generation import (
     assess_questions,
     build_correction_prompt,
     build_generation_prompt,
+    build_empty_priority_themes,
     build_priority_themes,
     find_catalog_theme,
     get_next_lot,
@@ -552,6 +553,14 @@ def test_priority_themes_follow_demand_and_missing_questions(database_file):
 
     assert vKeys[:2] == ["automates-programmables", "grafcet"]
     assert "java" in vKeys
+
+    vEmpty = build_empty_priority_themes(database_file, load_active_quiz(database_file))
+
+    # Java a déjà des questions livrées : seuls les thèmes vides sont repris.
+    assert [vTheme["key"] for vTheme in vEmpty] == [
+        "automates-programmables",
+        "grafcet",
+    ]
     assert "python" not in vKeys
     assert vPriorities[1] == {
         "key": "grafcet",

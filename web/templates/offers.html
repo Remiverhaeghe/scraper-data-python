@@ -7,6 +7,7 @@
 
 {% block content %}
 {% call ui.page_header("Offres", "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures", "briefcase") %}
+<a class="button" href="{{ url_for('show_comparison').path }}">{{ icon("list-checks", 16) }} Comparaison</a>
 <a class="button" href="{{ url_for('show_new_offer').path }}">{{ icon("sparkles", 16) }} Ajouter ou importer</a>
 {% endcall %}
 

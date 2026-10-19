@@ -734,3 +734,41 @@ def test_empty_rubric_offers_catalog_themes(qt_application, tmp_path, monkeypatc
     vButtons[0].click()
 
     assert len(vPrepared) == 1
+
+
+def test_priority_banner_prepares_empty_themes(qt_application, tmp_path, monkeypatch):
+    """Vérifie le bandeau des thèmes vides demandés et la demande préparée au clic."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile)
+
+    assert vPage.priority_banner.isHidden()
+
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "remotive",
+                    "source_id": "1",
+                    "title": "Automaticien",
+                    "skills": ["Grafcet"],
+                }
+            ]
+        ),
+        datetime.now(),
+    )
+    vPrepared = []
+    monkeypatch.setattr(vPage.import_panel, "prepare_priority", vPrepared.append)
+    vPage.priority_banner.prepare_requested.disconnect()
+    vPage.priority_banner.prepare_requested.connect(vPage.import_panel.prepare_priority)
+    vPage.refresh()
+
+    vButton = vPage.priority_banner.buttons_layout.itemAt(0).widget()
+
+    assert not vPage.priority_banner.isHidden()
+    assert vButton.text().startswith("Grafcet et logique séquentielle · 1 offre(s)")
+
+    vButton.click()
+
+    assert vPrepared == ["Grafcet et logique séquentielle"]

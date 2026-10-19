@@ -50,6 +50,10 @@ def block_network(monkeypatch):
 # Base réelle de l'application : un test qui l'ouvre dépend des données de ce
 # PC et échoue ailleurs, en CI notamment.
 REAL_DATABASE = Path(DATABASE_FILE).resolve()
+
+# Une base ouverte dans le dossier du projet, par un chemin relatif oublié par
+# exemple, y laisserait un fichier : les tests passent par tmp_path.
+PROJECT_DIRECTORY = Path(__file__).resolve().parents[1]
 SQLITE_CONNECT = sqlite3.connect
 
 
@@ -71,10 +75,18 @@ def get_database_path(pDatabase):
 def refuse_real_database(pDatabase, *pArgs, **pKwargs):
     """Ouvre une base SQLite, sauf la base réelle de l'application."""
 
-    if get_database_path(pDatabase) == REAL_DATABASE:
+    vPath = get_database_path(pDatabase)
+
+    if vPath == REAL_DATABASE:
         raise RuntimeError(
             f"Base réelle {DATABASE_FILE} ouverte pendant un test : passez une base "
             "temporaire (tmp_path) ou simulez la fonction qui la lit."
+        )
+
+    if vPath is not None and vPath.is_relative_to(PROJECT_DIRECTORY):
+        raise RuntimeError(
+            f"Base {vPath.name} ouverte dans le dossier du projet pendant un test : "
+            "passez une base temporaire (tmp_path)."
         )
 
     rConnection = SQLITE_CONNECT(pDatabase, *pArgs, **pKwargs)

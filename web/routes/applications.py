@@ -1,6 +1,7 @@
 """Pages des candidatures : suivi par étape, statut et agenda"""
 
 from datetime import datetime
+from html import escape
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -13,6 +14,7 @@ from job.application_tracking import (
     mark_followed_up,
 )
 from job.calendar import build_calendar
+from job.followed_availability import count_alerts
 from job.notification import describe_follow_up
 from job.presentation import STATUS_LABELS
 from storage.job_applications import get_application, update_application_status
@@ -96,6 +98,22 @@ def mark_follow_up_done(
 
     rResponse = RedirectResponse(
         router.url_path_for("show_applications"), status_code=303
+    )
+
+    return rResponse
+
+
+@router.get("/alerts", response_class=HTMLResponse)
+def show_alerts(pDatabaseFile: str = Depends(get_database_file)):
+    """Renvoie le badge du menu : relances dues et offres suivies retirées."""
+
+    vAlerts = count_alerts(pDatabaseFile, datetime.now())
+
+    rResponse = HTMLResponse(
+        f'<span class="badge badge-danger" title="{escape(vAlerts["text"])}">'
+        f'{vAlerts["total"]}</span>'
+        if vAlerts["total"]
+        else ""
     )
 
     return rResponse

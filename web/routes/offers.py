@@ -3,7 +3,7 @@
 import io
 from datetime import datetime, timedelta
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from fastapi import (
     APIRouter,
@@ -53,6 +53,12 @@ from job.quiz_exam import (
     load_exam_results,
 )
 from job.interview_journal import collect_asked_questions, record_interview
+from job.offer_comparison import (
+    build_comparison,
+    clear_comparison,
+    load_comparison_keys,
+    toggle_comparison,
+)
 from job.preparation import (
     MATCH_FILTERS,
     filter_by_match,
@@ -79,6 +85,7 @@ from job.presentation import (
     build_translate_url,
     can_lookup_company,
     describe_execution,
+    get_score_tone,
     prepare_offer,
 )
 from job.profile import is_profile_empty, load_profile
@@ -468,6 +475,7 @@ def show_offer(
     vCompanyRules = load_company_rules(pDatabaseFile)
 
     vExamResults = load_exam_results(pDatabaseFile, (pSource, str(pSourceId)))
+    vComparisonKeys = load_comparison_keys(pDatabaseFile)
 
     rResponse = templates.TemplateResponse(
         request,
@@ -495,6 +503,8 @@ def show_offer(
             "attachments": get_attachments(pDatabaseFile, pSource, pSourceId),
             "interview_notes": get_interview_notes(pDatabaseFile, pSource, pSourceId),
             "attachment_extensions": ALLOWED_EXTENSIONS,
+            "in_comparison": (pSource, str(pSourceId)) in vComparisonKeys,
+            "comparison_count": len(vComparisonKeys),
             "prompts": build_prompts(load_profile(pDatabaseFile), vPrepared),
             "prompt_kinds": PROMPT_KINDS,
             "chatgpt_url": CHATGPT_URL,
@@ -575,6 +585,57 @@ def add_follow_up(
 
     rResponse = render_application(
         request, pDatabaseFile, vOffer, "Relance enregistrée"
+    )
+
+    return rResponse
+
+
+@router.post("/offer/compare", dependencies=[Depends(require_csrf)])
+def toggle_offer_comparison(
+    pSource: str = Form(..., alias="source"),
+    pSourceId: str = Form(..., alias="id"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Ajoute l'offre à la comparaison, ou l'en retire, puis revient à sa fiche."""
+
+    get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    toggle_comparison(pDatabaseFile, pSource, pSourceId)
+
+    rResponse = RedirectResponse(
+        f"{router.url_path_for('show_offer')}?{urlencode({'source': pSource, 'id': pSourceId})}",
+        status_code=303,
+    )
+
+    return rResponse
+
+
+@router.get("/compare", response_class=HTMLResponse)
+def show_comparison(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche les offres comparées côte à côte."""
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "compare.html",
+        {
+            "active_page": "offers",
+            "comparison": build_comparison(pDatabaseFile, datetime.now()),
+        },
+    )
+
+    return rResponse
+
+
+@router.post("/compare/clear", dependencies=[Depends(require_csrf)])
+def clear_offer_comparison(pDatabaseFile: str = Depends(get_database_file)):
+    """Vide la comparaison, puis revient à la page de comparaison."""
+
+    clear_comparison(pDatabaseFile)
+
+    rResponse = RedirectResponse(
+        router.url_path_for("show_comparison"), status_code=303
     )
 
     return rResponse
@@ -859,15 +920,7 @@ def build_exam_chart(pResults):
                 (
                     "Note",
                     [
-                        (
-                            "var(--success)"
-                            if vPoint["score"] >= 70
-                            else (
-                                "var(--warning)"
-                                if vPoint["score"] >= 50
-                                else "var(--danger)"
-                            )
-                        )
+                        f"var(--{get_score_tone(vPoint['score'], 'danger')})"
                         for vPoint in vHistory
                     ],
                     [vPoint["score"] for vPoint in vHistory],

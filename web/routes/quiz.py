@@ -62,6 +62,7 @@ from job.quiz_exam import (
     summarize_exam,
 )
 from job.quiz_generation import (
+    build_empty_priority_themes,
     DEFAULT_GENERATION_COUNT,
     GENERATION_COUNTS,
     GENERATION_LEVELS,
@@ -189,6 +190,7 @@ def render_quiz(
             "subdomain": pSubdomain,
             "groups": group_themes(vThemes, pDomain, pSubdomain),
             "categories": count_categories(vThemes),
+            "empty_priorities": build_empty_priority_themes(pDatabaseFile, vQuiz),
             "empty_themes": [
                 vTheme
                 for vTheme in load_catalog()

@@ -1,7 +1,9 @@
 """Page du profil du candidat et import d'un CV"""
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from job.assistant import CHATGPT_URL
 from job.cv_import import (
@@ -12,6 +14,7 @@ from job.cv_import import (
     merge_profile_texts,
     read_cv_text,
 )
+from job.interview_drill import get_due_cards, grade_card
 from job.interview_journal import collect_asked_questions
 from job.profile import build_profile, load_profile, profile_to_texts, save_profile
 from job.star_answers import (
@@ -55,6 +58,7 @@ def render_profile(
             "star_answers": vAnswers,
             "star_message": pStarMessage,
             "asked_questions": collect_asked_questions(pDatabaseFile)[:5],
+            "drill_cards": get_due_cards(pDatabaseFile, datetime.now()),
             "experiences": [
                 vExperience["title"]
                 for vExperience in load_profile(pDatabaseFile)["experiences"]
@@ -188,5 +192,22 @@ async def update_star_answer(
         rResponse = render_profile(
             request, pDatabaseFile, vTexts, pStarMessage="Réponse enregistrée."
         )
+
+    return rResponse
+
+
+@router.post("/profile/drill", dependencies=[Depends(require_csrf)])
+def grade_interview_question(
+    pCardId: str = Form(..., alias="card"),
+    pKnown: str = Form("", alias="known"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Note une question d'entretien, puis revient au profil sur la suivante."""
+
+    grade_card(pDatabaseFile, pCardId, pKnown == "1", datetime.now())
+
+    rResponse = RedirectResponse(
+        router.url_path_for("show_profile") + "#drill", status_code=303
+    )
 
     return rResponse

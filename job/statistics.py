@@ -7,6 +7,7 @@ from job.settings import load_settings
 from job.sources.registry import SOURCES
 from storage.history_repository import get_history
 from storage.job_applications import (
+    count_applied_since,
     count_applications_by_day,
     count_follow_ups_by_day,
     get_upcoming_follow_ups,
@@ -68,6 +69,7 @@ def load_statistics(pDatabaseFile, pNow=None):
         ),
         "follow_ups": count_offers(pDatabaseFile, pFollowUpBefore=vNow),
         "new_offer_days": vNewOfferDays,
+        "week_goal": get_week_goal(pDatabaseFile, vNow),
         "upcoming_follow_ups": get_upcoming_follow_ups(
             pDatabaseFile, DASHBOARD_LIST_SIZE
         ),
@@ -191,3 +193,24 @@ def get_execution_counts(pDatabaseFile):
     ]
 
     return rCounts
+
+
+def get_week_goal(pDatabaseFile, pNow):
+    """Retourne l'objectif de candidatures de la semaine et sa progression.
+
+    La semaine commence le lundi à minuit ; sans objectif, share vaut None.
+    """
+
+    vGoal = load_settings(pDatabaseFile)["weekly_application_goal"]
+    vMonday = (pNow - timedelta(days=pNow.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    vSent = count_applied_since(pDatabaseFile, vMonday)
+
+    rGoal = {
+        "goal": vGoal,
+        "sent": vSent,
+        "share": min(round(100 * vSent / vGoal), 100) if vGoal else None,
+    }
+
+    return rGoal

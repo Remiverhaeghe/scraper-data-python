@@ -22,6 +22,11 @@ from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
 from job.company_info import lookup_company, summarize_company
 from job.interview_revision import build_offer_revision
 from job.interview_journal import collect_asked_questions
+from job.offer_comparison import (
+    build_comparison,
+    load_comparison_keys,
+    toggle_comparison,
+)
 from job.preparation import prepare_application
 from job.presentation import (
     AVAILABILITY_HELP,
@@ -30,6 +35,7 @@ from job.presentation import (
     AVAILABILITY_TONES,
     can_lookup_company,
     format_date,
+    get_score_tone,
     safe_url,
 )
 from job.profile import is_profile_empty, load_profile
@@ -48,14 +54,6 @@ logger = get_logger(__name__)
 
 # Hauteur du graphique des notes, dans la colonne étroite de l'assistant
 EXAM_CHART_HEIGHT = 130
-
-
-def get_score_tone(pScore):
-    """Retourne la couleur d'une note : vert, orange ou rouge."""
-
-    rTone = "success" if pScore >= 70 else ("warning" if pScore >= 50 else "danger")
-
-    return rTone
 
 
 def describe_availability(pOffer):
@@ -188,6 +186,18 @@ class OfferAssistantPanel(QWidget):
         vLayout.addWidget(self.availability_button)
         vLayout.addWidget(self.availability_label)
 
+        self.compare_button = create_button(
+            "Ajouter à la comparaison", "list-checks", pIconColor=COLORS["primary"]
+        )
+        self.compare_button.setToolTip("Trois offres au plus, comparées côte à côte")
+        self.compare_button.clicked.connect(self.toggle_comparison)
+
+        self.show_comparison_button = create_button("Voir la comparaison")
+        self.show_comparison_button.clicked.connect(self.show_comparison)
+
+        vLayout.addWidget(self.compare_button)
+        vLayout.addWidget(self.show_comparison_button)
+
     def set_offer(self, pOffer):
         """Prépare les actions pour une offre : entreprise, lien et disponibilité."""
         self.offer = pOffer
@@ -206,6 +216,7 @@ class OfferAssistantPanel(QWidget):
         )
         self.availability_button.setEnabled(safe_url(vOffer.get("url")) != "#")
         self.show_exam_results(vOffer)
+        self.refresh_comparison()
         self.show_availability(
             describe_availability(vOffer),
             (
@@ -240,6 +251,66 @@ class OfferAssistantPanel(QWidget):
                 ),
             )
 
+    def refresh_comparison(self):
+        """Met à jour les boutons de comparaison selon l'offre affichée."""
+        try:
+            vKeys = load_comparison_keys(self.database_file)
+
+        except Exception:
+            logger.exception("Impossible de lire la comparaison des offres")
+
+            vKeys = []
+
+        vInComparison = (
+            self.offer is not None
+            and (
+                self.offer["source"],
+                str(self.offer["source_id"]),
+            )
+            in vKeys
+        )
+
+        self.compare_button.setEnabled(self.offer is not None)
+        self.compare_button.setText(
+            "Retirer de la comparaison" if vInComparison else "Ajouter à la comparaison"
+        )
+        self.show_comparison_button.setText(f"Voir la comparaison ({len(vKeys)})")
+        self.show_comparison_button.setEnabled(bool(vKeys))
+
+    def toggle_comparison(self):
+        """Ajoute l'offre affichée à la comparaison, ou l'en retire."""
+        if self.offer is None:
+            return
+
+        toggle_comparison(
+            self.database_file, self.offer["source"], self.offer["source_id"]
+        )
+        self.refresh_comparison()
+
+    def show_comparison(self):
+        """Affiche les offres comparées dans un tableau, une colonne par offre."""
+        vComparison = build_comparison(self.database_file, datetime.now())
+
+        vHeader = "".join(
+            f"<th>{escape(vOffer.get('title') or 'Offre sans titre')}</th>"
+            for vOffer in vComparison["offers"]
+        )
+        vRows = "".join(
+            f"<tr><th align='left'>{escape(vLabel)}</th>"
+            + "".join(f"<td>{escape(str(vValue))}</td>" for vValue in vValues)
+            + "</tr>"
+            for vLabel, vValues in vComparison["rows"]
+        )
+
+        show_text_dialog(
+            self,
+            "Comparaison des offres",
+            pHtml=(
+                "<table border='1' cellpadding='6' cellspacing='0'>"
+                f"<tr><th></th>{vHeader}</tr>{vRows}</table>"
+            ),
+        )
+
     def show_exam_results(self, pOffer):
         """Rappelle les notes des examens blancs déjà passés sur l'offre."""
         vResults = []
@@ -264,7 +335,10 @@ class OfferAssistantPanel(QWidget):
             [
                 (
                     "Note",
-                    [COLORS[get_score_tone(vPoint["score"])] for vPoint in vHistory],
+                    [
+                        COLORS[get_score_tone(vPoint["score"], "danger")]
+                        for vPoint in vHistory
+                    ],
                     [vPoint["score"] for vPoint in vHistory],
                 )
             ],

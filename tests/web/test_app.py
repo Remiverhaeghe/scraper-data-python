@@ -2019,3 +2019,55 @@ def test_database_backup_restored_from_settings(client, tmp_path):
     assert vRefused.status_code == 400
     assert "Sauvegarde introuvable." in vUnknown.text
     assert "Sauvegarde restaurée." in vRestored.text
+
+
+def test_offers_comparison_on_the_web(client):
+    """Vérifie l'ajout depuis la fiche, la page de comparaison et son vidage."""
+
+    vAdded = client.post(
+        "/offer/compare", data={"source": "adzuna", "id": "new"}, follow_redirects=False
+    )
+    vPage = client.get("/compare").text
+    vOffer = client.get("/offer", params={"source": "adzuna", "id": "new"}).text
+
+    client.post("/compare/clear")
+
+    assert vAdded.status_code == 303
+    assert "Télétravail" in vPage
+    assert "Retirer de la comparaison" in vOffer
+    assert "Aucune offre à comparer" in client.get("/compare").text
+
+
+def test_interview_drill_on_the_web(client):
+    """Vérifie la question affichée puis notée depuis la page Profil."""
+
+    client.post("/profile/star", data={"question": "echec", "result": "Leçon"})
+
+    vPage = client.get("/profile").text
+    vCard = vPage.split('name="card" value="')[1].split('"')[0]
+    vGraded = client.post("/profile/drill", data={"card": vCard, "known": "1"})
+
+    assert "Racontez un échec" in vPage
+    assert "Aucune question à revoir aujourd" in vGraded.text
+
+
+def test_menu_alerts_badge(client):
+    """Vérifie le badge du menu, vide sans action en attente."""
+
+    assert client.get("/alerts").text == ""
+    assert 'hx-get="/alerts"' in client.get("/applications").text
+
+    client.post(
+        "/offer/application",
+        data={
+            "source": "adzuna",
+            "id": "new",
+            "status": "APPLIED",
+            "follow_up_date": "2026-01-01",
+        },
+    )
+
+    vBadge = client.get("/alerts").text
+
+    assert ">1</span>" in vBadge
+    assert "1 relance(s) à faire" in vBadge

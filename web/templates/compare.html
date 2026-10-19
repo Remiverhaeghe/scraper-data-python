@@ -1,0 +1,40 @@
+{# Comparaison des offres (route /compare) : calculée par job/offer_comparison.py, comme sur le bureau. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Comparaison{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Comparaison", "Trois offres au plus, côte à côte : ajoutez-les depuis leur fiche", "list-checks") }}
+
+<article class="card">
+    {% if comparison.offers %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    {% for offer in comparison.offers %}
+                    <th><a href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Offre sans titre" }}</a></th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, values in comparison.rows %}
+                <tr>
+                    <th scope="row">{{ label }}</th>
+                    {% for value in values %}<td>{{ value }}</td>{% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <form class="section-gap" method="post" action="{{ url_for('clear_offer_comparison').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button class="button" type="submit">Vider la comparaison</button>
+    </form>
+    {% else %}
+    <div class="empty">{{ icon("list-checks", 32) }}Aucune offre à comparer : utilisez « Ajouter à la comparaison » sur la fiche d'une offre.</div>
+    {% endif %}
+</article>
+{% endblock %}

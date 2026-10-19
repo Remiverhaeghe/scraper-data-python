@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QProgressBar,
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
@@ -134,6 +135,7 @@ class HomePage(QWidget):
 
         vLayout.addWidget(self.create_banner())
         vLayout.addLayout(self.create_statistics())
+        vLayout.addWidget(self.create_goal_bar())
 
         # Une grille aligne les colonnes des deux rangées, qui se partagent la
         # hauteur de la fenêtre : la page ne défile que sur un petit écran.
@@ -231,6 +233,27 @@ class HomePage(QWidget):
             rGrid.addWidget(vCard, 0, vIndex)
 
         return rGrid
+
+    def create_goal_bar(self):
+        """Construit la progression de l'objectif de candidatures de la semaine."""
+        self.goal_bar = QProgressBar()
+        self.goal_bar.setToolTip(
+            "Objectif réglable dans Paramètres, règles de calcul ; 0 le masque"
+        )
+        self.goal_bar.hide()
+
+        return self.goal_bar
+
+    def show_week_goal(self, pGoal):
+        """Affiche la progression de l'objectif, masquée sans objectif."""
+        self.goal_bar.setVisible(pGoal["share"] is not None)
+
+        if pGoal["share"] is not None:
+            self.goal_bar.setValue(pGoal["share"])
+            self.goal_bar.setFormat(
+                f"Objectif de la semaine : {pGoal['sent']} / {pGoal['goal']} "
+                "candidature(s)" + (" · atteint" if pGoal["share"] == 100 else "")
+            )
 
     def create_chart_card(self):
         """Construit le graphique des nouvelles offres par jour."""
@@ -460,6 +483,7 @@ class HomePage(QWidget):
                 f"Nouvelles sur {vStatistics['new_offer_days']} jours"
             )
 
+            self.show_week_goal(vStatistics["week_goal"])
             self.show_activity(vStatistics["executions"])
             self.show_chart(vStatistics["daily_activity"])
             self.show_follow_ups(vStatistics["upcoming_follow_ups"])

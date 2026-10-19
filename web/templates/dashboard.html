@@ -51,6 +51,18 @@
     {{ ui.stat(statistics.follow_ups, "Relances à faire", "bell-ring", "purple", offers_url ~ "?status=" ~ follow_up_filter) }}
 </section>
 
+{% if statistics.week_goal.share is not none %}
+<article class="card section-gap">
+    <h2>Objectif de la semaine</h2>
+    <p class="card-subtitle">{{ statistics.week_goal.sent }} candidature(s) envoyée(s) sur {{ statistics.week_goal.goal }} depuis lundi</p>
+    <div class="funnel-row funnel-{{ 2 if statistics.week_goal.share == 100 else 1 }}">
+        <span class="funnel-label">{{ statistics.week_goal.share }} %</span>
+        <span class="funnel-track"><span class="funnel-bar" style="width: {{ statistics.week_goal.share }}%">{{ statistics.week_goal.sent }} / {{ statistics.week_goal.goal }}</span></span>
+        <span class="muted">{% if statistics.week_goal.share == 100 %}Objectif atteint{% endif %}</span>
+    </div>
+</article>
+{% endif %}
+
 <section class="grid grid-dashboard">
     <article class="card">
         <h2>Activité</h2>

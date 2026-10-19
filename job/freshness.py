@@ -46,14 +46,6 @@ def compute_freshness(pOffer, pNow):
     return rScore
 
 
-def get_freshness_tone(pScore):
-    """Retourne la couleur d'un score : vert, orange ou gris."""
-
-    rTone = "success" if pScore >= 70 else ("warning" if pScore >= 40 else "muted")
-
-    return rTone
-
-
 def add_freshness(pOffers, pNow):
     """Ajoute le score de fraîcheur à chaque offre, après leur regroupement."""
 

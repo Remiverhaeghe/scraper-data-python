@@ -4,7 +4,8 @@ from datetime import datetime
 
 import pytest
 
-from job.freshness import add_freshness, compute_freshness, get_freshness_tone
+from job.freshness import add_freshness, compute_freshness
+from job.presentation import get_score_tone
 
 NOW = datetime(2026, 10, 19, 12, 0)
 
@@ -35,7 +36,7 @@ def test_add_freshness_and_tone():
     add_freshness(vOffers, NOW)
 
     assert [vOffer["freshness"] for vOffer in vOffers] == [100, 0]
-    assert [get_freshness_tone(vScore) for vScore in (85, 50, 10)] == [
+    assert [get_score_tone(vScore) for vScore in (85, 50, 10)] == [
         "success",
         "warning",
         "muted",

@@ -619,3 +619,21 @@ def describe_backup(pBackup):
     )
 
     return rText
+
+
+# Seuils de couleur des scores sur 100 : correspondance, fraîcheur et notes
+SCORE_GOOD = 70
+SCORE_FAIR = 40
+
+
+def get_score_tone(pScore, pLowTone="muted"):
+    """Retourne la couleur d'un score sur 100 : vert, orange, puis pLowTone."""
+
+    if pScore >= SCORE_GOOD:
+        rTone = "success"
+    elif pScore >= SCORE_FAIR:
+        rTone = "warning"
+    else:
+        rTone = pLowTone
+
+    return rTone

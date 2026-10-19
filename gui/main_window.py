@@ -37,6 +37,7 @@ from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
 from gui.theme import COLORS
 from gui.widgets import show_message
+from job.followed_availability import count_alerts
 from job.quiz import DEFAULT_MODE
 from job.quiz_generation import prepare_quiz_caches
 from job.schedule import save_scheduled_search
@@ -339,6 +340,23 @@ class MainWindow(QMainWindow):
 
         if hasattr(vPage, "refresh"):
             vPage.refresh()
+
+        self.update_alerts()
+
+    def update_alerts(self):
+        """Affiche le nombre d'actions en attente à côté de « Candidatures »."""
+        try:
+            vAlerts = count_alerts(self.database_file, datetime.now())
+
+        except Exception:
+            logger.exception("Impossible de compter les alertes du menu")
+            return
+
+        vItem = self.navigation.item(self.page_rows["applications"])
+        vItem.setText(
+            f"Candidatures ({vAlerts['total']})" if vAlerts["total"] else "Candidatures"
+        )
+        vItem.setToolTip(vAlerts["text"] if vAlerts["total"] else "")
 
     def on_search_started(self):
         """Signale la recherche en cours et bloque le changement de thème."""

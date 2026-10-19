@@ -10,6 +10,7 @@ from job.application_tracking import build_board
 from job.followed_availability import (
     build_expired_offers_email,
     check_followed_offers,
+    count_alerts,
     run_due_followed_check,
 )
 from job.schedule import save_notification_email
@@ -119,3 +120,31 @@ def test_expired_offers_email_and_alert(database_file, monkeypatch):
             [{"title": "Offre", "company": "Acme", "status": "APPLIED", "url": None}]
         )[1]
     )
+
+
+def test_check_stops_after_the_time_limit(database_file, caplog):
+    """Vérifie l'arrêt du passage une fois la durée maximale dépassée."""
+
+    vTimes = iter([0, 0, 500])
+    vChecked = []
+
+    check_followed_offers(
+        database_file,
+        NOW,
+        lambda pUrl: vChecked.append(pUrl),
+        lambda: next(vTimes),
+    )
+
+    assert len(vChecked) == 1
+    assert "arrêtée après" in caplog.text
+
+
+def test_alerts_count_due_follow_ups_and_expired_offers(database_file):
+    """Vérifie le total des actions en attente affiché dans le menu."""
+
+    check_followed_offers(database_file, NOW, fake_check)
+
+    vAlerts = count_alerts(database_file, NOW + timedelta(days=30))
+
+    assert (vAlerts["follow_ups"], vAlerts["expired"], vAlerts["total"]) == (1, 1, 2)
+    assert vAlerts["text"] == "1 relance(s) à faire, 1 offre(s) suivie(s) retirée(s)"

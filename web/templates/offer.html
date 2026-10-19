@@ -109,6 +109,14 @@
                     {% if offer.availability_checked_at %}<strong class="tone-{{ availability_tones[offer.availability] }}">Vérifiée le {{ offer.availability_checked_at | date_fr }} : {{ availability_labels[offer.availability] }}</strong>{% endif %}
                 </span>
             </form>
+
+            <form class="section-gap" method="post" action="{{ url_for('toggle_offer_comparison').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <input type="hidden" name="source" value="{{ offer.source }}">
+                <input type="hidden" name="id" value="{{ offer.source_id }}">
+                <button class="button" type="submit">{{ icon("list-checks", 16) }} {{ "Retirer de la comparaison" if in_comparison else "Ajouter à la comparaison" }}</button>
+                {% if comparison_count %}<a href="{{ url_for('show_comparison').path }}">Voir la comparaison ({{ comparison_count }})</a>{% endif %}
+            </form>
         </article>
 
         {% if group.offers | length > 1 %}

@@ -459,3 +459,20 @@ def get_applications_with_offers(pDatabaseFile, pStatuses):
     rApplications = [dict(vRow) for vRow in vRows]
 
     return rApplications
+
+
+def count_applied_since(pDatabaseFile, pSince):
+    """Compte les candidatures envoyées depuis une date."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rCount = vConnection.execute(
+            "SELECT COUNT(*) FROM job_application WHERE applied_at >= ?",
+            (pSince.isoformat(),),
+        ).fetchone()[0]
+
+    finally:
+        vConnection.close()
+
+    return rCount

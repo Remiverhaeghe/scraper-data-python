@@ -45,7 +45,7 @@ def require_api_token(
 
 @router.get("/quiz", dependencies=[Depends(require_api_token)])
 def download_quiz(
-    response: Response,
+    pResponse: Response,
     pVersion: str = Header("", alias="If-None-Match"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
@@ -57,7 +57,7 @@ def download_quiz(
     if pVersion == vETag:
         rResponse = Response(status_code=304, headers={"ETag": vETag})
     else:
-        response.headers["ETag"] = vETag
+        pResponse.headers["ETag"] = vETag
         rResponse = vPackage
 
     return rResponse

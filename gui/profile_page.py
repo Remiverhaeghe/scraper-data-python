@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.interview_drill_panel import InterviewDrillPanel
 from gui.star_answers_panel import StarAnswersPanel
 from gui.theme import COLORS
 from gui.widgets import (
@@ -159,13 +160,16 @@ class ProfilePage(QWidget):
         )
 
         self.star_panel = StarAnswersPanel(pDatabaseFile)
+        self.drill_panel = InterviewDrillPanel(pDatabaseFile)
 
         vLayout.addWidget(vCard, 1)
         vLayout.addWidget(self.star_panel)
+        vLayout.addWidget(self.drill_panel)
 
     def refresh(self):
         """Remplit le formulaire avec le profil enregistré."""
         self.star_panel.refresh()
+        self.drill_panel.refresh()
 
         try:
             vTexts = profile_to_texts(load_profile(self.database_file))

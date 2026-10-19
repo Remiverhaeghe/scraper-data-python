@@ -161,3 +161,22 @@ def test_applications_opens_its_page_and_preset_the_offers(qt_application, tmp_p
 
     assert vWindow.pages.currentWidget() is vWindow.offers_page
     assert vWindow.offers_page.status_combo.currentData() == "APPLIED"
+
+
+def test_menu_shows_pending_alerts(qt_application, tmp_path, monkeypatch):
+    """Vérifie le nombre d'actions en attente à côté de « Candidatures »."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+    monkeypatch.setattr(
+        "gui.main_window.count_alerts",
+        lambda pDatabaseFile, pNow: {"total": 2, "text": "2 relance(s) à faire"},
+    )
+
+    vWindow = MainWindow(vDatabaseFile, "Test")
+    vWindow.navigate("settings")
+    vItem = vWindow.navigation.item(vWindow.page_rows["applications"])
+
+    assert vItem.text() == "Candidatures (2)"
+    assert vItem.toolTip() == "2 relance(s) à faire"

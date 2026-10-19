@@ -8,6 +8,24 @@
 {% block content %}
 {{ ui.page_header("Révision", "QCM techniques pour préparer les entretiens, thèmes conseillés selon vos offres", "graduation-cap") }}
 
+{% if empty_priorities and not result and not question %}
+<article class="card section-gap">
+    <h2>{{ icon("target") }} À préparer en priorité</h2>
+    <p class="card-subtitle">Demandés dans vos offres, sans aucune question pour le moment.</p>
+    <div class="rules-actions">
+        {% for theme_item in empty_priorities %}
+        <form method="post" action="{{ url_for('prepare_quiz_prompt').path }}#add-questions">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <input type="hidden" name="theme" value="{{ theme_item.label }}">
+            <input type="hidden" name="level" value="{{ mixed_level }}">
+            <input type="hidden" name="count" value="{{ default_count }}">
+            <button class="button" type="submit">{{ icon("bot", 16) }} {{ theme_item.label }} · {{ theme_item.offer_count }} offre(s)</button>
+        </form>
+        {% endfor %}
+    </div>
+</article>
+{% endif %}
+
 {% if result %}
 <article class="card quiz-card">
     <p class="quiz-verdict {{ 'tone-success' if result.correct else 'tone-danger' }}" role="status">

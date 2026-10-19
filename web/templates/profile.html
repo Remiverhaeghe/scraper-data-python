@@ -83,4 +83,29 @@
     {% endif %}
     {% if star_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ star_message }}</p>{% endif %}
 </article>
+<article class="card section-gap" id="drill">
+    <h2>Entraînement à l'oral</h2>
+    <p class="card-subtitle">Répondez à voix haute, puis comparez à votre réponse préparée. Une question sue revient plus tard, une question à revoir dès demain.</p>
+    {% if drill_cards %}
+    {% set card = drill_cards[0] %}
+    <p class="muted">{{ card.origin }} · {{ drill_cards | length }} à revoir</p>
+    <p><strong>{{ card.question }}</strong></p>
+    <details>
+        <summary>Voir ma réponse</summary>
+        <p class="pre-line">{{ card.answer or "Pas de réponse écrite : préparez-la dans les réponses STAR." }}</p>
+    </details>
+    <div class="rules-actions">
+        {% for known, label in (("1", "Je savais"), ("0", "À revoir")) %}
+        <form method="post" action="{{ url_for('grade_interview_question').path }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <input type="hidden" name="card" value="{{ card.id }}">
+            <input type="hidden" name="known" value="{{ known }}">
+            <button class="button{% if known == '1' %} button-primary{% endif %}" type="submit">{{ label }}</button>
+        </form>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">Aucune question à revoir aujourd'hui : préparez des réponses STAR ou notez les questions de vos entretiens.</p>
+    {% endif %}
+</article>
 {% endblock %}

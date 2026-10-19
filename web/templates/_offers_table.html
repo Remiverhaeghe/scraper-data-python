@@ -37,8 +37,8 @@
                 <td class="muted">{{ offer.location or "" }}</td>
                 <td>{% if offer.contract %}<span class="badge badge-first badge-{{ contract_tones.get(offer.contract, 'muted') }}">{{ offer.contract }}</span>{% endif %}</td>
                 <td class="amount">{{ offer.net_salary or "" }}</td>
-                <td class="amount">{% if offer.match_score is not none %}<span class="badge badge-first badge-{{ 'success' if offer.match_score >= 70 else ('warning' if offer.match_score >= 40 else 'muted') }}" title="Compétences de l'offre présentes dans votre profil">{{ offer.match_score }} %</span>{% endif %}</td>
-                <td class="amount">{% if offer.freshness is defined %}<span class="badge badge-{{ 'success' if offer.freshness >= 70 else ('warning' if offer.freshness >= 40 else 'muted') }}">{{ offer.freshness }}</span>{% endif %}</td>
+                <td class="amount">{% if offer.match_score is not none %}<span class="badge badge-first badge-{{ offer.match_score | score_tone }}" title="Compétences de l'offre présentes dans votre profil">{{ offer.match_score }} %</span>{% endif %}</td>
+                <td class="amount">{% if offer.freshness is defined %}<span class="badge badge-{{ offer.freshness | score_tone }}">{{ offer.freshness }}</span>{% endif %}</td>
                 <td class="nowrap">
                     {% if offer.application_status %}<span class="badge badge-first badge-{{ status_tones.get(offer.application_status, 'muted') }}">{{ statuses[offer.application_status] }}</span>{% endif %}
                     {% if offer.follow_up_due %}<span class="badge badge-due">Relance le {{ offer.follow_up_date | date_fr }}</span>{% endif %}

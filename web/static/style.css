@@ -2211,3 +2211,7 @@ textarea.companies-preferred {
         gap: 4px;
     }
 }
+
+.nav-alerts {
+    margin-left: auto;
+}

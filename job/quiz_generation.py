@@ -230,6 +230,22 @@ def build_priority_themes(pDatabaseFile, pQuiz, pLimit=PRIORITY_LIMIT):
     return rThemes
 
 
+# Thèmes vides mis en avant en haut de la page Révision
+EMPTY_PRIORITY_LIMIT = 3
+
+
+def build_empty_priority_themes(pDatabaseFile, pQuiz, pLimit=EMPTY_PRIORITY_LIMIT):
+    """Retourne les thèmes demandés par les offres et encore sans aucune question."""
+
+    rThemes = [
+        vTheme
+        for vTheme in build_priority_themes(pDatabaseFile, pQuiz, pLimit=None)
+        if not vTheme["questions"]
+    ][:pLimit]
+
+    return rThemes
+
+
 def get_next_lot(pQuestions, pThemeKey):
     """Retourne le numéro du prochain lot d'un thème, d'après ses identifiants."""
 

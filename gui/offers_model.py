@@ -4,13 +4,13 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QColor, QFont
 
 from gui.theme import COLORS
-from job.freshness import get_freshness_tone
 from job.presentation import (
     CONTRACT_TONES,
     STATUS_LABELS,
     STATUS_TONES,
     format_date,
     format_net_salary,
+    get_score_tone,
 )
 
 # Rôle portant la valeur brute, utilisée pour trier les colonnes
@@ -107,13 +107,9 @@ def get_cell_color(pOffer, pKey):
     elif pKey == "company" and pOffer.get("company_preferred"):
         vTone = "primary"
     elif pKey == "match_score" and pOffer.get(pKey) is not None:
-        vTone = (
-            "success"
-            if pOffer[pKey] >= 70
-            else ("warning" if pOffer[pKey] >= 40 else "muted")
-        )
+        vTone = get_score_tone(pOffer[pKey])
     elif pKey == "freshness" and pOffer.get(pKey) is not None:
-        vTone = get_freshness_tone(pOffer[pKey])
+        vTone = get_score_tone(pOffer[pKey])
     elif pKey == "source_label" and pOffer.get("needs_review"):
         vTone = "warning"
 

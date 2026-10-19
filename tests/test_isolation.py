@@ -30,3 +30,12 @@ def test_temporary_database_can_be_opened(tmp_path):
         vConnection = sqlite3.connect(vDatabase)
         vConnection.execute("SELECT 1")
         vConnection.close()
+
+
+def test_database_inside_the_project_cannot_be_opened():
+    """Vérifie qu'un chemin relatif oublié ne crée pas de base dans le projet."""
+
+    with pytest.raises(RuntimeError, match="dossier du projet"):
+        sqlite3.connect("scraper.db")
+
+    assert not Path("scraper.db").exists()

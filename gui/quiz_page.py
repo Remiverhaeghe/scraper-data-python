@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from gui.dialogs import show_text_dialog
 from gui.quiz_answer import ClickableSvgWidget, add_answer_widgets, read_response
 from gui.quiz_import_panel import QuizImportPanel
+from gui.quiz_priority_banner import QuizPriorityBanner
 from gui.quiz_statistics_card import QuizStatisticsCard
 from gui.quiz_theme_cards import (
     create_domain_header,
@@ -199,7 +200,10 @@ class QuizPage(QWidget):
         vBody.addLayout(vHeader)
         vBody.addLayout(self.themes_holder)
 
+        self.priority_banner = QuizPriorityBanner(pDatabaseFile)
+
         vLayout.addWidget(self.message_label)
+        vLayout.addWidget(self.priority_banner)
         vLayout.addWidget(self.create_question_card())
         vLayout.addLayout(vBody)
 
@@ -214,6 +218,9 @@ class QuizPage(QWidget):
         self.guides_card.hide()
 
         self.import_panel = QuizImportPanel(pDatabaseFile)
+        self.priority_banner.prepare_requested.connect(
+            self.import_panel.prepare_priority
+        )
         self.import_panel.questions_changed.connect(self.refresh)
         self.import_panel.questions_cleared.connect(self.forget_question)
         self.statistics_card = QuizStatisticsCard()
@@ -390,6 +397,7 @@ class QuizPage(QWidget):
         self.themes = vThemes
         self.statistics_card.show_progress(vThemes, vStatistics)
         self.import_panel.refresh(vThemes)
+        self.priority_banner.refresh()
         self.select_category(self.domain, self.subdomain)
 
     def refresh_categories(self):

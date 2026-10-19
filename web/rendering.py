@@ -15,7 +15,13 @@ from config import (
     REPOSITORY_URL,
     TAGLINE,
 )
-from job.presentation import CHART_PALETTE, format_date, format_euros, safe_url
+from job.presentation import (
+    CHART_PALETTE,
+    format_date,
+    format_euros,
+    safe_url,
+    get_score_tone,
+)
 from job.schema_drawing import (
     GRID_COLUMNS,
     GRID_ROWS,
@@ -105,6 +111,9 @@ templates.env.filters["date_fr"] = format_date
 
 
 templates.env.filters["safe_url"] = safe_url
+
+# Couleur d'un score sur 100, la même qu'au bureau
+templates.env.filters["score_tone"] = get_score_tone
 
 
 templates.env.globals.update(

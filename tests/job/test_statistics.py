@@ -1,12 +1,19 @@
 """Tests des indicateurs communs au bureau et au web"""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import pandas as pd
 import pytest
 
-from job.statistics import MAX_PIE_SOURCES, get_source_shares, trim_leading_empty_days
+from job.settings import save_settings
+from job.statistics import (
+    MAX_PIE_SOURCES,
+    get_source_shares,
+    get_week_goal,
+    trim_leading_empty_days,
+)
 from storage.database import initialize_database
+from storage.job_applications import save_application
 from storage.job_offers import save_offers
 
 
@@ -79,3 +86,37 @@ def test_trim_leading_empty_days(pOffers, pApplications, pExpectedDays):
 
     assert len(rActivity["new_offers"]) == pExpectedDays
     assert len(rActivity["applications"]) == pExpectedDays
+
+
+def test_week_goal_counts_applications_since_monday(tmp_path):
+    """Vérifie l'objectif de la semaine, compté depuis lundi minuit."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vNow = datetime(2026, 10, 21, 15, 0)
+
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {"source": "remotive", "source_id": str(vId), "title": "Dev"}
+                for vId in range(3)
+            ]
+        ),
+        vNow,
+    )
+
+    for vId, vDays in ((0, 3), (1, 1), (2, 0)):
+        save_application(
+            vDatabaseFile,
+            "remotive",
+            str(vId),
+            "APPLIED",
+            pNow=vNow - timedelta(days=vDays),
+        )
+
+    assert get_week_goal(vDatabaseFile, vNow)["share"] is None
+
+    save_settings(vDatabaseFile, {"weekly_application_goal": "4"})
+
+    assert get_week_goal(vDatabaseFile, vNow) == {"goal": 4, "sent": 2, "share": 50}

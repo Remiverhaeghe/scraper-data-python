@@ -6,7 +6,7 @@ import gui.profile_page as profile_page
 from gui.profile_page import ProfilePage
 from gui.theme import COLORS
 from job.profile import build_profile, load_profile, save_profile
-from job.star_answers import load_star_answers
+from job.star_answers import load_star_answers, save_star_answer
 from storage.database import initialize_database
 
 
@@ -179,3 +179,27 @@ def test_star_answer_is_prefilled_and_saved(qt_application, tmp_path):
     assert load_star_answers(vDatabaseFile)["reussite"]["experience"] == "Développeur"
     assert vPanel.question_combo.currentText().endswith("(préparée)")
     assert vPanel.message_label.text() == "1 réponse(s) préparée(s) sur 7."
+
+
+def test_interview_drill_reveals_and_grades(qt_application, tmp_path):
+    """Vérifie la réponse révélée puis l'auto-évaluation qui passe à la suite."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+    save_star_answer(vDatabaseFile, "echec", "", {"result": "Leçon retenue"})
+
+    vPage = ProfilePage(vDatabaseFile)
+    vPage.refresh()
+    vDrill = vPage.drill_panel
+
+    assert vDrill.question_label.text().startswith("Racontez un échec")
+    assert not vDrill.known_button.isEnabled()
+
+    vDrill.reveal()
+
+    assert vDrill.answer_label.text() == "Résultat : Leçon retenue"
+
+    vDrill.known_button.click()
+
+    assert vDrill.question_label.text().startswith("Aucune question à revoir")

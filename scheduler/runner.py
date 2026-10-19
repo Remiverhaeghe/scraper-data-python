@@ -12,6 +12,11 @@ from job.followed_availability import (
     build_expired_offers_email,
     run_due_followed_check,
 )
+from job.interview_reminder import (
+    build_reminder_email,
+    get_interviews_to_remind,
+    mark_reminded,
+)
 from job.notification import build_follow_ups_email, build_new_offers_email
 from job.preparation import score_offers
 from job.presentation import SCHEDULED_TRIGGER, clean_missing_values
@@ -27,6 +32,12 @@ from job.schedule import (
 )
 from job.sources.aggregator import ScrapingCancelled
 from job.sources.configuration import build_job_config, build_search_arguments
+from job.weekly_digest import (
+    build_digest_email,
+    build_weekly_digest,
+    is_digest_due,
+    mark_digest_sent,
+)
 from storage.backup import run_due_backup
 from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
@@ -262,6 +273,54 @@ def check_followed_offers_daily(pDatabaseFile, pNow):
     return rSent
 
 
+def send_weekly_digest(pDatabaseFile, pNow):
+    """Envoie le récapitulatif de la semaine s'il n'est pas encore parti."""
+
+    rSent = False
+
+    try:
+        vEmail = load_schedule(pDatabaseFile)["email"]
+
+        if vEmail and is_digest_due(pDatabaseFile, pNow):
+            send_email(
+                vEmail, *build_digest_email(build_weekly_digest(pDatabaseFile, pNow))
+            )
+            mark_digest_sent(pDatabaseFile, pNow)
+            rSent = True
+
+    except (OSError, sqlite3.Error, smtplib.SMTPException, ValueError) as vException:
+        logger.error("Échec de l'envoi du récapitulatif hebdomadaire : %s", vException)
+
+    return rSent
+
+
+def send_interview_reminders(pDatabaseFile, pNow):
+    """Envoie le rappel de chaque entretien des prochaines 24 heures ; retourne leur nombre."""
+
+    rCount = 0
+
+    try:
+        vEmail = load_schedule(pDatabaseFile)["email"]
+
+        for vApplication in (
+            get_interviews_to_remind(pDatabaseFile, pNow) if vEmail else []
+        ):
+            send_email(vEmail, *build_reminder_email(pDatabaseFile, vApplication))
+            mark_reminded(pDatabaseFile, vApplication)
+            rCount += 1
+
+            logger.info(
+                "Rappel d'entretien envoyé : %s %s",
+                vApplication["source"],
+                vApplication["source_id"],
+            )
+
+    except (OSError, sqlite3.Error, smtplib.SMTPException, ValueError) as vException:
+        logger.error("Échec du rappel d'entretien : %s", vException)
+
+    return rCount
+
+
 def run_forever(pDatabaseFile, pStopEvent, pPollSeconds=POLL_SECONDS):
     """Vérifie l'échéance à intervalle régulier jusqu'à la demande d'arrêt."""
 
@@ -270,6 +329,8 @@ def run_forever(pDatabaseFile, pStopEvent, pPollSeconds=POLL_SECONDS):
     while not pStopEvent.is_set():
         run_due_backup(pDatabaseFile, datetime.now())
         check_followed_offers_daily(pDatabaseFile, datetime.now())
+        send_weekly_digest(pDatabaseFile, datetime.now())
+        send_interview_reminders(pDatabaseFile, datetime.now())
 
         try:
             run_due_search(pDatabaseFile, datetime.now(), pStopEvent)

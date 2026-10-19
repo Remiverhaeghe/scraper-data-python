@@ -153,6 +153,10 @@ def test_run_forever_survives_errors_until_stop(monkeypatch, pError):
     monkeypatch.setattr(
         runner, "check_followed_offers_daily", lambda pDatabaseFile, pNow: False
     )
+    monkeypatch.setattr(runner, "send_weekly_digest", lambda pDatabaseFile, pNow: False)
+    monkeypatch.setattr(
+        runner, "send_interview_reminders", lambda pDatabaseFile, pNow: 0
+    )
 
     runner.run_forever("scraper.db", vStopEvent, pPollSeconds=0)
 
