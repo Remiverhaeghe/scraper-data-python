@@ -130,4 +130,21 @@ class MemoryRevisionStore implements RevisionStore {
 
   @override
   Future<void> savePending(List<Map<String, dynamic>> pAnswers) async => pending = pAnswers;
+
+  List<Map<String, dynamic>> examResults = [];
+  Map<String, dynamic> preferences = {};
+
+  @override
+  Future<List<Map<String, dynamic>>> loadExamResults() async => examResults;
+
+  @override
+  Future<void> saveExamResults(List<Map<String, dynamic>> pResults) async =>
+      examResults = pResults;
+
+  @override
+  Future<Map<String, dynamic>> loadPreferences() async => preferences;
+
+  @override
+  Future<void> savePreferences(Map<String, dynamic> pPreferences) async =>
+      preferences = pPreferences;
 }

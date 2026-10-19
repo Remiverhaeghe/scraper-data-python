@@ -6,7 +6,10 @@ réseau, puis les envoie à la synchronisation suivante. Le serveur recalcule ch
 correction : la progression reste la même sur le PC, le web et le téléphone.
 
 Pris en charge : QCM, calculs avec unité, remises en ordre et associations, schémas
-SVG, extraits de code, guides pratiques, répétition espacée (boîtes de Leitner).
+SVG, extraits de code, guides pratiques, répétition espacée (boîtes de Leitner),
+examen blanc chronométré (tous thèmes ou un thème), synchronisation automatique à
+l'ouverture, au retour dans l'application et toutes les dix réponses, rappel
+quotidien à 18 h 30 avec le nombre de questions à revoir.
 
 ## Installation des outils (une fois)
 
@@ -79,6 +82,28 @@ flutter build apk --release
 Copier `build/app/outputs/flutter-apk/app-release.apk` sur le téléphone et
 l'ouvrir : Android demande d'autoriser l'installation depuis cette source.
 
+### Signature
+
+L'APK est signé avec une clé personnelle : `android/app/upload-keystore.jks`, dont
+les mots de passe sont dans `android/key.properties`. Les deux fichiers sont exclus
+du dépôt. **Les sauvegarder hors du PC** (clé USB, coffre de mots de passe) : sans
+eux, une nouvelle version ne s'installe plus par-dessus l'ancienne, il faut
+désinstaller et la progression locale non synchronisée est perdue. Sans
+`key.properties`, par exemple sur un autre poste, la clé de débogage est utilisée.
+
+### Icône
+
+L'icône, au style du logo du bureau, est dans `assets/icon/`. Après une
+modification : `dart run flutter_launcher_icons`.
+
+### Dépannage
+
+- *Daemon compilation failed* ou *Could not close incremental caches* : le projet
+  et le cache des paquets sont sur deux disques. `kotlin.incremental=false` dans
+  `android/gradle.properties` le contourne.
+- Échec de `ninja` sur un chemin contenant un accent : voir `PUB_CACHE` et
+  `GRADLE_USER_HOME` plus haut.
+
 ## Premier lancement
 
 1. Sur le PC, lancer le tableau de bord en écoutant sur le réseau (`WEB_HOST`
@@ -102,15 +127,18 @@ mobile/
 │   │   └── review_state.dart     # Boîte de Leitner et date de révision d'une question
 │   ├── logic/
 │   │   ├── grading.dart          # Correction, identique à job/quiz_types.py
-│   │   └── review.dart           # Répétition espacée, identique à job/quiz.py
+│   │   ├── review.dart           # Répétition espacée, identique à job/quiz.py
+│   │   └── exam.dart             # Examen blanc : tirage, durée conseillée, résultat
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
 │   │   ├── revision_store.dart   # Interface du stockage local et réglages du serveur
-│   │   └── file_store.dart       # Fichiers JSON et jeton dans le stockage chiffré
+│   │   ├── file_store.dart       # Fichiers JSON et jeton dans le stockage chiffré
+│   │   └── reminders.dart        # Rappel quotidien par notification locale
 │   ├── screens/
-│   │   ├── setup_screen.dart     # Adresse du serveur et jeton
-│   │   ├── home_screen.dart      # Progression et thèmes par domaine
+│   │   ├── setup_screen.dart     # Adresse du serveur, jeton et rappel quotidien
+│   │   ├── home_screen.dart      # Progression, synchronisation et thèmes par domaine
 │   │   ├── question_screen.dart  # Question, correction et suivante
+│   │   ├── exam_screen.dart      # Examen blanc chronométré et bilan
 │   │   └── guide_screen.dart     # Guide pratique d'un thème
 │   └── widgets/
 │       ├── question_input.dart   # Saisie selon le type de question
@@ -120,9 +148,13 @@ mobile/
     ├── grading_test.dart         # Teste la correction de chaque type
     ├── review_test.dart          # Teste les boîtes, les dates et le choix des questions
     ├── revision_state_test.dart  # Teste les réponses hors ligne et la synchronisation
+    ├── exam_and_sync_test.dart   # Teste l'examen, l'envoi automatique et le rappel
+    ├── shared_cases_test.dart    # Teste les cas communs avec le serveur
     └── widget_test.dart          # Teste l'accueil et une question corrigée
 ```
 
-La correction et la répétition espacée sont recopiées du serveur : une règle
-modifiée dans `job/quiz_types.py` ou `job/quiz.py` se reporte aussi ici, avec son
-test.
+La correction et la répétition espacée sont recopiées du serveur. Les cas de
+`tests/fixtures/shared_quiz_cases.json`, à la racine du dépôt, sont vérifiés des
+deux côtés (`test/shared_cases_test.dart` et `tests/job/test_shared_quiz_cases.py`) :
+une règle modifiée d'un seul côté fait échouer l'autre. La CI lance `flutter
+analyze` et `flutter test` à chaque envoi.

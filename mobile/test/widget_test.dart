@@ -4,7 +4,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:jobboard_revision/revision_state.dart';
+import 'package:jobboard_revision/services/api_client.dart';
 import 'package:jobboard_revision/screens/home_screen.dart';
 import 'package:jobboard_revision/services/revision_store.dart';
 
@@ -16,6 +19,11 @@ Future<RevisionState> buildState() async {
       ..settings = const ServerSettings(address: 'http://pc/api/v1', token: 'secret')
       ..package = jsonEncode(buildPackageJson())
       ..progress = buildProgressJson(),
+    // Serveur simulé hors service : la synchronisation de l'accueil échoue sans bruit.
+    pClientFactory: (pSettings) => ApiClient(
+      pSettings,
+      pClient: MockClient((_) async => http.Response('', 503)),
+    ),
   );
 
   await rState.load();

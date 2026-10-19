@@ -1,0 +1,155 @@
+{
+  "description": "Cas communs aux tests Python (tests/job/test_shared_quiz_cases.py) et Dart (mobile/test/shared_cases_test.dart) : le serveur et le téléphone doivent corriger et planifier de la même façon.",
+  "grading": [
+    {
+      "name": "QCM juste",
+      "question": {"id": "q1", "type": "qcm", "choices": ["A", "B", "C"], "answer": 1},
+      "response": 1,
+      "correct": true,
+      "expected": "B"
+    },
+    {
+      "name": "QCM faux",
+      "question": {"id": "q1", "type": "qcm", "choices": ["A", "B", "C"], "answer": 1},
+      "response": 2,
+      "correct": false,
+      "expected": "B"
+    },
+    {
+      "name": "QCM hors des choix",
+      "question": {"id": "q1", "type": "qcm", "choices": ["A", "B"], "answer": 0},
+      "response": 5,
+      "error": true
+    },
+    {
+      "name": "Calcul avec préfixe d'unité",
+      "question": {"id": "n1", "type": "numerique", "value": 0.0023, "unit": "A", "tolerance": 2},
+      "response": "2,3 mA",
+      "correct": true,
+      "expected": "0,0023 A"
+    },
+    {
+      "name": "Calcul dans la tolérance",
+      "question": {"id": "n1", "type": "numerique", "value": 0.0023, "unit": "A", "tolerance": 2},
+      "response": "0.00234",
+      "correct": true,
+      "expected": "0,0023 A"
+    },
+    {
+      "name": "Calcul hors tolérance",
+      "question": {"id": "n1", "type": "numerique", "value": 0.0023, "unit": "A", "tolerance": 2},
+      "response": "0,0024 A",
+      "correct": false,
+      "expected": "0,0023 A"
+    },
+    {
+      "name": "Calcul avec tolérance par défaut",
+      "question": {"id": "n2", "type": "numerique", "value": 230, "unit": "V"},
+      "response": "232 V",
+      "correct": true,
+      "expected": "230 V"
+    },
+    {
+      "name": "Calcul avec un grand nombre",
+      "question": {"id": "n3", "type": "numerique", "value": 1500000, "unit": "W"},
+      "response": "1,5 MW",
+      "correct": true,
+      "expected": "1,5e+06 W"
+    },
+    {
+      "name": "Calcul dans une mauvaise unité",
+      "question": {"id": "n1", "type": "numerique", "value": 0.0023, "unit": "A"},
+      "response": "2,3 V",
+      "error": true
+    },
+    {
+      "name": "Calcul sans unité attendue",
+      "question": {"id": "n4", "type": "numerique", "value": 12},
+      "response": "12 kg",
+      "error": true
+    },
+    {
+      "name": "Remise en ordre juste",
+      "question": {"id": "o1", "type": "ordre", "items": ["Un", "Deux", "Trois"]},
+      "response": [0, 1, 2],
+      "correct": true,
+      "expected": "Un → Deux → Trois"
+    },
+    {
+      "name": "Remise en ordre fausse",
+      "question": {"id": "o1", "type": "ordre", "items": ["Un", "Deux", "Trois"]},
+      "response": [2, 1, 0],
+      "correct": false,
+      "expected": "Un → Deux → Trois"
+    },
+    {
+      "name": "Remise en ordre avec un doublon",
+      "question": {"id": "o1", "type": "ordre", "items": ["Un", "Deux", "Trois"]},
+      "response": [0, 0, 1],
+      "error": true
+    },
+    {
+      "name": "Association juste",
+      "question": {"id": "a1", "type": "association", "pairs": [["Tension", "V"], ["Courant", "A"]]},
+      "response": [0, 1],
+      "correct": true,
+      "expected": "Tension → V ; Courant → A"
+    },
+    {
+      "name": "Association inversée",
+      "question": {"id": "a1", "type": "association", "pairs": [["Tension", "V"], ["Courant", "A"]]},
+      "response": [1, 0],
+      "correct": false,
+      "expected": "Tension → V ; Courant → A"
+    },
+    {
+      "name": "Association incomplète",
+      "question": {"id": "a1", "type": "association", "pairs": [["Tension", "V"], ["Courant", "A"]]},
+      "response": [0],
+      "error": true
+    }
+  ],
+  "review": [
+    {
+      "name": "Première réponse juste",
+      "answers": [[true, "2026-10-19T22:30:00"]],
+      "box": 1,
+      "due": "2026-10-20"
+    },
+    {
+      "name": "Deux réponses justes",
+      "answers": [[true, "2026-10-19T08:00:00"], [true, "2026-10-20T08:00:00"]],
+      "box": 2,
+      "due": "2026-10-23"
+    },
+    {
+      "name": "Erreur après deux bonnes réponses",
+      "answers": [
+        [true, "2026-10-19T08:00:00"],
+        [true, "2026-10-20T08:00:00"],
+        [false, "2026-10-23T08:00:00"]
+      ],
+      "box": 1,
+      "due": "2026-10-24"
+    },
+    {
+      "name": "Boîte maximale atteinte",
+      "answers": [
+        [true, "2026-01-01T08:00:00"],
+        [true, "2026-01-02T08:00:00"],
+        [true, "2026-01-05T08:00:00"],
+        [true, "2026-01-12T08:00:00"],
+        [true, "2026-02-02T08:00:00"],
+        [true, "2026-04-03T08:00:00"]
+      ],
+      "box": 5,
+      "due": "2026-06-02"
+    },
+    {
+      "name": "Changement d'heure fin octobre",
+      "answers": [[true, "2026-10-24T23:30:00"], [true, "2026-10-25T23:30:00"]],
+      "box": 2,
+      "due": "2026-10-28"
+    }
+  ]
+}

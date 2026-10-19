@@ -80,6 +80,34 @@ jobs:
       - name: Tests et couverture
         run: pytest -q --cov
 
+  # Application Flutter du dossier mobile/ : analyse et tests, dont les cas de
+  # correction communs avec le serveur (tests/fixtures/shared_quiz_cases.json).
+  mobile:
+    name: Application mobile
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      - name: Installation des dépendances
+        run: flutter pub get
+
+      - name: Analyse du code
+        run: flutter analyze
+
+      - name: Tests
+        run: flutter test
+
   audit:
     name: Vulnérabilités des dépendances
     runs-on: ubuntu-latest

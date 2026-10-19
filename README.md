@@ -318,7 +318,8 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Accès au tableau de bord web à distance sans ouvrir de port sur Internet, par un réseau privé (procédure Tailscale ci-dessous)
 - [x] Lancement d'une recherche depuis le web, avec la même file d'exécution que le planificateur
 - [x] Application installable sur l'écran d'accueil (manifeste web et icône)
-- [x] Application mobile Flutter de révision hors ligne (`mobile/`) : QCM, calculs, remises en ordre, associations, schémas et guides, répétition espacée, réponses envoyées au retour du réseau
+- [x] Application mobile Flutter de révision hors ligne (`mobile/`) : QCM, calculs, remises en ordre, associations, schémas et guides, répétition espacée, examen blanc chronométré, synchronisation automatique, rappel quotidien, icône et signature propres
+- [x] Correction et répétition espacée vérifiées des deux côtés par des cas communs (`tests/fixtures/shared_quiz_cases.json`), application mobile testée par la CI
 
 ### Hébergement et sécurité
 
@@ -810,6 +811,8 @@ scraper-data-python/
 │
 ├── tests/                                     # Ensemble des tests automatisés
 │   ├── __init__.py                            # Initialise le package de tests
+│   ├── fixtures/
+│   │   └── shared_quiz_cases.json             # Cas de correction communs au serveur et au téléphone
 │   │
 │   ├── job/                                   # Tests du domaine Job
 │   │   ├── __init__.py                         # Initialise le package de tests Job
@@ -845,6 +848,7 @@ scraper-data-python/
 │   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_quiz_types.py                 # Teste les questions interactives et leur correction
+│   │   ├── test_shared_quiz_cases.py          # Teste les cas communs avec l'application mobile
 │   │   ├── test_schema_building.py            # Teste les schémas à construire, leur correction et leur dessin
 │   │   ├── test_quiz_import.py                # Teste l'import des packs, schémas et guides
 │   │   ├── test_quiz_generation.py            # Teste le catalogue, la demande et le contrôle des lots
