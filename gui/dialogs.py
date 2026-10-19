@@ -137,7 +137,30 @@ def describe_preparation(pPreparation):
         f"<h3>Points forts à citer</h3><ul>{vStrengths or '<li>À compléter</li>'}</ul>"
         f"<h3>Points à préparer</h3><ul>{items(vInterview['gaps']) or '<li>Aucun</li>'}</ul>"
         f"<h3>Questions du recruteur</h3><ul>{vAnswers}</ul>"
-        f"<h3>Vos réponses STAR</h3><ul>"
+        + (
+            "<h3>Questions déjà posées en entretien</h3><ul>"
+            + "".join(
+                f"<li>{escape(vItem['question'])} <i>({escape(vItem['context'])})</i>"
+                "</li>"
+                for vItem in vInterview["asked"]
+            )
+            + "</ul>"
+            if vInterview.get("asked")
+            else ""
+        )
+        + (
+            "<h3>Questions comportementales probables</h3><ul>"
+            + "".join(
+                f"<li>{escape(vItem['question'])} <i>({escape(vItem['reason'])}"
+                + (", réponse préparée" if vItem["prepared"] else ", à préparer")
+                + ")</i></li>"
+                for vItem in vInterview["likely"]
+            )
+            + "</ul>"
+            if vInterview.get("likely")
+            else ""
+        )
+        + "<h3>Vos réponses STAR</h3><ul>"
         f"{vStar or '<li>À préparer dans la page Profil</li>'}</ul>"
         f"<h3>Questions à poser</h3><ul>{items(vInterview['questions'])}</ul>"
     )

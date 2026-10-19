@@ -4,14 +4,15 @@ from datetime import datetime
 
 import pytest
 
-from gui import settings_page
+from gui import data_panel, settings_page
 from gui.settings_page import SettingsPage, describe_source_state
 from gui.theme import COLORS
 from job.schedule import load_schedule, save_scheduled_search
 from job.settings import load_settings
 from job.sources.config import SourceDefinition
 from storage.database import initialize_database
-from storage.saved_searches import save_search
+from storage.backup import backup_database
+from storage.saved_searches import get_saved_searches, save_search
 
 
 def build_definition(pAvailable=True, pSettings=()):
@@ -252,7 +253,7 @@ def test_reset_asks_confirmation(qt_application, tmp_path, monkeypatch, pConfirm
 
     monkeypatch.setattr(settings_page.QMessageBox, "exec", fake_exec)
     monkeypatch.setattr(
-        settings_page,
+        data_panel,
         "reset_database",
         lambda pDatabaseFile, pNow: vResets.append(pDatabaseFile)
         or tmp_path / "backups" / "scraper-1.db",
@@ -262,7 +263,7 @@ def test_reset_asks_confirmation(qt_application, tmp_path, monkeypatch, pConfirm
     vMessages = []
     vPage.data_reset.connect(vMessages.append)
 
-    vPage.confirm_reset()
+    vPage.data_panel.confirm_reset()
 
     assert len(vResets) == (1 if pConfirmed else 0)
     assert vMessages == (
@@ -276,12 +277,12 @@ def test_reset_failure_is_reported(qt_application, tmp_path, monkeypatch):
     def refuse(pDatabaseFile, pNow):
         raise OSError("disque plein")
 
-    monkeypatch.setattr(settings_page, "reset_database", refuse)
+    monkeypatch.setattr(data_panel, "reset_database", refuse)
 
     vPage = create_page(tmp_path / "scraper.db", monkeypatch)
-    vPage.reset_data()
+    vPage.data_panel.reset_data()
 
-    assert "La réinitialisation a échoué" in vPage.reset_message.text()
+    assert "La réinitialisation a échoué" in vPage.data_panel.reset_message.text()
 
 
 def test_companies_are_saved_from_the_page(qt_application, tmp_path, monkeypatch):
@@ -355,16 +356,16 @@ def test_calendar_address_is_created_copied_and_renewed(
 
     vPage = create_page(tmp_path / "scraper.db", monkeypatch)
 
-    assert vPage.calendar_edit.text() == ""
-    assert not vPage.copy_calendar_button.isEnabled()
+    assert vPage.calendar_panel.edit.text() == ""
+    assert not vPage.calendar_panel.copy_button.isEnabled()
 
-    vPage.calendar_button.click()
-    vFirst = vPage.calendar_edit.text()
+    vPage.calendar_panel.button.click()
+    vFirst = vPage.calendar_panel.edit.text()
 
     assert vFirst.startswith(f"{settings_page.WEB_BASE_URL}/calendar/")
-    assert vPage.calendar_button.text() == "Renouveler l'adresse"
+    assert vPage.calendar_panel.button.text() == "Renouveler l'adresse"
 
-    vPage.copy_calendar_button.click()
+    vPage.calendar_panel.copy_button.click()
 
     assert settings_page.QApplication.clipboard().text() == vFirst
 
@@ -376,13 +377,13 @@ def test_calendar_address_is_created_copied_and_renewed(
         settings_page.QMessageBox, "question", lambda *pArgs: vAnswers.pop(0)
     )
 
-    vPage.calendar_button.click()
+    vPage.calendar_panel.button.click()
 
-    assert vPage.calendar_edit.text() == vFirst
+    assert vPage.calendar_panel.edit.text() == vFirst
 
-    vPage.calendar_button.click()
+    vPage.calendar_panel.button.click()
 
-    assert vPage.calendar_edit.text() not in ("", vFirst)
+    assert vPage.calendar_panel.edit.text() not in ("", vFirst)
 
 
 def test_archive_is_exported_then_restored(qt_application, tmp_path, monkeypatch):
@@ -394,16 +395,16 @@ def test_archive_is_exported_then_restored(qt_application, tmp_path, monkeypatch
     vPage.data_reset.connect(vMessages.append)
 
     monkeypatch.setattr(
-        settings_page.QFileDialog,
+        data_panel.QFileDialog,
         "getSaveFileName",
         lambda *pArgs: (str(vArchive), ""),
     )
-    vPage.export_archive_button.click()
+    vPage.data_panel.export_archive_button.click()
 
-    assert vPage.archive_message.text().startswith("Sauvegarde exportée")
+    assert vPage.data_panel.archive_message.text().startswith("Sauvegarde exportée")
 
     monkeypatch.setattr(
-        settings_page.QFileDialog,
+        data_panel.QFileDialog,
         "getOpenFileName",
         lambda *pArgs: (str(vArchive), ""),
     )
@@ -412,7 +413,7 @@ def test_archive_is_exported_then_restored(qt_application, tmp_path, monkeypatch
         "warning",
         lambda *pArgs: settings_page.QMessageBox.StandardButton.Yes,
     )
-    vPage.restore_archive_button.click()
+    vPage.data_panel.restore_archive_button.click()
 
     assert vMessages[0].startswith("Sauvegarde restaurée.")
 
@@ -424,13 +425,16 @@ def test_archive_restore_reports_refused_file(qt_application, tmp_path, monkeypa
     vText = tmp_path / "faux.zip"
     vText.write_text("texte", encoding="utf-8")
 
-    vPage.restore_archive(str(vText))
+    vPage.data_panel.restore_archive(str(vText))
 
-    assert "pas un fichier .zip" in vPage.archive_message.text()
+    assert "pas un fichier .zip" in vPage.data_panel.archive_message.text()
 
-    vPage.export_archive(str(tmp_path / "absent" / "sauvegarde.zip"))
+    vPage.data_panel.export_archive(str(tmp_path / "absent" / "sauvegarde.zip"))
 
-    assert vPage.archive_message.text() == "L'export a échoué. Voir les journaux."
+    assert (
+        vPage.data_panel.archive_message.text()
+        == "L'export a échoué. Voir les journaux."
+    )
 
 
 def test_calendar_and_archive_errors_are_reported(
@@ -444,21 +448,24 @@ def test_calendar_and_archive_errors_are_reported(
         raise OSError("disque plein")
 
     monkeypatch.setattr(settings_page, "renew_calendar_token", fail)
-    monkeypatch.setattr(settings_page, "restore_archive", fail)
+    monkeypatch.setattr(data_panel, "restore_archive", fail)
     monkeypatch.setattr(
-        settings_page.QFileDialog, "getOpenFileName", lambda *pArgs: ("", "")
+        data_panel.QFileDialog, "getOpenFileName", lambda *pArgs: ("", "")
     )
 
-    vPage.calendar_button.click()
-    vPage.restore_archive_button.click()
-
-    assert vPage.calendar_message.text() == "L'adresse n'a pas pu être créée."
-    assert vPage.archive_message.text() == ""
-
-    vPage.restore_archive(str(tmp_path / "sauvegarde.zip"))
+    vPage.calendar_panel.button.click()
+    vPage.data_panel.restore_archive_button.click()
 
     assert (
-        vPage.archive_message.text() == "La restauration a échoué. Voir les journaux."
+        vPage.calendar_panel.message_label.text() == "L'adresse n'a pas pu être créée."
+    )
+    assert vPage.data_panel.archive_message.text() == ""
+
+    vPage.data_panel.restore_archive(str(tmp_path / "sauvegarde.zip"))
+
+    assert (
+        vPage.data_panel.archive_message.text()
+        == "La restauration a échoué. Voir les journaux."
     )
 
 
@@ -469,16 +476,16 @@ def test_mobile_token_is_created_copied_and_renewed(
 
     vPage = create_page(tmp_path / "scraper.db", monkeypatch)
 
-    assert vPage.mobile_edit.text() == ""
-    assert not vPage.copy_mobile_button.isEnabled()
+    assert vPage.mobile_panel.edit.text() == ""
+    assert not vPage.mobile_panel.copy_button.isEnabled()
 
-    vPage.mobile_button.click()
-    vFirst = vPage.mobile_edit.text()
+    vPage.mobile_panel.button.click()
+    vFirst = vPage.mobile_panel.edit.text()
 
     assert len(vFirst) >= 40
-    assert vPage.mobile_button.text() == "Renouveler le jeton"
+    assert vPage.mobile_panel.button.text() == "Renouveler le jeton"
 
-    vPage.copy_mobile_button.click()
+    vPage.mobile_panel.copy_button.click()
 
     assert settings_page.QApplication.clipboard().text() == vFirst
 
@@ -490,20 +497,20 @@ def test_mobile_token_is_created_copied_and_renewed(
         settings_page.QMessageBox, "question", lambda *pArgs: vAnswers.pop(0)
     )
 
-    vPage.mobile_button.click()
+    vPage.mobile_panel.button.click()
 
-    assert vPage.mobile_edit.text() == vFirst
+    assert vPage.mobile_panel.edit.text() == vFirst
 
-    vPage.mobile_button.click()
+    vPage.mobile_panel.button.click()
 
-    assert vPage.mobile_edit.text() not in ("", vFirst)
+    assert vPage.mobile_panel.edit.text() not in ("", vFirst)
 
     monkeypatch.setattr(settings_page, "renew_mobile_token", lambda *pArgs: 1 / 0)
-    vPage.mobile_button.setText("Créer le jeton")
-    vPage.mobile_edit.clear()
-    vPage.mobile_button.click()
+    vPage.mobile_panel.button.setText("Créer le jeton")
+    vPage.mobile_panel.edit.clear()
+    vPage.mobile_panel.button.click()
 
-    assert vPage.mobile_message.text() == "Le jeton n'a pas pu être créé."
+    assert vPage.mobile_panel.message_label.text() == "Le jeton n'a pas pu être créé."
 
 
 def test_messages_are_colored_and_cards_reflow(qt_application, tmp_path, monkeypatch):
@@ -527,8 +534,45 @@ def test_messages_are_colored_and_cards_reflow(qt_application, tmp_path, monkeyp
     vPage.arrange_cards(vPage.width() < settings_page.SINGLE_COLUMN_WIDTH)
 
     assert vPage.columns[1].count() == 1
-    assert vPage.columns[0].count() == 11
+    assert vPage.columns[0].count() == 10
 
     vPage.arrange_cards(False)
 
-    assert vPage.columns[1].count() == 6
+    assert vPage.columns[1].count() == 5
+
+
+def test_database_backup_is_listed_and_restored(qt_application, tmp_path, monkeypatch):
+    """Vérifie la liste des sauvegardes et la restauration confirmée de l'une d'elles."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vPage = create_page(vDatabaseFile, monkeypatch)
+    vPanel = vPage.data_panel
+
+    assert not vPanel.restore_backup_button.isEnabled()
+
+    save_search(vDatabaseFile, "Avant", ["remotive"], {}, datetime.now())
+    backup_database(vDatabaseFile, datetime(2026, 10, 18, 9, 0), "auto")
+    save_search(vDatabaseFile, "Après", ["remotive"], {}, datetime.now())
+    vPanel.refresh()
+
+    assert vPanel.backups_combo.currentText().startswith(
+        "18/10/2026 09:00 · automatique"
+    )
+
+    vMessages = []
+    vPage.data_reset.connect(vMessages.append)
+    monkeypatch.setattr(
+        data_panel.QMessageBox,
+        "warning",
+        lambda *pArgs: data_panel.QMessageBox.StandardButton.Yes,
+    )
+    vPanel.restore_backup_button.click()
+
+    assert vMessages[0].startswith("Sauvegarde restaurée.")
+    assert [vSearch["name"] for vSearch in get_saved_searches(vDatabaseFile)] == [
+        "Avant"
+    ]
+
+    vPanel.restore_backup("absente.db")
+
+    assert vPanel.backup_message.text() == "Sauvegarde introuvable."

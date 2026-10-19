@@ -33,6 +33,7 @@
         <select name="sort" aria-label="Tri">
             <option value="">Plus récentes</option>
             <option value="match" {% if filters.sort == "match" %}selected{% endif %}>Correspondance avec mon profil</option>
+            <option value="fresh" {% if filters.sort == "fresh" %}selected{% endif %}>Les plus fraîches</option>
         </select>
 
         <select name="match" aria-label="Correspondance minimale" title="Correspondance minimale avec les compétences du profil">

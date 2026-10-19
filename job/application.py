@@ -6,6 +6,7 @@ from dataclasses import replace
 from config import DATABASE_FILE
 from job.exchange_rates import get_exchange_rates
 from job.filter import filter_jobs
+from job.offer_purge import drop_excluded_offers, load_excluded_words
 from job.settings import get_net_ratio, get_tax_rate, load_settings
 from job.sources.aggregator import scrape_sources
 from scraper.history_service import record_history
@@ -77,6 +78,16 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
     )
 
     vScrapedAt = datetime.now()
+
+    # Offres hors sujet déjà purgées : écartées avant l'enregistrement.
+    vItems, vExcludedCount = drop_excluded_offers(
+        vScrapingResult.items, load_excluded_words(DATABASE_FILE)
+    )
+
+    if vExcludedCount:
+        logger.info("Offres écartées par les mots exclus : %s", vExcludedCount)
+
+        vScrapingResult = replace(vScrapingResult, items=vItems)
 
     # Toutes les offres trouvées sont enregistrées, puis seul le résultat renvoyé
     # est filtré : une offre présente en base mais absente du résultat d'une

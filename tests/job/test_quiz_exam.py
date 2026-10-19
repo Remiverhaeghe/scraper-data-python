@@ -9,6 +9,7 @@ from job.quiz import load_quiz
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
     answer_exam,
+    build_exam_history,
     describe_exam_results,
     describe_exam_summary,
     format_countdown,
@@ -16,6 +17,7 @@ from job.quiz_exam import (
     get_remaining_seconds,
     load_exam,
     load_exam_results,
+    start_error_review,
     start_exam,
     stop_exam,
     summarize_exam,
@@ -154,3 +156,47 @@ def test_finished_exam_is_kept_with_its_offer(database_file):
         "(1 examen(s))."
     )
     assert describe_exam_results([]) == ""
+
+
+def test_exam_history_goes_from_oldest_to_latest():
+    """Vérifie l'ordre chronologique des notes pour le graphique."""
+
+    vResults = [
+        {"finished_at": "2026-10-14T10:00:00", "score": 80},
+        {"finished_at": "2026-10-12T10:00:00", "score": 55},
+    ]
+
+    assert build_exam_history(vResults) == [
+        {"label": "12/10", "score": 55},
+        {"label": "14/10", "score": 80},
+    ]
+
+
+def test_error_review_restarts_on_wrong_questions(database_file):
+    """Vérifie l'examen limité aux erreurs, sans offre, et le refus sans erreur."""
+
+    vQuiz = load_quiz()
+    start_exam(
+        database_file,
+        vQuiz,
+        "Informatique",
+        NOW,
+        random.Random(3),
+        pOfferKey=("a", "1"),
+    )
+
+    for vIndex in range(EXAM_QUESTION_COUNT):
+        vQuestion = get_exam_question(vQuiz, load_exam(database_file))
+        vChoice = vQuestion["answer"] if vIndex % 4 else 1 - vQuestion["answer"]
+        answer_exam(database_file, vQuiz, vChoice, NOW + timedelta(minutes=vIndex))
+
+    vFinished = load_exam(database_file)
+    vReview = start_error_review(database_file, vFinished, NOW)
+
+    assert vReview["ids"] == vFinished["wrong"]
+    assert len(vReview["ids"]) == 5
+    assert vReview["offer"] is None
+    assert vReview["title"].startswith("Erreurs : ")
+
+    with pytest.raises(ValueError, match="Aucune erreur"):
+        start_error_review(database_file, vReview, NOW)

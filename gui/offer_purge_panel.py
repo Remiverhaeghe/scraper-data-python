@@ -4,7 +4,9 @@ from datetime import datetime
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -15,7 +17,14 @@ from PySide6.QtWidgets import (
 
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, show_message
-from job.offer_purge import find_offers_to_purge, parse_purge_words, purge_offers
+from job.offer_purge import (
+    add_excluded_words,
+    find_offers_to_purge,
+    load_excluded_words,
+    parse_purge_words,
+    purge_offers,
+    save_excluded_words,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,6 +43,7 @@ class OfferPurgePanel(QWidget):
 
         self.database_file = pDatabaseFile
         self.preview_words = []
+        self.excluded_words = []
 
         self.words_edit = QLineEdit()
         self.words_edit.setPlaceholderText("Ex. stage, alternance, commercial")
@@ -58,6 +68,26 @@ class OfferPurgePanel(QWidget):
         self.preview_list = QListWidget()
         self.preview_list.setMaximumHeight(PREVIEW_HEIGHT)
 
+        self.exclude_check = QCheckBox(
+            "Exclure aussi ces mots des prochaines recherches"
+        )
+        self.exclude_check.setChecked(True)
+        self.exclude_check.setToolTip(
+            "Sans cela, les offres supprimées reviendraient à la prochaine recherche"
+        )
+
+        self.excluded_label = QLabel()
+        self.excluded_label.setObjectName("cardSubtitle")
+        self.excluded_label.setWordWrap(True)
+
+        vEditButton = create_button("Modifier…", "list-checks")
+        vEditButton.setToolTip("Mots qui écartent une offre dès sa récupération")
+        vEditButton.clicked.connect(self.edit_excluded_words)
+
+        vExcluded = QHBoxLayout()
+        vExcluded.addWidget(self.excluded_label, 1)
+        vExcluded.addWidget(vEditButton)
+
         self.message_label = QLabel()
         self.message_label.setObjectName("cardSubtitle")
         self.message_label.setWordWrap(True)
@@ -71,13 +101,63 @@ class OfferPurgePanel(QWidget):
         )
         vCardLayout.addLayout(vInput)
         vCardLayout.addWidget(self.preview_list)
+        vCardLayout.addWidget(self.exclude_check)
         vCardLayout.addWidget(self.message_label)
+        vCardLayout.addLayout(vExcluded)
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.addWidget(vCard)
 
         self.reset_preview()
+        self.show_excluded_words()
+
+    def show_excluded_words(self):
+        """Affiche les mots qui écartent une offre dès sa récupération."""
+        try:
+            vWords = load_excluded_words(self.database_file)
+
+        except Exception:
+            logger.exception("Impossible de lire les mots exclus")
+
+            vWords = []
+
+        self.excluded_words = vWords
+        self.excluded_label.setText(
+            "Mots exclus de toutes les recherches : " + ", ".join(vWords)
+            if vWords
+            else "Aucun mot exclu de toutes les recherches."
+        )
+
+    def edit_excluded_words(self):
+        """Modifie la liste des mots exclus, séparés par des virgules."""
+        vText, vAccepted = QInputDialog.getText(
+            self,
+            "Mots exclus de toutes les recherches",
+            "Mots séparés par des virgules (vide : aucun) :",
+            text=", ".join(self.excluded_words),
+        )
+
+        if not vAccepted:
+            return
+
+        try:
+            save_excluded_words(self.database_file, vText)
+
+        except ValueError as vException:
+            show_message(self.message_label, str(vException), "warning")
+            return
+
+        except Exception:
+            logger.exception("Échec de l'enregistrement des mots exclus")
+
+            show_message(
+                self.message_label, "Les mots n'ont pas pu être enregistrés.", "danger"
+            )
+            return
+
+        self.show_excluded_words()
+        show_message(self.message_label, "Mots exclus enregistrés.")
 
     def reset_preview(self):
         """Vide l'aperçu et désactive la suppression jusqu'au prochain aperçu."""
@@ -151,6 +231,9 @@ class OfferPurgePanel(QWidget):
                 self.database_file, vWords, datetime.now()
             )
 
+            if self.exclude_check.isChecked():
+                add_excluded_words(self.database_file, vWords)
+
         except Exception:
             logger.exception("Échec de la purge des offres")
 
@@ -162,13 +245,17 @@ class OfferPurgePanel(QWidget):
             return
 
         self.reset_preview()
+        self.show_excluded_words()
 
         show_message(
             self.message_label,
             f"{vCount} offre(s) supprimée(s)"
             + (f", sauvegarde : {vBackupFile.name}" if vBackupFile else "")
-            + ". Ajoutez ces mots aux « Mots à exclure du titre » de vos "
-            "recherches pour qu'elles ne reviennent pas.",
+            + (
+                ". Ces mots écartent désormais les offres des prochaines recherches."
+                if self.exclude_check.isChecked()
+                else ". Elles pourront revenir à la prochaine recherche."
+            ),
         )
 
         self.purged.emit(vCount)

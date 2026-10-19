@@ -96,7 +96,10 @@ def test_reset_rebuilds_pages_with_message(qt_application, tmp_path):
 
     assert vWindow.settings_page is not vOldSettingsPage
     assert vWindow.pages.currentWidget() is vWindow.settings_page
-    assert vWindow.settings_page.reset_message.text() == "Données réinitialisées."
+    assert (
+        vWindow.settings_page.data_panel.reset_message.text()
+        == "Données réinitialisées."
+    )
 
 
 def test_offer_mock_exam_opens_quiz_page(qt_application, tmp_path, monkeypatch):
@@ -139,3 +142,22 @@ def test_skills_page_opens_theme(qt_application, tmp_path):
 
     assert vWindow.pages.currentWidget() is vWindow.quiz_page
     assert vWindow.quiz_page.theme_key == "sql"
+
+
+def test_applications_opens_its_page_and_preset_the_offers(qt_application, tmp_path):
+    """Vérifie que la page Candidatures et le filtre des offres suivies sont distincts."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vWindow = MainWindow(vDatabaseFile, "Test")
+
+    vWindow.navigate("applications")
+
+    assert vWindow.pages.currentWidget() is vWindow.applications_page
+
+    vWindow.navigate("applied_offers")
+
+    assert vWindow.pages.currentWidget() is vWindow.offers_page
+    assert vWindow.offers_page.status_combo.currentData() == "APPLIED"

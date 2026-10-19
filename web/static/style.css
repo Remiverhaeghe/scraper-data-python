@@ -2175,3 +2175,39 @@ textarea.companies-preferred {
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
+
+.funnel-row {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr) minmax(0, 200px);
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.funnel-track {
+    display: block;
+    border-radius: 6px;
+    background: var(--surface-alt);
+}
+
+.funnel-bar {
+    display: block;
+    min-width: 4.5em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    color: #FFFFFF;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.funnel-1 .funnel-bar { background: #1769E0; }
+.funnel-2 .funnel-bar { background: #16A34A; }
+.funnel-3 .funnel-bar { background: #D97706; }
+.funnel-4 .funnel-bar { background: #7C3AED; }
+
+@media (max-width: 640px) {
+    .funnel-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}

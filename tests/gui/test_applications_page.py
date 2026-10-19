@@ -180,3 +180,13 @@ def test_week_follow_ups_are_copied_and_marked(qt_application, tmp_path):
         == 1
     )
     assert not vPanel.follow_ups[0]["follow_up_due"]
+
+
+def test_funnel_is_shown(qt_application, tmp_path):
+    """Vérifie une barre par étape de l'entonnoir."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vLayout = vPage.funnel_panel.rows_layout
+
+    assert vLayout.rowCount() == 4
+    assert vLayout.itemAtPosition(0, 1).widget().format() == "1  ·  100 %"

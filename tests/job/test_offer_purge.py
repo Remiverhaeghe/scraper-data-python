@@ -5,7 +5,15 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from job.offer_purge import find_offers_to_purge, parse_purge_words, purge_offers
+from job.offer_purge import (
+    add_excluded_words,
+    drop_excluded_offers,
+    find_offers_to_purge,
+    load_excluded_words,
+    parse_purge_words,
+    purge_offers,
+    save_excluded_words,
+)
 from storage.database import initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import count_offers, save_offers
@@ -68,3 +76,23 @@ def test_purge_without_match_makes_no_backup(database_file):
     """Vérifie qu'aucune sauvegarde n'est faite quand rien n'est supprimé."""
 
     assert purge_offers(database_file, ["commercial"], NOW) == (0, None)
+
+
+def test_excluded_words_are_kept_and_drop_offers(database_file):
+    """Vérifie l'ajout des mots exclus et le retrait des offres récupérées."""
+
+    assert load_excluded_words(database_file) == []
+    assert add_excluded_words(database_file, ["stage", "Stage", "alternance"]) == [
+        "stage",
+        "alternance",
+    ]
+
+    vItems = pd.DataFrame([{"title": "Stage Java"}, {"title": "Développeur"}])
+    vKept, vCount = drop_excluded_offers(vItems, load_excluded_words(database_file))
+
+    assert (vKept["title"].tolist(), vCount) == (["Développeur"], 1)
+    assert drop_excluded_offers(vItems, []) == (vItems, 0)
+    assert save_excluded_words(database_file, "") == []
+
+    with pytest.raises(ValueError, match="trop courts"):
+        save_excluded_words(database_file, "it")

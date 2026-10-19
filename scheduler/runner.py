@@ -1,12 +1,17 @@
 """Exécution de la recherche planifiée et envoi des notifications"""
 
 import smtplib
+import sqlite3
 from datetime import datetime
 
 import pandas as pd
 
 from job.application import process_jobs
 from job.application_tracking import get_due_follow_ups
+from job.followed_availability import (
+    build_expired_offers_email,
+    run_due_followed_check,
+)
 from job.notification import build_follow_ups_email, build_new_offers_email
 from job.preparation import score_offers
 from job.presentation import SCHEDULED_TRIGGER, clean_missing_values
@@ -236,6 +241,27 @@ def merge_items(pItemsList):
     return rItems
 
 
+def check_followed_offers_daily(pDatabaseFile, pNow):
+    """Vérifie une fois par jour les offres suivies et signale celles retirées."""
+
+    rSent = False
+
+    try:
+        vExpired = run_due_followed_check(pDatabaseFile, pNow)
+        vEmail = load_schedule(pDatabaseFile)["email"]
+
+        if vExpired and vEmail:
+            send_email(vEmail, *build_expired_offers_email(vExpired))
+            rSent = True
+
+            logger.info("Alerte envoyée pour %s offre(s) retirée(s)", len(vExpired))
+
+    except (OSError, sqlite3.Error, smtplib.SMTPException, ValueError) as vException:
+        logger.error("Échec de l'alerte des offres suivies retirées : %s", vException)
+
+    return rSent
+
+
 def run_forever(pDatabaseFile, pStopEvent, pPollSeconds=POLL_SECONDS):
     """Vérifie l'échéance à intervalle régulier jusqu'à la demande d'arrêt."""
 
@@ -243,6 +269,7 @@ def run_forever(pDatabaseFile, pStopEvent, pPollSeconds=POLL_SECONDS):
 
     while not pStopEvent.is_set():
         run_due_backup(pDatabaseFile, datetime.now())
+        check_followed_offers_daily(pDatabaseFile, datetime.now())
 
         try:
             run_due_search(pDatabaseFile, datetime.now(), pStopEvent)

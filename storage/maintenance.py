@@ -15,6 +15,7 @@ RESET_TABLES = (
     "challenge_attempt",
     "git_level_result",
     "job_attachment",
+    "interview_note",
     "job_follow_up",
     "job_application",
     "job_offer",
@@ -87,7 +88,7 @@ def reset_database(pDatabaseFile, pNow):
 
 
 def get_purgeable_offers(pDatabaseFile):
-    """Retourne les offres sans candidature, relance ni pièce jointe."""
+    """Retourne les offres sans candidature, relance, pièce jointe ni journal d'entretien."""
 
     vConnection = connect_database(pDatabaseFile)
 
@@ -106,6 +107,10 @@ def get_purgeable_offers(pDatabaseFile):
             AND NOT EXISTS (
                 SELECT 1 FROM job_attachment AS j
                 WHERE j.source = o.source AND j.source_id = o.source_id
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM interview_note AS n
+                WHERE n.source = o.source AND n.source_id = o.source_id
             )
             ORDER BY first_seen_at DESC
             """).fetchall()

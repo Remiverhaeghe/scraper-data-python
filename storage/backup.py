@@ -57,8 +57,11 @@ def backup_database(pDatabaseFile, pNow, pReason=None):
     return rBackupFile
 
 
-def list_backups(pDatabaseFile, pAutomatic=False):
-    """Retourne les sauvegardes automatiques, ou les autres, les plus récentes en tête."""
+def list_backups(pDatabaseFile, pAutomatic=None):
+    """Retourne les sauvegardes, les plus récentes en tête.
+
+    pAutomatic garde seulement les automatiques (True) ou les autres (False).
+    """
 
     vDatabaseFile = Path(pDatabaseFile)
     vDirectory = vDatabaseFile.parent / BACKUP_DIRECTORY_NAME
@@ -69,7 +72,8 @@ def list_backups(pDatabaseFile, pAutomatic=False):
         for vBackupFile in sorted(
             vDirectory.glob(f"{vDatabaseFile.stem}-*.db"), reverse=True
         )
-        if vBackupFile.stem.endswith(f"-{AUTO_BACKUP_REASON}") == pAutomatic
+        if pAutomatic is None
+        or vBackupFile.stem.endswith(f"-{AUTO_BACKUP_REASON}") == pAutomatic
     ]
 
     return rBackups
@@ -97,23 +101,60 @@ def purge_backups(pDatabaseFile, pKeepCount=BACKUP_KEEP_COUNT, pAutomatic=False)
     return rDeletedCount
 
 
+def describe_backup(pDatabaseFile, pBackupFile):
+    """Retourne la date, le motif et la taille d'une sauvegarde, ou None si son nom diffère."""
+
+    # Nom : <base>-AAAAMMJJ-HHMMSS[-motif].db
+    vParts = pBackupFile.stem[len(Path(pDatabaseFile).stem) + 1 :].split("-", 2)
+
+    try:
+        vCreatedAt = datetime.strptime(f"{vParts[0]}-{vParts[1]}", "%Y%m%d-%H%M%S")
+        vSize = pBackupFile.stat().st_size
+
+    except (IndexError, ValueError, OSError):
+        return None
+
+    rBackup = {
+        "name": pBackupFile.name,
+        "created_at": vCreatedAt,
+        "reason": vParts[2] if len(vParts) > 2 else "",
+        "size": vSize,
+    }
+
+    return rBackup
+
+
+def describe_backups(pDatabaseFile):
+    """Retourne la description de chaque sauvegarde, la plus récente en tête."""
+
+    rBackups = [
+        vBackup
+        for vBackup in (
+            describe_backup(pDatabaseFile, vBackupFile)
+            for vBackupFile in list_backups(pDatabaseFile)
+        )
+        if vBackup is not None
+    ]
+
+    rBackups.sort(key=lambda pBackup: pBackup["created_at"], reverse=True)
+
+    return rBackups
+
+
 def get_last_auto_backup_time(pDatabaseFile):
     """Retourne la date de la dernière sauvegarde automatique, lue dans son nom."""
 
-    vStem = Path(pDatabaseFile).stem
-
-    rTime = None
-
-    for vBackupFile in list_backups(pDatabaseFile, pAutomatic=True):
-        vStamp = vBackupFile.stem[len(vStem) + 1 : -len(AUTO_BACKUP_REASON) - 1]
-
-        try:
-            rTime = datetime.strptime(vStamp, "%Y%m%d-%H%M%S")
-
-        except ValueError:
-            continue
-
-        break
+    rTime = next(
+        (
+            vBackup["created_at"]
+            for vBackup in map(
+                lambda pFile: describe_backup(pDatabaseFile, pFile),
+                list_backups(pDatabaseFile, pAutomatic=True),
+            )
+            if vBackup is not None
+        ),
+        None,
+    )
 
     return rTime
 

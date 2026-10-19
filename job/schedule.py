@@ -6,7 +6,11 @@ from datetime import datetime, timedelta
 
 from job.presentation import describe_search, describe_sources
 from storage.saved_searches import get_saved_searches
-from storage.settings_repository import get_setting_values, save_setting_values
+from storage.settings_repository import (
+    get_setting_values,
+    save_json_setting,
+    save_setting_values,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -160,10 +164,7 @@ def save_extra_searches(pDatabaseFile, pNames):
 
     vNames = list(dict.fromkeys(pNames))
 
-    save_setting_values(
-        pDatabaseFile,
-        {EXTRA_SEARCHES_KEY: json.dumps(vNames, ensure_ascii=False)},
-    )
+    save_json_setting(pDatabaseFile, EXTRA_SEARCHES_KEY, vNames)
 
     logger.info("%s recherche(s) supplémentaire(s) planifiée(s)", len(vNames))
 

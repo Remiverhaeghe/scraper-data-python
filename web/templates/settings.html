@@ -197,6 +197,27 @@
         </article>
 
         <article class="card">
+            <h2>Sauvegardes de la base</h2>
+            <p class="card-subtitle">Faites chaque jour et avant chaque opération risquée. Restaurer remet la base dans cet état ; l'état actuel est d'abord sauvegardé, les pièces jointes ne changent pas.</p>
+            {% if backups %}
+            <form class="reset-form" method="post" action="{{ url_for('restore_database_backup').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <select name="name" aria-label="Sauvegarde à restaurer">
+                    {% for backup in backups %}<option value="{{ backup.name }}">{{ backup.label }}</option>{% endfor %}
+                </select>
+                <label class="check">
+                    <input type="checkbox" name="confirm" value="1" required>
+                    Je comprends que les données actuelles seront remplacées
+                </label>
+                <button class="button button-danger" type="submit">{{ icon("history", 16) }} Restaurer</button>
+            </form>
+            {% else %}
+            <p class="muted">Aucune sauvegarde pour le moment.</p>
+            {% endif %}
+            {% if backup_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ backup_message }}</p>{% endif %}
+        </article>
+
+        <article class="card">
             <h2>Réinitialisation</h2>
             <p class="card-subtitle">Efface les offres, candidatures, relances, historique, réglages et recherches enregistrées. Les questions de révision sont conservées. Une sauvegarde de la base est faite juste avant.</p>
             <form class="reset-form" method="post" action="{{ url_for('reset_data').path }}">

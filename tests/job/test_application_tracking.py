@@ -9,6 +9,7 @@ from job.application_tracking import (
     build_application_statistics,
     build_board,
     build_follow_up_draft,
+    build_funnel,
     get_job_family,
     get_week_follow_ups,
     mark_followed_up,
@@ -248,3 +249,49 @@ def test_follow_up_draft_without_company_or_name():
         "à votre convenance.\n\n"
         "Bien cordialement,"
     )
+
+
+def test_funnel_shares_and_conversions():
+    """Vérifie la part des envois et le passage d'une étape à l'autre."""
+
+    vFunnel = build_funnel({"sent": 10, "answered": 4, "interviews": 2, "accepted": 0})
+
+    assert [(vStage["count"], vStage["share"]) for vStage in vFunnel] == [
+        (10, 100),
+        (4, 40),
+        (2, 20),
+        (0, 0),
+    ]
+    assert [vStage["conversion"] for vStage in vFunnel] == [None, 40, 50, 0]
+    assert build_funnel({"sent": 0, "answered": 0, "interviews": 0, "accepted": 0})[
+        1
+    ] == {"label": "Réponses", "count": 0, "share": 0, "conversion": None}
+
+
+@pytest.mark.parametrize(
+    "pApplication, pExpected",
+    [
+        (
+            {
+                "title": "Dev",
+                "status": "INTERVIEW",
+                "interview_at": "2026-10-14T10:00",
+            },
+            "notre entretien du 14/10/2026 au sujet du poste de Dev",
+        ),
+        (
+            {
+                "title": "Dev",
+                "status": "APPLIED",
+                "follow_up_count": 1,
+                "last_follow_up_at": "2026-10-05T09:00:00",
+            },
+            "une dernière fois au sujet de ma candidature au poste de Dev, restée "
+            "sans réponse depuis ma relance du 05/10/2026.",
+        ),
+    ],
+)
+def test_follow_up_draft_depends_on_stage(pApplication, pExpected):
+    """Vérifie le brouillon après un entretien et à la deuxième relance."""
+
+    assert pExpected in build_follow_up_draft(pApplication, "Camille")

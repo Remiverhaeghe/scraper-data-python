@@ -7,7 +7,7 @@ l'application et aucun service payant n'est utilisé.
 from job.enrichment import detect_skills
 from job.fingerprint import GENDER_MARKERS
 from job.presentation import to_list
-from job.star_answers import select_star_answers
+from job.star_answers import select_star_answers, suggest_star_questions
 
 # Questions toujours utiles en fin d'entretien
 GENERAL_QUESTIONS = (
@@ -304,10 +304,15 @@ def build_letter(pProfile, pMatch, pOffer):
     return rLetter
 
 
-def prepare_application(pProfile, pOffer, pStarAnswers=None):
+# Questions vécues en entretien rappelées dans chaque préparation
+MAX_ASKED_QUESTIONS = 10
+
+
+def prepare_application(pProfile, pOffer, pStarAnswers=None, pAskedQuestions=None):
     """Prépare tous les éléments d'une candidature pour une offre.
 
-    pStarAnswers ajoute à l'entretien les réponses STAR préparées dans le Profil.
+    pStarAnswers ajoute à l'entretien les réponses STAR préparées dans le Profil ;
+    pAskedQuestions, les questions déjà posées lors d'entretiens précédents.
     """
 
     vOfferSkills = get_offer_skills(pOffer)
@@ -315,6 +320,10 @@ def prepare_application(pProfile, pOffer, pStarAnswers=None):
 
     vInterview = build_interview(pProfile, vMatch, pOffer)
     vInterview["star"] = select_star_answers(pStarAnswers or {}, pProfile, vOfferSkills)
+    vInterview["asked"] = (pAskedQuestions or [])[:MAX_ASKED_QUESTIONS]
+    vInterview["likely"] = suggest_star_questions(
+        get_offer_text(pOffer), pStarAnswers or {}
+    )
 
     rPreparation = {
         "offer_skills": vOfferSkills,

@@ -1,0 +1,79 @@
+"""Tests de l'état de santé de l'application"""
+
+from datetime import datetime, timedelta
+
+import pytest
+
+import job.health as health
+from job.health import build_health, format_age
+from job.schedule import mark_schedule_run, save_schedule_options, save_scheduled_search
+from storage.backup import backup_database
+from storage.database import initialize_database
+
+NOW = datetime(2026, 10, 19, 12, 0)
+
+
+@pytest.fixture
+def database_file(tmp_path):
+    """Crée une base vide."""
+
+    rDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(rDatabaseFile)
+
+    return rDatabaseFile
+
+
+def get_checks(pDatabaseFile):
+    """Retourne les indicateurs indexés par libellé."""
+
+    rChecks = {
+        vCheck["label"]: (vCheck["value"], vCheck["tone"])
+        for vCheck in build_health(pDatabaseFile, NOW)
+    }
+
+    return rChecks
+
+
+def test_health_of_a_new_database(database_file):
+    """Vérifie les indicateurs d'une base neuve : rien n'a encore eu lieu."""
+
+    vChecks = get_checks(database_file)
+
+    assert vChecks["Sauvegarde automatique"] == (
+        "Aucune sauvegarde automatique",
+        "warning",
+    )
+    assert vChecks["Recherche planifiée"] == ("Désactivée", "muted")
+    assert vChecks["Dernière recherche"][1] == "muted"
+    assert vChecks["Place occupée"][0].startswith("Base ")
+
+
+def test_health_reports_late_schedule_and_recent_backup(database_file):
+    """Vérifie la sauvegarde récente et la planification en retard."""
+
+    backup_database(database_file, NOW - timedelta(days=1), "auto")
+    save_scheduled_search(database_file, ["remotive"], {})
+    save_schedule_options(database_file, True, 6)
+    mark_schedule_run(database_file, NOW - timedelta(hours=13))
+
+    vChecks = get_checks(database_file)
+
+    assert vChecks["Sauvegarde automatique"] == ("18/10/2026 12:00 (hier)", "success")
+    assert vChecks["Recherche planifiée"][1] == "warning"
+    assert "en retard" in vChecks["Recherche planifiée"][0]
+
+
+def test_unreadable_check_does_not_hide_the_others(database_file, monkeypatch):
+    """Vérifie qu'un indicateur en erreur est signalé sans masquer les autres."""
+
+    def fail():
+        raise OSError("disque")
+
+    monkeypatch.setattr(health, "check_sources", fail)
+
+    vChecks = get_checks(database_file)
+
+    assert vChecks["Sources"] == ("Illisible : voir les journaux", "danger")
+    assert len(vChecks) == 6
+    assert format_age(NOW - timedelta(days=5), NOW) == "il y a 5 jours"

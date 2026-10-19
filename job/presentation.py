@@ -603,3 +603,19 @@ def read_icons_license():
     rText = read_license(ICONS_LICENSE_FILE)
 
     return rText
+
+
+def describe_backup(pBackup):
+    """Décrit une sauvegarde : date, motif et taille."""
+
+    vReason = {"auto": "automatique", "": "manuelle"}.get(
+        pBackup["reason"], pBackup["reason"].replace("-", " ")
+    )
+    vSize = pBackup["size"] / 1_048_576
+
+    rText = (
+        f"{pBackup['created_at']:%d/%m/%Y %H:%M} · {vReason} · "
+        f"{vSize:.1f} Mo".replace(".", ",")
+    )
+
+    return rText

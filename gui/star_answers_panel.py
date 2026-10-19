@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, show_message
+from job.interview_journal import collect_asked_questions
 from job.profile import load_profile
 from job.star_answers import (
     BEHAVIORAL_QUESTIONS,
@@ -25,6 +26,9 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 FIELD_HEIGHT = 72
+
+# Questions vécues en entretien rappelées sous les réponses
+MAX_ASKED_SHOWN = 5
 
 FIELD_HELP = {
     "situation": "Le contexte : projet, équipe, enjeu",
@@ -106,6 +110,11 @@ class StarAnswersPanel(QWidget):
         vCardLayout.addLayout(vGrid)
         vCardLayout.addLayout(vActions)
 
+        self.asked_label = QLabel()
+        self.asked_label.setObjectName("cardSubtitle")
+        self.asked_label.setWordWrap(True)
+        vCardLayout.addWidget(self.asked_label)
+
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.addWidget(self.card)
@@ -115,6 +124,7 @@ class StarAnswersPanel(QWidget):
         try:
             self.profile = load_profile(self.database_file)
             self.answers = load_star_answers(self.database_file)
+            vAsked = collect_asked_questions(self.database_file)[:MAX_ASKED_SHOWN]
 
         except Exception:
             logger.exception("Impossible de lire les réponses STAR")
@@ -123,6 +133,14 @@ class StarAnswersPanel(QWidget):
                 self.message_label, "Les réponses n'ont pas pu être lues.", "danger"
             )
             return
+
+        self.asked_label.setText(
+            "Questions posées dans vos entretiens : "
+            + " · ".join(vItem["question"] for vItem in vAsked)
+            if vAsked
+            else ""
+        )
+        self.asked_label.setVisible(bool(vAsked))
 
         self.experience_combo.clear()
         self.experience_combo.addItem("Sans expérience liée", "")

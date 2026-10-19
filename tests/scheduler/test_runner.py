@@ -150,6 +150,9 @@ def test_run_forever_survives_errors_until_stop(monkeypatch, pError):
     monkeypatch.setattr(
         runner, "run_due_backup", lambda pDatabaseFile, pNow: vBackups.append(pNow)
     )
+    monkeypatch.setattr(
+        runner, "check_followed_offers_daily", lambda pDatabaseFile, pNow: False
+    )
 
     runner.run_forever("scraper.db", vStopEvent, pPollSeconds=0)
 

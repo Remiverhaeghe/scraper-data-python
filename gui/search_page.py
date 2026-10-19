@@ -4,16 +4,13 @@ from datetime import datetime
 
 from PySide6.QtCore import QSettings, QThread, Qt, Signal, Slot
 from PySide6.QtWidgets import (
-    QButtonGroup,
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QGridLayout,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QLineEdit,
-    QMessageBox,
     QProgressBar,
     QPushButton,
     QSpinBox,
@@ -23,9 +20,11 @@ from PySide6.QtWidgets import (
 
 from gui.icons import get_icon
 from gui.keyword_suggestions import KeywordSuggestions
+from gui.saved_searches_bar import SavedSearchesBar
 from gui.search_worker import SearchWorker
 from gui.theme import COLORS
 from gui.widgets import (
+    STATUS_STYLES,
     align_spin_box,
     create_button,
     create_card,
@@ -33,13 +32,7 @@ from gui.widgets import (
     create_scroll_content,
 )
 from job.contract import CONTRACT_TYPES
-from job.presentation import describe_search, describe_sources
 from job.sources.registry import SOURCES
-from storage.saved_searches import (
-    delete_saved_search,
-    get_saved_searches,
-    save_search,
-)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -54,15 +47,6 @@ NO_KEYWORD_WARNING = (
     "métiers. Un mot-clé, ou des mots à exclure, garde la base centrée sur vos "
     "recherches."
 )
-
-# Icône et couleur du message d'état selon sa nature
-STATUS_STYLES = {
-    "idle": ("search", "muted"),
-    "running": ("timer", "primary"),
-    "success": ("circle-check", "success"),
-    "warning": ("circle-alert", "warning"),
-    "error": ("circle-alert", "danger"),
-}
 
 
 def create_spin_box(pMinimum, pMaximum, pValue, pSuffix="", pEmptyText=None):
@@ -117,23 +101,6 @@ def create_field(pLabel, pWidget):
     return rLayout
 
 
-def describe_saved_search(pSearch):
-    """Résume une recherche enregistrée : critères, puis sources."""
-
-    vParameters = {**pSearch["criteria"], "sources": pSearch["sources"]}
-
-    rDescription = " · ".join(
-        vPart
-        for vPart in (
-            describe_search(vParameters) or "Sans critère",
-            describe_sources(vParameters),
-        )
-        if vPart
-    )
-
-    return rDescription
-
-
 class SearchPage(QWidget):
     """Permet de lancer une recherche d'offres et d'en suivre l'avancement."""
 
@@ -153,15 +120,8 @@ class SearchPage(QWidget):
         self.settings = pSettings if pSettings is not None else QSettings()
         self.database_file = pDatabaseFile
 
-        # Recherches enregistrées : widgets créés seulement avec une base
-        self.saved_group = None
-        self.saved_grid = None
-        self.saved_summary_label = None
-        self.saved_message_icon = None
-        self.saved_message_label = None
-        self.selected_search_name = None
-        self.delete_saved_button = None
-        self.saved_searches = {}
+        # Recherches enregistrées : barre créée seulement avec une base
+        self.saved_bar = None
         self.search_thread = None
         self.search_worker = None
         self.source_buttons = {}
@@ -240,7 +200,12 @@ class SearchPage(QWidget):
         vCard, vLayout = create_card("Critères")
 
         if self.database_file is not None:
-            vLayout.addLayout(self.create_saved_searches_row())
+            self.saved_bar = SavedSearchesBar(
+                self.database_file,
+                lambda: (self.get_selected_sources(), self.build_criteria()),
+            )
+            self.saved_bar.search_loaded.connect(self.load_search)
+            vLayout.addWidget(self.saved_bar)
 
         vGrid = QGridLayout()
         vGrid.setHorizontalSpacing(16)
@@ -735,215 +700,10 @@ class SearchPage(QWidget):
 
         self.update_source_count()
 
-    def create_saved_searches_row(self):
-        """Construit les recherches enregistrées en pastilles, avec leurs boutons."""
-        vLabel = QLabel("Recherches enregistrées")
-        vLabel.setObjectName("fieldLabel")
-
-        vSaveButton = create_button(
-            "Enregistrer…", "download", "primaryButton", COLORS["on_primary"]
-        )
-        vSaveButton.setToolTip("Enregistre les critères et les sources actuels")
-        vSaveButton.clicked.connect(self.save_current_search)
-
-        self.delete_saved_button = create_button(
-            "Supprimer", "circle-alert", "dangerButton", COLORS["danger"]
-        )
-        self.delete_saved_button.setToolTip("Supprime la recherche sélectionnée")
-        self.delete_saved_button.clicked.connect(self.delete_current_search)
-
-        vHeader = QHBoxLayout()
-        vHeader.setSpacing(10)
-        # Messages propres aux recherches enregistrées, affichés près d'elles
-        self.saved_message_icon = QLabel()
-
-        self.saved_message_label = QLabel()
-
-        # Boutons à côté du libellé, le message de résultat à leur suite
-        vHeader.addWidget(vLabel)
-        vHeader.addSpacing(8)
-        vHeader.addWidget(vSaveButton)
-        vHeader.addWidget(self.delete_saved_button)
-        vHeader.addSpacing(12)
-        vHeader.addWidget(self.saved_message_icon)
-        vHeader.addWidget(self.saved_message_label)
-        vHeader.addStretch()
-
-        self.saved_group = QButtonGroup(self)
-
-        self.saved_grid = QGridLayout()
-        self.saved_grid.setSpacing(8)
-        self.saved_grid.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
-        self.saved_summary_label = QLabel()
-        self.saved_summary_label.setObjectName("cardSubtitle")
-        self.saved_summary_label.setWordWrap(True)
-
-        rLayout = QVBoxLayout()
-        rLayout.setSpacing(8)
-        rLayout.addLayout(vHeader)
-        rLayout.addLayout(self.saved_grid)
-        rLayout.addWidget(self.saved_summary_label)
-
-        self.refresh_saved_searches()
-
-        return rLayout
-
-    def set_saved_message(self, pKind, pText):
-        """Affiche le résultat d'une action sur les recherches enregistrées."""
-        vIcon, vColorName = STATUS_STYLES[pKind]
-
-        self.saved_message_icon.setPixmap(
-            get_icon(vIcon, COLORS[vColorName], 16).pixmap(16, 16)
-        )
-        self.saved_message_label.setStyleSheet(f"color: {COLORS[vColorName]};")
-        self.saved_message_label.setText(pText)
-
-    def refresh_saved_searches(self, pSelectedName=None):
-        """Recharge les pastilles des recherches enregistrées."""
-        try:
-            self.saved_searches = {
-                vSearch["name"]: vSearch
-                for vSearch in get_saved_searches(self.database_file)
-            }
-
-        except Exception:
-            logger.exception("Impossible de lire les recherches enregistrées")
-
-            self.saved_searches = {}
-
-        for vButton in self.saved_group.buttons():
-            self.saved_group.removeButton(vButton)
-            vButton.setParent(None)
-            vButton.deleteLater()
-
-        for vIndex, (vName, vSearch) in enumerate(self.saved_searches.items()):
-            vButton = QPushButton(vName)
-            vButton.setObjectName("savedChip")
-            vButton.setCheckable(True)
-            vButton.setCursor(Qt.CursorShape.PointingHandCursor)
-            vButton.setIcon(get_icon("search", COLORS["primary"], 14))
-            vButton.setToolTip(describe_saved_search(vSearch))
-            vButton.clicked.connect(
-                lambda pChecked=False, pName=vName: self.load_saved_search(pName)
-            )
-
-            self.saved_group.addButton(vButton)
-            self.saved_grid.addWidget(vButton, *divmod(vIndex, SOURCE_COLUMNS))
-
-        self.select_saved_search(pSelectedName)
-
-    def select_saved_search(self, pName):
-        """Met en avant la recherche choisie et affiche son résumé."""
-        self.selected_search_name = pName if pName in self.saved_searches else None
-
-        # Le groupe exclusif interdit de tout décocher : il est suspendu le temps
-        # de mettre à jour les pastilles.
-        self.saved_group.setExclusive(False)
-
-        for vButton in self.saved_group.buttons():
-            vButton.setChecked(vButton.text() == self.selected_search_name)
-
-        self.saved_group.setExclusive(True)
-
-        if self.selected_search_name is not None:
-            vSummary = describe_saved_search(
-                self.saved_searches[self.selected_search_name]
-            )
-        elif self.saved_searches:
-            # Les pastilles parlent d'elles-mêmes : pas de ligne d'aide en plus.
-            vSummary = ""
-        else:
-            vSummary = (
-                "Aucune recherche enregistrée : remplissez les critères et les "
-                "sources, puis cliquez sur « Enregistrer… »."
-            )
-
-        self.saved_summary_label.setText(vSummary)
-        self.saved_summary_label.setVisible(bool(vSummary))
-        self.delete_saved_button.setEnabled(self.selected_search_name is not None)
-
-    def load_saved_search(self, pName):
-        """Remplit le formulaire et les sources avec la recherche choisie."""
-        if pName in self.saved_searches:
-            vSearch = self.saved_searches[pName]
-
-            self.apply_criteria(vSearch["criteria"])
-            self.select_sources(vSearch["sources"])
-            self.select_saved_search(pName)
-            self.set_saved_message("idle", f"Recherche « {pName} » chargée")
-
-    def save_current_search(self):
-        """Demande un nom puis enregistre les critères et les sources actuels."""
-        vSources = self.get_selected_sources()
-
-        if not vSources:
-            self.set_saved_message("warning", "Sélectionnez au moins une source.")
-            return
-
-        vName, vAccepted = QInputDialog.getText(
-            self,
-            "Enregistrer la recherche",
-            "Nom de la recherche (un nom existant est remplacé) :",
-            text=self.selected_search_name or "",
-        )
-
-        if vAccepted:
-            try:
-                vSavedName = save_search(
-                    self.database_file,
-                    vName,
-                    vSources,
-                    self.build_criteria(),
-                    datetime.now(),
-                )
-
-            except ValueError as vException:
-                self.set_saved_message("warning", str(vException))
-
-            except Exception:
-                logger.exception("Échec de l'enregistrement de la recherche")
-
-                self.set_saved_message(
-                    "error", "La recherche n'a pas pu être enregistrée."
-                )
-
-            else:
-                self.refresh_saved_searches(vSavedName)
-                self.set_saved_message(
-                    "success", f"Recherche « {vSavedName} » enregistrée"
-                )
-
-    def delete_current_search(self):
-        """Supprime la recherche choisie, après confirmation."""
-        vName = self.selected_search_name
-
-        if vName is None:
-            self.set_saved_message(
-                "warning", "Choisissez d'abord une recherche enregistrée."
-            )
-            return
-
-        vAnswer = QMessageBox.question(
-            self,
-            "Supprimer la recherche",
-            f"Supprimer la recherche « {vName} » ?",
-        )
-
-        if vAnswer == QMessageBox.StandardButton.Yes:
-            try:
-                delete_saved_search(self.database_file, vName)
-
-            except Exception:
-                logger.exception("Échec de la suppression de la recherche")
-
-                self.set_saved_message(
-                    "error", "La recherche n'a pas pu être supprimée."
-                )
-
-            else:
-                self.refresh_saved_searches()
-                self.set_saved_message("idle", f"Recherche « {vName} » supprimée")
+    def load_search(self, pSources, pCriteria):
+        """Remplit le formulaire et les sources avec une recherche enregistrée."""
+        self.apply_criteria(pCriteria)
+        self.select_sources(pSources)
 
     def apply_criteria(self, pCriteria):
         """Remplit le formulaire avec des critères ; un critère absent est vidé."""

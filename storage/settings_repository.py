@@ -1,6 +1,11 @@
 """Persistance des réglages modifiables depuis les interfaces"""
 
+import json
+
 from storage.database import connect_database
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def get_setting_values(pDatabaseFile):
@@ -35,3 +40,37 @@ def save_setting_values(pDatabaseFile, pValues):
 
     finally:
         vConnection.close()
+
+
+def load_json_setting(pDatabaseFile, pKey, pDefault, pExpectedType=None):
+    """Retourne un réglage JSON, ou pDefault s'il est absent, illisible ou mal formé."""
+
+    vValue = get_setting_values(pDatabaseFile).get(pKey)
+
+    rValue = pDefault
+
+    if vValue:
+        try:
+            vData = json.loads(vValue)
+
+        except ValueError:
+            logger.warning("Réglage %s illisible : valeur par défaut utilisée", pKey)
+
+        else:
+            if pExpectedType is None or isinstance(vData, pExpectedType):
+                rValue = vData
+            else:
+                logger.warning(
+                    "Réglage %s de forme inattendue : valeur par défaut utilisée", pKey
+                )
+
+    return rValue
+
+
+def save_json_setting(pDatabaseFile, pKey, pValue):
+    """Enregistre un réglage en JSON ; None l'efface."""
+
+    save_setting_values(
+        pDatabaseFile,
+        {pKey: "" if pValue is None else json.dumps(pValue, ensure_ascii=False)},
+    )

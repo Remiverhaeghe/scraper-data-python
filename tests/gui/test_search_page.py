@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 from PySide6.QtCore import QCoreApplication, QSettings
 
+import gui.saved_searches_bar as saved_searches_bar
 import gui.search_page as search_page_module
 from gui.search_page import SearchPage
 from gui.search_worker import SearchWorker
@@ -331,18 +332,18 @@ def test_saved_search_round_trip(saved_search_page, monkeypatch):
     select_only_remotive(vPage)
 
     monkeypatch.setattr(
-        search_page_module.QInputDialog,
+        saved_searches_bar.QInputDialog,
         "getText",
         lambda *pArgs, **pKwargs: ("Python remote", True),
     )
-    vPage.save_current_search()
+    vPage.saved_bar.save_current()
 
-    vChip = vPage.saved_group.buttons()[0]
+    vChip = vPage.saved_bar.group.buttons()[0]
 
-    assert vPage.selected_search_name == "Python remote"
+    assert vPage.saved_bar.selected_name == "Python remote"
     assert vChip.isChecked()
     assert "Python" in vChip.toolTip()
-    assert "Python" in vPage.saved_summary_label.text()
+    assert "Python" in vPage.saved_bar.summary_label.text()
 
     vPage.keyword_edit.clear()
     vPage.skills_edit.clear()
@@ -352,7 +353,7 @@ def test_saved_search_round_trip(saved_search_page, monkeypatch):
     assert vPage.keyword_edit.text() == "Python"
     assert vPage.skills_edit.text() == "Django, SQL"
     assert vPage.get_selected_sources() == ["remotive"]
-    assert vPage.saved_message_label.text() == "Recherche « Python remote » chargée"
+    assert vPage.saved_bar.message_label.text() == "Recherche « Python remote » chargée"
 
 
 def test_saved_search_deletion_asks_confirmation(saved_search_page, monkeypatch):
@@ -361,35 +362,36 @@ def test_saved_search_deletion_asks_confirmation(saved_search_page, monkeypatch)
     vPage = saved_search_page
 
     monkeypatch.setattr(
-        search_page_module.QInputDialog,
+        saved_searches_bar.QInputDialog,
         "getText",
         lambda *pArgs, **pKwargs: ("À supprimer", True),
     )
-    vPage.save_current_search()
+    vPage.saved_bar.save_current()
 
     monkeypatch.setattr(
-        search_page_module.QMessageBox,
+        saved_searches_bar.QMessageBox,
         "question",
-        lambda *pArgs: search_page_module.QMessageBox.StandardButton.Yes,
+        lambda *pArgs: saved_searches_bar.QMessageBox.StandardButton.Yes,
     )
-    vPage.delete_current_search()
+    vPage.saved_bar.delete_current()
 
-    assert not vPage.saved_group.buttons()
-    assert vPage.selected_search_name is None
-    assert vPage.saved_summary_label.text().startswith("Aucune recherche")
-    assert not vPage.delete_saved_button.isEnabled()
+    assert not vPage.saved_bar.group.buttons()
+    assert vPage.saved_bar.selected_name is None
+    assert vPage.saved_bar.summary_label.text().startswith("Aucune recherche")
+    assert not vPage.saved_bar.delete_button.isEnabled()
 
 
 def test_saved_search_reports_invalid_name(saved_search_page, monkeypatch):
     """Vérifie le message affiché pour un nom vide."""
 
     monkeypatch.setattr(
-        search_page_module.QInputDialog, "getText", lambda *pArgs, **pKwargs: ("", True)
+        saved_searches_bar.QInputDialog, "getText", lambda *pArgs, **pKwargs: ("", True)
     )
-    saved_search_page.save_current_search()
+    saved_search_page.saved_bar.save_current()
 
     assert (
-        saved_search_page.saved_message_label.text() == "Donnez un nom à la recherche."
+        saved_search_page.saved_bar.message_label.text()
+        == "Donnez un nom à la recherche."
     )
 
 

@@ -56,6 +56,7 @@ from job.quiz_exam import (
     get_remaining_seconds,
     load_exam,
     load_exam_results,
+    start_error_review,
     start_exam,
     stop_exam,
     summarize_exam,
@@ -662,6 +663,21 @@ def answer_quiz_exam(
                 router.url_path_for("show_quiz_exam"), status_code=303
             )
         )
+
+    return rResponse
+
+
+@router.post("/quiz/exam/errors", dependencies=[Depends(require_csrf)])
+def review_quiz_exam_errors(pDatabaseFile: str = Depends(get_database_file)):
+    """Enchaîne sur un examen limité aux questions ratées de l'examen terminé."""
+
+    try:
+        start_error_review(pDatabaseFile, load_exam(pDatabaseFile), datetime.now())
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = RedirectResponse(router.url_path_for("show_quiz_exam"), status_code=303)
 
     return rResponse
 

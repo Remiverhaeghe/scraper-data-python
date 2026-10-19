@@ -2,7 +2,6 @@
 
 import smtplib
 from datetime import datetime
-from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -11,7 +10,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
-    QFileDialog,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -22,6 +20,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.token_access_panel import TokenAccessPanel
+from gui.data_panel import DataPanel
 from gui.theme import COLORS, THEME_CHOICES, is_dark_theme
 from gui.widgets import (
     FlowLayout,
@@ -61,8 +61,6 @@ from job.schedule import (
 )
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
-from storage.archive import export_archive, restore_archive
-from storage.maintenance import reset_database
 from storage.saved_searches import get_saved_searches
 from utils.logger import get_logger
 from utils.mailer import EMAIL_SETTINGS, get_missing_email_settings, send_email
@@ -124,6 +122,11 @@ class SettingsPage(QWidget):
             pIcon="settings",
         )
 
+        self.create_access_panels()
+
+        self.data_panel = DataPanel(pDatabaseFile)
+        self.data_panel.data_reset.connect(self.data_reset)
+
         # Deux colonnes indépendantes : dans une grille, une carte courte prendrait
         # la hauteur de sa voisine et s'étirerait.
         # Deux colonnes sur un écran large, une seule dans une fenêtre réduite :
@@ -133,15 +136,14 @@ class SettingsPage(QWidget):
                 self.create_appearance_card(),
                 self.create_rules_card(),
                 self.create_schedule_card(),
-                self.create_calendar_card(),
-                self.create_mobile_card(),
+                self.calendar_panel,
+                self.mobile_panel,
             ],
             [
                 self.create_notification_card(),
                 self.create_sources_card(),
                 self.create_companies_card(),
-                self.create_archive_card(),
-                self.create_reset_card(),
+                self.data_panel,
             ],
         )
         self.columns = []
@@ -161,8 +163,8 @@ class SettingsPage(QWidget):
         vLayout.addLayout(vColumns, 1)
 
         self.refresh_schedule()
-        self.refresh_calendar()
-        self.refresh_mobile()
+        self.calendar_panel.refresh()
+        self.mobile_panel.refresh()
 
     def arrange_cards(self, pSingleColumn):
         """Range les cartes sur une colonne, ou sur deux côte à côte."""
@@ -813,373 +815,52 @@ class SettingsPage(QWidget):
         finally:
             QApplication.restoreOverrideCursor()
 
-    def create_calendar_card(self):
-        """Construit l'adresse d'abonnement de l'agenda aux relances et entretiens."""
-        vCard, vLayout = create_card(
-            "Abonnement à l'agenda",
-            "Relances et entretiens relus automatiquement par l'agenda du téléphone "
-            "ou du PC, sur le réseau local ou par Tailscale.",
-        )
-
-        self.calendar_edit = QLineEdit()
-        self.calendar_edit.setReadOnly(True)
-        self.calendar_edit.setPlaceholderText("Aucune adresse créée")
-
-        self.calendar_button = create_button(
-            "Créer l'adresse", "calendar", pIconColor=COLORS["primary"]
-        )
-        self.calendar_button.setToolTip("Une nouvelle adresse désactive l'ancienne")
-        self.calendar_button.clicked.connect(self.renew_calendar)
-
-        self.copy_calendar_button = create_button(
-            "Copier", "copy", pIconColor=COLORS["primary"]
-        )
-        self.copy_calendar_button.clicked.connect(self.copy_calendar)
-
-        self.calendar_message = QLabel()
-        self.calendar_message.setObjectName("cardSubtitle")
-        self.calendar_message.setWordWrap(True)
-
-        vActions = QHBoxLayout()
-        vActions.addWidget(self.calendar_button)
-        vActions.addWidget(self.copy_calendar_button)
-        vActions.addWidget(self.calendar_message, 1)
-
-        vLayout.addWidget(self.calendar_edit)
-        vLayout.addLayout(vActions)
-
-        return vCard
-
-    def refresh_calendar(self):
-        """Affiche l'adresse d'abonnement enregistrée."""
-        try:
-            vUrl = build_subscription_url(
+    def create_access_panels(self):
+        """Construit les accès secrets : agenda par adresse et application mobile."""
+        self.calendar_panel = TokenAccessPanel(
+            {
+                "title": "Abonnement à l'agenda",
+                "subtitle": "Relances et entretiens relus automatiquement par "
+                "l'agenda du téléphone ou du PC, sur le réseau local ou par Tailscale.",
+                "placeholder": "Aucune adresse créée",
+                "create": "Créer l'adresse",
+                "renew": "Renouveler l'adresse",
+                "icon": "calendar",
+                "tooltip": "Une nouvelle adresse désactive l'ancienne",
+                "confirm": "L'adresse actuelle cessera de fonctionner : les agendas "
+                "abonnés devront utiliser la nouvelle. Continuer ?",
+                "created": "Adresse créée : ajoutez-la dans l'agenda comme agenda "
+                "par URL.",
+                "copied": "Adresse copiée.",
+                "failed": "L'adresse n'a pas pu être créée.",
+            },
+            lambda: build_subscription_url(
                 WEB_BASE_URL, get_calendar_token(self.database_file)
-            )
-
-        except Exception:
-            logger.exception("Impossible de lire l'adresse d'abonnement à l'agenda")
-
-            vUrl = None
-
-        self.calendar_edit.setText(vUrl or "")
-        self.calendar_button.setText(
-            "Renouveler l'adresse" if vUrl else "Créer l'adresse"
-        )
-        self.copy_calendar_button.setEnabled(bool(vUrl))
-
-    def renew_calendar(self):
-        """Crée une adresse d'abonnement ; une adresse existante est d'abord confirmée."""
-        if self.calendar_edit.text() and (
-            QMessageBox.question(
-                self,
-                "Renouveler l'adresse",
-                "L'adresse actuelle cessera de fonctionner : les agendas abonnés "
-                "devront utiliser la nouvelle. Continuer ?",
-            )
-            != QMessageBox.StandardButton.Yes
-        ):
-            return
-
-        try:
-            renew_calendar_token(self.database_file)
-
-        except Exception:
-            logger.exception("Échec de la création de l'adresse d'abonnement")
-
-            show_message(
-                self.calendar_message, "L'adresse n'a pas pu être créée.", "danger"
-            )
-
-        else:
-            self.refresh_calendar()
-            show_message(
-                self.calendar_message,
-                "Adresse créée : ajoutez-la dans l'agenda comme agenda par URL.",
-            )
-
-    def copy_calendar(self):
-        """Copie l'adresse d'abonnement dans le presse-papiers."""
-        QApplication.clipboard().setText(self.calendar_edit.text())
-
-        show_message(self.calendar_message, "Adresse copiée.")
-
-    def create_mobile_card(self):
-        """Construit l'accès de l'application mobile de révision : adresse et jeton."""
-        vCard, vLayout = create_card(
-            "Application mobile",
-            "Révision sur le téléphone, même hors ligne : saisissez cette adresse "
-            "et ce jeton dans l'application. Les réponses rejoignent la "
-            "progression d'ici au retour du réseau.",
+            ),
+            lambda: renew_calendar_token(self.database_file),
         )
 
-        vAddress = QLineEdit(f"{WEB_BASE_URL}{API_PREFIX}")
-        vAddress.setReadOnly(True)
-        vAddress.setToolTip("Adresse du serveur, à saisir dans l'application")
-
-        self.mobile_edit = QLineEdit()
-        self.mobile_edit.setReadOnly(True)
-        self.mobile_edit.setPlaceholderText("Aucun jeton créé")
-
-        self.mobile_button = create_button(
-            "Créer le jeton", "lock", pIconColor=COLORS["primary"]
+        self.mobile_panel = TokenAccessPanel(
+            {
+                "title": "Application mobile",
+                "subtitle": "Révision sur le téléphone, même hors ligne : saisissez "
+                "cette adresse et ce jeton dans l'application. Les réponses "
+                "rejoignent la progression d'ici au retour du réseau.",
+                "placeholder": "Aucun jeton créé",
+                "create": "Créer le jeton",
+                "renew": "Renouveler le jeton",
+                "icon": "lock",
+                "tooltip": "Un nouveau jeton désactive l'ancien",
+                "confirm": "Le jeton actuel cessera de fonctionner : l'application "
+                "mobile devra utiliser le nouveau. Continuer ?",
+                "created": "Jeton créé : saisissez-le dans l'application.",
+                "copied": "Jeton copié.",
+                "failed": "Le jeton n'a pas pu être créé.",
+            },
+            lambda: get_mobile_token(self.database_file),
+            lambda: renew_mobile_token(self.database_file),
+            f"{WEB_BASE_URL}{API_PREFIX}",
         )
-        self.mobile_button.setToolTip("Un nouveau jeton désactive l'ancien")
-        self.mobile_button.clicked.connect(self.renew_mobile)
-
-        self.copy_mobile_button = create_button(
-            "Copier", "copy", pIconColor=COLORS["primary"]
-        )
-        self.copy_mobile_button.clicked.connect(self.copy_mobile)
-
-        self.mobile_message = QLabel()
-        self.mobile_message.setObjectName("cardSubtitle")
-        self.mobile_message.setWordWrap(True)
-
-        vActions = QHBoxLayout()
-        vActions.addWidget(self.mobile_button)
-        vActions.addWidget(self.copy_mobile_button)
-        vActions.addWidget(self.mobile_message, 1)
-
-        vLayout.addWidget(vAddress)
-        vLayout.addWidget(self.mobile_edit)
-        vLayout.addLayout(vActions)
-
-        return vCard
-
-    def refresh_mobile(self):
-        """Affiche le jeton de l'application mobile enregistré."""
-        try:
-            vToken = get_mobile_token(self.database_file)
-
-        except Exception:
-            logger.exception("Impossible de lire le jeton de l'application mobile")
-
-            vToken = None
-
-        self.mobile_edit.setText(vToken or "")
-        self.mobile_button.setText(
-            "Renouveler le jeton" if vToken else "Créer le jeton"
-        )
-        self.copy_mobile_button.setEnabled(bool(vToken))
-
-    def renew_mobile(self):
-        """Crée un jeton ; un jeton existant n'est remplacé qu'après confirmation."""
-        if self.mobile_edit.text() and (
-            QMessageBox.question(
-                self,
-                "Renouveler le jeton",
-                "Le jeton actuel cessera de fonctionner : l'application mobile "
-                "devra utiliser le nouveau. Continuer ?",
-            )
-            != QMessageBox.StandardButton.Yes
-        ):
-            return
-
-        try:
-            renew_mobile_token(self.database_file)
-
-        except Exception:
-            logger.exception("Échec de la création du jeton de l'application mobile")
-
-            show_message(
-                self.mobile_message, "Le jeton n'a pas pu être créé.", "danger"
-            )
-
-        else:
-            self.refresh_mobile()
-            show_message(
-                self.mobile_message, "Jeton créé : saisissez-le dans l'application."
-            )
-
-    def copy_mobile(self):
-        """Copie le jeton de l'application mobile dans le presse-papiers."""
-        QApplication.clipboard().setText(self.mobile_edit.text())
-
-        show_message(self.mobile_message, "Jeton copié.")
-
-    def create_archive_card(self):
-        """Construit l'export et la restauration de la sauvegarde complète."""
-        vCard, vLayout = create_card(
-            "Sauvegarde complète",
-            "Base et pièces jointes dans une archive .zip, pour changer de PC sans "
-            "rien perdre. La restauration sauvegarde d'abord les données actuelles.",
-        )
-
-        self.export_archive_button = create_button(
-            "Exporter…", "download", pIconColor=COLORS["primary"]
-        )
-        self.export_archive_button.clicked.connect(self.choose_archive_target)
-
-        self.restore_archive_button = create_button(
-            "Restaurer…", "upload", "dangerButton", COLORS["danger"]
-        )
-        self.restore_archive_button.clicked.connect(self.choose_archive_source)
-
-        self.archive_message = QLabel()
-        self.archive_message.setObjectName("cardSubtitle")
-        self.archive_message.setWordWrap(True)
-
-        vActions = QHBoxLayout()
-        vActions.addWidget(self.export_archive_button)
-        vActions.addWidget(self.restore_archive_button)
-        vActions.addWidget(self.archive_message, 1)
-
-        vLayout.addLayout(vActions)
-
-        return vCard
-
-    def choose_archive_target(self):
-        """Demande où enregistrer la sauvegarde complète puis l'écrit."""
-        vPath, _ = QFileDialog.getSaveFileName(
-            self,
-            "Exporter la sauvegarde complète",
-            str(Path.home() / f"jobboard-{datetime.now():%Y%m%d}.zip"),
-            "Archive (*.zip)",
-        )
-
-        if vPath:
-            self.export_archive(vPath)
-
-    def export_archive(self, pPath):
-        """Écrit la base et les pièces jointes dans l'archive choisie."""
-        try:
-            vCount = export_archive(self.database_file, pPath)
-
-        except Exception:
-            logger.exception("Échec de l'export de la sauvegarde complète")
-
-            show_message(
-                self.archive_message, "L'export a échoué. Voir les journaux.", "danger"
-            )
-
-        else:
-            show_message(
-                self.archive_message,
-                f"Sauvegarde exportée : base et {vCount} pièce(s) jointe(s).",
-            )
-
-    def choose_archive_source(self):
-        """Demande l'archive à restaurer, puis une confirmation."""
-        vPath, _ = QFileDialog.getOpenFileName(
-            self,
-            "Restaurer une sauvegarde complète",
-            str(Path.home()),
-            "Archive (*.zip)",
-        )
-
-        # Par sécurité, Entrée annule : il faut cliquer sur Oui.
-        if vPath and (
-            QMessageBox.warning(
-                self,
-                "Restaurer la sauvegarde",
-                "Les données actuelles seront remplacées par celles de l'archive. "
-                "Elles sont d'abord sauvegardées dans data/backups. Continuer ?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Cancel,
-            )
-            == QMessageBox.StandardButton.Yes
-        ):
-            self.restore_archive(vPath)
-
-    def restore_archive(self, pPath):
-        """Restaure l'archive ; les pages sont ensuite reconstruites."""
-        try:
-            vBackupFile = restore_archive(self.database_file, pPath, datetime.now())
-
-        except ValueError as vException:
-            logger.warning("Restauration refusée : %s", vException)
-
-            show_message(self.archive_message, str(vException), "warning")
-
-        except Exception:
-            logger.exception("Échec de la restauration de la sauvegarde complète")
-
-            show_message(
-                self.archive_message,
-                "La restauration a échoué. Voir les journaux.",
-                "danger",
-            )
-
-        else:
-            self.data_reset.emit(
-                f"Sauvegarde restaurée. Anciennes données : {vBackupFile.name}"
-            )
-
-    def create_reset_card(self):
-        """Construit la réinitialisation des données, précédée d'une sauvegarde."""
-        vCard, vLayout = create_card(
-            "Réinitialisation",
-            "Efface les offres, candidatures, relances, historique, réglages et "
-            "recherches enregistrées. Les questions de révision sont conservées. "
-            "Une sauvegarde de la base est faite juste avant.",
-        )
-
-        self.reset_button = create_button(
-            "Réinitialiser les données",
-            "circle-alert",
-            "dangerButton",
-            COLORS["danger"],
-        )
-        self.reset_button.clicked.connect(self.confirm_reset)
-
-        self.reset_message = QLabel()
-        self.reset_message.setObjectName("cardSubtitle")
-        self.reset_message.setWordWrap(True)
-
-        vActions = QHBoxLayout()
-        vActions.addWidget(self.reset_button)
-        vActions.addWidget(self.reset_message, 1)
-
-        vLayout.addLayout(vActions)
-
-        return vCard
-
-    def confirm_reset(self):
-        """Demande confirmation, puis réinitialise les données."""
-        vDialog = QMessageBox(self)
-        vDialog.setIcon(QMessageBox.Icon.Warning)
-        vDialog.setWindowTitle("Réinitialiser les données")
-        vDialog.setText("Toutes les données de l'application vont être effacées.")
-        vDialog.setInformativeText(
-            "Offres, candidatures, relances, historique, réglages, recherches "
-            "enregistrées et planifiée, adresse de notification, progression de "
-            "révision. Les questions de révision importées sont conservées. Une "
-            "sauvegarde de la base est faite avant, dans data/backups. Continuer ?"
-        )
-
-        vConfirmButton = vDialog.addButton(
-            "Réinitialiser", QMessageBox.ButtonRole.DestructiveRole
-        )
-        vCancelButton = vDialog.addButton("Annuler", QMessageBox.ButtonRole.RejectRole)
-
-        # Par sécurité, Entrée annule : il faut cliquer sur Réinitialiser.
-        vDialog.setDefaultButton(vCancelButton)
-        vDialog.exec()
-
-        if vDialog.clickedButton() is vConfirmButton:
-            self.reset_data()
-
-    def reset_data(self):
-        """Sauvegarde puis efface les données ; les pages sont ensuite reconstruites."""
-        try:
-            vBackupFile = reset_database(self.database_file, datetime.now())
-
-        except Exception:
-            logger.exception("Échec de la réinitialisation des données")
-
-            show_message(
-                self.reset_message,
-                "La réinitialisation a échoué, aucune donnée n'a été effacée "
-                "si la sauvegarde n'a pas pu être faite. Voir les journaux.",
-                "danger",
-            )
-
-        else:
-            # Les pages sont reconstruites : le message est affiché sur la nouvelle.
-            self.data_reset.emit(
-                f"Données réinitialisées. Sauvegarde : {vBackupFile.name}"
-            )
 
     def set_actions_enabled(self, pEnabled):
         """Bloque le changement de thème et la réinitialisation pendant une recherche.
@@ -1189,5 +870,4 @@ class SettingsPage(QWidget):
         for vButton in self.theme_buttons.buttons():
             vButton.setEnabled(pEnabled)
 
-        self.reset_button.setEnabled(pEnabled)
-        self.restore_archive_button.setEnabled(pEnabled)
+        self.data_panel.set_actions_enabled(pEnabled)

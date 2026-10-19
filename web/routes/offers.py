@@ -36,6 +36,7 @@ from job.deduplication import (
     get_offer_group,
     group_offers,
 )
+from job.freshness import add_freshness
 from job.manual_offers import (
     IMPORT_FORMATS,
     MAX_IMPORT_BYTES,
@@ -46,7 +47,12 @@ from job.manual_offers import (
 )
 from job.interview_revision import build_offer_revision
 from job.quiz import THEME_STATUSES, load_active_quiz
-from job.quiz_exam import describe_exam_results, load_exam_results
+from job.quiz_exam import (
+    build_exam_history,
+    describe_exam_results,
+    load_exam_results,
+)
+from job.interview_journal import collect_asked_questions, record_interview
 from job.preparation import (
     MATCH_FILTERS,
     filter_by_match,
@@ -103,12 +109,13 @@ from storage.job_applications import (
     record_follow_up,
     save_application,
 )
+from storage.interview_notes import get_interview_notes
 from storage.job_offers import get_offer, get_offers, set_availability
 from utils.link_checker import check_offer_link
 from utils.logger import get_logger
 from web.dependencies import get_database_file, require_csrf
 from web.forms import parse_amount, parse_date, parse_published_days
-from web.rendering import TONE_ICONS, build_bar_chart, templates
+from web.rendering import TONE_ICONS, build_bar_chart, get_message_tone, templates
 
 logger = get_logger(__name__)
 
@@ -243,6 +250,10 @@ def list_offers(
 
     # Les annonces d'une même offre sont regroupées en une seule ligne.
     vGrouped = group_offers(vPrepared, get_decisions(pDatabaseFile))
+    add_freshness(vGrouped, vNow)
+
+    if pSort == "fresh":
+        vGrouped.sort(key=lambda pOffer: pOffer["freshness"], reverse=True)
 
     if pMultiple:
         vGrouped = [vOffer for vOffer in vGrouped if vOffer["duplicates"]]
@@ -456,6 +467,8 @@ def show_offer(
     vPrepared = prepare(vOffer)
     vCompanyRules = load_company_rules(pDatabaseFile)
 
+    vExamResults = load_exam_results(pDatabaseFile, (pSource, str(pSourceId)))
+
     rResponse = templates.TemplateResponse(
         request,
         "offer.html",
@@ -474,13 +487,13 @@ def show_offer(
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
             "preparation": build_preparation(pDatabaseFile, vPrepared),
             "revision": build_revision(pDatabaseFile, vPrepared),
-            "exam_results": describe_exam_results(
-                load_exam_results(pDatabaseFile, (pSource, str(pSourceId)))
-            ),
+            "exam_results": describe_exam_results(vExamResults),
+            "exam_chart": build_exam_chart(vExamResults),
             "theme_statuses": THEME_STATUSES,
             "compared_fields": COMPARED_FIELDS,
             "application": get_application(pDatabaseFile, pSource, pSourceId),
             "attachments": get_attachments(pDatabaseFile, pSource, pSourceId),
+            "interview_notes": get_interview_notes(pDatabaseFile, pSource, pSourceId),
             "attachment_extensions": ALLOWED_EXTENSIONS,
             "prompts": build_prompts(load_profile(pDatabaseFile), vPrepared),
             "prompt_kinds": PROMPT_KINDS,
@@ -562,6 +575,50 @@ def add_follow_up(
 
     rResponse = render_application(
         request, pDatabaseFile, vOffer, "Relance enregistrée"
+    )
+
+    return rResponse
+
+
+@router.post(
+    "/offer/interview-note",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def add_interview_journal_note(
+    request: Request,
+    pSource: str = Form(..., alias="source"),
+    pSourceId: str = Form(..., alias="id"),
+    pQuestions: str = Form("", alias="questions"),
+    pImpressions: str = Form("", alias="impressions"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Ajoute une entrée au journal d'entretien et renvoie le bloc mis à jour."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    vStatusCode = 200
+
+    try:
+        record_interview(
+            pDatabaseFile, pSource, pSourceId, datetime.now(), pQuestions, pImpressions
+        )
+
+    except ValueError as vException:
+        vMessage, vStatusCode = str(vException), 400
+
+    else:
+        vMessage = "Entrée ajoutée au journal."
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "_interview_journal.html",
+        {
+            "offer": vOffer,
+            "interview_notes": get_interview_notes(pDatabaseFile, pSource, pSourceId),
+            "journal_message": vMessage,
+            "journal_tone": get_message_tone(vStatusCode),
+        },
+        status_code=vStatusCode,
     )
 
     return rResponse
@@ -790,6 +847,42 @@ def request_search(pDatabaseFile: str = Depends(get_database_file)):
     return rResponse
 
 
+def build_exam_chart(pResults):
+    """Prépare le graphique des notes successives, ou None avant deux examens."""
+
+    vHistory = build_exam_history(pResults)
+
+    rChart = (
+        build_bar_chart(
+            [vPoint["label"] for vPoint in vHistory],
+            [
+                (
+                    "Note",
+                    [
+                        (
+                            "var(--success)"
+                            if vPoint["score"] >= 70
+                            else (
+                                "var(--warning)"
+                                if vPoint["score"] >= 50
+                                else "var(--danger)"
+                            )
+                        )
+                        for vPoint in vHistory
+                    ],
+                    [vPoint["score"] for vPoint in vHistory],
+                )
+            ],
+            pAxes=("Examen", "% de bonnes réponses"),
+            pFillWidth=True,
+        )
+        if len(vHistory) >= 2
+        else None
+    )
+
+    return rChart
+
+
 def build_preparation(pDatabaseFile, pOffer):
     """Prépare la candidature pour une offre, ou None tant que le profil est vide."""
 
@@ -798,7 +891,12 @@ def build_preparation(pDatabaseFile, pOffer):
     rPreparation = (
         None
         if is_profile_empty(vProfile)
-        else prepare_application(vProfile, pOffer, load_star_answers(pDatabaseFile))
+        else prepare_application(
+            vProfile,
+            pOffer,
+            load_star_answers(pDatabaseFile),
+            collect_asked_questions(pDatabaseFile),
+        )
     )
 
     return rPreparation

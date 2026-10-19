@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.theme import COLORS
+from gui.health_panel import HealthPanel
 from gui.widgets import create_button, create_page_header, show_message
 from utils.log_reader import (
     LEVEL_FILTERS,
@@ -43,9 +44,16 @@ COLUMN_WIDTHS = (150, 120, 230)
 class LogsPage(QWidget):
     """Affiche les derniers logs, filtrables par niveau et par texte."""
 
-    def __init__(self):
-        """Construit les filtres et le tableau ; les logs sont lus par refresh."""
+    def __init__(self, pDatabaseFile=None):
+        """Construit les filtres et le tableau ; les logs sont lus par refresh.
+
+        Avec une base, l'état de l'application est affiché au-dessus des logs.
+        """
         super().__init__()
+
+        self.health_panel = (
+            HealthPanel(pDatabaseFile) if pDatabaseFile is not None else None
+        )
 
         self.level_combo = QComboBox()
 
@@ -113,12 +121,18 @@ class LogsPage(QWidget):
             pIcon="terminal",
         )
 
+        if self.health_panel is not None:
+            vLayout.addWidget(self.health_panel)
+
         vLayout.addLayout(vFilters)
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.table, 1)
 
     def refresh(self):
-        """Relit les logs avec les filtres choisis, les plus récents en premier."""
+        """Relit l'état de l'application et les logs, les plus récents en premier."""
+        if self.health_panel is not None:
+            self.health_panel.refresh()
+
         try:
             vEntries = read_log_entries(
                 pLevel=self.level_combo.currentData(),

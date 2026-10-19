@@ -4,6 +4,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QColor, QFont
 
 from gui.theme import COLORS
+from job.freshness import get_freshness_tone
 from job.presentation import (
     CONTRACT_TONES,
     STATUS_LABELS,
@@ -23,6 +24,7 @@ COLUMNS = [
     ("Contrat", "contract", 85),
     ("Net mensuel", "salary_net_monthly_min", 145),
     ("Profil", "match_score", 70),
+    ("Fraîcheur", "freshness", 85),
     ("Source", "source_label", 105),
     ("Suivi", "application_status", 120),
 ]
@@ -47,6 +49,9 @@ def format_cell(pOffer, pKey):
 
     elif pKey == "match_score":
         rText = "" if pOffer.get(pKey) is None else f"{pOffer[pKey]} %"
+
+    elif pKey == "freshness":
+        rText = str(pOffer.get(pKey, ""))
 
     elif pKey == "first_seen_at":
         rText = format_date(pOffer.get(pKey))
@@ -78,7 +83,7 @@ def get_sort_value(pOffer, pKey):
 
         rValue = float(vValue) if vValue is not None else -1.0
 
-    elif pKey == "match_score":
+    elif pKey in ("match_score", "freshness"):
         rValue = -1.0 if vValue is None else float(vValue)
 
     else:
@@ -107,6 +112,8 @@ def get_cell_color(pOffer, pKey):
             if pOffer[pKey] >= 70
             else ("warning" if pOffer[pKey] >= 40 else "muted")
         )
+    elif pKey == "freshness" and pOffer.get(pKey) is not None:
+        vTone = get_freshness_tone(pOffer[pKey])
     elif pKey == "source_label" and pOffer.get("needs_review"):
         vTone = "warning"
 

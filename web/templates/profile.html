@@ -78,6 +78,9 @@
         </form>
     </details>
     {% endfor %}
+    {% if asked_questions %}
+    <p class="muted">Questions posées dans vos entretiens : {% for item in asked_questions %}{{ item.question }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+    {% endif %}
     {% if star_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ star_message }}</p>{% endif %}
 </article>
 {% endblock %}

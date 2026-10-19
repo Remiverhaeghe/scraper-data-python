@@ -1,0 +1,32 @@
+{# Fragment du journal d'entretien d'une offre : renvoyé seul par la route
+   /offer/interview-note, puis inséré par HTMX à la place de l'ancien bloc. #}
+<section id="interview-journal" class="card application">
+    <h2>Journal d'entretien</h2>
+    <p class="card-subtitle">Questions posées et impressions, reprises dans la préparation des autres offres</p>
+
+    <form hx-post="{{ url_for('add_interview_journal_note').path }}"
+          hx-target="#interview-journal"
+          hx-swap="outerHTML">
+        <input type="hidden" name="source" value="{{ offer.source }}">
+        <input type="hidden" name="id" value="{{ offer.source_id }}">
+        <label>
+            Questions posées
+            <textarea name="questions" rows="4" placeholder="Une question par ligne"></textarea>
+        </label>
+        <label>
+            Impressions
+            <textarea name="impressions" rows="3"></textarea>
+        </label>
+        <button class="button button-block" type="submit">{{ icon("file-text", 16) }} Ajouter au journal</button>
+    </form>
+
+    {% if journal_message %}<p class="application-message tone-{{ journal_tone }}" role="status">{{ journal_message }}</p>{% endif %}
+
+    {% for note in interview_notes %}
+    <details class="star-answer">
+        <summary>{{ note.interviewed_at | date_fr }}</summary>
+        {% if note.questions %}<ul>{% for question in note.questions.splitlines() %}<li>{{ question }}</li>{% endfor %}</ul>{% endif %}
+        {% if note.impressions %}<p class="pre-line">{{ note.impressions }}</p>{% endif %}
+    </details>
+    {% endfor %}
+</section>

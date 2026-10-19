@@ -10,6 +10,7 @@ from job.star_answers import (
     save_star_answer,
     select_star_answers,
     suggest_star_answer,
+    suggest_star_questions,
 )
 from storage.database import initialize_database
 from storage.settings_repository import save_setting_values
@@ -114,3 +115,26 @@ def test_star_answers_matching_the_offer_come_first():
     )
 
     assert vPreparation["interview"]["star"][0]["experience"] == "Data engineer"
+
+
+def test_offer_text_suggests_likely_questions():
+    """Vérifie les questions probables repérées dans le texte d'une offre."""
+
+    vSuggestions = suggest_star_questions(
+        "Au sein d'une équipe agile, vous gérez les délais de mise en production "
+        "en toute autonomie.",
+        {"pression": {"action": "x"}},
+    )
+
+    assert [(vItem["reason"], vItem["prepared"]) for vItem in vSuggestions] == [
+        ("travail en équipe", False),
+        ("délais et production", True),
+        ("autonomie et initiative", False),
+    ]
+    assert suggest_star_questions("Développeur Java", {}) == []
+    assert (
+        prepare_application(PROFILE, {"title": "Dev", "description": "Clients"})[
+            "interview"
+        ]["likely"][0]["reason"]
+        == "résultats et clients"
+    )

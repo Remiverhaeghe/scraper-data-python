@@ -89,9 +89,20 @@
             <input type="checkbox" name="confirm" value="1" required>
             Je confirme la suppression de ces {{ purge.offers | length }} offre(s)
         </label>
+        <label class="check">
+            <input type="checkbox" name="exclude" value="1" checked>
+            Exclure aussi ces mots des prochaines recherches
+        </label>
         <button class="button button-danger" type="submit">{{ icon("trash-2", 16) }} Supprimer</button>
     </form>
     {% endif %}
+    <form class="inline-form section-gap" method="post" action="{{ url_for('update_excluded_words').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <label>Mots exclus de toutes les recherches
+            <input type="text" name="words" value="{{ excluded_words | join(', ') }}" placeholder="Aucun mot exclu">
+        </label>
+        <button class="button" type="submit">Enregistrer</button>
+    </form>
     {% if purge.message %}<p class="application-message tone-{{ message_tone if message_tone != 'success' or not purge.offers else 'warning' }}" role="status">{{ purge.message }}</p>{% endif %}
 </article>
 

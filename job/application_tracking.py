@@ -101,6 +101,7 @@ def prepare_card(pApplication, pNow):
     rCard["source_label"] = get_source_label(rCard["source"])
     rCard["applied_label"] = format_date(rCard["applied_at"])
     rCard["follow_up_label"] = format_date(rCard["follow_up_date"])
+    rCard["expired"] = rCard.get("availability") == "expired"
     rCard["follow_up_due"] = bool(
         rCard["status"] in FOLLOW_UP_STATUSES
         and rCard["follow_up_date"]
@@ -236,6 +237,9 @@ def build_application_statistics(pDatabaseFile):
             for vApplication in vApplications
         ),
         "rate": round(100 * vAnswered / len(vApplications)) if vApplications else None,
+        "accepted": sum(
+            vApplication["status"] == "ACCEPTED" for vApplication in vApplications
+        ),
         "delay": format_delay(get_average_delay(vApplications)),
         "tables": [
             (
@@ -282,6 +286,8 @@ def build_application_statistics(pDatabaseFile):
             ),
         )
 
+    rStatistics["funnel"] = build_funnel(rStatistics)
+
     return rStatistics
 
 
@@ -318,12 +324,41 @@ def build_follow_up_draft(pApplication, pName):
     if vAppliedAt:
         vContext += f", envoyée le {format_date(vAppliedAt)}"
 
+    if pApplication.get("status") == "INTERVIEW":
+        vInterviewAt = pApplication.get("interview_at")
+        vBody = (
+            "Je vous remercie encore pour notre entretien"
+            + (f" du {format_date(vInterviewAt)}" if vInterviewAt else "")
+            + f" au sujet du poste de {vTitle}. Je me permets de revenir vers vous "
+            "pour connaître la suite donnée à ma candidature.\n\n"
+            "Notre échange a confirmé mon intérêt pour ce poste ; je reste "
+            "disponible pour toute information complémentaire."
+        )
+    elif pApplication.get("follow_up_count"):
+        vLastFollowUp = pApplication.get("last_follow_up_at")
+        vBody = (
+            f"Je reviens vers vous une dernière fois au sujet de {vContext}"
+            + (
+                f", restée sans réponse depuis ma relance du "
+                f"{format_date(vLastFollowUp)}"
+                if vLastFollowUp
+                else ""
+            )
+            + ".\n\nSi le poste est pourvu, un mot de votre part me permettrait "
+            "de clore ma candidature. Dans le cas contraire, ce poste m'intéresse "
+            "toujours et je reste disponible pour un échange."
+        )
+    else:
+        vBody = (
+            f"Je me permets de revenir vers vous au sujet de {vContext}.\n\n"
+            "Ce poste m'intéresse toujours et je reste disponible pour un échange "
+            "à votre convenance."
+        )
+
     rDraft = (
         f"Objet : ma candidature au poste de {vTitle}\n\n"
         "Bonjour,\n\n"
-        f"Je me permets de revenir vers vous au sujet de {vContext}.\n\n"
-        "Ce poste m'intéresse toujours et je reste disponible pour un échange "
-        "à votre convenance.\n\n"
+        f"{vBody}\n\n"
         f"Bien cordialement,\n{pName}"
     ).rstrip()
 
@@ -362,3 +397,35 @@ def mark_followed_up(pDatabaseFile, pSource, pSourceId, pNow):
     )
 
     logger.info("Relance notée : %s %s", pSource, pSourceId)
+
+
+def build_funnel(pStatistics):
+    """Retourne les étapes de l'entonnoir : nombre, part des envois et passage."""
+
+    vStages = (
+        ("Envoyées", pStatistics["sent"]),
+        ("Réponses", pStatistics["answered"]),
+        ("Entretiens", pStatistics["interviews"]),
+        ("Acceptées", pStatistics["accepted"]),
+    )
+
+    rFunnel = []
+    vPrevious = None
+
+    for vLabel, vCount in vStages:
+        rFunnel.append(
+            {
+                "label": vLabel,
+                "count": vCount,
+                "share": (
+                    round(100 * vCount / pStatistics["sent"])
+                    if pStatistics["sent"]
+                    else 0
+                ),
+                # Passage depuis l'étape précédente ; la première n'en a pas.
+                "conversion": round(100 * vCount / vPrevious) if vPrevious else None,
+            }
+        )
+        vPrevious = vCount
+
+    return rFunnel

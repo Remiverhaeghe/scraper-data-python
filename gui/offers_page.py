@@ -42,6 +42,7 @@ from job.companies import (
 )
 from job.contract import CONTRACT_TYPES
 from job.deduplication import group_offers
+from job.freshness import add_freshness
 from job.export import EXPORT_FORMATS, export_offers
 from job.manual_offers import (
     IMPORT_FORMATS,
@@ -74,7 +75,7 @@ logger = get_logger(__name__)
 MAX_DISPLAYED_OFFERS = 1000
 
 # Statut filtré par les préréglages ouverts depuis l'accueil
-PRESET_STATUSES = {"applications": "APPLIED", "follow_ups": FOLLOW_UP_FILTER}
+PRESET_STATUSES = {"applied_offers": "APPLIED", "follow_ups": FOLLOW_UP_FILTER}
 
 # Attente après la dernière frappe avant de relancer la recherche
 SEARCH_DELAY_MS = 300
@@ -449,7 +450,7 @@ class OffersPage(QWidget):
     def apply_preset(self, pPreset, pKeys=None, pDescription=""):
         """Réinitialise les filtres puis applique un préréglage.
 
-        Préréglages : offers, new_offers, applications ou follow_ups. pKeys
+        Préréglages : offers, new_offers, applied_offers ou follow_ups. pKeys
         restreint la liste aux offres d'une recherche, décrite par pDescription.
         """
         self.result_keys = pKeys
@@ -571,6 +572,7 @@ class OffersPage(QWidget):
 
             # Les annonces d'une même offre sont regroupées en une seule ligne.
             vPrepared = group_offers(vPrepared, get_decisions(self.database_file))
+            add_freshness(vPrepared, datetime.now())
 
             if self.multiple_check.isChecked():
                 vPrepared = [vOffer for vOffer in vPrepared if vOffer["duplicates"]]

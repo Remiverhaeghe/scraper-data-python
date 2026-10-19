@@ -14,12 +14,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.chart import BarChart
 from gui.dialogs import show_preparation, show_text_dialog
 from gui.theme import COLORS
 from gui.widgets import create_button
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
 from job.company_info import lookup_company, summarize_company
 from job.interview_revision import build_offer_revision
+from job.interview_journal import collect_asked_questions
 from job.preparation import prepare_application
 from job.presentation import (
     AVAILABILITY_HELP,
@@ -32,13 +34,28 @@ from job.presentation import (
 )
 from job.profile import is_profile_empty, load_profile
 from job.quiz import load_active_quiz
-from job.quiz_exam import describe_exam_results, load_exam_results
+from job.quiz_exam import (
+    build_exam_history,
+    describe_exam_results,
+    load_exam_results,
+)
 from job.star_answers import load_star_answers
 from storage.job_offers import set_availability
 from utils.link_checker import check_offer_link
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Hauteur du graphique des notes, dans la colonne étroite de l'assistant
+EXAM_CHART_HEIGHT = 130
+
+
+def get_score_tone(pScore):
+    """Retourne la couleur d'une note : vert, orange ou rouge."""
+
+    rTone = "success" if pScore >= 70 else ("warning" if pScore >= 50 else "danger")
+
+    return rTone
 
 
 def describe_availability(pOffer):
@@ -139,6 +156,11 @@ class OfferAssistantPanel(QWidget):
         self.exam_results_label.setWordWrap(True)
         self.exam_results_label.hide()
 
+        # Courbe des notes successives, à partir de deux examens
+        self.exam_chart = BarChart()
+        self.exam_chart.setFixedHeight(EXAM_CHART_HEIGHT)
+        self.exam_chart.hide()
+
         self.assistant_label = QLabel()
         self.assistant_label.setObjectName("cardSubtitle")
         self.assistant_label.setWordWrap(True)
@@ -159,6 +181,7 @@ class OfferAssistantPanel(QWidget):
         vLayout.addWidget(self.prepare_button)
         vLayout.addWidget(self.exam_button)
         vLayout.addWidget(self.exam_results_label)
+        vLayout.addWidget(self.exam_chart)
         vLayout.addWidget(self.chatgpt_button)
         vLayout.addWidget(self.company_info_button)
         vLayout.addWidget(self.assistant_label)
@@ -210,28 +233,44 @@ class OfferAssistantPanel(QWidget):
                 self,
                 self.offer.get("title") or "offre",
                 prepare_application(
-                    vProfile, self.offer, load_star_answers(self.database_file)
+                    vProfile,
+                    self.offer,
+                    load_star_answers(self.database_file),
+                    collect_asked_questions(self.database_file),
                 ),
             )
 
     def show_exam_results(self, pOffer):
         """Rappelle les notes des examens blancs déjà passés sur l'offre."""
-        vText = ""
+        vResults = []
 
         if pOffer.get("source"):
             try:
-                vText = describe_exam_results(
-                    load_exam_results(
-                        self.database_file,
-                        (pOffer["source"], str(pOffer.get("source_id"))),
-                    )
+                vResults = load_exam_results(
+                    self.database_file,
+                    (pOffer["source"], str(pOffer.get("source_id"))),
                 )
 
             except Exception:
                 logger.exception("Impossible de lire les notes des examens blancs")
 
+        vText = describe_exam_results(vResults)
+        vHistory = build_exam_history(vResults)
+
         self.exam_results_label.setText(vText)
         self.exam_results_label.setVisible(bool(vText))
+        self.exam_chart.set_series(
+            [vPoint["label"] for vPoint in vHistory],
+            [
+                (
+                    "Note",
+                    [COLORS[get_score_tone(vPoint["score"])] for vPoint in vHistory],
+                    [vPoint["score"] for vPoint in vHistory],
+                )
+            ],
+            pFillWidth=True,
+        )
+        self.exam_chart.setVisible(len(vHistory) >= 2)
 
     def request_exam(self):
         """Montre les thèmes à revoir pour l'offre, puis propose l'examen blanc."""

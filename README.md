@@ -128,9 +128,13 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Détection des nouvelles offres
 - [x] Suivi des candidatures
 - [x] Relances
-- [x] Relances de la semaine : brouillon de message par candidature, à copier, et relance notée d'un clic (bureau et web)
+- [x] Relances de la semaine : brouillon de message par candidature, adapté à l'étape (première relance, relance suivante, après entretien), à copier, et relance notée d'un clic (bureau et web)
 - [x] Statistiques de réponse : taux et délai moyen jusqu'à la première réponse, par source, type de poste, correspondance au profil, contrat et société
 - [x] Purge des offres hors sujet déjà en base, par mots du titre, avec aperçu, sauvegarde préalable et offres suivies protégées (bureau et web)
+- [x] Mots exclus de toutes les recherches, ajoutés lors d'une purge : les offres concernées sont écartées dès leur récupération
+- [x] Vérification quotidienne des liens des offres suivies par le planificateur : offre retirée signalée sur sa carte et par e-mail
+- [x] Score de fraîcheur des offres (ancienneté et nombre de sources qui les publient), colonne triable et tri « Les plus fraîches »
+- [x] Entonnoir des candidatures : envoyées, réponses, entretiens, acceptées, avec le passage d'une étape à l'autre
 - [x] Recherche planifiée complétée par des recherches enregistrées, lancées à la suite avec un seul e-mail récapitulatif
 
 ### ⚙️ Fonctionnalités communes
@@ -154,6 +158,8 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Consultation des logs depuis le bureau et le web, filtres par niveau et texte
 - [x] Réinitialisation des données après confirmation, avec sauvegarde préalable de la base
 - [x] Sauvegarde automatique quotidienne de la base au démarrage du bureau et par le planificateur, sept jours gardés, sans évincer les sauvegardes faites avant une opération risquée
+- [x] Restauration d'une sauvegarde de la base en un clic depuis les paramètres, après sauvegarde de l'état actuel (bureau et web)
+- [x] État de l'application dans la page Journaux : sauvegarde, planification, dernière recherche, sources, offres suivies et place occupée
 
 ### 🖥️ Interface graphique
 
@@ -297,7 +303,9 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Brouillon de lettre de motivation
 - [x] Réponses STAR aux sept questions comportementales courantes, reliées à une expérience du profil et reprises dans la préparation de chaque offre, celles qui couvrent ses compétences en tête (bureau et web)
 - [x] Mots-clés de recherche proposés à partir des intitulés d'expérience et des compétences du profil
-- [x] Examen blanc chronométré par offre : compte à rebours, note conservée et rappelée sur la fiche de l'offre
+- [x] Examen blanc chronométré par offre : compte à rebours, note conservée, graphique des notes successives sur la fiche de l'offre, puis examen limité aux questions ratées
+- [x] Journal d'entretien : questions posées et impressions par offre, questions reprises dans la préparation des autres offres et sous les réponses STAR
+- [x] Questions comportementales probables repérées dans le texte de l'offre (équipe, délais, autonomie, veille, priorités, clients), avec l'état de leur réponse STAR
 
 ### Utilisation depuis un téléphone
 
@@ -476,7 +484,11 @@ scraper-data-python/
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
 │   ├── star_answers.py                        # Réponses STAR aux questions comportementales
-│   ├── offer_purge.py                         # Purge des offres hors sujet, avec aperçu
+│   ├── offer_purge.py                         # Purge des offres hors sujet et mots exclus
+│   ├── followed_availability.py               # Vérification quotidienne des offres suivies
+│   ├── freshness.py                           # Score de fraîcheur des offres
+│   ├── interview_journal.py                   # Journal d'entretien : questions posées
+│   ├── health.py                              # État de santé de l'application
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
 │   ├── completion.py                          # Complétion commune avant enregistrement des offres
@@ -606,6 +618,7 @@ scraper-data-python/
 │   ├── main_window.py                         # Fenêtre principale, menu latéral et pages
 │   ├── home_page.py                           # Accueil et indicateurs
 │   ├── search_page.py                         # Critères, sources, progression et arrêt
+│   ├── saved_searches_bar.py                  # Recherches enregistrées en pastilles
 │   ├── keyword_suggestions.py                 # Mots-clés proposés à partir du profil
 │   ├── search_worker.py                       # Exécute la recherche dans un QThread
 │   ├── offers_page.py                         # Filtres et tableau des offres en base
@@ -613,11 +626,14 @@ scraper-data-python/
 │   ├── offer_detail.py                        # Détail d'une offre : résumé et description
 │   ├── offer_assistant.py                     # Aide : préparation, examen blanc, ChatGPT, lien
 │   ├── offer_application.py                   # Suivi de candidature : statut, relance, entretien
+│   ├── interview_journal_panel.py             # Journal d'entretien d'une offre
 │   ├── follow_ups_panel.py                    # Relances de la semaine et brouillons
 │   ├── offer_attachments.py                   # Pièces jointes d'une offre
 │   ├── offer_form.py                          # Saisie manuelle d'une offre
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
+│   ├── funnel_panel.py                        # Entonnoir des candidatures
 │   ├── quiz_page.py                           # Révision technique : thèmes, questions et examen
+│   ├── quiz_theme_cards.py                    # Cartes de thèmes et en-têtes de domaine
 │   ├── skills_page.py                         # Compétences demandées et préparation
 │   ├── quiz_answer.py                         # Zones de réponse selon le type, schéma cliquable
 │   ├── quiz_import_panel.py                   # Ajout de questions : priorités, ChatGPT, import, export
@@ -627,11 +643,14 @@ scraper-data-python/
 │   ├── git_page.py                            # Bac à sable Git
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
+│   ├── health_panel.py                        # État de l'application
 │   ├── quality_page.py                        # Qualité des données et offres à vérifier
 │   ├── offer_purge_panel.py                   # Aperçu et suppression des offres hors sujet
 │   ├── profile_page.py                        # Saisie du profil du candidat
 │   ├── star_answers_panel.py                  # Saisie des réponses STAR
 │   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
+│   ├── token_access_panel.py                  # Accès secret : adresse d'agenda ou jeton
+│   ├── data_panel.py                          # Sauvegarde complète, sauvegardes et réinitialisation
 │   ├── dialogs.py                             # Fenêtres des mentions légales et de la licence
 │   ├── chart.py                               # Histogramme et camembert dessinés avec QPainter
 │   ├── widgets.py                             # Composants partagés : cartes, tuiles, pastilles
@@ -753,7 +772,8 @@ scraper-data-python/
 │   ├── database.py                            # Gère la connexion et les migrations SQLite
 │   ├── history_repository.py                  # Persiste et récupère l'historique
 │   ├── job_applications.py                    # Suit les candidatures et les relances
-│   ├── settings_repository.py                 # Persiste les réglages modifiables
+│   ├── interview_notes.py                     # Persiste le journal d'entretien
+│   ├── settings_repository.py                 # Persiste les réglages, texte ou JSON
 │   ├── backup.py                              # Sauvegarde de la base et rotation des copies
 │   ├── archive.py                             # Sauvegarde complète (.zip) : export et restauration contrôlée
 │   ├── attachments.py                         # Pièces jointes des candidatures, rangées à côté de la base
@@ -788,6 +808,10 @@ scraper-data-python/
 │   │   ├── test_preparation.py                # Teste le profil et la préparation de candidature
 │   │   ├── test_star_answers.py               # Teste les réponses STAR
 │   │   ├── test_offer_purge.py                # Teste la purge des offres hors sujet
+│   │   ├── test_followed_availability.py      # Teste la vérification des offres suivies
+│   │   ├── test_freshness.py                  # Teste le score de fraîcheur
+│   │   ├── test_interview_journal.py          # Teste le journal d'entretien
+│   │   ├── test_health.py                     # Teste l'état de santé de l'application
 │   │   ├── test_interview_revision.py         # Teste la révision ciblée et l'examen blanc d'une offre
 │   │   ├── test_manual_offers.py              # Teste l'ajout manuel et l'import d'offres
 │   │   ├── test_companies.py                  # Teste les listes d'entreprises et l'avertissement
@@ -898,6 +922,7 @@ scraper-data-python/
 │   │   ├── test_history_page.py                # Teste la page de l'historique
 │   │   ├── test_logs_page.py                   # Teste la page des logs
 │   │   ├── test_quality_page.py                # Teste la page de qualité des données
+│   │   ├── test_interview_journal_panel.py     # Teste le panneau du journal d'entretien
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
@@ -928,6 +953,7 @@ scraper-data-python/
 │   │   ├── test_history_repository.py          # Teste la persistance de l'historique
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
 │   │   ├── test_maintenance.py                 # Teste les sauvegardes, leur rotation et la réinitialisation
+│   │   ├── test_settings_repository.py         # Teste les réglages JSON
 │   │   ├── test_archive.py                     # Teste la sauvegarde complète et le refus des archives piégées
 │   │   ├── test_saved_searches.py              # Teste les recherches enregistrées
 │   │   ├── test_attachments.py                 # Teste les pièces jointes et leur conservation

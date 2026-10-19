@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from gui.interview_journal_panel import InterviewJournalPanel
 from gui.offer_attachments import AttachmentsPanel
 from gui.widgets import align_spin_box, create_button
 from job.presentation import STATUS_LABELS, format_date
@@ -118,6 +119,7 @@ class ApplicationPanel(QGroupBox):
         self.application_label.setWordWrap(True)
 
         self.attachments = AttachmentsPanel(pDatabaseFile)
+        self.journal = InterviewJournalPanel(pDatabaseFile)
 
         vLayout = QVBoxLayout(self)
         vLayout.addWidget(self.status_combo)
@@ -125,6 +127,7 @@ class ApplicationPanel(QGroupBox):
         vLayout.addWidget(self.notes_edit)
         vLayout.addLayout(vButtons)
         vLayout.addWidget(self.application_label)
+        vLayout.addWidget(self.journal)
         vLayout.addWidget(self.attachments)
 
     def set_offer(self, pOffer):
@@ -173,6 +176,7 @@ class ApplicationPanel(QGroupBox):
         )
         self.application_label.setText(describe_application(vApplication))
         self.attachments.set_offer(self.offer)
+        self.journal.set_offer(self.offer)
 
     def get_follow_up_days(self):
         """Retourne le délai de relance défini dans les paramètres."""

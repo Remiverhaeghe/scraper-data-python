@@ -5,13 +5,12 @@ changement de page, et indifféremment sur le bureau ou le web. Chaque réponse
 compte aussi dans la progression et la répétition espacée.
 """
 
-import json
 import random
 from datetime import datetime
 
 from job.quiz import answer_question, build_quiz_overview, find_question
 from job.quiz_types import prepare_question
-from storage.settings_repository import get_setting_values, save_setting_values
+from storage.settings_repository import load_json_setting, save_json_setting
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -32,15 +31,7 @@ SECONDS_PER_QUESTION = 60
 def load_exam(pDatabaseFile):
     """Retourne l'examen en cours, ou None."""
 
-    vValue = get_setting_values(pDatabaseFile).get(EXAM_KEY)
-
-    try:
-        rExam = json.loads(vValue) if vValue else None
-
-    except ValueError:
-        logger.warning("Examen en cours illisible : ignoré")
-
-        rExam = None
+    rExam = load_json_setting(pDatabaseFile, EXAM_KEY, None, dict)
 
     return rExam
 
@@ -48,10 +39,7 @@ def load_exam(pDatabaseFile):
 def save_exam(pDatabaseFile, pExam):
     """Enregistre l'état de l'examen, ou l'efface avec None."""
 
-    save_setting_values(
-        pDatabaseFile,
-        {EXAM_KEY: json.dumps(pExam, ensure_ascii=False) if pExam else ""},
-    )
+    save_json_setting(pDatabaseFile, EXAM_KEY, pExam or None)
 
 
 def start_exam(
@@ -291,15 +279,7 @@ def load_exam_results(pDatabaseFile, pOfferKey=None):
     pOfferKey ne garde que les examens blancs de cette offre.
     """
 
-    vValue = get_setting_values(pDatabaseFile).get(EXAM_RESULTS_KEY)
-
-    try:
-        vResults = json.loads(vValue) if vValue else []
-
-    except ValueError:
-        logger.warning("Historique des examens illisible : ignoré")
-
-        vResults = []
+    vResults = load_json_setting(pDatabaseFile, EXAM_RESULTS_KEY, [], list)
 
     rResults = [
         vResult
@@ -326,10 +306,7 @@ def record_exam_result(pDatabaseFile, pExam):
 
     vResults = [vResult, *load_exam_results(pDatabaseFile)][:MAX_EXAM_RESULTS]
 
-    save_setting_values(
-        pDatabaseFile,
-        {EXAM_RESULTS_KEY: json.dumps(vResults, ensure_ascii=False)},
-    )
+    save_json_setting(pDatabaseFile, EXAM_RESULTS_KEY, vResults)
 
 
 def describe_exam_results(pResults):
@@ -348,3 +325,47 @@ def describe_exam_results(pResults):
         )
 
     return rText
+
+
+def build_exam_history(pResults):
+    """Retourne les notes du plus ancien au plus récent examen, avec leur date."""
+
+    rHistory = [
+        {
+            "label": f"{datetime.fromisoformat(vResult['finished_at']):%d/%m}",
+            "score": vResult["score"],
+        }
+        for vResult in reversed(pResults)
+    ]
+
+    return rHistory
+
+
+def start_error_review(pDatabaseFile, pExam, pNow):
+    """Commence un examen limité aux questions ratées d'un examen terminé.
+
+    La note n'est pas rattachée à l'offre : seules les erreurs sont reprises.
+    Lève ValueError si l'examen n'a aucune erreur.
+    """
+
+    if not pExam or not pExam.get("finished_at") or not pExam["wrong"]:
+        raise ValueError("Aucune erreur à revoir dans cet examen.")
+
+    rExam = {
+        "domain": None,
+        "subdomain": None,
+        "title": f"Erreurs : {pExam.get('title') or 'examen'}",
+        "offer": None,
+        "ids": list(pExam["wrong"]),
+        "index": 0,
+        "correct": 0,
+        "wrong": [],
+        "started_at": pNow.isoformat(timespec="seconds"),
+        "finished_at": None,
+    }
+
+    save_exam(pDatabaseFile, rExam)
+
+    logger.info("Revue des erreurs commencée : %s question(s)", len(rExam["ids"]))
+
+    return rExam

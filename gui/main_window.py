@@ -50,7 +50,8 @@ LEGAL_LINK = "#mentions-legales"
 LICENSE_LINK = "#licence"
 
 # Clés de navigation qui ouvrent la page des offres avec des filtres prédéfinis
-OFFER_PRESETS = ("offers", "new_offers", "applications", "follow_ups")
+# Distincts des noms de page : « applications » ouvre la page Candidatures.
+OFFER_PRESETS = ("offers", "new_offers", "applied_offers", "follow_ups")
 
 
 class MainWindow(QMainWindow):
@@ -124,7 +125,7 @@ class MainWindow(QMainWindow):
         self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
         self.add_page("quality", "Qualité", "list-checks", QualityPage(vDatabaseFile))
-        self.add_page("logs", "Journaux", "terminal", LogsPage())
+        self.add_page("logs", "Journaux", "terminal", LogsPage(vDatabaseFile))
 
         self.settings_page = SettingsPage(vDatabaseFile)
         self.add_page("settings", "Paramètres", "settings", self.settings_page)
@@ -287,7 +288,7 @@ class MainWindow(QMainWindow):
     def show_reset_result(self, pMessage):
         """Recharge toutes les pages après une réinitialisation des données."""
         self.rebuild("settings")
-        show_message(self.settings_page.reset_message, pMessage)
+        show_message(self.settings_page.data_panel.reset_message, pMessage)
 
     def save_scheduled_search(self, pSources, pCriteria):
         """Enregistre la recherche du planificateur et l'indique sur la page."""

@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.follow_ups_panel import FollowUpsPanel
+from gui.funnel_panel import FunnelPanel
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -107,9 +108,12 @@ class ApplicationsPage(QWidget):
 
         vLayout.addLayout(vStatistics)
         vLayout.addWidget(self.message_label)
+        self.funnel_panel = FunnelPanel()
+
         self.follow_ups_panel = FollowUpsPanel(pDatabaseFile)
         self.follow_ups_panel.changed.connect(self.refresh)
 
+        vLayout.addWidget(self.funnel_panel)
         vLayout.addWidget(self.follow_ups_panel)
         vLayout.addLayout(self.create_board())
         vLayout.addLayout(self.create_statistic_tables())
@@ -237,6 +241,7 @@ class ApplicationsPage(QWidget):
 
             vCard.set_value(vValue)
 
+        self.funnel_panel.set_funnel(vStatistics["funnel"])
         self.follow_ups_panel.set_follow_ups(vFollowUps)
         self.show_board(vBoard)
         self.show_statistics(vStatistics["tables"])
@@ -310,6 +315,13 @@ class ApplicationsPage(QWidget):
             )
             vFollowUp.setStyleSheet(f"color: {COLORS['warning']};")
             vLayout.addWidget(vFollowUp)
+
+        if pApplication["expired"]:
+            vExpired = QLabel("Offre retirée par le site")
+            vExpired.setObjectName("expiredOffer")
+            vExpired.setToolTip("Constaté par la vérification quotidienne des liens")
+            vExpired.setStyleSheet(f"color: {COLORS['danger']}; font-weight: 600;")
+            vLayout.addWidget(vExpired)
 
         vLayout.addWidget(vStatusCombo)
 

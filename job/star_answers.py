@@ -1,8 +1,9 @@
 """Réponses STAR aux questions comportementales, reliées aux expériences du profil"""
 
-import json
+import re
 
-from storage.settings_repository import get_setting_values, save_setting_values
+from job.fingerprint import normalize
+from storage.settings_repository import load_json_setting, save_json_setting
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,23 +35,13 @@ MAX_FIELD_LENGTH = 1000
 def load_star_answers(pDatabaseFile):
     """Retourne les réponses enregistrées, par clé de question."""
 
-    vValue = get_setting_values(pDatabaseFile).get(STAR_KEY)
-
-    rAnswers = {}
-
-    if vValue:
-        try:
-            vAnswers = json.loads(vValue)
-
-        except ValueError:
-            logger.warning("Réponses STAR enregistrées illisibles : ignorées")
-
-        else:
-            rAnswers = {
-                vKey: vAnswer
-                for vKey, vAnswer in vAnswers.items()
-                if vKey in BEHAVIORAL_QUESTIONS and isinstance(vAnswer, dict)
-            }
+    rAnswers = {
+        vKey: vAnswer
+        for vKey, vAnswer in load_json_setting(
+            pDatabaseFile, STAR_KEY, {}, dict
+        ).items()
+        if vKey in BEHAVIORAL_QUESTIONS and isinstance(vAnswer, dict)
+    }
 
     return rAnswers
 
@@ -75,9 +66,7 @@ def save_star_answer(pDatabaseFile, pKey, pExperience, pFields):
     else:
         vAnswers.pop(pKey, None)
 
-    save_setting_values(
-        pDatabaseFile, {STAR_KEY: json.dumps(vAnswers, ensure_ascii=False)}
-    )
+    save_json_setting(pDatabaseFile, STAR_KEY, vAnswers)
 
     logger.info(
         "Réponse STAR %s : %s",
@@ -149,3 +138,53 @@ def select_star_answers(pAnswers, pProfile, pOfferSkills):
     rAnswers.sort(key=lambda pAnswer: not pAnswer["skills"])
 
     return rAnswers
+
+
+# Mots de l'offre, sans accents, qui annoncent une question comportementale
+OFFER_SIGNALS = {
+    "desaccord": (
+        r"\b(equipe|collabor\w*|transverse|transversal\w*|interlocuteurs?)\b",
+        "travail en équipe",
+    ),
+    "pression": (
+        r"\b(delais?|urgences?|rythme|pression|astreintes?|production|run)\b",
+        "délais et production",
+    ),
+    "initiative": (
+        r"\b(autonom\w*|initiatives?|proacti\w*|force de proposition)\b",
+        "autonomie et initiative",
+    ),
+    "apprentissage": (
+        r"\b(veille|curiosite|curieux|apprendre|montee en competences?)\b",
+        "veille et apprentissage",
+    ),
+    "priorites": (
+        r"\b(priorit\w*|multi projets?|plusieurs projets|polyvalen\w*)\b",
+        "priorités multiples",
+    ),
+    "reussite": (
+        r"\b(clients?|utilisateurs?|resultats?|objectifs?)\b",
+        "résultats et clients",
+    ),
+}
+
+
+def suggest_star_questions(pOfferText, pAnswers):
+    """Retourne les questions comportementales que le texte de l'offre rend probables.
+
+    Chacune indique le thème repéré et si sa réponse STAR est déjà préparée.
+    """
+
+    vText = normalize(pOfferText)
+
+    rSuggestions = [
+        {
+            "question": BEHAVIORAL_QUESTIONS[vKey],
+            "reason": vReason,
+            "prepared": vKey in pAnswers,
+        }
+        for vKey, (vPattern, vReason) in OFFER_SIGNALS.items()
+        if re.search(vPattern, vText)
+    ]
+
+    return rSuggestions

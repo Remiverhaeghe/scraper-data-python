@@ -44,6 +44,12 @@
         {% if question.type != "zone" %}<button class="button button-primary" type="submit">Valider</button>{% endif %}
     </form>
     {% endif %}
+    {% if summary and exam.wrong %}
+    <form class="section-gap" method="post" action="{{ url_for('review_quiz_exam_errors').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button class="button button-primary" type="submit">{{ icon("history", 16) }} Revoir les {{ exam.wrong | length }} erreur(s)</button>
+    </form>
+    {% endif %}
     <form class="section-gap" method="post" action="{{ url_for('stop_quiz_exam').path }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
         <button class="button" type="submit">{% if exam.finished_at and not result %}Fermer l'examen{% else %}Abandonner l'examen{% endif %}</button>

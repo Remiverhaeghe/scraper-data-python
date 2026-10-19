@@ -25,6 +25,7 @@ from job.quiz_import import import_questions, import_questions_file
 from tools.quiz_lot import build_pack as build_lot_pack
 from tests.job.test_quiz_types import NUMERIC, ORDER, PAIRS
 from job.quiz_generation import MIN_QUALITY_SAMPLE
+from storage.backup import backup_database
 from storage.job_offers import get_offer, save_offers, set_availability
 from tests.job.test_quiz_import import build_pack
 from tools.quiz_lot import build_pack as build_lot_pack
@@ -685,7 +686,9 @@ def test_quality_purge_previews_then_deletes(client):
     vShort = client.post("/quality/purge/preview", data={"words": "it"})
     vPreview = client.post("/quality/purge/preview", data={"words": "java, script"})
     vRefused = client.post("/quality/purge", data={"words": "java"})
-    vDeleted = client.post("/quality/purge", data={"words": "java", "confirm": "1"})
+    vDeleted = client.post(
+        "/quality/purge", data={"words": "java", "confirm": "1", "exclude": "1"}
+    )
 
     assert vShort.status_code == 400
     assert "Mots trop courts" in vShort.text
@@ -694,6 +697,13 @@ def test_quality_purge_previews_then_deletes(client):
     assert vRefused.status_code == 400
     assert "1 offre(s) supprimée(s), sauvegarde" in vDeleted.text
     assert "2 offres" in client.get("/offers").text
+    assert 'value="java"' in vDeleted.text
+    assert (
+        client.post("/quality/excluded-words", data={"words": "it"}).status_code == 400
+    )
+    assert "Mots exclus enregistrés." in (
+        client.post("/quality/excluded-words", data={"words": ""}).text
+    )
 
 
 def test_offers_show_colored_badges(client):
@@ -1925,3 +1935,87 @@ def test_profile_star_answers(client):
     assert "Réponse enregistrée." in vSaved.text
     assert "1 réponse(s) préparée(s) sur 7" in vSaved.text
     assert vRefused.status_code == 400
+
+
+def test_offers_sorted_by_freshness(client):
+    """Vérifie la colonne de fraîcheur et le tri des plus fraîches en tête."""
+
+    vText = client.get("/offers", params={"sort": "fresh"}).text
+
+    assert "Fraîcheur" in vText
+    assert 'value="fresh" selected' in vText
+    assert vText.index("Développeur Java") > vText.index("Développeur Python new")
+
+
+def test_interview_journal_on_offer_page(client):
+    """Vérifie l'ajout d'une entrée au journal depuis la fiche d'une offre."""
+
+    vEmpty = client.post(
+        "/offer/interview-note", data={"source": "adzuna", "id": "new"}
+    )
+    vAdded = client.post(
+        "/offer/interview-note",
+        data={"source": "adzuna", "id": "new", "questions": "Votre plus grand défi ?"},
+    )
+    client.post("/profile", data={"skills": "Java"})
+    vPage = client.get("/offer", params={"source": "adzuna", "id": "old"}).text
+
+    assert vEmpty.status_code == 400
+    assert "Entrée ajoutée au journal." in vAdded.text
+    assert "Votre plus grand défi ?" in vAdded.text
+    assert "Questions déjà posées en entretien" in vPage
+
+
+def test_offer_page_charts_mock_exam_scores(client, monkeypatch):
+    """Vérifie le graphique des notes d'examen blanc à partir de deux examens."""
+
+    vResults = [
+        {"finished_at": "2026-10-14T10:00:00", "score": 80, "offer": ["adzuna", "new"]},
+        {"finished_at": "2026-10-12T10:00:00", "score": 40, "offer": ["adzuna", "new"]},
+    ]
+    monkeypatch.setattr(
+        "web.routes.offers.load_exam_results", lambda pDatabaseFile, pKey: vResults
+    )
+
+    vPage = client.get("/offer", params={"source": "adzuna", "id": "new"}).text
+
+    assert "Notes des examens blancs" in vPage
+    assert "meilleure note 80 %" in vPage
+
+
+def test_quiz_exam_errors_are_reviewed_on_the_web(client):
+    """Vérifie l'enchaînement sur les erreurs, refusé tant qu'il n'y en a pas."""
+
+    assert client.post("/quiz/exam/errors").status_code == 400
+
+    client.post("/quiz/exam/start", data={"source": "adzuna", "id": "new"})
+
+    for _ in range(16):
+        client.post("/quiz/exam/answer", data={"choice": "0"})
+
+    vResult = client.get("/quiz/exam").text
+
+    assert "Revoir les" in vResult
+
+    vReview = client.post("/quiz/exam/errors")
+
+    assert "Erreurs : Entretien" in vReview.text
+
+
+def test_database_backup_restored_from_settings(client, tmp_path):
+    """Vérifie la liste des sauvegardes et la restauration confirmée sur le web."""
+
+    vBackup = backup_database(
+        tmp_path / "scraper.db", datetime(2026, 10, 18, 9, 0), "auto"
+    )
+    vPage = client.get("/settings").text
+    vRefused = client.post("/settings/backup", data={"name": vBackup.name})
+    vUnknown = client.post("/settings/backup", data={"name": "../x.db", "confirm": "1"})
+    vRestored = client.post(
+        "/settings/backup", data={"name": vBackup.name, "confirm": "1"}
+    )
+
+    assert "18/10/2026 09:00 · automatique" in vPage
+    assert vRefused.status_code == 400
+    assert "Sauvegarde introuvable." in vUnknown.text
+    assert "Sauvegarde restaurée." in vRestored.text

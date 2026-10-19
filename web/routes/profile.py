@@ -12,6 +12,7 @@ from job.cv_import import (
     merge_profile_texts,
     read_cv_text,
 )
+from job.interview_journal import collect_asked_questions
 from job.profile import build_profile, load_profile, profile_to_texts, save_profile
 from job.star_answers import (
     BEHAVIORAL_QUESTIONS,
@@ -53,6 +54,7 @@ def render_profile(
             "star_fields": STAR_FIELDS,
             "star_answers": vAnswers,
             "star_message": pStarMessage,
+            "asked_questions": collect_asked_questions(pDatabaseFile)[:5],
             "experiences": [
                 vExperience["title"]
                 for vExperience in load_profile(pDatabaseFile)["experiences"]

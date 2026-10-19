@@ -52,6 +52,9 @@ TONE_ICONS = {
 }
 
 # Raccourcis de la bannière, après le bouton de recherche
+# Préréglage de la page Offres ouvert par une carte, quand il porte un autre nom
+CARD_PRESETS = {"applications": "applied_offers"}
+
 BANNER_ACTIONS = (
     ("Consulter les offres", "list-checks", "offers"),
     ("Relances à faire", "bell-ring", "follow_ups"),
@@ -221,7 +224,9 @@ class HomePage(QWidget):
         # Chaque carte ouvre les offres correspondantes.
         for vIndex, (vName, vCard) in enumerate(self.cards.items()):
             vCard.clicked.connect(
-                lambda pName=vName: self.navigation_requested.emit(pName)
+                lambda pName=vName: self.navigation_requested.emit(
+                    CARD_PRESETS.get(pName, pName)
+                )
             )
             rGrid.addWidget(vCard, 0, vIndex)
 

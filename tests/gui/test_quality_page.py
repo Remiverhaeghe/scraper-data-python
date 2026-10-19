@@ -7,6 +7,7 @@ import pandas as pd
 import gui.offer_purge_panel as offer_purge_panel
 import gui.quality_page as quality_page
 from gui.quality_page import QualityPage
+from job.offer_purge import load_excluded_words
 from storage.database import initialize_database
 from storage.job_offers import count_offers, save_offers
 
@@ -89,4 +90,6 @@ def test_off_topic_offers_are_purged_after_preview(
 
     assert count_offers(vDatabaseFile) == 1
     assert vPanel.message_label.text().startswith("1 offre(s) supprimée(s)")
+    assert load_excluded_words(vDatabaseFile) == ["stage", "alternance"]
+    assert "stage, alternance" in vPanel.excluded_label.text()
     assert vPage.statistic_cards["count"].value_label.text() == "1"

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_macros.html" as ui %}
 
 {% block title %}{{ offer.title or "Offre" }}{% endblock %}
 
@@ -171,6 +172,14 @@
             <ul>{% for gap in preparation.interview.gaps %}<li>{{ gap }}</li>{% else %}<li class="muted">Aucun</li>{% endfor %}</ul>
             <h3>Questions du recruteur</h3>
             <ul>{% for answer in preparation.interview.answers %}<li><strong>{{ answer.question }}</strong><br>{{ answer.hint }}</li>{% endfor %}</ul>
+            {% if preparation.interview.asked %}
+            <h3>Questions déjà posées en entretien</h3>
+            <ul>{% for item in preparation.interview.asked %}<li>{{ item.question }} <span class="muted">({{ item.context }})</span></li>{% endfor %}</ul>
+            {% endif %}
+            {% if preparation.interview.likely %}
+            <h3>Questions comportementales probables</h3>
+            <ul>{% for item in preparation.interview.likely %}<li>{{ item.question }} <span class="muted">({{ item.reason }}, {{ "réponse préparée" if item.prepared else "à préparer" }})</span></li>{% endfor %}</ul>
+            {% endif %}
             <h3>Vos réponses STAR</h3>
             <ul>{% for answer in preparation.interview.star %}<li><strong>{{ answer.question }}</strong>{% if answer.skills %} <span class="muted">({{ answer.skills | join(", ") }})</span>{% endif %}<br><span class="pre-line">{{ answer.text }}</span></li>{% else %}<li class="muted">À préparer dans la page Profil</li>{% endfor %}</ul>
             <h3>Questions à poser</h3>
@@ -207,6 +216,7 @@
                 <button class="button button-primary" type="submit">{{ icon("timer", 16) }} Examen blanc ({{ revision.exam_count }} questions)</button>
             </form>
             {% if exam_results %}<p class="muted">{{ exam_results }}</p>{% endif %}
+            {% if exam_chart %}{{ ui.bar_chart(exam_chart, "Notes des examens blancs") }}{% endif %}
             {% elif revision %}
             <p class="muted">Aucun thème de révision ne correspond aux compétences de cette offre. Importez des questions sur ces sujets depuis la page Révision.</p>
             {% else %}
@@ -243,6 +253,7 @@
 
     <div class="stack">
         {% include "_application.html" %}
+        {% include "_interview_journal.html" %}
         {% include "_attachments.html" %}
     </div>
 </div>

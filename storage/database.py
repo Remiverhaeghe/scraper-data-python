@@ -617,6 +617,23 @@ def migrate_to_v19(pConnection):
     pConnection.execute("ALTER TABLE job_application ADD COLUMN responded_at TEXT")
 
 
+def migrate_to_v20(pConnection):
+    """Ajoute le journal d'entretien : questions posées et impressions, par offre."""
+
+    pConnection.execute("""
+        CREATE TABLE interview_note (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            interviewed_at TEXT NOT NULL,
+            questions TEXT NOT NULL,
+            impressions TEXT NOT NULL,
+            FOREIGN KEY (source, source_id)
+                REFERENCES job_offer(source, source_id)
+        )
+        """)
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -637,6 +654,7 @@ MIGRATIONS = [
     migrate_to_v17,
     migrate_to_v18,
     migrate_to_v19,
+    migrate_to_v20,
 ]
 
 

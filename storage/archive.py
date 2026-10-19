@@ -12,7 +12,7 @@ from storage.attachments import (
     MAX_ATTACHMENT_BYTES,
     get_attachment_directory,
 )
-from storage.backup import backup_database
+from storage.backup import backup_database, list_backups
 from storage.database import MIGRATIONS, connect_database, initialize_database
 from storage.maintenance import move_attachments
 from utils.logger import get_logger
@@ -121,8 +121,11 @@ def check_archive(pArchive):
         raise ValueError("Archive refusée : contenu trop volumineux.")
 
 
-def check_database(pDatabaseFile):
-    """Vérifie qu'un fichier est une base saine de l'application ; lève ValueError."""
+def check_database(pDatabaseFile, pRefusal="Archive refusée"):
+    """Vérifie qu'un fichier est une base saine de l'application ; lève ValueError.
+
+    pRefusal commence le message d'erreur : archive ou sauvegarde refusée.
+    """
 
     try:
         vConnection = sqlite3.connect(
@@ -143,19 +146,19 @@ def check_database(pDatabaseFile):
             vConnection.close()
 
     except sqlite3.DatabaseError as vException:
-        raise ValueError("Archive refusée : la base est illisible.") from vException
+        raise ValueError(f"{pRefusal} : la base est illisible.") from vException
 
     if vIntegrity != "ok":
-        raise ValueError("Archive refusée : la base est endommagée.")
+        raise ValueError(f"{pRefusal} : la base est endommagée.")
 
     # Une base plus récente que l'application perdrait des colonnes inconnues.
     if not 1 <= vVersion <= len(MIGRATIONS):
         raise ValueError(
-            f"Archive refusée : version de base {vVersion} non prise en charge."
+            f"{pRefusal} : version de base {vVersion} non prise en charge."
         )
 
     if not set(REQUIRED_TABLES) <= vTables:
-        raise ValueError("Archive refusée : ce n'est pas une base de l'application.")
+        raise ValueError(f"{pRefusal} : ce n'est pas une base de l'application.")
 
 
 def restore_archive(pDatabaseFile, pArchiveFile, pNow):
@@ -227,6 +230,51 @@ def restore_archive(pDatabaseFile, pArchiveFile, pNow):
         "ancienne base : %s",
         len(vAttachments),
         rBackupFile.name,
+    )
+
+    return rBackupFile
+
+
+def restore_backup(pDatabaseFile, pBackupName, pNow):
+    """Remplace la base par une sauvegarde du dossier des sauvegardes.
+
+    La sauvegarde est désignée par son nom, cherché dans ce seul dossier. La base
+    actuelle est d'abord sauvegardée ; les pièces jointes ne changent pas. Retourne
+    la sauvegarde de l'état actuel ; lève ValueError si la sauvegarde est refusée.
+    """
+
+    vBackupFile = next(
+        (vFile for vFile in list_backups(pDatabaseFile) if vFile.name == pBackupName),
+        None,
+    )
+
+    if vBackupFile is None:
+        raise ValueError("Sauvegarde introuvable.")
+
+    check_database(vBackupFile, "Sauvegarde refusée")
+
+    # Ouverte avant de sauvegarder l'état actuel : la rotation qui suit ne peut
+    # plus la supprimer avant la copie.
+    vSource = sqlite3.connect(vBackupFile)
+
+    try:
+        rBackupFile = backup_database(pDatabaseFile, pNow, "avant-restauration")
+
+        vTarget = sqlite3.connect(pDatabaseFile)
+
+        try:
+            vSource.backup(vTarget)
+
+        finally:
+            vTarget.close()
+
+    finally:
+        vSource.close()
+
+    initialize_database(pDatabaseFile)
+
+    logger.warning(
+        "Sauvegarde %s restaurée ; ancienne base : %s", pBackupName, rBackupFile.name
     )
 
     return rBackupFile

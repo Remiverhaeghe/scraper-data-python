@@ -13,10 +13,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPlainTextEdit,
-    QProgressBar,
     QScrollArea,
     QFrame,
-    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -25,22 +23,24 @@ from gui.dialogs import show_text_dialog
 from gui.quiz_answer import ClickableSvgWidget, add_answer_widgets, read_response
 from gui.quiz_import_panel import QuizImportPanel
 from gui.quiz_statistics_card import QuizStatisticsCard
+from gui.quiz_theme_cards import (
+    create_domain_header,
+    create_empty_category,
+    create_subdomain_badge,
+    create_theme_card,
+)
 from gui.theme import COLORS
 from gui.widgets import (
     FlowLayout,
     clear_layout,
     create_button,
     create_card,
-    create_icon_label,
     create_page_header,
-    create_pill,
     create_scroll_content,
     show_message,
 )
 from job.quiz import (
-    DEFAULT_MODE,
     QUIZ_MODES,
-    THEME_STATUSES,
     answer_question,
     build_quiz_overview,
     build_quiz_statistics,
@@ -58,7 +58,6 @@ from job.quiz_domains import (
     filter_guides,
     group_themes,
 )
-from job.quiz_generation import load_catalog
 from job.schema_drawing import render_correction
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
@@ -70,6 +69,7 @@ from job.quiz_exam import (
     get_remaining_seconds,
     load_exam,
     load_exam_results,
+    start_error_review,
     start_exam,
     stop_exam,
     summarize_exam,
@@ -293,6 +293,15 @@ class QuizPage(QWidget):
         self.stop_exam_button.clicked.connect(self.close_exam)
         self.stop_exam_button.hide()
 
+        self.review_errors_button = create_button(
+            "Revoir les erreurs", "history", pIconColor=COLORS["primary"]
+        )
+        self.review_errors_button.setToolTip(
+            "Nouvel examen limité aux questions ratées, sans compter pour l'offre"
+        )
+        self.review_errors_button.clicked.connect(self.review_exam_errors)
+        self.review_errors_button.hide()
+
         # Compte à rebours de l'examen, sur la durée conseillée d'une minute par
         # question : dépassé, il continue en négatif sans arrêter l'examen.
         self.current_exam = None
@@ -315,6 +324,7 @@ class QuizPage(QWidget):
         vButtons.addWidget(self.next_button)
         vButtons.addStretch()
         vButtons.addWidget(self.timer_label)
+        vButtons.addWidget(self.review_errors_button)
         vButtons.addWidget(self.stop_exam_button)
         vButtons.addWidget(self.flag_button)
 
@@ -502,13 +512,17 @@ class QuizPage(QWidget):
         vGroups = group_themes(self.themes, self.domain, self.subdomain)
 
         if not vGroups:
-            vLayout.addWidget(self.create_empty_category())
+            vLayout.addWidget(
+                create_empty_category(
+                    self.domain, self.subdomain, self.import_panel.prepare_priority
+                )
+            )
 
         for vDomain, vSections in vGroups:
-            vLayout.addWidget(self.create_domain_header(vDomain, vSections))
+            vLayout.addWidget(create_domain_header(vDomain, vSections))
 
             for vSubdomain, vThemes in vSections:
-                vSubtitle = self.create_subdomain_badge(vSubdomain, len(vThemes))
+                vSubtitle = create_subdomain_badge(vSubdomain, len(vThemes))
 
                 vGrid = QGridLayout()
                 vGrid.setSpacing(16)
@@ -518,7 +532,9 @@ class QuizPage(QWidget):
 
                 for vIndex, vTheme in enumerate(vThemes):
                     vGrid.addWidget(
-                        self.create_theme_card(vTheme, vSubdomain),
+                        create_theme_card(
+                            vTheme, vSubdomain, self.start, self.show_guide
+                        ),
                         *divmod(vIndex, self.theme_columns),
                     )
 
@@ -526,193 +542,6 @@ class QuizPage(QWidget):
                 vLayout.addLayout(vGrid)
 
         self.themes_holder.addWidget(vContainer)
-
-    def create_empty_category(self):
-        """Crée la carte d'une rubrique sans question : ses thèmes du catalogue à préparer."""
-        rCard, vLayout = create_card(
-            "Aucune question dans cette rubrique",
-            "Préparez un lot avec votre compte ChatGPT : la demande est copiée, "
-            "collez ensuite la réponse dans « Ajouter des questions ».",
-        )
-
-        vThemes = [
-            vTheme
-            for vTheme in load_catalog()
-            if self.domain in (None, vTheme["domain"])
-            and self.subdomain in (None, vTheme["subdomain"])
-        ]
-        vGrid = QGridLayout()
-        vGrid.setSpacing(8)
-        vGrid.setColumnStretch(0, 1)
-
-        for vRow, vTheme in enumerate(vThemes):
-            vLabel = QLabel(vTheme["label"])
-            vLabel.setWordWrap(True)
-
-            vButton = create_button("Préparer", "bot", pIconColor=COLORS["primary"])
-            vButton.setToolTip("Copie la demande de questions pour ce thème")
-            vButton.clicked.connect(
-                lambda _=False, pLabel=vTheme["label"]: (
-                    self.import_panel.prepare_priority(pLabel)
-                )
-            )
-
-            vGrid.addWidget(vLabel, vRow, 0)
-            vGrid.addWidget(vButton, vRow, 1)
-
-        vLayout.addLayout(vGrid)
-
-        return rCard
-
-    def create_subdomain_badge(self, pSubdomain, pCount):
-        """Crée le badge d'un sous-domaine : icône, nom et nombre de thèmes."""
-        rBadge = QFrame()
-        rBadge.setObjectName("subdomainBadge")
-
-        vText = QLabel(f"{pSubdomain} · {pCount}")
-        vText.setObjectName("subdomainBadgeText")
-
-        vLayout = QHBoxLayout(rBadge)
-        vLayout.setContentsMargins(10, 3, 12, 3)
-        vLayout.setSpacing(6)
-        vLayout.addWidget(
-            create_icon_label(
-                DOMAIN_ICONS.get(pSubdomain, "tag"), COLORS["primary"], 14
-            )
-        )
-        vLayout.addWidget(vText)
-
-        return rBadge
-
-    def create_domain_header(self, pDomain, pSections):
-        """Crée l'en-tête d'un domaine : icône, nom et progression d'ensemble."""
-        vThemes = [vTheme for _, vThemes in pSections for vTheme in vThemes]
-
-        vTitle = QLabel(pDomain)
-        vTitle.setObjectName("cardTitle")
-
-        vSummary = QLabel(
-            f"{len(vThemes)} thème(s) · "
-            f"{sum(vTheme['correct'] for vTheme in vThemes)} / "
-            f"{sum(vTheme['total'] for vTheme in vThemes)} questions acquises"
-        )
-        vSummary.setObjectName("cardSubtitle")
-
-        vTexts = QVBoxLayout()
-        vTexts.setSpacing(2)
-        vTexts.addWidget(vTitle)
-        vTexts.addWidget(vSummary)
-
-        rHeader = QWidget()
-        vLayout = QHBoxLayout(rHeader)
-        vLayout.setContentsMargins(0, 12, 0, 0)
-        vLayout.setSpacing(12)
-        vLayout.addWidget(
-            create_icon_label(
-                DOMAIN_ICONS.get(pDomain, "sparkles"), COLORS["primary"], 22
-            )
-        )
-        vLayout.addLayout(vTexts, 1)
-
-        return rHeader
-
-    def create_theme_card(self, pTheme, pSubdomain=None):
-        """Crée la carte d'un thème : icône, progression, intérêt et boutons."""
-        rCard, vLayout = create_card()
-
-        # Largeur fixée par la grille seule : les colonnes restent égales.
-        rCard.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-
-        vIcon = create_icon_label(
-            DOMAIN_ICONS.get(pSubdomain, "graduation-cap"), COLORS["primary"], 20
-        )
-        vIcon.setFixedSize(40, 40)
-        vIcon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        vIcon.setStyleSheet(
-            f"background: {COLORS['primary_light']}; border-radius: 10px;"
-        )
-
-        vTitle = QLabel(pTheme["label"])
-        vTitle.setObjectName("cardTitle")
-        vTitle.setWordWrap(True)
-
-        vCount = QLabel(
-            f"{pTheme['total']} questions · {pTheme['correct']} acquise(s)"
-            + (f" · {pTheme['to_review']} ratée(s)" if pTheme["to_review"] else "")
-        )
-        vCount.setObjectName("cardSubtitle")
-        vCount.setWordWrap(True)
-
-        vTexts = QVBoxLayout()
-        vTexts.setSpacing(2)
-        vTexts.addWidget(vTitle)
-        vTexts.addWidget(vCount)
-
-        vTitleRow = QHBoxLayout()
-        vTitleRow.setSpacing(12)
-        vTitleRow.addWidget(vIcon, 0, Qt.AlignmentFlag.AlignTop)
-        vTitleRow.addLayout(vTexts, 1)
-
-        if pTheme["status"]:
-            vStatusIcon, vTone, vText = THEME_STATUSES[pTheme["status"]]
-            vStatus = create_icon_label(vStatusIcon, COLORS[vTone], 18)
-            vStatus.setToolTip(vText)
-            vTitleRow.addWidget(vStatus, 0, Qt.AlignmentFlag.AlignTop)
-
-        vLayout.addLayout(vTitleRow)
-
-        # Pastilles : intérêt pour les offres en bleu, révisions dues en orange.
-        vPills = FlowLayout()
-        vPills.addWidget(
-            create_pill(f"Demandé dans {pTheme['offer_count']} offre(s)", "primary")
-            if pTheme["offer_count"]
-            else create_pill("Pas encore dans vos offres", "muted")
-        )
-
-        if pTheme["due"]:
-            vPills.addWidget(
-                create_pill(f"{pTheme['due']} à revoir aujourd'hui", "warning")
-            )
-
-        vLayout.addLayout(vPills)
-
-        vProgress = QProgressBar()
-        vProgress.setTextVisible(False)
-        vProgress.setValue(pTheme["score"])
-
-        vScore = QLabel(f"{pTheme['score']} %")
-        vScore.setObjectName("cardSubtitle")
-
-        vProgressRow = QHBoxLayout()
-        vProgressRow.setSpacing(8)
-        vProgressRow.addWidget(vProgress, 1)
-        vProgressRow.addWidget(vScore)
-        vLayout.addLayout(vProgressRow)
-
-        vStart = create_button("Réviser", pObjectName="primaryButton")
-        vStart.setToolTip(
-            "Répétition espacée : questions à revoir aujourd'hui, puis nouvelles"
-        )
-        vStart.clicked.connect(lambda: self.start(pTheme["key"], DEFAULT_MODE))
-
-        vButtons = QHBoxLayout()
-        vButtons.addWidget(vStart)
-
-        if pTheme["to_review"]:
-            vReview = create_button("Erreurs", "history", pIconColor=COLORS["primary"])
-            vReview.setToolTip("Revoir les questions ratées")
-            vReview.clicked.connect(lambda: self.start(pTheme["key"], "review"))
-            vButtons.addWidget(vReview)
-
-        if pTheme["guide"]:
-            vGuide = create_button("Guide", "file-text", pIconColor=COLORS["primary"])
-            vGuide.clicked.connect(lambda: self.show_guide(pTheme["guide"]))
-            vButtons.addWidget(vGuide)
-
-        vButtons.addStretch()
-        vLayout.addLayout(vButtons)
-
-        return rCard
 
     def get_visual_width(self):
         """Retourne la largeur disponible pour un schéma dans la carte de question."""
@@ -841,6 +670,7 @@ class QuizPage(QWidget):
         self.next_button.hide()
         self.next_button.setText("Question suivante")
         self.stop_exam_button.setVisible(self.mode == EXAM_MODE)
+        self.review_errors_button.hide()
         self.meta_label.setText(pMeta)
 
         clear_layout(self.choices_layout)
@@ -931,6 +761,10 @@ class QuizPage(QWidget):
 
             self.display_question(None, "Examen terminé", vSummary)
             self.stop_exam_button.setText("Fermer l'examen")
+            self.review_errors_button.setText(
+                f"Revoir les {len(vExam['wrong'])} erreur(s)"
+            )
+            self.review_errors_button.setVisible(bool(vExam["wrong"]))
             self.update_exam_timer()
             return
 
@@ -951,6 +785,19 @@ class QuizPage(QWidget):
             ),
             "Cette question n'existe plus : passez à la suivante.",
         )
+
+    def review_exam_errors(self):
+        """Enchaîne sur un examen limité aux questions ratées."""
+        try:
+            start_error_review(
+                self.database_file, load_exam(self.database_file), datetime.now()
+            )
+
+        except ValueError as vException:
+            show_message(self.verdict_label, str(vException), "warning")
+            return
+
+        self.show_exam_question()
 
     def update_exam_timer(self):
         """Affiche le temps restant de l'examen en cours, ou masque le minuteur."""

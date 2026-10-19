@@ -28,9 +28,11 @@ from job.schedule import (
     load_schedule,
     save_min_score,
 )
+from job.presentation import describe_backup
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.registry import SOURCES
-from storage.archive import export_archive, restore_archive
+from storage.archive import export_archive, restore_archive, restore_backup
+from storage.backup import describe_backups
 from storage.maintenance import reset_database
 from utils.logger import get_logger
 from utils.mailer import get_missing_email_settings
@@ -55,6 +57,7 @@ def render_settings(
     pCalendarMessage=None,
     pArchiveMessage=None,
     pMobileMessage=None,
+    pBackupMessage=None,
 ):
     """Affiche thème, règles, planification, notifications et sources."""
 
@@ -113,6 +116,11 @@ def render_settings(
             "mobile_message": pMobileMessage,
             "message_tone": get_message_tone(pStatusCode),
             "archive_message": pArchiveMessage,
+            "backups": [
+                {"name": vBackup["name"], "label": describe_backup(vBackup)}
+                for vBackup in describe_backups(pDatabaseFile)
+            ],
+            "backup_message": pBackupMessage,
         },
         status_code=pStatusCode,
     )
@@ -402,6 +410,49 @@ def upload_archive(
                 request,
                 pDatabaseFile,
                 pArchiveMessage=f"Sauvegarde restaurée. Anciennes données : "
+                f"{vBackupFile.name}",
+            )
+
+    return rResponse
+
+
+@router.post(
+    "/settings/backup",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def restore_database_backup(
+    request: Request,
+    pName: str = Form("", alias="name"),
+    pConfirm: str = Form("", alias="confirm"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Remet la base dans l'état d'une sauvegarde choisie, après confirmation."""
+
+    if pConfirm != "1":
+        rResponse = render_settings(
+            request,
+            pDatabaseFile,
+            pStatusCode=400,
+            pBackupMessage="Cochez la case de confirmation pour restaurer.",
+        )
+
+    else:
+        try:
+            vBackupFile = restore_backup(pDatabaseFile, pName, datetime.now())
+
+        except ValueError as vException:
+            logger.warning("Restauration de sauvegarde refusée : %s", vException)
+
+            rResponse = render_settings(
+                request, pDatabaseFile, pStatusCode=400, pBackupMessage=str(vException)
+            )
+
+        else:
+            rResponse = render_settings(
+                request,
+                pDatabaseFile,
+                pBackupMessage=f"Sauvegarde restaurée. Anciennes données : "
                 f"{vBackupFile.name}",
             )
 

@@ -19,6 +19,18 @@
 </section>
 
 <article class="card section-gap">
+    <h2>Entonnoir des candidatures</h2>
+    <p class="card-subtitle">Part des candidatures envoyées qui atteint chaque étape, et passage depuis l'étape précédente.</p>
+    {% for stage in statistics.funnel %}
+    <div class="funnel-row funnel-{{ loop.index }}">
+        <span class="funnel-label">{{ stage.label }}</span>
+        <span class="funnel-track"><span class="funnel-bar" style="width: {{ stage.share }}%">{{ stage.count }} · {{ stage.share }} %</span></span>
+        <span class="muted">{% if stage.conversion is not none %}{{ stage.conversion }} % de l'étape précédente{% endif %}</span>
+    </div>
+    {% endfor %}
+</article>
+
+<article class="card section-gap">
     <h2>{{ icon("bell-ring") }} Relances de la semaine</h2>
     <p class="card-subtitle">Un brouillon par candidature, à relire avant envoi. Notez la relance une fois le message parti : la suivante est programmée.</p>
     {% for follow_up in follow_ups %}
@@ -54,6 +66,7 @@
             <p class="muted">{{ [card.company, card.source_label] | select | join(" · ") }}</p>
             {% if card.applied_label %}<p class="muted">Postulé le {{ card.applied_label }}</p>{% endif %}
             {% if card.follow_up_due %}<p class="tone-warning">À relancer depuis le {{ card.follow_up_label }}</p>{% endif %}
+            {% if card.expired %}<p><span class="badge badge-danger">Offre retirée par le site</span></p>{% endif %}
             {# forms.js envoie le formulaire au changement : aucun script en ligne. #}
             <form method="post" action="{{ url_for('change_application_status').path }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">

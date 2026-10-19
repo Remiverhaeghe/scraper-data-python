@@ -10,7 +10,15 @@ from fastapi.responses import (
     Response,
 )
 
-from job.offer_purge import find_offers_to_purge, parse_purge_words, purge_offers
+from job.health import build_health
+from job.offer_purge import (
+    add_excluded_words,
+    find_offers_to_purge,
+    load_excluded_words,
+    parse_purge_words,
+    purge_offers,
+    save_excluded_words,
+)
 from job.presentation import (
     CHART_PALETTE,
     EXECUTION_STATUS_LABELS,
@@ -71,6 +79,7 @@ def render_quality(pRequest, pDatabaseFile, pPurge=None, pStatusCode=200):
         {
             "active_page": "quality",
             "purge": pPurge or {"words": "", "offers": None, "message": None},
+            "excluded_words": load_excluded_words(pDatabaseFile),
             "message_tone": get_message_tone(pStatusCode),
             "report": vReport,
             "problems_text": describe_problems(vReport["problems"]),
@@ -160,6 +169,7 @@ def run_purge(
     request: Request,
     pWords: str = Form("", alias="words"),
     pConfirm: str = Form("", alias="confirm"),
+    pExclude: str = Form("", alias="exclude"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Supprime les offres hors sujet, après confirmation et sauvegarde."""
@@ -173,6 +183,9 @@ def run_purge(
             raise ValueError("Cochez la case de confirmation pour supprimer.")
 
         vCount, vBackupFile = purge_offers(pDatabaseFile, vWords, datetime.now())
+
+        if pExclude == "1":
+            add_excluded_words(pDatabaseFile, vWords)
 
     except ValueError as vException:
         rResponse = render_quality(
@@ -197,8 +210,12 @@ def run_purge(
                 **vPurge,
                 "message": f"{vCount} offre(s) supprimée(s)"
                 + (f", sauvegarde : {vBackupFile.name}" if vBackupFile else "")
-                + ". Ajoutez ces mots aux mots à exclure de vos recherches pour "
-                "qu'elles ne reviennent pas.",
+                + (
+                    ". Ces mots écartent désormais les offres des prochaines "
+                    "recherches."
+                    if pExclude == "1"
+                    else ". Elles pourront revenir à la prochaine recherche."
+                ),
             },
         )
 
@@ -227,8 +244,9 @@ def show_logs(
     request: Request,
     pLevel: str = Query("", alias="level"),
     pSearch: str = Query("", alias="search"),
+    pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Affiche les derniers logs, filtrables par niveau et par texte."""
+    """Affiche l'état de l'application, puis les derniers logs filtrables."""
 
     vLevel = pLevel if pLevel in LEVEL_FILTERS else None
     vSearch = pSearch.strip() or None
@@ -238,6 +256,7 @@ def show_logs(
         "logs.html",
         {
             "active_page": "logs",
+            "health": build_health(pDatabaseFile, datetime.now()),
             "entries": read_log_entries(pLevel=vLevel, pSearch=vSearch),
             "level": vLevel,
             "search": vSearch,
@@ -332,5 +351,35 @@ def show_history(
             "tone_icons": TONE_ICONS,
         },
     )
+
+    return rResponse
+
+
+@router.post(
+    "/quality/excluded-words",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def update_excluded_words(
+    request: Request,
+    pWords: str = Form("", alias="words"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre les mots qui écartent une offre dès sa récupération."""
+
+    vPurge = {"words": "", "offers": None}
+
+    try:
+        save_excluded_words(pDatabaseFile, pWords)
+
+    except ValueError as vException:
+        rResponse = render_quality(
+            request, pDatabaseFile, {**vPurge, "message": str(vException)}, 400
+        )
+
+    else:
+        rResponse = render_quality(
+            request, pDatabaseFile, {**vPurge, "message": "Mots exclus enregistrés."}
+        )
 
     return rResponse

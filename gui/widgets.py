@@ -337,6 +337,16 @@ class StatisticCard(QFrame):
             self.clicked.emit()
 
 
+# Icône et couleur du message d'état selon sa nature
+STATUS_STYLES = {
+    "idle": ("search", "muted"),
+    "running": ("timer", "primary"),
+    "success": ("circle-check", "success"),
+    "warning": ("circle-alert", "warning"),
+    "error": ("circle-alert", "danger"),
+}
+
+
 def show_message(pLabel, pText, pTone="success"):
     """Affiche un message coloré selon sa nature : success, warning ou danger.
 

@@ -100,6 +100,8 @@ def test_process_jobs():
         "job.application.load_settings", return_value=SETTINGS
     ), patch(
         "job.application.get_exchange_rates", return_value={}
+    ), patch(
+        "job.application.load_excluded_words", return_value=["stage"]
     ):
 
         rResult = process_jobs(vConfig)

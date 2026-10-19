@@ -7,9 +7,7 @@ rester facile à modifier sans formulaire complexe :
   - CV : « Nom du CV | compétences mises en avant ».
 """
 
-import json
-
-from storage.settings_repository import get_setting_values, save_setting_values
+from storage.settings_repository import load_json_setting, save_json_setting
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -133,15 +131,10 @@ def profile_to_texts(pProfile):
 def load_profile(pDatabaseFile):
     """Retourne le profil enregistré, ou un profil vide."""
 
-    rProfile = dict(EMPTY_PROFILE)
-    vValue = get_setting_values(pDatabaseFile).get(PROFILE_KEY)
-
-    if vValue:
-        try:
-            rProfile.update(json.loads(vValue))
-
-        except ValueError:
-            logger.warning("Profil enregistré illisible : profil vide utilisé")
+    rProfile = {
+        **EMPTY_PROFILE,
+        **load_json_setting(pDatabaseFile, PROFILE_KEY, {}, dict),
+    }
 
     return rProfile
 
@@ -149,9 +142,7 @@ def load_profile(pDatabaseFile):
 def save_profile(pDatabaseFile, pProfile):
     """Enregistre le profil du candidat."""
 
-    save_setting_values(
-        pDatabaseFile, {PROFILE_KEY: json.dumps(pProfile, ensure_ascii=False)}
-    )
+    save_json_setting(pDatabaseFile, PROFILE_KEY, pProfile)
 
     logger.info(
         "Profil enregistré : %s compétence(s), %s expérience(s), %s CV",

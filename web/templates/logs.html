@@ -7,6 +7,18 @@
 {% block content %}
 {{ ui.page_header("Journaux", "Ce que fait l'application, pour comprendre une erreur ou un résultat", "terminal") }}
 
+<article class="card section-gap">
+    <h2>État de l'application</h2>
+    <p class="card-subtitle">Vert : tout va bien · orange : à surveiller · rouge : à corriger</p>
+    {% for check in health %}
+    <div class="source-state">
+        <span class="tone-{{ check.tone }}">●</span>
+        <strong>{{ check.label }}</strong>
+        <span class="muted">{{ check.value }}</span>
+    </div>
+    {% endfor %}
+</article>
+
 <form class="filters card" method="get" action="{{ url_for('show_logs').path }}">
     <div class="filters-row">
         <select name="level" aria-label="Niveau" data-autosubmit>

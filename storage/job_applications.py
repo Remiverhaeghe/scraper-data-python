@@ -442,7 +442,9 @@ def get_applications_with_offers(pDatabaseFile, pStatuses):
                 o.source, o.source_id, o.title, o.company, o.location, o.contract,
                 o.url, o.description, o.missions, o.requirements, o.skills,
                 a.status, a.applied_at, a.follow_up_date, a.follow_up_count,
-                a.interview_at, a.responded_at
+                a.last_follow_up_at,
+                a.interview_at, a.responded_at, o.availability,
+                o.availability_checked_at
             FROM job_application a
             JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id
             WHERE a.status IN ({", ".join("?" for _ in pStatuses)})
