@@ -214,6 +214,7 @@ class GitPage(QWidget):
         vCard, vLayout = create_card(
             "Commandes disponibles",
             "Seul l'historique est simulé : aucun fichier n'est touché",
+            pOpen=True,
         )
         vLabel = QLabel(
             "<br>".join(

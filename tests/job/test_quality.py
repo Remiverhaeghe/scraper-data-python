@@ -92,6 +92,18 @@ def test_find_problems():
         "titre absent",
         "lieu absent",
     ]
+    # Adzuna masque l'entreprise des annonces d'agences : ce n'est pas un défaut.
+    assert (
+        find_problems(
+            {
+                "source": "adzuna",
+                "title": "Soudeur",
+                "location": "Lille",
+                "description": "x",
+            }
+        )
+        == []
+    )
 
 
 def test_build_quality_export_lists_problems_safely(database_file):

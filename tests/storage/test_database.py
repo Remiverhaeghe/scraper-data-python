@@ -366,3 +366,64 @@ def test_database_version_changes_with_each_write(tmp_path):
         vConnection.execute("INSERT INTO essai VALUES ('x')")
 
     assert get_database_version(vDatabaseFile) != vBefore
+
+
+def test_migration_to_v21_removes_offers_the_parsers_now_reject(tmp_path):
+    """Vérifie le retrait des anciens messages sans forme d'offre, sauf s'ils sont suivis."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vJunk = "there used to be 800+ posts here :("
+    vHiring = "We're hiring software engineers at the IRS!"
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        for vMigration in MIGRATIONS[:20]:
+            vMigration(vConnection)
+
+        vConnection.execute("PRAGMA user_version = 20")
+        vConnection.executemany(
+            """
+            INSERT INTO job_offer (
+                source, source_id, first_seen_at, last_seen_at, title, company
+            )
+            VALUES (?, ?, '2026-10-01', '2026-10-01', ?, ?)
+            """,
+            [
+                ("hackernews", "1", vJunk, vJunk),
+                ("hackernews", "2", vJunk, vJunk),
+                ("hackernews", "3", vHiring, vHiring),
+                ("hackernews", "4", "Founding Engineer", "exLabora"),
+                ("findwork", "5", None, "Location: Bangalore"),
+                ("findwork", "6", "Backend Developer", "Okta"),
+            ],
+        )
+        vConnection.execute("""
+            INSERT INTO interview_note (
+                source, source_id, interviewed_at, questions, impressions
+            )
+            VALUES ('hackernews', '2', '2026-10-02', 'Questions', 'Impressions')
+            """)
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    initialize_database(vDatabaseFile)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(
+            "SELECT source_id, company FROM job_offer ORDER BY source_id"
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    assert vRows == [
+        ("2", vJunk),
+        ("3", None),
+        ("4", "exLabora"),
+        ("6", "Okta"),
+    ]

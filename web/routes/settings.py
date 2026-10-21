@@ -17,7 +17,12 @@ from job.calendar import (
     renew_calendar_token,
 )
 from job.companies import load_company_rules, save_company_rules
-from job.mobile_sync import API_PREFIX, get_mobile_token, renew_mobile_token
+from job.mobile_sync import (
+    API_PREFIX,
+    build_connection_svg,
+    get_mobile_token,
+    renew_mobile_token,
+)
 from job.schedule import (
     MIN_SCORE_CHOICES,
     describe_extra_searches,
@@ -73,6 +78,8 @@ def render_settings(
 
     vSchedule = load_schedule(pDatabaseFile)
     vSearch, vSearchSources = describe_scheduled_search(vSchedule)
+    vMobileAddress = str(pRequest.base_url).rstrip("/") + API_PREFIX
+    vMobileToken = get_mobile_token(pDatabaseFile)
 
     rResponse = templates.TemplateResponse(
         pRequest,
@@ -111,8 +118,14 @@ def render_settings(
                 str(pRequest.base_url), get_calendar_token(pDatabaseFile)
             ),
             "calendar_message": pCalendarMessage,
-            "mobile_address": str(pRequest.base_url).rstrip("/") + API_PREFIX,
-            "mobile_token": get_mobile_token(pDatabaseFile),
+            "mobile_address": vMobileAddress,
+            "mobile_token": vMobileToken,
+            # SVG produit ici à partir de l'adresse et du jeton, sans texte saisi.
+            "mobile_qr": (
+                build_connection_svg(vMobileAddress, vMobileToken)
+                if vMobileToken
+                else None
+            ),
             "mobile_message": pMobileMessage,
             "message_tone": get_message_tone(pStatusCode),
             "archive_message": pArchiveMessage,

@@ -144,6 +144,7 @@ class ProfilePage(QWidget):
             "Mon profil",
             "Sert à comparer chaque offre à vos compétences, à conseiller un CV et à "
             "préparer l'entretien et la lettre. Il reste sur cet ordinateur.",
+            pOpen=True,
         )
         vCardLayout.addLayout(vGrid)
         vCardLayout.addLayout(vActions)

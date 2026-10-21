@@ -197,7 +197,7 @@ class SearchPage(QWidget):
         self.exclude_edit = QLineEdit()
         self.exclude_edit.setPlaceholderText("Ex. stage, alternance")
 
-        vCard, vLayout = create_card("Critères")
+        vCard, vLayout = create_card("Critères", pOpen=True)
 
         if self.database_file is not None:
             self.saved_bar = SavedSearchesBar(

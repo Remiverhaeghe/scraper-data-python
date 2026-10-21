@@ -394,6 +394,15 @@ h3 {
     resize: none;
 }
 
+/* Fond blanc fixe : un QR code sur fond sombre se lit mal à la caméra. */
+.qr-code svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-top: 8px;
+    background: #ffffff;
+}
+
 .reset-form {
     display: grid;
     gap: 12px;

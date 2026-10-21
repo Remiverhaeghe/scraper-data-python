@@ -9,7 +9,8 @@ Pris en charge : QCM, calculs avec unité, remises en ordre et associations, sch
 SVG, extraits de code, guides pratiques, répétition espacée (boîtes de Leitner),
 examen blanc chronométré (tous thèmes ou un thème), synchronisation automatique à
 l'ouverture, au retour dans l'application et toutes les dix réponses, rappel
-quotidien à 18 h 30 avec le nombre de questions à revoir, recherche du serveur sur
+quotidien à 18 h 30 avec le nombre de questions à revoir, connexion par le QR code
+affiché dans les Paramètres du PC ou du web, recherche du serveur sur
 le Wi-Fi (bouton de l'écran de connexion, et automatiquement quand son adresse
 change), schémas en plein écran tournés pour la longueur du téléphone.
 
@@ -134,11 +135,13 @@ mobile/
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
 │   │   ├── discovery.dart        # Recherche du serveur sur le réseau local
+│   │   ├── connection_code.dart  # Adresse et jeton lus dans le QR code du PC
 │   │   ├── revision_store.dart   # Interface du stockage local et réglages du serveur
 │   │   ├── file_store.dart       # Fichiers JSON et jeton dans le stockage chiffré
 │   │   └── reminders.dart        # Rappel quotidien par notification locale
 │   ├── screens/
 │   │   ├── setup_screen.dart     # Adresse du serveur, jeton et rappel quotidien
+│   │   ├── scan_screen.dart      # Scan du QR code de connexion (caméra)
 │   │   ├── home_screen.dart      # Progression, synchronisation et thèmes par domaine
 │   │   ├── question_screen.dart  # Question, correction et suivante
 │   │   ├── exam_screen.dart      # Examen blanc chronométré et bilan
@@ -154,6 +157,7 @@ mobile/
     ├── exam_and_sync_test.dart   # Teste l'examen, l'envoi automatique et le rappel
     ├── shared_cases_test.dart    # Teste les cas communs avec le serveur
     ├── discovery_test.dart       # Teste la recherche du serveur sur le Wi-Fi
+    ├── connection_code_test.dart # Teste la lecture du QR code de connexion
     ├── schema_view_test.dart     # Teste la description et le plein écran des schémas
     └── widget_test.dart          # Teste l'accueil et une question corrigée
 ```

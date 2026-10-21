@@ -651,6 +651,19 @@ def test_interview_score_and_france_filter(offers_page, database_file):
     assert get_titles(offers_page) == ["Développeur Java"]
 
 
+class SynchronousThread:
+    """Remplace threading.Thread : la cible s'exécute tout de suite, sans fil."""
+
+    def __init__(self, target, args=(), daemon=None):
+        self.target = target
+        self.args = args
+        self.daemon = daemon
+
+    def start(self):
+        """Exécute la cible dans le fil courant."""
+        self.target(*self.args)
+
+
 def test_detail_offers_translation_and_limits_company_info(
     offers_page, database_file, monkeypatch
 ):
@@ -675,6 +688,8 @@ def test_detail_offers_translation_and_limits_company_info(
     )
     vOpened = []
     monkeypatch.setattr(offer_detail.QDesktopServices, "openUrl", vOpened.append)
+    # Sans modèle de traduction installé, la description s'ouvre dans le navigateur.
+    monkeypatch.setattr(offer_detail, "can_translate", lambda _pText: False)
 
     offers_page.refresh()
     offers_page.select_offer(("arbeitnow", "de"))
@@ -686,6 +701,23 @@ def test_detail_offers_translation_and_limits_company_info(
     vPanel.translate_button.click()
 
     assert "translate.google.com" in vOpened[0].toString()
+
+    # Avec un modèle, le texte est remplacé sur place, puis rétabli.
+    monkeypatch.setattr(offer_detail, "can_translate", lambda _pText: True)
+    monkeypatch.setattr(
+        offer_detail, "translate_to_french", lambda _pText: "Nous recherchons"
+    )
+    monkeypatch.setattr(offer_detail.threading, "Thread", SynchronousThread)
+
+    vPanel.translate_button.click()
+
+    assert vPanel.description.toPlainText() == "Nous recherchons"
+    assert vPanel.translate_button.text() == "Texte d'origine"
+
+    vPanel.translate_button.click()
+
+    assert vPanel.description.toPlainText().startswith("Wir suchen")
+    assert len(vOpened) == 1
 
 
 def test_detail_can_be_hidden_at_once(offers_page):

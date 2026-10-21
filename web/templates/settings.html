@@ -77,6 +77,11 @@
                 <textarea rows="1" readonly aria-label="Jeton de l'application mobile">{{ mobile_token }}</textarea>
                 <button class="button" type="button" data-copy="mobile-token" data-copied="Jeton copié">{{ icon("copy", 16) }} Copier</button>
             </div>
+            <details class="qr-code">
+                <summary>Afficher le QR code</summary>
+                <p class="muted">Dans l'application, écran « Connexion au serveur » : « Scanner le QR code ».</p>
+                {{ mobile_qr | safe }}
+            </details>
             {% else %}
             <p class="muted">Aucun jeton créé.</p>
             {% endif %}

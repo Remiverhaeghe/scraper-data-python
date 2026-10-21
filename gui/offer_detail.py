@@ -8,6 +8,8 @@ jointes (gui/offer_attachments.py).
 from datetime import datetime
 from html import escape
 
+import threading
+
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QTextBlockFormat, QTextCursor
 from PySide6.QtWidgets import (
@@ -42,6 +44,7 @@ from job.presentation import (
     prepare_offer,
     safe_url,
 )
+from job.translation import can_translate, translate_to_french
 from storage.duplicates import save_decision
 from utils.logger import get_logger
 
@@ -50,6 +53,8 @@ logger = get_logger(__name__)
 # Clé, libellé et icône des informations affichées sous le titre de l'offre
 # Au-delà, une liste déborderait du panneau de largeur fixe : le reste est en infobulle.
 MAX_LIST_VALUES = 4
+
+TRANSLATE_TEXT = "Traduire en français"
 
 # Place de la barre de défilement à côté d'une colonne de largeur fixe
 COLUMN_SCROLL_MARGIN = 20
@@ -142,6 +147,8 @@ class OfferDetailPanel(QWidget):
 
     application_changed = Signal()
     exam_requested = Signal(dict)
+    # Émis depuis le fil de traduction : (description d'origine, traduction, erreur)
+    translation_done = Signal(str, object, object)
 
     def __init__(self, pDatabaseFile):
         """Construit le panneau, vide tant qu'aucune offre n'est choisie."""
@@ -192,20 +199,19 @@ class OfferDetailPanel(QWidget):
         self.description.setObjectName("descriptionText")
         self.description.setPlaceholderText("Aucune description fournie par la source.")
 
-        # Une description étrangère s'ouvre dans Google Traduction, gratuit.
+        # Une description étrangère se traduit sur place avec Argos ; sans lui,
+        # elle s'ouvre dans Google Traduction, dans le navigateur.
         self.translate_url = None
+        self.original_description = None
+        self.translated = False
         self.translate_button = create_button(
-            "Traduire en français", "languages", pIconColor=COLORS["primary"]
+            TRANSLATE_TEXT, "languages", pIconColor=COLORS["primary"]
         )
-        self.translate_button.setToolTip(
-            "Ouvre la description dans Google Traduction, dans le navigateur"
-        )
-        self.translate_button.clicked.connect(
-            lambda: QDesktopServices.openUrl(QUrl(self.translate_url))
-        )
+        self.translate_button.clicked.connect(self.toggle_translation)
         self.translate_button.hide()
+        self.translation_done.connect(self.show_translation)
 
-        vDescriptionCard, vDescriptionLayout = create_card("Description")
+        vDescriptionCard, vDescriptionLayout = create_card("Description", pOpen=True)
         vDescriptionLayout.addWidget(
             self.translate_button, 0, Qt.AlignmentFlag.AlignLeft
         )
@@ -435,8 +441,17 @@ class OfferDetailPanel(QWidget):
         )
         self.open_button.setEnabled(safe_url(vOffer.get("url")) != "#")
 
-        self.translate_url = build_translate_url(vOffer.get("description"))
+        self.original_description = vOffer.get("description")
+        self.translated = False
+        self.translate_url = build_translate_url(self.original_description)
         self.translate_button.setVisible(self.translate_url is not None)
+        self.translate_button.setEnabled(True)
+        self.translate_button.setText(TRANSLATE_TEXT)
+        self.translate_button.setToolTip(
+            "Traduit la description sur cet ordinateur"
+            if self.translate_url and can_translate(self.original_description)
+            else "Ouvre la description dans Google Traduction, dans le navigateur"
+        )
         self.show_duplicates(vOffer)
         self.show_company(vOffer)
 
@@ -488,6 +503,55 @@ class OfferDetailPanel(QWidget):
         vCursor = QTextCursor(self.description.document())
         vCursor.select(QTextCursor.SelectionType.Document)
         vCursor.setBlockFormat(vFormat)
+
+    def toggle_translation(self):
+        """Traduit la description sur place, ou revient au texte d'origine."""
+        vText = self.original_description
+
+        if self.translated:
+            self.translated = False
+            self.show_description(vText)
+            self.translate_button.setText(TRANSLATE_TEXT)
+
+        elif not can_translate(vText):
+            QDesktopServices.openUrl(QUrl(self.translate_url))
+
+        else:
+            self.translate_button.setEnabled(False)
+            self.translate_button.setText("Traduction en cours…")
+            # Quelques secondes de calcul : hors du fil de l'interface.
+            threading.Thread(
+                target=self.run_translation, args=(vText,), daemon=True
+            ).start()
+
+    def run_translation(self, pText):
+        """Traduit dans un fil séparé et transmet le résultat par signal."""
+        vTranslation = None
+        vError = None
+
+        try:
+            vTranslation = translate_to_french(pText)
+
+        except ValueError as vException:
+            vError = str(vException)
+
+        self.translation_done.emit(pText, vTranslation, vError)
+
+    def show_translation(self, pText, pTranslation, pError):
+        """Affiche la traduction, sauf si une autre offre a été choisie entre-temps."""
+        if pText != self.original_description:
+            return
+
+        self.translate_button.setEnabled(True)
+
+        if pError:
+            self.translate_button.setText(TRANSLATE_TEXT)
+            QMessageBox.warning(self, TRANSLATE_TEXT, pError)
+            return
+
+        self.translated = True
+        self.show_description(pTranslation)
+        self.translate_button.setText("Texte d'origine")
 
     def open_offer(self):
         """Ouvre l'offre dans le navigateur, uniquement en http ou https."""

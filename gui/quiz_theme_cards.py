@@ -31,6 +31,7 @@ def create_empty_category(pDomain, pSubdomain, pOnPrepare):
         "Aucune question dans cette rubrique",
         "Préparez un lot avec votre compte ChatGPT : la demande est copiée, "
         "collez ensuite la réponse dans « Ajouter des questions ».",
+        pOpen=True,
     )
 
     vThemes = [

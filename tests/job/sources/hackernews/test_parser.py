@@ -178,3 +178,14 @@ def test_parse_job_finds_location_and_role_out_of_place():
         "San Francisco, CA (Onsite)",
         "Founding Software Engineer",
     )
+
+
+def test_header_without_separator_has_no_company():
+    """Vérifie qu'une phrase d'en-tête sert de titre sans être recopiée en entreprise."""
+
+    vJob = parse_job(
+        {"id": 7, "text": "We're hiring software engineers at the IRS!<p>Details"}
+    )
+
+    assert vJob["title"] == "We're hiring software engineers at the IRS!"
+    assert vJob["company"] is None

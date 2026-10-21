@@ -3,8 +3,9 @@
 from datetime import datetime
 
 import pytest
+from PySide6.QtWidgets import QLabel
 
-from gui import data_panel, settings_page
+from gui import data_panel, settings_page, token_access_panel
 from gui.settings_page import SettingsPage, describe_source_state
 from gui.theme import COLORS
 from job.schedule import load_schedule, save_scheduled_search
@@ -488,6 +489,20 @@ def test_mobile_token_is_created_copied_and_renewed(
     vPage.mobile_panel.copy_button.click()
 
     assert settings_page.QApplication.clipboard().text() == vFirst
+
+    # Le QR code s'affiche à la demande, dans une fenêtre fermée aussitôt ici.
+    vShown = []
+    monkeypatch.setattr(
+        token_access_panel.QDialog,
+        "exec",
+        lambda pDialog: vShown.append(pDialog.findChild(QLabel).pixmap().width()),
+    )
+
+    assert vPage.mobile_panel.qr_button.isEnabled()
+
+    vPage.mobile_panel.qr_button.click()
+
+    assert vShown and vShown[0] > 100
 
     vAnswers = [
         settings_page.QMessageBox.StandardButton.No,

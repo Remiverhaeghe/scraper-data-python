@@ -16,6 +16,7 @@ dependencies:
   flutter_svg: ^2.0.10+1
   flutter_timezone: ^5.1.1
   http: ^1.2.2
+  mobile_scanner: ^7.4.2
   path_provider: ^2.1.4
   # Identifiant de chaque réponse : le serveur ignore un envoi en double
   timezone: ^0.11.2

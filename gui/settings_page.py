@@ -41,7 +41,12 @@ from job.calendar import (
     renew_calendar_token,
 )
 from job.companies import load_company_rules, save_company_rules
-from job.mobile_sync import API_PREFIX, get_mobile_token, renew_mobile_token
+from job.mobile_sync import (
+    API_PREFIX,
+    build_connection_png,
+    get_mobile_token,
+    renew_mobile_token,
+)
 from job.notification import build_test_email
 from job.schedule import (
     MIN_SCORE_CHOICES,
@@ -860,6 +865,7 @@ class SettingsPage(QWidget):
             lambda: get_mobile_token(self.database_file),
             lambda: renew_mobile_token(self.database_file),
             f"{WEB_BASE_URL}{API_PREFIX}",
+            lambda pToken: build_connection_png(f"{WEB_BASE_URL}{API_PREFIX}", pToken),
         )
 
     def set_actions_enabled(self, pEnabled):

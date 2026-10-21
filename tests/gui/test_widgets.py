@@ -10,7 +10,10 @@ from gui.widgets import CardHeader, TileButton, create_card
 def test_collapsible_card_remembers_state(qt_application):
     """Vérifie que la carte se replie par son titre et garde cet état."""
 
-    vCard, vLayout = create_card("Niveaux", "Sous-titre", "list-checks", "test")
+    QSettings().remove("collapsed/test")
+    vCard, vLayout = create_card(
+        "Niveaux", "Sous-titre", "list-checks", "test", pOpen=True
+    )
     vLayout.addWidget(QLabel("Contenu"))
     vContent = vLayout.parentWidget()
 
@@ -32,9 +35,9 @@ def test_collapsed_card_shrinks_in_a_grid(qt_application):
     QSettings().remove("collapsed/repli")
     vPage = QWidget()
     vGrid = QGridLayout(vPage)
-    vCard, vLayout = create_card("Par source", pKey="repli")
+    vCard, vLayout = create_card("Par source", pKey="repli", pOpen=True)
     vLayout.addWidget(QLabel("Contenu"))
-    vNeighbour, vNeighbourLayout = create_card("Par type de poste")
+    vNeighbour, vNeighbourLayout = create_card("Par type de poste", pOpen=True)
     vNeighbourLayout.addWidget(QLabel("Tableau"), 1)
     vNeighbour.setMinimumHeight(300)
     vGrid.addWidget(vCard, 0, 0)
@@ -53,6 +56,19 @@ def test_collapsed_card_shrinks_in_a_grid(qt_application):
 
     vPage.close()
     QSettings().remove("collapsed/repli")
+
+
+def test_secondary_card_starts_collapsed(qt_application):
+    """Vérifie qu'une carte jamais touchée s'affiche repliée, sauf contenu principal."""
+
+    QSettings().remove("collapsed/secondaire")
+    QSettings().remove("collapsed/principale")
+
+    _, vSecondary = create_card("Statistiques", pKey="secondaire")
+    _, vMain = create_card("Critères", pKey="principale", pOpen=True)
+
+    assert vSecondary.parentWidget().isHidden()
+    assert not vMain.parentWidget().isHidden()
 
 
 def test_tile_button_states_and_keyboard(qt_application):

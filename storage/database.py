@@ -652,6 +652,71 @@ def migrate_to_v20(pConnection):
         """)
 
 
+def migrate_to_v21(pConnection):
+    """Retire les anciennes offres que la collecte actuelle écarterait.
+
+    Hacker News : messages sans forme d'offre (réponses, remarques sur le fil),
+    reconnus à leur en-tête sans séparateur, rangé à la fois en titre et en
+    entreprise. Findwork : offres sans titre. Une offre suivie (candidature,
+    relance, pièce jointe, journal d'entretien) est toujours gardée.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    from job.sources.hackernews.parser import is_job_post
+
+    vUntouched = """
+        NOT EXISTS (SELECT 1 FROM job_application AS a
+                    WHERE a.source = o.source AND a.source_id = o.source_id)
+        AND NOT EXISTS (SELECT 1 FROM job_follow_up AS f
+                        WHERE f.source = o.source AND f.source_id = o.source_id)
+        AND NOT EXISTS (SELECT 1 FROM job_attachment AS j
+                        WHERE j.source = o.source AND j.source_id = o.source_id)
+        AND NOT EXISTS (SELECT 1 FROM interview_note AS n
+                        WHERE n.source = o.source AND n.source_id = o.source_id)
+        """
+
+    vHeaderRows = pConnection.execute(f"""
+        SELECT source_id, title, company FROM job_offer AS o
+        WHERE source = 'hackernews'
+        AND (title IS NULL OR company IS NULL OR title = company)
+        AND {vUntouched}
+        """).fetchall()  # nosec B608
+
+    vRejected = []
+    vKept = []
+
+    for vSourceId, vTitle, vCompany in vHeaderRows:
+        if not is_job_post({"text": vTitle or vCompany or ""}):
+            vRejected.append((vSourceId,))
+        elif vTitle and vTitle == vCompany:
+            vKept.append((vSourceId,))
+
+    pConnection.executemany(
+        "DELETE FROM job_offer WHERE source = 'hackernews' AND source_id = ?",
+        vRejected,
+    )
+    pConnection.executemany(
+        "UPDATE job_offer SET company = NULL "
+        "WHERE source = 'hackernews' AND source_id = ?",
+        vKept,
+    )
+
+    vFindwork = pConnection.execute(f"""
+        DELETE FROM job_offer AS o
+        WHERE source = 'findwork' AND (title IS NULL OR title = '')
+        AND {vUntouched}
+        """).rowcount  # nosec B608
+
+    logger.info(
+        "Nettoyage des offres : %s message(s) Hacker News sans forme d'offre et "
+        "%s offre(s) Findwork sans titre retirés, %s entreprise(s) répétant le "
+        "titre vidée(s)",
+        len(vRejected),
+        vFindwork,
+        len(vKept),
+    )
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -673,6 +738,7 @@ MIGRATIONS = [
     migrate_to_v18,
     migrate_to_v19,
     migrate_to_v20,
+    migrate_to_v21,
 ]
 
 

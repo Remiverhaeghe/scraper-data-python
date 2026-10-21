@@ -86,6 +86,7 @@ class ChallengesPage(QWidget):
             "Deux parties par défi, une étoile par partie réussie",
             "trophy",
             "challenges",
+            pOpen=True,
         )
         self.list_layout = QGridLayout()
         self.list_layout.setSpacing(8)

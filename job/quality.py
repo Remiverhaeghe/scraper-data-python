@@ -184,6 +184,11 @@ def describe_problems(pProblems):
     return rText
 
 
+# Sources qui masquent l'entreprise de certaines annonces (agences, cabinets) :
+# son absence vient de la source, pas d'un défaut de la collecte.
+HIDDEN_COMPANY_SOURCES = ("adzuna",)
+
+
 def find_problems(pOffer):
     """Retourne les défauts repérés sur une offre, en clair."""
 
@@ -196,7 +201,7 @@ def find_problems(pOffer):
     elif " | " in vTitle:
         rProblems.append("titre en plusieurs segments")
 
-    if not pOffer.get("company"):
+    if not pOffer.get("company") and pOffer.get("source") not in HIDDEN_COMPANY_SOURCES:
         rProblems.append("entreprise absente")
 
     if not pOffer.get("location") and not pOffer.get("remote"):

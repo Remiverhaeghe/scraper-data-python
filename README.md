@@ -51,6 +51,9 @@ python -m web                     # tableau de bord sur http://127.0.0.1:8000
 python -m scheduler               # recherche planifiée et notifications (--once : une vérification)
 python -m tools.windows_startup   # lance web et planificateur à l'ouverture de session (--remove : retire)
 
+pip install -r requirements-translation.txt   # facultatif, environ 1 Go : traduction hors ligne
+python -m job.translation                     # télécharge les modèles allemand et anglais vers français
+
 python -m playwright install chromium   # une fois, pour les tests de bout en bout du web
 pytest                            # tous les tests ; ceux du navigateur sont ignorés sans Chromium
 ```
@@ -188,7 +191,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Recherches enregistrées : enregistrer, recharger et supprimer des critères nommés
 - [x] Qualité des données : remplissage par champ et par source, export des offres à vérifier
 - [x] Nombre d'offres à vérifier et défauts les plus fréquents, avec l'usage de l'export expliqué
-- [x] Fiche d'une offre : disponibilité en couleur, traduction d'une annonce étrangère (Google Traduction), infos entreprise réservées aux offres en France
+- [x] Fiche d'une offre : disponibilité en couleur, traduction d'une annonce étrangère sur place, hors ligne avec Argos Translate (Google Traduction dans le navigateur sans lui), infos entreprise réservées aux offres en France
 - [x] Journaux : consultation filtrée, téléchargement et remise à zéro
 - [x] Réinitialisation des données après confirmation, base sauvegardée avant ; les questions de révision importées et leurs signalements sont conservés
 - [x] Profil du candidat et préparation de candidature : correspondance, CV, entretien, lettre
@@ -455,7 +458,8 @@ Internet, ce que l'accès par Tailscale évite justement.
 
 L'application Flutter du dossier `mobile/` révise hors ligne puis envoie ses réponses :
 installation, compilation et premier lancement dans [mobile/README.md](mobile/README.md). Le
-jeton se crée dans Paramètres, « Application mobile », avec l'adresse à saisir dans l'application.
+jeton se crée dans Paramètres, « Application mobile » ; son bouton « QR code » (PC) ou
+« Afficher le QR code » (web) donne l'adresse et le jeton à scanner depuis l'application.
 Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune session n'est utilisée.
 
 | Méthode | Adresse | Rôle |
@@ -519,6 +523,7 @@ scraper-data-python/
 │   ├── interview_drill.py                     # Entraînement à l'oral, répétition espacée
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
+│   ├── translation.py                         # Traduction hors ligne des descriptions (Argos, facultatif)
 │   ├── completion.py                          # Complétion commune avant enregistrement des offres
 │   ├── manual_offers.py                       # Ajout manuel et import d'offres depuis un fichier
 │   ├── companies.py                           # Entreprises exclues ou privilégiées, candidatures déjà envoyées
@@ -871,6 +876,7 @@ scraper-data-python/
 │   │   ├── test_quiz_domains.py               # Teste les domaines et le compte des offres par thème
 │   │   ├── test_quiz_exam.py                  # Teste le mode examen
 │   │   ├── test_skills_dashboard.py           # Teste le tableau de bord des compétences
+│   │   ├── test_translation.py                # Teste la langue reconnue et la traduction par paragraphe
 │   │   ├── test_mobile_sync.py                # Teste le contenu hors ligne et l'envoi des réponses
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
@@ -1048,6 +1054,7 @@ scraper-data-python/
 ├── main.py                                     # Point d'entrée principal de l'application
 ├── config.py                                   # Configuration générale de l'application
 ├── requirements.txt                            # Liste des dépendances Python
+├── requirements-translation.txt                # Traduction hors ligne, facultative (torch compris)
 ├── pyproject.toml                              # Couverture, convention de nommage pylint
 ├── README.md                                   # Documentation synthétique du projet
 ├── SECURITY.md                                 # Signalement des vulnérabilités

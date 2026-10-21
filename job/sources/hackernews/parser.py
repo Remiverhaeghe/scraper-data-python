@@ -142,7 +142,13 @@ def parse_header(pHeader):
 
     rHeader = {
         **vDetails,
-        "company": COMPANY_URL_PATTERN.sub("", vSegments[0]).strip() or None,
+        # Sans séparateur, rien ne distingue l'entreprise dans la phrase : elle
+        # reste vide plutôt que de répéter le titre.
+        "company": (
+            COMPANY_URL_PATTERN.sub("", vSegments[0]).strip() or None
+            if len(vSegments) > 1
+            else None
+        ),
         # Sans séparateur, l'en-tête est une phrase libre qui tient lieu de titre.
         "title": (vDetails["title"] or (pHeader if len(vSegments) == 1 else ""))[:200]
         or None,

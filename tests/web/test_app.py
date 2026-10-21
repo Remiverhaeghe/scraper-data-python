@@ -1493,8 +1493,11 @@ def test_settings_mobile_token(client):
 
     assert "http://testserver/api/v1" in vPage
     assert "Aucun jeton créé." in vPage
+    assert "Afficher le QR code" not in vPage
 
     vCreated = client.post("/settings/mobile").text
+
+    assert "Afficher le QR code" in vCreated and "<svg" in vCreated
 
     assert "Jeton créé : saisissez-le dans l&#39;application." in vCreated or (
         "Jeton créé : saisissez-le dans l'application." in vCreated

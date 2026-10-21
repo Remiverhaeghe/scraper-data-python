@@ -128,11 +128,15 @@ class CardHeader(QWidget):
         super().mouseReleaseEvent(pEvent)
 
 
-def create_card(pTitle=None, pSubtitle=None, pIcon=None, pKey=None, pActions=()):
+def create_card(
+    pTitle=None, pSubtitle=None, pIcon=None, pKey=None, pActions=(), pOpen=False
+):
     """Crée une carte blanche et retourne la carte et le layout de son contenu.
 
     Une carte titrée se replie d'un clic sur son en-tête ; l'état est mémorisé
     d'une ouverture à l'autre (QSettings), sous pKey ou à défaut sous le titre.
+    Repliée au premier affichage pour garder les pages lisibles, sauf avec pOpen,
+    réservé au contenu principal d'une page.
     """
 
     vCard = QFrame()
@@ -180,7 +184,7 @@ def create_card(pTitle=None, pSubtitle=None, pIcon=None, pKey=None, pActions=())
         QSettings().setValue(vSettingKey, vContent.isHidden())
 
     vHeader.clicked.connect(toggle)
-    set_open(not QSettings().value(vSettingKey, False, type=bool))
+    set_open(not QSettings().value(vSettingKey, not pOpen, type=bool))
 
     rCard = (vCard, vContentLayout)
 
