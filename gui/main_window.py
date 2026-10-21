@@ -1,7 +1,7 @@
 """Fenêtre principale : menu latéral et pages de l'application"""
 
 import threading
-from datetime import datetime
+from datetime import date, datetime
 
 from PySide6.QtCore import QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
@@ -42,6 +42,7 @@ from job.quiz import DEFAULT_MODE
 from job.quiz_generation import prepare_quiz_caches
 from job.schedule import save_scheduled_search
 from storage.backup import run_due_backup
+from storage.database import get_database_version
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -53,6 +54,11 @@ LICENSE_LINK = "#licence"
 # Clés de navigation qui ouvrent la page des offres avec des filtres prédéfinis
 # Distincts des noms de page : « applications » ouvre la page Candidatures.
 OFFER_PRESETS = ("offers", "new_offers", "applied_offers", "follow_ups")
+
+# Pages dont le calcul, coûteux, ne dépend que de la base et du jour : elles ne se
+# recalculent pas à chaque passage si rien n'a changé. Journaux et Git lisent des
+# fichiers hors base et restent recalculés à chaque fois.
+DATA_ONLY_PAGES = ("offers", "quiz", "skills", "challenges", "quality")
 
 
 class MainWindow(QMainWindow):
@@ -106,6 +112,8 @@ class MainWindow(QMainWindow):
 
         self.pages = QStackedWidget()
         self.page_rows = {}
+        self.page_keys = {}
+        self.refreshed_versions = {}
 
         self.home_page = HomePage(vDatabaseFile)
         self.search_page = SearchPage(pDatabaseFile=vDatabaseFile)
@@ -257,6 +265,7 @@ class MainWindow(QMainWindow):
         )
 
         self.page_rows[pKey] = self.pages.count()
+        self.page_keys[self.pages.count()] = pKey
         self.page_labels[self.pages.count()] = pLabel
         self.navigation.addItem(vItem)
         self.pages.addWidget(pPage)
@@ -337,11 +346,27 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{self.page_labels[pIndex]} · {self.title}")
 
         vPage = self.pages.currentWidget()
+        vKey = self.page_keys[pIndex]
 
-        if hasattr(vPage, "refresh"):
+        if hasattr(vPage, "refresh") and (
+            vKey not in DATA_ONLY_PAGES
+            or self.refreshed_versions.get(vKey) != self.get_data_version()
+        ):
             vPage.refresh()
 
+            if vKey in DATA_ONLY_PAGES:
+                self.refreshed_versions[vKey] = self.get_data_version()
+
         self.update_alerts()
+
+    def get_data_version(self):
+        """Retourne ce qui oblige une page à se recalculer : la base et le jour."""
+        vVersion = get_database_version(self.database_file)
+
+        # Sans empreinte lisible, la page est toujours recalculée.
+        rVersion = (vVersion, date.today()) if vVersion else object()
+
+        return rVersion
 
     def update_alerts(self):
         """Affiche le nombre d'actions en attente à côté de « Candidatures »."""

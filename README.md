@@ -49,6 +49,7 @@ python main.py                    # interface graphique
 python -m cli.main --help         # ligne de commande
 python -m web                     # tableau de bord sur http://127.0.0.1:8000
 python -m scheduler               # recherche planifiée et notifications (--once : une vérification)
+python -m tools.windows_startup   # lance web et planificateur à l'ouverture de session (--remove : retire)
 
 python -m playwright install chromium   # une fois, pour les tests de bout en bout du web
 pytest                            # tous les tests ; ceux du navigateur sont ignorés sans Chromium
@@ -412,6 +413,8 @@ Sur le Wi-Fi de la maison, sans Tailscale :
 Aucun port n'est ouvert sur la box : seuls les appareils de votre compte Tailscale
 atteignent le PC. L'authentification du tableau de bord reste obligatoire. Pour lancer une
 recherche depuis le téléphone, le planificateur (`python -m scheduler`) doit tourner sur le PC.
+`python -m tools.windows_startup` les lance tous deux à l'ouverture de session, dans des
+fenêtres réduites, après 30 secondes laissées au Wi-Fi pour se connecter.
 
 ### Défis de programmation
 
@@ -457,6 +460,7 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 
 | Méthode | Adresse | Rôle |
 |---|---|---|
+| GET | `/api/v1/ping` | Sans jeton : nom de l'application et version de l'API, pour que le téléphone trouve le serveur sur le Wi-Fi |
 | GET | `/api/v1/quiz` | Thèmes, questions (réponse et explication comprises), schémas et guides ; `ETag` : 304 si rien n'a changé |
 | GET | `/api/v1/progress` | Boîte et date de révision de chaque question, chiffres d'ensemble |
 | POST | `/api/v1/answers` | Réponses faites hors ligne : `{"answers": [{"id", "question_id", "choice" ou "response", "answered_at"}]}` |
@@ -782,6 +786,7 @@ scraper-data-python/
 │   ├── __init__.py                            # Initialise le package Tools
 │   ├── quiz_lot.py                            # Construit et contrôle les lots de révision
 │   ├── quiz_svg.py                            # Schémas SVG des lots
+│   ├── windows_startup.py                     # Lancement automatique à l'ouverture de session
 │   └── quiz_lots/                             # Sources des lots écrits, un dossier par thème
 │
 ├── utils/                                     # Utilitaires techniques communs
@@ -1007,7 +1012,8 @@ scraper-data-python/
 │   ├── tools/                                  # Tests des outils de développement
 │   │   ├── __init__.py                         # Initialise le package des tests des outils
 │   │   ├── test_quiz_lot.py                    # Teste la construction et le contrôle des lots
-│   │   └── test_quiz_svg.py                    # Teste les schémas SVG des lots
+│   │   ├── test_quiz_svg.py                    # Teste les schémas SVG des lots
+│   │   └── test_windows_startup.py             # Teste le fichier de lancement automatique
 │   ├── e2e/                                    # Tests du web dans un vrai navigateur (Playwright)
 │   │   ├── __init__.py                          # Initialise le package des tests de bout en bout
 │   │   └── test_web_browser.py                 # Pages, téléphone, HTMX, thème et agenda dans Chromium

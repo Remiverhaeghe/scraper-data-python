@@ -9,7 +9,9 @@ Pris en charge : QCM, calculs avec unité, remises en ordre et associations, sch
 SVG, extraits de code, guides pratiques, répétition espacée (boîtes de Leitner),
 examen blanc chronométré (tous thèmes ou un thème), synchronisation automatique à
 l'ouverture, au retour dans l'application et toutes les dix réponses, rappel
-quotidien à 18 h 30 avec le nombre de questions à revoir.
+quotidien à 18 h 30 avec le nombre de questions à revoir, recherche du serveur sur
+le Wi-Fi (bouton de l'écran de connexion, et automatiquement quand son adresse
+change), schémas en plein écran tournés pour la longueur du téléphone.
 
 ## Installation des outils (une fois)
 
@@ -131,6 +133,7 @@ mobile/
 │   │   └── exam.dart             # Examen blanc : tirage, durée conseillée, résultat
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
+│   │   ├── discovery.dart        # Recherche du serveur sur le réseau local
 │   │   ├── revision_store.dart   # Interface du stockage local et réglages du serveur
 │   │   ├── file_store.dart       # Fichiers JSON et jeton dans le stockage chiffré
 │   │   └── reminders.dart        # Rappel quotidien par notification locale
@@ -142,7 +145,7 @@ mobile/
 │   │   └── guide_screen.dart     # Guide pratique d'un thème
 │   └── widgets/
 │       ├── question_input.dart   # Saisie selon le type de question
-│       └── question_parts.dart   # Code, schéma SVG et résultat corrigé
+│       └── question_parts.dart   # Code, schéma SVG plein écran et résultat corrigé
 └── test/
     ├── support/sample_data.dart  # Contenu d'exemple et stockage en mémoire
     ├── grading_test.dart         # Teste la correction de chaque type
@@ -150,6 +153,8 @@ mobile/
     ├── revision_state_test.dart  # Teste les réponses hors ligne et la synchronisation
     ├── exam_and_sync_test.dart   # Teste l'examen, l'envoi automatique et le rappel
     ├── shared_cases_test.dart    # Teste les cas communs avec le serveur
+    ├── discovery_test.dart       # Teste la recherche du serveur sur le Wi-Fi
+    ├── schema_view_test.dart     # Teste la description et le plein écran des schémas
     └── widget_test.dart          # Teste l'accueil et une question corrigée
 ```
 

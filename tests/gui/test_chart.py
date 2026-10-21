@@ -59,6 +59,22 @@ def test_bar_chart_independent_scales(qt_application):
     assert [vValue for vValue, _ in vChart.get_scale()] == [400]
 
 
+def test_bar_chart_caps_scale_above_an_outlier(qt_application):
+    """Vérifie qu'un pic isolé n'écrase pas les autres barres."""
+
+    vChart = BarChart()
+    vChart.set_series(
+        ["15/10", "16/10", "17/10"],
+        [("Offres", "#3B82F6", [1736, 40, 12])],
+        pIndependentScales=True,
+    )
+
+    assert vChart.get_maximum([1736, 40, 12]) == 60
+    assert vChart.get_maximum([50, 40, 12]) == 50
+    assert vChart.get_scale() == [(60, "#3B82F6")]
+    assert not render(vChart).isNull()
+
+
 @pytest.mark.parametrize(
     "pShares",
     [[("Adzuna", 3, "#3B82F6"), ("Jooble", 1, "#F59E0B")], []],

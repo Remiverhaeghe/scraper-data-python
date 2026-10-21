@@ -6,6 +6,8 @@ import pytest
 
 from job.mobile_sync import (
     MAX_SYNC_ANSWERS,
+    build_connection_png,
+    build_connection_svg,
     build_progress,
     build_quiz_package,
     check_mobile_token,
@@ -138,3 +140,13 @@ def test_mobile_token_is_created_checked_and_renewed(database_file):
 
     assert not check_mobile_token(database_file, vFirst)
     assert check_mobile_token(database_file, vSecond)
+
+
+def test_connection_qr_code_in_svg_and_png():
+    """Vérifie le QR code de connexion, en SVG pour le web et en PNG pour le PC."""
+
+    vSvg = build_connection_svg("http://192.168.1.80:8000/api/v1", "secret")
+    vPng = build_connection_png("http://192.168.1.80:8000/api/v1", "secret")
+
+    assert vSvg.startswith("<svg") and "secret" not in vSvg
+    assert vPng.startswith(b"\x89PNG")

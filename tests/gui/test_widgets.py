@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import QEvent, QSettings, Qt
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QGridLayout, QLabel, QWidget
 
 from gui.widgets import CardHeader, TileButton, create_card
 
@@ -24,6 +24,35 @@ def test_collapsible_card_remembers_state(qt_application):
     _, vOtherLayout = create_card("Niveaux", pKey="test")
 
     assert vOtherLayout.parentWidget().isHidden()
+
+
+def test_collapsed_card_shrinks_in_a_grid(qt_application):
+    """Vérifie qu'une carte repliée ne garde pas la hauteur de sa voisine."""
+
+    QSettings().remove("collapsed/repli")
+    vPage = QWidget()
+    vGrid = QGridLayout(vPage)
+    vCard, vLayout = create_card("Par source", pKey="repli")
+    vLayout.addWidget(QLabel("Contenu"))
+    vNeighbour, vNeighbourLayout = create_card("Par type de poste")
+    vNeighbourLayout.addWidget(QLabel("Tableau"), 1)
+    vNeighbour.setMinimumHeight(300)
+    vGrid.addWidget(vCard, 0, 0)
+    vGrid.addWidget(vNeighbour, 0, 1)
+    vPage.show()
+
+    vCard.findChild(CardHeader).clicked.emit()
+    qt_application.processEvents()
+
+    assert vCard.height() < vNeighbour.height() / 2
+
+    vCard.findChild(CardHeader).clicked.emit()
+    qt_application.processEvents()
+
+    assert vCard.height() == vNeighbour.height()
+
+    vPage.close()
+    QSettings().remove("collapsed/repli")
 
 
 def test_tile_button_states_and_keyboard(qt_application):

@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pandas as pd
 import pytest
+from PySide6.QtCore import QSettings
 
 import gui.offer_assistant as offer_assistant
 import gui.offer_attachments as offer_attachments
@@ -685,3 +686,22 @@ def test_detail_offers_translation_and_limits_company_info(
     vPanel.translate_button.click()
 
     assert "translate.google.com" in vOpened[0].toString()
+
+
+def test_detail_can_be_hidden_at_once(offers_page):
+    """Vérifie que toute la fiche se masque d'un clic et le reste à la réouverture."""
+
+    QSettings().remove(offers_page_module.DETAIL_HIDDEN_KEY)
+    offers_page.set_detail_visible(True)
+
+    offers_page.detail_button.click()
+
+    assert offers_page.detail_panel.isHidden()
+    assert offers_page.detail_button.text() == "Afficher la fiche"
+    assert QSettings().value(offers_page_module.DETAIL_HIDDEN_KEY, type=bool)
+
+    offers_page.detail_button.click()
+
+    assert not offers_page.detail_panel.isHidden()
+
+    QSettings().remove(offers_page_module.DETAIL_HIDDEN_KEY)

@@ -1,5 +1,6 @@
 """Entonnoir des candidatures : envoyées, réponses, entretiens puis acceptées"""
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
@@ -15,6 +16,7 @@ from gui.widgets import clear_layout, create_card
 STAGE_ACCENTS = ("blue", "green", "amber", "purple")
 
 LABEL_WIDTH = 90
+BAR_HEIGHT = 24
 
 
 class FunnelPanel(QWidget):
@@ -55,9 +57,12 @@ class FunnelPanel(QWidget):
             vBar = QProgressBar()
             vBar.setValue(vStage["share"])
             vBar.setFormat(f"{vStage['count']}  ·  {vStage['share']} %")
+            # Hauteur fixée hors feuille de style : la grille la prend en compte et
+            # ne coupe plus la dernière barre.
+            vBar.setFixedHeight(BAR_HEIGHT)
             vBar.setStyleSheet(
                 f"QProgressBar {{ background: {vBackground}; border: none; "
-                "border-radius: 6px; min-height: 22px; text-align: center; }}"
+                "border-radius: 6px; text-align: center; }}"
                 f"QProgressBar::chunk {{ background: {vColor}; border-radius: 6px; }}"
             )
 
@@ -68,6 +73,7 @@ class FunnelPanel(QWidget):
             )
             vConversion.setObjectName("cardSubtitle")
 
-            self.rows_layout.addWidget(vLabel, vRow, 0)
-            self.rows_layout.addWidget(vBar, vRow, 1)
-            self.rows_layout.addWidget(vConversion, vRow, 2)
+            vMiddle = Qt.AlignmentFlag.AlignVCenter
+            self.rows_layout.addWidget(vLabel, vRow, 0, vMiddle)
+            self.rows_layout.addWidget(vBar, vRow, 1, vMiddle)
+            self.rows_layout.addWidget(vConversion, vRow, 2, vMiddle)

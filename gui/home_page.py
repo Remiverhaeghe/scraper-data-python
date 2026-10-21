@@ -42,7 +42,7 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-HOME_CHART_MIN_HEIGHT = 110
+HOME_CHART_MIN_HEIGHT = 170
 
 
 # Icône de chaque tonalité d'exécution

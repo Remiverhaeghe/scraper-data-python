@@ -41,6 +41,9 @@ logger = get_logger(__name__)
 # Hauteur du graphique : barres et noms des champs lisibles sans se chevaucher
 CHART_HEIGHT = 300
 
+# Marge autour du titre d'une colonne, flèche de tri comprise
+HEADER_PADDING = 28
+
 
 def set_bold(pItem, pBold):
     """Met en gras une cellule du tableau, pour la ligne du total par exemple."""
@@ -201,6 +204,18 @@ class QualityPage(QWidget):
             ["Source", "Offres", "Moyenne"] + pReport["columns"]
         )
         self.table.setRowCount(len(vRows))
+
+        # Colonnes étirées, mais jamais plus étroites que leur titre ; la source
+        # prend la largeur de son nom le plus long.
+        vHeader = self.table.horizontalHeader()
+        vHeader.setMinimumSectionSize(
+            max(
+                vHeader.fontMetrics().horizontalAdvance(vTitle)
+                for vTitle in pReport["columns"] + ["Moyenne"]
+            )
+            + HEADER_PADDING
+        )
+        vHeader.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
 
         for vRow, vSource in enumerate(vRows):
             vTotal = vRow == len(vRows) - 1

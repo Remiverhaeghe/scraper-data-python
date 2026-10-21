@@ -168,6 +168,11 @@ def create_card(pTitle=None, pSubtitle=None, pIcon=None, pKey=None, pActions=())
         """Affiche ou replie le contenu de la carte."""
         vContent.setHidden(not pOpen)
         vHeader.set_open(pOpen)
+        # Repliée, la carte ne se laisse plus étirer à la hauteur de ses voisines.
+        vCard.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Preferred if pOpen else QSizePolicy.Policy.Maximum,
+        )
 
     def toggle():
         """Inverse l'état du contenu et le mémorise."""

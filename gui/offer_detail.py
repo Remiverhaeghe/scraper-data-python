@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QStackedWidget,
     QTextBrowser,
     QVBoxLayout,
@@ -49,6 +50,9 @@ logger = get_logger(__name__)
 # Clé, libellé et icône des informations affichées sous le titre de l'offre
 # Au-delà, une liste déborderait du panneau de largeur fixe : le reste est en infobulle.
 MAX_LIST_VALUES = 4
+
+# Place de la barre de défilement à côté d'une colonne de largeur fixe
+COLUMN_SCROLL_MARGIN = 20
 
 INFO_ROWS = (
     ("location", "Lieu", "map-pin"),
@@ -114,6 +118,23 @@ def describe_duplicates(pGroup):
     rHtml = "<br>".join(vRows) + (f"<br><i>{vDecision}</i>" if vDecision else "")
 
     return rHtml
+
+
+def create_column_scroll(pColumn):
+    """Place une colonne de la fiche dans une zone qui défile s'il manque de hauteur.
+
+    Sans défilement, la hauteur minimale de la colonne écraserait le tableau des
+    offres au-dessus, ou ses champs seraient tronqués.
+    """
+
+    rScroll = QScrollArea()
+    rScroll.setWidget(pColumn)
+    rScroll.setWidgetResizable(True)
+    rScroll.setFixedWidth(pColumn.width() + COLUMN_SCROLL_MARGIN)
+    rScroll.setFrameShape(QFrame.Shape.NoFrame)
+    rScroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+    return rScroll
 
 
 class OfferDetailPanel(QWidget):
@@ -204,7 +225,13 @@ class OfferDetailPanel(QWidget):
         vSummary.addWidget(self.assistant)
         vSummary.addWidget(self.create_duplicates_group())
         vSummary.addSpacing(6)
-        vSummary.addLayout(vInfos)
+        # Bloc centré sous les boutons, à la largeur de sa ligne la plus longue
+        vInfosBlock = QWidget()
+        vInfosBlock.setLayout(vInfos)
+        vInfosBlock.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
+        vSummary.addWidget(vInfosBlock, 0, Qt.AlignmentFlag.AlignHCenter)
         vSummary.addStretch()
 
         vContent = QWidget()
@@ -212,20 +239,9 @@ class OfferDetailPanel(QWidget):
         vContentLayout = QHBoxLayout(vContent)
         vContentLayout.setContentsMargins(0, 12, 0, 0)
         vContentLayout.setSpacing(16)
-        # Le résumé défile s'il manque de hauteur : sans cela, sa hauteur minimale
-        # écraserait le tableau des offres au-dessus.
-        vSummaryScroll = QScrollArea()
-        vSummaryScroll.setWidget(vSummaryWidget)
-        vSummaryScroll.setWidgetResizable(True)
-        vSummaryScroll.setFixedWidth(360)
-        vSummaryScroll.setFrameShape(QFrame.Shape.NoFrame)
-        vSummaryScroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
-
-        vContentLayout.addWidget(vSummaryScroll)
+        vContentLayout.addWidget(create_column_scroll(vSummaryWidget))
         vContentLayout.addWidget(vDescriptionCard, 1)
-        vContentLayout.addWidget(self.application)
+        vContentLayout.addWidget(create_column_scroll(self.application))
 
         # Page 0 : aucune offre choisie, page 1 : détail de l'offre
         self.stack = QStackedWidget()

@@ -7,6 +7,7 @@ import pytest
 from storage.database import (
     MIGRATIONS,
     connect_database,
+    get_database_version,
     get_schema_version,
     initialize_database,
     count_by_day,
@@ -348,3 +349,20 @@ def test_migration_to_v9_computes_fingerprints(tmp_path):
         vConnection.close()
 
     assert vFingerprint == "developpeur java|acme|lille"
+
+
+def test_database_version_changes_with_each_write(tmp_path):
+    """Vérifie que l'empreinte change après une écriture validée."""
+
+    vDatabaseFile = tmp_path / "base.db"
+
+    assert get_database_version(vDatabaseFile) is None
+
+    initialize_database(vDatabaseFile)
+    vBefore = get_database_version(vDatabaseFile)
+
+    with connect_database(vDatabaseFile) as vConnection:
+        vConnection.execute("CREATE TABLE essai (valeur TEXT)")
+        vConnection.execute("INSERT INTO essai VALUES ('x')")
+
+    assert get_database_version(vDatabaseFile) != vBefore

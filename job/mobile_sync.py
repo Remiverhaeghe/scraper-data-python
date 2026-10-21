@@ -7,9 +7,12 @@ recalcule alors chaque correction : il ne se fie pas au téléphone.
 """
 
 import hashlib
+import io
 import json
 import re
 from datetime import datetime, timedelta
+
+import segno
 
 from job.access_tokens import check_access_token, get_access_token, renew_access_token
 from job.quiz import (
@@ -75,6 +78,43 @@ def renew_mobile_token(pDatabaseFile):
     logger.info("Nouveau jeton de l'application mobile créé")
 
     return rToken
+
+
+def build_connection_qr(pAddress, pToken):
+    """Retourne le QR code de connexion du téléphone : adresse de l'API et jeton.
+
+    Le contenu est un petit JSON que l'application lit au scan ; le QR code ne
+    s'affiche qu'à la demande, puisqu'il donne accès aux révisions.
+    """
+
+    vPayload = json.dumps({"address": pAddress, "token": pToken}, separators=(",", ":"))
+
+    rQrCode = segno.make(vPayload, error="m")
+
+    return rQrCode
+
+
+def build_connection_svg(pAddress, pToken):
+    """Retourne le QR code de connexion en SVG, pour la page web."""
+
+    rSvg = build_connection_qr(pAddress, pToken).svg_inline(
+        scale=5, dark="#0f172a", light="#ffffff"
+    )
+
+    return rSvg
+
+
+def build_connection_png(pAddress, pToken):
+    """Retourne le QR code de connexion en PNG, pour l'application de bureau."""
+
+    vBuffer = io.BytesIO()
+    build_connection_qr(pAddress, pToken).save(
+        vBuffer, kind="png", scale=6, dark="#0f172a", light="#ffffff"
+    )
+
+    rPng = vBuffer.getvalue()
+
+    return rPng
 
 
 def check_mobile_token(pDatabaseFile, pToken):

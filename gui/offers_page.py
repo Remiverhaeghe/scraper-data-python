@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from PySide6.QtCore import QSortFilterProxyModel, Qt, QTimer
+from PySide6.QtCore import QSettings, QSortFilterProxyModel, Qt, QTimer
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -25,11 +25,13 @@ from PySide6.QtWidgets import (
 )
 
 from config import EXPIRY_DAYS
+from gui.icons import get_icon
 from gui.offer_detail import OfferDetailPanel
 from gui.offer_form import ManualOfferDialog
 from gui.offers_model import COLUMNS, SORT_ROLE, OffersTableModel
 from gui.theme import COLORS
 from gui.widgets import (
+    FlowLayout,
     align_spin_box,
     create_button,
     create_icon_label,
@@ -81,6 +83,10 @@ PRESET_STATUSES = {"applied_offers": "APPLIED", "follow_ups": FOLLOW_UP_FILTER}
 SEARCH_DELAY_MS = 300
 
 
+# Réglage qui garde la fiche masquée d'une ouverture à l'autre
+DETAIL_HIDDEN_KEY = "offers/detail_hidden"
+
+
 def create_salary_spin(pEmptyText, pSuffix):
     """Crée un champ de salaire net mensuel ; 0 signifie aucune borne."""
 
@@ -89,6 +95,11 @@ def create_salary_spin(pEmptyText, pSuffix):
     rSpin.setSingleStep(100)
     rSpin.setSuffix(pSuffix)
     rSpin.setSpecialValueText(pEmptyText)
+    # La marge du texte n'entre pas dans la taille calculée par Qt : sans elle,
+    # « Salaire minimum » s'affichait tronqué.
+    rSpin.setMinimumWidth(
+        rSpin.sizeHint().width() + rSpin.lineEdit().textMargins().left()
+    )
 
     return rSpin
 
@@ -140,9 +151,24 @@ class OffersPage(QWidget):
         vSplitter.addWidget(self.table)
         vSplitter.addWidget(self.detail_panel)
         vSplitter.setSizes([500, 300])
+        # Le tableau garde quelques lignes visibles, même quand la fiche est haute.
+        self.table.setMinimumHeight(220)
+        vSplitter.setCollapsible(0, False)
+        vSplitter.setStretchFactor(0, 3)
+        vSplitter.setStretchFactor(1, 2)
 
         self.count_label = QLabel()
         self.count_label.setObjectName("pageSubtitle")
+
+        self.detail_button = create_button("", pIconColor=COLORS["primary"])
+        self.detail_button.clicked.connect(self.toggle_detail)
+        self.set_detail_visible(
+            not QSettings().value(DETAIL_HIDDEN_KEY, False, type=bool)
+        )
+
+        vCountRow = QHBoxLayout()
+        vCountRow.addWidget(self.count_label, 1)
+        vCountRow.addWidget(self.detail_button)
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(32, 28, 32, 28)
@@ -164,8 +190,26 @@ class OffersPage(QWidget):
 
         vLayout.addLayout(self.create_filters())
         vLayout.addWidget(self.results_banner)
-        vLayout.addWidget(self.count_label)
+        vLayout.addLayout(vCountRow)
         vLayout.addWidget(vSplitter, 1)
+
+    def set_detail_visible(self, pVisible):
+        """Affiche ou masque toute la fiche de l'offre, au profit du tableau."""
+        self.detail_panel.setVisible(pVisible)
+        self.detail_button.setText(
+            "Masquer la fiche" if pVisible else "Afficher la fiche"
+        )
+        self.detail_button.setIcon(
+            get_icon(
+                "chevron-down" if pVisible else "chevron-up", COLORS["primary"], 18
+            )
+        )
+
+    def toggle_detail(self):
+        """Inverse l'affichage de la fiche et le mémorise."""
+        vVisible = self.detail_panel.isHidden()
+        self.set_detail_visible(vVisible)
+        QSettings().setValue(DETAIL_HIDDEN_KEY, not vVisible)
 
     def create_filters(self):
         """Construit la barre de filtres, appliqués dès leur modification."""
@@ -266,8 +310,9 @@ class OffersPage(QWidget):
         vSearchRow.addWidget(self.status_combo)
         vSearchRow.addWidget(self.match_combo)
 
-        vOptionsRow = QHBoxLayout()
-        vOptionsRow.setSpacing(16)
+        # Passe à la ligne faute de place : une seule rangée écrasait les listes
+        # au point de tronquer leur texte.
+        vOptionsRow = FlowLayout(12)
         for vWidget in (
             self.contract_combo,
             self.availability_combo,
@@ -282,8 +327,6 @@ class OffersPage(QWidget):
             self.preferred_check,
         ):
             vOptionsRow.addWidget(vWidget)
-
-        vOptionsRow.addStretch()
 
         rLayout = QVBoxLayout()
         rLayout.setSpacing(10)

@@ -1,6 +1,6 @@
 """Histogramme et camembert dessinés avec QPainter"""
 
-from PySide6.QtCore import QRectF, Qt
+from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
@@ -21,6 +21,12 @@ LEGEND_GAP = 20
 
 # En dessous de cette largeur par groupe de barres, un libellé sur deux est affiché
 MIN_LABEL_WIDTH = 40
+
+# Une valeur plus de OUTLIER_RATIO fois supérieure à la suivante (un premier import,
+# par exemple) écraserait les autres barres : l'échelle s'arrête alors à
+# OUTLIER_SCALE fois la suivante, et la barre coupée affiche sa valeur.
+OUTLIER_RATIO = 3
+OUTLIER_SCALE = 1.5
 
 # Largeur maximale d'un jour : avec peu de jours, les barres restent à gauche
 # au lieu de s'étaler sur toute la largeur.
@@ -131,7 +137,19 @@ class BarChart(QWidget):
             else [vValue for _, _, vSeries in self.series for vValue in vSeries]
         )
 
-        rMaximum = max(vValues, default=0) or 1
+        vSorted = sorted(vValues, reverse=True)
+        rMaximum = (vSorted[0] if vSorted else 0) or 1
+
+        # Seulement entre les valeurs d'une même série : deux séries d'ordres de
+        # grandeur différents sur une échelle commune ne sont pas un pic isolé.
+        vOneSeries = self.independent_scales or len(self.series) <= 1
+
+        if (
+            vOneSeries
+            and len(vSorted) > 1
+            and 0 < vSorted[1] * OUTLIER_RATIO < vSorted[0]
+        ):
+            rMaximum = round(vSorted[1] * OUTLIER_SCALE)
 
         return rMaximum
 
@@ -142,7 +160,7 @@ class BarChart(QWidget):
         """
         rScale = (
             [
-                (max(vValues), vColor)
+                (self.get_maximum(vValues), vColor)
                 for _, vColor, vValues in self.series
                 if any(vValues)
             ]
@@ -247,7 +265,11 @@ class BarChart(QWidget):
                 for vSeriesIndex, (_, vColor, vValues) in enumerate(self.series):
                     vValue = vValues[vIndex]
                     vMaximum = self.get_maximum(vValues)
-                    vHeight = max(vChartHeight * vValue / vMaximum, 3 if vValue else 2)
+                    vCut = vValue > vMaximum
+                    vHeight = max(
+                        vChartHeight * min(vValue, vMaximum) / vMaximum,
+                        3 if vValue else 2,
+                    )
                     vLeft = vGroupLeft + vSeriesIndex * vBarWidth
 
                     vPainter.setPen(Qt.PenStyle.NoPen)
@@ -261,7 +283,16 @@ class BarChart(QWidget):
                         3,
                     )
 
-                    if vValue and not vHasLegend:
+                    if vCut:
+                        # Deux traits blancs en biais signalent la barre coupée.
+                        vPainter.setPen(QPen(QColor("#ffffff"), 2))
+                        for vOffset in (10, 16):
+                            vPainter.drawLine(
+                                QPointF(vLeft, vTop + vOffset + 3),
+                                QPointF(vLeft + vBarWidth, vTop + vOffset - 3),
+                            )
+
+                    if vValue and (vCut or not vHasLegend):
                         vPainter.setPen(QColor(COLORS["heading"]))
                         vPainter.drawText(
                             QRectF(

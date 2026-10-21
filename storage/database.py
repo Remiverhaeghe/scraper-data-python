@@ -29,6 +29,24 @@ def connect_database(pDatabasePath):
     return rConnection
 
 
+def get_database_version(pDatabasePath):
+    """Retourne une empreinte qui change à chaque écriture validée, ou None.
+
+    En journal classique (sans WAL), chaque écriture validée modifie la date et la
+    taille du fichier, quel que soit le processus : bureau, web ou planificateur.
+    """
+
+    try:
+        vStat = Path(pDatabasePath).stat()
+
+    except OSError:
+        return None
+
+    rVersion = (vStat.st_mtime_ns, vStat.st_size)
+
+    return rVersion
+
+
 def migrate_to_v1(pConnection):
     """Crée les tables des offres, des candidatures et de l'historique."""
 
