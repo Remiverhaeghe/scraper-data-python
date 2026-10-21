@@ -1,0 +1,15 @@
+<div id="offer-description">
+    {% if translated %}
+    <button class="button" type="button" hx-get="{{ translation_url }}&original=1" hx-target="#offer-description" hx-swap="outerHTML">{{ icon("languages", 16) }} Texte d'origine</button>
+    {% elif can_translate %}
+    <button class="button" type="button" hx-get="{{ translation_url }}" hx-target="#offer-description" hx-swap="outerHTML" hx-disabled-elt="this" title="Traduit la description sur le serveur, hors ligne">{{ icon("languages", 16) }} Traduire en français<span class="htmx-indicator"> : traduction en cours…</span></button>
+    {% elif translate_url %}
+    <a class="button" href="{{ translate_url }}" target="_blank" rel="noopener noreferrer" title="Ouvre la description dans Google Traduction">{{ icon("languages", 16) }} Traduire en français</a>
+    {% endif %}
+    {% if translation_message %}<p class="application-message tone-danger" role="status">{{ translation_message }}</p>{% endif %}
+    {% if description %}
+    <p class="offer-description">{{ description }}</p>
+    {% else %}
+    <p class="muted">Aucune description fournie par la source.</p>
+    {% endif %}
+</div>

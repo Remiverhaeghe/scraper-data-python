@@ -341,6 +341,33 @@ def get_offers(pDatabaseFile, pLimit=None, **pFilters):
     return rOffers
 
 
+def get_offers_to_check(pDatabaseFile):
+    """Retourne les seuls champs contrôlés par la page Qualité, pour chaque offre.
+
+    Sans pandas ni description complète : le contrôle de toutes les offres
+    reste immédiat. description vaut 1 si elle est renseignée, 0 sinon.
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+    vConnection.row_factory = sqlite3.Row
+
+    try:
+        vRows = vConnection.execute("""
+            SELECT source, source_id, title, company, location, remote,
+                   salary_label, salary_min, salary_max, url,
+                   (description IS NOT NULL AND description <> '') AS description
+            FROM job_offer
+            ORDER BY first_seen_at DESC, published_at DESC
+            """).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rOffers = [dict(vRow) for vRow in vRows]
+
+    return rOffers
+
+
 def count_offers(pDatabaseFile, **pFilters):
     """Compte les offres correspondant aux mêmes filtres que get_offers."""
 

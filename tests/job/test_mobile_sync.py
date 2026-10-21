@@ -114,6 +114,11 @@ def test_late_answers_keep_their_place_in_history(database_file):
 
     assert vProgress["questions"]["sql-null"]["last_correct"] is True
     assert vProgress["statistics"]["answers"] == 2
+    assert vProgress["statistics"]["days"][-1] == {
+        "date": NOW.date().isoformat(),
+        "answers": 1,
+        "correct": 1,
+    }
 
 
 def test_sync_refuses_invalid_batches(database_file):

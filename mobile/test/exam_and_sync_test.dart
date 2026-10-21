@@ -150,6 +150,24 @@ void main() {
     expect(vState.reminderEnabled, isFalse);
   });
 
+  test('Apparence et taille du texte gardées, valeur inconnue ignorée', () async {
+    final vState = await buildState(MockClient((_) async => http.Response('', 500)));
+
+    expect(vState.appearance, 'system');
+    expect(vState.textScale, 1.0);
+
+    await vState.setDisplay(pAppearance: 'dark', pTextScale: 1.3);
+
+    expect(vState.appearance, 'dark');
+    expect(vState.textScale, 1.3);
+    expect((vState.store as MemoryRevisionStore).preferences[appearancePreference], 'dark');
+
+    vState.preferences = {appearancePreference: 'violet', textScalePreference: 9};
+
+    expect(vState.appearance, 'system');
+    expect(vState.textScale, 1.0);
+  });
+
   test('Notifications refusées : le rappel reste coupé', () async {
     final vState = await buildState(
       MockClient((_) async => http.Response('', 500)),

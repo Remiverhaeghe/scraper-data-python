@@ -217,6 +217,12 @@ def build_progress(pDatabaseFile, pNow):
             "answers": vStatistics["answers"],
             "rate": vStatistics["rate"],
             "streak": vStatistics["streak"],
+            # Activité des derniers jours, pour le graphique du téléphone ; un
+            # ancien téléphone ignore ce champ.
+            "days": [
+                {"date": vDay.isoformat(), "answers": vCount, "correct": vCorrect}
+                for vDay, vCount, vCorrect in vStatistics["days"]
+            ],
         },
     }
 

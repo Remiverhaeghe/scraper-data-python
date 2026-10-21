@@ -81,6 +81,7 @@ from job.quiz_exam import build_exam_history, describe_exam_results, load_exam_r
 from job.settings import load_settings
 from job.sources.registry import SOURCES
 from job.star_answers import load_star_answers
+from job.translation import can_translate, translate_to_french
 from storage.attachments import ALLOWED_EXTENSIONS, get_attachments
 from storage.duplicates import get_decisions, save_decision
 from storage.interview_notes import get_interview_notes
@@ -387,7 +388,7 @@ def show_offer(
             "availability_labels": AVAILABILITY_LABELS,
             "availability_tones": AVAILABILITY_TONES,
             "availability_help": AVAILABILITY_HELP,
-            "translate_url": build_translate_url(vPrepared.get("description")),
+            **build_description_context(vPrepared),
             "company_lookup": can_lookup_company(vPrepared),
             "offer": vPrepared,
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
@@ -479,6 +480,56 @@ def show_company_info(
         vContext["chatgpt_url"] = CHATGPT_URL
 
     rResponse = templates.TemplateResponse(request, "_company_info.html", vContext)
+
+    return rResponse
+
+
+def build_description_context(pOffer, pTranslated=False):
+    """Retourne ce qu'il faut pour le bouton de traduction de la description."""
+
+    vDescription = pOffer.get("description")
+    vTranslateUrl = build_translate_url(vDescription)
+
+    rContext = {
+        "translate_url": vTranslateUrl,
+        "can_translate": bool(vTranslateUrl) and can_translate(vDescription),
+        "translated": pTranslated,
+        "translation_url": (
+            f"{router.url_path_for('show_translation')}"
+            f"?source={quote(pOffer['source'])}&id={quote(str(pOffer['source_id']))}"
+        ),
+    }
+
+    return rContext
+
+
+@router.get("/offer/translation", response_class=HTMLResponse)
+def show_translation(
+    request: Request,
+    pSource: str = Query(alias="source"),
+    pSourceId: str = Query(alias="id"),
+    pOriginal: bool = Query(False, alias="original"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Remplace la description par sa traduction hors ligne, ou la rétablit."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    vDescription = vOffer.get("description")
+    vContext = {
+        **build_description_context(vOffer),
+        "description": vDescription,
+        "translation_message": None,
+    }
+
+    if not pOriginal:
+        try:
+            vContext["description"] = translate_to_french(vDescription)
+            vContext["translated"] = True
+
+        except ValueError as vException:
+            vContext["translation_message"] = str(vException)
+
+    rResponse = templates.TemplateResponse(request, "_offer_description.html", vContext)
 
     return rResponse
 

@@ -250,12 +250,7 @@
 
         <article class="card">
             <h2>Description</h2>
-            {% if translate_url %}<a class="button" href="{{ translate_url }}" target="_blank" rel="noopener noreferrer" title="Ouvre la description dans Google Traduction">{{ icon("languages", 16) }} Traduire en français</a>{% endif %}
-            {% if offer.description %}
-            <p class="offer-description">{{ offer.description }}</p>
-            {% else %}
-            <p class="muted">Aucune description fournie par la source.</p>
-            {% endif %}
+            {% with description = offer.description %}{% include "_offer_description.html" %}{% endwith %}
         </article>
     </div>
 

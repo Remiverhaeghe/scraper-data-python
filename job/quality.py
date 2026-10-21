@@ -4,9 +4,13 @@ import csv
 import io
 
 from job.export import protect_formula
-from job.presentation import clean_missing_values, get_source_label
+from job.presentation import get_source_label
 from storage.history_repository import get_history
-from storage.job_offers import QUALITY_COLUMNS, count_filled_fields, get_offers
+from storage.job_offers import (
+    QUALITY_COLUMNS,
+    count_filled_fields,
+    get_offers_to_check,
+)
 
 # Libellé affiché pour chaque colonne mesurée, dans l'ordre de QUALITY_COLUMNS
 QUALITY_LABELS = {
@@ -70,8 +74,8 @@ def count_problems(pDatabaseFile):
     vKinds = {}
     vTotal = 0
 
-    for vOffer in get_offers(pDatabaseFile).to_dict("records"):
-        vProblems = find_problems(clean_missing_values(vOffer))
+    for vOffer in get_offers_to_check(pDatabaseFile):
+        vProblems = find_problems(vOffer)
 
         if vProblems:
             vTotal += 1
@@ -234,8 +238,7 @@ def build_quality_export(pDatabaseFile):
     vWriter = csv.writer(vOutput, delimiter=";")
     vWriter.writerow(EXPORT_COLUMNS)
 
-    for vOffer in get_offers(pDatabaseFile).to_dict("records"):
-        vOffer = clean_missing_values(vOffer)
+    for vOffer in get_offers_to_check(pDatabaseFile):
         vProblems = find_problems(vOffer)
 
         if vProblems:

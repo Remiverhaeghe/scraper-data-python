@@ -2074,3 +2074,38 @@ def test_menu_alerts_badge(client):
 
     assert ">1</span>" in vBadge
     assert "1 relance(s) à faire" in vBadge
+
+
+def test_offer_description_translated_in_place(client, monkeypatch):
+    """Vérifie la traduction sur place de la description, puis le retour au texte."""
+
+    monkeypatch.setattr(web_offers, "can_translate", lambda _pText: True)
+    monkeypatch.setattr(
+        web_offers, "translate_to_french", lambda _pText: "Nous recherchons"
+    )
+    vOfferUrl = client.post(
+        "/offers/new",
+        data={
+            "title": "Entwickler",
+            "company": "GmbH",
+            "url": "https://de.example",
+            "description": "Wir suchen neue Mitarbeiter für unser Team in Berlin",
+        },
+        follow_redirects=False,
+    ).headers["location"]
+    vSourceId = vOfferUrl.rsplit("=", 1)[1]
+
+    assert 'hx-get="/offer/translation?source=manual' in client.get(vOfferUrl).text
+
+    vParams = {"source": "manual", "id": vSourceId}
+    vTranslated = client.get("/offer/translation", params=vParams).text
+
+    assert "Nous recherchons" in vTranslated and "Texte d'origine" in vTranslated
+
+    vOriginal = client.get("/offer/translation", params={**vParams, "original": 1})
+
+    assert "Wir suchen" in vOriginal.text
+    assert (
+        client.get("/offer/translation", params={**vParams, "id": "x"}).status_code
+        == 404
+    )

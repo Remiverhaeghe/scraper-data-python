@@ -13,6 +13,7 @@ from storage.job_offers import (
     count_offers,
     get_offer,
     get_offers,
+    get_offers_to_check,
     save_offers,
 )
 
@@ -337,3 +338,27 @@ def test_get_offers_filters_keys(tmp_path):
 
     assert get_ids(vDatabaseFile, pKeys=[("lever", "1"), ("lever", "3")]) == ["1", "3"]
     assert get_ids(vDatabaseFile, pKeys=[]) == []
+
+
+def test_offers_to_check_keep_only_checked_fields(tmp_path):
+    """Vérifie les champs lus pour la qualité : description réduite à sa présence."""
+
+    vDatabaseFile = build_database(tmp_path)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {"source": "lever", "source_id": "1", "title": "A", "description": "x"},
+                {"source": "lever", "source_id": "2", "title": "B", "description": ""},
+            ]
+        ),
+        datetime.now(),
+    )
+
+    vOffers = {
+        vOffer["source_id"]: vOffer for vOffer in get_offers_to_check(vDatabaseFile)
+    }
+
+    assert vOffers["1"]["description"] == 1
+    assert not vOffers["2"]["description"]
+    assert vOffers["1"]["title"] == "A" and vOffers["1"]["company"] is None

@@ -12,7 +12,9 @@ l'ouverture, au retour dans l'application et toutes les dix réponses, rappel
 quotidien à 18 h 30 avec le nombre de questions à revoir, connexion par le QR code
 affiché dans les Paramètres du PC ou du web, recherche du serveur sur
 le Wi-Fi (bouton de l'écran de connexion, et automatiquement quand son adresse
-change), schémas en plein écran tournés pour la longueur du téléphone.
+change), schémas en plein écran tournés pour la longueur du téléphone, statistiques
+(activité des derniers jours, réussite par thème, examens blancs), apparence
+claire ou sombre et taille du texte réglables.
 
 ## Installation des outils (une fois)
 
@@ -79,11 +81,14 @@ flutter run          # téléphone branché en USB, débogage USB activé
 ## Installation sur le téléphone
 
 ```powershell
-flutter build apk --release
+flutter build apk --release --split-per-abi
 ```
 
-Copier `build/app/outputs/flutter-apk/app-release.apk` sur le téléphone et
-l'ouvrir : Android demande d'autoriser l'installation depuis cette source.
+Un APK par type de processeur, trois fois plus léger qu'un APK commun : copier
+`build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` (presque tous les
+téléphones Android récents) sur le téléphone et l'ouvrir : Android demande
+d'autoriser l'installation depuis cette source. Les vieux téléphones 32 bits
+prennent `app-armeabi-v7a-release.apk`.
 
 ### Signature
 
@@ -131,7 +136,8 @@ mobile/
 │   ├── logic/
 │   │   ├── grading.dart          # Correction, identique à job/quiz_types.py
 │   │   ├── review.dart           # Répétition espacée, identique à job/quiz.py
-│   │   └── exam.dart             # Examen blanc : tirage, durée conseillée, résultat
+│   │   ├── exam.dart             # Examen blanc : tirage, durée conseillée, résultat
+│   │   └── statistics.dart       # Réussite par thème et activité des derniers jours
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
 │   │   ├── discovery.dart        # Recherche du serveur sur le réseau local
@@ -140,11 +146,12 @@ mobile/
 │   │   ├── file_store.dart       # Fichiers JSON et jeton dans le stockage chiffré
 │   │   └── reminders.dart        # Rappel quotidien par notification locale
 │   ├── screens/
-│   │   ├── setup_screen.dart     # Adresse du serveur, jeton et rappel quotidien
+│   │   ├── setup_screen.dart     # Serveur, jeton, apparence, taille du texte, rappel
 │   │   ├── scan_screen.dart      # Scan du QR code de connexion (caméra)
 │   │   ├── home_screen.dart      # Progression, synchronisation et thèmes par domaine
 │   │   ├── question_screen.dart  # Question, correction et suivante
 │   │   ├── exam_screen.dart      # Examen blanc chronométré et bilan
+│   │   ├── statistics_screen.dart # Statistiques de révision
 │   │   └── guide_screen.dart     # Guide pratique d'un thème
 │   └── widgets/
 │       ├── question_input.dart   # Saisie selon le type de question
@@ -158,6 +165,7 @@ mobile/
     ├── shared_cases_test.dart    # Teste les cas communs avec le serveur
     ├── discovery_test.dart       # Teste la recherche du serveur sur le Wi-Fi
     ├── connection_code_test.dart # Teste la lecture du QR code de connexion
+    ├── statistics_test.dart      # Teste la réussite par thème et le graphique des jours
     ├── schema_view_test.dart     # Teste la description et le plein écran des schémas
     └── widget_test.dart          # Teste l'accueil et une question corrigée
 ```

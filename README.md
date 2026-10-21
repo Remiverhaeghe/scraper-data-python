@@ -191,7 +191,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Recherches enregistrées : enregistrer, recharger et supprimer des critères nommés
 - [x] Qualité des données : remplissage par champ et par source, export des offres à vérifier
 - [x] Nombre d'offres à vérifier et défauts les plus fréquents, avec l'usage de l'export expliqué
-- [x] Fiche d'une offre : disponibilité en couleur, traduction d'une annonce étrangère sur place, hors ligne avec Argos Translate (Google Traduction dans le navigateur sans lui), infos entreprise réservées aux offres en France
+- [x] Fiche d'une offre : disponibilité en couleur, traduction d'une annonce étrangère sur place, sur le bureau comme sur le web, hors ligne avec Argos Translate (Google Traduction dans le navigateur sans lui), infos entreprise réservées aux offres en France
 - [x] Journaux : consultation filtrée, téléchargement et remise à zéro
 - [x] Réinitialisation des données après confirmation, base sauvegardée avant ; les questions de révision importées et leurs signalements sont conservés
 - [x] Profil du candidat et préparation de candidature : correspondance, CV, entretien, lettre
