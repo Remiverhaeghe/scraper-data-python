@@ -79,3 +79,14 @@ def test_api_answers_sync_and_progress(api):
     vTooMany = api.post("/api/v1/answers", json={"answers": [vAnswer] * 501})
 
     assert vTooMany.status_code == 400
+
+
+def test_api_ping_answers_without_token(api):
+    """Vérifie que le serveur se signale sans jeton, et sans aucune donnée."""
+
+    del api.headers["Authorization"]
+
+    vResponse = api.get("/api/v1/ping")
+
+    assert vResponse.status_code == 200
+    assert vResponse.json() == {"application": "JobBoard Perso", "api_version": 1}

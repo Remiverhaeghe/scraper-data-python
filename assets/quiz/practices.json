@@ -11,10 +11,10 @@
       "level": "débutant",
       "question": "Que dit le principe de responsabilité unique (le S de SOLID) ?",
       "choices": [
-        "Une classe ne doit avoir qu'une seule méthode",
+        "Une classe ne doit avoir qu'une seule méthode publique",
         "Une classe ne doit avoir qu'une seule raison de changer",
-        "Un projet ne doit avoir qu'un seul développeur",
-        "Une fonction ne doit être appelée qu'une fois"
+        "Un module ne doit être modifié que par un seul développeur",
+        "Une fonction ne doit être appelée qu'à un seul endroit"
       ],
       "answer": 1,
       "explanation": "Une classe qui lit un fichier, calcule et affiche change pour trois raisons différentes. En séparant ces responsabilités, chaque modification reste localisée et testable."
@@ -24,10 +24,10 @@
       "level": "confirmé",
       "question": "À quoi sert l'injection de dépendances ?",
       "choices": [
-        "À accélérer l'exécution",
-        "À fournir ses dépendances à un objet de l'extérieur, pour le découpler et le tester avec des doublures",
-        "À supprimer les interfaces",
-        "À charger les classes plus tôt"
+        "À accélérer l'exécution en créant les objets au démarrage",
+        "À fournir ses dépendances à un objet de l'extérieur, pour le découpler",
+        "À supprimer les interfaces en reliant directement les classes concrètes",
+        "À charger les classes plus tôt pour éviter les erreurs à l'exécution"
       ],
       "answer": 1,
       "explanation": "Un service qui reçoit son dépôt de données au lieu de le créer peut être testé avec un faux dépôt. C'est l'application du principe d'inversion des dépendances (le D de SOLID)."
@@ -37,10 +37,10 @@
       "level": "débutant",
       "question": "Quelle est la qualité attendue d'un test unitaire ?",
       "choices": [
-        "Qu'il teste toute l'application d'un coup",
+        "Qu'il teste toute l'application d'un coup, base de données comprise",
         "Qu'il soit rapide, isolé et reproductible, sans réseau ni base partagée",
-        "Qu'il ne contienne aucune assertion",
-        "Qu'il dépende de l'ordre d'exécution des autres tests"
+        "Qu'il couvre toutes les lignes du code, même sans aucune assertion",
+        "Qu'il s'appuie sur les données laissées par les tests exécutés avant lui"
       ],
       "answer": 1,
       "explanation": "Un test unitaire vérifie une petite unité de code ; s'il dépend du réseau ou d'autres tests, il devient lent et instable. Les tests d'intégration couvrent les échanges entre composants."
@@ -50,10 +50,10 @@
       "level": "débutant",
       "question": "À quoi sert un mock dans un test ?",
       "choices": [
-        "À remplacer une dépendance pour contrôler son comportement et vérifier son utilisation",
-        "À mesurer la couverture du code",
-        "À générer des données de production",
-        "À compiler plus vite"
+        "À remplacer une dépendance pour contrôler et vérifier son utilisation",
+        "À mesurer la couverture du code par les tests unitaires",
+        "À générer un jeu de données réalistes copié de la production",
+        "À exécuter les tests en parallèle pour compiler et tourner plus vite"
       ],
       "answer": 0,
       "explanation": "Un mock remplace par exemple un appel HTTP : le test devient rapide, reproductible, et peut simuler une erreur difficile à provoquer autrement."
@@ -63,10 +63,10 @@
       "level": "débutant",
       "question": "Que ne faut-il jamais écrire dans un journal applicatif ?",
       "choices": [
-        "L'heure d'une erreur",
+        "L'heure et le niveau de gravité d'une erreur",
         "Un mot de passe, un jeton ou une clé d'API",
-        "Le nom du module concerné",
-        "Le nombre d'éléments traités"
+        "Le nom du module concerné par le message",
+        "Le nombre d'éléments traités pendant un traitement"
       ],
       "answer": 1,
       "explanation": "Les journaux sont souvent lus, copiés ou envoyés à des outils tiers : un secret y serait exposé. On journalise le contexte utile au diagnostic, jamais les valeurs sensibles."
@@ -77,9 +77,9 @@
       "question": "Quelle différence entre les codes HTTP 401 et 403 ?",
       "choices": [
         "401 : non authentifié ; 403 : authentifié mais non autorisé",
-        "401 : page introuvable ; 403 : erreur du serveur",
-        "Ce sont deux synonymes",
-        "401 : requête trop grande ; 403 : délai dépassé"
+        "401 : page introuvable ; 403 : erreur interne du serveur",
+        "Ce sont deux synonymes, choisis selon le framework utilisé",
+        "401 : requête trop volumineuse ; 403 : délai d'attente dépassé"
       ],
       "answer": 0,
       "explanation": "401 Unauthorized invite à s'authentifier ; 403 Forbidden signifie que l'identité est connue mais n'a pas le droit d'accéder à la ressource."
@@ -102,10 +102,10 @@
       "level": "confirmé",
       "question": "Que signifie qu'une API REST est sans état (stateless) ?",
       "choices": [
-        "Qu'elle n'utilise pas de base de données",
-        "Que chaque requête contient tout ce qu'il faut pour être traitée, sans session conservée par le serveur",
-        "Qu'elle ne renvoie jamais d'erreur",
-        "Qu'elle n'accepte que GET"
+        "Qu'elle n'utilise pas de base de données pour stocker ses ressources",
+        "Que chaque requête porte tout le nécessaire, sans session côté serveur",
+        "Qu'elle ne renvoie jamais d'erreur, seulement des réponses 200",
+        "Qu'elle n'accepte que des requêtes GET, sans modification des données"
       ],
       "answer": 1,
       "explanation": "Le serveur ne garde pas de contexte entre deux requêtes : l'authentification accompagne chaque appel (jeton, cookie signé). On peut ainsi répartir les requêtes sur plusieurs serveurs."
@@ -116,9 +116,9 @@
       "question": "Que signifie DRY ?",
       "choices": [
         "Don't Repeat Yourself : une règle n'est écrite qu'à un endroit",
-        "Debug, Run, Yield",
-        "Ne jamais écrire de tests",
-        "Documenter chaque ligne"
+        "Debug, Run, Yield : les trois étapes d'un cycle de développement",
+        "Ne jamais écrire de tests en double",
+        "Documenter chaque ligne du code"
       ],
       "answer": 0,
       "explanation": "Dupliquer une règle oblige à la corriger partout. Attention à ne pas fusionner deux codes qui se ressemblent par hasard mais évolueront différemment."
@@ -128,10 +128,10 @@
       "level": "confirmé",
       "question": "Que dit le principe ouvert/fermé (le O de SOLID) ?",
       "choices": [
-        "Une classe doit être publique",
-        "On ajoute un comportement en ajoutant du code, sans modifier le code existant",
-        "Il faut fermer les fichiers ouverts",
-        "Les attributs doivent être privés"
+        "Une classe doit être publique pour être réutilisée",
+        "On étend le comportement sans modifier le code existant",
+        "Il faut fermer les fichiers et connexions ouverts après usage",
+        "Les attributs doivent être privés et exposés par des accesseurs"
       ],
       "answer": 1,
       "explanation": "Exemple : un registre de sources où l'ajout d'une source passe par un nouveau module, sans toucher au code qui les parcourt."
@@ -154,10 +154,10 @@
       "level": "débutant",
       "question": "À quoi sert une revue de code ?",
       "choices": [
-        "À noter le développeur",
-        "À partager la connaissance et repérer défauts et risques avant la fusion",
-        "À remplacer les tests",
-        "À formater le code"
+        "À noter le développeur dans son entretien annuel d'évaluation",
+        "À partager la connaissance et repérer les défauts avant la fusion",
+        "À remplacer les tests automatisés par une vérification humaine",
+        "À reformater le code selon les conventions de l'équipe avant la fusion"
       ],
       "answer": 1,
       "explanation": "La revue complète les tests : lisibilité, cas oubliés, sécurité, cohérence avec l'architecture. Le formatage, lui, s'automatise (Black, Prettier)."

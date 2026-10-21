@@ -9,8 +9,10 @@ from datetime import datetime
 
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Response
 
+from config import APPLICATION_NAME
 from job.mobile_sync import (
     API_PREFIX,
+    API_VERSION,
     build_progress,
     build_quiz_package,
     check_mobile_token,
@@ -41,6 +43,19 @@ def require_api_token(
             detail="Jeton de l'application mobile absent ou invalide.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+@router.get("/ping")
+def ping():
+    """Signale le serveur à l'application mobile qui le cherche sur le Wi-Fi.
+
+    Sans jeton : la réponse ne contient que le nom de l'application et la version
+    de l'API, aucune donnée.
+    """
+
+    rAnswer = {"application": APPLICATION_NAME, "api_version": API_VERSION}
+
+    return rAnswer
 
 
 @router.get("/quiz", dependencies=[Depends(require_api_token)])

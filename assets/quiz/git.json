@@ -10,10 +10,10 @@
       "level": "débutant",
       "question": "Quelle différence entre git fetch et git pull ?",
       "choices": [
-        "Aucune",
-        "fetch récupère les commits distants sans toucher à la branche locale ; pull les récupère puis les intègre",
-        "pull envoie les commits locaux",
-        "fetch supprime les branches distantes"
+        "Aucune : pull est seulement l'ancien nom de fetch, conservé par compatibilité",
+        "fetch récupère les commits distants sans toucher à la branche ; pull les intègre aussi",
+        "pull envoie les commits locaux au serveur, fetch récupère ceux du serveur distant",
+        "fetch supprime les branches distantes effacées, pull les recrée ensuite en local"
       ],
       "answer": 1,
       "explanation": "git pull équivaut à git fetch suivi d'un merge (ou d'un rebase selon la configuration). fetch permet de regarder les changements avant de les intégrer."
@@ -23,10 +23,10 @@
       "level": "confirmé",
       "question": "Que fait git reset --hard HEAD~1 ?",
       "choices": [
-        "Il crée un commit qui annule le précédent",
+        "Il crée un nouveau commit qui annule les changements du commit précédent",
         "Il retire le dernier commit et efface aussi les modifications non commitées",
-        "Il ne fait que déplacer HEAD, fichiers conservés",
-        "Il supprime la branche"
+        "Il déplace seulement HEAD : le commit disparaît mais les fichiers sont conservés",
+        "Il supprime la branche courante et revient sur la branche principale"
       ],
       "answer": 1,
       "explanation": "--hard remet la branche, l'index et les fichiers dans l'état du commit précédent : le travail non commité est perdu. --soft garde les modifications indexées."
@@ -36,10 +36,10 @@
       "level": "débutant",
       "question": "Comment annuler un commit déjà poussé sur une branche partagée ?",
       "choices": [
-        "git reset --hard puis git push --force",
+        "git reset --hard sur le commit précédent, puis git push --force",
         "git revert, qui crée un nouveau commit inverse",
-        "Supprimer le dépôt distant",
-        "git commit --amend"
+        "Supprimer puis recréer le dépôt distant à partir de sa copie locale",
+        "git commit --amend pour remplacer le commit fautif"
       ],
       "answer": 1,
       "explanation": "revert ajoute un commit qui annule les changements, sans réécrire l'historique : les collègues n'ont rien à réparer. Réécrire une branche partagée casse leurs copies."
@@ -49,10 +49,10 @@
       "level": "débutant",
       "question": "À quoi sert git stash ?",
       "choices": [
-        "À supprimer les fichiers non suivis",
-        "À mettre de côté les modifications en cours pour les reprendre plus tard",
-        "À créer une branche",
-        "À annuler le dernier commit"
+        "À supprimer les fichiers non suivis qui encombrent la copie de travail",
+        "À mettre de côté les modifications en cours pour plus tard",
+        "À créer une branche temporaire à partir du dernier commit poussé",
+        "À annuler le dernier commit en gardant ses changements dans l'index"
       ],
       "answer": 1,
       "explanation": "stash range les modifications non commitées et rend un répertoire propre, par exemple pour changer de branche. git stash pop les réapplique."
@@ -62,10 +62,10 @@
       "level": "confirmé",
       "question": "Pourquoi éviter de rebaser une branche déjà partagée ?",
       "choices": [
-        "Parce que rebase est plus lent que merge",
+        "Parce que rebase est plus lent que merge sur une branche avec beaucoup de commits",
         "Parce que rebase réécrit les commits : leurs identifiants changent pour les autres",
-        "Parce que rebase supprime les conflits",
-        "Parce que rebase ne fonctionne qu'en local"
+        "Parce que rebase supprime les conflits sans les montrer, au risque de perdre du code",
+        "Parce que rebase ne fonctionne qu'en local et refuse les branches déjà poussées"
       ],
       "answer": 1,
       "explanation": "Les commits rebasés sont de nouveaux commits. Ceux qui avaient récupéré les anciens se retrouvent avec deux historiques divergents à réconcilier."
@@ -75,10 +75,10 @@
       "level": "confirmé",
       "question": "Un fichier déjà suivi est ajouté au .gitignore. Que se passe-t-il ?",
       "choices": [
-        "Il est retiré du dépôt automatiquement",
+        "Il est retiré du dépôt automatiquement au prochain commit",
         "Il reste suivi : il faut le retirer de l'index avec git rm --cached",
-        "Il est supprimé du disque",
-        "Git refuse la modification du .gitignore"
+        "Il est supprimé du disque et de l'historique lors du prochain git add",
+        "Git refuse d'enregistrer le .gitignore tant que le fichier reste suivi"
       ],
       "answer": 1,
       "explanation": ".gitignore ne concerne que les fichiers non suivis. git rm --cached fichier le retire du suivi sans le supprimer du disque."
@@ -88,10 +88,10 @@
       "level": "débutant",
       "question": "Que signifie un conflit lors d'un merge ?",
       "choices": [
-        "Que le dépôt est corrompu",
+        "Que le dépôt est corrompu et doit être recloné depuis le serveur",
         "Que les mêmes lignes ont été modifiées différemment des deux côtés",
-        "Qu'une branche a été supprimée",
-        "Que le message de commit est vide"
+        "Qu'une des deux branches a été supprimée pendant la fusion",
+        "Que les deux branches ont été créées par des utilisateurs différents"
       ],
       "answer": 1,
       "explanation": "Git ne sait pas quelle version garder : il marque les zones (<<<<<<<, =======, >>>>>>>) à résoudre à la main, puis on ajoute les fichiers et on termine le merge."
@@ -101,10 +101,10 @@
       "level": "débutant",
       "question": "Que fait git commit --amend ?",
       "choices": [
-        "Il crée un nouveau commit à la suite",
-        "Il remplace le dernier commit, par exemple pour corriger son message ou ajouter un oubli",
-        "Il annule le dernier commit",
-        "Il fusionne deux branches"
+        "Il crée un nouveau commit à la suite du dernier, avec le même message",
+        "Il remplace le dernier commit, pour corriger son message ou ajouter un oubli",
+        "Il annule le dernier commit et remet ses changements dans la copie de travail",
+        "Il fusionne la branche courante avec la branche principale"
       ],
       "answer": 1,
       "explanation": "amend remplace le dernier commit par un nouveau. Comme il réécrit l'historique, on l'évite sur un commit déjà poussé."
@@ -127,10 +127,10 @@
       "level": "confirmé",
       "question": "Que fait git cherry-pick <commit> ?",
       "choices": [
-        "Il supprime le commit",
+        "Il supprime ce commit de l'historique de toutes les branches",
         "Il applique les changements de ce commit sur la branche courante",
-        "Il affiche le commit",
-        "Il renomme le commit"
+        "Il affiche le détail du commit : auteur, date et fichiers modifiés",
+        "Il renomme le commit en modifiant son message"
       ],
       "answer": 1,
       "explanation": "cherry-pick recopie un commit précis sur la branche courante, avec un nouvel identifiant : utile pour reporter un correctif sur une autre branche."
@@ -140,10 +140,10 @@
       "level": "débutant",
       "question": "Comment voir l'historique des branches de façon compacte ?",
       "choices": [
-        "git status",
+        "git status --short --branch",
         "git log --oneline --graph --all",
-        "git diff",
-        "git show"
+        "git diff --stat main...HEAD",
+        "git branch --list --verbose --all"
       ],
       "answer": 1,
       "explanation": "--oneline met un commit par ligne, --graph dessine les fusions, --all inclut toutes les branches."

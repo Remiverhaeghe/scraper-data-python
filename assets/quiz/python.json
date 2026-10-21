@@ -41,9 +41,9 @@
       "level": "débutant",
       "question": "Quelle différence entre une liste et un tuple ?",
       "choices": [
-        "Un tuple ne peut contenir qu'un seul type de valeur",
+        "Un tuple ne peut contenir qu'un seul type de valeur à la fois",
         "Un tuple n'est pas modifiable et peut servir de clé de dictionnaire",
-        "Une liste est plus rapide à créer",
+        "Une liste est plus rapide à créer et prend moins de place en mémoire",
         "Aucune, ce sont deux noms du même type"
       ],
       "answer": 1,
@@ -68,9 +68,9 @@
       "level": "débutant",
       "question": "Quel est l'intérêt de with open(\"f.txt\") as f ?",
       "choices": [
-        "Lire le fichier plus vite",
+        "Lire le fichier plus vite grâce à une mise en mémoire tampon",
         "Fermer le fichier automatiquement, même en cas d'exception",
-        "Ouvrir le fichier en écriture",
+        "Ouvrir le fichier en écriture sans écraser son contenu",
         "Charger le fichier entier en mémoire"
       ],
       "answer": 1,
@@ -95,10 +95,10 @@
       "level": "confirmé",
       "question": "Quel est l'avantage de sum(x for x in range(1_000_000)) sur sum([x for x in range(1_000_000)]) ?",
       "choices": [
-        "Le résultat est plus précis",
+        "Le résultat est plus précis sur les très grands nombres",
         "Le générateur ne construit pas la liste entière en mémoire",
-        "Il n'y a aucune différence",
-        "Le générateur s'exécute en parallèle"
+        "Il n'y a aucune différence, Python optimise les deux écritures",
+        "Le générateur s'exécute en parallèle sur plusieurs cœurs"
       ],
       "answer": 1,
       "explanation": "Une expression génératrice produit les valeurs une à une, à la demande : la mémoire utilisée reste constante, quelle que soit la taille."
@@ -108,10 +108,10 @@
       "level": "débutant",
       "question": "Pourquoi écrire if x is None plutôt que if x == None ?",
       "choices": [
-        "is est plus lisible, sans autre différence",
-        "None est un objet unique : is compare l'identité et ne peut pas être redéfini par une classe",
-        "== ne fonctionne pas avec None",
-        "is convertit x en booléen"
+        "is est plus lisible, mais les deux écritures donnent toujours le même résultat",
+        "is compare l'identité de l'objet unique None, sans passer par __eq__",
+        "== ne fonctionne pas avec None et lève une TypeError",
+        "is convertit d'abord x en booléen avant de le comparer à None"
       ],
       "answer": 1,
       "explanation": "Il n'existe qu'un seul objet None. is teste l'identité, alors que == appelle __eq__, qu'une classe peut redéfinir de façon surprenante."
@@ -135,10 +135,10 @@
       "level": "confirmé",
       "question": "Avec CPython standard, comment accélérer un calcul lourd pour le processeur sur plusieurs cœurs ?",
       "choices": [
-        "Avec des threads (threading)",
+        "Avec des threads (threading ou ThreadPoolExecutor)",
         "Avec plusieurs processus (multiprocessing ou ProcessPoolExecutor)",
-        "Avec async et await",
-        "Ce n'est pas possible en Python"
+        "Avec async et await, qui répartissent les tâches sur les cœurs",
+        "Ce n'est pas possible : CPython n'utilise jamais qu'un seul cœur du processeur"
       ],
       "answer": 1,
       "explanation": "Le GIL empêche plusieurs threads d'exécuter du code Python en même temps : ils conviennent aux attentes réseau ou disque, pas au calcul. Des processus séparés ont chacun leur interpréteur."
@@ -163,7 +163,7 @@
       "question": "Que fait l'opérateur := ?",
       "code": "while (ligne := fichier.readline()):\n    traiter(ligne)",
       "choices": [
-        "Il compare deux valeurs",
+        "Il compare deux valeurs et leur type, comme === en JavaScript",
         "Il affecte une valeur à l'intérieur d'une expression",
         "Il déclare une constante",
         "Il copie une liste"
@@ -176,10 +176,10 @@
       "level": "confirmé",
       "question": "À quoi sert match / case (Python 3.10) ?",
       "choices": [
-        "À comparer des chaînes avec une regex",
+        "À comparer des chaînes avec une expression régulière",
         "Au filtrage par motif, selon la forme et la valeur d'un objet",
-        "À gérer les exceptions",
-        "À créer une boucle"
+        "À gérer les exceptions plus finement qu'avec try / except",
+        "À parcourir les éléments d'une séquence, comme une boucle for"
       ],
       "answer": 1,
       "explanation": "match compare une valeur à des motifs : littéraux, structures (case [x, y]), classes (case Point(x=0)), avec capture des variables. C'est plus qu'un switch."
@@ -193,7 +193,7 @@
         "[1, 2]",
         "[1, 2, 3]",
         "[3]",
-        "Erreur"
+        "Une erreur AttributeError"
       ],
       "answer": 1,
       "explanation": "b = a ne copie pas la liste : les deux noms désignent le même objet. Pour une copie : a.copy() ou list(a) (copie superficielle), copy.deepcopy pour les objets imbriqués."
@@ -203,9 +203,9 @@
       "level": "confirmé",
       "question": "Qu'est-ce qu'un décorateur ?",
       "choices": [
-        "Une fonction qui reçoit une fonction et renvoie une fonction qui l'enveloppe",
-        "Un commentaire spécial",
-        "Une classe abstraite",
+        "Une fonction qui enveloppe une autre fonction pour l'enrichir",
+        "Un commentaire spécial lu par l'interpréteur au démarrage",
+        "Une classe abstraite dont les méthodes doivent être redéfinies",
         "Un type de variable"
       ],
       "answer": 0,
@@ -219,7 +219,7 @@
       "choices": [
         "(1, 2)",
         "{'a': 3}",
-        "[3]",
+        "{'a': 3, 0: 1, 1: 2}",
         "None"
       ],
       "answer": 1,

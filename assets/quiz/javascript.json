@@ -28,10 +28,10 @@
       "level": "débutant",
       "question": "Quelle différence entre let et var ?",
       "choices": [
-        "Aucune",
+        "Aucune : let est seulement la syntaxe moderne de var",
         "let a une portée de bloc, var une portée de fonction",
-        "var est réservé aux constantes",
-        "let ne peut pas être réaffecté"
+        "var est réservé aux constantes, let aux variables modifiables",
+        "let ne peut pas être réaffecté après sa déclaration"
       ],
       "answer": 1,
       "explanation": "Une variable let n'existe que dans le bloc { } où elle est déclarée ; var est visible dans toute la fonction. const, lui, interdit la réaffectation."
@@ -109,10 +109,10 @@
       "question": "Ce code est-il valide ?",
       "code": "const options = { theme: \"clair\" };\noptions.theme = \"sombre\";",
       "choices": [
-        "Oui : const empêche de réaffecter la variable, pas de modifier l'objet",
-        "Non : une constante ne peut pas changer",
-        "Non : il faut Object.freeze",
-        "Oui, mais seulement en mode strict"
+        "Oui : const interdit la réaffectation, pas la modification",
+        "Non : une constante ne peut changer ni de valeur ni de contenu",
+        "Non : il faut déclarer l'objet avec let pour modifier ses propriétés",
+        "Oui, mais seulement en mode strict, qui autorise ces modifications"
       ],
       "answer": 0,
       "explanation": "const fixe la référence, pas le contenu. Pour un objet réellement figé, on utilise Object.freeze (de façon superficielle)."
@@ -122,9 +122,9 @@
       "level": "confirmé",
       "question": "Quelle différence entre une fonction fléchée et function, pour this ?",
       "choices": [
-        "Aucune",
+        "Aucune : this désigne toujours l'objet qui appelle la fonction",
         "La fonction fléchée reprend le this du contexte où elle est écrite",
-        "La fonction fléchée n'accepte pas de paramètres",
+        "La fonction fléchée n'a pas de this et lève une erreur si on l'utilise",
         "function ne peut pas être anonyme"
       ],
       "answer": 1,

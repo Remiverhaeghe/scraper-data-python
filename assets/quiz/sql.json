@@ -11,9 +11,9 @@
       "level": "débutant",
       "question": "Que renvoie un LEFT JOIN entre client et commande ?",
       "choices": [
-        "Seulement les clients qui ont une commande",
-        "Tous les clients, avec des colonnes de commande à NULL pour ceux qui n'en ont pas",
-        "Toutes les commandes, même sans client",
+        "Seulement les clients qui ont passé au moins une commande",
+        "Tous les clients, avec NULL côté commande pour ceux qui n'en ont pas",
+        "Toutes les commandes, avec NULL côté client pour celles qui n'en ont pas",
         "Le produit cartésien des deux tables"
       ],
       "answer": 1,
@@ -24,10 +24,10 @@
       "level": "débutant",
       "question": "Quelle différence entre WHERE et HAVING ?",
       "choices": [
-        "Aucune, ce sont deux syntaxes équivalentes",
-        "WHERE filtre les lignes avant le regroupement, HAVING filtre les groupes après GROUP BY",
-        "HAVING est plus rapide que WHERE",
-        "WHERE ne fonctionne qu'avec des index"
+        "Aucune, ce sont deux syntaxes équivalentes selon le moteur",
+        "WHERE filtre les lignes avant GROUP BY, HAVING les groupes après",
+        "HAVING est plus rapide que WHERE car il utilise toujours un index",
+        "WHERE ne fonctionne qu'avec des colonnes indexées"
       ],
       "answer": 1,
       "explanation": "WHERE s'applique aux lignes, avant GROUP BY ; HAVING s'applique aux groupes et peut donc utiliser des agrégats comme COUNT(*) ou AVG(...)."
@@ -37,10 +37,10 @@
       "level": "débutant",
       "question": "Quelle différence entre COUNT(*) et COUNT(telephone) ?",
       "choices": [
-        "Aucune",
+        "Aucune : les deux comptent toutes les lignes de la table",
         "COUNT(telephone) ignore les lignes où telephone est NULL",
-        "COUNT(*) ignore les doublons",
-        "COUNT(telephone) compte les valeurs distinctes"
+        "COUNT(*) ignore les doublons, COUNT(telephone) les garde",
+        "COUNT(telephone) compte seulement les valeurs distinctes non nulles"
       ],
       "answer": 1,
       "explanation": "COUNT(*) compte toutes les lignes ; COUNT(colonne) ne compte que les valeurs non NULL. Pour les valeurs distinctes : COUNT(DISTINCT colonne)."
@@ -63,9 +63,9 @@
       "level": "confirmé",
       "question": "Quel est le principal coût d'un index ?",
       "choices": [
-        "Il ralentit toutes les lectures",
+        "Il ralentit toutes les lectures qui n'utilisent pas la colonne indexée",
         "Il ralentit les écritures (INSERT, UPDATE, DELETE) et occupe de la place",
-        "Il empêche les doublons",
+        "Il empêche les doublons dans la colonne, ce qui bloque certaines insertions",
         "Il n'a aucun coût"
       ],
       "answer": 1,
@@ -76,10 +76,10 @@
       "level": "débutant",
       "question": "Comment se protéger des injections SQL ?",
       "choices": [
-        "En supprimant les apostrophes des saisies",
+        "En supprimant les apostrophes et les guillemets des saisies",
         "Avec des requêtes paramétrées, les valeurs étant transmises à part",
-        "En chiffrant la base de données",
-        "En limitant la longueur des saisies"
+        "En chiffrant la base de données et les sauvegardes",
+        "En limitant la longueur des saisies pour bloquer les requêtes injectées"
       ],
       "answer": 1,
       "explanation": "Avec une requête paramétrée (WHERE nom = ?), la valeur ne fait jamais partie du texte SQL : elle ne peut pas en modifier la structure. Nettoyer les saisies à la main laisse toujours des failles."
@@ -89,10 +89,10 @@
       "level": "débutant",
       "question": "Que garantit l'atomicité d'une transaction (le A de ACID) ?",
       "choices": [
-        "Que la transaction est rapide",
+        "Que la transaction s'exécute en une seule opération rapide",
         "Que toutes ses opérations sont appliquées, ou aucune",
-        "Que deux transactions ne se voient pas",
-        "Que les données survivent à une panne"
+        "Que deux transactions simultanées ne voient pas leurs modifications",
+        "Que les données validées survivent à une panne"
       ],
       "answer": 1,
       "explanation": "Atomicité : tout ou rien, en cas d'erreur un ROLLBACK annule l'ensemble. L'isolation (I) concerne les transactions concurrentes, la durabilité (D) la survie aux pannes."
@@ -103,10 +103,10 @@
       "question": "Que fait cette requête ?",
       "code": "SELECT departement, AVG(salaire)\nFROM employe\nGROUP BY departement\nHAVING AVG(salaire) > 3000;",
       "choices": [
-        "Elle liste les employés gagnant plus de 3000",
-        "Elle donne le salaire moyen par département, seulement pour ceux dont la moyenne dépasse 3000",
-        "Elle donne le salaire moyen global s'il dépasse 3000",
-        "Elle renvoie une erreur : AVG est interdit dans HAVING"
+        "Elle liste les employés gagnant plus de 3000, triés par département",
+        "Elle donne la moyenne par département, si elle dépasse 3000",
+        "Elle donne le salaire moyen global, seulement s'il dépasse 3000",
+        "Elle renvoie une erreur : AVG est interdit dans une clause HAVING"
       ],
       "answer": 1,
       "explanation": "GROUP BY forme un groupe par département, AVG calcule la moyenne de chacun, puis HAVING ne garde que les groupes dont la moyenne dépasse 3000."
@@ -117,9 +117,9 @@
       "question": "Quelle différence entre UNION et UNION ALL ?",
       "choices": [
         "UNION supprime les doublons, UNION ALL les garde",
-        "UNION ALL supprime les doublons",
-        "UNION trie toujours le résultat",
-        "Aucune"
+        "UNION ALL supprime les doublons, UNION les garde",
+        "UNION trie toujours le résultat, UNION ALL jamais",
+        "Aucune, UNION ALL est l'ancienne syntaxe"
       ],
       "answer": 0,
       "explanation": "UNION élimine les lignes en double, ce qui demande un travail supplémentaire ; UNION ALL les conserve et est donc plus rapide quand les doublons sont impossibles ou acceptés."
@@ -129,10 +129,10 @@
       "level": "débutant",
       "question": "À quoi sert une clé étrangère ?",
       "choices": [
-        "À accélérer les recherches",
+        "À accélérer les recherches en créant un index sur la colonne",
         "À garantir que la valeur référencée existe dans l'autre table",
-        "À rendre une colonne unique",
-        "À chiffrer une colonne"
+        "À rendre la colonne unique dans toute la base de données",
+        "À chiffrer une colonne dont la valeur provient d'une autre table"
       ],
       "answer": 1,
       "explanation": "La base refuse une commande dont le client n'existe pas, ou la suppression d'un client encore référencé (selon ON DELETE). C'est l'intégrité référentielle."
@@ -142,10 +142,10 @@
       "level": "débutant",
       "question": "Dans quel ordre logique une requête est-elle évaluée ?",
       "choices": [
-        "SELECT, FROM, WHERE, GROUP BY",
+        "SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY",
         "FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY",
-        "WHERE, FROM, SELECT, ORDER BY",
-        "FROM, SELECT, WHERE, HAVING"
+        "WHERE, FROM, SELECT, GROUP BY, ORDER BY",
+        "FROM, SELECT, WHERE, GROUP BY, HAVING, ORDER BY"
       ],
       "answer": 1,
       "explanation": "FROM et les jointures d'abord, puis WHERE (lignes), GROUP BY, HAVING (groupes), SELECT et ORDER BY en dernier. C'est pourquoi un alias du SELECT n'est pas utilisable dans WHERE."
@@ -155,10 +155,10 @@
       "level": "débutant",
       "question": "Que renvoie un INNER JOIN ?",
       "choices": [
-        "Toutes les lignes des deux tables",
+        "Toutes les lignes des deux tables, complétées par des NULL",
         "Seulement les lignes qui ont une correspondance des deux côtés",
-        "Les lignes de la table de gauche",
-        "Le produit cartésien"
+        "Toutes les lignes de la table de gauche, même sans correspondance",
+        "Le produit cartésien des deux tables"
       ],
       "answer": 1,
       "explanation": "INNER JOIN ne garde que les couples qui respectent la condition. LEFT JOIN garde en plus les lignes de gauche sans correspondance, avec des NULL à droite."
@@ -168,10 +168,10 @@
       "level": "confirmé",
       "question": "Qu'est-ce qu'une lecture non répétable ?",
       "choices": [
-        "Une requête qui échoue",
-        "Relire une ligne dans la même transaction et obtenir une autre valeur, modifiée entre-temps par une autre transaction",
-        "Une lecture sans index",
-        "Une lecture sur une vue"
+        "Une requête qui échoue et ne peut pas être relancée",
+        "Relire une ligne dans la même transaction et trouver une autre valeur",
+        "Une lecture faite sans index, qui parcourt toute la table à chaque fois",
+        "Une lecture sur une vue, dont le résultat n'est jamais mis en cache"
       ],
       "answer": 1,
       "explanation": "Les niveaux d'isolation (READ COMMITTED, REPEATABLE READ, SERIALIZABLE) déterminent les anomalies possibles : lecture sale, lecture non répétable, lignes fantômes."
@@ -182,10 +182,10 @@
       "question": "À quoi sert ROW_NUMBER() OVER (PARTITION BY ...) ?",
       "code": "SELECT nom, ROW_NUMBER() OVER (PARTITION BY service ORDER BY salaire DESC)\nFROM employe;",
       "choices": [
-        "À supprimer les doublons",
+        "À supprimer les doublons de chaque groupe de lignes",
         "À numéroter les lignes dans chaque groupe sans les regrouper",
-        "À créer un index",
-        "À compter les tables"
+        "À créer un index temporaire sur les colonnes de partition",
+        "À compter les lignes de chaque groupe et à n'en garder qu'une"
       ],
       "answer": 1,
       "explanation": "Une fonction de fenêtre calcule sur un ensemble de lignes tout en gardant chaque ligne : classement, cumul, ligne précédente (LAG). Exemple : le meilleur salaire de chaque service."

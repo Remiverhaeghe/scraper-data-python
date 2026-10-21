@@ -12,7 +12,7 @@
       "question": "Laquelle de ces nouveautés est apportée par Java 11 ?",
       "choices": [
         "Le mot-clé var dans les paramètres des lambdas",
-        "Les records",
+        "Les records, pour déclarer des classes de données immuables",
         "Le pattern matching dans les switch",
         "Le système de modules"
       ],
@@ -25,7 +25,7 @@
       "question": "Que fait ce code ?",
       "code": "List<String> noms = List.of(\"a\", \"b\");\nnoms.add(\"c\");",
       "choices": [
-        "Il ajoute \"c\" à la liste",
+        "Il ajoute \"c\" à la liste, qui contient alors trois éléments",
         "Il lève une UnsupportedOperationException",
         "Il ne compile pas",
         "Il lève une NullPointerException"
@@ -52,9 +52,9 @@
       "level": "débutant",
       "question": "Depuis Java 8, quelle affirmation sur les interfaces est vraie ?",
       "choices": [
-        "Une interface peut contenir des méthodes default avec une implémentation",
+        "Une interface peut fournir des méthodes default implémentées",
         "Une interface peut avoir des attributs d'instance modifiables",
-        "Une classe ne peut implémenter qu'une seule interface",
+        "Une classe ne peut implémenter qu'une seule interface à la fois",
         "Une interface peut avoir un constructeur"
       ],
       "answer": 0,
@@ -93,10 +93,10 @@
       "level": "confirmé",
       "question": "Que risque-t-on en redéfinissant equals sans redéfinir hashCode ?",
       "choices": [
-        "Rien, hashCode n'est utilisé que par la JVM",
-        "Une erreur de compilation",
-        "Deux objets égaux peuvent être rangés à deux endroits différents d'un HashMap ou d'un HashSet",
-        "Une perte de performance uniquement"
+        "Rien : hashCode n'est utilisé que par la JVM pour le ramasse-miettes",
+        "Une erreur de compilation sur la classe qui redéfinit equals",
+        "Deux objets égaux peuvent être rangés à deux places d'un HashMap",
+        "Une perte de performance uniquement, le résultat restant juste"
       ],
       "answer": 2,
       "explanation": "Le contrat impose que deux objets égaux aient le même hashCode. Sinon, un HashSet peut contenir deux objets « égaux », et un HashMap ne retrouve pas la valeur rangée sous une clé égale."
@@ -106,8 +106,8 @@
       "level": "débutant",
       "question": "Laquelle de ces exceptions est non vérifiée (unchecked) ?",
       "choices": [
-        "IOException",
-        "SQLException",
+        "FileNotFoundException",
+        "CloneNotSupportedException",
         "IllegalArgumentException",
         "ClassNotFoundException"
       ],
@@ -119,10 +119,10 @@
       "level": "confirmé",
       "question": "Une méthode annotée @Transactional est appelée depuis une autre méthode de la même classe. Que se passe-t-il ?",
       "choices": [
-        "La transaction s'applique normalement",
+        "La transaction s'applique normalement, comme pour un appel externe",
         "L'annotation est ignorée : l'appel ne passe pas par le proxy Spring",
-        "Spring lève une exception au démarrage",
-        "La transaction est toujours annulée"
+        "Spring lève une exception au démarrage pour signaler l'appel interne",
+        "La transaction est toujours annulée à la fin de la méthode appelante"
       ],
       "answer": 1,
       "explanation": "Spring applique @Transactional par un proxy qui entoure le bean. Un appel interne (this.methode()) ne traverse pas ce proxy : aucune transaction n'est ouverte. Il faut appeler la méthode depuis un autre bean."
@@ -134,9 +134,9 @@
       "code": "final List<String> liste = new ArrayList<>();\nliste.add(\"x\");",
       "choices": [
         "Oui : final empêche seulement de réaffecter la variable",
-        "Non : une liste final ne peut pas être modifiée",
+        "Non : une liste déclarée final ne peut plus recevoir d'éléments",
         "Non : final est interdit sur une variable locale",
-        "Oui, mais add lève une exception"
+        "Oui, mais add lève une exception car la liste est figée"
       ],
       "answer": 0,
       "explanation": "final porte sur la référence : liste ne peut pas désigner une autre liste, mais l'objet référencé reste modifiable. Pour une liste non modifiable, on utilise List.of ou Collections.unmodifiableList."
@@ -147,7 +147,7 @@
       "question": "Qu'apporte Java 8 de plus marquant ?",
       "choices": [
         "Les lambdas et l'API Stream",
-        "Les génériques",
+        "Les génériques et les collections typées",
         "Le mot-clé var",
         "Les records"
       ],
@@ -160,7 +160,7 @@
       "question": "Que fait le mot-clé var (Java 10) ?",
       "code": "var noms = new ArrayList<String>();",
       "choices": [
-        "Il rend la variable dynamique, comme en JavaScript",
+        "Il rend le type de la variable dynamique, comme en JavaScript",
         "Il laisse le compilateur déduire le type, qui reste fixe",
         "Il déclare une constante",
         "Il crée une variable globale"
@@ -174,10 +174,10 @@
       "question": "Que génère automatiquement ce record (Java 16, LTS en 17) ?",
       "code": "record Point(int x, int y) {}",
       "choices": [
-        "Seulement un constructeur",
-        "Un constructeur, les accesseurs x() et y(), equals, hashCode et toString",
-        "Des setters",
-        "Une interface"
+        "Seulement un constructeur prenant x et y en paramètres",
+        "Un constructeur, x(), y(), equals, hashCode et toString",
+        "Un constructeur, getX(), getY(), setX() et setY()",
+        "Une interface Point et sa classe d'implémentation immuable"
       ],
       "answer": 1,
       "explanation": "Un record est une classe de données immuable : champs private final, constructeur, accesseurs du même nom que les champs (x(), pas getX()), equals, hashCode et toString. Il n'a pas de setter."
@@ -202,9 +202,9 @@
       "question": "À quoi servent les triples guillemets (Java 15) ?",
       "choices": [
         "À écrire une chaîne sur plusieurs lignes sans \\n ni concaténation",
-        "À commenter un bloc",
-        "À déclarer une chaîne non modifiable",
-        "À échapper les caractères d'une regex"
+        "À commenter un bloc de code sur plusieurs lignes",
+        "À déclarer une chaîne immuable, partagée en mémoire entre les threads",
+        "À échapper automatiquement les caractères d'une regex"
       ],
       "answer": 0,
       "explanation": "Un bloc de texte (text block) garde les retours à la ligne et retire l'indentation commune : pratique pour du JSON, du SQL ou du HTML dans le code."
@@ -214,10 +214,10 @@
       "level": "confirmé",
       "question": "Qu'apportent les threads virtuels de Java 21 ?",
       "choices": [
-        "Des threads plus rapides pour le calcul",
-        "Des milliers de tâches bloquantes (attente réseau, base) sans un thread système chacune",
-        "L'exécution sur la carte graphique",
-        "La suppression du ramasse-miettes"
+        "Des threads plus rapides pour les calculs lourds sur le processeur",
+        "Des milliers de tâches bloquantes sans un thread système chacune",
+        "L'exécution des threads sur la carte graphique",
+        "La suppression du ramasse-miettes pour les threads courts"
       ],
       "answer": 1,
       "explanation": "Un thread virtuel est géré par la JVM : quand il attend une entrée-sortie, il libère son thread système. On peut en lancer des centaines de milliers (Executors.newVirtualThreadPerTaskExecutor()). Il n'accélère pas le calcul pur."
@@ -228,9 +228,9 @@
       "question": "Pourquoi utiliser StringBuilder dans une boucle ?",
       "choices": [
         "String est immuable : chaque + crée un nouvel objet",
-        "StringBuilder est thread-safe",
-        "String ne gère pas les accents",
-        "Pour trier les caractères"
+        "StringBuilder est thread-safe, contrairement à String",
+        "String ne gère pas les accents dans une boucle",
+        "Pour trier les caractères au fur et à mesure"
       ],
       "answer": 0,
       "explanation": "Concaténer avec + dans une boucle recrée une chaîne à chaque tour. StringBuilder modifie un tampon. StringBuffer est la version synchronisée, plus lente, rarement utile."

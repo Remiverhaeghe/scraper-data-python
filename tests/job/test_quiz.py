@@ -83,6 +83,32 @@ def test_versioned_questions_are_valid():
     assert all(len(vTheme["questions"]) >= 8 for vTheme in vQuiz.values())
 
 
+def test_right_choice_is_not_given_away_by_its_length():
+    """Vérifie que la bonne réponse d'un QCM n'est pas trop souvent la plus longue.
+
+    Le hasard donne 25 % avec quatre choix ; au-delà de 35 %, choisir la plus
+    longue devient une stratégie qui rapporte des points sans rien savoir.
+    """
+
+    vBiasedThemes = {}
+
+    for vKey, vTheme in load_quiz().items():
+        vLongest = []
+
+        for vQuestion in vTheme["questions"]:
+            if "choices" in vQuestion:
+                vLengths = [len(vChoice) for vChoice in vQuestion["choices"]]
+                vRight = vLengths[vQuestion["answer"]]
+
+                if vRight == max(vLengths) and vLengths.count(vRight) == 1:
+                    vLongest.append(vQuestion["id"])
+
+        if len(vLongest) > 0.35 * len(vTheme["questions"]):
+            vBiasedThemes[vKey] = vLongest
+
+    assert not vBiasedThemes
+
+
 def test_invalid_question_is_reported(tmp_path):
     """Vérifie le message d'une question dont la réponse n'existe pas."""
 
