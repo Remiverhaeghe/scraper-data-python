@@ -11,7 +11,7 @@
       "level": "débutant",
       "question": "Quelle différence entre une image et un conteneur ?",
       "choices": [
-        "Aucune : les deux mots désignent le même objet Docker",
+        "Les deux mots désignent le même objet Docker, selon le contexte",
         "L'image est le modèle en lecture seule, le conteneur une instance qui tourne",
         "Le conteneur est le fichier stocké sur Docker Hub, l'image son processus lancé",
         "L'image est une machine virtuelle complète, le conteneur un simple dossier partagé"
@@ -103,7 +103,7 @@
       "level": "confirmé",
       "question": "Quelle différence entre CMD et ENTRYPOINT ?",
       "choices": [
-        "Aucune : ce sont deux noms de la même instruction, gardés pour compatibilité",
+        "Ce sont deux noms de la même instruction, gardés pour compatibilité",
         "ENTRYPOINT fixe le programme lancé, CMD ses arguments par défaut, remplaçables",
         "CMD s'exécute pendant la construction de l'image, ENTRYPOINT au lancement",
         "ENTRYPOINT est réservé aux conteneurs Windows, CMD aux conteneurs Linux standards"

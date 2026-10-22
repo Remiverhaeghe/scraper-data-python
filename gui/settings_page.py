@@ -35,7 +35,7 @@ from gui.widgets import (
     create_scroll_content,
     show_message,
 )
-from config import WEB_HOST, WEB_PORT
+from config import WEB_BASE_URL
 from job.calendar import (
     build_subscription_url,
     get_calendar_token,
@@ -45,6 +45,7 @@ from job.companies import load_company_rules, save_company_rules
 from job.mobile_sync import (
     API_PREFIX,
     build_connection_png,
+    get_certificate_fingerprint,
     get_mobile_token,
     renew_mobile_token,
 )
@@ -80,10 +81,6 @@ COMPANY_EDIT_HEIGHT = 76
 
 # En dessous de cette largeur de page, les cartes passent sur une colonne.
 SINGLE_COLUMN_WIDTH = 1100
-
-# Adresse du tableau de bord : WEB_HOST vaut l'adresse Tailscale pour un accès
-# depuis le téléphone, voir le README.
-WEB_BASE_URL = f"http://{WEB_HOST}:{WEB_PORT}"
 
 
 def describe_source_state(pDefinition):
@@ -869,7 +866,9 @@ class SettingsPage(QWidget):
             lambda: get_mobile_token(self.database_file),
             lambda: renew_mobile_token(self.database_file),
             f"{WEB_BASE_URL}{API_PREFIX}",
-            lambda pToken: build_connection_png(f"{WEB_BASE_URL}{API_PREFIX}", pToken),
+            lambda pToken: build_connection_png(
+                f"{WEB_BASE_URL}{API_PREFIX}", pToken, get_certificate_fingerprint()
+            ),
         )
 
     def set_actions_enabled(self, pEnabled):

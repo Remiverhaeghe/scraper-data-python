@@ -24,9 +24,9 @@
       "level": "débutant",
       "question": "Quelle différence entre WHERE et HAVING ?",
       "choices": [
-        "Aucune, ce sont deux syntaxes équivalentes selon le moteur",
+        "Ce sont deux syntaxes équivalentes selon le moteur",
         "WHERE filtre les lignes avant GROUP BY, HAVING les groupes après",
-        "HAVING est plus rapide que WHERE car il utilise toujours un index",
+        "HAVING est plus rapide que WHERE car il passe par un index",
         "WHERE ne fonctionne qu'avec des colonnes indexées"
       ],
       "answer": 1,
@@ -37,10 +37,10 @@
       "level": "débutant",
       "question": "Quelle différence entre COUNT(*) et COUNT(telephone) ?",
       "choices": [
-        "Aucune : les deux comptent toutes les lignes de la table",
+        "Les deux comptent l'ensemble des lignes de la table",
         "COUNT(telephone) ignore les lignes où telephone est NULL",
         "COUNT(*) ignore les doublons, COUNT(telephone) les garde",
-        "COUNT(telephone) compte seulement les valeurs distinctes non nulles"
+        "COUNT(telephone) compte les valeurs distinctes non nulles"
       ],
       "answer": 1,
       "explanation": "COUNT(*) compte toutes les lignes ; COUNT(colonne) ne compte que les valeurs non NULL. Pour les valeurs distinctes : COUNT(DISTINCT colonne)."
@@ -105,7 +105,7 @@
       "choices": [
         "Elle liste les employés gagnant plus de 3000, triés par département",
         "Elle donne la moyenne par département, si elle dépasse 3000",
-        "Elle donne le salaire moyen global, seulement s'il dépasse 3000",
+        "Elle donne le salaire moyen global, s'il dépasse 3000",
         "Elle renvoie une erreur : AVG est interdit dans une clause HAVING"
       ],
       "answer": 1,
@@ -118,7 +118,7 @@
       "choices": [
         "UNION supprime les doublons, UNION ALL les garde",
         "UNION ALL supprime les doublons, UNION les garde",
-        "UNION trie toujours le résultat, UNION ALL jamais",
+        "UNION trie le résultat, UNION ALL le laisse dans l'ordre lu",
         "Aucune, UNION ALL est l'ancienne syntaxe"
       ],
       "answer": 0,
@@ -171,7 +171,7 @@
         "Une requête qui échoue et ne peut pas être relancée",
         "Relire une ligne dans la même transaction et trouver une autre valeur",
         "Une lecture faite sans index, qui parcourt toute la table à chaque fois",
-        "Une lecture sur une vue, dont le résultat n'est jamais mis en cache"
+        "Une lecture sur une vue, dont le résultat n'est pas mis en cache"
       ],
       "answer": 1,
       "explanation": "Les niveaux d'isolation (READ COMMITTED, REPEATABLE READ, SERIALIZABLE) déterminent les anomalies possibles : lecture sale, lecture non répétable, lignes fantômes."

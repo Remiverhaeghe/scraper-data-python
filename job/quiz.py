@@ -19,6 +19,7 @@ from storage.job_offers import (
 )
 from storage.quiz_answers import (
     count_answers_by_day,
+    count_answers_by_question,
     get_answer_history,
     get_last_answers,
     save_quiz_answer,
@@ -713,3 +714,59 @@ def answer_question(pDatabaseFile, pQuiz, pQuestionId, pResponse, pNow):
     }
 
     return rResult
+
+
+# Questions à revoir dans le contenu : réussies presque toujours, ou presque jamais,
+# sur assez de réponses pour que le taux veuille dire quelque chose.
+EASY_RATE = 95
+HARD_RATE = 25
+MIN_EASY_ANSWERS = 5
+MIN_HARD_ANSWERS = 3
+MAX_LISTED_QUESTIONS = 5
+
+
+def find_unbalanced_questions(pDatabaseFile, pQuiz):
+    """Retourne les questions trop faciles et trop dures d'après leur taux de réussite.
+
+    Une question trop dure est souvent mal posée ; une trop facile n'apprend
+    plus rien : les deux sont à revoir ou à signaler.
+    """
+
+    vCounts = count_answers_by_question(pDatabaseFile)
+    vRows = []
+
+    for vTheme in pQuiz.values():
+        for vQuestion in vTheme["questions"]:
+            vCount, vCorrect = vCounts.get(vQuestion["id"], (0, 0))
+
+            if vCount:
+                vRows.append(
+                    {
+                        "id": vQuestion["id"],
+                        "theme": vTheme["label"],
+                        "question": vQuestion["question"],
+                        "answers": vCount,
+                        "rate": round(100 * vCorrect / vCount),
+                    }
+                )
+
+    rQuestions = {
+        "hard": sorted(
+            (
+                vRow
+                for vRow in vRows
+                if vRow["answers"] >= MIN_HARD_ANSWERS and vRow["rate"] <= HARD_RATE
+            ),
+            key=lambda pRow: (pRow["rate"], -pRow["answers"]),
+        )[:MAX_LISTED_QUESTIONS],
+        "easy": sorted(
+            (
+                vRow
+                for vRow in vRows
+                if vRow["answers"] >= MIN_EASY_ANSWERS and vRow["rate"] >= EASY_RATE
+            ),
+            key=lambda pRow: (-pRow["answers"], -pRow["rate"]),
+        )[:MAX_LISTED_QUESTIONS],
+    }
+
+    return rQuestions

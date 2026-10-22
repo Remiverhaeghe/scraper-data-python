@@ -226,7 +226,7 @@ def test_assess_questions_flags_a_biased_lot(caplog):
     ]
     assert vQuality["summary"].startswith(
         "20 question(s), bonne réponse la plus longue 100 %, la plus courte 0 %, "
-        "positions A 0 % B 100 %"
+        "mot absolu dans les seuls pièges 0 %, positions A 0 % B 100 %"
     )
     assert "Lot de révision à vérifier" in caplog.text
 

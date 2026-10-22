@@ -23,6 +23,7 @@ from job.quiz import (
     load_quiz,
     slugify,
 )
+from job.quiz_bias import has_absolute_tell, is_longest_answer, is_shortest_answer
 from job.quiz_domains import DOMAIN_ORDER, OTHER_DOMAIN, classify_theme
 from job.quiz_types import get_type
 from storage.quiz_questions import get_imported_questions
@@ -394,28 +395,6 @@ def build_generation_prompt(pQuiz, pThemeLabel, pLevel, pCount):
     return rPrompt
 
 
-def is_longest_answer(pQuestion):
-    """Indique si la bonne réponse est strictement plus longue que les autres choix."""
-
-    vLengths = [len(vChoice) for vChoice in pQuestion["choices"]]
-    vRight = vLengths.pop(pQuestion["answer"])
-
-    rLongest = all(vRight > vLength for vLength in vLengths)
-
-    return rLongest
-
-
-def is_shortest_answer(pQuestion):
-    """Indique si la bonne réponse est strictement plus courte que les autres choix."""
-
-    vLengths = [len(vChoice) for vChoice in pQuestion["choices"]]
-    vRight = vLengths.pop(pQuestion["answer"])
-
-    rShortest = all(vRight < vLength for vLength in vLengths)
-
-    return rShortest
-
-
 def format_share(pCount, pTotal):
     """Retourne une part en pourcentage arrondi."""
 
@@ -448,11 +427,14 @@ def describe_measures(pQuestions):
     ]
     vLongest = sum(is_longest_answer(vQuestion) for vQuestion in pQuestions)
     vShortest = sum(is_shortest_answer(vQuestion) for vQuestion in pQuestions)
+    # Indiqué sans alerte : les lots déjà écrits l'ont souvent, sans être faux.
+    vAbsolute = sum(has_absolute_tell(vQuestion) for vQuestion in pQuestions)
 
     rSummary = (
         f"{vTotal} question(s), bonne réponse la plus longue "
         f"{format_share(vLongest, vTotal)}, la plus courte "
-        f"{format_share(vShortest, vTotal)}, positions "
+        f"{format_share(vShortest, vTotal)}, mot absolu dans les seuls pièges "
+        f"{format_share(vAbsolute, vTotal)}, positions "
         + " ".join(
             f"{vLabel} {format_share(vCount, vTotal)}"
             for vLabel, vCount in zip(POSITION_LABELS, vPositions)

@@ -309,6 +309,30 @@ def record_exam_result(pDatabaseFile, pExam):
     save_json_setting(pDatabaseFile, EXAM_RESULTS_KEY, vResults)
 
 
+def merge_exam_results(pDatabaseFile, pResults):
+    """Ajoute des notes reçues du téléphone à l'historique ; retourne leur nombre.
+
+    Une note déjà présente, reconnue à sa date de fin, n'est pas ajoutée deux
+    fois : le téléphone peut renvoyer tout son historique à chaque synchronisation.
+    """
+
+    vResults = load_exam_results(pDatabaseFile)
+    vKnown = {vResult["finished_at"] for vResult in vResults}
+    vAdded = [vResult for vResult in pResults if vResult["finished_at"] not in vKnown]
+
+    if vAdded:
+        vMerged = sorted(
+            [*vAdded, *vResults],
+            key=lambda pResult: pResult["finished_at"],
+            reverse=True,
+        )
+        save_json_setting(pDatabaseFile, EXAM_RESULTS_KEY, vMerged[:MAX_EXAM_RESULTS])
+
+    rCount = len(vAdded)
+
+    return rCount
+
+
 def describe_exam_results(pResults):
     """Résume les notes d'une offre : meilleure, dernière et nombre d'examens."""
 

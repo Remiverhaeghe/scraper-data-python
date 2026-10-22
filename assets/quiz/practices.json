@@ -39,7 +39,7 @@
       "choices": [
         "Qu'il teste toute l'application d'un coup, base de données comprise",
         "Qu'il soit rapide, isolé et reproductible, sans réseau ni base partagée",
-        "Qu'il couvre toutes les lignes du code, même sans aucune assertion",
+        "Qu'il couvre chaque ligne du code, même sans assertion",
         "Qu'il s'appuie sur les données laissées par les tests exécutés avant lui"
       ],
       "answer": 1,
@@ -104,7 +104,7 @@
       "choices": [
         "Qu'elle n'utilise pas de base de données pour stocker ses ressources",
         "Que chaque requête porte tout le nécessaire, sans session côté serveur",
-        "Qu'elle ne renvoie jamais d'erreur, seulement des réponses 200",
+        "Qu'elle répond par un code 200, même en cas d'erreur",
         "Qu'elle n'accepte que des requêtes GET, sans modification des données"
       ],
       "answer": 1,

@@ -849,6 +849,15 @@ def test_manifest_and_icons_are_public(client):
     assert vManifest.json()["display"] == "standalone"
     assert client.get("/static/icon-192.png").status_code == 200
 
+    # Service worker servi à la racine, sans session, jamais gardé en cache
+    vWorker = client.get("/service-worker.js")
+
+    assert vWorker.status_code == 200
+    assert vWorker.headers["content-type"].startswith("text/javascript")
+    assert vWorker.headers["cache-control"] == "no-cache"
+    assert "OFFLINE_URL" in vWorker.text
+    assert client.get("/static/offline.html").status_code == 200
+
 
 def test_security_headers(client):
     """Vérifie les en-têtes de sécurité sur une page et sur une redirection."""

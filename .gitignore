@@ -190,6 +190,7 @@ output/*
 # Base SQLite générée par l'application et ses sauvegardes
 data/*.db
 data/argos/
+data/tls/
 data/backups/
 data/attachments/
 

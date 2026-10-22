@@ -93,10 +93,10 @@
       "level": "confirmé",
       "question": "Que risque-t-on en redéfinissant equals sans redéfinir hashCode ?",
       "choices": [
-        "Rien : hashCode n'est utilisé que par la JVM pour le ramasse-miettes",
+        "Pas de risque : hashCode sert au ramasse-miettes de la JVM",
         "Une erreur de compilation sur la classe qui redéfinit equals",
         "Deux objets égaux peuvent être rangés à deux places d'un HashMap",
-        "Une perte de performance uniquement, le résultat restant juste"
+        "Une perte de performance, le résultat restant juste"
       ],
       "answer": 2,
       "explanation": "Le contrat impose que deux objets égaux aient le même hashCode. Sinon, un HashSet peut contenir deux objets « égaux », et un HashMap ne retrouve pas la valeur rangée sous une clé égale."
@@ -122,7 +122,7 @@
         "La transaction s'applique normalement, comme pour un appel externe",
         "L'annotation est ignorée : l'appel ne passe pas par le proxy Spring",
         "Spring lève une exception au démarrage pour signaler l'appel interne",
-        "La transaction est toujours annulée à la fin de la méthode appelante"
+        "La transaction est annulée à la fin de la méthode appelante"
       ],
       "answer": 1,
       "explanation": "Spring applique @Transactional par un proxy qui entoure le bean. Un appel interne (this.methode()) ne traverse pas ce proxy : aucune transaction n'est ouverte. Il faut appeler la méthode depuis un autre bean."

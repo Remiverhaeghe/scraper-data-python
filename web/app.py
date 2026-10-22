@@ -6,7 +6,13 @@ from datetime import datetime
 from urllib.parse import quote
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+)
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -36,7 +42,8 @@ logger = get_logger(__name__)
 
 
 # Pages accessibles sans connexion : connexion, informations légales et ressources
-PUBLIC_PATHS = ("/login", "/legal", "/license")
+# Le service worker est chargé par le navigateur avant toute connexion.
+PUBLIC_PATHS = ("/login", "/legal", "/license", "/service-worker.js")
 
 
 # L'abonnement à l'agenda est relu sans session : son jeton secret le protège.
@@ -66,6 +73,20 @@ app.include_router(api_router)
 
 
 app.mount("/static", StaticFiles(directory=WEB_DIRECTORY / "static"), name="static")
+
+
+@app.get("/service-worker.js", include_in_schema=False)
+def serve_service_worker():
+    """Sert le service worker à la racine : il ne gère que les adresses sous la sienne."""
+
+    rResponse = FileResponse(
+        WEB_DIRECTORY / "static" / "service-worker.js",
+        media_type="text/javascript",
+        # Une nouvelle version est prise dès le prochain chargement.
+        headers={"Cache-Control": "no-cache"},
+    )
+
+    return rResponse
 
 
 app.mount("/assets", StaticFiles(directory=ASSETS_DIRECTORY), name="assets")

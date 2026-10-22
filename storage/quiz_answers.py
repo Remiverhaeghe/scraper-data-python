@@ -50,6 +50,27 @@ def count_answers_by_day(pDatabaseFile):
     return rDays
 
 
+def count_answers_by_question(pDatabaseFile):
+    """Retourne, par question, le nombre de réponses et de bonnes réponses."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rQuestions = {
+            vQuestionId: (vCount, vCorrect)
+            for vQuestionId, vCount, vCorrect in vConnection.execute("""
+                SELECT question_id, COUNT(*), SUM(correct)
+                FROM quiz_answer
+                GROUP BY question_id
+                """)
+        }
+
+    finally:
+        vConnection.close()
+
+    return rQuestions
+
+
 def get_last_answers(pDatabaseFile):
     """Retourne, par question, si la dernière réponse donnée était juste."""
 

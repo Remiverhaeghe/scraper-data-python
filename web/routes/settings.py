@@ -20,6 +20,7 @@ from job.companies import load_company_rules, save_company_rules
 from job.mobile_sync import (
     API_PREFIX,
     build_connection_svg,
+    get_certificate_fingerprint,
     get_mobile_token,
     renew_mobile_token,
 )
@@ -127,7 +128,9 @@ def render_settings(
             "mobile_token": vMobileToken,
             # SVG produit ici à partir de l'adresse et du jeton, sans texte saisi.
             "mobile_qr": (
-                build_connection_svg(vMobileAddress, vMobileToken)
+                build_connection_svg(
+                    vMobileAddress, vMobileToken, get_certificate_fingerprint()
+                )
                 if vMobileToken
                 else None
             ),

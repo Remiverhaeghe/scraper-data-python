@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 
+import pandas as pd
 import pytest
 
 from job.mobile_sync import (
@@ -17,6 +18,8 @@ from job.mobile_sync import (
 )
 from job.quiz import get_review_schedule, load_quiz
 from storage.database import initialize_database
+from storage.job_applications import save_application
+from storage.job_offers import save_offers
 from storage.quiz_answers import get_last_answers
 
 NOW = datetime(2026, 10, 12, 10, 0)
@@ -155,3 +158,32 @@ def test_connection_qr_code_in_svg_and_png():
 
     assert vSvg.startswith("<svg") and "secret" not in vSvg
     assert vPng.startswith(b"\x89PNG")
+
+
+def test_progress_lists_themes_of_current_applications(database_file):
+    """Vérifie les thèmes à revoir pour une candidature en cours, pas pour les autres."""
+
+    save_offers(
+        database_file,
+        pd.DataFrame(
+            [
+                {
+                    "source": "lever",
+                    "source_id": "1",
+                    "title": "Développeur Java Spring",
+                    "company": "Acme",
+                    "skills": ["Java", "Spring"],
+                },
+                {"source": "lever", "source_id": "2", "title": "Comptable"},
+            ]
+        ),
+        NOW,
+    )
+    save_application(database_file, "lever", "1", "INTERVIEW", pNow=NOW)
+    save_application(database_file, "lever", "2", "APPLIED", pNow=NOW)
+
+    vApplications = build_progress(database_file, NOW)["applications"]
+
+    assert len(vApplications) == 1
+    assert vApplications[0]["status"] == "Entretien"
+    assert "java" in vApplications[0]["themes"]

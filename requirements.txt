@@ -3,9 +3,11 @@ bandit==1.9.4
 beautifulsoup4==4.15.0
 black==26.10.1
 certifi==2026.7.22
+cffi==2.1.1
 charset-normalizer==3.5.1
 colorama==0.4.6
 coverage==7.16.2
+cryptography==50.0.2
 defusedxml==0.7.1
 dill==0.4.1
 et_xmlfile==2.0.0
@@ -25,6 +27,7 @@ pandas==3.0.5
 platformdirs==4.12.4
 playwright==1.62.0
 pluggy==1.6.0
+pycparser==3.12
 pyee==13.0.1
 Pygments==2.21.0
 pylint==4.1.2

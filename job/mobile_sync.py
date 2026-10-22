@@ -14,26 +14,33 @@ from datetime import datetime, timedelta
 
 import segno
 
+from config import WEB_SCHEME, WEB_TLS_CERTFILE
 from job.access_tokens import check_access_token, get_access_token, renew_access_token
+from job.interview_revision import find_offer_themes
+from job.presentation import STATUS_LABELS
 from job.quiz import (
     LEITNER_INTERVALS,
     QUIZ_LEVELS,
     build_quiz_overview,
     build_quiz_statistics,
     find_question,
+    flag_question,
     get_review_schedule,
     load_active_quiz,
 )
 from job.quiz_domains import DOMAIN_ICONS
+from job.quiz_exam import merge_exam_results
 from job.quiz_types import (
     DEFAULT_TYPE,
     MAX_TEXT_ANSWER_LENGTH,
     get_type,
     grade_answer,
 )
+from storage.job_applications import get_applications_with_offers
 from storage.quiz_answers import get_last_answers, save_synced_answers
 from storage.quiz_questions import get_quiz_assets, get_quiz_guide, get_quiz_guides
 from utils.logger import get_logger
+from utils.tls import read_fingerprint
 
 logger = get_logger(__name__)
 
@@ -48,6 +55,14 @@ API_PREFIX = f"/api/v{API_VERSION}"
 
 # Un envoi plus gros est une erreur : le téléphone envoie par lots.
 MAX_SYNC_ANSWERS = 500
+
+# Examens blancs et signalements reçus au plus par envoi
+MAX_SYNC_EXAMS = 100
+MAX_SYNC_FLAGS = 200
+
+# Candidatures envoyées au téléphone pour réviser leurs thèmes : les plus récentes
+REVISION_STATUSES = ("INTERVIEW", "APPLIED")
+MAX_REVISION_APPLICATIONS = 10
 
 # Identifiant de réponse choisi par le téléphone, par exemple un UUID
 CLIENT_ID_PATTERN = re.compile(r"[A-Za-z0-9-]{8,64}")
@@ -80,41 +95,55 @@ def renew_mobile_token(pDatabaseFile):
     return rToken
 
 
-def build_connection_qr(pAddress, pToken):
+def build_connection_qr(pAddress, pToken, pFingerprint=None):
     """Retourne le QR code de connexion du téléphone : adresse de l'API et jeton.
 
     Le contenu est un petit JSON que l'application lit au scan ; le QR code ne
     s'affiche qu'à la demande, puisqu'il donne accès aux révisions.
     """
 
-    vPayload = json.dumps({"address": pAddress, "token": pToken}, separators=(",", ":"))
+    vData = {"address": pAddress, "token": pToken}
+
+    # En HTTPS, le téléphone n'accepte que le certificat de cette empreinte.
+    if pFingerprint:
+        vData["certificate_sha256"] = pFingerprint
+
+    vPayload = json.dumps(vData, separators=(",", ":"))
 
     rQrCode = segno.make(vPayload, error="m")
 
     return rQrCode
 
 
-def build_connection_svg(pAddress, pToken):
+def build_connection_svg(pAddress, pToken, pFingerprint=None):
     """Retourne le QR code de connexion en SVG, pour la page web."""
 
-    rSvg = build_connection_qr(pAddress, pToken).svg_inline(
+    rSvg = build_connection_qr(pAddress, pToken, pFingerprint).svg_inline(
         scale=5, dark="#0f172a", light="#ffffff"
     )
 
     return rSvg
 
 
-def build_connection_png(pAddress, pToken):
+def build_connection_png(pAddress, pToken, pFingerprint=None):
     """Retourne le QR code de connexion en PNG, pour l'application de bureau."""
 
     vBuffer = io.BytesIO()
-    build_connection_qr(pAddress, pToken).save(
+    build_connection_qr(pAddress, pToken, pFingerprint).save(
         vBuffer, kind="png", scale=6, dark="#0f172a", light="#ffffff"
     )
 
     rPng = vBuffer.getvalue()
 
     return rPng
+
+
+def get_certificate_fingerprint():
+    """Retourne l'empreinte du certificat HTTPS du tableau de bord, ou None en HTTP."""
+
+    rFingerprint = read_fingerprint(WEB_TLS_CERTFILE) if WEB_SCHEME == "https" else None
+
+    return rFingerprint
 
 
 def check_mobile_token(pDatabaseFile, pToken):
@@ -187,6 +216,27 @@ def build_quiz_package(pDatabaseFile, pNow):
     return rPackage
 
 
+def build_application_themes(pDatabaseFile, pQuiz):
+    """Retourne les candidatures en cours et les thèmes à revoir pour chacune."""
+
+    vApplications = get_applications_with_offers(pDatabaseFile, REVISION_STATUSES)
+
+    rApplications = [
+        {
+            "title": vApplication.get("title"),
+            "company": vApplication.get("company"),
+            "status": STATUS_LABELS.get(vApplication.get("status")),
+            "themes": list(find_offer_themes(pQuiz, vApplication)),
+        }
+        for vApplication in vApplications[:MAX_REVISION_APPLICATIONS]
+    ]
+
+    # Une candidature sans thème correspondant n'aide pas à réviser.
+    rApplications = [vItem for vItem in rApplications if vItem["themes"]]
+
+    return rApplications
+
+
 def build_progress(pDatabaseFile, pNow):
     """Retourne la progression : état de chaque question et chiffres d'ensemble.
 
@@ -211,6 +261,7 @@ def build_progress(pDatabaseFile, pNow):
             }
             for vQuestionId, vState in vSchedule.items()
         },
+        "applications": build_application_themes(pDatabaseFile, vQuiz),
         "statistics": {
             "acquired": vStatistics["acquired"],
             "total": vStatistics["total"],
@@ -353,5 +404,74 @@ def sync_answers(pDatabaseFile, pAnswers, pNow):
         rReport["duplicates"],
         len(vRejected),
     )
+
+    return rReport
+
+
+def check_synced_exam(pExam):
+    """Retourne la note d'examen reçue, au format de l'historique, ou lève ValueError."""
+
+    try:
+        vCorrect = int(pExam["correct"])
+        vCount = int(pExam["count"])
+        vSeconds = int(pExam.get("seconds") or 0)
+        vFinishedAt = datetime.fromisoformat(str(pExam["finished_at"]))
+    except (KeyError, TypeError, ValueError) as vException:
+        raise ValueError("Examen blanc illisible.") from vException
+
+    if not 0 <= vCorrect <= vCount or vCount == 0 or vSeconds < 0:
+        raise ValueError("Examen blanc incohérent.")
+
+    rResult = {
+        "title": str(pExam.get("title") or "Examen blanc")[:120],
+        "offer": None,
+        "finished_at": vFinishedAt.isoformat(timespec="seconds"),
+        "correct": vCorrect,
+        "count": vCount,
+        "score": round(100 * vCorrect / vCount),
+        "seconds": vSeconds,
+        "device": "téléphone",
+    }
+
+    return rResult
+
+
+def sync_exam_results(pDatabaseFile, pExams):
+    """Ajoute à l'historique du PC les examens blancs passés sur le téléphone."""
+
+    if not isinstance(pExams, list):
+        raise ValueError("Liste d'examens attendue.")
+
+    if len(pExams) > MAX_SYNC_EXAMS:
+        raise ValueError(f"{MAX_SYNC_EXAMS} examens au plus par envoi.")
+
+    vResults = [check_synced_exam(vExam) for vExam in pExams]
+    vAdded = merge_exam_results(pDatabaseFile, vResults)
+
+    logger.info(
+        "Examens blancs du téléphone : %s reçu(s), %s ajouté(s)", len(vResults), vAdded
+    )
+
+    rReport = {"received": len(vResults), "added": vAdded}
+
+    return rReport
+
+
+def sync_flags(pDatabaseFile, pQuestionIds):
+    """Retire des tirages les questions signalées depuis le téléphone."""
+
+    if not isinstance(pQuestionIds, list) or len(pQuestionIds) > MAX_SYNC_FLAGS:
+        raise ValueError(f"Liste de {MAX_SYNC_FLAGS} questions au plus attendue.")
+
+    vQuiz = load_active_quiz(pDatabaseFile)
+    vFlagged = 0
+
+    for vQuestionId in {str(vId) for vId in pQuestionIds}:
+        # Une question déjà retirée, ou inconnue, est simplement ignorée.
+        if find_question(vQuiz, vQuestionId)[0] is not None:
+            flag_question(pDatabaseFile, vQuestionId)
+            vFlagged += 1
+
+    rReport = {"received": len(pQuestionIds), "flagged": vFlagged}
 
     return rReport

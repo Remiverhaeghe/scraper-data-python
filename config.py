@@ -51,6 +51,13 @@ NET_SALARY_RATIO = 0.75
 WEB_HOST = os.getenv("WEB_HOST") or "127.0.0.1"
 WEB_PORT = 8000
 
+# HTTPS sur le réseau local : certificat créé par python -m tools.local_certificate.
+# Sans ces deux fichiers, le tableau de bord reste en HTTP.
+WEB_TLS_CERTFILE = os.getenv("WEB_TLS_CERTFILE") or None
+WEB_TLS_KEYFILE = os.getenv("WEB_TLS_KEYFILE") or None
+WEB_SCHEME = "https" if WEB_TLS_CERTFILE and WEB_TLS_KEYFILE else "http"
+WEB_BASE_URL = f"{WEB_SCHEME}://{WEB_HOST}:{WEB_PORT}"
+
 # Une offre est signalée comme nouvelle pendant ce nombre de jours
 NEW_OFFER_DAYS = 3
 

@@ -10,7 +10,7 @@
       "level": "débutant",
       "question": "Quelle différence entre git fetch et git pull ?",
       "choices": [
-        "Aucune : pull est seulement l'ancien nom de fetch, conservé par compatibilité",
+        "pull est l'ancien nom de fetch, conservé par compatibilité",
         "fetch récupère les commits distants sans toucher à la branche ; pull les intègre aussi",
         "pull envoie les commits locaux au serveur, fetch récupère ceux du serveur distant",
         "fetch supprime les branches distantes effacées, pull les recrée ensuite en local"
@@ -25,7 +25,7 @@
       "choices": [
         "Il crée un nouveau commit qui annule les changements du commit précédent",
         "Il retire le dernier commit et efface aussi les modifications non commitées",
-        "Il déplace seulement HEAD : le commit disparaît mais les fichiers sont conservés",
+        "Il déplace HEAD : le commit disparaît mais les fichiers sont conservés",
         "Il supprime la branche courante et revient sur la branche principale"
       ],
       "answer": 1,
@@ -127,7 +127,7 @@
       "level": "confirmé",
       "question": "Que fait git cherry-pick <commit> ?",
       "choices": [
-        "Il supprime ce commit de l'historique de toutes les branches",
+        "Il supprime ce commit de l'historique de la branche courante",
         "Il applique les changements de ce commit sur la branche courante",
         "Il affiche le détail du commit : auteur, date et fichiers modifiés",
         "Il renomme le commit en modifiant son message"

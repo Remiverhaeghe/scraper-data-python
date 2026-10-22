@@ -28,7 +28,7 @@
       "level": "débutant",
       "question": "Quelle différence entre let et var ?",
       "choices": [
-        "Aucune : let est seulement la syntaxe moderne de var",
+        "let est la syntaxe moderne de var, sans autre différence",
         "let a une portée de bloc, var une portée de fonction",
         "var est réservé aux constantes, let aux variables modifiables",
         "let ne peut pas être réaffecté après sa déclaration"
@@ -122,7 +122,7 @@
       "level": "confirmé",
       "question": "Quelle différence entre une fonction fléchée et function, pour this ?",
       "choices": [
-        "Aucune : this désigne toujours l'objet qui appelle la fonction",
+        "this désigne dans les deux cas l'objet qui appelle la fonction",
         "La fonction fléchée reprend le this du contexte où elle est écrite",
         "La fonction fléchée n'a pas de this et lève une erreur si on l'utilise",
         "function ne peut pas être anonyme"

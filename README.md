@@ -119,6 +119,8 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Entreprise reprise d'une annonce jumelle d'une autre source, pour regrouper les doublons
 - [x] Raccourcis : Ctrl+1 à 9 pour les pages, Ctrl+F pour chercher une offre, Échap pour masquer la fiche
 - [x] Largeur des colonnes et partage tableau / fiche mémorisés, « Tout replier » sur les pages chargées, thème Auto qui suit Windows
+- [x] HTTPS facultatif sur le réseau local, certificat épinglé par l'application mobile ; tableau de bord installable (service worker)
+- [x] QCM contrôlés : réponse la plus longue, la plus courte ou mots absolus ; part des mots absolus indiquée pour chaque lot ; questions trop faciles ou trop dures listées
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
   - [x] Adzuna
@@ -423,6 +425,13 @@ Sur le Wi-Fi de la maison, sans Tailscale :
    sur les réseaux privés seulement : sur un Wi-Fi public, le PC reste fermé.
 3. L'adresse du PC peut changer au redémarrage de la box : la réserver pour le PC dans
    les réglages de la box (bail DHCP fixe) évite de la ressaisir.
+4. Facultatif, HTTPS : `python -m tools.local_certificate` crée un certificat pour
+   l'adresse `WEB_HOST` et affiche les lignes `WEB_TLS_CERTFILE` et `WEB_TLS_KEYFILE`
+   à ajouter au `.env`. Après avoir relancé `python -m web`, rescanner le QR code :
+   il transmet l'empreinte du certificat, seule acceptée par l'application. Le
+   navigateur, lui, signale un certificat inconnu, à accepter une fois ; le tableau
+   de bord ne s'installe comme une application qu'avec un certificat reconnu
+   (Tailscale en fournit un gratuitement) ou depuis ce PC.
 
 Aucun port n'est ouvert sur la box : seuls les appareils de votre compte Tailscale
 atteignent le PC. L'authentification du tableau de bord reste obligatoire. Pour lancer une
@@ -478,6 +487,8 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 | GET | `/api/v1/ping` | Sans jeton : nom de l'application et version de l'API, pour que le téléphone trouve le serveur sur le Wi-Fi |
 | GET | `/api/v1/quiz` | Thèmes, questions (réponse et explication comprises), schémas et guides ; `ETag` : 304 si rien n'a changé |
 | GET | `/api/v1/progress` | Boîte et date de révision de chaque question, chiffres d'ensemble |
+| POST | `/api/v1/exams` | Examens blancs du téléphone, ajoutés sans doublon à l'historique du PC : `{"exams": [{"title", "finished_at", "correct", "count", "seconds"}]}` |
+| POST | `/api/v1/flags` | Questions signalées depuis le téléphone, retirées des tirages : `{"question_ids": [...]}` |
 | POST | `/api/v1/answers` | Réponses faites hors ligne : `{"answers": [{"id", "question_id", "choice" ou "response", "answered_at"}]}` |
 
 Les QCM sont dans `questions`. Les calculs, remises en ordre et associations sont dans
@@ -501,7 +512,8 @@ scraper-data-python/
 ├── .github/                                   # Configuration GitHub
 │   ├── dependabot.yml                         # Mises à jour hebdomadaires des dépendances
 │   └── workflows/                             # Workflows GitHub Actions
-│       └── ci.yml                             # Tests, analyses, vulnérabilités et secrets
+│       ├── ci.yml                             # Tests, analyses, vulnérabilités et secrets
+│       └── apk.yml                            # APK de l'application mobile à chaque étiquette v…
 │
 ├── job/                                       # Domaine métier consacré aux offres d'emploi
 │   ├── __init__.py                            # Initialise le package Job
@@ -550,6 +562,7 @@ scraper-data-python/
 │   ├── quiz_generation.py                     # Demande ChatGPT par lot et contrôle des lots importés
 │   ├── quiz_packs.py                          # Import groupé des lots validés de data/packs
 │   ├── quiz_domains.py                        # Classement des thèmes par domaine et sous-domaine
+│   ├── quiz_bias.py                           # Indices qui trahissent la bonne réponse d'un QCM
 │   ├── quiz_exam.py                           # Mode examen : tirage, réponses et résultat
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
@@ -829,6 +842,9 @@ scraper-data-python/
 │       ├── manifest.webmanifest               # Installation sur l'écran d'accueil d'un téléphone
 │       ├── icon-192.png                       # Icône de l'écran d'accueil
 │       ├── icon-512.png                       # Icône de l'écran d'accueil, grande taille
+│       ├── service-worker.js                  # Fichiers statiques en cache et page hors ligne
+│       ├── pwa.js                             # Enregistre le service worker, en HTTPS seulement
+│       ├── offline.html                       # Page affichée quand le PC ne répond pas
 │       └── htmx.min.js                        # HTMX 2.0.4, copie locale
 │
 ├── assets/                                    # Ressources partagées par le bureau et le web
@@ -858,6 +874,7 @@ scraper-data-python/
 │   ├── quiz_lot.py                            # Construit et contrôle les lots de révision
 │   ├── quiz_svg.py                            # Schémas SVG des lots
 │   ├── windows_startup.py                     # Lancement automatique à l'ouverture de session
+│   ├── local_certificate.py                   # Crée le certificat HTTPS du réseau local
 │   └── quiz_lots/                             # Sources des lots écrits, un dossier par thème
 │
 ├── utils/                                     # Utilitaires techniques communs
@@ -869,6 +886,7 @@ scraper-data-python/
 │   ├── link_checker.py                        # Vérifie si le lien d'une offre est encore en ligne
 │   ├── api_client.py                          # Appels sécurisés aux API des sources
 │   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
+│   ├── tls.py                                 # Certificat HTTPS local et son empreinte
 │   └── security.py                            # Contrôles de sécurité du scraper
 │
 ├── cli/                                       # Gestion de l'interface en ligne de commande
@@ -1129,6 +1147,7 @@ scraper-data-python/
 │   ├── test_link_checker.py                    # Teste la vérification du lien des offres
 │   ├── test_mailer.py                          # Teste l'envoi d'e-mails, serveur simulé
 │   ├── test_main.py                            # Teste le point d'entrée principal
+│   ├── test_tls.py                             # Teste le certificat local et son empreinte dans le QR code
 │   └── test_security.py                        # Teste les contrôles de sécurité
 │
 ├── main.py                                     # Point d'entrée principal de l'application
@@ -1137,6 +1156,7 @@ scraper-data-python/
 ├── requirements-translation.txt                # Traduction hors ligne, facultative (torch compris)
 ├── pyproject.toml                              # Couverture, convention de nommage pylint
 ├── README.md                                   # Documentation synthétique du projet
+├── CHANGELOG.md                                # Journal des versions
 ├── SECURITY.md                                 # Signalement des vulnérabilités
 ├── .env.example                                # Modèle des variables d'environnement
 ├── .gitattributes                              # Impose les fins de ligne LF

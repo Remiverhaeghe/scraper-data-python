@@ -188,74 +188,39 @@ class BarChart(QWidget):
             return
 
         vXAxisLabel, vYAxisLabel = self.axes
-        vWidth = self.width()
 
         # Le libellé de l'axe vertical occupe une ligne au-dessus des barres.
         vTop = LABEL_HEIGHT * (2 if vYAxisLabel else 1)
-
-        if vYAxisLabel:
-            vPainter.setPen(QColor(COLORS["muted"]))
-            vPainter.drawText(
-                QRectF(0, 0, vWidth, LABEL_HEIGHT),
-                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                vYAxisLabel,
-            )
-
-            # Valeur de la ligne haute, à droite du libellé de l'axe
-            vLeft = vPainter.fontMetrics().horizontalAdvance(vYAxisLabel + "   ")
-
-            for vValue, vColor in self.get_scale():
-                vText = f"max {vValue}"
-                vPainter.setPen(QColor(vColor))
-                vPainter.drawText(
-                    QRectF(vLeft, 0, vWidth, LABEL_HEIGHT),
-                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                    vText,
-                )
-                vLeft += vPainter.fontMetrics().horizontalAdvance(vText + "   ")
-
-        vHasLegend = len(self.series) > 1
         vLegendItems = [
             (f"{vName} · {sum(vValues)}", vColor)
             for vName, vColor, vValues in self.series
         ]
         vLegendHeight = (
-            draw_legend(vPainter, vLegendItems, vWidth, 0, pDraw=False)
-            if vHasLegend
+            draw_legend(vPainter, vLegendItems, self.width(), 0, pDraw=False)
+            if len(self.series) > 1
             else 0
         )
-
-        vXAxisHeight = LABEL_HEIGHT if vXAxisLabel else 0
         vChartHeight = (
-            self.height() - vTop - LABEL_HEIGHT - vXAxisHeight - vLegendHeight
+            self.height()
+            - vTop
+            - LABEL_HEIGHT
+            - (LABEL_HEIGHT if vXAxisLabel else 0)
+            - vLegendHeight
         )
-        vBaseline = vTop + vChartHeight
-
-        if vXAxisLabel:
-            vPainter.setPen(QColor(COLORS["muted"]))
-            vPainter.drawText(
-                QRectF(0, vBaseline + LABEL_HEIGHT, vWidth, LABEL_HEIGHT),
-                Qt.AlignmentFlag.AlignCenter,
-                vXAxisLabel,
-            )
-
-        if vHasLegend:
-            draw_legend(
-                vPainter, vLegendItems, vWidth, self.height() - vLegendHeight + 6
-            )
-
-        vPainter.setPen(QColor(COLORS["border"]))
-        vPainter.drawLine(0, vBaseline, vWidth, vBaseline)
 
         if vYAxisLabel:
-            vPainter.setPen(QPen(QColor(COLORS["border"]), 1, Qt.PenStyle.DashLine))
-            vPainter.drawLine(0, vTop, vWidth, vTop)
+            self.draw_scale(vPainter, vYAxisLabel)
+
+        self.draw_frame(
+            vPainter, vTop, vTop + vChartHeight, vLegendItems, vLegendHeight
+        )
 
         if self.labels:
-            vSlot = vWidth / len(self.labels)
+            vSlot = self.width() / len(self.labels)
 
             if not self.fill_width:
                 vSlot = min(vSlot, MAX_SLOT_WIDTH)
+
             vBarWidth = min(vSlot * 0.7 / len(self.series), 22)
             vGroupWidth = vBarWidth * len(self.series)
 
@@ -263,66 +228,125 @@ class BarChart(QWidget):
                 vGroupLeft = vIndex * vSlot + (vSlot - vGroupWidth) / 2
 
                 for vSeriesIndex, (_, vColor, vValues) in enumerate(self.series):
-                    vValue = vValues[vIndex]
-                    vMaximum = self.get_maximum(vValues)
-                    vCut = vValue > vMaximum
-                    vHeight = max(
-                        vChartHeight * min(vValue, vMaximum) / vMaximum,
-                        3 if vValue else 2,
+                    self.draw_bar(
+                        vPainter,
+                        QRectF(
+                            vGroupLeft + vSeriesIndex * vBarWidth,
+                            vTop,
+                            vBarWidth,
+                            vChartHeight,
+                        ),
+                        vValues[vIndex],
+                        self.get_maximum(vValues),
+                        vColor[vIndex] if isinstance(vColor, (list, tuple)) else vColor,
                     )
-                    vLeft = vGroupLeft + vSeriesIndex * vBarWidth
-
-                    vPainter.setPen(Qt.PenStyle.NoPen)
-                    vBarColor = (
-                        vColor[vIndex] if isinstance(vColor, (list, tuple)) else vColor
-                    )
-                    vPainter.setBrush(QColor(vBarColor if vValue else COLORS["border"]))
-                    vPainter.drawRoundedRect(
-                        QRectF(vLeft + 1, vBaseline - vHeight, vBarWidth - 2, vHeight),
-                        3,
-                        3,
-                    )
-
-                    if vCut:
-                        # Deux traits blancs en biais signalent la barre coupée.
-                        vPainter.setPen(QPen(QColor("#ffffff"), 2))
-                        for vOffset in (10, 16):
-                            vPainter.drawLine(
-                                QPointF(vLeft, vTop + vOffset + 3),
-                                QPointF(vLeft + vBarWidth, vTop + vOffset - 3),
-                            )
-
-                    if vValue and (vCut or not vHasLegend):
-                        vPainter.setPen(QColor(COLORS["heading"]))
-                        vPainter.drawText(
-                            QRectF(
-                                vLeft - 10,
-                                vBaseline - vHeight - LABEL_HEIGHT,
-                                vBarWidth + 20,
-                                LABEL_HEIGHT,
-                            ),
-                            Qt.AlignmentFlag.AlignCenter,
-                            str(vValue),
-                        )
 
                 # Le dernier libellé, souvent le jour courant, reste toujours visible.
                 if vSlot >= MIN_LABEL_WIDTH or (len(self.labels) - 1 - vIndex) % 2 == 0:
-                    # Centré sous sa barre, le texte n'est décalé que s'il
-                    # déborde du graphique.
-                    vLabelWidth = vPainter.fontMetrics().horizontalAdvance(vLabel) + 4
-                    vLabelLeft = min(
-                        max((vIndex + 0.5) * vSlot - vLabelWidth / 2, 0),
-                        vWidth - vLabelWidth,
-                    )
-
-                    vPainter.setPen(QColor(COLORS["muted"]))
-                    vPainter.drawText(
-                        QRectF(vLabelLeft, vBaseline, vLabelWidth, LABEL_HEIGHT),
-                        Qt.AlignmentFlag.AlignCenter,
-                        vLabel,
+                    self.draw_day_label(
+                        vPainter, vLabel, (vIndex + 0.5) * vSlot, vTop + vChartHeight
                     )
 
         vPainter.end()
+
+    def draw_scale(self, pPainter, pYAxisLabel):
+        """Écrit le libellé de l'axe vertical, puis la valeur de la ligne haute."""
+        pPainter.setPen(QColor(COLORS["muted"]))
+        pPainter.drawText(
+            QRectF(0, 0, self.width(), LABEL_HEIGHT),
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            pYAxisLabel,
+        )
+
+        vLeft = pPainter.fontMetrics().horizontalAdvance(pYAxisLabel + "   ")
+
+        for vValue, vColor in self.get_scale():
+            vText = f"max {vValue}"
+            pPainter.setPen(QColor(vColor))
+            pPainter.drawText(
+                QRectF(vLeft, 0, self.width(), LABEL_HEIGHT),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                vText,
+            )
+            vLeft += pPainter.fontMetrics().horizontalAdvance(vText + "   ")
+
+    def draw_frame(self, pPainter, pTop, pBaseline, pLegendItems, pLegendHeight):
+        """Trace la ligne de base, la ligne haute, l'axe horizontal et la légende."""
+        vXAxisLabel, vYAxisLabel = self.axes
+        vWidth = self.width()
+
+        if vXAxisLabel:
+            pPainter.setPen(QColor(COLORS["muted"]))
+            pPainter.drawText(
+                QRectF(0, pBaseline + LABEL_HEIGHT, vWidth, LABEL_HEIGHT),
+                Qt.AlignmentFlag.AlignCenter,
+                vXAxisLabel,
+            )
+
+        if pLegendHeight:
+            draw_legend(
+                pPainter, pLegendItems, vWidth, self.height() - pLegendHeight + 6
+            )
+
+        pPainter.setPen(QColor(COLORS["border"]))
+        pPainter.drawLine(0, pBaseline, vWidth, pBaseline)
+
+        if vYAxisLabel:
+            pPainter.setPen(QPen(QColor(COLORS["border"]), 1, Qt.PenStyle.DashLine))
+            pPainter.drawLine(0, pTop, vWidth, pTop)
+
+    def draw_bar(self, pPainter, pSlot, pValue, pMaximum, pColor):
+        """Dessine une barre dans pSlot (sa colonne, haute de toute la zone).
+
+        Une valeur au-delà de l'échelle est coupée, marquée de deux traits et
+        affiche son nombre ; sans légende, chaque barre affiche le sien.
+        """
+        vCut = pValue > pMaximum
+        vHeight = max(
+            pSlot.height() * min(pValue, pMaximum) / pMaximum, 3 if pValue else 2
+        )
+        vBaseline = pSlot.bottom()
+        vLeft = pSlot.left()
+
+        pPainter.setPen(Qt.PenStyle.NoPen)
+        pPainter.setBrush(QColor(pColor if pValue else COLORS["border"]))
+        pPainter.drawRoundedRect(
+            QRectF(vLeft + 1, vBaseline - vHeight, pSlot.width() - 2, vHeight), 3, 3
+        )
+
+        if vCut:
+            # Deux traits blancs en biais signalent la barre coupée.
+            pPainter.setPen(QPen(QColor("#ffffff"), 2))
+            for vOffset in (10, 16):
+                pPainter.drawLine(
+                    QPointF(vLeft, pSlot.top() + vOffset + 3),
+                    QPointF(vLeft + pSlot.width(), pSlot.top() + vOffset - 3),
+                )
+
+        if pValue and (vCut or len(self.series) == 1):
+            pPainter.setPen(QColor(COLORS["heading"]))
+            pPainter.drawText(
+                QRectF(
+                    vLeft - 10,
+                    vBaseline - vHeight - LABEL_HEIGHT,
+                    pSlot.width() + 20,
+                    LABEL_HEIGHT,
+                ),
+                Qt.AlignmentFlag.AlignCenter,
+                str(pValue),
+            )
+
+    def draw_day_label(self, pPainter, pLabel, pCenter, pBaseline):
+        """Écrit le libellé centré sous son groupe, décalé seulement s'il déborde."""
+        vLabelWidth = pPainter.fontMetrics().horizontalAdvance(pLabel) + 4
+        vLabelLeft = min(max(pCenter - vLabelWidth / 2, 0), self.width() - vLabelWidth)
+
+        pPainter.setPen(QColor(COLORS["muted"]))
+        pPainter.drawText(
+            QRectF(vLabelLeft, pBaseline, vLabelWidth, LABEL_HEIGHT),
+            Qt.AlignmentFlag.AlignCenter,
+            pLabel,
+        )
 
 
 class PieChart(QWidget):

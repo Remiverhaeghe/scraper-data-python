@@ -14,7 +14,10 @@ affiché dans les Paramètres du PC ou du web, recherche du serveur sur
 le Wi-Fi (bouton de l'écran de connexion, et automatiquement quand son adresse
 change), schémas en plein écran tournés pour la longueur du téléphone, statistiques
 (activité des derniers jours, réussite par thème, examens blancs), apparence
-claire ou sombre et taille du texte réglables.
+claire ou sombre et taille du texte réglables, question signalée depuis le
+téléphone, révision des thèmes de ses candidatures en cours, objectif de réponses
+du jour, vibration à la correction, examens blancs envoyés au PC, HTTPS avec
+certificat épinglé (empreinte reçue par le QR code).
 
 ## Installation des outils (une fois)
 
@@ -83,6 +86,11 @@ flutter run          # téléphone branché en USB, débogage USB activé
 ```powershell
 flutter build apk --release --split-per-abi
 ```
+
+La CI construit aussi ces APK à chaque étiquette `v…` (onglet Actions, artefact
+« jobboard-revision-apk ») ; avec les secrets `ANDROID_KEYSTORE_BASE64`,
+`ANDROID_STORE_PASSWORD`, `ANDROID_KEY_PASSWORD` et `ANDROID_KEY_ALIAS`, ils sont
+signés avec la clé personnelle et remplacent l'application installée.
 
 Un APK par type de processeur, trois fois plus léger qu'un APK commun : copier
 `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` (presque tous les
@@ -166,6 +174,7 @@ mobile/
     ├── discovery_test.dart       # Teste la recherche du serveur sur le Wi-Fi
     ├── connection_code_test.dart # Teste la lecture du QR code de connexion
     ├── statistics_test.dart      # Teste la réussite par thème et le graphique des jours
+    ├── phone_features_test.dart  # Teste signalements, examens envoyés, objectif et candidatures
     ├── schema_view_test.dart     # Teste la description et le plein écran des schémas
     └── widget_test.dart          # Teste l'accueil et une question corrigée
 ```

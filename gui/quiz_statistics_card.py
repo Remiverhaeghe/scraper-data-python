@@ -26,6 +26,27 @@ PROGRESS_BAR_WIDTH = 140
 PROGRESS_BAR_HEIGHT = 14
 
 
+def describe_unbalanced(pUnbalanced):
+    """Résume les questions à revoir : trop dures puis trop faciles, avec leur taux."""
+
+    vLines = []
+
+    for vKind, vLabel in (("hard", "Trop dures"), ("easy", "Trop faciles")):
+        if pUnbalanced.get(vKind):
+            vLines.append(
+                f"{vLabel}, à reformuler ou signaler : "
+                + " ; ".join(
+                    f"{vRow['question'][:60]} ({vRow['theme']}, {vRow['rate']} % "
+                    f"sur {vRow['answers']})"
+                    for vRow in pUnbalanced[vKind]
+                )
+            )
+
+    rText = "\n".join(vLines)
+
+    return rText
+
+
 class QuizStatisticsCard(QWidget):
     """Carte « Mes statistiques », remplie par show_progress."""
 
@@ -73,22 +94,33 @@ class QuizStatisticsCard(QWidget):
         vProgressTitle = QLabel("Progression par catégorie")
         vProgressTitle.setObjectName("fieldLabel")
 
+        # Questions réussies presque toujours ou presque jamais : à revoir.
+        self.unbalanced_label = QLabel()
+        self.unbalanced_label.setObjectName("cardSubtitle")
+        self.unbalanced_label.setWordWrap(True)
+
         vCard, vCardLayout = create_card(
             "Mes statistiques", "Progression globale et réponses des 14 derniers jours"
         )
         vCardLayout.addLayout(vCards)
         vCardLayout.addWidget(vProgressTitle)
         vCardLayout.addWidget(self.progress_tree)
+        vCardLayout.addWidget(self.unbalanced_label)
         vCardLayout.addWidget(self.statistics_chart)
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.addWidget(vCard)
 
-    def show_progress(self, pThemes, pStatistics):
-        """Affiche les chiffres, la progression par catégorie et l'activité récente."""
+    def show_progress(self, pThemes, pStatistics, pUnbalanced=None):
+        """Affiche les chiffres, la progression par catégorie et l'activité récente.
+
+        pUnbalanced liste les questions trop dures et trop faciles à revoir.
+        """
         self.show_statistics(pStatistics)
         self.show_category_progress(pThemes)
+        self.unbalanced_label.setText(describe_unbalanced(pUnbalanced or {}))
+        self.unbalanced_label.setVisible(bool(self.unbalanced_label.text()))
 
     def show_category_progress(self, pThemes):
         """Remplit le tableau de progression par domaine et sous-domaine."""

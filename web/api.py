@@ -17,6 +17,8 @@ from job.mobile_sync import (
     build_quiz_package,
     check_mobile_token,
     sync_answers,
+    sync_exam_results,
+    sync_flags,
 )
 from utils.logger import get_logger
 from web.dependencies import get_database_file
@@ -105,3 +107,35 @@ def upload_answers(
     rResult = {**vReport, "progress": build_progress(pDatabaseFile, vNow)}
 
     return rResult
+
+
+@router.post("/exams", dependencies=[Depends(require_api_token)])
+def upload_exams(
+    pExams: list = Body(..., embed=True, alias="exams"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Ajoute à l'historique du PC les examens blancs passés sur le téléphone."""
+
+    try:
+        rReport = sync_exam_results(pDatabaseFile, pExams)
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    return rReport
+
+
+@router.post("/flags", dependencies=[Depends(require_api_token)])
+def upload_flags(
+    pQuestionIds: list = Body(..., embed=True, alias="question_ids"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Retire des tirages les questions signalées depuis le téléphone."""
+
+    try:
+        rReport = sync_flags(pDatabaseFile, pQuestionIds)
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    return rReport

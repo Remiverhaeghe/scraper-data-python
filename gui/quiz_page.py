@@ -46,6 +46,7 @@ from job.quiz import (
     build_quiz_overview,
     build_quiz_statistics,
     describe_no_question,
+    find_unbalanced_questions,
     get_next_review,
     get_review_schedule,
     flag_question,
@@ -395,7 +396,13 @@ class QuizPage(QWidget):
             return
 
         self.themes = vThemes
-        self.statistics_card.show_progress(vThemes, vStatistics)
+        self.statistics_card.show_progress(
+            vThemes,
+            vStatistics,
+            find_unbalanced_questions(
+                self.database_file, load_active_quiz(self.database_file)
+            ),
+        )
         self.import_panel.refresh(vThemes)
         self.priority_banner.refresh()
         self.select_category(self.domain, self.subdomain)

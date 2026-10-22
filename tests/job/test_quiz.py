@@ -19,12 +19,14 @@ from job.quiz import (
     build_review_schedule,
     count_streak,
     describe_no_question,
+    find_unbalanced_questions,
     flag_question,
     get_next_review,
     load_active_quiz,
     load_quiz,
     pick_question,
 )
+from job.quiz_bias import describe_bias, measure_bias
 from job.quiz_import import (
     describe_import_details,
     describe_quiz_import,
@@ -33,7 +35,7 @@ from job.quiz_import import (
 )
 from storage.database import initialize_database
 from storage.job_offers import save_offers
-from storage.quiz_answers import get_last_answers
+from storage.quiz_answers import get_last_answers, save_quiz_answer
 from storage.settings_repository import save_setting_values
 
 NOW = datetime(2026, 10, 11, 10, 0)
@@ -83,30 +85,27 @@ def test_versioned_questions_are_valid():
     assert all(len(vTheme["questions"]) >= 8 for vTheme in vQuiz.values())
 
 
-def test_right_choice_is_not_given_away_by_its_length():
-    """Vérifie que la bonne réponse d'un QCM n'est pas trop souvent la plus longue.
+def test_right_choice_is_not_given_away():
+    """Vérifie qu'aucun thème livré ne laisse deviner la bonne réponse d'un QCM.
 
-    Le hasard donne 25 % avec quatre choix ; au-delà de 35 %, choisir la plus
-    longue devient une stratégie qui rapporte des points sans rien savoir.
+    Ni par la longueur (plus longue ou plus courte), ni par un mot absolu
+    réservé aux mauvaises réponses : choisir sur ces indices ne doit pas
+    rapporter de points sans connaître le sujet.
     """
 
-    vBiasedThemes = {}
+    vBiased = {
+        vKey: vProblems
+        for vKey, vTheme in load_quiz().items()
+        if (vProblems := describe_bias(measure_bias(vTheme["questions"])))
+    }
+    vAll = [
+        vQuestion
+        for vTheme in load_quiz().values()
+        for vQuestion in vTheme["questions"]
+    ]
 
-    for vKey, vTheme in load_quiz().items():
-        vLongest = []
-
-        for vQuestion in vTheme["questions"]:
-            if "choices" in vQuestion:
-                vLengths = [len(vChoice) for vChoice in vQuestion["choices"]]
-                vRight = vLengths[vQuestion["answer"]]
-
-                if vRight == max(vLengths) and vLengths.count(vRight) == 1:
-                    vLongest.append(vQuestion["id"])
-
-        if len(vLongest) > 0.35 * len(vTheme["questions"]):
-            vBiasedThemes[vKey] = vLongest
-
-    assert not vBiasedThemes
+    assert not vBiased
+    assert not describe_bias(measure_bias(vAll))
 
 
 def test_invalid_question_is_reported(tmp_path):
@@ -531,3 +530,27 @@ def test_find_skills_in_text_cases():
     }
     assert contains_word("a-java java", "java")
     assert not contains_word("javas", "java")
+
+
+def test_unbalanced_questions_need_enough_answers(database_file):
+    """Vérifie les questions trop dures et trop faciles, avec assez de réponses."""
+
+    vQuiz = load_quiz()
+    vHard, vEasy, vRare = [
+        vQuestion["id"] for vQuestion in vQuiz["sql"]["questions"][:3]
+    ]
+
+    for vIndex in range(4):
+        save_quiz_answer(database_file, vHard, "sql", vIndex == 0, NOW)
+
+    for _ in range(6):
+        save_quiz_answer(database_file, vEasy, "sql", True, NOW)
+
+    # Une seule réponse fausse : trop peu pour juger la question.
+    save_quiz_answer(database_file, vRare, "sql", False, NOW)
+
+    vUnbalanced = find_unbalanced_questions(database_file, vQuiz)
+
+    assert [vRow["id"] for vRow in vUnbalanced["hard"]] == [vHard]
+    assert vUnbalanced["hard"][0]["rate"] == 25
+    assert [vRow["id"] for vRow in vUnbalanced["easy"]] == [vEasy]

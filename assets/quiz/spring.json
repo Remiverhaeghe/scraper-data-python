@@ -39,7 +39,7 @@
         "Il crée une table en base à partir des attributs de la classe",
         "Il expose des méthodes HTTP dont le retour est converti en JSON",
         "Il planifie l'exécution régulière des méthodes de la classe",
-        "Il sécurise toutes les routes de l'application par authentification"
+        "Il sécurise les routes de l'application par authentification"
       ],
       "answer": 1,
       "explanation": "@RestController réunit @Controller et @ResponseBody. Les méthodes annotées @GetMapping, @PostMapping... répondent aux requêtes ; Jackson convertit les objets renvoyés en JSON."

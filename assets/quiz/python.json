@@ -44,7 +44,7 @@
         "Un tuple ne peut contenir qu'un seul type de valeur à la fois",
         "Un tuple n'est pas modifiable et peut servir de clé de dictionnaire",
         "Une liste est plus rapide à créer et prend moins de place en mémoire",
-        "Aucune, ce sont deux noms du même type"
+        "Ce sont deux noms du même type, au choix"
       ],
       "answer": 1,
       "explanation": "Un tuple est immuable : on ne peut ni ajouter ni remplacer d'élément. S'il ne contient que des valeurs hachables, il peut servir de clé de dictionnaire, contrairement à une liste."
@@ -97,7 +97,7 @@
       "choices": [
         "Le résultat est plus précis sur les très grands nombres",
         "Le générateur ne construit pas la liste entière en mémoire",
-        "Il n'y a aucune différence, Python optimise les deux écritures",
+        "Les deux écritures se valent, Python les optimise de la même façon",
         "Le générateur s'exécute en parallèle sur plusieurs cœurs"
       ],
       "answer": 1,
@@ -108,7 +108,7 @@
       "level": "débutant",
       "question": "Pourquoi écrire if x is None plutôt que if x == None ?",
       "choices": [
-        "is est plus lisible, mais les deux écritures donnent toujours le même résultat",
+        "is est plus lisible, mais les deux écritures donnent le même résultat",
         "is compare l'identité de l'objet unique None, sans passer par __eq__",
         "== ne fonctionne pas avec None et lève une TypeError",
         "is convertit d'abord x en booléen avant de le comparer à None"

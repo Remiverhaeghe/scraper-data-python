@@ -1,0 +1,68 @@
+name: APK
+
+# Construit l'application mobile à chaque version publiée (étiquette v1.2.0),
+# ou à la demande depuis l'onglet Actions.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    name: APK par type de processeur
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      # Le JDK 17 est déjà présent sur les machines Ubuntu de GitHub.
+      - name: Java 17
+        run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+
+      # Signature avec la clé personnelle si les secrets sont définis : l'APK
+      # remplace alors celui installé. Sans eux, la clé de débogage est utilisée
+      # et l'application installée doit d'abord être désinstallée.
+      - name: Clé de signature
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            {
+              echo "storePassword=$STORE_PASSWORD"
+              echo "keyPassword=$KEY_PASSWORD"
+              echo "keyAlias=$KEY_ALIAS"
+              echo "storeFile=upload-keystore.jks"
+            } > android/key.properties
+            echo "Signature avec la clé personnelle"
+          else
+            echo "Secrets absents : signature avec la clé de débogage"
+          fi
+
+      - name: Installation des dépendances
+        run: flutter pub get
+
+      - name: Construction
+        run: flutter build apk --release --split-per-abi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: jobboard-revision-apk
+          path: mobile/build/app/outputs/flutter-apk/*-release.apk
+          if-no-files-found: error
