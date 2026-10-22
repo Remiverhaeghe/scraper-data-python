@@ -30,6 +30,7 @@ from gui.widgets import (
     clear_layout,
     create_button,
     create_card,
+    create_fold_button,
     create_page_header,
     create_scroll_content,
     show_message,
@@ -84,7 +85,7 @@ class ApplicationsPage(QWidget):
             vLayout,
             "Candidatures",
             "Vos candidatures par étape, et les sources ou postes qui répondent le plus",
-            [vExportButton],
+            [vExportButton, create_fold_button(self)],
             pIcon="send",
         )
 

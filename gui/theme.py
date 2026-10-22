@@ -10,7 +10,11 @@ from gui.icons import stylesheet_path
 
 THEME_FILE = Path(__file__).with_name("theme.qss")
 
-THEME_CHOICES = {"light": "Clair", "dark": "Sombre"}
+# « Auto » suit le thème de Windows, comme le téléphone suit le sien.
+THEME_CHOICES = {"system": "Auto", "light": "Clair", "dark": "Sombre"}
+
+# Réglage qui mémorise le choix du thème
+THEME_SETTING = "appearance/theme"
 
 THEMES = {
     "light": {

@@ -29,4 +29,5 @@ SOURCE = SourceDefinition(
     label="Himalayas",
     load_parameters=load_parameters,
     scrape=scrape,
+    category="remote",
 )

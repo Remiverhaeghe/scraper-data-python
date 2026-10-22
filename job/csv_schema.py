@@ -122,3 +122,20 @@ JOB_COLUMNS = [
     # Type ou catégorie de poste
     "job_type",
 ]
+
+
+def build_job(**pFields):
+    """Retourne une offre au format commun : les colonnes non fournies sont vides.
+
+    Un nom de colonne inconnu lève ValueError : une faute de frappe dans un
+    parseur ne fait pas disparaître une information en silence.
+    """
+
+    vUnknown = set(pFields) - set(JOB_COLUMNS)
+
+    if vUnknown:
+        raise ValueError(f"Colonnes inconnues : {', '.join(sorted(vUnknown))}")
+
+    rJob = {vColumn: pFields.get(vColumn) for vColumn in JOB_COLUMNS}
+
+    return rJob

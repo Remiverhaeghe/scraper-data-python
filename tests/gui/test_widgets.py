@@ -2,9 +2,9 @@
 
 from PySide6.QtCore import QEvent, QSettings, Qt
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QGridLayout, QLabel, QWidget
+from PySide6.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
-from gui.widgets import CardHeader, TileButton, create_card
+from gui.widgets import CardHeader, TileButton, create_card, create_fold_button
 
 
 def test_collapsible_card_remembers_state(qt_application):
@@ -116,3 +116,30 @@ def test_card_title_stays_a_label(qt_application):
     vTitle.setText("Candidatures (3)")
 
     assert vTitle.text() == "Candidatures (3)"
+
+
+def test_fold_button_folds_then_unfolds_every_card(qt_application):
+    """Vérifie le bouton qui replie puis déplie toutes les cartes d'une page."""
+
+    vPage = QWidget()
+    vLayout = QVBoxLayout(vPage)
+    vContents = []
+
+    for vIndex in range(3):
+        vCard, vCardLayout = create_card(
+            f"Carte {vIndex}", pKey=f"pli{vIndex}", pOpen=True
+        )
+        vCardLayout.addWidget(QLabel("Contenu"))
+        vContents.append(vCardLayout.parentWidget())
+        vLayout.addWidget(vCard)
+
+    vButton = create_fold_button(vPage)
+    vButton.click()
+
+    assert all(vContent.isHidden() for vContent in vContents)
+    assert vButton.text() == "Tout déplier"
+
+    vButton.click()
+
+    assert not any(vContent.isHidden() for vContent in vContents)
+    assert vButton.text() == "Tout replier"

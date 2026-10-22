@@ -44,7 +44,7 @@ from job.presentation import (
     prepare_offer,
     safe_url,
 )
-from job.translation import can_translate, translate_to_french
+from job.translation import can_translate, translate_with_cache
 from storage.duplicates import save_decision
 from utils.logger import get_logger
 
@@ -530,7 +530,7 @@ class OfferDetailPanel(QWidget):
         vError = None
 
         try:
-            vTranslation = translate_to_french(pText)
+            vTranslation = translate_with_cache(self.database_file, pText)
 
         except ValueError as vException:
             vError = str(vException)

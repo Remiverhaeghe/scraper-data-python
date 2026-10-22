@@ -427,3 +427,80 @@ def test_migration_to_v21_removes_offers_the_parsers_now_reject(tmp_path):
         ("4", "exLabora"),
         ("6", "Okta"),
     ]
+
+
+def test_migration_to_v22_decodes_adzuna_html_and_finds_agency(tmp_path):
+    """Vérifie le décodage des entités HTML et l'agence retrouvée dans le texte."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        for vMigration in MIGRATIONS[:21]:
+            vMigration(vConnection)
+
+        vConnection.execute("PRAGMA user_version = 21")
+        vConnection.executemany(
+            """
+            INSERT INTO job_offer (
+                source, source_id, first_seen_at, last_seen_at, title, company,
+                description
+            )
+            VALUES (?, ?, '2026-10-01', '2026-10-01', ?, ?, ?)
+            """,
+            [
+                (
+                    "adzuna",
+                    "1",
+                    "&Eacute;lectricien H/F",
+                    None,
+                    "Votre agence d&rsquo;int&eacute;rim PROMAN recrute",
+                ),
+                ("adzuna", "2", "Soudeur", "Acme", "Soudure &amp; montage"),
+                ("lever", "3", "Dev &amp; Ops", None, "x"),
+            ],
+        )
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    initialize_database(vDatabaseFile)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(
+            "SELECT title, company, description FROM job_offer ORDER BY source_id"
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    assert vRows == [
+        ("Électricien H/F", "PROMAN", "Votre agence d’intérim PROMAN recrute"),
+        ("Soudeur", "Acme", "Soudure & montage"),
+        ("Dev &amp; Ops", None, "x"),
+    ]
+
+
+def test_offers_list_uses_the_discovery_date_index(tmp_path):
+    """Vérifie que la liste des offres, triée par date, ne trie plus toute la table."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vPlan = " ".join(vRow[3] for vRow in vConnection.execute("""
+                EXPLAIN QUERY PLAN SELECT * FROM job_offer
+                ORDER BY first_seen_at DESC, published_at DESC LIMIT 1000
+                """))
+
+    finally:
+        vConnection.close()
+
+    assert "idx_job_offer_first_seen" in vPlan
+    assert "TEMP B-TREE" not in vPlan

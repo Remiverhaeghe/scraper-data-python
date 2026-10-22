@@ -16,6 +16,10 @@ logger = get_logger(__name__)
 # Au-delà, la sauvegarde automatique n'a manifestement plus lieu
 BACKUP_WARNING_DELAY = timedelta(days=2)
 
+# Recherches de suite sans aucune offre au-delà desquelles une source qui en
+# renvoyait est signalée : son API a peut-être changé ou sa clé expiré.
+SILENT_SOURCE_RUNS = 3
+
 
 def format_age(pDate, pNow):
     """Décrit l'ancienneté d'une date : aujourd'hui, hier ou il y a n jours."""
@@ -118,6 +122,51 @@ def check_sources():
     return rCheck
 
 
+def find_silent_sources(pHistory, pRuns=SILENT_SOURCE_RUNS):
+    """Retourne les sources sans offre lors des pRuns dernières recherches qui les
+    ont interrogées, alors qu'elles en renvoyaient auparavant.
+
+    pHistory va de la plus récente à la plus ancienne entrée.
+    """
+
+    vCounts = {}
+
+    for vEntry in pHistory:
+        for vName, vCount in (
+            (vEntry.parameters or {}).get("source_counts") or {}
+        ).items():
+            vCounts.setdefault(vName, []).append(vCount)
+
+    rSilent = [
+        vName
+        for vName, vValues in vCounts.items()
+        if len(vValues) > pRuns and not any(vValues[:pRuns]) and any(vValues[pRuns:])
+    ]
+
+    return rSilent
+
+
+def check_silent_sources(pDatabaseFile):
+    """Signale les sources qui ne renvoient plus d'offres."""
+
+    vSilent = [
+        SOURCES[vName].label if vName in SOURCES else vName
+        for vName in find_silent_sources(get_history(pDatabaseFile))
+    ]
+
+    rCheck = (
+        (
+            f"Plus aucune offre depuis {SILENT_SOURCE_RUNS} recherches : "
+            f"{', '.join(vSilent)}. Clé expirée ou API modifiée ? Voir les journaux.",
+            "warning",
+        )
+        if vSilent
+        else ("Toutes les sources interrogées renvoient des offres", "success")
+    )
+
+    return rCheck
+
+
 def check_followed_offers(pDatabaseFile):
     """Indique la dernière vérification des liens des offres suivies."""
 
@@ -155,6 +204,7 @@ def build_health(pDatabaseFile, pNow):
         ("Recherche planifiée", lambda: check_schedule(pDatabaseFile, pNow)),
         ("Dernière recherche", lambda: check_last_run(pDatabaseFile)),
         ("Sources", check_sources),
+        ("Sources muettes", lambda: check_silent_sources(pDatabaseFile)),
         ("Offres suivies vérifiées", lambda: check_followed_offers(pDatabaseFile)),
         ("Place occupée", lambda: check_storage(pDatabaseFile)),
     )

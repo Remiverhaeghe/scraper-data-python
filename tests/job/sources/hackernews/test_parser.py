@@ -1,9 +1,12 @@
 """Tests de la transformation des offres Hacker News"""
 
+import json
+from pathlib import Path
+
 import pytest
 
 from job.csv_schema import JOB_COLUMNS
-from job.sources.hackernews.parser import parse_job, parse_jobs
+from job.sources.hackernews.parser import parse_header, parse_job, parse_jobs
 
 
 def build_comment(**pValues):
@@ -189,3 +192,21 @@ def test_header_without_separator_has_no_company():
 
     assert vJob["title"] == "We're hiring software engineers at the IRS!"
     assert vJob["company"] is None
+
+
+HEADER_CASES = json.loads(
+    (Path(__file__).parents[3] / "fixtures" / "hackernews_headers.json").read_text(
+        encoding="utf-8"
+    )
+)
+
+
+@pytest.mark.parametrize("pCase", HEADER_CASES, ids=lambda pCase: pCase["header"])
+def test_real_headers_are_split_into_company_title_and_location(pCase):
+    """Vérifie le découpage d'en-têtes réels : un lieu n'est jamais pris pour le poste."""
+
+    vHeader = parse_header(pCase["header"])
+
+    assert vHeader["company"] == pCase["company"]
+    assert vHeader["title"] == pCase["title"]
+    assert vHeader["location"] == pCase["location"]

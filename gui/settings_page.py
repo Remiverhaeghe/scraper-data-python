@@ -3,7 +3,7 @@
 import smtplib
 from datetime import datetime
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSettings, Qt, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QButtonGroup,
@@ -22,13 +22,14 @@ from PySide6.QtWidgets import (
 
 from gui.token_access_panel import TokenAccessPanel
 from gui.data_panel import DataPanel
-from gui.theme import COLORS, THEME_CHOICES, is_dark_theme
+from gui.theme import COLORS, THEME_CHOICES, THEME_SETTING
 from gui.widgets import (
     FlowLayout,
     align_spin_box,
     clear_layout,
     create_button,
     create_card,
+    create_fold_button,
     create_icon_label,
     create_page_header,
     create_scroll_content,
@@ -72,7 +73,7 @@ from utils.mailer import EMAIL_SETTINGS, get_missing_email_settings, send_email
 
 logger = get_logger(__name__)
 
-THEME_ICONS = {"light": "sun", "dark": "moon"}
+THEME_ICONS = {"system": "monitor", "light": "sun", "dark": "moon"}
 
 # Hauteur des listes d'entreprises : quelques lignes, la liste défile au-delà.
 COMPANY_EDIT_HEIGHT = 76
@@ -124,6 +125,7 @@ class SettingsPage(QWidget):
             vLayout,
             "Paramètres",
             "Apparence, règles de calcul, planification, notifications et sources",
+            [create_fold_button(self)],
             pIcon="settings",
         )
 
@@ -206,7 +208,9 @@ class SettingsPage(QWidget):
 
         self.theme_buttons = QButtonGroup(self)
 
-        vCurrentTheme = "dark" if is_dark_theme() else "light"
+        # Le choix mémorisé, et non le thème affiché : « Auto » reste coché même
+        # quand Windows est en clair.
+        vCurrentTheme = QSettings().value(THEME_SETTING, "system", str)
 
         vButtons = QHBoxLayout()
 

@@ -322,7 +322,11 @@ def get_offers(pDatabaseFile, pLimit=None, **pFilters):
     if vConditions:
         vQuery += " WHERE " + " AND ".join(vConditions)
 
-    vQuery += " ORDER BY o.first_seen_at DESC, o.published_at DESC"
+    # Départage par source et identifiant : deux offres vues au même instant
+    # gardent toujours le même ordre.
+    vQuery += (
+        " ORDER BY o.first_seen_at DESC, o.published_at DESC, o.source, o.source_id"
+    )
 
     if pLimit is not None:
         vQuery += " LIMIT ?"

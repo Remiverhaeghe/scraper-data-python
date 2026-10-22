@@ -12,6 +12,15 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Catégories des sources, dans l'ordre d'affichage : le lieu des offres qu'elles
+# publient, ou les pages carrière d'entreprises choisies.
+SOURCE_CATEGORIES = {
+    "france": "France",
+    "company": "Pages carrière",
+    "international": "International",
+    "remote": "Télétravail",
+}
+
 
 @dataclass
 class SourceConfig:
@@ -73,6 +82,9 @@ class SourceDefinition:
 
     # Variables d'environnement indispensables, comme les clés d'API
     settings: tuple[str, ...] = ()
+
+    # Catégorie affichée et filtrable, parmi SOURCE_CATEGORIES
+    category: str = "international"
 
     def get_missing_settings(self):
         """Retourne les variables d'environnement requises non renseignées."""

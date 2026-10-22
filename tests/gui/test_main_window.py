@@ -1,5 +1,7 @@
 """Tests de la fenêtre principale"""
 
+from PySide6.QtGui import QKeySequence, QShortcut
+
 import gui.offer_assistant as offer_assistant
 from gui.main_window import MainWindow
 from job.presentation import FOLLOW_UP_FILTER
@@ -180,3 +182,33 @@ def test_menu_shows_pending_alerts(qt_application, tmp_path, monkeypatch):
 
     assert vItem.text() == "Candidatures (2)"
     assert vItem.toolTip() == "2 relance(s) à faire"
+
+
+def test_keyboard_shortcuts(qt_application, tmp_path):
+    """Vérifie Ctrl+3 pour la troisième page, Ctrl+F et Échap sur les offres."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vWindow = MainWindow(vDatabaseFile, "Test")
+    vWindow.show()
+    vShortcuts = {
+        vShortcut.key().toString(): vShortcut
+        for vShortcut in vWindow.findChildren(QShortcut)
+    }
+
+    vShortcuts["Ctrl+3"].activated.emit()
+
+    assert vWindow.navigation.currentRow() == 2
+
+    vShortcuts[QKeySequence(QKeySequence.StandardKey.Find).toString()].activated.emit()
+
+    assert vWindow.pages.currentWidget() is vWindow.offers_page
+    assert vWindow.focusWidget() is vWindow.offers_page.search_edit
+
+    vWindow.offers_page.set_detail_visible(True)
+    vShortcuts["Esc"].activated.emit()
+
+    assert vWindow.offers_page.detail_panel.isHidden()
+
+    vWindow.offers_page.toggle_detail()
+    vWindow.close()

@@ -48,4 +48,5 @@ SOURCE = SourceDefinition(
     load_parameters=load_parameters,
     scrape=scrape,
     settings=("JOOBLE_API_KEY",),
+    category="france",
 )

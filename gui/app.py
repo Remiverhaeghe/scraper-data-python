@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QApplication
 from config import APPLICATION_NAME, DATABASE_FILE
 from gui.branding import create_logo_icon
 from gui.main_window import MainWindow
-from gui.theme import apply_theme
+from gui.theme import THEME_SETTING, apply_theme
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -17,8 +17,6 @@ logger = get_logger(__name__)
 # Identifiant propre à l'application : sans lui, Windows regroupe la fenêtre
 # sous l'icône de Python dans la barre des tâches.
 WINDOWS_APP_ID = "Remiverhaeghe.JobBoardPerso"
-
-THEME_SETTING = "appearance/theme"
 
 
 class DesktopApplication:

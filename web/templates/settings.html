@@ -147,6 +147,7 @@
             <h2>Sources</h2>
             <p class="card-subtitle">Les clés d'API se renseignent dans le fichier <code>.env</code>, jamais ici</p>
             {% for source in sources %}
+            {% if loop.first or source.category != loop.previtem.category %}<h3>{{ source.category }}</h3>{% endif %}
             <div class="source-state">
                 {% if source.reason is none %}
                 <span class="tone-success">{{ icon("circle-check") }}</span>

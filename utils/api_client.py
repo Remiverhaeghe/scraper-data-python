@@ -48,7 +48,7 @@ def read_limited_content(pResponse, pMaxSize):
     return rContent
 
 
-def request_json(
+def request_bytes(
     pMethod,
     pUrl,
     pParams=None,
@@ -57,13 +57,15 @@ def request_json(
     pData=None,
     pTimeout=DEFAULT_TIMEOUT,
     pMaxSize=MAX_RESPONSE_SIZE,
+    pExpectedType="json",
+    pAuth=None,
 ):
-    """Interroge une API et retourne sa réponse JSON décodée.
+    """Interroge une source et retourne le contenu brut de sa réponse.
 
     La destination est validée (pas d'adresse interne), les redirections sont
-    refusées, la taille de la réponse est plafonnée et son type doit être JSON.
-    Les erreurs HTTP sont levées telles quelles pour que chaque source masque
-    ses éventuelles clés avant de les journaliser.
+    refusées, la taille de la réponse est plafonnée et son type doit contenir
+    pExpectedType (json, xml). Les erreurs HTTP sont levées telles quelles pour
+    que chaque source masque ses éventuelles clés avant de les journaliser.
     """
 
     # Dépannage : une URL refusée ici vise une adresse locale ou privée, bloquée
@@ -77,6 +79,7 @@ def request_json(
         headers=pHeaders,
         json=pJson,
         data=pData,
+        auth=pAuth,
         timeout=pTimeout,
         # Une redirection pourrait mener vers une adresse non validée : elle est refusée
         # et signalée comme erreur plutôt que suivie.
@@ -92,19 +95,28 @@ def request_json(
 
         vContentType = vResponse.headers.get("Content-Type", "")
 
-        # Une page HTML à la place du JSON signale souvent une maintenance du site ou
-        # une clé refusée présentée sous forme de page.
-        if "json" not in vContentType.lower():
+        # Une page HTML à la place du contenu attendu signale souvent une
+        # maintenance du site ou une clé refusée présentée sous forme de page.
+        if pExpectedType not in vContentType.lower():
             raise ValueError(f"Réponse inattendue : type {vContentType or 'inconnu'}")
 
         check_announced_size(vResponse, pMaxSize)
 
-        vContent = read_limited_content(vResponse, pMaxSize)
+        rContent = read_limited_content(vResponse, pMaxSize)
 
     finally:
         vResponse.close()
 
+    return rContent
+
+
+def request_json(pMethod, pUrl, **pOptions):
+    """Interroge une API et retourne sa réponse JSON décodée.
+
+    Mêmes protections que request_bytes ; pOptions reprend ses paramètres.
+    """
+
     # json.loads détecte lui-même l'encodage UTF-8, UTF-16 ou UTF-32 des octets.
-    rData = json.loads(vContent)
+    rData = json.loads(request_bytes(pMethod, pUrl, **pOptions))
 
     return rData

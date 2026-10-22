@@ -6,6 +6,7 @@ import pytest
 
 import job.translation as translation
 from job.translation import can_translate, detect_language, translate_to_french
+from storage.database import initialize_database
 
 GERMAN = "Wir suchen dich für unser Team.\n\nDu arbeitest mit Java."
 
@@ -94,3 +95,17 @@ def test_german_needs_the_english_model(monkeypatch):
     assert not can_translate(GERMAN)
 
     translation.get_installed_codes.cache_clear()
+
+
+def test_translation_is_kept_in_the_database(fake_argos, tmp_path):
+    """Vérifie qu'une description traduite une fois n'est plus recalculée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+
+    vFirst = translation.translate_with_cache(vDatabaseFile, GERMAN)
+    translation.translate_to_french.cache_clear()
+    vSecond = translation.translate_with_cache(vDatabaseFile, GERMAN)
+
+    assert vFirst == vSecond
+    assert len(fake_argos.calls) == 2

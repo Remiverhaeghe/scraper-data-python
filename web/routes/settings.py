@@ -35,6 +35,7 @@ from job.schedule import (
 )
 from job.presentation import describe_backup
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
+from job.sources.config import SOURCE_CATEGORIES
 from job.sources.registry import SOURCES
 from storage.archive import export_archive, restore_archive, restore_backup
 from storage.backup import describe_backups
@@ -72,8 +73,12 @@ def render_settings(
             "reason": vDefinition.get_unavailability_reason(),
             # Seuls les noms des variables sont affichés, jamais leurs valeurs.
             "missing": vDefinition.get_missing_settings(),
+            "category": SOURCE_CATEGORIES.get(vDefinition.category),
         }
+        # Regroupées par catégorie, dans l'ordre du registre à l'intérieur de chacune
+        for vCategory in SOURCE_CATEGORIES
         for vDefinition in SOURCES.values()
+        if vDefinition.category == vCategory
     ]
 
     vSchedule = load_schedule(pDatabaseFile)

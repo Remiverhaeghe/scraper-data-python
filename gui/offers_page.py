@@ -86,6 +86,11 @@ SEARCH_DELAY_MS = 300
 # Réglage qui garde la fiche masquée d'une ouverture à l'autre
 DETAIL_HIDDEN_KEY = "offers/detail_hidden"
 
+# Largeur des colonnes du tableau et partage tableau / fiche, gardés d'une
+# ouverture à l'autre
+COLUMNS_STATE_KEY = "offers/columns"
+SPLITTER_STATE_KEY = "offers/splitter"
+
 
 def create_salary_spin(pEmptyText, pSuffix):
     """Crée un champ de salaire net mensuel ; 0 signifie aucune borne."""
@@ -156,6 +161,10 @@ class OffersPage(QWidget):
         vSplitter.setCollapsible(0, False)
         vSplitter.setStretchFactor(0, 3)
         vSplitter.setStretchFactor(1, 2)
+        self.splitter = vSplitter
+        self.restore_layout()
+        self.table.horizontalHeader().sectionResized.connect(self.save_layout)
+        vSplitter.splitterMoved.connect(self.save_layout)
 
         self.count_label = QLabel()
         self.count_label.setObjectName("pageSubtitle")
@@ -192,6 +201,25 @@ class OffersPage(QWidget):
         vLayout.addWidget(self.results_banner)
         vLayout.addLayout(vCountRow)
         vLayout.addWidget(vSplitter, 1)
+
+    def restore_layout(self):
+        """Rétablit la largeur des colonnes et le partage tableau / fiche gardés."""
+        vSettings = QSettings()
+        vColumns = vSettings.value(COLUMNS_STATE_KEY)
+        vSplitter = vSettings.value(SPLITTER_STATE_KEY)
+
+        # Un état illisible, d'une ancienne version du tableau, est ignoré par Qt.
+        if vColumns is not None:
+            self.table.horizontalHeader().restoreState(vColumns)
+
+        if vSplitter is not None:
+            self.splitter.restoreState(vSplitter)
+
+    def save_layout(self, *_pArguments):
+        """Garde la largeur des colonnes et le partage tableau / fiche."""
+        vSettings = QSettings()
+        vSettings.setValue(COLUMNS_STATE_KEY, self.table.horizontalHeader().saveState())
+        vSettings.setValue(SPLITTER_STATE_KEY, self.splitter.saveState())
 
     def set_detail_visible(self, pVisible):
         """Affiche ou masque toute la fiche de l'offre, au profit du tableau."""

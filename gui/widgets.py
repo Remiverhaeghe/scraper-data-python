@@ -178,17 +178,46 @@ def create_card(
             QSizePolicy.Policy.Preferred if pOpen else QSizePolicy.Policy.Maximum,
         )
 
-    def toggle():
-        """Inverse l'état du contenu et le mémorise."""
-        set_open(vContent.isHidden())
-        QSettings().setValue(vSettingKey, vContent.isHidden())
+    def set_card_open(pOpen):
+        """Ouvre ou replie la carte et mémorise son état."""
+        set_open(pOpen)
+        QSettings().setValue(vSettingKey, not pOpen)
 
-    vHeader.clicked.connect(toggle)
+    vHeader.clicked.connect(lambda: set_card_open(vContent.isHidden()))
     set_open(not QSettings().value(vSettingKey, not pOpen, type=bool))
+
+    # Le bouton « Tout replier » d'une page retrouve ses cartes par ces attributs.
+    vCard.set_card_open = set_card_open
+    vCard.is_card_open = lambda: not vContent.isHidden()
 
     rCard = (vCard, vContentLayout)
 
     return rCard
+
+
+def create_fold_button(pPage):
+    """Crée le bouton qui replie ou déplie d'un coup toutes les cartes de la page."""
+
+    rButton = QPushButton("Tout replier")
+    rButton.setObjectName("linkButton")
+
+    def fold_all():
+        """Replie toutes les cartes si l'une est ouverte, sinon les déplie toutes."""
+        vCards = [
+            vCard
+            for vCard in pPage.findChildren(QFrame, "card")
+            if hasattr(vCard, "set_card_open")
+        ]
+        vOpen = not any(vCard.is_card_open() for vCard in vCards)
+
+        for vCard in vCards:
+            vCard.set_card_open(vOpen)
+
+        rButton.setText("Tout replier" if vOpen else "Tout déplier")
+
+    rButton.clicked.connect(fold_all)
+
+    return rButton
 
 
 def create_subtitle(pText):

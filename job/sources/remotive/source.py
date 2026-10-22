@@ -25,4 +25,5 @@ SOURCE = SourceDefinition(
     label="Remotive",
     load_parameters=load_parameters,
     scrape=scrape,
+    category="remote",
 )

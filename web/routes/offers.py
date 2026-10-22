@@ -81,7 +81,7 @@ from job.quiz_exam import build_exam_history, describe_exam_results, load_exam_r
 from job.settings import load_settings
 from job.sources.registry import SOURCES
 from job.star_answers import load_star_answers
-from job.translation import can_translate, translate_to_french
+from job.translation import can_translate, translate_with_cache
 from storage.attachments import ALLOWED_EXTENSIONS, get_attachments
 from storage.duplicates import get_decisions, save_decision
 from storage.interview_notes import get_interview_notes
@@ -523,7 +523,7 @@ def show_translation(
 
     if not pOriginal:
         try:
-            vContext["description"] = translate_to_french(vDescription)
+            vContext["description"] = translate_with_cache(pDatabaseFile, vDescription)
             vContext["translated"] = True
 
         except ValueError as vException:

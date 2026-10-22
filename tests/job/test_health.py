@@ -1,11 +1,12 @@
 """Tests de l'état de santé de l'application"""
 
 from datetime import datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 
 import job.health as health
-from job.health import build_health, format_age
+from job.health import build_health, find_silent_sources, format_age
 from job.schedule import mark_schedule_run, save_schedule_options, save_scheduled_search
 from storage.backup import backup_database
 from storage.database import initialize_database
@@ -75,5 +76,24 @@ def test_unreadable_check_does_not_hide_the_others(database_file, monkeypatch):
     vChecks = get_checks(database_file)
 
     assert vChecks["Sources"] == ("Illisible : voir les journaux", "danger")
-    assert len(vChecks) == 6
+    assert len(vChecks) == 7
     assert format_age(NOW - timedelta(days=5), NOW) == "il y a 5 jours"
+
+
+def test_silent_source_is_reported_after_three_empty_runs():
+    """Vérifie qu'une source qui renvoyait des offres et n'en renvoie plus est repérée."""
+
+    def run(**pCounts):
+        return SimpleNamespace(parameters={"source_counts": pCounts})
+
+    vHistory = [
+        run(adzuna=0, remotive=4),
+        run(adzuna=0, remotive=0),
+        SimpleNamespace(parameters={"keyword": "java"}),
+        run(adzuna=0, remotive=3),
+        run(adzuna=12, remotive=5),
+    ]
+
+    assert find_silent_sources(vHistory) == ["adzuna"]
+    # Une source jamais productive n'est pas « cassée » : rien ne la distingue.
+    assert find_silent_sources([run(jooble=0)] * 5) == []

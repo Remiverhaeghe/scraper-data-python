@@ -19,6 +19,11 @@ LEGAL_FORMS = re.compile(
     r"\b(?:sas|sasu|sa|sarl|eurl|gmbh|ag|inc|ltd|llc|plc|bv|srl)\b\.?", re.IGNORECASE
 )
 
+# Mots du début de description comparés pour reconnaître deux annonces jumelles ;
+# en dessous du minimum, le texte est trop court pour conclure.
+SIGNATURE_WORDS = 20
+MIN_SIGNATURE_WORDS = 12
+
 
 def normalize(pText):
     """Met un texte sous une forme comparable : minuscules, sans accents ni ponctuation."""
@@ -64,3 +69,70 @@ def build_fingerprint(pOffer):
         )
 
     return rFingerprint
+
+
+def build_description_signature(pDescription):
+    """Retourne le début normalisé d'une description, ou None s'il est trop court.
+
+    Deux annonces d'une même offre, publiées par deux sources, commencent par
+    les mêmes mots même quand l'une donne l'entreprise et l'autre non.
+    """
+
+    vWords = normalize(pDescription).split()[:SIGNATURE_WORDS]
+
+    rSignature = " ".join(vWords) if len(vWords) >= MIN_SIGNATURE_WORDS else None
+
+    return rSignature
+
+
+def borrow_missing_companies(pOffers):
+    """Donne à une annonce sans entreprise celle de sa jumelle, et retourne leur nombre.
+
+    Jumelles : même titre, même ville et même début de description. L'empreinte
+    devient alors commune et les deux annonces sont regroupées comme doublons.
+    pOffers est une liste de dictionnaires, modifiés sur place.
+    """
+
+    vCompanies = {}
+
+    for vOffer in pOffers:
+        vKey = build_twin_key(vOffer)
+
+        if vKey and has_company(vOffer):
+            vCompanies.setdefault(vKey, vOffer["company"])
+
+    rBorrowed = 0
+
+    for vOffer in pOffers:
+        vKey = build_twin_key(vOffer)
+
+        if not has_company(vOffer) and vKey in vCompanies:
+            vOffer["company"] = vCompanies[vKey]
+            rBorrowed += 1
+
+    return rBorrowed
+
+
+def has_company(pOffer):
+    """Indique si l'entreprise est écrite ; une valeur manquante de pandas ne compte pas."""
+
+    vCompany = pOffer.get("company")
+
+    rHasCompany = isinstance(vCompany, str) and bool(vCompany.strip())
+
+    return rHasCompany
+
+
+def build_twin_key(pOffer):
+    """Retourne la clé qui reconnaît deux annonces d'une même offre, ou None."""
+
+    vSignature = build_description_signature(pOffer.get("description"))
+    vTitle = normalize(pOffer.get("title"))
+
+    rKey = (
+        (vTitle, normalize_city(pOffer.get("location")), vSignature)
+        if vSignature and vTitle
+        else None
+    )
+
+    return rKey

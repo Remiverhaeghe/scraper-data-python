@@ -1,5 +1,7 @@
 """Tests de la transformation des offres Adzuna"""
 
+import pytest
+
 from job.csv_schema import JOB_COLUMNS
 from job.sources.adzuna.parser import parse_job, parse_jobs
 
@@ -103,3 +105,26 @@ def test_parse_job_decodes_unicode_escapes():
 
     assert vJob["title"] == "Développeur"
     assert vJob["description"] == "Systèmes d’Information"
+
+
+@pytest.mark.parametrize(
+    "pDescription, pAgency",
+    [
+        (
+            "Votre agence d&rsquo;int&eacute;rim PROMAN recrute un ma&ccedil;on",
+            "PROMAN",
+        ),
+        ("PROMAN Niort recrute un cariste", "PROMAN"),
+        ("L'IMPORTANT C'EST VOUS ! Votre agence PROMAN NIORT recherche", "PROMAN"),
+        ("Nous recherchons, pour notre client, un magasinier", None),
+        ("CDI - Notre client recherche un technicien", None),
+    ],
+)
+def test_agency_is_found_in_the_text(pDescription, pAgency):
+    """Vérifie l'entreprise retrouvée dans le texte quand Adzuna ne la donne pas."""
+
+    vJob = parse_job({"id": "1", "title": "Ma&ccedil;on", "description": pDescription})
+
+    assert vJob["company"] == pAgency
+    assert vJob["title"] == "Maçon"
+    assert "&" not in vJob["description"]

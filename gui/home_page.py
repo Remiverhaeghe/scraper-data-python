@@ -21,6 +21,7 @@ from gui.widgets import (
     StatisticCard,
     create_button,
     create_card,
+    create_fold_button,
     create_icon_label,
     create_page_header,
     create_scroll_content,
@@ -129,7 +130,7 @@ class HomePage(QWidget):
             vLayout,
             "Tableau de bord",
             "Vue d'ensemble de vos offres et de vos candidatures",
-            [self.last_search_label],
+            [self.last_search_label, create_fold_button(self)],
             pIcon="house",
         )
 

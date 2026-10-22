@@ -62,4 +62,5 @@ SOURCE = SourceDefinition(
     ),
     # API suspendue par France Travail, accès soumis à une demande
     available=False,
+    category="france",
 )

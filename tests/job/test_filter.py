@@ -1,9 +1,10 @@
 """Tests du filtrage des offres d'emploi"""
 
 import pandas as pd
+import pytest
 
 from job.config import JobScrapingConfig
-from job.filter import filter_jobs
+from job.filter import filter_jobs, matches_location
 
 
 def create_job(**pValues):
@@ -375,3 +376,21 @@ def test_filter_jobs_excludes_title_keywords():
     rJobs = filter_jobs(vJobs, JobScrapingConfig(exclude_keywords=["STAGE"]))
 
     assert rJobs["title"].tolist() == ["Développeur Python"]
+
+
+@pytest.mark.parametrize(
+    "pJob, pSearch, pExpected",
+    [
+        ({"location": "Orléans (45)"}, "Orleans", True),
+        ({"location": "Fretin, Hauts-de-France", "postal_code": "59273"}, "59", True),
+        ({"location": "Lille (59)"}, "Nord", True),
+        ({"location": "Lens (62)"}, "59", False),
+        ({"location": "Pas-de-Calais, Hauts-De-France"}, "pas-de-calais", True),
+        ({"location": "Nordhausen, Germany"}, "Nord", False),
+        ({"location": "Remote", "city": "Lyon"}, "lyon", True),
+    ],
+)
+def test_matches_location_by_words_and_department(pJob, pSearch, pExpected):
+    """Vérifie le lieu cherché sans accents, par mots entiers ou par département."""
+
+    assert matches_location(pJob, pSearch) is pExpected

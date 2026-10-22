@@ -32,6 +32,7 @@ from gui.widgets import (
     create_scroll_content,
 )
 from job.contract import CONTRACT_TYPES
+from job.sources.config import SOURCE_CATEGORIES
 from job.sources.registry import SOURCES
 from utils.logger import get_logger
 
@@ -275,19 +276,59 @@ class SearchPage(QWidget):
             "Sources", pActions=[self.source_count_label, vAllButton, vNoneButton]
         )
 
+        # Une ligne de titre par catégorie, puis ses pastilles.
         vGrid = QGridLayout()
         vGrid.setSpacing(10)
+        vRow = 0
 
-        for vIndex, (vName, vDefinition) in enumerate(SOURCES.items()):
-            vButton = self.create_source_button(vDefinition)
+        for vCategory, vCategoryLabel in SOURCE_CATEGORIES.items():
+            vNames = [
+                vName
+                for vName, vDefinition in SOURCES.items()
+                if vDefinition.category == vCategory
+            ]
 
-            self.source_buttons[vName] = vButton
+            if not vNames:
+                continue
 
-            vGrid.addWidget(vButton, *divmod(vIndex, SOURCE_COLUMNS))
+            vGrid.addLayout(
+                self.create_category_header(vCategory, vCategoryLabel), vRow, 0, 1, -1
+            )
+            vRow += 1
+
+            for vIndex, vName in enumerate(vNames):
+                vButton = self.create_source_button(SOURCES[vName])
+
+                self.source_buttons[vName] = vButton
+
+                vGrid.addWidget(
+                    vButton,
+                    vRow + vIndex // SOURCE_COLUMNS,
+                    vIndex % SOURCE_COLUMNS,
+                )
+
+            vRow += (len(vNames) + SOURCE_COLUMNS - 1) // SOURCE_COLUMNS
 
         vLayout.addLayout(vGrid)
 
         return vCard
+
+    def create_category_header(self, pCategory, pLabel):
+        """Construit le titre d'une catégorie de sources et son lien « tout cocher »."""
+        vTitle = QLabel(pLabel)
+        vTitle.setObjectName("fieldLabel")
+
+        vButton = QPushButton("tout cocher")
+        vButton.setObjectName("linkButton")
+        vButton.clicked.connect(lambda: self.check_sources(True, pCategory))
+
+        rLayout = QHBoxLayout()
+        rLayout.setContentsMargins(0, 6, 0, 0)
+        rLayout.addWidget(vTitle)
+        rLayout.addWidget(vButton)
+        rLayout.addStretch()
+
+        return rLayout
 
     def create_source_button(self, pDefinition):
         """Crée la pastille sélectionnable d'une source."""
@@ -434,10 +475,10 @@ class SearchPage(QWidget):
             else "Afficher les options avancées"
         )
 
-    def check_sources(self, pChecked):
-        """Sélectionne ou désélectionne toutes les sources disponibles."""
-        for vButton in self.source_buttons.values():
-            if vButton.isEnabled():
+    def check_sources(self, pChecked, pCategory=None):
+        """Sélectionne ou désélectionne les sources disponibles, d'une catégorie ou toutes."""
+        for vName, vButton in self.source_buttons.items():
+            if vButton.isEnabled() and pCategory in (None, SOURCES[vName].category):
                 vButton.setChecked(pChecked)
 
     def update_source_count(self):

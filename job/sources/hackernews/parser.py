@@ -5,6 +5,7 @@ import re
 import pandas as pd
 
 from job.csv_schema import JOB_COLUMNS
+from job.location import detect_location
 from utils.helpers import html_to_text
 from utils.logger import get_logger
 
@@ -42,6 +43,16 @@ ROLE_PATTERN = re.compile(
     r"|consultants?|administrators?|technicians?|cto|head of)\b",
     re.IGNORECASE,
 )
+
+# Suite de noms propres séparés par des virgules : « Chicago, Las Vegas »,
+# « San Francisco, CA, USA ». Un mot de poste l'exclut (« Founding Engineer, AI »).
+PLACE_NAMES_SEGMENT = re.compile(
+    r"^[A-Z][\w.'-]*(?:\s+[A-Z][\w.'-]*){0,2}"
+    r"(?:,\s*[A-Z][\w.'-]*(?:\s+[A-Z][\w.'-]*){0,2})+$"
+)
+
+# Séparateur laissé en fin d'en-tête : « Chicago, Las Vegas | »
+TRAILING_SEPARATOR = re.compile(r"\s*[|–—]+\s*$")
 
 # Lieu placé là où on attend le poste : « San Francisco, CA (Onsite) »
 LOCATION_HINT = re.compile(
@@ -93,6 +104,18 @@ def split_header(pText):
     return rHeader
 
 
+def is_place(pSegment):
+    """Indique si un segment de l'en-tête désigne un lieu plutôt qu'un poste."""
+
+    rPlace = not ROLE_PATTERN.search(pSegment) and bool(
+        LOCATION_HINT.search(pSegment)
+        or PLACE_NAMES_SEGMENT.match(pSegment)
+        or detect_location(pSegment)[0]
+    )
+
+    return rPlace
+
+
 def classify_segments(pSegments):
     """Répartit les segments de l'en-tête entre poste, lieu, contrat et salaire."""
 
@@ -108,9 +131,7 @@ def classify_segments(pSegments):
         if vTitles and len(vSegment) > MAX_SEGMENT_LENGTH:
             continue
 
-        if WORK_MODE_SEGMENT.match(vSegment) or (
-            LOCATION_HINT.search(vSegment) and not ROLE_PATTERN.search(vSegment)
-        ):
+        if WORK_MODE_SEGMENT.match(vSegment) or is_place(vSegment):
             vLocations.append(vSegment)
         elif EMPLOYMENT_SEGMENT.match(vSegment):
             vEmployments.append(vSegment)
@@ -137,7 +158,14 @@ def parse_header(pHeader):
     Sert aussi à la reprise des offres enregistrées avant ce découpage.
     """
 
-    vSegments = HEADER_SEPARATOR.split(pHeader)
+    vSegments = [
+        vSegment
+        for vSegment in (
+            TRAILING_SEPARATOR.sub("", vPart).strip()
+            for vPart in HEADER_SEPARATOR.split(pHeader)
+        )
+        if vSegment
+    ]
     vDetails = classify_segments(vSegments[1:])
 
     rHeader = {

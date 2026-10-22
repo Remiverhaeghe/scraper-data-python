@@ -108,6 +108,17 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Findwork — clé à créer, intégration à valider sur un vrai appel
 - [x] Hacker News « Who is hiring? »
 - [x] Greenhouse
+- [x] SmartRecruiters, Lever et Ashby : pages carrière d'entreprises suivies, listes par défaut vérifiées (ingénierie et industrie pour SmartRecruiters)
+- [x] Recruitee et Workable — entreprises à renseigner dans .env
+- [x] Careerjet — clé d'éditeur à créer, intégration à valider sur un vrai appel
+- [x] La bonne alternance (alternance) — clé gratuite à demander, intégration à valider sur un vrai appel
+- [x] Remote OK, Working Nomads et We Work Remotely (télétravail)
+- [x] Sources classées par catégorie (France, pages carrière, télétravail, international), à cocher par catégorie
+- [x] Offres sans titre écartées et comptées par source, source muette signalée après trois recherches sans offre
+- [x] Lieu cherché sans accents, par mots entiers ou par département (« 59 », « Nord »)
+- [x] Entreprise reprise d'une annonce jumelle d'une autre source, pour regrouper les doublons
+- [x] Raccourcis : Ctrl+1 à 9 pour les pages, Ctrl+F pour chercher une offre, Échap pour masquer la fiche
+- [x] Largeur des colonnes et partage tableau / fiche mémorisés, « Tout replier » sur les pages chargées, thème Auto qui suit Windows
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
   - [x] Adzuna
@@ -559,6 +570,7 @@ scraper-data-python/
 │       ├── configuration.py                    # Construit la configuration des sources
 │       ├── registry.py                         # Liste des sources disponibles
 │       ├── aggregator.py                       # Agrège les résultats des sources
+│       ├── boards.py                           # Pages carrière et flux d'offres : filtre et déclaration communs
 │       │
 │       ├── adzuna/                             # Intégration Adzuna
 │       │   ├── __init__.py                     # Initialise le package Adzuna
@@ -599,6 +611,60 @@ scraper-data-python/
 │       │   ├── parser.py                       # Transforme les réponses Greenhouse
 │       │   ├── service.py                      # Orchestre le scraping Greenhouse
 │       │   └── source.py                       # Déclare la source Greenhouse
+│       ├── smartrecruiters/                    # Intégration SmartRecruiters
+│       │   ├── __init__.py                     # Initialise le package SmartRecruiters
+│       │   ├── client.py                       # Communique avec l'API SmartRecruiters
+│       │   ├── config.py                       # Configuration SmartRecruiters
+│       │   ├── parser.py                       # Transforme les réponses SmartRecruiters
+│       │   ├── service.py                      # Orchestre le scraping SmartRecruiters
+│       │   └── source.py                       # Déclare la source SmartRecruiters
+│       ├── lever/                              # Intégration Lever
+│       │   ├── __init__.py                     # Initialise le package Lever
+│       │   ├── client.py                       # Communique avec l'API Lever
+│       │   ├── parser.py                       # Transforme les réponses Lever
+│       │   └── source.py                       # Déclare la source Lever
+│       ├── ashby/                              # Intégration Ashby
+│       │   ├── __init__.py                     # Initialise le package Ashby
+│       │   ├── client.py                       # Communique avec l'API Ashby
+│       │   ├── parser.py                       # Transforme les réponses Ashby
+│       │   └── source.py                       # Déclare la source Ashby
+│       ├── recruitee/                          # Intégration Recruitee
+│       │   ├── __init__.py                     # Initialise le package Recruitee
+│       │   ├── client.py                       # Communique avec l'API Recruitee
+│       │   ├── parser.py                       # Transforme les réponses Recruitee
+│       │   └── source.py                       # Déclare la source Recruitee
+│       ├── workable/                           # Intégration Workable
+│       │   ├── __init__.py                     # Initialise le package Workable
+│       │   ├── client.py                       # Communique avec l'API Workable
+│       │   ├── parser.py                       # Transforme les réponses Workable
+│       │   └── source.py                       # Déclare la source Workable
+│       ├── careerjet/                          # Intégration Careerjet
+│       │   ├── __init__.py                     # Initialise le package Careerjet
+│       │   ├── client.py                       # Communique avec l'API Careerjet
+│       │   ├── config.py                       # Configuration Careerjet
+│       │   ├── parser.py                       # Transforme les réponses Careerjet
+│       │   └── source.py                       # Déclare la source Careerjet
+│       ├── labonnealternance/                  # Intégration La bonne alternance
+│       │   ├── __init__.py                     # Initialise le package La bonne alternance
+│       │   ├── client.py                       # Communique avec l'API La bonne alternance
+│       │   ├── config.py                       # Configuration La bonne alternance
+│       │   ├── parser.py                       # Transforme les réponses La bonne alternance
+│       │   └── source.py                       # Déclare la source La bonne alternance
+│       ├── remoteok/                           # Intégration Remote OK
+│       │   ├── __init__.py                     # Initialise le package Remote OK
+│       │   ├── client.py                       # Communique avec l'API Remote OK
+│       │   ├── parser.py                       # Transforme les réponses Remote OK
+│       │   └── source.py                       # Déclare la source Remote OK
+│       ├── workingnomads/                      # Intégration Working Nomads
+│       │   ├── __init__.py                     # Initialise le package Working Nomads
+│       │   ├── client.py                       # Communique avec l'API Working Nomads
+│       │   ├── parser.py                       # Transforme les réponses Working Nomads
+│       │   └── source.py                       # Déclare la source Working Nomads
+│       ├── weworkremotely/                     # Intégration We Work Remotely
+│       │   ├── __init__.py                     # Initialise le package We Work Remotely
+│       │   ├── client.py                       # Communique avec l'API We Work Remotely
+│       │   ├── parser.py                       # Transforme les réponses We Work Remotely
+│       │   └── source.py                       # Déclare la source We Work Remotely
 │       │
 │       ├── hackernews/                         # Intégration Hacker News
 │       │   ├── __init__.py                     # Initialise le package Hacker News
@@ -827,11 +893,13 @@ scraper-data-python/
 │   ├── maintenance.py                         # Réinitialisation et purge de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
+│   ├── translations.py                        # Cache des traductions de descriptions
 │   └── job_offers.py                          # Enregistre les offres et détecte les nouvelles
 │
 ├── tests/                                     # Ensemble des tests automatisés
 │   ├── __init__.py                            # Initialise le package de tests
 │   ├── fixtures/
+│   │   ├── hackernews_headers.json            # En-têtes Hacker News réels et leur découpage attendu
 │   │   └── shared_quiz_cases.json             # Cas de correction communs au serveur et au téléphone
 │   │
 │   ├── job/                                   # Tests du domaine Job
@@ -891,6 +959,17 @@ scraper-data-python/
 │   │       ├── conftest.py                     # Évite la résolution DNS dans les tests
 │   │       ├── fake_http.py                    # Réponses HTTP simulées des API
 │   │       ├── test_aggregator.py              # Teste l'agrégation des sources
+│   │       ├── test_boards.py                  # Teste les pages carrière (Lever, Ashby, Recruitee, Workable)
+│   │       ├── test_feeds.py                   # Teste les flux de télétravail (Remote OK, Working Nomads, We Work Remotely)
+│   │       ├── smartrecruiters/                # Tests SmartRecruiters
+│   │       │   ├── __init__.py                 # Initialise les tests SmartRecruiters
+│   │       │   └── test_service.py             # Teste la liste, le filtre et le détail des offres
+│   │       ├── careerjet/                      # Tests Careerjet
+│   │       │   ├── __init__.py                 # Initialise les tests Careerjet
+│   │       │   └── test_source.py              # Teste la lecture, la clé et la pagination
+│   │       ├── labonnealternance/              # Tests La bonne alternance
+│   │       │   ├── __init__.py                 # Initialise les tests La bonne alternance
+│   │       │   └── test_source.py              # Teste la lecture des blocs, la clé et le filtre
 │   │       ├── test_api_keys.py                # Teste le chargement des clés d'API
 │   │       ├── test_config.py                  # Teste la configuration commune
 │   │       ├── test_configuration.py           # Teste la construction de la configuration
@@ -975,6 +1054,7 @@ scraper-data-python/
 │   │   ├── test_quality_page.py                # Teste la page de qualité des données
 │   │   ├── test_interview_journal_panel.py     # Teste le panneau du journal d'entretien
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
+│   │   ├── test_funnel_panel.py                # Teste l'entonnoir, vide puis rempli
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
 │   │   ├── test_main_window.py                 # Teste la navigation et l'état du menu
@@ -992,7 +1072,7 @@ scraper-data-python/
 │   │   ├── test_settings_page.py               # Teste la page des paramètres
 │   │   ├── test_skills_page.py                 # Teste la page des compétences
 │   │   ├── test_theme.py                       # Teste les thèmes, les icônes et le logo
-│   │   └── test_widgets.py                     # Teste la carte repliable et la tuile cliquable
+│   │   └── test_widgets.py                     # Teste la carte repliable, « Tout replier » et la tuile cliquable
 │   │
 │   ├── scraper/                                # Tests des composants communs
 │   │   ├── __init__.py                          # Initialise le package de tests Scraper

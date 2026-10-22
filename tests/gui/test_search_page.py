@@ -13,6 +13,7 @@ from gui.search_page import SearchPage
 from gui.search_worker import SearchWorker
 from job.profile import build_profile, save_profile
 from job.sources.aggregator import ScrapingCancelled
+from job.sources.registry import SOURCES
 from storage.database import initialize_database
 
 
@@ -445,3 +446,16 @@ def test_profile_keywords_are_suggested(saved_search_page):
     vButtons[0].click()
 
     assert saved_search_page.keyword_edit.text() == "Data engineer"
+
+
+def test_sources_grouped_by_category_can_be_checked_together(search_page):
+    """Vérifie le « tout cocher » d'une catégorie, sans toucher aux autres."""
+
+    search_page.check_sources(False)
+    search_page.check_sources(True, "remote")
+
+    vSelected = set(search_page.get_selected_sources())
+
+    assert {"remotive", "remoteok", "weworkremotely"} <= vSelected
+    assert "smartrecruiters" not in vSelected
+    assert all(SOURCES[vName].category == "remote" for vName in vSelected)

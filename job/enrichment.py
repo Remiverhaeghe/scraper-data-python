@@ -400,24 +400,38 @@ def enrich_offer(pOffer, pText):
 
 
 def is_unusable(pOffer):
-    """Indique si une offre n'a ni titre ni description, et n'apporte donc rien."""
+    """Indique si une offre n'a pas de titre : réponse, remarque ou annonce tronquée.
 
-    rUnusable = is_empty(pOffer.get("title")) and is_empty(pOffer.get("description"))
+    Une description seule ne suffit pas : sans poste, l'offre ne se trie ni ne
+    se lit dans la liste.
+    """
+
+    rUnusable = is_empty(pOffer.get("title"))
 
     return rUnusable
 
 
 def enrich_offers(pItems):
-    """Écarte les offres inexploitables et complète les autres ; retourne aussi le nombre écarté."""
+    """Écarte les offres inexploitables et complète les autres.
+
+    Retourne aussi le nombre d'offres écartées par source.
+    """
 
     vOffers = []
-    vRejected = 0
+    vRejected = {}
     vFilledCounts = {}
 
     for vOffer in pItems.to_dict("records"):
         if is_unusable(vOffer):
-            vRejected += 1
+            vSource = "inconnue" if is_empty(vOffer.get("source")) else vOffer["source"]
+            vRejected[vSource] = vRejected.get(vSource, 0) + 1
             continue
+
+        # Une phrase d'en-tête rangée à la fois en titre et en entreprise : seul
+        # le titre a un sens.
+        if vOffer.get("company") and vOffer.get("company") == vOffer.get("title"):
+            vOffer["company"] = None
+            vFilledCounts["company"] = vFilledCounts.get("company", 0) + 1
 
         vText = " ".join(
             str(vOffer.get(vColumn) or "")
@@ -431,15 +445,15 @@ def enrich_offers(pItems):
         vOffers.append(vOffer)
 
     logger.info(
-        "Enrichissement de %s offre(s) : %s ; %s offre(s) sans titre ni description "
-        "écartée(s)",
+        "Enrichissement de %s offre(s) : %s ; offre(s) sans titre écartée(s) : %s",
         len(vOffers),
         ", ".join(
             f"{FILLED_FIELD_LABELS.get(vField, vField)} {vCount}"
             for vField, vCount in vFilledCounts.items()
         )
         or "rien à compléter",
-        vRejected,
+        ", ".join(f"{vSource} {vCount}" for vSource, vCount in vRejected.items())
+        or "aucune",
     )
 
     # Les colonnes remplies sont garanties même si le tableau reçu ne les avait pas.

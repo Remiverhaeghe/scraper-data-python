@@ -12,7 +12,11 @@ from job.deduplication import (
     get_offer_group,
     group_offers,
 )
-from job.fingerprint import build_fingerprint, normalize_city
+from job.fingerprint import (
+    borrow_missing_companies,
+    build_fingerprint,
+    normalize_city,
+)
 from storage.database import initialize_database
 from storage.duplicates import get_decisions, save_decision
 from storage.job_offers import save_offers
@@ -169,3 +173,39 @@ def test_get_offer_group_and_decisions(tmp_path):
     assert rGroup["differences"] == ["Contrat"]
     assert rGroup["decision"] == MERGED
     assert get_decisions(vDatabaseFile) == {"dev|acme|lille": MERGED}
+
+
+DESCRIPTION = (
+    "Au sein de notre usine de Lille, vous assurez la maintenance préventive et "
+    "curative des lignes de production automatisées, en lien avec la production."
+)
+
+
+def test_twin_offer_borrows_the_company_and_shares_its_fingerprint():
+    """Vérifie qu'une annonce sans entreprise reprend celle de sa jumelle."""
+
+    vOffers = [
+        {
+            "title": "Technicien de maintenance H/F",
+            "company": "Acme Industrie",
+            "location": "Lille (59)",
+            "description": DESCRIPTION,
+        },
+        {
+            "title": "Technicien de maintenance (H/F)",
+            "company": float("nan"),
+            "location": "Lille",
+            "description": DESCRIPTION + " Poste en CDI.",
+        },
+        {
+            "title": "Technicien de maintenance H/F",
+            "company": None,
+            "location": "Lille",
+            "description": "Texte trop court",
+        },
+    ]
+
+    assert borrow_missing_companies(vOffers) == 1
+    assert vOffers[1]["company"] == "Acme Industrie"
+    assert vOffers[2]["company"] is None
+    assert build_fingerprint(vOffers[0]) == build_fingerprint(vOffers[1])

@@ -2081,7 +2081,9 @@ def test_offer_description_translated_in_place(client, monkeypatch):
 
     monkeypatch.setattr(web_offers, "can_translate", lambda _pText: True)
     monkeypatch.setattr(
-        web_offers, "translate_to_french", lambda _pText: "Nous recherchons"
+        web_offers,
+        "translate_with_cache",
+        lambda _pDatabaseFile, _pText: "Nous recherchons",
     )
     vOfferUrl = client.post(
         "/offers/new",

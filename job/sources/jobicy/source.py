@@ -25,4 +25,5 @@ SOURCE = SourceDefinition(
     label="Jobicy",
     load_parameters=load_parameters,
     scrape=scrape,
+    category="remote",
 )

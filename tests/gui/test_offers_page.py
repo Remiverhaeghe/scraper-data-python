@@ -705,7 +705,9 @@ def test_detail_offers_translation_and_limits_company_info(
     # Avec un modèle, le texte est remplacé sur place, puis rétabli.
     monkeypatch.setattr(offer_detail, "can_translate", lambda _pText: True)
     monkeypatch.setattr(
-        offer_detail, "translate_to_french", lambda _pText: "Nous recherchons"
+        offer_detail,
+        "translate_with_cache",
+        lambda _pDatabaseFile, _pText: "Nous recherchons",
     )
     monkeypatch.setattr(offer_detail.threading, "Thread", SynchronousThread)
 
@@ -737,3 +739,26 @@ def test_detail_can_be_hidden_at_once(offers_page):
     assert not offers_page.detail_panel.isHidden()
 
     QSettings().remove(offers_page_module.DETAIL_HIDDEN_KEY)
+
+
+def test_column_width_is_kept_for_the_next_opening(database_file):
+    """Vérifie que la largeur d'une colonne élargie est rétablie à la réouverture."""
+
+    for vKey in (
+        offers_page_module.COLUMNS_STATE_KEY,
+        offers_page_module.SPLITTER_STATE_KEY,
+    ):
+        QSettings().remove(vKey)
+
+    vPage = OffersPage(database_file)
+    vPage.table.setColumnWidth(1, 333)
+
+    vReopened = OffersPage(database_file)
+
+    assert vReopened.table.columnWidth(1) == 333
+
+    for vKey in (
+        offers_page_module.COLUMNS_STATE_KEY,
+        offers_page_module.SPLITTER_STATE_KEY,
+    ):
+        QSettings().remove(vKey)

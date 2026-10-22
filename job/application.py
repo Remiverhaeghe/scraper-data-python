@@ -103,6 +103,12 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
 
     if vScrapingResult.rejected_count:
         vParameters["rejected"] = vScrapingResult.rejected_count
+        vParameters["rejected_by_source"] = vScrapingResult.rejected_by_source
+
+    # Offres reçues par source : une source qui n'en renvoie plus est repérée
+    # par job/source_health.py.
+    if vScrapingResult.source_counts:
+        vParameters["source_counts"] = vScrapingResult.source_counts
 
     record_history(
         DATABASE_FILE, "job", "multi-source", vScrapingResult, pParameters=vParameters

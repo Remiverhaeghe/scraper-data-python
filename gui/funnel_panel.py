@@ -18,6 +18,11 @@ STAGE_ACCENTS = ("blue", "green", "amber", "purple")
 LABEL_WIDTH = 90
 BAR_HEIGHT = 24
 
+EMPTY_TEXT = (
+    "Aucune candidature envoyée pour l'instant : l'entonnoir se remplira dès la "
+    "première, en passant une offre au statut « Postulé »."
+)
+
 
 class FunnelPanel(QWidget):
     """Montre la part des envois qui atteint chaque étape et le passage entre elles."""
@@ -44,8 +49,18 @@ class FunnelPanel(QWidget):
         vLayout.addWidget(vCard)
 
     def set_funnel(self, pFunnel):
-        """Affiche une barre par étape, à la couleur de sa carte statistique."""
+        """Affiche une barre par étape, à la couleur de sa carte statistique.
+
+        Sans candidature envoyée, un message remplace quatre barres vides.
+        """
         clear_layout(self.rows_layout)
+
+        if not pFunnel or not pFunnel[0]["count"]:
+            vEmpty = QLabel(EMPTY_TEXT)
+            vEmpty.setObjectName("cardSubtitle")
+            vEmpty.setWordWrap(True)
+            self.rows_layout.addWidget(vEmpty, 0, 0, 1, 3)
+            return
 
         for vRow, (vStage, vAccent) in enumerate(zip(pFunnel, STAGE_ACCENTS)):
             vColor, vBackground = ACCENTS[vAccent]

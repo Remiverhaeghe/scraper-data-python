@@ -20,6 +20,7 @@ from gui.widgets import (
     StatisticCard,
     create_button,
     create_card,
+    create_fold_button,
     create_page_header,
     create_scroll_content,
     show_message,
@@ -135,6 +136,7 @@ class SkillsPage(QWidget):
             vLayout,
             "Compétences",
             "Ce que demandent vos offres, et où en est votre préparation",
+            [create_fold_button(self)],
             pIcon="target",
         )
 

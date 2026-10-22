@@ -42,6 +42,7 @@ def scrape_sources(pConfig, pOnProgress=None, pCancelEvent=None):
     vDataFrames = []
     vPageCount = 0
     vErrors = []
+    vSourceCounts = {}
 
     # Vérification de la configuration
     pConfig.validate()
@@ -79,6 +80,7 @@ def scrape_sources(pConfig, pOnProgress=None, pCancelEvent=None):
             continue
 
         vPageCount += 1
+        vSourceCounts[vName] = len(vDataFrame)
 
         if not vDataFrame.empty:
             vDataFrames.append(vDataFrame)
@@ -111,7 +113,7 @@ def scrape_sources(pConfig, pOnProgress=None, pCancelEvent=None):
     else:
         vItems = pd.DataFrame(columns=JOB_COLUMNS)
 
-    vItems, vRejectedCount = complete_offers(
+    vItems, vRejectedBySource = complete_offers(
         vItems,
         pConfig.net_salary_ratio,
         pConfig.income_tax_rate,
@@ -139,7 +141,9 @@ def scrape_sources(pConfig, pOnProgress=None, pCancelEvent=None):
         started_at=vStartedAt,
         status=vStatus,
         error_message=" | ".join(vErrors) or None,
-        rejected_count=vRejectedCount,
+        rejected_count=sum(vRejectedBySource.values()),
+        rejected_by_source=vRejectedBySource,
+        source_counts=vSourceCounts,
     )
 
     logger.info(

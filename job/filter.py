@@ -2,6 +2,8 @@
 
 import pandas as pd
 
+from job.fingerprint import normalize
+from job.location import find_department
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -129,11 +131,26 @@ def matches_keyword(pJob, pKeyword):
 
 
 def matches_location(pJob, pLocation):
-    """Vérifie que la localisation recherchée est présente dans l'offre."""
+    """Vérifie que la localisation recherchée est présente dans l'offre.
 
-    vLocation = str(pJob["location"] or "")
+    Par mots entiers, sans tenir compte des accents ni de la ponctuation
+    (« Orleans » trouve « Orléans ») ; un département, par numéro ou par nom (« 59 », « Nord »),
+    trouve aussi les offres de son code postal ou notées « (59) ».
+    """
 
-    rMatches = pLocation.lower() in vLocation.lower()
+    vLocation = str(pJob.get("location") or "")
+    vSearch = normalize(pLocation)
+    vDepartment = find_department(pLocation)
+
+    # Mots entiers : « Nord » ne trouve pas « Nordhausen ».
+    rMatches = bool(vSearch) and f" {vSearch} " in (
+        f" {normalize(vLocation)} {normalize(pJob.get('city'))} "
+    )
+
+    if not rMatches and vDepartment:
+        rMatches = str(pJob.get("postal_code") or "").startswith(vDepartment) or (
+            f"({vDepartment.lower()})" in vLocation.lower()
+        )
 
     return rMatches
 

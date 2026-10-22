@@ -24,6 +24,7 @@ from gui.widgets import (
     StatisticCard,
     create_button,
     create_card,
+    create_fold_button,
     create_page_header,
     create_scroll_content,
     show_message,
@@ -138,6 +139,7 @@ class QualityPage(QWidget):
             vLayout,
             "Qualité des données",
             "Les informations fournies par chaque source, pour voir ce qui manque",
+            [create_fold_button(self)],
             pIcon="list-checks",
         )
 

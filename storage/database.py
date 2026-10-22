@@ -717,6 +717,73 @@ def migrate_to_v21(pConnection):
     )
 
 
+def migrate_to_v22(pConnection):
+    """Décode les entités HTML (&eacute;) des offres Adzuna déjà enregistrées.
+
+    Sans ce décodage, une recherche « électricien » ne trouvait pas
+    « &Eacute;lectricien ». L'entreprise absente est retrouvée dans le texte,
+    où les agences d'intérim se nomment.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    from job.sources.adzuna.parser import find_agency, read_text
+
+    vRows = pConnection.execute("""
+        SELECT source_id, title, company, description
+        FROM job_offer
+        WHERE source = 'adzuna'
+        AND (title LIKE '%&%;%' OR description LIKE '%&%;%' OR company IS NULL)
+        """).fetchall()
+
+    vUpdates = []
+    vCompanies = 0
+
+    for vSourceId, vTitle, vCompany, vDescription in vRows:
+        vText = read_text(vDescription)
+        vFound = vCompany or find_agency(vText)
+        vCompanies += vFound is not None and vCompany is None
+        vUpdates.append((read_text(vTitle), vFound, vText, vSourceId))
+
+    pConnection.executemany(
+        """
+        UPDATE job_offer SET title = ?, company = ?, description = ?
+        WHERE source = 'adzuna' AND source_id = ?
+        """,
+        vUpdates,
+    )
+
+    logger.info(
+        "Offres Adzuna relues : %s texte(s) décodé(s), %s entreprise(s) retrouvée(s)",
+        len(vUpdates),
+        vCompanies,
+    )
+
+
+def migrate_to_v23(pConnection):
+    """Ajoute le cache des traductions : une description traduite ne l'est qu'une fois."""
+
+    pConnection.execute("""
+        CREATE TABLE translation_cache (
+            text_key TEXT PRIMARY KEY,
+            translation TEXT NOT NULL,
+            translated_at TEXT NOT NULL
+        )
+        """)
+
+
+def migrate_to_v24(pConnection):
+    """Indexe la date de découverte des offres.
+
+    La liste des offres, triée par cette date, et les comptes par jour lisaient
+    toute la table : mesuré sur 3 400 offres, 72 ms ramenés à 17 ms et 6 ms à
+    moins d'une milliseconde.
+    """
+
+    pConnection.execute(
+        "CREATE INDEX idx_job_offer_first_seen ON job_offer(first_seen_at, published_at)"
+    )
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -739,6 +806,9 @@ MIGRATIONS = [
     migrate_to_v19,
     migrate_to_v20,
     migrate_to_v21,
+    migrate_to_v22,
+    migrate_to_v23,
+    migrate_to_v24,
 ]
 
 

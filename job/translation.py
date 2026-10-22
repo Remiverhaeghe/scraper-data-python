@@ -9,6 +9,7 @@ description allemande passe automatiquement par l'anglais.
 import os
 import re
 import sys
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 
@@ -212,3 +213,22 @@ if __name__ == "__main__":
         sys.exit(1)
 
     install_models()
+
+
+def translate_with_cache(pDatabaseFile, pText, pNow=None):
+    """Retourne la traduction gardée en base, ou traduit puis la garde.
+
+    Une description traduite une fois l'est pour le bureau comme pour le web,
+    sans les quelques secondes de calcul.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    from storage.translations import get_translation, save_translation
+
+    rTranslation = get_translation(pDatabaseFile, pText)
+
+    if rTranslation is None:
+        rTranslation = translate_to_french(pText)
+        save_translation(pDatabaseFile, pText, rTranslation, pNow or datetime.now())
+
+    return rTranslation

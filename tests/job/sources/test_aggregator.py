@@ -433,7 +433,7 @@ def test_scrape_sources_reports_progress(monkeypatch):
     )
 
     # Ordre du registre : Remotive avant Greenhouse.
-    assert vProgress == [(1, 2, "Remotive"), (2, 2, "Greenhouse")]
+    assert vProgress == [(1, 2, "Greenhouse"), (2, 2, "Remotive")]
 
 
 def test_scrape_sources_stops_before_first_source(monkeypatch):
@@ -462,8 +462,8 @@ def test_scrape_sources_stops_between_sources(monkeypatch):
     mock_greenhouse_and_remotive(monkeypatch, vCalls)
 
     monkeypatch.setattr(
-        "job.sources.remotive.source.scrape_jobs",
-        lambda pSearch, pMaxItems=None: vCancelEvent.set() or pd.DataFrame(),
+        "job.sources.greenhouse.source.scrape_jobs",
+        lambda pBoard, pMaxItems=None: vCancelEvent.set() or pd.DataFrame(),
     )
 
     with pytest.raises(ScrapingCancelled):
@@ -471,4 +471,4 @@ def test_scrape_sources_stops_between_sources(monkeypatch):
             build_greenhouse_and_remotive_config(), pCancelEvent=vCancelEvent
         )
 
-    assert vCalls == []
+    assert "remotive" not in vCalls

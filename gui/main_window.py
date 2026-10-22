@@ -4,7 +4,7 @@ import threading
 from datetime import date, datetime
 
 from PySide6.QtCore import QSize, Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -167,6 +167,34 @@ class MainWindow(QMainWindow):
 
         self.navigation.currentRowChanged.connect(self.show_page)
         self.navigation.setCurrentRow(0)
+
+        self.add_shortcuts()
+
+    def add_shortcuts(self):
+        """Ajoute les raccourcis : Ctrl+1 à 9 pour les pages, Ctrl+F, Échap."""
+        for vRow in range(min(9, self.navigation.count())):
+            QShortcut(
+                QKeySequence(f"Ctrl+{vRow + 1}"),
+                self,
+                lambda pRow=vRow: self.navigation.setCurrentRow(pRow),
+            )
+
+        QShortcut(QKeySequence.StandardKey.Find, self, self.search_offers)
+        QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self.hide_offer_detail)
+
+    def search_offers(self):
+        """Ouvre les offres, le curseur dans le champ de recherche."""
+        self.navigate("offers")
+        self.offers_page.search_edit.setFocus()
+        self.offers_page.search_edit.selectAll()
+
+    def hide_offer_detail(self):
+        """Masque la fiche de l'offre au profit du tableau, sur la page Offres."""
+        if (
+            self.pages.currentWidget() is self.offers_page
+            and not self.offers_page.detail_panel.isHidden()
+        ):
+            self.offers_page.toggle_detail()
 
     def create_sidebar(self, pTitle):
         """Construit le menu latéral : marque, navigation et état."""

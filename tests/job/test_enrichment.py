@@ -113,13 +113,14 @@ def test_enrich_offers_fills_only_empty_fields_and_rejects_unusable():
                 "salary_max": None,
             },
             {"title": None, "description": None},
+            {"title": None, "description": "Réponse sans poste", "source": "hn"},
         ]
     )
 
     rItems, rRejected = enrich_offers(vItems)
     vOffer = rItems.iloc[0]
 
-    assert rRejected == 1
+    assert rRejected == {"inconnue": 1, "hn": 1}
     assert len(rItems) == 1
     assert vOffer["remote"]
     assert vOffer["remote_type"] == "full"

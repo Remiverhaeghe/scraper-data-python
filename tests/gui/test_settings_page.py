@@ -61,15 +61,17 @@ def test_theme_buttons_emit_choice(qt_application, tmp_path):
 
     vButtons = vPage.theme_buttons.buttons()
 
+    # Sans choix mémorisé, « Auto » est coché : le thème suit Windows.
+    assert [vButton.text() for vButton in vButtons] == ["Auto", "Clair", "Sombre"]
     assert vButtons[0].isChecked()
 
-    vButtons[1].click()
+    vButtons[2].click()
 
     assert vRequested == ["dark"]
 
     vPage.set_actions_enabled(False)
 
-    assert not vButtons[1].isEnabled()
+    assert not vButtons[2].isEnabled()
 
 
 def test_rules_are_saved_from_the_page(qt_application, tmp_path):
