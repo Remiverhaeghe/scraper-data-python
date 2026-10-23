@@ -17,8 +17,8 @@ E: <h1>{titre}</h1> est traduit en appels de fonction par le compilateur. Les ac
 @003
 Q: Quelle est la différence entre props et state ?
 C: Les props viennent du parent, le state est interne
-W: Les props sont modifiables, le state ne l'est jamais
-W: Le state est partagé entre tous les composants de l'application
+W: Les props sont modifiables, le state ne l'est pas
+W: Le state est partagé entre les composants de l'application
 W: Les props ne servent qu'aux composants de classe
 E: Un composant ne modifie pas ses props : elles appartiennent au parent. Son state lui appartient, et le modifier provoque un nouveau rendu. Quand deux composants doivent partager une donnée, on remonte le state dans leur parent commun.
 

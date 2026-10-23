@@ -17,7 +17,8 @@ change), schémas en plein écran tournés pour la longueur du téléphone, stat
 claire ou sombre et taille du texte réglables, question signalée depuis le
 téléphone, révision des thèmes de ses candidatures en cours, objectif de réponses
 du jour, vibration à la correction, examens blancs envoyés au PC, HTTPS avec
-certificat épinglé (empreinte reçue par le QR code).
+certificat épinglé (empreinte reçue par le QR code), nouvelles offres de la
+semaine avec leur statut (Intéressé, Postulé, Ignorée) envoyé au PC.
 
 ## Installation des outils (une fois)
 
@@ -160,6 +161,7 @@ mobile/
 │   │   ├── question_screen.dart  # Question, correction et suivante
 │   │   ├── exam_screen.dart      # Examen blanc chronométré et bilan
 │   │   ├── statistics_screen.dart # Statistiques de révision
+│   │   ├── offers_screen.dart    # Nouvelles offres de la semaine et leur statut
 │   │   └── guide_screen.dart     # Guide pratique d'un thème
 │   └── widgets/
 │       ├── question_input.dart   # Saisie selon le type de question
@@ -174,7 +176,9 @@ mobile/
     ├── discovery_test.dart       # Teste la recherche du serveur sur le Wi-Fi
     ├── connection_code_test.dart # Teste la lecture du QR code de connexion
     ├── statistics_test.dart      # Teste la réussite par thème et le graphique des jours
-    ├── phone_features_test.dart  # Teste signalements, examens envoyés, objectif et candidatures
+    ├── phone_features_test.dart  # Teste signalements, examens, objectif, candidatures et offres
+    ├── integration/
+    │   └── server_sync_test.dart # Synchronisation avec le vrai serveur (CI seulement)
     ├── schema_view_test.dart     # Teste la description et le plein écran des schémas
     └── widget_test.dart          # Teste l'accueil et une question corrigée
 ```

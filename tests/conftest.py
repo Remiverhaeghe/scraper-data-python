@@ -95,10 +95,16 @@ def refuse_real_database(pDatabase, *pArgs, **pKwargs):
 
 
 @pytest.fixture(autouse=True)
-def block_real_database(monkeypatch):
-    """Empêche tout test d'ouvrir data/scraper.db, sur ce PC comme en CI."""
+def block_real_database(monkeypatch, tmp_path):
+    """Empêche tout test d'ouvrir data/scraper.db, sur ce PC comme en CI.
+
+    Les lectures qui suivent config.DATABASE_FILE, comme les entreprises suivies
+    (job/company_pages.py), visent une base absente : sans réglage enregistré,
+    elles prennent le .env ou les valeurs par défaut.
+    """
 
     monkeypatch.setattr(sqlite3, "connect", refuse_real_database)
+    monkeypatch.setattr("config.DATABASE_FILE", str(tmp_path / "absente.db"))
 
 
 @pytest.fixture

@@ -134,6 +134,14 @@ class MemoryRevisionStore implements RevisionStore {
   List<Map<String, dynamic>> examResults = [];
   Map<String, dynamic> preferences = {};
 
+  List<Map<String, dynamic>> offers = [];
+
+  @override
+  Future<List<Map<String, dynamic>>> loadOffers() async => offers;
+
+  @override
+  Future<void> saveOffers(List<Map<String, dynamic>> pOffers) async => offers = pOffers;
+
   @override
   Future<List<Map<String, dynamic>>> loadExamResults() async => examResults;
 

@@ -14,11 +14,11 @@ from job.quiz import (
     load_active_quiz,
     load_quiz,
 )
+from job.quiz_export import export_quiz_pack
 from job.quiz_import import (
     clear_imported_questions,
     is_safe_reference,
     describe_quiz_import,
-    export_quiz_pack,
     import_questions,
     import_questions_file,
     normalize_question,

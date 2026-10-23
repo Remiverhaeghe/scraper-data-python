@@ -19,9 +19,11 @@ MAX_ABSOLUTE_SHARE = 0.20
 # En dessous, un thème est trop petit pour qu'une part ait un sens.
 MIN_QUESTIONS = 8
 
+# Mots français seulement : None (Python) ou -refresh-only (Terraform) sont des
+# termes techniques, pas des indices.
 ABSOLUTE_WORDS = re.compile(
     r"\b(toujours|jamais|aucun|aucune|seulement|uniquement|tous|toutes|rien"
-    r"|obligatoire|impossible|always|never|only|none)\b",
+    r"|obligatoire|impossible)\b",
     re.IGNORECASE,
 )
 

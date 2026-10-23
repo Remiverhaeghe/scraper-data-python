@@ -77,7 +77,7 @@ E: La configuration s'écrit en HCL dans des fichiers .tf ; Terraform lit tous l
 @010
 Q: À quoi sert une variable déclarée ainsi ?
 C: À paramétrer la région sans toucher au code
-W: À fixer définitivement la région, impossible à changer ensuite
+W: À fixer définitivement la région, figée ensuite
 W: À stocker un mot de passe chiffré dans l'état de Terraform
 W: À créer une région supplémentaire dans le compte du fournisseur
 E: On utilise ensuite var.region dans la configuration. La valeur se change sans toucher au code : fichier terraform.tfvars, option -var ou variable d'environnement TF_VAR_region. La même configuration sert ainsi à plusieurs environnements. La valeur par défaut s'applique si rien n'est fourni.
@@ -117,7 +117,7 @@ Q: Quel fichier ajouter au .gitignore d'un projet Terraform ?
 C: .terraform/ et les fichiers *.tfstate
 W: main.tf et variables.tf
 W: Le fichier .terraform.lock.hcl
-W: Tous les fichiers .tf du dossier
+W: Les fichiers .tf du dossier
 E: Le dossier .terraform contient les providers téléchargés, recréés par init ; l'état ne va pas dans Git. Au contraire, .terraform.lock.hcl doit être versionné : il fige les versions exactes des providers pour toute l'équipe. Les fichiers .tf sont le code lui-même.
 
 @015
@@ -147,9 +147,9 @@ E: Ansible pousse ses modules par SSH et les exécute avec le Python du serveur,
 @018
 Q: Que fait ce playbook sur les serveurs du groupe web ?
 C: Il installe Nginx avec les droits root et s'assure qu'il tourne
-W: Il désinstalle Nginx puis redémarre tous les serveurs du groupe
-W: Il installe Nginx uniquement sur la machine qui lance Ansible
-W: Il vérifie Nginx sans rien modifier, comme un simple test
+W: Il désinstalle Nginx puis redémarre les serveurs du groupe
+W: Il installe Nginx sur la machine qui lance Ansible
+W: Il vérifie Nginx sans le modifier, comme un simple test
 E: hosts: web vise le groupe web de l'inventaire ; become: true élève les droits avec sudo. Le module apt installe le paquet s'il manque, le module service le démarre et l'active au démarrage. Relancé, le playbook ne change rien si tout est déjà conforme.
 ```yaml
 - hosts: web
@@ -209,7 +209,7 @@ E: fmt et validate s'utilisent avant tout plan, souvent dans l'intégration cont
 @024
 Q: Pourquoi relire attentivement une ligne « -/+ » dans un plan Terraform ?
 C: La ressource sera détruite puis recréée, avec ses données
-W: La ressource sera seulement renommée, sans autre effet
+W: La ressource sera renommée, sans autre effet
 W: La ressource sera dupliquée dans une seconde région
 W: La ressource sera ignorée lors du prochain apply
 E: Certains arguments ne se modifient pas sur place, comme le moteur d'une base ou la zone d'une machine : Terraform doit remplacer la ressource. Pour une base de données, cela signifie la perte des données si rien n'est prévu. Le plan indique quel argument force le remplacement.
@@ -271,7 +271,7 @@ E: Une source de données récupère une information existante, comme la derniè
 Q: Que récupère ce bloc ?
 C: L'image Ubuntu 24.04 la plus récente publiée par Canonical
 W: Une nouvelle image Ubuntu créée à chaque terraform apply
-W: Toutes les images du compte, dont celles d'autres éditeurs
+W: Les images du compte, dont celles d'autres éditeurs
 W: L'image utilisée par la dernière instance lancée à la main
 E: most_recent garde la plus récente des images qui correspondent au filtre de nom ; owners limite aux images publiées par Canonical, dont 099720109477 est le compte. On l'utilise ensuite avec data.aws_ami.ubuntu.id. Attention : une nouvelle image publiée provoque le remplacement des instances qui l'utilisent au prochain apply.
 ```hcl
@@ -382,7 +382,7 @@ E: Terraform remplace la valeur par (sensitive value) dans la sortie de plan et 
 Q: Que fait cette tâche Ansible à chaque modification du fichier de configuration ?
 C: Elle copie le fichier, puis Nginx est rechargé par le handler
 W: Elle recharge Nginx à chaque exécution, même sans changement
-W: Elle copie le fichier sans jamais recharger le service
+W: Elle copie le fichier sans recharger le service
 W: Elle supprime le fichier existant et arrête Nginx
 E: notify n'appelle le handler que si la tâche a réellement changé quelque chose : fichier modifié, Nginx rechargé ; fichier identique, rien ne se passe. Les handlers s'exécutent à la fin du play, une seule fois même si plusieurs tâches les notifient.
 ```yaml
@@ -438,9 +438,9 @@ E: ansible-vault chiffre un fichier ou une valeur avec un mot de passe ou une cl
 @045
 Q: Que fait l'option --check de ansible-playbook ?
 C: Elle simule l'exécution et montre ce qui changerait
-W: Elle vérifie que la syntaxe YAML est correcte, sans rien d'autre
+W: Elle vérifie que la syntaxe YAML est correcte
 W: Elle applique les changements puis les annule automatiquement
-W: Elle teste la connexion SSH sans lancer aucune tâche
+W: Elle teste la connexion SSH sans lancer de tâche
 E: En mode check, les modules qui le permettent indiquent ce qu'ils changeraient sans agir, un peu comme terraform plan. Avec --diff, on voit en plus les lignes modifiées dans les fichiers. Certaines tâches shell ne savent pas simuler et sont sautées.
 
 @046

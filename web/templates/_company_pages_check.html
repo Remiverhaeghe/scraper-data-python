@@ -1,0 +1,7 @@
+<ul class="company-pages-check">
+    {% for label, company, count, message in results %}
+    <li class="{{ 'tone-success' if count else ('tone-danger' if count is none else 'muted') }}">{{ label }} · {{ company }} : {{ message }}</li>
+    {% else %}
+    <li class="muted">Aucune entreprise à vérifier.</li>
+    {% endfor %}
+</ul>

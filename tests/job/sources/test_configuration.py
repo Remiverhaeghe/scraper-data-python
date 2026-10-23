@@ -1,5 +1,6 @@
 """Tests de construction de la configuration des sources d'emploi"""
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -89,6 +90,12 @@ def test_build_job_config_fails_when_source_config_is_missing(monkeypatch):
 
 
 # Vérifie qu'une source indisponible ne peut pas être sélectionnée
-def test_build_job_config_rejects_unavailable_source():
+def test_build_job_config_rejects_unavailable_source(monkeypatch):
+    """Vérifie le refus d'une source marquée indisponible."""
+
+    monkeypatch.setitem(
+        SOURCES, "france-travail", replace(SOURCES["france-travail"], available=False)
+    )
+
     with pytest.raises(ValueError, match="indisponible"):
         build_job_config(build_arguments(["france-travail"]))

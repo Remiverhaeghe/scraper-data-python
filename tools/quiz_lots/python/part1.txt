@@ -98,7 +98,7 @@ E: Le gestionnaire de contexte garantit la fermeture, même si une exception sur
 @011
 Q: Qu'affiche ce code ?
 C: Erreur : division par zéro
-W: Rien, l'erreur est ignorée
+W: Une ligne vide, l'erreur est ignorée
 W: ZeroDivisionError suivi de la trace
 W: 0
 E: L'exception est attrapée par le bloc except qui correspond à son type. On attrape des exceptions précises : un except nu, ou except Exception sans traitement, cache des bogues. finally s'exécute dans tous les cas, pour libérer une ressource.
@@ -165,7 +165,7 @@ Q: Quelle est la différence entre une liste et un tuple pour servir de clé de 
 C: Seul le tuple peut servir de clé
 W: Seule la liste peut servir de clé
 W: Les deux peuvent servir de clé
-W: Aucun des deux ne peut servir de clé
+W: Ni l'un ni l'autre ne peut servir de clé
 E: Une clé de dictionnaire doit être hachable, donc immuable : un tuple de valeurs immuables l'est, une liste non. d[(2026, 10)] = "octobre" fonctionne ; d[[2026, 10]] lève TypeError: unhashable type: 'list'.
 
 @018
@@ -191,7 +191,7 @@ E: PEP 8 fixe les conventions : quatre espaces d'indentation, noms en snake_case
 Q: À quoi sert la condition if __name__ == "__main__" ?
 C: À n'exécuter du code que si le fichier est lancé directement
 W: À empêcher l'import du fichier par un autre module
-W: À définir la fonction principale obligatoire
+W: À définir la fonction principale exigée par Python
 W: À exécuter le code deux fois de suite
 E: Lancé avec python script.py, le module s'appelle « __main__ » et le bloc s'exécute ; importé par un autre module, il porte son nom de fichier et le bloc est ignoré. On peut ainsi réutiliser les fonctions d'un script sans déclencher son traitement.
 

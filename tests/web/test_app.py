@@ -2120,3 +2120,28 @@ def test_offer_description_translated_in_place(client, monkeypatch):
         client.get("/offer/translation", params={**vParams, "id": "x"}).status_code
         == 404
     )
+
+
+def test_settings_company_pages_saved_and_checked(client, monkeypatch):
+    """Vérifie l'enregistrement des pages carrière suivies et leur vérification."""
+
+    monkeypatch.delenv("LEVER_COMPANIES", raising=False)
+
+    vSaved = client.post("/settings/company-pages", data={"lever": "qonto, inconnue"})
+
+    assert "Listes enregistrées" in vSaved.text
+    assert 'value="qonto, inconnue"' in vSaved.text
+
+    def count(_pPlatform, pCompany):
+        if pCompany == "inconnue":
+            raise ValueError("404")
+        return 7
+
+    monkeypatch.setattr("job.company_pages.count_published_offers", count)
+
+    vChecked = client.post(
+        "/settings/company-pages/check", data={"lever": "qonto, inconnue"}
+    )
+
+    assert "Lever · qonto : 7 offre(s)" in vChecked.text
+    assert "Lever · inconnue : introuvable" in vChecked.text

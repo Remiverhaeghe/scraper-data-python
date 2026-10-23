@@ -395,90 +395,98 @@ class PieChart(QWidget):
         vRing = QRectF(4, vTop + (vHeight - vDiameter) / 2, vDiameter, vDiameter)
 
         if self.title:
-            vPainter.save()
-            vPainter.setPen(QColor(COLORS["muted"]))
+            self.draw_title(vPainter, vRing)
 
-            vFont = vPainter.font()
-            vFont.setBold(True)
-            vPainter.setFont(vFont)
+        self.draw_ring(vPainter, vRing, vTotal)
+        self.draw_legend_rows(
+            vPainter, vLegend, vRing.right() + LEGEND_GAP, vTop, vHeight
+        )
 
-            # Centré sur l'anneau, ou élargi vers la droite s'il est plus long.
-            vTitleWidth = max(
-                vRing.width(),
-                vPainter.fontMetrics().horizontalAdvance(self.title) + 8,
-            )
-            vPainter.drawText(
-                QRectF(vRing.left(), 0, vTitleWidth, PIE_TITLE_HEIGHT),
-                Qt.AlignmentFlag.AlignCenter,
-                self.title,
-            )
-            vPainter.restore()
+        vPainter.end()
 
-        if vTotal:
+    def draw_title(self, pPainter, pRing):
+        """Écrit le titre centré sur l'anneau, élargi vers la droite s'il est long."""
+        pPainter.save()
+        pPainter.setPen(QColor(COLORS["muted"]))
+
+        vFont = pPainter.font()
+        vFont.setBold(True)
+        pPainter.setFont(vFont)
+
+        vTitleWidth = max(
+            pRing.width(), pPainter.fontMetrics().horizontalAdvance(self.title) + 8
+        )
+        pPainter.drawText(
+            QRectF(pRing.left(), 0, vTitleWidth, PIE_TITLE_HEIGHT),
+            Qt.AlignmentFlag.AlignCenter,
+            self.title,
+        )
+        pPainter.restore()
+
+    def draw_ring(self, pPainter, pRing, pTotal):
+        """Dessine les parts, le trou central et le total au milieu."""
+        if pTotal:
             # Qt compte les angles en seizièmes de degré, à partir de trois heures.
             vStart = 90 * 16
 
             for _, vValue, vColor in self.shares:
-                vSpan = -round(360 * 16 * vValue / vTotal)
+                vSpan = -round(360 * 16 * vValue / pTotal)
 
-                vPainter.setPen(Qt.PenStyle.NoPen)
-                vPainter.setBrush(QColor(vColor))
-                vPainter.drawPie(vRing, vStart, vSpan)
+                pPainter.setPen(Qt.PenStyle.NoPen)
+                pPainter.setBrush(QColor(vColor))
+                pPainter.drawPie(pRing, vStart, vSpan)
 
                 vStart += vSpan
         else:
-            vPainter.setPen(Qt.PenStyle.NoPen)
-            vPainter.setBrush(QColor(COLORS["border"]))
-            vPainter.drawEllipse(vRing)
+            pPainter.setPen(Qt.PenStyle.NoPen)
+            pPainter.setBrush(QColor(COLORS["border"]))
+            pPainter.drawEllipse(pRing)
 
         # Le disque central transforme le camembert en anneau, plus lisible.
-        vHole = vRing.adjusted(
-            vDiameter * 0.22, vDiameter * 0.22, -vDiameter * 0.22, -vDiameter * 0.22
-        )
+        vMargin = pRing.width() * 0.22
+        vHole = pRing.adjusted(vMargin, vMargin, -vMargin, -vMargin)
 
-        vPainter.setBrush(QColor(COLORS["surface"]))
-        vPainter.drawEllipse(vHole)
+        pPainter.setBrush(QColor(COLORS["surface"]))
+        pPainter.drawEllipse(vHole)
 
-        vPainter.save()
-        vPainter.setPen(QColor(COLORS["heading"]))
+        pPainter.save()
+        pPainter.setPen(QColor(COLORS["heading"]))
 
-        vFont = vPainter.font()
+        vFont = pPainter.font()
         vFont.setBold(True)
         scale_font(vFont, 1.4)
-        vPainter.setFont(vFont)
+        pPainter.setFont(vFont)
 
         # Dans un petit anneau, le total est réduit pour tenir dans le trou.
         vAvailable = vHole.width() * 0.85
-        vNeeded = vPainter.fontMetrics().horizontalAdvance(str(vTotal))
+        vNeeded = pPainter.fontMetrics().horizontalAdvance(str(pTotal))
 
         if vNeeded > vAvailable:
             scale_font(vFont, vAvailable / vNeeded)
-            vPainter.setFont(vFont)
+            pPainter.setFont(vFont)
 
-        vPainter.drawText(vHole, Qt.AlignmentFlag.AlignCenter, str(vTotal))
-        vPainter.restore()
+        pPainter.drawText(vHole, Qt.AlignmentFlag.AlignCenter, str(pTotal))
+        pPainter.restore()
 
-        vLegendLeft = vRing.right() + LEGEND_GAP
+    def draw_legend_rows(self, pPainter, pLegend, pLeft, pTop, pHeight):
+        """Écrit la légende à droite de l'anneau, une ligne par part."""
         vRowHeight = 22
-        vLegendTop = vTop + (vHeight - vRowHeight * len(self.shares)) / 2
+        vLegendTop = pTop + (pHeight - vRowHeight * len(self.shares)) / 2
+        vTextWidth = self.width() - pLeft - 18
 
-        vTextWidth = self.width() - vLegendLeft - 18
+        for vIndex, (vText, vColor) in enumerate(pLegend):
+            vRowTop = vLegendTop + vIndex * vRowHeight
 
-        for vIndex, (vText, vColor) in enumerate(vLegend):
-            vTop = vLegendTop + vIndex * vRowHeight
-
-            vPainter.setPen(Qt.PenStyle.NoPen)
-            vPainter.setBrush(QColor(vColor))
-            vPainter.drawRoundedRect(QRectF(vLegendLeft, vTop + 5, 10, 10), 3, 3)
+            pPainter.setPen(Qt.PenStyle.NoPen)
+            pPainter.setBrush(QColor(vColor))
+            pPainter.drawRoundedRect(QRectF(pLeft, vRowTop + 5, 10, 10), 3, 3)
 
             # Fenêtre vraiment trop étroite : le texte est abrégé, jamais coupé net.
-            vPainter.setPen(QColor(COLORS["text"]))
-            vPainter.drawText(
-                QRectF(vLegendLeft + 18, vTop, vTextWidth, vRowHeight),
+            pPainter.setPen(QColor(COLORS["text"]))
+            pPainter.drawText(
+                QRectF(pLeft + 18, vRowTop, vTextWidth, vRowHeight),
                 Qt.AlignmentFlag.AlignVCenter,
-                vPainter.fontMetrics().elidedText(
+                pPainter.fontMetrics().elidedText(
                     vText, Qt.TextElideMode.ElideRight, int(vTextWidth)
                 ),
             )
-
-        vPainter.end()

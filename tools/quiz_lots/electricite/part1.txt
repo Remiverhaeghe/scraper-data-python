@@ -20,7 +20,7 @@ Q: Comment branche-t-on un voltmètre pour mesurer la tension d'un récepteur ?
 C: En parallèle, aux bornes du récepteur
 W: En série, à la place d'un fusible
 W: En série, entre le récepteur et le neutre
-W: Uniquement entre une phase et la terre
+W: Entre une phase et la terre, quel que soit le récepteur
 E: Une tension est une différence de potentiel entre deux points : le voltmètre se place aux bornes du récepteur, en parallèle. Sa résistance interne très élevée ne perturbe presque pas le circuit. Monté en série, il bloquerait le courant et le récepteur ne fonctionnerait plus.
 
 @004

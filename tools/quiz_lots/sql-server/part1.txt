@@ -69,7 +69,7 @@ E: NULL représente une valeur inconnue : toute comparaison avec lui, même NULL
 Q: Que renvoie cette requête ?
 C: Le nombre de commandes de chaque client
 W: Le nombre total de clients de la base
-W: Les clients sans aucune commande
+W: Les clients sans commande
 W: La première commande de chaque client
 E: GROUP BY regroupe les lignes par client et COUNT(*) compte les lignes de chaque groupe. Toute colonne du SELECT doit être dans le GROUP BY ou dans une fonction d'agrégat, sinon SQL Server refuse la requête, contrairement à l'ancien comportement permissif de MySQL.
 ```sql
@@ -149,7 +149,7 @@ E: Les pages 1 à 4 contiennent 4 × 25 = 100 lignes, à sauter. La formule gén
 @018
 Q: À quoi sert une clé étrangère ?
 C: Garantir qu'une valeur existe dans la table référencée
-W: Accélérer toutes les requêtes de la table qui la porte
+W: Accélérer les requêtes de la table qui la porte
 W: Chiffrer la colonne qui fait référence à une autre table
 W: Créer automatiquement une copie de la table référencée
 E: Une clé étrangère Commande.ClientId vers Client.Id refuse une commande pour un client inexistant et empêche de supprimer un client qui a des commandes, sauf ON DELETE CASCADE. Elle ne crée pas d'index sur la colonne : on l'ajoute soi-même pour les jointures.
@@ -168,8 +168,8 @@ DELETE FROM Commande;
 @020
 Q: Quelle différence entre DELETE FROM Journal et TRUNCATE TABLE Journal ?
 C: TRUNCATE vide la table d'un coup et remet le compteur IDENTITY à zéro
-W: TRUNCATE supprime la table et sa structure, DELETE seulement les lignes
-W: DELETE est toujours plus rapide que TRUNCATE sur une grande table
+W: TRUNCATE supprime la table et sa structure, DELETE les lignes
+W: DELETE est plus rapide que TRUNCATE sur une grande table
 W: TRUNCATE accepte une clause WHERE, DELETE non
 E: TRUNCATE libère les pages de données sans journaliser chaque ligne : très rapide. Il réinitialise IDENTITY et refuse une table référencée par une clé étrangère. DELETE supprime ligne à ligne, accepte un WHERE et déclenche les triggers. Les deux laissent la table en place.
 
@@ -187,7 +187,7 @@ E: C'est l'ordre d'écriture imposé. L'ordre logique d'évaluation est différe
 Q: Pourquoi cet alias déclenche-t-il une erreur dans le WHERE ?
 C: Le WHERE est évalué avant le SELECT qui définit l'alias
 W: Les alias ne peuvent pas contenir de majuscules
-W: Un alias doit toujours être écrit entre crochets
+W: Un alias doit être écrit entre crochets
 W: Les opérations arithmétiques sont interdites dans un SELECT
 E: L'ordre logique évalue le WHERE avant le SELECT : Total n'existe pas encore. On répète l'expression dans le WHERE, ou on l'enveloppe dans une sous-requête ou une CTE. ORDER BY, évalué après, accepte l'alias.
 ```sql
@@ -200,7 +200,7 @@ WHERE Total > 100;
 Q: Que fait l'instruction UPDATE suivante ?
 C: Elle augmente de 5 % le prix des produits de la catégorie 3
 W: Elle fixe à 1,05 € le prix des produits de la catégorie 3
-W: Elle augmente de 5 % le prix de tous les produits
+W: Elle augmente de 5 % le prix des produits
 W: Elle ajoute un produit de prix 1,05 à la catégorie 3
 E: Prix * 1.05 multiplie le prix actuel ; le WHERE limite aux produits de la catégorie 3. Sans le WHERE, tous les prix augmenteraient. @@ROWCOUNT, juste après, indique combien de lignes ont été modifiées : une bonne vérification.
 ```sql

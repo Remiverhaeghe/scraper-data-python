@@ -86,8 +86,18 @@ class SourceDefinition:
     # Catégorie affichée et filtrable, parmi SOURCE_CATEGORIES
     category: str = "international"
 
+    # Plateforme de pages carrière (job/company_pages.py) : la source est
+    # configurée dès qu'elle suit des entreprises, réglées dans Paramètres ou .env.
+    companies: str | None = None
+
     def get_missing_settings(self):
         """Retourne les variables d'environnement requises non renseignées."""
+
+        if self.companies:
+            # pylint: disable=import-outside-toplevel
+            from job.company_pages import load_company_list
+
+            return [] if load_company_list(self.companies) else list(self.settings)
 
         rMissing = [vName for vName in self.settings if not os.getenv(vName)]
 

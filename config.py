@@ -76,3 +76,8 @@ BACKUP_KEEP_COUNT = 10
 # Sauvegardes automatiques : une par jour au plus, une semaine gardée
 AUTO_BACKUP_KEEP_COUNT = 7
 AUTO_BACKUP_INTERVAL_HOURS = 24
+
+# Copie des sauvegardes automatiques sur un NAS : dossier partagé, par exemple
+# \\NAS\sauvegardes\jobboard. Vide : aucune copie hors du PC.
+BACKUP_NAS_DIRECTORY = os.getenv("BACKUP_NAS_DIRECTORY") or None
+NAS_KEEP_COUNT = 30

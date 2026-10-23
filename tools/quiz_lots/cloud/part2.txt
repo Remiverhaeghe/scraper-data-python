@@ -44,7 +44,7 @@ E: La clé de condition aws:SourceIp compare l'adresse d'origine de la requête 
 Q: Qu'est-ce qu'une identité managée sur Azure ?
 C: Une identité donnée à une ressource, sans secret à stocker
 W: Un compte utilisateur créé et administré par le support d'Azure
-W: Un mot de passe partagé par toutes les applications de l'abonnement
+W: Un mot de passe partagé par les applications de l'abonnement
 W: Un certificat à copier sur chaque machine virtuelle à la main
 E: Comme un rôle IAM sur une instance AWS, une identité managée permet à une application Azure d'obtenir des jetons auprès d'Entra ID, par exemple pour lire un Key Vault ou un compte de stockage. Azure gère et renouvelle les identifiants ; on n'attribue que les rôles nécessaires.
 
@@ -79,9 +79,9 @@ E: Un /24 laisse 32 - 24 = 8 bits pour les hôtes, soit 2^8 = 256 adresses. AWS 
 @059
 Q: Quelle différence principale entre un load balancer applicatif (ALB) et un load balancer réseau (NLB) sur AWS ?
 C: L'ALB route le HTTP selon le chemin, le NLB transmet du TCP
-W: L'ALB ne fonctionne qu'en interne, le NLB seulement depuis Internet
+W: L'ALB fonctionne en interne, le NLB depuis Internet
 W: L'ALB est gratuit, le NLB est facturé à chaque requête traitée
-W: L'ALB répartit entre zones, le NLB uniquement dans une seule zone
+W: L'ALB répartit entre zones, le NLB dans une seule zone
 E: L'ALB travaille en couche 7 : il termine le TLS, route /api vers un groupe et /images vers un autre, ajoute des en-têtes. Le NLB travaille en couche 4, à très faible latence, garde l'adresse IP source et accepte des protocoles non HTTP. Les deux existent en interne ou exposés, et répartissent entre zones.
 
 @060

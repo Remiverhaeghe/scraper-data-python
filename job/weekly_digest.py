@@ -37,7 +37,7 @@ def get_week_key(pNow):
     return rKey
 
 
-def get_new_offers(pDatabaseFile, pNow):
+def get_new_offers(pDatabaseFile, pNow, pLimit=MAX_DIGEST_OFFERS):
     """Retourne les offres vues dans la semaine, les mieux notées en tête."""
 
     vOffers = [
@@ -57,7 +57,7 @@ def get_new_offers(pDatabaseFile, pNow):
             -1 if pOffer["match_score"] is None else pOffer["match_score"]
         ),
         reverse=True,
-    )[:MAX_DIGEST_OFFERS]
+    )[:pLimit]
 
     return rOffers
 

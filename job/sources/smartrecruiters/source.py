@@ -44,5 +44,7 @@ SOURCE = SourceDefinition(
     label="SmartRecruiters",
     load_parameters=load_parameters,
     scrape=scrape,
+    settings=("SMARTRECRUITERS_COMPANIES",),
     category="company",
+    companies="smartrecruiters",
 )

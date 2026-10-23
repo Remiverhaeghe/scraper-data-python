@@ -108,6 +108,55 @@ jobs:
       - name: Tests
         run: flutter test
 
+  integration:
+    name: Synchronisation téléphone ↔ serveur
+    runs-on: ubuntu-latest
+
+    # Le vrai serveur, sur une base neuve dans un dossier temporaire, et le vrai
+    # code de l'application : contenu, réponse, signalement et examen échangés.
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      - name: Installation des dépendances
+        run: |
+          pip install -r requirements.txt
+          cd mobile && flutter pub get
+
+      - name: Base neuve et serveur
+        run: |
+          mkdir -p "$RUNNER_TEMP/integration" && cd "$RUNNER_TEMP/integration"
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m tools.mobile_integration prepare > token.txt
+          PYTHONPATH="$GITHUB_WORKSPACE" nohup python -m uvicorn web.app:app --port 8765 > server.log 2>&1 &
+          for vTry in $(seq 30); do
+            curl -sf http://127.0.0.1:8765/api/v1/ping && break
+            sleep 1
+          done
+
+      - name: Synchronisation depuis l'application
+        working-directory: mobile
+        run: |
+          export JOBBOARD_SERVER=http://127.0.0.1:8765
+          export JOBBOARD_TOKEN="$(cat "$RUNNER_TEMP/integration/token.txt")"
+          flutter test test/integration
+
+      - name: Contrôle de ce que le serveur a reçu
+        run: cd "$RUNNER_TEMP/integration" && PYTHONPATH="$GITHUB_WORKSPACE" python -m tools.mobile_integration check
+
+      - name: Journal du serveur en cas d'échec
+        if: failure()
+        run: cat "$RUNNER_TEMP/integration/server.log"
+
   audit:
     name: Vulnérabilités des dépendances
     runs-on: ubuntu-latest

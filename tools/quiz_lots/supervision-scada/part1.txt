@@ -25,9 +25,9 @@ E: Un tag associe un nom, comme « Pompe1_Marche », à une adresse dans l'autom
 @004
 Q: Quelle différence entre une alarme et un événement ?
 C: L'alarme demande une action de l'opérateur
-W: L'événement exige toujours un acquittement
-W: L'alarme n'est jamais horodatée
-W: Il n'y en a aucune, ce sont des synonymes
+W: L'événement exige un acquittement
+W: L'alarme n'est pas horodatée
+W: Ce sont deux synonymes
 E: Une alarme signale une situation anormale qui exige une réaction de l'opérateur dans un délai donné ; un événement trace simplement un fait, comme un démarrage ou un changement de consigne, sans action requise. Les événements ne demandent pas d'acquittement. Les alarmes sont toujours horodatées. Confondre les deux noie l'opérateur sous des messages inutiles.
 
 @005
@@ -81,7 +81,7 @@ E: OPC UA définit un modèle d'information, des services de lecture, d'écritur
 @011
 Q: Pourquoi attribuer des droits différents aux opérateurs, techniciens et administrateurs ?
 C: Pour limiter chaque utilisateur à ce dont il a besoin
-W: Pour que tous puissent modifier la configuration
+W: Pour que chacun puisse modifier la configuration
 W: Pour éviter d'avoir à créer des comptes nominatifs
 W: Pour accélérer l'affichage des écrans de conduite
 E: Le principe du moindre privilège limite les erreurs et les actes malveillants : l'opérateur conduit, le technicien règle, l'administrateur configure. Laisser tout le monde modifier la configuration est risqué. Les comptes doivent rester nominatifs pour la traçabilité. Les droits n'ont pas d'effet sur la vitesse d'affichage.
@@ -99,7 +99,7 @@ Q: Quel principe de conception d'écran recommande des couleurs neutres en fonct
 C: Réserver la couleur aux anomalies
 W: Colorier chaque équipement selon sa marque
 W: Mettre un fond noir et du texte rouge partout
-W: Faire clignoter toutes les valeurs en continu
+W: Faire clignoter les valeurs en continu
 E: Les écrans dits à haute performance, dans l'esprit de l'ISA-101, utilisent des gris et des couleurs sobres en fonctionnement normal, et réservent les couleurs vives aux alarmes et aux anomalies : l'œil de l'opérateur est attiré par ce qui demande une action. Colorier selon la marque ou tout mettre en rouge brouille l'information. Le clignotement permanent fatigue et fait perdre l'attention.
 
 @014
@@ -130,7 +130,7 @@ E: Une priorité, haute, moyenne ou basse, reflète la gravité des conséquence
 Q: Une IHM tombe en panne. Que doit-il se passer pour la machine ?
 C: L'automate continue de la commander en sécurité
 W: La machine s'arrête obligatoirement sur le champ
-W: Les sorties de l'automate passent toutes à 1
+W: Les sorties de l'automate passent à 1
 W: Les capteurs cessent d'envoyer leurs signaux
 E: La commande en temps réel est assurée par l'automate : la perte de l'IHM ne doit pas créer de situation dangereuse, et le comportement attendu, poursuite ou mise en état sûr, est défini à la conception. Un arrêt brutal n'est pas toujours souhaitable. Les sorties ne changent pas d'état à cause de l'IHM. Les capteurs restent câblés à l'automate.
 
@@ -138,7 +138,7 @@ E: La commande en temps réel est assurée par l'automate : la perte de l'IHM ne
 Q: Pourquoi l'arrêt d'urgence ne doit-il pas être un simple bouton sur un écran tactile ?
 C: Il doit rester câblé, indépendant du logiciel
 W: Un écran tactile ne peut pas afficher de rouge
-W: Les opérateurs n'utilisent jamais l'écran tactile
+W: Les opérateurs utilisent rarement l'écran tactile
 W: Un bouton d'écran est plus lent qu'un bouton physique
 E: L'arrêt d'urgence est une fonction de sécurité : il doit fonctionner même si l'IHM, le réseau ou le logiciel sont défaillants, d'où un bouton physique câblé dans la chaîne de sécurité. Un écran peut afficher du rouge. Les opérateurs utilisent l'écran pour la conduite normale. La rapidité n'est pas le critère principal, c'est l'indépendance.
 
@@ -153,7 +153,7 @@ E: Une boîte de confirmation, du type « Arrêter la ligne 2 ? », évite qu'un
 @020
 Q: Que faut-il faire régulièrement pour pouvoir restaurer une supervision après une panne de serveur ?
 C: Sauvegarder le projet et tester sa restauration
-W: Garder uniquement des captures d'écran des vues
+W: Garder des captures d'écran des vues
 W: Noter les adresses IP sur un papier dans l'armoire
 W: Compter sur le support du fournisseur sans copie
 E: Une sauvegarde régulière du projet, de la configuration et de l'historien, conservée hors du serveur, permet de remettre la supervision en service ; il faut aussi tester la restauration, sinon on ne sait pas si elle fonctionne. Des captures d'écran ne se rechargent pas. Une note papier est insuffisante. Le fournisseur ne détient pas forcément votre configuration.

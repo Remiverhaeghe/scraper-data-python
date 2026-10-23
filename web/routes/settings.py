@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from starlette.background import BackgroundTask
+from starlette.concurrency import run_in_threadpool
 
 from job.calendar import (
     CALENDAR_SUBSCRIPTION_PATH,
@@ -17,6 +18,12 @@ from job.calendar import (
     renew_calendar_token,
 )
 from job.companies import load_company_rules, save_company_rules
+from job.company_pages import (
+    PLATFORMS,
+    check_companies,
+    load_company_list,
+    save_company_lists,
+)
 from job.mobile_sync import (
     API_PREFIX,
     build_connection_svg,
@@ -65,6 +72,7 @@ def render_settings(
     pArchiveMessage=None,
     pMobileMessage=None,
     pBackupMessage=None,
+    pCompanyPagesMessage=None,
 ):
     """Affiche thème, règles, planification, notifications et sources."""
 
@@ -137,6 +145,18 @@ def render_settings(
             "mobile_message": pMobileMessage,
             "message_tone": get_message_tone(pStatusCode),
             "archive_message": pArchiveMessage,
+            "company_pages": [
+                {
+                    "key": vPlatform,
+                    "label": vLabel,
+                    "example": vExample,
+                    "value": load_company_list(vPlatform, pDatabaseFile).replace(
+                        ",", ", "
+                    ),
+                }
+                for vPlatform, (vLabel, _, _, vExample) in PLATFORMS.items()
+            ],
+            "company_pages_message": pCompanyPagesMessage,
             "backups": [
                 {"name": vBackup["name"], "label": describe_backup(vBackup)}
                 for vBackup in describe_backups(pDatabaseFile)
@@ -476,5 +496,60 @@ def restore_database_backup(
                 pBackupMessage=f"Sauvegarde restaurée. Anciennes données : "
                 f"{vBackupFile.name}",
             )
+
+    return rResponse
+
+
+async def read_company_pages(pRequest):
+    """Lit dans le formulaire la liste saisie pour chaque plateforme."""
+
+    vForm = await pRequest.form()
+
+    rLists = {vPlatform: str(vForm.get(vPlatform, "")) for vPlatform in PLATFORMS}
+
+    return rLists
+
+
+@router.post(
+    "/settings/company-pages",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+async def update_company_pages(
+    request: Request, pDatabaseFile: str = Depends(get_database_file)
+):
+    """Enregistre les entreprises suivies, prises en compte à la prochaine recherche."""
+
+    save_company_lists(pDatabaseFile, await read_company_pages(request))
+
+    rResponse = render_settings(
+        request,
+        pDatabaseFile,
+        pCompanyPagesMessage="Listes enregistrées : prises en compte à la prochaine recherche.",
+    )
+
+    return rResponse
+
+
+@router.post(
+    "/settings/company-pages/check",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+async def check_company_pages(request: Request):
+    """Vérifie chaque entreprise saisie auprès de sa plateforme (fragment HTMX)."""
+
+    vLists = await read_company_pages(request)
+    vResults = [
+        (PLATFORMS[vPlatform][0], vCompany, vCount, vMessage)
+        for vPlatform, vText in vLists.items()
+        for vCompany, vCount, vMessage in await run_in_threadpool(
+            check_companies, vPlatform, vText
+        )
+    ]
+
+    rResponse = templates.TemplateResponse(
+        request, "_company_pages_check.html", {"results": vResults}
+    )
 
     return rResponse

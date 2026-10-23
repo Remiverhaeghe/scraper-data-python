@@ -1,10 +1,17 @@
 """Sauvegarde de la base de données et rotation des sauvegardes"""
 
+import shutil
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from config import AUTO_BACKUP_INTERVAL_HOURS, AUTO_BACKUP_KEEP_COUNT, BACKUP_KEEP_COUNT
+from config import (
+    AUTO_BACKUP_INTERVAL_HOURS,
+    AUTO_BACKUP_KEEP_COUNT,
+    BACKUP_KEEP_COUNT,
+    BACKUP_NAS_DIRECTORY,
+    NAS_KEEP_COUNT,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -179,4 +186,85 @@ def run_due_backup(pDatabaseFile, pNow):
     except (OSError, sqlite3.Error):
         logger.exception("Échec de la sauvegarde automatique de la base")
 
+    copy_to_nas(pDatabaseFile)
+
     return rBackupFile
+
+
+def list_nas_copies(pDatabaseFile, pNasDirectory):
+    """Retourne les copies présentes sur le NAS, les plus récentes en tête."""
+
+    vStem = Path(pDatabaseFile).stem
+
+    rCopies = sorted(
+        Path(pNasDirectory).glob(f"{vStem}-*-{AUTO_BACKUP_REASON}.db"), reverse=True
+    )
+
+    return rCopies
+
+
+def copy_to_nas(pDatabaseFile, pNasDirectory=None, pKeepCount=NAS_KEEP_COUNT):
+    """Copie la dernière sauvegarde automatique sur le NAS si elle n'y est pas.
+
+    Un NAS éteint ou injoignable est signalé dans le journal ; la copie est
+    retentée au passage suivant, sans rien perdre. Retourne le fichier copié,
+    ou None.
+    """
+
+    vNasDirectory = pNasDirectory or BACKUP_NAS_DIRECTORY
+    vLatest = next(iter(list_backups(pDatabaseFile, pAutomatic=True)), None)
+    rCopy = None
+
+    if vNasDirectory is None or vLatest is None:
+        return rCopy
+
+    try:
+        vTarget = Path(vNasDirectory) / vLatest.name
+
+        if not vTarget.exists():
+            Path(vNasDirectory).mkdir(parents=True, exist_ok=True)
+            # Copie sous un nom provisoire puis renommage : une coupure réseau ne
+            # laisse jamais une copie tronquée sous le nom définitif.
+            vPartial = vTarget.with_suffix(".partiel")
+            shutil.copy2(vLatest, vPartial)
+            vPartial.replace(vTarget)
+            rCopy = vTarget
+
+            logger.info("Sauvegarde copiée sur le NAS : %s", vTarget.name)
+
+            for vOld in list_nas_copies(pDatabaseFile, vNasDirectory)[pKeepCount:]:
+                vOld.unlink(missing_ok=True)
+
+    except OSError as vException:
+        logger.warning(
+            "Copie sur le NAS impossible (%s) : nouvel essai au prochain passage",
+            vException,
+        )
+
+    return rCopy
+
+
+def get_last_nas_copy_time(pDatabaseFile, pNasDirectory=None):
+    """Retourne la date de la dernière copie sur le NAS ; None sans copie.
+
+    Lève OSError si le NAS est injoignable.
+    """
+
+    vNasDirectory = pNasDirectory or BACKUP_NAS_DIRECTORY
+
+    if not Path(vNasDirectory).is_dir():
+        raise OSError(f"Dossier du NAS injoignable : {vNasDirectory}")
+
+    vCopies = list_nas_copies(pDatabaseFile, vNasDirectory)
+    vStemLength = len(Path(pDatabaseFile).stem) + 1
+
+    # Date lue dans le nom, « scraper-20261022-183000-auto » : 15 caractères
+    rTime = (
+        datetime.strptime(
+            vCopies[0].stem[vStemLength : vStemLength + 15], "%Y%m%d-%H%M%S"
+        )
+        if vCopies
+        else None
+    )
+
+    return rTime

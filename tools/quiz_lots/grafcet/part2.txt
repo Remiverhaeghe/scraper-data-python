@@ -93,7 +93,7 @@ E: Une action mémorisée, mise à 1 sur l'activation d'une étape, garde sa val
 Q: Au démarrage, quelle étape cet extrait rend-il active ?
 C: L'étape 0, comme une étape initiale
 W: Les étapes 0, 1 et 2 à la fois
-W: Aucune, il faut un ordre de l'opérateur
+W: L'étape 1, après un ordre de l'opérateur
 W: L'étape 2, la dernière de la liste
 E: Au premier cycle, l'extrait active X0 et désactive les autres étapes, puis passe PremierCycle à FALSE pour ne plus recommencer : c'est la mise en place de la situation initiale. Les étapes 1 et 2 sont explicitement mises à FALSE. Aucun ordre opérateur n'intervient. L'ordre des lignes ne change rien : seule X0 reçoit TRUE.
 ```
@@ -115,7 +115,7 @@ Q: Que signifie la réceptivité « 5s/X7 » ?
 C: Vraie 5 s après l'activation de l'étape 7
 W: Vraie pendant les 5 premières secondes de l'étape 7
 W: Vraie 5 s après la désactivation de l'étape 7
-W: Vraie toutes les 5 s tant que l'étape 7 est active
+W: Vraie par intervalles de 5 s tant que l'étape 7 est active
 E: La notation t/Xi donne une condition qui devient vraie lorsque l'étape i est active depuis t : ici, 5 s après l'activation de l'étape 7, et tant qu'elle reste active. Elle est fausse pendant les 5 premières secondes. Elle se réinitialise à la désactivation de l'étape. Elle ne produit pas d'impulsions périodiques.
 
 @035
@@ -152,7 +152,7 @@ Q: L'étape 1 est active, et `a` et `b` sont vrais au même cycle. Quelle étape
 C: L'étape 3, les deux transitions s'enchaînent
 W: L'étape 2, la seconde attend le cycle suivant
 W: Les étapes 2 et 3 en même temps
-W: Aucune, les deux franchissements s'annulent
+W: L'étape 1, les deux franchissements s'annulent
 E: Le premier IF active X2, et le second, exécuté juste après dans le même cycle, voit X2 et b vrais : il franchit aussitôt la transition suivante. L'étape 2 n'est active qu'un instant, et ses actions continues ne sont pas émises : c'est une évolution fugace. Ce comportement dépend ici de l'ordre des instructions : si les deux IF étaient inversés, la séquence s'arrêterait un cycle sur l'étape 2. On rend l'exécution indépendante de cet ordre en calculant toutes les transitions avant de mettre à jour les étapes.
 ```
 IF X1 AND a THEN
@@ -219,7 +219,7 @@ END_IF;
 @042
 Q: Pourquoi séparer le mode manuel du cycle automatique ?
 C: Pour définir les mouvements permis et sûrs
-W: Pour autoriser toutes les sorties sans condition
+W: Pour autoriser les sorties sans condition
 W: Pour que le cycle reprenne seul après le manuel
 W: Pour supprimer les capteurs en mode manuel
 E: Le mode manuel a ses propres règles : mouvements autorisés un par un, interverrouillages maintenus, vitesse réduite si besoin, et le cycle automatique est neutralisé pendant ce temps. Autoriser toutes les sorties supprimerait ces protections. Le retour en automatique passe par une procédure définie, souvent une remise en position initiale. Les capteurs restent utiles en manuel pour les interverrouillages.

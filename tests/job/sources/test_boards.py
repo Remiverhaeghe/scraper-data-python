@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from job.company_pages import PLATFORMS
 from job.csv_schema import build_job
 from job.sources.ashby.parser import parse_job as parse_ashby
 from job.sources.boards import (
@@ -63,7 +64,9 @@ def test_board_source_scrapes_each_company(monkeypatch):
             raise ValueError("404")
         return to_dataframe([build_job(title=f"Poste {pCompany}", country="FR")])
 
-    vSource = define_board_source("essai", "Essai", "ESSAI_COMPANIES", "", fetch)
+    monkeypatch.setitem(PLATFORMS, "essai", ("Essai", "ESSAI_COMPANIES", "", "x"))
+    monkeypatch.delenv("ESSAI_COMPANIES", raising=False)
+    vSource = define_board_source("essai", "Essai", fetch)
 
     assert vSource.get_unavailability_reason() == "non configurée"
 

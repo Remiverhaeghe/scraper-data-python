@@ -59,8 +59,9 @@ SOURCE = SourceDefinition(
         "FRANCE_TRAVAIL_SCOPE",
         "FRANCE_TRAVAIL_TOKEN_URL",
         "FRANCE_TRAVAIL_API_BASE_URL",
+        # Accès à l'API soumis à une demande sur francetravail.io : la source ne
+        # s'active qu'une fois l'accès accordé, pas sur d'anciens identifiants.
+        "FRANCE_TRAVAIL_ACCESS_GRANTED",
     ),
-    # API suspendue par France Travail, accès soumis à une demande
-    available=False,
     category="france",
 )

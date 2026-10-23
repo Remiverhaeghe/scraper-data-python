@@ -74,12 +74,12 @@ from job.quiz_generation import (
     build_priority_themes,
     list_generation_themes,
 )
+from job.quiz_export import export_quiz_pack
 from job.quiz_import import (
     IMPORT_EXTENSIONS,
     clear_imported_questions,
     describe_import_details,
     describe_quiz_import,
-    export_quiz_pack,
     get_import_tone,
     import_questions,
     import_questions_file,

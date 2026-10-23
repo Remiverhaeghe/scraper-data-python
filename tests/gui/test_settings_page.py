@@ -551,11 +551,11 @@ def test_messages_are_colored_and_cards_reflow(qt_application, tmp_path, monkeyp
     vPage.arrange_cards(vPage.width() < settings_page.SINGLE_COLUMN_WIDTH)
 
     assert vPage.columns[1].count() == 1
-    assert vPage.columns[0].count() == 10
+    assert vPage.columns[0].count() == 11
 
     vPage.arrange_cards(False)
 
-    assert vPage.columns[1].count() == 5
+    assert vPage.columns[1].count() == 6
 
 
 def test_database_backup_is_listed_and_restored(qt_application, tmp_path, monkeypatch):

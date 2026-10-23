@@ -68,7 +68,7 @@ E: L'ancien « utf8 » de MySQL, en réalité utf8mb3, ne stocke que trois octet
 @009
 Q: Que fait la fonction NOW() ?
 C: Elle renvoie la date et l'heure courantes
-W: Elle renvoie seulement la date du jour
+W: Elle renvoie la date du jour, sans l'heure
 W: Elle renvoie le nombre de secondes depuis 1970
 W: Elle fige la date de la ligne à sa création
 E: NOW() renvoie la date et l'heure de début de l'instruction, CURDATE() la date seule, UNIX_TIMESTAMP() les secondes depuis 1970. Pour remplir automatiquement une date de création, on déclare la colonne DEFAULT CURRENT_TIMESTAMP.
@@ -160,7 +160,7 @@ E: UPDATE produit SET prix = 0; met tous les prix à zéro. L'option --safe-upda
 Q: Que fait INSERT ... ON DUPLICATE KEY UPDATE ?
 C: Il insère la ligne ou met à jour celle qui existe déjà
 W: Il insère la ligne en double sous un autre identifiant
-W: Il refuse l'insertion et renvoie toujours une erreur
+W: Il refuse l'insertion et renvoie une erreur
 W: Il supprime la ligne existante avant d'insérer
 E: Si l'insertion viole une clé primaire ou unique, MySQL applique la clause UPDATE à la ligne existante. Pratique pour un compteur ou une synchronisation. REPLACE fait autrement : il supprime puis réinsère, ce qui déclenche les suppressions en cascade et change l'identifiant.
 ```sql

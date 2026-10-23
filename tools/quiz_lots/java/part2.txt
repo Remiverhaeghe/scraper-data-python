@@ -57,7 +57,7 @@ E: L'ArrayList s'appuie sur un tableau : get(i) est immédiat, alors que la Link
 Q: Que se passe-t-il à l'exécution de cette boucle ?
 C: Une ConcurrentModificationException est levée
 W: L'élément « b » est supprimé sans problème
-W: Tous les éléments de la liste sont supprimés
+W: Les éléments de la liste sont supprimés un à un
 W: La boucle tourne indéfiniment
 E: Modifier une ArrayList pendant qu'on la parcourt avec for-each invalide l'itérateur, qui détecte la modification et lève une ConcurrentModificationException. On utilise plutôt removeIf ou Iterator.remove. Rien ne garantit une suppression propre ici. Les autres éléments ne sont pas supprimés. La boucle ne tourne pas indéfiniment.
 ```
@@ -97,7 +97,7 @@ List<Object> objets = noms;
 Q: Que permet le paramètre de type List<? extends Number> dans cette méthode ?
 C: Lire des Number dans une liste d'Integer ou de Double
 W: Ajouter n'importe quel Number dans la liste
-W: Accepter uniquement une List<Number> exacte
+W: Accepter une List<Number> exacte, pas une autre
 W: Convertir automatiquement les nombres en int
 E: Le joker « ? extends Number » accepte une List<Integer>, une List<Double> ou une List<Number>, et permet d'en lire les éléments comme des Number. En revanche, on ne peut rien y ajouter, sauf null, car le type exact est inconnu. Ce n'est pas limité à List<Number>. Aucune conversion en int n'a lieu.
 ```

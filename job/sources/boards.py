@@ -10,6 +10,7 @@ import os
 
 import pandas as pd
 
+from job.company_pages import PLATFORMS, load_company_list
 from job.csv_schema import JOB_COLUMNS
 from job.filter import filter_by_keyword_and_location
 from job.sources.config import SourceDefinition, scrape_each
@@ -64,20 +65,20 @@ def keep_board_jobs(pJobs, pCountries, pKeyword, pLocation, pMaxItems):
     return rJobs
 
 
-def define_board_source(pName, pLabel, pSetting, pDefaultCompanies, pFetchJobs):
+def define_board_source(pName, pLabel, pFetchJobs):
     """Déclare une source de pages carrière.
 
-    pSetting nomme la variable .env des entreprises suivies, séparées par des
-    virgules ; sans entreprises par défaut, la source reste « non configurée »
-    tant que cette variable est vide. pFetchJobs(entreprise) retourne le
-    DataFrame Job de toutes les offres d'une entreprise.
+    Les entreprises suivies viennent de Paramètres, du .env ou de la liste par
+    défaut (job/company_pages.py) ; sans aucune, la source reste « non
+    configurée ». pFetchJobs(entreprise) retourne le DataFrame Job de toutes
+    les offres d'une entreprise.
     """
 
     def load_parameters(pJobConfig):
         """Construit les paramètres : entreprises, pays et critères."""
 
         rParameters = {
-            "companies": os.getenv(pSetting) or pDefaultCompanies,
+            "companies": load_company_list(pName),
             "countries": read_countries(),
             "keyword": pJobConfig.keyword,
             "location": pJobConfig.location,
@@ -126,8 +127,9 @@ def define_board_source(pName, pLabel, pSetting, pDefaultCompanies, pFetchJobs):
         label=pLabel,
         load_parameters=load_parameters,
         scrape=scrape,
-        settings=() if pDefaultCompanies else (pSetting,),
+        settings=(PLATFORMS[pName][1],),
         category="company",
+        companies=pName,
     )
 
     return rSource

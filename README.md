@@ -98,7 +98,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Filtrage des résultats après agrégation
 - [x] Enregistrement de l'historique du traitement
 - [x] Configuration API / HTML par source
-- [x] France Travail — API suspendue par France Travail, accès sur demande
+- [x] France Travail — accès à demander sur francetravail.io, activé par `FRANCE_TRAVAIL_ACCESS_GRANTED=1` dans `.env`
 - [x] Adzuna
 - [x] Remotive (télétravail)
 - [x] Arbeitnow (Europe)
@@ -120,6 +120,10 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Raccourcis : Ctrl+1 à 9 pour les pages, Ctrl+F pour chercher une offre, Échap pour masquer la fiche
 - [x] Largeur des colonnes et partage tableau / fiche mémorisés, « Tout replier » sur les pages chargées, thème Auto qui suit Windows
 - [x] HTTPS facultatif sur le réseau local, certificat épinglé par l'application mobile ; tableau de bord installable (service worker)
+- [x] Pages carrière suivies réglées dans Paramètres (PC et web), vérifiées auprès de chaque plateforme
+- [x] Recherches Industrie prêtes d'un clic : maintenance, automatisme, électrotechnique
+- [x] Copie quotidienne des sauvegardes sur un NAS (`BACKUP_NAS_DIRECTORY`), rattrapée si le NAS était éteint
+- [x] Nouvelles offres de la semaine sur le téléphone, statut envoyé au PC ; synchronisation testée de bout en bout par la CI
 - [x] QCM contrôlés : réponse la plus longue, la plus courte ou mots absolus ; part des mots absolus indiquée pour chaque lot ; questions trop faciles ou trop dures listées
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
@@ -550,6 +554,8 @@ scraper-data-python/
 │   ├── completion.py                          # Complétion commune avant enregistrement des offres
 │   ├── manual_offers.py                       # Ajout manuel et import d'offres depuis un fichier
 │   ├── companies.py                           # Entreprises exclues ou privilégiées, candidatures déjà envoyées
+│   ├── company_pages.py                       # Entreprises suivies par plateforme de pages carrière, vérification
+│   ├── search_presets.py                      # Recherches prêtes à l'emploi (Industrie)
 │   ├── application_tracking.py                # Colonnes de suivi, relances dues et taux de réponse
 │   ├── company_info.py                        # Informations publiques sur une entreprise française
 │   ├── assistant.py                           # Demandes préparées pour ChatGPT
@@ -558,7 +564,8 @@ scraper-data-python/
 │   ├── schema_library.py                      # Composants des schémas à construire : symboles et bornes
 │   ├── schema_building.py                     # Schémas à construire : vérification et correction
 │   ├── schema_drawing.py                      # Dessin SVG des schémas, commun au bureau et au web
-│   ├── quiz_import.py                         # Import et export de questions et de packs
+│   ├── quiz_import.py                         # Import de questions et de packs
+│   ├── quiz_export.py                         # Export des questions importées en pack réimportable
 │   ├── quiz_generation.py                     # Demande ChatGPT par lot et contrôle des lots importés
 │   ├── quiz_packs.py                          # Import groupé des lots validés de data/packs
 │   ├── quiz_domains.py                        # Classement des thèmes par domaine et sous-domaine
@@ -765,6 +772,7 @@ scraper-data-python/
 │   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
 │   ├── token_access_panel.py                  # Accès secret : adresse d'agenda ou jeton
 │   ├── data_panel.py                          # Sauvegarde complète, sauvegardes et réinitialisation
+│   ├── company_pages_panel.py                 # Pages carrière suivies : listes et vérification
 │   ├── dialogs.py                             # Fenêtres des mentions légales et de la licence
 │   ├── chart.py                               # Histogramme et camembert dessinés avec QPainter
 │   ├── widgets.py                             # Composants partagés : cartes, tuiles, pastilles
@@ -823,6 +831,7 @@ scraper-data-python/
 │   │   ├── git.html                           # Bac à sable Git
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
 │   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
+│   │   ├── _company_pages_check.html          # Bilan de vérification des pages carrière
 │   │   ├── history.html                       # Historique des exécutions
 │   │   ├── logs.html                          # Consultation des logs
 │   │   ├── quality.html                       # Qualité des données
@@ -875,6 +884,7 @@ scraper-data-python/
 │   ├── quiz_svg.py                            # Schémas SVG des lots
 │   ├── windows_startup.py                     # Lancement automatique à l'ouverture de session
 │   ├── local_certificate.py                   # Crée le certificat HTTPS du réseau local
+│   ├── mobile_integration.py                  # Prépare et contrôle le test téléphone ↔ serveur de la CI
 │   └── quiz_lots/                             # Sources des lots écrits, un dossier par thème
 │
 ├── utils/                                     # Utilitaires techniques communs
@@ -934,6 +944,7 @@ scraper-data-python/
 │   │   ├── test_schedule.py                   # Teste les réglages et l'échéance de la planification
 │   │   ├── test_notification.py               # Teste le contenu et l'échappement des e-mails
 │   │   ├── test_quality.py                    # Teste l'analyse de qualité et son export
+│   │   ├── test_search_presets.py             # Teste les recherches Industrie
 │   │   ├── test_enrichment.py                 # Teste l'enrichissement depuis la description
 │   │   ├── test_deduplication.py              # Teste l'empreinte et le regroupement des annonces
 │   │   ├── test_preparation.py                # Teste le profil et la préparation de candidature
@@ -1086,6 +1097,7 @@ scraper-data-python/
 │   │   ├── test_git_page.py                    # Teste la page du bac à sable Git
 │   │   ├── test_schema_editor.py               # Teste l'éditeur de schéma du bureau
 │   │   ├── test_search_page.py                 # Teste la page de recherche
+│   │   ├── test_company_pages_panel.py         # Teste les pages carrière suivies
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres
 │   │   ├── test_skills_page.py                 # Teste la page des compétences
@@ -1100,6 +1112,7 @@ scraper-data-python/
 │   ├── storage/                                # Tests de la persistance commune
 │   │   ├── __init__.py                          # Initialise le package de tests Storage
 │   │   ├── test_database.py                    # Teste la base SQLite
+│   │   ├── test_backup.py                      # Teste la copie des sauvegardes sur le NAS
 │   │   ├── test_history_repository.py          # Teste la persistance de l'historique
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
 │   │   ├── test_maintenance.py                 # Teste les sauvegardes, leur rotation et la réinitialisation
@@ -1115,6 +1128,8 @@ scraper-data-python/
 │   │
 │   ├── tools/                                  # Tests des outils de développement
 │   │   ├── __init__.py                         # Initialise le package des tests des outils
+│   │   ├── conftest.py                         # Rétablit les journaux coupés par les outils
+│   │   ├── test_mobile_integration.py          # Teste la préparation du test téléphone ↔ serveur
 │   │   ├── test_quiz_lot.py                    # Teste la construction et le contrôle des lots
 │   │   ├── test_quiz_svg.py                    # Teste les schémas SVG des lots
 │   │   └── test_windows_startup.py             # Teste le fichier de lancement automatique

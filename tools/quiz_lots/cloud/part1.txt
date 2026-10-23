@@ -62,9 +62,9 @@ E: Le compte racine peut tout faire, y compris fermer le compte, et aucune polit
 @009
 Q: Que permet l'élasticité d'un service cloud ?
 C: Ajuster les ressources à la charge, à la hausse comme à la baisse
-W: Garantir que le prix mensuel ne change jamais quelle que soit la charge
-W: Déplacer les données d'un fournisseur à l'autre sans aucune migration
-W: Augmenter la taille d'un disque sans jamais pouvoir la réduire
+W: Garantir un prix mensuel fixe quelle que soit la charge
+W: Déplacer les données d'un fournisseur à l'autre sans migration
+W: Augmenter la taille d'un disque sans pouvoir la réduire ensuite
 E: On ajoute des instances aux heures de pointe et on les retire ensuite, souvent automatiquement. On ne paie que ce qui tourne : c'est l'intérêt principal par rapport à un serveur dimensionné pour le pic. Le prix varie donc avec l'usage, et changer de fournisseur reste une vraie migration.
 
 @010
@@ -90,7 +90,7 @@ E: sync compare la source et la destination et ne transfère que ce qui a chang�
 Q: Dans une facture cloud, que signifie « paiement à l'usage » ?
 C: On paie la durée et le volume réellement consommés
 W: On paie un forfait fixe par mois quel que soit le nombre de serveurs
-W: On paie uniquement au moment de la création de chaque ressource
+W: On paie au moment de la création de chaque ressource
 W: On paie selon le nombre de personnes qui se connectent à la console
 E: Une machine virtuelle est facturée à la seconde ou à l'heure, le stockage au gigaoctet par mois, le trafic sortant au gigaoctet transféré. Une ressource oubliée continue donc de coûter : arrêter les environnements de test la nuit et supprimer ce qui ne sert plus fait vite baisser la facture.
 
@@ -114,7 +114,7 @@ Q: Quel risque présente cette règle de groupe de sécurité ?
 C: Le port SSH est ouvert à toute adresse d'Internet
 W: Le port web est fermé et le site devient inaccessible
 W: La base de données est exposée sur son port standard
-W: Aucun : 0.0.0.0/0 désigne uniquement le réseau local
+W: Pas de risque : 0.0.0.0/0 désigne le réseau local
 E: Le port 22 est celui de SSH et 0.0.0.0/0 désigne toutes les adresses IPv4 : n'importe qui peut tenter de se connecter, et les robots le font en permanence. On limite la source à l'adresse du bureau ou d'un VPN, ou on passe par un service d'accès comme Session Manager sans ouvrir de port.
 ```
 Type : SSH
@@ -134,7 +134,7 @@ E: Un CDN met en cache images, scripts et pages dans des serveurs répartis dans
 @017
 Q: Que garantit un SLA de disponibilité de 99,9 % par mois ?
 C: Au plus 43 minutes de coupure par mois, sinon un avoir
-W: Que le service ne tombera jamais plus de 99 secondes d'affilée
+W: Que le service ne tombera pas plus de 99 secondes d'affilée
 W: Que 99,9 % des données seront récupérables après une panne
 W: Que le service sera remboursé intégralement à la moindre coupure
 E: 0,1 % d'un mois de 30 jours représente 43,2 minutes. Le SLA est un engagement contractuel : au-delà, le fournisseur accorde un avoir sur la facture, pas un remboursement complet. Il ne dit rien de la durabilité des données, qui fait l'objet d'un autre engagement.
@@ -151,14 +151,14 @@ Q: À quoi sert Amazon RDS, ou Azure SQL Database, par rapport à une base insta
 C: Le fournisseur gère correctifs, sauvegardes et bascule
 W: Il remplace la base relationnelle par un stockage de fichiers plat
 W: Il permet d'éviter d'écrire des requêtes SQL dans l'application
-W: Il rend la base accessible sans aucun réseau ni mot de passe
+W: Il rend la base accessible sans réseau ni mot de passe
 E: Une base gérée évite l'administration courante : mises à jour, sauvegardes automatiques avec restauration à un instant donné, réplica dans une autre zone. On garde la main sur le schéma, les requêtes, les index et les accès. Installer soi-même la base sur une VM laisse tout cela à faire.
 
 @020
 Q: Qu'est-ce qu'une fonction serverless comme AWS Lambda ou Azure Functions ?
 C: Un code exécuté à la demande, sans serveur à gérer, facturé à l'exécution
 W: Une machine virtuelle sans disque qui démarre à chaque connexion SSH
-W: Un service qui fonctionne sans aucun serveur, y compris chez le fournisseur
+W: Un service qui fonctionne sans serveur, y compris chez le fournisseur
 W: Un script planifié sur le poste du développeur et synchronisé au cloud
 E: Le code se déclenche sur un événement : requête HTTP, fichier déposé, message, horaire. Le fournisseur lance l'exécution et ajuste le nombre d'instances ; on paie le nombre d'appels et la durée. Il y a bien des serveurs, mais on ne les voit ni ne les administre.
 
@@ -183,7 +183,7 @@ Q: Quelle différence entre un sous-réseau public et un sous-réseau privé dan
 C: Seul le public a une route vers Internet
 W: Seul le privé peut contenir des machines virtuelles
 W: Le public est gratuit, le privé est facturé à l'heure
-W: Le privé n'a aucune adresse IP, même interne
+W: Le privé n'a pas d'adresse IP, même interne
 E: Un sous-réseau est public quand sa table de routage envoie le trafic vers Internet par une passerelle Internet. On y place le load balancer ou un bastion. Les serveurs d'application et les bases vont dans des sous-réseaux privés, injoignables depuis Internet ; ils sortent si besoin par une passerelle NAT.
 
 @024
@@ -198,7 +198,7 @@ E: RDS gère MySQL, PostgreSQL, SQL Server ou Oracle ; S3 stocke des fichiers à
 Q: Pourquoi activer l'authentification multifacteur sur les comptes de la console cloud ?
 C: Un mot de passe volé ne suffit plus pour entrer
 W: Elle accélère la connexion en évitant de saisir le mot de passe
-W: Elle chiffre toutes les données stockées dans le compte
+W: Elle chiffre les données stockées dans le compte
 W: Elle remplace les politiques de droits de chaque utilisateur
 E: Un compte cloud compromis permet de lancer des machines à vos frais, de lire ou de supprimer des données. Le second facteur, application ou clé physique, bloque l'attaquant qui n'a que le mot de passe. Les droits restent à limiter par ailleurs, et le chiffrement des données est un autre réglage.
 
@@ -225,7 +225,7 @@ Q: Pourquoi cette politique ne permet-elle pas de lister le contenu du bucket ra
 C: Lister exige s3:ListBucket sur le bucket, pas sur ses objets
 W: Le mot Allow doit être écrit en minuscules pour être reconnu
 W: La version 2012-10-17 est trop ancienne pour le service S3
-W: Un utilisateur IAM ne peut jamais lister le contenu d'un bucket
+W: Un utilisateur IAM ne peut pas lister le contenu d'un bucket
 E: s3:ListBucket porte sur la ressource arn:aws:s3:::rapports, sans /*, alors que s3:GetObject porte sur les objets arn:aws:s3:::rapports/*. Il faut donc deux déclarations, une par ressource. La version 2012-10-17 est la version actuelle du langage des politiques, à utiliser telle quelle.
 ```json
 {
@@ -243,7 +243,7 @@ Q: Qu'est-ce que le principe du moindre privilège appliqué à IAM ?
 C: N'accorder que les actions et ressources dont chacun a besoin
 W: Donner les droits administrateur au plus petit nombre de comptes
 W: Attribuer moins de droits aux nouveaux arrivants qu'aux anciens
-W: Retirer tous les droits et les rétablir à chaque demande
+W: Retirer les droits et les rétablir à chaque demande
 E: Une application qui lit un bucket reçoit s3:GetObject sur ce bucket, pas s3:* sur tout le compte. Si ses accès fuient, les dégâts restent limités. On part du minimum et on ajoute au besoin, en s'aidant des outils qui montrent les droits réellement utilisés.
 
 @029
@@ -259,7 +259,7 @@ Q: Une instance doit télécharger des correctifs depuis Internet mais ne doit p
 C: La placer en privé, avec sortie par passerelle NAT
 W: La placer en sous-réseau public avec une adresse IP publique
 W: Lui retirer toute route, y compris vers le reste du VPC
-W: Ouvrir tous les ports entrants du groupe de sécurité
+W: Ouvrir les ports entrants du groupe de sécurité
 E: La passerelle NAT, placée en sous-réseau public, laisse sortir les connexions initiées par les instances privées et refuse celles qui viennent de l'extérieur. Une adresse publique rendrait l'instance joignable. Sans aucune route, l'instance ne pourrait même plus parler aux autres serveurs.
 
 @031
@@ -302,7 +302,7 @@ E: Standard coûte le plus cher au stockage mais n'a pas de frais de récupérat
 Q: Que fait cette règle de cycle de vie sur un bucket de journaux ?
 C: Elle archive les journaux après 30 jours et les supprime après un an
 W: Elle supprime les journaux après 30 jours et les archive après un an
-W: Elle copie les journaux dans un autre bucket tous les 30 jours
+W: Elle copie les journaux dans un autre bucket au bout de 30 jours
 W: Elle chiffre les journaux après 30 jours avec une clé tournante
 E: La transition fait passer les objets du préfixe logs/ en classe Glacier 30 jours après leur création ; l'expiration les supprime au bout de 365 jours. On paie ainsi le prix fort seulement le premier mois, puis presque rien, et les journaux ne s'accumulent pas indéfiniment.
 ```json
@@ -320,8 +320,8 @@ E: La transition fait passer les objets du préfixe logs/ en classe Glacier 30 j
 Q: Pourquoi le trafic sortant vers Internet est-il un poste de coût à surveiller ?
 C: Les données sortantes se paient, les entrantes rarement
 W: Chaque requête entrante est facturée au prix d'une heure de serveur
-W: Le trafic sortant ralentit toujours les machines du compte
-W: Les données qui sortent sont recopiées dans toutes les régions
+W: Le trafic sortant ralentit les machines du compte
+W: Les données qui sortent sont recopiées dans chaque région
 E: Envoyer des données vers le cloud est en général gratuit ; les faire sortir, vers les visiteurs ou un autre fournisseur, se paie au gigaoctet. Un site qui sert de grosses vidéos ou une sauvegarde rapatriée chaque nuit peut coûter cher. Un CDN réduit souvent la facture tout en accélérant le site.
 
 @037
@@ -337,7 +337,7 @@ Q: Une application tourne en continu toute l'année sur la même taille de serve
 C: Un engagement d'un ou trois ans, réservation ou Savings Plan
 W: Des instances Spot, interrompues dès que le fournisseur le décide
 W: Un passage en serverless, quel que soit le code de l'application
-W: Une région plus éloignée, toujours moins chère que les autres
+W: Une région plus éloignée, moins chère que les autres
 E: S'engager sur un niveau d'utilisation pour un ou trois ans apporte une remise importante sur le prix à la demande, sans rien changer à l'application. Les instances Spot ne conviennent pas à un service permanent. Réécrire en serverless est un vrai projet, et le prix des régions varie sans règle simple.
 
 @039
@@ -361,7 +361,7 @@ Q: Sur Azure, à quoi sert un groupe de ressources ?
 C: Regrouper des ressources d'un même projet pour les gérer et les supprimer ensemble
 W: Définir les utilisateurs autorisés à se connecter à la console Azure
 W: Répartir le trafic réseau entre plusieurs machines virtuelles
-W: Fixer la région unique de toutes les ressources de l'abonnement
+W: Fixer la région unique des ressources de l'abonnement
 E: Un groupe de ressources rassemble par exemple l'application, sa base et son stockage. On y attribue des droits, on suit son coût, et sa suppression nettoie tout d'un coup. Les ressources d'un groupe peuvent être dans des régions différentes ; la répartition de charge est le rôle d'un load balancer.
 
 @042
@@ -390,7 +390,7 @@ E: Des étiquettes comme projet=crm ou env=test permettent de filtrer la facture
 @045
 Q: À quoi sert une alerte de budget dans la console de facturation ?
 C: Prévenir quand la dépense réelle ou prévue dépasse un montant
-W: Bloquer automatiquement toutes les ressources au premier euro dépassé
+W: Bloquer automatiquement les ressources au premier euro dépassé
 W: Négocier une remise avec le fournisseur à partir d'un certain montant
 W: Répartir la facture entre les membres d'une équipe
 E: Une alerte de budget envoie un message, par exemple à 80 % puis 100 % du budget mensuel, ou dès que la prévision dépasse le montant. Par défaut elle ne coupe rien : une boucle qui lance des instances ou un bucket très téléchargé se détecte ainsi en jours plutôt qu'à la facture de fin de mois.

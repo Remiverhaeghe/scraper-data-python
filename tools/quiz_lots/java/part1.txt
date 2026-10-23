@@ -18,7 +18,7 @@ E: javac compile le code source en bytecode, rangé dans un fichier .class par c
 Q: Quelle différence y a-t-il entre int et Integer ?
 C: Primitif contre classe enveloppe
 W: Integer stocke des nombres plus grands que int
-W: int peut valoir null, Integer jamais
+W: int peut valoir null, Integer non
 W: Ce sont deux noms pour exactement le même type
 E: int est un type primitif qui contient directement la valeur ; Integer est un objet qui l'enveloppe, utilisable dans les collections et qui peut valoir null. Les deux ont la même plage de valeurs, sur 32 bits. C'est Integer qui peut valoir null, pas int. La conversion entre les deux est automatique : c'est l'autoboxing.
 R: Primitive Data Types | https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
@@ -86,7 +86,7 @@ System.out.println(langage);
 Q: Que permet le mot-clé private sur un attribut ?
 C: Limiter son accès à la classe qui le déclare
 W: Le rendre accessible aux seules sous-classes
-W: Le partager entre toutes les instances
+W: Le partager entre les instances de la classe
 W: L'empêcher d'être modifié après sa création
 E: Un membre private n'est visible que dans sa propre classe : c'est la base de l'encapsulation, l'accès passant par des méthodes. L'accès des sous-classes correspond à protected. Le partage entre instances est le rôle de static. Empêcher la modification est le rôle de final.
 
@@ -95,7 +95,7 @@ Q: Quelle est la différence entre une classe et un objet ?
 C: La classe est le modèle, l'objet une instance
 W: L'objet est le modèle, la classe une instance
 W: La classe existe à l'exécution, pas l'objet
-W: Il n'y en a aucune en Java
+W: Ce sont deux noms de la même chose en Java
 E: La classe décrit les attributs et les méthodes communs ; chaque objet créé avec new est une instance de cette classe, avec ses propres valeurs d'attributs. L'inverse n'a pas de sens. Les objets existent bien à l'exécution, en mémoire. La distinction est fondamentale en programmation orientée objet.
 
 @011
@@ -111,7 +111,7 @@ Q: Ces deux méthodes peuvent-elles coexister dans la même classe ?
 C: Oui, c'est une surcharge : les paramètres diffèrent
 W: Non, deux méthodes ne peuvent pas porter le même nom
 W: Non, il faudrait des types de retour différents
-W: Oui, mais seulement si l'une des deux est static
+W: Oui, à condition que l'une des deux soit static
 E: La surcharge autorise plusieurs méthodes de même nom si leurs listes de paramètres diffèrent par le nombre ou le type ; le compilateur choisit selon les arguments. Le nom seul ne suffit pas à les distinguer. Un type de retour différent ne suffit pas, et n'est pas nécessaire ici. static n'a aucun rapport avec la surcharge.
 ```
 int aire(int cote) { return cote * cote; }
@@ -131,7 +131,7 @@ Q: Combien de classes une classe Java peut-elle étendre directement ?
 C: Une seule
 W: Deux au plus
 W: Autant qu'elle veut
-W: Aucune, sauf Object
+W: Deux, en plus d'Object
 E: Java n'autorise l'héritage que d'une seule classe avec extends, pour éviter les ambiguïtés de l'héritage multiple ; une classe peut en revanche implémenter plusieurs interfaces. Toute classe hérite d'Object si elle n'étend rien, mais elle peut étendre une autre classe.
 
 @015
@@ -243,7 +243,7 @@ int taille = langages.size();
 @024
 Q: Quelle différence entre un tableau Java et une ArrayList ?
 C: Le tableau a une taille fixe, l'ArrayList s'agrandit
-W: Le tableau accepte seulement des objets, pas des int
+W: Le tableau accepte des objets, pas des int
 W: L'ArrayList est plus rapide en accès par indice
 W: Un tableau ne peut pas être parcouru avec une boucle
 E: La taille d'un tableau est fixée à sa création ; une ArrayList gère un tableau interne qu'elle remplace par un plus grand quand il est plein. Un tableau accepte aussi les types primitifs, contrairement à une ArrayList. L'accès par indice est rapide dans les deux cas. Un tableau se parcourt avec for ou for-each.

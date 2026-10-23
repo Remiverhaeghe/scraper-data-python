@@ -6,6 +6,7 @@ dans l'historique git.
 ## Non publié
 
 ### Application mobile 1.1.0
+- Nouvelles offres de la semaine, ouverture de l'annonce, statut envoyé au PC
 - Question signalée depuis le téléphone, retirée aussi sur le PC
 - Révision des thèmes liés aux candidatures en cours (Postulé, Entretien)
 - Objectif de réponses du jour, vibration à la correction
@@ -18,7 +19,13 @@ dans l'historique git.
 - QCM : garde-fou étendu à la réponse la plus courte et aux mots absolus, part
   des mots absolus indiquée pour chaque lot, questions trop faciles ou trop dures
   listées
-- Graphique en barres découpé en méthodes, APK construit par la CI sur étiquette
+- Graphiques découpés en méthodes, export des packs séparé de l'import, APK
+  construit par la CI sur étiquette, synchronisation téléphone ↔ serveur testée
+  de bout en bout par la CI
+- Pages carrière suivies réglées dans Paramètres et vérifiées, recherches
+  Industrie prêtes d'un clic, France Travail activable dès l'accès accordé
+- Copie quotidienne des sauvegardes sur un NAS
+- Lots de questions : pièges à mot absolu réécrits, aucun lot au-delà de 20 %
 
 ## 2026-10-22
 

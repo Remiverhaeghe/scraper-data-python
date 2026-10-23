@@ -3,10 +3,15 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from config import BACKUP_NAS_DIRECTORY
 from job.followed_availability import LAST_CHECK_KEY
 from job.schedule import load_schedule
 from job.sources.registry import SOURCES
-from storage.backup import describe_backups, get_last_auto_backup_time
+from storage.backup import (
+    describe_backups,
+    get_last_auto_backup_time,
+    get_last_nas_copy_time,
+)
 from storage.history_repository import get_history
 from storage.settings_repository import get_setting_values
 from utils.logger import get_logger
@@ -55,6 +60,33 @@ def check_backup(pDatabaseFile, pNow):
             f"{vLast:%d/%m/%Y %H:%M} ({format_age(vLast, pNow)})",
             "success" if pNow - vLast < BACKUP_WARNING_DELAY else "warning",
         )
+
+    return rCheck
+
+
+def check_nas_copy(pDatabaseFile, pNow):
+    """Vérifie que les sauvegardes sont copiées sur le NAS, s'il est configuré."""
+
+    if not BACKUP_NAS_DIRECTORY:
+        return ("Non configurée : BACKUP_NAS_DIRECTORY dans .env", "muted")
+
+    try:
+        vLast = get_last_nas_copy_time(pDatabaseFile)
+
+    except OSError:
+        return (
+            "NAS injoignable : la copie est retentée au prochain passage",
+            "warning",
+        )
+
+    rCheck = (
+        ("Aucune copie pour le moment", "warning")
+        if vLast is None
+        else (
+            f"{vLast:%d/%m/%Y %H:%M} ({format_age(vLast, pNow)})",
+            "success" if pNow - vLast < BACKUP_WARNING_DELAY else "warning",
+        )
+    )
 
     return rCheck
 
@@ -201,6 +233,7 @@ def build_health(pDatabaseFile, pNow):
 
     vChecks = (
         ("Sauvegarde automatique", lambda: check_backup(pDatabaseFile, pNow)),
+        ("Copie sur le NAS", lambda: check_nas_copy(pDatabaseFile, pNow)),
         ("Recherche planifiée", lambda: check_schedule(pDatabaseFile, pNow)),
         ("Dernière recherche", lambda: check_last_run(pDatabaseFile)),
         ("Sources", check_sources),

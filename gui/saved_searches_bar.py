@@ -19,6 +19,7 @@ from gui.icons import get_icon
 from gui.theme import COLORS
 from gui.widgets import STATUS_STYLES, create_button
 from job.presentation import describe_search, describe_sources
+from job.search_presets import create_industry_searches
 from storage.saved_searches import (
     delete_saved_search,
     get_saved_searches,
@@ -81,6 +82,13 @@ class SavedSearchesBar(QWidget):
         self.delete_button.setToolTip("Supprime la recherche sélectionnée")
         self.delete_button.clicked.connect(self.delete_current)
 
+        vIndustryButton = create_button("Recherches Industrie", "wrench")
+        vIndustryButton.setToolTip(
+            "Ajoute trois recherches : maintenance, automatisme, électrotechnique, "
+            "sur les sources France et les pages carrière"
+        )
+        vIndustryButton.clicked.connect(self.add_industry_searches)
+
         self.message_icon = QLabel()
         self.message_label = QLabel()
 
@@ -91,6 +99,7 @@ class SavedSearchesBar(QWidget):
         vHeader.addSpacing(8)
         vHeader.addWidget(vSaveButton)
         vHeader.addWidget(self.delete_button)
+        vHeader.addWidget(vIndustryButton)
         vHeader.addSpacing(12)
         vHeader.addWidget(self.message_icon)
         vHeader.addWidget(self.message_label)
@@ -228,6 +237,22 @@ class SavedSearchesBar(QWidget):
             else:
                 self.refresh(vSavedName)
                 self.set_message("success", f"Recherche « {vSavedName} » enregistrée")
+
+    def add_industry_searches(self):
+        """Enregistre les recherches Industrie, puis sélectionne la première."""
+        try:
+            vNames = create_industry_searches(self.database_file, datetime.now())
+
+        except Exception:
+            logger.exception("Échec de la création des recherches Industrie")
+
+            self.set_message(
+                "error", "Les recherches Industrie n'ont pas pu être créées."
+            )
+            return
+
+        self.refresh(vNames[0])
+        self.set_message("success", f"{len(vNames)} recherches Industrie prêtes")
 
     def delete_current(self):
         """Supprime la recherche choisie, après confirmation."""

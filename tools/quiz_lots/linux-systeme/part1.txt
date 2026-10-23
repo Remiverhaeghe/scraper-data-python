@@ -11,7 +11,7 @@ Q: Que désigne le chemin ~/rapports ?
 C: Le dossier rapports du dossier personnel
 W: Le dossier rapports à la racine du système de fichiers
 W: Un dossier caché nommé ~rapports dans le dossier courant
-W: Le dossier rapports de l'utilisateur root uniquement
+W: Le dossier rapports de l'utilisateur root
 E: Le tilde est remplacé par le shell par le dossier personnel, par exemple /home/alice. Un chemin qui commence par / part de la racine ; un chemin sans / part du dossier courant. Les fichiers cachés commencent par un point, comme ~/.bashrc.
 
 @003
@@ -41,8 +41,8 @@ E: La ligne drwxr-x--- se lit par blocs : le type, puis trois triplets pour le p
 @006
 Q: Quels droits donne chmod 640 sur un fichier ?
 C: Lecture-écriture au propriétaire, lecture au groupe
-W: Lecture au propriétaire, écriture au groupe, rien aux autres
-W: Tous les droits au propriétaire, lecture au groupe et aux autres
+W: Lecture au propriétaire, écriture au groupe, exécution aux autres
+W: Lecture, écriture et exécution au propriétaire, lecture au groupe et aux autres
 W: Lecture et écriture à tout le monde, exécution au propriétaire
 E: Chaque chiffre additionne lecture (4), écriture (2) et exécution (1) : 6 = 4 + 2 pour le propriétaire, 4 pour le groupe, 0 pour les autres. C'est un réglage courant pour un fichier de configuration contenant un mot de passe, lisible par le groupe du service.
 
@@ -75,7 +75,7 @@ E: sudo exécute une seule commande en root si l'utilisateur y est autorisé dan
 Q: Que fait le caractère | entre deux commandes ?
 C: Il envoie la sortie de la première commande à l'entrée de la seconde
 W: Il lance les deux commandes en même temps, sans lien entre elles
-W: Il exécute la seconde commande seulement si la première échoue
+W: Il exécute la seconde commande si la première échoue
 W: Il écrit la sortie de la première commande dans un fichier
 E: Le tube (pipe) enchaîne des commandes simples : ps aux | grep nginx filtre la liste des processus. C'est l'idée centrale du shell Unix. || exécute la seconde commande en cas d'échec, > écrit dans un fichier, & lance en arrière-plan.
 
@@ -183,7 +183,7 @@ Q: Qu'affiche ce script ?
 C: Bonjour alice
 W: Bonjour $nom
 W: Bonjour nom
-W: Rien, la variable n'est pas définie
+W: Une ligne vide, la variable n'est pas définie
 E: On affecte une variable sans espace autour du signe =, et on la lit avec $nom. Les guillemets doubles laissent le shell remplacer la variable ; des guillemets simples afficheraient Bonjour $nom tel quel. nom = alice, avec des espaces, provoquerait une erreur.
 ```bash
 nom=alice
@@ -211,7 +211,7 @@ Q: Que fait ce script sauvegarde.sh lancé avec ./sauvegarde.sh /srv/app ?
 C: Il crée une archive datée du dossier passé en argument
 W: Il supprime le dossier passé en argument après l'avoir lu
 W: Il copie le script lui-même dans le dossier /srv/app
-W: Il affiche le contenu du dossier sans rien créer
+W: Il affiche le contenu du dossier, sans archive
 E: $1 contient le premier argument, ici /srv/app ; $(date +%F) insère la date du jour au format 2026-10-16. tar -czf crée une archive compressée. set -e arrête le script à la première erreur, ce qui évite de continuer sur une archive incomplète.
 ```bash
 #!/bin/bash
@@ -298,7 +298,7 @@ E: Chaque ligne indique un disque ou un partage, son point de montage, son type 
 @035
 Q: Que fait cette ligne de crontab ?
 C: Elle lance la sauvegarde chaque jour à 2 h 30
-W: Elle lance la sauvegarde toutes les 30 minutes
+W: Elle lance la sauvegarde chaque demi-heure
 W: Elle lance la sauvegarde le 2 du mois à 30 minutes
 W: Elle lance la sauvegarde le 30 de chaque mois
 E: Les cinq champs sont minute, heure, jour du mois, mois et jour de la semaine : 30 2 * * * signifie 2 h 30 tous les jours. La sortie est ajoutée au journal, et 2>&1 y envoie aussi les erreurs, sinon cron les envoie par courrier, souvent perdu.
@@ -319,14 +319,14 @@ Q: Que signifie 2>&1 à la fin d'une commande ?
 C: Envoyer les erreurs au même endroit que la sortie normale
 W: Lancer la commande deux fois de suite
 W: Ignorer les erreurs et les supprimer
-W: Envoyer la sortie normale vers les erreurs uniquement
+W: Envoyer la sortie normale vers les erreurs
 E: Le descripteur 1 est la sortie standard, 2 la sortie d'erreur. 2>&1 redirige les erreurs vers l'endroit où va déjà la sortie : un fichier de journal, par exemple. 2>/dev/null, lui, jetterait les erreurs.
 
 @038
 Q: Que fait la commande journalctl -u nginx --since today ?
 C: Elle affiche les messages du service nginx depuis minuit
 W: Elle supprime les messages du service nginx du jour
-W: Elle affiche les messages de tous les services sauf nginx
+W: Elle affiche les messages des services autres que nginx
 W: Elle redémarre nginx et affiche ses messages
 E: journalctl lit le journal de systemd ; -u filtre sur une unité, --since sur une date ou une durée comme « 1 hour ago ». -f suit les nouveaux messages, -p err ne garde que les erreurs. C'est souvent plus rapide que de chercher le bon fichier dans /var/log.
 

@@ -16,9 +16,11 @@ from job.mobile_sync import (
     build_progress,
     build_quiz_package,
     check_mobile_token,
+    build_offer_list,
     sync_answers,
     sync_exam_results,
     sync_flags,
+    sync_status_changes,
 )
 from utils.logger import get_logger
 from web.dependencies import get_database_file
@@ -134,6 +136,31 @@ def upload_flags(
 
     try:
         rReport = sync_flags(pDatabaseFile, pQuestionIds)
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    return rReport
+
+
+@router.get("/offers", dependencies=[Depends(require_api_token)])
+def download_offers(pDatabaseFile: str = Depends(get_database_file)):
+    """Renvoie les nouvelles offres de la semaine, les mieux notées en tête."""
+
+    rOffers = {"offers": build_offer_list(pDatabaseFile, datetime.now())}
+
+    return rOffers
+
+
+@router.post("/applications", dependencies=[Depends(require_api_token)])
+def upload_status_changes(
+    pChanges: list = Body(..., embed=True, alias="changes"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Applique les statuts donnés aux offres depuis le téléphone."""
+
+    try:
+        rReport = sync_status_changes(pDatabaseFile, pChanges, datetime.now())
 
     except ValueError as vException:
         raise HTTPException(status_code=400, detail=str(vException)) from vException

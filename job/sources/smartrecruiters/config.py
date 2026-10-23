@@ -3,11 +3,7 @@
 import os
 from dataclasses import dataclass
 
-# Entreprises suivies par défaut, vérifiées sur l'API : ingénierie, industrie,
-# contrôle qualité, location de matériel et jeu vidéo, avec des offres en France.
-DEFAULT_COMPANIES = (
-    "Alten,Assystem,Eurofins,Loxam,Trigo,BoschGroup,SaintGobain,Ubisoft2"
-)
+from job.company_pages import load_company_list
 
 # Pays des offres, au format ISO à deux lettres en minuscules
 DEFAULT_COUNTRY = "fr"
@@ -22,10 +18,10 @@ class SmartRecruitersConfig:
 
 
 def load_config():
-    """Charge la configuration, avec les entreprises par défaut si .env n'en donne pas."""
+    """Charge les entreprises suivies (Paramètres, .env ou défaut) et le pays."""
 
     rConfig = SmartRecruitersConfig(
-        companies=os.getenv("SMARTRECRUITERS_COMPANIES") or DEFAULT_COMPANIES,
+        companies=load_company_list("smartrecruiters"),
         country=(os.getenv("SMARTRECRUITERS_COUNTRY") or DEFAULT_COUNTRY).lower(),
     )
 

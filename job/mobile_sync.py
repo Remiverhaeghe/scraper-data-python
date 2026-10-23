@@ -36,7 +36,9 @@ from job.quiz_types import (
     get_type,
     grade_answer,
 )
-from storage.job_applications import get_applications_with_offers
+from job.weekly_digest import get_new_offers
+from storage.job_applications import get_applications_with_offers, save_application
+from storage.job_offers import get_offer
 from storage.quiz_answers import get_last_answers, save_synced_answers
 from storage.quiz_questions import get_quiz_assets, get_quiz_guide, get_quiz_guides
 from utils.logger import get_logger
@@ -59,6 +61,14 @@ MAX_SYNC_ANSWERS = 500
 # Examens blancs et signalements reçus au plus par envoi
 MAX_SYNC_EXAMS = 100
 MAX_SYNC_FLAGS = 200
+
+# Nouvelles offres envoyées au téléphone : les mieux notées de la semaine
+MAX_PHONE_OFFERS = 30
+
+# Statuts que le téléphone peut donner à une offre ; le reste du suivi (entretien,
+# relances, notes) se fait sur le PC.
+PHONE_STATUSES = ("INTERESTED", "APPLIED", "IGNORED")
+MAX_SYNC_STATUSES = 200
 
 # Candidatures envoyées au téléphone pour réviser leurs thèmes : les plus récentes
 REVISION_STATUSES = ("INTERVIEW", "APPLIED")
@@ -473,5 +483,63 @@ def sync_flags(pDatabaseFile, pQuestionIds):
             vFlagged += 1
 
     rReport = {"received": len(pQuestionIds), "flagged": vFlagged}
+
+    return rReport
+
+
+def build_offer_list(pDatabaseFile, pNow):
+    """Retourne les nouvelles offres de la semaine pour le téléphone, en lecture."""
+
+    rOffers = [
+        {
+            "source": vOffer["source"],
+            "source_id": str(vOffer["source_id"]),
+            "title": vOffer.get("title"),
+            "company": vOffer.get("company"),
+            "location": vOffer.get("location"),
+            "contract": vOffer.get("contract"),
+            "url": vOffer.get("url"),
+            "match_score": vOffer.get("match_score"),
+            "first_seen_at": vOffer.get("first_seen_at"),
+            "status": vOffer.get("application_status"),
+        }
+        for vOffer in get_new_offers(pDatabaseFile, pNow, MAX_PHONE_OFFERS)
+    ]
+
+    return rOffers
+
+
+def sync_status_changes(pDatabaseFile, pChanges, pNow):
+    """Applique les statuts donnés aux offres depuis le téléphone."""
+
+    if not isinstance(pChanges, list) or len(pChanges) > MAX_SYNC_STATUSES:
+        raise ValueError(f"Liste de {MAX_SYNC_STATUSES} changements au plus attendue.")
+
+    vApplied = 0
+    vRejected = []
+
+    for vChange in pChanges:
+        vSource = str((vChange or {}).get("source") or "")
+        vSourceId = str((vChange or {}).get("source_id") or "")
+        vStatus = (vChange or {}).get("status")
+
+        # Une offre supprimée entre-temps, ou un statut réservé au PC, est refusé.
+        if (
+            vStatus not in PHONE_STATUSES
+            or get_offer(pDatabaseFile, vSource, vSourceId) is None
+        ):
+            vRejected.append(f"{vSource}/{vSourceId}")
+            continue
+
+        save_application(pDatabaseFile, vSource, vSourceId, vStatus, pNow=pNow)
+        vApplied += 1
+
+    logger.info(
+        "Statuts d'offres du téléphone : %s appliqué(s), %s refusé(s)",
+        vApplied,
+        len(vRejected),
+    )
+
+    rReport = {"applied": vApplied, "rejected": vRejected}
 
     return rReport

@@ -2,6 +2,7 @@
 
 from datetime import datetime
 
+import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
@@ -9,6 +10,8 @@ from job.mobile_sync import renew_mobile_token
 from job.quiz import load_active_quiz
 from job.quiz_exam import load_exam_results
 from storage.database import initialize_database
+from storage.job_applications import get_application
+from storage.job_offers import save_offers
 from web.app import app, get_database_file
 
 
@@ -123,3 +126,41 @@ def test_exams_and_flags_from_the_phone(api, tmp_path):
         vQuestion["id"]
         for vQuestion in load_active_quiz(vDatabaseFile)["sql"]["questions"]
     }
+
+
+def test_offers_and_status_changes_from_the_phone(api, tmp_path):
+    """Vérifie la liste des nouvelles offres et les statuts donnés depuis le téléphone."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "lever",
+                    "source_id": "1",
+                    "title": "Technicien de maintenance",
+                }
+            ]
+        ),
+        datetime.now(),
+    )
+
+    vOffers = api.get("/api/v1/offers").json()["offers"]
+
+    assert vOffers[0]["title"] == "Technicien de maintenance"
+    assert vOffers[0]["status"] is None
+
+    vReport = api.post(
+        "/api/v1/applications",
+        json={
+            "changes": [
+                {"source": "lever", "source_id": "1", "status": "APPLIED"},
+                {"source": "lever", "source_id": "absente", "status": "APPLIED"},
+                {"source": "lever", "source_id": "1", "status": "ACCEPTED"},
+            ]
+        },
+    ).json()
+
+    assert vReport == {"applied": 1, "rejected": ["lever/absente", "lever/1"]}
+    assert get_application(vDatabaseFile, "lever", "1")["status"] == "APPLIED"

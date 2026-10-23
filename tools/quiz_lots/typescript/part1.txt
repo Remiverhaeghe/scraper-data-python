@@ -9,8 +9,8 @@ E: TypeScript ajoute des types statiques à JavaScript ; le compilateur tsc les 
 @002
 Q: Que signale le compilateur sur ce code ?
 C: Un nombre n'est pas assignable au type string
-W: Rien, TypeScript convertit 42 en "42"
-W: Une erreur seulement à l'exécution
+W: Pas d'erreur, TypeScript convertit 42 en "42"
+W: Une erreur à l'exécution
 W: Un avertissement de style ignoré à la compilation
 E: La variable est annotée string : lui affecter un nombre est refusé dès la compilation, avant tout lancement. C'est le principal intérêt de TypeScript : une erreur de type est trouvée dans l'éditeur, pas par un utilisateur.
 ```typescript
@@ -31,7 +31,7 @@ Q: Que déduit TypeScript pour la variable ville sans annotation ?
 C: Le type string, par inférence
 W: Le type any, faute d'annotation
 W: Le type unknown, à préciser plus tard
-W: Aucun type, la vérification est désactivée
+W: Le type any, la vérification est désactivée
 E: TypeScript infère le type à partir de la valeur initiale : ville est un string, et lui affecter un nombre sera refusé. On n'annote donc pas tout : les annotations servent surtout aux paramètres de fonction et aux valeurs exportées.
 ```typescript
 let ville = "Lille";
@@ -50,7 +50,7 @@ Q: Quelle différence entre unknown et any ?
 C: unknown oblige à vérifier le type avant usage
 W: unknown accepte moins de valeurs que any
 W: any oblige à vérifier le type avant usage
-W: Aucune, unknown est un alias de any
+W: unknown est un simple alias de any
 E: Les deux acceptent n'importe quelle valeur. Avec unknown, appeler une méthode ou lire une propriété est refusé tant qu'un test (typeof, instanceof, validation) n'a pas précisé le type. C'est le bon type pour une donnée reçue d'une API.
 
 @007
@@ -58,7 +58,7 @@ Q: Que décrit cette interface ?
 C: La forme d'un objet utilisateur, e-mail facultatif
 W: Une classe à instancier avec new Utilisateur()
 W: Une table de base de données Utilisateur
-W: Un objet dont toutes les propriétés sont facultatives
+W: Un objet dont les propriétés sont facultatives
 E: Une interface décrit la forme attendue d'un objet ; le point d'interrogation rend email facultatif. Elle disparaît à la compilation : aucun code n'est généré. TypeScript compare les formes, pas les noms : tout objet de la bonne forme convient.
 ```typescript
 interface Utilisateur {
@@ -112,7 +112,7 @@ E: strict active notamment strictNullChecks, noImplicitAny et des contrôles sur
 Q: Pourquoi le compilateur refuse-t-il ce code avec strictNullChecks ?
 C: L'élément peut être null avant d'appeler une méthode
 W: getElementById n'existe pas en TypeScript
-W: La méthode focus attend un argument obligatoire
+W: La méthode focus attend un argument
 W: Les identifiants HTML doivent être en majuscules
 E: getElementById renvoie HTMLElement | null : l'élément peut ne pas exister. On teste d'abord, if (champ) champ.focus(), ou on écrit champ?.focus(). Le point d'exclamation, champ!.focus(), force le compilateur à se taire, au risque d'une erreur à l'exécution.
 ```typescript
@@ -159,7 +159,7 @@ E: Pick construit un type ne contenant que les clés citées, avec leurs types d
 Q: Que fait as const sur ce tableau ?
 C: Il fige les valeurs en types littéraux en lecture seule
 W: Il convertit le tableau en objet constant
-W: Il rend le tableau modifiable seulement par const
+W: Il rend le tableau modifiable par const
 W: Il supprime le tableau à la compilation
 E: Sans as const, le tableau est un string[] ; avec, c'est readonly ["rouge", "vert"]. On en tire un type union : typeof couleurs[number] vaut "rouge" | "vert". Une seule liste sert alors de valeurs et de type.
 ```typescript

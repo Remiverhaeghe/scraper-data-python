@@ -18,7 +18,26 @@ MockClient buildServer(Map<String, List<Object?>> pSent, {bool pOldServer = fals
     final vPath = pRequest.url.path;
     final http.Response rResponse;
 
-    if (vPath.endsWith('/flags') || vPath.endsWith('/exams')) {
+    if (vPath.endsWith('/offers')) {
+      rResponse = http.Response(
+        jsonEncode({
+          'offers': [
+            {
+              'source': 'lever',
+              'source_id': '1',
+              'title': 'Technicien de maintenance',
+              'company': 'Acme',
+              'status': null,
+              'match_score': 80,
+              'url': 'https://example.com/1',
+            },
+          ],
+        }),
+        200,
+      );
+    } else if (vPath.endsWith('/flags') ||
+        vPath.endsWith('/exams') ||
+        vPath.endsWith('/applications')) {
       pSent.putIfAbsent(vPath.split('/').last, () => []).add(jsonDecode(pRequest.body));
       rResponse = pOldServer ? http.Response('', 404) : http.Response('{}', 200);
     } else if (vPath.endsWith('/progress')) {
@@ -116,5 +135,28 @@ void main() {
     expect(vState.answersToday, 2);
     expect(vState.dailyGoal, 25);
     expect(vState.hapticsEnabled, isTrue);
+  });
+
+  test('Le statut d une offre s affiche tout de suite puis part au PC', () async {
+    final vSent = <String, List<Object?>>{};
+    final vState = await buildState(buildServer(vSent));
+
+    await vState.synchronize();
+
+    expect(vState.offers.single['title'], 'Technicien de maintenance');
+
+    await vState.setOfferStatus(vState.offers.single, 'INTERESTED');
+    await vState.setOfferStatus(vState.offers.single, 'APPLIED');
+
+    expect(vState.offers.single['status'], 'APPLIED');
+    // Seul le dernier statut est gardé pour l'envoi.
+    expect(vState.pendingStatuses, [
+      {'source': 'lever', 'source_id': '1', 'status': 'APPLIED'},
+    ]);
+
+    await vState.synchronize();
+
+    expect(((vSent['applications']!.single as Map)['changes'] as List).single['status'], 'APPLIED');
+    expect(vState.pendingStatuses, isEmpty);
   });
 }

@@ -17,9 +17,9 @@ E: La transition est un trait horizontal placé sur la liaison entre deux étape
 @003
 Q: Comment reconnaît-on une étape initiale ?
 C: Elle est tracée en double carré
-W: Elle porte toujours le numéro 1
+W: Elle porte le numéro 1
 W: Elle est placée en bas du diagramme
-W: Elle n'a aucune transition en sortie
+W: Elle n'a pas de transition en sortie
 E: L'étape initiale, active au démarrage, se dessine avec un double carré ; elle porte souvent le numéro 0, sans que ce soit une obligation. Sa position dans le diagramme est libre, même si on la place généralement en haut. Comme toute étape, elle a une transition en aval pour que la séquence puisse évoluer.
 
 @004
@@ -27,7 +27,7 @@ Q: Quand une transition est-elle franchie ?
 C: Quand elle est validée et que sa réceptivité est vraie
 W: Dès que sa réceptivité est vraie, quelle que soit l'étape
 W: Quand l'étape qui la suit est déjà active
-W: Quand toutes les actions de l'étape sont terminées
+W: Quand les actions de l'étape sont terminées
 E: Une transition est validée quand toutes les étapes qui la précèdent immédiatement sont actives ; elle est franchie si, en plus, sa réceptivité est vraie. Une réceptivité vraie ne suffit pas si l'étape amont est inactive. L'état de l'étape aval n'intervient pas. La fin des actions ne compte que si elle figure dans la réceptivité, par exemple sous forme de capteur de fin.
 
 @005
@@ -41,16 +41,16 @@ E: La réceptivité est la condition écrite à côté de la transition : capteu
 @006
 Q: Au démarrage du système, quelles étapes du GRAFCET sont actives ?
 C: Les étapes initiales, et elles seules
-W: Toutes les étapes du diagramme
+W: Les étapes de la première séquence
 W: L'étape qui porte le plus petit numéro
-W: Aucune, jusqu'au premier franchissement
+W: La dernière étape du cycle précédent
 E: Au démarrage, la situation initiale est formée par les étapes initiales, en double carré ; toutes les autres sont inactives. Activer toutes les étapes rendrait le comportement incohérent. Le numéro ne décide de rien : c'est le symbole qui compte. Sans étape active, aucune transition ne serait validée et la séquence ne pourrait jamais démarrer.
 
 @007
 Q: Que signifie qu'une étape est active ?
 C: La situation qu'elle décrit est en cours
-W: Toutes ses transitions aval sont franchies
-W: Toutes les sorties de l'automate sont à 1
+W: Ses transitions aval sont franchies
+W: Les sorties de l'automate sont à 1
 W: Le programme automate est en mode STOP
 E: Une étape active correspond à la situation en cours du système ; ses actions sont alors exécutées, selon leur type. Une étape active valide les transitions qui la suivent, sans pour autant les franchir. Elle ne commande que ses propres actions, pas toutes les sorties. Le mode STOP de l'automate arrête au contraire toute évolution.
 
@@ -58,8 +58,8 @@ E: Une étape active correspond à la situation en cours du système ; ses actio
 Q: Dans une séquence linéaire, que se passe-t-il quand une transition est franchie ?
 C: L'étape amont se désactive et l'étape aval s'active
 W: L'étape amont reste active jusqu'à la fin du cycle
-W: Toutes les étapes du GRAFCET deviennent actives
-W: L'étape aval s'active au cycle suivant seulement
+W: Les étapes amont et aval restent actives ensemble
+W: L'étape aval s'active au cycle suivant
 E: Le franchissement désactive les étapes immédiatement précédentes et active les étapes immédiatement suivantes, simultanément. L'étape amont ne reste pas active, sauf si elle est aussi réactivée par ce franchissement. Seules les étapes situées juste après la transition s'activent. En théorie le franchissement est instantané ; un programme automate le réalise dans le cycle où la réceptivité est lue vraie.
 
 @009
@@ -81,9 +81,9 @@ E: La divergence en ET part d'une seule transition, suivie d'une double ligne ho
 @011
 Q: Dans une divergence en OU, combien de branches deviennent actives en fonctionnement normal ?
 C: Une seule, celle dont la condition est vraie
-W: Toutes les branches, en même temps
+W: Les deux branches, en même temps
 W: Deux branches au moins, pour la redondance
-W: Aucune, avant une validation de l'opérateur
+W: Celle que l'opérateur valide
 E: La divergence en OU propose plusieurs évolutions possibles depuis une même étape ; seule la branche dont la réceptivité est vraie est empruntée. Activer toutes les branches est le rôle de la divergence en ET. Rien n'impose deux branches actives. Une validation opérateur n'est nécessaire que si elle figure dans une réceptivité. Le concepteur rend les réceptivités exclusives pour ne jamais activer deux branches à la fois.
 
 @012
@@ -126,7 +126,7 @@ Q: Qu'est-ce qu'une action continue associée à une étape ?
 C: Un ordre émis tant que l'étape est active
 W: Un ordre émis une seule fois à l'activation
 W: Un ordre qui reste vrai après la désactivation
-W: Un ordre émis uniquement à la désactivation
+W: Un ordre émis à la désactivation de l'étape
 E: Une action continue est exécutée pendant toute la durée d'activité de l'étape et cesse dès qu'elle se désactive. Une action émise une seule fois à l'activation est une action sur événement. Une action qui reste vraie après la désactivation est une action mémorisée. Une action à la désactivation est aussi une action sur événement, sur le front descendant de l'étape.
 
 @016
@@ -156,7 +156,7 @@ E: La situation initiale est l'ensemble des étapes actives au démarrage ; quan
 @018
 Q: Pourquoi rendre exclusives les réceptivités d'une divergence en OU ?
 C: Pour qu'une seule branche puisse être choisie
-W: Pour que toutes les branches démarrent ensemble
+W: Pour que les branches démarrent ensemble
 W: Pour pouvoir supprimer l'étape en amont
 W: Pour accélérer l'exécution du programme
 E: Si deux réceptivités d'une divergence en OU sont vraies en même temps, les deux transitions sont franchies simultanément et deux branches deviennent actives, ce qui n'était pas prévu. Des conditions exclusives, du type a et non a, garantissent un seul choix. Le démarrage simultané est le rôle de la divergence en ET. L'étape amont reste indispensable, et l'exclusivité ne change pas la vitesse d'exécution.
@@ -219,7 +219,7 @@ Q: Pourquoi nommer clairement étapes et réceptivités dans un projet ?
 C: Pour faciliter la lecture et le dépannage
 W: Pour rendre les essais de mise en service inutiles
 W: Pour que l'automate exécute la séquence plus vite
-W: Pour imposer le même cycle à toutes les machines
+W: Pour imposer le même cycle aux machines
 E: Des noms explicites, comme « Serrage » ou « Pièce présente », rendent le GRAFCET et le programme compréhensibles par l'équipe de maintenance, en particulier lors d'un dépannage. Les essais restent indispensables. Les noms n'ont aucun effet sur la vitesse d'exécution. Chaque machine garde son propre cycle.
 
 @025

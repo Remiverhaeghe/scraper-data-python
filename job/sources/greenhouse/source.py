@@ -32,5 +32,6 @@ SOURCE = SourceDefinition(
     load_parameters=load_parameters,
     scrape=scrape,
     settings=("GREENHOUSE_BOARD",),
+    companies="greenhouse",
     category="company",
 )

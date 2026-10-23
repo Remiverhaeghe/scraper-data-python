@@ -76,7 +76,7 @@ def test_unreadable_check_does_not_hide_the_others(database_file, monkeypatch):
     vChecks = get_checks(database_file)
 
     assert vChecks["Sources"] == ("Illisible : voir les journaux", "danger")
-    assert len(vChecks) == 7
+    assert len(vChecks) == 8
     assert format_age(NOW - timedelta(days=5), NOW) == "il y a 5 jours"
 
 

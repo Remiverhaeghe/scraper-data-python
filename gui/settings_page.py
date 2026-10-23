@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.token_access_panel import TokenAccessPanel
+from gui.company_pages_panel import CompanyPagesPanel
 from gui.data_panel import DataPanel
 from gui.theme import COLORS, THEME_CHOICES, THEME_SETTING
 from gui.widgets import (
@@ -131,6 +132,8 @@ class SettingsPage(QWidget):
         self.data_panel = DataPanel(pDatabaseFile)
         self.data_panel.data_reset.connect(self.data_reset)
 
+        self.company_pages_panel = CompanyPagesPanel(pDatabaseFile)
+
         # Deux colonnes indépendantes : dans une grille, une carte courte prendrait
         # la hauteur de sa voisine et s'étirerait.
         # Deux colonnes sur un écran large, une seule dans une fenêtre réduite :
@@ -146,6 +149,7 @@ class SettingsPage(QWidget):
             [
                 self.create_notification_card(),
                 self.create_sources_card(),
+                self.company_pages_panel,
                 self.create_companies_card(),
                 self.data_panel,
             ],
@@ -169,6 +173,7 @@ class SettingsPage(QWidget):
         self.refresh_schedule()
         self.calendar_panel.refresh()
         self.mobile_panel.refresh()
+        self.company_pages_panel.refresh()
 
     def arrange_cards(self, pSingleColumn):
         """Range les cartes sur une colonne, ou sur deux côte à côte."""

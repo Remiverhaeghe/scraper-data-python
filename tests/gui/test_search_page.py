@@ -459,3 +459,24 @@ def test_sources_grouped_by_category_can_be_checked_together(search_page):
     assert {"remotive", "remoteok", "weworkremotely"} <= vSelected
     assert "smartrecruiters" not in vSelected
     assert all(SOURCES[vName].category == "remote" for vName in vSelected)
+
+
+def test_industry_searches_are_added_and_loaded(saved_search_page):
+    """Vérifie le bouton des recherches Industrie et leur chargement dans le formulaire."""
+
+    vPage = saved_search_page
+
+    vPage.saved_bar.add_industry_searches()
+
+    assert vPage.saved_bar.selected_name == "Industrie · Maintenance"
+    assert len(vPage.saved_bar.group.buttons()) == 3
+
+    vPage.saved_bar.group.buttons()[0].click()
+
+    assert vPage.keyword_edit.text() in (
+        "automatisme",
+        "maintenance",
+        "électrotechnique",
+    )
+    assert "smartrecruiters" in vPage.get_selected_sources()
+    assert "remotive" not in vPage.get_selected_sources()

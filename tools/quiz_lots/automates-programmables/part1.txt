@@ -82,7 +82,7 @@ E: Le détecteur inductif crée un champ électromagnétique que perturbe l'appr
 Q: Dans un cycle automate classique, que fait la CPU juste avant d'exécuter le programme ?
 C: Elle lit les entrées et les copie en mémoire image
 W: Elle compile le programme chargé dans sa mémoire
-W: Elle remet toutes les sorties physiques à zéro
+W: Elle remet les sorties physiques à zéro
 W: Elle attend une validation de l'opérateur au pupitre
 E: Le cycle lit d'abord l'état des entrées et le fige dans la mémoire image des entrées, exécute ensuite le programme, puis met à jour les sorties. Le programme est compilé dans le logiciel d'ingénierie avant le téléchargement, jamais à chaque cycle. Remettre les sorties à zéro à chaque cycle ferait battre les actionneurs. Le cycle tourne en continu sans attendre l'opérateur.
 
@@ -115,7 +115,7 @@ Q: Qu'est-ce qui distingue un bloc fonctionnel (FB) d'une fonction (FC) ?
 C: Le FB garde ses données d'un appel à l'autre
 W: Le FB ne peut être écrit qu'en langage Ladder
 W: Le FB s'exécute plus vite que la fonction
-W: Le FB ne reçoit jamais de paramètres d'entrée
+W: Le FB ne reçoit pas de paramètres d'entrée
 E: Un FB possède une mémoire d'instance, un bloc de données d'instance chez Siemens : ses variables internes, comme l'état d'une temporisation, sont conservées entre deux appels. Une FC n'a pas de mémoire propre persistante. Un FB peut s'écrire en LD, FBD, ST ou SFC. Sa vitesse n'est pas ce qui le caractérise, et il reçoit des paramètres comme une fonction.
 
 @016
