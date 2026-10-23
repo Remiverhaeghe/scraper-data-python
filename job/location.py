@@ -432,6 +432,67 @@ FRENCH_DEPARTMENTS = {
     "976": "Mayotte",
 }
 
+# Régions depuis 2016 et leurs départements ; chaque outre-mer est sa propre région.
+FRENCH_REGIONS = {
+    "Auvergne-Rhône-Alpes": "01 03 07 15 26 38 42 43 63 69 73 74",
+    "Bourgogne-Franche-Comté": "21 25 39 58 70 71 89 90",
+    "Bretagne": "22 29 35 56",
+    "Centre-Val de Loire": "18 28 36 37 41 45",
+    "Corse": "2A 2B",
+    "Grand Est": "08 10 51 52 54 55 57 67 68 88",
+    "Hauts-de-France": "02 59 60 62 80",
+    "Île-de-France": "75 77 78 91 92 93 94 95",
+    "Normandie": "14 27 50 61 76",
+    "Nouvelle-Aquitaine": "16 17 19 23 24 33 40 47 64 79 86 87",
+    "Occitanie": "09 11 12 30 31 32 34 46 48 65 66 81 82",
+    "Pays de la Loire": "44 49 53 72 85",
+    "Provence-Alpes-Côte d'Azur": "04 05 06 13 83 84",
+    "Guadeloupe": "971",
+    "Martinique": "972",
+    "Guyane": "973",
+    "La Réunion": "974",
+    "Mayotte": "976",
+}
+
+REGION_BY_DEPARTMENT = {
+    vDepartment: vRegion
+    for vRegion, vDepartments in FRENCH_REGIONS.items()
+    for vDepartment in vDepartments.split()
+}
+
+
+def find_region(pDepartment):
+    """Retourne la région d'un numéro de département, ou None s'il est inconnu."""
+
+    rRegion = REGION_BY_DEPARTMENT.get(str(pDepartment or "").upper())
+
+    return rRegion
+
+
+def find_region_in_text(pLocation):
+    """Retourne la région nommée dans un lieu, par sa région ou son département.
+
+    Chaque segment est comparé en entier : « Cogolin, Var » donne Var, mais
+    « Saint-Martin-d'Ain » ne donne pas l'Ain.
+    """
+
+    vRegions = {normalize(vRegion): vRegion for vRegion in FRENCH_REGIONS}
+    vDepartments = {
+        normalize(vName): REGION_BY_DEPARTMENT[vCode]
+        for vCode, vName in FRENCH_DEPARTMENTS.items()
+    }
+
+    rRegion = next(
+        (
+            vRegions.get(vKey) or vDepartments.get(vKey)
+            for vKey in map(normalize, SEGMENT_SEPARATORS.split(str(pLocation or "")))
+            if vKey in vRegions or vKey in vDepartments
+        ),
+        None,
+    )
+
+    return rRegion
+
 
 def find_department(pSearch):
     """Retourne le numéro du département cherché par numéro ou par nom, ou None."""

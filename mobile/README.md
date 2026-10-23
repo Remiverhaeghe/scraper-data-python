@@ -20,9 +20,11 @@ du jour, vibration à la correction, examens blancs envoyés au PC, HTTPS avec
 certificat épinglé (empreinte reçue par le QR code), nouvelles offres de la
 semaine avec leur statut (Intéressé, Postulé, Ignorée) envoyé au PC, alerte des
 nouvelles offres proches du profil (vérifiées en arrière-plan toutes les 3 h
-environ, quand le PC est joignable), distance au domicile de chaque offre, fiche
-complète lisible hors ligne (description, compétences couvertes et manquantes,
-salaire), offres proches de vos candidatures signalées, simulation d'entretien
+environ, quand le PC est joignable), distance au domicile de chaque offre et
+filtre « Près de chez moi » (rayon des alertes réglé sur le PC), fiche complète
+lisible hors ligne (description, compétences couvertes et manquantes, salaire)
+avec l'emplacement de l'offre ouvert dans OpenStreetMap, offres proches de vos
+candidatures signalées, simulation d'entretien
 technique et auto-évaluation des compétences, envoyées au PC à la synchronisation.
 
 ## Installation des outils (une fois)

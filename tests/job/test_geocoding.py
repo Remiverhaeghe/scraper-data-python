@@ -14,19 +14,24 @@ from job.geocoding import (
     is_locatable,
     keep_within_alert_radius,
     load_home,
+    locate_all_offers,
     locate_offers,
     save_alert_radius,
     save_home,
 )
 from storage.database import initialize_database
-from storage.geo_cache import get_cached_locations
+from storage.geo_cache import (
+    get_cached_departments,
+    get_cached_locations,
+    save_location,
+)
 from storage.job_offers import get_offers, save_offers
 
 # Positions renvoyées par le géocodeur simulé, avec leur libellé
 PLACES = {
-    "59000 Lille": (50.6366, 3.0635, "Lille"),
-    "Roubaix": (50.6942, 3.1746, "Roubaix"),
-    "Lyon": (45.758, 4.835, "Lyon"),
+    "59000 Lille": (50.6366, 3.0635, "Lille", "59, Nord, Hauts-de-France"),
+    "Roubaix": (50.6942, 3.1746, "Roubaix", "59, Nord, Hauts-de-France"),
+    "Lyon": (45.758, 4.835, "Lyon", "69, Rhône, Auvergne-Rhône-Alpes"),
 }
 
 NOW = datetime(2026, 10, 23, 12)
@@ -47,7 +52,11 @@ def fixture_geocoder(monkeypatch):
                 [
                     {
                         "geometry": {"coordinates": [vPlace[1], vPlace[0]]},
-                        "properties": {"label": vPlace[2], "score": 0.9},
+                        "properties": {
+                            "label": vPlace[2],
+                            "score": 0.9,
+                            "context": vPlace[3],
+                        },
                     }
                 ]
                 if vPlace
@@ -153,6 +162,20 @@ def test_lookups_are_capped_per_pass(tmp_path, geocoder):
     assert len(geocoder) == 1
 
 
+def test_all_offers_are_located_pass_after_pass(tmp_path, geocoder, monkeypatch):
+    """Vérifie l'enchaînement des passages jusqu'au dernier lieu."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_located_offers(vDatabaseFile, ["Roubaix", "Lyon", "Brest"])
+    monkeypatch.setattr(geocoding, "MAX_LOOKUPS", 2)
+
+    vReport = locate_all_offers(vDatabaseFile, NOW)
+
+    assert vReport["lookups"] == 3
+    assert len(geocoder) == 3
+
+
 @pytest.mark.parametrize(
     ("pKey", "pExpected"),
     [
@@ -230,3 +253,38 @@ def test_alert_radius_keeps_near_and_remote_offers(tmp_path, geocoder):
     save_alert_radius(vDatabaseFile, 33)
 
     assert load_home(vDatabaseFile)["alert_radius_km"] == 0
+
+
+def test_department_is_kept_and_old_places_are_looked_up_once(tmp_path, geocoder):
+    """Vérifie le département de l'offre placée et la reprise des anciens lieux."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_located_offers(vDatabaseFile, ["Roubaix", "Lyon"])
+    # Lieu cherché avant que le département soit gardé
+    save_location(vDatabaseFile, "lyon", (45.758, 4.835), "Lyon", NOW)
+
+    vReport = locate_offers(vDatabaseFile, NOW)
+    vDepartments = {
+        vOffer["location"]: vOffer["french_department"]
+        for vOffer in get_offers(vDatabaseFile).to_dict("records")
+    }
+
+    assert vReport["lookups"] == 2
+    assert vDepartments == {"Roubaix": "59", "Lyon": "69"}
+    assert get_cached_departments(vDatabaseFile)["lyon"] == "69"
+    assert locate_offers(vDatabaseFile, NOW)["lookups"] == 0
+
+
+def test_alert_radius_reads_remote_as_stored_in_the_database():
+    """Vérifie le télétravail lu en base, en texte : « 1 » gardé, « 0 » écarté."""
+
+    vHome = {"latitude": 50.69, "longitude": 3.18, "alert_radius_km": 30}
+    vOffers = [
+        {"id": "teletravail", "remote": "1", "distance_km": None},
+        {"id": "sur site", "remote": "0", "distance_km": None},
+    ]
+
+    assert [vOffer["id"] for vOffer in keep_within_alert_radius(vOffers, vHome)] == [
+        "teletravail"
+    ]

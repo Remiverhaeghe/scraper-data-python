@@ -38,6 +38,7 @@ from job.companies import (
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
 from job.geocoding import describe_location
+from job.offer_details import can_fetch_description, fetch_missing_description
 from job.salary_market import describe_market_salary, find_market_salary
 from job.presentation import (
     build_translate_url,
@@ -152,6 +153,8 @@ class OfferDetailPanel(QWidget):
     exam_requested = Signal(dict)
     # Émis depuis le fil de traduction : (description d'origine, traduction, erreur)
     translation_done = Signal(str, object, object)
+    # Émis depuis le fil de lecture : offre complétée de sa description
+    description_fetched = Signal(object)
 
     def __init__(self, pDatabaseFile):
         """Construit le panneau, vide tant qu'aucune offre n'est choisie."""
@@ -213,6 +216,7 @@ class OfferDetailPanel(QWidget):
         self.translate_button.clicked.connect(self.toggle_translation)
         self.translate_button.hide()
         self.translation_done.connect(self.show_translation)
+        self.description_fetched.connect(self.show_fetched_description)
 
         vDescriptionCard, vDescriptionLayout = create_card("Description", pOpen=True)
         vDescriptionLayout.addWidget(
@@ -458,6 +462,21 @@ class OfferDetailPanel(QWidget):
         self.show_duplicates(vOffer)
         self.show_company(vOffer)
 
+        # Description absente pour une partie des offres SmartRecruiters : lue à
+        # l'ouverture, hors du fil de l'interface.
+        if can_fetch_description(vOffer):
+            self.description.setPlaceholderText("Lecture de la description…")
+            threading.Thread(
+                target=lambda: self.description_fetched.emit(
+                    fetch_missing_description(self.database_file, vOffer)
+                ),
+                daemon=True,
+            ).start()
+        else:
+            self.description.setPlaceholderText(
+                "Aucune description fournie par la source."
+            )
+
         vRemote = vOffer.get("remote")
 
         vInfos = {
@@ -569,6 +588,20 @@ class OfferDetailPanel(QWidget):
         self.translated = True
         self.show_description(pTranslation)
         self.translate_button.setText("Texte d'origine")
+
+    def show_fetched_description(self, pOffer):
+        """Réaffiche l'offre avec sa description, si elle est toujours affichée."""
+        if not self.offer or not pOffer.get("description"):
+            self.description.setPlaceholderText(
+                "Aucune description fournie par la source."
+            )
+            return
+
+        if (self.offer["source"], self.offer["source_id"]) == (
+            pOffer["source"],
+            pOffer["source_id"],
+        ):
+            self.show_offer({**self.offer, **pOffer})
 
     def open_offer(self):
         """Ouvre l'offre dans le navigateur, uniquement en http ou https."""

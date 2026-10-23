@@ -7,7 +7,14 @@ import pytest
 
 import job.exchange_rates as exchange_rates
 from job.exchange_rates import get_exchange_rates, parse_ecb_rates
-from job.location import add_location, detect_location
+from job.location import (
+    FRENCH_DEPARTMENTS,
+    REGION_BY_DEPARTMENT,
+    add_location,
+    detect_location,
+    find_region,
+    find_region_in_text,
+)
 from job.presentation import format_euros, format_net_salary
 from job.salary import add_net_salary
 from storage.database import initialize_database
@@ -126,3 +133,30 @@ def test_net_salary_converted_from_dollars():
     assert vOffer["salary_net_monthly_min"] == 6500
     assert format_net_salary(vOffer) == f"≈ {format_euros(6500)} (USD)"
     assert pd.isna(vItems.iloc[1]["salary_net_monthly_min"])
+
+
+@pytest.mark.parametrize(
+    ("pLocation", "pExpected"),
+    [
+        ("Pas-de-Calais, Hauts-De-France", "Hauts-de-France"),
+        ("Cogolin, Var", "Provence-Alpes-Côte d'Azur"),
+        ("Ardennes, Grand-Est", "Grand Est"),
+        ("Paris", "Île-de-France"),
+        ("Saint-Martin-d'Ain", None),
+        ("France", None),
+        (None, None),
+    ],
+)
+def test_region_is_found_in_the_location(pLocation, pExpected):
+    """Vérifie la région nommée dans un lieu, segment par segment."""
+
+    assert find_region_in_text(pLocation) == pExpected
+
+
+def test_every_department_has_a_region():
+    """Vérifie la table des régions : chaque département en a une, et une seule."""
+
+    assert set(REGION_BY_DEPARTMENT) == set(FRENCH_DEPARTMENTS)
+    assert find_region("59") == "Hauts-de-France"
+    assert find_region("2a") == "Corse"
+    assert find_region("") is None

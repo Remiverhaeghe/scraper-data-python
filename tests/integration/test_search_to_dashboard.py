@@ -71,13 +71,13 @@ class FakeResponse(FakeJsonResponse):
 
 
 def simulate_apis(pMonkeypatch, pFailingHost=None):
-    """Répond aux appels des sources ; pFailingHost renvoie une erreur 503."""
+    """Répond aux appels des sources ; pFailingHost renvoie une erreur 500."""
 
     def mock_request(pMethod, pUrl, **pOptions):
         vHost = next(vHost for vHost in API_RESPONSES if vHost in pUrl)
 
         if vHost == pFailingHost:
-            rResponse = FakeResponse({}, 503)
+            rResponse = FakeResponse({}, 500)
         else:
             rResponse = FakeResponse(API_RESPONSES[vHost])
 

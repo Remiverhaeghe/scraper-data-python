@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from gui.follow_ups_panel import FollowUpsPanel
 from gui.funnel_panel import FunnelPanel
+from gui.replies_panel import RepliesPanel
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -114,8 +115,12 @@ class ApplicationsPage(QWidget):
         self.follow_ups_panel = FollowUpsPanel(pDatabaseFile)
         self.follow_ups_panel.changed.connect(self.refresh)
 
+        self.replies_panel = RepliesPanel(pDatabaseFile)
+        self.replies_panel.changed.connect(self.refresh)
+
         vLayout.addWidget(self.funnel_panel)
         vLayout.addWidget(self.follow_ups_panel)
+        vLayout.addWidget(self.replies_panel)
         vLayout.addLayout(self.create_board())
         vLayout.addLayout(self.create_statistic_tables())
         vLayout.addStretch()

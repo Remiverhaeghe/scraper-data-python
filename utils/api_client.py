@@ -1,6 +1,8 @@
 """Appels sécurisés aux API JSON des sources d'offres"""
 
 import json
+import time
+from urllib.parse import urlparse
 
 import requests
 
@@ -15,6 +17,29 @@ CHUNK_SIZE = 64 * 1024
 DEFAULT_TIMEOUT = 10
 
 MAX_RESPONSE_SIZE = int(MAX_RESPONSE_SIZE_MB * 1024 * 1024)
+
+# Début du corps gardé pour une réponse en erreur : assez pour son message
+ERROR_BODY_SIZE = 2048
+
+# Trop de demandes (429) ou service saturé (503) : nouvel essai après le délai
+# demandé par le serveur, borné, faute de quoi la source échoue comme avant.
+RETRY_STATUSES = (429, 503)
+MAX_RETRIES = 2
+DEFAULT_RETRY_WAIT = 5
+MAX_RETRY_WAIT = 30
+
+
+def read_retry_wait(pResponse):
+    """Retourne l'attente demandée par le serveur en secondes, ou None si trop longue."""
+
+    vHeader = pResponse.headers.get("Retry-After", "")
+
+    # Une date HTTP à la place d'un nombre de secondes : attente par défaut.
+    vWait = int(vHeader) if vHeader.strip().isdigit() else DEFAULT_RETRY_WAIT
+
+    rWait = max(vWait, 1) if vWait <= MAX_RETRY_WAIT else None
+
+    return rWait
 
 
 def check_announced_size(pResponse, pMaxSize):
@@ -72,24 +97,50 @@ def request_bytes(
     # pour qu'une source ne puisse pas faire interroger le réseau interne.
     validate_url(pUrl)
 
-    vResponse = requests.request(
-        pMethod,
-        pUrl,
-        params=pParams,
-        headers=pHeaders,
-        json=pJson,
-        data=pData,
-        auth=pAuth,
-        timeout=pTimeout,
-        # Une redirection pourrait mener vers une adresse non validée : elle est refusée
-        # et signalée comme erreur plutôt que suivie.
-        allow_redirects=False,
-        stream=True,
-    )
+    for vAttempt in range(MAX_RETRIES + 1):
+        vResponse = requests.request(
+            pMethod,
+            pUrl,
+            params=pParams,
+            headers=pHeaders,
+            json=pJson,
+            data=pData,
+            auth=pAuth,
+            timeout=pTimeout,
+            # Une redirection pourrait mener vers une adresse non validée : elle
+            # est refusée et signalée comme erreur plutôt que suivie.
+            allow_redirects=False,
+            stream=True,
+        )
+
+        vWait = (
+            read_retry_wait(vResponse)
+            if vResponse.status_code in RETRY_STATUSES and vAttempt < MAX_RETRIES
+            else None
+        )
+
+        if vWait is None:
+            break
+
+        vResponse.close()
+        logger.warning(
+            "HTTP %s de %s : nouvel essai dans %s s",
+            vResponse.status_code,
+            # L'hôte seul : certaines API (Jooble) portent la clé dans le chemin.
+            urlparse(pUrl).netloc,
+            vWait,
+        )
+        time.sleep(vWait)
 
     try:
         if vResponse.is_redirect:
             raise ValueError("Redirection refusée : une API ne doit pas rediriger.")
+
+        if vResponse.status_code >= 400:
+            # Le début du corps explique souvent le refus (clé, adresse IP) : il
+            # reste lisible par la source dans l'erreur, sans être journalisé ici.
+            # pylint: disable-next=protected-access
+            vResponse._content = next(vResponse.iter_content(ERROR_BODY_SIZE), b"")
 
         vResponse.raise_for_status()
 

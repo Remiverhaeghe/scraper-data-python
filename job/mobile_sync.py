@@ -16,6 +16,7 @@ import segno
 
 from config import WEB_SCHEME, WEB_TLS_CERTFILE
 from job.access_tokens import check_access_token, get_access_token, renew_access_token
+from job.geocoding import load_home
 from job.interview_revision import find_offer_themes
 from job.preparation import match_offer
 from job.presentation import STATUS_LABELS, clean_missing_values, format_net_salary
@@ -40,7 +41,12 @@ from job.quiz_types import (
 )
 from job.similar_offers import find_similar_offers
 from job.weekly_digest import get_new_offers
-from storage.job_applications import get_applications_with_offers, save_application
+from storage.job_applications import (
+    get_application,
+    get_applications_with_offers,
+    save_application,
+    update_application_status,
+)
 from storage.job_offers import get_offer
 from storage.quiz_answers import get_last_answers, save_synced_answers
 from storage.quiz_questions import get_quiz_assets, get_quiz_guide, get_quiz_guides
@@ -536,6 +542,7 @@ def build_offer_list(pDatabaseFile, pNow):
 
     vProfile = load_profile(pDatabaseFile)
     vMatches = {id(vOffer): match_offer(vProfile, vOffer) for vOffer in vOffers}
+    vRadius = (load_home(pDatabaseFile) or {}).get("alert_radius_km") or 0
 
     rOffers = [
         {
@@ -548,6 +555,14 @@ def build_offer_list(pDatabaseFile, pNow):
             "url": vOffer.get("url"),
             "match_score": vOffer.get("match_score"),
             "distance_km": vOffer.get("distance_km"),
+            # Position pour la carte, et offre dans le rayon des alertes
+            "latitude": vOffer.get("latitude"),
+            "longitude": vOffer.get("longitude"),
+            "near": bool(
+                vRadius
+                and vOffer.get("distance_km") is not None
+                and vOffer["distance_km"] <= vRadius
+            ),
             "similar_to": vSimilar.get(
                 (vOffer["source"], str(vOffer["source_id"])), {}
             ).get("reference_title"),
@@ -587,7 +602,14 @@ def sync_status_changes(pDatabaseFile, pChanges, pNow):
             vRejected.append(f"{vSource}/{vSourceId}")
             continue
 
-        save_application(pDatabaseFile, vSource, vSourceId, vStatus, pNow=pNow)
+        # Une candidature suivie garde ses notes et sa date d'entretien.
+        if get_application(pDatabaseFile, vSource, vSourceId) is None:
+            save_application(pDatabaseFile, vSource, vSourceId, vStatus, pNow=pNow)
+        else:
+            update_application_status(
+                pDatabaseFile, vSource, vSourceId, vStatus, pNow=pNow
+            )
+
         vApplied += 1
 
     logger.info(

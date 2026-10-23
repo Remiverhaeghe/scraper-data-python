@@ -2,11 +2,13 @@
 
 from datetime import datetime
 from html import escape
+from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
+    QFileDialog,
     QLabel,
     QMenu,
     QMessageBox,
@@ -20,6 +22,8 @@ from gui.theme import COLORS
 from gui.widgets import create_button
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
 from job.company_info import lookup_company, summarize_company
+from job.cv_export import build_cv_file_name, build_tailored_cv, write_docx
+from job.geocoding import load_home
 from job.interview_revision import build_offer_revision
 from job.interview_journal import collect_asked_questions
 from job.offer_comparison import (
@@ -117,6 +121,15 @@ class OfferAssistantPanel(QWidget):
         )
         self.prepare_button.clicked.connect(self.open_preparation)
 
+        self.cv_button = create_button(
+            "CV adapté (.docx)", "download", pIconColor=COLORS["primary"]
+        )
+        self.cv_button.setToolTip(
+            "Votre profil réordonné pour l'offre : compétences demandées en tête, "
+            "expériences les plus proches d'abord"
+        )
+        self.cv_button.clicked.connect(self.export_cv)
+
         # Examen blanc sur les thèmes de révision dont l'offre demande les compétences
         self.exam_button = create_button(
             "Examen blanc pour l'entretien", "timer", pIconColor=COLORS["primary"]
@@ -177,6 +190,7 @@ class OfferAssistantPanel(QWidget):
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.setSpacing(4)
         vLayout.addWidget(self.prepare_button)
+        vLayout.addWidget(self.cv_button)
         vLayout.addWidget(self.exam_button)
         vLayout.addWidget(self.exam_results_label)
         vLayout.addWidget(self.exam_chart)
@@ -225,6 +239,49 @@ class OfferAssistantPanel(QWidget):
                 else None
             ),
         )
+
+    def export_cv(self):
+        """Enregistre le CV réordonné pour l'offre à l'endroit choisi."""
+        if self.offer is None:
+            return
+
+        vProfile = load_profile(self.database_file)
+
+        if is_profile_empty(vProfile):
+            QMessageBox.information(
+                self,
+                "CV adapté",
+                "Renseignez d'abord vos compétences et expériences dans la page Profil.",
+            )
+            return
+
+        vPath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Enregistrer le CV adapté",
+            str(Path.home() / build_cv_file_name(self.offer)),
+            "Document Word (*.docx)",
+        )
+
+        if not vPath:
+            return
+
+        try:
+            Path(vPath).write_bytes(write_docx(build_tailored_cv(vProfile, self.offer)))
+
+        except OSError as vException:
+            logger.warning("CV adapté non enregistré : %s", vException)
+            QMessageBox.warning(
+                self, "CV adapté", f"Enregistrement impossible : {vException}"
+            )
+            return
+
+        # Le chemin peut contenir le nom de l'utilisateur : seul le fait est journalisé.
+        logger.info(
+            "CV adapté enregistré pour %s/%s",
+            self.offer["source"],
+            self.offer["source_id"],
+        )
+        QDesktopServices.openUrl(QUrl.fromLocalFile(vPath))
 
     def open_preparation(self):
         """Ouvre la préparation de candidature, ou invite à remplir le profil."""
@@ -407,7 +464,7 @@ class OfferAssistantPanel(QWidget):
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         try:
-            vCompanies = lookup_company(vCompanyName)
+            vCompanies = lookup_company(vCompanyName, load_home(self.database_file))
 
         except ValueError as vException:
             vMessage = str(vException)

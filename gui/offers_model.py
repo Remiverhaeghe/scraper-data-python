@@ -57,6 +57,12 @@ def format_cell(pOffer, pKey):
     elif pKey == "distance_km":
         rText = "" if pOffer.get(pKey) is None else f"{pOffer[pKey]} km"
 
+    elif pKey == "first_seen_at" and pOffer.get("recurring_days"):
+        rText = (
+            f"{format_date(pOffer.get(pKey))} · en ligne depuis "
+            f"{pOffer['recurring_days']} j"
+        )
+
     elif pKey == "first_seen_at":
         rText = format_date(pOffer.get(pKey))
 

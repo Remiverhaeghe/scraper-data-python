@@ -56,6 +56,14 @@
     {% endfor %}
 </article>
 
+<article class="card section-gap">
+    <h2>{{ icon("inbox") }} Réponses des recruteurs</h2>
+    <p class="card-subtitle">Lit vos messages Gmail des 30 derniers jours, en lecture seule, et propose le statut annoncé : refus ou entretien. Rien du message n'est enregistré.</p>
+    <button class="button" type="button" hx-post="{{ url_for('read_replies').path }}" hx-target="#replies" hx-indicator="#replies-wait">{{ icon("inbox", 16) }} Lire mes réponses Gmail</button>
+    <span id="replies-wait" class="muted htmx-indicator">Lecture en cours…</span>
+    <div id="replies"></div>
+</article>
+
 <section class="grid grid-4 section-gap board">
     {% for column in board %}
     <article class="card board-column">

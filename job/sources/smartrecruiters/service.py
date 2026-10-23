@@ -1,5 +1,7 @@
 """Service de récupération des offres SmartRecruiters"""
 
+import re
+
 import pandas as pd
 import requests
 
@@ -22,6 +24,10 @@ DEFAULT_MAX_DETAILS = 25
 # recherche sans mot-clé passait plusieurs minutes par grand groupe. Les offres
 # suivantes sont gardées avec les champs de la liste, sans description.
 MAX_DESCRIPTIONS = 50
+
+# Identifiant de l'entreprise dans l'adresse d'une offre :
+# https://jobs.smartrecruiters.com/<entreprise>/<offre>
+COMPANY_URL_PATTERN = re.compile(r"smartrecruiters\.com/([^/?#]+)/")
 
 
 def matches_listing(pJob, pKeyword):
@@ -128,3 +134,25 @@ def scrape_jobs(pCompany, pCountry, pKeyword=None, pLocation=None, pMaxItems=Non
     )
 
     return rJobs
+
+
+def fetch_description(pOffer):
+    """Lit la description d'une offre enregistrée sans elle ; retourne (texte, adresse).
+
+    Retourne None si l'adresse ne donne pas l'entreprise ; lève
+    requests.RequestException si l'offre est retirée ou l'API injoignable.
+    """
+
+    vMatch = COMPANY_URL_PATTERN.search(str(pOffer.get("url") or ""))
+
+    if vMatch is None:
+        return None
+
+    vDetail = get_posting(vMatch.group(1), pOffer["source_id"])
+
+    rDescription = (
+        read_description(vDetail),
+        vDetail.get("postingUrl") or pOffer["url"],
+    )
+
+    return rDescription

@@ -1,11 +1,17 @@
 """Pages des candidatures : suivi par étape, statut et agenda"""
 
+import imaplib
 from datetime import datetime
 from html import escape
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
+from job.application_replies import (
+    apply_reply,
+    check_replies,
+    mark_reply_handled,
+)
 from job.application_tracking import (
     BOARD_STATUSES,
     build_application_statistics,
@@ -19,9 +25,12 @@ from job.notification import describe_follow_up
 from job.presentation import STATUS_LABELS
 from storage.job_applications import get_application, update_application_status
 from web.dependencies import get_database_file, require_csrf
+from utils.logger import get_logger
 from web.rendering import templates
 
 router = APIRouter()
+
+logger = get_logger(__name__)
 
 
 @router.get("/applications", response_class=HTMLResponse)
@@ -79,6 +88,80 @@ def change_application_status(
     rResponse = RedirectResponse(
         router.url_path_for("show_applications"), status_code=303
     )
+
+    return rResponse
+
+
+@router.post(
+    "/applications/replies",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def read_replies(request: Request, pDatabaseFile: str = Depends(get_database_file)):
+    """Lit les réponses récentes de Gmail et propose un statut pour chaque candidature."""
+
+    vContext = {"replies": [], "statuses": STATUS_LABELS, "message": None}
+
+    try:
+        vContext["replies"] = check_replies(pDatabaseFile, datetime.now())
+
+    except ValueError as vException:
+        vContext.update(message=str(vException), tone="warning")
+
+    except (OSError, imaplib.IMAP4.error):
+        logger.exception("Lecture de Gmail impossible")
+        vContext.update(
+            message="Gmail injoignable ou mot de passe d'application refusé : "
+            "voir les journaux.",
+            tone="danger",
+        )
+
+    if not vContext["replies"] and vContext["message"] is None:
+        vContext.update(
+            message="Aucune réponse de recruteur à appliquer sur 30 jours.",
+            tone="success",
+        )
+
+    rResponse = templates.TemplateResponse(request, "_replies.html", vContext)
+
+    return rResponse
+
+
+@router.post(
+    "/applications/replies/handle",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def handle_reply(
+    pAction: str = Form(alias="action"),
+    pMessageId: str = Form(alias="message_id"),
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pStatus: str = Form(alias="status"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Applique le statut proposé, ou ignore le message ; remplace sa ligne."""
+
+    if pAction == "apply":
+        if pStatus not in STATUS_LABELS:
+            raise HTTPException(status_code=400, detail="Statut invalide.")
+
+        apply_reply(
+            pDatabaseFile,
+            {
+                "message_id": pMessageId,
+                "source": pSource,
+                "source_id": pSourceId,
+                "status": pStatus,
+            },
+            datetime.now(),
+        )
+        vText = f"Statut « {STATUS_LABELS[pStatus]} » appliqué."
+    else:
+        mark_reply_handled(pDatabaseFile, pMessageId)
+        vText = "Réponse ignorée."
+
+    rResponse = HTMLResponse(f'<p class="muted reply">{escape(vText)}</p>')
 
     return rResponse
 

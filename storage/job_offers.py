@@ -620,6 +620,26 @@ def set_availability(pDatabaseFile, pSource, pSourceId, pAvailability, pNow):
     logger.info("Disponibilité vérifiée : %s %s, %s", pSource, pSourceId, pAvailability)
 
 
+def save_offer_description(pDatabaseFile, pSource, pSourceId, pDescription, pUrl):
+    """Enregistre la description lue après coup ; les compétences seront recalculées."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        with vConnection:
+            vConnection.execute(
+                """
+                UPDATE job_offer
+                SET description = ?, url = ?, detected_skills = NULL
+                WHERE source = ? AND source_id = ?
+                """,
+                (pDescription, pUrl, pSource, str(pSourceId)),
+            )
+
+    finally:
+        vConnection.close()
+
+
 def get_offer(pDatabaseFile, pSource, pSourceId):
     """Retourne une offre sous forme de dictionnaire, ou None si elle n'existe pas."""
 

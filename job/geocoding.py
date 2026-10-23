@@ -14,6 +14,7 @@ from job.location import (
     find_department,
 )
 from storage.geo_cache import (
+    get_cached_departments,
     get_cached_locations,
     get_offers_to_locate,
     save_location,
@@ -48,7 +49,7 @@ DISTANCE_FILTERS = {
 
 
 def geocode(pQuery, pType=None, pNear=None):
-    """Retourne ((latitude, longitude), libellé) du lieu cherché, ou None.
+    """Retourne ((latitude, longitude), libellé, département) du lieu, ou None.
 
     pNear, la position du domicile, départage les homonymes (Saint-Denis).
     """
@@ -73,7 +74,10 @@ def geocode(pQuery, pType=None, pNear=None):
 
     if vFeature and vFeature["properties"].get("score", 0) >= MIN_SCORE:
         vLongitude, vLatitude = vFeature["geometry"]["coordinates"]
-        rPlace = ((vLatitude, vLongitude), vFeature["properties"].get("label", ""))
+        vProperties = vFeature["properties"]
+        # Contexte de la base d'adresses : « 59, Nord, Hauts-de-France »
+        vDepartment = str(vProperties.get("context") or "").split(",", 1)[0].strip()
+        rPlace = ((vLatitude, vLongitude), vProperties.get("label", ""), vDepartment)
 
     return rPlace
 
@@ -104,7 +108,7 @@ def save_home(pDatabaseFile, pAddress):
                 "Adresse introuvable : précisez la ville ou le code postal."
             )
 
-        (vLatitude, vLongitude), vLabel = vPlace
+        (vLatitude, vLongitude), vLabel, _ = vPlace
         rHome = {
             "address": vAddress,
             "label": vLabel,
@@ -150,8 +154,8 @@ def keep_within_alert_radius(pOffers, pHome):
         vOffer
         for vOffer in pOffers
         if not vRadius
-        or vOffer.get("remote") is True
-        or vOffer.get("remote") == 1
+        # Lu en base, le télétravail est le texte « 1 » ; préparé, un booléen.
+        or str(vOffer.get("remote")).lower() in ("1", "true")
         or (vOffer.get("distance_km") is not None and vOffer["distance_km"] <= vRadius)
     ]
 
@@ -182,6 +186,7 @@ def locate_offers(pDatabaseFile, pNow=None, pMaxLookups=MAX_LOOKUPS):
     vHome = load_home(pDatabaseFile)
     vNear = (vHome["latitude"], vHome["longitude"]) if vHome else None
     vCache = get_cached_locations(pDatabaseFile)
+    vDepartments = get_cached_departments(pDatabaseFile)
     vPositions = []
     rReport = {"located": 0, "lookups": 0, "unknown": 0}
 
@@ -191,7 +196,8 @@ def locate_offers(pDatabaseFile, pNow=None, pMaxLookups=MAX_LOOKUPS):
         if not is_locatable(vKey):
             continue
 
-        if vKey not in vCache:
+        # Lieu jamais cherché, ou placé avant que le département soit gardé
+        if vKey not in vCache or (vCache[vKey] and vDepartments.get(vKey) is None):
             if rReport["lookups"] >= pMaxLookups:
                 continue
 
@@ -207,11 +213,22 @@ def locate_offers(pDatabaseFile, pNow=None, pMaxLookups=MAX_LOOKUPS):
 
             rReport["lookups"] += 1
             vCache[vKey] = vPlace[0] if vPlace else None
+            # Chaîne vide : cherché sans département connu, à ne pas chercher de nouveau.
+            vDepartments[vKey] = (vPlace[2] or "") if vPlace else None
             rReport["unknown"] += vPlace is None
-            save_location(pDatabaseFile, vKey, vCache[vKey], vPlace and vPlace[1], vNow)
+            save_location(
+                pDatabaseFile,
+                vKey,
+                vCache[vKey],
+                vPlace and vPlace[1],
+                vNow,
+                vDepartments[vKey],
+            )
 
         if vCache[vKey]:
-            vPositions.append((*vCache[vKey], vSource, vSourceId))
+            vPositions.append(
+                (*vCache[vKey], vDepartments.get(vKey) or "", vSource, vSourceId)
+            )
 
     save_offer_positions(pDatabaseFile, vPositions)
     rReport["located"] = len(vPositions)
@@ -223,6 +240,29 @@ def locate_offers(pDatabaseFile, pNow=None, pMaxLookups=MAX_LOOKUPS):
             rReport["lookups"],
             rReport["unknown"],
         )
+
+    return rReport
+
+
+def locate_all_offers(pDatabaseFile, pNow=None):
+    """Place toutes les offres en une fois, passage après passage ; retourne le bilan.
+
+    S'arrête quand un passage n'atteint plus la limite de recherches : tout est
+    placé, ou le géocodeur ne répond plus.
+    """
+
+    rReport = {"located": 0, "lookups": 0, "unknown": 0}
+
+    while True:
+        vReport = locate_offers(pDatabaseFile, pNow, MAX_LOOKUPS)
+        rReport = {
+            "located": rReport["located"] + vReport["located"],
+            "lookups": rReport["lookups"] + vReport["lookups"],
+            "unknown": rReport["unknown"] + vReport["unknown"],
+        }
+
+        if vReport["lookups"] < MAX_LOOKUPS:
+            break
 
     return rReport
 

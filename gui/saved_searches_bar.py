@@ -19,7 +19,7 @@ from gui.icons import get_icon
 from gui.theme import COLORS
 from gui.widgets import STATUS_STYLES, create_button
 from job.presentation import describe_search, describe_sources
-from job.search_presets import create_industry_searches
+from job.search_presets import create_industry_searches, create_local_searches
 from storage.saved_searches import (
     delete_saved_search,
     get_saved_searches,
@@ -89,6 +89,13 @@ class SavedSearchesBar(QWidget):
         )
         vIndustryButton.clicked.connect(self.add_industry_searches)
 
+        vLocalButton = create_button("Près de chez moi", "map-pin")
+        vLocalButton.setToolTip(
+            "Ajoute une recherche par métier (Java, PHP, développeur, maintenance, "
+            "automatisme) autour du domicile, dans le rayon des alertes"
+        )
+        vLocalButton.clicked.connect(self.add_local_searches)
+
         self.message_icon = QLabel()
         self.message_label = QLabel()
 
@@ -100,6 +107,7 @@ class SavedSearchesBar(QWidget):
         vHeader.addWidget(vSaveButton)
         vHeader.addWidget(self.delete_button)
         vHeader.addWidget(vIndustryButton)
+        vHeader.addWidget(vLocalButton)
         vHeader.addSpacing(12)
         vHeader.addWidget(self.message_icon)
         vHeader.addWidget(self.message_label)
@@ -253,6 +261,28 @@ class SavedSearchesBar(QWidget):
 
         self.refresh(vNames[0])
         self.set_message("success", f"{len(vNames)} recherches Industrie prêtes")
+
+    def add_local_searches(self):
+        """Enregistre les recherches autour du domicile, puis sélectionne la première."""
+        try:
+            vNames = create_local_searches(self.database_file, datetime.now())
+
+        except ValueError as vException:
+            self.set_message("warning", str(vException))
+            return
+
+        except Exception:
+            logger.exception("Échec de la création des recherches locales")
+
+            self.set_message(
+                "error", "Les recherches locales n'ont pas pu être créées."
+            )
+            return
+
+        self.refresh(vNames[0])
+        self.set_message(
+            "success", f"{len(vNames)} recherches près de chez vous prêtes"
+        )
 
     def delete_current(self):
         """Supprime la recherche choisie, après confirmation."""

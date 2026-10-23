@@ -120,12 +120,16 @@ def test_request_json_refuses_non_json_content(monkeypatch, calls):
 def test_request_json_propagates_http_error(monkeypatch, calls):
     """Vérifie que l'erreur HTTP garde la réponse, pour lire son code."""
 
-    use_response(monkeypatch, calls, FakeStreamResponse(pStatusCode=503))
+    use_response(
+        monkeypatch, calls, FakeStreamResponse(b'{"error": "cle"}', pStatusCode=401)
+    )
 
     with pytest.raises(requests.HTTPError) as vError:
         request_json("GET", "https://api.example.com/jobs")
 
-    assert vError.value.response.status_code == 503
+    assert vError.value.response.status_code == 401
+    assert vError.value.response._content == b'{"error": "cle"}'
+    assert len(calls) == 1
 
 
 def test_request_json_validates_destination(monkeypatch):
@@ -138,3 +142,35 @@ def test_request_json_validates_destination(monkeypatch):
 
     with pytest.raises(ValueError, match="destination"):
         request_json("GET", "http://127.0.0.1:8000/admin")
+
+
+def test_too_many_requests_are_retried_after_the_wait(monkeypatch, calls):
+    """Vérifie le nouvel essai après le délai demandé, puis l'abandon au-delà."""
+
+    vResponses = [
+        FakeStreamResponse(pStatusCode=429, pHeaders={"Retry-After": "3"}),
+        FakeStreamResponse(),
+    ]
+    vWaits = []
+    monkeypatch.setattr("utils.api_client.time.sleep", vWaits.append)
+
+    def mock_request(pMethod, pUrl, **pOptions):
+        calls.append(pUrl)
+
+        return vResponses.pop(0)
+
+    monkeypatch.setattr(requests, "request", mock_request)
+
+    assert request_json("GET", "https://api.example.com/jobs") == {"jobs": []}
+    assert vWaits == [3]
+
+    use_response(
+        monkeypatch,
+        calls,
+        FakeStreamResponse(pStatusCode=429, pHeaders={"Retry-After": "600"}),
+    )
+
+    with pytest.raises(requests.HTTPError):
+        request_json("GET", "https://api.example.com/jobs")
+
+    assert vWaits == [3]

@@ -196,10 +196,11 @@ def build_scraper(pCalls, pFailing=()):
     return scrape
 
 
-def test_scrape_each_combines_sites_within_the_limit():
+def test_scrape_each_combines_sites_within_the_limit(caplog):
     """Vérifie l'enchaînement des sites et le partage du nombre maximum d'offres."""
 
     vCalls = []
+    caplog.set_level("INFO")
 
     rJobs = scrape_each(
         " acme, globex ,initech", build_scraper(vCalls), 3, "Greenhouse"
@@ -207,6 +208,8 @@ def test_scrape_each_combines_sites_within_the_limit():
 
     assert rJobs["title"].tolist() == ["acme 1", "acme 2", "globex 1"]
     assert vCalls == [("acme", 3), ("globex", 1)]
+    assert "Greenhouse : site globex (2/3)" in caplog.text
+    assert "1 site(s) non lu(s)" in caplog.text
 
 
 def test_scrape_each_skips_a_failing_site(caplog):

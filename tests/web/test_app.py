@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 import web.rendering as web_rendering
 import storage.backup as storage_backup
+import web.routes.applications as web_applications
 import web.routes.offers as web_offers
 import web.routes.settings as web_settings
 import job.quiz_packs as quiz_packs
@@ -28,6 +29,7 @@ from tools.quiz_lot import build_pack as build_lot_pack
 from tests.job.test_quiz_types import NUMERIC, ORDER, PAIRS
 from job.quiz_generation import MIN_QUALITY_SAMPLE
 from storage.backup import backup_database, copy_to_nas
+from storage.job_applications import get_application
 from storage.job_offers import get_offer, save_offers, set_availability
 from tests.job.test_quiz_import import build_pack
 from tools.quiz_lot import build_pack as build_lot_pack
@@ -1118,7 +1120,7 @@ def test_chatgpt_prompts_and_company_info(client, monkeypatch):
     monkeypatch.setattr(
         web_offers,
         "lookup_company",
-        lambda pName: [
+        lambda pName, _pHome: [
             {
                 "name": "DATA SA",
                 "siren": "123456789",
@@ -1145,7 +1147,9 @@ def test_chatgpt_prompts_and_company_info(client, monkeypatch):
     monkeypatch.setattr(
         web_offers,
         "lookup_company",
-        lambda pName: (_ for _ in ()).throw(ValueError("Service indisponible.")),
+        lambda pName, _pHome: (_ for _ in ()).throw(
+            ValueError("Service indisponible.")
+        ),
     )
 
     assert (
@@ -2092,7 +2096,10 @@ def test_offers_near_home_sorted_by_distance(client):
     )
     save_offer_positions(
         vDatabaseFile,
-        [(45.758, 4.835, "adzuna", "old"), (50.6942, 3.1746, "adzuna", "new")],
+        [
+            (45.758, 4.835, "69", "adzuna", "old"),
+            (50.6942, 3.1746, "59", "adzuna", "new"),
+        ],
     )
 
     vSorted = client.get("/offers", params={"sort": "distance"}).text
@@ -2354,3 +2361,79 @@ def test_market_page(client):
     assert "Net mensuel médian" in vPage
     assert "Compétences les plus demandées" in vPage
     assert 'href="/market"' in client.get("/").text
+
+
+def test_recruiter_replies_are_read_and_handled(client, monkeypatch):
+    """Vérifie la lecture des réponses Gmail, puis leur application ou leur oubli."""
+
+    monkeypatch.delenv("GMAIL_ADDRESS", raising=False)
+
+    assert "À renseigner dans .env" in client.post("/applications/replies").text
+    assert "Lire mes réponses Gmail" in client.get("/applications").text
+
+    client.post(
+        "/offer/application",
+        data={"source": "adzuna", "id": "old", "status": "APPLIED"},
+    )
+    monkeypatch.setattr(
+        web_applications,
+        "check_replies",
+        lambda pDatabaseFile, pNow: [
+            {
+                "message_id": "<1>",
+                "subject": "Votre candidature",
+                "date": datetime(2026, 10, 22),
+                "source": "adzuna",
+                "source_id": "old",
+                "title": "Développeur Java",
+                "company": "Entreprise A",
+                "current_status": "APPLIED",
+                "status": "INTERVIEW",
+            }
+        ],
+    )
+
+    vReplies = client.post("/applications/replies").text
+    vApplied = client.post(
+        "/applications/replies/handle",
+        data={
+            "action": "apply",
+            "message_id": "<1>",
+            "source": "adzuna",
+            "id": "old",
+            "status": "INTERVIEW",
+        },
+    ).text
+    vIgnored = client.post(
+        "/applications/replies/handle",
+        data={
+            "action": "ignore",
+            "message_id": "<2>",
+            "source": "adzuna",
+            "id": "old",
+            "status": "REJECTED",
+        },
+    ).text
+
+    assert "« Votre candidature »" in vReplies
+    assert "Statut « Entretien » appliqué." in vApplied
+    assert "Réponse ignorée." in vIgnored
+    assert (
+        get_application(app.dependency_overrides[get_database_file](), "adzuna", "old")[
+            "status"
+        ]
+        == "INTERVIEW"
+    )
+
+
+def test_tailored_cv_is_downloaded(client):
+    """Vérifie le CV adapté : refusé sans profil, puis fichier Word nommé d'après l'offre."""
+
+    assert client.get("/offer/cv?source=adzuna&id=new").status_code == 400
+
+    client.post("/profile", data={"skills": "Python, Django", "experiences": ""})
+    vResponse = client.get("/offer/cv?source=adzuna&id=new")
+
+    assert vResponse.status_code == 200
+    assert vResponse.content[:2] == b"PK"
+    assert "CV%20-%20Entreprise%20A" in vResponse.headers["content-disposition"]

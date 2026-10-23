@@ -2270,6 +2270,16 @@ textarea.companies-preferred {
     border: 1px solid var(--border);
 }
 
+/* Indicateur HTMX : visible seulement pendant la requête */
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    display: inline;
+}
+
 .checklist {
     list-style: none;
     margin: 0;

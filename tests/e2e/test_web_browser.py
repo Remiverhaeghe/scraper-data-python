@@ -95,7 +95,10 @@ def server_url(tmp_path_factory):
         )
         save_offer_positions(
             vDatabaseFile,
-            [(50.63, 3.06, "remotive", "0"), (50.69, 3.17, "remotive", "1")],
+            [
+                (50.63, 3.06, "59", "remotive", "0"),
+                (50.69, 3.17, "59", "remotive", "1"),
+            ],
         )
 
         yield f"http://127.0.0.1:{vPort}"

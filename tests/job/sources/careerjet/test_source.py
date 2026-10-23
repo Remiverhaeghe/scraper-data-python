@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 
 import pytest
+import requests
 
 from job.sources.careerjet import client, source
 from job.sources.careerjet.config import load_config
@@ -73,3 +74,25 @@ def test_scrape_pages_until_the_limit(monkeypatch):
     assert len(vCalls) == 2
     assert vCalls[0]["pAuth"] == ("cle", "")
     assert vCalls[0]["pParams"]["user_ip"] and vCalls[0]["pParams"]["user_agent"]
+
+
+def test_refused_ip_gives_a_clear_message(monkeypatch):
+    """Vérifie le message d'une adresse IP non déclarée dans le compte éditeur."""
+
+    vResponse = requests.Response()
+    vResponse.status_code = 403
+    vResponse._content = b'{"error": "Unauthorized access from IP 192.0.2.7"}'
+
+    def refuse(*_pArgs, **_pKwargs):
+        raise requests.HTTPError("403", response=vResponse)
+
+    monkeypatch.setattr(client, "request_json", refuse)
+    vConfig = SimpleNamespace(api_key="cle", user_ip="127.0.0.1", referer=None)
+
+    with pytest.raises(ValueError, match="192.0.2.7 refusée"):
+        client.search_jobs(vConfig, "java", None)
+
+    vResponse._content = b"{}"
+
+    with pytest.raises(requests.HTTPError):
+        client.search_jobs(vConfig, "java", None)

@@ -90,3 +90,34 @@ def test_build_prompts_uses_offer_profile_and_company():
     assert "une seule question à la fois" in vPrompts["simulation"]
     assert "Poste : Développeur Java" in vPrompts["simulation"]
     assert describe_offer(vOffer).endswith("x […]")
+
+
+def test_nearest_site_is_given_from_home(monkeypatch):
+    """Vérifie l'établissement ouvert le plus proche du domicile, fermés ignorés."""
+
+    vResult = {
+        **API_RESULT,
+        "nombre_etablissements_ouverts": 2,
+        "matching_etablissements": [
+            {"libelle_commune": "PARIS", "latitude": "48.85", "longitude": "2.35"},
+            {"libelle_commune": "LILLE", "latitude": "50.63", "longitude": "3.06"},
+            {
+                "libelle_commune": "ROUBAIX",
+                "latitude": "50.69",
+                "longitude": "3.18",
+                "etat_administratif": "F",
+            },
+            {"libelle_commune": "SANS POSITION"},
+        ],
+    }
+    monkeypatch.setattr(
+        company_info, "request_json", lambda *pArgs, **pKwargs: {"results": [vResult]}
+    )
+
+    vCompany = lookup_company("Decathlon", {"latitude": 50.69, "longitude": 3.18})[0]
+
+    assert vCompany["nearest"] == {"city": "Lille", "distance_km": 11}
+    assert summarize_company(vCompany).endswith(
+        "2 établissement(s) ouvert(s), le plus proche à Lille (11 km de chez vous)"
+    )
+    assert lookup_company("Decathlon")[0]["nearest"] is None

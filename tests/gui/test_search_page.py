@@ -480,3 +480,14 @@ def test_industry_searches_are_added_and_loaded(saved_search_page):
     )
     assert "smartrecruiters" in vPage.get_selected_sources()
     assert "remotive" not in vPage.get_selected_sources()
+
+
+def test_local_searches_need_a_home(saved_search_page):
+    """Vérifie le bouton Près de chez moi : sans domicile, un message l'explique."""
+
+    vPage = saved_search_page
+
+    vPage.saved_bar.add_local_searches()
+
+    assert "domicile" in vPage.saved_bar.message_label.text()
+    assert vPage.saved_bar.group.buttons() == []

@@ -108,10 +108,11 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Findwork — clé à créer, intégration à valider sur un vrai appel
 - [x] Hacker News « Who is hiring? »
 - [x] Greenhouse
-- [x] SmartRecruiters, Lever et Ashby : pages carrière d'entreprises suivies, listes par défaut vérifiées (ingénierie et industrie pour SmartRecruiters)
+- [x] SmartRecruiters, Lever et Ashby : pages carrière d'entreprises suivies, listes par défaut vérifiées (ingénierie, industrie et sièges de la métropole lilloise pour SmartRecruiters)
+- [x] Workday : sites carrière des grands groupes (Valeo, Airbus, LFB, Néosoft par défaut), filtre France et mot-clé côté Workday
 - [x] Recruitee et Workable — entreprises à renseigner dans .env
-- [x] Careerjet — clé d'éditeur à créer, intégration à valider sur un vrai appel
-- [x] La bonne alternance (alternance) — clé gratuite à demander, intégration à valider sur un vrai appel
+- [x] Careerjet — clé d'éditeur, adresse IP du poste à déclarer dans le compte éditeur (refus signalé avec l'adresse à déclarer)
+- [x] La bonne alternance (alternance) — clé gratuite, vérifiée sur un vrai appel
 - [x] Remote OK, Working Nomads et We Work Remotely (télétravail)
 - [x] Sources classées par catégorie (France, pages carrière, télétravail, international), à cocher par catégorie
 - [x] Offres sans titre écartées et comptées par source, source muette signalée après trois recherches sans offre
@@ -251,6 +252,11 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Accueil : liste « À faire » des réglages manquants (compétences, auto-évaluation, salaire visé, accès France Travail, NAS), masquée une fois tout réglé
 - [x] Explication du score dans la préparation : poids de chaque compétence (exigée, demandée, appréciée) et niveau de maîtrise
 - [x] Mon marché : offres des 90 derniers jours, compétences et villes les plus demandées avec leur net mensuel médian
+- [x] Mon marché : régions (département gardé au placement des offres), compétences à travailler en priorité et évolution mois par mois
+- [x] Recherches « Près de chez moi » prêtes d'un clic : Java, PHP, développeur, maintenance et automatisme autour du domicile
+- [x] Réponses des recruteurs lues dans Gmail (IMAP, lecture seule) : refus ou entretien proposé, appliqué ou ignoré d'un clic
+- [x] CV Word adapté à une offre : compétences demandées en tête, expériences les plus proches d'abord
+- [x] Annonces en ligne depuis plus de 45 jours signalées ; fiche entreprise avec l'établissement le plus proche du domicile
 
 ### 🌐 Tableau de bord web
 
@@ -283,6 +289,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Score et tri par correspondance, filtre France, date d'entretien et export agenda, comme sur le bureau
 - [x] Abonnement à l'agenda, alertes ciblées et sauvegarde complète, comme sur le bureau
 - [x] Liste « À faire », explication du score et page Mon marché, comme sur le bureau
+- [x] Réponses des recruteurs lues dans Gmail et CV adapté à l'offre, comme sur le bureau
 - [x] Carte des offres : raccourcis de correspondance (toutes, 50 %, 70 %), pastille d'autant plus grande que le score est élevé
 
 ### 🔐 Sécurité
@@ -618,6 +625,9 @@ scraper-data-python/
 │   ├── interview_simulation.py                # Simulation d'entretien technique, points clés cochés
 │   ├── self_assessment.py                     # Grille d'auto-évaluation des compétences
 │   ├── skill_cache.py                         # Compétences de chaque offre détectées une fois, gardées en base
+│   ├── offer_details.py                       # Description lue à l'ouverture d'une offre enregistrée sans elle
+│   ├── application_replies.py                 # Réponses des recruteurs repérées dans Gmail, statut proposé
+│   ├── cv_export.py                           # CV réordonné pour une offre, écrit au format Word
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
 │   ├── translation.py                         # Traduction hors ligne des descriptions (Argos, facultatif)
@@ -730,6 +740,12 @@ scraper-data-python/
 │       │   ├── client.py                       # Communique avec l'API Workable
 │       │   ├── parser.py                       # Transforme les réponses Workable
 │       │   └── source.py                       # Déclare la source Workable
+│       ├── workday/                            # Intégration des sites carrière Workday (grands groupes)
+│       │   ├── __init__.py                     # Initialise le package Workday
+│       │   ├── client.py                       # Communique avec l'API des sites carrière
+│       │   ├── parser.py                       # Transforme les offres Workday
+│       │   ├── service.py                      # Filtre France, pages et descriptions
+│       │   └── source.py                       # Déclare la source Workday
 │       ├── careerjet/                          # Intégration Careerjet
 │       │   ├── __init__.py                     # Initialise le package Careerjet
 │       │   ├── client.py                       # Communique avec l'API Careerjet
@@ -820,6 +836,7 @@ scraper-data-python/
 │   ├── offer_application.py                   # Suivi de candidature : statut, relance, entretien
 │   ├── interview_journal_panel.py             # Journal d'entretien d'une offre
 │   ├── follow_ups_panel.py                    # Relances de la semaine et brouillons
+│   ├── replies_panel.py                       # Réponses des recruteurs lues dans Gmail
 │   ├── offer_attachments.py                   # Pièces jointes d'une offre
 │   ├── offer_form.py                          # Saisie manuelle d'une offre
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
@@ -904,6 +921,7 @@ scraper-data-python/
 │   │   ├── _attachments.html                  # Pièces jointes d'une offre
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
+│   │   ├── _replies.html                      # Réponses des recruteurs, chargées par HTMX
 │   │   ├── quiz.html                          # Révision technique par QCM
 │   │   ├── skills.html                        # Tableau de bord des compétences
 │   │   ├── market.html                        # Mon marché : salaires et demande
@@ -987,6 +1005,7 @@ scraper-data-python/
 │   ├── link_checker.py                        # Vérifie si le lien d'une offre est encore en ligne
 │   ├── api_client.py                          # Appels sécurisés aux API des sources
 │   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
+│   ├── mail_reader.py                         # Lecture des messages Gmail en IMAP, lecture seule
 │   ├── tls.py                                 # Certificat HTTPS local et son empreinte
 │   ├── tailscale.py                           # Certificat Tailscale : demande et renouvellement
 │   ├── permissions.py                         # Moindres privilèges : compte, .env et data/
@@ -1049,6 +1068,9 @@ scraper-data-python/
 │   │   ├── test_market.py                     # Teste la synthèse du marché
 │   │   ├── test_setup_checklist.py            # Teste la liste des réglages à faire
 │   │   ├── test_skill_cache.py                # Teste les compétences gardées en base
+│   │   ├── test_offer_details.py              # Teste la description lue à l'ouverture
+│   │   ├── test_application_replies.py        # Teste les réponses de recruteurs et leur classement
+│   │   ├── test_cv_export.py                  # Teste le CV adapté et le fichier Word
 │   │   ├── test_star_answers.py               # Teste les réponses STAR
 │   │   ├── test_offer_purge.py                # Teste la purge des offres hors sujet
 │   │   ├── test_followed_availability.py      # Teste la vérification des offres suivies
@@ -1101,6 +1123,9 @@ scraper-data-python/
 │   │       ├── smartrecruiters/                # Tests SmartRecruiters
 │   │       │   ├── __init__.py                 # Initialise les tests SmartRecruiters
 │   │       │   └── test_service.py             # Teste la liste, le filtre et le détail des offres
+│   │       ├── workday/                        # Tests Workday
+│   │       │   ├── __init__.py                 # Initialise les tests Workday
+│   │       │   └── test_service.py             # Teste le filtre France, la date et la lecture à l'ouverture
 │   │       ├── careerjet/                      # Tests Careerjet
 │   │       │   ├── __init__.py                 # Initialise les tests Careerjet
 │   │       │   └── test_source.py              # Teste la lecture, la clé et la pagination
@@ -1202,6 +1227,7 @@ scraper-data-python/
 │   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
 │   │   ├── test_offer_assistant_comparison.py  # Teste la comparaison depuis l'assistant
 │   │   ├── test_applications_page.py           # Teste la page des candidatures
+│   │   ├── test_replies_panel.py               # Teste le panneau des réponses de recruteurs
 │   │   ├── test_quiz_page.py                   # Teste la page de révision
 │   │   ├── test_quiz_answer.py                 # Teste les saisies de réponse, revue de code comprise
 │   │   ├── test_challenges_page.py             # Teste la page des défis

@@ -18,7 +18,7 @@ from gui.widgets import create_button, create_card, show_message
 from job.geocoding import (
     DISTANCE_FILTERS,
     load_home,
-    locate_offers,
+    locate_all_offers,
     save_alert_radius,
     save_home,
 )
@@ -30,7 +30,7 @@ logger = get_logger(__name__)
 class HomeLocationPanel(QWidget):
     """Adresse du domicile, cherchée puis enregistrée ; les offres sont ensuite placées."""
 
-    # Bilan de locate_offers, ou None en cas d'échec, émis depuis le thread
+    # Bilan de locate_all_offers, ou None en cas d'échec, émis depuis le thread
     offers_located = Signal(object)
 
     def __init__(self, pDatabaseFile):
@@ -160,7 +160,7 @@ class HomeLocationPanel(QWidget):
     def run_location(self):
         """Place les offres sans position ; appelé dans un thread."""
         try:
-            vReport = locate_offers(self.database_file)
+            vReport = locate_all_offers(self.database_file)
 
         except Exception:
             logger.exception("Échec du placement des offres sur la carte")
@@ -180,6 +180,7 @@ class HomeLocationPanel(QWidget):
 
         show_message(
             self.message_label,
-            f"{pReport['located']} offre(s) placée(s) ; les suivantes le seront "
-            "après chaque recherche.",
+            f"{pReport['located']} offre(s) placée(s), "
+            f"{pReport['unknown']} lieu(x) introuvable(s) ; les nouvelles offres le "
+            "seront après chaque recherche.",
         )

@@ -13,7 +13,7 @@ import gui.offers_page as offers_page_module
 from gui.offer_form import ManualOfferDialog
 from job.companies import load_company_rules
 from job.manual_offers import add_manual_offer
-from job.profile import build_profile, save_profile
+from job.profile import build_profile, load_profile, save_profile
 from gui.offer_application import describe_application
 from gui.offer_detail import summarize_values
 from gui.offers_model import format_cell, get_cell_color
@@ -571,7 +571,7 @@ def test_chatgpt_prompt_and_company_info(offers_page, database_file, monkeypatch
     monkeypatch.setattr(
         offer_assistant,
         "lookup_company",
-        lambda pName: [
+        lambda pName, _pHome: [
             {
                 "name": "GLOBEX",
                 "siren": "123456789",
@@ -766,3 +766,30 @@ def test_column_width_is_kept_for_the_next_opening(database_file):
         offers_page_module.SPLITTER_STATE_KEY,
     ):
         QSettings().remove(vKey)
+
+
+def test_tailored_cv_is_saved_where_chosen(
+    offers_page, database_file, tmp_path, monkeypatch
+):
+    """Vérifie l'enregistrement du CV adapté au chemin choisi, puis son ouverture."""
+
+    save_profile(
+        database_file,
+        {**load_profile(database_file), "name": "Camille", "skills": ["Java"]},
+    )
+    offers_page.select_offer(("lever", "1"))
+    vTarget = tmp_path / "cv.docx"
+    vOpened = []
+    monkeypatch.setattr(
+        offer_assistant.QFileDialog,
+        "getSaveFileName",
+        lambda *pArgs: (str(vTarget), ""),
+    )
+    monkeypatch.setattr(
+        offer_assistant.QDesktopServices, "openUrl", lambda pUrl: vOpened.append(pUrl)
+    )
+
+    offers_page.detail_panel.assistant.export_cv()
+
+    assert vTarget.read_bytes()[:2] == b"PK"
+    assert len(vOpened) == 1

@@ -10,6 +10,7 @@ import 'package:http/testing.dart';
 import 'package:jobboard_revision/revision_state.dart';
 import 'package:jobboard_revision/screens/interview_screen.dart';
 import 'package:jobboard_revision/screens/offer_detail_screen.dart';
+import 'package:jobboard_revision/screens/offers_screen.dart';
 import 'package:jobboard_revision/screens/skills_screen.dart';
 import 'package:jobboard_revision/services/api_client.dart';
 import 'package:jobboard_revision/services/revision_store.dart';
@@ -194,5 +195,32 @@ void main() {
     await pTester.tap(find.text("Ouvrir l'annonce"));
 
     expect(vOpened, isTrue);
+    expect(find.text('Voir sur la carte'), findsNothing);
+  });
+
+  test("La carte s'ouvre sur la position de l'offre", () {
+    final vUri = buildMapUri(const {'latitude': 50.63, 'longitude': 3.06});
+
+    expect(
+        vUri.toString(), 'https://www.openstreetmap.org/?mlat=50.63&mlon=3.06#map=14/50.63/3.06');
+    expect(buildMapUri(const {'latitude': null, 'longitude': 3.06}), isNull);
+  });
+
+  testWidgets('Le filtre Près de chez moi garde les offres du rayon', (pTester) async {
+    final vState = await buildState(buildServer({}));
+    vState.offers = [
+      {'source': 'lever', 'source_id': '1', 'title': 'Développeur Lille', 'near': true},
+      {'source': 'lever', 'source_id': '2', 'title': 'Développeur Lyon', 'near': false},
+    ];
+
+    await pTester.pumpWidget(MaterialApp(home: OffersScreen(state: vState)));
+
+    expect(find.text('Développeur Lyon'), findsOneWidget);
+
+    await pTester.tap(find.text('Près de chez moi'));
+    await pTester.pump();
+
+    expect(find.text('Développeur Lille'), findsOneWidget);
+    expect(find.text('Développeur Lyon'), findsNothing);
   });
 }

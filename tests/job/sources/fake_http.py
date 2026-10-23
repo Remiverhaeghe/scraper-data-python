@@ -11,6 +11,8 @@ class FakeJsonResponse:
 
     is_redirect = False
 
+    status_code = 200
+
     headers = {"Content-Type": "application/json"}
 
     def raise_for_status(self):

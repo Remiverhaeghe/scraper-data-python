@@ -8,33 +8,64 @@ import '../revision_state.dart';
 import '../theme.dart';
 import 'offer_detail_screen.dart';
 
-class OffersScreen extends StatelessWidget {
+class OffersScreen extends StatefulWidget {
   const OffersScreen({super.key, required this.state});
 
   final RevisionState state;
 
   @override
+  State<OffersScreen> createState() => _OffersScreenState();
+}
+
+class _OffersScreenState extends State<OffersScreen> {
+  /// Seules les offres dans le rayon des alertes réglé sur le PC.
+  bool nearOnly = false;
+
+  @override
   Widget build(BuildContext context) {
+    final vState = widget.state;
+
     final rScreen = Scaffold(
       appBar: AppBar(title: const Text('Nouvelles offres')),
       body: ListenableBuilder(
-        listenable: state,
-        builder: (_, __) => state.offers.isEmpty
-            ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    "Aucune offre reçue : synchronisez depuis l'accueil.",
-                    textAlign: TextAlign.center,
+        listenable: vState,
+        builder: (_, __) {
+          final vHasNear = vState.offers.any((vOffer) => vOffer['near'] == true);
+          final vOffers = [
+            for (final vOffer in vState.offers)
+              if (!nearOnly || vOffer['near'] == true) vOffer,
+          ];
+
+          if (vState.offers.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  "Aucune offre reçue : synchronisez depuis l'accueil.",
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(12),
+            children: [
+              // Le filtre n'apparaît qu'avec un domicile et un rayon réglés sur le PC.
+              if (vHasNear)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: FilterChip(
+                    avatar: const Icon(Icons.place_outlined, size: 18),
+                    label: const Text('Près de chez moi'),
+                    selected: nearOnly,
+                    onSelected: (pSelected) => setState(() => nearOnly = pSelected),
                   ),
                 ),
-              )
-            : ListView(
-                padding: const EdgeInsets.all(12),
-                children: [
-                  for (final vOffer in state.offers) OfferCard(state: state, offer: vOffer),
-                ],
-              ),
+              for (final vOffer in vOffers) OfferCard(state: vState, offer: vOffer),
+            ],
+          );
+        },
       ),
     );
 

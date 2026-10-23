@@ -1,0 +1,23 @@
+{# Réponses de recruteurs repérées dans Gmail (route /applications/replies), chargées par HTMX. #}
+{% if message %}
+<p class="application-message tone-{{ tone }}" role="status">{{ message }}</p>
+{% endif %}
+{% for reply in replies %}
+<div class="follow-up reply">
+    <span class="badge badge-{{ 'danger' if reply.status == 'REJECTED' else 'success' }}">{{ statuses[reply.status] }}</span>
+    <div class="follow-up-body">
+        <a class="offer-title" href="{{ url_for('show_offer').path }}?source={{ reply.source | urlencode }}&id={{ reply.source_id | urlencode }}">{{ reply.title or "Offre sans titre" }}</a>
+        <p class="muted">{{ reply.company }} · « {{ reply.subject }} »{% if reply.date %} · {{ reply.date.strftime("%d/%m") }}{% endif %}</p>
+    </div>
+    {% for action, label, style in [("apply", "Appliquer", "button-primary"), ("ignore", "Ignorer", "")] %}
+    <form hx-post="{{ url_for('handle_reply').path }}" hx-target="closest .reply" hx-swap="outerHTML">
+        <input type="hidden" name="action" value="{{ action }}">
+        <input type="hidden" name="message_id" value="{{ reply.message_id }}">
+        <input type="hidden" name="source" value="{{ reply.source }}">
+        <input type="hidden" name="id" value="{{ reply.source_id }}">
+        <input type="hidden" name="status" value="{{ reply.status }}">
+        <button class="button {{ style }}" type="submit">{{ label }}</button>
+    </form>
+    {% endfor %}
+</div>
+{% endfor %}

@@ -19,6 +19,7 @@ from job.sources.remotive.source import SOURCE as REMOTIVE
 from job.sources.smartrecruiters.source import SOURCE as SMARTRECRUITERS
 from job.sources.weworkremotely.source import SOURCE as WEWORKREMOTELY
 from job.sources.workable.source import SOURCE as WORKABLE
+from job.sources.workday.source import SOURCE as WORKDAY
 from job.sources.workingnomads.source import SOURCE as WORKINGNOMADS
 
 # L'ordre détermine l'ordre de scraping et d'affichage.
@@ -36,6 +37,7 @@ SOURCES = {
         GREENHOUSE,
         RECRUITEE,
         WORKABLE,
+        WORKDAY,
         JOBICY,
         HIMALAYAS,
         REMOTIVE,

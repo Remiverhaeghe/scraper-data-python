@@ -2,6 +2,7 @@
 
 import requests
 
+from job.geocoding import compute_distance_km
 from utils.api_client import request_json
 from utils.logger import get_logger
 
@@ -89,7 +90,44 @@ def format_revenue(pFinances):
     return rRevenue
 
 
-def describe_company(pResult):
+def find_nearest_site(pResult, pHome):
+    """Retourne la commune et la distance de l'établissement ouvert le plus proche.
+
+    Retourne None sans domicile ou sans établissement placé.
+    """
+
+    if not pHome:
+        return None
+
+    vSites = []
+
+    for vSite in pResult.get("matching_etablissements") or []:
+        try:
+            vPosition = (float(vSite["latitude"]), float(vSite["longitude"]))
+
+        except (KeyError, TypeError, ValueError):
+            continue
+
+        if vSite.get("etat_administratif") != "F":
+            vSites.append(
+                (
+                    compute_distance_km(
+                        (pHome["latitude"], pHome["longitude"]), vPosition
+                    ),
+                    vSite.get("libelle_commune") or "",
+                )
+            )
+
+    rNearest = None
+
+    if vSites:
+        vDistance, vCity = min(vSites)
+        rNearest = {"city": vCity.title(), "distance_km": round(vDistance)}
+
+    return rNearest
+
+
+def describe_company(pResult, pHome=None):
     """Traduit un résultat de l'API en informations lisibles."""
 
     vSiege = pResult.get("siege") or {}
@@ -105,6 +143,8 @@ def describe_company(pResult):
         "city": vSiege.get("libelle_commune"),
         "revenue": format_revenue(pResult.get("finances")),
         "active": pResult.get("etat_administratif") != "C",
+        "sites": pResult.get("nombre_etablissements_ouverts"),
+        "nearest": find_nearest_site(pResult, pHome),
         "url": (
             COMPANY_PAGE_URL.format(siren=pResult["siren"])
             if pResult.get("siren")
@@ -115,8 +155,10 @@ def describe_company(pResult):
     return rCompany
 
 
-def lookup_company(pName):
+def lookup_company(pName, pHome=None):
     """Cherche une entreprise française par son nom ; retourne les meilleurs résultats.
+
+    Avec pHome, chaque entreprise indique son établissement le plus proche.
 
     Lève ValueError avec un message lisible si le service ne répond pas.
     """
@@ -144,7 +186,7 @@ def lookup_company(pName):
         ) from vError
 
     rCompanies = [
-        describe_company(vResult)
+        describe_company(vResult, pHome)
         for vResult in (vData.get("results") or [])[:MAX_COMPANY_RESULTS]
     ]
 
@@ -165,6 +207,17 @@ def summarize_company(pCompany):
         f"créée en {pCompany['created']}" if pCompany["created"] else None,
         f"siège à {pCompany['city'].title()}" if pCompany["city"] else None,
         f"chiffre d'affaires {pCompany['revenue']}" if pCompany["revenue"] else None,
+        (
+            f"{pCompany['sites']} établissement(s) ouvert(s)"
+            if pCompany.get("sites")
+            else None
+        ),
+        (
+            f"le plus proche à {pCompany['nearest']['city']} "
+            f"({pCompany['nearest']['distance_km']} km de chez vous)"
+            if pCompany.get("nearest")
+            else None
+        ),
         None if pCompany["active"] else "fermée",
     ]
 

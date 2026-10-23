@@ -1,12 +1,13 @@
-"""Mon marché : demande et salaires par compétence et par ville, d'après les offres"""
+"""Mon marché : demande et salaires par compétence, région et ville, et leur évolution"""
 
 from datetime import timedelta
 from statistics import median
 
-from job.location import FRANCE
+from job.location import FRANCE, find_region, find_region_in_text
 from job.preparation import get_offer_skills
 from job.presentation import clean_missing_values, format_euros
 from job.profile import load_profile
+from job.self_assessment import KNOWN_LEVEL, MAX_LEVEL
 from job.salary_market import (
     EXCLUDED_CONTRACTS,
     MIN_COMPARABLES,
@@ -24,11 +25,35 @@ MARKET_DAYS = 90
 
 MAX_SKILL_ROWS = 20
 MAX_CITY_ROWS = 10
+MAX_REGION_ROWS = 18
+
+# Compétences demandées et peu maîtrisées proposées en priorité
+MAX_PRIORITY_SKILLS = 5
+
+# Mois repris dans l'évolution du marché
+HISTORY_MONTHS = 6
+
+MONTH_NAMES = (
+    "janv.",
+    "févr.",
+    "mars",
+    "avr.",
+    "mai",
+    "juin",
+    "juil.",
+    "août",
+    "sept.",
+    "oct.",
+    "nov.",
+    "déc.",
+)
 
 # Colonnes des tableaux, communes au bureau et au web
 MARKET_COLUMNS = ["Offres", "Part", "Avec salaire", "Net mensuel médian"]
 SKILL_COLUMNS = ["Compétence", *MARKET_COLUMNS, "Dans mon profil"]
 CITY_COLUMNS = ["Ville", *MARKET_COLUMNS]
+REGION_COLUMNS = ["Région", *MARKET_COLUMNS]
+HISTORY_COLUMNS = ["Mois", "Offres", "Avec vos compétences", "Net mensuel médian"]
 
 
 def summarize_salaries(pSalaries):
@@ -80,30 +105,124 @@ def build_market_cells(pRow, pWithMine=False):
     return rCells
 
 
-def build_market(pDatabaseFile, pNow, pDays=MARKET_DAYS):
-    """Retourne la synthèse du marché : offres, salaires, compétences et villes.
+def load_market_offers(pDatabaseFile, pSince):
+    """Retourne les offres du marché vues depuis pSince.
 
-    Seules les offres en France et en CDI, CDD ou intérim des pDays derniers
-    jours comptent, hors stage, alternance et mission libre, comme le salaire
-    du marché de chaque offre.
+    Seules les offres en France comptent, hors stage, alternance et mission
+    libre, comme pour le salaire du marché de chaque offre.
     """
 
-    vOffers = [
+    rOffers = [
         vOffer
         for vOffer in map(
             clean_missing_values,
             get_offers(
-                pDatabaseFile,
-                pCountry=FRANCE,
-                pSeenSince=pNow - timedelta(days=pDays),
-                pHideIgnored=True,
+                pDatabaseFile, pCountry=FRANCE, pSeenSince=pSince, pHideIgnored=True
             ).to_dict("records"),
         )
         if vOffer.get("contract") not in EXCLUDED_CONTRACTS and not is_training(vOffer)
     ]
 
+    return rOffers
+
+
+def find_priority_skills(pSkills, pLevels):
+    """Retourne les compétences les plus demandées que le profil maîtrise peu.
+
+    Une compétence non évaluée, ou notée sous KNOWN_LEVEL, est à travailler.
+    """
+
+    rPriorities = [
+        {
+            "name": vName,
+            "count": len(vSalaries),
+            "level": pLevels.get(vName) or None,
+            "label": f"{len(vSalaries)} offre(s) · "
+            + (
+                f"niveau {pLevels[vName]}/{MAX_LEVEL}"
+                if pLevels.get(vName)
+                else "non évaluée"
+            ),
+        }
+        for vName, vSalaries in sorted(
+            pSkills.items(), key=lambda pItem: (-len(pItem[1]), pItem[0])
+        )
+        if (pLevels.get(vName) or 0) < KNOWN_LEVEL
+    ][:MAX_PRIORITY_SKILLS]
+
+    return rPriorities
+
+
+def build_market_history(pDatabaseFile, pNow, pMonths=HISTORY_MONTHS):
+    """Retourne, mois par mois, les offres vues, celles qui citent une compétence du
+    profil et leur net mensuel médian.
+    """
+
+    vSkills = set(load_profile(pDatabaseFile)["skills"])
+    vMonths = {}
+    vMonth = pNow.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    for _ in range(pMonths):
+        vMonths[vMonth.strftime("%Y-%m")] = {"offers": 0, "mine": 0, "salaries": []}
+        vSince = vMonth
+        vMonth = (vMonth - timedelta(days=1)).replace(day=1)
+
+    for vOffer in load_market_offers(pDatabaseFile, vSince):
+        vKey = str(vOffer.get("first_seen_at") or "")[:7]
+
+        if vKey not in vMonths:
+            continue
+
+        vMonths[vKey]["offers"] += 1
+        vMonths[vKey]["mine"] += bool(vSkills & set(get_offer_skills(vOffer)))
+
+        if (vSalary := get_net_salary(vOffer)) is not None:
+            vMonths[vKey]["salaries"].append(vSalary)
+
+    vKeys = sorted(vMonths)
+
+    # Les mois vides du début sont retirés : une base récente ne montrerait
+    # sinon que des mois sans offre. Le mois en cours reste.
+    while len(vKeys) > 1 and not vMonths[vKeys[0]]["offers"]:
+        vKeys.pop(0)
+
+    rHistory = [
+        {
+            "month": vKey,
+            "label": f"{MONTH_NAMES[int(vKey[5:]) - 1]} {vKey[:4]}",
+            "offers": vMonths[vKey]["offers"],
+            "mine": vMonths[vKey]["mine"],
+            "median": summarize_salaries(vMonths[vKey]["salaries"]),
+        }
+        for vKey in vKeys
+    ]
+
+    return rHistory
+
+
+def build_history_cells(pMonth):
+    """Retourne les textes d'une ligne de l'évolution du marché."""
+
+    rCells = [
+        pMonth["label"],
+        str(pMonth["offers"]),
+        str(pMonth["mine"]),
+        pMonth["median"],
+    ]
+
+    return rCells
+
+
+def build_market(pDatabaseFile, pNow, pDays=MARKET_DAYS):
+    """Retourne la synthèse du marché des pDays derniers jours : offres,
+    salaires, compétences, régions et villes.
+    """
+
+    vOffers = load_market_offers(pDatabaseFile, pNow - timedelta(days=pDays))
+
     vSkills = {}
     vCities = {}
+    vRegions = {}
     vSalaries = []
 
     for vOffer in vOffers:
@@ -119,6 +238,15 @@ def build_market(pDatabaseFile, pNow, pDays=MARKET_DAYS):
         if vOffer.get("city"):
             vCities.setdefault(vOffer["city"], []).append(vSalary)
 
+        # Région connue une fois l'offre placée sur la carte (job/geocoding.py),
+        # sinon nommée dans le lieu : « Pas-de-Calais, Hauts-de-France ».
+        vRegion = find_region(vOffer.get("french_department")) or find_region_in_text(
+            vOffer.get("location")
+        )
+
+        if vRegion:
+            vRegions.setdefault(vRegion, []).append(vSalary)
+
     vProfile = load_profile(pDatabaseFile)
     vTarget = load_settings(pDatabaseFile)["target_net_salary"]
 
@@ -127,12 +255,15 @@ def build_market(pDatabaseFile, pNow, pDays=MARKET_DAYS):
         "offer_count": len(vOffers),
         "salaried_count": len(vSalaries),
         "unknown_city_count": len(vOffers) - sum(map(len, vCities.values())),
+        "unknown_region_count": len(vOffers) - sum(map(len, vRegions.values())),
         "median": summarize_salaries(vSalaries),
         "target": format_euros(vTarget) if vTarget else None,
         "skills": build_rows(
             vSkills, len(vOffers), MAX_SKILL_ROWS, frozenset(vProfile["skills"])
         ),
         "cities": build_rows(vCities, len(vOffers), MAX_CITY_ROWS),
+        "regions": build_rows(vRegions, len(vOffers), MAX_REGION_ROWS),
+        "priorities": find_priority_skills(vSkills, vProfile.get("skill_levels") or {}),
     }
 
     logger.info(

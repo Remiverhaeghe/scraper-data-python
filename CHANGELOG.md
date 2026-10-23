@@ -5,6 +5,10 @@ dans l'historique git.
 
 ## Non publié
 
+### Application mobile 1.5.0
+- Filtre « Près de chez moi » dans les offres, d'après le rayon des alertes
+- « Voir sur la carte » ouvre OpenStreetMap à l'emplacement de l'offre
+
 ### Application mobile 1.4.0
 - Fiche d'une offre lisible hors ligne : description, compétences couvertes et
   manquantes, salaire ; offres proches de vos candidatures signalées
@@ -28,6 +32,19 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Source Workday (grands groupes) ; Kiabi, Lesaffre et Boulanger suivis sur
+  SmartRecruiters ; recherches « Près de chez moi » prêtes d'un clic
+- Réponses des recruteurs lues dans Gmail, statut proposé ; CV Word adapté à
+  l'offre ; description lue à l'ouverture des offres qui n'en ont pas
+- Mon marché par région, compétences à travailler en priorité, évolution par
+  mois ; annonces en ligne depuis plus de 45 jours signalées ; établissement le
+  plus proche dans la fiche entreprise
+- Placement de toutes les offres en une fois, département gardé (migration v28)
+- Réessai après un refus 429 ou 503, message d'erreur des API conservé ;
+  Careerjet indique l'adresse IP à déclarer ; progression site par site
+- Corrections : un statut venu du téléphone n'efface plus les notes ni la date
+  d'entretien ; le télétravail enregistré en base est bien gardé par le rayon
+  des alertes
 - SmartRecruiters : 50 descriptions lues au plus par entreprise, une recherche
   sans mot-clé ne reste plus plusieurs minutes sur un grand groupe
 - Entités HTML (« &amp; ») décodées dans les titres et entreprises de toutes les

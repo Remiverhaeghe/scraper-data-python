@@ -21,7 +21,8 @@ PLATFORMS = {
     "smartrecruiters": (
         "SmartRecruiters",
         "SMARTRECRUITERS_COMPANIES",
-        "Alten,Assystem,Eurofins,Loxam,Trigo,BoschGroup,SaintGobain,Ubisoft2",
+        "Alten,Assystem,Eurofins,Loxam,Trigo,BoschGroup,SaintGobain,Ubisoft2,"
+        "Kiabi,Lesaffre,Boulanger",
         "jobs.smartrecruiters.com/<identifiant>",
     ),
     "lever": (
@@ -53,6 +54,14 @@ PLATFORMS = {
         "WORKABLE_ACCOUNTS",
         "",
         "apply.workable.com/<compte>",
+    ),
+    # Grands groupes : [Nom=]hôte/tenant/site, lu dans l'adresse du site carrière
+    "workday": (
+        "Workday",
+        "WORKDAY_SITES",
+        "Valeo=valeo.wd3/valeo/valeo_jobs,Airbus=ag.wd3/ag/Airbus,"
+        "LFB=lfb.wd3/lfb/LFB_External_Careers,Néosoft=neosoft.wd3/neosoft/neo-soft",
+        "<hôte>.myworkdayjobs.com/<site> : hôte/tenant/site",
     ),
 }
 
@@ -136,10 +145,14 @@ def count_published_offers(pPlatform, pCompany):
         from job.sources.recruitee.client import get_offers
 
         rCount = len(get_offers(pCompany))
-    else:
+    elif pPlatform == "workable":
         from job.sources.workable.client import get_account
 
         rCount = len(get_account(pCompany).get("jobs", []))
+    else:
+        from job.sources.workday.client import parse_site, search_jobs
+
+        rCount = search_jobs(parse_site(pCompany), None, 0).get("total", 0)
 
     return rCount
 

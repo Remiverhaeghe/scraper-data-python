@@ -109,3 +109,11 @@ def test_get_cell_color(pKey, pOffer, pTone):
         assert vColor is None
     else:
         assert vColor.name() == COLORS[pTone].lower()
+
+
+def test_old_ad_shows_its_online_days():
+    """Vérifie l'ancienneté affichée à côté de la date de première vue."""
+
+    vOffer = {"first_seen_at": "2026-08-20T08:00:00", "recurring_days": 60}
+
+    assert format_cell(vOffer, "first_seen_at").endswith("en ligne depuis 60 j")

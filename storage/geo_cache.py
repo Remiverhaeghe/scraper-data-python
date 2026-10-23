@@ -24,7 +24,23 @@ def get_cached_locations(pDatabaseFile):
     return rLocations
 
 
-def save_location(pDatabaseFile, pKey, pCoordinates, pLabel, pNow):
+def get_cached_departments(pDatabaseFile):
+    """Retourne le département de chaque lieu cherché : clé vers numéro, ou None."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rDepartments = dict(
+            vConnection.execute("SELECT location_key, department FROM geo_cache")
+        )
+
+    finally:
+        vConnection.close()
+
+    return rDepartments
+
+
+def save_location(pDatabaseFile, pKey, pCoordinates, pLabel, pNow, pDepartment=None):
     """Garde le résultat d'une recherche de lieu ; pCoordinates None s'il est inconnu."""
 
     vLatitude, vLongitude = pCoordinates or (None, None)
@@ -33,15 +49,25 @@ def save_location(pDatabaseFile, pKey, pCoordinates, pLabel, pNow):
     try:
         vConnection.execute(
             """
-            INSERT INTO geo_cache (location_key, latitude, longitude, label, looked_up_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO geo_cache (
+                location_key, latitude, longitude, label, looked_up_at, department
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(location_key) DO UPDATE SET
                 latitude = excluded.latitude,
                 longitude = excluded.longitude,
                 label = excluded.label,
-                looked_up_at = excluded.looked_up_at
+                looked_up_at = excluded.looked_up_at,
+                department = excluded.department
             """,
-            (pKey, vLatitude, vLongitude, pLabel, pNow.isoformat(timespec="seconds")),
+            (
+                pKey,
+                vLatitude,
+                vLongitude,
+                pLabel,
+                pNow.isoformat(timespec="seconds"),
+                pDepartment,
+            ),
         )
         vConnection.commit()
 
@@ -50,7 +76,10 @@ def save_location(pDatabaseFile, pKey, pCoordinates, pLabel, pNow):
 
 
 def get_offers_to_locate(pDatabaseFile, pCountry):
-    """Retourne la source, l'identifiant et le lieu des offres du pays sans position."""
+    """Retourne la source, l'identifiant et le lieu des offres du pays à placer.
+
+    Une offre placée avant que le département soit gardé l'est de nouveau.
+    """
 
     vConnection = connect_database(pDatabaseFile)
 
@@ -59,7 +88,9 @@ def get_offers_to_locate(pDatabaseFile, pCountry):
             """
             SELECT source, source_id, location
             FROM job_offer
-            WHERE country = ? AND latitude IS NULL AND COALESCE(location, '') != ''
+            WHERE country = ?
+            AND (latitude IS NULL OR french_department IS NULL)
+            AND COALESCE(location, '') != ''
             """,
             (pCountry,),
         ).fetchall()
@@ -71,13 +102,13 @@ def get_offers_to_locate(pDatabaseFile, pCountry):
 
 
 def save_offer_positions(pDatabaseFile, pPositions):
-    """Enregistre la position des offres, données par (latitude, longitude, source, id)."""
+    """Enregistre la position des offres : (latitude, longitude, département, source, id)."""
 
     vConnection = connect_database(pDatabaseFile)
 
     try:
         vConnection.executemany(
-            "UPDATE job_offer SET latitude = ?, longitude = ?"
+            "UPDATE job_offer SET latitude = ?, longitude = ?, french_department = ?"
             " WHERE source = ? AND source_id = ?",
             pPositions,
         )

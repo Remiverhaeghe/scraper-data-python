@@ -2,8 +2,24 @@
 // manquantes, description, et lien vers l'annonce.
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../theme.dart';
+
+/// Adresse OpenStreetMap centrée sur l'offre, ou null sans position connue.
+Uri? buildMapUri(Map<String, dynamic> pOffer) {
+  final vLatitude = pOffer['latitude'];
+  final vLongitude = pOffer['longitude'];
+
+  final rUri = vLatitude is num && vLongitude is num
+      ? Uri.https('www.openstreetmap.org', '/', {
+          'mlat': '$vLatitude',
+          'mlon': '$vLongitude',
+        }).replace(fragment: 'map=14/$vLatitude/$vLongitude')
+      : null;
+
+  return rUri;
+}
 
 class OfferDetailScreen extends StatelessWidget {
   const OfferDetailScreen({super.key, required this.offer, required this.onOpen});
@@ -26,6 +42,7 @@ class OfferDetailScreen extends StatelessWidget {
       offer['salary'],
     ].where((vValue) => vValue != null && '$vValue'.isNotEmpty).join(' · ');
     final vDescription = '${offer['description'] ?? ''}'.trim();
+    final vMapUri = buildMapUri(offer);
 
     final rScreen = Scaffold(
       appBar: AppBar(title: const Text('Offre')),
@@ -66,6 +83,14 @@ class OfferDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.open_in_new),
             label: const Text("Ouvrir l'annonce"),
           ),
+          if (vMapUri != null) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => launchUrl(vMapUri, mode: LaunchMode.externalApplication),
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Voir sur la carte'),
+            ),
+          ],
         ],
       ),
     );

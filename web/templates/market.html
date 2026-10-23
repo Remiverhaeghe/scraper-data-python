@@ -14,6 +14,24 @@
     {{ ui.stat(market.target or "À régler", "Votre salaire visé", "target", "purple", none if market.target else url_for('show_settings').path) }}
 </section>
 
+{% if market.priorities %}
+<article class="card section-gap">
+    <h2>{{ icon("target") }} À travailler en priorité</h2>
+    <p class="card-subtitle">Compétences les plus demandées que vous n'avez pas évaluées, ou notées sous 5 : à réviser, ou à évaluer dans Profil</p>
+    <ul class="checklist">
+        {% for skill in market.priorities %}
+        <li><a href="{{ url_for('show_profile').path }}">{{ skill.name }}</a> <span class="muted">{{ skill.label }}</span></li>
+        {% endfor %}
+    </ul>
+</article>
+{% endif %}
+
+<article class="card section-gap">
+    <h2>Évolution du marché</h2>
+    <p class="card-subtitle">Offres vues chaque mois, et celles qui citent une compétence de votre profil</p>
+    {{ ui.bar_chart(history_chart, "Offres par mois") }}
+</article>
+
 {% for title, subtitle, columns, rows in tables %}
 <article class="card section-gap">
     <h2>{{ title }}</h2>

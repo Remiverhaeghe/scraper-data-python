@@ -30,6 +30,7 @@ from job.companies import (
 )
 from job.company_info import lookup_company, summarize_company
 from job.contract import CONTRACT_TYPES
+from job.cv_export import build_cv_file_name, build_tailored_cv, write_docx
 from job.deduplication import (
     COMPARED_FIELDS,
     MERGED,
@@ -56,6 +57,7 @@ from job.manual_offers import (
     list_import_problems,
 )
 from job.offer_comparison import load_comparison_keys
+from job.offer_details import fetch_missing_description
 from job.offer_filters import OfferFilterChoices, build_offer_filters
 from job.preparation import (
     MATCH_FILTERS,
@@ -462,7 +464,9 @@ def show_offer(
 ):
     """Affiche la fiche détaillée d'une offre et son suivi."""
 
-    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    vOffer = fetch_missing_description(
+        pDatabaseFile, get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    )
 
     vSettings = load_settings(pDatabaseFile)
     vNewSince = datetime.now() - timedelta(days=vSettings["new_offer_days"])
@@ -564,7 +568,7 @@ def show_company_info(
     vContext = {"companies": [], "message": None}
 
     try:
-        vCompanies = lookup_company(vOffer.get("company"))
+        vCompanies = lookup_company(vOffer.get("company"), load_home(pDatabaseFile))
 
     except ValueError as vException:
         vContext["message"] = str(vException)
@@ -607,6 +611,34 @@ def build_description_context(pOffer, pTranslated=False):
     }
 
     return rContext
+
+
+@router.get("/offer/cv")
+def download_tailored_cv(
+    pSource: str = Query(alias="source"),
+    pSourceId: str = Query(alias="id"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Télécharge le CV du profil réordonné pour l'offre, au format Word."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    vProfile = load_profile(pDatabaseFile)
+
+    if is_profile_empty(vProfile):
+        raise HTTPException(status_code=400, detail="Profil vide : rien à exporter.")
+
+    rResponse = Response(
+        write_docx(build_tailored_cv(vProfile, vOffer)),
+        media_type=(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ),
+        headers={
+            "Content-Disposition": "attachment; filename*=UTF-8''"
+            + quote(build_cv_file_name(vOffer))
+        },
+    )
+
+    return rResponse
 
 
 @router.get("/offer/translation", response_class=HTMLResponse)

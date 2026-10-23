@@ -41,3 +41,20 @@ def test_add_freshness_and_tone():
         "warning",
         "muted",
     ]
+
+
+def test_old_ads_still_online_are_flagged():
+    """Vérifie l'ancienneté, doublons compris, signalée au-delà de 45 jours."""
+
+    vOffers = [
+        {
+            "first_seen_at": "2026-10-10T08:00:00",
+            "duplicates": [{"first_seen_at": "2026-08-20T08:00:00"}],
+        },
+        {"first_seen_at": "2026-10-01T08:00:00"},
+        {},
+    ]
+
+    add_freshness(vOffers, NOW)
+
+    assert [vOffer["recurring_days"] for vOffer in vOffers] == [60, None, None]

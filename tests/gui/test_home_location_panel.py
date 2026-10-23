@@ -26,7 +26,7 @@ def test_home_is_saved_then_offers_are_located(qt_application, tmp_path, monkeyp
     )
     monkeypatch.setattr(
         home_location_panel,
-        "locate_offers",
+        "locate_all_offers",
         lambda *pArgs: {"located": 4, "lookups": 2, "unknown": 0},
     )
 
@@ -85,7 +85,7 @@ def test_location_failure_is_reported(qt_application, tmp_path, monkeypatch):
     def fail(*_pArgs):
         raise OSError("disque")
 
-    monkeypatch.setattr(home_location_panel, "locate_offers", fail)
+    monkeypatch.setattr(home_location_panel, "locate_all_offers", fail)
     vPanel.run_location()
 
     assert vReports == [None]

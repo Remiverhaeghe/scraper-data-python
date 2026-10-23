@@ -127,11 +127,22 @@ def scrape_each(pNames, pScrape, pMaxItems, pLabel):
     vFrames = []
     vError = None
 
-    for vName in [vName.strip() for vName in pNames.split(",") if vName.strip()]:
+    vNames = [vName.strip() for vName in pNames.split(",") if vName.strip()]
+
+    for vIndex, vName in enumerate(vNames, start=1):
         vRemaining = None if pMaxItems is None else pMaxItems - sum(map(len, vFrames))
 
         if vRemaining is not None and vRemaining <= 0:
+            logger.info(
+                "%s : limite d'offres atteinte, %s site(s) non lu(s)",
+                pLabel,
+                len(vNames) - vIndex + 1,
+            )
             break
+
+        # Une source peut lire plusieurs minutes par grand site : le rang montre
+        # dans le journal que la recherche avance.
+        logger.info("%s : site %s (%s/%s)", pLabel, vName, vIndex, len(vNames))
 
         try:
             vFrames.append(pScrape(vName, vRemaining))

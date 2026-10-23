@@ -862,6 +862,16 @@ def migrate_to_v27(pConnection):
     logger.info("Entités HTML décodées : %s offre(s)", len(vUpdates))
 
 
+def migrate_to_v28(pConnection):
+    """Garde le département des lieux et des offres placées, pour Mon marché par région.
+
+    Les lieux déjà cherchés le reçoivent au prochain placement des offres.
+    """
+
+    pConnection.execute("ALTER TABLE geo_cache ADD COLUMN department TEXT")
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN french_department TEXT")
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -890,6 +900,7 @@ MIGRATIONS = [
     migrate_to_v25,
     migrate_to_v26,
     migrate_to_v27,
+    migrate_to_v28,
 ]
 
 

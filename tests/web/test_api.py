@@ -10,7 +10,7 @@ from job.mobile_sync import renew_mobile_token
 from job.quiz import load_active_quiz
 from job.quiz_exam import load_exam_results
 from storage.database import initialize_database
-from storage.job_applications import get_application
+from storage.job_applications import get_application, save_application
 from storage.job_offers import save_offers
 from web.app import app, get_database_file
 
@@ -164,3 +164,22 @@ def test_offers_and_status_changes_from_the_phone(api, tmp_path):
 
     assert vReport == {"applied": 1, "rejected": ["lever/absente", "lever/1"]}
     assert get_application(vDatabaseFile, "lever", "1")["status"] == "APPLIED"
+
+    # Une candidature suivie garde ses notes et sa date d'entretien.
+    save_application(
+        vDatabaseFile,
+        "lever",
+        "1",
+        "APPLIED",
+        pNotes="Contact : la RH",
+        pInterviewAt=datetime(2026, 11, 3, 10),
+    )
+    api.post(
+        "/api/v1/applications",
+        json={"changes": [{"source": "lever", "source_id": "1", "status": "IGNORED"}]},
+    )
+    vApplication = get_application(vDatabaseFile, "lever", "1")
+
+    assert vApplication["status"] == "IGNORED"
+    assert vApplication["notes"] == "Contact : la RH"
+    assert vApplication["interview_at"] == "2026-11-03T10:00"
