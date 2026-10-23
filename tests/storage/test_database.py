@@ -12,6 +12,7 @@ from storage.database import (
     initialize_database,
     count_by_day,
     migrate_to_v1,
+    migrate_to_v27,
 )
 
 
@@ -481,7 +482,8 @@ def test_migration_to_v22_decodes_adzuna_html_and_finds_agency(tmp_path):
     assert vRows == [
         ("Électricien H/F", "PROMAN", "Votre agence d’intérim PROMAN recrute"),
         ("Soudeur", "Acme", "Soudure & montage"),
-        ("Dev &amp; Ops", None, "x"),
+        # Hors Adzuna, seul le titre est décodé, par la migration v27.
+        ("Dev & Ops", None, "x"),
     ]
 
 
@@ -504,3 +506,35 @@ def test_offers_list_uses_the_discovery_date_index(tmp_path):
 
     assert "idx_job_offer_first_seen" in vPlan
     assert "TEMP B-TREE" not in vPlan
+
+
+def test_migration_to_v27_decodes_html_entities(tmp_path):
+    """Vérifie le décodage des titres déjà enregistrés et le recalcul de l'empreinte."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vConnection.execute("""
+            INSERT INTO job_offer (
+                source, source_id, first_seen_at, last_seen_at, title, company,
+                fingerprint, detected_skills
+            )
+            VALUES (
+                'findwork', '1', '2026-10-01', '2026-10-01',
+                'Data &amp; Python', 'R&amp;D', 'ancienne', '["Python"]'
+            )
+            """)
+        migrate_to_v27(vConnection)
+
+        vRow = vConnection.execute(
+            "SELECT title, company, fingerprint, detected_skills FROM job_offer"
+        ).fetchone()
+
+    finally:
+        vConnection.close()
+
+    assert vRow[:2] == ("Data & Python", "R&D")
+    assert vRow[2] != "ancienne"
+    assert vRow[3] is None

@@ -813,6 +813,55 @@ def migrate_to_v26(pConnection):
     pConnection.execute("ALTER TABLE job_offer ADD COLUMN detected_skills TEXT")
 
 
+def migrate_to_v27(pConnection):
+    """Décode les entités HTML (&amp;) des titres et entreprises déjà enregistrés.
+
+    Findwork, Arbeitnow ou La bonne alternance les envoient encodées ; elles le
+    sont désormais à la complétion des offres (job/completion.py). L'empreinte
+    est recalculée sur le titre décodé, les compétences le seront au prochain
+    passage.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    from job.completion import decode_text
+    from job.fingerprint import build_fingerprint
+
+    vRows = pConnection.execute("""
+        SELECT source, source_id, title, company, location
+        FROM job_offer
+        WHERE title LIKE '%&%;%' OR company LIKE '%&%;%'
+        """).fetchall()
+
+    vUpdates = []
+
+    for vSource, vSourceId, vTitle, vCompany, vLocation in vRows:
+        vOffer = {
+            "title": decode_text(vTitle),
+            "company": decode_text(vCompany),
+            "location": vLocation,
+        }
+        vUpdates.append(
+            (
+                vOffer["title"],
+                vOffer["company"],
+                build_fingerprint(vOffer),
+                vSource,
+                vSourceId,
+            )
+        )
+
+    pConnection.executemany(
+        """
+        UPDATE job_offer
+        SET title = ?, company = ?, fingerprint = ?, detected_skills = NULL
+        WHERE source = ? AND source_id = ?
+        """,
+        vUpdates,
+    )
+
+    logger.info("Entités HTML décodées : %s offre(s)", len(vUpdates))
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -840,6 +889,7 @@ MIGRATIONS = [
     migrate_to_v24,
     migrate_to_v25,
     migrate_to_v26,
+    migrate_to_v27,
 ]
 
 

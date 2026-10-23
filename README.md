@@ -1042,6 +1042,7 @@ scraper-data-python/
 │   │   ├── test_quality.py                    # Teste l'analyse de qualité et son export
 │   │   ├── test_search_presets.py             # Teste les recherches Industrie
 │   │   ├── test_enrichment.py                 # Teste l'enrichissement depuis la description
+│   │   ├── test_completion.py                 # Teste le décodage des titres et entreprises
 │   │   ├── test_deduplication.py              # Teste l'empreinte et le regroupement des annonces
 │   │   ├── test_preparation.py                # Teste le profil et la préparation de candidature
 │   │   ├── test_salary_market.py              # Teste le salaire du marché

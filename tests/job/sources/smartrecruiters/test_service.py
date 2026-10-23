@@ -92,3 +92,27 @@ def test_unavailable_detail_keeps_the_posting(monkeypatch):
 
     assert len(vJobs) == 1
     assert vJobs.iloc[0]["url"].endswith("/Loxam/744000154883219")
+
+
+def test_descriptions_are_capped_per_company(monkeypatch):
+    """Vérifie le plafond des descriptions : les offres suivantes restent gardées."""
+
+    vPostings = [{**POSTING, "id": str(vIndex)} for vIndex in range(4)]
+    vDetails = []
+    monkeypatch.setattr(service, "MAX_DESCRIPTIONS", 2)
+    monkeypatch.setattr(
+        service,
+        "get_postings",
+        lambda *_pArgs: {"content": vPostings, "totalFound": 4},
+    )
+    monkeypatch.setattr(
+        service,
+        "get_posting",
+        lambda _pCompany, pId: vDetails.append(pId) or DETAIL,
+    )
+
+    vJobs = scrape_jobs("Loxam", "fr", pMaxItems=500)
+
+    assert vDetails == ["0", "1"]
+    assert len(vJobs) == 4
+    assert vJobs["description"].isna().tolist() == [False, False, True, True]

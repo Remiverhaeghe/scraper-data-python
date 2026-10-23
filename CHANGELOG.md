@@ -28,6 +28,10 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- SmartRecruiters : 50 descriptions lues au plus par entreprise, une recherche
+  sans mot-clé ne reste plus plusieurs minutes sur un grand groupe
+- Entités HTML (« &amp; ») décodées dans les titres et entreprises de toutes les
+  sources, offres déjà enregistrées reprises (migration v27)
 - Page Mon marché : demande et net mensuel médian par compétence et par ville
 - Liste « À faire » sur l'accueil, explication du score de correspondance
 - Carte web : raccourcis de correspondance et pastilles proportionnées au score

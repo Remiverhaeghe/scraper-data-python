@@ -15,8 +15,13 @@ logger = get_logger(__name__)
 # celles qui correspondent, sans parcourir les milliers d'offres d'un grand groupe.
 MAX_PAGES = 5
 
-# Une description demande un appel par offre : leur nombre est plafonné.
+# Offres gardées par entreprise sans limite donnée par la recherche
 DEFAULT_MAX_DETAILS = 25
+
+# Une description demande un appel par offre, l'un après l'autre : au-delà, une
+# recherche sans mot-clé passait plusieurs minutes par grand groupe. Les offres
+# suivantes sont gardées avec les champs de la liste, sans description.
+MAX_DESCRIPTIONS = 50
 
 
 def matches_listing(pJob, pKeyword):
@@ -55,7 +60,12 @@ def add_descriptions(pJobs, pCompany):
     vDescriptions = []
     vUrls = []
 
-    for vJob in pJobs.to_dict("records"):
+    for vIndex, vJob in enumerate(pJobs.to_dict("records")):
+        if vIndex >= MAX_DESCRIPTIONS:
+            vDescriptions.append(None)
+            vUrls.append(vJob["url"])
+            continue
+
         try:
             vDetail = get_posting(pCompany, vJob["source_id"])
 
@@ -70,6 +80,14 @@ def add_descriptions(pJobs, pCompany):
 
         vDescriptions.append(read_description(vDetail))
         vUrls.append(vDetail.get("postingUrl") or vJob["url"])
+
+    if len(pJobs) > MAX_DESCRIPTIONS:
+        logger.info(
+            "SmartRecruiters %s : description lue pour %s offre(s) sur %s",
+            pCompany,
+            MAX_DESCRIPTIONS,
+            len(pJobs),
+        )
 
     rJobs = pJobs.assign(description=vDescriptions, url=vUrls)
 
