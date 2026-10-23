@@ -5,7 +5,7 @@ du serveur JobBoard Perso, corrige les réponses sur le téléphone, les garde s
 réseau, puis les envoie à la synchronisation suivante. Le serveur recalcule chaque
 correction : la progression reste la même sur le PC, le web et le téléphone.
 
-Pris en charge : QCM, calculs avec unité, remises en ordre et associations, schémas
+Pris en charge : QCM, calculs avec unité, remises en ordre, associations et revues de code, schémas
 SVG, extraits de code, guides pratiques, répétition espacée (boîtes de Leitner),
 examen blanc chronométré (tous thèmes ou un thème), synchronisation automatique à
 l'ouverture, au retour dans l'application et toutes les dix réponses, rappel
@@ -185,6 +185,7 @@ mobile/
     ├── phone_features_test.dart  # Teste signalements, examens, objectif, candidatures et offres
     ├── offer_alerts_test.dart    # Teste l'alerte des nouvelles offres bien notées
     ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond
+    ├── review_input_test.dart    # Teste la saisie d'une revue de code
     ├── integration/
     │   └── server_sync_test.dart # Synchronisation avec le vrai serveur (CI seulement)
     ├── schema_view_test.dart     # Teste la description et le plein écran des schémas

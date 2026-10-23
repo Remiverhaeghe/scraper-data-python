@@ -83,7 +83,7 @@ CLIENT_ID_PATTERN = re.compile(r"[A-Za-z0-9-]{8,64}")
 
 # Types interactifs envoyés au téléphone, à part des QCM : une application qui ne
 # les connaît pas encore ignore simplement la liste qui les contient.
-MOBILE_INTERACTIVE_TYPES = ("numerique", "ordre", "association")
+MOBILE_INTERACTIVE_TYPES = ("numerique", "ordre", "association", "revue")
 
 # Une réponse datée de plus loin est refusée : horloge du téléphone déréglée.
 MAX_CLOCK_DRIFT = timedelta(days=1)
@@ -297,7 +297,7 @@ def build_progress(pDatabaseFile, pNow):
 def grade_synced_response(pQuestion, pResponse, pClientId):
     """Corrige la réponse du téléphone à une question interactive ; retourne si elle est juste."""
 
-    # Calcul : texte court ou nombre ; ordre et association : liste d'indices.
+    # Calcul : texte court ou nombre ; ordre, association, revue : liste d'indices.
     vReadable = (
         isinstance(pResponse, (str, int, float))
         and not isinstance(pResponse, bool)

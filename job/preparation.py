@@ -7,6 +7,7 @@ l'application et aucun service payant n'est utilisé.
 from job.enrichment import detect_skills
 from job.fingerprint import GENDER_MARKERS
 from job.presentation import to_list
+from job.self_assessment import get_assessed_skills
 from job.star_answers import select_star_answers, suggest_star_questions
 
 # Questions toujours utiles en fin d'entretien
@@ -85,7 +86,10 @@ def expand_skills(pSkills):
 def match_profile(pProfile, pOfferSkills):
     """Retourne les compétences couvertes, manquantes et le score de correspondance."""
 
-    vProfileSkills = expand_skills(pProfile["skills"])
+    # Compétences du profil, et celles notées assez haut dans l'auto-évaluation
+    vProfileSkills = expand_skills(
+        [*pProfile["skills"], *get_assessed_skills(pProfile)]
+    )
     vCovered = [
         vSkill for vSkill in pOfferSkills if contains_skill(vProfileSkills, vSkill)
     ]

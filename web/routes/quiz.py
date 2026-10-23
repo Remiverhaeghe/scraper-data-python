@@ -61,6 +61,8 @@ from job.quiz_exam import (
     stop_exam,
     summarize_exam,
 )
+from job.profile import load_profile
+from job.self_assessment import find_weak_themes
 from job.quiz_generation import (
     build_empty_priority_themes,
     DEFAULT_GENERATION_COUNT,
@@ -191,6 +193,7 @@ def render_quiz(
             "groups": group_themes(vThemes, pDomain, pSubdomain),
             "categories": count_categories(vThemes),
             "empty_priorities": build_empty_priority_themes(pDatabaseFile, vQuiz),
+            "weak_themes": find_weak_themes(load_profile(pDatabaseFile), vQuiz),
             "empty_themes": [
                 vTheme
                 for vTheme in load_catalog()

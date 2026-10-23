@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from job.quiz import load_quiz
 from job.quiz_exam import (
     EXAM_QUESTION_COUNT,
     answer_exam,
@@ -24,8 +23,17 @@ from job.quiz_exam import (
 )
 from storage.database import initialize_database
 from storage.settings_repository import save_setting_values
+from tests.conftest import load_qcm_quiz
 
 NOW = datetime(2026, 10, 12, 10, 0)
+
+
+def get_wrong_choice(pQuestion):
+    """Retourne l'indice d'un mauvais choix, quelle que soit la place du bon."""
+
+    rChoice = (pQuestion["answer"] + 1) % len(pQuestion["choices"])
+
+    return rChoice
 
 
 @pytest.fixture
@@ -42,7 +50,7 @@ def database_file(tmp_path):
 def test_exam_runs_from_start_to_summary(database_file):
     """Vérifie un examen complet : tirage, réponses justes et fausses, résultat."""
 
-    vQuiz = load_quiz()
+    vQuiz = load_qcm_quiz()
     # Les thèmes livrés sont tous informatiques : l'industrie n'a aucune question.
     with pytest.raises(ValueError, match="Aucune question"):
         start_exam(database_file, vQuiz, "Industrie", NOW)
@@ -57,7 +65,9 @@ def test_exam_runs_from_start_to_summary(database_file):
         assert vQuestion["position"] == vIndex + 1
 
         # Une réponse sur deux juste
-        vChoice = vQuestion["answer"] if vIndex % 2 == 0 else 1 - vQuestion["answer"]
+        vChoice = (
+            vQuestion["answer"] if vIndex % 2 == 0 else get_wrong_choice(vQuestion)
+        )
         vResult, vExam = answer_exam(
             database_file, vQuiz, vChoice, NOW + timedelta(minutes=vIndex + 1)
         )
@@ -85,7 +95,7 @@ def test_exam_runs_from_start_to_summary(database_file):
 def test_exam_skips_deleted_question_and_reports_overtime(database_file):
     """Vérifie qu'une question disparue est passée et le dépassement de durée signalé."""
 
-    vQuiz = load_quiz()
+    vQuiz = load_qcm_quiz()
     start_exam(database_file, vQuiz, None, NOW, random.Random(2))
 
     vResult, vExam = answer_exam(database_file, {}, 0, NOW)
@@ -122,7 +132,7 @@ def test_unreadable_exam_is_ignored(database_file, caplog):
 def test_finished_exam_is_kept_with_its_offer(database_file):
     """Vérifie la note gardée pour l'offre et le compte à rebours."""
 
-    vQuiz = load_quiz()
+    vQuiz = load_qcm_quiz()
     vExam = start_exam(
         database_file,
         vQuiz,
@@ -175,7 +185,7 @@ def test_exam_history_goes_from_oldest_to_latest():
 def test_error_review_restarts_on_wrong_questions(database_file):
     """Vérifie l'examen limité aux erreurs, sans offre, et le refus sans erreur."""
 
-    vQuiz = load_quiz()
+    vQuiz = load_qcm_quiz()
     start_exam(
         database_file,
         vQuiz,
@@ -187,7 +197,7 @@ def test_error_review_restarts_on_wrong_questions(database_file):
 
     for vIndex in range(EXAM_QUESTION_COUNT):
         vQuestion = get_exam_question(vQuiz, load_exam(database_file))
-        vChoice = vQuestion["answer"] if vIndex % 4 else 1 - vQuestion["answer"]
+        vChoice = vQuestion["answer"] if vIndex % 4 else get_wrong_choice(vQuestion)
         answer_exam(database_file, vQuiz, vChoice, NOW + timedelta(minutes=vIndex))
 
     vFinished = load_exam(database_file)

@@ -8,9 +8,10 @@
 {% block content %}
 {{ ui.page_header("Révision", "QCM techniques pour préparer les entretiens, thèmes conseillés selon vos offres", "graduation-cap") }}
 
-{% if empty_priorities and not result and not question %}
+{% if (empty_priorities or weak_themes) and not result and not question %}
 <article class="card section-gap">
     <h2>{{ icon("target") }} À préparer en priorité</h2>
+    {% if empty_priorities %}
     <p class="card-subtitle">Demandés dans vos offres, sans aucune question pour le moment.</p>
     <div class="rules-actions">
         {% for theme_item in empty_priorities %}
@@ -23,6 +24,15 @@
         </form>
         {% endfor %}
     </div>
+    {% endif %}
+    {% if weak_themes %}
+    <p class="card-subtitle">À renforcer d'après votre auto-évaluation (page Profil) :</p>
+    <div class="rules-actions">
+        {% for theme_item in weak_themes %}
+        <a class="button" href="{{ url_for('show_quiz').path }}?theme={{ theme_item.key | urlencode }}&amp;mode=spaced">{{ icon("graduation-cap", 16) }} {{ theme_item.label }} · {{ theme_item.skill }} {{ theme_item.level }}/10</a>
+        {% endfor %}
+    </div>
+    {% endif %}
 </article>
 {% endif %}
 

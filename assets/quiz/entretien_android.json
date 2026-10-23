@@ -1,0 +1,183 @@
+{
+  "theme": "Entretien Android",
+  "skills": ["Android", "Kotlin", "Room", "Jetpack"],
+  "questions": [
+    {
+      "id": "ent-android-cycle-activite",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Une activité s'ouvre, puis l'utilisateur la quitte définitivement : remettez les méthodes appelées dans l'ordre.",
+      "items": ["onCreate", "onStart", "onResume", "onPause", "onStop", "onDestroy"],
+      "explanation": "onCreate construit l'écran, onStart le rend visible, onResume le rend interactif. En sens inverse : onPause (perte du premier plan), onStop (plus visible), onDestroy (fin). onRestart s'intercale avant onStart quand on revient sur une activité arrêtée."
+    },
+    {
+      "id": "ent-android-cycle-fragment",
+      "level": "intermédiaire",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les premières méthodes appelées sur un fragment ajouté à une activité.",
+      "items": ["onAttach", "onCreate", "onCreateView", "onViewCreated", "onStart", "onResume"],
+      "explanation": "Le fragment s'attache d'abord à son activité (onAttach), puis se crée (onCreate), construit sa vue (onCreateView) et la prépare (onViewCreated) avant de devenir visible et actif. onActivityCreated, présent dans les anciens supports d'entretien, est déprécié : on utilise onViewCreated."
+    },
+    {
+      "id": "ent-android-charger-donnees",
+      "level": "intermédiaire",
+      "question": "Les données d'un écran doivent être à jour à chaque retour de l'utilisateur sur cet écran. Où les charger ?",
+      "choices": [
+        "Dans onCreate",
+        "Dans onResume",
+        "Dans onDestroy",
+        "Dans onPause"
+      ],
+      "answer": 1,
+      "explanation": "onCreate ne s'exécute qu'à la création : on y construit l'écran. onStart ou onResume s'exécutent à chaque retour au premier plan : c'est là qu'on recharge des données susceptibles d'avoir changé. Aujourd'hui, un ViewModel avec un flux (LiveData, Flow) observé met l'écran à jour tout seul."
+    },
+    {
+      "id": "ent-android-activite-fragment",
+      "level": "débutant",
+      "question": "Quelle est la différence entre une Activity et un Fragment ?",
+      "choices": [
+        "Un fragment est un écran complet, une activité une portion d'écran",
+        "Un fragment est une portion d'interface réutilisable, hébergée par une activité",
+        "Une activité tourne sans interface visible, tandis qu'un fragment affiche la sienne à l'écran",
+        "Ce sont deux noms de la même classe selon la version d'Android"
+      ],
+      "answer": 1,
+      "explanation": "L'activité est un point d'entrée de l'application qui porte un écran. Un fragment est un morceau d'interface avec son propre cycle de vie, hébergé dans une activité et réutilisable : par exemple liste et détail côte à côte sur tablette, sur deux écrans sur téléphone."
+    },
+    {
+      "id": "ent-android-manifest",
+      "level": "débutant",
+      "question": "À quoi sert le fichier AndroidManifest.xml ?",
+      "choices": [
+        "À déclarer les composants et les permissions de l'application",
+        "À décrire la mise en page de chaque écran et de ses composants visuels",
+        "À traduire les textes de l'application",
+        "À lister les dépendances Gradle du projet"
+      ],
+      "answer": 0,
+      "explanation": "Le manifeste, obligatoire, déclare le nom de l'application, ses activités, services et récepteurs, les permissions demandées et les fonctionnalités requises. Les écrans sont dans res/layout, les traductions dans res/values-xx, les dépendances dans build.gradle."
+    },
+    {
+      "id": "ent-android-permissions",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque permission à ce qu'elle autorise.",
+      "pairs": [
+        ["ACCESS_FINE_LOCATION", "Connaître la position précise"],
+        ["CAMERA", "Prendre une photo"],
+        ["POST_NOTIFICATIONS", "Afficher une notification (Android 13 et plus)"],
+        ["INTERNET", "Appeler une API REST"],
+        ["READ_CONTACTS", "Lire le carnet d'adresses"]
+      ],
+      "explanation": "INTERNET est accordée à l'installation. Les permissions sensibles (position, caméra, contacts, notifications) se demandent en plus à l'exécution, au moment où on en a besoin, et l'utilisateur peut les refuser : l'application doit le prévoir."
+    },
+    {
+      "id": "ent-android-ressources",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque dossier de res/ à son contenu.",
+      "pairs": [
+        ["drawable", "Images et formes dessinées"],
+        ["layout", "Description XML des écrans"],
+        ["values", "Textes, couleurs et styles"],
+        ["values-fr", "Textes traduits en français"],
+        ["drawable-hdpi", "Images pour écrans haute densité"]
+      ],
+      "explanation": "Un suffixe (fr, hdpi, night, land…) cible une configuration : Android choisit seul le bon dossier selon la langue, la densité de l'écran, le thème sombre ou l'orientation."
+    },
+    {
+      "id": "ent-android-room",
+      "level": "débutant",
+      "question": "Quelle bibliothèque Jetpack Google recommande-t-il pour utiliser SQLite ?",
+      "choices": [
+        "Room",
+        "Hibernate",
+        "JDBC",
+        "Realm"
+      ],
+      "answer": 0,
+      "explanation": "Android embarque SQLite. Room (Jetpack) l'enveloppe : entités annotées, requêtes vérifiées à la compilation, migrations, résultats observables. Hibernate et JDBC visent le serveur ; Realm est une autre base, sans SQLite."
+    },
+    {
+      "id": "ent-android-tache-fond",
+      "level": "intermédiaire",
+      "question": "Quelle API remplace AsyncTask, abandonnée, pour une synchronisation qui doit aboutir même application fermée ?",
+      "choices": [
+        "Thread.sleep dans l'activité",
+        "Un Handler sur le thread principal",
+        "WorkManager",
+        "Un Timer"
+      ],
+      "answer": 2,
+      "explanation": "WorkManager planifie un travail garanti : il survit à la fermeture de l'application et au redémarrage du téléphone, et respecte des contraintes (réseau disponible, batterie). Pour un travail lié à l'écran, on utilise les coroutines Kotlin dans un ViewModel. AsyncTask est déprécié depuis Android 11."
+    },
+    {
+      "id": "ent-android-thread-principal",
+      "level": "intermédiaire",
+      "question": "Pourquoi un appel réseau ne doit-il pas se faire sur le thread principal ?",
+      "choices": [
+        "Le réseau y est plus lent",
+        "Il bloquerait l'interface : Android lève NetworkOnMainThreadException",
+        "Les appels réseau y sont refusés par la politique de sécurité des permissions",
+        "Le thread principal n'a pas accès à Internet"
+      ],
+      "answer": 1,
+      "explanation": "Le thread principal dessine l'interface et traite les gestes. Un appel réseau qui l'occupe figerait l'écran, jusqu'au message « L'application ne répond pas ». Android l'interdit donc. On fait l'appel en arrière-plan puis on revient sur le thread principal pour afficher : runOnUiThread autrefois, coroutines et Dispatchers.Main aujourd'hui."
+    },
+    {
+      "id": "ent-android-verbe-put",
+      "level": "débutant",
+      "question": "Dans une API REST, quel verbe HTTP remplace entièrement une ressource existante ?",
+      "choices": [
+        "GET",
+        "PUT",
+        "DELETE",
+        "HEAD"
+      ],
+      "answer": 1,
+      "explanation": "REST identifie les ressources par leur URI et les opérations par le verbe : GET lit, POST crée, PUT remplace, PATCH modifie en partie, DELETE supprime. Le code de retour dit le résultat (200, 201 créé, 404 introuvable, 401 non authentifié) et le corps porte la représentation, souvent en JSON."
+    },
+    {
+      "id": "ent-android-xml-ou-code",
+      "level": "intermédiaire",
+      "question": "Construire un écran en XML ou en code : quelle réponse défend-on le mieux en entretien ?",
+      "choices": [
+        "Tout en code Kotlin, le XML étant déprécié depuis l'arrivée de Compose",
+        "XML pour la structure, code pour ce qui dépend des données",
+        "Tout en XML, le code est interdit",
+        "Peu importe, le rendu est identique"
+      ],
+      "answer": 1,
+      "explanation": "Le XML se lit et se prévisualise facilement ; le code gère ce qui varie (listes, états, données). Le bon compromis combine des morceaux réutilisables. Aujourd'hui, Jetpack Compose décrit l'interface en Kotlin de façon déclarative, ce qui change la question : à mentionner."
+    },
+    {
+      "id": "ent-android-revue-activite",
+      "level": "confirmé",
+      "type": "revue",
+      "question": "Quels défauts réels contient cette activité ?",
+      "code": "class OffresActivity : AppCompatActivity() {\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        setContentView(R.layout.offres)\n        val vTexte = URL(\"https://exemple.fr/offres\").readText()\n        afficher(vTexte)\n    }\n}",
+      "choices": [
+        "L'appel réseau se fait sur le thread principal",
+        "Les offres ne sont plus rafraîchies au retour sur l'écran",
+        "Aucune erreur réseau n'est prévue",
+        "setContentView doit précéder super.onCreate",
+        "Une activité ne peut pas lire une URL"
+      ],
+      "answers": [0, 1, 2],
+      "explanation": "L'appel réseau dans onCreate bloque l'interface (et lève NetworkOnMainThreadException). Chargées une seule fois, les offres ne se mettent pas à jour. Sans réseau, readText lève une exception et l'application plante. super.onCreate doit bien venir en premier, et une activité peut tout à fait appeler le réseau, depuis un autre thread."
+    },
+    {
+      "id": "ent-android-classe-view",
+      "level": "débutant",
+      "question": "Quelle classe est le parent commun de TextView, Button et ImageView ?",
+      "choices": [
+        "Activity",
+        "View",
+        "Menu",
+        "Fragment"
+      ],
+      "answer": 1,
+      "explanation": "View est la classe de base de tout composant visuel. Les conteneurs (LinearLayout, ConstraintLayout) héritent de ViewGroup, lui-même une View. Activity et Context fournissent l'environnement, pas des composants visuels."
+    }
+  ]
+}

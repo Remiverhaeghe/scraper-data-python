@@ -45,6 +45,13 @@ class QuestionInput extends StatelessWidget {
           enabled: enabled,
           onChanged: onChanged,
         );
+      case 'revue':
+        rInput = ReviewInput(
+          question: question,
+          random: random,
+          enabled: enabled,
+          onChanged: onChanged,
+        );
       default:
         rInput = ChoiceInput(
           question: question,
@@ -99,6 +106,62 @@ class _ChoiceInputState extends State<ChoiceInput> {
                 setState(() => selected = vIndex);
                 widget.onChanged(vIndex);
               },
+            ),
+          ),
+      ],
+    );
+
+    return rInput;
+  }
+}
+
+/// Revue de code : la réponse liste les indices d'origine des constats cochés,
+/// ou null tant qu'aucun ne l'est.
+class ReviewInput extends StatefulWidget {
+  const ReviewInput({
+    super.key,
+    required this.question,
+    required this.random,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final QuizQuestion question;
+  final Random random;
+  final bool enabled;
+  final ValueChanged<Object?> onChanged;
+
+  @override
+  State<ReviewInput> createState() => _ReviewInputState();
+}
+
+class _ReviewInputState extends State<ReviewInput> {
+  late final order = shuffledIndexes(widget.question.choices.length, widget.random);
+  final checked = <int>{};
+
+  void toggle(int pIndex, bool pChecked) {
+    setState(() => pChecked ? checked.add(pIndex) : checked.remove(pIndex));
+    widget.onChanged(checked.isEmpty ? null : checked.toList());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final vChoices = widget.question.choices;
+
+    final rInput = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8),
+          child: Text('Cochez tous les défauts réels de cet extrait, et eux seuls.'),
+        ),
+        for (final vIndex in order)
+          Card(
+            child: CheckboxListTile(
+              enabled: widget.enabled,
+              value: checked.contains(vIndex),
+              title: Text(vChoices[vIndex]),
+              onChanged: (pValue) => toggle(vIndex, pValue ?? false),
             ),
           ),
       ],

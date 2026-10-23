@@ -1,0 +1,230 @@
+{
+  "questions": [
+    {
+      "id": "sim-patterns",
+      "theme": "Java",
+      "question": "Quels design patterns connaissez-vous ? Donnez un exemple d'utilisation pour l'un d'eux.",
+      "answer": "Je les range en trois familles. Création : Singleton, Factory, Builder. Structure : Adapter, Decorator, Facade, Proxy. Comportement : Observer, Strategy, Command, Template Method. Exemple : un Strategy pour choisir le calcul du salaire net selon le statut, sans enchaîner les if ; ou un Builder pour construire une requête aux nombreux paramètres facultatifs.",
+      "points": [
+        "Classe les patterns en création, structure et comportement",
+        "Cite au moins un pattern de chaque famille",
+        "Donne un cas concret tiré de son expérience",
+        "Explique le problème que le pattern résout"
+      ]
+    },
+    {
+      "id": "sim-principes",
+      "theme": "Java",
+      "question": "Quels sont, selon vous, les principes les plus importants à respecter en développement ?",
+      "answer": "La lisibilité d'abord : un code se lit bien plus souvent qu'il ne s'écrit, donc nommage clair et fonctions courtes. Les principes SOLID, surtout la responsabilité unique et l'inversion des dépendances, qui rendent le code testable. Ne pas dupliquer (DRY) sans tomber dans l'abstraction prématurée (KISS, YAGNI). Et des tests automatisés, plus une gestion d'erreurs et des journaux qui permettent de diagnostiquer en production.",
+      "points": [
+        "Lisibilité et nommage",
+        "SOLID, avec au moins un principe expliqué",
+        "DRY, KISS ou YAGNI",
+        "Tests automatisés",
+        "Gestion des erreurs et journaux"
+      ]
+    },
+    {
+      "id": "sim-equals-hashcode",
+      "theme": "Java",
+      "question": "Expliquez le rôle de equals et de hashCode, et le lien entre les deux.",
+      "answer": "equals dit si deux objets sont égaux en valeur ; par défaut, il compare les références. hashCode donne un entier utilisé par les tables de hachage (HashMap, HashSet) pour ranger l'objet. Le contrat : deux objets égaux selon equals doivent avoir le même hashCode, l'inverse n'étant pas obligatoire. Redéfinir equals sans hashCode casse les HashSet : deux objets égaux y sont stockés en double. On les génère ensemble, sur les mêmes champs, par exemple avec Objects.hash, ou on utilise un record.",
+      "points": [
+        "equals compare en valeur, par défaut les références",
+        "hashCode sert aux tables de hachage",
+        "Égaux selon equals implique même hashCode",
+        "Redéfinir les deux ensemble, sur les mêmes champs",
+        "Conséquence d'un oubli : doublons dans un HashSet"
+      ]
+    },
+    {
+      "id": "sim-nouveautes-java",
+      "theme": "Java",
+      "question": "Citez des nouveautés des versions récentes de Java.",
+      "answer": "Java 8 : lambdas, Stream, Optional, java.time. Java 9 : modules. Java 10 : var. Java 11 (LTS) : client HTTP, méthodes de String. Java 14 à 17 : switch en expression, text blocks, records, classes scellées ; 17 est LTS. Java 21 (LTS) : threads virtuels, pattern matching dans switch, record patterns, collections ordonnées.",
+      "points": [
+        "Java 8 : lambdas et Stream",
+        "Une nouveauté entre Java 9 et 11",
+        "Records ou classes scellées (Java 16, 17)",
+        "Threads virtuels ou pattern matching (Java 21)",
+        "Mentionne les versions LTS"
+      ]
+    },
+    {
+      "id": "sim-bibliotheques",
+      "theme": "Java",
+      "question": "Quelles bibliothèques Java utilisez-vous pour le JSON, le XML, la base de données et les journaux ?",
+      "answer": "JSON : Jackson ou Gson. XML : JAXB pour lier des classes, StAX ou DOM pour lire. Base de données : JDBC directement, JPA avec Hibernate pour le mapping, Flyway ou Liquibase pour les migrations. Journaux : SLF4J comme façade, avec Logback ou Log4j 2 derrière. Tests : JUnit 5 et Mockito.",
+      "points": [
+        "Jackson ou Gson pour le JSON",
+        "JAXB, StAX ou DOM pour le XML",
+        "JDBC ou JPA / Hibernate pour la base",
+        "SLF4J avec Logback ou Log4j 2",
+        "Cite aussi les outils de test"
+      ]
+    },
+    {
+      "id": "sim-revue-ressource",
+      "theme": "Java",
+      "question": "Une méthode ouvre une connexion à la base, appelle un traitement et attrape Exception pour la journaliser. Que lui reprochez-vous et comment la corrigez-vous ?",
+      "answer": "La connexion n'est jamais fermée : fuite de connexions jusqu'à épuiser le pool. Correction : try-with-resources. Attraper Exception masque aussi les erreurs de programmation, et l'appelant ne distingue pas une panne d'un résultat négatif : je laisse remonter une exception métier, ou je renvoie un résultat explicite, pour que l'écran affiche une erreur. Je garde le journal avec l'exception complète, et un résultat par défaut prudent.",
+      "points": [
+        "Repère la connexion jamais fermée",
+        "Propose try-with-resources",
+        "Critique le catch (Exception) trop large",
+        "Distingue panne et résultat métier pour l'appelant",
+        "Garde le journal avec la pile d'appels"
+      ]
+    },
+    {
+      "id": "sim-activite-fragment",
+      "theme": "Android",
+      "question": "Quelle est la différence entre une Activity et un Fragment, et quand utilisez-vous l'un ou l'autre ?",
+      "answer": "L'activité est un point d'entrée qui porte un écran, déclaré dans le manifeste. Le fragment est un morceau d'interface avec son propre cycle de vie, hébergé dans une activité, et réutilisable : liste et détail côte à côte sur tablette, séparés sur téléphone. Aujourd'hui on fait souvent une seule activité et plusieurs fragments reliés par le composant Navigation, ou des écrans Jetpack Compose.",
+      "points": [
+        "Activité : point d'entrée qui porte un écran",
+        "Fragment : portion d'interface hébergée et réutilisable",
+        "Le fragment a son propre cycle de vie",
+        "Exemple tablette ou réutilisation",
+        "Mentionne Navigation ou Compose"
+      ]
+    },
+    {
+      "id": "sim-cycle-vie",
+      "theme": "Android",
+      "question": "Décrivez le cycle de vie d'une activité. Où construisez-vous l'écran et où chargez-vous les données ?",
+      "answer": "onCreate, onStart, onResume à l'ouverture ; onPause, onStop, onDestroy à la fermeture, onRestart au retour. L'écran se construit dans onCreate, une seule fois. Les données susceptibles de changer se chargent dans onStart ou onResume, appelés à chaque retour. Avec un ViewModel, les données survivent à la rotation de l'écran et l'interface observe leurs changements.",
+      "points": [
+        "Cite les six méthodes dans l'ordre",
+        "Écran construit dans onCreate",
+        "Données rechargées dans onStart ou onResume",
+        "Parle de la rotation ou du ViewModel"
+      ]
+    },
+    {
+      "id": "sim-manifeste",
+      "theme": "Android",
+      "question": "À quoi sert le fichier AndroidManifest.xml ? Donnez des exemples de permissions.",
+      "answer": "C'est le fichier de configuration obligatoire : identifiant de l'application, activités et services, récepteurs, permissions, fonctionnalités matérielles requises. Permissions : INTERNET, ACCESS_FINE_LOCATION, CAMERA, READ_CONTACTS, POST_NOTIFICATIONS. Les permissions sensibles se demandent aussi à l'exécution, au moment où on en a besoin, et l'utilisateur peut refuser.",
+      "points": [
+        "Déclare les composants de l'application",
+        "Déclare les permissions",
+        "Au moins trois exemples de permissions",
+        "Permissions sensibles demandées à l'exécution"
+      ]
+    },
+    {
+      "id": "sim-ressources",
+      "theme": "Android",
+      "question": "Comment sont organisées les ressources d'une application Android ?",
+      "answer": "Dans res/ : drawable pour les images, layout pour les écrans XML, values pour les textes, couleurs et styles, mipmap pour l'icône. Un suffixe cible une configuration : values-fr pour le français, drawable-hdpi pour les écrans denses, values-night pour le thème sombre, layout-land pour le paysage. Android choisit seul le bon dossier.",
+      "points": [
+        "Dossiers drawable, layout et values",
+        "Suffixes de configuration (langue, densité, thème)",
+        "Exemple de traduction avec values-fr",
+        "Choix automatique par Android"
+      ]
+    },
+    {
+      "id": "sim-taches-fond",
+      "theme": "Android",
+      "question": "Comment réalisez-vous des tâches de fond sur Android ? Avantages et pièges ?",
+      "answer": "Jamais sur le thread principal, qui ferait geler l'interface. Pour un travail lié à l'écran : coroutines Kotlin dans un ViewModel, annulées avec lui. Pour un travail qui doit aboutir même application fermée, comme une synchronisation : WorkManager, avec des contraintes de réseau ou de batterie. AsyncTask est déprécié. Pièges : mettre à jour l'interface depuis un autre thread, fuites d'activité, batterie.",
+      "points": [
+        "Pas de travail long sur le thread principal",
+        "Coroutines ou ViewModel pour l'écran",
+        "WorkManager pour un travail garanti",
+        "AsyncTask déprécié",
+        "Retour sur le thread principal pour l'affichage"
+      ]
+    },
+    {
+      "id": "sim-rest",
+      "theme": "Android",
+      "question": "Quelles sont les caractéristiques d'une API REST ?",
+      "answer": "Chaque ressource a une URI ; les verbes HTTP disent l'opération : GET lit, POST crée, PUT remplace, PATCH modifie, DELETE supprime. Les codes de retour disent le résultat : 200, 201, 400, 401, 404, 500. Les échanges sont sans état et le corps est souvent en JSON. Côté client Android : Retrofit ou Ktor, avec la gestion des erreurs réseau.",
+      "points": [
+        "URI pour identifier les ressources",
+        "Verbes HTTP pour les opérations",
+        "Codes de retour HTTP",
+        "Sans état, souvent en JSON",
+        "Un client cité (Retrofit, Ktor, OkHttp)"
+      ]
+    },
+    {
+      "id": "sim-php-comparaison",
+      "theme": "Web",
+      "question": "En PHP, expliquez la différence entre == et ===, et entre empty et isset.",
+      "answer": "== compare après conversion de type ; === compare valeur et type, c'est plus sûr. isset vérifie qu'une variable existe et n'est pas null. empty est vrai pour une variable absente ou « vide » : 0, \"0\", \"\", null, false, tableau vide. Piège : empty est vrai pour un stock à 0, valeur pourtant légitime.",
+      "points": [
+        "== convertit les types, === non",
+        "Préférer === par sécurité",
+        "isset : existe et non null",
+        "empty : liste des valeurs considérées vides",
+        "Piège de la valeur 0"
+      ]
+    },
+    {
+      "id": "sim-superglobales",
+      "theme": "Web",
+      "question": "Que sont les superglobales PHP ? Lesquelles connaissez-vous ?",
+      "answer": "Des tableaux accessibles partout sans global : $_GET pour les paramètres d'URL, $_POST pour un formulaire, $_SESSION pour les données d'un visiteur entre les pages, $_COOKIE, $_FILES pour les envois de fichiers, $_SERVER pour la requête et le serveur, $_ENV, $_REQUEST et $GLOBALS. Tout ce qui vient du client se valide et s'échappe avant usage.",
+      "points": [
+        "Accessibles partout",
+        "Au moins quatre superglobales citées",
+        "Rôle de $_SESSION",
+        "Validation des données venant du client"
+      ]
+    },
+    {
+      "id": "sim-css-priorite",
+      "theme": "Web",
+      "question": "Deux règles CSS donnent une couleur différente au même élément : laquelle s'applique ?",
+      "answer": "D'abord !important, puis la spécificité : un identifiant pèse plus qu'une classe, qui pèse plus qu'une balise ; .carte .titre bat .titre. À spécificité égale, la dernière règle écrite gagne. Le style en ligne passe devant les feuilles. Mieux vaut éviter !important et garder des sélecteurs simples.",
+      "points": [
+        "Rôle de !important",
+        "Spécificité : identifiant, classe, balise",
+        "À égalité, la dernière règle gagne",
+        "Conseil d'éviter !important"
+      ]
+    },
+    {
+      "id": "sim-dom-pret",
+      "theme": "Web",
+      "question": "Pourquoi un script qui masque un élément peut-il ne rien faire, et comment l'éviter ?",
+      "answer": "S'il s'exécute avant que le navigateur ait lu l'élément, par exemple dans le head, il ne le trouve pas. Solutions : attendre le chargement du document ($(document).ready ou DOMContentLoaded), placer le script en fin de body, ou mieux, l'attribut defer. Et si l'élément ne doit jamais apparaître, le masquer en CSS évite qu'il clignote.",
+      "points": [
+        "Script exécuté avant que l'élément existe",
+        "document.ready ou DOMContentLoaded",
+        "Attribut defer ou script en fin de body",
+        "Masquer en CSS pour éviter le clignotement"
+      ]
+    },
+    {
+      "id": "sim-gestion-erreurs",
+      "theme": "Général",
+      "question": "Comment gérez-vous les erreurs et les journaux dans une application ?",
+      "answer": "J'attrape les exceptions au niveau où je sais quoi en faire, pas plus tôt, et jamais pour les ignorer. Je journalise avec l'exception complète et le contexte utile (identifiant, opération), sans donnée sensible. Niveaux : ERROR pour une panne, WARNING pour une situation anormale récupérée, INFO pour les étapes clés. L'utilisateur reçoit un message clair, pas une pile d'appels.",
+      "points": [
+        "Attraper là où l'on sait réagir",
+        "Journaliser l'exception et son contexte",
+        "Aucune donnée sensible dans les journaux",
+        "Niveaux de journalisation adaptés",
+        "Message clair pour l'utilisateur"
+      ]
+    },
+    {
+      "id": "sim-tests",
+      "theme": "Général",
+      "question": "Comment testez-vous votre code ?",
+      "answer": "Tests unitaires sur la logique métier, rapides et isolés, avec des doublures pour les dépendances externes (réseau, base). Tests d'intégration sur les points de contact : base, API. Quelques tests de bout en bout sur les parcours principaux. Tests lancés à chaque envoi par l'intégration continue, avec un seuil de couverture. Et pour un bug : d'abord un test qui le reproduit, puis la correction.",
+      "points": [
+        "Tests unitaires isolés",
+        "Tests d'intégration",
+        "Intégration continue",
+        "Reproduire un bug par un test avant de corriger"
+      ]
+    }
+  ]
+}

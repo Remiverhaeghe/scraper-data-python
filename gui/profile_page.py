@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
 )
 
 from gui.interview_drill_panel import InterviewDrillPanel
+from gui.interview_simulation_panel import InterviewSimulationPanel
+from gui.self_assessment_panel import SelfAssessmentPanel
 from gui.star_answers_panel import StarAnswersPanel
 from gui.theme import COLORS
 from gui.widgets import (
@@ -161,16 +163,24 @@ class ProfilePage(QWidget):
         )
 
         self.star_panel = StarAnswersPanel(pDatabaseFile)
+        self.self_assessment_panel = SelfAssessmentPanel(pDatabaseFile)
         self.drill_panel = InterviewDrillPanel(pDatabaseFile)
+        self.simulation_panel = InterviewSimulationPanel(pDatabaseFile)
+        # Une question ratée rejoint aussitôt l'entraînement à l'oral.
+        self.simulation_panel.next_button.clicked.connect(self.drill_panel.refresh)
 
         vLayout.addWidget(vCard, 1)
+        vLayout.addWidget(self.self_assessment_panel)
         vLayout.addWidget(self.star_panel)
+        vLayout.addWidget(self.simulation_panel)
         vLayout.addWidget(self.drill_panel)
 
     def refresh(self):
         """Remplit le formulaire avec le profil enregistré."""
         self.star_panel.refresh()
+        self.self_assessment_panel.refresh()
         self.drill_panel.refresh()
+        self.simulation_panel.refresh()
 
         try:
             vTexts = profile_to_texts(load_profile(self.database_file))
@@ -286,3 +296,4 @@ class ProfilePage(QWidget):
                 f"{len(vProfile['cv_variants'])} CV.",
             )
             self.star_panel.refresh()
+            self.self_assessment_panel.refresh()

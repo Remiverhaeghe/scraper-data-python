@@ -146,10 +146,16 @@ def test_overview_suggests_themes_from_offers(database_file):
 
     vOverview = build_quiz_overview(database_file, vQuiz)
 
-    assert [vTheme["label"] for vTheme in vOverview[:2]] == ["Java", "SQL"]
-    assert vOverview[0]["offer_count"] == 2
-    assert (vOverview[0]["answered"], vOverview[0]["to_review"]) == (2, 1)
-    assert vOverview[0]["score"] == round(100 / len(vQuiz["java"]["questions"]))
+    # « Entretien Java » partage la compétence Java : même nombre d'offres.
+    assert [vTheme["label"] for vTheme in vOverview[:3]] == [
+        "Entretien Java",
+        "Java",
+        "SQL",
+    ]
+    vJava = vOverview[1]
+    assert vJava["offer_count"] == 2
+    assert (vJava["answered"], vJava["to_review"]) == (2, 1)
+    assert vJava["score"] == round(100 / len(vQuiz["java"]["questions"]))
 
 
 def test_pick_question_modes_and_shuffle(database_file):

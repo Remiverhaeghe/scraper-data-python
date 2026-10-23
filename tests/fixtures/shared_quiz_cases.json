@@ -107,7 +107,11 @@
       "question": {"id": "a1", "type": "association", "pairs": [["Tension", "V"], ["Courant", "A"]]},
       "response": [0],
       "error": true
-    }
+    },
+    {"name": "Revue juste, ordre des cases indifférent", "question": {"id": "r1", "type": "revue", "code": "Session s = openSession();\nreturn check(s);", "choices": ["Session jamais fermée", "Nom de variable trop court", "Exception non traitée"], "answers": [0, 2]}, "response": [2, 0], "correct": true, "expected": "Session jamais fermée ; Exception non traitée"},
+    {"name": "Revue avec une fausse piste cochée", "question": {"id": "r1", "type": "revue", "code": "Session s = openSession();\nreturn check(s);", "choices": ["Session jamais fermée", "Nom de variable trop court", "Exception non traitée"], "answers": [0, 2]}, "response": [0, 1, 2], "correct": false, "expected": "Session jamais fermée ; Exception non traitée"},
+    {"name": "Revue incomplète", "question": {"id": "r1", "type": "revue", "code": "Session s = openSession();\nreturn check(s);", "choices": ["Session jamais fermée", "Nom de variable trop court", "Exception non traitée"], "answers": [0, 2]}, "response": [0], "correct": false, "expected": "Session jamais fermée ; Exception non traitée"},
+    {"name": "Revue sans case cochée", "question": {"id": "r1", "type": "revue", "code": "Session s = openSession();\nreturn check(s);", "choices": ["Session jamais fermée", "Nom de variable trop court", "Exception non traitée"], "answers": [0, 2]}, "response": [], "error": true}
   ],
   "review": [
     {

@@ -1188,6 +1188,86 @@ def test_quiz_question_answer_and_review(client):
     assert vRefused.status_code == 400
 
 
+def test_code_review_question_on_the_web(client):
+    """Vérifie une revue de code : cases à cocher, réponse juste, case oubliée."""
+
+    vRight = client.post(
+        "/quiz/answer",
+        data={
+            "question_id": "ent-java-revue-equals",
+            "indexes": ["1", "0"],
+            "mode": "discover",
+        },
+    ).text
+    vEmpty = client.post(
+        "/quiz/answer",
+        data={"question_id": "ent-java-revue-equals", "mode": "discover"},
+    )
+
+    assert "Bonne réponse" in vRight
+    assert vEmpty.status_code == 400
+    assert "Cochez au moins un constat." in vEmpty.text
+    assert 'type="checkbox" name="indexes"' in vEmpty.text
+
+
+def test_interview_simulation_on_the_web(client):
+    """Vérifie une série de simulation sur le web jusqu'au bilan."""
+
+    assert "Simulation d'entretien technique" in client.get("/profile").text
+    assert (
+        client.post("/profile/simulation/start", data={"theme": "Cobol"}).status_code
+        == 400
+    )
+
+    client.post("/profile/simulation/start", data={"theme": "Android"})
+
+    for vIndex in range(5):
+        vPage = client.get("/profile").text
+
+        assert f"question {vIndex + 1} sur 5" in vPage
+
+        client.post("/profile/simulation/answer", data={"points": ["0", "1"]})
+
+    vSummary = client.get("/profile").text
+
+    assert "Série terminée" in vSummary
+    assert "Dernières séries : Android" in vSummary
+    assert client.post("/profile/simulation/answer", data={}).status_code == 400
+
+    client.post("/profile/simulation/stop")
+
+    assert "Série terminée" not in client.get("/profile").text
+
+
+def test_self_assessment_on_the_web(client):
+    """Vérifie la grille d'auto-évaluation et les thèmes à renforcer en Révision."""
+
+    assert "Auto-évaluation des compétences" in client.get("/profile").text
+
+    vSaved = client.post(
+        "/profile/levels",
+        data={
+            "skill": ["Java", "Android"],
+            "level": ["8", "2"],
+            "new_skill": "Kafka",
+            "new_level": "4",
+        },
+        follow_redirects=False,
+    )
+    vQuiz = client.get("/quiz").text
+
+    assert vSaved.status_code == 303
+    assert 'name="skill" value="Kafka"' in client.get("/profile").text
+    assert "Entretien Android · Android 2/10" in vQuiz
+    assert (
+        client.post(
+            "/profile/levels", data={"skill": ["Java"], "level": ["12"]}
+        ).status_code
+        == 400
+    )
+    assert client.post("/profile/levels", data={"skill": ["Java"]}).status_code == 400
+
+
 def test_interview_date_and_calendar_export(client):
     """Vérifie la date d'entretien saisie et le fichier agenda téléchargé."""
 
@@ -1435,7 +1515,7 @@ def test_quiz_pack_export(client):
         assert "questions/ram-jvm.json" in vArchive.namelist()
 
 
-def test_quiz_exam_on_the_web(client):
+def test_quiz_exam_on_the_web(client, qcm_only_quiz):
     """Vérifie l'examen sur le web : début, réponse, résultat et fermeture."""
 
     assert "Mode examen (20 questions)" in client.get("/quiz").text

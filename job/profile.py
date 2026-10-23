@@ -31,6 +31,8 @@ EMPTY_PROFILE = {
     "skills": [],
     "experiences": [],
     "cv_variants": [],
+    # Auto-évaluation : compétence vers niveau de 0 (inconnue) à 10
+    "skill_levels": {},
 }
 
 
@@ -140,9 +142,19 @@ def load_profile(pDatabaseFile):
 
 
 def save_profile(pDatabaseFile, pProfile):
-    """Enregistre le profil du candidat."""
+    """Enregistre le profil du candidat.
 
-    save_json_setting(pDatabaseFile, PROFILE_KEY, pProfile)
+    Le formulaire du profil ne porte pas l'auto-évaluation : sans elle dans
+    pProfile, les niveaux déjà enregistrés sont gardés.
+    """
+
+    vProfile = (
+        pProfile
+        if "skill_levels" in pProfile
+        else {**pProfile, "skill_levels": load_profile(pDatabaseFile)["skill_levels"]}
+    )
+
+    save_json_setting(pDatabaseFile, PROFILE_KEY, vProfile)
 
     logger.info(
         "Profil enregistré : %s compétence(s), %s expérience(s), %s CV",

@@ -1,6 +1,6 @@
 {# Champs de réponse d'une question, selon son type (job/quiz_types.py) :
-   choice pour un QCM, text pour un calcul ou un code, indexes pour un ordre
-   ou une association, point.x et point.y pour une zone. Partagé par la
+   choice pour un QCM, text pour un calcul ou un code, indexes pour un ordre,
+   une association ou les constats cochés d'une revue de code, point.x et point.y pour une zone. Partagé par la
    révision et l'examen. #}
 {% if retry_message %}<p class="application-message tone-warning" role="status">{{ retry_message }}</p>{% endif %}
 {% if question.type == "numerique" %}
@@ -58,6 +58,11 @@
     </label>
     {% endfor %}
 </div>
+{% elif question.type == "revue" %}
+<p class="muted">Cochez tous les défauts réels de cet extrait, et eux seuls.</p>
+{% for index, choice in question.shuffled %}
+<label class="quiz-choice"><input type="checkbox" name="indexes" value="{{ index }}"> {{ choice }}</label>
+{% endfor %}
 {% else %}
 {% for index, choice in question.shuffled %}
 <label class="quiz-choice"><input type="radio" name="choice" value="{{ index }}" required> {{ choice }}</label>

@@ -137,3 +137,41 @@ def web_login(monkeypatch):
         pClient.headers["X-CSRF-Token"] = vSession["csrf"]
 
     return login
+
+
+def load_qcm_quiz():
+    """Retourne les thèmes livrés réduits à leurs QCM.
+
+    Pour les tests du déroulement d'un examen, qui répondent par l'indice du
+    bon choix : les questions interactives ont leurs propres tests.
+    """
+
+    from job.quiz import load_quiz  # pylint: disable=import-outside-toplevel
+    from job.quiz_types import (  # pylint: disable=import-outside-toplevel
+        DEFAULT_TYPE,
+        get_type,
+    )
+
+    rQuiz = {
+        vKey: {
+            **vTheme,
+            "questions": [
+                vQuestion
+                for vQuestion in vTheme["questions"]
+                if get_type(vQuestion) == DEFAULT_TYPE
+            ],
+        }
+        for vKey, vTheme in load_quiz().items()
+    }
+
+    return rQuiz
+
+
+@pytest.fixture
+def qcm_only_quiz(monkeypatch):
+    """Limite la révision du bureau et du web aux QCM livrés."""
+
+    # Calculé avant le remplacement : load_qcm_quiz lit le vrai load_quiz.
+    vQuiz = load_qcm_quiz()
+
+    monkeypatch.setattr("job.quiz.load_quiz", lambda *pArgs: vQuiz)

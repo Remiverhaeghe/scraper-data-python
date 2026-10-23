@@ -90,7 +90,10 @@ python -m tools.quiz_lot build <thème>
 
 Un lot écrit peut mêler aux QCM des questions interactives (calcul, remise en ordre,
 association, code à compléter, zone à désigner sur un schéma, schéma à construire), dont les
-champs sont décrits au même endroit. Les composants d'un schéma à construire viennent de
+champs sont décrits au même endroit. La revue de code (`"type": "revue"`) ne s'écrit qu'en
+JSON : un extrait `code`, 3 à 8 constats dans `choices` et les indices des défauts réels dans
+`answers`, au moins un et jamais tous ; elle n'est juste que si tous les défauts, et eux seuls,
+sont cochés. Les composants d'un schéma à construire viennent de
 `job/schema_library.py` ; un même type peut revenir plusieurs fois, chaque exemplaire ayant
 alors son identifiant et, si besoin, son nom (« Vérin de serrage »). Les zones se mesurent dans les coordonnées du SVG ; une question « zone »
 montre toujours son schéma avec l'énoncé. Dans

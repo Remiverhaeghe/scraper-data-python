@@ -138,6 +138,10 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Sources sans offre utile sur 30 jours signalées dans la comparaison des sources
 - [x] Offres proches de vos candidatures sur l'accueil : compétences et intitulé partagés avec les offres retenues
 - [x] Page Santé : fin du certificat HTTPS, placement des offres, dernière synchronisation du téléphone
+- [x] Thèmes « Entretien Java », « Entretien Android » et « Entretien PHP et web » : cas réels d'entretien reformulés (pièges de code, cycles de vie à remettre en ordre, revues de code), avec la réponse actuelle quand l'usage a changé
+- [x] Revue de code : un extrait et des constats, à cocher tous les défauts réels et eux seuls (bureau, web, téléphone)
+- [x] Simulation d'entretien technique dans le Profil : questions ouvertes par thème, réponse attendue et points clés à cocher ; une question ratée rejoint l'entraînement à l'oral (bureau et web)
+- [x] Auto-évaluation des compétences dans le Profil : niveau de 0 à 10 ; dès 5 la compétence compte dans le score des offres, de 1 à 4 ses thèmes sont proposés en priorité dans la Révision (bureau et web)
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
   - [x] Adzuna
@@ -380,7 +384,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 Page Révision du bureau et du web (installable sur le téléphone), sans service payant :
 
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
-- [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter, zone à désigner en cliquant sur un schéma, schéma à construire (49 symboles d'électricité, électronique, pneumatique, hydraulique et réseau ; placement sur une grille, câblage des bornes à la souris, plusieurs exemplaires d'un même composant (deux vérins, des lampes en parallèle, des postes en étoile) ; correction par comparaison des liaisons, schéma construit dessiné à côté du schéma attendu, fils en trop en rouge) ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile reçoit les QCM, les calculs, les remises en ordre et les associations
+- [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter, revue de code (défauts à cocher), zone à désigner en cliquant sur un schéma, schéma à construire (49 symboles d'électricité, électronique, pneumatique, hydraulique et réseau ; placement sur une grille, câblage des bornes à la souris, plusieurs exemplaires d'un même composant (deux vérins, des lampes en parallèle, des postes en étoile) ; correction par comparaison des liaisons, schéma construit dessiné à côté du schéma attendu, fils en trop en rouge) ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile reçoit les QCM, les calculs, les remises en ordre, les associations et les revues de code
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Thèmes demandés par les offres et encore sans question mis en avant en haut de la Révision, demande ChatGPT prête
 - [x] Lots écrits de 100 questions (tools/quiz_lots) : cloud (AWS, Azure, GCP), Terraform et Ansible, Linux et shell, SQL Server, MySQL et MariaDB, réseaux TCP/IP, sécurité applicative (OWASP), maintenance industrielle, Python, TypeScript, frameworks frontend (React, Angular, Vue), Kubernetes et Helm, en plus des lots d'automatisme, d'électricité, d'électronique, de fluides et de sigles
@@ -517,11 +521,11 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 | POST | `/api/v1/flags` | Questions signalées depuis le téléphone, retirées des tirages : `{"question_ids": [...]}` |
 | POST | `/api/v1/answers` | Réponses faites hors ligne : `{"answers": [{"id", "question_id", "choice" ou "response", "answered_at"}]}` |
 
-Les QCM sont dans `questions`. Les calculs, remises en ordre et associations sont dans
-`interactive_questions`, avec leur `type` : une application qui ne les connaît pas encore les
-ignore. Leurs éléments sont dans l'ordre correct, à mélanger à l'affichage. Une réponse porte
-alors `response` : texte du calcul (« 2,3 mA »), ou liste d'indices d'origine pour l'ordre et
-l'association.
+Les QCM sont dans `questions`. Les calculs, remises en ordre, associations et revues de code
+sont dans `interactive_questions`, avec leur `type` : une application qui ne les connaît pas
+encore les ignore. Leurs éléments sont dans l'ordre correct, à mélanger à l'affichage. Une
+réponse porte alors `response` : texte du calcul (« 2,3 mA »), ou liste d'indices d'origine pour
+l'ordre, l'association et les constats cochés d'une revue de code.
 
 Le téléphone corrige lui-même avec le contenu téléchargé ; à l'envoi, le serveur recalcule
 chaque correction, ignore une réponse déjà reçue (même `id`) et refuse une date hors limites.
@@ -572,6 +576,8 @@ scraper-data-python/
 │   ├── weekly_digest.py                       # Récapitulatif hebdomadaire par e-mail
 │   ├── interview_reminder.py                  # Rappel la veille d'un entretien
 │   ├── interview_drill.py                     # Entraînement à l'oral, répétition espacée
+│   ├── interview_simulation.py                # Simulation d'entretien technique, points clés cochés
+│   ├── self_assessment.py                     # Grille d'auto-évaluation des compétences
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
 │   ├── translation.py                         # Traduction hors ligne des descriptions (Argos, facultatif)
@@ -796,6 +802,8 @@ scraper-data-python/
 │   ├── offer_purge_panel.py                   # Aperçu et suppression des offres hors sujet
 │   ├── profile_page.py                        # Saisie du profil du candidat
 │   ├── interview_drill_panel.py               # Entraînement à l'oral
+│   ├── interview_simulation_panel.py          # Simulation d'entretien technique
+│   ├── self_assessment_panel.py               # Auto-évaluation des compétences
 │   ├── star_answers_panel.py                  # Saisie des réponses STAR
 │   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
 │   ├── token_access_panel.py                  # Accès secret : adresse d'agenda ou jeton
@@ -900,7 +908,12 @@ scraper-data-python/
 │   │   ├── javascript.json                    # JavaScript
 │   │   ├── git.json                           # Git
 │   │   ├── docker.json                        # Docker
-│   │   └── practices.json                     # Bonnes pratiques et API
+│   │   ├── practices.json                     # Bonnes pratiques et API
+│   │   ├── entretien_java.json                # Entretien Java : pièges de code, revues, patterns
+│   │   ├── entretien_android.json             # Entretien Android : cycles de vie, composants, revue
+│   │   └── entretien_web.json                 # Entretien PHP et web : PHP, CSS, jQuery
+│   ├── interview/                             # Simulation d'entretien technique
+│   │   └── questions.json                     # Questions ouvertes, réponse attendue et points clés
 │   └── quiz_generation/                       # Génération de questions avec ChatGPT
 │       ├── catalog.json                       # Catalogue des thèmes par domaine, avec les mots des offres
 │       ├── prompt.txt                         # Texte et règles de la demande
@@ -993,6 +1006,8 @@ scraper-data-python/
 │   │   ├── test_interview_reminder.py         # Teste le rappel d'entretien
 │   │   ├── test_offer_comparison.py           # Teste la comparaison des offres
 │   │   ├── test_interview_drill.py            # Teste l'entraînement à l'oral
+│   │   ├── test_interview_simulation.py       # Teste la simulation d'entretien
+│   │   ├── test_self_assessment.py            # Teste l'auto-évaluation et ses effets
 │   │   ├── test_freshness.py                  # Teste le score de fraîcheur
 │   │   ├── test_interview_journal.py          # Teste le journal d'entretien
 │   │   ├── test_health.py                     # Teste l'état de santé de l'application
@@ -1123,6 +1138,8 @@ scraper-data-python/
 │   │   ├── test_quality_page.py                # Teste la page de qualité des données
 │   │   ├── test_interview_journal_panel.py     # Teste le panneau du journal d'entretien
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
+│   │   ├── test_interview_simulation_panel.py  # Teste la simulation d'entretien
+│   │   ├── test_self_assessment_panel.py       # Teste la grille d'auto-évaluation
 │   │   ├── test_funnel_panel.py                # Teste l'entonnoir, vide puis rempli
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
@@ -1133,6 +1150,7 @@ scraper-data-python/
 │   │   ├── test_offer_assistant_comparison.py  # Teste la comparaison depuis l'assistant
 │   │   ├── test_applications_page.py           # Teste la page des candidatures
 │   │   ├── test_quiz_page.py                   # Teste la page de révision
+│   │   ├── test_quiz_answer.py                 # Teste les saisies de réponse, revue de code comprise
 │   │   ├── test_challenges_page.py             # Teste la page des défis
 │   │   ├── test_git_page.py                    # Teste la page du bac à sable Git
 │   │   ├── test_schema_editor.py               # Teste l'éditeur de schéma du bureau

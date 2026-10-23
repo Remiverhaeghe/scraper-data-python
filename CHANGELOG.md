@@ -5,6 +5,9 @@ dans l'historique git.
 
 ## Non publié
 
+### Application mobile 1.3.0
+- Revue de code : cocher tous les défauts réels d'un extrait, et eux seuls
+
 ### Application mobile 1.2.0
 - Alerte des nouvelles offres proches du profil (50 % et plus), vérifiées en
   arrière-plan toutes les 3 h environ quand le PC est joignable
@@ -41,6 +44,10 @@ dans l'historique git.
   placés par le géocodeur de l'IGN et gardés en cache (migration v25)
 - Accès hors du domicile par Tailscale : `python -m tools.tailscale_certificate`
   et `WEB_PUBLIC_HOST`
+- Révision d'entretien : thèmes Entretien Java, Android et PHP et web, tirés
+  de cas réels reformulés ; nouveau type « revue de code »
+- Simulation d'entretien technique (questions ouvertes, points clés cochés) et
+  auto-évaluation des compétences dans le Profil
 - Compétences de l'industrie reconnues, compétences du profil rapprochées de
   leur libellé reconnu
 - Distance dans la liste, la fiche et les e-mails ; carte des offres sur le web ;

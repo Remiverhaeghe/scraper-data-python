@@ -83,6 +83,67 @@
     {% endif %}
     {% if star_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ star_message }}</p>{% endif %}
 </article>
+<article class="card section-gap" id="self-assessment">
+    <h2>Auto-évaluation des compétences</h2>
+    <p class="card-subtitle">Niveau de 0 (inconnue) à {{ max_level }}. À partir de {{ known_level }}, la compétence compte dans le score des offres ; de 1 à {{ weak_level }}, ses thèmes sont proposés en priorité dans la Révision.</p>
+    <form method="post" action="{{ url_for('save_profile_levels').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <div class="skill-grid">
+            {% for skill, level in skill_grid %}
+            <label>{{ skill }}
+                <input type="hidden" name="skill" value="{{ skill }}">
+                <input type="number" name="level" value="{{ level }}" min="0" max="{{ max_level }}" required>
+            </label>
+            {% endfor %}
+        </div>
+        <div class="rules-actions">
+            <input type="text" name="new_skill" placeholder="Autre compétence à noter" aria-label="Autre compétence">
+            <input type="number" name="new_level" value="0" min="0" max="{{ max_level }}" aria-label="Niveau de l'autre compétence">
+            <button class="button button-primary" type="submit">Enregistrer</button>
+        </div>
+    </form>
+</article>
+<article class="card section-gap" id="simulation">
+    <h2>Simulation d'entretien technique</h2>
+    <p class="card-subtitle">Cinq questions ouvertes, comme face à un recruteur. Répondez, puis cochez les points clés cités : une question à moins de la moitié rejoint l'entraînement à l'oral.</p>
+    {% if simulation_question %}
+    {% set question = simulation_question %}
+    <p class="muted">{{ question.theme }} · question {{ question.position }} sur {{ question.count }}</p>
+    <p><strong>{{ question.question }}</strong></p>
+    <textarea rows="4" aria-label="Votre réponse" placeholder="Votre réponse, à l'oral ou ici pour vous entraîner à la formuler"></textarea>
+    <details>
+        <summary>Voir la réponse attendue</summary>
+        <p class="pre-line">{{ question.answer }}</p>
+        <form method="post" action="{{ url_for('answer_interview_simulation').path }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <p class="muted">Cochez les points clés que vous avez cités :</p>
+            {% for point in question.points %}
+            <label class="check"><input type="checkbox" name="points" value="{{ loop.index0 }}"> {{ point }}</label>
+            {% endfor %}
+            <div class="rules-actions"><button class="button button-primary" type="submit">Valider et continuer</button></div>
+        </form>
+    </details>
+    {% elif simulation_summary %}
+    <p><strong>Série terminée : {{ simulation_summary.score }} % des points clés cités.</strong></p>
+    {% if simulation_summary.weak %}<p class="muted">À retravailler : {{ simulation_summary.weak | join(" ; ") }}</p>{% endif %}
+    {% endif %}
+    <div class="rules-actions">
+        <form method="post" action="{{ url_for('start_interview_simulation').path }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <select name="theme" aria-label="Thème de la simulation">
+                {% for theme in simulation_themes %}<option value="{{ theme }}">{{ theme }}</option>{% endfor %}
+            </select>
+            <button class="button{% if not simulation %} button-primary{% endif %}" type="submit">{{ "Nouvelle série" if simulation else "Commencer" }}</button>
+        </form>
+        {% if simulation %}
+        <form method="post" action="{{ url_for('stop_interview_simulation').path }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <button class="button" type="submit">Arrêter</button>
+        </form>
+        {% endif %}
+    </div>
+    {% if simulation_history %}<p class="muted">Dernières séries : {% for entry in simulation_history %}{{ entry.theme }} {{ entry.score }} %{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+</article>
 <article class="card section-gap" id="drill">
     <h2>Entraînement à l'oral</h2>
     <p class="card-subtitle">Répondez à voix haute, puis comparez à votre réponse préparée. Une question sue revient plus tard, une question à revoir dès demain.</p>

@@ -1,0 +1,193 @@
+{
+  "theme": "Entretien PHP et web",
+  "skills": ["PHP", "CSS", "JavaScript", "jQuery", "HTML"],
+  "questions": [
+    {
+      "id": "ent-web-php-egalite-stricte",
+      "level": "débutant",
+      "question": "En PHP, que vaut 1 === \"1\" ?",
+      "choices": [
+        "true",
+        "false",
+        "null",
+        "Une erreur de type"
+      ],
+      "answer": 1,
+      "explanation": "=== compare la valeur et le type : un entier et une chaîne ne sont jamais identiques. == convertit d'abord les types : 1 == \"1\" vaut true. En entretien, préférer === évite des surprises comme \"abc\" == 0, vrai avant PHP 8."
+    },
+    {
+      "id": "ent-web-php-empty",
+      "level": "débutant",
+      "question": "Que renvoie empty($stock) quand $stock vaut 0 ?",
+      "choices": [
+        "false",
+        "true",
+        "0",
+        "null"
+      ],
+      "answer": 1,
+      "explanation": "empty considère comme vide 0, \"0\", \"\", null, false, un tableau vide et une variable non définie. C'est un piège quand 0 est une valeur légitime, comme un stock : on teste alors $stock === null ou isset."
+    },
+    {
+      "id": "ent-web-php-isset",
+      "level": "débutant",
+      "question": "Que renvoie isset($remise) quand $remise vaut null ?",
+      "choices": [
+        "true",
+        "null",
+        "false",
+        "Un avertissement"
+      ],
+      "answer": 2,
+      "explanation": "isset renvoie false pour une variable non définie et aussi pour une variable qui vaut null, sans avertissement. Pour savoir si une clé existe même avec la valeur null : array_key_exists."
+    },
+    {
+      "id": "ent-web-php-methode-magique",
+      "level": "confirmé",
+      "question": "Qu'affiche ce code ?",
+      "code": "class Panier {\n    private array $lignes = [];\n    public function __set($nom, $valeur) { $this->lignes[$nom] = $valeur; }\n    public function __call($methode, $arguments) { return 'méthode inconnue'; }\n}\n$vPanier = new Panier();\n$vPanier->total = 42;\necho $vPanier->getTotal();",
+      "choices": [
+        "42",
+        "méthode inconnue",
+        "null",
+        "Une erreur fatale"
+      ],
+      "answer": 1,
+      "explanation": "__set reçoit l'affectation d'une propriété inaccessible ou inexistante (total va dans $lignes). getTotal n'existe pas : PHP appelle __call, qui renvoie « méthode inconnue ». __get aurait servi à lire $vPanier->total. Ces méthodes magiques rendent le code difficile à suivre : à utiliser avec parcimonie."
+    },
+    {
+      "id": "ent-web-php-parametre-defaut",
+      "level": "intermédiaire",
+      "question": "Que produit l'appel livrer(\"Lille\") ?",
+      "code": "function livrer($mode = \"colis\", $ville) {\n    return $mode . \" vers \" . $ville;\n}\necho livrer(\"Lille\");",
+      "choices": [
+        "colis vers Lille, la valeur par défaut s'applique",
+        "Lille vers",
+        "Une erreur : il manque un argument",
+        "vers Lille"
+      ],
+      "answer": 2,
+      "explanation": "Un paramètre facultatif placé avant un paramètre obligatoire perd sa valeur par défaut (PHP 8 l'ignore et le signale). « Lille » va dans $mode et $ville manque : ArgumentCountError. Règle : les paramètres facultatifs viennent en dernier."
+    },
+    {
+      "id": "ent-web-php-superglobales",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque superglobale PHP à son contenu.",
+      "pairs": [
+        ["$_GET", "Paramètres présents dans l'URL"],
+        ["$_POST", "Champs d'un formulaire envoyé en POST"],
+        ["$_SESSION", "Données gardées d'une page à l'autre pour un visiteur"],
+        ["$_SERVER", "Informations sur la requête et le serveur"],
+        ["$_FILES", "Fichiers envoyés par un formulaire"]
+      ],
+      "explanation": "Les superglobales sont accessibles partout. Leurs valeurs viennent du client (sauf $_SESSION et une partie de $_SERVER) : on les valide et on les échappe avant usage, contre l'injection SQL et le XSS."
+    },
+    {
+      "id": "ent-web-php-post-decrement",
+      "level": "intermédiaire",
+      "question": "Qu'affiche ce code ?",
+      "code": "$vNombre = 2;\n$vNombre *= $vNombre;\necho $vNombre--;\necho $vNombre;",
+      "choices": [
+        "43",
+        "33",
+        "44",
+        "34"
+      ],
+      "answer": 0,
+      "explanation": "$vNombre vaut 4 après la multiplication. echo $vNombre-- affiche la valeur avant de la diminuer (post-décrémentation) : 4, puis $vNombre vaut 3. Les deux echo s'enchaînent sans séparateur : 43."
+    },
+    {
+      "id": "ent-web-php-foreach-valeur",
+      "level": "intermédiaire",
+      "question": "Qu'affiche ce code ?",
+      "code": "$vPrix = [10, 20];\nforeach ($vPrix as $vValeur) {\n    $vValeur *= 2;\n}\necho implode(\",\", $vPrix);",
+      "choices": [
+        "20,40",
+        "10,20",
+        "10,40",
+        "Une erreur"
+      ],
+      "answer": 1,
+      "explanation": "foreach donne une copie de chaque valeur : la modifier ne change pas le tableau, qui reste 10,20. Pour modifier le tableau, on passe par référence (&$vValeur) ou on écrit $vPrix[$vCle] = …"
+    },
+    {
+      "id": "ent-web-php-foreach-reference",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez pour que la boucle double réellement chaque prix du tableau.",
+      "code": "foreach ($vPrix as ____$vValeur) {\n    $vValeur *= 2;\n}\nunset($vValeur);",
+      "accepted": ["&"],
+      "explanation": "&$vValeur lie la variable à l'élément du tableau. Le unset après la boucle est indispensable : sinon $vValeur reste liée au dernier élément, qu'une boucle suivante écraserait."
+    },
+    {
+      "id": "ent-web-css-specificite",
+      "level": "intermédiaire",
+      "question": "De quelle couleur est le titre ?",
+      "code": "<div class=\"carte\"><h2 class=\"titre\">Offre</h2></div>\n\n.carte .titre { color: red; }\n.titre { color: green; }",
+      "choices": [
+        "Vert, la dernière règle écrite dans la feuille gagne",
+        "Rouge, le sélecteur le plus précis gagne",
+        "Noir, les deux règles s'annulent",
+        "Rouge puis vert au survol"
+      ],
+      "answer": 1,
+      "explanation": "La spécificité passe avant l'ordre : .carte .titre (deux classes) l'emporte sur .titre (une classe). L'ordre ne départage que deux sélecteurs de même spécificité. Un identifiant pèse plus que n'importe quel nombre de classes."
+    },
+    {
+      "id": "ent-web-css-important",
+      "level": "intermédiaire",
+      "question": "De quelle couleur est le titre ?",
+      "code": ".titre { color: red !important; }\n.carte .titre { color: green; }",
+      "choices": [
+        "Vert, le sélecteur à deux classes est plus précis",
+        "Rouge, !important passe avant la spécificité",
+        "Vert, la dernière règle gagne",
+        "La couleur par défaut du navigateur"
+      ],
+      "answer": 1,
+      "explanation": "!important place la déclaration au-dessus des règles normales, quelle que soit leur spécificité. Entre deux !important, la spécificité puis l'ordre départagent. À éviter : il complique toute la feuille de style."
+    },
+    {
+      "id": "ent-web-css-selecteurs",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque sélecteur CSS à ce qu'il cible.",
+      "pairs": [
+        ["div .info", "Éléments de classe info contenus dans un div, à toute profondeur"],
+        ["div.info", "Les div qui portent la classe info"],
+        ["div > a", "Les liens enfants directs d'un div"],
+        ["div, a", "Tous les div et tous les liens"],
+        ["#menu a", "Les liens contenus dans l'élément d'identifiant menu"]
+      ],
+      "explanation": "L'espace désigne un descendant à toute profondeur, > un enfant direct, la virgule regroupe deux sélecteurs, et l'absence d'espace (div.info) combine des conditions sur le même élément."
+    },
+    {
+      "id": "ent-web-jquery-head",
+      "level": "intermédiaire",
+      "question": "Ce script, placé dans le head sans attendre le chargement, s'exécute : que devient le div de la page ?",
+      "code": "<head>\n  <script src=\"jquery.js\"></script>\n  <script>$(\"div\").hide();</script>\n</head>\n<body><div>Mon texte</div></body>",
+      "choices": [
+        "Il est masqué dès l'affichage, car jQuery agit avant le rendu de la page",
+        "Il reste visible : il n'existe pas encore quand le script s'exécute",
+        "Il clignote puis disparaît",
+        "Le navigateur signale une erreur"
+      ],
+      "answer": 1,
+      "explanation": "Le script du head s'exécute avant que le navigateur ait lu le body : $(\"div\") ne trouve rien et hide() ne fait rien, sans erreur. Avec $(document).ready(…), ou un script placé en fin de body, le div existe et serait masqué."
+    },
+    {
+      "id": "ent-web-script-defer",
+      "level": "intermédiaire",
+      "question": "Quel attribut de la balise script remplace le plus simplement $(document).ready ?",
+      "choices": [
+        "async",
+        "defer",
+        "crossorigin",
+        "nomodule"
+      ],
+      "answer": 1,
+      "explanation": "defer télécharge le script sans bloquer l'affichage et ne l'exécute qu'une fois le document lu, dans l'ordre des scripts. async l'exécute dès qu'il arrive, éventuellement avant la fin du document et sans ordre garanti. jQuery n'est alors plus indispensable pour attendre le DOM."
+    }
+  ]
+}

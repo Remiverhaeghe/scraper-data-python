@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from job.assistant import CHATGPT_URL
@@ -15,6 +15,24 @@ from job.cv_import import (
     read_cv_text,
 )
 from job.interview_drill import get_due_cards, grade_card
+from job.self_assessment import (
+    KNOWN_LEVEL,
+    MAX_LEVEL,
+    WEAK_LEVEL,
+    build_grid,
+    save_skill_levels,
+)
+from job.interview_simulation import (
+    ALL_THEMES,
+    get_current_question,
+    list_themes,
+    load_simulation,
+    record_answer,
+    start_simulation,
+    stop_simulation,
+    summarize_simulation,
+)
+from job.interview_simulation import get_history as get_simulation_history
 from job.interview_journal import collect_asked_questions
 from job.profile import build_profile, load_profile, profile_to_texts, save_profile
 from job.star_answers import (
@@ -59,6 +77,11 @@ def render_profile(
             "star_message": pStarMessage,
             "asked_questions": collect_asked_questions(pDatabaseFile)[:5],
             "drill_cards": get_due_cards(pDatabaseFile, datetime.now()),
+            **build_simulation_context(pDatabaseFile),
+            "skill_grid": build_grid(load_profile(pDatabaseFile)),
+            "max_level": MAX_LEVEL,
+            "known_level": KNOWN_LEVEL,
+            "weak_level": WEAK_LEVEL,
             "experiences": [
                 vExperience["title"]
                 for vExperience in load_profile(pDatabaseFile)["experiences"]
@@ -192,6 +215,114 @@ async def update_star_answer(
         rResponse = render_profile(
             request, pDatabaseFile, vTexts, pStarMessage="Réponse enregistrée."
         )
+
+    return rResponse
+
+
+@router.post("/profile/levels", dependencies=[Depends(require_csrf)])
+def save_profile_levels(
+    pSkills: list[str] = Form([], alias="skill"),
+    pLevels: list[int] = Form([], alias="level"),
+    pNewSkill: str = Form("", alias="new_skill"),
+    pNewLevel: int = Form(0, alias="new_level"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre la grille d'auto-évaluation, compétence ajoutée comprise."""
+
+    if len(pSkills) != len(pLevels):
+        raise HTTPException(status_code=400, detail="Grille incomplète.")
+
+    vLevels = dict(zip(pSkills, pLevels))
+
+    if pNewSkill.strip():
+        vLevels[pNewSkill.strip()] = pNewLevel
+
+    try:
+        save_skill_levels(pDatabaseFile, vLevels)
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = RedirectResponse(
+        router.url_path_for("show_profile") + "#self-assessment", status_code=303
+    )
+
+    return rResponse
+
+
+def build_simulation_context(pDatabaseFile):
+    """Retourne la série de simulation en cours, son bilan et l'historique."""
+
+    vSimulation = load_simulation(pDatabaseFile)
+    vQuestion = get_current_question(vSimulation)
+
+    rContext = {
+        "simulation_themes": list_themes(),
+        "simulation": vSimulation,
+        "simulation_question": vQuestion,
+        "simulation_summary": (
+            summarize_simulation(vSimulation)
+            if vSimulation is not None and vQuestion is None
+            else None
+        ),
+        "simulation_history": get_simulation_history(pDatabaseFile)[:3],
+    }
+
+    return rContext
+
+
+def redirect_to_simulation():
+    """Revient à la carte de simulation de la page Profil."""
+
+    rResponse = RedirectResponse(
+        router.url_path_for("show_profile") + "#simulation", status_code=303
+    )
+
+    return rResponse
+
+
+@router.post("/profile/simulation/start", dependencies=[Depends(require_csrf)])
+def start_interview_simulation(
+    pTheme: str = Form(ALL_THEMES, alias="theme"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Commence une série de questions sur le thème choisi."""
+
+    if pTheme not in list_themes():
+        raise HTTPException(status_code=400, detail="Thème inconnu.")
+
+    start_simulation(pDatabaseFile, pTheme, datetime.now())
+
+    rResponse = redirect_to_simulation()
+
+    return rResponse
+
+
+@router.post("/profile/simulation/answer", dependencies=[Depends(require_csrf)])
+def answer_interview_simulation(
+    pPoints: list[int] = Form([], alias="points"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Note la question en cours d'après les points clés cochés."""
+
+    try:
+        record_answer(pDatabaseFile, pPoints, datetime.now())
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = redirect_to_simulation()
+
+    return rResponse
+
+
+@router.post("/profile/simulation/stop", dependencies=[Depends(require_csrf)])
+def stop_interview_simulation(pDatabaseFile: str = Depends(get_database_file)):
+    """Ferme la série en cours ou son bilan."""
+
+    stop_simulation(pDatabaseFile)
+
+    rResponse = redirect_to_simulation()
 
     return rResponse
 

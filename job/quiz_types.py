@@ -2,9 +2,9 @@
 
 Chaque type a ses propres champs et sa propre forme de réponse : l'indice d'un
 choix pour un QCM, un texte pour une valeur ou un code à compléter, une liste
-d'indices pour un ordre ou une association, un point cliqué sur le schéma pour
-une zone à désigner. Le reste de la révision (tirage, progression, examen) ne
-dépend pas du type.
+d'indices pour un ordre, une association ou les défauts cochés d'une revue de
+code, un point cliqué sur le schéma pour une zone à désigner. Le reste de la
+révision (tirage, progression, examen) ne dépend pas du type.
 """
 
 import json
@@ -27,6 +27,7 @@ TYPE_FIELDS = {
     "saisie": ("code", "accepted"),
     "zone": ("zones", "answer"),
     "construction": ("components", "connections"),
+    "revue": ("code", "choices", "answers"),
 }
 OPTIONAL_FIELDS = ("code", "unit", "tolerance", "distractors")
 QUESTION_TYPES = tuple(TYPE_FIELDS)
@@ -39,6 +40,7 @@ TYPE_LABELS = {
     "saisie": "Code à compléter",
     "zone": "Zone à désigner",
     "construction": "Schéma à construire",
+    "revue": "Revue de code",
 }
 
 # Taille maximale du schéma envoyé par le navigateur, en caractères JSON
@@ -115,6 +117,37 @@ def check_choices(pQuestion):
         or not 0 <= pQuestion["answer"] < len(vChoices)
     ):
         return "réponse hors des choix"
+
+    return ""
+
+
+def check_review(pQuestion):
+    """Vérifie une revue de code ; retourne le défaut trouvé, ou une chaîne vide.
+
+    Au moins un défaut réel et au moins une fausse piste : cocher tout, ou rien,
+    ne doit jamais suffire.
+    """
+
+    vChoices = pQuestion["choices"]
+    vAnswers = pQuestion["answers"]
+
+    if not isinstance(pQuestion["code"], str) or not pQuestion["code"].strip():
+        return "extrait de code attendu"
+
+    if not is_text_list(vChoices, 3, 8) or len(set(vChoices)) != len(vChoices):
+        return "3 à 8 constats distincts attendus"
+
+    if (
+        not isinstance(vAnswers, list)
+        or not all(
+            isinstance(vIndex, int) and not isinstance(vIndex, bool)
+            for vIndex in vAnswers
+        )
+        or len(set(vAnswers)) != len(vAnswers)
+        or not all(0 <= vIndex < len(vChoices) for vIndex in vAnswers)
+        or not 0 < len(vAnswers) < len(vChoices)
+    ):
+        return "défauts attendus parmi les constats, sans les prendre tous"
 
     return ""
 
@@ -220,6 +253,7 @@ CHECKS = {
     "saisie": check_completion,
     "zone": check_zones,
     "construction": check_construction,
+    "revue": check_review,
 }
 
 
@@ -250,7 +284,7 @@ def prepare_question(pQuestion, pRandom):
 
     vType = get_type(pQuestion)
 
-    if vType == "qcm":
+    if vType in ("qcm", "revue"):
         vShuffled = list(enumerate(pQuestion["choices"]))
     elif vType == "ordre":
         vShuffled = list(enumerate(pQuestion["items"]))
@@ -348,6 +382,35 @@ def grade_choice(pQuestion, pResponse):
         pResponse == pQuestion["answer"],
         pQuestion["choices"][pResponse],
         pQuestion["choices"][pQuestion["answer"]],
+    )
+
+    return rGrade
+
+
+def grade_review(pQuestion, pResponse):
+    """Corrige une revue de code : pResponse liste les indices des constats cochés.
+
+    Juste seulement si tous les défauts réels sont cochés, et eux seuls.
+    """
+
+    vChoices = pQuestion["choices"]
+
+    if (
+        not isinstance(pResponse, (list, tuple))
+        or not pResponse
+        or not all(
+            isinstance(vIndex, int)
+            and not isinstance(vIndex, bool)
+            and 0 <= vIndex < len(vChoices)
+            for vIndex in pResponse
+        )
+    ):
+        raise ValueError("Cochez au moins un constat.")
+
+    rGrade = (
+        set(pResponse) == set(pQuestion["answers"]),
+        " ; ".join(vChoices[vIndex] for vIndex in sorted(set(pResponse))),
+        " ; ".join(vChoices[vIndex] for vIndex in sorted(pQuestion["answers"])),
     )
 
     return rGrade
@@ -520,6 +583,7 @@ GRADERS = {
     "saisie": grade_completion,
     "zone": grade_zone,
     "construction": grade_construction,
+    "revue": grade_review,
 }
 
 

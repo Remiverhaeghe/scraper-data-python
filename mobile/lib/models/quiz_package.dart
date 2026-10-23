@@ -5,7 +5,7 @@
 const apiVersion = 1;
 
 /// Types de questions affichés et corrigés par l'application.
-const supportedTypes = {'qcm', 'numerique', 'ordre', 'association'};
+const supportedTypes = {'qcm', 'numerique', 'ordre', 'association', 'revue'};
 
 /// Tolérance d'un calcul sans tolérance précisée, en pourcentage.
 const defaultTolerance = 1.0;
@@ -66,6 +66,11 @@ class QuizQuestion {
 
   List<String> get choices => List<String>.from(data['choices'] as List? ?? const []);
   int get answer => (data['answer'] as num?)?.toInt() ?? 0;
+
+  /// Défauts réels d'une revue de code, parmi les constats de choices.
+  List<int> get answers => [
+        for (final vIndex in data['answers'] as List? ?? const []) (vIndex as num).toInt(),
+      ];
 
   double get value => (data['value'] as num).toDouble();
   String get unit => (data['unit'] as String?) ?? '';

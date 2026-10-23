@@ -396,3 +396,54 @@ def test_zone_question_needs_a_visual_to_click(tmp_path):
 
     assert vReport["added"] == 0
     assert "schéma où cliquer manquant" in " ".join(vReport["rejected"])
+
+
+REVIEW = {
+    "id": "revue-session",
+    "level": "intermédiaire",
+    "type": "revue",
+    "question": "Quels défauts relevez-vous dans cette méthode ?",
+    "code": "Session vSession = factory.openSession();\nreturn dao.canDelete(vSession);",
+    "choices": [
+        "La session n'est jamais fermée",
+        "Le nom vSession ne respecte pas la convention",
+        "Une exception laisse la connexion ouverte",
+    ],
+    "answers": [0, 2],
+    "explanation": "try-with-resources ferme la session dans tous les cas.",
+}
+
+
+def test_review_question_is_checked_shuffled_and_graded():
+    """Vérifie la revue de code : contrôle, mélange des constats et correction."""
+
+    assert check_question(REVIEW, "test") is None
+    assert check_typed_fields(REVIEW) == ""
+
+    vPrepared = prepare_question(REVIEW, random.Random(3))
+
+    assert vPrepared["type_label"] == "Revue de code"
+    assert sorted(vIndex for vIndex, _ in vPrepared["shuffled"]) == [0, 1, 2]
+    assert grade_answer(REVIEW, [2, 0])[0]
+    assert not grade_answer(REVIEW, [0])[0]
+    assert build_response(REVIEW, None, "", [1]) == [1]
+
+    with pytest.raises(ValueError, match="au moins un constat"):
+        grade_answer(REVIEW, [])
+
+
+@pytest.mark.parametrize(
+    ("pChange", "pMessage"),
+    [
+        ({"code": " "}, "extrait de code attendu"),
+        ({"choices": ["A", "A", "B"]}, "3 à 8 constats distincts attendus"),
+        ({"answers": [0, 1, 2]}, "sans les prendre tous"),
+        ({"answers": []}, "sans les prendre tous"),
+        ({"answers": [5]}, "sans les prendre tous"),
+        ({"answers": [True]}, "sans les prendre tous"),
+    ],
+)
+def test_malformed_review_question_is_refused(pChange, pMessage):
+    """Vérifie qu'une revue sans défaut, ou qui les prend tous, est refusée."""
+
+    assert pMessage in check_typed_fields({**REVIEW, **pChange})

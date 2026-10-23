@@ -223,6 +223,9 @@ class QuizPage(QWidget):
         self.priority_banner.prepare_requested.connect(
             self.import_panel.prepare_priority
         )
+        self.priority_banner.theme_requested.connect(
+            lambda pKey: self.start(pKey, "spaced")
+        )
         self.import_panel.questions_changed.connect(self.refresh)
         self.import_panel.questions_cleared.connect(self.forget_question)
         self.statistics_card = QuizStatisticsCard()

@@ -1,0 +1,195 @@
+{
+  "theme": "Entretien Java",
+  "skills": ["Java", "Design patterns", "Hibernate", "SOLID"],
+  "questions": [
+    {
+      "id": "ent-java-hashset-doublon",
+      "level": "intermédiaire",
+      "question": "Badge redéfinit equals (même numéro, même atelier) mais pas hashCode. Combien d'éléments contient le plus souvent l'ensemble après ces deux ajouts ?",
+      "code": "Set<Badge> vBadges = new HashSet<>();\nvBadges.add(new Badge(42, \"Atelier A\"));\nvBadges.add(new Badge(42, \"Atelier A\"));\nSystem.out.println(vBadges.size());",
+      "choices": [
+        "Un : equals repère le doublon",
+        "Deux : les hashCode diffèrent",
+        "Zéro : le second ajout vide l'ensemble",
+        "Cela dépend de l'ordre des ajouts"
+      ],
+      "answer": 1,
+      "explanation": "Un HashSet cherche d'abord la case du hashCode, puis compare avec equals dans cette case. Sans hashCode redéfini, chaque objet a le sien (lié à son identité) : les deux badges tombent presque toujours dans des cases différentes et equals n'est jamais appelé. On a donc 2 éléments. Règle : redéfinir equals impose de redéfinir hashCode, par exemple avec Objects.hash(numero, atelier)."
+    },
+    {
+      "id": "ent-java-contrat-hashcode",
+      "level": "intermédiaire",
+      "question": "Que garantit le contrat entre equals et hashCode ?",
+      "choices": [
+        "Deux objets égaux selon equals ont le même hashCode",
+        "Deux objets de même hashCode sont égaux selon equals",
+        "Chaque objet a un hashCode unique dans la JVM",
+        "equals compare les références, hashCode les valeurs"
+      ],
+      "answer": 0,
+      "explanation": "Le sens est unique : égaux ⇒ même hashCode. L'inverse est faux, deux objets différents peuvent partager un hashCode (collision), c'est pourquoi la table de hachage appelle ensuite equals. Un hashCode n'est pas unique : il n'y a que 2^32 valeurs possibles."
+    },
+    {
+      "id": "ent-java-patterns-intention",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque design pattern à son intention.",
+      "pairs": [
+        ["Singleton", "Garder une seule instance partagée"],
+        ["Builder", "Construire un objet complexe étape par étape"],
+        ["Adapter", "Faire collaborer deux interfaces incompatibles"],
+        ["Observer", "Prévenir des abonnés qu'un état a changé"],
+        ["Strategy", "Choisir un algorithme interchangeable à l'exécution"],
+        ["Decorator", "Ajouter un comportement sans modifier la classe"]
+      ],
+      "explanation": "Les patterns du « Gang of Four » se rangent en trois familles : création (Singleton, Builder, Factory, Prototype), structure (Adapter, Decorator, Facade, Proxy, Composite) et comportement (Observer, Strategy, Command, Template, State). En entretien, savoir dire à quoi sert un pattern compte plus que réciter la liste."
+    },
+    {
+      "id": "ent-java-famille-decorator",
+      "level": "débutant",
+      "question": "À quelle famille de design patterns appartient Decorator ?",
+      "choices": [
+        "Création",
+        "Structure",
+        "Comportement",
+        "Concurrence"
+      ],
+      "answer": 1,
+      "explanation": "Decorator est un pattern de structure : il compose des objets (un objet en enveloppe un autre) pour ajouter un comportement. Exemple connu : new BufferedReader(new FileReader(fichier)) dans java.io."
+    },
+    {
+      "id": "ent-java-attribut-static",
+      "level": "confirmé",
+      "question": "Qu'affiche ce programme ?",
+      "code": "abstract class Machine {\n    protected static String atelier = \"A\";\n    protected String nom = \"machine\";\n    String decrire() { return atelier + \"-\" + nom; }\n}\nclass Presse extends Machine {\n    Presse() { atelier = \"B\"; nom = \"presse\"; }\n}\nclass Tour extends Machine {\n    Tour() { nom = \"tour\"; }\n}\n\nMachine vPresse = new Presse();\nMachine vTour = new Tour();\nSystem.out.println(vPresse.decrire() + \" \" + vTour.decrire());",
+      "choices": [
+        "B-presse A-tour",
+        "B-presse B-tour",
+        "A-presse A-tour",
+        "B-presse B-machine"
+      ],
+      "answer": 1,
+      "explanation": "atelier est static : il n'en existe qu'un pour toute la classe Machine et ses filles. Le constructeur de Presse le passe à « B » pour tout le monde, Tour compris. nom, lui, est propre à chaque objet. Piège classique d'entretien : un attribut static modifié par un constructeur."
+    },
+    {
+      "id": "ent-java-ordre-initialisation",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Premier new Fille() du programme : remettez dans l'ordre ce qui s'exécute.",
+      "items": [
+        "Bloc static de la classe Mere",
+        "Bloc static de la classe Fille",
+        "Constructeur de Mere",
+        "Constructeur de Fille"
+      ],
+      "explanation": "Au premier usage, la JVM charge et initialise les classes, de la mère vers la fille (blocs et attributs static). Puis la construction de l'objet appelle d'abord le constructeur de la mère (super() implicite), ensuite celui de la fille. Les blocs static ne s'exécutent qu'une fois, au chargement."
+    },
+    {
+      "id": "ent-java-try-with-resources",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez pour que la ressource soit fermée automatiquement, même en cas d'exception.",
+      "code": "____ (BufferedReader vLecteur = Files.newBufferedReader(vChemin)) {\n    return vLecteur.readLine();\n}",
+      "accepted": ["try"],
+      "explanation": "try-with-resources (Java 7) ferme toute ressource AutoCloseable déclarée entre les parenthèses, à la fin du bloc, qu'il se termine normalement ou par une exception. C'est la correction attendue d'une connexion ou d'une session oubliée ouverte."
+    },
+    {
+      "id": "ent-java-revue-connexion",
+      "level": "confirmé",
+      "type": "revue",
+      "question": "Cette méthode vérifie si un groupe d'utilisateurs peut être supprimé. Quels défauts réels relevez-vous ?",
+      "code": "Connection vConnexion = null;\nboolean vSupprimable = false;\ntry {\n    vConnexion = source.getConnection();\n    vSupprimable = depot.peutSupprimer(vCode, vConnexion);\n} catch (Exception vException) {\n    LOGGER.error(\"Vérification impossible\", vException);\n}\nreturn vSupprimable;",
+      "choices": [
+        "La connexion n'est jamais fermée, même sans erreur",
+        "L'appelant ne distingue pas une panne d'un refus de suppression",
+        "catch (Exception) masque aussi les erreurs de programmation",
+        "vSupprimable devrait valoir true par défaut",
+        "L'exception ne devrait pas être passée au logger",
+        "vConnexion devrait être un attribut static"
+      ],
+      "answers": [0, 1, 2],
+      "explanation": "La connexion fuit à chaque appel : un try-with-resources la fermerait. En cas d'erreur, la méthode répond « non supprimable » comme si c'était une règle métier : mieux vaut relancer une exception métier pour que l'écran affiche une erreur. Attraper Exception avale aussi les NullPointerException. En revanche, false par défaut est le bon choix (refuser par prudence), passer l'exception au logger garde sa pile d'appels, et une connexion partagée en static serait une erreur grave."
+    },
+    {
+      "id": "ent-java-revue-equals",
+      "level": "intermédiaire",
+      "type": "revue",
+      "question": "Quels défauts réels contient cette classe ?",
+      "code": "public class Badge {\n    private final int numero;\n    private final String atelier;\n\n    @Override\n    public boolean equals(Object pAutre) {\n        if (!(pAutre instanceof Badge vBadge)) {\n            return false;\n        }\n        return numero == vBadge.numero && atelier == vBadge.atelier;\n    }\n}",
+      "choices": [
+        "hashCode n'est pas redéfini alors qu'equals l'est",
+        "Les ateliers sont comparés avec == au lieu d'equals",
+        "Le paramètre d'equals devrait être de type Badge",
+        "equals devrait lever une exception si pAutre est null",
+        "Les attributs final empêchent de redéfinir equals"
+      ],
+      "answers": [0, 1],
+      "explanation": "Sans hashCode cohérent, Badge fonctionne mal dans un HashSet ou comme clé de HashMap. == compare les références des chaînes : deux « Atelier A » construits séparément seraient différents ; il faut Objects.equals(atelier, vBadge.atelier). Le paramètre doit rester Object, sinon on surcharge au lieu de redéfinir. equals(null) doit renvoyer false, ce que fait déjà instanceof."
+    },
+    {
+      "id": "ent-java-nouveaute-java8",
+      "level": "débutant",
+      "question": "Laquelle de ces nouveautés date de Java 8 ?",
+      "choices": [
+        "Le mot-clé var pour les variables locales",
+        "Les lambdas et l'API Stream",
+        "Les records",
+        "Le système de modules"
+      ],
+      "answer": 1,
+      "explanation": "Java 8 (2014) apporte les lambdas, l'API Stream, Optional et la nouvelle API de dates java.time. Les modules arrivent avec Java 9, var avec Java 10, les records avec Java 16. Une question d'entretien fréquente : citer une nouveauté par version récente (Java 17 : classes scellées ; Java 21 : threads virtuels, pattern matching dans switch)."
+    },
+    {
+      "id": "ent-java-bibliotheque-json",
+      "level": "débutant",
+      "question": "Quelle bibliothèque Java sert couramment à lire et écrire du JSON ?",
+      "choices": [
+        "Log4j",
+        "Jackson",
+        "JUnit",
+        "Hibernate"
+      ],
+      "answer": 1,
+      "explanation": "Jackson (ou Gson) convertit objets et JSON. Log4j, Logback ou SLF4J servent aux journaux, JUnit aux tests, Hibernate (JPA) à la persistance en base. JAXB ou les API DOM et StAX traitent le XML."
+    },
+    {
+      "id": "ent-java-exception-logger",
+      "level": "intermédiaire",
+      "question": "Pourquoi passer l'exception en dernier argument de LOGGER.error(\"…\", vException) ?",
+      "choices": [
+        "Pour que l'erreur remonte à l'appelant",
+        "Pour journaliser sa pile d'appels complète",
+        "Pour éviter d'écrire un message",
+        "Pour envoyer l'erreur par e-mail"
+      ],
+      "answer": 1,
+      "explanation": "Le logger écrit alors le message, le type de l'exception et toute sa pile d'appels (stack trace), indispensable pour diagnostiquer. Journaliser seulement vException.getMessage() perd l'endroit exact de l'erreur. L'exception n'est pas relancée pour autant."
+    },
+    {
+      "id": "ent-java-responsabilite-unique",
+      "level": "intermédiaire",
+      "question": "Que demande le principe de responsabilité unique (le S de SOLID) ?",
+      "choices": [
+        "Qu'une classe n'ait qu'une méthode publique",
+        "Qu'une classe n'ait qu'une raison de changer",
+        "Qu'un programme n'ait qu'un point d'entrée",
+        "Qu'un objet ne soit créé qu'une fois dans tout le programme"
+      ],
+      "answer": 1,
+      "explanation": "Une classe ne doit avoir qu'une raison de changer : elle répond à un seul acteur ou besoin. Une classe qui lit un fichier, calcule un salaire et l'envoie par e-mail changera pour trois raisons : on la découpe. Les autres lettres : ouvert/fermé, substitution de Liskov, ségrégation des interfaces, inversion des dépendances."
+    },
+    {
+      "id": "ent-java-ordre-hashmap",
+      "level": "intermédiaire",
+      "question": "Dans quel ordre une HashMap parcourt-elle ses clés ?",
+      "choices": [
+        "Dans l'ordre d'insertion des clés",
+        "Dans l'ordre alphabétique, ou numérique pour des nombres",
+        "Sans ordre garanti : il dépend des hashCode",
+        "Dans l'ordre inverse des insertions"
+      ],
+      "answer": 2,
+      "explanation": "HashMap range ses entrées selon le hashCode des clés et la taille de sa table : l'ordre de parcours n'est pas garanti et peut changer quand elle s'agrandit. LinkedHashMap garde l'ordre d'insertion, TreeMap trie les clés. Un test qui affiche une HashMap et compare au texte attendu est fragile."
+    }
+  ]
+}

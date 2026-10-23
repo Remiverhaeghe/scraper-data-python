@@ -183,6 +183,28 @@ Grade gradePairs(QuizQuestion pQuestion, Object? pResponse) {
   return rGrade;
 }
 
+/// Revue de code : juste seulement si tous les défauts réels sont cochés, et eux seuls.
+Grade gradeReview(QuizQuestion pQuestion, Object? pResponse) {
+  final vChoices = pQuestion.choices;
+
+  if (pResponse is! List<int> ||
+      pResponse.isEmpty ||
+      pResponse.any((vIndex) => vIndex < 0 || vIndex >= vChoices.length)) {
+    throw const UnreadableAnswer('Cochez au moins un constat.');
+  }
+
+  final vGiven = pResponse.toSet().toList()..sort();
+  final vExpected = [...pQuestion.answers]..sort();
+
+  final rGrade = Grade(
+    correct: vGiven.join(',') == vExpected.join(','),
+    given: vGiven.map((vIndex) => vChoices[vIndex]).join(' ; '),
+    expected: vExpected.map((vIndex) => vChoices[vIndex]).join(' ; '),
+  );
+
+  return rGrade;
+}
+
 /// Corrige une réponse selon le type de la question ; lève UnreadableAnswer si illisible.
 Grade gradeAnswer(QuizQuestion pQuestion, Object? pResponse) {
   final Grade rGrade;
@@ -196,6 +218,8 @@ Grade gradeAnswer(QuizQuestion pQuestion, Object? pResponse) {
       rGrade = gradeOrder(pQuestion, pResponse);
     case 'association':
       rGrade = gradePairs(pQuestion, pResponse);
+    case 'revue':
+      rGrade = gradeReview(pQuestion, pResponse);
     default:
       throw const UnreadableAnswer('Type de question non pris en charge.');
   }

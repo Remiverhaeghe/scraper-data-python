@@ -72,13 +72,17 @@ def test_profile_round_trip(tmp_path, profile):
     assert vTexts["experiences"].splitlines()[0] == (
         "Développeur backend | Java, Spring, SQL | Réduit de 40 % le temps de réponse"
     )
-    assert build_profile(
-        vTexts["name"],
-        vTexts["headline"],
-        vTexts["skills"],
-        vTexts["experiences"],
-        vTexts["cv_variants"],
-    ) == load_profile(vDatabaseFile)
+    # Le formulaire ne porte pas l'auto-évaluation, gardée à part.
+    assert {
+        **build_profile(
+            vTexts["name"],
+            vTexts["headline"],
+            vTexts["skills"],
+            vTexts["experiences"],
+            vTexts["cv_variants"],
+        ),
+        "skill_levels": {},
+    } == load_profile(vDatabaseFile)
 
 
 def test_build_profile_rejects_huge_text():

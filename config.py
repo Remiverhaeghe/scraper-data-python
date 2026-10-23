@@ -31,6 +31,9 @@ ICONS_LICENSE_FILE = ASSETS_DIRECTORY / "icons" / "LICENSE"
 # Questions de révision technique, un fichier JSON par thème
 QUIZ_DIRECTORY = ASSETS_DIRECTORY / "quiz"
 
+# Questions ouvertes de la simulation d'entretien technique, réponse et points clés
+INTERVIEW_QUESTIONS_FILE = ASSETS_DIRECTORY / "interview" / "questions.json"
+
 # Catalogue des thèmes et modèle de la demande de questions à ChatGPT
 QUIZ_GENERATION_DIRECTORY = ASSETS_DIRECTORY / "quiz_generation"
 

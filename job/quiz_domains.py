@@ -65,7 +65,7 @@ DOMAIN_RULES = (
         "Informatique",
         "Développement",
         "java spring python javascript typescript angular react kotlin php node "
-        "backend frontend",
+        "backend frontend android html css",
     ),
     ("Industrie", "Automatisme", "automatisme plc"),
     ("Informatique", "Données", "sql base donnees postgresql mysql oracle mongodb"),

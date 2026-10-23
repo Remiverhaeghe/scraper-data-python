@@ -4,6 +4,7 @@ import hashlib
 from datetime import timedelta
 
 from job.interview_journal import collect_asked_questions
+from job.interview_simulation import format_model_answer, get_weak_questions
 from job.quiz import LEITNER_INTERVALS
 from job.star_answers import (
     BEHAVIORAL_QUESTIONS,
@@ -28,7 +29,7 @@ def get_card_id(pQuestion):
 
 
 def build_deck(pDatabaseFile):
-    """Retourne les cartes : réponses STAR préparées, puis questions vécues."""
+    """Retourne les cartes : réponses STAR, questions vécues, puis techniques ratées."""
 
     vCards = {}
 
@@ -47,6 +48,17 @@ def build_deck(pDatabaseFile):
                 "question": vItem["question"],
                 "answer": "",
                 "origin": f"Posée en entretien : {vItem['context']}",
+            },
+        )
+
+    # Questions techniques ratées en simulation, réponse modèle et points clés
+    for vQuestion in get_weak_questions(pDatabaseFile):
+        vCards.setdefault(
+            get_card_id(vQuestion["question"]),
+            {
+                "question": vQuestion["question"],
+                "answer": format_model_answer(vQuestion),
+                "origin": f"Simulation technique · {vQuestion['theme']}",
             },
         )
 

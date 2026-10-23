@@ -21,6 +21,7 @@ from job.quiz_import import import_questions, import_questions_file
 from job.quiz_types import prepare_question
 from storage.database import initialize_database
 from storage.job_offers import save_offers
+from job.self_assessment import save_skill_levels
 from tests.job.test_quiz_generation import build_lot_text, build_question
 from tests.job.test_quiz_import import build_pack
 from tests.job.test_quiz_types import COMPLETION, NUMERIC, ORDER, PAIRS
@@ -297,7 +298,7 @@ def test_domain_filter_zero_offers_and_scroll(qt_application, tmp_path):
     assert vScroll.verticalScrollBar().value() == 0
 
 
-def test_exam_is_run_resumed_and_closed(qt_application, tmp_path):
+def test_exam_is_run_resumed_and_closed(qt_application, tmp_path, qcm_only_quiz):
     """Vérifie l'examen sur le bureau : questions, reprise, résultat et fermeture."""
 
     vPage = create_page(tmp_path / "scraper.db")
@@ -783,3 +784,25 @@ def test_priority_banner_prepares_empty_themes(qt_application, tmp_path, monkeyp
     vButton.click()
 
     assert vPrepared == ["Grafcet et logique séquentielle"]
+
+
+def test_priority_banner_offers_weak_themes(qt_application, tmp_path):
+    """Vérifie les thèmes à renforcer d'après l'auto-évaluation, ouverts d'un clic."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_skill_levels(vDatabaseFile, {"Android": 2})
+
+    vPage = QuizPage(vDatabaseFile)
+    vPage.refresh()
+
+    assert not vPage.priority_banner.isHidden()
+    assert vPage.priority_banner.empty_title.isHidden()
+
+    vButton = vPage.priority_banner.weak_layout.itemAt(0).widget()
+
+    assert vButton.text() == "Entretien Android · Android 2/10"
+
+    vButton.click()
+
+    assert vPage.theme_key == "entretien_android"

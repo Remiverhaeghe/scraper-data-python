@@ -4,6 +4,7 @@ from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import QColor, QFontDatabase, QPainter, QPen
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QGridLayout,
     QLabel,
@@ -170,6 +171,17 @@ def add_answer_widgets(pQuestion, pLayout, pGroup, pOnSubmit):
         pLayout.addWidget(vContainer)
 
         return rWidgets
+    elif vType == "revue":
+        vHint = QLabel("Cochez tous les défauts réels de cet extrait, et eux seuls.")
+        vHint.setObjectName("cardSubtitle")
+        pLayout.addWidget(vHint)
+        rWidgets = []
+
+        # L'indice d'origine du constat suit la case, pour la correction.
+        for vIndex, vChoice in pQuestion["shuffled"]:
+            vCheck = QCheckBox(vChoice)
+            vCheck.setProperty("choice_index", vIndex)
+            rWidgets.append(vCheck)
     else:
         rWidgets = []
 
@@ -202,6 +214,10 @@ def read_response(pQuestion, pWidgets, pGroup, pPoint):
     elif vType == "association":
         rResponse = [vCombo.currentData() for vCombo in pWidgets]
         rResponse = None if None in rResponse else rResponse
+    elif vType == "revue":
+        rResponse = [
+            vCheck.property("choice_index") for vCheck in pWidgets if vCheck.isChecked()
+        ] or None
     elif vType == "zone":
         rResponse = list(pPoint) if pPoint else None
     elif vType == "construction":
