@@ -10,6 +10,7 @@ from job.interview_revision import (
     describe_offer_exam,
     find_offer_themes,
     start_offer_exam,
+    start_skills_exam,
 )
 from job.quiz import load_quiz
 from storage.database import initialize_database
@@ -86,3 +87,26 @@ def test_start_offer_exam(database_file):
 
     with pytest.raises(ValueError, match="Aucun thème"):
         start_offer_exam(database_file, vQuiz, {"title": "Comptable"}, NOW)
+
+
+def test_skills_exam_covers_the_themes_of_the_skills(tmp_path):
+    """Vérifie l'examen sur des compétences : thèmes trouvés, ou refus sans thème."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vQuiz = load_quiz()
+    vSkill = next(
+        vSkill.strip()
+        for vTheme in vQuiz.values()
+        for vSkill in vTheme["skills"]
+        if vSkill.strip()
+    )
+
+    vExam = start_skills_exam(vDatabaseFile, vQuiz, [vSkill], NOW)
+
+    assert vExam["title"] == "Compétences prioritaires du marché"
+    assert vExam["ids"]
+    assert vExam["offer"] is None
+
+    with pytest.raises(ValueError):
+        start_skills_exam(vDatabaseFile, vQuiz, ["Compétence inconnue"], NOW)

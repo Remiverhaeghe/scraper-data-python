@@ -10,6 +10,7 @@ from collections import defaultdict, deque
 from datetime import timedelta
 
 from utils.logger import get_logger
+from utils.totp import find_code_step
 
 logger = get_logger(__name__)
 
@@ -73,6 +74,43 @@ def verify_password(pPassword, pStoredHash):
         logger.error("Empreinte WEB_PASSWORD_HASH illisible : régénérez-la")
 
     return rValid
+
+
+class SecondFactor:
+    """Vérifie le code à 6 chiffres quand WEB_TOTP_SECRET est renseigné.
+
+    Un code accepté ne l'est qu'une fois : intercepté, il ne resservirait pas.
+    """
+
+    def __init__(self):
+        """Commence sans code déjà utilisé."""
+        self.last_step = None
+
+    @staticmethod
+    def is_enabled():
+        """Indique si la double authentification est demandée."""
+        rEnabled = bool(os.getenv("WEB_TOTP_SECRET"))
+
+        return rEnabled
+
+    def check(self, pCode, pTimestamp):
+        """Vérifie le code saisi ; toujours vrai sans double authentification."""
+        if not self.is_enabled():
+            return True
+
+        vStep = find_code_step(os.getenv("WEB_TOTP_SECRET"), pCode, pTimestamp)
+
+        rValid = vStep is not None and (
+            self.last_step is None or vStep > self.last_step
+        )
+
+        if rValid:
+            self.last_step = vStep
+
+        return rValid
+
+
+second_factor = SecondFactor()
 
 
 def check_credentials(pUsername, pPassword):

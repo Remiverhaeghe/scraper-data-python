@@ -4,7 +4,12 @@ import pandas as pd
 import pytest
 
 from job.config import JobScrapingConfig
-from job.filter import filter_jobs, matches_location
+from job.filter import (
+    expand_keyword,
+    filter_jobs,
+    matches_keyword,
+    matches_location,
+)
 
 
 def create_job(**pValues):
@@ -394,3 +399,14 @@ def test_matches_location_by_words_and_department(pJob, pSearch, pExpected):
     """Vérifie le lieu cherché sans accents, par mots entiers ou par département."""
 
     assert matches_location(pJob, pSearch) is pExpected
+
+
+def test_keyword_finds_its_synonyms():
+    """Vérifie les synonymes : « Java » trouve « JEE », pas l'inverse."""
+
+    vJob = {"title": "Développeur JEE / Spring", "description": ""}
+
+    assert matches_keyword(vJob, "Java")
+    assert matches_keyword({"title": "Technicien GMAO"}, "maintenance")
+    assert not matches_keyword({"title": "Développeur Java"}, "JEE")
+    assert expand_keyword("Développeur")[0] == "développeur"

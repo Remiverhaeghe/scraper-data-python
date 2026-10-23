@@ -34,13 +34,15 @@
                     {% if offer.needs_review %}<span class="badge badge-warning" title="Différences : {{ offer.differences | join(', ') }}">À valider</span>{% endif %}
                     {% if offer.remote %}<span class="badge">Télétravail</span>{% endif %}
                     {% if offer.is_agency %}<span class="badge badge-warning" title="Annonce d'une agence d'intérim">Intérim</span>{% endif %}
+                    {% if offer.above_experience %}<span class="badge badge-warning" title="Expérience demandée au-dessus de la vôtre">{{ offer.required_years }} ans demandés</span>{% endif %}
+                    {% if offer.is_consulting %}<span class="badge badge-muted" title="Société de conseil : le poste s'exerce chez un de ses clients">ESN</span>{% endif %}
                     {% for benefit in offer.benefits[:max_benefit_badges] %}<span class="badge badge-muted">{{ benefit }}</span>{% endfor %}
                 </td>
                 <td>{% if offer.company_preferred %}<span class="tone-primary" title="Entreprise privilégiée">★</span> {% endif %}{{ offer.company or "" }}</td>
                 <td class="muted">{{ offer.location or "" }}</td>
                 <td class="amount nowrap">{% if offer.distance_km is not none %}{{ offer.distance_km }} km{% endif %}</td>
                 <td>{% if offer.contract %}<span class="badge badge-first badge-{{ contract_tones.get(offer.contract, 'muted') }}">{{ offer.contract }}</span>{% endif %}</td>
-                <td class="amount">{{ offer.net_salary or "" }}</td>
+                <td class="amount">{% if offer.net_salary %}{{ offer.net_salary }}{% elif offer.estimated_salary %}<span class="muted" title="Estimation : médiane des offres comparables qui annoncent un salaire">≈ {{ offer.estimated_salary }}</span>{% endif %}</td>
                 <td class="amount">{% if offer.match_score is not none %}<span class="badge badge-first badge-{{ offer.match_score | score_tone }}" title="Compétences de l'offre présentes dans votre profil">{{ offer.match_score }} %</span>{% endif %}</td>
                 <td class="amount">{% if offer.freshness is defined %}<span class="badge badge-{{ offer.freshness | score_tone }}">{{ offer.freshness }}</span>{% endif %}</td>
                 <td class="nowrap">

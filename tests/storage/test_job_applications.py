@@ -374,3 +374,38 @@ def test_follow_ups_and_applications_are_counted_by_day(tmp_path):
     assert [
         vCount for _, vCount in count_follow_ups_by_day(vDatabaseFile, 3, vNow)
     ] == [0, 1, 1]
+
+
+def test_status_alone_keeps_notes_follow_up_and_interview(tmp_path):
+    """Vérifie qu'un statut seul garde les champs saisis, et qu'un formulaire les vide."""
+
+    database_file = tmp_path / "scraper.db"
+    initialize_database(database_file)
+
+    save_application(
+        database_file,
+        "adzuna",
+        "1",
+        "APPLIED",
+        pFollowUpDate=datetime(2026, 11, 2),
+        pNotes="Contact : la RH",
+        pInterviewAt=datetime(2026, 11, 5, 10),
+    )
+    save_application(database_file, "adzuna", "1", "INTERVIEW")
+    vKept = get_application(database_file, "adzuna", "1")
+
+    save_application(
+        database_file,
+        "adzuna",
+        "1",
+        "INTERVIEW",
+        pFollowUpDate=None,
+        pNotes="",
+        pInterviewAt=None,
+    )
+    vCleared = get_application(database_file, "adzuna", "1")
+
+    assert vKept["notes"] == "Contact : la RH"
+    assert vKept["follow_up_date"].startswith("2026-11-02")
+    assert vKept["interview_at"] == "2026-11-05T10:00"
+    assert (vCleared["notes"], vCleared["interview_at"]) == (None, None)

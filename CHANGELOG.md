@@ -5,6 +5,11 @@ dans l'historique git.
 
 ## Non publié
 
+### Application mobile 1.6.0
+- Tri rapide des nouvelles offres : glisser pour « Intéressé » ou « Ignorée »
+- Notification des réponses de recruteurs (refus, entretien daté) repérées par
+  le PC dans Gmail
+
 ### Application mobile 1.5.0
 - Filtre « Près de chez moi » dans les offres, d'après le rayon des alertes
 - « Voir sur la carte » ouvre OpenStreetMap à l'emplacement de l'offre
@@ -32,6 +37,16 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Entreprise suivie ajoutée depuis l'adresse de son site carrière
+- Badge ESN, filtres Clients finaux, Sans stage ni alternance et À ma portée
+  (réglage Expérience), synonymes de métier dans la recherche
+- Salaire estimé, argumentaire de négociation, lettre en Word, candidatures
+  spontanées, journal de recherche exportable, date d'entretien lue dans Gmail
+- Taux de réponse par type d'employeur et par délai, examen blanc sur les
+  compétences prioritaires, raccourcis clavier, double authentification du web
+- Corrections : pays « FR » des offres SmartRecruiters (migration v29), désormais
+  placées sur la carte et comptées en France ; télétravail lu en booléen ; un
+  statut seul ne vide plus notes, relance ni date d'entretien
 - Source Workday (grands groupes) ; Kiabi, Lesaffre et Boulanger suivis sur
   SmartRecruiters ; recherches « Près de chez moi » prêtes d'un clic
 - Réponses des recruteurs lues dans Gmail, statut proposé ; CV Word adapté à

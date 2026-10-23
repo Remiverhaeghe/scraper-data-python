@@ -4,7 +4,14 @@ from datetime import datetime
 
 import pandas as pd
 
-from job.salary_market import describe_market_salary, find_market_salary, is_training
+from job.salary_market import (
+    add_estimated_salaries,
+    describe_market_salary,
+    describe_negotiation,
+    find_market_salary,
+    is_training,
+    to_gross_yearly,
+)
 from job.settings import save_settings
 from storage.database import initialize_database
 from storage.job_offers import save_offers
@@ -79,3 +86,51 @@ def test_is_training():
     assert is_training({"title": "Software Engineer Intern"})
     assert is_training({"title": "Développeur en alternance"})
     assert not is_training({"title": "Développeur internationalisation"})
+
+
+def test_negotiation_gives_gross_yearly_range_and_ask():
+    """Vérifie l'argumentaire : brut annuel, demande au moins égale à la médiane."""
+
+    vSettings = {"net_salary_percent": 75, "income_tax_rate": 0}
+    vMarket = {"median": 3000, "low": 2500, "high": 3500, "count": 6, "target": 2800}
+
+    vText = describe_negotiation(
+        vMarket, {"salary_net_monthly_min": 3600}, vSettings
+    ).replace(" ", " ")
+
+    assert to_gross_yearly(3000, vSettings) == 48000
+    assert vText.startswith("Offres proches : 40 000 € à 56 000 € brut annuel")
+    assert "demande appuyée par le marché : 48 000 € brut annuel" in vText
+    assert vText.endswith("l'offre annonce plus que le marché")
+    assert describe_negotiation(None, {}, vSettings) == ""
+
+
+def test_offers_without_salary_get_an_estimate(tmp_path):
+    """Vérifie l'estimation : médiane des offres proches, seulement en France."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                build_offer(str(vId), "Développeur", ["Java", "SQL"], vSalary)
+                for vId, vSalary in ((1, 2800), (2, 3000), (3, 3400))
+            ]
+        ),
+        NOW,
+    )
+    vOffers = [
+        build_offer("a", "Développeur Java", ["Java", "SQL"], None),
+        {
+            **build_offer("b", "Développeur Java", ["Java", "SQL"], None),
+            "country": "Allemagne",
+        },
+        build_offer("c", "Développeur Java", ["Java", "SQL"], 3100),
+    ]
+
+    add_estimated_salaries(vDatabaseFile, vOffers)
+
+    assert vOffers[0]["estimated_salary"] == "3 000 €"
+    assert vOffers[1]["estimated_salary"] is None
+    assert vOffers[2]["estimated_salary"] is None

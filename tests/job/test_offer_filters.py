@@ -47,6 +47,8 @@ def test_build_offer_filters_keeps_known_values():
         "pPreferredCompanies": None,
         "pCountry": None,
         "pHiddenAgencies": None,
+        "pHiddenCompanies": None,
+        "pHideTraining": False,
         "pNear": None,
     }
 

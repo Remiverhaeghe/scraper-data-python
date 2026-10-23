@@ -15,6 +15,27 @@ const reminderMinute = 30;
 
 const reminderId = 1;
 const offersNotificationId = 2;
+const repliesNotificationId = 3;
+
+/// Résume une réponse : « Entretien chez Kiabi le 05/11 à 14:00 », « Refus de Kiabi ».
+String describeReply(Map<String, dynamic> pReply) {
+  final vCompany = '${pReply['company'] ?? 'l\'entreprise'}';
+
+  if (pReply['status'] != 'INTERVIEW') {
+    return 'Refus de $vCompany';
+  }
+
+  final vDate = DateTime.tryParse('${pReply['interview_at'] ?? ''}');
+
+  final rText = vDate == null
+      ? 'Entretien chez $vCompany'
+      : 'Entretien chez $vCompany le ${twoDigits(vDate.day)}/${twoDigits(vDate.month)} '
+          'à ${twoDigits(vDate.hour)}:${twoDigits(vDate.minute)}';
+
+  return rText;
+}
+
+String twoDigits(int pValue) => pValue.toString().padLeft(2, '0');
 
 /// Vérification des offres en arrière-plan : Android la lance au mieux toutes les
 /// trois heures, seulement avec une connexion réseau.
@@ -33,6 +54,9 @@ abstract class Reminders {
 
   /// Signale les nouvelles offres proches du profil, en une seule notification.
   Future<void> showNewOffers(List<Map<String, dynamic>> pOffers);
+
+  /// Signale les réponses de recruteurs repérées par le PC, en une seule notification.
+  Future<void> showReplies(List<Map<String, dynamic>> pReplies);
 
   /// Lance ou arrête la vérification périodique des offres en arrière-plan.
   Future<void> scheduleOfferChecks(bool pEnabled);
@@ -143,6 +167,28 @@ class LocalReminders implements Reminders {
     );
 
     log('Notification de ${pOffers.length} nouvelle(s) offre(s)', name: 'offres');
+  }
+
+  @override
+  Future<void> showReplies(List<Map<String, dynamic>> pReplies) async {
+    await initialize();
+
+    await plugin.show(
+      id: repliesNotificationId,
+      title: pReplies.length == 1
+          ? 'Réponse d\'un recruteur'
+          : '${pReplies.length} réponses de recruteurs',
+      body: pReplies.take(3).map(describeReply).join(' · '),
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'replies',
+          'Réponses des recruteurs',
+          channelDescription: 'Refus ou entretien repérés par le PC dans vos e-mails',
+        ),
+      ),
+    );
+
+    log('Notification de ${pReplies.length} réponse(s) de recruteur', name: 'réponses');
   }
 
   @override

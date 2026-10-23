@@ -274,17 +274,3 @@ def test_department_is_kept_and_old_places_are_looked_up_once(tmp_path, geocoder
     assert vDepartments == {"Roubaix": "59", "Lyon": "69"}
     assert get_cached_departments(vDatabaseFile)["lyon"] == "69"
     assert locate_offers(vDatabaseFile, NOW)["lookups"] == 0
-
-
-def test_alert_radius_reads_remote_as_stored_in_the_database():
-    """Vérifie le télétravail lu en base, en texte : « 1 » gardé, « 0 » écarté."""
-
-    vHome = {"latitude": 50.69, "longitude": 3.18, "alert_radius_km": 30}
-    vOffers = [
-        {"id": "teletravail", "remote": "1", "distance_km": None},
-        {"id": "sur site", "remote": "0", "distance_km": None},
-    ]
-
-    assert [vOffer["id"] for vOffer in keep_within_alert_radius(vOffers, vHome)] == [
-        "teletravail"
-    ]

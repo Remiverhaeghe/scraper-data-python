@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, QSortFilterProxyModel, Qt
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFileDialog,
@@ -39,7 +40,9 @@ from job.companies import (
     mark_preferred_companies,
 )
 from job.deduplication import group_offers
+from job.experience_fit import mark_experience_fit
 from job.freshness import add_freshness
+from job.salary_market import add_estimated_salaries
 from job.geocoding import add_distances, load_home
 from job.export import EXPORT_FORMATS, export_offers
 from job.manual_offers import (
@@ -58,6 +61,7 @@ from job.preparation import filter_by_match, score_offers
 from job.profile import load_profile
 from job.settings import load_settings
 from storage.duplicates import get_decisions
+from storage.job_applications import save_application
 from storage.job_offers import get_offers
 from utils.logger import get_logger
 
@@ -123,6 +127,24 @@ class OffersPage(QWidget):
 
         self.detail_panel = OfferDetailPanel(pDatabaseFile)
         self.detail_panel.application_changed.connect(self.refresh)
+
+        # Actifs seulement quand le tableau a le focus : la saisie d'une
+        # recherche n'est pas gênée.
+        for vKeys, vAction in (
+            ("I", lambda: self.set_current_status("INTERESTED")),
+            ("P", lambda: self.set_current_status("APPLIED")),
+            ("X", lambda: self.set_current_status("IGNORED")),
+            ("O", self.detail_panel.open_offer),
+            ("Return", self.detail_panel.open_offer),
+        ):
+            vShortcut = QShortcut(QKeySequence(vKeys), self.table)
+            vShortcut.setContext(Qt.ShortcutContext.WidgetShortcut)
+            vShortcut.activated.connect(vAction)
+
+        self.table.setToolTip(
+            "Raccourcis : I Intéressé, P Postulé, X Ignorée, O ou Entrée pour "
+            "ouvrir l'annonce"
+        )
 
         vSplitter = QSplitter(Qt.Orientation.Vertical)
         vSplitter.addWidget(self.table)
@@ -446,6 +468,12 @@ class OffersPage(QWidget):
             score_offers(vPrepared, load_profile(self.database_file))
             add_distances(vPrepared, self.home)
             mark_agency_offers(vPrepared, self.agencies)
+            mark_experience_fit(vPrepared, vSettings["experience_years"])
+
+            if self.filters_bar.reach_check.isChecked():
+                vPrepared = [
+                    vOffer for vOffer in vPrepared if not vOffer["above_experience"]
+                ]
             vPrepared = filter_by_match(
                 vPrepared, self.filters_bar.match_combo.currentData()
             )
@@ -453,6 +481,7 @@ class OffersPage(QWidget):
             # Les annonces d'une même offre sont regroupées en une seule ligne.
             vPrepared = group_offers(vPrepared, get_decisions(self.database_file))
             add_freshness(vPrepared, datetime.now())
+            add_estimated_salaries(self.database_file, vPrepared)
 
             if self.filters_bar.multiple_check.isChecked():
                 vPrepared = [vOffer for vOffer in vPrepared if vOffer["duplicates"]]
@@ -480,6 +509,35 @@ class OffersPage(QWidget):
             )
 
         return rText
+
+    def set_current_status(self, pStatus):
+        """Donne un statut à l'offre choisie, puis reste sur la même ligne.
+
+        Une offre ignorée disparaît de la liste : la ligne suivante est alors
+        choisie, pour trier les offres d'affilée au clavier.
+        """
+        vOffer = self.detail_panel.offer
+
+        if vOffer is None:
+            return
+
+        vRow = self.table.currentIndex().row()
+
+        try:
+            save_application(
+                self.database_file, vOffer["source"], vOffer["source_id"], pStatus
+            )
+
+        except Exception:
+            logger.exception("Statut non enregistré depuis le clavier")
+            return
+
+        self.refresh()
+
+        vRowCount = self.proxy.rowCount()
+
+        if vRowCount:
+            self.table.selectRow(min(max(vRow, 0), vRowCount - 1))
 
     @staticmethod
     def get_offer_key(pOffer):

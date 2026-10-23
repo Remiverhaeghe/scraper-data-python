@@ -38,7 +38,7 @@ from job.quiz import (
     load_active_quiz,
     pick_question,
 )
-from job.interview_revision import start_offer_exam
+from job.interview_revision import start_offer_exam, start_skills_exam
 from job.quiz_domains import (
     DOMAIN_ICONS,
     build_category_progress,
@@ -533,9 +533,12 @@ def begin_quiz_exam(
     pSubdomain: str = Form("", alias="subdomain"),
     pSource: str = Form("", alias="source"),
     pSourceId: str = Form("", alias="id"),
+    pSkills: str = Form("", alias="skills"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Commence un examen sur une catégorie ou une offre, ou reprend celui en cours."""
+    """Commence un examen sur une catégorie, une offre ou des compétences, ou
+    reprend celui en cours.
+    """
 
     vExam = load_exam(pDatabaseFile)
     vOffer = get_offer(pDatabaseFile, pSource, pSourceId) if pSource else None
@@ -549,6 +552,13 @@ def begin_quiz_exam(
 
             if vOffer:
                 start_offer_exam(pDatabaseFile, vQuiz, vOffer, datetime.now())
+            elif pSkills:
+                start_skills_exam(
+                    pDatabaseFile,
+                    vQuiz,
+                    [vSkill.strip() for vSkill in pSkills.split(",") if vSkill.strip()],
+                    datetime.now(),
+                )
             else:
                 start_exam(
                     pDatabaseFile,

@@ -106,6 +106,21 @@
             Sans intérim
         </label>
 
+        <label class="check" title="Masque les sociétés de conseil (ESN) connues : Alten, Capgemini, Sopra Steria…">
+            <input type="checkbox" name="no_consulting" value="1" {% if filters.no_consulting %}checked{% endif %}>
+            Clients finaux seulement
+        </label>
+
+        <label class="check" title="Masque les intitulés de stage, d'alternance et d'apprentissage">
+            <input type="checkbox" name="no_training" value="1" {% if filters.no_training %}checked{% endif %}>
+            Sans stage ni alternance
+        </label>
+
+        <label class="check" title="Masque les offres qui demandent nettement plus que votre expérience (Paramètres, règles de calcul)">
+            <input type="checkbox" name="reach" value="1" {% if filters.reach %}checked{% endif %}>
+            À ma portée
+        </label>
+
         <label class="check" title="Seulement les entreprises de la liste des Paramètres">
             <input type="checkbox" name="preferred" value="1" {% if filters.preferred %}checked{% endif %}>
             Entreprises privilégiées

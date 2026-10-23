@@ -23,8 +23,9 @@ nouvelles offres proches du profil (vérifiées en arrière-plan toutes les 3 h
 environ, quand le PC est joignable), distance au domicile de chaque offre et
 filtre « Près de chez moi » (rayon des alertes réglé sur le PC), fiche complète
 lisible hors ligne (description, compétences couvertes et manquantes, salaire)
-avec l'emplacement de l'offre ouvert dans OpenStreetMap, offres proches de vos
-candidatures signalées, simulation d'entretien
+avec l'emplacement de l'offre ouvert dans OpenStreetMap, tri rapide des offres
+d'un glissement, notification des réponses de recruteurs repérées par le PC,
+offres proches de vos candidatures signalées, simulation d'entretien
 technique et auto-évaluation des compétences, envoyées au PC à la synchronisation.
 
 ## Installation des outils (une fois)
@@ -172,6 +173,7 @@ mobile/
 │   │   ├── statistics_screen.dart # Statistiques de révision
 │   │   ├── offers_screen.dart    # Nouvelles offres de la semaine et leur statut
 │   │   ├── offer_detail_screen.dart # Fiche d'une offre, lisible hors ligne
+│   │   ├── triage_screen.dart    # Tri rapide des nouvelles offres, une à la fois
 │   │   ├── interview_screen.dart # Simulation d'entretien technique
 │   │   ├── skills_screen.dart    # Auto-évaluation des compétences
 │   │   └── guide_screen.dart     # Guide pratique d'un thème
@@ -191,6 +193,8 @@ mobile/
     ├── connection_code_test.dart # Teste la lecture du QR code de connexion
     ├── statistics_test.dart      # Teste la réussite par thème et le graphique des jours
     ├── phone_features_test.dart  # Teste signalements, examens, objectif, candidatures et offres
+    ├── recruiter_replies_test.dart # Teste la notification des réponses de recruteurs
+    ├── triage_test.dart          # Teste le tri rapide des offres
     ├── offer_alerts_test.dart    # Teste l'alerte des nouvelles offres bien notées
     ├── interview_skills_test.dart # Teste simulation, auto-évaluation et fiche d'offre
     ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond

@@ -10,6 +10,7 @@ from config import WEB_PUBLIC_HOST, WEB_SCHEME, WEB_TLS_CERTFILE, WEB_TLS_KEYFIL
 from job.application import process_jobs
 from job.offer_archive import archive_expired_offers
 from job.skill_cache import refresh_detected_skills
+from job.application_replies import run_due_reply_check
 from job.application_tracking import get_due_follow_ups
 from job.followed_availability import (
     build_expired_offers_email,
@@ -330,6 +331,7 @@ BACKGROUND_TASKS = (
     ("certificat du tableau de bord", renew_web_certificate),
     ("archivage des offres expirées", archive_expired_offers),
     ("compétences des offres", refresh_detected_skills),
+    ("réponses des recruteurs", run_due_reply_check),
 )
 
 # Erreurs attendues d'une tâche : disque, base, envoi d'e-mail ou réglage invalide

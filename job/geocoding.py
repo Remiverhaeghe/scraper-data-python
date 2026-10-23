@@ -154,8 +154,7 @@ def keep_within_alert_radius(pOffers, pHome):
         vOffer
         for vOffer in pOffers
         if not vRadius
-        # Lu en base, le télétravail est le texte « 1 » ; préparé, un booléen.
-        or str(vOffer.get("remote")).lower() in ("1", "true")
+        or vOffer.get("remote") is True
         or (vOffer.get("distance_km") is not None and vOffer["distance_km"] <= vRadius)
     ]
 

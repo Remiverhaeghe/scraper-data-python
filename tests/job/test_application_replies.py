@@ -1,15 +1,20 @@
 """Tests des réponses de recruteurs repérées dans Gmail"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
 
+import job.application_replies as application_replies
 from job.application_replies import (
     apply_reply,
+    build_reply_id,
     classify_reply,
+    find_interview_date,
     find_replies,
+    load_pending_replies,
     mark_reply_handled,
+    run_due_reply_check,
 )
 from storage.database import initialize_database
 from storage.job_applications import get_application, save_application
@@ -154,3 +159,74 @@ def test_raw_message_is_decoded():
     assert vMessage["sender"].startswith("Recrutement Kiabi")
     assert vMessage["text"] == "Nous souhaitons vous rencontrer"
     assert vMessage["date"].day == 22
+
+
+@pytest.mark.parametrize(
+    ("pText", "pExpected"),
+    [
+        ("Entretien le mardi 5 novembre à 14h30", datetime(2026, 11, 5, 14, 30)),
+        ("rendez-vous le 05/11/2026 à 9 h", datetime(2026, 11, 5, 9, 0)),
+        ("le 20 octobre à 10h", None),
+        ("pas de date dans ce message", None),
+    ],
+)
+def test_interview_date_is_read_in_the_message(pText, pExpected):
+    """Vérifie la date d'entretien lue en toutes lettres ou en chiffres."""
+
+    assert find_interview_date(pText, NOW) == pExpected
+
+
+def test_date_without_year_in_december_is_next_year():
+    """Vérifie qu'un « 3 janvier » lu en décembre désigne l'année suivante."""
+
+    assert find_interview_date("le 3 janvier à 10h", datetime(2026, 12, 20)) == (
+        datetime(2027, 1, 3, 10, 0)
+    )
+
+
+def test_dated_interview_is_saved_with_the_status(database_file):
+    """Vérifie que l'entretien daté est enregistré, notes gardées."""
+
+    vMessage = build_message(
+        "<5>", "Kiabi <rh@kiabi.com>", "Entretien", "Rendez-vous le 5 novembre à 14h"
+    )
+    vReply = find_replies(database_file, [vMessage])[0]
+
+    apply_reply(database_file, vReply, NOW)
+    vApplication = get_application(database_file, "smartrecruiters", "1")
+
+    assert vApplication["status"] == "INTERVIEW"
+    assert vApplication["interview_at"] == "2026-11-05T14:00"
+    assert vApplication["notes"] == "Relancer RH"
+
+
+def test_due_check_keeps_replies_without_message_content(database_file, monkeypatch):
+    """Vérifie la lecture espacée, sans Gmail rien, et seulement offre et statut gardés."""
+
+    monkeypatch.delenv("GMAIL_ADDRESS", raising=False)
+
+    assert run_due_reply_check(database_file, NOW) is None
+
+    monkeypatch.setenv("GMAIL_ADDRESS", "moi@exemple.fr")
+    monkeypatch.setenv("GMAIL_APP_PASSWORD", "secret")
+    vMessage = build_message(
+        "<9>", "Kiabi <rh@kiabi.com>", "Votre candidature", "Malheureusement..."
+    )
+    monkeypatch.setattr(
+        application_replies, "read_recent_messages", lambda pNow, pDays: [vMessage]
+    )
+
+    assert run_due_reply_check(database_file, NOW) == 1
+    assert run_due_reply_check(database_file, NOW + timedelta(hours=1)) is None
+
+    vPending = load_pending_replies(database_file)
+
+    assert vPending == [
+        {
+            "id": build_reply_id("<9>"),
+            "title": "Dev Java",
+            "company": "Kiabi",
+            "status": "REJECTED",
+            "interview_at": None,
+        }
+    ]

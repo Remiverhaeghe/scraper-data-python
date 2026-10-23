@@ -3,6 +3,7 @@
 import re
 from datetime import datetime, timedelta
 
+from job.agencies import is_agency_offer, is_consulting_offer, load_interim_agencies
 from job.fingerprint import normalize
 from job.preparation import score_offers
 from job.presentation import (
@@ -74,6 +75,14 @@ JOB_FAMILIES = (
     ),
 )
 OTHER_FAMILY = "Autre"
+
+# Délai entre la publication de l'offre et la candidature : (jours au plus, libellé)
+APPLICATION_DELAYS = (
+    (0, "Le jour même"),
+    (3, "1 à 3 jours"),
+    (7, "4 à 7 jours"),
+    (None, "Plus d'une semaine"),
+)
 
 # Lignes affichées par tableau de statistiques, les plus fournies d'abord
 MAX_STATISTIC_ROWS = 10
@@ -218,12 +227,52 @@ def count_by(pApplications, pGetLabel):
     return rRows
 
 
+def get_employer_type(pApplication, pAgencies):
+    """Retourne le type d'employeur : agence d'intérim, ESN ou client final."""
+
+    if is_agency_offer(pApplication, pAgencies):
+        rType = "Agence d'intérim"
+    elif is_consulting_offer(pApplication):
+        rType = "Société de conseil (ESN)"
+    else:
+        rType = "Client final"
+
+    return rType
+
+
+def get_application_delay(pApplication):
+    """Retourne le délai entre la publication et la candidature, en tranche lisible."""
+
+    vPublished = pApplication.get("published_at") or pApplication.get("first_seen_at")
+
+    if not vPublished or not pApplication.get("applied_at"):
+        return "Date inconnue"
+
+    try:
+        vDays = (
+            datetime.fromisoformat(str(pApplication["applied_at"])[:10])
+            - datetime.fromisoformat(str(vPublished)[:10])
+        ).days
+
+    except ValueError:
+        return "Date inconnue"
+
+    rLabel = next(
+        vLabel
+        for vMaximum, vLabel in APPLICATION_DELAYS
+        if vMaximum is None or max(vDays, 0) <= vMaximum
+    )
+
+    return rLabel
+
+
 def build_application_statistics(pDatabaseFile):
     """Calcule taux et délai de réponse, globalement puis par dimension."""
 
     vApplications = get_applications_with_offers(pDatabaseFile, SENT_STATUSES)
 
     score_offers(vApplications, load_profile(pDatabaseFile))
+    vAgencies = load_interim_agencies(pDatabaseFile)
 
     vAnswered = sum(
         vApplication["status"] in ANSWERED_STATUSES for vApplication in vApplications
@@ -248,6 +297,17 @@ def build_application_statistics(pDatabaseFile):
                     vApplications,
                     lambda pApplication: get_source_label(pApplication["source"]),
                 ),
+            ),
+            (
+                "Par type d'employeur",
+                count_by(
+                    vApplications,
+                    lambda pApplication: get_employer_type(pApplication, vAgencies),
+                ),
+            ),
+            (
+                "Par délai de candidature",
+                count_by(vApplications, get_application_delay),
             ),
             (
                 "Par type de poste",

@@ -63,6 +63,7 @@ def server_url(tmp_path_factory):
         vPatch.setenv("WEB_USERNAME", "admin")
         vPatch.setenv("WEB_PASSWORD_HASH", hash_password(TEST_PASSWORD, 1000))
         vPatch.setenv("WEB_SESSION_SECRET", "secret-de-test")
+        vPatch.delenv("WEB_TOTP_SECRET", raising=False)
         app.dependency_overrides[get_database_file] = lambda: vDatabaseFile
 
         vServer = uvicorn.Server(

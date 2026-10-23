@@ -28,10 +28,11 @@
 </nav>
 
 <div class="map-legend">
-    <span class="map-dot map-dot-success"></span> {{ score_levels[0] }} % et plus
-    <span class="map-dot map-dot-warning"></span> {{ score_levels[1] }} à {{ score_levels[0] - 1 }} %
-    <span class="map-dot map-dot-muted"></span> moins ou sans score
-    · pastille d'autant plus grande que le score est élevé
+    {# Chaque pastille reste avec son libellé quand la légende passe à la ligne. #}
+    <span class="map-key"><span class="map-dot map-dot-success"></span> {{ score_levels[0] }} % et plus</span>
+    <span class="map-key"><span class="map-dot map-dot-warning"></span> {{ score_levels[1] }} à {{ score_levels[0] - 1 }} %</span>
+    <span class="map-key"><span class="map-dot map-dot-muted"></span> moins ou sans score</span>
+    <span>Pastille d'autant plus grande que le score est élevé</span>
 </div>
 
 <div id="offers-map" class="offers-map" aria-label="Carte des offres"></div>

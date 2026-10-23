@@ -22,6 +22,7 @@ from job.calendar import (
 from job.companies import load_company_rules, save_company_rules
 from job.company_pages import (
     PLATFORMS,
+    add_company_from_url,
     check_companies,
     load_company_list,
     save_company_lists,
@@ -75,6 +76,7 @@ def render_settings(
     pMobileMessage=None,
     pBackupMessage=None,
     pCompanyPagesMessage=None,
+    pCompanyPagesTone="success",
 ):
     """Affiche thème, règles, planification, notifications et sources."""
 
@@ -162,6 +164,7 @@ def render_settings(
                 for vPlatform, (vLabel, _, _, vExample) in PLATFORMS.items()
             ],
             "company_pages_message": pCompanyPagesMessage,
+            "company_pages_tone": pCompanyPagesTone,
             "backups": [
                 {"name": vBackup["name"], "label": describe_backup(vBackup)}
                 for vBackup in describe_backups(pDatabaseFile)
@@ -573,6 +576,36 @@ async def update_company_pages(
         request,
         pDatabaseFile,
         pCompanyPagesMessage="Listes enregistrées : prises en compte à la prochaine recherche.",
+    )
+
+    return rResponse
+
+
+@router.post(
+    "/settings/company-pages/url",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+async def add_company_page(
+    request: Request,
+    pUrl: str = Form("", alias="url"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Ajoute l'entreprise d'un site carrière collé, après vérification."""
+
+    try:
+        vMessage = await run_in_threadpool(add_company_from_url, pDatabaseFile, pUrl)
+        vTone = "success"
+
+    except ValueError as vException:
+        vMessage = str(vException)
+        vTone = "warning"
+
+    rResponse = render_settings(
+        request,
+        pDatabaseFile,
+        pCompanyPagesMessage=vMessage,
+        pCompanyPagesTone=vTone,
     )
 
     return rResponse

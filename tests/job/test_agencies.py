@@ -3,6 +3,7 @@
 from job.agencies import (
     INTERIM_AGENCIES,
     is_agency_offer,
+    is_consulting_offer,
     load_interim_agencies,
     mark_agency_offers,
     save_interim_agencies,
@@ -41,3 +42,19 @@ def test_agency_offers_are_recognized():
 
     assert [vOffer["is_agency"] for vOffer in vOffers] == [True, False, True, False]
     assert not is_agency_offer({}, INTERIM_AGENCIES)
+
+
+def test_consulting_firms_are_marked():
+    """Vérifie le repérage des ESN par mot entier dans le nom de l'entreprise."""
+
+    vOffers = [
+        {"company": "ALTEN SA"},
+        {"company": "Sopra Steria Group"},
+        {"company": "Altenergie"},
+        {"company": None},
+    ]
+
+    mark_agency_offers(vOffers, INTERIM_AGENCIES)
+
+    assert [vOffer["is_consulting"] for vOffer in vOffers] == [True, True, False, False]
+    assert is_consulting_offer({"company": "Néosoft"})

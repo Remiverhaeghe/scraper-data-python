@@ -257,6 +257,13 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Réponses des recruteurs lues dans Gmail (IMAP, lecture seule) : refus ou entretien proposé, appliqué ou ignoré d'un clic
 - [x] CV Word adapté à une offre : compétences demandées en tête, expériences les plus proches d'abord
 - [x] Annonces en ligne depuis plus de 45 jours signalées ; fiche entreprise avec l'établissement le plus proche du domicile
+- [x] Ajout d'une entreprise suivie en collant l'adresse de son site carrière (SmartRecruiters, Lever, Ashby, Greenhouse, Recruitee, Workable, Workday)
+- [x] Badge ESN et filtres « Clients finaux seulement », « Sans stage ni alternance » et « À ma portée » (expérience demandée comparée à la vôtre)
+- [x] Synonymes de métier dans la recherche : « Java » trouve « JEE » ou « Spring », « maintenance » trouve « GMAO »
+- [x] Salaire estimé (médiane des offres comparables) pour les offres sans salaire, argumentaire de négociation en brut annuel
+- [x] Lettre de motivation en Word, candidatures spontanées, journal de recherche exportable (justificatif de démarches)
+- [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
+- [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 
 ### 🌐 Tableau de bord web
 
@@ -291,6 +298,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Liste « À faire », explication du score et page Mon marché, comme sur le bureau
 - [x] Réponses des recruteurs lues dans Gmail et CV adapté à l'offre, comme sur le bureau
 - [x] Carte des offres : raccourcis de correspondance (toutes, 50 %, 70 %), pastille d'autant plus grande que le score est élevé
+- [x] Double authentification facultative (code à 6 chiffres, Google Authenticator), sans service extérieur
 
 ### 🔐 Sécurité
 
@@ -562,6 +570,11 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 | POST | `/api/v1/exams` | Examens blancs du téléphone, ajoutés sans doublon à l'historique du PC : `{"exams": [{"title", "finished_at", "correct", "count", "seconds"}]}` |
 | POST | `/api/v1/flags` | Questions signalées depuis le téléphone, retirées des tirages : `{"question_ids": [...]}` |
 | POST | `/api/v1/answers` | Réponses faites hors ligne : `{"answers": [{"id", "question_id", "choice" ou "response", "answered_at"}]}` |
+| GET | `/api/v1/offers` | Nouvelles offres de la semaine, fiche lisible hors ligne : description, compétences couvertes et manquantes, salaire, distance, position et `near` (dans le rayon des alertes) |
+| POST | `/api/v1/applications` | Statuts donnés aux offres sur le téléphone : `{"changes": [{"source", "source_id", "status"}]}` ; notes et date d'entretien gardées |
+| GET, POST | `/api/v1/interview` | Questions de la simulation d'entretien ; séries faites sur le téléphone : `{"series": [...]}` |
+| GET, POST | `/api/v1/skills` | Grille d'auto-évaluation ; niveaux saisis sur le téléphone : `{"levels": {"Java": 6}}` |
+| GET | `/api/v1/replies` | Réponses de recruteurs repérées dans Gmail par le planificateur : offre, statut annoncé, date d'entretien ; jamais le contenu du message |
 
 Les QCM sont dans `questions`. Les calculs, remises en ordre, associations et revues de code
 sont dans `interactive_questions`, avec leur `type` : une application qui ne les connaît pas
@@ -628,6 +641,8 @@ scraper-data-python/
 │   ├── offer_details.py                       # Description lue à l'ouverture d'une offre enregistrée sans elle
 │   ├── application_replies.py                 # Réponses des recruteurs repérées dans Gmail, statut proposé
 │   ├── cv_export.py                           # CV réordonné pour une offre, écrit au format Word
+│   ├── search_journal.py                      # Journal des démarches datées, exporté pour un tableur
+│   ├── experience_fit.py                      # Expérience demandée par l'offre comparée à la vôtre
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
 │   ├── translation.py                         # Traduction hors ligne des descriptions (Argos, facultatif)
@@ -837,6 +852,7 @@ scraper-data-python/
 │   ├── interview_journal_panel.py             # Journal d'entretien d'une offre
 │   ├── follow_ups_panel.py                    # Relances de la semaine et brouillons
 │   ├── replies_panel.py                       # Réponses des recruteurs lues dans Gmail
+│   ├── spontaneous_dialog.py                  # Saisie d'une candidature spontanée
 │   ├── offer_attachments.py                   # Pièces jointes d'une offre
 │   ├── offer_form.py                          # Saisie manuelle d'une offre
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
@@ -886,6 +902,7 @@ scraper-data-python/
 │   ├── __main__.py                            # Lance le serveur avec python -m web
 │   ├── auth.py                                # Mot de passe, session signée et tentatives
 │   ├── password.py                            # Génère l'empreinte du mot de passe (.env)
+│   ├── totp.py                                # Prépare la double authentification (secret et QR code)
 │   ├── app.py                                 # Application, sécurité, erreurs et routeurs
 │   ├── api.py                                 # API JSON de l'application mobile (jeton)
 │   ├── healthcheck.py                         # Contrôle de santé du conteneur Docker
@@ -1006,6 +1023,7 @@ scraper-data-python/
 │   ├── api_client.py                          # Appels sécurisés aux API des sources
 │   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
 │   ├── mail_reader.py                         # Lecture des messages Gmail en IMAP, lecture seule
+│   ├── totp.py                                # Codes à usage unique de la double authentification (RFC 6238)
 │   ├── tls.py                                 # Certificat HTTPS local et son empreinte
 │   ├── tailscale.py                           # Certificat Tailscale : demande et renouvellement
 │   ├── permissions.py                         # Moindres privilèges : compte, .env et data/
@@ -1071,6 +1089,10 @@ scraper-data-python/
 │   │   ├── test_offer_details.py              # Teste la description lue à l'ouverture
 │   │   ├── test_application_replies.py        # Teste les réponses de recruteurs et leur classement
 │   │   ├── test_cv_export.py                  # Teste le CV adapté et le fichier Word
+│   │   ├── test_company_pages.py              # Teste l'ajout d'une entreprise depuis l'adresse de son site carrière
+│   │   ├── test_search_journal.py             # Teste le journal de recherche
+│   │   ├── test_experience_fit.py             # Teste l'expérience demandée comparée à la vôtre
+│   │   ├── test_spontaneous.py                # Teste les candidatures spontanées
 │   │   ├── test_star_answers.py               # Teste les réponses STAR
 │   │   ├── test_offer_purge.py                # Teste la purge des offres hors sujet
 │   │   ├── test_followed_availability.py      # Teste la vérification des offres suivies
@@ -1310,6 +1332,7 @@ scraper-data-python/
 │   ├── test_mailer.py                          # Teste l'envoi d'e-mails, serveur simulé
 │   ├── test_main.py                            # Teste le point d'entrée principal
 │   ├── test_tls.py                             # Teste le certificat local et son empreinte dans le QR code
+│   ├── test_totp.py                            # Teste les codes de double authentification (vecteurs de la RFC)
 │   ├── test_permissions.py                     # Teste le contrôle des moindres privilèges
 │   └── test_security.py                        # Teste les contrôles de sécurité
 │

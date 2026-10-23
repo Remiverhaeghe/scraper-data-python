@@ -1,4 +1,5 @@
-"""Agences d'intérim et de placement, reconnues pour masquer leurs annonces"""
+"""Agences d'intérim et sociétés de conseil (ESN), reconnues pour signaler ou
+masquer leurs annonces"""
 
 import re
 
@@ -44,6 +45,43 @@ INTERIM_AGENCIES = (
     "synergie",
     "temporis",
     "triangle interim",
+)
+
+# Sociétés de conseil et d'ingénierie (ESN) : elles recrutent pour travailler chez
+# leurs clients. Noms normalisés, cherchés comme mot dans le nom de l'entreprise.
+CONSULTING_COMPANIES = (
+    "accenture",
+    "akkodis",
+    "alten",
+    "altran",
+    "amaris",
+    "apside",
+    "assystem",
+    "astek",
+    "atos",
+    "aubay",
+    "ausy",
+    "capgemini",
+    "cgi",
+    "davidson",
+    "devoteam",
+    "expleo",
+    "extia",
+    "hardis",
+    "inetum",
+    "infotel",
+    "keyrus",
+    "modis",
+    "neosoft",
+    "neurones",
+    "onepoint",
+    "scalian",
+    "segula",
+    "sii",
+    "sopra steria",
+    "talan",
+    "viveris",
+    "wavestone",
 )
 
 # Mentions d'une annonce publiée par une agence pour le compte d'un client
@@ -100,8 +138,21 @@ def is_agency_offer(pOffer, pAgencies):
     return rAgency
 
 
+def is_consulting_offer(pOffer):
+    """Indique si une offre est publiée par une société de conseil (ESN) connue."""
+
+    vCompany = f" {normalize_company(pOffer.get('company'))} "
+
+    rConsulting = any(f" {vName} " in vCompany for vName in CONSULTING_COMPANIES)
+
+    return rConsulting
+
+
 def mark_agency_offers(pOffers, pAgencies):
-    """Signale par is_agency les offres des agences d'intérim."""
+    """Signale par is_agency les offres des agences d'intérim, par is_consulting
+    celles des ESN.
+    """
 
     for vOffer in pOffers:
         vOffer["is_agency"] = is_agency_offer(vOffer, pAgencies)
+        vOffer["is_consulting"] = is_consulting_offer(vOffer)

@@ -30,6 +30,9 @@ const autoSyncEvery = 10;
 const reminderPreference = 'reminder_enabled';
 const offerAlertPreference = 'offer_alerts';
 
+/// Réponses de recruteurs déjà notifiées, par identifiant.
+const notifiedRepliesPreference = 'notified_replies';
+
 /// Apparence choisie : system (celle du téléphone), light ou dark.
 const appearancePreference = 'appearance';
 const appearances = ['system', 'light', 'dark'];
@@ -482,6 +485,7 @@ class RevisionState extends ChangeNotifier {
       offers = await pClient.downloadOffers();
       await store.saveOffers(offers);
       await notifyNewOffers(findNewGoodOffers(vPrevious, offers));
+      await exchangeReplies(pClient);
     } on ApiException catch (vException) {
       if (vException.unreachable) {
         rethrow;
@@ -599,6 +603,37 @@ class RevisionState extends ChangeNotifier {
     final rEnabled = vEnabled;
 
     return rEnabled;
+  }
+
+  /// Reçoit les réponses de recruteurs repérées par le PC et signale les nouvelles.
+  ///
+  /// Un serveur plus ancien qui ne les connaît pas n'empêche pas la synchronisation.
+  Future<void> exchangeReplies(ApiClient pClient) async {
+    try {
+      final vReplies = await pClient.downloadReplies();
+      final vNotified = {
+        for (final vId in preferences[notifiedRepliesPreference] as List? ?? const []) '$vId',
+      };
+      final vNew = [
+        for (final vReply in vReplies)
+          if (!vNotified.contains('${vReply['id']}')) vReply,
+      ];
+
+      if (vNew.isNotEmpty && offerAlertsEnabled && reminders != null) {
+        await reminders!.showReplies(vNew);
+      }
+
+      // Seuls les identifiants encore proposés par le PC sont gardés.
+      await savePreference(notifiedRepliesPreference, [
+        for (final vReply in vReplies) '${vReply['id']}',
+      ]);
+    } on ApiException catch (vException) {
+      if (vException.unreachable) {
+        rethrow;
+      }
+
+      log('Réponses de recruteurs non reçues : ${vException.message}', name: 'sync');
+    }
   }
 
   /// Signale les nouvelles offres bien notées, si l'alerte est active.

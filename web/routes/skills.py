@@ -109,6 +109,8 @@ def show_market(
         {
             "active_page": "market",
             "market": vMarket,
+            "history_columns": HISTORY_COLUMNS,
+            "history_rows": [build_history_cells(vMonth) for vMonth in vHistory],
             "history_chart": build_bar_chart(
                 [vMonth["label"] for vMonth in vHistory],
                 [
@@ -133,12 +135,6 @@ def show_market(
                     "Médiane affichée à partir de trois salaires",
                     SKILL_COLUMNS,
                     [build_market_cells(vRow, True) for vRow in vMarket["skills"]],
-                ),
-                (
-                    "Évolution mois par mois",
-                    "Offres vues pour la première fois chaque mois",
-                    HISTORY_COLUMNS,
-                    [build_history_cells(vMonth) for vMonth in vHistory],
                 ),
                 (
                     "Régions qui recrutent le plus",

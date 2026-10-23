@@ -41,6 +41,12 @@
             Mot de passe
             <input type="password" name="password" autocomplete="current-password" required>
         </label>
+        {% if totp_enabled %}
+        <label>
+            Code de l'application d'authentification
+            <input type="text" name="code" inputmode="numeric" pattern="[0-9 ]{6,7}" autocomplete="one-time-code" required>
+        </label>
+        {% endif %}
         {% if message %}<p class="login-message" role="alert">{{ message }}</p>{% endif %}
         <button class="button button-primary" type="submit">{{ icon("lock", 16) }} Se connecter</button>
     </form>

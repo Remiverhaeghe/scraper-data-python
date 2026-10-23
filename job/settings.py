@@ -107,6 +107,15 @@ SETTING_DEFINITIONS = {
         50,
         "€ net/mois",
     ),
+    "experience_years": SettingDefinition(
+        "Expérience",
+        "Vos années d'expérience professionnelle, comparées à celles demandées "
+        "par les offres. 0 : non renseignée.",
+        0,
+        50,
+        1,
+        "ans",
+    ),
 }
 
 # Réglages dont la modification change le net des offres déjà enregistrées
@@ -134,6 +143,7 @@ def get_default_settings():
         "weekly_application_goal": 0,
         "target_net_salary": 0,
         "archive_after_days": 0,
+        "experience_years": 0,
     }
 
     return rSettings

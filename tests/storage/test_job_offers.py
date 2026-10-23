@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from job.agencies import INTERIM_AGENCIES
 from storage.database import connect_database, initialize_database
@@ -15,6 +16,7 @@ from storage.job_offers import (
     get_offer,
     get_offers,
     get_offers_to_check,
+    read_remote,
     save_offers,
 )
 
@@ -399,3 +401,47 @@ def test_get_offers_hides_interim_agencies(tmp_path):
     )
 
     assert vIds == ["2", "4", "5", "6"]
+
+
+@pytest.mark.parametrize(
+    ("pValue", "pExpected"),
+    [("1", True), ("0", False), ("true", True), (None, None), (float("nan"), None)],
+)
+def test_remote_is_read_as_a_boolean(pValue, pExpected):
+    """Vérifie le télétravail lu en base : « 0 » ne doit pas valoir vrai."""
+
+    assert read_remote(pValue) is pExpected
+
+
+def test_get_offers_hides_consulting_firms_and_training(tmp_path):
+    """Vérifie le masquage des ESN par mot entier, et des stages et alternances."""
+
+    vDatabaseFile = build_database(tmp_path)
+    vOffers = [
+        ("1", "Développeur Java", "developpeur java|alten|lille"),
+        ("2", "Développeur Java", "developpeur java|altenergie|lille"),
+        ("3", "Stage - Développeur Java", "stage developpeur java|kiabi|hem"),
+        ("4", "Alternant(e) développeur", "alternant developpeur|kiabi|hem"),
+        ("5", "Développeur backstage", "developpeur backstage|kiabi|hem"),
+    ]
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "lever",
+                    "source_id": vId,
+                    "title": vTitle,
+                    "fingerprint": vFingerprint,
+                }
+                for vId, vTitle, vFingerprint in vOffers
+            ]
+        ),
+        datetime(2026, 10, 23),
+    )
+
+    vWithoutFirms = get_offers(vDatabaseFile, pHiddenCompanies=["alten"])
+    vWithoutTraining = get_offers(vDatabaseFile, pHideTraining=True)
+
+    assert sorted(vWithoutFirms["source_id"]) == ["2", "3", "4", "5"]
+    assert sorted(vWithoutTraining["source_id"]) == ["1", "2", "5"]

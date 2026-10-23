@@ -46,7 +46,11 @@ def format_cell(pOffer, pKey):
     """Retourne le texte affiché dans une cellule."""
 
     if pKey == "salary_net_monthly_min":
-        rText = format_net_salary(pOffer)
+        rText = format_net_salary(pOffer) or (
+            f"≈ {pOffer['estimated_salary']} (estimé)"
+            if pOffer.get("estimated_salary")
+            else ""
+        )
 
     elif pKey == "match_score":
         rText = "" if pOffer.get(pKey) is None else f"{pOffer[pKey]} %"
@@ -74,6 +78,12 @@ def format_cell(pOffer, pKey):
 
     elif pKey == "company" and pOffer.get("is_agency"):
         rText = f"{pOffer.get('company') or ''} · intérim"
+
+    elif pKey == "title" and pOffer.get("above_experience"):
+        rText = f"{pOffer.get('title') or ''} · {pOffer['required_years']} ans demandés"
+
+    elif pKey == "company" and pOffer.get("is_consulting"):
+        rText = f"{pOffer.get('company') or ''} · ESN"
 
     # Une offre publiée plusieurs fois liste toutes ses sources.
     elif pKey == "source_label" and pOffer.get("source_labels"):

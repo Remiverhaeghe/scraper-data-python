@@ -8,6 +8,7 @@
     <div class="follow-up-body">
         <a class="offer-title" href="{{ url_for('show_offer').path }}?source={{ reply.source | urlencode }}&id={{ reply.source_id | urlencode }}">{{ reply.title or "Offre sans titre" }}</a>
         <p class="muted">{{ reply.company }} · « {{ reply.subject }} »{% if reply.date %} · {{ reply.date.strftime("%d/%m") }}{% endif %}</p>
+        {% if reply.interview_at %}<p><strong>Entretien le {{ reply.interview_at.strftime("%d/%m/%Y à %H:%M") }}</strong></p>{% endif %}
     </div>
     {% for action, label, style in [("apply", "Appliquer", "button-primary"), ("ignore", "Ignorer", "")] %}
     <form hx-post="{{ url_for('handle_reply').path }}" hx-target="closest .reply" hx-swap="outerHTML">
@@ -16,6 +17,7 @@
         <input type="hidden" name="source" value="{{ reply.source }}">
         <input type="hidden" name="id" value="{{ reply.source_id }}">
         <input type="hidden" name="status" value="{{ reply.status }}">
+        <input type="hidden" name="interview_at" value="{{ reply.interview_at.strftime('%Y-%m-%dT%H:%M') if reply.interview_at else '' }}">
         <button class="button {{ style }}" type="submit">{{ label }}</button>
     </form>
     {% endfor %}

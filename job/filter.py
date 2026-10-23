@@ -8,6 +8,30 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Termes qui désignent le même métier ou la même technologie, cherchés avec le
+# mot-clé : une annonce « JEE » répond à « Java ». Clé : mot-clé normalisé.
+KEYWORD_SYNONYMS = {
+    "java": ("jee", "j2ee", "java ee", "jakarta ee", "spring"),
+    "php": ("symfony", "laravel"),
+    "developpeur": (
+        "développeur",
+        "développeuse",
+        "developpeuse",
+        "developer",
+        "ingénieur logiciel",
+        "ingénieur développement",
+        "software engineer",
+    ),
+    "maintenance": ("gmao", "maintenancier"),
+    "automatisme": ("automaticien", "automate", "plc", "scada"),
+    "electrotechnique": (
+        "électrotechnique",
+        "électrotechnicien",
+        "electrotechnicien",
+    ),
+    "devops": ("sre", "kubernetes", "ci/cd"),
+}
+
 
 def keep_matching(pJobs, pPredicate):
     """Conserve les offres pour lesquelles pPredicate est vrai.
@@ -120,12 +144,24 @@ def get_offer_text(pJob):
     return rText
 
 
+def expand_keyword(pKeyword):
+    """Retourne le mot-clé et ses synonymes, en minuscules."""
+
+    vKeyword = str(pKeyword or "").strip().lower()
+
+    rTerms = (vKeyword, *KEYWORD_SYNONYMS.get(normalize(vKeyword), ()))
+
+    return rTerms
+
+
 def matches_keyword(pJob, pKeyword):
-    """Recherche un mot-clé dans les principales informations textuelles
-    de l'offre.
+    """Recherche un mot-clé, ou l'un de ses synonymes, dans les principales
+    informations textuelles de l'offre.
     """
 
-    rMatches = pKeyword.lower() in get_offer_text(pJob)
+    vText = get_offer_text(pJob)
+
+    rMatches = any(vTerm in vText for vTerm in expand_keyword(pKeyword))
 
     return rMatches
 

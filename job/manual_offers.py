@@ -17,6 +17,7 @@ from job.presentation import (
     safe_url,
 )
 from job.settings import get_net_ratio, get_tax_rate, load_settings
+from storage.job_applications import save_application
 from storage.job_offers import get_fingerprints, save_offers
 from utils.logger import get_logger
 
@@ -193,6 +194,36 @@ def add_manual_offer(pDatabaseFile, pFields, pNow):
         raise ValueError("Offre non créée : elle est déjà dans la liste des offres.")
 
     rSourceId = vReport["source_ids"][0]
+
+    return rSourceId
+
+
+def add_spontaneous_application(
+    pDatabaseFile, pCompany, pTitle, pUrl, pNote, pNow
+):  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    """Enregistre une candidature spontanée, envoyée sans offre publiée.
+
+    Elle devient une offre manuelle au statut Postulé : relances, journal de
+    recherche et réponses des recruteurs la suivent comme les autres.
+    Retourne son identifiant ; lève ValueError si l'entreprise manque.
+    """
+
+    rSourceId = add_manual_offer(
+        pDatabaseFile,
+        {
+            "title": " · ".join(
+                vPart for vPart in ("Candidature spontanée", pTitle) if vPart
+            ),
+            "company": pCompany,
+            "url": pUrl or "",
+            "description": pNote
+            or f"Candidature spontanée envoyée le {pNow:%d/%m/%Y}.",
+        },
+        pNow,
+    )
+    save_application(pDatabaseFile, MANUAL_SOURCE, rSourceId, "APPLIED", pNow=pNow)
+
+    logger.info("Candidature spontanée enregistrée : %s", rSourceId)
 
     return rSourceId
 

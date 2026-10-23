@@ -12,6 +12,7 @@ from job.quiz_exam import load_exam_results
 from storage.database import initialize_database
 from storage.job_applications import get_application, save_application
 from storage.job_offers import save_offers
+from storage.settings_repository import save_json_setting
 from web.app import app, get_database_file
 
 
@@ -183,3 +184,15 @@ def test_offers_and_status_changes_from_the_phone(api, tmp_path):
     assert vApplication["status"] == "IGNORED"
     assert vApplication["notes"] == "Contact : la RH"
     assert vApplication["interview_at"] == "2026-11-03T10:00"
+
+
+def test_replies_are_sent_to_the_phone(api, tmp_path):
+    """Vérifie les réponses gardées par la dernière lecture, transmises au téléphone."""
+
+    save_json_setting(
+        app.dependency_overrides[get_database_file](),
+        "pending_replies",
+        [{"id": "abc", "title": "Dev", "company": "Kiabi", "status": "INTERVIEW"}],
+    )
+
+    assert api.get("/api/v1/replies").json()["replies"][0]["company"] == "Kiabi"

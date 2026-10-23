@@ -16,8 +16,11 @@ from web.auth import (
     hash_password,
     is_safe_redirect,
     read_session_token,
+    second_factor,
     verify_password,
 )
+from utils.totp import compute_code, generate_secret
+from web import totp
 
 NOW = datetime(2026, 10, 10, 12, 0)
 
@@ -229,3 +232,42 @@ def test_public_pages_hide_the_application(anonymous_client, monkeypatch, pPath)
     assert 'class="sidebar"' not in vText
     assert "Se connecter" in vText
     assert "/offers" not in vText
+
+
+def test_second_factor_is_required_when_configured(anonymous_client, monkeypatch):
+    """Vérifie le code demandé, refusé s'il est faux ou déjà utilisé."""
+
+    vSecret = generate_secret()
+    monkeypatch.setenv("WEB_TOTP_SECRET", vSecret)
+    monkeypatch.setattr(second_factor, "last_step", None)
+    vCode = compute_code(vSecret, int(datetime.now().timestamp() // 30))
+
+    def log_in_with(pCode):
+        rResponse = anonymous_client.post(
+            "/login",
+            data={"username": "admin", "password": TEST_PASSWORD, "code": pCode},
+            follow_redirects=False,
+        )
+
+        return rResponse
+
+    assert "Code de l'application" in anonymous_client.get("/login").text
+    assert log_in_with("000000").status_code == 401
+    assert log_in_with(vCode).status_code == 303
+
+    anonymous_client.cookies.clear()
+
+    assert log_in_with(vCode).status_code == 401
+
+
+def test_totp_setup_writes_the_qr_code(tmp_path, monkeypatch, capsys):
+    """Vérifie l'outil d'installation : QR code écrit, ligne du .env affichée."""
+
+    monkeypatch.setattr("sys.argv", ["web.totp", str(tmp_path)])
+
+    totp.main()
+
+    assert (
+        (tmp_path / totp.QR_FILE_NAME).read_text(encoding="utf-8").startswith("<?xml")
+    )
+    assert "WEB_TOTP_SECRET=" in capsys.readouterr().out

@@ -160,3 +160,19 @@ def test_every_department_has_a_region():
     assert find_region("59") == "Hauts-de-France"
     assert find_region("2a") == "Corse"
     assert find_region("") is None
+
+
+def test_country_code_given_by_the_source_is_renamed():
+    """Vérifie qu'un pays donné en code (« FR ») prend son nom, comme un pays déduit."""
+
+    vItems = add_location(
+        pd.DataFrame(
+            [
+                {"location": "Hem", "country": "FR"},
+                {"location": "Berlin", "country": "Germany"},
+                {"location": "Lille", "country": None},
+            ]
+        )
+    )
+
+    assert vItems["country"].tolist() == ["France", "Allemagne", "France"]

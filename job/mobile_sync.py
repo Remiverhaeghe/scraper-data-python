@@ -41,12 +41,7 @@ from job.quiz_types import (
 )
 from job.similar_offers import find_similar_offers
 from job.weekly_digest import get_new_offers
-from storage.job_applications import (
-    get_application,
-    get_applications_with_offers,
-    save_application,
-    update_application_status,
-)
+from storage.job_applications import get_applications_with_offers, save_application
 from storage.job_offers import get_offer
 from storage.quiz_answers import get_last_answers, save_synced_answers
 from storage.quiz_questions import get_quiz_assets, get_quiz_guide, get_quiz_guides
@@ -602,13 +597,8 @@ def sync_status_changes(pDatabaseFile, pChanges, pNow):
             vRejected.append(f"{vSource}/{vSourceId}")
             continue
 
-        # Une candidature suivie garde ses notes et sa date d'entretien.
-        if get_application(pDatabaseFile, vSource, vSourceId) is None:
-            save_application(pDatabaseFile, vSource, vSourceId, vStatus, pNow=pNow)
-        else:
-            update_application_status(
-                pDatabaseFile, vSource, vSourceId, vStatus, pNow=pNow
-            )
+        # Seul le statut change : notes, relance et entretien sont gardés.
+        save_application(pDatabaseFile, vSource, vSourceId, vStatus, pNow=pNow)
 
         vApplied += 1
 

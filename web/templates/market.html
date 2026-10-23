@@ -23,13 +23,28 @@
         <li><a href="{{ url_for('show_profile').path }}">{{ skill.name }}</a> <span class="muted">{{ skill.label }}</span></li>
         {% endfor %}
     </ul>
+    <form class="section-gap" method="post" action="{{ url_for('begin_quiz_exam').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="skills" value="{{ market.priorities | map(attribute='name') | join(',') }}">
+        <button class="button button-primary" type="submit">{{ icon("timer", 16) }} Examen blanc sur ces compétences</button>
+    </form>
 </article>
 {% endif %}
 
 <article class="card section-gap">
     <h2>Évolution du marché</h2>
-    <p class="card-subtitle">Offres vues chaque mois, et celles qui citent une compétence de votre profil</p>
+    <p class="card-subtitle">Offres vues pour la première fois chaque mois, et celles qui citent une compétence de votre profil</p>
     {{ ui.bar_chart(history_chart, "Offres par mois") }}
+    <div class="table-wrapper section-gap" tabindex="0" role="region" aria-label="Évolution mois par mois">
+        <table class="table">
+            <thead><tr>{% for column in history_columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
+            <tbody>
+                {% for row in history_rows %}
+                <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </article>
 
 {% for title, subtitle, columns, rows in tables %}

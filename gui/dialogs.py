@@ -1,12 +1,17 @@
 """Fenêtres d'information : mentions légales, licence et préparation de candidature"""
 
 from html import escape
+from pathlib import Path
 
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QLabel,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QTextBrowser,
@@ -14,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from config import APPLICATION_NAME
+from job.cv_export import build_file_name, write_letter_docx
 from job.preparation import describe_missing, describe_score
 from job.presentation import (
     LICENSE_SUMMARY,
@@ -179,6 +185,31 @@ def describe_preparation(pPreparation):
     return rHtml
 
 
+def save_letter(pParent, pTitle, pText):
+    """Enregistre la lettre au format Word, à l'endroit choisi, puis l'ouvre."""
+
+    vPath, _ = QFileDialog.getSaveFileName(
+        pParent,
+        "Enregistrer la lettre",
+        str(Path.home() / build_file_name({"title": pTitle}, "Lettre")),
+        "Document Word (*.docx)",
+    )
+
+    if not vPath:
+        return
+
+    try:
+        Path(vPath).write_bytes(write_letter_docx(pText))
+
+    except OSError as vException:
+        QMessageBox.warning(
+            pParent, "Lettre", f"Enregistrement impossible : {vException}"
+        )
+        return
+
+    QDesktopServices.openUrl(QUrl.fromLocalFile(vPath))
+
+
 def show_preparation(pParent, pTitle, pPreparation):
     """Affiche la préparation d'une candidature et le brouillon de lettre."""
 
@@ -193,9 +224,16 @@ def show_preparation(pParent, pTitle, pPreparation):
         lambda: QApplication.clipboard().setText(vLetter.toPlainText())
     )
 
+    # La lettre telle que modifiée dans la fenêtre, au format Word
+    vSaveButton = QPushButton("Enregistrer en Word")
+    vSaveButton.clicked.connect(
+        lambda: save_letter(vDialog, pTitle, vLetter.toPlainText())
+    )
+
     vButtons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
     vButtons.button(QDialogButtonBox.StandardButton.Close).setText("Fermer")
     vButtons.addButton(vCopyButton, QDialogButtonBox.ButtonRole.ActionRole)
+    vButtons.addButton(vSaveButton, QDialogButtonBox.ButtonRole.ActionRole)
 
     vDialog = QDialog(pParent)
     vDialog.setWindowTitle(f"Préparer ma candidature · {pTitle}")

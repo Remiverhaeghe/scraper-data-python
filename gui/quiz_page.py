@@ -54,7 +54,7 @@ from job.quiz import (
     load_active_quiz,
     pick_question,
 )
-from job.interview_revision import start_offer_exam
+from job.interview_revision import start_offer_exam, start_skills_exam
 from job.quiz_domains import (
     DOMAIN_ICONS,
     count_categories,
@@ -748,6 +748,14 @@ class QuizPage(QWidget):
         self.begin_exam(
             lambda pQuiz: start_offer_exam(
                 self.database_file, pQuiz, pOffer, datetime.now()
+            )
+        )
+
+    def start_skills_exam(self, pSkills):
+        """Reprend l'examen en cours, ou commence celui des compétences prioritaires."""
+        self.begin_exam(
+            lambda pQuiz: start_skills_exam(
+                self.database_file, pQuiz, pSkills, datetime.now()
             )
         )
 

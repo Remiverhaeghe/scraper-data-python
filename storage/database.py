@@ -872,6 +872,38 @@ def migrate_to_v28(pConnection):
     pConnection.execute("ALTER TABLE job_offer ADD COLUMN french_department TEXT")
 
 
+def migrate_to_v29(pConnection):
+    """Donne leur nom affiché aux pays enregistrés en code (« FR » devient « France »).
+
+    SmartRecruiters donnait le code : ses offres échappaient au filtre France,
+    à Mon marché et au placement sur la carte.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    from job.location import normalize_country
+
+    vCountries = [
+        vRow[0]
+        for vRow in pConnection.execute(
+            "SELECT DISTINCT country FROM job_offer WHERE country IS NOT NULL"
+        )
+    ]
+    vUpdates = [
+        (normalize_country(vCountry), vCountry)
+        for vCountry in vCountries
+        if normalize_country(vCountry) != vCountry
+    ]
+
+    pConnection.executemany(
+        "UPDATE job_offer SET country = ? WHERE country = ?", vUpdates
+    )
+
+    logger.info(
+        "Pays enregistrés en code renommés : %s",
+        ", ".join(f"{vOld} -> {vNew}" for vNew, vOld in vUpdates) or "aucun",
+    )
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -901,6 +933,7 @@ MIGRATIONS = [
     migrate_to_v26,
     migrate_to_v27,
     migrate_to_v28,
+    migrate_to_v29,
 ]
 
 

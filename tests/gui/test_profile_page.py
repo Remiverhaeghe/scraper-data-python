@@ -209,3 +209,21 @@ def test_interview_drill_reveals_and_grades(qt_application, tmp_path):
     vDrill.known_button.click()
 
     assert vDrill.question_label.text().startswith("Aucune question à revoir")
+
+
+def test_letter_is_saved_as_word(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'enregistrement de la lettre au format Word, puis son ouverture."""
+
+    vTarget = tmp_path / "lettre.docx"
+    vOpened = []
+    monkeypatch.setattr(
+        dialogs.QFileDialog, "getSaveFileName", lambda *pArgs: (str(vTarget), "")
+    )
+    monkeypatch.setattr(
+        dialogs.QDesktopServices, "openUrl", lambda pUrl: vOpened.append(pUrl)
+    )
+
+    dialogs.save_letter(None, "Développeur Java", "Madame, Monsieur,")
+
+    assert vTarget.read_bytes()[:2] == b"PK"
+    assert len(vOpened) == 1

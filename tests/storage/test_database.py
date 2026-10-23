@@ -13,6 +13,7 @@ from storage.database import (
     count_by_day,
     migrate_to_v1,
     migrate_to_v27,
+    migrate_to_v29,
 )
 
 
@@ -506,6 +507,34 @@ def test_offers_list_uses_the_discovery_date_index(tmp_path):
 
     assert "idx_job_offer_first_seen" in vPlan
     assert "TEMP B-TREE" not in vPlan
+
+
+def test_migration_to_v29_renames_country_codes(tmp_path):
+    """Vérifie le pays « FR » enregistré par SmartRecruiters, renommé « France »."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vConnection.executemany(
+            "INSERT INTO job_offer (source, source_id, first_seen_at, last_seen_at,"
+            " country) VALUES ('smartrecruiters', ?, '2026-10-01',"
+            " '2026-10-01', ?)",
+            [("1", "FR"), ("2", "France"), ("3", "Mars")],
+        )
+        migrate_to_v29(vConnection)
+        vCountries = [
+            vRow[0]
+            for vRow in vConnection.execute(
+                "SELECT country FROM job_offer ORDER BY source_id"
+            )
+        ]
+
+    finally:
+        vConnection.close()
+
+    assert vCountries == ["France", "France", "Mars"]
 
 
 def test_migration_to_v27_decodes_html_entities(tmp_path):

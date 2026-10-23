@@ -9,6 +9,7 @@ import pandas as pd
 
 from job.agencies import AGENCY_MENTIONS
 from job.csv_schema import JOB_COLUMNS
+from job.filter import expand_keyword
 from storage.database import connect_database, count_by_day
 from utils.logger import get_logger
 
@@ -24,6 +25,11 @@ CONTENT_COLUMNS = [
     for vColumn in JOB_COLUMNS
     if vColumn not in ("source", "source_id", "scraped_at", "first_seen_at")
 ]
+
+
+# Début des mots qui désignent un stage ou une alternance dans un intitulé :
+# « stagiaire », « alternant(e) », « apprenti(e) », « internship » compris.
+TRAINING_WORDS = ("stage", "alternan", "apprenti", "intern ", "internship")
 
 
 def to_sql_value(pValue):
@@ -191,6 +197,8 @@ def build_offer_conditions(
     pPreferredCompanies=None,
     pCountry=None,
     pHiddenAgencies=None,
+    pHiddenCompanies=None,
+    pHideTraining=False,
     pNear=None,
 ):
     """Construit les conditions SQL et leurs paramètres à partir des filtres.
@@ -205,12 +213,19 @@ def build_offer_conditions(
     vConditions = []
     vParams = []
 
+    # Le mot cherché ou l'un de ses synonymes (« Java » trouve « JEE »)
     if pSearch:
+        vTerms = expand_keyword(pSearch)
         vConditions.append(
-            "(o.title LIKE ? OR o.company LIKE ? OR o.location LIKE ?"
-            " OR o.description LIKE ?)"
+            "("
+            + " OR ".join(
+                "o.title LIKE ? OR o.company LIKE ? OR o.location LIKE ?"
+                " OR o.description LIKE ?"
+                for _ in vTerms
+            )
+            + ")"
         )
-        vParams += [f"%{pSearch}%"] * 4
+        vParams += [f"%{vTerm}%" for vTerm in vTerms for _ in range(4)]
 
     if pSource:
         vConditions.append("o.source = ?")
@@ -307,6 +322,31 @@ def build_offer_conditions(
         vParams += [f"%|% {vAgency} %|%" for vAgency in pHiddenAgencies]
         vParams += [f"%{vMention}%" for vMention in AGENCY_MENTIONS]
 
+    # Même repérage par mot entier que pour les agences, sans les mentions de
+    # la description : les ESN ne se présentent pas comme intermédiaires.
+    if pHiddenCompanies:
+        vConditions.append(
+            "NOT ("
+            + " OR ".join(
+                "(' ' || REPLACE(COALESCE(o.fingerprint, ''), '|', ' | ') || ' ')"
+                " LIKE ?"
+                for _ in pHiddenCompanies
+            )
+            + ")"
+        )
+        vParams += [f"%|% {vCompany} %|%" for vCompany in pHiddenCompanies]
+
+    # Stage, alternance ou apprentissage annoncés en début de mot dans l'intitulé
+    if pHideTraining:
+        vConditions.append(
+            "NOT ("
+            + " OR ".join(
+                "(' ' || LOWER(COALESCE(o.title, ''))) LIKE ?" for _ in TRAINING_WORDS
+            )
+            + ")"
+        )
+        vParams += [f"% {vWord}%" for vWord in TRAINING_WORDS]
+
     if pNear:
         # Un degré de longitude raccourcit vers les pôles : facteur cos(latitude).
         vLongitudeScale = KM_PER_DEGREE * math.cos(math.radians(pNear["latitude"]))
@@ -358,6 +398,20 @@ def build_offer_conditions(
     return rConditions
 
 
+def read_remote(pValue):
+    """Retourne le télétravail lu en base en booléen, ou None s'il est inconnu.
+
+    La colonne est en texte : « 0 » y serait une chaîne non vide, donc vraie.
+    """
+
+    if pValue is None or (isinstance(pValue, float) and pd.isna(pValue)):
+        return None
+
+    rRemote = str(pValue).strip().lower() in ("1", "true")
+
+    return rRemote
+
+
 def get_offers(pDatabaseFile, pLimit=None, **pFilters):
     """Retourne les offres filtrées avec leur suivi, des plus récentes aux plus
     anciennes.
@@ -394,6 +448,8 @@ def get_offers(pDatabaseFile, pLimit=None, **pFilters):
 
     finally:
         vConnection.close()
+
+    vOffers["remote"] = vOffers["remote"].map(read_remote).astype(object)
 
     rOffers = vOffers
 
@@ -657,6 +713,9 @@ def get_offer(pDatabaseFile, pSource, pSourceId):
         vConnection.close()
 
     rOffer = dict(vRow) if vRow is not None else None
+
+    if rOffer is not None:
+        rOffer["remote"] = read_remote(rOffer["remote"])
 
     return rOffer
 

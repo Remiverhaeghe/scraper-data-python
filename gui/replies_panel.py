@@ -121,6 +121,11 @@ class RepliesPanel(QWidget):
                     pReply["company"],
                     f"« {pReply['subject']} »",
                     pReply["date"].strftime("%d/%m") if pReply["date"] else None,
+                    (
+                        f"entretien le {pReply['interview_at']:%d/%m/%Y à %H:%M}"
+                        if pReply.get("interview_at")
+                        else None
+                    ),
                 )
                 if vPart
             )

@@ -793,3 +793,18 @@ def test_tailored_cv_is_saved_where_chosen(
 
     assert vTarget.read_bytes()[:2] == b"PK"
     assert len(vOpened) == 1
+
+
+def test_keyboard_status_moves_to_the_next_offer(offers_page, database_file):
+    """Vérifie le statut donné au clavier, puis l'offre suivante choisie."""
+
+    offers_page.select_offer(("lever", "1"))
+    offers_page.set_current_status("IGNORED")
+
+    assert get_application(database_file, "lever", "1")["status"] == "IGNORED"
+    assert offers_page.detail_panel.offer["source_id"] == "2"
+
+    offers_page.set_current_status("INTERESTED")
+
+    assert get_application(database_file, "lever", "2")["status"] == "INTERESTED"
+    assert "Raccourcis" in offers_page.table.toolTip()

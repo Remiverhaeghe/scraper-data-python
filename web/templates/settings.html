@@ -202,9 +202,16 @@
                 <div class="rules-actions">
                     <button class="button button-primary" type="submit">Enregistrer</button>
                     <button class="button" type="button" hx-post="{{ url_for('check_company_pages').path }}" hx-include="closest form" hx-target="#company-pages-check" hx-disabled-elt="this">{{ icon("circle-check", 16) }} Vérifier<span class="htmx-indicator"> : en cours…</span></button>
-                    {% if company_pages_message %}<p class="application-message tone-success" role="status">{{ company_pages_message }}</p>{% endif %}
+                    {% if company_pages_message %}<p class="application-message tone-{{ company_pages_tone }}" role="status">{{ company_pages_message }}</p>{% endif %}
                 </div>
                 <div id="company-pages-check"></div>
+            </form>
+            <form class="inline-form section-gap" method="post" action="{{ url_for('add_company_page').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <label>Ou collez l'adresse d'un site carrière
+                    <input type="url" name="url" placeholder="https://jobs.lever.co/qonto" required>
+                </label>
+                <button class="button" type="submit">{{ icon("circle-check", 16) }} Ajouter</button>
             </form>
         </article>
 

@@ -22,7 +22,7 @@ from gui.theme import COLORS
 from gui.widgets import create_button
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
 from job.company_info import lookup_company, summarize_company
-from job.cv_export import build_cv_file_name, build_tailored_cv, write_docx
+from job.cv_export import build_file_name, build_tailored_cv, write_docx
 from job.geocoding import load_home
 from job.interview_revision import build_offer_revision
 from job.interview_journal import collect_asked_questions
@@ -258,7 +258,7 @@ class OfferAssistantPanel(QWidget):
         vPath, _ = QFileDialog.getSaveFileName(
             self,
             "Enregistrer le CV adapté",
-            str(Path.home() / build_cv_file_name(self.offer)),
+            str(Path.home() / build_file_name(self.offer)),
             "Document Word (*.docx)",
         )
 

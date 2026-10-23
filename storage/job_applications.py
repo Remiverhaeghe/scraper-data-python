@@ -25,6 +25,17 @@ APPLICATION_STATUSES = (
 # Statuts qui signalent une réponse de l'entreprise, positive ou non
 ANSWERED_STATUSES = ("INTERVIEW", "REJECTED", "ACCEPTED")
 
+# Valeur par défaut d'un champ non fourni : sa valeur en base est gardée.
+UNCHANGED = object()
+
+
+def read_date(pValue):
+    """Retourne une date ISO lue en base en datetime, ou None."""
+
+    rDate = datetime.fromisoformat(pValue) if pValue else None
+
+    return rDate
+
 
 def create_application(
     pDatabaseFile,
@@ -222,20 +233,37 @@ def save_application(
     pSource,
     pSourceId,
     pStatus,
-    pFollowUpDate=None,
-    pNotes=None,
+    pFollowUpDate=UNCHANGED,
+    pNotes=UNCHANGED,
     pNow=None,
     pFollowUpDays=FOLLOW_UP_DAYS,
-    pInterviewAt=None,
+    pInterviewAt=UNCHANGED,
 ):
     """Crée ou met à jour le suivi d'une offre depuis le tableau de bord.
 
     La date de candidature est fixée au premier passage au statut APPLIED.
     Une candidature envoyée sans date de relance en reçoit une par défaut.
+    Relance, notes et entretien non fournis gardent leur valeur en base ;
+    fournis, même vides, ils la remplacent, comme depuis un formulaire.
     """
 
     if pStatus not in APPLICATION_STATUSES:
         raise ValueError("Statut de candidature invalide.")
+
+    vExisting = (
+        get_application(pDatabaseFile, pSource, pSourceId) or {}
+        if UNCHANGED in (pFollowUpDate, pNotes, pInterviewAt)
+        else {}
+    )
+
+    if pFollowUpDate is UNCHANGED:
+        pFollowUpDate = read_date(vExisting.get("follow_up_date"))
+
+    if pNotes is UNCHANGED:
+        pNotes = vExisting.get("notes")
+
+    if pInterviewAt is UNCHANGED:
+        pInterviewAt = read_date(vExisting.get("interview_at"))
 
     vNow = pNow or datetime.now()
 
@@ -444,7 +472,7 @@ def get_applications_with_offers(pDatabaseFile, pStatuses):
                 a.status, a.applied_at, a.follow_up_date, a.follow_up_count,
                 a.last_follow_up_at,
                 a.interview_at, a.responded_at, o.availability,
-                o.availability_checked_at
+                o.availability_checked_at, o.published_at, o.first_seen_at
             FROM job_application a
             JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id
             WHERE a.status IN ({", ".join("?" for _ in pStatuses)})

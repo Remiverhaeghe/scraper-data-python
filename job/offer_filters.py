@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from config import EXPIRY_DAYS, NEW_OFFER_DAYS
-from job.agencies import INTERIM_AGENCIES
+from job.agencies import CONSULTING_COMPANIES, INTERIM_AGENCIES
 from job.contract import CONTRACT_TYPES
 from job.geocoding import DISTANCE_FILTERS
 from job.location import FRANCE
@@ -42,6 +42,8 @@ class OfferFilterChoices:  # pylint: disable=too-many-instance-attributes
     preferred_only: bool = False
     france_only: bool = False
     hide_agencies: bool = False
+    hide_consulting: bool = False
+    hide_training: bool = False
 
 
 def build_near(pChoices, pHome):
@@ -120,6 +122,10 @@ def build_offer_filters(
         "pHiddenAgencies": (
             (pAgencies or list(INTERIM_AGENCIES)) if pChoices.hide_agencies else None
         ),
+        "pHiddenCompanies": (
+            list(CONSULTING_COMPANIES) if pChoices.hide_consulting else None
+        ),
+        "pHideTraining": pChoices.hide_training,
         "pNear": build_near(pChoices, pHome),
     }
 

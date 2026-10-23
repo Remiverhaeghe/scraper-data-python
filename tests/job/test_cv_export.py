@@ -3,7 +3,12 @@
 import io
 import zipfile
 
-from job.cv_export import build_cv_file_name, build_tailored_cv, write_docx
+from job.cv_export import (
+    build_file_name,
+    build_tailored_cv,
+    write_docx,
+    write_letter_docx,
+)
 from job.cv_import import read_docx
 
 PROFILE = {
@@ -59,7 +64,7 @@ def test_docx_is_a_valid_word_archive_with_escaped_text():
 def test_file_name_is_safe():
     """Vérifie le nom de fichier : caractères interdits retirés."""
 
-    assert build_cv_file_name(OFFER) == "CV - Acme - Développeur Java SQL.docx"
+    assert build_file_name(OFFER) == "CV - Acme - Développeur Java SQL.docx"
 
 
 def test_docx_is_read_back_by_the_cv_import():
@@ -69,3 +74,15 @@ def test_docx_is_read_back_by_the_cv_import():
 
     assert vText.splitlines()[:2] == ["Camille Martin", "Développeur Java"]
     assert "Java, SQL" in vText
+
+
+def test_letter_is_written_line_by_line():
+    """Vérifie la lettre en Word : une ligne par paragraphe, texte échappé."""
+
+    vText = read_docx(write_letter_docx("Madame, Monsieur,\n\nJe postule <ici>."))
+
+    assert vText.splitlines()[0] == "Madame, Monsieur,"
+    assert "Je postule <ici>." in vText
+    assert (
+        build_file_name(OFFER, "Lettre") == "Lettre - Acme - Développeur Java SQL.docx"
+    )

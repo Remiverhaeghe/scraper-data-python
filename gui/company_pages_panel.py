@@ -15,6 +15,7 @@ from gui.theme import COLORS
 from gui.widgets import create_button, create_card, show_message
 from job.company_pages import (
     PLATFORMS,
+    add_company_from_url,
     check_companies,
     load_company_list,
     save_company_lists,
@@ -71,6 +72,23 @@ class CompanyPagesPanel(QWidget):
         vActions.addWidget(vCheckButton)
         vActions.addStretch()
 
+        # Adresse copiée depuis le navigateur : plateforme et identifiant déduits
+        self.url_edit = QLineEdit()
+        self.url_edit.setPlaceholderText(
+            "Ou collez l'adresse d'un site carrière, par exemple "
+            "https://jobs.lever.co/qonto"
+        )
+        self.url_edit.returnPressed.connect(self.add_from_url)
+
+        vAddButton = create_button(
+            "Ajouter", "circle-check", pIconColor=COLORS["primary"]
+        )
+        vAddButton.clicked.connect(self.add_from_url)
+
+        vAddRow = QHBoxLayout()
+        vAddRow.addWidget(self.url_edit, 1)
+        vAddRow.addWidget(vAddButton)
+
         self.message_label = QLabel()
         self.message_label.setObjectName("cardSubtitle")
         self.message_label.setWordWrap(True)
@@ -85,6 +103,7 @@ class CompanyPagesPanel(QWidget):
             "Champ vide : la liste du .env, sinon celle par défaut.",
         )
         vCardLayout.addLayout(vGrid)
+        vCardLayout.addLayout(vAddRow)
         vCardLayout.addLayout(vActions)
         vCardLayout.addWidget(self.message_label)
         vCardLayout.addWidget(self.result_label)
@@ -99,6 +118,24 @@ class CompanyPagesPanel(QWidget):
             vEdit.setText(
                 load_company_list(vPlatform, self.database_file).replace(",", ", ")
             )
+
+    def add_from_url(self):
+        """Ajoute l'entreprise de l'adresse collée, après vérification."""
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+        try:
+            vMessage = add_company_from_url(self.database_file, self.url_edit.text())
+
+        except ValueError as vException:
+            show_message(self.message_label, str(vException), "warning")
+            return
+
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        self.url_edit.clear()
+        self.refresh()
+        show_message(self.message_label, vMessage)
 
     def save(self):
         """Enregistre les listes saisies, prises en compte à la prochaine recherche."""

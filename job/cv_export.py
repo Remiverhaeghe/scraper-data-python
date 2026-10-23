@@ -1,4 +1,5 @@
-"""CV adapté à une offre, écrit au format Word (.docx) sans bibliothèque externe
+"""CV adapté à une offre et lettre de motivation, écrits au format Word (.docx)
+sans bibliothèque externe
 
 Le CV reprend le profil tel quel, réordonné pour l'offre : compétences qu'elle
 demande en tête, puis expériences qui les mobilisent le plus. Rien n'est inventé.
@@ -125,13 +126,21 @@ def write_docx(pCv):
             if vExperience.get(vField):
                 vParagraphs.append(build_paragraph(f"• {vExperience[vField]}"))
 
+    rContent = write_document(vParagraphs)
+
+    return rContent
+
+
+def write_document(pParagraphs):
+    """Retourne les octets d'un document Word fait des paragraphes XML donnés."""
+
     vBuffer = io.BytesIO()
 
     with zipfile.ZipFile(vBuffer, "w", zipfile.ZIP_DEFLATED) as vArchive:
         vArchive.writestr("[Content_Types].xml", CONTENT_TYPES)
         vArchive.writestr("_rels/.rels", RELATIONSHIPS)
         vArchive.writestr(
-            "word/document.xml", DOCUMENT_START + "".join(vParagraphs) + DOCUMENT_END
+            "word/document.xml", DOCUMENT_START + "".join(pParagraphs) + DOCUMENT_END
         )
 
     rContent = vBuffer.getvalue()
@@ -139,11 +148,21 @@ def write_docx(pCv):
     return rContent
 
 
-def build_cv_file_name(pOffer):
-    """Retourne un nom de fichier lisible et sûr pour le CV adapté à une offre."""
+def write_letter_docx(pText):
+    """Retourne la lettre de motivation au format Word, un paragraphe par ligne."""
+
+    rContent = write_document(
+        [build_paragraph(vLine) for vLine in str(pText or "").splitlines()]
+    )
+
+    return rContent
+
+
+def build_file_name(pOffer, pKind="CV"):
+    """Retourne un nom de fichier lisible et sûr pour un document lié à une offre."""
 
     vName = " - ".join(
-        vPart for vPart in ("CV", pOffer.get("company"), pOffer.get("title")) if vPart
+        vPart for vPart in (pKind, pOffer.get("company"), pOffer.get("title")) if vPart
     )
 
     rFileName = (

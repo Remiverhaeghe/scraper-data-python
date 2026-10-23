@@ -79,12 +79,16 @@
 
                 {% call detail("scale", "Marché") %}{{ market_salary }}{% endcall %}
 
+                {% if negotiation %}
+                {% call detail("banknote", "Négociation") %}{{ negotiation }}{% endcall %}
+                {% endif %}
+
                 {% if offer.benefits %}
                 {% call detail("gift", "Avantages") %}{{ offer.benefits | join(", ") }}{% endcall %}
                 {% endif %}
 
                 {% if offer.experience_level %}
-                {% call detail("timer", "Expérience") %}{{ offer.experience_level }}{% endcall %}
+                {% call detail("timer", "Expérience") %}{{ offer.experience_level }}{% if experience_fit %} · {{ experience_fit }}{% endif %}{% endcall %}
                 {% endif %}
 
                 {% if offer.skills_list %}
@@ -206,7 +210,13 @@
                 <span class="muted">Votre profil réordonné : compétences demandées en tête, expériences les plus proches d'abord. À relire avant envoi.</span>
             </p>
             <h3>Brouillon de lettre de motivation</h3>
-            <textarea class="letter" rows="14" aria-label="Brouillon de lettre de motivation">{{ preparation.letter }}</textarea>
+            <form method="post" action="{{ url_for('download_letter').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <input type="hidden" name="source" value="{{ offer.source }}">
+                <input type="hidden" name="id" value="{{ offer.source_id }}">
+                <textarea class="letter" name="letter" rows="14" aria-label="Brouillon de lettre de motivation">{{ preparation.letter }}</textarea>
+                <button class="button" type="submit">{{ icon("download", 16) }} Télécharger la lettre (.docx)</button>
+            </form>
             {% else %}
             <p class="muted">Renseignez d'abord vos compétences et expériences dans la page <a href="{{ url_for('show_profile').path }}">Profil</a>.</p>
             {% endif %}

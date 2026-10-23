@@ -119,6 +119,8 @@ def web_login(monkeypatch):
     # Peu de tours de hachage : les tests restent rapides.
     monkeypatch.setenv("WEB_PASSWORD_HASH", hash_password(TEST_PASSWORD, 1000))
     monkeypatch.setenv("WEB_SESSION_SECRET", "secret-de-test")
+    # Sans double authentification, même si le .env du poste l'active
+    monkeypatch.delenv("WEB_TOTP_SECRET", raising=False)
 
     def login(pClient):
         """Ouvre une session et joint son jeton CSRF aux requêtes suivantes."""

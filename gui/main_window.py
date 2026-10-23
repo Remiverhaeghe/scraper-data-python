@@ -138,7 +138,9 @@ class MainWindow(QMainWindow):
         self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
         self.add_page("quiz", "Révision", "graduation-cap", self.quiz_page)
         self.add_page("skills", "Compétences", "target", self.skills_page)
-        self.add_page("market", "Mon marché", "banknote", MarketPage(vDatabaseFile))
+        self.market_page = MarketPage(vDatabaseFile)
+        self.market_page.exam_requested.connect(self.start_skills_exam)
+        self.add_page("market", "Mon marché", "banknote", self.market_page)
         self.add_page("challenges", "Défis", "trophy", ChallengesPage(vDatabaseFile))
         self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
@@ -366,6 +368,11 @@ class MainWindow(QMainWindow):
         """Ouvre la page Révision sur l'examen blanc d'une offre."""
         self.navigate("quiz")
         self.quiz_page.start_offer_exam(pOffer)
+
+    def start_skills_exam(self, pSkills):
+        """Ouvre la page Révision sur l'examen des compétences prioritaires."""
+        self.navigate("quiz")
+        self.quiz_page.start_skills_exam(pSkills)
 
     def revise_theme(self, pThemeKey):
         """Ouvre la page Révision sur un thème, en répétition espacée."""

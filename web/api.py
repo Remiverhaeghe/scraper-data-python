@@ -10,6 +10,7 @@ from datetime import datetime
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Response
 
 from config import APPLICATION_NAME
+from job.application_replies import load_pending_replies
 from job.interview_simulation import (
     list_themes,
     load_interview_questions,
@@ -228,6 +229,15 @@ def upload_skill_levels(
     rReport = {"rated": sum(1 for _, vLevel in vGrid if vLevel)}
 
     return rReport
+
+
+@router.get("/replies", dependencies=[Depends(require_api_token)])
+def download_replies(pDatabaseFile: str = Depends(get_database_file)):
+    """Renvoie les réponses de recruteurs repérées par la dernière lecture de Gmail."""
+
+    rReplies = {"replies": load_pending_replies(pDatabaseFile)}
+
+    return rReplies
 
 
 @router.get("/offers", dependencies=[Depends(require_api_token)])

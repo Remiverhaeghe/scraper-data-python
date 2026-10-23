@@ -2,6 +2,7 @@
 
 from datetime import datetime
 
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QGridLayout,
@@ -17,6 +18,7 @@ from gui.chart import BarChart
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
+    create_button,
     create_card,
     create_page_header,
     create_scroll_content,
@@ -67,6 +69,9 @@ def fill_table(pTable, pRows, pWithMine=False):
 class MarketPage(QWidget):
     """Affiche le marché tiré des offres récentes : volumes et salaires."""
 
+    # Compétences prioritaires dont l'examen blanc est demandé
+    exam_requested = Signal(list)
+
     def __init__(self, pDatabaseFile):
         """Construit la page ; les données sont chargées par refresh."""
         super().__init__()
@@ -106,21 +111,32 @@ class MarketPage(QWidget):
             "Compétences les plus demandées que vous n'avez pas évaluées, ou notées "
             "sous 5 : à réviser, ou à évaluer dans Profil",
             pIcon="target",
+            pOpen=True,
         )
         self.priority_label = QLabel()
         self.priority_label.setWordWrap(True)
         vPriorityLayout.addWidget(self.priority_label)
+
+        self.priority_skills = []
+        self.exam_button = create_button(
+            "Examen blanc sur ces compétences", "timer", pObjectName="primaryButton"
+        )
+        self.exam_button.clicked.connect(
+            lambda: self.exam_requested.emit(self.priority_skills)
+        )
+        vPriorityLayout.addWidget(self.exam_button, 0, Qt.AlignmentFlag.AlignLeft)
         vLayout.addWidget(vPriorityCard)
 
         vHistoryCard, vHistoryLayout = create_card(
             "Évolution du marché",
             "Offres vues chaque mois, et celles qui citent une compétence de votre "
             "profil",
+            pOpen=True,
         )
         self.history_chart = BarChart()
         self.history_chart.setMinimumHeight(200)
         self.history_table = create_table(HISTORY_COLUMNS)
-        self.history_table.setMinimumHeight(220)
+        self.history_table.setMinimumHeight(140)
         vHistoryLayout.addWidget(self.history_chart)
         vHistoryLayout.addWidget(self.history_table)
         vLayout.addWidget(vHistoryCard)
@@ -128,6 +144,7 @@ class MarketPage(QWidget):
         vSkillsCard, vSkillsLayout = create_card(
             "Compétences les plus demandées",
             "Médiane affichée à partir de trois salaires",
+            pOpen=True,
         )
         self.skills_table = create_table(SKILL_COLUMNS)
         vSkillsLayout.addWidget(self.skills_table)
@@ -142,6 +159,7 @@ class MarketPage(QWidget):
         self.cities_table = create_table(CITY_COLUMNS)
         vCitiesLayout.addWidget(self.cities_table)
         vLayout.addWidget(vCitiesCard)
+        vLayout.addStretch()
 
     def show_history(self, pHistory):
         """Affiche l'évolution du marché : graphique et tableau mois par mois."""
@@ -186,6 +204,8 @@ class MarketPage(QWidget):
         if vMarket["target"] is None:
             self.cards["target"].set_value("À régler")
 
+        self.priority_skills = [vSkill["name"] for vSkill in vMarket["priorities"]]
+        self.exam_button.setEnabled(bool(self.priority_skills))
         self.priority_label.setText(
             "\n".join(
                 f"{vSkill['name']} · {vSkill['label']}"

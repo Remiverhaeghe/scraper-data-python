@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../revision_state.dart';
 import '../theme.dart';
 import 'offer_detail_screen.dart';
+import 'triage_screen.dart';
 
 class OffersScreen extends StatefulWidget {
   const OffersScreen({super.key, required this.state});
@@ -26,7 +27,18 @@ class _OffersScreenState extends State<OffersScreen> {
     final vState = widget.state;
 
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Nouvelles offres')),
+      appBar: AppBar(
+        title: const Text('Nouvelles offres'),
+        actions: [
+          IconButton(
+            tooltip: 'Tri rapide',
+            icon: const Icon(Icons.swipe),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => TriageScreen(state: vState)),
+            ),
+          ),
+        ],
+      ),
       body: ListenableBuilder(
         listenable: vState,
         builder: (_, __) {

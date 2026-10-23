@@ -6,7 +6,9 @@ dire, entreprise par entreprise, si elle publie des offres.
 """
 
 import os
+import re
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
@@ -66,6 +68,22 @@ PLATFORMS = {
 }
 
 SETTING_PREFIX = "company_pages/"
+
+# Plateforme reconnue au nom d'hôte, l'identifiant étant le premier dossier de
+# l'adresse : jobs.lever.co/qonto donne « qonto ».
+PATH_HOSTS = {
+    "jobs.smartrecruiters.com": "smartrecruiters",
+    "careers.smartrecruiters.com": "smartrecruiters",
+    "jobs.lever.co": "lever",
+    "jobs.ashbyhq.com": "ashby",
+    "boards.greenhouse.io": "greenhouse",
+    "job-boards.greenhouse.io": "greenhouse",
+    "job-boards.eu.greenhouse.io": "greenhouse",
+    "apply.workable.com": "workable",
+}
+
+# Langue placée avant le site dans une adresse Workday : /fr-FR/valeo_jobs
+LOCALE_PATTERN = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
 
 
 def split_companies(pValue):
@@ -155,6 +173,74 @@ def count_published_offers(pPlatform, pCompany):
         rCount = search_jobs(parse_site(pCompany), None, 0).get("total", 0)
 
     return rCount
+
+
+def read_career_url(pUrl):
+    """Retourne (plateforme, identifiant) lus dans l'adresse d'un site carrière.
+
+    Lève ValueError si l'adresse ne désigne pas une plateforme prise en charge.
+    """
+
+    vUrl = urlparse(str(pUrl or "").strip())
+    vHost = vUrl.netloc.lower()
+    vParts = [vPart for vPart in vUrl.path.split("/") if vPart]
+
+    if vHost in PATH_HOSTS and vParts:
+        rFound = (PATH_HOSTS[vHost], vParts[0])
+
+    elif vHost.endswith(".recruitee.com"):
+        rFound = ("recruitee", vHost.removesuffix(".recruitee.com"))
+
+    elif vHost.endswith(".myworkdayjobs.com") and vParts:
+        vPrefix = vHost.removesuffix(".myworkdayjobs.com")
+        vTenant = vPrefix.split(".")[0]
+        vSite = (
+            vParts[1]
+            if LOCALE_PATTERN.match(vParts[0]) and len(vParts) > 1
+            else vParts[0]
+        )
+        # Tenant trop court pour un nom (« ag » chez Airbus) : le site le donne.
+        vName = vSite if len(vTenant) <= 3 else vTenant.title()
+        rFound = ("workday", f"{vName}={vPrefix}/{vTenant}/{vSite}")
+
+    else:
+        raise ValueError(
+            "Adresse non reconnue : sites carrière SmartRecruiters, Lever, Ashby, "
+            "Greenhouse, Recruitee, Workable ou Workday."
+        )
+
+    return rFound
+
+
+def add_company_from_url(pDatabaseFile, pUrl):
+    """Ajoute l'entreprise d'un site carrière à la liste suivie ; retourne le message.
+
+    L'entreprise est d'abord vérifiée auprès de sa plateforme. Lève ValueError
+    si l'adresse n'est pas reconnue ou si la plateforme ne la connaît pas.
+    """
+
+    vPlatform, vCompany = read_career_url(pUrl)
+    vLabel = PLATFORMS[vPlatform][0]
+
+    try:
+        vCount = count_published_offers(vPlatform, vCompany)
+
+    except (requests.RequestException, ValueError) as vException:
+        logger.warning("Site carrière non reconnu par %s : %s", vLabel, vException)
+        raise ValueError(
+            f"{vLabel} ne connaît pas « {vCompany} » : vérifiez l'adresse."
+        ) from vException
+
+    vCompanies = split_companies(load_company_list(vPlatform, pDatabaseFile))
+
+    if vCompany.lower() in (vName.lower() for vName in vCompanies):
+        return f"{vLabel} · {vCompany} : déjà suivie ({vCount} offre(s))."
+
+    save_company_lists(pDatabaseFile, {vPlatform: ",".join([*vCompanies, vCompany])})
+
+    rMessage = f"{vLabel} · {vCompany} ajoutée : {vCount} offre(s) publiée(s)."
+
+    return rMessage
 
 
 def check_companies(pPlatform, pText):

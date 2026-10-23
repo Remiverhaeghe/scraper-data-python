@@ -2319,6 +2319,13 @@ textarea.companies-preferred {
     font-size: 13px;
 }
 
+.map-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+}
+
 .map-dot {
     display: inline-block;
     width: 12px;

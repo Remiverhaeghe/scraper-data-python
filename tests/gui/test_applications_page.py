@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QComboBox, QLabel, QPushButton
 
 import gui.applications_page as applications_page
 from gui.applications_page import ApplicationsPage
+from gui.spontaneous_dialog import SpontaneousDialog
 from storage.database import initialize_database
 from storage.job_applications import get_application, save_application
 from storage.job_offers import save_offers
@@ -190,3 +191,37 @@ def test_funnel_is_shown(qt_application, tmp_path):
 
     assert vLayout.rowCount() == 4
     assert vLayout.itemAtPosition(0, 1).widget().format() == "1  ·  100 %"
+
+
+def test_search_journal_export(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'écriture du journal de recherche et le message de fin."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vPath = tmp_path / "journal.csv"
+    monkeypatch.setattr(
+        applications_page.QFileDialog,
+        "getSaveFileName",
+        lambda *pArgs: (str(vPath), ""),
+    )
+
+    vPage.export_journal()
+
+    assert vPath.read_bytes().startswith(b"\xef\xbb\xbfDate;")
+    assert "Journal enregistré" in vPage.message_label.text()
+
+
+def test_spontaneous_dialog_saves_or_explains(qt_application, tmp_path):
+    """Vérifie l'enregistrement depuis la fenêtre, et le message sans entreprise."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vDialog = SpontaneousDialog(None, vDatabaseFile)
+
+    vDialog.save()
+
+    assert "entreprise manquante" in vDialog.message_label.text()
+
+    vDialog.company_edit.setText("OVHcloud")
+    vDialog.save()
+
+    assert vDialog.result() == vDialog.DialogCode.Accepted

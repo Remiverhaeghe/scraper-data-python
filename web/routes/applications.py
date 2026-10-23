@@ -1,10 +1,10 @@
 """Pages des candidatures : suivi par étape, statut et agenda"""
 
 import imaplib
-from datetime import datetime
+from datetime import datetime, timedelta
 from html import escape
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from job.application_replies import (
@@ -20,6 +20,13 @@ from job.application_tracking import (
     mark_followed_up,
 )
 from job.calendar import build_calendar
+from job.manual_offers import add_spontaneous_application
+from job.search_journal import (
+    DEFAULT_JOURNAL_DAYS,
+    build_journal_file_name,
+    build_search_journal,
+    write_journal_csv,
+)
 from job.followed_availability import count_alerts
 from job.notification import describe_follow_up
 from job.presentation import STATUS_LABELS
@@ -52,10 +59,75 @@ def show_applications(
             "statistics": build_application_statistics(pDatabaseFile),
             "board_statuses": BOARD_STATUSES,
             "statuses": STATUS_LABELS,
+            "journal_start": (
+                datetime.now() - timedelta(days=DEFAULT_JOURNAL_DAYS)
+            ).strftime("%Y-%m-%d"),
+            "journal_end": datetime.now().strftime("%Y-%m-%d"),
         },
     )
 
     return rResponse
+
+
+@router.post("/applications/spontaneous", dependencies=[Depends(require_csrf)])
+def create_spontaneous_application(
+    pCompany: str = Form("", alias="company"),
+    pTitle: str = Form("", alias="title"),
+    pUrl: str = Form("", alias="url"),
+    pNote: str = Form("", alias="note"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre une candidature spontanée, puis revient au tableau."""
+
+    try:
+        add_spontaneous_application(
+            pDatabaseFile, pCompany, pTitle, pUrl, pNote, datetime.now()
+        )
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = RedirectResponse(
+        router.url_path_for("show_applications"), status_code=303
+    )
+
+    return rResponse
+
+
+@router.get("/applications/journal.csv")
+def download_journal(
+    pStart: str = Query("", alias="start"),
+    pEnd: str = Query("", alias="end"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Télécharge le journal des démarches de la période, au format CSV."""
+
+    vEnd = parse_day(pEnd) or datetime.now()
+    vStart = parse_day(pStart) or vEnd - timedelta(days=DEFAULT_JOURNAL_DAYS)
+
+    rResponse = Response(
+        write_journal_csv(build_search_journal(pDatabaseFile, vStart, vEnd)),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{build_journal_file_name(vStart, vEnd)}"'
+            )
+        },
+    )
+
+    return rResponse
+
+
+def parse_day(pValue):
+    """Lit une date AAAA-MM-JJ du formulaire, ou None si elle est vide ou invalide."""
+
+    try:
+        rDate = datetime.strptime(pValue, "%Y-%m-%d") if pValue else None
+
+    except ValueError:
+        rDate = None
+
+    return rDate
 
 
 @router.get("/applications/calendar.ics")
@@ -90,6 +162,18 @@ def change_application_status(
     )
 
     return rResponse
+
+
+def parse_interview_at(pValue):
+    """Lit la date d'entretien du formulaire (AAAA-MM-JJTHH:MM), ou None."""
+
+    try:
+        rDate = datetime.strptime(pValue, "%Y-%m-%dT%H:%M") if pValue else None
+
+    except ValueError:
+        rDate = None
+
+    return rDate
 
 
 @router.post(
@@ -138,6 +222,7 @@ def handle_reply(
     pSource: str = Form(alias="source"),
     pSourceId: str = Form(alias="id"),
     pStatus: str = Form(alias="status"),
+    pInterviewAt: str = Form("", alias="interview_at"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Applique le statut proposé, ou ignore le message ; remplace sa ligne."""
@@ -153,6 +238,7 @@ def handle_reply(
                 "source": pSource,
                 "source_id": pSourceId,
                 "status": pStatus,
+                "interview_at": parse_interview_at(pInterviewAt),
             },
             datetime.now(),
         )

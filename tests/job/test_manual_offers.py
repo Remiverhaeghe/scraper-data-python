@@ -73,7 +73,7 @@ def test_add_manual_offer_completes_and_saves(database_file):
 
     assert vOffer["contract"] == "CDI"
     # Comme pour les autres sources, SQLite range la valeur en texte.
-    assert vOffer["remote"] == "1"
+    assert vOffer["remote"] is True
     assert "Java" in vOffer["skills"]
     assert vOffer["fingerprint"] == "developpeur java|acme|lille"
 

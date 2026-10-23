@@ -20,6 +20,7 @@ from web.auth import (
     SESSION_COOKIE,
     SESSION_DURATION,
     check_credentials,
+    second_factor,
     create_session_token,
     get_missing_auth_settings,
     is_safe_redirect,
@@ -66,6 +67,7 @@ def render_login(pRequest, pNext, pMessage=None, pStatusCode=200):
             "message": pMessage,
             # Seuls les noms des variables sont affichés, jamais leurs valeurs.
             "missing_settings": get_missing_auth_settings(),
+            "totp_enabled": second_factor.is_enabled(),
         },
         status_code=pStatusCode,
     )
@@ -92,6 +94,7 @@ def login(
     request: Request,
     pUsername: str = Form("", alias="username"),
     pPassword: str = Form("", alias="password"),
+    pCode: str = Form("", alias="code"),
     pNext: str = Form("/", alias="next"),
 ):
     """Ouvre une session si l'identifiant et le mot de passe sont corrects."""
@@ -111,13 +114,24 @@ def login(
             request, pNext, "Trop de tentatives. Réessayez dans 15 minutes.", 429
         )
 
-    elif not check_credentials(pUsername, pPassword):
+    # Le code n'est vérifié qu'avec des identifiants corrects : un code valide
+    # n'est pas consommé par une tentative au mauvais mot de passe.
+    elif not check_credentials(pUsername, pPassword) or not second_factor.check(
+        pCode, vNow.timestamp()
+    ):
         login_rate_limiter.record_failure(vAddress, vNow)
 
         logger.warning("Échec de connexion au tableau de bord depuis %s", vAddress)
 
         rResponse = render_login(
-            request, pNext, "Identifiant ou mot de passe incorrect.", 401
+            request,
+            pNext,
+            (
+                "Identifiant, mot de passe ou code incorrect."
+                if second_factor.is_enabled()
+                else "Identifiant ou mot de passe incorrect."
+            ),
+            401,
         )
 
     else:

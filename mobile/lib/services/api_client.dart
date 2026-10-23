@@ -161,6 +161,21 @@ class ApiClient {
     return rOffers;
   }
 
+  /// Réponses de recruteurs repérées par le PC dans Gmail : offre et statut annoncé.
+  Future<List<Map<String, dynamic>>> downloadReplies() async {
+    final vResponse = await send(
+      'Réponses',
+      () => client.get(buildUri('/replies'), headers: buildHeaders()),
+    );
+
+    final rReplies = [
+      for (final vReply in decode(vResponse)['replies'] as List? ?? const [])
+        Map<String, dynamic>.from(vReply as Map),
+    ];
+
+    return rReplies;
+  }
+
   /// Questions ouvertes de la simulation d'entretien, et leurs thèmes.
   Future<Map<String, dynamic>> downloadInterview() async {
     final vResponse = await send(

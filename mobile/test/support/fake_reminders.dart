@@ -25,6 +25,11 @@ class FakeReminders implements Reminders {
   @override
   Future<void> showNewOffers(List<Map<String, dynamic>> pOffers) async => shownOffers.add(pOffers);
 
+  final shownReplies = <List<Map<String, dynamic>>>[];
+
+  @override
+  Future<void> showReplies(List<Map<String, dynamic>> pReplies) async => shownReplies.add(pReplies);
+
   @override
   Future<void> scheduleOfferChecks(bool pEnabled) async => offerChecks.add(pEnabled);
 }

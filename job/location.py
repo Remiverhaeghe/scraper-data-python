@@ -573,8 +573,22 @@ def detect_location(pLocation, pCountry=None):
     return rLocation
 
 
+def normalize_country(pCountry):
+    """Retourne le nom affiché d'un pays donné en code ou en nom (« FR » donne
+    « France ») ; un pays inconnu est gardé tel quel.
+    """
+
+    rCountry = COUNTRY_ALIASES.get(normalize(pCountry), str(pCountry).strip())
+
+    return rCountry
+
+
 def add_location(pItems):
-    """Complète le pays et la ville des offres qui ne les ont pas."""
+    """Complète le pays et la ville des offres qui ne les ont pas.
+
+    Un pays donné par la source en code (« FR ») prend son nom affiché, comme
+    un pays déduit du lieu : les filtres et le placement ne cherchent que lui.
+    """
 
     vItems = pItems.copy()
 
@@ -589,7 +603,11 @@ def add_location(pItems):
     ]
 
     vItems["country"] = [
-        vCountry if isinstance(vCountry, str) and vCountry else vFound[0]
+        (
+            normalize_country(vCountry)
+            if isinstance(vCountry, str) and vCountry
+            else vFound[0]
+        )
         for vCountry, vFound in zip(vColumns["country"], vDetected)
     ]
     vItems["city"] = [

@@ -10,6 +10,8 @@ from job.application_tracking import (
     build_board,
     build_follow_up_draft,
     build_funnel,
+    get_application_delay,
+    get_employer_type,
     get_job_family,
     get_week_follow_ups,
     mark_followed_up,
@@ -301,3 +303,37 @@ def test_follow_up_draft_depends_on_stage(pApplication, pExpected):
     """Vérifie le brouillon après un entretien et à la deuxième relance."""
 
     assert pExpected in build_follow_up_draft(pApplication, "Camille")
+
+
+@pytest.mark.parametrize(
+    ("pApplication", "pExpected"),
+    [
+        (
+            {"published_at": "2026-10-20", "applied_at": "2026-10-20T09:00"},
+            "Le jour même",
+        ),
+        (
+            {"published_at": "2026-10-18", "applied_at": "2026-10-20T09:00"},
+            "1 à 3 jours",
+        ),
+        (
+            {"first_seen_at": "2026-10-01", "applied_at": "2026-10-20"},
+            "Plus d'une semaine",
+        ),
+        ({"published_at": None, "applied_at": "2026-10-20"}, "Date inconnue"),
+    ],
+)
+def test_application_delay_is_grouped(pApplication, pExpected):
+    """Vérifie le délai entre la publication et la candidature, par tranche."""
+
+    assert get_application_delay(pApplication) == pExpected
+
+
+def test_employer_type_separates_agencies_firms_and_final_clients():
+    """Vérifie le type d'employeur : intérim, ESN ou client final."""
+
+    assert get_employer_type({"company": "Proman 59"}, ["proman"]) == "Agence d'intérim"
+    assert get_employer_type({"company": "Alten"}, ["proman"]) == (
+        "Société de conseil (ESN)"
+    )
+    assert get_employer_type({"company": "Kiabi"}, ["proman"]) == "Client final"

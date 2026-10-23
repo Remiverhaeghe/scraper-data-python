@@ -1,6 +1,6 @@
 """Page des candidatures : tableau de suivi par colonnes et taux de réponse"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from PySide6.QtCore import Signal
@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 from gui.follow_ups_panel import FollowUpsPanel
 from gui.funnel_panel import FunnelPanel
 from gui.replies_panel import RepliesPanel
+from gui.spontaneous_dialog import SpontaneousDialog
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -43,6 +44,12 @@ from job.application_tracking import (
     get_week_follow_ups,
 )
 from job.calendar import build_calendar
+from job.search_journal import (
+    DEFAULT_JOURNAL_DAYS,
+    build_journal_file_name,
+    build_search_journal,
+    write_journal_csv,
+)
 from job.presentation import STATUS_LABELS
 from storage.job_applications import update_application_status
 from utils.logger import get_logger
@@ -51,8 +58,9 @@ logger = get_logger(__name__)
 
 STATISTIC_HEADERS = ["", "Envoyées", "Réponses", "Taux", "Délai moyen"]
 
-# Tableaux par dimension : source, poste, correspondance, contrat, société
-MAX_STATISTIC_TABLES = 5
+# Tableaux par dimension : source, employeur, délai, poste, correspondance, contrat,
+# société
+MAX_STATISTIC_TABLES = 7
 STATISTIC_COLUMNS = 3
 
 
@@ -82,11 +90,33 @@ class ApplicationsPage(QWidget):
         )
         vExportButton.clicked.connect(self.choose_calendar_file)
 
+        vJournalButton = create_button(
+            "Journal de recherche", "file-text", pIconColor=COLORS["primary"]
+        )
+        vJournalButton.setToolTip(
+            "Démarches datées des trois derniers mois (candidatures, relances, "
+            "réponses, entretiens), pour un tableur"
+        )
+        vJournalButton.clicked.connect(self.export_journal)
+
+        vSpontaneousButton = create_button(
+            "Candidature spontanée", "send", pIconColor=COLORS["primary"]
+        )
+        vSpontaneousButton.setToolTip(
+            "Pour une entreprise sans offre publiée : suivie comme les autres"
+        )
+        vSpontaneousButton.clicked.connect(self.add_spontaneous)
+
         create_page_header(
             vLayout,
             "Candidatures",
             "Vos candidatures par étape, et les sources ou postes qui répondent le plus",
-            [vExportButton, create_fold_button(self)],
+            [
+                vSpontaneousButton,
+                vExportButton,
+                vJournalButton,
+                create_fold_button(self),
+            ],
             pIcon="send",
         )
 
@@ -124,6 +154,44 @@ class ApplicationsPage(QWidget):
         vLayout.addLayout(self.create_board())
         vLayout.addLayout(self.create_statistic_tables())
         vLayout.addStretch()
+
+    def add_spontaneous(self):
+        """Ouvre la saisie d'une candidature spontanée, puis rafraîchit la page."""
+        if SpontaneousDialog(self, self.database_file).exec():
+            self.refresh()
+            self.application_changed.emit()
+
+    def export_journal(self):
+        """Enregistre le journal des démarches des trois derniers mois, au format CSV."""
+        vEnd = datetime.now()
+        vStart = vEnd - timedelta(days=DEFAULT_JOURNAL_DAYS)
+
+        vPath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Enregistrer le journal de recherche",
+            str(Path.home() / build_journal_file_name(vStart, vEnd)),
+            "Fichier CSV (*.csv)",
+        )
+
+        if not vPath:
+            return
+
+        try:
+            vRows = build_search_journal(self.database_file, vStart, vEnd)
+            Path(vPath).write_bytes(write_journal_csv(vRows))
+
+        except OSError as vException:
+            logger.warning("Journal de recherche non enregistré : %s", vException)
+            show_message(
+                self.message_label, "Le journal n'a pas pu être enregistré.", "danger"
+            )
+            self.message_label.show()
+            return
+
+        show_message(
+            self.message_label, f"Journal enregistré : {len(vRows)} démarche(s)."
+        )
+        self.message_label.show()
 
     def choose_calendar_file(self):
         """Demande où enregistrer le fichier agenda puis l'écrit."""

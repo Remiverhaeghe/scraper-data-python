@@ -30,7 +30,12 @@ from job.companies import (
 )
 from job.company_info import lookup_company, summarize_company
 from job.contract import CONTRACT_TYPES
-from job.cv_export import build_cv_file_name, build_tailored_cv, write_docx
+from job.cv_export import (
+    build_file_name,
+    build_tailored_cv,
+    write_docx,
+    write_letter_docx,
+)
 from job.deduplication import (
     COMPARED_FIELDS,
     MERGED,
@@ -38,6 +43,7 @@ from job.deduplication import (
     get_offer_group,
     group_offers,
 )
+from job.experience_fit import describe_experience_fit, mark_experience_fit
 from job.freshness import add_freshness
 from job.geocoding import (
     DISTANCE_FILTERS,
@@ -90,7 +96,12 @@ from job.presentation import (
 from job.profile import is_profile_empty, load_profile
 from job.quiz import THEME_STATUSES, load_active_quiz
 from job.quiz_exam import build_exam_history, describe_exam_results, load_exam_results
-from job.salary_market import describe_market_salary, find_market_salary
+from job.salary_market import (
+    add_estimated_salaries,
+    describe_market_salary,
+    describe_negotiation,
+    find_market_salary,
+)
 from job.settings import load_settings
 from job.sources.registry import SOURCES
 from job.star_answers import load_star_answers
@@ -114,6 +125,9 @@ router = APIRouter()
 # Au-delà, l'utilisateur affine sa recherche plutôt que de parcourir la liste.
 MAX_DISPLAYED_OFFERS = 300
 
+# Longueur gardée pour une lettre envoyée par le formulaire
+MAX_LETTER_LENGTH = 20000
+
 
 @router.get("/offers", response_class=HTMLResponse)
 def list_offers(
@@ -133,6 +147,9 @@ def list_offers(
     pPreferred: str = Query("", alias="preferred"),
     pFrance: str = Query("", alias="france"),
     pNoAgency: str = Query("", alias="no_agency"),
+    pNoConsulting: str = Query("", alias="no_consulting"),
+    pNoTraining: str = Query("", alias="no_training"),
+    pReach: str = Query("", alias="reach"),
     pDistance: str = Query("", alias="distance"),
     pView: str = Query("", alias="view"),
     pSort: str = Query("", alias="sort"),
@@ -166,6 +183,8 @@ def list_offers(
         preferred_only=bool(pPreferred),
         france_only=bool(pFrance),
         hide_agencies=bool(pNoAgency),
+        hide_consulting=bool(pNoConsulting),
+        hide_training=bool(pNoTraining),
     )
     vFilters = build_offer_filters(
         vChoices,
@@ -187,6 +206,10 @@ def list_offers(
     score_offers(vPrepared, load_profile(pDatabaseFile))
     add_distances(vPrepared, vHome)
     mark_agency_offers(vPrepared, vAgencies)
+    mark_experience_fit(vPrepared, vSettings["experience_years"])
+
+    if pReach:
+        vPrepared = [vOffer for vOffer in vPrepared if not vOffer["above_experience"]]
 
     # Valeur inconnue : aucun filtre, comme pour les autres listes de choix
     vMinMatch = int(pMatch) if pMatch.isdigit() and int(pMatch) in MATCH_FILTERS else 0
@@ -204,6 +227,7 @@ def list_offers(
     # Les annonces d'une même offre sont regroupées en une seule ligne.
     vGrouped = group_offers(vPrepared, get_decisions(pDatabaseFile))
     add_freshness(vGrouped, vNow)
+    add_estimated_salaries(pDatabaseFile, vGrouped)
 
     if pSort == "fresh":
         vGrouped.sort(key=lambda pOffer: pOffer["freshness"], reverse=True)
@@ -241,6 +265,9 @@ def list_offers(
             "preferred": pPreferred,
             "france": pFrance,
             "no_agency": pNoAgency,
+            "no_consulting": pNoConsulting,
+            "no_training": pNoTraining,
+            "reach": pReach,
             "distance": vDistance,
             "sort": pSort,
             "match": vMinMatch,
@@ -478,6 +505,7 @@ def show_offer(
         return rOffer
 
     vPrepared = prepare(vOffer)
+    vMarket = find_market_salary(pDatabaseFile, vPrepared)
     vCompanyRules = load_company_rules(pDatabaseFile)
 
     vExamResults = load_exam_results(pDatabaseFile, (pSource, str(pSourceId)))
@@ -500,8 +528,10 @@ def show_offer(
             "offer": vPrepared,
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
             "preparation": build_preparation(pDatabaseFile, vPrepared),
-            "market_salary": describe_market_salary(
-                find_market_salary(pDatabaseFile, vPrepared)
+            "market_salary": describe_market_salary(vMarket),
+            "negotiation": describe_negotiation(vMarket, vPrepared, vSettings),
+            "experience_fit": describe_experience_fit(
+                vPrepared, vSettings["experience_years"]
             ),
             "revision": build_revision(pDatabaseFile, vPrepared),
             "exam_results": describe_exam_results(vExamResults),
@@ -634,7 +664,32 @@ def download_tailored_cv(
         ),
         headers={
             "Content-Disposition": "attachment; filename*=UTF-8''"
-            + quote(build_cv_file_name(vOffer))
+            + quote(build_file_name(vOffer))
+        },
+    )
+
+    return rResponse
+
+
+@router.post("/offer/letter", dependencies=[Depends(require_csrf)])
+def download_letter(
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pLetter: str = Form("", alias="letter"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Télécharge la lettre telle que modifiée dans la page, au format Word."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+
+    rResponse = Response(
+        write_letter_docx(pLetter[:MAX_LETTER_LENGTH]),
+        media_type=(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ),
+        headers={
+            "Content-Disposition": "attachment; filename*=UTF-8''"
+            + quote(build_file_name(vOffer, "Lettre"))
         },
     )
 

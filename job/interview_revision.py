@@ -87,6 +87,38 @@ def describe_offer_exam(pOffer):
     return rTitle
 
 
+def start_skills_exam(pDatabaseFile, pQuiz, pSkills, pNow, pRandom=random):
+    """Commence un examen blanc sur les thèmes de compétences données, celles à
+    travailler en priorité d'après Mon marché.
+
+    Lève ValueError si aucun thème de révision ne couvre ces compétences.
+    """
+
+    vKeys = find_offer_themes(pQuiz, {"skills": list(pSkills)})
+
+    if not vKeys:
+        raise ValueError(
+            "Aucun thème de révision ne couvre ces compétences : préparez-en les "
+            "questions avec ChatGPT depuis la page Compétences."
+        )
+
+    logger.info(
+        "Examen blanc sur les compétences prioritaires : %s thème(s)", len(vKeys)
+    )
+
+    rExam = start_exam(
+        pDatabaseFile,
+        pQuiz,
+        None,
+        pNow,
+        pRandom,
+        pThemeKeys=set(vKeys),
+        pTitle="Compétences prioritaires du marché",
+    )
+
+    return rExam
+
+
 def start_offer_exam(pDatabaseFile, pQuiz, pOffer, pNow, pRandom=random):
     """Commence un examen blanc sur les thèmes demandés par une offre.
 

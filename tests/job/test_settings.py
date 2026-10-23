@@ -60,6 +60,7 @@ def test_load_settings_returns_defaults(database_file):
         "weekly_application_goal": 0,
         "target_net_salary": 0,
         "archive_after_days": 0,
+        "experience_years": 0,
     }
 
 

@@ -57,6 +57,29 @@
 </article>
 
 <article class="card section-gap">
+    <h2>{{ icon("send") }} Candidature spontanée</h2>
+    <p class="card-subtitle">Pour une entreprise sans offre publiée : elle rejoint la colonne Postulé, avec sa relance programmée</p>
+    <form class="profile-form" method="post" action="{{ url_for('create_spontaneous_application').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <label>Entreprise <input type="text" name="company" required maxlength="200"></label>
+        <label>Poste visé <input type="text" name="title" maxlength="200" placeholder="Développeur Java"></label>
+        <label>Lien <input type="url" name="url" placeholder="Site carrière ou page de contact"></label>
+        <label>Note <input type="text" name="note" maxlength="500" placeholder="Envoyée à la RH par e-mail"></label>
+        <button class="button button-primary" type="submit">{{ icon("send", 16) }} Enregistrer la candidature</button>
+    </form>
+</article>
+
+<article class="card section-gap">
+    <h2>{{ icon("file-text") }} Journal de recherche</h2>
+    <p class="card-subtitle">Vos démarches datées (candidatures, relances, réponses, entretiens) dans un fichier pour tableur, pour les justifier auprès de France Travail par exemple</p>
+    <form class="inline-form" method="get" action="{{ url_for('download_journal').path }}">
+        <label>Du <input type="date" name="start" value="{{ journal_start }}"></label>
+        <label>au <input type="date" name="end" value="{{ journal_end }}"></label>
+        <button class="button" type="submit">{{ icon("download", 16) }} Télécharger le journal</button>
+    </form>
+</article>
+
+<article class="card section-gap">
     <h2>{{ icon("inbox") }} Réponses des recruteurs</h2>
     <p class="card-subtitle">Lit vos messages Gmail des 30 derniers jours, en lecture seule, et propose le statut annoncé : refus ou entretien. Rien du message n'est enregistré.</p>
     <button class="button" type="button" hx-post="{{ url_for('read_replies').path }}" hx-target="#replies" hx-indicator="#replies-wait">{{ icon("inbox", 16) }} Lire mes réponses Gmail</button>

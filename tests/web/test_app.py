@@ -28,6 +28,7 @@ from job.quiz_import import import_questions, import_questions_file
 from tools.quiz_lot import build_pack as build_lot_pack
 from tests.job.test_quiz_types import NUMERIC, ORDER, PAIRS
 from job.quiz_generation import MIN_QUALITY_SAMPLE
+from job.settings import load_settings, save_settings
 from storage.backup import backup_database, copy_to_nas
 from storage.job_applications import get_application
 from storage.job_offers import get_offer, save_offers, set_availability
@@ -2341,7 +2342,7 @@ def test_offers_map_offers_match_shortcuts(client):
         'class="button button-primary" href="?view=map&amp;q=Python&amp;match=50"'
         in vPage
     )
-    assert "pastille d'autant plus grande" in vPage
+    assert "Pastille d'autant plus grande" in vPage
 
 
 def test_dashboard_lists_settings_to_do(client):
@@ -2437,3 +2438,129 @@ def test_tailored_cv_is_downloaded(client):
     assert vResponse.status_code == 200
     assert vResponse.content[:2] == b"PK"
     assert "CV%20-%20Entreprise%20A" in vResponse.headers["content-disposition"]
+
+
+def test_list_offers_hides_consulting_and_training(client):
+    """Vérifie les cases Clients finaux seulement et Sans stage ni alternance."""
+
+    save_offers(
+        app.dependency_overrides[get_database_file](),
+        pd.DataFrame(
+            [
+                build_offer(
+                    "esn",
+                    company="Alten",
+                    title="Ingénieur Java",
+                    fingerprint="ingenieur java|alten|lille",
+                ),
+                build_offer("stage", title="Stage développeur"),
+            ]
+        ),
+        datetime.now(),
+    )
+
+    vAll = client.get("/offers").text
+    vFiltered = client.get("/offers?no_consulting=1&no_training=1").text
+
+    assert ">ESN</span>" in vAll
+    assert "Ingénieur Java" in vAll and "Stage développeur" in vAll
+    assert "Ingénieur Java" not in vFiltered
+    assert "Stage développeur" not in vFiltered
+
+
+def test_company_page_is_added_from_its_address(client, monkeypatch):
+    """Vérifie l'ajout d'une entreprise depuis l'adresse de son site carrière."""
+
+    monkeypatch.setattr(
+        "job.company_pages.count_published_offers", lambda pPlatform, pCompany: 5
+    )
+
+    vAdded = client.post(
+        "/settings/company-pages/url", data={"url": "https://jobs.lever.co/doctolib"}
+    ).text
+    vRefused = client.post(
+        "/settings/company-pages/url", data={"url": "https://www.exemple.fr"}
+    ).text
+
+    assert "doctolib ajoutée : 5 offre(s)" in vAdded
+    assert "Adresse non reconnue" in vRefused
+
+
+def test_letter_is_downloaded_as_edited(client):
+    """Vérifie la lettre téléchargée telle que modifiée dans la page."""
+
+    vResponse = client.post(
+        "/offer/letter",
+        data={"source": "adzuna", "id": "new", "letter": "Bonjour,\nMa lettre"},
+    )
+
+    assert vResponse.status_code == 200
+    assert vResponse.content[:2] == b"PK"
+    assert "Lettre%20-%20Entreprise%20A" in vResponse.headers["content-disposition"]
+
+
+def test_search_journal_is_downloaded(client):
+    """Vérifie le téléchargement du journal de recherche pour une période."""
+
+    client.post(
+        "/offer/application",
+        data={"source": "adzuna", "id": "old", "status": "APPLIED"},
+    )
+
+    vResponse = client.get("/applications/journal.csv?start=2000-01-01&end=2100-01-01")
+
+    assert vResponse.status_code == 200
+    assert "Candidature envoyée" in vResponse.content.decode("utf-8-sig")
+    assert "journal-recherche-20000101-21000101.csv" in (
+        vResponse.headers["content-disposition"]
+    )
+    assert "Journal de recherche" in client.get("/applications").text
+
+
+def test_priority_skills_exam_is_started(client):
+    """Vérifie l'examen blanc lancé sur des compétences, puis le refus sans thème."""
+
+    vRefused = client.post("/quiz/exam/start", data={"skills": "Inconnue"})
+    vStarted = client.post("/quiz/exam/start", data={"skills": "SQL"})
+
+    assert vStarted.url.path == "/quiz/exam"
+    assert vRefused.status_code == 400
+    assert "Aucun thème de révision ne couvre ces compétences" in vRefused.text
+
+
+def test_offers_above_experience_are_flagged_and_hidden(client):
+    """Vérifie le badge d'expérience demandée et le filtre À ma portée."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+    save_settings(
+        vDatabaseFile, {**load_settings(vDatabaseFile), "experience_years": 2}
+    )
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                build_offer(
+                    "senior", title="Architecte logiciel", experience_level="8 ans"
+                )
+            ]
+        ),
+        datetime.now(),
+    )
+
+    vAll = client.get("/offers").text
+    vReach = client.get("/offers?reach=1").text
+
+    assert "8 ans demandés" in vAll
+    assert "Architecte logiciel" not in vReach
+
+
+def test_spontaneous_application_is_added(client):
+    """Vérifie la candidature spontanée ajoutée à la colonne Postulé."""
+
+    vPage = client.post(
+        "/applications/spontaneous",
+        data={"company": "OVHcloud", "title": "Développeur Java"},
+    ).text
+
+    assert "Candidature spontanée · Développeur Java" in vPage
+    assert client.post("/applications/spontaneous", data={}).status_code == 400

@@ -37,9 +37,15 @@ from job.companies import (
     find_company_applications,
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
+from job.experience_fit import describe_experience_fit
 from job.geocoding import describe_location
 from job.offer_details import can_fetch_description, fetch_missing_description
-from job.salary_market import describe_market_salary, find_market_salary
+from job.salary_market import (
+    describe_market_salary,
+    describe_negotiation,
+    find_market_salary,
+)
+from job.settings import load_settings
 from job.presentation import (
     build_translate_url,
     format_date,
@@ -68,6 +74,7 @@ INFO_ROWS = (
     ("salary", "Net mensuel", "banknote"),
     ("salary_label", "Salaire annoncé", "tag"),
     ("market_salary", "Marché", "scale"),
+    ("negotiation", "Négociation", "banknote"),
     ("remote", "Télétravail", "house"),
     ("benefits", "Avantages", "gift"),
     ("experience_level", "Expérience", "timer"),
@@ -484,10 +491,19 @@ class OfferDetailPanel(QWidget):
             "contract": vOffer.get("contract"),
             "salary": format_net_salary(vOffer),
             "salary_label": vOffer.get("salary_label"),
-            "market_salary": self.describe_market(vOffer),
+            **self.describe_market(vOffer),
             "remote": None if vRemote is None else ("Oui" if vRemote else "Non"),
             "benefits": summarize_values(vOffer.get("benefits")),
-            "experience_level": vOffer.get("experience_level"),
+            "experience_level": " · ".join(
+                vPart
+                for vPart in (
+                    vOffer.get("experience_level"),
+                    describe_experience_fit(
+                        vOffer, load_settings(self.database_file)["experience_years"]
+                    ),
+                )
+                if vPart
+            ),
             "skills": summarize_values(vOffer.get("skills_list")),
             "published_at": format_date(vOffer.get("published_at")),
             "first_seen_at": format_date(vOffer.get("first_seen_at")),
@@ -512,17 +528,23 @@ class OfferDetailPanel(QWidget):
         self.application.set_offer(pOffer)
 
     def describe_market(self, pOffer):
-        """Résume le salaire des offres proches ; vide si le calcul échoue."""
+        """Résume le salaire des offres proches et l'argumentaire de négociation ;
+        vides si le calcul échoue.
+        """
         try:
-            rText = describe_market_salary(
-                find_market_salary(self.database_file, pOffer)
-            )
+            vMarket = find_market_salary(self.database_file, pOffer)
+            rTexts = {
+                "market_salary": describe_market_salary(vMarket),
+                "negotiation": describe_negotiation(
+                    vMarket, pOffer, load_settings(self.database_file)
+                ),
+            }
 
         except Exception:
             logger.exception("Salaire du marché non calculé")
-            rText = ""
+            rTexts = {"market_salary": "", "negotiation": ""}
 
-        return rText
+        return rTexts
 
     def show_description(self, pDescription):
         """Affiche la description en texte brut, avec un interligne aéré."""

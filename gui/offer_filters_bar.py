@@ -131,6 +131,20 @@ class OfferFiltersBar(QWidget):  # pylint: disable=too-many-instance-attributes
             "Sans intérim",
             "Masque les annonces des agences d'intérim connues (Proman, Adecco…)",
         )
+        self.consulting_check = create_check(
+            "Clients finaux seulement",
+            "Masque les sociétés de conseil (ESN) connues : Alten, Capgemini, "
+            "Sopra Steria…",
+        )
+        self.training_check = create_check(
+            "Sans stage ni alternance",
+            "Masque les intitulés de stage, d'alternance et d'apprentissage",
+        )
+        self.reach_check = create_check(
+            "À ma portée",
+            "Masque les offres qui demandent nettement plus que votre expérience "
+            "(Paramètres, règles de calcul)",
+        )
         self.preferred_check = create_check(
             "Entreprises privilégiées",
             "Seulement les entreprises de la liste des Paramètres",
@@ -171,6 +185,9 @@ class OfferFiltersBar(QWidget):  # pylint: disable=too-many-instance-attributes
             self.multiple_check,
             self.france_check,
             self.agency_check,
+            self.consulting_check,
+            self.training_check,
+            self.reach_check,
             self.preferred_check,
         )
 
@@ -223,6 +240,8 @@ class OfferFiltersBar(QWidget):  # pylint: disable=too-many-instance-attributes
             preferred_only=self.preferred_check.isChecked(),
             france_only=self.france_check.isChecked(),
             hide_agencies=self.agency_check.isChecked(),
+            hide_consulting=self.consulting_check.isChecked(),
+            hide_training=self.training_check.isChecked(),
         )
 
         return rChoices
