@@ -17,6 +17,8 @@ IGNORED_DIRECTORIES = {
     # Fichiers générés par Flutter
     ".dart_tool",
     "build",
+    # Bibliothèque tierce minifiée des tests (axe-core), non écrite ici
+    "vendor",
 }
 
 CHECKED_SUFFIXES = {

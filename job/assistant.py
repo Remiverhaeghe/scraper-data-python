@@ -5,7 +5,7 @@ ChatGPT. L'application assemble le texte, l'utilisateur le relit puis le colle.
 """
 
 from job.fingerprint import GENDER_MARKERS
-from job.preparation import get_offer_skills, match_profile, recommend_cv
+from job.preparation import get_offer_skills, match_offer, recommend_cv
 
 CHATGPT_URL = "https://chatgpt.com/"
 
@@ -55,7 +55,7 @@ def describe_profile(pProfile, pOffer):
     """Présente le candidat : présentation, compétences, expériences et CV conseillé."""
 
     vOfferSkills = get_offer_skills(pOffer)
-    vMatch = match_profile(pProfile, vOfferSkills)
+    vMatch = match_offer(pProfile, pOffer)
     vCv = recommend_cv(pProfile, vOfferSkills)
 
     vLines = []

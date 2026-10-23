@@ -4,10 +4,12 @@ Tout repose sur des règles et sur le profil saisi : aucune donnée ne quitte
 l'application et aucun service payant n'est utilisé.
 """
 
-from job.enrichment import detect_skills
+import re
+
+from job.enrichment import SKILL_PATTERNS, detect_skills
 from job.fingerprint import GENDER_MARKERS
 from job.presentation import to_list
-from job.self_assessment import get_assessed_skills
+from job.self_assessment import KNOWN_LEVEL, get_assessed_skills
 from job.star_answers import select_star_answers, suggest_star_questions
 
 # Questions toujours utiles en fin d'entretien
@@ -19,6 +21,31 @@ GENERAL_QUESTIONS = (
 
 # Nombre de compétences mises en avant dans la lettre
 LETTER_SKILLS = 3
+
+# Poids d'une compétence selon la phrase de l'annonce qui la cite
+REQUIRED_WEIGHT = 2.0
+NORMAL_WEIGHT = 1.0
+PREFERRED_WEIGHT = 0.5
+REQUIRED_MARKERS = re.compile(
+    r"\b(?:exig[ée]e?s?|indispensables?|obligatoires?|imp[ée]ratifs?|imp[ée]rative"
+    r"|ma[îi]trise[rz]?|ma[îi]trisez|required|must)\b",
+    re.IGNORECASE,
+)
+PREFERRED_MARKERS = re.compile(
+    r"\bun plus\b|\bapp?r[ée]ci[ée]e?s?\b|\bsouhait[ée]e?s?\b|\bid[ée]alement\b"
+    r"|\batouts?\b|\bnice to have\b|\bbonus\b|\bpreferred\b|\bplus\b\s*$",
+    re.IGNORECASE,
+)
+SENTENCE_SEPARATORS = re.compile(r"[.;!?\n•·]+")
+
+# Au-dessous, le score est rapporté à ce poids : une offre qui ne cite qu'une
+# compétence, même couverte, reste à un tiers.
+MIN_SCORED_WEIGHT = 3.0
+
+# Niveau d'auto-évaluation à partir duquel une compétence compte pleinement, et
+# part de maîtrise à partir de laquelle elle est affichée comme couverte
+FULL_LEVEL = 8
+COVERED_SHARE = 0.5
 
 
 def lower_first(pText):
@@ -83,26 +110,131 @@ def expand_skills(pSkills):
     return rSkills
 
 
-def match_profile(pProfile, pOfferSkills):
-    """Retourne les compétences couvertes, manquantes et le score de correspondance."""
+def find_skill_sentence(pSentences, pSkill):
+    """Retourne la phrase de l'annonce qui cite la compétence, ou une chaîne vide."""
+
+    vPattern = SKILL_PATTERNS.get(pSkill)
+
+    rSentence = next(
+        (
+            vSentence
+            for vSentence in pSentences
+            if (
+                vPattern.search(vSentence)
+                if vPattern
+                else pSkill.lower() in vSentence.lower()
+            )
+        ),
+        "",
+    )
+
+    return rSentence
+
+
+def classify_requirements(pOfferText, pOfferSkills):
+    """Retourne le poids de chaque compétence : exigée, appréciée ou normale.
+
+    La phrase qui cite la compétence décide : « exigé », « maîtrise » la rendent
+    exigée ; « un plus », « idéalement » la rendent appréciée.
+    """
+
+    vSentences = SENTENCE_SEPARATORS.split(pOfferText or "")
+    rWeights = {}
+
+    for vSkill in pOfferSkills:
+        vSentence = find_skill_sentence(vSentences, vSkill)
+
+        if PREFERRED_MARKERS.search(vSentence):
+            rWeights[vSkill] = PREFERRED_WEIGHT
+        elif REQUIRED_MARKERS.search(vSentence):
+            rWeights[vSkill] = REQUIRED_WEIGHT
+        else:
+            rWeights[vSkill] = NORMAL_WEIGHT
+
+    return rWeights
+
+
+def get_coverage(pProfile, pProfileSkills, pSkill):
+    """Retourne la part de la compétence que le candidat maîtrise, de 0 à 1.
+
+    Notée dans l'auto-évaluation, elle compte à partir de KNOWN_LEVEL, au prorata
+    de son niveau et pleinement dès FULL_LEVEL ; plus bas, elle est à renforcer.
+    Présente dans le profil sans note, elle compte pleinement.
+    """
+
+    vLevel = next(
+        (
+            vValue
+            for vName, vValue in (pProfile.get("skill_levels") or {}).items()
+            if pSkill in expand_skills([vName]) or same_skill(vName, pSkill)
+        ),
+        None,
+    )
+
+    if vLevel:
+        rCoverage = min(1.0, vLevel / FULL_LEVEL) if vLevel >= KNOWN_LEVEL else 0.0
+    else:
+        rCoverage = 1.0 if contains_skill(pProfileSkills, pSkill) else 0.0
+
+    return rCoverage
+
+
+def match_profile(pProfile, pOfferSkills, pOfferText=""):
+    """Retourne les compétences couvertes, manquantes et le score de correspondance.
+
+    Le score pèse chaque compétence (exigée, appréciée) et sa maîtrise ; il est
+    rapporté à au moins MIN_SCORED_WEIGHT, pour qu'une offre qui ne cite qu'une
+    compétence ne monte pas à 100 %.
+    """
 
     # Compétences du profil, et celles notées assez haut dans l'auto-évaluation
     vProfileSkills = expand_skills(
         [*pProfile["skills"], *get_assessed_skills(pProfile)]
     )
-    vCovered = [
-        vSkill for vSkill in pOfferSkills if contains_skill(vProfileSkills, vSkill)
-    ]
-    vMissing = [vSkill for vSkill in pOfferSkills if vSkill not in vCovered]
+    vWeights = classify_requirements(pOfferText, pOfferSkills)
+    vCoverage = {
+        vSkill: get_coverage(pProfile, vProfileSkills, vSkill)
+        for vSkill in pOfferSkills
+    }
+    vCovered = [vSkill for vSkill in pOfferSkills if vCoverage[vSkill] >= COVERED_SHARE]
+    vTotal = sum(vWeights.values())
 
     rMatch = {
         "covered": vCovered,
-        "missing": vMissing,
+        "missing": [vSkill for vSkill in pOfferSkills if vSkill not in vCovered],
+        "required": [
+            vSkill for vSkill, vWeight in vWeights.items() if vWeight == REQUIRED_WEIGHT
+        ],
         # Sans compétence identifiée dans l'offre, aucun score n'a de sens.
         "score": (
-            round(100 * len(vCovered) / len(pOfferSkills)) if pOfferSkills else None
+            round(
+                100
+                * sum(vWeights[vSkill] * vCoverage[vSkill] for vSkill in pOfferSkills)
+                / max(vTotal, MIN_SCORED_WEIGHT)
+            )
+            if pOfferSkills
+            else None
         ),
     }
+
+    return rMatch
+
+
+def describe_missing(pMatch):
+    """Retourne les compétences manquantes, les exigées signalées, ou « aucune »."""
+
+    rText = ", ".join(
+        f"{vSkill} (exigée)" if vSkill in pMatch.get("required", ()) else vSkill
+        for vSkill in pMatch["missing"]
+    )
+
+    return rText or "aucune"
+
+
+def match_offer(pProfile, pOffer):
+    """Compare le profil à une offre, d'après ses compétences et son texte."""
+
+    rMatch = match_profile(pProfile, get_offer_skills(pOffer), get_offer_text(pOffer))
 
     return rMatch
 
@@ -334,7 +466,7 @@ def prepare_application(pProfile, pOffer, pStarAnswers=None, pAskedQuestions=Non
     """
 
     vOfferSkills = get_offer_skills(pOffer)
-    vMatch = match_profile(pProfile, vOfferSkills)
+    vMatch = match_offer(pProfile, pOffer)
 
     vInterview = build_interview(pProfile, vMatch, pOffer)
     vInterview["star"] = select_star_answers(pStarAnswers or {}, pProfile, vOfferSkills)
@@ -346,6 +478,7 @@ def prepare_application(pProfile, pOffer, pStarAnswers=None, pAskedQuestions=Non
     rPreparation = {
         "offer_skills": vOfferSkills,
         "match": vMatch,
+        "missing_text": describe_missing(vMatch),
         "cv": recommend_cv(pProfile, vOfferSkills),
         "interview": vInterview,
         "letter": build_letter(pProfile, vMatch, pOffer),
@@ -360,13 +493,11 @@ def score_offers(pOffers, pProfile):
     Sans profil renseigné, aucun score n'est calculé.
     """
 
-    vEmpty = not pProfile.get("skills")
+    vEmpty = not pProfile.get("skills") and not get_assessed_skills(pProfile)
 
     for vOffer in pOffers:
         vOffer["match_score"] = (
-            None
-            if vEmpty
-            else match_profile(pProfile, get_offer_skills(vOffer))["score"]
+            None if vEmpty else match_offer(pProfile, vOffer)["score"]
         )
 
 

@@ -11,6 +11,7 @@ from job.preparation import score_offers
 from job.presentation import clean_missing_values, format_date, safe_url
 from job.profile import load_profile
 from job.quiz import load_active_quiz
+from job.similar_offers import find_similar_offers
 from job.skills_dashboard import build_skills_dashboard
 from storage.job_applications import get_applications_with_offers
 from storage.job_offers import get_offers
@@ -96,6 +97,7 @@ def build_weekly_digest(pDatabaseFile, pNow):
 
     rDigest = {
         "offers": get_new_offers(pDatabaseFile, pNow),
+        "similar": find_similar_offers(pDatabaseFile, pNow, MAX_DIGEST_OFFERS),
         "follow_ups": get_week_follow_ups(pDatabaseFile, pNow),
         "interviews": get_coming_interviews(pDatabaseFile, pNow),
         "readiness": vDashboard["summary"]["readiness"],
@@ -103,6 +105,21 @@ def build_weekly_digest(pDatabaseFile, pNow):
     }
 
     return rDigest
+
+
+def describe_similar_offer(pOffer):
+    """Résume une offre proche : entreprise et offre retenue qu'elle rappelle."""
+
+    rText = " · ".join(
+        vPart
+        for vPart in (
+            pOffer.get("company"),
+            f"proche de « {pOffer['reference_title']} » ({pOffer['similarity']} %)",
+        )
+        if vPart
+    )
+
+    return rText
 
 
 def describe_interview(pApplication):
@@ -175,6 +192,18 @@ def build_digest_email(pDigest):
             "Aucun entretien prévu dans les sept prochains jours.",
         ),
     ]
+
+    # Seulement s'il y en a : sans offre retenue, la section n'aurait pas de sens.
+    if pDigest.get("similar"):
+        vSections.insert(
+            1,
+            build_section(
+                "Offres proches de vos candidatures",
+                pDigest["similar"],
+                describe_similar_offer,
+                "",
+            ),
+        )
 
     vPreparation = (
         f"Préparation des compétences demandées : {pDigest['readiness']} %"

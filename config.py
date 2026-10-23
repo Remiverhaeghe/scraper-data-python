@@ -87,3 +87,7 @@ AUTO_BACKUP_INTERVAL_HOURS = 24
 # \\NAS\sauvegardes\jobboard. Vide : aucune copie hors du PC.
 BACKUP_NAS_DIRECTORY = os.getenv("BACKUP_NAS_DIRECTORY") or None
 NAS_KEEP_COUNT = 30
+
+# Facultatif : clé de chiffrement des copies du NAS, donnée par
+# python -m tools.backup_key. Perdue, les copies chiffrées sont illisibles.
+BACKUP_ENCRYPTION_KEY = os.getenv("BACKUP_ENCRYPTION_KEY") or None

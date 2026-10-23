@@ -20,7 +20,10 @@ du jour, vibration à la correction, examens blancs envoyés au PC, HTTPS avec
 certificat épinglé (empreinte reçue par le QR code), nouvelles offres de la
 semaine avec leur statut (Intéressé, Postulé, Ignorée) envoyé au PC, alerte des
 nouvelles offres proches du profil (vérifiées en arrière-plan toutes les 3 h
-environ, quand le PC est joignable), distance au domicile de chaque offre.
+environ, quand le PC est joignable), distance au domicile de chaque offre, fiche
+complète lisible hors ligne (description, compétences couvertes et manquantes,
+salaire), offres proches de vos candidatures signalées, simulation d'entretien
+technique et auto-évaluation des compétences, envoyées au PC à la synchronisation.
 
 ## Installation des outils (une fois)
 
@@ -166,6 +169,9 @@ mobile/
 │   │   ├── exam_screen.dart      # Examen blanc chronométré et bilan
 │   │   ├── statistics_screen.dart # Statistiques de révision
 │   │   ├── offers_screen.dart    # Nouvelles offres de la semaine et leur statut
+│   │   ├── offer_detail_screen.dart # Fiche d'une offre, lisible hors ligne
+│   │   ├── interview_screen.dart # Simulation d'entretien technique
+│   │   ├── skills_screen.dart    # Auto-évaluation des compétences
 │   │   └── guide_screen.dart     # Guide pratique d'un thème
 │   └── widgets/
 │       ├── question_input.dart   # Saisie selon le type de question
@@ -184,6 +190,7 @@ mobile/
     ├── statistics_test.dart      # Teste la réussite par thème et le graphique des jours
     ├── phone_features_test.dart  # Teste signalements, examens, objectif, candidatures et offres
     ├── offer_alerts_test.dart    # Teste l'alerte des nouvelles offres bien notées
+    ├── interview_skills_test.dart # Teste simulation, auto-évaluation et fiche d'offre
     ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond
     ├── review_input_test.dart    # Teste la saisie d'une revue de code
     ├── integration/

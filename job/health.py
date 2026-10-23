@@ -19,6 +19,7 @@ from storage.geo_cache import count_offer_positions
 from storage.history_repository import get_history
 from storage.settings_repository import get_setting_values
 from utils.logger import get_logger
+from utils.permissions import find_permission_problems
 from utils.tls import read_expiry
 
 logger = get_logger(__name__)
@@ -304,6 +305,23 @@ def check_phone(pDatabaseFile, pNow):
     return rCheck
 
 
+def check_permissions():
+    """Vérifie les moindres privilèges : compte d'exécution, .env et data/."""
+
+    vProblems = find_permission_problems()
+
+    if vProblems is None:
+        return ("Non vérifiés sous Windows", "muted")
+
+    rCheck = (
+        ("Compte dédié, .env et data/ protégés", "success")
+        if not vProblems
+        else ("À corriger : " + " ; ".join(vProblems), "warning")
+    )
+
+    return rCheck
+
+
 def build_health(pDatabaseFile, pNow):
     """Retourne les indicateurs de santé, chacun avec son libellé, sa valeur et sa couleur."""
 
@@ -319,6 +337,7 @@ def build_health(pDatabaseFile, pNow):
         ("Certificat HTTPS", lambda: check_certificate(pNow)),
         ("Placement des offres", lambda: check_geocoding(pDatabaseFile)),
         ("Application mobile", lambda: check_phone(pDatabaseFile, pNow)),
+        ("Droits d'exécution", check_permissions),
     )
 
     rHealth = []

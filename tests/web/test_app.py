@@ -1268,6 +1268,15 @@ def test_self_assessment_on_the_web(client):
     assert client.post("/profile/levels", data={"skill": ["Java"]}).status_code == 400
 
 
+def test_offer_page_shows_the_market_salary(client):
+    """Vérifie la ligne Marché de la fiche, même sans offre comparable."""
+
+    vPage = client.get("/offer", params={"source": "adzuna", "id": "new"}).text
+
+    assert "Marché" in vPage
+    assert "Pas encore assez d" in vPage
+
+
 def test_interview_date_and_calendar_export(client):
     """Vérifie la date d'entretien saisie et le fichier agenda téléchargé."""
 

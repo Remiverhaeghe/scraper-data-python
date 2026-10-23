@@ -8,6 +8,7 @@ import pytest
 from job.cv_import import (
     MAX_CV_BYTES,
     build_cv_prompt,
+    extract_experiences,
     extract_profile,
     merge_profile_texts,
     read_cv_text,
@@ -180,3 +181,47 @@ def test_extract_profile_finds_the_name_after_contact_lines():
 
     assert vProfile["name"] == "Rémi Martin"
     assert vProfile["headline"] == "Profil technique et industriel"
+
+
+EXPERIENCES_TEXT = """Expériences
+2022 – aujourd'hui
+Analyse & conception
+• Développement d'une GMAO en Java et SQL
+• Interfaces avec SAP par API REST
+Développeur Java - Acme
+2010 - 2021
+Atelier – Maintenance ferroviaire :
+• Management d'une équipe de 35 personnes
+• Amélioration continue des processus
+Formation
+2008 - 2010
+BTS Maintenance industrielle
+"""
+
+
+def test_extract_experiences_reads_period_title_and_bullets():
+    """Vérifie les expériences : titre « Poste - Entreprise », période et puces."""
+
+    vExperiences = extract_experiences(EXPERIENCES_TEXT)
+
+    assert [vItem["title"] for vItem in vExperiences] == [
+        "Développeur Java - Acme (2022 – aujourd'hui)",
+        "Atelier – Maintenance ferroviaire (2010 - 2021)",
+    ]
+    assert vExperiences[0]["skills"] == ["Java", "SQL", "SAP", "REST", "GMAO"]
+    assert vExperiences[0]["achievement"] == (
+        "Développement d'une GMAO en Java et SQL ; Interfaces avec SAP par API REST"
+    )
+    assert vExperiences[1]["skills"] == ["Lean"]
+
+
+def test_merge_fills_experiences_only_when_empty():
+    """Vérifie que les expériences repérées ne remplacent pas celles saisies."""
+
+    vExtracted = extract_profile(EXPERIENCES_TEXT)
+    vFilled = merge_profile_texts({"experiences": ""}, vExtracted)
+    vKept = merge_profile_texts({"experiences": "Déjà saisie"}, vExtracted)
+
+    assert vFilled["experiences"].startswith("Développeur Java - Acme (2022")
+    assert " | Java, SQL, SAP, REST, GMAO | " in vFilled["experiences"]
+    assert vKept["experiences"] == "Déjà saisie"

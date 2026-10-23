@@ -161,6 +161,62 @@ class ApiClient {
     return rOffers;
   }
 
+  /// Questions ouvertes de la simulation d'entretien, et leurs thèmes.
+  Future<Map<String, dynamic>> downloadInterview() async {
+    final vResponse = await send(
+      'Simulation',
+      () => client.get(buildUri('/interview'), headers: buildHeaders()),
+    );
+
+    final rContent = decode(vResponse);
+
+    return rContent;
+  }
+
+  /// Envoie les séries de simulation faites sur le téléphone.
+  Future<Map<String, dynamic>> uploadInterview(List<Map<String, dynamic>> pSeries) async {
+    final vResponse = await send(
+      'Simulation',
+      () => client.post(
+        buildUri('/interview'),
+        headers: {...buildHeaders(), 'Content-Type': 'application/json'},
+        body: jsonEncode({'series': pSeries}),
+      ),
+    );
+
+    final rReport = decode(vResponse);
+
+    return rReport;
+  }
+
+  /// Grille d'auto-évaluation et ses seuils.
+  Future<Map<String, dynamic>> downloadSkills() async {
+    final vResponse = await send(
+      'Auto-évaluation',
+      () => client.get(buildUri('/skills'), headers: buildHeaders()),
+    );
+
+    final rContent = decode(vResponse);
+
+    return rContent;
+  }
+
+  /// Envoie les niveaux saisis sur le téléphone.
+  Future<Map<String, dynamic>> uploadSkills(Map<String, int> pLevels) async {
+    final vResponse = await send(
+      'Auto-évaluation',
+      () => client.post(
+        buildUri('/skills'),
+        headers: {...buildHeaders(), 'Content-Type': 'application/json'},
+        body: jsonEncode({'levels': pLevels}),
+      ),
+    );
+
+    final rReport = decode(vResponse);
+
+    return rReport;
+  }
+
   /// Envoie les statuts donnés aux offres sur le téléphone.
   Future<Map<String, dynamic>> uploadStatusChanges(List<Map<String, dynamic>> pChanges) async {
     final vResponse = await send(

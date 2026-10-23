@@ -88,6 +88,7 @@ from job.presentation import (
 from job.profile import is_profile_empty, load_profile
 from job.quiz import THEME_STATUSES, load_active_quiz
 from job.quiz_exam import build_exam_history, describe_exam_results, load_exam_results
+from job.salary_market import describe_market_salary, find_market_salary
 from job.settings import load_settings
 from job.sources.registry import SOURCES
 from job.star_answers import load_star_answers
@@ -477,6 +478,9 @@ def show_offer(
             "offer": vPrepared,
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
             "preparation": build_preparation(pDatabaseFile, vPrepared),
+            "market_salary": describe_market_salary(
+                find_market_salary(pDatabaseFile, vPrepared)
+            ),
             "revision": build_revision(pDatabaseFile, vPrepared),
             "exam_results": describe_exam_results(vExamResults),
             "exam_chart": build_exam_chart(vExamResults),

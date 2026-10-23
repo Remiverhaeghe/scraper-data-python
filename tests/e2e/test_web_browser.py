@@ -6,6 +6,7 @@ pip install playwright puis python -m playwright install chromium.
 """
 
 import json
+from pathlib import Path
 import socket
 import threading
 import time
@@ -383,3 +384,53 @@ def test_offers_map_shows_placed_offers(page):
         .startswith("/offer?source=remotive")
     )
     assert page.console_errors == []
+
+
+# axe-core 4.10.2 (licence MPL 2.0), vérifié contre le paquet npm officiel
+AXE_SCRIPT = (Path(__file__).parent / "vendor" / "axe.min.js").read_text(
+    encoding="utf-8"
+)
+
+AXE_RUN = """async () => (await axe.run(document, {
+    runOnly: ["wcag2a", "wcag2aa"]
+})).violations
+    .filter(vRule => ["serious", "critical"].includes(vRule.impact))
+    .map(vRule => vRule.id + " : " + vRule.nodes[0].target.join(" "))"""
+
+
+@pytest.fixture
+def audited_page(browser, server_url):
+    """Ouvre une page connectée où axe-core peut être injecté malgré la CSP."""
+
+    vContext = browser.new_context(base_url=server_url, bypass_csp=True)
+    rPage = vContext.new_page()
+    rPage.route(
+        "https://tile.openstreetmap.org/**",
+        lambda pRoute: pRoute.fulfill(status=204),
+    )
+    rPage.goto("/login")
+    rPage.fill("input[name=username]", "admin")
+    rPage.fill("input[name=password]", TEST_PASSWORD)
+    rPage.click("button[type=submit]")
+    rPage.wait_for_url(f"{server_url}/")
+
+    yield rPage
+
+    vContext.close()
+
+
+@pytest.mark.parametrize("pTheme", ["light", "dark"])
+def test_pages_meet_accessibility_rules(audited_page, pTheme):
+    """Vérifie WCAG 2 A et AA avec axe-core : aucun défaut grave ni critique."""
+
+    audited_page.emulate_media(color_scheme=pTheme)
+    vViolations = []
+
+    for vPath in (*PAGES, "/offers?view=map"):
+        audited_page.goto(vPath)
+        audited_page.add_script_tag(content=AXE_SCRIPT)
+        vViolations += [
+            f"{vPath} {vViolation}" for vViolation in audited_page.evaluate(AXE_RUN)
+        ]
+
+    assert vViolations == []

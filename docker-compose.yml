@@ -1,0 +1,41 @@
+# Tableau de bord web et planificateur sur le NAS, isolés et sans privilèges.
+#
+#   docker compose up -d
+#
+# Les secrets restent dans .env, à côté de ce fichier, jamais dans l'image.
+# Les chemins du .env (WEB_TLS_CERTFILE…) sont relatifs au projet : data/tls/…
+
+x-durcissement: &durcissement
+  image: jobboard-perso:latest
+  env_file: .env
+  # Fichiers de l'image en lecture seule ; seuls data/ et logs/ s'écrivent.
+  read_only: true
+  tmpfs:
+    - /tmp
+  volumes:
+    - ./data:/app/data
+    - ./logs:/app/logs
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 200
+  restart: unless-stopped
+
+services:
+  web:
+    <<: *durcissement
+    build: .
+    command: ["python", "-m", "web"]
+    environment:
+      # À l'intérieur du conteneur ; l'adresse d'accès se choisit ci-dessous.
+      WEB_HOST: 0.0.0.0
+    ports:
+      # Seulement l'adresse Tailscale du NAS, par exemple 100.101.102.103:8000:8000
+      - "${WEB_PUBLISHED_ADDRESS:-127.0.0.1}:8000:8000"
+
+  scheduler:
+    <<: *durcissement
+    command: ["python", "-m", "scheduler"]
+    healthcheck:
+      disable: true

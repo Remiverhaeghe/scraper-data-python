@@ -3,9 +3,11 @@
 from datetime import datetime
 
 import pytest
+from cryptography.fernet import Fernet
 
 from storage.backup import (
     AUTO_BACKUP_REASON,
+    ENCRYPTED_SUFFIX,
     backup_database,
     copy_to_nas,
     describe_nas_copies,
@@ -82,3 +84,41 @@ def test_nas_copy_is_fetched_by_name_only(tmp_path):
 
     with pytest.raises(OSError):
         describe_nas_copies(vDatabaseFile, tmp_path / "absent")
+
+
+def test_nas_copy_is_encrypted_then_restored_with_its_key(tmp_path):
+    """Vérifie la copie chiffrée, illisible en clair, puis rapatriée avec la clé."""
+
+    vKey = Fernet.generate_key()
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vNas = tmp_path / "nas"
+    vBackup = backup_database(
+        vDatabaseFile, datetime(2026, 10, 1, 2), AUTO_BACKUP_REASON
+    )
+
+    vCopy = copy_to_nas(vDatabaseFile, vNas, pKey=vKey)
+
+    assert vCopy.name == vBackup.name + ENCRYPTED_SUFFIX
+    assert b"SQLite format" not in vCopy.read_bytes()
+    assert copy_to_nas(vDatabaseFile, vNas, pKey=vKey) is None
+
+    vDescription = describe_nas_copies(vDatabaseFile, vNas)[0]
+
+    assert (vDescription["encrypted"], vDescription["reason"]) == (True, "auto")
+
+    vOriginal = vBackup.read_bytes()
+    vBackup.unlink()
+
+    with pytest.raises(ValueError, match="BACKUP_ENCRYPTION_KEY manquante"):
+        fetch_nas_copy(vDatabaseFile, vCopy.name, vNas, pKey=None)
+
+    with pytest.raises(ValueError, match="autre clé"):
+        fetch_nas_copy(vDatabaseFile, vCopy.name, vNas, pKey=Fernet.generate_key())
+
+    vLocal = fetch_nas_copy(vDatabaseFile, vCopy.name, vNas, pKey=vKey)
+
+    assert vLocal == vBackup
+    assert vLocal.read_bytes() == vOriginal
+    assert list_nas_copies(vDatabaseFile, vNas) == [vCopy]
+    assert get_last_nas_copy_time(vDatabaseFile, vNas) == datetime(2026, 10, 1, 2)

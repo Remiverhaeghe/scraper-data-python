@@ -10,6 +10,11 @@ from datetime import datetime
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Response
 
 from config import APPLICATION_NAME
+from job.interview_simulation import (
+    list_themes,
+    load_interview_questions,
+    record_phone_series,
+)
 from job.mobile_sync import (
     API_PREFIX,
     API_VERSION,
@@ -22,12 +27,23 @@ from job.mobile_sync import (
     sync_flags,
     sync_status_changes,
 )
+from job.profile import load_profile
+from job.self_assessment import (
+    KNOWN_LEVEL,
+    MAX_LEVEL,
+    WEAK_LEVEL,
+    build_grid,
+    save_skill_levels,
+)
 from utils.logger import get_logger
 from web.dependencies import get_database_file
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix=API_PREFIX)
+
+# Compétences notées envoyées par le téléphone en une fois, au plus
+MAX_PHONE_SKILLS = 200
 
 
 def require_api_token(
@@ -139,6 +155,77 @@ def upload_flags(
 
     except ValueError as vException:
         raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    return rReport
+
+
+@router.get("/interview", dependencies=[Depends(require_api_token)])
+def download_interview_questions():
+    """Renvoie les questions ouvertes de la simulation d'entretien, par thème."""
+
+    rContent = {
+        "themes": list_themes(),
+        "questions": list(load_interview_questions().values()),
+    }
+
+    return rContent
+
+
+@router.post("/interview", dependencies=[Depends(require_api_token)])
+def upload_interview_series(
+    pSeries: list = Body(..., embed=True, alias="series"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Ajoute à l'historique les séries de simulation faites sur le téléphone."""
+
+    try:
+        vCount = record_phone_series(pDatabaseFile, pSeries, datetime.now())
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rReport = {"received": len(pSeries), "recorded": vCount}
+
+    return rReport
+
+
+@router.get("/skills", dependencies=[Depends(require_api_token)])
+def download_skill_grid(pDatabaseFile: str = Depends(get_database_file)):
+    """Renvoie la grille d'auto-évaluation et ses seuils."""
+
+    rContent = {
+        "grid": [
+            {"skill": vSkill, "level": vLevel}
+            for vSkill, vLevel in build_grid(load_profile(pDatabaseFile))
+        ],
+        "max_level": MAX_LEVEL,
+        "known_level": KNOWN_LEVEL,
+        "weak_level": WEAK_LEVEL,
+    }
+
+    return rContent
+
+
+@router.post("/skills", dependencies=[Depends(require_api_token)])
+def upload_skill_levels(
+    pLevels: dict = Body(..., embed=True, alias="levels"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre la grille d'auto-évaluation saisie sur le téléphone."""
+
+    if len(pLevels) > MAX_PHONE_SKILLS or not all(
+        isinstance(vLevel, int) and not isinstance(vLevel, bool)
+        for vLevel in pLevels.values()
+    ):
+        raise HTTPException(status_code=400, detail="Niveaux entiers attendus.")
+
+    try:
+        vGrid = save_skill_levels(pDatabaseFile, pLevels)
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rReport = {"rated": sum(1 for _, vLevel in vGrid if vLevel)}
 
     return rReport
 

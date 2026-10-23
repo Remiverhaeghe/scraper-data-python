@@ -236,3 +236,79 @@ def format_model_answer(pQuestion):
     )
 
     return rText
+
+
+# Séries envoyées par le téléphone en une synchronisation, au plus
+MAX_PHONE_SERIES = 20
+
+
+def read_phone_series(pSeries, pQuestions):
+    """Retourne le thème et les scores d'une série du téléphone ; ignore l'illisible."""
+
+    vScores = []
+
+    for vResult in pSeries.get("results") or []:
+        vQuestion = pQuestions.get(vResult.get("question_id"))
+        vChecked = vResult.get("checked")
+
+        if vQuestion is None or not isinstance(vChecked, list):
+            continue
+
+        vChecked = [
+            vIndex
+            for vIndex in vChecked
+            if isinstance(vIndex, int)
+            and not isinstance(vIndex, bool)
+            and 0 <= vIndex < len(vQuestion["points"])
+        ]
+        vScores.append(
+            (vQuestion["id"], compute_score(vChecked, len(vQuestion["points"])))
+        )
+
+    rSeries = (str(pSeries.get("theme") or ALL_THEMES), vScores)
+
+    return rSeries
+
+
+def record_phone_series(pDatabaseFile, pSeries, pNow):
+    """Ajoute à l'historique les séries faites sur le téléphone ; retourne leur nombre.
+
+    Les derniers scores alimentent l'entraînement à l'oral, comme sur le PC.
+    """
+
+    if not isinstance(pSeries, list) or len(pSeries) > MAX_PHONE_SERIES:
+        raise ValueError(f"Liste de {MAX_PHONE_SERIES} séries au plus attendue.")
+
+    vQuestions = load_interview_questions()
+    vLastScores = load_json_setting(pDatabaseFile, LAST_SCORES_KEY, {}, dict)
+    vHistory = load_json_setting(pDatabaseFile, HISTORY_KEY, [], list)
+    rCount = 0
+
+    for vSeries in pSeries:
+        if not isinstance(vSeries, dict):
+            continue
+
+        vTheme, vScores = read_phone_series(vSeries, vQuestions)
+
+        if not vScores:
+            continue
+
+        vLastScores.update(vScores)
+        vHistory.insert(
+            0,
+            {
+                "theme": vTheme,
+                "finished_at": str(
+                    vSeries.get("finished_at") or pNow.isoformat(timespec="seconds")
+                )[:19],
+                "score": round(sum(vScore for _, vScore in vScores) / len(vScores)),
+            },
+        )
+        rCount += 1
+
+    save_json_setting(pDatabaseFile, LAST_SCORES_KEY, vLastScores)
+    save_json_setting(pDatabaseFile, HISTORY_KEY, vHistory[:MAX_HISTORY])
+
+    logger.info("Simulation d'entretien : %s série(s) reçue(s) du téléphone", rCount)
+
+    return rCount

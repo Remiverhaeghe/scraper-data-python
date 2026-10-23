@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../revision_state.dart';
 import '../theme.dart';
+import 'offer_detail_screen.dart';
 
 class OffersScreen extends StatelessWidget {
   const OffersScreen({super.key, required this.state});
@@ -68,60 +69,70 @@ class OfferCard extends StatelessWidget {
     final vScore = offer['match_score'];
     final vStatus = offer['status'] as String?;
     final vDistance = offer['distance_km'];
+    final vSimilarTo = offer['similar_to'];
     final vDetails = [
       offer['company'],
       offer['location'],
       if (vDistance != null) '$vDistance km',
       offer['contract'],
+      if (vSimilarTo != null) 'proche de « $vSimilarTo »',
     ].where((vValue) => vValue != null && '$vValue'.isNotEmpty).join(' · ');
 
     final rCard = Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${offer['title'] ?? ''}', style: vTheme.textTheme.titleMedium),
-            if (vDetails.isNotEmpty) Text(vDetails, style: vTheme.textTheme.bodySmall),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                if (vScore != null)
-                  Chip(
-                    label: Text('$vScore % de correspondance'),
-                    visualDensity: VisualDensity.compact,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => OfferDetailScreen(offer: offer, onOpen: () => open(context)),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${offer['title'] ?? ''}', style: vTheme.textTheme.titleMedium),
+              if (vDetails.isNotEmpty) Text(vDetails, style: vTheme.textTheme.bodySmall),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  if (vScore != null)
+                    Chip(
+                      label: Text('$vScore % de correspondance'),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () => open(context),
+                    icon: const Icon(Icons.open_in_new, size: 18),
+                    label: const Text('Ouvrir'),
                   ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () => open(context),
-                  icon: const Icon(Icons.open_in_new, size: 18),
-                  label: const Text('Ouvrir'),
-                ),
-                PopupMenuButton<String>(
-                  tooltip: 'Changer le statut',
-                  onSelected: (pStatus) => state.setOfferStatus(offer, pStatus),
-                  itemBuilder: (_) => [
-                    for (final vEntry in offerStatuses.entries)
-                      CheckedPopupMenuItem(
-                        value: vEntry.key,
-                        checked: vEntry.key == vStatus,
-                        child: Text(vEntry.value),
-                      ),
-                  ],
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Text(
-                      offerStatuses[vStatus] ?? 'Statut',
-                      style: TextStyle(
-                        color: vStatus == 'APPLIED' ? successColor : vTheme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                  PopupMenuButton<String>(
+                    tooltip: 'Changer le statut',
+                    onSelected: (pStatus) => state.setOfferStatus(offer, pStatus),
+                    itemBuilder: (_) => [
+                      for (final vEntry in offerStatuses.entries)
+                        CheckedPopupMenuItem(
+                          value: vEntry.key,
+                          checked: vEntry.key == vStatus,
+                          child: Text(vEntry.value),
+                        ),
+                    ],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Text(
+                        offerStatuses[vStatus] ?? 'Statut',
+                        style: TextStyle(
+                          color: vStatus == 'APPLIED' ? successColor : vTheme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

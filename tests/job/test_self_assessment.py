@@ -60,7 +60,8 @@ def test_assessed_skills_count_in_the_match_and_weak_ones_point_to_themes():
     }
 
     assert get_assessed_skills(vProfile) == ["Java"]
-    assert match_profile(vProfile, ["Java", "Docker"])["score"] == 50
+    # Java noté 7 sur 8 : 0,875 rapporté au plancher de 3 compétences
+    assert match_profile(vProfile, ["Java", "Docker"])["score"] == 29
 
     vThemes = find_weak_themes(vProfile, load_quiz())
 

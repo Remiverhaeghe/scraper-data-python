@@ -8,6 +8,7 @@ from datetime import datetime
 from config import DATABASE_FILE
 from scheduler.runner import run_due_search, run_forever
 from storage.database import initialize_database
+from utils.permissions import warn_permission_problems
 
 
 def parse_arguments(pArguments=None):
@@ -34,6 +35,7 @@ def main(pArguments=None):
 
     vArguments = parse_arguments(pArguments)
     vStopEvent = threading.Event()
+    warn_permission_problems()
 
     # SIGTERM est le signal d'arrêt envoyé par Docker.
     for vSignal in (signal.SIGINT, signal.SIGTERM):

@@ -38,6 +38,7 @@ from job.companies import (
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
 from job.geocoding import describe_location
+from job.salary_market import describe_market_salary, find_market_salary
 from job.presentation import (
     build_translate_url,
     format_date,
@@ -65,6 +66,7 @@ INFO_ROWS = (
     ("contract", "Contrat", "file-text"),
     ("salary", "Net mensuel", "banknote"),
     ("salary_label", "Salaire annoncé", "tag"),
+    ("market_salary", "Marché", "scale"),
     ("remote", "Télétravail", "house"),
     ("benefits", "Avantages", "gift"),
     ("experience_level", "Expérience", "timer"),
@@ -463,6 +465,7 @@ class OfferDetailPanel(QWidget):
             "contract": vOffer.get("contract"),
             "salary": format_net_salary(vOffer),
             "salary_label": vOffer.get("salary_label"),
+            "market_salary": self.describe_market(vOffer),
             "remote": None if vRemote is None else ("Oui" if vRemote else "Non"),
             "benefits": summarize_values(vOffer.get("benefits")),
             "experience_level": vOffer.get("experience_level"),
@@ -488,6 +491,19 @@ class OfferDetailPanel(QWidget):
 
         self.assistant.set_offer(pOffer)
         self.application.set_offer(pOffer)
+
+    def describe_market(self, pOffer):
+        """Résume le salaire des offres proches ; vide si le calcul échoue."""
+        try:
+            rText = describe_market_salary(
+                find_market_salary(self.database_file, pOffer)
+            )
+
+        except Exception:
+            logger.exception("Salaire du marché non calculé")
+            rText = ""
+
+        return rText
 
     def show_description(self, pDescription):
         """Affiche la description en texte brut, avec un interligne aéré."""

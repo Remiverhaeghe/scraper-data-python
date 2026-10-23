@@ -5,6 +5,11 @@ dans l'historique git.
 
 ## Non publié
 
+### Application mobile 1.4.0
+- Fiche d'une offre lisible hors ligne : description, compétences couvertes et
+  manquantes, salaire ; offres proches de vos candidatures signalées
+- Simulation d'entretien technique et auto-évaluation des compétences
+
 ### Application mobile 1.3.0
 - Revue de code : cocher tous les défauts réels d'un extrait, et eux seuls
 
@@ -44,6 +49,13 @@ dans l'historique git.
   placés par le géocodeur de l'IGN et gardés en cache (migration v25)
 - Accès hors du domicile par Tailscale : `python -m tools.tailscale_certificate`
   et `WEB_PUBLIC_HOST`
+- Score de correspondance pondéré (plancher de trois compétences, compétences
+  exigées ou appréciées, niveau d'auto-évaluation) ; salaire du marché des
+  offres proches comparé au salaire visé
+- Offres proches des candidatures dans l'e-mail de la semaine ; expériences du
+  CV repérées par règles ; archivage automatique des offres expirées
+- Docker sur le NAS : image durcie, moindres privilèges vérifiés, copies du NAS
+  chiffrées ; accessibilité vérifiée par axe-core, contrastes corrigés
 - Révision d'entretien : thèmes Entretien Java, Android et PHP et web, tirés
   de cas réels reformulés ; nouveau type « revue de code »
 - Simulation d'entretien technique (questions ouvertes, points clés cochés) et

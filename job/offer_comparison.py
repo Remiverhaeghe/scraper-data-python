@@ -1,7 +1,7 @@
 """Comparaison de quelques offres côte à côte, partagée entre le bureau et le web"""
 
 from job.freshness import compute_freshness
-from job.preparation import get_offer_skills, match_profile
+from job.preparation import match_offer
 from job.presentation import (
     STATUS_LABELS,
     clean_missing_values,
@@ -96,7 +96,7 @@ def build_comparison(pDatabaseFile, pNow):
             continue
 
         vOffer = clean_missing_values(vOffer)
-        vMatch = match_profile(vProfile, get_offer_skills(vOffer))
+        vMatch = match_offer(vProfile, vOffer)
         vApplication = get_application(pDatabaseFile, vSource, vSourceId)
 
         vOffer["comparison"] = {

@@ -15,7 +15,7 @@ from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
 from job.enrichment import detect_skills
-from job.profile import split_list
+from job.profile import EXPERIENCE_FIELDS, format_lines, split_list
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -39,6 +39,7 @@ NAME_PATTERN = re.compile(r"^[^\W\d_][^\d@|:/]{1,48}$")
 MAX_NAME_WORDS = 4
 NAME_SEARCH_LINES = 10
 MAX_HEADLINE_LENGTH = 120
+MIN_SINGLE_WORD_HEADLINE = 6
 
 # Lignes à ne pas prendre pour une présentation : coordonnées, titres de rubrique
 CONTACT_PATTERN = re.compile(r"@|\+?\d[\d .-]{7,}|https?://|linkedin", re.IGNORECASE)
@@ -52,6 +53,19 @@ SECTION_TITLES = {
     "langues",
     "centres d'intérêt",
 }
+
+# Période d'une expérience en début de ligne : « 2022 – aujourd'hui »,
+# « mars 2019 - juin 2021 » ; une année seule ne suffit pas.
+PERIOD_PATTERN = re.compile(
+    r"^(?:[a-zéû]+\.?\s+)?(?:19|20)\d{2}\s*(?:-|–|—|à)\s*"
+    r"(?:(?:[a-zéû]+\.?\s+)?(?:19|20)\d{2}|aujourd['’]hui|à ce jour|ce jour"
+    r"|pr[ée]sent|actuellement|en cours)",
+    re.IGNORECASE,
+)
+BULLET_PATTERN = re.compile(r"^[•●▪◦‣*·-]\s*")
+TITLE_SEPARATOR_PATTERN = re.compile(r"\s[-–—]\s|\s(?:chez|at)\s", re.IGNORECASE)
+MAX_TITLE_LENGTH = 80
+MAX_ACHIEVEMENTS = 3
 
 DOCX_TEXT_FILE = "word/document.xml"
 
@@ -148,10 +162,23 @@ def is_name(pLine):
 def is_headline(pLine):
     """Indique si une ligne peut servir de présentation."""
 
+    # Un seul mot suffit pour un métier (« Électrotechnicien »), pas pour une
+    # compétence comme « Python ».
+    vSingleWord = len(pLine.split()) == 1
     rHeadline = (
         len(pLine) <= MAX_HEADLINE_LENGTH
-        and len(pLine.split()) > 1
+        and (
+            not vSingleWord
+            or (
+                pLine.isalpha()
+                and len(pLine) >= MIN_SINGLE_WORD_HEADLINE
+                and pLine.lower()
+                not in {vSkill.lower() for vSkill in detect_skills(pLine)}
+            )
+        )
         and not CONTACT_PATTERN.search(pLine)
+        and not PERIOD_PATTERN.match(pLine)
+        and not BULLET_PATTERN.match(pLine)
         and pLine.lower().strip(" :") not in SECTION_TITLES
     )
 
@@ -182,6 +209,7 @@ def extract_profile(pText):
         "name": vName,
         "headline": vHeadline,
         "skills": detect_skills(pText),
+        "experiences": extract_experiences(pText),
     }
 
     logger.info(
@@ -194,6 +222,67 @@ def extract_profile(pText):
     return rProfile
 
 
+def find_experience_title(pLines):
+    """Retourne l'intitulé d'une expérience : « Poste - Entreprise » de préférence."""
+
+    vCandidates = [
+        vLine
+        for vLine in pLines
+        if not BULLET_PATTERN.match(vLine) and len(vLine) <= MAX_TITLE_LENGTH
+    ]
+
+    rTitle = next(
+        (vLine for vLine in vCandidates if TITLE_SEPARATOR_PATTERN.search(vLine)),
+        vCandidates[0] if vCandidates else "",
+    )
+
+    return rTitle.rstrip(" :")
+
+
+def extract_experiences(pText):
+    """Repère les expériences : une période, un intitulé et des puces de réalisations.
+
+    Le texte est découpé aux lignes de période (« 2022 – aujourd'hui ») ; une
+    tranche sans puce, comme une formation, est ignorée. L'intitulé peut suivre
+    les puces : les zones de texte d'un document Word mélangent l'ordre.
+    """
+
+    vLines = [vLine.strip() for vLine in pText.splitlines() if vLine.strip()]
+    vStarts = [
+        vIndex for vIndex, vLine in enumerate(vLines) if PERIOD_PATTERN.match(vLine)
+    ]
+    rExperiences = []
+
+    for vPosition, vStart in enumerate(vStarts):
+        vEnd = vStarts[vPosition + 1] if vPosition + 1 < len(vStarts) else len(vLines)
+        vBlock = vLines[vStart + 1 : vEnd]
+        vBullets = [
+            BULLET_PATTERN.sub("", vLine)
+            for vLine in vBlock
+            if BULLET_PATTERN.match(vLine)
+        ]
+
+        if not vBullets:
+            continue
+
+        vPeriod = PERIOD_PATTERN.match(vLines[vStart]).group(0).strip()
+        vTitle = find_experience_title(vBlock)
+
+        rExperiences.append(
+            {
+                "title": f"{vTitle} ({vPeriod})" if vTitle else vPeriod,
+                # Intitulé et puces seulement : un encadré voisin, intercalé par
+                # les zones de texte, prêterait ses compétences à l'expérience.
+                "skills": detect_skills(" ".join([vTitle, *vBullets])),
+                "achievement": " ; ".join(vBullets[:MAX_ACHIEVEMENTS]),
+            }
+        )
+
+    logger.info("CV : %s expérience(s) repérée(s)", len(rExperiences))
+
+    return rExperiences
+
+
 def merge_profile_texts(pTexts, pExtracted):
     """Complète les textes du formulaire sans écraser ce qui est déjà saisi."""
 
@@ -202,6 +291,11 @@ def merge_profile_texts(pTexts, pExtracted):
     for vKey in ("name", "headline"):
         if not rTexts.get(vKey, "").strip():
             rTexts[vKey] = pExtracted[vKey]
+
+    if not rTexts.get("experiences", "").strip() and pExtracted.get("experiences"):
+        rTexts["experiences"] = format_lines(
+            pExtracted["experiences"], EXPERIENCE_FIELDS
+        )
 
     rTexts["skills"] = ", ".join(
         split_list(", ".join([rTexts.get("skills", ""), *pExtracted["skills"]]))

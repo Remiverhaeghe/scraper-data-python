@@ -139,6 +139,11 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Offres proches de vos candidatures sur l'accueil : compétences et intitulé partagés avec les offres retenues
 - [x] Page Santé : fin du certificat HTTPS, placement des offres, dernière synchronisation du téléphone
 - [x] Thèmes « Entretien Java », « Entretien Android » et « Entretien PHP et web » : cas réels d'entretien reformulés (pièges de code, cycles de vie à remettre en ordre, revues de code), avec la réponse actuelle quand l'usage a changé
+- [x] Score de correspondance pondéré : au moins trois compétences au dénominateur, compétences exigées comptées double et appréciées à moitié (lues dans la phrase de l'annonce), niveau d'auto-évaluation pris en compte ; compétences exigées manquantes signalées
+- [x] Salaire du marché dans la fiche d'une offre : médiane des offres françaises proches (deux compétences communes au moins, même nature d'emploi, sans freelance), comparée au salaire visé des règles de calcul
+- [x] Offres proches de vos candidatures dans l'e-mail de la semaine et les alertes du téléphone
+- [x] Expériences repérées dans le CV par règles (période, intitulé « Poste - Entreprise », puces), sans ChatGPT
+- [x] Archivage automatique des offres absentes des recherches depuis le délai choisi, après sauvegarde, offres suivies épargnées (0 : jamais)
 - [x] Revue de code : un extrait et des constats, à cocher tous les défauts réels et eux seuls (bureau, web, téléphone)
 - [x] Simulation d'entretien technique dans le Profil : questions ouvertes par thème, réponse attendue et points clés à cocher ; une question ratée rejoint l'entraînement à l'oral (bureau et web)
 - [x] Auto-évaluation des compétences dans le Profil : niveau de 0 à 10 ; dès 5 la compétence compte dans le score des offres, de 1 à 4 ses thèmes sont proposés en priorité dans la Révision (bureau et web)
@@ -286,9 +291,10 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Protection contre le path traversal : aucun chemin saisi côté serveur, fichiers statiques testés
 - [x] Gestion sécurisée des secrets : .env ignoré, gitleaks en CI, clés masquées dans les erreurs et jamais affichées
 - [x] Aucun accès réseau réel pendant les tests
-- [ ] Exécution avec des privilèges minimum
-- [ ] Isolation du scraper sur le NAS
-- [ ] Préparation d'une exécution Docker sécurisée
+- [x] Exécution avec des privilèges minimum : compte dédié, .env et data/ protégés, vérifiés au démarrage et dans la page Santé
+- [x] Isolation du scraper sur le NAS : conteneurs du web et du planificateur, fichiers en lecture seule sauf data/ et logs/
+- [x] Exécution Docker sécurisée : image en deux étapes sans compte administrateur, aucun droit système (cap_drop), pas d'élévation de privilèges, contrôle de santé
+- [x] Copies du NAS chiffrées (clé du .env, `python -m tools.backup_key`), déchiffrées à la restauration
 
 ### 🧪 Qualité
 
@@ -303,6 +309,8 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Analyse pylint en CI, configurée pour la convention p, v, r (note minimale 9.8/10)
 - [x] Analyse de sécurité bandit en CI ; chaque exception « nosec » est justifiée dans le code
 - [x] Tests de bout en bout du web dans Chromium (Playwright) : pages sans erreur ni blocage CSP, affichage sur téléphone sans défilement horizontal, filtres HTMX, thème, abonnement à l'agenda
+- [x] Accessibilité vérifiée par axe-core (WCAG 2 A et AA) sur toutes les pages, thèmes clair et sombre : contrastes, libellés, clavier
+- [x] Import de CV testé sur un jeu de CV fictifs aux mises en page difficiles (zones de texte et photo, colonnes en tableau, PDF, texte Windows)
 
 ---
 
@@ -424,6 +432,27 @@ Format d'une question (un fichier par thème, `skills` reprend les compétences 
 ```
 
 ---
+
+## 🐳 Exécution sur le NAS (Docker)
+
+Le tableau de bord web et le planificateur tournent dans deux conteneurs isolés ; l'interface de
+bureau reste sur le PC. Sur le NAS, dans le dossier du projet :
+
+1. Copier le `.env` (droits `chmod 600 .env`) et le dossier `data/` (`chmod 750 data`). Les
+   chemins du `.env` restent relatifs au projet, par exemple `data/tls/…`.
+2. Choisir l'adresse publiée : `WEB_PUBLISHED_ADDRESS=100.x.y.z` dans le `.env`, l'adresse
+   Tailscale du NAS ; sans elle, le tableau de bord n'est joignable que depuis le NAS.
+3. `docker compose up -d` construit l'image et lance le web et le planificateur.
+
+Durcissement : image en deux étapes sans outil de compilation, compte `jobboard` sans droits
+d'administration, fichiers de l'image en lecture seule (seuls `data/` et `logs/` s'écrivent),
+aucun droit système (`cap_drop: ALL`), pas d'élévation de privilèges, contrôle de santé
+(`python -m web.healthcheck`). Au démarrage, un `.env` ou un `data/` trop ouvert, ou un
+lancement en administrateur, est signalé dans le journal et dans la page Santé.
+
+Copies chiffrées : `python -m tools.backup_key` donne une clé à mettre dans le `.env`
+(`BACKUP_ENCRYPTION_KEY`) ; les copies du NAS sont alors chiffrées, et déchiffrées à la
+restauration. Gardez la clé aussi hors du PC et du NAS : sans elle, ces copies sont perdues.
 
 ## 📱 Accès depuis un téléphone
 
@@ -557,6 +586,8 @@ scraper-data-python/
 │   ├── presentation.py                        # Mise en forme et filtres communs aux interfaces
 │   ├── offer_filters.py                       # Choix de la barre de filtres traduits pour la requête
 │   ├── statistics.py                          # Indicateurs et graphiques, bureau et web
+│   ├── salary_market.py                       # Salaire du marché des offres proches, comparé au salaire visé
+│   ├── offer_archive.py                       # Archivage quotidien des offres expirées non suivies
 │   ├── similar_offers.py                      # Nouvelles offres proches de celles retenues
 │   ├── settings.py                            # Réglages de calcul modifiables et recalcul du net
 │   ├── export.py                              # Export des offres en CSV, Excel et JSON
@@ -830,6 +861,7 @@ scraper-data-python/
 │   ├── password.py                            # Génère l'empreinte du mot de passe (.env)
 │   ├── app.py                                 # Application, sécurité, erreurs et routeurs
 │   ├── api.py                                 # API JSON de l'application mobile (jeton)
+│   ├── healthcheck.py                         # Contrôle de santé du conteneur Docker
 │   ├── dependencies.py                        # Base de données et jeton CSRF des routes
 │   ├── rendering.py                           # Gabarits, icônes, graphiques et schémas
 │   ├── forms.py                               # Lecture des montants, durées et dates
@@ -931,6 +963,7 @@ scraper-data-python/
 │   ├── windows_startup.py                     # Lancement automatique à l'ouverture de session
 │   ├── local_certificate.py                   # Crée le certificat HTTPS du réseau local
 │   ├── tailscale_certificate.py               # Certificat reconnu pour l'accès par Tailscale
+│   ├── backup_key.py                          # Crée la clé de chiffrement des copies du NAS
 │   ├── mobile_integration.py                  # Prépare et contrôle le test téléphone ↔ serveur de la CI
 │   └── quiz_lots/                             # Sources des lots écrits, un dossier par thème
 │
@@ -945,6 +978,7 @@ scraper-data-python/
 │   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
 │   ├── tls.py                                 # Certificat HTTPS local et son empreinte
 │   ├── tailscale.py                           # Certificat Tailscale : demande et renouvellement
+│   ├── permissions.py                         # Moindres privilèges : compte, .env et data/
 │   └── security.py                            # Contrôles de sécurité du scraper
 │
 ├── cli/                                       # Gestion de l'interface en ligne de commande
@@ -999,10 +1033,12 @@ scraper-data-python/
 │   │   ├── test_enrichment.py                 # Teste l'enrichissement depuis la description
 │   │   ├── test_deduplication.py              # Teste l'empreinte et le regroupement des annonces
 │   │   ├── test_preparation.py                # Teste le profil et la préparation de candidature
+│   │   ├── test_salary_market.py              # Teste le salaire du marché
 │   │   ├── test_star_answers.py               # Teste les réponses STAR
 │   │   ├── test_offer_purge.py                # Teste la purge des offres hors sujet
 │   │   ├── test_followed_availability.py      # Teste la vérification des offres suivies
 │   │   ├── test_weekly_digest.py              # Teste le récapitulatif hebdomadaire
+│   │   ├── test_offer_archive.py              # Teste l'archivage des offres expirées
 │   │   ├── test_interview_reminder.py         # Teste le rappel d'entretien
 │   │   ├── test_offer_comparison.py           # Teste la comparaison des offres
 │   │   ├── test_interview_drill.py            # Teste l'entraînement à l'oral
@@ -1030,12 +1066,14 @@ scraper-data-python/
 │   │   ├── test_translation.py                # Teste la langue reconnue et la traduction par paragraphe
 │   │   ├── test_geocoding.py                  # Teste le domicile, le placement des offres et le cache
 │   │   ├── test_mobile_sync.py                # Teste le contenu hors ligne et l'envoi des réponses
+│   │   ├── test_mobile_offer_list.py          # Teste la liste d'offres du téléphone
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
 │   │   ├── test_challenges.py                 # Teste les défis, leurs solutions et les réponses
 │   │   ├── test_git_sandbox.py                # Teste le dépôt simulé, les commandes et le graphe
 │   │   ├── test_git_levels.py                 # Teste les niveaux Git et leur progression
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage
+│   │   ├── test_cv_corpus.py                  # Teste l'import sur des CV fictifs difficiles
 │   │   ├── test_filter.py                     # Teste les filtres des offres
 │   │   │
 │   │   └── sources/                           # Tests des sources d'emploi
@@ -1192,10 +1230,12 @@ scraper-data-python/
 │   │   ├── test_quiz_lot.py                    # Teste la construction et le contrôle des lots
 │   │   ├── test_quiz_svg.py                    # Teste les schémas SVG des lots
 │   │   ├── test_tailscale_certificate.py       # Teste la demande du certificat Tailscale
+│   │   ├── test_backup_key.py                  # Teste la création de la clé de chiffrement
 │   │   └── test_windows_startup.py             # Teste le fichier de lancement automatique
 │   ├── e2e/                                    # Tests du web dans un vrai navigateur (Playwright)
 │   │   ├── __init__.py                          # Initialise le package des tests de bout en bout
-│   │   └── test_web_browser.py                 # Pages, téléphone, HTMX, thème et agenda dans Chromium
+│   │   ├── test_web_browser.py                 # Pages, téléphone, HTMX, thème et agenda dans Chromium
+│   │   └── vendor/                             # axe-core 4.10.2 (MPL 2.0), audit d'accessibilité
 │   │
 │   ├── scheduler/                              # Tests du planificateur
 │   │   ├── __init__.py                          # Initialise le package de tests du planificateur
@@ -1207,6 +1247,8 @@ scraper-data-python/
 │   │   ├── test_app.py                         # Teste les routes et la sécurité de l'affichage
 │   │   ├── test_main.py                        # Teste le rechargement à chaud du certificat
 │   │   ├── test_api.py                         # Teste l'API mobile : jeton, contenu et réponses
+│   │   ├── test_api_interview.py               # Teste l'API de simulation et d'auto-évaluation
+│   │   ├── test_healthcheck.py                 # Teste le contrôle de santé du conteneur
 │   │   ├── test_auth.py                        # Teste la connexion, la session et le CSRF
 │   │   └── test_password.py                    # Teste la génération de l'empreinte
 │   │
@@ -1224,12 +1266,17 @@ scraper-data-python/
 │   ├── test_mailer.py                          # Teste l'envoi d'e-mails, serveur simulé
 │   ├── test_main.py                            # Teste le point d'entrée principal
 │   ├── test_tls.py                             # Teste le certificat local et son empreinte dans le QR code
+│   ├── test_permissions.py                     # Teste le contrôle des moindres privilèges
 │   └── test_security.py                        # Teste les contrôles de sécurité
 │
 ├── main.py                                     # Point d'entrée principal de l'application
 ├── config.py                                   # Configuration générale de l'application
 ├── requirements.txt                            # Liste des dépendances Python
 ├── requirements-translation.txt                # Traduction hors ligne, facultative (torch compris)
+├── requirements-server.txt                     # Dépendances du web et du planificateur seuls (Docker)
+├── Dockerfile                                  # Image du web et du planificateur pour le NAS
+├── docker-compose.yml                          # Conteneurs durcis du web et du planificateur
+├── .dockerignore                               # Exclut de l'image données, secrets et tests
 ├── pyproject.toml                              # Couverture, convention de nommage pylint
 ├── README.md                                   # Documentation synthétique du projet
 ├── CHANGELOG.md                                # Journal des versions

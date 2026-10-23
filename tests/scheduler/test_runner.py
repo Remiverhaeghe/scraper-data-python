@@ -212,7 +212,10 @@ def test_notify_follow_ups_once_a_day(database_file, sent_emails):
 
 
 def build_scored_items():
-    """Construit trois nouvelles offres plus ou moins proches d'un profil Java."""
+    """Construit trois nouvelles offres plus ou moins proches d'un profil Java.
+
+    Trois compétences par offre : le score est rapporté à trois au minimum.
+    """
 
     rItems = pd.DataFrame(
         [
@@ -220,7 +223,14 @@ def build_scored_items():
             {"title": "Développeur Java PHP", "url": "https://example.com/2"},
             {"title": "Développeur PHP", "url": "https://example.com/3"},
         ]
-    ).assign(is_new=True, skills=[["Java", "SQL"], ["Java", "PHP"], ["PHP"]])
+    ).assign(
+        is_new=True,
+        skills=[
+            ["Java", "SQL", "Git"],
+            ["Java", "PHP", "Git"],
+            ["PHP", "Symfony", "Docker"],
+        ],
+    )
 
     return rItems
 
@@ -228,7 +238,7 @@ def build_scored_items():
 def test_notify_new_offers_keeps_offers_above_min_score(database_file, sent_emails):
     """Vérifie que seules les offres assez proches du profil sont envoyées, triées."""
 
-    save_profile(database_file, build_profile("", "", "Java, SQL", "", ""))
+    save_profile(database_file, build_profile("", "", "Java, SQL, Git", "", ""))
     vSchedule = {"email": "moi@example.com", "search": None, "min_score": 50}
 
     assert runner.notify_new_offers(database_file, vSchedule, build_scored_items())

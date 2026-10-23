@@ -5,10 +5,13 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from cryptography.fernet import Fernet, InvalidToken
+
 from config import (
     AUTO_BACKUP_INTERVAL_HOURS,
     AUTO_BACKUP_KEEP_COUNT,
     BACKUP_KEEP_COUNT,
+    BACKUP_ENCRYPTION_KEY,
     BACKUP_NAS_DIRECTORY,
     NAS_KEEP_COUNT,
 )
@@ -18,6 +21,9 @@ logger = get_logger(__name__)
 
 # Dossier des sauvegardes, à côté de la base
 BACKUP_DIRECTORY_NAME = "backups"
+
+# Copie chiffrée sur le NAS : nom de la sauvegarde suivi de ce suffixe
+ENCRYPTED_SUFFIX = ".chiffre"
 
 # Suffixe des sauvegardes automatiques : elles tournent entre elles, sans évincer
 # celles faites avant une opération risquée.
@@ -195,20 +201,33 @@ def list_nas_copies(pDatabaseFile, pNasDirectory):
     """Retourne les copies présentes sur le NAS, les plus récentes en tête."""
 
     vStem = Path(pDatabaseFile).stem
+    vPattern = f"{vStem}-*-{AUTO_BACKUP_REASON}.db"
 
+    # Copies en clair et chiffrées, triées par leur date, dans le nom
     rCopies = sorted(
-        Path(pNasDirectory).glob(f"{vStem}-*-{AUTO_BACKUP_REASON}.db"), reverse=True
+        [
+            *Path(pNasDirectory).glob(vPattern),
+            *Path(pNasDirectory).glob(vPattern + ENCRYPTED_SUFFIX),
+        ],
+        key=lambda pFile: pFile.name.removesuffix(ENCRYPTED_SUFFIX),
+        reverse=True,
     )
 
     return rCopies
 
 
-def copy_to_nas(pDatabaseFile, pNasDirectory=None, pKeepCount=NAS_KEEP_COUNT):
+def copy_to_nas(
+    pDatabaseFile,
+    pNasDirectory=None,
+    pKeepCount=NAS_KEEP_COUNT,
+    pKey=BACKUP_ENCRYPTION_KEY,
+):
     """Copie la dernière sauvegarde automatique sur le NAS si elle n'y est pas.
 
-    Un NAS éteint ou injoignable est signalé dans le journal ; la copie est
-    retentée au passage suivant, sans rien perdre. Retourne le fichier copié,
-    ou None.
+    Avec une clé, la copie est chiffrée : elle contient profil, candidatures et
+    notes. Un NAS éteint ou injoignable est signalé dans le journal ; la copie
+    est retentée au passage suivant, sans rien perdre. Retourne le fichier
+    copié, ou None.
     """
 
     vNasDirectory = pNasDirectory or BACKUP_NAS_DIRECTORY
@@ -219,14 +238,21 @@ def copy_to_nas(pDatabaseFile, pNasDirectory=None, pKeepCount=NAS_KEEP_COUNT):
         return rCopy
 
     try:
-        vTarget = Path(vNasDirectory) / vLatest.name
+        vTarget = Path(vNasDirectory) / (
+            vLatest.name + (ENCRYPTED_SUFFIX if pKey else "")
+        )
 
         if not vTarget.exists():
             Path(vNasDirectory).mkdir(parents=True, exist_ok=True)
             # Copie sous un nom provisoire puis renommage : une coupure réseau ne
             # laisse jamais une copie tronquée sous le nom définitif.
-            vPartial = vTarget.with_suffix(".partiel")
-            shutil.copy2(vLatest, vPartial)
+            vPartial = vTarget.with_name(vTarget.name + ".partiel")
+
+            if pKey:
+                vPartial.write_bytes(Fernet(pKey).encrypt(vLatest.read_bytes()))
+            else:
+                shutil.copy2(vLatest, vPartial)
+
             vPartial.replace(vTarget)
             rCopy = vTarget
 
@@ -281,24 +307,33 @@ def describe_nas_copies(pDatabaseFile, pNasDirectory=None):
     if vNasDirectory is None or not Path(vNasDirectory).is_dir():
         raise OSError(f"Dossier du NAS injoignable : {vNasDirectory}")
 
-    rCopies = [
-        vCopy
-        for vCopy in (
-            describe_backup(pDatabaseFile, vFile)
-            for vFile in list_nas_copies(pDatabaseFile, vNasDirectory)
-        )
-        if vCopy is not None
-    ]
+    rCopies = []
+
+    for vFile in list_nas_copies(pDatabaseFile, vNasDirectory):
+        vCopy = describe_backup(pDatabaseFile, vFile)
+
+        if vCopy is not None:
+            vEncrypted = vFile.name.endswith(ENCRYPTED_SUFFIX)
+            vCopy["encrypted"] = vEncrypted
+
+            # « auto.db » lu dans le nom d'une copie chiffrée : le motif reste « auto ».
+            if vEncrypted:
+                vCopy["reason"] = vCopy["reason"].removesuffix(".db")
+
+            rCopies.append(vCopy)
 
     return rCopies
 
 
-def fetch_nas_copy(pDatabaseFile, pCopyName, pNasDirectory=None):
+def fetch_nas_copy(
+    pDatabaseFile, pCopyName, pNasDirectory=None, pKey=BACKUP_ENCRYPTION_KEY
+):
     """Rapatrie une copie du NAS dans le dossier des sauvegardes, pour la restaurer.
 
     La copie est cherchée par son nom parmi celles du NAS : un nom forgé ne peut
-    pas désigner un autre fichier. Retourne le fichier local ; lève ValueError si
-    la copie est introuvable et OSError si le NAS est injoignable.
+    pas désigner un autre fichier ; chiffrée, elle est déchiffrée avec pKey.
+    Retourne le fichier local, en clair ; lève ValueError si la copie est
+    introuvable ou la clé absente ou fausse, OSError si le NAS est injoignable.
     """
 
     vNasDirectory = pNasDirectory or BACKUP_NAS_DIRECTORY
@@ -314,12 +349,31 @@ def fetch_nas_copy(pDatabaseFile, pCopyName, pNasDirectory=None):
     if vSource is None:
         raise ValueError("Copie introuvable sur le NAS.")
 
-    rLocalFile = Path(pDatabaseFile).parent / BACKUP_DIRECTORY_NAME / vSource.name
+    vEncrypted = vSource.name.endswith(ENCRYPTED_SUFFIX)
+    rLocalFile = (
+        Path(pDatabaseFile).parent
+        / BACKUP_DIRECTORY_NAME
+        / vSource.name.removesuffix(ENCRYPTED_SUFFIX)
+    )
+
+    if vEncrypted and not pKey:
+        raise ValueError("Copie chiffrée : BACKUP_ENCRYPTION_KEY manquante dans .env.")
 
     if not rLocalFile.exists():
         rLocalFile.parent.mkdir(parents=True, exist_ok=True)
         vPartial = rLocalFile.with_suffix(".partiel")
-        shutil.copy2(vSource, vPartial)
+
+        if vEncrypted:
+            try:
+                vPartial.write_bytes(Fernet(pKey).decrypt(vSource.read_bytes()))
+
+            except InvalidToken as vException:
+                raise ValueError(
+                    "Copie chiffrée avec une autre clé : déchiffrement impossible."
+                ) from vException
+        else:
+            shutil.copy2(vSource, vPartial)
+
         vPartial.replace(rLocalFile)
 
         logger.info("Copie du NAS rapatriée : %s", rLocalFile.name)

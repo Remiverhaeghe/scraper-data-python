@@ -17,7 +17,9 @@ import segno
 from config import WEB_SCHEME, WEB_TLS_CERTFILE
 from job.access_tokens import check_access_token, get_access_token, renew_access_token
 from job.interview_revision import find_offer_themes
-from job.presentation import STATUS_LABELS
+from job.preparation import match_offer
+from job.presentation import STATUS_LABELS, clean_missing_values, format_net_salary
+from job.profile import load_profile
 from job.quiz import (
     LEITNER_INTERVALS,
     QUIZ_LEVELS,
@@ -36,6 +38,7 @@ from job.quiz_types import (
     get_type,
     grade_answer,
 )
+from job.similar_offers import find_similar_offers
 from job.weekly_digest import get_new_offers
 from storage.job_applications import get_applications_with_offers, save_application
 from storage.job_offers import get_offer
@@ -68,6 +71,12 @@ MAX_SYNC_FLAGS = 200
 
 # Nouvelles offres envoyées au téléphone : les mieux notées de la semaine
 MAX_PHONE_OFFERS = 30
+
+# Offres proches des candidatures envoyées en plus, si absentes de la liste
+MAX_PHONE_SIMILAR = 5
+
+# Description lisible hors ligne sur le téléphone, coupée au-delà
+MAX_PHONE_DESCRIPTION = 4000
 
 # Statuts que le téléphone peut donner à une offre ; le reste du suivi (entretien,
 # relances, notes) se fait sur le PC.
@@ -512,6 +521,22 @@ def build_offer_list(pDatabaseFile, pNow):
         pDatabaseFile, {LAST_SYNC_KEY: pNow.isoformat(timespec="seconds")}
     )
 
+    # Offres proches d'une offre retenue : signalées, et ajoutées si besoin.
+    vSimilar = {
+        (vOffer["source"], str(vOffer["source_id"])): vOffer
+        for vOffer in find_similar_offers(pDatabaseFile, pNow, MAX_PHONE_SIMILAR)
+    }
+    vOffers = get_new_offers(pDatabaseFile, pNow, MAX_PHONE_OFFERS)
+    vKeys = {(vOffer["source"], str(vOffer["source_id"])) for vOffer in vOffers}
+    vOffers += [
+        clean_missing_values(vOffer)
+        for vKey, vOffer in vSimilar.items()
+        if vKey not in vKeys
+    ]
+
+    vProfile = load_profile(pDatabaseFile)
+    vMatches = {id(vOffer): match_offer(vProfile, vOffer) for vOffer in vOffers}
+
     rOffers = [
         {
             "source": vOffer["source"],
@@ -523,10 +548,18 @@ def build_offer_list(pDatabaseFile, pNow):
             "url": vOffer.get("url"),
             "match_score": vOffer.get("match_score"),
             "distance_km": vOffer.get("distance_km"),
+            "similar_to": vSimilar.get(
+                (vOffer["source"], str(vOffer["source_id"])), {}
+            ).get("reference_title"),
             "first_seen_at": vOffer.get("first_seen_at"),
             "status": vOffer.get("application_status"),
+            # Fiche lisible hors ligne : description, salaire et compétences
+            "description": (vOffer.get("description") or "")[:MAX_PHONE_DESCRIPTION],
+            "salary": format_net_salary(vOffer),
+            "covered": vMatches[id(vOffer)]["covered"],
+            "missing": vMatches[id(vOffer)]["missing"],
         }
-        for vOffer in get_new_offers(pDatabaseFile, pNow, MAX_PHONE_OFFERS)
+        for vOffer in vOffers
     ]
 
     return rOffers

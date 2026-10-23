@@ -11,19 +11,19 @@
     --text: #1e293b;
     --muted: #52658a;
     --on-primary: #ffffff;
-    --primary: #1769e0;
+    --primary: #155fcc;
     --primary-dark: #0f56be;
     --primary-light: #e8f1ff;
     --primary-gradient: #4f8df5;
     --banner-text: #dce9ff;
-    --success: #16a34a;
-    --warning: #d97706;
-    --danger: #dc2626;
-    --blue: #1769e0;
+    --success: #15803d;
+    --warning: #b45309;
+    --danger: #c81e1e;
+    --blue: #155fcc;
     --blue-light: #e8f1ff;
-    --green: #16a34a;
+    --green: #15803d;
     --green-light: #e7f7ec;
-    --amber: #d97706;
+    --amber: #b45309;
     --amber-light: #fff4e0;
     --purple: #7c3aed;
     --purple-light: #f1eafe;
@@ -39,14 +39,15 @@
     --heading: #f1f5f9;
     --text: #d9e1ec;
     --muted: #8fa0ba;
-    --primary: #3b82f6;
-    --primary-dark: #2563eb;
+    --on-primary: #0b1220;
+    --primary: #60a5fa;
+    --primary-dark: #93c5fd;
     --primary-light: #1c2c47;
     --primary-gradient: #1d4ed8;
     --banner-text: #c9dbff;
     --success: #22c55e;
     --warning: #f59e0b;
-    --danger: #ef4444;
+    --danger: #f87171;
     --blue: #60a5fa;
     --blue-light: #16243b;
     --green: #4ade80;
@@ -60,6 +61,7 @@
 
 /* Sans JavaScript, le thème suit celui du système */
 @media (prefers-color-scheme: dark) {
+    /* Mêmes couleurs que :root[data-theme="dark"] */
     :root:not([data-theme]) {
         color-scheme: dark;
         --background: #0f141c;
@@ -69,9 +71,23 @@
         --heading: #f1f5f9;
         --text: #d9e1ec;
         --muted: #8fa0ba;
-        --primary: #3b82f6;
+        --on-primary: #0b1220;
+        --primary: #60a5fa;
+        --primary-dark: #93c5fd;
         --primary-light: #1c2c47;
         --primary-gradient: #1d4ed8;
+        --banner-text: #c9dbff;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --danger: #f87171;
+        --blue: #60a5fa;
+        --blue-light: #16243b;
+        --green: #4ade80;
+        --green-light: #132a1f;
+        --amber: #fbbf24;
+        --amber-light: #2e2412;
+        --purple: #c084fc;
+        --purple-light: #251a3a;
         --shadow: none;
     }
 }
@@ -1738,6 +1754,15 @@ textarea.companies-preferred {
     font-weight: 600;
 }
 
+/* La couleur de la série sur une pastille : en texte, elle manquait de contraste. */
+.chart-key {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 4px;
+    border-radius: 50%;
+}
+
 .chart-axis-x {
     margin: 4px 0 0;
     text-align: center;
@@ -2214,9 +2239,9 @@ textarea.companies-preferred {
     white-space: nowrap;
 }
 
-.funnel-1 .funnel-bar { background: #1769E0; }
-.funnel-2 .funnel-bar { background: #16A34A; }
-.funnel-3 .funnel-bar { background: #D97706; }
+.funnel-1 .funnel-bar { background: #155FCC; }
+.funnel-2 .funnel-bar { background: #15803D; }
+.funnel-3 .funnel-bar { background: #B45309; }
 .funnel-4 .funnel-bar { background: #7C3AED; }
 
 @media (max-width: 640px) {

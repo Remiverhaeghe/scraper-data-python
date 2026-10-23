@@ -58,6 +58,8 @@ def test_load_settings_returns_defaults(database_file):
         "follow_up_days": 7,
         "challenge_wait_seconds": 30,
         "weekly_application_goal": 0,
+        "target_net_salary": 0,
+        "archive_after_days": 0,
     }
 
 

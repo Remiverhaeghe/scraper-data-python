@@ -9,9 +9,11 @@ import '../revision_state.dart';
 import '../services/api_client.dart';
 import '../theme.dart';
 import 'exam_screen.dart';
+import 'interview_screen.dart';
 import 'offers_screen.dart';
 import 'question_screen.dart';
 import 'setup_screen.dart';
+import 'skills_screen.dart';
 import 'statistics_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -106,6 +108,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               tooltip: 'Synchroniser',
               onPressed: state.syncing ? null : synchronize,
               icon: const Icon(Icons.sync),
+            ),
+            PopupMenuButton<Widget Function()>(
+              tooltip: 'Entretien',
+              icon: const Icon(Icons.record_voice_over_outlined),
+              onSelected: (pBuild) => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => pBuild()),
+              ),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: () => InterviewScreen(state: state),
+                  child: const Text("Simulation d'entretien"),
+                ),
+                PopupMenuItem(
+                  value: () => SkillsScreen(state: state),
+                  child: const Text('Auto-évaluation'),
+                ),
+              ],
             ),
             IconButton(
               tooltip: 'Paramètres',

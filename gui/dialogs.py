@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from config import APPLICATION_NAME
+from job.preparation import describe_missing
 from job.presentation import (
     LICENSE_SUMMARY,
     LICENSE_SUMMARY_NOTE,
@@ -124,7 +125,7 @@ def describe_preparation(pPreparation):
     rHtml = (
         f"<h3>Correspondance</h3><p>{escape(vScore)}</p>"
         f"<p>Couvertes : {escape(', '.join(vMatch['covered']) or 'aucune')}<br>"
-        f"Manquantes : {escape(', '.join(vMatch['missing']) or 'aucune')}</p>"
+        f"Manquantes : {escape(describe_missing(vMatch))}</p>"
     )
 
     if pPreparation["cv"]:

@@ -552,7 +552,7 @@ def describe_backup(pBackup):
     rText = (
         f"{pBackup['created_at']:%d/%m/%Y %H:%M} · {vReason} · "
         f"{vSize:.1f} Mo".replace(".", ",")
-    )
+    ) + (" · chiffrée" if pBackup.get("encrypted") else "")
 
     return rText
 

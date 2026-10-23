@@ -77,6 +77,8 @@
                 {% endcall %}
                 {% endif %}
 
+                {% call detail("scale", "Marché") %}{{ market_salary }}{% endcall %}
+
                 {% if offer.benefits %}
                 {% call detail("gift", "Avantages") %}{{ offer.benefits | join(", ") }}{% endcall %}
                 {% endif %}
@@ -167,7 +169,7 @@
                 {% if preparation.match.score is not none %}<strong>{{ preparation.match.score }} %</strong> des compétences repérées dans l'offre{% else %}Aucune compétence technique repérée dans l'offre{% endif %}
                 {% if preparation.cv %} · CV conseillé : <strong>{{ preparation.cv.name }}</strong>{% endif %}
             </p>
-            <p class="muted">Couvertes : {{ preparation.match.covered | join(", ") or "aucune" }}<br>Manquantes : {{ preparation.match.missing | join(", ") or "aucune" }}</p>
+            <p class="muted">Couvertes : {{ preparation.match.covered | join(", ") or "aucune" }}<br>Manquantes : {{ preparation.missing_text }}</p>
             <h3>Points forts à citer</h3>
             <ul>
                 {% for strength in preparation.interview.strengths %}

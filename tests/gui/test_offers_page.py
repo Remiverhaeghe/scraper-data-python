@@ -616,7 +616,7 @@ def test_interview_score_and_france_filter(offers_page, database_file):
             "title": "Développeur Java",
             "company": "Acme",
             "location": "Lille",
-            "description": "Java et Kafka",
+            "description": "Java, Spring et Kafka",
         },
         NOW,
     )
@@ -626,7 +626,7 @@ def test_interview_score_and_france_filter(offers_page, database_file):
     vPanel = offers_page.detail_panel
     vOffer = vPanel.offer
 
-    assert format_cell(vOffer, "match_score") == "50 %"
+    assert format_cell(vOffer, "match_score") == "67 %"
     assert vOffer["country"] == "France"
 
     vPanel.application.status_combo.setCurrentIndex(

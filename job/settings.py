@@ -90,6 +90,23 @@ SETTING_DEFINITIONS = {
         1,
         "candidatures",
     ),
+    "archive_after_days": SettingDefinition(
+        "Archivage",
+        "Offres absentes des recherches depuis ce délai supprimées chaque jour, "
+        "après une sauvegarde ; les offres suivies sont gardées. 0 : jamais.",
+        0,
+        3650,
+        1,
+        "jours",
+    ),
+    "target_net_salary": SettingDefinition(
+        "Salaire visé",
+        "Net mensuel souhaité, comparé au salaire des offres proches. 0 : aucun.",
+        0,
+        20000,
+        50,
+        "€ net/mois",
+    ),
 }
 
 # Réglages dont la modification change le net des offres déjà enregistrées
@@ -115,6 +132,8 @@ def get_default_settings():
         "follow_up_days": FOLLOW_UP_DAYS,
         "challenge_wait_seconds": CHALLENGE_WAIT_SECONDS,
         "weekly_application_goal": 0,
+        "target_net_salary": 0,
+        "archive_after_days": 0,
     }
 
     return rSettings

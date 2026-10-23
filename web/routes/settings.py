@@ -497,10 +497,12 @@ def restore_database_backup(
 
     else:
         try:
-            if pOrigin == "nas":
-                fetch_nas_copy(pDatabaseFile, pName)
+            # Une copie chiffrée est rapatriée en clair, sous un nom sans suffixe.
+            vName = (
+                fetch_nas_copy(pDatabaseFile, pName).name if pOrigin == "nas" else pName
+            )
 
-            vBackupFile = restore_backup(pDatabaseFile, pName, datetime.now())
+            vBackupFile = restore_backup(pDatabaseFile, vName, datetime.now())
 
         except (ValueError, OSError) as vException:
             logger.warning("Restauration de sauvegarde refusée : %s", vException)

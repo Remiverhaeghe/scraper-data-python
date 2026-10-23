@@ -3,6 +3,8 @@
 import pytest
 
 from job.preparation import (
+    describe_missing,
+    classify_requirements,
     filter_by_match,
     build_questions,
     get_offer_skills,
@@ -105,6 +107,7 @@ def test_match_and_recommendation(profile):
     assert vMatch == {
         "covered": ["Java", "Spring", "Docker"],
         "missing": ["Kafka"],
+        "required": [],
         "score": 75,
     }
     assert recommend_cv(profile, vOfferSkills) == {
@@ -254,3 +257,57 @@ def test_match_profile_recognizes_free_skill_wording():
 
     assert vMatch["covered"] == ["Siemens TIA Portal", "Habilitation électrique"]
     assert vMatch["score"] == 67
+
+
+def test_requirements_weigh_required_and_preferred_skills():
+    """Vérifie le poids d'une compétence selon la phrase qui la cite."""
+
+    vText = (
+        "Maîtrise de Java exigée. Spring est un plus ; Docker idéalement. "
+        "Vous utiliserez SQL au quotidien."
+    )
+
+    assert classify_requirements(vText, ["Java", "Spring", "Docker", "SQL"]) == {
+        "Java": 2.0,
+        "Spring": 0.5,
+        "Docker": 0.5,
+        "SQL": 1.0,
+    }
+
+
+def test_score_weighs_requirements_levels_and_a_minimum_of_skills():
+    """Vérifie le score : compétence exigée manquante, niveau noté et plancher."""
+
+    vText = "Java exigé. SQL. Docker est un plus."
+    vSkills = ["Java", "SQL", "Docker"]
+    vProfile = {"skills": ["SQL", "Docker"], "skill_levels": {}}
+
+    # Java exigé manque : (1 + 0,5) / 3,5
+    vMatch = match_profile(vProfile, vSkills, vText)
+
+    assert vMatch["score"] == 43
+    assert vMatch["required"] == ["Java"]
+    assert vMatch["missing"] == ["Java"]
+
+    # Java noté 6 : trois quarts de son poids, affiché comme couvert
+    vMatch = match_profile({**vProfile, "skill_levels": {"Java": 6}}, vSkills, vText)
+
+    assert vMatch["score"] == 86
+    assert vMatch["covered"] == vSkills
+
+    # Noté 4, sous le seuil de 5 : à renforcer, il ne compte pas
+    vWeak = {**vProfile, "skills": vSkills, "skill_levels": {"Java": 4}}
+
+    assert match_profile(vWeak, vSkills, vText)["missing"] == ["Java"]
+
+    # Une seule compétence, couverte : rapportée au plancher de trois
+    assert match_profile({"skills": ["Java"]}, ["Java"])["score"] == 33
+
+
+def test_describe_missing_flags_required_skills():
+    """Vérifie que les compétences exigées manquantes sont signalées."""
+
+    assert describe_missing({"missing": ["Java", "Git"], "required": ["Java"]}) == (
+        "Java (exigée), Git"
+    )
+    assert describe_missing({"missing": [], "required": []}) == "aucune"

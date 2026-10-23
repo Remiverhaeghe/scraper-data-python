@@ -168,9 +168,15 @@ class DataPanel(QWidget):
             return
 
         try:
-            fetch_nas_copy(self.database_file, vName, self.nas_directory)
+            vLocalFile = fetch_nas_copy(self.database_file, vName, self.nas_directory)
 
-        except (OSError, ValueError) as vException:
+        except ValueError as vException:
+            # Copie chiffrée sans la bonne clé : le message dit quoi corriger.
+            logger.warning("Copie du NAS non rapatriée : %s", vException)
+            show_message(self.backup_message, str(vException), "danger")
+            return
+
+        except OSError as vException:
             logger.warning("Copie du NAS non rapatriée : %s", vException)
 
             show_message(
@@ -180,7 +186,7 @@ class DataPanel(QWidget):
             )
             return
 
-        self.restore_backup(vName)
+        self.restore_backup(vLocalFile.name)
 
     def restore_backup(self, pName):
         """Restaure une sauvegarde ; les pages sont ensuite reconstruites."""

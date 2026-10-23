@@ -133,13 +133,16 @@ def test_compare_sources_ranks_useful_sources_first(tmp_path):
     vNow = datetime(2026, 10, 23, 12)
 
     initialize_database(vDatabaseFile)
-    save_profile(vDatabaseFile, {**EMPTY_PROFILE, "skills": ["Python"]})
+    save_profile(
+        vDatabaseFile, {**EMPTY_PROFILE, "skills": ["Python", "Django", "SQL"]}
+    )
 
+    # Trois compétences : le score est rapporté à trois au minimum.
     vOffers = [
-        ("arbeitnow", "1", "Développeur Python", "Python et Django."),
+        ("arbeitnow", "1", "Développeur Python", "Python, Django et Docker."),
         ("arbeitnow", "2", "Comptable", "Bilans et paie."),
         ("arbeitnow", "3", "Vendeur", "Magasin."),
-        ("lever", "4", "Développeur Python", "Python requis."),
+        ("lever", "4", "Développeur Python", "Python, Django et SQL requis."),
     ]
     save_offers(
         vDatabaseFile,
@@ -171,7 +174,7 @@ def test_compare_sources_ranks_useful_sources_first(tmp_path):
         "sent": 0,
         "ignored": 1,
         "good_rate": 33,
-        "average_score": 50,
+        "average_score": 67,
     }
     assert build_source_cells(vRows[0])[1:] == [
         "1",

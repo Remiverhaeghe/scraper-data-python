@@ -158,7 +158,13 @@ def test_statistics_measure_first_response_delay(database_file):
     save_offers(
         database_file,
         pd.DataFrame(
-            [{"source": "remotive", "source_id": "d", "title": "Développeur Python"}]
+            [
+                {
+                    "source": "remotive",
+                    "source_id": "d",
+                    "title": "Développeur Python Django SQL",
+                }
+            ]
         ),
         NOW,
     )
@@ -169,7 +175,7 @@ def test_statistics_measure_first_response_delay(database_file):
     save_application(
         database_file, "remotive", "d", "REJECTED", pNow=NOW + timedelta(days=9)
     )
-    save_profile(database_file, build_profile("", "", "Python", "", ""))
+    save_profile(database_file, build_profile("", "", "Python, Django, SQL", "", ""))
 
     vStatistics = build_application_statistics(database_file)
     vTables = dict(vStatistics["tables"])

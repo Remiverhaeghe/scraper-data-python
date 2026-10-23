@@ -50,6 +50,12 @@ void main() {
     );
 
     expect([for (final vOffer in vNew) vOffer['source_id']], ['2']);
+
+    final vSimilar = findNewGoodOffers(const [], [
+      {...buildOffer('5', 20), 'similar_to': 'Technicien de maintenance'},
+    ]);
+
+    expect(vSimilar, hasLength(1));
   });
 
   test('Les nouvelles offres sont signalées une fois, alerte active', () async {

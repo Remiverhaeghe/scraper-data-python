@@ -90,3 +90,30 @@ def test_digest_is_sent_once_a_week(database_file, monkeypatch):
     assert not runner.send_weekly_digest(database_file, NOW + timedelta(days=2))
     assert is_digest_due(database_file, NOW + timedelta(days=7))
     assert len(vSent) == 1
+
+
+def test_digest_lists_offers_close_to_retained_ones():
+    """Vérifie la section des offres proches, absente quand il n'y en a pas."""
+
+    vDigest = {
+        "offers": [],
+        "similar": [
+            {
+                "title": "Développeur Java Spring",
+                "company": "Acme",
+                "url": "https://example.com/1",
+                "reference_title": "Développeur Java",
+                "similarity": 75,
+            }
+        ],
+        "follow_ups": [],
+        "interviews": [],
+        "readiness": 40,
+        "priority": None,
+    }
+
+    vText = build_digest_email(vDigest)[1]
+
+    assert "Offres proches de vos candidatures" in vText
+    assert "Acme · proche de « Développeur Java » (75 %)" in vText
+    assert "Offres proches" not in build_digest_email({**vDigest, "similar": []})[1]

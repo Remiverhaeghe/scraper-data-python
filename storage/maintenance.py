@@ -94,7 +94,7 @@ def get_purgeable_offers(pDatabaseFile):
 
     try:
         vRows = vConnection.execute("""
-            SELECT source, source_id, title, company, first_seen_at
+            SELECT source, source_id, title, company, first_seen_at, last_seen_at
             FROM job_offer AS o
             WHERE NOT EXISTS (
                 SELECT 1 FROM job_application AS a
@@ -125,8 +125,9 @@ def get_purgeable_offers(pDatabaseFile):
             "title": vTitle,
             "company": vCompany,
             "first_seen_at": vFirstSeenAt,
+            "last_seen_at": vLastSeenAt,
         }
-        for vSource, vSourceId, vTitle, vCompany, vFirstSeenAt in vRows
+        for vSource, vSourceId, vTitle, vCompany, vFirstSeenAt, vLastSeenAt in vRows
     ]
 
     return rOffers

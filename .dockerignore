@@ -1,0 +1,21 @@
+# Rien de personnel ni d'inutile dans l'image : données, secrets, tests, mobile
+.env
+.env.*
+data/
+logs/
+backups/
+.git/
+.github/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+mobile/
+tests/
+tools/
+gui/
+docs/
+*.md
