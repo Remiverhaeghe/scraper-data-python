@@ -1,0 +1,87 @@
+"""Coordonnées des lieux d'offres : cache du géocodage et position de chaque offre"""
+
+from storage.database import connect_database
+
+
+def get_cached_locations(pDatabaseFile):
+    """Retourne les lieux déjà cherchés : clé vers (latitude, longitude) ou None."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(
+            "SELECT location_key, latitude, longitude FROM geo_cache"
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rLocations = {
+        vKey: None if vLatitude is None else (vLatitude, vLongitude)
+        for vKey, vLatitude, vLongitude in vRows
+    }
+
+    return rLocations
+
+
+def save_location(pDatabaseFile, pKey, pCoordinates, pLabel, pNow):
+    """Garde le résultat d'une recherche de lieu ; pCoordinates None s'il est inconnu."""
+
+    vLatitude, vLongitude = pCoordinates or (None, None)
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vConnection.execute(
+            """
+            INSERT INTO geo_cache (location_key, latitude, longitude, label, looked_up_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(location_key) DO UPDATE SET
+                latitude = excluded.latitude,
+                longitude = excluded.longitude,
+                label = excluded.label,
+                looked_up_at = excluded.looked_up_at
+            """,
+            (pKey, vLatitude, vLongitude, pLabel, pNow.isoformat(timespec="seconds")),
+        )
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+
+def get_offers_to_locate(pDatabaseFile, pCountry):
+    """Retourne la source, l'identifiant et le lieu des offres du pays sans position."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rOffers = vConnection.execute(
+            """
+            SELECT source, source_id, location
+            FROM job_offer
+            WHERE country = ? AND latitude IS NULL AND COALESCE(location, '') != ''
+            """,
+            (pCountry,),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    return rOffers
+
+
+def save_offer_positions(pDatabaseFile, pPositions):
+    """Enregistre la position des offres, données par (latitude, longitude, source, id)."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vConnection.executemany(
+            "UPDATE job_offer SET latitude = ?, longitude = ?"
+            " WHERE source = ? AND source_id = ?",
+            pPositions,
+        )
+        vConnection.commit()
+
+    finally:
+        vConnection.close()

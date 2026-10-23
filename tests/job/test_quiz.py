@@ -18,6 +18,7 @@ from job.quiz import (
     build_quiz_statistics,
     build_review_schedule,
     count_streak,
+    describe_flagged_questions,
     describe_no_question,
     find_unbalanced_questions,
     flag_question,
@@ -25,6 +26,7 @@ from job.quiz import (
     load_active_quiz,
     load_quiz,
     pick_question,
+    unflag_questions,
 )
 from job.quiz_bias import describe_bias, measure_bias
 from job.quiz_import import (
@@ -412,6 +414,29 @@ def test_flagged_question_leaves_the_quiz(database_file):
         vQuestion["id"] for vQuestion in vQuiz["java"]["questions"]
     ]
     assert len(load_quiz()["java"]["questions"]) == len(vQuiz["java"]["questions"]) + 1
+
+
+def test_flagged_questions_are_listed_then_restored(database_file):
+    """Vérifie la relecture des questions signalées puis leur remise en jeu."""
+
+    flag_question(database_file, "java-optional")
+    flag_question(database_file, "question-disparue")
+
+    vFlagged = describe_flagged_questions(database_file)
+
+    assert [vRow["id"] for vRow in vFlagged] == ["question-disparue", "java-optional"]
+    assert vFlagged[0]["question"] == ""
+    assert vFlagged[1]["theme"] == load_quiz()["java"]["label"]
+
+    unflag_questions(database_file, ["java-optional", "inconnue"])
+
+    assert [vRow["id"] for vRow in describe_flagged_questions(database_file)] == [
+        "question-disparue"
+    ]
+    assert "java-optional" in [
+        vQuestion["id"]
+        for vQuestion in load_active_quiz(database_file)["java"]["questions"]
+    ]
 
 
 def test_flagged_list_unreadable_is_ignored(database_file, caplog):

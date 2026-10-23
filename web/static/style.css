@@ -1154,9 +1154,10 @@ input[type="number"] {
     color: var(--primary);
 }
 
+/* minmax(0, 1fr) : un long nom de variable passe à la ligne au lieu d'élargir la page */
 .source-state {
     display: grid;
-    grid-template-columns: 20px 130px 1fr;
+    grid-template-columns: 20px 130px minmax(0, 1fr);
     gap: 10px;
     align-items: center;
     padding: 6px 0;
@@ -1164,6 +1165,10 @@ input[type="number"] {
 
 .source-state strong {
     color: var(--heading);
+}
+
+.source-state code {
+    overflow-wrap: anywhere;
 }
 
 code {

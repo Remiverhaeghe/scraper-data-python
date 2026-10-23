@@ -175,8 +175,54 @@ def flag_question(pDatabaseFile, pQuestionId):
     logger.info("Question de révision signalée comme douteuse : %s", pQuestionId)
 
 
-def load_active_quiz(pDatabaseFile):
-    """Retourne les thèmes livrés et importés, sans les questions signalées."""
+def unflag_questions(pDatabaseFile, pQuestionIds):
+    """Remet dans les tirages des questions signalées."""
+
+    vFlagged = get_flagged_questions(pDatabaseFile)
+    vCleared = vFlagged & set(pQuestionIds)
+
+    if vCleared:
+        save_setting_values(
+            pDatabaseFile, {FLAGGED_KEY: json.dumps(sorted(vFlagged - vCleared))}
+        )
+
+        logger.info(
+            "Révision : %s question(s) signalée(s) remise(s) dans les tirages",
+            len(vCleared),
+        )
+
+
+def describe_flagged_questions(pDatabaseFile):
+    """Retourne les questions signalées avec leur thème, triées par thème.
+
+    Une question disparue depuis son signalement reste listée, sans texte, pour
+    pouvoir être retirée de la liste.
+    """
+
+    vQuiz = load_active_quiz(pDatabaseFile, pKeepFlagged=True)
+    rQuestions = []
+
+    for vQuestionId in get_flagged_questions(pDatabaseFile):
+        vQuestion, vThemeKey = find_question(vQuiz, vQuestionId)
+
+        rQuestions.append(
+            {
+                "id": vQuestionId,
+                "theme": vQuiz[vThemeKey]["label"] if vThemeKey else "",
+                "question": vQuestion["question"] if vQuestion else "",
+            }
+        )
+
+    rQuestions.sort(key=lambda pRow: (pRow["theme"], pRow["question"], pRow["id"]))
+
+    return rQuestions
+
+
+def load_active_quiz(pDatabaseFile, pKeepFlagged=False):
+    """Retourne les thèmes livrés et importés, sans les questions signalées.
+
+    pKeepFlagged les garde, pour les relire avant de les remettre en jeu.
+    """
 
     rThemes = {
         vKey: {**vTheme, "questions": list(vTheme["questions"])}
@@ -202,7 +248,7 @@ def load_active_quiz(pDatabaseFile):
         )
         vTheme["questions"].append(vQuestion)
 
-    vFlagged = get_flagged_questions(pDatabaseFile)
+    vFlagged = set() if pKeepFlagged else get_flagged_questions(pDatabaseFile)
 
     for vTheme in rThemes.values():
         vTheme["questions"] = [

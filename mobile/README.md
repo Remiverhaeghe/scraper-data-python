@@ -18,7 +18,9 @@ claire ou sombre et taille du texte réglables, question signalée depuis le
 téléphone, révision des thèmes de ses candidatures en cours, objectif de réponses
 du jour, vibration à la correction, examens blancs envoyés au PC, HTTPS avec
 certificat épinglé (empreinte reçue par le QR code), nouvelles offres de la
-semaine avec leur statut (Intéressé, Postulé, Ignorée) envoyé au PC.
+semaine avec leur statut (Intéressé, Postulé, Ignorée) envoyé au PC, alerte des
+nouvelles offres proches du profil (vérifiées en arrière-plan toutes les 3 h
+environ, quand le PC est joignable).
 
 ## Installation des outils (une fois)
 
@@ -146,16 +148,18 @@ mobile/
 │   │   ├── grading.dart          # Correction, identique à job/quiz_types.py
 │   │   ├── review.dart           # Répétition espacée, identique à job/quiz.py
 │   │   ├── exam.dart             # Examen blanc : tirage, durée conseillée, résultat
-│   │   └── statistics.dart       # Réussite par thème et activité des derniers jours
+│   │   ├── statistics.dart       # Réussite par thème et activité des derniers jours
+│   │   └── offer_alerts.dart     # Nouvelles offres assez proches du profil pour une alerte
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
 │   │   ├── discovery.dart        # Recherche du serveur sur le réseau local
 │   │   ├── connection_code.dart  # Adresse et jeton lus dans le QR code du PC
 │   │   ├── revision_store.dart   # Interface du stockage local et réglages du serveur
 │   │   ├── file_store.dart       # Fichiers JSON et jeton dans le stockage chiffré
-│   │   └── reminders.dart        # Rappel quotidien par notification locale
+│   │   ├── reminders.dart        # Rappel quotidien et alerte des offres par notification
+│   │   └── offer_checks.dart     # Tâche Android d'arrière-plan : synchronise et alerte
 │   ├── screens/
-│   │   ├── setup_screen.dart     # Serveur, jeton, apparence, taille du texte, rappel
+│   │   ├── setup_screen.dart     # Serveur, jeton, apparence, taille du texte, rappel, alerte
 │   │   ├── scan_screen.dart      # Scan du QR code de connexion (caméra)
 │   │   ├── home_screen.dart      # Progression, synchronisation et thèmes par domaine
 │   │   ├── question_screen.dart  # Question, correction et suivante
@@ -167,7 +171,9 @@ mobile/
 │       ├── question_input.dart   # Saisie selon le type de question
 │       └── question_parts.dart   # Code, schéma SVG plein écran et résultat corrigé
 └── test/
-    ├── support/sample_data.dart  # Contenu d'exemple et stockage en mémoire
+    ├── support/
+    │   ├── sample_data.dart      # Contenu d'exemple et stockage en mémoire
+    │   └── fake_reminders.dart   # Rappels et alertes simulés
     ├── grading_test.dart         # Teste la correction de chaque type
     ├── review_test.dart          # Teste les boîtes, les dates et le choix des questions
     ├── revision_state_test.dart  # Teste les réponses hors ligne et la synchronisation
@@ -177,6 +183,7 @@ mobile/
     ├── connection_code_test.dart # Teste la lecture du QR code de connexion
     ├── statistics_test.dart      # Teste la réussite par thème et le graphique des jours
     ├── phone_features_test.dart  # Teste signalements, examens, objectif, candidatures et offres
+    ├── offer_alerts_test.dart    # Teste l'alerte des nouvelles offres bien notées
     ├── integration/
     │   └── server_sync_test.dart # Synchronisation avec le vrai serveur (CI seulement)
     ├── schema_view_test.dart     # Teste la description et le plein écran des schémas

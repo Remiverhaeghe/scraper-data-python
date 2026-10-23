@@ -20,10 +20,10 @@ from job.quiz import (
     QUIZ_LEVELS,
     check_question,
     find_theme,
-    get_flagged_questions,
     load_active_quiz,
     load_quiz,
     slugify,
+    unflag_questions,
 )
 from job.quiz_domains import DOMAIN_ORDER
 from job.quiz_types import (
@@ -476,23 +476,6 @@ def get_question_text(pQuestion):
     rText = " ".join(pQuestion["question"].lower().split()) + pQuestion.get("code", "")
 
     return rText
-
-
-def unflag_questions(pDatabaseFile, pQuestionIds):
-    """Remet dans les tirages des questions signalées, remplacées par leur correction."""
-
-    vFlagged = get_flagged_questions(pDatabaseFile)
-    vCleared = vFlagged & pQuestionIds
-
-    if vCleared:
-        save_setting_values(
-            pDatabaseFile, {FLAGGED_KEY: json.dumps(sorted(vFlagged - vCleared))}
-        )
-
-        logger.info(
-            "Révision : %s question(s) corrigée(s) remise(s) dans les tirages",
-            len(vCleared),
-        )
 
 
 def merge_report(pReport, pFileReport, pFileName):

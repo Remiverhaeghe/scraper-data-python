@@ -362,3 +362,37 @@ def test_offers_to_check_keep_only_checked_fields(tmp_path):
     assert vOffers["1"]["description"] == 1
     assert not vOffers["2"]["description"]
     assert vOffers["1"]["title"] == "A" and vOffers["1"]["company"] is None
+
+
+def test_get_offers_hides_interim_agencies(tmp_path):
+    """Vérifie que les agences sont reconnues par mot entier dans l'entreprise."""
+
+    vDatabaseFile = build_database(tmp_path)
+    vOffers = [
+        ("1", "technicien|proman 123|lille", ""),
+        ("2", "technicien|alstom|valenciennes", "Poste chez Alstom."),
+        ("3", "technicien|groupe atlantic|lyon", "Notre agence d'intérim recrute."),
+        ("4", "chargé adecco|cristal union|reims", ""),
+        ("5", "technicien|cristal union|reims", ""),
+        ("6", None, ""),
+    ]
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "lever",
+                    "source_id": vId,
+                    "title": "Technicien",
+                    "fingerprint": vFingerprint,
+                    "description": vDescription,
+                }
+                for vId, vFingerprint, vDescription in vOffers
+            ]
+        ),
+        datetime(2026, 10, 23),
+    )
+
+    vIds = sorted(get_offers(vDatabaseFile, pHideAgencies=True)["source_id"])
+
+    assert vIds == ["2", "4", "5", "6"]

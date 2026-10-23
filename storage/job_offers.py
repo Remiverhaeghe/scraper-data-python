@@ -1,16 +1,22 @@
 """Enregistrement et lecture des offres d'emploi en base"""
 
 import json
+import math
 import sqlite3
 from datetime import datetime
 
 import pandas as pd
 
+from job.agencies import AGENCY_MENTIONS, INTERIM_AGENCIES
 from job.csv_schema import JOB_COLUMNS
 from storage.database import connect_database, count_by_day
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Longueur d'un degré de latitude : la distance est approchée à plat, assez juste
+# pour un rayon de quelques dizaines de kilomètres.
+KM_PER_DEGREE = 111.2
 
 # Colonnes recopiées depuis la source ; les dates de suivi sont gérées à part.
 CONTENT_COLUMNS = [
@@ -173,11 +179,14 @@ def build_offer_conditions(
     pExcludedCompanies=None,
     pPreferredCompanies=None,
     pCountry=None,
+    pHideAgencies=False,
+    pNear=None,
 ):
     """Construit les conditions SQL et leurs paramètres à partir des filtres.
 
     Les colonnes sont préfixées : o pour l'offre, a pour son suivi. pKeys
-    restreint le résultat à une liste de couples (source, identifiant).
+    restreint le résultat à une liste de couples (source, identifiant). pNear
+    garde les offres placées dans un rayon : latitude, longitude et radius_km.
     """
 
     # Chaque valeur passe par un paramètre « ? », jamais par concaténation : une
@@ -269,6 +278,41 @@ def build_offer_conditions(
             + "))"
         )
         vParams += [f"%|{vCompany}|%" for vCompany in pExcludedCompanies]
+
+    # Les séparateurs « | » entourés d'espaces : « % adecco % » ne reconnaît que
+    # le mot entier, et seulement entre les deux séparateurs, dans l'entreprise.
+    if pHideAgencies:
+        vConditions.append(
+            "NOT ("
+            + " OR ".join(
+                "(' ' || REPLACE(COALESCE(o.fingerprint, ''), '|', ' | ') || ' ')"
+                " LIKE ?"
+                for _ in INTERIM_AGENCIES
+            )
+            + " OR "
+            + " OR ".join("COALESCE(o.description, '') LIKE ?" for _ in AGENCY_MENTIONS)
+            + ")"
+        )
+        vParams += [f"%|% {vAgency} %|%" for vAgency in INTERIM_AGENCIES]
+        vParams += [f"%{vMention}%" for vMention in AGENCY_MENTIONS]
+
+    if pNear:
+        # Un degré de longitude raccourcit vers les pôles : facteur cos(latitude).
+        vLongitudeScale = KM_PER_DEGREE * math.cos(math.radians(pNear["latitude"]))
+        vConditions.append(
+            "o.latitude IS NOT NULL AND"
+            " (o.latitude - ?) * (o.latitude - ?) * ?"
+            " + (o.longitude - ?) * (o.longitude - ?) * ? <= ?"
+        )
+        vParams += [
+            pNear["latitude"],
+            pNear["latitude"],
+            KM_PER_DEGREE**2,
+            pNear["longitude"],
+            pNear["longitude"],
+            vLongitudeScale**2,
+            pNear["radius_km"] ** 2,
+        ]
 
     if pPreferredCompanies is not None:
         vConditions.append(

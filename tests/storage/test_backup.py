@@ -8,6 +8,8 @@ from storage.backup import (
     AUTO_BACKUP_REASON,
     backup_database,
     copy_to_nas,
+    describe_nas_copies,
+    fetch_nas_copy,
     get_last_nas_copy_time,
     list_nas_copies,
 )
@@ -54,3 +56,29 @@ def test_unreachable_nas_is_retried_later(tmp_path, caplog):
     vBlocked.unlink()
 
     assert copy_to_nas(vDatabaseFile, vBlocked / "jobboard") is not None
+
+
+def test_nas_copy_is_fetched_by_name_only(tmp_path):
+    """Vérifie le rapatriement d'une copie du NAS, désignée par un nom connu."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vNas = tmp_path / "nas"
+    vBackup = backup_database(
+        vDatabaseFile, datetime(2026, 10, 1, 2), AUTO_BACKUP_REASON
+    )
+    copy_to_nas(vDatabaseFile, vNas)
+    vBackup.unlink()
+
+    assert [vCopy["name"] for vCopy in describe_nas_copies(vDatabaseFile, vNas)] == [
+        vBackup.name
+    ]
+    assert fetch_nas_copy(vDatabaseFile, vBackup.name, vNas) == vBackup
+    assert vBackup.exists()
+    assert fetch_nas_copy(vDatabaseFile, vBackup.name, vNas) == vBackup
+
+    with pytest.raises(ValueError):
+        fetch_nas_copy(vDatabaseFile, "../scraper.db", vNas)
+
+    with pytest.raises(OSError):
+        describe_nas_copies(vDatabaseFile, tmp_path / "absent")

@@ -784,6 +784,25 @@ def migrate_to_v24(pConnection):
     )
 
 
+def migrate_to_v25(pConnection):
+    """Ajoute les coordonnées des offres et le cache du géocodage de leurs lieux.
+
+    Un lieu introuvable est gardé sans coordonnées : il n'est pas redemandé.
+    """
+
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN latitude REAL")
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN longitude REAL")
+    pConnection.execute("""
+        CREATE TABLE geo_cache (
+            location_key TEXT PRIMARY KEY,
+            latitude REAL,
+            longitude REAL,
+            label TEXT,
+            looked_up_at TEXT NOT NULL
+        )
+        """)
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -809,6 +828,7 @@ MIGRATIONS = [
     migrate_to_v22,
     migrate_to_v23,
     migrate_to_v24,
+    migrate_to_v25,
 ]
 
 

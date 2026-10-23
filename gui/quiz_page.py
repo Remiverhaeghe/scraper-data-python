@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from gui.dialogs import show_text_dialog
 from gui.quiz_answer import ClickableSvgWidget, add_answer_widgets, read_response
+from gui.quiz_flagged_card import QuizFlaggedCard
 from gui.quiz_import_panel import QuizImportPanel
 from gui.quiz_priority_banner import QuizPriorityBanner
 from gui.quiz_statistics_card import QuizStatisticsCard
@@ -225,10 +226,13 @@ class QuizPage(QWidget):
         self.import_panel.questions_changed.connect(self.refresh)
         self.import_panel.questions_cleared.connect(self.forget_question)
         self.statistics_card = QuizStatisticsCard()
+        self.flagged_card = QuizFlaggedCard(pDatabaseFile)
+        self.flagged_card.questions_changed.connect(self.refresh)
 
         vLayout.addWidget(self.guides_card)
         vLayout.addWidget(self.import_panel)
         vLayout.addWidget(self.statistics_card)
+        vLayout.addWidget(self.flagged_card)
         # Facteur 1 : la place libre d'une page courte va ici, et non aux cartes
         # qui contiennent une zone de texte extensible.
         vLayout.addStretch(1)
@@ -405,6 +409,7 @@ class QuizPage(QWidget):
         )
         self.import_panel.refresh(vThemes)
         self.priority_banner.refresh()
+        self.flagged_card.refresh()
         self.select_category(self.domain, self.subdomain)
 
     def refresh_categories(self):

@@ -2,7 +2,9 @@
 
 from datetime import datetime, timedelta
 
+from job.preparation import score_offers
 from job.presentation import get_source_label, prepare_offer
+from job.profile import load_profile
 from job.settings import load_settings
 from job.sources.registry import SOURCES
 from storage.history_repository import get_history
@@ -48,6 +50,14 @@ MAX_PIE_SOURCES = 6
 
 # Nombre d'exécutions représentées par le graphique de l'historique
 EXECUTION_CHART_SIZE = 10
+
+# Comparaison des sources : période observée et score d'une offre intéressante
+SOURCE_COMPARISON_DAYS = 30
+GOOD_MATCH_SCORE = 50
+
+# Offres retenues (suivies au-delà d'un simple coup d'œil) et candidatures envoyées
+KEPT_STATUSES = ("INTERESTED", "APPLIED", "INTERVIEW", "REJECTED", "ACCEPTED")
+SENT_STATUSES = ("APPLIED", "INTERVIEW", "REJECTED", "ACCEPTED")
 
 
 def load_statistics(pDatabaseFile, pNow=None):
@@ -214,3 +224,92 @@ def get_week_goal(pDatabaseFile, pNow):
     }
 
     return rGoal
+
+
+def compare_sources(pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS):
+    """Retourne, par source, les offres découvertes sur la période et leur intérêt.
+
+    Une source utile apporte des offres proches du profil, retenues ou menant à
+    une candidature, pas seulement beaucoup d'offres. Tri : les plus utiles en tête.
+    """
+
+    vOffers = get_offers(
+        pDatabaseFile, pSeenSince=pNow - timedelta(days=pDays)
+    ).to_dict("records")
+    score_offers(vOffers, load_profile(pDatabaseFile))
+
+    vRows = {}
+
+    for vOffer in vOffers:
+        vRow = vRows.setdefault(
+            vOffer["source"],
+            {
+                "source": vOffer["source"],
+                "label": get_source_label(vOffer["source"]),
+                "offers": 0,
+                "good": 0,
+                "kept": 0,
+                "sent": 0,
+                "ignored": 0,
+                "scores": [],
+            },
+        )
+        vStatus = vOffer.get("application_status")
+        vScore = vOffer["match_score"]
+
+        vRow["offers"] += 1
+        vRow["good"] += vScore is not None and vScore >= GOOD_MATCH_SCORE
+        vRow["kept"] += vStatus in KEPT_STATUSES
+        vRow["sent"] += vStatus in SENT_STATUSES
+        vRow["ignored"] += vStatus == "IGNORED"
+
+        if vScore is not None:
+            vRow["scores"].append(vScore)
+
+    rComparison = []
+
+    for vRow in vRows.values():
+        vScores = vRow.pop("scores")
+        vRow["good_rate"] = round(100 * vRow["good"] / vRow["offers"])
+        vRow["average_score"] = round(sum(vScores) / len(vScores)) if vScores else None
+        rComparison.append(vRow)
+
+    rComparison.sort(
+        key=lambda pRow: (
+            -pRow["sent"],
+            -pRow["kept"],
+            -pRow["good"],
+            -pRow["offers"],
+            pRow["label"],
+        )
+    )
+
+    return rComparison
+
+
+# En-têtes du tableau de comparaison, dans l'ordre de build_source_cells
+SOURCE_COMPARISON_COLUMNS = (
+    "Source",
+    "Offres",
+    f"Score ≥ {GOOD_MATCH_SCORE} %",
+    "Retenues",
+    "Candidatures",
+    "Ignorées",
+    "Score moyen",
+)
+
+
+def build_source_cells(pRow):
+    """Met en texte une ligne de compare_sources, pour le bureau comme le web."""
+
+    rCells = [
+        pRow["label"],
+        str(pRow["offers"]),
+        f"{pRow['good']} ({pRow['good_rate']} %)",
+        str(pRow["kept"]),
+        str(pRow["sent"]),
+        str(pRow["ignored"]),
+        "—" if pRow["average_score"] is None else f"{pRow['average_score']} %",
+    ]
+
+    return rCells

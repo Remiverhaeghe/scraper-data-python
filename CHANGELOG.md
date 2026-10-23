@@ -5,6 +5,10 @@ dans l'historique git.
 
 ## Non publié
 
+### Application mobile 1.2.0
+- Alerte des nouvelles offres proches du profil (50 % et plus), vérifiées en
+  arrière-plan toutes les 3 h environ quand le PC est joignable
+
 ### Application mobile 1.1.0
 - Nouvelles offres de la semaine, ouverture de l'annonce, statut envoyé au PC
 - Question signalée depuis le téléphone, retirée aussi sur le PC
@@ -26,6 +30,18 @@ dans l'historique git.
   Industrie prêtes d'un clic, France Travail activable dès l'accès accordé
 - Copie quotidienne des sauvegardes sur un NAS
 - Lots de questions : pièges à mot absolu réécrits, aucun lot au-delà de 20 %
+- Filtre « Sans intérim » : annonces des agences connues masquées
+- Questions signalées listées dans Révision, remises dans les tirages d'un clic
+- Comparaison des sources sur 30 jours dans Historique : correspondance au
+  profil, offres retenues, candidatures
+- Restauration de la base depuis une copie du NAS
+- Domicile dans Paramètres et filtre de distance (10 à 100 km), lieux des offres
+  placés par le géocodeur de l'IGN et gardés en cache (migration v25)
+- Accès hors du domicile par Tailscale : `python -m tools.tailscale_certificate`
+  et `WEB_PUBLIC_HOST`
+- Sources de l'application mobile enfin versionnées (`mobile/lib` était ignoré
+  par la règle `lib/` du `.gitignore`), page Paramètres web sans défilement
+  horizontal sur téléphone
 
 ## 2026-10-22
 

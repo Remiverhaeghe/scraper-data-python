@@ -5,9 +5,12 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 import pytest
 
+from job.profile import EMPTY_PROFILE, save_profile
 from job.settings import save_settings
 from job.statistics import (
     MAX_PIE_SOURCES,
+    build_source_cells,
+    compare_sources,
     get_source_shares,
     get_week_goal,
     trim_leading_empty_days,
@@ -120,3 +123,77 @@ def test_week_goal_counts_applications_since_monday(tmp_path):
     save_settings(vDatabaseFile, {"weekly_application_goal": "4"})
 
     assert get_week_goal(vDatabaseFile, vNow) == {"goal": 4, "sent": 2, "share": 50}
+
+
+def test_compare_sources_ranks_useful_sources_first(tmp_path):
+    """Vérifie les comptes par source sur la période et le tri par utilité."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vNow = datetime(2026, 10, 23, 12)
+
+    initialize_database(vDatabaseFile)
+    save_profile(vDatabaseFile, {**EMPTY_PROFILE, "skills": ["Python"]})
+
+    vOffers = [
+        ("arbeitnow", "1", "Développeur Python", "Python et Django."),
+        ("arbeitnow", "2", "Comptable", "Bilans et paie."),
+        ("arbeitnow", "3", "Vendeur", "Magasin."),
+        ("lever", "4", "Développeur Python", "Python requis."),
+    ]
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": vSource,
+                    "source_id": vId,
+                    "title": vTitle,
+                    "description": vDescription,
+                }
+                for vSource, vId, vTitle, vDescription in vOffers
+            ]
+        ),
+        vNow,
+    )
+    save_application(vDatabaseFile, "arbeitnow", "2", "IGNORED", pNow=vNow)
+    save_application(vDatabaseFile, "lever", "4", "APPLIED", pNow=vNow)
+
+    vRows = compare_sources(vDatabaseFile, vNow)
+
+    assert [vRow["source"] for vRow in vRows] == ["lever", "arbeitnow"]
+    assert vRows[1] | {"label": ""} == {
+        "source": "arbeitnow",
+        "label": "",
+        "offers": 3,
+        "good": 1,
+        "kept": 0,
+        "sent": 0,
+        "ignored": 1,
+        "good_rate": 33,
+        "average_score": 50,
+    }
+    assert build_source_cells(vRows[0])[1:] == [
+        "1",
+        "1 (100 %)",
+        "1",
+        "1",
+        "0",
+        "100 %",
+    ]
+    assert compare_sources(vDatabaseFile, vNow + timedelta(days=31)) == []
+
+
+def test_compare_sources_without_profile_has_no_score(tmp_path):
+    """Vérifie qu'un profil vide donne un score moyen absent, affiché par un tiret."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vNow = datetime(2026, 10, 23, 12)
+
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame([{"source": "lever", "source_id": "1", "title": "Dev"}]),
+        vNow,
+    )
+
+    assert build_source_cells(compare_sources(vDatabaseFile, vNow)[0])[-1] == "—"

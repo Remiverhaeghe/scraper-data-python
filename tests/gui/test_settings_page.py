@@ -1,5 +1,6 @@
 """Tests de la page des paramètres"""
 
+import shutil
 from datetime import datetime
 
 import pytest
@@ -12,7 +13,7 @@ from job.schedule import load_schedule, save_scheduled_search
 from job.settings import load_settings
 from job.sources.config import SourceDefinition
 from storage.database import initialize_database
-from storage.backup import backup_database
+from storage.backup import backup_database, copy_to_nas
 from storage.saved_searches import get_saved_searches, save_search
 
 
@@ -551,11 +552,11 @@ def test_messages_are_colored_and_cards_reflow(qt_application, tmp_path, monkeyp
     vPage.arrange_cards(vPage.width() < settings_page.SINGLE_COLUMN_WIDTH)
 
     assert vPage.columns[1].count() == 1
-    assert vPage.columns[0].count() == 11
+    assert vPage.columns[0].count() == 12
 
     vPage.arrange_cards(False)
 
-    assert vPage.columns[1].count() == 6
+    assert vPage.columns[1].count() == 7
 
 
 def test_database_backup_is_listed_and_restored(qt_application, tmp_path, monkeypatch):
@@ -593,3 +594,61 @@ def test_database_backup_is_listed_and_restored(qt_application, tmp_path, monkey
     vPanel.restore_backup("absente.db")
 
     assert vPanel.backup_message.text() == "Sauvegarde introuvable."
+
+
+def test_database_is_restored_from_the_nas(qt_application, tmp_path, monkeypatch):
+    """Vérifie la restauration d'une copie du NAS après la perte des sauvegardes."""
+
+    vDatabaseFile = tmp_path / "pc" / "scraper.db"
+    vNas = tmp_path / "nas"
+    initialize_database(vDatabaseFile)
+    save_search(vDatabaseFile, "Avant", ["remotive"], {}, datetime.now())
+    backup_database(vDatabaseFile, datetime(2026, 10, 18, 2, 0), "auto")
+    copy_to_nas(vDatabaseFile, vNas)
+    shutil.rmtree(vDatabaseFile.parent / "backups")
+    save_search(vDatabaseFile, "Après", ["remotive"], {}, datetime.now())
+
+    vPanel = data_panel.DataPanel(vDatabaseFile, vNas)
+    vMessages = []
+    vPanel.data_reset.connect(vMessages.append)
+    vOffered = []
+
+    def choose(*pArgs):
+        vOffered.extend(pArgs[3])
+        return pArgs[3][0], True
+
+    monkeypatch.setattr(data_panel.QInputDialog, "getItem", choose)
+    monkeypatch.setattr(
+        data_panel.QMessageBox,
+        "warning",
+        lambda *pArgs: data_panel.QMessageBox.StandardButton.Yes,
+    )
+
+    assert not vPanel.nas_button.isHidden()
+
+    vPanel.nas_button.click()
+
+    assert vOffered[0].startswith("18/10/2026 02:00 · automatique")
+    assert vMessages[0].startswith("Sauvegarde restaurée.")
+    assert [vSearch["name"] for vSearch in get_saved_searches(vDatabaseFile)] == [
+        "Avant"
+    ]
+
+
+def test_nas_restore_reports_missing_nas_or_copies(qt_application, tmp_path):
+    """Vérifie les messages d'un NAS injoignable puis d'un NAS sans copie."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+
+    vPanel = data_panel.DataPanel(vDatabaseFile, tmp_path / "absent")
+    vPanel.choose_nas_copy()
+
+    assert "injoignable" in vPanel.backup_message.text()
+
+    (tmp_path / "vide").mkdir()
+    vPanel = data_panel.DataPanel(vDatabaseFile, tmp_path / "vide")
+    vPanel.choose_nas_copy()
+
+    assert vPanel.backup_message.text() == "Aucune copie sur le NAS."
+    assert data_panel.DataPanel(vDatabaseFile, None).nas_button.isHidden()

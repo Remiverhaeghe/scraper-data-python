@@ -45,6 +45,7 @@ from job.companies import (
 from job.contract import CONTRACT_TYPES
 from job.deduplication import group_offers
 from job.freshness import add_freshness
+from job.geocoding import DISTANCE_FILTERS, load_home
 from job.export import EXPORT_FORMATS, export_offers
 from job.manual_offers import (
     IMPORT_FORMATS,
@@ -117,6 +118,7 @@ class OffersPage(QWidget):
         super().__init__()
 
         self.database_file = pDatabaseFile
+        self.home = None
 
         self.model = OffersTableModel()
 
@@ -295,6 +297,10 @@ class OffersPage(QWidget):
         self.france_check.setToolTip(
             "Offres dont le pays, donné par la source ou déduit du lieu, est la France"
         )
+        self.agency_check = QCheckBox("Sans intérim")
+        self.agency_check.setToolTip(
+            "Masque les annonces des agences d'intérim connues (Proman, Adecco…)"
+        )
         # Écarte les offres éloignées du métier, d'après les compétences du profil
         self.match_combo = QComboBox()
         self.match_combo.setToolTip(
@@ -303,6 +309,11 @@ class OffersPage(QWidget):
 
         for vScore, vLabel in MATCH_FILTERS.items():
             self.match_combo.addItem(vLabel, vScore)
+
+        self.distance_combo = QComboBox()
+
+        for vDistance, vLabel in DISTANCE_FILTERS.items():
+            self.distance_combo.addItem(vLabel, vDistance)
 
         self.preferred_check = QCheckBox("Entreprises privilégiées")
         self.preferred_check.setToolTip(
@@ -316,6 +327,7 @@ class OffersPage(QWidget):
             self.availability_combo,
             self.published_combo,
             self.match_combo,
+            self.distance_combo,
         ):
             vCombo.currentIndexChanged.connect(self.refresh)
 
@@ -328,6 +340,7 @@ class OffersPage(QWidget):
             self.new_check,
             self.multiple_check,
             self.france_check,
+            self.agency_check,
             self.preferred_check,
         ):
             vCheck.toggled.connect(self.refresh)
@@ -345,6 +358,7 @@ class OffersPage(QWidget):
             self.contract_combo,
             self.availability_combo,
             self.published_combo,
+            self.distance_combo,
             self.min_salary_spin,
             self.max_salary_spin,
             self.salary_check,
@@ -352,6 +366,7 @@ class OffersPage(QWidget):
             self.new_check,
             self.multiple_check,
             self.france_check,
+            self.agency_check,
             self.preferred_check,
         ):
             vOptionsRow.addWidget(vWidget)
@@ -535,6 +550,7 @@ class OffersPage(QWidget):
             self.status_combo,
             self.availability_combo,
             self.published_combo,
+            self.distance_combo,
             self.min_salary_spin,
             self.max_salary_spin,
             self.salary_check,
@@ -542,6 +558,7 @@ class OffersPage(QWidget):
             self.new_check,
             self.multiple_check,
             self.france_check,
+            self.agency_check,
             self.preferred_check,
             self.match_combo,
         )
@@ -565,7 +582,9 @@ class OffersPage(QWidget):
         self.multiple_check.setChecked(False)
         self.preferred_check.setChecked(False)
         self.france_check.setChecked(False)
+        self.agency_check.setChecked(False)
         self.match_combo.setCurrentIndex(0)
+        self.distance_combo.setCurrentIndex(0)
         self.status_combo.setCurrentIndex(
             max(self.status_combo.findData(PRESET_STATUSES.get(pPreset)), 0)
         )
@@ -585,6 +604,9 @@ class OffersPage(QWidget):
             ),
             pPreferredOnly=self.preferred_check.isChecked(),
             pFranceOnly=self.france_check.isChecked(),
+            pHideAgencies=self.agency_check.isChecked(),
+            pDistanceKm=self.distance_combo.currentData(),
+            pHome=self.home,
             pSearch=self.search_edit.text(),
             pSource=self.source_combo.currentData(),
             pContract=self.contract_combo.currentData(),
@@ -604,6 +626,16 @@ class OffersPage(QWidget):
 
         return rFilters
 
+    def update_distance_filter(self, pHome):
+        """Active le filtre de distance seulement si le domicile est connu."""
+        self.home = pHome
+        self.distance_combo.setEnabled(pHome is not None)
+        self.distance_combo.setToolTip(
+            f"Distance à vol d'oiseau depuis {pHome['label']}"
+            if pHome
+            else "Renseignez votre domicile dans Paramètres pour filtrer par distance"
+        )
+
     def refresh(self):
         """Relit les offres en base en conservant l'offre sélectionnée."""
         vNow = datetime.now()
@@ -613,6 +645,7 @@ class OffersPage(QWidget):
             vSettings = load_settings(self.database_file)
             vNewOfferDays = vSettings["new_offer_days"]
             vCompanyRules = load_company_rules(self.database_file)
+            self.update_distance_filter(load_home(self.database_file))
 
             vOffers = get_offers(
                 self.database_file,

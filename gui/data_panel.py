@@ -8,17 +8,19 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QMessageBox,
     QVBoxLayout,
     QWidget,
 )
 
+from config import BACKUP_NAS_DIRECTORY
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, show_message
 from job.presentation import describe_backup
 from storage.archive import export_archive, restore_archive, restore_backup
-from storage.backup import describe_backups
+from storage.backup import describe_backups, describe_nas_copies, fetch_nas_copy
 from storage.maintenance import reset_database
 from utils.logger import get_logger
 
@@ -31,11 +33,12 @@ class DataPanel(QWidget):
     # Message à afficher une fois les pages reconstruites sur les nouvelles données
     data_reset = Signal(str)
 
-    def __init__(self, pDatabaseFile):
+    def __init__(self, pDatabaseFile, pNasDirectory=BACKUP_NAS_DIRECTORY):
         """Construit les trois cartes ; la liste des sauvegardes est lue par refresh."""
         super().__init__()
 
         self.database_file = pDatabaseFile
+        self.nas_directory = pNasDirectory
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0, 0, 0, 0)
@@ -66,9 +69,18 @@ class DataPanel(QWidget):
         self.backup_message.setObjectName("cardSubtitle")
         self.backup_message.setWordWrap(True)
 
+        # Le NAS n'est lu qu'au clic : éteint, il ralentirait l'ouverture de la page.
+        self.nas_button = create_button("Depuis le NAS…", "server")
+        self.nas_button.setToolTip(
+            "Choisir une des copies quotidiennes du NAS, utile après la perte du PC"
+        )
+        self.nas_button.setVisible(bool(self.nas_directory))
+        self.nas_button.clicked.connect(self.choose_nas_copy)
+
         vActions = QHBoxLayout()
         vActions.addWidget(self.backups_combo, 1)
         vActions.addWidget(self.restore_backup_button)
+        vActions.addWidget(self.nas_button)
 
         vLayout.addLayout(vActions)
         vLayout.addWidget(self.backup_message)
@@ -112,6 +124,63 @@ class DataPanel(QWidget):
             == QMessageBox.StandardButton.Yes
         ):
             self.restore_backup(vName)
+
+    def choose_nas_copy(self):
+        """Liste les copies du NAS, puis restaure celle choisie après confirmation."""
+        try:
+            vCopies = describe_nas_copies(self.database_file, self.nas_directory)
+
+        except OSError as vException:
+            logger.warning("Copies du NAS illisibles : %s", vException)
+
+            show_message(
+                self.backup_message,
+                "Le NAS est injoignable : vérifiez qu'il est allumé et accessible.",
+                "warning",
+            )
+            return
+
+        if not vCopies:
+            show_message(self.backup_message, "Aucune copie sur le NAS.", "warning")
+            return
+
+        vLabels = [describe_backup(vCopy) for vCopy in vCopies]
+        vLabel, vChosen = QInputDialog.getItem(
+            self, "Restaurer depuis le NAS", "Copie à restaurer :", vLabels, 0, False
+        )
+
+        if not vChosen:
+            return
+
+        vName = vCopies[vLabels.index(vLabel)]["name"]
+
+        if (
+            QMessageBox.warning(
+                self,
+                "Restaurer depuis le NAS",
+                f"La base sera remise dans l'état du {vLabel}. L'état actuel est "
+                "d'abord sauvegardé. Continuer ?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel,
+            )
+            != QMessageBox.StandardButton.Yes
+        ):
+            return
+
+        try:
+            fetch_nas_copy(self.database_file, vName, self.nas_directory)
+
+        except (OSError, ValueError) as vException:
+            logger.warning("Copie du NAS non rapatriée : %s", vException)
+
+            show_message(
+                self.backup_message,
+                "La copie n'a pas pu être lue sur le NAS.",
+                "danger",
+            )
+            return
+
+        self.restore_backup(vName)
 
     def restore_backup(self, pName):
         """Restaure une sauvegarde ; les pages sont ensuite reconstruites."""

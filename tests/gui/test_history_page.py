@@ -2,6 +2,8 @@
 
 from datetime import datetime
 
+import pandas as pd
+
 from PySide6.QtWidgets import QLabel
 
 from gui.history_page import HistoryPage, build_row
@@ -11,6 +13,7 @@ from job.presentation import UNKNOWN_SEARCH
 from scraper.history import HistoryEntry
 from storage.database import initialize_database
 from storage.history_repository import save_history
+from storage.job_offers import save_offers
 
 
 def build_entry(**pValues):
@@ -77,6 +80,7 @@ def test_history_page_lists_executions(qt_application, tmp_path):
     assert vPage.cards["success_rate"].value_label.text() == "0 %"
     assert len(vPage.execution_chart.labels) == 1
     assert vPage.source_chart.shares == []
+    assert vPage.comparison_table.rowCount() == 0
 
 
 def test_build_row_without_parameters():
@@ -99,3 +103,23 @@ def test_information_message_drops_previous_colour(qt_application):
     show_message(vLabel, "3 exécution(s).", None)
 
     assert (vLabel.text(), vLabel.styleSheet()) == ("3 exécution(s).", "")
+
+
+def test_history_page_compares_sources(qt_application, tmp_path):
+    """Vérifie une ligne par source dans le tableau de comparaison."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame([{"source": "lever", "source_id": "1", "title": "Dev"}]),
+        datetime.now(),
+    )
+
+    vPage = HistoryPage(vDatabaseFile)
+    vPage.refresh()
+
+    assert vPage.comparison_table.rowCount() == 1
+    assert vPage.comparison_table.item(0, 0).text() == "Lever"
+    assert vPage.comparison_table.item(0, 1).text() == "1"

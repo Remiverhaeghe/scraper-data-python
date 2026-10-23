@@ -43,6 +43,12 @@
             {% endfor %}
         </select>
 
+        <select name="distance" aria-label="Distance du domicile"{% if home %} title="Distance à vol d'oiseau depuis {{ home.label }}"{% else %} title="Renseignez votre domicile dans Paramètres pour filtrer par distance" disabled{% endif %}>
+            {% for km, label in distance_filters.items() %}
+            <option value="{{ km }}" {% if filters.distance == km %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
         <select name="status" aria-label="Suivi">
             <option value="">Offres actives</option>
             <option value="{{ follow_up_filter }}" {% if filters.status == follow_up_filter %}selected{% endif %}>À relancer</option>
@@ -91,6 +97,11 @@
         <label class="check" title="Pays donné par la source ou déduit du lieu">
             <input type="checkbox" name="france" value="1" {% if filters.france %}checked{% endif %}>
             France uniquement
+        </label>
+
+        <label class="check" title="Masque les annonces des agences d'intérim connues">
+            <input type="checkbox" name="no_agency" value="1" {% if filters.no_agency %}checked{% endif %}>
+            Sans intérim
         </label>
 
         <label class="check" title="Seulement les entreprises de la liste des Paramètres">

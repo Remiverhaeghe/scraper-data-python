@@ -139,6 +139,17 @@ def test_questions_are_generated_imported_and_flagged(
 
     assert vPage.question is None
     assert vPage.flag_button.isHidden()
+    assert not vPage.flagged_card.isHidden()
+    assert vPage.flagged_card.tree.topLevelItemCount() == 1
+    assert not vPage.flagged_card.restore_button.isEnabled()
+
+    vPage.flagged_card.tree.topLevelItem(0).setSelected(True)
+    vPage.flagged_card.restore_button.click()
+
+    assert vPage.flagged_card.isHidden()
+    assert vPage.flagged_card.message_label.text() == (
+        "1 question(s) remise(s) dans les tirages."
+    )
 
 
 def test_questions_file_import_and_errors(qt_application, tmp_path, monkeypatch):

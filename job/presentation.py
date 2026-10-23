@@ -18,6 +18,7 @@ from config import (
 )
 from job.benefits import BENEFIT_LABELS
 from job.contract import CONTRACT_TYPES
+from job.geocoding import DISTANCE_FILTERS
 from job.location import FRANCE, detect_location
 from job.sources.registry import SOURCES
 from storage.job_applications import APPLICATION_STATUSES
@@ -341,12 +342,16 @@ def build_offer_filters(
     pCompanyKeys=None,
     pPreferredOnly=False,
     pFranceOnly=False,
+    pHideAgencies=False,
+    pDistanceKm=0,
+    pHome=None,
 ):
     """Traduit les filtres saisis en paramètres de get_offers.
 
     Les valeurs inconnues sont ignorées. Les offres ignorées restent masquées
     sauf si ce statut est demandé explicitement, comme celles des entreprises
     exclues. pCompanyKeys donne les noms normalisés des listes d'entreprises.
+    Le rayon pDistanceKm autour du domicile pHome est ignoré sans domicile.
     """
 
     vCompanyKeys = pCompanyKeys or {"excluded": [], "preferred": []}
@@ -379,6 +384,16 @@ def build_offer_filters(
         "pExcludedCompanies": vCompanyKeys["excluded"],
         "pPreferredCompanies": vCompanyKeys["preferred"] if pPreferredOnly else None,
         "pCountry": FRANCE if pFranceOnly else None,
+        "pHideAgencies": bool(pHideAgencies),
+        "pNear": (
+            {
+                "latitude": pHome["latitude"],
+                "longitude": pHome["longitude"],
+                "radius_km": pDistanceKm,
+            }
+            if pHome and pDistanceKm in DISTANCE_FILTERS and pDistanceKm
+            else None
+        ),
     }
 
     return rFilters

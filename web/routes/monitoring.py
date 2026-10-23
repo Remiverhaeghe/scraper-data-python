@@ -39,6 +39,10 @@ from job.statistics import (
     EXECUTION_CHART_SIZE,
     get_contract_shares,
     get_execution_counts,
+    SOURCE_COMPARISON_COLUMNS,
+    SOURCE_COMPARISON_DAYS,
+    build_source_cells,
+    compare_sources,
     get_source_shares,
 )
 from storage.history_repository import get_history, get_history_summary
@@ -332,6 +336,12 @@ def show_history(
             "active_page": "history",
             "summary": summarize_history(get_history_summary(pDatabaseFile)),
             "source_pie": build_pie(get_source_shares(pDatabaseFile)),
+            "comparison_columns": SOURCE_COMPARISON_COLUMNS,
+            "comparison_days": SOURCE_COMPARISON_DAYS,
+            "comparison_rows": [
+                build_source_cells(vRow)
+                for vRow in compare_sources(pDatabaseFile, datetime.now())
+            ],
             "contract_pie": build_pie(get_contract_shares(pDatabaseFile)),
             "execution_chart": build_bar_chart(
                 [vLabel for vLabel, _ in vExecutionCounts],

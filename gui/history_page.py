@@ -1,5 +1,8 @@
 """Page de l'historique des exécutions"""
 
+from datetime import datetime
+
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -33,6 +36,10 @@ from job.presentation import (
 from job.statistics import (
     EXECUTION_AXES,
     EXECUTION_CHART_SIZE,
+    SOURCE_COMPARISON_COLUMNS,
+    SOURCE_COMPARISON_DAYS,
+    build_source_cells,
+    compare_sources,
     get_contract_shares,
     get_execution_counts,
     get_source_shares,
@@ -126,8 +133,59 @@ class HistoryPage(QWidget):
 
         vLayout.addLayout(vCards)
         vLayout.addLayout(self.create_charts())
+        vLayout.addWidget(self.create_comparison_card())
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.table, 1)
+
+    def create_comparison_card(self):
+        """Construit le tableau qui compare l'utilité des sources."""
+        self.comparison_table = QTableWidget(0, len(SOURCE_COMPARISON_COLUMNS))
+        self.comparison_table.setHorizontalHeaderLabels(SOURCE_COMPARISON_COLUMNS)
+        self.comparison_table.setEditTriggers(
+            QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.comparison_table.setAlternatingRowColors(True)
+        self.comparison_table.verticalHeader().hide()
+        self.comparison_table.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+
+        vHeader = self.comparison_table.horizontalHeader()
+        vHeader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        vHeader.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+
+        rCard, vLayout = create_card(
+            "Comparaison des sources",
+            f"Offres découvertes ces {SOURCE_COMPARISON_DAYS} derniers jours : "
+            "correspondance au profil et suites données",
+        )
+        vLayout.addWidget(self.comparison_table)
+
+        return rCard
+
+    def fill_comparison(self):
+        """Remplit le tableau de comparaison, ajusté à son nombre de lignes."""
+        vRows = compare_sources(self.database_file, datetime.now())
+
+        self.comparison_table.setRowCount(len(vRows))
+
+        for vRow, vSource in enumerate(vRows):
+            for vColumn, vText in enumerate(build_source_cells(vSource)):
+                vItem = QTableWidgetItem(vText)
+
+                if vColumn:
+                    vItem.setTextAlignment(
+                        Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+                    )
+
+                self.comparison_table.setItem(vRow, vColumn, vItem)
+
+        # Toutes les lignes visibles, sans barre de défilement interne
+        self.comparison_table.setFixedHeight(
+            self.comparison_table.horizontalHeader().height()
+            + sum(self.comparison_table.rowHeight(vRow) for vRow in range(len(vRows)))
+            + 2 * self.comparison_table.frameWidth()
+        )
 
     def create_charts(self):
         """Construit la répartition par source et le rendement des exécutions."""
@@ -215,6 +273,8 @@ class HistoryPage(QWidget):
                     )
                 ]
             )
+
+            self.fill_comparison()
 
             vExecutions = get_execution_counts(self.database_file)
 

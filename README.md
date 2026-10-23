@@ -125,6 +125,11 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Copie quotidienne des sauvegardes sur un NAS (`BACKUP_NAS_DIRECTORY`), rattrapée si le NAS était éteint
 - [x] Nouvelles offres de la semaine sur le téléphone, statut envoyé au PC ; synchronisation testée de bout en bout par la CI
 - [x] QCM contrôlés : réponse la plus longue, la plus courte ou mots absolus ; part des mots absolus indiquée pour chaque lot ; questions trop faciles ou trop dures listées
+- [x] Filtre « Sans intérim » : annonces des agences connues (Proman, Adecco, Randstad…) ou se présentant comme agence d'intérim masquées (bureau et web)
+- [x] Domicile dans Paramètres et filtre de distance de 10 à 100 km : lieux des offres en France placés par le géocodeur gratuit de l'IGN, une fois par lieu (cache), après chaque recherche
+- [x] Comparaison des sources sur 30 jours dans Historique : offres, correspondance au profil, offres retenues, candidatures et ignorées (bureau et web)
+- [x] Restauration de la base depuis une copie du NAS, utile après la perte du PC
+- [x] Questions signalées (PC ou téléphone) listées dans Révision et remises dans les tirages d'un clic
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
   - [x] Adzuna
@@ -414,11 +419,19 @@ Le tableau de bord web s'adapte au téléphone et peut s'installer sur l'écran 
 (menu du navigateur, « Ajouter à l'écran d'accueil »). Pour y accéder hors de chez soi
 sans exposer ce PC sur Internet, un réseau privé chiffré relie le téléphone au PC :
 
-1. Installer Tailscale (offre gratuite personnelle) sur le PC et sur le téléphone, avec le même compte.
-2. Sur le PC, lancer le tableau de bord en écoutant sur l'adresse Tailscale du PC (100.x.y.z,
-   visible dans l'application Tailscale) : `WEB_HOST=100.x.y.z` dans `.env`, puis
-   `python -m web`.
-3. Depuis le téléphone, ouvrir `http://100.x.y.z:8000`, puis se connecter.
+1. Installer Tailscale (offre gratuite personnelle) sur le serveur (PC ou NAS) et sur le
+   téléphone, avec le même compte.
+2. Dans la console d'administration de Tailscale (DNS), activer MagicDNS et « HTTPS
+   Certificates ».
+3. Sur le serveur, `python -m tools.tailscale_certificate` demande un certificat reconnu
+   pour son nom Tailscale (`serveur.xxx.ts.net`) et affiche les lignes du `.env` :
+   `WEB_HOST` (adresse Tailscale 100.x.y.z, fermée au Wi-Fi et à Internet),
+   `WEB_PUBLIC_HOST` (le nom, transmis par le QR code), `WEB_TLS_CERTFILE`,
+   `WEB_TLS_KEYFILE` et `WEB_SECURE_COOKIE`. Le certificat vaut 90 jours : relancer la
+   commande chaque mois.
+4. Relancer `python -m web`, rescanner le QR code depuis l'application, et ouvrir
+   `https://serveur.xxx.ts.net:8000` dans le navigateur du téléphone : le tableau de bord
+   s'installe alors comme une application.
 
 Sur le Wi-Fi de la maison, sans Tailscale :
 
@@ -572,6 +585,8 @@ scraper-data-python/
 │   ├── quiz_bias.py                           # Indices qui trahissent la bonne réponse d'un QCM
 │   ├── quiz_exam.py                           # Mode examen : tirage, réponses et résultat
 │   ├── location.py                            # Pays et ville déduits du lieu d'une offre
+│   ├── agencies.py                            # Agences d'intérim reconnues pour le filtre « Sans intérim »
+│   ├── geocoding.py                           # Domicile et position des offres, géocodeur de l'IGN
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
 │   ├── challenges/                            # Défis : moteur de progression et un module par défi
@@ -758,6 +773,7 @@ scraper-data-python/
 │   ├── quiz_import_panel.py                   # Ajout de questions : priorités, ChatGPT, import, export
 │   ├── quiz_priority_banner.py                # Thèmes vides demandés par les offres
 │   ├── quiz_statistics_card.py                # Statistiques et progression de la révision
+│   ├── quiz_flagged_card.py                   # Questions signalées, remises dans les tirages
 │   ├── schema_editor.py                       # Éditeur de schéma : palette, grille et câblage
 │   ├── challenges_page.py                     # Défis de programmation
 │   ├── git_page.py                            # Bac à sable Git
@@ -773,6 +789,7 @@ scraper-data-python/
 │   ├── token_access_panel.py                  # Accès secret : adresse d'agenda ou jeton
 │   ├── data_panel.py                          # Sauvegarde complète, sauvegardes et réinitialisation
 │   ├── company_pages_panel.py                 # Pages carrière suivies : listes et vérification
+│   ├── home_location_panel.py                 # Domicile, point de départ du filtre de distance
 │   ├── dialogs.py                             # Fenêtres des mentions légales et de la licence
 │   ├── chart.py                               # Histogramme et camembert dessinés avec QPainter
 │   ├── widgets.py                             # Composants partagés : cartes, tuiles, pastilles
@@ -884,6 +901,7 @@ scraper-data-python/
 │   ├── quiz_svg.py                            # Schémas SVG des lots
 │   ├── windows_startup.py                     # Lancement automatique à l'ouverture de session
 │   ├── local_certificate.py                   # Crée le certificat HTTPS du réseau local
+│   ├── tailscale_certificate.py               # Certificat reconnu pour l'accès par Tailscale
 │   ├── mobile_integration.py                  # Prépare et contrôle le test téléphone ↔ serveur de la CI
 │   └── quiz_lots/                             # Sources des lots écrits, un dossier par thème
 │
@@ -912,6 +930,7 @@ scraper-data-python/
 │   ├── interview_notes.py                     # Persiste le journal d'entretien
 │   ├── settings_repository.py                 # Persiste les réglages, texte ou JSON
 │   ├── backup.py                              # Sauvegarde de la base et rotation des copies
+│   ├── geo_cache.py                           # Cache du géocodage et position des offres
 │   ├── archive.py                             # Sauvegarde complète (.zip) : export et restauration contrôlée
 │   ├── attachments.py                         # Pièces jointes des candidatures, rangées à côté de la base
 │   ├── quiz_answers.py                        # Réponses de révision, pour la progression
@@ -974,6 +993,7 @@ scraper-data-python/
 │   │   ├── test_quiz_exam.py                  # Teste le mode examen
 │   │   ├── test_skills_dashboard.py           # Teste le tableau de bord des compétences
 │   │   ├── test_translation.py                # Teste la langue reconnue et la traduction par paragraphe
+│   │   ├── test_geocoding.py                  # Teste le domicile, le placement des offres et le cache
 │   │   ├── test_mobile_sync.py                # Teste le contenu hors ligne et l'envoi des réponses
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
@@ -1098,6 +1118,7 @@ scraper-data-python/
 │   │   ├── test_schema_editor.py               # Teste l'éditeur de schéma du bureau
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_company_pages_panel.py         # Teste les pages carrière suivies
+│   │   ├── test_home_location_panel.py         # Teste la carte du domicile
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres
 │   │   ├── test_skills_page.py                 # Teste la page des compétences
@@ -1132,6 +1153,7 @@ scraper-data-python/
 │   │   ├── test_mobile_integration.py          # Teste la préparation du test téléphone ↔ serveur
 │   │   ├── test_quiz_lot.py                    # Teste la construction et le contrôle des lots
 │   │   ├── test_quiz_svg.py                    # Teste les schémas SVG des lots
+│   │   ├── test_tailscale_certificate.py       # Teste la demande du certificat Tailscale
 │   │   └── test_windows_startup.py             # Teste le fichier de lancement automatique
 │   ├── e2e/                                    # Tests du web dans un vrai navigateur (Playwright)
 │   │   ├── __init__.py                          # Initialise le package des tests de bout en bout

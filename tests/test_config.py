@@ -32,3 +32,19 @@ def test_web_host_defaults_to_this_computer(monkeypatch, pValue, pExpected):
     finally:
         monkeypatch.undo()
         importlib.reload(config)
+
+
+def test_public_host_replaces_the_listening_address(monkeypatch):
+    """Vérifie que le nom public, celui de Tailscale par exemple, sert à l'adresse."""
+
+    monkeypatch.setenv("WEB_HOST", "0.0.0.0")
+    monkeypatch.setenv("WEB_PUBLIC_HOST", "pc.tailnet.ts.net")
+    monkeypatch.setenv("WEB_TLS_CERTFILE", "cert.pem")
+    monkeypatch.setenv("WEB_TLS_KEYFILE", "key.pem")
+
+    try:
+        assert importlib.reload(config).WEB_BASE_URL == "https://pc.tailnet.ts.net:8000"
+
+    finally:
+        monkeypatch.undo()
+        importlib.reload(config)

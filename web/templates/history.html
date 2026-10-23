@@ -31,6 +31,33 @@
     </article>
 </section>
 
+{% if comparison_rows %}
+<article class="card section-gap">
+    <h2>Comparaison des sources</h2>
+    <p class="card-subtitle">Offres découvertes ces {{ comparison_days }} derniers jours : correspondance au profil et suites données</p>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    {% for column in comparison_columns %}
+                    <th{% if not loop.first %} class="amount"{% endif %}>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in comparison_rows %}
+                <tr>
+                    {% for cell in row %}
+                    <td{% if not loop.first %} class="amount nowrap"{% endif %}>{{ cell }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+{% endif %}
+
 <p class="count count-after-cards">
     {% if executions %}
     {{ executions | length }} dernière(s) exécution(s) · survolez un statut pour lire le détail d'une erreur

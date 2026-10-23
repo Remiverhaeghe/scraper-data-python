@@ -54,6 +54,8 @@ def test_build_offer_filters_keeps_known_values():
         "pExcludedCompanies": [],
         "pPreferredCompanies": None,
         "pCountry": None,
+        "pHideAgencies": False,
+        "pNear": None,
     }
 
 

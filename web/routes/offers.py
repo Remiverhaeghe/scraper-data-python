@@ -37,6 +37,7 @@ from job.deduplication import (
     group_offers,
 )
 from job.freshness import add_freshness
+from job.geocoding import DISTANCE_FILTERS, load_home
 from job.interview_journal import collect_asked_questions
 from job.interview_revision import build_offer_revision
 from job.manual_offers import (
@@ -119,6 +120,8 @@ def list_offers(
     pMultiple: str = Query("", alias="multiple"),
     pPreferred: str = Query("", alias="preferred"),
     pFrance: str = Query("", alias="france"),
+    pNoAgency: str = Query("", alias="no_agency"),
+    pDistance: str = Query("", alias="distance"),
     pSort: str = Query("", alias="sort"),
     pMatch: str = Query("", alias="match"),
     pDatabaseFile: str = Depends(get_database_file),
@@ -130,6 +133,8 @@ def list_offers(
     vNewOfferDays = vSettings["new_offer_days"]
     vNewSince = vNow - timedelta(days=vNewOfferDays)
     vCompanyRules = load_company_rules(pDatabaseFile)
+    vHome = load_home(pDatabaseFile)
+    vDistance = int(pDistance) if pDistance.isdigit() else 0
 
     vFilters = build_offer_filters(
         pSearch=pSearch,
@@ -149,6 +154,9 @@ def list_offers(
         pCompanyKeys=build_company_filter_keys(vCompanyRules),
         pPreferredOnly=bool(pPreferred),
         pFranceOnly=bool(pFrance),
+        pHideAgencies=bool(pNoAgency),
+        pDistanceKm=vDistance,
+        pHome=vHome,
     )
 
     vOffers = get_offers(pDatabaseFile, pLimit=MAX_DISPLAYED_OFFERS + 1, **vFilters)
@@ -199,11 +207,15 @@ def list_offers(
         "published_periods": PUBLISHED_PERIODS,
         "availability_filters": AVAILABILITY_FILTERS,
         "match_filters": MATCH_FILTERS,
+        "distance_filters": DISTANCE_FILTERS,
+        "home": vHome,
         "filters": {
             "availability": pAvailability,
             "multiple": pMultiple,
             "preferred": pPreferred,
             "france": pFrance,
+            "no_agency": pNoAgency,
+            "distance": vDistance,
             "sort": pSort,
             "match": vMinMatch,
             "q": pSearch,

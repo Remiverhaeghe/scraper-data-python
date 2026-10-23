@@ -354,6 +354,8 @@ def test_history_page(client):
     assert "Taux de réussite" in vResponse.text
     assert "built-in" not in vResponse.text
     assert "Aucune exécution enregistrée pour le moment." in vResponse.text
+    assert "Comparaison des sources" in vResponse.text
+    assert "<td>Hacker News</td>" in vResponse.text
 
 
 def test_settings_page_never_shows_secret_values(client, monkeypatch):

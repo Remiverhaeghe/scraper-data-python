@@ -56,7 +56,10 @@ WEB_PORT = 8000
 WEB_TLS_CERTFILE = os.getenv("WEB_TLS_CERTFILE") or None
 WEB_TLS_KEYFILE = os.getenv("WEB_TLS_KEYFILE") or None
 WEB_SCHEME = "https" if WEB_TLS_CERTFILE and WEB_TLS_KEYFILE else "http"
-WEB_BASE_URL = f"{WEB_SCHEME}://{WEB_HOST}:{WEB_PORT}"
+# Nom donné au téléphone et au calendrier quand il diffère de l'adresse d'écoute,
+# par exemple le nom Tailscale du serveur (python -m tools.tailscale_certificate).
+WEB_PUBLIC_HOST = os.getenv("WEB_PUBLIC_HOST") or WEB_HOST
+WEB_BASE_URL = f"{WEB_SCHEME}://{WEB_PUBLIC_HOST}:{WEB_PORT}"
 
 # Une offre est signalée comme nouvelle pendant ce nombre de jours
 NEW_OFFER_DAYS = 3

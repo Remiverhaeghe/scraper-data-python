@@ -13,25 +13,8 @@ import 'package:jobboard_revision/services/api_client.dart';
 import 'package:jobboard_revision/services/reminders.dart';
 import 'package:jobboard_revision/services/revision_store.dart';
 
+import 'support/fake_reminders.dart';
 import 'support/sample_data.dart';
-
-/// Rappels simulés : retient les planifications au lieu de notifier.
-class FakeReminders implements Reminders {
-  FakeReminders({this.granted = true});
-
-  final bool granted;
-  final scheduled = <int>[];
-  int cancelled = 0;
-
-  @override
-  Future<bool> requestPermission() async => granted;
-
-  @override
-  Future<void> schedule(int pDueCount) async => scheduled.add(pDueCount);
-
-  @override
-  Future<void> cancel() async => cancelled++;
-}
 
 Future<RevisionState> buildState(
   http.Client pClient, {

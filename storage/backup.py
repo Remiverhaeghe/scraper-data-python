@@ -268,3 +268,60 @@ def get_last_nas_copy_time(pDatabaseFile, pNasDirectory=None):
     )
 
     return rTime
+
+
+def describe_nas_copies(pDatabaseFile, pNasDirectory=None):
+    """Retourne la description des copies du NAS, la plus récente en tête.
+
+    Lève OSError si le NAS n'est pas configuré ou injoignable.
+    """
+
+    vNasDirectory = pNasDirectory or BACKUP_NAS_DIRECTORY
+
+    if vNasDirectory is None or not Path(vNasDirectory).is_dir():
+        raise OSError(f"Dossier du NAS injoignable : {vNasDirectory}")
+
+    rCopies = [
+        vCopy
+        for vCopy in (
+            describe_backup(pDatabaseFile, vFile)
+            for vFile in list_nas_copies(pDatabaseFile, vNasDirectory)
+        )
+        if vCopy is not None
+    ]
+
+    return rCopies
+
+
+def fetch_nas_copy(pDatabaseFile, pCopyName, pNasDirectory=None):
+    """Rapatrie une copie du NAS dans le dossier des sauvegardes, pour la restaurer.
+
+    La copie est cherchée par son nom parmi celles du NAS : un nom forgé ne peut
+    pas désigner un autre fichier. Retourne le fichier local ; lève ValueError si
+    la copie est introuvable et OSError si le NAS est injoignable.
+    """
+
+    vNasDirectory = pNasDirectory or BACKUP_NAS_DIRECTORY
+    vSource = next(
+        (
+            vFile
+            for vFile in list_nas_copies(pDatabaseFile, vNasDirectory)
+            if vFile.name == pCopyName
+        ),
+        None,
+    )
+
+    if vSource is None:
+        raise ValueError("Copie introuvable sur le NAS.")
+
+    rLocalFile = Path(pDatabaseFile).parent / BACKUP_DIRECTORY_NAME / vSource.name
+
+    if not rLocalFile.exists():
+        rLocalFile.parent.mkdir(parents=True, exist_ok=True)
+        vPartial = rLocalFile.with_suffix(".partiel")
+        shutil.copy2(vSource, vPartial)
+        vPartial.replace(rLocalFile)
+
+        logger.info("Copie du NAS rapatriée : %s", rLocalFile.name)
+
+    return rLocalFile
