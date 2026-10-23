@@ -89,7 +89,7 @@ def test_read_cv_text_from_each_format():
     [
         ("cv.odt", b"x", "formats acceptés"),
         ("cv.pdf", b"", "vide"),
-        ("cv.pdf", b"x" * (MAX_CV_BYTES + 1), "5 Mo au maximum"),
+        ("cv.pdf", b"x" * (MAX_CV_BYTES + 1), "20 Mo au maximum"),
         ("cv.pdf", b"pas un pdf", "endommagé"),
         ("cv.docx", b"pas un zip", "endommagé"),
         ("cv.txt", b"  \n ", "sans texte lisible"),
@@ -146,3 +146,37 @@ def test_build_cv_prompt_asks_for_profile_format_and_truncates():
     assert "Poste | compétences" in vPrompt
     assert "sans rien inventer" in vPrompt
     assert vPrompt.endswith("x […]")
+
+
+def test_read_docx_skips_text_box_copies_and_drawing_positions():
+    """Vérifie qu'une zone de texte n'est lue qu'une fois, sans les positions."""
+
+    vXml = (
+        '<w:document xmlns:w="w"><w:body><w:p><w:r>'
+        "<wp:positionH><wp:posOffset>-567479</wp:posOffset></wp:positionH>"
+        "<mc:AlternateContent><mc:Choice><w:txbxContent><w:p><w:r>"
+        '<w:t xml:space="preserve">Rémi </w:t><w:tab/><w:t>Martin</w:t>'
+        "</w:r></w:p></w:txbxContent></mc:Choice>"
+        "<mc:Fallback><w:txbxContent><w:p><w:r><w:t>Rémi Martin</w:t></w:r></w:p>"
+        "</w:txbxContent></mc:Fallback></mc:AlternateContent>"
+        "</w:r></w:p></w:body></w:document>"
+    )
+    vBuffer = io.BytesIO()
+
+    with zipfile.ZipFile(vBuffer, "w") as vArchive:
+        vArchive.writestr("word/document.xml", vXml)
+        vArchive.writestr("word/media/photo.png", b"x" * 1024)
+
+    assert read_cv_text("cv.docx", vBuffer.getvalue()).split() == ["Rémi", "Martin"]
+
+
+def test_extract_profile_finds_the_name_after_contact_lines():
+    """Vérifie le nom placé après les coordonnées, sans prendre « Permis B »."""
+
+    vProfile = extract_profile(
+        "remi@example.com\nRoubaix (59)\nPermis B\nDéveloppeur Java\n"
+        "Rémi Martin\nProfil technique et industriel\nGMAO"
+    )
+
+    assert vProfile["name"] == "Rémi Martin"
+    assert vProfile["headline"] == "Profil technique et industriel"

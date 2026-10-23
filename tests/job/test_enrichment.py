@@ -156,3 +156,27 @@ def test_detect_skills_reads_industrial_offers():
         "GMAO",
     ]
     assert detect_skills("Programmation Unity Pro sur M580") == ["Schneider"]
+
+
+def test_detect_skills_reads_french_wording_and_java_tools():
+    """Vérifie « API REST » à la française, les outils Java, sans faux électronique."""
+
+    assert detect_skills(
+        "Java 8, Hibernate, JSF / PrimeFaces, Maven, Tomcat, JUnit, Jira, API REST, "
+        "XML et SFTP ; module de facturation électronique"
+    ) == [
+        "Java",
+        "Hibernate",
+        "JSF / PrimeFaces",
+        "Maven",
+        "Tomcat",
+        "JUnit",
+        "Jira",
+        "REST",
+        "XML",
+        "SFTP",
+    ]
+    assert detect_skills("Technicien en électronique") == ["Électronique"]
+    assert detect_skills("Dépannage de cartes électroniques") == ["Électronique"]
+    assert detect_skills("Électronicien de maintenance") == ["Électronique"]
+    assert detect_skills("Feuilles de soin électroniques, signature électronique") == []

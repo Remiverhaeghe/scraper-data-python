@@ -13,6 +13,7 @@ from job.presentation import (
     is_french,
     prepare_offer,
     summarize_history,
+    to_list,
 )
 
 
@@ -143,3 +144,13 @@ def test_get_score_tone(pScore, pLowTone, pExpected):
     """Vérifie les seuils communs de couleur des scores."""
 
     assert get_score_tone(pScore, pLowTone) == pExpected
+
+
+def test_to_list_reads_json_and_ignores_missing_values():
+    """Vérifie la lecture d'une liste JSON, d'un texte, et d'une valeur manquante."""
+
+    assert to_list('["Java", "SQL"]') == ["Java", "SQL"]
+    assert to_list("Java") == ["Java"]
+    assert to_list(["Go"]) == ["Go"]
+    assert to_list(float("nan")) == []
+    assert to_list(None) == []

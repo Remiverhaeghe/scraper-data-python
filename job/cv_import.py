@@ -22,7 +22,10 @@ logger = get_logger(__name__)
 
 CV_EXTENSIONS = (".pdf", ".docx", ".txt")
 
-MAX_CV_BYTES = 5 * 1024 * 1024
+# Une photo suffit à alourdir un CV : les images d'un document Word ne sont pas
+# lues, seul son texte est plafonné (MAX_DOCX_TEXT_BYTES).
+MAX_CV_BYTES = 20 * 1024 * 1024
+MAX_DOCX_TEXT_BYTES = 10 * 1024 * 1024
 
 # Au-delà, le texte envoyé à ChatGPT est coupé : un CV tient en deux pages.
 MAX_PROMPT_CV_LENGTH = 8000
@@ -30,9 +33,11 @@ MAX_PROMPT_CV_LENGTH = 8000
 # Un PDF de CV a une ou deux pages ; au-delà, le reste est ignoré.
 MAX_PDF_PAGES = 5
 
-# Un nom tient en quelques mots, sans chiffre ni arobase.
+# Un nom tient en quelques mots, sans chiffre ni arobase, parmi les premières
+# lignes : les coordonnées le précèdent parfois.
 NAME_PATTERN = re.compile(r"^[^\W\d_][^\d@|:/]{1,48}$")
 MAX_NAME_WORDS = 4
+NAME_SEARCH_LINES = 10
 MAX_HEADLINE_LENGTH = 120
 
 # Lignes à ne pas prendre pour une présentation : coordonnées, titres de rubrique
@@ -49,17 +54,34 @@ SECTION_TITLES = {
 }
 
 DOCX_TEXT_FILE = "word/document.xml"
-DOCX_PARAGRAPH_PATTERN = re.compile(r"</w:p>")
-XML_TAG_PATTERN = re.compile(r"<[^>]+>")
+
+# Une zone de texte Word est enregistrée deux fois : la version moderne et une
+# copie de secours (mc:Fallback) pour les anciens logiciels, ignorée ici.
+DOCX_FALLBACK_PATTERN = re.compile(r"<mc:Fallback>.*?</mc:Fallback>", re.DOTALL)
+
+# Seuls les éléments w:t portent du texte : les positions des dessins, elles
+# aussi écrites en texte dans le XML, sont ainsi écartées.
+DOCX_TEXT_PATTERN = re.compile(r"<w:t(?:\s[^>]*)?>([^<]*)</w:t>|(<w:tab/>)|</w:p>")
 
 
 def read_docx(pContent):
     """Retourne le texte d'un document Word, un paragraphe par ligne."""
 
     with zipfile.ZipFile(io.BytesIO(pContent)) as vArchive:
+        if vArchive.getinfo(DOCX_TEXT_FILE).file_size > MAX_DOCX_TEXT_BYTES:
+            raise ValueError("Texte du document trop volumineux.")
+
         vXml = vArchive.read(DOCX_TEXT_FILE).decode("utf-8")
 
-    rText = unescape(XML_TAG_PATTERN.sub("", DOCX_PARAGRAPH_PATTERN.sub("\n", vXml)))
+    vParts = []
+
+    for vMatch in DOCX_TEXT_PATTERN.finditer(DOCX_FALLBACK_PATTERN.sub("", vXml)):
+        if vMatch.group(1) is not None:
+            vParts.append(vMatch.group(1))
+        else:
+            vParts.append(" " if vMatch.group(2) else "\n")
+
+    rText = unescape("".join(vParts))
 
     return rText
 
@@ -111,8 +133,13 @@ def read_cv_text(pFileName, pContent):
 def is_name(pLine):
     """Indique si une ligne ressemble à un prénom et un nom."""
 
-    rName = bool(NAME_PATTERN.match(pLine)) and (
-        1 < len(pLine.split()) <= MAX_NAME_WORDS
+    # Un mot d'une lettre trahit une mention comme « Permis B », une compétence
+    # un intitulé comme « Développeur Java ».
+    rName = (
+        bool(NAME_PATTERN.match(pLine))
+        and 1 < len(pLine.split()) <= MAX_NAME_WORDS
+        and all(len(vWord) > 1 for vWord in pLine.split())
+        and not detect_skills(pLine)
     )
 
     return rName
@@ -136,10 +163,19 @@ def extract_profile(pText):
 
     vLines = [vLine.strip() for vLine in pText.splitlines() if vLine.strip()]
 
-    # Le nom ouvre presque toujours le CV, suivi du titre visé.
-    vName = vLines[0] if vLines and is_name(vLines[0]) else ""
+    # Le nom ouvre le CV, parfois après les coordonnées, suivi du titre visé.
+    vNameIndex = next(
+        (
+            vIndex
+            for vIndex, vLine in enumerate(vLines[:NAME_SEARCH_LINES])
+            if is_name(vLine)
+        ),
+        None,
+    )
+    vName = "" if vNameIndex is None else vLines[vNameIndex]
+    vStart = 0 if vNameIndex is None else vNameIndex + 1
     vHeadline = next(
-        (vLine for vLine in vLines[1 if vName else 0 : 6] if is_headline(vLine)), ""
+        (vLine for vLine in vLines[vStart : vStart + 5] if is_headline(vLine)), ""
     )
 
     rProfile = {

@@ -129,6 +129,11 @@ SKILLS = {
     "Flask": r"\bflask\b",
     "FastAPI": r"\bfastapi\b",
     "Spring": r"\bspring(?:\s*boot)?\b",
+    "Hibernate": r"\bhibernate\b",
+    "JSF / PrimeFaces": r"\bjsf\b|\bjavaserver\s+faces\b|\bprimefaces\b",
+    "Maven": r"\bmaven\b",
+    "Tomcat": r"\btomcat\b",
+    "JUnit": r"\bjunit\b",
     "PHP": r"\bphp\b",
     "Symfony": r"\bsymfony\b",
     "C#": r"(?<!\w)c#",
@@ -148,6 +153,7 @@ SKILLS = {
     "Ansible": r"\bansible\b",
     "Linux": r"\blinux\b",
     "Git": r"\bgit\b",
+    "Jira": r"\bjira\b",
     "CI/CD": r"\bci\s*/\s*cd\b",
     "Kafka": r"\bkafka\b",
     "Spark": r"\bspark\b",
@@ -163,7 +169,10 @@ SKILLS = {
     "HTML": r"\bhtml5?\b",
     "CSS": r"\bcss3?\b",
     "GraphQL": r"\bgraphql\b",
-    "REST": r"\brest(?:ful)?\s+api",
+    # « REST API » en anglais, « API REST » en français
+    "REST": r"\brest(?:ful)?\s+api|\bapis?\s+rest(?:ful)?\b",
+    "XML": r"\bxml\b",
+    "SFTP": r"\bsftp\b",
     "Agile": r"\bagile\b|\bscrum\b",
     # Industrie : automatisme, électricité et maintenance
     "Automates programmables": r"automates?\s+programmables?|\bplc\b",
@@ -175,7 +184,13 @@ SKILLS = {
     "Supervision / IHM": r"\bscada\b|\bwincc\b|\bpcvue\b|\bihm\b|\bhmi\b",
     "Réseaux industriels": r"\bmodbus\b|\bprofinet\b|\bprofibus\b|\bethernet/ip\b",
     "Électrotechnique": r"[ée]lectrotechni",
-    "Électronique": r"[ée]lectroni(?:que|cien)",
+    # Le métier, pas l'adjectif : facture, signature ou feuille de soin
+    # « électronique » ne sont pas de l'électronique.
+    "Électronique": (
+        r"[ée]lectronicien|\b(?:en|l'|d')\s?[ée]lectronique\b"
+        r"|[ée]lectronique\s+(?:num[ée]rique|analogique|de\s+puissance|embarqu[ée]e)"
+        r"|\b(?:cartes?|composants?|circuits?|montages?)\s+[ée]lectroniques?"
+    ),
     "Habilitation électrique": r"habilitations?\s+[ée]lectriques?|\bb[12]v\b|\bh0v\b",
     "Schémas électriques": r"sch[ée]mas?\s+[ée]lectriques?|\beplan\b",
     "Variateurs de vitesse": r"\bvariateurs?\b",

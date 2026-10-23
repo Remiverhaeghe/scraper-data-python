@@ -188,10 +188,11 @@ def to_list(pValue):
 
     rValues = []
 
-    # Les offres d'une recherche en cours portent déjà des listes.
+    # Les offres d'une recherche en cours portent déjà des listes ; une valeur
+    # manquante lue en base arrive en NaN, un nombre et non un texte.
     if isinstance(pValue, list):
         rValues = pValue
-    elif pValue:
+    elif isinstance(pValue, str) and pValue:
         try:
             vValues = json.loads(pValue)
             rValues = vValues if isinstance(vValues, list) else [pValue]

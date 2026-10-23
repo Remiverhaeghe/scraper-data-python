@@ -49,11 +49,9 @@ def build_signature(pOffer):
         if len(vWord) > 2 and vWord not in TITLE_STOP_WORDS
     }
 
-    # Valeur manquante lue en base : NaN, et non None ou une liste
-    vSkills = pOffer.get("skills")
-    vSkills = to_list(vSkills) if isinstance(vSkills, (str, list)) else []
-
-    rSignature = vWords | {f"competence:{normalize(vSkill)}" for vSkill in vSkills}
+    rSignature = vWords | {
+        f"competence:{normalize(vSkill)}" for vSkill in to_list(pOffer.get("skills"))
+    }
 
     return rSignature
 

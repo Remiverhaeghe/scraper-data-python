@@ -184,6 +184,33 @@ def test_compare_sources_ranks_useful_sources_first(tmp_path):
     assert compare_sources(vDatabaseFile, vNow + timedelta(days=31)) == []
 
 
+def test_compare_sources_with_a_profile_and_offers_without_skills(tmp_path):
+    """Vérifie qu'une offre sans compétences enregistrées (NaN) ne bloque rien."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vNow = datetime(2026, 10, 23, 12)
+
+    initialize_database(vDatabaseFile)
+    save_profile(vDatabaseFile, {**EMPTY_PROFILE, "skills": ["Java"]})
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {"source": "lever", "source_id": "1", "title": "Dev Java"},
+                {
+                    "source": "lever",
+                    "source_id": "2",
+                    "title": "Dev",
+                    "skills": ["Java"],
+                },
+            ]
+        ),
+        vNow,
+    )
+
+    assert compare_sources(vDatabaseFile, vNow)[0]["offers"] == 2
+
+
 def test_compare_sources_without_profile_has_no_score(tmp_path):
     """Vérifie qu'un profil vide donne un score moyen absent, affiché par un tiret."""
 
