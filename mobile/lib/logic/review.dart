@@ -46,8 +46,7 @@ QuizQuestion? pickQuestion(
 ) {
   final vDue = [
     for (final vQuestion in pQuestions)
-      if (pSchedule[vQuestion.id] != null && isDue(pSchedule[vQuestion.id]!, pToday))
-        vQuestion,
+      if (pSchedule[vQuestion.id] != null && isDue(pSchedule[vQuestion.id]!, pToday)) vQuestion,
   ];
   final vCandidates = vDue.isNotEmpty
       ? vDue
@@ -56,8 +55,7 @@ QuizQuestion? pickQuestion(
             if (!pSchedule.containsKey(vQuestion.id)) vQuestion,
         ];
 
-  final rQuestion =
-      vCandidates.isEmpty ? null : vCandidates[pRandom.nextInt(vCandidates.length)];
+  final rQuestion = vCandidates.isEmpty ? null : vCandidates[pRandom.nextInt(vCandidates.length)];
 
   return rQuestion;
 }
@@ -65,8 +63,8 @@ QuizQuestion? pickQuestion(
 /// Compte les questions déjà vues et à revoir à cette date.
 int countDue(List<QuizQuestion> pQuestions, Map<String, ReviewState> pSchedule, DateTime pToday) {
   final rCount = pQuestions
-      .where((vQuestion) =>
-          pSchedule[vQuestion.id] != null && isDue(pSchedule[vQuestion.id]!, pToday))
+      .where(
+          (vQuestion) => pSchedule[vQuestion.id] != null && isDue(pSchedule[vQuestion.id]!, pToday))
       .length;
 
   return rCount;
@@ -74,8 +72,7 @@ int countDue(List<QuizQuestion> pQuestions, Map<String, ReviewState> pSchedule, 
 
 /// Compte les questions jamais répondues.
 int countNew(List<QuizQuestion> pQuestions, Map<String, ReviewState> pSchedule) {
-  final rCount =
-      pQuestions.where((vQuestion) => !pSchedule.containsKey(vQuestion.id)).length;
+  final rCount = pQuestions.where((vQuestion) => !pSchedule.containsKey(vQuestion.id)).length;
 
   return rCount;
 }

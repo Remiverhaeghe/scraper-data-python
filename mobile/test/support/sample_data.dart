@@ -136,6 +136,20 @@ class MemoryRevisionStore implements RevisionStore {
 
   List<Map<String, dynamic>> offers = [];
 
+  bool syncLocked = false;
+
+  @override
+  Future<bool> acquireSyncLock() async {
+    final rAcquired = !syncLocked;
+
+    syncLocked = true;
+
+    return rAcquired;
+  }
+
+  @override
+  Future<void> releaseSyncLock() async => syncLocked = false;
+
   @override
   Future<List<Map<String, dynamic>>> loadOffers() async => offers;
 
@@ -146,8 +160,7 @@ class MemoryRevisionStore implements RevisionStore {
   Future<List<Map<String, dynamic>>> loadExamResults() async => examResults;
 
   @override
-  Future<void> saveExamResults(List<Map<String, dynamic>> pResults) async =>
-      examResults = pResults;
+  Future<void> saveExamResults(List<Map<String, dynamic>> pResults) async => examResults = pResults;
 
   @override
   Future<Map<String, dynamic>> loadPreferences() async => preferences;

@@ -1,0 +1,33 @@
+{# Carte des offres (route /offers?view=map) : mêmes filtres que la liste, une
+   pastille par offre placée, colorée selon la correspondance au profil. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Carte des offres{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', path='leaflet/leaflet.css').path }}">
+    <script src="{{ url_for('static', path='leaflet/leaflet.js').path }}" defer></script>
+    <script src="{{ url_for('static', path='offers_map.js').path }}" defer></script>
+{% endblock %}
+
+{% block content %}
+{% call ui.page_header("Carte des offres", "Offres placées d'après leur ville, avec les filtres de la liste", "map-pin") %}
+<a class="button" href="{{ url_for('list_offers').path }}{% if list_query %}?{{ list_query }}{% endif %}">{{ icon("briefcase", 16) }} Liste</a>
+{% endcall %}
+
+<p class="count">
+    {{ map_points | length }} offre(s) placée(s) sur {{ offers | length }}
+    {% if not home %} · renseignez votre domicile dans Paramètres pour voir le rayon{% endif %}
+</p>
+
+<div class="map-legend">
+    <span class="map-dot map-dot-success"></span> {{ score_levels[0] }} % et plus
+    <span class="map-dot map-dot-warning"></span> {{ score_levels[1] }} à {{ score_levels[0] - 1 }} %
+    <span class="map-dot map-dot-muted"></span> moins ou sans score
+</div>
+
+<div id="offers-map" class="offers-map" aria-label="Carte des offres"></div>
+
+<script type="application/json" id="map-data">{{ {"points": map_points, "home": map_home, "radius": filters.distance} | tojson }}</script>
+{% endblock %}

@@ -8,6 +8,8 @@ dans l'historique git.
 ### Application mobile 1.2.0
 - Alerte des nouvelles offres proches du profil (50 % et plus), vérifiées en
   arrière-plan toutes les 3 h environ quand le PC est joignable
+- Distance au domicile de chaque offre ; une seule synchronisation à la fois
+  entre l'application et la tâche d'arrière-plan
 
 ### Application mobile 1.1.0
 - Nouvelles offres de la semaine, ouverture de l'annonce, statut envoyé au PC
@@ -39,6 +41,18 @@ dans l'historique git.
   placés par le géocodeur de l'IGN et gardés en cache (migration v25)
 - Accès hors du domicile par Tailscale : `python -m tools.tailscale_certificate`
   et `WEB_PUBLIC_HOST`
+- Compétences de l'industrie reconnues, compétences du profil rapprochées de
+  leur libellé reconnu
+- Distance dans la liste, la fiche et les e-mails ; carte des offres sur le web ;
+  rayon des alertes pour le téléphone et l'e-mail de la semaine
+- Liste d'agences d'intérim modifiable, badge « Intérim »
+- Sources sans offre utile signalées, offres proches de vos candidatures sur
+  l'accueil
+- Certificat Tailscale renouvelé par le planificateur et rechargé à chaud ;
+  page Santé : certificat, placement des offres, téléphone
+- Restauration depuis le NAS aussi sur le web
+- Filtres des offres regroupés (`OfferFilterChoices`, barre de filtres à part),
+  `dart format` contrôlé par la CI
 - Sources de l'application mobile enfin versionnées (`mobile/lib` était ignoré
   par la règle `lib/` du `.gitignore`), page Paramètres web sans défilement
   horizontal sur téléphone

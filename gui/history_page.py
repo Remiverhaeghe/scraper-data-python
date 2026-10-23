@@ -40,6 +40,7 @@ from job.statistics import (
     SOURCE_COMPARISON_DAYS,
     build_source_cells,
     compare_sources,
+    describe_useless_sources,
     get_contract_shares,
     get_execution_counts,
     get_source_shares,
@@ -159,13 +160,22 @@ class HistoryPage(QWidget):
             f"Offres découvertes ces {SOURCE_COMPARISON_DAYS} derniers jours : "
             "correspondance au profil et suites données",
         )
+        self.useless_label = QLabel()
+        self.useless_label.setObjectName("cardSubtitle")
+        self.useless_label.setWordWrap(True)
+
         vLayout.addWidget(self.comparison_table)
+        vLayout.addWidget(self.useless_label)
 
         return rCard
 
     def fill_comparison(self):
         """Remplit le tableau de comparaison, ajusté à son nombre de lignes."""
         vRows = compare_sources(self.database_file, datetime.now())
+        vAdvice = describe_useless_sources(vRows)
+
+        show_message(self.useless_label, vAdvice, "warning")
+        self.useless_label.setVisible(bool(vAdvice))
 
         self.comparison_table.setRowCount(len(vRows))
 

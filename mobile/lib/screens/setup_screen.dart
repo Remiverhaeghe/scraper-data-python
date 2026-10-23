@@ -215,13 +215,13 @@ class _SetupScreenState extends State<SetupScreen> {
             listenable: widget.state,
             builder: (_, __) => SegmentedButton<String>(
               segments: const [
-                ButtonSegment(value: 'system', label: Text('Auto'), icon: Icon(Icons.brightness_auto)),
+                ButtonSegment(
+                    value: 'system', label: Text('Auto'), icon: Icon(Icons.brightness_auto)),
                 ButtonSegment(value: 'light', label: Text('Clair'), icon: Icon(Icons.light_mode)),
                 ButtonSegment(value: 'dark', label: Text('Sombre'), icon: Icon(Icons.dark_mode)),
               ],
               selected: {widget.state.appearance},
-              onSelectionChanged: (pChoice) =>
-                  widget.state.setDisplay(pAppearance: pChoice.first),
+              onSelectionChanged: (pChoice) => widget.state.setDisplay(pAppearance: pChoice.first),
             ),
           ),
           const SizedBox(height: 16),
@@ -236,8 +236,7 @@ class _SetupScreenState extends State<SetupScreen> {
                 ButtonSegment(value: 1.3, label: Text('Très grande')),
               ],
               selected: {widget.state.textScale},
-              onSelectionChanged: (pChoice) =>
-                  widget.state.setDisplay(pTextScale: pChoice.first),
+              onSelectionChanged: (pChoice) => widget.state.setDisplay(pTextScale: pChoice.first),
             ),
           ),
           const SizedBox(height: 16),
@@ -247,8 +246,7 @@ class _SetupScreenState extends State<SetupScreen> {
             listenable: widget.state,
             builder: (_, __) => SegmentedButton<int>(
               segments: [
-                for (final vGoal in dailyGoals)
-                  ButtonSegment(value: vGoal, label: Text('$vGoal')),
+                for (final vGoal in dailyGoals) ButtonSegment(value: vGoal, label: Text('$vGoal')),
               ],
               selected: {widget.state.dailyGoal},
               onSelectionChanged: (pChoice) =>

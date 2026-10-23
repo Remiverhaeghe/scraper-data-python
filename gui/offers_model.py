@@ -21,6 +21,7 @@ COLUMNS = [
     ("Titre", "title", None),
     ("Entreprise", "company", 160),
     ("Lieu", "location", 160),
+    ("Distance", "distance_km", 80),
     ("Contrat", "contract", 85),
     ("Net mensuel", "salary_net_monthly_min", 145),
     ("Profil", "match_score", 70),
@@ -53,6 +54,9 @@ def format_cell(pOffer, pKey):
     elif pKey == "freshness":
         rText = str(pOffer.get(pKey, ""))
 
+    elif pKey == "distance_km":
+        rText = "" if pOffer.get(pKey) is None else f"{pOffer[pKey]} km"
+
     elif pKey == "first_seen_at":
         rText = format_date(pOffer.get(pKey))
 
@@ -61,6 +65,9 @@ def format_cell(pOffer, pKey):
 
     elif pKey == "company" and pOffer.get("company_preferred"):
         rText = f"★ {pOffer.get('company') or ''}"
+
+    elif pKey == "company" and pOffer.get("is_agency"):
+        rText = f"{pOffer.get('company') or ''} · intérim"
 
     # Une offre publiée plusieurs fois liste toutes ses sources.
     elif pKey == "source_label" and pOffer.get("source_labels"):
@@ -85,6 +92,10 @@ def get_sort_value(pOffer, pKey):
 
     elif pKey in ("match_score", "freshness"):
         rValue = -1.0 if vValue is None else float(vValue)
+
+    # Distance inconnue en fin de liste dans l'ordre croissant, le plus utile
+    elif pKey == "distance_km":
+        rValue = float("inf") if vValue is None else float(vValue)
 
     else:
         rValue = str(vValue or "").lower()

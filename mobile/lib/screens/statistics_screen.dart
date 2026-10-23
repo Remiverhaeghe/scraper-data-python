@@ -162,8 +162,7 @@ class ThemeProgress extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             color: theme.share >= 0.8 ? successColor : null,
           ),
-          if (theme.due > 0)
-            Text("${theme.due} à revoir aujourd'hui", style: vTextTheme.bodySmall),
+          if (theme.due > 0) Text("${theme.due} à revoir aujourd'hui", style: vTextTheme.bodySmall),
         ],
       ),
     );

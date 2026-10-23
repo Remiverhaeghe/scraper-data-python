@@ -297,10 +297,11 @@ def test_companies_are_saved_from_the_page(qt_application, tmp_path, monkeypatch
 
     vPage.company_edits["excluded"].setPlainText("Globex\nInitech")
     vPage.company_edits["preferred"].setPlainText("Acme")
+    vPage.company_edits["agencies"].setPlainText("Proman\nAgence Locale SAS, proman")
     vPage.save_companies()
 
     assert vPage.companies_message.text() == (
-        "2 entreprise(s) exclue(s), 1 privilégiée(s)."
+        "2 entreprise(s) exclue(s), 1 privilégiée(s), 2 agence(s) d'intérim."
     )
 
     vPage.company_edits["preferred"].setPlainText("globex")

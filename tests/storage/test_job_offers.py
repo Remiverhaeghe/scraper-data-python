@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from job.agencies import INTERIM_AGENCIES
 from storage.database import connect_database, initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import (
@@ -393,6 +394,8 @@ def test_get_offers_hides_interim_agencies(tmp_path):
         datetime(2026, 10, 23),
     )
 
-    vIds = sorted(get_offers(vDatabaseFile, pHideAgencies=True)["source_id"])
+    vIds = sorted(
+        get_offers(vDatabaseFile, pHiddenAgencies=list(INTERIM_AGENCIES))["source_id"]
+    )
 
     assert vIds == ["2", "4", "5", "6"]

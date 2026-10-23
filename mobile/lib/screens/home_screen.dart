@@ -175,9 +175,8 @@ class SummaryCard extends StatelessWidget {
     final vStatistics = state.statistics;
     final vLastSync = state.lastSync;
     final vToday = DateTime.now();
-    final vDue = state.package == null
-        ? 0
-        : countDue(state.package!.questions, state.schedule, vToday);
+    final vDue =
+        state.package == null ? 0 : countDue(state.package!.questions, state.schedule, vToday);
 
     final rCard = Card(
       child: Padding(
@@ -369,8 +368,7 @@ class ApplicationsCard extends StatelessWidget {
                         label: Text(vThemes[vKey]!.label),
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) =>
-                                QuestionScreen(state: state, theme: vThemes[vKey]!),
+                            builder: (_) => QuestionScreen(state: state, theme: vThemes[vKey]!),
                           ),
                         ),
                       ),

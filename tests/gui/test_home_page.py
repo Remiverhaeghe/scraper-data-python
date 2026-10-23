@@ -185,3 +185,28 @@ def test_home_page_fills_chart(qt_application, tmp_path):
         "Candidatures",
         "Relances",
     ]
+
+
+def test_similar_offers_card_is_shown_only_with_offers(qt_application, tmp_path):
+    """Vérifie la carte des offres proches, masquée sans offre retenue."""
+
+    vPage = HomePage(build_database(tmp_path))
+    vPage.refresh()
+
+    assert vPage.similar_offers_card.isHidden()
+
+    vPage.show_similar_offers(
+        [
+            {
+                "source": "lever",
+                "source_id": "3",
+                "title": "Technicien",
+                "company": "Acme",
+                "similarity": 75,
+                "reference_title": "Technicien de maintenance",
+            }
+        ]
+    )
+
+    assert not vPage.similar_offers_card.isHidden()
+    assert vPage.similar_offers_layout.count() == 1

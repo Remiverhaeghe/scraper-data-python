@@ -14,14 +14,10 @@ from config import (
     LICENSE_FILE,
     EXPIRY_DAYS,
     LICENSE_NAME,
-    NEW_OFFER_DAYS,
 )
 from job.benefits import BENEFIT_LABELS
-from job.contract import CONTRACT_TYPES
-from job.geocoding import DISTANCE_FILTERS
 from job.location import FRANCE, detect_location
 from job.sources.registry import SOURCES
-from storage.job_applications import APPLICATION_STATUSES
 
 STATUS_LABELS = {
     "INTERESTED": "Intéressé",
@@ -321,82 +317,6 @@ def is_offer_expired(pOffer, pNow, pExpiryDays=EXPIRY_DAYS):
     )
 
     return rExpired
-
-
-def build_offer_filters(
-    pSearch=None,
-    pSource=None,
-    pContract=None,
-    pRemote=False,
-    pMinNetSalary=None,
-    pNewOnly=False,
-    pStatus=None,
-    pNow=None,
-    pNewOfferDays=NEW_OFFER_DAYS,
-    pMaxNetSalary=None,
-    pPublishedDays=None,
-    pHasSalary=False,
-    pKeys=None,
-    pAvailability=DEFAULT_AVAILABILITY,
-    pExpiryDays=EXPIRY_DAYS,
-    pCompanyKeys=None,
-    pPreferredOnly=False,
-    pFranceOnly=False,
-    pHideAgencies=False,
-    pDistanceKm=0,
-    pHome=None,
-):
-    """Traduit les filtres saisis en paramètres de get_offers.
-
-    Les valeurs inconnues sont ignorées. Les offres ignorées restent masquées
-    sauf si ce statut est demandé explicitement, comme celles des entreprises
-    exclues. pCompanyKeys donne les noms normalisés des listes d'entreprises.
-    Le rayon pDistanceKm autour du domicile pHome est ignoré sans domicile.
-    """
-
-    vCompanyKeys = pCompanyKeys or {"excluded": [], "preferred": []}
-
-    vNow = pNow or datetime.now()
-
-    rFilters = {
-        "pSearch": (pSearch or "").strip() or None,
-        "pSource": (
-            pSource if pSource in SOURCES or pSource in ADDED_SOURCE_LABELS else None
-        ),
-        "pContract": pContract if pContract in CONTRACT_TYPES else None,
-        "pRemote": bool(pRemote),
-        "pMinNetSalary": pMinNetSalary,
-        "pSeenSince": vNow - timedelta(days=pNewOfferDays) if pNewOnly else None,
-        "pStatus": pStatus if pStatus in APPLICATION_STATUSES else None,
-        "pFollowUpBefore": vNow if pStatus == FOLLOW_UP_FILTER else None,
-        "pMaxNetSalary": pMaxNetSalary,
-        "pPublishedSince": (
-            vNow - timedelta(days=pPublishedDays) if pPublishedDays else None
-        ),
-        "pHasSalary": bool(pHasSalary),
-        "pKeys": pKeys,
-        "pHideIgnored": True,
-        "pAvailability": (
-            pAvailability if pAvailability in AVAILABILITY_FILTERS else None
-        ),
-        "pNow": vNow,
-        "pExpiredBefore": vNow - timedelta(days=pExpiryDays),
-        "pExcludedCompanies": vCompanyKeys["excluded"],
-        "pPreferredCompanies": vCompanyKeys["preferred"] if pPreferredOnly else None,
-        "pCountry": FRANCE if pFranceOnly else None,
-        "pHideAgencies": bool(pHideAgencies),
-        "pNear": (
-            {
-                "latitude": pHome["latitude"],
-                "longitude": pHome["longitude"],
-                "radius_km": pDistanceKm,
-            }
-            if pHome and pDistanceKm in DISTANCE_FILTERS and pDistanceKm
-            else None
-        ),
-    }
-
-    return rFilters
 
 
 def describe_search(pParameters):

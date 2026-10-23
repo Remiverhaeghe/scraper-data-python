@@ -67,9 +67,13 @@ class OfferCard extends StatelessWidget {
     final vTheme = Theme.of(context);
     final vScore = offer['match_score'];
     final vStatus = offer['status'] as String?;
-    final vDetails = [offer['company'], offer['location'], offer['contract']]
-        .where((vValue) => vValue != null && '$vValue'.isNotEmpty)
-        .join(' · ');
+    final vDistance = offer['distance_km'];
+    final vDetails = [
+      offer['company'],
+      offer['location'],
+      if (vDistance != null) '$vDistance km',
+      offer['contract'],
+    ].where((vValue) => vValue != null && '$vValue'.isNotEmpty).join(' · ');
 
     final rCard = Card(
       child: Padding(

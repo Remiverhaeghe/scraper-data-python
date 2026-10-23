@@ -165,6 +165,36 @@ SKILLS = {
     "GraphQL": r"\bgraphql\b",
     "REST": r"\brest(?:ful)?\s+api",
     "Agile": r"\bagile\b|\bscrum\b",
+    # Industrie : automatisme, électricité et maintenance
+    "Automates programmables": r"automates?\s+programmables?|\bplc\b",
+    "Siemens TIA Portal": r"\btia\s*portal\b|\bstep\s*7\b|\bs7[\s-]?1[25]00\b",
+    # Les produits, et non le nom seul : Schneider Electric est aussi un employeur.
+    "Schneider": r"\bunity\s+pro\b|\bcontrol\s*expert\b|\bm[235][45]0\b|\bsomachine\b",
+    "Rockwell": r"\brockwell\b|\ballen[\s-]bradley\b|\bstudio\s*5000\b|\brslogix\b",
+    "Grafcet": r"\bgrafcet\b",
+    "Supervision / IHM": r"\bscada\b|\bwincc\b|\bpcvue\b|\bihm\b|\bhmi\b",
+    "Réseaux industriels": r"\bmodbus\b|\bprofinet\b|\bprofibus\b|\bethernet/ip\b",
+    "Électrotechnique": r"[ée]lectrotechni",
+    "Électronique": r"[ée]lectroni(?:que|cien)",
+    "Habilitation électrique": r"habilitations?\s+[ée]lectriques?|\bb[12]v\b|\bh0v\b",
+    "Schémas électriques": r"sch[ée]mas?\s+[ée]lectriques?|\beplan\b",
+    "Variateurs de vitesse": r"\bvariateurs?\b",
+    "Pneumatique": r"\bpneumatique\b",
+    "Hydraulique": r"\bhydrauliques?\b",
+    "Mécanique": r"\bm[ée]caniques?\b",
+    "Instrumentation et régulation": r"\binstrumentation\b|\br[ée]gulation\b",
+    "Robotique": r"\brobotique\b|\bfanuc\b|\bkuka\b|\brobots?\s+industriels?\b",
+    "Maintenance préventive et curative": (
+        r"maintenance\s+(?:pr[ée]ventive|curative|corrective|conditionnelle)"
+    ),
+    "GMAO": r"\bgmao\b|\bcmms\b|\bmaximo\b",
+    "Lean": r"\blean\b|\bkaizen\b|\bam[ée]lioration\s+continue\b",
+    "TPM": r"\btpm\b",
+    "AMDEC": r"\bamdec\b|\bfmea\b",
+    "Lecture de plans": r"lecture\s+de\s+plans?|lire\s+(?:des|les)\s+plans",
+    "CAO": r"\bcao\b|\bsolidworks\b|\bautocad\b|\bcatia\b",
+    "Soudure": r"\bsoudure\b|\bsoudage\b",
+    "CVC et froid": r"\bcvc\b|\bfrigorifiques?\b|\bclimatisation\b",
 }
 SKILL_PATTERNS = {
     vLabel: re.compile(vPattern, re.IGNORECASE) for vLabel, vPattern in SKILLS.items()

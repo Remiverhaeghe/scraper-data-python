@@ -43,6 +43,7 @@ from job.statistics import (
     SOURCE_COMPARISON_DAYS,
     build_source_cells,
     compare_sources,
+    describe_useless_sources,
     get_source_shares,
 )
 from storage.history_repository import get_history, get_history_summary
@@ -329,6 +330,8 @@ def show_history(
         for vEntry in get_history(pDatabaseFile, pLimit=MAX_DISPLAYED_EXECUTIONS)
     ]
 
+    vComparison = compare_sources(pDatabaseFile, datetime.now())
+
     rResponse = templates.TemplateResponse(
         request,
         "history.html",
@@ -338,10 +341,8 @@ def show_history(
             "source_pie": build_pie(get_source_shares(pDatabaseFile)),
             "comparison_columns": SOURCE_COMPARISON_COLUMNS,
             "comparison_days": SOURCE_COMPARISON_DAYS,
-            "comparison_rows": [
-                build_source_cells(vRow)
-                for vRow in compare_sources(pDatabaseFile, datetime.now())
-            ],
+            "comparison_rows": [build_source_cells(vRow) for vRow in vComparison],
+            "useless_sources": describe_useless_sources(vComparison),
             "contract_pie": build_pie(get_contract_shares(pDatabaseFile)),
             "execution_chart": build_bar_chart(
                 [vLabel for vLabel, _ in vExecutionCounts],

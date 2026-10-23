@@ -159,6 +159,7 @@ class LocalReminders implements Reminders {
       await Workmanager().cancelByUniqueName(offerCheckTask);
     }
 
-    log('Vérification des offres en arrière-plan ${pEnabled ? 'activée' : 'arrêtée'}', name: 'offres');
+    log('Vérification des offres en arrière-plan ${pEnabled ? 'activée' : 'arrêtée'}',
+        name: 'offres');
   }
 }

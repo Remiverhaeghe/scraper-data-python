@@ -52,9 +52,8 @@ String formatNumber(double pValue) {
 
     if (vExponent < -4 || vExponent >= 6) {
       final vParts = pValue.toStringAsExponential(5).split('e');
-      final vMantissa = vParts[0].contains('.')
-          ? vParts[0].replaceFirst(RegExp(r'\.?0+$'), '')
-          : vParts[0];
+      final vMantissa =
+          vParts[0].contains('.') ? vParts[0].replaceFirst(RegExp(r'\.?0+$'), '') : vParts[0];
       final vPower = int.parse(vParts[1]);
 
       vText = '${vMantissa}e${vPower < 0 ? '-' : '+'}'
@@ -158,8 +157,7 @@ Grade gradeOrder(QuizQuestion pQuestion, Object? pResponse) {
   }
 
   final rGrade = Grade(
-    correct: List.generate(vItems.length, (vIndex) => vIndex).join(',') ==
-        vIndexes.join(','),
+    correct: List.generate(vItems.length, (vIndex) => vIndex).join(',') == vIndexes.join(','),
     given: vIndexes.map((vIndex) => vItems[vIndex]).join(' → '),
     expected: vItems.join(' → '),
   );

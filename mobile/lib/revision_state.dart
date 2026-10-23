@@ -259,13 +259,11 @@ class RevisionState extends ChangeNotifier {
     final vIntervals = package?.leitnerIntervals ?? const [1, 3, 7, 21, 60];
     final vSchedule = <String, ReviewState>{
       for (final vEntry in (progress['questions'] as Map? ?? const {}).entries)
-        vEntry.key as String:
-            ReviewState.fromJson(Map<String, dynamic>.from(vEntry.value as Map)),
+        vEntry.key as String: ReviewState.fromJson(Map<String, dynamic>.from(vEntry.value as Map)),
     };
 
-    final vAnswers = [...pending]
-      ..sort((pFirst, pSecond) =>
-          (pFirst['answered_at'] as String).compareTo(pSecond['answered_at'] as String));
+    final vAnswers = [...pending]..sort((pFirst, pSecond) =>
+        (pFirst['answered_at'] as String).compareTo(pSecond['answered_at'] as String));
 
     for (final vAnswer in vAnswers) {
       final vQuestionId = vAnswer['question_id'] as String;
@@ -306,6 +304,10 @@ class RevisionState extends ChangeNotifier {
 
     if (vSettings == null) {
       throw const ApiException("Renseignez d'abord l'adresse du serveur et le jeton.");
+    }
+
+    if (!await store.acquireSyncLock()) {
+      throw const ApiException('Synchronisation déjà en cours : réessayez dans un instant.');
     }
 
     final vClient = clientFactory(vSettings);
@@ -362,6 +364,7 @@ class RevisionState extends ChangeNotifier {
       return rReport;
     } finally {
       syncing = false;
+      await store.releaseSyncLock();
       notifyListeners();
     }
   }
@@ -463,8 +466,7 @@ class RevisionState extends ChangeNotifier {
 
   /// Questions à revoir aujourd'hui, tous thèmes confondus.
   int countDueToday() {
-    final rCount =
-        package == null ? 0 : countDue(package!.questions, schedule, DateTime.now());
+    final rCount = package == null ? 0 : countDue(package!.questions, schedule, DateTime.now());
 
     return rCount;
   }

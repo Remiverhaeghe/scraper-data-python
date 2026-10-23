@@ -185,8 +185,8 @@ class MainWindow(QMainWindow):
     def search_offers(self):
         """Ouvre les offres, le curseur dans le champ de recherche."""
         self.navigate("offers")
-        self.offers_page.search_edit.setFocus()
-        self.offers_page.search_edit.selectAll()
+        self.offers_page.filters_bar.search_edit.setFocus()
+        self.offers_page.filters_bar.search_edit.selectAll()
 
     def hide_offer_detail(self):
         """Masque la fiche de l'offre au profit du tableau, sur la page Offres."""

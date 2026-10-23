@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from job.agencies import AGENCY_MENTIONS, INTERIM_AGENCIES
+from job.agencies import AGENCY_MENTIONS
 from job.csv_schema import JOB_COLUMNS
 from storage.database import connect_database, count_by_day
 from utils.logger import get_logger
@@ -179,7 +179,7 @@ def build_offer_conditions(
     pExcludedCompanies=None,
     pPreferredCompanies=None,
     pCountry=None,
-    pHideAgencies=False,
+    pHiddenAgencies=None,
     pNear=None,
 ):
     """Construit les conditions SQL et leurs paramètres à partir des filtres.
@@ -281,19 +281,19 @@ def build_offer_conditions(
 
     # Les séparateurs « | » entourés d'espaces : « % adecco % » ne reconnaît que
     # le mot entier, et seulement entre les deux séparateurs, dans l'entreprise.
-    if pHideAgencies:
+    if pHiddenAgencies:
         vConditions.append(
             "NOT ("
             + " OR ".join(
                 "(' ' || REPLACE(COALESCE(o.fingerprint, ''), '|', ' | ') || ' ')"
                 " LIKE ?"
-                for _ in INTERIM_AGENCIES
+                for _ in pHiddenAgencies
             )
             + " OR "
             + " OR ".join("COALESCE(o.description, '') LIKE ?" for _ in AGENCY_MENTIONS)
             + ")"
         )
-        vParams += [f"%|% {vAgency} %|%" for vAgency in INTERIM_AGENCIES]
+        vParams += [f"%|% {vAgency} %|%" for vAgency in pHiddenAgencies]
         vParams += [f"%{vMention}%" for vMention in AGENCY_MENTIONS]
 
     if pNear:

@@ -16,7 +16,7 @@ from job.companies import (
     save_company_rules,
 )
 from job.fingerprint import build_fingerprint
-from job.presentation import build_offer_filters
+from job.offer_filters import OfferFilterChoices, build_offer_filters
 from storage.database import initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import get_offers, save_offers
@@ -100,7 +100,9 @@ def test_filters_hide_excluded_and_keep_preferred(database_file):
             get_offers(
                 database_file,
                 **build_offer_filters(
-                    pNow=NOW, pCompanyKeys=vKeys, pPreferredOnly=pPreferredOnly
+                    OfferFilterChoices(preferred_only=pPreferredOnly),
+                    pNow=NOW,
+                    pCompanyKeys=vKeys,
                 ),
             )["title"]
         )
@@ -112,9 +114,9 @@ def test_filters_hide_excluded_and_keep_preferred(database_file):
     assert get_offers(
         database_file,
         **build_offer_filters(
+            OfferFilterChoices(preferred_only=True),
             pNow=NOW,
             pCompanyKeys={"excluded": [], "preferred": []},
-            pPreferredOnly=True,
         ),
     ).empty
 

@@ -76,8 +76,7 @@ class QuizQuestion {
 
   /// Paires d'une association : élément de gauche et sa correspondance.
   List<List<String>> get pairs => [
-        for (final vPair in data['pairs'] as List? ?? const [])
-          List<String>.from(vPair as List),
+        for (final vPair in data['pairs'] as List? ?? const []) List<String>.from(vPair as List),
       ];
 
   Map<String, dynamic>? get visual => data['visual'] as Map<String, dynamic>?;

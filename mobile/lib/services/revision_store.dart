@@ -82,4 +82,10 @@ abstract class RevisionStore {
   Future<Map<String, dynamic>> loadPreferences();
 
   Future<void> savePreferences(Map<String, dynamic> pPreferences);
+
+  /// Réserve la synchronisation ; faux si une autre est en cours, celle de la
+  /// tâche d'arrière-plan par exemple.
+  Future<bool> acquireSyncLock();
+
+  Future<void> releaseSyncLock();
 }

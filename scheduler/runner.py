@@ -6,6 +6,7 @@ from datetime import datetime
 
 import pandas as pd
 
+from config import WEB_PUBLIC_HOST, WEB_SCHEME, WEB_TLS_CERTFILE, WEB_TLS_KEYFILE
 from job.application import process_jobs
 from job.application_tracking import get_due_follow_ups
 from job.followed_availability import (
@@ -42,6 +43,7 @@ from storage.backup import run_due_backup
 from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
 from utils.mailer import send_email
+from utils.tailscale import renew_certificate_if_due
 
 logger = get_logger(__name__)
 
@@ -307,6 +309,15 @@ def send_interview_reminders(pDatabaseFile, pNow):
     return rCount
 
 
+def renew_web_certificate(_pDatabaseFile, pNow):
+    """Renouvelle le certificat Tailscale du tableau de bord un mois avant sa fin."""
+
+    if WEB_SCHEME == "https":
+        renew_certificate_if_due(
+            WEB_PUBLIC_HOST, WEB_TLS_CERTFILE, WEB_TLS_KEYFILE, pNow
+        )
+
+
 # Tâches de chaque tour du planificateur, avant la recherche : chacune vérifie
 # elle-même son échéance. Une nouvelle tâche s'ajoute ici, sans toucher la boucle.
 BACKGROUND_TASKS = (
@@ -314,6 +325,7 @@ BACKGROUND_TASKS = (
     ("vérification des offres suivies", check_followed_offers_daily),
     ("récapitulatif hebdomadaire", send_weekly_digest),
     ("rappels d'entretien", send_interview_reminders),
+    ("certificat du tableau de bord", renew_web_certificate),
 )
 
 # Erreurs attendues d'une tâche : disque, base, envoi d'e-mail ou réglage invalide

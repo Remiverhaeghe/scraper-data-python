@@ -5,6 +5,7 @@ from html import escape
 
 from config import APPLICATION_NAME
 from job.application_tracking import get_week_follow_ups
+from job.geocoding import add_distances, keep_within_alert_radius, load_home
 from job.notification import describe_follow_up, describe_offer
 from job.preparation import score_offers
 from job.presentation import clean_missing_values, format_date, safe_url
@@ -51,8 +52,11 @@ def get_new_offers(pDatabaseFile, pNow, pLimit=MAX_DIGEST_OFFERS):
 
     score_offers(vOffers, load_profile(pDatabaseFile))
 
+    vHome = load_home(pDatabaseFile)
+    add_distances(vOffers, vHome)
+
     rOffers = sorted(
-        vOffers,
+        keep_within_alert_radius(vOffers, vHome),
         key=lambda pOffer: (
             -1 if pOffer["match_score"] is None else pOffer["match_score"]
         ),

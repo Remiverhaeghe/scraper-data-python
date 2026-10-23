@@ -19,6 +19,40 @@ const pendingFile = 'pending.json';
 const examsFile = 'exams.json';
 const preferencesFile = 'preferences.json';
 const offersFile = 'offers.json';
+const syncLockFile = 'sync.lock';
+
+/// Au-delà, le verrou vient d'une synchronisation interrompue (application
+/// arrêtée net) : il est repris.
+const staleSyncLock = Duration(minutes: 5);
+
+/// Crée le fichier de verrou de façon exclusive ; retourne s'il est obtenu.
+///
+/// La création exclusive est atomique, même entre l'application et la tâche
+/// d'arrière-plan qui tournent dans le même processus Android, où les verrous
+/// de fichier classiques ne s'excluent pas.
+Future<bool> acquireLockFile(File pFile, {DateTime? pNow}) async {
+  var rAcquired = false;
+
+  try {
+    await pFile.create(exclusive: true);
+    rAcquired = true;
+  } on FileSystemException {
+    try {
+      final vAge = (pNow ?? DateTime.now()).difference(await pFile.lastModified());
+
+      if (vAge > staleSyncLock) {
+        await pFile.delete();
+        await pFile.create(exclusive: true);
+        rAcquired = true;
+      }
+    } on FileSystemException {
+      // Repris entre-temps par l'autre synchronisation : elle garde la main.
+      rAcquired = false;
+    }
+  }
+
+  return rAcquired;
+}
 
 class FileRevisionStore implements RevisionStore {
   FileRevisionStore({FlutterSecureStorage? pSecureStorage})
@@ -102,8 +136,7 @@ class FileRevisionStore implements RevisionStore {
     final rItems = vText == null
         ? <Map<String, dynamic>>[]
         : [
-            for (final vItem in jsonDecode(vText) as List)
-              Map<String, dynamic>.from(vItem as Map),
+            for (final vItem in jsonDecode(vText) as List) Map<String, dynamic>.from(vItem as Map),
           ];
 
     return rItems;
@@ -143,4 +176,16 @@ class FileRevisionStore implements RevisionStore {
   @override
   Future<void> savePreferences(Map<String, dynamic> pPreferences) =>
       writeText(preferencesFile, jsonEncode(pPreferences));
+
+  @override
+  Future<bool> acquireSyncLock() async => acquireLockFile(await getFile(syncLockFile));
+
+  @override
+  Future<void> releaseSyncLock() async {
+    final vFile = await getFile(syncLockFile);
+
+    if (await vFile.exists()) {
+      await vFile.delete();
+    }
+  }
 }

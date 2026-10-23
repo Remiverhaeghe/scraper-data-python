@@ -25,9 +25,8 @@ void main() {
         ServerSettings(address: '$vServer/api/v1', token: vToken!),
       );
 
-      final vQuestions = vState.package!.questions
-          .where((vQuestion) => vQuestion.type == 'qcm')
-          .toList();
+      final vQuestions =
+          vState.package!.questions.where((vQuestion) => vQuestion.type == 'qcm').toList();
 
       expect(vQuestions.length, greaterThan(2));
 

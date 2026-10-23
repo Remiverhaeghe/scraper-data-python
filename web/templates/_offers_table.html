@@ -13,6 +13,7 @@
                 <th>Poste</th>
                 <th>Entreprise</th>
                 <th>Lieu</th>
+                <th class="amount" title="À vol d'oiseau depuis le domicile">Distance</th>
                 <th>Contrat</th>
                 <th class="amount">Net mensuel</th>
                 <th class="amount">Profil</th>
@@ -31,10 +32,12 @@
                     {% if offer.duplicates %}<span class="badge badge-muted" title="{{ offer.source_labels | join(', ') }}">{{ offer.duplicates | length + 1 }} annonces</span>{% endif %}
                     {% if offer.needs_review %}<span class="badge badge-warning" title="Différences : {{ offer.differences | join(', ') }}">À valider</span>{% endif %}
                     {% if offer.remote %}<span class="badge">Télétravail</span>{% endif %}
+                    {% if offer.is_agency %}<span class="badge badge-warning" title="Annonce d'une agence d'intérim">Intérim</span>{% endif %}
                     {% for benefit in offer.benefits[:max_benefit_badges] %}<span class="badge badge-muted">{{ benefit }}</span>{% endfor %}
                 </td>
                 <td>{% if offer.company_preferred %}<span class="tone-primary" title="Entreprise privilégiée">★</span> {% endif %}{{ offer.company or "" }}</td>
                 <td class="muted">{{ offer.location or "" }}</td>
+                <td class="amount nowrap">{% if offer.distance_km is not none %}{{ offer.distance_km }} km{% endif %}</td>
                 <td>{% if offer.contract %}<span class="badge badge-first badge-{{ contract_tones.get(offer.contract, 'muted') }}">{{ offer.contract }}</span>{% endif %}</td>
                 <td class="amount">{{ offer.net_salary or "" }}</td>
                 <td class="amount">{% if offer.match_score is not none %}<span class="badge badge-first badge-{{ offer.match_score | score_tone }}" title="Compétences de l'offre présentes dans votre profil">{{ offer.match_score }} %</span>{% endif %}</td>

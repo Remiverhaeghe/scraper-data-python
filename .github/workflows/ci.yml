@@ -102,6 +102,10 @@ jobs:
       - name: Installation des dépendances
         run: flutter pub get
 
+      # Largeur des lignes fixée dans analysis_options.yaml
+      - name: Vérification du formatage
+        run: dart format --output=none --set-exit-if-changed lib test
+
       - name: Analyse du code
         run: flutter analyze
 

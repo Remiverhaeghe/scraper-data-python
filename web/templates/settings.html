@@ -179,6 +179,9 @@
                         <textarea class="companies-preferred" name="preferred" rows="3" placeholder="Ex. Globex">{{ companies.preferred }}</textarea>
                     </label>
                 </div>
+                <label class="tone-warning">{{ icon("users", 16) }} Agences d'intérim, pour le filtre « Sans intérim » et le badge (vide : liste par défaut)
+                    <textarea class="companies-agencies" name="agencies" rows="3" placeholder="Ex. Proman">{{ companies.agencies }}</textarea>
+                </label>
                 <div class="rules-actions">
                     <button class="button button-primary" type="submit">Enregistrer</button>
                     {% if companies_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ companies_message }}</p>{% endif %}
@@ -238,6 +241,11 @@
             </form>
             {% else %}
             <p class="muted">Aucune sauvegarde pour le moment.</p>
+            {% endif %}
+            {% if nas_configured %}
+            <div id="nas-copies">
+                <button class="button" type="button" hx-get="{{ url_for('list_nas_copies_fragment').path }}" hx-target="#nas-copies">{{ icon("server", 16) }} Lire les copies du NAS</button>
+            </div>
             {% endif %}
             {% if backup_message %}<p class="application-message tone-{{ message_tone }}" role="status">{{ backup_message }}</p>{% endif %}
         </article>

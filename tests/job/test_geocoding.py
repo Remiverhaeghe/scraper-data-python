@@ -8,9 +8,14 @@ import requests
 
 import job.geocoding as geocoding
 from job.geocoding import (
+    add_distances,
+    compute_distance_km,
+    describe_location,
     is_locatable,
+    keep_within_alert_radius,
     load_home,
     locate_offers,
+    save_alert_radius,
     save_home,
 )
 from storage.database import initialize_database
@@ -163,3 +168,65 @@ def test_is_locatable(pKey, pExpected):
     """Vérifie qu'un pays, une zone ou un département seul n'est pas cherché."""
 
     assert is_locatable(pKey) == pExpected
+
+
+def test_compute_distance_km():
+    """Vérifie la distance Lille-Paris, environ 204 km à vol d'oiseau."""
+
+    assert round(compute_distance_km((50.6366, 3.0635), (48.8566, 2.3522))) == 204
+
+
+def test_distances_are_added_and_described():
+    """Vérifie la distance au domicile, absente sans position ni domicile."""
+
+    vHome = {"latitude": 50.6366, "longitude": 3.0635}
+    vOffers = [
+        {"location": "Roubaix", "latitude": 50.6942, "longitude": 3.1746},
+        {"location": "France", "latitude": float("nan"), "longitude": None},
+    ]
+
+    add_distances(vOffers, vHome)
+
+    assert [vOffer["distance_km"] for vOffer in vOffers] == [10, None]
+    assert describe_location(vOffers[0]) == "Roubaix · 10 km"
+    assert describe_location(vOffers[1]) == "France"
+    assert describe_location({}) == ""
+
+    add_distances(vOffers, None)
+
+    assert vOffers[0]["distance_km"] is None
+
+
+def test_alert_radius_keeps_near_and_remote_offers(tmp_path, geocoder):
+    """Vérifie le rayon des alertes, gardé quand l'adresse change."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+
+    with pytest.raises(ValueError):
+        save_alert_radius(vDatabaseFile, 25)
+
+    save_home(vDatabaseFile, "59000 Lille")
+    save_alert_radius(vDatabaseFile, 25)
+    save_home(vDatabaseFile, "Roubaix")
+    vHome = load_home(vDatabaseFile)
+
+    assert vHome["alert_radius_km"] == 25
+    assert geocoder
+
+    vOffers = [
+        {"id": "proche", "distance_km": 10},
+        {"id": "loin", "distance_km": 200},
+        {"id": "inconnue", "distance_km": None},
+        {"id": "teletravail", "distance_km": None, "remote": True},
+    ]
+
+    assert [vOffer["id"] for vOffer in keep_within_alert_radius(vOffers, vHome)] == [
+        "proche",
+        "teletravail",
+    ]
+    assert len(keep_within_alert_radius(vOffers, None)) == 4
+
+    save_alert_radius(vDatabaseFile, 33)
+
+    assert load_home(vDatabaseFile)["alert_radius_km"] == 0

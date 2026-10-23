@@ -37,6 +37,7 @@ from job.companies import (
     find_company_applications,
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
+from job.geocoding import describe_location
 from job.presentation import (
     build_translate_url,
     format_date,
@@ -458,7 +459,7 @@ class OfferDetailPanel(QWidget):
         vRemote = vOffer.get("remote")
 
         vInfos = {
-            "location": vOffer.get("location"),
+            "location": describe_location(vOffer),
             "contract": vOffer.get("contract"),
             "salary": format_net_salary(vOffer),
             "salary_label": vOffer.get("salary_label"),

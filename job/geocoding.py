@@ -1,5 +1,6 @@
 """Position du domicile et des offres en France, pour filtrer par distance"""
 
+import math
 from datetime import datetime
 
 import requests
@@ -34,6 +35,7 @@ MIN_SCORE = 0.4
 MAX_LOOKUPS = 300
 
 HOME_KEY = "home_location"
+EARTH_RADIUS_KM = 6371
 
 # Rayons proposés dans les filtres, en kilomètres ; 0 désactive le filtre.
 DISTANCE_FILTERS = {
@@ -108,6 +110,9 @@ def save_home(pDatabaseFile, pAddress):
             "label": vLabel,
             "latitude": vLatitude,
             "longitude": vLongitude,
+            "alert_radius_km": (load_home(pDatabaseFile) or {}).get(
+                "alert_radius_km", 0
+            ),
         }
 
     save_json_setting(pDatabaseFile, HOME_KEY, rHome)
@@ -116,6 +121,41 @@ def save_home(pDatabaseFile, pAddress):
     logger.info("Domicile %s", f"enregistré : {rHome['label']}" if rHome else "effacé")
 
     return rHome
+
+
+def save_alert_radius(pDatabaseFile, pRadiusKm):
+    """Enregistre le rayon des alertes autour du domicile ; 0 garde toutes les offres."""
+
+    vHome = load_home(pDatabaseFile)
+
+    if vHome is None:
+        raise ValueError("Enregistrez d'abord le domicile.")
+
+    vHome["alert_radius_km"] = pRadiusKm if pRadiusKm in DISTANCE_FILTERS else 0
+    save_json_setting(pDatabaseFile, HOME_KEY, vHome)
+
+    logger.info("Rayon des alertes : %s km", vHome["alert_radius_km"] or "aucun")
+
+
+def keep_within_alert_radius(pOffers, pHome):
+    """Garde les offres dans le rayon des alertes, et celles en télétravail.
+
+    Sans domicile ni rayon, toutes les offres sont gardées ; une offre sans
+    position connue est écartée dès qu'un rayon est choisi.
+    """
+
+    vRadius = (pHome or {}).get("alert_radius_km") or 0
+
+    rOffers = [
+        vOffer
+        for vOffer in pOffers
+        if not vRadius
+        or vOffer.get("remote") is True
+        or vOffer.get("remote") == 1
+        or (vOffer.get("distance_km") is not None and vOffer["distance_km"] <= vRadius)
+    ]
+
+    return rOffers
 
 
 def is_locatable(pKey):
@@ -185,3 +225,64 @@ def locate_offers(pDatabaseFile, pNow=None, pMaxLookups=MAX_LOOKUPS):
         )
 
     return rReport
+
+
+def compute_distance_km(pFrom, pTo):
+    """Retourne la distance à vol d'oiseau entre deux positions, en kilomètres."""
+
+    vLatitude1, vLongitude1 = map(math.radians, pFrom)
+    vLatitude2, vLongitude2 = map(math.radians, pTo)
+
+    vHalfChord = (
+        math.sin((vLatitude2 - vLatitude1) / 2) ** 2
+        + math.cos(vLatitude1)
+        * math.cos(vLatitude2)
+        * math.sin((vLongitude2 - vLongitude1) / 2) ** 2
+    )
+
+    rDistance = 2 * EARTH_RADIUS_KM * math.asin(math.sqrt(vHalfChord))
+
+    return rDistance
+
+
+def read_position(pOffer):
+    """Retourne la position enregistrée d'une offre, ou None (NaN des DataFrame compris)."""
+
+    try:
+        vPosition = (float(pOffer.get("latitude")), float(pOffer.get("longitude")))
+
+    except (TypeError, ValueError):
+        return None
+
+    rPosition = None if any(map(math.isnan, vPosition)) else vPosition
+
+    return rPosition
+
+
+def add_distances(pOffers, pHome):
+    """Ajoute à chaque offre sa distance au domicile en km, ou None si inconnue."""
+
+    vHome = (pHome["latitude"], pHome["longitude"]) if pHome else None
+
+    for vOffer in pOffers:
+        vPosition = read_position(vOffer)
+        vOffer["distance_km"] = (
+            round(compute_distance_km(vHome, vPosition))
+            if vHome and vPosition
+            else None
+        )
+
+
+def describe_location(pOffer):
+    """Retourne le lieu suivi de la distance au domicile quand elle est connue."""
+
+    vLocation = pOffer.get("location") or ""
+    vDistance = pOffer.get("distance_km")
+
+    rText = (
+        f"{vLocation} · {vDistance} km"
+        if vLocation and vDistance is not None
+        else vLocation
+    )
+
+    return rText

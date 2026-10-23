@@ -130,6 +130,14 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Comparaison des sources sur 30 jours dans Historique : offres, correspondance au profil, offres retenues, candidatures et ignorées (bureau et web)
 - [x] Restauration de la base depuis une copie du NAS, utile après la perte du PC
 - [x] Questions signalées (PC ou téléphone) listées dans Révision et remises dans les tirages d'un clic
+- [x] Compétences de l'industrie reconnues (automates, TIA Portal, habilitation électrique, GMAO, maintenance préventive…), compétence saisie librement dans le profil rapprochée de son libellé reconnu
+- [x] Distance au domicile dans la liste, la fiche, les e-mails et sur le téléphone, tri « Les plus proches » (web)
+- [x] Carte des offres sur le web (Leaflet et OpenStreetMap), avec les filtres de la liste et le rayon choisi
+- [x] Rayon des alertes : le téléphone et le récapitulatif par e-mail ne signalent que les offres proches, et le télétravail
+- [x] Liste des agences d'intérim modifiable dans Paramètres, badge « Intérim » dans la liste des offres
+- [x] Sources sans offre utile sur 30 jours signalées dans la comparaison des sources
+- [x] Offres proches de vos candidatures sur l'accueil : compétences et intitulé partagés avec les offres retenues
+- [x] Page Santé : fin du certificat HTTPS, placement des offres, dernière synchronisation du téléphone
 - [ ] Pagination spécifique aux sites
   - [x] France Travail
   - [x] Adzuna
@@ -427,8 +435,9 @@ sans exposer ce PC sur Internet, un réseau privé chiffré relie le téléphone
    pour son nom Tailscale (`serveur.xxx.ts.net`) et affiche les lignes du `.env` :
    `WEB_HOST` (adresse Tailscale 100.x.y.z, fermée au Wi-Fi et à Internet),
    `WEB_PUBLIC_HOST` (le nom, transmis par le QR code), `WEB_TLS_CERTFILE`,
-   `WEB_TLS_KEYFILE` et `WEB_SECURE_COOKIE`. Le certificat vaut 90 jours : relancer la
-   commande chaque mois.
+   `WEB_TLS_KEYFILE` et `WEB_SECURE_COOKIE`. Le certificat vaut 90 jours : le
+   planificateur le renouvelle un mois avant sa fin, et le tableau de bord le recharge
+   sans redémarrer ; la page Santé affiche sa date de fin.
 4. Relancer `python -m web`, rescanner le QR code depuis l'application, et ouvrir
    `https://serveur.xxx.ts.net:8000` dans le navigateur du téléphone : le tableau de bord
    s'installe alors comme une application.
@@ -542,7 +551,9 @@ scraper-data-python/
 │   ├── benefits.py                            # Détecte primes, 13e mois et épargne salariale
 │   ├── contract.py                            # Normalise le contrat : CDI, CDD ou freelance
 │   ├── presentation.py                        # Mise en forme et filtres communs aux interfaces
+│   ├── offer_filters.py                       # Choix de la barre de filtres traduits pour la requête
 │   ├── statistics.py                          # Indicateurs et graphiques, bureau et web
+│   ├── similar_offers.py                      # Nouvelles offres proches de celles retenues
 │   ├── settings.py                            # Réglages de calcul modifiables et recalcul du net
 │   ├── export.py                              # Export des offres en CSV, Excel et JSON
 │   ├── quality.py                             # Remplissage des champs et offres à vérifier
@@ -756,6 +767,7 @@ scraper-data-python/
 │   ├── keyword_suggestions.py                 # Mots-clés proposés à partir du profil
 │   ├── search_worker.py                       # Exécute la recherche dans un QThread
 │   ├── offers_page.py                         # Filtres et tableau des offres en base
+│   ├── offer_filters_bar.py                   # Barre de filtres de la page Offres
 │   ├── offers_model.py                        # Modèle Qt du tableau des offres
 │   ├── offer_detail.py                        # Détail d'une offre : résumé et description
 │   ├── offer_assistant.py                     # Aide : préparation, examen blanc, ChatGPT, lien
@@ -834,6 +846,7 @@ scraper-data-python/
 │   │   ├── dashboard.html                     # Tableau de bord
 │   │   ├── offers.html                        # Liste des offres et filtres
 │   │   ├── _offers_table.html                 # Tableau rechargé par HTMX
+│   │   ├── offers_map.html                    # Carte des offres (Leaflet, OpenStreetMap)
 │   │   ├── offer.html                         # Fiche détaillée d'une offre
 │   │   ├── compare.html                       # Comparaison des offres
 │   │   ├── _application.html                  # Bloc de suivi d'une candidature
@@ -849,6 +862,7 @@ scraper-data-python/
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
 │   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
 │   │   ├── _company_pages_check.html          # Bilan de vérification des pages carrière
+│   │   ├── _nas_copies.html                   # Copies du NAS, lues à la demande
 │   │   ├── history.html                       # Historique des exécutions
 │   │   ├── logs.html                          # Consultation des logs
 │   │   ├── quality.html                       # Qualité des données
@@ -871,7 +885,9 @@ scraper-data-python/
 │       ├── service-worker.js                  # Fichiers statiques en cache et page hors ligne
 │       ├── pwa.js                             # Enregistre le service worker, en HTTPS seulement
 │       ├── offline.html                       # Page affichée quand le PC ne répond pas
-│       └── htmx.min.js                        # HTMX 2.0.4, copie locale
+│       ├── htmx.min.js                        # HTMX 2.0.4, copie locale
+│       ├── offers_map.js                      # Place les offres et le domicile sur la carte
+│       └── leaflet/                           # Leaflet 1.9.4, copie locale (licence BSD)
 │
 ├── assets/                                    # Ressources partagées par le bureau et le web
 │   ├── logo.png                               # Logo, icône de fenêtre et favicon
@@ -915,6 +931,7 @@ scraper-data-python/
 │   ├── api_client.py                          # Appels sécurisés aux API des sources
 │   ├── mailer.py                              # Envoi d'e-mails par le SMTP de Gmail
 │   ├── tls.py                                 # Certificat HTTPS local et son empreinte
+│   ├── tailscale.py                           # Certificat Tailscale : demande et renouvellement
 │   └── security.py                            # Contrôles de sécurité du scraper
 │
 ├── cli/                                       # Gestion de l'interface en ligne de commande
@@ -957,7 +974,9 @@ scraper-data-python/
 │   │   ├── test_benefits.py                   # Teste la détection des avantages
 │   │   ├── test_contract.py                   # Teste la normalisation du contrat
 │   │   ├── test_presentation.py               # Teste la mise en forme commune des offres
+│   │   ├── test_offer_filters.py              # Teste la traduction des filtres
 │   │   ├── test_statistics.py                 # Teste les indicateurs du tableau de bord
+│   │   ├── test_similar_offers.py             # Teste les offres proches de celles retenues
 │   │   ├── test_settings.py                   # Teste les réglages et le recalcul du net
 │   │   ├── test_export.py                     # Teste l'export et la neutralisation des formules
 │   │   ├── test_schedule.py                   # Teste les réglages et l'échéance de la planification
@@ -980,6 +999,7 @@ scraper-data-python/
 │   │   ├── test_interview_revision.py         # Teste la révision ciblée et l'examen blanc d'une offre
 │   │   ├── test_manual_offers.py              # Teste l'ajout manuel et l'import d'offres
 │   │   ├── test_companies.py                  # Teste les listes d'entreprises et l'avertissement
+│   │   ├── test_agencies.py                   # Teste la liste d'agences et leur repérage
 │   │   ├── test_application_tracking.py       # Teste les colonnes de suivi et les statistiques
 │   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
@@ -1167,6 +1187,7 @@ scraper-data-python/
 │   ├── web/                                    # Tests du tableau de bord
 │   │   ├── __init__.py                          # Initialise le package de tests Web
 │   │   ├── test_app.py                         # Teste les routes et la sécurité de l'affichage
+│   │   ├── test_main.py                        # Teste le rechargement à chaud du certificat
 │   │   ├── test_api.py                         # Teste l'API mobile : jeton, contenu et réponses
 │   │   ├── test_auth.py                        # Teste la connexion, la session et le CSRF
 │   │   └── test_password.py                    # Teste la génération de l'empreinte
@@ -1207,3 +1228,4 @@ scraper-data-python/
 Ce projet est publié sous licence [PolyForm Strict 1.0.0](LICENSE) : le code peut être consulté et utilisé tel quel à des fins non commerciales, mais ni modifié, ni redistribué.
 
 Les icônes de `assets/icons/` proviennent de [Lucide](https://lucide.dev) et restent sous leur licence [ISC](assets/icons/LICENSE).
+La carte des offres utilise [Leaflet](https://leafletjs.com), sous licence [BSD](web/static/leaflet/LICENSE), et les fonds de carte d'[OpenStreetMap](https://www.openstreetmap.org/copyright).

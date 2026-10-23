@@ -41,6 +41,7 @@ from storage.job_applications import get_applications_with_offers, save_applicat
 from storage.job_offers import get_offer
 from storage.quiz_answers import get_last_answers, save_synced_answers
 from storage.quiz_questions import get_quiz_assets, get_quiz_guide, get_quiz_guides
+from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
 from utils.tls import read_fingerprint
 
@@ -48,6 +49,9 @@ logger = get_logger(__name__)
 
 # Nom du réglage qui garde le jeton ; ce n'est pas le jeton lui-même.
 MOBILE_TOKEN_KEY = "mobile_api_token"  # nosec B105
+
+# Heure de la dernière liste d'offres envoyée : la synchronisation est vivante.
+LAST_SYNC_KEY = "mobile_last_sync"
 
 # Version du format échangé : le téléphone refuse un format qu'il ne connaît pas.
 API_VERSION = 1
@@ -487,8 +491,26 @@ def sync_flags(pDatabaseFile, pQuestionIds):
     return rReport
 
 
+def get_last_phone_sync(pDatabaseFile):
+    """Retourne l'heure de la dernière synchronisation du téléphone, ou None."""
+
+    vValue = get_setting_values(pDatabaseFile).get(LAST_SYNC_KEY)
+
+    rTime = datetime.fromisoformat(vValue) if vValue else None
+
+    return rTime
+
+
 def build_offer_list(pDatabaseFile, pNow):
-    """Retourne les nouvelles offres de la semaine pour le téléphone, en lecture."""
+    """Retourne les nouvelles offres de la semaine pour le téléphone, en lecture.
+
+    Demandée à chaque synchronisation, tâche d'arrière-plan comprise : son heure
+    est gardée pour la page Santé.
+    """
+
+    save_setting_values(
+        pDatabaseFile, {LAST_SYNC_KEY: pNow.isoformat(timespec="seconds")}
+    )
 
     rOffers = [
         {
@@ -500,6 +522,7 @@ def build_offer_list(pDatabaseFile, pNow):
             "contract": vOffer.get("contract"),
             "url": vOffer.get("url"),
             "match_score": vOffer.get("match_score"),
+            "distance_km": vOffer.get("distance_km"),
             "first_seen_at": vOffer.get("first_seen_at"),
             "status": vOffer.get("application_status"),
         }

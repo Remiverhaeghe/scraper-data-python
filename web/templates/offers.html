@@ -7,11 +7,12 @@
 
 {% block content %}
 {% call ui.page_header("Offres", "Toutes les offres récupérées : filtrez, triez et suivez vos candidatures", "briefcase") %}
+<button class="button" type="submit" form="offer-filters" name="view" value="map">{{ icon("map-pin", 16) }} Carte</button>
 <a class="button" href="{{ url_for('show_comparison').path }}">{{ icon("list-checks", 16) }} Comparaison</a>
 <a class="button" href="{{ url_for('show_new_offer').path }}">{{ icon("sparkles", 16) }} Ajouter ou importer</a>
 {% endcall %}
 
-<form class="filters card"
+<form class="filters card" id="offer-filters"
       hx-get="{{ url_for('list_offers').path }}"
       hx-target="#offers"
       hx-trigger="change, input changed delay:400ms from:.filters-search"
@@ -35,6 +36,7 @@
             <option value="">Plus récentes</option>
             <option value="match" {% if filters.sort == "match" %}selected{% endif %}>Correspondance avec mon profil</option>
             <option value="fresh" {% if filters.sort == "fresh" %}selected{% endif %}>Les plus fraîches</option>
+            {% if home %}<option value="distance" {% if filters.sort == "distance" %}selected{% endif %}>Les plus proches</option>{% endif %}
         </select>
 
         <select name="match" aria-label="Correspondance minimale" title="Correspondance minimale avec les compétences du profil">

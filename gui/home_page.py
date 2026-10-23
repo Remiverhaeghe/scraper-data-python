@@ -146,6 +146,7 @@ class HomePage(QWidget):
         vGrid.addWidget(self.create_activity_card(), 0, 1)
         vGrid.addWidget(self.create_follow_ups_card(), 1, 0)
         vGrid.addWidget(self.create_latest_offers_card(), 1, 1)
+        vGrid.addWidget(self.create_similar_offers_card(), 2, 0, 1, 2)
 
         for vIndex in range(2):
             vGrid.setColumnStretch(vIndex, 1)
@@ -376,6 +377,47 @@ class HomePage(QWidget):
             "Aucune relance prévue.",
         )
 
+    def create_similar_offers_card(self):
+        """Construit la liste des nouvelles offres proches de celles retenues."""
+        self.similar_offers_card, vLayout = create_card(
+            "Offres proches de vos candidatures",
+            "Nouvelles offres qui partagent compétences et intitulé avec celles "
+            "que vous avez retenues",
+        )
+
+        self.similar_offers_layout = QVBoxLayout()
+        self.similar_offers_layout.setSpacing(2)
+
+        vLayout.addLayout(self.similar_offers_layout)
+
+        return self.similar_offers_card
+
+    def show_similar_offers(self, pOffers):
+        """Affiche les offres proches ; la carte est masquée sans offre retenue."""
+        self.similar_offers_card.setVisible(bool(pOffers))
+        self.show_rows(
+            self.similar_offers_layout,
+            [
+                self.create_offer_row(
+                    "target",
+                    COLORS["primary"],
+                    vOffer["title"] or "Titre non communiqué",
+                    " · ".join(
+                        vPart
+                        for vPart in (
+                            vOffer.get("company"),
+                            f"proche de « {vOffer['reference_title']} »",
+                        )
+                        if vPart
+                    ),
+                    f"{vOffer['similarity']} %",
+                    (vOffer["source"], vOffer["source_id"]),
+                )
+                for vOffer in pOffers
+            ],
+            "",
+        )
+
     def show_latest_offers(self, pOffers):
         """Affiche les dernières offres avec leur source, leur salaire et leur date."""
         self.show_rows(
@@ -489,6 +531,7 @@ class HomePage(QWidget):
             self.show_chart(vStatistics["daily_activity"])
             self.show_follow_ups(vStatistics["upcoming_follow_ups"])
             self.show_latest_offers(vStatistics["latest_offers"])
+            self.show_similar_offers(vStatistics["similar_offers"])
             self.last_search_label.setText(
                 describe_last_search(vStatistics["executions"])
             )

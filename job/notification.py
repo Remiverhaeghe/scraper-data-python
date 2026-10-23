@@ -3,6 +3,7 @@
 from html import escape
 
 from config import APPLICATION_NAME
+from job.geocoding import describe_location
 from job.presentation import (
     clean_missing_values,
     format_date,
@@ -23,7 +24,7 @@ def describe_offer(pOffer):
         vPart
         for vPart in (
             pOffer.get("company"),
-            pOffer.get("location"),
+            describe_location(pOffer),
             format_net_salary(pOffer),
             f"correspondance {vScore} %" if vScore is not None else None,
         )

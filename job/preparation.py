@@ -70,11 +70,24 @@ def contains_skill(pSkills, pSkill):
     return rContains
 
 
+def expand_skills(pSkills):
+    """Ajoute aux compétences saisies leur libellé reconnu dans les offres.
+
+    « TIA Portal » ou « habilitation B2V » saisis dans le profil couvrent ainsi
+    « Siemens TIA Portal » et « Habilitation électrique » détectés dans une offre.
+    """
+
+    rSkills = list(dict.fromkeys([*pSkills, *detect_skills(" ; ".join(pSkills))]))
+
+    return rSkills
+
+
 def match_profile(pProfile, pOfferSkills):
     """Retourne les compétences couvertes, manquantes et le score de correspondance."""
 
+    vProfileSkills = expand_skills(pProfile["skills"])
     vCovered = [
-        vSkill for vSkill in pOfferSkills if contains_skill(pProfile["skills"], vSkill)
+        vSkill for vSkill in pOfferSkills if contains_skill(vProfileSkills, vSkill)
     ]
     vMissing = [vSkill for vSkill in pOfferSkills if vSkill not in vCovered]
 
@@ -97,7 +110,8 @@ def recommend_cv(pProfile, pOfferSkills):
     vBestCount = -1
 
     for vCv in pProfile["cv_variants"]:
-        vCount = sum(contains_skill(vCv["skills"], vSkill) for vSkill in pOfferSkills)
+        vCvSkills = expand_skills(vCv["skills"])
+        vCount = sum(contains_skill(vCvSkills, vSkill) for vSkill in pOfferSkills)
 
         if vCount > vBestCount:
             rCv = {"name": vCv["name"], "matching": vCount}

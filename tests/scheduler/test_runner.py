@@ -332,3 +332,22 @@ def test_failing_task_does_not_stop_the_others(caplog):
 
     assert vCalls == [("base", NOW)]
     assert "Échec de la tâche « en échec » : disque plein" in caplog.text
+
+
+def test_web_certificate_is_renewed_only_in_https(monkeypatch):
+    """Vérifie que le renouvellement du certificat ne concerne que le HTTPS."""
+
+    vCalls = []
+    monkeypatch.setattr(
+        runner, "renew_certificate_if_due", lambda *pArgs: vCalls.append(pArgs)
+    )
+    monkeypatch.setattr(runner, "WEB_SCHEME", "http")
+    runner.renew_web_certificate("scraper.db", datetime(2026, 10, 23))
+
+    assert not vCalls
+
+    monkeypatch.setattr(runner, "WEB_SCHEME", "https")
+    monkeypatch.setattr(runner, "WEB_PUBLIC_HOST", "serveur.chat-tigre.ts.net")
+    runner.renew_web_certificate("scraper.db", datetime(2026, 10, 23))
+
+    assert vCalls[0][0] == "serveur.chat-tigre.ts.net"

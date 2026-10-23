@@ -1,0 +1,19 @@
+{# Copies du NAS (route /settings/nas-copies), chargées à la demande par HTMX. #}
+{% if error %}
+<p class="application-message tone-warning" role="status">{{ error }}</p>
+{% elif copies %}
+<form class="reset-form" method="post" action="{{ url_for('restore_database_backup').path }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <input type="hidden" name="origin" value="nas">
+    <select name="name" aria-label="Copie du NAS à restaurer">
+        {% for copy in copies %}<option value="{{ copy.name }}">{{ copy.label }}</option>{% endfor %}
+    </select>
+    <label class="check">
+        <input type="checkbox" name="confirm" value="1" required>
+        Je comprends que les données actuelles seront remplacées
+    </label>
+    <button class="button button-danger" type="submit">{{ icon("server", 16) }} Restaurer depuis le NAS</button>
+</form>
+{% else %}
+<p class="muted">Aucune copie sur le NAS.</p>
+{% endif %}

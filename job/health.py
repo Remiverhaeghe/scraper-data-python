@@ -3,8 +3,11 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from config import BACKUP_NAS_DIRECTORY
+from config import BACKUP_NAS_DIRECTORY, WEB_SCHEME, WEB_TLS_CERTFILE
 from job.followed_availability import LAST_CHECK_KEY
+from job.geocoding import load_home
+from job.location import FRANCE
+from job.mobile_sync import get_last_phone_sync, get_mobile_token
 from job.schedule import load_schedule
 from job.sources.registry import SOURCES
 from storage.backup import (
@@ -12,14 +15,23 @@ from storage.backup import (
     get_last_auto_backup_time,
     get_last_nas_copy_time,
 )
+from storage.geo_cache import count_offer_positions
 from storage.history_repository import get_history
 from storage.settings_repository import get_setting_values
 from utils.logger import get_logger
+from utils.tls import read_expiry
 
 logger = get_logger(__name__)
 
 # Au-delà, la sauvegarde automatique n'a manifestement plus lieu
 BACKUP_WARNING_DELAY = timedelta(days=2)
+
+# Fin proche du certificat HTTPS : orange à un mois, rouge à une semaine
+CERTIFICATE_WARNING_DAYS = 30
+CERTIFICATE_DANGER_DAYS = 7
+
+# Au-delà, le téléphone ne s'est plus synchronisé depuis longtemps
+PHONE_SYNC_WARNING_DELAY = timedelta(days=2)
 
 # Recherches de suite sans aucune offre au-delà desquelles une source qui en
 # renvoyait est signalée : son API a peut-être changé ou sa clé expiré.
@@ -228,6 +240,70 @@ def check_storage(pDatabaseFile):
     return rCheck
 
 
+def check_certificate(pNow, pCertificateFile=None):
+    """Vérifie la date de fin du certificat HTTPS du tableau de bord."""
+
+    vCertificateFile = pCertificateFile or WEB_TLS_CERTFILE
+
+    if WEB_SCHEME != "https" and pCertificateFile is None:
+        return ("HTTP, sans certificat", "muted")
+
+    try:
+        vExpiry = read_expiry(vCertificateFile)
+
+    except (OSError, ValueError):
+        return ("Certificat illisible : voir WEB_TLS_CERTFILE", "danger")
+
+    vDays = (vExpiry - pNow).days
+
+    if vDays < CERTIFICATE_DANGER_DAYS:
+        vTone = "danger"
+    elif vDays < CERTIFICATE_WARNING_DAYS:
+        vTone = "warning"
+    else:
+        vTone = "success"
+
+    rCheck = (f"Valable jusqu'au {vExpiry:%d/%m/%Y} ({max(vDays, 0)} jours)", vTone)
+
+    return rCheck
+
+
+def check_geocoding(pDatabaseFile):
+    """Vérifie que les offres en France sont placées pour le filtre de distance."""
+
+    if load_home(pDatabaseFile) is None:
+        return ("Domicile non renseigné dans Paramètres", "muted")
+
+    vTotal, vPlaced = count_offer_positions(pDatabaseFile, FRANCE)
+
+    rCheck = (
+        f"{vPlaced} offre(s) placée(s) sur {vTotal} en France",
+        "success" if vPlaced >= vTotal / 2 else "warning",
+    )
+
+    return rCheck
+
+
+def check_phone(pDatabaseFile, pNow):
+    """Vérifie que l'application mobile se synchronise encore."""
+
+    if not get_mobile_token(pDatabaseFile):
+        return ("Application mobile non reliée", "muted")
+
+    vLast = get_last_phone_sync(pDatabaseFile)
+
+    rCheck = (
+        ("Jamais synchronisée", "warning")
+        if vLast is None
+        else (
+            f"{vLast:%d/%m/%Y %H:%M} ({format_age(vLast, pNow)})",
+            "success" if pNow - vLast < PHONE_SYNC_WARNING_DELAY else "warning",
+        )
+    )
+
+    return rCheck
+
+
 def build_health(pDatabaseFile, pNow):
     """Retourne les indicateurs de santé, chacun avec son libellé, sa valeur et sa couleur."""
 
@@ -240,6 +316,9 @@ def build_health(pDatabaseFile, pNow):
         ("Sources muettes", lambda: check_silent_sources(pDatabaseFile)),
         ("Offres suivies vérifiées", lambda: check_followed_offers(pDatabaseFile)),
         ("Place occupée", lambda: check_storage(pDatabaseFile)),
+        ("Certificat HTTPS", lambda: check_certificate(pNow)),
+        ("Placement des offres", lambda: check_geocoding(pDatabaseFile)),
+        ("Application mobile", lambda: check_phone(pDatabaseFile, pNow)),
     )
 
     rHealth = []

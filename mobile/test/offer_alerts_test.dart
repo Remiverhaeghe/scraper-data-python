@@ -2,11 +2,13 @@
 
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:jobboard_revision/logic/offer_alerts.dart';
 import 'package:jobboard_revision/revision_state.dart';
+import 'package:jobboard_revision/screens/offers_screen.dart';
 import 'package:jobboard_revision/services/api_client.dart';
 import 'package:jobboard_revision/services/revision_store.dart';
 
@@ -39,6 +41,8 @@ MockClient buildServer(List<List<Map<String, dynamic>>> pOfferLists) {
 }
 
 void main() {
+  testOfferCardShowsDistance();
+
   test('Seules les nouvelles offres assez proches du profil sont retenues', () {
     final vNew = findNewGoodOffers(
       [buildOffer('1', 90)],
@@ -90,5 +94,29 @@ void main() {
     expect(await vState.setOfferAlerts(true), isFalse);
     expect(vState.offerAlertsEnabled, isFalse);
     expect(vReminders.offerChecks, [false]);
+  });
+}
+
+void testOfferCardShowsDistance() {
+  testWidgets('La fiche d\'une offre affiche sa distance au domicile', (pTester) async {
+    final vState = RevisionState(MemoryRevisionStore());
+
+    await pTester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: OfferCard(
+            state: vState,
+            offer: {
+              ...buildOffer('1', 80),
+              'company': 'Acme',
+              'location': 'Roubaix',
+              'distance_km': 12
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Acme · Roubaix · 12 km'), findsOneWidget);
   });
 }

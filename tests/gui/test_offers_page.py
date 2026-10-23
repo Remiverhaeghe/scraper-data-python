@@ -87,16 +87,16 @@ def test_page_lists_active_offers(offers_page):
 def test_page_applies_filters(offers_page):
     """Vérifie que les filtres de la page sont transmis à la requête."""
 
-    offers_page.contract_combo.setCurrentIndex(
-        offers_page.contract_combo.findData("CDI")
+    offers_page.filters_bar.contract_combo.setCurrentIndex(
+        offers_page.filters_bar.contract_combo.findData("CDI")
     )
 
     assert get_titles(offers_page) == ["Développeur Java"]
 
-    offers_page.status_combo.setCurrentIndex(
-        offers_page.status_combo.findData("IGNORED")
+    offers_page.filters_bar.status_combo.setCurrentIndex(
+        offers_page.filters_bar.status_combo.findData("IGNORED")
     )
-    offers_page.contract_combo.setCurrentIndex(0)
+    offers_page.filters_bar.contract_combo.setCurrentIndex(0)
 
     assert get_titles(offers_page) == ["Offre ignorée"]
 
@@ -161,7 +161,7 @@ def test_describe_application():
 def test_empty_result_shows_empty_state(offers_page):
     """Vérifie l'état vide lorsqu'aucune offre ne correspond aux filtres."""
 
-    offers_page.search_edit.setText("introuvable")
+    offers_page.filters_bar.search_edit.setText("introuvable")
     offers_page.refresh()
 
     assert offers_page.detail_panel.stack.currentIndex() == 0
@@ -178,22 +178,22 @@ def test_first_offer_is_selected_by_default(offers_page):
 def test_apply_preset_resets_other_filters(offers_page):
     """Vérifie qu'un préréglage repart de filtres vierges."""
 
-    offers_page.contract_combo.setCurrentIndex(
-        offers_page.contract_combo.findData("CDD")
+    offers_page.filters_bar.contract_combo.setCurrentIndex(
+        offers_page.filters_bar.contract_combo.findData("CDD")
     )
 
     offers_page.apply_preset("new_offers")
 
-    assert offers_page.contract_combo.currentData() is None
-    assert offers_page.new_check.isChecked()
+    assert offers_page.filters_bar.contract_combo.currentData() is None
+    assert offers_page.filters_bar.new_check.isChecked()
     assert get_titles(offers_page) == ["Data Engineer", "Développeur Java"]
 
 
 def test_export_uses_current_filters(offers_page, tmp_path):
     """Vérifie que l'export reprend les filtres affichés."""
 
-    offers_page.contract_combo.setCurrentIndex(
-        offers_page.contract_combo.findData("CDI")
+    offers_page.filters_bar.contract_combo.setCurrentIndex(
+        offers_page.filters_bar.contract_combo.findData("CDI")
     )
 
     assert offers_page.export_to(tmp_path / "offres.json") == 1
@@ -228,9 +228,9 @@ def test_search_results_are_shown_alone(offers_page):
 def test_salary_and_publication_filters(offers_page):
     """Vérifie que les nouveaux filtres sont transmis à la requête."""
 
-    offers_page.max_salary_spin.setValue(2500)
-    offers_page.salary_check.setChecked(True)
-    offers_page.published_combo.setCurrentIndex(2)
+    offers_page.filters_bar.max_salary_spin.setValue(2500)
+    offers_page.filters_bar.salary_check.setChecked(True)
+    offers_page.filters_bar.published_combo.setCurrentIndex(2)
 
     vFilters = offers_page.build_filters(datetime.now(), 3)
 
@@ -261,8 +261,8 @@ def test_expired_offers_are_hidden_then_shown_greyed(offers_page, database_file)
 
     assert get_titles(offers_page) == ["Développeur Java"]
 
-    offers_page.availability_combo.setCurrentIndex(
-        offers_page.availability_combo.findData("expired")
+    offers_page.filters_bar.availability_combo.setCurrentIndex(
+        offers_page.filters_bar.availability_combo.findData("expired")
     )
 
     assert get_titles(offers_page) == ["Data Engineer"]
@@ -322,7 +322,7 @@ def test_duplicates_are_grouped_then_separated(offers_page, database_file):
         ),
         datetime.now(),
     )
-    offers_page.multiple_check.setChecked(True)
+    offers_page.filters_bar.multiple_check.setChecked(True)
 
     vOffer = offers_page.model.offers[0]
 
@@ -336,7 +336,7 @@ def test_duplicates_are_grouped_then_separated(offers_page, database_file):
     assert "Différences à valider" in offers_page.detail_panel.duplicates_label.text()
 
     offers_page.detail_panel.decide_duplicates("separate")
-    offers_page.multiple_check.setChecked(False)
+    offers_page.filters_bar.multiple_check.setChecked(False)
 
     assert get_titles(offers_page).count("QA") == 2
 
@@ -637,16 +637,20 @@ def test_interview_score_and_france_filter(offers_page, database_file):
 
     assert get_application(database_file, "manual", vSourceId)["interview_at"]
 
-    offers_page.france_check.setChecked(True)
+    offers_page.filters_bar.france_check.setChecked(True)
 
     assert get_titles(offers_page) == ["Développeur Java"]
 
     # Filtre France gardé : seule l'offre ajoutée, à 50 % du profil, reste.
-    offers_page.match_combo.setCurrentIndex(offers_page.match_combo.findData(70))
+    offers_page.filters_bar.match_combo.setCurrentIndex(
+        offers_page.filters_bar.match_combo.findData(70)
+    )
 
     assert get_titles(offers_page) == []
 
-    offers_page.match_combo.setCurrentIndex(offers_page.match_combo.findData(50))
+    offers_page.filters_bar.match_combo.setCurrentIndex(
+        offers_page.filters_bar.match_combo.findData(50)
+    )
 
     assert get_titles(offers_page) == ["Développeur Java"]
 

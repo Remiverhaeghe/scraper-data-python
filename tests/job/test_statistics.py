@@ -11,6 +11,7 @@ from job.statistics import (
     MAX_PIE_SOURCES,
     build_source_cells,
     compare_sources,
+    describe_useless_sources,
     get_source_shares,
     get_week_goal,
     trim_leading_empty_days,
@@ -197,3 +198,27 @@ def test_compare_sources_without_profile_has_no_score(tmp_path):
     )
 
     assert build_source_cells(compare_sources(vDatabaseFile, vNow)[0])[-1] == "—"
+
+
+def test_useless_sources_need_a_profile_and_enough_offers():
+    """Vérifie le conseil : assez d'offres, aucune utile, et un profil renseigné."""
+
+    def build_row(pLabel, pOffers, pGood=0, pScore=10):
+        return {
+            "label": pLabel,
+            "offers": pOffers,
+            "good": pGood,
+            "kept": 0,
+            "sent": 0,
+            "average_score": pScore,
+        }
+
+    vRows = [
+        build_row("Arbeitnow", 120),
+        build_row("Lever", 40, pGood=3),
+        build_row("Jooble", 5),
+    ]
+
+    assert describe_useless_sources(vRows).endswith(": Arbeitnow (120 offres)")
+    assert describe_useless_sources([build_row("Arbeitnow", 120, pScore=None)]) == ""
+    assert describe_useless_sources(vRows[1:]) == ""

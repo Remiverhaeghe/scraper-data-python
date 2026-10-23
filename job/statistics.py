@@ -6,6 +6,7 @@ from job.preparation import score_offers
 from job.presentation import get_source_label, prepare_offer
 from job.profile import load_profile
 from job.settings import load_settings
+from job.similar_offers import find_similar_offers
 from job.sources.registry import SOURCES
 from storage.history_repository import get_history
 from storage.job_applications import (
@@ -89,6 +90,7 @@ def load_statistics(pDatabaseFile, pNow=None):
                 pDatabaseFile, pLimit=DASHBOARD_LIST_SIZE, pHideIgnored=True
             ).to_dict("records")
         ],
+        "similar_offers": find_similar_offers(pDatabaseFile, vNow, DASHBOARD_LIST_SIZE),
         "executions": get_history(pDatabaseFile, pLimit=RECENT_EXECUTIONS),
         "daily_activity": trim_leading_empty_days(
             {
@@ -313,3 +315,35 @@ def build_source_cells(pRow):
     ]
 
     return rCells
+
+
+# Au-dessous, une source a trop peu d'offres pour être jugée
+MIN_JUDGED_OFFERS = 20
+
+
+def describe_useless_sources(pComparison):
+    """Retourne le conseil de décocher les sources sans offre utile, ou "".
+
+    Une source n'est jugée qu'avec assez d'offres et un profil renseigné : sans
+    compétences, aucune offre ne peut atteindre le score attendu.
+    """
+
+    if all(vRow["average_score"] is None for vRow in pComparison):
+        return ""
+
+    vUseless = [
+        f"{vRow['label']} ({vRow['offers']} offres)"
+        for vRow in pComparison
+        if vRow["offers"] >= MIN_JUDGED_OFFERS
+        and not (vRow["good"] or vRow["kept"] or vRow["sent"])
+    ]
+
+    rText = (
+        "À envisager de décocher, aucune offre à "
+        f"{GOOD_MATCH_SCORE} % ni retenue en {SOURCE_COMPARISON_DAYS} jours : "
+        + ", ".join(vUseless)
+        if vUseless
+        else ""
+    )
+
+    return rText

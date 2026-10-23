@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import io
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from fastapi import (
     APIRouter,
@@ -17,6 +17,7 @@ from fastapi import (
 )
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
+from job.agencies import load_interim_agencies, mark_agency_offers
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
 from job.companies import (
     add_company_rule,
@@ -37,7 +38,13 @@ from job.deduplication import (
     group_offers,
 )
 from job.freshness import add_freshness
-from job.geocoding import DISTANCE_FILTERS, load_home
+from job.geocoding import (
+    DISTANCE_FILTERS,
+    add_distances,
+    describe_location,
+    load_home,
+    read_position,
+)
 from job.interview_journal import collect_asked_questions
 from job.interview_revision import build_offer_revision
 from job.manual_offers import (
@@ -49,6 +56,7 @@ from job.manual_offers import (
     list_import_problems,
 )
 from job.offer_comparison import load_comparison_keys
+from job.offer_filters import OfferFilterChoices, build_offer_filters
 from job.preparation import (
     MATCH_FILTERS,
     filter_by_match,
@@ -70,9 +78,10 @@ from job.presentation import (
     PUBLISHED_PERIODS,
     STATUS_LABELS,
     STATUS_TONES,
-    build_offer_filters,
     build_translate_url,
     can_lookup_company,
+    SCORE_FAIR,
+    SCORE_GOOD,
     get_score_tone,
     prepare_offer,
 )
@@ -122,6 +131,7 @@ def list_offers(
     pFrance: str = Query("", alias="france"),
     pNoAgency: str = Query("", alias="no_agency"),
     pDistance: str = Query("", alias="distance"),
+    pView: str = Query("", alias="view"),
     pSort: str = Query("", alias="sort"),
     pMatch: str = Query("", alias="match"),
     pDatabaseFile: str = Depends(get_database_file),
@@ -135,27 +145,32 @@ def list_offers(
     vCompanyRules = load_company_rules(pDatabaseFile)
     vHome = load_home(pDatabaseFile)
     vDistance = int(pDistance) if pDistance.isdigit() else 0
+    vAgencies = load_interim_agencies(pDatabaseFile)
 
+    vChoices = OfferFilterChoices(
+        search=pSearch,
+        source=pSource,
+        contract=pContract,
+        status=pStatus,
+        availability=pAvailability,
+        min_net_salary=parse_amount(pMinSalary),
+        max_net_salary=parse_amount(pMaxSalary),
+        published_days=parse_published_days(pPublished),
+        distance_km=vDistance,
+        remote=bool(pRemote),
+        new_only=bool(pNew),
+        has_salary=bool(pHasSalary),
+        preferred_only=bool(pPreferred),
+        france_only=bool(pFrance),
+        hide_agencies=bool(pNoAgency),
+    )
     vFilters = build_offer_filters(
-        pSearch=pSearch,
-        pSource=pSource,
-        pContract=pContract,
-        pRemote=pRemote,
-        pMinNetSalary=parse_amount(pMinSalary),
-        pNewOnly=bool(pNew),
-        pStatus=pStatus,
+        vChoices,
         pNow=vNow,
         pNewOfferDays=vNewOfferDays,
-        pAvailability=pAvailability,
         pExpiryDays=vSettings["expiry_days"],
-        pMaxNetSalary=parse_amount(pMaxSalary),
-        pPublishedDays=parse_published_days(pPublished),
-        pHasSalary=bool(pHasSalary),
         pCompanyKeys=build_company_filter_keys(vCompanyRules),
-        pPreferredOnly=bool(pPreferred),
-        pFranceOnly=bool(pFrance),
-        pHideAgencies=bool(pNoAgency),
-        pDistanceKm=vDistance,
+        pAgencies=vAgencies,
         pHome=vHome,
     )
 
@@ -167,6 +182,8 @@ def list_offers(
     ]
     mark_preferred_companies(vPrepared, vCompanyRules)
     score_offers(vPrepared, load_profile(pDatabaseFile))
+    add_distances(vPrepared, vHome)
+    mark_agency_offers(vPrepared, vAgencies)
 
     # Valeur inconnue : aucun filtre, comme pour les autres listes de choix
     vMinMatch = int(pMatch) if pMatch.isdigit() and int(pMatch) in MATCH_FILTERS else 0
@@ -187,6 +204,12 @@ def list_offers(
 
     if pSort == "fresh":
         vGrouped.sort(key=lambda pOffer: pOffer["freshness"], reverse=True)
+
+    # Distance inconnue en fin de liste
+    if pSort == "distance":
+        vGrouped.sort(
+            key=lambda pOffer: (pOffer["distance_km"] is None, pOffer["distance_km"])
+        )
 
     if pMultiple:
         vGrouped = [vOffer for vOffer in vGrouped if vOffer["duplicates"]]
@@ -231,13 +254,62 @@ def list_offers(
         },
     }
 
-    vTemplate = (
-        "_offers_table.html" if request.headers.get("HX-Request") else "offers.html"
-    )
+    if request.headers.get("HX-Request"):
+        vTemplate = "_offers_table.html"
+
+    elif pView == "map":
+        vTemplate = "offers_map.html"
+        vContext["map_points"] = build_map_points(vGrouped)
+        # Le libellé et la position suffisent : l'adresse ne quitte pas le serveur.
+        vContext["map_home"] = (
+            {vKey: vHome[vKey] for vKey in ("label", "latitude", "longitude")}
+            if vHome
+            else None
+        )
+        vContext["score_levels"] = (SCORE_GOOD, SCORE_FAIR)
+        vContext["list_query"] = urlencode(
+            [
+                (vKey, vValue)
+                for vKey, vValue in request.query_params.items()
+                if vKey != "view"
+            ]
+        )
+
+    else:
+        vTemplate = "offers.html"
 
     rResponse = templates.TemplateResponse(request, vTemplate, vContext)
 
     return rResponse
+
+
+def build_map_points(pOffers):
+    """Retourne les offres placées sur la carte : position, résumé et lien."""
+
+    rPoints = [
+        {
+            "latitude": vPosition[0],
+            "longitude": vPosition[1],
+            "title": vOffer.get("title") or "Offre sans titre",
+            "detail": " · ".join(
+                vPart
+                for vPart in (vOffer.get("company"), describe_location(vOffer))
+                if vPart
+            ),
+            "score": vOffer.get("match_score"),
+            "tone": (
+                None
+                if vOffer.get("match_score") is None
+                else get_score_tone(vOffer["match_score"])
+            ),
+            "url": "/offer?"
+            + urlencode({"source": vOffer["source"], "id": vOffer["source_id"]}),
+        }
+        for vOffer in pOffers
+        if (vPosition := read_position(vOffer))
+    ]
+
+    return rPoints
 
 
 # Fiche d'une offre et suivi de candidature. Les formulaires sont envoyés par

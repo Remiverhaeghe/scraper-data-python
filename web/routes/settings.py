@@ -9,6 +9,8 @@ from fastapi.responses import FileResponse, HTMLResponse, Response
 from starlette.background import BackgroundTask
 from starlette.concurrency import run_in_threadpool
 
+from config import BACKUP_NAS_DIRECTORY
+from job.agencies import load_interim_agencies, save_interim_agencies
 from job.calendar import (
     CALENDAR_SUBSCRIPTION_PATH,
     build_calendar,
@@ -46,7 +48,7 @@ from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.config import SOURCE_CATEGORIES
 from job.sources.registry import SOURCES
 from storage.archive import export_archive, restore_archive, restore_backup
-from storage.backup import describe_backups
+from storage.backup import describe_backups, describe_nas_copies, fetch_nas_copy
 from storage.maintenance import reset_database
 from utils.logger import get_logger
 from utils.mailer import get_missing_email_settings
@@ -120,8 +122,11 @@ def render_settings(
             # Textes saisis réaffichés après une erreur, sinon listes enregistrées
             "companies": pCompanies
             or {
-                vKind: "\n".join(vNames)
-                for vKind, vNames in load_company_rules(pDatabaseFile).items()
+                **{
+                    vKind: "\n".join(vNames)
+                    for vKind, vNames in load_company_rules(pDatabaseFile).items()
+                },
+                "agencies": "\n".join(load_interim_agencies(pDatabaseFile)),
             },
             "companies_message": pCompaniesMessage,
             "min_scores": {
@@ -162,6 +167,7 @@ def render_settings(
                 for vBackup in describe_backups(pDatabaseFile)
             ],
             "backup_message": pBackupMessage,
+            "nas_configured": bool(BACKUP_NAS_DIRECTORY),
         },
         status_code=pStatusCode,
     )
@@ -272,19 +278,25 @@ def update_companies(
     request: Request,
     pExcluded: str = Form("", alias="excluded"),
     pPreferred: str = Form("", alias="preferred"),
+    pAgencies: str = Form("", alias="agencies"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Enregistre les listes d'entreprises, ou les réaffiche avec l'erreur."""
 
     try:
         vRules = save_company_rules(pDatabaseFile, pExcluded, pPreferred)
+        vAgencies = save_interim_agencies(pDatabaseFile, pAgencies)
 
     except ValueError as vException:
         rResponse = render_settings(
             request,
             pDatabaseFile,
             pStatusCode=400,
-            pCompanies={"excluded": pExcluded, "preferred": pPreferred},
+            pCompanies={
+                "excluded": pExcluded,
+                "preferred": pPreferred,
+                "agencies": pAgencies,
+            },
             pCompaniesMessage=str(vException),
         )
 
@@ -293,7 +305,8 @@ def update_companies(
             request,
             pDatabaseFile,
             pCompaniesMessage=f"{len(vRules['excluded'])} entreprise(s) exclue(s), "
-            f"{len(vRules['preferred'])} privilégiée(s).",
+            f"{len(vRules['preferred'])} privilégiée(s), "
+            f"{len(vAgencies)} agence(s) d'intérim.",
         )
 
     return rResponse
@@ -466,9 +479,13 @@ def restore_database_backup(
     request: Request,
     pName: str = Form("", alias="name"),
     pConfirm: str = Form("", alias="confirm"),
+    pOrigin: str = Form("", alias="origin"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Remet la base dans l'état d'une sauvegarde choisie, après confirmation."""
+    """Remet la base dans l'état d'une sauvegarde choisie, après confirmation.
+
+    Avec origin=nas, la copie est d'abord rapatriée du NAS.
+    """
 
     if pConfirm != "1":
         rResponse = render_settings(
@@ -480,9 +497,12 @@ def restore_database_backup(
 
     else:
         try:
+            if pOrigin == "nas":
+                fetch_nas_copy(pDatabaseFile, pName)
+
             vBackupFile = restore_backup(pDatabaseFile, pName, datetime.now())
 
-        except ValueError as vException:
+        except (ValueError, OSError) as vException:
             logger.warning("Restauration de sauvegarde refusée : %s", vException)
 
             rResponse = render_settings(
@@ -496,6 +516,31 @@ def restore_database_backup(
                 pBackupMessage=f"Sauvegarde restaurée. Anciennes données : "
                 f"{vBackupFile.name}",
             )
+
+    return rResponse
+
+
+@router.get("/settings/nas-copies", response_class=HTMLResponse)
+def list_nas_copies_fragment(
+    request: Request, pDatabaseFile: str = Depends(get_database_file)
+):
+    """Liste les copies du NAS à restaurer (fragment HTMX, lu à la demande)."""
+
+    try:
+        vCopies = [
+            {"name": vCopy["name"], "label": describe_backup(vCopy)}
+            for vCopy in describe_nas_copies(pDatabaseFile)
+        ]
+        vError = None
+
+    except OSError as vException:
+        logger.warning("Copies du NAS illisibles : %s", vException)
+        vCopies = []
+        vError = "Le NAS est injoignable : vérifiez qu'il est allumé et accessible."
+
+    rResponse = templates.TemplateResponse(
+        request, "_nas_copies.html", {"copies": vCopies, "error": vError}
+    )
 
     return rResponse
 

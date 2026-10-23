@@ -142,4 +142,27 @@
         {% endif %}
     </article>
 </section>
+
+{% if statistics.similar_offers %}
+<section class="section-gap">
+    <article class="card">
+        <h2>Offres proches de vos candidatures</h2>
+        <p class="card-subtitle">Nouvelles offres qui partagent compétences et intitulé avec celles que vous avez retenues</p>
+        <ul class="list">
+            {% for offer in statistics.similar_offers %}
+            <li>
+                <a class="list-item list-link" href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">
+                    <span class="tone-primary">{{ icon("target", 20) }}</span>
+                    <div>
+                        <strong>{{ offer.title or "Titre non communiqué" }}</strong>
+                        <small>{{ offer.company or "" }}{% if offer.company %} · {% endif %}proche de « {{ offer.reference_title }} »</small>
+                    </div>
+                    <em>{{ offer.similarity }} %</em>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endif %}
 {% endblock %}

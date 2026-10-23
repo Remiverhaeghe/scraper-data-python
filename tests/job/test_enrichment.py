@@ -140,3 +140,19 @@ def test_title_segments_are_split_after_reading():
     assert vOffer["title"] == "Senior Consultant (m/w/d) Finance"
     assert "title" in vFilled
     assert vOffer["remote"] in (1, True)
+
+
+def test_detect_skills_reads_industrial_offers():
+    """Vérifie les compétences d'automatisme et de maintenance, sans le nom Schneider."""
+
+    assert detect_skills(
+        "Schneider Electric recrute : automates programmables, TIA Portal, "
+        "habilitation électrique B2V, GMAO et maintenance préventive."
+    ) == [
+        "Automates programmables",
+        "Siemens TIA Portal",
+        "Habilitation électrique",
+        "Maintenance préventive et curative",
+        "GMAO",
+    ]
+    assert detect_skills("Programmation Unity Pro sur M580") == ["Schneider"]

@@ -77,8 +77,7 @@ String formatCountdown(int pRemainingSeconds) {
   final vText = '${(vSeconds ~/ 60).toString().padLeft(2, '0')}:'
       '${(vSeconds % 60).toString().padLeft(2, '0')}';
 
-  final rText =
-      pRemainingSeconds >= 0 ? 'Temps restant : $vText' : 'Temps dépassé de $vText';
+  final rText = pRemainingSeconds >= 0 ? 'Temps restant : $vText' : 'Temps dépassé de $vText';
 
   return rText;
 }

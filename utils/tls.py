@@ -91,3 +91,16 @@ def read_fingerprint(pCertificateFile):
     rFingerprint = vCertificate.fingerprint(hashes.SHA256()).hex()
 
     return rFingerprint
+
+
+def read_expiry(pCertificateFile):
+    """Retourne la date de fin d'un certificat, à l'heure locale.
+
+    Lève OSError ou ValueError si le fichier est absent ou illisible.
+    """
+
+    vCertificate = x509.load_pem_x509_certificate(Path(pCertificateFile).read_bytes())
+
+    rExpiry = vCertificate.not_valid_after_utc.astimezone().replace(tzinfo=None)
+
+    return rExpiry

@@ -22,7 +22,9 @@ def test_navigation_to_follow_ups(qt_application, tmp_path):
     vWindow.navigate("follow_ups")
 
     assert vWindow.pages.currentWidget() is vWindow.offers_page
-    assert vWindow.offers_page.status_combo.currentData() == FOLLOW_UP_FILTER
+    assert (
+        vWindow.offers_page.filters_bar.status_combo.currentData() == FOLLOW_UP_FILTER
+    )
 
 
 def test_status_follows_search(qt_application, tmp_path):
@@ -162,7 +164,7 @@ def test_applications_opens_its_page_and_preset_the_offers(qt_application, tmp_p
     vWindow.navigate("applied_offers")
 
     assert vWindow.pages.currentWidget() is vWindow.offers_page
-    assert vWindow.offers_page.status_combo.currentData() == "APPLIED"
+    assert vWindow.offers_page.filters_bar.status_combo.currentData() == "APPLIED"
 
 
 def test_menu_shows_pending_alerts(qt_application, tmp_path, monkeypatch):
@@ -203,7 +205,7 @@ def test_keyboard_shortcuts(qt_application, tmp_path):
     vShortcuts[QKeySequence(QKeySequence.StandardKey.Find).toString()].activated.emit()
 
     assert vWindow.pages.currentWidget() is vWindow.offers_page
-    assert vWindow.focusWidget() is vWindow.offers_page.search_edit
+    assert vWindow.focusWidget() is vWindow.offers_page.filters_bar.search_edit
 
     vWindow.offers_page.set_detail_visible(True)
     vShortcuts["Esc"].activated.emit()

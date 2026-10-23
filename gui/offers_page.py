@@ -3,21 +3,17 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, QSortFilterProxyModel, Qt, QTimer
+from PySide6.QtCore import QSettings, QSortFilterProxyModel, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QCheckBox,
-    QComboBox,
     QFileDialog,
     QFrame,
     QHBoxLayout,
     QHeaderView,
     QLabel,
-    QLineEdit,
     QMenu,
     QMessageBox,
     QPushButton,
-    QSpinBox,
     QSplitter,
     QTableView,
     QVBoxLayout,
@@ -27,25 +23,24 @@ from PySide6.QtWidgets import (
 from config import EXPIRY_DAYS
 from gui.icons import get_icon
 from gui.offer_detail import OfferDetailPanel
+from gui.offer_filters_bar import OfferFiltersBar
 from gui.offer_form import ManualOfferDialog
 from gui.offers_model import COLUMNS, SORT_ROLE, OffersTableModel
 from gui.theme import COLORS
 from gui.widgets import (
-    FlowLayout,
-    align_spin_box,
     create_button,
     create_icon_label,
     create_page_header,
 )
+from job.agencies import load_interim_agencies, mark_agency_offers
 from job.companies import (
     build_company_filter_keys,
     load_company_rules,
     mark_preferred_companies,
 )
-from job.contract import CONTRACT_TYPES
 from job.deduplication import group_offers
 from job.freshness import add_freshness
-from job.geocoding import DISTANCE_FILTERS, load_home
+from job.geocoding import add_distances, load_home
 from job.export import EXPORT_FORMATS, export_offers
 from job.manual_offers import (
     IMPORT_FORMATS,
@@ -53,21 +48,15 @@ from job.manual_offers import (
     import_offers_file,
     list_import_problems,
 )
+from job.offer_filters import build_offer_filters
 from job.presentation import (
-    ADDED_SOURCE_LABELS,
-    AVAILABILITY_FILTERS,
-    DEFAULT_AVAILABILITY,
     FOLLOW_UP_FILTER,
     MANUAL_SOURCE,
-    PUBLISHED_PERIODS,
-    STATUS_LABELS,
-    build_offer_filters,
     prepare_offer,
 )
-from job.preparation import MATCH_FILTERS, filter_by_match, score_offers
+from job.preparation import filter_by_match, score_offers
 from job.profile import load_profile
 from job.settings import load_settings
-from job.sources.registry import SOURCES
 from storage.duplicates import get_decisions
 from storage.job_offers import get_offers
 from utils.logger import get_logger
@@ -80,34 +69,14 @@ MAX_DISPLAYED_OFFERS = 1000
 # Statut filtré par les préréglages ouverts depuis l'accueil
 PRESET_STATUSES = {"applied_offers": "APPLIED", "follow_ups": FOLLOW_UP_FILTER}
 
-# Attente après la dernière frappe avant de relancer la recherche
-SEARCH_DELAY_MS = 300
-
 
 # Réglage qui garde la fiche masquée d'une ouverture à l'autre
 DETAIL_HIDDEN_KEY = "offers/detail_hidden"
 
 # Largeur des colonnes du tableau et partage tableau / fiche, gardés d'une
-# ouverture à l'autre
-COLUMNS_STATE_KEY = "offers/columns"
+# ouverture à l'autre ; la clé change avec la liste des colonnes.
+COLUMNS_STATE_KEY = "offers/columns-v2"
 SPLITTER_STATE_KEY = "offers/splitter"
-
-
-def create_salary_spin(pEmptyText, pSuffix):
-    """Crée un champ de salaire net mensuel ; 0 signifie aucune borne."""
-
-    rSpin = align_spin_box(QSpinBox())
-    rSpin.setRange(0, 20000)
-    rSpin.setSingleStep(100)
-    rSpin.setSuffix(pSuffix)
-    rSpin.setSpecialValueText(pEmptyText)
-    # La marge du texte n'entre pas dans la taille calculée par Qt : sans elle,
-    # « Salaire minimum » s'affichait tronqué.
-    rSpin.setMinimumWidth(
-        rSpin.sizeHint().width() + rSpin.lineEdit().textMargins().left()
-    )
-
-    return rSpin
 
 
 class OffersPage(QWidget):
@@ -119,6 +88,7 @@ class OffersPage(QWidget):
 
         self.database_file = pDatabaseFile
         self.home = None
+        self.agencies = None
 
         self.model = OffersTableModel()
 
@@ -199,7 +169,9 @@ class OffersPage(QWidget):
         self.result_keys = None
         self.results_banner = self.create_results_banner()
 
-        vLayout.addLayout(self.create_filters())
+        self.filters_bar = OfferFiltersBar()
+        self.filters_bar.changed.connect(self.refresh)
+        vLayout.addWidget(self.filters_bar)
         vLayout.addWidget(self.results_banner)
         vLayout.addLayout(vCountRow)
         vLayout.addWidget(vSplitter, 1)
@@ -240,143 +212,6 @@ class OffersPage(QWidget):
         vVisible = self.detail_panel.isHidden()
         self.set_detail_visible(vVisible)
         QSettings().setValue(DETAIL_HIDDEN_KEY, not vVisible)
-
-    def create_filters(self):
-        """Construit la barre de filtres, appliqués dès leur modification."""
-        self.search_timer = QTimer(self)
-        self.search_timer.setSingleShot(True)
-        self.search_timer.setInterval(SEARCH_DELAY_MS)
-        self.search_timer.timeout.connect(self.refresh)
-
-        self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText("Titre, entreprise, lieu, description")
-        self.search_edit.setMinimumWidth(260)
-        self.search_edit.textChanged.connect(self.search_timer.start)
-
-        self.source_combo = QComboBox()
-        self.source_combo.addItem("Toutes les sources", None)
-
-        for vName, vDefinition in SOURCES.items():
-            self.source_combo.addItem(vDefinition.label, vName)
-
-        for vName, vLabel in ADDED_SOURCE_LABELS.items():
-            self.source_combo.addItem(vLabel, vName)
-
-        self.contract_combo = QComboBox()
-        self.contract_combo.addItem("Tous les contrats", None)
-
-        for vContract in CONTRACT_TYPES:
-            self.contract_combo.addItem(vContract, vContract)
-
-        self.status_combo = QComboBox()
-        self.status_combo.addItem("Offres actives", None)
-        self.status_combo.addItem("À relancer", FOLLOW_UP_FILTER)
-
-        for vStatus, vLabel in STATUS_LABELS.items():
-            self.status_combo.addItem(vLabel, vStatus)
-
-        self.min_salary_spin = create_salary_spin("Sans minimum", " € net min")
-        self.max_salary_spin = create_salary_spin("Sans maximum", " € net max")
-
-        self.availability_combo = QComboBox()
-
-        for vValue, vLabel in AVAILABILITY_FILTERS.items():
-            self.availability_combo.addItem(vLabel, vValue)
-
-        self.published_combo = QComboBox()
-
-        for vDays, vLabel in PUBLISHED_PERIODS.items():
-            self.published_combo.addItem(vLabel, vDays)
-
-        self.salary_check = QCheckBox("Avec salaire")
-        self.remote_check = QCheckBox("Télétravail")
-        self.new_check = QCheckBox("Nouvelles uniquement")
-        self.multiple_check = QCheckBox("Multi-annonces")
-        self.multiple_check.setToolTip("Offres publiées plusieurs fois, regroupées")
-        self.france_check = QCheckBox("France uniquement")
-        self.france_check.setToolTip(
-            "Offres dont le pays, donné par la source ou déduit du lieu, est la France"
-        )
-        self.agency_check = QCheckBox("Sans intérim")
-        self.agency_check.setToolTip(
-            "Masque les annonces des agences d'intérim connues (Proman, Adecco…)"
-        )
-        # Écarte les offres éloignées du métier, d'après les compétences du profil
-        self.match_combo = QComboBox()
-        self.match_combo.setToolTip(
-            "Correspondance minimale avec les compétences de la page Profil"
-        )
-
-        for vScore, vLabel in MATCH_FILTERS.items():
-            self.match_combo.addItem(vLabel, vScore)
-
-        self.distance_combo = QComboBox()
-
-        for vDistance, vLabel in DISTANCE_FILTERS.items():
-            self.distance_combo.addItem(vLabel, vDistance)
-
-        self.preferred_check = QCheckBox("Entreprises privilégiées")
-        self.preferred_check.setToolTip(
-            "Seulement les entreprises de la liste des Paramètres"
-        )
-
-        for vCombo in (
-            self.source_combo,
-            self.contract_combo,
-            self.status_combo,
-            self.availability_combo,
-            self.published_combo,
-            self.match_combo,
-            self.distance_combo,
-        ):
-            vCombo.currentIndexChanged.connect(self.refresh)
-
-        for vSpin in (self.min_salary_spin, self.max_salary_spin):
-            vSpin.valueChanged.connect(self.search_timer.start)
-
-        for vCheck in (
-            self.salary_check,
-            self.remote_check,
-            self.new_check,
-            self.multiple_check,
-            self.france_check,
-            self.agency_check,
-            self.preferred_check,
-        ):
-            vCheck.toggled.connect(self.refresh)
-
-        vSearchRow = QHBoxLayout()
-        vSearchRow.addWidget(self.search_edit, 1)
-        vSearchRow.addWidget(self.source_combo)
-        vSearchRow.addWidget(self.status_combo)
-        vSearchRow.addWidget(self.match_combo)
-
-        # Passe à la ligne faute de place : une seule rangée écrasait les listes
-        # au point de tronquer leur texte.
-        vOptionsRow = FlowLayout(12)
-        for vWidget in (
-            self.contract_combo,
-            self.availability_combo,
-            self.published_combo,
-            self.distance_combo,
-            self.min_salary_spin,
-            self.max_salary_spin,
-            self.salary_check,
-            self.remote_check,
-            self.new_check,
-            self.multiple_check,
-            self.france_check,
-            self.agency_check,
-            self.preferred_check,
-        ):
-            vOptionsRow.addWidget(vWidget)
-
-        rLayout = QVBoxLayout()
-        rLayout.setSpacing(10)
-        rLayout.addLayout(vSearchRow)
-        rLayout.addLayout(vOptionsRow)
-
-        return rLayout
 
     def create_add_button(self):
         """Crée le bouton de saisie manuelle d'une offre."""
@@ -543,55 +378,9 @@ class OffersPage(QWidget):
         self.results_label.setText(pDescription)
         self.results_banner.setVisible(pKeys is not None)
 
-        vWidgets = (
-            self.search_edit,
-            self.source_combo,
-            self.contract_combo,
-            self.status_combo,
-            self.availability_combo,
-            self.published_combo,
-            self.distance_combo,
-            self.min_salary_spin,
-            self.max_salary_spin,
-            self.salary_check,
-            self.remote_check,
-            self.new_check,
-            self.multiple_check,
-            self.france_check,
-            self.agency_check,
-            self.preferred_check,
-            self.match_combo,
+        self.filters_bar.reset(
+            pNewOnly=pPreset == "new_offers", pStatus=PRESET_STATUSES.get(pPreset)
         )
-
-        # Une seule relecture en base plutôt qu'une par filtre modifié
-        for vWidget in vWidgets:
-            vWidget.blockSignals(True)
-
-        self.search_edit.clear()
-        self.source_combo.setCurrentIndex(0)
-        self.contract_combo.setCurrentIndex(0)
-        self.published_combo.setCurrentIndex(0)
-        self.availability_combo.setCurrentIndex(
-            self.availability_combo.findData(DEFAULT_AVAILABILITY)
-        )
-        self.min_salary_spin.setValue(0)
-        self.max_salary_spin.setValue(0)
-        self.salary_check.setChecked(False)
-        self.remote_check.setChecked(False)
-        self.new_check.setChecked(pPreset == "new_offers")
-        self.multiple_check.setChecked(False)
-        self.preferred_check.setChecked(False)
-        self.france_check.setChecked(False)
-        self.agency_check.setChecked(False)
-        self.match_combo.setCurrentIndex(0)
-        self.distance_combo.setCurrentIndex(0)
-        self.status_combo.setCurrentIndex(
-            max(self.status_combo.findData(PRESET_STATUSES.get(pPreset)), 0)
-        )
-
-        for vWidget in vWidgets:
-            vWidget.blockSignals(False)
-
         self.refresh()
 
     def build_filters(
@@ -599,42 +388,24 @@ class OffersPage(QWidget):
     ):
         """Traduit les filtres de la page en paramètres de get_offers."""
         rFilters = build_offer_filters(
+            self.filters_bar.read_choices(),
+            pNow=pNow,
+            pNewOfferDays=pNewOfferDays,
+            pExpiryDays=pExpiryDays,
             pCompanyKeys=(
                 build_company_filter_keys(pCompanyRules) if pCompanyRules else None
             ),
-            pPreferredOnly=self.preferred_check.isChecked(),
-            pFranceOnly=self.france_check.isChecked(),
-            pHideAgencies=self.agency_check.isChecked(),
-            pDistanceKm=self.distance_combo.currentData(),
+            pAgencies=self.agencies,
             pHome=self.home,
-            pSearch=self.search_edit.text(),
-            pSource=self.source_combo.currentData(),
-            pContract=self.contract_combo.currentData(),
-            pRemote=self.remote_check.isChecked(),
-            pMinNetSalary=self.min_salary_spin.value() or None,
-            pNewOnly=self.new_check.isChecked(),
-            pStatus=self.status_combo.currentData(),
-            pNow=pNow,
-            pNewOfferDays=pNewOfferDays,
-            pMaxNetSalary=self.max_salary_spin.value() or None,
-            pPublishedDays=self.published_combo.currentData(),
-            pHasSalary=self.salary_check.isChecked(),
             pKeys=self.result_keys,
-            pAvailability=self.availability_combo.currentData(),
-            pExpiryDays=pExpiryDays,
         )
 
         return rFilters
 
     def update_distance_filter(self, pHome):
-        """Active le filtre de distance seulement si le domicile est connu."""
+        """Garde le domicile et n'active le filtre de distance qu'avec lui."""
         self.home = pHome
-        self.distance_combo.setEnabled(pHome is not None)
-        self.distance_combo.setToolTip(
-            f"Distance à vol d'oiseau depuis {pHome['label']}"
-            if pHome
-            else "Renseignez votre domicile dans Paramètres pour filtrer par distance"
-        )
+        self.filters_bar.set_home(pHome)
 
     def refresh(self):
         """Relit les offres en base en conservant l'offre sélectionnée."""
@@ -646,6 +417,7 @@ class OffersPage(QWidget):
             vNewOfferDays = vSettings["new_offer_days"]
             vCompanyRules = load_company_rules(self.database_file)
             self.update_distance_filter(load_home(self.database_file))
+            self.agencies = load_interim_agencies(self.database_file)
 
             vOffers = get_offers(
                 self.database_file,
@@ -672,13 +444,17 @@ class OffersPage(QWidget):
 
             mark_preferred_companies(vPrepared, vCompanyRules)
             score_offers(vPrepared, load_profile(self.database_file))
-            vPrepared = filter_by_match(vPrepared, self.match_combo.currentData())
+            add_distances(vPrepared, self.home)
+            mark_agency_offers(vPrepared, self.agencies)
+            vPrepared = filter_by_match(
+                vPrepared, self.filters_bar.match_combo.currentData()
+            )
 
             # Les annonces d'une même offre sont regroupées en une seule ligne.
             vPrepared = group_offers(vPrepared, get_decisions(self.database_file))
             add_freshness(vPrepared, datetime.now())
 
-            if self.multiple_check.isChecked():
+            if self.filters_bar.multiple_check.isChecked():
                 vPrepared = [vOffer for vOffer in vPrepared if vOffer["duplicates"]]
 
             self.model.set_offers(vPrepared)

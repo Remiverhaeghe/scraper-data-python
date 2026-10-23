@@ -20,7 +20,7 @@ du jour, vibration à la correction, examens blancs envoyés au PC, HTTPS avec
 certificat épinglé (empreinte reçue par le QR code), nouvelles offres de la
 semaine avec leur statut (Intéressé, Postulé, Ignorée) envoyé au PC, alerte des
 nouvelles offres proches du profil (vérifiées en arrière-plan toutes les 3 h
-environ, quand le PC est joignable).
+environ, quand le PC est joignable), distance au domicile de chaque offre.
 
 ## Installation des outils (une fois)
 
@@ -184,6 +184,7 @@ mobile/
     ├── statistics_test.dart      # Teste la réussite par thème et le graphique des jours
     ├── phone_features_test.dart  # Teste signalements, examens, objectif, candidatures et offres
     ├── offer_alerts_test.dart    # Teste l'alerte des nouvelles offres bien notées
+    ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond
     ├── integration/
     │   └── server_sync_test.dart # Synchronisation avec le vrai serveur (CI seulement)
     ├── schema_view_test.dart     # Teste la description et le plein écran des schémas
@@ -193,5 +194,6 @@ mobile/
 La correction et la répétition espacée sont recopiées du serveur. Les cas de
 `tests/fixtures/shared_quiz_cases.json`, à la racine du dépôt, sont vérifiés des
 deux côtés (`test/shared_cases_test.dart` et `tests/job/test_shared_quiz_cases.py`) :
-une règle modifiée d'un seul côté fait échouer l'autre. La CI lance `flutter
-analyze` et `flutter test` à chaque envoi.
+une règle modifiée d'un seul côté fait échouer l'autre. La CI lance `dart format`
+(largeur 100, fixée dans `analysis_options.yaml`), `flutter analyze` et `flutter
+test` à chaque envoi.

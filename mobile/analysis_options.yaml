@@ -10,3 +10,7 @@ linter:
     avoid_print: true
     prefer_const_constructors: true
     prefer_final_locals: true
+
+# Largeur des lignes de dart format, contrôlée par la CI
+formatter:
+  page_width: 100

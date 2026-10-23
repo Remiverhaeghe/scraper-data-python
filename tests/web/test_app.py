@@ -11,7 +11,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 import web.rendering as web_rendering
+import storage.backup as storage_backup
 import web.routes.offers as web_offers
+import web.routes.settings as web_settings
 import job.quiz_packs as quiz_packs
 
 from job.schedule import (
@@ -25,12 +27,15 @@ from job.quiz_import import import_questions, import_questions_file
 from tools.quiz_lot import build_pack as build_lot_pack
 from tests.job.test_quiz_types import NUMERIC, ORDER, PAIRS
 from job.quiz_generation import MIN_QUALITY_SAMPLE
-from storage.backup import backup_database
+from storage.backup import backup_database, copy_to_nas
 from storage.job_offers import get_offer, save_offers, set_availability
 from tests.job.test_quiz_import import build_pack
 from tools.quiz_lot import build_pack as build_lot_pack
 from tests.job.test_quiz_generation import build_lot_text, build_question
 from web.app import app, get_database_file
+from job.geocoding import HOME_KEY
+from storage.geo_cache import save_offer_positions
+from storage.settings_repository import save_json_setting
 from web.rendering import (
     build_bar_chart,
     build_pie,
@@ -822,6 +827,26 @@ def test_profile_page_and_offer_preparation(client):
     assert "CV conseillé : <strong>CV Python</strong>" in vOffer
     assert "Brouillon de lettre de motivation" in vOffer
     assert client.post("/profile", data={"skills": "x" * 30000}).status_code == 400
+
+
+def test_dashboard_shows_offers_close_to_retained_ones(client):
+    """Vérifie la carte des offres proches d'une offre retenue."""
+
+    assert "Offres proches de vos candidatures" not in client.get("/").text
+
+    save_offers(
+        app.dependency_overrides[get_database_file](),
+        pd.DataFrame([build_offer("twin", title="Développeur Java senior")]),
+        datetime.now(),
+    )
+    client.post(
+        "/offer/application",
+        data={"source": "adzuna", "id": "old", "status": "INTERESTED"},
+    )
+    vPage = client.get("/").text
+
+    assert "Offres proches de vos candidatures" in vPage
+    assert "proche de « Développeur Java »" in vPage
 
 
 def test_dashboard_requests_a_search(client):
@@ -1961,6 +1986,37 @@ def test_offers_sorted_by_freshness(client):
     assert vText.index("Développeur Java") > vText.index("Développeur Python new")
 
 
+def test_offers_near_home_sorted_by_distance(client):
+    """Vérifie la colonne Distance, le tri des plus proches et le filtre de rayon."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+    save_json_setting(
+        vDatabaseFile,
+        HOME_KEY,
+        {
+            "address": "Lille",
+            "label": "Lille",
+            "latitude": 50.6366,
+            "longitude": 3.0635,
+        },
+    )
+    save_offer_positions(
+        vDatabaseFile,
+        [(45.758, 4.835, "adzuna", "old"), (50.6942, 3.1746, "adzuna", "new")],
+    )
+
+    vSorted = client.get("/offers", params={"sort": "distance"}).text
+
+    assert 'value="distance" selected' in vSorted
+    assert ">10 km<" in vSorted
+    assert vSorted.index("Développeur Python new") < vSorted.index("Développeur Java")
+
+    vNear = client.get("/offers", params={"distance": "25"}).text
+
+    assert "Développeur Python new" in vNear
+    assert "Développeur Java" not in vNear
+
+
 def test_interview_journal_on_offer_page(client):
     """Vérifie l'ajout d'une entrée au journal depuis la fiche d'une offre."""
 
@@ -2033,6 +2089,35 @@ def test_database_backup_restored_from_settings(client, tmp_path):
     assert vRefused.status_code == 400
     assert "Sauvegarde introuvable." in vUnknown.text
     assert "Sauvegarde restaurée." in vRestored.text
+
+
+def test_database_restored_from_the_nas_on_the_web(client, tmp_path, monkeypatch):
+    """Vérifie la liste des copies du NAS lue à la demande et leur restauration."""
+
+    vNas = tmp_path / "nas"
+    vBackup = backup_database(
+        tmp_path / "scraper.db", datetime(2026, 10, 18, 2, 0), "auto"
+    )
+    copy_to_nas(tmp_path / "scraper.db", vNas)
+    vBackup.unlink()
+
+    assert "Lire les copies du NAS" not in client.get("/settings").text
+
+    monkeypatch.setattr(web_settings, "BACKUP_NAS_DIRECTORY", str(vNas))
+    monkeypatch.setattr(storage_backup, "BACKUP_NAS_DIRECTORY", str(vNas))
+    vCopies = client.get("/settings/nas-copies").text
+    vRestored = client.post(
+        "/settings/backup",
+        data={"name": vBackup.name, "confirm": "1", "origin": "nas"},
+    )
+
+    assert "Lire les copies du NAS" in client.get("/settings").text
+    assert "18/10/2026 02:00 · automatique" in vCopies
+    assert "Sauvegarde restaurée." in vRestored.text
+
+    monkeypatch.setattr(storage_backup, "BACKUP_NAS_DIRECTORY", str(tmp_path / "x"))
+
+    assert "injoignable" in client.get("/settings/nas-copies").text
 
 
 def test_offers_comparison_on_the_web(client):

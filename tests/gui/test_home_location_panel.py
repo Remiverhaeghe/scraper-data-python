@@ -89,3 +89,35 @@ def test_location_failure_is_reported(qt_application, tmp_path, monkeypatch):
     vPanel.run_location()
 
     assert vReports == [None]
+
+
+def test_alert_radius_is_saved(qt_application, tmp_path, monkeypatch):
+    """Vérifie le rayon des alertes, refusé tant que le domicile est inconnu."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vPanel = HomeLocationPanel(vDatabaseFile)
+    vPanel.refresh()
+
+    assert not vPanel.radius_combo.isEnabled()
+
+    vPanel.save_radius()
+
+    assert vPanel.message_label.text() == "Le rayon n'a pas pu être enregistré."
+
+    vSaved = []
+    monkeypatch.setattr(
+        home_location_panel, "load_home", lambda *pArgs: {**HOME, "alert_radius_km": 25}
+    )
+    monkeypatch.setattr(
+        home_location_panel, "save_alert_radius", lambda *pArgs: vSaved.append(pArgs[1])
+    )
+    vPanel.refresh()
+
+    assert vPanel.radius_combo.currentData() == 25
+
+    vPanel.radius_combo.setCurrentIndex(vPanel.radius_combo.findData(50))
+    vPanel.save_radius()
+
+    assert vSaved == [50]
+    assert vPanel.message_label.text() == "Rayon des alertes enregistré."

@@ -16,6 +16,7 @@ import pytest
 import uvicorn
 
 from job.quiz_import import import_questions
+from storage.geo_cache import save_offer_positions
 from storage.job_offers import save_offers
 from tests.conftest import TEST_PASSWORD
 from web.app import app, get_database_file
@@ -89,6 +90,10 @@ def server_url(tmp_path_factory):
                 ]
             ),
             datetime.now(),
+        )
+        save_offer_positions(
+            vDatabaseFile,
+            [(50.63, 3.06, "remotive", "0"), (50.69, 3.17, "remotive", "1")],
         )
 
         yield f"http://127.0.0.1:{vPort}"
@@ -351,4 +356,30 @@ def test_identical_components_are_numbered_in_the_browser(page):
     page.get_by_role("button", name="Valider").click()
 
     assert "Bonne réponse" in page.locator(".quiz-verdict").inner_text()
+    assert page.console_errors == []
+
+
+def test_offers_map_shows_placed_offers(page):
+    """Vérifie le passage de la liste à la carte, ses pastilles et l'absence d'erreur."""
+
+    # Fond de carte simulé : le test ne dépend pas d'Internet.
+    page.route(
+        "https://tile.openstreetmap.org/**",
+        lambda pRoute: pRoute.fulfill(status=204),
+    )
+    page.goto("/offers?q=D%C3%A9veloppeur")
+    page.click("button[value=map]")
+    page.wait_for_url("**view=map**")
+
+    assert "q=D%C3%A9veloppeur" in page.url
+    sync_api.expect(page.locator(".leaflet-interactive")).to_have_count(2)
+    assert "2 offre(s) placée(s) sur 2" in page.locator(".count").inner_text()
+
+    page.locator(".leaflet-interactive").first.click(force=True)
+
+    assert (
+        page.locator(".leaflet-popup a")
+        .first.get_attribute("href")
+        .startswith("/offer?source=remotive")
+    )
     assert page.console_errors == []

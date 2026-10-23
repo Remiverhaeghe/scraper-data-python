@@ -143,7 +143,8 @@ CONTENT_SECURITY_POLICY = "; ".join(
         "default-src 'self'",
         "script-src 'self'",
         "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data:",
+        # Fonds de carte de la page Carte des offres, rien d'autre
+        "img-src 'self' data: https://tile.openstreetmap.org",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

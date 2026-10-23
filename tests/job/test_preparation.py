@@ -238,3 +238,15 @@ def test_suggest_keywords(profile):
         "Docker",
     ]
     assert suggest_keywords(profile, 2) == ["Développeur backend", "Tech lead"]
+
+
+def test_match_profile_recognizes_free_skill_wording():
+    """Vérifie qu'une compétence saisie librement couvre son libellé reconnu."""
+
+    vMatch = match_profile(
+        {"skills": ["TIA Portal", "habilitation B2V"]},
+        ["Siemens TIA Portal", "Habilitation électrique", "GMAO"],
+    )
+
+    assert vMatch["covered"] == ["Siemens TIA Portal", "Habilitation électrique"]
+    assert vMatch["score"] == 67

@@ -7,6 +7,7 @@ from gui.offers_model import (
     COLUMNS,
     SORT_ROLE,
     OffersTableModel,
+    format_cell,
     format_status,
     get_cell_color,
     get_sort_value,
@@ -57,6 +58,10 @@ def test_get_sort_value():
     assert get_sort_value({}, vKey) == -1.0
     assert get_sort_value({"company": "Kent"}, "company") == "kent"
     assert get_sort_value({}, "company") == ""
+    assert get_sort_value({"distance_km": 12}, "distance_km") == 12.0
+    assert get_sort_value({"distance_km": None}, "distance_km") == float("inf")
+    assert format_cell({"distance_km": 12}, "distance_km") == "12 km"
+    assert format_cell({"distance_km": None}, "distance_km") == ""
 
 
 def test_model_exposes_offers(qt_application):

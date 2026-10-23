@@ -43,6 +43,7 @@ from job.calendar import (
     get_calendar_token,
     renew_calendar_token,
 )
+from job.agencies import load_interim_agencies, save_interim_agencies
 from job.companies import load_company_rules, save_company_rules
 from job.mobile_sync import (
     API_PREFIX,
@@ -567,6 +568,17 @@ class SettingsPage(QWidget):
             vGrid.addLayout(vTitleRow, 0, vColumn)
             vGrid.addWidget(vEdit, 1, vColumn)
 
+        vAgencyTitle = QLabel("Agences d'intérim, pour le filtre « Sans intérim »")
+        vAgencyTitle.setStyleSheet(f"color: {COLORS['warning']}; font-weight: 600;")
+
+        vAgencyEdit = QPlainTextEdit()
+        vAgencyEdit.setPlaceholderText("Vide : liste par défaut (Proman, Adecco…)")
+        vAgencyEdit.setFixedHeight(COMPANY_EDIT_HEIGHT)
+        self.company_edits["agencies"] = vAgencyEdit
+
+        vGrid.addWidget(vAgencyTitle, 2, 0, 1, 2)
+        vGrid.addWidget(vAgencyEdit, 3, 0, 1, 2)
+
         vSaveButton = create_button("Enregistrer", pObjectName="primaryButton")
         vSaveButton.clicked.connect(self.save_companies)
 
@@ -598,6 +610,8 @@ class SettingsPage(QWidget):
             )
 
         else:
+            vRules["agencies"] = load_interim_agencies(self.database_file)
+
             for vKind, vEdit in self.company_edits.items():
                 vEdit.setPlainText("\n".join(vRules[vKind]))
 
@@ -608,6 +622,9 @@ class SettingsPage(QWidget):
                 self.database_file,
                 self.company_edits["excluded"].toPlainText(),
                 self.company_edits["preferred"].toPlainText(),
+            )
+            vAgencies = save_interim_agencies(
+                self.database_file, self.company_edits["agencies"].toPlainText()
             )
 
         except ValueError as vException:
@@ -623,7 +640,8 @@ class SettingsPage(QWidget):
 
             vMessage, vTone = (
                 f"{len(vRules['excluded'])} entreprise(s) exclue(s), "
-                f"{len(vRules['preferred'])} privilégiée(s).",
+                f"{len(vRules['preferred'])} privilégiée(s), "
+                f"{len(vAgencies)} agence(s) d'intérim.",
                 "success",
             )
 

@@ -85,3 +85,26 @@ def save_offer_positions(pDatabaseFile, pPositions):
 
     finally:
         vConnection.close()
+
+
+def count_offer_positions(pDatabaseFile, pCountry):
+    """Retourne le nombre d'offres du pays avec un lieu, et celles déjà placées."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vTotal, vPlaced = vConnection.execute(
+            """
+            SELECT COUNT(*), COUNT(latitude)
+            FROM job_offer
+            WHERE country = ? AND COALESCE(location, '') != ''
+            """,
+            (pCountry,),
+        ).fetchone()
+
+    finally:
+        vConnection.close()
+
+    rCounts = (vTotal, vPlaced)
+
+    return rCounts
