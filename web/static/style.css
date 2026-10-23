@@ -16,6 +16,9 @@
     --primary-light: #e8f1ff;
     --primary-gradient: #4f8df5;
     --banner-text: #dce9ff;
+    --banner-start: #155fcc;
+    --banner-end: #1d4ed8;
+    --banner-title: #ffffff;
     --success: #15803d;
     --warning: #b45309;
     --danger: #c81e1e;
@@ -45,6 +48,9 @@
     --primary-light: #1c2c47;
     --primary-gradient: #1d4ed8;
     --banner-text: #c9dbff;
+    --banner-start: #1d4ed8;
+    --banner-end: #1e3a8a;
+    --banner-title: #ffffff;
     --success: #22c55e;
     --warning: #f59e0b;
     --danger: #f87171;
@@ -77,6 +83,9 @@
         --primary-light: #1c2c47;
         --primary-gradient: #1d4ed8;
         --banner-text: #c9dbff;
+        --banner-start: #1d4ed8;
+        --banner-end: #1e3a8a;
+        --banner-title: #ffffff;
         --success: #22c55e;
         --warning: #f59e0b;
         --danger: #f87171;
@@ -518,12 +527,12 @@ h3 {
     margin-bottom: 18px;
     padding: 26px 40px 26px 32px;
     border-radius: 14px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-gradient));
+    background: linear-gradient(135deg, var(--banner-start), var(--banner-end));
     color: var(--banner-text);
 }
 
 .banner h2 {
-    color: var(--on-primary);
+    color: var(--banner-title);
     font-size: 24px;
 }
 
@@ -559,7 +568,7 @@ h3 {
 .banner-actions .button:not(.button-banner) {
     background: transparent;
     border-color: var(--banner-text);
-    color: var(--on-primary);
+    color: var(--banner-title);
 }
 
 /* Cartes statistiques */
@@ -2259,6 +2268,35 @@ textarea.companies-preferred {
     height: min(70vh, 640px);
     border-radius: 12px;
     border: 1px solid var(--border);
+}
+
+.checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.checklist li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+}
+
+.checklist a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.map-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
 .map-legend {

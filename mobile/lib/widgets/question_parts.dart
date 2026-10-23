@@ -156,7 +156,7 @@ class ResultPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vColor = grade.correct ? successColor : dangerColor;
+    final vColor = grade.correct ? successColorOf(context) : dangerColorOf(context);
 
     final rPanel = Card(
       shape: RoundedRectangleBorder(

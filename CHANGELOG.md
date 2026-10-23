@@ -28,6 +28,17 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Page Mon marché : demande et net mensuel médian par compétence et par ville
+- Liste « À faire » sur l'accueil, explication du score de correspondance
+- Carte web : raccourcis de correspondance et pastilles proportionnées au score
+- Sauvegardes contrôlées à leur création, indicateur Santé « Sauvegarde vérifiée »
+- Compétences des offres gardées en base : page des offres environ dix fois plus
+  rapide
+- Contrastes WCAG AA vérifiés sur le bureau, le web et le téléphone, bannière
+  comprise
+- CI : image Docker construite et lancée durcie, dépendances de l'image
+  verrouillées avec empreintes (`requirements-server.lock`), synchronisation
+  téléphone ↔ serveur étendue aux offres, à l'entretien et à l'auto-évaluation
 - Tableau de bord web installable (service worker, page hors ligne)
 - Certificat HTTPS local : `python -m tools.local_certificate`
 - QCM : garde-fou étendu à la réponse la plus courte et aux mots absolus, part

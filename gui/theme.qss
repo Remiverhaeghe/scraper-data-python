@@ -381,11 +381,11 @@ QLabel#companyWarning {
 QFrame#banner {
     border-radius: 14px;
     background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
-        stop: 0 $primary, stop: 1 $primary_gradient);
+        stop: 0 $banner_start, stop: 1 $banner_end);
 }
 
 QLabel#bannerTitle {
-    color: $on_primary;
+    color: $banner_title;
     font-size: 24px;
     font-weight: 700;
 }
@@ -465,7 +465,7 @@ QPushButton#bannerButton:hover {
 QPushButton#bannerSecondaryButton {
     background: transparent;
     border: 1px solid $banner_text;
-    color: $on_primary;
+    color: $banner_title;
     padding: 9px 16px;
 }
 

@@ -9,6 +9,7 @@ import pandas as pd
 from config import WEB_PUBLIC_HOST, WEB_SCHEME, WEB_TLS_CERTFILE, WEB_TLS_KEYFILE
 from job.application import process_jobs
 from job.offer_archive import archive_expired_offers
+from job.skill_cache import refresh_detected_skills
 from job.application_tracking import get_due_follow_ups
 from job.followed_availability import (
     build_expired_offers_email,
@@ -328,6 +329,7 @@ BACKGROUND_TASKS = (
     ("rappels d'entretien", send_interview_reminders),
     ("certificat du tableau de bord", renew_web_certificate),
     ("archivage des offres expirées", archive_expired_offers),
+    ("compétences des offres", refresh_detected_skills),
 )
 
 # Erreurs attendues d'une tâche : disque, base, envoi d'e-mail ou réglage invalide

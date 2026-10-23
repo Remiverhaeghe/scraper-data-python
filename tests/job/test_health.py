@@ -80,7 +80,7 @@ def test_unreadable_check_does_not_hide_the_others(database_file, monkeypatch):
     vChecks = get_checks(database_file)
 
     assert vChecks["Sources"] == ("Illisible : voir les journaux", "danger")
-    assert len(vChecks) == 12
+    assert len(vChecks) == 13
     assert format_age(NOW - timedelta(days=5), NOW) == "il y a 5 jours"
 
 
@@ -149,3 +149,18 @@ def test_geocoding_and_phone_checks(database_file):
     build_offer_list(database_file, NOW - timedelta(hours=3))
 
     assert get_checks(database_file)["Application mobile"][1] == "success"
+
+
+def test_backup_integrity_check(database_file):
+    """Vérifie l'indicateur des sauvegardes vérifiées, puis d'une endommagée."""
+
+    vBackupFile = backup_database(database_file, NOW, "auto")
+
+    assert get_checks(database_file)["Sauvegarde vérifiée"][1] == "success"
+
+    vBackupFile.rename(vBackupFile.with_name(vBackupFile.name + ".endommagee"))
+
+    vValue, vTone = get_checks(database_file)["Sauvegarde vérifiée"]
+
+    assert vTone == "danger"
+    assert vValue.startswith("1 sauvegarde(s) endommagée(s)")

@@ -826,6 +826,7 @@ def test_profile_page_and_offer_preparation(client):
     assert "Profil enregistré : 2 compétence(s)" in vSaved.text
     assert "CV conseillé : <strong>CV Python</strong>" in vOffer
     assert "Brouillon de lettre de motivation" in vOffer
+    assert "Pourquoi ce score ?" in vOffer
     assert client.post("/profile", data={"skills": "x" * 30000}).status_code == 400
 
 
@@ -2321,3 +2322,35 @@ def test_settings_company_pages_saved_and_checked(client, monkeypatch):
 
     assert "Lever · qonto : 7 offre(s)" in vChecked.text
     assert "Lever · inconnue : introuvable" in vChecked.text
+
+
+def test_offers_map_offers_match_shortcuts(client):
+    """Vérifie les raccourcis de correspondance de la carte, autres filtres gardés."""
+
+    vPage = client.get("/offers?view=map&q=Python&match=50").text
+
+    assert 'href="?view=map&amp;q=Python&amp;match=70"' in vPage
+    assert (
+        'class="button button-primary" href="?view=map&amp;q=Python&amp;match=50"'
+        in vPage
+    )
+    assert "pastille d'autant plus grande" in vPage
+
+
+def test_dashboard_lists_settings_to_do(client):
+    """Vérifie la carte À faire de l'accueil, avec le lien vers chaque réglage."""
+
+    vPage = client.get("/").text
+
+    assert "À faire pour bien démarrer" in vPage
+    assert '<a href="/settings">' in vPage
+
+
+def test_market_page(client):
+    """Vérifie la page Mon marché et son entrée dans le menu."""
+
+    vPage = client.get("/market").text
+
+    assert "Net mensuel médian" in vPage
+    assert "Compétences les plus demandées" in vPage
+    assert 'href="/market"' in client.get("/").text

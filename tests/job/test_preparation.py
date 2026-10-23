@@ -3,6 +3,7 @@
 import pytest
 
 from job.preparation import (
+    describe_score,
     describe_missing,
     classify_requirements,
     filter_by_match,
@@ -104,12 +105,13 @@ def test_match_and_recommendation(profile):
     vMatch = match_profile(profile, vOfferSkills)
 
     assert vOfferSkills == ["Kafka", "Java", "Spring", "Docker"]
-    assert vMatch == {
+    assert {vKey: vValue for vKey, vValue in vMatch.items() if vKey != "details"} == {
         "covered": ["Java", "Spring", "Docker"],
         "missing": ["Kafka"],
         "required": [],
         "score": 75,
     }
+    assert vMatch["details"][0] == {"skill": "Kafka", "weight": 1.0, "coverage": 0.0}
     assert recommend_cv(profile, vOfferSkills) == {
         "name": "CV Java backend",
         "matching": 2,
@@ -311,3 +313,23 @@ def test_describe_missing_flags_required_skills():
         "Java (exigée), Git"
     )
     assert describe_missing({"missing": [], "required": []}) == "aucune"
+
+
+def test_describe_score_explains_weights_and_mastery():
+    """Vérifie l'explication : exigées d'abord, maîtrise, plancher signalé."""
+
+    vMatch = match_profile(
+        {"skills": ["SQL"], "skill_levels": {"Java": 6}},
+        ["Java", "SQL", "Docker"],
+        "Java exigé. SQL. Docker est un plus.",
+    )
+
+    assert describe_score(vMatch) == [
+        "Java · exigée · partielle (75 %)",
+        "SQL · demandée · maîtrisée",
+        "Docker · appréciée · manquante",
+    ]
+    assert describe_score(match_profile({"skills": ["Go"]}, ["Go"]))[-1].startswith(
+        "Peu de compétences citées"
+    )
+    assert describe_score({"missing": []}) == []

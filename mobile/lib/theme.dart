@@ -2,10 +2,17 @@
 
 import 'package:flutter/material.dart';
 
-/// Bleu principal de JobBoard Perso.
-const primaryColor = Color(0xFF1769E0);
-const successColor = Color(0xFF16A34A);
-const dangerColor = Color(0xFFDC2626);
+/// Bleu principal de JobBoard Perso, mêmes teintes que le bureau et le web.
+const primaryColor = Color(0xFF155FCC);
+
+/// Vert et rouge lisibles en texte : foncés sur fond clair, clairs sur fond sombre.
+Color successColorOf(BuildContext pContext) => Theme.of(pContext).brightness == Brightness.dark
+    ? const Color(0xFF4ADE80)
+    : const Color(0xFF15803D);
+
+Color dangerColorOf(BuildContext pContext) => Theme.of(pContext).brightness == Brightness.dark
+    ? const Color(0xFFF87171)
+    : const Color(0xFFC81E1E);
 
 ThemeData buildTheme(Brightness pBrightness) {
   final rTheme = ThemeData(

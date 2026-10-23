@@ -1,6 +1,10 @@
 # Dépendances du tableau de bord web et du planificateur seuls, pour l'image
 # Docker du NAS : ni interface de bureau (PySide6), ni outils de test.
-# Mêmes versions que requirements.txt.
+# Mêmes versions que requirements.txt. Après une modification, régénérer le
+# fichier verrouillé, avec les empreintes, utilisé par le Dockerfile :
+#   python -m uv pip compile requirements-server.txt --generate-hashes
+#     --python-version 3.14 --python-platform linux --no-header
+#     -o requirements-server.lock
 beautifulsoup4==4.15.0
 certifi==2026.7.22
 cffi==2.1.1

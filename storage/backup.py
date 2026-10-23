@@ -29,6 +29,10 @@ ENCRYPTED_SUFFIX = ".chiffre"
 # celles faites avant une opération risquée.
 AUTO_BACKUP_REASON = "auto"
 
+# Sauvegarde dont le contrôle d'intégrité échoue : renommée avec ce suffixe, elle
+# n'est plus proposée à la restauration ni copiée sur le NAS.
+DAMAGED_SUFFIX = ".endommagee"
+
 
 def backup_database(pDatabaseFile, pNow, pReason=None):
     """Copie la base dans le dossier des sauvegardes ; retourne le fichier créé.
@@ -57,7 +61,9 @@ def backup_database(pDatabaseFile, pNow, pReason=None):
         vTarget.close()
         vSource.close()
 
-    logger.info("Sauvegarde de la base créée : %s", rBackupFile.name)
+    verify_backup(rBackupFile)
+
+    logger.info("Sauvegarde de la base créée et vérifiée : %s", rBackupFile.name)
 
     vAutomatic = pReason == AUTO_BACKUP_REASON
 
@@ -68,6 +74,51 @@ def backup_database(pDatabaseFile, pNow, pReason=None):
     )
 
     return rBackupFile
+
+
+def verify_backup(pBackupFile):
+    """Contrôle une sauvegarde ; endommagée, elle est écartée et une erreur levée."""
+
+    try:
+        vConnection = sqlite3.connect(
+            Path(pBackupFile).resolve().as_uri() + "?mode=ro", uri=True
+        )
+
+        try:
+            vIntegrity = vConnection.execute("PRAGMA integrity_check").fetchone()[0]
+
+        finally:
+            vConnection.close()
+
+    except sqlite3.DatabaseError:
+        vIntegrity = "illisible"
+
+    if vIntegrity != "ok":
+        Path(pBackupFile).replace(
+            Path(pBackupFile).with_name(Path(pBackupFile).name + DAMAGED_SUFFIX)
+        )
+        logger.error(
+            "Sauvegarde endommagée, mise à l'écart : %s (%s)",
+            Path(pBackupFile).name,
+            vIntegrity,
+        )
+
+        raise sqlite3.DatabaseError(f"Sauvegarde endommagée : {vIntegrity}")
+
+
+def list_damaged_backups(pDatabaseFile):
+    """Retourne les sauvegardes écartées par le contrôle d'intégrité."""
+
+    vDatabaseFile = Path(pDatabaseFile)
+
+    rBackups = sorted(
+        (vDatabaseFile.parent / BACKUP_DIRECTORY_NAME).glob(
+            f"{vDatabaseFile.stem}-*.db{DAMAGED_SUFFIX}"
+        ),
+        reverse=True,
+    )
+
+    return rBackups
 
 
 def list_backups(pDatabaseFile, pAutomatic=None):

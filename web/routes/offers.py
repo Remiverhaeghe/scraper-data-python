@@ -275,6 +275,20 @@ def list_offers(
                 if vKey != "view"
             ]
         )
+        # Raccourcis de correspondance : les autres filtres sont gardés.
+        vOtherFilters = [
+            (vKey, vValue)
+            for vKey, vValue in request.query_params.items()
+            if vKey != "match"
+        ]
+        vContext["map_match_links"] = [
+            {
+                "label": "Toutes" if vScore == 0 else f"{vScore} % et +",
+                "query": urlencode([*vOtherFilters, ("match", vScore)]),
+                "active": vScore == vMinMatch,
+            }
+            for vScore in MAP_MATCH_LEVELS
+        ]
 
     else:
         vTemplate = "offers.html"
@@ -282,6 +296,10 @@ def list_offers(
     rResponse = templates.TemplateResponse(request, vTemplate, vContext)
 
     return rResponse
+
+
+# Raccourcis de correspondance proposés sur la carte, parmi MATCH_FILTERS
+MAP_MATCH_LEVELS = (0, 50, 70)
 
 
 def build_map_points(pOffers):

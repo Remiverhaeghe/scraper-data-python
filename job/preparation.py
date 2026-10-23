@@ -68,16 +68,20 @@ def get_offer_text(pOffer):
 
 
 def get_offer_skills(pOffer):
-    """Retourne les compétences demandées : celles de la source et celles du texte."""
+    """Retourne les compétences demandées : celles de la source et celles du texte.
 
-    rSkills = list(
-        dict.fromkeys(
-            [
-                *(to_list(pOffer.get("skills")) or []),
-                *detect_skills(get_offer_text(pOffer)),
-            ]
-        )
+    Celles du texte sont lues en base quand elles y sont déjà (job/skill_cache.py),
+    sinon cherchées à la volée, plus lentement.
+    """
+
+    vDetected = pOffer.get("detected_skills")
+    vDetected = (
+        to_list(vDetected)
+        if isinstance(vDetected, (str, list))
+        else detect_skills(get_offer_text(pOffer))
     )
+
+    rSkills = list(dict.fromkeys([*(to_list(pOffer.get("skills")) or []), *vDetected]))
 
     return rSkills
 
@@ -205,6 +209,15 @@ def match_profile(pProfile, pOfferSkills, pOfferText=""):
         "required": [
             vSkill for vSkill, vWeight in vWeights.items() if vWeight == REQUIRED_WEIGHT
         ],
+        # Poids et maîtrise de chaque compétence, pour expliquer le score
+        "details": [
+            {
+                "skill": vSkill,
+                "weight": vWeights[vSkill],
+                "coverage": vCoverage[vSkill],
+            }
+            for vSkill in pOfferSkills
+        ],
         # Sans compétence identifiée dans l'offre, aucun score n'a de sens.
         "score": (
             round(
@@ -218,6 +231,51 @@ def match_profile(pProfile, pOfferSkills, pOfferText=""):
     }
 
     return rMatch
+
+
+WEIGHT_LABELS = {
+    REQUIRED_WEIGHT: "exigée",
+    NORMAL_WEIGHT: "demandée",
+    PREFERRED_WEIGHT: "appréciée",
+}
+
+
+def describe_score(pMatch):
+    """Explique le score : une ligne par compétence, poids et maîtrise.
+
+    Les compétences exigées d'abord, puis par maîtrise croissante : ce qui pèse
+    le plus et manque le plus se lit en premier.
+    """
+
+    vDetails = sorted(
+        pMatch.get("details", []),
+        key=lambda pDetail: (-pDetail["weight"], pDetail["coverage"]),
+    )
+
+    rLines = []
+
+    for vDetail in vDetails:
+        if vDetail["coverage"] >= 1:
+            vMastery = "maîtrisée"
+        elif vDetail["coverage"] > 0:
+            vMastery = f"partielle ({round(100 * vDetail['coverage'])} %)"
+        else:
+            vMastery = "manquante"
+
+        rLines.append(
+            f"{vDetail['skill']} · {WEIGHT_LABELS.get(vDetail['weight'], '')} · "
+            f"{vMastery}"
+        )
+
+    vWeight = sum(vDetail["weight"] for vDetail in vDetails)
+
+    # Plancher appliqué : l'offre cite trop peu de compétences pour un score haut.
+    if vDetails and vWeight < MIN_SCORED_WEIGHT:
+        rLines.append(
+            "Peu de compétences citées : le score est rapporté à trois au minimum"
+        )
+
+    return rLines
 
 
 def describe_missing(pMatch):
@@ -479,6 +537,7 @@ def prepare_application(pProfile, pOffer, pStarAnswers=None, pAskedQuestions=Non
         "offer_skills": vOfferSkills,
         "match": vMatch,
         "missing_text": describe_missing(vMatch),
+        "score_lines": describe_score(vMatch),
         "cv": recommend_cv(pProfile, vOfferSkills),
         "interview": vInterview,
         "letter": build_letter(pProfile, vMatch, pOffer),

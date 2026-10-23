@@ -340,7 +340,7 @@ class DailyGoalCard extends StatelessWidget {
               value: vGoal == 0 ? 0 : (vDone / vGoal).clamp(0, 1).toDouble(),
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
-              color: vReached ? successColor : null,
+              color: vReached ? successColorOf(context) : null,
             ),
           ],
         ),

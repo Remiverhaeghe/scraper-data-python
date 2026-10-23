@@ -14,6 +14,7 @@ from storage.backup import (
     describe_backups,
     get_last_auto_backup_time,
     get_last_nas_copy_time,
+    list_damaged_backups,
 )
 from storage.geo_cache import count_offer_positions
 from storage.history_repository import get_history
@@ -73,6 +74,24 @@ def check_backup(pDatabaseFile, pNow):
             f"{vLast:%d/%m/%Y %H:%M} ({format_age(vLast, pNow)})",
             "success" if pNow - vLast < BACKUP_WARNING_DELAY else "warning",
         )
+
+    return rCheck
+
+
+def check_backup_integrity(pDatabaseFile):
+    """Signale les sauvegardes écartées par le contrôle d'intégrité."""
+
+    vDamaged = list_damaged_backups(pDatabaseFile)
+
+    rCheck = (
+        (
+            f"{len(vDamaged)} sauvegarde(s) endommagée(s) mise(s) à l'écart, "
+            f"dont {vDamaged[0].name} : voir les journaux",
+            "danger",
+        )
+        if vDamaged
+        else ("Contrôle d'intégrité réussi à chaque sauvegarde", "success")
+    )
 
     return rCheck
 
@@ -327,6 +346,7 @@ def build_health(pDatabaseFile, pNow):
 
     vChecks = (
         ("Sauvegarde automatique", lambda: check_backup(pDatabaseFile, pNow)),
+        ("Sauvegarde vérifiée", lambda: check_backup_integrity(pDatabaseFile)),
         ("Copie sur le NAS", lambda: check_nas_copy(pDatabaseFile, pNow)),
         ("Recherche planifiée", lambda: check_schedule(pDatabaseFile, pNow)),
         ("Dernière recherche", lambda: check_last_run(pDatabaseFile)),

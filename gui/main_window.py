@@ -27,6 +27,7 @@ from gui.git_page import GitPage
 from gui.history_page import HistoryPage
 from gui.home_page import HomePage
 from gui.logs_page import LogsPage
+from gui.market_page import MarketPage
 from gui.icons import get_icon
 from gui.offers_page import OffersPage
 from gui.profile_page import ProfilePage
@@ -41,6 +42,7 @@ from job.followed_availability import count_alerts
 from job.quiz import DEFAULT_MODE
 from job.quiz_generation import prepare_quiz_caches
 from job.schedule import save_scheduled_search
+from job.skill_cache import refresh_detected_skills_safely
 from storage.backup import run_due_backup
 from storage.database import get_database_version
 from utils.logger import get_logger
@@ -58,7 +60,7 @@ OFFER_PRESETS = ("offers", "new_offers", "applied_offers", "follow_ups")
 # Pages dont le calcul, coûteux, ne dépend que de la base et du jour : elles ne se
 # recalculent pas à chaque passage si rien n'a changé. Journaux et Git lisent des
 # fichiers hors base et restent recalculés à chaque fois.
-DATA_ONLY_PAGES = ("offers", "quiz", "skills", "challenges", "quality")
+DATA_ONLY_PAGES = ("offers", "quiz", "skills", "market", "challenges", "quality")
 
 
 class MainWindow(QMainWindow):
@@ -90,6 +92,12 @@ class MainWindow(QMainWindow):
         # la page Révision s'ouvre aussitôt. Sans attente ni effet sur l'interface.
         threading.Thread(
             target=prepare_quiz_caches, args=(pDatabaseFile,), daemon=True
+        ).start()
+
+        # Compétences des nouvelles offres repérées une fois pour toutes : la
+        # page Offres les lit au lieu de les chercher à chaque affichage.
+        threading.Thread(
+            target=refresh_detected_skills_safely, args=(pDatabaseFile,), daemon=True
         ).start()
 
         # Une sauvegarde par jour au plus, sans attendre qu'elle soit finie.
@@ -130,6 +138,7 @@ class MainWindow(QMainWindow):
         self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
         self.add_page("quiz", "Révision", "graduation-cap", self.quiz_page)
         self.add_page("skills", "Compétences", "target", self.skills_page)
+        self.add_page("market", "Mon marché", "banknote", MarketPage(vDatabaseFile))
         self.add_page("challenges", "Défis", "trophy", ChallengesPage(vDatabaseFile))
         self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))

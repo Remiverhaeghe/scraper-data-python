@@ -84,7 +84,12 @@ def test_describe_preparation_escapes_and_lists(qt_application):
 
     vHtml = dialogs.describe_preparation(
         {
-            "match": {"covered": ["<Java>"], "missing": [], "score": 100},
+            "match": {
+                "covered": ["<Java>"],
+                "missing": [],
+                "score": 100,
+                "details": [{"skill": "<Java>", "weight": 2, "coverage": 1.0}],
+            },
             "cv": {"name": "CV backend", "matching": 1},
             "interview": {
                 "strengths": [{"skill": "<Java>", "examples": ["Projet A"]}],
@@ -101,6 +106,7 @@ def test_describe_preparation_escapes_and_lists(qt_application):
     assert "CV backend" in vHtml
     assert "Projet A" in vHtml
     assert "Pourquoi &lt;Acme&gt; ?" in vHtml
+    assert "&lt;Java&gt; · exigée · maîtrisée" in vHtml
 
 
 def test_cv_import_fills_profile_and_copies_prompt(

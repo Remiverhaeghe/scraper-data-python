@@ -32,6 +32,7 @@ from job.presentation import (
     format_date,
     format_net_salary,
 )
+from job.setup_checklist import build_setup_checklist
 from job.statistics import (
     ACTIVITY_AXES,
     ACTIVITY_SERIES,
@@ -137,6 +138,7 @@ class HomePage(QWidget):
         vLayout.addWidget(self.create_banner())
         vLayout.addLayout(self.create_statistics())
         vLayout.addWidget(self.create_goal_bar())
+        vLayout.addWidget(self.create_checklist_card())
 
         # Une grille aligne les colonnes des deux rangées, qui se partagent la
         # hauteur de la fenêtre : la page ne défile que sur un petit écran.
@@ -256,6 +258,53 @@ class HomePage(QWidget):
                 f"Objectif de la semaine : {pGoal['sent']} / {pGoal['goal']} "
                 "candidature(s)" + (" · atteint" if pGoal["share"] == 100 else "")
             )
+
+    def create_checklist_card(self):
+        """Construit la liste des réglages restant à faire."""
+        self.checklist_card, vLayout = create_card(
+            "À faire pour bien démarrer", "Cette carte disparaît une fois tout réglé"
+        )
+
+        self.checklist_layout = QVBoxLayout()
+        self.checklist_layout.setSpacing(2)
+
+        vLayout.addLayout(self.checklist_layout)
+        self.checklist_card.hide()
+
+        return self.checklist_card
+
+    def create_checklist_row(self, pItem):
+        """Construit une ligne cliquable qui ouvre la page où faire le réglage."""
+        vButton = QPushButton()
+        vButton.setObjectName("listRow")
+        vButton.setCursor(Qt.CursorShape.PointingHandCursor)
+        vButton.clicked.connect(lambda: self.navigation_requested.emit(pItem["page"]))
+
+        vTitleLabel = QLabel(pItem["text"])
+        vTitleLabel.setObjectName("activityTitle")
+
+        vHintLabel = QLabel(pItem["hint"])
+        vHintLabel.setObjectName("cardSubtitle")
+
+        vLayout = QHBoxLayout(vButton)
+        vLayout.setContentsMargins(8, 6, 8, 6)
+        vLayout.setSpacing(12)
+        vLayout.addWidget(create_icon_label("circle-alert", COLORS["warning"], 20))
+        vLayout.addWidget(vTitleLabel)
+        vLayout.addWidget(vHintLabel, 1)
+
+        vButton.setMinimumHeight(vLayout.sizeHint().height())
+
+        return vButton
+
+    def show_checklist(self, pChecklist):
+        """Affiche les réglages manquants ; la carte est masquée quand tout est fait."""
+        self.checklist_card.setVisible(bool(pChecklist))
+        self.show_rows(
+            self.checklist_layout,
+            [self.create_checklist_row(vItem) for vItem in pChecklist],
+            "",
+        )
 
     def create_chart_card(self):
         """Construit le graphique des nouvelles offres par jour."""
@@ -532,6 +581,7 @@ class HomePage(QWidget):
             self.show_follow_ups(vStatistics["upcoming_follow_ups"])
             self.show_latest_offers(vStatistics["latest_offers"])
             self.show_similar_offers(vStatistics["similar_offers"])
+            self.show_checklist(build_setup_checklist(self.database_file))
             self.last_search_label.setText(
                 describe_last_search(vStatistics["executions"])
             )

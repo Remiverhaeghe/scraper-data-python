@@ -1,8 +1,16 @@
-"""Page des compétences : demande des offres croisée avec la préparation"""
+"""Pages des compétences et du marché : demande des offres, préparation et salaires"""
+
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from job.market import (
+    CITY_COLUMNS,
+    SKILL_COLUMNS,
+    build_market,
+    build_market_cells,
+)
 from job.profile import add_profile_skill
 from job.quiz import load_active_quiz
 from job.skills_dashboard import SKILL_STATUSES, build_skills_dashboard
@@ -77,5 +85,41 @@ def add_skill_to_profile(
     add_profile_skill(pDatabaseFile, pSkill[:100])
 
     rResponse = RedirectResponse(router.url_path_for("show_skills"), status_code=303)
+
+    return rResponse
+
+
+@router.get("/market", response_class=HTMLResponse)
+def show_market(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche le marché : volumes et salaires par compétence et par ville."""
+
+    vMarket = build_market(pDatabaseFile, datetime.now())
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "market.html",
+        {
+            "active_page": "market",
+            "market": vMarket,
+            "tables": [
+                (
+                    "Compétences les plus demandées",
+                    "Médiane affichée à partir de trois salaires",
+                    SKILL_COLUMNS,
+                    [build_market_cells(vRow, True) for vRow in vMarket["skills"]],
+                ),
+                (
+                    "Villes qui recrutent le plus",
+                    f"{vMarket['unknown_city_count']} offre(s) sans ville ne sont "
+                    "pas classées",
+                    CITY_COLUMNS,
+                    [build_market_cells(vRow) for vRow in vMarket["cities"]],
+                ),
+            ],
+        },
+    )
 
     return rResponse

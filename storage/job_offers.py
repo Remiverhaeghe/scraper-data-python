@@ -52,8 +52,19 @@ def build_upsert_query():
     vPlaceholders = ", ".join("?" for _ in vColumns)
 
     vUpdates = ",\n            ".join(
-        f"{vColumn} = excluded.{vColumn}"
-        for vColumn in ["last_seen_at"] + CONTENT_COLUMNS
+        [
+            f"{vColumn} = excluded.{vColumn}"
+            for vColumn in ["last_seen_at"] + CONTENT_COLUMNS
+        ]
+        # Texte modifié : les compétences repérées sont à recalculer.
+        + [
+            "detected_skills = CASE WHEN "
+            + " AND ".join(
+                f"job_offer.{vColumn} IS excluded.{vColumn}"
+                for vColumn in ("title", "description", "missions", "requirements")
+            )
+            + " THEN job_offer.detected_skills ELSE NULL END"
+        ]
     )
 
     # first_seen_at n'est pas mis à jour : il garde la date de découverte. Les

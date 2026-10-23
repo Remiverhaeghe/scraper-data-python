@@ -123,7 +123,9 @@ class OfferCard extends StatelessWidget {
                       child: Text(
                         offerStatuses[vStatus] ?? 'Statut',
                         style: TextStyle(
-                          color: vStatus == 'APPLIED' ? successColor : vTheme.colorScheme.primary,
+                          color: vStatus == 'APPLIED'
+                              ? successColorOf(context)
+                              : vTheme.colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

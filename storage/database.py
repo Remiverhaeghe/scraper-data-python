@@ -803,6 +803,16 @@ def migrate_to_v25(pConnection):
         """)
 
 
+def migrate_to_v26(pConnection):
+    """Ajoute les compétences repérées dans le texte de chaque offre.
+
+    Les chercher à chaque affichage prenait six secondes pour mille offres ; elles
+    sont désormais calculées une fois, puis lues (job/skill_cache.py).
+    """
+
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN detected_skills TEXT")
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -829,6 +839,7 @@ MIGRATIONS = [
     migrate_to_v23,
     migrate_to_v24,
     migrate_to_v25,
+    migrate_to_v26,
 ]
 
 

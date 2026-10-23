@@ -9,6 +9,7 @@ from job.filter import filter_jobs
 from job.geocoding import load_home, locate_offers
 from job.offer_purge import drop_excluded_offers, load_excluded_words
 from job.settings import get_net_ratio, get_tax_rate, load_settings
+from job.skill_cache import refresh_detected_skills_safely
 from job.sources.aggregator import scrape_sources
 from scraper.history_service import record_history
 from storage.job_offers import save_offers
@@ -105,6 +106,8 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
 
     except Exception:
         logger.exception("Échec du placement des offres sur la carte")
+
+    refresh_detected_skills_safely(DATABASE_FILE)
 
     vParameters = build_search_parameters(pConfig)
 

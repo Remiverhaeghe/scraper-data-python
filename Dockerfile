@@ -10,8 +10,11 @@ FROM python:3.14-slim AS dependances
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY requirements-server.txt .
-RUN pip install --no-cache-dir -r requirements-server.txt
+# Versions et empreintes de toutes les dépendances : un paquet modifié sur PyPI
+# fait échouer la construction au lieu de s'installer. Le fichier se régénère
+# depuis requirements-server.txt, voir en tête de celui-ci.
+COPY requirements-server.lock .
+RUN pip install --no-cache-dir --require-hashes -r requirements-server.lock
 
 
 FROM python:3.14-slim

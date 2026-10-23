@@ -210,3 +210,20 @@ def test_similar_offers_card_is_shown_only_with_offers(qt_application, tmp_path)
 
     assert not vPage.similar_offers_card.isHidden()
     assert vPage.similar_offers_layout.count() == 1
+
+
+def test_checklist_card_opens_the_page_to_set(qt_application, tmp_path):
+    """Vérifie la carte À faire : une ligne par réglage, qui ouvre sa page."""
+
+    vPage = HomePage(build_database(tmp_path))
+    vRequested = []
+    vPage.navigation_requested.connect(vRequested.append)
+    vPage.refresh()
+
+    assert not vPage.checklist_card.isHidden()
+
+    vPage.checklist_layout.itemAt(0).widget().click()
+    vPage.show_checklist([])
+
+    assert vRequested == ["profile"]
+    assert vPage.checklist_card.isHidden()

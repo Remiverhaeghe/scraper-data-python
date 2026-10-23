@@ -170,6 +170,12 @@
                 {% if preparation.cv %} · CV conseillé : <strong>{{ preparation.cv.name }}</strong>{% endif %}
             </p>
             <p class="muted">Couvertes : {{ preparation.match.covered | join(", ") or "aucune" }}<br>Manquantes : {{ preparation.missing_text }}</p>
+            {% if preparation.score_lines %}
+            <details>
+                <summary>Pourquoi ce score ?</summary>
+                <ul>{% for line in preparation.score_lines %}<li>{{ line }}</li>{% endfor %}</ul>
+            </details>
+            {% endif %}
             <h3>Points forts à citer</h3>
             <ul>
                 {% for strength in preparation.interview.strengths %}

@@ -34,6 +34,7 @@ PAGES = (
     "/profile",
     "/settings",
     "/quality",
+    "/market",
     "/logs",
     "/legal",
 )

@@ -208,6 +208,7 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Sauvegarde automatique quotidienne de la base au démarrage du bureau et par le planificateur, sept jours gardés, sans évincer les sauvegardes faites avant une opération risquée
 - [x] Restauration d'une sauvegarde de la base en un clic depuis les paramètres, après sauvegarde de l'état actuel (bureau et web)
 - [x] État de l'application dans la page Journaux : sauvegarde, planification, dernière recherche, sources, offres suivies et place occupée
+- [x] Chaque sauvegarde contrôlée à sa création (PRAGMA integrity_check) : une copie endommagée est écartée, signalée en rouge dans la page Santé et jamais copiée sur le NAS
 
 ### 🖥️ Interface graphique
 
@@ -247,6 +248,9 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Alertes ciblées : score de correspondance minimal des nouvelles offres envoyées par e-mail
 - [x] Sauvegarde complète exportable et restaurable (base et pièces jointes dans un .zip)
 - [x] Pistes de réponse aux questions classiques du recruteur et simulation d'entretien avec ChatGPT
+- [x] Accueil : liste « À faire » des réglages manquants (compétences, auto-évaluation, salaire visé, accès France Travail, NAS), masquée une fois tout réglé
+- [x] Explication du score dans la préparation : poids de chaque compétence (exigée, demandée, appréciée) et niveau de maîtrise
+- [x] Mon marché : offres des 90 derniers jours, compétences et villes les plus demandées avec leur net mensuel médian
 
 ### 🌐 Tableau de bord web
 
@@ -278,6 +282,8 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Révision par QCM, demandes ChatGPT à copier et infos sur l'entreprise, comme sur le bureau
 - [x] Score et tri par correspondance, filtre France, date d'entretien et export agenda, comme sur le bureau
 - [x] Abonnement à l'agenda, alertes ciblées et sauvegarde complète, comme sur le bureau
+- [x] Liste « À faire », explication du score et page Mon marché, comme sur le bureau
+- [x] Carte des offres : raccourcis de correspondance (toutes, 50 %, 70 %), pastille d'autant plus grande que le score est élevé
 
 ### 🔐 Sécurité
 
@@ -587,8 +593,10 @@ scraper-data-python/
 │   ├── offer_filters.py                       # Choix de la barre de filtres traduits pour la requête
 │   ├── statistics.py                          # Indicateurs et graphiques, bureau et web
 │   ├── salary_market.py                       # Salaire du marché des offres proches, comparé au salaire visé
+│   ├── market.py                              # Mon marché : demande et salaires par compétence et par ville
 │   ├── offer_archive.py                       # Archivage quotidien des offres expirées non suivies
 │   ├── similar_offers.py                      # Nouvelles offres proches de celles retenues
+│   ├── setup_checklist.py                     # Réglages restant à faire, listés sur l'accueil
 │   ├── settings.py                            # Réglages de calcul modifiables et recalcul du net
 │   ├── export.py                              # Export des offres en CSV, Excel et JSON
 │   ├── quality.py                             # Remplissage des champs et offres à vérifier
@@ -609,6 +617,7 @@ scraper-data-python/
 │   ├── interview_drill.py                     # Entraînement à l'oral, répétition espacée
 │   ├── interview_simulation.py                # Simulation d'entretien technique, points clés cochés
 │   ├── self_assessment.py                     # Grille d'auto-évaluation des compétences
+│   ├── skill_cache.py                         # Compétences de chaque offre détectées une fois, gardées en base
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
 │   ├── translation.py                         # Traduction hors ligne des descriptions (Argos, facultatif)
@@ -818,6 +827,7 @@ scraper-data-python/
 │   ├── quiz_page.py                           # Révision technique : thèmes, questions et examen
 │   ├── quiz_theme_cards.py                    # Cartes de thèmes et en-têtes de domaine
 │   ├── skills_page.py                         # Compétences demandées et préparation
+│   ├── market_page.py                         # Mon marché : salaires et demande
 │   ├── quiz_answer.py                         # Zones de réponse selon le type, schéma cliquable
 │   ├── quiz_import_panel.py                   # Ajout de questions : priorités, ChatGPT, import, export
 │   ├── quiz_priority_banner.py                # Thèmes vides demandés par les offres
@@ -896,6 +906,7 @@ scraper-data-python/
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
 │   │   ├── quiz.html                          # Révision technique par QCM
 │   │   ├── skills.html                        # Tableau de bord des compétences
+│   │   ├── market.html                        # Mon marché : salaires et demande
 │   │   ├── _quiz_answer.html                  # Champs de réponse selon le type de question
 │   │   ├── challenges.html                    # Défis de programmation
 │   │   ├── git.html                           # Bac à sable Git
@@ -1034,6 +1045,9 @@ scraper-data-python/
 │   │   ├── test_deduplication.py              # Teste l'empreinte et le regroupement des annonces
 │   │   ├── test_preparation.py                # Teste le profil et la préparation de candidature
 │   │   ├── test_salary_market.py              # Teste le salaire du marché
+│   │   ├── test_market.py                     # Teste la synthèse du marché
+│   │   ├── test_setup_checklist.py            # Teste la liste des réglages à faire
+│   │   ├── test_skill_cache.py                # Teste les compétences gardées en base
 │   │   ├── test_star_answers.py               # Teste les réponses STAR
 │   │   ├── test_offer_purge.py                # Teste la purge des offres hors sujet
 │   │   ├── test_followed_availability.py      # Teste la vérification des offres suivies
@@ -1198,7 +1212,9 @@ scraper-data-python/
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres
 │   │   ├── test_skills_page.py                 # Teste la page des compétences
+│   │   ├── test_market_page.py                 # Teste la page Mon marché
 │   │   ├── test_theme.py                       # Teste les thèmes, les icônes et le logo
+│   │   ├── test_theme_contrast.py              # Teste les contrastes des thèmes (WCAG AA)
 │   │   └── test_widgets.py                     # Teste la carte repliable, « Tout replier » et la tuile cliquable
 │   │
 │   ├── scraper/                                # Tests des composants communs
@@ -1255,6 +1271,7 @@ scraper-data-python/
 │   ├── conftest.py                             # Bloque l'accès réseau, SMTP et à la base réelle
 │   ├── test_isolation.py                       # Teste le blocage des bases du projet pendant les tests
 │   ├── test_sources.py                         # Teste l'absence de caractères de contrôle
+│   ├── test_server_requirements.py             # Teste le fichier verrouillé des dépendances Docker
 │   ├── test_api_client.py                      # Teste les appels sécurisés aux API
 │   ├── test_config.py                          # Teste la configuration générale
 │   ├── test_helpers.py                         # Teste les fonctions utilitaires
@@ -1274,6 +1291,7 @@ scraper-data-python/
 ├── requirements.txt                            # Liste des dépendances Python
 ├── requirements-translation.txt                # Traduction hors ligne, facultative (torch compris)
 ├── requirements-server.txt                     # Dépendances du web et du planificateur seuls (Docker)
+├── requirements-server.lock                    # Mêmes dépendances, versions et empreintes verrouillées
 ├── Dockerfile                                  # Image du web et du planificateur pour le NAS
 ├── docker-compose.yml                          # Conteneurs durcis du web et du planificateur
 ├── .dockerignore                               # Exclut de l'image données, secrets et tests

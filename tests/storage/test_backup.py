@@ -1,5 +1,6 @@
 """Tests de la copie des sauvegardes automatiques sur le NAS"""
 
+import sqlite3
 from datetime import datetime
 
 import pytest
@@ -13,7 +14,9 @@ from storage.backup import (
     describe_nas_copies,
     fetch_nas_copy,
     get_last_nas_copy_time,
+    list_damaged_backups,
     list_nas_copies,
+    verify_backup,
 )
 from storage.database import initialize_database
 
@@ -122,3 +125,20 @@ def test_nas_copy_is_encrypted_then_restored_with_its_key(tmp_path):
     assert vLocal.read_bytes() == vOriginal
     assert list_nas_copies(vDatabaseFile, vNas) == [vCopy]
     assert get_last_nas_copy_time(vDatabaseFile, vNas) == datetime(2026, 10, 1, 2)
+
+
+def test_damaged_backup_is_set_aside(tmp_path):
+    """Vérifie qu'une sauvegarde illisible est écartée et signalée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vBackupFile = backup_database(vDatabaseFile, datetime(2026, 10, 1, 2), "auto")
+    vBackupFile.write_bytes(b"SQLite format 3\x00" + b"\x00" * 200)
+
+    with pytest.raises(sqlite3.DatabaseError):
+        verify_backup(vBackupFile)
+
+    assert not vBackupFile.exists()
+    assert [vFile.name for vFile in list_damaged_backups(vDatabaseFile)] == [
+        "scraper-20261001-020000-auto.db.endommagee"
+    ]

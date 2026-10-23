@@ -17,7 +17,8 @@ void main() {
   final vToken = Platform.environment['JOBBOARD_TOKEN'];
 
   test(
-    'Contenu reçu, réponse, signalement et examen envoyés au vrai serveur',
+    'Contenu et offres reçus ; réponse, signalement, examen, entretien, '
+    'auto-évaluation et statut envoyés au vrai serveur',
     () async {
       final vState = RevisionState(MemoryRevisionStore());
 
@@ -29,6 +30,24 @@ void main() {
           vState.package!.questions.where((vQuestion) => vQuestion.type == 'qcm').toList();
 
       expect(vQuestions.length, greaterThan(2));
+
+      // Offre préparée par tools/mobile_integration.py, lisible hors ligne
+      final vOffer = vState.offers.single;
+
+      expect(vOffer['description'], 'Java, SQL et Docker');
+      expect(vOffer['covered'], ['Java', 'SQL']);
+      expect(vOffer['missing'], ['Docker']);
+      expect(vState.interviewQuestions, isNotEmpty);
+      expect(vState.skillGrid, isNotEmpty);
+
+      await vState.setOfferStatus(vOffer, 'INTERESTED');
+      await vState.recordInterviewSeries('Java', [
+        {
+          'question_id': vState.interviewQuestions.first['id'],
+          'checked': [0],
+        },
+      ]);
+      await vState.saveSkillLevels({'Java': 6});
 
       await vState.answer(vQuestions[0], 0);
       await vState.flagQuestion(vQuestions[1].id);
@@ -53,7 +72,13 @@ void main() {
         vState.package!.questions.any((vQuestion) => vQuestion.id == vQuestions[1].id),
         isFalse,
       );
-      expect(vState.offers, isA<List>());
+      expect(vState.pendingStatuses, isEmpty);
+      expect(vState.pendingInterview, isEmpty);
+      expect(
+        vState.skillGrid.firstWhere((vItem) => vItem['skill'] == 'Java')['level'],
+        6,
+      );
+      expect(vState.offers.single['status'], 'INTERESTED');
     },
     skip: vServer == null || vToken == null ? 'Serveur de test absent' : false,
   );

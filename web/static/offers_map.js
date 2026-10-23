@@ -35,8 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
             : `${vPoint.detail} · ${vPoint.score} %`;
         vPopup.append(vLink, vDetail);
 
+        // Rayon de 5 à 12 pixels selon le score : les meilleures offres ressortent.
         L.circleMarker(vPosition, {
-            radius: 8,
+            radius: vPoint.score === null ? 5 : 5 + Math.round(vPoint.score * 0.07),
             weight: 1,
             color: "#ffffff",
             fillColor: vColors[vPoint.tone || "muted"],

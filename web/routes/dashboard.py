@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 
 from job.presentation import CHART_PALETTE, FOLLOW_UP_FILTER, describe_execution
 from job.schedule import request_immediate_run
+from job.setup_checklist import build_setup_checklist
 from job.statistics import (
     ACTIVITY_AXES,
     ACTIVITY_SERIES,
@@ -38,6 +39,7 @@ def show_dashboard(
         {
             "active_page": "dashboard",
             "statistics": vStatistics,
+            "checklist": build_setup_checklist(pDatabaseFile),
             "ready_sources": count_ready_sources(),
             "new_offer_days": vStatistics["new_offer_days"],
             "chart": build_bar_chart(

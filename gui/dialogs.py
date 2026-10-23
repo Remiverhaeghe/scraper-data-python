@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from config import APPLICATION_NAME
-from job.preparation import describe_missing
+from job.preparation import describe_missing, describe_score
 from job.presentation import (
     LICENSE_SUMMARY,
     LICENSE_SUMMARY_NOTE,
@@ -127,6 +127,16 @@ def describe_preparation(pPreparation):
         f"<p>Couvertes : {escape(', '.join(vMatch['covered']) or 'aucune')}<br>"
         f"Manquantes : {escape(describe_missing(vMatch))}</p>"
     )
+
+    # Explication du score : poids et maîtrise de chaque compétence
+    vScoreLines = describe_score(vMatch)
+
+    if vScoreLines:
+        rHtml += (
+            "<p><b>Pourquoi ce score</b></p><ul>"
+            + "".join(f"<li>{escape(vLine)}</li>" for vLine in vScoreLines)
+            + "</ul>"
+        )
 
     if pPreparation["cv"]:
         rHtml += (

@@ -117,7 +117,7 @@ class ActivityChart extends StatelessWidget {
                       alignment: Alignment.bottomCenter,
                       child: FractionallySizedBox(
                         heightFactor: vDay.answers == 0 ? 0 : vDay.correct / vDay.answers,
-                        child: Container(color: successColor),
+                        child: Container(color: successColorOf(context)),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -160,7 +160,7 @@ class ThemeProgress extends StatelessWidget {
             value: theme.share,
             minHeight: 8,
             borderRadius: BorderRadius.circular(4),
-            color: theme.share >= 0.8 ? successColor : null,
+            color: theme.share >= 0.8 ? successColorOf(context) : null,
           ),
           if (theme.due > 0) Text("${theme.due} à revoir aujourd'hui", style: vTextTheme.bodySmall),
         ],

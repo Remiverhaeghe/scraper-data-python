@@ -1,0 +1,37 @@
+{# Mon marché (route /market) : calculé par job/market.py, comme sur le bureau. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Mon marché{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Mon marché", "Offres en France des " ~ market.days ~ " derniers jours, hors stage, alternance et mission libre", "banknote") }}
+
+<section class="grid grid-4">
+    {{ ui.stat(market.offer_count, "Offres analysées", "briefcase", "blue") }}
+    {{ ui.stat(market.salaried_count, "Avec un salaire", "banknote", "green") }}
+    {{ ui.stat(market.median, "Net mensuel médian", "scale", "amber") }}
+    {{ ui.stat(market.target or "À régler", "Votre salaire visé", "target", "purple", none if market.target else url_for('show_settings').path) }}
+</section>
+
+{% for title, subtitle, columns, rows in tables %}
+<article class="card section-gap">
+    <h2>{{ title }}</h2>
+    <p class="card-subtitle">{{ subtitle }}</p>
+    {% if rows %}
+    <div class="table-wrapper" tabindex="0" role="region" aria-label="{{ title }}">
+        <table class="table">
+            <thead><tr>{% for column in columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted">Aucune offre récente pour le moment.</p>
+    {% endif %}
+</article>
+{% endfor %}
+{% endblock %}

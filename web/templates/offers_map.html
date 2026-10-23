@@ -21,10 +21,17 @@
     {% if not home %} · renseignez votre domicile dans Paramètres pour voir le rayon{% endif %}
 </p>
 
+<nav class="map-filters" aria-label="Correspondance au profil">
+    {% for link in map_match_links %}
+    <a class="button{% if link.active %} button-primary{% endif %}" href="?{{ link.query }}"{% if link.active %} aria-current="true"{% endif %}>{{ link.label }}</a>
+    {% endfor %}
+</nav>
+
 <div class="map-legend">
     <span class="map-dot map-dot-success"></span> {{ score_levels[0] }} % et plus
     <span class="map-dot map-dot-warning"></span> {{ score_levels[1] }} à {{ score_levels[0] - 1 }} %
     <span class="map-dot map-dot-muted"></span> moins ou sans score
+    · pastille d'autant plus grande que le score est élevé
 </div>
 
 <div id="offers-map" class="offers-map" aria-label="Carte des offres"></div>

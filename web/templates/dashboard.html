@@ -51,6 +51,21 @@
     {{ ui.stat(statistics.follow_ups, "Relances à faire", "bell-ring", "purple", offers_url ~ "?status=" ~ follow_up_filter) }}
 </section>
 
+{% if checklist %}
+<article class="card section-gap">
+    <h2>À faire pour bien démarrer</h2>
+    <p class="card-subtitle">Cette carte disparaît une fois tout réglé</p>
+    <ul class="checklist">
+        {% for item in checklist %}
+        <li>
+            <a href="/{{ item.page }}">{{ icon("circle-alert", 16) }} {{ item.text }}</a>
+            <span class="muted">{{ item.hint }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</article>
+{% endif %}
+
 {% if statistics.week_goal.share is not none %}
 <article class="card section-gap">
     <h2>Objectif de la semaine</h2>

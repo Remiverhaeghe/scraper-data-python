@@ -44,7 +44,7 @@ class OfferDetailScreen extends StatelessWidget {
               children: [
                 for (final vSkill in vCovered)
                   Chip(
-                    avatar: const Icon(Icons.check, size: 16, color: successColor),
+                    avatar: Icon(Icons.check, size: 16, color: successColorOf(context)),
                     label: Text(vSkill),
                     visualDensity: VisualDensity.compact,
                   ),
