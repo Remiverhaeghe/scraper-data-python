@@ -9,7 +9,13 @@ import job.health as health
 from job.health import build_health, find_silent_sources, format_age
 from job.geocoding import HOME_KEY
 from job.mobile_sync import build_offer_list, renew_mobile_token
-from job.schedule import mark_schedule_run, save_schedule_options, save_scheduled_search
+from job.schedule import (
+    get_scheduler_heartbeat,
+    mark_schedule_run,
+    mark_scheduler_alive,
+    save_schedule_options,
+    save_scheduled_search,
+)
 from scraper.history import HistoryEntry
 from storage.backup import backup_database
 from storage.database import initialize_database
@@ -82,7 +88,7 @@ def test_unreadable_check_does_not_hide_the_others(database_file, monkeypatch):
     vChecks = get_checks(database_file)
 
     assert vChecks["Sources"] == ("Illisible : voir les journaux", "danger")
-    assert len(vChecks) == 16
+    assert len(vChecks) == 17
     assert format_age(NOW - timedelta(days=5), NOW) == "il y a 5 jours"
 
 
@@ -218,3 +224,21 @@ def test_gmail_and_description_checks(database_file, monkeypatch):
     assert vTone == "success"
     assert vValue.startswith("Lu aujourd'hui à 09:00")
     assert get_checks(database_file)["Descriptions"][1] == "success"
+
+
+def test_scheduler_check_follows_the_heartbeat(tmp_path):
+    """Vérifie l'indicateur du planificateur : jamais vu, en marche, puis arrêté."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    assert health.check_scheduler(vDatabaseFile, NOW)[1] == "warning"
+
+    mark_scheduler_alive(vDatabaseFile)
+    vNow = datetime.now()
+
+    assert health.check_scheduler(vDatabaseFile, vNow)[1] == "success"
+    assert health.check_scheduler(vDatabaseFile, vNow + timedelta(hours=1)) == (
+        f"Arrêté depuis le {get_scheduler_heartbeat(vDatabaseFile):%d/%m/%Y %H:%M} "
+        ": les tâches de fond attendent",
+        "danger",
+    )

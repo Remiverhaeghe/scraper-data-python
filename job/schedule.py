@@ -3,6 +3,7 @@
 import json
 import re
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from job.presentation import describe_search, describe_sources
 from storage.saved_searches import get_saved_searches
@@ -40,6 +41,10 @@ FOLLOW_UP_REMINDER_KEY = "follow_up_reminder_sent"
 
 # Contrôle de forme volontairement simple : seul l'envoi prouve que l'adresse existe.
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+# Fichier touché à chaque passage du planificateur, à côté de la base : une
+# écriture en base chaque minute ferait recharger les pages du bureau.
+HEARTBEAT_FILE_NAME = "scheduler.heartbeat"
 
 
 def parse_interval(pValue):
@@ -394,3 +399,27 @@ def describe_schedule_runs(pSchedule, pNow):
         )
 
     return rText
+
+
+def get_heartbeat_file(pDatabaseFile):
+    """Retourne le fichier témoin du planificateur, rangé à côté de la base."""
+
+    rFile = Path(pDatabaseFile).with_name(HEARTBEAT_FILE_NAME)
+
+    return rFile
+
+
+def mark_scheduler_alive(pDatabaseFile):
+    """Note un passage du planificateur en touchant son fichier témoin."""
+
+    get_heartbeat_file(pDatabaseFile).touch()
+
+
+def get_scheduler_heartbeat(pDatabaseFile):
+    """Retourne la date du dernier passage du planificateur, ou None."""
+
+    vFile = get_heartbeat_file(pDatabaseFile)
+
+    rTime = datetime.fromtimestamp(vFile.stat().st_mtime) if vFile.exists() else None
+
+    return rTime

@@ -31,6 +31,7 @@ def scrape(pParameters, pJobConfig):
             pParameters["keyword"],
             pParameters["location"],
             pMaxItems,
+            (pJobConfig.known_descriptions or {}).get("smartrecruiters"),
         ),
         pJobConfig.max_items,
         "SmartRecruiters",

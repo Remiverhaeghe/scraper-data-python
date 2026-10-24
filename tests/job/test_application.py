@@ -101,6 +101,8 @@ def test_process_jobs():
     ), patch(
         "job.application.get_exchange_rates", return_value={}
     ), patch(
+        "job.application.get_known_descriptions", return_value={}
+    ), patch(
         "job.application.load_excluded_words", return_value=["stage"]
     ):
 
@@ -163,6 +165,8 @@ def test_process_jobs_saves_nothing_when_cancelled():
         "job.application.load_settings", return_value=SETTINGS
     ), patch(
         "job.application.get_exchange_rates", return_value={}
+    ), patch(
+        "job.application.get_known_descriptions", return_value={}
     ):
 
         with pytest.raises(ScrapingCancelled):

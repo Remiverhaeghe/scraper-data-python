@@ -71,7 +71,13 @@ dans l'historique git.
   déconnexion
 - Correction : la remise à zéro vide aussi l'historique des statuts
 - Sécurité : pypdf 6.21.2 (9 failles, lecture des CV importés), certifi
-  2026.10.19 et uv 0.13.4, image Docker comprise (`requirements-server.lock`)
+  2026.10.19 et uv 0.13.4, image Docker comprise (`requirements-server.lock`) ;
+  la CI audite aussi l'image Docker et l'application mobile (osv-scanner)
+- Recherche : SmartRecruiters et Workday reprennent les descriptions déjà en base
+  au lieu de les relire (Alten : 1,6 s au lieu de 22 s, 500 offres décrites au
+  lieu de 50)
+- Santé : indicateur « Planificateur », d'après un fichier témoin touché à
+  chaque passage (`data/scheduler.heartbeat`)
 - Migrations rangées dans `storage/migrations.py` ; tests en parallèle
   (`pytest -n auto`, pytest-xdist)
 - Entreprise suivie ajoutée depuis l'adresse de son site carrière

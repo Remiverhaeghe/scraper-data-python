@@ -209,7 +209,7 @@ pytest -n auto                    # les mêmes, en parallèle sur tous les cœur
 - [x] Réinitialisation des données après confirmation, avec sauvegarde préalable de la base
 - [x] Sauvegarde automatique quotidienne de la base au démarrage du bureau et par le planificateur, sept jours gardés, sans évincer les sauvegardes faites avant une opération risquée
 - [x] Restauration d'une sauvegarde de la base en un clic depuis les paramètres, après sauvegarde de l'état actuel (bureau et web)
-- [x] État de l'application dans la page Journaux : sauvegarde, planification, dernière recherche, sources, offres suivies et place occupée
+- [x] État de l'application dans la page Journaux : sauvegarde, planificateur en marche, planification, dernière recherche, sources, offres suivies et place occupée
 - [x] Chaque sauvegarde contrôlée à sa création (PRAGMA integrity_check) : une copie endommagée est écartée, signalée en rouge dans la page Santé et jamais copiée sur le NAS
 - [x] Essai mensuel de restauration de la dernière sauvegarde, résultat dans la page Santé
 - [x] Sauvegarde complète chiffrée par mot de passe sur clé USB, restaurable sur un autre PC

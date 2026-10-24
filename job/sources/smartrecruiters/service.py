@@ -60,17 +60,32 @@ def list_postings(pCompany, pCountry):
     return rPostings
 
 
-def add_descriptions(pJobs, pCompany):
-    """Complète chaque offre retenue avec sa description et son adresse publique."""
+def add_descriptions(pJobs, pCompany, pKnown=None):
+    """Complète chaque offre retenue avec sa description et son adresse publique.
 
+    Une description déjà en base (pKnown) est reprise sans appel réseau : le
+    plafond ne compte que les offres réellement lues.
+    """
+
+    vKnown = pKnown or {}
     vDescriptions = []
     vUrls = []
+    vRead = 0
 
-    for vIndex, vJob in enumerate(pJobs.to_dict("records")):
-        if vIndex >= MAX_DESCRIPTIONS:
+    for vJob in pJobs.to_dict("records"):
+        vSaved = vKnown.get(str(vJob["source_id"]))
+
+        if vSaved:
+            vDescriptions.append(vSaved["description"])
+            vUrls.append(vSaved["url"] or vJob["url"])
+            continue
+
+        if vRead >= MAX_DESCRIPTIONS:
             vDescriptions.append(None)
             vUrls.append(vJob["url"])
             continue
+
+        vRead += 1
 
         try:
             vDetail = get_posting(pCompany, vJob["source_id"])
@@ -87,20 +102,23 @@ def add_descriptions(pJobs, pCompany):
         vDescriptions.append(read_description(vDetail))
         vUrls.append(vDetail.get("postingUrl") or vJob["url"])
 
-    if len(pJobs) > MAX_DESCRIPTIONS:
-        logger.info(
-            "SmartRecruiters %s : description lue pour %s offre(s) sur %s",
-            pCompany,
-            MAX_DESCRIPTIONS,
-            len(pJobs),
-        )
+    logger.info(
+        "SmartRecruiters %s : %s description(s) lue(s), %s reprise(s) de la base, "
+        "sur %s offre(s)",
+        pCompany,
+        vRead,
+        sum(1 for vId in pJobs["source_id"] if str(vId) in vKnown),
+        len(pJobs),
+    )
 
     rJobs = pJobs.assign(description=vDescriptions, url=vUrls)
 
     return rJobs
 
 
-def scrape_jobs(pCompany, pCountry, pKeyword=None, pLocation=None, pMaxItems=None):
+def scrape_jobs(
+    pCompany, pCountry, pKeyword=None, pLocation=None, pMaxItems=None, pKnown=None
+):
     """Récupère, filtre et complète les offres d'une entreprise SmartRecruiters.
 
     Le filtre par mot-clé et par lieu se fait sur la liste, avant de lire le
@@ -121,7 +139,7 @@ def scrape_jobs(pCompany, pCountry, pKeyword=None, pLocation=None, pMaxItems=Non
     vJobs = vJobs.head(pMaxItems if pMaxItems is not None else DEFAULT_MAX_DETAILS)
 
     rJobs = (
-        add_descriptions(vJobs, pCompany)
+        add_descriptions(vJobs, pCompany, pKnown)
         if not vJobs.empty
         else pd.DataFrame(columns=JOB_COLUMNS)
     )

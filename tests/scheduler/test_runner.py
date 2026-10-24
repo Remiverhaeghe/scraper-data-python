@@ -130,7 +130,7 @@ def test_notify_new_offers_reports_sending_failure(database_file, monkeypatch, c
 
 
 @pytest.mark.parametrize("pError", [ScrapingCancelled(), RuntimeError("panne")])
-def test_run_forever_survives_errors_until_stop(monkeypatch, pError):
+def test_run_forever_survives_errors_until_stop(monkeypatch, tmp_path, pError):
     """Vérifie que la boucle continue après une erreur et s'arrête à la demande."""
 
     vStopEvent = threading.Event()
@@ -153,10 +153,11 @@ def test_run_forever_survives_errors_until_stop(monkeypatch, pError):
         (("test", lambda pDatabaseFile, pNow: vTasks.append(pNow)),),
     )
 
-    runner.run_forever("scraper.db", vStopEvent, pPollSeconds=0)
+    runner.run_forever(tmp_path / "scraper.db", vStopEvent, pPollSeconds=0)
 
     assert len(vCalls) == 2
     assert len(vTasks) == 2
+    assert (tmp_path / "scheduler.heartbeat").exists()
 
 
 def test_run_due_search_handles_web_request(database_file, monkeypatch, sent_emails):

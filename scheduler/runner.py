@@ -37,6 +37,7 @@ from job.schedule import (
     is_schedule_due,
     load_schedule,
     mark_schedule_run,
+    mark_scheduler_alive,
 )
 from job.sources.aggregator import ScrapingCancelled
 from job.sources.configuration import build_job_config, build_search_arguments
@@ -373,6 +374,12 @@ def run_forever(pDatabaseFile, pStopEvent, pPollSeconds=POLL_SECONDS):
     logger.info("Planificateur démarré, vérification toutes les %s s", pPollSeconds)
 
     while not pStopEvent.is_set():
+        try:
+            mark_scheduler_alive(pDatabaseFile)
+
+        except OSError as vException:
+            logger.warning("Fichier témoin du planificateur non écrit : %s", vException)
+
         run_background_tasks(pDatabaseFile, datetime.now())
 
         try:

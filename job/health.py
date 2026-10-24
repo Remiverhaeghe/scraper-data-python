@@ -11,7 +11,7 @@ from job.geocoding import load_home
 from job.location import FRANCE
 from job.restore_check import load_restore_check
 from job.mobile_sync import get_last_phone_sync, get_mobile_token
-from job.schedule import load_schedule
+from job.schedule import get_scheduler_heartbeat, load_schedule
 from job.sources.registry import SOURCES
 from storage.backup import (
     describe_backups,
@@ -39,6 +39,9 @@ CERTIFICATE_DANGER_DAYS = 7
 
 # Offres récentes dont la description manquante est comptée
 DESCRIPTION_DAYS = 7
+
+# Le planificateur passe chaque minute : au-delà, il est arrêté ou bloqué.
+SCHEDULER_SILENT_DELAY = timedelta(minutes=10)
 
 # Au-delà, le téléphone ne s'est plus synchronisé depuis longtemps
 PHONE_SYNC_WARNING_DELAY = timedelta(days=2)
@@ -171,6 +174,29 @@ def check_schedule(pDatabaseFile, pNow):
     return rCheck
 
 
+def check_scheduler(pDatabaseFile, pNow):
+    """Vérifie que le planificateur tourne : il fait les tâches de fond."""
+
+    vLast = get_scheduler_heartbeat(pDatabaseFile)
+
+    if vLast is None:
+        rCheck = (
+            "Jamais vu tourner : sauvegardes, descriptions et récapitulatifs "
+            "attendent. Lancez python -m scheduler, ou python -m "
+            "tools.windows_startup pour le démarrer avec la session.",
+            "warning",
+        )
+    elif pNow - vLast > SCHEDULER_SILENT_DELAY:
+        rCheck = (
+            f"Arrêté depuis le {vLast:%d/%m/%Y %H:%M} : les tâches de fond attendent",
+            "danger",
+        )
+    else:
+        rCheck = (f"En marche, dernier passage à {vLast:%H:%M}", "success")
+
+    return rCheck
+
+
 def check_last_run(pDatabaseFile):
     """Vérifie le résultat de la dernière recherche."""
 
@@ -245,8 +271,8 @@ def check_descriptions(pDatabaseFile, pNow):
     rCheck = (
         (
             f"{vMissing} offre(s) des {DESCRIPTION_DAYS} derniers jours sans "
-            "description : lue à l'ouverture pour SmartRecruiters et Workday, "
-            "score moins précis en attendant",
+            "description : SmartRecruiters et Workday les complètent en tâche de "
+            "fond, score moins précis en attendant",
             "warning" if vMissing > len(vOffers) / 2 else "muted",
         )
         if vMissing
@@ -437,6 +463,7 @@ def build_health(pDatabaseFile, pNow):
         ("Sauvegarde vérifiée", lambda: check_backup_integrity(pDatabaseFile)),
         ("Restauration éprouvée", lambda: check_restore_test(pDatabaseFile)),
         ("Copie sur le NAS", lambda: check_nas_copy(pDatabaseFile, pNow)),
+        ("Planificateur", lambda: check_scheduler(pDatabaseFile, pNow)),
         ("Recherche planifiée", lambda: check_schedule(pDatabaseFile, pNow)),
         ("Dernière recherche", lambda: check_last_run(pDatabaseFile)),
         ("Sources", check_sources),

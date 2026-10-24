@@ -116,3 +116,32 @@ def test_descriptions_are_capped_per_company(monkeypatch):
     assert vDetails == ["0", "1"]
     assert len(vJobs) == 4
     assert vJobs["description"].isna().tolist() == [False, False, True, True]
+
+
+def test_known_descriptions_are_reused_without_network(monkeypatch):
+    """Vérifie la reprise des descriptions en base : seul l'inconnu est lu."""
+
+    vPostings = [{**POSTING, "id": str(vIndex)} for vIndex in range(3)]
+    vDetails = []
+    monkeypatch.setattr(service, "MAX_DESCRIPTIONS", 1)
+    monkeypatch.setattr(
+        service,
+        "get_postings",
+        lambda *_pArgs: {"content": vPostings, "totalFound": 3},
+    )
+    monkeypatch.setattr(
+        service,
+        "get_posting",
+        lambda _pCompany, pId: vDetails.append(pId) or DETAIL,
+    )
+    vKnown = {
+        "0": {"description": "Déjà lue", "url": "https://jobs.smartrecruiters.com/a/0"},
+        "1": {"description": "Déjà lue aussi", "url": None},
+    }
+
+    vJobs = scrape_jobs("Loxam", "fr", pMaxItems=500, pKnown=vKnown)
+
+    assert vDetails == ["2"]
+    assert vJobs["description"].tolist()[:2] == ["Déjà lue", "Déjà lue aussi"]
+    assert vJobs["url"].iloc[0] == "https://jobs.smartrecruiters.com/a/0"
+    assert "Maintenance des nacelles" in vJobs["description"].iloc[2]

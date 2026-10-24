@@ -218,6 +218,14 @@ jobs:
         run: |
           pip install pip-audit==2.10.1
           pip-audit -r requirements.txt
+          pip-audit -r requirements-server.lock
+
+      # Dépendances de l'application mobile (pubspec.lock), même base OSV ;
+      # go install vérifie l'empreinte du code auprès de sum.golang.org.
+      - name: Analyse osv-scanner de l'application mobile
+        run: |
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.6.0
+          "$(go env GOPATH)/bin/osv-scanner" scan source --lockfile mobile/pubspec.lock
 
   secrets:
     name: Recherche de secrets

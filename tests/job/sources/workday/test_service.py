@@ -141,3 +141,24 @@ def test_description_is_fetched_from_the_saved_url(monkeypatch):
         )
     ]
     assert fetch_description({**vOffer, "url": "https://exemple.fr/offre"}) is None
+
+
+def test_known_workday_offer_is_not_read_again(monkeypatch):
+    """Vérifie qu'une offre déjà décrite garde description et temps de travail."""
+
+    monkeypatch.setattr(
+        service,
+        "search_jobs",
+        lambda *_pArgs, **_pOptions: {"total": 1, "jobPostings": [POSTING]},
+    )
+    monkeypatch.setattr(
+        service,
+        "get_job",
+        lambda *_pArgs: pytest.fail("détail relu alors qu'il est connu"),
+    )
+    vKnown = {"lfb:R9955": {"description": "En base", "employment_type": "Part time"}}
+
+    vJobs = scrape_jobs("LFB=lfb.wd3/lfb/LFB_External_Careers", pNow=NOW, pKnown=vKnown)
+
+    assert vJobs.iloc[0]["description"] == "En base"
+    assert vJobs.iloc[0]["employment_type"] == "Part time"

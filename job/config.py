@@ -14,6 +14,10 @@ class JobScrapingConfig(ScrapingConfig):
     # Recherche textuelle
     keyword: str | None = None
 
+    # Descriptions déjà en base, par source puis par identifiant : reprises au
+    # lieu d'être relues sur le réseau (job/application.py)
+    known_descriptions: dict | None = None
+
     # Localisation
     location: str | None = None
     max_distance_km: float | None = None

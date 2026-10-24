@@ -11,6 +11,7 @@ from storage.database import connect_database, initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import (
     CONTENT_COLUMNS,
+    get_known_descriptions,
     count_new_offers_by_day,
     count_offers,
     get_offer,
@@ -445,3 +446,26 @@ def test_get_offers_hides_consulting_firms_and_training(tmp_path):
 
     assert sorted(vWithoutFirms["source_id"]) == ["2", "3", "4", "5"]
     assert sorted(vWithoutTraining["source_id"]) == ["1", "2", "5"]
+
+
+def test_known_descriptions_skip_empty_ones(tmp_path):
+    """Vérifie les descriptions reprises : renseignées seulement, par identifiant."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {"source": "workday", "source_id": "a", "description": "Texte"},
+                {"source": "workday", "source_id": "b", "description": ""},
+                {"source": "lever", "source_id": "c", "description": "Autre"},
+            ]
+        ),
+        datetime(2026, 10, 24),
+    )
+
+    vKnown = get_known_descriptions(vDatabaseFile, "workday")
+
+    assert list(vKnown) == ["a"]
+    assert vKnown["a"]["description"] == "Texte"

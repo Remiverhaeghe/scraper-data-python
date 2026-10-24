@@ -7,12 +7,13 @@ from config import DATABASE_FILE
 from job.exchange_rates import get_exchange_rates
 from job.filter import filter_jobs
 from job.geocoding import locate_new_offers
+from job.offer_details import DESCRIPTION_FETCHERS
 from job.offer_purge import drop_excluded_offers, load_excluded_words
 from job.settings import get_net_ratio, get_tax_rate, load_settings
 from job.skill_cache import refresh_detected_skills_safely
 from job.sources.aggregator import scrape_sources
 from scraper.history_service import record_history
-from storage.job_offers import save_offers
+from storage.job_offers import get_known_descriptions, save_offers
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -73,6 +74,10 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
         net_salary_ratio=get_net_ratio(vSettings),
         income_tax_rate=get_tax_rate(vSettings),
         exchange_rates=get_exchange_rates(DATABASE_FILE, datetime.now()),
+        known_descriptions={
+            vSource: get_known_descriptions(DATABASE_FILE, vSource)
+            for vSource in DESCRIPTION_FETCHERS
+        },
     )
 
     vScrapingResult = scrape_sources(

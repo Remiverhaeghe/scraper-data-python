@@ -724,6 +724,32 @@ def get_offers_without_description(pDatabaseFile, pSources, pLimit):
     return rOffers
 
 
+def get_known_descriptions(pDatabaseFile, pSource):
+    """Retourne, par identifiant, la description, l'adresse et le temps de travail
+    des offres déjà décrites d'une source.
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+    vConnection.row_factory = sqlite3.Row
+
+    try:
+        vRows = vConnection.execute(
+            """
+            SELECT source_id, description, url, employment_type
+            FROM job_offer
+            WHERE source = ? AND COALESCE(description, '') <> ''
+            """,
+            (pSource,),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rDescriptions = {vRow["source_id"]: dict(vRow) for vRow in vRows}
+
+    return rDescriptions
+
+
 def mark_description_unavailable(pDatabaseFile, pSource, pSourceId):
     """Note une description introuvable à la source : elle n'est plus redemandée."""
 

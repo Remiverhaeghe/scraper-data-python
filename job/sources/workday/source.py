@@ -23,7 +23,11 @@ def scrape(pParameters, pJobConfig):
     rDataFrame = scrape_each(
         pParameters["companies"],
         lambda pSite, pMaxItems: scrape_jobs(
-            pSite, pParameters["keyword"], pParameters["location"], pMaxItems
+            pSite,
+            pParameters["keyword"],
+            pParameters["location"],
+            pMaxItems,
+            pKnown=(pJobConfig.known_descriptions or {}).get("workday"),
         ),
         pJobConfig.max_items,
         "Workday",

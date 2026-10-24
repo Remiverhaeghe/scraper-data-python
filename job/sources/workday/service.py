@@ -106,16 +106,24 @@ def read_job_path(pSite, pUrl):
     return rPath
 
 
-def add_descriptions(pJobs, pSite):
-    """Complète les premières offres avec leur description et leur temps de travail."""
+def add_descriptions(pJobs, pSite, pKnown=None):
+    """Complète les premières offres avec leur description et leur temps de travail.
 
+    Une offre déjà décrite en base (pKnown) est reprise sans appel réseau : le
+    plafond ne compte que les offres réellement lues.
+    """
+
+    vKnown = pKnown or {}
     vDescriptions = []
     vTypes = []
+    vRead = 0
 
-    for vIndex, vJob in enumerate(pJobs.to_dict("records")):
-        vDetail = {}
+    for vJob in pJobs.to_dict("records"):
+        vDetail = vKnown.get(str(vJob["source_id"])) or {}
 
-        if vIndex < MAX_DESCRIPTIONS:
+        if not vDetail and vRead < MAX_DESCRIPTIONS:
+            vRead += 1
+
             try:
                 vDetail = read_detail(get_job(pSite, read_job_path(pSite, vJob["url"])))
 
@@ -130,20 +138,23 @@ def add_descriptions(pJobs, pSite):
         vDescriptions.append(vDetail.get("description"))
         vTypes.append(vDetail.get("employment_type"))
 
-    if len(pJobs) > MAX_DESCRIPTIONS:
-        logger.info(
-            "Workday %s : description lue pour %s offre(s) sur %s",
-            pSite.name,
-            MAX_DESCRIPTIONS,
-            len(pJobs),
-        )
+    logger.info(
+        "Workday %s : %s description(s) lue(s), %s reprise(s) de la base, sur %s "
+        "offre(s)",
+        pSite.name,
+        vRead,
+        sum(1 for vJob in pJobs["source_id"] if str(vJob) in vKnown),
+        len(pJobs),
+    )
 
     rJobs = pJobs.assign(description=vDescriptions, employment_type=vTypes)
 
     return rJobs
 
 
-def scrape_jobs(pSiteText, pKeyword=None, pLocation=None, pMaxItems=None, pNow=None):
+def scrape_jobs(
+    pSiteText, pKeyword=None, pLocation=None, pMaxItems=None, pNow=None, pKnown=None
+):
     """Récupère, filtre et complète les offres d'un site carrière Workday."""
 
     vSite = parse_site(pSiteText)
@@ -159,7 +170,7 @@ def scrape_jobs(pSiteText, pKeyword=None, pLocation=None, pMaxItems=None, pNow=N
     vJobs = vJobs.head(pMaxItems if pMaxItems is not None else DEFAULT_MAX_ITEMS)
 
     rJobs = (
-        add_descriptions(vJobs, vSite)
+        add_descriptions(vJobs, vSite, pKnown)
         if not vJobs.empty
         else pd.DataFrame(columns=JOB_COLUMNS)
     )
