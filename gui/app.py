@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QApplication
 from config import APPLICATION_NAME, DATABASE_FILE
 from gui.branding import create_logo_icon
 from gui.main_window import MainWindow
-from gui.theme import THEME_SETTING, apply_theme
+from gui.theme import TEXT_SCALE_SETTING, THEME_SETTING, apply_theme
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -29,11 +29,14 @@ class DesktopApplication:
 
         # Sans choix mémorisé, le premier lancement suit le thème de Windows.
         vTheme = apply_theme(
-            self.application, self.settings.value(THEME_SETTING, "system", str)
+            self.application,
+            self.settings.value(THEME_SETTING, "system", str),
+            self.settings.value(TEXT_SCALE_SETTING, 100, int),
         )
 
         self.window = MainWindow(DATABASE_FILE, APPLICATION_NAME)
         self.window.theme_requested.connect(self.change_theme)
+        self.window.text_scale_requested.connect(self.change_text_scale)
         self.window.showMaximized()
 
         logger.info("Application de bureau ouverte avec le thème %s", vTheme)
@@ -42,11 +45,27 @@ class DesktopApplication:
         """Mémorise le thème choisi et repeint la fenêtre sans la recréer."""
         self.settings.setValue(THEME_SETTING, pTheme)
 
-        apply_theme(self.application, pTheme)
+        apply_theme(
+            self.application, pTheme, self.settings.value(TEXT_SCALE_SETTING, 100, int)
+        )
 
         self.window.rebuild("settings")
 
         logger.info("Thème %s appliqué", pTheme)
+
+    def change_text_scale(self, pTextScale):
+        """Mémorise la taille du texte choisie et repeint la fenêtre."""
+        self.settings.setValue(TEXT_SCALE_SETTING, pTextScale)
+
+        apply_theme(
+            self.application,
+            self.settings.value(THEME_SETTING, "system", str),
+            pTextScale,
+        )
+
+        self.window.rebuild("settings")
+
+        logger.info("Taille du texte : %s %%", pTextScale)
 
 
 def run():

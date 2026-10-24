@@ -3,6 +3,8 @@
 import pytest
 
 from job.preparation import (
+    match_offer,
+    score_offers,
     describe_score,
     describe_missing,
     classify_requirements,
@@ -333,3 +335,30 @@ def test_describe_score_explains_weights_and_mastery():
         "Peu de compétences citées"
     )
     assert describe_score({"missing": []}) == []
+
+
+def test_offer_is_scored_on_the_best_target_profile():
+    """Vérifie le double profil : chaque offre notée sur le CV qui lui correspond."""
+
+    vProfile = {
+        **build_profile("", "", "", "", ""),
+        "cv_variants": [
+            {"name": "Développement", "skills": ["Java", "SQL"]},
+            {"name": "Maintenance", "skills": ["GMAO", "Électrotechnique"]},
+        ],
+    }
+    vOffers = [
+        {"title": "Développeur", "skills": '["Java", "SQL"]'},
+        {"title": "Technicien", "skills": '["GMAO", "Électrotechnique"]'},
+    ]
+
+    score_offers(vOffers, vProfile)
+
+    assert [(vOffer["match_score"], vOffer["match_target"]) for vOffer in vOffers] == [
+        # Deux compétences seulement : rapportées au plancher de trois
+        (67, "Développement"),
+        (67, "Maintenance"),
+    ]
+    assert (
+        match_offer(build_profile("", "", "Java", "", ""), vOffers[0])["target"] is None
+    )

@@ -5,8 +5,12 @@ from datetime import datetime
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
+    QDialogButtonBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
+    QPlainTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -19,14 +23,46 @@ from gui.widgets import (
     create_pill,
     show_message,
 )
-from job.application_tracking import mark_followed_up
+from job.application_tracking import mark_followed_up, send_follow_up
 from job.notification import describe_follow_up
 from utils.logger import get_logger
+from utils.mailer import get_missing_email_settings
 
 logger = get_logger(__name__)
 
 # Séparateur des brouillons copiés ensemble, un par entreprise
 DRAFT_SEPARATOR = "\n\n----------\n\n"
+
+
+class FollowUpDialog(QDialog):
+    """Relecture d'une relance avant envoi : adresse du recruteur et message."""
+
+    def __init__(self, pParent, pFollowUp):
+        """Construit les deux champs, pré-remplis, et les boutons Envoyer et Annuler."""
+        super().__init__(pParent)
+
+        self.setWindowTitle("Envoyer la relance")
+        self.resize(560, 460)
+
+        self.recipient_edit = QLineEdit(pFollowUp.get("contact_email") or "")
+        self.recipient_edit.setPlaceholderText("recruteur@entreprise.fr")
+        self.recipient_edit.setMaxLength(254)
+
+        self.draft_edit = QPlainTextEdit(pFollowUp["draft"])
+
+        vButtons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        vButtons.button(QDialogButtonBox.StandardButton.Ok).setText("Envoyer")
+        vButtons.accepted.connect(self.accept)
+        vButtons.rejected.connect(self.reject)
+
+        vLayout = QVBoxLayout(self)
+        vLayout.addWidget(QLabel("Adresse du recruteur"))
+        vLayout.addWidget(self.recipient_edit)
+        vLayout.addWidget(QLabel("Message, la première ligne en est l'objet"))
+        vLayout.addWidget(self.draft_edit, 1)
+        vLayout.addWidget(vButtons)
 
 
 class FollowUpsPanel(QWidget):
@@ -103,6 +139,11 @@ class FollowUpsPanel(QWidget):
             lambda: self.copy_drafts([pFollowUp], "Message copié.")
         )
 
+        vSendButton = create_button("Envoyer…", "send")
+        vSendButton.setToolTip("Relire le message puis l'envoyer depuis votre Gmail")
+        vSendButton.setEnabled(not get_missing_email_settings())
+        vSendButton.clicked.connect(lambda: self.send(pFollowUp))
+
         vDoneButton = create_button("Relance faite", pObjectName="primaryButton")
         vDoneButton.clicked.connect(lambda: self.mark_done(pFollowUp))
 
@@ -121,6 +162,7 @@ class FollowUpsPanel(QWidget):
         )
         vLayout.addLayout(vTexts, 1)
         vLayout.addWidget(vCopyButton)
+        vLayout.addWidget(vSendButton)
         vLayout.addWidget(vDoneButton)
 
         return rRow
@@ -138,6 +180,41 @@ class FollowUpsPanel(QWidget):
         self.copy_drafts(
             self.follow_ups, f"{len(self.follow_ups)} message(s) copié(s)."
         )
+
+    def send(self, pFollowUp):
+        """Ouvre le message à relire, puis l'envoie et note la relance."""
+        vDialog = FollowUpDialog(self, pFollowUp)
+
+        if vDialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        try:
+            send_follow_up(
+                self.database_file,
+                pFollowUp["source"],
+                pFollowUp["source_id"],
+                vDialog.recipient_edit.text(),
+                vDialog.draft_edit.toPlainText(),
+                datetime.now(),
+            )
+
+        except ValueError as vException:
+            show_message(self.message_label, str(vException), "warning")
+            return
+
+        except OSError:
+            logger.exception("Échec de l'envoi de la relance")
+
+            show_message(
+                self.message_label,
+                "L'envoi a échoué : vérifiez la connexion et réessayez.",
+                "danger",
+            )
+            return
+
+        show_message(self.message_label, "Relance envoyée et notée.")
+
+        self.changed.emit()
 
     def mark_done(self, pFollowUp):
         """Note la relance comme faite aujourd'hui."""

@@ -2,6 +2,9 @@
 
 from datetime import datetime, timedelta
 
+from job.companies import find_preferred_offers
+from job.followed_availability import list_withdrawn_offers
+from job.filter import matches_keyword, matches_location
 from job.preparation import score_offers
 from job.presentation import get_source_label, prepare_offer
 from job.profile import load_profile
@@ -13,6 +16,7 @@ from storage.job_applications import (
     count_applied_since,
     count_applications_by_day,
     count_follow_ups_by_day,
+    count_responses_by_day,
     get_upcoming_follow_ups,
 )
 from storage.job_offers import (
@@ -23,6 +27,7 @@ from storage.job_offers import (
     count_offers_by_source,
     get_offers,
 )
+from storage.saved_searches import get_saved_searches
 
 RECENT_EXECUTIONS = 3
 
@@ -46,6 +51,14 @@ ACTIVITY_SERIES = {
     "follow_ups": ("Relances", count_follow_ups_by_day),
 }
 
+# Le bilan de la semaine ajoute les réponses reçues, absentes du graphique.
+WEEK_SERIES = {
+    **ACTIVITY_SERIES,
+    "responses": ("Réponses reçues", count_responses_by_day),
+}
+
+WEEK_DAYS = 7
+
 # Au-delà, les sources les moins fournies sont regroupées dans « Autres »
 MAX_PIE_SOURCES = 6
 
@@ -66,6 +79,10 @@ def load_statistics(pDatabaseFile, pNow=None):
 
     vNow = pNow if pNow is not None else datetime.now()
     vNewOfferDays = load_settings(pDatabaseFile)["new_offer_days"]
+    vActivity = {
+        vName: vCount(pDatabaseFile, max(CHART_DAYS, 2 * WEEK_DAYS), vNow)
+        for vName, (_, vCount) in WEEK_SERIES.items()
+    }
 
     rStatistics = {
         "offers": count_offers(pDatabaseFile, pHideIgnored=True),
@@ -91,16 +108,54 @@ def load_statistics(pDatabaseFile, pNow=None):
             ).to_dict("records")
         ],
         "similar_offers": find_similar_offers(pDatabaseFile, vNow, DASHBOARD_LIST_SIZE),
+        "withdrawn_offers": list_withdrawn_offers(pDatabaseFile),
+        "preferred_offers": find_preferred_offers(
+            pDatabaseFile, vNow - timedelta(days=vNewOfferDays)
+        ),
         "executions": get_history(pDatabaseFile, pLimit=RECENT_EXECUTIONS),
         "daily_activity": trim_leading_empty_days(
-            {
-                vName: vCount(pDatabaseFile, CHART_DAYS, vNow)
-                for vName, (_, vCount) in ACTIVITY_SERIES.items()
-            }
+            {vName: vActivity[vName][-CHART_DAYS:] for vName in ACTIVITY_SERIES}
         ),
+        "week_summary": summarize_week(vActivity),
     }
 
     return rStatistics
+
+
+def summarize_week(pActivity):
+    """Compare, série par série, les 7 derniers jours aux 7 précédents."""
+
+    rWeek = []
+
+    for vName, vCounts in pActivity.items():
+        vValues = [vCount for _, vCount in vCounts]
+        vCurrent = sum(vValues[-WEEK_DAYS:])
+        vPrevious = sum(vValues[-2 * WEEK_DAYS : -WEEK_DAYS])
+
+        rWeek.append(
+            {
+                "name": vName,
+                "label": WEEK_SERIES[vName][0],
+                "current": vCurrent,
+                "previous": vPrevious,
+                "trend": describe_trend(vCurrent - vPrevious),
+            }
+        )
+
+    return rWeek
+
+
+def describe_trend(pDelta):
+    """Décrit un écart d'une semaine à l'autre : « +3 », « −2 » ou « = »."""
+
+    if pDelta > 0:
+        rTrend = f"+{pDelta}"
+    elif pDelta < 0:
+        rTrend = f"\u2212{-pDelta}"
+    else:
+        rTrend = "="
+
+    return rTrend
 
 
 def trim_leading_empty_days(pDailyActivity):
@@ -240,51 +295,93 @@ def compare_sources(pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS):
     ).to_dict("records")
     score_offers(vOffers, load_profile(pDatabaseFile))
 
-    vRows = {}
+    vGroups = {}
 
     for vOffer in vOffers:
-        vRow = vRows.setdefault(
-            vOffer["source"],
+        vGroups.setdefault(vOffer["source"], []).append(vOffer)
+
+    rComparison = sort_comparison(
+        [
             {
-                "source": vOffer["source"],
-                "label": get_source_label(vOffer["source"]),
-                "offers": 0,
-                "good": 0,
-                "kept": 0,
-                "sent": 0,
-                "ignored": 0,
-                "scores": [],
-            },
-        )
-        vStatus = vOffer.get("application_status")
-        vScore = vOffer["match_score"]
+                "source": vSource,
+                **summarize_offers(get_source_label(vSource), vGroup),
+            }
+            for vSource, vGroup in vGroups.items()
+        ]
+    )
 
-        vRow["offers"] += 1
-        vRow["good"] += vScore is not None and vScore >= GOOD_MATCH_SCORE
-        vRow["kept"] += vStatus in KEPT_STATUSES
-        vRow["sent"] += vStatus in SENT_STATUSES
-        vRow["ignored"] += vStatus == "IGNORED"
+    return rComparison
 
-        if vScore is not None:
-            vRow["scores"].append(vScore)
 
-    rComparison = []
+def summarize_offers(pLabel, pOffers):
+    """Résume un groupe d'offres notées : nombre, bon score, suites données."""
 
-    for vRow in vRows.values():
-        vScores = vRow.pop("scores")
-        vRow["good_rate"] = round(100 * vRow["good"] / vRow["offers"])
-        vRow["average_score"] = round(sum(vScores) / len(vScores)) if vScores else None
-        rComparison.append(vRow)
+    vScores = [
+        vOffer["match_score"] for vOffer in pOffers if vOffer["match_score"] is not None
+    ]
+    vStatuses = [vOffer.get("application_status") for vOffer in pOffers]
+    vGood = sum(vScore >= GOOD_MATCH_SCORE for vScore in vScores)
 
-    rComparison.sort(
+    rRow = {
+        "label": pLabel,
+        "offers": len(pOffers),
+        "good": vGood,
+        "kept": sum(vStatus in KEPT_STATUSES for vStatus in vStatuses),
+        "sent": sum(vStatus in SENT_STATUSES for vStatus in vStatuses),
+        "ignored": sum(vStatus == "IGNORED" for vStatus in vStatuses),
+        "good_rate": round(100 * vGood / len(pOffers)) if pOffers else 0,
+        "average_score": round(sum(vScores) / len(vScores)) if vScores else None,
+    }
+
+    return rRow
+
+
+def sort_comparison(pRows):
+    """Trie les lignes : celles qui mènent le plus à des candidatures en tête."""
+
+    rRows = sorted(
+        pRows,
         key=lambda pRow: (
             -pRow["sent"],
             -pRow["kept"],
             -pRow["good"],
             -pRow["offers"],
             pRow["label"],
-        )
+        ),
     )
+
+    return rRows
+
+
+def compare_saved_searches(pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS):
+    """Retourne, par recherche enregistrée, les offres de la période qui répondent
+    à ses critères et les suites données, comme pour les sources.
+
+    L'offre ne garde pas la recherche qui l'a trouvée : ses critères (mot-clé,
+    synonymes compris, et lieu) sont appliqués aux offres en base.
+    """
+
+    vOffers = get_offers(
+        pDatabaseFile, pSeenSince=pNow - timedelta(days=pDays)
+    ).to_dict("records")
+    score_offers(vOffers, load_profile(pDatabaseFile))
+
+    vRows = []
+
+    for vSearch in get_saved_searches(pDatabaseFile):
+        vKeyword = vSearch["criteria"].get("keyword")
+        vLocation = vSearch["criteria"].get("location")
+        vMatching = [
+            vOffer
+            for vOffer in vOffers
+            if (not vKeyword or matches_keyword(vOffer, vKeyword))
+            and (not vLocation or matches_location(vOffer, vLocation))
+        ]
+
+        if vMatching:
+            vRows.append(summarize_offers(vSearch["name"], vMatching))
+
+    rComparison = sort_comparison(vRows)
 
     return rComparison
 

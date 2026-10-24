@@ -1,5 +1,6 @@
 """Couleurs, thèmes clair et sombre et feuille de style de l'interface"""
 
+import re
 from pathlib import Path
 from string import Template
 
@@ -15,6 +16,12 @@ THEME_CHOICES = {"system": "Auto", "light": "Clair", "dark": "Sombre"}
 
 # Réglage qui mémorise le choix du thème
 THEME_SETTING = "appearance/theme"
+
+# Taille du texte en pourcentage, mémorisée comme le thème
+TEXT_SCALE_SETTING = "appearance/text_scale"
+TEXT_SCALES = {90: "90 %", 100: "100 %", 115: "115 %", 130: "130 %"}
+
+FONT_SIZE_PATTERN = re.compile(r"font-size:\s*(\d+)px")
 
 THEMES = {
     "light": {
@@ -109,8 +116,21 @@ def resolve_theme(pChoice):
     return rTheme
 
 
-def build_stylesheet():
-    """Retourne la feuille de style, ses variables remplacées par les couleurs."""
+def scale_font_sizes(pStylesheet, pTextScale):
+    """Agrandit ou réduit chaque taille de texte de la feuille de style."""
+
+    rStylesheet = FONT_SIZE_PATTERN.sub(
+        lambda pMatch: f"font-size: {round(int(pMatch[1]) * pTextScale / 100)}px",
+        pStylesheet,
+    )
+
+    return rStylesheet
+
+
+def build_stylesheet(pTextScale=100):
+    """Retourne la feuille de style, ses variables remplacées par les couleurs et
+    ses tailles de texte mises à l'échelle choisie.
+    """
 
     # Dépannage : une variable $nom de theme.qss absente de COLORS lève KeyError
     # au démarrage ; une propriété CSS inconnue de Qt est ignorée sans erreur.
@@ -119,6 +139,9 @@ def build_stylesheet():
         chevron_up=stylesheet_path("chevron-up"),
         chevron_down=stylesheet_path("chevron-down"),
     )
+
+    if pTextScale != 100:
+        rStylesheet = scale_font_sizes(rStylesheet, pTextScale)
 
     return rStylesheet
 
@@ -149,8 +172,8 @@ def build_palette():
     return rPalette
 
 
-def apply_theme(pApplication, pChoice):
-    """Applique un thème à l'application et retourne le thème réellement utilisé."""
+def apply_theme(pApplication, pChoice, pTextScale=100):
+    """Applique un thème et une taille de texte, retourne le thème réellement utilisé."""
 
     rTheme = resolve_theme(pChoice)
 
@@ -160,6 +183,6 @@ def apply_theme(pApplication, pChoice):
     ACCENTS.update(THEME_ACCENTS[rTheme])
 
     pApplication.setPalette(build_palette())
-    pApplication.setStyleSheet(build_stylesheet())
+    pApplication.setStyleSheet(build_stylesheet(pTextScale))
 
     return rTheme

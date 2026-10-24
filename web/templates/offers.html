@@ -34,6 +34,7 @@
 
         <select name="sort" aria-label="Tri">
             <option value="">Plus récentes</option>
+            <option value="global" {% if filters.sort == "global" %}selected{% endif %}>Score global</option>
             <option value="match" {% if filters.sort == "match" %}selected{% endif %}>Correspondance avec mon profil</option>
             <option value="fresh" {% if filters.sort == "fresh" %}selected{% endif %}>Les plus fraîches</option>
             {% if home %}<option value="distance" {% if filters.sort == "distance" %}selected{% endif %}>Les plus proches</option>{% endif %}

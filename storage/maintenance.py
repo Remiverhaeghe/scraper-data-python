@@ -17,6 +17,7 @@ RESET_TABLES = (
     "job_attachment",
     "interview_note",
     "job_follow_up",
+    "application_history",
     "job_application",
     "job_offer",
     "history",

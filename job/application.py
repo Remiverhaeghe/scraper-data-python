@@ -6,7 +6,7 @@ from dataclasses import replace
 from config import DATABASE_FILE
 from job.exchange_rates import get_exchange_rates
 from job.filter import filter_jobs
-from job.geocoding import load_home, locate_offers
+from job.geocoding import locate_new_offers
 from job.offer_purge import drop_excluded_offers, load_excluded_words
 from job.settings import get_net_ratio, get_tax_rate, load_settings
 from job.skill_cache import refresh_detected_skills_safely
@@ -98,11 +98,11 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
 
     vScrapingResult = replace(vScrapingResult, items=vSavedItems)
 
-    # Les nouvelles offres reçoivent leur position, pour le filtre de distance ;
-    # un échec n'empêche pas d'utiliser le résultat de la recherche.
+    # Les nouvelles offres reçoivent leur position, pour le filtre de distance, par
+    # lot : le planificateur place le reste. Un échec n'empêche pas d'utiliser le
+    # résultat de la recherche.
     try:
-        if load_home(DATABASE_FILE):
-            locate_offers(DATABASE_FILE, vScrapedAt)
+        locate_new_offers(DATABASE_FILE, vScrapedAt)
 
     except Exception:
         logger.exception("Échec du placement des offres sur la carte")

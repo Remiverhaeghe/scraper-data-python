@@ -5,6 +5,13 @@ dans l'historique git.
 
 ## Non publié
 
+### Application mobile 1.7.0
+- Rappel de chaque entretien la veille à 18 h et une heure avant
+- Notification des offres suivies retirées par leur site, et des nouvelles offres
+  des entreprises privilégiées
+- Révision express de 5 minutes, toutes thématiques, avec compte à rebours
+- Note rapide sur une offre, ajoutée aux notes de la candidature sur le PC
+
 ### Application mobile 1.6.0
 - Tri rapide des nouvelles offres : glisser pour « Intéressé » ou « Ignorée »
 - Notification des réponses de recruteurs (refus, entretien daté) repérées par
@@ -37,6 +44,34 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Santé : dernière recherche lue correctement (indicateur toujours « Illisible »
+  auparavant), recherche partielle signalée, Gmail, descriptions et essai mensuel
+  de restauration de la dernière sauvegarde
+- Lieux introuvables corrigeables à la main, géocodage repris sur la ville seule
+  (migration v30) ; placement sur la carte par lots de 40, le reste en tâche de
+  fond : la recherche n'attend plus plusieurs minutes le géocodeur
+- Descriptions SmartRecruiters et Workday complétées en tâche de fond ; une
+  recherche n'efface plus une description déjà lue (offres à vérifier divisées
+  par quinze)
+- Score selon chaque variante de CV, score global pondéré (profil, distance,
+  salaire, fraîcheur, employeur), mots exclus suggérés, annonces douteuses,
+  résumé « L'essentiel », ancienneté chez la source, offre ajoutée depuis son lien
+- Offres suivies retirées, veille des entreprises privilégiées, recherches
+  enregistrées comparées, historique des statuts (migration v31), récapitulatif
+  quotidien facultatif, bilan « Votre semaine »
+- Entretien : questions déjà posées par l'entreprise, examen sur les seules
+  compétences manquantes, fiche de préparation imprimable ou en PDF, pitch 30 s
+  et 2 min, questions pièges selon le type d'employeur, glossaire des compétences
+- Relance envoyée depuis l'application après relecture, adresse du recruteur
+  gardée (migration v32)
+- Taille du texte du bureau réglable ; barres de défilement plus visibles
+- Export lisible de vos données personnelles (JSON, sans secret) ; sauvegarde
+  chiffrée par mot de passe sur clé USB
+- Web lisible hors connexion : dernière copie des pages de lecture, effacée à la
+  déconnexion
+- Correction : la remise à zéro vide aussi l'historique des statuts
+- Migrations rangées dans `storage/migrations.py` ; tests en parallèle
+  (`pytest -n auto`, pytest-xdist)
 - Entreprise suivie ajoutée depuis l'adresse de son site carrière
 - Badge ESN, filtres Clients finaux, Sans stage ni alternance et À ma portée
   (réglage Expérience), synonymes de métier dans la recherche

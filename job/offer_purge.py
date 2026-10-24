@@ -1,7 +1,9 @@
 """Purge des offres hors sujet déjà enregistrées, avec aperçu préalable"""
 
 from job.filter import contains_any
-from job.profile import split_list
+from job.fingerprint import normalize
+from job.profile import load_profile, split_list
+from storage.job_applications import get_applications_with_offers
 from storage.maintenance import delete_offers, get_purgeable_offers
 from storage.settings_repository import load_json_setting, save_json_setting
 from utils.logger import get_logger
@@ -13,6 +15,13 @@ MIN_WORD_LENGTH = 3
 
 # Mots qui écartent une offre dès sa récupération, ajoutés lors d'une purge
 EXCLUDED_WORDS_KEY = "excluded_title_words"
+
+# Mots suggérés : vus au moins MIN_IGNORED_COUNT fois dans les offres ignorées,
+# jamais dans celles retenues ; les plus fréquents d'abord.
+MIN_IGNORED_COUNT = 3
+MAX_SUGGESTIONS = 8
+SUGGESTION_MIN_LENGTH = 4
+KEPT_STATUSES = ("INTERESTED", "APPLIED", "INTERVIEW", "ACCEPTED", "REJECTED")
 
 
 def parse_purge_words(pText):
@@ -110,6 +119,49 @@ def add_excluded_words(pDatabaseFile, pWords):
     )
 
     return rWords
+
+
+def suggest_excluded_words(pDatabaseFile):
+    """Retourne les mots d'intitulé typiques des offres ignorées : (mot, nombre).
+
+    Un mot présent dans une offre retenue, dans une compétence du profil ou
+    déjà exclu n'est jamais proposé.
+    """
+
+    def count_words(pStatuses):
+        """Compte les mots des intitulés des candidatures de ces statuts."""
+        rCounts = {}
+
+        for vApplication in get_applications_with_offers(pDatabaseFile, pStatuses):
+            for vWord in set(normalize(vApplication.get("title")).split()):
+                rCounts[vWord] = rCounts.get(vWord, 0) + 1
+
+        return rCounts
+
+    vIgnored = count_words(("IGNORED",))
+    vKept = count_words(KEPT_STATUSES)
+    vProtected = {
+        normalize(vWord)
+        for vWord in [
+            *load_profile(pDatabaseFile)["skills"],
+            *load_excluded_words(pDatabaseFile),
+        ]
+    }
+
+    rSuggestions = sorted(
+        (
+            (vWord, vCount)
+            for vWord, vCount in vIgnored.items()
+            if vCount >= MIN_IGNORED_COUNT
+            and len(vWord) >= SUGGESTION_MIN_LENGTH
+            and not vWord.isdigit()
+            and vWord not in vKept
+            and vWord not in vProtected
+        ),
+        key=lambda pItem: (-pItem[1], pItem[0]),
+    )[:MAX_SUGGESTIONS]
+
+    return rSuggestions
 
 
 def drop_excluded_offers(pItems, pWords):

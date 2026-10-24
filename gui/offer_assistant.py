@@ -4,8 +4,14 @@ from datetime import datetime
 from html import escape
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import QMarginsF, Qt, QUrl, Signal
+from PySide6.QtGui import (
+    QDesktopServices,
+    QPageLayout,
+    QPageSize,
+    QPdfWriter,
+    QTextDocument,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -25,6 +31,7 @@ from job.company_info import lookup_company, summarize_company
 from job.cv_export import build_file_name, build_tailored_cv, write_docx
 from job.geocoding import load_home
 from job.interview_revision import build_offer_revision
+from job.agencies import load_interim_agencies
 from job.interview_journal import collect_asked_questions
 from job.offer_comparison import (
     build_comparison,
@@ -32,6 +39,7 @@ from job.offer_comparison import (
     toggle_comparison,
 )
 from job.preparation import prepare_application
+from job.preparation_sheet import build_preparation_sheet, render_sheet_html
 from job.presentation import (
     AVAILABILITY_HELP,
     AVAILABILITY_LABELS,
@@ -103,10 +111,32 @@ def describe_companies_html(pCompanies):
     return rHtml
 
 
+def write_pdf(pPath, pHtml):
+    """Écrit un document HTML simple dans un PDF au format A4.
+
+    Lève OSError si le fichier n'a pas pu être écrit.
+    """
+
+    vWriter = QPdfWriter(str(pPath))
+    vWriter.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+    vWriter.setPageMargins(QMarginsF(15, 15, 15, 15), QPageLayout.Unit.Millimeter)
+
+    vDocument = QTextDocument()
+    vDocument.setHtml(pHtml)
+    vDocument.print_(vWriter)
+
+    # QPdfWriter n'indique pas d'erreur : un fichier absent ou vide en est une.
+    del vWriter
+
+    if not Path(pPath).is_file() or not Path(pPath).stat().st_size:
+        raise OSError(f"fichier non écrit : {Path(pPath).name}")
+
+
 class OfferAssistantPanel(QWidget):
     """Actions d'aide sur l'offre affichée, à base de règles et sans service payant."""
 
     exam_requested = Signal(dict)
+    missing_exam_requested = Signal(dict)
 
     def __init__(self, pDatabaseFile):
         """Construit les boutons d'aide, inactifs tant qu'aucune offre n'est choisie."""
@@ -129,6 +159,15 @@ class OfferAssistantPanel(QWidget):
             "expériences les plus proches d'abord"
         )
         self.cv_button.clicked.connect(self.export_cv)
+
+        self.sheet_button = create_button(
+            "Fiche de préparation PDF…", "file-text", pIconColor=COLORS["primary"]
+        )
+        self.sheet_button.setToolTip(
+            "L'offre en bref, vos exemples à citer, vos réponses et les questions "
+            "déjà posées par l'entreprise, sur une fiche à emporter"
+        )
+        self.sheet_button.clicked.connect(self.export_sheet)
 
         # Examen blanc sur les thèmes de révision dont l'offre demande les compétences
         self.exam_button = create_button(
@@ -191,6 +230,7 @@ class OfferAssistantPanel(QWidget):
         vLayout.setSpacing(4)
         vLayout.addWidget(self.prepare_button)
         vLayout.addWidget(self.cv_button)
+        vLayout.addWidget(self.sheet_button)
         vLayout.addWidget(self.exam_button)
         vLayout.addWidget(self.exam_results_label)
         vLayout.addWidget(self.exam_chart)
@@ -239,6 +279,48 @@ class OfferAssistantPanel(QWidget):
                 else None
             ),
         )
+
+    def export_sheet(self):
+        """Enregistre la fiche de préparation de l'offre en PDF à l'endroit choisi."""
+        if self.offer is None:
+            return
+
+        vPath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Enregistrer la fiche de préparation",
+            str(
+                Path.home()
+                / Path(build_file_name(self.offer, "Fiche")).with_suffix(".pdf")
+            ),
+            "Document PDF (*.pdf)",
+        )
+
+        if not vPath:
+            return
+
+        try:
+            write_pdf(
+                vPath,
+                render_sheet_html(
+                    build_preparation_sheet(self.database_file, self.offer)
+                ),
+            )
+
+        except OSError as vException:
+            logger.warning("Fiche de préparation non enregistrée : %s", vException)
+            QMessageBox.warning(
+                self,
+                "Fiche de préparation",
+                f"Enregistrement impossible : {vException}",
+            )
+            return
+
+        logger.info(
+            "Fiche de préparation enregistrée pour %s/%s",
+            self.offer["source"],
+            self.offer["source_id"],
+        )
+        QDesktopServices.openUrl(QUrl.fromLocalFile(vPath))
 
     def export_cv(self):
         """Enregistre le CV réordonné pour l'offre à l'endroit choisi."""
@@ -305,6 +387,7 @@ class OfferAssistantPanel(QWidget):
                     self.offer,
                     load_star_answers(self.database_file),
                     collect_asked_questions(self.database_file),
+                    load_interim_agencies(self.database_file),
                 ),
             )
 
@@ -426,16 +509,44 @@ class OfferAssistantPanel(QWidget):
             f"({', '.join(vTheme['matched'])})"
             for vTheme in vRevision["themes"]
         )
-        vAnswer = QMessageBox.question(
-            self,
-            "Examen blanc",
+        vKind = self.ask_exam_kind(
             "Thèmes demandés par l'offre, les moins maîtrisés d'abord :\n\n"
             f"{vThemes}\n\nCommencer un examen blanc de "
-            f"{vRevision['exam_count']} questions ?",
+            f"{vRevision['exam_count']} questions ?"
         )
 
-        if vAnswer == QMessageBox.StandardButton.Yes:
+        if vKind == "missing":
+            self.missing_exam_requested.emit(self.offer)
+        elif vKind == "all":
             self.exam_requested.emit(self.offer)
+
+    def ask_exam_kind(self, pText):
+        """Propose l'examen complet ou limité aux manques ; retourne « all »,
+        « missing » ou None si l'examen est refusé.
+        """
+        vBox = QMessageBox(
+            QMessageBox.Icon.Question,
+            "Examen blanc",
+            pText,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            self,
+        )
+        vMissingButton = vBox.addButton(
+            "Seulement mes manques", QMessageBox.ButtonRole.AcceptRole
+        )
+        vMissingButton.setToolTip(
+            "Examen limité aux compétences de l'offre absentes de votre profil"
+        )
+        vBox.exec()
+
+        if vBox.clickedButton() is vMissingButton:
+            rKind = "missing"
+        elif vBox.clickedButton() is vBox.button(QMessageBox.StandardButton.Yes):
+            rKind = "all"
+        else:
+            rKind = None
+
+        return rKind
 
     def copy_prompt(self, pKind):
         """Copie une demande préparée pour ChatGPT puis ouvre le site."""

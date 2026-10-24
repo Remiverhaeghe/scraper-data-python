@@ -10,11 +10,14 @@ from job.application_tracking import (
     build_board,
     build_follow_up_draft,
     build_funnel,
+    describe_status_history,
     get_application_delay,
     get_employer_type,
     get_job_family,
     get_week_follow_ups,
     mark_followed_up,
+    send_follow_up,
+    split_draft,
 )
 from job.profile import build_profile, save_profile
 from storage.database import initialize_database
@@ -337,3 +340,62 @@ def test_employer_type_separates_agencies_firms_and_final_clients():
         "Société de conseil (ESN)"
     )
     assert get_employer_type({"company": "Kiabi"}, ["proman"]) == "Client final"
+
+
+def test_status_history_is_described():
+    """Vérifie la frise des statuts d'une candidature."""
+
+    assert (
+        describe_status_history(
+            [("INTERESTED", "2026-10-03T09:00:00"), ("APPLIED", "2026-10-05T18:30:00")]
+        )
+        == "Intéressé le 03/10 · Postulé le 05/10"
+    )
+    assert describe_status_history([]) == ""
+
+
+def test_split_draft_reads_the_subject_line():
+    """Vérifie l'objet tiré de la première ligne, ou le repli sans elle."""
+
+    assert split_draft("Objet : ma relance\n\nBonjour,\nMerci") == (
+        "Ma relance",
+        "Bonjour,\nMerci",
+    )
+    assert split_draft("Bonjour") == ("Relance de candidature", "Bonjour")
+
+
+def test_send_follow_up_sends_remembers_and_records(database_file):
+    """Vérifie l'envoi : refus d'une adresse invalide, puis envoi, adresse et relance."""
+
+    vSent = []
+
+    def send(pRecipient, pSubject, pText):
+        vSent.append((pRecipient, pSubject, pText))
+
+    vOfferId = OFFERS[1][0]
+    vSource = OFFERS[1][1]
+
+    with pytest.raises(ValueError, match="invalide"):
+        send_follow_up(
+            database_file, vSource, vOfferId, "pas-une-adresse", "Bonjour", NOW, send
+        )
+
+    with pytest.raises(ValueError, match="vide"):
+        send_follow_up(
+            database_file, vSource, vOfferId, "rh@acme.fr", "Objet : x", NOW, send
+        )
+
+    send_follow_up(
+        database_file,
+        vSource,
+        vOfferId,
+        " rh@acme.fr ",
+        "Objet : ma relance\n\nBonjour",
+        NOW,
+        send,
+    )
+    vApplication = get_application(database_file, vSource, vOfferId)
+
+    assert vSent == [("rh@acme.fr", "Ma relance", "Bonjour")]
+    assert vApplication["contact_email"] == "rh@acme.fr"
+    assert vApplication["follow_up_count"] == 1

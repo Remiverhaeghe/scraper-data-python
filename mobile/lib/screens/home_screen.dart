@@ -143,6 +143,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               if (state.syncing) const LinearProgressIndicator(),
               SummaryCard(state: state),
               DailyGoalCard(state: state),
+              if (state.package != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => QuestionScreen(state: state, timeLimit: sprintDuration),
+                      ),
+                    ),
+                    icon: const Icon(Icons.bolt),
+                    label: const Text('Révision express · 5 minutes'),
+                  ),
+                ),
               if (state.package != null && state.applications.isNotEmpty)
                 ApplicationsCard(state: state),
               if (state.package == null)

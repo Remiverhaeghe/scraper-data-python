@@ -161,6 +161,36 @@ class ApiClient {
     return rOffers;
   }
 
+  /// Offres suivies que leur site a retirées.
+  Future<List<Map<String, dynamic>>> downloadWithdrawn() async {
+    final vResponse = await send(
+      'Offres retirées',
+      () => client.get(buildUri('/withdrawn'), headers: buildHeaders()),
+    );
+
+    final rOffers = [
+      for (final vOffer in decode(vResponse)['offers'] as List? ?? const [])
+        Map<String, dynamic>.from(vOffer as Map),
+    ];
+
+    return rOffers;
+  }
+
+  /// Entretiens des sept prochains jours, pour les rappels du téléphone.
+  Future<List<Map<String, dynamic>>> downloadInterviews() async {
+    final vResponse = await send(
+      'Entretiens',
+      () => client.get(buildUri('/interviews'), headers: buildHeaders()),
+    );
+
+    final rInterviews = [
+      for (final vInterview in decode(vResponse)['interviews'] as List? ?? const [])
+        Map<String, dynamic>.from(vInterview as Map),
+    ];
+
+    return rInterviews;
+  }
+
   /// Réponses de recruteurs repérées par le PC dans Gmail : offre et statut annoncé.
   Future<List<Map<String, dynamic>>> downloadReplies() async {
     final vResponse = await send(
@@ -240,6 +270,22 @@ class ApiClient {
         buildUri('/applications'),
         headers: {...buildHeaders(), 'Content-Type': 'application/json'},
         body: jsonEncode({'changes': pChanges}),
+      ),
+    );
+
+    final rReport = decode(vResponse);
+
+    return rReport;
+  }
+
+  /// Envoie les notes rapides prises sur les offres.
+  Future<Map<String, dynamic>> uploadNotes(List<Map<String, dynamic>> pNotes) async {
+    final vResponse = await send(
+      'Notes',
+      () => client.post(
+        buildUri('/notes'),
+        headers: {...buildHeaders(), 'Content-Type': 'application/json'},
+        body: jsonEncode({'notes': pNotes}),
       ),
     );
 

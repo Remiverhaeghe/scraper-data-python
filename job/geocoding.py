@@ -1,6 +1,7 @@
 """Position du domicile et des offres en France, pour filtrer par distance"""
 
 import math
+import re
 from datetime import datetime
 
 import requests
@@ -34,6 +35,13 @@ MIN_SCORE = 0.4
 
 # Recherches réseau par passage : les suivantes attendent le passage suivant.
 MAX_LOOKUPS = 300
+
+# Lieux cherchés à la fin d'une recherche, puis à chaque passage du planificateur :
+# environ une demi-seconde par lieu, la recherche ne reste pas bloquée des minutes.
+BATCH_LOOKUPS = 40
+
+# Lieux introuvables proposés à la correction, les plus fréquents d'abord
+MAX_UNKNOWN_PLACES = 30
 
 HOME_KEY = "home_location"
 EARTH_RADIUS_KM = 6371
@@ -174,6 +182,23 @@ def is_locatable(pKey):
     return rLocatable
 
 
+def geocode_location(pLocation, pNear=None):
+    """Cherche la commune d'un lieu d'offre ; à défaut, celle de son premier segment.
+
+    « Lyon, Auvergne-Rhône-Alpes, France » n'est pas reconnu tel quel par la
+    base d'adresses : « Lyon » l'est. Retourne le lieu trouvé, ou None.
+    """
+
+    rPlace = geocode(pLocation, "municipality", pNear)
+
+    vCity = re.sub(r"\(.*?\)", " ", re.split(r"[,;/|]| - ", str(pLocation))[0]).strip()
+
+    if rPlace is None and vCity and vCity != str(pLocation).strip():
+        rPlace = geocode(vCity, "municipality", pNear)
+
+    return rPlace
+
+
 def locate_offers(pDatabaseFile, pNow=None, pMaxLookups=MAX_LOOKUPS):
     """Donne une position aux offres françaises qui n'en ont pas encore.
 
@@ -201,7 +226,7 @@ def locate_offers(pDatabaseFile, pNow=None, pMaxLookups=MAX_LOOKUPS):
                 continue
 
             try:
-                vPlace = geocode(vLocation, "municipality", vNear)
+                vPlace = geocode_location(vLocation, vNear)
 
             except (requests.RequestException, ValueError) as vException:
                 logger.warning(
@@ -239,6 +264,69 @@ def locate_offers(pDatabaseFile, pNow=None, pMaxLookups=MAX_LOOKUPS):
             rReport["lookups"],
             rReport["unknown"],
         )
+
+    return rReport
+
+
+def list_unknown_places(pDatabaseFile, pLimit=MAX_UNKNOWN_PLACES):
+    """Retourne les lieux introuvables des offres en France, les plus fréquents d'abord.
+
+    Chaque lieu : clé normalisée, exemple tel qu'écrit dans une offre, nombre
+    d'offres qu'il empêche de placer.
+    """
+
+    vCache = get_cached_locations(pDatabaseFile)
+    vPlaces = {}
+
+    for _, _, vLocation in get_offers_to_locate(pDatabaseFile, FRANCE):
+        vKey = normalize(vLocation)
+
+        if vKey in vCache and vCache[vKey] is None:
+            vPlace = vPlaces.setdefault(
+                vKey, {"key": vKey, "example": vLocation, "count": 0}
+            )
+            vPlace["count"] += 1
+
+    rPlaces = sorted(vPlaces.values(), key=lambda pPlace: -pPlace["count"])[:pLimit]
+
+    return rPlaces
+
+
+def resolve_place(pDatabaseFile, pKey, pCommune, pNow=None):
+    """Associe un lieu introuvable à une commune, puis place les offres concernées.
+
+    Retourne le libellé de la commune trouvée ; lève ValueError si elle est
+    introuvable, requests.RequestException si le géocodeur ne répond pas.
+    """
+
+    vNow = pNow or datetime.now()
+    vPlace = geocode(str(pCommune or "").strip()[:200], "municipality")
+
+    if not pCommune or vPlace is None:
+        raise ValueError("Commune introuvable : précisez son nom ou son code postal.")
+
+    save_location(pDatabaseFile, pKey, vPlace[0], vPlace[1], vNow, vPlace[2] or "")
+
+    # Le placement relit le cache : seules les offres de ce lieu changent.
+    locate_offers(pDatabaseFile, vNow, 0)
+
+    logger.info("Lieu associé à une commune : %s", vPlace[1])
+
+    rLabel = vPlace[1]
+
+    return rLabel
+
+
+def locate_new_offers(pDatabaseFile, pNow=None):
+    """Place un lot d'offres sur la carte, si le domicile est renseigné ; le reste
+    l'est aux passages suivants. Retourne le bilan, ou None sans domicile.
+    """
+
+    rReport = (
+        locate_offers(pDatabaseFile, pNow, BATCH_LOOKUPS)
+        if load_home(pDatabaseFile)
+        else None
+    )
 
     return rReport
 

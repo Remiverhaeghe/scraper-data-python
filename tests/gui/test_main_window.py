@@ -1,5 +1,6 @@
 """Tests de la fenêtre principale"""
 
+import pytest
 from PySide6.QtGui import QKeySequence, QShortcut
 
 import gui.offer_assistant as offer_assistant
@@ -122,9 +123,7 @@ def test_offer_mock_exam_opens_quiz_page(qt_application, tmp_path, monkeypatch):
         "description": "API FastAPI et base PostgreSQL.",
     }
     monkeypatch.setattr(
-        offer_assistant.QMessageBox,
-        "question",
-        lambda *pArgs: offer_assistant.QMessageBox.StandardButton.Yes,
+        offer_assistant.OfferAssistantPanel, "ask_exam_kind", lambda *pArgs: "all"
     )
 
     vPanel.request_exam()
@@ -132,6 +131,65 @@ def test_offer_mock_exam_opens_quiz_page(qt_application, tmp_path, monkeypatch):
     assert vWindow.pages.currentWidget() is vWindow.quiz_page
     assert vWindow.quiz_page.mode == "exam"
     assert load_exam(vDatabaseFile)["title"] == "Entretien : Développeur Python"
+
+
+@pytest.mark.parametrize(
+    "pClicked, pKind",
+    [("Seulement mes manques", "missing"), ("&Yes", "all"), (None, None)],
+)
+def test_exam_kind_follows_the_clicked_button(
+    qt_application, tmp_path, monkeypatch, pClicked, pKind
+):
+    """Vérifie le choix de l'examen : complet, limité aux manques, ou refusé."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vPanel = MainWindow(vDatabaseFile, "Test").offers_page.detail_panel.assistant
+
+    def click(pBox):
+        return next(
+            (
+                vButton
+                for vButton in pBox.buttons()
+                if pBox.standardButton(vButton)
+                == offer_assistant.QMessageBox.StandardButton.Yes
+                and pClicked == "&Yes"
+                or vButton.text() == pClicked
+            ),
+            None,
+        )
+
+    monkeypatch.setattr(offer_assistant.QMessageBox, "exec", lambda pBox: 0)
+    monkeypatch.setattr(offer_assistant.QMessageBox, "clickedButton", click)
+
+    assert vPanel.ask_exam_kind("Commencer ?") == pKind
+
+
+def test_offer_missing_skills_exam_opens_quiz_page(
+    qt_application, tmp_path, monkeypatch
+):
+    """Vérifie que « Seulement mes manques » ouvre l'examen des compétences absentes."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+
+    initialize_database(vDatabaseFile)
+
+    vWindow = MainWindow(vDatabaseFile, "Test")
+    vPanel = vWindow.offers_page.detail_panel.assistant
+    vPanel.offer = {
+        "source": "adzuna",
+        "source_id": "42",
+        "title": "Développeur Python",
+        "description": "API FastAPI et base PostgreSQL.",
+    }
+    monkeypatch.setattr(
+        offer_assistant.OfferAssistantPanel, "ask_exam_kind", lambda *pArgs: "missing"
+    )
+
+    vPanel.request_exam()
+
+    assert vWindow.quiz_page.mode == "exam"
+    assert load_exam(vDatabaseFile)["title"].startswith("Compétences manquantes · ")
 
 
 def test_skills_page_opens_theme(qt_application, tmp_path):

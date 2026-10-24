@@ -3,7 +3,7 @@
 import re
 from datetime import datetime, timedelta
 
-from job.agencies import is_agency_offer, is_consulting_offer, load_interim_agencies
+from job.agencies import load_interim_agencies
 from job.fingerprint import normalize
 from job.preparation import score_offers
 from job.presentation import (
@@ -12,15 +12,19 @@ from job.presentation import (
     get_source_label,
 )
 from job.profile import load_profile
+from job.schedule import EMAIL_PATTERN
 from job.settings import load_settings
+from job.tricky_questions import EMPLOYER_LABELS, get_employer_kind
 from storage.job_applications import (
     ANSWERED_STATUSES,
     SENT_STATUSES,
     get_applications_with_offers,
     record_follow_up,
+    save_contact_email,
 )
 from storage.job_offers import FOLLOW_UP_STATUSES
 from utils.logger import get_logger
+from utils.mailer import send_email
 
 logger = get_logger(__name__)
 
@@ -44,6 +48,11 @@ BOARD_STATUSES = (
 
 # Horizon de la vue des relances, en jours : la semaine à venir
 FOLLOW_UP_HORIZON_DAYS = 7
+
+# Relance envoyée depuis l'application : première ligne du brouillon et repli
+SUBJECT_PREFIX = "Objet :"
+DEFAULT_SUBJECT = "Relance de candidature"
+MAX_DRAFT_LENGTH = 5000
 
 # Niveaux de correspondance avec le profil, du plus exigeant au moins exigeant
 MATCH_LEVELS = (
@@ -227,15 +236,21 @@ def count_by(pApplications, pGetLabel):
     return rRows
 
 
+def describe_status_history(pHistory):
+    """Décrit les statuts successifs : « Intéressé le 03/10 · Postulé le 05/10 »."""
+
+    rText = " · ".join(
+        f"{STATUS_LABELS.get(vStatus, vStatus)} le {vDate[8:10]}/{vDate[5:7]}"
+        for vStatus, vDate in pHistory
+    )
+
+    return rText
+
+
 def get_employer_type(pApplication, pAgencies):
     """Retourne le type d'employeur : agence d'intérim, ESN ou client final."""
 
-    if is_agency_offer(pApplication, pAgencies):
-        rType = "Agence d'intérim"
-    elif is_consulting_offer(pApplication):
-        rType = "Société de conseil (ESN)"
-    else:
-        rType = "Client final"
+    rType = EMPLOYER_LABELS[get_employer_kind(pApplication, pAgencies)]
 
     return rType
 
@@ -457,6 +472,51 @@ def mark_followed_up(pDatabaseFile, pSource, pSourceId, pNow):
     )
 
     logger.info("Relance notée : %s %s", pSource, pSourceId)
+
+
+def split_draft(pDraft):
+    """Sépare l'objet, sur la ligne « Objet : … », du corps du message."""
+
+    vLines = pDraft.strip().splitlines()
+
+    if vLines and vLines[0].startswith(SUBJECT_PREFIX):
+        vSubject = vLines[0][len(SUBJECT_PREFIX) :].strip()
+        rDraft = (
+            vSubject[:1].upper() + vSubject[1:] or DEFAULT_SUBJECT,
+            "\n".join(vLines[1:]).strip(),
+        )
+    else:
+        rDraft = (DEFAULT_SUBJECT, pDraft.strip())
+
+    return rDraft
+
+
+def send_follow_up(
+    pDatabaseFile, pSource, pSourceId, pRecipient, pDraft, pNow, pSend=None
+):
+    """Envoie la relance relue au recruteur, mémorise son adresse et note la relance.
+
+    Lève ValueError pour une adresse ou un message invalide, OSError si l'envoi
+    échoue.
+    """
+
+    vRecipient = (pRecipient or "").strip()
+    vSubject, vBody = split_draft(pDraft or "")
+
+    if not EMAIL_PATTERN.match(vRecipient):
+        raise ValueError("Adresse e-mail du recruteur invalide.")
+
+    if not vBody or len(pDraft) > MAX_DRAFT_LENGTH:
+        raise ValueError(
+            f"Message vide ou trop long : {MAX_DRAFT_LENGTH} caractères au plus."
+        )
+
+    (pSend or send_email)(vRecipient, vSubject, vBody)
+    save_contact_email(pDatabaseFile, pSource, pSourceId, vRecipient)
+    mark_followed_up(pDatabaseFile, pSource, pSourceId, pNow)
+
+    # L'adresse du recruteur n'est pas journalisée.
+    logger.info("Relance envoyée par e-mail : %s %s", pSource, pSourceId)
 
 
 def build_funnel(pStatistics):

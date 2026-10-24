@@ -8,6 +8,7 @@ import pytest
 import scheduler.runner as runner
 from job.application_tracking import build_board
 from job.followed_availability import (
+    list_withdrawn_offers,
     build_expired_offers_email,
     check_followed_offers,
     count_alerts,
@@ -148,3 +149,16 @@ def test_alerts_count_due_follow_ups_and_expired_offers(database_file):
 
     assert (vAlerts["follow_ups"], vAlerts["expired"], vAlerts["total"]) == (1, 1, 2)
     assert vAlerts["text"] == "1 relance(s) à faire, 1 offre(s) suivie(s) retirée(s)"
+
+
+def test_withdrawn_followed_offers_are_listed(database_file):
+    """Vérifie la liste des offres suivies retirées, affichée sur l'accueil."""
+
+    assert list_withdrawn_offers(database_file) == []
+
+    check_followed_offers(database_file, NOW, fake_check)
+
+    vOffers = list_withdrawn_offers(database_file)
+
+    assert len(vOffers) == 1
+    assert {"source", "source_id", "title", "company", "status"} <= set(vOffers[0])

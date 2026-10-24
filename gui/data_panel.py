@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
+    QLineEdit,
     QMessageBox,
     QVBoxLayout,
     QWidget,
@@ -18,9 +19,16 @@ from PySide6.QtWidgets import (
 from config import BACKUP_NAS_DIRECTORY
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, show_message
+from job.personal_export import export_personal_data
 from job.presentation import describe_backup
 from storage.archive import export_archive, restore_archive, restore_backup
 from storage.backup import describe_backups, describe_nas_copies, fetch_nas_copy
+from storage.encrypted_archive import (
+    ENCRYPTED_ARCHIVE_SUFFIX,
+    MIN_PASSWORD_LENGTH,
+    export_encrypted_archive,
+    restore_encrypted_archive,
+)
 from storage.maintenance import reset_database
 from utils.logger import get_logger
 
@@ -44,6 +52,7 @@ class DataPanel(QWidget):
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.setSpacing(18)
         vLayout.addWidget(self.create_archive_card())
+        vLayout.addWidget(self.create_usb_card())
         vLayout.addWidget(self.create_backups_card())
         vLayout.addWidget(self.create_reset_card())
 
@@ -230,6 +239,15 @@ class DataPanel(QWidget):
         )
         self.restore_archive_button.clicked.connect(self.choose_archive_source)
 
+        self.personal_data_button = create_button(
+            "Mes données (lisibles)…", "file-text"
+        )
+        self.personal_data_button.setToolTip(
+            "Fichiers JSON lisibles sans l'application, pièces jointes comprises, "
+            "sans secret ni jeton"
+        )
+        self.personal_data_button.clicked.connect(self.choose_personal_data_target)
+
         self.archive_message = QLabel()
         self.archive_message.setObjectName("cardSubtitle")
         self.archive_message.setWordWrap(True)
@@ -237,6 +255,7 @@ class DataPanel(QWidget):
         vActions = QHBoxLayout()
         vActions.addWidget(self.export_archive_button)
         vActions.addWidget(self.restore_archive_button)
+        vActions.addWidget(self.personal_data_button)
         vActions.addWidget(self.archive_message, 1)
 
         vLayout.addLayout(vActions)
@@ -271,6 +290,35 @@ class DataPanel(QWidget):
             show_message(
                 self.archive_message,
                 f"Sauvegarde exportée : base et {vCount} pièce(s) jointe(s).",
+            )
+
+    def choose_personal_data_target(self):
+        """Demande où enregistrer vos données lisibles puis les écrit."""
+        vPath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Exporter mes données",
+            str(Path.home() / f"mes-donnees-jobboard-{datetime.now():%Y%m%d}.zip"),
+            "Archive (*.zip)",
+        )
+
+        if vPath:
+            self.export_personal_data(vPath)
+
+    def export_personal_data(self, pPath):
+        """Écrit vos données personnelles lisibles dans l'archive choisie."""
+        try:
+            vCount = export_personal_data(self.database_file, pPath, datetime.now())
+
+        except Exception:
+            logger.exception("Échec de l'export des données personnelles")
+
+            show_message(
+                self.archive_message, "L'export a échoué. Voir les journaux.", "danger"
+            )
+
+        else:
+            show_message(
+                self.archive_message, f"Données exportées : {vCount} fichier(s)."
             )
 
     def choose_archive_source(self):
@@ -318,6 +366,147 @@ class DataPanel(QWidget):
         else:
             self.data_reset.emit(
                 f"Sauvegarde restaurée. Anciennes données : {vBackupFile.name}"
+            )
+
+    def create_usb_card(self):
+        """Construit la sauvegarde chiffrée par mot de passe, pour une clé USB."""
+        vCard, vLayout = create_card(
+            "Clé USB chiffrée",
+            "Base et pièces jointes chiffrées par un mot de passe : la copie se "
+            "restaure sur un autre PC, mais un mot de passe oublié la rend illisible.",
+        )
+
+        self.usb_export_button = create_button(
+            "Sauvegarder sur la clé…", "lock", pIconColor=COLORS["primary"]
+        )
+        self.usb_export_button.clicked.connect(self.choose_usb_target)
+
+        self.usb_restore_button = create_button(
+            "Restaurer depuis la clé…", "upload", "dangerButton", COLORS["danger"]
+        )
+        self.usb_restore_button.clicked.connect(self.choose_usb_source)
+
+        self.usb_message = QLabel()
+        self.usb_message.setObjectName("cardSubtitle")
+        self.usb_message.setWordWrap(True)
+
+        vActions = QHBoxLayout()
+        vActions.addWidget(self.usb_export_button)
+        vActions.addWidget(self.usb_restore_button)
+        vActions.addWidget(self.usb_message, 1)
+
+        vLayout.addLayout(vActions)
+
+        return vCard
+
+    def ask_password(self, pLabel):
+        """Demande un mot de passe masqué ; retourne None si la saisie est annulée."""
+        vPassword, vAccepted = QInputDialog.getText(
+            self, "Clé USB chiffrée", pLabel, QLineEdit.EchoMode.Password
+        )
+
+        rPassword = vPassword if vAccepted else None
+
+        return rPassword
+
+    def choose_usb_target(self):
+        """Demande le dossier de la clé et le mot de passe, puis écrit la copie."""
+        vDirectory = QFileDialog.getExistingDirectory(
+            self, "Choisir la clé USB ou son dossier", str(Path.home())
+        )
+
+        if not vDirectory:
+            return
+
+        vPassword = self.ask_password(
+            f"Mot de passe ({MIN_PASSWORD_LENGTH} caractères au moins) :"
+        )
+
+        if vPassword is None:
+            return
+
+        if self.ask_password("Saisissez de nouveau le mot de passe :") != vPassword:
+            show_message(
+                self.usb_message, "Les deux mots de passe diffèrent.", "warning"
+            )
+            return
+
+        self.export_to_usb(vDirectory, vPassword)
+
+    def export_to_usb(self, pDirectory, pPassword):
+        """Écrit la sauvegarde chiffrée dans le dossier choisi."""
+        try:
+            vFile = export_encrypted_archive(
+                self.database_file, pDirectory, pPassword, datetime.now()
+            )
+
+        except ValueError as vException:
+            show_message(self.usb_message, str(vException), "warning")
+
+        except Exception:
+            logger.exception("Échec de la sauvegarde chiffrée")
+
+            show_message(
+                self.usb_message,
+                "La sauvegarde a échoué : clé pleine, retirée ou protégée ?",
+                "danger",
+            )
+
+        else:
+            show_message(self.usb_message, f"Sauvegarde chiffrée : {vFile.name}")
+
+    def choose_usb_source(self):
+        """Demande la copie chiffrée, son mot de passe et une confirmation."""
+        vPath, _ = QFileDialog.getOpenFileName(
+            self,
+            "Restaurer une sauvegarde chiffrée",
+            str(Path.home()),
+            f"Sauvegarde chiffrée (*{ENCRYPTED_ARCHIVE_SUFFIX})",
+        )
+
+        if not vPath:
+            return
+
+        vPassword = self.ask_password("Mot de passe de la sauvegarde :")
+
+        # Par sécurité, Entrée annule : il faut cliquer sur Oui.
+        if vPassword is not None and (
+            QMessageBox.warning(
+                self,
+                "Restaurer la sauvegarde chiffrée",
+                "Les données actuelles seront remplacées par celles de la clé. "
+                "Elles sont d'abord sauvegardées dans data/backups. Continuer ?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel,
+            )
+            == QMessageBox.StandardButton.Yes
+        ):
+            self.restore_from_usb(vPath, vPassword)
+
+    def restore_from_usb(self, pPath, pPassword):
+        """Restaure la copie chiffrée ; les pages sont ensuite reconstruites."""
+        try:
+            vBackupFile = restore_encrypted_archive(
+                self.database_file, pPath, pPassword, datetime.now()
+            )
+
+        except ValueError as vException:
+            logger.warning("Restauration chiffrée refusée : %s", vException)
+
+            show_message(self.usb_message, str(vException), "warning")
+
+        except Exception:
+            logger.exception("Échec de la restauration chiffrée")
+
+            show_message(
+                self.usb_message,
+                "La restauration a échoué. Voir les journaux.",
+                "danger",
+            )
+
+        else:
+            self.data_reset.emit(
+                f"Sauvegarde chiffrée restaurée. Anciennes données : {vBackupFile.name}"
             )
 
     def create_reset_card(self):

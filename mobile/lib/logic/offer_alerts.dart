@@ -19,7 +19,8 @@ List<Map<String, dynamic>> findNewGoodOffers(
     for (final vOffer in pCurrent)
       if (!vKnown.contains(offerKey(vOffer)) &&
           (((vOffer['match_score'] as num?) ?? 0) >= offerAlertScore ||
-              vOffer['similar_to'] != null))
+              vOffer['similar_to'] != null ||
+              vOffer['preferred'] == true))
         vOffer,
   ];
 

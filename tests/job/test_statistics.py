@@ -8,17 +8,20 @@ import pytest
 from job.profile import EMPTY_PROFILE, save_profile
 from job.settings import save_settings
 from job.statistics import (
+    compare_saved_searches,
     MAX_PIE_SOURCES,
     build_source_cells,
     compare_sources,
     describe_useless_sources,
     get_source_shares,
     get_week_goal,
+    summarize_week,
     trim_leading_empty_days,
 )
 from storage.database import initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import save_offers
+from storage.saved_searches import save_search
 
 
 def test_get_source_shares_groups_smallest_sources(tmp_path):
@@ -252,3 +255,67 @@ def test_useless_sources_need_a_profile_and_enough_offers():
     assert describe_useless_sources(vRows).endswith(": Arbeitnow (120 offres)")
     assert describe_useless_sources([build_row("Arbeitnow", 120, pScore=None)]) == ""
     assert describe_useless_sources(vRows[1:]) == ""
+
+
+def test_saved_searches_are_compared_on_their_criteria(tmp_path):
+    """Vérifie la comparaison des recherches : offres qui répondent, suites données."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {"source": "lever", "source_id": "1", "title": "Développeur JEE"},
+                {"source": "lever", "source_id": "2", "title": "Technicien GMAO"},
+                {"source": "lever", "source_id": "3", "title": "Comptable"},
+            ]
+        ),
+        datetime.now(),
+    )
+    save_application(vDatabaseFile, "lever", "1", "APPLIED")
+    save_search(vDatabaseFile, "Java", ["lever"], {"keyword": "java"}, datetime.now())
+    save_search(
+        vDatabaseFile,
+        "Maintenance",
+        ["lever"],
+        {"keyword": "maintenance"},
+        datetime.now(),
+    )
+    save_search(
+        vDatabaseFile, "Pilote", ["lever"], {"keyword": "pilote"}, datetime.now()
+    )
+
+    vRows = compare_saved_searches(vDatabaseFile, datetime.now())
+
+    # « JEE » répond à Java et « GMAO » à maintenance, par les synonymes.
+    assert [(vRow["label"], vRow["offers"], vRow["sent"]) for vRow in vRows] == [
+        ("Java", 1, 1),
+        ("Maintenance", 1, 0),
+    ]
+
+
+def test_summarize_week_compares_with_previous_week():
+    """Vérifie le bilan : 7 derniers jours, 7 précédents et évolution."""
+
+    vFirstDay = date(2026, 10, 1)
+    vDays = [vFirstDay + timedelta(days=vOffset) for vOffset in range(14)]
+
+    rWeek = summarize_week(
+        {
+            "new_offers": [(vDay, 2) for vDay in vDays[:7]]
+            + [(vDay, 3) for vDay in vDays[7:]],
+            "applications": [(vDay, 1) for vDay in vDays[:7]]
+            + [(vDay, 0) for vDay in vDays[7:]],
+            "responses": [(vDay, 0) for vDay in vDays],
+        }
+    )
+
+    assert [
+        (vRow["label"], vRow["current"], vRow["previous"], vRow["trend"])
+        for vRow in rWeek
+    ] == [
+        ("Nouvelles offres", 21, 14, "+7"),
+        ("Candidatures", 0, 7, "−7"),
+        ("Réponses reçues", 0, 0, "="),
+    ]

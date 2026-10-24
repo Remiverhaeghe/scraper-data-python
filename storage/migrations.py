@@ -1,0 +1,947 @@
+"""Migrations successives du schéma de la base SQLite
+
+Une migration par version, appliquée une seule fois par initialize_database
+(storage/database.py) ; MIGRATIONS les range dans l'ordre. Une nouvelle
+version s'ajoute à la fin, jamais en modifiant une migration déjà livrée.
+"""
+
+import json
+import math
+
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+def migrate_to_v1(pConnection):
+    """Crée les tables des offres, des candidatures et de l'historique."""
+
+    # Toute évolution de ce schéma passe par une nouvelle migration.
+    pConnection.execute("""
+        CREATE TABLE job_offer (
+            source TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            first_seen_at TEXT NOT NULL,
+            last_seen_at TEXT NOT NULL,
+            title TEXT,
+            company TEXT,
+            company_id TEXT,
+            url TEXT,
+            location TEXT,
+            city TEXT,
+            postal_code TEXT,
+            country TEXT,
+            distance_km REAL,
+            contract TEXT,
+            contract_type TEXT,
+            employment_type TEXT,
+            salary_min REAL,
+            salary_max REAL,
+            salary_currency TEXT,
+            salary_period TEXT,
+            salary_label TEXT,
+            salary_net_monthly_min REAL,
+            salary_net_monthly_max REAL,
+            salary_net_after_tax_monthly_min REAL,
+            salary_net_after_tax_monthly_max REAL,
+            has_13th_month INTEGER,
+            has_bonus INTEGER,
+            has_profit_sharing INTEGER,
+            has_savings_plan INTEGER,
+            remote TEXT,
+            remote_days INTEGER,
+            remote_type TEXT,
+            nearest_metro TEXT,
+            metro_distance_km REAL,
+            date TEXT,
+            published_at TEXT,
+            updated_at TEXT,
+            description TEXT,
+            missions TEXT,
+            requirements TEXT,
+            education TEXT,
+            skills TEXT,
+            department TEXT,
+            experience_level TEXT,
+            job_type TEXT,
+            PRIMARY KEY (source, source_id)
+        )
+        """)
+
+    pConnection.execute("""
+        CREATE TABLE job_application (
+            source TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            status TEXT NOT NULL,
+            applied_at TEXT,
+            follow_up_date TEXT,
+            follow_up_count INTEGER NOT NULL DEFAULT 0,
+            last_follow_up_at TEXT,
+            notes TEXT,
+            PRIMARY KEY (source, source_id),
+            FOREIGN KEY (source, source_id)
+                REFERENCES job_offer(source, source_id)
+        )
+        """)
+
+    pConnection.execute("""
+        CREATE TABLE history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            started_at TEXT NOT NULL,
+            scraper_type TEXT NOT NULL,
+            url TEXT NOT NULL,
+            page_count INTEGER NOT NULL,
+            item_count INTEGER NOT NULL,
+            duration_seconds REAL NOT NULL,
+            status TEXT NOT NULL,
+            error_message TEXT
+        )
+        """)
+
+
+def migrate_to_v2(pConnection):
+    """Ajoute à l'historique les paramètres de chaque exécution."""
+
+    # Paramètres au format JSON, absents pour les exécutions antérieures.
+    pConnection.execute("ALTER TABLE history ADD COLUMN parameters TEXT")
+
+
+def migrate_to_v3(pConnection):
+    """Conserve chaque relance pour pouvoir les compter jour par jour."""
+
+    pConnection.execute("""
+        CREATE TABLE job_follow_up (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            followed_up_at TEXT NOT NULL,
+            FOREIGN KEY (source, source_id)
+                REFERENCES job_offer(source, source_id)
+        )
+        """)
+
+    # Avant cette version, seule la dernière relance de chaque candidature est connue.
+    pConnection.execute("""
+        INSERT INTO job_follow_up (source, source_id, followed_up_at)
+        SELECT source, source_id, last_follow_up_at
+        FROM job_application
+        WHERE last_follow_up_at IS NOT NULL
+        """)
+
+
+def migrate_to_v4(pConnection):
+    """Ajoute les réglages modifiables depuis les interfaces."""
+
+    pConnection.execute("""
+        CREATE TABLE app_setting (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )
+        """)
+
+
+def migrate_to_v5(pConnection):
+    """Reprend les offres enregistrées avant deux corrections de parsing.
+
+    Adzuna renvoyait parfois ses accents échappés (\\u00e9) ; Hacker News rangeait
+    tout l'en-tête de l'annonce dans le lieu et le titre.
+    """
+
+    # Imports locaux : la reprise réutilise le parsing métier sans que le
+    # stockage en dépende pour son fonctionnement courant.
+    # pylint: disable=import-outside-toplevel
+    from job.sources.hackernews.parser import parse_header
+    from utils.helpers import decode_unicode_escapes
+
+    vEscapedRows = pConnection.execute(r"""
+        SELECT source, source_id, title, description
+        FROM job_offer
+        WHERE title LIKE '%\u%' OR description LIKE '%\u%'
+        """).fetchall()
+
+    pConnection.executemany(
+        "UPDATE job_offer SET title = ?, description = ? "
+        "WHERE source = ? AND source_id = ?",
+        [
+            (
+                decode_unicode_escapes(vTitle),
+                decode_unicode_escapes(vDescription),
+                vSource,
+                vSourceId,
+            )
+            for vSource, vSourceId, vTitle, vDescription in vEscapedRows
+        ],
+    )
+
+    # L'ancien découpage conservait l'en-tête complet, entreprise en tête, dans le lieu.
+    vHeaderRows = [
+        (vSourceId, vLocation)
+        for vSourceId, vCompany, vLocation in pConnection.execute("""
+            SELECT source_id, company, location
+            FROM job_offer
+            WHERE source = 'hackernews' AND company IS NOT NULL
+            """)
+        if vLocation and vLocation.startswith(vCompany)
+    ]
+
+    vUpdates = []
+
+    for vSourceId, vHeader in vHeaderRows:
+        vDetails = parse_header(vHeader)
+        vUpdates.append(
+            (
+                vDetails["title"],
+                vDetails["location"],
+                vDetails["employment"],
+                vDetails["employment"],
+                vDetails["salary"],
+                vSourceId,
+            )
+        )
+
+    pConnection.executemany(
+        """
+        UPDATE job_offer
+        SET title = ?, location = ?, contract_type = ?, employment_type = ?,
+            salary_label = ?
+        WHERE source = 'hackernews' AND source_id = ?
+        """,
+        vUpdates,
+    )
+
+    logger.info(
+        "Reprise des offres : %s texte(s) décodé(s), %s en-tête(s) Hacker News "
+        "redécoupé(s)",
+        len(vEscapedRows),
+        len(vUpdates),
+    )
+
+
+def migrate_to_v6(pConnection):
+    """Ajoute les recherches enregistrées, réutilisables depuis la page Recherche."""
+
+    # Sources et critères sont stockés en JSON, comme dans l'historique.
+    pConnection.execute("""
+        CREATE TABLE saved_search (
+            name TEXT PRIMARY KEY,
+            sources TEXT NOT NULL,
+            criteria TEXT NOT NULL,
+            saved_at TEXT NOT NULL
+        )
+        """)
+
+
+def migrate_to_v7(pConnection):
+    """Complète les offres déjà en base à partir de leur description.
+
+    Même enrichissement que les nouvelles recherches : télétravail, compétences,
+    expérience et salaire, uniquement pour les champs encore vides. Le net des
+    salaires trouvés est calculé avec les règles enregistrées. Tout passe par la
+    connexion de la migration : une seconde connexion attendrait son verrou.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    import pandas as pd
+
+    from job.enrichment import ENRICHED_COLUMNS, TEXT_COLUMNS, enrich_offer
+    from config import NET_SALARY_RATIO
+    from job.salary import add_net_salary, get_income_tax_rate
+
+    vColumns = ["source", "source_id", *TEXT_COLUMNS, *ENRICHED_COLUMNS]
+    vColumns = list(dict.fromkeys(vColumns))
+    # Colonnes issues des constantes TEXT_COLUMNS et ENRICHED_COLUMNS.
+    vCursor = pConnection.execute(
+        f"SELECT {', '.join(vColumns)} FROM job_offer"  # nosec B608
+    )
+    vOffers = [dict(zip(vColumns, vRow)) for vRow in vCursor.fetchall()]
+
+    vUpdated = []
+
+    for vOffer in vOffers:
+        vText = " ".join(str(vOffer.get(vColumn) or "") for vColumn in TEXT_COLUMNS)
+
+        if enrich_offer(vOffer, vText):
+            vUpdated.append(vOffer)
+
+    if vUpdated:
+        # Réglages lus directement : passer par job.settings créerait une
+        # dépendance circulaire entre le stockage et le métier.
+        vValues = dict(pConnection.execute("SELECT key, value FROM app_setting"))
+        vNetPercent = float(vValues.get("net_salary_percent", NET_SALARY_RATIO * 100))
+        vTaxRate = float(vValues.get("income_tax_rate", get_income_tax_rate() or 0))
+
+        vItems = add_net_salary(
+            pd.DataFrame(vUpdated),
+            pNetRatio=vNetPercent / 100,
+            pTaxRate=vTaxRate or None,
+        )
+
+        vSetColumns = [*ENRICHED_COLUMNS, *NET_COLUMNS]
+
+        pConnection.executemany(
+            "UPDATE job_offer SET "  # nosec B608
+            + ", ".join(f"{vColumn} = ?" for vColumn in vSetColumns)
+            + " WHERE source = ? AND source_id = ?",
+            [
+                (
+                    *(to_storage(vRow[vColumn]) for vColumn in vSetColumns),
+                    vRow["source"],
+                    vRow["source_id"],
+                )
+                for vRow in vItems.to_dict("records")
+            ],
+        )
+
+    logger.info("Reprise des offres : %s offre(s) complétée(s)", len(vUpdated))
+
+
+def migrate_to_v8(pConnection):
+    """Ajoute la date limite fournie par la source et la vérification du lien."""
+
+    # availability : NULL tant que le lien n'a pas été vérifié, puis available ou
+    # expired selon la réponse du site de l'offre.
+    for vColumn in ("expires_at", "availability", "availability_checked_at"):
+        pConnection.execute(f"ALTER TABLE job_offer ADD COLUMN {vColumn} TEXT")
+
+
+def migrate_to_v9(pConnection):
+    """Ajoute l'empreinte des offres et les décisions sur les offres multi-sources."""
+
+    # pylint: disable=import-outside-toplevel
+    from job.fingerprint import build_fingerprint
+
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN fingerprint TEXT")
+    pConnection.execute(
+        "CREATE INDEX idx_job_offer_fingerprint ON job_offer(fingerprint)"
+    )
+
+    # Décision prise sur un groupe d'annonces : merged pour une seule offre
+    # malgré leurs différences, separate pour les garder distinctes.
+    pConnection.execute("""
+        CREATE TABLE duplicate_decision (
+            fingerprint TEXT PRIMARY KEY,
+            decision TEXT NOT NULL,
+            decided_at TEXT NOT NULL
+        )
+        """)
+
+    vRows = pConnection.execute(
+        "SELECT source, source_id, title, company, location FROM job_offer"
+    ).fetchall()
+
+    pConnection.executemany(
+        "UPDATE job_offer SET fingerprint = ? WHERE source = ? AND source_id = ?",
+        [
+            (
+                build_fingerprint(
+                    {"title": vTitle, "company": vCompany, "location": vLocation}
+                ),
+                vSource,
+                vSourceId,
+            )
+            for vSource, vSourceId, vTitle, vCompany, vLocation in vRows
+        ],
+    )
+
+
+# Colonnes de salaire net calculées par add_net_salary
+NET_COLUMNS = (
+    "salary_net_monthly_min",
+    "salary_net_monthly_max",
+    "salary_net_after_tax_monthly_min",
+    "salary_net_after_tax_monthly_max",
+)
+
+
+def _is_missing(pValue):
+    """Indique si une valeur est un NaN de pandas, qui n'a pas sa place en base."""
+
+    rMissing = isinstance(pValue, float) and math.isnan(pValue)
+
+    return rMissing
+
+
+def to_storage(pValue):
+    """Convertit une valeur enrichie pour SQLite : liste en JSON, NaN en NULL."""
+
+    rValue = pValue
+
+    if isinstance(pValue, list):
+        rValue = json.dumps(pValue, ensure_ascii=False)
+    elif _is_missing(pValue):
+        rValue = None
+
+    return rValue
+
+
+def migrate_to_v10(pConnection):
+    """Ajoute les pièces jointes des candidatures (CV envoyé, lettre)."""
+
+    # Le fichier est rangé sous stored_name, un nom aléatoire : le nom choisi par
+    # l'utilisateur (file_name) ne sert qu'à l'affichage et au téléchargement.
+    pConnection.execute("""
+        CREATE TABLE job_attachment (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            file_name TEXT NOT NULL,
+            stored_name TEXT NOT NULL UNIQUE,
+            size INTEGER NOT NULL,
+            added_at TEXT NOT NULL,
+            FOREIGN KEY (source, source_id)
+                REFERENCES job_offer(source, source_id)
+        )
+        """)
+    pConnection.execute(
+        "CREATE INDEX idx_job_attachment_offer ON job_attachment(source, source_id)"
+    )
+
+
+def migrate_to_v11(pConnection):
+    """Ajoute l'historique des réponses aux questions de révision."""
+
+    # Une ligne par réponse : la dernière réponse à une question dit si elle est
+    # acquise ou à revoir, les précédentes gardent la progression.
+    pConnection.execute("""
+        CREATE TABLE quiz_answer (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question_id TEXT NOT NULL,
+            theme TEXT NOT NULL,
+            correct INTEGER NOT NULL,
+            answered_at TEXT NOT NULL
+        )
+        """)
+    pConnection.execute(
+        "CREATE INDEX idx_quiz_answer_question ON quiz_answer(question_id)"
+    )
+
+
+def migrate_to_v12(pConnection):
+    """Ajoute la date d'entretien et complète le pays et la ville des offres."""
+
+    # pylint: disable=import-outside-toplevel
+    from job.location import detect_location
+
+    pConnection.execute("ALTER TABLE job_application ADD COLUMN interview_at TEXT")
+
+    vRows = pConnection.execute(
+        "SELECT source, source_id, location, country, city FROM job_offer"
+    ).fetchall()
+
+    vUpdates = []
+
+    for vSource, vSourceId, vLocation, vCountry, vCity in vRows:
+        vFoundCountry, vFoundCity = detect_location(vLocation, vCountry)
+
+        if (vFoundCountry and not vCountry) or (vFoundCity and not vCity):
+            vUpdates.append(
+                (vCountry or vFoundCountry, vCity or vFoundCity, vSource, vSourceId)
+            )
+
+    pConnection.executemany(
+        "UPDATE job_offer SET country = ?, city = ? WHERE source = ? AND source_id = ?",
+        vUpdates,
+    )
+
+    logger.info(
+        "Reprise des offres : pays ou ville complété pour %s offre(s)", len(vUpdates)
+    )
+
+
+def migrate_to_v13(pConnection):
+    """Crée la table des questions de révision importées par l'utilisateur."""
+
+    # Le contenu de la question est gardé en JSON, au format des fichiers livrés.
+    pConnection.execute("""
+        CREATE TABLE quiz_question (
+            question_id TEXT PRIMARY KEY,
+            theme TEXT NOT NULL,
+            theme_label TEXT NOT NULL,
+            content TEXT NOT NULL,
+            added_at TEXT NOT NULL
+        )
+        """)
+
+
+def migrate_to_v14(pConnection):
+    """Ajoute les thèmes, schémas et guides importés avec les questions de révision."""
+
+    pConnection.execute("""
+        CREATE TABLE quiz_theme (
+            theme TEXT PRIMARY KEY,
+            label TEXT NOT NULL,
+            skills TEXT NOT NULL
+        )
+        """)
+    # Schéma SVG d'une question, déjà vérifié sans script à l'import
+    pConnection.execute("""
+        CREATE TABLE quiz_asset (
+            name TEXT PRIMARY KEY,
+            content TEXT NOT NULL,
+            added_at TEXT NOT NULL
+        )
+        """)
+    # Guide en Markdown, rattaché au thème de même nom quand il existe
+    pConnection.execute("""
+        CREATE TABLE quiz_guide (
+            name TEXT PRIMARY KEY,
+            theme TEXT,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            added_at TEXT NOT NULL
+        )
+        """)
+
+
+def migrate_to_v15(pConnection):
+    """Ajoute le domaine et le sous-domaine indiqués par un pack de révision."""
+
+    pConnection.execute("ALTER TABLE quiz_theme ADD COLUMN domain TEXT")
+    pConnection.execute("ALTER TABLE quiz_theme ADD COLUMN subdomain TEXT")
+
+
+def migrate_to_v16(pConnection):
+    """Ajoute l'identifiant des réponses envoyées par l'application mobile."""
+
+    # Identifiant choisi par le téléphone : un envoi relancé après une coupure
+    # ne crée pas de doublon. Les réponses faites ici n'en ont pas.
+    pConnection.execute("ALTER TABLE quiz_answer ADD COLUMN client_id TEXT")
+    pConnection.execute(
+        "CREATE UNIQUE INDEX idx_quiz_answer_client ON quiz_answer(client_id) "
+        "WHERE client_id IS NOT NULL"
+    )
+
+
+def migrate_to_v17(pConnection):
+    """Ajoute les défis de programmation : graines des données et tentatives."""
+
+    # Une graine par défi : les données personnelles restent les mêmes d'une
+    # session à l'autre, comme la réponse attendue.
+    pConnection.execute("""
+        CREATE TABLE challenge_seed (
+            challenge TEXT PRIMARY KEY,
+            seed INTEGER NOT NULL,
+            created_at TEXT NOT NULL
+        )
+        """)
+    pConnection.execute("""
+        CREATE TABLE challenge_attempt (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            challenge TEXT NOT NULL,
+            part INTEGER NOT NULL,
+            answer TEXT NOT NULL,
+            correct INTEGER NOT NULL,
+            answered_at TEXT NOT NULL
+        )
+        """)
+    pConnection.execute(
+        "CREATE INDEX idx_challenge_attempt ON challenge_attempt(challenge, part)"
+    )
+
+
+def migrate_to_v18(pConnection):
+    """Ajoute le bac à sable Git : meilleur résultat de chaque niveau réussi."""
+
+    pConnection.execute("""
+        CREATE TABLE git_level_result (
+            level TEXT PRIMARY KEY,
+            best_count INTEGER NOT NULL,
+            completed_at TEXT NOT NULL
+        )
+        """)
+
+
+def migrate_to_v19(pConnection):
+    """Ajoute la date de la première réponse, pour le délai de réponse moyen."""
+
+    pConnection.execute("ALTER TABLE job_application ADD COLUMN responded_at TEXT")
+
+
+def migrate_to_v20(pConnection):
+    """Ajoute le journal d'entretien : questions posées et impressions, par offre."""
+
+    pConnection.execute("""
+        CREATE TABLE interview_note (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            interviewed_at TEXT NOT NULL,
+            questions TEXT NOT NULL,
+            impressions TEXT NOT NULL,
+            FOREIGN KEY (source, source_id)
+                REFERENCES job_offer(source, source_id)
+        )
+        """)
+
+
+def migrate_to_v21(pConnection):
+    """Retire les anciennes offres que la collecte actuelle écarterait.
+
+    Hacker News : messages sans forme d'offre (réponses, remarques sur le fil),
+    reconnus à leur en-tête sans séparateur, rangé à la fois en titre et en
+    entreprise. Findwork : offres sans titre. Une offre suivie (candidature,
+    relance, pièce jointe, journal d'entretien) est toujours gardée.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    from job.sources.hackernews.parser import is_job_post
+
+    vUntouched = """
+        NOT EXISTS (SELECT 1 FROM job_application AS a
+                    WHERE a.source = o.source AND a.source_id = o.source_id)
+        AND NOT EXISTS (SELECT 1 FROM job_follow_up AS f
+                        WHERE f.source = o.source AND f.source_id = o.source_id)
+        AND NOT EXISTS (SELECT 1 FROM job_attachment AS j
+                        WHERE j.source = o.source AND j.source_id = o.source_id)
+        AND NOT EXISTS (SELECT 1 FROM interview_note AS n
+                        WHERE n.source = o.source AND n.source_id = o.source_id)
+        """
+
+    vHeaderRows = pConnection.execute(f"""
+        SELECT source_id, title, company FROM job_offer AS o
+        WHERE source = 'hackernews'
+        AND (title IS NULL OR company IS NULL OR title = company)
+        AND {vUntouched}
+        """).fetchall()  # nosec B608
+
+    vRejected = []
+    vKept = []
+
+    for vSourceId, vTitle, vCompany in vHeaderRows:
+        if not is_job_post({"text": vTitle or vCompany or ""}):
+            vRejected.append((vSourceId,))
+        elif vTitle and vTitle == vCompany:
+            vKept.append((vSourceId,))
+
+    pConnection.executemany(
+        "DELETE FROM job_offer WHERE source = 'hackernews' AND source_id = ?",
+        vRejected,
+    )
+    pConnection.executemany(
+        "UPDATE job_offer SET company = NULL "
+        "WHERE source = 'hackernews' AND source_id = ?",
+        vKept,
+    )
+
+    vFindwork = pConnection.execute(f"""
+        DELETE FROM job_offer AS o
+        WHERE source = 'findwork' AND (title IS NULL OR title = '')
+        AND {vUntouched}
+        """).rowcount  # nosec B608
+
+    logger.info(
+        "Nettoyage des offres : %s message(s) Hacker News sans forme d'offre et "
+        "%s offre(s) Findwork sans titre retirés, %s entreprise(s) répétant le "
+        "titre vidée(s)",
+        len(vRejected),
+        vFindwork,
+        len(vKept),
+    )
+
+
+def migrate_to_v22(pConnection):
+    """Décode les entités HTML (&eacute;) des offres Adzuna déjà enregistrées.
+
+    Sans ce décodage, une recherche « électricien » ne trouvait pas
+    « &Eacute;lectricien ». L'entreprise absente est retrouvée dans le texte,
+    où les agences d'intérim se nomment.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    from job.sources.adzuna.parser import find_agency, read_text
+
+    vRows = pConnection.execute("""
+        SELECT source_id, title, company, description
+        FROM job_offer
+        WHERE source = 'adzuna'
+        AND (title LIKE '%&%;%' OR description LIKE '%&%;%' OR company IS NULL)
+        """).fetchall()
+
+    vUpdates = []
+    vCompanies = 0
+
+    for vSourceId, vTitle, vCompany, vDescription in vRows:
+        vText = read_text(vDescription)
+        vFound = vCompany or find_agency(vText)
+        vCompanies += vFound is not None and vCompany is None
+        vUpdates.append((read_text(vTitle), vFound, vText, vSourceId))
+
+    pConnection.executemany(
+        """
+        UPDATE job_offer SET title = ?, company = ?, description = ?
+        WHERE source = 'adzuna' AND source_id = ?
+        """,
+        vUpdates,
+    )
+
+    logger.info(
+        "Offres Adzuna relues : %s texte(s) décodé(s), %s entreprise(s) retrouvée(s)",
+        len(vUpdates),
+        vCompanies,
+    )
+
+
+def migrate_to_v23(pConnection):
+    """Ajoute le cache des traductions : une description traduite ne l'est qu'une fois."""
+
+    pConnection.execute("""
+        CREATE TABLE translation_cache (
+            text_key TEXT PRIMARY KEY,
+            translation TEXT NOT NULL,
+            translated_at TEXT NOT NULL
+        )
+        """)
+
+
+def migrate_to_v24(pConnection):
+    """Indexe la date de découverte des offres.
+
+    La liste des offres, triée par cette date, et les comptes par jour lisaient
+    toute la table : mesuré sur 3 400 offres, 72 ms ramenés à 17 ms et 6 ms à
+    moins d'une milliseconde.
+    """
+
+    pConnection.execute(
+        "CREATE INDEX idx_job_offer_first_seen ON job_offer(first_seen_at, published_at)"
+    )
+
+
+def migrate_to_v25(pConnection):
+    """Ajoute les coordonnées des offres et le cache du géocodage de leurs lieux.
+
+    Un lieu introuvable est gardé sans coordonnées : il n'est pas redemandé.
+    """
+
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN latitude REAL")
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN longitude REAL")
+    pConnection.execute("""
+        CREATE TABLE geo_cache (
+            location_key TEXT PRIMARY KEY,
+            latitude REAL,
+            longitude REAL,
+            label TEXT,
+            looked_up_at TEXT NOT NULL
+        )
+        """)
+
+
+def migrate_to_v26(pConnection):
+    """Ajoute les compétences repérées dans le texte de chaque offre.
+
+    Les chercher à chaque affichage prenait six secondes pour mille offres ; elles
+    sont désormais calculées une fois, puis lues (job/skill_cache.py).
+    """
+
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN detected_skills TEXT")
+
+
+def migrate_to_v27(pConnection):
+    """Décode les entités HTML (&amp;) des titres et entreprises déjà enregistrés.
+
+    Findwork, Arbeitnow ou La bonne alternance les envoient encodées ; elles le
+    sont désormais à la complétion des offres (job/completion.py). L'empreinte
+    est recalculée sur le titre décodé, les compétences le seront au prochain
+    passage.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    from job.completion import decode_text
+    from job.fingerprint import build_fingerprint
+
+    vRows = pConnection.execute("""
+        SELECT source, source_id, title, company, location
+        FROM job_offer
+        WHERE title LIKE '%&%;%' OR company LIKE '%&%;%'
+        """).fetchall()
+
+    vUpdates = []
+
+    for vSource, vSourceId, vTitle, vCompany, vLocation in vRows:
+        vOffer = {
+            "title": decode_text(vTitle),
+            "company": decode_text(vCompany),
+            "location": vLocation,
+        }
+        vUpdates.append(
+            (
+                vOffer["title"],
+                vOffer["company"],
+                build_fingerprint(vOffer),
+                vSource,
+                vSourceId,
+            )
+        )
+
+    pConnection.executemany(
+        """
+        UPDATE job_offer
+        SET title = ?, company = ?, fingerprint = ?, detected_skills = NULL
+        WHERE source = ? AND source_id = ?
+        """,
+        vUpdates,
+    )
+
+    logger.info("Entités HTML décodées : %s offre(s)", len(vUpdates))
+
+
+def migrate_to_v28(pConnection):
+    """Garde le département des lieux et des offres placées, pour Mon marché par région.
+
+    Les lieux déjà cherchés le reçoivent au prochain placement des offres.
+    """
+
+    pConnection.execute("ALTER TABLE geo_cache ADD COLUMN department TEXT")
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN french_department TEXT")
+
+
+def migrate_to_v29(pConnection):
+    """Donne leur nom affiché aux pays enregistrés en code (« FR » devient « France »).
+
+    SmartRecruiters donnait le code : ses offres échappaient au filtre France,
+    à Mon marché et au placement sur la carte.
+    """
+
+    # pylint: disable=import-outside-toplevel
+    from job.location import normalize_country
+
+    vCountries = [
+        vRow[0]
+        for vRow in pConnection.execute(
+            "SELECT DISTINCT country FROM job_offer WHERE country IS NOT NULL"
+        )
+    ]
+    vUpdates = [
+        (normalize_country(vCountry), vCountry)
+        for vCountry in vCountries
+        if normalize_country(vCountry) != vCountry
+    ]
+
+    pConnection.executemany(
+        "UPDATE job_offer SET country = ? WHERE country = ?", vUpdates
+    )
+
+    logger.info(
+        "Pays enregistrés en code renommés : %s",
+        ", ".join(f"{vOld} -> {vNew}" for vNew, vOld in vUpdates) or "aucun",
+    )
+
+
+def migrate_to_v30(pConnection):
+    """Oublie les lieux restés introuvables, cherchés de nouveau au prochain placement.
+
+    « Lyon, Auvergne-Rhône-Alpes, France » échouait tel quel : la ville seule est
+    désormais essayée (job/geocoding.py).
+    """
+
+    vCount = pConnection.execute(
+        "DELETE FROM geo_cache WHERE latitude IS NULL"
+    ).rowcount
+
+    logger.info("Lieux introuvables à chercher de nouveau : %s", vCount)
+
+
+def migrate_to_v31(pConnection):
+    """Garde l'historique des statuts de chaque candidature.
+
+    Des déclencheurs l'alimentent à chaque création ou changement de statut,
+    quel que soit le chemin (formulaire, téléphone, réponse Gmail). Le statut
+    actuel des candidatures existantes en est le premier élément.
+    """
+
+    pConnection.execute("""
+        CREATE TABLE application_history (
+            id INTEGER PRIMARY KEY,
+            source TEXT NOT NULL,
+            source_id TEXT NOT NULL,
+            status TEXT NOT NULL,
+            changed_at TEXT NOT NULL
+        )
+        """)
+    pConnection.execute(
+        "CREATE INDEX application_history_offer"
+        " ON application_history (source, source_id)"
+    )
+    pConnection.execute("""
+        CREATE TRIGGER application_status_created
+        AFTER INSERT ON job_application
+        BEGIN
+            INSERT INTO application_history (source, source_id, status, changed_at)
+            VALUES (
+                NEW.source,
+                NEW.source_id,
+                NEW.status,
+                strftime('%Y-%m-%dT%H:%M:%S', 'now', 'localtime')
+            );
+        END
+        """)
+    pConnection.execute("""
+        CREATE TRIGGER application_status_changed
+        AFTER UPDATE OF status ON job_application
+        WHEN NEW.status IS NOT OLD.status
+        BEGIN
+            INSERT INTO application_history (source, source_id, status, changed_at)
+            VALUES (
+                NEW.source,
+                NEW.source_id,
+                NEW.status,
+                strftime('%Y-%m-%dT%H:%M:%S', 'now', 'localtime')
+            );
+        END
+        """)
+    vCount = pConnection.execute("""
+        INSERT INTO application_history (source, source_id, status, changed_at)
+        SELECT
+            source,
+            source_id,
+            status,
+            COALESCE(
+                responded_at,
+                applied_at,
+                strftime('%Y-%m-%dT%H:%M:%S', 'now', 'localtime')
+            )
+        FROM job_application
+        """).rowcount
+
+    logger.info("Historique des statuts commencé pour %s candidature(s)", vCount)
+
+
+def migrate_to_v32(pConnection):
+    """Garde l'adresse du recruteur, utilisée pour envoyer les relances."""
+
+    pConnection.execute("ALTER TABLE job_application ADD COLUMN contact_email TEXT")
+
+
+MIGRATIONS = [
+    migrate_to_v1,
+    migrate_to_v2,
+    migrate_to_v3,
+    migrate_to_v4,
+    migrate_to_v5,
+    migrate_to_v6,
+    migrate_to_v7,
+    migrate_to_v8,
+    migrate_to_v9,
+    migrate_to_v10,
+    migrate_to_v11,
+    migrate_to_v12,
+    migrate_to_v13,
+    migrate_to_v14,
+    migrate_to_v15,
+    migrate_to_v16,
+    migrate_to_v17,
+    migrate_to_v18,
+    migrate_to_v19,
+    migrate_to_v20,
+    migrate_to_v21,
+    migrate_to_v22,
+    migrate_to_v23,
+    migrate_to_v24,
+    migrate_to_v25,
+    migrate_to_v26,
+    migrate_to_v27,
+    migrate_to_v28,
+    migrate_to_v29,
+    migrate_to_v30,
+    migrate_to_v31,
+    migrate_to_v32,
+]

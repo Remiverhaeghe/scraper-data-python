@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 
 from gui.chart import BarChart
 from gui.offer_purge_panel import OfferPurgePanel
+from gui.unknown_places_panel import UnknownPlacesPanel
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -123,6 +124,8 @@ class QualityPage(QWidget):
         )
         vTableLayout.addWidget(self.table)
 
+        self.places_panel = UnknownPlacesPanel(pDatabaseFile)
+
         self.purge_panel = OfferPurgePanel(pDatabaseFile)
         self.purge_panel.purged.connect(lambda _: self.refresh())
 
@@ -147,12 +150,15 @@ class QualityPage(QWidget):
         vLayout.addWidget(vChartCard)
         vLayout.addWidget(vProblemsCard)
         vLayout.addWidget(vTableCard)
+        vLayout.addWidget(self.places_panel)
         vLayout.addWidget(self.purge_panel)
         vLayout.addWidget(self.message_label)
         vLayout.addStretch(1)
 
     def refresh(self):
-        """Relit le remplissage des champs en base."""
+        """Relit le remplissage des champs en base et les lieux introuvables."""
+        self.places_panel.refresh()
+
         try:
             vReport = get_quality_report(self.database_file)
 

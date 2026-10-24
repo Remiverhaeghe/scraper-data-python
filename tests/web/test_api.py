@@ -1,6 +1,6 @@
 """Tests de l'API JSON de l'application mobile"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
@@ -11,7 +11,7 @@ from job.quiz import load_active_quiz
 from job.quiz_exam import load_exam_results
 from storage.database import initialize_database
 from storage.job_applications import get_application, save_application
-from storage.job_offers import save_offers
+from storage.job_offers import save_offers, set_availability
 from storage.settings_repository import save_json_setting
 from web.app import app, get_database_file
 
@@ -186,6 +186,52 @@ def test_offers_and_status_changes_from_the_phone(api, tmp_path):
     assert vApplication["interview_at"] == "2026-11-03T10:00"
 
 
+def test_quick_notes_from_the_phone(api, tmp_path):
+    """Vérifie les notes rapides : ajoutées datées, sans doublon, refus expliqués."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame([{"source": "lever", "source_id": "1", "title": "Dev"}]),
+        datetime.now(),
+    )
+    save_application(vDatabaseFile, "lever", "1", "APPLIED", pNotes="Contact : la RH")
+    vWrittenAt = datetime.now().replace(second=0, microsecond=0)
+    vNote = {
+        "source": "lever",
+        "source_id": "1",
+        "text": "  Rappel   reçu, entretien à caler ",
+        "written_at": vWrittenAt.isoformat(),
+    }
+
+    vReport = api.post(
+        "/api/v1/notes",
+        json={
+            "notes": [
+                vNote,
+                vNote,
+                {**vNote, "source_id": "absente"},
+                {**vNote, "text": " "},
+                {**vNote, "written_at": "hier"},
+            ]
+        },
+    ).json()
+    vApplication = get_application(vDatabaseFile, "lever", "1")
+
+    assert vReport["applied"] == 2
+    assert vReport["rejected"] == [
+        "lever/absente : offre inconnue",
+        "note vide ou de plus de 1000 caractères",
+        "date de note illisible",
+    ]
+    assert vApplication["status"] == "APPLIED"
+    assert vApplication["notes"] == (
+        "Contact : la RH\n"
+        f"[{vWrittenAt:%d/%m/%Y %H:%M}, téléphone] Rappel reçu, entretien à caler"
+    )
+    assert api.post("/api/v1/notes", json={"notes": "x"}).status_code == 422
+
+
 def test_replies_are_sent_to_the_phone(api, tmp_path):
     """Vérifie les réponses gardées par la dernière lecture, transmises au téléphone."""
 
@@ -196,3 +242,44 @@ def test_replies_are_sent_to_the_phone(api, tmp_path):
     )
 
     assert api.get("/api/v1/replies").json()["replies"][0]["company"] == "Kiabi"
+
+
+def test_coming_interviews_are_sent_to_the_phone(api):
+    """Vérifie les entretiens des sept prochains jours transmis au téléphone."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [{"source": "lever", "source_id": "1", "title": "Dev", "company": "Kiabi"}]
+        ),
+        datetime.now(),
+    )
+    save_application(
+        vDatabaseFile,
+        "lever",
+        "1",
+        "INTERVIEW",
+        pInterviewAt=datetime.now() + timedelta(days=2),
+    )
+
+    vInterviews = api.get("/api/v1/interviews").json()["interviews"]
+
+    assert [(vItem["company"], vItem["title"]) for vItem in vInterviews] == [
+        ("Kiabi", "Dev")
+    ]
+
+
+def test_withdrawn_offers_are_sent_to_the_phone(api):
+    """Vérifie les offres suivies retirées transmises au téléphone."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame([{"source": "lever", "source_id": "1", "title": "Dev"}]),
+        datetime.now(),
+    )
+    save_application(vDatabaseFile, "lever", "1", "APPLIED")
+    set_availability(vDatabaseFile, "lever", "1", "expired", datetime.now())
+
+    assert api.get("/api/v1/withdrawn").json()["offers"][0]["title"] == "Dev"

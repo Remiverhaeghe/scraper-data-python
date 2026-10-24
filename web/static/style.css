@@ -2280,6 +2280,27 @@ textarea.companies-preferred {
     display: inline;
 }
 
+.offer-summary {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 14px;
+    margin: 0;
+}
+
+.offer-summary dt {
+    font-weight: 600;
+}
+
+.offer-summary dd {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .offer-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
 .checklist {
     list-style: none;
     margin: 0;
@@ -2361,4 +2382,52 @@ textarea.companies-preferred {
 
 .skill-grid input[type="number"] {
     width: 4.5em;
+}
+
+.week-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.week-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.week-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.week-trend {
+    font-weight: 600;
+}
+
+.trend-up {
+    color: var(--success);
+}
+
+.trend-down {
+    color: var(--danger);
+}
+
+.glossary dt {
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.glossary dd {
+    margin: 2px 0 0;
+    color: var(--muted);
+}
+
+.offline-banner {
+    margin: 0;
+    padding: 8px 16px;
+    background: color-mix(in srgb, var(--warning) 15%, var(--surface));
+    color: var(--text);
+    border-bottom: 1px solid var(--warning);
+    text-align: center;
 }

@@ -40,6 +40,7 @@ from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
 from job.experience_fit import describe_experience_fit
 from job.geocoding import describe_location
 from job.offer_details import can_fetch_description, fetch_missing_description
+from job.offer_summary import build_offer_summary
 from job.salary_market import (
     describe_market_salary,
     describe_negotiation,
@@ -74,6 +75,7 @@ INFO_ROWS = (
     ("salary", "Net mensuel", "banknote"),
     ("salary_label", "Salaire annoncé", "tag"),
     ("market_salary", "Marché", "scale"),
+    ("suspicious", "Prudence", "circle-alert"),
     ("negotiation", "Négociation", "banknote"),
     ("remote", "Télétravail", "house"),
     ("benefits", "Avantages", "gift"),
@@ -158,6 +160,7 @@ class OfferDetailPanel(QWidget):
 
     application_changed = Signal()
     exam_requested = Signal(dict)
+    missing_exam_requested = Signal(dict)
     # Émis depuis le fil de traduction : (description d'origine, traduction, erreur)
     translation_done = Signal(str, object, object)
     # Émis depuis le fil de lecture : offre complétée de sa description
@@ -172,6 +175,7 @@ class OfferDetailPanel(QWidget):
 
         self.assistant = OfferAssistantPanel(pDatabaseFile)
         self.assistant.exam_requested.connect(self.exam_requested)
+        self.assistant.missing_exam_requested.connect(self.missing_exam_requested)
 
         self.application = ApplicationPanel(pDatabaseFile)
         self.application.setFixedWidth(340)
@@ -225,7 +229,13 @@ class OfferDetailPanel(QWidget):
         self.translation_done.connect(self.show_translation)
         self.description_fetched.connect(self.show_fetched_description)
 
+        # L'essentiel de l'annonce, extrait par règles, avant le texte complet
+        self.summary_label = QLabel()
+        self.summary_label.setWordWrap(True)
+        self.summary_label.setTextFormat(Qt.TextFormat.RichText)
+
         vDescriptionCard, vDescriptionLayout = create_card("Description", pOpen=True)
+        vDescriptionLayout.addWidget(self.summary_label)
         vDescriptionLayout.addWidget(
             self.translate_button, 0, Qt.AlignmentFlag.AlignLeft
         )
@@ -456,6 +466,14 @@ class OfferDetailPanel(QWidget):
         self.open_button.setEnabled(safe_url(vOffer.get("url")) != "#")
 
         self.original_description = vOffer.get("description")
+        vSummary = build_offer_summary(vOffer) if pOffer else []
+        self.summary_label.setText(
+            "<br>".join(
+                f"<b>{escape(vLabel)}</b> : {escape(vText)}"
+                for vLabel, vText in vSummary
+            )
+        )
+        self.summary_label.setVisible(bool(vSummary))
         self.translated = False
         self.translate_url = build_translate_url(self.original_description)
         self.translate_button.setVisible(self.translate_url is not None)
@@ -492,6 +510,13 @@ class OfferDetailPanel(QWidget):
             "salary": format_net_salary(vOffer),
             "salary_label": vOffer.get("salary_label"),
             **self.describe_market(vOffer),
+            "suspicious": (
+                "Annonce douteuse : "
+                + ", ".join(vOffer["suspicious_signs"])
+                + ". Vérifiez l'entreprise avant de répondre."
+                if vOffer.get("suspicious_signs")
+                else ""
+            ),
             "remote": None if vRemote is None else ("Oui" if vRemote else "Non"),
             "benefits": summarize_values(vOffer.get("benefits")),
             "experience_level": " · ".join(

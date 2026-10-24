@@ -28,6 +28,7 @@ from gui.widgets import (
 )
 from job.presentation import (
     CHART_PALETTE,
+    STATUS_LABELS,
     describe_execution,
     format_date,
     format_net_salary,
@@ -138,6 +139,7 @@ class HomePage(QWidget):
         vLayout.addWidget(self.create_banner())
         vLayout.addLayout(self.create_statistics())
         vLayout.addWidget(self.create_goal_bar())
+        vLayout.addWidget(self.create_week_card())
         vLayout.addWidget(self.create_checklist_card())
 
         # Une grille aligne les colonnes des deux rangées, qui se partagent la
@@ -149,6 +151,8 @@ class HomePage(QWidget):
         vGrid.addWidget(self.create_follow_ups_card(), 1, 0)
         vGrid.addWidget(self.create_latest_offers_card(), 1, 1)
         vGrid.addWidget(self.create_similar_offers_card(), 2, 0, 1, 2)
+        vGrid.addWidget(self.create_withdrawn_card(), 3, 0, 1, 2)
+        vGrid.addWidget(self.create_preferred_card(), 4, 0, 1, 2)
 
         for vIndex in range(2):
             vGrid.setColumnStretch(vIndex, 1)
@@ -258,6 +262,46 @@ class HomePage(QWidget):
                 f"Objectif de la semaine : {pGoal['sent']} / {pGoal['goal']} "
                 "candidature(s)" + (" · atteint" if pGoal["share"] == 100 else "")
             )
+
+    def create_week_card(self):
+        """Construit le bilan des 7 derniers jours, comparés aux 7 précédents."""
+        vCard, vLayout = create_card(
+            "Votre semaine",
+            "Les 7 derniers jours, comparés aux 7 précédents",
+            pIcon="calendar",
+        )
+
+        self.week_layout = QHBoxLayout()
+        self.week_layout.setSpacing(24)
+        vLayout.addLayout(self.week_layout)
+
+        return vCard
+
+    def show_week_summary(self, pWeek):
+        """Affiche chaque série de la semaine avec son évolution colorée."""
+        self.show_rows(
+            self.week_layout,
+            [self.create_week_item(vRow) for vRow in pWeek],
+            "",
+        )
+
+    @staticmethod
+    def create_week_item(pRow):
+        """Construit une série de la semaine : valeur, libellé et évolution."""
+        if pRow["current"] > pRow["previous"]:
+            vColor = COLORS["success"]
+        elif pRow["current"] < pRow["previous"]:
+            vColor = COLORS["danger"]
+        else:
+            vColor = COLORS["muted"]
+
+        rItem = QLabel(
+            f"<b style='font-size:18px'>{pRow['current']}</b> {pRow['label']} "
+            f"<span style='color:{vColor}'><b>{pRow['trend']}</b></span>"
+        )
+        rItem.setToolTip(f"{pRow['previous']} les 7 jours précédents")
+
+        return rItem
 
     def create_checklist_card(self):
         """Construit la liste des réglages restant à faire."""
@@ -426,6 +470,72 @@ class HomePage(QWidget):
             "Aucune relance prévue.",
         )
 
+    def create_preferred_card(self):
+        """Construit la liste des nouvelles offres des entreprises privilégiées."""
+        self.preferred_card, vLayout = create_card(
+            "Vos entreprises privilégiées recrutent",
+            "Nouvelles offres des entreprises de votre liste, réglée dans les Paramètres",
+            pIcon="sparkles",
+        )
+
+        self.preferred_layout = QVBoxLayout()
+        self.preferred_layout.setSpacing(2)
+        vLayout.addLayout(self.preferred_layout)
+
+        return self.preferred_card
+
+    def show_preferred(self, pOffers):
+        """Affiche les offres des entreprises privilégiées ; masquée sans elles."""
+        self.preferred_card.setVisible(bool(pOffers))
+        self.show_rows(
+            self.preferred_layout,
+            [
+                self.create_offer_row(
+                    "sparkles",
+                    COLORS["primary"],
+                    vOffer.get("title") or "Titre non communiqué",
+                    vOffer.get("company") or "",
+                    vOffer.get("location") or "",
+                    (vOffer["source"], vOffer["source_id"]),
+                )
+                for vOffer in pOffers
+            ],
+            "",
+        )
+
+    def create_withdrawn_card(self):
+        """Construit la liste des offres suivies retirées par leur site."""
+        self.withdrawn_card, vLayout = create_card(
+            "Offres suivies retirées",
+            "Le site ne les publie plus : poste sans doute pourvu. Pensez à les classer.",
+            pIcon="circle-alert",
+        )
+
+        self.withdrawn_layout = QVBoxLayout()
+        self.withdrawn_layout.setSpacing(2)
+        vLayout.addLayout(self.withdrawn_layout)
+
+        return self.withdrawn_card
+
+    def show_withdrawn(self, pOffers):
+        """Affiche les offres suivies retirées ; la carte est masquée sans elles."""
+        self.withdrawn_card.setVisible(bool(pOffers))
+        self.show_rows(
+            self.withdrawn_layout,
+            [
+                self.create_offer_row(
+                    "circle-alert",
+                    COLORS["warning"],
+                    vOffer["title"] or "Titre non communiqué",
+                    vOffer.get("company") or "",
+                    STATUS_LABELS.get(vOffer["status"], ""),
+                    (vOffer["source"], vOffer["source_id"]),
+                )
+                for vOffer in pOffers
+            ],
+            "",
+        )
+
     def create_similar_offers_card(self):
         """Construit la liste des nouvelles offres proches de celles retenues."""
         self.similar_offers_card, vLayout = create_card(
@@ -576,11 +686,14 @@ class HomePage(QWidget):
             )
 
             self.show_week_goal(vStatistics["week_goal"])
+            self.show_week_summary(vStatistics["week_summary"])
             self.show_activity(vStatistics["executions"])
             self.show_chart(vStatistics["daily_activity"])
             self.show_follow_ups(vStatistics["upcoming_follow_ups"])
             self.show_latest_offers(vStatistics["latest_offers"])
             self.show_similar_offers(vStatistics["similar_offers"])
+            self.show_withdrawn(vStatistics["withdrawn_offers"])
+            self.show_preferred(vStatistics["preferred_offers"])
             self.show_checklist(build_setup_checklist(self.database_file))
             self.last_search_label.setText(
                 describe_last_search(vStatistics["executions"])

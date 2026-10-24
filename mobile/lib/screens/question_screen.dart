@@ -22,11 +22,14 @@ const typeLabels = {
   'association': 'Association',
 };
 
+/// Sans thème, les questions sont tirées dans tous les thèmes ; avec timeLimit,
+/// la révision s'arrête à la fin du temps imparti (révision express).
 class QuestionScreen extends StatefulWidget {
-  const QuestionScreen({super.key, required this.state, required this.theme});
+  const QuestionScreen({super.key, required this.state, this.theme, this.timeLimit});
 
   final RevisionState state;
-  final QuizTheme theme;
+  final QuizTheme? theme;
+  final Duration? timeLimit;
 
   @override
   State<QuestionScreen> createState() => _QuestionScreenState();
@@ -40,16 +43,53 @@ class _QuestionScreenState extends State<QuestionScreen> {
   /// Change à chaque question : la saisie précédente est remise à zéro.
   int round = 0;
 
+  DateTime? endsAt;
+  Timer? ticker;
+  int answered = 0;
+  int correct = 0;
+
+  List<QuizQuestion> get questions {
+    final vTheme = widget.theme;
+
+    final rQuestions = vTheme == null
+        ? widget.state.package!.questions
+        : widget.state.package!.questionsOf(vTheme.key);
+
+    return rQuestions;
+  }
+
+  String get title => widget.theme?.label ?? 'Révision express';
+
+  bool get timeUp => endsAt != null && !DateTime.now().isBefore(endsAt!);
+
   @override
   void initState() {
     super.initState();
+
+    final vLimit = widget.timeLimit;
+
+    if (vLimit != null) {
+      endsAt = DateTime.now().add(vLimit);
+      ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
+
     pickNext();
+  }
+
+  @override
+  void dispose() {
+    ticker?.cancel();
+    super.dispose();
   }
 
   void pickNext() {
     setState(() {
       question = pickQuestion(
-        widget.state.package!.questionsOf(widget.theme.key),
+        questions,
         widget.state.schedule,
         DateTime.now(),
         widget.state.random,
@@ -74,7 +114,11 @@ class _QuestionScreenState extends State<QuestionScreen> {
       }
 
       if (mounted) {
-        setState(() => grade = vGrade);
+        setState(() {
+          grade = vGrade;
+          answered++;
+          correct += vGrade.correct ? 1 : 0;
+        });
       }
     } on UnreadableAnswer catch (vException) {
       vMessenger.showSnackBar(SnackBar(content: Text(vException.message)));
@@ -129,10 +173,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
   }
 
   Widget buildEmpty() {
-    final vNext = nextReview(
-      widget.state.package!.questionsOf(widget.theme.key),
-      widget.state.schedule,
-    );
+    final vNext = nextReview(questions, widget.state.schedule);
 
     final rEmpty = Center(
       child: Padding(
@@ -204,11 +245,20 @@ class _QuestionScreenState extends State<QuestionScreen> {
           ResultPanel(grade: vGrade, explanation: pQuestion.explanation),
           if (pQuestion.visual != null && !pQuestion.visualOnQuestion) buildSchema(pQuestion),
           const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: pickNext,
-            icon: const Icon(Icons.arrow_forward),
-            label: const Text('Question suivante'),
-          ),
+          if (timeUp) ...[
+            Text(describeSprint(answered, correct), style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.task_alt),
+              label: const Text('Terminer'),
+            ),
+          ] else
+            FilledButton.icon(
+              onPressed: pickNext,
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('Question suivante'),
+            ),
         ],
       ],
     );
@@ -218,32 +268,45 @@ class _QuestionScreenState extends State<QuestionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vGuide = widget.state.package!.guides[widget.theme.guide];
+    final vGuide = widget.state.package!.guides[widget.theme?.guide];
     final vQuestion = question;
+    final vEndsAt = endsAt;
 
     final rScreen = Scaffold(
       appBar: AppBar(
-        title: Text(widget.theme.label),
+        title: Text(title),
         actions: [
+          if (vEndsAt != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(
+                child: Text(
+                  formatRemaining(vEndsAt.difference(DateTime.now())),
+                  semanticsLabel: 'Temps restant',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ),
           if (vQuestion != null)
             IconButton(
               tooltip: 'Signaler une question fausse ou ambiguë',
               icon: const Icon(Icons.flag_outlined),
               onPressed: flag,
             ),
-          IconButton(
-            tooltip: 'Examen blanc sur ce thème',
-            icon: const Icon(Icons.timer_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => ExamScreen(
-                  state: widget.state,
-                  title: 'Examen : ${widget.theme.label}',
-                  questions: widget.state.package!.questionsOf(widget.theme.key),
+          if (widget.theme != null)
+            IconButton(
+              tooltip: 'Examen blanc sur ce thème',
+              icon: const Icon(Icons.timer_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => ExamScreen(
+                    state: widget.state,
+                    title: 'Examen : $title',
+                    questions: questions,
+                  ),
                 ),
               ),
             ),
-          ),
           if (vGuide != null)
             IconButton(
               tooltip: 'Guide pratique',

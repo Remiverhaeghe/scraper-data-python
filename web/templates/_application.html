@@ -4,6 +4,7 @@
 <section id="application" class="card application">
     <h2>Suivi</h2>
     <p class="card-subtitle">Statut, relance et notes de votre candidature</p>
+    {% if status_history %}<p class="muted">Historique : {{ status_history }}</p>{% endif %}
 
     <form hx-post="{{ url_for('update_application').path }}"
           hx-target="#application"

@@ -219,6 +219,7 @@
             <h2>Sauvegarde complète</h2>
             <p class="card-subtitle">Base et pièces jointes dans une archive .zip, pour changer de PC sans rien perdre. La restauration sauvegarde d'abord les données actuelles.</p>
             <a class="button" href="{{ url_for('download_archive').path }}">{{ icon("download", 16) }} Exporter</a>
+            <a class="button" href="{{ url_for('download_personal_data').path }}" title="Fichiers JSON lisibles sans l'application, sans secret ni jeton">{{ icon("file-text", 16) }} Mes données (lisibles)</a>
             <form class="reset-form" method="post" action="{{ url_for('upload_archive').path }}" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                 <input type="file" name="file" accept=".zip" required aria-label="Archive à restaurer">

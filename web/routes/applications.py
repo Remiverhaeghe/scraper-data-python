@@ -18,6 +18,7 @@ from job.application_tracking import (
     build_board,
     get_week_follow_ups,
     mark_followed_up,
+    send_follow_up,
 )
 from job.calendar import build_calendar
 from job.manual_offers import add_spontaneous_application
@@ -31,6 +32,7 @@ from job.followed_availability import count_alerts
 from job.notification import describe_follow_up
 from job.presentation import STATUS_LABELS
 from storage.job_applications import get_application, update_application_status
+from utils.mailer import get_missing_email_settings
 from web.dependencies import get_database_file, require_csrf
 from utils.logger import get_logger
 from web.rendering import templates
@@ -40,9 +42,23 @@ router = APIRouter()
 logger = get_logger(__name__)
 
 
+# Messages fixes du retour d'envoi d'une relance : rien de saisi n'est renvoyé.
+FOLLOW_UP_MESSAGES = {
+    "sent": ("Relance envoyée et notée, la suivante est programmée.", "success"),
+    "invalid": ("Adresse du recruteur ou message invalide.", "warning"),
+    "unconfigured": (
+        "Envoi impossible : renseignez GMAIL_ADDRESS et GMAIL_APP_PASSWORD dans .env.",
+        "warning",
+    ),
+    "failed": ("L'envoi a échoué : vérifiez la connexion et réessayez.", "danger"),
+}
+
+
 @router.get("/applications", response_class=HTMLResponse)
 def show_applications(
-    request: Request, pDatabaseFile: str = Depends(get_database_file)
+    request: Request,
+    pFollowUpResult: str = Query("", alias="follow_up"),
+    pDatabaseFile: str = Depends(get_database_file),
 ):
     """Affiche les candidatures par étape et leurs taux de réponse."""
 
@@ -63,6 +79,8 @@ def show_applications(
                 datetime.now() - timedelta(days=DEFAULT_JOURNAL_DAYS)
             ).strftime("%Y-%m-%d"),
             "journal_end": datetime.now().strftime("%Y-%m-%d"),
+            "follow_up_message": FOLLOW_UP_MESSAGES.get(pFollowUpResult),
+            "can_send_email": not get_missing_email_settings(),
         },
     )
 
@@ -248,6 +266,45 @@ def handle_reply(
         vText = "Réponse ignorée."
 
     rResponse = HTMLResponse(f'<p class="muted reply">{escape(vText)}</p>')
+
+    return rResponse
+
+
+@router.post("/applications/follow-up/send", dependencies=[Depends(require_csrf)])
+def send_follow_up_email(
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pRecipient: str = Form("", alias="recipient"),
+    pDraft: str = Form("", alias="draft"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Envoie la relance relue au recruteur, puis la note comme faite."""
+
+    if get_application(pDatabaseFile, pSource, pSourceId) is None:
+        raise HTTPException(status_code=400, detail="Aucun suivi pour cette offre")
+
+    if get_missing_email_settings():
+        vResult = "unconfigured"
+    else:
+        try:
+            send_follow_up(
+                pDatabaseFile, pSource, pSourceId, pRecipient, pDraft, datetime.now()
+            )
+
+        except ValueError:
+            vResult = "invalid"
+
+        except OSError:
+            logger.exception("Échec de l'envoi de la relance")
+            vResult = "failed"
+
+        else:
+            vResult = "sent"
+
+    rResponse = RedirectResponse(
+        f"{router.url_path_for('show_applications')}?follow_up={vResult}",
+        status_code=303,
+    )
 
     return rResponse
 

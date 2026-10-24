@@ -7,10 +7,12 @@ from PySide6.QtCore import QSettings, QSortFilterProxyModel, Qt
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QApplication,
     QFileDialog,
     QFrame,
     QHBoxLayout,
     QHeaderView,
+    QInputDialog,
     QLabel,
     QMenu,
     QMessageBox,
@@ -42,6 +44,8 @@ from job.companies import (
 from job.deduplication import group_offers
 from job.experience_fit import mark_experience_fit
 from job.freshness import add_freshness
+from job.global_score import add_global_scores
+from job.suspicious_offers import mark_suspicious_offers
 from job.salary_market import add_estimated_salaries
 from job.geocoding import add_distances, load_home
 from job.export import EXPORT_FORMATS, export_offers
@@ -52,6 +56,7 @@ from job.manual_offers import (
     list_import_problems,
 )
 from job.offer_filters import build_offer_filters
+from job.offer_from_link import add_offer_from_link
 from job.presentation import (
     FOLLOW_UP_FILTER,
     MANUAL_SOURCE,
@@ -243,7 +248,40 @@ class OffersPage(QWidget):
         rButton.setToolTip("Saisir une offre trouvée en dehors des sources")
         rButton.clicked.connect(self.add_offer)
 
+        # Menu : saisie complète, ou lien d'une annonce
+        vMenu = QMenu(rButton)
+        vMenu.addAction("Saisir une offre…", self.add_offer)
+        vMenu.addAction("Depuis le lien d'une annonce…", self.add_offer_from_link)
+        rButton.setMenu(vMenu)
+
         return rButton
+
+    def add_offer_from_link(self):
+        """Crée une offre depuis le lien d'une annonce, puis l'affiche."""
+        vUrl, vAccepted = QInputDialog.getText(
+            self,
+            "Offre depuis un lien",
+            "Lien de l'annonce (Indeed, Welcome to the Jungle, site d'entreprise…) :",
+        )
+
+        if not vAccepted or not vUrl.strip():
+            return
+
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+        try:
+            vSourceId = add_offer_from_link(
+                self.database_file, vUrl.strip(), datetime.now()
+            )
+
+        except ValueError as vException:
+            QApplication.restoreOverrideCursor()
+            QMessageBox.warning(self, "Offre depuis un lien", str(vException))
+            return
+
+        QApplication.restoreOverrideCursor()
+        self.apply_preset("offers")
+        self.select_offer((MANUAL_SOURCE, vSourceId))
 
     def add_offer(self):
         """Ouvre la saisie d'une offre puis l'affiche une fois créée."""
@@ -482,6 +520,10 @@ class OffersPage(QWidget):
             vPrepared = group_offers(vPrepared, get_decisions(self.database_file))
             add_freshness(vPrepared, datetime.now())
             add_estimated_salaries(self.database_file, vPrepared)
+            mark_suspicious_offers(self.database_file, vPrepared)
+            add_global_scores(
+                vPrepared, vSettings, (self.home or {}).get("alert_radius_km")
+            )
 
             if self.filters_bar.multiple_check.isChecked():
                 vPrepared = [vOffer for vOffer in vPrepared if vOffer["duplicates"]]

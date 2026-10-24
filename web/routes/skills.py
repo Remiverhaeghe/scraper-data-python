@@ -17,6 +17,7 @@ from job.market import (
 )
 from job.profile import add_profile_skill
 from job.quiz import load_active_quiz
+from job.skill_glossary import build_glossary
 from job.skills_dashboard import SKILL_STATUSES, build_skills_dashboard
 from web.dependencies import get_database_file, require_csrf
 from web.rendering import build_bar_chart, templates
@@ -43,6 +44,8 @@ def show_skills(
         {
             "active_page": "skills",
             "dashboard": vDashboard,
+            "glossary": build_glossary(),
+            "definitions": dict(build_glossary()),
             "statuses": SKILL_STATUSES,
             "history_chart": build_bar_chart(
                 [vPoint["label"] for vPoint in vDashboard["history"]],

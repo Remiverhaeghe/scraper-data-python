@@ -126,7 +126,11 @@ class OfferCard extends StatelessWidget {
       child: InkWell(
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => OfferDetailScreen(offer: offer, onOpen: () => open(context)),
+            builder: (_) => OfferDetailScreen(
+              offer: offer,
+              onOpen: () => open(context),
+              onNote: (pText) => state.addOfferNote(offer, pText),
+            ),
           ),
         ),
         child: Padding(

@@ -192,6 +192,23 @@ def record_follow_up(
         vConnection.close()
 
 
+def save_contact_email(pDatabaseFile, pSource, pSourceId, pEmail):
+    """Mémorise l'adresse du recruteur d'une candidature."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vConnection.execute(
+            "UPDATE job_application SET contact_email = ?"
+            " WHERE source = ? AND source_id = ?",
+            (pEmail, pSource, str(pSourceId)),
+        )
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+
 def get_follow_ups(pDatabaseFile, pDate=None):
     """Récupère les candidatures dont une relance est nécessaire."""
 
@@ -372,6 +389,30 @@ def get_application(pDatabaseFile, pSource, pSourceId):
 SENT_STATUSES = ("APPLIED", "INTERVIEW", "REJECTED", "ACCEPTED")
 
 
+def get_status_history(pDatabaseFile, pSource, pSourceId):
+    """Retourne les statuts successifs d'une candidature : (statut, date), du
+    plus ancien au plus récent.
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rHistory = vConnection.execute(
+            """
+            SELECT status, changed_at
+            FROM application_history
+            WHERE source = ? AND source_id = ?
+            ORDER BY changed_at, id
+            """,
+            (pSource, str(pSourceId)),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    return rHistory
+
+
 def get_company_applications(pDatabaseFile, pCompanyKey, pExcludedKey=None):
     """Retourne les candidatures envoyées à une entreprise, la plus récente en tête.
 
@@ -427,6 +468,16 @@ def count_follow_ups_by_day(pDatabaseFile, pDays, pNow=None):
     return rCounts
 
 
+def count_responses_by_day(pDatabaseFile, pDays, pNow=None):
+    """Compte les réponses d'employeurs reçues chaque jour, jours vides compris."""
+
+    rCounts = count_by_day(
+        pDatabaseFile, "job_application", "responded_at", pDays, pNow
+    )
+
+    return rCounts
+
+
 def get_upcoming_follow_ups(pDatabaseFile, pLimit):
     """Retourne les prochaines relances prévues, les plus proches en premier."""
 
@@ -470,7 +521,7 @@ def get_applications_with_offers(pDatabaseFile, pStatuses):
                 o.source, o.source_id, o.title, o.company, o.location, o.contract,
                 o.url, o.description, o.missions, o.requirements, o.skills,
                 a.status, a.applied_at, a.follow_up_date, a.follow_up_count,
-                a.last_follow_up_at,
+                a.last_follow_up_at, a.contact_email,
                 a.interview_at, a.responded_at, o.availability,
                 o.availability_checked_at, o.published_at, o.first_seen_at
             FROM job_application a

@@ -62,6 +62,12 @@ def test_load_statistics(tmp_path):
     assert rStatistics["applications"] == 1
     assert rStatistics["follow_ups"] == 1
     assert [vEntry.item_count for vEntry in rStatistics["executions"]] == [42]
+    assert [vRow["name"] for vRow in rStatistics["week_summary"]] == [
+        "new_offers",
+        "applications",
+        "follow_ups",
+        "responses",
+    ]
 
 
 def test_load_statistics_on_empty_database(tmp_path):
@@ -227,3 +233,27 @@ def test_checklist_card_opens_the_page_to_set(qt_application, tmp_path):
 
     assert vRequested == ["profile"]
     assert vPage.checklist_card.isHidden()
+
+
+def test_withdrawn_card_is_shown_only_with_offers(qt_application, tmp_path):
+    """Vérifie la carte des offres suivies retirées, masquée sans elles."""
+
+    vPage = HomePage(build_database(tmp_path))
+    vPage.refresh()
+
+    assert vPage.withdrawn_card.isHidden()
+
+    vPage.show_withdrawn(
+        [
+            {
+                "source": "lever",
+                "source_id": "1",
+                "title": "Dev",
+                "company": "Acme",
+                "status": "APPLIED",
+            }
+        ]
+    )
+
+    assert not vPage.withdrawn_card.isHidden()
+    assert vPage.withdrawn_layout.count() == 1

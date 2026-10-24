@@ -8,9 +8,11 @@ import re
 
 from job.enrichment import SKILL_PATTERNS, detect_skills
 from job.fingerprint import GENDER_MARKERS
+from job.pitch import build_pitch, lower_first
 from job.presentation import to_list
 from job.self_assessment import KNOWN_LEVEL, get_assessed_skills
 from job.star_answers import select_star_answers, suggest_star_questions
+from job.tricky_questions import build_tricky_questions
 
 # Questions toujours utiles en fin d'entretien
 GENERAL_QUESTIONS = (
@@ -46,14 +48,6 @@ MIN_SCORED_WEIGHT = 3.0
 # part de maîtrise à partir de laquelle elle est affichée comme couverte
 FULL_LEVEL = 8
 COVERED_SHARE = 0.5
-
-
-def lower_first(pText):
-    """Met la première lettre en minuscule, pour insérer un texte dans une phrase."""
-
-    rText = pText[:1].lower() + pText[1:]
-
-    return rText
 
 
 def get_offer_text(pOffer):
@@ -289,10 +283,40 @@ def describe_missing(pMatch):
     return rText or "aucune"
 
 
-def match_offer(pProfile, pOffer):
-    """Compare le profil à une offre, d'après ses compétences et son texte."""
+def build_target_profiles(pProfile):
+    """Retourne les profils cibles : un par CV nommé avec ses compétences, sinon
+    le profil entier.
 
-    rMatch = match_profile(pProfile, get_offer_skills(pOffer), get_offer_text(pOffer))
+    Un parcours double (développement et maintenance, par exemple) se décrit
+    par deux CV : chaque offre est notée sur celui qui lui correspond.
+    """
+
+    rTargets = [
+        (vCv["name"], {**pProfile, "skills": to_list(vCv["skills"])})
+        for vCv in pProfile.get("cv_variants") or []
+        if vCv.get("name") and to_list(vCv.get("skills"))
+    ] or [(None, pProfile)]
+
+    return rTargets
+
+
+def match_offer(pProfile, pOffer):
+    """Compare le profil à une offre, d'après ses compétences et son texte.
+
+    Avec plusieurs profils cibles, le meilleur score l'emporte ; target donne
+    le nom du CV retenu, ou None.
+    """
+
+    vSkills = get_offer_skills(pOffer)
+    vText = get_offer_text(pOffer)
+
+    rMatch = None
+
+    for vName, vTarget in build_target_profiles(pProfile):
+        vMatch = {**match_profile(vTarget, vSkills, vText), "target": vName}
+
+        if rMatch is None or (vMatch["score"] or -1) > (rMatch["score"] or -1):
+            rMatch = vMatch
 
     return rMatch
 
@@ -516,17 +540,22 @@ def build_letter(pProfile, pMatch, pOffer):
 MAX_ASKED_QUESTIONS = 10
 
 
-def prepare_application(pProfile, pOffer, pStarAnswers=None, pAskedQuestions=None):
+def prepare_application(
+    pProfile, pOffer, pStarAnswers=None, pAskedQuestions=None, pAgencies=()
+):
     """Prépare tous les éléments d'une candidature pour une offre.
 
     pStarAnswers ajoute à l'entretien les réponses STAR préparées dans le Profil ;
-    pAskedQuestions, les questions déjà posées lors d'entretiens précédents.
+    pAskedQuestions, les questions déjà posées lors d'entretiens précédents ;
+    pAgencies, les agences d'intérim qui orientent les questions pièges.
     """
 
     vOfferSkills = get_offer_skills(pOffer)
     vMatch = match_offer(pProfile, pOffer)
 
     vInterview = build_interview(pProfile, vMatch, pOffer)
+    vInterview["pitch"] = build_pitch(pProfile, vMatch, pOffer)
+    vInterview["tricky"] = build_tricky_questions(pOffer, pAgencies)
     vInterview["star"] = select_star_answers(pStarAnswers or {}, pProfile, vOfferSkills)
     vInterview["asked"] = (pAskedQuestions or [])[:MAX_ASKED_QUESTIONS]
     vInterview["likely"] = suggest_star_questions(
@@ -552,12 +581,16 @@ def score_offers(pOffers, pProfile):
     Sans profil renseigné, aucun score n'est calculé.
     """
 
-    vEmpty = not pProfile.get("skills") and not get_assessed_skills(pProfile)
+    vEmpty = (
+        not pProfile.get("skills")
+        and not get_assessed_skills(pProfile)
+        and build_target_profiles(pProfile)[0][0] is None
+    )
 
     for vOffer in pOffers:
-        vOffer["match_score"] = (
-            None if vEmpty else match_offer(pProfile, vOffer)["score"]
-        )
+        vMatch = None if vEmpty else match_offer(pProfile, vOffer)
+        vOffer["match_score"] = vMatch["score"] if vMatch else None
+        vOffer["match_target"] = vMatch["target"] if vMatch else None
 
 
 # Filtre de la liste des offres : correspondance minimale avec le profil

@@ -1,5 +1,7 @@
 """Page des compétences : demande des offres croisée avec la préparation"""
 
+from html import escape
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -14,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.chart import BarChart
+from gui.dialogs import show_text_dialog
 from gui.icons import get_icon
 from gui.theme import COLORS
 from gui.widgets import (
@@ -27,6 +30,7 @@ from gui.widgets import (
 )
 from job.profile import add_profile_skill
 from job.quiz import load_active_quiz
+from job.skill_glossary import build_glossary, describe_skill
 from job.skills_dashboard import SKILL_STATUSES, build_skills_dashboard
 from utils.logger import get_logger
 
@@ -136,7 +140,7 @@ class SkillsPage(QWidget):
             vLayout,
             "Compétences",
             "Ce que demandent vos offres, et où en est votre préparation",
-            [create_fold_button(self)],
+            [self.create_glossary_button(), create_fold_button(self)],
             pIcon="target",
         )
 
@@ -146,6 +150,25 @@ class SkillsPage(QWidget):
         vLayout.addWidget(vTableCard)
         vLayout.addWidget(self.message_label)
         vLayout.addStretch(1)
+
+    def create_glossary_button(self):
+        """Construit le bouton qui ouvre le glossaire des compétences."""
+        rButton = create_button("Glossaire", "languages")
+        rButton.setToolTip("Définition courte de chaque compétence repérée")
+        rButton.clicked.connect(self.show_glossary)
+
+        return rButton
+
+    def show_glossary(self):
+        """Affiche la définition de chaque compétence, par ordre alphabétique."""
+        show_text_dialog(
+            self,
+            "Glossaire des compétences",
+            pHtml="".join(
+                f"<p><b>{escape(vSkill)}</b> : {escape(vDefinition)}</p>"
+                for vSkill, vDefinition in build_glossary()
+            ),
+        )
 
     def refresh(self):
         """Relit les offres, le profil et la révision."""
@@ -238,6 +261,7 @@ class SkillsPage(QWidget):
             self.table.item(vRow, 0).setIcon(
                 get_icon(vSkill["icon"], COLORS["primary"], 16)
             )
+            self.table.item(vRow, 0).setToolTip(describe_skill(vSkill["skill"]) or "")
 
             vStatus = QTableWidgetItem(get_icon(vIcon, COLORS[vTone], 16), vLabel)
             vStatus.setForeground(QColor(COLORS[vTone]))

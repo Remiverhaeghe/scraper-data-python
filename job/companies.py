@@ -5,6 +5,7 @@ import json
 from job.fingerprint import normalize_company
 from job.presentation import STATUS_LABELS, format_date
 from storage.job_applications import get_company_applications
+from storage.job_offers import get_offers
 from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
 
@@ -19,6 +20,9 @@ MAX_COMPANY_LENGTH = 200
 
 # Candidatures citées dans l'avertissement, les autres sont seulement comptées
 MAX_LISTED_APPLICATIONS = 3
+
+# Offres des entreprises privilégiées montrées sur l'accueil
+PREFERRED_OFFERS_LIMIT = 10
 
 
 def parse_companies(pText):
@@ -158,6 +162,27 @@ def mark_preferred_companies(pOffers, pRules):
 
     for vOffer in pOffers:
         vOffer["company_preferred"] = normalize_company(vOffer.get("company")) in vKeys
+
+
+def find_preferred_offers(pDatabaseFile, pSince, pLimit=PREFERRED_OFFERS_LIMIT):
+    """Retourne les offres récentes des entreprises privilégiées, les plus récentes
+    en tête : la liste des entreprises privilégiées sert de veille.
+    """
+
+    vKeys = set(get_company_keys(load_company_rules(pDatabaseFile), "preferred"))
+
+    if not vKeys:
+        return []
+
+    rOffers = [
+        vOffer
+        for vOffer in get_offers(
+            pDatabaseFile, pSeenSince=pSince, pHideIgnored=True
+        ).to_dict("records")
+        if normalize_company(vOffer.get("company")) in vKeys
+    ][:pLimit]
+
+    return rOffers
 
 
 def find_company_applications(pDatabaseFile, pOffer):

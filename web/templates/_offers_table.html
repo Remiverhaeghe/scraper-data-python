@@ -16,6 +16,7 @@
                 <th class="amount" title="À vol d'oiseau depuis le domicile">Distance</th>
                 <th>Contrat</th>
                 <th class="amount">Net mensuel</th>
+                <th class="amount" title="Profil, distance, salaire, fraîcheur et employeur, pondérés dans les Paramètres">Global</th>
                 <th class="amount">Profil</th>
                 <th class="amount" title="Récente et publiée par plusieurs sources : 100 au mieux">Fraîcheur</th>
                 <th>Suivi</th>
@@ -28,7 +29,10 @@
                 <td>
                     {% if offer.is_new %}<span class="badge badge-new">Nouvelle</span>{% endif %}
                     <a class="offer-title" href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Titre non communiqué" }}</a>
+                    {% if offer.suspicious_signs %}<span class="badge badge-danger" title="À vérifier avant de répondre : {{ offer.suspicious_signs | join(', ') }}">Annonce douteuse</span>{% endif %}
                     {% if offer.is_expired %}<span class="badge badge-danger">Probablement expirée</span>{% endif %}
+                    {% if offer.republished %}<span class="badge badge-muted" title="Vue bien avant la date de publication annoncée : l'annonce a été remise en avant">Republiée</span>{% endif %}
+                    {% if offer.old_at_source_days %}<span class="badge badge-muted" title="Publiée chez la source bien avant d'être trouvée">Publiée il y a {{ offer.old_at_source_days }} j</span>{% endif %}
                     {% if offer.recurring_days %}<span class="badge badge-muted" title="Annonce vue pour la première fois il y a {{ offer.recurring_days }} jours : poste difficile à pourvoir ou annonce de vivier">En ligne depuis {{ offer.recurring_days }} j</span>{% endif %}
                     {% if offer.duplicates %}<span class="badge badge-muted" title="{{ offer.source_labels | join(', ') }}">{{ offer.duplicates | length + 1 }} annonces</span>{% endif %}
                     {% if offer.needs_review %}<span class="badge badge-warning" title="Différences : {{ offer.differences | join(', ') }}">À valider</span>{% endif %}
@@ -43,7 +47,8 @@
                 <td class="amount nowrap">{% if offer.distance_km is not none %}{{ offer.distance_km }} km{% endif %}</td>
                 <td>{% if offer.contract %}<span class="badge badge-first badge-{{ contract_tones.get(offer.contract, 'muted') }}">{{ offer.contract }}</span>{% endif %}</td>
                 <td class="amount">{% if offer.net_salary %}{{ offer.net_salary }}{% elif offer.estimated_salary %}<span class="muted" title="Estimation : médiane des offres comparables qui annoncent un salaire">≈ {{ offer.estimated_salary }}</span>{% endif %}</td>
-                <td class="amount">{% if offer.match_score is not none %}<span class="badge badge-first badge-{{ offer.match_score | score_tone }}" title="Compétences de l'offre présentes dans votre profil">{{ offer.match_score }} %</span>{% endif %}</td>
+                <td class="amount">{% if offer.global_score is not none %}<span class="badge badge-first badge-{{ offer.global_score | score_tone }}">{{ offer.global_score }}</span>{% endif %}</td>
+                <td class="amount">{% if offer.match_score is not none %}<span class="badge badge-first badge-{{ offer.match_score | score_tone }}" title="Compétences de l'offre présentes dans votre profil{% if offer.match_target %} « {{ offer.match_target }} »{% endif %}">{{ offer.match_score }} %</span>{% endif %}</td>
                 <td class="amount">{% if offer.freshness is defined %}<span class="badge badge-{{ offer.freshness | score_tone }}">{{ offer.freshness }}</span>{% endif %}</td>
                 <td class="nowrap">
                     {% if offer.application_status %}<span class="badge badge-first badge-{{ status_tones.get(offer.application_status, 'muted') }}">{{ statuses[offer.application_status] }}</span>{% endif %}

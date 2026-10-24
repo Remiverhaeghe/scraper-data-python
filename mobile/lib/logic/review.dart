@@ -92,6 +92,27 @@ DateTime? nextReview(List<QuizQuestion> pQuestions, Map<String, ReviewState> pSc
   return rDate;
 }
 
+/// Durée de la révision express, pour les temps morts de la journée.
+const sprintDuration = Duration(minutes: 5);
+
+/// Retourne le temps restant au format « 4:05 », jamais négatif.
+String formatRemaining(Duration pRemaining) {
+  final vSeconds = pRemaining.isNegative ? 0 : pRemaining.inSeconds;
+
+  final rText = '${vSeconds ~/ 60}:${(vSeconds % 60).toString().padLeft(2, '0')}';
+
+  return rText;
+}
+
+/// Résume une révision express terminée.
+String describeSprint(int pAnswered, int pCorrect) {
+  final rText = pAnswered == 0
+      ? 'Temps écoulé : aucune réponse cette fois.'
+      : 'Temps écoulé : $pAnswered réponse(s), $pCorrect juste(s).';
+
+  return rText;
+}
+
 /// Mélange les indices 0 à pCount - 1 ; une remise en ordre ne part jamais
 /// déjà dans l'ordre, sinon il n'y aurait rien à faire.
 List<int> shuffledIndexes(int pCount, Random pRandom, {bool pAvoidIdentity = false}) {

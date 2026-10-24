@@ -4,9 +4,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from config import BACKUP_NAS_DIRECTORY, WEB_SCHEME, WEB_TLS_CERTFILE
+from job.application_replies import LAST_CHECK_KEY as LAST_REPLY_CHECK_KEY
+from job.application_replies import REPLY_CHECK_HOURS, load_pending_replies
 from job.followed_availability import LAST_CHECK_KEY
 from job.geocoding import load_home
 from job.location import FRANCE
+from job.restore_check import load_restore_check
 from job.mobile_sync import get_last_phone_sync, get_mobile_token
 from job.schedule import load_schedule
 from job.sources.registry import SOURCES
@@ -18,8 +21,10 @@ from storage.backup import (
 )
 from storage.geo_cache import count_offer_positions
 from storage.history_repository import get_history
-from storage.settings_repository import get_setting_values
+from storage.job_offers import get_offers
+from storage.settings_repository import get_setting_values, load_json_setting
 from utils.logger import get_logger
+from utils.mailer import get_missing_email_settings
 from utils.permissions import find_permission_problems
 from utils.tls import read_expiry
 
@@ -31,6 +36,9 @@ BACKUP_WARNING_DELAY = timedelta(days=2)
 # Fin proche du certificat HTTPS : orange à un mois, rouge à une semaine
 CERTIFICATE_WARNING_DAYS = 30
 CERTIFICATE_DANGER_DAYS = 7
+
+# Offres récentes dont la description manquante est comptée
+DESCRIPTION_DAYS = 7
 
 # Au-delà, le téléphone ne s'est plus synchronisé depuis longtemps
 PHONE_SYNC_WARNING_DELAY = timedelta(days=2)
@@ -96,6 +104,24 @@ def check_backup_integrity(pDatabaseFile):
     return rCheck
 
 
+def check_restore_test(pDatabaseFile):
+    """Rappelle le résultat du dernier essai de restauration, fait chaque mois."""
+
+    vResult = load_restore_check(pDatabaseFile)
+
+    if not vResult:
+        return ("Pas encore essayée : le planificateur le fait chaque mois", "muted")
+
+    vDate = datetime.fromisoformat(vResult["date"])
+
+    rCheck = (
+        f"{vDate:%d/%m/%Y} : {vResult['message']}",
+        "success" if vResult["success"] else "danger",
+    )
+
+    return rCheck
+
+
 def check_nas_copy(pDatabaseFile, pNow):
     """Vérifie que les sauvegardes sont copiées sur le NAS, s'il est configuré."""
 
@@ -154,16 +180,78 @@ def check_last_run(pDatabaseFile):
         rCheck = ("Aucune recherche pour le moment", "muted")
     else:
         vEntry = vHistory[0]
-        vDate = datetime.fromisoformat(str(vEntry["started_at"])[:19])
+        vDate = datetime.fromisoformat(str(vEntry.started_at)[:19])
 
-        rCheck = (
-            (f"{vDate:%d/%m/%Y %H:%M} : {vEntry['item_count']} offre(s)", "success")
-            if vEntry["status"] == "success"
-            else (
-                f"{vDate:%d/%m/%Y %H:%M} : {vEntry['error_message'] or 'en échec'}",
+        if vEntry.status == "success":
+            rCheck = (
+                f"{vDate:%d/%m/%Y %H:%M} : {vEntry.item_count} offre(s)",
+                "success",
+            )
+        # Partielle : des offres reçues, mais au moins une source en erreur
+        elif vEntry.status == "partial":
+            rCheck = (
+                f"{vDate:%d/%m/%Y %H:%M} : {vEntry.item_count} offre(s), "
+                f"source(s) en erreur : {vEntry.error_message}",
+                "warning",
+            )
+        else:
+            rCheck = (
+                f"{vDate:%d/%m/%Y %H:%M} : {vEntry.error_message or 'en échec'}",
                 "danger",
             )
+
+    return rCheck
+
+
+def check_gmail(pDatabaseFile, pNow):
+    """Vérifie la lecture des réponses de recruteurs dans Gmail."""
+
+    vMissing = get_missing_email_settings()
+
+    if vMissing:
+        return (f"Non configuré : {', '.join(vMissing)} dans .env", "muted")
+
+    vLast = load_json_setting(pDatabaseFile, LAST_REPLY_CHECK_KEY, None, str)
+
+    if not vLast:
+        return ("Configuré, pas encore lu par le planificateur", "warning")
+
+    vDate = datetime.fromisoformat(vLast)
+    vPending = len(load_pending_replies(pDatabaseFile))
+
+    rCheck = (
+        f"Lu {format_age(vDate, pNow)} à {vDate:%H:%M} · "
+        f"{vPending} réponse(s) à traiter dans Candidatures",
+        (
+            "success"
+            if pNow - vDate < timedelta(hours=REPLY_CHECK_HOURS * 2)
+            else "warning"
+        ),
+    )
+
+    return rCheck
+
+
+def check_descriptions(pDatabaseFile, pNow):
+    """Compte les offres récentes sans description, lue seulement à l'ouverture."""
+
+    vOffers = get_offers(
+        pDatabaseFile,
+        pSeenSince=pNow - timedelta(days=DESCRIPTION_DAYS),
+        pHideIgnored=True,
+    )
+    vMissing = int(vOffers["description"].isna().sum()) if not vOffers.empty else 0
+
+    rCheck = (
+        (
+            f"{vMissing} offre(s) des {DESCRIPTION_DAYS} derniers jours sans "
+            "description : lue à l'ouverture pour SmartRecruiters et Workday, "
+            "score moins précis en attendant",
+            "warning" if vMissing > len(vOffers) / 2 else "muted",
         )
+        if vMissing
+        else ("Toutes les offres récentes ont une description", "success")
+    )
 
     return rCheck
 
@@ -347,11 +435,14 @@ def build_health(pDatabaseFile, pNow):
     vChecks = (
         ("Sauvegarde automatique", lambda: check_backup(pDatabaseFile, pNow)),
         ("Sauvegarde vérifiée", lambda: check_backup_integrity(pDatabaseFile)),
+        ("Restauration éprouvée", lambda: check_restore_test(pDatabaseFile)),
         ("Copie sur le NAS", lambda: check_nas_copy(pDatabaseFile, pNow)),
         ("Recherche planifiée", lambda: check_schedule(pDatabaseFile, pNow)),
         ("Dernière recherche", lambda: check_last_run(pDatabaseFile)),
         ("Sources", check_sources),
         ("Sources muettes", lambda: check_silent_sources(pDatabaseFile)),
+        ("Descriptions", lambda: check_descriptions(pDatabaseFile, pNow)),
+        ("Réponses Gmail", lambda: check_gmail(pDatabaseFile, pNow)),
         ("Offres suivies vérifiées", lambda: check_followed_offers(pDatabaseFile)),
         ("Place occupée", lambda: check_storage(pDatabaseFile)),
         ("Certificat HTTPS", lambda: check_certificate(pNow)),

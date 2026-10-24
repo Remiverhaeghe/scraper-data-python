@@ -153,7 +153,24 @@ def describe_preparation(pPreparation):
     rHtml += (
         f"<h3>Points forts à citer</h3><ul>{vStrengths or '<li>À compléter</li>'}</ul>"
         f"<h3>Points à préparer</h3><ul>{items(vInterview['gaps']) or '<li>Aucun</li>'}</ul>"
-        f"<h3>Questions du recruteur</h3><ul>{vAnswers}</ul>"
+        + (
+            f"<h3>Mon pitch, 30 secondes</h3><p>{escape(vPitch['short'])}</p>"
+            f"<h3>Mon pitch, 2 minutes</h3><p>{escape(vPitch['long'])}</p>"
+            if (vPitch := vInterview.get("pitch"))
+            else ""
+        )
+        + (
+            f"<h3>Questions pièges · {escape(vTricky['employer'])}</h3><ul>"
+            + "".join(
+                f"<li><b>{escape(vItem['question'])}</b><br>"
+                f"{escape(vItem['hint'])}</li>"
+                for vItem in vTricky["questions"]
+            )
+            + "</ul>"
+            if (vTricky := vInterview.get("tricky"))
+            else ""
+        )
+        + f"<h3>Questions du recruteur</h3><ul>{vAnswers}</ul>"
         + (
             "<h3>Questions déjà posées en entretien</h3><ul>"
             + "".join(

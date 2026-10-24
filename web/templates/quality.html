@@ -68,6 +68,23 @@
     {% endif %}
 </article>
 
+<article class="card section-gap">
+    <h2>{{ icon("map-pin") }} Lieux introuvables</h2>
+    <p class="card-subtitle">Lieux d'offres en France que le géocodeur n'a pas reconnus, les plus fréquents d'abord. Indiquez la commune : elle est retenue pour toutes les offres de ce lieu.</p>
+    {% if place_message %}<p class="application-message tone-{{ place_message[1] }}" role="status">{{ place_message[0] }}</p>{% endif %}
+    {% for place in unknown_places %}
+    <form class="inline-form" method="post" action="{{ url_for('correct_place').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="key" value="{{ place.key }}">
+        <span>{{ place.example }} <span class="muted">({{ place.count }} offre(s))</span></span>
+        <input type="text" name="commune" placeholder="Commune ou code postal" aria-label="Commune de {{ place.example }}" required>
+        <button class="button" type="submit">Associer</button>
+    </form>
+    {% else %}
+    <p class="muted">Tous les lieux des offres en France sont reconnus.</p>
+    {% endfor %}
+</article>
+
 <article class="card">
     <h2>Offres hors sujet</h2>
     <p class="card-subtitle">Supprime les offres dont le titre contient l'un des mots. Les offres avec candidature, relance ou pièce jointe sont toujours gardées, et la base est sauvegardée avant suppression.</p>
@@ -103,6 +120,14 @@
         </label>
         <button class="button" type="submit">Enregistrer</button>
     </form>
+    {% if suggested_words %}
+    <form class="inline-form" method="post" action="{{ url_for('update_excluded_words').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="words" value="{{ (excluded_words + suggested_words | map(attribute=0) | list) | join(', ') }}">
+        <span class="muted">Souvent dans vos offres ignorées, jamais dans les retenues : {% for word, count in suggested_words %}{{ word }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}</span>
+        <button class="button" type="submit">Exclure ces mots</button>
+    </form>
+    {% endif %}
     {% if purge.message %}<p class="application-message tone-{{ message_tone if message_tone != 'success' or not purge.offers else 'warning' }}" role="status">{{ purge.message }}</p>{% endif %}
 </article>
 

@@ -24,7 +24,13 @@ from gui.token_access_panel import TokenAccessPanel
 from gui.company_pages_panel import CompanyPagesPanel
 from gui.home_location_panel import HomeLocationPanel
 from gui.data_panel import DataPanel
-from gui.theme import COLORS, THEME_CHOICES, THEME_SETTING
+from gui.theme import (
+    COLORS,
+    TEXT_SCALE_SETTING,
+    TEXT_SCALES,
+    THEME_CHOICES,
+    THEME_SETTING,
+)
 from gui.widgets import (
     FlowLayout,
     align_spin_box,
@@ -109,6 +115,7 @@ class SettingsPage(QWidget):
     """Regroupe les réglages de l'application et l'état de sa configuration."""
 
     theme_requested = Signal(str)
+    text_scale_requested = Signal(int)
     data_reset = Signal(str)
 
     def __init__(self, pDatabaseFile):
@@ -211,7 +218,7 @@ class SettingsPage(QWidget):
 
     def create_appearance_card(self):
         """Construit le choix du thème, mémorisé pour les prochains lancements."""
-        vCard, vLayout = create_card("Apparence", "Thème de l'interface")
+        vCard, vLayout = create_card("Apparence", "Thème et taille du texte")
 
         self.theme_buttons = QButtonGroup(self)
 
@@ -236,6 +243,26 @@ class SettingsPage(QWidget):
 
         vButtons.addStretch()
         vLayout.addLayout(vButtons)
+
+        self.text_scale_buttons = QButtonGroup(self)
+        vCurrentScale = QSettings().value(TEXT_SCALE_SETTING, 100, int)
+
+        vScaleButtons = QHBoxLayout()
+        vScaleButtons.addWidget(QLabel("Taille du texte"))
+
+        for vScale, vLabel in TEXT_SCALES.items():
+            vButton = create_button(vLabel, pObjectName="segmentButton")
+            vButton.setCheckable(True)
+            vButton.setChecked(vScale == vCurrentScale)
+            vButton.clicked.connect(
+                lambda _=False, pScale=vScale: self.text_scale_requested.emit(pScale)
+            )
+
+            self.text_scale_buttons.addButton(vButton)
+            vScaleButtons.addWidget(vButton)
+
+        vScaleButtons.addStretch()
+        vLayout.addLayout(vScaleButtons)
 
         return vCard
 

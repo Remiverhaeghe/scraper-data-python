@@ -24,6 +24,7 @@ COLUMNS = [
     ("Distance", "distance_km", 80),
     ("Contrat", "contract", 85),
     ("Net mensuel", "salary_net_monthly_min", 145),
+    ("Global", "global_score", 70),
     ("Profil", "match_score", 70),
     ("Fraîcheur", "freshness", 85),
     ("Source", "source_label", 105),
@@ -61,6 +62,15 @@ def format_cell(pOffer, pKey):
     elif pKey == "distance_km":
         rText = "" if pOffer.get(pKey) is None else f"{pOffer[pKey]} km"
 
+    elif pKey == "first_seen_at" and (
+        pOffer.get("republished") or pOffer.get("old_at_source_days")
+    ):
+        rText = f"{format_date(pOffer.get(pKey))} · " + (
+            "republiée"
+            if pOffer.get("republished")
+            else f"publiée il y a {pOffer['old_at_source_days']} j"
+        )
+
     elif pKey == "first_seen_at" and pOffer.get("recurring_days"):
         rText = (
             f"{format_date(pOffer.get(pKey))} · en ligne depuis "
@@ -78,6 +88,9 @@ def format_cell(pOffer, pKey):
 
     elif pKey == "company" and pOffer.get("is_agency"):
         rText = f"{pOffer.get('company') or ''} · intérim"
+
+    elif pKey == "title" and pOffer.get("suspicious_signs"):
+        rText = f"⚠ {pOffer.get('title') or ''} · annonce douteuse"
 
     elif pKey == "title" and pOffer.get("above_experience"):
         rText = f"{pOffer.get('title') or ''} · {pOffer['required_years']} ans demandés"
@@ -106,7 +119,7 @@ def get_sort_value(pOffer, pKey):
 
         rValue = float(vValue) if vValue is not None else -1.0
 
-    elif pKey in ("match_score", "freshness"):
+    elif pKey in ("match_score", "freshness", "global_score"):
         rValue = -1.0 if vValue is None else float(vValue)
 
     # Distance inconnue en fin de liste dans l'ordre croissant, le plus utile
@@ -135,7 +148,7 @@ def get_cell_color(pOffer, pKey):
         vTone = "primary"
     elif pKey == "match_score" and pOffer.get(pKey) is not None:
         vTone = get_score_tone(pOffer[pKey])
-    elif pKey == "freshness" and pOffer.get(pKey) is not None:
+    elif pKey in ("freshness", "global_score") and pOffer.get(pKey) is not None:
         vTone = get_score_tone(pOffer[pKey])
     elif pKey == "source_label" and pOffer.get("needs_review"):
         vTone = "warning"

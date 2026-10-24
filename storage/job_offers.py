@@ -49,6 +49,23 @@ def to_sql_value(pValue):
     return rValue
 
 
+# Colonnes gardées quand une recherche ne les fournit pas : une description lue
+# après coup, ou par une recherche précédente, n'est pas effacée.
+KEPT_WHEN_MISSING = ("description",)
+
+
+def build_update_value(pColumn):
+    """Retourne la nouvelle valeur d'une colonne lors de la mise à jour d'une offre."""
+
+    rValue = (
+        f"COALESCE(excluded.{pColumn}, job_offer.{pColumn})"
+        if pColumn in KEPT_WHEN_MISSING
+        else f"excluded.{pColumn}"
+    )
+
+    return rValue
+
+
 def build_upsert_query():
     """Construit la requête d'insertion ou de mise à jour d'une offre."""
 
@@ -59,14 +76,14 @@ def build_upsert_query():
 
     vUpdates = ",\n            ".join(
         [
-            f"{vColumn} = excluded.{vColumn}"
+            f"{vColumn} = {build_update_value(vColumn)}"
             for vColumn in ["last_seen_at"] + CONTENT_COLUMNS
         ]
         # Texte modifié : les compétences repérées sont à recalculer.
         + [
             "detected_skills = CASE WHEN "
             + " AND ".join(
-                f"job_offer.{vColumn} IS excluded.{vColumn}"
+                f"job_offer.{vColumn} IS {build_update_value(vColumn)}"
                 for vColumn in ("title", "description", "missions", "requirements")
             )
             + " THEN job_offer.detected_skills ELSE NULL END"
@@ -674,6 +691,54 @@ def set_availability(pDatabaseFile, pSource, pSourceId, pAvailability, pNow):
         vConnection.close()
 
     logger.info("Disponibilité vérifiée : %s %s, %s", pSource, pSourceId, pAvailability)
+
+
+def get_offers_without_description(pDatabaseFile, pSources, pLimit):
+    """Retourne les offres jamais décrites des sources données, récentes en tête.
+
+    Une description vide (chaîne vide) signale une offre déjà essayée en vain.
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+    vConnection.row_factory = sqlite3.Row
+
+    try:
+        # Seuls des « ? » sont insérés : les sources passent en paramètres.
+        vRows = vConnection.execute(
+            f"""
+            SELECT source, source_id, url, description
+            FROM job_offer
+            WHERE description IS NULL
+            AND source IN ({", ".join("?" for _ in pSources)})
+            ORDER BY first_seen_at DESC
+            LIMIT ?
+            """,  # nosec B608
+            (*pSources, pLimit),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rOffers = [dict(vRow) for vRow in vRows]
+
+    return rOffers
+
+
+def mark_description_unavailable(pDatabaseFile, pSource, pSourceId):
+    """Note une description introuvable à la source : elle n'est plus redemandée."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        with vConnection:
+            vConnection.execute(
+                "UPDATE job_offer SET description = ''"
+                " WHERE source = ? AND source_id = ? AND description IS NULL",
+                (pSource, str(pSourceId)),
+            )
+
+    finally:
+        vConnection.close()
 
 
 def save_offer_description(pDatabaseFile, pSource, pSourceId, pDescription, pUrl):

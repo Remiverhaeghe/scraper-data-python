@@ -33,6 +33,7 @@
 <article class="card section-gap">
     <h2>{{ icon("bell-ring") }} Relances de la semaine</h2>
     <p class="card-subtitle">Un brouillon par candidature, à relire avant envoi. Notez la relance une fois le message parti : la suivante est programmée.</p>
+    {% if follow_up_message %}<p class="application-message tone-{{ follow_up_message[1] }}" role="status">{{ follow_up_message[0] }}</p>{% endif %}
     {% for follow_up in follow_ups %}
     <div class="follow-up">
         <span class="badge badge-{{ 'warning' if follow_up.follow_up_due else 'muted' }}">{{ "En retard" if follow_up.follow_up_due else "Cette semaine" }}</span>
@@ -40,8 +41,19 @@
             <a class="offer-title" href="{{ url_for('show_offer').path }}?source={{ follow_up.source | urlencode }}&id={{ follow_up.source_id | urlencode }}">{{ follow_up.title or "Offre sans titre" }}</a>
             <p class="muted">{{ follow_up.detail }}</p>
             <details>
-                <summary>Brouillon du message</summary>
+                <summary>Brouillon du message{% if can_send_email %}, à envoyer d'ici{% endif %}</summary>
+                {% if can_send_email %}
+                <form class="profile-form" method="post" action="{{ url_for('send_follow_up_email').path }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <input type="hidden" name="source" value="{{ follow_up.source }}">
+                    <input type="hidden" name="id" value="{{ follow_up.source_id }}">
+                    <label>Adresse du recruteur <input type="email" name="recipient" value="{{ follow_up.contact_email or '' }}" required maxlength="254" autocomplete="off"></label>
+                    <label>Message <textarea name="draft" rows="9" maxlength="5000" required>{{ follow_up.draft }}</textarea></label>
+                    <button class="button" type="submit">{{ icon("send", 16) }} Envoyer et noter la relance</button>
+                </form>
+                {% else %}
                 <textarea readonly rows="9" aria-label="Brouillon de relance">{{ follow_up.draft }}</textarea>
+                {% endif %}
             </details>
         </div>
         <form method="post" action="{{ url_for('mark_follow_up_done').path }}">

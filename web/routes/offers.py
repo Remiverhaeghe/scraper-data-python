@@ -45,6 +45,12 @@ from job.deduplication import (
 )
 from job.experience_fit import describe_experience_fit, mark_experience_fit
 from job.freshness import add_freshness
+from job.global_score import add_global_scores
+from job.suspicious_offers import (
+    find_suspicious_signs,
+    load_market_median,
+    mark_suspicious_offers,
+)
 from job.geocoding import (
     DISTANCE_FILTERS,
     add_distances,
@@ -52,7 +58,10 @@ from job.geocoding import (
     load_home,
     read_position,
 )
-from job.interview_journal import collect_asked_questions
+from job.interview_journal import (
+    collect_asked_questions,
+    collect_company_questions,
+)
 from job.interview_revision import build_offer_revision
 from job.manual_offers import (
     IMPORT_FORMATS,
@@ -64,6 +73,8 @@ from job.manual_offers import (
 )
 from job.offer_comparison import load_comparison_keys
 from job.offer_details import fetch_missing_description
+from job.offer_from_link import add_offer_from_link
+from job.offer_summary import build_offer_summary
 from job.offer_filters import OfferFilterChoices, build_offer_filters
 from job.preparation import (
     MATCH_FILTERS,
@@ -91,8 +102,10 @@ from job.presentation import (
     SCORE_FAIR,
     SCORE_GOOD,
     get_score_tone,
+    clean_missing_values,
     prepare_offer,
 )
+from job.preparation_sheet import build_preparation_sheet
 from job.profile import is_profile_empty, load_profile
 from job.quiz import THEME_STATUSES, load_active_quiz
 from job.quiz_exam import build_exam_history, describe_exam_results, load_exam_results
@@ -228,6 +241,16 @@ def list_offers(
     vGrouped = group_offers(vPrepared, get_decisions(pDatabaseFile))
     add_freshness(vGrouped, vNow)
     add_estimated_salaries(pDatabaseFile, vGrouped)
+    mark_suspicious_offers(pDatabaseFile, vGrouped)
+    add_global_scores(vGrouped, vSettings, (vHome or {}).get("alert_radius_km"))
+
+    if pSort == "global":
+        vGrouped.sort(
+            key=lambda pOffer: (
+                -1 if pOffer["global_score"] is None else pOffer["global_score"]
+            ),
+            reverse=True,
+        )
 
     if pSort == "fresh":
         vGrouped.sort(key=lambda pOffer: pOffer["freshness"], reverse=True)
@@ -447,6 +470,32 @@ def create_offer(
 
 
 @router.post(
+    "/offers/from-link",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def create_offer_from_link(
+    request: Request,
+    pUrl: str = Form("", alias="url"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Crée l'offre décrite par la page d'une annonce, ou explique pourquoi non."""
+
+    try:
+        vSourceId = add_offer_from_link(pDatabaseFile, pUrl, datetime.now())
+
+    except ValueError as vException:
+        rResponse = render_new_offer(request, None, str(vException), pStatus=400)
+
+    else:
+        rResponse = RedirectResponse(
+            build_offer_url(MANUAL_SOURCE, vSourceId), status_code=303
+        )
+
+    return rResponse
+
+
+@router.post(
     "/offers/import",
     response_class=HTMLResponse,
     dependencies=[Depends(require_csrf)],
@@ -530,6 +579,10 @@ def show_offer(
             "preparation": build_preparation(pDatabaseFile, vPrepared),
             "market_salary": describe_market_salary(vMarket),
             "negotiation": describe_negotiation(vMarket, vPrepared, vSettings),
+            "summary": build_offer_summary(vPrepared),
+            "suspicious_signs": find_suspicious_signs(
+                vPrepared, load_market_median(pDatabaseFile)
+            ),
             "experience_fit": describe_experience_fit(
                 vPrepared, vSettings["experience_years"]
             ),
@@ -541,6 +594,7 @@ def show_offer(
             "application": get_application(pDatabaseFile, pSource, pSourceId),
             "attachments": get_attachments(pDatabaseFile, pSource, pSourceId),
             "interview_notes": get_interview_notes(pDatabaseFile, pSource, pSourceId),
+            "company_questions": collect_company_questions(pDatabaseFile, vPrepared),
             "attachment_extensions": ALLOWED_EXTENSIONS,
             "in_comparison": (pSource, str(pSourceId)) in vComparisonKeys,
             "comparison_count": len(vComparisonKeys),
@@ -820,6 +874,26 @@ def build_exam_chart(pResults):
     return rChart
 
 
+@router.get("/offer/sheet", response_class=HTMLResponse)
+def show_preparation_sheet(
+    request: Request,
+    pSource: str = Query(alias="source"),
+    pSourceId: str = Query(alias="id"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche la fiche de préparation d'entretien, prête à imprimer en PDF."""
+
+    vOffer = clean_missing_values(get_existing_offer(pDatabaseFile, pSource, pSourceId))
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "preparation_sheet.html",
+        {"sheet": build_preparation_sheet(pDatabaseFile, vOffer)},
+    )
+
+    return rResponse
+
+
 def build_preparation(pDatabaseFile, pOffer):
     """Prépare la candidature pour une offre, ou None tant que le profil est vide."""
 
@@ -833,6 +907,7 @@ def build_preparation(pDatabaseFile, pOffer):
             pOffer,
             load_star_answers(pDatabaseFile),
             collect_asked_questions(pDatabaseFile),
+            load_interim_agencies(pDatabaseFile),
         )
     )
 

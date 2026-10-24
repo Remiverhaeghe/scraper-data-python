@@ -16,6 +16,7 @@ import segno
 
 from config import WEB_SCHEME, WEB_TLS_CERTFILE
 from job.access_tokens import check_access_token, get_access_token, renew_access_token
+from job.companies import load_company_rules, mark_preferred_companies
 from job.geocoding import load_home
 from job.interview_revision import find_offer_themes
 from job.preparation import match_offer
@@ -41,7 +42,11 @@ from job.quiz_types import (
 )
 from job.similar_offers import find_similar_offers
 from job.weekly_digest import get_new_offers
-from storage.job_applications import get_applications_with_offers, save_application
+from storage.job_applications import (
+    get_application,
+    get_applications_with_offers,
+    save_application,
+)
 from storage.job_offers import get_offer
 from storage.quiz_answers import get_last_answers, save_synced_answers
 from storage.quiz_questions import get_quiz_assets, get_quiz_guide, get_quiz_guides
@@ -83,6 +88,10 @@ MAX_PHONE_DESCRIPTION = 4000
 # relances, notes) se fait sur le PC.
 PHONE_STATUSES = ("INTERESTED", "APPLIED", "IGNORED")
 MAX_SYNC_STATUSES = 200
+
+# Notes rapides prises sur le téléphone, ajoutées à celles de la candidature
+MAX_SYNC_NOTES = 50
+MAX_PHONE_NOTE = 1000
 
 # Candidatures envoyées au téléphone pour réviser leurs thèmes : les plus récentes
 REVISION_STATUSES = ("INTERVIEW", "APPLIED")
@@ -538,6 +547,7 @@ def build_offer_list(pDatabaseFile, pNow):
     vProfile = load_profile(pDatabaseFile)
     vMatches = {id(vOffer): match_offer(vProfile, vOffer) for vOffer in vOffers}
     vRadius = (load_home(pDatabaseFile) or {}).get("alert_radius_km") or 0
+    mark_preferred_companies(vOffers, load_company_rules(pDatabaseFile))
 
     rOffers = [
         {
@@ -553,6 +563,8 @@ def build_offer_list(pDatabaseFile, pNow):
             # Position pour la carte, et offre dans le rayon des alertes
             "latitude": vOffer.get("latitude"),
             "longitude": vOffer.get("longitude"),
+            # Entreprise de la veille : signalée même si l'offre est peu notée
+            "preferred": vOffer["company_preferred"],
             "near": bool(
                 vRadius
                 and vOffer.get("distance_km") is not None
@@ -606,6 +618,90 @@ def sync_status_changes(pDatabaseFile, pChanges, pNow):
         "Statuts d'offres du téléphone : %s appliqué(s), %s refusé(s)",
         vApplied,
         len(vRejected),
+    )
+
+    rReport = {"applied": vApplied, "rejected": vRejected}
+
+    return rReport
+
+
+def read_phone_note(pNote, pNow):
+    """Vérifie une note du téléphone ; retourne (source, identifiant, ligne datée).
+
+    Lève ValueError si la note est vide, trop longue ou mal datée.
+    """
+
+    if not isinstance(pNote, dict):
+        raise ValueError("format inattendu")
+
+    vText = " ".join(str(pNote.get("text") or "").split())
+
+    if not vText or len(vText) > MAX_PHONE_NOTE:
+        raise ValueError(f"note vide ou de plus de {MAX_PHONE_NOTE} caractères")
+
+    try:
+        vWrittenAt = datetime.fromisoformat(str(pNote.get("written_at"))).replace(
+            tzinfo=None
+        )
+
+    except ValueError as vException:
+        raise ValueError("date de note illisible") from vException
+
+    if not pNow - MAX_ANSWER_AGE <= vWrittenAt <= pNow + MAX_CLOCK_DRIFT:
+        raise ValueError("date de note hors limites")
+
+    rNote = (
+        str(pNote.get("source") or ""),
+        str(pNote.get("source_id") or ""),
+        f"[{vWrittenAt:%d/%m/%Y %H:%M}, téléphone] {vText}",
+    )
+
+    return rNote
+
+
+def sync_phone_notes(pDatabaseFile, pNotes, pNow):
+    """Ajoute aux candidatures les notes rapides prises sur le téléphone.
+
+    Une offre sans suivi passe en « Intéressé » : la note montre un intérêt. Une
+    note déjà reçue n'est pas ajoutée deux fois, si le téléphone renvoie un lot.
+    """
+
+    if not isinstance(pNotes, list) or len(pNotes) > MAX_SYNC_NOTES:
+        raise ValueError(f"Liste de {MAX_SYNC_NOTES} notes au plus attendue.")
+
+    vApplied = 0
+    vRejected = []
+
+    for vNote in pNotes:
+        try:
+            vSource, vSourceId, vLine = read_phone_note(vNote, pNow)
+
+        except ValueError as vException:
+            vRejected.append(str(vException))
+            continue
+
+        if get_offer(pDatabaseFile, vSource, vSourceId) is None:
+            vRejected.append(f"{vSource}/{vSourceId} : offre inconnue")
+            continue
+
+        vApplication = get_application(pDatabaseFile, vSource, vSourceId) or {}
+        vNotes = vApplication.get("notes") or ""
+
+        if vLine not in vNotes:
+            save_application(
+                pDatabaseFile,
+                vSource,
+                vSourceId,
+                vApplication.get("status") or "INTERESTED",
+                pNotes="\n".join(vPart for vPart in (vNotes, vLine) if vPart),
+                pNow=pNow,
+            )
+
+        vApplied += 1
+
+    # Le texte des notes n'est pas journalisé : il peut être personnel.
+    logger.info(
+        "Notes du téléphone : %s ajoutée(s), %s refusée(s)", vApplied, len(vRejected)
     )
 
     rReport = {"applied": vApplied, "rejected": vRejected}

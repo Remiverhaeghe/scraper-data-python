@@ -9,6 +9,8 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:workmanager/workmanager.dart';
 
+import '../logic/interview_alerts.dart';
+
 /// Heure du rappel, chaque jour.
 const reminderHour = 18;
 const reminderMinute = 30;
@@ -16,6 +18,11 @@ const reminderMinute = 30;
 const reminderId = 1;
 const offersNotificationId = 2;
 const repliesNotificationId = 3;
+const withdrawnNotificationId = 4;
+
+// Rappels d'entretien : identifiants réservés, un par rappel
+const firstInterviewAlertId = 100;
+const maxInterviewAlerts = 20;
 
 /// Résume une réponse : « Entretien chez Kiabi le 05/11 à 14:00 », « Refus de Kiabi ».
 String describeReply(Map<String, dynamic> pReply) {
@@ -34,8 +41,6 @@ String describeReply(Map<String, dynamic> pReply) {
 
   return rText;
 }
-
-String twoDigits(int pValue) => pValue.toString().padLeft(2, '0');
 
 /// Vérification des offres en arrière-plan : Android la lance au mieux toutes les
 /// trois heures, seulement avec une connexion réseau.
@@ -57,6 +62,12 @@ abstract class Reminders {
 
   /// Signale les réponses de recruteurs repérées par le PC, en une seule notification.
   Future<void> showReplies(List<Map<String, dynamic>> pReplies);
+
+  /// Signale les offres suivies que leur site a retirées.
+  Future<void> showWithdrawn(List<Map<String, dynamic>> pOffers);
+
+  /// Remplace les rappels d'entretien par ceux donnés.
+  Future<void> scheduleInterviews(List<InterviewAlert> pAlerts);
 
   /// Lance ou arrête la vérification périodique des offres en arrière-plan.
   Future<void> scheduleOfferChecks(bool pEnabled);
@@ -189,6 +200,57 @@ class LocalReminders implements Reminders {
     );
 
     log('Notification de ${pReplies.length} réponse(s) de recruteur', name: 'réponses');
+  }
+
+  @override
+  Future<void> showWithdrawn(List<Map<String, dynamic>> pOffers) async {
+    await initialize();
+
+    await plugin.show(
+      id: withdrawnNotificationId,
+      title: pOffers.length == 1
+          ? 'Offre suivie retirée'
+          : '${pOffers.length} offres suivies retirées',
+      body: pOffers.take(3).map((vOffer) => '${vOffer['title'] ?? 'Offre'}').join(' · '),
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'withdrawn',
+          'Offres retirées',
+          channelDescription: 'Offres suivies que leur site ne publie plus',
+        ),
+      ),
+    );
+
+    log('Notification de ${pOffers.length} offre(s) retirée(s)', name: 'offres');
+  }
+
+  @override
+  Future<void> scheduleInterviews(List<InterviewAlert> pAlerts) async {
+    await initialize();
+
+    // Un entretien déplacé ou annulé ne doit pas laisser d'ancien rappel.
+    for (var vIndex = 0; vIndex < maxInterviewAlerts; vIndex++) {
+      await plugin.cancel(id: firstInterviewAlertId + vIndex);
+    }
+
+    for (final (vIndex, vAlert) in pAlerts.take(maxInterviewAlerts).indexed) {
+      await plugin.zonedSchedule(
+        id: firstInterviewAlertId + vIndex,
+        scheduledDate: tz.TZDateTime.from(vAlert.at, tz.local),
+        title: vAlert.title,
+        body: vAlert.body,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'interviews',
+            "Rappels d'entretien",
+            channelDescription: 'La veille et une heure avant chaque entretien',
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    }
+
+    log("${pAlerts.length} rappel(s) d'entretien planifié(s)", name: 'entretiens');
   }
 
   @override

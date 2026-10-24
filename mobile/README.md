@@ -26,7 +26,11 @@ lisible hors ligne (description, compétences couvertes et manquantes, salaire)
 avec l'emplacement de l'offre ouvert dans OpenStreetMap, tri rapide des offres
 d'un glissement, notification des réponses de recruteurs repérées par le PC,
 offres proches de vos candidatures signalées, simulation d'entretien
-technique et auto-évaluation des compétences, envoyées au PC à la synchronisation.
+technique et auto-évaluation des compétences, envoyées au PC à la synchronisation,
+rappel de chaque entretien la veille à 18 h et une heure avant, notification des
+offres suivies retirées par leur site et des nouvelles offres des entreprises
+privilégiées, révision express de 5 minutes avec compte à rebours, note rapide sur
+une offre ajoutée aux notes de la candidature sur le PC.
 
 ## Installation des outils (une fois)
 
@@ -155,7 +159,8 @@ mobile/
 │   │   ├── review.dart           # Répétition espacée, identique à job/quiz.py
 │   │   ├── exam.dart             # Examen blanc : tirage, durée conseillée, résultat
 │   │   ├── statistics.dart       # Réussite par thème et activité des derniers jours
-│   │   └── offer_alerts.dart     # Nouvelles offres assez proches du profil pour une alerte
+│   │   ├── offer_alerts.dart     # Nouvelles offres assez proches du profil pour une alerte
+│   │   └── interview_alerts.dart # Rappels d'entretien : la veille à 18 h et une heure avant
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
 │   │   ├── discovery.dart        # Recherche du serveur sur le réseau local
@@ -197,6 +202,10 @@ mobile/
     ├── triage_test.dart          # Teste le tri rapide des offres
     ├── offer_alerts_test.dart    # Teste l'alerte des nouvelles offres bien notées
     ├── interview_skills_test.dart # Teste simulation, auto-évaluation et fiche d'offre
+    ├── interview_alerts_test.dart # Teste les dates des rappels d'entretien
+    ├── withdrawn_offers_test.dart # Teste la notification unique des offres retirées
+    ├── sprint_test.dart          # Teste le temps restant et le bilan de la révision express
+    ├── offer_notes_test.dart     # Teste l'envoi unique des notes rapides au PC
     ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond
     ├── review_input_test.dart    # Teste la saisie d'une revue de code
     ├── integration/

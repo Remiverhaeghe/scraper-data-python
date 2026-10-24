@@ -9,9 +9,11 @@ from job.interview_revision import (
     build_offer_revision,
     describe_offer_exam,
     find_offer_themes,
+    start_missing_skills_exam,
     start_offer_exam,
     start_skills_exam,
 )
+from job.profile import EMPTY_PROFILE, save_profile
 from job.quiz import load_quiz
 from storage.database import initialize_database
 
@@ -110,3 +112,24 @@ def test_skills_exam_covers_the_themes_of_the_skills(tmp_path):
 
     with pytest.raises(ValueError):
         start_skills_exam(vDatabaseFile, vQuiz, ["Compétence inconnue"], NOW)
+
+
+def test_missing_skills_exam_targets_the_profile_gaps(database_file):
+    """Vérifie l'examen sur les manques : titre de l'offre, refus sans manque."""
+
+    vQuiz = load_quiz()
+
+    vExam = start_missing_skills_exam(database_file, vQuiz, OFFER, NOW)
+
+    assert vExam["title"] == (
+        "Compétences manquantes · Entretien : Développeur Python chez Entreprise A"
+    )
+    assert vExam["ids"]
+
+    save_profile(
+        database_file,
+        {**EMPTY_PROFILE, "skills": ["Python", "FastAPI", "PostgreSQL", "Docker"]},
+    )
+
+    with pytest.raises(ValueError, match="couvre déjà"):
+        start_missing_skills_exam(database_file, vQuiz, OFFER, NOW)

@@ -79,6 +79,10 @@
 
                 {% call detail("scale", "Marché") %}{{ market_salary }}{% endcall %}
 
+                {% if suspicious_signs %}
+                {% call detail("circle-alert", "Prudence") %}Annonce douteuse : {{ suspicious_signs | join(", ") }}. Vérifiez l'entreprise avant de répondre ou d'envoyer des documents.{% endcall %}
+                {% endif %}
+
                 {% if negotiation %}
                 {% call detail("banknote", "Négociation") %}{{ negotiation }}{% endcall %}
                 {% endif %}
@@ -174,6 +178,7 @@
                 {% if preparation.cv %} · CV conseillé : <strong>{{ preparation.cv.name }}</strong>{% endif %}
             </p>
             <p class="muted">Couvertes : {{ preparation.match.covered | join(", ") or "aucune" }}<br>Manquantes : {{ preparation.missing_text }}</p>
+            <p><a class="button" href="{{ url_for('show_preparation_sheet').path }}?source={{ offer.source | urlencode }}&amp;id={{ offer.source_id | urlencode }}" target="_blank" rel="noopener">{{ icon("file-text", 16) }} Fiche de préparation à imprimer</a></p>
             {% if preparation.score_lines %}
             <details>
                 <summary>Pourquoi ce score ?</summary>
@@ -190,6 +195,18 @@
             </ul>
             <h3>Points à préparer</h3>
             <ul>{% for gap in preparation.interview.gaps %}<li>{{ gap }}</li>{% else %}<li class="muted">Aucun</li>{% endfor %}</ul>
+            {% if preparation.interview.pitch %}
+            <h3>Mon pitch</h3>
+            <p><strong>30 secondes :</strong> {{ preparation.interview.pitch.short }}</p>
+            <details>
+                <summary>Version 2 minutes</summary>
+                <p>{{ preparation.interview.pitch.long }}</p>
+            </details>
+            {% endif %}
+            {% if preparation.interview.tricky %}
+            <h3>Questions pièges · {{ preparation.interview.tricky.employer }}</h3>
+            <ul>{% for item in preparation.interview.tricky.questions %}<li><strong>{{ item.question }}</strong><br>{{ item.hint }}</li>{% endfor %}</ul>
+            {% endif %}
             <h3>Questions du recruteur</h3>
             <ul>{% for answer in preparation.interview.answers %}<li><strong>{{ answer.question }}</strong><br>{{ answer.hint }}</li>{% endfor %}</ul>
             {% if preparation.interview.asked %}
@@ -245,6 +262,9 @@
                 <input type="hidden" name="source" value="{{ offer.source }}">
                 <input type="hidden" name="id" value="{{ offer.source_id }}">
                 <button class="button button-primary" type="submit">{{ icon("timer", 16) }} Examen blanc ({{ revision.exam_count }} questions)</button>
+                {% if preparation and preparation.match.missing %}
+                <button class="button" type="submit" name="missing" value="true" title="Seulement les thèmes de : {{ preparation.match.missing | join(', ') }}">{{ icon("target", 16) }} Réviser mes manques</button>
+                {% endif %}
             </form>
             {% if exam_results %}<p class="muted">{{ exam_results }}</p>{% endif %}
             {% if exam_chart %}{{ ui.bar_chart(exam_chart, "Notes des examens blancs") }}{% endif %}
@@ -270,6 +290,15 @@
             {% include "_prompt.html" %}
             {% endfor %}
         </details>
+
+        {% if summary %}
+        <article class="card">
+            <h2>L'essentiel</h2>
+            <dl class="offer-summary">
+                {% for label, text in summary %}<dt>{{ label }}</dt><dd>{{ text }}</dd>{% endfor %}
+            </dl>
+        </article>
+        {% endif %}
 
         <article class="card">
             <h2>Description</h2>

@@ -128,6 +128,26 @@ def build_expired_offers_email(pOffers):
     return rEmail
 
 
+def list_withdrawn_offers(pDatabaseFile):
+    """Retourne les offres suivies que leur site a retirées, pour les signaler."""
+
+    rOffers = [
+        {
+            "source": vApplication["source"],
+            "source_id": str(vApplication["source_id"]),
+            "title": vApplication.get("title"),
+            "company": vApplication.get("company"),
+            "status": vApplication["status"],
+        }
+        for vApplication in get_applications_with_offers(
+            pDatabaseFile, FOLLOWED_STATUSES
+        )
+        if vApplication.get("availability") == "expired"
+    ]
+
+    return rOffers
+
+
 def count_alerts(pDatabaseFile, pNow):
     """Compte ce qui demande une action : relances dues et offres suivies retirées."""
 

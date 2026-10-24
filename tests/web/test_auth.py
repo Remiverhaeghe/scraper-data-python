@@ -218,6 +218,7 @@ def test_logout_closes_the_session(anonymous_client):
     )
 
     assert vResponse.status_code == 303
+    assert vResponse.headers["Clear-Site-Data"] == '"cache", "storage"'
     assert anonymous_client.get("/", follow_redirects=False).status_code == 303
 
 

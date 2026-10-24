@@ -10,8 +10,10 @@ from job.health import build_health, find_silent_sources, format_age
 from job.geocoding import HOME_KEY
 from job.mobile_sync import build_offer_list, renew_mobile_token
 from job.schedule import mark_schedule_run, save_schedule_options, save_scheduled_search
+from scraper.history import HistoryEntry
 from storage.backup import backup_database
 from storage.database import initialize_database
+from storage.history_repository import save_history
 from storage.settings_repository import save_json_setting
 from utils.tls import create_certificate, read_expiry
 
@@ -80,7 +82,7 @@ def test_unreadable_check_does_not_hide_the_others(database_file, monkeypatch):
     vChecks = get_checks(database_file)
 
     assert vChecks["Sources"] == ("Illisible : voir les journaux", "danger")
-    assert len(vChecks) == 13
+    assert len(vChecks) == 16
     assert format_age(NOW - timedelta(days=5), NOW) == "il y a 5 jours"
 
 
@@ -164,3 +166,55 @@ def test_backup_integrity_check(database_file):
 
     assert vTone == "danger"
     assert vValue.startswith("1 sauvegarde(s) endommagée(s)")
+
+
+def test_last_run_partial_and_success(database_file):
+    """Vérifie la dernière recherche réussie, puis partielle avec sa source en erreur."""
+
+    def save_run(pStatus, pError=None, pHour=8):
+        save_history(
+            database_file,
+            HistoryEntry(
+                started_at=datetime(2026, 10, 19, pHour, 30),
+                scraper_type="job",
+                url="multi-source",
+                page_count=2,
+                item_count=42,
+                duration_seconds=3.0,
+                status=pStatus,
+                error_message=pError,
+            ),
+        )
+
+    save_run("success")
+
+    assert get_checks(database_file)["Dernière recherche"] == (
+        "19/10/2026 08:30 : 42 offre(s)",
+        "success",
+    )
+
+    save_run("partial", "Careerjet : adresse IP 192.0.2.7 refusée", 9)
+    vValue, vTone = get_checks(database_file)["Dernière recherche"]
+
+    assert vTone == "warning"
+    assert vValue.endswith(
+        "source(s) en erreur : Careerjet : adresse IP 192.0.2.7 refusée"
+    )
+
+
+def test_gmail_and_description_checks(database_file, monkeypatch):
+    """Vérifie l'indicateur Gmail, sans puis avec configuration, et les descriptions."""
+
+    monkeypatch.delenv("GMAIL_ADDRESS", raising=False)
+
+    assert get_checks(database_file)["Réponses Gmail"][1] == "muted"
+
+    monkeypatch.setenv("GMAIL_ADDRESS", "moi@exemple.fr")
+    monkeypatch.setenv("GMAIL_APP_PASSWORD", "secret")
+    save_json_setting(database_file, "last_reply_check", "2026-10-19T09:00:00")
+
+    vValue, vTone = get_checks(database_file)["Réponses Gmail"]
+
+    assert vTone == "success"
+    assert vValue.startswith("Lu aujourd'hui à 09:00")
+    assert get_checks(database_file)["Descriptions"][1] == "success"

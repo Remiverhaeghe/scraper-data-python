@@ -152,6 +152,8 @@ def test_reset_database_empties_tables_and_keeps_schema(database_file):
 
     assert count_offers(database_file) == 0
     assert count_rows(database_file, "job_application") == 0
+    assert count_rows(database_file, "application_history") == 0
+    assert count_rows(vBackupFile, "application_history") >= 1
     assert load_schedule(database_file)["email"] is None
     assert count_rows(vBackupFile, "job_offer") == 1
 

@@ -5,12 +5,13 @@ from datetime import datetime
 import pandas as pd
 from PySide6.QtWidgets import QPushButton
 
+import gui.skills_page as skills_page
 from gui.skills_page import SkillsPage
 from storage.database import initialize_database
 from storage.job_offers import save_offers
 
 
-def test_skills_page_shows_rows_and_actions(qt_application, tmp_path):
+def test_skills_page_shows_rows_and_actions(qt_application, tmp_path, monkeypatch):
     """Vérifie le tableau, les chiffres clés et les signaux des actions."""
 
     vDatabaseFile = tmp_path / "scraper.db"
@@ -49,6 +50,17 @@ def test_skills_page_shows_rows_and_actions(qt_application, tmp_path):
 
     assert vRevised == ["python"]
     assert vPrepared == ["Cloud et infrastructure (AWS, Azure)"]
+    assert vPage.table.item(vSkills["AWS"], 0).toolTip().startswith("Amazon")
+
+    vShown = []
+    monkeypatch.setattr(
+        skills_page,
+        "show_text_dialog",
+        lambda *pArgs, **pOptions: vShown.append(pOptions),
+    )
+    vPage.show_glossary()
+
+    assert "<b>Docker</b>" in vShown[0]["pHtml"]
 
 
 def test_skills_rows_fit_their_button(qt_application, tmp_path):

@@ -70,6 +70,16 @@ def test_theme_buttons_emit_choice(qt_application, tmp_path):
 
     assert vRequested == ["dark"]
 
+    vScales = []
+    vPage.text_scale_requested.connect(vScales.append)
+    vScaleButtons = vPage.text_scale_buttons.buttons()
+
+    assert vScaleButtons[1].isChecked()
+
+    vScaleButtons[3].click()
+
+    assert vScales == [130]
+
     vPage.set_actions_enabled(False)
 
     assert not vButtons[2].isEnabled()
@@ -421,6 +431,80 @@ def test_archive_is_exported_then_restored(qt_application, tmp_path, monkeypatch
     vPage.data_panel.restore_archive_button.click()
 
     assert vMessages[0].startswith("Sauvegarde restaurée.")
+
+
+def test_personal_data_is_exported(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'export lisible des données personnelles, puis l'échec signalé."""
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+    vTarget = tmp_path / "mes-donnees.zip"
+
+    monkeypatch.setattr(
+        data_panel.QFileDialog,
+        "getSaveFileName",
+        lambda *pArgs: (str(vTarget), ""),
+    )
+    vPage.data_panel.personal_data_button.click()
+
+    assert vTarget.is_file()
+    assert vPage.data_panel.archive_message.text().startswith("Données exportées")
+
+    vPage.data_panel.export_personal_data(tmp_path / "absent" / "export.zip")
+
+    assert "a échoué" in vPage.data_panel.archive_message.text()
+
+
+def test_usb_copy_is_encrypted_then_restored(qt_application, tmp_path, monkeypatch):
+    """Vérifie la copie chiffrée sur clé, le refus de mots de passe différents,
+    puis la restauration confirmée.
+    """
+
+    vPage = create_page(tmp_path / "scraper.db", monkeypatch)
+    vPanel = vPage.data_panel
+    vUsb = tmp_path / "usb"
+    vUsb.mkdir()
+    vPasswords = iter(
+        ["mot-de-passe-1", "mot-de-passe-2", "cle-usb-solide", "cle-usb-solide"]
+    )
+    vMessages = []
+    vPage.data_reset.connect(vMessages.append)
+
+    monkeypatch.setattr(
+        data_panel.QFileDialog, "getExistingDirectory", lambda *pArgs: str(vUsb)
+    )
+    monkeypatch.setattr(
+        data_panel.QInputDialog,
+        "getText",
+        lambda *pArgs: (next(vPasswords), True),
+    )
+
+    vPanel.usb_export_button.click()
+
+    assert vPanel.usb_message.text() == "Les deux mots de passe diffèrent."
+
+    vPanel.usb_export_button.click()
+    vCopy = next(vUsb.glob("*.jbk"))
+
+    assert vPanel.usb_message.text().startswith("Sauvegarde chiffrée : jobboard-")
+
+    monkeypatch.setattr(
+        data_panel.QFileDialog, "getOpenFileName", lambda *pArgs: (str(vCopy), "")
+    )
+    monkeypatch.setattr(
+        data_panel.QInputDialog, "getText", lambda *pArgs: ("cle-usb-solide", True)
+    )
+    monkeypatch.setattr(
+        data_panel.QMessageBox,
+        "warning",
+        lambda *pArgs: data_panel.QMessageBox.StandardButton.Yes,
+    )
+    vPanel.usb_restore_button.click()
+
+    assert vMessages[0].startswith("Sauvegarde chiffrée restaurée.")
+
+    vPanel.restore_from_usb(vCopy, "mauvais-mot-de-passe")
+
+    assert vPanel.usb_message.text().startswith("Mot de passe incorrect")
 
 
 def test_archive_restore_reports_refused_file(qt_application, tmp_path, monkeypatch):

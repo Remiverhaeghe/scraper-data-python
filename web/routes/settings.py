@@ -45,6 +45,7 @@ from job.schedule import (
     save_min_score,
 )
 from job.presentation import describe_backup
+from job.personal_export import export_personal_data
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
 from job.sources.config import SOURCE_CATEGORIES
 from job.sources.registry import SOURCES
@@ -400,6 +401,30 @@ def subscribe_calendar(
     rResponse = Response(
         build_calendar(pDatabaseFile, datetime.now()),
         media_type="text/calendar; charset=utf-8",
+    )
+
+    return rResponse
+
+
+@router.get("/settings/personal-data")
+def download_personal_data(pDatabaseFile: str = Depends(get_database_file)):
+    """Télécharge vos données personnelles en JSON lisible, pièces jointes comprises."""
+
+    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as vFile:
+        vPath = Path(vFile.name)
+
+    try:
+        export_personal_data(pDatabaseFile, vPath, datetime.now())
+
+    except Exception:
+        vPath.unlink(missing_ok=True)
+        raise
+
+    rResponse = FileResponse(
+        vPath,
+        media_type="application/zip",
+        filename=f"mes-donnees-jobboard-{datetime.now():%Y%m%d}.zip",
+        background=BackgroundTask(vPath.unlink, missing_ok=True),
     )
 
     return rResponse

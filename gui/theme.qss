@@ -698,26 +698,26 @@ QSplitter::handle {
 
 QScrollBar:vertical {
     background: transparent;
-    width: 10px;
+    width: 12px;
     margin: 2px;
 }
 
 QScrollBar:horizontal {
     background: transparent;
-    height: 10px;
+    height: 12px;
     margin: 2px;
 }
 
 QScrollBar::handle:vertical,
 QScrollBar::handle:horizontal {
-    background: $border;
-    border-radius: 3px;
+    background: $muted;
+    border-radius: 4px;
     min-height: 30px;
     min-width: 30px;
 }
 
 QScrollBar::handle:hover {
-    background: $muted;
+    background: $primary;
 }
 
 QScrollBar::add-line,

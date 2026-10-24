@@ -1,5 +1,6 @@
 """Journal d'entretien : questions posées à reprendre en révision et en réponses STAR"""
 
+from job.fingerprint import normalize_company
 from job.presentation import format_date
 from storage.interview_notes import add_interview_note, get_interview_notes
 from utils.logger import get_logger
@@ -72,6 +73,28 @@ def collect_asked_questions(pDatabaseFile):
     rQuestions = [
         {"question": vQuestion, "context": describe_note(vNote)}
         for vNote in get_interview_notes(pDatabaseFile)
+        for vQuestion in split_questions(vNote["questions"])
+    ]
+
+    return rQuestions
+
+
+def collect_company_questions(pDatabaseFile, pOffer):
+    """Retourne les questions déjà posées par l'entreprise de l'offre, lors des
+    entretiens pour ses autres offres.
+    """
+
+    vKey = normalize_company(pOffer.get("company"))
+
+    if not vKey:
+        return []
+
+    rQuestions = [
+        {"question": vQuestion, "context": describe_note(vNote)}
+        for vNote in get_interview_notes(pDatabaseFile)
+        if normalize_company(vNote.get("company")) == vKey
+        and (vNote["source"], vNote["source_id"])
+        != (pOffer["source"], str(pOffer["source_id"]))
         for vQuestion in split_questions(vNote["questions"])
     ]
 

@@ -7,6 +7,7 @@ import pytest
 
 from job.companies import (
     add_company_rule,
+    find_preferred_offers,
     build_company_filter_keys,
     describe_company_applications,
     find_company_applications,
@@ -137,3 +138,17 @@ def test_company_applications_warning(database_file):
     assert describe_company_applications(
         find_company_applications(database_file, vOffer)
     ) == ("Déjà 1 candidature(s) dans cette entreprise : Java (Postulé, le 11/10/2026)")
+
+
+def test_preferred_companies_offers_are_watched(database_file):
+    """Vérifie les offres récentes des entreprises privilégiées, et rien sans liste."""
+
+    vSince = datetime(2000, 1, 1)
+
+    assert find_preferred_offers(database_file, vSince) == []
+
+    save_company_rules(database_file, "", "Acme")
+
+    assert sorted(
+        vOffer["source_id"] for vOffer in find_preferred_offers(database_file, vSince)
+    ) == ["1", "2"]

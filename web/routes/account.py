@@ -164,6 +164,10 @@ def logout():
     rResponse = RedirectResponse(router.url_path_for("show_login"), status_code=303)
     rResponse.delete_cookie(SESSION_COOKIE)
 
+    # Les copies de pages gardées pour le hors connexion contiennent offres et
+    # candidatures : le navigateur les efface à la déconnexion.
+    rResponse.headers["Clear-Site-Data"] = '"cache", "storage"'
+
     return rResponse
 
 

@@ -12,6 +12,11 @@ EXTRA_SOURCE_POINTS = 10
 # ou annonce republiée pour constituer un vivier de candidats.
 RECURRING_DAYS = 45
 
+# Écart entre la publication annoncée et la première vue au-delà duquel l'offre
+# est dite republiée (vue bien avant sa « publication ») ou ancienne chez la
+# source (publiée bien avant d'être trouvée).
+SOURCE_GAP_DAYS = 30
+
 
 def get_offer_date(pOffer):
     """Retourne la date de publication, ou à défaut de première récupération."""
@@ -64,6 +69,40 @@ def count_online_days(pOffer, pNow):
     return rDays
 
 
+def read_date(pValue):
+    """Retourne une date ISO en datetime, ou None si elle est absente ou illisible."""
+
+    try:
+        rDate = datetime.fromisoformat(str(pValue)[:19]) if pValue else None
+
+    except ValueError:
+        rDate = None
+
+    return rDate
+
+
+def describe_source_age(pOffer):
+    """Retourne (republiée, ancienneté chez la source en jours ou None).
+
+    La publication annoncée par la source est comparée à la première vue.
+    """
+
+    vPublished = read_date(pOffer.get("published_at"))
+    vFirstSeen = read_date(pOffer.get("first_seen_at"))
+
+    if vPublished is None or vFirstSeen is None:
+        return (False, None)
+
+    vGap = (vPublished - vFirstSeen).days
+
+    rAge = (
+        vGap > SOURCE_GAP_DAYS,
+        -vGap if -vGap > SOURCE_GAP_DAYS else None,
+    )
+
+    return rAge
+
+
 def add_freshness(pOffers, pNow):
     """Ajoute à chaque offre regroupée son score de fraîcheur et son ancienneté.
 
@@ -75,3 +114,6 @@ def add_freshness(pOffers, pNow):
 
         vDays = count_online_days(vOffer, pNow)
         vOffer["recurring_days"] = vDays if vDays >= RECURRING_DAYS else None
+        vOffer["republished"], vOffer["old_at_source_days"] = describe_source_age(
+            vOffer
+        )

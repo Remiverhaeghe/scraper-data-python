@@ -61,6 +61,12 @@ def test_load_settings_returns_defaults(database_file):
         "target_net_salary": 0,
         "archive_after_days": 0,
         "experience_years": 0,
+        "daily_digest_hour": 0,
+        "weight_match": 5,
+        "weight_distance": 3,
+        "weight_salary": 2,
+        "weight_freshness": 2,
+        "weight_employer": 1,
     }
 
 

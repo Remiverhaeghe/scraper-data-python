@@ -116,6 +116,55 @@ SETTING_DEFINITIONS = {
         1,
         "ans",
     ),
+    "daily_digest_hour": SettingDefinition(
+        "Récapitulatif quotidien",
+        "Heure d'envoi du récapitulatif du jour par e-mail : offres, relances, "
+        "entretiens du lendemain. 0 : désactivé.",
+        0,
+        23,
+        1,
+        "h",
+    ),
+    "weight_match": SettingDefinition(
+        "Score global : profil",
+        "Poids de la correspondance au profil dans le score global. 0 : ignorée.",
+        0,
+        10,
+        1,
+        "poids",
+    ),
+    "weight_distance": SettingDefinition(
+        "Score global : distance",
+        "Poids de la proximité du domicile (télétravail compris). 0 : ignorée.",
+        0,
+        10,
+        1,
+        "poids",
+    ),
+    "weight_salary": SettingDefinition(
+        "Score global : salaire",
+        "Poids du salaire comparé au salaire visé. 0 : ignoré.",
+        0,
+        10,
+        1,
+        "poids",
+    ),
+    "weight_freshness": SettingDefinition(
+        "Score global : fraîcheur",
+        "Poids de la fraîcheur de l'annonce. 0 : ignorée.",
+        0,
+        10,
+        1,
+        "poids",
+    ),
+    "weight_employer": SettingDefinition(
+        "Score global : employeur",
+        "Poids du type d'employeur : client final, ESN, intérim. 0 : ignoré.",
+        0,
+        10,
+        1,
+        "poids",
+    ),
 }
 
 # Réglages dont la modification change le net des offres déjà enregistrées
@@ -144,6 +193,12 @@ def get_default_settings():
         "target_net_salary": 0,
         "archive_after_days": 0,
         "experience_years": 0,
+        "daily_digest_hour": 0,
+        "weight_match": 5,
+        "weight_distance": 3,
+        "weight_salary": 2,
+        "weight_freshness": 2,
+        "weight_employer": 1,
     }
 
     return rSettings

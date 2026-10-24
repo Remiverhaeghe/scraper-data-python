@@ -6,7 +6,8 @@ comme pour le classement des thèmes conseillés de la page Révision.
 
 import random
 
-from job.preparation import get_offer_skills, get_offer_text
+from job.preparation import get_offer_skills, get_offer_text, match_offer
+from job.profile import load_profile
 from job.quiz import (
     MIN_MATCHED_SKILLS,
     build_quiz_overview,
@@ -87,9 +88,16 @@ def describe_offer_exam(pOffer):
     return rTitle
 
 
-def start_skills_exam(pDatabaseFile, pQuiz, pSkills, pNow, pRandom=random):
-    """Commence un examen blanc sur les thèmes de compétences données, celles à
-    travailler en priorité d'après Mon marché.
+def start_skills_exam(
+    pDatabaseFile,
+    pQuiz,
+    pSkills,
+    pNow,
+    pRandom=random,
+    pTitle="Compétences prioritaires du marché",
+):
+    """Commence un examen blanc sur les thèmes de compétences données : celles à
+    travailler en priorité d'après Mon marché, ou celles qui manquent pour une offre.
 
     Lève ValueError si aucun thème de révision ne couvre ces compétences.
     """
@@ -102,9 +110,7 @@ def start_skills_exam(pDatabaseFile, pQuiz, pSkills, pNow, pRandom=random):
             "questions avec ChatGPT depuis la page Compétences."
         )
 
-    logger.info(
-        "Examen blanc sur les compétences prioritaires : %s thème(s)", len(vKeys)
-    )
+    logger.info("Examen blanc « %s » : %s thème(s)", pTitle, len(vKeys))
 
     rExam = start_exam(
         pDatabaseFile,
@@ -113,7 +119,32 @@ def start_skills_exam(pDatabaseFile, pQuiz, pSkills, pNow, pRandom=random):
         pNow,
         pRandom,
         pThemeKeys=set(vKeys),
-        pTitle="Compétences prioritaires du marché",
+        pTitle=pTitle,
+    )
+
+    return rExam
+
+
+def start_missing_skills_exam(pDatabaseFile, pQuiz, pOffer, pNow, pRandom=random):
+    """Commence un examen blanc limité aux compétences de l'offre absentes du profil.
+
+    Lève ValueError si le profil les couvre toutes ou si aucun thème ne les couvre.
+    """
+
+    vMissing = match_offer(load_profile(pDatabaseFile), pOffer)["missing"]
+
+    if not vMissing:
+        raise ValueError(
+            "Votre profil couvre déjà toutes les compétences repérées dans l'offre."
+        )
+
+    rExam = start_skills_exam(
+        pDatabaseFile,
+        pQuiz,
+        vMissing,
+        pNow,
+        pRandom,
+        pTitle=f"Compétences manquantes · {describe_offer_exam(pOffer)}",
     )
 
     return rExam

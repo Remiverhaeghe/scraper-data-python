@@ -5,15 +5,18 @@ import sqlite3
 import pytest
 
 from storage.database import (
-    MIGRATIONS,
     connect_database,
+    count_by_day,
     get_database_version,
     get_schema_version,
     initialize_database,
-    count_by_day,
+)
+from storage.migrations import (
+    MIGRATIONS,
     migrate_to_v1,
     migrate_to_v27,
     migrate_to_v29,
+    migrate_to_v30,
 )
 
 
@@ -567,3 +570,28 @@ def test_migration_to_v27_decodes_html_entities(tmp_path):
     assert vRow[:2] == ("Data & Python", "R&D")
     assert vRow[2] != "ancienne"
     assert vRow[3] is None
+
+
+def test_migration_to_v30_forgets_unknown_places(tmp_path):
+    """Vérifie que seuls les lieux introuvables sont oubliés, pour être recherchés."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vConnection = connect_database(vDatabaseFile)
+
+    try:
+        vConnection.executemany(
+            "INSERT INTO geo_cache (location_key, latitude, longitude, label,"
+            " looked_up_at) VALUES (?, ?, ?, ?, '2026-10-01')",
+            [("lille", 50.6, 3.0, "Lille"), ("lyon auvergne", None, None, None)],
+        )
+        migrate_to_v30(vConnection)
+        vKeys = [
+            vRow[0]
+            for vRow in vConnection.execute("SELECT location_key FROM geo_cache")
+        ]
+
+    finally:
+        vConnection.close()
+
+    assert vKeys == ["lille"]

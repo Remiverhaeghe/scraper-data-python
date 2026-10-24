@@ -2,6 +2,8 @@
 
 from datetime import datetime
 
+import requests
+
 from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import (
     HTMLResponse,
@@ -10,11 +12,13 @@ from fastapi.responses import (
     Response,
 )
 
+from job.geocoding import list_unknown_places, resolve_place
 from job.health import build_health
 from job.offer_purge import (
     add_excluded_words,
     find_offers_to_purge,
     load_excluded_words,
+    suggest_excluded_words,
     parse_purge_words,
     purge_offers,
     save_excluded_words,
@@ -42,6 +46,7 @@ from job.statistics import (
     SOURCE_COMPARISON_COLUMNS,
     SOURCE_COMPARISON_DAYS,
     build_source_cells,
+    compare_saved_searches,
     compare_sources,
     describe_useless_sources,
     get_source_shares,
@@ -73,7 +78,9 @@ router = APIRouter()
 MAX_DISPLAYED_EXECUTIONS = 200
 
 
-def render_quality(pRequest, pDatabaseFile, pPurge=None, pStatusCode=200):
+def render_quality(
+    pRequest, pDatabaseFile, pPurge=None, pStatusCode=200, pPlaceMessage=None
+):
     """Affiche le remplissage des champs, puis la purge des offres hors sujet."""
 
     vReport = get_quality_report(pDatabaseFile)
@@ -85,8 +92,11 @@ def render_quality(pRequest, pDatabaseFile, pPurge=None, pStatusCode=200):
             "active_page": "quality",
             "purge": pPurge or {"words": "", "offers": None, "message": None},
             "excluded_words": load_excluded_words(pDatabaseFile),
+            "suggested_words": suggest_excluded_words(pDatabaseFile),
             "message_tone": get_message_tone(pStatusCode),
             "report": vReport,
+            "unknown_places": list_unknown_places(pDatabaseFile),
+            "place_message": pPlaceMessage,
             "problems_text": describe_problems(vReport["problems"]),
             "problems_help": PROBLEMS_HELP,
             "chart": build_bar_chart(
@@ -120,6 +130,35 @@ def show_quality(
     """Affiche la page de qualité des données."""
 
     rResponse = render_quality(request, pDatabaseFile)
+
+    return rResponse
+
+
+@router.post(
+    "/quality/place",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def correct_place(
+    request: Request,
+    pKey: str = Form("", alias="key"),
+    pCommune: str = Form("", alias="commune"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Associe un lieu introuvable à la commune indiquée, puis place ses offres."""
+
+    try:
+        vLabel = resolve_place(pDatabaseFile, pKey, pCommune)
+        vMessage = (f"Lieu associé à {vLabel} : ses offres sont placées.", "success")
+
+    except ValueError as vException:
+        vMessage = (str(vException), "warning")
+
+    except requests.RequestException:
+        logger.warning("Géocodeur injoignable pour la correction d'un lieu")
+        vMessage = ("Le géocodeur ne répond pas : réessayez plus tard.", "danger")
+
+    rResponse = render_quality(request, pDatabaseFile, pPlaceMessage=vMessage)
 
     return rResponse
 
@@ -342,6 +381,10 @@ def show_history(
             "comparison_columns": SOURCE_COMPARISON_COLUMNS,
             "comparison_days": SOURCE_COMPARISON_DAYS,
             "comparison_rows": [build_source_cells(vRow) for vRow in vComparison],
+            "search_rows": [
+                build_source_cells(vRow)
+                for vRow in compare_saved_searches(pDatabaseFile, datetime.now())
+            ],
             "useless_sources": describe_useless_sources(vComparison),
             "contract_pie": build_pie(get_contract_shares(pDatabaseFile)),
             "execution_chart": build_bar_chart(

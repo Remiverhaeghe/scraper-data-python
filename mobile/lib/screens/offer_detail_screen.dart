@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../revision_state.dart';
 import '../theme.dart';
 
 /// Adresse OpenStreetMap centrée sur l'offre, ou null sans position connue.
@@ -22,12 +23,56 @@ Uri? buildMapUri(Map<String, dynamic> pOffer) {
 }
 
 class OfferDetailScreen extends StatelessWidget {
-  const OfferDetailScreen({super.key, required this.offer, required this.onOpen});
+  const OfferDetailScreen({super.key, required this.offer, required this.onOpen, this.onNote});
 
   final Map<String, dynamic> offer;
 
   /// Ouvre l'annonce d'origine dans le navigateur.
   final VoidCallback onOpen;
+
+  /// Garde une note rapide sur l'offre, ajoutée à la candidature sur le PC.
+  final Future<void> Function(String)? onNote;
+
+  Future<void> writeNote(BuildContext pContext) async {
+    final vMessenger = ScaffoldMessenger.of(pContext);
+    final vController = TextEditingController();
+    final vText = await showDialog<String>(
+      context: pContext,
+      builder: (pDialogContext) => AlertDialog(
+        title: const Text('Note rapide'),
+        content: TextField(
+          controller: vController,
+          autofocus: true,
+          minLines: 3,
+          maxLines: 6,
+          maxLength: maxNoteLength,
+          decoration: const InputDecoration(hintText: 'Appel du recruteur, impression, à faire…'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(pDialogContext).pop(),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(pDialogContext).pop(vController.text),
+            child: const Text('Garder'),
+          ),
+        ],
+      ),
+    );
+
+    vController.dispose();
+
+    if (vText == null || vText.trim().isEmpty) {
+      return;
+    }
+
+    await onNote!(vText);
+    vMessenger.showSnackBar(
+      const SnackBar(
+          content: Text('Note gardée : elle rejoint la candidature à la synchronisation.')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +128,14 @@ class OfferDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.open_in_new),
             label: const Text("Ouvrir l'annonce"),
           ),
+          if (onNote != null) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => writeNote(context),
+              icon: const Icon(Icons.edit_note),
+              label: const Text('Note rapide'),
+            ),
+          ],
           if (vMapUri != null) ...[
             const SizedBox(height: 8),
             OutlinedButton.icon(

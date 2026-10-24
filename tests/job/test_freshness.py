@@ -58,3 +58,20 @@ def test_old_ads_still_online_are_flagged():
     add_freshness(vOffers, NOW)
 
     assert [vOffer["recurring_days"] for vOffer in vOffers] == [60, None, None]
+
+
+def test_republished_and_old_offers_at_the_source():
+    """Vérifie l'offre republiée, puis l'offre ancienne chez la source."""
+
+    vOffers = [
+        {"first_seen_at": "2026-08-01T08:00:00", "published_at": "2026-10-15"},
+        {"first_seen_at": "2026-10-18T08:00:00", "published_at": "2026-07-01"},
+        {"first_seen_at": "2026-10-18T08:00:00", "published_at": "2026-10-17"},
+        {"first_seen_at": "2026-10-18T08:00:00"},
+    ]
+
+    add_freshness(vOffers, NOW)
+
+    assert [
+        (vOffer["republished"], vOffer["old_at_source_days"]) for vOffer in vOffers
+    ] == [(True, None), (False, 110), (False, None), (False, None)]

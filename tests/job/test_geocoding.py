@@ -14,7 +14,11 @@ from job.geocoding import (
     is_locatable,
     keep_within_alert_radius,
     load_home,
+    resolve_place,
+    geocode_location,
+    list_unknown_places,
     locate_all_offers,
+    locate_new_offers,
     locate_offers,
     save_alert_radius,
     save_home,
@@ -162,6 +166,22 @@ def test_lookups_are_capped_per_pass(tmp_path, geocoder):
     assert len(geocoder) == 1
 
 
+def test_new_offers_are_located_by_batch_with_a_home(tmp_path, geocoder, monkeypatch):
+    """Vérifie le lot de fin de recherche : rien sans domicile, plafond sinon."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_located_offers(vDatabaseFile, ["Roubaix", "Lyon"])
+
+    assert locate_new_offers(vDatabaseFile, NOW) is None
+
+    save_home(vDatabaseFile, "59000 Lille")
+    monkeypatch.setattr(geocoding, "BATCH_LOOKUPS", 1)
+
+    assert locate_new_offers(vDatabaseFile, NOW)["lookups"] == 1
+    assert locate_new_offers(vDatabaseFile, NOW)["lookups"] == 1
+
+
 def test_all_offers_are_located_pass_after_pass(tmp_path, geocoder, monkeypatch):
     """Vérifie l'enchaînement des passages jusqu'au dernier lieu."""
 
@@ -274,3 +294,36 @@ def test_department_is_kept_and_old_places_are_looked_up_once(tmp_path, geocoder
     assert vDepartments == {"Roubaix": "59", "Lyon": "69"}
     assert get_cached_departments(vDatabaseFile)["lyon"] == "69"
     assert locate_offers(vDatabaseFile, NOW)["lookups"] == 0
+
+
+def test_city_alone_is_tried_when_the_full_place_is_unknown(geocoder):
+    """Vérifie l'essai de la ville seule quand « Ville, Région, Pays » échoue."""
+
+    vPlace = geocode_location("Roubaix, Hauts-de-France, France")
+
+    assert vPlace[1] == "Roubaix"
+    assert [vQuery["q"] for vQuery in geocoder] == [
+        "Roubaix, Hauts-de-France, France",
+        "Roubaix",
+    ]
+
+
+def test_unknown_places_are_listed_then_resolved(tmp_path, geocoder):
+    """Vérifie la liste des lieux introuvables, puis leur commune indiquée à la main."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_located_offers(vDatabaseFile, ["Atlantis", "Atlantis", "Lyon"])
+    locate_offers(vDatabaseFile, NOW)
+
+    vPlaces = list_unknown_places(vDatabaseFile)
+
+    assert [(vPlace["example"], vPlace["count"]) for vPlace in vPlaces] == [
+        ("Atlantis", 2)
+    ]
+
+    assert resolve_place(vDatabaseFile, "atlantis", "Roubaix", NOW) == "Roubaix"
+    assert list_unknown_places(vDatabaseFile) == []
+
+    with pytest.raises(ValueError):
+        resolve_place(vDatabaseFile, "ailleurs", "Nulle part", NOW)

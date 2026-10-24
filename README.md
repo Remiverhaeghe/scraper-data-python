@@ -56,6 +56,7 @@ python -m job.translation                     # télécharge les modèles allema
 
 python -m playwright install chromium   # une fois, pour les tests de bout en bout du web
 pytest                            # tous les tests ; ceux du navigateur sont ignorés sans Chromium
+pytest -n auto                    # les mêmes, en parallèle sur tous les cœurs
 ```
 
 ---
@@ -210,6 +211,15 @@ pytest                            # tous les tests ; ceux du navigateur sont ign
 - [x] Restauration d'une sauvegarde de la base en un clic depuis les paramètres, après sauvegarde de l'état actuel (bureau et web)
 - [x] État de l'application dans la page Journaux : sauvegarde, planification, dernière recherche, sources, offres suivies et place occupée
 - [x] Chaque sauvegarde contrôlée à sa création (PRAGMA integrity_check) : une copie endommagée est écartée, signalée en rouge dans la page Santé et jamais copiée sur le NAS
+- [x] Essai mensuel de restauration de la dernière sauvegarde, résultat dans la page Santé
+- [x] Sauvegarde complète chiffrée par mot de passe sur clé USB, restaurable sur un autre PC
+- [x] Export lisible de vos données personnelles (JSON et pièces jointes, sans secret ni jeton)
+- [x] Descriptions manquantes (SmartRecruiters, Workday) complétées en tâche de fond, par lots de 30
+- [x] Placement des offres sur la carte par lots de 40 en fin de recherche, le reste en tâche de fond
+- [x] Score global pondéré, annonces douteuses signalées, résumé « L'essentiel » d'une annonce, offre ajoutée depuis son lien
+- [x] Récapitulatif quotidien facultatif par e-mail et bilan « Votre semaine » sur l'accueil
+- [x] Préparation d'entretien : fiche imprimable ou PDF, pitch, questions pièges selon l'employeur, questions déjà posées par l'entreprise, glossaire des compétences
+- [x] Relance envoyée depuis l'application après relecture, historique des statuts de chaque candidature
 
 ### 🖥️ Interface graphique
 
@@ -680,6 +690,17 @@ scraper-data-python/
 │   ├── cv_import.py                           # Import d'un CV : lecture et pré-remplissage du profil
 │   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
 │   ├── notification.py                        # Contenu des e-mails de nouvelles offres et de relances
+│   ├── daily_digest.py                        # Récapitulatif quotidien facultatif par e-mail
+│   ├── global_score.py                        # Score global pondéré : profil, distance, salaire, fraîcheur
+│   ├── suspicious_offers.py                   # Annonces douteuses : frais, messagerie, salaire irréaliste
+│   ├── offer_summary.py                       # L'essentiel d'une annonce : missions, profil, avantages
+│   ├── offer_from_link.py                     # Offre ajoutée depuis le lien de l'annonce (JSON-LD)
+│   ├── restore_check.py                       # Essai mensuel de restauration de la dernière sauvegarde
+│   ├── preparation_sheet.py                   # Fiche de préparation d'entretien, à imprimer ou en PDF
+│   ├── pitch.py                               # Pitch de présentation en 30 secondes et en 2 minutes
+│   ├── tricky_questions.py                    # Questions pièges selon le type d'employeur
+│   ├── skill_glossary.py                      # Glossaire : définition courte de chaque compétence
+│   ├── personal_export.py                     # Export lisible de vos données personnelles (JSON)
 │   │
 │   └── sources/                               # Gestion des différentes sources d'emploi
 │       ├── __init__.py                         # Initialise le package des sources
@@ -874,6 +895,7 @@ scraper-data-python/
 │   ├── health_panel.py                        # État de l'application
 │   ├── quality_page.py                        # Qualité des données et offres à vérifier
 │   ├── offer_purge_panel.py                   # Aperçu et suppression des offres hors sujet
+│   ├── unknown_places_panel.py                # Lieux introuvables corrigés à la main
 │   ├── profile_page.py                        # Saisie du profil du candidat
 │   ├── interview_drill_panel.py               # Entraînement à l'oral
 │   ├── interview_simulation_panel.py          # Simulation d'entretien technique
@@ -937,6 +959,7 @@ scraper-data-python/
 │   │   ├── _interview_journal.html            # Journal d'entretien d'une offre
 │   │   ├── _attachments.html                  # Pièces jointes d'une offre
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
+│   │   ├── preparation_sheet.html             # Fiche de préparation imprimable, sans menu
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
 │   │   ├── _replies.html                      # Réponses des recruteurs, chargées par HTMX
 │   │   ├── quiz.html                          # Révision technique par QCM
@@ -1036,7 +1059,8 @@ scraper-data-python/
 │
 ├── storage/                                   # Persistance technique des données communes
 │   ├── __init__.py                            # Initialise le package Storage
-│   ├── database.py                            # Gère la connexion et les migrations SQLite
+│   ├── database.py                            # Connexion SQLite, décomptes et application des migrations
+│   ├── migrations.py                          # Migrations successives du schéma, une par version
 │   ├── history_repository.py                  # Persiste et récupère l'historique
 │   ├── job_applications.py                    # Suit les candidatures et les relances
 │   ├── interview_notes.py                     # Persiste le journal d'entretien
@@ -1044,6 +1068,8 @@ scraper-data-python/
 │   ├── backup.py                              # Sauvegarde de la base et rotation des copies
 │   ├── geo_cache.py                           # Cache du géocodage et position des offres
 │   ├── archive.py                             # Sauvegarde complète (.zip) : export et restauration contrôlée
+│   ├── encrypted_archive.py                   # Sauvegarde complète chiffrée par mot de passe (clé USB)
+│   ├── personal_data.py                       # Lecture de vos données personnelles pour leur export
 │   ├── attachments.py                         # Pièces jointes des candidatures, rangées à côté de la base
 │   ├── quiz_answers.py                        # Réponses de révision, pour la progression
 │   ├── quiz_questions.py                      # Questions, thèmes, schémas et guides importés
@@ -1087,6 +1113,18 @@ scraper-data-python/
 │   │   ├── test_setup_checklist.py            # Teste la liste des réglages à faire
 │   │   ├── test_skill_cache.py                # Teste les compétences gardées en base
 │   │   ├── test_offer_details.py              # Teste la description lue à l'ouverture
+│   │   ├── test_daily_digest.py               # Teste le contenu et l'envoi unique du récapitulatif
+│   │   ├── test_excluded_suggestions.py       # Teste les mots exclus suggérés
+│   │   ├── test_global_score.py               # Teste le score global pondéré
+│   │   ├── test_offer_from_link.py            # Teste la lecture d'une annonce par son lien
+│   │   ├── test_offer_summary.py              # Teste le résumé d'une annonce
+│   │   ├── test_personal_export.py            # Teste l'export des données personnelles, sans secret
+│   │   ├── test_pitch.py                      # Teste le pitch de présentation
+│   │   ├── test_preparation_sheet.py          # Teste la fiche de préparation d'entretien
+│   │   ├── test_restore_check.py              # Teste l'essai de restauration
+│   │   ├── test_skill_glossary.py             # Teste le glossaire des compétences
+│   │   ├── test_suspicious_offers.py          # Teste le repérage des annonces douteuses
+│   │   ├── test_tricky_questions.py           # Teste les questions pièges par type d'employeur
 │   │   ├── test_application_replies.py        # Teste les réponses de recruteurs et leur classement
 │   │   ├── test_cv_export.py                  # Teste le CV adapté et le fichier Word
 │   │   ├── test_company_pages.py              # Teste l'ajout d'une entreprise depuis l'adresse de son site carrière
@@ -1236,6 +1274,7 @@ scraper-data-python/
 │   │   ├── test_history_page.py                # Teste la page de l'historique
 │   │   ├── test_logs_page.py                   # Teste la page des logs
 │   │   ├── test_quality_page.py                # Teste la page de qualité des données
+│   │   ├── test_unknown_places_panel.py        # Teste la correction des lieux introuvables
 │   │   ├── test_interview_journal_panel.py     # Teste le panneau du journal d'entretien
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
 │   │   ├── test_interview_simulation_panel.py  # Teste la simulation d'entretien
@@ -1248,6 +1287,7 @@ scraper-data-python/
 │   │   ├── test_offers_model.py                # Teste le modèle du tableau des offres
 │   │   ├── test_offers_page.py                 # Teste la page des offres et le suivi
 │   │   ├── test_offer_assistant_comparison.py  # Teste la comparaison depuis l'assistant
+│   │   ├── test_offer_assistant_sheet.py       # Teste l'écriture de la fiche en PDF
 │   │   ├── test_applications_page.py           # Teste la page des candidatures
 │   │   ├── test_replies_panel.py               # Teste le panneau des réponses de recruteurs
 │   │   ├── test_quiz_page.py                   # Teste la page de révision
@@ -1280,6 +1320,7 @@ scraper-data-python/
 │   │   ├── test_maintenance.py                 # Teste les sauvegardes, leur rotation et la réinitialisation
 │   │   ├── test_settings_repository.py         # Teste les réglages JSON
 │   │   ├── test_archive.py                     # Teste la sauvegarde complète et le refus des archives piégées
+│   │   ├── test_encrypted_archive.py           # Teste la sauvegarde chiffrée et les mots de passe refusés
 │   │   ├── test_saved_searches.py              # Teste les recherches enregistrées
 │   │   ├── test_attachments.py                 # Teste les pièces jointes et leur conservation
 │   │   └── test_job_offers.py                  # Teste l'enregistrement des offres

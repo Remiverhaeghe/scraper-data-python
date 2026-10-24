@@ -6,6 +6,7 @@ import pandas as pd
 
 import gui.offer_purge_panel as offer_purge_panel
 import gui.quality_page as quality_page
+from gui.offer_purge_panel import OfferPurgePanel
 from gui.quality_page import QualityPage
 from job.offer_purge import load_excluded_words
 from storage.database import initialize_database
@@ -93,3 +94,28 @@ def test_off_topic_offers_are_purged_after_preview(
     assert load_excluded_words(vDatabaseFile) == ["stage", "alternance"]
     assert "stage, alternance" in vPanel.excluded_label.text()
     assert vPage.statistic_cards["count"].value_label.text() == "1"
+
+
+def test_suggested_words_are_excluded_in_one_click(
+    qt_application, tmp_path, monkeypatch
+):
+    """Vérifie les mots suggérés affichés, puis ajoutés aux mots exclus."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    monkeypatch.setattr(
+        offer_purge_panel,
+        "suggest_excluded_words",
+        lambda pDatabaseFile: (
+            [] if load_excluded_words(pDatabaseFile) else [("vendeur", 4)]
+        ),
+    )
+    vPanel = OfferPurgePanel(vDatabaseFile)
+
+    assert "vendeur (4)" in vPanel.suggestion_label.text()
+    assert not vPanel.suggestion_button.isHidden()
+
+    vPanel.add_suggestions()
+
+    assert load_excluded_words(vDatabaseFile) == ["vendeur"]
+    assert vPanel.suggestion_button.isHidden()

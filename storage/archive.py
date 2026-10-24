@@ -13,7 +13,8 @@ from storage.attachments import (
     get_attachment_directory,
 )
 from storage.backup import backup_database, list_backups
-from storage.database import MIGRATIONS, connect_database, initialize_database
+from storage.database import connect_database, initialize_database
+from storage.migrations import MIGRATIONS
 from storage.maintenance import move_attachments
 from utils.logger import get_logger
 

@@ -96,11 +96,13 @@ def test_describe_preparation_escapes_and_lists(qt_application):
                 "gaps": [],
                 "answers": [{"question": "Pourquoi <Acme> ?", "hint": "Activité"}],
                 "questions": ["Question ?"],
+                "pitch": {"short": "Court <b>", "long": "Long"},
             },
             "letter": "",
         }
     )
 
+    assert "Mon pitch, 30 secondes</h3><p>Court &lt;b&gt;</p>" in vHtml
     assert "&lt;Java&gt;" in vHtml
     assert "<Java>" not in vHtml
     assert "CV backend" in vHtml

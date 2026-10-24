@@ -12,6 +12,16 @@
 
 <div class="grid grid-settings">
     <article class="card">
+        <h2>Depuis le lien d'une annonce</h2>
+        <p class="card-subtitle">Indeed, Welcome to the Jungle, site d'entreprise… : l'offre est remplie d'après la fiche que la page fournit aux moteurs de recherche. Certains sites refusent les lectures automatiques.</p>
+        <form class="inline-form" method="post" action="{{ url_for('create_offer_from_link').path }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <input type="url" name="url" placeholder="https://…" aria-label="Lien de l'annonce" required>
+            <button class="button button-primary" type="submit">{{ icon("download", 16) }} Créer l'offre</button>
+        </form>
+    </article>
+
+    <article class="card">
         <h2>Saisie manuelle</h2>
         <p class="card-subtitle">* obligatoire. Renseignez au moins le lien ou la description : compétences, télétravail et salaire y sont repérés.</p>
         <form class="profile-form" method="post" action="{{ url_for('create_offer').path }}">

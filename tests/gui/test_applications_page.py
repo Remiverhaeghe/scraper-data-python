@@ -6,6 +6,7 @@ import pandas as pd
 from PySide6.QtWidgets import QComboBox, QLabel, QPushButton
 
 import gui.applications_page as applications_page
+import gui.follow_ups_panel as follow_ups_panel
 from gui.applications_page import ApplicationsPage
 from gui.spontaneous_dialog import SpontaneousDialog
 from storage.database import initialize_database
@@ -181,6 +182,68 @@ def test_week_follow_ups_are_copied_and_marked(qt_application, tmp_path):
         == 1
     )
     assert not vPanel.follow_ups[0]["follow_up_due"]
+
+
+def test_follow_up_is_sent_after_review(qt_application, tmp_path, monkeypatch):
+    """Vérifie l'envoi depuis la fenêtre de relecture, puis les refus expliqués."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vPanel = vPage.follow_ups_panel
+    vFollowUp = vPanel.follow_ups[0]
+    vSent = []
+
+    vDialog = follow_ups_panel.FollowUpDialog(vPanel, vFollowUp)
+
+    assert vDialog.draft_edit.toPlainText().startswith("Objet : ma candidature")
+
+    monkeypatch.setattr(
+        follow_ups_panel.FollowUpDialog,
+        "exec",
+        lambda pDialog: (
+            pDialog.recipient_edit.setText("rh@acme.fr"),
+            follow_ups_panel.QDialog.DialogCode.Accepted,
+        )[1],
+    )
+    monkeypatch.setattr(
+        "job.application_tracking.send_email",
+        lambda pRecipient, pSubject, pText: vSent.append(pRecipient),
+    )
+    vPanel.send(vFollowUp)
+
+    assert vSent == ["rh@acme.fr"]
+    assert vPanel.message_label.text() == "Relance envoyée et notée."
+    assert get_application(tmp_path / "scraper.db", "remotive", "1")[
+        "contact_email"
+    ] == ("rh@acme.fr")
+
+    def fail(*_pArgs):
+        raise OSError("hors ligne")
+
+    monkeypatch.setattr("job.application_tracking.send_email", fail)
+    vPanel.send(vFollowUp)
+
+    assert "L'envoi a échoué" in vPanel.message_label.text()
+
+    monkeypatch.setattr(
+        follow_ups_panel.FollowUpDialog,
+        "exec",
+        lambda pDialog: (
+            pDialog.recipient_edit.setText("pas-une-adresse"),
+            follow_ups_panel.QDialog.DialogCode.Accepted,
+        )[1],
+    )
+    vPanel.send(vFollowUp)
+
+    assert vPanel.message_label.text() == "Adresse e-mail du recruteur invalide."
+
+    monkeypatch.setattr(
+        follow_ups_panel.FollowUpDialog,
+        "exec",
+        lambda pDialog: follow_ups_panel.QDialog.DialogCode.Rejected,
+    )
+    vPanel.send(vFollowUp)
+
+    assert vPanel.message_label.text() == "Adresse e-mail du recruteur invalide."
 
 
 def test_funnel_is_shown(qt_application, tmp_path):

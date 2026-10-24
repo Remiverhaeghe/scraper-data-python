@@ -38,7 +38,7 @@
                 {% for row in dashboard.rows %}
                 {% set status = statuses[row.status] %}
                 <tr>
-                    <td class="nowrap"><span class="tone-primary">{{ icon(row.icon, 16) }}</span> <strong>{{ row.skill }}</strong></td>
+                    <td class="nowrap"{% if definitions[row.skill] %} title="{{ definitions[row.skill] }}"{% endif %}><span class="tone-primary">{{ icon(row.icon, 16) }}</span> <strong>{{ row.skill }}</strong></td>
                     <td>{{ row.offers }} <small class="muted">({{ row.share }} %)</small></td>
                     <td>
                         {% if row.in_profile %}Oui{% else %}
@@ -73,4 +73,15 @@
     {% endif %}
     <p class="card-subtitle">{{ dashboard.offer_count }} offre(s) analysée(s).</p>
 </article>
+
+<details class="card section-gap">
+    <summary><h2>{{ icon("languages") }} Glossaire des compétences</h2></summary>
+    <p class="card-subtitle">Une définition courte de chaque compétence repérée dans les offres, pour comprendre une exigence ou l'expliquer en entretien</p>
+    <dl class="glossary">
+        {% for skill, definition in glossary %}
+        <dt>{{ skill }}</dt>
+        <dd>{{ definition }}</dd>
+        {% endfor %}
+    </dl>
+</details>
 {% endblock %}

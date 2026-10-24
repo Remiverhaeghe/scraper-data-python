@@ -16,7 +16,11 @@ from PySide6.QtWidgets import (
 from gui.dialogs import show_text_dialog
 from gui.theme import COLORS
 from gui.widgets import create_button, show_message
-from job.interview_journal import describe_note, record_interview
+from job.interview_journal import (
+    collect_company_questions,
+    describe_note,
+    record_interview,
+)
 from storage.interview_notes import get_interview_notes
 from utils.logger import get_logger
 
@@ -73,6 +77,10 @@ class InterviewJournalPanel(QWidget):
         self.summary_label.setObjectName("cardSubtitle")
         self.summary_label.setWordWrap(True)
 
+        self.company_label = QLabel()
+        self.company_label.setWordWrap(True)
+        self.company_label.hide()
+
         vAddButton = create_button(
             "Noter un entretien…", "file-text", pIconColor=COLORS["primary"]
         )
@@ -91,17 +99,22 @@ class InterviewJournalPanel(QWidget):
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.addWidget(QLabel("Journal d'entretien"))
         vLayout.addWidget(self.summary_label)
+        vLayout.addWidget(self.company_label)
         vLayout.addLayout(vButtons)
 
     def set_offer(self, pOffer):
         """Relit le journal de l'offre affichée."""
         self.offer = pOffer
         self.notes = []
+        vCompanyQuestions = []
 
         if pOffer is not None:
             try:
                 self.notes = get_interview_notes(
                     self.database_file, pOffer["source"], pOffer["source_id"]
+                )
+                vCompanyQuestions = collect_company_questions(
+                    self.database_file, pOffer
                 )
 
             except Exception:
@@ -113,6 +126,11 @@ class InterviewJournalPanel(QWidget):
             else "Aucune entrée pour cette offre."
         )
         self.show_button.setEnabled(bool(self.notes))
+        self.company_label.setVisible(bool(vCompanyQuestions))
+        self.company_label.setText(
+            "Déjà posées par cette entreprise : "
+            + " ; ".join(vItem["question"] for vItem in vCompanyQuestions)
+        )
 
     def add_note(self):
         """Ouvre la saisie d'une entrée, puis l'enregistre."""

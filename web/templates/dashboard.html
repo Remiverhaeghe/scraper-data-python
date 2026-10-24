@@ -78,6 +78,20 @@
 </article>
 {% endif %}
 
+<article class="card section-gap">
+    <h2>Votre semaine</h2>
+    <p class="card-subtitle">Les 7 derniers jours, comparés aux 7 précédents</p>
+    <div class="week-summary">
+        {% for row in statistics.week_summary %}
+        <div class="week-item" title="{{ row.previous }} les 7 jours précédents">
+            <span class="week-value">{{ row.current }}</span>
+            <span class="muted">{{ row.label }}</span>
+            <span class="week-trend {{ 'trend-up' if row.current > row.previous else 'trend-down' if row.current < row.previous else '' }}">{{ row.trend }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</article>
+
 <section class="grid grid-dashboard">
     <article class="card">
         <h2>Activité</h2>
@@ -157,6 +171,34 @@
         {% endif %}
     </article>
 </section>
+
+{% if statistics.preferred_offers %}
+<section class="section-gap">
+    <article class="card">
+        <h2>{{ icon("sparkles") }} Vos entreprises privilégiées recrutent</h2>
+        <p class="card-subtitle">Nouvelles offres des entreprises de votre liste, réglée dans les Paramètres</p>
+        <ul class="checklist">
+            {% for offer in statistics.preferred_offers %}
+            <li><a href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Offre sans titre" }}</a> <span class="muted">{{ offer.company or "" }}{% if offer.location %} · {{ offer.location }}{% endif %}</span></li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endif %}
+
+{% if statistics.withdrawn_offers %}
+<section class="section-gap">
+    <article class="card">
+        <h2>{{ icon("circle-alert") }} Offres suivies retirées</h2>
+        <p class="card-subtitle">Le site ne les publie plus : poste sans doute pourvu. Pensez à les classer.</p>
+        <ul class="checklist">
+            {% for offer in statistics.withdrawn_offers %}
+            <li><a href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Offre sans titre" }}</a> <span class="muted">{{ offer.company or "" }} · {{ statuses[offer.status] }}</span></li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endif %}
 
 {% if statistics.similar_offers %}
 <section class="section-gap">

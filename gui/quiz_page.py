@@ -54,7 +54,11 @@ from job.quiz import (
     load_active_quiz,
     pick_question,
 )
-from job.interview_revision import start_offer_exam, start_skills_exam
+from job.interview_revision import (
+    start_missing_skills_exam,
+    start_offer_exam,
+    start_skills_exam,
+)
 from job.quiz_domains import (
     DOMAIN_ICONS,
     count_categories,
@@ -747,6 +751,14 @@ class QuizPage(QWidget):
         """Reprend l'examen en cours, ou commence l'examen blanc d'une offre."""
         self.begin_exam(
             lambda pQuiz: start_offer_exam(
+                self.database_file, pQuiz, pOffer, datetime.now()
+            )
+        )
+
+    def start_missing_skills_exam(self, pOffer):
+        """Reprend l'examen en cours, ou commence celui des manques d'une offre."""
+        self.begin_exam(
+            lambda pQuiz: start_missing_skills_exam(
                 self.database_file, pQuiz, pOffer, datetime.now()
             )
         )

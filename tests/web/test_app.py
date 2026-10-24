@@ -833,6 +833,29 @@ def test_profile_page_and_offer_preparation(client):
     assert client.post("/profile", data={"skills": "x" * 30000}).status_code == 400
 
 
+def test_preparation_sheet_page(client):
+    """Vérifie la fiche imprimable : lien depuis l'offre, contenu échappé, 404."""
+
+    client.post(
+        "/profile",
+        data={
+            "skills": "Python",
+            "experiences": "Développeur | Python | Livré une API",
+        },
+    )
+
+    vOffer = client.get("/offer?source=adzuna&id=new").text
+    vSheet = client.get("/offer/sheet?source=adzuna&id=new")
+    vXss = client.get("/offer/sheet?source=hackernews&id=xss").text
+
+    assert "/offer/sheet?source=adzuna&amp;id=new" in vOffer
+    assert vSheet.status_code == 200
+    assert "Exemples à citer" in vSheet.text
+    assert "Python : Développeur : Livré une API" in vSheet.text
+    assert "<script>alert(1)</script>" not in vXss
+    assert client.get("/offer/sheet?source=adzuna&id=absent").status_code == 404
+
+
 def test_dashboard_shows_offers_close_to_retained_ones(client):
     """Vérifie la carte des offres proches d'une offre retenue."""
 
@@ -887,6 +910,8 @@ def test_manifest_and_icons_are_public(client):
     assert vWorker.headers["content-type"].startswith("text/javascript")
     assert vWorker.headers["cache-control"] == "no-cache"
     assert "OFFLINE_URL" in vWorker.text
+    assert '"/settings"' not in vWorker.text
+    assert "MAX_PAGES = 40" in vWorker.text
     assert client.get("/static/offline.html").status_code == 200
 
 
@@ -1345,6 +1370,21 @@ def test_calendar_subscription_requires_valid_token(client):
     assert vCalendar.headers["content-type"].startswith("text/calendar")
     assert vCalendar.text.startswith("BEGIN:VCALENDAR")
     assert client.get("/calendar/mauvais-jeton.ics").status_code == 404
+
+
+def test_personal_data_can_be_downloaded(client):
+    """Vérifie l'export lisible des données personnelles depuis les Paramètres."""
+
+    vSettings = client.get("/settings").text
+    vExport = client.get("/settings/personal-data")
+
+    with zipfile.ZipFile(io.BytesIO(vExport.content)) as vArchive:
+        vNames = vArchive.namelist()
+
+    assert "/settings/personal-data" in vSettings
+    assert vExport.headers["content-type"] == "application/zip"
+    assert "mes-donnees-jobboard-" in vExport.headers["content-disposition"]
+    assert {"LISEZMOI.txt", "candidatures.json", "reglages.json"} <= set(vNames)
 
 
 def test_archive_can_be_downloaded_and_restored(client, tmp_path):
@@ -2010,6 +2050,8 @@ def test_skills_page(client):
     assert "<strong>Python</strong>" in vPage
     assert 'href="/skills"' in vPage
     assert "?theme=python" in vPage
+    assert "Glossaire des compétences" in vPage
+    assert 'title="Langage polyvalent' in vPage
 
     vPrompt = client.post("/quiz/prompt", data={"theme": "Cloud et infrastructure"})
 
@@ -2055,6 +2097,83 @@ def test_week_follow_ups_on_applications_page(client):
     assert vMissing.status_code == 400
     assert vDone.status_code == 303
     assert "1 relance(s) déjà faite(s)" in client.get("/applications").text
+
+
+def test_follow_up_is_sent_from_applications_page(client, monkeypatch):
+    """Vérifie l'envoi d'une relance : formulaire, messages fixes, adresse gardée."""
+
+    vSent = []
+
+    monkeypatch.setattr(web_applications, "get_missing_email_settings", lambda: [])
+    monkeypatch.setattr(
+        "job.application_tracking.send_email",
+        lambda pRecipient, pSubject, pText: vSent.append(pRecipient),
+    )
+    client.post(
+        "/offer/application",
+        data={
+            "source": "adzuna",
+            "id": "new",
+            "status": "APPLIED",
+            "follow_up_date": datetime.now().date().isoformat(),
+        },
+    )
+
+    vForm = client.get("/applications").text
+    vInvalid = client.post(
+        "/applications/follow-up/send",
+        data={"source": "adzuna", "id": "new", "recipient": "x", "draft": "Bonjour"},
+        follow_redirects=False,
+    )
+    vSentPage = client.post(
+        "/applications/follow-up/send",
+        data={
+            "source": "adzuna",
+            "id": "new",
+            "recipient": "rh@acme.fr",
+            "draft": "Objet : relance\n\nBonjour",
+        },
+    )
+
+    assert "Envoyer et noter la relance" in vForm
+    assert vInvalid.headers["location"].endswith("?follow_up=invalid")
+    assert "Relance envoyée et notée" in vSentPage.text
+    assert vSent == ["rh@acme.fr"]
+
+    def fail(*_pArgs):
+        raise OSError("hors ligne")
+
+    monkeypatch.setattr("job.application_tracking.send_email", fail)
+    vFailed = client.post(
+        "/applications/follow-up/send",
+        data={
+            "source": "adzuna",
+            "id": "new",
+            "recipient": "rh@acme.fr",
+            "draft": "Objet : relance\n\nBonjour",
+        },
+        follow_redirects=False,
+    )
+
+    assert vFailed.headers["location"].endswith("?follow_up=failed")
+
+    monkeypatch.setattr(
+        web_applications, "get_missing_email_settings", lambda: ["GMAIL_ADDRESS"]
+    )
+    vUnconfigured = client.post(
+        "/applications/follow-up/send",
+        data={"source": "adzuna", "id": "new", "recipient": "rh@acme.fr"},
+    )
+
+    assert "Envoyer et noter la relance" not in vUnconfigured.text
+    assert "renseignez GMAIL_ADDRESS" in vUnconfigured.text
+    assert (
+        client.post(
+            "/applications/follow-up/send",
+            data={"source": "adzuna", "id": "absente"},
+        ).status_code
+        == 400
+    )
 
 
 def test_profile_star_answers(client):
@@ -2564,3 +2683,57 @@ def test_spontaneous_application_is_added(client):
 
     assert "Candidature spontanée · Développeur Java" in vPage
     assert client.post("/applications/spontaneous", data={}).status_code == 400
+
+
+def test_unknown_place_is_corrected_from_the_quality_page(client, monkeypatch):
+    """Vérifie la correction d'un lieu depuis la page Qualité."""
+
+    monkeypatch.setattr(
+        "web.routes.monitoring.resolve_place",
+        lambda pDatabaseFile, pKey, pCommune: "Roubaix",
+    )
+
+    assert "Lieux introuvables" in client.get("/quality").text
+
+    vPage = client.post("/quality/place", data={"key": "x", "commune": "Roubaix"}).text
+
+    assert "Lieu associé à Roubaix" in vPage
+
+
+def test_offer_is_added_from_a_link(client, monkeypatch):
+    """Vérifie l'ajout depuis un lien, puis le message quand la page ne suffit pas."""
+
+    monkeypatch.setattr(
+        "web.routes.offers.add_offer_from_link",
+        lambda pDatabaseFile, pUrl, pNow: "abc",
+    )
+
+    vCreated = client.post(
+        "/offers/from-link",
+        data={"url": "https://exemple.fr/offre"},
+        follow_redirects=False,
+    )
+
+    assert vCreated.status_code == 303
+    assert "id=abc" in vCreated.headers["location"]
+
+    def refuse(pDatabaseFile, pUrl, pNow):
+        raise ValueError("Aucune fiche d'offre structurée sur cette page")
+
+    monkeypatch.setattr("web.routes.offers.add_offer_from_link", refuse)
+
+    vRefused = client.post("/offers/from-link", data={"url": "https://exemple.fr"})
+
+    assert vRefused.status_code == 400
+    assert "Aucune fiche" in vRefused.text
+
+
+def test_status_history_is_shown_on_the_offer(client):
+    """Vérifie l'historique des statuts dans le bloc de suivi de la fiche."""
+
+    vPage = client.post(
+        "/offer/application",
+        data={"source": "adzuna", "id": "new", "status": "APPLIED"},
+    ).text
+
+    assert "Historique : Postulé le" in vPage

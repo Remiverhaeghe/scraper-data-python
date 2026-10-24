@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 
 import 'logic/exam.dart';
 import 'logic/grading.dart';
+import 'logic/interview_alerts.dart';
 import 'logic/offer_alerts.dart';
 import 'logic/review.dart';
 import 'models/quiz_package.dart';
@@ -33,6 +34,9 @@ const offerAlertPreference = 'offer_alerts';
 /// Réponses de recruteurs déjà notifiées, par identifiant.
 const notifiedRepliesPreference = 'notified_replies';
 
+/// Offres suivies retirées déjà notifiées, par source et identifiant.
+const notifiedWithdrawnPreference = 'notified_withdrawn';
+
 /// Apparence choisie : system (celle du téléphone), light ou dark.
 const appearancePreference = 'appearance';
 const appearances = ['system', 'light', 'dark'];
@@ -49,6 +53,12 @@ const dailyGoals = [10, 15, 25, 40];
 
 /// Statuts donnés aux offres sur le téléphone, pas encore envoyés au PC
 const pendingStatusPreference = 'pending_status';
+
+/// Notes rapides prises sur une offre, pas encore envoyées au PC
+const pendingNotesPreference = 'pending_notes';
+
+/// Taille d'une note rapide, la même limite que côté PC
+const maxNoteLength = 1000;
 
 /// Simulation d'entretien : questions reçues du PC et séries pas encore envoyées
 const interviewPreference = 'interview_content';
@@ -270,6 +280,30 @@ class RevisionState extends ChangeNotifier {
     ]);
   }
 
+  List<Map<String, dynamic>> get pendingNotes => [
+        for (final vItem in preferences[pendingNotesPreference] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  /// Garde une note rapide sur une offre, envoyée au PC à la synchronisation.
+  Future<void> addOfferNote(Map<String, dynamic> pOffer, String pText) async {
+    final vText = pText.trim();
+
+    if (vText.isEmpty) {
+      return;
+    }
+
+    await savePreference(pendingNotesPreference, [
+      ...pendingNotes,
+      {
+        'source': pOffer['source'],
+        'source_id': pOffer['source_id'],
+        'text': vText.length > maxNoteLength ? vText.substring(0, maxNoteLength) : vText,
+        'written_at': DateTime.now().toIso8601String(),
+      },
+    ]);
+  }
+
   /// Retire une question fausse ou ambiguë des tirages et la signale au PC.
   Future<void> flagQuestion(String pQuestionId) async {
     package = package?.withoutQuestions({pQuestionId});
@@ -480,12 +514,19 @@ class RevisionState extends ChangeNotifier {
         await savePreference(pendingStatusPreference, <Map<String, dynamic>>[]);
       }
 
+      if (pendingNotes.isNotEmpty) {
+        await pClient.uploadNotes(pendingNotes);
+        await savePreference(pendingNotesPreference, <Map<String, dynamic>>[]);
+      }
+
       final vPrevious = offers;
 
       offers = await pClient.downloadOffers();
       await store.saveOffers(offers);
       await notifyNewOffers(findNewGoodOffers(vPrevious, offers));
       await exchangeReplies(pClient);
+      await exchangeWithdrawn(pClient);
+      await scheduleInterviewAlerts(pClient);
     } on ApiException catch (vException) {
       if (vException.unreachable) {
         rethrow;
@@ -605,34 +646,79 @@ class RevisionState extends ChangeNotifier {
     return rEnabled;
   }
 
-  /// Reçoit les réponses de recruteurs repérées par le PC et signale les nouvelles.
+  /// Replanifie les rappels d'entretien d'après les entretiens connus du PC.
   ///
   /// Un serveur plus ancien qui ne les connaît pas n'empêche pas la synchronisation.
-  Future<void> exchangeReplies(ApiClient pClient) async {
+  Future<void> scheduleInterviewAlerts(ApiClient pClient) async {
+    if (reminders == null) {
+      return;
+    }
+
     try {
-      final vReplies = await pClient.downloadReplies();
-      final vNotified = {
-        for (final vId in preferences[notifiedRepliesPreference] as List? ?? const []) '$vId',
-      };
-      final vNew = [
-        for (final vReply in vReplies)
-          if (!vNotified.contains('${vReply['id']}')) vReply,
-      ];
-
-      if (vNew.isNotEmpty && offerAlertsEnabled && reminders != null) {
-        await reminders!.showReplies(vNew);
-      }
-
-      // Seuls les identifiants encore proposés par le PC sont gardés.
-      await savePreference(notifiedRepliesPreference, [
-        for (final vReply in vReplies) '${vReply['id']}',
-      ]);
+      await reminders!.scheduleInterviews(
+        buildInterviewAlerts(await pClient.downloadInterviews(), DateTime.now()),
+      );
     } on ApiException catch (vException) {
       if (vException.unreachable) {
         rethrow;
       }
 
-      log('Réponses de recruteurs non reçues : ${vException.message}', name: 'sync');
+      log('Entretiens non reçus : ${vException.message}', name: 'sync');
+    }
+  }
+
+  /// Reçoit les réponses de recruteurs repérées par le PC et signale les nouvelles.
+  ///
+  /// Un serveur plus ancien qui ne les connaît pas n'empêche pas la synchronisation.
+  Future<void> exchangeReplies(ApiClient pClient) => notifyOnce(
+        'Réponses de recruteurs',
+        pClient.downloadReplies,
+        notifiedRepliesPreference,
+        (pReply) => '${pReply['id']}',
+        (pReplies) => reminders!.showReplies(pReplies),
+      );
+
+  /// Reçoit les offres suivies retirées par leur site et signale les nouvelles.
+  Future<void> exchangeWithdrawn(ApiClient pClient) => notifyOnce(
+        'Offres retirées',
+        pClient.downloadWithdrawn,
+        notifiedWithdrawnPreference,
+        (pOffer) => '${pOffer['source']}/${pOffer['source_id']}',
+        (pOffers) => reminders!.showWithdrawn(pOffers),
+      );
+
+  /// Télécharge une liste du PC et notifie ses éléments jamais signalés.
+  ///
+  /// Seuls les identifiants encore présents sont gardés ; un serveur plus ancien
+  /// qui ne connaît pas la liste n'empêche pas la synchronisation.
+  Future<void> notifyOnce(
+    String pLabel,
+    Future<List<Map<String, dynamic>>> Function() pDownload,
+    String pPreference,
+    String Function(Map<String, dynamic>) pIdOf,
+    Future<void> Function(List<Map<String, dynamic>>) pShow,
+  ) async {
+    try {
+      final vItems = await pDownload();
+      final vNotified = {
+        for (final vId in preferences[pPreference] as List? ?? const []) '$vId',
+      };
+      final vNew = [
+        for (final vItem in vItems)
+          if (!vNotified.contains(pIdOf(vItem))) vItem,
+      ];
+
+      if (vNew.isNotEmpty && offerAlertsEnabled && reminders != null) {
+        await pShow(vNew);
+      }
+
+      await savePreference(pPreference, [for (final vItem in vItems) pIdOf(vItem)]);
+    } on ApiException catch (vException) {
+      if (vException.unreachable) {
+        rethrow;
+      }
+
+      log('$pLabel non reçues : ${vException.message}', name: 'sync');
     }
   }
 

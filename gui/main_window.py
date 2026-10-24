@@ -68,6 +68,7 @@ class MainWindow(QMainWindow):
 
     # Thème choisi dans les paramètres : light ou dark
     theme_requested = Signal(str)
+    text_scale_requested = Signal(int)
 
     def __init__(self, pDatabaseFile, pTitle):
         """Construit la fenêtre et son contenu."""
@@ -153,12 +154,16 @@ class MainWindow(QMainWindow):
         # Les pages ne se connaissent pas : elles émettent des signaux et la fenêtre
         # décide de la suite. Pour suivre l'effet d'un clic, partir de ces connexions.
         self.settings_page.theme_requested.connect(self.theme_requested)
+        self.settings_page.text_scale_requested.connect(self.text_scale_requested)
         self.settings_page.data_reset.connect(self.show_reset_result)
 
         self.home_page.navigation_requested.connect(self.navigate)
         self.home_page.offer_requested.connect(self.show_search_results)
         self.applications_page.offer_requested.connect(self.show_search_results)
         self.offers_page.detail_panel.exam_requested.connect(self.start_offer_exam)
+        self.offers_page.detail_panel.missing_exam_requested.connect(
+            self.start_missing_skills_exam
+        )
         self.skills_page.revise_requested.connect(self.revise_theme)
         self.skills_page.generation_requested.connect(self.prepare_questions)
         self.search_page.show_offers_requested.connect(self.show_search_results)
@@ -368,6 +373,11 @@ class MainWindow(QMainWindow):
         """Ouvre la page Révision sur l'examen blanc d'une offre."""
         self.navigate("quiz")
         self.quiz_page.start_offer_exam(pOffer)
+
+    def start_missing_skills_exam(self, pOffer):
+        """Ouvre la page Révision sur l'examen des compétences manquantes d'une offre."""
+        self.navigate("quiz")
+        self.quiz_page.start_missing_skills_exam(pOffer)
 
     def start_skills_exam(self, pSkills):
         """Ouvre la page Révision sur l'examen des compétences prioritaires."""

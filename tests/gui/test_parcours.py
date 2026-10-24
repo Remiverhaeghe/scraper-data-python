@@ -113,9 +113,7 @@ def test_offer_mock_exam_is_graded_and_kept(window, database_file, monkeypatch):
     """De l'examen blanc d'une offre à sa note, rappelée sur la fiche."""
 
     monkeypatch.setattr(
-        offer_assistant.QMessageBox,
-        "question",
-        lambda *pArgs: offer_assistant.QMessageBox.StandardButton.Yes,
+        offer_assistant.OfferAssistantPanel, "ask_exam_kind", lambda *pArgs: "all"
     )
 
     open_page(window, "offers")

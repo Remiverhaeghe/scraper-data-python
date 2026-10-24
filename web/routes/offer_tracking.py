@@ -14,7 +14,8 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
-from job.interview_journal import record_interview
+from job.application_tracking import describe_status_history
+from job.interview_journal import collect_company_questions, record_interview
 from job.presentation import STATUS_LABELS
 from job.settings import load_settings
 from storage.attachments import (
@@ -28,6 +29,7 @@ from storage.job_applications import (
     APPLICATION_STATUSES,
     delete_application,
     get_application,
+    get_status_history,
     record_follow_up,
     save_application,
 )
@@ -50,6 +52,9 @@ def render_application(pRequest, pDatabaseFile, pOffer, pMessage=None):
         {
             "offer": pOffer,
             "application": vApplication,
+            "status_history": describe_status_history(
+                get_status_history(pDatabaseFile, pOffer["source"], pOffer["source_id"])
+            ),
             "statuses": STATUS_LABELS,
             "message": pMessage,
         },
@@ -167,6 +172,7 @@ def add_interview_journal_note(
         {
             "offer": vOffer,
             "interview_notes": get_interview_notes(pDatabaseFile, pSource, pSourceId),
+            "company_questions": collect_company_questions(pDatabaseFile, vOffer),
             "journal_message": vMessage,
             "journal_tone": get_message_tone(vStatusCode),
         },

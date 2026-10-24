@@ -5,7 +5,12 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
-from job.presentation import CHART_PALETTE, FOLLOW_UP_FILTER, describe_execution
+from job.presentation import (
+    CHART_PALETTE,
+    FOLLOW_UP_FILTER,
+    STATUS_LABELS,
+    describe_execution,
+)
 from job.schedule import request_immediate_run
 from job.setup_checklist import build_setup_checklist
 from job.statistics import (
@@ -66,6 +71,7 @@ def show_dashboard(
             ],
             "tone_icons": TONE_ICONS,
             "follow_up_filter": FOLLOW_UP_FILTER,
+            "statuses": STATUS_LABELS,
             "now_iso": datetime.now().isoformat(),
         },
     )

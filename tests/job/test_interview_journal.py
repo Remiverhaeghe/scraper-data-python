@@ -7,6 +7,7 @@ import pytest
 
 from job.interview_journal import (
     collect_asked_questions,
+    collect_company_questions,
     record_interview,
     split_questions,
 )
@@ -83,3 +84,25 @@ def test_reset_clears_the_journal(database_file):
     reset_database(database_file, NOW)
 
     assert get_interview_notes(database_file) == []
+
+
+def test_company_questions_come_from_its_other_offers(database_file):
+    """Vérifie la reprise des questions d'une même entreprise, hors offre affichée."""
+
+    save_offers(
+        database_file,
+        pd.DataFrame(
+            [{"source": "lever", "source_id": "2", "title": "Dev", "company": "ACME"}]
+        ),
+        NOW,
+    )
+    record_interview(database_file, "remotive", "1", NOW, "Pourquoi nous ?", "")
+
+    vOther = {"source": "lever", "source_id": 2, "company": "Acme"}
+    vSame = {"source": "remotive", "source_id": "1", "company": "Acme"}
+
+    assert [
+        vItem["question"] for vItem in collect_company_questions(database_file, vOther)
+    ] == ["Pourquoi nous ?"]
+    assert collect_company_questions(database_file, vSame) == []
+    assert collect_company_questions(database_file, {"company": ""}) == []

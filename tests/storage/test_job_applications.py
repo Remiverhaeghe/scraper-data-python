@@ -7,6 +7,7 @@ import pytest
 
 from storage.database import initialize_database
 from storage.job_applications import (
+    get_status_history,
     count_applications_by_day,
     count_follow_ups_by_day,
     create_application,
@@ -409,3 +410,24 @@ def test_status_alone_keeps_notes_follow_up_and_interview(tmp_path):
     assert vKept["follow_up_date"].startswith("2026-11-02")
     assert vKept["interview_at"] == "2026-11-05T10:00"
     assert (vCleared["notes"], vCleared["interview_at"]) == (None, None)
+
+
+def test_every_status_change_is_kept_in_the_history(tmp_path):
+    """Vérifie l'historique : création, changements, statut inchangé ignoré."""
+
+    database_file = tmp_path / "scraper.db"
+    initialize_database(database_file)
+
+    save_application(database_file, "adzuna", "1", "INTERESTED")
+    save_application(database_file, "adzuna", "1", "APPLIED")
+    update_application_status(database_file, "adzuna", "1", "APPLIED")
+    update_application_status(database_file, "adzuna", "1", "INTERVIEW")
+
+    vHistory = get_status_history(database_file, "adzuna", "1")
+
+    assert [vStatus for vStatus, _ in vHistory] == [
+        "INTERESTED",
+        "APPLIED",
+        "INTERVIEW",
+    ]
+    assert all(vDate[:4].isdigit() for _, vDate in vHistory)

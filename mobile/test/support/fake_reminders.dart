@@ -1,5 +1,6 @@
 // Rappels et alertes simulés, partagés par les tests.
 
+import 'package:jobboard_revision/logic/interview_alerts.dart';
 import 'package:jobboard_revision/services/reminders.dart';
 
 /// Rappels simulés : retient les planifications au lieu de notifier.
@@ -26,6 +27,16 @@ class FakeReminders implements Reminders {
   Future<void> showNewOffers(List<Map<String, dynamic>> pOffers) async => shownOffers.add(pOffers);
 
   final shownReplies = <List<Map<String, dynamic>>>[];
+  final interviewAlerts = <List<InterviewAlert>>[];
+  final shownWithdrawn = <List<Map<String, dynamic>>>[];
+
+  @override
+  Future<void> showWithdrawn(List<Map<String, dynamic>> pOffers) async =>
+      shownWithdrawn.add(pOffers);
+
+  @override
+  Future<void> scheduleInterviews(List<InterviewAlert> pAlerts) async =>
+      interviewAlerts.add(pAlerts);
 
   @override
   Future<void> showReplies(List<Map<String, dynamic>> pReplies) async => shownReplies.add(pReplies);

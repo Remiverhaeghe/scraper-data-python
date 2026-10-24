@@ -56,6 +56,12 @@ void main() {
     ]);
 
     expect(vSimilar, hasLength(1));
+
+    final vPreferred = findNewGoodOffers(const [], [
+      {...buildOffer('6', 10), 'preferred': true},
+    ]);
+
+    expect(vPreferred, hasLength(1));
   });
 
   test('Les nouvelles offres sont signalées une fois, alerte active', () async {

@@ -8,9 +8,13 @@ import pandas as pd
 
 from config import WEB_PUBLIC_HOST, WEB_SCHEME, WEB_TLS_CERTFILE, WEB_TLS_KEYFILE
 from job.application import process_jobs
+from job.geocoding import locate_new_offers
 from job.offer_archive import archive_expired_offers
+from job.offer_details import complete_missing_descriptions
 from job.skill_cache import refresh_detected_skills
 from job.application_replies import run_due_reply_check
+from job.daily_digest import send_daily_digest_if_due
+from job.restore_check import run_due_restore_check
 from job.application_tracking import get_due_follow_ups
 from job.followed_availability import (
     build_expired_offers_email,
@@ -291,6 +295,16 @@ def send_weekly_digest(pDatabaseFile, pNow):
     return rSent
 
 
+def send_daily_digest(pDatabaseFile, pNow):
+    """Envoie le récapitulatif du jour, s'il est activé et pas encore parti."""
+
+    rSent = send_daily_digest_if_due(
+        pDatabaseFile, pNow, load_schedule(pDatabaseFile)["email"], send_email
+    )
+
+    return rSent
+
+
 def send_interview_reminders(pDatabaseFile, pNow):
     """Envoie le rappel de chaque entretien des prochaines 24 heures ; retourne leur nombre."""
 
@@ -327,11 +341,15 @@ BACKGROUND_TASKS = (
     ("sauvegarde automatique", run_due_backup),
     ("vérification des offres suivies", check_followed_offers_daily),
     ("récapitulatif hebdomadaire", send_weekly_digest),
+    ("récapitulatif quotidien", send_daily_digest),
     ("rappels d'entretien", send_interview_reminders),
     ("certificat du tableau de bord", renew_web_certificate),
     ("archivage des offres expirées", archive_expired_offers),
     ("compétences des offres", refresh_detected_skills),
+    ("placement des offres sur la carte", locate_new_offers),
+    ("descriptions manquantes", complete_missing_descriptions),
     ("réponses des recruteurs", run_due_reply_check),
+    ("essai de restauration", run_due_restore_check),
 )
 
 # Erreurs attendues d'une tâche : disque, base, envoi d'e-mail ou réglage invalide

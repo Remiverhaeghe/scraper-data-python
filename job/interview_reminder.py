@@ -4,6 +4,7 @@ from datetime import timedelta
 from html import escape
 
 from config import APPLICATION_NAME
+from job.agencies import load_interim_agencies
 from job.interview_journal import collect_asked_questions
 from job.interview_revision import build_offer_revision
 from job.preparation import prepare_application
@@ -96,6 +97,7 @@ def build_reminder_email(pDatabaseFile, pApplication):
         vOffer,
         load_star_answers(pDatabaseFile),
         collect_asked_questions(pDatabaseFile),
+        load_interim_agencies(pDatabaseFile),
     )["interview"]
 
     vTitle = vOffer.get("title") or "offre sans titre"

@@ -20,11 +20,13 @@ from PySide6.QtWidgets import (
 from gui.interview_journal_panel import InterviewJournalPanel
 from gui.offer_attachments import AttachmentsPanel
 from gui.widgets import align_spin_box, create_button
+from job.application_tracking import describe_status_history
 from job.presentation import STATUS_LABELS, format_date
 from job.settings import load_settings
 from storage.job_applications import (
     delete_application,
     get_application,
+    get_status_history,
     record_follow_up,
     save_application,
 )
@@ -174,7 +176,25 @@ class ApplicationPanel(QGroupBox):
         self.follow_up_button.setVisible(
             vApplication.get("status") in FOLLOW_UP_STATUSES
         )
-        self.application_label.setText(describe_application(vApplication))
+        vHistory = (
+            describe_status_history(
+                get_status_history(
+                    self.database_file, self.offer["source"], self.offer["source_id"]
+                )
+            )
+            if self.offer is not None
+            else ""
+        )
+        self.application_label.setText(
+            "\n".join(
+                vPart
+                for vPart in (
+                    describe_application(vApplication),
+                    f"Historique : {vHistory}" if vHistory else "",
+                )
+                if vPart
+            )
+        )
         self.attachments.set_offer(self.offer)
         self.journal.set_offer(self.offer)
 

@@ -11,6 +11,7 @@ from fastapi import APIRouter, Body, Depends, Header, HTTPException, Response
 
 from config import APPLICATION_NAME
 from job.application_replies import load_pending_replies
+from job.followed_availability import list_withdrawn_offers
 from job.interview_simulation import (
     list_themes,
     load_interview_questions,
@@ -26,6 +27,7 @@ from job.mobile_sync import (
     sync_answers,
     sync_exam_results,
     sync_flags,
+    sync_phone_notes,
     sync_status_changes,
 )
 from job.profile import load_profile
@@ -36,6 +38,7 @@ from job.self_assessment import (
     build_grid,
     save_skill_levels,
 )
+from job.weekly_digest import get_coming_interviews
 from utils.logger import get_logger
 from web.dependencies import get_database_file
 
@@ -231,6 +234,33 @@ def upload_skill_levels(
     return rReport
 
 
+@router.get("/interviews", dependencies=[Depends(require_api_token)])
+def download_interviews(pDatabaseFile: str = Depends(get_database_file)):
+    """Renvoie les entretiens des sept prochains jours, pour les rappels du téléphone."""
+
+    rInterviews = {
+        "interviews": [
+            {
+                "title": vInterview["title"],
+                "company": vInterview["company"],
+                "interview_at": vInterview["interview_at"],
+            }
+            for vInterview in get_coming_interviews(pDatabaseFile, datetime.now())
+        ]
+    }
+
+    return rInterviews
+
+
+@router.get("/withdrawn", dependencies=[Depends(require_api_token)])
+def download_withdrawn_offers(pDatabaseFile: str = Depends(get_database_file)):
+    """Renvoie les offres suivies que leur site a retirées."""
+
+    rOffers = {"offers": list_withdrawn_offers(pDatabaseFile)}
+
+    return rOffers
+
+
 @router.get("/replies", dependencies=[Depends(require_api_token)])
 def download_replies(pDatabaseFile: str = Depends(get_database_file)):
     """Renvoie les réponses de recruteurs repérées par la dernière lecture de Gmail."""
@@ -247,6 +277,22 @@ def download_offers(pDatabaseFile: str = Depends(get_database_file)):
     rOffers = {"offers": build_offer_list(pDatabaseFile, datetime.now())}
 
     return rOffers
+
+
+@router.post("/notes", dependencies=[Depends(require_api_token)])
+def upload_phone_notes(
+    pNotes: list = Body(..., embed=True, alias="notes"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Ajoute aux candidatures les notes rapides prises sur le téléphone."""
+
+    try:
+        rReport = sync_phone_notes(pDatabaseFile, pNotes, datetime.now())
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    return rReport
 
 
 @router.post("/applications", dependencies=[Depends(require_api_token)])

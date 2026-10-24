@@ -24,6 +24,7 @@ from job.offer_purge import (
     parse_purge_words,
     purge_offers,
     save_excluded_words,
+    suggest_excluded_words,
 )
 from utils.logger import get_logger
 
@@ -88,6 +89,19 @@ class OfferPurgePanel(QWidget):
         vExcluded.addWidget(self.excluded_label, 1)
         vExcluded.addWidget(vEditButton)
 
+        # Mots typiques des offres ignorées, ajoutés d'un clic
+        self.suggestions = []
+        self.suggestion_label = QLabel()
+        self.suggestion_label.setObjectName("cardSubtitle")
+        self.suggestion_label.setWordWrap(True)
+
+        self.suggestion_button = create_button("Exclure ces mots", "list-checks")
+        self.suggestion_button.clicked.connect(self.add_suggestions)
+
+        vSuggestions = QHBoxLayout()
+        vSuggestions.addWidget(self.suggestion_label, 1)
+        vSuggestions.addWidget(self.suggestion_button)
+
         self.message_label = QLabel()
         self.message_label.setObjectName("cardSubtitle")
         self.message_label.setWordWrap(True)
@@ -104,6 +118,7 @@ class OfferPurgePanel(QWidget):
         vCardLayout.addWidget(self.exclude_check)
         vCardLayout.addWidget(self.message_label)
         vCardLayout.addLayout(vExcluded)
+        vCardLayout.addLayout(vSuggestions)
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0, 0, 0, 0)
@@ -128,6 +143,27 @@ class OfferPurgePanel(QWidget):
             if vWords
             else "Aucun mot exclu de toutes les recherches."
         )
+
+        try:
+            self.suggestions = suggest_excluded_words(self.database_file)
+
+        except Exception:
+            logger.exception("Impossible de proposer des mots exclus")
+
+            self.suggestions = []
+
+        self.suggestion_label.setText(
+            "Souvent dans vos offres ignorées, jamais dans les retenues : "
+            + ", ".join(f"{vWord} ({vCount})" for vWord, vCount in self.suggestions)
+        )
+        self.suggestion_label.setVisible(bool(self.suggestions))
+        self.suggestion_button.setVisible(bool(self.suggestions))
+
+    def add_suggestions(self):
+        """Ajoute les mots suggérés à la liste des mots exclus."""
+        add_excluded_words(self.database_file, [vWord for vWord, _ in self.suggestions])
+        self.show_excluded_words()
+        show_message(self.message_label, "Mots suggérés ajoutés aux mots exclus.")
 
     def edit_excluded_words(self):
         """Modifie la liste des mots exclus, séparés par des virgules."""

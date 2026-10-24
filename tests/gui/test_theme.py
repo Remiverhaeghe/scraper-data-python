@@ -4,7 +4,14 @@ import re
 
 from gui.icons import ICONS_DIRECTORY, get_icon
 from gui.branding import LOGO_SIZES, create_logo_icon
-from gui.theme import THEMES, COLORS, apply_theme, build_stylesheet, is_dark_theme
+from gui.theme import (
+    THEMES,
+    COLORS,
+    apply_theme,
+    build_stylesheet,
+    is_dark_theme,
+    scale_font_sizes,
+)
 
 
 def test_stylesheet_has_no_unresolved_variable():
@@ -56,3 +63,15 @@ def test_embedded_icons_contain_only_drawing():
 
     for vFile in ICONS_DIRECTORY.glob("*.svg"):
         assert not vForbidden.search(vFile.read_text(encoding="utf-8")), vFile.name
+
+
+def test_text_scale_resizes_every_font_size():
+    """Vérifie la mise à l'échelle des tailles de texte, le reste inchangé."""
+
+    assert scale_font_sizes("a { font-size: 13px; width: 10px; }", 130) == (
+        "a { font-size: 17px; width: 10px; }"
+    )
+    assert build_stylesheet(115).count("font-size") == build_stylesheet().count(
+        "font-size"
+    )
+    assert build_stylesheet(115) != build_stylesheet()

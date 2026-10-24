@@ -22,6 +22,13 @@
 
     {% if journal_message %}<p class="application-message tone-{{ journal_tone }}" role="status">{{ journal_message }}</p>{% endif %}
 
+    {% if company_questions %}
+    <details class="star-answer" open>
+        <summary>Déjà posées par cette entreprise ({{ company_questions | length }})</summary>
+        <ul>{% for item in company_questions %}<li>{{ item.question }} <span class="muted">· {{ item.context }}</span></li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+
     {% for note in interview_notes %}
     <details class="star-answer">
         <summary>{{ note.interviewed_at | date_fr }}</summary>
