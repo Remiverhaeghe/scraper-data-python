@@ -70,6 +70,8 @@ dans l'historique git.
 - Web lisible hors connexion : dernière copie des pages de lecture, effacée à la
   déconnexion
 - Correction : la remise à zéro vide aussi l'historique des statuts
+- Sécurité : pypdf 6.21.2 (9 failles, lecture des CV importés), certifi
+  2026.10.19 et uv 0.13.4, image Docker comprise (`requirements-server.lock`)
 - Migrations rangées dans `storage/migrations.py` ; tests en parallèle
   (`pytest -n auto`, pytest-xdist)
 - Entreprise suivie ajoutée depuis l'adresse de son site carrière
