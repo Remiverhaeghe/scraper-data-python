@@ -26,7 +26,9 @@ def parse_job(pJob):
 
     vIdentifier = pJob.get("identifier") or {}
     vWorkplace = pJob.get("workplace") or {}
-    vLocation = pJob.get("location") or {}
+    # L'API range désormais le lieu dans l'établissement ; location reste lu en
+    # premier pour les offres qui le renseignent encore.
+    vLocation = pJob.get("location") or vWorkplace.get("location") or {}
     vContract = pJob.get("contract") or {}
     vOffer = pJob.get("offer") or {}
     vPublication = pJob.get("publication") or {}

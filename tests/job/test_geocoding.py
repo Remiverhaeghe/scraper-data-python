@@ -308,6 +308,15 @@ def test_city_alone_is_tried_when_the_full_place_is_unknown(geocoder):
     ]
 
 
+def test_postal_address_is_found_by_its_postcode_and_city(geocoder):
+    """Vérifie qu'une adresse complète se cherche par « code postal commune »."""
+
+    vPlace = geocode_location("12 rue de l'Usine 59000 Lille")
+
+    assert vPlace[1] == "Lille"
+    assert [vQuery["q"] for vQuery in geocoder][-1] == "59000 Lille"
+
+
 def test_unknown_places_are_listed_then_resolved(tmp_path, geocoder):
     """Vérifie la liste des lieux introuvables, puis leur commune indiquée à la main."""
 

@@ -1275,6 +1275,8 @@ scraper-data-python/
 │   │   ├── test_logs_page.py                   # Teste la page des logs
 │   │   ├── test_quality_page.py                # Teste la page de qualité des données
 │   │   ├── test_unknown_places_panel.py        # Teste la correction des lieux introuvables
+│   │   ├── test_dialogs.py                     # Teste la préparation, la lettre et les fenêtres de texte
+│   │   ├── test_health_panel.py                # Teste la carte d'état de l'application
 │   │   ├── test_interview_journal_panel.py     # Teste le panneau du journal d'entretien
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
 │   │   ├── test_interview_simulation_panel.py  # Teste la simulation d'entretien

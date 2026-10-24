@@ -9,7 +9,13 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QEvent, QSettings  # noqa: E402
-from PySide6.QtWidgets import QApplication  # noqa: E402
+from PySide6.QtWidgets import (  # noqa: E402
+    QApplication,
+    QDialog,
+    QFileDialog,
+    QInputDialog,
+    QMessageBox,
+)
 
 
 @pytest.fixture(scope="session")
@@ -73,3 +79,62 @@ def close_windows():
 
         # deleteLater attend la boucle d'événements : la suppression est forcée ici.
         vApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+
+# Fenêtres qui attendent une réponse : sans simulation, un test resterait bloqué
+# jusqu'à ce qu'on tue pytest. Chacune répond « annuler » et le test échoue.
+MODAL_METHODS = {
+    QDialog: {"exec": 0},
+    QMessageBox: {
+        "exec": 0,
+        "question": QMessageBox.StandardButton.NoButton,
+        "warning": QMessageBox.StandardButton.NoButton,
+        "information": QMessageBox.StandardButton.NoButton,
+        "critical": QMessageBox.StandardButton.NoButton,
+    },
+    QInputDialog: {
+        "exec": 0,
+        "getText": ("", False),
+        "getMultiLineText": ("", False),
+        "getItem": ("", False),
+        "getInt": (0, False),
+        "getDouble": (0.0, False),
+    },
+    QFileDialog: {
+        "exec": 0,
+        "getOpenFileName": ("", ""),
+        "getOpenFileNames": ([], ""),
+        "getSaveFileName": ("", ""),
+        "getExistingDirectory": "",
+    },
+}
+
+
+@pytest.fixture(autouse=True)
+def refuse_modal_windows(monkeypatch):
+    """Fait échouer un test qui ouvre une fenêtre modale sans la simuler.
+
+    L'échec est signalé après le test : levée dans un slot Qt, une exception
+    serait seulement affichée et le test passerait quand même.
+    """
+
+    vOpened = []
+
+    for vClass, vMethods in MODAL_METHODS.items():
+        for vName, vAnswer in vMethods.items():
+
+            def refuse(*_pArgs, pName=f"{vClass.__name__}.{vName}", pAnswer=vAnswer):
+                vOpened.append(pName)
+
+                return pAnswer
+
+            monkeypatch.setattr(vClass, vName, refuse)
+
+    yield
+
+    if vOpened:
+        pytest.fail(
+            "Fenêtre modale non simulée : "
+            + ", ".join(dict.fromkeys(vOpened))
+            + ". Simulez-la avec monkeypatch dans le test."
+        )

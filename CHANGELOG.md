@@ -78,6 +78,11 @@ dans l'historique git.
   lieu de 50)
 - Santé : indicateur « Planificateur », d'après un fichier témoin touché à
   chaque passage (`data/scheduler.heartbeat`)
+- Correction : lieu des offres La bonne alternance lu dans l'établissement, où
+  l'API le range désormais ; une adresse complète est placée sur la carte par
+  son code postal et sa commune
+- Tests : une fenêtre modale non simulée fait échouer le test au lieu de bloquer
+  la suite ; couverture relevée (purge, fenêtres, santé)
 - Migrations rangées dans `storage/migrations.py` ; tests en parallèle
   (`pytest -n auto`, pytest-xdist)
 - Entreprise suivie ajoutée depuis l'adresse de son site carrière

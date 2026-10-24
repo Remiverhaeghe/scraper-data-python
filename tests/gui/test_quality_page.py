@@ -119,3 +119,83 @@ def test_suggested_words_are_excluded_in_one_click(
 
     assert load_excluded_words(vDatabaseFile) == ["vendeur"]
     assert vPanel.suggestion_button.isHidden()
+
+
+def test_excluded_words_edit_and_purge_errors(qt_application, tmp_path, monkeypatch):
+    """Vérifie la saisie des mots exclus, puis chaque refus ou échec expliqué."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame([{"source": "remotive", "source_id": "1", "title": "Stage"}]),
+        datetime(2026, 10, 11),
+    )
+    vPanel = OfferPurgePanel(vDatabaseFile)
+    vAnswers = iter([("vendeur, stage", True), ("", False), ("ab", True)])
+    monkeypatch.setattr(
+        offer_purge_panel.QInputDialog, "getText", lambda *_, **__: next(vAnswers)
+    )
+
+    vPanel.edit_excluded_words()
+
+    assert load_excluded_words(vDatabaseFile) == ["vendeur", "stage"]
+    assert vPanel.message_label.text() == "Mots exclus enregistrés."
+
+    vPanel.edit_excluded_words()
+    vPanel.edit_excluded_words()
+
+    assert vPanel.message_label.text().startswith("Mots trop courts")
+    assert load_excluded_words(vDatabaseFile) == ["vendeur", "stage"]
+
+    vPanel.words_edit.setText("")
+    vPanel.preview()
+
+    assert vPanel.message_label.text().startswith("Saisissez au moins un mot")
+
+    vPanel.words_edit.setText("inconnu")
+    vPanel.preview()
+
+    assert vPanel.message_label.text() == "Aucune offre à supprimer pour ces mots."
+
+    vPanel.words_edit.setText("stage")
+    vPanel.preview()
+    monkeypatch.setattr(
+        offer_purge_panel.QMessageBox,
+        "question",
+        lambda *_: offer_purge_panel.QMessageBox.StandardButton.No,
+    )
+    vPanel.delete()
+
+    assert count_offers(vDatabaseFile) == 1
+
+    def fail(*_pArgs, **_pOptions):
+        raise RuntimeError("base verrouillée")
+
+    monkeypatch.setattr(
+        offer_purge_panel.QMessageBox,
+        "question",
+        lambda *_: offer_purge_panel.QMessageBox.StandardButton.Yes,
+    )
+    monkeypatch.setattr(offer_purge_panel, "purge_offers", fail)
+    vPanel.delete()
+
+    assert vPanel.message_label.text().startswith("La suppression a échoué")
+
+    monkeypatch.setattr(offer_purge_panel, "find_offers_to_purge", fail)
+    vPanel.preview()
+
+    assert vPanel.message_label.text() == "L'aperçu n'a pas pu être calculé."
+
+    monkeypatch.setattr(offer_purge_panel, "save_excluded_words", fail)
+    vAnswers = iter([("stage", True)])
+    vPanel.edit_excluded_words()
+
+    assert vPanel.message_label.text() == "Les mots n'ont pas pu être enregistrés."
+
+    monkeypatch.setattr(offer_purge_panel, "load_excluded_words", fail)
+    monkeypatch.setattr(offer_purge_panel, "suggest_excluded_words", fail)
+    vPanel.show_excluded_words()
+
+    assert vPanel.excluded_label.text() == "Aucun mot exclu de toutes les recherches."
+    assert vPanel.suggestion_button.isHidden()

@@ -21,6 +21,23 @@ JOB = {
 }
 
 
+def test_location_is_read_in_the_workplace():
+    """Vérifie le lieu lu dans l'établissement quand location est vide."""
+
+    vJob = parse_job(
+        {
+            **JOB,
+            "location": None,
+            "workplace": {
+                "name": "Azur Linge Service",
+                "location": {"address": "120 AVENUE JEAN MAUBERT 06130 GRASSE"},
+            },
+        }
+    )
+
+    assert vJob["location"] == "120 AVENUE JEAN MAUBERT 06130 GRASSE"
+
+
 def test_parse_job_reads_each_block():
     """Vérifie la lecture des blocs de l'offre."""
 

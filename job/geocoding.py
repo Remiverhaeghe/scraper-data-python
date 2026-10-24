@@ -40,6 +40,9 @@ MAX_LOOKUPS = 300
 # environ une demi-seconde par lieu, la recherche ne reste pas bloquée des minutes.
 BATCH_LOOKUPS = 40
 
+# Code postal suivi de la commune, en fin d'adresse
+POSTAL_ADDRESS_PATTERN = re.compile(r"\b\d{5}\s+[^\d,;]+$")
+
 # Lieux introuvables proposés à la correction, les plus fréquents d'abord
 MAX_UNKNOWN_PLACES = 30
 
@@ -195,6 +198,13 @@ def geocode_location(pLocation, pNear=None):
 
     if rPlace is None and vCity and vCity != str(pLocation).strip():
         rPlace = geocode(vCity, "municipality", pNear)
+
+    # Adresse postale complète : « 120 avenue … 06130 Grasse » se cherche par son
+    # code postal et sa commune.
+    vPostal = POSTAL_ADDRESS_PATTERN.search(str(pLocation))
+
+    if rPlace is None and vPostal:
+        rPlace = geocode(vPostal.group(0), "municipality", pNear)
 
     return rPlace
 
