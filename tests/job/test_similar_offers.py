@@ -4,7 +4,12 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from job.similar_offers import build_signature, compute_similarity, find_similar_offers
+from job.similar_offers import (
+    build_signature,
+    compute_similarity,
+    find_similar_offers,
+    mark_like_ignored,
+)
 from storage.database import initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import save_offers
@@ -75,3 +80,33 @@ def test_similar_offers_follow_the_retained_ones(tmp_path):
     assert [vOffer["source_id"] for vOffer in vOffers] == ["proche"]
     assert vOffers[0]["reference_title"] == "Technicien de maintenance"
     assert vOffers[0]["similarity"] == 75
+
+
+def test_offers_like_an_ignored_one_are_marked(tmp_path):
+    """Vérifie le signalement des offres proches d'un refus, jamais des offres suivies."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {"source": "lever", "source_id": "0", "title": "Vendeur magasin sport"},
+            ]
+        ),
+        datetime(2026, 10, 24),
+    )
+    save_application(vDatabaseFile, "lever", "0", "IGNORED")
+    vOffers = [
+        {"title": "Vendeur magasin sport"},
+        {"title": "Développeur Python"},
+        {"title": "Vendeur magasin sport", "application_status": "APPLIED"},
+    ]
+
+    mark_like_ignored(vDatabaseFile, vOffers)
+
+    assert [vOffer["like_ignored"] for vOffer in vOffers] == [
+        "Vendeur magasin sport",
+        None,
+        None,
+    ]

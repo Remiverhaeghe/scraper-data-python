@@ -13,6 +13,7 @@ from job.restore_check import load_restore_check
 from job.mobile_sync import get_last_phone_sync, get_mobile_token
 from job.schedule import get_scheduler_heartbeat, load_schedule
 from job.sources.registry import SOURCES
+from job.statistics import load_source_review
 from storage.backup import (
     describe_backups,
     get_last_auto_backup_time,
@@ -21,7 +22,7 @@ from storage.backup import (
 )
 from storage.geo_cache import count_offer_positions
 from storage.history_repository import get_history
-from storage.job_offers import get_offers
+from storage.job_offers import count_empty_fields, get_offers
 from storage.settings_repository import get_setting_values, load_json_setting
 from utils.logger import get_logger
 from utils.mailer import get_missing_email_settings
@@ -49,6 +50,13 @@ PHONE_SYNC_WARNING_DELAY = timedelta(days=2)
 # Recherches de suite sans aucune offre au-delà desquelles une source qui en
 # renvoyait est signalée : son API a peut-être changé ou sa clé expiré.
 SILENT_SOURCE_RUNS = 3
+
+# Une source dont plus de la moitié des offres récentes ont un champ vide a
+# sans doute changé le format de son API (lieu déplacé, champ renommé).
+FORMAT_CHECK_DAYS = 14
+FORMAT_MIN_OFFERS = 10
+FORMAT_EMPTY_SHARE = 0.5
+FORMAT_FIELDS = {"title": "titre", "location": "lieu", "company": "entreprise"}
 
 
 def format_age(pDate, pNow):
@@ -345,6 +353,59 @@ def check_silent_sources(pDatabaseFile):
     return rCheck
 
 
+def find_format_changes(pCounts):
+    """Retourne « Source : lieu vide pour 85 % » pour chaque champ trop souvent vide."""
+
+    rChanges = [
+        f"{SOURCES[vRow['source']].label if vRow['source'] in SOURCES else vRow['source']}"
+        f" : {vLabel} vide pour {round(100 * vRow[vField] / vRow['total'])} %"
+        for vRow in pCounts
+        if vRow["total"] >= FORMAT_MIN_OFFERS
+        for vField, vLabel in FORMAT_FIELDS.items()
+        if vRow[vField] > FORMAT_EMPTY_SHARE * vRow["total"]
+    ]
+
+    return rChanges
+
+
+def check_source_formats(pDatabaseFile, pNow):
+    """Signale les sources dont les offres récentes arrivent avec des champs vides."""
+
+    vChanges = find_format_changes(
+        count_empty_fields(pDatabaseFile, pNow - timedelta(days=FORMAT_CHECK_DAYS))
+    )
+
+    rCheck = (
+        (
+            "; ".join(vChanges)
+            + ". Format de l'API modifié ? Comparez une offre récente à la source.",
+            "warning",
+        )
+        if vChanges
+        else ("Titre, lieu et entreprise lus pour toutes les sources", "success")
+    )
+
+    return rCheck
+
+
+def check_useful_sources(pDatabaseFile):
+    """Rappelle les sources à décocher, d'après la revue quotidienne du planificateur."""
+
+    vReview = load_source_review(pDatabaseFile)
+
+    if not vReview:
+        rCheck = ("Pas encore revue : faite chaque jour par le planificateur", "muted")
+    elif vReview["advice"]:
+        rCheck = (vReview["advice"], "warning")
+    else:
+        rCheck = (
+            "Chaque source a donné au moins une offre utile ce mois-ci",
+            "success",
+        )
+
+    return rCheck
+
+
 def check_followed_offers(pDatabaseFile):
     """Indique la dernière vérification des liens des offres suivies."""
 
@@ -468,6 +529,8 @@ def build_health(pDatabaseFile, pNow):
         ("Dernière recherche", lambda: check_last_run(pDatabaseFile)),
         ("Sources", check_sources),
         ("Sources muettes", lambda: check_silent_sources(pDatabaseFile)),
+        ("Formats des sources", lambda: check_source_formats(pDatabaseFile, pNow)),
+        ("Sources utiles", lambda: check_useful_sources(pDatabaseFile)),
         ("Descriptions", lambda: check_descriptions(pDatabaseFile, pNow)),
         ("Réponses Gmail", lambda: check_gmail(pDatabaseFile, pNow)),
         ("Offres suivies vérifiées", lambda: check_followed_offers(pDatabaseFile)),

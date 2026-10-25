@@ -15,6 +15,7 @@ import 'question_screen.dart';
 import 'setup_screen.dart';
 import 'skills_screen.dart';
 import 'statistics_screen.dart';
+import 'tracking_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.state});
@@ -93,6 +94,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               icon: const Icon(Icons.work_outline),
             ),
             IconButton(
+              tooltip: 'Mes candidatures',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => TrackingScreen(state: state)),
+              ),
+              icon: const Icon(Icons.assignment_outlined),
+            ),
+            IconButton(
               tooltip: 'Statistiques',
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => StatisticsScreen(state: state)),
@@ -143,6 +151,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               if (state.syncing) const LinearProgressIndicator(),
               SummaryCard(state: state),
               DailyGoalCard(state: state),
+              if (state.nextInterview(DateTime.now()) case final vInterview?)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.event_available),
+                    title: Text(
+                      'Entretien le ${formatMoment(vInterview['interview_at'] as String?)}',
+                    ),
+                    subtitle: Text('${vInterview['company'] ?? vInterview['title'] ?? ''}'
+                        ' · ouvrir la fiche de préparation'),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => SheetScreen(sheet: state.sheetOf(vInterview)!),
+                      ),
+                    ),
+                  ),
+                ),
               if (state.package != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),

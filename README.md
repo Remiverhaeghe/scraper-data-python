@@ -220,6 +220,11 @@ pytest -n auto                    # les mêmes, en parallèle sur tous les cœur
 - [x] Récapitulatif quotidien facultatif par e-mail et bilan « Votre semaine » sur l'accueil
 - [x] Préparation d'entretien : fiche imprimable ou PDF, pitch, questions pièges selon l'employeur, questions déjà posées par l'entreprise, glossaire des compétences
 - [x] Relance envoyée depuis l'application après relecture, historique des statuts de chaque candidature
+- [x] Page Santé : planificateur en marche, formats des sources (champ vide pour plus de la moitié des offres récentes), sources utiles revues chaque jour
+- [x] Pages lentes signalées dans les journaux (plus d'une seconde), sur le web et le bureau
+- [x] Offres « à saisir vite », offres « Intéressé » restées sans candidature, offres proches de vos refus en bas de liste
+- [x] Trajet en voiture estimé et net après trajet (coût par kilomètre réglable), avantages et ressenti dans la comparaison
+- [x] Remerciement proposé après un entretien, contacts connus par entreprise, message de candidature spontanée, bilan du mois
 
 ### 🖥️ Interface graphique
 
@@ -960,6 +965,7 @@ scraper-data-python/
 │   │   ├── _attachments.html                  # Pièces jointes d'une offre
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── preparation_sheet.html             # Fiche de préparation imprimable, sans menu
+│   │   ├── _spontaneous_draft.html            # Brouillon de candidature spontanée, chargé par HTMX
 │   │   ├── applications.html                  # Candidatures par étape et taux de réponse
 │   │   ├── _replies.html                      # Réponses des recruteurs, chargées par HTMX
 │   │   ├── quiz.html                          # Révision technique par QCM

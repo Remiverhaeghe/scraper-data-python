@@ -16,7 +16,9 @@ MAX_EMAIL_OFFERS = 20
 
 
 def describe_offer(pOffer):
-    """Résume une offre en une ligne : entreprise, lieu, salaire net et score."""
+    """Résume une offre en une ligne : entreprise, lieu, salaire net, score et,
+    s'il y a plusieurs recherches, celle qui l'a trouvée.
+    """
 
     vScore = pOffer.get("match_score")
 
@@ -27,11 +29,36 @@ def describe_offer(pOffer):
             describe_location(pOffer),
             format_net_salary(pOffer),
             f"correspondance {vScore} %" if vScore is not None else None,
+            f"recherche « {pOffer['found_by']} »" if pOffer.get("found_by") else None,
         )
         if vPart
     )
 
     return rDetail
+
+
+def describe_offers_by_search(pOffers):
+    """Compte les offres par recherche, si plusieurs recherches en ont trouvé ;
+    sinon, efface la recherche des offres, inutile à répéter sur chacune.
+    """
+
+    vCounts = {}
+
+    for vOffer in pOffers:
+        if vOffer.get("found_by"):
+            vCounts[vOffer["found_by"]] = vCounts.get(vOffer["found_by"], 0) + 1
+
+    if len(vCounts) < 2:
+        for vOffer in pOffers:
+            vOffer.pop("found_by", None)
+
+        return ""
+
+    rText = "Par recherche : " + ", ".join(
+        f"{vName} {vCount}" for vName, vCount in vCounts.items()
+    )
+
+    return rText
 
 
 def build_list_email(pSubject, pIntroduction, pItems, pDescribe, pMoreLabel):

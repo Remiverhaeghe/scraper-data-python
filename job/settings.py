@@ -107,6 +107,16 @@ SETTING_DEFINITIONS = {
         50,
         "€ net/mois",
     ),
+    "commute_cost_per_km": SettingDefinition(
+        "Coût du trajet",
+        "Coût d'un kilomètre en voiture (carburant, usure), déduit du net pour "
+        "comparer les offres. 0 : non calculé.",
+        0,
+        2,
+        0.05,
+        "€/km",
+        False,
+    ),
     "experience_years": SettingDefinition(
         "Expérience",
         "Vos années d'expérience professionnelle, comparées à celles demandées "
@@ -192,6 +202,7 @@ def get_default_settings():
         "weekly_application_goal": 0,
         "target_net_salary": 0,
         "archive_after_days": 0,
+        "commute_cost_per_km": 0.25,
         "experience_years": 0,
         "daily_digest_hour": 0,
         "weight_match": 5,

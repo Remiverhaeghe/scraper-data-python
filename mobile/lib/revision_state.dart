@@ -57,6 +57,12 @@ const pendingStatusPreference = 'pending_status';
 /// Notes rapides prises sur une offre, pas encore envoyées au PC
 const pendingNotesPreference = 'pending_notes';
 
+/// Candidatures en cours et fiches des entretiens à venir, lisibles hors ligne
+const trackingPreference = 'tracking';
+
+/// Avant un entretien, la fiche de préparation est proposée sur l'accueil.
+const interviewSheetLead = Duration(hours: 24);
+
 /// Taille d'une note rapide, la même limite que côté PC
 const maxNoteLength = 1000;
 
@@ -527,6 +533,7 @@ class RevisionState extends ChangeNotifier {
       await exchangeReplies(pClient);
       await exchangeWithdrawn(pClient);
       await scheduleInterviewAlerts(pClient);
+      await exchangeTracking(pClient);
     } on ApiException catch (vException) {
       if (vException.unreachable) {
         rethrow;
@@ -679,6 +686,56 @@ class RevisionState extends ChangeNotifier {
       );
 
   /// Reçoit les offres suivies retirées par leur site et signale les nouvelles.
+  /// Candidatures en cours, reçues du PC à la dernière synchronisation.
+  List<Map<String, dynamic>> get trackedApplications => [
+        for (final vItem
+            in (preferences[trackingPreference] as Map?)?['applications'] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  /// Fiche de préparation d'une candidature, ou null si aucun entretien proche.
+  Map<String, dynamic>? sheetOf(Map<String, dynamic> pApplication) {
+    final vSheets = (preferences[trackingPreference] as Map?)?['sheets'] as Map?;
+    final vSheet = vSheets?['${pApplication['source']}/${pApplication['source_id']}'];
+
+    final rSheet = vSheet == null ? null : Map<String, dynamic>.from(vSheet as Map);
+
+    return rSheet;
+  }
+
+  /// Prochain entretien dans les 24 heures qui a sa fiche, ou null.
+  Map<String, dynamic>? nextInterview(DateTime pNow) {
+    Map<String, dynamic>? rNext;
+
+    for (final vApplication in trackedApplications) {
+      final vAt = DateTime.tryParse('${vApplication['interview_at'] ?? ''}');
+
+      if (vAt != null &&
+          vAt.isAfter(pNow) &&
+          vAt.isBefore(pNow.add(interviewSheetLead)) &&
+          sheetOf(vApplication) != null &&
+          (rNext == null || vAt.isBefore(DateTime.parse('${rNext['interview_at']}')))) {
+        rNext = vApplication;
+      }
+    }
+
+    return rNext;
+  }
+
+  /// Garde les candidatures et les fiches pour une consultation hors ligne ; un
+  /// serveur plus ancien qui ne les connaît pas n'empêche pas la synchronisation.
+  Future<void> exchangeTracking(ApiClient pClient) async {
+    try {
+      await savePreference(trackingPreference, await pClient.downloadTracking());
+    } on ApiException catch (vException) {
+      if (vException.unreachable) {
+        rethrow;
+      }
+
+      log('Candidatures non reçues : ${vException.message}', name: 'sync');
+    }
+  }
+
   Future<void> exchangeWithdrawn(ApiClient pClient) => notifyOnce(
         'Offres retirées',
         pClient.downloadWithdrawn,

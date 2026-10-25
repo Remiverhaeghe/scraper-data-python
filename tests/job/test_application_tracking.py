@@ -9,6 +9,7 @@ from job.application_tracking import (
     build_application_statistics,
     build_board,
     build_follow_up_draft,
+    build_spontaneous_draft,
     build_funnel,
     describe_status_history,
     get_application_delay,
@@ -399,3 +400,61 @@ def test_send_follow_up_sends_remembers_and_records(database_file):
     assert vSent == [("rh@acme.fr", "Ma relance", "Bonjour")]
     assert vApplication["contact_email"] == "rh@acme.fr"
     assert vApplication["follow_up_count"] == 1
+
+
+def test_thanks_is_offered_right_after_the_interview(database_file):
+    """Vérifie le remerciement proposé après l'entretien, puis remplacé par la relance."""
+
+    vInterviewAt = NOW - timedelta(days=1)
+    save_application(
+        database_file,
+        "remotive",
+        "2",
+        "INTERVIEW",
+        pInterviewAt=vInterviewAt,
+        pFollowUpDate=NOW + timedelta(days=30),
+        pNow=NOW,
+    )
+    save_profile(database_file, build_profile("Camille D.", "", "", "", ""))
+
+    vCard = next(
+        vCard
+        for vCard in get_week_follow_ups(database_file, NOW)
+        if vCard["source_id"] == "2"
+    )
+
+    assert vCard["kind"] == "thanks"
+    assert vCard["draft"].startswith("Objet : merci pour notre entretien")
+    assert f"entretien du {vInterviewAt:%d/%m/%Y}" in vCard["draft"]
+
+    mark_followed_up(database_file, "remotive", "2", NOW)
+
+    assert all(
+        vCard.get("kind") != "thanks"
+        for vCard in get_week_follow_ups(database_file, NOW)
+        if vCard["source_id"] == "2"
+    )
+    assert all(
+        vCard.get("kind") != "thanks"
+        for vCard in get_week_follow_ups(database_file, NOW + timedelta(days=5))
+    )
+
+
+def test_spontaneous_draft_uses_the_profile():
+    """Vérifie le brouillon : objet, entreprise, compétences et exemple du profil."""
+
+    vProfile = build_profile(
+        "Camille D.",
+        "Technicienne de maintenance",
+        "Électrotechnique, Automates programmables",
+        "Technicienne | Électrotechnique | Réduit les arrêts de ligne de 20 %",
+        "",
+    )
+
+    vDraft = build_spontaneous_draft(vProfile, " Acme ", "Technicien")
+
+    assert vDraft.startswith("Objet : candidature spontanée, Technicien")
+    assert "chez Acme pour un poste de Technicien." in vDraft
+    assert "j'ai par exemple réduit les arrêts de ligne de 20 %." in vDraft
+    assert vDraft.endswith("Bien cordialement,\nCamille D.")
+    assert "chez votre entreprise." in build_spontaneous_draft(vProfile, "", "")

@@ -10,7 +10,9 @@ import job.geocoding as geocoding
 from job.geocoding import (
     add_distances,
     compute_distance_km,
+    describe_distance,
     describe_location,
+    estimate_drive_minutes,
     is_locatable,
     keep_within_alert_radius,
     load_home,
@@ -336,3 +338,17 @@ def test_unknown_places_are_listed_then_resolved(tmp_path, geocoder):
 
     with pytest.raises(ValueError):
         resolve_place(vDatabaseFile, "ailleurs", "Nulle part", NOW)
+
+
+def test_drive_time_is_estimated_and_grows_with_distance():
+    """Vérifie l'estimation du trajet : arrondie à 5 min, croissante, affichée."""
+
+    vMinutes = [estimate_drive_minutes(vKm) for vKm in range(0, 150)]
+
+    assert all(vFirst <= vSecond for vFirst, vSecond in zip(vMinutes, vMinutes[1:]))
+    assert estimate_drive_minutes(0) == 5
+    assert estimate_drive_minutes(20) == 40
+    assert describe_distance({"distance_km": 20, "drive_minutes": 40}) == (
+        "20 km · ≈ 40 min"
+    )
+    assert describe_distance({"distance_km": None}) == ""

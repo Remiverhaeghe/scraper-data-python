@@ -1,6 +1,7 @@
 """Page de l'historique des exécutions"""
 
 from datetime import datetime
+from html import escape
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
@@ -41,6 +42,8 @@ from job.statistics import (
     build_source_cells,
     compare_saved_searches,
     compare_sources,
+    build_month_summary,
+    describe_interview_sources,
     describe_useless_sources,
     get_contract_shares,
     get_execution_counts,
@@ -135,6 +138,7 @@ class HistoryPage(QWidget):
 
         vLayout.addLayout(vCards)
         vLayout.addLayout(self.create_charts())
+        vLayout.addWidget(self.create_month_card())
         vLayout.addWidget(self.create_comparison_card())
         vLayout.addWidget(self.create_search_comparison_card())
         vLayout.addWidget(self.message_label)
@@ -173,6 +177,30 @@ class HistoryPage(QWidget):
         vLayout.addWidget(self.useless_label)
 
         return rCard
+
+    def create_month_card(self):
+        """Construit le bilan des 30 derniers jours, comparés aux 30 précédents."""
+        vCard, vLayout = create_card(
+            "Votre mois",
+            "Les 30 derniers jours, comparés aux 30 précédents",
+            pIcon="calendar",
+        )
+
+        self.month_label = QLabel()
+        self.month_label.setWordWrap(True)
+        vLayout.addWidget(self.month_label)
+
+        return vCard
+
+    def show_month(self, pMonth):
+        """Affiche chaque série du mois, son évolution et les entretiens par source."""
+        self.month_label.setText(
+            " · ".join(
+                f"<b>{vRow['current']}</b> {escape(vRow['label'])} ({vRow['trend']})"
+                for vRow in pMonth["rows"]
+            )
+            + f"<br>{escape(describe_interview_sources(pMonth['interview_sources']))}"
+        )
 
     def create_search_comparison_card(self):
         """Construit le tableau qui compare les recherches enregistrées."""
@@ -291,6 +319,8 @@ class HistoryPage(QWidget):
         else:
             for vName, vValue in summarize_history(vSummary).items():
                 self.cards[vName].set_value(vValue)
+
+            self.show_month(build_month_summary(self.database_file, datetime.now()))
 
             self.source_chart.set_shares(
                 [

@@ -35,6 +35,8 @@ PAGES = (
     "/settings",
     "/quality",
     "/market",
+    "/skills",
+    "/compare",
     "/logs",
     "/legal",
 )
@@ -439,3 +441,54 @@ def test_pages_meet_accessibility_rules(audited_page, pTheme):
         ]
 
     assert vViolations == []
+
+
+def test_spontaneous_draft_is_loaded_without_reload(page):
+    """Vérifie le brouillon de candidature spontanée chargé dans la page par HTMX."""
+
+    page.goto("/applications")
+    page.fill("input[name=company]", "Acme")
+    page.fill("input[name=title]", "Développeur")
+    page.click("text=Préparer le message")
+
+    vDraft = page.locator("#spontaneous-draft textarea")
+    vDraft.wait_for()
+
+    assert "candidature spontanée chez Acme" in vDraft.input_value()
+    assert page.url.endswith("/applications")
+
+
+def test_personal_data_is_downloaded(page, tmp_path):
+    """Vérifie le téléchargement de l'export lisible des données personnelles."""
+
+    page.goto("/settings")
+
+    with page.expect_download() as vDownload:
+        page.click("text=Mes données (lisibles)")
+
+    vFile = tmp_path / vDownload.value.suggested_filename
+    vDownload.value.save_as(vFile)
+
+    assert vFile.name.startswith("mes-donnees-jobboard-")
+    assert vFile.read_bytes().startswith(b"PK")
+
+
+def test_visited_page_is_readable_offline(page):
+    """Vérifie la dernière copie d'une page relue sans réseau, avec le bandeau."""
+
+    page.goto("/")
+    page.evaluate("navigator.serviceWorker.ready.then(() => true)")
+    page.goto("/offers")
+    page.wait_for_function("navigator.serviceWorker.controller !== null")
+    page.reload()
+
+    page.context.set_offline(True)
+
+    try:
+        page.reload()
+
+        assert "Développeur Python" in page.content()
+        assert page.locator("#offline-banner").is_visible()
+
+    finally:
+        page.context.set_offline(False)

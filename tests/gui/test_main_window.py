@@ -3,6 +3,7 @@
 import pytest
 from PySide6.QtGui import QKeySequence, QShortcut
 
+import gui.main_window as main_window
 import gui.offer_assistant as offer_assistant
 from gui.main_window import MainWindow
 from job.presentation import FOLLOW_UP_FILTER
@@ -272,3 +273,16 @@ def test_keyboard_shortcuts(qt_application, tmp_path):
 
     vWindow.offers_page.toggle_detail()
     vWindow.close()
+
+
+def test_slow_page_is_logged(qt_application, tmp_path, monkeypatch, caplog):
+    """Vérifie qu'une page longue à rafraîchir est signalée dans les journaux."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vWindow = MainWindow(vDatabaseFile, "Test")
+    monkeypatch.setattr(main_window, "SLOW_PAGE_SECONDS", -1)
+
+    vWindow.navigate("skills")
+
+    assert "Page lente : skills en" in caplog.text

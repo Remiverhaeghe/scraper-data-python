@@ -21,6 +21,10 @@ SIMILAR_OFFER_DAYS = 14
 # En dessous, la ressemblance tient du hasard d'un mot commun.
 MIN_SIMILARITY = 30
 
+# Ressemblance à une offre ignorée qui fait passer une offre en bas de liste :
+# plus stricte, pour ne pas écarter une offre pour un mot de titre partagé.
+LIKE_IGNORED_SIMILARITY = 60
+
 # Mots de titre trop courants pour distinguer deux postes
 TITLE_STOP_WORDS = {
     "and",
@@ -109,3 +113,29 @@ def find_similar_offers(pDatabaseFile, pNow, pLimit):
     rOffers.sort(key=lambda pOffer: pOffer["similarity"], reverse=True)
 
     return rOffers[:pLimit]
+
+
+def mark_like_ignored(pDatabaseFile, pOffers):
+    """Signale par like_ignored les offres très proches d'une offre ignorée, avec
+    son titre ; une offre déjà suivie n'est jamais signalée.
+    """
+
+    vIgnored = [
+        (vOffer.get("title") or "", build_signature(vOffer))
+        for vOffer in get_offers(pDatabaseFile, pStatus="IGNORED").to_dict("records")
+    ]
+
+    for vOffer in pOffers:
+        vOffer["like_ignored"] = None
+
+        if not vIgnored or isinstance(vOffer.get("application_status"), str):
+            continue
+
+        vSignature = build_signature(vOffer)
+        vSimilarity, vTitle = max(
+            (compute_similarity(vSignature, vReference), vReferenceTitle)
+            for vReferenceTitle, vReference in vIgnored
+        )
+
+        if vSimilarity >= LIKE_IGNORED_SIMILARITY:
+            vOffer["like_ignored"] = vTitle

@@ -11,6 +11,8 @@ dans l'historique git.
   des entreprises privilégiées
 - Révision express de 5 minutes, toutes thématiques, avec compte à rebours
 - Note rapide sur une offre, ajoutée aux notes de la candidature sur le PC
+- Candidatures en cours lisibles hors ligne ; fiche de préparation proposée sur
+  l'accueil dans les 24 heures qui précèdent un entretien
 
 ### Application mobile 1.6.0
 - Tri rapide des nouvelles offres : glisser pour « Intéressé » ou « Ignorée »
@@ -82,7 +84,22 @@ dans l'historique git.
   l'API le range désormais ; une adresse complète est placée sur la carte par
   son code postal et sa commune
 - Tests : une fenêtre modale non simulée fait échouer le test au lieu de bloquer
-  la suite ; couverture relevée (purge, fenêtres, santé)
+  la suite ; couverture relevée (purge, fenêtres, santé) ; chaque migration
+  récente a son test ; parcours du navigateur (brouillon HTMX, export, lecture
+  hors connexion)
+- Santé : formats des sources (un champ vide pour plus de la moitié des offres
+  récentes signale une API modifiée), sources utiles revues chaque jour ; essai
+  mensuel de restauration étendu aux copies du NAS ; pages lentes journalisées
+- Performance : notation des offres environ dix fois plus rapide (cache de la
+  détection des compétences), page Historique comprise
+- Offres « à saisir vite », « Intéressé, pas encore postulé », offres proches de
+  vos refus en bas de liste, origine de chaque offre dans l'e-mail des recherches
+- Trajet en voiture estimé, net après trajet (réglage « Coût du trajet »),
+  comparaison enrichie (net après trajet, avantages, ressenti)
+- Remerciement proposé après un entretien, contacts connus par entreprise,
+  message de candidature spontanée, lettre alignée sur le pitch, bilan du mois
+- Web hors connexion : bandeau aussi quand le PC ne répond plus (copie marquée
+  par le service worker)
 - Migrations rangées dans `storage/migrations.py` ; tests en parallèle
   (`pytest -n auto`, pytest-xdist)
 - Entreprise suivie ajoutée depuis l'adresse de son site carrière

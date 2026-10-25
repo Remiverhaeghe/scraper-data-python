@@ -1,6 +1,7 @@
 """Tests de la connexion et des migrations de la base SQLite"""
 
 import sqlite3
+from pathlib import Path
 
 import pytest
 
@@ -15,8 +16,11 @@ from storage.migrations import (
     MIGRATIONS,
     migrate_to_v1,
     migrate_to_v27,
+    migrate_to_v28,
     migrate_to_v29,
     migrate_to_v30,
+    migrate_to_v31,
+    migrate_to_v32,
 )
 
 
@@ -595,3 +599,104 @@ def test_migration_to_v30_forgets_unknown_places(tmp_path):
         vConnection.close()
 
     assert vKeys == ["lille"]
+
+
+# Depuis cette version, chaque migration a son propre test dans ce fichier.
+FIRST_NAMED_MIGRATION = 27
+
+
+def build_database_at(pDatabaseFile, pVersion):
+    """Ouvre une base au schéma de la version donnée, sans les migrations suivantes."""
+
+    rConnection = connect_database(pDatabaseFile)
+
+    for vMigration in MIGRATIONS[:pVersion]:
+        vMigration(rConnection)
+
+    return rConnection
+
+
+def get_columns(pConnection, pTable):
+    """Retourne les colonnes d'une table."""
+
+    rColumns = [vRow[1] for vRow in pConnection.execute(f"PRAGMA table_info({pTable})")]
+
+    return rColumns
+
+
+def test_every_recent_migration_has_its_test():
+    """Vérifie qu'une nouvelle migration n'est pas livrée sans test qui la nomme."""
+
+    vTests = Path(__file__).read_text(encoding="utf-8")
+
+    vUntested = [
+        vVersion
+        for vVersion in range(FIRST_NAMED_MIGRATION, len(MIGRATIONS) + 1)
+        if f"migrate_to_v{vVersion}("
+        not in vTests.replace(f"migrate_to_v{vVersion},", "")
+    ]
+
+    assert not vUntested, f"Migrations sans test : {vUntested}"
+
+
+def test_migration_to_v28_adds_departments(tmp_path):
+    """Vérifie les colonnes de département des lieux et des offres."""
+
+    vConnection = build_database_at(tmp_path / "scraper.db", 27)
+
+    try:
+        migrate_to_v28(vConnection)
+
+        assert "department" in get_columns(vConnection, "geo_cache")
+        assert "french_department" in get_columns(vConnection, "job_offer")
+
+    finally:
+        vConnection.close()
+
+
+def test_migration_to_v31_starts_status_history(tmp_path):
+    """Vérifie l'historique amorcé par les candidatures puis suivi par déclencheur."""
+
+    vConnection = build_database_at(tmp_path / "scraper.db", 30)
+
+    try:
+        vConnection.execute(
+            "INSERT INTO job_application (source, source_id, status, applied_at)"
+            " VALUES ('lever', '1', 'APPLIED', '2026-10-01T09:00:00')"
+        )
+        migrate_to_v31(vConnection)
+        vConnection.execute(
+            "UPDATE job_application SET status = 'INTERVIEW' WHERE source_id = '1'"
+        )
+        vHistory = [
+            vRow[0]
+            for vRow in vConnection.execute(
+                "SELECT status FROM application_history ORDER BY id"
+            )
+        ]
+
+    finally:
+        vConnection.close()
+
+    assert vHistory == ["APPLIED", "INTERVIEW"]
+
+
+def test_migration_to_v32_adds_recruiter_address(tmp_path):
+    """Vérifie la colonne de l'adresse du recruteur, vide pour l'existant."""
+
+    vConnection = build_database_at(tmp_path / "scraper.db", 31)
+
+    try:
+        vConnection.execute(
+            "INSERT INTO job_application (source, source_id, status)"
+            " VALUES ('lever', '1', 'APPLIED')"
+        )
+        migrate_to_v32(vConnection)
+        vAddress = vConnection.execute(
+            "SELECT contact_email FROM job_application"
+        ).fetchone()[0]
+
+    finally:
+        vConnection.close()
+
+    assert vAddress is None

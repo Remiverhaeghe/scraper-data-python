@@ -46,6 +46,7 @@ from job.deduplication import (
 from job.experience_fit import describe_experience_fit, mark_experience_fit
 from job.freshness import add_freshness
 from job.global_score import add_global_scores
+from job.similar_offers import mark_like_ignored
 from job.suspicious_offers import (
     find_suspicious_signs,
     load_market_median,
@@ -113,6 +114,7 @@ from job.salary_market import (
     add_estimated_salaries,
     describe_market_salary,
     describe_negotiation,
+    describe_net_after_commute,
     find_market_salary,
 )
 from job.settings import load_settings
@@ -242,6 +244,7 @@ def list_offers(
     add_freshness(vGrouped, vNow)
     add_estimated_salaries(pDatabaseFile, vGrouped)
     mark_suspicious_offers(pDatabaseFile, vGrouped)
+    mark_like_ignored(pDatabaseFile, vGrouped)
     add_global_scores(vGrouped, vSettings, (vHome or {}).get("alert_radius_km"))
 
     if pSort == "global":
@@ -260,6 +263,9 @@ def list_offers(
         vGrouped.sort(
             key=lambda pOffer: (pOffer["distance_km"] is None, pOffer["distance_km"])
         )
+
+    # Les offres proches de vos refus passent en bas, dans l'ordre choisi.
+    vGrouped.sort(key=lambda pOffer: bool(pOffer["like_ignored"]))
 
     if pMultiple:
         vGrouped = [vOffer for vOffer in vGrouped if vOffer["duplicates"]]
@@ -554,6 +560,7 @@ def show_offer(
         return rOffer
 
     vPrepared = prepare(vOffer)
+    add_distances([vPrepared], load_home(pDatabaseFile))
     vMarket = find_market_salary(pDatabaseFile, vPrepared)
     vCompanyRules = load_company_rules(pDatabaseFile)
 
@@ -579,6 +586,7 @@ def show_offer(
             "preparation": build_preparation(pDatabaseFile, vPrepared),
             "market_salary": describe_market_salary(vMarket),
             "negotiation": describe_negotiation(vMarket, vPrepared, vSettings),
+            "net_after_commute": describe_net_after_commute(vPrepared, vSettings),
             "summary": build_offer_summary(vPrepared),
             "suspicious_signs": find_suspicious_signs(
                 vPrepared, load_market_median(pDatabaseFile)

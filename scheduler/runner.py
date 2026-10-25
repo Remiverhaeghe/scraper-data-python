@@ -11,6 +11,7 @@ from job.application import process_jobs
 from job.geocoding import locate_new_offers
 from job.offer_archive import archive_expired_offers
 from job.offer_details import complete_missing_descriptions
+from job.statistics import run_due_source_review
 from job.skill_cache import refresh_detected_skills
 from job.application_replies import run_due_reply_check
 from job.daily_digest import send_daily_digest_if_due
@@ -25,7 +26,11 @@ from job.interview_reminder import (
     get_interviews_to_remind,
     mark_reminded,
 )
-from job.notification import build_follow_ups_email, build_new_offers_email
+from job.notification import (
+    build_follow_ups_email,
+    build_new_offers_email,
+    describe_offers_by_search,
+)
 from job.preparation import score_offers
 from job.presentation import SCHEDULED_TRIGGER, clean_missing_values
 from job.profile import load_profile
@@ -127,6 +132,7 @@ def notify_new_offers(pDatabaseFile, pSchedule, pItems):
                 for vPart in (
                     *describe_scheduled_search(pSchedule),
                     describe_extra_searches(pSchedule),
+                    describe_offers_by_search(vOffers),
                 )
                 if vPart
             ),
@@ -197,6 +203,8 @@ def run_due_search(pDatabaseFile, pNow, pCancelEvent=None):
             vResult = run_search(vSearch, pCancelEvent)
 
             if vResult is not None:
+                # L'e-mail dit quelle recherche a trouvé chaque offre.
+                vResult.items["found_by"] = vSearch["name"]
                 rResult.append(vResult)
 
         notify_new_offers(
@@ -349,6 +357,7 @@ BACKGROUND_TASKS = (
     ("compétences des offres", refresh_detected_skills),
     ("placement des offres sur la carte", locate_new_offers),
     ("descriptions manquantes", complete_missing_descriptions),
+    ("revue de l'utilité des sources", run_due_source_review),
     ("réponses des recruteurs", run_due_reply_check),
     ("essai de restauration", run_due_restore_check),
 )

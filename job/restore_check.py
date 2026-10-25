@@ -1,8 +1,9 @@
-"""Restauration éprouvée : la dernière sauvegarde est restaurée à l'essai chaque mois
+"""Restauration éprouvée : la dernière sauvegarde, et la dernière copie du NAS,
+sont restaurées à l'essai chaque mois
 
 Une sauvegarde vérifiée à sa création peut encore échouer à la restauration
-(version, tables). L'essai se fait dans un dossier temporaire : la vraie base
-n'est jamais touchée.
+(version, tables, clé de chiffrement). L'essai se fait dans un dossier
+temporaire : la vraie base n'est jamais touchée.
 """
 
 import shutil
@@ -11,8 +12,11 @@ import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from cryptography.fernet import Fernet, InvalidToken
+
+from config import BACKUP_ENCRYPTION_KEY, BACKUP_NAS_DIRECTORY
 from storage.archive import check_database
-from storage.backup import list_backups
+from storage.backup import ENCRYPTED_SUFFIX, list_backups, list_nas_copies
 from storage.settings_repository import load_json_setting, save_json_setting
 from utils.logger import get_logger
 
@@ -41,6 +45,27 @@ def count_offers(pDatabaseFile):
     return rCount
 
 
+def try_restored_file(pDatabaseFile, pRestored, pName):
+    """Contrôle une base restaurée à l'essai ; retourne (réussite, message)."""
+
+    try:
+        check_database(pRestored, "Restauration impossible")
+        vRestored = count_offers(pRestored)
+
+    except ValueError as vException:
+        return (False, f"{pName} : {vException}")
+
+    vCurrent = count_offers(pDatabaseFile)
+
+    rResult = (
+        (False, f"{pName} : {vRestored} offre(s) seulement, contre {vCurrent} en base")
+        if vCurrent and vRestored < vCurrent * MIN_OFFER_SHARE
+        else (True, f"{pName} restaurée à l'essai : {vRestored} offre(s)")
+    )
+
+    return rResult
+
+
 def check_restore(pDatabaseFile):
     """Restaure la dernière sauvegarde à l'essai ; retourne (réussite, message)."""
 
@@ -53,25 +78,60 @@ def check_restore(pDatabaseFile):
         vCopy = Path(vDirectory) / "essai.db"
         shutil.copy2(vBackup, vCopy)
 
-        try:
-            check_database(vCopy, "Restauration impossible")
-            vRestored = count_offers(vCopy)
-
-        except ValueError as vException:
-            return (False, f"{vBackup.name} : {vException}")
-
-    vCurrent = count_offers(pDatabaseFile)
-
-    if vCurrent and vRestored < vCurrent * MIN_OFFER_SHARE:
-        rResult = (
-            False,
-            f"{vBackup.name} : {vRestored} offre(s) seulement, contre {vCurrent} en base",
-        )
-    else:
-        rResult = (True, f"{vBackup.name} restaurée à l'essai : {vRestored} offre(s)")
+        rResult = try_restored_file(pDatabaseFile, vCopy, vBackup.name)
 
     logger.info(
         "Essai de restauration %s : %s",
+        "réussi" if rResult[0] else "en échec",
+        rResult[1],
+    )
+
+    return rResult
+
+
+def check_nas_restore(pDatabaseFile, pNasDirectory=None, pKey=BACKUP_ENCRYPTION_KEY):
+    """Restaure à l'essai la dernière copie du NAS, déchiffrée si besoin ; retourne
+    (réussite, message), ou None sans NAS configuré.
+    """
+
+    vNasDirectory = pNasDirectory or BACKUP_NAS_DIRECTORY
+
+    if vNasDirectory is None:
+        return None
+
+    try:
+        vCopy = next(iter(list_nas_copies(pDatabaseFile, vNasDirectory)), None)
+
+    except OSError as vException:
+        return (False, f"NAS injoignable : {vException}")
+
+    if vCopy is None:
+        return (False, "Aucune copie sur le NAS")
+
+    vEncrypted = vCopy.name.endswith(ENCRYPTED_SUFFIX)
+
+    if vEncrypted and not pKey:
+        return (False, f"{vCopy.name} : BACKUP_ENCRYPTION_KEY manquante dans .env")
+
+    with tempfile.TemporaryDirectory() as vDirectory:
+        vRestored = Path(vDirectory) / "essai.db"
+
+        try:
+            vContent = vCopy.read_bytes()
+            vRestored.write_bytes(
+                Fernet(pKey).decrypt(vContent) if vEncrypted else vContent
+            )
+
+        except InvalidToken:
+            return (False, f"{vCopy.name} : chiffrée avec une autre clé")
+
+        except OSError as vException:
+            return (False, f"{vCopy.name} illisible : {vException}")
+
+        rResult = try_restored_file(pDatabaseFile, vRestored, vCopy.name)
+
+    logger.info(
+        "Essai de restauration de la copie du NAS %s : %s",
         "réussi" if rResult[0] else "en échec",
         rResult[1],
     )
@@ -90,6 +150,11 @@ def run_due_restore_check(pDatabaseFile, pNow):
         return None
 
     vSuccess, vMessage = check_restore(pDatabaseFile)
+    vNas = check_nas_restore(pDatabaseFile)
+
+    if vNas is not None:
+        vSuccess = vSuccess and vNas[0]
+        vMessage += f" ; NAS : {vNas[1]}"
 
     rResult = {
         "date": pNow.isoformat(timespec="seconds"),

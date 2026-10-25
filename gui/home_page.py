@@ -153,6 +153,8 @@ class HomePage(QWidget):
         vGrid.addWidget(self.create_similar_offers_card(), 2, 0, 1, 2)
         vGrid.addWidget(self.create_withdrawn_card(), 3, 0, 1, 2)
         vGrid.addWidget(self.create_preferred_card(), 4, 0, 1, 2)
+        vGrid.addWidget(self.create_hot_card(), 5, 0, 1, 2)
+        vGrid.addWidget(self.create_waiting_card(), 6, 0, 1, 2)
 
         for vIndex in range(2):
             vGrid.setColumnStretch(vIndex, 1)
@@ -470,6 +472,72 @@ class HomePage(QWidget):
             "Aucune relance prévue.",
         )
 
+    def create_waiting_card(self):
+        """Construit la liste des offres « Intéressé » restées sans candidature."""
+        self.waiting_card, vLayout = create_card(
+            "Intéressé, pas encore postulé",
+            "Marquées « Intéressé » depuis plus de 5 jours : postulez, ou classez-les",
+            pIcon="bell-ring",
+        )
+
+        self.waiting_layout = QVBoxLayout()
+        self.waiting_layout.setSpacing(2)
+        vLayout.addLayout(self.waiting_layout)
+
+        return self.waiting_card
+
+    def show_waiting(self, pOffers):
+        """Affiche les offres en attente de candidature ; masquée sans elles."""
+        self.waiting_card.setVisible(bool(pOffers))
+        self.show_rows(
+            self.waiting_layout,
+            [
+                self.create_offer_row(
+                    "bell-ring",
+                    COLORS["warning"],
+                    vOffer.get("title") or "Titre non communiqué",
+                    vOffer.get("company") or "",
+                    f"depuis le {format_date(vOffer['interested_at'])}",
+                    (vOffer["source"], vOffer["source_id"]),
+                )
+                for vOffer in pOffers
+            ],
+            "",
+        )
+
+    def create_hot_card(self):
+        """Construit la liste des offres à saisir vite."""
+        self.hot_card, vLayout = create_card(
+            "À saisir vite",
+            "Publiées depuis moins de 48 h, bien notées et pas encore traitées",
+            pIcon="zap",
+        )
+
+        self.hot_layout = QVBoxLayout()
+        self.hot_layout.setSpacing(2)
+        vLayout.addLayout(self.hot_layout)
+
+        return self.hot_card
+
+    def show_hot(self, pOffers):
+        """Affiche les offres à saisir vite ; la carte est masquée sans elles."""
+        self.hot_card.setVisible(bool(pOffers))
+        self.show_rows(
+            self.hot_layout,
+            [
+                self.create_offer_row(
+                    "zap",
+                    COLORS["warning"],
+                    vOffer.get("title") or "Titre non communiqué",
+                    vOffer.get("company") or "",
+                    f"{vOffer['match_score']} %",
+                    (vOffer["source"], vOffer["source_id"]),
+                )
+                for vOffer in pOffers
+            ],
+            "",
+        )
+
     def create_preferred_card(self):
         """Construit la liste des nouvelles offres des entreprises privilégiées."""
         self.preferred_card, vLayout = create_card(
@@ -694,6 +762,8 @@ class HomePage(QWidget):
             self.show_similar_offers(vStatistics["similar_offers"])
             self.show_withdrawn(vStatistics["withdrawn_offers"])
             self.show_preferred(vStatistics["preferred_offers"])
+            self.show_hot(vStatistics["hot_offers"])
+            self.show_waiting(vStatistics["waiting_interests"])
             self.show_checklist(build_setup_checklist(self.database_file))
             self.last_search_label.setText(
                 describe_last_search(vStatistics["executions"])

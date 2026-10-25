@@ -5,10 +5,11 @@ l'application et aucun service payant n'est utilisé.
 """
 
 import re
+from functools import lru_cache
 
 from job.enrichment import SKILL_PATTERNS, detect_skills
 from job.fingerprint import GENDER_MARKERS
-from job.pitch import build_pitch, lower_first
+from job.pitch import build_pitch, find_examples, lower_first
 from job.presentation import to_list
 from job.self_assessment import KNOWN_LEVEL, get_assessed_skills
 from job.star_answers import select_star_answers, suggest_star_questions
@@ -103,7 +104,18 @@ def expand_skills(pSkills):
     « Siemens TIA Portal » et « Habilitation électrique » détectés dans une offre.
     """
 
-    rSkills = list(dict.fromkeys([*pSkills, *detect_skills(" ; ".join(pSkills))]))
+    rSkills = list(expand_skill_names(tuple(pSkills)))
+
+    return rSkills
+
+
+# Les mêmes noms reviennent pour chaque offre notée (auto-évaluation) : sans ce
+# cache, noter quelques milliers d'offres relançait la détection 500 000 fois.
+@lru_cache(maxsize=4096)
+def expand_skill_names(pSkills):
+    """Retourne les compétences et leurs libellés reconnus, pour un tuple de noms."""
+
+    rSkills = tuple(dict.fromkeys([*pSkills, *detect_skills(" ; ".join(pSkills))]))
 
     return rSkills
 
@@ -493,14 +505,8 @@ def build_letter(pProfile, pMatch, pOffer):
     vTitle = vTitle or "le poste proposé"
     vSkills = pMatch["covered"][:LETTER_SKILLS]
 
-    vExperience = next(
-        (
-            vExperience
-            for vSkill in vSkills
-            for vExperience in find_experiences(pProfile, vSkill)
-        ),
-        None,
-    )
+    # Le même exemple que le pitch : un discours cohérent de la lettre à l'entretien.
+    vExperience = next(iter(find_examples(pProfile, pMatch["covered"])), None)
 
     vParagraphs = [
         "Madame, Monsieur,",

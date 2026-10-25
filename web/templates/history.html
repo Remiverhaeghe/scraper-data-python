@@ -59,6 +59,21 @@
 </article>
 {% endif %}
 
+<article class="card section-gap">
+    <h2>Votre mois</h2>
+    <p class="card-subtitle">Les 30 derniers jours, comparés aux 30 précédents</p>
+    <div class="week-summary">
+        {% for row in month.rows %}
+        <div class="week-item" title="{{ row.previous }} les 30 jours précédents">
+            <span class="week-value">{{ row.current }}</span>
+            <span class="muted">{{ row.label }}</span>
+            <span class="week-trend {{ 'trend-up' if row.current > row.previous else 'trend-down' if row.current < row.previous else '' }}">{{ row.trend }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    <p class="muted">{{ month_interviews }}</p>
+</article>
+
 {% if search_rows %}
 <article class="card section-gap">
     <h2>Comparaison des recherches enregistrées</h2>

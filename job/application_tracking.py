@@ -4,8 +4,10 @@ import re
 from datetime import datetime, timedelta
 
 from job.agencies import load_interim_agencies
+from job.companies import find_company_applications, find_company_contacts
 from job.fingerprint import normalize
-from job.preparation import score_offers
+from job.pitch import end_sentence, find_examples, lower_first
+from job.preparation import LETTER_SKILLS, score_offers
 from job.presentation import (
     STATUS_LABELS,
     format_date,
@@ -48,6 +50,9 @@ BOARD_STATUSES = (
 
 # Horizon de la vue des relances, en jours : la semaine à venir
 FOLLOW_UP_HORIZON_DAYS = 7
+
+# Un remerciement s'envoie dans les jours qui suivent l'entretien.
+THANKS_DAYS = 3
 
 # Relance envoyée depuis l'application : première ligne du brouillon et repli
 SUBJECT_PREFIX = "Objet :"
@@ -440,8 +445,90 @@ def build_follow_up_draft(pApplication, pName):
     return rDraft
 
 
+def needs_thanks(pCard, pNow):
+    """Indique si l'entretien vient d'avoir lieu sans message envoyé depuis."""
+
+    vInterviewAt = pCard.get("interview_at")
+
+    rNeeded = bool(
+        pCard["status"] == "INTERVIEW"
+        and vInterviewAt
+        and (pNow - timedelta(days=THANKS_DAYS)).isoformat()
+        <= vInterviewAt
+        <= pNow.isoformat()
+        and (pCard.get("last_follow_up_at") or "") < vInterviewAt
+    )
+
+    return rNeeded
+
+
+def build_thanks_draft(pApplication, pName):
+    """Rédige le remerciement qui suit un entretien, à relire avant envoi."""
+
+    vTitle = pApplication.get("title") or "proposé"
+    vCompany = pApplication.get("company")
+
+    rDraft = (
+        f"Objet : merci pour notre entretien, poste de {vTitle}\n\n"
+        "Bonjour,\n\n"
+        "Je vous remercie pour le temps que vous m'avez accordé lors de notre "
+        f"entretien du {format_date(pApplication.get('interview_at'))}"
+        + (f" chez {vCompany}" if vCompany else "")
+        + ".\n\n"
+        "Nos échanges ont renforcé mon intérêt pour ce poste et pour votre équipe. "
+        "Je reste à votre disposition pour tout complément d'information.\n\n"
+        f"Bien cordialement,\n{pName}"
+    ).rstrip()
+
+    return rDraft
+
+
+def build_spontaneous_draft(pProfile, pCompany, pTitle):
+    """Rédige une candidature spontanée d'après le profil, à relire avant envoi."""
+
+    vCompany = (pCompany or "").strip() or "votre entreprise"
+    vTitle = (pTitle or "").strip()
+    vSkills = pProfile["skills"][:LETTER_SKILLS]
+    vExample = next(iter(find_examples(pProfile, pProfile["skills"])), None)
+
+    vParagraphs = [
+        "Objet : candidature spontanée" + (f", {vTitle}" if vTitle else ""),
+        "Bonjour,",
+    ]
+
+    if pProfile["headline"]:
+        vParagraphs.append(end_sentence(pProfile["headline"]))
+
+    vParagraphs.append(
+        f"Je me permets de vous adresser ma candidature spontanée chez {vCompany}"
+        + (f" pour un poste de {vTitle}" if vTitle else "")
+        + "."
+    )
+
+    if vSkills:
+        vParagraphs.append(f"Je pratique notamment {', '.join(vSkills)}.")
+
+    if vExample:
+        vParagraphs.append(
+            f"Comme {lower_first(vExample['title'])}, j'ai par exemple "
+            f"{end_sentence(lower_first(vExample['achievement']))}"
+        )
+
+    vParagraphs += [
+        "Je reste disponible pour un échange à votre convenance et vous joins mon CV.",
+        "Bien cordialement," + (f"\n{pProfile['name']}" if pProfile["name"] else ""),
+    ]
+
+    rDraft = "\n\n".join(vParagraphs)
+
+    return rDraft
+
+
 def get_week_follow_ups(pDatabaseFile, pNow):
-    """Retourne les relances en retard ou prévues dans la semaine, avec un brouillon."""
+    """Retourne les relances en retard ou prévues dans la semaine, avec un brouillon.
+
+    Juste après un entretien, le brouillon est un remerciement plutôt qu'une relance.
+    """
 
     vLimit = (pNow + timedelta(days=FOLLOW_UP_HORIZON_DAYS)).isoformat()
     vName = load_profile(pDatabaseFile)["name"]
@@ -451,11 +538,31 @@ def get_week_follow_ups(pDatabaseFile, pNow):
     for vApplication in get_applications_with_offers(pDatabaseFile, FOLLOW_UP_STATUSES):
         vCard = prepare_card(vApplication, pNow)
 
-        if vCard["follow_up_date"] and vCard["follow_up_date"] <= vLimit:
+        # Sans adresse pour cette candidature, celle d'une autre dans l'entreprise
+        if not vCard.get("contact_email"):
+            vCard["contact_email"] = next(
+                iter(
+                    find_company_contacts(
+                        find_company_applications(pDatabaseFile, vCard)
+                    )
+                ),
+                None,
+            )
+
+        if needs_thanks(vCard, pNow):
+            vCard["kind"] = "thanks"
+            vCard["follow_up_due"] = True
+            vCard["draft"] = build_thanks_draft(vCard, vName)
+            rFollowUps.append(vCard)
+
+        elif vCard["follow_up_date"] and vCard["follow_up_date"] <= vLimit:
+            vCard["kind"] = "follow_up"
             vCard["draft"] = build_follow_up_draft(vCard, vName)
             rFollowUps.append(vCard)
 
-    rFollowUps.sort(key=lambda pCard: pCard["follow_up_date"])
+    rFollowUps.sort(
+        key=lambda pCard: (pCard["kind"] != "thanks", pCard["follow_up_date"] or "")
+    )
 
     return rFollowUps
 

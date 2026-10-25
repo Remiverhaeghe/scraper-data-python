@@ -1,6 +1,7 @@
 """Application web du tableau de bord des offres d'emploi"""
 
 import os
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from urllib.parse import quote
@@ -153,6 +154,9 @@ CONTENT_SECURITY_POLICY = "; ".join(
 )
 
 
+# Au-delà, une page est signalée dans les journaux pour en chercher la cause.
+SLOW_PAGE_SECONDS = 1.0
+
 SECURITY_HEADERS = {
     "Content-Security-Policy": CONTENT_SECURITY_POLICY,
     "X-Frame-Options": "DENY",
@@ -165,9 +169,17 @@ SECURITY_HEADERS = {
 # connexion reçoivent aussi les en-têtes.
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
-    """Ajoute les en-têtes de sécurité HTTP à chaque réponse."""
+    """Ajoute les en-têtes de sécurité HTTP à chaque réponse et signale les pages
+    lentes dans les journaux.
+    """
 
+    vStart = time.perf_counter()
     rResponse = await call_next(request)
+    vDuration = time.perf_counter() - vStart
+
+    # Chemin seul : les paramètres peuvent contenir une recherche ou un jeton.
+    if vDuration > SLOW_PAGE_SECONDS:
+        logger.warning("Page lente : %s en %.1f s", request.url.path, vDuration)
 
     # Une route plus stricte, celle des schémas SVG, garde sa propre politique.
     for vName, vValue in SECURITY_HEADERS.items():

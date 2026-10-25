@@ -232,6 +232,44 @@ def test_quick_notes_from_the_phone(api, tmp_path):
     assert api.post("/api/v1/notes", json={"notes": "x"}).status_code == 422
 
 
+def test_tracking_lists_applications_and_interview_sheets(api, tmp_path):
+    """Vérifie les candidatures envoyées au téléphone et la fiche de l'entretien."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "lever",
+                    "source_id": "1",
+                    "title": "Dev",
+                    "company": "Acme",
+                },
+                {"source": "lever", "source_id": "2", "title": "Data"},
+            ]
+        ),
+        datetime.now(),
+    )
+    save_application(
+        vDatabaseFile,
+        "lever",
+        "1",
+        "INTERVIEW",
+        pInterviewAt=datetime.now() + timedelta(days=2),
+    )
+    save_application(vDatabaseFile, "lever", "2", "INTERESTED")
+
+    vTracking = api.get("/api/v1/tracking").json()
+
+    assert [vItem["status_label"] for vItem in vTracking["applications"]] == [
+        "Entretien",
+        "Intéressé",
+    ]
+    assert list(vTracking["sheets"]) == ["lever/1"]
+    assert vTracking["sheets"]["lever/1"]["title"] == "Dev"
+
+
 def test_replies_are_sent_to_the_phone(api, tmp_path):
     """Vérifie les réponses gardées par la dernière lecture, transmises au téléphone."""
 

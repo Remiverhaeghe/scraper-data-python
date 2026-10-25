@@ -1,6 +1,7 @@
 """Fenêtre principale : menu latéral et pages de l'application"""
 
 import threading
+import time
 from datetime import date, datetime
 
 from PySide6.QtCore import QSize, Qt, QUrl, Signal
@@ -48,6 +49,9 @@ from storage.database import get_database_version
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Au-delà, une page est signalée dans les journaux pour en chercher la cause.
+SLOW_PAGE_SECONDS = 1.0
 
 # Liens internes du pied de menu, ouverts dans l'application
 LEGAL_LINK = "#mentions-legales"
@@ -406,7 +410,12 @@ class MainWindow(QMainWindow):
             vKey not in DATA_ONLY_PAGES
             or self.refreshed_versions.get(vKey) != self.get_data_version()
         ):
+            vStart = time.perf_counter()
             vPage.refresh()
+            vDuration = time.perf_counter() - vStart
+
+            if vDuration > SLOW_PAGE_SECONDS:
+                logger.warning("Page lente : %s en %.1f s", vKey, vDuration)
 
             if vKey in DATA_ONLY_PAGES:
                 self.refreshed_versions[vKey] = self.get_data_version()

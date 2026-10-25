@@ -5,10 +5,16 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 import pytest
 
+from job.health import check_useful_sources
 from job.profile import EMPTY_PROFILE, save_profile
 from job.settings import save_settings
 from job.statistics import (
     compare_saved_searches,
+    build_month_summary,
+    describe_interview_sources,
+    find_hot_offers,
+    load_source_review,
+    run_due_source_review,
     MAX_PIE_SOURCES,
     build_source_cells,
     compare_sources,
@@ -319,3 +325,130 @@ def test_summarize_week_compares_with_previous_week():
         ("Candidatures", 0, 7, "−7"),
         ("Réponses reçues", 0, 0, "="),
     ]
+
+
+def test_hot_offers_are_recent_well_matched_and_untouched(tmp_path):
+    """Vérifie les offres à saisir vite : récentes, bien notées et sans statut."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vNow = datetime(2026, 10, 24, 12)
+    initialize_database(vDatabaseFile)
+    save_profile(
+        vDatabaseFile, {**EMPTY_PROFILE, "skills": ["Python", "Django", "SQL"]}
+    )
+    vText = "Python, Django et SQL requis."
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "lever",
+                    "source_id": "1",
+                    "title": "Dev",
+                    "description": vText,
+                },
+                {
+                    "source": "lever",
+                    "source_id": "2",
+                    "title": "Dev",
+                    "description": vText,
+                },
+                {
+                    "source": "lever",
+                    "source_id": "3",
+                    "title": "Vendeur",
+                    "description": "Magasin.",
+                },
+                {
+                    "source": "lever",
+                    "source_id": "4",
+                    "title": "Dev",
+                    "description": vText,
+                    "published_at": "2026-09-01",
+                },
+            ]
+        ),
+        vNow,
+    )
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "lever",
+                    "source_id": "5",
+                    "title": "Dev",
+                    "description": vText,
+                }
+            ]
+        ),
+        vNow - timedelta(days=5),
+    )
+    save_application(vDatabaseFile, "lever", "2", "APPLIED", pNow=vNow)
+
+    vHot = find_hot_offers(vDatabaseFile, vNow)
+
+    assert [vOffer["source_id"] for vOffer in vHot] == ["1"]
+    assert vHot[0]["match_score"] == 100
+
+
+def test_source_review_is_done_once_a_day_and_shown_in_health(tmp_path):
+    """Vérifie la revue quotidienne des sources, puis son rappel dans Santé."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vNow = datetime(2026, 10, 24, 12)
+    initialize_database(vDatabaseFile)
+    save_profile(vDatabaseFile, {**EMPTY_PROFILE, "skills": ["Python"]})
+
+    assert check_useful_sources(vDatabaseFile)[1] == "muted"
+
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "arbeitnow",
+                    "source_id": str(vId),
+                    "title": "Développeur Java",
+                    "description": "Java et Spring requis.",
+                }
+                for vId in range(25)
+            ]
+        ),
+        vNow,
+    )
+
+    vReview = run_due_source_review(vDatabaseFile, vNow)
+
+    assert vReview["advice"].endswith("Arbeitnow (25 offres)")
+    assert load_source_review(vDatabaseFile) == vReview
+    assert run_due_source_review(vDatabaseFile, vNow + timedelta(hours=3)) is None
+    assert check_useful_sources(vDatabaseFile) == (vReview["advice"], "warning")
+
+
+def test_month_summary_counts_interviews_by_source(tmp_path):
+    """Vérifie le bilan du mois : séries comparées et entretiens par source."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vNow = datetime.now()
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {"source": "lever", "source_id": "1", "title": "Dev"},
+                {"source": "adzuna", "source_id": "2", "title": "Data"},
+            ]
+        ),
+        vNow,
+    )
+    save_application(vDatabaseFile, "lever", "1", "INTERVIEW", pNow=vNow)
+
+    vMonth = build_month_summary(vDatabaseFile, vNow)
+
+    assert vMonth["rows"][0]["current"] == 2
+    assert vMonth["rows"][0]["label"] == "Nouvelles offres"
+    assert describe_interview_sources(vMonth["interview_sources"]) == (
+        "Entretiens obtenus ce mois-ci : Lever 1"
+    )
+    assert describe_interview_sources([]).startswith("Aucun entretien")

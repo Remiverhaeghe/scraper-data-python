@@ -22,6 +22,7 @@ from job.mobile_sync import (
     API_VERSION,
     build_progress,
     build_quiz_package,
+    build_tracking,
     check_mobile_token,
     build_offer_list,
     sync_answers,
@@ -250,6 +251,15 @@ def download_interviews(pDatabaseFile: str = Depends(get_database_file)):
     }
 
     return rInterviews
+
+
+@router.get("/tracking", dependencies=[Depends(require_api_token)])
+def download_tracking(pDatabaseFile: str = Depends(get_database_file)):
+    """Renvoie les candidatures en cours et la fiche des entretiens à venir."""
+
+    rTracking = build_tracking(pDatabaseFile, datetime.now())
+
+    return rTracking
 
 
 @router.get("/withdrawn", dependencies=[Depends(require_api_token)])

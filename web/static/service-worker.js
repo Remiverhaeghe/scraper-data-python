@@ -4,7 +4,7 @@
 // lecture sont gardées, 40 au plus, et la déconnexion les efface
 // (en-tête Clear-Site-Data de /logout).
 
-const CACHE_NAME = "jobboard-static-v2";
+const CACHE_NAME = "jobboard-static-v3";
 const PAGES_CACHE_NAME = "jobboard-pages-v1";
 const MAX_PAGES = 40;
 const OFFLINE_URL = "/static/offline.html";
@@ -69,6 +69,18 @@ async function keepPage(pRequest, pResponse) {
     );
 }
 
+/**
+ * Marque une copie servie sans réseau : la page affiche alors son bandeau.
+ * navigator.onLine ne suffit pas, le téléphone garde le Wi-Fi quand le PC s'éteint.
+ */
+async function markOfflineCopy(pCopy) {
+    const vText = await pCopy.text();
+
+    return new Response(vText.replace("<body", '<body data-offline-copy="1"'), {
+        headers: pCopy.headers,
+    });
+}
+
 /** Le réseau d'abord ; sans réseau, la dernière copie de la page, sinon la page hors ligne. */
 async function readPage(pRequest) {
     try {
@@ -82,7 +94,7 @@ async function readPage(pRequest) {
     } catch (pError) {
         const vCopy = await caches.match(pRequest, { cacheName: PAGES_CACHE_NAME });
 
-        return vCopy || caches.match(OFFLINE_URL);
+        return vCopy ? markOfflineCopy(vCopy) : caches.match(OFFLINE_URL);
     }
 }
 

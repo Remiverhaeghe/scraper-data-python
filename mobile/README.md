@@ -30,7 +30,9 @@ technique et auto-évaluation des compétences, envoyées au PC à la synchronis
 rappel de chaque entretien la veille à 18 h et une heure avant, notification des
 offres suivies retirées par leur site et des nouvelles offres des entreprises
 privilégiées, révision express de 5 minutes avec compte à rebours, note rapide sur
-une offre ajoutée aux notes de la candidature sur le PC.
+une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
+lisibles hors ligne et fiche de préparation (pitch, questions pièges, questions à
+poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien.
 
 ## Installation des outils (une fois)
 
@@ -178,6 +180,7 @@ mobile/
 │   │   ├── statistics_screen.dart # Statistiques de révision
 │   │   ├── offers_screen.dart    # Nouvelles offres de la semaine et leur statut
 │   │   ├── offer_detail_screen.dart # Fiche d'une offre, lisible hors ligne
+│   │   ├── tracking_screen.dart  # Candidatures en cours et fiche de préparation d'un entretien
 │   │   ├── triage_screen.dart    # Tri rapide des nouvelles offres, une à la fois
 │   │   ├── interview_screen.dart # Simulation d'entretien technique
 │   │   ├── skills_screen.dart    # Auto-évaluation des compétences
@@ -206,6 +209,7 @@ mobile/
     ├── withdrawn_offers_test.dart # Teste la notification unique des offres retirées
     ├── sprint_test.dart          # Teste le temps restant et le bilan de la révision express
     ├── offer_notes_test.dart     # Teste l'envoi unique des notes rapides au PC
+    ├── tracking_test.dart        # Teste les candidatures et la fiche du prochain entretien
     ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond
     ├── review_input_test.dart    # Teste la saisie d'une revue de code
     ├── integration/

@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 
+import pandas as pd
 import pytest
 
 import job.health as health
@@ -20,6 +21,7 @@ from scraper.history import HistoryEntry
 from storage.backup import backup_database
 from storage.database import initialize_database
 from storage.history_repository import save_history
+from storage.job_offers import save_offers
 from storage.settings_repository import save_json_setting
 from utils.tls import create_certificate, read_expiry
 
@@ -88,7 +90,7 @@ def test_unreadable_check_does_not_hide_the_others(database_file, monkeypatch):
     vChecks = get_checks(database_file)
 
     assert vChecks["Sources"] == ("Illisible : voir les journaux", "danger")
-    assert len(vChecks) == 17
+    assert len(vChecks) == 19
     assert format_age(NOW - timedelta(days=5), NOW) == "il y a 5 jours"
 
 
@@ -241,4 +243,48 @@ def test_scheduler_check_follows_the_heartbeat(tmp_path):
         f"Arrêté depuis le {get_scheduler_heartbeat(vDatabaseFile):%d/%m/%Y %H:%M} "
         ": les tâches de fond attendent",
         "danger",
+    )
+
+
+def test_format_changes_name_the_source_and_the_field():
+    """Vérifie le signalement d'un champ vide pour plus de la moitié des offres."""
+
+    vCounts = [
+        {
+            "source": "labonnealternance",
+            "total": 85,
+            "title": 0,
+            "location": 85,
+            "company": 8,
+        },
+        {"source": "adzuna", "total": 1000, "title": 0, "location": 0, "company": 70},
+        {"source": "remotive", "total": 4, "title": 4, "location": 4, "company": 4},
+    ]
+
+    assert health.find_format_changes(vCounts) == [
+        "La bonne alternance : lieu vide pour 100 %"
+    ]
+
+
+def test_source_formats_check_reads_recent_offers(tmp_path):
+    """Vérifie l'indicateur sur une base : source propre, puis lieu disparu."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+
+    assert health.check_source_formats(vDatabaseFile, NOW)[1] == "success"
+
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {"source": "lever", "source_id": str(vIndex), "title": "Dev"}
+                for vIndex in range(12)
+            ]
+        ),
+        NOW,
+    )
+
+    assert health.check_source_formats(vDatabaseFile, NOW)[0].startswith(
+        "Lever : lieu vide pour 100 %"
     )

@@ -154,8 +154,15 @@ class FollowUpsPanel(QWidget):
         vLayout.setSpacing(10)
         vLayout.addWidget(
             create_pill(
-                "En retard" if pFollowUp["follow_up_due"] else "Cette semaine",
-                "warning" if pFollowUp["follow_up_due"] else "primary",
+                *(
+                    ("Remerciement", "success")
+                    if pFollowUp.get("kind") == "thanks"
+                    else (
+                        ("En retard", "warning")
+                        if pFollowUp["follow_up_due"]
+                        else ("Cette semaine", "primary")
+                    )
+                )
             ),
             0,
             Qt.AlignmentFlag.AlignTop,

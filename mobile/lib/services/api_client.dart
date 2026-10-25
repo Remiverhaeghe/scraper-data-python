@@ -176,6 +176,18 @@ class ApiClient {
     return rOffers;
   }
 
+  /// Candidatures en cours et fiche de préparation des entretiens à venir.
+  Future<Map<String, dynamic>> downloadTracking() async {
+    final vResponse = await send(
+      'Candidatures',
+      () => client.get(buildUri('/tracking'), headers: buildHeaders()),
+    );
+
+    final rTracking = decode(vResponse);
+
+    return rTracking;
+  }
+
   /// Entretiens des sept prochains jours, pour les rappels du téléphone.
   Future<List<Map<String, dynamic>>> downloadInterviews() async {
     final vResponse = await send(

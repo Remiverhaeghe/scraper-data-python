@@ -1,6 +1,7 @@
 """Tests du pitch de présentation"""
 
 from job.pitch import build_pitch, describe_of, describe_target, end_sentence
+from job.preparation import build_letter
 from job.profile import EMPTY_PROFILE
 
 PROFILE = {
@@ -64,3 +65,22 @@ def test_end_sentence_and_describe_of():
     assert describe_of("Thales") == "de Thales"
     assert describe_target("Acme", None) == "d'Acme"
     assert describe_target(None, "Dev") == "du poste de Dev"
+
+
+def test_letter_cites_the_same_example_as_the_pitch():
+    """Vérifie que la lettre reprend la réalisation citée dans le pitch."""
+
+    vProfile = {
+        **PROFILE,
+        "experiences": [
+            {"title": "Stagiaire", "skills": ["Python"], "achievement": ""},
+            *PROFILE["experiences"],
+        ],
+    }
+    vOffer = {"title": "Dev Python", "company": "Acme"}
+
+    vLetter = build_letter(vProfile, MATCH, vOffer)
+    vPitch = build_pitch(vProfile, MATCH, vOffer)
+
+    assert "j'ai par exemple livré une API de paiement" in vLetter
+    assert "j'ai par exemple livré une API de paiement" in vPitch["long"]

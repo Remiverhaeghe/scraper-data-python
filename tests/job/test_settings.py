@@ -60,6 +60,7 @@ def test_load_settings_returns_defaults(database_file):
         "weekly_application_goal": 0,
         "target_net_salary": 0,
         "archive_after_days": 0,
+        "commute_cost_per_km": 0.25,
         "experience_years": 0,
         "daily_digest_hour": 0,
         "weight_match": 5,

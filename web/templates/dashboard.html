@@ -172,6 +172,34 @@
     </article>
 </section>
 
+{% if statistics.waiting_interests %}
+<section class="section-gap">
+    <article class="card">
+        <h2>{{ icon("bell-ring") }} Intéressé, pas encore postulé</h2>
+        <p class="card-subtitle">Marquées « Intéressé » depuis plus de 5 jours : postulez, ou classez-les</p>
+        <ul class="checklist">
+            {% for offer in statistics.waiting_interests %}
+            <li><a href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Offre sans titre" }}</a> <span class="muted">{{ offer.company or "" }} · depuis le {{ offer.interested_at | date_fr }}</span></li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endif %}
+
+{% if statistics.hot_offers %}
+<section class="section-gap">
+    <article class="card">
+        <h2>{{ icon("zap") }} À saisir vite</h2>
+        <p class="card-subtitle">Publiées depuis moins de 48 h, bien notées et pas encore traitées : les premières candidatures sont souvent les mieux lues</p>
+        <ul class="checklist">
+            {% for offer in statistics.hot_offers %}
+            <li><a href="{{ url_for('show_offer').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ offer.title or "Offre sans titre" }}</a> <span class="muted">{{ offer.company or "" }} · {{ offer.match_score }} %</span></li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endif %}
+
 {% if statistics.preferred_offers %}
 <section class="section-gap">
     <article class="card">

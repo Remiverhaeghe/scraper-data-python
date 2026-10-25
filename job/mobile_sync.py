@@ -41,7 +41,8 @@ from job.quiz_types import (
     grade_answer,
 )
 from job.similar_offers import find_similar_offers
-from job.weekly_digest import get_new_offers
+from job.preparation_sheet import build_preparation_sheet
+from job.weekly_digest import get_coming_interviews, get_new_offers
 from storage.job_applications import (
     get_application,
     get_applications_with_offers,
@@ -95,6 +96,9 @@ MAX_PHONE_NOTE = 1000
 
 # Candidatures envoyées au téléphone pour réviser leurs thèmes : les plus récentes
 REVISION_STATUSES = ("INTERVIEW", "APPLIED")
+
+# Candidatures consultables hors ligne sur le téléphone
+TRACKED_STATUSES = ("INTERVIEW", "APPLIED", "INTERESTED")
 MAX_REVISION_APPLICATIONS = 10
 
 # Identifiant de réponse choisi par le téléphone, par exemple un UUID
@@ -707,3 +711,35 @@ def sync_phone_notes(pDatabaseFile, pNotes, pNow):
     rReport = {"applied": vApplied, "rejected": vRejected}
 
     return rReport
+
+
+def build_tracking(pDatabaseFile, pNow):
+    """Retourne les candidatures en cours, et la fiche de préparation de chaque
+    entretien des sept prochains jours, pour les consulter hors ligne.
+    """
+
+    rTracking = {
+        "applications": [
+            {
+                "source": vApplication["source"],
+                "source_id": vApplication["source_id"],
+                "title": vApplication.get("title"),
+                "company": vApplication.get("company"),
+                "status": vApplication["status"],
+                "status_label": STATUS_LABELS.get(vApplication["status"]),
+                "follow_up_date": vApplication.get("follow_up_date"),
+                "interview_at": vApplication.get("interview_at"),
+            }
+            for vApplication in get_applications_with_offers(
+                pDatabaseFile, TRACKED_STATUSES
+            )
+        ],
+        "sheets": {
+            f"{vInterview['source']}/{vInterview['source_id']}": build_preparation_sheet(
+                pDatabaseFile, clean_missing_values(vInterview)
+            )
+            for vInterview in get_coming_interviews(pDatabaseFile, pNow)
+        },
+    }
+
+    return rTracking

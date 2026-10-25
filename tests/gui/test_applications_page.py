@@ -285,6 +285,11 @@ def test_spontaneous_dialog_saves_or_explains(qt_application, tmp_path):
     assert "entreprise manquante" in vDialog.message_label.text()
 
     vDialog.company_edit.setText("OVHcloud")
+    vDialog.copy_draft()
+
+    assert "candidature spontanée chez OVHcloud" in qt_application.clipboard().text()
+    assert vDialog.message_label.text().startswith("Message copié")
+
     vDialog.save()
 
     assert vDialog.result() == vDialog.DialogCode.Accepted

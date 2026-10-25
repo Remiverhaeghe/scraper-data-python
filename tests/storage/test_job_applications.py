@@ -1,13 +1,15 @@
 """Tests du suivi des candidatures"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from storage.database import initialize_database
 from storage.job_applications import (
     get_status_history,
+    get_waiting_interests,
     count_applications_by_day,
     count_follow_ups_by_day,
     create_application,
@@ -18,6 +20,7 @@ from storage.job_applications import (
     save_application,
     update_application_status,
 )
+from storage.job_offers import save_offers
 
 
 def test_create_application(tmp_path):
@@ -431,3 +434,35 @@ def test_every_status_change_is_kept_in_the_history(tmp_path):
         "INTERVIEW",
     ]
     assert all(vDate[:4].isdigit() for _, vDate in vHistory)
+
+
+def test_waiting_interests_are_still_interested_offers(tmp_path):
+    """Vérifie les offres restées « Intéressé », pas celles déjà postulées."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "lever",
+                    "source_id": "1",
+                    "title": "Dev",
+                    "company": "Acme",
+                },
+                {"source": "lever", "source_id": "2", "title": "Data"},
+            ]
+        ),
+        datetime(2026, 10, 1),
+    )
+    save_application(vDatabaseFile, "lever", "1", "INTERESTED")
+    save_application(vDatabaseFile, "lever", "2", "INTERESTED")
+    save_application(vDatabaseFile, "lever", "2", "APPLIED")
+
+    vLater = datetime.now() + timedelta(days=1)
+
+    assert [
+        vOffer["source_id"] for vOffer in get_waiting_interests(vDatabaseFile, vLater)
+    ] == ["1"]
+    assert get_waiting_interests(vDatabaseFile, datetime(2020, 1, 1)) == []

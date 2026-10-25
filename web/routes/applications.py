@@ -16,6 +16,7 @@ from job.application_tracking import (
     BOARD_STATUSES,
     build_application_statistics,
     build_board,
+    build_spontaneous_draft,
     get_week_follow_ups,
     mark_followed_up,
     send_follow_up,
@@ -31,6 +32,7 @@ from job.search_journal import (
 from job.followed_availability import count_alerts
 from job.notification import describe_follow_up
 from job.presentation import STATUS_LABELS
+from job.profile import load_profile
 from storage.job_applications import get_application, update_application_status
 from utils.mailer import get_missing_email_settings
 from web.dependencies import get_database_file, require_csrf
@@ -107,6 +109,28 @@ def create_spontaneous_application(
 
     rResponse = RedirectResponse(
         router.url_path_for("show_applications"), status_code=303
+    )
+
+    return rResponse
+
+
+@router.get("/applications/spontaneous/draft", response_class=HTMLResponse)
+def draft_spontaneous_application(
+    request: Request,
+    pCompany: str = Query("", alias="company"),
+    pTitle: str = Query("", alias="title"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Renvoie le brouillon d'une candidature spontanée, sans rien enregistrer."""
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "_spontaneous_draft.html",
+        {
+            "draft": build_spontaneous_draft(
+                load_profile(pDatabaseFile), pCompany[:200], pTitle[:200]
+            )
+        },
     )
 
     return rResponse

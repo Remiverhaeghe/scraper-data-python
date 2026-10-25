@@ -8,6 +8,7 @@ from job.salary_market import (
     add_estimated_salaries,
     describe_market_salary,
     describe_negotiation,
+    describe_net_after_commute,
     find_market_salary,
     is_training,
     to_gross_yearly,
@@ -134,3 +135,19 @@ def test_offers_without_salary_get_an_estimate(tmp_path):
     assert vOffers[0]["estimated_salary"] == "3 000 €"
     assert vOffers[1]["estimated_salary"] is None
     assert vOffers[2]["estimated_salary"] is None
+
+
+def test_net_after_commute_deducts_the_car_trip():
+    """Vérifie le net après trajet : plein temps sur site, hybride, ou non calculé."""
+
+    vSettings = {"commute_cost_per_km": 0.25}
+    vOffer = {"salary_net_monthly_min": 2500, "distance_km": 10}
+
+    assert describe_net_after_commute(vOffer, vSettings) == (
+        "2 364 € après trajet : environ 136 € par mois pour 10 km à vol d'oiseau"
+    )
+    assert describe_net_after_commute({**vOffer, "remote": True}, vSettings).endswith(
+        "3 jours sur site par semaine"
+    )
+    assert describe_net_after_commute({**vOffer, "distance_km": None}, vSettings) == ""
+    assert describe_net_after_commute(vOffer, {"commute_cost_per_km": 0}) == ""

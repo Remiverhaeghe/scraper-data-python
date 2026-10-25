@@ -4,6 +4,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QColor, QFont
 
 from gui.theme import COLORS
+from job.geocoding import describe_distance
 from job.presentation import (
     CONTRACT_TONES,
     STATUS_LABELS,
@@ -60,7 +61,7 @@ def format_cell(pOffer, pKey):
         rText = str(pOffer.get(pKey, ""))
 
     elif pKey == "distance_km":
-        rText = "" if pOffer.get(pKey) is None else f"{pOffer[pKey]} km"
+        rText = describe_distance(pOffer)
 
     elif pKey == "first_seen_at" and (
         pOffer.get("republished") or pOffer.get("old_at_source_days")
@@ -91,6 +92,9 @@ def format_cell(pOffer, pKey):
 
     elif pKey == "title" and pOffer.get("suspicious_signs"):
         rText = f"⚠ {pOffer.get('title') or ''} · annonce douteuse"
+
+    elif pKey == "title" and pOffer.get("like_ignored"):
+        rText = f"{pOffer.get('title') or ''} · proche d'une offre ignorée"
 
     elif pKey == "title" and pOffer.get("above_experience"):
         rText = f"{pOffer.get('title') or ''} · {pOffer['required_years']} ans demandés"

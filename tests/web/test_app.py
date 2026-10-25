@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+import web.app as web_app
 import web.rendering as web_rendering
 import storage.backup as storage_backup
 import web.routes.applications as web_applications
@@ -913,6 +914,34 @@ def test_manifest_and_icons_are_public(client):
     assert '"/settings"' not in vWorker.text
     assert "MAX_PAGES = 40" in vWorker.text
     assert client.get("/static/offline.html").status_code == 200
+
+
+def test_spontaneous_draft_is_prepared_without_saving(client):
+    """Vérifie le brouillon renvoyé à part, sans candidature enregistrée."""
+
+    vBoard = client.get("/applications").text
+    vDraft = client.get(
+        "/applications/spontaneous/draft", params={"company": "Acme", "title": "Dev"}
+    ).text
+
+    assert "Préparer le message" in vBoard
+    assert "candidature spontanée chez Acme pour un poste de Dev." in vDraft
+    assert client.get("/applications").text == vBoard
+
+
+def test_slow_page_is_logged_without_its_parameters(client, monkeypatch, caplog):
+    """Vérifie qu'une page lente est signalée par son chemin seul."""
+
+    monkeypatch.setattr(web_app, "SLOW_PAGE_SECONDS", -1)
+
+    client.get("/offers?keyword=secret")
+
+    vMessages = [
+        vRecord.getMessage() for vRecord in caplog.records if vRecord.name == "web.app"
+    ]
+
+    assert any(vMessage.startswith("Page lente : /offers en") for vMessage in vMessages)
+    assert not any("secret" in vMessage for vMessage in vMessages)
 
 
 def test_security_headers(client):

@@ -36,7 +36,11 @@
     {% if follow_up_message %}<p class="application-message tone-{{ follow_up_message[1] }}" role="status">{{ follow_up_message[0] }}</p>{% endif %}
     {% for follow_up in follow_ups %}
     <div class="follow-up">
+        {% if follow_up.kind == "thanks" %}
+        <span class="badge badge-success">Remerciement</span>
+        {% else %}
         <span class="badge badge-{{ 'warning' if follow_up.follow_up_due else 'muted' }}">{{ "En retard" if follow_up.follow_up_due else "Cette semaine" }}</span>
+        {% endif %}
         <div class="follow-up-body">
             <a class="offer-title" href="{{ url_for('show_offer').path }}?source={{ follow_up.source | urlencode }}&id={{ follow_up.source_id | urlencode }}">{{ follow_up.title or "Offre sans titre" }}</a>
             <p class="muted">{{ follow_up.detail }}</p>
@@ -78,6 +82,8 @@
         <label>Lien <input type="url" name="url" placeholder="Site carrière ou page de contact"></label>
         <label>Note <input type="text" name="note" maxlength="500" placeholder="Envoyée à la RH par e-mail"></label>
         <button class="button button-primary" type="submit">{{ icon("send", 16) }} Enregistrer la candidature</button>
+        <button class="button" type="button" hx-get="{{ url_for('draft_spontaneous_application').path }}" hx-include="closest form" hx-target="#spontaneous-draft">{{ icon("file-text", 16) }} Préparer le message</button>
+        <div id="spontaneous-draft"></div>
     </form>
 </article>
 

@@ -77,6 +77,10 @@
                 {% endcall %}
                 {% endif %}
 
+                {% if net_after_commute %}
+                {% call detail("map-pin", "Net après trajet") %}{{ net_after_commute }}{% endcall %}
+                {% endif %}
+
                 {% call detail("scale", "Marché") %}{{ market_salary }}{% endcall %}
 
                 {% if suspicious_signs %}

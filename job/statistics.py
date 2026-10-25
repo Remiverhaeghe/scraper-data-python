@@ -6,7 +6,7 @@ from job.companies import find_preferred_offers
 from job.followed_availability import list_withdrawn_offers
 from job.filter import matches_keyword, matches_location
 from job.preparation import score_offers
-from job.presentation import get_source_label, prepare_offer
+from job.presentation import clean_missing_values, get_source_label, prepare_offer
 from job.profile import load_profile
 from job.settings import load_settings
 from job.similar_offers import find_similar_offers
@@ -15,9 +15,11 @@ from storage.history_repository import get_history
 from storage.job_applications import (
     count_applied_since,
     count_applications_by_day,
+    count_interviews_by_source,
     count_follow_ups_by_day,
     count_responses_by_day,
     get_upcoming_follow_ups,
+    get_waiting_interests,
 )
 from storage.job_offers import (
     FOLLOW_UP_STATUSES,
@@ -28,6 +30,10 @@ from storage.job_offers import (
     get_offers,
 )
 from storage.saved_searches import get_saved_searches
+from storage.settings_repository import load_json_setting, save_json_setting
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 RECENT_EXECUTIONS = 3
 
@@ -59,6 +65,9 @@ WEEK_SERIES = {
 
 WEEK_DAYS = 7
 
+# Bilan mensuel de la page Historique : 30 derniers jours et 30 précédents
+MONTH_DAYS = 30
+
 # Au-delà, les sources les moins fournies sont regroupées dans « Autres »
 MAX_PIE_SOURCES = 6
 
@@ -68,6 +77,15 @@ EXECUTION_CHART_SIZE = 10
 # Comparaison des sources : période observée et score d'une offre intéressante
 SOURCE_COMPARISON_DAYS = 30
 GOOD_MATCH_SCORE = 50
+
+# Offres « à saisir vite » : publiées depuis peu, bien notées et pas encore
+# traitées. Les premières candidatures sont souvent les mieux lues.
+HOT_OFFER_HOURS = 48
+HOT_OFFER_SCORE = 70
+HOT_OFFERS_LIMIT = 5
+
+# Offres marquées « Intéressé » sans candidature depuis ce délai : rappelées
+WAITING_INTEREST_DAYS = 5
 
 # Offres retenues (suivies au-delà d'un simple coup d'œil) et candidatures envoyées
 KEPT_STATUSES = ("INTERESTED", "APPLIED", "INTERVIEW", "REJECTED", "ACCEPTED")
@@ -109,6 +127,10 @@ def load_statistics(pDatabaseFile, pNow=None):
         ],
         "similar_offers": find_similar_offers(pDatabaseFile, vNow, DASHBOARD_LIST_SIZE),
         "withdrawn_offers": list_withdrawn_offers(pDatabaseFile),
+        "hot_offers": find_hot_offers(pDatabaseFile, vNow),
+        "waiting_interests": get_waiting_interests(
+            pDatabaseFile, vNow - timedelta(days=WAITING_INTEREST_DAYS)
+        )[:DASHBOARD_LIST_SIZE],
         "preferred_offers": find_preferred_offers(
             pDatabaseFile, vNow - timedelta(days=vNewOfferDays)
         ),
@@ -122,15 +144,15 @@ def load_statistics(pDatabaseFile, pNow=None):
     return rStatistics
 
 
-def summarize_week(pActivity):
-    """Compare, série par série, les 7 derniers jours aux 7 précédents."""
+def summarize_week(pActivity, pDays=WEEK_DAYS):
+    """Compare, série par série, les pDays derniers jours aux pDays précédents."""
 
     rWeek = []
 
     for vName, vCounts in pActivity.items():
         vValues = [vCount for _, vCount in vCounts]
-        vCurrent = sum(vValues[-WEEK_DAYS:])
-        vPrevious = sum(vValues[-2 * WEEK_DAYS : -WEEK_DAYS])
+        vCurrent = sum(vValues[-pDays:])
+        vPrevious = sum(vValues[-2 * pDays : -pDays])
 
         rWeek.append(
             {
@@ -145,6 +167,42 @@ def summarize_week(pActivity):
     return rWeek
 
 
+def build_month_summary(pDatabaseFile, pNow):
+    """Retourne le bilan des 30 derniers jours comparés aux 30 précédents, et les
+    entretiens obtenus par source sur le mois.
+    """
+
+    vActivity = {
+        vName: vCount(pDatabaseFile, 2 * MONTH_DAYS, pNow)
+        for vName, (_, vCount) in WEEK_SERIES.items()
+    }
+
+    rMonth = {
+        "rows": summarize_week(vActivity, MONTH_DAYS),
+        "interview_sources": [
+            (get_source_label(vSource), vCount)
+            for vSource, vCount in count_interviews_by_source(
+                pDatabaseFile, pNow - timedelta(days=MONTH_DAYS)
+            )
+        ],
+    }
+
+    return rMonth
+
+
+def describe_interview_sources(pSources):
+    """Résume les entretiens du mois par source, ou indique qu'il n'y en a pas."""
+
+    rText = (
+        "Entretiens obtenus ce mois-ci : "
+        + ", ".join(f"{vLabel} {vCount}" for vLabel, vCount in pSources)
+        if pSources
+        else "Aucun entretien obtenu ces 30 derniers jours."
+    )
+
+    return rText
+
+
 def describe_trend(pDelta):
     """Décrit un écart d'une semaine à l'autre : « +3 », « −2 » ou « = »."""
 
@@ -156,6 +214,39 @@ def describe_trend(pDelta):
         rTrend = "="
 
     return rTrend
+
+
+def find_hot_offers(pDatabaseFile, pNow, pLimit=HOT_OFFERS_LIMIT):
+    """Retourne les offres à saisir vite : vues et publiées depuis HOT_OFFER_HOURS,
+    sans statut, avec une correspondance d'au moins HOT_OFFER_SCORE %.
+    """
+
+    vSince = pNow - timedelta(hours=HOT_OFFER_HOURS)
+    vOffers = [
+        vOffer
+        for vOffer in map(
+            clean_missing_values,
+            get_offers(pDatabaseFile, pSeenSince=vSince, pHideIgnored=True).to_dict(
+                "records"
+            ),
+        )
+        if not vOffer.get("application_status")
+        and str(vOffer.get("published_at") or vSince.isoformat())[:10]
+        >= vSince.date().isoformat()
+    ]
+
+    score_offers(vOffers, load_profile(pDatabaseFile))
+
+    rOffers = sorted(
+        (
+            vOffer
+            for vOffer in vOffers
+            if (vOffer.get("match_score") or 0) >= HOT_OFFER_SCORE
+        ),
+        key=lambda pOffer: -pOffer["match_score"],
+    )[:pLimit]
+
+    return rOffers
 
 
 def trim_leading_empty_days(pDailyActivity):
@@ -417,6 +508,9 @@ def build_source_cells(pRow):
 # Au-dessous, une source a trop peu d'offres pour être jugée
 MIN_JUDGED_OFFERS = 20
 
+# Dernière revue quotidienne de l'utilité des sources (run_due_source_review)
+SOURCE_REVIEW_KEY = "source_review"
+
 
 def describe_useless_sources(pComparison):
     """Retourne le conseil de décocher les sources sans offre utile, ou "".
@@ -444,3 +538,36 @@ def describe_useless_sources(pComparison):
     )
 
     return rText
+
+
+def run_due_source_review(pDatabaseFile, pNow):
+    """Revoit chaque jour l'utilité des sources et garde le conseil en base.
+
+    La comparaison note toutes les offres du mois : trop longue pour une page,
+    elle est faite par le planificateur et lue ensuite par la page Santé.
+    """
+
+    vToday = pNow.date().isoformat()
+
+    if load_source_review(pDatabaseFile).get("date") == vToday:
+        return None
+
+    rReview = {
+        "date": vToday,
+        "advice": describe_useless_sources(compare_sources(pDatabaseFile, pNow)),
+    }
+    save_json_setting(pDatabaseFile, SOURCE_REVIEW_KEY, rReview)
+
+    logger.info(
+        "Utilité des sources revue : %s", rReview["advice"] or "rien à signaler"
+    )
+
+    return rReview
+
+
+def load_source_review(pDatabaseFile):
+    """Retourne la dernière revue des sources, vide si elle n'a jamais eu lieu."""
+
+    rReview = load_json_setting(pDatabaseFile, SOURCE_REVIEW_KEY, {}, dict)
+
+    return rReview

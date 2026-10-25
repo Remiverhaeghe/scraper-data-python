@@ -9,6 +9,7 @@ pas. En dessous de MIN_COMPARABLES offres, aucune médiane n'est donnée.
 import re
 from statistics import median, quantiles
 
+from job.geocoding import ROAD_DETOUR_FACTOR
 from job.location import FRANCE
 from job.preparation import get_offer_skills
 from job.presentation import clean_missing_values, format_euros
@@ -30,6 +31,11 @@ TRAINING_PATTERN = re.compile(
 
 # Écart au-delà duquel le salaire visé est dit au-dessus ou en dessous du marché
 TARGET_MARGIN = 0.05
+
+
+# Jours de trajet par mois, et part sur site d'une offre en télétravail
+COMMUTE_WORKDAYS = 21
+HYBRID_ONSITE_SHARE = 0.6
 
 
 def get_net_salary(pOffer):
@@ -249,5 +255,31 @@ def describe_market_salary(pMarket):
             vPosition = "dans le marché"
 
         rText += f" · visé {format_euros(vTarget)} : {vPosition}"
+
+    return rText
+
+
+def describe_net_after_commute(pOffer, pSettings):
+    """Retourne le net mensuel diminué du trajet en voiture, ou un texte vide.
+
+    Le trajet compte deux fois la route par jour sur site ; une offre en
+    télétravail est supposée hybride, faute de rythme précisé.
+    """
+
+    vNet = get_net_salary(pOffer)
+    vDistance = pOffer.get("distance_km")
+    vCostPerKm = pSettings["commute_cost_per_km"]
+
+    if vNet is None or vDistance is None or not vCostPerKm:
+        return ""
+
+    vDays = COMMUTE_WORKDAYS * (HYBRID_ONSITE_SHARE if pOffer.get("remote") else 1)
+    vCost = 2 * vDistance * ROAD_DETOUR_FACTOR * vDays * vCostPerKm
+
+    rText = (
+        f"{format_euros(vNet - vCost)} après trajet : environ "
+        f"{format_euros(vCost)} par mois pour {vDistance} km à vol d'oiseau"
+        + (", 3 jours sur site par semaine" if pOffer.get("remote") else "")
+    )
 
     return rText

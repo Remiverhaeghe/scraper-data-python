@@ -1,6 +1,6 @@
 """Tests des listes d'entreprises et des candidatures déjà envoyées"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
@@ -16,10 +16,11 @@ from job.companies import (
     parse_companies,
     save_company_rules,
 )
+from job.application_tracking import get_week_follow_ups
 from job.fingerprint import build_fingerprint
 from job.offer_filters import OfferFilterChoices, build_offer_filters
 from storage.database import initialize_database
-from storage.job_applications import save_application
+from storage.job_applications import save_application, save_contact_email
 from storage.job_offers import get_offers, save_offers
 
 NOW = datetime(2026, 10, 11, 10, 0)
@@ -138,6 +139,28 @@ def test_company_applications_warning(database_file):
     assert describe_company_applications(
         find_company_applications(database_file, vOffer)
     ) == ("Déjà 1 candidature(s) dans cette entreprise : Java (Postulé, le 11/10/2026)")
+
+
+def test_known_contact_is_shared_with_the_company_offers(database_file):
+    """Vérifie l'adresse du recruteur rappelée sur les autres offres de l'entreprise."""
+
+    vOffer = {"source": "remotive", "source_id": "2", "company": "Acme"}
+    save_application(database_file, "remotive", "1", "APPLIED", pNow=NOW)
+    save_contact_email(database_file, "remotive", "1", "rh@acme.fr")
+
+    assert describe_company_applications(
+        find_company_applications(database_file, vOffer)
+    ).endswith(". Contact connu : rh@acme.fr")
+
+    save_application(database_file, "remotive", "2", "APPLIED", pNow=NOW)
+
+    vCard = next(
+        vCard
+        for vCard in get_week_follow_ups(database_file, NOW + timedelta(days=8))
+        if vCard["source_id"] == "2"
+    )
+
+    assert vCard["contact_email"] == "rh@acme.fr"
 
 
 def test_preferred_companies_offers_are_watched(database_file):

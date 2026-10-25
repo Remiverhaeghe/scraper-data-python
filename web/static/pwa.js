@@ -11,12 +11,13 @@ if ("serviceWorker" in navigator && window.isSecureContext) {
     });
 }
 
-// Bandeau affiché sans réseau : la page lue est la dernière copie gardée, et
-// les actions (statut, notes, recherche) attendent le retour du réseau.
+// Bandeau affiché sur une copie servie sans réseau (marquée par le service
+// worker) ou quand l'appareil perd le réseau : les actions (statut, notes,
+// recherche) attendent le retour du PC.
 function showConnectionState() {
     let vBanner = document.getElementById("offline-banner");
 
-    if (navigator.onLine) {
+    if (navigator.onLine && !document.body.dataset.offlineCopy) {
         vBanner?.remove();
         return;
     }

@@ -45,6 +45,7 @@ from job.deduplication import group_offers
 from job.experience_fit import mark_experience_fit
 from job.freshness import add_freshness
 from job.global_score import add_global_scores
+from job.similar_offers import mark_like_ignored
 from job.suspicious_offers import mark_suspicious_offers
 from job.salary_market import add_estimated_salaries
 from job.geocoding import add_distances, load_home
@@ -521,6 +522,7 @@ class OffersPage(QWidget):
             add_freshness(vPrepared, datetime.now())
             add_estimated_salaries(self.database_file, vPrepared)
             mark_suspicious_offers(self.database_file, vPrepared)
+            mark_like_ignored(self.database_file, vPrepared)
             add_global_scores(
                 vPrepared, vSettings, (self.home or {}).get("alert_radius_km")
             )

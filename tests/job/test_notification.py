@@ -2,7 +2,13 @@
 
 import math
 
-from job.notification import MAX_EMAIL_OFFERS, build_new_offers_email, build_test_email
+from job.notification import (
+    MAX_EMAIL_OFFERS,
+    build_new_offers_email,
+    build_test_email,
+    describe_offer,
+    describe_offers_by_search,
+)
 
 
 def build_offer(**pValues):
@@ -69,3 +75,23 @@ def test_build_test_email():
 
     assert "e-mail de test" in vSubject
     assert vText
+
+
+def test_offers_are_counted_by_search_when_several_ran():
+    """Vérifie le compte par recherche, et la recherche effacée s'il n'y en a qu'une."""
+
+    vOffers = [
+        build_offer(found_by="Python Lille", salary_net_monthly_max=None),
+        build_offer(found_by="Python Lille", salary_net_monthly_max=None),
+        build_offer(found_by="Data", salary_net_monthly_max=None),
+    ]
+
+    assert (
+        describe_offers_by_search(vOffers) == "Par recherche : Python Lille 2, Data 1"
+    )
+    assert describe_offer(vOffers[2]).endswith("recherche « Data »")
+
+    vAlone = [build_offer(found_by="Recherche planifiée", salary_net_monthly_max=None)]
+
+    assert describe_offers_by_search(vAlone) == ""
+    assert "recherche «" not in describe_offer(vAlone[0])

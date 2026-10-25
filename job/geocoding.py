@@ -40,6 +40,13 @@ MAX_LOOKUPS = 300
 # environ une demi-seconde par lieu, la recherche ne reste pas bloquée des minutes.
 BATCH_LOOKUPS = 40
 
+# Temps de trajet estimé sans service d'itinéraire : la route fait en moyenne
+# 1,3 fois la distance à vol d'oiseau, parcourue plus lentement en ville.
+ROAD_DETOUR_FACTOR = 1.3
+CITY_DISTANCE_KM = 20
+CITY_SPEED_KMH = 40
+ROAD_SPEED_KMH = 70
+
 # Code postal suivi de la commune, en fin d'adresse
 POSTAL_ADDRESS_PATTERN = re.compile(r"\b\d{5}\s+[^\d,;]+$")
 
@@ -396,8 +403,38 @@ def read_position(pOffer):
     return rPosition
 
 
+def estimate_drive_minutes(pDistanceKm):
+    """Estime le trajet en voiture, en minutes, d'après la distance à vol d'oiseau."""
+
+    # Les premiers kilomètres en ville, le reste sur route : le temps croît
+    # toujours avec la distance.
+    vCityKm = min(pDistanceKm, CITY_DISTANCE_KM) * ROAD_DETOUR_FACTOR
+    vRoadKm = max(pDistanceKm - CITY_DISTANCE_KM, 0) * ROAD_DETOUR_FACTOR
+    vHours = vCityKm / CITY_SPEED_KMH + vRoadKm / ROAD_SPEED_KMH
+
+    rMinutes = max(5, round(vHours * 60 / 5) * 5)
+
+    return rMinutes
+
+
+def describe_distance(pOffer):
+    """Retourne « 12 km · ≈ 25 min », ou une chaîne vide sans distance connue."""
+
+    vDistance = pOffer.get("distance_km")
+
+    rText = (
+        f"{vDistance} km · ≈ {pOffer['drive_minutes']} min"
+        if vDistance is not None and pOffer.get("drive_minutes")
+        else (f"{vDistance} km" if vDistance is not None else "")
+    )
+
+    return rText
+
+
 def add_distances(pOffers, pHome):
-    """Ajoute à chaque offre sa distance au domicile en km, ou None si inconnue."""
+    """Ajoute à chaque offre sa distance au domicile en km et le trajet estimé en
+    voiture, ou None si la position est inconnue.
+    """
 
     vHome = (pHome["latitude"], pHome["longitude"]) if pHome else None
 
@@ -406,6 +443,11 @@ def add_distances(pOffers, pHome):
         vOffer["distance_km"] = (
             round(compute_distance_km(vHome, vPosition))
             if vHome and vPosition
+            else None
+        )
+        vOffer["drive_minutes"] = (
+            estimate_drive_minutes(vOffer["distance_km"])
+            if vOffer["distance_km"] is not None
             else None
         )
 

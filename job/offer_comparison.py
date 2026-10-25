@@ -1,14 +1,19 @@
 """Comparaison de quelques offres côte à côte, partagée entre le bureau et le web"""
 
 from job.freshness import compute_freshness
+from job.geocoding import add_distances, load_home
 from job.preparation import match_offer
 from job.presentation import (
     STATUS_LABELS,
     clean_missing_values,
     format_net_salary,
     get_source_label,
+    to_list,
 )
 from job.profile import load_profile
+from job.salary_market import describe_net_after_commute
+from job.settings import load_settings
+from storage.interview_notes import get_interview_notes
 from storage.job_applications import get_application
 from storage.job_offers import get_offer
 from storage.settings_repository import load_json_setting, save_json_setting
@@ -20,6 +25,9 @@ COMPARISON_KEY = "offer_comparison"
 
 # Au-delà, les colonnes deviennent trop étroites pour être lues
 MAX_COMPARED_OFFERS = 3
+
+# Ressenti affiché en entier au-delà de quelques lignes : il reste lisible
+MAX_FEELING_LENGTH = 160
 
 
 def load_comparison_keys(pDatabaseFile):
@@ -82,10 +90,30 @@ def describe_remote(pOffer):
     return rText
 
 
+def describe_feeling(pDatabaseFile, pOffer, pApplication):
+    """Retourne vos impressions du dernier entretien, sinon vos notes, abrégées."""
+
+    vNotes = get_interview_notes(pDatabaseFile, pOffer["source"], pOffer["source_id"])
+    vText = (vNotes[0]["impressions"] if vNotes else "") or (
+        (pApplication or {}).get("notes") or ""
+    )
+    vText = " ".join(vText.split())
+
+    rFeeling = (
+        vText[: MAX_FEELING_LENGTH - 1] + "…"
+        if len(vText) > MAX_FEELING_LENGTH
+        else vText
+    ) or "Non noté"
+
+    return rFeeling
+
+
 def build_comparison(pDatabaseFile, pNow):
     """Retourne les offres comparées et une ligne par critère, une valeur par offre."""
 
     vProfile = load_profile(pDatabaseFile)
+    vSettings = load_settings(pDatabaseFile)
+    vHome = load_home(pDatabaseFile)
     vOffers = []
 
     for vSource, vSourceId in load_comparison_keys(pDatabaseFile):
@@ -96,6 +124,7 @@ def build_comparison(pDatabaseFile, pNow):
             continue
 
         vOffer = clean_missing_values(vOffer)
+        add_distances([vOffer], vHome)
         vMatch = match_offer(vProfile, vOffer)
         vApplication = get_application(pDatabaseFile, vSource, vSourceId)
 
@@ -109,6 +138,9 @@ def build_comparison(pDatabaseFile, pNow):
             ),
             "Contrat": vOffer.get("contract") or "Non précisé",
             "Net mensuel": format_net_salary(vOffer) or "Non communiqué",
+            "Net après trajet": describe_net_after_commute(vOffer, vSettings)
+            or "Non calculé",
+            "Avantages": ", ".join(to_list(vOffer.get("benefits"))) or "Aucun repéré",
             "Télétravail": describe_remote(vOffer),
             "Correspondance": (
                 f"{vMatch['score']} %" if vMatch["score"] is not None else "Inconnue"
@@ -121,6 +153,7 @@ def build_comparison(pDatabaseFile, pNow):
                 if vApplication
                 else "Aucun"
             ),
+            "Mon ressenti": describe_feeling(pDatabaseFile, vOffer, vApplication),
         }
         vOffers.append(vOffer)
 

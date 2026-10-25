@@ -389,6 +389,63 @@ def get_application(pDatabaseFile, pSource, pSourceId):
 SENT_STATUSES = ("APPLIED", "INTERVIEW", "REJECTED", "ACCEPTED")
 
 
+def count_interviews_by_source(pDatabaseFile, pSince):
+    """Compte, par source, les candidatures passées en entretien depuis pSince."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rCounts = vConnection.execute(
+            """
+            SELECT source, COUNT(DISTINCT source_id)
+            FROM application_history
+            WHERE status = 'INTERVIEW' AND changed_at >= ?
+            GROUP BY source
+            ORDER BY 2 DESC, source
+            """,
+            (pSince.isoformat(),),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    return rCounts
+
+
+def get_waiting_interests(pDatabaseFile, pBefore):
+    """Retourne les offres toujours « Intéressé » depuis avant pBefore, avec la date
+    à laquelle elles le sont devenues, les plus anciennes en tête.
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+    vConnection.row_factory = sqlite3.Row
+
+    try:
+        vRows = vConnection.execute(
+            """
+            SELECT a.source, a.source_id, o.title, o.company,
+                MAX(h.changed_at) AS interested_at
+            FROM job_application a
+            JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id
+            JOIN application_history h
+                ON h.source = a.source AND h.source_id = a.source_id
+                AND h.status = 'INTERESTED'
+            WHERE a.status = 'INTERESTED'
+            GROUP BY a.source, a.source_id
+            HAVING interested_at < ?
+            ORDER BY interested_at
+            """,
+            (pBefore.isoformat(),),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rOffers = [dict(vRow) for vRow in vRows]
+
+    return rOffers
+
+
 def get_status_history(pDatabaseFile, pSource, pSourceId):
     """Retourne les statuts successifs d'une candidature : (statut, date), du
     plus ancien au plus récent.
@@ -428,7 +485,8 @@ def get_company_applications(pDatabaseFile, pCompanyKey, pExcludedKey=None):
         # Le nom normalisé ne contient ni « | » ni joker LIKE.
         vRows = vConnection.execute(
             f"""
-            SELECT o.source, o.source_id, o.title, o.company, a.status, a.applied_at
+            SELECT o.source, o.source_id, o.title, o.company, a.status, a.applied_at,
+                a.contact_email
             FROM job_application a
             JOIN job_offer o ON o.source = a.source AND o.source_id = a.source_id
             WHERE o.fingerprint LIKE ?

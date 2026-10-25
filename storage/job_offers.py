@@ -473,6 +473,38 @@ def get_offers(pDatabaseFile, pLimit=None, **pFilters):
     return rOffers
 
 
+def count_empty_fields(pDatabaseFile, pSince):
+    """Compte, par source, les offres découvertes depuis pSince et celles dont le
+    titre, le lieu (hors télétravail) ou l'entreprise est vide.
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+    vConnection.row_factory = sqlite3.Row
+
+    try:
+        vRows = vConnection.execute(
+            """
+            SELECT source, COUNT(*) AS total,
+                SUM(COALESCE(title, '') = '') AS title,
+                SUM(COALESCE(location, '') = '' AND COALESCE(remote, 0) = 0)
+                    AS location,
+                SUM(COALESCE(company, '') = '') AS company
+            FROM job_offer
+            WHERE first_seen_at >= ?
+            GROUP BY source
+            ORDER BY source
+            """,
+            (pSince.isoformat(),),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rCounts = [dict(vRow) for vRow in vRows]
+
+    return rCounts
+
+
 def get_offers_to_check(pDatabaseFile):
     """Retourne les seuls champs contrôlés par la page Qualité, pour chaque offre.
 

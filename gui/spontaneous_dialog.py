@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
@@ -12,7 +13,9 @@ from PySide6.QtWidgets import (
 )
 
 from gui.widgets import show_message
+from job.application_tracking import build_spontaneous_draft
 from job.manual_offers import add_spontaneous_application
+from job.profile import load_profile
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -55,6 +58,12 @@ class SpontaneousDialog(QDialog):
         vButtons.accepted.connect(self.save)
         vButtons.rejected.connect(self.reject)
 
+        vDraftButton = vButtons.addButton(
+            "Copier un message", QDialogButtonBox.ButtonRole.ActionRole
+        )
+        vDraftButton.setToolTip("Brouillon tiré de votre profil, à relire avant envoi")
+        vDraftButton.clicked.connect(self.copy_draft)
+
         vLayout = QVBoxLayout(self)
         vLayout.addWidget(
             QLabel(
@@ -65,6 +74,17 @@ class SpontaneousDialog(QDialog):
         vLayout.addLayout(vForm)
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(vButtons)
+
+    def copy_draft(self):
+        """Copie le brouillon de candidature spontanée dans le presse-papiers."""
+        QApplication.clipboard().setText(
+            build_spontaneous_draft(
+                load_profile(self.database_file),
+                self.company_edit.text(),
+                self.title_edit.text(),
+            )
+        )
+        show_message(self.message_label, "Message copié : collez-le dans votre e-mail.")
 
     def save(self):
         """Enregistre la candidature ; la fenêtre reste ouverte en cas d'erreur."""

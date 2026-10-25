@@ -48,6 +48,8 @@ from job.statistics import (
     build_source_cells,
     compare_saved_searches,
     compare_sources,
+    build_month_summary,
+    describe_interview_sources,
     describe_useless_sources,
     get_source_shares,
 )
@@ -370,6 +372,7 @@ def show_history(
     ]
 
     vComparison = compare_sources(pDatabaseFile, datetime.now())
+    vMonth = build_month_summary(pDatabaseFile, datetime.now())
 
     rResponse = templates.TemplateResponse(
         request,
@@ -386,6 +389,8 @@ def show_history(
                 for vRow in compare_saved_searches(pDatabaseFile, datetime.now())
             ],
             "useless_sources": describe_useless_sources(vComparison),
+            "month": vMonth,
+            "month_interviews": describe_interview_sources(vMonth["interview_sources"]),
             "contract_pie": build_pie(get_contract_shares(pDatabaseFile)),
             "execution_chart": build_bar_chart(
                 [vLabel for vLabel, _ in vExecutionCounts],

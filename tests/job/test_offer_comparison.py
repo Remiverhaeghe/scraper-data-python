@@ -11,7 +11,9 @@ from job.offer_comparison import (
     load_comparison_keys,
     toggle_comparison,
 )
+from job.interview_journal import record_interview
 from storage.database import initialize_database
+from storage.job_applications import save_application
 from storage.job_offers import save_offers
 
 NOW = datetime(2026, 10, 19, 12, 0)
@@ -77,3 +79,20 @@ def test_build_comparison_rows(database_file):
     assert vRows["Télétravail"] == ["2 jour(s) par semaine"]
     assert vRows["Fraîcheur"] == ["100 / 100"]
     assert vRows["Suivi"] == ["Aucun"]
+
+
+def test_feeling_comes_from_the_interview_then_the_notes(database_file):
+    """Vérifie le ressenti : impressions d'entretien d'abord, notes sinon."""
+
+    save_application(database_file, "remotive", "1", "INTERVIEW", pNotes="Note")
+    save_application(database_file, "remotive", "2", "APPLIED", pNotes="Équipe sympa")
+    record_interview(database_file, "remotive", "1", NOW, "", "Très bon contact")
+    toggle_comparison(database_file, "remotive", "1")
+    toggle_comparison(database_file, "remotive", "2")
+    toggle_comparison(database_file, "remotive", "3")
+
+    vRows = dict(build_comparison(database_file, NOW)["rows"])
+
+    assert vRows["Mon ressenti"] == ["Très bon contact", "Équipe sympa", "Non noté"]
+    assert vRows["Net après trajet"] == ["Non calculé"] * 3
+    assert vRows["Avantages"] == ["Aucun repéré"] * 3

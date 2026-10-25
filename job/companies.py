@@ -201,6 +201,20 @@ def find_company_applications(pDatabaseFile, pOffer):
     return rApplications
 
 
+def find_company_contacts(pApplications):
+    """Retourne les adresses de recruteurs connues, sans doublon, récentes en tête."""
+
+    rContacts = list(
+        dict.fromkeys(
+            vApplication["contact_email"]
+            for vApplication in pApplications
+            if vApplication.get("contact_email")
+        )
+    )
+
+    return rContacts
+
+
 def describe_company_applications(pApplications):
     """Résume les candidatures déjà envoyées à l'entreprise, ou None s'il n'y en a pas."""
 
@@ -222,9 +236,12 @@ def describe_company_applications(pApplications):
         if len(pApplications) > MAX_LISTED_APPLICATIONS:
             vItems.append(f"et {len(pApplications) - MAX_LISTED_APPLICATIONS} autre(s)")
 
+        vContacts = find_company_contacts(pApplications)
+
         rText = (
             f"Déjà {len(pApplications)} candidature(s) dans cette entreprise : "
             + ", ".join(vItems)
+            + (f". Contact connu : {', '.join(vContacts)}" if vContacts else "")
         )
 
     return rText

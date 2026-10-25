@@ -38,12 +38,13 @@ from job.companies import (
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
 from job.experience_fit import describe_experience_fit
-from job.geocoding import describe_location
+from job.geocoding import add_distances, describe_location, load_home
 from job.offer_details import can_fetch_description, fetch_missing_description
 from job.offer_summary import build_offer_summary
 from job.salary_market import (
     describe_market_salary,
     describe_negotiation,
+    describe_net_after_commute,
     find_market_salary,
 )
 from job.settings import load_settings
@@ -74,6 +75,7 @@ INFO_ROWS = (
     ("contract", "Contrat", "file-text"),
     ("salary", "Net mensuel", "banknote"),
     ("salary_label", "Salaire annoncé", "tag"),
+    ("net_after_commute", "Net après trajet", "map-pin"),
     ("market_salary", "Marché", "scale"),
     ("suspicious", "Prudence", "circle-alert"),
     ("negotiation", "Négociation", "banknote"),
@@ -558,7 +560,11 @@ class OfferDetailPanel(QWidget):
         """
         try:
             vMarket = find_market_salary(self.database_file, pOffer)
+            vSettings = load_settings(self.database_file)
+            vPlaced = {**pOffer}
+            add_distances([vPlaced], load_home(self.database_file))
             rTexts = {
+                "net_after_commute": describe_net_after_commute(vPlaced, vSettings),
                 "market_salary": describe_market_salary(vMarket),
                 "negotiation": describe_negotiation(
                     vMarket, pOffer, load_settings(self.database_file)
@@ -567,7 +573,7 @@ class OfferDetailPanel(QWidget):
 
         except Exception:
             logger.exception("Salaire du marché non calculé")
-            rTexts = {"market_salary": "", "negotiation": ""}
+            rTexts = {"net_after_commute": "", "market_salary": "", "negotiation": ""}
 
         return rTexts
 
