@@ -1653,9 +1653,7 @@ def test_quiz_exam_on_the_web(client, qcm_only_quiz):
     client.post("/quiz/exam/stop")
 
     assert client.get("/quiz/exam", follow_redirects=False).status_code == 303
-    assert (
-        client.post("/quiz/exam/start", data={"domain": "Industrie"}).status_code == 400
-    )
+    assert client.post("/quiz/exam/start", data={"domain": "Autres"}).status_code == 400
     assert client.post("/quiz/exam/answer", data={"choice": "0"}).status_code == 400
 
 
@@ -1700,7 +1698,7 @@ def test_quiz_category_navigation(client):
     assert 'name="subdomain" value="Données"' in vFiltered
 
     vEmpty = client.get(
-        "/quiz", params={"domain": "Industrie", "subdomain": "Maintenance"}
+        "/quiz", params={"domain": "Industrie", "subdomain": "Électricité et énergie"}
     ).text
 
     assert "Aucune question dans cette rubrique" in vEmpty

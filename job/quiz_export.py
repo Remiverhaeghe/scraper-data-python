@@ -94,7 +94,9 @@ def export_quiz_pack(pDatabaseFile, pTarget):
         for vName, vContent in get_quiz_assets(pDatabaseFile).items():
             vArchive.writestr(f"{EXPORT_SCHEMA_DIRECTORY}/{vName}", vContent)
 
-        for vGuide in get_quiz_guides(pDatabaseFile):
+        # Les guides livrés avec l'application n'y sont pas : réimportés, ils
+        # masqueraient leurs mises à jour.
+        for vGuide in get_quiz_guides(pDatabaseFile, pShipped=False):
             vArchive.writestr(
                 f"guides/{vGuide['name']}.md",
                 get_quiz_guide(pDatabaseFile, vGuide["name"])["content"],

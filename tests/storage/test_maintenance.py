@@ -196,7 +196,10 @@ def test_reset_database_keeps_quiz_questions(database_file):
     ]
     assert vQuiz["ram-jvm"]["skills"] == ["JVM", "GC"]
     assert get_quiz_asset(database_file, "ram.svg")
-    assert len(get_quiz_guides(database_file)) == 2
+    # Les guides importés restent ; les guides livrés s'y ajoutent.
+    assert {"ram-jvm-analyse", "rapport"} <= {
+        vGuide["name"] for vGuide in get_quiz_guides(database_file)
+    }
     assert count_rows(database_file, "quiz_answer") == 0
     assert load_schedule(database_file)["email"] is None
     assert maintenance.KEPT_SETTINGS == (FLAGGED_KEY,)

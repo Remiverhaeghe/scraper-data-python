@@ -1,7 +1,10 @@
 """Questions de révision importées, rangées dans la base avec les autres données"""
 
 import json
+from functools import lru_cache
+from pathlib import Path
 
+from config import QUIZ_DIRECTORY
 from storage.database import connect_database
 from utils.logger import get_logger
 
@@ -187,13 +190,48 @@ def save_quiz_guides(pDatabaseFile, pGuides, pNow):
         vConnection.close()
 
 
-def get_quiz_guides(pDatabaseFile):
-    """Retourne les guides : nom, thème et titre, sans leur contenu."""
+# Guides livrés avec l'application, un fichier Markdown par thème : le nom du
+# fichier est celui du thème, le titre la première ligne « # ».
+SHIPPED_GUIDES_DIRECTORY = Path(QUIZ_DIRECTORY) / "guides"
+
+
+@lru_cache
+def load_shipped_guides(pDirectory=SHIPPED_GUIDES_DIRECTORY):
+    """Retourne les guides livrés, par nom : thème, titre et contenu."""
+
+    rGuides = {}
+
+    for vFile in sorted(Path(pDirectory).glob("*.md")):
+        vContent = vFile.read_text(encoding="utf-8")
+        vTitle = next(
+            (
+                vLine[2:].strip()
+                for vLine in vContent.splitlines()
+                if vLine.startswith("# ")
+            ),
+            vFile.stem,
+        )
+        rGuides[vFile.stem] = {
+            "name": vFile.stem,
+            "theme": vFile.stem,
+            "title": vTitle,
+            "content": vContent,
+        }
+
+    return rGuides
+
+
+def get_quiz_guides(pDatabaseFile, pShipped=True):
+    """Retourne les guides : nom, thème et titre, sans leur contenu.
+
+    Un guide importé remplace le guide livré du même nom. Sans pShipped, seuls
+    les guides importés sont rendus, pour un export par exemple.
+    """
 
     vConnection = connect_database(pDatabaseFile)
 
     try:
-        rGuides = [
+        vImported = [
             {"name": vName, "theme": vTheme, "title": vTitle}
             for vName, vTheme, vTitle in vConnection.execute(
                 "SELECT name, theme, title FROM quiz_guide ORDER BY title"
@@ -202,6 +240,17 @@ def get_quiz_guides(pDatabaseFile):
 
     finally:
         vConnection.close()
+
+    vNames = {vGuide["name"] for vGuide in vImported}
+    rGuides = sorted(
+        vImported
+        + [
+            {vKey: vGuide[vKey] for vKey in ("name", "theme", "title")}
+            for vName, vGuide in load_shipped_guides().items()
+            if pShipped and vName not in vNames
+        ],
+        key=lambda pGuide: pGuide["title"].casefold(),
+    )
 
     return rGuides
 
@@ -220,7 +269,11 @@ def get_quiz_guide(pDatabaseFile, pName):
     finally:
         vConnection.close()
 
-    rGuide = dict(zip(("name", "theme", "title", "content"), vRow)) if vRow else None
+    rGuide = (
+        dict(zip(("name", "theme", "title", "content"), vRow))
+        if vRow
+        else load_shipped_guides().get(pName)
+    )
 
     return rGuide
 

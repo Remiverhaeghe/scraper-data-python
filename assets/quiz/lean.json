@@ -1,0 +1,1347 @@
+{
+  "theme": "Lean manufacturing et amélioration continue (5S, SMED, TRS)",
+  "skills": [
+    "Lean",
+    "5S",
+    "SMED",
+    "TRS",
+    "amélioration continue",
+    "Kaizen",
+    "Six Sigma"
+  ],
+  "questions": [
+    {
+      "id": "lean-001",
+      "level": "débutant",
+      "question": "Quel est l'objectif premier du Lean manufacturing ?",
+      "choices": [
+        "Augmenter les stocks de sécurité pour ne plus jamais manquer de pièces",
+        "Éliminer les gaspillages pour livrer plus vite ce que veut le client",
+        "Remplacer les opérateurs par des robots sur chaque poste de travail",
+        "Produire en très grandes séries pour baisser au maximum le coût unitaire"
+      ],
+      "answer": 1,
+      "explanation": "Le Lean, issu du système de production Toyota, cherche à supprimer tout ce qui n'apporte pas de valeur au client (les gaspillages, ou muda) pour réduire les délais, les coûts et les défauts."
+    },
+    {
+      "id": "lean-002",
+      "level": "débutant",
+      "question": "Que signifie le mot japonais « muda » ?",
+      "choices": [
+        "Amélioration continue",
+        "Gaspillage",
+        "Arrêt automatique",
+        "Détrompeur"
+      ],
+      "answer": 1,
+      "explanation": "Muda désigne le gaspillage, toute activité qui consomme des ressources sans créer de valeur. Le Lean y ajoute mura (irrégularité) et muri (surcharge)."
+    },
+    {
+      "id": "lean-003",
+      "level": "débutant",
+      "question": "Combien de gaspillages compte la liste classique du Lean (TIMWOOD), sans la sous-utilisation des compétences ?",
+      "choices": [
+        "5",
+        "6",
+        "7",
+        "9"
+      ],
+      "answer": 2,
+      "explanation": "Les 7 gaspillages : Transport, Inventaire (stocks), Mouvements, Attentes (Waiting), Surproduction (Overproduction), Surprocessus (Over-processing), Défauts. La sous-utilisation des compétences est souvent ajoutée en 8e."
+    },
+    {
+      "id": "lean-004",
+      "level": "débutant",
+      "question": "Lequel de ces gaspillages est souvent considéré comme le pire, car il en entraîne d'autres ?",
+      "choices": [
+        "Les mouvements inutiles de l'opérateur",
+        "Le transport entre deux ateliers",
+        "La surproduction",
+        "Le surprocessus"
+      ],
+      "answer": 2,
+      "explanation": "Produire plus ou plus tôt que nécessaire crée des stocks, du transport, des manutentions, et masque les problèmes (défauts, pannes). Taiichi Ohno la considérait comme le gaspillage majeur."
+    },
+    {
+      "id": "lean-005",
+      "level": "débutant",
+      "question": "Un opérateur se déplace de 15 mètres pour chercher une clé à chaque changement d'outil. De quel gaspillage s'agit-il ?",
+      "choices": [
+        "Transport",
+        "Mouvement",
+        "Attente",
+        "Inventaire"
+      ],
+      "answer": 1,
+      "explanation": "Le mouvement concerne les déplacements et gestes inutiles des personnes. Le transport concerne le déplacement des produits ou des matières."
+    },
+    {
+      "id": "lean-006",
+      "level": "débutant",
+      "question": "Des palettes de pièces attendent entre deux machines pendant trois jours. Quel gaspillage observe-t-on d'abord ?",
+      "choices": [
+        "Défauts",
+        "Surprocessus",
+        "Stock (inventaire)",
+        "Mouvement"
+      ],
+      "answer": 2,
+      "explanation": "Les en-cours entre postes sont du stock : ils immobilisent de l'argent et de la place, allongent le délai et cachent les problèmes d'équilibrage ou de fiabilité."
+    },
+    {
+      "id": "lean-007",
+      "level": "débutant",
+      "question": "Une pièce est polie alors que le client ne voit pas cette face et ne l'a pas demandé. De quel gaspillage s'agit-il ?",
+      "choices": [
+        "Surprocessus",
+        "Surproduction",
+        "Transport",
+        "Attente"
+      ],
+      "answer": 0,
+      "explanation": "Le surprocessus consiste à faire plus que ce que le client demande : tolérances trop serrées, finition inutile, contrôles en double."
+    },
+    {
+      "id": "lean-008",
+      "level": "débutant",
+      "question": "Que signifient les 5S, dans l'ordre ?",
+      "choices": [
+        "Sécurité, Simplicité, Standard, Suivi, Synthèse : les cinq règles de base du poste",
+        "Trier, ranger, nettoyer, standardiser, maintenir (Seiri à Shitsuke)",
+        "Nettoyer d'abord, puis trier, maintenir, ranger et enfin standardiser",
+        "Supprimer, Stocker, Surveiller, Signaler, Sanctionner"
+      ],
+      "answer": 1,
+      "explanation": "Trier (Seiri), ranger (Seiton), nettoyer (Seiso), standardiser (Seiketsu), faire respecter et progresser (Shitsuke). L'ordre compte : on ne range pas ce qu'on aurait dû jeter."
+    },
+    {
+      "id": "lean-009",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les étapes d'une démarche 5S.",
+      "items": [
+        "Trier : éliminer ce qui est inutile au poste",
+        "Ranger : une place pour chaque chose, chaque chose à sa place",
+        "Nettoyer : nettoyer et inspecter en même temps",
+        "Standardiser : formaliser les règles et les rendre visibles",
+        "Maintenir : faire vivre les règles par des audits réguliers"
+      ],
+      "explanation": "Chaque S s'appuie sur le précédent. Le nettoyage est aussi une inspection : en nettoyant, on découvre fuites, jeux et usures, d'où le lien fort entre 5S et maintenance."
+    },
+    {
+      "id": "lean-010",
+      "level": "débutant",
+      "question": "Lors du tri (Seiri), que fait-on d'un outil dont on ne sait pas s'il sert encore ?",
+      "choices": [
+        "On le garde au poste par précaution, au cas où il servirait de nouveau",
+        "On l'isole en zone d'attente avec une étiquette rouge et une date",
+        "On le jette immédiatement sans demander l'avis de personne",
+        "On le range dans l'armoire la plus proche du poste concerné"
+      ],
+      "answer": 1,
+      "explanation": "L'étiquette rouge (red tag) isole les objets douteux dans une zone de quarantaine. Passé le délai sans usage, ils sont évacués ou réaffectés."
+    },
+    {
+      "id": "lean-011",
+      "level": "débutant",
+      "question": "Pourquoi trace-t-on la silhouette des outils sur un tableau mural (shadow board) ?",
+      "choices": [
+        "Pour décorer l'atelier lors des visites de clients",
+        "Pour voir d'un coup d'œil l'outil manquant et le remettre à sa place",
+        "Pour mesurer l'usure des outils en comparant leur forme",
+        "Pour empêcher les opérateurs d'emprunter les outils d'un autre poste"
+      ],
+      "answer": 1,
+      "explanation": "C'est du management visuel appliqué au rangement (Seiton) : l'absence d'un outil saute aux yeux, ce qui réduit les recherches et les pertes."
+    },
+    {
+      "id": "lean-012",
+      "level": "débutant",
+      "question": "Quel S est le plus difficile à tenir dans la durée ?",
+      "choices": [
+        "Trier, car il faut décider quoi jeter et convaincre l'équipe",
+        "Nettoyer, car cela prend du temps chaque jour à chaque poste",
+        "Maintenir, car il demande de la rigueur et des audits",
+        "Ranger, car il faut acheter du mobilier adapté et des étiquettes"
+      ],
+      "answer": 2,
+      "explanation": "Sans audits, routines de management et implication des équipes, le poste retrouve son état initial en quelques semaines. Le 5e S fait du 5S une habitude."
+    },
+    {
+      "id": "lean-013",
+      "level": "débutant",
+      "question": "Que signifie SMED ?",
+      "choices": [
+        "Single Minute Exchange of Die : changer de série en moins de 10 minutes",
+        "Système de Maintenance des Équipements Durables, piloté par la GMAO",
+        "Standard Method for Equipment Diagnostics, issue de la norme ISO",
+        "Suivi Mensuel des Écarts de Délai entre l'atelier et le client"
+      ],
+      "answer": 0,
+      "explanation": "Méthode de Shigeo Shingo pour réduire les temps de changement de série. « Single minute » veut dire un nombre de minutes à un seul chiffre, donc moins de 10 minutes."
+    },
+    {
+      "id": "lean-014",
+      "level": "débutant",
+      "question": "Dans la méthode SMED, qu'est-ce qu'une opération externe ?",
+      "choices": [
+        "Une opération confiée à un sous-traitant extérieur à l'entreprise",
+        "Une opération faisable pendant que la machine produit",
+        "Une opération réalisée à l'extérieur du bâtiment de production",
+        "Une opération qui exige l'arrêt complet de la ligne de production"
+      ],
+      "answer": 1,
+      "explanation": "Les opérations externes (préparer les outils, préchauffer un moule, rapprocher la matière) se font machine en marche. Les opérations internes exigent l'arrêt."
+    },
+    {
+      "id": "lean-015",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les étapes classiques d'un chantier SMED.",
+      "items": [
+        "Filmer et chronométrer le changement de série actuel",
+        "Séparer les opérations internes et externes",
+        "Convertir des opérations internes en externes",
+        "Réduire la durée des opérations internes restantes",
+        "Réduire la durée des opérations externes et standardiser"
+      ],
+      "explanation": "Séparer suffit souvent à gagner 30 à 50 % : on cessait de chercher les outils machine arrêtée. Ensuite viennent les conversions (préréglage) puis les améliorations techniques (serrages rapides, suppression des réglages)."
+    },
+    {
+      "id": "lean-016",
+      "level": "confirmé",
+      "question": "Lequel de ces exemples convertit une opération interne en opération externe ?",
+      "choices": [
+        "Remplacer les vis par des serrages rapides quart de tour",
+        "Préchauffer le moule suivant pendant que le moule actuel produit",
+        "Ajouter un deuxième opérateur pendant le changement",
+        "Supprimer un contrôle visuel de la première pièce"
+      ],
+      "answer": 1,
+      "explanation": "Le préchauffage fait en temps masqué sort une tâche de l'arrêt machine. Les serrages rapides réduisent une opération interne sans la rendre externe."
+    },
+    {
+      "id": "lean-017",
+      "level": "confirmé",
+      "question": "Pourquoi réduire le temps de changement de série est-il si important en Lean ?",
+      "choices": [
+        "Pour pouvoir supprimer les opérateurs de réglage de l'équipe",
+        "Pour produire en petits lots sans perdre de capacité",
+        "Pour augmenter la taille des lots et mieux amortir chaque réglage",
+        "Pour se passer des contrôles de la première pièce de chaque série"
+      ],
+      "answer": 1,
+      "explanation": "Un changement court rend rentables les petites séries : on suit mieux la demande, les stocks et les délais baissent, la flexibilité augmente."
+    },
+    {
+      "id": "lean-018",
+      "level": "débutant",
+      "question": "Que mesure le TRS (taux de rendement synthétique) ?",
+      "choices": [
+        "La part du chiffre d'affaires réalisée par un équipement donné",
+        "L'efficacité d'un équipement : disponibilité × performance × qualité",
+        "Le nombre de pannes d'une machine sur un mois, rapporté à sa charge",
+        "Le taux de présence des opérateurs à leur poste pendant l'équipe"
+      ],
+      "answer": 1,
+      "explanation": "Le TRS (OEE en anglais) combine trois taux : disponibilité (arrêts), performance (ralentissements, micro-arrêts) et qualité (rebuts, retouches)."
+    },
+    {
+      "id": "lean-019",
+      "level": "débutant",
+      "type": "numerique",
+      "question": "Une ligne a une disponibilité de 90 %, une performance de 80 % et une qualité de 95 %. Quel est son TRS en % ?",
+      "value": 68.4,
+      "unit": "%",
+      "tolerance": 1,
+      "explanation": "TRS = 0,90 × 0,80 × 0,95 = 0,684, soit 68,4 %. Le produit de trois taux corrects donne vite un TRS moyen : c'est ce qui le rend exigeant."
+    },
+    {
+      "id": "lean-020",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Une machine est ouverte 8 heures et s'arrête 1 h 30 pour pannes et réglages. Quelle est sa disponibilité en % (temps de fonctionnement / temps requis) ?",
+      "value": 81.25,
+      "unit": "%",
+      "tolerance": 1,
+      "explanation": "Temps de fonctionnement = 8 h - 1,5 h = 6,5 h. Disponibilité = 6,5 / 8 = 0,8125, soit 81,25 %."
+    },
+    {
+      "id": "lean-021",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "En 6 heures de fonctionnement, une machine au temps de cycle théorique de 30 secondes a produit 600 pièces. Quelle est sa performance en % ?",
+      "value": 83.3,
+      "unit": "%",
+      "tolerance": 1,
+      "explanation": "En 6 h (21 600 s), elle pourrait faire 21 600 / 30 = 720 pièces. Performance = 600 / 720 = 0,833, soit 83,3 %. L'écart vient des ralentissements et micro-arrêts."
+    },
+    {
+      "id": "lean-022",
+      "level": "débutant",
+      "type": "numerique",
+      "question": "Sur 600 pièces produites, 30 sont rebutées et 0 retouchée. Quel est le taux de qualité en % ?",
+      "value": 95,
+      "unit": "%",
+      "tolerance": 0.5,
+      "explanation": "Qualité = pièces bonnes du premier coup / pièces produites = 570 / 600 = 95 %. Une pièce retouchée ne compte pas comme bonne du premier coup."
+    },
+    {
+      "id": "lean-023",
+      "level": "confirmé",
+      "question": "Une machine tourne mais à vitesse réduite à cause d'un capteur mal réglé. Quel taux du TRS cette perte dégrade-t-elle ?",
+      "choices": [
+        "La disponibilité",
+        "La performance",
+        "La qualité",
+        "Le taux de charge"
+      ],
+      "answer": 1,
+      "explanation": "Les ralentissements et les micro-arrêts (souvent non saisis) font baisser la performance, pas la disponibilité, qui ne compte que les arrêts enregistrés."
+    },
+    {
+      "id": "lean-024",
+      "level": "confirmé",
+      "question": "Quelles sont les six grandes pertes associées au TRS ?",
+      "choices": [
+        "Pannes, réglages, micro-arrêts, ralentissements, rebuts, pertes au démarrage",
+        "Absentéisme, grèves, retards fournisseurs, inventaires, audits, formations",
+        "Transport, stock, mouvement, attente, surproduction, défauts",
+        "Énergie, eau, air comprimé, huile, outillage, emballages"
+      ],
+      "answer": 0,
+      "explanation": "Pannes et réglages pèsent sur la disponibilité, micro-arrêts et ralentissements sur la performance, rebuts et pertes au démarrage sur la qualité."
+    },
+    {
+      "id": "lean-025",
+      "level": "confirmé",
+      "question": "Quelle différence entre TRS et TRG ?",
+      "choices": [
+        "Le TRG ne compte que les pannes, alors que le TRS ne compte que les rebuts",
+        "Le TRG se rapporte au temps d'ouverture, le TRS au temps requis",
+        "Le TRS se calcule chaque mois et le TRG chaque jour de production",
+        "Ce sont deux noms pour un même indicateur, selon les entreprises"
+      ],
+      "answer": 1,
+      "explanation": "Le TRG (rendement global) inclut aussi les arrêts planifiés (pauses, absence de commande) en se rapportant au temps d'ouverture. Il mesure l'usage du moyen ; le TRS mesure son efficacité quand on le sollicite."
+    },
+    {
+      "id": "lean-026",
+      "level": "débutant",
+      "question": "Qu'est-ce que le takt time ?",
+      "choices": [
+        "Le temps réel mis par un opérateur expérimenté pour faire une pièce",
+        "Le temps disponible divisé par la quantité demandée par le client",
+        "Le temps de changement d'outil entre deux séries de fabrication",
+        "La durée d'une pause réglementaire de l'équipe de production"
+      ],
+      "answer": 1,
+      "explanation": "Le takt time donne la cadence à laquelle il faut sortir une pièce pour suivre la demande du client. On compare ensuite les temps de cycle des postes à ce rythme."
+    },
+    {
+      "id": "lean-027",
+      "level": "débutant",
+      "type": "numerique",
+      "question": "Une équipe dispose de 7 heures de production par jour et le client demande 420 pièces par jour. Quel est le takt time en secondes ?",
+      "value": 60,
+      "unit": "s",
+      "tolerance": 0.5,
+      "explanation": "Takt = 7 × 3 600 s / 420 = 25 200 / 420 = 60 s. Chaque poste doit sortir une pièce en 60 s au plus."
+    },
+    {
+      "id": "lean-028",
+      "level": "confirmé",
+      "question": "Le temps de cycle d'un poste est de 75 s pour un takt time de 60 s. Que se passe-t-il ?",
+      "choices": [
+        "Le poste a de la marge et attend les pièces du poste précédent",
+        "Le poste est un goulot : la ligne ne suit plus la demande",
+        "Le TRS du poste est forcément supérieur à 100 % sur la journée",
+        "Le takt time s'adapte de lui-même au poste le plus lent de la ligne"
+      ],
+      "answer": 1,
+      "explanation": "Un temps de cycle supérieur au takt crée un goulot. On rééquilibre les tâches, on réduit le cycle (Kaizen) ou on ajoute une ressource."
+    },
+    {
+      "id": "lean-029",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Une ligne a un contenu de travail total de 300 s par pièce et un takt time de 60 s. Combien d'opérateurs faut-il au minimum ?",
+      "value": 5,
+      "tolerance": 0,
+      "explanation": "Nombre minimal d'opérateurs = contenu de travail / takt = 300 / 60 = 5. Si le résultat n'est pas entier, on arrondit au supérieur puis on cherche à équilibrer."
+    },
+    {
+      "id": "lean-030",
+      "level": "débutant",
+      "question": "Que signifie Kaizen ?",
+      "choices": [
+        "Changement radical décidé par la direction et imposé aux équipes",
+        "Amélioration continue par petits pas, impliquant chacun",
+        "Contrôle qualité final des produits avant leur expédition",
+        "Système de récompense des meilleurs opérateurs de l'usine"
+      ],
+      "answer": 1,
+      "explanation": "Kaizen (« changer pour le mieux ») désigne l'amélioration continue, progressive, menée au plus près du terrain. Un chantier Kaizen dure souvent quelques jours sur un sujet ciblé."
+    },
+    {
+      "id": "lean-031",
+      "level": "débutant",
+      "question": "Que veut dire Gemba ?",
+      "choices": [
+        "Le bureau des méthodes",
+        "Le lieu réel où la valeur est créée, l'atelier",
+        "La réunion mensuelle de direction",
+        "Le tableau des indicateurs"
+      ],
+      "answer": 1,
+      "explanation": "Le Gemba est le terrain. Le « Gemba walk » consiste pour un responsable à aller voir sur place, observer et questionner plutôt que décider depuis un bureau."
+    },
+    {
+      "id": "lean-032",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les étapes de la roue de Deming (PDCA).",
+      "items": [
+        "Planifier (Plan)",
+        "Faire (Do)",
+        "Vérifier (Check)",
+        "Agir (Act)"
+      ],
+      "explanation": "On planifie l'action, on la réalise à petite échelle, on vérifie les résultats, puis on agit : standardiser si cela marche, sinon relancer un cycle. Le PDCA tourne en continu."
+    },
+    {
+      "id": "lean-033",
+      "level": "débutant",
+      "question": "À quoi sert la méthode des 5 pourquoi ?",
+      "choices": [
+        "À répartir les tâches entre cinq personnes",
+        "À remonter d'un problème jusqu'à sa cause racine",
+        "À choisir entre cinq solutions possibles",
+        "À planifier un projet sur cinq semaines"
+      ],
+      "answer": 1,
+      "explanation": "On demande « pourquoi ? » à chaque réponse jusqu'à atteindre une cause sur laquelle agir durablement. Cinq est un ordre de grandeur, pas une règle stricte."
+    },
+    {
+      "id": "lean-034",
+      "level": "confirmé",
+      "question": "Une machine s'arrête : fusible grillé. Pourquoi ? Moteur en surcharge. Pourquoi ? Roulement grippé. Pourquoi ? Pas lubrifié. Quelle action traite la cause racine ?",
+      "choices": [
+        "Remplacer le fusible par un calibre plus fort",
+        "Remplacer le moteur par un modèle plus puissant",
+        "Mettre en place un plan de graissage avec point de contrôle",
+        "Demander à l'opérateur de surveiller le moteur"
+      ],
+      "answer": 2,
+      "explanation": "Changer le fusible ou le moteur traite un symptôme. L'absence de lubrification est la cause : un plan de graissage (maintenance préventive, TPM) évite la répétition."
+    },
+    {
+      "id": "lean-035",
+      "level": "débutant",
+      "question": "Le diagramme d'Ishikawa classe les causes d'un problème selon les 5M. Lesquels ?",
+      "choices": [
+        "Matière, Milieu, Méthodes, Matériel, Main-d'œuvre",
+        "Marketing, Management, Marge, Marché, Mesure",
+        "Maintenance, Montage, Moteur, Mécanique, Mise en service",
+        "Mois, Mesure, Masse, Mètre, Minute"
+      ],
+      "answer": 0,
+      "explanation": "Le diagramme en arêtes de poisson range les causes en familles. On ajoute parfois Mesure et Management pour aller jusqu'à 7M."
+    },
+    {
+      "id": "lean-036",
+      "level": "débutant",
+      "question": "À quoi sert un diagramme de Pareto ?",
+      "choices": [
+        "À représenter l'évolution d'un indicateur au fil des jours et des semaines",
+        "À classer les causes par importance pour traiter les principales",
+        "À mesurer la dispersion d'un processus autour de sa valeur moyenne",
+        "À décrire les étapes successives d'un flux de fabrication"
+      ],
+      "answer": 1,
+      "explanation": "Le principe 80/20 : une minorité de causes explique souvent la majorité des effets. Le Pareto aide à concentrer l'effort sur ces causes."
+    },
+    {
+      "id": "lean-037",
+      "level": "débutant",
+      "question": "Que signifie Poka-Yoke ?",
+      "choices": [
+        "Un dispositif qui empêche une erreur ou la rend visible aussitôt",
+        "Une méthode de nettoyage approfondi des machines et de leurs abords",
+        "Un tableau d'affichage des indicateurs de l'équipe de production",
+        "Une technique de calcul de la taille économique des lots"
+      ],
+      "answer": 0,
+      "explanation": "Le détrompeur rend l'erreur impossible ou visible tout de suite : connecteur à forme unique, pièce qui ne se monte que dans un sens, capteur de présence."
+    },
+    {
+      "id": "lean-038",
+      "level": "débutant",
+      "question": "Lequel de ces dispositifs est un Poka-Yoke ?",
+      "choices": [
+        "Une affiche rappelant de vérifier le sens de montage",
+        "Un gabarit dans lequel la pièce ne rentre que dans le bon sens",
+        "Un contrôle final par prélèvement d'une pièce sur dix",
+        "Une formation annuelle des opérateurs au montage"
+      ],
+      "answer": 1,
+      "explanation": "Une affiche ou une formation reposent sur la vigilance humaine. Le gabarit rend physiquement l'erreur impossible : c'est le détrompeur le plus efficace."
+    },
+    {
+      "id": "lean-039",
+      "level": "débutant",
+      "question": "Qu'est-ce que le Jidoka ?",
+      "choices": [
+        "La production en flux tiré, pilotée par la consommation de l'aval",
+        "L'autonomation : la machine s'arrête seule en cas d'anomalie",
+        "Le nettoyage quotidien du poste de travail par son opérateur",
+        "Le lissage de la production sur la semaine en volume et en variété"
+      ],
+      "answer": 1,
+      "explanation": "Avec le juste-à-temps, le Jidoka est l'un des deux piliers du système Toyota : arrêter au premier défaut évite de produire en série des pièces mauvaises et force à traiter la cause."
+    },
+    {
+      "id": "lean-040",
+      "level": "débutant",
+      "question": "À quoi sert un andon ?",
+      "choices": [
+        "À signaler un problème sur la ligne et appeler de l'aide",
+        "À compter automatiquement les pièces produites par chaque poste",
+        "À stocker les pièces entre deux postes en attendant le suivant",
+        "À calculer le salaire variable de l'équipe selon sa production"
+      ],
+      "answer": 0,
+      "explanation": "L'andon (tableau lumineux, cordon d'appel) permet à l'opérateur d'appeler de l'aide ou d'arrêter la ligne. Le soutien doit arriver vite pour que le système soit utilisé."
+    },
+    {
+      "id": "lean-041",
+      "level": "débutant",
+      "question": "Que signifie le juste-à-temps (JAT) ?",
+      "choices": [
+        "Produire le plus possible tant que la machine est disponible",
+        "Produire ce qui est demandé, en quantité demandée, au moment voulu",
+        "Livrer les clients avec une semaine d'avance par sécurité",
+        "Faire les travaux de maintenance uniquement le week-end"
+      ],
+      "answer": 1,
+      "explanation": "Le JAT réduit les stocks et les délais en produisant au rythme de la demande. Il exige des processus fiables : sans stock, la moindre panne se voit tout de suite."
+    },
+    {
+      "id": "lean-042",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un flux tiré ?",
+      "choices": [
+        "Un flux où chaque poste produit selon un planning central, sans regarder l'aval",
+        "Un flux où le poste aval déclenche la production du poste amont selon sa consommation",
+        "Un flux où les pièces avancent sur un convoyeur à vitesse constante",
+        "Un flux où les commandes sont regroupées une fois par mois"
+      ],
+      "answer": 1,
+      "explanation": "En flux tiré, c'est la consommation réelle qui déclenche la fabrication, souvent par kanban. En flux poussé, on fabrique selon des prévisions, avec un risque de surproduction."
+    },
+    {
+      "id": "lean-043",
+      "level": "débutant",
+      "question": "À quoi sert une carte kanban ?",
+      "choices": [
+        "À autoriser la fabrication ou le réapprovisionnement d'un lot",
+        "À enregistrer les heures de présence des opérateurs de l'équipe",
+        "À noter les défauts trouvés au contrôle final avant expédition",
+        "À programmer la maintenance préventive d'une machine critique"
+      ],
+      "answer": 0,
+      "explanation": "Le kanban circule avec les conteneurs : quand un conteneur est consommé, sa carte revient en amont et autorise la fabrication d'un nouveau lot. Le nombre de cartes plafonne l'en-cours."
+    },
+    {
+      "id": "lean-044",
+      "level": "confirmé",
+      "question": "Dans une boucle kanban, que se passe-t-il si l'on retire des cartes ?",
+      "choices": [
+        "L'en-cours baisse et les problèmes cachés par le stock apparaissent",
+        "La production augmente parce que les opérateurs travaillent plus vite",
+        "Le délai de livraison au client s'allonge forcément de plusieurs jours",
+        "Les cartes restantes deviennent inutiles et peuvent être retirées"
+      ],
+      "answer": 0,
+      "explanation": "Baisser le stock, c'est baisser le niveau de l'eau : les rochers (pannes, réglages longs, défauts) apparaissent. On les traite, puis on réduit encore."
+    },
+    {
+      "id": "lean-045",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Une pièce est consommée à 200 par jour, le délai de réapprovisionnement est de 2 jours, la sécurité de 10 % et le conteneur contient 50 pièces. Combien de cartes kanban faut-il (arrondi au supérieur) ?",
+      "value": 9,
+      "tolerance": 0,
+      "explanation": "Besoin pendant le délai = 200 × 2 = 400 pièces, plus 10 % = 440. 440 / 50 = 8,8, arrondi à 9 cartes."
+    },
+    {
+      "id": "lean-046",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'une VSM (Value Stream Mapping) ?",
+      "choices": [
+        "Une carte des flux de matières et d'informations, du fournisseur au client",
+        "Un tableau de bord financier des ventes de l'entreprise, mois par mois",
+        "Un plan d'implantation des machines de l'atelier dessiné à l'échelle",
+        "Un organigramme des responsables de l'usine et de leurs équipes"
+      ],
+      "answer": 0,
+      "explanation": "La VSM représente le flux actuel avec ses temps de cycle, stocks et délais, distingue valeur ajoutée et non-valeur ajoutée, puis sert à dessiner l'état futur."
+    },
+    {
+      "id": "lean-047",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Sur une VSM, le délai total (lead time) est de 12 jours et le temps à valeur ajoutée de 36 minutes. Pour 8 heures par jour, quel est le ratio de valeur ajoutée en % ?",
+      "value": 0.625,
+      "unit": "%",
+      "tolerance": 2,
+      "explanation": "12 jours × 8 h = 96 h = 5 760 min. 36 / 5 760 = 0,00625, soit 0,625 %. Un ratio bien inférieur à 1 % est courant : la pièce attend presque tout le temps."
+    },
+    {
+      "id": "lean-048",
+      "level": "débutant",
+      "question": "Dans une analyse Lean, qu'est-ce qu'une activité à valeur ajoutée ?",
+      "choices": [
+        "Toute activité réalisée par un opérateur qualifié et habilité",
+        "Une transformation du produit que le client est prêt à payer",
+        "Toute activité qui dure plus de cinq minutes sur un même poste",
+        "Une activité de contrôle qui garantit la qualité livrée au client"
+      ],
+      "answer": 1,
+      "explanation": "Valeur ajoutée = transformation voulue par le client, faite bien du premier coup. Le contrôle, le transport ou le stockage sont parfois nécessaires mais n'ajoutent pas de valeur."
+    },
+    {
+      "id": "lean-049",
+      "level": "confirmé",
+      "question": "Que dit la loi de Little appliquée à un flux de production ?",
+      "choices": [
+        "Délai = en-cours / débit",
+        "Débit = délai × en-cours",
+        "En-cours = débit / délai",
+        "Délai = débit × temps de cycle"
+      ],
+      "answer": 0,
+      "explanation": "À débit égal, plus il y a d'en-cours, plus le délai est long. C'est pourquoi la réduction des stocks entre postes raccourcit directement le délai."
+    },
+    {
+      "id": "lean-050",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Une ligne sort 50 pièces par jour avec 400 pièces en cours entre les postes. Quel est le délai de traversée en jours (loi de Little) ?",
+      "value": 8,
+      "unit": "j",
+      "tolerance": 0,
+      "explanation": "Délai = en-cours / débit = 400 / 50 = 8 jours. Diviser l'en-cours par deux divise le délai par deux."
+    },
+    {
+      "id": "lean-051",
+      "level": "débutant",
+      "question": "Que signifie heijunka ?",
+      "choices": [
+        "Le lissage de la production en volume et en variété",
+        "Le contrôle de la première pièce d'une nouvelle série de fabrication",
+        "La réparation rapide d'une machine en panne par l'opérateur",
+        "La répartition des primes de l'équipe selon la production"
+      ],
+      "answer": 0,
+      "explanation": "Plutôt que produire 500 A puis 500 B, on alterne de petits lots A, B, A, B : l'amont voit une demande régulière et les stocks baissent. Cela suppose des changements de série courts."
+    },
+    {
+      "id": "lean-052",
+      "level": "débutant",
+      "question": "Qu'est-ce que le one piece flow ?",
+      "choices": [
+        "Fabriquer une seule référence par jour pour éviter les réglages",
+        "Faire avancer les pièces une à une d'un poste au suivant",
+        "Confier toute la fabrication d'un produit à un seul opérateur",
+        "Utiliser une seule machine polyvalente pour toutes les opérations"
+      ],
+      "answer": 1,
+      "explanation": "Le flux pièce à pièce réduit l'en-cours et le délai, et révèle un défaut dès la pièce suivante au lieu de tout un lot."
+    },
+    {
+      "id": "lean-053",
+      "level": "débutant",
+      "question": "Pourquoi organise-t-on souvent une cellule de production en U ?",
+      "choices": [
+        "Pour réduire les déplacements et partager les postes entre opérateurs",
+        "Pour laisser plus de place aux stocks d'en-cours entre les machines",
+        "Pour éloigner les opérateurs afin qu'ils ne se gênent pas en travaillant",
+        "Pour respecter une norme de sécurité incendie propre aux ateliers"
+      ],
+      "answer": 0,
+      "explanation": "En U, entrée et sortie sont proches, les distances courtes, et l'on ajuste le nombre d'opérateurs à la demande en redistribuant les postes."
+    },
+    {
+      "id": "lean-054",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un standard de travail en Lean ?",
+      "choices": [
+        "Un document figé, validé une fois pour toutes par la direction",
+        "La meilleure méthode connue aujourd'hui, base des améliorations",
+        "Une fiche de paie standardisée commune à toute l'équipe de production",
+        "Une norme ISO imposée par le client et contrôlée par audit"
+      ],
+      "answer": 1,
+      "explanation": "Le standard décrit la séquence, le temps de cycle et l'en-cours standard. Sans standard, pas d'amélioration mesurable : on améliore puis on met à jour le standard."
+    },
+    {
+      "id": "lean-055",
+      "level": "débutant",
+      "question": "Que signifie TPM ?",
+      "choices": [
+        "Total Productive Maintenance : maintenance productive totale",
+        "Temps de Production Maximal d'une ligne sur une semaine",
+        "Tableau de Pilotage Mensuel des indicateurs de l'atelier",
+        "Technique de Planification de la Main-d'œuvre par équipe"
+      ],
+      "answer": 0,
+      "explanation": "La TPM vise zéro panne, zéro défaut et zéro accident en impliquant tout le monde, des opérateurs à la direction. Le TRS est son indicateur central."
+    },
+    {
+      "id": "lean-056",
+      "level": "débutant",
+      "question": "Dans la TPM, que recouvre la maintenance autonome ?",
+      "choices": [
+        "Les réparations lourdes confiées à un prestataire spécialisé",
+        "Le nettoyage, l'inspection, le serrage et le graissage par l'opérateur",
+        "La maintenance faite par un robot, sans aucune intervention humaine",
+        "Le remplacement préventif des pièces d'usure à date fixe chaque année"
+      ],
+      "answer": 1,
+      "explanation": "L'opérateur, qui connaît sa machine, détecte tôt les anomalies. Les techniciens se consacrent aux interventions complexes et à l'amélioration."
+    },
+    {
+      "id": "lean-057",
+      "level": "confirmé",
+      "question": "Lequel de ces éléments fait partie des piliers de la TPM ?",
+      "choices": [
+        "La maintenance planifiée et la formation des compétences",
+        "La sous-traitance de la maintenance à une entreprise extérieure",
+        "L'augmentation des stocks de pièces de rechange au magasin",
+        "La suppression des contrôles qualité pour gagner du temps de cycle"
+      ],
+      "answer": 0,
+      "explanation": "Les huit piliers usuels : amélioration ciblée, maintenance autonome, maintenance planifiée, formation, maîtrise de la conception, maintenance de la qualité, TPM dans les bureaux, sécurité et environnement."
+    },
+    {
+      "id": "lean-058",
+      "level": "débutant",
+      "question": "À quoi sert un point de rencontre quotidien (réunion de 5 à 15 minutes devant un tableau) ?",
+      "choices": [
+        "À faire le point sur la veille, les problèmes et les actions",
+        "À présenter la stratégie annuelle de l'entreprise à toute l'équipe",
+        "À évaluer individuellement chaque opérateur devant ses collègues",
+        "À remplacer les audits de sécurité menés par le responsable HSE"
+      ],
+      "answer": 0,
+      "explanation": "Le management visuel quotidien (sécurité, qualité, délais, coûts) fait remonter les écarts vite et répartit les actions avec un responsable et une date."
+    },
+    {
+      "id": "lean-059",
+      "level": "débutant",
+      "question": "Dans un tableau de pilotage d'atelier, que signifie souvent l'acronyme SQCDP ?",
+      "choices": [
+        "Sécurité, Qualité, Coûts, Délais, Personnel",
+        "Stock, Quantité, Commandes, Délais, Prix",
+        "Service, Qualification, Contrôle, Documentation, Planning",
+        "Standard, Qualité, Cadence, Défauts, Production"
+      ],
+      "answer": 0,
+      "explanation": "Les indicateurs sont présentés par thème, la sécurité d'abord. Chaque écart donne lieu à une action suivie."
+    },
+    {
+      "id": "lean-060",
+      "level": "confirmé",
+      "question": "Qu'est-ce que le Hoshin Kanri ?",
+      "choices": [
+        "Le déploiement des objectifs stratégiques à chaque niveau",
+        "Une technique de nettoyage approfondi des machines et des sols",
+        "Le calcul du nombre de cartes kanban d'une boucle de production",
+        "Un type de détrompeur électrique monté sur les connecteurs"
+      ],
+      "answer": 0,
+      "explanation": "Les objectifs de la direction se déclinent en objectifs et actions cohérents à chaque niveau, avec des échanges dans les deux sens (catchball)."
+    },
+    {
+      "id": "lean-061",
+      "level": "débutant",
+      "question": "Que vise la démarche Six Sigma ?",
+      "choices": [
+        "Réduire la variabilité des processus pour diminuer les défauts",
+        "Multiplier par six la production d'une ligne en un an seulement",
+        "Former six personnes par service aux outils statistiques de la qualité",
+        "Faire six audits par an de chaque atelier par un organisme extérieur"
+      ],
+      "answer": 0,
+      "explanation": "Six Sigma cible environ 3,4 défauts par million d'opportunités. Elle s'appuie sur les statistiques et la démarche DMAIC. Le Lean Six Sigma combine vitesse du flux et maîtrise de la variabilité."
+    },
+    {
+      "id": "lean-062",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les étapes de la démarche DMAIC.",
+      "items": [
+        "Définir",
+        "Mesurer",
+        "Analyser",
+        "Innover (améliorer)",
+        "Contrôler"
+      ],
+      "explanation": "Définir le problème et le périmètre, mesurer la situation actuelle, analyser les causes, améliorer, puis contrôler pour que le gain dure."
+    },
+    {
+      "id": "lean-063",
+      "level": "confirmé",
+      "question": "Que mesure l'indicateur Cpk d'un processus ?",
+      "choices": [
+        "Sa capacité à produire dans les tolérances, centrage compris",
+        "Le nombre de pièces produites par heure sur l'équipement",
+        "Le coût de la non-qualité rapporté à chaque pièce produite",
+        "Le temps moyen de bon fonctionnement entre deux pannes"
+      ],
+      "answer": 0,
+      "explanation": "Cpk compare la distance entre la moyenne et la tolérance la plus proche à trois écarts-types. Un Cpk de 1,33 ou plus est souvent exigé dans l'automobile."
+    },
+    {
+      "id": "lean-064",
+      "level": "confirmé",
+      "question": "Un processus a un Cp élevé mais un Cpk faible. Qu'en conclure ?",
+      "choices": [
+        "La dispersion est faible mais le processus est décentré",
+        "La dispersion est trop grande pour les tolérances",
+        "Le processus est parfaitement maîtrisé",
+        "Les mesures sont fausses"
+      ],
+      "answer": 0,
+      "explanation": "Cp ne regarde que la dispersion, Cpk tient aussi compte de la position de la moyenne. Un écart entre les deux indique un réglage à recentrer."
+    },
+    {
+      "id": "lean-065",
+      "level": "confirmé",
+      "question": "À quoi sert une carte de contrôle (MSP / SPC) ?",
+      "choices": [
+        "À distinguer les variations normales des dérives à corriger",
+        "À planifier les congés de l'équipe en fonction de la charge prévue",
+        "À tracer le chemin parcouru par les pièces dans tout l'atelier",
+        "À enregistrer les commandes des clients et leurs dates de livraison"
+      ],
+      "answer": 0,
+      "explanation": "On suit une caractéristique dans le temps entre des limites de contrôle. Un point hors limites ou une tendance signale une cause spéciale à corriger avant de produire hors tolérance."
+    },
+    {
+      "id": "lean-066",
+      "level": "débutant",
+      "question": "Que signifie QRQC ?",
+      "choices": [
+        "Quick Response Quality Control : réagir vite sur le terrain",
+        "Qualité, Rendement, Quantité, Coût : les quatre axes du tableau de bord",
+        "Questionnaire de Retour Qualité Client envoyé après chaque livraison",
+        "Quota de Rebuts par Quart de Cycle fixé à chaque équipe"
+      ],
+      "answer": 0,
+      "explanation": "Le QRQC traite les problèmes sur place, avec les vraies pièces et les vraies données (San Gen Shugi), en sécurisant d'abord le client puis en cherchant la cause."
+    },
+    {
+      "id": "lean-067",
+      "level": "confirmé",
+      "question": "Que désigne la méthode 8D ?",
+      "choices": [
+        "Une résolution de problème en huit étapes, souvent exigée par les clients",
+        "Huit audits de sécurité par an, répartis entre les ateliers de l'usine",
+        "Un indicateur de délai de réponse en huit jours aux réclamations",
+        "Une démarche de rangement des postes en huit étapes successives"
+      ],
+      "answer": 0,
+      "explanation": "Équipe, description, actions immédiates, causes racines, actions correctives, mise en œuvre, prévention de la récurrence, félicitations. Courante dans l'automobile pour répondre à une réclamation."
+    },
+    {
+      "id": "lean-068",
+      "level": "confirmé",
+      "question": "Dans une démarche 8D, pourquoi mettre en place des actions de confinement avant de chercher la cause ?",
+      "choices": [
+        "Pour protéger le client tout de suite, par tri ou blocage",
+        "Pour éviter d'avoir à rechercher la cause racine du problème ensuite",
+        "Pour réduire le nombre de personnes mobilisées dans l'équipe 8D",
+        "Pour remplacer définitivement les actions correctives par un contrôle"
+      ],
+      "answer": 0,
+      "explanation": "Le confinement (tri à 100 %, blocage, contrôle renforcé) est provisoire : il évite que d'autres pièces mauvaises partent pendant l'analyse."
+    },
+    {
+      "id": "lean-069",
+      "level": "débutant",
+      "question": "Que signifie QQOQCP dans la description d'un problème ?",
+      "choices": [
+        "Qui, Quoi, Où, Quand, Comment, Pourquoi",
+        "Qualité, Quantité, Organisation, Qualification, Coût, Prix",
+        "Question, Quota, Objectif, Quart, Contrôle, Planning",
+        "Quantité, Qualité, Opérateur, Quai, Camion, Palette"
+      ],
+      "answer": 0,
+      "explanation": "Cette grille force à décrire précisément le problème avant de chercher des causes. On y ajoute souvent « Combien »."
+    },
+    {
+      "id": "lean-070",
+      "level": "confirmé",
+      "question": "Qu'est-ce que la méthode A3 ?",
+      "choices": [
+        "La résolution d'un problème présentée sur une seule feuille A3",
+        "Un format d'affichage obligatoire pour les consignes de sécurité",
+        "Une classe d'audit qualité réservée aux fournisseurs stratégiques",
+        "Un niveau de gravité des défauts dans la grille de cotation client"
+      ],
+      "answer": 0,
+      "explanation": "Contexte, situation actuelle, objectif, analyse des causes, contre-mesures, plan d'action, suivi : la feuille unique oblige à synthétiser et sert de support d'échange."
+    },
+    {
+      "id": "lean-071",
+      "level": "débutant",
+      "question": "Que désigne mura ?",
+      "choices": [
+        "L'irrégularité, la variabilité de la charge ou du flux",
+        "La surcharge des personnes ou des machines",
+        "Le gaspillage lié aux stocks",
+        "L'arrêt automatique sur défaut"
+      ],
+      "answer": 0,
+      "explanation": "Mura (irrégularité) entraîne souvent muri (surcharge) aux pics et muda (attentes) aux creux. Le lissage heijunka la réduit."
+    },
+    {
+      "id": "lean-072",
+      "level": "débutant",
+      "question": "Que désigne muri ?",
+      "choices": [
+        "La surcharge des personnes ou des machines au-delà de leurs limites",
+        "L'irrégularité de la demande des clients d'une semaine à l'autre",
+        "Le temps d'attente des pièces et des personnes entre deux postes",
+        "Le défaut de qualité d'une pièce découvert au contrôle final"
+      ],
+      "answer": 0,
+      "explanation": "Une surcharge durable provoque fatigue, accidents, pannes et défauts. Le Lean cherche à l'éviter autant que le gaspillage."
+    },
+    {
+      "id": "lean-073",
+      "level": "confirmé",
+      "question": "Un indicateur de TRS passe de 65 % à 72 % après un chantier SMED. Quel taux du TRS a le plus probablement progressé ?",
+      "choices": [
+        "La disponibilité",
+        "La performance",
+        "La qualité",
+        "Le taux de service client"
+      ],
+      "answer": 0,
+      "explanation": "Les changements de série sont des arrêts : les raccourcir augmente le temps de fonctionnement, donc la disponibilité."
+    },
+    {
+      "id": "lean-074",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque outil Lean à son but principal.",
+      "pairs": [
+        [
+          "5S",
+          "Organiser et tenir propre le poste"
+        ],
+        [
+          "SMED",
+          "Réduire le temps de changement de série"
+        ],
+        [
+          "Poka-Yoke",
+          "Empêcher les erreurs"
+        ],
+        [
+          "Kanban",
+          "Piloter le réapprovisionnement en flux tiré"
+        ],
+        [
+          "VSM",
+          "Cartographier le flux de valeur"
+        ]
+      ],
+      "explanation": "Chaque outil répond à un gaspillage précis. On les combine : 5S et SMED rendent possible le flux tiré, que le kanban pilote."
+    },
+    {
+      "id": "lean-075",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque situation au gaspillage correspondant.",
+      "pairs": [
+        [
+          "Un cariste fait trois allers-retours pour une palette",
+          "Transport"
+        ],
+        [
+          "Un opérateur attend que la machine finisse son cycle",
+          "Attente"
+        ],
+        [
+          "On fabrique 1 000 pièces pour 600 commandées",
+          "Surproduction"
+        ],
+        [
+          "Une pièce est retouchée après contrôle",
+          "Défauts"
+        ]
+      ],
+      "explanation": "Savoir nommer le gaspillage aide à choisir la bonne action : implantation pour le transport, équilibrage pour l'attente, flux tiré pour la surproduction, détrompeurs pour les défauts."
+    },
+    {
+      "id": "lean-076",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque perte au taux du TRS qu'elle dégrade.",
+      "pairs": [
+        [
+          "Panne de moteur",
+          "Disponibilité"
+        ],
+        [
+          "Micro-arrêts du convoyeur",
+          "Performance"
+        ],
+        [
+          "Pièces rebutées au démarrage",
+          "Qualité"
+        ]
+      ],
+      "explanation": "Pannes et changements de série sont des arrêts (disponibilité), micro-arrêts et ralentissements des pertes de vitesse (performance), rebuts et retouches des pertes de qualité."
+    },
+    {
+      "id": "lean-077",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque mot japonais à sa signification.",
+      "pairs": [
+        [
+          "Kaizen",
+          "Amélioration continue"
+        ],
+        [
+          "Gemba",
+          "Le terrain"
+        ],
+        [
+          "Jidoka",
+          "Arrêt automatique sur anomalie"
+        ],
+        [
+          "Heijunka",
+          "Lissage de la production"
+        ],
+        [
+          "Andon",
+          "Signal d'alerte visuel"
+        ]
+      ],
+      "explanation": "Ces termes viennent du système de production Toyota et se sont diffusés dans l'industrie mondiale."
+    },
+    {
+      "id": "lean-078",
+      "level": "confirmé",
+      "question": "Un responsable veut lancer le 5S. Quelle condition favorise le plus son succès ?",
+      "choices": [
+        "Impliquer l'équipe du poste et auditer régulièrement avec la hiérarchie",
+        "Faire réaliser le 5S par une entreprise de nettoyage pendant le week-end",
+        "Acheter d'abord des armoires, des étiquettes et des marquages au sol neufs",
+        "Afficher un règlement intérieur et sanctionner chaque écart constaté"
+      ],
+      "answer": 0,
+      "explanation": "Le 5S réussit quand les personnes qui travaillent au poste conçoivent les règles. La hiérarchie doit s'y intéresser durablement, sinon l'effort retombe."
+    },
+    {
+      "id": "lean-079",
+      "level": "confirmé",
+      "question": "Que désigne le temps de cycle d'un poste ?",
+      "choices": [
+        "Le temps entre la sortie de deux pièces consécutives au poste",
+        "Le délai total entre la commande du client et sa livraison effective",
+        "Le temps disponible divisé par la demande du client sur la période",
+        "La durée de vie d'un outil de coupe avant son remplacement"
+      ],
+      "answer": 0,
+      "explanation": "Le temps de cycle est observé au poste ; le takt time vient de la demande. On les compare pour équilibrer la ligne."
+    },
+    {
+      "id": "lean-080",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Une ligne de trois postes a des temps de cycle de 40 s, 55 s et 45 s. Combien de pièces sort-elle au plus en une heure ?",
+      "value": 65,
+      "tolerance": 2,
+      "explanation": "Le débit est fixé par le poste le plus lent (55 s) : 3 600 / 55 = 65,5, soit 65 pièces complètes. Améliorer les autres postes ne change rien tant que le goulot reste."
+    },
+    {
+      "id": "lean-081",
+      "level": "confirmé",
+      "question": "Selon la théorie des contraintes, où faut-il concentrer l'amélioration ?",
+      "choices": [
+        "Sur le goulot : une heure perdue au goulot l'est pour toute l'usine",
+        "Sur le poste le plus rapide, pour qu'il produise davantage de pièces",
+        "Sur chaque poste de la ligne en même temps et à parts strictement égales",
+        "Sur le magasin de produits finis, au plus près des expéditions"
+      ],
+      "answer": 0,
+      "explanation": "Le goulot fixe le débit global. Le protéger (pas de panne, pas d'attente de pièces, pas de pièce mauvaise envoyée) rapporte plus que d'accélérer les autres postes."
+    },
+    {
+      "id": "lean-082",
+      "level": "débutant",
+      "question": "Qu'appelle-t-on un chantier Kaizen (Kaizen blitz) ?",
+      "choices": [
+        "Un atelier de quelques jours pour améliorer un processus sur le terrain",
+        "Un audit annuel de toute l'usine mené par un cabinet de conseil extérieur",
+        "Un plan d'investissement en machines nouvelles étalé sur cinq ans",
+        "Une formation théorique en salle sur les principes et les outils du Lean"
+      ],
+      "answer": 0,
+      "explanation": "L'équipe pluridisciplinaire observe, mesure, teste des solutions et les met en place dans la semaine, avec un suivi après le chantier."
+    },
+    {
+      "id": "lean-083",
+      "level": "confirmé",
+      "question": "Pourquoi un système de suggestions d'amélioration échoue-t-il souvent ?",
+      "choices": [
+        "Les idées restent sans réponse ni retour à leur auteur",
+        "Les opérateurs n'ont pas d'idées d'amélioration sur leur propre poste",
+        "Une seule idée par an suffit largement à faire progresser une usine",
+        "Noter et classer les idées coûte plus cher que les gains obtenus"
+      ],
+      "answer": 0,
+      "explanation": "Sans réponse rapide ni mise en œuvre visible, les personnes cessent de proposer. Les petites idées faciles, traitées vite, entretiennent la dynamique."
+    },
+    {
+      "id": "lean-084",
+      "level": "confirmé",
+      "question": "Qu'est-ce que le SMED appliqué à la maintenance (parfois appelé « SMED maintenance ») cherche à réduire ?",
+      "choices": [
+        "La durée des arrêts préventifs, en préparant tout machine en marche",
+        "Le nombre de techniciens de l'équipe de maintenance de l'usine",
+        "Le budget annuel consacré aux pièces de rechange et à leur stockage",
+        "La fréquence des inspections de sécurité imposées par la réglementation"
+      ],
+      "answer": 0,
+      "explanation": "Kits de pièces préparés, outillage prêt, procédures standardisées : l'arrêt programmé ne contient plus que ce qui exige vraiment la machine arrêtée."
+    },
+    {
+      "id": "lean-085",
+      "level": "débutant",
+      "question": "Un opérateur range des cales de réglage dans un tiroir identifié, au plus près de leur usage. Quel S applique-t-il ?",
+      "choices": [
+        "Trier",
+        "Ranger",
+        "Nettoyer",
+        "Standardiser"
+      ],
+      "answer": 1,
+      "explanation": "Ranger (Seiton) : chaque chose a une place définie, repérée, près de l'endroit où elle sert, pour supprimer les recherches."
+    },
+    {
+      "id": "lean-086",
+      "level": "confirmé",
+      "question": "Pourquoi associe-t-on souvent le nettoyage (Seiso) à l'inspection ?",
+      "choices": [
+        "En nettoyant, l'opérateur repère fuites, fissures et desserrages",
+        "Parce que l'inspection remplace le nettoyage dans la démarche 5S",
+        "Parce que le nettoyage est confié au service qualité de l'usine",
+        "Parce qu'une machine propre ne tombe plus jamais en panne ensuite"
+      ],
+      "answer": 0,
+      "explanation": "« Nettoyer, c'est inspecter » : une machine propre rend visibles les anomalies. C'est le point de départ de la maintenance autonome en TPM."
+    },
+    {
+      "id": "lean-087",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un changement de série passe de 90 à 30 minutes. Une ligne fait 4 changements par jour. Combien de minutes de production gagne-t-elle par jour ?",
+      "value": 240,
+      "unit": "min",
+      "tolerance": 0,
+      "explanation": "Gain = (90 - 30) × 4 = 240 minutes, soit 4 heures. On peut aussi les réinvestir en changements plus fréquents pour réduire les lots."
+    },
+    {
+      "id": "lean-088",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'un supermarché dans un flux Lean ?",
+      "choices": [
+        "Un stock tampon maîtrisé où l'aval se sert et déclenche l'amont",
+        "Le magasin où les salariés achètent leurs repas pendant les pauses",
+        "Une zone de stockage des rebuts en attente de leur destruction",
+        "Un entrepôt de produits finis géré directement par le client final"
+      ],
+      "answer": 0,
+      "explanation": "Quand le flux continu est impossible (temps de cycle différents, machines partagées), un petit stock contrôlé par kanban relie deux processus."
+    },
+    {
+      "id": "lean-089",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un « train logistique » (petit train) dans une usine Lean ?",
+      "choices": [
+        "Une tournée régulière qui livre les postes en petites quantités",
+        "Un convoyeur aérien automatique reliant deux bâtiments de l'usine",
+        "Un transporteur qui livre les clients une fois par semaine par camion",
+        "Une ligne de production très longue avec de nombreux postes en série"
+      ],
+      "answer": 0,
+      "explanation": "Le petit train (milk run) passe à fréquence fixe, livre ce qui a été consommé et reprend les kanbans : moins de chariots, moins de stock bord de ligne."
+    },
+    {
+      "id": "lean-090",
+      "level": "confirmé",
+      "question": "Lors d'une observation, on mesure le temps de chaque étape d'un poste plusieurs fois. Pourquoi ne garde-t-on pas seulement la mesure la plus courte ?",
+      "choices": [
+        "Parce que la dispersion révèle des aléas : outils manquants, attentes",
+        "Parce que la mesure la plus courte est forcément une erreur de lecture",
+        "Parce que le chronométrage est interdit au-delà d'une mesure par poste",
+        "Parce que seul le temps le plus long compte pour le client final"
+      ],
+      "answer": 0,
+      "explanation": "La variabilité entre cycles indique des aléas à traiter. Le temps répétable le plus bas sert de cible, mais les écarts sont des pistes d'amélioration."
+    },
+    {
+      "id": "lean-091",
+      "level": "débutant",
+      "question": "Dans un plan d'action, pourquoi chaque action doit-elle avoir un responsable et une date ?",
+      "choices": [
+        "Pour qu'elle soit suivie et réellement terminée",
+        "Pour pouvoir sanctionner la personne en retard",
+        "Pour remplir le tableau de façon symétrique",
+        "Pour que l'auditeur externe soit satisfait"
+      ],
+      "answer": 0,
+      "explanation": "Une action sans pilote ni échéance reste lettre morte. Le suivi au point quotidien ou hebdomadaire garantit son avancement."
+    },
+    {
+      "id": "lean-092",
+      "level": "confirmé",
+      "question": "Que vérifie un audit 5S ?",
+      "choices": [
+        "Le respect des règles du poste, noté sur une grille, pour progresser",
+        "Le nombre d'heures supplémentaires réalisées par l'équipe dans le mois",
+        "La conformité comptable des achats de fournitures de l'atelier",
+        "La vitesse maximale atteinte par les machines de la ligne"
+      ],
+      "answer": 0,
+      "explanation": "La grille note chaque S. Le score affiché et son évolution montrent les dérives et les progrès ; l'audit est un outil de progrès, pas de sanction."
+    },
+    {
+      "id": "lean-093",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les étapes d'une résolution de problème en 8D.",
+      "items": [
+        "Constituer l'équipe et décrire le problème",
+        "Mettre en place des actions de confinement",
+        "Rechercher les causes racines",
+        "Choisir et mettre en œuvre les actions correctives",
+        "Empêcher la récurrence et reconnaître le travail de l'équipe"
+      ],
+      "explanation": "Le confinement protège le client pendant l'analyse. Les actions correctives traitent la cause, la prévention étend la leçon aux produits et processus semblables."
+    },
+    {
+      "id": "lean-094",
+      "level": "confirmé",
+      "question": "Une usine affiche un TRS de 95 % sur une machine qui n'est pas un goulot. Qu'en penser ?",
+      "choices": [
+        "C'est peut-être de la surproduction : produire sans demande crée du stock",
+        "C'est parfait : il faut viser 100 % sur chaque machine de l'usine",
+        "Le calcul est forcément faux, un TRS ne dépasse pas 90 %",
+        "Il faut acheter une deuxième machine identique pour doubler la capacité"
+      ],
+      "answer": 0,
+      "explanation": "Hors goulot, faire tourner une machine au maximum sans demande ne fait que remplir les stocks. Le TRS se pilote d'abord sur les équipements critiques."
+    },
+    {
+      "id": "lean-095",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un poste réalise une opération en 48 s pour un takt de 60 s. Quel est son taux de charge en % ?",
+      "value": 80,
+      "unit": "%",
+      "tolerance": 0.5,
+      "explanation": "Taux de charge = temps de cycle / takt = 48 / 60 = 80 %. Les 20 % restants sont une marge, ou une capacité à réaffecter lors de l'équilibrage."
+    },
+    {
+      "id": "lean-096",
+      "level": "débutant",
+      "question": "Que signifie l'expression « bon du premier coup » ?",
+      "choices": [
+        "Une pièce conforme dès sa fabrication, sans retouche ni reprise",
+        "Une pièce contrôlée par deux personnes successives",
+        "Une pièce produite par le premier poste de la ligne",
+        "Une commande livrée dès la première relance du client"
+      ],
+      "answer": 0,
+      "explanation": "Le taux de bon du premier coup (First Pass Yield) révèle les retouches cachées que le seul taux de rebut ne montre pas."
+    },
+    {
+      "id": "lean-097",
+      "level": "confirmé",
+      "question": "Lors d'un passage en flux tiré, quel risque faut-il traiter avant de réduire les stocks ?",
+      "choices": [
+        "La fiabilité des machines et la durée des changements de série",
+        "La couleur des cartes kanban et leur format d'impression",
+        "Le nombre de bureaux et de salles de réunion dans l'usine",
+        "La date des prochains congés collectifs de l'atelier"
+      ],
+      "answer": 0,
+      "explanation": "Sans stock tampon, chaque panne ou changement long arrête l'aval. TPM et SMED préparent le terrain au flux tiré."
+    },
+    {
+      "id": "lean-098",
+      "level": "confirmé",
+      "question": "Que signifie le « respect des personnes », second pilier du Toyota Way ?",
+      "choices": [
+        "Développer les compétences et associer les équipes aux améliorations",
+        "Laisser chacun travailler à sa façon, sans standard ni consigne écrite",
+        "Garantir une augmentation de salaire à chaque salarié tous les ans",
+        "Réduire les échanges entre la hiérarchie et les opérateurs de terrain"
+      ],
+      "answer": 0,
+      "explanation": "Le Lean n'est pas qu'une boîte à outils : sans confiance, formation et écoute des équipes, les gains ne durent pas."
+    },
+    {
+      "id": "lean-099",
+      "level": "confirmé",
+      "question": "Quelle est la limite principale d'une démarche Lean appliquée seulement comme un programme de réduction des coûts ?",
+      "choices": [
+        "Les équipes y voient une menace et cessent de proposer des améliorations",
+        "Les coûts baissent trop vite et les clients se plaignent de la qualité",
+        "Elle demande trop d'investissements dans de nouvelles machines",
+        "Elle impose de supprimer le service maintenance pour réduire les coûts"
+      ],
+      "answer": 0,
+      "explanation": "Si chaque gain se traduit par une suppression de poste, plus personne ne propose d'amélioration. Les gains de productivité sont réinvestis dans la croissance ou le progrès."
+    },
+    {
+      "id": "lean-100",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque indicateur à ce qu'il mesure.",
+      "pairs": [
+        [
+          "TRS",
+          "Efficacité d'un équipement"
+        ],
+        [
+          "Takt time",
+          "Rythme de la demande client"
+        ],
+        [
+          "Lead time",
+          "Délai de traversée du flux"
+        ],
+        [
+          "Cpk",
+          "Capacité d'un processus à respecter les tolérances"
+        ],
+        [
+          "MTBF",
+          "Temps moyen entre deux pannes"
+        ]
+      ],
+      "explanation": "Ces indicateurs se complètent : le takt fixe la cible, le TRS et le MTBF disent si les équipements la tiennent, le lead time mesure le flux, le Cpk la qualité."
+    }
+  ]
+}

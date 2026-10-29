@@ -471,6 +471,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Packs .zip enrichis : thèmes listés par manifest.json, niveaux intermédiaire et expert, schémas SVG affichés avec la correction, ou avec la question pour un symbole à reconnaître (refusés s'ils contiennent du script), références https et guides pratiques en Markdown
 - [x] Explication de la bonne réponse après chaque question, choix mélangés à chaque affichage
 - [x] Questions stockées dans des fichiers JSON versionnés (`assets/quiz/`), faciles à compléter
+- [x] Guides pratiques livrés (`assets/quiz/guides/`) : l'essentiel, formules, pièges et références par thème ; un guide importé du même nom les remplace
 - [x] Suivi de la progression : score par thème, questions ratées à revoir
 - [x] Statistiques : questions acquises, taux de bonnes réponses, jours de révision d'affilée, réponses des 14 derniers jours
 - [x] Thèmes proposés selon les compétences demandées dans les offres enregistrées ; pour un thème importé, compétences cherchées dans le texte des offres (deux au moins par offre)
@@ -1052,7 +1053,10 @@ scraper-data-python/
 │   │   ├── practices.json                     # Bonnes pratiques et API
 │   │   ├── entretien_java.json                # Entretien Java : pièges de code, revues, patterns
 │   │   ├── entretien_android.json             # Entretien Android : cycles de vie, composants, revue
-│   │   └── entretien_web.json                 # Entretien PHP et web : PHP, CSS, jQuery
+│   │   ├── entretien_web.json                 # Entretien PHP et web : PHP, CSS, jQuery
+│   │   ├── lean.json                          # Lean et amélioration continue : 5S, SMED, TRS, kanban
+│   │   ├── fiabilite.json                     # Fiabilité et méthodes : AMDEC, MTBF, GMAO
+│   │   └── guides/                            # Guides pratiques livrés, un Markdown par thème
 │   ├── interview/                             # Simulation d'entretien technique
 │   │   └── questions.json                     # Questions ouvertes, réponse attendue et points clés
 │   └── quiz_generation/                       # Génération de questions avec ChatGPT
@@ -1364,6 +1368,7 @@ scraper-data-python/
 │   │   ├── test_history_repository.py          # Teste la persistance de l'historique
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
 │   │   ├── test_maintenance.py                 # Teste les sauvegardes, leur rotation et la réinitialisation
+│   │   ├── test_quiz_guides.py                 # Teste les guides livrés et la priorité des guides importés
 │   │   ├── test_settings_repository.py         # Teste les réglages JSON
 │   │   ├── test_archive.py                     # Teste la sauvegarde complète et le refus des archives piégées
 │   │   ├── test_encrypted_archive.py           # Teste la sauvegarde chiffrée et les mots de passe refusés

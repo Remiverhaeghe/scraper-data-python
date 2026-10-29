@@ -54,7 +54,11 @@ DOMAIN_RULES = (
         "authentification identite",
     ),
     ("Réseau et sécurité", "Réseau", "reseau reseaux tcp dns routage"),
-    ("Industrie", "Maintenance", "maintenance"),
+    (
+        "Industrie",
+        "Maintenance",
+        "maintenance lean 5s smed trs kaizen gmao amdec fiabilite",
+    ),
     (
         "Industrie",
         "Électricité et énergie",
@@ -67,7 +71,7 @@ DOMAIN_RULES = (
         "java spring python javascript typescript angular react kotlin php node "
         "backend frontend android html css",
     ),
-    ("Industrie", "Automatisme", "automatisme plc"),
+    ("Industrie", "Automatisme", "automatisme plc iot iiot mqtt"),
     ("Informatique", "Données", "sql base donnees postgresql mysql oracle mongodb"),
     (
         "Informatique",

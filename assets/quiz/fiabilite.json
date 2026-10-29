@@ -1,0 +1,1337 @@
+{
+  "theme": "Fiabilité et méthodes (AMDEC, MTBF, GMAO)",
+  "skills": [
+    "AMDEC",
+    "GMAO",
+    "MTBF",
+    "fiabilité",
+    "méthodes maintenance",
+    "maintenance préventive"
+  ],
+  "questions": [
+    {
+      "id": "fiab-001",
+      "level": "débutant",
+      "question": "Que signifie MTBF ?",
+      "choices": [
+        "Mean Time Between Failures : temps moyen entre deux défaillances",
+        "Maximum Time Before Failure : durée maximale avant une première panne",
+        "Mean Time Before Fixing : temps moyen avant le début d'une réparation",
+        "Minimum Time Between Faults : plus court délai observé entre deux pannes"
+      ],
+      "answer": 0,
+      "explanation": "Le MTBF mesure la fiabilité d'un équipement réparable : plus il est élevé, plus les pannes sont espacées."
+    },
+    {
+      "id": "fiab-002",
+      "level": "débutant",
+      "question": "Que signifie MTTR ?",
+      "choices": [
+        "Mean Time To Repair : temps moyen de réparation",
+        "Maximum Time To Restart : délai maximal de redémarrage d'une ligne",
+        "Mean Time To Replace : temps moyen avant le remplacement d'une pièce",
+        "Monthly Total Time of Repairs : cumul mensuel des heures de dépannage"
+      ],
+      "answer": 0,
+      "explanation": "Le MTTR mesure la maintenabilité : temps moyen pour remettre l'équipement en état, diagnostic, attente de pièces et essais compris selon la définition retenue."
+    },
+    {
+      "id": "fiab-003",
+      "level": "débutant",
+      "type": "numerique",
+      "question": "Une pompe a fonctionné 2 400 heures sur l'année et a connu 8 pannes. Quel est son MTBF en heures ?",
+      "value": 300,
+      "unit": "h",
+      "tolerance": 0,
+      "explanation": "MTBF = temps de bon fonctionnement / nombre de défaillances = 2 400 / 8 = 300 h."
+    },
+    {
+      "id": "fiab-004",
+      "level": "débutant",
+      "type": "numerique",
+      "question": "Les 5 dernières réparations d'un convoyeur ont duré 2 h, 1 h, 3 h, 1,5 h et 2,5 h. Quel est son MTTR en heures ?",
+      "value": 2,
+      "unit": "h",
+      "tolerance": 0,
+      "explanation": "MTTR = somme des durées de réparation / nombre de réparations = 10 / 5 = 2 h."
+    },
+    {
+      "id": "fiab-005",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un équipement a un MTBF de 190 h et un MTTR de 10 h. Quelle est sa disponibilité intrinsèque en % ?",
+      "value": 95,
+      "unit": "%",
+      "tolerance": 0.5,
+      "explanation": "Disponibilité = MTBF / (MTBF + MTTR) = 190 / 200 = 95 %. Elle progresse si l'on espace les pannes (fiabilité) ou si l'on répare plus vite (maintenabilité)."
+    },
+    {
+      "id": "fiab-006",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un équipement a un taux de défaillance constant de 0,002 panne par heure. Quel est son MTBF en heures ?",
+      "value": 500,
+      "unit": "h",
+      "tolerance": 0,
+      "explanation": "À taux constant (loi exponentielle), MTBF = 1 / λ = 1 / 0,002 = 500 h."
+    },
+    {
+      "id": "fiab-007",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Avec un taux de défaillance constant λ = 0,001 par heure, quelle est la fiabilité R(t) à 500 heures, en % ? (R(t) = e^(-λt))",
+      "value": 60.7,
+      "unit": "%",
+      "tolerance": 1,
+      "explanation": "R(500) = e^(-0,5) ≈ 0,607 : environ 61 % de chances de fonctionner 500 h sans panne. Au temps t = MTBF, la fiabilité n'est que de 37 %."
+    },
+    {
+      "id": "fiab-008",
+      "level": "confirmé",
+      "question": "Pour un équipement à taux de défaillance constant, quelle est la probabilité de fonctionner sans panne jusqu'au MTBF ?",
+      "choices": [
+        "Environ 37 %, soit e^-1",
+        "Exactement 50 %, par définition de la moyenne",
+        "Environ 63 %, soit 1 - e^-1",
+        "100 %, puisque c'est la durée moyenne garantie"
+      ],
+      "answer": 0,
+      "explanation": "R(MTBF) = e^(-λ × 1/λ) = e^-1 ≈ 0,37. Le MTBF n'est donc pas une durée garantie : près des deux tiers des équipements tombent en panne avant."
+    },
+    {
+      "id": "fiab-009",
+      "level": "débutant",
+      "question": "Que représente la courbe en baignoire ?",
+      "choices": [
+        "L'évolution du taux de défaillance : jeunesse, maturité, usure",
+        "L'évolution du coût de maintenance selon le nombre de techniciens",
+        "La répartition des pannes entre causes mécaniques et électriques",
+        "La consommation d'énergie d'une machine au cours d'une journée"
+      ],
+      "answer": 0,
+      "explanation": "Taux élevé au début (défauts de jeunesse), bas et constant en maturité (pannes aléatoires), puis croissant avec l'usure. La stratégie de maintenance dépend de la période."
+    },
+    {
+      "id": "fiab-010",
+      "level": "confirmé",
+      "question": "Dans quelle période de la courbe en baignoire le remplacement systématique à date fixe est-il le plus utile ?",
+      "choices": [
+        "En période de vieillissement, quand l'usure fait croître le taux de pannes",
+        "En période de jeunesse, pour éliminer au plus vite les défauts de montage",
+        "En période de maturité, où les pannes sont aléatoires et indépendantes de l'âge",
+        "À n'importe quel moment, la période n'influence pas l'intérêt du remplacement"
+      ],
+      "answer": 0,
+      "explanation": "Remplacer une pièce qui ne s'use pas (pannes aléatoires) ne réduit pas le risque et peut ajouter des défauts de remontage. Le systématique se justifie sur l'usure prévisible."
+    },
+    {
+      "id": "fiab-011",
+      "level": "débutant",
+      "question": "Que signifie AMDEC ?",
+      "choices": [
+        "Analyse des Modes de Défaillance, Effets et Criticité",
+        "Audit de Maintenance Des Équipements et de leur Conformité",
+        "Application de Méthodes de Dépannage pour Équipements Complexes",
+        "Analyse Mensuelle Des Écarts de Coûts de la maintenance"
+      ],
+      "answer": 0,
+      "explanation": "L'AMDEC (FMEA en anglais) recense méthodiquement comment un produit ou un équipement peut défaillir, les effets et la criticité, pour prioriser les actions préventives."
+    },
+    {
+      "id": "fiab-012",
+      "level": "débutant",
+      "question": "Dans une AMDEC, comment calcule-t-on la criticité la plus courante ?",
+      "choices": [
+        "Fréquence × Gravité × Non-détection",
+        "Fréquence + Gravité + Détection",
+        "Gravité ÷ Fréquence × Détection",
+        "Coût de la panne × Durée d'arrêt"
+      ],
+      "answer": 0,
+      "explanation": "C = F × G × D, chaque note sur une échelle (souvent 1 à 4, 1 à 5 ou 1 à 10). D note la difficulté de détection : plus la défaillance passe inaperçue, plus la note est forte."
+    },
+    {
+      "id": "fiab-013",
+      "level": "débutant",
+      "type": "numerique",
+      "question": "Un mode de défaillance est noté Fréquence 3, Gravité 4, Détection 2. Quelle est sa criticité ?",
+      "value": 24,
+      "tolerance": 0,
+      "explanation": "C = 3 × 4 × 2 = 24. On compare ce résultat au seuil fixé par l'équipe pour décider d'une action."
+    },
+    {
+      "id": "fiab-014",
+      "level": "confirmé",
+      "question": "Une note de détection élevée dans une AMDEC signifie que la défaillance est :",
+      "choices": [
+        "Difficile à repérer avant qu'elle produise son effet",
+        "Facile à détecter grâce à un capteur ou une inspection",
+        "Fréquente, car on la détecte souvent sur le terrain",
+        "Grave, car elle déclenche une alarme de sécurité"
+      ],
+      "answer": 0,
+      "explanation": "L'échelle de détection est inversée : 1 = détectée à coup sûr, note maximale = indétectable. Ajouter une surveillance fait baisser la criticité."
+    },
+    {
+      "id": "fiab-015",
+      "level": "confirmé",
+      "question": "Un mode de défaillance a une gravité maximale mais une criticité sous le seuil. Que faire ?",
+      "choices": [
+        "Le traiter quand même : la gravité extrême l'impose",
+        "L'ignorer, puisque la criticité est sous le seuil fixé",
+        "Augmenter sa note de fréquence pour dépasser le seuil",
+        "Le retirer de l'analyse pour alléger le tableau"
+      ],
+      "answer": 0,
+      "explanation": "Beaucoup d'entreprises imposent une action dès que la gravité atteint le maximum (risque humain ou environnemental), quelle que soit la criticité."
+    },
+    {
+      "id": "fiab-016",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les étapes d'une AMDEC machine.",
+      "items": [
+        "Découper la machine en sous-ensembles et fonctions",
+        "Lister les modes de défaillance de chaque élément",
+        "Identifier causes et effets de chaque mode",
+        "Coter fréquence, gravité, détection et calculer la criticité",
+        "Décider des actions et réévaluer la criticité après action"
+      ],
+      "explanation": "L'AMDEC se mène en groupe (maintenance, production, méthodes) et se met à jour avec le retour d'expérience des pannes réelles."
+    },
+    {
+      "id": "fiab-017",
+      "level": "débutant",
+      "question": "Quelle différence entre une cause et un mode de défaillance ?",
+      "choices": [
+        "Le mode décrit comment l'élément défaille, la cause pourquoi il défaille",
+        "La cause décrit comment l'élément défaille, le mode pourquoi il défaille",
+        "Le mode est toujours électrique, la cause toujours mécanique",
+        "Ce sont deux termes identiques employés dans des normes différentes"
+      ],
+      "answer": 0,
+      "explanation": "Exemple : mode « grippage du roulement », cause « manque de lubrification », effet « arrêt du convoyeur »."
+    },
+    {
+      "id": "fiab-018",
+      "level": "débutant",
+      "question": "Que signifie GMAO ?",
+      "choices": [
+        "Gestion de Maintenance Assistée par Ordinateur",
+        "Groupe de Maintenance des Automates et Outils",
+        "Garantie Mécanique Annuelle des Organes",
+        "Gestion des Matières et des Achats Opérationnels"
+      ],
+      "answer": 0,
+      "explanation": "La GMAO (CMMS en anglais) gère le parc d'équipements, les interventions, les plans préventifs, les pièces de rechange et l'historique des pannes."
+    },
+    {
+      "id": "fiab-019",
+      "level": "débutant",
+      "question": "Lequel de ces logiciels est une GMAO ?",
+      "choices": [
+        "Carl Source ou Coswin",
+        "AutoCAD ou SolidWorks",
+        "TIA Portal ou Unity Pro",
+        "Excel ou Power BI"
+      ],
+      "answer": 0,
+      "explanation": "Carl Source, Coswin, Mainta, MaintiMizer ou le module PM de SAP sont des GMAO. AutoCAD et SolidWorks sont des logiciels de CAO, TIA Portal programme des automates."
+    },
+    {
+      "id": "fiab-020",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un bon de travail (OT) dans une GMAO ?",
+      "choices": [
+        "La fiche qui déclenche, décrit et trace une intervention",
+        "Le bon de commande d'une pièce de rechange auprès d'un fournisseur",
+        "Le contrat de travail d'un technicien intérimaire",
+        "La fiche de pointage horaire de l'équipe de production"
+      ],
+      "answer": 0,
+      "explanation": "L'ordre de travail porte l'équipement, la demande, les temps passés, les pièces consommées et le compte rendu. C'est la base de l'historique et des indicateurs."
+    },
+    {
+      "id": "fiab-021",
+      "level": "confirmé",
+      "question": "Pourquoi un historique de GMAO mal renseigné pose-t-il problème ?",
+      "choices": [
+        "Les indicateurs et les analyses de pannes sont faussés",
+        "La GMAO cesse de fonctionner et bloque les demandes d'intervention",
+        "Les pièces de rechange ne peuvent plus être commandées",
+        "Le contrat de maintenance avec l'éditeur est annulé"
+      ],
+      "answer": 0,
+      "explanation": "Sans cause, temps et pièces saisis, impossible d'identifier les équipements à problèmes, de calculer les indicateurs ou d'optimiser les plans préventifs."
+    },
+    {
+      "id": "fiab-022",
+      "level": "débutant",
+      "question": "Qu'est-ce que la maintenance corrective ?",
+      "choices": [
+        "La maintenance réalisée après la détection d'une panne",
+        "La maintenance réalisée à date fixe, avant toute panne",
+        "La maintenance qui modifie l'équipement pour l'améliorer",
+        "La maintenance déclenchée par une mesure de l'état"
+      ],
+      "answer": 0,
+      "explanation": "Le correctif peut être palliatif (dépannage provisoire) ou curatif (réparation définitive). Selon la norme NF EN 13306, il intervient après la détection d'une panne."
+    },
+    {
+      "id": "fiab-023",
+      "level": "débutant",
+      "question": "Quelle différence entre un dépannage et une réparation ?",
+      "choices": [
+        "Le dépannage est provisoire, la réparation remet durablement en état",
+        "Le dépannage est fait par un sous-traitant, la réparation en interne",
+        "La réparation est provisoire, le dépannage remet durablement en état",
+        "Le dépannage concerne l'électricité, la réparation la mécanique"
+      ],
+      "answer": 0,
+      "explanation": "Le dépannage (palliatif) remet en marche au plus vite ; il doit être suivi d'une réparation (curatif) pour éviter que la panne revienne."
+    },
+    {
+      "id": "fiab-024",
+      "level": "débutant",
+      "question": "Qu'est-ce que la maintenance préventive systématique ?",
+      "choices": [
+        "Des interventions selon un échéancier fixe : temps ou cycles",
+        "Des interventions déclenchées par la mesure d'un paramètre d'usure",
+        "Des interventions réalisées après une panne constatée",
+        "Des interventions décidées par prévision statistique de la panne"
+      ],
+      "answer": 0,
+      "explanation": "Exemple : vidange toutes les 2 000 heures. Simple à planifier, mais elle remplace parfois des pièces encore bonnes."
+    },
+    {
+      "id": "fiab-025",
+      "level": "débutant",
+      "question": "Qu'est-ce que la maintenance conditionnelle ?",
+      "choices": [
+        "Une intervention déclenchée par un seuil de mesure",
+        "Une intervention réalisée à date fixe, quel que soit l'état",
+        "Une intervention faite à la condition que la production l'accepte",
+        "Une intervention prévue pour les équipements sous garantie"
+      ],
+      "answer": 0,
+      "explanation": "On mesure l'état réel (vibrations, température, épaisseur, analyse d'huile) et on intervient au besoin : moins de remplacements inutiles qu'en systématique."
+    },
+    {
+      "id": "fiab-026",
+      "level": "confirmé",
+      "question": "Qu'apporte la maintenance prévisionnelle par rapport à la conditionnelle ?",
+      "choices": [
+        "Elle prévoit la date de défaillance d'après la tendance",
+        "Elle remplace les mesures par un calendrier fixe d'interventions",
+        "Elle se passe de capteurs sur les équipements",
+        "Elle n'intervient qu'après une panne pour en analyser la cause"
+      ],
+      "answer": 0,
+      "explanation": "La prévisionnelle (prédictive) suit la tendance des mesures pour estimer la durée de vie restante et planifier l'intervention au meilleur moment."
+    },
+    {
+      "id": "fiab-027",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque type de maintenance à son déclencheur.",
+      "pairs": [
+        [
+          "Corrective",
+          "La panne constatée"
+        ],
+        [
+          "Préventive systématique",
+          "Un échéancier fixe"
+        ],
+        [
+          "Conditionnelle",
+          "Un seuil de mesure dépassé"
+        ],
+        [
+          "Prévisionnelle",
+          "La tendance des mesures extrapolée"
+        ]
+      ],
+      "explanation": "Le bon mélange dépend de la criticité de l'équipement, du coût de la panne et de la possibilité de mesurer l'usure."
+    },
+    {
+      "id": "fiab-028",
+      "level": "débutant",
+      "question": "Quelle technique de surveillance détecte le mieux un défaut de roulement naissant ?",
+      "choices": [
+        "L'analyse vibratoire",
+        "La mesure de l'isolement à 500 V",
+        "Le contrôle visuel de la peinture",
+        "Le comptage des cycles de production"
+      ],
+      "answer": 0,
+      "explanation": "Les défauts de roulement produisent des fréquences caractéristiques visibles en analyse vibratoire bien avant l'échauffement ou le bruit audible."
+    },
+    {
+      "id": "fiab-029",
+      "level": "débutant",
+      "question": "À quoi sert la thermographie infrarouge en maintenance ?",
+      "choices": [
+        "À repérer des points chauds anormaux",
+        "À mesurer l'épaisseur des tôles sans les démonter",
+        "À analyser la composition chimique des huiles",
+        "À contrôler l'alignement de deux arbres accouplés"
+      ],
+      "answer": 0,
+      "explanation": "Une connexion électrique mal serrée chauffe : la caméra thermique la révèle sans contact, sous charge, avant l'incendie ou la coupure."
+    },
+    {
+      "id": "fiab-030",
+      "level": "confirmé",
+      "question": "Que peut révéler une analyse d'huile d'un réducteur ?",
+      "choices": [
+        "L'usure interne, la pollution et l'état du lubrifiant",
+        "Le désalignement de l'accouplement uniquement, sans autre information",
+        "La température exacte des bobinages du moteur d'entraînement",
+        "La qualité de l'isolement électrique du variateur de vitesse"
+      ],
+      "answer": 0,
+      "explanation": "Particules métalliques (usure d'engrenages ou de roulements), eau, viscosité, acidité : l'analyse guide la vidange et alerte sur une dégradation."
+    },
+    {
+      "id": "fiab-031",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un équipement critique ?",
+      "choices": [
+        "Un équipement dont la panne a de lourdes conséquences",
+        "Un équipement ancien, à remplacer dans l'année par un modèle récent",
+        "Un équipement qui consomme beaucoup d'énergie électrique",
+        "Un équipement surveillé par le service qualité plutôt que par la maintenance"
+      ],
+      "answer": 0,
+      "explanation": "La criticité oriente l'effort : préventif renforcé, pièces de rechange en stock, redondance pour les plus critiques ; correctif accepté pour les moins critiques."
+    },
+    {
+      "id": "fiab-032",
+      "level": "confirmé",
+      "question": "Pour un équipement non critique, peu coûteux et sans usure mesurable, quelle stratégie est souvent la plus économique ?",
+      "choices": [
+        "Le correctif, en gardant éventuellement une pièce de rechange",
+        "Le préventif systématique hebdomadaire avec remplacement des pièces",
+        "La surveillance vibratoire en continu avec capteurs connectés",
+        "La redondance complète avec un second équipement en attente"
+      ],
+      "answer": 0,
+      "explanation": "Le préventif a un coût : il doit être inférieur au coût évité des pannes. Pour un équipement non critique, laisser fonctionner jusqu'à la panne est souvent rationnel."
+    },
+    {
+      "id": "fiab-033",
+      "level": "débutant",
+      "question": "Que contient un plan de maintenance préventive ?",
+      "choices": [
+        "Les tâches, leur fréquence, leur durée et leurs moyens",
+        "La liste des pannes de l'année précédente et leurs coûts",
+        "Les objectifs de production de chaque équipe",
+        "Le budget d'investissement en machines nouvelles"
+      ],
+      "answer": 0,
+      "explanation": "Le plan, saisi dans la GMAO, génère automatiquement les bons de travail aux échéances et sert à planifier la charge des techniciens."
+    },
+    {
+      "id": "fiab-034",
+      "level": "confirmé",
+      "question": "Comment ajuster la fréquence d'une tâche préventive qui ne trouve jamais d'anomalie ?",
+      "choices": [
+        "L'espacer progressivement en suivant l'historique",
+        "La rendre plus fréquente pour être certain de ne rien manquer",
+        "La supprimer immédiatement sans analyse complémentaire",
+        "La confier à un sous-traitant pour réduire son coût"
+      ],
+      "answer": 0,
+      "explanation": "Le retour d'expérience optimise le plan : une inspection toujours conforme peut être espacée ; une panne entre deux visites montre qu'il faut la rapprocher ou changer de méthode."
+    },
+    {
+      "id": "fiab-035",
+      "level": "débutant",
+      "question": "Que signifie RCM ?",
+      "choices": [
+        "Reliability Centered Maintenance",
+        "Repair Cost Management : gestion des coûts de réparation",
+        "Remote Control Monitoring : surveillance à distance des machines",
+        "Regular Check Method : méthode de contrôles réguliers"
+      ],
+      "answer": 0,
+      "explanation": "La MBF (RCM) choisit pour chaque fonction et mode de défaillance la tâche la plus adaptée, ou aucune tâche si elle n'est pas rentable."
+    },
+    {
+      "id": "fiab-036",
+      "level": "débutant",
+      "question": "À quoi sert l'arbre de défaillance (AdD) ?",
+      "choices": [
+        "À remonter d'un événement redouté vers ses causes",
+        "À dessiner l'implantation des machines dans l'atelier",
+        "À classer les pièces de rechange par fournisseur",
+        "À planifier les congés des techniciens de maintenance"
+      ],
+      "answer": 0,
+      "explanation": "On part de l'événement redouté (sommet) et on le décompose en causes reliées par des portes ET et OU. On peut ensuite calculer sa probabilité."
+    },
+    {
+      "id": "fiab-037",
+      "level": "confirmé",
+      "question": "Dans un arbre de défaillance, que signifie une porte ET ?",
+      "choices": [
+        "Toutes les causes doivent survenir ensemble",
+        "L'événement survient dès qu'une seule des causes en dessous survient",
+        "Les causes en dessous s'excluent l'une l'autre",
+        "L'événement ne peut pas survenir"
+      ],
+      "answer": 0,
+      "explanation": "Porte ET : causes simultanées (redondance, il faut perdre les deux pompes). Porte OU : une seule cause suffit. La redondance transforme un OU en ET et rend l'événement moins probable."
+    },
+    {
+      "id": "fiab-038",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Deux pompes identiques sont montées en redondance (une seule suffit). Chacune a une fiabilité de 0,9 sur la période. Quelle est la fiabilité de l'ensemble en % ?",
+      "value": 99,
+      "unit": "%",
+      "tolerance": 0.5,
+      "explanation": "En parallèle, l'ensemble défaille si les deux défaillent : 0,1 × 0,1 = 0,01. Fiabilité = 1 - 0,01 = 0,99, soit 99 %."
+    },
+    {
+      "id": "fiab-039",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Trois éléments en série ont des fiabilités de 0,95, 0,90 et 0,98. Quelle est la fiabilité du système en % ?",
+      "value": 83.8,
+      "unit": "%",
+      "tolerance": 1,
+      "explanation": "En série, tous doivent fonctionner : 0,95 × 0,90 × 0,98 ≈ 0,838. Un système en série est moins fiable que son élément le plus faible."
+    },
+    {
+      "id": "fiab-040",
+      "level": "débutant",
+      "question": "Pourquoi un système composé de nombreux éléments en série est-il fragile ?",
+      "choices": [
+        "La panne d'un seul élément arrête tout l'ensemble",
+        "Les éléments en série consomment plus d'énergie et chauffent davantage",
+        "La maintenance d'éléments en série est interdite par la réglementation",
+        "Les éléments en série vieillissent exactement au même rythme"
+      ],
+      "answer": 0,
+      "explanation": "Produit de nombres inférieurs à 1 : plus il y a d'éléments, plus la fiabilité globale baisse. D'où l'intérêt des stocks tampons ou de la redondance sur les points faibles."
+    },
+    {
+      "id": "fiab-041",
+      "level": "confirmé",
+      "question": "Que décrit le paramètre de forme β de la loi de Weibull ?",
+      "choices": [
+        "L'allure du taux de défaillance dans le temps",
+        "Le coût moyen d'une réparation selon l'âge de l'équipement",
+        "Le nombre de pièces de rechange à garder en stock",
+        "La durée exacte avant la première panne d'un équipement"
+      ],
+      "answer": 0,
+      "explanation": "β < 1 : défauts de jeunesse ; β = 1 : pannes aléatoires (loi exponentielle) ; β > 1 : usure. On l'obtient à partir de l'historique des pannes."
+    },
+    {
+      "id": "fiab-042",
+      "level": "confirmé",
+      "question": "L'analyse de Weibull d'un composant donne β = 3,2. Qu'en conclure ?",
+      "choices": [
+        "Les pannes viennent de l'usure",
+        "Les pannes sont aléatoires : le préventif systématique est inutile",
+        "Les pannes sont des défauts de jeunesse liés au montage",
+        "Le composant ne tombe jamais en panne avant 3 200 heures"
+      ],
+      "answer": 0,
+      "explanation": "Un β nettement supérieur à 1 traduit un taux de défaillance croissant : il existe un âge auquel remplacer devient rentable."
+    },
+    {
+      "id": "fiab-043",
+      "level": "débutant",
+      "question": "Quel indicateur suit le poids des pannes non planifiées dans l'activité ?",
+      "choices": [
+        "Le taux de correctif",
+        "Le taux d'absentéisme de l'équipe de maintenance",
+        "Le nombre de bons de commande de pièces par mois",
+        "La surface de l'atelier de maintenance"
+      ],
+      "answer": 0,
+      "explanation": "Un service qui passe la majorité de son temps en correctif subit les pannes. L'objectif est d'augmenter la part de préventif et d'amélioration."
+    },
+    {
+      "id": "fiab-044",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'une pièce de rechange stratégique ?",
+      "choices": [
+        "Une pièce longue à obtenir pour un équipement critique",
+        "Une pièce bon marché achetée en grande quantité pour obtenir une remise",
+        "Une pièce consommée chaque semaine par l'ensemble des machines",
+        "Une pièce dont le fournisseur est situé dans la même région que l'usine"
+      ],
+      "answer": 0,
+      "explanation": "Moteur spécial, réducteur, carte électronique obsolète : on les garde en stock malgré leur coût car une panne sans pièce coûterait bien plus cher."
+    },
+    {
+      "id": "fiab-045",
+      "level": "confirmé",
+      "question": "Comment la méthode ABC aide-t-elle à gérer le magasin de pièces de rechange ?",
+      "choices": [
+        "En classant les articles par valeur consommée",
+        "En rangeant les pièces par ordre alphabétique dans les rayonnages",
+        "En attribuant une lettre à chaque technicien responsable d'un rayon",
+        "En triant les pièces selon le pays de leur fabricant"
+      ],
+      "answer": 0,
+      "explanation": "La classe A (environ 20 % des articles, 80 % de la valeur) mérite un suivi fin. On la croise souvent avec la criticité de l'équipement servi."
+    },
+    {
+      "id": "fiab-046",
+      "level": "débutant",
+      "question": "Que signifie le sigle REX en maintenance ?",
+      "choices": [
+        "Retour d'expérience",
+        "Réparation exceptionnelle",
+        "Registre des extincteurs",
+        "Révision externe"
+      ],
+      "answer": 0,
+      "explanation": "Le retour d'expérience exploite l'historique des pannes et des interventions pour améliorer les plans, la conception et les procédures."
+    },
+    {
+      "id": "fiab-047",
+      "level": "débutant",
+      "question": "Quel est le rôle d'un technicien méthodes maintenance ?",
+      "choices": [
+        "Préparer, planifier et améliorer la maintenance",
+        "Réaliser seul toutes les interventions de dépannage de nuit",
+        "Vendre des contrats de maintenance aux clients de l'entreprise",
+        "Fixer les objectifs de production de chaque ligne"
+      ],
+      "answer": 0,
+      "explanation": "Il rédige gammes et procédures, gère la GMAO, analyse les pannes, optimise le préventif et prépare les arrêts programmés."
+    },
+    {
+      "id": "fiab-048",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'une gamme de maintenance ?",
+      "choices": [
+        "La description pas à pas d'une intervention",
+        "La liste des prix des interventions facturées aux clients",
+        "La gamme de couleurs utilisée pour repérer les tuyauteries",
+        "L'ensemble des machines produites par un même constructeur"
+      ],
+      "answer": 0,
+      "explanation": "Une gamme standardise l'intervention : tout technicien la réalise de la même façon, avec le bon outillage et la consignation prévue."
+    },
+    {
+      "id": "fiab-049",
+      "level": "confirmé",
+      "question": "Lors de la préparation d'un arrêt technique annuel, quelle est la priorité ?",
+      "choices": [
+        "Préparer travaux, pièces et entreprises à l'avance",
+        "Attendre l'arrêt pour inspecter les machines et décider des travaux sur place",
+        "Confier l'organisation à la production, la maintenance n'intervenant qu'au redémarrage",
+        "Limiter l'arrêt aux seules réparations des pannes de la semaine précédente"
+      ],
+      "answer": 0,
+      "explanation": "Un arrêt court et maîtrisé se prépare des mois avant : liste des travaux, planning (souvent en chemin critique), approvisionnements, sécurité et coactivité."
+    },
+    {
+      "id": "fiab-050",
+      "level": "débutant",
+      "question": "Quel est le premier geste avant toute intervention sur un équipement ?",
+      "choices": [
+        "Consigner l'équipement et vérifier l'absence d'énergie",
+        "Démonter le carter pour gagner du temps pendant l'arrêt",
+        "Prévenir le client que la livraison sera en retard",
+        "Commander les pièces de rechange au fournisseur"
+      ],
+      "answer": 0,
+      "explanation": "Séparation, condamnation, identification, vérification d'absence d'énergie (électrique, pneumatique, hydraulique, mécanique) : la consignation protège l'intervenant."
+    },
+    {
+      "id": "fiab-051",
+      "level": "débutant",
+      "question": "Quelle norme définit les termes de la maintenance en Europe ?",
+      "choices": [
+        "NF EN 13306",
+        "ISO 9001",
+        "IEC 61131-3",
+        "NF C 15-100"
+      ],
+      "answer": 0,
+      "explanation": "La NF EN 13306 donne le vocabulaire : défaillance, panne, maintenance corrective, préventive, conditionnelle, etc. ISO 9001 traite du management de la qualité."
+    },
+    {
+      "id": "fiab-052",
+      "level": "confirmé",
+      "question": "Selon le vocabulaire de la maintenance, quelle différence entre défaillance et panne ?",
+      "choices": [
+        "La défaillance est l'événement de perte de fonction, la panne l'état qui en résulte",
+        "La panne est l'événement de perte de fonction, la défaillance l'état qui en résulte",
+        "La défaillance est électrique, la panne mécanique",
+        "Les deux mots sont synonymes dans la norme"
+      ],
+      "answer": 0,
+      "explanation": "La défaillance est un événement (le roulement casse) ; la panne est l'état de l'équipement incapable d'accomplir sa fonction jusqu'à la réparation."
+    },
+    {
+      "id": "fiab-053",
+      "level": "débutant",
+      "question": "Qu'est-ce que la maintenabilité d'un équipement ?",
+      "choices": [
+        "Son aptitude à être remis en état facilement",
+        "Sa capacité à fonctionner longtemps sans aucune panne",
+        "Son coût d'achat rapporté à sa durée de vie",
+        "Sa conformité aux normes de sécurité en vigueur"
+      ],
+      "answer": 0,
+      "explanation": "Accès facile, pièces standard, diagnostic intégré, documentation claire : la maintenabilité réduit le MTTR. La fiabilité, elle, augmente le MTBF."
+    },
+    {
+      "id": "fiab-054",
+      "level": "confirmé",
+      "question": "Lors de l'achat d'une nouvelle machine, quelle demande de la maintenance améliore le plus la maintenabilité ?",
+      "choices": [
+        "Des pièces standardisées et un diagnostic des défauts",
+        "Une couleur de carrosserie identique aux autres machines",
+        "Une vitesse de production supérieure de 20 % à la demande",
+        "Un emplacement le plus loin possible de l'atelier de maintenance"
+      ],
+      "answer": 0,
+      "explanation": "Associer la maintenance au cahier des charges (maîtrise de la conception, pilier de la TPM) évite des années de difficultés : accès, standardisation, documentation, formation."
+    },
+    {
+      "id": "fiab-055",
+      "level": "débutant",
+      "question": "Que signifie le coût global de possession (LCC) d'un équipement ?",
+      "choices": [
+        "Le coût total sur la vie : achat, énergie, maintenance",
+        "Le seul prix d'achat de l'équipement négocié avec le fournisseur",
+        "Le coût de la maintenance pendant la première année de garantie",
+        "Le coût du transport et de l'installation de l'équipement"
+      ],
+      "answer": 0,
+      "explanation": "Une machine moins chère à l'achat peut coûter beaucoup plus en énergie et en pannes. Le LCC permet de comparer des offres sur toute la durée de vie."
+    },
+    {
+      "id": "fiab-056",
+      "level": "débutant",
+      "question": "Que mesure le ratio « coût de maintenance / valeur de remplacement du parc » ?",
+      "choices": [
+        "L'effort financier de maintenance",
+        "La part des pannes dues à des erreurs de pilotage",
+        "Le temps moyen passé par intervention",
+        "Le taux de disponibilité des techniciens"
+      ],
+      "answer": 0,
+      "explanation": "Il permet de comparer des sites entre eux. Un ratio très faible peut cacher un sous-entretien qui se paiera plus tard."
+    },
+    {
+      "id": "fiab-057",
+      "level": "confirmé",
+      "question": "Une machine tombe en panne chaque mois pour le même défaut, réparé à chaque fois en 2 heures. Quelle démarche s'impose ?",
+      "choices": [
+        "Une analyse de cause racine pour supprimer la répétition de la panne",
+        "Stocker davantage de pièces pour réparer encore plus vite",
+        "Former un opérateur de plus au dépannage de ce défaut",
+        "Accepter la panne puisque le temps de réparation reste court"
+      ],
+      "answer": 0,
+      "explanation": "Une panne répétitive est un gisement : 5 pourquoi, Ishikawa ou arbre des causes pour trouver l'origine, puis une action définitive (modification, préventif adapté)."
+    },
+    {
+      "id": "fiab-058",
+      "level": "débutant",
+      "question": "Qu'est-ce que la maintenance améliorative ?",
+      "choices": [
+        "Modifier l'équipement pour supprimer une cause de panne",
+        "Repeindre les machines pour améliorer l'image de l'atelier",
+        "Augmenter la fréquence des contrôles préventifs existants",
+        "Remplacer une machine par une autre strictement identique"
+      ],
+      "answer": 0,
+      "explanation": "Remplacer un composant fragile par un modèle plus robuste, ajouter un graisseur centralisé, protéger un capteur exposé : on améliore la fiabilité ou la maintenabilité."
+    },
+    {
+      "id": "fiab-059",
+      "level": "débutant",
+      "question": "Que permettent les niveaux de maintenance (1 à 5) de la norme NF X60-000 ?",
+      "choices": [
+        "De répartir les interventions selon leur complexité",
+        "De classer les machines selon leur âge",
+        "De fixer le salaire des techniciens selon leur ancienneté",
+        "De définir l'ordre de démarrage des équipements"
+      ],
+      "answer": 0,
+      "explanation": "Niveau 1 : réglages simples par l'opérateur ; niveau 2 et 3 : technicien ; niveau 4 : spécialiste avec outillage dédié ; niveau 5 : rénovation lourde, souvent chez le constructeur."
+    },
+    {
+      "id": "fiab-060",
+      "level": "confirmé",
+      "question": "Un opérateur remplace un fusible accessible selon une procédure simple. Quel niveau de maintenance est-ce ?",
+      "choices": [
+        "Niveau 1",
+        "Niveau 3",
+        "Niveau 4",
+        "Niveau 5"
+      ],
+      "answer": 0,
+      "explanation": "Le niveau 1 regroupe les actions simples prévues par le constructeur, sans démontage, avec des éléments accessibles en sécurité."
+    },
+    {
+      "id": "fiab-061",
+      "level": "débutant",
+      "question": "Qu'appelle-t-on la planification de la maintenance ?",
+      "choices": [
+        "Programmer les interventions dans le temps",
+        "Calculer le budget annuel d'investissement de l'usine",
+        "Décider de l'achat de nouvelles machines",
+        "Recruter les techniciens de l'équipe"
+      ],
+      "answer": 0,
+      "explanation": "Le planificateur cale les travaux préventifs et correctifs différés dans les créneaux d'arrêt, avec les bonnes compétences et les pièces disponibles."
+    },
+    {
+      "id": "fiab-062",
+      "level": "confirmé",
+      "question": "Pourquoi distinguer le correctif urgent du correctif différé ?",
+      "choices": [
+        "Le différé peut être préparé et planifié à l'avance",
+        "Le correctif différé n'a pas besoin d'être réalisé",
+        "Le correctif urgent est facturé au client, le différé non",
+        "Le correctif différé est réservé aux sous-traitants"
+      ],
+      "answer": 0,
+      "explanation": "Une anomalie qui ne bloque pas la production (fuite légère, bruit) est enregistrée puis traitée au prochain arrêt, avec pièces et compétences prêtes."
+    },
+    {
+      "id": "fiab-063",
+      "level": "débutant",
+      "question": "Qu'est-ce que le backlog d'un service maintenance ?",
+      "choices": [
+        "Le volume de travaux en attente",
+        "Le stock de pièces de rechange obsolètes",
+        "La liste des techniciens en congé",
+        "Le registre des accidents du travail"
+      ],
+      "answer": 0,
+      "explanation": "Un backlog de 2 à 4 semaines est souvent jugé sain. Trop faible, l'équipe est surdimensionnée ; trop fort, les travaux prennent du retard."
+    },
+    {
+      "id": "fiab-064",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un service maintenance a 480 heures de travaux en attente et dispose de 160 heures disponibles par semaine. Quel est son backlog en semaines ?",
+      "value": 3,
+      "unit": "sem",
+      "tolerance": 0,
+      "explanation": "Backlog = charge en attente / capacité hebdomadaire = 480 / 160 = 3 semaines."
+    },
+    {
+      "id": "fiab-065",
+      "level": "débutant",
+      "question": "À quoi sert un diagramme de Pareto des pannes ?",
+      "choices": [
+        "À cibler les causes de la majorité des arrêts de production",
+        "À montrer l'évolution du nombre de pannes jour après jour",
+        "À représenter le plan de câblage d'une armoire",
+        "À calculer le salaire des techniciens d'astreinte"
+      ],
+      "answer": 0,
+      "explanation": "Classé par temps d'arrêt ou par coût, le Pareto montre où agir en premier : souvent 20 % des équipements causent 80 % des pertes."
+    },
+    {
+      "id": "fiab-066",
+      "level": "confirmé",
+      "question": "Pourquoi classer les pannes par temps d'arrêt plutôt que par nombre ?",
+      "choices": [
+        "Une panne rare mais longue peut coûter plus que beaucoup de petites pannes",
+        "Le nombre de pannes ne peut pas être extrait d'une GMAO",
+        "Les petites pannes sont toutes dues à des erreurs de saisie",
+        "Le temps d'arrêt est le seul indicateur prévu par la norme"
+      ],
+      "answer": 0,
+      "explanation": "On regarde souvent les deux : le nombre révèle les micro-pannes qui usent les équipes, le temps d'arrêt l'impact sur la production."
+    },
+    {
+      "id": "fiab-067",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'une ronde d'inspection ?",
+      "choices": [
+        "Un circuit de contrôles réguliers sur le terrain",
+        "Une réunion hebdomadaire de l'équipe de direction",
+        "Le trajet des caristes pour livrer les postes",
+        "La visite annuelle de l'inspecteur du travail"
+      ],
+      "answer": 0,
+      "explanation": "La ronde, avec une liste de points à vérifier, détecte les anomalies tôt. Les relevés peuvent alimenter la GMAO pour suivre les tendances."
+    },
+    {
+      "id": "fiab-068",
+      "level": "confirmé",
+      "question": "Que signifie TRS dans le suivi de la performance d'un équipement, et quel lien avec la maintenance ?",
+      "choices": [
+        "Taux de rendement synthétique : pannes et réglages pèsent sur sa disponibilité",
+        "Temps de réparation standard : il fixe la durée maximale d'une intervention",
+        "Taux de remplacement systématique : part des pièces changées à date fixe",
+        "Tableau de suivi des stocks : il recense les pièces de rechange"
+      ],
+      "answer": 0,
+      "explanation": "TRS = disponibilité × performance × qualité. La maintenance agit surtout sur la disponibilité (pannes, durées de réparation) et sur les micro-arrêts."
+    },
+    {
+      "id": "fiab-069",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un dossier technique d'équipement ?",
+      "choices": [
+        "Plans, schémas, notices et historique d'une machine",
+        "Le contrat de vente de la machine signé avec le fournisseur",
+        "La fiche de poste de l'opérateur qui conduit la machine",
+        "Le rapport de l'audit qualité annuel"
+      ],
+      "answer": 0,
+      "explanation": "Indispensable au dépannage et à la préparation : schémas électriques à jour, plans, liste des pièces, réglages, modifications réalisées."
+    },
+    {
+      "id": "fiab-070",
+      "level": "confirmé",
+      "question": "Pourquoi tenir à jour les schémas électriques après une modification ?",
+      "choices": [
+        "Un schéma faux ralentit le dépannage et met en danger",
+        "La loi impose de redessiner les schémas chaque année",
+        "Les schémas servent seulement à la facturation de l'installateur",
+        "Un schéma à jour supprime le besoin de consigner la machine"
+      ],
+      "answer": 0,
+      "explanation": "Un pontage ou un câblage modifié et non documenté peut laisser une tension là où le schéma n'en indique pas. La documentation fait partie de l'intervention."
+    },
+    {
+      "id": "fiab-071",
+      "level": "débutant",
+      "question": "Qu'est-ce que l'obsolescence en maintenance ?",
+      "choices": [
+        "L'arrêt de fabrication de composants encore utilisés",
+        "L'usure normale des pièces mécaniques sous l'effet du frottement",
+        "Le vieillissement des opérateurs qui conduisent les machines",
+        "La perte de couleur des peintures des machines"
+      ],
+      "answer": 0,
+      "explanation": "Automates, variateurs, cartes électroniques non fabriqués : il faut repérer ces risques, stocker, trouver des équivalents ou planifier le remplacement."
+    },
+    {
+      "id": "fiab-072",
+      "level": "confirmé",
+      "question": "Face à un automate obsolète sur une machine critique, quelle démarche est la plus prudente ?",
+      "choices": [
+        "Sécuriser des pièces de rechange puis planifier une migration testée",
+        "Attendre la panne pour décider de la solution de remplacement",
+        "Remplacer l'automate pendant la production pour éviter un arrêt",
+        "Supprimer l'automate et câbler la machine en logique à relais"
+      ],
+      "answer": 0,
+      "explanation": "On achète un stock de sécurité (ou du matériel reconditionné), on sauvegarde les programmes, puis on prépare la migration hors des périodes critiques."
+    },
+    {
+      "id": "fiab-073",
+      "level": "débutant",
+      "question": "Pourquoi sauvegarder régulièrement les programmes des automates et paramètres des variateurs ?",
+      "choices": [
+        "Pour remettre vite en service après un remplacement",
+        "Pour augmenter la vitesse d'exécution des programmes",
+        "Pour réduire la consommation électrique des armoires",
+        "Pour se dispenser de la documentation des machines"
+      ],
+      "answer": 0,
+      "explanation": "Sans sauvegarde à jour, remplacer une CPU ou un variateur peut prendre des jours. La sauvegarde fait partie du plan de maintenance."
+    },
+    {
+      "id": "fiab-074",
+      "level": "débutant",
+      "question": "Lequel de ces indicateurs mesure la maintenabilité ?",
+      "choices": [
+        "Le MTTR",
+        "Le MTBF",
+        "Le taux de rebut",
+        "Le takt time"
+      ],
+      "answer": 0,
+      "explanation": "Le MTTR mesure la rapidité de remise en état. Le MTBF mesure la fiabilité, le taux de rebut la qualité, le takt time le rythme de la demande."
+    },
+    {
+      "id": "fiab-075",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque indicateur à ce qu'il mesure.",
+      "pairs": [
+        [
+          "MTBF",
+          "La fiabilité"
+        ],
+        [
+          "MTTR",
+          "La maintenabilité"
+        ],
+        [
+          "MTBF / (MTBF + MTTR)",
+          "La disponibilité"
+        ],
+        [
+          "Criticité F × G × D",
+          "La priorité d'un mode de défaillance"
+        ]
+      ],
+      "explanation": "Ces indicateurs se lisent ensemble : une bonne disponibilité peut cacher des pannes fréquentes réparées très vite."
+    },
+    {
+      "id": "fiab-076",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque technique de surveillance au défaut qu'elle détecte le mieux.",
+      "pairs": [
+        [
+          "Analyse vibratoire",
+          "Usure de roulement, balourd, désalignement"
+        ],
+        [
+          "Thermographie",
+          "Connexion électrique desserrée"
+        ],
+        [
+          "Analyse d'huile",
+          "Usure interne d'un réducteur"
+        ],
+        [
+          "Ultrasons",
+          "Fuite d'air comprimé"
+        ],
+        [
+          "Mesure d'isolement",
+          "Dégradation du bobinage d'un moteur"
+        ]
+      ],
+      "explanation": "On choisit la technique selon le mode de défaillance à surveiller, identifié par exemple dans l'AMDEC."
+    },
+    {
+      "id": "fiab-077",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un balourd sur une machine tournante ?",
+      "choices": [
+        "Une répartition inégale de la masse autour de l'axe de rotation",
+        "Un défaut d'alignement entre deux arbres accouplés",
+        "Une surcharge électrique du moteur d'entraînement",
+        "Un manque de lubrification du palier"
+      ],
+      "answer": 0,
+      "explanation": "Le balourd provoque une vibration à la fréquence de rotation (1 × la vitesse). Il se corrige par équilibrage."
+    },
+    {
+      "id": "fiab-078",
+      "level": "confirmé",
+      "question": "En analyse vibratoire, une vibration dominante à deux fois la fréquence de rotation, surtout en axial, évoque plutôt :",
+      "choices": [
+        "Un désalignement",
+        "Un balourd",
+        "Un défaut de roulement",
+        "Un défaut électrique du variateur"
+      ],
+      "answer": 0,
+      "explanation": "Le balourd ressort à 1 × la vitesse en radial, le désalignement souvent à 2 × avec une composante axiale, les roulements à des fréquences propres non multiples entières."
+    },
+    {
+      "id": "fiab-079",
+      "level": "débutant",
+      "question": "Pourquoi aligner précisément un moteur et une pompe accouplés ?",
+      "choices": [
+        "Pour éviter l'usure des roulements et des joints",
+        "Pour augmenter la puissance nominale du moteur",
+        "Pour diminuer la pression de refoulement de la pompe",
+        "Pour supprimer le besoin de lubrification des paliers"
+      ],
+      "answer": 0,
+      "explanation": "Un désalignement crée des efforts parasites qui dégradent rapidement roulements et garnitures et augmentent la consommation d'énergie. L'alignement laser est courant."
+    },
+    {
+      "id": "fiab-080",
+      "level": "débutant",
+      "question": "Quelle est la première cause de défaillance des roulements ?",
+      "choices": [
+        "Une lubrification inadaptée : manque, excès ou pollution du lubrifiant",
+        "Une vitesse de rotation trop lente par rapport au catalogue",
+        "Une peinture abîmée sur le carter du palier",
+        "Un nombre de démarrages trop faible dans la journée"
+      ],
+      "answer": 0,
+      "explanation": "Les constructeurs attribuent une grande part des défaillances de roulements à la lubrification, suivie du montage et de la pollution. Trop de graisse fait aussi chauffer."
+    },
+    {
+      "id": "fiab-081",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre une démarche d'analyse de panne.",
+      "items": [
+        "Sécuriser et recueillir les faits sur place",
+        "Décrire précisément la défaillance et ses symptômes",
+        "Rechercher et vérifier la cause racine",
+        "Mettre en place l'action corrective",
+        "Vérifier l'efficacité et mettre à jour le plan de maintenance"
+      ],
+      "explanation": "Sans faits ni vérification de la cause, on change des pièces au hasard. La mise à jour du plan préventif évite la répétition."
+    },
+    {
+      "id": "fiab-082",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'une démarche de diagnostic méthodique ?",
+      "choices": [
+        "Formuler des hypothèses et les vérifier par des mesures",
+        "Remplacer les pièces une par une jusqu'à ce que la machine redémarre",
+        "Appeler le constructeur avant toute observation de la panne",
+        "Attendre que la panne se reproduise pour la comprendre"
+      ],
+      "answer": 0,
+      "explanation": "On sépare la chaîne fonctionnelle (commande, puissance, actionneur, capteur), on mesure aux points clés et on élimine les hypothèses : plus rapide et moins coûteux."
+    },
+    {
+      "id": "fiab-083",
+      "level": "confirmé",
+      "question": "Un vérin ne sort plus. L'électrovanne reçoit bien son ordre. Quelle vérification suit logiquement ?",
+      "choices": [
+        "La présence de pression d'air et le basculement réel du distributeur",
+        "Le programme de l'automate, ligne par ligne",
+        "Le câblage de l'arrêt d'urgence de la cellule voisine",
+        "La date de fabrication du vérin"
+      ],
+      "answer": 0,
+      "explanation": "La commande est bonne : on avance dans la chaîne vers la puissance. Pression disponible, distributeur qui commute, puis vérin (joints, tige)."
+    },
+    {
+      "id": "fiab-084",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un kit de maintenance préparé à l'avance ?",
+      "choices": [
+        "Les pièces et consommables d'une intervention, prêts",
+        "Une boîte à outils personnelle remise à chaque nouveau technicien",
+        "Une notice simplifiée de la machine à destination des opérateurs",
+        "Une trousse de secours placée près de chaque machine"
+      ],
+      "answer": 0,
+      "explanation": "Le kit réduit le temps d'arrêt : pas de recherche de pièces pendant l'intervention, application directe du SMED à la maintenance."
+    },
+    {
+      "id": "fiab-085",
+      "level": "confirmé",
+      "question": "Comment la GMAO peut-elle aider à fiabiliser un équipement ?",
+      "choices": [
+        "En croisant historique des pannes, causes et pièces pour cibler les actions",
+        "En empêchant toute intervention non planifiée sur l'équipement",
+        "En remplaçant les techniciens par des alertes automatiques",
+        "En réduisant le nombre de bons de travail à saisir"
+      ],
+      "answer": 0,
+      "explanation": "Les requêtes sur l'historique (pannes répétitives, consommation de pièces, temps passés) alimentent le Pareto, l'AMDEC et l'optimisation du préventif."
+    },
+    {
+      "id": "fiab-086",
+      "level": "débutant",
+      "question": "Qu'est-ce que la nomenclature (arborescence) d'un équipement dans une GMAO ?",
+      "choices": [
+        "Le découpage de la machine en sous-ensembles et composants rattachés",
+        "La liste des opérateurs habilités à conduire la machine",
+        "Le classement des machines par ordre alphabétique",
+        "La table des prix des pièces chez chaque fournisseur"
+      ],
+      "answer": 0,
+      "explanation": "Rattacher les interventions au bon niveau (ligne, machine, moteur, roulement) permet d'analyser précisément où se concentrent les pannes."
+    },
+    {
+      "id": "fiab-087",
+      "level": "confirmé",
+      "question": "Pourquoi mesurer le taux de réalisation du plan préventif ?",
+      "choices": [
+        "Un préventif planifié mais non réalisé n'apporte aucune fiabilité",
+        "Pour calculer le salaire variable des opérateurs",
+        "Parce que la GMAO l'exige pour générer les bons de travail",
+        "Pour savoir combien de machines acheter l'année suivante"
+      ],
+      "answer": 0,
+      "explanation": "Un taux faible montre que le correctif absorbe l'équipe : un cercle vicieux s'installe, moins de préventif entraînant plus de pannes."
+    },
+    {
+      "id": "fiab-088",
+      "level": "débutant",
+      "question": "Que signifie le sigle LOTO souvent rencontré dans les procédures ?",
+      "choices": [
+        "Lock Out Tag Out : condamnation par cadenas et étiquetage",
+        "Line Output Time Optimisation : optimisation de la cadence",
+        "Lubrication Of Transmission Organs : graissage des transmissions",
+        "Log Of Technical Operations : journal des interventions"
+      ],
+      "answer": 0,
+      "explanation": "Le LOTO est l'équivalent anglo-saxon de la consignation : chaque intervenant pose son cadenas, garde sa clé, et l'étiquette identifie qui intervient."
+    },
+    {
+      "id": "fiab-089",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Une panne coûte 4 000 € par heure d'arrêt et dure en moyenne 3 heures. Elle survient 4 fois par an. Combien coûtent ces pannes par an, en euros ?",
+      "value": 48000,
+      "unit": "€",
+      "tolerance": 0,
+      "explanation": "4 000 × 3 × 4 = 48 000 € par an. Un préventif ou une modification coûtant moins que ce montant (pièces et main-d'œuvre comprises) est rentable."
+    },
+    {
+      "id": "fiab-090",
+      "level": "confirmé",
+      "question": "Un capteur de vibration connecté coûte 2 000 € et évite en moyenne une panne de 10 000 € par an. Que conclure ?",
+      "choices": [
+        "L'investissement est rentabilisé en moins d'un an, il est justifié",
+        "L'investissement est trop cher, la panne reste moins coûteuse",
+        "Il faut d'abord attendre trois pannes pour décider",
+        "Le capteur supprimera les autres pannes de la machine"
+      ],
+      "answer": 0,
+      "explanation": "Retour sur investissement : 2 000 / 10 000 = 0,2 an. On vérifie ensuite que la surveillance détecte bien le mode de défaillance visé."
+    },
+    {
+      "id": "fiab-091",
+      "level": "débutant",
+      "question": "Qu'appelle-t-on une défaillance de jeunesse ?",
+      "choices": [
+        "Une panne précoce due à la fabrication ou au montage",
+        "Une panne causée par un opérateur débutant mal formé",
+        "Une panne qui survient seulement sur les machines de moins d'un an",
+        "Une panne due à l'usure normale des pièces mécaniques"
+      ],
+      "answer": 0,
+      "explanation": "Les défauts de jeunesse se traitent par le rodage, les essais de réception et le contrôle de la qualité de montage, pas par du préventif systématique."
+    },
+    {
+      "id": "fiab-092",
+      "level": "confirmé",
+      "question": "Pourquoi un remontage peut-il faire augmenter le nombre de pannes après une intervention préventive ?",
+      "choices": [
+        "Un démontage introduit des risques : mauvais serrage, pollution, joint pincé",
+        "Les pièces neuves sont souvent moins résistantes que les anciennes",
+        "La GMAO compte deux fois les pannes après une intervention",
+        "Le préventif rend les machines plus sensibles à la température"
+      ],
+      "answer": 0,
+      "explanation": "C'est une raison de ne pas multiplier les interventions intrusives inutiles et de privilégier la surveillance non intrusive quand c'est possible."
+    },
+    {
+      "id": "fiab-093",
+      "level": "débutant",
+      "question": "Dans une équipe de maintenance, qu'est-ce que l'astreinte ?",
+      "choices": [
+        "Être disponible hors horaires pour intervenir",
+        "Une sanction appliquée après une erreur d'intervention",
+        "La formation obligatoire des nouveaux techniciens",
+        "Le contrôle annuel des outillages électriques"
+      ],
+      "answer": 0,
+      "explanation": "L'astreinte couvre les nuits et week-ends sur les sites à production continue. Elle est encadrée par le Code du travail et rémunérée."
+    },
+    {
+      "id": "fiab-094",
+      "level": "confirmé",
+      "question": "Quel est l'intérêt de standardiser les composants (vérins, moteurs, roulements) sur un parc de machines ?",
+      "choices": [
+        "Moins de références en stock, des interventions connues et plus rapides",
+        "Une production plus rapide de 30 % sans autre modification",
+        "La suppression de la maintenance préventive sur les machines",
+        "Une garantie constructeur prolongée de dix ans"
+      ],
+      "answer": 0,
+      "explanation": "Standardiser réduit le stock de rechange, simplifie la formation et raccourcit le MTTR, car les techniciens connaissent les composants."
+    },
+    {
+      "id": "fiab-095",
+      "level": "débutant",
+      "question": "Que contient un compte rendu d'intervention utile ?",
+      "choices": [
+        "Constats, cause, actions, pièces et temps passé",
+        "Uniquement l'heure de début et de fin de l'intervention",
+        "Le nom du technicien et sa signature, sans autre information",
+        "Une photo de la machine avant le démarrage de l'équipe"
+      ],
+      "answer": 0,
+      "explanation": "Ce compte rendu alimente l'historique, les indicateurs et le retour d'expérience. « Réparé » ne suffit pas pour analyser une panne qui revient."
+    },
+    {
+      "id": "fiab-096",
+      "level": "confirmé",
+      "question": "Qu'est-ce que la maintenance 4.0 ajoute aux méthodes classiques ?",
+      "choices": [
+        "Des capteurs connectés et l'analyse des données pour anticiper les défaillances",
+        "La suppression des techniciens au profit de robots de maintenance",
+        "Le remplacement de la GMAO par des fiches papier numérisées",
+        "Une maintenance réalisée uniquement par le constructeur à distance"
+      ],
+      "answer": 0,
+      "explanation": "IIoT, historisation, tableaux de bord, alertes sur tendance, réalité augmentée pour guider l'intervention : les données rendent le prévisionnel accessible."
+    },
+    {
+      "id": "fiab-097",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre la mise en place d'une maintenance conditionnelle sur un équipement.",
+      "items": [
+        "Identifier les modes de défaillance à surveiller (AMDEC)",
+        "Choisir la technique et le paramètre de mesure",
+        "Faire une mesure de référence sur l'équipement sain",
+        "Fixer des seuils d'alerte et d'alarme",
+        "Mesurer périodiquement et intervenir au dépassement"
+      ],
+      "explanation": "Sans référence ni seuil, une mesure isolée ne dit rien. On ajuste ensuite les seuils avec le retour d'expérience."
+    },
+    {
+      "id": "fiab-098",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque outil à son usage.",
+      "pairs": [
+        [
+          "AMDEC",
+          "Anticiper les défaillances et prioriser"
+        ],
+        [
+          "Arbre de défaillance",
+          "Remonter vers les causes d'un événement redouté"
+        ],
+        [
+          "Pareto",
+          "Classer les pannes par importance"
+        ],
+        [
+          "GMAO",
+          "Gérer interventions, plans et historique"
+        ]
+      ],
+      "explanation": "L'AMDEC et l'arbre de défaillance sont des analyses ; le Pareto un outil de priorisation ; la GMAO le système qui porte les données."
+    },
+    {
+      "id": "fiab-099",
+      "level": "confirmé",
+      "question": "Un responsable veut réduire le budget maintenance en supprimant la moitié du préventif. Quel risque faut-il lui exposer ?",
+      "choices": [
+        "Plus de pannes et d'arrêts non planifiés, dont le coût dépasse souvent l'économie",
+        "Pas de risque, le préventif n'a pas d'effet mesurable",
+        "Une baisse de la qualité des pièces de rechange livrées",
+        "Une augmentation automatique du MTBF des machines"
+      ],
+      "answer": 0,
+      "explanation": "Le chiffrage (coût des arrêts, Pareto, criticité) permet de proposer une réduction ciblée sur les tâches peu utiles plutôt qu'une coupe uniforme."
+    },
+    {
+      "id": "fiab-100",
+      "level": "confirmé",
+      "question": "En entretien pour un poste de technicien méthodes, quelle réponse montre le mieux votre apport ?",
+      "choices": [
+        "« J'ai analysé les pannes répétitives, adapté le préventif et fait passer le MTBF de 120 à 200 h »",
+        "« J'ai toujours fait ce que mon responsable me demandait, sans proposer d'autres méthodes »",
+        "« Je préfère le dépannage en urgence, car la préparation des interventions m'ennuie »",
+        "« Je connais la GMAO de nom, mais je n'ai jamais eu besoin de l'ouvrir dans mon travail »"
+      ],
+      "answer": 0,
+      "explanation": "Un recruteur attend une démarche (analyse, action, mesure) et un résultat chiffré. Préparez un ou deux exemples de ce type."
+    }
+  ]
+}

@@ -408,5 +408,5 @@ def test_clear_imported_questions_keeps_shipped_ones(database_file):
     assert "ram-jvm" not in vQuiz
     assert len(vQuiz) == len(load_quiz())
     assert get_last_answers(database_file) == {"sql-null": True}
-    assert get_quiz_guides(database_file) == []
+    assert get_quiz_guides(database_file, pShipped=False) == []
     assert get_quiz_asset(database_file, "ram.svg") is None

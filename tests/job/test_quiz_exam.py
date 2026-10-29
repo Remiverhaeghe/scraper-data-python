@@ -51,9 +51,9 @@ def test_exam_runs_from_start_to_summary(database_file):
     """Vérifie un examen complet : tirage, réponses justes et fausses, résultat."""
 
     vQuiz = load_qcm_quiz()
-    # Les thèmes livrés sont tous informatiques : l'industrie n'a aucune question.
+    # Aucun thème livré n'est rangé dans « Autres ».
     with pytest.raises(ValueError, match="Aucune question"):
-        start_exam(database_file, vQuiz, "Industrie", NOW)
+        start_exam(database_file, vQuiz, "Autres", NOW)
 
     vExam = start_exam(database_file, vQuiz, "Informatique", NOW, random.Random(1))
 

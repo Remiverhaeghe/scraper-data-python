@@ -346,7 +346,7 @@ def test_exam_reports_empty_domain(qt_application, tmp_path):
     """Vérifie le message d'un examen demandé sur un domaine sans question."""
 
     vPage = create_page(tmp_path / "scraper.db")
-    vPage.domain = "Industrie"
+    vPage.domain = "Autres"
     vPage.start_exam()
 
     assert vPage.message_label.text() == "Aucune question dans ce domaine."
@@ -732,7 +732,7 @@ def test_empty_rubric_offers_catalog_themes(qt_application, tmp_path, monkeypatc
 
     assert vPage.category_buttons[("Réseau et sécurité", None)].text().endswith("(0)")
 
-    vPage.category_buttons[("Industrie", "Maintenance")].click()
+    vPage.category_buttons[("Industrie", "Électricité et énergie")].click()
 
     vButtons = [
         vButton
@@ -741,7 +741,7 @@ def test_empty_rubric_offers_catalog_themes(qt_application, tmp_path, monkeypatc
     ]
 
     assert vButtons
-    assert vPage.filter_label.text() == "Industrie › Maintenance"
+    assert vPage.filter_label.text() == "Industrie › Électricité et énergie"
 
     vButtons[0].click()
 

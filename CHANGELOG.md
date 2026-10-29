@@ -123,6 +123,9 @@ dans l'historique git.
   « +XP » animé, confettis au passage de niveau, réglage « Jeu et animations »
 - Menu latéral resserré : toutes les pages tiennent à l'écran avec l'encart
   de niveau
+- Révision : thèmes Lean et amélioration continue, et Fiabilité et méthodes
+  (AMDEC, MTBF, GMAO), 100 questions chacun avec calculs, associations et
+  remises en ordre ; guides pratiques livrés avec l'application
 - Recherches prêtes à l'emploi élargies à la maintenance : technicien de
   maintenance, maintenance ferroviaire, électrotechnicien, GMAO, planificateur
 - Pages carrière sans entreprise suivie affichées « Aucune entreprise suivie »,
