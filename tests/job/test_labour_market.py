@@ -7,6 +7,7 @@ import pytest
 
 import job.labour_market as labour_market
 from job.labour_market import (
+    build_offers_link,
     build_outlook,
     count_matching_words,
     describe_outlook_row,
@@ -189,3 +190,18 @@ def test_row_is_described_with_its_trend():
     assert describe_outlook_row({**vRow, "seasonal_share": 10, "change": None}) == (
         "12 345 projets · 60 % difficiles"
     )
+
+
+def test_offers_link_searches_the_first_words_in_singular():
+    """Vérifie que le lien cherche deux mots au singulier, dans le département."""
+
+    assert build_offers_link(
+        "Ouvriers du conditionnement, du tri et de l'emballage", "59"
+    ) == (
+        "https://candidat.francetravail.fr/offres/recherche"
+        "?motsCles=ouvrier+conditionnement&offresPartenaires=true&lieux=59D"
+    )
+    assert "motsCles=technicien+industrie&offresPartenaires=true" in (
+        build_offers_link("Techniciens (industrie) des industries de process")
+    )
+    assert "lieux" not in build_offers_link("Techniciens de process")

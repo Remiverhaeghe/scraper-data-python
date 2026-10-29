@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from job.geocoding import get_home_department
 from job.labour_market import (
+    BMO_URL,
     OUTLOOK_LISTS,
     build_outlook,
     describe_outlook_row,
@@ -146,6 +147,7 @@ def show_market(
             "market": vMarket,
             "outlook": vOutlook,
             "outlook_lists": OUTLOOK_LISTS,
+            "bmo_url": BMO_URL,
             "outlook_message": OUTLOOK_MESSAGES.get(pOutlookResult),
             "describe_outlook_row": describe_outlook_row,
             "history_columns": HISTORY_COLUMNS,

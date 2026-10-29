@@ -9,6 +9,7 @@ import secrets
 from collections import defaultdict, deque
 from datetime import timedelta
 
+from storage.settings_repository import get_setting_values, save_setting_values
 from utils.logger import get_logger
 from utils.totp import find_code_step
 
@@ -25,6 +26,10 @@ PASSWORD_ITERATIONS = 600_000
 
 SESSION_COOKIE = "jobboard_session"
 SESSION_DURATION = timedelta(hours=12)
+# « Rester connecté » sur un appareil de confiance ; « Déconnecter tous les
+# appareils » refuse ensuite toute session ouverte avant ce moment.
+REMEMBERED_SESSION_DURATION = timedelta(days=30)
+SESSIONS_REVOKED_KEY = "web_sessions_revoked_at"
 
 MAX_LOGIN_FAILURES = 5
 LOGIN_FAILURE_WINDOW = timedelta(minutes=15)
@@ -158,14 +163,23 @@ def sign(pPayload, pSecret):
     return rSignature
 
 
-def create_session_token(pSecret, pUsername, pNow):
+def get_session_duration(pRemember):
+    """Retourne la durée d'une session : 30 jours si l'appareil est mémorisé."""
+
+    rDuration = REMEMBERED_SESSION_DURATION if pRemember else SESSION_DURATION
+
+    return rDuration
+
+
+def create_session_token(pSecret, pUsername, pNow, pRemember=False):
     """Crée le jeton de session signé, avec son expiration et son jeton CSRF."""
 
     vPayload = encode_part(
         json.dumps(
             {
                 "user": pUsername,
-                "expires": (pNow + SESSION_DURATION).timestamp(),
+                "issued": pNow.timestamp(),
+                "expires": (pNow + get_session_duration(pRemember)).timestamp(),
                 "csrf": secrets.token_urlsafe(32),
             }
         ).encode("utf-8")
@@ -176,8 +190,11 @@ def create_session_token(pSecret, pUsername, pNow):
     return rToken
 
 
-def read_session_token(pSecret, pToken, pNow):
-    """Retourne la session d'un jeton valide et non expiré, sinon None."""
+def read_session_token(pSecret, pToken, pNow, pRevokedAt=None):
+    """Retourne la session d'un jeton valide, non expiré ni révoqué, sinon None.
+
+    pRevokedAt écarte les sessions ouvertes avant cet instant (horodatage).
+    """
 
     rSession = None
 
@@ -187,13 +204,33 @@ def read_session_token(pSecret, pToken, pNow):
         if hmac.compare_digest(vSignature, sign(vPayload, pSecret)):
             vSession = json.loads(decode_part(vPayload))
 
-            if vSession["expires"] > pNow.timestamp():
+            if vSession["expires"] > pNow.timestamp() and (
+                pRevokedAt is None or vSession.get("issued", 0) > pRevokedAt
+            ):
                 rSession = vSession
 
     except (AttributeError, ValueError, KeyError, TypeError):
         rSession = None
 
     return rSession
+
+
+def get_sessions_revoked_at(pDatabaseFile):
+    """Retourne l'instant de la dernière déconnexion de tous les appareils, ou None."""
+
+    vValue = get_setting_values(pDatabaseFile).get(SESSIONS_REVOKED_KEY)
+
+    rRevokedAt = float(vValue) if vValue else None
+
+    return rRevokedAt
+
+
+def revoke_sessions(pDatabaseFile, pNow):
+    """Déconnecte tous les appareils : les sessions ouvertes avant pNow sont refusées."""
+
+    save_setting_values(pDatabaseFile, {SESSIONS_REVOKED_KEY: str(pNow.timestamp())})
+
+    logger.info("Sessions du tableau de bord révoquées sur tous les appareils")
 
 
 def is_safe_redirect(pTarget):

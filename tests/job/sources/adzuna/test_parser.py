@@ -3,7 +3,7 @@
 import pytest
 
 from job.csv_schema import JOB_COLUMNS
-from job.sources.adzuna.parser import parse_job, parse_jobs
+from job.sources.adzuna.parser import parse_job, parse_jobs, read_salary_period
 
 
 def build_job(**pValues):
@@ -128,3 +128,13 @@ def test_agency_is_found_in_the_text(pDescription, pAgency):
     assert vJob["company"] == pAgency
     assert vJob["title"] == "Maçon"
     assert "&" not in vJob["description"]
+
+
+@pytest.mark.parametrize(
+    "pAmount, pPeriod",
+    [(12, "hour"), (199, "hour"), (2100, "month"), (9999, "month"), (35000, "year")],
+)
+def test_salary_period_is_read_from_the_amount(pAmount, pPeriod):
+    """Vérifie la période déduite du montant : taux horaire, mensuel ou annuel."""
+
+    assert read_salary_period(pAmount) == pPeriod

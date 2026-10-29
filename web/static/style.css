@@ -629,6 +629,26 @@ a.stat:hover {
     --accent-light: var(--purple-light);
 }
 
+/* Métiers qui recrutent */
+
+.outlook-panel {
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: var(--accent-light);
+}
+
+.outlook-panel h3 {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 0 0 4px;
+    color: var(--accent);
+}
+
+.outlook-panel a {
+    color: var(--text);
+}
+
 /* Graphiques */
 
 .legend {
@@ -1867,6 +1887,13 @@ textarea.companies-preferred {
     display: grid;
     gap: 6px;
     font-weight: 600;
+}
+
+.login-form .login-remember {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-weight: 400;
 }
 
 .login-form .button {

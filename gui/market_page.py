@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QFrame,
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
@@ -19,17 +20,19 @@ from PySide6.QtWidgets import (
 )
 
 from gui.chart import BarChart
-from gui.theme import COLORS
+from gui.theme import ACCENTS, COLORS
 from gui.widgets import (
     StatisticCard,
     create_button,
     create_card,
+    create_icon_label,
     create_page_header,
     create_scroll_content,
     show_message,
 )
 from job.geocoding import get_home_department
 from job.labour_market import (
+    BMO_URL,
     OUTLOOK_LISTS,
     build_outlook,
     describe_outlook_row,
@@ -208,17 +211,29 @@ class MarketPage(QWidget):
         vGrid = QGridLayout()
         vGrid.setSpacing(18)
 
-        for vIndex, (vKey, vTitle, vHelp) in enumerate(OUTLOOK_LISTS):
+        for vIndex, (vKey, vTitle, vHelp, vIcon, vAccent) in enumerate(OUTLOOK_LISTS):
             vList = QLabel()
             vList.setWordWrap(True)
-            vList.setToolTip(vHelp)
             vList.setTextFormat(Qt.TextFormat.RichText)
+            vList.setOpenExternalLinks(True)
             self.outlook_lists[vKey] = (vTitle, vList)
-            vGrid.addWidget(vList, vIndex // 2, vIndex % 2)
+            vGrid.addWidget(
+                create_outlook_panel(vTitle, vHelp, vIcon, vAccent, vList),
+                vIndex // 2,
+                vIndex % 2,
+            )
+
+        vSource = QLabel(
+            f"<a href='{BMO_URL}'>Détail par métier et bassin d'emploi sur le site "
+            "de France Travail</a> · un clic sur un métier ouvre ses offres"
+        )
+        vSource.setObjectName("cardSubtitle")
+        vSource.setOpenExternalLinks(True)
 
         vLayout.addWidget(self.outlook_label)
         vLayout.addLayout(vRow)
         vLayout.addLayout(vGrid)
+        vLayout.addWidget(vSource)
 
         return vCard
 
@@ -271,17 +286,16 @@ class MarketPage(QWidget):
             + f" · {vOutlook['scope']}"
         )
 
-        for vKey, (vTitle, vList) in self.outlook_lists.items():
+        for vKey, (_, vList) in self.outlook_lists.items():
             vList.setText(
-                f"<b>{escape(vTitle)}</b><br>"
-                + (
-                    "<br>".join(
-                        f"{escape(vRow['label'])}<br><small>"
-                        f"{escape(describe_outlook_row(vRow))}</small>"
-                        for vRow in vOutlook[vKey]
-                    )
-                    or "Aucun métier pour cette zone."
+                "<br>".join(
+                    f'<a href="{escape(vRow["link"])}" style="color: {COLORS["text"]};'
+                    f' text-decoration: none;">{escape(vRow["label"])}</a><br>'
+                    f'<small style="color: {COLORS["muted"]};">'
+                    f"{escape(describe_outlook_row(vRow))}</small>"
+                    for vRow in vOutlook[vKey]
                 )
+                or "Aucun métier pour cette zone."
             )
 
     def download_outlook(self):
@@ -378,3 +392,38 @@ class MarketPage(QWidget):
         self.cities_table.setToolTip(
             f"{vMarket['unknown_city_count']} offre(s) sans ville ne sont pas classées"
         )
+
+
+def create_outlook_panel(pTitle, pHelp, pIcon, pAccent, pList):
+    """Encadre une liste de métiers sur fond coloré, sous son icône et son titre."""
+
+    vColor, vBackground = ACCENTS[pAccent]
+
+    rPanel = QFrame()
+    rPanel.setObjectName("outlookPanel")
+    rPanel.setStyleSheet(
+        f"QFrame#outlookPanel {{ background: {vBackground}; border-radius: 12px; }}"
+    )
+
+    vTitle = QLabel(pTitle)
+    vTitle.setStyleSheet(f"color: {vColor}; font-weight: 600;")
+
+    vHeader = QHBoxLayout()
+    vHeader.setSpacing(8)
+    vHeader.addWidget(create_icon_label(pIcon, vColor, 18))
+    vHeader.addWidget(vTitle, 1)
+
+    vHelp = QLabel(pHelp)
+    vHelp.setObjectName("cardSubtitle")
+    vHelp.setWordWrap(True)
+
+    vLayout = QVBoxLayout(rPanel)
+    vLayout.setContentsMargins(16, 14, 16, 14)
+    vLayout.setSpacing(6)
+    vLayout.addLayout(vHeader)
+    vLayout.addWidget(vHelp)
+    vLayout.addWidget(pList)
+    # Contenu en haut du cadre, aligné sur la liste voisine plus longue
+    vLayout.addStretch(1)
+
+    return rPanel

@@ -164,6 +164,38 @@ def classify_requirements(pOfferText, pOfferSkills):
     return rWeights
 
 
+@lru_cache(maxsize=64)
+def build_level_index(pLevels):
+    """Retourne, pour des niveaux (nom, niveau), le rang et le niveau de chaque nom
+    exact reconnu et de chaque nom en minuscules, le premier noté l'emportant.
+
+    Construit une fois par profil : noter des milliers d'offres ne relit plus
+    chaque niveau pour chaque compétence.
+    """
+
+    vExact = {}
+    vLower = {}
+
+    for vRank, (vName, vValue) in enumerate(pLevels):
+        for vExpanded in expand_skills([vName]):
+            vExact.setdefault(vExpanded, (vRank, vValue))
+
+        vLower.setdefault(vName.strip().lower(), (vRank, vValue))
+
+    rIndex = (vExact, vLower)
+
+    return rIndex
+
+
+@lru_cache(maxsize=64)
+def build_skill_set(pSkills):
+    """Retourne les compétences en minuscules, pour les chercher sans parcourir la liste."""
+
+    rSkills = frozenset(vSkill.strip().lower() for vSkill in pSkills)
+
+    return rSkills
+
+
 def get_coverage(pProfile, pProfileSkills, pSkill):
     """Retourne la part de la compétence que le candidat maîtrise, de 0 à 1.
 
@@ -172,19 +204,28 @@ def get_coverage(pProfile, pProfileSkills, pSkill):
     Présente dans le profil sans note, elle compte pleinement.
     """
 
-    vLevel = next(
-        (
-            vValue
-            for vName, vValue in (pProfile.get("skill_levels") or {}).items()
-            if pSkill in expand_skills([vName]) or same_skill(vName, pSkill)
-        ),
-        None,
+    vExact, vLower = build_level_index(
+        tuple((pProfile.get("skill_levels") or {}).items())
     )
+    # Le premier niveau noté qui correspond, par nom reconnu ou par nom saisi
+    vFound = min(
+        (
+            vMatch
+            for vMatch in (vExact.get(pSkill), vLower.get(pSkill.strip().lower()))
+            if vMatch
+        ),
+        default=None,
+    )
+    vLevel = vFound[1] if vFound else None
 
     if vLevel:
         rCoverage = min(1.0, vLevel / FULL_LEVEL) if vLevel >= KNOWN_LEVEL else 0.0
     else:
-        rCoverage = 1.0 if contains_skill(pProfileSkills, pSkill) else 0.0
+        rCoverage = (
+            1.0
+            if pSkill.strip().lower() in build_skill_set(tuple(pProfileSkills))
+            else 0.0
+        )
 
     return rCoverage
 

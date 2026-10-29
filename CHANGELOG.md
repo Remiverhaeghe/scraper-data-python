@@ -92,7 +92,15 @@ dans l'historique git.
   récentes signale une API modifiée), sources utiles revues chaque jour ; essai
   mensuel de restauration étendu aux copies du NAS ; pages lentes journalisées
 - Performance : notation des offres environ dix fois plus rapide (cache de la
-  détection des compétences), page Historique comprise
+  détection des compétences), offres notées une fois pour les deux comparaisons
+  de l'Historique (7 s à 1,7 s) ; au lancement, comptes des offres par thème
+  relus en base tant que les offres ne changent pas (2,7 s à 0,1 s) ; changement
+  de thème ou de taille du texte deux fois plus rapide
+- Médiane du marché corrigée (environ 1 600 € au lieu de 6 250 €) : seuls les
+  sites français et pages carrière comptent, et la période des salaires Adzuna
+  se lit au montant, heure, mois ou an (migration v33)
+- Cartes de Paramètres ouvertes à leur hauteur, sans s'étirer jusqu'au bas de
+  la colonne voisine
 - Offres « à saisir vite », « Intéressé, pas encore postulé », offres proches de
   vos refus en bas de liste, origine de chaque offre dans l'e-mail des recherches
 - Trajet en voiture estimé, net après trajet (réglage « Coût du trajet »),
@@ -102,7 +110,12 @@ dans l'historique git.
 - Web hors connexion : bandeau aussi quand le PC ne répond plus (copie marquée
   par le service worker)
 - Métiers qui recrutent d'après l'enquête Besoins en Main-d'Œuvre de France
-  Travail (données ouvertes, deux années comparées), dans Mon marché
+  Travail (données ouvertes, deux années comparées), dans Mon marché : listes
+  colorées avec icône, chaque métier ouvre ses offres France Travail de la zone
+- Web : « Rester connecté 30 jours » sur un appareil de confiance, et
+  « Déconnecter tous les appareils » dans Paramètres
+- Téléphone connecté d'un seul bouton : le jeton est créé au besoin et le QR
+  code (adresse, jeton, certificat) s'affiche aussitôt
 - Données hors du projet, dans Documents\JobBoard (JOBBOARD_DATA_DIR) ; dossiers
   exports et imports proposés par les fenêtres de fichier ; image Docker
   inchangée (/app/data)

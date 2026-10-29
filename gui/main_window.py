@@ -4,6 +4,7 @@ import threading
 import time
 from datetime import date, datetime
 
+import shiboken6
 from PySide6.QtCore import QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
@@ -328,15 +329,22 @@ class MainWindow(QMainWindow):
 
         self.navigation.setCurrentRow(self.page_rows[vKey])
 
-    def rebuild(self, pPage):
+    def rebuild(self, pPage, pRestyle=None):
         """Reconstruit le contenu dans la même fenêtre, sans la fermer.
 
         L'affichage est suspendu pendant la reconstruction pour éviter tout
-        scintillement ; setCentralWidget détruit l'ancien contenu.
+        scintillement ; setCentralWidget détruit l'ancien contenu. pRestyle
+        applique un nouveau thème entre la destruction et la reconstruction.
         """
         self.setUpdatesEnabled(False)
 
         try:
+            if pRestyle is not None:
+                # Ancien contenu détruit avant le nouveau style : sinon Qt recalcule
+                # le style de chaque widget des pages, pour les jeter juste après.
+                shiboken6.delete(self.takeCentralWidget())
+                pRestyle()
+
             self.build_content()
             self.navigate(pPage)
 

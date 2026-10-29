@@ -15,6 +15,7 @@ from job.salary_market import (
     is_training,
 )
 from job.settings import load_settings
+from job.sources.registry import SOURCES
 from storage.job_offers import get_offers
 from utils.logger import get_logger
 
@@ -22,6 +23,9 @@ logger = get_logger(__name__)
 
 # Offres vues sur cette période : le marché d'aujourd'hui, pas celui d'il y a un an
 MARKET_DAYS = 90
+
+# Sources dont les salaires comptent : sites français et pages carrière
+LOCAL_SALARY_CATEGORIES = ("france", "company")
 
 MAX_SKILL_ROWS = 20
 MAX_CITY_ROWS = 10
@@ -54,6 +58,25 @@ SKILL_COLUMNS = ["Compétence", *MARKET_COLUMNS, "Dans mon profil"]
 CITY_COLUMNS = ["Ville", *MARKET_COLUMNS]
 REGION_COLUMNS = ["Région", *MARKET_COLUMNS]
 HISTORY_COLUMNS = ["Mois", "Offres", "Avec vos compétences", "Net mensuel médian"]
+
+
+def get_local_salary(pOffer):
+    """Retourne le net mensuel d'une offre publiée par un site français ou une page
+    carrière, None sinon.
+
+    Les sites internationaux et de télétravail affichent surtout des salaires
+    américains ou de cadres dirigeants : ils fausseraient la médiane française.
+    """
+
+    vSource = SOURCES.get(pOffer.get("source"))
+
+    rSalary = (
+        get_net_salary(pOffer)
+        if vSource is not None and vSource.category in LOCAL_SALARY_CATEGORIES
+        else None
+    )
+
+    return rSalary
 
 
 def summarize_salaries(pSalaries):
@@ -176,7 +199,7 @@ def build_market_history(pDatabaseFile, pNow, pMonths=HISTORY_MONTHS):
         vMonths[vKey]["offers"] += 1
         vMonths[vKey]["mine"] += bool(vSkills & set(get_offer_skills(vOffer)))
 
-        if (vSalary := get_net_salary(vOffer)) is not None:
+        if (vSalary := get_local_salary(vOffer)) is not None:
             vMonths[vKey]["salaries"].append(vSalary)
 
     vKeys = sorted(vMonths)
@@ -226,7 +249,7 @@ def build_market(pDatabaseFile, pNow, pDays=MARKET_DAYS):
     vSalaries = []
 
     for vOffer in vOffers:
-        vSalary = get_net_salary(vOffer)
+        vSalary = get_local_salary(vOffer)
 
         if vSalary is not None:
             vSalaries.append(vSalary)

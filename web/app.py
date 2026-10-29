@@ -22,7 +22,7 @@ from job.mobile_sync import API_PREFIX
 from storage.database import initialize_database
 from utils.logger import get_logger
 from web.api import router as api_router
-from web.auth import SESSION_COOKIE, read_session_token
+from web.auth import SESSION_COOKIE, get_sessions_revoked_at, read_session_token
 from web.dependencies import get_database_file
 from web.rendering import WEB_DIRECTORY, templates
 from web.routes.offers import router as offers_router
@@ -112,8 +112,13 @@ async def require_login(request: Request, call_next):
     vSecret = os.getenv("WEB_SESSION_SECRET")
     vToken = request.cookies.get(SESSION_COOKIE)
 
+    # Même base que les routes, y compris celle d'un test (dependency_overrides)
+    vDatabaseFile = app.dependency_overrides.get(get_database_file, get_database_file)()
+
     request.state.session = (
-        read_session_token(vSecret, vToken, datetime.now())
+        read_session_token(
+            vSecret, vToken, datetime.now(), get_sessions_revoked_at(vDatabaseFile)
+        )
         if vSecret and vToken
         else None
     )

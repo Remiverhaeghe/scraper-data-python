@@ -47,6 +47,10 @@
             <input type="text" name="code" inputmode="numeric" pattern="[0-9 ]{6,7}" autocomplete="one-time-code" required>
         </label>
         {% endif %}
+        <label class="login-remember">
+            <input type="checkbox" name="remember" value="1">
+            Rester connecté 30 jours sur cet appareil
+        </label>
         {% if message %}<p class="login-message" role="alert">{{ message }}</p>{% endif %}
         <button class="button button-primary" type="submit">{{ icon("lock", 16) }} Se connecter</button>
     </form>

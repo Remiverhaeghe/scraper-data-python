@@ -27,6 +27,25 @@ AGENCY_PATTERNS = (
 # Mots en capitales qui ouvrent une annonce sans être un nom d'agence
 NOT_AGENCIES = {"CDI", "CDD", "URGENT", "IMPORTANT", "POSTE", "MISSION", "OFFRE"}
 
+# Adzuna présente ses salaires comme annuels, mais l'employeur saisit parfois un
+# taux horaire (12 €) ou un salaire mensuel (2 100 €) : la période se lit au
+# montant, sinon ces postes seraient écartés et fausseraient la médiane.
+MAX_HOURLY_SALARY = 200
+MAX_MONTHLY_SALARY = 10000
+
+
+def read_salary_period(pAmount):
+    """Retourne la période d'un salaire Adzuna d'après son montant : heure, mois ou an."""
+
+    if pAmount < MAX_HOURLY_SALARY:
+        rPeriod = "hour"
+    elif pAmount < MAX_MONTHLY_SALARY:
+        rPeriod = "month"
+    else:
+        rPeriod = "year"
+
+    return rPeriod
+
 
 def find_agency(pText):
     """Retourne l'agence qui publie l'annonce, nommée dans son texte, ou None."""
@@ -87,11 +106,14 @@ def parse_job(pJob):
         "contract": CONTRACTS.get(pJob.get("contract_type")),
         "contract_type": pJob.get("contract_type"),
         "employment_type": pJob.get("contract_time"),
-        # Rémunération, annualisée par Adzuna
         "salary_min": vSalaryMin,
         "salary_max": vSalaryMax,
         "salary_currency": "EUR" if vHasSalary else None,
-        "salary_period": "year" if vHasSalary else None,
+        "salary_period": (
+            read_salary_period(max(vSalaryMin or 0, vSalaryMax or 0))
+            if vHasSalary
+            else None
+        ),
         "salary_label": None,
         # Télétravail
         "remote": None,

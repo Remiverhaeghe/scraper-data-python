@@ -183,26 +183,14 @@ __marimo__/
 # Web Scraper - fichiers générés
 # =========================
 
-# Fichiers de sortie générés par le scraper
-output/*
-!output/.gitkeep
-
-# Base SQLite générée par l'application et ses sauvegardes
-data/*.db
-data/*.heartbeat
-data/argos/
-data/tls/
-data/backups/
-data/attachments/
-
-# Lots de questions de révision prêts à importer
-data/packs/
+# Données de l'application : rangées hors du projet (Documents\JobBoard ou
+# JOBBOARD_DATA_DIR). Seul le déploiement Docker crée data/ et logs/ ici, montés
+# dans le conteneur (docker-compose.yml) : base, sauvegardes, journaux.
+data/
+logs/
 
 # Fichiers locaux
 *.local
-
-# Logs générés par l'application
-logs/
 
 # Fichier .env et ses copies, hors modèle
 .env

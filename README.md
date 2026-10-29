@@ -319,7 +319,7 @@ Documents/JobBoard/
 - [x] Règles de calcul modifiables, partagées avec l'application de bureau
 - [x] Mentions légales, licence avec résumé en français et contact LinkedIn
 - [x] Planification et notifications en lecture seule, sans afficher l'adresse e-mail
-- [x] Authentification : connexion, session signée de 12 h, protection CSRF, tentatives limitées
+- [x] Authentification : connexion, session signée de 12 h ou 30 jours (« Rester connecté »), déconnexion de tous les appareils, protection CSRF, tentatives limitées
 - [x] Sans session, aucun menu : seules les pages légales restent lisibles
 - [x] Adapté au téléphone : menu compact défilant, cartes et formulaires sur une colonne
 - [x] Graphiques avec libellés d'axes et état vide explicite

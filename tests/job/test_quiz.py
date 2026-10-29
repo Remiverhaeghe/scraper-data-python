@@ -9,8 +9,10 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 import pytest
 
+import job.quiz as quiz
 from job.quiz import (
     contains_word,
+    count_offers_by_text,
     find_skills_in_text,
     index_skills,
     answer_question,
@@ -561,6 +563,21 @@ def test_find_skills_in_text_cases():
     }
     assert contains_word("a-java java", "java")
     assert not contains_word("javas", "java")
+
+
+def test_text_counts_are_read_back_after_a_restart(database_file, monkeypatch):
+    """Vérifie que les comptes par texte sont relus en base, sans relire les offres."""
+
+    vThemes = [{"key": "tomcat", "skills": ["Tomcat", "logs"]}]
+    quiz.TEXT_COUNTS_CACHE.clear()
+    vCounts = count_offers_by_text(database_file, vThemes)
+
+    quiz.TEXT_COUNTS_CACHE.clear()
+    monkeypatch.setattr(
+        quiz, "get_offer_texts", lambda pDatabaseFile: pytest.fail(pDatabaseFile)
+    )
+
+    assert count_offers_by_text(database_file, vThemes) == vCounts
 
 
 def test_unbalanced_questions_need_enough_answers(database_file):

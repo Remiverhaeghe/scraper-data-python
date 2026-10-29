@@ -208,7 +208,9 @@ class SettingsPage(QWidget):
             for vCard in vCards:
                 vColumn.addWidget(vCard)
 
-            vColumn.addStretch()
+            # Facteur 1 : l'espace libre va au ressort, une carte ouverte garde sa
+            # hauteur au lieu de s'étirer jusqu'au bas de la colonne voisine.
+            vColumn.addStretch(1)
 
     def resizeEvent(self, pEvent):  # pylint: disable=invalid-name
         """Passe sur une colonne quand la page devient trop étroite pour deux."""
@@ -903,9 +905,10 @@ class SettingsPage(QWidget):
         self.mobile_panel = TokenAccessPanel(
             {
                 "title": "Application mobile",
-                "subtitle": "Révision sur le téléphone, même hors ligne : saisissez "
-                "cette adresse et ce jeton dans l'application. Les réponses "
-                "rejoignent la progression d'ici au retour du réseau.",
+                "subtitle": "Révision sur le téléphone, même hors ligne. Un scan "
+                "du QR code suffit : adresse, jeton et certificat en une fois. Les "
+                "réponses rejoignent la progression d'ici au retour du réseau.",
+                "qr": "Connecter un téléphone",
                 "placeholder": "Aucun jeton créé",
                 "create": "Créer le jeton",
                 "renew": "Renouveler le jeton",
@@ -913,7 +916,7 @@ class SettingsPage(QWidget):
                 "tooltip": "Un nouveau jeton désactive l'ancien",
                 "confirm": "Le jeton actuel cessera de fonctionner : l'application "
                 "mobile devra utiliser le nouveau. Continuer ?",
-                "created": "Jeton créé : saisissez-le dans l'application.",
+                "created": "Jeton créé : scannez le QR code avec l'application.",
                 "copied": "Jeton copié.",
                 "failed": "Le jeton n'a pas pu être créé.",
             },

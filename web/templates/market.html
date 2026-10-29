@@ -47,13 +47,13 @@
         <button class="button" type="submit">Afficher</button>
     </form>
     <div class="grid grid-dashboard">
-        {% for key, title, help in outlook_lists %}
-        <div>
-            <h3>{{ title }}</h3>
+        {% for key, title, help, list_icon, accent in outlook_lists %}
+        <div class="outlook-panel accent-{{ accent }}">
+            <h3>{{ icon(list_icon, 18) }} {{ title }}</h3>
             <p class="muted">{{ help }}</p>
             <ul class="checklist">
                 {% for row in outlook[key] %}
-                <li><strong>{{ row.label }}</strong><br><span class="muted">{{ describe_outlook_row(row) }}</span></li>
+                <li><a href="{{ row.link }}" target="_blank" rel="noopener noreferrer"><strong>{{ row.label }}</strong></a><br><span class="muted">{{ describe_outlook_row(row) }}</span></li>
                 {% else %}
                 <li class="muted">Aucun métier pour cette zone.</li>
                 {% endfor %}
@@ -61,6 +61,7 @@
         </div>
         {% endfor %}
     </div>
+    <p class="muted"><a href="{{ bmo_url }}" target="_blank" rel="noopener noreferrer">Détail par métier et bassin d'emploi sur le site de France Travail</a> · un clic sur un métier ouvre ses offres</p>
     {% else %}
     <p class="card-subtitle">Chaque année, France Travail interroge plus de 400 000 employeurs sur leurs projets de recrutement. Téléchargez l'enquête (deux années, environ 8 Mo) pour voir les métiers en hausse, ceux qui peinent à recruter, et ceux proches de votre profil.</p>
     {% endif %}

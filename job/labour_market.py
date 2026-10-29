@@ -12,8 +12,7 @@ import io
 import json
 import os
 import re
-
-import openpyxl
+from urllib.parse import urlencode
 
 from config import DATA_DIRECTORY
 from job.fingerprint import normalize
@@ -49,13 +48,59 @@ MIN_DEPARTMENT_PROJECTS = 30
 OUTLOOK_SIZE = 10
 MINE_SIZE = 6
 
-# Listes de la synthèse : clé, titre et explication
+# Listes de la synthèse : clé, titre, explication, icône et couleur
 OUTLOOK_LISTS = (
-    ("mine", "Vos métiers", "Rapprochés des intitulés de votre profil"),
-    ("rising", "En hausse", "Projets de recrutement en plus depuis l'an dernier"),
-    ("difficult", "Difficiles à pourvoir", "Employeurs en manque de candidats"),
-    ("top", "Les plus demandés", "Le plus de projets de recrutement"),
+    (
+        "mine",
+        "Vos métiers",
+        "Rapprochés des intitulés de votre profil",
+        "target",
+        "blue",
+    ),
+    (
+        "rising",
+        "En hausse",
+        "Projets de recrutement en plus depuis l'an dernier",
+        "trending-up",
+        "green",
+    ),
+    (
+        "difficult",
+        "Difficiles à pourvoir",
+        "Employeurs en manque de candidats",
+        "circle-alert",
+        "amber",
+    ),
+    (
+        "top",
+        "Les plus demandés",
+        "Le plus de projets de recrutement",
+        "users",
+        "purple",
+    ),
 )
+
+# Résultats détaillés de l'enquête, par métier et bassin, sur le site de France Travail
+BMO_URL = "https://statistiques.francetravail.org/bmo"
+OFFERS_SEARCH_URL = "https://candidat.francetravail.fr/offres/recherche"
+
+# La recherche de France Travail exige chaque mot : un intitulé entier, au
+# pluriel (« Ouvriers du conditionnement, du tri et de l'emballage »), ne trouve
+# presque rien, ses deux premiers mots au singulier trouvent le métier.
+SEARCH_WORDS = 2
+SEARCH_STOP_WORDS = {
+    "au",
+    "aux",
+    "de",
+    "des",
+    "du",
+    "en",
+    "et",
+    "la",
+    "le",
+    "les",
+    "sur",
+}
 
 # Mots trop vagues pour rapprocher un intitulé du profil d'un métier
 PROFILE_STOP_WORDS = {
@@ -99,6 +144,9 @@ def add_counts(pTotals, pCounts):
 
 def summarize_bmo(pContent, pYear):
     """Résume le tableur d'une année par métier : France et départements."""
+
+    # Chargé ici : 0,3 s d'import épargnée à chaque lancement de l'application
+    import openpyxl
 
     vBook = openpyxl.load_workbook(io.BytesIO(pContent), read_only=True)
 
@@ -315,6 +363,7 @@ def build_outlook(pProfile, pDepartment=None):
                     else None
                 ),
                 "matching": count_matching_words(vJob["label"], vWords),
+                "link": build_offers_link(vJob["label"], pDepartment),
             }
         )
 
@@ -344,6 +393,33 @@ def build_outlook(pProfile, pDepartment=None):
     }
 
     return rOutlook
+
+
+def build_search_words(pLabel):
+    """Retourne les premiers mots d'un intitulé de métier, au singulier, sans mot vide."""
+
+    vWords = [
+        vWord[:-1] if vWord.endswith("s") and not vWord.endswith("ss") else vWord
+        for vWord in re.findall(r"\w+", re.sub(r"\(.*?\)", " ", pLabel.lower()))
+        if len(vWord) > 1 and vWord not in SEARCH_STOP_WORDS
+    ]
+
+    rWords = " ".join(vWords[:SEARCH_WORDS])
+
+    return rWords
+
+
+def build_offers_link(pLabel, pDepartment=None):
+    """Retourne la recherche des offres du métier sur France Travail, dans la zone."""
+
+    vParameters = {"motsCles": build_search_words(pLabel), "offresPartenaires": "true"}
+
+    if pDepartment:
+        vParameters["lieux"] = f"{pDepartment}D"
+
+    rLink = f"{OFFERS_SEARCH_URL}?{urlencode(vParameters)}"
+
+    return rLink
 
 
 def describe_outlook_row(pRow):

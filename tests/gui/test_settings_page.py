@@ -561,24 +561,13 @@ def test_calendar_and_archive_errors_are_reported(
 def test_mobile_token_is_created_copied_and_renewed(
     qt_application, tmp_path, monkeypatch
 ):
-    """Vérifie la carte de l'application mobile : création, copie et renouvellement."""
+    """Vérifie la carte de l'application mobile : création, copie et renouvellement.
+
+    Un seul bouton suffit pour connecter un téléphone : sans jeton, il le crée
+    puis affiche le QR code, dans une fenêtre fermée aussitôt ici.
+    """
 
     vPage = create_page(tmp_path / "scraper.db", monkeypatch)
-
-    assert vPage.mobile_panel.edit.text() == ""
-    assert not vPage.mobile_panel.copy_button.isEnabled()
-
-    vPage.mobile_panel.button.click()
-    vFirst = vPage.mobile_panel.edit.text()
-
-    assert len(vFirst) >= 40
-    assert vPage.mobile_panel.button.text() == "Renouveler le jeton"
-
-    vPage.mobile_panel.copy_button.click()
-
-    assert settings_page.QApplication.clipboard().text() == vFirst
-
-    # Le QR code s'affiche à la demande, dans une fenêtre fermée aussitôt ici.
     vShown = []
     monkeypatch.setattr(
         token_access_panel.QDialog,
@@ -586,11 +575,25 @@ def test_mobile_token_is_created_copied_and_renewed(
         lambda pDialog: vShown.append(pDialog.findChild(QLabel).pixmap().width()),
     )
 
-    assert vPage.mobile_panel.qr_button.isEnabled()
+    assert vPage.mobile_panel.edit.text() == ""
+    assert not vPage.mobile_panel.copy_button.isEnabled()
+    assert vPage.mobile_panel.qr_button.text() == "Connecter un téléphone"
+
+    vPage.mobile_panel.qr_button.click()
+    vFirst = vPage.mobile_panel.edit.text()
+
+    assert len(vFirst) >= 40
+    assert vShown and vShown[0] > 100
+    assert vPage.mobile_panel.button.text() == "Renouveler le jeton"
+
+    vPage.mobile_panel.copy_button.click()
+
+    assert settings_page.QApplication.clipboard().text() == vFirst
 
     vPage.mobile_panel.qr_button.click()
 
-    assert vShown and vShown[0] > 100
+    assert len(vShown) == 2
+    assert vPage.mobile_panel.edit.text() == vFirst
 
     vAnswers = [
         settings_page.QMessageBox.StandardButton.No,
@@ -607,13 +610,14 @@ def test_mobile_token_is_created_copied_and_renewed(
     vPage.mobile_panel.button.click()
 
     assert vPage.mobile_panel.edit.text() not in ("", vFirst)
+    assert len(vShown) == 3
 
     monkeypatch.setattr(settings_page, "renew_mobile_token", lambda *pArgs: 1 / 0)
-    vPage.mobile_panel.button.setText("Créer le jeton")
     vPage.mobile_panel.edit.clear()
-    vPage.mobile_panel.button.click()
+    vPage.mobile_panel.qr_button.click()
 
     assert vPage.mobile_panel.message_label.text() == "Le jeton n'a pas pu être créé."
+    assert len(vShown) == 3
 
 
 def test_messages_are_colored_and_cards_reflow(qt_application, tmp_path, monkeypatch):

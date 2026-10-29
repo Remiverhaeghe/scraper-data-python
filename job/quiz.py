@@ -29,7 +29,12 @@ from storage.quiz_questions import (
     get_quiz_guides,
     get_quiz_themes,
 )
-from storage.settings_repository import get_setting_values, save_setting_values
+from storage.settings_repository import (
+    get_setting_values,
+    load_json_setting,
+    save_json_setting,
+    save_setting_values,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -304,6 +309,10 @@ MIN_MATCHED_SKILLS = 2
 # Comptes par texte, gardés tant que les offres en base ne changent pas
 TEXT_COUNTS_CACHE = {}
 
+# Les mêmes comptes, gardés en base : au lancement suivant, sans nouvelle offre,
+# ils sont relus au lieu de parcourir de nouveau tous les textes.
+TEXT_COUNTS_KEY = "theme_offer_counts"
+
 # Le calcul peut tourner en arrière-plan au démarrage : un seul à la fois, la
 # page qui le demande en même temps attend son résultat au lieu de le refaire.
 TEXT_COUNTS_LOCK = threading.Lock()
@@ -426,6 +435,13 @@ def count_offers_by_text(pDatabaseFile, pThemes):
 
     with TEXT_COUNTS_LOCK:
         if vKey not in TEXT_COUNTS_CACHE:
+            vStored = load_json_setting(pDatabaseFile, TEXT_COUNTS_KEY, {}, dict)
+            vStoredKey = json.dumps(vKey[1:])
+
+            if isinstance(vStored.get(vStoredKey), dict):
+                TEXT_COUNTS_CACHE[vKey] = vStored[vStoredKey]
+
+        if vKey not in TEXT_COUNTS_CACHE:
             vIndex = index_skills(
                 {
                     vSkill.strip()
@@ -451,6 +467,20 @@ def count_offers_by_text(pDatabaseFile, pThemes):
                 del TEXT_COUNTS_CACHE[vOldKey]
 
             TEXT_COUNTS_CACHE[vKey] = rCounts
+
+            vSignature = json.dumps(vKey[1])
+            save_json_setting(
+                pDatabaseFile,
+                TEXT_COUNTS_KEY,
+                {
+                    **{
+                        vOldKey: vOldCounts
+                        for vOldKey, vOldCounts in vStored.items()
+                        if vOldKey.startswith(f"[{vSignature},")
+                    },
+                    vStoredKey: rCounts,
+                },
+            )
 
     rCounts = TEXT_COUNTS_CACHE[vKey]
 

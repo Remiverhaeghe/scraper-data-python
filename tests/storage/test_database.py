@@ -21,6 +21,7 @@ from storage.migrations import (
     migrate_to_v30,
     migrate_to_v31,
     migrate_to_v32,
+    migrate_to_v33,
 )
 
 
@@ -700,3 +701,27 @@ def test_migration_to_v32_adds_recruiter_address(tmp_path):
         vConnection.close()
 
     assert vAddress is None
+
+
+def test_migration_to_v33_reads_adzuna_hourly_salaries(tmp_path):
+    """Vérifie qu'un taux horaire Adzuna présenté comme annuel retrouve son net."""
+
+    vConnection = build_database_at(tmp_path / "scraper.db", 32)
+
+    try:
+        vConnection.executemany(
+            "INSERT INTO job_offer (source, source_id, title, salary_min, salary_max,"
+            " salary_period, first_seen_at, last_seen_at)"
+            " VALUES ('adzuna', ?, 'Agent', ?, ?, 'year', '2026-10-01', '2026-10-01')",
+            [("1", 12.0, 13.0), ("2", 90000.0, 120000.0)],
+        )
+        migrate_to_v33(vConnection)
+        vRows = vConnection.execute(
+            "SELECT source_id, salary_period, salary_net_monthly_min"
+            " FROM job_offer ORDER BY source_id"
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    assert vRows == [("1", "hour", 1365), ("2", "year", None)]

@@ -51,6 +51,7 @@ from job.statistics import (
     build_month_summary,
     describe_interview_sources,
     describe_useless_sources,
+    load_scored_offers,
     get_source_shares,
 )
 from storage.history_repository import get_history, get_history_summary
@@ -371,7 +372,9 @@ def show_history(
         for vEntry in get_history(pDatabaseFile, pLimit=MAX_DISPLAYED_EXECUTIONS)
     ]
 
-    vComparison = compare_sources(pDatabaseFile, datetime.now())
+    # Offres notées une fois pour les deux tableaux
+    vOffers = load_scored_offers(pDatabaseFile, datetime.now())
+    vComparison = compare_sources(pDatabaseFile, datetime.now(), pOffers=vOffers)
     vMonth = build_month_summary(pDatabaseFile, datetime.now())
 
     rResponse = templates.TemplateResponse(
@@ -386,7 +389,9 @@ def show_history(
             "comparison_rows": [build_source_cells(vRow) for vRow in vComparison],
             "search_rows": [
                 build_source_cells(vRow)
-                for vRow in compare_saved_searches(pDatabaseFile, datetime.now())
+                for vRow in compare_saved_searches(
+                    pDatabaseFile, datetime.now(), pOffers=vOffers
+                )
             ],
             "useless_sources": describe_useless_sources(vComparison),
             "month": vMonth,

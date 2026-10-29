@@ -1,5 +1,6 @@
 """Tests du lancement de l'application de bureau"""
 
+import shiboken6
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QTextBrowser
 
@@ -25,8 +26,11 @@ def test_theme_change_is_saved_and_applied(qt_application, tmp_path, monkeypatch
         vDesktop = DesktopApplication(qt_application, vSettings)
         vWindow = vDesktop.window
 
+        vOldSettingsPage = vWindow.settings_page
         vDesktop.change_theme("dark")
+        qt_application.processEvents()
 
+        assert not shiboken6.isValid(vOldSettingsPage)
         assert vSettings.value(THEME_SETTING) == "dark"
         assert COLORS == THEMES["dark"]
         assert vDesktop.window is vWindow

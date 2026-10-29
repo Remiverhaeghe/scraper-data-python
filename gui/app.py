@@ -3,7 +3,7 @@
 import ctypes
 import sys
 
-from PySide6.QtCore import QSettings
+from PySide6.QtCore import QSettings, QTimer
 from PySide6.QtWidgets import QApplication
 
 from config import APPLICATION_NAME, DATABASE_FILE
@@ -45,11 +45,8 @@ class DesktopApplication:
         """Mémorise le thème choisi et repeint la fenêtre sans la recréer."""
         self.settings.setValue(THEME_SETTING, pTheme)
 
-        apply_theme(
-            self.application, pTheme, self.settings.value(TEXT_SCALE_SETTING, 100, int)
-        )
-
-        self.window.rebuild("settings")
+        # Différé : le clic vient d'un bouton de la page qui va être détruite.
+        QTimer.singleShot(0, self.restyle_window)
 
         logger.info("Thème %s appliqué", pTheme)
 
@@ -57,15 +54,20 @@ class DesktopApplication:
         """Mémorise la taille du texte choisie et repeint la fenêtre."""
         self.settings.setValue(TEXT_SCALE_SETTING, pTextScale)
 
-        apply_theme(
-            self.application,
-            self.settings.value(THEME_SETTING, "system", str),
-            pTextScale,
-        )
-
-        self.window.rebuild("settings")
+        QTimer.singleShot(0, self.restyle_window)
 
         logger.info("Taille du texte : %s %%", pTextScale)
+
+    def restyle_window(self):
+        """Applique le thème et la taille mémorisés, puis reconstruit les pages."""
+        self.window.rebuild(
+            "settings",
+            lambda: apply_theme(
+                self.application,
+                self.settings.value(THEME_SETTING, "system", str),
+                self.settings.value(TEXT_SCALE_SETTING, 100, int),
+            ),
+        )
 
 
 def run():

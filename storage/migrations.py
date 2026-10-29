@@ -911,6 +911,51 @@ def migrate_to_v32(pConnection):
     pConnection.execute("ALTER TABLE job_application ADD COLUMN contact_email TEXT")
 
 
+def migrate_to_v33(pConnection):
+    """Relit la période des salaires Adzuna d'après leur montant, puis leur net.
+
+    Présentés comme annuels, des taux horaires (12 €) et salaires mensuels
+    étaient écartés comme incohérents : seuls restaient les salaires de cadres.
+    """
+
+    from config import NET_SALARY_RATIO
+    from job.salary import to_net_monthly
+    from job.sources.adzuna.parser import read_salary_period
+
+    vRows = pConnection.execute("""
+        SELECT source_id, salary_min, salary_max
+        FROM job_offer
+        WHERE source = 'adzuna' AND salary_period = 'year'
+            AND COALESCE(salary_min, salary_max) IS NOT NULL
+        """).fetchall()
+    vUpdates = []
+
+    for vSourceId, vMinimum, vMaximum in vRows:
+        vPeriod = read_salary_period(max(vMinimum or 0, vMaximum or 0))
+
+        if vPeriod != "year":
+            vUpdates.append(
+                (
+                    vPeriod,
+                    to_net_monthly(vMinimum, vPeriod, NET_SALARY_RATIO),
+                    to_net_monthly(vMaximum, vPeriod, NET_SALARY_RATIO),
+                    vSourceId,
+                )
+            )
+
+    pConnection.executemany(
+        """
+        UPDATE job_offer
+        SET salary_period = ?, salary_net_monthly_min = ?,
+            salary_net_monthly_max = ?
+        WHERE source = 'adzuna' AND source_id = ?
+        """,
+        vUpdates,
+    )
+
+    logger.info("Période des salaires Adzuna corrigée : %s offre(s)", len(vUpdates))
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -944,4 +989,5 @@ MIGRATIONS = [
     migrate_to_v30,
     migrate_to_v31,
     migrate_to_v32,
+    migrate_to_v33,
 ]

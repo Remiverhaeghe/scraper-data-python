@@ -9,6 +9,7 @@ from tests.conftest import TEST_PASSWORD
 from web.app import app, get_database_file
 from web.auth import (
     SESSION_COOKIE,
+    REMEMBERED_SESSION_DURATION,
     SESSION_DURATION,
     LoginRateLimiter,
     create_session_token,
@@ -219,6 +220,49 @@ def test_logout_closes_the_session(anonymous_client):
 
     assert vResponse.status_code == 303
     assert vResponse.headers["Clear-Site-Data"] == '"cache", "storage"'
+    assert anonymous_client.get("/", follow_redirects=False).status_code == 303
+
+
+def test_remembered_session_lasts_thirty_days_and_can_be_revoked():
+    """Vérifie la session mémorisée et le refus des sessions ouvertes avant révocation."""
+
+    vToken = create_session_token("secret", "admin", NOW, pRemember=True)
+    vLater = NOW + SESSION_DURATION + timedelta(days=1)
+
+    assert read_session_token("secret", vToken, vLater)["user"] == "admin"
+    assert (
+        read_session_token("secret", vToken, NOW + REMEMBERED_SESSION_DURATION) is None
+    )
+    assert read_session_token("secret", vToken, vLater, NOW.timestamp() - 1)
+    assert read_session_token("secret", vToken, vLater, NOW.timestamp()) is None
+
+
+def test_logout_everywhere_closes_every_session(anonymous_client):
+    """Vérifie l'option « Rester connecté », puis la déconnexion de tous les appareils."""
+
+    vResponse = anonymous_client.post(
+        "/login",
+        data={"username": "admin", "password": TEST_PASSWORD, "remember": "1"},
+        follow_redirects=False,
+    )
+
+    assert f"Max-Age={int(REMEMBERED_SESSION_DURATION.total_seconds())}" in (
+        vResponse.headers["set-cookie"]
+    )
+
+    vCookie = anonymous_client.cookies[SESSION_COOKIE]
+    vSession = read_session_token("secret-de-test", vCookie, datetime.now())
+
+    assert "Déconnecter tous les appareils" in anonymous_client.get("/settings").text
+
+    vResponse = anonymous_client.post(
+        "/logout-everywhere",
+        data={"csrf_token": vSession["csrf"]},
+        follow_redirects=False,
+    )
+    anonymous_client.cookies.set(SESSION_COOKIE, vCookie)
+
+    assert vResponse.status_code == 303
     assert anonymous_client.get("/", follow_redirects=False).status_code == 303
 
 

@@ -19,6 +19,17 @@
             </div>
         </article>
 
+        {% if request.state.session %}
+        <article class="card">
+            <h2>Connexion</h2>
+            <p class="card-subtitle">« Rester connecté 30 jours » mémorise un appareil de confiance. En cas de perte ou de doute, déconnectez-les tous : chacun redemandera le mot de passe.</p>
+            <form method="post" action="{{ url_for('logout_everywhere').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <button class="button" type="submit">{{ icon("log-out", 16) }} Déconnecter tous les appareils</button>
+            </form>
+        </article>
+        {% endif %}
+
         <article class="card">
             <h2>Règles de calcul</h2>
             <p class="card-subtitle">Partagées avec l'application de bureau. Le net des offres est recalculé.</p>

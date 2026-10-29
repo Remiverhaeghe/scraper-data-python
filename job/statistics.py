@@ -374,17 +374,29 @@ def get_week_goal(pDatabaseFile, pNow):
     return rGoal
 
 
-def compare_sources(pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS):
+def load_scored_offers(pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS):
+    """Retourne les offres de la période, notées une fois pour les deux comparaisons."""
+
+    rOffers = get_offers(
+        pDatabaseFile, pSeenSince=pNow - timedelta(days=pDays)
+    ).to_dict("records")
+    score_offers(rOffers, load_profile(pDatabaseFile))
+
+    return rOffers
+
+
+def compare_sources(pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS, pOffers=None):
     """Retourne, par source, les offres découvertes sur la période et leur intérêt.
 
     Une source utile apporte des offres proches du profil, retenues ou menant à
     une candidature, pas seulement beaucoup d'offres. Tri : les plus utiles en tête.
     """
 
-    vOffers = get_offers(
-        pDatabaseFile, pSeenSince=pNow - timedelta(days=pDays)
-    ).to_dict("records")
-    score_offers(vOffers, load_profile(pDatabaseFile))
+    vOffers = (
+        pOffers
+        if pOffers is not None
+        else load_scored_offers(pDatabaseFile, pNow, pDays)
+    )
 
     vGroups = {}
 
@@ -444,7 +456,9 @@ def sort_comparison(pRows):
     return rRows
 
 
-def compare_saved_searches(pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS):
+def compare_saved_searches(
+    pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS, pOffers=None
+):
     """Retourne, par recherche enregistrée, les offres de la période qui répondent
     à ses critères et les suites données, comme pour les sources.
 
@@ -452,10 +466,11 @@ def compare_saved_searches(pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS):
     synonymes compris, et lieu) sont appliqués aux offres en base.
     """
 
-    vOffers = get_offers(
-        pDatabaseFile, pSeenSince=pNow - timedelta(days=pDays)
-    ).to_dict("records")
-    score_offers(vOffers, load_profile(pDatabaseFile))
+    vOffers = (
+        pOffers
+        if pOffers is not None
+        else load_scored_offers(pDatabaseFile, pNow, pDays)
+    )
 
     vRows = []
 

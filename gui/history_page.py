@@ -45,6 +45,7 @@ from job.statistics import (
     build_month_summary,
     describe_interview_sources,
     describe_useless_sources,
+    load_scored_offers,
     get_contract_shares,
     get_execution_counts,
     get_source_shares,
@@ -240,14 +241,18 @@ class HistoryPage(QWidget):
 
     def fill_comparison(self):
         """Remplit les comparaisons des sources et des recherches enregistrées."""
-        vRows = compare_sources(self.database_file, datetime.now())
+        # Offres notées une fois pour les deux tableaux
+        vOffers = load_scored_offers(self.database_file, datetime.now())
+        vRows = compare_sources(self.database_file, datetime.now(), pOffers=vOffers)
         vAdvice = describe_useless_sources(vRows)
 
         show_message(self.useless_label, vAdvice, "warning")
         self.useless_label.setVisible(bool(vAdvice))
         self.fill_comparison_table(self.comparison_table, vRows)
 
-        vSearches = compare_saved_searches(self.database_file, datetime.now())
+        vSearches = compare_saved_searches(
+            self.database_file, datetime.now(), pOffers=vOffers
+        )
         self.search_card.setVisible(bool(vSearches))
         self.fill_comparison_table(self.search_table, vSearches)
 

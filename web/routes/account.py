@@ -18,14 +18,15 @@ from utils.logger import get_logger
 from web.auth import (
     LoginRateLimiter,
     SESSION_COOKIE,
-    SESSION_DURATION,
     check_credentials,
     second_factor,
     create_session_token,
     get_missing_auth_settings,
+    get_session_duration,
     is_safe_redirect,
+    revoke_sessions,
 )
-from web.dependencies import require_csrf
+from web.dependencies import get_database_file, require_csrf
 from web.rendering import templates
 
 logger = get_logger(__name__)
@@ -96,6 +97,7 @@ def login(
     pPassword: str = Form("", alias="password"),
     pCode: str = Form("", alias="code"),
     pNext: str = Form("/", alias="next"),
+    pRemember: bool = Form(False, alias="remember"),
 ):
     """Ouvre une session si l'identifiant et le mot de passe sont corrects."""
 
@@ -137,15 +139,21 @@ def login(
     else:
         login_rate_limiter.reset(vAddress)
 
-        logger.info("Connexion au tableau de bord depuis %s", vAddress)
+        logger.info(
+            "Connexion au tableau de bord depuis %s%s",
+            vAddress,
+            " (appareil mémorisé 30 jours)" if pRemember else "",
+        )
 
         rResponse = RedirectResponse(
             pNext if is_safe_redirect(pNext) else "/", status_code=303
         )
         rResponse.set_cookie(
             SESSION_COOKIE,
-            create_session_token(os.getenv("WEB_SESSION_SECRET"), pUsername, vNow),
-            max_age=int(SESSION_DURATION.total_seconds()),
+            create_session_token(
+                os.getenv("WEB_SESSION_SECRET"), pUsername, vNow, pRemember
+            ),
+            max_age=int(get_session_duration(pRemember).total_seconds()),
             httponly=True,
             samesite="lax",
             # À activer lorsque le tableau de bord est servi en HTTPS.
@@ -166,6 +174,19 @@ def logout():
 
     # Les copies de pages gardées pour le hors connexion contiennent offres et
     # candidatures : le navigateur les efface à la déconnexion.
+    rResponse.headers["Clear-Site-Data"] = '"cache", "storage"'
+
+    return rResponse
+
+
+@router.post("/logout-everywhere", dependencies=[Depends(require_csrf)])
+def logout_everywhere(pDatabaseFile: str = Depends(get_database_file)):
+    """Ferme les sessions de tous les appareils, celle-ci comprise."""
+
+    revoke_sessions(pDatabaseFile, datetime.now())
+
+    rResponse = RedirectResponse(router.url_path_for("show_login"), status_code=303)
+    rResponse.delete_cookie(SESSION_COOKIE)
     rResponse.headers["Clear-Site-Data"] = '"cache", "storage"'
 
     return rResponse
