@@ -68,7 +68,8 @@ def test_board_source_scrapes_each_company(monkeypatch):
     monkeypatch.delenv("ESSAI_COMPANIES", raising=False)
     vSource = define_board_source("essai", "Essai", fetch)
 
-    assert vSource.get_unavailability_reason() == "non configurée"
+    assert vSource.get_unavailability_reason() == "aucune entreprise suivie"
+    assert vSource.describe_missing().startswith("Aucune entreprise suivie")
 
     monkeypatch.setenv("ESSAI_COMPANIES", "acme, inconnue,globex")
     vJobs = vSource.scrape(vSource.load_parameters(CONFIG), CONFIG)

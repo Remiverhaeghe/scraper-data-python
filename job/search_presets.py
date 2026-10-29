@@ -8,8 +8,18 @@ from job.sources.registry import SOURCES
 from storage.saved_searches import save_search
 
 # Métiers industriels cherchés, un par recherche : les sources qui cherchent
-# côté serveur n'acceptent qu'un mot-clé à la fois.
-INDUSTRY_KEYWORDS = ("Maintenance", "Automatisme", "Électrotechnique")
+# côté serveur n'acceptent qu'un mot-clé à la fois. Intitulés au singulier, tels
+# que les recruteurs les écrivent (SNCF, Keolis, industriels du Nord).
+INDUSTRY_KEYWORDS = (
+    "Maintenance",
+    "Technicien de maintenance",
+    "Maintenance ferroviaire",
+    "Électrotechnique",
+    "Électrotechnicien",
+    "Automatisme",
+    "GMAO",
+    "Planificateur maintenance",
+)
 
 # Sources cochées : offres en France et pages carrière des entreprises suivies
 INDUSTRY_CATEGORIES = ("france", "company")
@@ -17,7 +27,16 @@ INDUSTRY_CATEGORIES = ("france", "company")
 INDUSTRY_MAX_ITEMS = 100
 
 # Métiers cherchés autour du domicile : développement et industrie
-LOCAL_KEYWORDS = ("Java", "PHP", "Développeur", "Maintenance", "Automatisme")
+LOCAL_KEYWORDS = (
+    "Java",
+    "PHP",
+    "Développeur",
+    "Maintenance",
+    "Technicien de maintenance",
+    "Électrotechnicien",
+    "Ferroviaire",
+    "Automatisme",
+)
 
 # Rayon des recherches locales sans rayon d'alerte réglé
 DEFAULT_LOCAL_RADIUS_KM = 30

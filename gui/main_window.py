@@ -5,7 +5,7 @@ import time
 from datetime import date, datetime
 
 import shiboken6
-from PySide6.QtCore import QSize, Qt, QUrl, Signal
+from PySide6.QtCore import QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
@@ -33,6 +33,14 @@ from gui.market_page import MarketPage
 from gui.icons import get_icon
 from gui.offers_page import OffersPage
 from gui.profile_page import ProfilePage
+from gui.progress_page import ProgressPage
+from gui.progress_widgets import (
+    TOAST_GAP_MS,
+    CelebrationOverlay,
+    SidebarProgress,
+    get_game_mode,
+    show_xp_gain,
+)
 from gui.quality_page import QualityPage
 from gui.quiz_page import QuizPage
 from gui.skills_page import SkillsPage
@@ -40,7 +48,9 @@ from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
 from gui.theme import COLORS
 from gui.widgets import show_message
+from job.education import refresh_education_levels_safely
 from job.followed_availability import count_alerts
+from job.progress import build_progress, get_total_xp
 from job.quiz import DEFAULT_MODE
 from job.quiz_generation import prepare_quiz_caches
 from job.schedule import save_scheduled_search
@@ -53,6 +63,10 @@ logger = get_logger(__name__)
 
 # Au-delà, une page est signalée dans les journaux pour en chercher la cause.
 SLOW_PAGE_SECONDS = 1.0
+
+# Relecture des points : un gain s'affiche peu après l'action, sans que les pages
+# aient à le signaler. Le total se lit en quelques millisecondes.
+PROGRESS_CHECK_MS = 1500
 
 # Liens internes du pied de menu, ouverts dans l'application
 LEGAL_LINK = "#mentions-legales"
@@ -86,13 +100,24 @@ class MainWindow(QMainWindow):
         self.status_bar = None
         self.status_dot = None
         self.status_label = None
+        self.progress_box = None
 
         self.setWindowTitle(pTitle)
         # En dessous, les cartes se chevauchent. Sur un petit écran ou un téléphone,
         # le tableau de bord web s'adapte à la largeur disponible.
         self.setMinimumSize(1180, 760)
 
+        # Dernière progression vue : un écart déclenche « +XP » et célébrations.
+        self.last_progress = None
+        self.last_xp = None
+        self.progress_failed = False
+
         self.build_content()
+
+        self.progress_timer = QTimer(self)
+        self.progress_timer.timeout.connect(self.check_progress)
+        self.progress_timer.start(PROGRESS_CHECK_MS)
+        QTimer.singleShot(0, self.check_progress)
 
         # Les comptes d'offres par thème sont longs à calculer : faits d'avance,
         # la page Révision s'ouvre aussitôt. Sans attente ni effet sur l'interface.
@@ -104,6 +129,9 @@ class MainWindow(QMainWindow):
         # page Offres les lit au lieu de les chercher à chaque affichage.
         threading.Thread(
             target=refresh_detected_skills_safely, args=(pDatabaseFile,), daemon=True
+        ).start()
+        threading.Thread(
+            target=refresh_education_levels_safely, args=(pDatabaseFile,), daemon=True
         ).start()
 
         # Une sauvegarde par jour au plus, sans attendre qu'elle soit finie.
@@ -138,6 +166,8 @@ class MainWindow(QMainWindow):
 
         # L'ordre d'ajout fixe l'ordre du menu ; la clé sert à navigate().
         self.add_page("home", "Accueil", "house", self.home_page)
+        self.progress_page = ProgressPage(vDatabaseFile)
+        self.add_page("progress", "Progression", "award", self.progress_page)
         self.add_page("search", "Recherche", "search", self.search_page)
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
         self.add_page("applications", "Candidatures", "send", self.applications_page)
@@ -161,6 +191,7 @@ class MainWindow(QMainWindow):
         self.settings_page.theme_requested.connect(self.theme_requested)
         self.settings_page.text_scale_requested.connect(self.text_scale_requested)
         self.settings_page.data_reset.connect(self.show_reset_result)
+        self.settings_page.game_mode_changed.connect(self.check_progress)
 
         self.home_page.navigation_requested.connect(self.navigate)
         self.home_page.offer_requested.connect(self.show_search_results)
@@ -243,6 +274,13 @@ class MainWindow(QMainWindow):
         vSeparator = QFrame()
         vSeparator.setObjectName("separator")
 
+        self.progress_box = SidebarProgress()
+        self.progress_box.clicked.connect(lambda: self.navigate("progress"))
+        self.progress_box.setVisible(get_game_mode() != "off")
+
+        if self.last_progress is not None:
+            self.progress_box.set_progress(self.last_progress)
+
         self.status_dot = QLabel("●")
 
         self.status_label = QLabel()
@@ -266,6 +304,7 @@ class MainWindow(QMainWindow):
         vLayout.setSpacing(16)
         vLayout.addLayout(vBrand)
         vLayout.addWidget(vSeparator)
+        vLayout.addWidget(self.progress_box)
         vLayout.addWidget(self.navigation, 1)
         vLayout.addWidget(self.create_footer_links())
         vLayout.addWidget(self.status_bar)
@@ -305,6 +344,86 @@ class MainWindow(QMainWindow):
             show_license(self)
         else:
             QDesktopServices.openUrl(QUrl(pTarget))
+
+    def check_progress(self):
+        """Relit les points ; un gain s'affiche, un niveau gagné se fête."""
+        vMode = get_game_mode()
+        self.progress_box.setVisible(vMode != "off")
+
+        if vMode == "off":
+            return
+
+        try:
+            vXp = get_total_xp(self.database_file)
+
+            if vXp == self.last_xp and self.last_progress is not None:
+                return
+
+            vProgress = build_progress(self.database_file)
+
+        except Exception:
+            # Journalisé une fois : la relecture reprend d'elle-même ensuite.
+            if not self.progress_failed:
+                logger.exception("Progression non relue")
+                self.progress_failed = True
+            return
+
+        self.progress_failed = False
+        vPrevious = self.last_progress
+        self.last_progress = vProgress
+        self.last_xp = get_total_xp(self.database_file)
+        self.progress_box.set_progress(vProgress, pAnimate=vPrevious is not None)
+
+        if self.pages.currentWidget() is self.progress_page:
+            self.progress_page.show_progress(vProgress)
+
+        # Premier calcul : la base de référence, sans fête pour l'historique.
+        if vPrevious is None:
+            return
+
+        self.celebrate(vPrevious, vProgress, vMode)
+
+    def celebrate(self, pPrevious, pProgress, pMode):
+        """Montre les points gagnés, les quêtes réussies et un nouveau niveau."""
+        vGain = pProgress["xp"] - pPrevious["xp"]
+        vDelay = 0
+
+        if vGain > 0:
+            show_xp_gain(self, self.progress_box, f"+{vGain} XP")
+            vDelay += TOAST_GAP_MS
+
+        vDoneBefore = {vQuest["id"] for vQuest in pPrevious["quests"] if vQuest["done"]}
+
+        for vQuest in pProgress["quests"]:
+            if vQuest["done"] and vQuest["id"] not in vDoneBefore:
+                logger.info("Quête réussie affichée : %s", vQuest["label"])
+                show_xp_gain(
+                    self,
+                    self.progress_box,
+                    f"Quête réussie : {vQuest['label']}",
+                    vDelay,
+                )
+                vDelay += TOAST_GAP_MS
+
+        if pProgress["level"] > pPrevious["level"]:
+            logger.info(
+                "Niveau %s atteint : %s", pProgress["level"], pProgress["title"]
+            )
+
+            if pMode == "full":
+                CelebrationOverlay(
+                    self,
+                    f"Niveau {pProgress['level']}",
+                    pProgress["title"],
+                    f"Prochain titre : {pProgress['next_title']}",
+                )
+            else:
+                show_xp_gain(
+                    self,
+                    self.progress_box,
+                    f"Niveau {pProgress['level']} : {pProgress['title']}",
+                    vDelay,
+                )
 
     def add_page(self, pKey, pLabel, pIcon, pPage):
         """Ajoute une page et son entrée dans le menu latéral."""

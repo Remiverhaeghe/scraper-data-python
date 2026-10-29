@@ -7,6 +7,7 @@ rester facile à modifier sans formulaire complexe :
   - CV : « Nom du CV | compétences mises en avant ».
 """
 
+from job.education import read_level
 from storage.settings_repository import load_json_setting, save_json_setting
 from utils.logger import get_logger
 
@@ -33,6 +34,10 @@ EMPTY_PROFILE = {
     "cv_variants": [],
     # Auto-évaluation : compétence vers niveau de 0 (inconnue) à 10
     "skill_levels": {},
+    # Diplôme le plus élevé et son niveau européen (job/education.py), comparé à
+    # celui que demandent les offres
+    "diploma": "",
+    "education_level": None,
 }
 
 
@@ -97,10 +102,18 @@ def format_lines(pItems, pFields):
     return rText
 
 
-def build_profile(pName, pHeadline, pSkills, pExperiences, pCvVariants):
+def build_profile(
+    pName,
+    pHeadline,
+    pSkills,
+    pExperiences,
+    pCvVariants,
+    pDiploma="",
+    pEducationLevel=None,
+):
     """Construit un profil à partir des textes saisis ; lève ValueError si trop long."""
 
-    vTexts = (pName, pHeadline, pSkills, pExperiences, pCvVariants)
+    vTexts = (pName, pHeadline, pSkills, pExperiences, pCvVariants, pDiploma)
 
     if any(len(vText or "") > MAX_TEXT_LENGTH for vText in vTexts):
         raise ValueError("Profil trop long : un champ dépasse la taille autorisée.")
@@ -111,6 +124,8 @@ def build_profile(pName, pHeadline, pSkills, pExperiences, pCvVariants):
         "skills": split_list(pSkills),
         "experiences": parse_lines(pExperiences, EXPERIENCE_FIELDS),
         "cv_variants": parse_lines(pCvVariants, CV_FIELDS),
+        "diploma": (pDiploma or "").strip(),
+        "education_level": read_level(pEducationLevel),
     }
 
     return rProfile
@@ -125,6 +140,8 @@ def profile_to_texts(pProfile):
         "skills": ", ".join(pProfile["skills"]),
         "experiences": format_lines(pProfile["experiences"], EXPERIENCE_FIELDS),
         "cv_variants": format_lines(pProfile["cv_variants"], CV_FIELDS),
+        "diploma": pProfile["diploma"],
+        "education_level": pProfile["education_level"],
     }
 
     return rTexts

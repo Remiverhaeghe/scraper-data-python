@@ -23,6 +23,12 @@ from PySide6.QtWidgets import (
 from gui.token_access_panel import TokenAccessPanel
 from gui.company_pages_panel import CompanyPagesPanel
 from gui.home_location_panel import HomeLocationPanel
+from gui.progress_widgets import (
+    GAME_MODE_HELP,
+    GAME_MODE_SETTING,
+    GAME_MODES,
+    get_saved_game_mode,
+)
 from gui.data_panel import DataPanel
 from gui.theme import (
     COLORS,
@@ -95,15 +101,15 @@ SINGLE_COLUMN_WIDTH = 1100
 def describe_source_state(pDefinition):
     """Retourne l'icône, sa couleur et le texte de l'état d'une source."""
 
-    vMissing = pDefinition.get_missing_settings()
+    vMissing = pDefinition.describe_missing()
 
     if not pDefinition.available:
         rState = ("circle-alert", COLORS["muted"], "Indisponible pour le moment")
     elif vMissing:
         rState = (
             "circle-alert",
-            COLORS["warning"],
-            "À renseigner dans .env : " + ", ".join(vMissing),
+            COLORS["muted"] if pDefinition.companies else COLORS["warning"],
+            vMissing,
         )
     else:
         rState = ("circle-check", COLORS["success"], "Prête")
@@ -116,6 +122,7 @@ class SettingsPage(QWidget):
 
     theme_requested = Signal(str)
     text_scale_requested = Signal(int)
+    game_mode_changed = Signal()
     data_reset = Signal(str)
 
     def __init__(self, pDatabaseFile):
@@ -266,7 +273,35 @@ class SettingsPage(QWidget):
         vScaleButtons.addStretch()
         vLayout.addLayout(vScaleButtons)
 
+        # Appliqué sans reconstruire les pages : la fenêtre relit ce réglage.
+        self.game_mode_buttons = QButtonGroup(self)
+        vCurrentMode = get_saved_game_mode()
+
+        vGameButtons = QHBoxLayout()
+        vGameButtons.addWidget(QLabel("Jeu et animations"))
+
+        for vMode, vLabel in GAME_MODES.items():
+            vButton = create_button(vLabel, pObjectName="segmentButton")
+            vButton.setCheckable(True)
+            vButton.setChecked(vMode == vCurrentMode)
+            vButton.setToolTip(GAME_MODE_HELP[vMode])
+            vButton.clicked.connect(
+                lambda _=False, pMode=vMode: self.save_game_mode(pMode)
+            )
+
+            self.game_mode_buttons.addButton(vButton)
+            vGameButtons.addWidget(vButton)
+
+        vGameButtons.addStretch()
+        vLayout.addLayout(vGameButtons)
+
         return vCard
+
+    def save_game_mode(self, pMode):
+        """Mémorise le réglage « Jeu et animations » de ce PC."""
+        QSettings().setValue(GAME_MODE_SETTING, pMode)
+        logger.info("Jeu et animations : %s", GAME_MODES[pMode])
+        self.game_mode_changed.emit()
 
     def create_rules_card(self):
         """Construit le formulaire des règles de calcul, enregistrées en base."""

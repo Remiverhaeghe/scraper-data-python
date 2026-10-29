@@ -629,6 +629,14 @@ a.stat:hover {
     --accent-light: var(--purple-light);
 }
 
+/* Diplôme du profil, sur deux colonnes quand la largeur le permet */
+
+.profile-education {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+}
+
 /* Métiers qui recrutent */
 
 .outlook-panel {
@@ -1188,6 +1196,7 @@ input[type="number"] {
 
 .segmented {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
@@ -1197,6 +1206,302 @@ input[type="number"] {
     background: var(--primary-light);
     border-color: var(--primary);
     color: var(--primary);
+}
+
+/* Mode « Jeu et animations » choisi dans ce navigateur (progress.js) */
+:root[data-game="full"] [data-game-choice="full"],
+:root[data-game="discreet"] [data-game-choice="discreet"],
+:root[data-game="off"] [data-game-choice="off"] {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+:root[data-game="off"] .progress-slot {
+    display: none;
+}
+
+/* Progression : encart du menu, bandeau de niveau, quêtes */
+
+.progress-slot {
+    min-height: 58px;
+    margin-bottom: 10px;
+}
+
+.progress-box {
+    display: grid;
+    gap: 6px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: var(--blue-light);
+    color: var(--blue);
+}
+
+.progress-box:hover {
+    text-decoration: none;
+    outline: 2px solid var(--blue);
+}
+
+.progress-box-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.progress-level,
+.level-badge {
+    display: grid;
+    place-items: center;
+    flex: none;
+    border-radius: 50%;
+    background: var(--blue);
+    color: var(--surface);
+    font-weight: 800;
+}
+
+.progress-level {
+    width: 28px;
+    height: 28px;
+}
+
+.progress-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.progress-streak {
+    display: inline-flex;
+    gap: 2px;
+    align-items: center;
+    color: var(--amber);
+    font-weight: 700;
+}
+
+.progress-track,
+.level-track,
+.quest-track {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--surface);
+}
+
+.progress-track {
+    height: 6px;
+}
+
+.progress-track > span,
+.level-track > span,
+.quest-track > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent, var(--blue));
+    transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.level-banner {
+    display: flex;
+    gap: 22px;
+    align-items: center;
+    padding: 20px 24px;
+    border-radius: 16px;
+    background: var(--accent-light);
+}
+
+.level-banner h2 {
+    margin: 0 0 4px;
+    color: var(--accent);
+}
+
+.level-banner > div {
+    flex: 1;
+    min-width: 0;
+}
+
+.level-badge {
+    width: 84px;
+    height: 84px;
+    font-size: 30px;
+}
+
+.level-track,
+.quest-track {
+    height: 22px;
+}
+
+.level-track b,
+.quest-track b {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--text);
+    font-size: 12px;
+}
+
+.quest-list {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.quest {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 2fr) minmax(90px, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    color: var(--accent);
+}
+
+.quest .quest-track {
+    background: var(--accent-light);
+}
+
+.quest-label {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.quest.is-done {
+    --accent: var(--green);
+    --accent-light: var(--green-light);
+}
+
+.quest.is-done .quest-label {
+    color: var(--muted);
+    text-decoration: line-through;
+}
+
+.rule-xp {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.rule-xp strong,
+.quest-xp {
+    color: var(--green);
+}
+
+@media (max-width: 640px) {
+    .level-banner {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .quest {
+        grid-template-columns: 22px minmax(0, 1fr) auto;
+    }
+
+    .quest .quest-track {
+        grid-column: 2 / -1;
+    }
+}
+
+/* Points gagnés et célébration du niveau ; un simple fondu si le système
+   demande de réduire les animations */
+
+.xp-toast {
+    position: fixed;
+    z-index: 60;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--green-light);
+    color: var(--green);
+    font-weight: 700;
+    pointer-events: none;
+    white-space: nowrap;
+    transform: translate(-50%, -100%);
+    animation: xp-rise 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes xp-rise {
+    0% { opacity: 0; transform: translate(-50%, -60%) scale(0.8); }
+    15% { opacity: 1; transform: translate(-50%, -100%) scale(1.08); }
+    60% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -260%) scale(1); }
+}
+
+.celebration {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: grid;
+    place-items: center;
+    background: rgb(15 23 42 / 45%);
+    cursor: pointer;
+    animation: fade-in 0.2s ease-out;
+    transition: opacity 0.35s;
+}
+
+.celebration.is-leaving {
+    opacity: 0;
+}
+
+.celebration canvas {
+    position: absolute;
+    inset: 0;
+}
+
+.celebration-card {
+    position: relative;
+    display: grid;
+    gap: 8px;
+    padding: 28px 40px;
+    border-radius: 18px;
+    background: var(--surface);
+    text-align: center;
+    animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.celebration-card strong {
+    color: var(--primary);
+    font-size: 44px;
+    line-height: 1.1;
+}
+
+.celebration-card span {
+    color: var(--heading);
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.celebration-card small {
+    color: var(--muted);
+}
+
+@keyframes pop-in {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .xp-toast {
+        animation-name: fade-in;
+        animation-direction: alternate;
+        animation-iteration-count: 2;
+    }
+
+    .celebration-card,
+    .progress-track > span,
+    .level-track > span,
+    .quest-track > span {
+        animation: none;
+        transition: none;
+    }
 }
 
 /* minmax(0, 1fr) : un long nom de variable passe à la ligne au lieu d'élargir la page */

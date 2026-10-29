@@ -17,6 +17,7 @@ import pytest
 import uvicorn
 
 from job.quiz_import import import_questions
+from storage.database import connect_database
 from storage.geo_cache import save_offer_positions
 from storage.job_offers import save_offers
 from tests.conftest import TEST_PASSWORD
@@ -38,6 +39,7 @@ PAGES = (
     "/skills",
     "/compare",
     "/logs",
+    "/progress",
     "/legal",
 )
 
@@ -492,3 +494,29 @@ def test_visited_page_is_readable_offline(page):
 
     finally:
         page.context.set_offline(False)
+
+
+def test_points_and_level_are_celebrated(page):
+    """Vérifie le « +XP » puis la célébration du niveau, repérés par progress.js."""
+
+    page.goto("/progress")
+    page.wait_for_selector(".progress-box")
+
+    vConnection = connect_database(app.dependency_overrides[get_database_file]())
+
+    try:
+        vConnection.executemany(
+            "INSERT INTO quiz_answer (question_id, theme, correct, answered_at)"
+            " VALUES (?, 'sql', 1, datetime('now', 'localtime'))",
+            [(f"e2e{vIndex}",) for vIndex in range(30)],
+        )
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+    page.reload()
+
+    sync_api.expect(page.locator(".xp-toast").first).to_contain_text("XP")
+    sync_api.expect(page.locator(".celebration-card")).to_contain_text("Niveau 2")
+    assert page.console_errors == []

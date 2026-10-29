@@ -4,6 +4,7 @@ from datetime import datetime
 from dataclasses import replace
 
 from config import DATABASE_FILE
+from job.education import refresh_education_levels_safely
 from job.exchange_rates import get_exchange_rates
 from job.filter import filter_jobs
 from job.geocoding import locate_new_offers
@@ -113,6 +114,7 @@ def process_jobs(pConfig, pOnProgress=None, pCancelEvent=None, pTrigger=None):
         logger.exception("Échec du placement des offres sur la carte")
 
     refresh_detected_skills_safely(DATABASE_FILE)
+    refresh_education_levels_safely(DATABASE_FILE)
 
     vParameters = build_search_parameters(pConfig)
 

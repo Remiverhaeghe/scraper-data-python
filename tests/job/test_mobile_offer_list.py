@@ -58,6 +58,7 @@ def test_offer_list_flags_and_adds_offers_close_to_retained_ones(tmp_path):
     assert vOffers["proche"]["covered"] == []
     assert vOffers["proche"]["missing"] == ["GMAO"]
     assert {"description", "salary"} <= set(vOffers["proche"])
+    assert vOffers["proche"]["education"] is None
 
 
 def test_offer_list_gives_position_and_near_flag(tmp_path):

@@ -43,6 +43,12 @@ from job.deduplication import (
     get_offer_group,
     group_offers,
 )
+from job.education import (
+    EDUCATION_LEVELS,
+    compare_education,
+    format_education,
+    is_education_blocked,
+)
 from job.experience_fit import describe_experience_fit, mark_experience_fit
 from job.freshness import add_freshness
 from job.global_score import add_global_scores
@@ -224,7 +230,11 @@ def list_offers(
     mark_experience_fit(vPrepared, vSettings["experience_years"])
 
     if pReach:
-        vPrepared = [vOffer for vOffer in vPrepared if not vOffer["above_experience"]]
+        vPrepared = [
+            vOffer
+            for vOffer in vPrepared
+            if not vOffer["above_experience"] and not is_education_blocked(vOffer)
+        ]
 
     # Valeur inconnue : aucun filtre, comme pour les autres listes de choix
     vMinMatch = int(pMatch) if pMatch.isdigit() and int(pMatch) in MATCH_FILTERS else 0
@@ -275,6 +285,7 @@ def list_offers(
         "contract_tones": CONTRACT_TONES,
         "status_tones": STATUS_TONES,
         "max_benefit_badges": MAX_BENEFIT_BADGES,
+        "education_levels": EDUCATION_LEVELS,
         "offers": vGrouped,
         "is_truncated": len(vOffers) > MAX_DISPLAYED_OFFERS,
         "max_offers": MAX_DISPLAYED_OFFERS,
@@ -561,6 +572,10 @@ def show_offer(
 
     vPrepared = prepare(vOffer)
     add_distances([vPrepared], load_home(pDatabaseFile))
+    vPrepared["education_status"] = compare_education(
+        vPrepared.get("education_level"),
+        load_profile(pDatabaseFile).get("education_level"),
+    )
     vMarket = find_market_salary(pDatabaseFile, vPrepared)
     vCompanyRules = load_company_rules(pDatabaseFile)
 
@@ -591,6 +606,7 @@ def show_offer(
             "suspicious_signs": find_suspicious_signs(
                 vPrepared, load_market_median(pDatabaseFile)
             ),
+            "education": format_education(vPrepared),
             "experience_fit": describe_experience_fit(
                 vPrepared, vSettings["experience_years"]
             ),

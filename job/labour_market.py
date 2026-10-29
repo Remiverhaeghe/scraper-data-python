@@ -146,7 +146,7 @@ def summarize_bmo(pContent, pYear):
     """Résume le tableur d'une année par métier : France et départements."""
 
     # Chargé ici : 0,3 s d'import épargnée à chaque lancement de l'application
-    import openpyxl
+    import openpyxl  # pylint: disable=import-outside-toplevel
 
     vBook = openpyxl.load_workbook(io.BytesIO(pContent), read_only=True)
 

@@ -74,6 +74,19 @@ class OfferDetailScreen extends StatelessWidget {
     );
   }
 
+  /// Couleur du diplôme demandé : vert accessible, orange un niveau au-dessus,
+  /// rouge bloquant ; neutre sans diplôme renseigné dans le profil.
+  Color? educationColorOf(BuildContext pContext) {
+    final rColor = switch (offer['education_tone']) {
+      'success' => successColorOf(pContext),
+      'warning' => Colors.orange.shade800,
+      'danger' => dangerColorOf(pContext),
+      _ => null,
+    };
+
+    return rColor;
+  }
+
   @override
   Widget build(BuildContext context) {
     final vTheme = Theme.of(context);
@@ -98,6 +111,22 @@ class OfferDetailScreen extends StatelessWidget {
           if (vDetails.isNotEmpty) Text(vDetails, style: vTheme.textTheme.bodyMedium),
           if (offer['match_score'] != null)
             Text('${offer['match_score']} % de correspondance avec votre profil'),
+          if (offer['education'] != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                children: [
+                  Icon(Icons.school_outlined, size: 18, color: educationColorOf(context)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${offer['education']}',
+                      style: TextStyle(color: educationColorOf(context)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 12),
           if (vCovered.isNotEmpty || vMissing.isNotEmpty)
             Wrap(

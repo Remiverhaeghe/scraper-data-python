@@ -19,6 +19,7 @@ import web.routes.offers as web_offers
 import web.routes.settings as web_settings
 import job.quiz_packs as quiz_packs
 
+from job.education import save_education_levels
 from job.schedule import (
     save_notification_email,
     save_schedule_options,
@@ -377,7 +378,7 @@ def test_settings_page_never_shows_secret_values(client, monkeypatch):
     vResponse = client.get("/settings")
 
     assert vResponse.status_code == 200
-    assert "GREENHOUSE_BOARD" in vResponse.text
+    assert "Aucune entreprise suivie" in vResponse.text
     assert "valeur-secrete" not in vResponse.text
 
 
@@ -833,6 +834,32 @@ def test_profile_page_and_offer_preparation(client):
     assert "Brouillon de lettre de motivation" in vOffer
     assert "Pourquoi ce score ?" in vOffer
     assert client.post("/profile", data={"skills": "x" * 30000}).status_code == 400
+
+
+def test_diploma_is_compared_to_the_offer(client):
+    """Vérifie le diplôme du profil, son écart sur l'offre et le filtre « À ma portée »."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+    save_education_levels(vDatabaseFile, [(7, "adzuna", "new")])
+
+    client.post(
+        "/profile",
+        data={
+            "skills": "Java",
+            "diploma": "BTS Maintenance industrielle",
+            "education_level": "5",
+        },
+    )
+    vProfile = client.get("/profile").text
+    vOffer = client.get("/offer?source=adzuna&id=new").text
+    vList = client.get("/offers").text
+    vReachable = client.get("/offers?reach=1").text
+
+    assert 'value="BTS Maintenance industrielle"' in vProfile
+    assert '<option value="5" selected>' in vProfile
+    assert "Bac+5 (master, ingénieur) · Diplôme probablement bloquant" in vOffer
+    assert "Diplôme demandé au-dessus du vôtre" in vList
+    assert "Diplôme demandé au-dessus du vôtre" not in vReachable
 
 
 def test_preparation_sheet_page(client):
@@ -2784,3 +2811,17 @@ def test_status_history_is_shown_on_the_offer(client):
     ).text
 
     assert "Historique : Postulé le" in vPage
+
+
+def test_progress_page_and_sidebar_summary(client):
+    """Vérifie la page Progression et l'encart du menu lu par progress.js."""
+
+    vPage = client.get("/progress")
+    vSummary = client.get("/progress/summary").text
+
+    assert vPage.status_code == 200
+    assert "Niveau 1 · Apprenti" in vPage.text
+    assert "Réviser 10 questions" in vPage.text
+    assert "Candidature envoyée" in vPage.text
+    assert 'data-xp="0"' in vSummary and 'data-level="1"' in vSummary
+    assert 'hx-get="/progress/summary"' in client.get("/").text

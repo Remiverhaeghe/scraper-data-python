@@ -8,6 +8,7 @@ import pandas as pd
 
 from config import WEB_PUBLIC_HOST, WEB_SCHEME, WEB_TLS_CERTFILE, WEB_TLS_KEYFILE
 from job.application import process_jobs
+from job.education import refresh_education_levels
 from job.geocoding import locate_new_offers
 from job.offer_archive import archive_expired_offers
 from job.offer_details import complete_missing_descriptions
@@ -355,6 +356,7 @@ BACKGROUND_TASKS = (
     ("certificat du tableau de bord", renew_web_certificate),
     ("archivage des offres expirées", archive_expired_offers),
     ("compétences des offres", refresh_detected_skills),
+    ("diplômes demandés par les offres", refresh_education_levels),
     ("placement des offres sur la carte", locate_new_offers),
     ("descriptions manquantes", complete_missing_descriptions),
     ("revue de l'utilité des sources", run_due_source_review),

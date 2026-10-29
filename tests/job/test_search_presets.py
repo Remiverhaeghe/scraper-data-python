@@ -5,7 +5,12 @@ from datetime import datetime
 import pytest
 
 from job.geocoding import HOME_KEY
-from job.search_presets import create_industry_searches, create_local_searches
+from job.search_presets import (
+    INDUSTRY_KEYWORDS,
+    LOCAL_KEYWORDS,
+    create_industry_searches,
+    create_local_searches,
+)
 from job.sources.registry import SOURCES
 from storage.database import initialize_database
 from storage.saved_searches import get_saved_searches
@@ -25,12 +30,9 @@ def test_industry_searches_use_france_and_company_pages(tmp_path):
         vSearch["name"]: vSearch for vSearch in get_saved_searches(vDatabaseFile)
     }
 
-    assert vNames == [
-        "Industrie · Maintenance",
-        "Industrie · Automatisme",
-        "Industrie · Électrotechnique",
-    ]
-    assert len(vSearches) == 3
+    assert vNames == [f"Industrie · {vKeyword}" for vKeyword in INDUSTRY_KEYWORDS]
+    assert "Industrie · Maintenance ferroviaire" in vNames
+    assert len(vSearches) == len(INDUSTRY_KEYWORDS)
     assert vSearches["Industrie · Automatisme"]["criteria"]["keyword"] == "automatisme"
     assert {SOURCES[vName].category for vName in vSearches[vNames[0]]["sources"]} == {
         "france",
@@ -56,6 +58,6 @@ def test_local_searches_use_home_city_and_radius(tmp_path):
     vCriteria = get_saved_searches(vDatabaseFile)[0]["criteria"]
 
     assert vNames[0] == "Près de chez moi · Java"
-    assert len(vNames) == 5
+    assert len(vNames) == len(LOCAL_KEYWORDS)
     assert vCriteria["location"] == "Roubaix"
     assert vCriteria["max_distance_km"] == 30

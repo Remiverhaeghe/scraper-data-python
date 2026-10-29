@@ -12,6 +12,7 @@ from job.location import FRANCE
 from job.restore_check import load_restore_check
 from job.mobile_sync import get_last_phone_sync, get_mobile_token
 from job.schedule import get_scheduler_heartbeat, load_schedule
+from job.sources.config import NO_COMPANY_REASON
 from job.sources.registry import SOURCES
 from job.statistics import load_source_review
 from storage.backup import (
@@ -296,7 +297,7 @@ def check_sources():
     vUnavailable = [
         vDefinition.label
         for vDefinition in SOURCES.values()
-        if vDefinition.get_unavailability_reason()
+        if vDefinition.get_unavailability_reason() not in (None, NO_COMPANY_REASON)
     ]
 
     rCheck = (

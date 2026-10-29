@@ -44,6 +44,7 @@ from job.companies import (
     mark_preferred_companies,
 )
 from job.deduplication import group_offers
+from job.education import is_education_blocked
 from job.experience_fit import mark_experience_fit
 from job.freshness import add_freshness
 from job.global_score import add_global_scores
@@ -516,7 +517,10 @@ class OffersPage(QWidget):
 
             if self.filters_bar.reach_check.isChecked():
                 vPrepared = [
-                    vOffer for vOffer in vPrepared if not vOffer["above_experience"]
+                    vOffer
+                    for vOffer in vPrepared
+                    if not vOffer["above_experience"]
+                    and not is_education_blocked(vOffer)
                 ]
             vPrepared = filter_by_match(
                 vPrepared, self.filters_bar.match_combo.currentData()

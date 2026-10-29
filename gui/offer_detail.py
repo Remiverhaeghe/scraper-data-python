@@ -37,6 +37,7 @@ from job.companies import (
     find_company_applications,
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
+from job.education import format_education
 from job.experience_fit import describe_experience_fit
 from job.geocoding import add_distances, describe_location, load_home
 from job.offer_details import can_fetch_description, fetch_missing_description
@@ -82,6 +83,7 @@ INFO_ROWS = (
     ("remote", "Télétravail", "house"),
     ("benefits", "Avantages", "gift"),
     ("experience_level", "Expérience", "timer"),
+    ("education", "Diplôme", "graduation-cap"),
     ("skills", "Compétences", "list-checks"),
     ("published_at", "Publiée le", "calendar"),
     ("first_seen_at", "Découverte le", "search"),
@@ -531,6 +533,7 @@ class OfferDetailPanel(QWidget):
                 )
                 if vPart
             ),
+            "education": format_education(vOffer),
             "skills": summarize_values(vOffer.get("skills_list")),
             "published_at": format_date(vOffer.get("published_at")),
             "first_seen_at": format_date(vOffer.get("first_seen_at")),

@@ -58,6 +58,9 @@ def no_cache_warm_up(monkeypatch):
     monkeypatch.setattr(
         "gui.main_window.run_due_backup", lambda pDatabaseFile, pNow: None
     )
+    monkeypatch.setattr(
+        "gui.main_window.refresh_education_levels_safely", lambda pDatabaseFile: None
+    )
 
 
 @pytest.fixture(autouse=True)

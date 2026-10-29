@@ -2,9 +2,11 @@
 
 Chaque critère vaut de 0 à 1 et pèse selon les Paramètres. Un critère inconnu
 (salaire non annoncé, lieu non placé) est écarté plutôt que compté à zéro : le
-score se calcule sur les critères connus, poids renormalisés.
+score se calcule sur les critères connus, poids renormalisés. Un diplôme demandé
+au-dessus de celui du profil réduit ensuite le score, sans l'annuler.
 """
 
+from job.education import EDUCATION_SCORE_FACTORS
 from job.salary_market import get_net_salary
 
 # Réglage de chaque poids : (clé dans les Paramètres, critère)
@@ -96,7 +98,12 @@ def compute_global_score(pOffer, pSettings, pRadiusKm=None):
     vTotal = sum(vWeight for _, vWeight in vKnown)
 
     rScore = (
-        round(100 * sum(vRate * vWeight for vRate, vWeight in vKnown) / vTotal)
+        round(
+            100
+            * sum(vRate * vWeight for vRate, vWeight in vKnown)
+            / vTotal
+            * EDUCATION_SCORE_FACTORS.get(pOffer.get("education_status"), 1)
+        )
         if vTotal
         else None
     )

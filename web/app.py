@@ -36,6 +36,7 @@ from web.routes.challenges import router as challenges_router
 from web.routes.git_sandbox import router as git_sandbox_router
 from web.routes.monitoring import router as monitoring_router
 from web.routes.profile import router as profile_router
+from web.routes.progress import router as progress_router
 from web.routes.settings import router as settings_router
 from web.routes.account import router as account_router
 
@@ -235,5 +236,6 @@ app.include_router(challenges_router)
 app.include_router(git_sandbox_router)
 app.include_router(monitoring_router)
 app.include_router(profile_router)
+app.include_router(progress_router)
 app.include_router(settings_router)
 app.include_router(account_router)

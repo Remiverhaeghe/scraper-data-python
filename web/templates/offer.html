@@ -99,6 +99,10 @@
                 {% call detail("timer", "Expérience") %}{{ offer.experience_level }}{% if experience_fit %} · {{ experience_fit }}{% endif %}{% endcall %}
                 {% endif %}
 
+                {% if education %}
+                {% call detail("graduation-cap", "Diplôme") %}{{ education }}{% endcall %}
+                {% endif %}
+
                 {% if offer.skills_list %}
                 {% call detail("list-checks", "Compétences") %}{{ offer.skills_list | join(", ") }}{% endcall %}
                 {% endif %}

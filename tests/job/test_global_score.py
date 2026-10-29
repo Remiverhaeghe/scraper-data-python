@@ -52,3 +52,15 @@ def test_scores_are_added_to_each_offer():
     add_global_scores(vOffers, SETTINGS)
 
     assert [vOffer["global_score"] for vOffer in vOffers] == [90, 40]
+
+
+def test_blocking_diploma_lowers_the_score():
+    """Vérifie le score réduit d'un diplôme trop élevé, sans être annulé."""
+
+    vOffer = {"match_score": 80}
+
+    assert compute_global_score({**vOffer, "education_status": "ok"}, SETTINGS) == 80
+    assert compute_global_score({**vOffer, "education_status": "close"}, SETTINGS) == 72
+    assert (
+        compute_global_score({**vOffer, "education_status": "blocked"}, SETTINGS) == 60
+    )

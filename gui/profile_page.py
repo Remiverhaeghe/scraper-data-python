@@ -6,6 +6,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
+    QComboBox,
     QFileDialog,
     QGridLayout,
     QHBoxLayout,
@@ -37,6 +38,7 @@ from job.cv_import import (
     merge_profile_texts,
     read_cv_text,
 )
+from job.education import EDUCATION_LEVELS
 from job.profile import build_profile, load_profile, profile_to_texts, save_profile
 from utils.logger import get_logger
 
@@ -88,6 +90,16 @@ class ProfilePage(QWidget):
         self.skills_edit = QLineEdit()
         self.skills_edit.setPlaceholderText("Ex. Java, Spring, SQL, Docker")
 
+        self.diploma_edit = QLineEdit()
+        self.diploma_edit.setPlaceholderText("Ex. BTS Maintenance industrielle")
+
+        # Comparé au diplôme demandé par chaque offre : badge, filtre et score
+        self.education_combo = QComboBox()
+        self.education_combo.addItem("Non renseigné", None)
+
+        for vLevel, vLabel in EDUCATION_LEVELS.items():
+            self.education_combo.addItem(vLabel, vLevel)
+
         self.experiences_edit = QPlainTextEdit()
         self.experiences_edit.setPlaceholderText(EXPERIENCES_HELP)
 
@@ -100,16 +112,20 @@ class ProfilePage(QWidget):
         vGrid.setVerticalSpacing(12)
         vGrid.addLayout(create_text_field("Nom", self.name_edit), 0, 0)
         vGrid.addLayout(create_text_field("Présentation", self.headline_edit), 0, 1)
-        vGrid.addLayout(create_text_field("Compétences", self.skills_edit), 1, 0, 1, 2)
+        vGrid.addLayout(create_text_field("Diplôme", self.diploma_edit), 1, 0)
         vGrid.addLayout(
-            create_text_field("Expériences", self.experiences_edit), 2, 0, 1, 2
+            create_text_field("Niveau du diplôme", self.education_combo), 1, 1
         )
-        vGrid.addLayout(create_text_field("Variantes de CV", self.cv_edit), 3, 0, 1, 2)
+        vGrid.addLayout(create_text_field("Compétences", self.skills_edit), 2, 0, 1, 2)
+        vGrid.addLayout(
+            create_text_field("Expériences", self.experiences_edit), 3, 0, 1, 2
+        )
+        vGrid.addLayout(create_text_field("Variantes de CV", self.cv_edit), 4, 0, 1, 2)
         vGrid.setColumnStretch(0, 1)
         vGrid.setColumnStretch(1, 2)
         # La hauteur libre va aux expériences : les variantes de CV, limitées en
         # hauteur, laisseraient sinon un vide au-dessus de leur champ.
-        vGrid.setRowStretch(2, 1)
+        vGrid.setRowStretch(3, 1)
 
         vSaveButton = create_button("Enregistrer", pObjectName="primaryButton")
         vSaveButton.clicked.connect(self.save)
@@ -197,6 +213,10 @@ class ProfilePage(QWidget):
             self.skills_edit.setText(vTexts["skills"])
             self.experiences_edit.setPlainText(vTexts["experiences"])
             self.cv_edit.setPlainText(vTexts["cv_variants"])
+            self.diploma_edit.setText(vTexts["diploma"])
+            self.education_combo.setCurrentIndex(
+                max(0, self.education_combo.findData(vTexts["education_level"]))
+            )
 
     def get_texts(self):
         """Retourne les textes saisis dans le formulaire."""
@@ -274,6 +294,8 @@ class ProfilePage(QWidget):
                 self.skills_edit.text(),
                 self.experiences_edit.toPlainText(),
                 self.cv_edit.toPlainText(),
+                self.diploma_edit.text(),
+                self.education_combo.currentData(),
             )
             save_profile(self.database_file, vProfile)
 

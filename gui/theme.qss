@@ -66,8 +66,8 @@ QListWidget#navigation {
 QListWidget#navigation::item {
     color: $text;
     font-weight: 600;
-    padding: 11px 12px;
-    margin: 2px 0;
+    padding: 8px 12px;
+    margin: 1px 0;
     border-radius: 8px;
 }
 

@@ -12,6 +12,7 @@ import gui.search_page as search_page_module
 from gui.search_page import SearchPage
 from gui.search_worker import SearchWorker
 from job.profile import build_profile, save_profile
+from job.search_presets import INDUSTRY_KEYWORDS
 from job.sources.aggregator import ScrapingCancelled
 from job.sources.registry import SOURCES
 from storage.database import initialize_database
@@ -469,15 +470,13 @@ def test_industry_searches_are_added_and_loaded(saved_search_page):
     vPage.saved_bar.add_industry_searches()
 
     assert vPage.saved_bar.selected_name == "Industrie · Maintenance"
-    assert len(vPage.saved_bar.group.buttons()) == 3
+    assert len(vPage.saved_bar.group.buttons()) == len(INDUSTRY_KEYWORDS)
 
     vPage.saved_bar.group.buttons()[0].click()
 
-    assert vPage.keyword_edit.text() in (
-        "automatisme",
-        "maintenance",
-        "électrotechnique",
-    )
+    assert vPage.keyword_edit.text() in {
+        vKeyword.lower() for vKeyword in INDUSTRY_KEYWORDS
+    }
     assert "smartrecruiters" in vPage.get_selected_sources()
     assert "remotive" not in vPage.get_selected_sources()
 

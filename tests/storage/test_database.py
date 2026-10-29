@@ -22,6 +22,7 @@ from storage.migrations import (
     migrate_to_v31,
     migrate_to_v32,
     migrate_to_v33,
+    migrate_to_v34,
 )
 
 
@@ -680,6 +681,25 @@ def test_migration_to_v31_starts_status_history(tmp_path):
         vConnection.close()
 
     assert vHistory == ["APPLIED", "INTERVIEW"]
+
+
+def test_migration_to_v34_adds_education_level_to_compute(tmp_path):
+    """Vérifie la colonne du diplôme demandé, vide pour l'existant : à repérer."""
+
+    vConnection = build_database_at(tmp_path / "scraper.db", 33)
+
+    try:
+        vConnection.execute(
+            "INSERT INTO job_offer (source, source_id, first_seen_at, last_seen_at)"
+            " VALUES ('lever', '1', '2026-10-29', '2026-10-29')"
+        )
+        migrate_to_v34(vConnection)
+        vLevel = vConnection.execute("SELECT education_level FROM job_offer").fetchone()
+
+    finally:
+        vConnection.close()
+
+    assert vLevel == (None,)
 
 
 def test_migration_to_v32_adds_recruiter_address(tmp_path):

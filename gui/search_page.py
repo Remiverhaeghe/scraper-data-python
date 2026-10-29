@@ -349,11 +349,10 @@ class SearchPage(QWidget):
             rButton.setEnabled(False)
             rButton.setText(f"{pDefinition.label} · {vReason}")
 
-            # Seuls les noms des variables sont affichés, jamais leurs valeurs.
-            vMissing = pDefinition.get_missing_settings()
+            vMissing = pDefinition.describe_missing()
 
             rButton.setToolTip(
-                "À renseigner dans .env : " + ", ".join(vMissing)
+                vMissing
                 if pDefinition.available and vMissing
                 else "Source momentanément indisponible"
             )

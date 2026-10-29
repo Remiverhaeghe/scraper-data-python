@@ -17,6 +17,7 @@ import segno
 from config import WEB_SCHEME, WEB_TLS_CERTFILE
 from job.access_tokens import check_access_token, get_access_token, renew_access_token
 from job.companies import load_company_rules, mark_preferred_companies
+from job.education import compare_education, describe_education, format_education
 from job.geocoding import load_home
 from job.interview_revision import find_offer_themes
 from job.preparation import match_offer
@@ -553,6 +554,11 @@ def build_offer_list(pDatabaseFile, pNow):
     vRadius = (load_home(pDatabaseFile) or {}).get("alert_radius_km") or 0
     mark_preferred_companies(vOffers, load_company_rules(pDatabaseFile))
 
+    for vOffer in vOffers:
+        vOffer["education_status"] = compare_education(
+            vOffer.get("education_level"), vProfile.get("education_level")
+        )
+
     rOffers = [
         {
             "source": vOffer["source"],
@@ -584,6 +590,9 @@ def build_offer_list(pDatabaseFile, pNow):
             "salary": format_net_salary(vOffer),
             "covered": vMatches[id(vOffer)]["covered"],
             "missing": vMatches[id(vOffer)]["missing"],
+            # Diplôme demandé et son écart avec le profil : vert, orange ou rouge
+            "education": format_education(vOffer) or None,
+            "education_tone": (describe_education(vOffer) or {}).get("tone"),
         }
         for vOffer in vOffers
     ]

@@ -7,6 +7,7 @@ l'application et aucun service payant n'est utilisé.
 import re
 from functools import lru_cache
 
+from job.education import compare_education
 from job.enrichment import SKILL_PATTERNS, detect_skills
 from job.fingerprint import GENDER_MARKERS
 from job.pitch import build_pitch, find_examples, lower_first
@@ -625,7 +626,8 @@ def prepare_application(
 def score_offers(pOffers, pProfile):
     """Ajoute à chaque offre son score de correspondance avec le profil, ou None.
 
-    Sans profil renseigné, aucun score n'est calculé.
+    Sans profil renseigné, aucun score n'est calculé. L'écart entre le diplôme
+    demandé et celui du profil est ajouté aussi, s'ils sont connus tous les deux.
     """
 
     vEmpty = (
@@ -638,6 +640,9 @@ def score_offers(pOffers, pProfile):
         vMatch = None if vEmpty else match_offer(pProfile, vOffer)
         vOffer["match_score"] = vMatch["score"] if vMatch else None
         vOffer["match_target"] = vMatch["target"] if vMatch else None
+        vOffer["education_status"] = compare_education(
+            vOffer.get("education_level"), pProfile.get("education_level")
+        )
 
 
 # Filtre de la liste des offres : correspondance minimale avec le profil

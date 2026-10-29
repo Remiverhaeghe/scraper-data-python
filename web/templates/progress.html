@@ -1,0 +1,60 @@
+{# Progression (route /progress) : calculée par job/progress.py, comme sur le bureau. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Progression{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Progression", "Chaque action utile à votre recherche rapporte des points", "award") }}
+
+<section class="level-banner accent-blue">
+    <span class="level-badge">{{ progress.level }}</span>
+    <div>
+        <h2>Niveau {{ progress.level }} · {{ progress.title }}</h2>
+        <p class="muted">Encore {{ progress.xp_for_level - progress.xp_in_level }} XP pour devenir {{ progress.next_title }}</p>
+        <div class="level-track" role="progressbar" aria-valuenow="{{ progress.xp_in_level }}" aria-valuemin="0" aria-valuemax="{{ progress.xp_for_level }}" aria-label="Points du niveau">
+            <span style="width: {{ progress.percent }}%"></span>
+            <b>{{ progress.xp_in_level }} / {{ progress.xp_for_level }} XP</b>
+        </div>
+    </div>
+</section>
+
+<section class="grid grid-4 section-gap">
+    {{ ui.stat(progress.xp, "Points au total", "sparkles", "blue") }}
+    {{ ui.stat(progress.today_xp, "Points aujourd'hui", "zap", "green") }}
+    {{ ui.stat(progress.streak, "Jours de série", "flame", "amber") }}
+    {{ ui.stat(progress.best_streak, "Meilleure série", "trophy", "purple") }}
+</section>
+
+<article class="card section-gap">
+    <h2>{{ icon("target") }} Quêtes</h2>
+    <p class="card-subtitle">Trois quêtes par jour, choisies selon votre situation, et une pour la semaine. Une série perdue ne fait jamais perdre de points.</p>
+    <ul class="quest-list">
+        {% for quest in progress.quests %}
+        <li class="quest{% if quest.done %} is-done{% endif %} {{ 'accent-purple' if quest.weekly else 'accent-blue' }}">
+            {{ icon("circle-check" if quest.done else ("calendar" if quest.weekly else "target"), 20) }}
+            <span class="quest-label">{% if quest.weekly %}Semaine · {% endif %}{{ quest.label }}</span>
+            <span class="quest-track"><span style="width: {{ (100 * quest.progress / quest.target) | round | int }}%"></span><b>{{ quest.progress }} / {{ quest.target }}</b></span>
+            <strong class="quest-xp">+{{ quest.xp }} XP</strong>
+        </li>
+        {% endfor %}
+    </ul>
+</article>
+
+<div class="grid grid-dashboard section-gap">
+    <article class="card">
+        <h2>{{ icon("history") }} Points des 14 derniers jours</h2>
+        {{ ui.bar_chart(chart, "Points gagnés par jour") }}
+    </article>
+
+    <article class="card">
+        <h2>{{ icon("list-checks") }} Comment gagner des points</h2>
+        <p class="card-subtitle">Les actions qui font avancer la recherche d'emploi rapportent le plus</p>
+        <ul class="checklist">
+            {% for rule in progress.rules %}
+            <li class="rule-xp"><span>{{ rule.label }}</span><strong>+{{ rule.xp }} XP</strong></li>
+            {% endfor %}
+        </ul>
+    </article>
+</div>
+{% endblock %}

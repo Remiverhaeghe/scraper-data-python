@@ -47,7 +47,7 @@ from job.schedule import (
 from job.presentation import describe_backup
 from job.personal_export import export_personal_data
 from job.settings import SETTING_DEFINITIONS, load_settings, save_settings
-from job.sources.config import SOURCE_CATEGORIES
+from job.sources.config import NO_COMPANY_REASON, SOURCE_CATEGORIES
 from job.sources.registry import SOURCES
 from storage.archive import export_archive, restore_archive, restore_backup
 from storage.backup import describe_backups, describe_nas_copies, fetch_nas_copy
@@ -87,6 +87,8 @@ def render_settings(
             "reason": vDefinition.get_unavailability_reason(),
             # Seuls les noms des variables sont affichés, jamais leurs valeurs.
             "missing": vDefinition.get_missing_settings(),
+            "waiting_companies": vDefinition.get_unavailability_reason()
+            == NO_COMPANY_REASON,
             "category": SOURCE_CATEGORIES.get(vDefinition.category),
         }
         # Regroupées par catégorie, dans l'ordre du registre à l'intérieur de chacune

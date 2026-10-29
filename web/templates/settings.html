@@ -17,6 +17,12 @@
                 <button class="button" type="button" data-theme-choice="light">{{ icon("sun", 16) }} Clair</button>
                 <button class="button" type="button" data-theme-choice="dark">{{ icon("moon", 16) }} Sombre</button>
             </div>
+            <p class="card-subtitle">Jeu et animations, mémorisés dans ce navigateur</p>
+            <div class="segmented">
+                <button class="button" type="button" data-game-choice="full" title="Points, quêtes, confettis au passage de niveau">{{ icon("sparkles", 16) }} Complet</button>
+                <button class="button" type="button" data-game-choice="discreet" title="Points et quêtes, sans confettis">{{ icon("zap", 16) }} Discret</button>
+                <button class="button" type="button" data-game-choice="off" title="Ni encart de niveau ni animation ; la page Progression reste ouverte">{{ icon("circle-alert", 16) }} Désactivé</button>
+            </div>
         </article>
 
         {% if request.state.session %}
@@ -164,6 +170,10 @@
                 <span class="tone-success">{{ icon("circle-check") }}</span>
                 <strong>{{ source.label }}</strong>
                 <span class="muted">Prête</span>
+                {% elif source.waiting_companies %}
+                <span class="tone-muted">{{ icon("circle-alert") }}</span>
+                <strong>{{ source.label }}</strong>
+                <span class="muted">Aucune entreprise suivie : à ajouter dans Pages carrière suivies</span>
                 {% elif source.missing and source.reason == "non configurée" %}
                 <span class="tone-warning">{{ icon("circle-alert") }}</span>
                 <strong>{{ source.label }}</strong>

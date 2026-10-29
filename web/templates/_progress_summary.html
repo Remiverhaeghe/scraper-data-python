@@ -1,0 +1,14 @@
+{# Encart du menu : progress.js compare ces données à la dernière visite pour
+   afficher les points gagnés, les quêtes réussies et le passage de niveau. #}
+<a class="progress-box" href="{{ url_for('show_progress').path }}"
+   data-xp="{{ progress.xp }}" data-level="{{ progress.level }}"
+   data-title="{{ progress.title }}" data-next-title="{{ progress.next_title }}"
+   data-quests="{{ progress.quests | selectattr('done') | map(attribute='label') | join('|') }}"
+   title="Niveau {{ progress.level }} · {{ progress.xp_in_level }} / {{ progress.xp_for_level }} XP · série de {{ progress.streak }} jour(s)">
+    <span class="progress-box-row">
+        <span class="progress-level">{{ progress.level }}</span>
+        <span class="progress-title">{{ progress.title }}</span>
+        <span class="progress-streak">{{ icon("flame", 16) }} {{ progress.streak }}</span>
+    </span>
+    <span class="progress-track"><span style="width: {{ progress.percent }}%"></span></span>
+</a>

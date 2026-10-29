@@ -35,6 +35,19 @@
         <label>Présentation
             <input type="text" name="headline" value="{{ profile.headline }}" placeholder="Ex. Développeur Java depuis 5 ans, orienté qualité et performance.">
         </label>
+        <div class="profile-education">
+            <label>Diplôme
+                <input type="text" name="diploma" value="{{ profile.diploma }}" placeholder="Ex. BTS Maintenance industrielle">
+            </label>
+            <label>Niveau du diplôme
+                <select name="education_level">
+                    <option value="">Non renseigné</option>
+                    {% for level, label in education_levels.items() %}
+                    <option value="{{ level }}"{% if profile.education_level == level %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
         <label>Compétences
             <input type="text" name="skills" value="{{ profile.skills }}" placeholder="Ex. Java, Spring, SQL, Docker">
         </label>

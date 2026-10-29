@@ -956,6 +956,12 @@ def migrate_to_v33(pConnection):
     logger.info("Période des salaires Adzuna corrigée : %s offre(s)", len(vUpdates))
 
 
+def migrate_to_v34(pConnection):
+    """Ajoute le diplôme demandé par chaque offre, repéré ensuite en tâche de fond."""
+
+    pConnection.execute("ALTER TABLE job_offer ADD COLUMN education_level INTEGER")
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -990,4 +996,5 @@ MIGRATIONS = [
     migrate_to_v31,
     migrate_to_v32,
     migrate_to_v33,
+    migrate_to_v34,
 ]

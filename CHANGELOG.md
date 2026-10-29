@@ -14,6 +14,7 @@ dans l'historique git.
 - Candidatures en cours lisibles hors ligne ; fiche de préparation proposée sur
   l'accueil dans les 24 heures qui précèdent un entretien
 - Widget Android de l'écran d'accueil : questions à revoir et prochain entretien
+- Diplôme demandé sur la fiche d'une offre, en couleur selon le vôtre
 
 ### Application mobile 1.6.0
 - Tri rapide des nouvelles offres : glisser pour « Intéressé » ou « Ignorée »
@@ -101,6 +102,21 @@ dans l'historique git.
   se lit au montant, heure, mois ou an (migration v33)
 - Cartes de Paramètres ouvertes à leur hauteur, sans s'étirer jusqu'au bas de
   la colonne voisine
+- Diplôme du profil (intitulé et niveau, du CAP au Bac+5) comparé au diplôme
+  demandé par chaque offre, repéré dans le champ formation de la source ou dans
+  l'annonce (migration v34) : ligne « Diplôme » de la fiche, badge orange ou
+  rouge, score global réduit d'un diplôme bloquant, filtre « À ma portée »
+- Progression façon jeu, sur le bureau et le web : points calculés depuis
+  l'activité déjà en base (révision, défis, Git, examens, candidatures,
+  relances, entretiens), niveaux d'Apprenti à Légende, série avec un joker par
+  semaine, trois quêtes du jour et une de la semaine selon la situation ;
+  « +XP » animé, confettis au passage de niveau, réglage « Jeu et animations »
+- Menu latéral resserré : toutes les pages tiennent à l'écran avec l'encart
+  de niveau
+- Recherches prêtes à l'emploi élargies à la maintenance : technicien de
+  maintenance, maintenance ferroviaire, électrotechnicien, GMAO, planificateur
+- Pages carrière sans entreprise suivie affichées « Aucune entreprise suivie »,
+  sans alerte ni signalement dans la Santé
 - Offres « à saisir vite », « Intéressé, pas encore postulé », offres proches de
   vos refus en bas de liste, origine de chaque offre dans l'e-mail des recherches
 - Trajet en voiture estimé, net après trajet (réglage « Coût du trajet »),

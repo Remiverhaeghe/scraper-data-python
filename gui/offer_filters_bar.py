@@ -143,7 +143,7 @@ class OfferFiltersBar(QWidget):  # pylint: disable=too-many-instance-attributes
         self.reach_check = create_check(
             "À ma portée",
             "Masque les offres qui demandent nettement plus que votre expérience "
-            "(Paramètres, règles de calcul)",
+            "(Paramètres, règles de calcul) ou que votre diplôme (Profil)",
         )
         self.preferred_check = create_check(
             "Entreprises privilégiées",

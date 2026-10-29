@@ -14,6 +14,7 @@ from job.cv_import import (
     merge_profile_texts,
     read_cv_text,
 )
+from job.education import EDUCATION_LEVELS, read_level
 from job.interview_drill import get_due_cards, grade_card
 from job.self_assessment import (
     KNOWN_LEVEL,
@@ -66,6 +67,7 @@ def render_profile(
         {
             "active_page": "profile",
             "profile": pTexts,
+            "education_levels": EDUCATION_LEVELS,
             "message": pMessage,
             "message_tone": get_message_tone(pStatusCode),
             "cv_prompt": pCvPrompt,
@@ -114,6 +116,8 @@ def update_profile(
     pSkills: str = Form("", alias="skills"),
     pExperiences: str = Form("", alias="experiences"),
     pCvVariants: str = Form("", alias="cv_variants"),
+    pDiploma: str = Form("", alias="diploma"),
+    pEducationLevel: str = Form("", alias="education_level"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
     """Enregistre le profil saisi, ou réaffiche le formulaire avec l'erreur."""
@@ -124,10 +128,20 @@ def update_profile(
         "skills": pSkills,
         "experiences": pExperiences,
         "cv_variants": pCvVariants,
+        "diploma": pDiploma,
+        "education_level": read_level(pEducationLevel),
     }
 
     try:
-        vProfile = build_profile(pName, pHeadline, pSkills, pExperiences, pCvVariants)
+        vProfile = build_profile(
+            pName,
+            pHeadline,
+            pSkills,
+            pExperiences,
+            pCvVariants,
+            pDiploma,
+            pEducationLevel,
+        )
 
     except ValueError as vException:
         rResponse = render_profile(request, pDatabaseFile, vTexts, str(vException), 400)

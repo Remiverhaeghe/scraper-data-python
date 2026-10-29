@@ -294,12 +294,15 @@ Documents/JobBoard/
 - [x] CV Word adapté à une offre : compétences demandées en tête, expériences les plus proches d'abord
 - [x] Annonces en ligne depuis plus de 45 jours signalées ; fiche entreprise avec l'établissement le plus proche du domicile
 - [x] Ajout d'une entreprise suivie en collant l'adresse de son site carrière (SmartRecruiters, Lever, Ashby, Greenhouse, Recruitee, Workable, Workday)
-- [x] Badge ESN et filtres « Clients finaux seulement », « Sans stage ni alternance » et « À ma portée » (expérience demandée comparée à la vôtre)
+- [x] Badge ESN et filtres « Clients finaux seulement », « Sans stage ni alternance » et « À ma portée » (expérience et diplôme demandés comparés aux vôtres)
+- [x] Diplôme demandé repéré dans chaque offre (CAP à Bac+5), comparé à celui du profil : badge, ligne de la fiche, score global réduit s'il bloque (bureau, web, téléphone)
 - [x] Synonymes de métier dans la recherche : « Java » trouve « JEE » ou « Spring », « maintenance » trouve « GMAO »
 - [x] Salaire estimé (médiane des offres comparables) pour les offres sans salaire, argumentaire de négociation en brut annuel
 - [x] Lettre de motivation en Word, candidatures spontanées, journal de recherche exportable (justificatif de démarches)
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
+- [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
+- [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
 ### 🌐 Tableau de bord web
 
@@ -335,6 +338,7 @@ Documents/JobBoard/
 - [x] Réponses des recruteurs lues dans Gmail et CV adapté à l'offre, comme sur le bureau
 - [x] Carte des offres : raccourcis de correspondance (toutes, 50 %, 70 %), pastille d'autant plus grande que le score est élevé
 - [x] Double authentification facultative (code à 6 chiffres, Google Authenticator), sans service extérieur
+- [x] Page Progression, encart de niveau dans le menu et animations, comme sur le bureau ; préférence « réduire les animations » du système respectée
 
 ### 🔐 Sécurité
 
@@ -660,6 +664,7 @@ scraper-data-python/
 │   ├── fingerprint.py                         # Empreinte titre, entreprise et ville d'une offre
 │   ├── deduplication.py                       # Regroupe les annonces d'une même offre
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
+│   ├── progress.py                            # Points, niveaux, série et quêtes, calculés depuis l'activité
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
 │   ├── star_answers.py                        # Réponses STAR aux questions comportementales
 │   ├── offer_purge.py                         # Purge des offres hors sujet et mots exclus
@@ -678,6 +683,7 @@ scraper-data-python/
 │   ├── application_replies.py                 # Réponses des recruteurs repérées dans Gmail, statut proposé
 │   ├── cv_export.py                           # CV réordonné pour une offre, écrit au format Word
 │   ├── search_journal.py                      # Journal des démarches datées, exporté pour un tableur
+│   ├── education.py                           # Diplôme demandé par l'offre, repéré une fois puis comparé au vôtre
 │   ├── experience_fit.py                      # Expérience demandée par l'offre comparée à la vôtre
 │   ├── interview_revision.py                  # Thèmes à revoir pour une offre et examen blanc
 │   ├── skills_dashboard.py                    # Compétences demandées croisées avec la révision
@@ -924,6 +930,8 @@ scraper-data-python/
 │   ├── offer_purge_panel.py                   # Aperçu et suppression des offres hors sujet
 │   ├── unknown_places_panel.py                # Lieux introuvables corrigés à la main
 │   ├── profile_page.py                        # Saisie du profil du candidat
+│   ├── progress_page.py                       # Page Progression : niveau, quêtes, points récents
+│   ├── progress_widgets.py                    # Encart du menu, « +XP » et célébration animés
 │   ├── interview_drill_panel.py               # Entraînement à l'oral
 │   ├── interview_simulation_panel.py          # Simulation d'entretien technique
 │   ├── self_assessment_panel.py               # Auto-évaluation des compétences
@@ -971,6 +979,7 @@ scraper-data-python/
 │   │   ├── git_sandbox.py                     # Bac à sable Git
 │   │   ├── monitoring.py                      # Qualité, journaux et historique
 │   │   ├── profile.py                         # Profil et import du CV
+│   │   ├── progress.py                        # Progression et encart du menu
 │   │   ├── settings.py                        # Paramètres, abonnements et sauvegardes
 │   │   └── account.py                         # Connexion, mentions légales et licence
 │   ├── templates/                             # Gabarits HTML Jinja2
@@ -1004,6 +1013,8 @@ scraper-data-python/
 │   │   ├── logs.html                          # Consultation des logs
 │   │   ├── quality.html                       # Qualité des données
 │   │   ├── profile.html                       # Profil du candidat
+│   │   ├── progress.html                      # Progression : niveau, quêtes, points récents
+│   │   ├── _progress_summary.html             # Encart de niveau du menu, chargé à part
 │   │   ├── settings.html                      # Thème, règles de calcul et état des sources
 │   │   ├── legal.html                         # Mentions légales
 │   │   ├── login.html                         # Connexion au tableau de bord
@@ -1021,6 +1032,7 @@ scraper-data-python/
 │       ├── icon-512.png                       # Icône de l'écran d'accueil, grande taille
 │       ├── service-worker.js                  # Fichiers statiques en cache et page hors ligne
 │       ├── pwa.js                             # Enregistre le service worker, en HTTPS seulement
+│       ├── progress.js                        # « +XP », quêtes et confettis, d'après l'encart du menu
 │       ├── offline.html                       # Page affichée quand le PC ne répond pas
 │       ├── htmx.min.js                        # HTMX 2.0.4, copie locale
 │       ├── offers_map.js                      # Place les offres et le domicile sur la carte
@@ -1158,6 +1170,7 @@ scraper-data-python/
 │   │   ├── test_cv_export.py                  # Teste le CV adapté et le fichier Word
 │   │   ├── test_company_pages.py              # Teste l'ajout d'une entreprise depuis l'adresse de son site carrière
 │   │   ├── test_search_journal.py             # Teste le journal de recherche
+│   │   ├── test_education.py                  # Teste le diplôme demandé, son écart et son calcul en tâche de fond
 │   │   ├── test_experience_fit.py             # Teste l'expérience demandée comparée à la vôtre
 │   │   ├── test_spontaneous.py                # Teste les candidatures spontanées
 │   │   ├── test_star_answers.py               # Teste les réponses STAR
@@ -1180,6 +1193,7 @@ scraper-data-python/
 │   │   ├── test_application_tracking.py       # Teste les colonnes de suivi et les statistiques
 │   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
+│   │   ├── test_progress.py                   # Teste les points, niveaux, série et quêtes
 │   │   ├── test_quiz_types.py                 # Teste les questions interactives et leur correction
 │   │   ├── test_shared_quiz_cases.py          # Teste les cas communs avec l'application mobile
 │   │   ├── test_schema_building.py            # Teste les schémas à construire, leur correction et leur dessin
@@ -1308,6 +1322,7 @@ scraper-data-python/
 │   │   ├── test_health_panel.py                # Teste la carte d'état de l'application
 │   │   ├── test_interview_journal_panel.py     # Teste le panneau du journal d'entretien
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
+│   │   ├── test_progress_page.py               # Teste la progression, le « +XP » et la célébration
 │   │   ├── test_interview_simulation_panel.py  # Teste la simulation d'entretien
 │   │   ├── test_self_assessment_panel.py       # Teste la grille d'auto-évaluation
 │   │   ├── test_funnel_panel.py                # Teste l'entonnoir, vide puis rempli

@@ -61,6 +61,11 @@ class SourceConfig:
             raise ValueError("Le mode HTML n'est pas disponible pour cette source.")
 
 
+# Une page carrière sans entreprise suivie n'est pas mal configurée : elle attend
+# simplement qu'on lui en ajoute une.
+NO_COMPANY_REASON = "aucune entreprise suivie"
+
+
 @dataclass(frozen=True)
 class SourceDefinition:
     """Description d'une source d'emploi utilisable par l'application."""
@@ -112,9 +117,26 @@ class SourceDefinition:
             rReason = "indisponible"
 
         elif self.get_missing_settings():
-            rReason = "non configurée"
+            rReason = NO_COMPANY_REASON if self.companies else "non configurée"
 
         return rReason
+
+    def describe_missing(self):
+        """Retourne ce qu'il reste à faire pour utiliser la source, ou None.
+
+        Seuls les noms des variables sont donnés, jamais leurs valeurs.
+        """
+
+        vMissing = self.get_missing_settings()
+
+        if not vMissing:
+            rText = None
+        elif self.companies:
+            rText = "Aucune entreprise suivie : à ajouter dans Paramètres, Pages carrière suivies"
+        else:
+            rText = "À renseigner dans .env : " + ", ".join(vMissing)
+
+        return rText
 
 
 def scrape_each(pNames, pScrape, pMaxItems, pLabel):
