@@ -61,6 +61,7 @@ def no_cache_warm_up(monkeypatch):
     monkeypatch.setattr(
         "gui.main_window.refresh_education_levels_safely", lambda pDatabaseFile: None
     )
+    monkeypatch.setattr("gui.main_window.warm_up_scores", lambda pDatabaseFile: None)
 
 
 @pytest.fixture(autouse=True)

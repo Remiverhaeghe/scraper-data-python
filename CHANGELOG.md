@@ -5,6 +5,12 @@ dans l'historique git.
 
 ## Non publié
 
+### Application mobile 1.8.0
+- Carte de progression (niveau, série, quêtes) reçue du PC, niveau gagné fêté par
+  des confettis ; jeu « Contre la montre » : QCM pendant 60 secondes, multiplicateur
+  de série, record gardé sur le téléphone
+- Diplôme demandé sur la fiche d'une offre, en couleur selon le vôtre
+
 ### Application mobile 1.7.0
 - Rappel de chaque entretien la veille à 18 h et une heure avant
 - Notification des offres suivies retirées par leur site, et des nouvelles offres
@@ -14,7 +20,6 @@ dans l'historique git.
 - Candidatures en cours lisibles hors ligne ; fiche de préparation proposée sur
   l'accueil dans les 24 heures qui précèdent un entretien
 - Widget Android de l'écran d'accueil : questions à revoir et prochain entretien
-- Diplôme demandé sur la fiche d'une offre, en couleur selon le vôtre
 
 ### Application mobile 1.6.0
 - Tri rapide des nouvelles offres : glisser pour « Intéressé » ou « Ignorée »
@@ -97,12 +102,17 @@ dans l'historique git.
   de l'Historique (7 s à 1,7 s) ; au lancement, comptes des offres par thème
   relus en base tant que les offres ne changent pas (2,7 s à 0,1 s) ; changement
   de thème ou de taille du texte deux fois plus rapide
+- Pages Offres, Historique et Mon marché plus rapides à chaque nouvel affichage :
+  textes normalisés, comparaisons au profil, offres salariées et offres du
+  marché gardés en mémoire tant que la base ne change pas ; offres récentes
+  notées d'avance en arrière-plan après le lancement
 - Médiane du marché corrigée (environ 1 600 € au lieu de 6 250 €) : seuls les
   sites français et pages carrière comptent, et la période des salaires Adzuna
   se lit au montant, heure, mois ou an (migration v33)
 - Cartes de Paramètres ouvertes à leur hauteur, sans s'étirer jusqu'au bas de
   la colonne voisine
-- Diplôme du profil (intitulé et niveau, du CAP au Bac+5) comparé au diplôme
+- Diplômes du profil, un par ligne, niveau reconnu dans l'intitulé (le plus haut
+  retenu, ou choisi à la main), du CAP au Bac+5, comparé au diplôme
   demandé par chaque offre, repéré dans le champ formation de la source ou dans
   l'annonce (migration v34) : ligne « Diplôme » de la fiche, badge orange ou
   rouge, score global réduit d'un diplôme bloquant, filtre « À ma portée »

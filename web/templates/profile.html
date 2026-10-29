@@ -36,16 +36,17 @@
             <input type="text" name="headline" value="{{ profile.headline }}" placeholder="Ex. Développeur Java depuis 5 ans, orienté qualité et performance.">
         </label>
         <div class="profile-education">
-            <label>Diplôme
-                <input type="text" name="diploma" value="{{ profile.diploma }}" placeholder="Ex. BTS Maintenance industrielle">
+            <label>Diplômes
+                <textarea name="diploma" rows="3" placeholder="Un diplôme par ligne, le niveau est reconnu dans l'intitulé&#10;Ex. BTS Maintenance industrielle">{{ profile.diplomas }}</textarea>
             </label>
             <label>Niveau du diplôme
                 <select name="education_level">
-                    <option value="">Non renseigné</option>
+                    <option value="">Automatique, d'après vos diplômes</option>
                     {% for level, label in education_levels.items() %}
                     <option value="{{ level }}"{% if profile.education_level == level %} selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
+                <small class="muted">{% if profile_level %}Niveau retenu : {{ education_levels[profile_level] }}{% else %}Aucun niveau reconnu : choisissez-le dans la liste{% endif %}</small>
             </label>
         </div>
         <label>Compétences

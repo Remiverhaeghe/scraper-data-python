@@ -38,7 +38,7 @@ from job.cv_import import (
     merge_profile_texts,
     read_cv_text,
 )
-from job.education import EDUCATION_LEVELS
+from job.education import EDUCATION_LEVELS, get_profile_level
 from job.profile import build_profile, load_profile, profile_to_texts, save_profile
 from utils.logger import get_logger
 
@@ -48,6 +48,10 @@ logger = get_logger(__name__)
 EXPERIENCES_HELP = (
     "Une expérience par ligne : Poste | compétences | réalisation marquante\n"
     "Ex. Développeur backend | Java, Spring | Réduit de 40 % le temps de réponse"
+)
+DIPLOMAS_HELP = (
+    "Un diplôme par ligne, le niveau est reconnu dans l'intitulé\n"
+    "Ex. BTS Maintenance industrielle"
 )
 CV_HELP = (
     "Une variante par ligne : Nom du CV | compétences mises en avant\n"
@@ -90,15 +94,28 @@ class ProfilePage(QWidget):
         self.skills_edit = QLineEdit()
         self.skills_edit.setPlaceholderText("Ex. Java, Spring, SQL, Docker")
 
-        self.diploma_edit = QLineEdit()
-        self.diploma_edit.setPlaceholderText("Ex. BTS Maintenance industrielle")
+        self.diploma_edit = QPlainTextEdit()
+        self.diploma_edit.setPlaceholderText(DIPLOMAS_HELP)
+        self.diploma_edit.setMaximumHeight(80)
+        self.diploma_edit.textChanged.connect(self.show_detected_level)
 
-        # Comparé au diplôme demandé par chaque offre : badge, filtre et score
+        # Comparé au diplôme demandé par chaque offre : badge, filtre et score.
+        # Automatique retient le plus haut niveau reconnu dans les intitulés.
         self.education_combo = QComboBox()
-        self.education_combo.addItem("Non renseigné", None)
+        self.education_combo.addItem("Automatique, d'après vos diplômes", None)
 
         for vLevel, vLabel in EDUCATION_LEVELS.items():
             self.education_combo.addItem(vLabel, vLevel)
+
+        self.education_combo.currentIndexChanged.connect(self.show_detected_level)
+
+        self.level_label = QLabel()
+        self.level_label.setObjectName("cardSubtitle")
+        self.level_label.setWordWrap(True)
+
+        vEducation = create_text_field("Niveau du diplôme", self.education_combo)
+        vEducation.addWidget(self.level_label)
+        vEducation.addStretch(1)
 
         self.experiences_edit = QPlainTextEdit()
         self.experiences_edit.setPlaceholderText(EXPERIENCES_HELP)
@@ -112,10 +129,8 @@ class ProfilePage(QWidget):
         vGrid.setVerticalSpacing(12)
         vGrid.addLayout(create_text_field("Nom", self.name_edit), 0, 0)
         vGrid.addLayout(create_text_field("Présentation", self.headline_edit), 0, 1)
-        vGrid.addLayout(create_text_field("Diplôme", self.diploma_edit), 1, 0)
-        vGrid.addLayout(
-            create_text_field("Niveau du diplôme", self.education_combo), 1, 1
-        )
+        vGrid.addLayout(create_text_field("Diplômes", self.diploma_edit), 1, 0)
+        vGrid.addLayout(vEducation, 1, 1)
         vGrid.addLayout(create_text_field("Compétences", self.skills_edit), 2, 0, 1, 2)
         vGrid.addLayout(
             create_text_field("Expériences", self.experiences_edit), 3, 0, 1, 2
@@ -213,10 +228,25 @@ class ProfilePage(QWidget):
             self.skills_edit.setText(vTexts["skills"])
             self.experiences_edit.setPlainText(vTexts["experiences"])
             self.cv_edit.setPlainText(vTexts["cv_variants"])
-            self.diploma_edit.setText(vTexts["diploma"])
+            self.diploma_edit.setPlainText(vTexts["diplomas"])
             self.education_combo.setCurrentIndex(
                 max(0, self.education_combo.findData(vTexts["education_level"]))
             )
+
+    def show_detected_level(self):
+        """Indique le niveau retenu pour comparer le profil aux offres."""
+        vLevel = get_profile_level(
+            {
+                "diplomas": self.diploma_edit.toPlainText().splitlines(),
+                "education_level": self.education_combo.currentData(),
+            }
+        )
+
+        self.level_label.setText(
+            f"Niveau retenu : {EDUCATION_LEVELS[vLevel]}"
+            if vLevel is not None
+            else "Aucun niveau reconnu : choisissez-le dans la liste"
+        )
 
     def get_texts(self):
         """Retourne les textes saisis dans le formulaire."""
@@ -294,7 +324,7 @@ class ProfilePage(QWidget):
                 self.skills_edit.text(),
                 self.experiences_edit.toPlainText(),
                 self.cv_edit.toPlainText(),
-                self.diploma_edit.text(),
+                self.diploma_edit.toPlainText(),
                 self.education_combo.currentData(),
             )
             save_profile(self.database_file, vProfile)

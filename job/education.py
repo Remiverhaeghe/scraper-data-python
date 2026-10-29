@@ -333,3 +333,46 @@ def is_education_blocked(pOffer):
     rBlocked = pOffer.get("education_status") == "blocked"
 
     return rBlocked
+
+
+def get_diplomas(pProfile):
+    """Retourne les diplômes du profil ; un ancien profil n'en gardait qu'un, en texte."""
+
+    vDiplomas = pProfile.get("diplomas")
+
+    # Liste vide aussi : le profil vide en apporte une à un ancien profil.
+    if not isinstance(vDiplomas, list) or not vDiplomas:
+        vDiplomas = str(pProfile.get("diploma") or "").splitlines()
+
+    rDiplomas = [vDiploma.strip() for vDiploma in vDiplomas if vDiploma.strip()]
+
+    return rDiplomas
+
+
+def detect_diploma_level(pDiploma):
+    """Retourne le niveau reconnu dans l'intitulé d'un diplôme, ou None."""
+
+    vLevels = find_levels(pDiploma, pStructured=True)
+
+    rLevel = max(vLevels) if vLevels else None
+
+    return rLevel
+
+
+def get_profile_level(pProfile):
+    """Retourne le niveau du profil : celui choisi, sinon le plus haut reconnu.
+
+    Le choix manuel sert aux intitulés non reconnus, un titre professionnel
+    par exemple.
+    """
+
+    vChosen = read_level(pProfile.get("education_level"))
+    vDetected = [
+        vLevel
+        for vLevel in map(detect_diploma_level, get_diplomas(pProfile))
+        if vLevel is not None
+    ]
+
+    rLevel = vChosen if vChosen is not None else max(vDetected, default=None)
+
+    return rLevel

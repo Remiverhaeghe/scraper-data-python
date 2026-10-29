@@ -21,8 +21,10 @@ def test_profile_is_saved_and_reloaded(qt_application, tmp_path):
     vPage.refresh()
     vPage.skills_edit.setText("Java, SQL")
     vPage.experiences_edit.setPlainText("Développeur | Java | Livré une API")
-    vPage.diploma_edit.setText("BTS Maintenance industrielle")
-    vPage.education_combo.setCurrentIndex(vPage.education_combo.findData(5))
+    vPage.diploma_edit.setPlainText("Bac pro MEI\nBTS Maintenance industrielle")
+
+    assert vPage.level_label.text() == "Niveau retenu : Bac+2 (BTS, DUT)"
+
     vPage.save()
 
     assert vPage.message_label.text().startswith("Profil enregistré : 2 compétence(s)")
@@ -33,8 +35,14 @@ def test_profile_is_saved_and_reloaded(qt_application, tmp_path):
     vReopened.refresh()
 
     assert vReopened.skills_edit.text() == "Java, SQL"
-    assert vReopened.diploma_edit.text() == "BTS Maintenance industrielle"
-    assert vReopened.education_combo.currentData() == 5
+    assert vReopened.diploma_edit.toPlainText() == (
+        "Bac pro MEI\nBTS Maintenance industrielle"
+    )
+    assert vReopened.education_combo.currentData() is None
+    assert load_profile(vDatabaseFile)["diplomas"] == [
+        "Bac pro MEI",
+        "BTS Maintenance industrielle",
+    ]
 
 
 def test_profile_reports_invalid_input(qt_application, tmp_path):

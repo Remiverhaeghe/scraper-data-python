@@ -11,6 +11,7 @@ from job.salary_market import (
     describe_net_after_commute,
     find_market_salary,
     is_training,
+    load_salaried_offers,
     to_gross_yearly,
 )
 from job.settings import save_settings
@@ -151,3 +152,26 @@ def test_net_after_commute_deducts_the_car_trip():
     )
     assert describe_net_after_commute({**vOffer, "distance_km": None}, vSettings) == ""
     assert describe_net_after_commute(vOffer, {"commute_cost_per_km": 0}) == ""
+
+
+def test_salaried_offers_are_read_again_when_offers_change(tmp_path):
+    """Vérifie la lecture gardée en mémoire, reprise dès qu'une offre change."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame([build_offer("1", "Dev Java", ["Java", "SQL"], 2500)]),
+        NOW,
+    )
+    vFirst = load_salaried_offers(vDatabaseFile)
+
+    assert load_salaried_offers(vDatabaseFile) is vFirst
+
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame([build_offer("2", "Dev Java", ["Java", "SQL"], 2700)]),
+        NOW,
+    )
+
+    assert len(load_salaried_offers(vDatabaseFile)) == 2

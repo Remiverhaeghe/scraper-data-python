@@ -55,6 +55,7 @@ from job.quiz import DEFAULT_MODE
 from job.quiz_generation import prepare_quiz_caches
 from job.schedule import save_scheduled_search
 from job.skill_cache import refresh_detected_skills_safely
+from job.statistics import warm_up_scores
 from storage.backup import run_due_backup
 from storage.database import get_database_version
 from utils.logger import get_logger
@@ -67,6 +68,8 @@ SLOW_PAGE_SECONDS = 1.0
 # Relecture des points : un gain s'affiche peu après l'action, sans que les pages
 # aient à le signaler. Le total se lit en quelques millisecondes.
 PROGRESS_CHECK_MS = 1500
+
+SCORE_WARM_UP_DELAY_MS = 15000
 
 # Liens internes du pied de menu, ouverts dans l'application
 LEGAL_LINK = "#mentions-legales"
@@ -118,6 +121,15 @@ class MainWindow(QMainWindow):
         self.progress_timer.timeout.connect(self.check_progress)
         self.progress_timer.start(PROGRESS_CHECK_MS)
         QTimer.singleShot(0, self.check_progress)
+
+        # Offres récentes notées d'avance, une fois la fenêtre ouverte et les
+        # tâches du démarrage passées : Historique et Offres s'ouvrent ensuite vite.
+        QTimer.singleShot(
+            SCORE_WARM_UP_DELAY_MS,
+            lambda: threading.Thread(
+                target=warm_up_scores, args=(pDatabaseFile,), daemon=True
+            ).start(),
+        )
 
         # Les comptes d'offres par thème sont longs à calculer : faits d'avance,
         # la page Révision s'ouvre aussitôt. Sans attente ni effet sur l'interface.

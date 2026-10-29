@@ -16,7 +16,7 @@ from job.salary_market import (
 )
 from job.settings import load_settings
 from job.sources.registry import SOURCES
-from storage.job_offers import get_offers
+from storage.job_offers import get_offers, get_salary_signature
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -176,21 +176,58 @@ def find_priority_skills(pSkills, pLevels):
     return rPriorities
 
 
-def build_market_history(pDatabaseFile, pNow, pMonths=HISTORY_MONTHS):
-    """Retourne, mois par mois, les offres vues, celles qui citent une compétence du
-    profil et leur net mensuel médian.
+def get_history_months(pNow, pMonths=HISTORY_MONTHS):
+    """Retourne les mois de l'historique, du plus récent au plus ancien, et le
+    début du plus ancien.
     """
 
-    vSkills = set(load_profile(pDatabaseFile)["skills"])
-    vMonths = {}
+    rMonths = []
     vMonth = pNow.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     for _ in range(pMonths):
-        vMonths[vMonth.strftime("%Y-%m")] = {"offers": 0, "mine": 0, "salaries": []}
-        vSince = vMonth
+        rMonths.append(vMonth)
         vMonth = (vMonth - timedelta(days=1)).replace(day=1)
 
-    for vOffer in load_market_offers(pDatabaseFile, vSince):
+    rStart = rMonths[-1]
+
+    return rMonths, rStart
+
+
+# Offres de la période, gardées tant que les offres et leurs nets ne changent pas
+MARKET_OFFERS_CACHE = {}
+
+
+def load_market_period(pDatabaseFile, pNow):
+    """Retourne les offres de l'historique, lues une fois pour le marché aussi."""
+
+    vStart = get_history_months(pNow)[1]
+    vKey = (str(pDatabaseFile), vStart, get_salary_signature(pDatabaseFile))
+
+    if vKey not in MARKET_OFFERS_CACHE:
+        MARKET_OFFERS_CACHE.clear()
+        MARKET_OFFERS_CACHE[vKey] = load_market_offers(pDatabaseFile, vStart)
+
+    rOffers = MARKET_OFFERS_CACHE[vKey]
+
+    return rOffers
+
+
+def build_market_history(pDatabaseFile, pNow, pMonths=HISTORY_MONTHS, pOffers=None):
+    """Retourne, mois par mois, les offres vues, celles qui citent une compétence du
+    profil et leur net mensuel médian.
+
+    pOffers, lues par load_market_period, évite une seconde lecture des offres.
+    """
+
+    vSkills = set(load_profile(pDatabaseFile)["skills"])
+    vMonthStarts, vSince = get_history_months(pNow, pMonths)
+    vMonths = {
+        vMonth.strftime("%Y-%m"): {"offers": 0, "mine": 0, "salaries": []}
+        for vMonth in vMonthStarts
+    }
+    vOffers = load_market_offers(pDatabaseFile, vSince) if pOffers is None else pOffers
+
+    for vOffer in vOffers:
         vKey = str(vOffer.get("first_seen_at") or "")[:7]
 
         if vKey not in vMonths:
@@ -236,12 +273,24 @@ def build_history_cells(pMonth):
     return rCells
 
 
-def build_market(pDatabaseFile, pNow, pDays=MARKET_DAYS):
+def build_market(pDatabaseFile, pNow, pDays=MARKET_DAYS, pOffers=None):
     """Retourne la synthèse du marché des pDays derniers jours : offres,
     salaires, compétences, régions et villes.
+
+    pOffers, offres d'une période plus longue déjà lues, sont filtrées sur la
+    date de découverte, comme le fait la requête.
     """
 
-    vOffers = load_market_offers(pDatabaseFile, pNow - timedelta(days=pDays))
+    vSince = pNow - timedelta(days=pDays)
+    vOffers = (
+        load_market_offers(pDatabaseFile, vSince)
+        if pOffers is None
+        else [
+            vOffer
+            for vOffer in pOffers
+            if str(vOffer.get("first_seen_at") or "") >= vSince.isoformat()
+        ]
+    )
 
     vSkills = {}
     vCities = {}

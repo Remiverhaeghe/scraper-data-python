@@ -61,6 +61,13 @@ const pendingNotesPreference = 'pending_notes';
 /// Candidatures en cours et fiches des entretiens à venir, lisibles hors ligne
 const trackingPreference = 'tracking';
 
+/// Progression reçue du PC (niveau, série, quêtes) et dernier niveau fêté ici
+const gamePreference = 'game';
+const celebratedLevelPreference = 'celebrated_level';
+
+/// Meilleur score du jeu « Contre la montre »
+const timeAttackBestPreference = 'time_attack_best';
+
 /// Avant un entretien, la fiche de préparation est proposée sur l'accueil.
 const interviewSheetLead = Duration(hours: 24);
 
@@ -540,6 +547,7 @@ class RevisionState extends ChangeNotifier {
       await exchangeWithdrawn(pClient);
       await scheduleInterviewAlerts(pClient);
       await exchangeTracking(pClient);
+      await exchangeGame(pClient);
     } on ApiException catch (vException) {
       if (vException.unreachable) {
         rethrow;
@@ -743,6 +751,68 @@ class RevisionState extends ChangeNotifier {
     }
 
     return rNext;
+  }
+
+  /// Progression reçue du PC, ou null avant la première synchronisation.
+  Map<String, dynamic>? get game {
+    final vGame = preferences[gamePreference];
+
+    final rGame = vGame is Map ? Map<String, dynamic>.from(vGame) : null;
+
+    return rGame;
+  }
+
+  /// Niveau atteint depuis la dernière fête, ou null : la première progression
+  /// reçue sert de référence, sans fête pour l'historique.
+  int? get levelToCelebrate {
+    final vLevel = (game?['level'] as num?)?.toInt();
+    final vCelebrated = (preferences[celebratedLevelPreference] as num?)?.toInt();
+
+    final rLevel = vLevel != null && vCelebrated != null && vLevel > vCelebrated ? vLevel : null;
+
+    return rLevel;
+  }
+
+  /// Note le niveau actuel comme fêté.
+  Future<void> markLevelCelebrated() async {
+    final vLevel = (game?['level'] as num?)?.toInt();
+
+    if (vLevel != null) {
+      await savePreference(celebratedLevelPreference, vLevel);
+    }
+  }
+
+  /// Garde la progression du PC ; la première reçue devient la référence des fêtes.
+  Future<void> exchangeGame(ApiClient pClient) async {
+    try {
+      final vGame = await pClient.downloadGame();
+
+      await savePreference(gamePreference, vGame);
+
+      if (preferences[celebratedLevelPreference] == null && vGame['level'] is num) {
+        await savePreference(celebratedLevelPreference, vGame['level'] as num);
+      }
+    } on ApiException catch (vException) {
+      if (vException.unreachable) {
+        rethrow;
+      }
+
+      log('Progression non reçue : ${vException.message}', name: 'sync');
+    }
+  }
+
+  /// Meilleur score du jeu « Contre la montre », 0 avant la première partie.
+  int get timeAttackBest => (preferences[timeAttackBestPreference] as num?)?.toInt() ?? 0;
+
+  /// Garde le score s'il bat le record ; retourne si c'est un nouveau record.
+  Future<bool> recordTimeAttack(int pScore) async {
+    final rRecord = pScore > timeAttackBest;
+
+    if (rRecord) {
+      await savePreference(timeAttackBestPreference, pScore);
+    }
+
+    return rRecord;
   }
 
   /// Garde les candidatures et les fiches pour une consultation hors ligne ; un

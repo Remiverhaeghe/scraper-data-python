@@ -4,10 +4,11 @@ Tout repose sur des règles et sur le profil saisi : aucune donnée ne quitte
 l'application et aucun service payant n'est utilisé.
 """
 
+import json
 import re
 from functools import lru_cache
 
-from job.education import compare_education
+from job.education import compare_education, get_profile_level
 from job.enrichment import SKILL_PATTERNS, detect_skills
 from job.fingerprint import GENDER_MARKERS
 from job.pitch import build_pitch, find_examples, lower_first
@@ -354,15 +355,38 @@ def build_target_profiles(pProfile):
     return rTargets
 
 
-def match_offer(pProfile, pOffer):
+# Comparaisons déjà faites : une offre et un profil inchangés donnent le même
+# résultat. L'Historique note sinon 7 000 offres à chaque affichage.
+MATCH_CACHE = {}
+MATCH_CACHE_SIZE = 30000
+
+
+def get_profile_key(pProfile):
+    """Retourne une empreinte du profil : elle change dès qu'il est modifié."""
+
+    rKey = hash(json.dumps(pProfile, sort_keys=True, default=str))
+
+    return rKey
+
+
+def match_offer(pProfile, pOffer, pProfileKey=None):
     """Compare le profil à une offre, d'après ses compétences et son texte.
 
     Avec plusieurs profils cibles, le meilleur score l'emporte ; target donne
-    le nom du CV retenu, ou None.
+    le nom du CV retenu, ou None. pProfileKey évite de recalculer l'empreinte
+    du profil pour chaque offre d'une liste.
     """
 
     vSkills = get_offer_skills(pOffer)
     vText = get_offer_text(pOffer)
+    vKey = (
+        get_profile_key(pProfile) if pProfileKey is None else pProfileKey,
+        hash((tuple(vSkills), vText)),
+    )
+    vCached = MATCH_CACHE.get(vKey)
+
+    if vCached is not None:
+        return dict(vCached)
 
     rMatch = None
 
@@ -372,7 +396,15 @@ def match_offer(pProfile, pOffer):
         if rMatch is None or (vMatch["score"] or -1) > (rMatch["score"] or -1):
             rMatch = vMatch
 
-    return rMatch
+    if rMatch is None:
+        return None
+
+    if len(MATCH_CACHE) >= MATCH_CACHE_SIZE:
+        MATCH_CACHE.clear()
+
+    MATCH_CACHE[vKey] = rMatch
+
+    return dict(rMatch)
 
 
 def recommend_cv(pProfile, pOfferSkills):
@@ -636,12 +668,15 @@ def score_offers(pOffers, pProfile):
         and build_target_profiles(pProfile)[0][0] is None
     )
 
+    vProfileKey = get_profile_key(pProfile)
+    vLevel = get_profile_level(pProfile)
+
     for vOffer in pOffers:
-        vMatch = None if vEmpty else match_offer(pProfile, vOffer)
+        vMatch = None if vEmpty else match_offer(pProfile, vOffer, vProfileKey)
         vOffer["match_score"] = vMatch["score"] if vMatch else None
         vOffer["match_target"] = vMatch["target"] if vMatch else None
         vOffer["education_status"] = compare_education(
-            vOffer.get("education_level"), pProfile.get("education_level")
+            vOffer.get("education_level"), vLevel
         )
 
 

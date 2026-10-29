@@ -24,6 +24,7 @@ from job.market import (
     build_market,
     build_market_cells,
     build_market_history,
+    load_market_period,
 )
 from job.profile import add_profile_skill, load_profile
 from job.quiz import load_active_quiz
@@ -136,8 +137,10 @@ def show_market(
         load_profile(pDatabaseFile),
         None if vDepartment in (None, "", "france") else vDepartment,
     )
-    vMarket = build_market(pDatabaseFile, datetime.now())
-    vHistory = build_market_history(pDatabaseFile, datetime.now())
+    vNow = datetime.now()
+    vOffers = load_market_period(pDatabaseFile, vNow)
+    vMarket = build_market(pDatabaseFile, vNow, pOffers=vOffers)
+    vHistory = build_market_history(pDatabaseFile, vNow, pOffers=vOffers)
 
     rResponse = templates.TemplateResponse(
         request,

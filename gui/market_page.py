@@ -48,6 +48,7 @@ from job.market import (
     build_market,
     build_market_cells,
     build_market_history,
+    load_market_period,
 )
 from job.profile import load_profile
 from utils.logger import get_logger
@@ -356,8 +357,10 @@ class MarketPage(QWidget):
     def refresh(self):
         """Recalcule le marché à partir des offres en base."""
         try:
-            vMarket = build_market(self.database_file, datetime.now())
-            vHistory = build_market_history(self.database_file, datetime.now())
+            vNow = datetime.now()
+            vOffers = load_market_period(self.database_file, vNow)
+            vMarket = build_market(self.database_file, vNow, pOffers=vOffers)
+            vHistory = build_market_history(self.database_file, vNow, pOffers=vOffers)
 
         except Exception:
             logger.exception("Impossible de calculer le marché")

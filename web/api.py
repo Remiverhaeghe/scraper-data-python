@@ -32,6 +32,7 @@ from job.mobile_sync import (
     sync_status_changes,
 )
 from job.profile import load_profile
+from job.progress import build_progress as build_game_progress
 from job.self_assessment import (
     KNOWN_LEVEL,
     MAX_LEVEL,
@@ -260,6 +261,15 @@ def download_tracking(pDatabaseFile: str = Depends(get_database_file)):
     rTracking = build_tracking(pDatabaseFile, datetime.now())
 
     return rTracking
+
+
+@router.get("/game", dependencies=[Depends(require_api_token)])
+def download_game(pDatabaseFile: str = Depends(get_database_file)):
+    """Renvoie niveau, points, série et quêtes, calculés sur le PC."""
+
+    rGame = build_game_progress(pDatabaseFile, datetime.now())
+
+    return rGame
 
 
 @router.get("/withdrawn", dependencies=[Depends(require_api_token)])

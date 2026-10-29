@@ -47,6 +47,7 @@ from job.education import (
     EDUCATION_LEVELS,
     compare_education,
     format_education,
+    get_profile_level,
     is_education_blocked,
 )
 from job.experience_fit import describe_experience_fit, mark_experience_fit
@@ -574,7 +575,7 @@ def show_offer(
     add_distances([vPrepared], load_home(pDatabaseFile))
     vPrepared["education_status"] = compare_education(
         vPrepared.get("education_level"),
-        load_profile(pDatabaseFile).get("education_level"),
+        get_profile_level(load_profile(pDatabaseFile)),
     )
     vMarket = find_market_salary(pDatabaseFile, vPrepared)
     vCompanyRules = load_company_rules(pDatabaseFile)

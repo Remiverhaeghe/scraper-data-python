@@ -166,7 +166,8 @@ mobile/
 │   │   ├── exam.dart             # Examen blanc : tirage, durée conseillée, résultat
 │   │   ├── statistics.dart       # Réussite par thème et activité des derniers jours
 │   │   ├── offer_alerts.dart     # Nouvelles offres assez proches du profil pour une alerte
-│   │   └── interview_alerts.dart # Rappels d'entretien : la veille à 18 h et une heure avant
+│   │   ├── interview_alerts.dart # Rappels d'entretien : la veille à 18 h et une heure avant
+│   │   └── time_attack.dart      # Jeu « Contre la montre » : points, multiplicateur, bilan
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
 │   │   ├── discovery.dart        # Recherche du serveur sur le réseau local
@@ -189,8 +190,11 @@ mobile/
 │   │   ├── triage_screen.dart    # Tri rapide des nouvelles offres, une à la fois
 │   │   ├── interview_screen.dart # Simulation d'entretien technique
 │   │   ├── skills_screen.dart    # Auto-évaluation des compétences
-│   │   └── guide_screen.dart     # Guide pratique d'un thème
+│   │   ├── guide_screen.dart     # Guide pratique d'un thème
+│   │   └── time_attack_screen.dart # Jeu « Contre la montre » : QCM pendant 60 secondes
 │   └── widgets/
+│       ├── celebration.dart      # Confettis et carte d'un niveau gagné ou d'un record
+│       ├── game_card.dart        # Niveau, série et quêtes reçus du PC, accès au jeu
 │       ├── question_input.dart   # Saisie selon le type de question
 │       └── question_parts.dart   # Code, schéma SVG plein écran et résultat corrigé
 └── test/
@@ -218,6 +222,7 @@ mobile/
     ├── home_widget_test.dart     # Teste les lignes du widget et sa mise à jour
     ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond
     ├── review_input_test.dart    # Teste la saisie d'une revue de code
+    ├── game_test.dart            # Teste la progression reçue, la fête de niveau et le jeu
     ├── integration/
     │   └── server_sync_test.dart # Synchronisation avec le vrai serveur (CI seulement)
     ├── schema_view_test.dart     # Teste la description et le plein écran des schémas

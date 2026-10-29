@@ -1,5 +1,6 @@
 """Indicateurs du tableau de bord et de l'historique, communs au bureau et au web"""
 
+import time
 from datetime import datetime, timedelta
 
 from job.companies import find_preferred_offers
@@ -372,6 +373,28 @@ def get_week_goal(pDatabaseFile, pNow):
     }
 
     return rGoal
+
+
+def warm_up_scores(pDatabaseFile):
+    """Note d'avance les offres récentes : Historique, Offres et Mon marché
+    s'ouvrent ensuite sans recalcul. Lancée en arrière-plan ; une erreur est
+    journalisée sans gêner l'application.
+    """
+
+    vStart = time.perf_counter()
+
+    try:
+        vCount = len(load_scored_offers(pDatabaseFile, datetime.now()))
+
+    except Exception:  # pylint: disable=broad-exception-caught
+        logger.exception("Échec de la notation anticipée des offres")
+
+    else:
+        logger.info(
+            "%s offre(s) notée(s) d'avance en %.1f s",
+            vCount,
+            time.perf_counter() - vStart,
+        )
 
 
 def load_scored_offers(pDatabaseFile, pNow, pDays=SOURCE_COMPARISON_DAYS):

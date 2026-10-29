@@ -6,6 +6,7 @@ des offres déjà en base peut l'utiliser sans créer d'import circulaire.
 
 import re
 import unicodedata
+from functools import lru_cache
 
 # Mentions de genre ajoutées aux titres : « H/F », « F/H », « (m/w/d) »...
 GENDER_MARKERS = re.compile(
@@ -24,11 +25,24 @@ LEGAL_FORMS = re.compile(
 SIGNATURE_WORDS = 20
 MIN_SIGNATURE_WORDS = 12
 
+# Textes normalisés gardés : agences, annonces douteuses, marché et doublons
+# relisent les mêmes descriptions à chaque affichage.
+NORMALIZE_CACHE_SIZE = 50000
+
 
 def normalize(pText):
     """Met un texte sous une forme comparable : minuscules, sans accents ni ponctuation."""
 
-    vText = unicodedata.normalize("NFKD", str(pText or ""))
+    rText = normalize_text(str(pText or ""))
+
+    return rText
+
+
+@lru_cache(maxsize=NORMALIZE_CACHE_SIZE)
+def normalize_text(pText):
+    """Normalise un texte déjà converti en chaîne ; résultat gardé en cache."""
+
+    vText = unicodedata.normalize("NFKD", pText)
     vText = "".join(vChar for vChar in vText if not unicodedata.combining(vChar))
     vText = GENDER_MARKERS.sub(" ", vText.lower())
 

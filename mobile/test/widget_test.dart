@@ -37,10 +37,17 @@ void main() {
 
     await pTester.pumpWidget(MaterialApp(home: HomeScreen(state: vState)));
 
+    // La carte de progression est en tête : les domaines viennent en défilant.
+    await pTester.scrollUntilVisible(find.text('Informatique'), 200);
     expect(find.text('Informatique'), findsOneWidget);
-    expect(find.text('Industrie'), findsOneWidget);
     expect(find.text('Docker'), findsOneWidget);
+    await pTester.scrollUntilVisible(
+      find.text('0 à revoir · 3 nouvelle(s) · 3 question(s)'),
+      200,
+    );
     expect(find.text('0 à revoir · 3 nouvelle(s) · 3 question(s)'), findsOneWidget);
+    await pTester.scrollUntilVisible(find.text('Industrie'), 200);
+    expect(find.text('Industrie'), findsOneWidget);
   });
 
   testWidgets('Une question de QCM se corrige et se garde pour l envoi', (pTester) async {

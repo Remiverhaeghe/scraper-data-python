@@ -937,6 +937,26 @@ def get_offer_texts(pDatabaseFile):
     return rTexts
 
 
+def get_salary_signature(pDatabaseFile):
+    """Retourne une empreinte des offres et de leurs salaires nets : elle change avec
+    les offres, et aussi quand les règles de calcul du net sont modifiées.
+    """
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rSignature = tuple(vConnection.execute("""
+                SELECT COUNT(*), MAX(last_seen_at), TOTAL(salary_net_monthly_min),
+                    TOTAL(salary_net_monthly_max)
+                FROM job_offer
+                """).fetchone())
+
+    finally:
+        vConnection.close()
+
+    return rSignature
+
+
 def get_offers_signature(pDatabaseFile):
     """Retourne le nombre d'offres et la dernière date vue : change avec les offres."""
 

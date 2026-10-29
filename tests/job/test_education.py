@@ -10,6 +10,7 @@ from job.education import (
     compare_education,
     describe_education,
     detect_education_level,
+    get_profile_level,
     refresh_education_levels,
 )
 from storage.database import connect_database, initialize_database
@@ -116,3 +117,14 @@ def test_levels_are_saved_once_then_recomputed_with_new_rules(tmp_path, monkeypa
     monkeypatch.setattr("job.education.EDUCATION_VERSION", "autres-regles")
 
     assert refresh_education_levels(vDatabaseFile) == 2
+
+
+def test_profile_level_is_the_highest_diploma_unless_chosen():
+    """Vérifie le niveau retenu : le plus haut reconnu, ou celui choisi."""
+
+    vProfile = {"diplomas": ["Bac pro MEI", "BTS Maintenance industrielle"]}
+
+    assert get_profile_level(vProfile) == 5
+    assert get_profile_level({**vProfile, "education_level": 6}) == 6
+    assert get_profile_level({"diplomas": ["Titre professionnel TMI"]}) is None
+    assert get_profile_level({"diplomas": [], "diploma": "Licence pro GMAO"}) == 6

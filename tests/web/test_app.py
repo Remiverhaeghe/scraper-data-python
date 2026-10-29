@@ -846,8 +846,8 @@ def test_diploma_is_compared_to_the_offer(client):
         "/profile",
         data={
             "skills": "Java",
-            "diploma": "BTS Maintenance industrielle",
-            "education_level": "5",
+            "diploma": "Bac pro MEI\nBTS Maintenance industrielle",
+            "education_level": "",
         },
     )
     vProfile = client.get("/profile").text
@@ -855,8 +855,8 @@ def test_diploma_is_compared_to_the_offer(client):
     vList = client.get("/offers").text
     vReachable = client.get("/offers?reach=1").text
 
-    assert 'value="BTS Maintenance industrielle"' in vProfile
-    assert '<option value="5" selected>' in vProfile
+    assert "Bac pro MEI\nBTS Maintenance industrielle</textarea>" in vProfile
+    assert "Niveau retenu : Bac+2 (BTS, DUT)" in vProfile
     assert "Bac+5 (master, ingénieur) · Diplôme probablement bloquant" in vOffer
     assert "Diplôme demandé au-dessus du vôtre" in vList
     assert "Diplôme demandé au-dessus du vôtre" not in vReachable

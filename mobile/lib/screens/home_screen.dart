@@ -8,6 +8,8 @@ import '../models/quiz_package.dart';
 import '../revision_state.dart';
 import '../services/api_client.dart';
 import '../theme.dart';
+import '../widgets/celebration.dart';
+import '../widgets/game_card.dart';
 import 'exam_screen.dart';
 import 'interview_screen.dart';
 import 'offers_screen.dart';
@@ -33,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    state.addListener(celebrateLevel);
 
     // Synchronisation à l'ouverture, sans attendre un geste de l'utilisateur.
     WidgetsBinding.instance.addPostFrameCallback((_) => state.synchronizeQuietly());
@@ -41,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    state.removeListener(celebrateLevel);
     super.dispose();
   }
 
@@ -49,6 +53,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // Au retour dans l'application, le réseau est peut-être revenu.
     if (pState == AppLifecycleState.resumed) {
       state.synchronizeQuietly();
+    }
+  }
+
+  /// Fête un niveau gagné, reçu du PC à la synchronisation ; une seule fois.
+  Future<void> celebrateLevel() async {
+    final vLevel = state.levelToCelebrate;
+
+    if (vLevel == null || !mounted) {
+      return;
+    }
+
+    await state.markLevelCelebrated();
+
+    if (mounted) {
+      await showCelebration(
+        context,
+        title: 'Niveau $vLevel',
+        subtitle: '${state.game?['title'] ?? ''}',
+        detail: 'Prochain titre : ${state.game?['next_title'] ?? ''}',
+      );
     }
   }
 
@@ -150,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             children: [
               if (state.syncing) const LinearProgressIndicator(),
               SummaryCard(state: state),
+              GameCard(state: state),
               DailyGoalCard(state: state),
               if (state.nextInterview(DateTime.now()) case final vInterview?)
                 Card(

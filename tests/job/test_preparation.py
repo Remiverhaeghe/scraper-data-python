@@ -362,3 +362,13 @@ def test_offer_is_scored_on_the_best_target_profile():
     assert (
         match_offer(build_profile("", "", "Java", "", ""), vOffers[0])["target"] is None
     )
+
+
+def test_match_is_kept_until_the_profile_changes():
+    """Vérifie la comparaison gardée, refaite quand le profil change."""
+
+    vOffer = {"title": "Dev", "skills": ["Java", "SQL"], "detected_skills": "[]"}
+    vFirst = match_offer({"skills": ["Java"]}, vOffer)
+
+    assert match_offer({"skills": ["Java"]}, vOffer) == vFirst
+    assert match_offer({"skills": ["Java", "SQL"]}, vOffer)["score"] > vFirst["score"]

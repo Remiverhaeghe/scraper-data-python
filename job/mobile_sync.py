@@ -17,7 +17,12 @@ import segno
 from config import WEB_SCHEME, WEB_TLS_CERTFILE
 from job.access_tokens import check_access_token, get_access_token, renew_access_token
 from job.companies import load_company_rules, mark_preferred_companies
-from job.education import compare_education, describe_education, format_education
+from job.education import (
+    compare_education,
+    describe_education,
+    format_education,
+    get_profile_level,
+)
 from job.geocoding import load_home
 from job.interview_revision import find_offer_themes
 from job.preparation import match_offer
@@ -556,7 +561,7 @@ def build_offer_list(pDatabaseFile, pNow):
 
     for vOffer in vOffers:
         vOffer["education_status"] = compare_education(
-            vOffer.get("education_level"), vProfile.get("education_level")
+            vOffer.get("education_level"), get_profile_level(vProfile)
         )
 
     rOffers = [

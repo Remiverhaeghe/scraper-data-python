@@ -321,3 +321,13 @@ def test_withdrawn_offers_are_sent_to_the_phone(api):
     set_availability(vDatabaseFile, "lever", "1", "expired", datetime.now())
 
     assert api.get("/api/v1/withdrawn").json()["offers"][0]["title"] == "Dev"
+
+
+def test_game_gives_level_streak_and_quests(api):
+    """Vérifie la progression envoyée au téléphone, avec le jeton seulement."""
+
+    vGame = api.get("/api/v1/game").json()
+
+    assert (vGame["level"], vGame["title"], vGame["xp"]) == (1, "Apprenti", 0)
+    assert len(vGame["quests"]) == 4
+    assert api.get("/api/v1/game", headers={"Authorization": ""}).status_code == 401

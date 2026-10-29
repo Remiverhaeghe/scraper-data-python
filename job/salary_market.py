@@ -14,7 +14,7 @@ from job.location import FRANCE
 from job.preparation import get_offer_skills
 from job.presentation import clean_missing_values, format_euros
 from job.settings import get_net_ratio, get_tax_rate, load_settings
-from storage.job_offers import get_offers
+from storage.job_offers import get_offers, get_salary_signature
 
 MIN_COMPARABLES = 3
 MIN_SKILL_SHARE = 1 / 3
@@ -76,8 +76,27 @@ def share_skills(pFirst, pSecond):
     return rShared
 
 
+# Offres avec salaire, gardées tant que les offres et les nets ne changent pas :
+# Offres, fiche d'une offre et annonces douteuses les relisent à chaque affichage.
+SALARIED_CACHE = {}
+
+
 def load_salaried_offers(pDatabaseFile):
     """Retourne les offres comparables lues une fois : (offre, compétences, net)."""
+
+    vKey = (str(pDatabaseFile), get_salary_signature(pDatabaseFile))
+
+    if vKey not in SALARIED_CACHE:
+        SALARIED_CACHE.clear()
+        SALARIED_CACHE[vKey] = read_salaried_offers(pDatabaseFile)
+
+    rOffers = SALARIED_CACHE[vKey]
+
+    return rOffers
+
+
+def read_salaried_offers(pDatabaseFile):
+    """Lit en base les offres comparables : (offre, compétences, net)."""
 
     rOffers = [
         (vOffer, set(get_offer_skills(vOffer)), vSalary)
@@ -104,9 +123,11 @@ def collect_salaries(pOffer, pSalaried):
     rSalaries = (
         [
             vSalary
-            for vOther, vOtherSkills, vSalary in pSalaried
-            if (vOther["source"], str(vOther["source_id"])) != vKey
-            and is_training(vOther) == vTraining
+            for vOtherKey, vOtherTraining, vOtherSkills, vSalary in get_comparables(
+                pSalaried
+            )
+            if vOtherKey != vKey
+            and vOtherTraining == vTraining
             and share_skills(vSkills, vOtherSkills)
         ]
         if vSkills
@@ -114,6 +135,37 @@ def collect_salaries(pOffer, pSalaried):
     )
 
     return rSalaries
+
+
+# Clé et stage repérés une fois par liste d'offres salariées, pas à chaque offre
+COMPARABLES_CACHE = {}
+
+
+def get_comparables(pSalaried):
+    """Retourne (clé, stage, compétences, net) pour chaque offre salariée."""
+
+    vKey = id(pSalaried)
+    vCached = COMPARABLES_CACHE.get(vKey)
+
+    if vCached is None or vCached[0] is not pSalaried:
+        vCached = (
+            pSalaried,
+            [
+                (
+                    (vOther["source"], str(vOther["source_id"])),
+                    is_training(vOther),
+                    vSkills,
+                    vSalary,
+                )
+                for vOther, vSkills, vSalary in pSalaried
+            ],
+        )
+        COMPARABLES_CACHE.clear()
+        COMPARABLES_CACHE[vKey] = vCached
+
+    rComparables = vCached[1]
+
+    return rComparables
 
 
 def add_estimated_salaries(pDatabaseFile, pOffers):

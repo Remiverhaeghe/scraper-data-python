@@ -188,6 +188,18 @@ class ApiClient {
     return rTracking;
   }
 
+  /// Niveau, points, série et quêtes, calculés par le PC.
+  Future<Map<String, dynamic>> downloadGame() async {
+    final vResponse = await send(
+      'Progression',
+      () => client.get(buildUri('/game'), headers: buildHeaders()),
+    );
+
+    final rGame = decode(vResponse);
+
+    return rGame;
+  }
+
   /// Entretiens des sept prochains jours, pour les rappels du téléphone.
   Future<List<Map<String, dynamic>>> downloadInterviews() async {
     final vResponse = await send(

@@ -14,7 +14,7 @@ from job.cv_import import (
     merge_profile_texts,
     read_cv_text,
 )
-from job.education import EDUCATION_LEVELS, read_level
+from job.education import EDUCATION_LEVELS, get_profile_level, read_level
 from job.interview_drill import get_due_cards, grade_card
 from job.self_assessment import (
     KNOWN_LEVEL,
@@ -68,6 +68,12 @@ def render_profile(
             "active_page": "profile",
             "profile": pTexts,
             "education_levels": EDUCATION_LEVELS,
+            "profile_level": get_profile_level(
+                {
+                    "diplomas": str(pTexts.get("diplomas") or "").splitlines(),
+                    "education_level": pTexts.get("education_level"),
+                }
+            ),
             "message": pMessage,
             "message_tone": get_message_tone(pStatusCode),
             "cv_prompt": pCvPrompt,
@@ -128,7 +134,7 @@ def update_profile(
         "skills": pSkills,
         "experiences": pExperiences,
         "cv_variants": pCvVariants,
-        "diploma": pDiploma,
+        "diplomas": pDiploma,
         "education_level": read_level(pEducationLevel),
     }
 
