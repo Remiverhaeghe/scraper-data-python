@@ -109,7 +109,11 @@
         "La consommation d'énergie d'une machine au cours d'une journée"
       ],
       "answer": 0,
-      "explanation": "Taux élevé au début (défauts de jeunesse), bas et constant en maturité (pannes aléatoires), puis croissant avec l'usure. La stratégie de maintenance dépend de la période."
+      "explanation": "Taux élevé au début (défauts de jeunesse), bas et constant en maturité (pannes aléatoires), puis croissant avec l'usure. La stratégie de maintenance dépend de la période.",
+      "visual": {
+        "asset": "fiab-baignoire.svg",
+        "alt": "Courbe en baignoire et ses trois périodes"
+      }
     },
     {
       "id": "fiab-010",
@@ -122,7 +126,11 @@
         "À n'importe quel moment, la période n'influence pas l'intérêt du remplacement"
       ],
       "answer": 0,
-      "explanation": "Remplacer une pièce qui ne s'use pas (pannes aléatoires) ne réduit pas le risque et peut ajouter des défauts de remontage. Le systématique se justifie sur l'usure prévisible."
+      "explanation": "Remplacer une pièce qui ne s'use pas (pannes aléatoires) ne réduit pas le risque et peut ajouter des défauts de remontage. Le systématique se justifie sur l'usure prévisible.",
+      "visual": {
+        "asset": "fiab-baignoire.svg",
+        "alt": "Courbe en baignoire et ses trois périodes"
+      }
     },
     {
       "id": "fiab-011",
@@ -469,7 +477,11 @@
         "À planifier les congés des techniciens de maintenance"
       ],
       "answer": 0,
-      "explanation": "On part de l'événement redouté (sommet) et on le décompose en causes reliées par des portes ET et OU. On peut ensuite calculer sa probabilité."
+      "explanation": "On part de l'événement redouté (sommet) et on le décompose en causes reliées par des portes ET et OU. On peut ensuite calculer sa probabilité.",
+      "visual": {
+        "asset": "fiab-arbre.svg",
+        "alt": "Arbre de défaillance avec portes OU et ET"
+      }
     },
     {
       "id": "fiab-037",
@@ -482,7 +494,11 @@
         "L'événement ne peut pas survenir"
       ],
       "answer": 0,
-      "explanation": "Porte ET : causes simultanées (redondance, il faut perdre les deux pompes). Porte OU : une seule cause suffit. La redondance transforme un OU en ET et rend l'événement moins probable."
+      "explanation": "Porte ET : causes simultanées (redondance, il faut perdre les deux pompes). Porte OU : une seule cause suffit. La redondance transforme un OU en ET et rend l'événement moins probable.",
+      "visual": {
+        "asset": "fiab-arbre.svg",
+        "alt": "Arbre de défaillance avec portes OU et ET"
+      }
     },
     {
       "id": "fiab-038",
@@ -492,7 +508,11 @@
       "value": 99,
       "unit": "%",
       "tolerance": 0.5,
-      "explanation": "En parallèle, l'ensemble défaille si les deux défaillent : 0,1 × 0,1 = 0,01. Fiabilité = 1 - 0,01 = 0,99, soit 99 %."
+      "explanation": "En parallèle, l'ensemble défaille si les deux défaillent : 0,1 × 0,1 = 0,01. Fiabilité = 1 - 0,01 = 0,99, soit 99 %.",
+      "visual": {
+        "asset": "fiab-montages.svg",
+        "alt": "Éléments en série et en parallèle"
+      }
     },
     {
       "id": "fiab-039",
@@ -502,7 +522,11 @@
       "value": 83.8,
       "unit": "%",
       "tolerance": 1,
-      "explanation": "En série, tous doivent fonctionner : 0,95 × 0,90 × 0,98 ≈ 0,838. Un système en série est moins fiable que son élément le plus faible."
+      "explanation": "En série, tous doivent fonctionner : 0,95 × 0,90 × 0,98 ≈ 0,838. Un système en série est moins fiable que son élément le plus faible.",
+      "visual": {
+        "asset": "fiab-montages.svg",
+        "alt": "Éléments en série et en parallèle"
+      }
     },
     {
       "id": "fiab-040",
@@ -515,7 +539,11 @@
         "Les éléments en série vieillissent exactement au même rythme"
       ],
       "answer": 0,
-      "explanation": "Produit de nombres inférieurs à 1 : plus il y a d'éléments, plus la fiabilité globale baisse. D'où l'intérêt des stocks tampons ou de la redondance sur les points faibles."
+      "explanation": "Produit de nombres inférieurs à 1 : plus il y a d'éléments, plus la fiabilité globale baisse. D'où l'intérêt des stocks tampons ou de la redondance sur les points faibles.",
+      "visual": {
+        "asset": "fiab-montages.svg",
+        "alt": "Éléments en série et en parallèle"
+      }
     },
     {
       "id": "fiab-041",
@@ -528,7 +556,11 @@
         "La durée exacte avant la première panne d'un équipement"
       ],
       "answer": 0,
-      "explanation": "β < 1 : défauts de jeunesse ; β = 1 : pannes aléatoires (loi exponentielle) ; β > 1 : usure. On l'obtient à partir de l'historique des pannes."
+      "explanation": "β < 1 : défauts de jeunesse ; β = 1 : pannes aléatoires (loi exponentielle) ; β > 1 : usure. On l'obtient à partir de l'historique des pannes.",
+      "visual": {
+        "asset": "fiab-baignoire.svg",
+        "alt": "Courbe en baignoire et ses trois périodes"
+      }
     },
     {
       "id": "fiab-042",
@@ -1332,6 +1364,141 @@
       ],
       "answer": 0,
       "explanation": "Un recruteur attend une démarche (analyse, action, mesure) et un résultat chiffré. Préparez un ou deux exemples de ce type."
+    },
+    {
+      "id": "fiab-101",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Un roulement s'use avec le temps et ses pannes deviennent de plus en plus fréquentes. Cliquez sur la période correspondante de la courbe.",
+      "zones": [
+        {
+          "label": "Jeunesse",
+          "rect": [
+            82,
+            64,
+            198,
+            224
+          ]
+        },
+        {
+          "label": "Maturité",
+          "rect": [
+            282,
+            64,
+            356,
+            224
+          ]
+        },
+        {
+          "label": "Vieillissement",
+          "rect": [
+            640,
+            64,
+            198,
+            224
+          ]
+        }
+      ],
+      "answer": 2,
+      "visual": {
+        "asset": "fiab-baignoire.svg",
+        "alt": "Courbe en baignoire et ses trois périodes",
+        "show": "question"
+      },
+      "explanation": "Un taux de défaillance qui croît avec l'âge caractérise le vieillissement (β > 1 en Weibull). C'est la période où un remplacement préventif peut être rentable."
+    },
+    {
+      "id": "fiab-102",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Dans cet arbre, cliquez sur la porte qui traduit la redondance des deux pompes.",
+      "zones": [
+        {
+          "label": "Porte OU",
+          "rect": [
+            420,
+            112,
+            60,
+            50
+          ]
+        },
+        {
+          "label": "Porte ET",
+          "rect": [
+            640,
+            256,
+            60,
+            50
+          ]
+        },
+        {
+          "label": "Arrêt de la ligne",
+          "rect": [
+            330,
+            50,
+            240,
+            46
+          ]
+        },
+        {
+          "label": "Panne du convoyeur",
+          "rect": [
+            130,
+            196,
+            200,
+            46
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "fiab-arbre.svg",
+        "alt": "Arbre de défaillance avec portes OU et ET",
+        "show": "question"
+      },
+      "explanation": "La porte ET exige que les deux pompes soient hors service pour perdre la fonction : c'est la redondance. La porte OU du sommet arrête la ligne dès qu'une de ses causes survient."
+    },
+    {
+      "id": "fiab-103",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Des pannes surviennent juste après la mise en service, dues à des défauts de montage. Cliquez sur la période correspondante.",
+      "zones": [
+        {
+          "label": "Jeunesse",
+          "rect": [
+            82,
+            64,
+            198,
+            224
+          ]
+        },
+        {
+          "label": "Maturité",
+          "rect": [
+            282,
+            64,
+            356,
+            224
+          ]
+        },
+        {
+          "label": "Vieillissement",
+          "rect": [
+            640,
+            64,
+            198,
+            224
+          ]
+        }
+      ],
+      "answer": 0,
+      "visual": {
+        "asset": "fiab-baignoire.svg",
+        "alt": "Courbe en baignoire et ses trois périodes",
+        "show": "question"
+      },
+      "explanation": "Les défauts de jeunesse (β < 1) se traitent par la qualité de montage, les essais de réception et le rodage, pas par du préventif systématique."
     }
   ]
 }

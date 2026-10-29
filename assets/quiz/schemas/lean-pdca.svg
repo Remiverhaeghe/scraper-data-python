@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="335" viewBox="0 0 900 335" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="335" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Roue de Deming (PDCA)</text>
+<path d="M450,175 L450.0,60.0 A115,115 0 0 1 565.0,175.0 z" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="494.7" y="128.3" text-anchor="middle" font-size="16" font-weight="bold" fill="#0f172a">Plan</text>
+<text x="494.7" y="146.3" text-anchor="middle" font-size="13" fill="#0f172a">Planifier</text>
+<path d="M450,175 L565.0,175.0 A115,115 0 0 1 450.0,290.0 z" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="494.7" y="217.7" text-anchor="middle" font-size="16" font-weight="bold" fill="#0f172a">Do</text>
+<text x="494.7" y="235.7" text-anchor="middle" font-size="13" fill="#0f172a">Faire</text>
+<path d="M450,175 L450.0,290.0 A115,115 0 0 1 335.0,175.0 z" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+<text x="405.3" y="217.7" text-anchor="middle" font-size="16" font-weight="bold" fill="#0f172a">Check</text>
+<text x="405.3" y="235.7" text-anchor="middle" font-size="13" fill="#0f172a">Vérifier</text>
+<path d="M450,175 L335.0,175.0 A115,115 0 0 1 450.0,60.0 z" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+<text x="405.3" y="128.3" text-anchor="middle" font-size="16" font-weight="bold" fill="#0f172a">Act</text>
+<text x="405.3" y="146.3" text-anchor="middle" font-size="13" fill="#0f172a">Agir</text>
+<text x="450.0" y="318.0" text-anchor="middle" font-size="14" fill="#475569">Le cycle recommence : chaque tour part du standard amélioré</text>
+</svg>

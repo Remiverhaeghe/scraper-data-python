@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="300" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Boucle kanban en flux tiré</text>
+<rect x="40.0" y="90.0" width="200.0" height="70.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="140.0" y="121.0" text-anchor="middle" font-size="15" fill="#0f172a">Poste amont</text>
+<text x="140.0" y="139.0" text-anchor="middle" font-size="15" fill="#0f172a">(fabrique)</text>
+<rect x="350.0" y="90.0" width="200.0" height="70.0" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+<text x="450.0" y="121.0" text-anchor="middle" font-size="15" fill="#0f172a">Supermarché</text>
+<text x="450.0" y="139.0" text-anchor="middle" font-size="15" fill="#0f172a">(stock limité)</text>
+<rect x="660.0" y="90.0" width="200.0" height="70.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="760.0" y="121.0" text-anchor="middle" font-size="15" fill="#0f172a">Poste aval</text>
+<text x="760.0" y="139.0" text-anchor="middle" font-size="15" fill="#0f172a">(consomme)</text>
+<line x1="242.0" y1="125.0" x2="347.0" y2="125.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="552.0" y1="125.0" x2="657.0" y2="125.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<text x="295.0" y="115.0" text-anchor="middle" font-size="13" fill="#475569">pièces</text>
+<text x="605.0" y="115.0" text-anchor="middle" font-size="13" fill="#475569">pièces</text>
+<path d="M760,162 C760,240 140,240 140,164" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#fleche)"/>
+<rect x="390.0" y="214.0" width="120.0" height="36.0" rx="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+<text x="450.0" y="236.3" text-anchor="middle" font-size="13" fill="#0f172a">Carte kanban</text>
+<text x="450.0" y="282.0" text-anchor="middle" font-size="14" fill="#475569">La carte libérée autorise la fabrication d'un nouveau conteneur</text>
+</svg>

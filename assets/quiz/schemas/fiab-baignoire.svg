@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="330" viewBox="0 0 900 330" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="330" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Courbe en baignoire</text>
+<line x1="80" y1="290" x2="840" y2="290" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="80" y1="290" x2="80" y2="60" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<text x="840.0" y="312.0" text-anchor="end" font-size="13" fill="#475569">Temps</text>
+<text x="88.0" y="56.0" text-anchor="start" font-size="13" fill="#475569">Taux de défaillance λ</text>
+<rect x="82" y="64" width="198" height="224" fill="#fee2e2" opacity="0.5"/>
+<rect x="282" y="64" width="356" height="224" fill="#dcfce7" opacity="0.5"/>
+<rect x="640" y="64" width="198" height="224" fill="#fef3c7" opacity="0.5"/>
+<path d="M90,90 C150,230 220,240 290,240 L630,240 C700,240 760,220 830,90" fill="none" stroke="#0369a1" stroke-width="4"/>
+<text x="181.0" y="274.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Jeunesse (β &lt; 1)</text>
+<text x="460.0" y="274.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Maturité (β = 1)</text>
+<text x="739.0" y="274.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Vieillissement (β &gt; 1)</text>
+<text x="460.0" y="200.0" text-anchor="middle" font-size="13" fill="#475569">pannes aléatoires, λ constant</text>
+</svg>

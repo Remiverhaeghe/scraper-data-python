@@ -125,7 +125,9 @@ dans l'historique git.
   de niveau
 - Révision : thèmes Lean et amélioration continue, et Fiabilité et méthodes
   (AMDEC, MTBF, GMAO), 100 questions chacun avec calculs, associations et
-  remises en ordre ; guides pratiques livrés avec l'application
+  remises en ordre ; guides pratiques et schémas livrés avec l'application
+  (TRS, SMED, kanban, PDCA, Ishikawa, courbe en baignoire, série et parallèle,
+  arbre de défaillance), questions où désigner la bonne zone d'un schéma
 - Recherches prêtes à l'emploi élargies à la maintenance : technicien de
   maintenance, maintenance ferroviaire, électrotechnicien, GMAO, planificateur
 - Pages carrière sans entreprise suivie affichées « Aucune entreprise suivie »,

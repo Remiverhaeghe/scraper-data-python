@@ -191,7 +191,11 @@
         "Une opération qui exige l'arrêt complet de la ligne de production"
       ],
       "answer": 1,
-      "explanation": "Les opérations externes (préparer les outils, préchauffer un moule, rapprocher la matière) se font machine en marche. Les opérations internes exigent l'arrêt."
+      "explanation": "Les opérations externes (préparer les outils, préchauffer un moule, rapprocher la matière) se font machine en marche. Les opérations internes exigent l'arrêt.",
+      "visual": {
+        "asset": "lean-smed.svg",
+        "alt": "Changement de série avant et après SMED"
+      }
     },
     {
       "id": "lean-015",
@@ -205,7 +209,11 @@
         "Réduire la durée des opérations internes restantes",
         "Réduire la durée des opérations externes et standardiser"
       ],
-      "explanation": "Séparer suffit souvent à gagner 30 à 50 % : on cessait de chercher les outils machine arrêtée. Ensuite viennent les conversions (préréglage) puis les améliorations techniques (serrages rapides, suppression des réglages)."
+      "explanation": "Séparer suffit souvent à gagner 30 à 50 % : on cessait de chercher les outils machine arrêtée. Ensuite viennent les conversions (préréglage) puis les améliorations techniques (serrages rapides, suppression des réglages).",
+      "visual": {
+        "asset": "lean-smed.svg",
+        "alt": "Changement de série avant et après SMED"
+      }
     },
     {
       "id": "lean-016",
@@ -244,7 +252,11 @@
         "Le taux de présence des opérateurs à leur poste pendant l'équipe"
       ],
       "answer": 1,
-      "explanation": "Le TRS (OEE en anglais) combine trois taux : disponibilité (arrêts), performance (ralentissements, micro-arrêts) et qualité (rebuts, retouches)."
+      "explanation": "Le TRS (OEE en anglais) combine trois taux : disponibilité (arrêts), performance (ralentissements, micro-arrêts) et qualité (rebuts, retouches).",
+      "visual": {
+        "asset": "lean-trs.svg",
+        "alt": "Du temps requis au temps utile, pertes par taux"
+      }
     },
     {
       "id": "lean-019",
@@ -310,7 +322,11 @@
         "Énergie, eau, air comprimé, huile, outillage, emballages"
       ],
       "answer": 0,
-      "explanation": "Pannes et réglages pèsent sur la disponibilité, micro-arrêts et ralentissements sur la performance, rebuts et pertes au démarrage sur la qualité."
+      "explanation": "Pannes et réglages pèsent sur la disponibilité, micro-arrêts et ralentissements sur la performance, rebuts et pertes au démarrage sur la qualité.",
+      "visual": {
+        "asset": "lean-trs.svg",
+        "alt": "Du temps requis au temps utile, pertes par taux"
+      }
     },
     {
       "id": "lean-025",
@@ -407,7 +423,11 @@
         "Vérifier (Check)",
         "Agir (Act)"
       ],
-      "explanation": "On planifie l'action, on la réalise à petite échelle, on vérifie les résultats, puis on agit : standardiser si cela marche, sinon relancer un cycle. Le PDCA tourne en continu."
+      "explanation": "On planifie l'action, on la réalise à petite échelle, on vérifie les résultats, puis on agit : standardiser si cela marche, sinon relancer un cycle. Le PDCA tourne en continu.",
+      "visual": {
+        "asset": "lean-pdca.svg",
+        "alt": "Roue de Deming : planifier, faire, vérifier, agir"
+      }
     },
     {
       "id": "lean-033",
@@ -446,7 +466,11 @@
         "Mois, Mesure, Masse, Mètre, Minute"
       ],
       "answer": 0,
-      "explanation": "Le diagramme en arêtes de poisson range les causes en familles. On ajoute parfois Mesure et Management pour aller jusqu'à 7M."
+      "explanation": "Le diagramme en arêtes de poisson range les causes en familles. On ajoute parfois Mesure et Management pour aller jusqu'à 7M.",
+      "visual": {
+        "asset": "lean-ishikawa.svg",
+        "alt": "Diagramme d'Ishikawa des 5M"
+      }
     },
     {
       "id": "lean-036",
@@ -537,7 +561,11 @@
         "Un flux où les commandes sont regroupées une fois par mois"
       ],
       "answer": 1,
-      "explanation": "En flux tiré, c'est la consommation réelle qui déclenche la fabrication, souvent par kanban. En flux poussé, on fabrique selon des prévisions, avec un risque de surproduction."
+      "explanation": "En flux tiré, c'est la consommation réelle qui déclenche la fabrication, souvent par kanban. En flux poussé, on fabrique selon des prévisions, avec un risque de surproduction.",
+      "visual": {
+        "asset": "lean-kanban.svg",
+        "alt": "Boucle kanban entre poste amont et poste aval"
+      }
     },
     {
       "id": "lean-043",
@@ -550,7 +578,11 @@
         "À programmer la maintenance préventive d'une machine critique"
       ],
       "answer": 0,
-      "explanation": "Le kanban circule avec les conteneurs : quand un conteneur est consommé, sa carte revient en amont et autorise la fabrication d'un nouveau lot. Le nombre de cartes plafonne l'en-cours."
+      "explanation": "Le kanban circule avec les conteneurs : quand un conteneur est consommé, sa carte revient en amont et autorise la fabrication d'un nouveau lot. Le nombre de cartes plafonne l'en-cours.",
+      "visual": {
+        "asset": "lean-kanban.svg",
+        "alt": "Boucle kanban entre poste amont et poste aval"
+      }
     },
     {
       "id": "lean-044",
@@ -1342,6 +1374,177 @@
         ]
       ],
       "explanation": "Ces indicateurs se complètent : le takt fixe la cible, le TRS et le MTBF disent si les équipements la tiennent, le lead time mesure le flux, le Cpk la qualité."
+    },
+    {
+      "id": "lean-101",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Sur cette décomposition du temps, cliquez sur la perte qui fait baisser le taux de performance du TRS.",
+      "zones": [
+        {
+          "label": "Pannes, réglages",
+          "rect": [
+            660,
+            124,
+            200,
+            46
+          ]
+        },
+        {
+          "label": "Micro-arrêts",
+          "rect": [
+            490,
+            188,
+            170,
+            46
+          ]
+        },
+        {
+          "label": "Temps utile",
+          "rect": [
+            40,
+            252,
+            330,
+            46
+          ]
+        },
+        {
+          "label": "Rebuts",
+          "rect": [
+            370,
+            252,
+            120,
+            46
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "lean-trs.svg",
+        "alt": "Du temps requis au temps utile, pertes par taux",
+        "show": "question"
+      },
+      "explanation": "Micro-arrêts et ralentissements dégradent la performance : la machine tourne, mais moins vite ou par à-coups. Pannes et réglages pèsent sur la disponibilité, rebuts et retouches sur la qualité."
+    },
+    {
+      "id": "lean-102",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Les rebuts viennent d'une gamme de réglage mal rédigée. Sur quelle branche du diagramme d'Ishikawa ranger cette cause ?",
+      "zones": [
+        {
+          "label": "Matière",
+          "rect": [
+            100,
+            64,
+            120,
+            34
+          ]
+        },
+        {
+          "label": "Méthodes",
+          "rect": [
+            320,
+            64,
+            120,
+            34
+          ]
+        },
+        {
+          "label": "Main-d'œuvre",
+          "rect": [
+            540,
+            64,
+            120,
+            34
+          ]
+        },
+        {
+          "label": "Matériel",
+          "rect": [
+            210,
+            272,
+            120,
+            34
+          ]
+        },
+        {
+          "label": "Milieu",
+          "rect": [
+            430,
+            272,
+            120,
+            34
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "lean-ishikawa.svg",
+        "alt": "Diagramme d'Ishikawa des 5M",
+        "show": "question"
+      },
+      "explanation": "Une gamme, un mode opératoire ou une procédure relèvent des Méthodes. Main-d'œuvre concerne les personnes (formation, fatigue), Matériel les machines et outils, Matière les pièces et matières premières, Milieu l'environnement."
+    },
+    {
+      "id": "lean-103",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Un lot de barres d'acier livré hors tolérance fait rebuter des pièces. Cliquez sur la branche du diagramme correspondante.",
+      "zones": [
+        {
+          "label": "Matière",
+          "rect": [
+            100,
+            64,
+            120,
+            34
+          ]
+        },
+        {
+          "label": "Méthodes",
+          "rect": [
+            320,
+            64,
+            120,
+            34
+          ]
+        },
+        {
+          "label": "Main-d'œuvre",
+          "rect": [
+            540,
+            64,
+            120,
+            34
+          ]
+        },
+        {
+          "label": "Matériel",
+          "rect": [
+            210,
+            272,
+            120,
+            34
+          ]
+        },
+        {
+          "label": "Milieu",
+          "rect": [
+            430,
+            272,
+            120,
+            34
+          ]
+        }
+      ],
+      "answer": 0,
+      "visual": {
+        "asset": "lean-ishikawa.svg",
+        "alt": "Diagramme d'Ishikawa des 5M",
+        "show": "question"
+      },
+      "explanation": "Les matières premières et pièces achetées relèvent de la Matière. On y range aussi un changement de fournisseur ou un lot non conforme."
     }
   ]
 }

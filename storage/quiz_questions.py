@@ -150,8 +150,27 @@ def save_quiz_assets(pDatabaseFile, pAssets, pNow):
         vConnection.close()
 
 
+# Schémas livrés avec les thèmes de l'application, un fichier SVG chacun
+SHIPPED_SCHEMAS_DIRECTORY = Path(QUIZ_DIRECTORY) / "schemas"
+
+
+@lru_cache
+def load_shipped_assets(pDirectory=SHIPPED_SCHEMAS_DIRECTORY):
+    """Retourne les schémas livrés : contenu par nom de fichier."""
+
+    rAssets = {
+        vFile.name: vFile.read_text(encoding="utf-8")
+        for vFile in sorted(Path(pDirectory).glob("*.svg"))
+    }
+
+    return rAssets
+
+
 def get_quiz_asset(pDatabaseFile, pName):
-    """Retourne le contenu d'un schéma, ou None s'il est inconnu."""
+    """Retourne le contenu d'un schéma, ou None s'il est inconnu.
+
+    Un schéma importé remplace le schéma livré du même nom.
+    """
 
     vConnection = connect_database(pDatabaseFile)
 
@@ -163,7 +182,7 @@ def get_quiz_asset(pDatabaseFile, pName):
     finally:
         vConnection.close()
 
-    rContent = vRow[0] if vRow else None
+    rContent = vRow[0] if vRow else load_shipped_assets().get(pName)
 
     return rContent
 
@@ -278,18 +297,23 @@ def get_quiz_guide(pDatabaseFile, pName):
     return rGuide
 
 
-def get_quiz_assets(pDatabaseFile):
-    """Retourne tous les schémas enregistrés : contenu par nom."""
+def get_quiz_assets(pDatabaseFile, pShipped=True):
+    """Retourne les schémas : contenu par nom, livrés puis importés.
+
+    Sans pShipped, seuls les schémas importés sont rendus, pour un export.
+    """
 
     vConnection = connect_database(pDatabaseFile)
 
     try:
-        rAssets = dict(
+        vImported = dict(
             vConnection.execute("SELECT name, content FROM quiz_asset ORDER BY name")
         )
 
     finally:
         vConnection.close()
+
+    rAssets = {**(load_shipped_assets() if pShipped else {}), **vImported}
 
     return rAssets
 

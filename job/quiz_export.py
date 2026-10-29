@@ -91,7 +91,7 @@ def export_quiz_pack(pDatabaseFile, pTarget):
                 json.dumps(vTheme, ensure_ascii=False, indent=2),
             )
 
-        for vName, vContent in get_quiz_assets(pDatabaseFile).items():
+        for vName, vContent in get_quiz_assets(pDatabaseFile, pShipped=False).items():
             vArchive.writestr(f"{EXPORT_SCHEMA_DIRECTORY}/{vName}", vContent)
 
         # Les guides livrés avec l'application n'y sont pas : réimportés, ils

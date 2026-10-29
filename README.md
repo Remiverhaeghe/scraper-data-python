@@ -1056,7 +1056,8 @@ scraper-data-python/
 │   │   ├── entretien_web.json                 # Entretien PHP et web : PHP, CSS, jQuery
 │   │   ├── lean.json                          # Lean et amélioration continue : 5S, SMED, TRS, kanban
 │   │   ├── fiabilite.json                     # Fiabilité et méthodes : AMDEC, MTBF, GMAO
-│   │   └── guides/                            # Guides pratiques livrés, un Markdown par thème
+│   │   ├── guides/                            # Guides pratiques livrés, un Markdown par thème
+│   │   └── schemas/                           # Schémas SVG livrés, montrés avec la question ou la correction
 │   ├── interview/                             # Simulation d'entretien technique
 │   │   └── questions.json                     # Questions ouvertes, réponse attendue et points clés
 │   └── quiz_generation/                       # Génération de questions avec ChatGPT
@@ -1368,7 +1369,7 @@ scraper-data-python/
 │   │   ├── test_history_repository.py          # Teste la persistance de l'historique
 │   │   ├── test_job_applications.py            # Teste le suivi des candidatures
 │   │   ├── test_maintenance.py                 # Teste les sauvegardes, leur rotation et la réinitialisation
-│   │   ├── test_quiz_guides.py                 # Teste les guides livrés et la priorité des guides importés
+│   │   ├── test_quiz_shipped.py                # Teste les guides et schémas livrés, et la priorité des importés
 │   │   ├── test_settings_repository.py         # Teste les réglages JSON
 │   │   ├── test_archive.py                     # Teste la sauvegarde complète et le refus des archives piégées
 │   │   ├── test_encrypted_archive.py           # Teste la sauvegarde chiffrée et les mots de passe refusés
