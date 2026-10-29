@@ -26,6 +26,7 @@ from gui.widgets import (
     create_card,
     create_page_header,
     create_scroll_content,
+    get_imports_folder,
     show_message,
 )
 from job.assistant import CHATGPT_URL
@@ -214,7 +215,7 @@ class ProfilePage(QWidget):
         vPath, _ = QFileDialog.getOpenFileName(
             self,
             "Importer un CV",
-            str(Path.home()),
+            str(get_imports_folder()),
             "CV (" + " ".join(f"*{vExtension}" for vExtension in CV_EXTENSIONS) + ")",
         )
 

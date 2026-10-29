@@ -32,6 +32,46 @@
 {% endif %}
 
 <article class="card section-gap">
+    <h2>{{ icon("trophy") }} Métiers qui recrutent (France Travail)</h2>
+    {% if outlook %}
+    <p class="card-subtitle">Enquête Besoins en Main-d'Œuvre {{ outlook.year }}{% if outlook.previous_year %}, comparée à {{ outlook.previous_year }}{% endif %} : projets de recrutement déclarés par les employeurs, {{ outlook.scope }}</p>
+    <form class="filters" method="get" action="{{ url_for('show_market').path }}">
+        <label>Zone
+            <select name="department">
+                <option value="france">France entière</option>
+                {% for code, name in outlook.departments %}
+                <option value="{{ code }}"{% if outlook.scope == name %} selected{% endif %}>{{ code }} · {{ name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <button class="button" type="submit">Afficher</button>
+    </form>
+    <div class="grid grid-dashboard">
+        {% for key, title, help in outlook_lists %}
+        <div>
+            <h3>{{ title }}</h3>
+            <p class="muted">{{ help }}</p>
+            <ul class="checklist">
+                {% for row in outlook[key] %}
+                <li><strong>{{ row.label }}</strong><br><span class="muted">{{ describe_outlook_row(row) }}</span></li>
+                {% else %}
+                <li class="muted">Aucun métier pour cette zone.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="card-subtitle">Chaque année, France Travail interroge plus de 400 000 employeurs sur leurs projets de recrutement. Téléchargez l'enquête (deux années, environ 8 Mo) pour voir les métiers en hausse, ceux qui peinent à recruter, et ceux proches de votre profil.</p>
+    {% endif %}
+    {% if outlook_message %}<p class="application-message tone-{{ outlook_message[1] }}" role="status">{{ outlook_message[0] }}</p>{% endif %}
+    <form method="post" action="{{ url_for('update_labour_market').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button class="button" type="submit">{{ icon("download", 16) }} {{ "Mettre à jour l'enquête" if outlook else "Télécharger l'enquête" }}</button>
+    </form>
+</article>
+
+<article class="card section-gap">
     <h2>Évolution du marché</h2>
     <p class="card-subtitle">Offres vues pour la première fois chaque mois, et celles qui citent une compétence de votre profil</p>
     {{ ui.bar_chart(history_chart, "Offres par mois") }}

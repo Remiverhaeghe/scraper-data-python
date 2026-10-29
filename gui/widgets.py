@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from config import EXPORTS_DIRECTORY, IMPORTS_DIRECTORY
 from gui.icons import get_icon
 from gui.theme import ACCENTS, COLORS
 
@@ -271,6 +272,22 @@ def create_icon_label(pIcon, pColor, pSize=20):
     rLabel.setPixmap(get_icon(pIcon, pColor, pSize).pixmap(pSize, pSize))
 
     return rLabel
+
+
+def get_exports_folder():
+    """Retourne le dossier proposé pour enregistrer un fichier, créé au besoin."""
+
+    EXPORTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
+    return EXPORTS_DIRECTORY
+
+
+def get_imports_folder():
+    """Retourne le dossier proposé pour ouvrir un fichier à importer, créé au besoin."""
+
+    IMPORTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
+    return IMPORTS_DIRECTORY
 
 
 def create_scroll_content(pPage):

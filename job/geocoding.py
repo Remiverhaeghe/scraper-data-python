@@ -108,6 +108,42 @@ def load_home(pDatabaseFile):
     return rHome
 
 
+def get_home_department(pDatabaseFile):
+    """Retourne le département du domicile, ou None sans domicile.
+
+    Un domicile enregistré avant que le département soit gardé le retrouve dans
+    le cache du géocodeur, par sa commune.
+    """
+
+    vHome = load_home(pDatabaseFile) or {}
+    vPostcode = re.search(r"\b(\d{5})\b", str(vHome.get("address") or ""))
+
+    rDepartment = (
+        vHome.get("department")
+        or (
+            get_cached_departments(pDatabaseFile).get(normalize(vHome.get("label")))
+            if vHome
+            else None
+        )
+        or (read_postcode_department(vPostcode.group(1)) if vPostcode else None)
+    )
+
+    return rDepartment or None
+
+
+def read_postcode_department(pPostcode):
+    """Retourne le département d'un code postal : « 59 », « 974 » ; None pour la
+    Corse, partagée entre deux départements.
+    """
+
+    if pPostcode.startswith("20"):
+        return None
+
+    rDepartment = pPostcode[:3] if pPostcode.startswith("97") else pPostcode[:2]
+
+    return rDepartment
+
+
 def save_home(pDatabaseFile, pAddress):
     """Cherche l'adresse du domicile et l'enregistre ; vide, l'efface.
 
@@ -126,10 +162,12 @@ def save_home(pDatabaseFile, pAddress):
                 "Adresse introuvable : précisez la ville ou le code postal."
             )
 
-        (vLatitude, vLongitude), vLabel, _ = vPlace
+        (vLatitude, vLongitude), vLabel, vDepartment = vPlace
         rHome = {
             "address": vAddress,
             "label": vLabel,
+            # Département proposé par défaut pour les métiers qui recrutent
+            "department": vDepartment,
             "latitude": vLatitude,
             "longitude": vLongitude,
             "alert_radius_km": (load_home(pDatabaseFile) or {}).get(

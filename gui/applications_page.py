@@ -35,6 +35,7 @@ from gui.widgets import (
     create_fold_button,
     create_page_header,
     create_scroll_content,
+    get_exports_folder,
     show_message,
 )
 from job.application_tracking import (
@@ -169,7 +170,7 @@ class ApplicationsPage(QWidget):
         vPath, _ = QFileDialog.getSaveFileName(
             self,
             "Enregistrer le journal de recherche",
-            str(Path.home() / build_journal_file_name(vStart, vEnd)),
+            str(get_exports_folder() / build_journal_file_name(vStart, vEnd)),
             "Fichier CSV (*.csv)",
         )
 
@@ -198,7 +199,7 @@ class ApplicationsPage(QWidget):
         vPath, _ = QFileDialog.getSaveFileName(
             self,
             "Exporter vers l'agenda",
-            str(Path.home() / "candidatures.ics"),
+            str(get_exports_folder() / "candidatures.ics"),
             "Agenda (*.ics)",
         )
 

@@ -13,6 +13,8 @@ from job.geocoding import (
     describe_distance,
     describe_location,
     estimate_drive_minutes,
+    get_home_department,
+    read_postcode_department,
     is_locatable,
     keep_within_alert_radius,
     load_home,
@@ -352,3 +354,18 @@ def test_drive_time_is_estimated_and_grows_with_distance():
         "20 km · ≈ 40 min"
     )
     assert describe_distance({"distance_km": None}) == ""
+
+
+def test_home_department_is_kept_or_read_in_the_postcode(tmp_path, geocoder):
+    """Vérifie le département du domicile : gardé, sinon lu dans le code postal."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+
+    assert get_home_department(vDatabaseFile) is None
+
+    save_home(vDatabaseFile, "59000 Lille")
+
+    assert get_home_department(vDatabaseFile) == "59"
+    assert read_postcode_department("97400") == "974"
+    assert read_postcode_department("20000") is None

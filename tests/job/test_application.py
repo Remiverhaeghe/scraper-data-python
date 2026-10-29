@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
+from config import DATABASE_FILE
 from job.application import build_search_parameters, process_jobs
 from job.config import JobScrapingConfig
 from job.sources.aggregator import ScrapingCancelled
@@ -120,7 +121,7 @@ def test_process_jobs():
 
     vSaveArguments = vSaveOffers.call_args.args
 
-    assert vSaveArguments[0] == "data/scraper.db"
+    assert vSaveArguments[0] == DATABASE_FILE
 
     assert vSaveArguments[1] is vScrapingResult.items
 
@@ -130,7 +131,7 @@ def test_process_jobs():
 
     vHistoryArguments = vRecordHistory.call_args.args
 
-    assert vHistoryArguments[0] == "data/scraper.db"
+    assert vHistoryArguments[0] == DATABASE_FILE
     assert vHistoryArguments[1] == "job"
     assert vHistoryArguments[2] == "multi-source"
     assert vHistoryArguments[3].items is vJobs

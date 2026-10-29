@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 import pytest
+import requests
 from fastapi.testclient import TestClient
 
 import web.app as web_app
@@ -2500,6 +2501,23 @@ def test_dashboard_lists_settings_to_do(client):
 
     assert "À faire pour bien démarrer" in vPage
     assert '<a href="/settings">' in vPage
+
+
+def test_labour_market_is_downloaded_from_the_market_page(client, monkeypatch):
+    """Vérifie le bouton de téléchargement de l'enquête, puis le message d'échec."""
+
+    vPage = client.get("/market").text
+
+    assert "Télécharger l&#39;enquête" in vPage
+
+    def fail():
+        raise requests.ConnectionError("hors ligne")
+
+    monkeypatch.setattr("web.routes.skills.refresh_labour_market", fail)
+    vFailed = client.post("/market/france-travail", follow_redirects=False)
+
+    assert vFailed.headers["location"].endswith("?outlook=failed")
+    assert "Téléchargement impossible" in client.get("/market?outlook=failed").text
 
 
 def test_market_page(client):

@@ -61,6 +61,25 @@ pytest -n auto                    # les mêmes, en parallèle sur tous les cœur
 
 ---
 
+### Où sont les données
+
+Le projet ne contient que le code. Les données sont dans `Documents\JobBoard`
+(modifiable par `JOBBOARD_DATA_DIR` dans `.env`) :
+
+```text
+Documents/JobBoard/
+├── scraper.db        # Base : offres, candidatures, profil, réglages
+├── backups/          # Sauvegardes automatiques et avant opération risquée
+├── attachments/      # Pièces jointes des candidatures
+├── logs/             # Journaux, un fichier par jour
+├── exports/          # Proposé pour enregistrer un export, un CV, une fiche
+├── imports/          # Proposé pour ouvrir un fichier à importer
+├── bmo/              # Enquêtes Besoins en Main-d'Œuvre résumées
+├── packs/            # Lots de révision validés
+├── tls/              # Certificat HTTPS du tableau de bord
+└── argos/            # Modèles de traduction hors ligne (facultatifs)
+```
+
 ## 📋 Suivi du projet
 
 ### 🏗️ Architecture
@@ -225,6 +244,8 @@ pytest -n auto                    # les mêmes, en parallèle sur tous les cœur
 - [x] Offres « à saisir vite », offres « Intéressé » restées sans candidature, offres proches de vos refus en bas de liste
 - [x] Trajet en voiture estimé et net après trajet (coût par kilomètre réglable), avantages et ressenti dans la comparaison
 - [x] Remerciement proposé après un entretien, contacts connus par entreprise, message de candidature spontanée, bilan du mois
+- [x] Métiers qui recrutent d'après l'enquête Besoins en Main-d'Œuvre de France Travail (données ouvertes) : vos métiers, en hausse, difficiles à pourvoir, les plus demandés, en France ou par département
+- [x] Données hors du projet, dans Documents\JobBoard (JOBBOARD_DATA_DIR pour un autre dossier) : base, sauvegardes, pièces jointes, journaux, dossiers exports et imports proposés par les fenêtres de fichier
 
 ### 🖥️ Interface graphique
 
@@ -339,7 +360,7 @@ pytest -n auto                    # les mêmes, en parallèle sur tous les cœur
 - [x] Tests anti-régression
 - [x] Tests de sécurité
 - [x] Intégration continue : tests, couverture, formatage Black et recherche de secrets à chaque push ; tests lancés sous Linux et sous Windows
-- [x] Tests isolés des données réelles : un test qui ouvre data/scraper.db échoue aussitôt
+- [x] Tests isolés des données réelles : un test qui ouvre la vraie base échoue aussitôt, et les dossiers de données des tests sont temporaires
 - [x] Couverture mesurée, branches comprises, avec un seuil minimal relevé progressivement (95 %)
 - [x] Tests d'intégration : des API simulées jusqu'à la base, au tableau de bord web et à l'export
 - [x] Analyse pylint en CI, configurée pour la convention p, v, r (note minimale 9.8/10)
@@ -439,7 +460,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] Navigation par onglets de domaine et pastilles de sous-domaine ; toutes les rubriques du classement sont montrées, une rubrique vide propose ses thèmes du catalogue à préparer avec ChatGPT ; schémas réduits à la largeur de la page
 - [x] Thèmes à compléter en priorité : les plus demandés dans les offres parmi ceux loin de 100 questions, thèmes vides du catalogue compris (mots des offres de chaque thème), avec la demande ChatGPT préparée en un clic
 - [x] Outil de production des lots (tools/quiz_lot.py) : construction, contrôle d'une archive sans import et vérification en ligne des références
-- [x] Import en un clic des lots validés (archives « -valide.zip » de data/packs), sur le bureau et le web, avec un bilan commun
+- [x] Import en un clic des lots validés (archives « -valide.zip » du dossier packs des données), sur le bureau et le web, avec un bilan commun
 - [x] Signalement d'une question douteuse, retirée des tirages
 - [x] Export des questions importées en pack .zip réimportable (manifest, questions, schémas, guides), sans les questions signalées
 - [x] Suppression de toutes les questions importées (schémas, guides et réponses compris) après confirmation, base sauvegardée avant ; les questions livrées sont gardées
@@ -677,7 +698,7 @@ scraper-data-python/
 │   ├── quiz_import.py                         # Import de questions et de packs
 │   ├── quiz_export.py                         # Export des questions importées en pack réimportable
 │   ├── quiz_generation.py                     # Demande ChatGPT par lot et contrôle des lots importés
-│   ├── quiz_packs.py                          # Import groupé des lots validés de data/packs
+│   ├── quiz_packs.py                          # Import groupé des lots validés du dossier packs
 │   ├── quiz_domains.py                        # Classement des thèmes par domaine et sous-domaine
 │   ├── quiz_bias.py                           # Indices qui trahissent la bonne réponse d'un QCM
 │   ├── quiz_exam.py                           # Mode examen : tirage, réponses et résultat
@@ -703,6 +724,7 @@ scraper-data-python/
 │   ├── restore_check.py                       # Essai mensuel de restauration de la dernière sauvegarde
 │   ├── preparation_sheet.py                   # Fiche de préparation d'entretien, à imprimer ou en PDF
 │   ├── pitch.py                               # Pitch de présentation en 30 secondes et en 2 minutes
+│   ├── labour_market.py                       # Métiers qui recrutent : enquête BMO de France Travail
 │   ├── tricky_questions.py                    # Questions pièges selon le type d'employeur
 │   ├── skill_glossary.py                      # Glossaire : définition courte de chaque compétence
 │   ├── personal_export.py                     # Export lisible de vos données personnelles (JSON)
@@ -1130,6 +1152,7 @@ scraper-data-python/
 │   │   ├── test_restore_check.py              # Teste l'essai de restauration
 │   │   ├── test_skill_glossary.py             # Teste le glossaire des compétences
 │   │   ├── test_suspicious_offers.py          # Teste le repérage des annonces douteuses
+│   │   ├── test_labour_market.py              # Teste le résumé de l'enquête BMO et les listes de métiers
 │   │   ├── test_tricky_questions.py           # Teste les questions pièges par type d'employeur
 │   │   ├── test_application_replies.py        # Teste les réponses de recruteurs et leur classement
 │   │   ├── test_cv_export.py                  # Teste le CV adapté et le fichier Word

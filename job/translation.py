@@ -13,6 +13,7 @@ from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 
+from config import DATA_DIRECTORY
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,7 +23,7 @@ TARGET_LANGUAGE = "fr"
 # Les modèles sont rangés dans data/ du projet : la bibliothèque C++ qui les lit
 # échoue sur un chemin accentué comme C:\Users\rémi. Fixé avant tout import
 # d'Argos, qui lit ce réglage à son chargement.
-MODELS_DIRECTORY = Path(__file__).resolve().parent.parent / "data" / "argos"
+MODELS_DIRECTORY = DATA_DIRECTORY / "argos"
 os.environ.setdefault("ARGOS_PACKAGES_DIR", str(MODELS_DIRECTORY))
 
 # Modèles installés par la commande : chaque paire est téléchargée une fois.

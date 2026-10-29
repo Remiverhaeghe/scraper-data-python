@@ -26,6 +26,8 @@ from gui.widgets import (
     clear_layout,
     create_button,
     create_card,
+    get_exports_folder,
+    get_imports_folder,
     show_message,
 )
 from job.assistant import CHATGPT_URL
@@ -367,7 +369,7 @@ class QuizImportPanel(QWidget):
         vPath, _ = QFileDialog.getOpenFileName(
             self,
             "Importer des questions",
-            str(Path.home()),
+            str(get_imports_folder()),
             "Questions ("
             + " ".join(f"*{vExtension}" for vExtension in IMPORT_EXTENSIONS)
             + ")",
@@ -389,7 +391,9 @@ class QuizImportPanel(QWidget):
         vPath, _ = QFileDialog.getSaveFileName(
             self,
             "Exporter mes questions",
-            str(Path.home() / f"questions-revision-{datetime.now():%Y%m%d}.zip"),
+            str(
+                get_exports_folder() / f"questions-revision-{datetime.now():%Y%m%d}.zip"
+            ),
             "Archive (*.zip)",
         )
 

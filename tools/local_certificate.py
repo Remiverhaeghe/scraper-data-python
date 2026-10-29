@@ -10,10 +10,10 @@ de nouveau depuis le téléphone.
 import sys
 from pathlib import Path
 
-from config import WEB_HOST
+from config import DATA_DIRECTORY, WEB_HOST
 from utils.tls import create_certificate
 
-TLS_DIRECTORY = Path(__file__).resolve().parent.parent / "data" / "tls"
+TLS_DIRECTORY = DATA_DIRECTORY / "tls"
 CERTIFICATE_FILE = TLS_DIRECTORY / "certificate.pem"
 KEY_FILE = TLS_DIRECTORY / "private-key.pem"
 

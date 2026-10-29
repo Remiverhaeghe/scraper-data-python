@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 from gui.chart import BarChart
 from gui.dialogs import show_preparation, show_text_dialog
 from gui.theme import COLORS
-from gui.widgets import create_button
+from gui.widgets import create_button, get_exports_folder
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
 from job.company_info import lookup_company, summarize_company
 from job.cv_export import build_file_name, build_tailored_cv, write_docx
@@ -289,7 +289,7 @@ class OfferAssistantPanel(QWidget):
             self,
             "Enregistrer la fiche de préparation",
             str(
-                Path.home()
+                get_exports_folder()
                 / Path(build_file_name(self.offer, "Fiche")).with_suffix(".pdf")
             ),
             "Document PDF (*.pdf)",
@@ -340,7 +340,7 @@ class OfferAssistantPanel(QWidget):
         vPath, _ = QFileDialog.getSaveFileName(
             self,
             "Enregistrer le CV adapté",
-            str(Path.home() / build_file_name(self.offer)),
+            str(get_exports_folder() / build_file_name(self.offer)),
             "Document Word (*.docx)",
         )
 

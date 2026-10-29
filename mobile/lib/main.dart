@@ -8,6 +8,7 @@ import 'revision_state.dart';
 import 'screens/home_screen.dart';
 import 'screens/setup_screen.dart';
 import 'services/file_store.dart';
+import 'services/home_widget_service.dart';
 import 'services/offer_checks.dart';
 import 'services/reminders.dart';
 import 'theme.dart';
@@ -20,7 +21,11 @@ Future<void> main() async {
 
   runApp(
     RevisionApp(
-      state: RevisionState(FileRevisionStore(), reminders: LocalReminders()),
+      state: RevisionState(
+        FileRevisionStore(),
+        reminders: LocalReminders(),
+        homeWidget: AndroidHomeWidget(),
+      ),
     ),
   );
 }

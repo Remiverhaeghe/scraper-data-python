@@ -26,6 +26,7 @@ RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin jobboard
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    JOBBOARD_DATA_DIR=/app/data \
     LOG_DIRECTORY=/app/logs
 
 COPY --from=dependances /opt/venv /opt/venv

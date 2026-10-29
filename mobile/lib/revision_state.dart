@@ -18,6 +18,7 @@ import 'models/quiz_package.dart';
 import 'models/review_state.dart';
 import 'services/api_client.dart';
 import 'services/discovery.dart';
+import 'services/home_widget_service.dart';
 import 'services/reminders.dart';
 import 'services/revision_store.dart';
 
@@ -114,6 +115,7 @@ class RevisionState extends ChangeNotifier {
     Random? pRandom,
     ServerDiscovery? pDiscovery,
     this.reminders,
+    this.homeWidget,
   })  : clientFactory = pClientFactory ?? ((pSettings) => ApiClient(pSettings)),
         random = pRandom ?? Random(),
         discovery = pDiscovery ?? ServerDiscovery();
@@ -123,6 +125,9 @@ class RevisionState extends ChangeNotifier {
 
   /// Rappel quotidien ; absent dans les tests, qui n'ont pas de notifications.
   final Reminders? reminders;
+
+  /// Widget de l'écran d'accueil ; absent dans les tests.
+  final HomeWidgetUpdater? homeWidget;
 
   /// Recherche du serveur sur le Wi-Fi, quand son adresse est inconnue ou a changé.
   final ServerDiscovery discovery;
@@ -483,6 +488,7 @@ class RevisionState extends ChangeNotifier {
       await store.saveProgress(vProgress);
       rebuildSchedule();
       unawaited(refreshReminder());
+      unawaited(refreshHomeWidget());
 
       final rReport = SyncReport(
         sent: vSent,
@@ -686,6 +692,23 @@ class RevisionState extends ChangeNotifier {
       );
 
   /// Reçoit les offres suivies retirées par leur site et signale les nouvelles.
+  /// Met à jour le widget de l'écran d'accueil avec la révision et l'entretien.
+  Future<void> refreshHomeWidget() async {
+    final vPackage = package;
+
+    if (homeWidget == null || vPackage == null) {
+      return;
+    }
+
+    await homeWidget!.show(
+      buildWidgetLines(
+        countDue(vPackage.questions, schedule, DateTime.now()),
+        trackedApplications,
+        DateTime.now(),
+      ),
+    );
+  }
+
   /// Candidatures en cours, reçues du PC à la dernière synchronisation.
   List<Map<String, dynamic>> get trackedApplications => [
         for (final vItem

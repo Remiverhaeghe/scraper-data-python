@@ -32,7 +32,11 @@ offres suivies retirées par leur site et des nouvelles offres des entreprises
 privilégiées, révision express de 5 minutes avec compte à rebours, note rapide sur
 une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
 lisibles hors ligne et fiche de préparation (pitch, questions pièges, questions à
-poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien.
+poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien,
+widget de l'écran d'accueil (questions à revoir, prochain entretien), dessiné par
+`android/app/src/main/kotlin/…/RevisionWidgetProvider.kt` et
+`res/layout/revision_widget.xml`, avec son fond (`res/drawable/widget_background.xml`)
+et ses couleurs claires et sombres (`res/values/colors.xml`, `res/values-night/colors.xml`).
 
 ## Installation des outils (une fois)
 
@@ -170,6 +174,7 @@ mobile/
 │   │   ├── revision_store.dart   # Interface du stockage local et réglages du serveur
 │   │   ├── file_store.dart       # Fichiers JSON et jeton dans le stockage chiffré
 │   │   ├── reminders.dart        # Rappel quotidien et alerte des offres par notification
+│   │   ├── home_widget_service.dart # Lignes du widget Android et leur envoi
 │   │   └── offer_checks.dart     # Tâche Android d'arrière-plan : synchronise et alerte
 │   ├── screens/
 │   │   ├── setup_screen.dart     # Serveur, jeton, apparence, taille du texte, rappel, alerte
@@ -210,6 +215,7 @@ mobile/
     ├── sprint_test.dart          # Teste le temps restant et le bilan de la révision express
     ├── offer_notes_test.dart     # Teste l'envoi unique des notes rapides au PC
     ├── tracking_test.dart        # Teste les candidatures et la fiche du prochain entretien
+    ├── home_widget_test.dart     # Teste les lignes du widget et sa mise à jour
     ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond
     ├── review_input_test.dart    # Teste la saisie d'une revue de code
     ├── integration/

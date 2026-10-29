@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from config import APPLICATION_NAME
+from gui.widgets import get_exports_folder
 from job.cv_export import build_file_name, write_letter_docx
 from job.preparation import describe_missing, describe_score
 from job.presentation import (
@@ -208,7 +209,7 @@ def save_letter(pParent, pTitle, pText):
     vPath, _ = QFileDialog.getSaveFileName(
         pParent,
         "Enregistrer la lettre",
-        str(Path.home() / build_file_name({"title": pTitle}, "Lettre")),
+        str(get_exports_folder() / build_file_name({"title": pTitle}, "Lettre")),
         "Document Word (*.docx)",
     )
 

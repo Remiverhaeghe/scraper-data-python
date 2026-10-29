@@ -13,6 +13,15 @@ from urllib.request import url2pathname
 # ne doivent pas se mélanger aux journaux réels consultés dans l'application.
 os.environ["LOG_DIRECTORY"] = tempfile.mkdtemp(prefix="jobboard-tests-logs-")
 
+# De même pour le dossier des données (base, exports, imports) : un test ne crée
+# rien dans les Documents de l'utilisateur.
+# Le même dossier pour tous les processus de pytest -n : les workers héritent de
+# la variable posée par le premier, et les noms des tests restent identiques.
+os.environ.setdefault(
+    "JOBBOARD_TESTS_DATA_DIR", tempfile.mkdtemp(prefix="jobboard-tests-data-")
+)
+os.environ["JOBBOARD_DATA_DIR"] = os.environ["JOBBOARD_TESTS_DATA_DIR"]
+
 import pytest  # noqa: E402
 import requests  # noqa: E402
 
@@ -47,9 +56,12 @@ def block_network(monkeypatch):
     monkeypatch.setattr(smtplib, "SMTP_SSL", refuse_network_access)
 
 
-# Base réelle de l'application : un test qui l'ouvre dépend des données de ce
-# PC et échoue ailleurs, en CI notamment.
-REAL_DATABASE = Path(DATABASE_FILE).resolve()
+# Base de l'application, et la vraie base de l'utilisateur à son emplacement par
+# défaut : un test qui les ouvre dépend des données de ce PC.
+REAL_DATABASES = {
+    Path(DATABASE_FILE).resolve(),
+    (Path.home() / "Documents" / "JobBoard" / "scraper.db").resolve(),
+}
 
 # Une base ouverte dans le dossier du projet, par un chemin relatif oublié par
 # exemple, y laisserait un fichier : les tests passent par tmp_path.
@@ -77,7 +89,7 @@ def refuse_real_database(pDatabase, *pArgs, **pKwargs):
 
     vPath = get_database_path(pDatabase)
 
-    if vPath == REAL_DATABASE:
+    if vPath in REAL_DATABASES:
         raise RuntimeError(
             f"Base réelle {DATABASE_FILE} ouverte pendant un test : passez une base "
             "temporaire (tmp_path) ou simulez la fonction qui la lit."

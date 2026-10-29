@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from job.presentation import format_date
+from gui.widgets import get_imports_folder
 from storage.attachments import (
     ALLOWED_EXTENSIONS,
     add_attachment,
@@ -104,7 +105,10 @@ class AttachmentsPanel(QWidget):
         vFilter = " ".join(f"*{vExtension}" for vExtension in ALLOWED_EXTENSIONS)
 
         vPath, _ = QFileDialog.getOpenFileName(
-            self, "Joindre un fichier", str(Path.home()), f"Documents ({vFilter})"
+            self,
+            "Joindre un fichier",
+            str(get_imports_folder()),
+            f"Documents ({vFilter})",
         )
 
         if vPath:

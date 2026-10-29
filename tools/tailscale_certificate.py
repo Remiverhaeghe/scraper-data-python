@@ -16,10 +16,10 @@ Prérequis, dans la console d'administration de Tailscale (DNS) : MagicDNS et
 import sys
 from pathlib import Path
 
-from config import WEB_PORT
+from config import DATA_DIRECTORY, WEB_PORT
 from utils.tailscale import read_server_identity, request_certificate
 
-TLS_DIRECTORY = Path(__file__).resolve().parent.parent / "data" / "tls"
+TLS_DIRECTORY = DATA_DIRECTORY / "tls"
 CERTIFICATE_FILE = TLS_DIRECTORY / "tailscale-certificate.pem"
 KEY_FILE = TLS_DIRECTORY / "tailscale-private-key.pem"
 

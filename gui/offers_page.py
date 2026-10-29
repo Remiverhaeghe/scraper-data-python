@@ -34,6 +34,8 @@ from gui.widgets import (
     create_button,
     create_icon_label,
     create_page_header,
+    get_exports_folder,
+    get_imports_folder,
 )
 from job.agencies import load_interim_agencies, mark_agency_offers
 from job.companies import (
@@ -308,7 +310,10 @@ class OffersPage(QWidget):
         vFilter = " ".join(f"*{vSuffix}" for vSuffix in IMPORT_FORMATS)
 
         vPath, _ = QFileDialog.getOpenFileName(
-            self, "Importer des offres", str(Path.home()), f"Offres ({vFilter})"
+            self,
+            "Importer des offres",
+            str(get_imports_folder()),
+            f"Offres ({vFilter})",
         )
 
         if vPath:
@@ -369,7 +374,7 @@ class OffersPage(QWidget):
         vPath, _ = QFileDialog.getSaveFileName(
             self,
             "Exporter les offres",
-            str(Path.home() / f"offres_{datetime.now():%Y-%m-%d}{pSuffix}"),
+            str(get_exports_folder() / f"offres_{datetime.now():%Y-%m-%d}{pSuffix}"),
             f"{vLabel} (*{pSuffix})",
         )
 

@@ -2,9 +2,18 @@
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, Request
+import requests
+
+from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from job.geocoding import get_home_department
+from job.labour_market import (
+    OUTLOOK_LISTS,
+    build_outlook,
+    describe_outlook_row,
+    refresh_labour_market,
+)
 from job.market import (
     CITY_COLUMNS,
     HISTORY_COLUMNS,
@@ -15,12 +24,15 @@ from job.market import (
     build_market_cells,
     build_market_history,
 )
-from job.profile import add_profile_skill
+from job.profile import add_profile_skill, load_profile
 from job.quiz import load_active_quiz
 from job.skill_glossary import build_glossary
 from job.skills_dashboard import SKILL_STATUSES, build_skills_dashboard
+from utils.logger import get_logger
 from web.dependencies import get_database_file, require_csrf
 from web.rendering import build_bar_chart, templates
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -96,13 +108,33 @@ def add_skill_to_profile(
     return rResponse
 
 
+# Messages fixes du téléchargement de l'enquête : rien de saisi n'est renvoyé.
+OUTLOOK_MESSAGES = {
+    "updated": ("Enquête France Travail à jour.", "success"),
+    "failed": (
+        "Téléchargement impossible : vérifiez la connexion et réessayez.",
+        "danger",
+    ),
+}
+
+
 @router.get("/market", response_class=HTMLResponse)
 def show_market(
     request: Request,
+    pDepartment: str = Query("", alias="department"),
+    pOutlookResult: str = Query("", alias="outlook"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Affiche le marché : volumes et salaires par compétence et par ville."""
+    """Affiche le marché : volumes et salaires par compétence et par ville, puis les
+    métiers qui recrutent d'après France Travail.
+    """
 
+    # Sans choix, le département du domicile ; « france » pour toute la France
+    vDepartment = pDepartment or get_home_department(pDatabaseFile)
+    vOutlook = build_outlook(
+        load_profile(pDatabaseFile),
+        None if vDepartment in (None, "", "france") else vDepartment,
+    )
     vMarket = build_market(pDatabaseFile, datetime.now())
     vHistory = build_market_history(pDatabaseFile, datetime.now())
 
@@ -112,6 +144,10 @@ def show_market(
         {
             "active_page": "market",
             "market": vMarket,
+            "outlook": vOutlook,
+            "outlook_lists": OUTLOOK_LISTS,
+            "outlook_message": OUTLOOK_MESSAGES.get(pOutlookResult),
+            "describe_outlook_row": describe_outlook_row,
             "history_columns": HISTORY_COLUMNS,
             "history_rows": [build_history_cells(vMonth) for vMonth in vHistory],
             "history_chart": build_bar_chart(
@@ -155,6 +191,25 @@ def show_market(
                 ),
             ],
         },
+    )
+
+    return rResponse
+
+
+@router.post("/market/france-travail", dependencies=[Depends(require_csrf)])
+def update_labour_market():
+    """Télécharge et résume les deux dernières enquêtes BMO de France Travail."""
+
+    try:
+        refresh_labour_market()
+        vResult = "updated"
+
+    except (requests.RequestException, ValueError, KeyError) as vException:
+        logger.warning("Enquête France Travail non téléchargée : %s", vException)
+        vResult = "failed"
+
+    rResponse = RedirectResponse(
+        f"{router.url_path_for('show_market')}?outlook={vResult}", status_code=303
     )
 
     return rResponse

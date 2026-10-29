@@ -5,9 +5,11 @@ import os
 from datetime import date, timedelta
 from pathlib import Path
 
+from config import DATA_DIRECTORY
+
 # Dossier des logs, à la racine du projet quel que soit le dossier de lancement ;
 # la variable d'environnement LOG_DIRECTORY le remplace (les tests l'utilisent).
-LOG_DIRECTORY = Path(__file__).resolve().parent.parent / "logs"
+LOG_DIRECTORY = DATA_DIRECTORY / "logs"
 
 LOG_FILE_PREFIX = "scraper-"
 LOG_FORMAT = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"

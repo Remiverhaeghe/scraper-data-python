@@ -18,7 +18,13 @@ from PySide6.QtWidgets import (
 
 from config import BACKUP_NAS_DIRECTORY
 from gui.theme import COLORS
-from gui.widgets import create_button, create_card, show_message
+from gui.widgets import (
+    create_button,
+    create_card,
+    get_exports_folder,
+    get_imports_folder,
+    show_message,
+)
 from job.personal_export import export_personal_data
 from job.presentation import describe_backup
 from storage.archive import export_archive, restore_archive, restore_backup
@@ -267,7 +273,7 @@ class DataPanel(QWidget):
         vPath, _ = QFileDialog.getSaveFileName(
             self,
             "Exporter la sauvegarde complète",
-            str(Path.home() / f"jobboard-{datetime.now():%Y%m%d}.zip"),
+            str(get_exports_folder() / f"jobboard-{datetime.now():%Y%m%d}.zip"),
             "Archive (*.zip)",
         )
 
@@ -297,7 +303,10 @@ class DataPanel(QWidget):
         vPath, _ = QFileDialog.getSaveFileName(
             self,
             "Exporter mes données",
-            str(Path.home() / f"mes-donnees-jobboard-{datetime.now():%Y%m%d}.zip"),
+            str(
+                get_exports_folder()
+                / f"mes-donnees-jobboard-{datetime.now():%Y%m%d}.zip"
+            ),
             "Archive (*.zip)",
         )
 
@@ -326,7 +335,7 @@ class DataPanel(QWidget):
         vPath, _ = QFileDialog.getOpenFileName(
             self,
             "Restaurer une sauvegarde complète",
-            str(Path.home()),
+            str(get_imports_folder()),
             "Archive (*.zip)",
         )
 

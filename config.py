@@ -7,7 +7,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_FILE = "data/scraper.db"
+# Données hors du projet : base, sauvegardes, pièces jointes, modèles de
+# traduction, certificats, journaux et exports. JOBBOARD_DATA_DIR le remplace,
+# par exemple /app/data dans l'image Docker.
+DATA_DIRECTORY = Path(
+    os.getenv("JOBBOARD_DATA_DIR") or Path.home() / "Documents" / "JobBoard"
+)
+
+DATABASE_FILE = str(DATA_DIRECTORY / "scraper.db")
+
+# Dossiers proposés par défaut : enregistrer un export, un CV ou une fiche ;
+# ouvrir un fichier à importer (offres, CV, sauvegarde, questions)
+EXPORTS_DIRECTORY = DATA_DIRECTORY / "exports"
+IMPORTS_DIRECTORY = DATA_DIRECTORY / "imports"
 
 # Logo et icônes partagés par l'interface de bureau et le tableau de bord web
 ASSETS_DIRECTORY = Path(__file__).parent / "assets"
@@ -38,7 +50,7 @@ INTERVIEW_QUESTIONS_FILE = ASSETS_DIRECTORY / "interview" / "questions.json"
 QUIZ_GENERATION_DIRECTORY = ASSETS_DIRECTORY / "quiz_generation"
 
 # Lots de questions prêts à importer, hors dépôt
-QUIZ_PACKS_DIRECTORY = "data/packs"
+QUIZ_PACKS_DIRECTORY = str(DATA_DIRECTORY / "packs")
 ICONS_URL = "https://lucide.dev"
 
 CONTACT_URL = "https://www.linkedin.com/in/remi-verhaeghe-99a532121/"

@@ -10,6 +10,7 @@ import 'package:jobboard_revision/logic/exam.dart';
 import 'package:jobboard_revision/models/quiz_package.dart';
 import 'package:jobboard_revision/revision_state.dart';
 import 'package:jobboard_revision/services/api_client.dart';
+import 'package:jobboard_revision/services/discovery.dart';
 import 'package:jobboard_revision/services/reminders.dart';
 import 'package:jobboard_revision/services/revision_store.dart';
 
@@ -28,6 +29,8 @@ Future<RevisionState> buildState(
     pClientFactory: (pSettings) => ApiClient(pSettings, pClient: pClient),
     pRandom: Random(3),
     reminders: pReminders,
+    // Aucun réseau local parcouru : le test ne dépend pas du Wi-Fi de la machine.
+    pDiscovery: ServerDiscovery(pClient: pClient, pFindPrefixes: () async => []),
   );
 
   await rState.load();

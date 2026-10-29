@@ -1,11 +1,15 @@
 """Page Mon marché : demande et salaires par compétence et par ville"""
 
+import threading
 from datetime import datetime
+from html import escape
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QComboBox,
     QGridLayout,
+    QHBoxLayout,
     QHeaderView,
     QLabel,
     QTableWidget,
@@ -22,6 +26,14 @@ from gui.widgets import (
     create_card,
     create_page_header,
     create_scroll_content,
+    show_message,
+)
+from job.geocoding import get_home_department
+from job.labour_market import (
+    OUTLOOK_LISTS,
+    build_outlook,
+    describe_outlook_row,
+    refresh_labour_market,
 )
 from job.market import (
     CITY_COLUMNS,
@@ -34,6 +46,7 @@ from job.market import (
     build_market_cells,
     build_market_history,
 )
+from job.profile import load_profile
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -69,6 +82,9 @@ def fill_table(pTable, pRows, pWithMine=False):
 class MarketPage(QWidget):
     """Affiche le marché tiré des offres récentes : volumes et salaires."""
 
+    # Fin du téléchargement de l'enquête, émise depuis le thread : réussite
+    outlook_downloaded = Signal(bool)
+
     # Compétences prioritaires dont l'examen blanc est demandé
     exam_requested = Signal(list)
 
@@ -77,6 +93,7 @@ class MarketPage(QWidget):
         super().__init__()
 
         self.database_file = pDatabaseFile
+        self.outlook_downloaded.connect(self.show_downloaded)
 
         vContent = create_scroll_content(self)
         vLayout = QVBoxLayout(vContent)
@@ -126,6 +143,7 @@ class MarketPage(QWidget):
         )
         vPriorityLayout.addWidget(self.exam_button, 0, Qt.AlignmentFlag.AlignLeft)
         vLayout.addWidget(vPriorityCard)
+        vLayout.addWidget(self.create_outlook_card())
 
         vHistoryCard, vHistoryLayout = create_card(
             "Évolution du marché",
@@ -160,6 +178,141 @@ class MarketPage(QWidget):
         vCitiesLayout.addWidget(self.cities_table)
         vLayout.addWidget(vCitiesCard)
         vLayout.addStretch()
+
+    def create_outlook_card(self):
+        """Construit les métiers qui recrutent d'après l'enquête de France Travail."""
+        vCard, vLayout = create_card(
+            "Métiers qui recrutent (France Travail)",
+            "Projets de recrutement déclarés chaque année par plus de 400 000 "
+            "employeurs (enquête Besoins en Main-d'Œuvre)",
+            pIcon="trophy",
+            pOpen=True,
+        )
+
+        self.outlook_label = QLabel()
+        self.outlook_label.setObjectName("cardSubtitle")
+        self.outlook_label.setWordWrap(True)
+
+        self.zone_combo = QComboBox()
+        self.zone_combo.setToolTip("France entière, ou un département")
+        self.zone_combo.activated.connect(lambda _: self.show_outlook())
+
+        self.outlook_button = create_button("Télécharger l'enquête", "download")
+        self.outlook_button.clicked.connect(self.download_outlook)
+
+        vRow = QHBoxLayout()
+        vRow.addWidget(self.zone_combo, 1)
+        vRow.addWidget(self.outlook_button)
+
+        self.outlook_lists = {}
+        vGrid = QGridLayout()
+        vGrid.setSpacing(18)
+
+        for vIndex, (vKey, vTitle, vHelp) in enumerate(OUTLOOK_LISTS):
+            vList = QLabel()
+            vList.setWordWrap(True)
+            vList.setToolTip(vHelp)
+            vList.setTextFormat(Qt.TextFormat.RichText)
+            self.outlook_lists[vKey] = (vTitle, vList)
+            vGrid.addWidget(vList, vIndex // 2, vIndex % 2)
+
+        vLayout.addWidget(self.outlook_label)
+        vLayout.addLayout(vRow)
+        vLayout.addLayout(vGrid)
+
+        return vCard
+
+    def show_outlook(self):
+        """Affiche les métiers de la zone choisie ; vide sans enquête téléchargée."""
+        vZone = self.zone_combo.currentData()
+
+        if vZone is None:
+            vZone = get_home_department(self.database_file)
+
+        try:
+            vOutlook = build_outlook(
+                load_profile(self.database_file),
+                None if vZone in (None, "france") else vZone,
+            )
+
+        except Exception:
+            logger.exception("Métiers qui recrutent non calculés")
+            vOutlook = None
+
+        self.zone_combo.setVisible(vOutlook is not None)
+
+        if vOutlook is None:
+            self.outlook_label.setText(
+                "Téléchargez l'enquête (deux années, environ 8 Mo) pour voir les "
+                "métiers en hausse, ceux qui peinent à recruter et ceux proches de "
+                "votre profil."
+            )
+            for _, vList in self.outlook_lists.values():
+                vList.clear()
+            return
+
+        if not self.zone_combo.count():
+            self.zone_combo.addItem("France entière", "france")
+
+            for vCode, vName in vOutlook["departments"]:
+                self.zone_combo.addItem(f"{vCode} · {vName}", vCode)
+
+            vIndex = self.zone_combo.findData(vZone)
+            self.zone_combo.setCurrentIndex(max(vIndex, 0))
+
+        self.outlook_button.setText("Mettre à jour l'enquête")
+        self.outlook_label.setText(
+            f"Enquête {vOutlook['year']}"
+            + (
+                f", comparée à {vOutlook['previous_year']}"
+                if vOutlook["previous_year"]
+                else ""
+            )
+            + f" · {vOutlook['scope']}"
+        )
+
+        for vKey, (vTitle, vList) in self.outlook_lists.items():
+            vList.setText(
+                f"<b>{escape(vTitle)}</b><br>"
+                + (
+                    "<br>".join(
+                        f"{escape(vRow['label'])}<br><small>"
+                        f"{escape(describe_outlook_row(vRow))}</small>"
+                        for vRow in vOutlook[vKey]
+                    )
+                    or "Aucun métier pour cette zone."
+                )
+            )
+
+    def download_outlook(self):
+        """Télécharge l'enquête en arrière-plan : une vingtaine de secondes."""
+        self.outlook_button.setEnabled(False)
+        self.outlook_label.setText("Téléchargement de l'enquête France Travail…")
+        threading.Thread(target=self.run_outlook_download, daemon=True).start()
+
+    def run_outlook_download(self):
+        """Télécharge et résume l'enquête ; appelé dans un thread."""
+        try:
+            refresh_labour_market()
+            vSuccess = True
+
+        except Exception:
+            logger.exception("Enquête France Travail non téléchargée")
+            vSuccess = False
+
+        self.outlook_downloaded.emit(vSuccess)
+
+    def show_downloaded(self, pSuccess):
+        """Réaffiche les métiers, ou explique l'échec du téléchargement."""
+        self.outlook_button.setEnabled(True)
+        self.show_outlook()
+
+        if not pSuccess:
+            show_message(
+                self.outlook_label,
+                "Téléchargement impossible : vérifiez la connexion et réessayez.",
+                "danger",
+            )
 
     def show_history(self, pHistory):
         """Affiche l'évolution du marché : graphique et tableau mois par mois."""
@@ -214,6 +367,7 @@ class MarketPage(QWidget):
             or "Toutes les compétences les plus demandées sont maîtrisées."
         )
         self.show_history(vHistory)
+        self.show_outlook()
         fill_table(self.skills_table, vMarket["skills"], pWithMine=True)
         fill_table(self.regions_table, vMarket["regions"])
         self.regions_table.setToolTip(

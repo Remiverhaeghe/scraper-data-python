@@ -13,6 +13,7 @@ dans l'historique git.
 - Note rapide sur une offre, ajoutée aux notes de la candidature sur le PC
 - Candidatures en cours lisibles hors ligne ; fiche de préparation proposée sur
   l'accueil dans les 24 heures qui précèdent un entretien
+- Widget Android de l'écran d'accueil : questions à revoir et prochain entretien
 
 ### Application mobile 1.6.0
 - Tri rapide des nouvelles offres : glisser pour « Intéressé » ou « Ignorée »
@@ -100,6 +101,11 @@ dans l'historique git.
   message de candidature spontanée, lettre alignée sur le pitch, bilan du mois
 - Web hors connexion : bandeau aussi quand le PC ne répond plus (copie marquée
   par le service worker)
+- Métiers qui recrutent d'après l'enquête Besoins en Main-d'Œuvre de France
+  Travail (données ouvertes, deux années comparées), dans Mon marché
+- Données hors du projet, dans Documents\JobBoard (JOBBOARD_DATA_DIR) ; dossiers
+  exports et imports proposés par les fenêtres de fichier ; image Docker
+  inchangée (/app/data)
 - Migrations rangées dans `storage/migrations.py` ; tests en parallèle
   (`pytest -n auto`, pytest-xdist)
 - Entreprise suivie ajoutée depuis l'adresse de son site carrière

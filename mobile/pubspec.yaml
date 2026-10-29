@@ -16,6 +16,8 @@ dependencies:
   # Schémas des questions, livrés en SVG par le serveur
   flutter_svg: ^2.0.10+1
   flutter_timezone: ^5.1.1
+  # Widget de l'écran d'accueil : questions à revoir et prochain entretien
+  home_widget: ^0.9.4
   http: ^1.2.2
   mobile_scanner: ^7.4.2
   path_provider: ^2.1.4
