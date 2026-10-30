@@ -14,6 +14,7 @@ import 'logic/grading.dart';
 import 'logic/interview_alerts.dart';
 import 'logic/offer_alerts.dart';
 import 'logic/review.dart';
+import 'logic/troubleshooting.dart';
 import 'models/quiz_package.dart';
 import 'models/review_state.dart';
 import 'services/api_client.dart';
@@ -77,6 +78,9 @@ const maxNoteLength = 1000;
 /// Simulation d'entretien : questions reçues du PC et séries pas encore envoyées
 const interviewPreference = 'interview_content';
 const pendingInterviewPreference = 'pending_interview';
+const labsPreference = 'labs_content';
+const pendingLabsPreference = 'pending_labs';
+const labScoresPreference = 'lab_scores';
 
 /// Auto-évaluation : grille reçue du PC et niveaux saisis pas encore envoyés
 const skillGridPreference = 'skill_grid';
@@ -210,6 +214,75 @@ class RevisionState extends ChangeNotifier {
         for (final vItem in preferences[pendingInterviewPreference] as List? ?? const [])
           Map<String, dynamic>.from(vItem as Map),
       ];
+
+  /// Contenu des simulations reçu du PC, par simulation.
+  Map<String, dynamic> get labs => Map<String, dynamic>.from(preferences[labsPreference] as Map? ?? const {});
+
+  List<Map<String, dynamic>> get troubleshootingScenarios => [
+        for (final vItem in (labs['troubleshooting'] as Map?)?['scenarios'] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  TroubleshootingRules get troubleshootingRules => TroubleshootingRules.fromJson(
+        Map<String, dynamic>.from((labs['troubleshooting'] as Map?)?['rules'] as Map? ?? const {}),
+      );
+
+  List<Map<String, dynamic>> get pendingLabs => [
+        for (final vItem in preferences[pendingLabsPreference] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  /// Meilleur score obtenu sur le téléphone pour un scénario, ou null.
+  int? bestLabScore(String pScenarioId) =>
+      ((preferences[labScoresPreference] as Map?)?[pScenarioId] as num?)?.toInt();
+
+  /// Garde une panne résolue : meilleur score affiché, partie envoyée au PC ensuite.
+  Future<void> recordTroubleshooting(String pScenarioId, List<String> pActions, int pScore) async {
+    final vScores = Map<String, dynamic>.from(preferences[labScoresPreference] as Map? ?? const {});
+    final vBest = bestLabScore(pScenarioId);
+
+    if (vBest == null || pScore > vBest) {
+      vScores[pScenarioId] = pScore;
+    }
+
+    preferences = {
+      ...preferences,
+      labScoresPreference: vScores,
+      pendingLabsPreference: [
+        ...pendingLabs,
+        {
+          'id': const Uuid().v4(),
+          'lab': 'troubleshooting',
+          'scenario': pScenarioId,
+          'actions': pActions,
+          'finished_at': DateTime.now().toIso8601String(),
+        },
+      ],
+    };
+    await store.savePreferences(preferences);
+    notifyListeners();
+  }
+
+  /// Envoie les parties en attente et reçoit le contenu à jour des simulations ;
+  /// un serveur plus ancien qui ne les connaît pas n'empêche pas le reste.
+  Future<void> exchangeLabs(ApiClient pClient) async {
+    try {
+      if (pendingLabs.isNotEmpty) {
+        await pClient.uploadLabs(pendingLabs);
+        await savePreference(pendingLabsPreference, <Map<String, dynamic>>[]);
+      }
+
+      await savePreference(labsPreference, await pClient.downloadLabs());
+    } on ApiException catch (vException) {
+      if (vException.unreachable) {
+        rethrow;
+      }
+
+      log('Simulations non échangées : ${vException.message}', name: 'sync');
+    } on FormatException catch (vException) {
+      log('Réponse illisible pour les simulations : ${vException.message}', name: 'sync');
+    }
+  }
 
   /// Grille d'auto-évaluation : compétence et niveau de 0 à 10.
   List<Map<String, dynamic>> get skillGrid => [
@@ -481,6 +554,7 @@ class RevisionState extends ChangeNotifier {
 
       await sendFlagsAndExams(vClient);
       await exchangeInterviewAndSkills(vClient);
+      await exchangeLabs(vClient);
 
       final vProgress = await vClient.downloadProgress();
       final vContent = await vClient.downloadQuiz(package?.version);

@@ -430,6 +430,7 @@ Documents/JobBoard/
 - [x] Application installable sur l'écran d'accueil (manifeste web et icône)
 - [x] Application mobile Flutter de révision hors ligne (`mobile/`) : QCM, calculs, remises en ordre, associations, schémas et guides, répétition espacée, examen blanc chronométré, synchronisation automatique, rappel quotidien, icône et signature propres
 - [x] Correction et répétition espacée vérifiées des deux côtés par des cas communs (`tests/fixtures/shared_quiz_cases.json`), application mobile testée par la CI
+- [x] Pannes à résoudre jouables hors ligne sur le téléphone : contenu reçu du PC, simulateur Dart vérifié par les cas communs de `tests/fixtures/shared_lab_cases.json` (à régénérer par `python -m tools.lab_cases` après une modification du simulateur ou des scénarios), parties rejouées par le PC
 
 ### Hébergement et sécurité
 
@@ -678,6 +679,7 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 | GET | `/api/v1/offers` | Nouvelles offres de la semaine, fiche lisible hors ligne : description, compétences couvertes et manquantes, salaire, distance, position et `near` (dans le rayon des alertes) |
 | POST | `/api/v1/applications` | Statuts donnés aux offres sur le téléphone : `{"changes": [{"source", "source_id", "status"}]}` ; notes et date d'entretien gardées |
 | GET, POST | `/api/v1/interview` | Questions de la simulation d'entretien ; séries faites sur le téléphone : `{"series": [...]}` |
+| GET, POST | `/api/v1/labs` | Simulations jouables hors ligne (scénarios de pannes et règles du score) ; parties faites sur le téléphone : `{"results": [{"id", "lab", "scenario", "actions", "finished_at"}]}`, rejouées par le PC avant d'être comptées |
 | GET, POST | `/api/v1/skills` | Grille d'auto-évaluation ; niveaux saisis sur le téléphone : `{"levels": {"Java": 6}}` |
 | GET | `/api/v1/replies` | Réponses de recruteurs repérées dans Gmail par le planificateur : offre, statut annoncé, date d'entretien ; jamais le contenu du message |
 
@@ -799,6 +801,7 @@ scraper-data-python/
 │   ├── devops_levels.py                       # Niveaux Maven et Docker, objectif et progression
 │   ├── access_tokens.py                       # Jetons d'accès secrets (agenda, application mobile)
 │   ├── mobile_sync.py                         # Contenu hors ligne et réponses de l'application mobile
+│   ├── mobile_labs.py                         # Simulations hors ligne du téléphone, parties rejouées
 │   ├── cv_import.py                           # Import d'un CV : lecture et pré-remplissage du profil
 │   ├── schedule.py                            # Réglages et échéance de la recherche planifiée
 │   ├── notification.py                        # Contenu des e-mails de nouvelles offres et de relances
@@ -1196,6 +1199,7 @@ scraper-data-python/
 │   ├── tailscale_certificate.py               # Certificat reconnu pour l'accès par Tailscale
 │   ├── backup_key.py                          # Crée la clé de chiffrement des copies du NAS
 │   ├── mobile_integration.py                  # Prépare et contrôle le test téléphone ↔ serveur de la CI
+│   ├── lab_cases.py                           # Écrit les cas communs aux simulateurs Python et Dart
 │   └── quiz_lots/                             # Sources des lots écrits, un dossier par thème
 │
 ├── utils/                                     # Utilitaires techniques communs
@@ -1248,7 +1252,8 @@ scraper-data-python/
 │   ├── __init__.py                            # Initialise le package de tests
 │   ├── fixtures/
 │   │   ├── hackernews_headers.json            # En-têtes Hacker News réels et leur découpage attendu
-│   │   └── shared_quiz_cases.json             # Cas de correction communs au serveur et au téléphone
+│   │   ├── shared_quiz_cases.json             # Cas de correction communs au serveur et au téléphone
+│   │   └── shared_lab_cases.json              # Cas des simulateurs communs au PC et au téléphone
 │   │
 │   ├── job/                                   # Tests du domaine Job
 │   │   ├── __init__.py                         # Initialise le package de tests Job
@@ -1325,6 +1330,7 @@ scraper-data-python/
 │   │   ├── test_hybrid.py                     # Teste le repérage du double profil, ses faux amis et les conseils
 │   │   ├── test_quiz_types.py                 # Teste les questions interactives et leur correction
 │   │   ├── test_shared_quiz_cases.py          # Teste les cas communs avec l'application mobile
+│   │   ├── test_shared_lab_cases.py           # Teste les cas des simulateurs et les parties du téléphone
 │   │   ├── test_schema_building.py            # Teste les schémas à construire, leur correction et leur dessin
 │   │   ├── test_quiz_import.py                # Teste l'import des packs, schémas et guides
 │   │   ├── test_quiz_generation.py            # Teste le catalogue, la demande et le contrôle des lots

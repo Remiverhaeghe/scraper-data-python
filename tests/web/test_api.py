@@ -331,3 +331,22 @@ def test_game_gives_level_streak_and_quests(api):
     assert (vGame["level"], vGame["title"], vGame["xp"]) == (1, "Apprenti", 0)
     assert len(vGame["quests"]) == 4
     assert api.get("/api/v1/game", headers={"Authorization": ""}).status_code == 401
+
+
+def test_labs_are_downloaded_and_results_replayed(api):
+    """Vérifie le contenu des simulations envoyé, puis une partie rejouée par le PC."""
+
+    vPackage = api.get("/api/v1/labs").json()
+    vScenario = vPackage["troubleshooting"]["scenarios"][0]
+    vRight = next(vCause for vCause in vScenario["causes"] if vCause.get("right"))
+    vResult = {
+        "id": "partie-api",
+        "lab": "troubleshooting",
+        "scenario": vScenario["id"],
+        "actions": [f"repair:{vRight['id']}"],
+        "finished_at": "2026-10-30T09:00:00",
+    }
+
+    assert vPackage["troubleshooting"]["rules"]["unproven_score"] == 50
+    assert api.post("/api/v1/labs", json={"results": [vResult]}).json()["saved"] == 1
+    assert api.post("/api/v1/labs", json={"results": "rien"}).status_code == 422

@@ -17,6 +17,7 @@ from job.interview_simulation import (
     load_interview_questions,
     record_phone_series,
 )
+from job.mobile_labs import build_labs_package, sync_lab_results
 from job.mobile_sync import (
     API_PREFIX,
     API_VERSION,
@@ -142,6 +143,31 @@ def upload_exams(
 
     try:
         rReport = sync_exam_results(pDatabaseFile, pExams)
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    return rReport
+
+
+@router.get("/labs", dependencies=[Depends(require_api_token)])
+def download_labs():
+    """Renvoie le contenu des simulations jouables hors ligne sur le téléphone."""
+
+    rPackage = build_labs_package()
+
+    return rPackage
+
+
+@router.post("/labs", dependencies=[Depends(require_api_token)])
+def upload_labs(
+    pResults: list = Body(..., embed=True, alias="results"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Rejoue et enregistre les parties de simulation faites sur le téléphone."""
+
+    try:
+        rReport = sync_lab_results(pDatabaseFile, pResults)
 
     except ValueError as vException:
         raise HTTPException(status_code=400, detail=str(vException)) from vException

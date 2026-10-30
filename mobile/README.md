@@ -33,7 +33,8 @@ privilégiées, révision express de 5 minutes avec compte à rebours, note rapi
 une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
 lisibles hors ligne et fiche de préparation (pitch, questions pièges, questions à
 poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien,
-widget de l'écran d'accueil (questions à revoir, prochain entretien), dessiné par
+pannes à résoudre jouables sans réseau (scénarios reçus du PC, parties rejouées par le PC à
+la synchronisation), widget de l'écran d'accueil (questions à revoir, prochain entretien), dessiné par
 `android/app/src/main/kotlin/…/RevisionWidgetProvider.kt` et
 `res/layout/revision_widget.xml`, avec son fond (`res/drawable/widget_background.xml`)
 et ses couleurs claires et sombres (`res/values/colors.xml`, `res/values-night/colors.xml`).
@@ -167,7 +168,8 @@ mobile/
 │   │   ├── statistics.dart       # Réussite par thème et activité des derniers jours
 │   │   ├── offer_alerts.dart     # Nouvelles offres assez proches du profil pour une alerte
 │   │   ├── interview_alerts.dart # Rappels d'entretien : la veille à 18 h et une heure avant
-│   │   └── time_attack.dart      # Jeu « Contre la montre » : points, multiplicateur, bilan
+│   │   ├── time_attack.dart      # Jeu « Contre la montre » : points, multiplicateur, bilan
+│   │   └── troubleshooting.dart  # Pannes à résoudre, identique à job/troubleshooting.py
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
 │   │   ├── discovery.dart        # Recherche du serveur sur le réseau local
@@ -191,7 +193,8 @@ mobile/
 │   │   ├── interview_screen.dart # Simulation d'entretien technique
 │   │   ├── skills_screen.dart    # Auto-évaluation des compétences
 │   │   ├── guide_screen.dart     # Guide pratique d'un thème
-│   │   └── time_attack_screen.dart # Jeu « Contre la montre » : QCM pendant 60 secondes
+│   │   ├── time_attack_screen.dart # Jeu « Contre la montre » : QCM pendant 60 secondes
+│   │   └── troubleshooting_screen.dart # Simulations hors ligne : pannes à résoudre
 │   └── widgets/
 │       ├── celebration.dart      # Confettis et carte d'un niveau gagné ou d'un record
 │       ├── game_card.dart        # Niveau, série et quêtes reçus du PC, accès au jeu
@@ -206,6 +209,8 @@ mobile/
     ├── revision_state_test.dart  # Teste les réponses hors ligne et la synchronisation
     ├── exam_and_sync_test.dart   # Teste l'examen, l'envoi automatique et le rappel
     ├── shared_cases_test.dart    # Teste les cas communs avec le serveur
+    ├── shared_lab_cases_test.dart # Teste les simulateurs avec les cas communs du PC
+    ├── labs_test.dart            # Teste une panne jouée hors ligne puis envoyée
     ├── discovery_test.dart       # Teste la recherche du serveur sur le Wi-Fi
     ├── connection_code_test.dart # Teste la lecture du QR code de connexion
     ├── statistics_test.dart      # Teste la réussite par thème et le graphique des jours

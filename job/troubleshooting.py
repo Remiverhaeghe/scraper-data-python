@@ -79,14 +79,23 @@ def get_stars(pScore):
 
 
 def play(pScenarioId, pActions):
+    """Rejoue les actions sur un scénario livré et retourne l'état de la partie."""
+
+    rState = play_scenario(get_scenario(pScenarioId), pActions)
+
+    return rState
+
+
+def play_scenario(pScenario, pActions):
     """Rejoue les actions et retourne l'état de la partie.
 
     Une mesure qui demande une consignation non faite est refusée, sans
     coûter de temps. La partie s'arrête à la bonne réparation ; les actions
-    suivantes sont ignorées.
+    suivantes sont ignorées. L'application mobile rejoue la même logique, en
+    Dart : tests/fixtures/shared_lab_cases.json garde les deux identiques.
     """
 
-    vScenario = get_scenario(pScenarioId)
+    vScenario = pScenario
     vChecks = {vCheck["id"]: vCheck for vCheck in vScenario["checks"]}
     vCauses = {vCause["id"]: vCause for vCause in vScenario["causes"]}
     vDone = []

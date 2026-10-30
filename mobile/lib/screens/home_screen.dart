@@ -18,6 +18,7 @@ import 'setup_screen.dart';
 import 'skills_screen.dart';
 import 'statistics_screen.dart';
 import 'tracking_screen.dart';
+import 'troubleshooting_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.state});
@@ -175,6 +176,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               if (state.syncing) const LinearProgressIndicator(),
               SummaryCard(state: state),
               GameCard(state: state),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.build_circle_outlined),
+                  title: const Text('Pannes à résoudre'),
+                  subtitle: Text(
+                    state.troubleshootingScenarios.isEmpty
+                        ? 'Simulations jouables sans réseau, après une synchronisation'
+                        : '${state.troubleshootingScenarios.length} machines en panne, '
+                            'jouables sans réseau',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => LabsScreen(state: state)),
+                  ),
+                ),
+              ),
               DailyGoalCard(state: state),
               if (state.nextInterview(DateTime.now()) case final vInterview?)
                 Card(

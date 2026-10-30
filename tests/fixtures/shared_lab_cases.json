@@ -1,0 +1,1662 @@
+{
+ "description": "Cas communs aux simulateurs Python et Dart, générés par python -m tools.lab_cases : ne pas modifier à la main.",
+ "extra_scenarios": [
+  {
+   "id": "essai-arrondi-bas",
+   "best_minutes": 1,
+   "checks": [
+    {
+     "id": "mesure",
+     "label": "Mesure",
+     "minutes": 8,
+     "result": "ok",
+     "evidence": true
+    }
+   ],
+   "causes": [
+    {
+     "id": "reparer",
+     "label": "Réparer",
+     "minutes": 0,
+     "right": true
+    }
+   ]
+  },
+  {
+   "id": "essai-arrondi-haut",
+   "best_minutes": 3,
+   "checks": [
+    {
+     "id": "mesure",
+     "label": "Mesure",
+     "minutes": 8,
+     "result": "ok",
+     "evidence": true
+    }
+   ],
+   "causes": [
+    {
+     "id": "reparer",
+     "label": "Réparer",
+     "minutes": 0,
+     "right": true
+    }
+   ]
+  }
+ ],
+ "troubleshooting": [
+  {
+   "name": "convoyeur-arret : chemin le plus court",
+   "scenario": "convoyeur-arret",
+   "actions": [
+    "check:observer-km1",
+    "repair:bobine-km1"
+   ],
+   "expected": {
+    "done": [
+     "observer-km1"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Observer le contacteur KM1 pendant l'appui sur Marche",
+      "result": "Aucun claquement : KM1 ne colle pas alors que Q0.0 est allumée.",
+      "minutes": 1
+     },
+     {
+      "label": "Remplacer la bobine du contacteur KM1",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 16,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "convoyeur-arret : réparation sans preuve",
+   "scenario": "convoyeur-arret",
+   "actions": [
+    "repair:bobine-km1"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer la bobine du contacteur KM1",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 15,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "convoyeur-arret : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "convoyeur-arret",
+   "actions": [
+    "check:operateur",
+    "check:voyants-api",
+    "check:observer-km1",
+    "check:tension-bobine",
+    "check:consigner",
+    "check:resistance-bobine",
+    "check:fusibles",
+    "check:isolement-moteur",
+    "repair:moteur",
+    "repair:moteur",
+    "repair:bobine-km1",
+    "check:operateur"
+   ],
+   "expected": {
+    "done": [
+     "operateur",
+     "voyants-api",
+     "observer-km1",
+     "tension-bobine",
+     "consigner",
+     "resistance-bobine",
+     "fusibles",
+     "isolement-moteur"
+    ],
+    "wrong": [
+     "moteur"
+    ],
+    "log": [
+     {
+      "label": "Interroger l'opérateur",
+      "result": "Le convoyeur s'est arrêté normalement hier soir. Personne n'est intervenu depuis.",
+      "minutes": 1
+     },
+     {
+      "label": "Lire les voyants d'entrées et sorties de l'automate",
+      "result": "I0.0 (Marche) s'allume à l'appui, I0.1 (Arrêt, contact fermé au repos) et I0.2 (relais thermique F2 non déclenché) sont allumés. Q0.0 s'allume quand on appuie sur Marche.",
+      "minutes": 2
+     },
+     {
+      "label": "Observer le contacteur KM1 pendant l'appui sur Marche",
+      "result": "Aucun claquement : KM1 ne colle pas alors que Q0.0 est allumée.",
+      "minutes": 1
+     },
+     {
+      "label": "Mesurer la tension aux bornes A1-A2 de la bobine KM1",
+      "result": "24 V continu présents dès que Q0.0 s'allume : la commande arrive bien jusqu'à la bobine.",
+      "minutes": 4
+     },
+     {
+      "label": "Consigner le départ moteur",
+      "result": "Sectionneur Q1 ouvert et cadenassé, absence de tension vérifiée au VAT : le départ est consigné.",
+      "minutes": 5
+     },
+     {
+      "label": "Mesurer la résistance de la bobine KM1",
+      "result": "Circuit ouvert : la bobine est coupée.",
+      "minutes": 3
+     },
+     {
+      "label": "Contrôler les fusibles F1 du circuit de puissance",
+      "result": "Les trois fusibles sont bons.",
+      "minutes": 4
+     },
+     {
+      "label": "Mesurer l'isolement du moteur",
+      "result": "Plus de 100 MΩ entre chaque phase et la masse : le moteur est sain.",
+      "minutes": 6
+     },
+     {
+      "label": "Remplacer le moteur",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 90,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer la bobine du contacteur KM1",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 131,
+    "solved": true,
+    "proven": true,
+    "score": 0,
+    "stars": 1
+   }
+  },
+  {
+   "name": "verin-lent : chemin le plus court",
+   "scenario": "verin-lent",
+   "actions": [
+    "check:silencieux",
+    "repair:silencieux"
+   ],
+   "expected": {
+    "done": [
+     "silencieux"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Déposer le silencieux de l'échappement côté sortie et refaire un cycle",
+      "result": "Sans le silencieux, la sortie redevient rapide. Le silencieux est noirci et gras.",
+      "minutes": 3
+     },
+     {
+      "label": "Remplacer le silencieux d'échappement colmaté",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 5,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 8,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "verin-lent : réparation sans preuve",
+   "scenario": "verin-lent",
+   "actions": [
+    "repair:silencieux"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer le silencieux d'échappement colmaté",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 5,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 5,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "verin-lent : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "verin-lent",
+   "actions": [
+    "check:reseau",
+    "check:frl",
+    "check:ecouter",
+    "check:regleurs",
+    "check:silencieux",
+    "check:joint-piston",
+    "check:capteur-fin",
+    "repair:joints",
+    "repair:joints",
+    "repair:silencieux",
+    "check:reseau"
+   ],
+   "expected": {
+    "done": [
+     "reseau",
+     "frl",
+     "ecouter",
+     "regleurs",
+     "silencieux",
+     "joint-piston",
+     "capteur-fin"
+    ],
+    "wrong": [
+     "joints"
+    ],
+    "log": [
+     {
+      "label": "Lire le manomètre du réseau d'air",
+      "result": "6 bar, stable.",
+      "minutes": 1
+     },
+     {
+      "label": "Lire la pression en sortie du FRL pendant le mouvement",
+      "result": "6 bar avant le mouvement, 5,8 bar pendant : la chute est normale.",
+      "minutes": 1
+     },
+     {
+      "label": "Écouter le vérin et le distributeur, vérin sorti puis rentré",
+      "result": "Aucune fuite audible dans les deux positions.",
+      "minutes": 2
+     },
+     {
+      "label": "Vérifier les régleurs de débit",
+      "result": "Les réglages sont marqués à la peinture et n'ont pas bougé depuis la mise en service.",
+      "minutes": 3
+     },
+     {
+      "label": "Déposer le silencieux de l'échappement côté sortie et refaire un cycle",
+      "result": "Sans le silencieux, la sortie redevient rapide. Le silencieux est noirci et gras.",
+      "minutes": 3
+     },
+     {
+      "label": "Tester l'étanchéité du piston, vérin bloqué en sortie",
+      "result": "Aucun souffle à l'échappement opposé : le joint de piston est étanche.",
+      "minutes": 5
+     },
+     {
+      "label": "Contrôler le capteur de fin de course",
+      "result": "Le capteur détecte la tige en fin de course, son voyant s'allume.",
+      "minutes": 2
+     },
+     {
+      "label": "Changer les joints du vérin",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 45,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer le silencieux d'échappement colmaté",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 5,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 67,
+    "solved": true,
+    "proven": true,
+    "score": 0,
+    "stars": 1
+   }
+  },
+  {
+   "name": "capteur-piece : chemin le plus court",
+   "scenario": "capteur-piece",
+   "actions": [
+    "check:led",
+    "repair:regler"
+   ],
+   "expected": {
+    "done": [
+     "led"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Observer la LED du détecteur, pièce en place",
+      "result": "La LED s'allume, puis s'éteint par moments quand le montage vibre.",
+      "minutes": 1
+     },
+     {
+      "label": "Régler le détecteur à environ 3 mm de la pièce et resserrer l'écrou",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 8,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 9,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "capteur-piece : réparation sans preuve",
+   "scenario": "capteur-piece",
+   "actions": [
+    "repair:regler"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Régler le détecteur à environ 3 mm de la pièce et resserrer l'écrou",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 8,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 8,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "capteur-piece : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "capteur-piece",
+   "actions": [
+    "check:operateur",
+    "check:led",
+    "check:entree-api",
+    "check:cable",
+    "check:alimentation",
+    "check:fixation",
+    "check:distance",
+    "repair:remplacer-detecteur",
+    "repair:remplacer-detecteur",
+    "repair:regler",
+    "check:operateur"
+   ],
+   "expected": {
+    "done": [
+     "operateur",
+     "led",
+     "entree-api",
+     "cable",
+     "alimentation",
+     "fixation",
+     "distance"
+    ],
+    "wrong": [
+     "remplacer-detecteur"
+    ],
+    "log": [
+     {
+      "label": "Interroger l'opérateur",
+      "result": "Le défaut est apparu après un bourrage la semaine dernière, que l'opérateur a dégagé à la main.",
+      "minutes": 1
+     },
+     {
+      "label": "Observer la LED du détecteur, pièce en place",
+      "result": "La LED s'allume, puis s'éteint par moments quand le montage vibre.",
+      "minutes": 1
+     },
+     {
+      "label": "Lire l'entrée I1.3 sur l'automate",
+      "result": "Elle suit exactement la LED : l'automate reçoit ce que voit le détecteur.",
+      "minutes": 2
+     },
+     {
+      "label": "Bouger le câble du détecteur",
+      "result": "Aucune influence sur la LED.",
+      "minutes": 2
+     },
+     {
+      "label": "Mesurer l'alimentation 24 V du détecteur",
+      "result": "24,1 V stables.",
+      "minutes": 3
+     },
+     {
+      "label": "Vérifier la fixation du détecteur",
+      "result": "L'écrou de blocage est desserré : le détecteur a reculé dans son support.",
+      "minutes": 2
+     },
+     {
+      "label": "Mesurer la distance entre le détecteur et la pièce",
+      "result": "4,5 mm, au-delà de la portée nominale de 4 mm.",
+      "minutes": 3
+     },
+     {
+      "label": "Remplacer le détecteur",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 20,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Régler le détecteur à environ 3 mm de la pièce et resserrer l'écrou",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 8,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 42,
+    "solved": true,
+    "proven": true,
+    "score": 16,
+    "stars": 1
+   }
+  },
+  {
+   "name": "four-pid : chemin le plus court",
+   "scenario": "four-pid",
+   "actions": [
+    "check:parametres",
+    "repair:reglage"
+   ],
+   "expected": {
+    "done": [
+     "parametres"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Lire les paramètres du régulateur",
+      "result": "Bande proportionnelle 2 %, Ti 60 s, Td 0. La fiche de réglage d'origine indique une bande proportionnelle de 8 %.",
+      "minutes": 2
+     },
+     {
+      "label": "Remettre la bande proportionnelle d'origine et vérifier la réponse",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 10,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 12,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "four-pid : réparation sans preuve",
+   "scenario": "four-pid",
+   "actions": [
+    "repair:reglage"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remettre la bande proportionnelle d'origine et vérifier la réponse",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 10,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 10,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "four-pid : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "four-pid",
+   "actions": [
+    "check:courbe",
+    "check:parametres",
+    "check:sonde",
+    "check:manuel",
+    "check:relais",
+    "check:consigner",
+    "check:resistances",
+    "repair:sonde",
+    "repair:sonde",
+    "repair:reglage",
+    "check:courbe"
+   ],
+   "expected": {
+    "done": [
+     "courbe",
+     "parametres",
+     "sonde",
+     "manuel",
+     "relais",
+     "consigner",
+     "resistances"
+    ],
+    "wrong": [
+     "sonde"
+    ],
+    "log": [
+     {
+      "label": "Tracer la température et la sortie du régulateur",
+      "result": "Oscillation régulière d'environ 4 minutes ; la sortie passe de 0 à 100 % à chaque cycle.",
+      "minutes": 5
+     },
+     {
+      "label": "Lire les paramètres du régulateur",
+      "result": "Bande proportionnelle 2 %, Ti 60 s, Td 0. La fiche de réglage d'origine indique une bande proportionnelle de 8 %.",
+      "minutes": 2
+     },
+     {
+      "label": "Comparer la sonde à un thermomètre étalon",
+      "result": "Écart de 0,5 °C : la mesure est juste.",
+      "minutes": 6
+     },
+     {
+      "label": "Passer le régulateur en manuel, sortie fixée à 40 %",
+      "result": "La température se stabilise : le procédé et l'actionneur fonctionnent.",
+      "minutes": 5
+     },
+     {
+      "label": "Contrôler le relais statique de chauffe",
+      "result": "Il commute normalement, sans rester collé.",
+      "minutes": 4
+     },
+     {
+      "label": "Consigner le four",
+      "result": "Four consigné : alimentation séparée, condamnée, absence de tension vérifiée.",
+      "minutes": 5
+     },
+     {
+      "label": "Mesurer les résistances de chauffe",
+      "result": "Les trois résistances ont la valeur attendue.",
+      "minutes": 8
+     },
+     {
+      "label": "Remplacer la sonde Pt100",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 20,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remettre la bande proportionnelle d'origine et vérifier la réponse",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 10,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 65,
+    "solved": true,
+    "proven": true,
+    "score": 11,
+    "stars": 1
+   }
+  },
+  {
+   "name": "differentiel : chemin le plus court",
+   "scenario": "differentiel",
+   "actions": [
+    "check:debrancher",
+    "repair:cable"
+   ],
+   "expected": {
+    "done": [
+     "debrancher"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Débrancher le nettoyeur et réarmer le différentiel",
+      "result": "Le différentiel tient.",
+      "minutes": 2
+     },
+     {
+      "label": "Remplacer le câble d'alimentation abîmé du nettoyeur",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 17,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "differentiel : réparation sans preuve",
+   "scenario": "differentiel",
+   "actions": [
+    "repair:cable"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer le câble d'alimentation abîmé du nettoyeur",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 15,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "differentiel : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "differentiel",
+   "actions": [
+    "check:debrancher",
+    "check:autre-appareil",
+    "check:bouton-test",
+    "check:fuite-atelier",
+    "check:cable",
+    "check:isolement",
+    "repair:differentiel",
+    "repair:differentiel",
+    "repair:cable",
+    "check:debrancher"
+   ],
+   "expected": {
+    "done": [
+     "debrancher",
+     "autre-appareil",
+     "bouton-test",
+     "fuite-atelier",
+     "cable",
+     "isolement"
+    ],
+    "wrong": [
+     "differentiel"
+    ],
+    "log": [
+     {
+      "label": "Débrancher le nettoyeur et réarmer le différentiel",
+      "result": "Le différentiel tient.",
+      "minutes": 2
+     },
+     {
+      "label": "Brancher un autre appareil sur la même prise",
+      "result": "Il fonctionne sans déclenchement.",
+      "minutes": 3
+     },
+     {
+      "label": "Appuyer sur le bouton test du différentiel",
+      "result": "Il déclenche : le différentiel fonctionne.",
+      "minutes": 1
+     },
+     {
+      "label": "Mesurer le courant de fuite permanent du circuit à la pince",
+      "result": "3 mA sans le nettoyeur : valeur normale.",
+      "minutes": 4
+     },
+     {
+      "label": "Inspecter le câble et la fiche du nettoyeur",
+      "result": "La gaine est fendue près de la poignée, avec des traces d'eau à l'intérieur.",
+      "minutes": 2
+     },
+     {
+      "label": "Mesurer l'isolement du nettoyeur, débranché",
+      "result": "0,2 MΩ entre phase et terre : l'isolement est très faible.",
+      "minutes": 5
+     },
+     {
+      "label": "Remplacer le disjoncteur différentiel",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 25,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer le câble d'alimentation abîmé du nettoyeur",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 57,
+    "solved": true,
+    "proven": true,
+    "score": 18,
+    "stars": 1
+   }
+  },
+  {
+   "name": "presse-hydraulique : chemin le plus court",
+   "scenario": "presse-hydraulique",
+   "actions": [
+    "check:colmatage",
+    "repair:filtre"
+   ],
+   "expected": {
+    "done": [
+     "colmatage"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Lire l'indicateur de colmatage du filtre d'aspiration",
+      "result": "L'indicateur est dans la zone rouge : le filtre est colmaté.",
+      "minutes": 2
+     },
+     {
+      "label": "Remplacer la cartouche du filtre d'aspiration",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 17,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "presse-hydraulique : réparation sans preuve",
+   "scenario": "presse-hydraulique",
+   "actions": [
+    "repair:filtre"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer la cartouche du filtre d'aspiration",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 15,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "presse-hydraulique : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "presse-hydraulique",
+   "actions": [
+    "check:niveau",
+    "check:colmatage",
+    "check:temperature",
+    "check:huile",
+    "check:limiteur",
+    "check:consigner",
+    "check:accouplement",
+    "repair:pompe",
+    "repair:pompe",
+    "repair:filtre",
+    "check:niveau"
+   ],
+   "expected": {
+    "done": [
+     "niveau",
+     "colmatage",
+     "temperature",
+     "huile",
+     "limiteur",
+     "consigner",
+     "accouplement"
+    ],
+    "wrong": [
+     "pompe"
+    ],
+    "log": [
+     {
+      "label": "Lire le niveau d'huile",
+      "result": "Le niveau est correct, entre mini et maxi.",
+      "minutes": 1
+     },
+     {
+      "label": "Lire l'indicateur de colmatage du filtre d'aspiration",
+      "result": "L'indicateur est dans la zone rouge : le filtre est colmaté.",
+      "minutes": 2
+     },
+     {
+      "label": "Mesurer la température de l'huile",
+      "result": "45 °C, valeur normale.",
+      "minutes": 2
+     },
+     {
+      "label": "Observer l'huile dans le réservoir",
+      "result": "Fines bulles en surface : la pompe aspire de l'air ou de la vapeur.",
+      "minutes": 1
+     },
+     {
+      "label": "Contrôler le tarage du limiteur de pression",
+      "result": "Taré à 190 bar et plombé : il n'a pas été déréglé.",
+      "minutes": 3
+     },
+     {
+      "label": "Consigner le groupe hydraulique",
+      "result": "Moteur consigné, pression résiduelle purgée.",
+      "minutes": 5
+     },
+     {
+      "label": "Contrôler l'accouplement moteur-pompe",
+      "result": "Pas de jeu, élément élastique en bon état.",
+      "minutes": 5
+     },
+     {
+      "label": "Remplacer la pompe",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 120,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer la cartouche du filtre d'aspiration",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 154,
+    "solved": true,
+    "proven": true,
+    "score": 0,
+    "stars": 1
+   }
+  },
+  {
+   "name": "variateur-surtension : chemin le plus court",
+   "scenario": "variateur-surtension",
+   "actions": [
+    "check:consigner",
+    "check:resistance",
+    "repair:resistance"
+   ],
+   "expected": {
+    "done": [
+     "consigner",
+     "resistance"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Consigner le variateur et attendre la décharge du bus continu",
+      "result": "Sectionneur ouvert et cadenassé ; après 5 minutes, bus continu mesuré à 0 V.",
+      "minutes": 8
+     },
+     {
+      "label": "Mesurer la résistance de freinage",
+      "result": "Circuit ouvert : la résistance est coupée, au lieu des 47 Ω de sa plaque.",
+      "minutes": 4
+     },
+     {
+      "label": "Remplacer la résistance de freinage",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 18,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 30,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "variateur-surtension : réparation sans preuve",
+   "scenario": "variateur-surtension",
+   "actions": [
+    "repair:resistance"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer la résistance de freinage",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 18,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 18,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "variateur-surtension : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "variateur-surtension",
+   "actions": [
+    "check:historique",
+    "check:reseau",
+    "check:rampe",
+    "check:ventilation",
+    "check:consigner",
+    "check:resistance",
+    "check:isolement",
+    "repair:rampe",
+    "repair:rampe",
+    "repair:resistance",
+    "check:historique"
+   ],
+   "expected": {
+    "done": [
+     "historique",
+     "reseau",
+     "rampe",
+     "ventilation",
+     "consigner",
+     "resistance",
+     "isolement"
+    ],
+    "wrong": [
+     "rampe"
+    ],
+    "log": [
+     {
+      "label": "Lire l'historique des défauts du variateur",
+      "result": "Défaut « surtension bus continu » (OV), toujours pendant la décélération.",
+      "minutes": 2
+     },
+     {
+      "label": "Mesurer la tension du réseau en entrée du variateur",
+      "result": "402 V entre phases, stable : le réseau est normal.",
+      "minutes": 3
+     },
+     {
+      "label": "Lire le paramètre de rampe de décélération",
+      "result": "2 s, la valeur d'origine notée dans le dossier de la machine.",
+      "minutes": 2
+     },
+     {
+      "label": "Contrôler le ventilateur et le radiateur du variateur",
+      "result": "Ventilateur en marche, radiateur propre.",
+      "minutes": 3
+     },
+     {
+      "label": "Consigner le variateur et attendre la décharge du bus continu",
+      "result": "Sectionneur ouvert et cadenassé ; après 5 minutes, bus continu mesuré à 0 V.",
+      "minutes": 8
+     },
+     {
+      "label": "Mesurer la résistance de freinage",
+      "result": "Circuit ouvert : la résistance est coupée, au lieu des 47 Ω de sa plaque.",
+      "minutes": 4
+     },
+     {
+      "label": "Mesurer l'isolement du moteur",
+      "result": "Plus de 100 MΩ entre chaque phase et la masse : le moteur est sain.",
+      "minutes": 6
+     },
+     {
+      "label": "Allonger la rampe de décélération à 10 s",
+      "result": "Essai : la panne est toujours là. Le défaut disparaîtrait à vide, mais l'arrêt serait cinq fois plus long et, chargé, le convoyeur incliné renverrait encore son énergie au variateur. La résistance coupée reste à remplacer.",
+      "minutes": 5,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer la résistance de freinage",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 18,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 51,
+    "solved": true,
+    "proven": true,
+    "score": 44,
+    "stars": 1
+   }
+  },
+  {
+   "name": "boucle-4-20 : chemin le plus court",
+   "scenario": "boucle-4-20",
+   "actions": [
+    "check:tension-transmetteur",
+    "repair:cable"
+   ],
+   "expected": {
+    "done": [
+     "tension-transmetteur"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Mesurer la tension aux bornes du transmetteur",
+      "result": "0 V : la tension de l'armoire n'arrive pas au transmetteur, le câble est coupé entre les deux.",
+      "minutes": 3
+     },
+     {
+      "label": "Remplacer le tronçon de câble abîmé et le protéger",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 18,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "boucle-4-20 : réparation sans preuve",
+   "scenario": "boucle-4-20",
+   "actions": [
+    "repair:cable"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer le tronçon de câble abîmé et le protéger",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 15,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "boucle-4-20 : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "boucle-4-20",
+   "actions": [
+    "check:manometre",
+    "check:brute",
+    "check:alimentation",
+    "check:tension-transmetteur",
+    "check:courant",
+    "check:cheminement",
+    "repair:transmetteur",
+    "repair:transmetteur",
+    "repair:cable",
+    "check:manometre"
+   ],
+   "expected": {
+    "done": [
+     "manometre",
+     "brute",
+     "alimentation",
+     "tension-transmetteur",
+     "courant",
+     "cheminement"
+    ],
+    "wrong": [
+     "transmetteur"
+    ],
+    "log": [
+     {
+      "label": "Lire le manomètre local à côté du transmetteur",
+      "result": "4,2 bar : la pression est normale, seule la mesure est fausse.",
+      "minutes": 1
+     },
+     {
+      "label": "Lire la valeur brute de l'entrée analogique",
+      "result": "0 mA, avec le diagnostic « rupture de fil » de la carte.",
+      "minutes": 2
+     },
+     {
+      "label": "Mesurer la tension de boucle au bornier de l'armoire",
+      "result": "24 V présents entre les bornes de la boucle.",
+      "minutes": 3
+     },
+     {
+      "label": "Mesurer la tension aux bornes du transmetteur",
+      "result": "0 V : la tension de l'armoire n'arrive pas au transmetteur, le câble est coupé entre les deux.",
+      "minutes": 3
+     },
+     {
+      "label": "Mesurer le courant en série au niveau du transmetteur",
+      "result": "0 mA : rien ne circule dans la boucle.",
+      "minutes": 5
+     },
+     {
+      "label": "Suivre le câble le long de la passerelle",
+      "result": "Câble écrasé et sectionné au pied de la passerelle, à un passage de chariot.",
+      "minutes": 8
+     },
+     {
+      "label": "Remplacer le transmetteur de pression",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 30,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer le tronçon de câble abîmé et le protéger",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 15,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 67,
+    "solved": true,
+    "proven": true,
+    "score": 12,
+    "stars": 1
+   }
+  },
+  {
+   "name": "moteur-thermique : chemin le plus court",
+   "scenario": "moteur-thermique",
+   "actions": [
+    "check:capot",
+    "repair:nettoyage"
+   ],
+   "expected": {
+    "done": [
+     "capot"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Inspecter le capot de ventilation et les ailettes",
+      "result": "Grille du capot bouchée par un feutre de fibres, ailettes encrassées : l'air ne passe plus.",
+      "minutes": 2
+     },
+     {
+      "label": "Nettoyer le capot et les ailettes, puis prévoir ce nettoyage au plan de maintenance",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 14,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 16,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "moteur-thermique : réparation sans preuve",
+   "scenario": "moteur-thermique",
+   "actions": [
+    "repair:nettoyage"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Nettoyer le capot et les ailettes, puis prévoir ce nettoyage au plan de maintenance",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 14,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 14,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "moteur-thermique : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "moteur-thermique",
+   "actions": [
+    "check:intensite",
+    "check:reglage",
+    "check:temperature",
+    "check:capot",
+    "check:consigner",
+    "check:roulements",
+    "repair:reglage",
+    "repair:reglage",
+    "repair:nettoyage",
+    "check:intensite"
+   ],
+   "expected": {
+    "done": [
+     "intensite",
+     "reglage",
+     "temperature",
+     "capot",
+     "consigner",
+     "roulements"
+    ],
+    "wrong": [
+     "reglage"
+    ],
+    "log": [
+     {
+      "label": "Mesurer l'intensité des trois phases à la pince, en marche",
+      "result": "7,9 A, 8,0 A et 7,9 A : le moteur n'est pas surchargé et les phases sont équilibrées.",
+      "minutes": 4
+     },
+     {
+      "label": "Lire le réglage du relais thermique",
+      "result": "8,5 A, adapté à l'intensité nominale du moteur.",
+      "minutes": 1
+     },
+     {
+      "label": "Mesurer la température de la carcasse au thermomètre infrarouge",
+      "result": "95 °C après un quart d'heure : le moteur chauffe anormalement sans être surchargé.",
+      "minutes": 2
+     },
+     {
+      "label": "Inspecter le capot de ventilation et les ailettes",
+      "result": "Grille du capot bouchée par un feutre de fibres, ailettes encrassées : l'air ne passe plus.",
+      "minutes": 2
+     },
+     {
+      "label": "Consigner le départ moteur",
+      "result": "Sectionneur ouvert et cadenassé, absence de tension vérifiée.",
+      "minutes": 5
+     },
+     {
+      "label": "Tourner l'arbre à la main et écouter les roulements",
+      "result": "Rotation libre, sans bruit ni point dur.",
+      "minutes": 3
+     },
+     {
+      "label": "Monter le réglage du thermique à 10 A",
+      "result": "Essai : la panne est toujours là. Le thermique protège le bobinage : relevé au-dessus de l'intensité nominale, il laisserait le moteur surchauffer jusqu'à griller son isolant.",
+      "minutes": 2,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Nettoyer le capot et les ailettes, puis prévoir ce nettoyage au plan de maintenance",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 14,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 33,
+    "solved": true,
+    "proven": true,
+    "score": 33,
+    "stars": 1
+   }
+  },
+  {
+   "name": "compresseur-continu : chemin le plus court",
+   "scenario": "compresseur-continu",
+   "actions": [
+    "check:purgeur",
+    "repair:purgeur"
+   ],
+   "expected": {
+    "done": [
+     "purgeur"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Écouter le purgeur sous le réservoir",
+      "result": "Sifflement continu : l'évacuation du purgeur reste ouverte en permanence, l'air s'échappe avec les condensats.",
+      "minutes": 3
+     },
+     {
+      "label": "Remplacer le purgeur de condensats bloqué ouvert",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 20,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 23,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "compresseur-continu : réparation sans preuve",
+   "scenario": "compresseur-continu",
+   "actions": [
+    "repair:purgeur"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer le purgeur de condensats bloqué ouvert",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 20,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 20,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "compresseur-continu : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "compresseur-continu",
+   "actions": [
+    "check:pression",
+    "check:chute",
+    "check:purgeur",
+    "check:postes",
+    "check:pressostat",
+    "repair:pressostat",
+    "repair:pressostat",
+    "repair:purgeur",
+    "check:pression"
+   ],
+   "expected": {
+    "done": [
+     "pression",
+     "chute",
+     "purgeur",
+     "postes",
+     "pressostat"
+    ],
+    "wrong": [
+     "pressostat"
+    ],
+    "log": [
+     {
+      "label": "Lire la pression du réseau",
+      "result": "6,8 bar : la pression est tenue.",
+      "minutes": 1
+     },
+     {
+      "label": "Arrêter le compresseur, production à l'arrêt, et suivre la pression 15 minutes",
+      "result": "La pression passe de 7 à 4 bar : une fuite importante existe, sans dire où.",
+      "minutes": 15
+     },
+     {
+      "label": "Écouter le purgeur sous le réservoir",
+      "result": "Sifflement continu : l'évacuation du purgeur reste ouverte en permanence, l'air s'échappe avec les condensats.",
+      "minutes": 3
+     },
+     {
+      "label": "Écouter les raccords des postes avec un détecteur à ultrasons",
+      "result": "Deux petites fuites sur des raccords rapides, trop faibles pour expliquer une telle consommation.",
+      "minutes": 20
+     },
+     {
+      "label": "Contrôler le réglage du pressostat",
+      "result": "Enclenchement à 6,5 bar, déclenchement à 7,5 bar : réglage d'origine.",
+      "minutes": 2
+     },
+     {
+      "label": "Baisser le seuil de déclenchement du pressostat à 6 bar",
+      "result": "Essai : la panne est toujours là. La fuite continuerait, et les postes qui ont besoin de 6 bar manqueraient de pression aux pointes de consommation.",
+      "minutes": 5,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer le purgeur de condensats bloqué ouvert",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 20,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 66,
+    "solved": true,
+    "proven": true,
+    "score": 20,
+    "stars": 1
+   }
+  },
+  {
+   "name": "essai-arrondi-bas : chemin le plus court",
+   "scenario": "essai-arrondi-bas",
+   "actions": [
+    "check:mesure",
+    "repair:reparer"
+   ],
+   "expected": {
+    "done": [
+     "mesure"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Mesure",
+      "result": "ok",
+      "minutes": 8
+     },
+     {
+      "label": "Réparer",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 0,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 8,
+    "solved": true,
+    "proven": true,
+    "score": 12,
+    "stars": 1
+   }
+  },
+  {
+   "name": "essai-arrondi-bas : réparation sans preuve",
+   "scenario": "essai-arrondi-bas",
+   "actions": [
+    "repair:reparer"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Réparer",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 0,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 0,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "essai-arrondi-bas : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "essai-arrondi-bas",
+   "actions": [
+    "check:mesure",
+    "repair:reparer",
+    "check:mesure"
+   ],
+   "expected": {
+    "done": [
+     "mesure"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Mesure",
+      "result": "ok",
+      "minutes": 8
+     },
+     {
+      "label": "Réparer",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 0,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 8,
+    "solved": true,
+    "proven": true,
+    "score": 12,
+    "stars": 1
+   }
+  },
+  {
+   "name": "essai-arrondi-haut : chemin le plus court",
+   "scenario": "essai-arrondi-haut",
+   "actions": [
+    "check:mesure",
+    "repair:reparer"
+   ],
+   "expected": {
+    "done": [
+     "mesure"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Mesure",
+      "result": "ok",
+      "minutes": 8
+     },
+     {
+      "label": "Réparer",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 0,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 8,
+    "solved": true,
+    "proven": true,
+    "score": 38,
+    "stars": 1
+   }
+  },
+  {
+   "name": "essai-arrondi-haut : réparation sans preuve",
+   "scenario": "essai-arrondi-haut",
+   "actions": [
+    "repair:reparer"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Réparer",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 0,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 0,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "essai-arrondi-haut : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "essai-arrondi-haut",
+   "actions": [
+    "check:mesure",
+    "repair:reparer",
+    "check:mesure"
+   ],
+   "expected": {
+    "done": [
+     "mesure"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Mesure",
+      "result": "ok",
+      "minutes": 8
+     },
+     {
+      "label": "Réparer",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 0,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 8,
+    "solved": true,
+    "proven": true,
+    "score": 38,
+    "stars": 1
+   }
+  }
+ ]
+}

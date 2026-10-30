@@ -242,6 +242,34 @@ class ApiClient {
     return rContent;
   }
 
+  /// Contenu des simulations jouables hors ligne : scénarios et règles.
+  Future<Map<String, dynamic>> downloadLabs() async {
+    final vResponse = await send(
+      'Simulations',
+      () => client.get(buildUri('/labs'), headers: buildHeaders()),
+    );
+
+    final rContent = decode(vResponse);
+
+    return rContent;
+  }
+
+  /// Envoie les parties jouées hors ligne ; le PC les rejoue avant de les compter.
+  Future<Map<String, dynamic>> uploadLabs(List<Map<String, dynamic>> pResults) async {
+    final vResponse = await send(
+      'Simulations',
+      () => client.post(
+        buildUri('/labs'),
+        headers: {...buildHeaders(), 'Content-Type': 'application/json'},
+        body: jsonEncode({'results': pResults}),
+      ),
+    );
+
+    final rReport = decode(vResponse);
+
+    return rReport;
+  }
+
   /// Envoie les séries de simulation faites sur le téléphone.
   Future<Map<String, dynamic>> uploadInterview(List<Map<String, dynamic>> pSeries) async {
     final vResponse = await send(
