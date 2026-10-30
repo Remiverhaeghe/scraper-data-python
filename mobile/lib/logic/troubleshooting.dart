@@ -1,6 +1,8 @@
 // Pannes à résoudre, jouées hors ligne : même logique que job/troubleshooting.py,
 // gardée identique par les cas de tests/fixtures/shared_lab_cases.json.
 
+import 'python_compat.dart';
+
 const checkPrefix = 'check:';
 const repairPrefix = 'repair:';
 
@@ -27,19 +29,6 @@ class TroubleshootingRules {
   final List<int> starThresholds;
   final int xpBase;
   final int xpPerTen;
-}
-
-/// Arrondit comme Python : une moitié exacte va vers l'entier pair (12,5 donne 12).
-int roundHalfEven(double pValue) {
-  final vFloor = pValue.floorToDouble();
-  final vRest = pValue - vFloor;
-  var rValue = vFloor.toInt();
-
-  if (vRest > 0.5 || (vRest == 0.5 && rValue.isOdd)) {
-    rValue += 1;
-  }
-
-  return rValue;
 }
 
 /// Nombre d'étoiles d'un score, de 1 à 3.
@@ -79,7 +68,8 @@ int scoreOf(
 }
 
 /// Points gagnés par une panne résolue : un forfait plus un bonus selon le score.
-int xpOf(int pScore, TroubleshootingRules pRules) => pRules.xpBase + pRules.xpPerTen * (pScore ~/ 10);
+int xpOf(int pScore, TroubleshootingRules pRules) =>
+    pRules.xpBase + pRules.xpPerTen * (pScore ~/ 10);
 
 /// Rejoue les actions sur un scénario et retourne l'état de la partie.
 ///
@@ -128,7 +118,8 @@ Map<String, dynamic> playScenario(
 
       vDone.add(vCheck['id'] as String);
       vMinutes += vCheck['minutes'] as int;
-      vLog.add({'label': vCheck['label'], 'result': vCheck['result'], 'minutes': vCheck['minutes']});
+      vLog.add(
+          {'label': vCheck['label'], 'result': vCheck['result'], 'minutes': vCheck['minutes']});
     } else if (vAction.startsWith(repairPrefix)) {
       final vCause = vCauses[vAction.substring(repairPrefix.length)];
 
@@ -147,8 +138,9 @@ Map<String, dynamic> playScenario(
 
       vLog.add({
         'label': vCause['label'],
-        'result': (vSolved ? 'La machine repart : panne résolue.' : 'Essai : la panne est toujours là.') +
-            (vNote != null && vNote.isNotEmpty ? ' $vNote' : ''),
+        'result':
+            (vSolved ? 'La machine repart : panne résolue.' : 'Essai : la panne est toujours là.') +
+                (vNote != null && vNote.isNotEmpty ? ' $vNote' : ''),
         'minutes': vCause['minutes'],
         'repair': true,
         'solved': vSolved,

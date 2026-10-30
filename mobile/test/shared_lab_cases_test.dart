@@ -5,6 +5,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jobboard_revision/logic/ladder.dart';
+import 'package:jobboard_revision/logic/ladder_game.dart';
+import 'package:jobboard_revision/logic/python_compat.dart';
 import 'package:jobboard_revision/logic/troubleshooting.dart';
 
 void main() {
@@ -30,6 +33,58 @@ void main() {
         );
 
         expect(vState, equals(vCase['expected']));
+      });
+    }
+  });
+
+  final vLevels = <String, Map<String, dynamic>>{
+    for (final vLevel
+        in jsonDecode(File('../assets/ladder/levels.json').readAsStringSync()) as List)
+      (vLevel as Map)['id'] as String: Map<String, dynamic>.from(vLevel),
+  };
+
+  group('Automate', () {
+    for (final vCase in vCases['ladder'] as List) {
+      test(vCase['name'] as String, () {
+        final vLevel = vLevels[vCase['level']]!;
+        final vProgram = vCase['program'] as String;
+        final vExpected = Map<String, dynamic>.from(vCase['expected'] as Map);
+        final vRun = runLevel(vLevel, vProgram);
+
+        for (final vKey in [
+          'passed',
+          'error',
+          'line',
+          'checks',
+          'violations',
+          'signals',
+          'samples'
+        ]) {
+          if (vExpected.containsKey(vKey)) {
+            expect(vRun[vKey], equals(vExpected[vKey]), reason: vKey);
+          }
+        }
+
+        if (vExpected.containsKey('ladder_svg')) {
+          final vInputs = namesOf(vLevel, 'input').toSet();
+          final vRungs = parseProgram(vProgram, vInputs);
+          final vSimulator = Simulator(vLevel, vRungs);
+
+          for (var vCycle = 0; vCycle < 15; vCycle++) {
+            vSimulator.step();
+          }
+
+          expect(renderSvg(vRungs), vExpected['ladder_svg']);
+          expect(renderSvg(vRungs, vSimulator.values), vExpected['live_svg']);
+          expect(
+            renderChronogram(
+              List<String>.from(vRun['signals'] as List),
+              List<Map<String, int>>.from(vRun['samples'] as List),
+              vInputs,
+            ),
+            vExpected['chart_svg'],
+          );
+        }
       });
     }
   });

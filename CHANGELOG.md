@@ -6,9 +6,11 @@ dans l'historique git.
 ## Non publié
 
 ### Application mobile 1.9.0
-- Pannes à résoudre jouables hors ligne : scénarios reçus du PC, simulateur
-  réécrit en Dart et vérifié par des cas communs avec Python
-  (`python -m tools.lab_cases`), parties rejouées par le PC à la synchronisation
+- Simulations jouables hors ligne, contenu reçu du PC : pannes à résoudre, et
+  simulateur d'automate (ladder dessiné en direct, scénario de test et
+  chronogramme, machine pilotée au doigt) ; simulateurs réécrits en Dart et
+  vérifiés par des cas communs avec Python (`python -m tools.lab_cases`), dessins
+  SVG compris ; parties revérifiées par le PC à la synchronisation
 
 ### Application mobile 1.8.0
 - Trophées obtenus affichés sur la carte de progression

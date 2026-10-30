@@ -2,17 +2,20 @@
 
 Le téléphone joue hors ligne avec sa propre version de chaque simulateur, en
 Dart. Le contenu (scénarios, niveaux) vient d'ici, seul endroit où il se
-modifie. Au retour, le PC ne croit pas le score annoncé : il rejoue les actions
-avec le simulateur de référence, puis enregistre la partie comme sur le bureau.
+modifie. Au retour, le PC ne croit pas le résultat annoncé : il rejoue la
+partie avec le simulateur de référence, puis l'enregistre comme sur le bureau.
 """
 
 from datetime import datetime
 
+from job.ladder_game import build_ladder_overview, load_levels, run_level
+from job.ladder_game import save_attempt as save_ladder_attempt
 from job.progress import TROUBLESHOOTING_XP_PER_TEN, XP_RULES
 from job.troubleshooting import (
     STAR_THRESHOLDS,
     UNPROVEN_SCORE,
     WRONG_REPAIR_PENALTY,
+    build_overview,
     load_scenarios,
     play,
     save_result,
@@ -27,10 +30,11 @@ RECEIVED_KEY = "mobile_lab_ids"
 MAX_RECEIVED = 1000
 MAX_RESULTS_PER_SYNC = 200
 MAX_ACTIONS = 100
+MAX_PROGRAM_LENGTH = 4000
 
 
-def build_labs_package():
-    """Retourne le contenu des simulations jouables sur le téléphone."""
+def build_labs_package(pDatabaseFile):
+    """Retourne le contenu des simulations et ce qui est déjà réussi sur le PC."""
 
     rPackage = {
         "troubleshooting": {
@@ -42,6 +46,20 @@ def build_labs_package():
                 "xp_base": XP_RULES["troubleshooting"][1],
                 "xp_per_ten": TROUBLESHOOTING_XP_PER_TEN,
             },
+            "best": {
+                vRow["id"]: vRow["best"]
+                for vRow in build_overview(pDatabaseFile)["rows"]
+                if vRow["best"] is not None
+            },
+        },
+        "ladder": {
+            "levels": list(load_levels().values()),
+            "xp": XP_RULES["ladder_level"][1],
+            "passed": [
+                vRow["id"]
+                for vRow in build_ladder_overview(pDatabaseFile)["rows"]
+                if vRow["passed"]
+            ],
         },
     }
 
@@ -49,16 +67,31 @@ def build_labs_package():
 
 
 def read_result(pItem):
-    """Vérifie une partie envoyée ; retourne (id, laboratoire, contenu, date) ou lève ValueError."""
+    """Vérifie l'enveloppe d'une partie ; retourne (id, simulation, date) ou lève ValueError."""
 
     if not isinstance(pItem, dict):
         raise ValueError("partie illisible")
 
     vId = pItem.get("id")
-    vActions = pItem.get("actions")
 
     if not isinstance(vId, str) or not 1 <= len(vId) <= 64:
         raise ValueError("identifiant de partie manquant")
+
+    try:
+        vFinishedAt = datetime.fromisoformat(str(pItem.get("finished_at")))
+
+    except ValueError as vError:
+        raise ValueError("date de fin illisible") from vError
+
+    rResult = (vId, pItem.get("lab"), vFinishedAt)
+
+    return rResult
+
+
+def integrate_troubleshooting(pDatabaseFile, pItem, pFinishedAt):
+    """Rejoue une panne du téléphone ; retourne les points gagnés ou lève ValueError."""
+
+    vActions = pItem.get("actions")
 
     if (
         not isinstance(vActions, list)
@@ -67,15 +100,47 @@ def read_result(pItem):
     ):
         raise ValueError("actions illisibles")
 
-    try:
-        vFinishedAt = datetime.fromisoformat(str(pItem.get("finished_at")))
+    if pItem.get("scenario") not in load_scenarios():
+        raise ValueError("simulation ou scénario inconnu")
 
-    except ValueError as vError:
-        raise ValueError("date de fin illisible") from vError
+    vState = play(pItem["scenario"], vActions)
 
-    rResult = (vId, pItem.get("lab"), pItem.get("scenario"), vActions, vFinishedAt)
+    if not vState["solved"]:
+        raise ValueError("panne non résolue")
 
-    return rResult
+    rXp = save_result(pDatabaseFile, vState, pFinishedAt)
+
+    return rXp
+
+
+def integrate_ladder(pDatabaseFile, pItem, pFinishedAt):
+    """Revérifie un programme d'automate du téléphone ; retourne les points gagnés."""
+
+    vProgram = pItem.get("program")
+    vLevel = load_levels().get(pItem.get("level"))
+
+    if vLevel is None:
+        raise ValueError("simulation ou niveau inconnu")
+
+    if not isinstance(vProgram, str) or len(vProgram) > MAX_PROGRAM_LENGTH:
+        raise ValueError("programme illisible")
+
+    if not run_level(vLevel, vProgram)["passed"]:
+        raise ValueError("niveau non réussi")
+
+    vFirst = save_ladder_attempt(
+        pDatabaseFile, vLevel["id"], vProgram, True, pFinishedAt
+    )
+
+    rXp = XP_RULES["ladder_level"][1] if vFirst else 0
+
+    return rXp
+
+
+INTEGRATIONS = {
+    "troubleshooting": integrate_troubleshooting,
+    "ladder": integrate_ladder,
+}
 
 
 def sync_lab_results(pDatabaseFile, pResults):
@@ -94,18 +159,15 @@ def sync_lab_results(pDatabaseFile, pResults):
 
     for vItem in pResults:
         try:
-            vId, vLab, vScenarioId, vActions, vFinishedAt = read_result(vItem)
+            vId, vLab, vFinishedAt = read_result(vItem)
 
             if vId in vReceived:
                 continue
 
-            if vLab != "troubleshooting" or vScenarioId not in load_scenarios():
+            if vLab not in INTEGRATIONS:
                 raise ValueError("simulation ou scénario inconnu")
 
-            vState = play(vScenarioId, vActions)
-
-            if not vState["solved"]:
-                raise ValueError("panne non résolue")
+            vXp += INTEGRATIONS[vLab](pDatabaseFile, vItem, vFinishedAt)
 
         except ValueError as vError:
             vRejected.append(
@@ -116,7 +178,6 @@ def sync_lab_results(pDatabaseFile, pResults):
             )
             continue
 
-        vXp += save_result(pDatabaseFile, vState, vFinishedAt)
         vReceived.append(vId)
         vSaved += 1
 

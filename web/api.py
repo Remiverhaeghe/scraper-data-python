@@ -151,10 +151,10 @@ def upload_exams(
 
 
 @router.get("/labs", dependencies=[Depends(require_api_token)])
-def download_labs():
+def download_labs(pDatabaseFile: str = Depends(get_database_file)):
     """Renvoie le contenu des simulations jouables hors ligne sur le téléphone."""
 
-    rPackage = build_labs_package()
+    rPackage = build_labs_package(pDatabaseFile)
 
     return rPackage
 

@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import '../logic/troubleshooting.dart';
 import '../revision_state.dart';
 
-/// Liste des simulations jouables hors ligne ; les pannes pour commencer.
-class LabsScreen extends StatelessWidget {
-  const LabsScreen({super.key, required this.state});
+/// Liste des machines en panne, avec le meilleur score de chacune.
+class TroubleshootingListScreen extends StatelessWidget {
+  const TroubleshootingListScreen({super.key, required this.state});
 
   final RevisionState state;
 
@@ -49,7 +49,8 @@ class LabsScreen extends StatelessWidget {
                         isThreeLine: true,
                         onTap: () => Navigator.of(pContext).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => TroubleshootingScreen(state: state, scenario: vScenario),
+                            builder: (_) =>
+                                TroubleshootingScreen(state: state, scenario: vScenario),
                           ),
                         ),
                       ),
@@ -63,7 +64,8 @@ class LabsScreen extends StatelessWidget {
 
 /// Meilleur score en étoiles, ou rien si le scénario n'a pas encore été résolu.
 String describeBest(int? pScore) {
-  final rText = pScore == null ? '' : '${'★' * starsOf(pScore, const TroubleshootingRules())}\n$pScore';
+  final rText =
+      pScore == null ? '' : '${'★' * starsOf(pScore, const TroubleshootingRules())}\n$pScore';
 
   return rText;
 }

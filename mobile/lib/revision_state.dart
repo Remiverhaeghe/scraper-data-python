@@ -81,6 +81,8 @@ const pendingInterviewPreference = 'pending_interview';
 const labsPreference = 'labs_content';
 const pendingLabsPreference = 'pending_labs';
 const labScoresPreference = 'lab_scores';
+const ladderPassedPreference = 'ladder_passed';
+const ladderProgramsPreference = 'ladder_programs';
 
 /// Auto-évaluation : grille reçue du PC et niveaux saisis pas encore envoyés
 const skillGridPreference = 'skill_grid';
@@ -216,7 +218,8 @@ class RevisionState extends ChangeNotifier {
       ];
 
   /// Contenu des simulations reçu du PC, par simulation.
-  Map<String, dynamic> get labs => Map<String, dynamic>.from(preferences[labsPreference] as Map? ?? const {});
+  Map<String, dynamic> get labs =>
+      Map<String, dynamic>.from(preferences[labsPreference] as Map? ?? const {});
 
   List<Map<String, dynamic>> get troubleshootingScenarios => [
         for (final vItem in (labs['troubleshooting'] as Map?)?['scenarios'] as List? ?? const [])
@@ -232,9 +235,67 @@ class RevisionState extends ChangeNotifier {
           Map<String, dynamic>.from(vItem as Map),
       ];
 
-  /// Meilleur score obtenu sur le téléphone pour un scénario, ou null.
-  int? bestLabScore(String pScenarioId) =>
-      ((preferences[labScoresPreference] as Map?)?[pScenarioId] as num?)?.toInt();
+  /// Meilleur score d'un scénario, sur le téléphone ou sur le PC, ou null.
+  int? bestLabScore(String pScenarioId) {
+    final vScores = [
+      (preferences[labScoresPreference] as Map?)?[pScenarioId],
+      ((labs['troubleshooting'] as Map?)?['best'] as Map?)?[pScenarioId],
+    ].whereType<num>().map((pScore) => pScore.toInt());
+
+    final rBest = vScores.isEmpty ? null : vScores.reduce((pA, pB) => pA > pB ? pA : pB);
+
+    return rBest;
+  }
+
+  List<Map<String, dynamic>> get ladderLevels => [
+        for (final vItem in (labs['ladder'] as Map?)?['levels'] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  int get ladderXp => ((labs['ladder'] as Map?)?['xp'] as num? ?? 25).toInt();
+
+  /// Niveaux d'automate réussis, sur le PC ou sur le téléphone.
+  Set<String> get ladderPassed => {
+        for (final vId in (labs['ladder'] as Map?)?['passed'] as List? ?? const []) vId as String,
+        for (final vId in preferences[ladderPassedPreference] as List? ?? const []) vId as String,
+      };
+
+  /// Dernier programme écrit pour un niveau, ou son point de départ.
+  String ladderProgram(Map<String, dynamic> pLevel) =>
+      (preferences[ladderProgramsPreference] as Map?)?[pLevel['id']] as String? ??
+      pLevel['starter'] as String;
+
+  Future<void> saveLadderProgram(String pLevelId, String pProgram) => savePreference(
+        ladderProgramsPreference,
+        {
+          ...Map<String, dynamic>.from(preferences[ladderProgramsPreference] as Map? ?? const {}),
+          pLevelId: pProgram
+        },
+      );
+
+  /// Garde un niveau réussi ; le programme part au PC, qui le revérifie.
+  Future<bool> recordLadder(String pLevelId, String pProgram) async {
+    final rFirst = !ladderPassed.contains(pLevelId);
+
+    preferences = {
+      ...preferences,
+      ladderPassedPreference: [...ladderPassed, if (rFirst) pLevelId],
+      pendingLabsPreference: [
+        ...pendingLabs,
+        {
+          'id': const Uuid().v4(),
+          'lab': 'ladder',
+          'level': pLevelId,
+          'program': pProgram,
+          'finished_at': DateTime.now().toIso8601String(),
+        },
+      ],
+    };
+    await store.savePreferences(preferences);
+    notifyListeners();
+
+    return rFirst;
+  }
 
   /// Garde une panne résolue : meilleur score affiché, partie envoyée au PC ensuite.
   Future<void> recordTroubleshooting(String pScenarioId, List<String> pActions, int pScore) async {

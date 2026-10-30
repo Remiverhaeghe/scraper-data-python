@@ -26,7 +26,7 @@ def test_phone_results_are_replayed_and_counted_once(tmp_path):
 
     vDatabaseFile = tmp_path / "scraper.db"
     initialize_database(vDatabaseFile)
-    vScenario = build_labs_package()["troubleshooting"]["scenarios"][0]
+    vScenario = build_labs_package(vDatabaseFile)["troubleshooting"]["scenarios"][0]
     vRight = next(vCause for vCause in vScenario["causes"] if vCause.get("right"))
     vResult = {
         "id": "partie-1",
@@ -56,3 +56,31 @@ def test_phone_results_are_replayed_and_counted_once(tmp_path):
         2026, 10, 30, 9, 0
     ).isoformat(timespec="seconds")
     assert sync_lab_results(vDatabaseFile, [vResult])["saved"] == 0
+
+
+def test_phone_ladder_program_is_checked_again(tmp_path):
+    """Vérifie un programme réussi compté une fois, et un programme faux refusé."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vLevel = build_labs_package(vDatabaseFile)["ladder"]["levels"][0]
+    vResult = {
+        "id": "automate-1",
+        "lab": "ladder",
+        "level": vLevel["id"],
+        "program": vLevel["solution"],
+        "finished_at": "2026-10-30T09:00:00",
+    }
+
+    vReport = sync_lab_results(
+        vDatabaseFile,
+        [
+            vResult,
+            {**vResult, "id": "automate-2"},
+            {**vResult, "id": "automate-3", "program": vLevel["starter"]},
+        ],
+    )
+
+    assert (vReport["saved"], vReport["xp"]) == (2, 25)
+    assert vReport["rejected"][0]["reason"] == "niveau non réussi"
+    assert build_labs_package(vDatabaseFile)["ladder"]["passed"] == [vLevel["id"]]
