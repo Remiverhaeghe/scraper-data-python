@@ -123,6 +123,9 @@ dans l'historique git.
   « +XP » animé, confettis au passage de niveau, réglage « Jeu et animations »
 - Menu latéral resserré : toutes les pages tiennent à l'écran avec l'encart
   de niveau
+- Guide pratique pour chacun des 35 thèmes de révision (industrie et
+  informatique) : l'essentiel, formules ou commandes, pièges, conseils pour
+  l'entretien et références vérifiées
 - Révision : thèmes Lean et amélioration continue, Fiabilité et méthodes
   (AMDEC, MTBF, GMAO), IoT industriel et industrie 4.0, Cybersécurité
   industrielle (IEC 62443), 100 questions chacun avec calculs, associations et

@@ -8,6 +8,7 @@ from job.quiz_generation import load_catalog
 from job.quiz_import import UNSAFE_SVG_PATTERN
 from job.quiz_types import MAX_SCHEMA_LENGTH
 from storage.database import initialize_database
+from utils.markdown import render_markdown
 from storage.quiz_questions import (
     get_quiz_asset,
     get_quiz_assets,
@@ -101,3 +102,14 @@ def test_shipped_schema_is_served_unless_an_imported_one_replaces_it(tmp_path):
     )
 
     assert get_quiz_asset(vDatabaseFile, "lean-trs.svg") == "<svg>importé</svg>"
+
+
+def test_shipped_guide_links_render_whole():
+    """Vérifie que chaque lien d'un guide livré est rendu entier, parenthèses encodées."""
+
+    for vName, vGuide in load_shipped_guides().items():
+        vLinks = re.findall(r"\]\((https?://[^)\s]*)\)", vGuide["content"])
+        vRendered = re.findall(r'href="([^"]+)"', render_markdown(vGuide["content"]))
+
+        assert vLinks, vName
+        assert vRendered == vLinks, vName
