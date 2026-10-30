@@ -9,6 +9,7 @@ restent cachés jusqu'à leur obtention, pour l'effet de surprise.
 from datetime import timedelta
 
 from job.quiz_exam import load_exam_results
+from storage.aptitude_sessions import get_aptitude_sessions
 from storage.settings_repository import load_json_setting, save_json_setting
 from utils.logger import get_logger
 
@@ -201,6 +202,24 @@ ACHIEVEMENTS = (
         30,
         False,
     ),
+    (
+        "aptitude-first",
+        "Candidat préparé",
+        "Terminer un test de recrutement",
+        "timer",
+        "aptitude",
+        1,
+        False,
+    ),
+    (
+        "aptitude-perfect",
+        "Sans faute",
+        "Réussir un test de recrutement à 10 sur 10",
+        "circle-check",
+        "aptitude_perfect",
+        1,
+        False,
+    ),
     ("level-3", "Technicien", "Atteindre le niveau 3", "star", "level", 3, False),
     (
         "level-5",
@@ -325,6 +344,10 @@ def build_statistics(pDatabaseFile, pActivity, pProgress):
                 for vResult in load_exam_results(pDatabaseFile)
             ),
             default=0,
+        ),
+        "aptitude_perfect": sum(
+            vSession["correct"] == vSession["total"]
+            for vSession in get_aptitude_sessions(pDatabaseFile)
         ),
         "best_streak": pProgress["best_streak"],
         "level": pProgress["level"],

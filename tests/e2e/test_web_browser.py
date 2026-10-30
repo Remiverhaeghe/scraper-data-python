@@ -38,6 +38,8 @@ PAGES = (
     "/market",
     "/skills",
     "/certifications",
+    "/aptitude",
+    "/aptitude/play?category=calcul",
     "/compare",
     "/logs",
     "/progress",
@@ -520,4 +522,22 @@ def test_points_and_level_are_celebrated(page):
 
     sync_api.expect(page.locator(".xp-toast").first).to_contain_text("XP")
     sync_api.expect(page.locator(".celebration-card")).to_contain_text("Niveau 2")
+    assert page.console_errors == []
+
+
+def test_aptitude_shows_one_question_at_a_time(page):
+    """Vérifie qu'aptitude.js montre une question, avance au clic et envoie à la fin."""
+
+    page.goto("/aptitude/play?category=mecanique")
+    vQuestions = page.locator("[data-aptitude-question]")
+
+    sync_api.expect(vQuestions.nth(0)).to_be_visible()
+    sync_api.expect(vQuestions.nth(1)).to_be_hidden()
+
+    for vIndex in range(vQuestions.count()):
+        vQuestions.nth(vIndex).locator(".quiz-choice").first.click()
+
+    sync_api.expect(page.locator("h2").first).to_contain_text(
+        "Raisonnement mécanique :"
+    )
     assert page.console_errors == []

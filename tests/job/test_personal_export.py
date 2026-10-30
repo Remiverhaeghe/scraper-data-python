@@ -47,7 +47,8 @@ def test_export_contains_personal_data_but_no_secret(tmp_path):
         vContent = b"".join(vArchive.read(vName) for vName in vNames)
         vReadme = vArchive.read("LISEZMOI.txt").decode("utf-8")
 
-    assert vCount == 12
+    assert vCount == 13
+    assert "tests_recrutement.json" in vNames
     assert "pieces_jointes/1-CV Acme.pdf" in vNames
     assert vApplications[0]["company"] == "Acme"
     assert vApplications[0]["notes"] == "Appel RH"

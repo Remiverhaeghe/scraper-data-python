@@ -19,6 +19,7 @@ import web.routes.offers as web_offers
 import web.routes.settings as web_settings
 import job.quiz_packs as quiz_packs
 
+from job.aptitude import generate_session
 from job.education import save_education_levels
 from job.schedule import (
     save_notification_email,
@@ -2879,4 +2880,32 @@ def test_certifications_page_saves_details_and_documents(client):
             files={"file": ("a.pdf", b"%PDF", "application/pdf")},
         ).status_code
         == 404
+    )
+
+
+def test_aptitude_session_is_played_and_corrected(client):
+    """Vérifie le choix, la partie tirée, la correction côté serveur et le score."""
+
+    assert "Raisonnement mécanique" in client.get("/aptitude").text
+
+    vPage = client.get("/aptitude/play?category=plans").text
+    vSeed = int(re.search(r'name="seed" value="(\d+)"', vPage).group(1))
+    vStarted = re.search(r'name="started" value="([^"]+)"', vPage).group(1)
+    vQuestions = generate_session("plans", vSeed)
+    vData = {"category": "plans", "seed": str(vSeed), "started": vStarted}
+    vData |= {
+        f"answer-{vIndex}": str(vQuestion["answer"])
+        for vIndex, vQuestion in enumerate(vQuestions[:9])
+    }
+
+    vResult = client.post("/aptitude/finish", data=vData).text
+
+    assert "Lecture de plans : 9 / 10 (90 %)" in vResult
+    assert "pas de réponse" in vResult
+    assert client.get("/aptitude/play?category=inconnue").status_code == 404
+    assert (
+        client.post(
+            "/aptitude/finish", data={"category": "plans", "seed": "x"}
+        ).status_code
+        == 400
     )

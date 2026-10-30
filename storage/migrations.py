@@ -962,6 +962,24 @@ def migrate_to_v34(pConnection):
     pConnection.execute("ALTER TABLE job_offer ADD COLUMN education_level INTEGER")
 
 
+def migrate_to_v35(pConnection):
+    """Garde les parties des tests de recrutement : catégorie, score et durée."""
+
+    pConnection.execute("""
+        CREATE TABLE aptitude_session (
+            id INTEGER PRIMARY KEY,
+            category TEXT NOT NULL,
+            correct INTEGER NOT NULL,
+            total INTEGER NOT NULL,
+            duration_seconds INTEGER NOT NULL,
+            played_at TEXT NOT NULL
+        )
+        """)
+    pConnection.execute(
+        "CREATE INDEX aptitude_session_category ON aptitude_session (category)"
+    )
+
+
 MIGRATIONS = [
     migrate_to_v1,
     migrate_to_v2,
@@ -997,4 +1015,5 @@ MIGRATIONS = [
     migrate_to_v32,
     migrate_to_v33,
     migrate_to_v34,
+    migrate_to_v35,
 ]

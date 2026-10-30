@@ -23,6 +23,7 @@ from storage.migrations import (
     migrate_to_v32,
     migrate_to_v33,
     migrate_to_v34,
+    migrate_to_v35,
 )
 
 
@@ -681,6 +682,35 @@ def test_migration_to_v31_starts_status_history(tmp_path):
         vConnection.close()
 
     assert vHistory == ["APPLIED", "INTERVIEW"]
+
+
+def test_migration_to_v35_adds_aptitude_sessions(tmp_path):
+    """Vérifie la table des parties de tests de recrutement, vide au départ."""
+
+    vConnection = build_database_at(tmp_path / "scraper.db", 34)
+
+    try:
+        migrate_to_v35(vConnection)
+        vColumns = [
+            vRow[1]
+            for vRow in vConnection.execute("PRAGMA table_info(aptitude_session)")
+        ]
+        vCount = vConnection.execute(
+            "SELECT COUNT(*) FROM aptitude_session"
+        ).fetchone()[0]
+
+    finally:
+        vConnection.close()
+
+    assert vColumns == [
+        "id",
+        "category",
+        "correct",
+        "total",
+        "duration_seconds",
+        "played_at",
+    ]
+    assert vCount == 0
 
 
 def test_migration_to_v34_adds_education_level_to_compute(tmp_path):

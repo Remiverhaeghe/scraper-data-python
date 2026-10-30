@@ -15,6 +15,7 @@ from datetime import date, datetime, timedelta
 
 from job.achievements import build_player_card, evaluate_achievements
 from job.quiz_exam import load_exam_results
+from storage.aptitude_sessions import get_aptitude_sessions
 from storage.database import connect_database
 from storage.settings_repository import load_json_setting, save_json_setting
 from utils.logger import get_logger
@@ -29,6 +30,7 @@ XP_RULES = {
     "challenge_tried": ("Défi tenté", 3),
     "git_level": ("Niveau Git terminé", 25),
     "exam": ("Examen blanc terminé, plus 1 par tranche de 10 % de note", 30),
+    "aptitude": ("Test de recrutement terminé, plus 2 par bonne réponse", 10),
     "interested": ("Offre marquée « Intéressé »", 5),
     "applied": ("Candidature envoyée", 30),
     "follow_up": ("Relance faite", 15),
@@ -38,6 +40,9 @@ XP_RULES = {
     "daily_quest": ("Quête du jour réussie", 20),
     "weekly_quest": ("Quête de la semaine réussie", 60),
 }
+
+# Points de chaque bonne réponse d'un test de recrutement, en plus du forfait
+APTITUDE_XP_PER_RIGHT = 2
 
 # Statut de candidature vers son action
 STATUS_ACTIONS = {
@@ -169,6 +174,14 @@ def load_activity(pDatabaseFile):
             read_day(vResult.get("finished_at")),
             "exam",
             pXp=XP_RULES["exam"][1] + int(vResult.get("score") or 0) // 10,
+        )
+
+    for vSession in get_aptitude_sessions(pDatabaseFile):
+        add_action(
+            rActivity,
+            read_day(vSession["played_at"]),
+            "aptitude",
+            pXp=XP_RULES["aptitude"][1] + APTITUDE_XP_PER_RIGHT * vSession["correct"],
         )
 
     for vDay, vQuests in load_quest_log(pDatabaseFile).get("done", {}).items():

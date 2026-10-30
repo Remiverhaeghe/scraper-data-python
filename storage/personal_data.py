@@ -25,6 +25,7 @@ PERSONAL_QUERIES = {
     "reponses_revision": "SELECT * FROM quiz_answer ORDER BY id",
     "defis": "SELECT * FROM challenge_attempt ORDER BY id",
     "niveaux_git": "SELECT * FROM git_level_result ORDER BY level",
+    "tests_recrutement": "SELECT * FROM aptitude_session ORDER BY id",
 }
 
 

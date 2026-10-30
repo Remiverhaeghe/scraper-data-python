@@ -54,6 +54,10 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Tests de recrutement : cinq catégories de tests psychotechniques (suites
+  logiques, calcul, raisonnement mécanique, attention, lecture de plans),
+  questions générées, dix questions en 2 min 30, correction détaillée, scores
+  par catégorie, XP et deux trophées (migration v35)
 - Révision : thème Normes, qualité et sécurité (QSE), 100 questions (ISO 9001,
   14001, 45001, 50001, IATF 16949, EN 9100, ISO 27001, audit, NF EN 13306,
   NF X60-000, NF C 18-510, NF C 15-100, règlement Machines 2023/1230,

@@ -16,6 +16,7 @@
     <script src="{{ url_for('static', path='schema_editor.js').path }}" defer></script>
     <script src="{{ url_for('static', path='pwa.js').path }}" defer></script>
     <script src="{{ url_for('static', path='progress.js').path }}" defer></script>
+    <script src="{{ url_for('static', path='aptitude.js').path }}" defer></script>
     {% block head %}{% endblock %}
 </head>
 <body hx-headers='{{ {"X-CSRF-Token": csrf_token(request)} | tojson }}'>
@@ -50,6 +51,7 @@
                 ("certifications", "Certifications", "shield", "show_certifications"),
                 ("market", "Mon marché", "banknote", "show_market"),
                 ("challenges", "Défis", "trophy", "show_challenges"),
+                ("aptitude", "Tests de recrutement", "timer", "show_aptitude"),
                 ("git", "Git", "git-branch", "show_git"),
                 ("settings", "Paramètres", "settings", "show_settings"),
             ] %}

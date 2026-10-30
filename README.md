@@ -302,7 +302,7 @@ Documents/JobBoard/
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
-- [x] 28 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] 30 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
@@ -572,6 +572,15 @@ Page Défis du bureau et du web, sur le principe des calendriers de défis en li
 - [x] Seconde partie ouverte après la première, attente réglable après une erreur (30 s par défaut, jamais nulle), « trop haute » ou « trop basse » pour un nombre
 - [x] Indices dévoilés un à un et solution commentée une fois le défi terminé
 
+### Tests de recrutement
+
+Page Tests de recrutement du bureau et du web, pour s'entraîner aux tests psychotechniques des industriels :
+
+- [x] Cinq catégories : suites logiques, calcul et proportions, raisonnement mécanique (engrenages, courroies, leviers, palans, vérins), attention, lecture de plans (échelles, cotes, tolérances)
+- [x] Questions générées à partir de modèles et d'une graine : jamais deux parties identiques, correction refaite côté serveur
+- [x] Dix questions en 2 min 30, une à la fois, envoi automatique à la fin du temps ; correction détaillée des erreurs
+- [x] Meilleur score et moyenne des 5 dernières parties par catégorie, catégorie « prête » à 80 %, XP et deux trophées
+
 ### Bac à sable Git
 
 Page Git du bureau et du web, pour s'exercer aux branches sans risque :
@@ -669,6 +678,7 @@ scraper-data-python/
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
 │   ├── progress.py                            # Points, niveaux, série et quêtes, calculés depuis l'activité
 │   ├── achievements.py                        # Trophées et carte joueur, déduits de l'activité
+│   ├── aptitude.py                            # Tests de recrutement : questions générées et scores
 │   ├── certifications.py                      # Certifications citées par les offres, obtenues, validité
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
 │   ├── star_answers.py                        # Réponses STAR aux questions comportementales
@@ -929,6 +939,7 @@ scraper-data-python/
 │   ├── quiz_flagged_card.py                   # Questions signalées, remises dans les tirages
 │   ├── schema_editor.py                       # Éditeur de schéma : palette, grille et câblage
 │   ├── challenges_page.py                     # Défis de programmation
+│   ├── aptitude_page.py                       # Tests de recrutement chronométrés
 │   ├── git_page.py                            # Bac à sable Git
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
@@ -984,6 +995,7 @@ scraper-data-python/
 │   │   ├── skills.py                          # Compétences demandées et préparation
 │   │   ├── certifications.py                  # Certifications, informations et documents
 │   │   ├── challenges.py                      # Défis de programmation
+│   │   ├── aptitude.py                        # Tests de recrutement
 │   │   ├── git_sandbox.py                     # Bac à sable Git
 │   │   ├── monitoring.py                      # Qualité, journaux et historique
 │   │   ├── profile.py                         # Profil et import du CV
@@ -1013,6 +1025,7 @@ scraper-data-python/
 │   │   ├── market.html                        # Mon marché : salaires et demande
 │   │   ├── _quiz_answer.html                  # Champs de réponse selon le type de question
 │   │   ├── challenges.html                    # Défis de programmation
+│   │   ├── aptitude.html                      # Tests de recrutement
 │   │   ├── git.html                           # Bac à sable Git
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
 │   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
@@ -1042,6 +1055,7 @@ scraper-data-python/
 │       ├── service-worker.js                  # Fichiers statiques en cache et page hors ligne
 │       ├── pwa.js                             # Enregistre le service worker, en HTTPS seulement
 │       ├── progress.js                        # « +XP », quêtes et confettis, d'après l'encart du menu
+│       ├── aptitude.js                        # Test de recrutement : une question à la fois, compte à rebours
 │       ├── offline.html                       # Page affichée quand le PC ne répond pas
 │       ├── htmx.min.js                        # HTMX 2.0.4, copie locale
 │       ├── offers_map.js                      # Place les offres et le domicile sur la carte
@@ -1130,6 +1144,7 @@ scraper-data-python/
 │   ├── quiz_answers.py                        # Réponses de révision, pour la progression
 │   ├── quiz_questions.py                      # Questions, thèmes, schémas et guides importés
 │   ├── challenges.py                          # Graines et essais des défis
+│   ├── aptitude_sessions.py                   # Parties des tests de recrutement
 │   ├── git_levels.py                          # Meilleur résultat des niveaux Git
 │   ├── maintenance.py                         # Réinitialisation et purge de la base, après sauvegarde
 │   ├── saved_searches.py                      # Recherches enregistrées
@@ -1211,6 +1226,7 @@ scraper-data-python/
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_progress.py                   # Teste les points, niveaux, série et quêtes
 │   │   ├── test_achievements.py               # Teste les trophées, cachés compris, et la carte joueur
+│   │   ├── test_aptitude.py                   # Teste les questions générées, la correction et les scores
 │   │   ├── test_certifications.py             # Teste le repérage, le plan, la validité et les informations
 │   │   ├── test_quiz_types.py                 # Teste les questions interactives et leur correction
 │   │   ├── test_shared_quiz_cases.py          # Teste les cas communs avec l'application mobile
@@ -1357,6 +1373,7 @@ scraper-data-python/
 │   │   ├── test_quiz_page.py                   # Teste la page de révision
 │   │   ├── test_quiz_answer.py                 # Teste les saisies de réponse, revue de code comprise
 │   │   ├── test_challenges_page.py             # Teste la page des défis
+│   │   ├── test_aptitude_page.py               # Teste une partie, l'abandon et le temps écoulé
 │   │   ├── test_git_page.py                    # Teste la page du bac à sable Git
 │   │   ├── test_schema_editor.py               # Teste l'éditeur de schéma du bureau
 │   │   ├── test_search_page.py                 # Teste la page de recherche

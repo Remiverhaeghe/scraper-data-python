@@ -1,0 +1,74 @@
+{# Tests de recrutement (routes /aptitude) : questions générées par job/aptitude.py, comme sur le bureau.
+   Sans JavaScript, toutes les questions s'affichent ; aptitude.js les montre une à une et envoie
+   le formulaire à la fin du temps. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Tests de recrutement{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Tests de recrutement", "Les tests psychotechniques que font passer beaucoup d'industriels : " ~ question_count ~ " questions en " ~ (session_seconds // 60) ~ " min " ~ "%02d" | format(session_seconds % 60) ~ ", sans calculatrice", "timer") }}
+
+<section class="grid grid-4">
+    {{ ui.stat(overview.sessions, "Parties jouées", "timer", "blue") }}
+    {{ ui.stat(overview.ready ~ " / " ~ overview.rows | length, "Catégories prêtes (≥ " ~ ready_score ~ " %)", "circle-check", "green") }}
+    {{ ui.stat(overview.perfect, "Sans faute", "trophy", "purple") }}
+    {{ ui.stat(overview.weakest or "-", "À travailler", "target", "amber") }}
+</section>
+
+{% if questions %}
+<article class="card section-gap">
+    <div class="aptitude-top">
+        <h2>{{ label }}</h2>
+        <span class="aptitude-timer" data-aptitude-timer aria-live="polite">{{ session_seconds // 60 }}:{{ "%02d" | format(session_seconds % 60) }}</span>
+    </div>
+    <form class="quiz-form" method="post" action="{{ url_for('finish_aptitude').path }}" data-aptitude-form data-seconds="{{ session_seconds }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="category" value="{{ category }}">
+        <input type="hidden" name="seed" value="{{ seed }}">
+        <input type="hidden" name="started" value="{{ started }}">
+        {% for question in questions %}
+        {% set number = loop.index0 %}
+        <fieldset class="aptitude-question" data-aptitude-question>
+            <legend><span class="muted">Question {{ loop.index }} sur {{ questions | length }}</span><br><strong>{{ question.question }}</strong></legend>
+            {% for choice in question.choices %}
+            <label class="quiz-choice"><input type="radio" name="answer-{{ number }}" value="{{ loop.index0 }}"> {{ choice }}</label>
+            {% endfor %}
+        </fieldset>
+        {% endfor %}
+        <button class="button button-primary" type="submit">{{ icon("circle-check", 16) }} Terminer et corriger</button>
+    </form>
+    <p><a href="{{ url_for('show_aptitude').path }}">Abandonner</a></p>
+</article>
+{% elif result %}
+<article class="card section-gap">
+    <h2>{{ result.label }} : {{ result.correct }} / {{ result.total }} ({{ result.score }} %) en {{ result.duration }} s · +{{ result.xp }} XP</h2>
+    {% for question in result.questions if question.given != question.answer %}
+    <div class="aptitude-correction">
+        <strong>{{ question.question }}</strong>
+        <p>Votre réponse : {{ "pas de réponse" if question.given is none else question.choices[question.given] }} · bonne réponse : <strong>{{ question.choices[question.answer] }}</strong></p>
+        <p class="muted">{{ question.explanation }}</p>
+    </div>
+    {% else %}
+    <p>Sans faute, bravo.</p>
+    {% endfor %}
+    <p>
+        <a class="button button-primary" href="{{ url_for('play_aptitude').path }}?category={{ result.category }}">{{ icon("timer", 16) }} Rejouer cette catégorie</a>
+        <a class="button" href="{{ url_for('show_aptitude').path }}">Choisir un autre test</a>
+    </p>
+</article>
+{% endif %}
+
+<article class="card section-gap">
+    <h2>Choisir un test</h2>
+    <p class="card-subtitle">Chaque partie est tirée au hasard : refaites-la jusqu'à dépasser {{ ready_score }} % de moyenne</p>
+    <div class="trophy-grid">
+        {% for row in overview.rows %}
+        <a class="trophy aptitude-tile{% if row.ready %} is-ready{% endif %}" href="{{ url_for('play_aptitude').path }}?category={{ row.category }}">
+            <strong>{{ icon(row.icon, 18) }} {{ row.label }}{% if row.ready %} <span class="badge badge-success">Prêt</span>{% endif %}</strong>
+            <small class="muted">{% if row.sessions %}Meilleur {{ row.best }} % · moyenne récente {{ row.average }} % · {{ row.sessions }} partie{{ "s" if row.sessions > 1 }}{% else %}{{ row.description }}{% endif %}</small>
+        </a>
+        {% endfor %}
+    </div>
+</article>
+{% endblock %}

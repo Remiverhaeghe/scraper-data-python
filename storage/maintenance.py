@@ -14,6 +14,7 @@ RESET_TABLES = (
     "quiz_answer",
     "challenge_attempt",
     "git_level_result",
+    "aptitude_session",
     "job_attachment",
     "interview_note",
     "job_follow_up",

@@ -2548,6 +2548,51 @@ textarea.companies-preferred {
     margin-top: 3px;
 }
 
+/* Tests de recrutement : une question par écran quand aptitude.js est actif */
+.aptitude-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.aptitude-timer {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--primary);
+}
+
+.aptitude-question {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.aptitude-question[hidden] {
+    display: none;
+}
+
+.aptitude-question legend {
+    margin-bottom: 10px;
+}
+
+.aptitude-correction {
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+}
+
+.aptitude-tile {
+    color: inherit;
+    text-decoration: none;
+}
+
+.aptitude-tile:hover {
+    outline: 1px solid var(--primary);
+}
+
 /* Réponses saisies : calcul, code à compléter, ordre et association */
 .quiz-typed {
     display: flex;

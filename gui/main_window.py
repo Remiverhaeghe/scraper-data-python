@@ -24,6 +24,7 @@ from config import CONTACT_URL, LICENSE_NAME, REPOSITORY_URL, TAGLINE
 from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
 from gui.applications_page import ApplicationsPage
+from gui.aptitude_page import AptitudePage
 from gui.certifications_page import CertificationsPage
 from gui.challenges_page import ChallengesPage
 from gui.git_page import GitPage
@@ -90,6 +91,7 @@ DATA_ONLY_PAGES = (
     "certifications",
     "market",
     "challenges",
+    "aptitude",
     "quality",
 )
 
@@ -205,6 +207,12 @@ class MainWindow(QMainWindow):
         self.market_page.exam_requested.connect(self.start_skills_exam)
         self.add_page("market", "Mon marché", "banknote", self.market_page)
         self.add_page("challenges", "Défis", "trophy", ChallengesPage(vDatabaseFile))
+        self.add_page(
+            "aptitude",
+            "Tests de recrutement",
+            "timer",
+            AptitudePage(vDatabaseFile),
+        )
         self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
         self.add_page("quality", "Qualité", "list-checks", QualityPage(vDatabaseFile))
