@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400" viewBox="0 0 900 400" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="400" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">ISO 9001 : le PDCA et les chapitres</text>
+<rect x="240.0" y="70.0" width="200.0" height="74.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="340.0" y="103.2" text-anchor="middle" font-size="14" fill="#0f172a">P - Planifier</text>
+<text x="340.0" y="120.2" text-anchor="middle" font-size="14" fill="#0f172a">Planification (6)</text>
+<rect x="460.0" y="70.0" width="200.0" height="74.0" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="560.0" y="94.7" text-anchor="middle" font-size="14" fill="#0f172a">D - Réaliser</text>
+<text x="560.0" y="111.7" text-anchor="middle" font-size="14" fill="#0f172a">Support (7)</text>
+<text x="560.0" y="128.7" text-anchor="middle" font-size="14" fill="#0f172a">Réalisation (8)</text>
+<rect x="460.0" y="250.0" width="200.0" height="74.0" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+<text x="560.0" y="274.7" text-anchor="middle" font-size="14" fill="#0f172a">C - Vérifier</text>
+<text x="560.0" y="291.7" text-anchor="middle" font-size="14" fill="#0f172a">Évaluation des</text>
+<text x="560.0" y="308.7" text-anchor="middle" font-size="14" fill="#0f172a">performances (9)</text>
+<rect x="240.0" y="250.0" width="200.0" height="74.0" rx="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+<text x="340.0" y="283.2" text-anchor="middle" font-size="14" fill="#0f172a">A - Agir</text>
+<text x="340.0" y="300.2" text-anchor="middle" font-size="14" fill="#0f172a">Amélioration (10)</text>
+<rect x="375.0" y="167.0" width="150.0" height="60.0" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+<text x="450.0" y="201.7" text-anchor="middle" font-size="14" fill="#0f172a">Leadership (5)</text>
+<rect x="20.0" y="140.0" width="190.0" height="120.0" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="115.0" y="187.7" text-anchor="middle" font-size="14" fill="#0f172a">Contexte (4)</text>
+<text x="115.0" y="204.7" text-anchor="middle" font-size="14" fill="#0f172a">enjeux, parties</text>
+<text x="115.0" y="221.7" text-anchor="middle" font-size="14" fill="#0f172a">intéressées</text>
+<rect x="690.0" y="140.0" width="190.0" height="120.0" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="785.0" y="187.7" text-anchor="middle" font-size="14" fill="#0f172a">Résultats</text>
+<text x="785.0" y="204.7" text-anchor="middle" font-size="14" fill="#0f172a">produits conformes,</text>
+<text x="785.0" y="221.7" text-anchor="middle" font-size="14" fill="#0f172a">clients satisfaits</text>
+<line x1="440.0" y1="107.0" x2="458.0" y2="107.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="560.0" y1="144.0" x2="560.0" y2="248.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="460.0" y1="287.0" x2="442.0" y2="287.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="340.0" y1="250.0" x2="340.0" y2="146.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="210.0" y1="200.0" x2="238.0" y2="130.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="662.0" y1="280.0" x2="688.0" y2="240.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<text x="450.0" y="360.0" text-anchor="middle" font-size="13" fill="#475569">Le leadership (5) est au centre : la direction pilote toute la boucle</text>
+<text x="450.0" y="382.0" text-anchor="middle" font-size="13" fill="#475569">Même découpage en 10 chapitres pour ISO 14001, 45001, 50001 et 27001</text>
+</svg>

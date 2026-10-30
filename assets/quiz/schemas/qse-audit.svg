@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="380" viewBox="0 0 900 380" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="380" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Déroulement d'un audit (ISO 19011)</text>
+<rect x="30.0" y="70.0" width="190.0" height="80.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="125.0" y="106.2" text-anchor="middle" font-size="14" fill="#0f172a">1. Programme</text>
+<text x="125.0" y="123.2" text-anchor="middle" font-size="14" fill="#0f172a">d'audit annuel</text>
+<rect x="245.0" y="70.0" width="190.0" height="80.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="340.0" y="106.2" text-anchor="middle" font-size="14" fill="#0f172a">2. Préparation :</text>
+<text x="340.0" y="123.2" text-anchor="middle" font-size="14" fill="#0f172a">plan, check-list</text>
+<rect x="460.0" y="70.0" width="190.0" height="80.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="555.0" y="106.2" text-anchor="middle" font-size="14" fill="#0f172a">3. Réunion</text>
+<text x="555.0" y="123.2" text-anchor="middle" font-size="14" fill="#0f172a">d'ouverture</text>
+<rect x="675.0" y="70.0" width="190.0" height="80.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="770.0" y="106.2" text-anchor="middle" font-size="14" fill="#0f172a">4. Collecte</text>
+<text x="770.0" y="123.2" text-anchor="middle" font-size="14" fill="#0f172a">des preuves</text>
+<rect x="675.0" y="220.0" width="190.0" height="80.0" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="770.0" y="256.2" text-anchor="middle" font-size="14" fill="#0f172a">5. Constats :</text>
+<text x="770.0" y="273.2" text-anchor="middle" font-size="14" fill="#0f172a">conformités, écarts</text>
+<rect x="460.0" y="220.0" width="190.0" height="80.0" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="555.0" y="256.2" text-anchor="middle" font-size="14" fill="#0f172a">6. Réunion</text>
+<text x="555.0" y="273.2" text-anchor="middle" font-size="14" fill="#0f172a">de clôture</text>
+<rect x="245.0" y="220.0" width="190.0" height="80.0" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="340.0" y="256.2" text-anchor="middle" font-size="14" fill="#0f172a">7. Rapport</text>
+<text x="340.0" y="273.2" text-anchor="middle" font-size="14" fill="#0f172a">d'audit</text>
+<rect x="30.0" y="220.0" width="190.0" height="80.0" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+<text x="125.0" y="256.2" text-anchor="middle" font-size="14" fill="#0f172a">8. Actions correctives</text>
+<text x="125.0" y="273.2" text-anchor="middle" font-size="14" fill="#0f172a">et suivi (audité)</text>
+<line x1="220.0" y1="110.0" x2="243.0" y2="110.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="245.0" y1="260.0" x2="222.0" y2="260.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="435.0" y1="110.0" x2="458.0" y2="110.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="460.0" y1="260.0" x2="437.0" y2="260.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="650.0" y1="110.0" x2="673.0" y2="110.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="675.0" y1="260.0" x2="652.0" y2="260.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="770.0" y1="150.0" x2="770.0" y2="218.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<text x="450.0" y="340.0" text-anchor="middle" font-size="13" fill="#475569">Preuves : entretiens, observations sur le terrain, documents et enregistrements</text>
+<text x="450.0" y="362.0" text-anchor="middle" font-size="13" fill="#475569">Audit 1re partie : interne · 2e partie : client chez son fournisseur · 3e partie : certification</text>
+</svg>

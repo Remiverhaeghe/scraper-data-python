@@ -54,6 +54,13 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Révision : thème Normes, qualité et sécurité (QSE), 100 questions (ISO 9001,
+  14001, 45001, 50001, IATF 16949, EN 9100, ISO 27001, audit, NF EN 13306,
+  NF X60-000, NF C 18-510, NF C 15-100, règlement Machines 2023/1230,
+  ISO 12100, ISO 13849-1, IEC 60204-1, IEC 61131-3), guide pratique et
+  schémas (PDCA de l'ISO 9001, cartographie des processus, déroulement d'un
+  audit, méthode de l'ISO 12100) avec questions à zone ; nouveau sous-domaine
+  Industrie « Qualité et normes »
 - Certifications : celles que citent les offres (37 suivies, industrie, qualité,
   informatique, langues), plan des trois qui couvriraient le plus d'offres
   proches, ligne « Certifications » sur la fiche d'une offre ; suivi de celles

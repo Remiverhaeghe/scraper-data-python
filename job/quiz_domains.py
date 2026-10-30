@@ -21,6 +21,7 @@ DOMAIN_ICONS = {
     "Réseau": "network",
     "Sécurité et identité": "shield",
     "Maintenance": "wrench",
+    "Qualité et normes": "circle-check",
     "Électricité et énergie": "zap",
     "Mécanique et fluides": "settings",
     "Automatisme": "cpu",
@@ -37,6 +38,7 @@ DOMAIN_ORDER = {
     "Réseau et sécurité": ("Réseau", "Sécurité et identité"),
     "Industrie": (
         "Maintenance",
+        "Qualité et normes",
         "Électricité et énergie",
         "Mécanique et fluides",
         "Automatisme",
@@ -45,8 +47,10 @@ DOMAIN_ORDER = {
 }
 
 # Ordre d'évaluation : du plus précis au plus général. « Cybersécurité et
-# réseau » relève de la sécurité, « Python et automatisation » du développement.
+# réseau » relève de la sécurité, « Python et automatisation » du développement,
+# « Normes, qualité et sécurité » des normes industrielles.
 DOMAIN_RULES = (
+    ("Industrie", "Qualité et normes", "normes norme qse hse qhse"),
     (
         "Réseau et sécurité",
         "Sécurité et identité",

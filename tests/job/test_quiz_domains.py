@@ -29,6 +29,7 @@ NOW = datetime(2026, 10, 12, 10, 0)
         ("Réseaux et diagnostic", (), ("Réseau et sécurité", "Réseau")),
         ("Automatisme industriel et API/PLC", (), ("Industrie", "Automatisme")),
         ("Analyse mémoire", ("JVM", "GC"), ("Informatique", "Exploitation et DevOps")),
+        ("Normes, qualité et sécurité (QSE)", (), ("Industrie", "Qualité et normes")),
         ("Kafka", (), OTHER_DOMAIN),
     ],
 )

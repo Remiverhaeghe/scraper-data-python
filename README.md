@@ -1066,6 +1066,7 @@ scraper-data-python/
 │   │   ├── fiabilite.json                     # Fiabilité et méthodes : AMDEC, MTBF, GMAO
 │   │   ├── iot-industriel.json                # IoT industriel : MQTT, OPC UA, edge, ISA-95, capteurs connectés
 │   │   ├── cybersecurite-industrielle.json    # Cybersécurité industrielle : IEC 62443, zones et conduits, ANSSI
+│   │   ├── normes-qse.json                    # Normes, qualité et sécurité : ISO 9001, habilitation, machines
 │   │   ├── guides/                            # Guides pratiques livrés, un Markdown par thème
 │   │   └── schemas/                           # Schémas SVG livrés, montrés avec la question ou la correction
 │   ├── interview/                             # Simulation d'entretien technique
