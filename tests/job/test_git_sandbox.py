@@ -149,7 +149,7 @@ def test_reset_revert_cherry_pick_and_amend():
         ("", "Saisissez une commande"),
         ("ls", "commencent par git"),
         ("git", "commencent par git"),
-        ("git stash", "non prise en charge"),
+        ("git bisect", "non prise en charge"),
         ('git commit -m "oubli', "Guillemet"),
         ("git commit " + "x" * 120, "trop longue"),
         ("git branch C5", "Nom de branche invalide"),
@@ -288,3 +288,97 @@ def test_server_graph_has_no_head():
     vSvg = render_graph(replay(("@clone",)).server_view(), "Serveur", pShowHead=False)
 
     assert ">main</text>" in vSvg and "*" not in vSvg
+
+
+def test_files_are_staged_committed_and_stashed():
+    """Vérifie l'index, le commit -a, la remise et le refus d'écraser une modification."""
+
+    vRepository = replay(
+        ["@commit app.py=v1 config.py=v1", "git switch -c fonction", "@commit app.py=f"]
+    )
+    run_command(vRepository, "modifier app.py")
+
+    with pytest.raises(ValueError, match="Aucune modification indexée"):
+        run_command(vRepository, "git commit")
+
+    with pytest.raises(ValueError, match="seraient écrasées"):
+        run_command(vRepository, "git switch main")
+
+    assert "stash@{0}" in run_command(vRepository, "git stash")
+    assert vRepository.changes == {}
+
+    run_command(vRepository, "git switch main")
+    run_command(vRepository, "modifier config.py")
+    run_command(vRepository, "git commit -am 'correctif'")
+
+    assert vRepository.tree(vRepository.branches["main"])["config.py"] == "v1+modif"
+
+    run_command(vRepository, "git switch fonction")
+    run_command(vRepository, "git stash pop")
+
+    assert vRepository.changes == {"app.py": "f+modif"}
+    assert vRepository.stash == []
+
+
+def test_merge_conflict_is_resolved_or_aborted():
+    """Vérifie le conflit, les commandes refusées, la résolution et l'abandon."""
+
+    vSetup = [
+        "@commit app.py=base",
+        "git switch -c couleur",
+        "@commit app.py=bleu",
+        "git switch main",
+        "@commit app.py=rouge",
+    ]
+    vRepository = replay(vSetup)
+
+    assert "CONFLIT dans app.py" in run_command(vRepository, "git merge couleur")
+    assert vRepository.changes == {"app.py": "marqueurs"}
+
+    with pytest.raises(ValueError, match="Fusion en cours"):
+        run_command(vRepository, "git switch couleur")
+
+    with pytest.raises(ValueError, match="encore en conflit"):
+        run_command(vRepository, "git commit")
+
+    run_command(vRepository, "git checkout --theirs app.py")
+    run_command(vRepository, "git add app.py")
+    run_command(vRepository, "git commit")
+
+    assert vRepository.head_tree() == {"app.py": "bleu"}
+    assert vRepository.conflict is None
+
+    vAborted = replay(vSetup)
+    vBefore = vAborted.branches["main"]
+    run_command(vAborted, "git merge couleur")
+    run_command(vAborted, "git merge --abort")
+
+    assert vAborted.conflict is None
+    assert vAborted.changes == {}
+    assert vAborted.branches["main"] == vBefore
+
+
+def test_rebase_stops_on_a_conflict_then_continues():
+    """Vérifie l'arrêt du rebase, HEAD détaché, puis la reprise jusqu'au bout."""
+
+    vRepository = replay(
+        [
+            "@commit app.py=base",
+            "git switch -c fonction",
+            "@commit app.py=fonction",
+            "git switch main",
+            "@commit app.py=correctif",
+            "git switch fonction",
+        ]
+    )
+
+    assert "Arrêt sur C2" in run_command(vRepository, "git rebase main")
+    assert vRepository.detached
+
+    run_command(vRepository, "modifier app.py")
+    run_command(vRepository, "git add app.py")
+    run_command(vRepository, "git rebase --continue")
+
+    assert not vRepository.detached
+    assert vRepository.head_tree() == {"app.py": "correctif+fonction"}
+    assert vRepository.commits[vRepository.branches["fonction"]].origin == "C2"

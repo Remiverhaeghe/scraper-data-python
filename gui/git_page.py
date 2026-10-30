@@ -176,6 +176,8 @@ class GitPage(QWidget):
         self.history_label = QLabel()
         self.history_label.setObjectName("cardSubtitle")
         self.history_label.setWordWrap(True)
+        self.worktree_label = QLabel()
+        self.worktree_label.setWordWrap(True)
 
         self.hint_button = create_button("Afficher un indice", "sparkles")
         self.hint_button.clicked.connect(self.show_hint)
@@ -200,6 +202,7 @@ class GitPage(QWidget):
             vLayout.addWidget(vWidget)
 
         vLayout.addLayout(vGraphs)
+        vLayout.addWidget(self.worktree_label)
         vLayout.addLayout(vCommandRow)
         vLayout.addWidget(self.message_label)
         vLayout.addWidget(self.history_label)
@@ -299,6 +302,17 @@ class GitPage(QWidget):
             vWidget.setVisible(bool(vView["server"]))
         self.history_label.setText(
             "Commandes : " + " · ".join(vView["history"]) if vView["history"] else ""
+        )
+        self.worktree_label.setText(
+            " ".join(
+                f"{vTitle} : {' · '.join(vLines) or 'rien en cours'}."
+                for vTitle, vLines in (
+                    ("Fichiers", vView["worktree"]),
+                    ("Objectif", vView["goal_worktree"]),
+                )
+            )
+            if vView["worktree"] or vView["goal_worktree"]
+            else ""
         )
         self.command_edit.setEnabled(not vView["done"])
         self.run_button.setEnabled(not vView["done"])

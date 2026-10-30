@@ -9,7 +9,7 @@ autre chemin qui aboutit au même graphe réussit aussi le niveau.
 from dataclasses import dataclass
 
 from job.git_graph import render_graph
-from job.git_sandbox import MAX_HISTORY, replay, run_command
+from job.git_sandbox import MAX_HISTORY, describe_worktree, replay, run_command
 from storage.git_levels import get_git_level_results, save_git_level_result
 
 
@@ -34,6 +34,7 @@ SERIES_ICONS = {
     "Intégrer": "git-merge",
     "Travailler à plusieurs": "users",
     "Cas de la vraie vie": "briefcase",
+    "Fichiers et conflits": "file-text",
 }
 
 
@@ -384,6 +385,168 @@ LEVELS = (
         ("git revert C2", "git push"),
         "Ce qui est partagé s'annule par revert, jamais par reset.",
     ),
+    GitLevel(
+        "indexer",
+        "Indexer avant de valider",
+        "Fichiers et conflits",
+        "Un commit n'enregistre que ce qui est **indexé**. Ici, `modifier app.py` "
+        "simule une modification dans l'éditeur ; `git add app.py` la place dans "
+        "l'index, `git commit` l'enregistre. `git status` montre à tout moment ce "
+        "qui est modifié et ce qui est indexé.\n\n"
+        "Objectif : enregistrer une modification de app.py dans un commit.",
+        ("@commit app.py=v1",),
+        ("modifier app.py", "git add app.py", "git commit"),
+        "modifier app.py, git add app.py, puis git commit.",
+    ),
+    GitLevel(
+        "fichier-oublie",
+        "Le fichier oublié",
+        "Fichiers et conflits",
+        "Le dernier commit a été fait sans son fichier de test. Tant qu'il n'est "
+        "pas envoyé, `git commit --amend` le remplace par un commit complet, au "
+        "lieu d'en ajouter un second.\n\n"
+        "Objectif : ajouter test_app.py au dernier commit.",
+        ("@commit app.py=v1", "@commit app.py=v2"),
+        ("modifier test_app.py", "git add test_app.py", "git commit --amend"),
+        "modifier test_app.py, git add test_app.py, puis git commit --amend.",
+    ),
+    GitLevel(
+        "stash-urgence",
+        "Le correctif urgent",
+        "Fichiers et conflits",
+        "Vous travaillez sur `fonction`, app.py est en cours de modification, et "
+        "un correctif urgent de config.py tombe sur `main`. `git switch main` "
+        "refuse : vos modifications seraient écrasées. `git stash` les met de "
+        "côté, `git stash pop` les reprend.\n\n"
+        "Objectif : corriger config.py par un commit sur main, puis retrouver "
+        "votre travail en cours sur fonction, la remise vide.",
+        (
+            "@commit app.py=v1 config.py=v1",
+            "git switch -c fonction",
+            "@commit app.py=fonction",
+            "@modifie app.py=brouillon",
+        ),
+        (
+            "git stash",
+            "git switch main",
+            "modifier config.py",
+            "git commit -a",
+            "git switch fonction",
+            "git stash pop",
+        ),
+        "git stash, git switch main, modifier config.py, git commit -a, "
+        "git switch fonction, git stash pop.",
+    ),
+    GitLevel(
+        "conflit-fusion",
+        "Le premier conflit",
+        "Fichiers et conflits",
+        "Les deux branches ont modifié la même partie de app.py : git ne peut pas "
+        "choisir et s'arrête sur un **conflit**. Le fichier contient alors les deux "
+        "versions entre les marqueurs `<<<<<<<`, `=======` et `>>>>>>>`.\n\n"
+        "On corrige le fichier (ici, `modifier app.py` garde les deux "
+        "modifications), on le marque résolu avec `git add`, puis `git commit` "
+        "termine la fusion.\n\n"
+        "Objectif : fusionner couleur dans main en gardant les deux modifications.",
+        (
+            "@commit app.py=base",
+            "git switch -c couleur",
+            "@commit app.py=bleu",
+            "git switch main",
+            "@commit app.py=rouge",
+        ),
+        ("git merge couleur", "modifier app.py", "git add app.py", "git commit"),
+        "git merge couleur, modifier app.py, git add app.py, git commit.",
+    ),
+    GitLevel(
+        "conflit-theirs",
+        "La version du terrain",
+        "Fichiers et conflits",
+        "Parfois une seule version est la bonne : les réglages mesurés sur le "
+        "terrain remplacent ceux du bureau. En conflit, `git checkout --theirs "
+        "fichier` garde la version de la branche fusionnée, `--ours` celle de la "
+        "branche courante.\n\n"
+        "Objectif : fusionner terrain dans main en gardant ses réglages.",
+        (
+            "@commit reglages.yml=usine",
+            "git switch -c terrain",
+            "@commit reglages.yml=terrain",
+            "git switch main",
+            "@commit reglages.yml=bureau",
+        ),
+        (
+            "git merge terrain",
+            "git checkout --theirs reglages.yml",
+            "git add reglages.yml",
+            "git commit",
+        ),
+        "git merge terrain, git checkout --theirs reglages.yml, git add, git commit.",
+    ),
+    GitLevel(
+        "conflit-rebase",
+        "Le rebase interrompu",
+        "Fichiers et conflits",
+        "Un rebase rejoue vos commits un par un : il peut s'arrêter sur l'un "
+        "d'eux. HEAD est alors détaché au milieu du rebase ; on corrige, "
+        "`git add`, puis `git rebase --continue` reprend. `git rebase --abort` "
+        "ramène tout à l'état d'avant.\n\n"
+        "Objectif : rebaser fonction sur main en gardant les deux modifications "
+        "de app.py.",
+        (
+            "@commit app.py=base notes.md=base",
+            "git switch -c fonction",
+            "@commit notes.md=fonction",
+            "@commit app.py=fonction",
+            "git switch main",
+            "@commit app.py=correctif",
+            "git switch fonction",
+        ),
+        (
+            "git rebase main",
+            "modifier app.py",
+            "git add app.py",
+            "git rebase --continue",
+        ),
+        "git rebase main, puis au conflit : modifier app.py, git add app.py, "
+        "git rebase --continue.",
+    ),
+    GitLevel(
+        "abandon-fusion",
+        "Savoir renoncer",
+        "Fichiers et conflits",
+        "Un conflit sur un fichier qu'on ne sait pas fusionner, comme un plan : "
+        "mieux vaut revenir en arrière et en parler à l'équipe. `git merge "
+        "--abort` remet le dépôt dans l'état d'avant la fusion.\n\n"
+        "Objectif : abandonner la fusion en cours.",
+        (
+            "@commit plan.dwg=v1",
+            "git switch -c etude",
+            "@commit plan.dwg=etude",
+            "git switch main",
+            "@commit plan.dwg=atelier",
+            "git merge etude",
+        ),
+        ("git merge --abort",),
+        "git merge --abort.",
+    ),
+    GitLevel(
+        "pull-conflit",
+        "Le collègue a modifié le même fichier",
+        "Fichiers et conflits",
+        "Vous et un collègue avez modifié app.py. `git push` est refusé ; "
+        "`git pull` récupère son travail et le fusionne… avec un conflit. On le "
+        "résout comme d'habitude, puis on envoie la fusion.\n\n"
+        "Objectif : intégrer le travail de l'équipe en gardant les deux "
+        "modifications, puis l'envoyer.",
+        (
+            "@commit app.py=base",
+            "@clone",
+            "@equipe main app.py=equipe",
+            "@commit app.py=moi",
+        ),
+        ("git pull", "modifier app.py", "git add app.py", "git commit", "git push"),
+        "git pull, modifier app.py, git add app.py, git commit, git push.",
+    ),
 )
 
 
@@ -412,6 +575,7 @@ def build_signatures(pRepository, pBaseCommits):
                 vData.kind,
                 rSignatures.get(vData.origin, ""),
                 tuple(rSignatures[vParent] for vParent in vData.parents),
+                vData.tree,
             )
 
     return rSignatures
@@ -426,7 +590,7 @@ def sign_references(pReferences, pSignatures):
 
 
 def describe(pRepository, pBaseCommits):
-    """Retourne ce qui définit l'état d'un dépôt : branches, serveur et HEAD."""
+    """Retourne ce qui définit l'état d'un dépôt : branches, serveur, HEAD, fichiers."""
 
     vSignatures = build_signatures(pRepository, pBaseCommits)
 
@@ -439,6 +603,10 @@ def describe(pRepository, pBaseCommits):
             if pRepository.detached
             else ("branche", pRepository.head)
         ),
+        tuple(sorted(pRepository.changes.items())),
+        tuple(sorted(pRepository.staged)),
+        tuple(tuple(sorted(vEntry["changes"].items())) for vEntry in pRepository.stash),
+        pRepository.conflict["operation"] if pRepository.conflict else None,
     )
 
     return rState
@@ -593,6 +761,8 @@ def build_level_view(pLevelId, pHistory):
         "done": is_goal_reached(vLevel, vRepository),
         "next_id": LEVELS[vIndex + 1].id if vIndex + 1 < len(LEVELS) else None,
         "graph": render_graph(vRepository.local_view(), "Votre dépôt"),
+        "worktree": describe_worktree(vRepository),
+        "goal_worktree": describe_worktree(vGoal),
         "goal": render_graph(vGoal.local_view(), "Objectif"),
         "server": (
             render_graph(vRepository.server_view(), "Serveur", pShowHead=False)

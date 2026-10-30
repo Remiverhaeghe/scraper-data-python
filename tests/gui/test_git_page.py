@@ -38,11 +38,11 @@ def test_level_is_played_undone_and_solved(qt_application, tmp_path):
     assert not vPage.level_card.isHidden()
     assert vPage.graph_widget.width() > 0
 
-    vPage.command_edit.setText("git stash")
+    vPage.command_edit.setText("git bisect")
     vPage.run_command()
 
     assert vPage.message_label.text().startswith("Commande non prise en charge")
-    assert vPage.command_edit.text() == "git stash"
+    assert vPage.command_edit.text() == "git bisect"
 
     vPage.command_edit.setText("git commit")
     vPage.run_command()

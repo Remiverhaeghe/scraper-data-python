@@ -608,10 +608,13 @@ Page Git du bureau et du web, pour s'exercer aux branches sans risque :
 - [x] Dépôt simulé (commits, branches, HEAD) : commit, branch, switch, checkout, merge, rebase, reset, revert, cherry-pick, références relatives ^ et ~
 - [x] Serveur origin simulé : fetch, pull (avec --rebase), push refusé tant que le travail de l'équipe n'est pas intégré, graphe du serveur à côté du dépôt local
 - [x] Graphe des commits en SVG, à côté de l'objectif ; commits perdus estompés
-- [x] Vingt-quatre niveaux progressifs, du premier commit au travail à plusieurs, objectif comparé par la forme du graphe : un autre chemin vers le même résultat est accepté
+- [x] Trente-deux niveaux progressifs, du premier commit au travail à plusieurs, objectif comparé par la forme du graphe : un autre chemin vers le même résultat est accepté
 - [x] Série « Cas de la vraie vie » : commit sur la mauvaise branche, correctif urgent, report d'un correctif sur une version maintenue, correction avant envoi, annulation d'un commit déjà envoyé
 - [x] Annulation de la dernière commande, indice, solution de référence et meilleur nombre de commandes enregistré
-- [x] Aucune commande transmise au système : seul l'historique est simulé
+- [x] Fichiers simulés : modification (modifier <fichier>), index (git add, restore, commit -a), remise (git stash, pop, apply, list, drop), diff et log
+- [x] Conflits à résoudre : fusion à trois voies pour merge, rebase, cherry-pick, pull et stash pop ; correction à la main ou git checkout --ours / --theirs, puis git add ; --continue, --skip et --abort ; changement de branche refusé s'il écraserait des modifications
+- [x] Série « Fichiers et conflits » : indexer, compléter le dernier commit, correctif urgent avec stash, premier conflit, garder la version du terrain, rebase interrompu, abandonner une fusion, conflit avec le travail d'un collègue
+- [x] Aucune commande transmise au système : historique et fichiers sont simulés
 
 ### Bac à sable SQL
 

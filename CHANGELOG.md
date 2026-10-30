@@ -73,6 +73,10 @@ dans l'historique git.
   (cycle de vie Maven, dependency:tree, build, run, ps, logs, rm, volume,
   curl), douze niveaux des coordonnées Maven aux volumes Docker ; trophées
   Premier build et Intégrateur
+- Bac à sable Git : fichiers simulés (index, commit -a, stash, diff, log) et
+  conflits à résoudre lors d'un merge, rebase, cherry-pick, pull ou stash pop
+  (--ours, --theirs, --continue, --skip, --abort) ; huit niveaux « Fichiers et
+  conflits »
 - Offres à double profil, maintenance et informatique : informatique
   industrielle, MES, supervision, OPC UA, administration de GMAO, ou
   maintenance avec développement ; badge, filtre « Double profil », tri dédié

@@ -1932,7 +1932,7 @@ def test_git_levels_are_listed_played_and_solved(client):
     assert (
         client.post(
             "/git/premiers-commits/command",
-            data={"history": ["git stash"], "command": "git commit"},
+            data={"history": ["git bisect"], "command": "git commit"},
         ).status_code
         == 400
     )

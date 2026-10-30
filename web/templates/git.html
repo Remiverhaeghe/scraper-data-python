@@ -41,6 +41,10 @@
         {% endif %}
     </div>
 
+    {% if view.worktree or view.goal_worktree %}
+    <p class="card-subtitle">Fichiers : {{ view.worktree | join(" · ") or "rien en cours" }}. Objectif : {{ view.goal_worktree | join(" · ") or "rien en cours" }}.</p>
+    {% endif %}
+
     {% if message %}<p class="application-message tone-{{ message[1] }}" role="status">{{ message[0] }}</p>{% endif %}
 
     {% if view.done %}
