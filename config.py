@@ -53,6 +53,7 @@ TROUBLESHOOTING_FILE = ASSETS_DIRECTORY / "troubleshooting" / "scenarios.json"
 LADDER_LEVELS_FILE = ASSETS_DIRECTORY / "ladder" / "levels.json"
 SQL_DATABASE_FILE = ASSETS_DIRECTORY / "sql" / "atelier.sql"
 SQL_LEVELS_FILE = ASSETS_DIRECTORY / "sql" / "levels.json"
+CIRCUIT_LEVELS_FILE = ASSETS_DIRECTORY / "circuit" / "levels.json"
 
 # Catalogue des thèmes et modèle de la demande de questions à ChatGPT
 QUIZ_GENERATION_DIRECTORY = ASSETS_DIRECTORY / "quiz_generation"

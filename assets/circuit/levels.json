@@ -1,0 +1,265 @@
+[
+  {
+    "id": "lampe-simple",
+    "title": "Allumer une lampe",
+    "goal": "Alimentez une lampe à travers le disjoncteur et un interrupteur. Interrupteur ouvert, la lampe doit être éteinte et hors tension.",
+    "hint": "Suivez le courant : phase L, disjoncteur, interrupteur, lampe, puis retour au neutre N. L'interrupteur coupe la phase, jamais le neutre : sinon la lampe reste sous tension même éteinte.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "interrupteur": 1, "lampe_bornes": 1},
+    "steps": [
+      {"set": {"interrupteur": false}, "expect": {"lampe_bornes": "off", "lampe_bornes.potential": [0, 1]}, "message": "Interrupteur ouvert : la lampe est éteinte et hors tension, la phase est coupée."},
+      {"set": {"interrupteur": true}, "expect": {"lampe_bornes": "on"}, "message": "Interrupteur fermé : la lampe s'allume."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 2, "y": 0},
+      {"id": "lampe_bornes", "type": "lampe_bornes", "x": 3, "y": 0}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "interrupteur", "1"],
+      ["interrupteur", "2", "lampe_bornes", "1"],
+      ["lampe_bornes", "2", "alimentation", "N"]
+    ],
+    "explanation": "Le courant fait une boucle : il part de la phase et revient par le neutre. Couper la phase met la lampe hors tension : c'est ce qui permet de changer une ampoule sans risque."
+  },
+  {
+    "id": "deux-lampes",
+    "title": "Deux lampes en parallèle",
+    "goal": "Un même interrupteur commande deux lampes, qui doivent éclairer toutes les deux normalement.",
+    "hint": "En série, les deux lampes se partagent les 230 V et éclairent faiblement. En parallèle, chacune reçoit les 230 V : reliez chaque lampe entre la sortie de l'interrupteur et le neutre.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "interrupteur": 1, "lampe_bornes": 2},
+    "steps": [
+      {"set": {"interrupteur": true}, "expect": {"lampe_bornes-1": "on", "lampe_bornes-2": "on"}, "message": "Interrupteur fermé : les deux lampes éclairent normalement."},
+      {"set": {"interrupteur": false}, "expect": {"lampe_bornes-1": "off", "lampe_bornes-2": "off"}, "message": "Interrupteur ouvert : les deux s'éteignent."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 2, "y": 0},
+      {"id": "lampe_bornes-1", "type": "lampe_bornes", "x": 3, "y": 0},
+      {"id": "lampe_bornes-2", "type": "lampe_bornes", "x": 3, "y": 1}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "interrupteur", "1"],
+      ["interrupteur", "2", "lampe_bornes-1", "1"],
+      ["interrupteur", "2", "lampe_bornes-2", "1"],
+      ["lampe_bornes-1", "2", "alimentation", "N"],
+      ["lampe_bornes-2", "2", "alimentation", "N"]
+    ],
+    "explanation": "En parallèle, chaque récepteur a la tension du réseau et fonctionne indépendamment : c'est le câblage des prises et des luminaires d'un bâtiment. Le courant total est la somme des courants des lampes."
+  },
+  {
+    "id": "va-et-vient",
+    "title": "Le va-et-vient",
+    "goal": "Commandez une lampe depuis deux endroits, par exemple les deux bouts d'un couloir : chaque interrupteur doit changer l'état de la lampe, quelle que soit la position de l'autre.",
+    "hint": "La phase arrive sur le commun du premier va-et-vient, le commun du second part vers la lampe. Entre les deux, deux fils appelés navettes relient a avec a et b avec b.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "va_et_vient": 2, "lampe_bornes": 1},
+    "steps": [
+      {"set": {"va_et_vient-1": false, "va_et_vient-2": false}, "expect": {}},
+      {"set": {"va_et_vient-1": true}, "expect": {"lampe_bornes": "toggle"}, "message": "Le premier interrupteur change l'état de la lampe."},
+      {"set": {"va_et_vient-2": true}, "expect": {"lampe_bornes": "toggle"}, "message": "Le second aussi."},
+      {"set": {"va_et_vient-1": false}, "expect": {"lampe_bornes": "toggle"}, "message": "Et de nouveau le premier, quelle que soit la position de l'autre."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "va_et_vient-1", "type": "va_et_vient", "x": 2, "y": 0},
+      {"id": "va_et_vient-2", "type": "va_et_vient", "x": 3, "y": 0},
+      {"id": "lampe_bornes", "type": "lampe_bornes", "x": 3, "y": 1}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "va_et_vient-1", "commun"],
+      ["va_et_vient-1", "a", "va_et_vient-2", "a"],
+      ["va_et_vient-1", "b", "va_et_vient-2", "b"],
+      ["va_et_vient-2", "commun", "lampe_bornes", "1"],
+      ["lampe_bornes", "2", "alimentation", "N"]
+    ],
+    "explanation": "Chaque va-et-vient aiguille la phase vers l'une des deux navettes : la lampe s'allume quand les deux aiguillages choisissent la même. Au-delà de deux points de commande, on passe au télérupteur."
+  },
+  {
+    "id": "telerupteur",
+    "title": "Le télérupteur",
+    "goal": "Commandez une lampe depuis trois boutons poussoirs : chaque appui sur l'un d'eux allume la lampe si elle est éteinte, et l'éteint si elle est allumée.",
+    "hint": "Les trois boutons sont en parallèle et alimentent la bobine du télérupteur. Le contact du télérupteur, lui, alimente la lampe : il change d'état à chaque impulsion sur la bobine.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "bouton_marche": 3, "telerupteur": 1, "contact_telerupteur": 1, "lampe_bornes": 1},
+    "steps": [
+      {"set": {}, "expect": {"lampe_bornes": "off"}, "message": "Au départ, la lampe est éteinte."},
+      {"set": {"bouton_marche-1": true}, "expect": {"lampe_bornes": "on"}, "message": "Un appui sur le premier bouton allume la lampe."},
+      {"set": {"bouton_marche-1": false}, "expect": {"lampe_bornes": "on"}, "message": "Bouton relâché : la lampe reste allumée."},
+      {"set": {"bouton_marche-2": true}, "expect": {"lampe_bornes": "off"}, "message": "Un appui sur le deuxième bouton l'éteint."},
+      {"set": {"bouton_marche-2": false}, "expect": {"lampe_bornes": "off"}, "message": "Elle reste éteinte."},
+      {"set": {"bouton_marche-3": true}, "expect": {"lampe_bornes": "on"}, "message": "Le troisième bouton la rallume."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "bouton_marche-1", "type": "bouton_marche", "x": 0, "y": 1},
+      {"id": "bouton_marche-2", "type": "bouton_marche", "x": 1, "y": 1},
+      {"id": "bouton_marche-3", "type": "bouton_marche", "x": 2, "y": 1},
+      {"id": "telerupteur", "type": "telerupteur", "x": 2, "y": 2},
+      {"id": "contact_telerupteur", "type": "contact_telerupteur", "x": 2, "y": 0},
+      {"id": "lampe_bornes", "type": "lampe_bornes", "x": 3, "y": 0}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "bouton_marche-1", "1"],
+      ["disjoncteur", "2", "bouton_marche-2", "1"],
+      ["disjoncteur", "2", "bouton_marche-3", "1"],
+      ["bouton_marche-1", "2", "telerupteur", "1"],
+      ["bouton_marche-2", "2", "telerupteur", "1"],
+      ["bouton_marche-3", "2", "telerupteur", "1"],
+      ["telerupteur", "2", "alimentation", "N"],
+      ["disjoncteur", "2", "contact_telerupteur", "1"],
+      ["contact_telerupteur", "2", "lampe_bornes", "1"],
+      ["lampe_bornes", "2", "alimentation", "N"]
+    ],
+    "explanation": "Le télérupteur sépare la commande, par impulsions, de la puissance. Ajouter un point de commande ne demande qu'un bouton de plus en parallèle : c'est la solution des grands couloirs et des cages d'escalier."
+  },
+  {
+    "id": "demarrage-moteur",
+    "title": "Démarrage d'un moteur avec auto-maintien",
+    "goal": "Un appui bref sur Marche démarre le moteur, qui continue une fois le bouton relâché ; Arrêt le coupe. La bobine commande le contacteur de puissance du moteur.",
+    "hint": "Circuit de commande : Arrêt (à ouverture), puis Marche, puis la bobine. Le contact du relais, en parallèle de Marche, maintient la bobine. Circuit de puissance : le contacteur entre le disjoncteur et le moteur.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "bouton_arret": 1, "bouton_marche": 1, "bobine_relais": 1, "contact_relais": 1, "contacteur": 1, "moteur_mono": 1},
+    "steps": [
+      {"set": {}, "expect": {"moteur_mono": "off"}, "message": "Au départ, le moteur est arrêté."},
+      {"set": {"bouton_marche": true}, "expect": {"moteur_mono": "on"}, "message": "Un appui sur Marche démarre le moteur."},
+      {"set": {"bouton_marche": false}, "expect": {"moteur_mono": "on"}, "message": "Marche relâché, le moteur continue : c'est l'auto-maintien."},
+      {"set": {"bouton_arret": true}, "expect": {"moteur_mono": "off"}, "message": "Arrêt coupe le moteur."},
+      {"set": {"bouton_arret": false}, "expect": {"moteur_mono": "off"}, "message": "Arrêt relâché, le moteur ne repart pas seul."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "bouton_arret", "type": "bouton_arret", "x": 0, "y": 1},
+      {"id": "bouton_marche", "type": "bouton_marche", "x": 1, "y": 1},
+      {"id": "contact_relais", "type": "contact_relais", "x": 2, "y": 1},
+      {"id": "bobine_relais", "type": "bobine_relais", "x": 1, "y": 2},
+      {"id": "contacteur", "type": "contacteur", "x": 2, "y": 0},
+      {"id": "moteur_mono", "type": "moteur_mono", "x": 3, "y": 0}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "bouton_arret", "1"],
+      ["bouton_arret", "2", "bouton_marche", "1"],
+      ["bouton_marche", "2", "bobine_relais", "1"],
+      ["bouton_arret", "2", "contact_relais", "1"],
+      ["contact_relais", "2", "bobine_relais", "1"],
+      ["bobine_relais", "2", "alimentation", "N"],
+      ["disjoncteur", "2", "contacteur", "1"],
+      ["contacteur", "2", "moteur_mono", "1"],
+      ["moteur_mono", "2", "alimentation", "N"]
+    ],
+    "explanation": "C'est le schéma du simulateur d'automate, câblé cette fois : le contact d'auto-maintien remplace la mémoire. Une coupure de courant fait retomber la bobine, et le moteur ne redémarre pas seul au retour de la tension : c'est une sécurité."
+  },
+  {
+    "id": "led-resistance",
+    "title": "Une LED et sa résistance",
+    "goal": "Allumez une LED sur une pile de 9 V, avec un courant de 10 à 20 mA. Réglez la valeur de la résistance.",
+    "hint": "La LED garde environ 2 V à ses bornes ; la résistance prend le reste, 7 V. Pour 15 mA : R = 7 / 0,015, soit environ 470 Ω. Attention au sens : le courant entre par l'anode.",
+    "palette": {"pile": 1, "interrupteur": 1, "resistance": 1, "led": 1},
+    "values": {"pile": 9, "resistance": 100},
+    "editable": ["resistance"],
+    "steps": [
+      {"set": {"interrupteur": true}, "expect": {"led": "on", "led.current": [0.01, 0.02]}, "message": "Interrupteur fermé : la LED s'allume avec 10 à 20 mA."},
+      {"set": {"interrupteur": false}, "expect": {"led": "off"}, "message": "Interrupteur ouvert : elle s'éteint."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 1, "y": 0},
+      {"id": "resistance", "type": "resistance", "x": 2, "y": 0},
+      {"id": "led", "type": "led", "x": 3, "y": 0}
+    ],
+    "solution_wires": [
+      ["pile", "+", "interrupteur", "1"],
+      ["interrupteur", "2", "resistance", "1"],
+      ["resistance", "2", "led", "anode"],
+      ["led", "cathode", "pile", "−"]
+    ],
+    "solution_values": {"resistance": 470},
+    "explanation": "Loi d'Ohm : U = R × I. Sans résistance, rien ne limite le courant et la LED grille. Les valeurs normalisées de la série E12 (330, 390, 470, 560 Ω…) donnent le choix le plus proche."
+  },
+  {
+    "id": "diviseur",
+    "title": "Un diviseur de tension",
+    "goal": "À partir d'une alimentation de 5 V, obtenez 3,3 V (à 0,1 V près) mesurés par le voltmètre, avec deux résistances.",
+    "hint": "Deux résistances en série se partagent la tension en proportion de leurs valeurs : Us = 5 × R2 / (R1 + R2). Le voltmètre se branche en parallèle, aux bornes de R2.",
+    "palette": {"pile": 1, "resistance": 2, "voltmetre": 1},
+    "values": {"pile": 5, "resistance-1": 1000, "resistance-2": 1000},
+    "editable": ["resistance-1", "resistance-2"],
+    "steps": [{"set": {}, "expect": {"voltmetre.voltage": [3.2, 3.4]}, "message": "Le voltmètre mesure 3,3 V en sortie du diviseur."}],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "resistance-1", "type": "resistance", "x": 1, "y": 0},
+      {"id": "resistance-2", "type": "resistance", "x": 2, "y": 0},
+      {"id": "voltmetre", "type": "voltmetre", "x": 3, "y": 0}
+    ],
+    "solution_wires": [
+      ["pile", "+", "resistance-1", "1"],
+      ["resistance-1", "2", "resistance-2", "1"],
+      ["resistance-2", "2", "pile", "−"],
+      ["voltmetre", "1", "resistance-2", "1"],
+      ["voltmetre", "2", "resistance-2", "2"]
+    ],
+    "solution_values": {"resistance-1": 1000, "resistance-2": 2000},
+    "explanation": "5 × 2000 / 3000 = 3,33 V. C'est l'adaptation classique d'un signal 5 V vers une entrée 3,3 V de microcontrôleur. Un voltmètre a une très grande résistance interne : il ne perturbe presque pas le montage."
+  },
+  {
+    "id": "mesure-courant",
+    "title": "Mesurer un courant",
+    "goal": "Mesurez le courant consommé par la lampe allumée avec l'ampèremètre, sans faire déclencher le disjoncteur.",
+    "hint": "Un ampèremètre se place en série, dans le circuit coupé, pour être traversé par le courant à mesurer. En parallèle, sa résistance presque nulle crée un court-circuit.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "interrupteur": 1, "lampe_bornes": 1, "amperemetre": 1},
+    "steps": [{"set": {"interrupteur": true}, "expect": {"lampe_bornes": "on", "amperemetre.current": [0.2, 0.3]}, "message": "La lampe est allumée et l'ampèremètre mesure son courant, environ 0,26 A."}],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 2, "y": 0},
+      {"id": "amperemetre", "type": "amperemetre", "x": 2, "y": 1},
+      {"id": "lampe_bornes", "type": "lampe_bornes", "x": 3, "y": 0}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "interrupteur", "1"],
+      ["interrupteur", "2", "amperemetre", "1"],
+      ["amperemetre", "2", "lampe_bornes", "1"],
+      ["lampe_bornes", "2", "alimentation", "N"]
+    ],
+    "explanation": "60 W sous 230 V : I = P / U = 0,26 A. Sur le terrain, la pince ampèremétrique évite d'ouvrir le circuit : elle mesure le champ magnétique autour d'un seul conducteur."
+  },
+  {
+    "id": "commande-relais",
+    "title": "Commander le 230 V en 12 V",
+    "goal": "Un interrupteur alimenté par une pile de 12 V commande, par un relais, une lampe 230 V. Les deux circuits restent séparés.",
+    "hint": "Circuit de commande : pile, interrupteur, bobine du relais (12 V). Circuit de puissance : alimentation, disjoncteur, contact du relais, lampe. Aucun fil ne relie les deux circuits.",
+    "palette": {"pile": 1, "interrupteur": 1, "bobine_relais": 1, "alimentation": 1, "disjoncteur": 1, "contact_relais": 1, "lampe_bornes": 1},
+    "values": {"pile": 12, "bobine_relais": 12},
+    "steps": [
+      {"set": {"interrupteur": false}, "expect": {"lampe_bornes": "off"}, "message": "Interrupteur ouvert : la lampe est éteinte."},
+      {"set": {"interrupteur": true}, "expect": {"bobine_relais": "on", "lampe_bornes": "on"}, "message": "Interrupteur fermé : le relais colle et la lampe 230 V s'allume."},
+      {"set": {"interrupteur": false}, "expect": {"lampe_bornes": "off"}, "message": "Interrupteur ouvert : le relais retombe."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 1},
+      {"id": "interrupteur", "type": "interrupteur", "x": 1, "y": 1},
+      {"id": "bobine_relais", "type": "bobine_relais", "x": 2, "y": 1},
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "contact_relais", "type": "contact_relais", "x": 2, "y": 0},
+      {"id": "lampe_bornes", "type": "lampe_bornes", "x": 3, "y": 0}
+    ],
+    "solution_wires": [
+      ["pile", "+", "interrupteur", "1"],
+      ["interrupteur", "2", "bobine_relais", "1"],
+      ["bobine_relais", "2", "pile", "−"],
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "contact_relais", "1"],
+      ["contact_relais", "2", "lampe_bornes", "1"],
+      ["lampe_bornes", "2", "alimentation", "N"]
+    ],
+    "explanation": "Le relais isole la commande de la puissance : l'opérateur ne touche que du 12 V, et une carte électronique peut piloter un récepteur 230 V. C'est le rôle des sorties à relais d'un automate."
+  }
+]

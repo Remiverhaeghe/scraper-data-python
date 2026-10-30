@@ -494,6 +494,44 @@ class SchemaEditor(QWidget):
         for vId in list(self.components):
             self.remove_component(vId)
 
+    def load_answer(self, pAnswer):
+        """Remplace le schéma par un schéma enregistré, identifiants et cases compris."""
+        self.clear()
+
+        for vItem in (pAnswer or {}).get("components", []):
+            vType = vItem.get("type")
+
+            if vType not in self.limits or self.count_type(vType) >= self.limits[vType]:
+                continue
+
+            vId = vItem["id"]
+            vSuffix = vId.rsplit("-", 1)[-1] if "-" in vId else ""
+            vLabel = COMPONENTS[vType].label + (
+                f" {vSuffix}" if vSuffix.isdigit() else ""
+            )
+            vComponent = ComponentItem(
+                self, (vId, vType, vLabel), self.renderers[vType]
+            )
+            vComponent.cell = (vItem["x"], vItem["y"])
+            self.components[vId] = vComponent
+            self.scene.addItem(vComponent)
+            vComponent.setPos(QPointF(*get_origin(*vComponent.cell)))
+
+        for vIdA, vPortA, vIdB, vPortB in (pAnswer or {}).get("wires", []):
+            vStart = self.components.get(vIdA)
+            vEnd = self.components.get(vIdB)
+
+            if vStart and vEnd and vPortA in vStart.ports and vPortB in vEnd.ports:
+                vWire = WireItem(
+                    vStart.ports[vPortA],
+                    vEnd.ports[vPortB],
+                    len(self.wires) % LANE_COUNT,
+                )
+                self.wires.append(vWire)
+                self.scene.addItem(vWire)
+
+        self.refresh_palette()
+
     def get_answer(self):
         """Retourne le schéma construit, au format attendu par la correction."""
         return {

@@ -65,6 +65,10 @@ dans l'historique git.
   jointures et aux modifications, en MySQL ou en SQL Server, résultat comparé
   à celui attendu, erreurs classiques expliquées ; trophées Première requête
   et As du SQL
+- Schémas électriques : l'éditeur de schémas câble des montages simulés
+  (courants, tensions, relais, télérupteur, disjoncteur, LED), neuf montages
+  guidés de la lampe au démarrage moteur, mode libre avec schémas enregistrés
+  et export SVG ; trophées Premier montage et Électricien
 - Offres à double profil, maintenance et informatique : informatique
   industrielle, MES, supervision, OPC UA, administration de GMAO, ou
   maintenance avec développement ; badge, filtre « Double profil », tri dédié

@@ -1,0 +1,141 @@
+{# Schémas électriques (routes /circuit) : éditeur static/schema_editor.js, simulateur
+   job/circuit.py. Le schéma, l'état des commandes et la mémoire des relais voyagent
+   dans le formulaire et sont revérifiés par le serveur à chaque envoi. Le SVG simulé
+   est produit côté serveur à partir des symboles de la bibliothèque. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Schémas électriques{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Schémas électriques", "Câblez un montage, puis manœuvrez-le : le simulateur calcule courants et tensions, allume les lampes et signale les défauts", "zap") }}
+
+<section class="grid grid-4">
+    {{ ui.stat(overview.passed ~ " / " ~ overview.rows | length, "Montages réussis", "zap", "blue") }}
+    {{ ui.stat(overview.schemas | length, "Schémas enregistrés", "file-text", "green") }}
+</section>
+
+{% if level or free %}
+<article class="card section-gap" id="work">
+    <h2>{% if level %}{{ level.title }}{% else %}Mode libre{% if schema_name %} · {{ schema_name }}{% endif %}{% endif %}</h2>
+    {% if level %}
+    <p>{{ level.goal }}</p>
+    <details>
+        <summary>Indice</summary>
+        <p>{{ level.hint }}</p>
+    </details>
+    {% else %}
+    <p class="muted">Posez les composants, reliez leurs bornes, réglez les valeurs puis simulez. Les contacts de relais suivent la bobine de relais, le contact du télérupteur suit sa bobine.</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('run_circuit').path }}#work">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="level" value="{{ level.id if level else '' }}">
+        <input type="hidden" name="inputs" value="{{ simulation.inputs if simulation else '' }}">
+        <input type="hidden" name="memory" value="{{ simulation.memory if simulation else '' }}">
+
+        <div class="schema-editor" data-schema-editor hidden>
+            <p class="muted">Cliquez sur une icône pour poser le composant, faites-le glisser sur la grille, puis cliquez sur une borne et sur une autre pour les relier.</p>
+            <div class="schema-palette">
+                {% for type in palette %}
+                <button class="schema-tool" type="button" data-type="{{ type }}" title="Placer : {{ schema_label(type) }}">{{ schema_icon(type) }}<span>{{ schema_label(type) }}</span></button>
+                {% endfor %}
+            </div>
+            <svg class="schema-canvas" data-schema-canvas tabindex="0" role="application" aria-label="Grille du schéma électrique"></svg>
+            <div class="schema-actions">
+                <button class="button" type="button" data-schema-action="delete">{{ icon("trash-2", 16) }} Supprimer la sélection</button>
+                <button class="button" type="button" data-schema-action="clear">{{ icon("history", 16) }} Tout effacer</button>
+            </div>
+            <input type="hidden" name="answer" value="" data-schema-answer>
+            <script type="application/json" data-schema-config>{{ schema_config(palette | list, palette) | tojson }}</script>
+            <script type="application/json" data-schema-initial>{{ initial | tojson }}</script>
+        </div>
+        <noscript><p class="application-message tone-warning">Le schéma se construit à la souris et demande JavaScript.</p></noscript>
+
+        {% if editable %}
+        <div class="profile-form section-gap">
+            {% for id, label, range in editable %}
+            <label>{{ label }} ({{ range[3] }}) <input type="number" name="value_{{ id }}" value="{{ '%g' | format(values.get(id, range[0])) }}" min="{{ range[1] }}" max="{{ range[2] }}" step="any"></label>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if free %}
+        <label class="section-gap">Nom du schéma <input type="text" name="name" value="{{ schema_name }}" maxlength="60"></label>
+        {% endif %}
+
+        <div class="schema-actions section-gap">
+            {% if level %}<button class="button button-primary" type="submit" name="action" value="check">{{ icon("circle-check", 16) }} Vérifier</button>{% endif %}
+            <button class="button" type="submit" name="action" value="simulate">{{ icon("zap", 16) }} Simuler</button>
+            {% if level %}<button class="button" type="submit" name="action" value="solution">Voir la solution</button>{% endif %}
+            {% if free %}
+            <button class="button" type="submit" name="action" value="save">{{ icon("download", 16) }} Enregistrer</button>
+            <button class="button" type="submit" name="action" value="export">{{ icon("upload", 16) }} Exporter en SVG</button>
+            {% endif %}
+        </div>
+
+        {% if error %}<p class="tone-danger">{{ error }}</p>{% endif %}
+
+        {% if run %}
+        {% if run.passed %}
+        <h3 class="tone-success">Montage réussi{% if first %} · +{{ level_xp }} XP{% endif %}</h3>
+        <p>{{ level.explanation }}</p>
+        {% else %}
+        <h3>Pas encore : regardez les étapes à revoir</h3>
+        {% endif %}
+        <ul>
+            {% for check in run.checks %}
+            <li><span class="{{ 'tone-success' if check.passed else 'tone-danger' }}">{{ "réussi" if check.passed else "à revoir" }}</span> · {{ check.message }}{% for detail in check.details %}<br><small class="muted">{{ detail }}</small>{% endfor %}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if simulation %}
+        <h3 class="section-gap">Simulation</h3>
+        <p class="card-subtitle">Fils sous tension en rouge ; un clic manœuvre une commande, un poussoir reste appuyé jusqu'au clic suivant</p>
+        <div class="schema-actions">
+            {% for control in simulation.controls %}
+            <button class="button{% if control.on %} button-primary{% endif %}" type="submit" name="action" value="operate:{{ control.id }}">{{ control.label }} : {{ control.status }}</button>
+            {% endfor %}
+        </div>
+        {% for fault in simulation.faults %}<p class="tone-danger">{{ fault }}</p>{% endfor %}
+        <div class="ladder-drawing">{{ simulation.svg | safe }}</div>
+        {% endif %}
+    </form>
+
+    {% if free and overview.schemas %}
+    <h3 class="section-gap">Schémas enregistrés</h3>
+    <ul>
+        {% for name in overview.schemas %}
+        <li>
+            <a href="{{ url_for('show_circuit').path }}?free=1&amp;schema={{ name | urlencode }}#work">{{ name }}</a>
+            <form class="inline-form" method="post" action="{{ url_for('delete_circuit_schema').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <input type="hidden" name="name" value="{{ name }}">
+                <button class="link-button" type="submit">Supprimer</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <p><a href="{{ url_for('show_circuit').path }}">Choisir un autre montage</a></p>
+</article>
+{% endif %}
+
+<article class="card section-gap">
+    <h2>Choisir un montage</h2>
+    <p class="card-subtitle">Chaque montage réussi rapporte {{ level_xp }} XP ; le mode libre accepte tous les composants</p>
+    <div class="trophy-grid">
+        {% for row in overview.rows %}
+        <a class="trophy aptitude-tile{% if row.passed %} is-ready{% endif %}" href="{{ url_for('show_circuit').path }}?level={{ row.id }}#work">
+            <strong>{{ icon("zap", 18) }} {{ loop.index }}. {{ row.title }}{% if row.passed %} <span class="badge badge-success">Réussi</span>{% endif %}</strong>
+            <small class="muted">{{ row.goal }}</small>
+        </a>
+        {% endfor %}
+        <a class="trophy aptitude-tile" href="{{ url_for('show_circuit').path }}?free=1#work">
+            <strong>{{ icon("pencil", 18) }} Mode libre</strong>
+            <small class="muted">Tous les composants, schémas enregistrés et exportables</small>
+        </a>
+    </div>
+</article>
+{% endblock %}

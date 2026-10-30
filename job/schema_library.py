@@ -508,6 +508,116 @@ COMPONENT_TYPES = (
         '<text x="40" y="55" text-anchor="middle" font-size="12" '
         'font-weight="bold" fill="#0f172a">REG</text>',
     ),
+    ComponentType(
+        "alimentation",
+        "Alimentation 230 V",
+        ELECTRICAL,
+        (("L", TOP), ("N", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="30"/>'
+        '<circle cx="40" cy="50" r="20"/><line x1="40" y1="70" x2="40" y2="100"/>'
+        '<path d="M30,50 q5,-8 10,0 t10,0"/></g>'
+        '<text x="48" y="16" font-size="12" font-weight="bold" fill="#0f172a">L</text>'
+        '<text x="48" y="94" font-size="12" font-weight="bold" fill="#0f172a">N</text>',
+    ),
+    two_terminals(
+        "lampe_bornes",
+        "Lampe",
+        ELECTRICAL,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="28"/>'
+        '<circle cx="40" cy="50" r="22"/><line x1="25" y1="35" x2="55" y2="65"/>'
+        '<line x1="55" y1="35" x2="25" y2="65"/>'
+        '<line x1="40" y1="72" x2="40" y2="100"/></g>',
+    ),
+    two_terminals(
+        "moteur_mono",
+        "Moteur monophasé",
+        ELECTRICAL,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="24"/>'
+        '<circle cx="40" cy="50" r="26"/><line x1="40" y1="76" x2="40" y2="100"/></g>'
+        '<text x="40" y="52" text-anchor="middle" font-size="17" '
+        'font-weight="bold" fill="#0f172a">M</text>'
+        '<text x="40" y="68" text-anchor="middle" font-size="12" '
+        'font-weight="bold" fill="#0f172a">1~</text>',
+    ),
+    two_terminals(
+        "bouton_marche",
+        "Bouton poussoir à fermeture",
+        ELECTRICAL,
+        CONTACT + f'<g {STROKE}><line x1="32" y1="53" x2="12" y2="53" '
+        'stroke-dasharray="4 3"/><line x1="12" y1="45" x2="12" y2="61"/></g>',
+    ),
+    two_terminals(
+        "bouton_arret",
+        "Bouton poussoir à ouverture",
+        ELECTRICAL,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="32"/>'
+        '<line x1="40" y1="32" x2="54" y2="32"/>'
+        '<line x1="40" y1="70" x2="40" y2="100"/>'
+        '<line x1="40" y1="70" x2="58" y2="28"/>'
+        '<line x1="49" y1="50" x2="12" y2="50" stroke-dasharray="4 3"/>'
+        '<line x1="12" y1="42" x2="12" y2="58"/></g>',
+    ),
+    ComponentType(
+        "va_et_vient",
+        "Interrupteur va-et-vient",
+        ELECTRICAL,
+        (("a", (24, 0)), ("b", (56, 0)), ("commun", BOTTOM)),
+        f'<g {STROKE}><line x1="24" y1="0" x2="24" y2="30"/>'
+        '<line x1="56" y1="0" x2="56" y2="30"/>'
+        '<line x1="40" y1="70" x2="40" y2="100"/>'
+        '<line x1="40" y1="70" x2="26" y2="34"/></g>',
+    ),
+    two_terminals(
+        "contact_relais",
+        "Contact du relais, à fermeture",
+        ELECTRICAL,
+        CONTACT,
+    ),
+    two_terminals(
+        "contact_relais_nf",
+        "Contact du relais, à ouverture",
+        ELECTRICAL,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="32"/>'
+        '<line x1="40" y1="32" x2="54" y2="32"/>'
+        '<line x1="40" y1="70" x2="40" y2="100"/>'
+        '<line x1="40" y1="70" x2="58" y2="28"/></g>',
+    ),
+    two_terminals(
+        "telerupteur",
+        "Bobine de télérupteur",
+        ELECTRICAL,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="34"/>'
+        '<rect x="18" y="34" width="44" height="32"/>'
+        '<line x1="40" y1="66" x2="40" y2="100"/></g>'
+        '<text x="40" y="55" text-anchor="middle" font-size="12" '
+        'font-weight="bold" fill="#0f172a">TL</text>',
+    ),
+    two_terminals(
+        "contact_telerupteur",
+        "Contact du télérupteur",
+        ELECTRICAL,
+        CONTACT
+        + '<text x="50" y="58" font-size="11" font-weight="bold" '
+        'fill="#0f172a">TL</text>',
+    ),
+    two_terminals(
+        "voltmetre",
+        "Voltmètre",
+        ELECTRICAL,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="30"/>'
+        '<circle cx="40" cy="50" r="20"/><line x1="40" y1="70" x2="40" y2="100"/></g>'
+        '<text x="40" y="56" text-anchor="middle" font-size="17" '
+        'font-weight="bold" fill="#0f172a">V</text>',
+    ),
+    two_terminals(
+        "amperemetre",
+        "Ampèremètre",
+        ELECTRICAL,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="30"/>'
+        '<circle cx="40" cy="50" r="20"/><line x1="40" y1="70" x2="40" y2="100"/></g>'
+        '<text x="40" y="56" text-anchor="middle" font-size="17" '
+        'font-weight="bold" fill="#0f172a">A</text>',
+    ),
     network_device("internet", "Internet", "Internet"),
     network_device("routeur", "Routeur", "Routeur"),
     network_device("pare_feu", "Pare-feu", "Pare-feu"),

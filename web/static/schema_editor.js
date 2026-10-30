@@ -256,15 +256,19 @@
             }
         }
 
-        function addComponent(pType) {
-            var vCell = getFirstFreeCell();
+        // pCell et pId servent à recharger un schéma enregistré, tel quel.
+        function addComponent(pType, pCell, pId) {
+            var vCell = pCell || getFirstFreeCell();
             var vComponent = vConfig.components[pType];
 
-            if (countType(pType) >= getLimit(pType) || !vCell) {
+            if (!vComponent || countType(pType) >= getLimit(pType) || !vCell) {
                 return;
             }
 
-            var vInstance = newInstance(pType);
+            var vInstance = pId ? {
+                id: pId,
+                number: /-\d+$/.test(pId) ? Number(pId.split("-").pop()) : null
+            } : newInstance(pType);
             var vLines = vComponent.lines.slice();
             var vGroup = createElement("g", { class: "schema-component", "data-component": vInstance.id });
 
@@ -429,6 +433,21 @@
             select(null);
             save();
         });
+
+        var vInitial = pRoot.querySelector("[data-schema-initial]");
+
+        if (vInitial) {
+            var vSchema = JSON.parse(vInitial.textContent) || {};
+
+            (vSchema.components || []).forEach(function (pItem) {
+                addComponent(pItem.type, [pItem.x, pItem.y], pItem.id);
+            });
+            (vSchema.wires || []).forEach(function (pWire) {
+                if (vComponents[pWire[0]] && vComponents[pWire[2]]) {
+                    addWire([pWire[0], pWire[1]], [pWire[2], pWire[3]]);
+                }
+            });
+        }
 
         refreshPalette();
         pRoot.hidden = false;

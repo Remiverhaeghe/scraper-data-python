@@ -34,6 +34,7 @@ XP_RULES = {
     "troubleshooting": ("Panne résolue, plus 2 par tranche de 10 points", 20),
     "ladder_level": ("Niveau d'automate réussi", 25),
     "sql_level": ("Niveau SQL réussi", 15),
+    "circuit_level": ("Montage électrique réussi", 20),
     "interested": ("Offre marquée « Intéressé »", 5),
     "applied": ("Candidature envoyée", 30),
     "follow_up": ("Relance faite", 15),
@@ -58,6 +59,9 @@ LADDER_PROGRESS_KEY = "ladder_progress"
 
 # Dialecte choisi, requêtes et réussites du bac à sable SQL (job/sql_levels.py)
 SQL_PROGRESS_KEY = "sql_progress"
+
+# Montages réussis et schémas libres de l'éditeur de circuits (job/circuit_levels.py)
+CIRCUIT_PROGRESS_KEY = "circuit_progress"
 
 # Statut de candidature vers son action
 STATUS_ACTIONS = {
@@ -216,13 +220,15 @@ def load_activity(pDatabaseFile):
         if isinstance(vEntry, dict) and vEntry.get("passed_at"):
             add_action(rActivity, read_day(vEntry["passed_at"]), "ladder_level")
 
-    vSqlLevels = load_json_setting(pDatabaseFile, SQL_PROGRESS_KEY, {}, dict).get(
-        "levels"
-    )
+    for vKey, vAction in (
+        (SQL_PROGRESS_KEY, "sql_level"),
+        (CIRCUIT_PROGRESS_KEY, "circuit_level"),
+    ):
+        vLevels = load_json_setting(pDatabaseFile, vKey, {}, dict).get("levels")
 
-    for vEntry in (vSqlLevels if isinstance(vSqlLevels, dict) else {}).values():
-        if isinstance(vEntry, dict) and vEntry.get("passed_at"):
-            add_action(rActivity, read_day(vEntry["passed_at"]), "sql_level")
+        for vEntry in (vLevels if isinstance(vLevels, dict) else {}).values():
+            if isinstance(vEntry, dict) and vEntry.get("passed_at"):
+                add_action(rActivity, read_day(vEntry["passed_at"]), vAction)
 
     for vDay, vQuests in load_quest_log(pDatabaseFile).get("done", {}).items():
         for vQuest in vQuests:

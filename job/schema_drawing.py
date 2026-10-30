@@ -102,12 +102,13 @@ def route_wire(pStart, pEnd, pCorridorX, pLane=0):
     return rPath
 
 
-def draw_wire(pEndA, pEndB, pLane=0, pWrong=False):
+def draw_wire(pEndA, pEndB, pLane=0, pWrong=False, pColor=None):
     """Retourne le fil entre deux bornes, et les points qui marquent ses extrémités.
 
     Chaque extrémité est un triplet (type, borne, origine du symbole). Le fil
     emprunte le couloir de la colonne la plus à droite des deux : il passe entre
-    les colonnes sans longer les symboles de la première.
+    les colonnes sans longer les symboles de la première. pColor remplace la
+    couleur habituelle, par exemple pour un fil sous tension.
     """
 
     vStart = get_port_position(*pEndA)
@@ -119,7 +120,7 @@ def draw_wire(pEndA, pEndB, pLane=0, pWrong=False):
         pLane,
     )
 
-    vColor = WRONG_WIRE_COLOR if pWrong else WIRE_COLOR
+    vColor = pColor or (WRONG_WIRE_COLOR if pWrong else WIRE_COLOR)
     vDash = ' stroke-dasharray="7 4"' if pWrong else ""
 
     rSvg = (

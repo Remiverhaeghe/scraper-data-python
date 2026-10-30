@@ -3042,3 +3042,69 @@ def test_sql_level_is_run_on_the_web(client):
     assert "<td>2340</td>" in vResult
     assert client.get("/sql?level=inconnu").status_code == 404
     assert client.post("/sql/dialect", data={"dialect": "oracle"}).status_code == 400
+
+
+def test_circuit_is_checked_operated_saved_and_exported_on_the_web(client):
+    """Vérifie un montage réussi, un poussoir manœuvré, un schéma libre et son export."""
+
+    from job.circuit_levels import get_solution, load_levels
+
+    vLevel = load_levels()["demarrage-moteur"]
+    vComponents, vWires, _ = get_solution(vLevel)
+    vAnswer = json.dumps({"components": vComponents, "wires": vWires})
+
+    assert (
+        "moteur avec auto-maintien"
+        in client.get("/circuit?level=demarrage-moteur").text
+    )
+
+    vChecked = client.post(
+        "/circuit/run",
+        data={"level": "demarrage-moteur", "answer": vAnswer, "action": "check"},
+    ).text
+
+    assert "Montage réussi · +20 XP" in vChecked
+    assert "<svg" in vChecked
+
+    vStarted = client.post(
+        "/circuit/run",
+        data={
+            "level": "demarrage-moteur",
+            "answer": vAnswer,
+            "action": "operate:bouton_marche",
+            "inputs": "{}",
+            "memory": "{}",
+        },
+    ).text
+
+    assert "tourne" in vStarted
+    assert (
+        "Placez au moins un composant"
+        in client.post(
+            "/circuit/run",
+            data={"level": "demarrage-moteur", "answer": "", "action": "check"},
+        ).text
+    )
+
+    vFree = json.dumps(
+        {
+            "components": [{"id": "pile", "type": "pile", "x": 0, "y": 0}],
+            "wires": [],
+        }
+    )
+    vSaved = client.post(
+        "/circuit/run",
+        data={"answer": vFree, "action": "save", "name": "Ma pile", "value_pile": "12"},
+        follow_redirects=False,
+    )
+
+    assert vSaved.status_code == 303
+    assert "Ma pile" in client.get("/circuit?free=1&schema=Ma+pile").text
+
+    vExport = client.post(
+        "/circuit/run", data={"answer": vFree, "action": "export", "name": "Ma pile"}
+    )
+
+    assert vExport.headers["content-type"].startswith("image/svg+xml")
+    assert 'filename="Ma-pile.svg"' in vExport.headers["content-disposition"]
+    assert client.get("/circuit?level=inconnu").status_code == 404

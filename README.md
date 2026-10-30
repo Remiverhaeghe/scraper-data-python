@@ -303,7 +303,7 @@ Documents/JobBoard/
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
-- [x] 34 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] 36 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
@@ -623,6 +623,16 @@ Page SQL du bureau et du web, pour s'exercer aux requêtes sur la base d'une usi
 - [x] Erreurs classiques expliquées : `= NULL`, `COUNT(*)` après un LEFT JOIN, NOT IN face à des NULL, BETWEEN sur des dates avec heure, agrégat dans WHERE, colonne ambiguë
 - [x] Base SQLite en mémoire recréée à chaque requête : seules SELECT, INSERT, UPDATE et DELETE sont permises, requête arrêtée au bout de 2 secondes
 
+### Schémas électriques
+
+Page Schémas électriques du bureau et du web, pour câbler puis manœuvrer des montages :
+
+- [x] Éditeur de schémas des questions de révision : composants posés sur une grille, fils tirés de borne à borne ; symboles ajoutés pour l'alimentation 230 V, la lampe, le moteur monophasé, les boutons poussoirs, le va-et-vient, les contacts de relais, le télérupteur, le voltmètre et l'ampèremètre
+- [x] Simulateur en courant continu (analyse nodale, sans dépendance) : courants et tensions, lampes allumées ou faibles, moteur qui tourne, LED avec son courant, relais et auto-maintien, télérupteur, disjoncteur qui déclenche, court-circuit, LED grillée
+- [x] Neuf montages guidés vérifiés par étapes : lampe, deux lampes en parallèle, va-et-vient, télérupteur, démarrage moteur avec auto-maintien, LED et sa résistance, diviseur de tension, mesure de courant, commande d'une lampe 230 V par un relais en 12 V
+- [x] Simulation manœuvrable : fils sous tension en rouge, état de chaque composant sous son nom, un bouton par commande
+- [x] Mode libre : tous les composants, valeurs réglables, schémas enregistrés sous un nom et exportables en SVG
+
 ### Abonnement à l'agenda
 
 Paramètres, « Abonnement à l'agenda », « Créer l'adresse » : l'adresse contient un jeton
@@ -768,6 +778,9 @@ scraper-data-python/
 │   ├── git_levels.py                          # Niveaux Git : objectif, réussite et progression
 │   ├── sql_sandbox.py                         # Bac à sable SQL : base en mémoire, dialectes, comparaison
 │   ├── sql_levels.py                          # Niveaux SQL : vérification et progression
+│   ├── circuit.py                             # Simulateur de circuits : nœuds, relais, défauts
+│   ├── circuit_drawing.py                     # Dessin SVG d'un circuit simulé
+│   ├── circuit_levels.py                      # Montages guidés, vérification, schémas libres
 │   ├── access_tokens.py                       # Jetons d'accès secrets (agenda, application mobile)
 │   ├── mobile_sync.py                         # Contenu hors ligne et réponses de l'application mobile
 │   ├── cv_import.py                           # Import d'un CV : lecture et pré-remplissage du profil
@@ -981,6 +994,7 @@ scraper-data-python/
 │   ├── ladder_machine.py                      # Machine animée du simulateur
 │   ├── git_page.py                            # Bac à sable Git
 │   ├── sql_page.py                            # Bac à sable SQL
+│   ├── circuit_page.py                        # Schémas électriques
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
 │   ├── health_panel.py                        # État de l'application
@@ -1040,6 +1054,7 @@ scraper-data-python/
 │   │   ├── ladder.py                          # Simulateur d'automate
 │   │   ├── git_sandbox.py                     # Bac à sable Git
 │   │   ├── sql_sandbox.py                     # Bac à sable SQL
+│   │   ├── circuit.py                         # Schémas électriques
 │   │   ├── monitoring.py                      # Qualité, journaux et historique
 │   │   ├── profile.py                         # Profil et import du CV
 │   │   ├── progress.py                        # Progression et encart du menu
@@ -1073,6 +1088,7 @@ scraper-data-python/
 │   │   ├── ladder.html                        # Simulateur d'automate
 │   │   ├── git.html                           # Bac à sable Git
 │   │   ├── sql.html                           # Bac à sable SQL
+│   │   ├── circuit.html                       # Schémas électriques
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
 │   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
 │   │   ├── _company_pages_check.html          # Bilan de vérification des pages carrière
@@ -1133,6 +1149,8 @@ scraper-data-python/
 │   │   └── scenarios.json                     # Pannes : machine, mesures, réparations, explication
 │   ├── ladder/
 │   │   └── levels.json                        # Niveaux d'automate : variables, scénario de test, solution
+│   ├── circuit/
+│   │   └── levels.json                        # Montages : palette, étapes vérifiées, solution
 │   ├── sql/
 │   │   ├── atelier.sql                        # Base d'exemple du bac à sable SQL
 │   │   └── levels.json                        # Niveaux SQL : énoncé, solution par dialecte, pièges
@@ -1304,6 +1322,8 @@ scraper-data-python/
 │   │   ├── test_git_levels.py                 # Teste les niveaux Git et leur progression
 │   │   ├── test_sql_sandbox.py                # Teste les dialectes, les protections et la comparaison
 │   │   ├── test_sql_levels.py                 # Teste les solutions, les erreurs classiques et la progression
+│   │   ├── test_circuit.py                    # Teste les lois électriques, les relais et les défauts
+│   │   ├── test_circuit_levels.py             # Teste les montages, les erreurs classiques et les schémas libres
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage
 │   │   ├── test_cv_corpus.py                  # Teste l'import sur des CV fictifs difficiles
 │   │   ├── test_filter.py                     # Teste les filtres des offres
@@ -1436,6 +1456,7 @@ scraper-data-python/
 │   │   ├── test_ladder_page.py                 # Teste la vérification et la simulation pilotée
 │   │   ├── test_git_page.py                    # Teste la page du bac à sable Git
 │   │   ├── test_sql_page.py                    # Teste la page du bac à sable SQL
+│   │   ├── test_circuit_page.py                # Teste un montage réussi, manœuvré, et le mode libre
 │   │   ├── test_schema_editor.py               # Teste l'éditeur de schéma du bureau
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_company_pages_panel.py         # Teste les pages carrière suivies
