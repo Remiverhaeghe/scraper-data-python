@@ -28,6 +28,7 @@ from gui.aptitude_page import AptitudePage
 from gui.certifications_page import CertificationsPage
 from gui.challenges_page import ChallengesPage
 from gui.circuit_page import CircuitPage
+from gui.devops_page import DevopsPage
 from gui.git_page import GitPage
 from gui.history_page import HistoryPage
 from gui.ladder_page import LadderPage
@@ -100,6 +101,7 @@ DATA_ONLY_PAGES = (
     "ladder",
     "sql",
     "circuit",
+    "devops",
     "quality",
 )
 
@@ -230,6 +232,7 @@ class MainWindow(QMainWindow):
         self.add_page("ladder", "Automate", "cpu", LadderPage(vDatabaseFile))
         self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
         self.add_page("sql", "SQL", "database", SqlPage(vDatabaseFile))
+        self.add_page("devops", "Maven et Docker", "server", DevopsPage(vDatabaseFile))
         self.add_page(
             "circuit", "Schémas électriques", "zap", CircuitPage(vDatabaseFile)
         )

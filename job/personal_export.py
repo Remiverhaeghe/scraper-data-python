@@ -38,6 +38,7 @@ EXPORTED_SETTINGS = (
     "ladder_progress",
     "sql_progress",
     "circuit_progress",
+    "devops_progress",
 )
 
 ATTACHMENT_PREFIX = "pieces_jointes/"
@@ -55,8 +56,8 @@ Chaque fichier .json se lit avec un éditeur de texte ou un navigateur :
 - recherches_enregistrees.json, historique_recherches.json : vos recherches
 - reponses_revision.json, defis.json, niveaux_git.json : votre révision
 - tests_recrutement.json : vos parties de tests de recrutement ; les pannes
-  résolues, vos programmes d'automate, vos requêtes SQL et vos schémas électriques
-  sont dans reglages.json
+  résolues, vos programmes d'automate, vos requêtes SQL, vos schémas électriques et
+  vos niveaux Maven et Docker sont dans reglages.json
 - pieces_jointes/ : les CV et lettres joints aux candidatures, les certificats
 
 Les offres publiées par les sites d'emploi et les jetons d'accès n'y figurent pas.

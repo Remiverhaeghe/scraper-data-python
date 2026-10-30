@@ -3108,3 +3108,41 @@ def test_circuit_is_checked_operated_saved_and_exported_on_the_web(client):
     assert vExport.headers["content-type"].startswith("image/svg+xml")
     assert 'filename="Ma-pile.svg"' in vExport.headers["content-disposition"]
     assert client.get("/circuit?level=inconnu").status_code == 404
+
+
+def test_devops_level_is_played_on_the_web(client):
+    """Vérifie une commande Docker refusée, la solution réussie et la remise à zéro."""
+
+    from job.devops_levels import load_levels
+
+    vLevel = load_levels()["docker-port-pris"]
+
+    assert "Le port déjà pris" in client.get("/devops?level=docker-port-pris").text
+
+    def run(pCommand):
+        return client.post(
+            "/devops/run",
+            data={
+                "level": vLevel["id"],
+                "file": vLevel["solution"],
+                "command": pCommand,
+            },
+        ).text
+
+    run("docker build -t atelier:1.0 .")
+
+    assert "port is already allocated" in run("docker run -d -p 8080:8080 atelier:1.0")
+
+    run("docker run -d --name atelier -p 8081:8080 atelier:1.0")
+    vResult = run("curl http://localhost:8081/")
+
+    assert "Objectif atteint · +20 XP" in vResult
+    assert "devops-console" in vResult
+
+    vReset = client.post(
+        "/devops/reset", data={"level": vLevel["id"]}, follow_redirects=False
+    )
+
+    assert vReset.status_code == 303
+    assert "devops-console" not in client.get("/devops?level=docker-port-pris").text
+    assert client.get("/devops?level=inconnu").status_code == 404

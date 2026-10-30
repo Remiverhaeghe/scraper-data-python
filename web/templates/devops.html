@@ -1,0 +1,76 @@
+{# Maven et Docker (routes /devops) : simulateurs job/maven_sim.py et job/docker_sim.py,
+   niveaux et état gardé côté serveur par job/devops_levels.py. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Maven et Docker{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Maven et Docker", "Corrigez un pom.xml ou un Dockerfile, puis lancez les commandes dans une console simulée : rien n'est exécuté sur la machine", "server") }}
+
+<section class="grid grid-4">
+    {{ ui.stat(overview.passed ~ " / " ~ overview.total, "Niveaux réussis", "server", "blue") }}
+</section>
+
+{% if view %}
+<article class="card section-gap" id="level">
+    <h2>{{ view.level.title }}{% if view.passed %} <span class="badge badge-success">Réussi</span>{% endif %}</h2>
+    <p>{{ view.level.goal }}</p>
+    <details>
+        <summary>Indice</summary>
+        <p>{{ view.level.hint }}</p>
+    </details>
+    <details>
+        <summary>Solution</summary>
+        <pre class="sql-code">{{ view.level.solution }}</pre>
+        <p class="card-subtitle">Commandes : {{ view.level.commands | join(" · ") }}</p>
+    </details>
+
+    <form class="profile-form" method="post" action="{{ url_for('run_devops').path }}#level">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="level" value="{{ view.level.id }}">
+        <label>{{ view.file_name }} <textarea class="sql-code" name="file" rows="14" maxlength="{{ max_file_length }}" spellcheck="false">{{ view.file }}</textarea></label>
+        <label>Commande
+            <input class="sql-code" type="text" name="command" maxlength="{{ max_command_length }}" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus placeholder="{{ 'mvn package' if view.level.tool == 'maven' else 'docker build -t atelier:1.0 .' }}">
+        </label>
+        <button class="button button-primary" type="submit">{{ icon("terminal", 16) }} Exécuter</button>
+    </form>
+
+    {% if run %}
+    {% if run.reached %}
+    <h3 class="tone-success">Objectif atteint{% if run.first %} · +{{ level_xp }} XP{% endif %}</h3>
+    <p>{{ view.level.explanation }}</p>
+    {% elif run.message %}
+    <p class="tone-warning">{{ run.message }}</p>
+    {% endif %}
+    {% endif %}
+
+    {% if view.console %}
+    <pre class="devops-console">{{ view.console | join("\n") }}</pre>
+    {% endif %}
+
+    <form class="inline-form section-gap" method="post" action="{{ url_for('reset_devops').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="level" value="{{ view.level.id }}">
+        <button class="link-button" type="submit">Recommencer le niveau</button>
+    </form>
+    <p><a href="{{ url_for('show_devops').path }}">Choisir un autre niveau</a></p>
+</article>
+{% endif %}
+
+<article class="card section-gap">
+    <h2>Choisir un niveau</h2>
+    <p class="card-subtitle">Chaque niveau réussi rapporte {{ level_xp }} XP</p>
+    {% for series in overview.series %}
+    <h3 class="level-series">{{ icon(series.icon, 18) }} {{ series.label }} <small class="muted">{{ series.done }} / {{ series.rows | length }} réussi(s)</small></h3>
+    <div class="challenge-list">
+        {% for row in series.rows %}
+        <a class="challenge-item{% if row.passed %} is-done{% endif %}{% if view and view.level.id == row.id %} is-active{% endif %}" href="{{ url_for('show_devops').path }}?level={{ row.id }}#level">
+            <strong>{% if row.passed %}{{ icon("circle-check", 16) }} {% endif %}{{ row.title }}</strong>
+            <span class="card-subtitle">{{ row.goal }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</article>
+{% endblock %}

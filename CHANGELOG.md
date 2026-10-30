@@ -69,6 +69,10 @@ dans l'historique git.
   (courants, tensions, relais, télérupteur, disjoncteur, LED), neuf montages
   guidés de la lampe au démarrage moteur, mode libre avec schémas enregistrés
   et export SVG ; trophées Premier montage et Électricien
+- Maven et Docker : pom.xml et Dockerfile à corriger, commandes simulées
+  (cycle de vie Maven, dependency:tree, build, run, ps, logs, rm, volume,
+  curl), douze niveaux des coordonnées Maven aux volumes Docker ; trophées
+  Premier build et Intégrateur
 - Offres à double profil, maintenance et informatique : informatique
   industrielle, MES, supervision, OPC UA, administration de GMAO, ou
   maintenance avec développement ; badge, filtre « Double profil », tri dédié

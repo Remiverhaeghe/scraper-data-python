@@ -35,6 +35,7 @@ XP_RULES = {
     "ladder_level": ("Niveau d'automate réussi", 25),
     "sql_level": ("Niveau SQL réussi", 15),
     "circuit_level": ("Montage électrique réussi", 20),
+    "devops_level": ("Niveau Maven ou Docker réussi", 20),
     "interested": ("Offre marquée « Intéressé »", 5),
     "applied": ("Candidature envoyée", 30),
     "follow_up": ("Relance faite", 15),
@@ -62,6 +63,9 @@ SQL_PROGRESS_KEY = "sql_progress"
 
 # Montages réussis et schémas libres de l'éditeur de circuits (job/circuit_levels.py)
 CIRCUIT_PROGRESS_KEY = "circuit_progress"
+
+# Fichiers, hôte Docker et réussites des niveaux Maven et Docker (job/devops_levels.py)
+DEVOPS_PROGRESS_KEY = "devops_progress"
 
 # Statut de candidature vers son action
 STATUS_ACTIONS = {
@@ -223,6 +227,7 @@ def load_activity(pDatabaseFile):
     for vKey, vAction in (
         (SQL_PROGRESS_KEY, "sql_level"),
         (CIRCUIT_PROGRESS_KEY, "circuit_level"),
+        (DEVOPS_PROGRESS_KEY, "devops_level"),
     ):
         vLevels = load_json_setting(pDatabaseFile, vKey, {}, dict).get("levels")
 

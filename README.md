@@ -303,7 +303,7 @@ Documents/JobBoard/
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
-- [x] 36 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] 38 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
@@ -633,6 +633,16 @@ Page Schémas électriques du bureau et du web, pour câbler puis manœuvrer des
 - [x] Simulation manœuvrable : fils sous tension en rouge, état de chaque composant sous son nom, un bouton par commande
 - [x] Mode libre : tous les composants, valeurs réglables, schémas enregistrés sous un nom et exportables en SVG
 
+### Maven et Docker
+
+Page Maven et Docker du bureau et du web : un fichier à corriger, des commandes lancées dans une console simulée, rien n'est exécuté sur la machine :
+
+- [x] Maven : pom.xml lu (coordonnées, propriétés, dépendances, plugins), dépendances résolues dans un dépôt central réduit, cycle de vie compile, test, package avec les messages de Maven, mvn dependency:tree
+- [x] Six niveaux Maven : coordonnées, dépendance manquante, scopes, version de Java, plugin surefire trop ancien, conflit de versions
+- [x] Docker : Dockerfile construit instruction par instruction, docker build, run (-p, -v, -e, --name), ps, logs, stop, rm, volume, et curl pour vérifier que le service répond
+- [x] Six niveaux Docker : premier Dockerfile, conteneur qui s'arrête aussitôt, port déjà pris, application Python, variable d'environnement, données gardées par un volume
+- [x] Fichier, conteneurs et console gardés d'une séance à l'autre ; niveau remis à zéro sur demande
+
 ### Abonnement à l'agenda
 
 Paramètres, « Abonnement à l'agenda », « Créer l'adresse » : l'adresse contient un jeton
@@ -781,6 +791,9 @@ scraper-data-python/
 │   ├── circuit.py                             # Simulateur de circuits : nœuds, relais, défauts
 │   ├── circuit_drawing.py                     # Dessin SVG d'un circuit simulé
 │   ├── circuit_levels.py                      # Montages guidés, vérification, schémas libres
+│   ├── maven_sim.py                           # Maven simulé : pom.xml, dépendances, cycle de vie
+│   ├── docker_sim.py                          # Docker simulé : Dockerfile, conteneurs, ports, volumes
+│   ├── devops_levels.py                       # Niveaux Maven et Docker, objectif et progression
 │   ├── access_tokens.py                       # Jetons d'accès secrets (agenda, application mobile)
 │   ├── mobile_sync.py                         # Contenu hors ligne et réponses de l'application mobile
 │   ├── cv_import.py                           # Import d'un CV : lecture et pré-remplissage du profil
@@ -995,6 +1008,7 @@ scraper-data-python/
 │   ├── git_page.py                            # Bac à sable Git
 │   ├── sql_page.py                            # Bac à sable SQL
 │   ├── circuit_page.py                        # Schémas électriques
+│   ├── devops_page.py                         # Maven et Docker
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
 │   ├── health_panel.py                        # État de l'application
@@ -1055,6 +1069,7 @@ scraper-data-python/
 │   │   ├── git_sandbox.py                     # Bac à sable Git
 │   │   ├── sql_sandbox.py                     # Bac à sable SQL
 │   │   ├── circuit.py                         # Schémas électriques
+│   │   ├── devops.py                          # Maven et Docker
 │   │   ├── monitoring.py                      # Qualité, journaux et historique
 │   │   ├── profile.py                         # Profil et import du CV
 │   │   ├── progress.py                        # Progression et encart du menu
@@ -1089,6 +1104,7 @@ scraper-data-python/
 │   │   ├── git.html                           # Bac à sable Git
 │   │   ├── sql.html                           # Bac à sable SQL
 │   │   ├── circuit.html                       # Schémas électriques
+│   │   ├── devops.html                        # Maven et Docker
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
 │   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
 │   │   ├── _company_pages_check.html          # Bilan de vérification des pages carrière
@@ -1149,6 +1165,8 @@ scraper-data-python/
 │   │   └── scenarios.json                     # Pannes : machine, mesures, réparations, explication
 │   ├── ladder/
 │   │   └── levels.json                        # Niveaux d'automate : variables, scénario de test, solution
+│   ├── devops/
+│   │   └── levels.json                        # Niveaux Maven et Docker : fichier, objectif, solution
 │   ├── circuit/
 │   │   └── levels.json                        # Montages : palette, étapes vérifiées, solution
 │   ├── sql/
@@ -1324,6 +1342,7 @@ scraper-data-python/
 │   │   ├── test_sql_levels.py                 # Teste les solutions, les erreurs classiques et la progression
 │   │   ├── test_circuit.py                    # Teste les lois électriques, les relais et les défauts
 │   │   ├── test_circuit_levels.py             # Teste les montages, les erreurs classiques et les schémas libres
+│   │   ├── test_devops.py                     # Teste Maven, Docker, les niveaux et leur progression
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage
 │   │   ├── test_cv_corpus.py                  # Teste l'import sur des CV fictifs difficiles
 │   │   ├── test_filter.py                     # Teste les filtres des offres
@@ -1457,6 +1476,7 @@ scraper-data-python/
 │   │   ├── test_git_page.py                    # Teste la page du bac à sable Git
 │   │   ├── test_sql_page.py                    # Teste la page du bac à sable SQL
 │   │   ├── test_circuit_page.py                # Teste un montage réussi, manœuvré, et le mode libre
+│   │   ├── test_devops_page.py                 # Teste un niveau joué dans la console
 │   │   ├── test_schema_editor.py               # Teste l'éditeur de schéma du bureau
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_company_pages_panel.py         # Teste les pages carrière suivies

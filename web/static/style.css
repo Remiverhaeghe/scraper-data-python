@@ -2908,3 +2908,16 @@ textarea.companies-preferred {
     border-bottom: 1px solid var(--warning);
     text-align: center;
 }
+
+/* Console simulée de Maven et Docker : défile plutôt que d'élargir la page */
+.devops-console {
+    max-height: 420px;
+    overflow: auto;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 0.85rem;
+    white-space: pre;
+}

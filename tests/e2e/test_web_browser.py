@@ -48,6 +48,8 @@ PAGES = (
     "/circuit",
     "/circuit?level=demarrage-moteur",
     "/circuit?free=1",
+    "/devops",
+    "/devops?level=docker-volume",
     "/troubleshooting/play?scenario=convoyeur-arret&actions=check:operateur",
     "/compare",
     "/logs",
