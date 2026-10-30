@@ -3,7 +3,9 @@
 from datetime import date
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
+    QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -22,6 +24,7 @@ from gui.widgets import (
     create_page_header,
     create_scroll_content,
 )
+from job.achievements import HEATMAP_WEEKS, get_heat_level, sort_achievements
 from job.progress import build_progress
 from utils.logger import get_logger
 
@@ -75,6 +78,114 @@ def create_quest_row(pQuest):
     vLayout.addWidget(vXp)
 
     return rRow
+
+
+TROPHY_COLUMNS = 4
+
+# Taille d'une case de la carte d'activité, et espace entre deux cases
+HEAT_CELL = 14
+HEAT_GAP = 3
+
+
+def create_trophy_tile(pAchievement):
+    """Construit la tuile d'un trophée : obtenu en couleur, à venir grisé avec son avancée."""
+
+    vUnlocked = pAchievement["unlocked"]
+    vColor, vBackground = (
+        ACCENTS["amber"] if vUnlocked else (COLORS["muted"], COLORS["surface_alt"])
+    )
+
+    rTile = QFrame()
+    rTile.setObjectName("trophyTile")
+    rTile.setStyleSheet(
+        f"QFrame#trophyTile {{ background: {vBackground}; border-radius: 12px; }}"
+    )
+
+    vTitle = QLabel(pAchievement["title"])
+    vTitle.setWordWrap(True)
+    vTitle.setStyleSheet(
+        f"color: {vColor if vUnlocked else COLORS['text']}; font-weight: 700;"
+    )
+
+    vDescription = QLabel(pAchievement["description"])
+    vDescription.setObjectName("cardSubtitle")
+    vDescription.setWordWrap(True)
+
+    if vUnlocked:
+        vState = "Obtenu le " + date.fromisoformat(
+            pAchievement["unlocked_on"]
+        ).strftime("%d/%m/%Y")
+    elif pAchievement["hidden"]:
+        vState = ""
+    else:
+        vState = f"{pAchievement['progress']} / {pAchievement['target']}"
+
+    vStateLabel = QLabel(vState)
+    vStateLabel.setObjectName("cardSubtitle")
+
+    vTop = QHBoxLayout()
+    vTop.setSpacing(8)
+    vTop.addWidget(create_icon_label(pAchievement["icon"], vColor, 22))
+    vTop.addWidget(vTitle, 1)
+
+    vLayout = QVBoxLayout(rTile)
+    vLayout.setContentsMargins(12, 10, 12, 10)
+    vLayout.setSpacing(4)
+    vLayout.addLayout(vTop)
+    vLayout.addWidget(vDescription)
+    vLayout.addWidget(vStateLabel)
+
+    return rTile
+
+
+class Heatmap(QWidget):
+    """Carte d'activité : une case par jour, une colonne par semaine, plus foncée
+    quand la journée a rapporté plus de points."""
+
+    def __init__(self):
+        """Crée une carte vide ; set_days la remplit."""
+        super().__init__()
+
+        self.days = []
+        self.setFixedHeight(7 * (HEAT_CELL + HEAT_GAP) + 4)
+
+    def set_days(self, pDays):
+        """Remplace les jours affichés : dicts {day, xp}, xp à None pour un jour futur."""
+        self.days = pDays
+        self.setToolTip(
+            "Plus la case est foncée, plus la journée a rapporté de points. "
+            f"Total sur la période : {sum(vDay['xp'] or 0 for vDay in pDays)} XP"
+        )
+        self.update()
+
+    def paintEvent(self, _pEvent):  # pylint: disable=invalid-name
+        """Dessine les cases, du lundi en haut au dimanche en bas."""
+        vPainter = QPainter(self)
+        vPainter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        vPainter.setPen(Qt.PenStyle.NoPen)
+        vGreen = QColor(ACCENTS["green"][0])
+
+        for vIndex, vDay in enumerate(self.days):
+            if vDay["xp"] is None:
+                continue
+
+            vLevel = get_heat_level(vDay["xp"])
+            vColor = QColor(COLORS["border"]) if not vLevel else QColor(vGreen)
+
+            if vLevel:
+                vColor.setAlphaF(0.25 + 0.1875 * vLevel)
+
+            vPainter.setBrush(vColor)
+            vPainter.drawRoundedRect(
+                vIndex // 7 * (HEAT_CELL + HEAT_GAP),
+                vIndex % 7 * (HEAT_CELL + HEAT_GAP),
+                HEAT_CELL,
+                HEAT_CELL,
+                3,
+                3,
+            )
+
+        vPainter.end()
 
 
 class ProgressPage(QWidget):
@@ -173,9 +284,35 @@ class ProgressPage(QWidget):
             pKey="progress-rules",
         )
 
+        vTrophyCard, vTrophyLayout = create_card(
+            "Trophées",
+            "Certains restent cachés jusqu'à leur obtention",
+            pIcon="award",
+            pKey="progress-trophies",
+            pOpen=True,
+        )
+        self.trophy_count_label = vTrophyCard.findChild(QLabel, "cardTitle")
+        self.trophy_grid = QGridLayout()
+        self.trophy_grid.setSpacing(12)
+        vTrophyLayout.addLayout(self.trophy_grid)
+
+        vPlayerCard, vPlayerLayout = create_card(
+            "Carte joueur",
+            f"Records et points gagnés jour par jour sur {HEATMAP_WEEKS} semaines",
+            pIcon="user",
+            pKey="progress-player",
+        )
+        self.heatmap = Heatmap()
+        self.records_layout = QGridLayout()
+        self.records_layout.setSpacing(12)
+        vPlayerLayout.addWidget(self.heatmap)
+        vPlayerLayout.addLayout(self.records_layout)
+
         vLayout.addWidget(vBanner)
         vLayout.addLayout(vCards)
         vLayout.addWidget(vQuestCard)
+        vLayout.addWidget(vTrophyCard)
+        vLayout.addWidget(vPlayerCard)
         vLayout.addWidget(vHistoryCard)
         vLayout.addWidget(vRulesCard)
         vLayout.addStretch(1)
@@ -228,6 +365,40 @@ class ProgressPage(QWidget):
             ],
             pEmptyText="Aucun point ces 14 derniers jours : une révision suffit pour commencer",
         )
+
+        vAchievements = pProgress["achievements"]
+        self.trophy_count_label.setText(
+            f"Trophées · {pProgress['achievement_count']} sur {len(vAchievements)}"
+        )
+        clear_layout(self.trophy_grid)
+
+        # Les trophées obtenus d'abord, les plus récents en tête
+        vSorted = sort_achievements(vAchievements)
+
+        for vIndex, vAchievement in enumerate(vSorted):
+            self.trophy_grid.addWidget(
+                create_trophy_tile(vAchievement),
+                vIndex // TROPHY_COLUMNS,
+                vIndex % TROPHY_COLUMNS,
+            )
+
+        self.heatmap.set_days(pProgress["player"]["heatmap"])
+        clear_layout(self.records_layout)
+
+        for vIndex, vRecord in enumerate(pProgress["player"]["records"]):
+            vValue = QLabel(str(vRecord["value"]))
+            vValue.setStyleSheet(
+                f"color: {ACCENTS['blue'][0]}; font-size: 18px; font-weight: 800;"
+            )
+            vLabel = QLabel(vRecord["label"])
+            vLabel.setObjectName("cardSubtitle")
+            vHolder = QWidget()
+            vRecordLayout = QVBoxLayout(vHolder)
+            vRecordLayout.setContentsMargins(0, 0, 0, 0)
+            vRecordLayout.setSpacing(0)
+            vRecordLayout.addWidget(vValue)
+            vRecordLayout.addWidget(vLabel)
+            self.records_layout.addWidget(vHolder, vIndex // 3, vIndex % 3)
 
         clear_layout(self.rules_layout)
 

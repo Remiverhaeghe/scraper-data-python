@@ -152,7 +152,8 @@
         var vNow = {
             xp: Number(pBox.dataset.xp),
             level: Number(pBox.dataset.level),
-            quests: pBox.dataset.quests ? pBox.dataset.quests.split("|") : []
+            quests: pBox.dataset.quests ? pBox.dataset.quests.split("|") : [],
+            trophies: pBox.dataset.trophies ? pBox.dataset.trophies.split("|") : []
         };
         var vLast = readLast();
         var vDelay = 0;
@@ -172,6 +173,13 @@
         vNow.quests.forEach(function (pQuest) {
             if ((vLast.quests || []).indexOf(pQuest) < 0) {
                 showToast("Quête réussie : " + pQuest, pBox, vDelay);
+                vDelay += TOAST_GAP_MS;
+            }
+        });
+
+        vNow.trophies.forEach(function (pTrophy) {
+            if ((vLast.trophies || []).indexOf(pTrophy) < 0) {
+                showToast("Trophée obtenu : " + pTrophy, pBox, vDelay);
                 vDelay += TOAST_GAP_MS;
             }
         });

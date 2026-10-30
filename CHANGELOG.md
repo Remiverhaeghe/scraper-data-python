@@ -6,6 +6,7 @@ dans l'historique git.
 ## Non publié
 
 ### Application mobile 1.8.0
+- Trophées obtenus affichés sur la carte de progression
 - Carte de progression (niveau, série, quêtes) reçue du PC, niveau gagné fêté par
   des confettis ; jeu « Contre la montre » : QCM pendant 60 secondes, multiplicateur
   de série, record gardé sur le téléphone
@@ -121,6 +122,8 @@ dans l'historique git.
   relances, entretiens), niveaux d'Apprenti à Légende, série avec un joker par
   semaine, trois quêtes du jour et une de la semaine selon la situation ;
   « +XP » animé, confettis au passage de niveau, réglage « Jeu et animations »
+- Trophées (28, dont 3 cachés) et carte joueur : records, carte d'activité
+  sur 12 semaines ; « Trophée obtenu » annoncé sur le bureau et le web
 - Menu latéral resserré : toutes les pages tiennent à l'écran avec l'encart
   de niveau
 - Guide pratique pour chacun des 35 thèmes de révision (industrie et

@@ -417,6 +417,20 @@ class MainWindow(QMainWindow):
                 )
                 vDelay += TOAST_GAP_MS
 
+        vUnlockedBefore = {
+            vItem["id"] for vItem in pPrevious["achievements"] if vItem["unlocked"]
+        }
+
+        for vItem in pProgress["achievements"]:
+            if vItem["unlocked"] and vItem["id"] not in vUnlockedBefore:
+                show_xp_gain(
+                    self,
+                    self.progress_box,
+                    f"Trophée obtenu : {vItem['title']}",
+                    vDelay,
+                )
+                vDelay += TOAST_GAP_MS
+
         if pProgress["level"] > pPrevious["level"]:
             logger.info(
                 "Niveau %s atteint : %s", pProgress["level"], pProgress["title"]

@@ -41,6 +41,35 @@
     </ul>
 </article>
 
+<article class="card section-gap">
+    <h2>{{ icon("award") }} Trophées · {{ progress.achievement_count }} sur {{ progress.achievements | length }}</h2>
+    <p class="card-subtitle">Certains restent cachés jusqu'à leur obtention</p>
+    <div class="trophy-grid">
+        {% for item in achievements %}
+        <div class="trophy{% if item.unlocked %} is-unlocked{% endif %}">
+            <strong>{{ icon(item.icon, 20) }} {{ item.title }}</strong>
+            <span class="muted">{{ item.description }}</span>
+            <small class="muted">{% if item.unlocked %}Obtenu le {{ item.unlocked_on[8:10] }}/{{ item.unlocked_on[5:7] }}/{{ item.unlocked_on[:4] }}{% elif not item.hidden %}{{ item.progress }} / {{ item.target }}{% endif %}</small>
+        </div>
+        {% endfor %}
+    </div>
+</article>
+
+<article class="card section-gap">
+    <h2>{{ icon("user") }} Carte joueur</h2>
+    <p class="card-subtitle">Points gagnés jour par jour : plus la case est foncée, plus la journée a rapporté</p>
+    <div class="heatmap" role="img" aria-label="Carte d'activité des 12 dernières semaines">
+        {% for day in progress.player.heatmap %}
+        <i class="heat-{{ heat_level(day.xp) if day.xp is not none else 'future' }}" title="{{ day.day }} : {{ day.xp or 0 }} XP"></i>
+        {% endfor %}
+    </div>
+    <dl class="records">
+        {% for record in progress.player.records %}
+        <div><dt>{{ record.label }}</dt><dd>{{ record.value }}</dd></div>
+        {% endfor %}
+    </dl>
+</article>
+
 <div class="grid grid-dashboard section-gap">
     <article class="card">
         <h2>{{ icon("history") }} Points des 14 derniers jours</h2>

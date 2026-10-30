@@ -1406,6 +1406,79 @@ input[type="number"] {
     }
 }
 
+/* Trophées et carte joueur */
+
+.trophy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.trophy {
+    display: grid;
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--surface-alt, var(--background));
+}
+
+.trophy strong {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    color: var(--muted);
+}
+
+.trophy.is-unlocked {
+    background: var(--amber-light);
+}
+
+.trophy.is-unlocked strong {
+    color: var(--amber);
+}
+
+.heatmap {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(7, 14px);
+    grid-auto-columns: 14px;
+    gap: 3px;
+    overflow-x: auto;
+}
+
+.heatmap i {
+    border-radius: 3px;
+    background: var(--border);
+}
+
+.heatmap .heat-future {
+    background: transparent;
+}
+
+.heatmap .heat-1 { background: color-mix(in srgb, var(--green) 44%, transparent); }
+.heatmap .heat-2 { background: color-mix(in srgb, var(--green) 62%, transparent); }
+.heatmap .heat-3 { background: color-mix(in srgb, var(--green) 81%, transparent); }
+.heatmap .heat-4 { background: var(--green); }
+
+.records {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 16px 0 0;
+}
+
+.records dt {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.records dd {
+    margin: 0;
+    color: var(--blue);
+    font-size: 20px;
+    font-weight: 800;
+}
+
 /* Points gagnés et célébration du niveau ; un simple fondu si le système
    demande de réduire les animations */
 

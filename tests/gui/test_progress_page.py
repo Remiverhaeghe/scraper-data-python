@@ -64,7 +64,7 @@ def test_points_gained_are_shown_then_level_is_celebrated(
     answer(vDatabaseFile, 2)
     vWindow.check_progress()
 
-    assert vShown == ["+10 XP"]
+    assert vShown == ["+10 XP", "Trophée obtenu : Premier pas"]
     assert not vCelebrated
 
     answer(vDatabaseFile, 18)

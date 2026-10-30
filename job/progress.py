@@ -13,6 +13,7 @@ jamais perdre de points.
 import random
 from datetime import date, datetime, timedelta
 
+from job.achievements import build_player_card, evaluate_achievements
 from job.quiz_exam import load_exam_results
 from storage.database import connect_database
 from storage.settings_repository import load_json_setting, save_json_setting
@@ -485,6 +486,10 @@ def build_progress(pDatabaseFile, pNow=None):
         ],
         "rules": [{"label": vLabel, "xp": vXp} for vLabel, vXp in XP_RULES.values()],
     }
+    vAchievements = evaluate_achievements(pDatabaseFile, vActivity, rProgress, vToday)
+    rProgress["achievements"] = vAchievements
+    rProgress["achievement_count"] = sum(vItem["unlocked"] for vItem in vAchievements)
+    rProgress["player"] = build_player_card(pDatabaseFile, vActivity, rProgress, vToday)
 
     return rProgress
 

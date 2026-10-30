@@ -5,6 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
+from job.achievements import get_heat_level, sort_achievements
 from job.progress import build_progress
 from web.dependencies import get_database_file
 from web.rendering import build_bar_chart, templates
@@ -24,6 +25,8 @@ def show_progress(request: Request, pDatabaseFile: str = Depends(get_database_fi
         {
             "active_page": "progress",
             "progress": vProgress,
+            "heat_level": get_heat_level,
+            "achievements": sort_achievements(vProgress["achievements"]),
             "chart": build_bar_chart(
                 [
                     date.fromisoformat(vDay["day"]).strftime("%d/%m")

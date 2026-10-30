@@ -4,6 +4,7 @@
    data-xp="{{ progress.xp }}" data-level="{{ progress.level }}"
    data-title="{{ progress.title }}" data-next-title="{{ progress.next_title }}"
    data-quests="{{ progress.quests | selectattr('done') | map(attribute='label') | join('|') }}"
+   data-trophies="{{ progress.achievements | selectattr('unlocked') | map(attribute='title') | join('|') }}"
    title="Niveau {{ progress.level }} · {{ progress.xp_in_level }} / {{ progress.xp_for_level }} XP · série de {{ progress.streak }} jour(s)">
     <span class="progress-box-row">
         <span class="progress-level">{{ progress.level }}</span>

@@ -12,6 +12,7 @@ import 'package:jobboard_revision/screens/time_attack_screen.dart';
 import 'package:jobboard_revision/services/api_client.dart';
 import 'package:jobboard_revision/services/revision_store.dart';
 import 'package:jobboard_revision/widgets/celebration.dart';
+import 'package:jobboard_revision/widgets/game_card.dart';
 
 import 'support/sample_data.dart';
 
@@ -49,6 +50,10 @@ ApiClient serveGame(int pLevel) {
             'streak': 2,
             'quests': [
               {'label': 'Réviser 10 questions', 'progress': 4, 'target': 10, 'done': false, 'xp': 20},
+            ],
+            'achievements': [
+              {'title': 'Premier pas', 'unlocked': true, 'unlocked_on': '2026-10-30'},
+              {'title': 'Lancé', 'unlocked': false, 'unlocked_on': null},
             ],
           }),
         ),
@@ -98,6 +103,17 @@ void main() {
     expect(await vState.recordTimeAttack(50), isTrue);
     expect(await vState.recordTimeAttack(30), isFalse);
     expect(vState.timeAttackBest, 50);
+  });
+
+  testWidgets('La carte affiche niveau, quêtes et trophées obtenus', (pTester) async {
+    final vState = await buildState();
+    await vState.exchangeGame(serveGame(3));
+
+    await pTester.pumpWidget(MaterialApp(home: Scaffold(body: GameCard(state: vState))));
+
+    expect(find.text('Technicien'), findsOneWidget);
+    expect(find.text('Trophées : 1 / 2'), findsOneWidget);
+    expect(find.text('Premier pas'), findsOneWidget);
   });
 
   testWidgets('Une partie : bonne réponse, fin du temps et record fêté', (pTester) async {

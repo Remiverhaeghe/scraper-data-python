@@ -302,6 +302,7 @@ Documents/JobBoard/
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
+- [x] 28 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
 ### 🌐 Tableau de bord web
@@ -666,6 +667,7 @@ scraper-data-python/
 │   ├── deduplication.py                       # Regroupe les annonces d'une même offre
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
 │   ├── progress.py                            # Points, niveaux, série et quêtes, calculés depuis l'activité
+│   ├── achievements.py                        # Trophées et carte joueur, déduits de l'activité
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
 │   ├── star_answers.py                        # Réponses STAR aux questions comportementales
 │   ├── offer_purge.py                         # Purge des offres hors sujet et mots exclus
@@ -1201,6 +1203,7 @@ scraper-data-python/
 │   │   ├── test_assistant.py                  # Teste les infos d'entreprise et les demandes ChatGPT
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_progress.py                   # Teste les points, niveaux, série et quêtes
+│   │   ├── test_achievements.py               # Teste les trophées, cachés compris, et la carte joueur
 │   │   ├── test_quiz_types.py                 # Teste les questions interactives et leur correction
 │   │   ├── test_shared_quiz_cases.py          # Teste les cas communs avec l'application mobile
 │   │   ├── test_schema_building.py            # Teste les schémas à construire, leur correction et leur dessin
