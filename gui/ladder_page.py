@@ -266,9 +266,9 @@ class LadderPage(QWidget):
 
             vButton = QPushButton(vVariable["name"])
             vButton.setToolTip(vVariable["label"])
-            vButton.setCheckable(vVariable.get("control") == "switch_nc")
+            vButton.setCheckable(vVariable.get("control") in ("switch", "switch_nc"))
 
-            if vButton.isCheckable():
+            if vVariable.get("control") == "switch_nc":
                 vButton.setText(f"Déclencher {vVariable['name']}")
 
             self.input_buttons[vVariable["name"]] = vButton

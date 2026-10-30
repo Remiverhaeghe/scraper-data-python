@@ -20,6 +20,17 @@
       "explanation": "SELECT choisit les colonnes, FROM la table, ORDER BY l'ordre : sans ORDER BY, l'ordre des lignes n'est jamais garanti."
     },
     {
+      "id": "distinct",
+      "series": "Les bases",
+      "title": "Les spécialités",
+      "goal": "Les spécialités des techniciens, chacune une seule fois.",
+      "starter": "SELECT specialite\nFROM technicien",
+      "hint": "DISTINCT, juste après SELECT, retire les lignes en double.",
+      "solution": "SELECT DISTINCT specialite\nFROM technicien",
+      "ordered": false,
+      "explanation": "DISTINCT porte sur la ligne entière : SELECT DISTINCT nom, specialite garderait chaque couple différent. Pour compter les valeurs distinctes : COUNT(DISTINCT specialite)."
+    },
+    {
       "id": "filtre-date",
       "series": "Les bases",
       "title": "Les machines anciennes",
@@ -31,6 +42,23 @@
       "explanation": "Le format AAAA-MM-JJ se trie dans l'ordre chronologique : c'est celui qu'attendent MySQL et SQL Server."
     },
     {
+      "id": "mois-de-mai",
+      "series": "Les bases",
+      "title": "Les interventions de mai",
+      "goal": "Interventions commencées en mai 2026 : id et début.",
+      "starter": "SELECT id, debut\nFROM intervention",
+      "hint": "Les dates contiennent une heure : bornez par debut >= '2026-05-01' AND debut < '2026-06-01'.",
+      "solution": "SELECT id, debut\nFROM intervention\nWHERE debut >= '2026-05-01' AND debut < '2026-06-01'",
+      "ordered": false,
+      "pitfalls": [
+        [
+          "BETWEEN",
+          "BETWEEN '2026-05-01' AND '2026-05-31' s'arrête le 31 mai à 0 h : une intervention commencée ce jour-là à 7 h est oubliée. Bornez par < '2026-06-01'."
+        ]
+      ],
+      "explanation": "Avec des dates et heures, la borne de fin exclue (< 1er juin) est la plus sûre. MONTH(debut) = 5 marche aussi, mais empêche l'usage d'un index sur debut."
+    },
+    {
       "id": "like",
       "series": "Les bases",
       "title": "Les roulements en magasin",
@@ -40,7 +68,10 @@
       "solution": "SELECT reference, prix\nFROM piece\nWHERE libelle LIKE 'Roulement%'",
       "ordered": false,
       "pitfalls": [
-        ["=\\s*'Roulement", "= compare au texte exact : pour « commence par », écrivez LIKE 'Roulement%'."]
+        [
+          "=\\s*'Roulement",
+          "= compare au texte exact : pour « commence par », écrivez LIKE 'Roulement%'."
+        ]
       ],
       "explanation": "'Roulement%' : commence par ; '%roulement%' : contient. Un % au début empêche l'usage d'un index, la recherche est alors plus lente sur une grosse table."
     },
@@ -71,7 +102,10 @@
       "solution": "SELECT id, machine_id, debut\nFROM intervention\nWHERE fin IS NULL",
       "ordered": false,
       "pitfalls": [
-        ["=\\s*NULL", "fin = NULL n'est jamais vrai, même quand fin est vide : NULL se teste avec IS NULL."]
+        [
+          "=\\s*NULL",
+          "fin = NULL n'est jamais vrai, même quand fin est vide : NULL se teste avec IS NULL."
+        ]
       ],
       "explanation": "NULL signifie « inconnu » : toute comparaison avec NULL donne inconnu, donc jamais vrai. D'où IS NULL et IS NOT NULL."
     },
@@ -109,6 +143,17 @@
       "explanation": "Ordre d'exécution : FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY. C'est pourquoi un agrégat ne peut pas figurer dans WHERE."
     },
     {
+      "id": "par-mois",
+      "series": "Regrouper",
+      "title": "Le bilan mensuel",
+      "goal": "Par mois de 2026 : numéro du mois, nombre d'interventions et coût total, du premier au dernier mois.",
+      "starter": "SELECT MONTH(debut)\nFROM intervention",
+      "hint": "MONTH(debut) donne le numéro du mois ; regroupez et triez par cette même expression.",
+      "solution": "SELECT MONTH(debut), COUNT(*), SUM(cout)\nFROM intervention\nGROUP BY MONTH(debut)\nORDER BY MONTH(debut)",
+      "ordered": true,
+      "explanation": "On peut regrouper sur une expression, pas seulement sur une colonne. MONTH existe en MySQL comme en SQL Server ; sur plusieurs années, il faudrait aussi regrouper par YEAR(debut)."
+    },
+    {
       "id": "jointure",
       "series": "Jointures",
       "title": "Le nom de la machine",
@@ -129,8 +174,14 @@
       "solution": "SELECT a.nom, COUNT(m.id)\nFROM atelier a\nLEFT JOIN machine m ON m.atelier_id = a.id\nGROUP BY a.id, a.nom",
       "ordered": false,
       "pitfalls": [
-        ["COUNT\\(\\s*\\*\\s*\\)", "COUNT(*) compte aussi la ligne vide ajoutée par LEFT JOIN pour un atelier sans machine : comptez COUNT(m.id)."],
-        ["^(?![\\s\\S]*\\bLEFT\\b)[\\s\\S]*\\bJOIN\\b","Une jointure simple retire les ateliers sans machine : il faut LEFT JOIN."]
+        [
+          "COUNT\\(\\s*\\*\\s*\\)",
+          "COUNT(*) compte aussi la ligne vide ajoutée par LEFT JOIN pour un atelier sans machine : comptez COUNT(m.id)."
+        ],
+        [
+          "^(?![\\s\\S]*\\bLEFT\\b)[\\s\\S]*\\bJOIN\\b",
+          "Une jointure simple retire les ateliers sans machine : il faut LEFT JOIN."
+        ]
       ],
       "explanation": "LEFT JOIN complète par des NULL quand il n'y a pas de correspondance. COUNT(m.id) les ignore et donne 0, là où COUNT(*) donnerait 1."
     },
@@ -172,7 +223,10 @@
       "solution": "SELECT t.nom, t.prenom\nFROM technicien t\nWHERE NOT EXISTS (\n    SELECT 1 FROM intervention i WHERE i.technicien_id = t.id\n)",
       "ordered": false,
       "pitfalls": [
-        ["NOT\\s+IN", "NOT IN ne renvoie rien dès que la sous-requête contient un NULL, et technicien_id est vide pour certaines interventions : utilisez NOT EXISTS, ou ajoutez WHERE technicien_id IS NOT NULL dans la sous-requête."]
+        [
+          "NOT\\s+IN",
+          "NOT IN ne renvoie rien dès que la sous-requête contient un NULL, et technicien_id est vide pour certaines interventions : utilisez NOT EXISTS, ou ajoutez WHERE technicien_id IS NOT NULL dans la sous-requête."
+        ]
       ],
       "explanation": "Trois écritures possibles : NOT EXISTS, LEFT JOIN … WHERE i.id IS NULL, ou NOT IN en filtrant les NULL. NOT EXISTS est la plus sûre."
     },
@@ -231,6 +285,39 @@
       },
       "ordered": true,
       "explanation": "Les deux serveurs ne comptent pas pareil : de 14 h 30 à 9 h le lendemain, TIMESTAMPDIFF (MySQL) donne 18 heures entières, DATEDIFF (SQL Server) compte 19 changements d'heure. Changez de dialecte pour le voir."
+    },
+    {
+      "id": "cte",
+      "series": "Requêtes avancées",
+      "title": "Les ateliers qui coûtent",
+      "goal": "Ateliers dont les interventions ont coûté plus de 1 000 € au total : nom de l'atelier et total.",
+      "starter": "WITH couts AS (\n    SELECT\n    FROM intervention i\n)\nSELECT\nFROM couts",
+      "hint": "WITH couts AS (SELECT …) nomme une première requête : le total par atelier_id, via la machine. La requête principale la joint à atelier et filtre le total.",
+      "solution": "WITH couts AS (\n    SELECT m.atelier_id, SUM(i.cout) AS total\n    FROM intervention i\n    JOIN machine m ON m.id = i.machine_id\n    GROUP BY m.atelier_id\n)\nSELECT a.nom, c.total\nFROM couts c\nJOIN atelier a ON a.id = c.atelier_id\nWHERE c.total > 1000",
+      "ordered": false,
+      "explanation": "Une CTE (WITH) découpe une requête longue en étapes nommées, lisibles de haut en bas. Le même résultat s'obtient avec un HAVING ; la CTE devient précieuse quand une étape sert plusieurs fois."
+    },
+    {
+      "id": "derniere-intervention",
+      "series": "Requêtes avancées",
+      "title": "La dernière intervention",
+      "goal": "Dernière intervention de chaque machine qui en a eu : code de la machine, id et début de l'intervention.",
+      "starter": "SELECT m.code, i.id, i.debut\nFROM intervention i\nJOIN machine m ON m.id = i.machine_id",
+      "hint": "ROW_NUMBER() OVER (PARTITION BY machine_id ORDER BY debut DESC) numérote les interventions de chaque machine, la plus récente en 1 ; gardez le rang 1 dans une CTE.",
+      "solution": "WITH classees AS (\n    SELECT id, machine_id, debut,\n        ROW_NUMBER() OVER (PARTITION BY machine_id ORDER BY debut DESC) AS rang\n    FROM intervention\n)\nSELECT m.code, c.id, c.debut\nFROM classees c\nJOIN machine m ON m.id = c.machine_id\nWHERE c.rang = 1",
+      "ordered": false,
+      "explanation": "Les fonctions de fenêtre (OVER) calculent sans regrouper : chaque ligne garde ses colonnes. Une sous-requête sur MAX(debut) marche aussi, mais ROW_NUMBER se généralise aux « N dernières »."
+    },
+    {
+      "id": "cumul",
+      "series": "Requêtes avancées",
+      "title": "Le cumul des dépenses",
+      "goal": "Interventions terminées dans l'ordre chronologique : id, coût et coût cumulé depuis le début de l'année.",
+      "starter": "SELECT id, cout\nFROM intervention\nWHERE fin IS NOT NULL",
+      "hint": "SUM(cout) OVER (ORDER BY debut) additionne le coût de la ligne et de toutes celles d'avant.",
+      "solution": "SELECT id, cout, SUM(cout) OVER (ORDER BY debut)\nFROM intervention\nWHERE fin IS NOT NULL\nORDER BY debut",
+      "ordered": true,
+      "explanation": "Avec ORDER BY dans OVER, la somme devient un cumul. Sans fenêtre, il faudrait une sous-requête par ligne, bien plus lente."
     },
     {
       "id": "hausse-prix",

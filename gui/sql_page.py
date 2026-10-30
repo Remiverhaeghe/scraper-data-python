@@ -108,7 +108,7 @@ def format_schema(pSchema):
 
 
 class SqlPage(QWidget):
-    """Vingt niveaux de requêtes, des bases aux jointures et aux modifications."""
+    """Niveaux de requêtes, des bases aux fonctions de fenêtre et aux modifications."""
 
     def __init__(self, pDatabaseFile):
         """Construit la page ; refresh lit la progression."""

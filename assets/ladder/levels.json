@@ -151,5 +151,166 @@
       {"at": 4.5, "expect": {"monter": 1, "rotation": 1}, "message": "Après une seconde de perçage, la broche remonte."},
       {"at": 7.0, "expect": {"monter": 0, "descendre": 0, "rotation": 0}, "message": "En haut, le cycle se termine : retour à l'étape initiale."}
     ]
+  },
+  {
+    "id": "inverseur",
+    "title": "Inversion du sens de marche",
+    "machine": "moteur",
+    "goal": "Le moteur tourne en avant (KM1) ou en arrière (KM2). Les deux contacteurs ne doivent jamais être fermés ensemble, et le changement de sens passe obligatoirement par l'arrêt.",
+    "hint": "Chaque sens se verrouille par le contact inversé de l'autre : !arriere dans la ligne d'avant, !avant dans celle d'arrière. Sur l'armoire, ce verrouillage est doublé par des contacts auxiliaires câblés et un verrouillage mécanique.",
+    "variables": [
+      {"name": "bp_avant", "kind": "input", "label": "Bouton Avant, à fermeture", "default": 0, "control": "button"},
+      {"name": "bp_arriere", "kind": "input", "label": "Bouton Arrière, à fermeture", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "avant", "kind": "output", "label": "Contacteur KM1, sens avant"},
+      {"name": "arriere", "kind": "output", "label": "Contacteur KM2, sens arrière"}
+    ],
+    "starter": "avant = (bp_avant | avant) & arret\narriere = (bp_arriere | arriere) & arret\n",
+    "solution": "avant = (bp_avant | avant) & arret & !arriere\narriere = (bp_arriere | arriere) & arret & !avant",
+    "duration": 5.0,
+    "events": [
+      {"at": 0.5, "set": {"bp_avant": 1}},
+      {"at": 0.8, "set": {"bp_avant": 0}},
+      {"at": 1.5, "set": {"bp_arriere": 1}},
+      {"at": 1.8, "set": {"bp_arriere": 0}},
+      {"at": 2.5, "set": {"arret": 0}},
+      {"at": 2.8, "set": {"arret": 1}},
+      {"at": 3.2, "set": {"bp_arriere": 1}},
+      {"at": 3.5, "set": {"bp_arriere": 0}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"avant": 1, "arriere": 0}, "message": "Marche avant."},
+      {"at": 2.0, "expect": {"avant": 1, "arriere": 0}, "message": "Un appui sur Arrière pendant la marche avant est sans effet : il faut d'abord arrêter."},
+      {"at": 3.0, "expect": {"avant": 0, "arriere": 0}, "message": "L'arrêt ouvre les deux sens."},
+      {"at": 4.0, "expect": {"avant": 0, "arriere": 1}, "message": "Marche arrière après l'arrêt."}
+    ],
+    "forbidden": [{"all": ["avant", "arriere"], "message": "KM1 et KM2 fermés ensemble : court-circuit entre phases."}]
+  },
+  {
+    "id": "etoile-triangle",
+    "title": "Démarrage étoile-triangle",
+    "machine": "moteur",
+    "goal": "Pour limiter l'appel de courant, le moteur démarre couplé en étoile pendant 3 s, puis passe en triangle. L'étoile et le triangle ne sont jamais fermés ensemble ; Arrêt ouvre tout.",
+    "hint": "Une temporisation lancée par le contacteur de ligne : étoile tant qu'elle n'est pas écoulée, triangle ensuite. Verrouillez étoile et triangle l'un par l'autre, comme pour un inverseur.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche, à fermeture", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "ligne", "kind": "output", "label": "Contacteur de ligne KM1"},
+      {"name": "etoile", "kind": "output", "label": "Contacteur étoile KM3"},
+      {"name": "triangle", "kind": "output", "label": "Contacteur triangle KM2"}
+    ],
+    "starter": "ligne = (marche | ligne) & arret\n",
+    "solution": "ligne = (marche | ligne) & arret\nt_etoile = TON(ligne, 3s)\netoile = ligne & !t_etoile & !triangle\ntriangle = ligne & t_etoile & !etoile",
+    "duration": 6.0,
+    "events": [
+      {"at": 0.5, "set": {"marche": 1}},
+      {"at": 0.8, "set": {"marche": 0}},
+      {"at": 5.0, "set": {"arret": 0}},
+      {"at": 5.3, "set": {"arret": 1}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"ligne": 1, "etoile": 1, "triangle": 0}, "message": "Démarrage en étoile."},
+      {"at": 3.2, "expect": {"etoile": 1, "triangle": 0}, "message": "Toujours en étoile avant la fin des 3 s."},
+      {"at": 3.8, "expect": {"ligne": 1, "etoile": 0, "triangle": 1}, "message": "Passage en triangle au bout de 3 s."},
+      {"at": 5.5, "expect": {"ligne": 0, "etoile": 0, "triangle": 0}, "message": "Arrêt : tout s'ouvre."}
+    ],
+    "forbidden": [{"all": ["etoile", "triangle"], "message": "Étoile et triangle fermés ensemble : court-circuit franc."}]
+  },
+  {
+    "id": "clignotant",
+    "title": "Voyant de défaut clignotant",
+    "machine": "moteur",
+    "goal": "Reprenez le défaut thermique, mais le voyant clignote (environ 0,5 s allumé, 0,5 s éteint) tant que le thermique est déclenché : un voyant qui clignote attire l'œil de l'opérateur.",
+    "hint": "Deux temporisations qui se relancent : la première compte le temps allumé, la seconde le temps éteint et remet la première à zéro. Le voyant s'allume tant que la première n'est pas écoulée.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche, à fermeture", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "thermique", "kind": "input", "label": "Relais thermique : 1 tant qu'il n'a pas déclenché", "default": 1, "control": "switch_nc"},
+      {"name": "moteur", "kind": "output", "label": "Contacteur du moteur"},
+      {"name": "voyant_defaut", "kind": "output", "label": "Voyant de défaut, clignotant"}
+    ],
+    "starter": "moteur = (marche | moteur) & arret & thermique\nvoyant_defaut = !thermique\n",
+    "solution": "moteur = (marche | moteur) & arret & thermique\nt_allume = TON(!thermique & !t_eteint, 0.5s)\nt_eteint = TON(t_allume, 0.5s)\nvoyant_defaut = !thermique & !t_allume",
+    "duration": 4.0,
+    "events": [
+      {"at": 0.3, "set": {"marche": 1}},
+      {"at": 0.6, "set": {"marche": 0}},
+      {"at": 1.0, "set": {"thermique": 0}},
+      {"at": 3.0, "set": {"thermique": 1}}
+    ],
+    "checks": [
+      {"at": 0.8, "expect": {"moteur": 1, "voyant_defaut": 0}, "message": "Le moteur tourne, sans défaut."},
+      {"at": 1.2, "expect": {"moteur": 0, "voyant_defaut": 1}, "message": "Thermique déclenché : moteur arrêté, voyant allumé."},
+      {"at": 1.7, "expect": {"voyant_defaut": 0}, "message": "Puis le voyant s'éteint…"},
+      {"at": 2.2, "expect": {"voyant_defaut": 1}, "message": "… et se rallume : il clignote."},
+      {"at": 2.6, "expect": {"voyant_defaut": 0}, "message": "Il s'éteint de nouveau."},
+      {"at": 3.5, "expect": {"moteur": 0, "voyant_defaut": 0}, "message": "Thermique réarmé : voyant éteint, moteur arrêté."}
+    ]
+  },
+  {
+    "id": "bimanuelle",
+    "title": "Commande bimanuelle de presse",
+    "machine": "verin",
+    "goal": "La presse ne descend que si l'opérateur appuie sur les deux boutons à moins de 0,5 s d'intervalle, et remonte dès qu'une main est lâchée. Pour recommencer, il faut relâcher les deux boutons.",
+    "hint": "Une temporisation par bouton mesure depuis combien de temps il est tenu. L'ordre de sortie s'auto-maintient tant que les deux mains sont là, mais ne s'enclenche que si aucune des deux temporisations n'est écoulée.",
+    "variables": [
+      {"name": "gauche", "kind": "input", "label": "Bouton main gauche, à maintenir", "default": 0, "control": "switch"},
+      {"name": "droite", "kind": "input", "label": "Bouton main droite, à maintenir", "default": 0, "control": "switch"},
+      {"name": "fin_sortie", "kind": "input", "label": "Capteur presse en bas", "default": 0, "control": "sensor"},
+      {"name": "sortir", "kind": "output", "label": "Distributeur : descente de la presse"}
+    ],
+    "starter": "sortir = gauche & droite\n",
+    "solution": "t_gauche = TON(gauche, 0.5s)\nt_droite = TON(droite, 0.5s)\nsortir = gauche & droite & (sortir | (!t_gauche & !t_droite))",
+    "duration": 6.0,
+    "events": [
+      {"at": 0.5, "set": {"gauche": 1}},
+      {"at": 0.7, "set": {"droite": 1}},
+      {"at": 1.5, "set": {"gauche": 0}},
+      {"at": 1.8, "set": {"gauche": 1}},
+      {"at": 2.2, "set": {"gauche": 0, "droite": 0}},
+      {"at": 2.5, "set": {"gauche": 1}},
+      {"at": 3.5, "set": {"droite": 1}},
+      {"at": 4.0, "set": {"gauche": 0, "droite": 0}},
+      {"at": 4.5, "set": {"droite": 1}},
+      {"at": 4.8, "set": {"gauche": 1}},
+      {"at": 5.6, "set": {"gauche": 0, "droite": 0}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"sortir": 1}, "message": "Deux mains à moins de 0,5 s : la presse descend."},
+      {"at": 1.7, "expect": {"sortir": 0}, "message": "Une main lâchée : la presse remonte."},
+      {"at": 2.0, "expect": {"sortir": 0}, "message": "Reprendre une seule main ne suffit pas : il faut tout relâcher."},
+      {"at": 3.8, "expect": {"sortir": 0}, "message": "Deux mains à plus de 0,5 s d'écart : refusé."},
+      {"at": 5.2, "expect": {"sortir": 1}, "message": "Après avoir tout relâché, un nouvel appui simultané est accepté."}
+    ]
+  },
+  {
+    "id": "alternance-pompes",
+    "title": "Alternance de deux pompes",
+    "machine": "moteur",
+    "goal": "Deux pompes alimentent le réseau d'eau. À chaque nouvelle demande du pressostat, c'est l'autre pompe qui démarre, pour partager l'usure. La première demande démarre la pompe 1.",
+    "hint": "Détectez la fin d'une demande (front descendant) en gardant l'état du cycle précédent dans une mémoire. À chaque front, une mémoire de choix bascule : RESET si elle valait 1, SET sinon, en se servant de sa valeur avant le basculement.",
+    "variables": [
+      {"name": "demande", "kind": "input", "label": "Pressostat : 1 quand la pression est basse", "default": 0, "control": "switch"},
+      {"name": "pompe1", "kind": "output", "label": "Contacteur de la pompe 1"},
+      {"name": "pompe2", "kind": "output", "label": "Contacteur de la pompe 2"}
+    ],
+    "starter": "pompe1 = demande\n",
+    "solution": "fin = !demande & memoire\nmemoire = demande\nbascule = fin & !choix\nRESET choix = fin & choix\nSET choix = bascule\npompe1 = demande & !choix\npompe2 = demande & choix",
+    "duration": 5.0,
+    "events": [
+      {"at": 0.5, "set": {"demande": 1}},
+      {"at": 1.5, "set": {"demande": 0}},
+      {"at": 2.0, "set": {"demande": 1}},
+      {"at": 3.0, "set": {"demande": 0}},
+      {"at": 3.5, "set": {"demande": 1}},
+      {"at": 4.5, "set": {"demande": 0}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"pompe1": 1, "pompe2": 0}, "message": "Première demande : pompe 1."},
+      {"at": 2.5, "expect": {"pompe1": 0, "pompe2": 1}, "message": "Demande suivante : pompe 2."},
+      {"at": 4.0, "expect": {"pompe1": 1, "pompe2": 0}, "message": "Puis de nouveau la pompe 1 : l'usure est partagée."},
+      {"at": 4.8, "expect": {"pompe1": 0, "pompe2": 0}, "message": "Plus de demande : les deux pompes s'arrêtent."}
+    ],
+    "forbidden": [{"all": ["pompe1", "pompe2"], "message": "Les deux pompes tournent ensemble."}]
   }
 ]

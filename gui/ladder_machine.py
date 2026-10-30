@@ -13,6 +13,9 @@ ON_COLOR = "#16a34a"
 FAULT_COLOR = "#dc2626"
 STEEL = "#64748b"
 
+# Sorties qui alimentent le moteur dessiné : un sens, le contacteur de ligne, une pompe
+MOTOR_OUTPUTS = ("moteur", "avant", "arriere", "ligne", "pompe1", "pompe2")
+
 
 class MachineView(QWidget):
     """Dessine la machine d'un niveau et l'état de ses sorties."""
@@ -33,10 +36,18 @@ class MachineView(QWidget):
         self.values = pValues
         self.machine = pMachine
 
-        if pValues.get("moteur") or pValues.get("tapis") or pValues.get("rotation"):
-            self.angle = (self.angle + 30) % 360
+        if self.is_motor_running() or pValues.get("tapis") or pValues.get("rotation"):
+            self.angle = (self.angle + (-30 if pValues.get("arriere") else 30)) % 360
 
         self.update()
+
+    def is_motor_running(self):
+        """Indique si le moteur est alimenté : une sortie de puissance, pas un voyant."""
+        rRunning = self.level is not None and any(
+            self.values.get(vName) for vName in MOTOR_OUTPUTS
+        )
+
+        return rRunning
 
     def paintEvent(self, _pEvent):  # pylint: disable=invalid-name
         """Dessine la machine à gauche et les voyants des sorties à droite."""
@@ -62,7 +73,7 @@ class MachineView(QWidget):
         """Moteur avec un repère qui tourne quand il est alimenté."""
         vCenter = pArea.center()
         vRadius = min(pArea.width(), pArea.height()) / 3
-        vRunning = bool(self.values.get("moteur"))
+        vRunning = self.is_motor_running()
 
         pPainter.setBrush(QColor(ON_COLOR if vRunning else "#e2e8f0"))
         pPainter.drawEllipse(vCenter, vRadius, vRadius)

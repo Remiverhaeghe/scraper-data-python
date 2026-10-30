@@ -54,14 +54,14 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
-- Pannes à résoudre : six machines en panne, mesures qui coûtent du temps,
+- Pannes à résoudre : dix machines en panne, mesures qui coûtent du temps,
   consignation exigée pour les mesures hors tension, score selon le temps et
   les pièces changées pour rien, explication de chaque panne
 - Simulateur d'automate : programme en ladder écrit ligne par ligne et dessiné
-  en direct (contacts, SET, RESET, TON, CTU), cinq niveaux de la marche-arrêt
+  en direct (contacts, SET, RESET, TON, CTU), dix niveaux de la marche-arrêt
   au Grafcet, scénario de test avec chronogramme, machine animée sur le bureau
 - Deux trophées : Premier dépannage, Automaticien
-- Bac à sable SQL : vingt niveaux sur la base d'une usine, des bases aux
+- Bac à sable SQL : vingt-six niveaux sur la base d'une usine, des bases aux
   jointures et aux modifications, en MySQL ou en SQL Server, résultat comparé
   à celui attendu, erreurs classiques expliquées ; trophées Première requête
   et As du SQL

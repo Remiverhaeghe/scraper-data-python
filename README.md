@@ -586,7 +586,8 @@ Page Tests de recrutement du bureau et du web, pour s'entraîner aux tests psych
 
 Page Pannes à résoudre du bureau et du web, pour s'entraîner au diagnostic :
 
-- [x] Six machines en panne : convoyeur qui ne démarre plus, vérin lent, capteur instable, four qui oscille (PID), différentiel qui déclenche, presse hydraulique en cavitation
+- [x] Dix machines en panne : convoyeur qui ne démarre plus, vérin lent, capteur instable, four qui oscille (PID), différentiel qui déclenche, presse hydraulique en cavitation, variateur en surtension au freinage, boucle 4-20 mA coupée, moteur qui chauffe, compresseur qui tourne sans arrêt
+- [x] Réparations tentantes mais fausses ou dangereuses expliquées : différentiel 300 mA sur des prises, thermique relevé, mesure maquillée en supervision, rampe allongée
 - [x] Chaque mesure coûte du temps ; les mesures hors tension sont refusées sans consignation
 - [x] Score selon le temps comparé à celui d'un technicien expérimenté, moins les pièces changées pour rien, plafonné si la cause n'a pas été prouvée ; une à trois étoiles
 - [x] Journal d'intervention et explication de la panne ; scénarios dans `assets/troubleshooting/scenarios.json`
@@ -596,7 +597,7 @@ Page Pannes à résoudre du bureau et du web, pour s'entraîner au diagnostic :
 Page Automate du bureau et du web, pour programmer en ladder :
 
 - [x] Un barreau par ligne (`moteur = (marche | moteur) & arret`), dessiné en ladder en direct : contacts en série et en parallèle, contacts à ouverture, bobines, SET, RESET, temporisation TON et compteur CTU
-- [x] Cinq niveaux : marche-arrêt avec auto-maintien, défaut thermique, temporisation d'un vérin, comptage de pièces, séquence Grafcet de perçage
+- [x] Dix niveaux : marche-arrêt avec auto-maintien, défaut thermique, temporisation d'un vérin, comptage de pièces, séquence Grafcet de perçage, inversion du sens de marche, démarrage étoile-triangle, voyant clignotant, commande bimanuelle, alternance de deux pompes
 - [x] Cycle d'automate de 100 ms, barreaux lus de haut en bas ; scénario de test automatique avec chronogramme, indice et solution
 - [x] Sur le bureau, machine animée (moteur, vérin, tapis, broche) pilotée à la souris, contacts passants colorés en direct
 
@@ -616,10 +617,10 @@ Page Git du bureau et du web, pour s'exercer aux branches sans risque :
 
 Page SQL du bureau et du web, pour s'exercer aux requêtes sur la base d'une usine (ateliers, machines, techniciens, interventions, pièces) :
 
-- [x] Vingt niveaux en cinq séries : les bases, regrouper, jointures, pour aller plus loin (sous-requêtes, CASE, dates), modifier les données (UPDATE, INSERT, DELETE)
+- [x] Vingt-six niveaux en six séries : les bases, regrouper, jointures, pour aller plus loin (sous-requêtes, CASE, dates), requêtes avancées (WITH, ROW_NUMBER, cumul avec OVER), modifier les données (UPDATE, INSERT, DELETE)
 - [x] Dialecte MySQL ou SQL Server au choix : LIMIT ou TOP, IFNULL ou ISNULL, NOW ou GETDATE, DATEDIFF et TIMESTAMPDIFF ; une écriture de l'autre dialecte est signalée
 - [x] Résultat comparé à celui de la solution de référence : une autre requête qui renvoie les mêmes lignes est acceptée ; résultat attendu affiché à côté du sien
-- [x] Erreurs classiques expliquées : `= NULL`, `COUNT(*)` après un LEFT JOIN, NOT IN face à des NULL, agrégat dans WHERE, colonne ambiguë
+- [x] Erreurs classiques expliquées : `= NULL`, `COUNT(*)` après un LEFT JOIN, NOT IN face à des NULL, BETWEEN sur des dates avec heure, agrégat dans WHERE, colonne ambiguë
 - [x] Base SQLite en mémoire recréée à chaque requête : seules SELECT, INSERT, UPDATE et DELETE sont permises, requête arrêtée au bout de 2 secondes
 
 ### Abonnement à l'agenda

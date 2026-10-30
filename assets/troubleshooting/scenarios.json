@@ -148,5 +148,98 @@
       {"id": "moteur", "label": "Remplacer le moteur électrique", "minutes": 90}
     ],
     "explanation": "Un filtre d'aspiration colmaté crée une dépression à l'entrée de la pompe : c'est la cavitation, avec son bruit de graviers et ses bulles. La pompe débite mal et la pression ne monte plus. Changer la pompe sans traiter le filtre l'abîmerait à son tour."
+  },
+  {
+    "id": "variateur-surtension",
+    "title": "Le variateur du convoyeur incliné se met en défaut à chaque arrêt",
+    "domain": "Électricité",
+    "symptom": "Le convoyeur incliné chargé s'arrête en roue libre et son variateur affiche un défaut à chaque demande d'arrêt. Il redémarre après acquittement.",
+    "machine": "Variateur de vitesse 7,5 kW avec résistance de freinage externe, moteur asynchrone 400 V, convoyeur incliné qui descend des colis.",
+    "best_minutes": 30,
+    "checks": [
+      {"id": "historique", "label": "Lire l'historique des défauts du variateur", "minutes": 2, "result": "Défaut « surtension bus continu » (OV), toujours pendant la décélération."},
+      {"id": "reseau", "label": "Mesurer la tension du réseau en entrée du variateur", "minutes": 3, "result": "402 V entre phases, stable : le réseau est normal."},
+      {"id": "rampe", "label": "Lire le paramètre de rampe de décélération", "minutes": 2, "result": "2 s, la valeur d'origine notée dans le dossier de la machine."},
+      {"id": "ventilation", "label": "Contrôler le ventilateur et le radiateur du variateur", "minutes": 3, "result": "Ventilateur en marche, radiateur propre."},
+      {"id": "consigner", "label": "Consigner le variateur et attendre la décharge du bus continu", "minutes": 8, "result": "Sectionneur ouvert et cadenassé ; après 5 minutes, bus continu mesuré à 0 V."},
+      {"id": "resistance", "label": "Mesurer la résistance de freinage", "minutes": 4, "requires": "consigner", "result": "Circuit ouvert : la résistance est coupée, au lieu des 47 Ω de sa plaque.", "evidence": true},
+      {"id": "isolement", "label": "Mesurer l'isolement du moteur", "minutes": 6, "requires": "consigner", "result": "Plus de 100 MΩ entre chaque phase et la masse : le moteur est sain."}
+    ],
+    "causes": [
+      {"id": "resistance", "label": "Remplacer la résistance de freinage", "minutes": 18, "right": true},
+      {"id": "rampe", "label": "Allonger la rampe de décélération à 10 s", "minutes": 5, "note": "Le défaut disparaîtrait à vide, mais l'arrêt serait cinq fois plus long et, chargé, le convoyeur incliné renverrait encore son énergie au variateur. La résistance coupée reste à remplacer."},
+      {"id": "variateur", "label": "Remplacer le variateur", "minutes": 60},
+      {"id": "moteur", "label": "Remplacer le moteur", "minutes": 90}
+    ],
+    "explanation": "En freinant une charge qui descend, le moteur devient générateur : il renvoie de l'énergie dans le bus continu du variateur. La résistance de freinage la dissipe ; coupée, elle laisse monter la tension jusqu'au défaut de surtension. Avant de la mesurer, il faut attendre la décharge des condensateurs du bus, qui restent dangereux après la coupure."
+  },
+  {
+    "id": "boucle-4-20",
+    "title": "La supervision affiche 0 bar sur le réseau d'eau",
+    "domain": "Capteurs",
+    "symptom": "La supervision affiche une pression nulle sur le réseau d'eau industrielle et l'alarme « pression basse » est active, alors que les ateliers ont de l'eau.",
+    "machine": "Transmetteur de pression 0-10 bar en boucle 4-20 mA deux fils, alimenté en 24 V par l'armoire ; entrée analogique d'automate ; câble d'une quarantaine de mètres sous une passerelle.",
+    "best_minutes": 18,
+    "checks": [
+      {"id": "manometre", "label": "Lire le manomètre local à côté du transmetteur", "minutes": 1, "result": "4,2 bar : la pression est normale, seule la mesure est fausse."},
+      {"id": "brute", "label": "Lire la valeur brute de l'entrée analogique", "minutes": 2, "result": "0 mA, avec le diagnostic « rupture de fil » de la carte."},
+      {"id": "alimentation", "label": "Mesurer la tension de boucle au bornier de l'armoire", "minutes": 3, "result": "24 V présents entre les bornes de la boucle."},
+      {"id": "tension-transmetteur", "label": "Mesurer la tension aux bornes du transmetteur", "minutes": 3, "result": "0 V : la tension de l'armoire n'arrive pas au transmetteur, le câble est coupé entre les deux.", "evidence": true},
+      {"id": "courant", "label": "Mesurer le courant en série au niveau du transmetteur", "minutes": 5, "result": "0 mA : rien ne circule dans la boucle."},
+      {"id": "cheminement", "label": "Suivre le câble le long de la passerelle", "minutes": 8, "result": "Câble écrasé et sectionné au pied de la passerelle, à un passage de chariot.", "evidence": true}
+    ],
+    "causes": [
+      {"id": "cable", "label": "Remplacer le tronçon de câble abîmé et le protéger", "minutes": 15, "right": true},
+      {"id": "transmetteur", "label": "Remplacer le transmetteur de pression", "minutes": 30},
+      {"id": "carte", "label": "Remplacer la carte d'entrées analogiques", "minutes": 45},
+      {"id": "echelle", "label": "Forcer la valeur en supervision à la pression du manomètre", "minutes": 5, "note": "Maquiller la mesure ferait disparaître l'alarme sans rien réparer : une vraie baisse de pression passerait inaperçue."}
+    ],
+    "explanation": "En 4-20 mA, 4 mA représente le bas de l'échelle : un courant nul n'est jamais une mesure, c'est une boucle ouverte. La tension présente à l'armoire mais absente au transmetteur situe la coupure sur le câble entre les deux. C'est tout l'intérêt du « zéro vivant » à 4 mA : distinguer 0 bar d'un fil coupé."
+  },
+  {
+    "id": "moteur-thermique",
+    "title": "Le thermique de la pompe de circulation déclenche au bout de 20 minutes",
+    "domain": "Électricité",
+    "symptom": "Le relais thermique du moteur de la pompe de circulation déclenche après une vingtaine de minutes de marche. Réarmé, il tient de nouveau 20 minutes.",
+    "machine": "Moteur asynchrone 4 kW, 400 V, intensité nominale 8,2 A, ventilé par son propre ventilateur sous capot ; relais thermique réglé à 8,5 A ; local poussiéreux d'une filature.",
+    "best_minutes": 16,
+    "checks": [
+      {"id": "intensite", "label": "Mesurer l'intensité des trois phases à la pince, en marche", "minutes": 4, "result": "7,9 A, 8,0 A et 7,9 A : le moteur n'est pas surchargé et les phases sont équilibrées."},
+      {"id": "reglage", "label": "Lire le réglage du relais thermique", "minutes": 1, "result": "8,5 A, adapté à l'intensité nominale du moteur."},
+      {"id": "temperature", "label": "Mesurer la température de la carcasse au thermomètre infrarouge", "minutes": 2, "result": "95 °C après un quart d'heure : le moteur chauffe anormalement sans être surchargé."},
+      {"id": "capot", "label": "Inspecter le capot de ventilation et les ailettes", "minutes": 2, "result": "Grille du capot bouchée par un feutre de fibres, ailettes encrassées : l'air ne passe plus.", "evidence": true},
+      {"id": "consigner", "label": "Consigner le départ moteur", "minutes": 5, "result": "Sectionneur ouvert et cadenassé, absence de tension vérifiée."},
+      {"id": "roulements", "label": "Tourner l'arbre à la main et écouter les roulements", "minutes": 3, "requires": "consigner", "result": "Rotation libre, sans bruit ni point dur."}
+    ],
+    "causes": [
+      {"id": "nettoyage", "label": "Nettoyer le capot et les ailettes, puis prévoir ce nettoyage au plan de maintenance", "minutes": 14, "right": true},
+      {"id": "reglage", "label": "Monter le réglage du thermique à 10 A", "minutes": 2, "note": "Le thermique protège le bobinage : relevé au-dessus de l'intensité nominale, il laisserait le moteur surchauffer jusqu'à griller son isolant."},
+      {"id": "thermique", "label": "Remplacer le relais thermique", "minutes": 15},
+      {"id": "roulements", "label": "Remplacer les roulements du moteur", "minutes": 60},
+      {"id": "moteur", "label": "Remplacer le moteur", "minutes": 90}
+    ],
+    "explanation": "Un moteur qui chauffe sans consommer plus que son nominal ne se refroidit plus : ici, la grille du capot est bouchée par les fibres. Le thermique, qui imite l'échauffement du bobinage, fait son travail. La vraie réparation inclut la prévention : un nettoyage régulier dans un local poussiéreux."
+  },
+  {
+    "id": "compresseur-continu",
+    "title": "Le compresseur tourne presque en continu, même le week-end",
+    "domain": "Pneumatique",
+    "symptom": "Le compteur d'heures en charge du compresseur avance même le week-end, production arrêtée, et la facture d'électricité de l'atelier a augmenté.",
+    "machine": "Compresseur à vis 22 kW, réservoir de 500 litres avec purgeur automatique de condensats, sécheur frigorifique, réseau d'air à 7 bar vers une quinzaine de postes.",
+    "best_minutes": 23,
+    "checks": [
+      {"id": "pression", "label": "Lire la pression du réseau", "minutes": 1, "result": "6,8 bar : la pression est tenue."},
+      {"id": "chute", "label": "Arrêter le compresseur, production à l'arrêt, et suivre la pression 15 minutes", "minutes": 15, "result": "La pression passe de 7 à 4 bar : une fuite importante existe, sans dire où."},
+      {"id": "purgeur", "label": "Écouter le purgeur sous le réservoir", "minutes": 3, "result": "Sifflement continu : l'évacuation du purgeur reste ouverte en permanence, l'air s'échappe avec les condensats.", "evidence": true},
+      {"id": "postes", "label": "Écouter les raccords des postes avec un détecteur à ultrasons", "minutes": 20, "result": "Deux petites fuites sur des raccords rapides, trop faibles pour expliquer une telle consommation."},
+      {"id": "pressostat", "label": "Contrôler le réglage du pressostat", "minutes": 2, "result": "Enclenchement à 6,5 bar, déclenchement à 7,5 bar : réglage d'origine."}
+    ],
+    "causes": [
+      {"id": "purgeur", "label": "Remplacer le purgeur de condensats bloqué ouvert", "minutes": 20, "right": true},
+      {"id": "pressostat", "label": "Baisser le seuil de déclenchement du pressostat à 6 bar", "minutes": 5, "note": "La fuite continuerait, et les postes qui ont besoin de 6 bar manqueraient de pression aux pointes de consommation."},
+      {"id": "raccords", "label": "Remplacer les raccords rapides de tous les postes", "minutes": 45},
+      {"id": "compresseur", "label": "Remplacer le compresseur", "minutes": 240}
+    ],
+    "explanation": "Un purgeur bloqué ouvert vide le réservoir en continu : le compresseur compense jour et nuit. La chute de pression production arrêtée prouve une fuite, l'écoute la situe. Les fuites d'air coûtent cher : l'air comprimé est l'énergie la plus chère de l'atelier."
   }
 ]

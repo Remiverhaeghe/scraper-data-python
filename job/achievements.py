@@ -232,10 +232,10 @@ ACHIEVEMENTS = (
     (
         "ladder-all",
         "Automaticien",
-        "Réussir les 5 niveaux du simulateur d'automate",
+        "Réussir les 10 niveaux du simulateur d'automate",
         "cpu",
         "ladder_level",
-        5,
+        10,
         False,
     ),
     (
@@ -250,10 +250,10 @@ ACHIEVEMENTS = (
     (
         "sql-all",
         "As du SQL",
-        "Réussir les 20 niveaux du bac à sable SQL",
+        "Réussir les 26 niveaux du bac à sable SQL",
         "database",
         "sql_level",
-        20,
+        26,
         False,
     ),
     ("level-3", "Technicien", "Atteindre le niveau 3", "star", "level", 3, False),

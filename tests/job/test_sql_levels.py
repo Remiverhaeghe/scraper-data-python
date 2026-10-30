@@ -145,9 +145,9 @@ def test_progress_dialect_and_points(tmp_path):
     assert vOverview["passed"] == 1
     assert vOverview["total"] == len(load_levels())
     assert vOverview["series"][0]["rows"][0]["query"] == "SELECT nom"
-    assert vOverview["series"][0]["rows"][1]["query"] == (
-        get_level("filtre-date")["starter"]
-    )
+    vSecond = vOverview["series"][0]["rows"][1]
+
+    assert vSecond["query"] == get_level(vSecond["id"])["starter"]
     assert load_activity(vDatabaseFile)[vNow.date()]["xp"] == 15
     assert {vEntry[0] for vEntry in ACHIEVEMENTS} >= {"sql-first", "sql-all"}
     assert [vEntry[5] for vEntry in ACHIEVEMENTS if vEntry[0] == "sql-all"] == [
