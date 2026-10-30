@@ -123,11 +123,14 @@ dans l'historique git.
   « +XP » animé, confettis au passage de niveau, réglage « Jeu et animations »
 - Menu latéral resserré : toutes les pages tiennent à l'écran avec l'encart
   de niveau
-- Révision : thèmes Lean et amélioration continue, et Fiabilité et méthodes
-  (AMDEC, MTBF, GMAO), 100 questions chacun avec calculs, associations et
+- Révision : thèmes Lean et amélioration continue, Fiabilité et méthodes
+  (AMDEC, MTBF, GMAO), IoT industriel et industrie 4.0, Cybersécurité
+  industrielle (IEC 62443), 100 questions chacun avec calculs, associations et
   remises en ordre ; guides pratiques et schémas livrés avec l'application
   (TRS, SMED, kanban, PDCA, Ishikawa, courbe en baignoire, série et parallèle,
-  arbre de défaillance), questions où désigner la bonne zone d'un schéma
+  arbre de défaillance, pyramide ISA-95, MQTT, edge et cloud, modèle de Purdue,
+  zones et conduits, défense en profondeur), questions où désigner la bonne
+  zone d'un schéma
 - Recherches prêtes à l'emploi élargies à la maintenance : technicien de
   maintenance, maintenance ferroviaire, électrotechnicien, GMAO, planificateur
 - Pages carrière sans entreprise suivie affichées « Aucune entreprise suivie »,

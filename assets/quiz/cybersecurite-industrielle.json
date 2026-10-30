@@ -1,0 +1,1564 @@
+{
+  "theme": "Cybersécurité industrielle (IEC 62443)",
+  "skills": [
+    "IEC 62443",
+    "cybersécurité industrielle",
+    "OT",
+    "segmentation",
+    "ANSSI"
+  ],
+  "questions": [
+    {
+      "id": "cyber-001",
+      "level": "débutant",
+      "question": "Que couvre la série de normes IEC 62443 ?",
+      "choices": [
+        "La cybersécurité des systèmes industriels",
+        "La sécurité électrique des armoires basse tension et leur câblage",
+        "La qualité des pièces mécaniques usinées",
+        "Les règles de programmation des robots collaboratifs"
+      ],
+      "answer": 0,
+      "explanation": "L'IEC 62443 (issue de l'ISA-99) s'adresse aux exploitants, intégrateurs et fournisseurs : politiques, analyse de risques, architecture, exigences techniques des systèmes et des composants."
+    },
+    {
+      "id": "cyber-002",
+      "level": "débutant",
+      "question": "Quelle différence entre IT et OT en cybersécurité ?",
+      "choices": [
+        "L'OT pilote des procédés physiques où la disponibilité prime",
+        "L'OT désigne les ordinateurs portables des commerciaux en déplacement",
+        "L'IT est réservée aux usines et l'OT aux bureaux",
+        "Il n'y a pas de différence : les mêmes règles s'appliquent sans adaptation"
+      ],
+      "answer": 0,
+      "explanation": "En informatique de gestion, la confidentialité passe souvent en premier. En OT, un arrêt ou une commande erronée a des conséquences physiques : sécurité des personnes, production, environnement."
+    },
+    {
+      "id": "cyber-003",
+      "level": "débutant",
+      "question": "Dans un système industriel, quel critère passe généralement en premier ?",
+      "choices": [
+        "La disponibilité",
+        "La confidentialité",
+        "L'anonymat",
+        "La portabilité"
+      ],
+      "answer": 0,
+      "explanation": "On parle souvent d'ordre DIC (disponibilité, intégrité, confidentialité) en OT, contre CID en IT. L'intégrité des commandes est aussi critique : une consigne modifiée peut être dangereuse."
+    },
+    {
+      "id": "cyber-004",
+      "level": "débutant",
+      "question": "Qu'est-ce que Stuxnet ?",
+      "choices": [
+        "Un logiciel qui a saboté des automates",
+        "Une norme européenne de cybersécurité pour les réseaux électriques",
+        "Un pare-feu industriel libre et gratuit",
+        "Un protocole de communication entre automates Siemens"
+      ],
+      "answer": 0,
+      "explanation": "Découvert en 2010, Stuxnet modifiait le programme d'automates Siemens pour faire varier la vitesse des centrifugeuses, tout en affichant des valeurs normales aux opérateurs. Il s'est propagé notamment par clé USB."
+    },
+    {
+      "id": "cyber-005",
+      "level": "débutant",
+      "question": "Par quel moyen Stuxnet a-t-il atteint des réseaux non reliés à Internet ?",
+      "choices": [
+        "Des clés USB infectées",
+        "Une connexion satellite cachée dans les automates",
+        "Des courriels envoyés aux automates",
+        "Un réseau Wi-Fi public installé par les attaquants"
+      ],
+      "answer": 0,
+      "explanation": "Un réseau isolé n'est pas invulnérable : supports amovibles, portables de prestataires et mises à jour sont autant de chemins. D'où les stations blanches de décontamination."
+    },
+    {
+      "id": "cyber-006",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'une station blanche ?",
+      "choices": [
+        "Un poste qui analyse les supports amovibles avant leur usage",
+        "Un poste de supervision peint en blanc pour la salle propre",
+        "Un serveur de sauvegarde situé hors du site de production",
+        "Une console de programmation réservée au constructeur"
+      ],
+      "answer": 0,
+      "explanation": "Avant de brancher une clé USB sur un poste industriel, on la passe sur une station de décontamination (plusieurs antivirus, contrôle des types de fichiers)."
+    },
+    {
+      "id": "cyber-007",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un rançongiciel (ransomware) ?",
+      "choices": [
+        "Un logiciel qui chiffre les données et réclame une rançon",
+        "Un outil de sauvegarde automatique des postes de supervision",
+        "Un antivirus spécialisé pour les automates",
+        "Un logiciel de gestion de licences"
+      ],
+      "answer": 0,
+      "explanation": "Les rançongiciels touchent souvent l'informatique de gestion, puis l'usine s'arrête par précaution ou par propagation (NotPetya en 2017, Norsk Hydro en 2019)."
+    },
+    {
+      "id": "cyber-008",
+      "level": "confirmé",
+      "question": "Une attaque par rançongiciel touche l'ERP mais pas les automates. Pourquoi la production peut-elle quand même s'arrêter ?",
+      "choices": [
+        "Ordres de fabrication, étiquettes et expéditions dépendent de l'ERP",
+        "Les automates s'arrêtent dès qu'un virus est détecté sur le réseau du siège",
+        "Le rançongiciel coupe l'alimentation électrique de l'usine",
+        "Les capteurs perdent leur étalonnage"
+      ],
+      "answer": 0,
+      "explanation": "Les dépendances entre IT et OT (MES, étiquetage, planification) doivent être identifiées : un mode dégradé prévu à l'avance permet de continuer à produire."
+    },
+    {
+      "id": "cyber-009",
+      "level": "débutant",
+      "question": "Qu'est-ce que la segmentation réseau ?",
+      "choices": [
+        "Découper le réseau en zones séparées et filtrées",
+        "Couper les câbles réseau en morceaux plus courts pour réduire les pertes",
+        "Donner une adresse IP différente à chaque machine",
+        "Augmenter le débit en ajoutant des commutateurs"
+      ],
+      "answer": 0,
+      "explanation": "Pare-feu, VLAN et règles de filtrage limitent les échanges au nécessaire : une infection dans un segment ne se propage pas librement aux autres."
+    },
+    {
+      "id": "cyber-010",
+      "level": "débutant",
+      "question": "Dans l'IEC 62443, qu'est-ce qu'une zone ?",
+      "choices": [
+        "Un regroupement d'actifs qui partagent les mêmes exigences de sécurité",
+        "La surface au sol délimitée par un marquage jaune autour d'une machine",
+        "Le périmètre de couverture d'un point d'accès Wi-Fi",
+        "Une plage d'adresses IP réservée au constructeur"
+      ],
+      "answer": 0,
+      "explanation": "On regroupe par exemple les automates d'une ligne dans une zone, avec un niveau de sécurité visé. Les échanges entre zones passent par des conduits.",
+      "visual": {
+        "asset": "cyber-zones.svg",
+        "alt": "Zones et conduits selon l'IEC 62443"
+      }
+    },
+    {
+      "id": "cyber-011",
+      "level": "débutant",
+      "question": "Dans l'IEC 62443, qu'est-ce qu'un conduit ?",
+      "choices": [
+        "Un canal de communication contrôlé entre deux zones",
+        "Une gaine électrique qui protège les câbles de puissance",
+        "Un tuyau d'air comprimé entre deux machines",
+        "Une connexion Internet partagée par les postes"
+      ],
+      "answer": 0,
+      "explanation": "Le conduit décrit et protège les flux autorisés entre zones : pare-feu, règles, chiffrement, surveillance.",
+      "visual": {
+        "asset": "cyber-zones.svg",
+        "alt": "Zones et conduits selon l'IEC 62443"
+      }
+    },
+    {
+      "id": "cyber-012",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Sur ce schéma, cliquez sur le passage contrôlé entre la DMZ et la cellule de la ligne 2.",
+      "zones": [
+        {
+          "label": "Zone bureautique",
+          "rect": [
+            40,
+            60,
+            250,
+            180
+          ]
+        },
+        {
+          "label": "Conduit C1",
+          "rect": [
+            292,
+            135,
+            56,
+            30
+          ]
+        },
+        {
+          "label": "Zone DMZ",
+          "rect": [
+            350,
+            60,
+            200,
+            180
+          ]
+        },
+        {
+          "label": "Conduit C2",
+          "rect": [
+            552,
+            135,
+            56,
+            30
+          ]
+        },
+        {
+          "label": "Zone cellule ligne 2",
+          "rect": [
+            610,
+            60,
+            250,
+            180
+          ]
+        }
+      ],
+      "answer": 3,
+      "visual": {
+        "asset": "cyber-zones.svg",
+        "alt": "Zones et conduits selon l'IEC 62443",
+        "show": "question"
+      },
+      "explanation": "Le conduit C2 est le seul chemin autorisé entre la DMZ et la cellule : on y filtre les protocoles, les adresses et les sens de flux."
+    },
+    {
+      "id": "cyber-013",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Sur le modèle de Purdue, cliquez sur la zone tampon où transitent les échanges entre l'informatique et l'usine.",
+      "zones": [
+        {
+          "label": "Niveaux 4-5 : réseau d'entreprise (IT)",
+          "rect": [
+            150,
+            54,
+            600,
+            50
+          ]
+        },
+        {
+          "label": "DMZ industrielle (niveau 3,5)",
+          "rect": [
+            150,
+            116,
+            600,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 3 : opérations du site",
+          "rect": [
+            150,
+            178,
+            600,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 2 : supervision",
+          "rect": [
+            150,
+            240,
+            600,
+            50
+          ]
+        },
+        {
+          "label": "Niveaux 0-1 : contrôle et terrain",
+          "rect": [
+            150,
+            302,
+            600,
+            50
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "cyber-purdue.svg",
+        "alt": "Modèle de Purdue avec DMZ industrielle",
+        "show": "question"
+      },
+      "explanation": "La DMZ industrielle héberge serveur relais, historique répliqué et dépôt de mises à jour. L'IT et l'OT s'y connectent chacun de leur côté, sans flux direct entre eux."
+    },
+    {
+      "id": "cyber-014",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Sur le modèle de Purdue, cliquez sur le niveau qui accueille les postes d'ingénierie et le SCADA.",
+      "zones": [
+        {
+          "label": "Niveaux 4-5 : réseau d'entreprise (IT)",
+          "rect": [
+            150,
+            54,
+            600,
+            50
+          ]
+        },
+        {
+          "label": "DMZ industrielle (niveau 3,5)",
+          "rect": [
+            150,
+            116,
+            600,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 3 : opérations du site",
+          "rect": [
+            150,
+            178,
+            600,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 2 : supervision",
+          "rect": [
+            150,
+            240,
+            600,
+            50
+          ]
+        },
+        {
+          "label": "Niveaux 0-1 : contrôle et terrain",
+          "rect": [
+            150,
+            302,
+            600,
+            50
+          ]
+        }
+      ],
+      "answer": 3,
+      "visual": {
+        "asset": "cyber-purdue.svg",
+        "alt": "Modèle de Purdue avec DMZ industrielle",
+        "show": "question"
+      },
+      "explanation": "Le niveau 2 regroupe la supervision : SCADA, IHM et postes d'ingénierie qui programment les automates. Ces postes sont des cibles de choix : ils parlent directement aux automates."
+    },
+    {
+      "id": "cyber-015",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Dans la défense en profondeur, cliquez sur la couche qui regroupe segmentation et pare-feu.",
+      "zones": [
+        {
+          "label": "Politiques, formation, procédures",
+          "rect": [
+            40,
+            50,
+            820,
+            22
+          ]
+        },
+        {
+          "label": "Sécurité physique",
+          "rect": [
+            90,
+            76,
+            720,
+            22
+          ]
+        },
+        {
+          "label": "Réseau",
+          "rect": [
+            140,
+            102,
+            620,
+            22
+          ]
+        },
+        {
+          "label": "Postes",
+          "rect": [
+            190,
+            128,
+            520,
+            22
+          ]
+        },
+        {
+          "label": "Automates et données",
+          "rect": [
+            270,
+            170,
+            360,
+            60
+          ]
+        }
+      ],
+      "answer": 2,
+      "visual": {
+        "asset": "cyber-defense.svg",
+        "alt": "Couches de la défense en profondeur",
+        "show": "question"
+      },
+      "explanation": "Chaque couche compense les failles des autres : organisation, accès physique, réseau, postes, et enfin les automates eux-mêmes."
+    },
+    {
+      "id": "cyber-016",
+      "level": "débutant",
+      "question": "Qu'est-ce que la défense en profondeur ?",
+      "choices": [
+        "Superposer plusieurs protections indépendantes",
+        "Installer le serveur le plus profondément possible dans le bâtiment",
+        "Concentrer tout le budget sur un pare-feu très performant en entrée de site",
+        "Former un seul expert chargé de toute la sécurité"
+      ],
+      "answer": 0,
+      "explanation": "Aucune mesure n'est parfaite. Si le pare-feu est contourné, le durcissement des postes, la surveillance et les sauvegardes limitent encore les dégâts.",
+      "visual": {
+        "asset": "cyber-defense.svg",
+        "alt": "Couches de la défense en profondeur"
+      }
+    },
+    {
+      "id": "cyber-017",
+      "level": "débutant",
+      "question": "Qu'est-ce que la DMZ industrielle ?",
+      "choices": [
+        "Une zone tampon entre le réseau d'entreprise et l'usine",
+        "Une zone démilitarisée autour des machines dangereuses, sans personnel",
+        "Le réseau Wi-Fi des visiteurs",
+        "Le local technique où sont stockées les pièces de rechange"
+      ],
+      "answer": 0,
+      "explanation": "Les flux s'arrêtent dans la DMZ : l'historique est répliqué vers elle, l'IT le lit là. Un attaquant présent dans l'IT ne peut pas ouvrir de session directe sur un automate.",
+      "visual": {
+        "asset": "cyber-purdue.svg",
+        "alt": "Modèle de Purdue avec DMZ industrielle"
+      }
+    },
+    {
+      "id": "cyber-018",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'une diode réseau (diode de données) ?",
+      "choices": [
+        "Un équipement qui ne laisse passer les données que dans un sens",
+        "Une diode électronique qui protège un automate contre les surtensions",
+        "Un voyant qui signale l'activité d'un câble réseau",
+        "Un logiciel qui accélère les transferts de fichiers"
+      ],
+      "answer": 0,
+      "explanation": "Par construction physique, elle laisse sortir les données de l'usine vers l'IT mais rien ne peut revenir. Elle est utilisée sur les systèmes les plus critiques."
+    },
+    {
+      "id": "cyber-019",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque rôle de l'IEC 62443 à sa responsabilité.",
+      "pairs": [
+        [
+          "Exploitant (asset owner)",
+          "Exploiter le système et gérer ses risques"
+        ],
+        [
+          "Intégrateur",
+          "Concevoir et installer la solution"
+        ],
+        [
+          "Fournisseur de produits",
+          "Développer des composants sécurisés"
+        ]
+      ],
+      "explanation": "Chaque partie de la norme s'adresse à un rôle : la sécurité d'une installation dépend des trois, et les contrats doivent préciser qui fait quoi."
+    },
+    {
+      "id": "cyber-020",
+      "level": "confirmé",
+      "question": "Combien de niveaux de sécurité (SL) la norme IEC 62443 définit-elle au-dessus de SL 0 ?",
+      "choices": [
+        "4",
+        "2",
+        "3",
+        "7"
+      ],
+      "answer": 0,
+      "explanation": "SL 1 : protection contre une erreur ou une violation occasionnelle ; SL 2 : attaquant aux moyens simples ; SL 3 : moyens sophistiqués ; SL 4 : moyens étendus d'un attaquant organisé."
+    },
+    {
+      "id": "cyber-021",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque niveau de sécurité IEC 62443 à la menace visée.",
+      "pairs": [
+        [
+          "SL 1",
+          "Erreur ou violation occasionnelle"
+        ],
+        [
+          "SL 2",
+          "Attaque volontaire aux moyens simples"
+        ],
+        [
+          "SL 3",
+          "Attaque aux moyens sophistiqués"
+        ],
+        [
+          "SL 4",
+          "Attaquant organisé aux moyens étendus"
+        ]
+      ],
+      "explanation": "On fixe un niveau cible par zone (SL-T) après analyse de risques, puis on vérifie le niveau atteint (SL-A) par les mesures en place."
+    },
+    {
+      "id": "cyber-022",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Combien d'exigences fondamentales (FR) l'IEC 62443 définit-elle pour structurer les exigences techniques ?",
+      "value": 7,
+      "tolerance": 0,
+      "explanation": "Identification et authentification, contrôle d'usage, intégrité, confidentialité, flux restreints, réponse aux événements, disponibilité des ressources."
+    },
+    {
+      "id": "cyber-023",
+      "level": "confirmé",
+      "question": "Laquelle de ces exigences fait partie des exigences fondamentales de l'IEC 62443 ?",
+      "choices": [
+        "La restriction des flux de données",
+        "La réduction de la consommation électrique",
+        "L'harmonisation des couleurs des écrans",
+        "Le remplacement annuel du matériel"
+      ],
+      "answer": 0,
+      "explanation": "Restreindre les flux (Restricted Data Flow) se traduit par la segmentation, les zones et les conduits."
+    },
+    {
+      "id": "cyber-024",
+      "level": "débutant",
+      "question": "Quel organisme publie en France des guides de cybersécurité des systèmes industriels ?",
+      "choices": [
+        "L'ANSSI",
+        "L'INRS",
+        "L'AFNOR seule",
+        "La CNIL"
+      ],
+      "answer": 0,
+      "explanation": "L'Agence nationale de la sécurité des systèmes d'information propose une méthode de classification (classes 1 à 3) et des mesures détaillées pour les systèmes industriels."
+    },
+    {
+      "id": "cyber-025",
+      "level": "confirmé",
+      "question": "Dans la méthode de l'ANSSI, que détermine la classe d'un système industriel (1, 2 ou 3) ?",
+      "choices": [
+        "Le niveau de mesures selon la gravité",
+        "Le nombre d'automates à installer sur la ligne",
+        "La classe énergétique des machines",
+        "Le nombre d'opérateurs autorisés sur le site"
+      ],
+      "answer": 0,
+      "explanation": "Plus les conséquences d'une attaque sont graves (humaines, environnementales, économiques), plus la classe est élevée et les mesures exigeantes, jusqu'à l'homologation en classe 3."
+    },
+    {
+      "id": "cyber-026",
+      "level": "débutant",
+      "question": "Qu'impose la directive européenne NIS2 ?",
+      "choices": [
+        "Des mesures de sécurité et la déclaration d'incidents",
+        "Une norme de câblage Ethernet pour les usines européennes",
+        "L'interdiction des automates connectés à un réseau",
+        "Le chiffrement de chaque câble électrique"
+      ],
+      "answer": 0,
+      "explanation": "NIS2 élargit les secteurs concernés (énergie, transports, eau, industrie manufacturière, agroalimentaire…) avec des obligations de gestion des risques et de notification."
+    },
+    {
+      "id": "cyber-027",
+      "level": "débutant",
+      "question": "Quel est le premier travail d'une démarche de cybersécurité industrielle ?",
+      "choices": [
+        "Inventorier les équipements, logiciels et flux",
+        "Acheter un pare-feu de dernière génération",
+        "Débrancher le réseau de l'usine",
+        "Installer un antivirus sur chaque automate"
+      ],
+      "answer": 0,
+      "explanation": "On ne protège pas ce qu'on ne connaît pas : automates, versions de firmware, postes, comptes, connexions distantes, flux. La cartographie fonde l'analyse de risques."
+    },
+    {
+      "id": "cyber-028",
+      "level": "confirmé",
+      "question": "Pourquoi installer un antivirus classique sur un poste de supervision demande-t-il des précautions ?",
+      "choices": [
+        "Il peut bloquer ou ralentir le logiciel de supervision",
+        "Les antivirus sont interdits par la loi sur les postes industriels",
+        "Les postes industriels ne peuvent pas recevoir de logiciel",
+        "Un antivirus coupe la communication avec les automates"
+      ],
+      "answer": 0,
+      "explanation": "On vérifie la compatibilité avec l'éditeur de supervision, on exclut certains dossiers, et l'on préfère souvent la liste blanche d'applications sur les postes figés."
+    },
+    {
+      "id": "cyber-029",
+      "level": "confirmé",
+      "question": "Qu'est-ce que la liste blanche d'applications (allowlisting) ?",
+      "choices": [
+        "N'autoriser à s'exécuter que les programmes approuvés",
+        "La liste des sites web recommandés aux opérateurs",
+        "Un registre des employés autorisés à entrer dans l'usine",
+        "Un antivirus qui détecte les virus connus par leur signature"
+      ],
+      "answer": 0,
+      "explanation": "Adaptée aux postes industriels dont les logiciels changent peu : un programme inconnu, même nouveau, ne peut pas s'exécuter."
+    },
+    {
+      "id": "cyber-030",
+      "level": "débutant",
+      "question": "Qu'est-ce que le durcissement d'un poste ?",
+      "choices": [
+        "Réduire sa surface d'attaque en retirant ce qui est inutile",
+        "Remplacer son boîtier par un modèle renforcé contre les chocs",
+        "Augmenter la puissance de son processeur",
+        "Le coller au bureau pour éviter le vol"
+      ],
+      "answer": 0,
+      "explanation": "Désinstaller les logiciels et services inutiles, fermer les ports, désactiver l'USB, appliquer des réglages sécurisés : moins il y a de portes, moins il y a de risques."
+    },
+    {
+      "id": "cyber-031",
+      "level": "débutant",
+      "question": "Pourquoi les comptes partagés (« operateur / operateur ») posent-ils problème ?",
+      "choices": [
+        "On ne sait plus qui a fait quoi",
+        "Ils ralentissent le démarrage des postes de supervision",
+        "Ils consomment trop de licences logicielles",
+        "Ils empêchent l'impression des rapports"
+      ],
+      "answer": 0,
+      "explanation": "Des comptes nominatifs avec des droits adaptés permettent la traçabilité. Là où un compte partagé est inévitable (poste de conduite), on limite ses droits au strict nécessaire."
+    },
+    {
+      "id": "cyber-032",
+      "level": "débutant",
+      "question": "Qu'est-ce que le principe du moindre privilège ?",
+      "choices": [
+        "Donner à chacun les seuls droits nécessaires à son travail",
+        "Donner les droits administrateur à l'ensemble des techniciens pour gagner du temps",
+        "Réserver les postes informatiques aux cadres",
+        "Supprimer les comptes inutilisés une fois par an"
+      ],
+      "answer": 0,
+      "explanation": "Un opérateur conduit, il ne modifie pas le programme ; un compte compromis aux droits limités fait moins de dégâts."
+    },
+    {
+      "id": "cyber-033",
+      "level": "confirmé",
+      "question": "Un prestataire doit intervenir à distance sur un automate. Quelle solution est la plus sûre ?",
+      "choices": [
+        "Un accès via bastion, avec MFA, ouvert le temps de l'intervention",
+        "Un logiciel de prise en main à distance laissé ouvert en permanence",
+        "Un port de l'automate ouvert sur Internet avec un mot de passe solide",
+        "Un compte partagé dont le mot de passe est envoyé par courriel"
+      ],
+      "answer": 0,
+      "explanation": "Le bastion centralise et enregistre les sessions ; l'accès est validé par l'exploitant, limité dans le temps et aux équipements nécessaires, avec authentification forte."
+    },
+    {
+      "id": "cyber-034",
+      "level": "débutant",
+      "question": "Que signifie MFA ?",
+      "choices": [
+        "Authentification à plusieurs facteurs",
+        "Mise en Forme Automatique des rapports",
+        "Module de Filtrage d'Adresses",
+        "Maintenance Fonctionnelle Assistée"
+      ],
+      "answer": 0,
+      "explanation": "Combiner quelque chose que l'on sait (mot de passe), que l'on possède (téléphone, clé) ou que l'on est (empreinte) : un mot de passe volé ne suffit plus."
+    },
+    {
+      "id": "cyber-035",
+      "level": "confirmé",
+      "question": "Pourquoi un VPN seul ne suffit-il pas à sécuriser l'accès distant d'un prestataire ?",
+      "choices": [
+        "Il chiffre le tunnel mais ouvre souvent un accès trop large",
+        "Il ralentit la connexion au point de la rendre inutilisable",
+        "Il ne fonctionne qu'en Wi-Fi et pas en filaire",
+        "Il interdit l'usage des automates pendant la connexion"
+      ],
+      "answer": 0,
+      "explanation": "Un VPN mal configuré place le portable du prestataire au cœur du réseau. On restreint les destinations, on enregistre les sessions et on désactive l'accès hors intervention."
+    },
+    {
+      "id": "cyber-036",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un bastion d'administration ?",
+      "choices": [
+        "Un point de passage unique pour administrer",
+        "Un mur coupe-feu entre deux bâtiments de l'usine",
+        "Un local fermé à clé où sont rangées les armoires électriques",
+        "Le poste du responsable de la sécurité au poste de garde"
+      ],
+      "answer": 0,
+      "explanation": "Toutes les connexions d'administration passent par lui : authentification forte, droits par cible, enregistrement des sessions pour l'audit."
+    },
+    {
+      "id": "cyber-037",
+      "level": "débutant",
+      "question": "Que signifie CVE ?",
+      "choices": [
+        "Un identifiant public de vulnérabilité connue",
+        "Un certificat de vérification électrique",
+        "Un câble de verrouillage Ethernet",
+        "Une classe de valeur environnementale"
+      ],
+      "answer": 0,
+      "explanation": "Common Vulnerabilities and Exposures : chaque faille publiée reçoit un identifiant (CVE-2024-…), avec un score de gravité (CVSS) pour prioriser."
+    },
+    {
+      "id": "cyber-038",
+      "level": "confirmé",
+      "question": "Une vulnérabilité critique touche un automate en production qu'on ne peut pas mettre à jour avant l'arrêt annuel. Que faire ?",
+      "choices": [
+        "Réduire l'exposition en attendant : filtrage, surveillance, accès limités",
+        "Mettre à jour immédiatement en production sans test préalable",
+        "Ignorer la vulnérabilité jusqu'à l'arrêt annuel",
+        "Débrancher définitivement l'automate du réseau sans prévenir la production"
+      ],
+      "answer": 0,
+      "explanation": "Les mesures compensatoires (règles de pare-feu, désactivation du service vulnérable, détection) réduisent le risque jusqu'à la correction planifiée et testée."
+    },
+    {
+      "id": "cyber-039",
+      "level": "confirmé",
+      "question": "Pourquoi tester un correctif avant de l'appliquer sur un système industriel ?",
+      "choices": [
+        "Un correctif peut casser la compatibilité avec le procédé",
+        "Les correctifs industriels contiennent souvent des virus",
+        "La loi interdit d'installer un correctif le jour de sa parution",
+        "Un correctif efface le programme de l'automate"
+      ],
+      "answer": 0,
+      "explanation": "Validation par l'éditeur de supervision, essai sur un poste de test ou un jumeau, application lors d'un arrêt avec retour arrière prévu."
+    },
+    {
+      "id": "cyber-040",
+      "level": "débutant",
+      "question": "Qu'est-ce que la règle de sauvegarde 3-2-1 ?",
+      "choices": [
+        "3 copies, sur 2 supports différents, dont 1 hors site",
+        "3 sauvegardes par jour, 2 par semaine et 1 par mois",
+        "3 serveurs, 2 pare-feu et 1 antivirus",
+        "3 techniciens, 2 responsables et 1 auditeur"
+      ],
+      "answer": 0,
+      "explanation": "Une copie hors ligne ou hors site échappe au rançongiciel qui chiffre ce qu'il atteint sur le réseau. On ajoute souvent une copie immuable."
+    },
+    {
+      "id": "cyber-041",
+      "level": "débutant",
+      "type": "numerique",
+      "question": "Selon la règle 3-2-1, combien de copies des données faut-il au total ?",
+      "value": 3,
+      "tolerance": 0,
+      "explanation": "Les données d'origine plus deux sauvegardes, sur deux types de supports, dont une hors site."
+    },
+    {
+      "id": "cyber-042",
+      "level": "confirmé",
+      "question": "Que faut-il sauvegarder en plus des données pour pouvoir redémarrer une ligne après une attaque ?",
+      "choices": [
+        "Programmes, configurations et licences",
+        "Les plans du bâtiment et l'organigramme de l'entreprise",
+        "Les photos des machines prises lors de leur réception",
+        "Les courriels des opérateurs"
+      ],
+      "answer": 0,
+      "explanation": "Programmes d'automates, projets de supervision, paramètres de variateurs, configurations réseau, médias d'installation et clés de licence : sans eux, la reconstruction prend des semaines."
+    },
+    {
+      "id": "cyber-043",
+      "level": "confirmé",
+      "question": "Pourquoi tester régulièrement la restauration des sauvegardes ?",
+      "choices": [
+        "Une sauvegarde jamais restaurée peut se révéler inutilisable le jour J",
+        "Pour vérifier que les disques de sauvegarde ne sont pas pleins de poussière",
+        "Parce que la restauration accélère les automates",
+        "Pour supprimer les anciennes sauvegardes"
+      ],
+      "answer": 0,
+      "explanation": "Support illisible, version incompatible, clé de chiffrement perdue : l'essai périodique de restauration valide aussi la procédure et sa durée."
+    },
+    {
+      "id": "cyber-044",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les phases de la réponse à un incident de cybersécurité.",
+      "items": [
+        "Préparer : contacts, procédures, sauvegardes",
+        "Détecter et qualifier l'incident",
+        "Contenir : isoler les systèmes touchés",
+        "Éradiquer la menace et restaurer",
+        "Tirer les leçons et améliorer les mesures"
+      ],
+      "explanation": "Cette démarche suit les guides du NIST et de l'ANSSI. En OT, le confinement se décide avec la production : isoler peut arrêter un procédé."
+    },
+    {
+      "id": "cyber-045",
+      "level": "confirmé",
+      "question": "Un poste de supervision montre un comportement suspect. Quel premier réflexe ?",
+      "choices": [
+        "Prévenir le référent et isoler le poste",
+        "Formater immédiatement le disque pour supprimer le virus",
+        "Continuer à travailler et attendre la fin de l'équipe",
+        "Débrancher l'ensemble des automates de l'usine"
+      ],
+      "answer": 0,
+      "explanation": "Isoler limite la propagation ; garder le poste allumé conserve des traces utiles à l'analyse. On suit la procédure prévue et on vérifie la sécurité du procédé."
+    },
+    {
+      "id": "cyber-046",
+      "level": "débutant",
+      "question": "Qu'est-ce que l'hameçonnage (phishing) ?",
+      "choices": [
+        "Un message piégé qui pousse à cliquer ou à donner ses identifiants",
+        "Une technique de pêche à l'aimant des pièces tombées dans les cuves",
+        "Une attaque physique contre les armoires électriques",
+        "Une panne de réseau due à un câble coupé"
+      ],
+      "answer": 0,
+      "explanation": "C'est la porte d'entrée de nombreuses attaques. La formation, la vigilance sur les expéditeurs et la MFA réduisent le risque."
+    },
+    {
+      "id": "cyber-047",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'un outil de détection d'intrusion industriel (IDS OT) apporte ?",
+      "choices": [
+        "Il écoute le trafic et alerte sur les échanges anormaux",
+        "Il bloque les communications entre automates",
+        "Il remplace le pare-feu en entrée de site",
+        "Il programme automatiquement les automates"
+      ],
+      "answer": 0,
+      "explanation": "Branché en écoute passive (port miroir), il comprend les protocoles industriels, repère une écriture inhabituelle sur un automate ou un nouvel équipement, sans perturber le procédé."
+    },
+    {
+      "id": "cyber-048",
+      "level": "confirmé",
+      "question": "Pourquoi un IDS industriel est-il souvent installé en écoute passive ?",
+      "choices": [
+        "Pour ne pas perturber le procédé",
+        "Parce qu'il est incapable d'analyser le trafic en temps réel",
+        "Parce que la loi interdit la détection active",
+        "Pour économiser de l'électricité"
+      ],
+      "answer": 0,
+      "explanation": "Une copie du trafic est analysée hors ligne de flux : en cas de défaillance de l'outil, la production n'est pas touchée."
+    },
+    {
+      "id": "cyber-049",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un SIEM ?",
+      "choices": [
+        "Un outil qui centralise et corrèle les journaux",
+        "Un automate de sécurité pour les machines dangereuses",
+        "Un logiciel de planification de la production",
+        "Un réseau sans fil industriel"
+      ],
+      "answer": 0,
+      "explanation": "Le SIEM rassemble les journaux des pare-feu, postes, serveurs et sondes pour détecter des enchaînements suspects, souvent opéré par un SOC."
+    },
+    {
+      "id": "cyber-050",
+      "level": "débutant",
+      "question": "Pourquoi conserver les journaux (logs) des équipements industriels ?",
+      "choices": [
+        "Pour détecter et comprendre un incident a posteriori",
+        "Pour mesurer le temps de présence des opérateurs",
+        "Parce qu'ils accélèrent le fonctionnement des équipements",
+        "Pour remplacer les sauvegardes"
+      ],
+      "answer": 0,
+      "explanation": "Connexions, modifications de programme, changements de consigne : sans journaux horodatés, impossible de reconstituer une attaque ou une erreur."
+    },
+    {
+      "id": "cyber-051",
+      "level": "confirmé",
+      "question": "Quelle différence entre safety et security ?",
+      "choices": [
+        "Safety : défaillances ; security : malveillance",
+        "Safety concerne les ordinateurs, security les machines",
+        "Ce sont deux traductions du même mot sans différence",
+        "Safety est européenne, security américaine"
+      ],
+      "answer": 0,
+      "explanation": "La sûreté de fonctionnement (safety) traite pannes et erreurs ; la cybersécurité (security) les attaques. Une attaque peut neutraliser une fonction de sécurité : les deux analyses se croisent."
+    },
+    {
+      "id": "cyber-052",
+      "level": "confirmé",
+      "question": "Qu'a visé le logiciel malveillant Triton (Trisis) en 2017 ?",
+      "choices": [
+        "Des automates de sécurité pétrochimiques",
+        "Les caisses enregistreuses d'une chaîne de magasins",
+        "Les téléphones mobiles des opérateurs",
+        "Les serveurs de messagerie d'un hôpital"
+      ],
+      "answer": 0,
+      "explanation": "Triton s'en prenait aux systèmes instrumentés de sécurité (Triconex), conçus pour éviter les accidents. Il a révélé que la sécurité des personnes pouvait être directement visée."
+    },
+    {
+      "id": "cyber-053",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque attaque connue à sa cible.",
+      "pairs": [
+        [
+          "Stuxnet",
+          "Centrifugeuses pilotées par automates"
+        ],
+        [
+          "Industroyer",
+          "Réseau électrique ukrainien"
+        ],
+        [
+          "Triton",
+          "Automates de sécurité pétrochimiques"
+        ],
+        [
+          "NotPetya",
+          "Systèmes Windows d'entreprises du monde entier"
+        ]
+      ],
+      "explanation": "Ces cas servent d'exemples dans les analyses de risques : sabotage ciblé, coupure électrique, attaque des fonctions de sécurité, destruction de données à grande échelle."
+    },
+    {
+      "id": "cyber-054",
+      "level": "débutant",
+      "question": "Sur un automate ou une IHM, quel est l'équivalent numérique d'une porte laissée ouverte ?",
+      "choices": [
+        "Un port de service laissé actif et accessible",
+        "Un écran éteint en dehors des heures de production",
+        "Une imprimante réseau sans papier",
+        "Un câble Ethernet de couleur non standard"
+      ],
+      "answer": 0,
+      "explanation": "Serveur web de diagnostic, Telnet, FTP ou port de programmation ouverts sans besoin : on les ferme ou on les filtre."
+    },
+    {
+      "id": "cyber-055",
+      "level": "confirmé",
+      "question": "Qu'est-ce que Shodan révèle pour une usine ?",
+      "choices": [
+        "Des équipements exposés sur Internet",
+        "Le planning de production publié par erreur",
+        "Le nombre d'employés présents",
+        "La consommation électrique du site"
+      ],
+      "answer": 0,
+      "explanation": "Ce moteur de recherche indexe les équipements connectés : automates, IHM ou passerelles visibles en ligne sont des cibles faciles. Rien ne doit être exposé directement."
+    },
+    {
+      "id": "cyber-056",
+      "level": "débutant",
+      "question": "Pourquoi la sécurité physique fait-elle partie de la cybersécurité industrielle ?",
+      "choices": [
+        "Une armoire ouverte permet de brancher une clé",
+        "Parce que les câbles réseau peuvent rouiller",
+        "Parce que les pare-feu doivent être fixés au mur",
+        "Pour empêcher les opérateurs de déplacer les écrans"
+      ],
+      "answer": 0,
+      "explanation": "Armoires fermées, prises réseau inutilisées désactivées, contrôle d'accès aux salles techniques : un attaquant sur place contourne les protections réseau."
+    },
+    {
+      "id": "cyber-057",
+      "level": "confirmé",
+      "question": "Pourquoi désactiver les prises réseau inutilisées dans les armoires et ateliers ?",
+      "choices": [
+        "Pour empêcher le branchement d'un équipement non autorisé",
+        "Pour économiser l'électricité des commutateurs",
+        "Pour accélérer les autres prises",
+        "Parce que les prises s'usent si elles restent actives"
+      ],
+      "answer": 0,
+      "explanation": "Désactivation des ports, contrôle d'accès 802.1X ou filtrage des adresses MAC limitent les branchements sauvages."
+    },
+    {
+      "id": "cyber-058",
+      "level": "débutant",
+      "question": "Quelle bonne pratique s'applique aux mots de passe par défaut des équipements industriels ?",
+      "choices": [
+        "Les changer dès l'installation",
+        "Les garder pour que le constructeur puisse intervenir",
+        "Les noter sur une étiquette collée sur l'équipement",
+        "Les partager avec l'équipe par messagerie"
+      ],
+      "answer": 0,
+      "explanation": "Les mots de passe par défaut sont publiés dans les notices et connus des attaquants. On les remplace par des mots de passe robustes, conservés dans un coffre."
+    },
+    {
+      "id": "cyber-059",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un mot de passe de 8 lettres minuscules (26 possibilités par caractère) : combien de combinaisons existe-t-il, en milliards (arrondi) ?",
+      "value": 209,
+      "tolerance": 2,
+      "explanation": "26^8 ≈ 208,8 milliards. Un ordinateur moderne les essaie vite hors ligne : la longueur et la variété des caractères comptent plus que la complexité apparente."
+    },
+    {
+      "id": "cyber-060",
+      "level": "débutant",
+      "question": "Qu'est-ce qui rend un mot de passe le plus résistant ?",
+      "choices": [
+        "Sa longueur, par exemple une phrase de passe",
+        "Le remplacer chaque semaine par une variante proche",
+        "Utiliser le nom de l'usine suivi de l'année",
+        "Le réutiliser sur plusieurs équipements pour s'en souvenir"
+      ],
+      "answer": 0,
+      "explanation": "Une phrase de plusieurs mots est longue et mémorisable. Un gestionnaire de mots de passe évite la réutilisation."
+    },
+    {
+      "id": "cyber-061",
+      "level": "confirmé",
+      "question": "Pourquoi Modbus TCP et de nombreux protocoles industriels anciens sont-ils risqués ?",
+      "choices": [
+        "Ils n'authentifient pas l'émetteur des commandes",
+        "Ils transmettent les données trop lentement pour la production",
+        "Ils nécessitent une connexion Internet",
+        "Ils ne fonctionnent qu'avec des câbles en cuivre"
+      ],
+      "answer": 0,
+      "explanation": "Toute machine qui peut joindre l'automate peut écrire une consigne. La segmentation et le filtrage par adresse et par fonction compensent ce manque."
+    },
+    {
+      "id": "cyber-062",
+      "level": "confirmé",
+      "question": "Qu'apporte un pare-feu industriel capable d'inspecter les protocoles (DPI) ?",
+      "choices": [
+        "Il autorise la lecture et bloque l'écriture d'un automate",
+        "Il augmente la vitesse du réseau de l'usine",
+        "Il remplace les sauvegardes des automates",
+        "Il chiffre l'énergie électrique"
+      ],
+      "answer": 0,
+      "explanation": "L'inspection approfondie comprend Modbus, S7 ou EtherNet/IP : on peut par exemple permettre à la supervision de lire mais interdire les écritures depuis une autre zone."
+    },
+    {
+      "id": "cyber-063",
+      "level": "débutant",
+      "question": "Pourquoi un ordinateur portable de prestataire est-il un risque ?",
+      "choices": [
+        "Il a pu être infecté ailleurs",
+        "Il consomme trop d'électricité sur les prises de l'atelier",
+        "Il est plus lourd qu'une tablette",
+        "Il ne peut pas se connecter aux automates"
+      ],
+      "answer": 0,
+      "explanation": "On contrôle les portables externes (analyse, accès limité, réseau dédié) ou l'on fournit un poste de maintenance appartenant au site."
+    },
+    {
+      "id": "cyber-064",
+      "level": "confirmé",
+      "question": "Qu'est-ce que la gestion des changements (change management) apporte à la cybersécurité OT ?",
+      "choices": [
+        "Chaque modification est validée, tracée et réversible",
+        "Les changements de programme sont interdits sur l'ensemble du site",
+        "Les mises à jour se font automatiquement sans validation",
+        "Le personnel change de poste chaque année"
+      ],
+      "answer": 0,
+      "explanation": "Une modification non tracée d'un programme d'automate est aussi un risque : erreur, perte de version, attaque non détectée. On compare régulièrement les programmes à la référence."
+    },
+    {
+      "id": "cyber-065",
+      "level": "confirmé",
+      "question": "Pourquoi comparer régulièrement le programme d'un automate à sa version de référence ?",
+      "choices": [
+        "Pour détecter une modification non autorisée ou oubliée",
+        "Pour mesurer la vitesse du processeur de l'automate",
+        "Pour réduire la consommation électrique de l'automate",
+        "Pour mettre à jour l'heure de l'automate"
+      ],
+      "answer": 0,
+      "explanation": "Les outils de gestion de versions des programmes signalent tout écart : modification malveillante comme correction non documentée."
+    },
+    {
+      "id": "cyber-066",
+      "level": "débutant",
+      "question": "Que faire d'une clé USB trouvée sur le parking de l'usine ?",
+      "choices": [
+        "La remettre au service informatique sans la brancher",
+        "La brancher sur un poste de supervision pour trouver son propriétaire",
+        "La brancher sur son ordinateur personnel",
+        "La jeter dans la poubelle de l'atelier"
+      ],
+      "answer": 0,
+      "explanation": "Déposer des clés piégées est une technique d'attaque connue. Seul le service compétent l'analyse, sur un poste isolé."
+    },
+    {
+      "id": "cyber-067",
+      "level": "confirmé",
+      "question": "Quelle méthode française d'analyse de risques numériques est publiée par l'ANSSI ?",
+      "choices": [
+        "EBIOS Risk Manager",
+        "AMDEC",
+        "HAZOP",
+        "Ishikawa"
+      ],
+      "answer": 0,
+      "explanation": "EBIOS RM part des valeurs métier et construit des scénarios d'attaque réalistes. AMDEC et HAZOP sont des analyses de sûreté de fonctionnement, utiles en complément."
+    },
+    {
+      "id": "cyber-068",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Dans une analyse de risques, un scénario a une vraisemblance de 3 et une gravité de 4 (échelles de 1 à 4). Quel est son niveau de risque (produit) ?",
+      "value": 12,
+      "tolerance": 0,
+      "explanation": "Risque = vraisemblance × gravité = 12 sur 16. On compare au seuil d'acceptation pour décider de mesures."
+    },
+    {
+      "id": "cyber-069",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Une usine perd 50 000 € par jour d'arrêt. Une attaque l'arrête 3 jours. Quel est le coût de l'arrêt en euros ?",
+      "value": 150000,
+      "unit": "€",
+      "tolerance": 0,
+      "explanation": "50 000 × 3 = 150 000 €, sans compter la reconstruction, les pénalités et l'image. Ce chiffrage justifie les investissements de sécurité."
+    },
+    {
+      "id": "cyber-070",
+      "level": "débutant",
+      "question": "Qui doit être formé à la cybersécurité dans une usine ?",
+      "choices": [
+        "Chacun, selon son rôle",
+        "Seulement le responsable informatique",
+        "Seulement les prestataires extérieurs",
+        "Les outils techniques suffisent, sans formation"
+      ],
+      "answer": 0,
+      "explanation": "Clés USB, courriels piégés, prestataires non annoncés : le facteur humain intervient partout. Une sensibilisation courte et régulière est efficace."
+    },
+    {
+      "id": "cyber-071",
+      "level": "confirmé",
+      "question": "Pourquoi un technicien de maintenance est-il un acteur clé de la cybersécurité OT ?",
+      "choices": [
+        "Il accède aux automates et voit les anomalies en premier",
+        "Il est le seul à connaître les mots de passe des serveurs de l'entreprise",
+        "Il décide du budget de sécurité de l'usine",
+        "Il installe les antivirus sur les postes de bureau"
+      ],
+      "answer": 0,
+      "explanation": "Programmes, consoles, clés USB, prestataires : le technicien manipule les points d'entrée. Il repère aussi un comportement anormal d'une machine."
+    },
+    {
+      "id": "cyber-072",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un poste d'ingénierie dans un système industriel ?",
+      "choices": [
+        "Le poste qui programme et configure les automates",
+        "Le bureau du directeur technique de l'usine",
+        "Un poste réservé au calcul de la paie",
+        "Une imprimante de plans grand format"
+      ],
+      "answer": 0,
+      "explanation": "Avec ses logiciels de programmation, il peut tout modifier : on le durcit, on limite son accès au réseau et on le range quand il ne sert pas."
+    },
+    {
+      "id": "cyber-073",
+      "level": "confirmé",
+      "question": "Sur un automate qui le permet, à quoi sert la position du sélecteur « RUN » plutôt que « PROG » ?",
+      "choices": [
+        "À empêcher la modification du programme à distance",
+        "À doubler la vitesse d'exécution du programme",
+        "À couper la communication avec la supervision",
+        "À effacer la mémoire de l'automate"
+      ],
+      "answer": 0,
+      "explanation": "Sur de nombreux automates, le mode RUN verrouillé interdit le téléchargement de programme. C'est une mesure simple contre une modification non autorisée."
+    },
+    {
+      "id": "cyber-074",
+      "level": "confirmé",
+      "question": "Pourquoi signer numériquement le firmware des équipements industriels ?",
+      "choices": [
+        "Pour que l'équipement refuse un firmware modifié",
+        "Pour accélérer le démarrage de l'équipement",
+        "Pour réduire la taille du fichier",
+        "Pour afficher le nom du technicien qui l'a installé"
+      ],
+      "answer": 0,
+      "explanation": "L'équipement vérifie la signature du fabricant avant d'installer la mise à jour. C'est une exigence de l'IEC 62443-4-2 pour les composants."
+    },
+    {
+      "id": "cyber-075",
+      "level": "confirmé",
+      "question": "Qu'exige l'IEC 62443-4-1 des fournisseurs de produits ?",
+      "choices": [
+        "Un cycle de développement sécurisé",
+        "Un délai de livraison inférieur à une semaine",
+        "Une couleur standard pour les automates",
+        "La fourniture du code source à chaque client"
+      ],
+      "answer": 0,
+      "explanation": "Analyse de menaces, codage sécurisé, tests, gestion et publication des vulnérabilités, correctifs : la norme encadre la façon de concevoir les produits."
+    },
+    {
+      "id": "cyber-076",
+      "level": "débutant",
+      "question": "Quel est le principe d'un pare-feu ?",
+      "choices": [
+        "Filtrer les communications selon des règles",
+        "Empêcher le feu de se propager entre deux salles serveurs",
+        "Chiffrer les disques durs des postes",
+        "Sauvegarder les données chaque nuit"
+      ],
+      "answer": 0,
+      "explanation": "Par défaut, on refuse tout et on autorise seulement les flux nécessaires (source, destination, port, protocole), documentés dans une matrice de flux."
+    },
+    {
+      "id": "cyber-077",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'une matrice des flux ?",
+      "choices": [
+        "La liste des communications autorisées entre zones",
+        "Un tableau des débits d'eau des circuits de refroidissement",
+        "Le planning des livraisons de matières",
+        "La liste des câbles d'une armoire"
+      ],
+      "answer": 0,
+      "explanation": "Qui parle à qui, avec quel protocole et dans quel sens : elle sert à configurer les pare-feu et à repérer les flux inattendus."
+    },
+    {
+      "id": "cyber-078",
+      "level": "débutant",
+      "question": "Pourquoi éviter qu'un poste de supervision navigue sur Internet ?",
+      "choices": [
+        "La navigation l'expose à des pièges",
+        "Internet ralentit l'affichage des synoptiques",
+        "Les écrans de supervision sont trop petits",
+        "Les navigateurs consomment l'encre de l'imprimante"
+      ],
+      "answer": 0,
+      "explanation": "Un poste industriel a un usage dédié : la messagerie et la navigation se font sur un autre poste, dans le réseau bureautique."
+    },
+    {
+      "id": "cyber-079",
+      "level": "confirmé",
+      "question": "Une IHM tourne sous un Windows qui n'a plus de mises à jour. Quelle démarche est réaliste ?",
+      "choices": [
+        "Isoler, durcir et surveiller, puis planifier la migration",
+        "La laisser connectée à Internet pour recevoir d'éventuelles mises à jour",
+        "La remplacer en urgence pendant la production",
+        "Ignorer le problème tant qu'elle fonctionne"
+      ],
+      "answer": 0,
+      "explanation": "Les systèmes obsolètes sont courants en usine. Mesures compensatoires (segmentation stricte, liste blanche, USB bloqué) et plan de migration budgété."
+    },
+    {
+      "id": "cyber-080",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un référent cybersécurité sur un site industriel ?",
+      "choices": [
+        "Le coordinateur de la sécurité du site",
+        "Le fournisseur du pare-feu",
+        "Le pompier du site",
+        "Le responsable des achats"
+      ],
+      "answer": 0,
+      "explanation": "Il fait le lien entre production, maintenance et informatique, tient les procédures à jour et reçoit les signalements."
+    },
+    {
+      "id": "cyber-081",
+      "level": "confirmé",
+      "question": "Que signifie un niveau de sécurité cible (SL-T) défini pour une zone ?",
+      "choices": [
+        "Le niveau de protection que la zone doit atteindre",
+        "La température maximale de la salle informatique",
+        "Le nombre de personnes autorisées dans la zone",
+        "La note obtenue lors du dernier audit"
+      ],
+      "answer": 0,
+      "explanation": "SL-T (target) est fixé par l'analyse de risques. SL-C (capability) indique ce que permettent les composants, SL-A (achieved) ce qui est réellement atteint."
+    },
+    {
+      "id": "cyber-082",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre la démarche de l'IEC 62443-3-2 pour une installation.",
+      "items": [
+        "Identifier le système et ses actifs",
+        "Faire une première évaluation des risques",
+        "Découper en zones et conduits",
+        "Évaluer les risques détaillés par zone",
+        "Fixer le niveau de sécurité cible et les mesures"
+      ],
+      "explanation": "Le découpage en zones s'appuie sur une première vue des risques ; l'analyse détaillée de chaque zone fixe ensuite le SL-T et les exigences à respecter."
+    },
+    {
+      "id": "cyber-083",
+      "level": "confirmé",
+      "question": "Pourquoi regrouper dans une même zone des équipements de criticité très différente pose-t-il problème ?",
+      "choices": [
+        "Le maillon faible ouvre l'accès aux autres",
+        "La zone devient trop grande pour le câblage réseau",
+        "Les équipements critiques fonctionnent moins vite",
+        "Les automates refusent de partager un même réseau"
+      ],
+      "answer": 0,
+      "explanation": "Un PC de bureau dans la même zone qu'un automate de sécurité donne à un attaquant un accès direct. On sépare selon les exigences de sécurité."
+    },
+    {
+      "id": "cyber-084",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un VLAN ?",
+      "choices": [
+        "Un réseau logique séparé sur le même matériel",
+        "Un câble réseau plus rapide que la norme",
+        "Un antivirus pour commutateurs",
+        "Un type de fibre optique"
+      ],
+      "answer": 0,
+      "explanation": "Les VLAN séparent logiquement les flux sur des commutateurs partagés. Seuls, ils ne filtrent pas : le passage d'un VLAN à l'autre doit être contrôlé par un pare-feu."
+    },
+    {
+      "id": "cyber-085",
+      "level": "confirmé",
+      "question": "Pourquoi le Wi-Fi industriel demande-t-il des précautions particulières ?",
+      "choices": [
+        "Le signal peut être écouté ou brouillé",
+        "Il ne permet pas de transmettre des données numériques",
+        "Il chauffe les équipements voisins",
+        "Il impose de changer les automates"
+      ],
+      "answer": 0,
+      "explanation": "Chiffrement WPA3, authentification par certificat, réseau séparé, détection des points d'accès pirates. Le brouillage peut aussi arrêter des chariots autonomes."
+    },
+    {
+      "id": "cyber-086",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un SOC ?",
+      "choices": [
+        "Un centre de surveillance de la sécurité",
+        "Une société de contrôle technique des ascenseurs",
+        "Un système d'ordonnancement de la production",
+        "Un standard de câblage"
+      ],
+      "answer": 0,
+      "explanation": "Le Security Operations Center analyse les alertes (SIEM, sondes) en continu, souvent avec des analystes formés aux spécificités OT."
+    },
+    {
+      "id": "cyber-087",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'un plan de continuité d'activité (PCA) apporte face à une cyberattaque ?",
+      "choices": [
+        "Des modes dégradés pour continuer à produire",
+        "Une assurance qui rembourse l'intégralité des pertes",
+        "Une garantie que l'attaque ne réussira pas",
+        "La suppression des sauvegardes devenues inutiles"
+      ],
+      "answer": 0,
+      "explanation": "Fiches papier, production sans MES, étiquettes préimprimées : le PCA décrit comment fonctionner sans certains systèmes. Le PRA décrit la reconstruction."
+    },
+    {
+      "id": "cyber-088",
+      "level": "confirmé",
+      "question": "Pourquoi des exercices de crise sont-ils utiles ?",
+      "choices": [
+        "Ils révèlent les failles du plan avant une vraie crise",
+        "Ils remplacent les sauvegardes",
+        "Ils empêchent toute attaque future",
+        "Ils servent à évaluer le salaire des équipes"
+      ],
+      "answer": 0,
+      "explanation": "Contacts introuvables, sauvegardes inaccessibles, décisions floues : l'exercice met ces problèmes en lumière dans un cadre maîtrisé."
+    },
+    {
+      "id": "cyber-089",
+      "level": "débutant",
+      "question": "Qu'est-ce que l'ingénierie sociale ?",
+      "choices": [
+        "Manipuler quelqu'un pour obtenir un accès",
+        "La conception des vestiaires et salles de pause",
+        "Une méthode d'organisation des équipes",
+        "La gestion des relations avec les syndicats"
+      ],
+      "answer": 0,
+      "explanation": "Faux technicien au téléphone, prestataire non annoncé, courriel urgent du « directeur » : on vérifie l'identité et la demande par un autre canal."
+    },
+    {
+      "id": "cyber-090",
+      "level": "confirmé",
+      "question": "Un appel d'un « support du constructeur » demande d'ouvrir un accès distant urgent. Que faire ?",
+      "choices": [
+        "Rappeler un numéro connu et suivre la procédure",
+        "Ouvrir l'accès tout de suite pour éviter un arrêt",
+        "Donner le mot de passe par téléphone",
+        "Envoyer une copie du programme de l'automate par courriel"
+      ],
+      "answer": 0,
+      "explanation": "L'urgence est une technique classique de manipulation. On rappelle via le contact enregistré et on passe par le circuit d'autorisation de l'accès distant."
+    },
+    {
+      "id": "cyber-091",
+      "level": "confirmé",
+      "question": "Pourquoi synchroniser l'heure des équipements OT a-t-il aussi un intérêt de sécurité ?",
+      "choices": [
+        "Pour reconstituer la chronologie d'un incident",
+        "Pour que les automates exécutent leur programme plus vite",
+        "Pour réduire le nombre de mots de passe",
+        "Pour réveiller les opérateurs à l'heure"
+      ],
+      "answer": 0,
+      "explanation": "Des journaux décalés de quelques minutes rendent l'analyse d'une attaque très difficile. Une source NTP interne et fiable sert toute l'usine."
+    },
+    {
+      "id": "cyber-092",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque mesure de sécurité à la menace qu'elle réduit le plus.",
+      "pairs": [
+        [
+          "Station blanche",
+          "Clé USB infectée"
+        ],
+        [
+          "MFA",
+          "Mot de passe volé"
+        ],
+        [
+          "Sauvegarde hors ligne",
+          "Rançongiciel"
+        ],
+        [
+          "Segmentation",
+          "Propagation d'une infection"
+        ],
+        [
+          "Bastion",
+          "Accès distant non maîtrisé"
+        ]
+      ],
+      "explanation": "Chaque mesure répond à un scénario précis. L'analyse de risques aide à choisir les plus utiles pour un site donné."
+    },
+    {
+      "id": "cyber-093",
+      "level": "confirmé",
+      "question": "Une IHM affiche des valeurs normales alors que le procédé dérive. Quel type d'attaque cela rappelle-t-il ?",
+      "choices": [
+        "Une falsification de la vue, comme Stuxnet",
+        "Une panne d'écran due à une surtension",
+        "Un oubli de calibration de la sonde",
+        "Un simple bug d'affichage sans conséquence"
+      ],
+      "answer": 0,
+      "explanation": "Les attaquants peuvent rejouer des valeurs normales vers la supervision. Des mesures indépendantes et la vigilance sur le terrain restent des garde-fous."
+    },
+    {
+      "id": "cyber-094",
+      "level": "confirmé",
+      "question": "Que vérifier dans un contrat avec un intégrateur au sujet de la cybersécurité ?",
+      "choices": [
+        "Les exigences de sécurité et la gestion des accès",
+        "La couleur des armoires livrées",
+        "Le nombre de techniciens envoyés le premier jour",
+        "La marque des chaises de la salle de contrôle"
+      ],
+      "answer": 0,
+      "explanation": "Niveau de sécurité attendu, durcissement, documentation, comptes livrés, accès distant, correctifs, fin de vie des composants : à préciser avant la commande."
+    },
+    {
+      "id": "cyber-095",
+      "level": "débutant",
+      "question": "Quel est le bon réflexe si l'on constate une modification inexpliquée d'un programme d'automate ?",
+      "choices": [
+        "Le signaler au référent et ne pas recharger sans analyse",
+        "Recharger tout de suite l'ancienne version sans prévenir personne",
+        "Ignorer la modification si la machine tourne",
+        "Supprimer les journaux pour repartir sur une base propre"
+      ],
+      "answer": 0,
+      "explanation": "La modification peut être une erreur ou une attaque : garder les traces, analyser, puis restaurer une version de référence validée."
+    },
+    {
+      "id": "cyber-096",
+      "level": "confirmé",
+      "question": "Qu'est-ce que l'immuabilité d'une sauvegarde ?",
+      "choices": [
+        "Une sauvegarde impossible à modifier pour un temps",
+        "Le fait qu'elle soit stockée dans un coffre ignifugé",
+        "Le fait qu'elle soit compressée",
+        "Le fait qu'elle soit faite chaque nuit"
+      ],
+      "answer": 0,
+      "explanation": "Même avec des droits administrateur, un attaquant ne peut pas effacer une sauvegarde immuable : elle reste disponible pour la restauration."
+    },
+    {
+      "id": "cyber-097",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre l'intervention d'un prestataire à distance selon une bonne pratique.",
+      "items": [
+        "Le prestataire demande l'intervention et son motif",
+        "L'exploitant valide la demande et la date",
+        "L'accès est ouvert pour la durée prévue, via le bastion",
+        "La session est enregistrée pendant l'intervention",
+        "L'accès est refermé et l'intervention tracée"
+      ],
+      "explanation": "Aucun accès permanent : l'ouverture est décidée par l'exploitant, limitée dans le temps et aux équipements concernés, puis tracée."
+    },
+    {
+      "id": "cyber-098",
+      "level": "confirmé",
+      "question": "Pourquoi la fin de vie (obsolescence) d'un composant est-elle un risque de sécurité ?",
+      "choices": [
+        "Les nouvelles vulnérabilités ne sont plus corrigées",
+        "Le composant se met à consommer plus d'énergie",
+        "Il perd sa garantie électrique",
+        "Il ne peut plus être affiché en supervision"
+      ],
+      "answer": 0,
+      "explanation": "Un système non maintenu accumule les failles connues. On suit les dates de fin de support et on prévoit la migration dans le budget."
+    },
+    {
+      "id": "cyber-099",
+      "level": "confirmé",
+      "question": "En entretien pour un poste de technicien OT, quelle réponse montre une bonne culture cybersécurité ?",
+      "choices": [
+        "« Je passe les clés par la station blanche et je trace mes modifications »",
+        "« Je laisse l'accès à distance ouvert pour intervenir plus vite la nuit »",
+        "« J'utilise le même mot de passe partout, c'est plus simple pour l'équipe »",
+        "« La cybersécurité concerne l'informatique, pas la maintenance »"
+      ],
+      "answer": 0,
+      "explanation": "Le recruteur attend des réflexes concrets : supports contrôlés, accès tracés, programmes versionnés, signalement des anomalies."
+    },
+    {
+      "id": "cyber-100",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque élément d'architecture à son rôle.",
+      "pairs": [
+        [
+          "DMZ industrielle",
+          "Zone tampon entre IT et OT"
+        ],
+        [
+          "Diode de données",
+          "Flux à sens unique"
+        ],
+        [
+          "Bastion",
+          "Point d'entrée unique pour administrer"
+        ],
+        [
+          "IDS industriel",
+          "Détection des échanges anormaux"
+        ],
+        [
+          "Station blanche",
+          "Décontamination des supports amovibles"
+        ]
+      ],
+      "explanation": "Ces briques, combinées, réalisent la défense en profondeur décrite par l'IEC 62443 et les guides de l'ANSSI."
+    }
+  ]
+}

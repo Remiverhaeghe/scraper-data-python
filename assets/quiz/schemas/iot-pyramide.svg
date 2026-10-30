@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="380" viewBox="0 0 900 380" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="380" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Pyramide de l'automatisation (ISA-95)</text>
+<rect x="300.0" y="56.0" width="300.0" height="50.0" rx="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+<text x="450.0" y="77.2" text-anchor="middle" font-size="14" fill="#0f172a">Niveau 4 : ERP</text>
+<text x="450.0" y="94.2" text-anchor="middle" font-size="14" fill="#0f172a">Gestion, commandes, achats</text>
+<rect x="240.0" y="114.0" width="420.0" height="50.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="450.0" y="135.2" text-anchor="middle" font-size="14" fill="#0f172a">Niveau 3 : MES</text>
+<text x="450.0" y="152.2" text-anchor="middle" font-size="14" fill="#0f172a">Ordres de fabrication, traçabilité</text>
+<rect x="180.0" y="172.0" width="540.0" height="50.0" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="450.0" y="193.2" text-anchor="middle" font-size="14" fill="#0f172a">Niveau 2 : supervision</text>
+<text x="450.0" y="210.2" text-anchor="middle" font-size="14" fill="#0f172a">SCADA, IHM, historique</text>
+<rect x="120.0" y="230.0" width="660.0" height="50.0" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+<text x="450.0" y="251.2" text-anchor="middle" font-size="14" fill="#0f172a">Niveau 1 : contrôle</text>
+<text x="450.0" y="268.2" text-anchor="middle" font-size="14" fill="#0f172a">Automates, régulateurs</text>
+<rect x="60.0" y="288.0" width="780.0" height="50.0" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="450.0" y="309.2" text-anchor="middle" font-size="14" fill="#0f172a">Niveau 0 : terrain</text>
+<text x="450.0" y="326.2" text-anchor="middle" font-size="14" fill="#0f172a">Capteurs, actionneurs</text>
+<text x="450.0" y="362.0" text-anchor="middle" font-size="13" fill="#475569">Plus on monte, plus les données sont agrégées et moins le temps réel compte</text>
+</svg>

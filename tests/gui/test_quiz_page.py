@@ -730,7 +730,11 @@ def test_empty_rubric_offers_catalog_themes(qt_application, tmp_path, monkeypatc
     vPrepared = []
     monkeypatch.setattr(vPage.import_panel, "prepare_priority", vPrepared.append)
 
-    assert vPage.category_buttons[("Réseau et sécurité", None)].text().endswith("(0)")
+    assert (
+        vPage.category_buttons[("Industrie", "Électricité et énergie")]
+        .text()
+        .endswith("(0)")
+    )
 
     vPage.category_buttons[("Industrie", "Électricité et énergie")].click()
 

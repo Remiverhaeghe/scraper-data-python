@@ -1,0 +1,1574 @@
+{
+  "theme": "IoT industriel et industrie 4.0",
+  "skills": [
+    "IoT",
+    "IIoT",
+    "MQTT",
+    "industrie 4.0",
+    "edge computing",
+    "OPC UA"
+  ],
+  "questions": [
+    {
+      "id": "iot-001",
+      "level": "débutant",
+      "question": "Que désigne l'IIoT ?",
+      "choices": [
+        "L'Internet des objets appliqué à l'industrie",
+        "Un réseau privé réservé aux automates de sécurité d'une même usine",
+        "Une norme de câblage des capteurs analogiques en 4-20 mA",
+        "Un logiciel de supervision vendu par un constructeur unique"
+      ],
+      "answer": 0,
+      "explanation": "L'Industrial Internet of Things relie capteurs, machines et systèmes pour collecter et exploiter des données de production : surveillance, maintenance prévisionnelle, optimisation."
+    },
+    {
+      "id": "iot-002",
+      "level": "débutant",
+      "question": "Qu'appelle-t-on industrie 4.0 ?",
+      "choices": [
+        "L'usine connectée qui exploite ses données",
+        "La quatrième révision de la norme de sécurité des machines européennes",
+        "Une usine où chaque poste est tenu par un robot, sans opérateur",
+        "Le passage de la vapeur à l'électricité dans les ateliers"
+      ],
+      "answer": 0,
+      "explanation": "Après la mécanisation, l'électricité et l'automatisation, la quatrième révolution industrielle connecte machines, produits et systèmes d'information : IoT, données, simulation, robotique collaborative."
+    },
+    {
+      "id": "iot-003",
+      "level": "débutant",
+      "question": "Que signifie MQTT ?",
+      "choices": [
+        "Message Queuing Telemetry Transport",
+        "Machine Quality Test and Tracking, un outil de contrôle qualité",
+        "Modbus Query Transfer Technology",
+        "Multi Queue Time Transmission, un bus de terrain temps réel"
+      ],
+      "answer": 0,
+      "explanation": "MQTT est un protocole léger de messagerie par publication et abonnement, conçu pour des réseaux peu fiables et des équipements modestes. Il est normalisé par OASIS et l'ISO (ISO/IEC 20922)."
+    },
+    {
+      "id": "iot-004",
+      "level": "débutant",
+      "question": "Dans MQTT, quel est le rôle du broker ?",
+      "choices": [
+        "Recevoir les messages et les transmettre aux abonnés",
+        "Mesurer la grandeur physique et la convertir en signal électrique normalisé",
+        "Afficher les valeurs sur un écran d'opérateur",
+        "Stocker les programmes des automates de la ligne"
+      ],
+      "answer": 0,
+      "explanation": "Les clients publient sur un topic et s'abonnent à des topics ; le broker (Mosquitto, HiveMQ, EMQX) fait le lien. Éditeurs et abonnés ne se connaissent pas.",
+      "visual": {
+        "asset": "iot-mqtt.svg",
+        "alt": "Éditeurs, broker et abonnés MQTT"
+      }
+    },
+    {
+      "id": "iot-005",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un topic MQTT ?",
+      "choices": [
+        "Un chemin hiérarchique qui identifie un flux de messages",
+        "Le mot de passe partagé par l'ensemble des clients du broker",
+        "L'adresse IP du broker sur le réseau de l'usine",
+        "Un message d'erreur renvoyé quand la connexion échoue"
+      ],
+      "answer": 0,
+      "explanation": "Exemple : usine/ligne2/four/temperature. Une bonne arborescence (site, zone, machine, mesure) facilite les abonnements et la sécurité.",
+      "visual": {
+        "asset": "iot-mqtt.svg",
+        "alt": "Éditeurs, broker et abonnés MQTT"
+      }
+    },
+    {
+      "id": "iot-006",
+      "level": "confirmé",
+      "question": "Que reçoit un abonné au topic usine/+/four/temperature ?",
+      "choices": [
+        "La température des fours de chaque ligne de l'usine",
+        "Tous les messages de l'usine, à tous les niveaux de l'arborescence",
+        "Seulement le topic écrit avec un signe plus littéral",
+        "Aucun message, car le signe plus est interdit dans un abonnement"
+      ],
+      "answer": 0,
+      "explanation": "Le joker + remplace exactement un niveau (ligne1, ligne2…). Le joker # remplace un nombre quelconque de niveaux et se place en fin de filtre."
+    },
+    {
+      "id": "iot-007",
+      "level": "confirmé",
+      "question": "Que reçoit un abonné au topic usine/ligne2/# ?",
+      "choices": [
+        "Les messages de la ligne 2, à tous les sous-niveaux",
+        "Seulement les messages publiés exactement sur usine/ligne2",
+        "Les messages de toutes les lignes sauf la ligne 2",
+        "Uniquement le dernier message de chaque topic de l'usine"
+      ],
+      "answer": 0,
+      "explanation": "Le joker # couvre tous les niveaux qui suivent, y compris usine/ligne2 lui-même. À utiliser avec prudence en production : il peut faire arriver un très gros volume."
+    },
+    {
+      "id": "iot-008",
+      "level": "débutant",
+      "question": "Que garantit le niveau QoS 1 de MQTT ?",
+      "choices": [
+        "Au moins une livraison, avec des doublons possibles",
+        "Exactement une livraison, sans doublon, grâce à un échange en quatre temps",
+        "Pas de garantie : le message est envoyé une fois, sans accusé de réception",
+        "Une livraison en moins de dix millisecondes"
+      ],
+      "answer": 0,
+      "explanation": "QoS 0 : au plus une fois (pas d'accusé). QoS 1 : au moins une fois (accusé PUBACK, réémission possible donc doublons). QoS 2 : exactement une fois, plus coûteux."
+    },
+    {
+      "id": "iot-009",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque niveau de qualité de service MQTT à sa garantie.",
+      "pairs": [
+        [
+          "QoS 0",
+          "Au plus une fois"
+        ],
+        [
+          "QoS 1",
+          "Au moins une fois"
+        ],
+        [
+          "QoS 2",
+          "Exactement une fois"
+        ]
+      ],
+      "explanation": "Plus le niveau est élevé, plus il y a d'échanges et de latence. Une mesure fréquente se contente souvent de QoS 0 ; une commande ou un comptage demande plus."
+    },
+    {
+      "id": "iot-010",
+      "level": "confirmé",
+      "question": "À quoi sert l'option retain sur un message MQTT ?",
+      "choices": [
+        "À donner la dernière valeur à un nouvel abonné",
+        "À chiffrer le message pendant son transport sur le réseau",
+        "À conserver l'historique complet des messages pendant un an sur le broker",
+        "À limiter le nombre d'abonnés à un topic"
+      ],
+      "answer": 0,
+      "explanation": "Le broker garde le dernier message retenu de chaque topic : un tableau de bord qui démarre affiche aussitôt l'état actuel au lieu d'attendre la prochaine publication."
+    },
+    {
+      "id": "iot-011",
+      "level": "confirmé",
+      "question": "À quoi sert le « Last Will and Testament » de MQTT ?",
+      "choices": [
+        "À signaler qu'un client s'est déconnecté brutalement",
+        "À enregistrer la configuration du broker avant une mise à jour logicielle",
+        "À supprimer les messages anciens du broker",
+        "À fermer proprement la session à la fin de la journée de production"
+      ],
+      "answer": 0,
+      "explanation": "Le client déclare à la connexion un message que le broker publiera s'il disparaît sans se déconnecter proprement (coupure réseau, panne) : par exemple machine12/etat = hors ligne."
+    },
+    {
+      "id": "iot-012",
+      "level": "débutant",
+      "question": "Quel port TCP utilise habituellement MQTT chiffré par TLS ?",
+      "choices": [
+        "8883",
+        "1883",
+        "502",
+        "4840"
+      ],
+      "answer": 0,
+      "explanation": "1883 : MQTT sans chiffrement ; 8883 : MQTT sur TLS. Le port 502 est celui de Modbus TCP, le 4840 celui d'OPC UA."
+    },
+    {
+      "id": "iot-013",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque protocole à son port TCP habituel.",
+      "pairs": [
+        [
+          "Modbus TCP",
+          "502"
+        ],
+        [
+          "MQTT sans chiffrement",
+          "1883"
+        ],
+        [
+          "MQTT sur TLS",
+          "8883"
+        ],
+        [
+          "OPC UA",
+          "4840"
+        ]
+      ],
+      "explanation": "Connaître ces ports aide à configurer pare-feu et diagnostics. Un port ouvert inutilement est une porte d'entrée."
+    },
+    {
+      "id": "iot-014",
+      "level": "débutant",
+      "question": "Que signifie OPC UA ?",
+      "choices": [
+        "Open Platform Communications Unified Architecture",
+        "Operator Panel Control for Universal Automation",
+        "Optical Process Camera for Unattended Assembly",
+        "Online Programming Center for User Applications"
+      ],
+      "answer": 0,
+      "explanation": "OPC UA (IEC 62541) est un standard d'échange de données industrielles indépendant du constructeur et du système d'exploitation, avec modèle d'information et sécurité intégrés."
+    },
+    {
+      "id": "iot-015",
+      "level": "confirmé",
+      "question": "Qu'apporte OPC UA par rapport à l'ancien OPC Classic (DA) ?",
+      "choices": [
+        "Il ne dépend plus de Windows et intègre la sécurité",
+        "Il fonctionne sur réseau série RS-485, sans Ethernet ni IP",
+        "Il supprime la notion de serveur au profit d'un bus de terrain",
+        "Il est réservé aux automates d'un seul constructeur"
+      ],
+      "answer": 0,
+      "explanation": "OPC Classic reposait sur DCOM, propre à Windows et difficile à sécuriser. OPC UA est multiplateforme, chiffré, authentifié et décrit les données avec leur sens (modèle d'information)."
+    },
+    {
+      "id": "iot-016",
+      "level": "confirmé",
+      "question": "Qu'est-ce que le modèle d'information d'un serveur OPC UA ?",
+      "choices": [
+        "Une arborescence d'objets typés avec leurs relations",
+        "La liste des adresses IP autorisées à se connecter",
+        "Un fichier de traduction de l'interface en plusieurs langues",
+        "Le planning des sauvegardes du serveur sur le réseau"
+      ],
+      "answer": 0,
+      "explanation": "Une variable n'est pas qu'une valeur : elle a un type, une unité, une plage, un horodatage, une qualité. Les spécifications compagnons (companion specifications) décrivent les machines d'un métier."
+    },
+    {
+      "id": "iot-017",
+      "level": "confirmé",
+      "question": "Comment OPC UA sécurise-t-il une connexion ?",
+      "choices": [
+        "Par des certificats, une signature et un chiffrement",
+        "Par un mot de passe unique commun à l'ensemble de l'usine",
+        "En cachant le serveur derrière un nom de domaine",
+        "En limitant la vitesse des échanges pour décourager les attaques"
+      ],
+      "answer": 0,
+      "explanation": "Client et serveur échangent des certificats X.509 ; les modes de sécurité Sign ou SignAndEncrypt protègent les messages, et l'utilisateur s'authentifie en plus."
+    },
+    {
+      "id": "iot-018",
+      "level": "débutant",
+      "question": "Qu'est-ce que Modbus ?",
+      "choices": [
+        "Un protocole de communication industriel simple et très répandu",
+        "Une marque d'automate programmable",
+        "Un langage de programmation des robots",
+        "Un logiciel de gestion de la maintenance assistée par ordinateur"
+      ],
+      "answer": 0,
+      "explanation": "Créé par Modicon en 1979, Modbus existe en série (RTU sur RS-485) et en Ethernet (TCP). Il échange des registres et des bits, sans sécurité intégrée."
+    },
+    {
+      "id": "iot-019",
+      "level": "confirmé",
+      "question": "Quelle faiblesse de Modbus faut-il garder en tête quand on l'expose sur un réseau ?",
+      "choices": [
+        "Il n'a ni authentification ni chiffrement",
+        "Il ne transmet que des valeurs booléennes, pas de nombres",
+        "Il n'accepte qu'un seul esclave par réseau, quelle que soit sa longueur",
+        "Il exige une connexion Internet pour fonctionner"
+      ],
+      "answer": 0,
+      "explanation": "Toute machine qui atteint le port 502 peut lire et écrire. On isole donc les équipements Modbus dans des zones protégées et on passe par une passerelle sécurisée."
+    },
+    {
+      "id": "iot-020",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un capteur 4-20 mA mesure une pression de 0 à 10 bar. Il délivre 12 mA. Quelle pression mesure-t-il en bar ?",
+      "value": 5,
+      "unit": "bar",
+      "tolerance": 0,
+      "explanation": "La plage de 16 mA (4 à 20) couvre 10 bar : (12 - 4) / 16 × 10 = 5 bar. Le zéro vivant à 4 mA permet de détecter un fil coupé (0 mA)."
+    },
+    {
+      "id": "iot-021",
+      "level": "débutant",
+      "question": "Pourquoi le signal 4-20 mA commence-t-il à 4 mA plutôt qu'à 0 ?",
+      "choices": [
+        "Pour distinguer une mesure nulle d'un fil coupé",
+        "Pour économiser l'énergie de l'alimentation de la boucle de courant",
+        "Parce que les automates ne savent pas lire un courant inférieur à 4 mA",
+        "Pour augmenter la précision de la mesure en haut de l'échelle"
+      ],
+      "answer": 0,
+      "explanation": "Un courant à 0 mA signale une coupure ou un capteur en panne, alors que 4 mA correspond au bas de l'échelle. Le zéro vivant alimente aussi certains capteurs 2 fils."
+    },
+    {
+      "id": "iot-022",
+      "level": "débutant",
+      "question": "Qu'apporte IO-Link par rapport à un capteur classique tout-ou-rien ?",
+      "choices": [
+        "Une communication numérique point à point avec le capteur",
+        "Une portée radio de plusieurs kilomètres en zone rurale",
+        "Un câble à fibre optique entre le capteur et l'automate",
+        "La suppression de l'alimentation électrique du capteur"
+      ],
+      "answer": 0,
+      "explanation": "Sur un câble standard à 3 fils, IO-Link transmet valeurs, paramètres et diagnostics (encrassement, température) : on change un capteur et le maître lui recharge ses réglages."
+    },
+    {
+      "id": "iot-023",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'une passerelle IoT ?",
+      "choices": [
+        "Un équipement qui relie les protocoles de terrain au réseau informatique",
+        "Une passerelle métallique pour accéder aux machines en hauteur dans l'atelier",
+        "Un câble de rallonge pour les capteurs éloignés",
+        "Un tableau d'affichage des alarmes de l'atelier"
+      ],
+      "answer": 0,
+      "explanation": "Elle lit Modbus, Profinet ou OPC UA côté machines et publie en MQTT ou HTTPS côté informatique, souvent avec du filtrage et du stockage local (edge)."
+    },
+    {
+      "id": "iot-024",
+      "level": "débutant",
+      "question": "Qu'est-ce que l'edge computing ?",
+      "choices": [
+        "Traiter les données au plus près des machines",
+        "Envoyer les données brutes vers un centre de calcul distant",
+        "Placer les serveurs au bord des toits pour mieux les refroidir",
+        "Un tableur réservé aux techniciens de maintenance"
+      ],
+      "answer": 0,
+      "explanation": "Filtrer, agréger, détecter une anomalie et réagir localement réduit la latence, le volume envoyé et la dépendance au réseau. Le cloud garde l'historique long et les analyses lourdes.",
+      "visual": {
+        "asset": "iot-edge.svg",
+        "alt": "Chaîne de données du capteur au cloud"
+      }
+    },
+    {
+      "id": "iot-025",
+      "level": "confirmé",
+      "question": "Une détection de défaut doit arrêter un convoyeur en moins de 50 ms. Où placer le traitement ?",
+      "choices": [
+        "En local, sur l'automate ou la passerelle edge",
+        "Dans le cloud, pour profiter d'une grande puissance de calcul",
+        "Sur le poste du responsable de production",
+        "Dans l'ERP, au moment de la saisie de l'ordre de fabrication"
+      ],
+      "answer": 0,
+      "explanation": "Un aller-retour vers le cloud prend des dizaines à des centaines de millisecondes et dépend du réseau. Une réaction rapide ou de sécurité se traite localement.",
+      "visual": {
+        "asset": "iot-edge.svg",
+        "alt": "Chaîne de données du capteur au cloud"
+      }
+    },
+    {
+      "id": "iot-026",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Sur ce schéma, cliquez sur l'élément qui filtre et agrège les données sur site avant de les envoyer.",
+      "zones": [
+        {
+          "label": "Terrain",
+          "rect": [
+            40,
+            80,
+            220,
+            90
+          ]
+        },
+        {
+          "label": "Edge (passerelle)",
+          "rect": [
+            340,
+            80,
+            220,
+            90
+          ]
+        },
+        {
+          "label": "Cloud",
+          "rect": [
+            640,
+            80,
+            220,
+            90
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "iot-edge.svg",
+        "alt": "Chaîne de données du capteur au cloud",
+        "show": "question"
+      },
+      "explanation": "La passerelle edge réduit le volume, réagit vite et continue à collecter si le réseau tombe. Le cloud stocke et analyse sur le long terme."
+    },
+    {
+      "id": "iot-027",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Sur ce schéma MQTT, cliquez sur l'élément qui reçoit les publications et les redistribue aux abonnés.",
+      "zones": [
+        {
+          "label": "Capteur de température",
+          "rect": [
+            40,
+            70,
+            210,
+            56
+          ]
+        },
+        {
+          "label": "Broker MQTT",
+          "rect": [
+            345,
+            110,
+            210,
+            76
+          ]
+        },
+        {
+          "label": "Tableau de bord",
+          "rect": [
+            650,
+            70,
+            210,
+            56
+          ]
+        },
+        {
+          "label": "Base historique",
+          "rect": [
+            650,
+            170,
+            210,
+            56
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "iot-mqtt.svg",
+        "alt": "Éditeurs, broker et abonnés MQTT",
+        "show": "question"
+      },
+      "explanation": "Le broker est le seul point de passage : éditeurs et abonnés s'y connectent sans se connaître. C'est aussi là qu'on gère les droits par topic."
+    },
+    {
+      "id": "iot-028",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Sur la pyramide de l'automatisation, cliquez sur le niveau qui gère les ordres de fabrication et la traçabilité.",
+      "zones": [
+        {
+          "label": "Niveau 4 : ERP",
+          "rect": [
+            300,
+            56,
+            300,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 3 : MES",
+          "rect": [
+            240,
+            114,
+            420,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 2 : supervision",
+          "rect": [
+            180,
+            172,
+            540,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 1 : contrôle",
+          "rect": [
+            120,
+            230,
+            660,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 0 : terrain",
+          "rect": [
+            60,
+            288,
+            780,
+            50
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "iot-pyramide.svg",
+        "alt": "Pyramide de l'automatisation selon ISA-95",
+        "show": "question"
+      },
+      "explanation": "Le MES (Manufacturing Execution System) fait le lien entre l'ERP (commandes, gestion) et la supervision : lancement des ordres, suivi, traçabilité, rendement."
+    },
+    {
+      "id": "iot-029",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Sur la pyramide, cliquez sur le niveau où se trouvent les automates programmables.",
+      "zones": [
+        {
+          "label": "Niveau 4 : ERP",
+          "rect": [
+            300,
+            56,
+            300,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 3 : MES",
+          "rect": [
+            240,
+            114,
+            420,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 2 : supervision",
+          "rect": [
+            180,
+            172,
+            540,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 1 : contrôle",
+          "rect": [
+            120,
+            230,
+            660,
+            50
+          ]
+        },
+        {
+          "label": "Niveau 0 : terrain",
+          "rect": [
+            60,
+            288,
+            780,
+            50
+          ]
+        }
+      ],
+      "answer": 3,
+      "visual": {
+        "asset": "iot-pyramide.svg",
+        "alt": "Pyramide de l'automatisation selon ISA-95",
+        "show": "question"
+      },
+      "explanation": "Niveau 0 : capteurs et actionneurs ; niveau 1 : automates et régulateurs ; niveau 2 : supervision ; niveau 3 : MES ; niveau 4 : ERP."
+    },
+    {
+      "id": "iot-030",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque système à son niveau dans la pyramide de l'automatisation.",
+      "pairs": [
+        [
+          "ERP",
+          "Gestion de l'entreprise"
+        ],
+        [
+          "MES",
+          "Pilotage de la production"
+        ],
+        [
+          "SCADA",
+          "Supervision des installations"
+        ],
+        [
+          "Automate",
+          "Contrôle des machines"
+        ],
+        [
+          "Capteur",
+          "Mesure sur le terrain"
+        ]
+      ],
+      "explanation": "La norme ISA-95 (IEC 62264) décrit ces niveaux et les échanges entre gestion et production.",
+      "visual": {
+        "asset": "iot-pyramide.svg",
+        "alt": "Pyramide de l'automatisation selon ISA-95"
+      }
+    },
+    {
+      "id": "iot-031",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un jumeau numérique ?",
+      "choices": [
+        "Une représentation virtuelle d'un équipement, alimentée par ses données",
+        "Une machine de secours identique installée à côté de la machine principale",
+        "Un double de la clé d'accès à l'armoire électrique",
+        "Une copie de sauvegarde du programme de l'automate"
+      ],
+      "answer": 0,
+      "explanation": "Le jumeau numérique reproduit le comportement d'une machine ou d'une ligne : simulation, tests de réglages, formation, prévision de pannes sans toucher au réel."
+    },
+    {
+      "id": "iot-032",
+      "level": "confirmé",
+      "question": "Quel usage d'un jumeau numérique réduit le plus le risque lors de la mise en service ?",
+      "choices": [
+        "Tester le programme de l'automate sur la machine simulée",
+        "Remplacer définitivement la machine réelle par son modèle numérique",
+        "Imprimer les plans de la machine en trois dimensions",
+        "Augmenter la vitesse de la machine réelle au-delà de ses limites"
+      ],
+      "answer": 0,
+      "explanation": "La mise en service virtuelle détecte des erreurs de séquence ou de collision avant l'installation : le démarrage réel est plus court et plus sûr."
+    },
+    {
+      "id": "iot-033",
+      "level": "débutant",
+      "question": "Quel réseau sans fil convient à un capteur sur batterie qui envoie quelques octets par heure à plusieurs kilomètres ?",
+      "choices": [
+        "LoRaWAN",
+        "Wi-Fi 6 en 5 GHz",
+        "Bluetooth classique",
+        "Ethernet industriel"
+      ],
+      "answer": 0,
+      "explanation": "LoRaWAN, Sigfox ou NB-IoT (réseaux LPWAN) privilégient la portée et l'autonomie au prix d'un débit très faible. Le Wi-Fi offre du débit mais consomme beaucoup."
+    },
+    {
+      "id": "iot-034",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque technologie sans fil à son point fort.",
+      "pairs": [
+        [
+          "LoRaWAN",
+          "Longue portée, faible consommation"
+        ],
+        [
+          "Wi-Fi",
+          "Débit élevé sur site"
+        ],
+        [
+          "Bluetooth Low Energy",
+          "Courte portée, très faible consommation"
+        ],
+        [
+          "5G privée",
+          "Faible latence et forte densité d'objets"
+        ]
+      ],
+      "explanation": "On choisit selon la portée, le débit, la consommation, la latence et le coût d'infrastructure."
+    },
+    {
+      "id": "iot-035",
+      "level": "confirmé",
+      "question": "Quelle différence principale entre NB-IoT et LoRaWAN ?",
+      "choices": [
+        "NB-IoT passe par un opérateur mobile, LoRaWAN peut être privé",
+        "NB-IoT est filaire alors que LoRaWAN est sans fil",
+        "LoRaWAN offre un débit vidéo, NB-IoT seulement du texte",
+        "Les deux technologies sont identiques sous deux noms commerciaux"
+      ],
+      "answer": 0,
+      "explanation": "NB-IoT utilise des fréquences sous licence d'un opérateur (abonnement). LoRaWAN, en bande libre, se déploie avec ses propres passerelles ou via un opérateur."
+    },
+    {
+      "id": "iot-036",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "On veut mesurer des vibrations dont la fréquence la plus haute est de 1 000 Hz. Quelle fréquence d'échantillonnage minimale faut-il en Hz (théorème de Shannon) ?",
+      "value": 2000,
+      "unit": "Hz",
+      "tolerance": 0,
+      "explanation": "Il faut échantillonner au moins au double de la fréquence maximale : 2 × 1 000 = 2 000 Hz. En pratique on prend une marge (2,5 à 5 fois) et un filtre anti-repliement."
+    },
+    {
+      "id": "iot-037",
+      "level": "confirmé",
+      "question": "Que se passe-t-il si l'on échantillonne un signal trop lentement ?",
+      "choices": [
+        "Des fréquences fausses apparaissent : c'est le repliement",
+        "Le signal devient plus précis car il y a moins de bruit",
+        "Le capteur chauffe et finit par tomber en panne",
+        "Les données sont chiffrées automatiquement par le capteur"
+      ],
+      "answer": 0,
+      "explanation": "Le repliement de spectre (aliasing) fait apparaître une fréquence qui n'existe pas. On l'évite en échantillonnant assez vite et en filtrant avant la conversion."
+    },
+    {
+      "id": "iot-038",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un capteur envoie 10 mesures par seconde, de 4 octets chacune. Combien de mégaoctets produit-il par jour (1 Mo = 1 000 000 octets) ?",
+      "value": 3.456,
+      "unit": "Mo",
+      "tolerance": 2,
+      "explanation": "10 × 4 × 86 400 s = 3 456 000 octets, soit environ 3,5 Mo par jour, sans compter l'horodatage et l'en-tête des messages. Multiplié par des centaines de capteurs, le volume justifie un filtrage en edge."
+    },
+    {
+      "id": "iot-039",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un capteur sur batterie de 2 400 mAh consomme en moyenne 0,1 mA. Combien de jours tient-il, en théorie ?",
+      "value": 1000,
+      "unit": "j",
+      "tolerance": 1,
+      "explanation": "2 400 / 0,1 = 24 000 heures, soit 1 000 jours. En pratique, le froid, l'autodécharge et les pics d'émission réduisent cette durée."
+    },
+    {
+      "id": "iot-040",
+      "level": "confirmé",
+      "question": "Comment allonger le plus l'autonomie d'un capteur radio sur batterie ?",
+      "choices": [
+        "Le laisser en veille et n'émettre qu'à intervalle ou sur changement",
+        "Émettre en continu à pleine puissance pour éviter les pertes de messages",
+        "Augmenter la fréquence d'échantillonnage pour garder plus de données",
+        "Remplacer la batterie par un modèle de plus petite capacité"
+      ],
+      "answer": 0,
+      "explanation": "La radio consomme l'essentiel de l'énergie. Une veille profonde, des envois groupés ou sur seuil (rapport par exception) multiplient l'autonomie."
+    },
+    {
+      "id": "iot-041",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un historian (historien de données) ?",
+      "choices": [
+        "Une base qui stocke les mesures horodatées des procédés",
+        "Un employé chargé de rédiger l'histoire de l'entreprise",
+        "Un journal papier des pannes tenu par l'équipe de nuit",
+        "Un module de l'automate qui efface les anciennes alarmes"
+      ],
+      "answer": 0,
+      "explanation": "PI System, Wonderware Historian ou des bases de séries temporelles (InfluxDB, TimescaleDB) stockent efficacement des millions de points horodatés pour l'analyse."
+    },
+    {
+      "id": "iot-042",
+      "level": "confirmé",
+      "question": "Pourquoi utiliser une base de séries temporelles plutôt qu'une base relationnelle classique pour des mesures de capteurs ?",
+      "choices": [
+        "Elle est optimisée pour écrire et agréger beaucoup de points horodatés",
+        "Elle interdit le stockage des dates, ce qui accélère les requêtes",
+        "Elle fonctionne sans disque, en mémoire vive",
+        "Elle est la seule à pouvoir être sauvegardée"
+      ],
+      "answer": 0,
+      "explanation": "Compression, rétention automatique, agrégations par intervalle (moyenne par minute) : les bases de séries temporelles sont conçues pour ce flux continu."
+    },
+    {
+      "id": "iot-043",
+      "level": "débutant",
+      "question": "Pourquoi l'horodatage d'une mesure est-il important ?",
+      "choices": [
+        "Pour corréler les événements de plusieurs machines dans le temps",
+        "Pour savoir quel opérateur a saisi la mesure dans l'atelier",
+        "Pour calculer le prix de la mesure",
+        "Parce qu'une mesure sans date est plus légère à transmettre"
+      ],
+      "answer": 0,
+      "explanation": "Pour analyser une panne, on compare ce qui s'est passé au même instant sur plusieurs équipements. Des horloges synchronisées (NTP, PTP) sont indispensables."
+    },
+    {
+      "id": "iot-044",
+      "level": "confirmé",
+      "question": "Deux machines horodatent leurs données avec des horloges décalées de 3 minutes. Quel risque ?",
+      "choices": [
+        "Des analyses fausses : la cause semble suivre son effet",
+        "Pas de risque, les bases de données corrigent l'heure d'elles-mêmes",
+        "Les machines s'arrêtent pour se resynchroniser",
+        "Les capteurs consomment davantage d'énergie"
+      ],
+      "answer": 0,
+      "explanation": "Une synchronisation par NTP (ou PTP pour la précision sous la microseconde) est la base de toute analyse croisée."
+    },
+    {
+      "id": "iot-045",
+      "level": "débutant",
+      "question": "Que signifie la qualité (quality) associée à une valeur OPC UA ou SCADA ?",
+      "choices": [
+        "Elle indique si la valeur est fiable, douteuse ou mauvaise",
+        "Elle donne la note de satisfaction des clients sur le produit fabriqué",
+        "Elle mesure la précision du capteur en pourcentage",
+        "Elle indique le prix de la licence du serveur"
+      ],
+      "answer": 0,
+      "explanation": "Une valeur figée par une perte de communication doit être marquée comme mauvaise : sinon un tableau de bord affiche une valeur fausse sans alerter."
+    },
+    {
+      "id": "iot-046",
+      "level": "débutant",
+      "question": "Qu'est-ce que Node-RED ?",
+      "choices": [
+        "Un outil de programmation par flux pour relier capteurs et services",
+        "Un automate de sécurité de couleur rouge pour les arrêts d'urgence",
+        "Un câble réseau blindé pour les environnements perturbés",
+        "Un protocole de communication sans fil"
+      ],
+      "answer": 0,
+      "explanation": "Node-RED assemble visuellement des nœuds (lecture Modbus, transformation, publication MQTT, base de données). Très utilisé sur passerelles et Raspberry Pi pour prototyper."
+    },
+    {
+      "id": "iot-047",
+      "level": "débutant",
+      "question": "À quoi sert Grafana dans une architecture IoT ?",
+      "choices": [
+        "À construire des tableaux de bord à partir des données stockées",
+        "À programmer les automates en langage ladder",
+        "À chiffrer les communications entre capteurs",
+        "À piloter directement les moteurs des machines"
+      ],
+      "answer": 0,
+      "explanation": "Grafana se connecte à InfluxDB, PostgreSQL ou Prometheus pour afficher courbes, jauges et alertes. Il visualise mais ne commande pas les machines."
+    },
+    {
+      "id": "iot-048",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre une chaîne de données IoT typique.",
+      "items": [
+        "Le capteur mesure la grandeur physique",
+        "L'automate ou la passerelle lit la valeur",
+        "La passerelle publie la donnée en MQTT",
+        "Le broker la transmet à la base de séries temporelles",
+        "Le tableau de bord l'affiche et déclenche les alertes"
+      ],
+      "explanation": "Chaque maillon peut faillir : capteur, liaison, passerelle, broker, base. La supervision de la chaîne elle-même (données manquantes) fait partie du projet."
+    },
+    {
+      "id": "iot-049",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les étapes d'un projet de maintenance prévisionnelle connectée.",
+      "items": [
+        "Choisir les équipements critiques et les défaillances à prévenir",
+        "Choisir les mesures et installer les capteurs",
+        "Collecter un historique de référence",
+        "Fixer des seuils ou entraîner un modèle de détection",
+        "Intégrer les alertes au travail de la maintenance"
+      ],
+      "explanation": "Un projet qui commence par les capteurs sans objectif produit des données inutilisées. L'alerte doit déboucher sur un bon de travail dans la GMAO."
+    },
+    {
+      "id": "iot-050",
+      "level": "confirmé",
+      "question": "Une usine installe 500 capteurs connectés mais personne n'utilise les données. Quelle erreur de démarche est la plus probable ?",
+      "choices": [
+        "Les capteurs ont précédé le besoin métier",
+        "Les capteurs choisis étaient trop précis pour l'usage prévu",
+        "Le réseau Wi-Fi de l'usine était trop rapide",
+        "Les données étaient stockées trop longtemps"
+      ],
+      "answer": 0,
+      "explanation": "On part d'un problème (pannes d'un équipement, consommation d'énergie, qualité) puis on choisit les données utiles. Un pilote limité prouve la valeur avant le déploiement."
+    },
+    {
+      "id": "iot-051",
+      "level": "débutant",
+      "question": "Qu'est-ce que la maintenance prévisionnelle connectée ?",
+      "choices": [
+        "Anticiper une panne à partir de l'évolution de mesures continues",
+        "Remplacer les pièces à date fixe selon le calendrier du constructeur",
+        "Réparer après la panne le plus vite possible",
+        "Confier la maintenance à un prestataire extérieur"
+      ],
+      "answer": 0,
+      "explanation": "Vibrations, températures, courant moteur suivis en continu : la tendance annonce la défaillance et l'intervention se planifie avant l'arrêt."
+    },
+    {
+      "id": "iot-052",
+      "level": "confirmé",
+      "question": "Quelle mesure, simple à installer, renseigne sur l'état d'un moteur sans capteur sur la mécanique ?",
+      "choices": [
+        "Le courant absorbé, lu par le variateur ou un tore",
+        "La couleur de la peinture du carter moteur",
+        "Le nombre d'heures de présence de l'opérateur",
+        "La température de la salle de pause"
+      ],
+      "answer": 0,
+      "explanation": "Le courant reflète la charge mécanique : frottement, blocage, usure de la transmission. Les variateurs le remontent déjà, souvent sans câblage supplémentaire."
+    },
+    {
+      "id": "iot-053",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un cobot ?",
+      "choices": [
+        "Un robot conçu pour travailler à côté des opérateurs",
+        "Un robot logiciel qui automatise des tâches de bureau répétitives",
+        "Un chariot autonome qui transporte les palettes",
+        "Un automate de sécurité dédié aux arrêts d'urgence"
+      ],
+      "answer": 0,
+      "explanation": "Le robot collaboratif limite sa force et sa vitesse, détecte les contacts et peut partager l'espace de travail après une analyse de risques (ISO/TS 15066)."
+    },
+    {
+      "id": "iot-054",
+      "level": "débutant",
+      "question": "Quelle différence entre un AGV et un AMR ?",
+      "choices": [
+        "L'AGV suit un guidage fixe, l'AMR calcule son trajet",
+        "L'AGV vole au-dessus des lignes, l'AMR roule au sol entre les postes",
+        "L'AMR est conduit par un opérateur, l'AGV jamais",
+        "Ce sont deux noms pour le même chariot"
+      ],
+      "answer": 0,
+      "explanation": "L'AGV suit des bandes, aimants ou réflecteurs. L'AMR se localise par cartographie (lidar) et contourne les obstacles, d'où une installation plus souple."
+    },
+    {
+      "id": "iot-055",
+      "level": "débutant",
+      "question": "À quoi sert la RFID en production ?",
+      "choices": [
+        "À identifier sans contact les produits ou les outillages",
+        "À mesurer la température des fours à distance par infrarouge",
+        "À chiffrer les échanges entre automates",
+        "À alimenter les capteurs sans batterie sur de longues distances"
+      ],
+      "answer": 0,
+      "explanation": "Une étiquette lue par radio suit un produit ou un outil à chaque poste : traçabilité, bon outil monté, paramètres de fabrication chargés automatiquement."
+    },
+    {
+      "id": "iot-056",
+      "level": "confirmé",
+      "question": "Qu'apporte la vision industrielle par caméra intelligente ?",
+      "choices": [
+        "Le contrôle automatique de présence, d'aspect ou de dimension",
+        "La surveillance des opérateurs pour mesurer leur rendement individuel",
+        "Le remplacement des capteurs de sécurité des portes de protection",
+        "La lecture des courriels du service qualité"
+      ],
+      "answer": 0,
+      "explanation": "La vision contrôle 100 % des pièces à cadence, lit codes et caractères, et alimente la traçabilité. Les données personnelles des salariés restent encadrées par le RGPD."
+    },
+    {
+      "id": "iot-057",
+      "level": "débutant",
+      "question": "Comment la réalité augmentée aide-t-elle un technicien de maintenance ?",
+      "choices": [
+        "En superposant des instructions et des données sur la machine",
+        "En réparant la machine à sa place grâce à un bras robotisé",
+        "En coupant automatiquement l'énergie de la machine",
+        "En remplaçant les procédures de consignation"
+      ],
+      "answer": 0,
+      "explanation": "Tablette ou lunettes affichent la procédure étape par étape, les valeurs en direct ou l'aide d'un expert à distance. La consignation reste indispensable."
+    },
+    {
+      "id": "iot-058",
+      "level": "débutant",
+      "question": "Quel est le premier risque de sécurité d'un objet connecté installé avec ses réglages d'usine ?",
+      "choices": [
+        "Un mot de passe par défaut connu de tous",
+        "Une consommation électrique supérieure à la notice",
+        "Une couleur de boîtier non conforme à la charte de l'usine",
+        "Une garantie constructeur plus courte"
+      ],
+      "answer": 0,
+      "explanation": "Des milliers d'objets ont été piratés (botnet Mirai) grâce à des identifiants par défaut. On les change à l'installation et on désactive les services inutiles."
+    },
+    {
+      "id": "iot-059",
+      "level": "confirmé",
+      "question": "Pourquoi séparer le réseau des objets connectés du réseau bureautique ?",
+      "choices": [
+        "Pour limiter la propagation d'une attaque d'un réseau à l'autre",
+        "Pour que les objets connectés fonctionnent plus vite",
+        "Parce que les deux réseaux ne peuvent pas utiliser les mêmes câbles",
+        "Pour réduire la facture d'électricité"
+      ],
+      "answer": 0,
+      "explanation": "La segmentation (VLAN, pare-feu, zones et conduits de l'IEC 62443) empêche un poste infecté d'atteindre les machines et réciproquement."
+    },
+    {
+      "id": "iot-060",
+      "level": "confirmé",
+      "question": "Une passerelle doit envoyer des données vers le cloud. Quelle configuration est la plus sûre ?",
+      "choices": [
+        "Connexion sortante chiffrée, sans port entrant ouvert",
+        "Port entrant ouvert sur Internet pour que le cloud vienne lire les données",
+        "Connexion en clair pour faciliter le diagnostic par le fournisseur",
+        "Accès à distance par un mot de passe simple partagé avec le fournisseur"
+      ],
+      "answer": 0,
+      "explanation": "La passerelle initie la connexion (MQTT sur TLS, HTTPS) : aucun service n'est exposé à Internet. Les certificats authentifient chaque appareil."
+    },
+    {
+      "id": "iot-061",
+      "level": "débutant",
+      "question": "Qu'est-ce que le MES ?",
+      "choices": [
+        "Le système qui pilote et trace l'exécution de la production",
+        "Le module électronique de sécurité d'un automate",
+        "Le service de messagerie de l'entreprise",
+        "La norme européenne des équipements sous pression"
+      ],
+      "answer": 0,
+      "explanation": "Manufacturing Execution System : ordres de fabrication, suivi des quantités, rebuts, temps d'arrêt, traçabilité des lots, indicateurs comme le TRS.",
+      "visual": {
+        "asset": "iot-pyramide.svg",
+        "alt": "Pyramide de l'automatisation selon ISA-95"
+      }
+    },
+    {
+      "id": "iot-062",
+      "level": "confirmé",
+      "question": "Pourquoi relier les arrêts machine remontés automatiquement à une saisie de cause par l'opérateur ?",
+      "choices": [
+        "La machine sait qu'elle s'arrête, l'opérateur sait pourquoi",
+        "Pour mesurer la vitesse de frappe des opérateurs au clavier",
+        "Parce que la saisie manuelle remplace les capteurs",
+        "Pour supprimer le calcul du TRS"
+      ],
+      "answer": 0,
+      "explanation": "Le temps d'arrêt est capté automatiquement, la cause (attente matière, réglage, panne) vient de l'humain : ensemble, ils donnent un Pareto exploitable."
+    },
+    {
+      "id": "iot-063",
+      "level": "débutant",
+      "question": "Que signifie le sigle SCADA ?",
+      "choices": [
+        "Supervisory Control And Data Acquisition",
+        "Secure Cloud Access for Distributed Automation",
+        "System of Controlled Assembly and Digital Analysis",
+        "Standard Code for Automated Device Addressing"
+      ],
+      "answer": 0,
+      "explanation": "Le SCADA supervise les installations : synoptiques, alarmes, commandes opérateur, historique. Il peut couvrir un site ou un réseau étendu (eau, énergie).",
+      "visual": {
+        "asset": "iot-pyramide.svg",
+        "alt": "Pyramide de l'automatisation selon ISA-95"
+      }
+    },
+    {
+      "id": "iot-064",
+      "level": "confirmé",
+      "question": "Qu'est-ce que l'architecture Unified Namespace (UNS) ?",
+      "choices": [
+        "Un espace central où chaque système publie et lit ses données",
+        "Un nom de domaine unique imposé à chaque usine d'un groupe",
+        "Un annuaire des employés partagé entre les sites",
+        "Une norme de nommage des fichiers de programmes"
+      ],
+      "answer": 0,
+      "explanation": "Souvent bâti sur MQTT, l'UNS organise les données par site, zone, ligne et machine : chaque application s'abonne au lieu de créer des liaisons point à point."
+    },
+    {
+      "id": "iot-065",
+      "level": "confirmé",
+      "question": "Quel est l'intérêt principal d'une architecture par publication et abonnement face aux liaisons point à point ?",
+      "choices": [
+        "Ajouter un consommateur sans modifier les producteurs",
+        "Supprimer le besoin de réseau entre les équipements",
+        "Garantir un temps de réponse inférieur à la microseconde",
+        "Rendre inutile la sécurité des échanges"
+      ],
+      "answer": 0,
+      "explanation": "Avec n systèmes en point à point, les liaisons se multiplient. Avec un broker, chacun ne se connecte qu'une fois et un nouveau tableau de bord s'abonne simplement.",
+      "visual": {
+        "asset": "iot-mqtt.svg",
+        "alt": "Éditeurs, broker et abonnés MQTT"
+      }
+    },
+    {
+      "id": "iot-066",
+      "level": "débutant",
+      "question": "Quel format de données est le plus courant dans les messages MQTT ?",
+      "choices": [
+        "JSON",
+        "PDF",
+        "MP3",
+        "DOCX"
+      ],
+      "answer": 0,
+      "explanation": "MQTT transporte des octets quelconques ; JSON est lisible et répandu. Pour économiser la bande passante, on utilise parfois des formats binaires (Protobuf, CBOR) ou Sparkplug B."
+    },
+    {
+      "id": "iot-067",
+      "level": "confirmé",
+      "question": "Qu'apporte la spécification Sparkplug B à MQTT ?",
+      "choices": [
+        "Une structure de topics et de messages standard pour l'industrie",
+        "Un chiffrement matériel des capteurs",
+        "Le remplacement du broker par un automate",
+        "Une portée radio augmentée"
+      ],
+      "answer": 0,
+      "explanation": "MQTT ne fixe ni le nom des topics ni le format des messages. Sparkplug B les normalise et gère la découverte des équipements et leur état en ligne ou hors ligne."
+    },
+    {
+      "id": "iot-068",
+      "level": "débutant",
+      "question": "Pourquoi l'Ethernet industriel (Profinet, EtherNet/IP) remplace-t-il les anciens bus de terrain ?",
+      "choices": [
+        "Un réseau standard plus rapide, qui transporte aussi l'IT",
+        "Parce qu'il ne nécessite plus aucun câble entre les équipements",
+        "Parce qu'il est garanti insensible aux attaques informatiques",
+        "Parce qu'il impose un seul constructeur d'automates"
+      ],
+      "answer": 0,
+      "explanation": "Débit élevé, diagnostics, accès aux données depuis l'informatique : l'Ethernet industriel facilite l'IoT, mais rend aussi la segmentation et la sécurité indispensables."
+    },
+    {
+      "id": "iot-069",
+      "level": "confirmé",
+      "question": "Que permet TSN (Time-Sensitive Networking) ?",
+      "choices": [
+        "Un trafic temps réel garanti sur un Ethernet partagé",
+        "Le chiffrement de la totalité des échanges d'un réseau",
+        "Une alimentation des équipements par le câble réseau",
+        "La connexion des capteurs par satellite"
+      ],
+      "answer": 0,
+      "explanation": "TSN réserve des créneaux et synchronise les horloges pour que les trames critiques arrivent à temps, même avec du trafic informatique sur le même réseau."
+    },
+    {
+      "id": "iot-070",
+      "level": "débutant",
+      "question": "Qu'est-ce que le PoE ?",
+      "choices": [
+        "L'alimentation d'un appareil par son câble Ethernet",
+        "Un protocole de supervision des pompes et des moteurs",
+        "Une norme de protection contre l'explosion",
+        "Une méthode de calcul du TRS"
+      ],
+      "answer": 0,
+      "explanation": "Power over Ethernet alimente caméras, points d'accès ou capteurs par le même câble que les données, ce qui simplifie l'installation."
+    },
+    {
+      "id": "iot-071",
+      "level": "confirmé",
+      "question": "Un tableau de bord affiche une température figée depuis deux heures. Quelle vérification faire en premier ?",
+      "choices": [
+        "L'horodatage et la qualité de la valeur",
+        "Le remplacement immédiat de la sonde de température",
+        "Le redémarrage de l'ERP de l'entreprise",
+        "La modification des seuils d'alarme"
+      ],
+      "answer": 0,
+      "explanation": "Une valeur constante est souvent une perte de communication, pas une mesure réelle. Horodatage, qualité, état de la passerelle et du broker indiquent où la chaîne s'est rompue."
+    },
+    {
+      "id": "iot-072",
+      "level": "confirmé",
+      "question": "Pourquoi définir une bande morte (deadband) sur la publication d'une mesure ?",
+      "choices": [
+        "Pour ne publier que les variations significatives",
+        "Pour couper le capteur quand la mesure est hors plage",
+        "Pour augmenter la précision du capteur",
+        "Pour masquer les alarmes aux opérateurs"
+      ],
+      "answer": 0,
+      "explanation": "Une mesure qui oscille de 0,01 °C n'a pas besoin d'être publiée à chaque fois : la bande morte réduit fortement le volume sans perdre l'information utile."
+    },
+    {
+      "id": "iot-073",
+      "level": "débutant",
+      "question": "Que signifie « rapport par exception » pour un capteur connecté ?",
+      "choices": [
+        "N'émettre qu'en cas de changement ou d'événement",
+        "Envoyer un rapport écrit au responsable chaque semaine",
+        "Émettre seulement quand le capteur tombe en panne",
+        "Transmettre les mesures en continu sans pause"
+      ],
+      "answer": 0,
+      "explanation": "Avec un message périodique de vie (heartbeat), on sait que le capteur fonctionne tout en limitant le trafic et la consommation."
+    },
+    {
+      "id": "iot-074",
+      "level": "débutant",
+      "question": "Qu'est-ce que le cloud computing pour une usine ?",
+      "choices": [
+        "Des serveurs et services distants, loués à l'usage",
+        "Un réseau de capteurs installés dans le plafond de l'atelier",
+        "Une méthode de nettoyage des filtres d'aspiration",
+        "Un logiciel installé sur chaque automate"
+      ],
+      "answer": 0,
+      "explanation": "Le cloud (AWS, Azure, OVHcloud…) offre stockage et calcul à la demande, utile pour l'historique long, les comparaisons entre sites et l'apprentissage automatique."
+    },
+    {
+      "id": "iot-075",
+      "level": "confirmé",
+      "question": "Quel inconvénient du cloud faut-il prévoir pour une donnée de production ?",
+      "choices": [
+        "La dépendance au réseau et la question de la souveraineté",
+        "Il empêche de stocker plus de quelques mégaoctets",
+        "Il oblige à remplacer les automates du site",
+        "Il ne permet pas d'afficher des courbes"
+      ],
+      "answer": 0,
+      "explanation": "Sans réseau, plus de données : l'edge doit pouvoir mémoriser localement. On choisit aussi l'hébergeur selon la sensibilité des données et la réglementation."
+    },
+    {
+      "id": "iot-076",
+      "level": "confirmé",
+      "question": "Que doit faire une passerelle edge quand la liaison vers le cloud est coupée ?",
+      "choices": [
+        "Mémoriser les données et les renvoyer au retour du réseau",
+        "Arrêter la production jusqu'au retour de la connexion",
+        "Effacer les mesures pour éviter un débordement de mémoire",
+        "Envoyer les données par courriel à chaque opérateur"
+      ],
+      "answer": 0,
+      "explanation": "Le stockage tampon (store and forward) évite les trous dans l'historique. La production ne doit pas dépendre du cloud.",
+      "visual": {
+        "asset": "iot-edge.svg",
+        "alt": "Chaîne de données du capteur au cloud"
+      }
+    },
+    {
+      "id": "iot-077",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un capteur intelligent (smart sensor) ?",
+      "choices": [
+        "Un capteur qui traite sa mesure et fournit des diagnostics",
+        "Un capteur qui prend seul la décision d'arrêter l'usine",
+        "Un capteur qui se passe d'étalonnage",
+        "Un capteur relié directement au cloud sans réseau"
+      ],
+      "answer": 0,
+      "explanation": "Il intègre conversion, filtrage, auto-diagnostic et communication numérique (IO-Link, HART, réseau). L'étalonnage reste nécessaire."
+    },
+    {
+      "id": "iot-078",
+      "level": "confirmé",
+      "question": "Que permet le protocole HART sur une boucle 4-20 mA existante ?",
+      "choices": [
+        "Superposer une communication numérique au signal analogique",
+        "Remplacer le courant par un signal radio",
+        "Augmenter la plage du signal à 0-40 mA",
+        "Alimenter les moteurs de la machine"
+      ],
+      "answer": 0,
+      "explanation": "Le signal numérique HART est modulé sur la boucle : on lit diagnostics et paramètres sans recâbler, très courant en instrumentation de procédé."
+    },
+    {
+      "id": "iot-079",
+      "level": "débutant",
+      "question": "Quel est l'intérêt de l'étalonnage des capteurs dans un projet IoT ?",
+      "choices": [
+        "Garantir que les mesures reflètent la réalité",
+        "Augmenter la portée radio des capteurs connectés",
+        "Réduire le prix d'achat des capteurs",
+        "Permettre de se passer de réseau"
+      ],
+      "answer": 0,
+      "explanation": "Des données fausses donnent de fausses décisions. La métrologie (étalonnage, raccordement, suivi des dérives) reste la base de toute analyse."
+    },
+    {
+      "id": "iot-080",
+      "level": "confirmé",
+      "question": "Qu'est-ce que l'apprentissage automatique apporte à la maintenance prévisionnelle ?",
+      "choices": [
+        "Détecter des comportements anormaux appris sur l'historique",
+        "Remplacer les techniciens dans les réparations",
+        "Supprimer le besoin de capteurs",
+        "Garantir l'absence de pannes"
+      ],
+      "answer": 0,
+      "explanation": "Un modèle apprend le fonctionnement normal et signale les écarts. Il faut des données propres, des pannes connues pour valider, et l'avis des techniciens."
+    },
+    {
+      "id": "iot-081",
+      "level": "confirmé",
+      "question": "Un modèle de détection d'anomalies déclenche dix fausses alertes par jour. Quel risque ?",
+      "choices": [
+        "Les équipes finissent par ignorer les alertes, y compris les vraies",
+        "Les machines s'arrêtent d'elles-mêmes à chaque alerte",
+        "Le modèle s'améliore automatiquement sans intervention",
+        "La base de données se remplit et s'arrête"
+      ],
+      "answer": 0,
+      "explanation": "La lassitude d'alarme est un vrai danger. On ajuste les seuils, on combine plusieurs indicateurs et on recueille l'avis des techniciens sur chaque alerte."
+    },
+    {
+      "id": "iot-082",
+      "level": "débutant",
+      "question": "Qu'est-ce que l'interopérabilité ?",
+      "choices": [
+        "La capacité d'équipements de marques différentes à échanger des données",
+        "L'obligation d'acheter tout le matériel chez un même constructeur",
+        "La vitesse maximale d'un réseau industriel",
+        "La durée de vie d'une batterie"
+      ],
+      "answer": 0,
+      "explanation": "Les standards ouverts (OPC UA, MQTT, IO-Link) évitent l'enfermement chez un fournisseur et facilitent l'intégration de nouvelles machines."
+    },
+    {
+      "id": "iot-083",
+      "level": "confirmé",
+      "question": "Lors de l'achat d'une machine neuve, quelle exigence facilite son intégration à l'IoT de l'usine ?",
+      "choices": [
+        "Un serveur OPC UA avec des données documentées",
+        "Une interface propriétaire accessible uniquement par le constructeur",
+        "Un écran plus grand sur le pupitre opérateur",
+        "Une couleur de carrosserie identique aux autres machines"
+      ],
+      "answer": 0,
+      "explanation": "Spécifier dans le cahier des charges les données exposées (états, compteurs, alarmes), le protocole et la sécurité évite des passerelles coûteuses ensuite."
+    },
+    {
+      "id": "iot-084",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un tableau de bord temps réel sur une ligne ?",
+      "choices": [
+        "Un écran qui affiche l'état et les indicateurs de la ligne en direct",
+        "Un tableau électrique qui distribue l'énergie aux machines",
+        "Un planning papier affiché le lundi matin",
+        "Le pupitre de commande d'une seule machine"
+      ],
+      "answer": 0,
+      "explanation": "Cadence, arrêts, TRS, alarmes visibles de tous : l'équipe réagit vite et le point quotidien s'appuie sur des chiffres fiables."
+    },
+    {
+      "id": "iot-085",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "200 capteurs publient chacun un message de 200 octets par minute. Combien de mégaoctets cela représente-t-il par heure (1 Mo = 1 000 000 octets) ?",
+      "value": 2.4,
+      "unit": "Mo",
+      "tolerance": 1,
+      "explanation": "200 × 200 × 60 = 2 400 000 octets, soit 2,4 Mo par heure. Un volume modeste : l'enjeu est souvent l'organisation des données plus que leur taille."
+    },
+    {
+      "id": "iot-086",
+      "level": "confirmé",
+      "question": "Quel critère est le plus important pour choisir un capteur de vibration connecté sur un roulement ?",
+      "choices": [
+        "La bande de fréquence mesurée et la fréquence d'échantillonnage",
+        "La couleur du boîtier pour le repérer facilement",
+        "Le nombre de LED de signalisation sur le capteur",
+        "La longueur du câble de rechange fourni"
+      ],
+      "answer": 0,
+      "explanation": "Les défauts de roulement apparaissent à des fréquences élevées : un capteur qui ne mesure qu'une valeur globale basse fréquence ne les verra pas."
+    },
+    {
+      "id": "iot-087",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un Raspberry Pi dans un projet IoT industriel ?",
+      "choices": [
+        "Un petit ordinateur souvent utilisé pour prototyper une passerelle",
+        "Un automate de sécurité certifié pour les arrêts d'urgence",
+        "Un capteur de température à sonde platine",
+        "Un logiciel de GMAO"
+      ],
+      "answer": 0,
+      "explanation": "Pratique pour prototyper, il n'est pas conçu pour l'environnement industriel sévère : on préfère ensuite une passerelle durcie (température, vibrations, alimentation)."
+    },
+    {
+      "id": "iot-088",
+      "level": "confirmé",
+      "question": "Pourquoi éviter de piloter une sortie de sécurité (arrêt d'urgence) par un message IoT ?",
+      "choices": [
+        "Les fonctions de sécurité exigent des matériels certifiés et câblés",
+        "Les messages IoT sont plus lents que le courrier postal",
+        "Les arrêts d'urgence sont interdits sur les machines connectées",
+        "Le broker refuse les messages qui contiennent le mot arrêt"
+      ],
+      "answer": 0,
+      "explanation": "La sécurité des machines relève de normes dédiées (ISO 13849, IEC 62061) : automates et relais de sécurité, câblage ou réseaux de sécurité certifiés. L'IoT supervise, il ne protège pas."
+    },
+    {
+      "id": "iot-089",
+      "level": "débutant",
+      "question": "Quel est l'intérêt de suivre la consommation d'énergie machine par machine ?",
+      "choices": [
+        "Repérer les gaspillages : fuites d'air, machines en marche à vide",
+        "Calculer le salaire des opérateurs selon l'énergie consommée",
+        "Arrêter les machines dès qu'elles consomment de l'électricité",
+        "Remplacer le compteur général du site"
+      ],
+      "answer": 0,
+      "explanation": "Compteurs connectés et capteurs de débit d'air révèlent les consommations hors production et les fuites, avec des gains rapides (norme ISO 50001)."
+    },
+    {
+      "id": "iot-090",
+      "level": "confirmé",
+      "question": "Une fuite d'air comprimé est détectée par la hausse de débit la nuit, ligne arrêtée. Quel outil la localise ensuite sur le terrain ?",
+      "choices": [
+        "Un détecteur à ultrasons",
+        "Un multimètre en mode ohmmètre",
+        "Une caméra de vision industrielle",
+        "Un lecteur RFID portable"
+      ],
+      "answer": 0,
+      "explanation": "Une fuite émet des ultrasons audibles avec l'appareil même dans le bruit de l'atelier. Le suivi connecté du débit révèle le problème, l'ultrason le localise."
+    },
+    {
+      "id": "iot-091",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque outil à son rôle dans une architecture IoT.",
+      "pairs": [
+        [
+          "Mosquitto",
+          "Broker MQTT"
+        ],
+        [
+          "InfluxDB",
+          "Base de séries temporelles"
+        ],
+        [
+          "Grafana",
+          "Tableaux de bord"
+        ],
+        [
+          "Node-RED",
+          "Flux de traitement des données"
+        ]
+      ],
+      "explanation": "Cette pile libre (souvent appelée TIG ou MING selon les composants) permet un prototype complet à faible coût."
+    },
+    {
+      "id": "iot-092",
+      "level": "confirmé",
+      "question": "Dans une usine, qui doit être associé dès le début d'un projet IoT ?",
+      "choices": [
+        "Production, maintenance, informatique et sécurité",
+        "Le service informatique seul, puisqu'il s'agit de réseau",
+        "Le fournisseur des capteurs seul",
+        "Le service commercial"
+      ],
+      "answer": 0,
+      "explanation": "Le monde de l'exploitation (OT) et celui de l'informatique (IT) ont des contraintes différentes : disponibilité d'un côté, sécurité et mises à jour de l'autre. Le projet doit les réunir."
+    },
+    {
+      "id": "iot-093",
+      "level": "débutant",
+      "question": "Que désignent les sigles IT et OT ?",
+      "choices": [
+        "L'informatique de gestion et les technologies d'exploitation",
+        "Les équipes de jour et de nuit",
+        "L'intérim et les contrats à durée indéterminée",
+        "Les entrées et les sorties d'un automate"
+      ],
+      "answer": 0,
+      "explanation": "L'OT regroupe automates, SCADA, réseaux industriels ; l'IT les serveurs, la bureautique, l'ERP. L'industrie 4.0 les fait converger."
+    },
+    {
+      "id": "iot-094",
+      "level": "confirmé",
+      "question": "Pourquoi appliquer une mise à jour de sécurité sur un poste de supervision demande-t-il plus de précautions qu'en bureautique ?",
+      "choices": [
+        "Un redémarrage ou une incompatibilité peut arrêter la production",
+        "Les postes industriels ne peuvent jamais être mis à jour",
+        "Les mises à jour industrielles sont toujours payantes",
+        "Le fournisseur interdit toute modification du poste"
+      ],
+      "answer": 0,
+      "explanation": "On teste la mise à jour (validation du fournisseur, poste de test), on la planifie lors d'un arrêt et on garde un retour arrière. La disponibilité prime en OT."
+    },
+    {
+      "id": "iot-095",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'une API REST dans un contexte IoT ?",
+      "choices": [
+        "Une interface HTTP pour lire ou envoyer des données à un service",
+        "Un automate programmable de petite taille",
+        "Un temps de repos réglementaire pour les machines",
+        "Un réseau sans fil à longue portée"
+      ],
+      "answer": 0,
+      "explanation": "Les plateformes et les MES exposent souvent des API REST (requêtes GET, POST en JSON). Elles complètent MQTT pour les échanges ponctuels."
+    },
+    {
+      "id": "iot-096",
+      "level": "confirmé",
+      "question": "Quelle différence d'usage entre MQTT et une API REST ?",
+      "choices": [
+        "MQTT pousse des flux continus, REST répond à des requêtes",
+        "MQTT ne fonctionne que sans fil, REST que par câble",
+        "REST est réservé aux automates, MQTT aux ordinateurs",
+        "Les deux sont strictement interchangeables"
+      ],
+      "answer": 0,
+      "explanation": "MQTT convient aux mesures publiées en continu vers plusieurs abonnés ; REST à la lecture ou à l'écriture d'une ressource à la demande (un ordre de fabrication, une configuration)."
+    },
+    {
+      "id": "iot-097",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre l'échange d'un client MQTT qui s'abonne puis reçoit un message.",
+      "items": [
+        "Le client se connecte au broker (CONNECT)",
+        "Le broker accepte la connexion (CONNACK)",
+        "Le client s'abonne à un topic (SUBSCRIBE)",
+        "Un éditeur publie sur ce topic (PUBLISH)",
+        "Le broker transmet le message à l'abonné"
+      ],
+      "explanation": "Le client garde ensuite la connexion ouverte (keep alive). En cas de coupure, le broker publie son message de dernière volonté s'il en a déclaré un."
+    },
+    {
+      "id": "iot-098",
+      "level": "confirmé",
+      "question": "À quoi sert le keep alive dans une connexion MQTT ?",
+      "choices": [
+        "À détecter qu'un client ou le broker ne répond plus",
+        "À garder la batterie chargée pendant les périodes de veille",
+        "À conserver les messages pendant un mois",
+        "À empêcher les autres clients de se connecter"
+      ],
+      "answer": 0,
+      "explanation": "Sans échange pendant l'intervalle convenu, le client envoie un PINGREQ. Si rien ne revient, la connexion est considérée comme perdue et le message de dernière volonté est publié."
+    },
+    {
+      "id": "iot-099",
+      "level": "confirmé",
+      "question": "En entretien, comment valoriser une expérience de maintenance dans un poste orienté industrie 4.0 ?",
+      "choices": [
+        "Montrer comment des données ont aidé à prévenir des pannes",
+        "Expliquer qu'on n'a jamais utilisé d'outil numérique dans son travail",
+        "Dire que les capteurs remplaceront bientôt les techniciens",
+        "Citer des sigles sans exemple concret"
+      ],
+      "answer": 0,
+      "explanation": "Un exemple : « suivi de la température d'un palier, alerte avant grippage, intervention planifiée ». La compréhension du terrain est l'atout d'un profil maintenance."
+    },
+    {
+      "id": "iot-100",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque concept de l'industrie 4.0 à sa définition.",
+      "pairs": [
+        [
+          "Jumeau numérique",
+          "Modèle virtuel alimenté par les données réelles"
+        ],
+        [
+          "Edge computing",
+          "Traitement au plus près des machines"
+        ],
+        [
+          "Cobot",
+          "Robot qui partage l'espace avec l'opérateur"
+        ],
+        [
+          "MES",
+          "Pilotage et traçabilité de la production"
+        ],
+        [
+          "Unified Namespace",
+          "Espace central de publication des données"
+        ]
+      ],
+      "explanation": "Ces briques se combinent : les capteurs alimentent l'edge, qui publie dans l'UNS, d'où le MES et le jumeau numérique tirent leurs données."
+    }
+  ]
+}

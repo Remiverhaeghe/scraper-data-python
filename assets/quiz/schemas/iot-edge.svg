@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="260" viewBox="0 0 900 260" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="260" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Du capteur au cloud</text>
+<rect x="40.0" y="80.0" width="220.0" height="90.0" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="150.0" y="112.7" text-anchor="middle" font-size="14" fill="#0f172a">Terrain</text>
+<text x="150.0" y="129.7" text-anchor="middle" font-size="14" fill="#0f172a">capteurs, automates</text>
+<text x="150.0" y="146.7" text-anchor="middle" font-size="14" fill="#0f172a">mesures brutes</text>
+<rect x="340.0" y="80.0" width="220.0" height="90.0" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+<text x="450.0" y="112.7" text-anchor="middle" font-size="14" fill="#0f172a">Edge (passerelle)</text>
+<text x="450.0" y="129.7" text-anchor="middle" font-size="14" fill="#0f172a">filtrer, agréger,</text>
+<text x="450.0" y="146.7" text-anchor="middle" font-size="14" fill="#0f172a">réagir vite, sur site</text>
+<rect x="640.0" y="80.0" width="220.0" height="90.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="750.0" y="112.7" text-anchor="middle" font-size="14" fill="#0f172a">Cloud</text>
+<text x="750.0" y="129.7" text-anchor="middle" font-size="14" fill="#0f172a">stocker longtemps,</text>
+<text x="750.0" y="146.7" text-anchor="middle" font-size="14" fill="#0f172a">analyser, comparer</text>
+<line x1="262.0" y1="125.0" x2="337.0" y2="125.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="562.0" y1="125.0" x2="637.0" y2="125.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<text x="300.0" y="68.0" text-anchor="middle" font-size="12" fill="#475569">OPC UA, Modbus</text>
+<text x="600.0" y="68.0" text-anchor="middle" font-size="12" fill="#475569">MQTT, HTTPS</text>
+<text x="150.0" y="200.0" text-anchor="middle" font-size="13" fill="#475569">temps réel : milliseconde</text>
+<text x="450.0" y="200.0" text-anchor="middle" font-size="13" fill="#475569">réactions locales : seconde</text>
+<text x="750.0" y="200.0" text-anchor="middle" font-size="13" fill="#475569">tendances : jours et mois</text>
+<text x="450.0" y="240.0" text-anchor="middle" font-size="13" fill="#475569">Envoyer moins mais mieux : l'edge réduit le volume et continue sans réseau</text>
+</svg>
