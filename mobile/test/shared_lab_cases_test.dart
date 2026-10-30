@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jobboard_revision/logic/git_levels.dart';
+import 'package:jobboard_revision/logic/git_sandbox.dart';
 import 'package:jobboard_revision/logic/ladder.dart';
 import 'package:jobboard_revision/logic/ladder_game.dart';
 import 'package:jobboard_revision/logic/python_compat.dart';
@@ -85,6 +87,43 @@ void main() {
             vExpected['chart_svg'],
           );
         }
+      });
+    }
+  });
+
+  final vGitLevels = <String, Map<String, dynamic>>{
+    for (final vLevel in vCases['git_levels'] as List)
+      (vLevel as Map)['id'] as String: Map<String, dynamic>.from(vLevel),
+  };
+
+  group('Git', () {
+    for (final vCase in vCases['git'] as List) {
+      test(vCase['name'] as String, () {
+        final vLevel = vGitLevels[vCase['level']]!;
+        final vRepository = replay(setupOf(vLevel));
+
+        for (final vStep in vCase['steps'] as List) {
+          final vCommand = (vStep as Map)['command'] as String;
+          final vActual = <String, Object?>{'command': vCommand};
+
+          try {
+            vActual['message'] = runCommand(vRepository, vCommand);
+          } on GitError catch (vError) {
+            vActual['error'] = vError.message;
+          }
+
+          vActual['worktree'] = describeWorktree(vRepository);
+          vActual['reached'] = isGoalReached(vLevel, vRepository);
+
+          expect(vActual, equals(vStep), reason: vCommand);
+        }
+
+        expect(renderGraph(vRepository.localView(), 'Votre dépôt'), vCase['graph']);
+        expect(
+          vRepository.remote.isEmpty ? '' : renderGraph(vRepository.serverView(), 'Serveur', false),
+          vCase['server'],
+        );
+        expect(renderGraph(goalOf(vLevel).localView(), 'Objectif'), vCase['goal']);
       });
     }
   });

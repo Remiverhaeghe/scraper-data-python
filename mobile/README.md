@@ -33,7 +33,7 @@ privilégiées, révision express de 5 minutes avec compte à rebours, note rapi
 une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
 lisibles hors ligne et fiche de préparation (pitch, questions pièges, questions à
 poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien,
-simulations jouables sans réseau, pannes à résoudre et automate en ladder (contenu reçu du PC,
+simulations jouables sans réseau, pannes à résoudre, automate en ladder et bac à sable Git (contenu reçu du PC,
 parties revérifiées par le PC à la synchronisation), widget de l'écran d'accueil (questions à revoir, prochain entretien), dessiné par
 `android/app/src/main/kotlin/…/RevisionWidgetProvider.kt` et
 `res/layout/revision_widget.xml`, avec son fond (`res/drawable/widget_background.xml`)
@@ -172,6 +172,8 @@ mobile/
 │   │   ├── troubleshooting.dart  # Pannes à résoudre, identique à job/troubleshooting.py
 │   │   ├── ladder.dart           # Langage ladder et dessin, identiques à job/ladder.py
 │   │   ├── ladder_game.dart      # Machines, scénario de test, chronogramme (job/ladder_game.py)
+│   │   ├── git_sandbox.dart      # Dépôt Git simulé, identique à job/git_sandbox.py
+│   │   ├── git_levels.dart       # Niveaux Git et graphe, identiques à job/git_levels.py et git_graph.py
 │   │   └── python_compat.dart    # Arrondi, lignes et format de Python, reproduits à l'identique
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
@@ -199,7 +201,8 @@ mobile/
 │   │   ├── time_attack_screen.dart # Jeu « Contre la montre » : QCM pendant 60 secondes
 │   │   ├── labs_screen.dart      # Simulations hors ligne : choix de la simulation
 │   │   ├── troubleshooting_screen.dart # Pannes à résoudre : liste et partie
-│   │   └── ladder_screen.dart    # Automate : niveaux, éditeur, test et simulation
+│   │   ├── ladder_screen.dart    # Automate : niveaux, éditeur, test et simulation
+│   │   └── git_screen.dart       # Git : niveaux par série, commandes, graphes et fichiers
 │   └── widgets/
 │       ├── celebration.dart      # Confettis et carte d'un niveau gagné ou d'un record
 │       ├── game_card.dart        # Niveau, série et quêtes reçus du PC, accès au jeu
@@ -215,7 +218,7 @@ mobile/
     ├── exam_and_sync_test.dart   # Teste l'examen, l'envoi automatique et le rappel
     ├── shared_cases_test.dart    # Teste les cas communs avec le serveur
     ├── shared_lab_cases_test.dart # Teste les simulateurs avec les cas communs du PC
-    ├── labs_test.dart            # Teste une panne et un niveau d'automate joués hors ligne
+    ├── labs_test.dart            # Teste une panne, un niveau d'automate et un niveau Git hors ligne
     ├── discovery_test.dart       # Teste la recherche du serveur sur le Wi-Fi
     ├── connection_code_test.dart # Teste la lecture du QR code de connexion
     ├── statistics_test.dart      # Teste la réussite par thème et le graphique des jours

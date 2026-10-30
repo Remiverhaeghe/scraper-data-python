@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../revision_state.dart';
+import 'git_screen.dart';
 import 'ladder_screen.dart';
 import 'troubleshooting_screen.dart';
 
@@ -19,7 +20,9 @@ class LabsScreen extends StatelessWidget {
           builder: (pContext, _) => ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (state.troubleshootingScenarios.isEmpty && state.ladderLevels.isEmpty)
+              if (state.troubleshootingScenarios.isEmpty &&
+                  state.ladderLevels.isEmpty &&
+                  state.gitLevels.isEmpty)
                 const Text(
                   'Synchronisez une fois avec le PC pour télécharger les simulations : '
                   'elles se jouent ensuite sans réseau.',
@@ -37,6 +40,21 @@ class LabsScreen extends StatelessWidget {
                     onTap: () => Navigator.of(pContext).push(
                       MaterialPageRoute<void>(
                           builder: (_) => TroubleshootingListScreen(state: state)),
+                    ),
+                  ),
+                ),
+              if (state.gitLevels.isNotEmpty)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.account_tree_outlined),
+                    title: const Text('Bac à sable Git'),
+                    subtitle: Text(
+                      '${state.gitLevels.where((pLevel) => state.gitBest(pLevel['id'] as String) != null).length}'
+                      ' / ${state.gitLevels.length} niveaux réussis',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(pContext).push(
+                      MaterialPageRoute<void>(builder: (_) => GitListScreen(state: state)),
                     ),
                   ),
                 ),

@@ -430,7 +430,7 @@ Documents/JobBoard/
 - [x] Application installable sur l'écran d'accueil (manifeste web et icône)
 - [x] Application mobile Flutter de révision hors ligne (`mobile/`) : QCM, calculs, remises en ordre, associations, schémas et guides, répétition espacée, examen blanc chronométré, synchronisation automatique, rappel quotidien, icône et signature propres
 - [x] Correction et répétition espacée vérifiées des deux côtés par des cas communs (`tests/fixtures/shared_quiz_cases.json`), application mobile testée par la CI
-- [x] Pannes à résoudre et simulateur d'automate jouables hors ligne sur le téléphone : contenu reçu du PC, simulateurs Dart vérifiés par les cas communs de `tests/fixtures/shared_lab_cases.json` (à régénérer par `python -m tools.lab_cases` après une modification du simulateur ou des scénarios), parties rejouées par le PC
+- [x] Pannes à résoudre, simulateur d'automate et bac à sable Git jouables hors ligne sur le téléphone : contenu reçu du PC, simulateurs Dart vérifiés par les cas communs de `tests/fixtures/shared_lab_cases.json` (à régénérer par `python -m tools.lab_cases` après une modification du simulateur ou des scénarios), parties rejouées par le PC
 
 ### Hébergement et sécurité
 
@@ -679,7 +679,7 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 | GET | `/api/v1/offers` | Nouvelles offres de la semaine, fiche lisible hors ligne : description, compétences couvertes et manquantes, salaire, distance, position et `near` (dans le rayon des alertes) |
 | POST | `/api/v1/applications` | Statuts donnés aux offres sur le téléphone : `{"changes": [{"source", "source_id", "status"}]}` ; notes et date d'entretien gardées |
 | GET, POST | `/api/v1/interview` | Questions de la simulation d'entretien ; séries faites sur le téléphone : `{"series": [...]}` |
-| GET, POST | `/api/v1/labs` | Simulations jouables hors ligne (scénarios de pannes, niveaux d'automate, règles et réussites du PC) ; parties faites sur le téléphone : `{"results": [{"id", "lab", "scenario" et "actions" ou "level" et "program", "finished_at"}]}`, rejouées par le PC avant d'être comptées |
+| GET, POST | `/api/v1/labs` | Simulations jouables hors ligne (scénarios de pannes, niveaux d'automate et de Git, règles et réussites du PC) ; parties faites sur le téléphone : `{"results": [{"id", "lab", "scenario" et "actions", ou "level" et "program" ou "history", "finished_at"}]}`, rejouées par le PC avant d'être comptées |
 | GET, POST | `/api/v1/skills` | Grille d'auto-évaluation ; niveaux saisis sur le téléphone : `{"levels": {"Java": 6}}` |
 | GET | `/api/v1/replies` | Réponses de recruteurs repérées dans Gmail par le planificateur : offre, statut annoncé, date d'entretien ; jamais le contenu du message |
 

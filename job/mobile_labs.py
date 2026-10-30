@@ -6,8 +6,12 @@ modifie. Au retour, le PC ne croit pas le résultat annoncé : il rejoue la
 partie avec le simulateur de référence, puis l'enregistre comme sur le bureau.
 """
 
+from dataclasses import asdict
 from datetime import datetime
 
+from job.git_levels import LEVELS as GIT_LEVELS
+from job.git_levels import get_level as get_git_level
+from job.git_levels import is_goal_reached, replay_level
 from job.ladder_game import build_ladder_overview, load_levels, run_level
 from job.ladder_game import save_attempt as save_ladder_attempt
 from job.progress import TROUBLESHOOTING_XP_PER_TEN, XP_RULES
@@ -20,6 +24,7 @@ from job.troubleshooting import (
     play,
     save_result,
 )
+from storage.git_levels import get_git_level_results, save_git_level_result
 from storage.settings_repository import load_json_setting, save_json_setting
 from utils.logger import get_logger
 
@@ -60,6 +65,11 @@ def build_labs_package(pDatabaseFile):
                 for vRow in build_ladder_overview(pDatabaseFile)["rows"]
                 if vRow["passed"]
             ],
+        },
+        "git": {
+            "levels": [asdict(vLevel) for vLevel in GIT_LEVELS],
+            "xp": XP_RULES["git_level"][1],
+            "best": get_git_level_results(pDatabaseFile),
         },
     }
 
@@ -137,9 +147,35 @@ def integrate_ladder(pDatabaseFile, pItem, pFinishedAt):
     return rXp
 
 
+def integrate_git(pDatabaseFile, pItem, pFinishedAt):
+    """Rejoue les commandes Git du téléphone ; retourne les points gagnés."""
+
+    vLevel = get_git_level(pItem.get("level"))
+    vHistory = pItem.get("history")
+
+    if vLevel is None:
+        raise ValueError("simulation ou niveau inconnu")
+
+    if not isinstance(vHistory, list) or not all(
+        isinstance(vCommand, str) for vCommand in vHistory
+    ):
+        raise ValueError("commandes illisibles")
+
+    if not is_goal_reached(vLevel, replay_level(vLevel, vHistory)):
+        raise ValueError("niveau non réussi")
+
+    vFirst = vLevel.id not in get_git_level_results(pDatabaseFile)
+    save_git_level_result(pDatabaseFile, vLevel.id, len(vHistory), pFinishedAt)
+
+    rXp = XP_RULES["git_level"][1] if vFirst else 0
+
+    return rXp
+
+
 INTEGRATIONS = {
     "troubleshooting": integrate_troubleshooting,
     "ladder": integrate_ladder,
+    "git": integrate_git,
 }
 
 

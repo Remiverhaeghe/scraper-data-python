@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:jobboard_revision/revision_state.dart';
+import 'package:jobboard_revision/screens/git_screen.dart';
 import 'package:jobboard_revision/screens/ladder_screen.dart';
 import 'package:jobboard_revision/screens/troubleshooting_screen.dart';
 import 'package:jobboard_revision/services/api_client.dart';
@@ -20,6 +21,8 @@ final scenarios = jsonDecode(
   File('../assets/troubleshooting/scenarios.json').readAsStringSync(),
 ) as List;
 final levels = jsonDecode(File('../assets/ladder/levels.json').readAsStringSync()) as List;
+final gitLevels = (jsonDecode(File('../tests/fixtures/shared_lab_cases.json').readAsStringSync())
+    as Map)['git_levels'] as List;
 
 /// Serveur simulé : contenu des simulations, envois notés, ou serveur trop ancien.
 MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
@@ -48,6 +51,11 @@ MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
             'levels': levels,
             'xp': 25,
             'passed': ['comptage']
+          },
+          'git': {
+            'levels': gitLevels,
+            'xp': 25,
+            'best': {'fusion': 3},
           },
         })),
         200,
@@ -151,6 +159,30 @@ void main() {
         scrollable: find.byType(Scrollable).first);
     await pTester.tap(find.text('Arrêter'));
     await pTester.pump();
+  });
+
+  testWidgets('Un niveau Git se joue au clavier puis part au PC', (pTester) async {
+    final vState = await buildState(buildServer([]));
+    await pTester.runAsync(vState.synchronize);
+
+    expect(vState.gitBest('fusion'), 3);
+
+    final vLevel = vState.gitLevels.firstWhere((pLevel) => pLevel['id'] == 'premiers-commits');
+
+    await pTester.pumpWidget(MaterialApp(home: GitScreen(state: vState, level: vLevel)));
+
+    for (final vCommand in ['git comit', 'git commit', 'git commit']) {
+      await pTester.enterText(find.byType(TextField), vCommand);
+      await pTester.testTextInput.receiveAction(TextInputAction.done);
+      await pTester.runAsync(() => pTester.pumpAndSettle());
+    }
+
+    expect(
+      find.textContaining('Niveau réussi en 2 commande(s) : parcours optimal. +25 XP'),
+      findsOneWidget,
+    );
+    expect(vState.gitBest('premiers-commits'), 2);
+    expect(vState.pendingLabs.single['history'], ['git commit', 'git commit']);
   });
 
   test("Un serveur sans simulations n'empêche pas la synchronisation", () async {

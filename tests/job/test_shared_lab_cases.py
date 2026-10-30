@@ -12,7 +12,7 @@ from tools.lab_cases import FIXTURE_FILE, build_cases
 def test_shared_cases_are_up_to_date():
     """Vérifie le fichier commun : à régénérer par python -m tools.lab_cases."""
 
-    vCases = build_cases()
+    vCases = json.loads(json.dumps(build_cases()))
 
     assert json.loads(FIXTURE_FILE.read_text(encoding="utf-8")) == vCases
     assert {vCase["expected"]["score"] for vCase in vCases["troubleshooting"]} >= {
@@ -84,3 +84,26 @@ def test_phone_ladder_program_is_checked_again(tmp_path):
     assert (vReport["saved"], vReport["xp"]) == (2, 25)
     assert vReport["rejected"][0]["reason"] == "niveau non réussi"
     assert build_labs_package(vDatabaseFile)["ladder"]["passed"] == [vLevel["id"]]
+
+
+def test_phone_git_history_is_replayed(tmp_path):
+    """Vérifie des commandes Git qui atteignent l'objectif, et un historique incomplet refusé."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vResult = {
+        "id": "git-1",
+        "lab": "git",
+        "level": "premiers-commits",
+        "history": ["git commit", "git commit"],
+        "finished_at": "2026-10-30T09:00:00",
+    }
+
+    vReport = sync_lab_results(
+        vDatabaseFile,
+        [vResult, {**vResult, "id": "git-2", "history": ["git commit"]}],
+    )
+
+    assert (vReport["saved"], vReport["xp"]) == (1, 25)
+    assert vReport["rejected"][0]["reason"] == "niveau non réussi"
+    assert build_labs_package(vDatabaseFile)["git"]["best"] == {"premiers-commits": 2}

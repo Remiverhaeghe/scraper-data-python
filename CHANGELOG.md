@@ -8,7 +8,8 @@ dans l'historique git.
 ### Application mobile 1.9.0
 - Simulations jouables hors ligne, contenu reçu du PC : pannes à résoudre, et
   simulateur d'automate (ladder dessiné en direct, scénario de test et
-  chronogramme, machine pilotée au doigt) ; simulateurs réécrits en Dart et
+  chronogramme, machine pilotée au doigt), bac à sable Git (32 niveaux, fichiers,
+  remise et conflits, graphes du dépôt, de l'objectif et du serveur) ; simulateurs réécrits en Dart et
   vérifiés par des cas communs avec Python (`python -m tools.lab_cases`), dessins
   SVG compris ; parties revérifiées par le PC à la synchronisation
 

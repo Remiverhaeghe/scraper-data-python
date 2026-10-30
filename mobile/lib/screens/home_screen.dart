@@ -180,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 child: ListTile(
                   leading: const Icon(Icons.build_circle_outlined),
                   title: const Text('Simulations'),
-                  subtitle: const Text('Pannes à résoudre et automate, jouables sans réseau'),
+                  subtitle: const Text('Pannes, automate et Git, jouables sans réseau'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(builder: (_) => LabsScreen(state: state)),

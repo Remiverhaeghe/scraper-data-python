@@ -83,6 +83,8 @@ const pendingLabsPreference = 'pending_labs';
 const labScoresPreference = 'lab_scores';
 const ladderPassedPreference = 'ladder_passed';
 const ladderProgramsPreference = 'ladder_programs';
+const gitBestPreference = 'git_best';
+const gitHistoriesPreference = 'git_histories';
 
 /// Auto-évaluation : grille reçue du PC et niveaux saisis pas encore envoyés
 const skillGridPreference = 'skill_grid';
@@ -272,6 +274,65 @@ class RevisionState extends ChangeNotifier {
           pLevelId: pProgram
         },
       );
+
+  List<Map<String, dynamic>> get gitLevels => [
+        for (final vItem in (labs['git'] as Map?)?['levels'] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  int get gitXp => ((labs['git'] as Map?)?['xp'] as num? ?? 25).toInt();
+
+  /// Meilleur nombre de commandes d'un niveau Git, sur le PC ou le téléphone, ou null.
+  int? gitBest(String pLevelId) {
+    final vCounts = [
+      ((labs['git'] as Map?)?['best'] as Map?)?[pLevelId],
+      (preferences[gitBestPreference] as Map?)?[pLevelId],
+    ].whereType<num>().map((pCount) => pCount.toInt());
+
+    final rBest = vCounts.isEmpty ? null : vCounts.reduce((pA, pB) => pA < pB ? pA : pB);
+
+    return rBest;
+  }
+
+  /// Commandes déjà jouées dans un niveau Git, pour le reprendre là où on l'a laissé.
+  List<String> gitHistory(String pLevelId) => List<String>.from(
+      (preferences[gitHistoriesPreference] as Map?)?[pLevelId] as List? ?? const []);
+
+  Future<void> saveGitHistory(String pLevelId, List<String> pHistory) => savePreference(
+        gitHistoriesPreference,
+        {
+          ...Map<String, dynamic>.from(preferences[gitHistoriesPreference] as Map? ?? const {}),
+          pLevelId: pHistory,
+        },
+      );
+
+  /// Garde un niveau Git réussi ; les commandes partent au PC, qui les rejoue.
+  Future<bool> recordGit(String pLevelId, List<String> pHistory) async {
+    final rFirst = gitBest(pLevelId) == null;
+    final vBest = gitBest(pLevelId);
+
+    preferences = {
+      ...preferences,
+      gitBestPreference: {
+        ...Map<String, dynamic>.from(preferences[gitBestPreference] as Map? ?? const {}),
+        pLevelId: vBest == null || pHistory.length < vBest ? pHistory.length : vBest,
+      },
+      pendingLabsPreference: [
+        ...pendingLabs,
+        {
+          'id': const Uuid().v4(),
+          'lab': 'git',
+          'level': pLevelId,
+          'history': pHistory,
+          'finished_at': DateTime.now().toIso8601String(),
+        },
+      ],
+    };
+    await store.savePreferences(preferences);
+    notifyListeners();
+
+    return rFirst;
+  }
 
   /// Garde un niveau réussi ; le programme part au PC, qui le revérifie.
   Future<bool> recordLadder(String pLevelId, String pProgram) async {
