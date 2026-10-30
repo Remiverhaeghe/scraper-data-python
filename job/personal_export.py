@@ -32,6 +32,8 @@ EXPORTED_SETTINGS = (
     "interview_simulation_history",
     "interview_simulation_scores",
     "quiz_exam_results",
+    "certifications_owned",
+    "certifications_details",
 )
 
 ATTACHMENT_PREFIX = "pieces_jointes/"
@@ -44,10 +46,11 @@ Chaque fichier .json se lit avec un éditeur de texte ou un navigateur :
 - candidatures.json : vos candidatures, avec l'offre, les notes et l'adresse du recruteur
 - historique_des_statuts.json, relances.json : le suivi de chaque candidature
 - journal_entretien.json : les questions posées et vos impressions
-- reglages.json : profil, CV, réponses STAR, domicile, e-mail et règles personnelles
+- reglages.json : profil, CV, réponses STAR, domicile, e-mail, règles personnelles
+  et certifications obtenues
 - recherches_enregistrees.json, historique_recherches.json : vos recherches
 - reponses_revision.json, defis.json, niveaux_git.json : votre révision
-- pieces_jointes/ : les CV et lettres joints aux candidatures
+- pieces_jointes/ : les CV et lettres joints aux candidatures, les certificats
 
 Les offres publiées par les sites d'emploi et les jetons d'accès n'y figurent pas.
 """

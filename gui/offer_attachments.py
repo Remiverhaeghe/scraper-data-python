@@ -34,7 +34,7 @@ logger = get_logger(__name__)
 class AttachmentsPanel(QWidget):
     """Liste les fichiers joints à l'offre affichée et permet d'en ajouter."""
 
-    def __init__(self, pDatabaseFile):
+    def __init__(self, pDatabaseFile, pHint="CV envoyé, lettre"):
         """Construit la liste et ses boutons, vide tant qu'aucune offre n'est choisie."""
         super().__init__()
 
@@ -52,7 +52,7 @@ class AttachmentsPanel(QWidget):
         vAddButton = QPushButton("Joindre un fichier…")
         vAddButton.setObjectName("linkButton")
         vAddButton.setToolTip(
-            "CV envoyé, lettre : " + ", ".join(ALLOWED_EXTENSIONS) + ", 10 Mo maximum"
+            f"{pHint} : " + ", ".join(ALLOWED_EXTENSIONS) + ", 10 Mo maximum"
         )
         vAddButton.clicked.connect(self.add_attachment)
 

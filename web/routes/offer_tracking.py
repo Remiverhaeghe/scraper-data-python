@@ -15,6 +15,7 @@ from fastapi import (
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from job.application_tracking import describe_status_history
+from job.certifications import DOCUMENT_SOURCE
 from job.interview_journal import collect_company_questions, record_interview
 from job.presentation import STATUS_LABELS
 from job.settings import load_settings
@@ -36,6 +37,7 @@ from storage.job_applications import (
 from web.dependencies import get_database_file, require_csrf
 from web.forms import parse_date
 from web.rendering import get_message_tone, templates
+from web.routes.certifications import build_certification_url
 from web.routes.offers import build_offer_url, get_existing_offer
 
 router = APIRouter()
@@ -237,7 +239,7 @@ def remove_attachment(
     pAttachmentId: int = Form(alias="id"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Supprime une pièce jointe puis rouvre la fiche de son offre."""
+    """Supprime une pièce jointe puis rouvre la fiche de son offre ou sa certification."""
 
     vAttachment = get_attachment(pDatabaseFile, pAttachmentId)
 
@@ -247,7 +249,11 @@ def remove_attachment(
     delete_attachment(pDatabaseFile, pAttachmentId)
 
     rResponse = RedirectResponse(
-        build_offer_url(vAttachment["source"], vAttachment["source_id"]),
+        (
+            build_certification_url(vAttachment["source_id"])
+            if vAttachment["source"] == DOCUMENT_SOURCE
+            else build_offer_url(vAttachment["source"], vAttachment["source_id"])
+        ),
         status_code=303,
     )
 

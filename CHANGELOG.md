@@ -54,6 +54,11 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Certifications : celles que citent les offres (37 suivies, industrie, qualité,
+  informatique, langues), plan des trois qui couvriraient le plus d'offres
+  proches, ligne « Certifications » sur la fiche d'une offre ; suivi de celles
+  obtenues avec organisme, numéro, niveau, lien de vérification, financement,
+  documents joints et fin de validité, rappel de renouvellement sur l'accueil
 - Santé : dernière recherche lue correctement (indicateur toujours « Illisible »
   auparavant), recherche partielle signalée, Gmail, descriptions et essai mensuel
   de restauration de la dernière sauvegarde

@@ -1,6 +1,9 @@
 """Réglages restant à faire, affichés sur l'accueil jusqu'à ce qu'ils soient faits"""
 
+from datetime import date
+
 from config import BACKUP_NAS_DIRECTORY
+from job.certifications import find_renewals
 from job.profile import load_profile
 from job.settings import load_settings
 from job.sources.registry import SOURCES
@@ -57,6 +60,21 @@ def build_setup_checklist(pDatabaseFile, pNasDirectory=BACKUP_NAS_DIRECTORY):
         {"text": vText, "hint": vHint, "page": vPage}
         for vMissing, vText, vHint, vPage in vItems
         if vMissing
+    ]
+
+    # Une certification à recycler bientôt, ou déjà expirée, reste en tête de liste.
+    rChecklist[:0] = [
+        {
+            "text": f"Renouveler : {vRenewal['label']}",
+            "hint": (
+                "Expirée le "
+                if vRenewal["status"] == "expired"
+                else "Valable jusqu'au "
+            )
+            + date.fromisoformat(vRenewal["valid_until"]).strftime("%d/%m/%Y"),
+            "page": "certifications",
+        }
+        for vRenewal in find_renewals(pDatabaseFile, date.today())
     ]
 
     return rChecklist

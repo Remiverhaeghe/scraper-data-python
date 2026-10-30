@@ -149,6 +149,30 @@ def get_attachments(pDatabaseFile, pSource, pSourceId):
     return rAttachments
 
 
+def count_attachments(pDatabaseFile, pSource):
+    """Retourne le nombre de pièces jointes par identifiant pour une source."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        vRows = vConnection.execute(
+            """
+            SELECT source_id, COUNT(*)
+            FROM job_attachment
+            WHERE source = ?
+            GROUP BY source_id
+            """,
+            (pSource,),
+        ).fetchall()
+
+    finally:
+        vConnection.close()
+
+    rCounts = dict(vRows)
+
+    return rCounts
+
+
 def get_attachment(pDatabaseFile, pAttachmentId):
     """Retourne une pièce jointe et le chemin de son fichier, ou None."""
 

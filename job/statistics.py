@@ -3,6 +3,7 @@
 import time
 from datetime import datetime, timedelta
 
+from job.certifications import get_offer_certifications
 from job.companies import find_preferred_offers
 from job.followed_availability import list_withdrawn_offers
 from job.filter import matches_keyword, matches_location
@@ -384,7 +385,12 @@ def warm_up_scores(pDatabaseFile):
     vStart = time.perf_counter()
 
     try:
-        vCount = len(load_scored_offers(pDatabaseFile, datetime.now()))
+        vOffers = load_scored_offers(pDatabaseFile, datetime.now())
+        vCount = len(vOffers)
+
+        # Certifications repérées d'avance aussi : la page s'ouvre sans attente.
+        for vOffer in vOffers:
+            get_offer_certifications(vOffer)
 
     except Exception:  # pylint: disable=broad-exception-caught
         logger.exception("Échec de la notation anticipée des offres")

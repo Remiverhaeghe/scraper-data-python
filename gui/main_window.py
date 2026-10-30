@@ -24,6 +24,7 @@ from config import CONTACT_URL, LICENSE_NAME, REPOSITORY_URL, TAGLINE
 from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
 from gui.applications_page import ApplicationsPage
+from gui.certifications_page import CertificationsPage
 from gui.challenges_page import ChallengesPage
 from gui.git_page import GitPage
 from gui.history_page import HistoryPage
@@ -82,7 +83,15 @@ OFFER_PRESETS = ("offers", "new_offers", "applied_offers", "follow_ups")
 # Pages dont le calcul, coûteux, ne dépend que de la base et du jour : elles ne se
 # recalculent pas à chaque passage si rien n'a changé. Journaux et Git lisent des
 # fichiers hors base et restent recalculés à chaque fois.
-DATA_ONLY_PAGES = ("offers", "quiz", "skills", "market", "challenges", "quality")
+DATA_ONLY_PAGES = (
+    "offers",
+    "quiz",
+    "skills",
+    "certifications",
+    "market",
+    "challenges",
+    "quality",
+)
 
 
 class MainWindow(QMainWindow):
@@ -186,6 +195,12 @@ class MainWindow(QMainWindow):
         self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
         self.add_page("quiz", "Révision", "graduation-cap", self.quiz_page)
         self.add_page("skills", "Compétences", "target", self.skills_page)
+        self.add_page(
+            "certifications",
+            "Certifications",
+            "shield",
+            CertificationsPage(vDatabaseFile),
+        )
         self.market_page = MarketPage(vDatabaseFile)
         self.market_page.exam_requested.connect(self.start_skills_exam)
         self.add_page("market", "Mon marché", "banknote", self.market_page)

@@ -2823,3 +2823,60 @@ def test_progress_page_and_sidebar_summary(client):
     assert "Candidature envoyée" in vPage.text
     assert 'data-xp="0"' in vSummary and 'data-level="1"' in vSummary
     assert 'hx-get="/progress/summary"' in client.get("/").text
+
+
+def test_certifications_page_saves_details_and_documents(client):
+    """Vérifie la page, l'enregistrement, le document joint puis sa suppression."""
+
+    assert "Habilitation électrique" in client.get("/certifications").text
+
+    vSaved = client.post(
+        "/certifications/save",
+        data={
+            "id": "sst",
+            "owned": "1",
+            "obtained": "2025-06-02",
+            "organism": "INRS <script>",
+            "number": "SST-42",
+        },
+        follow_redirects=False,
+    )
+
+    assert vSaved.headers["location"] == "/certifications#cert-sst"
+
+    vUploaded = client.post(
+        "/certifications/documents",
+        data={"id": "sst"},
+        files={"file": ("carte SST.jpg", b"JPEG", "image/jpeg")},
+        follow_redirects=False,
+    )
+
+    assert vUploaded.status_code == 303
+
+    vPage = client.get("/certifications").text
+    vAttachmentId = re.search(r"/attachment\?id=(\d+)", vPage).group(1)
+
+    assert "carte SST.jpg" in vPage
+    assert "SST-42" in vPage
+    assert "INRS &lt;script&gt;" in vPage
+    assert "Valide jusqu&#39;au 02/06/2027" in vPage
+
+    vDeleted = client.post(
+        "/attachment/delete", data={"id": vAttachmentId}, follow_redirects=False
+    )
+
+    assert vDeleted.headers["location"] == "/certifications#cert-sst"
+    assert (
+        client.post(
+            "/certifications/save", data={"id": "sst", "verify_link": "javascript:x"}
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post(
+            "/certifications/documents",
+            data={"id": "inconnue"},
+            files={"file": ("a.pdf", b"%PDF", "application/pdf")},
+        ).status_code
+        == 404
+    )

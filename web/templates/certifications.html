@@ -1,0 +1,105 @@
+{# Certifications (route /certifications) : calculées par job/certifications.py, comme sur le bureau.
+   Les documents passent par job_attachment ; /attachment et /attachment/delete sont partagés avec les offres. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Certifications{% endblock %}
+
+{% set status_texts = {"valid": ("Valide jusqu'au", "success"), "soon": ("À renouveler avant le", "warning"), "expired": ("Expirée le", "danger")} %}
+{% set detail_labels = [
+    ("organism", "Organisme certificateur", "ETS Global, AFNOR, Microsoft, Apave…"),
+    ("number", "N° du certificat", "Numéro ou identifiant du candidat"),
+    ("level", "Niveau ou score", "B2V-BR, 850 points, catégories 1A et 3…"),
+    ("verify_link", "Lien de vérification", "https://… (Credly, Microsoft Learn…)"),
+    ("funding_used", "Financement utilisé", "CPF, employeur, OPCO, France Travail…"),
+] %}
+
+{% block content %}
+{{ ui.page_header("Certifications", "Celles que demandent vos offres, celles que vous avez et leur validité", "shield") }}
+
+<section class="grid grid-3">
+    {{ ui.stat(overview.citing, "Offres proches qui en citent", "briefcase", "blue") }}
+    {{ ui.stat(overview.covered_before ~ " %", "Couvertes aujourd'hui", "circle-check", "green") }}
+    {{ ui.stat(overview.covered_after ~ " %", "Avec le plan conseillé", "target", "purple") }}
+</section>
+
+<article class="card section-gap">
+    <h2>Plan conseillé</h2>
+    <p class="card-subtitle">Les certifications qui couvriraient le plus d'offres proches de votre profil</p>
+    {% if overview.plan_labels %}
+    <p>En passant {{ overview.plan_labels | join(", puis ") }}, vous couvririez {{ overview.covered_after }} % des offres proches qui citent une certification.</p>
+    {% else %}
+    <p class="muted">Aucune certification à conseiller pour vos offres proches : complétez votre profil ou lancez une recherche.</p>
+    {% endif %}
+</article>
+
+{% for category in categories %}
+<article class="card section-gap">
+    <h2>{{ category }}</h2>
+    <p class="card-subtitle">Ouvrez une certification pour saisir l'organisme, le numéro et joindre le certificat. Durées et coûts sont des ordres de grandeur : la fiche de l'organisme fait foi.</p>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead><tr><th scope="col">Certification</th><th scope="col">Offres proches</th><th scope="col">Toutes offres</th><th scope="col">Durée et coût</th><th scope="col">Validité</th><th scope="col">Mon suivi</th></tr></thead>
+            <tbody>
+                {% for row in overview.rows if row.category == category %}
+                <tr id="cert-{{ row.id }}">
+                    <td>
+                        <details class="certification">
+                            <summary><strong>{{ row.label }}</strong></summary>
+                            <p class="muted">{{ row.advice }} {{ row.funding }} <a href="{{ row.link }}" target="_blank" rel="noopener noreferrer">Fiche de l'organisme</a></p>
+
+                            <form class="profile-form" method="post" action="{{ url_for('save_certification').path }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                                <input type="hidden" name="id" value="{{ row.id }}">
+                                <label class="check"><input type="checkbox" name="owned" value="1"{% if row.obtained %} checked{% endif %}> Je l'ai</label>
+                                <label>Obtenue le <input type="date" name="obtained" value="{{ row.obtained or '' }}" max="{{ today }}"></label>
+                                {% for key, label, placeholder in detail_labels %}
+                                <label>{{ label }} <input type="{{ 'url' if key == 'verify_link' else 'text' }}" name="{{ key }}" value="{{ row.details.get(key, '') }}" placeholder="{{ placeholder }}" maxlength="1000"></label>
+                                {% endfor %}
+                                <label>Expire le, si la date figure sur le certificat <input type="date" name="expires" value="{{ row.details.get('expires', '') }}"></label>
+                                <label>Notes <textarea name="notes" rows="3" maxlength="1000" placeholder="Centre d'examen, recyclage prévu, remarques…">{{ row.details.get('notes', '') }}</textarea></label>
+                                <button class="button button-primary" type="submit">Enregistrer</button>
+                            </form>
+
+                            <h3>Documents</h3>
+                            {% for attachment in documents.get(row.id, []) %}
+                            <div class="attachment">
+                                <a href="{{ url_for('download_attachment').path }}?id={{ attachment.id }}">{{ icon("file-text", 16) }} {{ attachment.file_name }}</a>
+                                <span class="muted">{{ attachment.added_at | date_fr }}</span>
+                                <form method="post" action="{{ url_for('remove_attachment').path }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                                    <input type="hidden" name="id" value="{{ attachment.id }}">
+                                    <button class="link-button" type="submit" aria-label="Supprimer {{ attachment.file_name }}">Supprimer</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <p class="muted">Aucun document joint.</p>
+                            {% endfor %}
+                            <form class="profile-form" method="post" action="{{ url_for('upload_certification_document').path }}" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                                <input type="hidden" name="id" value="{{ row.id }}">
+                                <input type="file" name="file" required accept="{{ attachment_extensions | join(',') }}" aria-label="Document à joindre pour {{ row.label }}">
+                                <button class="button" type="submit">{{ icon("upload", 16) }} Joindre le document</button>
+                            </form>
+                        </details>
+                    </td>
+                    <td>{{ row.close_count }}</td>
+                    <td>{{ row.count }}</td>
+                    <td>{{ row.duration }} · {{ row.cost }}</td>
+                    <td class="nowrap">{% if row.validity_months is none %}Sans limite fixée{% elif row.validity_months % 12 == 0 %}{{ row.validity_months // 12 }} an{{ "s" if row.validity_months > 12 }}{% else %}{{ row.validity_months }} mois{% endif %}</td>
+                    <td>
+                        {% if row.status and row.valid_until %}
+                        <span class="badge badge-{{ status_texts[row.status][1] }}" title="Obtenue le {{ row.obtained | date_fr }}">{{ status_texts[row.status][0] }} {{ row.valid_until | date_fr }}</span>
+                        {% elif row.obtained %}
+                        <span class="badge badge-success">Obtenue le {{ row.obtained | date_fr }}</span>
+                        {% endif %}
+                        {% if row.documents %}<small class="muted">{{ row.documents }} document{{ "s" if row.documents > 1 }}</small>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+{% endfor %}
+{% endblock %}

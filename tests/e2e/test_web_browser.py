@@ -37,6 +37,7 @@ PAGES = (
     "/quality",
     "/market",
     "/skills",
+    "/certifications",
     "/compare",
     "/logs",
     "/progress",

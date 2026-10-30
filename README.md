@@ -303,6 +303,7 @@ Documents/JobBoard/
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
 - [x] 28 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
 ### 🌐 Tableau de bord web
@@ -668,6 +669,7 @@ scraper-data-python/
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
 │   ├── progress.py                            # Points, niveaux, série et quêtes, calculés depuis l'activité
 │   ├── achievements.py                        # Trophées et carte joueur, déduits de l'activité
+│   ├── certifications.py                      # Certifications citées par les offres, obtenues, validité
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
 │   ├── star_answers.py                        # Réponses STAR aux questions comportementales
 │   ├── offer_purge.py                         # Purge des offres hors sujet et mots exclus
@@ -917,6 +919,8 @@ scraper-data-python/
 │   ├── quiz_page.py                           # Révision technique : thèmes, questions et examen
 │   ├── quiz_theme_cards.py                    # Cartes de thèmes et en-têtes de domaine
 │   ├── skills_page.py                         # Compétences demandées et préparation
+│   ├── certifications_page.py                 # Certifications : plan conseillé et suivi
+│   ├── certification_dialog.py                # Informations et documents d'une certification
 │   ├── market_page.py                         # Mon marché : salaires et demande
 │   ├── quiz_answer.py                         # Zones de réponse selon le type, schéma cliquable
 │   ├── quiz_import_panel.py                   # Ajout de questions : priorités, ChatGPT, import, export
@@ -978,6 +982,7 @@ scraper-data-python/
 │   │   ├── applications.py                    # Candidatures, statut et agenda
 │   │   ├── quiz.py                            # Révision, examen et import des questions
 │   │   ├── skills.py                          # Compétences demandées et préparation
+│   │   ├── certifications.py                  # Certifications, informations et documents
 │   │   ├── challenges.py                      # Défis de programmation
 │   │   ├── git_sandbox.py                     # Bac à sable Git
 │   │   ├── monitoring.py                      # Qualité, journaux et historique
@@ -1004,6 +1009,7 @@ scraper-data-python/
 │   │   ├── _replies.html                      # Réponses des recruteurs, chargées par HTMX
 │   │   ├── quiz.html                          # Révision technique par QCM
 │   │   ├── skills.html                        # Tableau de bord des compétences
+│   │   ├── certifications.html                # Certifications citées et suivi
 │   │   ├── market.html                        # Mon marché : salaires et demande
 │   │   ├── _quiz_answer.html                  # Champs de réponse selon le type de question
 │   │   ├── challenges.html                    # Défis de programmation
@@ -1204,6 +1210,7 @@ scraper-data-python/
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_progress.py                   # Teste les points, niveaux, série et quêtes
 │   │   ├── test_achievements.py               # Teste les trophées, cachés compris, et la carte joueur
+│   │   ├── test_certifications.py             # Teste le repérage, le plan, la validité et les informations
 │   │   ├── test_quiz_types.py                 # Teste les questions interactives et leur correction
 │   │   ├── test_shared_quiz_cases.py          # Teste les cas communs avec l'application mobile
 │   │   ├── test_schema_building.py            # Teste les schémas à construire, leur correction et leur dessin
@@ -1357,6 +1364,7 @@ scraper-data-python/
 │   │   ├── test_search_worker.py               # Teste le worker de recherche
 │   │   ├── test_settings_page.py               # Teste la page des paramètres
 │   │   ├── test_skills_page.py                 # Teste la page des compétences
+│   │   ├── test_certifications_page.py         # Teste la page et la fenêtre d'une certification
 │   │   ├── test_market_page.py                 # Teste la page Mon marché
 │   │   ├── test_theme.py                       # Teste les thèmes, les icônes et le logo
 │   │   ├── test_theme_contrast.py              # Teste les contrastes des thèmes (WCAG AA)
