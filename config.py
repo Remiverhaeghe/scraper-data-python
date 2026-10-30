@@ -51,6 +51,8 @@ TROUBLESHOOTING_FILE = ASSETS_DIRECTORY / "troubleshooting" / "scenarios.json"
 
 # Niveaux du simulateur d'automate : variables, scénario de test et solution
 LADDER_LEVELS_FILE = ASSETS_DIRECTORY / "ladder" / "levels.json"
+SQL_DATABASE_FILE = ASSETS_DIRECTORY / "sql" / "atelier.sql"
+SQL_LEVELS_FILE = ASSETS_DIRECTORY / "sql" / "levels.json"
 
 # Catalogue des thèmes et modèle de la demande de questions à ChatGPT
 QUIZ_GENERATION_DIRECTORY = ASSETS_DIRECTORY / "quiz_generation"

@@ -43,6 +43,8 @@ PAGES = (
     "/troubleshooting",
     "/ladder",
     "/ladder?level=grafcet-percage",
+    "/sql",
+    "/sql?level=ateliers-machines",
     "/troubleshooting/play?scenario=convoyeur-arret&actions=check:operateur",
     "/compare",
     "/logs",

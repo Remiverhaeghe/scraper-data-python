@@ -3000,3 +3000,45 @@ def test_ladder_level_is_checked_on_the_web(client):
     assert "Chronogramme du scénario de test" in vResult
     assert "<script" not in vResult.split("<main", 1)[-1]
     assert client.get("/ladder?level=inconnu").status_code == 404
+
+
+def test_sql_level_is_run_on_the_web(client):
+    """Vérifie le niveau, une erreur de dialecte, le changement de dialecte et la réussite."""
+
+    vPage = client.get("/sql?level=plus-cheres").text
+
+    assert "Les trois interventions les plus coûteuses" in vPage
+    assert "Requête en MySQL" in vPage
+
+    vError = client.post(
+        "/sql/run",
+        data={
+            "level": "plus-cheres",
+            "query": "SELECT TOP 3 id, cout FROM intervention",
+        },
+    ).text
+
+    assert "MySQL n&#39;a pas TOP" in vError
+    assert "Résultat attendu" in vError
+
+    vRedirect = client.post(
+        "/sql/dialect",
+        data={"dialect": "sqlserver", "level": "plus-cheres"},
+        follow_redirects=False,
+    )
+
+    assert vRedirect.status_code == 303
+    assert vRedirect.headers["location"] == "/sql?level=plus-cheres"
+
+    vResult = client.post(
+        "/sql/run",
+        data={
+            "level": "plus-cheres",
+            "query": "SELECT TOP 3 id, cout FROM intervention ORDER BY cout DESC",
+        },
+    ).text
+
+    assert "Niveau réussi · +15 XP" in vResult
+    assert "<td>2340</td>" in vResult
+    assert client.get("/sql?level=inconnu").status_code == 404
+    assert client.post("/sql/dialect", data={"dialect": "oracle"}).status_code == 400

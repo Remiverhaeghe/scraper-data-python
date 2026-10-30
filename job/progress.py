@@ -33,6 +33,7 @@ XP_RULES = {
     "aptitude": ("Test de recrutement terminé, plus 2 par bonne réponse", 10),
     "troubleshooting": ("Panne résolue, plus 2 par tranche de 10 points", 20),
     "ladder_level": ("Niveau d'automate réussi", 25),
+    "sql_level": ("Niveau SQL réussi", 15),
     "interested": ("Offre marquée « Intéressé »", 5),
     "applied": ("Candidature envoyée", 30),
     "follow_up": ("Relance faite", 15),
@@ -54,6 +55,9 @@ TROUBLESHOOTING_RESULTS_KEY = "troubleshooting_results"
 
 # Programmes et réussites du simulateur d'automate (job/ladder_game.py)
 LADDER_PROGRESS_KEY = "ladder_progress"
+
+# Dialecte choisi, requêtes et réussites du bac à sable SQL (job/sql_levels.py)
+SQL_PROGRESS_KEY = "sql_progress"
 
 # Statut de candidature vers son action
 STATUS_ACTIONS = {
@@ -211,6 +215,14 @@ def load_activity(pDatabaseFile):
     ).values():
         if isinstance(vEntry, dict) and vEntry.get("passed_at"):
             add_action(rActivity, read_day(vEntry["passed_at"]), "ladder_level")
+
+    vSqlLevels = load_json_setting(pDatabaseFile, SQL_PROGRESS_KEY, {}, dict).get(
+        "levels"
+    )
+
+    for vEntry in (vSqlLevels if isinstance(vSqlLevels, dict) else {}).values():
+        if isinstance(vEntry, dict) and vEntry.get("passed_at"):
+            add_action(rActivity, read_day(vEntry["passed_at"]), "sql_level")
 
     for vDay, vQuests in load_quest_log(pDatabaseFile).get("done", {}).items():
         for vQuest in vQuests:

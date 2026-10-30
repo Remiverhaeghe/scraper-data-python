@@ -1,0 +1,105 @@
+{# Bac à sable SQL (routes /sql) : moteur job/sql_sandbox.py, niveaux et progression job/sql_levels.py. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% macro result_table(table) %}
+{% if table.columns %}
+<div class="table-wrapper">
+    <table class="table">
+        <thead><tr>{% for column in table.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
+        <tbody>
+            {% for row in table.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% block title %}SQL{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Bac à sable SQL", "Des requêtes sur la base d'une usine, en MySQL ou en SQL Server, comparées au résultat attendu", "database") }}
+
+<section class="grid grid-4">
+    {{ ui.stat(overview.passed ~ " / " ~ overview.total, "Niveaux réussis", "database", "blue") }}
+</section>
+
+<form class="profile-form section-gap" method="post" action="{{ url_for('change_sql_dialect').path }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    {% if level %}<input type="hidden" name="level" value="{{ level.id }}">{% endif %}
+    <label>Dialecte
+        <select name="dialect">
+            {% for key, label in dialects.items() %}<option value="{{ key }}"{% if key == overview.dialect %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+    </label>
+    <button class="button" type="submit">Changer de dialecte</button>
+</form>
+
+{% if level %}
+<article class="card section-gap" id="level">
+    <h2>{{ level.title }}</h2>
+    <p>{{ level.goal }}</p>
+    <ul class="muted">
+        {% for table in schema %}<li><strong>{{ table.name }}</strong> ({{ table.columns | join(", ") }}) : {{ table.label }}</li>{% endfor %}
+    </ul>
+    <details>
+        <summary>Indice</summary>
+        <p>{{ hint }}</p>
+    </details>
+    <details>
+        <summary>Solution en {{ dialects[overview.dialect] }}</summary>
+        <pre class="sql-code">{{ solution }}</pre>
+    </details>
+
+    <form class="profile-form" method="post" action="{{ url_for('run_sql').path }}#level">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="level" value="{{ level.id }}">
+        <label>Requête en {{ dialects[overview.dialect] }} <textarea class="sql-code" name="query" rows="8" maxlength="{{ max_query_length }}" spellcheck="false">{{ query }}</textarea></label>
+        <button class="button button-primary" type="submit">{{ icon("circle-check", 16) }} Exécuter</button>
+    </form>
+
+    {% if run %}
+    {% if run.passed %}
+    <h3 class="tone-success">Niveau réussi{% if first %} · +{{ level_xp }} XP{% endif %}</h3>
+    <p>{{ level.explanation }}</p>
+    {% else %}
+    <p class="tone-danger">{{ run.message }}</p>
+    {% for advice in run.advice %}<p>Conseil : {{ advice }}</p>{% endfor %}
+    {% endif %}
+
+    <div class="grid grid-2 section-gap">
+        <div>
+            <h3>Votre résultat</h3>
+            <p class="card-subtitle">
+                {% if result.changed is not none %}{{ result.changed }} ligne(s) modifiée(s) · {% endif %}
+                {% if result.truncated %}{{ max_rows }} premières lignes{% else %}{{ result.rows | length }} ligne(s){% endif %}
+            </p>
+            {{ result_table(result) }}
+        </div>
+        <div>
+            <h3>Résultat attendu</h3>
+            <p class="card-subtitle">{{ expected.rows | length }} ligne(s)</p>
+            {{ result_table(expected) }}
+        </div>
+    </div>
+    {% endif %}
+    <p><a href="{{ url_for('show_sql').path }}">Choisir un autre niveau</a></p>
+</article>
+{% endif %}
+
+<article class="card section-gap">
+    <h2>Choisir un niveau</h2>
+    <p class="card-subtitle">Chaque niveau réussi rapporte {{ level_xp }} XP ; la base est recréée à chaque requête, rien n'est abîmé</p>
+    {% for series in overview.series %}
+    <h3 class="level-series">{{ icon("database", 18) }} {{ series.label }} <small class="muted">{{ series.done }} / {{ series.rows | length }} réussi(s)</small></h3>
+    <div class="challenge-list">
+        {% for row in series.rows %}
+        <a class="challenge-item{% if row.passed %} is-done{% endif %}{% if level and level.id == row.id %} is-active{% endif %}" href="{{ url_for('show_sql').path }}?level={{ row.id }}#level">
+            <strong>{% if row.passed %}{{ icon("circle-check", 16) }} {% endif %}{{ row.title }}</strong>
+            <span class="card-subtitle">{{ row.goal }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</article>
+{% endblock %}

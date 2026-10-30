@@ -49,6 +49,7 @@ from gui.quiz_page import QuizPage
 from gui.skills_page import SkillsPage
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
+from gui.sql_page import SqlPage
 from gui.troubleshooting_page import TroubleshootingPage
 from gui.theme import COLORS
 from gui.widgets import show_message
@@ -96,6 +97,7 @@ DATA_ONLY_PAGES = (
     "aptitude",
     "troubleshooting",
     "ladder",
+    "sql",
     "quality",
 )
 
@@ -225,6 +227,7 @@ class MainWindow(QMainWindow):
         )
         self.add_page("ladder", "Automate", "cpu", LadderPage(vDatabaseFile))
         self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
+        self.add_page("sql", "SQL", "database", SqlPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
         self.add_page("quality", "Qualité", "list-checks", QualityPage(vDatabaseFile))
         self.add_page("logs", "Journaux", "terminal", LogsPage(vDatabaseFile))

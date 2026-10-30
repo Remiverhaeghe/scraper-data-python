@@ -61,6 +61,10 @@ dans l'historique git.
   en direct (contacts, SET, RESET, TON, CTU), cinq niveaux de la marche-arrêt
   au Grafcet, scénario de test avec chronogramme, machine animée sur le bureau
 - Deux trophées : Premier dépannage, Automaticien
+- Bac à sable SQL : vingt niveaux sur la base d'une usine, des bases aux
+  jointures et aux modifications, en MySQL ou en SQL Server, résultat comparé
+  à celui attendu, erreurs classiques expliquées ; trophées Première requête
+  et As du SQL
 - Offres à double profil, maintenance et informatique : informatique
   industrielle, MES, supervision, OPC UA, administration de GMAO, ou
   maintenance avec développement ; badge, filtre « Double profil », tri dédié

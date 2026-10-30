@@ -1,0 +1,272 @@
+{
+  "tables": {
+    "atelier": "Ateliers de l'usine",
+    "machine": "Machines, leur atelier et leur date de mise en service",
+    "technicien": "Techniciens de maintenance et leur atelier de rattachement (vide pour un nouvel arrivant)",
+    "intervention": "Interventions préventives ou correctives ; fin et coût vides tant qu'elles sont en cours",
+    "piece": "Pièces détachées en magasin : stock, stock minimal et prix",
+    "piece_utilisee": "Pièces consommées par chaque intervention"
+  },
+  "levels": [
+    {
+      "id": "selection",
+      "series": "Les bases",
+      "title": "Lister les machines",
+      "goal": "Affichez le code et le nom de toutes les machines, triées par code.",
+      "starter": "SELECT\nFROM machine",
+      "hint": "Les colonnes se listent après SELECT, séparées par des virgules ; le tri s'écrit à la fin avec ORDER BY.",
+      "solution": "SELECT code, nom\nFROM machine\nORDER BY code",
+      "ordered": true,
+      "explanation": "SELECT choisit les colonnes, FROM la table, ORDER BY l'ordre : sans ORDER BY, l'ordre des lignes n'est jamais garanti."
+    },
+    {
+      "id": "filtre-date",
+      "series": "Les bases",
+      "title": "Les machines anciennes",
+      "goal": "Machines mises en service avant le 1er janvier 2015 : code et date de mise en service, de la plus ancienne à la plus récente.",
+      "starter": "SELECT code, mise_en_service\nFROM machine",
+      "hint": "WHERE filtre les lignes ; une date s'écrit entre apostrophes au format 'AAAA-MM-JJ' et se compare avec < ou >.",
+      "solution": "SELECT code, mise_en_service\nFROM machine\nWHERE mise_en_service < '2015-01-01'\nORDER BY mise_en_service",
+      "ordered": true,
+      "explanation": "Le format AAAA-MM-JJ se trie dans l'ordre chronologique : c'est celui qu'attendent MySQL et SQL Server."
+    },
+    {
+      "id": "like",
+      "series": "Les bases",
+      "title": "Les roulements en magasin",
+      "goal": "Référence et prix des roulements : les pièces dont le libellé commence par « Roulement ».",
+      "starter": "SELECT reference, prix\nFROM piece",
+      "hint": "LIKE compare à un modèle : % remplace n'importe quelle suite de caractères.",
+      "solution": "SELECT reference, prix\nFROM piece\nWHERE libelle LIKE 'Roulement%'",
+      "ordered": false,
+      "pitfalls": [
+        ["=\\s*'Roulement", "= compare au texte exact : pour « commence par », écrivez LIKE 'Roulement%'."]
+      ],
+      "explanation": "'Roulement%' : commence par ; '%roulement%' : contient. Un % au début empêche l'usage d'un index, la recherche est alors plus lente sur une grosse table."
+    },
+    {
+      "id": "plus-cheres",
+      "series": "Les bases",
+      "title": "Les trois interventions les plus coûteuses",
+      "goal": "Les 3 interventions les plus chères : id et coût, de la plus chère à la moins chère.",
+      "starter": "SELECT id, cout\nFROM intervention",
+      "hint": {
+        "mysql": "Triez par coût décroissant (DESC), puis gardez les 3 premières lignes avec LIMIT 3 à la fin.",
+        "sqlserver": "Triez par coût décroissant (DESC) ; en SQL Server, le nombre de lignes se limite au début : SELECT TOP 3 …"
+      },
+      "solution": {
+        "mysql": "SELECT id, cout\nFROM intervention\nORDER BY cout DESC\nLIMIT 3",
+        "sqlserver": "SELECT TOP 3 id, cout\nFROM intervention\nORDER BY cout DESC"
+      },
+      "ordered": true,
+      "explanation": "Même besoin, deux écritures : LIMIT à la fin en MySQL, TOP au début en SQL Server. Les coûts vides (NULL) passent après les autres dans un tri décroissant."
+    },
+    {
+      "id": "en-cours",
+      "series": "Les bases",
+      "title": "Les interventions en cours",
+      "goal": "Interventions encore en cours, sans date de fin : id, machine_id et début.",
+      "starter": "SELECT id, machine_id, debut\nFROM intervention",
+      "hint": "Une valeur absente vaut NULL ; elle se teste avec IS NULL.",
+      "solution": "SELECT id, machine_id, debut\nFROM intervention\nWHERE fin IS NULL",
+      "ordered": false,
+      "pitfalls": [
+        ["=\\s*NULL", "fin = NULL n'est jamais vrai, même quand fin est vide : NULL se teste avec IS NULL."]
+      ],
+      "explanation": "NULL signifie « inconnu » : toute comparaison avec NULL donne inconnu, donc jamais vrai. D'où IS NULL et IS NOT NULL."
+    },
+    {
+      "id": "par-type",
+      "series": "Regrouper",
+      "title": "Préventif ou correctif",
+      "goal": "Nombre d'interventions par type : le type et le nombre.",
+      "starter": "SELECT type\nFROM intervention",
+      "hint": "GROUP BY type forme un groupe par type ; COUNT(*) compte les lignes de chaque groupe.",
+      "solution": "SELECT type, COUNT(*)\nFROM intervention\nGROUP BY type",
+      "ordered": false,
+      "explanation": "Avec GROUP BY, chaque colonne du SELECT est soit regroupée, soit calculée par une fonction d'agrégat (COUNT, SUM, AVG, MIN, MAX)."
+    },
+    {
+      "id": "terminees",
+      "series": "Regrouper",
+      "title": "Interventions terminées par machine",
+      "goal": "Pour chaque machine (machine_id) : nombre total d'interventions et nombre d'interventions terminées.",
+      "starter": "SELECT machine_id\nFROM intervention\nGROUP BY machine_id",
+      "hint": "COUNT(*) compte toutes les lignes ; COUNT(colonne) ne compte que celles où la colonne n'est pas NULL.",
+      "solution": "SELECT machine_id, COUNT(*), COUNT(fin)\nFROM intervention\nGROUP BY machine_id",
+      "ordered": false,
+      "explanation": "COUNT(fin) ignore les NULL : c'est le moyen le plus court de compter les interventions terminées sans WHERE, qui retirerait les machines dont toutes les interventions sont en cours."
+    },
+    {
+      "id": "having",
+      "series": "Regrouper",
+      "title": "Les machines qui coûtent cher",
+      "goal": "Machines (machine_id) dont le coût total des interventions dépasse 500 €, avec ce total, du plus élevé au plus bas.",
+      "starter": "SELECT machine_id, SUM(cout)\nFROM intervention\nGROUP BY machine_id",
+      "hint": "WHERE filtre les lignes avant le regroupement ; un filtre sur SUM() se place après, dans HAVING.",
+      "solution": "SELECT machine_id, SUM(cout)\nFROM intervention\nGROUP BY machine_id\nHAVING SUM(cout) > 500\nORDER BY SUM(cout) DESC",
+      "ordered": true,
+      "explanation": "Ordre d'exécution : FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY. C'est pourquoi un agrégat ne peut pas figurer dans WHERE."
+    },
+    {
+      "id": "jointure",
+      "series": "Jointures",
+      "title": "Le nom de la machine",
+      "goal": "Interventions correctives avec le nom de leur machine : id de l'intervention, nom de la machine et début, par date de début.",
+      "starter": "SELECT i.id, i.debut\nFROM intervention i",
+      "hint": "JOIN machine m ON m.id = i.machine_id relie chaque intervention à sa machine ; préfixez les colonnes par l'alias de leur table.",
+      "solution": "SELECT i.id, m.nom, i.debut\nFROM intervention i\nJOIN machine m ON m.id = i.machine_id\nWHERE i.type = 'corrective'\nORDER BY i.debut",
+      "ordered": true,
+      "explanation": "JOIN (ou INNER JOIN) ne garde que les lignes qui ont une correspondance des deux côtés. Les alias courts (i, m) rendent la requête lisible et lèvent les ambiguïtés, comme id présent dans les deux tables."
+    },
+    {
+      "id": "ateliers-machines",
+      "series": "Jointures",
+      "title": "Tous les ateliers",
+      "goal": "Tous les ateliers avec leur nombre de machines, y compris ceux qui n'en ont aucune : nom de l'atelier et nombre.",
+      "starter": "SELECT a.nom\nFROM atelier a",
+      "hint": "LEFT JOIN garde chaque atelier, même sans machine ; comptez une colonne de la table machine, pas les lignes.",
+      "solution": "SELECT a.nom, COUNT(m.id)\nFROM atelier a\nLEFT JOIN machine m ON m.atelier_id = a.id\nGROUP BY a.id, a.nom",
+      "ordered": false,
+      "pitfalls": [
+        ["COUNT\\(\\s*\\*\\s*\\)", "COUNT(*) compte aussi la ligne vide ajoutée par LEFT JOIN pour un atelier sans machine : comptez COUNT(m.id)."],
+        ["^(?![\\s\\S]*\\bLEFT\\b)[\\s\\S]*\\bJOIN\\b","Une jointure simple retire les ateliers sans machine : il faut LEFT JOIN."]
+      ],
+      "explanation": "LEFT JOIN complète par des NULL quand il n'y a pas de correspondance. COUNT(m.id) les ignore et donne 0, là où COUNT(*) donnerait 1."
+    },
+    {
+      "id": "non-affecte",
+      "series": "Jointures",
+      "title": "Qui est intervenu ?",
+      "goal": "Toutes les interventions avec le nom du technicien, ou « non affecté » s'il n'y en a pas : id et nom, par id.",
+      "starter": "SELECT i.id\nFROM intervention i",
+      "hint": {
+        "mysql": "LEFT JOIN technicien, puis IFNULL(t.nom, 'non affecté') remplace le nom absent.",
+        "sqlserver": "LEFT JOIN technicien, puis ISNULL(t.nom, 'non affecté') remplace le nom absent."
+      },
+      "solution": {
+        "mysql": "SELECT i.id, IFNULL(t.nom, 'non affecté')\nFROM intervention i\nLEFT JOIN technicien t ON t.id = i.technicien_id\nORDER BY i.id",
+        "sqlserver": "SELECT i.id, ISNULL(t.nom, 'non affecté')\nFROM intervention i\nLEFT JOIN technicien t ON t.id = i.technicien_id\nORDER BY i.id"
+      },
+      "ordered": true,
+      "explanation": "IFNULL en MySQL, ISNULL en SQL Server : COALESCE(t.nom, 'non affecté') est la version standard, comprise par les deux."
+    },
+    {
+      "id": "pieces-usinage",
+      "series": "Jointures",
+      "title": "Les pièces de l'usinage",
+      "goal": "Pièces consommées par les machines de l'atelier « Usinage » : référence et quantité totale.",
+      "starter": "SELECT p.reference, SUM(pu.quantite)\nFROM piece_utilisee pu",
+      "hint": "Remontez la chaîne : pièce utilisée, pièce, intervention, machine, atelier ; une jointure par lien, puis WHERE sur le nom de l'atelier et GROUP BY la référence.",
+      "solution": "SELECT p.reference, SUM(pu.quantite)\nFROM piece_utilisee pu\nJOIN piece p ON p.id = pu.piece_id\nJOIN intervention i ON i.id = pu.intervention_id\nJOIN machine m ON m.id = i.machine_id\nJOIN atelier a ON a.id = m.atelier_id\nWHERE a.nom = 'Usinage'\nGROUP BY p.reference",
+      "ordered": false,
+      "explanation": "Une table de liaison (piece_utilisee) relie deux tables en relation plusieurs à plusieurs : une intervention consomme plusieurs pièces, une pièce sert à plusieurs interventions."
+    },
+    {
+      "id": "sans-intervention",
+      "series": "Jointures",
+      "title": "Le technicien disponible",
+      "goal": "Techniciens qui n'ont fait aucune intervention : nom et prénom.",
+      "starter": "SELECT t.nom, t.prenom\nFROM technicien t",
+      "hint": "NOT EXISTS (SELECT 1 FROM intervention i WHERE i.technicien_id = t.id) garde les techniciens sans intervention.",
+      "solution": "SELECT t.nom, t.prenom\nFROM technicien t\nWHERE NOT EXISTS (\n    SELECT 1 FROM intervention i WHERE i.technicien_id = t.id\n)",
+      "ordered": false,
+      "pitfalls": [
+        ["NOT\\s+IN", "NOT IN ne renvoie rien dès que la sous-requête contient un NULL, et technicien_id est vide pour certaines interventions : utilisez NOT EXISTS, ou ajoutez WHERE technicien_id IS NOT NULL dans la sous-requête."]
+      ],
+      "explanation": "Trois écritures possibles : NOT EXISTS, LEFT JOIN … WHERE i.id IS NULL, ou NOT IN en filtrant les NULL. NOT EXISTS est la plus sûre."
+    },
+    {
+      "id": "au-dessus-moyenne",
+      "series": "Pour aller plus loin",
+      "title": "Au-dessus de la moyenne",
+      "goal": "Interventions plus chères que le coût moyen : id et coût, de la plus chère à la moins chère.",
+      "starter": "SELECT id, cout\nFROM intervention",
+      "hint": "Une sous-requête entre parenthèses calcule la moyenne : WHERE cout > (SELECT AVG(cout) FROM intervention).",
+      "solution": "SELECT id, cout\nFROM intervention\nWHERE cout > (SELECT AVG(cout) FROM intervention)\nORDER BY cout DESC",
+      "ordered": true,
+      "explanation": "AVG ignore les coûts vides : la moyenne porte sur les interventions terminées. Une sous-requête qui renvoie une seule valeur s'utilise comme un nombre."
+    },
+    {
+      "id": "etat-stock",
+      "series": "Pour aller plus loin",
+      "title": "L'état du magasin",
+      "goal": "État du stock de chaque pièce : référence et « rupture » si le stock est nul, « à commander » s'il est sous le minimum, « ok » sinon.",
+      "starter": "SELECT reference\nFROM piece",
+      "hint": "CASE WHEN condition THEN valeur … ELSE valeur END ; les conditions sont lues dans l'ordre, la première vraie l'emporte.",
+      "solution": "SELECT reference,\n    CASE\n        WHEN stock = 0 THEN 'rupture'\n        WHEN stock < stock_mini THEN 'à commander'\n        ELSE 'ok'\n    END\nFROM piece",
+      "ordered": false,
+      "explanation": "L'ordre des WHEN compte : un stock nul est aussi sous le minimum, il faut donc tester la rupture en premier."
+    },
+    {
+      "id": "depuis-combien",
+      "series": "Pour aller plus loin",
+      "title": "Depuis combien de jours ?",
+      "goal": "Interventions en cours : id et nombre de jours écoulés depuis leur début, à la date du jour (le 30 juin 2026 dans cette base).",
+      "starter": "SELECT id\nFROM intervention\nWHERE fin IS NULL",
+      "hint": {
+        "mysql": "NOW() donne la date du jour ; DATEDIFF(NOW(), debut) compte les jours de debut à aujourd'hui.",
+        "sqlserver": "GETDATE() donne la date du jour ; DATEDIFF(day, debut, GETDATE()) compte les jours de debut à aujourd'hui."
+      },
+      "solution": {
+        "mysql": "SELECT id, DATEDIFF(NOW(), debut)\nFROM intervention\nWHERE fin IS NULL",
+        "sqlserver": "SELECT id, DATEDIFF(day, debut, GETDATE())\nFROM intervention\nWHERE fin IS NULL"
+      },
+      "ordered": false,
+      "explanation": "Attention à l'ordre des dates : DATEDIFF(fin, début) en MySQL, DATEDIFF(unité, début, fin) en SQL Server."
+    },
+    {
+      "id": "duree-heures",
+      "series": "Pour aller plus loin",
+      "title": "La durée des arrêts",
+      "goal": "Durée en heures des interventions terminées de la presse hydraulique (machine 4) : id et durée, par id.",
+      "starter": "SELECT id\nFROM intervention\nWHERE machine_id = 4",
+      "hint": {
+        "mysql": "TIMESTAMPDIFF(HOUR, debut, fin) compte les heures entières entre deux dates.",
+        "sqlserver": "DATEDIFF(hour, debut, fin) compte les heures entre deux dates."
+      },
+      "solution": {
+        "mysql": "SELECT id, TIMESTAMPDIFF(HOUR, debut, fin)\nFROM intervention\nWHERE machine_id = 4 AND fin IS NOT NULL\nORDER BY id",
+        "sqlserver": "SELECT id, DATEDIFF(hour, debut, fin)\nFROM intervention\nWHERE machine_id = 4 AND fin IS NOT NULL\nORDER BY id"
+      },
+      "ordered": true,
+      "explanation": "Les deux serveurs ne comptent pas pareil : de 14 h 30 à 9 h le lendemain, TIMESTAMPDIFF (MySQL) donne 18 heures entières, DATEDIFF (SQL Server) compte 19 changements d'heure. Changez de dialecte pour le voir."
+    },
+    {
+      "id": "hausse-prix",
+      "series": "Modifier les données",
+      "title": "Hausse du fournisseur",
+      "goal": "Le fournisseur augmente de 5 % le prix des roulements (libellé commençant par « Roulement ») : mettez la table piece à jour.",
+      "starter": "UPDATE piece\nSET prix = ",
+      "hint": "UPDATE piece SET prix = prix * 1.05 WHERE … ; sans WHERE, toutes les pièces augmentent.",
+      "solution": "UPDATE piece\nSET prix = prix * 1.05\nWHERE libelle LIKE 'Roulement%'",
+      "check": "SELECT reference, prix FROM piece ORDER BY id",
+      "ordered": true,
+      "explanation": "Réflexe de terrain : écrire d'abord le SELECT avec le même WHERE pour voir les lignes touchées, puis le transformer en UPDATE."
+    },
+    {
+      "id": "nouvelle-intervention",
+      "series": "Modifier les données",
+      "title": "Enregistrer une intervention",
+      "goal": "Enregistrez l'intervention préventive commencée aujourd'hui (30 juin 2026) à 8 h sur le tour CN (machine 1) par Julie Martin (technicien 1), sans fin ni coût pour l'instant.",
+      "starter": "INSERT INTO intervention (machine_id, technicien_id, type, debut)\nVALUES ",
+      "hint": "Les dates de la base s'écrivent '2026-06-30 08:00:00' ; une colonne absente de la liste reste NULL et l'id se remplit tout seul.",
+      "solution": "INSERT INTO intervention (machine_id, technicien_id, type, debut)\nVALUES (1, 1, 'preventive', '2026-06-30 08:00:00')",
+      "check": "SELECT machine_id, technicien_id, type, debut, fin, cout FROM intervention WHERE id > 19",
+      "ordered": true,
+      "explanation": "Nommer les colonnes rend l'INSERT robuste : il continue de fonctionner si une colonne est ajoutée à la table."
+    },
+    {
+      "id": "pieces-obsoletes",
+      "series": "Modifier les données",
+      "title": "Le ménage du magasin",
+      "goal": "Supprimez les pièces obsolètes : stock nul et jamais utilisées dans une intervention.",
+      "starter": "DELETE FROM piece\nWHERE ",
+      "hint": "Deux conditions : stock = 0, et id absent de piece_utilisee (NOT IN ou NOT EXISTS).",
+      "solution": "DELETE FROM piece\nWHERE stock = 0\n    AND id NOT IN (SELECT piece_id FROM piece_utilisee)",
+      "check": "SELECT reference FROM piece ORDER BY id",
+      "ordered": true,
+      "explanation": "Le joint hydraulique est en rupture mais déjà utilisé : il reste, l'historique des interventions en a besoin. Ici NOT IN convient, car piece_id n'est jamais NULL."
+    }
+  ]
+}

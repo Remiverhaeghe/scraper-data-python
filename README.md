@@ -303,7 +303,7 @@ Documents/JobBoard/
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
-- [x] 32 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] 34 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
@@ -612,6 +612,16 @@ Page Git du bureau et du web, pour s'exercer aux branches sans risque :
 - [x] Annulation de la dernière commande, indice, solution de référence et meilleur nombre de commandes enregistré
 - [x] Aucune commande transmise au système : seul l'historique est simulé
 
+### Bac à sable SQL
+
+Page SQL du bureau et du web, pour s'exercer aux requêtes sur la base d'une usine (ateliers, machines, techniciens, interventions, pièces) :
+
+- [x] Vingt niveaux en cinq séries : les bases, regrouper, jointures, pour aller plus loin (sous-requêtes, CASE, dates), modifier les données (UPDATE, INSERT, DELETE)
+- [x] Dialecte MySQL ou SQL Server au choix : LIMIT ou TOP, IFNULL ou ISNULL, NOW ou GETDATE, DATEDIFF et TIMESTAMPDIFF ; une écriture de l'autre dialecte est signalée
+- [x] Résultat comparé à celui de la solution de référence : une autre requête qui renvoie les mêmes lignes est acceptée ; résultat attendu affiché à côté du sien
+- [x] Erreurs classiques expliquées : `= NULL`, `COUNT(*)` après un LEFT JOIN, NOT IN face à des NULL, agrégat dans WHERE, colonne ambiguë
+- [x] Base SQLite en mémoire recréée à chaque requête : seules SELECT, INSERT, UPDATE et DELETE sont permises, requête arrêtée au bout de 2 secondes
+
 ### Abonnement à l'agenda
 
 Paramètres, « Abonnement à l'agenda », « Créer l'adresse » : l'adresse contient un jeton
@@ -755,6 +765,8 @@ scraper-data-python/
 │   ├── git_sandbox.py                         # Bac à sable Git : dépôt simulé et commandes
 │   ├── git_graph.py                           # Dessin SVG du graphe des commits
 │   ├── git_levels.py                          # Niveaux Git : objectif, réussite et progression
+│   ├── sql_sandbox.py                         # Bac à sable SQL : base en mémoire, dialectes, comparaison
+│   ├── sql_levels.py                          # Niveaux SQL : vérification et progression
 │   ├── access_tokens.py                       # Jetons d'accès secrets (agenda, application mobile)
 │   ├── mobile_sync.py                         # Contenu hors ligne et réponses de l'application mobile
 │   ├── cv_import.py                           # Import d'un CV : lecture et pré-remplissage du profil
@@ -967,6 +979,7 @@ scraper-data-python/
 │   ├── ladder_page.py                         # Simulateur d'automate : éditeur, tests, simulation
 │   ├── ladder_machine.py                      # Machine animée du simulateur
 │   ├── git_page.py                            # Bac à sable Git
+│   ├── sql_page.py                            # Bac à sable SQL
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
 │   ├── health_panel.py                        # État de l'application
@@ -1025,6 +1038,7 @@ scraper-data-python/
 │   │   ├── troubleshooting.py                 # Pannes à résoudre
 │   │   ├── ladder.py                          # Simulateur d'automate
 │   │   ├── git_sandbox.py                     # Bac à sable Git
+│   │   ├── sql_sandbox.py                     # Bac à sable SQL
 │   │   ├── monitoring.py                      # Qualité, journaux et historique
 │   │   ├── profile.py                         # Profil et import du CV
 │   │   ├── progress.py                        # Progression et encart du menu
@@ -1057,6 +1071,7 @@ scraper-data-python/
 │   │   ├── troubleshooting.html               # Pannes à résoudre
 │   │   ├── ladder.html                        # Simulateur d'automate
 │   │   ├── git.html                           # Bac à sable Git
+│   │   ├── sql.html                           # Bac à sable SQL
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
 │   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
 │   │   ├── _company_pages_check.html          # Bilan de vérification des pages carrière
@@ -1117,6 +1132,9 @@ scraper-data-python/
 │   │   └── scenarios.json                     # Pannes : machine, mesures, réparations, explication
 │   ├── ladder/
 │   │   └── levels.json                        # Niveaux d'automate : variables, scénario de test, solution
+│   ├── sql/
+│   │   ├── atelier.sql                        # Base d'exemple du bac à sable SQL
+│   │   └── levels.json                        # Niveaux SQL : énoncé, solution par dialecte, pièges
 │   ├── interview/                             # Simulation d'entretien technique
 │   │   └── questions.json                     # Questions ouvertes, réponse attendue et points clés
 │   └── quiz_generation/                       # Génération de questions avec ChatGPT
@@ -1283,6 +1301,8 @@ scraper-data-python/
 │   │   ├── test_challenges.py                 # Teste les défis, leurs solutions et les réponses
 │   │   ├── test_git_sandbox.py                # Teste le dépôt simulé, les commandes et le graphe
 │   │   ├── test_git_levels.py                 # Teste les niveaux Git et leur progression
+│   │   ├── test_sql_sandbox.py                # Teste les dialectes, les protections et la comparaison
+│   │   ├── test_sql_levels.py                 # Teste les solutions, les erreurs classiques et la progression
 │   │   ├── test_cv_import.py                  # Teste la lecture des CV et le pré-remplissage
 │   │   ├── test_cv_corpus.py                  # Teste l'import sur des CV fictifs difficiles
 │   │   ├── test_filter.py                     # Teste les filtres des offres
@@ -1414,6 +1434,7 @@ scraper-data-python/
 │   │   ├── test_troubleshooting_page.py        # Teste une intervention jusqu'à la réparation
 │   │   ├── test_ladder_page.py                 # Teste la vérification et la simulation pilotée
 │   │   ├── test_git_page.py                    # Teste la page du bac à sable Git
+│   │   ├── test_sql_page.py                    # Teste la page du bac à sable SQL
 │   │   ├── test_schema_editor.py               # Teste l'éditeur de schéma du bureau
 │   │   ├── test_search_page.py                 # Teste la page de recherche
 │   │   ├── test_company_pages_panel.py         # Teste les pages carrière suivies

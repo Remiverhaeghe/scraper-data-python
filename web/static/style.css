@@ -2584,7 +2584,8 @@ textarea.companies-preferred {
     border-top: 1px solid var(--border);
 }
 
-.ladder-code {
+.ladder-code,
+.sql-code {
     font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
 }
 
