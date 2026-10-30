@@ -295,6 +295,7 @@ Documents/JobBoard/
 - [x] Annonces en ligne depuis plus de 45 jours signalées ; fiche entreprise avec l'établissement le plus proche du domicile
 - [x] Ajout d'une entreprise suivie en collant l'adresse de son site carrière (SmartRecruiters, Lever, Ashby, Greenhouse, Recruitee, Workable, Workday)
 - [x] Badge ESN et filtres « Clients finaux seulement », « Sans stage ni alternance » et « À ma portée » (expérience et diplôme demandés comparés aux vôtres)
+- [x] Offres à double profil, maintenance et informatique (informatique industrielle, MES, supervision, administration de GMAO…) : badge, filtre, tri « Double profil d'abord » sur le web, et pitch, lettre et accroche de CV qui mettent ce double parcours en avant
 - [x] Diplôme demandé repéré dans chaque offre (CAP à Bac+5), comparé à celui du profil : badge, ligne de la fiche, score global réduit s'il bloque (bureau, web, téléphone)
 - [x] Synonymes de métier dans la recherche : « Java » trouve « JEE » ou « Spring », « maintenance » trouve « GMAO »
 - [x] Salaire estimé (médiane des offres comparables) pour les offres sans salaire, argumentaire de négociation en brut annuel
@@ -680,6 +681,7 @@ scraper-data-python/
 │   ├── achievements.py                        # Trophées et carte joueur, déduits de l'activité
 │   ├── aptitude.py                            # Tests de recrutement : questions générées et scores
 │   ├── certifications.py                      # Certifications citées par les offres, obtenues, validité
+│   ├── hybrid.py                              # Offres à double profil maintenance et informatique
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
 │   ├── star_answers.py                        # Réponses STAR aux questions comportementales
 │   ├── offer_purge.py                         # Purge des offres hors sujet et mots exclus
@@ -1228,6 +1230,7 @@ scraper-data-python/
 │   │   ├── test_achievements.py               # Teste les trophées, cachés compris, et la carte joueur
 │   │   ├── test_aptitude.py                   # Teste les questions générées, la correction et les scores
 │   │   ├── test_certifications.py             # Teste le repérage, le plan, la validité et les informations
+│   │   ├── test_hybrid.py                     # Teste le repérage du double profil, ses faux amis et les conseils
 │   │   ├── test_quiz_types.py                 # Teste les questions interactives et leur correction
 │   │   ├── test_shared_quiz_cases.py          # Teste les cas communs avec l'application mobile
 │   │   ├── test_schema_building.py            # Teste les schémas à construire, leur correction et leur dessin

@@ -41,6 +41,7 @@
                     {% if offer.is_agency %}<span class="badge badge-warning" title="Annonce d'une agence d'intérim">Intérim</span>{% endif %}
                     {% if offer.above_experience %}<span class="badge badge-warning" title="Expérience demandée au-dessus de la vôtre">{{ offer.required_years }} ans demandés</span>{% endif %}
                     {% if offer.education_status in ("close", "blocked") %}<span class="badge {{ 'badge-danger' if offer.education_status == 'blocked' else 'badge-warning' }}" title="Diplôme demandé au-dessus du vôtre">{{ education_levels[offer.education_level | int] }}</span>{% endif %}
+                    {% if offer.hybrid_terms %}<span class="badge badge-success" title="Maintenance et informatique : {{ offer.hybrid_terms | join(', ') }}">Double profil</span>{% endif %}
                     {% if offer.is_consulting %}<span class="badge badge-muted" title="Société de conseil : le poste s'exerce chez un de ses clients">ESN</span>{% endif %}
                     {% for benefit in offer.benefits[:max_benefit_badges] %}<span class="badge badge-muted">{{ benefit }}</span>{% endfor %}
                 </td>

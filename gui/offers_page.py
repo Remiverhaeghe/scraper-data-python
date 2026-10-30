@@ -46,6 +46,7 @@ from job.companies import (
 from job.deduplication import group_offers
 from job.education import is_education_blocked
 from job.experience_fit import mark_experience_fit
+from job.hybrid import mark_hybrid_offers
 from job.freshness import add_freshness
 from job.global_score import add_global_scores
 from job.similar_offers import mark_like_ignored
@@ -514,6 +515,7 @@ class OffersPage(QWidget):
             add_distances(vPrepared, self.home)
             mark_agency_offers(vPrepared, self.agencies)
             mark_experience_fit(vPrepared, vSettings["experience_years"])
+            mark_hybrid_offers(vPrepared)
 
             if self.filters_bar.reach_check.isChecked():
                 vPrepared = [
@@ -522,6 +524,9 @@ class OffersPage(QWidget):
                     if not vOffer["above_experience"]
                     and not is_education_blocked(vOffer)
                 ]
+            if self.filters_bar.hybrid_check.isChecked():
+                vPrepared = [vOffer for vOffer in vPrepared if vOffer["hybrid_terms"]]
+
             vPrepared = filter_by_match(
                 vPrepared, self.filters_bar.match_combo.currentData()
             )

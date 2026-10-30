@@ -28,6 +28,7 @@ from job.companies import (
     load_company_rules,
     mark_preferred_companies,
 )
+from job.certifications import describe_offer_certifications, load_owned
 from job.company_info import lookup_company, summarize_company
 from job.contract import CONTRACT_TYPES
 from job.cv_export import (
@@ -53,6 +54,7 @@ from job.education import (
 from job.experience_fit import describe_experience_fit, mark_experience_fit
 from job.freshness import add_freshness
 from job.global_score import add_global_scores
+from job.hybrid import describe_offer_hybrid, mark_hybrid_offers
 from job.similar_offers import mark_like_ignored
 from job.suspicious_offers import (
     find_suspicious_signs,
@@ -172,6 +174,7 @@ def list_offers(
     pNoConsulting: str = Query("", alias="no_consulting"),
     pNoTraining: str = Query("", alias="no_training"),
     pReach: str = Query("", alias="reach"),
+    pHybrid: str = Query("", alias="hybrid"),
     pDistance: str = Query("", alias="distance"),
     pView: str = Query("", alias="view"),
     pSort: str = Query("", alias="sort"),
@@ -229,6 +232,10 @@ def list_offers(
     add_distances(vPrepared, vHome)
     mark_agency_offers(vPrepared, vAgencies)
     mark_experience_fit(vPrepared, vSettings["experience_years"])
+    mark_hybrid_offers(vPrepared)
+
+    if pHybrid:
+        vPrepared = [vOffer for vOffer in vPrepared if vOffer["hybrid_terms"]]
 
     if pReach:
         vPrepared = [
@@ -268,6 +275,16 @@ def list_offers(
 
     if pSort == "fresh":
         vGrouped.sort(key=lambda pOffer: pOffer["freshness"], reverse=True)
+
+    # Double profil d'abord, puis le score global à l'intérieur de chaque groupe
+    if pSort == "hybrid":
+        vGrouped.sort(
+            key=lambda pOffer: (
+                bool(pOffer["hybrid_terms"]),
+                -1 if pOffer["global_score"] is None else pOffer["global_score"],
+            ),
+            reverse=True,
+        )
 
     # Distance inconnue en fin de liste
     if pSort == "distance":
@@ -309,6 +326,7 @@ def list_offers(
             "no_consulting": pNoConsulting,
             "no_training": pNoTraining,
             "reach": pReach,
+            "hybrid": pHybrid,
             "distance": vDistance,
             "sort": pSort,
             "match": vMinMatch,
@@ -608,6 +626,10 @@ def show_offer(
                 vPrepared, load_market_median(pDatabaseFile)
             ),
             "education": format_education(vPrepared),
+            "certifications": describe_offer_certifications(
+                vPrepared, load_owned(pDatabaseFile)
+            ),
+            "hybrid": describe_offer_hybrid(vPrepared),
             "experience_fit": describe_experience_fit(
                 vPrepared, vSettings["experience_years"]
             ),

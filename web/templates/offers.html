@@ -37,6 +37,7 @@
             <option value="global" {% if filters.sort == "global" %}selected{% endif %}>Score global</option>
             <option value="match" {% if filters.sort == "match" %}selected{% endif %}>Correspondance avec mon profil</option>
             <option value="fresh" {% if filters.sort == "fresh" %}selected{% endif %}>Les plus fraîches</option>
+            <option value="hybrid" {% if filters.sort == "hybrid" %}selected{% endif %}>Double profil d'abord</option>
             {% if home %}<option value="distance" {% if filters.sort == "distance" %}selected{% endif %}>Les plus proches</option>{% endif %}
         </select>
 
@@ -120,6 +121,11 @@
         <label class="check" title="Masque les offres qui demandent nettement plus que votre expérience (Paramètres, règles de calcul) ou que votre diplôme (Profil)">
             <input type="checkbox" name="reach" value="1" {% if filters.reach %}checked{% endif %}>
             À ma portée
+        </label>
+
+        <label class="check" title="Seulement les postes entre maintenance et informatique : informatique industrielle, MES, supervision, GMAO…">
+            <input type="checkbox" name="hybrid" value="1" {% if filters.hybrid %}checked{% endif %}>
+            Double profil
         </label>
 
         <label class="check" title="Seulement les entreprises de la liste des Paramètres">

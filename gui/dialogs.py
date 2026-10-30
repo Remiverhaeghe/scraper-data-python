@@ -151,6 +151,17 @@ def describe_preparation(pPreparation):
             f"({pPreparation['cv']['matching']} compétence(s) de l'offre)</p>"
         )
 
+    if vHybrid := pPreparation.get("hybrid"):
+        rHtml += (
+            f"<h3>Double profil · {escape(', '.join(vHybrid['terms']))}</h3>"
+            f"<p>{escape(vHybrid['advice'])}</p>"
+            + (
+                f"<p>Accroche de CV conseillée : <b>{escape(vHybrid['headline'])}</b></p>"
+                if vHybrid["headline"]
+                else ""
+            )
+        )
+
     rHtml += (
         f"<h3>Points forts à citer</h3><ul>{vStrengths or '<li>À compléter</li>'}</ul>"
         f"<h3>Points à préparer</h3><ul>{items(vInterview['gaps']) or '<li>Aucun</li>'}</ul>"

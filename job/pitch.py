@@ -68,8 +68,11 @@ def find_examples(pProfile, pSkills):
     return rExamples
 
 
-def build_pitch(pProfile, pMatch, pOffer):
-    """Retourne le pitch court (30 secondes) et long (2 minutes) pour une offre."""
+def build_pitch(pProfile, pMatch, pOffer, pHybridSentence=""):
+    """Retourne le pitch court (30 secondes) et long (2 minutes) pour une offre.
+
+    pHybridSentence met en avant un double parcours, juste avant la conclusion.
+    """
 
     vTitle = pOffer.get("title")
     vCompany = pOffer.get("company")
@@ -98,6 +101,9 @@ def build_pitch(pProfile, pMatch, pOffer):
         vShort.append(
             f"Je pratique {', '.join(vSkills)}, des compétences demandées ici."
         )
+
+    if pHybridSentence:
+        vShort.append(pHybridSentence)
 
     vShort.append(
         "Je souhaite aujourd'hui mettre mon expérience au service "

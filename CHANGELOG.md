@@ -54,6 +54,12 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Offres à double profil, maintenance et informatique : informatique
+  industrielle, MES, supervision, OPC UA, administration de GMAO, ou
+  maintenance avec développement ; badge, filtre « Double profil », tri dédié
+  sur le web, ligne sur la fiche ; pitch, lettre et accroche de CV adaptés
+  quand le profil couvre les deux mondes. Ligne « Certifications » ajoutée à
+  la fiche web d'une offre
 - Tests de recrutement : cinq catégories de tests psychotechniques (suites
   logiques, calcul, raisonnement mécanique, attention, lecture de plans),
   questions générées, dix questions en 2 min 30, correction détaillée, scores

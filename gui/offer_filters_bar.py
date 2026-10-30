@@ -145,6 +145,11 @@ class OfferFiltersBar(QWidget):  # pylint: disable=too-many-instance-attributes
             "Masque les offres qui demandent nettement plus que votre expérience "
             "(Paramètres, règles de calcul) ou que votre diplôme (Profil)",
         )
+        self.hybrid_check = create_check(
+            "Double profil",
+            "Seulement les postes entre maintenance et informatique : "
+            "informatique industrielle, MES, supervision, GMAO…",
+        )
         self.preferred_check = create_check(
             "Entreprises privilégiées",
             "Seulement les entreprises de la liste des Paramètres",
@@ -188,6 +193,7 @@ class OfferFiltersBar(QWidget):  # pylint: disable=too-many-instance-attributes
             self.consulting_check,
             self.training_check,
             self.reach_check,
+            self.hybrid_check,
             self.preferred_check,
         )
 

@@ -103,6 +103,14 @@
                 {% call detail("graduation-cap", "Diplôme") %}{{ education }}{% endcall %}
                 {% endif %}
 
+                {% if certifications %}
+                {% call detail("shield", "Certifications") %}{{ certifications }}{% endcall %}
+                {% endif %}
+
+                {% if hybrid %}
+                {% call detail("cpu", "Double profil") %}{{ hybrid }}{% endcall %}
+                {% endif %}
+
                 {% if offer.skills_list %}
                 {% call detail("list-checks", "Compétences") %}{{ offer.skills_list | join(", ") }}{% endcall %}
                 {% endif %}
@@ -186,6 +194,9 @@
                 {% if preparation.cv %} · CV conseillé : <strong>{{ preparation.cv.name }}</strong>{% endif %}
             </p>
             <p class="muted">Couvertes : {{ preparation.match.covered | join(", ") or "aucune" }}<br>Manquantes : {{ preparation.missing_text }}</p>
+            {% if preparation.hybrid %}
+            <p><span class="badge badge-success">Double profil</span> {{ preparation.hybrid.terms | join(", ") }} · {{ preparation.hybrid.advice }}{% if preparation.hybrid.headline %}<br>Accroche de CV conseillée : <strong>{{ preparation.hybrid.headline }}</strong>{% endif %}</p>
+            {% endif %}
             <p><a class="button" href="{{ url_for('show_preparation_sheet').path }}?source={{ offer.source | urlencode }}&amp;id={{ offer.source_id | urlencode }}" target="_blank" rel="noopener">{{ icon("file-text", 16) }} Fiche de préparation à imprimer</a></p>
             {% if preparation.score_lines %}
             <details>

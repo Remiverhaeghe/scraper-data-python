@@ -93,6 +93,9 @@ def format_cell(pOffer, pKey):
     elif pKey == "title" and pOffer.get("suspicious_signs"):
         rText = f"⚠ {pOffer.get('title') or ''} · annonce douteuse"
 
+    elif pKey == "title" and pOffer.get("hybrid_terms"):
+        rText = f"{pOffer.get('title') or ''} · double profil"
+
     elif pKey == "title" and pOffer.get("like_ignored"):
         rText = f"{pOffer.get('title') or ''} · proche d'une offre ignorée"
 
@@ -226,6 +229,12 @@ class OffersTableModel(QAbstractTableModel):
 
                 if vOffer.get("is_expired"):
                     rData = f"{rData or ''}\nProbablement expirée"
+
+                if vOffer.get("hybrid_terms"):
+                    rData = (
+                        f"{rData or ''}\nDouble profil, maintenance et "
+                        "informatique : " + ", ".join(vOffer["hybrid_terms"])
+                    )
 
                 if vOffer.get("needs_review"):
                     rData = (

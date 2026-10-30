@@ -2909,3 +2909,26 @@ def test_aptitude_session_is_played_and_corrected(client):
         ).status_code
         == 400
     )
+
+
+def test_hybrid_offers_have_badge_filter_and_sort(client):
+    """Vérifie le badge Double profil, le filtre et le tri qui les met en tête."""
+
+    client.post(
+        "/offers/new",
+        data={
+            "title": "Technicien informatique industrielle",
+            "company": "Usine SA",
+            "url": "https://usine.example",
+        },
+    )
+
+    vFiltered = client.get("/offers?hybrid=1").text
+    vSorted = client.get("/offers?sort=hybrid").text
+
+    assert "Technicien informatique industrielle" in vFiltered
+    assert "Développeur Java" not in vFiltered
+    assert ">Double profil</span>" in vFiltered
+    assert vSorted.index("Technicien informatique industrielle") < vSorted.index(
+        "Développeur Java"
+    )

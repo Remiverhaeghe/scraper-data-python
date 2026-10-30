@@ -117,3 +117,18 @@ def test_old_ad_shows_its_online_days():
     vOffer = {"first_seen_at": "2026-08-20T08:00:00", "recurring_days": 60}
 
     assert format_cell(vOffer, "first_seen_at").endswith("en ligne depuis 60 j")
+
+
+def test_hybrid_offer_title_and_tooltip(qt_application):
+    """Vérifie la mention « double profil » du titre et ses termes en infobulle."""
+
+    vOffer = {"title": "Technicien MES", "hybrid_terms": ["MES", "SQL"]}
+    vModel = OffersTableModel()
+    vModel.set_offers([vOffer])
+    vColumn = [vKey for _, vKey, _ in COLUMNS].index("title")
+    vIndex = vModel.index(0, vColumn)
+
+    assert format_cell(vOffer, "title") == "Technicien MES · double profil"
+    assert vModel.data(vIndex, Qt.ItemDataRole.ToolTipRole).endswith(
+        "informatique : MES, SQL"
+    )

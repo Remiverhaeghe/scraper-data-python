@@ -11,6 +11,7 @@ from functools import lru_cache
 from job.education import compare_education, get_profile_level
 from job.enrichment import SKILL_PATTERNS, detect_skills
 from job.fingerprint import GENDER_MARKERS
+from job.hybrid import build_hybrid_advice
 from job.pitch import build_pitch, find_examples, lower_first
 from job.presentation import to_list
 from job.self_assessment import KNOWN_LEVEL, get_assessed_skills
@@ -569,7 +570,7 @@ def build_interview(pProfile, pMatch, pOffer):
     return rInterview
 
 
-def build_letter(pProfile, pMatch, pOffer):
+def build_letter(pProfile, pMatch, pOffer, pHybridSentence=""):
     """Assemble un brouillon de lettre de motivation à relire et personnaliser."""
 
     vCompany = pOffer.get("company") or "votre entreprise"
@@ -594,6 +595,9 @@ def build_letter(pProfile, pMatch, pOffer):
         vParagraphs.append(
             "Je maîtrise notamment " + ", ".join(vSkills) + ", que vous recherchez."
         )
+
+    if pHybridSentence:
+        vParagraphs.append(pHybridSentence)
 
     if vExperience and vExperience["achievement"]:
         vParagraphs.append(
@@ -633,8 +637,11 @@ def prepare_application(
     vOfferSkills = get_offer_skills(pOffer)
     vMatch = match_offer(pProfile, pOffer)
 
+    vHybrid = build_hybrid_advice(pProfile, pOffer)
+    vHybridSentence = vHybrid["pitch"] if vHybrid else ""
+
     vInterview = build_interview(pProfile, vMatch, pOffer)
-    vInterview["pitch"] = build_pitch(pProfile, vMatch, pOffer)
+    vInterview["pitch"] = build_pitch(pProfile, vMatch, pOffer, vHybridSentence)
     vInterview["tricky"] = build_tricky_questions(pOffer, pAgencies)
     vInterview["star"] = select_star_answers(pStarAnswers or {}, pProfile, vOfferSkills)
     vInterview["asked"] = (pAskedQuestions or [])[:MAX_ASKED_QUESTIONS]
@@ -649,7 +656,8 @@ def prepare_application(
         "score_lines": describe_score(vMatch),
         "cv": recommend_cv(pProfile, vOfferSkills),
         "interview": vInterview,
-        "letter": build_letter(pProfile, vMatch, pOffer),
+        "letter": build_letter(pProfile, vMatch, pOffer, vHybridSentence),
+        "hybrid": vHybrid,
     }
 
     return rPreparation

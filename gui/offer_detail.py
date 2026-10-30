@@ -38,6 +38,7 @@ from job.companies import (
 )
 from job.deduplication import COMPARED_FIELDS, MERGED, SEPARATE, get_offer_group
 from job.certifications import describe_offer_certifications, load_owned
+from job.hybrid import describe_offer_hybrid
 from job.education import format_education
 from job.experience_fit import describe_experience_fit
 from job.geocoding import add_distances, describe_location, load_home
@@ -86,6 +87,7 @@ INFO_ROWS = (
     ("experience_level", "Expérience", "timer"),
     ("education", "Diplôme", "graduation-cap"),
     ("certifications", "Certifications", "shield"),
+    ("hybrid", "Double profil", "cpu"),
     ("skills", "Compétences", "list-checks"),
     ("published_at", "Publiée le", "calendar"),
     ("first_seen_at", "Découverte le", "search"),
@@ -539,6 +541,7 @@ class OfferDetailPanel(QWidget):
             "certifications": describe_offer_certifications(
                 vOffer, load_owned(self.database_file)
             ),
+            "hybrid": describe_offer_hybrid(vOffer),
             "skills": summarize_values(vOffer.get("skills_list")),
             "published_at": format_date(vOffer.get("published_at")),
             "first_seen_at": format_date(vOffer.get("first_seen_at")),

@@ -88,6 +88,21 @@ def build_preparation_sections(pPreparation):
                 [f"CV conseillé : {pPreparation['cv']['name']}"]
                 if pPreparation["cv"]
                 else []
+            )
+            + (
+                [
+                    "Double profil ("
+                    + ", ".join(vHybrid["terms"])
+                    + ") : "
+                    + vHybrid["advice"]
+                ]
+                + (
+                    [f"Accroche de CV conseillée : {vHybrid['headline']}"]
+                    if vHybrid["headline"]
+                    else []
+                )
+                if (vHybrid := pPreparation.get("hybrid"))
+                else []
             ),
         ),
         (
