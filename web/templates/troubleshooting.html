@@ -1,0 +1,92 @@
+{# Pannes à résoudre (routes /troubleshooting) : scénarios de assets/troubleshooting, moteur job/troubleshooting.py.
+   Les actions jouées voyagent dans l'adresse ; seule la réparation, qui enregistre le résultat, est un POST. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Pannes à résoudre{% endblock %}
+
+{% macro stars(count) %}{{ "★" * count }}{{ "☆" * (3 - count) }}{% endmacro %}
+
+{% macro journal(log) %}
+{% for entry in log | reverse %}
+<div class="aptitude-correction">
+    <strong>{{ entry.label }}</strong>{% if entry.minutes %} <span class="muted">· {{ entry.minutes }} min</span>{% endif %}
+    <p{% if entry.refused %} class="tone-danger"{% endif %}>{{ entry.result }}</p>
+</div>
+{% else %}
+<p class="muted">Aucune action pour l'instant : par quoi commencez-vous ?</p>
+{% endfor %}
+{% endmacro %}
+
+{% block content %}
+{{ ui.page_header("Pannes à résoudre", "Choisissez vos mesures, trouvez la cause : chaque mesure coûte du temps, chaque pièce changée pour rien aussi", "wrench") }}
+
+<section class="grid grid-2">
+    {{ ui.stat(overview.solved ~ " / " ~ overview.rows | length, "Pannes résolues", "wrench", "blue") }}
+    {{ ui.stat(overview.stars ~ " / " ~ overview.max_stars, "Étoiles", "star", "amber") }}
+</section>
+
+{% if state %}
+{% set scenario = state.scenario %}
+<article class="card section-gap">
+    <h2>{{ scenario.title }} · {{ scenario.domain }}</h2>
+    <p>{{ scenario.symptom }}</p>
+    <p class="muted">{{ scenario.machine }}</p>
+    <p><strong>Temps passé : {{ state.minutes }} min</strong> · pièces changées pour rien : {{ state.wrong | length }}</p>
+    <div class="grid grid-2">
+        <div>
+            <h3>Mesures et contrôles</h3>
+            <div class="troubleshooting-actions">
+                {% for check in scenario.checks if check.id not in state.done %}
+                <a class="button" href="{{ check_urls[check.id] }}">{{ icon("search", 16) }} {{ check.label }} · {{ check.minutes }} min</a>
+                {% endfor %}
+            </div>
+            <h3>Réparer</h3>
+            <div class="troubleshooting-actions">
+                {% for cause in scenario.causes if cause.id not in state.wrong %}
+                <form method="post" action="{{ url_for('repair_troubleshooting').path }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <input type="hidden" name="scenario" value="{{ scenario.id }}">
+                    <input type="hidden" name="actions" value="{{ actions }}">
+                    <input type="hidden" name="cause" value="{{ cause.id }}">
+                    <button class="button" type="submit">{{ icon("wrench", 16) }} {{ cause.label }} · {{ cause.minutes }} min</button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+        <div>
+            <h3>Journal d'intervention</h3>
+            {{ journal(state.log) }}
+        </div>
+    </div>
+    <p><a href="{{ url_for('show_troubleshooting').path }}">Choisir une autre panne</a></p>
+</article>
+{% elif result %}
+<article class="card section-gap">
+    <h2>{{ stars(result.stars) }} {{ result.scenario.title }} : {{ result.score }} / 100 · +{{ result.xp }} XP</h2>
+    <p>{{ result.minutes }} min, {{ result.wrong | length }} pièce{{ "s" if result.wrong | length > 1 }} changée{{ "s" if result.wrong | length > 1 }} pour rien.{% if not result.proven %} Score plafonné : la réparation a été faite sans mesure qui prouve la cause.{% endif %}</p>
+    <p>{{ result.scenario.explanation }}</p>
+    <details>
+        <summary>Journal d'intervention</summary>
+        {{ journal(result.log) }}
+    </details>
+    <p>
+        <a class="button button-primary" href="{{ url_for('play_troubleshooting').path }}?scenario={{ result.scenario.id }}">{{ icon("wrench", 16) }} Rejouer cette panne</a>
+        <a class="button" href="{{ url_for('show_troubleshooting').path }}">Choisir une autre panne</a>
+    </p>
+</article>
+{% endif %}
+
+<article class="card section-gap">
+    <h2>Choisir une panne</h2>
+    <p class="card-subtitle">Trois étoiles en trouvant la cause aussi vite qu'un technicien expérimenté, sans changer de pièce pour rien</p>
+    <div class="trophy-grid">
+        {% for row in overview.rows %}
+        <a class="trophy aptitude-tile{% if row.stars == 3 %} is-ready{% endif %}" href="{{ url_for('play_troubleshooting').path }}?scenario={{ row.id }}">
+            <strong>{{ icon("wrench", 18) }} {{ row.title }}{% if row.attempts %} <span class="tone-warning">{{ stars(row.stars) }}</span>{% endif %}</strong>
+            <small class="muted">{{ row.domain }} · {{ row.symptom }}</small>
+        </a>
+        {% endfor %}
+    </div>
+</article>
+{% endblock %}

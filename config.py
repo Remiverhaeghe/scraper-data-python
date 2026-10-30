@@ -46,6 +46,12 @@ QUIZ_DIRECTORY = ASSETS_DIRECTORY / "quiz"
 # Questions ouvertes de la simulation d'entretien technique, réponse et points clés
 INTERVIEW_QUESTIONS_FILE = ASSETS_DIRECTORY / "interview" / "questions.json"
 
+# Pannes à résoudre : machine, mesures possibles et réparations
+TROUBLESHOOTING_FILE = ASSETS_DIRECTORY / "troubleshooting" / "scenarios.json"
+
+# Niveaux du simulateur d'automate : variables, scénario de test et solution
+LADDER_LEVELS_FILE = ASSETS_DIRECTORY / "ladder" / "levels.json"
+
 # Catalogue des thèmes et modèle de la demande de questions à ChatGPT
 QUIZ_GENERATION_DIRECTORY = ASSETS_DIRECTORY / "quiz_generation"
 

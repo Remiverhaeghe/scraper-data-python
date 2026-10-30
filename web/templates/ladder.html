@@ -1,0 +1,77 @@
+{# Simulateur d'automate (routes /ladder) : langage job/ladder.py, niveaux et tests job/ladder_game.py.
+   Les SVG sont produits côté serveur à partir de noms de variables contrôlés (minuscules, chiffres, _). #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Simulateur d'automate{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Simulateur d'automate", "Écrivez un programme en ladder et vérifiez-le sur un scénario de test ; la machine animée est sur le bureau", "cpu") }}
+
+{% if level %}
+<article class="card">
+    <h2>{{ level.title }}</h2>
+    <p>{{ level.goal }}</p>
+    <ul class="muted">
+        {% for variable in level.variables %}
+        <li><strong>{{ variable.name }}</strong> ({{ "entrée" if variable.kind == "input" else "sortie" }}) : {{ variable.label }}</li>
+        {% endfor %}
+    </ul>
+    <details>
+        <summary>Indice</summary>
+        <p>{{ level.hint }}</p>
+    </details>
+    <details>
+        <summary>Solution</summary>
+        <pre class="ladder-code">{{ level.solution }}</pre>
+    </details>
+
+    <form class="profile-form" method="post" action="{{ url_for('check_ladder').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="level" value="{{ level.id }}">
+        <label>Programme, un barreau par ligne <textarea class="ladder-code" name="program" rows="10" maxlength="{{ max_program_length }}" spellcheck="false">{{ program }}</textarea></label>
+        <button class="button button-primary" type="submit">{{ icon("circle-check", 16) }} Vérifier</button>
+    </form>
+
+    {% if run %}
+    {% if run.error %}
+    <p class="tone-danger">{{ run.error }}</p>
+    {% else %}
+    <h3>{% if run.passed %}Niveau réussi{% if first %} · +25 XP{% endif %}{% else %}Pas encore : regardez les vérifications à revoir{% endif %}</h3>
+    <ul>
+        {% for check in run.checks %}
+        <li><span class="{{ 'tone-success' if check.passed else 'tone-danger' }}">{{ "réussi" if check.passed else "à revoir" }}</span> · {{ "%g" | format(check.at) }} s : {{ check.message }}</li>
+        {% endfor %}
+        {% for message in run.violations %}
+        <li><span class="tone-danger">à revoir</span> · {{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endif %}
+
+    {% if ladder_svg %}
+    <h3>Programme en ladder</h3>
+    <div class="ladder-drawing">{{ ladder_svg | safe }}</div>
+    {% endif %}
+    {% if chart_svg %}
+    <h3>Chronogramme du scénario de test</h3>
+    <p class="card-subtitle">Entrées en bleu, sorties en vert</p>
+    <div class="ladder-drawing">{{ chart_svg | safe }}</div>
+    {% endif %}
+    <p><a href="{{ url_for('show_ladder').path }}">Choisir un autre niveau</a></p>
+</article>
+{% endif %}
+
+<article class="card section-gap">
+    <h2>Choisir un niveau</h2>
+    <p class="card-subtitle">Du plus simple au plus complet : chaque niveau réussi rapporte 25 XP</p>
+    <div class="trophy-grid">
+        {% for row in overview.rows %}
+        <a class="trophy aptitude-tile{% if row.passed %} is-ready{% endif %}" href="{{ url_for('show_ladder').path }}?level={{ row.id }}">
+            <strong>{{ icon("cpu", 18) }} {{ loop.index }}. {{ row.title }}{% if row.passed %} <span class="badge badge-success">Réussi</span>{% endif %}</strong>
+            <small class="muted">{{ row.goal }}</small>
+        </a>
+        {% endfor %}
+    </div>
+</article>
+{% endblock %}

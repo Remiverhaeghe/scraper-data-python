@@ -2932,3 +2932,71 @@ def test_hybrid_offers_have_badge_filter_and_sort(client):
     assert vSorted.index("Technicien informatique industrielle") < vSorted.index(
         "Développeur Java"
     )
+
+
+def test_troubleshooting_is_played_on_the_web(client):
+    """Vérifie une mesure par lien, une mauvaise réparation puis la bonne."""
+
+    assert (
+        "Le vérin sort de plus en plus lentement" in client.get("/troubleshooting").text
+    )
+
+    vPage = client.get(
+        "/troubleshooting/play?scenario=verin-lent&actions=check:silencieux"
+    ).text
+
+    assert "noirci et gras" in vPage
+
+    vWrong = client.post(
+        "/troubleshooting/repair",
+        data={
+            "scenario": "verin-lent",
+            "actions": "check:silencieux",
+            "cause": "joints",
+        },
+        follow_redirects=False,
+    )
+
+    assert vWrong.status_code == 303
+    assert "repair%3Ajoints" in vWrong.headers["location"]
+
+    vResult = client.post(
+        "/troubleshooting/repair",
+        data={
+            "scenario": "verin-lent",
+            "actions": "check:silencieux,repair:joints",
+            "cause": "silencieux",
+        },
+    ).text
+
+    assert "Le vérin sort de plus en plus lentement : " in vResult
+    assert "1 pièce changée pour rien" in vResult
+    assert client.get("/troubleshooting/play?scenario=inconnu").status_code == 404
+
+
+def test_ladder_level_is_checked_on_the_web(client):
+    """Vérifie le niveau, une faute d'écriture, puis la solution réussie et dessinée."""
+
+    vPage = client.get("/ladder?level=marche-arret").text
+
+    assert "Marche, arrêt et auto-maintien" in vPage
+    assert "<svg" in vPage
+
+    vError = client.post(
+        "/ladder/check", data={"level": "marche-arret", "program": "marche = arret"}
+    ).text
+
+    assert "est une entrée" in vError
+
+    vResult = client.post(
+        "/ladder/check",
+        data={
+            "level": "marche-arret",
+            "program": "moteur = (marche | moteur) & arret",
+        },
+    ).text
+
+    assert "Niveau réussi · +25 XP" in vResult
+    assert "Chronogramme du scénario de test" in vResult
+    assert "<script" not in vResult.split("<main", 1)[-1]
+    assert client.get("/ladder?level=inconnu").status_code == 404

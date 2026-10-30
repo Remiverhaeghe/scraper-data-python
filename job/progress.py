@@ -31,6 +31,8 @@ XP_RULES = {
     "git_level": ("Niveau Git terminé", 25),
     "exam": ("Examen blanc terminé, plus 1 par tranche de 10 % de note", 30),
     "aptitude": ("Test de recrutement terminé, plus 2 par bonne réponse", 10),
+    "troubleshooting": ("Panne résolue, plus 2 par tranche de 10 points", 20),
+    "ladder_level": ("Niveau d'automate réussi", 25),
     "interested": ("Offre marquée « Intéressé »", 5),
     "applied": ("Candidature envoyée", 30),
     "follow_up": ("Relance faite", 15),
@@ -43,6 +45,15 @@ XP_RULES = {
 
 # Points de chaque bonne réponse d'un test de recrutement, en plus du forfait
 APTITUDE_XP_PER_RIGHT = 2
+
+# Points de chaque tranche de 10 points du score d'une panne résolue
+TROUBLESHOOTING_XP_PER_TEN = 2
+
+# Résultats des pannes résolues, enregistrés par job/troubleshooting.py
+TROUBLESHOOTING_RESULTS_KEY = "troubleshooting_results"
+
+# Programmes et réussites du simulateur d'automate (job/ladder_game.py)
+LADDER_PROGRESS_KEY = "ladder_progress"
 
 # Statut de candidature vers son action
 STATUS_ACTIONS = {
@@ -183,6 +194,23 @@ def load_activity(pDatabaseFile):
             "aptitude",
             pXp=XP_RULES["aptitude"][1] + APTITUDE_XP_PER_RIGHT * vSession["correct"],
         )
+
+    for vResult in load_json_setting(
+        pDatabaseFile, TROUBLESHOOTING_RESULTS_KEY, [], list
+    ):
+        add_action(
+            rActivity,
+            read_day(vResult.get("finished_at")),
+            "troubleshooting",
+            pXp=XP_RULES["troubleshooting"][1]
+            + TROUBLESHOOTING_XP_PER_TEN * (int(vResult.get("score") or 0) // 10),
+        )
+
+    for vEntry in load_json_setting(
+        pDatabaseFile, LADDER_PROGRESS_KEY, {}, dict
+    ).values():
+        if isinstance(vEntry, dict) and vEntry.get("passed_at"):
+            add_action(rActivity, read_day(vEntry["passed_at"]), "ladder_level")
 
     for vDay, vQuests in load_quest_log(pDatabaseFile).get("done", {}).items():
         for vQuest in vQuests:

@@ -303,7 +303,7 @@ Documents/JobBoard/
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
-- [x] 30 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] 32 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
@@ -582,6 +582,24 @@ Page Tests de recrutement du bureau et du web, pour s'entraîner aux tests psych
 - [x] Dix questions en 2 min 30, une à la fois, envoi automatique à la fin du temps ; correction détaillée des erreurs
 - [x] Meilleur score et moyenne des 5 dernières parties par catégorie, catégorie « prête » à 80 %, XP et deux trophées
 
+### Pannes à résoudre
+
+Page Pannes à résoudre du bureau et du web, pour s'entraîner au diagnostic :
+
+- [x] Six machines en panne : convoyeur qui ne démarre plus, vérin lent, capteur instable, four qui oscille (PID), différentiel qui déclenche, presse hydraulique en cavitation
+- [x] Chaque mesure coûte du temps ; les mesures hors tension sont refusées sans consignation
+- [x] Score selon le temps comparé à celui d'un technicien expérimenté, moins les pièces changées pour rien, plafonné si la cause n'a pas été prouvée ; une à trois étoiles
+- [x] Journal d'intervention et explication de la panne ; scénarios dans `assets/troubleshooting/scenarios.json`
+
+### Simulateur d'automate
+
+Page Automate du bureau et du web, pour programmer en ladder :
+
+- [x] Un barreau par ligne (`moteur = (marche | moteur) & arret`), dessiné en ladder en direct : contacts en série et en parallèle, contacts à ouverture, bobines, SET, RESET, temporisation TON et compteur CTU
+- [x] Cinq niveaux : marche-arrêt avec auto-maintien, défaut thermique, temporisation d'un vérin, comptage de pièces, séquence Grafcet de perçage
+- [x] Cycle d'automate de 100 ms, barreaux lus de haut en bas ; scénario de test automatique avec chronogramme, indice et solution
+- [x] Sur le bureau, machine animée (moteur, vérin, tapis, broche) pilotée à la souris, contacts passants colorés en direct
+
 ### Bac à sable Git
 
 Page Git du bureau et du web, pour s'exercer aux branches sans risque :
@@ -680,6 +698,9 @@ scraper-data-python/
 │   ├── progress.py                            # Points, niveaux, série et quêtes, calculés depuis l'activité
 │   ├── achievements.py                        # Trophées et carte joueur, déduits de l'activité
 │   ├── aptitude.py                            # Tests de recrutement : questions générées et scores
+│   ├── troubleshooting.py                     # Pannes à résoudre : partie rejouée, score
+│   ├── ladder.py                              # Langage du simulateur d'automate et dessin ladder
+│   ├── ladder_game.py                         # Niveaux, machines simulées, tests et chronogramme
 │   ├── certifications.py                      # Certifications citées par les offres, obtenues, validité
 │   ├── hybrid.py                              # Offres à double profil maintenance et informatique
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
@@ -942,6 +963,9 @@ scraper-data-python/
 │   ├── schema_editor.py                       # Éditeur de schéma : palette, grille et câblage
 │   ├── challenges_page.py                     # Défis de programmation
 │   ├── aptitude_page.py                       # Tests de recrutement chronométrés
+│   ├── troubleshooting_page.py                # Pannes à résoudre : mesures, réparation, journal
+│   ├── ladder_page.py                         # Simulateur d'automate : éditeur, tests, simulation
+│   ├── ladder_machine.py                      # Machine animée du simulateur
 │   ├── git_page.py                            # Bac à sable Git
 │   ├── history_page.py                        # Historique des exécutions
 │   ├── logs_page.py                           # Consultation des logs
@@ -998,6 +1022,8 @@ scraper-data-python/
 │   │   ├── certifications.py                  # Certifications, informations et documents
 │   │   ├── challenges.py                      # Défis de programmation
 │   │   ├── aptitude.py                        # Tests de recrutement
+│   │   ├── troubleshooting.py                 # Pannes à résoudre
+│   │   ├── ladder.py                          # Simulateur d'automate
 │   │   ├── git_sandbox.py                     # Bac à sable Git
 │   │   ├── monitoring.py                      # Qualité, journaux et historique
 │   │   ├── profile.py                         # Profil et import du CV
@@ -1028,6 +1054,8 @@ scraper-data-python/
 │   │   ├── _quiz_answer.html                  # Champs de réponse selon le type de question
 │   │   ├── challenges.html                    # Défis de programmation
 │   │   ├── aptitude.html                      # Tests de recrutement
+│   │   ├── troubleshooting.html               # Pannes à résoudre
+│   │   ├── ladder.html                        # Simulateur d'automate
 │   │   ├── git.html                           # Bac à sable Git
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
 │   │   ├── _company_info.html                 # Entreprises trouvées dans l'annuaire public
@@ -1085,6 +1113,10 @@ scraper-data-python/
 │   │   ├── normes-qse.json                    # Normes, qualité et sécurité : ISO 9001, habilitation, machines
 │   │   ├── guides/                            # Guides pratiques livrés, un Markdown par thème
 │   │   └── schemas/                           # Schémas SVG livrés, montrés avec la question ou la correction
+│   ├── troubleshooting/
+│   │   └── scenarios.json                     # Pannes : machine, mesures, réparations, explication
+│   ├── ladder/
+│   │   └── levels.json                        # Niveaux d'automate : variables, scénario de test, solution
 │   ├── interview/                             # Simulation d'entretien technique
 │   │   └── questions.json                     # Questions ouvertes, réponse attendue et points clés
 │   └── quiz_generation/                       # Génération de questions avec ChatGPT
@@ -1229,6 +1261,8 @@ scraper-data-python/
 │   │   ├── test_progress.py                   # Teste les points, niveaux, série et quêtes
 │   │   ├── test_achievements.py               # Teste les trophées, cachés compris, et la carte joueur
 │   │   ├── test_aptitude.py                   # Teste les questions générées, la correction et les scores
+│   │   ├── test_troubleshooting.py            # Teste les scénarios, la consignation et le score
+│   │   ├── test_ladder.py                     # Teste le langage, le dessin, les niveaux et les erreurs classiques
 │   │   ├── test_certifications.py             # Teste le repérage, le plan, la validité et les informations
 │   │   ├── test_hybrid.py                     # Teste le repérage du double profil, ses faux amis et les conseils
 │   │   ├── test_quiz_types.py                 # Teste les questions interactives et leur correction
@@ -1377,6 +1411,8 @@ scraper-data-python/
 │   │   ├── test_quiz_answer.py                 # Teste les saisies de réponse, revue de code comprise
 │   │   ├── test_challenges_page.py             # Teste la page des défis
 │   │   ├── test_aptitude_page.py               # Teste une partie, l'abandon et le temps écoulé
+│   │   ├── test_troubleshooting_page.py        # Teste une intervention jusqu'à la réparation
+│   │   ├── test_ladder_page.py                 # Teste la vérification et la simulation pilotée
 │   │   ├── test_git_page.py                    # Teste la page du bac à sable Git
 │   │   ├── test_schema_editor.py               # Teste l'éditeur de schéma du bureau
 │   │   ├── test_search_page.py                 # Teste la page de recherche

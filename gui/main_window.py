@@ -29,6 +29,7 @@ from gui.certifications_page import CertificationsPage
 from gui.challenges_page import ChallengesPage
 from gui.git_page import GitPage
 from gui.history_page import HistoryPage
+from gui.ladder_page import LadderPage
 from gui.home_page import HomePage
 from gui.logs_page import LogsPage
 from gui.market_page import MarketPage
@@ -48,6 +49,7 @@ from gui.quiz_page import QuizPage
 from gui.skills_page import SkillsPage
 from gui.search_page import SearchPage
 from gui.settings_page import SettingsPage
+from gui.troubleshooting_page import TroubleshootingPage
 from gui.theme import COLORS
 from gui.widgets import show_message
 from job.education import refresh_education_levels_safely
@@ -92,6 +94,8 @@ DATA_ONLY_PAGES = (
     "market",
     "challenges",
     "aptitude",
+    "troubleshooting",
+    "ladder",
     "quality",
 )
 
@@ -213,6 +217,13 @@ class MainWindow(QMainWindow):
             "timer",
             AptitudePage(vDatabaseFile),
         )
+        self.add_page(
+            "troubleshooting",
+            "Pannes à résoudre",
+            "wrench",
+            TroubleshootingPage(vDatabaseFile),
+        )
+        self.add_page("ladder", "Automate", "cpu", LadderPage(vDatabaseFile))
         self.add_page("git", "Git", "git-branch", GitPage(vDatabaseFile))
         self.add_page("history", "Historique", "history", HistoryPage(vDatabaseFile))
         self.add_page("quality", "Qualité", "list-checks", QualityPage(vDatabaseFile))

@@ -1,0 +1,155 @@
+[
+  {
+    "id": "marche-arret",
+    "title": "Marche, arrêt et auto-maintien",
+    "machine": "moteur",
+    "goal": "Un appui bref sur Marche démarre le moteur, qui continue une fois le bouton relâché. Arrêt le coupe, et l'emporte si les deux boutons sont appuyés ensemble.",
+    "hint": "Le moteur doit se maintenir lui-même : mettez son propre contact en parallèle du bouton Marche. Le bouton Arrêt est à ouverture : il vaut 1 au repos, son contact se place en série.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche, à fermeture", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "moteur", "kind": "output", "label": "Contacteur du moteur"}
+    ],
+    "starter": "# Une ligne par barreau, par exemple :\n# sortie = entree1 & !entree2\nmoteur = marche\n",
+    "solution": "moteur = (marche | moteur) & arret",
+    "duration": 4.5,
+    "events": [
+      {"at": 0.5, "set": {"marche": 1}},
+      {"at": 0.8, "set": {"marche": 0}},
+      {"at": 2.0, "set": {"arret": 0}},
+      {"at": 2.3, "set": {"arret": 1}},
+      {"at": 3.0, "set": {"marche": 1, "arret": 0}},
+      {"at": 3.5, "set": {"marche": 0, "arret": 1}}
+    ],
+    "checks": [
+      {"at": 0.3, "expect": {"moteur": 0}, "message": "Au départ, le moteur reste arrêté."},
+      {"at": 0.7, "expect": {"moteur": 1}, "message": "Un appui sur Marche démarre le moteur."},
+      {"at": 1.5, "expect": {"moteur": 1}, "message": "Marche relâché, le moteur continue : c'est l'auto-maintien."},
+      {"at": 2.2, "expect": {"moteur": 0}, "message": "Arrêt coupe le moteur."},
+      {"at": 2.7, "expect": {"moteur": 0}, "message": "Arrêt relâché, le moteur reste arrêté."},
+      {"at": 3.2, "expect": {"moteur": 0}, "message": "Marche et Arrêt ensemble : l'arrêt est prioritaire."}
+    ]
+  },
+  {
+    "id": "defaut-thermique",
+    "title": "Défaut thermique et voyant",
+    "machine": "moteur",
+    "goal": "Reprenez la marche et l'arrêt. Si le relais thermique déclenche, le moteur s'arrête et le voyant de défaut s'allume. Une fois le thermique réarmé, le moteur ne repart qu'avec un nouvel appui sur Marche.",
+    "hint": "Le contact du thermique vaut 1 tant qu'il n'a pas déclenché : il se place en série, comme Arrêt. Le voyant s'allume avec le contact inversé du thermique.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche, à fermeture", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "thermique", "kind": "input", "label": "Relais thermique : 1 tant qu'il n'a pas déclenché", "default": 1, "control": "switch_nc"},
+      {"name": "moteur", "kind": "output", "label": "Contacteur du moteur"},
+      {"name": "voyant_defaut", "kind": "output", "label": "Voyant de défaut, rouge"}
+    ],
+    "starter": "moteur = (marche | moteur) & arret\n",
+    "solution": "moteur = (marche | moteur) & arret & thermique\nvoyant_defaut = !thermique",
+    "duration": 4.0,
+    "events": [
+      {"at": 0.5, "set": {"marche": 1}},
+      {"at": 0.8, "set": {"marche": 0}},
+      {"at": 1.5, "set": {"thermique": 0}},
+      {"at": 2.5, "set": {"thermique": 1}},
+      {"at": 3.0, "set": {"marche": 1}},
+      {"at": 3.3, "set": {"marche": 0}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"moteur": 1, "voyant_defaut": 0}, "message": "Le moteur démarre, sans défaut."},
+      {"at": 1.7, "expect": {"moteur": 0}, "message": "Le déclenchement du thermique arrête le moteur."},
+      {"at": 1.7, "expect": {"voyant_defaut": 1}, "message": "Le voyant signale le défaut."},
+      {"at": 2.7, "expect": {"moteur": 0, "voyant_defaut": 0}, "message": "Thermique réarmé : le voyant s'éteint et le moteur ne repart pas seul."},
+      {"at": 3.5, "expect": {"moteur": 1}, "message": "Un nouvel appui sur Marche redémarre le moteur."}
+    ]
+  },
+  {
+    "id": "temporisation",
+    "title": "Temporisation d'un vérin",
+    "machine": "verin",
+    "goal": "Un appui sur Départ fait sortir le vérin. Arrivé en fin de course, il y reste 2 secondes, puis rentre tout seul.",
+    "hint": "Une temporisation TON démarre quand son entrée passe à 1 et se termine après la durée donnée. Démarrez-la sur le capteur de fin de course, et coupez la sortie du vérin quand elle est terminée.",
+    "variables": [
+      {"name": "depart", "kind": "input", "label": "Bouton Départ", "default": 0, "control": "button"},
+      {"name": "fin_sortie", "kind": "input", "label": "Capteur : vérin sorti", "default": 0, "control": "sensor"},
+      {"name": "sortir", "kind": "output", "label": "Distributeur monostable : 1 fait sortir le vérin"}
+    ],
+    "starter": "# t_attente = TON(entree, 2s) vaut 1 deux secondes après que entree est passée à 1\nsortir = depart\n",
+    "solution": "sortir = (depart | sortir) & !t_attente\nt_attente = TON(fin_sortie, 2s)",
+    "duration": 6.0,
+    "events": [
+      {"at": 0.5, "set": {"depart": 1}},
+      {"at": 0.8, "set": {"depart": 0}}
+    ],
+    "checks": [
+      {"at": 0.3, "expect": {"sortir": 0}, "message": "Au départ, le vérin est au repos."},
+      {"at": 1.0, "expect": {"sortir": 1}, "message": "Départ fait sortir le vérin, même bouton relâché."},
+      {"at": 3.0, "expect": {"sortir": 1}, "message": "Le vérin reste sorti pendant la temporisation."},
+      {"at": 4.0, "expect": {"sortir": 0}, "message": "Après 2 s en fin de course, le vérin rentre."},
+      {"at": 5.5, "expect": {"sortir": 0}, "message": "Il ne ressort pas sans nouvel appui sur Départ."}
+    ]
+  },
+  {
+    "id": "comptage",
+    "title": "Comptage de pièces",
+    "machine": "tapis",
+    "goal": "Marche lance le tapis. Au cinquième passage de pièce devant le capteur, le tapis s'arrête et le voyant « lot complet » s'allume. Acquittement remet le compteur à zéro ; Marche relance un nouveau lot.",
+    "hint": "Un compteur CTU compte les fronts montants de son entrée et vaut 1 une fois la valeur atteinte ; son troisième paramètre le remet à zéro. Placez son contact inversé en série dans la marche du tapis.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "acquit", "kind": "input", "label": "Bouton Acquittement", "default": 0, "control": "button"},
+      {"name": "piece", "kind": "input", "label": "Capteur : pièce devant le capteur", "default": 0, "control": "sensor"},
+      {"name": "tapis", "kind": "output", "label": "Moteur du tapis"},
+      {"name": "voyant_lot", "kind": "output", "label": "Voyant lot complet, vert"}
+    ],
+    "starter": "# lot = CTU(entree, 5, remise_a_zero) vaut 1 au cinquième front montant de entree\ntapis = (marche | tapis) & arret\n",
+    "solution": "lot = CTU(piece, 5, acquit)\ntapis = (marche | tapis) & arret & !lot\nvoyant_lot = lot",
+    "duration": 9.0,
+    "events": [
+      {"at": 0.5, "set": {"marche": 1}},
+      {"at": 0.8, "set": {"marche": 0}},
+      {"at": 6.0, "set": {"acquit": 1}},
+      {"at": 6.3, "set": {"acquit": 0}},
+      {"at": 7.0, "set": {"marche": 1}},
+      {"at": 7.3, "set": {"marche": 0}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"tapis": 1}, "message": "Marche lance le tapis."},
+      {"at": 3.0, "expect": {"tapis": 1, "voyant_lot": 0}, "message": "Le tapis tourne tant que le lot n'est pas complet."},
+      {"at": 5.0, "expect": {"tapis": 0}, "message": "Le tapis s'arrête au cinquième passage de pièce."},
+      {"at": 5.0, "expect": {"voyant_lot": 1}, "message": "Le voyant signale le lot complet."},
+      {"at": 6.5, "expect": {"voyant_lot": 0}, "message": "L'acquittement remet le compteur à zéro."},
+      {"at": 7.5, "expect": {"tapis": 1}, "message": "Marche relance un nouveau lot."}
+    ]
+  },
+  {
+    "id": "grafcet-percage",
+    "title": "Séquence Grafcet de perçage",
+    "machine": "percage",
+    "goal": "Broche en haut, Départ lance un cycle : descente avec rotation jusqu'en bas, perçage d'une seconde en bas, remontée jusqu'en haut, puis retour à l'étape initiale. La descente et la montée ne sont jamais commandées ensemble.",
+    "hint": "Chaque étape du Grafcet est une mémoire x1, x2, x3 : SET l'active quand l'étape précédente est active et sa réceptivité vraie, RESET désactive l'étape précédente. L'étape initiale est active quand aucune autre ne l'est. Attention à l'ordre des lignes : l'automate les lit de haut en bas.",
+    "variables": [
+      {"name": "depart", "kind": "input", "label": "Bouton Départ cycle", "default": 0, "control": "button"},
+      {"name": "haut", "kind": "input", "label": "Capteur : broche en haut", "default": 1, "control": "sensor"},
+      {"name": "bas", "kind": "input", "label": "Capteur : broche en bas", "default": 0, "control": "sensor"},
+      {"name": "descendre", "kind": "output", "label": "Descente de la broche"},
+      {"name": "monter", "kind": "output", "label": "Montée de la broche"},
+      {"name": "rotation", "kind": "output", "label": "Rotation de la broche"}
+    ],
+    "starter": "# SET x1 = condition   met x1 à 1 ; RESET x1 = condition   le remet à 0\nSET x1 = depart & haut & !x1 & !x2 & !x3\n",
+    "solution": "SET x1 = depart & haut & !x1 & !x2 & !x3\nSET x2 = x1 & bas\nRESET x1 = x2\nt_percage = TON(x2, 1s)\nSET x3 = x2 & t_percage\nRESET x2 = x3\nRESET x3 = x3 & haut\ndescendre = x1\nmonter = x3\nrotation = x1 | x2 | x3",
+    "duration": 8.0,
+    "forbidden": [{"all": ["descendre", "monter"], "message": "Descente et montée commandées en même temps."}],
+    "events": [
+      {"at": 0.5, "set": {"depart": 1}},
+      {"at": 0.8, "set": {"depart": 0}}
+    ],
+    "checks": [
+      {"at": 0.3, "expect": {"rotation": 0, "descendre": 0}, "message": "Au départ, la broche est arrêtée."},
+      {"at": 1.5, "expect": {"descendre": 1, "rotation": 1}, "message": "Départ lance la descente avec rotation."},
+      {"at": 3.0, "expect": {"descendre": 0, "monter": 0, "rotation": 1}, "message": "En bas, la broche tourne pendant la temporisation de perçage."},
+      {"at": 4.5, "expect": {"monter": 1, "rotation": 1}, "message": "Après une seconde de perçage, la broche remonte."},
+      {"at": 7.0, "expect": {"monter": 0, "descendre": 0, "rotation": 0}, "message": "En haut, le cycle se termine : retour à l'étape initiale."}
+    ]
+  }
+]

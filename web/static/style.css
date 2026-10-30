@@ -2584,6 +2584,27 @@ textarea.companies-preferred {
     border-top: 1px solid var(--border);
 }
 
+.ladder-code {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+/* Ladder et chronogramme : défilement horizontal plutôt qu'un dessin écrasé */
+.ladder-drawing {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.troubleshooting-actions {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.troubleshooting-actions .button {
+    width: 100%;
+    justify-content: flex-start;
+}
+
 .aptitude-tile {
     color: inherit;
     text-decoration: none;

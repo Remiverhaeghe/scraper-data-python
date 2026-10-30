@@ -1,0 +1,152 @@
+[
+  {
+    "id": "convoyeur-arret",
+    "title": "Le convoyeur ne démarre plus",
+    "domain": "Électricité",
+    "symptom": "Ce matin, l'opérateur appuie sur Marche : le convoyeur ne démarre pas, aucun bruit. Le voyant Défaut de l'armoire est éteint.",
+    "machine": "Convoyeur à bande, moteur asynchrone triphasé 400 V commandé par le contacteur KM1 (bobine 24 V continu), protégé par le relais thermique F2 et les fusibles F1. L'automate pilote KM1 par sa sortie Q0.0.",
+    "best_minutes": 20,
+    "checks": [
+      {"id": "operateur", "label": "Interroger l'opérateur", "minutes": 1, "result": "Le convoyeur s'est arrêté normalement hier soir. Personne n'est intervenu depuis."},
+      {"id": "voyants-api", "label": "Lire les voyants d'entrées et sorties de l'automate", "minutes": 2, "result": "I0.0 (Marche) s'allume à l'appui, I0.1 (Arrêt, contact fermé au repos) et I0.2 (relais thermique F2 non déclenché) sont allumés. Q0.0 s'allume quand on appuie sur Marche."},
+      {"id": "observer-km1", "label": "Observer le contacteur KM1 pendant l'appui sur Marche", "minutes": 1, "result": "Aucun claquement : KM1 ne colle pas alors que Q0.0 est allumée.", "evidence": true},
+      {"id": "tension-bobine", "label": "Mesurer la tension aux bornes A1-A2 de la bobine KM1", "minutes": 4, "result": "24 V continu présents dès que Q0.0 s'allume : la commande arrive bien jusqu'à la bobine.", "evidence": true},
+      {"id": "consigner", "label": "Consigner le départ moteur", "minutes": 5, "result": "Sectionneur Q1 ouvert et cadenassé, absence de tension vérifiée au VAT : le départ est consigné."},
+      {"id": "resistance-bobine", "label": "Mesurer la résistance de la bobine KM1", "minutes": 3, "requires": "consigner", "result": "Circuit ouvert : la bobine est coupée.", "evidence": true},
+      {"id": "fusibles", "label": "Contrôler les fusibles F1 du circuit de puissance", "minutes": 4, "requires": "consigner", "result": "Les trois fusibles sont bons."},
+      {"id": "isolement-moteur", "label": "Mesurer l'isolement du moteur", "minutes": 6, "requires": "consigner", "result": "Plus de 100 MΩ entre chaque phase et la masse : le moteur est sain."}
+    ],
+    "causes": [
+      {"id": "bobine-km1", "label": "Remplacer la bobine du contacteur KM1", "minutes": 15, "right": true},
+      {"id": "moteur", "label": "Remplacer le moteur", "minutes": 90},
+      {"id": "thermique", "label": "Remplacer le relais thermique F2", "minutes": 15},
+      {"id": "carte-sorties", "label": "Remplacer la carte de sorties de l'automate", "minutes": 40},
+      {"id": "bouton-marche", "label": "Remplacer le bouton Marche", "minutes": 10}
+    ],
+    "explanation": "La chaîne de commande fonctionne jusqu'à la bobine : l'automate voit Marche, active Q0.0, et 24 V arrivent sur A1-A2. Si KM1 ne colle pas avec sa tension, la bobine est coupée. On remonte la chaîne de l'ordre vers l'actionneur, et on mesure une résistance seulement après consignation."
+  },
+  {
+    "id": "verin-lent",
+    "title": "Le vérin sort de plus en plus lentement",
+    "domain": "Pneumatique",
+    "symptom": "Depuis quelques semaines, le vérin de poussée sort de plus en plus lentement et la cadence baisse. La rentrée reste rapide.",
+    "machine": "Vérin double effet alimenté par un distributeur 5/2 monostable, avec des régleurs de débit sur l'échappement et des silencieux sur les échappements du distributeur. Réseau à 6 bar, filtre-régulateur (FRL) au poste.",
+    "best_minutes": 9,
+    "checks": [
+      {"id": "reseau", "label": "Lire le manomètre du réseau d'air", "minutes": 1, "result": "6 bar, stable."},
+      {"id": "frl", "label": "Lire la pression en sortie du FRL pendant le mouvement", "minutes": 1, "result": "6 bar avant le mouvement, 5,8 bar pendant : la chute est normale."},
+      {"id": "ecouter", "label": "Écouter le vérin et le distributeur, vérin sorti puis rentré", "minutes": 2, "result": "Aucune fuite audible dans les deux positions."},
+      {"id": "regleurs", "label": "Vérifier les régleurs de débit", "minutes": 3, "result": "Les réglages sont marqués à la peinture et n'ont pas bougé depuis la mise en service."},
+      {"id": "silencieux", "label": "Déposer le silencieux de l'échappement côté sortie et refaire un cycle", "minutes": 3, "result": "Sans le silencieux, la sortie redevient rapide. Le silencieux est noirci et gras.", "evidence": true},
+      {"id": "joint-piston", "label": "Tester l'étanchéité du piston, vérin bloqué en sortie", "minutes": 5, "result": "Aucun souffle à l'échappement opposé : le joint de piston est étanche."},
+      {"id": "capteur-fin", "label": "Contrôler le capteur de fin de course", "minutes": 2, "result": "Le capteur détecte la tige en fin de course, son voyant s'allume."}
+    ],
+    "causes": [
+      {"id": "silencieux", "label": "Remplacer le silencieux d'échappement colmaté", "minutes": 5, "right": true},
+      {"id": "joints", "label": "Changer les joints du vérin", "minutes": 45},
+      {"id": "distributeur", "label": "Remplacer le distributeur", "minutes": 30},
+      {"id": "regleur", "label": "Remplacer le régleur de débit", "minutes": 15},
+      {"id": "frl", "label": "Remplacer le filtre-régulateur", "minutes": 20}
+    ],
+    "explanation": "La sortie est réglée par le débit d'air qui s'échappe de la chambre avant. Un silencieux encrassé par l'huile et les poussières freine cet échappement : la sortie ralentit peu à peu, la rentrée n'est pas touchée. Pression correcte et absence de fuite écartent le réseau et les joints."
+  },
+  {
+    "id": "capteur-piece",
+    "title": "Défaut « pièce absente » avec la pièce en place",
+    "domain": "Capteurs",
+    "symptom": "La machine s'arrête en défaut « pièce absente » environ une fois sur trois, alors que la pièce est bien dans le montage.",
+    "machine": "Détecteur inductif M12 B3, portée nominale 4 mm, sortie PNP 24 V câblée sur l'entrée I1.3 de l'automate.",
+    "best_minutes": 13,
+    "checks": [
+      {"id": "operateur", "label": "Interroger l'opérateur", "minutes": 1, "result": "Le défaut est apparu après un bourrage la semaine dernière, que l'opérateur a dégagé à la main."},
+      {"id": "led", "label": "Observer la LED du détecteur, pièce en place", "minutes": 1, "result": "La LED s'allume, puis s'éteint par moments quand le montage vibre.", "evidence": true},
+      {"id": "entree-api", "label": "Lire l'entrée I1.3 sur l'automate", "minutes": 2, "result": "Elle suit exactement la LED : l'automate reçoit ce que voit le détecteur."},
+      {"id": "cable", "label": "Bouger le câble du détecteur", "minutes": 2, "result": "Aucune influence sur la LED."},
+      {"id": "alimentation", "label": "Mesurer l'alimentation 24 V du détecteur", "minutes": 3, "result": "24,1 V stables."},
+      {"id": "fixation", "label": "Vérifier la fixation du détecteur", "minutes": 2, "result": "L'écrou de blocage est desserré : le détecteur a reculé dans son support.", "evidence": true},
+      {"id": "distance", "label": "Mesurer la distance entre le détecteur et la pièce", "minutes": 3, "result": "4,5 mm, au-delà de la portée nominale de 4 mm.", "evidence": true}
+    ],
+    "causes": [
+      {"id": "regler", "label": "Régler le détecteur à environ 3 mm de la pièce et resserrer l'écrou", "minutes": 8, "right": true},
+      {"id": "remplacer-detecteur", "label": "Remplacer le détecteur", "minutes": 20},
+      {"id": "remplacer-cable", "label": "Remplacer le câble du détecteur", "minutes": 15},
+      {"id": "carte-entrees", "label": "Remplacer la carte d'entrées de l'automate", "minutes": 40},
+      {"id": "filtrer", "label": "Ajouter une temporisation sur l'entrée dans le programme", "minutes": 25, "note": "Masquer un signal instable dans le programme cache la cause et peut laisser passer une vraie absence de pièce."}
+    ],
+    "explanation": "Un détecteur inductif se règle avec une marge : on vise une distance d'environ 80 % de la portée nominale, la portée utile tenant compte des dispersions et de la température. Le bourrage a fait reculer le détecteur : à 4,5 mm, la moindre vibration fait basculer sa sortie."
+  },
+  {
+    "id": "four-pid",
+    "title": "La température du four oscille",
+    "domain": "Régulation",
+    "symptom": "La température du four oscille de plus ou moins 8 °C autour de la consigne de 180 °C depuis qu'un collègue a modifié des réglages pour accélérer la montée en température.",
+    "machine": "Four électrique régulé par un régulateur PID, sonde Pt100, résistances commandées par un relais statique.",
+    "best_minutes": 17,
+    "checks": [
+      {"id": "courbe", "label": "Tracer la température et la sortie du régulateur", "minutes": 5, "result": "Oscillation régulière d'environ 4 minutes ; la sortie passe de 0 à 100 % à chaque cycle.", "evidence": true},
+      {"id": "parametres", "label": "Lire les paramètres du régulateur", "minutes": 2, "result": "Bande proportionnelle 2 %, Ti 60 s, Td 0. La fiche de réglage d'origine indique une bande proportionnelle de 8 %.", "evidence": true},
+      {"id": "sonde", "label": "Comparer la sonde à un thermomètre étalon", "minutes": 6, "result": "Écart de 0,5 °C : la mesure est juste."},
+      {"id": "manuel", "label": "Passer le régulateur en manuel, sortie fixée à 40 %", "minutes": 5, "result": "La température se stabilise : le procédé et l'actionneur fonctionnent.", "evidence": true},
+      {"id": "relais", "label": "Contrôler le relais statique de chauffe", "minutes": 4, "result": "Il commute normalement, sans rester collé."},
+      {"id": "consigner", "label": "Consigner le four", "minutes": 5, "result": "Four consigné : alimentation séparée, condamnée, absence de tension vérifiée."},
+      {"id": "resistances", "label": "Mesurer les résistances de chauffe", "minutes": 8, "requires": "consigner", "result": "Les trois résistances ont la valeur attendue."}
+    ],
+    "causes": [
+      {"id": "reglage", "label": "Remettre la bande proportionnelle d'origine et vérifier la réponse", "minutes": 10, "right": true},
+      {"id": "sonde", "label": "Remplacer la sonde Pt100", "minutes": 20},
+      {"id": "relais", "label": "Remplacer le relais statique", "minutes": 25},
+      {"id": "regulateur", "label": "Remplacer le régulateur", "minutes": 40},
+      {"id": "resistances", "label": "Remplacer les résistances de chauffe", "minutes": 60}
+    ],
+    "explanation": "Une bande proportionnelle plus étroite veut dire un gain plus fort (gain = 100 / BP). Passée de 8 % à 2 %, elle multiplie le gain par quatre : la boucle devient instable et la sortie va d'une butée à l'autre. En manuel, tout est stable : le problème est le réglage, pas le matériel."
+  },
+  {
+    "id": "differentiel",
+    "title": "Le différentiel saute au démarrage du nettoyeur",
+    "domain": "Électricité",
+    "symptom": "Le disjoncteur différentiel 30 mA du circuit de prises de l'atelier déclenche à chaque mise en route du nettoyeur haute pression.",
+    "machine": "Circuit de prises 230 V protégé par un disjoncteur différentiel 30 mA ; nettoyeur haute pression de classe I, branché par son câble et sa fiche.",
+    "best_minutes": 19,
+    "checks": [
+      {"id": "debrancher", "label": "Débrancher le nettoyeur et réarmer le différentiel", "minutes": 2, "result": "Le différentiel tient.", "evidence": true},
+      {"id": "autre-appareil", "label": "Brancher un autre appareil sur la même prise", "minutes": 3, "result": "Il fonctionne sans déclenchement."},
+      {"id": "bouton-test", "label": "Appuyer sur le bouton test du différentiel", "minutes": 1, "result": "Il déclenche : le différentiel fonctionne."},
+      {"id": "fuite-atelier", "label": "Mesurer le courant de fuite permanent du circuit à la pince", "minutes": 4, "result": "3 mA sans le nettoyeur : valeur normale."},
+      {"id": "cable", "label": "Inspecter le câble et la fiche du nettoyeur", "minutes": 2, "result": "La gaine est fendue près de la poignée, avec des traces d'eau à l'intérieur.", "evidence": true},
+      {"id": "isolement", "label": "Mesurer l'isolement du nettoyeur, débranché", "minutes": 5, "result": "0,2 MΩ entre phase et terre : l'isolement est très faible.", "evidence": true}
+    ],
+    "causes": [
+      {"id": "cable", "label": "Remplacer le câble d'alimentation abîmé du nettoyeur", "minutes": 15, "right": true},
+      {"id": "differentiel", "label": "Remplacer le disjoncteur différentiel", "minutes": 25},
+      {"id": "differentiel-300", "label": "Monter un différentiel 300 mA à la place", "minutes": 10, "note": "Interdit : un circuit de prises doit rester protégé par un différentiel 30 mA, qui protège les personnes. Le déclenchement signalait un vrai défaut."},
+      {"id": "prise", "label": "Remplacer la prise de courant", "minutes": 10},
+      {"id": "moteur", "label": "Remplacer le moteur du nettoyeur", "minutes": 60}
+    ],
+    "explanation": "Le différentiel compare le courant qui part et celui qui revient : il coupe quand une partie fuit vers la terre. Il tient sans le nettoyeur et l'autre appareil fonctionne : le défaut est dans le nettoyeur. La gaine fendue laisse entrer l'eau, d'où la fuite à la terre."
+  },
+  {
+    "id": "presse-hydraulique",
+    "title": "La presse n'atteint plus sa pression",
+    "domain": "Hydraulique",
+    "symptom": "La presse plafonne à 120 bar au lieu de 180 bar, et la pompe fait un bruit de graviers depuis ce matin.",
+    "machine": "Groupe hydraulique : réservoir, filtre d'aspiration avec indicateur de colmatage, pompe à engrenages entraînée par un moteur électrique, limiteur de pression taré à 190 bar.",
+    "best_minutes": 17,
+    "checks": [
+      {"id": "niveau", "label": "Lire le niveau d'huile", "minutes": 1, "result": "Le niveau est correct, entre mini et maxi."},
+      {"id": "colmatage", "label": "Lire l'indicateur de colmatage du filtre d'aspiration", "minutes": 2, "result": "L'indicateur est dans la zone rouge : le filtre est colmaté.", "evidence": true},
+      {"id": "temperature", "label": "Mesurer la température de l'huile", "minutes": 2, "result": "45 °C, valeur normale."},
+      {"id": "huile", "label": "Observer l'huile dans le réservoir", "minutes": 1, "result": "Fines bulles en surface : la pompe aspire de l'air ou de la vapeur."},
+      {"id": "limiteur", "label": "Contrôler le tarage du limiteur de pression", "minutes": 3, "result": "Taré à 190 bar et plombé : il n'a pas été déréglé."},
+      {"id": "consigner", "label": "Consigner le groupe hydraulique", "minutes": 5, "result": "Moteur consigné, pression résiduelle purgée."},
+      {"id": "accouplement", "label": "Contrôler l'accouplement moteur-pompe", "minutes": 5, "requires": "consigner", "result": "Pas de jeu, élément élastique en bon état."}
+    ],
+    "causes": [
+      {"id": "filtre", "label": "Remplacer la cartouche du filtre d'aspiration", "minutes": 15, "right": true},
+      {"id": "pompe", "label": "Remplacer la pompe", "minutes": 120},
+      {"id": "limiteur", "label": "Retarer le limiteur de pression", "minutes": 10, "note": "Retoucher un limiteur plombé sans cause identifiée peut mettre l'installation en surpression."},
+      {"id": "appoint", "label": "Faire l'appoint d'huile", "minutes": 5},
+      {"id": "moteur", "label": "Remplacer le moteur électrique", "minutes": 90}
+    ],
+    "explanation": "Un filtre d'aspiration colmaté crée une dépression à l'entrée de la pompe : c'est la cavitation, avec son bruit de graviers et ses bulles. La pompe débite mal et la pression ne monte plus. Changer la pompe sans traiter le filtre l'abîmerait à son tour."
+  }
+]

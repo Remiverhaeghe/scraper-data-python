@@ -54,6 +54,13 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Pannes à résoudre : six machines en panne, mesures qui coûtent du temps,
+  consignation exigée pour les mesures hors tension, score selon le temps et
+  les pièces changées pour rien, explication de chaque panne
+- Simulateur d'automate : programme en ladder écrit ligne par ligne et dessiné
+  en direct (contacts, SET, RESET, TON, CTU), cinq niveaux de la marche-arrêt
+  au Grafcet, scénario de test avec chronogramme, machine animée sur le bureau
+- Deux trophées : Premier dépannage, Automaticien
 - Offres à double profil, maintenance et informatique : informatique
   industrielle, MES, supervision, OPC UA, administration de GMAO, ou
   maintenance avec développement ; badge, filtre « Double profil », tri dédié
