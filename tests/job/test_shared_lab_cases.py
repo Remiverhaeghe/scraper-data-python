@@ -107,3 +107,35 @@ def test_phone_git_history_is_replayed(tmp_path):
     assert (vReport["saved"], vReport["xp"]) == (1, 25)
     assert vReport["rejected"][0]["reason"] == "niveau non réussi"
     assert build_labs_package(vDatabaseFile)["git"]["best"] == {"premiers-commits": 2}
+
+
+def test_phone_devops_steps_are_replayed(tmp_path):
+    """Vérifie des étapes Docker qui atteignent l'objectif, et des étapes insuffisantes refusées."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vLevel = next(
+        vItem
+        for vItem in build_labs_package(vDatabaseFile)["devops"]["levels"]
+        if vItem["id"] == "docker-port-pris"
+    )
+    vSteps = [
+        {"file": vLevel["solution"], "command": vCommand}
+        for vCommand in vLevel["commands"]
+    ]
+    vResult = {
+        "id": "devops-1",
+        "lab": "devops",
+        "level": vLevel["id"],
+        "steps": vSteps,
+        "finished_at": "2026-10-30T09:00:00",
+    }
+
+    vReport = sync_lab_results(
+        vDatabaseFile,
+        [vResult, {**vResult, "id": "devops-2", "steps": vSteps[:2]}],
+    )
+
+    assert (vReport["saved"], vReport["xp"]) == (1, 20)
+    assert vReport["rejected"][0]["reason"] == "niveau non réussi"
+    assert build_labs_package(vDatabaseFile)["devops"]["passed"] == [vLevel["id"]]

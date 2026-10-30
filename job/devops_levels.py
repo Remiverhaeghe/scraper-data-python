@@ -117,6 +117,64 @@ def get_level_view(pDatabaseFile, pLevelId):
     return rView
 
 
+def play_step(pLevel, pFile, pCommand, pHost):
+    """Joue une commande sur un fichier ; retourne (lignes, objectif atteint, message).
+
+    Pour Docker, l'hôte pHost est modifié sur place. Le téléphone joue la même
+    étape en Dart, et le PC rejoue ainsi les parties qu'il reçoit.
+    """
+
+    vMessage = ""
+
+    if pLevel["tool"] == "maven":
+        vLines, vReport = run_maven(pLevel["project"], pFile, pCommand)
+        vReached, vMessage = check_maven_goal(pLevel["target"], vReport)
+    else:
+        try:
+            vLines = run_docker(pHost, pLevel, pFile, pCommand)
+
+        except DockerError as vError:
+            vLines = [f"Error: {vError}"]
+
+        vReached = is_goal_reached(pHost, pLevel["target"])
+
+    rStep = (vLines, vReached, vMessage)
+
+    return rStep
+
+
+def replay_steps(pLevel, pSteps):
+    """Rejoue des étapes (fichier, commande) depuis le départ ; indique si l'objectif est atteint."""
+
+    vHost = new_host(pLevel.get("setup", []))
+    rReached = False
+
+    for vFile, vCommand in pSteps:
+        vCommand = " ".join(vCommand.split())[:MAX_COMMAND_LENGTH]
+
+        if vCommand:
+            rReached |= play_step(pLevel, vFile[:MAX_FILE_LENGTH], vCommand, vHost)[1]
+
+    return rReached
+
+
+def mark_passed(pDatabaseFile, pLevelId, pFile, pNow):
+    """Marque un niveau réussi sur un autre appareil ; indique si c'est la première fois."""
+
+    vProgress = load_devops_progress(pDatabaseFile)
+    vEntry = vProgress["levels"].get(pLevelId) or {}
+    rFirst = not vEntry.get("passed_at")
+
+    if rFirst:
+        vEntry["passed_at"] = pNow.isoformat(timespec="seconds")
+        vEntry.setdefault("file", pFile)
+        vProgress["levels"][pLevelId] = vEntry
+        save_json_setting(pDatabaseFile, DEVOPS_PROGRESS_KEY, vProgress)
+        logger.info("Niveau Maven ou Docker réussi sur le téléphone : %s", pLevelId)
+
+    return rFirst
+
+
 def run_level_command(pDatabaseFile, pLevelId, pFile, pCommand, pNow=None):
     """Exécute une commande sur le niveau ; retourne lignes, objectif et première réussite."""
 
@@ -135,19 +193,10 @@ def run_level_command(pDatabaseFile, pLevelId, pFile, pCommand, pNow=None):
             "message": "Saisissez une commande.",
         }
 
-    if vLevel["tool"] == "maven":
-        vLines, vReport = run_maven(vLevel["project"], vFile, vCommand)
-        vReached, vMessage = check_maven_goal(vLevel["target"], vReport)
-    else:
-        vHost = vEntry.get("host") or new_host(vLevel.get("setup", []))
+    vHost = vEntry.get("host") or new_host(vLevel.get("setup", []))
+    vLines, vReached, vMessage = play_step(vLevel, vFile, vCommand, vHost)
 
-        try:
-            vLines = run_docker(vHost, vLevel, vFile, vCommand)
-
-        except DockerError as vError:
-            vLines = [f"Error: {vError}"]
-
-        vReached = is_goal_reached(vHost, vLevel["target"])
+    if vLevel["tool"] == "docker":
         vEntry["host"] = vHost
 
     vFirst = vReached and not vEntry.get("passed_at")

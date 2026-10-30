@@ -9,11 +9,16 @@ partie avec le simulateur de référence, puis l'enregistre comme sur le bureau.
 from dataclasses import asdict
 from datetime import datetime
 
+from job.devops_levels import build_devops_overview
+from job.devops_levels import load_levels as load_devops_levels
+from job.devops_levels import mark_passed, replay_steps
+from job.docker_sim import REGISTRY
 from job.git_levels import LEVELS as GIT_LEVELS
 from job.git_levels import get_level as get_git_level
 from job.git_levels import is_goal_reached, replay_level
 from job.ladder_game import build_ladder_overview, load_levels, run_level
 from job.ladder_game import save_attempt as save_ladder_attempt
+from job.maven_sim import CENTRAL
 from job.progress import TROUBLESHOOTING_XP_PER_TEN, XP_RULES
 from job.troubleshooting import (
     STAR_THRESHOLDS,
@@ -70,6 +75,18 @@ def build_labs_package(pDatabaseFile):
             "levels": [asdict(vLevel) for vLevel in GIT_LEVELS],
             "xp": XP_RULES["git_level"][1],
             "best": get_git_level_results(pDatabaseFile),
+        },
+        "devops": {
+            "levels": list(load_devops_levels().values()),
+            "central": CENTRAL,
+            "registry": REGISTRY,
+            "xp": XP_RULES["devops_level"][1],
+            "passed": [
+                vRow["id"]
+                for vSeries in build_devops_overview(pDatabaseFile)["series"]
+                for vRow in vSeries["rows"]
+                if vRow["passed"]
+            ],
         },
     }
 
@@ -172,10 +189,44 @@ def integrate_git(pDatabaseFile, pItem, pFinishedAt):
     return rXp
 
 
+def integrate_devops(pDatabaseFile, pItem, pFinishedAt):
+    """Rejoue les étapes Maven ou Docker du téléphone ; retourne les points gagnés."""
+
+    vLevel = load_devops_levels().get(pItem.get("level"))
+    vSteps = pItem.get("steps")
+
+    if vLevel is None:
+        raise ValueError("simulation ou niveau inconnu")
+
+    if (
+        not isinstance(vSteps, list)
+        or len(vSteps) > MAX_ACTIONS
+        or not all(
+            isinstance(vStep, dict)
+            and isinstance(vStep.get("file"), str)
+            and isinstance(vStep.get("command"), str)
+            for vStep in vSteps
+        )
+    ):
+        raise ValueError("étapes illisibles")
+
+    if not replay_steps(
+        vLevel, [(vStep["file"], vStep["command"]) for vStep in vSteps]
+    ):
+        raise ValueError("niveau non réussi")
+
+    vFirst = mark_passed(pDatabaseFile, vLevel["id"], vSteps[-1]["file"], pFinishedAt)
+
+    rXp = XP_RULES["devops_level"][1] if vFirst else 0
+
+    return rXp
+
+
 INTEGRATIONS = {
     "troubleshooting": integrate_troubleshooting,
     "ladder": integrate_ladder,
     "git": integrate_git,
+    "devops": integrate_devops,
 }
 
 

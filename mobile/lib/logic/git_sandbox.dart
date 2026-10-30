@@ -2,6 +2,8 @@
 // branches, fichiers, index, remise, conflits, serveur origin), mêmes messages,
 // gardés identiques par les cas de tests/fixtures/shared_lab_cases.json.
 
+import 'python_compat.dart';
+
 const maxCommandLength = 120;
 const maxHistory = 60;
 const remoteName = 'origin';
@@ -1429,101 +1431,19 @@ void checkConflictCommand(Repository pRepository, String pAction, List<String> p
   }
 }
 
-/// Découpe une commande comme shlex.split : guillemets simples et doubles, \ d'échappement.
-List<String> splitCommand(String pCommand) {
-  final rWords = <String>[];
-  final vWord = StringBuffer();
-  var vInWord = false;
-  var vIndex = 0;
-
-  while (vIndex < pCommand.length) {
-    final vChar = pCommand[vIndex];
-
-    if (vChar == "'" || vChar == '"') {
-      final vEnd = vChar == "'" ? pCommand.indexOf("'", vIndex + 1) : -1;
-
-      vInWord = true;
-
-      if (vChar == "'") {
-        if (vEnd < 0) {
-          throw GitError('Guillemet non refermé');
-        }
-
-        vWord.write(pCommand.substring(vIndex + 1, vEnd));
-        vIndex = vEnd + 1;
-        continue;
-      }
-
-      vIndex++;
-
-      while (true) {
-        if (vIndex >= pCommand.length) {
-          throw GitError('Guillemet non refermé');
-        }
-
-        final vInner = pCommand[vIndex];
-
-        if (vInner == '"') {
-          vIndex++;
-          break;
-        }
-
-        if (vInner == '\\' &&
-            vIndex + 1 < pCommand.length &&
-            '"\\'.contains(pCommand[vIndex + 1])) {
-          vWord.write(pCommand[vIndex + 1]);
-          vIndex += 2;
-          continue;
-        }
-
-        vWord.write(vInner);
-        vIndex++;
-      }
-
-      continue;
-    }
-
-    if (vChar == '\\') {
-      if (vIndex + 1 >= pCommand.length) {
-        throw GitError('Guillemet non refermé');
-      }
-
-      vWord.write(pCommand[vIndex + 1]);
-      vInWord = true;
-      vIndex += 2;
-      continue;
-    }
-
-    if (' \t\r\n'.contains(vChar)) {
-      if (vInWord) {
-        rWords.add(vWord.toString());
-        vWord.clear();
-        vInWord = false;
-      }
-
-      vIndex++;
-      continue;
-    }
-
-    vWord.write(vChar);
-    vInWord = true;
-    vIndex++;
-  }
-
-  if (vInWord) {
-    rWords.add(vWord.toString());
-  }
-
-  return rWords;
-}
-
 /// Exécute une commande ; retourne le message, ou lève GitError sans rien modifier.
 String runCommand(Repository pRepository, String pCommand, {bool pAllowSetup = false}) {
   if (pCommand.length > maxCommandLength) {
     throw GitError('Commande trop longue');
   }
 
-  final vWords = splitCommand(pCommand);
+  final List<String> vWords;
+
+  try {
+    vWords = splitCommand(pCommand);
+  } on ShlexError {
+    throw GitError('Guillemet non refermé');
+  }
 
   if (vWords.isEmpty) {
     throw GitError('Saisissez une commande');

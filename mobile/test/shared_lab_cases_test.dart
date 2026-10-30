@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jobboard_revision/logic/devops.dart';
 import 'package:jobboard_revision/logic/git_levels.dart';
 import 'package:jobboard_revision/logic/git_sandbox.dart';
 import 'package:jobboard_revision/logic/ladder.dart';
@@ -124,6 +125,46 @@ void main() {
           vCase['server'],
         );
         expect(renderGraph(goalOf(vLevel).localView(), 'Objectif'), vCase['goal']);
+      });
+    }
+  });
+
+  final vDevops = Map<String, dynamic>.from(vCases['devops_content'] as Map);
+  final vLab = DevopsLab(
+    Map<String, dynamic>.from(vDevops['central'] as Map),
+    Map<String, dynamic>.from(vDevops['registry'] as Map),
+  );
+  final vDevopsLevels = <String, Map<String, dynamic>>{
+    for (final vLevel in vDevops['levels'] as List)
+      (vLevel as Map)['id'] as String: Map<String, dynamic>.from(vLevel),
+  };
+
+  group('Maven et Docker', () {
+    for (final vCase in vCases['devops'] as List) {
+      test(vCase['name'] as String, () {
+        final vLevel = vDevopsLevels[vCase['level']]!;
+        final vHost = vLab.newHost(vLevel);
+
+        for (final vStep in vCase['steps'] as List) {
+          final (vLines, vReached, vMessage) = vLab.playStep(
+            vLevel,
+            (vStep as Map)['file'] as String,
+            vStep['command'] as String,
+            vHost,
+          );
+
+          expect(
+            {'lines': vLines, 'reached': vReached, 'message': vMessage},
+            equals({
+              'lines': vStep['lines'],
+              'reached': vStep['reached'],
+              'message': vStep['message']
+            }),
+            reason: vStep['command'] as String,
+          );
+        }
+
+        expect(jsonDecode(jsonEncode(vHost)), equals(vCase['host']));
       });
     }
   });

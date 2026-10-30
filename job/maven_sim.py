@@ -7,7 +7,9 @@ dépôt central réduit, puis déroule les phases comme Maven, avec ses messages
 """
 
 import re
-import xml.etree.ElementTree as ET
+
+from job.pom_xml import XmlError
+from job.pom_xml import parse as parse_xml
 
 MAX_POM_LENGTH = 8000
 SEPARATOR = "[INFO] " + "-" * 72
@@ -81,14 +83,6 @@ def parse_version(pText):
     return rVersion
 
 
-def strip_namespaces(pRoot):
-    """Retire l'espace de noms Maven des balises, pour les lire par leur nom."""
-
-    for vElement in pRoot.iter():
-        if isinstance(vElement.tag, str) and "}" in vElement.tag:
-            vElement.tag = vElement.tag.split("}", 1)[1]
-
-
 def read_text(pElement, pPath, pProperties=None):
     """Retourne le texte d'une balise, propriétés ${...} remplacées, ou une chaîne vide."""
 
@@ -113,18 +107,10 @@ def parse_pom(pText):
         )
 
     try:
-        vRoot = ET.fromstring(pText)
+        vRoot = parse_xml(pText)
 
-    except ET.ParseError as vError:
-        raise PomError(
-            [
-                "[ERROR] Non-parseable POM pom.xml: "
-                f"{vError.msg if hasattr(vError, 'msg') else vError} "
-                f"@ line {vError.position[0]}, column {vError.position[1]}",
-            ]
-        ) from vError
-
-    strip_namespaces(vRoot)
+    except XmlError as vError:
+        raise PomError([f"[ERROR] Non-parseable POM pom.xml: {vError}"]) from vError
 
     if vRoot.tag != "project":
         raise PomError(
@@ -134,7 +120,7 @@ def parse_pom(pText):
     vProperties = {}
     vPropertiesElement = vRoot.find("properties")
 
-    for vChild in list(vPropertiesElement) if vPropertiesElement is not None else []:
+    for vChild in vPropertiesElement.children if vPropertiesElement else []:
         vProperties[vChild.tag] = (vChild.text or "").strip()
 
     vModel = {

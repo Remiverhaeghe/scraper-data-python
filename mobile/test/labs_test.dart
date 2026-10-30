@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:jobboard_revision/revision_state.dart';
+import 'package:jobboard_revision/screens/devops_screen.dart';
 import 'package:jobboard_revision/screens/git_screen.dart';
 import 'package:jobboard_revision/screens/ladder_screen.dart';
 import 'package:jobboard_revision/screens/troubleshooting_screen.dart';
@@ -21,8 +22,10 @@ final scenarios = jsonDecode(
   File('../assets/troubleshooting/scenarios.json').readAsStringSync(),
 ) as List;
 final levels = jsonDecode(File('../assets/ladder/levels.json').readAsStringSync()) as List;
-final gitLevels = (jsonDecode(File('../tests/fixtures/shared_lab_cases.json').readAsStringSync())
-    as Map)['git_levels'] as List;
+final sharedCases =
+    jsonDecode(File('../tests/fixtures/shared_lab_cases.json').readAsStringSync()) as Map;
+final gitLevels = sharedCases['git_levels'] as List;
+final devopsContent = Map<String, dynamic>.from(sharedCases['devops_content'] as Map);
 
 /// Serveur simulé : contenu des simulations, envois notés, ou serveur trop ancien.
 MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
@@ -57,6 +60,7 @@ MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
             'xp': 25,
             'best': {'fusion': 3},
           },
+          'devops': {...devopsContent, 'xp': 20, 'passed': <String>[]},
         })),
         200,
         headers: {'content-type': 'application/json; charset=utf-8'},
@@ -183,6 +187,35 @@ void main() {
     );
     expect(vState.gitBest('premiers-commits'), 2);
     expect(vState.pendingLabs.single['history'], ['git commit', 'git commit']);
+  });
+
+  testWidgets('Un niveau Docker se joue dans la console puis part au PC', (pTester) async {
+    final vState = await buildState(buildServer([]));
+    await pTester.runAsync(vState.synchronize);
+
+    final vLevel = vState.devopsLevels.firstWhere((pLevel) => pLevel['id'] == 'docker-port-pris');
+
+    await pTester.pumpWidget(MaterialApp(home: DevopsScreen(state: vState, level: vLevel)));
+
+    for (final vCommand in [
+      'docker build -t atelier:1.0 .',
+      'docker run -d -p 8080:8080 atelier:1.0',
+      'docker run -d --name atelier -p 8081:8080 atelier:1.0',
+      'curl http://localhost:8081/',
+    ]) {
+      await pTester.enterText(find.byType(TextField).last, vCommand);
+      await pTester.testTextInput.receiveAction(TextInputAction.done);
+      await pTester.runAsync(() => pTester.pumpAndSettle());
+    }
+
+    expect(find.textContaining('port is already allocated'), findsOneWidget);
+    expect(find.textContaining('Objectif atteint · +20 XP'), findsOneWidget);
+    expect(vState.devopsPassed, {'docker-port-pris'});
+    expect((vState.pendingLabs.single['steps'] as List).length, 4);
+
+    await pTester.pumpWidget(MaterialApp(home: DevopsScreen(state: vState, level: vLevel)));
+
+    expect(find.textContaining('port is already allocated'), findsOneWidget);
   });
 
   test("Un serveur sans simulations n'empêche pas la synchronisation", () async {

@@ -9,7 +9,9 @@ dans l'historique git.
 - Simulations jouables hors ligne, contenu reçu du PC : pannes à résoudre, et
   simulateur d'automate (ladder dessiné en direct, scénario de test et
   chronogramme, machine pilotée au doigt), bac à sable Git (32 niveaux, fichiers,
-  remise et conflits, graphes du dépôt, de l'objectif et du serveur) ; simulateurs réécrits en Dart et
+  remise et conflits, graphes du dépôt, de l'objectif et du serveur), Maven et
+  Docker (fichier à corriger, console simulée, partie reprise là où on l'a
+  laissée) ; simulateurs réécrits en Dart et
   vérifiés par des cas communs avec Python (`python -m tools.lab_cases`), dessins
   SVG compris ; parties revérifiées par le PC à la synchronisation
 
@@ -62,6 +64,9 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Maven : pom.xml lu par un lecteur XML réduit (messages d'erreur localisés,
+  DOCTYPE refusé) ; Docker : sortie de docker logs figée au moment de la
+  commande, CMD vide sans plantage, jokers de COPY sensibles à la casse partout
 - Pannes à résoudre : dix machines en panne, mesures qui coûtent du temps,
   consignation exigée pour les mesures hors tension, score selon le temps et
   les pièces changées pour rien, explication de chaque panne

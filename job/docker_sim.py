@@ -179,7 +179,7 @@ def copy_files(pSpec, pContext, pArguments, pLine):
             vFiles = [
                 (vPath, posixpath.basename(vPath))
                 for vPath in pContext
-                if fnmatch.fnmatch(vPath, vSource)
+                if fnmatch.fnmatchcase(vPath, vSource)
             ] + [
                 (vPath, vPath[len(vSource) :].lstrip("/"))
                 for vPath in pContext
@@ -388,7 +388,10 @@ def start_process(pImage, pContainer, pApp):
         )
 
     if vCommand[:2] == ["/bin/sh", "-c"]:
-        vCommand = vCommand[2].split()
+        vCommand = vCommand[2].split() if len(vCommand) > 2 else []
+
+    if not vCommand:
+        return (False, ["/bin/sh: commande vide"], None)
 
     if vCommand[0] == "nginx":
         return (True, ["nginx: start worker processes"], 80)
@@ -807,7 +810,8 @@ def run_docker(pHost, pLevel, pDockerfile, pCommand):
         return list_containers(pHost, "-a" in vRest or "--all" in vRest)
 
     if vVerb == "logs":
-        return find_container(pHost, vRest[-1] if vRest else "")["logs"] or [
+        # Une copie : la sortie affichée ne doit pas s'allonger avec le conteneur
+        return list(find_container(pHost, vRest[-1] if vRest else "")["logs"]) or [
             "(aucun journal)"
         ]
 

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../revision_state.dart';
+import 'devops_screen.dart';
 import 'git_screen.dart';
 import 'ladder_screen.dart';
 import 'troubleshooting_screen.dart';
@@ -55,6 +56,20 @@ class LabsScreen extends StatelessWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(pContext).push(
                       MaterialPageRoute<void>(builder: (_) => GitListScreen(state: state)),
+                    ),
+                  ),
+                ),
+              if (state.devopsLevels.isNotEmpty)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.dns_outlined),
+                    title: const Text('Maven et Docker'),
+                    subtitle: Text(
+                      '${state.devopsPassed.length} / ${state.devopsLevels.length} niveaux réussis',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(pContext).push(
+                      MaterialPageRoute<void>(builder: (_) => DevopsListScreen(state: state)),
                     ),
                   ),
                 ),
