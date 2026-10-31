@@ -19,6 +19,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from config import ASSETS_DIRECTORY
 from job.mobile_sync import API_PREFIX
+from job.page_timings import record_page_time
 from storage.database import initialize_database
 from utils.logger import get_logger
 from web.api import router as api_router
@@ -170,9 +171,6 @@ CONTENT_SECURITY_POLICY = "; ".join(
 )
 
 
-# Au-delà, une page est signalée dans les journaux pour en chercher la cause.
-SLOW_PAGE_SECONDS = 1.0
-
 SECURITY_HEADERS = {
     "Content-Security-Policy": CONTENT_SECURITY_POLICY,
     "X-Frame-Options": "DENY",
@@ -185,17 +183,23 @@ SECURITY_HEADERS = {
 # connexion reçoivent aussi les en-têtes.
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
-    """Ajoute les en-têtes de sécurité HTTP à chaque réponse et signale les pages
-    lentes dans les journaux.
+    """Ajoute les en-têtes de sécurité HTTP à chaque réponse et note les pages
+    lentes.
     """
 
     vStart = time.perf_counter()
     rResponse = await call_next(request)
     vDuration = time.perf_counter() - vStart
 
-    # Chemin seul : les paramètres peuvent contenir une recherche ou un jeton.
-    if vDuration > SLOW_PAGE_SECONDS:
-        logger.warning("Page lente : %s en %.1f s", request.url.path, vDuration)
+    # Modèle de la route plutôt que le chemin : /offers/{offer_id} regroupe les
+    # fiches, et ni les paramètres ni les identifiants ne sont gardés.
+    vRoute = getattr(request.scope.get("route"), "path", request.url.path)
+    record_page_time(
+        app.dependency_overrides.get(get_database_file, get_database_file)(),
+        f"site {vRoute}",
+        vDuration,
+        datetime.now(),
+    )
 
     # Une route plus stricte, celle des schémas SVG, garde sa propre politique.
     for vName, vValue in SECURITY_HEADERS.items():

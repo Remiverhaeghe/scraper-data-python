@@ -12,6 +12,7 @@ from datetime import timedelta
 
 from job.application_tracking import get_due_follow_ups
 from job.companies import find_preferred_offers
+from job.page_timings import describe_slow_pages, load_slow_pages
 from job.progress import build_progress
 from job.spontaneous_applications import list_due_follow_ups
 from job.settings import load_settings
@@ -143,6 +144,19 @@ def collect_candidates(pDatabaseFile, pNow):
                 "title": f"Série de {vProgress['streak']} jours en danger",
                 "text": "Une révision ce soir suffit à la garder.",
                 "page": "quiz",
+            }
+        )
+
+    # Une fois par semaine au plus : la Santé garde l'alerte visible entre-temps
+    vSlowPages = load_slow_pages(pDatabaseFile, pNow)
+
+    if vSlowPages:
+        rCandidates.append(
+            {
+                "key": f"slow-pages-{pNow:%G-W%V}",
+                "title": f"{len(vSlowPages)} page(s) souvent lente(s)",
+                "text": describe_slow_pages(vSlowPages),
+                "page": "logs",
             }
         )
 

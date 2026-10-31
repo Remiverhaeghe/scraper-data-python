@@ -14,12 +14,12 @@ from pypdf import PdfReader
 import requests
 from fastapi.testclient import TestClient
 
-import web.app as web_app
 import web.rendering as web_rendering
 import storage.backup as storage_backup
 import web.routes.applications as web_applications
 import web.routes.offers as web_offers
 import web.routes.settings as web_settings
+import job.page_timings as page_timings
 import job.quiz_packs as quiz_packs
 
 from job.aptitude import generate_session
@@ -971,15 +971,19 @@ def test_spontaneous_draft_is_prepared_without_saving(client):
 def test_slow_page_is_logged_without_its_parameters(client, monkeypatch, caplog):
     """Vérifie qu'une page lente est signalée par son chemin seul."""
 
-    monkeypatch.setattr(web_app, "SLOW_PAGE_SECONDS", -1)
+    monkeypatch.setattr(page_timings, "SLOW_PAGE_SECONDS", -1)
 
     client.get("/offers?keyword=secret")
 
     vMessages = [
-        vRecord.getMessage() for vRecord in caplog.records if vRecord.name == "web.app"
+        vRecord.getMessage()
+        for vRecord in caplog.records
+        if vRecord.name == "job.page_timings"
     ]
 
-    assert any(vMessage.startswith("Page lente : /offers en") for vMessage in vMessages)
+    assert any(
+        vMessage.startswith("Page lente : site /offers en") for vMessage in vMessages
+    )
     assert not any("secret" in vMessage for vMessage in vMessages)
 
 

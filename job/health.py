@@ -11,6 +11,12 @@ from job.geocoding import load_home
 from job.location import FRANCE
 from job.restore_check import load_restore_check
 from job.mobile_sync import get_last_phone_sync, get_mobile_token
+from job.page_timings import (
+    ALERT_COUNT,
+    ALERT_SECONDS,
+    describe_slow_pages,
+    load_slow_pages,
+)
 from job.schedule import get_scheduler_heartbeat, load_schedule
 from job.sources.config import NO_COMPANY_REASON
 from job.sources.registry import SOURCES
@@ -500,6 +506,24 @@ def check_phone(pDatabaseFile, pNow):
     return rCheck
 
 
+def check_slow_pages(pDatabaseFile, pNow):
+    """Signale les pages du bureau ou du site trop souvent lentes cette semaine."""
+
+    vPages = load_slow_pages(pDatabaseFile, pNow)
+
+    rCheck = (
+        ("À examiner : " + describe_slow_pages(vPages), "warning")
+        if vPages
+        else (
+            f"Aucune au-delà de {ALERT_SECONDS:.0f} s plus de {ALERT_COUNT - 1} fois "
+            "cette semaine",
+            "success",
+        )
+    )
+
+    return rCheck
+
+
 def check_permissions():
     """Vérifie les moindres privilèges : compte d'exécution, .env et data/."""
 
@@ -539,6 +563,7 @@ def build_health(pDatabaseFile, pNow):
         ("Certificat HTTPS", lambda: check_certificate(pNow)),
         ("Placement des offres", lambda: check_geocoding(pDatabaseFile)),
         ("Application mobile", lambda: check_phone(pDatabaseFile, pNow)),
+        ("Pages lentes", lambda: check_slow_pages(pDatabaseFile, pNow)),
         ("Droits d'exécution", check_permissions),
     )
 

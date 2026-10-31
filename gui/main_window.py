@@ -61,6 +61,7 @@ from gui.theme import COLORS
 from gui.widgets import show_message
 from job.education import refresh_education_levels_safely
 from job.followed_availability import count_alerts
+from job.page_timings import record_page_time
 from job.progress import build_progress, get_total_xp
 from job.quiz import DEFAULT_MODE
 from job.quiz_generation import prepare_quiz_caches
@@ -72,9 +73,6 @@ from storage.database import get_database_version
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-# Au-delà, une page est signalée dans les journaux pour en chercher la cause.
-SLOW_PAGE_SECONDS = 1.0
 
 # Relecture des points : un gain s'affiche peu après l'action, sans que les pages
 # aient à le signaler. Le total se lit en quelques millisecondes.
@@ -661,10 +659,12 @@ class MainWindow(QMainWindow):
         ):
             vStart = time.perf_counter()
             vPage.refresh()
-            vDuration = time.perf_counter() - vStart
-
-            if vDuration > SLOW_PAGE_SECONDS:
-                logger.warning("Page lente : %s en %.1f s", vKey, vDuration)
+            record_page_time(
+                self.database_file,
+                f"bureau {vKey}",
+                time.perf_counter() - vStart,
+                datetime.now(),
+            )
 
             if vKey in DATA_ONLY_PAGES:
                 self.refreshed_versions[vKey] = self.get_data_version()

@@ -5,11 +5,14 @@ from PySide6.QtGui import QKeySequence, QShortcut
 
 import gui.main_window as main_window
 import gui.offer_assistant as offer_assistant
+import job.page_timings as page_timings
 from gui.main_window import MainWindow
+from job.page_timings import SLOW_PAGES_KEY
 from job.presentation import FOLLOW_UP_FILTER
 from job.quiz_exam import load_exam
 from job.schedule import load_schedule
 from storage.database import initialize_database
+from storage.settings_repository import load_json_setting
 
 
 def test_navigation_to_follow_ups(qt_application, tmp_path):
@@ -281,8 +284,9 @@ def test_slow_page_is_logged(qt_application, tmp_path, monkeypatch, caplog):
     vDatabaseFile = tmp_path / "scraper.db"
     initialize_database(vDatabaseFile)
     vWindow = MainWindow(vDatabaseFile, "Test")
-    monkeypatch.setattr(main_window, "SLOW_PAGE_SECONDS", -1)
+    monkeypatch.setattr(page_timings, "SLOW_PAGE_SECONDS", -1)
 
     vWindow.navigate("skills")
 
-    assert "Page lente : skills en" in caplog.text
+    assert "Page lente : bureau skills en" in caplog.text
+    assert "bureau skills" in load_json_setting(vDatabaseFile, SLOW_PAGES_KEY, {})

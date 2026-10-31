@@ -244,6 +244,7 @@ Documents/JobBoard/
 - [x] Relance envoyée depuis l'application après relecture, historique des statuts de chaque candidature
 - [x] Page Santé : planificateur en marche, formats des sources (champ vide pour plus de la moitié des offres récentes), sources utiles revues chaque jour
 - [x] Pages lentes signalées dans les journaux (plus d'une seconde), sur le web et le bureau
+- [x] Indicateur « Pages lentes » dans la page Santé : orange quand une page dépasse 2 s au moins trois fois dans la semaine, avec une notification du bureau par semaine
 - [x] Offres « à saisir vite », offres « Intéressé » restées sans candidature, offres proches de vos refus en bas de liste
 - [x] Trajet en voiture estimé et net après trajet (coût par kilomètre réglable), avantages et ressenti dans la comparaison
 - [x] Remerciement proposé après un entretien, contacts connus par entreprise, message de candidature spontanée, bilan du mois
@@ -778,6 +779,7 @@ scraper-data-python/
 │   ├── oral_interview.py                      # Entretien oral : questions, grille, durée, séances
 │   ├── salary_negotiation.py                  # Jeu de négociation salariale : recruteur à règles, score
 │   ├── health.py                              # État de santé de l'application
+│   ├── page_timings.py                        # Pages lentes du bureau et du site, gardées une semaine
 │   ├── offer_comparison.py                    # Comparaison des offres côte à côte
 │   ├── weekly_digest.py                       # Récapitulatif hebdomadaire par e-mail
 │   ├── interview_reminder.py                  # Rappel la veille d'un entretien
@@ -1389,6 +1391,7 @@ scraper-data-python/
 │   │   ├── test_oral_interview.py             # Teste les questions, la grille, la durée et les séances
 │   │   ├── test_salary_negotiation.py         # Teste le budget, les réactions du recruteur et le score
 │   │   ├── test_health.py                     # Teste l'état de santé de l'application
+│   │   ├── test_page_timings.py               # Teste le seuil, la répétition et l'oubli des pages lentes
 │   │   ├── test_interview_revision.py         # Teste la révision ciblée et l'examen blanc d'une offre
 │   │   ├── test_manual_offers.py              # Teste l'ajout manuel et l'import d'offres
 │   │   ├── test_companies.py                  # Teste les listes d'entreprises et l'avertissement

@@ -5,6 +5,13 @@ dans l'historique git.
 
 ## Non publié
 
+### Surveillance des performances
+- Les pages lentes du bureau et du site (plus d'une seconde) sont gardées une
+  semaine, par page et par modèle de route, sans paramètres ni identifiants
+- Indicateur « Pages lentes » dans la page Santé : orange dès qu'une page
+  dépasse 2 s au moins trois fois dans la semaine, avec sa pire durée
+- Notification du bureau, une fois par semaine, qui ouvre la page Journaux
+
 ### Anglais technique
 - Thème de révision livré : 72 termes d'atelier et d'informatique (bearing,
   lockout, circuit breaker, solenoid valve, rollback…) et les faux amis

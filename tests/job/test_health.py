@@ -10,6 +10,7 @@ import job.health as health
 from job.health import build_health, find_silent_sources, format_age
 from job.geocoding import HOME_KEY
 from job.mobile_sync import build_offer_list, renew_mobile_token
+from job.page_timings import record_page_time
 from job.schedule import (
     get_scheduler_heartbeat,
     mark_schedule_run,
@@ -62,6 +63,19 @@ def test_health_of_a_new_database(database_file):
     assert vChecks["Recherche planifiée"] == ("Désactivée", "muted")
     assert vChecks["Dernière recherche"][1] == "muted"
     assert vChecks["Place occupée"][0].startswith("Base ")
+    assert vChecks["Pages lentes"][1] == "success"
+
+
+def test_page_slow_three_times_is_reported(database_file):
+    """Vérifie l'indicateur orange d'une page lente à répétition."""
+
+    for vSeconds in (2.1, 4.3, 2.6):
+        record_page_time(database_file, "site /market", vSeconds, NOW)
+
+    assert get_checks(database_file)["Pages lentes"] == (
+        "À examiner : site /market (3 fois, jusqu'à 4.3 s)",
+        "warning",
+    )
 
 
 def test_health_reports_late_schedule_and_recent_backup(database_file):
@@ -90,7 +104,7 @@ def test_unreadable_check_does_not_hide_the_others(database_file, monkeypatch):
     vChecks = get_checks(database_file)
 
     assert vChecks["Sources"] == ("Illisible : voir les journaux", "danger")
-    assert len(vChecks) == 19
+    assert len(vChecks) == 20
     assert format_age(NOW - timedelta(days=5), NOW) == "il y a 5 jours"
 
 

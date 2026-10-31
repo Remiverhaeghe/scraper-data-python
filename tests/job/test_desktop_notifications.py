@@ -6,6 +6,7 @@ import pytest
 
 import job.desktop_notifications as notifications
 from job.desktop_notifications import is_quiet, pick_notification
+from job.page_timings import record_page_time
 from job.settings import load_settings, save_settings
 from storage.database import initialize_database
 
@@ -164,3 +165,26 @@ def test_last_week_review_is_announced_on_monday(database_file, monkeypatch):
     assert vNotification["title"] == "Bilan de la Saison 44"
     assert vNotification["text"] == "310 XP"
     assert vNotification["page"] == "progress"
+
+
+def test_slow_pages_are_announced_once_a_week(database_file, monkeypatch):
+    """Vérifie l'alerte des pages lentes à répétition, une fois par semaine."""
+
+    for vName in ("get_due_follow_ups", "find_hot_offers"):
+        monkeypatch.setattr(notifications, vName, lambda *pArgs: [])
+
+    monkeypatch.setattr(
+        notifications,
+        "build_progress",
+        lambda *pArgs: {"quests": [], "streak": 0, "active_today": True},
+    )
+
+    for _ in range(3):
+        record_page_time(database_file, "bureau offers", 2.5, MORNING)
+
+    vNotification = pick_notification(database_file, MORNING)
+
+    assert vNotification["title"] == "1 page(s) souvent lente(s)"
+    assert vNotification["text"] == "bureau offers (3 fois, jusqu'à 2.5 s)"
+    assert vNotification["page"] == "logs"
+    assert pick_notification(database_file, MORNING.replace(hour=11)) is None
