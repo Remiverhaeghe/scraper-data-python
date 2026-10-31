@@ -307,6 +307,7 @@ Documents/JobBoard/
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
 - [x] 44 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] Notifications natives de Windows sur le bureau : relances du jour, offre récente à 80 % et plus du profil, quête du jour presque terminée, série en danger le soir ; un clic ouvre la bonne page ; heures calmes et plafond quotidien (3 par défaut) réglables dans les Paramètres, chaque notification montrée une seule fois
 - [x] Sessions de concentration de 25 minutes (méthode Pomodoro) sur un objectif : postuler, réviser ou préparer un entretien ; anneau du minuteur animé, points des actions faites pendant la session comptés double si elle va à son terme, bilan des actions en fin de session (accueil du bureau, tableau de bord web)
 - [x] Mascotte Boulon, robot de maintenance dessiné en SVG : content, concentré, endormi ou fier selon la progression, phrases écrites à l'avance qui saluent, commentent les quêtes du jour et fêtent les réussites, endormie sans reproche après trois jours d'absence (accueil du bureau, tableau de bord web, carte de jeu du téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
@@ -745,6 +746,7 @@ scraper-data-python/
 │   ├── achievements.py                        # Trophées et carte joueur, déduits de l'activité
 │   ├── mascot.py                              # Mascotte : dessin, humeur et phrase du jour
 │   ├── focus_sessions.py                      # Sessions de concentration : fenêtre, bonus, bilan
+│   ├── desktop_notifications.py               # Notifications du bureau : choix, heures calmes, plafond
 │   ├── aptitude.py                            # Tests de recrutement : questions générées et scores
 │   ├── troubleshooting.py                     # Pannes à résoudre : partie rejouée, score
 │   ├── ladder.py                              # Langage du simulateur d'automate et dessin ladder
@@ -1008,6 +1010,7 @@ scraper-data-python/
 │   ├── oral_interview_panel.py                # Entretien oral simulé, chrono et grille
 │   ├── negotiation_dialog.py                  # Jeu de négociation salariale d'une offre
 │   ├── focus_panel.py                         # Session de concentration de l'accueil, anneau du minuteur
+│   ├── desktop_notifier.py                    # Notifications natives de Windows, clic vers la page
 │   ├── speech.py                              # Lecture à voix haute par la voix de Windows
 │   ├── follow_ups_panel.py                    # Relances de la semaine et brouillons
 │   ├── replies_panel.py                       # Réponses des recruteurs lues dans Gmail
@@ -1361,6 +1364,7 @@ scraper-data-python/
 │   │   ├── test_achievements.py               # Teste les trophées, cachés compris, et la carte joueur
 │   │   ├── test_mascot.py                     # Teste l'humeur, la phrase et le dessin de la mascotte
 │   │   ├── test_focus_sessions.py             # Teste la fenêtre comptée, le bonus et le bilan
+│   │   ├── test_desktop_notifications.py      # Teste le choix, les heures calmes et le plafond
 │   │   ├── test_aptitude.py                   # Teste les questions générées, la correction et les scores
 │   │   ├── test_troubleshooting.py            # Teste les scénarios, la consignation et le score
 │   │   ├── test_ladder.py                     # Teste le langage, le dessin, les niveaux et les erreurs classiques
@@ -1504,6 +1508,7 @@ scraper-data-python/
 │   │   ├── test_oral_interview_panel.py        # Teste le chrono, la grille et la voix absente
 │   │   ├── test_negotiation_dialog.py          # Teste la fenêtre du jeu de négociation
 │   │   ├── test_focus_panel.py                 # Teste le minuteur, la fin de session et l'arrêt
+│   │   ├── test_desktop_notifier.py            # Teste la notification montrée et la page ouverte
 │   │   ├── test_drawn_widgets.py               # Teste le dessin de la machine d'automate et de la célébration
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
 │   │   ├── test_progress_page.py               # Teste la progression, le « +XP » et la célébration

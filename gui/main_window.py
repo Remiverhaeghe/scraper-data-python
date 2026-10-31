@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from config import CONTACT_URL, LICENSE_NAME, REPOSITORY_URL, TAGLINE
+from gui.desktop_notifier import DesktopNotifier
 from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
 from gui.applications_page import ApplicationsPage
@@ -137,6 +138,8 @@ class MainWindow(QMainWindow):
         self.progress_failed = False
 
         self.build_content()
+
+        self.notifier = DesktopNotifier(self, self.database_file, self.navigate)
 
         self.progress_timer = QTimer(self)
         self.progress_timer.timeout.connect(self.check_progress)

@@ -5,6 +5,12 @@ dans l'historique git.
 
 ## Non publié
 
+### Notifications du bureau
+- Notifications natives de Windows : relances du jour, offre récente à 80 % et
+  plus du profil, quête presque terminée, série en danger le soir ; un clic
+  ouvre la bonne page ; heures calmes (21 h à 8 h par défaut) et 3 notifications
+  par jour au plus, réglables dans les Paramètres
+
 ### Sessions de concentration
 - Session de 25 minutes sur un objectif (postuler, réviser, préparer un
   entretien), sur l'accueil du bureau et le tableau de bord web : anneau du
