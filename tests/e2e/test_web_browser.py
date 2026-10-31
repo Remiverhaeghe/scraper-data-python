@@ -54,6 +54,10 @@ PAGES = (
     "/compare",
     "/logs",
     "/progress",
+    "/planning",
+    "/tour",
+    "/puzzles",
+    "/challenges",
     "/legal",
 )
 
@@ -579,4 +583,22 @@ def test_oral_answer_is_timed_then_graded(page):
     sync_api.expect(page.locator("#oral")).to_contain_text(
         "Réponse précédente notée 50 %"
     )
+    assert page.console_errors == []
+
+
+def test_planning_task_is_dragged_to_another_day(page):
+    """Vérifie que planning.js déplace une révision glissée sur un autre jour."""
+
+    page.goto("/planning")
+    page.fill('input[name="label"]', "Pneumatique")
+    page.locator('form[action="/planning/revision"] button').click()
+    vItem = page.locator("[data-item]", has_text="Réviser : Pneumatique")
+    vTarget = page.locator("[data-day]").nth(3)
+
+    sync_api.expect(vItem).to_be_visible()
+
+    with page.expect_navigation():
+        vItem.drag_to(vTarget)
+
+    sync_api.expect(vTarget).to_contain_text("Réviser : Pneumatique")
     assert page.console_errors == []

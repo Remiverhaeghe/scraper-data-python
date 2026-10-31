@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from config import CONTACT_URL, LICENSE_NAME, REPOSITORY_URL, TAGLINE
 from gui.desktop_notifier import DesktopNotifier
+from gui.planning_page import PlanningPage
 from gui.tour_overlay import TourOverlay
 from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
@@ -213,6 +214,9 @@ class MainWindow(QMainWindow):
         self.add_page("search", "Recherche", "search", self.search_page)
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
         self.add_page("applications", "Candidatures", "send", self.applications_page)
+        self.planning_page = PlanningPage(vDatabaseFile)
+        self.planning_page.navigation_requested.connect(self.navigate)
+        self.add_page("planning", "Planning", "calendar", self.planning_page)
         self.add_page("profile", "Profil", "user", ProfilePage(vDatabaseFile))
         self.add_page("quiz", "Révision", "graduation-cap", self.quiz_page)
         self.add_page("skills", "Compétences", "target", self.skills_page)

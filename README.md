@@ -307,6 +307,7 @@ Documents/JobBoard/
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
 - [x] 44 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] Planning de la semaine (bureau, web) : entretiens, relances, séances de révision prévues et quêtes de la semaine jour par jour ; une tâche glissée d'un jour à l'autre change sa date, et l'abonnement d'agenda suit, révisions prévues comprises
 - [x] Première ouverture guidée : visite des pages principales présentée par la mascotte au premier lancement (surimpression animée sur le bureau, page Visite guidée sur le web, relançable à tout moment), quêtes de démarrage cochées d'elles-mêmes (compétences, recherche enregistrée, première recherche, première révision, téléphone connecté) et récompensées une fois
 - [x] Notifications natives de Windows sur le bureau : relances du jour, offre récente à 80 % et plus du profil, quête du jour presque terminée, série en danger le soir ; un clic ouvre la bonne page ; heures calmes et plafond quotidien (3 par défaut) réglables dans les Paramètres, chaque notification montrée une seule fois
 - [x] Sessions de concentration de 25 minutes (méthode Pomodoro) sur un objectif : postuler, réviser ou préparer un entretien ; anneau du minuteur animé, points des actions faites pendant la session comptés double si elle va à son terme, bilan des actions en fin de session (accueil du bureau, tableau de bord web)
@@ -749,6 +750,7 @@ scraper-data-python/
 │   ├── focus_sessions.py                      # Sessions de concentration : fenêtre, bonus, bilan
 │   ├── desktop_notifications.py               # Notifications du bureau : choix, heures calmes, plafond
 │   ├── onboarding.py                          # Premiers pas : quêtes de démarrage et étapes de la visite
+│   ├── weekly_planning.py                     # Planning de la semaine : tâches par jour, déplacements
 │   ├── aptitude.py                            # Tests de recrutement : questions générées et scores
 │   ├── troubleshooting.py                     # Pannes à résoudre : partie rejouée, score
 │   ├── ladder.py                              # Langage du simulateur d'automate et dessin ladder
@@ -1014,6 +1016,7 @@ scraper-data-python/
 │   ├── focus_panel.py                         # Session de concentration de l'accueil, anneau du minuteur
 │   ├── desktop_notifier.py                    # Notifications natives de Windows, clic vers la page
 │   ├── tour_overlay.py                        # Visite guidée en surimpression, présentée par la mascotte
+│   ├── planning_page.py                       # Planning de la semaine, tâches glissées d'un jour à l'autre
 │   ├── speech.py                              # Lecture à voix haute par la voix de Windows
 │   ├── follow_ups_panel.py                    # Relances de la semaine et brouillons
 │   ├── replies_panel.py                       # Réponses des recruteurs lues dans Gmail
@@ -1099,6 +1102,7 @@ scraper-data-python/
 │   │   ├── certifications.py                  # Certifications, informations et documents
 │   │   ├── challenges.py                      # Défis de programmation
 │   │   ├── puzzles.py                         # Puzzles de code
+│   │   ├── planning.py                        # Planning de la semaine
 │   │   ├── aptitude.py                        # Tests de recrutement
 │   │   ├── troubleshooting.py                 # Pannes à résoudre
 │   │   ├── ladder.py                          # Simulateur d'automate
@@ -1126,6 +1130,7 @@ scraper-data-python/
 │   │   ├── _oral_interview.html               # Entretien oral simulé de la page Profil
 │   │   ├── _negotiation.html                  # Jeu de négociation salariale d'une offre
 │   │   ├── tour.html                          # Visite guidée, une étape par page principale
+│   │   ├── planning.html                      # Planning de la semaine
 │   │   ├── _attachments.html                  # Pièces jointes d'une offre
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── preparation_sheet.html             # Fiche de préparation imprimable, sans menu
@@ -1177,6 +1182,7 @@ scraper-data-python/
 │       ├── aptitude.js                        # Test de recrutement : une question à la fois, compte à rebours
 │       ├── oral.js                            # Entretien oral : lecture de la question et chrono
 │       ├── focus.js                           # Session de concentration : anneau et fin de session
+│       ├── planning.js                        # Planning : glisser une tâche d'un jour à l'autre
 │       ├── offline.html                       # Page affichée quand le PC ne répond pas
 │       ├── htmx.min.js                        # HTMX 2.0.4, copie locale
 │       ├── offers_map.js                      # Place les offres et le domicile sur la carte
@@ -1370,6 +1376,7 @@ scraper-data-python/
 │   │   ├── test_focus_sessions.py             # Teste la fenêtre comptée, le bonus et le bilan
 │   │   ├── test_desktop_notifications.py      # Teste le choix, les heures calmes et le plafond
 │   │   ├── test_onboarding.py                 # Teste les quêtes de démarrage et la visite
+│   │   ├── test_weekly_planning.py            # Teste les tâches par jour, les déplacements et l'agenda
 │   │   ├── test_aptitude.py                   # Teste les questions générées, la correction et les scores
 │   │   ├── test_troubleshooting.py            # Teste les scénarios, la consignation et le score
 │   │   ├── test_ladder.py                     # Teste le langage, le dessin, les niveaux et les erreurs classiques
@@ -1515,6 +1522,7 @@ scraper-data-python/
 │   │   ├── test_focus_panel.py                 # Teste le minuteur, la fin de session et l'arrêt
 │   │   ├── test_desktop_notifier.py            # Teste la notification montrée et la page ouverte
 │   │   ├── test_tour_overlay.py                # Teste la visite guidée et les premiers pas de l'accueil
+│   │   ├── test_planning_page.py               # Teste le planning : ajout, déplacement, retrait, semaines
 │   │   ├── test_drawn_widgets.py               # Teste le dessin de la machine d'automate et de la célébration
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
 │   │   ├── test_progress_page.py               # Teste la progression, le « +XP » et la célébration

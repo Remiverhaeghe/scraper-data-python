@@ -5,6 +5,12 @@ dans l'historique git.
 
 ## Non publié
 
+### Planning de la semaine
+- Page Planning (bureau, web) : entretiens, relances, séances de révision
+  prévues et quêtes de la semaine, jour par jour ; une tâche glissée d'un jour à
+  l'autre change sa date, l'heure d'un entretien est gardée
+- Les révisions prévues rejoignent l'abonnement d'agenda (.ics)
+
 ### Première ouverture guidée
 - Visite des pages principales présentée par Boulon au premier lancement :
   surimpression animée sur le bureau, page Visite guidée sur le web,

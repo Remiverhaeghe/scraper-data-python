@@ -209,6 +209,27 @@ def save_contact_email(pDatabaseFile, pSource, pSourceId, pEmail):
         vConnection.close()
 
 
+def move_application_date(pDatabaseFile, pSource, pSourceId, pColumn, pValue):
+    """Change la date de relance ou d'entretien d'une candidature."""
+
+    if pColumn not in ("follow_up_date", "interview_at"):
+        raise ValueError(f"Date de candidature inconnue : {pColumn}")
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        # Colonne vérifiée ci-dessus parmi deux noms fixes : pas d'injection possible.
+        vConnection.execute(
+            f"UPDATE job_application SET {pColumn} = ?"  # nosec B608
+            " WHERE source = ? AND source_id = ?",
+            (pValue.isoformat(), pSource, str(pSourceId)),
+        )
+        vConnection.commit()
+
+    finally:
+        vConnection.close()
+
+
 def get_follow_ups(pDatabaseFile, pDate=None):
     """Récupère les candidatures dont une relance est nécessaire."""
 

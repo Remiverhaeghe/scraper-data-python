@@ -28,6 +28,7 @@ from job.schedule import (
 )
 from job.profile import build_profile, save_profile
 from job.code_puzzles import SERIES_LENGTH, build_puzzle_view
+from job.weekly_planning import load_planned_revisions
 from job.challenges import get_expected_answers, get_seed
 from job.quiz_import import import_questions, import_questions_file
 from tools.quiz_lot import build_pack as build_lot_pack
@@ -2489,6 +2490,49 @@ def test_start_quests_and_tour_on_the_web(client):
         and "Précédent" not in vFirst
     )
     assert "Paramètres" in vLast and "Terminer" in vLast and 'href="/settings"' in vLast
+
+
+def test_planning_lists_moves_and_plans_revisions(client):
+    """Vérifie le planning web : semaine, révision ajoutée, déplacée puis retirée."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+
+    assert "Rien de prévu" in client.get("/planning").text
+    assert client.get("/planning?week=hier").status_code == 400
+    assert (
+        client.post(
+            "/planning/revision", data={"day": "2026-10-27", "label": " "}
+        ).status_code
+        == 400
+    )
+
+    vPage = client.post(
+        "/planning/revision", data={"day": "2026-10-27", "label": "Hydraulique"}
+    ).text
+    vRevision = load_planned_revisions(vDatabaseFile)[0]["id"]
+
+    assert "Réviser : Hydraulique" in vPage and "Mardi 27/10" in vPage
+
+    vMoved = client.post(
+        "/planning/move",
+        data={"item": f"revision|{vRevision}", "day": "2026-10-29"},
+        headers={"X-Requested-With": "fetch"},
+    )
+
+    assert vMoved.status_code == 204
+    assert load_planned_revisions(vDatabaseFile)[0]["day"] == "2026-10-29"
+    assert (
+        client.post(
+            "/planning/move", data={"item": "x|y", "day": "2026-10-29"}
+        ).status_code
+        == 400
+    )
+
+    client.post(
+        "/planning/revision/delete", data={"revision": vRevision, "week": "2026-10-26"}
+    )
+
+    assert load_planned_revisions(vDatabaseFile) == []
 
 
 def test_offer_page_charts_mock_exam_scores(client, monkeypatch):

@@ -19,6 +19,7 @@
     <script src="{{ url_for('static', path='aptitude.js').path }}" defer></script>
     <script src="{{ url_for('static', path='oral.js').path }}" defer></script>
     <script src="{{ url_for('static', path='focus.js').path }}" defer></script>
+    <script src="{{ url_for('static', path='planning.js').path }}" defer></script>
     {% block head %}{% endblock %}
 </head>
 <body hx-headers='{{ {"X-CSRF-Token": csrf_token(request)} | tojson }}'>
@@ -44,6 +45,7 @@
                 ("progress", "Progression", "award", "show_progress"),
                 ("offers", "Offres", "briefcase", "list_offers"),
                 ("applications", "Candidatures", "send", "show_applications"),
+                ("planning", "Planning", "calendar", "show_planning"),
                 ("history", "Historique", "history", "show_history"),
                 ("quality", "Qualité", "list-checks", "show_quality"),
                 ("logs", "Journaux", "terminal", "show_logs"),

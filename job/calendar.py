@@ -11,6 +11,7 @@ from job.access_tokens import (
 from job.presentation import safe_url
 from storage.job_applications import get_applications_with_offers
 from storage.job_offers import FOLLOW_UP_STATUSES
+from storage.settings_repository import load_json_setting
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -20,6 +21,8 @@ INTERVIEW_STATUSES = ("INTERESTED", "APPLIED", "INTERVIEW", "ACCEPTED")
 
 INTERVIEW_DURATION = timedelta(hours=1)
 
+# Séances de révision prévues dans le planning de la semaine (job/weekly_planning.py)
+PLANNED_REVISIONS_KEY = "planned_revisions"
 # Longueur maximale d'une ligne iCalendar, en octets, avant repli
 MAX_LINE_BYTES = 75
 
@@ -142,7 +145,7 @@ def describe_offer(pApplication):
 
 
 def build_calendar(pDatabaseFile, pNow):
-    """Retourne le contenu .ics des relances prévues et des entretiens."""
+    """Retourne le contenu .ics des relances, des entretiens et des révisions prévues."""
 
     vStamp = pNow.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     vLines = [
@@ -187,6 +190,19 @@ def build_calendar(pDatabaseFile, pNow):
                 vDescription,
                 vStamp,
                 False,
+            )
+
+    for vRevision in load_json_setting(pDatabaseFile, PLANNED_REVISIONS_KEY, [], list):
+        if isinstance(vRevision, dict) and vRevision.get("id") and vRevision.get("day"):
+            vDay = datetime.fromisoformat(vRevision["day"]).date()
+            vLines += build_event(
+                f"revision-{vRevision['id']}@jobboard-perso",
+                vDay,
+                vDay + timedelta(days=1),
+                f"Réviser : {vRevision.get('label') or 'révision'}",
+                "",
+                vStamp,
+                True,
             )
 
     vLines.append("END:VCALENDAR")

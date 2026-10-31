@@ -3038,3 +3038,42 @@ textarea.companies-preferred {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
+
+/* Planning de la semaine : sept colonnes, une par jour, repliées sur téléphone */
+.planning-week {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.planning-day ul {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.planning-day.is-today {
+    border-color: var(--primary);
+}
+
+.planning-day.is-target {
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.planning-item {
+    padding: 6px 8px;
+    border-left: 4px solid var(--primary);
+    border-radius: 6px;
+    background: var(--surface-alt);
+    cursor: grab;
+}
+
+.planning-interview {
+    border-left-color: var(--danger);
+}
+
+.planning-follow-up {
+    border-left-color: var(--warning);
+}

@@ -1,0 +1,67 @@
+{# Planning de la semaine (job/weekly_planning.py) : static/planning.js déplace les
+   tâches par glisser-déposer ; sans script, chaque tâche a son formulaire. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Planning{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Planning", "La semaine en un coup d'œil : glissez une tâche d'un jour à l'autre, l'abonnement d'agenda suit", "calendar") }}
+
+<div class="rules-actions">
+    <a class="button" href="{{ url_for('show_planning').path }}?week={{ week.previous.isoformat() }}">Semaine précédente</a>
+    <a class="button" href="{{ url_for('show_planning').path }}">Cette semaine</a>
+    <a class="button" href="{{ url_for('show_planning').path }}?week={{ week.next.isoformat() }}">Semaine suivante</a>
+</div>
+
+<section class="planning-week section-gap" aria-label="Semaine du {{ week.monday.strftime('%d/%m/%Y') }}" data-planning data-move-url="{{ url_for('move_planning_item').path }}">
+    {% for day in week.days %}
+    <div class="card planning-day{% if day.today %} is-today{% endif %}" data-day="{{ day.date.isoformat() }}">
+        <h2>{{ day.name | capitalize }} {{ day.date.strftime("%d/%m") }}</h2>
+        <ul>
+            {% for item in day["items"] %}
+            <li class="planning-item planning-{{ item.kind }}" draggable="true" data-item="{{ item.id }}">
+                <span>{% if item.time %}<strong>{{ item.time }}</strong> {% endif %}{{ item.label }}</span>
+                <details>
+                    <summary>Déplacer</summary>
+                    <form method="post" action="{{ url_for('move_planning_item').path }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        <input type="hidden" name="item" value="{{ item.id }}">
+                        <input type="date" name="day" value="{{ day.date.isoformat() }}" required aria-label="Nouveau jour">
+                        <button class="button" type="submit">Déplacer</button>
+                    </form>
+                    {% if item.kind == "revision" %}
+                    <form method="post" action="{{ url_for('delete_planned_revision').path }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        <input type="hidden" name="revision" value="{{ item.id.split('|', 1)[1] }}">
+                        <input type="hidden" name="week" value="{{ week.monday.isoformat() }}">
+                        <button class="button" type="submit">Retirer</button>
+                    </form>
+                    {% endif %}
+                </details>
+            </li>
+            {% else %}
+            <li class="muted">Rien de prévu</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</section>
+
+<section class="card section-gap">
+    <h2>{{ icon("graduation-cap") }} Prévoir une révision</h2>
+    <form class="rules-actions" method="post" action="{{ url_for('add_planned_revision').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="date" name="day" value="{{ week.monday.isoformat() }}" required aria-label="Jour de la révision">
+        <input type="text" name="label" maxlength="80" required placeholder="Thème à réviser" aria-label="Thème à réviser">
+        <button class="button button-primary" type="submit">Ajouter</button>
+    </form>
+</section>
+
+<section class="card section-gap">
+    <h2>{{ icon("award") }} Quêtes de la semaine</h2>
+    <ul class="checklist">
+        {% for quest in week.quests %}<li>{{ icon("circle-check" if quest.done else "timer", 16) }} {{ quest.label }} · {{ quest.progress }} / {{ quest.target }}</li>{% else %}<li class="muted">Aucune quête cette semaine</li>{% endfor %}
+    </ul>
+</section>
+{% endblock %}
