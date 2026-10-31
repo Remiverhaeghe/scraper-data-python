@@ -1,0 +1,495 @@
+@001
+Q: Qu'affiche ce code ?
+C: 3
+W: 3.5
+W: 4
+W: Une erreur de compilation
+E: Entre deux int, / fait une division entière : la partie décimale est tronquée, 7 / 2 donne 3. Pour obtenir 3.5, il faut qu'au moins un opérande soit décimal : a / 2.0 ou (double)a / b.
+```csharp
+int a = 7;
+int b = 2;
+Console.WriteLine(a / b);
+```
+
+@002
+Q: Quelle est la différence entre un type valeur et un type référence en C# ?
+C: Le type valeur contient la donnée, le type référence désigne un objet
+W: Le type valeur vit toujours sur le tas, le type référence toujours sur la pile
+W: Un type référence ne peut jamais valoir null, un type valeur le peut
+W: Seuls les types référence peuvent déclarer des méthodes
+E: int, double, bool ou un struct sont des types valeur : l'affectation copie la donnée. Une classe, une string ou un tableau sont des types référence : l'affectation copie la référence, et deux variables désignent alors le même objet.
+
+@003
+Q: Associer chaque mot-clé C# au type .NET qu'il désigne.
+P: int => System.Int32
+P: long => System.Int64
+P: string => System.String
+P: bool => System.Boolean
+E: Les mots-clés de C# sont des alias des types de la bibliothèque de base : int et System.Int32 sont strictement le même type. int occupe 32 bits, long 64 bits ; string est un type référence immuable.
+
+@004
+Q: Qu'affiche ce code ?
+C: -1
+W: 0
+W: Une NullReferenceException
+W: Une chaîne vide
+E: L'opérateur ?. renvoie null au lieu de lever une exception quand s est null. L'opérateur ?? fournit alors la valeur de repli -1. Cette combinaison évite les tests if (s != null) en cascade.
+```csharp
+string s = null;
+Console.WriteLine(s?.Length ?? -1);
+```
+
+@005
+Q: Quel mot-clé déclare une variable locale dont le type est déduit par le compilateur ?
+C: var
+W: dynamic
+W: object
+W: auto
+E: Avec var, le type est fixé à la compilation d'après la valeur affectée : le typage reste statique. dynamic reporte la vérification à l'exécution, object oblige à convertir, et auto est le mot-clé équivalent en C++.
+
+@006
+Q: Que garantit l'instruction using de ce code ?
+C: Dispose est appelé sur le lecteur à la sortie du bloc, même en cas d'exception
+W: L'espace de noms System.IO est importé pour la durée du bloc
+W: Le fichier est verrouillé pour tous les autres processus de la machine jusqu'au redémarrage
+W: Le lecteur est gardé en cache pour les appels suivants
+E: using sur un objet IDisposable équivaut à un try/finally qui appelle Dispose : le fichier est fermé quoi qu'il arrive. Depuis C# 8, using var vReader = … libère l'objet à la fin de la portée, sans accolades.
+```csharp
+using (var vReader = new StreamReader("data.txt"))
+{
+    Console.WriteLine(vReader.ReadLine());
+}
+```
+
+@007
+Q: Pourquoi préférer StringBuilder à string pour assembler un long texte morceau par morceau ?
+C: Une string est immuable : chaque ajout crée une nouvelle chaîne
+W: StringBuilder chiffre le texte en mémoire pendant sa construction
+W: string est limitée à 255 caractères en C#
+W: StringBuilder est le seul type accepté par Console.WriteLine
+E: Concaténer une string dans une boucle recopie tout le texte à chaque tour. StringBuilder ajoute dans un tampon qui grandit par blocs, puis ToString produit la chaîne finale une seule fois.
+
+@008
+Q: Combien de lignes ce code affiche-t-il ?
+N: 4
+E: i prend les valeurs 0, 3, 6 et 9 ; à 12, la condition i < 10 est fausse et la boucle s'arrête. Quatre passages, donc quatre lignes. Compter les bornes à la main évite les erreurs d'une itération en trop ou en moins.
+```csharp
+for (int i = 0; i < 10; i += 3)
+    Console.WriteLine(i);
+```
+
+@009
+Q: Quel est le point d'entrée d'une application console C# classique ?
+C: La méthode static Main
+W: Le constructeur de la classe Program
+W: La méthode Start de la classe App
+W: Le premier fichier du projet par ordre alphabétique
+E: Le runtime appelle static void Main ou static async Task Main. Depuis C# 9, les instructions de niveau supérieur permettent d'écrire le code directement dans Program.cs : le compilateur génère alors Main lui-même.
+
+@010
+Q: Que permet le ? dans la déclaration int? vAge ?
+C: La variable peut contenir null en plus d'un entier
+W: La variable devient facultative dans le constructeur
+W: La variable est initialisée à zéro par défaut
+W: La variable est en lecture seule après son affectation
+E: int? est un raccourci de Nullable<int>. HasValue indique si une valeur est présente, Value la lit, GetValueOrDefault donne 0 sinon. Pratique pour une colonne SQL qui accepte NULL.
+
+@011
+Q: Quelle commande crée un nouveau projet console avec le SDK .NET ?
+C: dotnet new console
+W: dotnet create console
+W: dotnet init console
+W: nuget new console
+E: dotnet new suivi d'un modèle crée le projet : console, webapi, classlib, xunit. Ensuite, dotnet build compile, dotnet run lance l'application et dotnet test exécute les tests.
+
+@012
+Q: Quel est le rôle du CLR dans .NET ?
+C: Exécuter l'IL : compilation JIT en code machine et gestion de la mémoire
+W: Compiler le C# en code machine natif avant la livraison
+W: Fournir les collections, les fichiers et le réseau
+W: Télécharger et installer les paquets du projet
+E: Roslyn compile le C# en langage intermédiaire (IL) rangé dans des assemblies. Au lancement, le CLR charge l'IL, le compile à la volée en code machine (JIT), gère les exceptions et libère la mémoire avec le ramasse-miettes.
+
+@013
+Q: Remettre dans l'ordre la vie d'un programme C#, de l'écriture à l'exécution.
+O: Écriture du code C#
+O: Compilation par Roslyn en langage intermédiaire (IL)
+O: Production d'une assembly .dll ou .exe
+O: Chargement de l'assembly par le CLR
+O: Compilation JIT en code machine à l'exécution
+E: Le code C# n'est jamais exécuté directement : il devient de l'IL, indépendant du processeur, puis le CLR le traduit en code machine au moment où chaque méthode est appelée pour la première fois.
+
+@014
+Q: Quel modificateur d'accès limite un membre à la seule classe qui le déclare ?
+C: private
+W: protected
+W: internal
+W: sealed
+E: private réserve le membre à sa classe. protected l'ouvre aussi aux classes dérivées, internal à toute l'assembly. sealed n'est pas un modificateur d'accès : il interdit d'hériter d'une classe ou de redéfinir une méthode.
+
+@015
+Q: Qu'affiche ce code ?
+N: 3
+E: La liste est initialisée avec deux éléments, puis Add en ajoute un troisième. Count donne le nombre d'éléments présents, à ne pas confondre avec Capacity, la taille du tableau interne réservé.
+```csharp
+var vNames = new List<string> { "Ana", "Bob" };
+vNames.Add("Eve");
+Console.WriteLine(vNames.Count);
+```
+
+@016
+Q: De combien de classes et d'interfaces une classe C# peut-elle hériter ?
+C: Une seule classe de base, autant d'interfaces que voulu
+W: Autant de classes que voulu, une seule interface
+W: Une seule classe et une seule interface
+W: Deux classes de base au plus, et autant d'interfaces que voulu
+E: C# n'a pas d'héritage multiple de classes, ce qui évite les conflits d'implémentation. Une classe peut en revanche implémenter plusieurs interfaces : class Moteur : Equipement, IDisposable, IComparable<Moteur>.
+
+@017
+Q: Que se passe-t-il à l'exécution de ce code ?
+C: Une IndexOutOfRangeException est levée
+W: Le tableau s'agrandit tout seul à quatre cases
+W: L'affectation est ignorée sans erreur
+W: La valeur écrase la première case
+E: Un tableau de taille 3 a les indices 0, 1 et 2 ; sa taille ne change jamais. Le CLR vérifie chaque accès et lève l'exception. Pour une taille variable, on utilise List<T>.
+```csharp
+int[] vTab = new int[3];
+vTab[3] = 5;
+```
+
+@018
+Q: À quoi sert une propriété automatique comme public string Name { get; set; } ?
+C: À exposer une valeur avec accesseurs sans écrire de champ privé
+W: À déclarer un champ public qui ne pourra plus jamais être encapsulé ensuite
+W: À créer une constante calculée à la compilation
+W: À réserver la valeur aux classes dérivées
+E: Le compilateur génère le champ caché. On peut restreindre l'écriture avec { get; private set; } ou { get; init; }, et ajouter plus tard de la validation sans changer le code appelant.
+
+@019
+Q: Quelle est la valeur de vResult après ce code ?
+C: true
+W: false
+W: Une erreur de compilation
+W: null
+E: Pour string, l'opérateur == est redéfini : il compare le contenu des chaînes, pas les références. Pour comparer les références, on utilise object.ReferenceEquals. Pour ignorer la casse : string.Equals(a, b, StringComparison.OrdinalIgnoreCase).
+```csharp
+string a = "abc";
+string b = "ab" + "c";
+bool vResult = a == b;
+```
+
+@020
+Q: Quel bloc s'exécute toujours, que le try lève une exception ou non ?
+C: finally
+W: catch
+W: else
+W: default
+E: finally sert à libérer une ressource ou à remettre un état, qu'il y ait eu erreur ou non. catch ne s'exécute qu'en cas d'exception correspondante. else et default n'existent pas dans un try.
+
+@021
+Q: Qu'est-ce que NuGet ?
+C: Le gestionnaire de paquets de .NET
+W: Le compilateur C# de Microsoft
+W: Le serveur web intégré d'ASP.NET Core
+W: Le format des fichiers de solution
+E: dotnet add package Serilog ajoute une PackageReference dans le .csproj, et dotnet restore télécharge les paquets depuis nuget.org. Le serveur web intégré s'appelle Kestrel.
+
+@022
+Q: Associer chaque collection .NET à son usage.
+P: List<T> => liste ordonnée accessible par indice
+P: Dictionary<TKey, TValue> => recherche rapide par clé
+P: HashSet<T> => ensemble sans doublon
+P: Queue<T> => premier entré, premier sorti
+E: Choisir la bonne collection évite des parcours inutiles : chercher dans une List<T> parcourt les éléments un à un, alors qu'un Dictionary ou un HashSet trouve une clé en temps quasi constant. Stack<T> est la pile, dernier entré premier sorti.
+
+@023
+Q: Que signifie le mot-clé static sur une méthode ?
+C: La méthode appartient à la classe et s'appelle sans instance
+W: La méthode ne peut plus être modifiée après la compilation
+W: La méthode est exécutée une seule fois, au démarrage de l'application
+W: La méthode ne peut pas recevoir de paramètres
+E: Math.Max ou File.ReadAllText s'appellent directement sur la classe. Une méthode static n'a pas de this : elle ne peut pas accéder aux champs d'instance, seulement aux membres static.
+
+@024
+Q: Quelle est la valeur d'un champ bool non initialisé dans une classe ?
+C: false
+W: true
+W: null
+W: Aucune, le compilateur refuse la classe
+E: Les champs reçoivent la valeur par défaut de leur type : 0, false ou null. En revanche, lire une variable locale jamais affectée est refusé par le compilateur (erreur CS0165).
+
+@025
+Q: Qu'affiche ce code utilisant l'interpolation de chaîne ?
+C: Léa a 31 ans
+W: {vName} a {vAge + 1} ans
+W: Léa a 301 ans
+W: Léa a 30 + 1 ans
+E: Le $ devant la chaîne active l'interpolation : chaque expression entre accolades est évaluée, ici vAge + 1 donne 31. Sans le $, les accolades seraient affichées telles quelles.
+```csharp
+string vName = "Léa";
+int vAge = 30;
+Console.WriteLine($"{vName} a {vAge + 1} ans");
+```
+
+@026
+Q: Qu'affiche ce code LINQ ?
+C: 5,8
+W: 8,5
+W: 5,2,8
+W: 1,2
+E: Where garde les nombres supérieurs à 2 (5 et 8), OrderBy les trie par ordre croissant. string.Join les assemble avec une virgule. OrderByDescending donnerait 8,5.
+```csharp
+var vNombres = new[] { 5, 2, 8, 1 };
+var vResult = vNombres.Where(n => n > 2).OrderBy(n => n);
+Console.WriteLine(string.Join(",", vResult));
+```
+
+@027
+Q: Quand la requête LINQ de ce code est-elle exécutée ?
+C: Au foreach, le produit ajouté est donc inclus
+W: À la déclaration de vQuery, le produit ajouté est donc ignoré
+W: À la déclaration, puis à nouveau après chaque Add
+W: Jamais, Where reste vide tant que ToList n'est pas appelé
+E: LINQ sur des objets a une exécution différée : vQuery décrit le calcul, qui n'a lieu qu'au parcours. ToList() fige le résultat. Parcourir deux fois une requête la refait deux fois, ce qui coûte cher si elle interroge une base.
+```csharp
+var vQuery = vProduits.Where(p => p.Prix > 100);
+vProduits.Add(new Produit { Prix = 500 });
+foreach (var p in vQuery)
+    Console.WriteLine(p.Prix);
+```
+
+@028
+Q: Avec Entity Framework, quelle est la différence entre IQueryable<T> et IEnumerable<T> ?
+C: IQueryable est traduit en SQL ; IEnumerable filtre en mémoire
+W: IEnumerable exécute toujours la requête en base, il est donc plus rapide
+W: IQueryable ne fonctionne qu'avec des tableaux en mémoire
+W: Aucune, les deux produisent exactement la même requête SQL
+E: Un Where appliqué à un IQueryable devient une clause WHERE exécutée par la base. Appliqué après un AsEnumerable ou un ToList, il charge d'abord toutes les lignes puis filtre en mémoire : une erreur fréquente sur une grosse table.
+
+@029
+Q: Que fait le mot-clé await dans ce code ?
+C: Il rend la main pendant la requête et reprend la méthode à la réponse
+W: Il bloque le thread courant jusqu'à la fin de la requête
+W: Il crée un nouveau thread réservé à cette requête, détruit à la réponse
+W: Il annule la requête au-delà de 30 secondes
+E: Pendant l'attente réseau, aucun thread n'est bloqué : la méthode renvoie une Task à l'appelant, et la suite (vPage.Trim()) est exécutée quand la réponse arrive. Un serveur sert ainsi beaucoup plus de requêtes avec peu de threads.
+```csharp
+public async Task<string> LireAsync(HttpClient pClient)
+{
+    string vPage = await pClient.GetStringAsync("https://example.org");
+    return vPage.Trim();
+}
+```
+
+@030
+Q: Pourquoi éviter .Result ou .Wait() sur une tâche dans une application WPF ou ASP.NET ?
+C: Ils bloquent le thread et peuvent provoquer un interblocage
+W: Ils sont un peu plus lents que await, mais sans autre risque réel
+W: Ils annulent la tâche si elle n'est pas encore terminée
+W: Ils lèvent toujours une exception sur une tâche en cours
+E: Dans WPF, .Result bloque le thread de l'interface alors que la suite de la tâche attend ce même thread : l'application se fige. Dans ASP.NET Core, bloquer épuise le pool de threads. La règle : async jusqu'au bout.
+
+@031
+Q: Quel type de retour donner à une méthode async qui ne renvoie rien, hors gestionnaire d'événement ?
+C: Task
+W: void
+W: Task<void>
+W: object
+E: Une méthode async void ne peut pas être attendue, et ses exceptions ne remontent pas à l'appelant : elles peuvent arrêter le processus. async void est réservé aux gestionnaires d'événements. Task<void> n'existe pas.
+
+@032
+Q: Qu'est-ce que l'injection de dépendances dans ASP.NET Core ?
+C: Le conteneur fournit à chaque classe les services demandés par son constructeur
+W: Le framework recopie le code des services dans chaque contrôleur
+W: Chaque classe crée elle-même ses services avec new, pour rester indépendante du framework
+W: Une technique pour insérer du SQL dans Entity Framework
+E: On enregistre builder.Services.AddScoped<IClientRepository, ClientRepository>(), puis un contrôleur qui demande IClientRepository dans son constructeur le reçoit. En test, on lui passe un faux dépôt sans toucher au code.
+
+@033
+Q: Associer chaque durée de vie de service ASP.NET Core à sa règle.
+P: AddSingleton => une instance pour toute l'application
+P: AddScoped => une instance par requête HTTP
+P: AddTransient => une nouvelle instance à chaque injection
+E: Un DbContext est enregistré en Scoped : une requête garde le même pendant tout son traitement. Un service sans état ou un cache partagé peut être Singleton, à condition d'être sûr en multithread.
+
+@034
+Q: Quel problème pose ce code d'enregistrement de services ?
+C: Le singleton garde un DbContext prévu pour une seule requête
+W: AddScoped doit toujours être déclaré avant AddSingleton
+W: Un singleton ne peut pas avoir de paramètres de constructeur
+W: Aucun, le conteneur crée un nouveau DbContext à chaque appel
+E: C'est une dépendance captive : le singleton reçoit un DbContext une fois et le partage entre toutes les requêtes, alors qu'il n'est pas sûr en multithread. En développement, ASP.NET Core le détecte au démarrage. Solution : rendre RapportService Scoped, ou créer un scope avec IServiceScopeFactory.
+```csharp
+builder.Services.AddScoped<AppDbContext>();
+// RapportService reçoit AppDbContext dans son constructeur
+builder.Services.AddSingleton<RapportService>();
+```
+
+@035
+Q: Qu'est-ce qu'un DbContext dans Entity Framework Core ?
+C: Une session avec la base, qui suit les entités et enregistre leurs modifications
+W: Une connexion SQL ouverte en permanence pour toute l'application
+W: Le fichier de migration qui décrit le schéma de la base
+W: Un cache partagé des résultats de toutes les requêtes
+E: Le DbContext suit les entités lues (change tracker) ; SaveChanges génère les INSERT, UPDATE et DELETE dans une transaction. Il doit vivre peu de temps : une requête HTTP ou une unité de travail.
+
+@036
+Q: Quelle commande crée une migration Entity Framework Core après une modification du modèle ?
+C: dotnet ef migrations add AjoutClient
+W: dotnet ef database create AjoutClient
+W: dotnet migrate new AjoutClient
+W: dotnet ef update AjoutClient
+E: La migration générée décrit les changements de schéma ; on la relit avant de l'appliquer avec dotnet ef database update. En production, on préfère un script SQL relu : dotnet ef migrations script --idempotent.
+
+@037
+Q: Avec le chargement différé (lazy loading) activé, quel problème de performance ce code provoque-t-il ?
+C: Une requête SQL par commande pour charger son client (N+1)
+W: Une seule requête trop lourde qui charge toute la base
+W: Le client de chaque commande reste vide, car il n'est jamais chargé par EF
+W: Aucun, le client est déjà lu avec la commande
+E: La première requête lit les commandes, puis chaque accès à c.Client déclenche une requête supplémentaire : 1 000 commandes font 1 001 requêtes. Include(c => c.Client) ou une projection Select chargent tout en une fois.
+```csharp
+var vCommandes = context.Commandes.ToList();
+foreach (var c in vCommandes)
+    Console.WriteLine(c.Client.Nom);
+```
+
+@038
+Q: Compléter ce code pour charger les commandes avec leur client en une seule requête.
+A: Include
+E: Include ajoute une jointure à la requête SQL : les clients arrivent avec les commandes. ThenInclude descend d'un niveau de plus, par exemple vers l'adresse du client. Sans Include et sans lazy loading, c.Client resterait null.
+```csharp
+var vCommandes = context.Commandes
+    .____(c => c.Client)
+    .ToList();
+```
+
+@039
+Q: À quoi sert AsNoTracking() dans une requête Entity Framework Core ?
+C: À lire des entités sans les suivre, pour une lecture seule plus rapide
+W: À désactiver la transaction de la requête
+W: À empêcher la mise en cache du plan côté serveur SQL
+W: À charger automatiquement toutes les relations
+E: Sans suivi, le DbContext ne garde pas de copie des entités pour détecter les modifications : moins de mémoire et de calcul. À utiliser pour les listes et les écrans de consultation, pas pour des entités qu'on va modifier puis enregistrer.
+
+@040
+Q: Quelle est la différence entre un record et une class en C# ?
+C: Un record compare ses instances par valeur, une classe par référence
+W: Un record est toujours un type valeur alloué sur la pile
+W: Un record ne peut pas déclarer de méthodes
+W: Une classe ne peut pas être immuable
+E: Deux records aux propriétés égales sont égaux avec ==. Un record fournit aussi un ToString lisible et l'expression with pour copier en changeant une propriété. record est un type référence par défaut ; record struct en fait un type valeur.
+
+@041
+Q: Qu'affiche ce code ?
+C: 2 5
+W: 5 5
+W: 2 2
+W: Une erreur, un record ne se modifie pas
+E: with crée une copie de a en changeant Y : a reste intact, b vaut Point(1, 5). C'est la façon idiomatique de « modifier » un objet immuable.
+```csharp
+var a = new Point(1, 2);
+var b = a with { Y = 5 };
+Console.WriteLine($"{a.Y} {b.Y}");
+
+record Point(int X, int Y);
+```
+
+@042
+Q: Quel mot-clé permet à une classe dérivée de redéfinir une méthode virtual de sa classe de base ?
+C: override
+W: new
+W: virtual
+W: base
+E: override remplace la méthode, y compris quand l'objet est manipulé par une variable du type de base. new masque la méthode sans polymorphisme. base.Methode() appelle la version de la classe parente.
+
+@043
+Q: Qu'affiche ce code ?
+C: Wouf
+W: Bruit
+W: Animal
+W: Une erreur de conversion
+E: La variable est de type Animal, mais l'objet est un Chien : grâce à virtual et override, c'est la méthode du type réel qui est appelée. Si Chien avait utilisé new au lieu de override, le code afficherait « Bruit ».
+```csharp
+Animal a = new Chien();
+Console.WriteLine(a.Cri());
+
+class Animal { public virtual string Cri() => "Bruit"; }
+class Chien : Animal { public override string Cri() => "Wouf"; }
+```
+
+@044
+Q: Depuis C# 8, qu'est-ce qui distingue encore une classe abstraite d'une interface ?
+C: La classe abstraite peut avoir des champs d'instance et un constructeur
+W: Une interface ne peut contenir aucune implémentation de méthode, même par défaut
+W: Une classe abstraite peut être instanciée directement
+W: Une interface peut hériter d'une classe abstraite
+E: Depuis C# 8, une interface peut fournir une implémentation par défaut, mais elle ne porte pas d'état. Une classe abstraite partage état et code avec ses dérivées, mais on n'en hérite qu'une ; on implémente autant d'interfaces que voulu.
+
+@045
+Q: Que fait ce gestionnaire d'exceptions ?
+C: Il journalise puis relance la même exception, pile d'appels comprise
+W: Il journalise l'erreur et la supprime, le programme continue
+W: Il relance une nouvelle exception, qui perd la pile d'appels de l'erreur d'origine
+W: Il relance l'exception uniquement en mode Debug
+E: throw; seul relance l'exception en cours sans toucher à sa pile d'appels. throw ex; la relancerait comme si elle naissait dans ce catch, ce qui fait perdre l'endroit réel de l'erreur au diagnostic.
+```csharp
+try
+{
+    Traiter();
+}
+catch (Exception ex)
+{
+    _logger.LogError(ex, "Échec du traitement");
+    throw;
+}
+```
+
+@046
+Q: Qu'est-ce qu'une méthode d'extension en C# ?
+C: Une méthode statique appelée comme si elle appartenait au type étendu
+W: Une méthode héritée par toutes les classes du projet
+W: Une méthode ajoutée à une classe par réflexion, au moment de l'exécution
+W: Une méthode virtuelle redéfinie dans une classe fille
+E: Déclarée dans une classe static avec this devant le premier paramètre, par exemple public static bool EstVide(this string s), elle s'appelle "abc".EstVide(). Tous les opérateurs LINQ (Where, Select) sont des méthodes d'extension sur IEnumerable<T>.
+
+@047
+Q: Quel code HTTP ce contrôleur renvoie-t-il quand le produit n'existe pas ?
+N: 404
+E: NotFound() produit une réponse 404. Quand le produit existe, il est renvoyé avec le code 200 et sérialisé en JSON. ActionResult<T> permet de renvoyer soit l'objet, soit un résultat HTTP.
+```csharp
+[HttpGet("{id}")]
+public async Task<ActionResult<Produit>> Get(int id)
+{
+    var vProduit = await _context.Produits.FindAsync(id);
+    if (vProduit is null)
+        return NotFound();
+    return vProduit;
+}
+```
+
+@048
+Q: Qu'apporte l'attribut [ApiController] sur un contrôleur ASP.NET Core ?
+C: La validation automatique du modèle, avec une réponse 400 si elle échoue
+W: L'accès au contrôleur sans aucune authentification
+W: La génération de la documentation OpenAPI du contrôleur
+W: La conversion de toutes les réponses en XML
+E: Avec [ApiController], un modèle invalide (attributs [Required], [Range]) est refusé avant d'entrer dans l'action, avec un détail des erreurs au format ProblemDetails. Il impose aussi le routage par attribut et déduit [FromBody] pour les objets complexes.
+
+@049
+Q: Où une application ASP.NET Core doit-elle lire sa chaîne de connexion ?
+C: Dans la configuration : appsettings, variables d'environnement ou secrets
+W: Dans une constante du code, pour éviter une lecture de fichier
+W: Dans le fichier .csproj, compilé avec l'application
+W: Dans un cookie envoyé par le navigateur
+E: IConfiguration fusionne appsettings.json, appsettings.{Environment}.json, les variables d'environnement (ConnectionStrings__Default) et, en développement, dotnet user-secrets. Un mot de passe ne doit jamais être versionné dans git.
+
+@050
+Q: Remettre dans l'ordre les middlewares d'un pipeline ASP.NET Core typique.
+O: UseExceptionHandler pour la gestion des erreurs
+O: UseHttpsRedirection
+O: UseRouting
+O: UseAuthentication
+O: UseAuthorization
+O: MapControllers pour exécuter le contrôleur
+E: Les middlewares s'exécutent dans l'ordre de déclaration. Le gestionnaire d'erreurs vient en premier pour tout couvrir ; l'authentification doit précéder l'autorisation, qui a besoin de connaître l'utilisateur avant d'appeler le contrôleur.

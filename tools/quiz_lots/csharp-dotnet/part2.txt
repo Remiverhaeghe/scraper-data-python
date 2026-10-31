@@ -1,0 +1,548 @@
+@051
+Q: Quel est le rôle du ramasse-miettes (GC) de .NET ?
+C: Libérer la mémoire des objets qui ne sont plus référencés
+W: Fermer les fichiers et connexions dès qu'ils ne servent plus
+W: Compacter la base de données à intervalles réguliers
+W: Effacer les variables locales après chaque instruction
+E: Le GC ne gère que la mémoire managée, par générations (0, 1, 2) : les objets récents sont examinés plus souvent. Un fichier, une connexion ou un handle natif ne sont pas libérés à temps par le GC : on les ferme avec Dispose, via using.
+
+@052
+Q: Qu'affiche ce code ?
+N: 1
+E: L'indexeur d'un dictionnaire ajoute la clé si elle manque et remplace la valeur sinon : la clé "a" vaut 2 et il n'y a qu'une entrée. Add("a", 2) aurait levé une ArgumentException, et TryAdd aurait renvoyé false.
+```csharp
+var vDico = new Dictionary<string, int>();
+vDico["a"] = 1;
+vDico["a"] = 2;
+Console.WriteLine(vDico.Count);
+```
+
+@053
+Q: Quelle méthode lit une valeur d'un dictionnaire sans exception si la clé manque ?
+C: TryGetValue
+W: GetValue
+W: Find
+W: ContainsValue
+E: if (vDico.TryGetValue("a", out var vValeur)) fait la recherche une seule fois. Lire vDico["x"] sur une clé absente lève une KeyNotFoundException, et ContainsKey suivi de l'indexeur cherche deux fois.
+
+@054
+Q: Quelle valeur ce code range-t-il dans vMoyenne ?
+N: 12
+E: Average additionne les notes (12 + 15 + 9 = 36) puis divise par leur nombre, 3, et renvoie un double. Sur une liste vide, Average lève une InvalidOperationException : on teste Any() avant, ou on utilise DefaultIfEmpty.
+```csharp
+var vNotes = new List<int> { 12, 15, 9 };
+double vMoyenne = vNotes.Average();
+```
+
+@055
+Q: Quelle est la différence entre First() et FirstOrDefault() en LINQ ?
+C: Sur une séquence vide, First lève une exception et FirstOrDefault renvoie default
+W: First trie la séquence avant de lire le premier élément, FirstOrDefault garde l'ordre
+W: FirstOrDefault est marqué obsolète depuis .NET 6
+W: Sur une séquence vide, First renvoie null et FirstOrDefault lève une exception
+E: FirstOrDefault renvoie null pour une référence et 0 pour un int, ce qui peut masquer une absence. Single et SingleOrDefault vérifient en plus qu'il n'y a pas plus d'un élément.
+
+@056
+Q: À quoi sert un CancellationToken passé à une méthode async ?
+C: À demander l'arrêt coopératif d'une opération longue
+W: À tuer immédiatement le thread qui exécute la tâche
+W: À limiter le nombre de tâches exécutées en parallèle
+W: À reprendre une tâche annulée là où elle s'était arrêtée
+E: La méthode vérifie le jeton ou le transmet aux appels qu'elle fait (ToListAsync(pToken), GetAsync(url, pToken)). ASP.NET Core fournit un jeton annulé quand le client ferme la connexion : la requête SQL en cours s'arrête au lieu de tourner pour rien.
+
+@057
+Q: Que fait Task.WhenAll dans ce code ?
+C: Il attend la fin des deux requêtes, lancées en même temps
+W: Il lance la seconde requête après la fin de la première
+W: Il renvoie la première page reçue et annule la seconde requête
+W: Il bloque le thread jusqu'à la fin des deux requêtes
+E: Les deux appels démarrent dès leur création ; WhenAll attend les deux sans bloquer de thread et renvoie leurs résultats dans l'ordre. La durée totale est celle de la plus lente, pas la somme. Task.WhenAny renverrait la première terminée.
+```csharp
+var vT1 = pClient.GetStringAsync(vUrl1);
+var vT2 = pClient.GetStringAsync(vUrl2);
+string[] vPages = await Task.WhenAll(vT1, vT2);
+```
+
+@058
+Q: Pourquoi réutiliser HttpClient plutôt que le créer et le détruire à chaque requête ?
+C: Chaque instance détruite laisse des sockets ouverts qui épuisent les ports
+W: Un HttpClient ne peut envoyer qu'une seule requête dans sa vie
+W: Chaque création d'HttpClient interroge un serveur de licences
+W: Détruire un HttpClient annule aussi les requêtes en cours des autres instances
+E: Les connexions fermées restent un moment en TIME_WAIT : sous charge, les ports locaux s'épuisent. IHttpClientFactory, via builder.Services.AddHttpClient, réutilise les connexions et les renouvelle pour suivre les changements de DNS.
+
+@059
+Q: Quel est le rôle d'un fichier .csproj ?
+C: Décrire le projet : framework cible, paquets NuGet et options de compilation
+W: Contenir le code compilé de l'application
+W: Stocker la chaîne de connexion de production
+W: Lister dans l'ordre les tests à exécuter
+E: Au format SDK, il est court : <TargetFramework>net8.0</TargetFramework>, des PackageReference et quelques options comme <Nullable>enable</Nullable>. Un fichier .sln regroupe plusieurs projets.
+
+@060
+Q: Quel framework de tests unitaires est très utilisé avec .NET, aux côtés de NUnit et MSTest ?
+C: xUnit
+W: JUnit
+W: pytest
+W: Jasmine
+E: xUnit marque un test par [Fact] et un test paramétré par [Theory] avec [InlineData]. dotnet test lance tous les tests de la solution. JUnit est l'équivalent en Java, pytest en Python, Jasmine en JavaScript.
+
+@061
+Q: Que vérifie ce test xUnit ?
+C: Additionner avec deux jeux de données, chacun exécuté comme un test séparé
+W: Que la méthode Additionner a été appelée exactement deux fois
+W: Que les deux jeux de données donnent le même résultat
+W: Seulement le premier jeu de données, le second étant ignoré par [Theory]
+E: [Theory] exécute la méthode une fois par [InlineData] : deux cas, deux résultats distincts dans le rapport. Assert.Equal prend la valeur attendue en premier, pour un message d'échec lisible.
+```csharp
+[Theory]
+[InlineData(2, 3, 5)]
+[InlineData(-1, 1, 0)]
+public void Additionner_RenvoieLaSomme(int a, int b, int attendu)
+{
+    Assert.Equal(attendu, Calcul.Additionner(a, b));
+}
+```
+
+@062
+Q: À quoi sert un mock, par exemple avec Moq, dans un test unitaire ?
+C: À remplacer une dépendance par un faux objet aux réponses contrôlées
+W: À exécuter le test sur la vraie base de production
+W: À mesurer la couverture de code du test
+W: À générer automatiquement les assertions du test
+E: Un mock de IClientRepository renvoie les données voulues sans base, et permet de vérifier qu'une méthode a été appelée (Verify). Le test devient rapide et indépendant de l'environnement. L'injection de dépendances rend ce remplacement possible.
+
+@063
+Q: Qu'affiche ce code ?
+C: négatif
+W: entier
+W: autre
+W: texte de 2
+E: Une expression switch teste ses cas dans l'ordre : -4 est un int et la garde when n < 0 est vraie, le premier cas s'applique. Le motif _ attrape tout le reste. Placer int avant int n when n < 0 rendrait ce dernier cas inaccessible.
+```csharp
+Console.WriteLine(Decrire(-4));
+
+string Decrire(object o) => o switch
+{
+    int n when n < 0 => "négatif",
+    int => "entier",
+    string s => $"texte de {s.Length}",
+    null => "rien",
+    _ => "autre",
+};
+```
+
+@064
+Q: Qu'apportent les types références nullables (<Nullable>enable</Nullable>) ?
+C: Des avertissements du compilateur quand une référence peut être null par erreur
+W: La suppression de toute NullReferenceException à l'exécution
+W: La transformation de chaque référence en Nullable<T>
+W: Des chaînes vides par défaut à la place de null
+E: string signifie alors « jamais null » et string? « peut être null ». Le compilateur suit les tests et signale un déréférencement risqué. C'est une analyse statique : à l'exécution, rien ne change.
+
+@065
+Q: Pourquoi utiliser decimal plutôt que double pour un montant en euros ?
+C: decimal représente exactement 0,1 ; double l'arrondit en binaire
+W: decimal occupe moins de mémoire que double
+W: double ne peut pas stocker de nombres négatifs
+W: decimal est plus rapide pour le calcul scientifique
+E: En double, 0.1 + 0.2 == 0.3 est faux, car 0,1 n'a pas d'écriture binaire exacte. decimal travaille en base 10 sur 128 bits : 0.1m + 0.2m == 0.3m est vrai. Il est plus lent, mais c'est le bon choix pour la monnaie.
+
+@066
+Q: Que risque ce code appelé par plusieurs threads en même temps ?
+C: Perdre des incrémentations, car ++ lit puis écrit en deux temps
+W: Rien, ++ est atomique sur un int en C#
+W: Un verrou automatique posé par le compilateur sur le champ static
+W: Une exception dès que deux threads lisent le champ
+E: Deux threads peuvent lire la même valeur, l'augmenter chacun, puis écrire le même résultat : une incrémentation disparaît. Interlocked.Increment(ref _compteur) rend l'opération atomique ; un lock convient pour plusieurs instructions.
+```csharp
+private static int _compteur;
+
+public static void Incrementer() => _compteur++;
+```
+
+@067
+Q: Compléter ce code pour incrémenter le compteur de façon atomique.
+A: Increment
+E: Interlocked.Increment lit, ajoute 1 et écrit en une seule opération du processeur, sans verrou. La classe propose aussi Add, Decrement, Exchange et CompareExchange.
+```csharp
+Interlocked.____(ref _compteur);
+```
+
+@068
+Q: Pourquoi le verrou de ce code est-il une mauvaise pratique ?
+C: Du code extérieur peut verrouiller la même instance et créer un interblocage
+W: lock ne fonctionne que sur des types valeur
+W: lock (this) verrouille en même temps toutes les instances de cette classe
+W: Un lock ne protège pas une List<T>
+E: this est visible de l'extérieur : n'importe quel appelant peut faire lock (vPanier) et bloquer la classe. On verrouille un objet privé dédié, private readonly object _verrou = new(); .NET 9 propose aussi le type System.Threading.Lock.
+```csharp
+public void Ajouter(Commande c)
+{
+    lock (this)
+    {
+        _commandes.Add(c);
+    }
+}
+```
+
+@069
+Q: Quelle collection choisir pour un cache partagé entre les requêtes d'une API ASP.NET Core ?
+C: ConcurrentDictionary<TKey, TValue>
+W: Dictionary<TKey, TValue> lu et écrit sans verrou
+W: List<T> déclarée readonly
+W: SortedList<TKey, TValue>
+E: Les requêtes s'exécutent en parallèle : un Dictionary modifié par plusieurs threads peut se corrompre. ConcurrentDictionary et sa méthode GetOrAdd sont faits pour cela. Pour un cache avec expiration, IMemoryCache est souvent plus adapté.
+
+@070
+Q: Que fait ConfigureAwait(false) sur une tâche attendue dans une bibliothèque ?
+C: La suite peut reprendre sur un autre thread que le contexte d'origine
+W: La tâche n'est plus attendue et tourne en arrière-plan
+W: Les exceptions de la tâche sont ignorées
+W: La tâche s'exécute de manière synchrone
+E: Sans contexte à retrouver, la suite s'exécute sur le pool de threads : moins de coût, et pas d'interblocage si un appelant bloque avec .Result. Inutile dans ASP.NET Core, qui n'a pas de contexte de synchronisation, et à éviter si la suite touche l'interface graphique.
+
+@071
+Q: Quel avantage apporte ValueTask<T> par rapport à Task<T> ?
+C: Il évite une allocation quand le résultat est souvent déjà disponible
+W: Il peut être attendu plusieurs fois sans aucun risque
+W: Il s'exécute toujours sur un thread dédié
+W: Il remplace le CancellationToken
+E: Une méthode qui répond souvent depuis un cache n'alloue alors pas de Task. Une ValueTask ne doit être attendue qu'une seule fois. On la réserve aux chemins très sollicités, après mesure.
+
+@072
+Q: Quel est l'effet de yield return dans cette méthode ?
+C: Les valeurs sont produites une à une, au fil du parcours de l'appelant
+W: La méthode remplit une liste complète puis la renvoie
+W: La méthode s'arrête au premier yield et renvoie 0
+W: Les valeurs sont calculées en parallèle sur plusieurs threads du pool
+E: Le compilateur transforme la méthode en itérateur : chaque MoveNext reprend l'exécution jusqu'au yield return suivant. Rien n'est calculé tant que la séquence n'est pas parcourue, et Pairs(int.MaxValue).Take(3) ne produit que trois valeurs.
+```csharp
+IEnumerable<int> Pairs(int pMax)
+{
+    for (int i = 0; i <= pMax; i += 2)
+        yield return i;
+}
+```
+
+@073
+Q: Qu'affiche ce code ?
+C: 234
+W: Rien, la boucle ne se termine jamais
+W: 012
+W: 345
+E: La séquence est infinie, mais l'exécution différée la rend utilisable : Skip saute 0 et 1, Take s'arrête après trois valeurs, et l'itérateur n'est plus sollicité. Un ToList() avant Take, en revanche, ne se terminerait jamais.
+```csharp
+foreach (var v in Nombres().Skip(2).Take(3))
+    Console.Write(v);
+
+IEnumerable<int> Nombres()
+{
+    int i = 0;
+    while (true)
+        yield return i++;
+}
+```
+
+@074
+Q: Que change ReadOnlySpan<char> dans ce code de traitement de texte ?
+C: La tranche désigne une partie de la chaîne sans copier de caractères
+W: La tranche crée une nouvelle chaîne de dix caractères
+W: Le texte est converti en tableau d'octets UTF-8
+W: La chaîne littérale devient modifiable en place
+E: vLigne[..10] ne fait qu'avancer un pointeur et une longueur : aucune allocation, utile pour analyser de gros fichiers. Un Span est un ref struct : il ne peut être ni champ d'une classe, ni conservé à travers un await ; Memory<T> prend le relais.
+```csharp
+ReadOnlySpan<char> vLigne = "2026-10-31;OK";
+var vDate = vLigne[..10];
+```
+
+@075
+Q: Que fait le middleware ajouté par ce code ?
+C: Il mesure la durée de chaque requête traitée par la suite du pipeline
+W: Il refuse les requêtes qui durent plus d'une seconde
+W: Il ne s'exécute qu'en cas d'exception
+W: Il remplace le routage vers les contrôleurs
+E: Le code placé avant await next() s'exécute à l'aller, celui placé après au retour, une fois la réponse produite par les middlewares suivants. Le message utilise un gabarit, ce qui garde Path et Ms comme propriétés recherchables.
+```csharp
+app.Use(async (context, next) =>
+{
+    var vChrono = Stopwatch.StartNew();
+    await next();
+    logger.LogInformation(
+        "{Path} en {Ms} ms", context.Request.Path, vChrono.ElapsedMilliseconds);
+});
+```
+
+@076
+Q: Pourquoi écrire LogInformation("Commande {Id} traitée", vId) plutôt qu'avec une chaîne interpolée ?
+C: Id reste une propriété structurée et le texte n'est pas construit si le niveau est coupé
+W: L'interpolation de chaîne est interdite dans les journaux depuis .NET 6
+W: Le gabarit chiffre l'identifiant dans le journal
+W: Les deux écritures donnent le même journal structuré
+E: Avec Serilog ou un outil comme Seq, on peut filtrer toutes les lignes où Id vaut 42. Une chaîne interpolée est construite même si le niveau Information est désactivé, et Id n'est plus qu'un morceau de texte. L'analyseur CA2254 signale ce cas.
+
+@077
+Q: Comment protéger la requête de ce code contre l'injection SQL ?
+C: Passer pNom en paramètre (@nom), ou écrire la requête en LINQ
+W: Doubler les apostrophes contenues dans pNom
+W: Limiter pNom à 50 caractères
+W: Exécuter la requête dans une transaction
+E: Avec un paramètre, la valeur n'est jamais interprétée comme du SQL. En ADO.NET : SqlParameter ; avec Dapper : new { nom = pNom } ; avec EF Core : LINQ ou FromSql($"… {pNom}"), qui paramètre l'interpolation. FromSqlRaw avec une concaténation reste vulnérable.
+```csharp
+var vSql = "SELECT * FROM Clients WHERE Nom = '" + pNom + "'";
+```
+
+@078
+Q: Avec cette entité, que se passe-t-il si deux utilisateurs modifient le même produit en même temps ?
+C: Le second SaveChanges lève une DbUpdateConcurrencyException
+W: Le dernier enregistrement écrase silencieusement le premier
+W: EF fusionne automatiquement les deux modifications
+W: La ligne est verrouillée en base dès la lecture
+E: [Timestamp] crée une colonne rowversion que SQL Server change à chaque mise à jour. EF ajoute WHERE Version = @ancienne à l'UPDATE : si aucune ligne ne correspond, quelqu'un a modifié le produit entre-temps. On recharge alors et on demande à l'utilisateur. C'est la concurrence optimiste.
+```csharp
+public class Produit
+{
+    public int Id { get; set; }
+    public decimal Prix { get; set; }
+
+    [Timestamp]
+    public byte[] Version { get; set; }
+}
+```
+
+@079
+Q: Quel avantage apporte la projection Select de ce code ?
+C: Le SQL ne lit que Id et Nom, sans suivi des entités
+W: Les relations du client sont chargées dans la même requête
+W: Le résultat est mis en cache pour les requêtes suivantes
+W: Les lignes lues restent verrouillées jusqu'à la fin
+E: La requête générée est SELECT Id, Nom FROM Clients WHERE Actif = 1 : moins de données transférées, et un objet anonyme n'est pas suivi par le DbContext. C'est la forme la plus efficace pour une liste à afficher.
+```csharp
+var vListe = await context.Clients
+    .Where(c => c.Actif)
+    .Select(c => new { c.Id, c.Nom })
+    .ToListAsync();
+```
+
+@080
+Q: Que signifie le code 401 renvoyé par une action marquée [Authorize] ?
+C: La requête n'est pas authentifiée : jeton absent, invalide ou expiré
+W: L'utilisateur est connu mais n'a pas le droit d'accéder à la ressource
+W: La ressource demandée n'existe pas
+W: Le serveur a rencontré une erreur interne
+E: 401 Unauthorized signifie en réalité « non authentifié ». Un utilisateur authentifié à qui il manque un rôle ou une politique reçoit 403 Forbidden. 404 désigne une ressource absente et 500 une erreur du serveur.
+
+@081
+Q: Comment ASP.NET Core vérifie-t-il un jeton JWT reçu dans l'en-tête Authorization ?
+C: Signature avec la clé configurée, puis émetteur, audience et expiration
+W: Recherche du jeton dans la table des utilisateurs à chaque requête
+W: Déchiffrement du jeton avec le mot de passe de l'utilisateur qui l'a demandé
+W: Acceptation de tout jeton bien formé, la signature étant facultative
+E: AddAuthentication().AddJwtBearer configure ces contrôles. Le contenu d'un JWT est simplement encodé en Base64 : n'importe qui peut le lire, il ne faut donc y mettre aucun secret. La signature garantit seulement qu'il n'a pas été modifié.
+
+@082
+Q: Quelle valeur ce code affiche-t-il ?
+N: 170
+E: GroupBy regroupe les ventes par région ; First isole le groupe "Nord", qui contient 120 et 50 ; Sum les additionne : 170. Le suffixe m fait de ces montants des decimal.
+```csharp
+var vVentes = new[]
+{
+    new { Region = "Nord", Montant = 120m },
+    new { Region = "Sud", Montant = 80m },
+    new { Region = "Nord", Montant = 50m },
+};
+var vNord = vVentes
+    .GroupBy(v => v.Region)
+    .First(g => g.Key == "Nord")
+    .Sum(v => v.Montant);
+Console.WriteLine(vNord);
+```
+
+@083
+Q: Quel est le rôle de IOptions<T> dans ASP.NET Core ?
+C: Lier une section de configuration à une classe typée injectable
+W: Lister les options de ligne de commande de dotnet run
+W: Activer les fonctionnalités expérimentales du framework
+W: Stocker les préférences de l'utilisateur connecté
+E: builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp")) puis un service reçoit IOptions<SmtpOptions>. IOptionsMonitor suit les changements du fichier ; ValidateOnStart refuse de démarrer avec une configuration invalide.
+
+@084
+Q: Quelle est la différence entre .NET Framework et .NET, l'ancien .NET Core ?
+C: .NET Framework ne tourne que sous Windows et n'évolue plus ; .NET est multiplateforme
+W: .NET Framework est la version la plus récente des deux
+W: .NET ne permet pas de créer d'applications web
+W: Ce sont deux noms commerciaux du même produit
+E: .NET Framework 4.8 ne reçoit plus que des correctifs. .NET, unifié depuis la version 5, sort une version chaque année ; les versions paires sont LTS et suivies trois ans. Un nouveau projet vise .NET, Linux et conteneurs compris.
+
+@085
+Q: Remettre dans l'ordre la publication d'une API .NET dans une image Docker.
+O: Restauration des paquets avec dotnet restore
+O: Compilation en Release avec dotnet build
+O: Exécution des tests avec dotnet test
+O: Publication dans un dossier avec dotnet publish
+O: Copie du dossier publié dans l'image aspnet d'exécution
+E: Un Dockerfile en deux étapes compile avec l'image sdk, puis ne garde que le résultat de dotnet publish dans l'image aspnet, bien plus légère et sans compilateur. Les images Microsoft récentes fournissent un compte sans droits, à utiliser avec USER $APP_UID.
+
+@086
+Q: Pourquoi ce code provoque-t-il une fuite mémoire dans une application qui tourne longtemps ?
+C: Le capteur garde une référence vers chaque écran abonné
+W: Le GC ne libère jamais un objet qui a des méthodes privées
+W: Chaque abonnement à un événement crée un thread
+W: Le constructeur aurait dû appeler GC.Collect
+E: S'abonner ajoute une référence de l'émetteur vers l'abonné. Tant que le capteur vit, chaque écran créé reste en mémoire, même fermé. On se désabonne avec -= dans Dispose, ou l'écran ne vit pas plus longtemps que le capteur.
+```csharp
+public class Ecran
+{
+    public Ecran(Capteur pCapteur)
+    {
+        pCapteur.MesureRecue += Afficher;
+    }
+
+    void Afficher(object s, double v) { }
+}
+```
+
+@087
+Q: Quand faut-il écrire un finaliseur (~MaClasse) dans une classe C# ?
+C: Si la classe détient directement une ressource non managée
+W: Dans toute classe qui implémente IDisposable
+W: Dans toute classe qui contient une List<T>
+W: Pour libérer plus vite la mémoire managée
+E: Un finaliseur retarde la libération de l'objet d'un cycle de GC et coûte cher. Il ne sert que pour un handle natif détenu en direct, et SafeHandle le fait déjà. Une classe qui ne détient que des objets IDisposable implémente Dispose sans finaliseur.
+
+@088
+Q: Quel piège contient ce code ?
+C: La lambda devient async void : « Terminé » s'affiche trop tôt
+W: Parallel.ForEach attend correctement chaque tâche asynchrone
+W: Le code ne compile pas, Parallel.ForEach refuse les lambdas
+W: Les fichiers sont traités un par un, dans l'ordre de la liste fournie
+E: Parallel.ForEach attend une Action : la lambda async est convertie en async void, elle rend la main au premier await et ses exceptions échappent à l'appelant. Depuis .NET 6, Parallel.ForEachAsync attend chaque tâche et accepte un degré de parallélisme.
+```csharp
+Parallel.ForEach(vFichiers, async f =>
+{
+    await TraiterAsync(f);
+});
+Console.WriteLine("Terminé");
+```
+
+@089
+Q: Comment limiter à 4 le nombre d'appels HTTP simultanés sur une liste de 1 000 adresses ?
+C: Parallel.ForEachAsync avec MaxDegreeOfParallelism = 4, ou un SemaphoreSlim(4)
+W: Task.WhenAll sur les 1 000 tâches, le pool de threads les limitant de lui-même à 4
+W: Quatre HttpClient entre lesquels les adresses sont tirées au hasard
+W: Un Thread.Sleep entre deux requêtes
+E: Task.WhenAll lance toutes les requêtes d'un coup : le pool de threads ne limite pas des E/S asynchrones, et le serveur distant peut saturer ou bloquer. Un SemaphoreSlim attendu avec WaitAsync avant chaque appel et relâché dans un finally borne la concurrence.
+
+@090
+Q: Quel mécanisme ASP.NET Core utiliser pour une tâche de fond périodique, comme purger les sessions expirées ?
+C: Un BackgroundService enregistré avec AddHostedService
+W: Un Task.Run lancé dans le constructeur d'un contrôleur
+W: Un Timer créé à chaque requête
+W: Une boucle while (true) dans Program.cs avant app.Run()
+E: ExecuteAsync tourne avec l'application et reçoit un jeton d'arrêt ; un PeriodicTimer cadence le travail. Pour utiliser un DbContext, le service crée un scope avec IServiceScopeFactory. Pour des tâches qui doivent survivre à un redémarrage, Hangfire ou Quartz.NET.
+
+@091
+Q: Quelle faille contient cette action d'API ?
+C: Un nom comme ..\..\appsettings.json lit un fichier hors du dossier
+W: PhysicalFile ne fonctionne pas sous Windows
+W: Path.Combine lève une exception si le nom contient un point
+W: Le fichier est chargé deux fois en mémoire
+E: C'est une traversée de chemin. Path.Combine accepte même un chemin absolu qui remplace la racine. On garde Path.GetFileName(nom), on vérifie que Path.GetFullPath commence par le dossier autorisé, ou on désigne les fichiers par un identifiant.
+```csharp
+[HttpGet("rapport/{nom}")]
+public IActionResult Telecharger(string nom) =>
+    PhysicalFile(Path.Combine(@"C:\rapports", nom), "application/pdf");
+```
+
+@092
+Q: Quel est l'intérêt de publier une application .NET en Native AOT ?
+C: Un exécutable natif sans JIT, qui démarre vite et consomme peu de mémoire
+W: La compatibilité du code avec .NET Framework 4.8
+W: Un chiffrement de l'assembly contre la décompilation
+W: Une réflexion dynamique sans aucune limite
+E: dotnet publish -p:PublishAot=true compile tout à l'avance : intéressant pour un outil en ligne de commande ou un conteneur qui démarre souvent. En contrepartie, la réflexion dynamique est limitée ; System.Text.Json passe alors par un générateur de source.
+
+@093
+Q: Qu'affiche ce code ?
+C: 5
+W: 10
+W: null
+W: System.Int32
+E: Affecter un int à un object le met en boîte (boxing) : une copie de la valeur est placée sur le tas. Modifier a ensuite ne touche pas cette copie. Le boxing alloue de la mémoire, c'est pourquoi List<int> est préféré à l'ancienne ArrayList.
+```csharp
+int a = 5;
+object o = a;
+a = 10;
+Console.WriteLine(o);
+```
+
+@094
+Q: Qu'affiche ce code utilisant une structure modifiable ?
+C: 0, car c est une copie de l'élément de la liste
+W: 1, car la liste contient une référence vers le compteur
+W: Rien, un struct ne peut pas déclarer de méthode
+W: Une exception, un struct ne va pas dans une liste
+E: Lire vListe[0] copie le struct ; Ajouter modifie la copie. Le compilateur refuse d'ailleurs vListe[0].Valeur = 1 (erreur CS1612) pour cette raison. Un struct gagne à être immuable : readonly struct.
+```csharp
+var vListe = new List<Compteur> { new Compteur() };
+var c = vListe[0];
+c.Ajouter();
+Console.WriteLine(vListe[0].Valeur);
+
+struct Compteur
+{
+    public int Valeur;
+    public void Ajouter() => Valeur++;
+}
+```
+
+@095
+Q: Quel est le coût de la concaténation de cette boucle ?
+C: Une nouvelle chaîne à chaque tour, soit un coût quadratique en copies
+W: Aucun, le compilateur la remplace toujours par un StringBuilder en Release
+W: Aucun, la chaîne est modifiée en place
+W: Une seule allocation, faite à la fin de la boucle
+E: Au tour n, toute la chaîne précédente est recopiée : 10 000 tours copient des dizaines de millions de caractères. StringBuilder ou string.Join ramènent le coût à une seule passe. BenchmarkDotNet permet de mesurer l'écart.
+```csharp
+string s = "";
+for (int i = 0; i < 10000; i++)
+    s += i;
+```
+
+@096
+Q: Quel outil mesure de façon fiable la performance de deux implémentations d'une méthode .NET ?
+C: BenchmarkDotNet
+W: Un Stopwatch sur une seule exécution en Debug
+W: Le Gestionnaire des tâches de Windows
+W: dotnet format
+E: BenchmarkDotNet compile en Release, fait chauffer le JIT, répète les mesures et calcule écart type et allocations avec [MemoryDiagnoser]. Une mesure unique en Debug inclut la compilation JIT et des optimisations désactivées.
+
+@097
+Q: Quel outil en ligne de commande suit en direct le GC, le pool de threads et le débit d'une application .NET ?
+C: dotnet-counters
+W: dotnet new
+W: ildasm, le désassembleur d'IL
+W: nuget
+E: dotnet-counters monitor -p <pid> affiche les compteurs en continu, sans redémarrer l'application. dotnet-trace enregistre une trace détaillée, dotnet-dump capture la mémoire pour l'analyser.
+
+@098
+Q: Une API reçoit 600 requêtes par seconde ; chacune bloque un thread 50 ms en attendant la base de façon synchrone. Combien de threads sont occupés en moyenne ?
+N: 30
+E: Loi de Little : nombre moyen en cours = débit × durée, soit 600 × 0,05 = 30 threads bloqués en permanence. Avec un accès asynchrone, ces threads seraient rendus au pool pendant l'attente ; en synchrone, une hausse de charge ou de latence épuise vite le pool.
+
+@099
+Q: Sous charge, une API ASP.NET Core devient lente, le CPU reste bas et la file d'attente du pool de threads grossit. Quelle est la cause la plus probable ?
+C: Des appels bloquants (.Result, .Wait(), E/S synchrones) qui épuisent le pool
+W: Le ramasse-miettes désactivé par la configuration
+W: Un manque de mémoire vive sur le serveur
+W: Des requêtes trop rapides pour Kestrel
+E: C'est une famine du pool de threads : les threads attendent sans calculer, d'où un CPU bas, et le pool n'en ajoute que lentement. dotnet-counters montre ThreadPool Queue Length qui monte. La correction : rendre asynchrone toute la chaîne d'appels.
+
+@100
+Q: Remettre dans l'ordre le diagnostic d'une fuite mémoire dans un service .NET en production.
+O: Constater la hausse continue de la mémoire avec dotnet-counters
+O: Capturer un dump avec dotnet-dump collect
+O: Repérer les types les plus présents sur le tas avec dumpheap -stat
+O: Remonter les références qui retiennent ces objets avec gcroot
+O: Corriger le code puis vérifier que la mémoire se stabilise
+E: On mesure avant de chercher : une mémoire qui monte puis redescend après un GC n'est pas une fuite. Le dump fige l'état du tas ; gcroot montre la chaîne de références, souvent un événement, un cache statique ou un singleton qui garde les objets.

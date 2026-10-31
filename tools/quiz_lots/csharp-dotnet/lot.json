@@ -1,0 +1,34 @@
+{
+  "lot": 1,
+  "seed": 2026103101,
+  "skills": ["C#", ".NET", "ASP.NET", "Entity Framework"],
+  "schemas": [
+    {
+      "name": "csharp-compilation.svg",
+      "questions": ["012", "051"],
+      "diagram": {
+        "title": "Du C# au code machine",
+        "nodes": [
+          "Code C# (.cs)",
+          "Roslyn : compilation en IL",
+          "Assembly .dll ou .exe",
+          "CLR : compilation JIT et exécution"
+        ],
+        "note": "Le ramasse-miettes du CLR libère la mémoire managée"
+      }
+    },
+    {
+      "name": "csharp-durees-de-vie.svg",
+      "questions": ["032", "034"],
+      "diagram": {
+        "title": "Durées de vie des services ASP.NET Core",
+        "nodes": [
+          "Singleton : une instance pour l'application",
+          "Scoped : une instance par requête",
+          "Transient : une instance par injection"
+        ],
+        "note": "Un service ne dépend que de services qui vivent au moins aussi longtemps"
+      }
+    }
+  ]
+}

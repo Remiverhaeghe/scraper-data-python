@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision C# et .NET
+- Lot de 100 questions rangé dans Informatique, Développement, thème vide le
+  plus demandé par les offres : bases du langage, collections et LINQ,
+  async et await, ASP.NET Core (injection de dépendances, middlewares, JWT),
+  Entity Framework Core (N+1, suivi, concurrence), threads, mémoire et
+  diagnostic en production
+- Deux schémas : compilation du C# au code machine, durées de vie des services
+
 ### Révision IA et machine learning
 - Thème de 100 questions rangé dans Informatique, Données : types
   d'apprentissage, jeux de données et fuites, mesures (précision, rappel, F1,
