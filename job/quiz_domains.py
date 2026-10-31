@@ -25,6 +25,8 @@ DOMAIN_ICONS = {
     "Électricité et énergie": "zap",
     "Mécanique et fluides": "settings",
     "Automatisme": "cpu",
+    "Langues": "languages",
+    "Anglais technique": "languages",
 }
 
 # Ordre d'affichage des domaines et de leurs sous-domaines
@@ -43,6 +45,7 @@ DOMAIN_ORDER = {
         "Mécanique et fluides",
         "Automatisme",
     ),
+    "Langues": ("Anglais technique",),
     OTHER_DOMAIN[0]: (OTHER_DOMAIN[1],),
 }
 
@@ -50,6 +53,8 @@ DOMAIN_ORDER = {
 # réseau » relève de la sécurité, « Python et automatisation » du développement,
 # « Normes, qualité et sécurité » des normes industrielles.
 DOMAIN_RULES = (
+    # En premier : « Anglais technique (atelier et informatique) » n'est ni l'un ni l'autre
+    ("Langues", "Anglais technique", "anglais english"),
     ("Industrie", "Qualité et normes", "normes norme qse hse qhse"),
     (
         "Réseau et sécurité",

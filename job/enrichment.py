@@ -164,6 +164,7 @@ SKILLS = {
     "Power BI": r"\bpower\s*bi\b",
     "Tableau": r"\btableau\s+(?:software|desktop)\b",
     "Excel": r"\bexcel\b",
+    "Anglais": r"\banglais\b|\benglish\b",
     "SAP": r"\bsap\b",
     "Salesforce": r"\bsalesforce\b",
     "HTML": r"\bhtml5?\b",

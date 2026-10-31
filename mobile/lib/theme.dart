@@ -38,6 +38,7 @@ const domainIcons = {
   'network': Icons.lan_outlined,
   'wrench': Icons.build_outlined,
   'factory': Icons.factory_outlined,
+  'languages': Icons.translate,
 };
 
 IconData getDomainIcon(String? pName) {

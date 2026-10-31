@@ -99,6 +99,8 @@ SKILL_GLOSSARY = {
     "interactifs.",
     "Excel": "Tableur de Microsoft : formules, tableaux croisés dynamiques, "
     "graphiques.",
+    "Anglais": "Lire une notice, un message d'erreur ou une documentation en "
+    "anglais, parfois échanger à l'oral avec un fournisseur ou une équipe.",
     "SAP": "Progiciel de gestion intégré (ERP) qui couvre finance, achats, "
     "production et logistique.",
     "Salesforce": "Logiciel de gestion de la relation client (CRM) en ligne.",

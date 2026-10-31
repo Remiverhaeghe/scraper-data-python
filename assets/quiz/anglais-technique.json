@@ -1,0 +1,2256 @@
+{
+  "theme": "Anglais technique (atelier et informatique)",
+  "skills": [
+    "Anglais",
+    "anglais technique",
+    "English"
+  ],
+  "questions": [
+    {
+      "id": "anglais-meca-bearing-sens",
+      "level": "débutant",
+      "question": "Que signifie « bearing » en français (mécanique) ?",
+      "choices": [
+        "roulement",
+        "réducteur",
+        "courroie",
+        "graisse"
+      ],
+      "answer": 0,
+      "explanation": "« bearing » se traduit par « roulement ». Exemple : « Replace the worn bearing on the motor shaft. » (Remplacez le roulement usé sur l'arbre du moteur.)"
+    },
+    {
+      "id": "anglais-meca-bearing-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « roulement ».",
+      "code": "Replace the worn ____ on the motor shaft.",
+      "accepted": [
+        "bearing",
+        "Bearing"
+      ],
+      "explanation": "Le mot attendu est « bearing » : Remplacez le roulement usé sur l'arbre du moteur."
+    },
+    {
+      "id": "anglais-meca-shaft-sens",
+      "level": "débutant",
+      "question": "Que signifie « shaft » en français (mécanique) ?",
+      "choices": [
+        "graisse",
+        "arbre",
+        "courroie",
+        "roulement"
+      ],
+      "answer": 1,
+      "explanation": "« shaft » se traduit par « arbre ». Exemple : « The shaft is misaligned with the gearbox. » (L'arbre est mal aligné avec le réducteur.)"
+    },
+    {
+      "id": "anglais-meca-shaft-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « arbre ».",
+      "code": "The ____ is misaligned with the gearbox.",
+      "accepted": [
+        "shaft",
+        "Shaft"
+      ],
+      "explanation": "Le mot attendu est « shaft » : L'arbre est mal aligné avec le réducteur."
+    },
+    {
+      "id": "anglais-meca-gearbox-sens",
+      "level": "débutant",
+      "question": "Que signifie « gearbox » en français (mécanique) ?",
+      "choices": [
+        "graisse",
+        "accouplement",
+        "réducteur",
+        "arbre"
+      ],
+      "answer": 2,
+      "explanation": "« gearbox » se traduit par « réducteur ». Exemple : « Check the oil level in the gearbox every week. » (Contrôlez le niveau d'huile du réducteur chaque semaine.)"
+    },
+    {
+      "id": "anglais-meca-gearbox-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « réducteur ».",
+      "code": "Check the oil level in the ____ every week.",
+      "accepted": [
+        "gearbox",
+        "Gearbox"
+      ],
+      "explanation": "Le mot attendu est « gearbox » : Contrôlez le niveau d'huile du réducteur chaque semaine."
+    },
+    {
+      "id": "anglais-meca-belt-sens",
+      "level": "débutant",
+      "question": "Que signifie « belt » en français (mécanique) ?",
+      "choices": [
+        "arbre",
+        "usure",
+        "graisse",
+        "courroie"
+      ],
+      "answer": 3,
+      "explanation": "« belt » se traduit par « courroie ». Exemple : « The belt is slipping on the pulley. » (La courroie patine sur la poulie.)"
+    },
+    {
+      "id": "anglais-meca-belt-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « courroie ».",
+      "code": "The ____ is slipping on the pulley.",
+      "accepted": [
+        "belt",
+        "Belt"
+      ],
+      "explanation": "Le mot attendu est « belt » : La courroie patine sur la poulie."
+    },
+    {
+      "id": "anglais-meca-coupling-sens",
+      "level": "débutant",
+      "question": "Que signifie « coupling » en français (mécanique) ?",
+      "choices": [
+        "accouplement",
+        "joint d'étanchéité",
+        "roulement",
+        "réducteur"
+      ],
+      "answer": 0,
+      "explanation": "« coupling » se traduit par « accouplement ». Exemple : « Inspect the coupling between the motor and the pump. » (Inspectez l'accouplement entre le moteur et la pompe.)"
+    },
+    {
+      "id": "anglais-meca-coupling-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « accouplement ».",
+      "code": "Inspect the ____ between the motor and the pump.",
+      "accepted": [
+        "coupling",
+        "Coupling"
+      ],
+      "explanation": "Le mot attendu est « coupling » : Inspectez l'accouplement entre le moteur et la pompe."
+    },
+    {
+      "id": "anglais-meca-seal-sens",
+      "level": "débutant",
+      "question": "Que signifie « seal » en français (mécanique) ?",
+      "choices": [
+        "accouplement",
+        "joint d'étanchéité",
+        "roulement",
+        "réducteur"
+      ],
+      "answer": 1,
+      "explanation": "« seal » se traduit par « joint d'étanchéité ». Exemple : « Oil is leaking past the seal. » (De l'huile fuit au niveau du joint d'étanchéité.)"
+    },
+    {
+      "id": "anglais-meca-seal-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « joint d'étanchéité ».",
+      "code": "Oil is leaking past the ____.",
+      "accepted": [
+        "seal",
+        "Seal"
+      ],
+      "explanation": "Le mot attendu est « seal » : De l'huile fuit au niveau du joint d'étanchéité."
+    },
+    {
+      "id": "anglais-meca-wear-sens",
+      "level": "débutant",
+      "question": "Que signifie « wear » en français (mécanique) ?",
+      "choices": [
+        "graisse",
+        "courroie",
+        "usure",
+        "roulement"
+      ],
+      "answer": 2,
+      "explanation": "« wear » se traduit par « usure ». Exemple : « Measure the wear on the brake pads. » (Mesurez l'usure des plaquettes de frein.)"
+    },
+    {
+      "id": "anglais-meca-wear-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « usure ».",
+      "code": "Measure the ____ on the brake pads.",
+      "accepted": [
+        "wear",
+        "Wear"
+      ],
+      "explanation": "Le mot attendu est « wear » : Mesurez l'usure des plaquettes de frein."
+    },
+    {
+      "id": "anglais-meca-grease-sens",
+      "level": "débutant",
+      "question": "Que signifie « grease » en français (mécanique) ?",
+      "choices": [
+        "roulement",
+        "réducteur",
+        "usure",
+        "graisse"
+      ],
+      "answer": 3,
+      "explanation": "« grease » se traduit par « graisse ». Exemple : « Apply grease to the fittings once a month. » (Appliquez de la graisse sur les graisseurs une fois par mois.)"
+    },
+    {
+      "id": "anglais-meca-grease-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « graisse ».",
+      "code": "Apply ____ to the fittings once a month.",
+      "accepted": [
+        "grease",
+        "Grease"
+      ],
+      "explanation": "Le mot attendu est « grease » : Appliquez de la graisse sur les graisseurs une fois par mois."
+    },
+    {
+      "id": "anglais-meca-association-1",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque terme anglais (mécanique) à sa traduction.",
+      "pairs": [
+        [
+          "bearing",
+          "roulement"
+        ],
+        [
+          "shaft",
+          "arbre"
+        ],
+        [
+          "gearbox",
+          "réducteur"
+        ],
+        [
+          "belt",
+          "courroie"
+        ]
+      ],
+      "explanation": "bearing : roulement ; shaft : arbre ; gearbox : réducteur ; belt : courroie."
+    },
+    {
+      "id": "anglais-meca-association-2",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque terme anglais (mécanique) à sa traduction.",
+      "pairs": [
+        [
+          "coupling",
+          "accouplement"
+        ],
+        [
+          "seal",
+          "joint d'étanchéité"
+        ],
+        [
+          "wear",
+          "usure"
+        ],
+        [
+          "grease",
+          "graisse"
+        ]
+      ],
+      "explanation": "coupling : accouplement ; seal : joint d'étanchéité ; wear : usure ; grease : graisse."
+    },
+    {
+      "id": "anglais-elec-circuit-breaker-sens",
+      "level": "débutant",
+      "question": "Que signifie « circuit breaker » en français (électricité) ?",
+      "choices": [
+        "disjoncteur",
+        "contacteur",
+        "court-circuit",
+        "surcharge"
+      ],
+      "answer": 0,
+      "explanation": "« circuit breaker » se traduit par « disjoncteur ». Exemple : « The circuit breaker tripped during start-up. » (Le disjoncteur a déclenché au démarrage.)"
+    },
+    {
+      "id": "anglais-elec-circuit-breaker-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « disjoncteur ».",
+      "code": "The ____ tripped during start-up.",
+      "accepted": [
+        "circuit breaker",
+        "Circuit breaker"
+      ],
+      "explanation": "Le mot attendu est « circuit breaker » : Le disjoncteur a déclenché au démarrage."
+    },
+    {
+      "id": "anglais-elec-fuse-sens",
+      "level": "débutant",
+      "question": "Que signifie « fuse » en français (électricité) ?",
+      "choices": [
+        "câblage",
+        "fusible",
+        "surcharge",
+        "terre"
+      ],
+      "answer": 1,
+      "explanation": "« fuse » se traduit par « fusible ». Exemple : « A blown fuse cut the power to the conveyor. » (Un fusible grillé a coupé l'alimentation du convoyeur.)"
+    },
+    {
+      "id": "anglais-elec-fuse-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « fusible ».",
+      "code": "A blown ____ cut the power to the conveyor.",
+      "accepted": [
+        "fuse",
+        "Fuse"
+      ],
+      "explanation": "Le mot attendu est « fuse » : Un fusible grillé a coupé l'alimentation du convoyeur."
+    },
+    {
+      "id": "anglais-elec-contactor-sens",
+      "level": "débutant",
+      "question": "Que signifie « contactor » en français (électricité) ?",
+      "choices": [
+        "bornier",
+        "court-circuit",
+        "contacteur",
+        "câblage"
+      ],
+      "answer": 2,
+      "explanation": "« contactor » se traduit par « contacteur ». Exemple : « The contactor coil is burnt. » (La bobine du contacteur est brûlée.)"
+    },
+    {
+      "id": "anglais-elec-contactor-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « contacteur ».",
+      "code": "The ____ coil is burnt.",
+      "accepted": [
+        "contactor",
+        "Contactor"
+      ],
+      "explanation": "Le mot attendu est « contactor » : La bobine du contacteur est brûlée."
+    },
+    {
+      "id": "anglais-elec-wiring-sens",
+      "level": "débutant",
+      "question": "Que signifie « wiring » en français (électricité) ?",
+      "choices": [
+        "terre",
+        "contacteur",
+        "bornier",
+        "câblage"
+      ],
+      "answer": 3,
+      "explanation": "« wiring » se traduit par « câblage ». Exemple : « Follow the wiring diagram before you disconnect anything. » (Suivez le schéma de câblage avant de débrancher quoi que ce soit.)"
+    },
+    {
+      "id": "anglais-elec-wiring-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « câblage ».",
+      "code": "Follow the ____ diagram before you disconnect anything.",
+      "accepted": [
+        "wiring",
+        "Wiring"
+      ],
+      "explanation": "Le mot attendu est « wiring » : Suivez le schéma de câblage avant de débrancher quoi que ce soit."
+    },
+    {
+      "id": "anglais-elec-terminal-block-sens",
+      "level": "débutant",
+      "question": "Que signifie « terminal block » en français (électricité) ?",
+      "choices": [
+        "bornier",
+        "contacteur",
+        "câblage",
+        "fusible"
+      ],
+      "answer": 0,
+      "explanation": "« terminal block » se traduit par « bornier ». Exemple : « Tighten the screws on the terminal block. » (Serrez les vis du bornier.)"
+    },
+    {
+      "id": "anglais-elec-terminal-block-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « bornier ».",
+      "code": "Tighten the screws on the ____.",
+      "accepted": [
+        "terminal block",
+        "Terminal block"
+      ],
+      "explanation": "Le mot attendu est « terminal block » : Serrez les vis du bornier."
+    },
+    {
+      "id": "anglais-elec-ground-sens",
+      "level": "débutant",
+      "question": "Que signifie « ground » en français (électricité) ?",
+      "choices": [
+        "bornier",
+        "terre",
+        "câblage",
+        "fusible"
+      ],
+      "answer": 1,
+      "explanation": "« ground » se traduit par « terre ». Exemple : « Make sure the cabinet is connected to ground. » (Vérifiez que l'armoire est reliée à la terre.)"
+    },
+    {
+      "id": "anglais-elec-ground-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « terre ».",
+      "code": "Make sure the cabinet is connected to ____.",
+      "accepted": [
+        "ground",
+        "Ground"
+      ],
+      "explanation": "Le mot attendu est « ground » : Vérifiez que l'armoire est reliée à la terre."
+    },
+    {
+      "id": "anglais-elec-overload-sens",
+      "level": "débutant",
+      "question": "Que signifie « overload » en français (électricité) ?",
+      "choices": [
+        "bornier",
+        "câblage",
+        "surcharge",
+        "disjoncteur"
+      ],
+      "answer": 2,
+      "explanation": "« overload » se traduit par « surcharge ». Exemple : « The motor stopped because of an overload. » (Le moteur s'est arrêté à cause d'une surcharge.)"
+    },
+    {
+      "id": "anglais-elec-overload-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « surcharge ».",
+      "code": "The motor stopped because of an ____.",
+      "accepted": [
+        "overload",
+        "Overload"
+      ],
+      "explanation": "Le mot attendu est « overload » : Le moteur s'est arrêté à cause d'une surcharge."
+    },
+    {
+      "id": "anglais-elec-short-circuit-sens",
+      "level": "débutant",
+      "question": "Que signifie « short circuit » en français (électricité) ?",
+      "choices": [
+        "surcharge",
+        "bornier",
+        "câblage",
+        "court-circuit"
+      ],
+      "answer": 3,
+      "explanation": "« short circuit » se traduit par « court-circuit ». Exemple : « A damaged cable caused a short circuit. » (Un câble abîmé a provoqué un court-circuit.)"
+    },
+    {
+      "id": "anglais-elec-short-circuit-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « court-circuit ».",
+      "code": "A damaged cable caused a ____.",
+      "accepted": [
+        "short circuit",
+        "Short circuit"
+      ],
+      "explanation": "Le mot attendu est « short circuit » : Un câble abîmé a provoqué un court-circuit."
+    },
+    {
+      "id": "anglais-elec-association-1",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque terme anglais (électricité) à sa traduction.",
+      "pairs": [
+        [
+          "circuit breaker",
+          "disjoncteur"
+        ],
+        [
+          "fuse",
+          "fusible"
+        ],
+        [
+          "contactor",
+          "contacteur"
+        ],
+        [
+          "wiring",
+          "câblage"
+        ]
+      ],
+      "explanation": "circuit breaker : disjoncteur ; fuse : fusible ; contactor : contacteur ; wiring : câblage."
+    },
+    {
+      "id": "anglais-elec-association-2",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque terme anglais (électricité) à sa traduction.",
+      "pairs": [
+        [
+          "terminal block",
+          "bornier"
+        ],
+        [
+          "ground",
+          "terre"
+        ],
+        [
+          "overload",
+          "surcharge"
+        ],
+        [
+          "short circuit",
+          "court-circuit"
+        ]
+      ],
+      "explanation": "terminal block : bornier ; ground : terre ; overload : surcharge ; short circuit : court-circuit."
+    },
+    {
+      "id": "anglais-fluides-pump-sens",
+      "level": "débutant",
+      "question": "Que signifie « pump » en français (hydraulique et pneumatique) ?",
+      "choices": [
+        "pompe",
+        "débit",
+        "fuite",
+        "vanne"
+      ],
+      "answer": 0,
+      "explanation": "« pump » se traduit par « pompe ». Exemple : « The pump is running but nothing comes out. » (La pompe tourne mais rien ne sort.)"
+    },
+    {
+      "id": "anglais-fluides-pump-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « pompe ».",
+      "code": "The ____ is running but nothing comes out.",
+      "accepted": [
+        "pump",
+        "Pump"
+      ],
+      "explanation": "Le mot attendu est « pump » : La pompe tourne mais rien ne sort."
+    },
+    {
+      "id": "anglais-fluides-valve-sens",
+      "level": "débutant",
+      "question": "Que signifie « valve » en français (hydraulique et pneumatique) ?",
+      "choices": [
+        "fuite",
+        "vanne",
+        "pompe",
+        "vérin"
+      ],
+      "answer": 1,
+      "explanation": "« valve » se traduit par « vanne ». Exemple : « Close the valve before you open the filter housing. » (Fermez la vanne avant d'ouvrir le corps du filtre.)"
+    },
+    {
+      "id": "anglais-fluides-valve-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « vanne ».",
+      "code": "Close the ____ before you open the filter housing.",
+      "accepted": [
+        "valve",
+        "Valve"
+      ],
+      "explanation": "Le mot attendu est « valve » : Fermez la vanne avant d'ouvrir le corps du filtre."
+    },
+    {
+      "id": "anglais-fluides-cylinder-sens",
+      "level": "débutant",
+      "question": "Que signifie « cylinder » en français (hydraulique et pneumatique) ?",
+      "choices": [
+        "pompe",
+        "vanne",
+        "vérin",
+        "flexible"
+      ],
+      "answer": 2,
+      "explanation": "« cylinder » se traduit par « vérin ». Exemple : « The cylinder does not extend fully. » (Le vérin ne sort pas complètement.)"
+    },
+    {
+      "id": "anglais-fluides-cylinder-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « vérin ».",
+      "code": "The ____ does not extend fully.",
+      "accepted": [
+        "cylinder",
+        "Cylinder"
+      ],
+      "explanation": "Le mot attendu est « cylinder » : Le vérin ne sort pas complètement."
+    },
+    {
+      "id": "anglais-fluides-hose-sens",
+      "level": "débutant",
+      "question": "Que signifie « hose » en français (hydraulique et pneumatique) ?",
+      "choices": [
+        "pompe",
+        "vanne",
+        "manomètre",
+        "flexible"
+      ],
+      "answer": 3,
+      "explanation": "« hose » se traduit par « flexible ». Exemple : « Replace the cracked hose on the press. » (Remplacez le flexible fissuré de la presse.)"
+    },
+    {
+      "id": "anglais-fluides-hose-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « flexible ».",
+      "code": "Replace the cracked ____ on the press.",
+      "accepted": [
+        "hose",
+        "Hose"
+      ],
+      "explanation": "Le mot attendu est « hose » : Remplacez le flexible fissuré de la presse."
+    },
+    {
+      "id": "anglais-fluides-leak-sens",
+      "level": "débutant",
+      "question": "Que signifie « leak » en français (hydraulique et pneumatique) ?",
+      "choices": [
+        "fuite",
+        "flexible",
+        "débit",
+        "pompe"
+      ],
+      "answer": 0,
+      "explanation": "« leak » se traduit par « fuite ». Exemple : « There is an air leak on the main line. » (Il y a une fuite d'air sur la ligne principale.)"
+    },
+    {
+      "id": "anglais-fluides-leak-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « fuite ».",
+      "code": "There is an air ____ on the main line.",
+      "accepted": [
+        "leak",
+        "Leak"
+      ],
+      "explanation": "Le mot attendu est « leak » : Il y a une fuite d'air sur la ligne principale."
+    },
+    {
+      "id": "anglais-fluides-pressure-gauge-sens",
+      "level": "débutant",
+      "question": "Que signifie « pressure gauge » en français (hydraulique et pneumatique) ?",
+      "choices": [
+        "flexible",
+        "manomètre",
+        "électrovanne",
+        "débit"
+      ],
+      "answer": 1,
+      "explanation": "« pressure gauge » se traduit par « manomètre ». Exemple : « Read the value on the pressure gauge. » (Relevez la valeur sur le manomètre.)"
+    },
+    {
+      "id": "anglais-fluides-pressure-gauge-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « manomètre ».",
+      "code": "Read the value on the ____.",
+      "accepted": [
+        "pressure gauge",
+        "Pressure gauge"
+      ],
+      "explanation": "Le mot attendu est « pressure gauge » : Relevez la valeur sur le manomètre."
+    },
+    {
+      "id": "anglais-fluides-solenoid-valve-sens",
+      "level": "débutant",
+      "question": "Que signifie « solenoid valve » en français (hydraulique et pneumatique) ?",
+      "choices": [
+        "flexible",
+        "débit",
+        "électrovanne",
+        "fuite"
+      ],
+      "answer": 2,
+      "explanation": "« solenoid valve » se traduit par « électrovanne ». Exemple : « The solenoid valve stays open when the coil is off. » (L'électrovanne reste ouverte quand la bobine est coupée.)"
+    },
+    {
+      "id": "anglais-fluides-solenoid-valve-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « électrovanne ».",
+      "code": "The ____ stays open when the coil is off.",
+      "accepted": [
+        "solenoid valve",
+        "Solenoid valve"
+      ],
+      "explanation": "Le mot attendu est « solenoid valve » : L'électrovanne reste ouverte quand la bobine est coupée."
+    },
+    {
+      "id": "anglais-fluides-flow-rate-sens",
+      "level": "débutant",
+      "question": "Que signifie « flow rate » en français (hydraulique et pneumatique) ?",
+      "choices": [
+        "vanne",
+        "vérin",
+        "flexible",
+        "débit"
+      ],
+      "answer": 3,
+      "explanation": "« flow rate » se traduit par « débit ». Exemple : « The flow rate dropped when the filter clogged. » (Le débit a chuté quand le filtre s'est colmaté.)"
+    },
+    {
+      "id": "anglais-fluides-flow-rate-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « débit ».",
+      "code": "The ____ dropped when the filter clogged.",
+      "accepted": [
+        "flow rate",
+        "Flow rate"
+      ],
+      "explanation": "Le mot attendu est « flow rate » : Le débit a chuté quand le filtre s'est colmaté."
+    },
+    {
+      "id": "anglais-fluides-association-1",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque terme anglais (hydraulique et pneumatique) à sa traduction.",
+      "pairs": [
+        [
+          "pump",
+          "pompe"
+        ],
+        [
+          "valve",
+          "vanne"
+        ],
+        [
+          "cylinder",
+          "vérin"
+        ],
+        [
+          "hose",
+          "flexible"
+        ]
+      ],
+      "explanation": "pump : pompe ; valve : vanne ; cylinder : vérin ; hose : flexible."
+    },
+    {
+      "id": "anglais-fluides-association-2",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque terme anglais (hydraulique et pneumatique) à sa traduction.",
+      "pairs": [
+        [
+          "leak",
+          "fuite"
+        ],
+        [
+          "pressure gauge",
+          "manomètre"
+        ],
+        [
+          "solenoid valve",
+          "électrovanne"
+        ],
+        [
+          "flow rate",
+          "débit"
+        ]
+      ],
+      "explanation": "leak : fuite ; pressure gauge : manomètre ; solenoid valve : électrovanne ; flow rate : débit."
+    },
+    {
+      "id": "anglais-securite-lockout-sens",
+      "level": "débutant",
+      "question": "Que signifie « lockout » en français (sécurité) ?",
+      "choices": [
+        "consignation",
+        "protecteur",
+        "arrêt d'urgence",
+        "presque-accident"
+      ],
+      "answer": 0,
+      "explanation": "« lockout » se traduit par « consignation ». Exemple : « Apply the lockout procedure before any work on the machine. » (Appliquez la procédure de consignation avant toute intervention sur la machine.)"
+    },
+    {
+      "id": "anglais-securite-lockout-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « consignation ».",
+      "code": "Apply the ____ procedure before any work on the machine.",
+      "accepted": [
+        "lockout",
+        "Lockout"
+      ],
+      "explanation": "Le mot attendu est « lockout » : Appliquez la procédure de consignation avant toute intervention sur la machine."
+    },
+    {
+      "id": "anglais-securite-ppe-sens",
+      "level": "débutant",
+      "question": "Que signifie « PPE » en français (sécurité) ?",
+      "choices": [
+        "permis de travail",
+        "équipements de protection individuelle",
+        "presque-accident",
+        "arrêt d'urgence"
+      ],
+      "answer": 1,
+      "explanation": "« PPE » se traduit par « équipements de protection individuelle ». Exemple : « Wear your PPE in the workshop. » (Portez vos équipements de protection individuelle dans l'atelier.)"
+    },
+    {
+      "id": "anglais-securite-ppe-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « équipements de protection individuelle ».",
+      "code": "Wear your ____ in the workshop.",
+      "accepted": [
+        "PPE"
+      ],
+      "explanation": "Le mot attendu est « PPE » : Portez vos équipements de protection individuelle dans l'atelier."
+    },
+    {
+      "id": "anglais-securite-hazard-sens",
+      "level": "débutant",
+      "question": "Que signifie « hazard » en français (sécurité) ?",
+      "choices": [
+        "arrêt d'urgence",
+        "presque-accident",
+        "danger",
+        "permis de travail"
+      ],
+      "answer": 2,
+      "explanation": "« hazard » se traduit par « danger ». Exemple : « Report any hazard to your supervisor. » (Signalez tout danger à votre responsable.)"
+    },
+    {
+      "id": "anglais-securite-hazard-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « danger ».",
+      "code": "Report any ____ to your supervisor.",
+      "accepted": [
+        "hazard",
+        "Hazard"
+      ],
+      "explanation": "Le mot attendu est « hazard » : Signalez tout danger à votre responsable."
+    },
+    {
+      "id": "anglais-securite-emergency-stop-sens",
+      "level": "débutant",
+      "question": "Que signifie « emergency stop » en français (sécurité) ?",
+      "choices": [
+        "protecteur",
+        "évaluation des risques",
+        "presque-accident",
+        "arrêt d'urgence"
+      ],
+      "answer": 3,
+      "explanation": "« emergency stop » se traduit par « arrêt d'urgence ». Exemple : « Press the emergency stop if someone is at risk. » (Appuyez sur l'arrêt d'urgence si quelqu'un est en danger.)"
+    },
+    {
+      "id": "anglais-securite-emergency-stop-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « arrêt d'urgence ».",
+      "code": "Press the ____ if someone is at risk.",
+      "accepted": [
+        "emergency stop",
+        "Emergency stop"
+      ],
+      "explanation": "Le mot attendu est « emergency stop » : Appuyez sur l'arrêt d'urgence si quelqu'un est en danger."
+    },
+    {
+      "id": "anglais-securite-guard-sens",
+      "level": "débutant",
+      "question": "Que signifie « guard » en français (sécurité) ?",
+      "choices": [
+        "protecteur",
+        "permis de travail",
+        "consignation",
+        "danger"
+      ],
+      "answer": 0,
+      "explanation": "« guard » se traduit par « protecteur ». Exemple : « Never run the machine with the guard removed. » (Ne faites jamais tourner la machine sans son protecteur.)"
+    },
+    {
+      "id": "anglais-securite-guard-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « protecteur ».",
+      "code": "Never run the machine with the ____ removed.",
+      "accepted": [
+        "guard",
+        "Guard"
+      ],
+      "explanation": "Le mot attendu est « guard » : Ne faites jamais tourner la machine sans son protecteur."
+    },
+    {
+      "id": "anglais-securite-permit-to-work-sens",
+      "level": "débutant",
+      "question": "Que signifie « permit to work » en français (sécurité) ?",
+      "choices": [
+        "presque-accident",
+        "permis de travail",
+        "arrêt d'urgence",
+        "consignation"
+      ],
+      "answer": 1,
+      "explanation": "« permit to work » se traduit par « permis de travail ». Exemple : « Hot work requires a permit to work. » (Le travail par point chaud exige un permis de travail.)"
+    },
+    {
+      "id": "anglais-securite-permit-to-work-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « permis de travail ».",
+      "code": "Hot work requires a ____.",
+      "accepted": [
+        "permit to work",
+        "Permit to work"
+      ],
+      "explanation": "Le mot attendu est « permit to work » : Le travail par point chaud exige un permis de travail."
+    },
+    {
+      "id": "anglais-securite-near-miss-sens",
+      "level": "débutant",
+      "question": "Que signifie « near miss » en français (sécurité) ?",
+      "choices": [
+        "permis de travail",
+        "consignation",
+        "presque-accident",
+        "protecteur"
+      ],
+      "answer": 2,
+      "explanation": "« near miss » se traduit par « presque-accident ». Exemple : « Every near miss must be reported. » (Chaque presque-accident doit être déclaré.)"
+    },
+    {
+      "id": "anglais-securite-near-miss-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « presque-accident ».",
+      "code": "Every ____ must be reported.",
+      "accepted": [
+        "near miss",
+        "Near miss"
+      ],
+      "explanation": "Le mot attendu est « near miss » : Chaque presque-accident doit être déclaré."
+    },
+    {
+      "id": "anglais-securite-risk-assessment-sens",
+      "level": "débutant",
+      "question": "Que signifie « risk assessment » en français (sécurité) ?",
+      "choices": [
+        "arrêt d'urgence",
+        "consignation",
+        "protecteur",
+        "évaluation des risques"
+      ],
+      "answer": 3,
+      "explanation": "« risk assessment » se traduit par « évaluation des risques ». Exemple : « Update the risk assessment after the change. » (Mettez à jour l'évaluation des risques après la modification.)"
+    },
+    {
+      "id": "anglais-securite-risk-assessment-phrase",
+      "level": "intermédiaire",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « évaluation des risques ».",
+      "code": "Update the ____ after the change.",
+      "accepted": [
+        "risk assessment",
+        "Risk assessment"
+      ],
+      "explanation": "Le mot attendu est « risk assessment » : Mettez à jour l'évaluation des risques après la modification."
+    },
+    {
+      "id": "anglais-securite-association-1",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque terme anglais (sécurité) à sa traduction.",
+      "pairs": [
+        [
+          "lockout",
+          "consignation"
+        ],
+        [
+          "PPE",
+          "équipements de protection individuelle"
+        ],
+        [
+          "hazard",
+          "danger"
+        ],
+        [
+          "emergency stop",
+          "arrêt d'urgence"
+        ]
+      ],
+      "explanation": "lockout : consignation ; PPE : équipements de protection individuelle ; hazard : danger ; emergency stop : arrêt d'urgence."
+    },
+    {
+      "id": "anglais-securite-association-2",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque terme anglais (sécurité) à sa traduction.",
+      "pairs": [
+        [
+          "guard",
+          "protecteur"
+        ],
+        [
+          "permit to work",
+          "permis de travail"
+        ],
+        [
+          "near miss",
+          "presque-accident"
+        ],
+        [
+          "risk assessment",
+          "évaluation des risques"
+        ]
+      ],
+      "explanation": "guard : protecteur ; permit to work : permis de travail ; near miss : presque-accident ; risk assessment : évaluation des risques."
+    },
+    {
+      "id": "anglais-maintenance-breakdown-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « breakdown » en français (maintenance) ?",
+      "choices": [
+        "panne",
+        "GMAO",
+        "dépannage",
+        "cause racine"
+      ],
+      "answer": 0,
+      "explanation": "« breakdown » se traduit par « panne ». Exemple : « The line was stopped by a breakdown on the filler. » (La ligne a été arrêtée par une panne de la remplisseuse.)"
+    },
+    {
+      "id": "anglais-maintenance-breakdown-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « panne ».",
+      "code": "The line was stopped by a ____ on the filler.",
+      "accepted": [
+        "breakdown",
+        "Breakdown"
+      ],
+      "explanation": "Le mot attendu est « breakdown » : La ligne a été arrêtée par une panne de la remplisseuse."
+    },
+    {
+      "id": "anglais-maintenance-troubleshooting-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « troubleshooting » en français (maintenance) ?",
+      "choices": [
+        "panne",
+        "dépannage",
+        "temps d'arrêt",
+        "GMAO"
+      ],
+      "answer": 1,
+      "explanation": "« troubleshooting » se traduit par « dépannage ». Exemple : « Good troubleshooting starts with the alarm history. » (Un bon dépannage commence par l'historique des alarmes.)"
+    },
+    {
+      "id": "anglais-maintenance-troubleshooting-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « dépannage ».",
+      "code": "Good ____ starts with the alarm history.",
+      "accepted": [
+        "troubleshooting",
+        "Troubleshooting"
+      ],
+      "explanation": "Le mot attendu est « troubleshooting » : Un bon dépannage commence par l'historique des alarmes."
+    },
+    {
+      "id": "anglais-maintenance-spare-part-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « spare part » en français (maintenance) ?",
+      "choices": [
+        "temps d'arrêt",
+        "cause racine",
+        "pièce de rechange",
+        "dépannage"
+      ],
+      "answer": 2,
+      "explanation": "« spare part » se traduit par « pièce de rechange ». Exemple : « Order the spare part before the summer stop. » (Commandez la pièce de rechange avant l'arrêt d'été.)"
+    },
+    {
+      "id": "anglais-maintenance-spare-part-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « pièce de rechange ».",
+      "code": "Order the ____ before the summer stop.",
+      "accepted": [
+        "spare part",
+        "Spare part"
+      ],
+      "explanation": "Le mot attendu est « spare part » : Commandez la pièce de rechange avant l'arrêt d'été."
+    },
+    {
+      "id": "anglais-maintenance-work-order-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « work order » en français (maintenance) ?",
+      "choices": [
+        "cause racine",
+        "dépannage",
+        "arrêt programmé",
+        "ordre de travail"
+      ],
+      "answer": 3,
+      "explanation": "« work order » se traduit par « ordre de travail ». Exemple : « Close the work order when the job is done. » (Clôturez l'ordre de travail une fois l'intervention finie.)"
+    },
+    {
+      "id": "anglais-maintenance-work-order-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « ordre de travail ».",
+      "code": "Close the ____ when the job is done.",
+      "accepted": [
+        "work order",
+        "Work order"
+      ],
+      "explanation": "Le mot attendu est « work order » : Clôturez l'ordre de travail une fois l'intervention finie."
+    },
+    {
+      "id": "anglais-maintenance-downtime-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « downtime » en français (maintenance) ?",
+      "choices": [
+        "temps d'arrêt",
+        "pièce de rechange",
+        "cause racine",
+        "arrêt programmé"
+      ],
+      "answer": 0,
+      "explanation": "« downtime » se traduit par « temps d'arrêt ». Exemple : « We reduced downtime by 20 % this year. » (Nous avons réduit le temps d'arrêt de 20 % cette année.)"
+    },
+    {
+      "id": "anglais-maintenance-downtime-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « temps d'arrêt ».",
+      "code": "We reduced ____ by 20 % this year.",
+      "accepted": [
+        "downtime",
+        "Downtime"
+      ],
+      "explanation": "Le mot attendu est « downtime » : Nous avons réduit le temps d'arrêt de 20 % cette année."
+    },
+    {
+      "id": "anglais-maintenance-root-cause-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « root cause » en français (maintenance) ?",
+      "choices": [
+        "temps d'arrêt",
+        "cause racine",
+        "arrêt programmé",
+        "dépannage"
+      ],
+      "answer": 1,
+      "explanation": "« root cause » se traduit par « cause racine ». Exemple : « Find the root cause, not only the symptom. » (Trouvez la cause racine, pas seulement le symptôme.)"
+    },
+    {
+      "id": "anglais-maintenance-root-cause-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « cause racine ».",
+      "code": "Find the ____, not only the symptom.",
+      "accepted": [
+        "root cause",
+        "Root cause"
+      ],
+      "explanation": "Le mot attendu est « root cause » : Trouvez la cause racine, pas seulement le symptôme."
+    },
+    {
+      "id": "anglais-maintenance-shutdown-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « shutdown » en français (maintenance) ?",
+      "choices": [
+        "pièce de rechange",
+        "temps d'arrêt",
+        "arrêt programmé",
+        "cause racine"
+      ],
+      "answer": 2,
+      "explanation": "« shutdown » se traduit par « arrêt programmé ». Exemple : « The annual shutdown lasts two weeks. » (L'arrêt programmé annuel dure deux semaines.)"
+    },
+    {
+      "id": "anglais-maintenance-shutdown-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « arrêt programmé ».",
+      "code": "The annual ____ lasts two weeks.",
+      "accepted": [
+        "shutdown",
+        "Shutdown"
+      ],
+      "explanation": "Le mot attendu est « shutdown » : L'arrêt programmé annuel dure deux semaines."
+    },
+    {
+      "id": "anglais-maintenance-cmms-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « CMMS » en français (maintenance) ?",
+      "choices": [
+        "cause racine",
+        "temps d'arrêt",
+        "arrêt programmé",
+        "GMAO"
+      ],
+      "answer": 3,
+      "explanation": "« CMMS » se traduit par « GMAO ». Exemple : « Log every intervention in the CMMS. » (Enregistrez chaque intervention dans la GMAO.)"
+    },
+    {
+      "id": "anglais-maintenance-cmms-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « GMAO ».",
+      "code": "Log every intervention in the ____.",
+      "accepted": [
+        "CMMS"
+      ],
+      "explanation": "Le mot attendu est « CMMS » : Enregistrez chaque intervention dans la GMAO."
+    },
+    {
+      "id": "anglais-maintenance-association-1",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque terme anglais (maintenance) à sa traduction.",
+      "pairs": [
+        [
+          "breakdown",
+          "panne"
+        ],
+        [
+          "troubleshooting",
+          "dépannage"
+        ],
+        [
+          "spare part",
+          "pièce de rechange"
+        ],
+        [
+          "work order",
+          "ordre de travail"
+        ]
+      ],
+      "explanation": "breakdown : panne ; troubleshooting : dépannage ; spare part : pièce de rechange ; work order : ordre de travail."
+    },
+    {
+      "id": "anglais-maintenance-association-2",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque terme anglais (maintenance) à sa traduction.",
+      "pairs": [
+        [
+          "downtime",
+          "temps d'arrêt"
+        ],
+        [
+          "root cause",
+          "cause racine"
+        ],
+        [
+          "shutdown",
+          "arrêt programmé"
+        ],
+        [
+          "CMMS",
+          "GMAO"
+        ]
+      ],
+      "explanation": "downtime : temps d'arrêt ; root cause : cause racine ; shutdown : arrêt programmé ; CMMS : GMAO."
+    },
+    {
+      "id": "anglais-automatisme-sensor-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « sensor » en français (automatisme) ?",
+      "choices": [
+        "capteur",
+        "codeur",
+        "consigne",
+        "variateur"
+      ],
+      "answer": 0,
+      "explanation": "« sensor » se traduit par « capteur ». Exemple : « The sensor does not detect the part. » (Le capteur ne détecte pas la pièce.)"
+    },
+    {
+      "id": "anglais-automatisme-sensor-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « capteur ».",
+      "code": "The ____ does not detect the part.",
+      "accepted": [
+        "sensor",
+        "Sensor"
+      ],
+      "explanation": "Le mot attendu est « sensor » : Le capteur ne détecte pas la pièce."
+    },
+    {
+      "id": "anglais-automatisme-actuator-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « actuator » en français (automatisme) ?",
+      "choices": [
+        "consigne",
+        "actionneur",
+        "capteur",
+        "fin de course"
+      ],
+      "answer": 1,
+      "explanation": "« actuator » se traduit par « actionneur ». Exemple : « Check the actuator before you blame the program. » (Vérifiez l'actionneur avant d'accuser le programme.)"
+    },
+    {
+      "id": "anglais-automatisme-actuator-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « actionneur ».",
+      "code": "Check the ____ before you blame the program.",
+      "accepted": [
+        "actuator",
+        "Actuator"
+      ],
+      "explanation": "Le mot attendu est « actuator » : Vérifiez l'actionneur avant d'accuser le programme."
+    },
+    {
+      "id": "anglais-automatisme-plc-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « PLC » en français (automatisme) ?",
+      "choices": [
+        "actionneur",
+        "variateur",
+        "automate programmable",
+        "consigne"
+      ],
+      "answer": 2,
+      "explanation": "« PLC » se traduit par « automate programmable ». Exemple : « Download the program to the PLC. » (Chargez le programme dans l'automate programmable.)"
+    },
+    {
+      "id": "anglais-automatisme-plc-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « automate programmable ».",
+      "code": "Download the program to the ____.",
+      "accepted": [
+        "PLC"
+      ],
+      "explanation": "Le mot attendu est « PLC » : Chargez le programme dans l'automate programmable."
+    },
+    {
+      "id": "anglais-automatisme-drive-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « drive » en français (automatisme) ?",
+      "choices": [
+        "codeur",
+        "fin de course",
+        "actionneur",
+        "variateur"
+      ],
+      "answer": 3,
+      "explanation": "« drive » se traduit par « variateur ». Exemple : « The drive shows an overcurrent fault. » (Le variateur affiche un défaut de surintensité.)"
+    },
+    {
+      "id": "anglais-automatisme-drive-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « variateur ».",
+      "code": "The ____ shows an overcurrent fault.",
+      "accepted": [
+        "drive",
+        "Drive"
+      ],
+      "explanation": "Le mot attendu est « drive » : Le variateur affiche un défaut de surintensité."
+    },
+    {
+      "id": "anglais-automatisme-limit-switch-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « limit switch » en français (automatisme) ?",
+      "choices": [
+        "fin de course",
+        "codeur",
+        "actionneur",
+        "variateur"
+      ],
+      "answer": 0,
+      "explanation": "« limit switch » se traduit par « fin de course ». Exemple : « Adjust the limit switch so the door stops in time. » (Réglez le fin de course pour que la porte s'arrête à temps.)"
+    },
+    {
+      "id": "anglais-automatisme-limit-switch-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « fin de course ».",
+      "code": "Adjust the ____ so the door stops in time.",
+      "accepted": [
+        "limit switch",
+        "Limit switch"
+      ],
+      "explanation": "Le mot attendu est « limit switch » : Réglez le fin de course pour que la porte s'arrête à temps."
+    },
+    {
+      "id": "anglais-automatisme-setpoint-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « setpoint » en français (automatisme) ?",
+      "choices": [
+        "capteur",
+        "consigne",
+        "variateur",
+        "actionneur"
+      ],
+      "answer": 1,
+      "explanation": "« setpoint » se traduit par « consigne ». Exemple : « Set the temperature setpoint to 80 °C. » (Réglez la consigne de température à 80 °C.)"
+    },
+    {
+      "id": "anglais-automatisme-setpoint-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « consigne ».",
+      "code": "Set the temperature ____ to 80 °C.",
+      "accepted": [
+        "setpoint",
+        "Setpoint"
+      ],
+      "explanation": "Le mot attendu est « setpoint » : Réglez la consigne de température à 80 °C."
+    },
+    {
+      "id": "anglais-automatisme-hmi-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « HMI » en français (automatisme) ?",
+      "choices": [
+        "fin de course",
+        "actionneur",
+        "interface homme-machine",
+        "variateur"
+      ],
+      "answer": 2,
+      "explanation": "« HMI » se traduit par « interface homme-machine ». Exemple : « The operator acknowledges the alarm on the HMI. » (L'opérateur acquitte l'alarme sur l'interface homme-machine.)"
+    },
+    {
+      "id": "anglais-automatisme-hmi-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « interface homme-machine ».",
+      "code": "The operator acknowledges the alarm on the ____.",
+      "accepted": [
+        "HMI"
+      ],
+      "explanation": "Le mot attendu est « HMI » : L'opérateur acquitte l'alarme sur l'interface homme-machine."
+    },
+    {
+      "id": "anglais-automatisme-encoder-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « encoder » en français (automatisme) ?",
+      "choices": [
+        "variateur",
+        "actionneur",
+        "fin de course",
+        "codeur"
+      ],
+      "answer": 3,
+      "explanation": "« encoder » se traduit par « codeur ». Exemple : « The encoder gives the position of the axis. » (Le codeur donne la position de l'axe.)"
+    },
+    {
+      "id": "anglais-automatisme-encoder-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « codeur ».",
+      "code": "The ____ gives the position of the axis.",
+      "accepted": [
+        "encoder",
+        "Encoder"
+      ],
+      "explanation": "Le mot attendu est « encoder » : Le codeur donne la position de l'axe."
+    },
+    {
+      "id": "anglais-automatisme-association-1",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque terme anglais (automatisme) à sa traduction.",
+      "pairs": [
+        [
+          "sensor",
+          "capteur"
+        ],
+        [
+          "actuator",
+          "actionneur"
+        ],
+        [
+          "PLC",
+          "automate programmable"
+        ],
+        [
+          "drive",
+          "variateur"
+        ]
+      ],
+      "explanation": "sensor : capteur ; actuator : actionneur ; PLC : automate programmable ; drive : variateur."
+    },
+    {
+      "id": "anglais-automatisme-association-2",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque terme anglais (automatisme) à sa traduction.",
+      "pairs": [
+        [
+          "limit switch",
+          "fin de course"
+        ],
+        [
+          "setpoint",
+          "consigne"
+        ],
+        [
+          "HMI",
+          "interface homme-machine"
+        ],
+        [
+          "encoder",
+          "codeur"
+        ]
+      ],
+      "explanation": "limit switch : fin de course ; setpoint : consigne ; HMI : interface homme-machine ; encoder : codeur."
+    },
+    {
+      "id": "anglais-dev-release-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « release » en français (développement) ?",
+      "choices": [
+        "version livrée",
+        "fonctionnalité",
+        "retour arrière",
+        "revue de code"
+      ],
+      "answer": 0,
+      "explanation": "« release » se traduit par « version livrée ». Exemple : « The new release fixes three bugs. » (La nouvelle version livrée corrige trois bugs.)"
+    },
+    {
+      "id": "anglais-dev-release-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « version livrée ».",
+      "code": "The new ____ fixes three bugs.",
+      "accepted": [
+        "release",
+        "Release"
+      ],
+      "explanation": "Le mot attendu est « release » : La nouvelle version livrée corrige trois bugs."
+    },
+    {
+      "id": "anglais-dev-deployment-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « deployment » en français (développement) ?",
+      "choices": [
+        "débogage",
+        "déploiement",
+        "fonctionnalité",
+        "retour arrière"
+      ],
+      "answer": 1,
+      "explanation": "« deployment » se traduit par « déploiement ». Exemple : « The deployment failed on the production server. » (Le déploiement a échoué sur le serveur de production.)"
+    },
+    {
+      "id": "anglais-dev-deployment-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « déploiement ».",
+      "code": "The ____ failed on the production server.",
+      "accepted": [
+        "deployment",
+        "Deployment"
+      ],
+      "explanation": "Le mot attendu est « deployment » : Le déploiement a échoué sur le serveur de production."
+    },
+    {
+      "id": "anglais-dev-rollback-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « rollback » en français (développement) ?",
+      "choices": [
+        "revue de code",
+        "déploiement",
+        "retour arrière",
+        "débogage"
+      ],
+      "answer": 2,
+      "explanation": "« rollback » se traduit par « retour arrière ». Exemple : « If the tests fail, we do a rollback. » (Si les tests échouent, on fait un retour arrière.)"
+    },
+    {
+      "id": "anglais-dev-rollback-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « retour arrière ».",
+      "code": "If the tests fail, we do a ____.",
+      "accepted": [
+        "rollback",
+        "Rollback"
+      ],
+      "explanation": "Le mot attendu est « rollback » : Si les tests échouent, on fait un retour arrière."
+    },
+    {
+      "id": "anglais-dev-branch-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « branch » en français (développement) ?",
+      "choices": [
+        "revue de code",
+        "fonctionnalité",
+        "débogage",
+        "branche"
+      ],
+      "answer": 3,
+      "explanation": "« branch » se traduit par « branche ». Exemple : « Create a branch for each new screen. » (Créez une branche pour chaque nouvel écran.)"
+    },
+    {
+      "id": "anglais-dev-branch-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « branche ».",
+      "code": "Create a ____ for each new screen.",
+      "accepted": [
+        "branch",
+        "Branch"
+      ],
+      "explanation": "Le mot attendu est « branch » : Créez une branche pour chaque nouvel écran."
+    },
+    {
+      "id": "anglais-dev-merge-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « merge » en français (développement) ?",
+      "choices": [
+        "fusion",
+        "fonctionnalité",
+        "branche",
+        "débogage"
+      ],
+      "answer": 0,
+      "explanation": "« merge » se traduit par « fusion ». Exemple : « Ask for a review before the merge. » (Demandez une relecture avant la fusion.)"
+    },
+    {
+      "id": "anglais-dev-merge-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « fusion ».",
+      "code": "Ask for a review before the ____.",
+      "accepted": [
+        "merge",
+        "Merge"
+      ],
+      "explanation": "Le mot attendu est « merge » : Demandez une relecture avant la fusion."
+    },
+    {
+      "id": "anglais-dev-feature-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « feature » en français (développement) ?",
+      "choices": [
+        "retour arrière",
+        "fonctionnalité",
+        "version livrée",
+        "revue de code"
+      ],
+      "answer": 1,
+      "explanation": "« feature » se traduit par « fonctionnalité ». Exemple : « This feature will ship next sprint. » (Cette fonctionnalité sortira au prochain sprint.)"
+    },
+    {
+      "id": "anglais-dev-feature-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « fonctionnalité ».",
+      "code": "This ____ will ship next sprint.",
+      "accepted": [
+        "feature",
+        "Feature"
+      ],
+      "explanation": "Le mot attendu est « feature » : Cette fonctionnalité sortira au prochain sprint."
+    },
+    {
+      "id": "anglais-dev-code-review-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « code review » en français (développement) ?",
+      "choices": [
+        "retour arrière",
+        "version livrée",
+        "revue de code",
+        "déploiement"
+      ],
+      "answer": 2,
+      "explanation": "« code review » se traduit par « revue de code ». Exemple : « The code review found a security issue. » (La revue de code a trouvé un problème de sécurité.)"
+    },
+    {
+      "id": "anglais-dev-code-review-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « revue de code ».",
+      "code": "The ____ found a security issue.",
+      "accepted": [
+        "code review",
+        "Code review"
+      ],
+      "explanation": "Le mot attendu est « code review » : La revue de code a trouvé un problème de sécurité."
+    },
+    {
+      "id": "anglais-dev-debugging-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « debugging » en français (développement) ?",
+      "choices": [
+        "déploiement",
+        "revue de code",
+        "fonctionnalité",
+        "débogage"
+      ],
+      "answer": 3,
+      "explanation": "« debugging » se traduit par « débogage ». Exemple : « Most of the time went into debugging. » (L'essentiel du temps est passé dans le débogage.)"
+    },
+    {
+      "id": "anglais-dev-debugging-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « débogage ».",
+      "code": "Most of the time went into ____.",
+      "accepted": [
+        "debugging",
+        "Debugging"
+      ],
+      "explanation": "Le mot attendu est « debugging » : L'essentiel du temps est passé dans le débogage."
+    },
+    {
+      "id": "anglais-dev-association-1",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque terme anglais (développement) à sa traduction.",
+      "pairs": [
+        [
+          "release",
+          "version livrée"
+        ],
+        [
+          "deployment",
+          "déploiement"
+        ],
+        [
+          "rollback",
+          "retour arrière"
+        ],
+        [
+          "branch",
+          "branche"
+        ]
+      ],
+      "explanation": "release : version livrée ; deployment : déploiement ; rollback : retour arrière ; branch : branche."
+    },
+    {
+      "id": "anglais-dev-association-2",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque terme anglais (développement) à sa traduction.",
+      "pairs": [
+        [
+          "merge",
+          "fusion"
+        ],
+        [
+          "feature",
+          "fonctionnalité"
+        ],
+        [
+          "code review",
+          "revue de code"
+        ],
+        [
+          "debugging",
+          "débogage"
+        ]
+      ],
+      "explanation": "merge : fusion ; feature : fonctionnalité ; code review : revue de code ; debugging : débogage."
+    },
+    {
+      "id": "anglais-projet-backup-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « backup » en français (exploitation et projet) ?",
+      "choices": [
+        "sauvegarde",
+        "anomalie",
+        "exigence",
+        "échéance"
+      ],
+      "answer": 0,
+      "explanation": "« backup » se traduit par « sauvegarde ». Exemple : « Restore the database from last night's backup. » (Restaurez la base depuis la sauvegarde de cette nuit.)"
+    },
+    {
+      "id": "anglais-projet-backup-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « sauvegarde ».",
+      "code": "Restore the database from last night's ____.",
+      "accepted": [
+        "backup",
+        "Backup"
+      ],
+      "explanation": "Le mot attendu est « backup » : Restaurez la base depuis la sauvegarde de cette nuit."
+    },
+    {
+      "id": "anglais-projet-outage-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « outage » en français (exploitation et projet) ?",
+      "choices": [
+        "partie prenante",
+        "panne de service",
+        "contournement",
+        "sauvegarde"
+      ],
+      "answer": 1,
+      "explanation": "« outage » se traduit par « panne de service ». Exemple : « The outage lasted two hours. » (La panne de service a duré deux heures.)"
+    },
+    {
+      "id": "anglais-projet-outage-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « panne de service ».",
+      "code": "The ____ lasted two hours.",
+      "accepted": [
+        "outage",
+        "Outage"
+      ],
+      "explanation": "Le mot attendu est « outage » : La panne de service a duré deux heures."
+    },
+    {
+      "id": "anglais-projet-workaround-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « workaround » en français (exploitation et projet) ?",
+      "choices": [
+        "panne de service",
+        "sauvegarde",
+        "contournement",
+        "anomalie"
+      ],
+      "answer": 2,
+      "explanation": "« workaround » se traduit par « contournement ». Exemple : « We found a workaround until the fix is ready. » (Nous avons trouvé un contournement en attendant le correctif.)"
+    },
+    {
+      "id": "anglais-projet-workaround-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « contournement ».",
+      "code": "We found a ____ until the fix is ready.",
+      "accepted": [
+        "workaround",
+        "Workaround"
+      ],
+      "explanation": "Le mot attendu est « workaround » : Nous avons trouvé un contournement en attendant le correctif."
+    },
+    {
+      "id": "anglais-projet-log-file-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « log file » en français (exploitation et projet) ?",
+      "choices": [
+        "sauvegarde",
+        "anomalie",
+        "partie prenante",
+        "fichier journal"
+      ],
+      "answer": 3,
+      "explanation": "« log file » se traduit par « fichier journal ». Exemple : « The error is written in the log file. » (L'erreur est écrite dans le fichier journal.)"
+    },
+    {
+      "id": "anglais-projet-log-file-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « fichier journal ».",
+      "code": "The error is written in the ____.",
+      "accepted": [
+        "log file",
+        "Log file"
+      ],
+      "explanation": "Le mot attendu est « log file » : L'erreur est écrite dans le fichier journal."
+    },
+    {
+      "id": "anglais-projet-requirement-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « requirement » en français (exploitation et projet) ?",
+      "choices": [
+        "exigence",
+        "fichier journal",
+        "anomalie",
+        "échéance"
+      ],
+      "answer": 0,
+      "explanation": "« requirement » se traduit par « exigence ». Exemple : « Each requirement must be testable. » (Chaque exigence doit pouvoir être testée.)"
+    },
+    {
+      "id": "anglais-projet-requirement-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « exigence ».",
+      "code": "Each ____ must be testable.",
+      "accepted": [
+        "requirement",
+        "Requirement"
+      ],
+      "explanation": "Le mot attendu est « requirement » : Chaque exigence doit pouvoir être testée."
+    },
+    {
+      "id": "anglais-projet-deadline-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « deadline » en français (exploitation et projet) ?",
+      "choices": [
+        "anomalie",
+        "échéance",
+        "exigence",
+        "sauvegarde"
+      ],
+      "answer": 1,
+      "explanation": "« deadline » se traduit par « échéance ». Exemple : « The deadline for the delivery is Friday. » (L'échéance de la livraison est vendredi.)"
+    },
+    {
+      "id": "anglais-projet-deadline-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « échéance ».",
+      "code": "The ____ for the delivery is Friday.",
+      "accepted": [
+        "deadline",
+        "Deadline"
+      ],
+      "explanation": "Le mot attendu est « deadline » : L'échéance de la livraison est vendredi."
+    },
+    {
+      "id": "anglais-projet-issue-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « issue » en français (exploitation et projet) ?",
+      "choices": [
+        "échéance",
+        "sauvegarde",
+        "anomalie",
+        "contournement"
+      ],
+      "answer": 2,
+      "explanation": "« issue » se traduit par « anomalie ». Exemple : « Open an issue in the tracker. » (Ouvrez une anomalie dans l'outil de suivi.)"
+    },
+    {
+      "id": "anglais-projet-issue-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « anomalie ».",
+      "code": "Open an ____ in the tracker.",
+      "accepted": [
+        "issue",
+        "Issue"
+      ],
+      "explanation": "Le mot attendu est « issue » : Ouvrez une anomalie dans l'outil de suivi."
+    },
+    {
+      "id": "anglais-projet-stakeholder-sens",
+      "level": "intermédiaire",
+      "question": "Que signifie « stakeholder » en français (exploitation et projet) ?",
+      "choices": [
+        "contournement",
+        "sauvegarde",
+        "anomalie",
+        "partie prenante"
+      ],
+      "answer": 3,
+      "explanation": "« stakeholder » se traduit par « partie prenante ». Exemple : « Present the plan to every stakeholder. » (Présentez le plan à chaque partie prenante.)"
+    },
+    {
+      "id": "anglais-projet-stakeholder-phrase",
+      "level": "confirmé",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « partie prenante ».",
+      "code": "Present the plan to every ____.",
+      "accepted": [
+        "stakeholder",
+        "Stakeholder"
+      ],
+      "explanation": "Le mot attendu est « stakeholder » : Présentez le plan à chaque partie prenante."
+    },
+    {
+      "id": "anglais-projet-association-1",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque terme anglais (exploitation et projet) à sa traduction.",
+      "pairs": [
+        [
+          "backup",
+          "sauvegarde"
+        ],
+        [
+          "outage",
+          "panne de service"
+        ],
+        [
+          "workaround",
+          "contournement"
+        ],
+        [
+          "log file",
+          "fichier journal"
+        ]
+      ],
+      "explanation": "backup : sauvegarde ; outage : panne de service ; workaround : contournement ; log file : fichier journal."
+    },
+    {
+      "id": "anglais-projet-association-2",
+      "level": "intermédiaire",
+      "type": "association",
+      "question": "Associez chaque terme anglais (exploitation et projet) à sa traduction.",
+      "pairs": [
+        [
+          "requirement",
+          "exigence"
+        ],
+        [
+          "deadline",
+          "échéance"
+        ],
+        [
+          "issue",
+          "anomalie"
+        ],
+        [
+          "stakeholder",
+          "partie prenante"
+        ]
+      ],
+      "explanation": "requirement : exigence ; deadline : échéance ; issue : anomalie ; stakeholder : partie prenante."
+    },
+    {
+      "id": "anglais-fauxamis-eventually-sens",
+      "level": "confirmé",
+      "question": "Que signifie « eventually » en français (faux amis) ?",
+      "choices": [
+        "finalement",
+        "éventuellement",
+        "atteindre",
+        "raisonnable"
+      ],
+      "answer": 0,
+      "explanation": "« eventually » se traduit par « finalement ». Piège : « eventually » ne veut pas dire « éventuellement ». Exemple : « The pump eventually stopped. » (La pompe a fini par s'arrêter.)"
+    },
+    {
+      "id": "anglais-fauxamis-eventually-phrase",
+      "level": "expert",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « finalement ».",
+      "code": "The pump ____ stopped.",
+      "accepted": [
+        "eventually",
+        "Eventually"
+      ],
+      "explanation": "Le mot attendu est « eventually » : La pompe a fini par s'arrêter. Piège : « eventually » ne veut pas dire « éventuellement »."
+    },
+    {
+      "id": "anglais-fauxamis-actually-sens",
+      "level": "confirmé",
+      "question": "Que signifie « actually » en français (faux amis) ?",
+      "choices": [
+        "actuellement",
+        "en fait",
+        "aider",
+        "atteindre"
+      ],
+      "answer": 1,
+      "explanation": "« actually » se traduit par « en fait ». Piège : « actually » ne veut pas dire « actuellement ». Exemple : « The fault actually comes from the sensor. » (En fait, le défaut vient du capteur.)"
+    },
+    {
+      "id": "anglais-fauxamis-actually-phrase",
+      "level": "expert",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « en fait ».",
+      "code": "The fault ____ comes from the sensor.",
+      "accepted": [
+        "actually",
+        "Actually"
+      ],
+      "explanation": "Le mot attendu est « actually » : En fait, le défaut vient du capteur. Piège : « actually » ne veut pas dire « actuellement »."
+    },
+    {
+      "id": "anglais-fauxamis-control-sens",
+      "level": "confirmé",
+      "question": "Que signifie « control » en français (faux amis) ?",
+      "choices": [
+        "contrôle",
+        "finalement",
+        "commande",
+        "aider"
+      ],
+      "answer": 2,
+      "explanation": "« control » se traduit par « commande ». Piège : « control » ne veut pas dire « contrôle ». Exemple : « The control system adjusts the speed. » (Le système de commande règle la vitesse.)"
+    },
+    {
+      "id": "anglais-fauxamis-control-phrase",
+      "level": "expert",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « commande ».",
+      "code": "The ____ system adjusts the speed.",
+      "accepted": [
+        "control",
+        "Control"
+      ],
+      "explanation": "Le mot attendu est « control » : Le système de commande règle la vitesse. Piège : « control » ne veut pas dire « contrôle »."
+    },
+    {
+      "id": "anglais-fauxamis-library-sens",
+      "level": "confirmé",
+      "question": "Que signifie « library » en français (faux amis) ?",
+      "choices": [
+        "librairie",
+        "atteindre",
+        "commande",
+        "bibliothèque"
+      ],
+      "answer": 3,
+      "explanation": "« library » se traduit par « bibliothèque ». Piège : « library » ne veut pas dire « librairie ». Exemple : « Import the library before you call the function. » (Importez la bibliothèque avant d'appeler la fonction.)"
+    },
+    {
+      "id": "anglais-fauxamis-library-phrase",
+      "level": "expert",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « bibliothèque ».",
+      "code": "Import the ____ before you call the function.",
+      "accepted": [
+        "library",
+        "Library"
+      ],
+      "explanation": "Le mot attendu est « library » : Importez la bibliothèque avant d'appeler la fonction. Piège : « library » ne veut pas dire « librairie »."
+    },
+    {
+      "id": "anglais-fauxamis-achieve-sens",
+      "level": "confirmé",
+      "question": "Que signifie « achieve » en français (faux amis) ?",
+      "choices": [
+        "atteindre",
+        "achever",
+        "actuellement",
+        "commande"
+      ],
+      "answer": 0,
+      "explanation": "« achieve » se traduit par « atteindre ». Piège : « achieve » ne veut pas dire « achever ». Exemple : « We must achieve 85 % availability. » (Nous devons atteindre 85 % de disponibilité.)"
+    },
+    {
+      "id": "anglais-fauxamis-achieve-phrase",
+      "level": "expert",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « atteindre ».",
+      "code": "We must ____ 85 % availability.",
+      "accepted": [
+        "achieve",
+        "Achieve"
+      ],
+      "explanation": "Le mot attendu est « achieve » : Nous devons atteindre 85 % de disponibilité. Piège : « achieve » ne veut pas dire « achever »."
+    },
+    {
+      "id": "anglais-fauxamis-sensible-sens",
+      "level": "confirmé",
+      "question": "Que signifie « sensible » en français (faux amis) ?",
+      "choices": [
+        "sensible",
+        "raisonnable",
+        "actuellement",
+        "bibliothèque"
+      ],
+      "answer": 1,
+      "explanation": "« sensible » se traduit par « raisonnable ». Piège : « sensible » ne veut pas dire « sensible ». Exemple : « That is a sensible solution. » (C'est une solution raisonnable.)"
+    },
+    {
+      "id": "anglais-fauxamis-sensible-phrase",
+      "level": "expert",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « raisonnable ».",
+      "code": "That is a ____ solution.",
+      "accepted": [
+        "sensible",
+        "Sensible"
+      ],
+      "explanation": "Le mot attendu est « sensible » : C'est une solution raisonnable. Piège : « sensible » ne veut pas dire « sensible »."
+    },
+    {
+      "id": "anglais-fauxamis-assist-sens",
+      "level": "confirmé",
+      "question": "Que signifie « assist » en français (faux amis) ?",
+      "choices": [
+        "assister à",
+        "commande",
+        "aider",
+        "atteindre"
+      ],
+      "answer": 2,
+      "explanation": "« assist » se traduit par « aider ». Piège : « assist » ne veut pas dire « assister à ». Exemple : « Can you assist the technician tomorrow? » (Pouvez-vous aider le technicien demain ?)"
+    },
+    {
+      "id": "anglais-fauxamis-assist-phrase",
+      "level": "expert",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « aider ».",
+      "code": "Can you ____ the technician tomorrow?",
+      "accepted": [
+        "assist",
+        "Assist"
+      ],
+      "explanation": "Le mot attendu est « assist » : Pouvez-vous aider le technicien demain ? Piège : « assist » ne veut pas dire « assister à »."
+    },
+    {
+      "id": "anglais-fauxamis-currently-sens",
+      "level": "confirmé",
+      "question": "Que signifie « currently » en français (faux amis) ?",
+      "choices": [
+        "couramment",
+        "finalement",
+        "atteindre",
+        "actuellement"
+      ],
+      "answer": 3,
+      "explanation": "« currently » se traduit par « actuellement ». Piège : « currently » ne veut pas dire « couramment ». Exemple : « The line is currently stopped. » (La ligne est actuellement arrêtée.)"
+    },
+    {
+      "id": "anglais-fauxamis-currently-phrase",
+      "level": "expert",
+      "type": "saisie",
+      "question": "Complétez la phrase avec le mot anglais qui signifie « actuellement ».",
+      "code": "The line is ____ stopped.",
+      "accepted": [
+        "currently",
+        "Currently"
+      ],
+      "explanation": "Le mot attendu est « currently » : La ligne est actuellement arrêtée. Piège : « currently » ne veut pas dire « couramment »."
+    },
+    {
+      "id": "anglais-fauxamis-association-1",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque terme anglais (faux amis) à sa traduction.",
+      "pairs": [
+        [
+          "eventually",
+          "finalement"
+        ],
+        [
+          "actually",
+          "en fait"
+        ],
+        [
+          "control",
+          "commande"
+        ],
+        [
+          "library",
+          "bibliothèque"
+        ]
+      ],
+      "explanation": "eventually : finalement ; actually : en fait ; control : commande ; library : bibliothèque."
+    },
+    {
+      "id": "anglais-fauxamis-association-2",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque terme anglais (faux amis) à sa traduction.",
+      "pairs": [
+        [
+          "achieve",
+          "atteindre"
+        ],
+        [
+          "sensible",
+          "raisonnable"
+        ],
+        [
+          "assist",
+          "aider"
+        ],
+        [
+          "currently",
+          "actuellement"
+        ]
+      ],
+      "explanation": "achieve : atteindre ; sensible : raisonnable ; assist : aider ; currently : actuellement."
+    }
+  ]
+}

@@ -5,6 +5,15 @@ dans l'historique git.
 
 ## Non publié
 
+### Anglais technique
+- Thème de révision livré : 72 termes d'atelier et d'informatique (bearing,
+  lockout, circuit breaker, solenoid valve, rollback…) et les faux amis
+  (actually, eventually, control…), chacun en QCM et en phrase à compléter,
+  plus des associations ; répétition espacée, examen et téléphone comme les
+  autres thèmes, guide pratique et nouveau domaine Langues
+- L'anglais demandé par une offre est repéré comme compétence : le thème est
+  proposé et la préparation le signale
+
 ### Dossier de candidature en un clic
 - Un seul PDF par offre : l'offre en bref, le CV adapté, la lettre de motivation,
   la fiche de l'entreprise (annuaire public) et les questions à poser, une partie

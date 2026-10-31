@@ -473,6 +473,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
 - [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter, revue de code (défauts à cocher), zone à désigner en cliquant sur un schéma, schéma à construire (49 symboles d'électricité, électronique, pneumatique, hydraulique et réseau ; placement sur une grille, câblage des bornes à la souris, plusieurs exemplaires d'un même composant (deux vérins, des lampes en parallèle, des postes en étoile) ; correction par comparaison des liaisons, schéma construit dessiné à côté du schéma attendu, fils en trop en rouge) ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile reçoit les QCM, les calculs, les remises en ordre, les associations et les revues de code
 - [x] Thème livré « Lecture de schémas de maintenance » : composants à désigner sur quatre circuits (puissance d'un moteur triphasé, commande marche-arrêt avec auto-maintien, vérin pneumatique double effet, centrale hydraulique), consignation et recherche de panne en plusieurs étapes, commande d'un vérin à câbler
+- [x] Thème livré « Anglais technique » en répétition espacée : 72 termes d'atelier et d'informatique (mécanique, électricité, fluides, sécurité dont lockout, maintenance, automatisme, développement, exploitation) et les faux amis, chacun en QCM et en phrase à compléter, plus des associations ; domaine Langues, guide pratique, anglais repéré dans les offres
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Thèmes demandés par les offres et encore sans question mis en avant en haut de la Révision, demande ChatGPT prête
 - [x] Lots écrits de 100 questions (tools/quiz_lots) : cloud (AWS, Azure, GCP), Terraform et Ansible, Linux et shell, SQL Server, MySQL et MariaDB, réseaux TCP/IP, sécurité applicative (OWASP), maintenance industrielle, Python, TypeScript, frameworks frontend (React, Angular, Vue), Kubernetes et Helm, en plus des lots d'automatisme, d'électricité, d'électronique, de fluides et de sigles
@@ -1229,6 +1230,7 @@ scraper-data-python/
 │   │   ├── cybersecurite-industrielle.json    # Cybersécurité industrielle : IEC 62443, zones et conduits, ANSSI
 │   │   ├── normes-qse.json                    # Normes, qualité et sécurité : ISO 9001, habilitation, machines
 │   │   ├── schemas-maintenance.json           # Lecture de schémas : électricité, pneumatique, hydraulique
+│   │   ├── anglais-technique.json             # Anglais technique : vocabulaire d'atelier et d'informatique, faux amis
 │   │   ├── guides/                            # Guides pratiques livrés, un Markdown par thème
 │   │   └── schemas/                           # Schémas SVG livrés, montrés avec la question ou la correction
 │   ├── troubleshooting/
@@ -1365,6 +1367,7 @@ scraper-data-python/
 │   │   ├── test_cv_keywords.py                # Teste l'intitulé nettoyé et les mots à reprendre
 │   │   ├── test_pdf_document.py               # Teste le PDF relu, les accents, la coupe et les pages
 │   │   ├── test_application_dossier.py        # Teste les pages du dossier, la lettre et la fiche entreprise
+│   │   ├── test_english_theme.py              # Teste le thème d'anglais : deux sens, phrases, faux amis, domaine
 │   │   ├── test_company_pages.py              # Teste l'ajout d'une entreprise depuis l'adresse de son site carrière
 │   │   ├── test_search_journal.py             # Teste le journal de recherche
 │   │   ├── test_education.py                  # Teste le diplôme demandé, son écart et son calcul en tâche de fond
