@@ -54,7 +54,7 @@ void main() {
     final vState = await buildState();
 
     await pTester.pumpWidget(MaterialApp(home: HomeScreen(state: vState)));
-    await pTester.ensureVisible(find.text('Docker'));
+    await pTester.scrollUntilVisible(find.text('Docker'), 200);
     await pTester.pumpAndSettle();
     await pTester.tap(find.text('Docker'));
     await pTester.pumpAndSettle();

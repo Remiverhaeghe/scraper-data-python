@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import '../logic/interview_alerts.dart';
 import '../revision_state.dart';
+import 'offer_detail_screen.dart';
+import 'offers_screen.dart';
 
 /// Date et heure lisibles, « 27/10 à 14:30 », ou la date seule.
 String formatMoment(String? pValue) {
@@ -69,17 +71,31 @@ class TrackingScreen extends StatelessWidget {
                   Builder(
                     builder: (pContext) {
                       final vSheet = state.sheetOf(vApplication);
+                      final vOffer = state.offerOf(vApplication);
+
+                      // La fiche d'entretien passe avant celle de l'offre.
+                      final Widget Function()? vBuild = vSheet != null
+                          ? () => SheetScreen(sheet: vSheet)
+                          : vOffer != null
+                              ? () => OfferDetailScreen(
+                                    offer: vOffer,
+                                    onOpen: () => openOfferUrl(pContext, vOffer),
+                                    onNote: (pText) => state.addOfferNote(vOffer, pText),
+                                  )
+                              : null;
 
                       return ListTile(
                         title: Text('${vApplication['title'] ?? 'Offre sans titre'}'),
                         subtitle: Text(describeTracking(vApplication)),
-                        trailing: vSheet == null ? null : const Icon(Icons.description_outlined),
-                        onTap: vSheet == null
+                        trailing: vSheet != null
+                            ? const Icon(Icons.description_outlined)
+                            : vOffer != null
+                                ? const Icon(Icons.chevron_right)
+                                : null,
+                        onTap: vBuild == null
                             ? null
                             : () => Navigator.of(pContext).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => SheetScreen(sheet: vSheet),
-                                  ),
+                                  MaterialPageRoute<void>(builder: (_) => vBuild()),
                                 ),
                       );
                     },

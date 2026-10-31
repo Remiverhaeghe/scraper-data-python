@@ -318,7 +318,7 @@ def download_replies(pDatabaseFile: str = Depends(get_database_file)):
 
 @router.get("/offers", dependencies=[Depends(require_api_token)])
 def download_offers(pDatabaseFile: str = Depends(get_database_file)):
-    """Renvoie les nouvelles offres de la semaine, les mieux notées en tête."""
+    """Renvoie les nouvelles offres de la semaine, puis les offres retenues."""
 
     rOffers = {"offers": build_offer_list(pDatabaseFile, datetime.now())}
 

@@ -61,6 +61,40 @@ def test_offer_list_flags_and_adds_offers_close_to_retained_ones(tmp_path):
     assert vOffers["proche"]["education"] is None
 
 
+def test_offer_list_keeps_old_retained_offers_but_not_ignored_ones(tmp_path):
+    """Vérifie l'offre retenue ancienne envoyée avec sa fiche, l'ignorée écartée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame(
+            [
+                {
+                    "source": "lever",
+                    "source_id": "retenue",
+                    "title": "Automaticien",
+                    "description": "Maintenance des automates",
+                    "skills": ["Grafcet"],
+                },
+                {"source": "lever", "source_id": "ignoree", "title": "Vendeur"},
+            ]
+        ),
+        NOW - timedelta(days=60),
+    )
+    save_application(vDatabaseFile, "lever", "retenue", "INTERESTED", pNow=NOW)
+    save_application(vDatabaseFile, "lever", "ignoree", "IGNORED", pNow=NOW)
+
+    vOffers = {
+        vOffer["source_id"]: vOffer for vOffer in build_offer_list(vDatabaseFile, NOW)
+    }
+
+    assert set(vOffers) == {"retenue"}
+    assert vOffers["retenue"]["status"] == "INTERESTED"
+    assert vOffers["retenue"]["description"] == "Maintenance des automates"
+    assert vOffers["retenue"]["missing"] == ["Grafcet"]
+
+
 def test_offer_list_gives_position_and_near_flag(tmp_path):
     """Vérifie la position envoyée et l'offre signalée dans le rayon des alertes."""
 

@@ -8,7 +8,7 @@ const offerAlertScore = 50;
 String offerKey(Map<String, dynamic> pOffer) => '${pOffer['source']}/${pOffer['source_id']}';
 
 /// Retourne les offres absentes de la liste précédente, assez bien notées ou
-/// proches d'une offre retenue.
+/// proches d'une offre retenue ; une offre qui a déjà un statut est connue.
 List<Map<String, dynamic>> findNewGoodOffers(
   List<Map<String, dynamic>> pPrevious,
   List<Map<String, dynamic>> pCurrent,
@@ -18,6 +18,7 @@ List<Map<String, dynamic>> findNewGoodOffers(
   final rOffers = [
     for (final vOffer in pCurrent)
       if (!vKnown.contains(offerKey(vOffer)) &&
+          vOffer['status'] == null &&
           (((vOffer['match_score'] as num?) ?? 0) >= offerAlertScore ||
               vOffer['similar_to'] != null ||
               vOffer['preferred'] == true))

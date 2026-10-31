@@ -74,7 +74,7 @@ abstract class RevisionStore {
   Future<void> saveExamResults(List<Map<String, dynamic>> pResults);
 
   /// Préférences de l'application, comme le rappel quotidien.
-  /// Nouvelles offres de la semaine, lues hors ligne.
+  /// Nouvelles offres de la semaine et offres retenues, lues hors ligne.
   Future<List<Map<String, dynamic>>> loadOffers();
 
   Future<void> saveOffers(List<Map<String, dynamic>> pOffers);

@@ -13,6 +13,7 @@ import '../widgets/game_card.dart';
 import 'exam_screen.dart';
 import 'interview_screen.dart';
 import 'labs_screen.dart';
+import 'library_screen.dart';
 import 'offers_screen.dart';
 import 'question_screen.dart';
 import 'setup_screen.dart';
@@ -112,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           title: const Text('Révision'),
           actions: [
             IconButton(
-              tooltip: 'Nouvelles offres',
+              tooltip: 'Offres',
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => OffersScreen(state: state)),
               ),
@@ -188,6 +189,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
+              if (state.package case final vPackage?)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.local_library_outlined),
+                    title: const Text('Guides et schémas'),
+                    subtitle:
+                        const Text('Guides pratiques et schémas de chaque thème, sans réseau'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => LibraryScreen(package: vPackage)),
+                    ),
+                  ),
+                ),
               DailyGoalCard(state: state),
               if (state.nextInterview(DateTime.now()) case final vInterview?)
                 Card(

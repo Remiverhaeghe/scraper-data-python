@@ -23,9 +23,9 @@ from job.education import (
     format_education,
     get_profile_level,
 )
-from job.geocoding import load_home
+from job.geocoding import add_distances, load_home
 from job.interview_revision import find_offer_themes
-from job.preparation import match_offer
+from job.preparation import match_offer, score_offers
 from job.presentation import STATUS_LABELS, clean_missing_values, format_net_salary
 from job.profile import is_profile_empty, load_profile
 from job.quiz import (
@@ -55,7 +55,7 @@ from storage.job_applications import (
     get_applications_with_offers,
     save_application,
 )
-from storage.job_offers import get_offer
+from storage.job_offers import get_offer, get_offers
 from storage.quiz_answers import get_last_answers, save_synced_answers
 from storage.quiz_questions import get_quiz_assets, get_quiz_guide, get_quiz_guides
 from storage.settings_repository import get_setting_values, save_setting_values
@@ -88,6 +88,9 @@ MAX_PHONE_OFFERS = 30
 
 # Offres proches des candidatures envoyées en plus, si absentes de la liste
 MAX_PHONE_SIMILAR = 5
+
+# Offres retenues gardées sur le téléphone même anciennes, les plus récentes
+MAX_PHONE_RETAINED = 50
 
 # Description lisible hors ligne sur le téléphone, coupée au-delà
 MAX_PHONE_DESCRIPTION = 4000
@@ -531,8 +534,33 @@ def get_last_phone_sync(pDatabaseFile):
     return rTime
 
 
+def get_retained_offers(pDatabaseFile):
+    """Retourne les offres retenues, notées et situées comme les nouvelles offres.
+
+    Leur fiche reste ainsi sur le téléphone après la semaine où elles sont parues.
+    """
+
+    vOffers = sorted(
+        (
+            clean_missing_values(vOffer)
+            for vStatus in TRACKED_STATUSES
+            for vOffer in get_offers(pDatabaseFile, pStatus=vStatus).to_dict("records")
+        ),
+        key=lambda pOffer: str(pOffer.get("first_seen_at") or ""),
+        reverse=True,
+    )[:MAX_PHONE_RETAINED]
+
+    score_offers(vOffers, load_profile(pDatabaseFile))
+    add_distances(vOffers, load_home(pDatabaseFile))
+
+    rOffers = vOffers
+
+    return rOffers
+
+
 def build_offer_list(pDatabaseFile, pNow):
-    """Retourne les nouvelles offres de la semaine pour le téléphone, en lecture.
+    """Retourne les nouvelles offres de la semaine et les offres retenues pour le
+    téléphone, en lecture.
 
     Demandée à chaque synchronisation, tâche d'arrière-plan comprise : son heure
     est gardée pour la page Santé.
@@ -553,6 +581,12 @@ def build_offer_list(pDatabaseFile, pNow):
         clean_missing_values(vOffer)
         for vKey, vOffer in vSimilar.items()
         if vKey not in vKeys
+    ]
+    vKeys |= vSimilar.keys()
+    vOffers += [
+        vOffer
+        for vOffer in get_retained_offers(pDatabaseFile)
+        if (vOffer["source"], str(vOffer["source_id"])) not in vKeys
     ]
 
     vProfile = load_profile(pDatabaseFile)

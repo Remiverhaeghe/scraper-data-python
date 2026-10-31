@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Téléphone hors ligne
+- Les offres retenues (intéressé, postulé, entretien) restent sur le téléphone
+  avec leur fiche complète, même après la semaine de leur parution ; filtre
+  « Retenues » dans les offres, sans nouvelle alerte pour elles
+- Une candidature ouvre la fiche de son offre quand aucun entretien n'est proche
+- Page « Guides et schémas » : guides pratiques et schémas de chaque thème,
+  rangés comme à l'accueil, avec une recherche dans leur texte, sans réseau
+
 ### Nettoyage technique
 - Page Paramètres découpée : règles de calcul, recherche planifiée,
   notifications e-mail et listes d'entreprises deviennent des panneaux

@@ -145,6 +145,7 @@ Documents/JobBoard/
 - [x] Recherches Industrie prêtes d'un clic : maintenance, automatisme, électrotechnique
 - [x] Copie quotidienne des sauvegardes sur un NAS (`BACKUP_NAS_DIRECTORY`), rattrapée si le NAS était éteint
 - [x] Nouvelles offres de la semaine sur le téléphone, statut envoyé au PC ; synchronisation testée de bout en bout par la CI
+- [x] Téléphone entièrement hors ligne : offres retenues gardées même anciennes (filtre « Retenues », fiche depuis les candidatures), guides et schémas de chaque thème consultables avec recherche
 - [x] QCM contrôlés : réponse la plus longue, la plus courte ou mots absolus ; part des mots absolus indiquée pour chaque lot ; questions trop faciles ou trop dures listées
 - [x] Filtre « Sans intérim » : annonces des agences connues (Proman, Adecco, Randstad…) ou se présentant comme agence d'intérim masquées (bureau et web)
 - [x] Domicile dans Paramètres et filtre de distance de 10 à 100 km : lieux des offres en France placés par le géocodeur gratuit de l'IGN, une fois par lieu (cache), après chaque recherche
@@ -697,7 +698,7 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 | POST | `/api/v1/exams` | Examens blancs du téléphone, ajoutés sans doublon à l'historique du PC : `{"exams": [{"title", "finished_at", "correct", "count", "seconds"}]}` |
 | POST | `/api/v1/flags` | Questions signalées depuis le téléphone, retirées des tirages : `{"question_ids": [...]}` |
 | POST | `/api/v1/answers` | Réponses faites hors ligne : `{"answers": [{"id", "question_id", "choice" ou "response", "answered_at"}]}` |
-| GET | `/api/v1/offers` | Nouvelles offres de la semaine, fiche lisible hors ligne : description, compétences couvertes et manquantes, salaire, distance, position et `near` (dans le rayon des alertes) |
+| GET | `/api/v1/offers` | Nouvelles offres de la semaine puis offres retenues (intéressé, postulé, entretien), fiche lisible hors ligne : description, compétences couvertes et manquantes, salaire, distance, position et `near` (dans le rayon des alertes) |
 | POST | `/api/v1/applications` | Statuts donnés aux offres sur le téléphone : `{"changes": [{"source", "source_id", "status"}]}` ; notes et date d'entretien gardées |
 | GET, POST | `/api/v1/interview` | Questions de la simulation d'entretien ; séries faites sur le téléphone : `{"series": [...]}` |
 | GET, POST | `/api/v1/labs` | Simulations jouables hors ligne (scénarios de pannes, niveaux d'automate, de Git, de SQL, de Maven et de Docker, base d'exemple SQL et règles de dialecte, dépôt Maven et images Docker simulés, réussites du PC) ; parties faites sur le téléphone : `{"results": [{"id", "lab", "scenario" et "actions", ou "level" et "program", "history", "steps" ou "query" et "dialect", "finished_at"}]}`, rejouées par le PC avant d'être comptées |

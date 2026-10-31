@@ -115,6 +115,12 @@ const offerStatuses = {
   'IGNORED': 'Ignorée',
 };
 
+/// Libellés affichés, entretien compris : ce statut se donne sur le PC
+const offerStatusLabels = {...offerStatuses, 'INTERVIEW': 'Entretien'};
+
+/// Offres retenues, gardées par le PC sur le téléphone même anciennes
+const retainedStatuses = {'INTERESTED', 'APPLIED', 'INTERVIEW'};
+
 /// Vibration à la correction : courte si juste, appuyée si faux
 const hapticsPreference = 'haptics';
 
@@ -175,7 +181,7 @@ class RevisionState extends ChangeNotifier {
   Map<String, ReviewState> schedule = {};
   List<ExamResult> examResults = [];
 
-  /// Nouvelles offres de la semaine, reçues à la synchronisation.
+  /// Nouvelles offres de la semaine et offres retenues, reçues à la synchronisation.
   List<Map<String, dynamic>> offers = [];
   Map<String, dynamic> preferences = {};
   bool syncing = false;
@@ -1317,6 +1323,20 @@ class RevisionState extends ChangeNotifier {
     final rSheet = vSheet == null ? null : Map<String, dynamic>.from(vSheet as Map);
 
     return rSheet;
+  }
+
+  /// Offre reçue d'une candidature, pour lire sa fiche hors ligne, ou null.
+  Map<String, dynamic>? offerOf(Map<String, dynamic> pApplication) {
+    Map<String, dynamic>? rOffer;
+
+    for (final vOffer in offers) {
+      if (vOffer['source'] == pApplication['source'] &&
+          '${vOffer['source_id']}' == '${pApplication['source_id']}') {
+        rOffer = vOffer;
+      }
+    }
+
+    return rOffer;
   }
 
   /// Prochain entretien dans les 24 heures qui a sa fiche, ou null.

@@ -22,8 +22,9 @@ semaine avec leur statut (Intéressé, Postulé, Ignorée) envoyé au PC, alerte
 nouvelles offres proches du profil (vérifiées en arrière-plan toutes les 3 h
 environ, quand le PC est joignable), distance au domicile de chaque offre et
 filtre « Près de chez moi » (rayon des alertes réglé sur le PC), fiche complète
-lisible hors ligne (description, compétences couvertes et manquantes, salaire)
-avec l'emplacement de l'offre ouvert dans OpenStreetMap, tri rapide des offres
+lisible hors ligne (description, compétences couvertes et manquantes, salaire),
+offres retenues (Intéressé, Postulé, Entretien) gardées même anciennes, filtre
+« Retenues » et fiche ouverte depuis « Mes candidatures », avec l'emplacement de l'offre ouvert dans OpenStreetMap, tri rapide des offres
 d'un glissement, notification des réponses de recruteurs repérées par le PC,
 offres proches de vos candidatures signalées, simulation d'entretien
 technique et auto-évaluation des compétences, envoyées au PC à la synchronisation,
@@ -33,7 +34,8 @@ privilégiées, bilan de la semaine écoulée annoncé une fois par semaine, ré
 une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
 lisibles hors ligne et fiche de préparation (avancement de la mission entretien, pitch, questions pièges, questions à
 poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien,
-simulations jouables sans réseau, entretien oral lu à voix haute par le moteur vocal d'Android (canal natif de MainActivity.kt), puzzles de code par séries de dix, pannes à résoudre, automate en ladder, schémas électriques construits au toucher, bac à sable Git, bac à sable SQL (SQLite embarqué par le paquet sqlite3), Maven et Docker (contenu reçu du PC,
+guides pratiques et schémas de chaque thème consultables sans réseau, avec une
+recherche dans leur texte, simulations jouables sans réseau, entretien oral lu à voix haute par le moteur vocal d'Android (canal natif de MainActivity.kt), puzzles de code par séries de dix, pannes à résoudre, automate en ladder, schémas électriques construits au toucher, bac à sable Git, bac à sable SQL (SQLite embarqué par le paquet sqlite3), Maven et Docker (contenu reçu du PC,
 parties revérifiées par le PC à la synchronisation), widget de l'écran d'accueil (questions à revoir, prochain entretien), dessiné par
 `android/app/src/main/kotlin/…/RevisionWidgetProvider.kt` et
 `res/layout/revision_widget.xml`, avec son fond (`res/drawable/widget_background.xml`)
@@ -167,6 +169,7 @@ mobile/
 │   │   ├── exam.dart             # Examen blanc : tirage, durée conseillée, résultat
 │   │   ├── statistics.dart       # Réussite par thème et activité des derniers jours
 │   │   ├── offer_alerts.dart     # Nouvelles offres assez proches du profil pour une alerte
+│   │   ├── library.dart          # Guides et schémas reçus, rangés par thème, et recherche
 │   │   ├── interview_alerts.dart # Rappels d'entretien : la veille à 18 h et une heure avant
 │   │   ├── time_attack.dart      # Jeu « Contre la montre » : points, multiplicateur, bilan
 │   │   ├── troubleshooting.dart  # Pannes à résoudre, identique à job/troubleshooting.py
@@ -204,13 +207,14 @@ mobile/
 │   │   ├── question_screen.dart  # Question, correction et suivante
 │   │   ├── exam_screen.dart      # Examen blanc chronométré et bilan
 │   │   ├── statistics_screen.dart # Statistiques de révision
-│   │   ├── offers_screen.dart    # Nouvelles offres de la semaine et leur statut
+│   │   ├── offers_screen.dart    # Nouvelles offres, offres retenues et leur statut
 │   │   ├── offer_detail_screen.dart # Fiche d'une offre, lisible hors ligne
 │   │   ├── tracking_screen.dart  # Candidatures en cours et fiche de préparation d'un entretien
 │   │   ├── triage_screen.dart    # Tri rapide des nouvelles offres, une à la fois
 │   │   ├── interview_screen.dart # Simulation d'entretien technique
 │   │   ├── skills_screen.dart    # Auto-évaluation des compétences
 │   │   ├── guide_screen.dart     # Guide pratique d'un thème
+│   │   ├── library_screen.dart   # Guides et schémas sans réseau, avec recherche
 │   │   ├── time_attack_screen.dart # Jeu « Contre la montre » : QCM pendant 60 secondes
 │   │   ├── labs_screen.dart      # Simulations hors ligne : choix de la simulation
 │   │   ├── troubleshooting_screen.dart # Pannes à résoudre : liste et partie
@@ -250,6 +254,7 @@ mobile/
     ├── sprint_test.dart          # Teste le temps restant et le bilan de la révision express
     ├── offer_notes_test.dart     # Teste l'envoi unique des notes rapides au PC
     ├── tracking_test.dart        # Teste les candidatures et la fiche du prochain entretien
+    ├── offline_library_test.dart # Teste guides et schémas hors ligne, offres retenues
     ├── home_widget_test.dart     # Teste les lignes du widget et sa mise à jour
     ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond
     ├── review_input_test.dart    # Teste la saisie d'une revue de code

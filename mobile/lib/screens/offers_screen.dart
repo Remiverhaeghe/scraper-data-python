@@ -1,5 +1,6 @@
-// Nouvelles offres de la semaine, les mieux notées en tête : lecture, ouverture
-// de l'annonce et statut envoyé au PC à la synchronisation.
+// Nouvelles offres de la semaine, les mieux notées en tête, puis offres retenues
+// gardées hors ligne : lecture, ouverture de l'annonce et statut envoyé au PC à
+// la synchronisation.
 
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,6 +9,33 @@ import '../revision_state.dart';
 import '../theme.dart';
 import 'offer_detail_screen.dart';
 import 'triage_screen.dart';
+
+/// Ouvre l'annonce dans le navigateur ; seules les adresses web sont ouvertes.
+Future<void> openOfferUrl(BuildContext pContext, Map<String, dynamic> pOffer) async {
+  final vMessenger = ScaffoldMessenger.of(pContext);
+  final vUri = Uri.tryParse('${pOffer['url'] ?? ''}');
+
+  final vOpened = vUri != null &&
+      (vUri.scheme == 'https' || vUri.scheme == 'http') &&
+      await launchUrl(vUri, mode: LaunchMode.externalApplication);
+
+  if (!vOpened) {
+    vMessenger.showSnackBar(const SnackBar(content: Text("L'annonce n'a pas pu être ouverte.")));
+  }
+}
+
+/// Offres affichées selon les filtres : près de chez moi, retenues.
+List<Map<String, dynamic>> filterOffers(
+  List<Map<String, dynamic>> pOffers, {
+  bool pNearOnly = false,
+  bool pRetainedOnly = false,
+}) =>
+    [
+      for (final vOffer in pOffers)
+        if ((!pNearOnly || vOffer['near'] == true) &&
+            (!pRetainedOnly || retainedStatuses.contains(vOffer['status'])))
+          vOffer,
+    ];
 
 class OffersScreen extends StatefulWidget {
   const OffersScreen({super.key, required this.state});
@@ -22,13 +50,16 @@ class _OffersScreenState extends State<OffersScreen> {
   /// Seules les offres dans le rayon des alertes réglé sur le PC.
   bool nearOnly = false;
 
+  /// Seules les offres retenues, lisibles même sans réseau.
+  bool retainedOnly = false;
+
   @override
   Widget build(BuildContext context) {
     final vState = widget.state;
 
     final rScreen = Scaffold(
       appBar: AppBar(
-        title: const Text('Nouvelles offres'),
+        title: const Text('Offres'),
         actions: [
           IconButton(
             tooltip: 'Tri rapide',
@@ -43,10 +74,11 @@ class _OffersScreenState extends State<OffersScreen> {
         listenable: vState,
         builder: (_, __) {
           final vHasNear = vState.offers.any((vOffer) => vOffer['near'] == true);
-          final vOffers = [
-            for (final vOffer in vState.offers)
-              if (!nearOnly || vOffer['near'] == true) vOffer,
-          ];
+          final vOffers = filterOffers(
+            vState.offers,
+            pNearOnly: nearOnly,
+            pRetainedOnly: retainedOnly,
+          );
 
           if (vState.offers.isEmpty) {
             return const Center(
@@ -63,16 +95,29 @@ class _OffersScreenState extends State<OffersScreen> {
           return ListView(
             padding: const EdgeInsets.all(12),
             children: [
-              // Le filtre n'apparaît qu'avec un domicile et un rayon réglés sur le PC.
-              if (vHasNear)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: FilterChip(
-                    avatar: const Icon(Icons.place_outlined, size: 18),
-                    label: const Text('Près de chez moi'),
-                    selected: nearOnly,
-                    onSelected: (pSelected) => setState(() => nearOnly = pSelected),
+              Wrap(
+                spacing: 8,
+                children: [
+                  FilterChip(
+                    avatar: const Icon(Icons.bookmark_outline, size: 18),
+                    label: const Text('Retenues'),
+                    selected: retainedOnly,
+                    onSelected: (pSelected) => setState(() => retainedOnly = pSelected),
                   ),
+                  // Ce filtre n'apparaît qu'avec un domicile et un rayon réglés sur le PC.
+                  if (vHasNear)
+                    FilterChip(
+                      avatar: const Icon(Icons.place_outlined, size: 18),
+                      label: const Text('Près de chez moi'),
+                      selected: nearOnly,
+                      onSelected: (pSelected) => setState(() => nearOnly = pSelected),
+                    ),
+                ],
+              ),
+              if (vOffers.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text('Aucune offre pour ces filtres.', textAlign: TextAlign.center),
                 ),
               for (final vOffer in vOffers) OfferCard(state: vState, offer: vOffer),
             ],
@@ -92,19 +137,7 @@ class OfferCard extends StatelessWidget {
   final RevisionState state;
   final Map<String, dynamic> offer;
 
-  Future<void> open(BuildContext pContext) async {
-    final vMessenger = ScaffoldMessenger.of(pContext);
-    final vUri = Uri.tryParse('${offer['url'] ?? ''}');
-
-    // Seules les adresses web sont ouvertes, jamais un autre type de lien.
-    final vOpened = vUri != null &&
-        (vUri.scheme == 'https' || vUri.scheme == 'http') &&
-        await launchUrl(vUri, mode: LaunchMode.externalApplication);
-
-    if (!vOpened) {
-      vMessenger.showSnackBar(const SnackBar(content: Text("L'annonce n'a pas pu être ouverte.")));
-    }
-  }
+  Future<void> open(BuildContext pContext) => openOfferUrl(pContext, offer);
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +201,7 @@ class OfferCard extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       child: Text(
-                        offerStatuses[vStatus] ?? 'Statut',
+                        offerStatusLabels[vStatus] ?? 'Statut',
                         style: TextStyle(
                           color: vStatus == 'APPLIED'
                               ? successColorOf(context)
