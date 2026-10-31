@@ -32,6 +32,7 @@ from job.profile import build_profile, save_profile
 from job.code_puzzles import SERIES_LENGTH, build_puzzle_view
 from job.cosmetics import ACCENTS
 from job.weekly_planning import load_planned_revisions
+from job.local_employers import LOCAL_EMPLOYERS_KEY
 from job.challenges import get_expected_answers, get_seed
 from job.quiz_import import import_questions, import_questions_file
 from tools.quiz_lot import build_pack as build_lot_pack
@@ -3412,3 +3413,66 @@ def test_devops_level_is_played_on_the_web(client):
     assert vReset.status_code == 303
     assert "devops-console" not in client.get("/devops?level=docker-port-pris").text
     assert client.get("/devops?level=inconnu").status_code == 404
+
+
+def test_employers_page_updates_filters_and_follows(client, monkeypatch):
+    """Vérifie la page des employeurs : mise à jour, filtre, suivi, service muet."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+
+    def fake_fetch(pDatabaseFile, _pNow):
+        save_json_setting(
+            pDatabaseFile,
+            LOCAL_EMPLOYERS_KEY,
+            {
+                "updated_at": "2026-10-30T09:00:00",
+                "employers": [
+                    {
+                        "siren": "111",
+                        "name": "Entreprise A",
+                        "names": ["Entreprise A"],
+                        "sector": "Énergie",
+                        "city": "Lille",
+                        "distance_km": 12,
+                        "page": "https://annuaire-entreprises.data.gouv.fr/entreprise/111",
+                    },
+                    {
+                        "siren": "222",
+                        "name": "Fonderie B",
+                        "names": ["Fonderie B"],
+                        "sector": "Métallurgie et mécanique",
+                        "city": "Douai",
+                        "distance_km": 40,
+                        "page": "https://annuaire-entreprises.data.gouv.fr/entreprise/222",
+                    },
+                ],
+            },
+        )
+        return 2
+
+    assert "Liste encore vide" in client.get("/employers").text
+    assert "/employers" in client.get("/market").text
+
+    monkeypatch.setattr("web.routes.employers.fetch_local_employers", fake_fetch)
+    vPage = client.post("/employers/update").text
+
+    assert "2 employeur(s) trouvé(s)" in vPage and "Fonderie B" in vPage
+
+    vFiltered = client.get("/employers?distance=20").text
+
+    assert "Entreprise A" in vFiltered and "Fonderie B" not in vFiltered
+
+    vFollowed = client.post(
+        "/employers/follow", data={"siren": "111", "sector": "", "distance": 0}
+    )
+
+    assert vFollowed.status_code == 200
+    assert "Suivi" in vFollowed.text
+    assert client.post("/employers/follow", data={"siren": "999"}).status_code == 200
+
+    def failing_fetch(_pDatabaseFile, _pNow):
+        raise ValueError("Le service public ne répond pas.")
+
+    monkeypatch.setattr("web.routes.employers.fetch_local_employers", failing_fetch)
+
+    assert "ne répond pas" in client.post("/employers/update").text

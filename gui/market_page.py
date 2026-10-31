@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.local_employers_panel import LocalEmployersPanel
 from gui.chart import BarChart
 from gui.theme import ACCENTS, COLORS
 from gui.widgets import (
@@ -181,6 +182,8 @@ class MarketPage(QWidget):
         self.cities_table = create_table(CITY_COLUMNS)
         vCitiesLayout.addWidget(self.cities_table)
         vLayout.addWidget(vCitiesCard)
+        self.employers_panel = LocalEmployersPanel(pDatabaseFile)
+        vLayout.addWidget(self.employers_panel)
         vLayout.addStretch()
 
     def create_outlook_card(self):
@@ -356,6 +359,8 @@ class MarketPage(QWidget):
 
     def refresh(self):
         """Recalcule le marché à partir des offres en base."""
+        self.employers_panel.refresh()
+
         try:
             vNow = datetime.now()
             vOffers = load_market_period(self.database_file, vNow)

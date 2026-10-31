@@ -1,12 +1,15 @@
 """Notifications du bureau : quoi signaler, quand, et jamais plus de trois par jour
 
-Quatre situations méritent une notification : les relances du jour, une offre
-récente très proche du profil, une quête du jour presque terminée et, le soir,
-une série sur le point de s'arrêter. Chacune n'est signalée qu'une fois ; les
+Cinq situations méritent une notification : les relances du jour, une offre
+récente très proche du profil, une nouvelle offre d'un employeur suivi, une
+quête du jour presque terminée et, le soir, une série sur le point de s'arrêter. Chacune n'est signalée qu'une fois ; les
 heures calmes et le plafond quotidien des Paramètres évitent de lasser.
 """
 
+from datetime import timedelta
+
 from job.application_tracking import get_due_follow_ups
+from job.companies import find_preferred_offers
 from job.progress import build_progress
 from job.settings import load_settings
 from job.statistics import find_hot_offers
@@ -72,6 +75,17 @@ def collect_candidates(pDatabaseFile, pNow):
                     "page": "offers",
                 }
             )
+
+    # Employeurs suivis : leurs offres vues depuis la veille
+    for vOffer in find_preferred_offers(pDatabaseFile, pNow - timedelta(days=1)):
+        rCandidates.append(
+            {
+                "key": f"offer-{vOffer['source']}-{vOffer['source_id']}",
+                "title": f"Nouvelle offre chez {vOffer.get('company')}",
+                "text": vOffer.get("title") or "Offre",
+                "page": "offers",
+            }
+        )
 
     vProgress = build_progress(pDatabaseFile, pNow)
 

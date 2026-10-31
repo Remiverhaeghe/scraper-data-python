@@ -7,6 +7,8 @@
 {% block content %}
 {{ ui.page_header("Mon marché", "Offres en France des " ~ market.days ~ " derniers jours, hors stage, alternance et mission libre", "banknote") }}
 
+<p><a class="button" href="{{ url_for('show_employers').path }}">{{ icon("briefcase", 16) }} Employeurs industriels de la région</a></p>
+
 <section class="grid grid-4">
     {{ ui.stat(market.offer_count, "Offres analysées", "briefcase", "blue") }}
     {{ ui.stat(market.salaried_count, "Avec un salaire", "banknote", "green") }}

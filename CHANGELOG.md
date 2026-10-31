@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Employeurs de la région
+- Liste des employeurs industriels, d'énergie et de transport de 250 salariés et
+  plus des Hauts-de-France, tirée de l'annuaire public des entreprises (gratuit,
+  sans clé) : secteur, site le plus proche et distance, offres déjà en base
+- Filtre par secteur et par distance, fiche publique et recherche de la page
+  carrière ; suivre un employeur l'ajoute aux entreprises privilégiées
+- Notification du bureau pour une nouvelle offre d'une entreprise privilégiée
+
 ### Récompenses cosmétiques
 - Six couleurs d'accent et quatre cadres du badge de niveau, débloqués avec les
   niveaux et choisis sur la page Progression (bureau, web) ; l'accent recolore

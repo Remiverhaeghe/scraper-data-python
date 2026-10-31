@@ -43,6 +43,7 @@ def database_file(tmp_path, monkeypatch):
             },
         ],
     )
+    monkeypatch.setattr(notifications, "find_preferred_offers", lambda *pArgs: [])
     monkeypatch.setattr(
         notifications,
         "build_progress",
@@ -113,3 +114,27 @@ def test_evening_streak_and_quiet_hours(database_file):
     save_settings(database_file, {**vSettings, "notification_daily_limit": 0})
 
     assert pick_notification(database_file, MORNING.replace(day=2, month=11)) is None
+
+
+def test_new_offer_of_a_followed_employer_is_announced(database_file, monkeypatch):
+    """Vérifie la notification d'une nouvelle offre chez un employeur suivi."""
+
+    monkeypatch.setattr(notifications, "get_due_follow_ups", lambda *pArgs: [])
+    monkeypatch.setattr(notifications, "find_hot_offers", lambda *pArgs: [])
+    monkeypatch.setattr(
+        notifications,
+        "find_preferred_offers",
+        lambda *pArgs: [
+            {
+                "source": "lever",
+                "source_id": "9",
+                "company": "Roquette",
+                "title": "Technicien de maintenance",
+            }
+        ],
+    )
+
+    vNotification = pick_notification(database_file, MORNING)
+
+    assert vNotification["title"] == "Nouvelle offre chez Roquette"
+    assert vNotification["text"] == "Technicien de maintenance"

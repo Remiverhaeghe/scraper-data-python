@@ -292,6 +292,7 @@ Documents/JobBoard/
 - [x] Explication du score dans la préparation : poids de chaque compétence (exigée, demandée, appréciée) et niveau de maîtrise
 - [x] Mon marché : offres des 90 derniers jours, compétences et villes les plus demandées avec leur net mensuel médian
 - [x] Mon marché : régions (département gardé au placement des offres), compétences à travailler en priorité et évolution mois par mois
+- [x] Employeurs industriels de la région (annuaire public des entreprises, 250 salariés et plus) : filtre par secteur et distance, offres en base, suivi qui signale leurs nouvelles offres
 - [x] Recherches « Près de chez moi » prêtes d'un clic : Java, PHP, développeur, maintenance et automatisme autour du domicile
 - [x] Réponses des recruteurs lues dans Gmail (IMAP, lecture seule) : refus ou entretien proposé, appliqué ou ignoré d'un clic
 - [x] CV Word adapté à une offre : compétences demandées en tête, expériences les plus proches d'abord
@@ -753,6 +754,7 @@ scraper-data-python/
 │   ├── desktop_notifications.py               # Notifications du bureau : choix, heures calmes, plafond
 │   ├── onboarding.py                          # Premiers pas : quêtes de démarrage et étapes de la visite
 │   ├── weekly_planning.py                     # Planning de la semaine : tâches par jour, déplacements
+│   ├── local_employers.py                     # Employeurs de la région : annuaire public, secteurs, suivi
 │   ├── aptitude.py                            # Tests de recrutement : questions générées et scores
 │   ├── troubleshooting.py                     # Pannes à résoudre : partie rejouée, score
 │   ├── ladder.py                              # Langage du simulateur d'automate et dessin ladder
@@ -1035,6 +1037,7 @@ scraper-data-python/
 │   ├── certifications_page.py                 # Certifications : plan conseillé et suivi
 │   ├── certification_dialog.py                # Informations et documents d'une certification
 │   ├── market_page.py                         # Mon marché : salaires et demande
+│   ├── local_employers_panel.py               # Employeurs industriels de la région, sur Mon marché
 │   ├── quiz_answer.py                         # Zones de réponse selon le type, schéma cliquable
 │   ├── quiz_import_panel.py                   # Ajout de questions : priorités, ChatGPT, import, export
 │   ├── quiz_priority_banner.py                # Thèmes vides demandés par les offres
@@ -1107,6 +1110,7 @@ scraper-data-python/
 │   │   ├── challenges.py                      # Défis de programmation
 │   │   ├── puzzles.py                         # Puzzles de code
 │   │   ├── planning.py                        # Planning de la semaine
+│   │   ├── employers.py                       # Employeurs de la région
 │   │   ├── aptitude.py                        # Tests de recrutement
 │   │   ├── troubleshooting.py                 # Pannes à résoudre
 │   │   ├── ladder.py                          # Simulateur d'automate
@@ -1135,6 +1139,7 @@ scraper-data-python/
 │   │   ├── _negotiation.html                  # Jeu de négociation salariale d'une offre
 │   │   ├── tour.html                          # Visite guidée, une étape par page principale
 │   │   ├── planning.html                      # Planning de la semaine
+│   │   ├── employers.html                     # Employeurs de la région
 │   │   ├── _attachments.html                  # Pièces jointes d'une offre
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── preparation_sheet.html             # Fiche de préparation imprimable, sans menu
@@ -1382,6 +1387,7 @@ scraper-data-python/
 │   │   ├── test_desktop_notifications.py      # Teste le choix, les heures calmes et le plafond
 │   │   ├── test_onboarding.py                 # Teste les quêtes de démarrage et la visite
 │   │   ├── test_weekly_planning.py            # Teste les tâches par jour, les déplacements et l'agenda
+│   │   ├── test_local_employers.py            # Teste l'annuaire, le secteur, le filtre et le suivi
 │   │   ├── test_aptitude.py                   # Teste les questions générées, la correction et les scores
 │   │   ├── test_troubleshooting.py            # Teste les scénarios, la consignation et le score
 │   │   ├── test_ladder.py                     # Teste le langage, le dessin, les niveaux et les erreurs classiques
@@ -1564,6 +1570,7 @@ scraper-data-python/
 │   │   ├── test_skills_page.py                 # Teste la page des compétences
 │   │   ├── test_certifications_page.py         # Teste la page et la fenêtre d'une certification
 │   │   ├── test_market_page.py                 # Teste la page Mon marché
+│   │   ├── test_local_employers_panel.py       # Teste la liste, le filtre, le suivi et la mise à jour
 │   │   ├── test_theme.py                       # Teste les thèmes, les icônes et le logo
 │   │   ├── test_theme_contrast.py              # Teste les contrastes des thèmes (WCAG AA)
 │   │   └── test_widgets.py                     # Teste la carte repliable, « Tout replier » et la tuile cliquable

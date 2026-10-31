@@ -1,0 +1,63 @@
+{# Employeurs industriels de la région (job/local_employers.py), tirés de
+   l'annuaire public des entreprises ; suivre un employeur l'ajoute aux
+   entreprises privilégiées, dont les nouvelles offres sont signalées. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Employeurs de la région{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Employeurs de la région", "Entreprises industrielles, d'énergie et de transport de 250 salariés et plus, " ~ view.region, "briefcase") }}
+
+<p><a class="button" href="{{ url_for('show_market').path }}">{{ icon("banknote", 16) }} Retour à Mon marché</a></p>
+
+{% if message %}<p class="application-message tone-{{ message[1] }}" role="status">{{ message[0] }}</p>{% endif %}
+
+<section class="card">
+    <form class="rules-actions" method="get" action="{{ url_for('show_employers').path }}">
+        <select name="sector" aria-label="Secteur">
+            <option value="">Tous les secteurs</option>
+            {% for item in view.sectors %}<option value="{{ item }}"{% if item == sector %} selected{% endif %}>{{ item }}</option>{% endfor %}
+        </select>
+        <label>À moins de <input type="number" name="distance" min="0" max="1000" step="10" value="{{ distance or '' }}" placeholder="toute la région"> km</label>
+        <button class="button" type="submit">Filtrer</button>
+    </form>
+    <form method="post" action="{{ url_for('update_employers').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button class="button" type="submit">{{ icon("history", 16) }} Mettre à jour la liste</button>
+    </form>
+    <p class="muted">
+        {% if view.updated_at %}{{ shown }} employeur(s) affiché(s) sur {{ view.count }} · liste du {{ view.updated_at | date_fr }}{% else %}Liste encore vide : mettez-la à jour depuis l'annuaire public (une vingtaine de secondes).{% endif %}
+    </p>
+</section>
+
+{% if view.employers %}
+<section class="card section-gap">
+    <table class="table">
+        <thead><tr><th scope="col">Employeur</th><th scope="col">Secteur</th><th scope="col">Site le plus proche</th><th scope="col">Distance</th><th scope="col">Offres en base</th><th scope="col">Veille</th></tr></thead>
+        <tbody>
+            {% for employer in view.employers %}
+            <tr>
+                <td><a href="{{ employer.page }}" rel="noopener" target="_blank">{{ employer.name }}</a></td>
+                <td>{{ employer.sector }}</td>
+                <td>{{ employer.city }}</td>
+                <td>{% if employer.distance_km is not none %}{{ employer.distance_km }} km{% endif %}</td>
+                <td>{{ employer.offers }}</td>
+                <td>
+                    {% if employer.followed %}<span class="badge badge-success">Suivi</span>{% else %}
+                    <form method="post" action="{{ url_for('follow_local_employer').path }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        <input type="hidden" name="siren" value="{{ employer.siren }}">
+                        <input type="hidden" name="sector" value="{{ sector }}">
+                        <input type="hidden" name="distance" value="{{ distance }}">
+                        <button class="button" type="submit">Suivre</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+{% endblock %}
