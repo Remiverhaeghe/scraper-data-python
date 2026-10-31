@@ -1013,7 +1013,9 @@ scraper-data-python/
 │   ├── __init__.py                            # Initialise le package GUI
 │   ├── app.py                                 # Crée l'application Qt et ouvre la fenêtre
 │   ├── branding.py                            # Nom, slogan et logo de l'application
-│   ├── main_window.py                         # Fenêtre principale, menu latéral et pages
+│   ├── main_window.py                         # Fenêtre principale : pages, navigation et signaux
+│   ├── sidebar.py                             # Menu latéral : marque, progression, liens et état
+│   ├── celebration.py                         # Fête des gains : points, quêtes, trophées, niveau
 │   ├── home_page.py                           # Accueil et indicateurs
 │   ├── search_page.py                         # Critères, sources, progression et arrêt
 │   ├── saved_searches_bar.py                  # Recherches enregistrées en pastilles
@@ -1081,7 +1083,11 @@ scraper-data-python/
 │   ├── interview_simulation_panel.py          # Simulation d'entretien technique
 │   ├── self_assessment_panel.py               # Auto-évaluation des compétences
 │   ├── star_answers_panel.py                  # Saisie des réponses STAR
-│   ├── settings_page.py                       # Thème, règles de calcul, sources et licence
+│   ├── settings_page.py                       # Apparence, sources et mise en colonnes des cartes
+│   ├── calculation_rules_panel.py             # Règles de calcul partagées avec le web
+│   ├── schedule_panel.py                      # Recherche planifiée : recherches, fréquence, état
+│   ├── notification_panel.py                  # Notifications e-mail : adresse, score, test
+│   ├── company_lists_panel.py                 # Entreprises exclues, privilégiées, agences d'intérim
 │   ├── token_access_panel.py                  # Accès secret : adresse d'agenda ou jeton
 │   ├── data_panel.py                          # Sauvegarde complète, sauvegardes et réinitialisation
 │   ├── company_pages_panel.py                 # Pages carrière suivies : listes et vérification
@@ -1566,6 +1572,7 @@ scraper-data-python/
 │   │   ├── test_funnel_panel.py                # Teste l'entonnoir, vide puis rempli
 │   │   ├── test_home_page.py                   # Teste l'accueil et ses indicateurs
 │   │   ├── test_job_controller.py              # Teste le contrôleur des offres
+│   │   ├── test_celebration.py                 # Teste le repérage des nouveaux succès
 │   │   ├── test_main_window.py                 # Teste la navigation et l'état du menu
 │   │   ├── test_parcours.py                    # Teste les parcours de bout en bout du bureau
 │   │   ├── test_offers_model.py                # Teste le modèle du tableau des offres

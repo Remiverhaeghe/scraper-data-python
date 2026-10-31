@@ -41,16 +41,16 @@ def test_status_follows_search(qt_application, tmp_path):
 
     vWindow = MainWindow(vDatabaseFile, "Test")
 
-    assert vWindow.status_bar.isHidden()
+    assert vWindow.sidebar.status_bar.isHidden()
 
     vWindow.search_page.search_started.emit()
 
-    assert vWindow.status_label.text() == "Recherche en cours"
-    assert not vWindow.status_bar.isHidden()
+    assert vWindow.sidebar.status_label.text() == "Recherche en cours"
+    assert not vWindow.sidebar.status_bar.isHidden()
 
     vWindow.search_page.search_ended.emit()
 
-    assert vWindow.status_bar.isHidden()
+    assert vWindow.sidebar.status_bar.isHidden()
 
 
 def test_rebuild_keeps_window_and_shows_page(qt_application, tmp_path):
@@ -88,7 +88,7 @@ def test_search_page_saves_scheduled_search(qt_application, tmp_path):
     assert vSearch["criteria"]["keyword"] == "Python"
     assert vSearch["sources"] == vSearchPage.get_selected_sources()
     assert vSearchPage.status_label.text() == "Recherche planifiée enregistrée"
-    assert vWindow.settings_page.schedule_search_label.text().startswith("Python")
+    assert vWindow.settings_page.schedule_panel.search_label.text().startswith("Python")
 
 
 def test_reset_rebuilds_pages_with_message(qt_application, tmp_path):

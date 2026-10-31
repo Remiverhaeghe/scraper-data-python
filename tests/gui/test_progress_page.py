@@ -3,6 +3,7 @@
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QLabel
 
+import gui.celebration as celebration
 import gui.main_window as main_window
 from gui.main_window import MainWindow
 from gui.progress_widgets import GAME_MODE_SETTING, CelebrationOverlay
@@ -49,19 +50,19 @@ def test_points_gained_are_shown_then_level_is_celebrated(
     vShown = []
     vCelebrated = []
     vChimes = []
-    monkeypatch.setattr(main_window, "play_success", lambda: vChimes.append(True))
+    monkeypatch.setattr(celebration, "play_success", lambda: vChimes.append(True))
     monkeypatch.setattr(
-        main_window,
+        celebration,
         "show_xp_gain",
         lambda pWindow, pAnchor, pText, pDelayMs=0: vShown.append(pText),
     )
     monkeypatch.setattr(
-        main_window,
+        celebration,
         "CelebrationOverlay",
         lambda pWindow, pTitle, pSubtitle, pDetail: vCelebrated.append(pTitle),
     )
 
-    assert vWindow.progress_box.title_label.text() == "Apprenti"
+    assert vWindow.sidebar.progress_box.title_label.text() == "Apprenti"
 
     answer(vDatabaseFile, 2)
     vWindow.check_progress()
@@ -78,7 +79,7 @@ def test_points_gained_are_shown_then_level_is_celebrated(
 
     assert "Quête réussie : Réviser 10 questions" in vShown
     assert vCelebrated == ["Niveau 2"] and len(vChimes) == 2
-    assert vWindow.progress_box.title_label.text() == "Apprenti confirmé"
+    assert vWindow.sidebar.progress_box.title_label.text() == "Apprenti confirmé"
 
 
 def test_progress_page_lists_quests_and_rules(qt_application, tmp_path):
@@ -111,7 +112,7 @@ def test_game_can_be_turned_off(qt_application, tmp_path):
     vWindow.check_progress()
 
     assert QSettings().value(GAME_MODE_SETTING) == "off"
-    assert vWindow.progress_box.isHidden()
+    assert vWindow.sidebar.progress_box.isHidden()
     assert vWindow.last_progress["xp"] == 0
 
 

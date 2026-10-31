@@ -5,28 +5,22 @@ import time
 from datetime import date, datetime
 
 import shiboken6
-from PySide6.QtCore import QSettings, QSize, Qt, QTimer, QUrl, Signal
-from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut
+from PySide6.QtCore import QSettings, QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QFrame,
     QHBoxLayout,
-    QLabel,
     QListWidget,
     QListWidgetItem,
     QMainWindow,
-    QPushButton,
     QStackedWidget,
-    QVBoxLayout,
     QWidget,
 )
 
-from config import CONTACT_URL, LICENSE_NAME, REPOSITORY_URL, TAGLINE
+from gui.celebration import celebrate
 from gui.desktop_notifier import DesktopNotifier
 from gui.planning_page import PlanningPage
-from gui.sounds import play_success
+from gui.sidebar import Sidebar
 from gui.tour_overlay import TourOverlay
-from gui.branding import create_logo_icon
-from gui.dialogs import show_legal_notice, show_license
 from gui.applications_page import ApplicationsPage
 from gui.aptitude_page import AptitudePage
 from gui.certifications_page import CertificationsPage
@@ -43,13 +37,7 @@ from gui.icons import get_icon
 from gui.offers_page import OffersPage
 from gui.profile_page import ProfilePage
 from gui.progress_page import ProgressPage
-from gui.progress_widgets import (
-    TOAST_GAP_MS,
-    CelebrationOverlay,
-    SidebarProgress,
-    get_game_mode,
-    show_xp_gain,
-)
+from gui.progress_widgets import get_game_mode
 from gui.quality_page import QualityPage
 from gui.quiz_page import QuizPage
 from gui.skills_page import SkillsPage
@@ -82,10 +70,6 @@ TOUR_DELAY_MS = 800
 TOUR_DONE_SETTING = "tour_done"
 
 SCORE_WARM_UP_DELAY_MS = 15000
-
-# Liens internes du pied de menu, ouverts dans l'application
-LEGAL_LINK = "#mentions-legales"
-LICENSE_LINK = "#licence"
 
 # Clés de navigation qui ouvrent la page des offres avec des filtres prédéfinis
 # Distincts des noms de page : « applications » ouvre la page Candidatures.
@@ -126,11 +110,8 @@ class MainWindow(QMainWindow):
         self.database_file = pDatabaseFile
         self.title = pTitle
 
-        # Créés par create_sidebar, appelée à chaque construction du contenu
-        self.status_bar = None
-        self.status_dot = None
-        self.status_label = None
-        self.progress_box = None
+        # Recréé à chaque construction du contenu
+        self.sidebar = None
 
         self.setWindowTitle(pTitle)
         # En dessous, les cartes se chevauchent. Sur un petit écran ou un téléphone,
@@ -279,12 +260,18 @@ class MainWindow(QMainWindow):
         self.search_page.search_ended.connect(self.on_search_ended)
         self.search_page.schedule_requested.connect(self.save_scheduled_search)
 
+        self.sidebar = Sidebar(self.title, self.navigation)
+        self.sidebar.progress_requested.connect(lambda: self.navigate("progress"))
+
+        if self.last_progress is not None:
+            self.sidebar.progress_box.set_progress(self.last_progress)
+
         vCentral = QWidget()
 
         vLayout = QHBoxLayout(vCentral)
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.setSpacing(0)
-        vLayout.addWidget(self.create_sidebar(self.title))
+        vLayout.addWidget(self.sidebar)
         vLayout.addWidget(self.pages, 1)
 
         self.setCentralWidget(vCentral)
@@ -320,107 +307,10 @@ class MainWindow(QMainWindow):
         ):
             self.offers_page.toggle_detail()
 
-    def create_sidebar(self, pTitle):
-        """Construit le menu latéral : marque, navigation et état."""
-        vLogo = QLabel()
-        vLogo.setPixmap(create_logo_icon().pixmap(44, 44))
-        vLogo.setFixedSize(44, 44)
-
-        vName = QLabel(pTitle)
-        vName.setObjectName("brandName")
-
-        vTagline = QLabel(TAGLINE)
-        vTagline.setObjectName("brandTagline")
-        vTagline.setWordWrap(True)
-
-        vBrandTexts = QVBoxLayout()
-        vBrandTexts.setSpacing(2)
-        vBrandTexts.addWidget(vName)
-        vBrandTexts.addWidget(vTagline)
-
-        vBrand = QHBoxLayout()
-        vBrand.setSpacing(12)
-        vBrand.addWidget(vLogo)
-        vBrand.addLayout(vBrandTexts, 1)
-
-        vSeparator = QFrame()
-        vSeparator.setObjectName("separator")
-
-        self.progress_box = SidebarProgress()
-        self.progress_box.clicked.connect(lambda: self.navigate("progress"))
-        self.progress_box.setVisible(get_game_mode() != "off")
-
-        if self.last_progress is not None:
-            self.progress_box.set_progress(self.last_progress)
-
-        self.status_dot = QLabel("●")
-
-        self.status_label = QLabel()
-        self.status_label.setObjectName("sidebarStatus")
-
-        # Visible seulement pendant une recherche, pour la suivre depuis une autre page
-        self.status_bar = QWidget()
-        self.status_bar.setVisible(False)
-
-        vStatus = QHBoxLayout(self.status_bar)
-        vStatus.setContentsMargins(0, 0, 0, 0)
-        vStatus.addWidget(self.status_dot)
-        vStatus.addWidget(self.status_label, 1)
-
-        rSidebar = QWidget()
-        rSidebar.setObjectName("sidebar")
-        rSidebar.setFixedWidth(240)
-
-        vLayout = QVBoxLayout(rSidebar)
-        vLayout.setContentsMargins(16, 22, 16, 18)
-        vLayout.setSpacing(16)
-        vLayout.addLayout(vBrand)
-        vLayout.addWidget(vSeparator)
-        vLayout.addWidget(self.progress_box)
-        vLayout.addWidget(self.navigation, 1)
-        vLayout.addWidget(self.create_footer_links())
-        vLayout.addWidget(self.status_bar)
-
-        return rSidebar
-
-    def create_footer_links(self):
-        """Construit les liens du pied de menu, identiques à ceux du web."""
-        rLinks = QFrame()
-        rLinks.setObjectName("sidebarLinks")
-
-        vLayout = QVBoxLayout(rLinks)
-        vLayout.setContentsMargins(0, 10, 0, 0)
-        vLayout.setSpacing(2)
-
-        for vTarget, vLabel, vIcon in (
-            (LEGAL_LINK, "Mentions légales", "file-text"),
-            (CONTACT_URL, "Me contacter", "linkedin"),
-            (REPOSITORY_URL, "Code source", "github"),
-            (LICENSE_LINK, f"Licence {LICENSE_NAME}", "scale"),
-        ):
-            vButton = QPushButton(get_icon(vIcon, COLORS["muted"], 16), vLabel)
-            vButton.setObjectName("sidebarLink")
-            vButton.setCursor(Qt.CursorShape.PointingHandCursor)
-            vButton.clicked.connect(
-                lambda _=False, pTarget=vTarget: self.open_footer_link(pTarget)
-            )
-            vLayout.addWidget(vButton)
-
-        return rLinks
-
-    def open_footer_link(self, pTarget):
-        """Ouvre mentions et licence dans l'application, le contact au navigateur."""
-        if pTarget == LEGAL_LINK:
-            show_legal_notice(self)
-        elif pTarget == LICENSE_LINK:
-            show_license(self)
-        else:
-            QDesktopServices.openUrl(QUrl(pTarget))
-
     def check_progress(self):
         """Relit les points ; un gain s'affiche, un niveau gagné se fête."""
         vMode = get_game_mode()
-        self.progress_box.setVisible(vMode != "off")
+        self.sidebar.progress_box.setVisible(vMode != "off")
 
         if vMode == "off":
             return
@@ -444,7 +334,9 @@ class MainWindow(QMainWindow):
         vPrevious = self.last_progress
         self.last_progress = vProgress
         self.last_xp = get_total_xp(self.database_file)
-        self.progress_box.set_progress(vProgress, pAnimate=vPrevious is not None)
+        self.sidebar.progress_box.set_progress(
+            vProgress, pAnimate=vPrevious is not None
+        )
 
         if self.pages.currentWidget() is self.progress_page:
             self.progress_page.show_progress(vProgress)
@@ -453,79 +345,7 @@ class MainWindow(QMainWindow):
         if vPrevious is None:
             return
 
-        self.celebrate(vPrevious, vProgress, vMode)
-
-    def celebrate(self, pPrevious, pProgress, pMode):
-        """Montre les points gagnés, les quêtes réussies et un nouveau niveau."""
-        vGain = pProgress["xp"] - pPrevious["xp"]
-        vDelay = 0
-
-        if vGain > 0:
-            show_xp_gain(self, self.progress_box, f"+{vGain} XP")
-            vDelay += TOAST_GAP_MS
-
-        vDoneBefore = {vQuest["id"] for vQuest in pPrevious["quests"] if vQuest["done"]}
-
-        for vQuest in pProgress["quests"]:
-            if vQuest["done"] and vQuest["id"] not in vDoneBefore:
-                logger.info("Quête réussie affichée : %s", vQuest["label"])
-                show_xp_gain(
-                    self,
-                    self.progress_box,
-                    f"Quête réussie : {vQuest['label']}",
-                    vDelay,
-                )
-                vDelay += TOAST_GAP_MS
-
-        vUnlockedBefore = {
-            vItem["id"] for vItem in pPrevious["achievements"] if vItem["unlocked"]
-        }
-
-        for vItem in pProgress["achievements"]:
-            if vItem["unlocked"] and vItem["id"] not in vUnlockedBefore:
-                show_xp_gain(
-                    self,
-                    self.progress_box,
-                    f"Trophée obtenu : {vItem['title']}",
-                    vDelay,
-                )
-                vDelay += TOAST_GAP_MS
-
-        if pProgress["level"] > pPrevious["level"]:
-            logger.info(
-                "Niveau %s atteint : %s", pProgress["level"], pProgress["title"]
-            )
-
-            if pMode == "full":
-                CelebrationOverlay(
-                    self,
-                    f"Niveau {pProgress['level']}",
-                    pProgress["title"],
-                    f"Prochain titre : {pProgress['next_title']}",
-                )
-            else:
-                show_xp_gain(
-                    self,
-                    self.progress_box,
-                    f"Niveau {pProgress['level']} : {pProgress['title']}",
-                    vDelay,
-                )
-
-        # Un son court pour une quête, un trophée ou un niveau ; pas pour de simples points
-        vSuccess = (
-            pProgress["level"] > pPrevious["level"]
-            or any(
-                vQuest["done"] and vQuest["id"] not in vDoneBefore
-                for vQuest in pProgress["quests"]
-            )
-            or any(
-                vItem["unlocked"] and vItem["id"] not in vUnlockedBefore
-                for vItem in pProgress["achievements"]
-            )
-        )
-
-        if vSuccess and pProgress.get("cosmetics", {}).get("sounds"):
-            play_success()
+        celebrate(self, self.sidebar.progress_box, vPrevious, vProgress, vMode)
 
     def add_page(self, pKey, pLabel, pIcon, pPage):
         """Ajoute une page et son entrée dans le menu latéral."""
@@ -613,7 +433,7 @@ class MainWindow(QMainWindow):
                 "Recherche planifiée enregistrée",
                 "Activez-la et choisissez sa fréquence dans les Paramètres.",
             )
-            self.settings_page.refresh_schedule()
+            self.settings_page.schedule_panel.refresh()
 
     def show_search_results(self, pKeys, pDescription):
         """Ouvre la page des offres restreinte aux résultats d'une recherche."""
@@ -697,14 +517,12 @@ class MainWindow(QMainWindow):
 
     def on_search_started(self):
         """Signale la recherche en cours et bloque le changement de thème."""
-        self.status_dot.setStyleSheet(f"color: {COLORS['warning']};")
-        self.status_label.setText("Recherche en cours")
-        self.status_bar.setVisible(True)
+        self.sidebar.show_search_running(True)
         self.settings_page.set_actions_enabled(False)
 
     def on_search_ended(self):
         """Masque l'état et réautorise le changement de thème."""
-        self.status_bar.setVisible(False)
+        self.sidebar.show_search_running(False)
         self.settings_page.set_actions_enabled(True)
 
     def closeEvent(self, pEvent):

@@ -4,9 +4,9 @@ import shutil
 from datetime import datetime
 
 import pytest
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QApplication, QLabel, QMessageBox
 
-from gui import data_panel, settings_page, token_access_panel
+from gui import data_panel, notification_panel, settings_page, token_access_panel
 from gui.settings_page import SettingsPage, describe_source_state
 from gui.theme import COLORS
 from job.schedule import load_schedule, save_scheduled_search
@@ -93,11 +93,11 @@ def test_rules_are_saved_from_the_page(qt_application, tmp_path):
     initialize_database(vDatabaseFile)
 
     vPage = SettingsPage(vDatabaseFile)
-    vPage.setting_spins["follow_up_days"].setValue(10)
-    vPage.save_rules()
+    vPage.rules_panel.spins["follow_up_days"].setValue(10)
+    vPage.rules_panel.save()
 
     assert load_settings(vDatabaseFile)["follow_up_days"] == 10
-    assert vPage.rules_message.text() == "Règles enregistrées."
+    assert vPage.rules_panel.message_label.text() == "Règles enregistrées."
 
 
 def create_page(pDatabaseFile, pMonkeypatch, pGmailConfigured=True):
@@ -121,11 +121,13 @@ def test_schedule_requires_a_saved_search(qt_application, tmp_path, monkeypatch)
 
     vPage = create_page(tmp_path / "scraper.db", monkeypatch)
 
-    vPage.schedule_check.setChecked(True)
-    vPage.save_schedule()
+    vPage.schedule_panel.enabled_check.setChecked(True)
+    vPage.schedule_panel.save()
 
-    assert "Enregistrez d'abord une recherche" in vPage.schedule_message.text()
-    assert vPage.schedule_search_label.text() == "Aucune recherche enregistrée"
+    assert (
+        "Enregistrez d'abord une recherche" in vPage.schedule_panel.message_label.text()
+    )
+    assert vPage.schedule_panel.search_label.text() == "Aucune recherche enregistrée"
 
 
 def test_schedule_is_saved_from_the_page(qt_application, tmp_path, monkeypatch):
@@ -135,19 +137,21 @@ def test_schedule_is_saved_from_the_page(qt_application, tmp_path, monkeypatch):
     vPage = create_page(vDatabaseFile, monkeypatch)
 
     save_scheduled_search(vDatabaseFile, ["remotive"], {"keyword": "Java"})
-    vPage.refresh_schedule()
+    vPage.schedule_panel.refresh()
 
-    vPage.schedule_check.setChecked(True)
-    vPage.interval_combo.setCurrentIndex(vPage.interval_combo.findData(12))
-    vPage.save_schedule()
+    vPage.schedule_panel.enabled_check.setChecked(True)
+    vPage.schedule_panel.interval_combo.setCurrentIndex(
+        vPage.schedule_panel.interval_combo.findData(12)
+    )
+    vPage.schedule_panel.save()
 
     vSchedule = load_schedule(vDatabaseFile)
 
     assert vSchedule["enabled"] is True
     assert vSchedule["interval_hours"] == 12
-    assert vPage.schedule_message.text() == "Planification enregistrée."
-    assert vPage.schedule_search_label.text() == "Java"
-    assert vPage.schedule_sources_label.text() == "Remotive"
+    assert vPage.schedule_panel.message_label.text() == "Planification enregistrée."
+    assert vPage.schedule_panel.search_label.text() == "Java"
+    assert vPage.schedule_panel.sources_label.text() == "Remotive"
 
 
 def test_schedule_uses_a_saved_search(qt_application, tmp_path, monkeypatch):
@@ -161,14 +165,14 @@ def test_schedule_uses_a_saved_search(qt_application, tmp_path, monkeypatch):
     )
     vPage.refresh()
 
-    vPage.schedule_search_combo.setCurrentIndex(1)
-    vPage.save_schedule()
+    vPage.schedule_panel.search_combo.setCurrentIndex(1)
+    vPage.schedule_panel.save()
 
     assert load_schedule(vDatabaseFile)["search"] == {
         "sources": ["remotive"],
         "criteria": {"keyword": "Python"},
     }
-    assert vPage.schedule_search_label.text() == "Python"
+    assert vPage.schedule_panel.search_label.text() == "Python"
 
 
 def test_extra_searches_are_saved_from_the_page(qt_application, tmp_path, monkeypatch):
@@ -182,13 +186,13 @@ def test_extra_searches_are_saved_from_the_page(qt_application, tmp_path, monkey
     )
     vPage.refresh()
 
-    vPage.schedule_search_combo.setCurrentIndex(1)
-    vPage.extra_search_checks["Python"].setChecked(True)
-    vPage.save_schedule()
+    vPage.schedule_panel.search_combo.setCurrentIndex(1)
+    vPage.schedule_panel.extra_search_checks["Python"].setChecked(True)
+    vPage.schedule_panel.save()
 
     assert load_schedule(vDatabaseFile)["extra_searches"] == ["Python"]
-    assert vPage.extra_search_checks["Python"].isChecked()
-    assert "Python" in vPage.schedule_extra_label.text()
+    assert vPage.schedule_panel.extra_search_checks["Python"].isChecked()
+    assert "Python" in vPage.schedule_panel.extra_label.text()
 
 
 @pytest.mark.parametrize(
@@ -207,10 +211,10 @@ def test_email_is_saved_from_the_page(
     vDatabaseFile = tmp_path / "scraper.db"
     vPage = create_page(vDatabaseFile, monkeypatch)
 
-    vPage.email_edit.setText(pEmail)
-    vPage.save_email()
+    vPage.notification_panel.email_edit.setText(pEmail)
+    vPage.notification_panel.save()
 
-    assert vPage.email_message.text() == pMessage
+    assert vPage.notification_panel.message_label.text() == pMessage
     assert load_schedule(vDatabaseFile)["email"] == pSaved
 
 
@@ -219,7 +223,7 @@ def test_test_email_is_disabled_without_gmail(qt_application, tmp_path, monkeypa
 
     vPage = create_page(tmp_path / "scraper.db", monkeypatch, pGmailConfigured=False)
 
-    assert not vPage.test_email_button.isEnabled()
+    assert not vPage.notification_panel.test_button.isEnabled()
 
 
 @pytest.mark.parametrize(
@@ -243,13 +247,13 @@ def test_send_test_email(
 
         vSent.append(pRecipient)
 
-    monkeypatch.setattr(settings_page, "send_email", fake_send)
+    monkeypatch.setattr(notification_panel, "send_email", fake_send)
 
     vPage = create_page(tmp_path / "scraper.db", monkeypatch)
-    vPage.email_edit.setText(pEmail)
-    vPage.send_test_email()
+    vPage.notification_panel.email_edit.setText(pEmail)
+    vPage.notification_panel.send_test_email()
 
-    assert vPage.email_message.text() == pMessage
+    assert vPage.notification_panel.message_label.text() == pMessage
     assert vSent == (["moi@example.com"] if pEmail and not pError else [])
 
 
@@ -265,7 +269,7 @@ def test_reset_asks_confirmation(qt_application, tmp_path, monkeypatch, pConfirm
             "Réinitialiser" if pConfirmed else "Annuler"
         ]
 
-    monkeypatch.setattr(settings_page.QMessageBox, "exec", fake_exec)
+    monkeypatch.setattr(QMessageBox, "exec", fake_exec)
     monkeypatch.setattr(
         data_panel,
         "reset_database",
@@ -305,19 +309,24 @@ def test_companies_are_saved_from_the_page(qt_application, tmp_path, monkeypatch
     vDatabaseFile = tmp_path / "scraper.db"
     vPage = create_page(vDatabaseFile, monkeypatch)
 
-    vPage.company_edits["excluded"].setPlainText("Globex\nInitech")
-    vPage.company_edits["preferred"].setPlainText("Acme")
-    vPage.company_edits["agencies"].setPlainText("Proman\nAgence Locale SAS, proman")
-    vPage.save_companies()
+    vPage.company_lists_panel.edits["excluded"].setPlainText("Globex\nInitech")
+    vPage.company_lists_panel.edits["preferred"].setPlainText("Acme")
+    vPage.company_lists_panel.edits["agencies"].setPlainText(
+        "Proman\nAgence Locale SAS, proman"
+    )
+    vPage.company_lists_panel.save()
 
-    assert vPage.companies_message.text() == (
+    assert vPage.company_lists_panel.message_label.text() == (
         "2 entreprise(s) exclue(s), 1 privilégiée(s), 2 agence(s) d'intérim."
     )
 
-    vPage.company_edits["preferred"].setPlainText("globex")
-    vPage.save_companies()
+    vPage.company_lists_panel.edits["preferred"].setPlainText("globex")
+    vPage.company_lists_panel.save()
 
-    assert "à la fois exclue et privilégiée" in vPage.companies_message.text()
+    assert (
+        "à la fois exclue et privilégiée"
+        in vPage.company_lists_panel.message_label.text()
+    )
 
 
 def test_scheduled_search_can_be_removed(qt_application, tmp_path, monkeypatch):
@@ -329,25 +338,25 @@ def test_scheduled_search_can_be_removed(qt_application, tmp_path, monkeypatch):
     save_scheduled_search(vDatabaseFile, ["remotive"], {"keyword": "Java"})
     vPage.refresh()
 
-    vPage.schedule_check.setChecked(True)
-    vPage.save_schedule()
+    vPage.schedule_panel.enabled_check.setChecked(True)
+    vPage.schedule_panel.save()
 
-    assert not vPage.remove_schedule_button.isHidden()
+    assert not vPage.schedule_panel.remove_button.isHidden()
 
     monkeypatch.setattr(
-        settings_page.QMessageBox,
+        QMessageBox,
         "question",
-        lambda *pArgs: settings_page.QMessageBox.StandardButton.Yes,
+        lambda *pArgs: QMessageBox.StandardButton.Yes,
     )
-    vPage.remove_schedule_button.click()
+    vPage.schedule_panel.remove_button.click()
 
     vSchedule = load_schedule(vDatabaseFile)
 
     assert vSchedule["search"] is None
     assert vSchedule["enabled"] is False
-    assert vPage.schedule_search_label.text() == "Aucune recherche enregistrée"
-    assert vPage.remove_schedule_button.isHidden()
-    assert vPage.schedule_message.text() == "Recherche planifiée retirée."
+    assert vPage.schedule_panel.search_label.text() == "Aucune recherche enregistrée"
+    assert vPage.schedule_panel.remove_button.isHidden()
+    assert vPage.schedule_panel.message_label.text() == "Recherche planifiée retirée."
 
 
 def test_min_score_is_saved_with_the_email(qt_application, tmp_path, monkeypatch):
@@ -356,12 +365,14 @@ def test_min_score_is_saved_with_the_email(qt_application, tmp_path, monkeypatch
     vDatabaseFile = tmp_path / "scraper.db"
     vPage = create_page(vDatabaseFile, monkeypatch)
 
-    vPage.email_edit.setText("moi@example.com")
-    vPage.min_score_combo.setCurrentIndex(vPage.min_score_combo.findData(70))
-    vPage.save_email()
+    vPage.notification_panel.email_edit.setText("moi@example.com")
+    vPage.notification_panel.min_score_combo.setCurrentIndex(
+        vPage.notification_panel.min_score_combo.findData(70)
+    )
+    vPage.notification_panel.save()
 
     assert load_schedule(vDatabaseFile)["min_score"] == 70
-    assert vPage.email_message.text() == "Adresse enregistrée."
+    assert vPage.notification_panel.message_label.text() == "Adresse enregistrée."
 
 
 def test_calendar_address_is_created_copied_and_renewed(
@@ -382,15 +393,13 @@ def test_calendar_address_is_created_copied_and_renewed(
 
     vPage.calendar_panel.copy_button.click()
 
-    assert settings_page.QApplication.clipboard().text() == vFirst
+    assert QApplication.clipboard().text() == vFirst
 
     vAnswers = [
-        settings_page.QMessageBox.StandardButton.No,
-        settings_page.QMessageBox.StandardButton.Yes,
+        QMessageBox.StandardButton.No,
+        QMessageBox.StandardButton.Yes,
     ]
-    monkeypatch.setattr(
-        settings_page.QMessageBox, "question", lambda *pArgs: vAnswers.pop(0)
-    )
+    monkeypatch.setattr(QMessageBox, "question", lambda *pArgs: vAnswers.pop(0))
 
     vPage.calendar_panel.button.click()
 
@@ -424,9 +433,9 @@ def test_archive_is_exported_then_restored(qt_application, tmp_path, monkeypatch
         lambda *pArgs: (str(vArchive), ""),
     )
     monkeypatch.setattr(
-        settings_page.QMessageBox,
+        QMessageBox,
         "warning",
-        lambda *pArgs: settings_page.QMessageBox.StandardButton.Yes,
+        lambda *pArgs: QMessageBox.StandardButton.Yes,
     )
     vPage.data_panel.restore_archive_button.click()
 
@@ -588,7 +597,7 @@ def test_mobile_token_is_created_copied_and_renewed(
 
     vPage.mobile_panel.copy_button.click()
 
-    assert settings_page.QApplication.clipboard().text() == vFirst
+    assert QApplication.clipboard().text() == vFirst
 
     vPage.mobile_panel.qr_button.click()
 
@@ -596,12 +605,10 @@ def test_mobile_token_is_created_copied_and_renewed(
     assert vPage.mobile_panel.edit.text() == vFirst
 
     vAnswers = [
-        settings_page.QMessageBox.StandardButton.No,
-        settings_page.QMessageBox.StandardButton.Yes,
+        QMessageBox.StandardButton.No,
+        QMessageBox.StandardButton.Yes,
     ]
-    monkeypatch.setattr(
-        settings_page.QMessageBox, "question", lambda *pArgs: vAnswers.pop(0)
-    )
+    monkeypatch.setattr(QMessageBox, "question", lambda *pArgs: vAnswers.pop(0))
 
     vPage.mobile_panel.button.click()
 
@@ -625,17 +632,19 @@ def test_messages_are_colored_and_cards_reflow(qt_application, tmp_path, monkeyp
 
     vPage = create_page(tmp_path / "scraper.db", monkeypatch)
 
-    vPage.company_edits["excluded"].setPlainText("acme")
-    vPage.company_edits["preferred"].setPlainText("acme")
-    vPage.save_companies()
+    vPage.company_lists_panel.edits["excluded"].setPlainText("acme")
+    vPage.company_lists_panel.edits["preferred"].setPlainText("acme")
+    vPage.company_lists_panel.save()
 
-    assert COLORS["warning"] in vPage.companies_message.styleSheet()
+    assert COLORS["warning"] in vPage.company_lists_panel.message_label.styleSheet()
 
-    vPage.company_edits["preferred"].setPlainText("globex")
-    vPage.save_companies()
+    vPage.company_lists_panel.edits["preferred"].setPlainText("globex")
+    vPage.company_lists_panel.save()
 
-    assert COLORS["success"] in vPage.companies_message.styleSheet()
-    assert vPage.company_edits["excluded"].objectName() == "excludedCompanies"
+    assert COLORS["success"] in vPage.company_lists_panel.message_label.styleSheet()
+    assert (
+        vPage.company_lists_panel.edits["excluded"].objectName() == "excludedCompanies"
+    )
 
     vPage.resize(800, 600)
     vPage.arrange_cards(vPage.width() < settings_page.SINGLE_COLUMN_WIDTH)

@@ -5,6 +5,13 @@ dans l'historique git.
 
 ## Non publié
 
+### Nettoyage technique
+- Page Paramètres découpée : règles de calcul, recherche planifiée,
+  notifications e-mail et listes d'entreprises deviennent des panneaux
+  autonomes, comme le domicile et les données
+- Fenêtre principale allégée : le menu latéral et la fête des gains ont leur
+  propre module ; aucun changement visible
+
 ### Surveillance des performances
 - Les pages lentes du bureau et du site (plus d'une seconde) sont gardées une
   semaine, par page et par modèle de route, sans paramètres ni identifiants
