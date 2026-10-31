@@ -1,0 +1,383 @@
+@001
+Q: Sur un plan, que signifie la cote Ø25 H7 portée sur un alésage ?
+C: Un diamètre nominal de 25 mm avec la position H et la qualité 7
+W: Un diamètre de 25 mm à usiner puis à tremper avec une dureté de 7 HRC
+W: Une profondeur de 25 mm et une rugosité de classe H7
+W: Un trou taraudé de 25 mm au pas de 7 dixièmes
+E: La lettre donne la position de la tolérance par rapport à la cote nominale (majuscule pour un alésage, minuscule pour un arbre), le chiffre la qualité, c'est-à-dire la largeur de l'intervalle. Pour H, l'écart inférieur est nul : l'alésage fait au moins 25,000 mm.
+
+@002
+Q: Un alésage Ø25 H7 (0 / +21 µm) reçoit un arbre Ø25 g6 (−7 / −20 µm). Quel est le jeu maximal, en micromètres ?
+N: 41
+U: µm
+E: Le jeu maximal s'obtient avec l'alésage le plus grand et l'arbre le plus petit : 25,021 − 24,980 = 0,041 mm, soit 41 µm. Le jeu minimal vaut 25,000 − 24,993 = 7 µm : l'ajustement H7/g6 est toujours avec jeu, adapté à un guidage glissant précis.
+
+@003
+Q: Associer chaque ajustement à son usage typique.
+P: H7/g6 => Pièce guidée qui doit coulisser sans jeu visible
+P: H7/k6 => Bague de roulement montée légèrement serrée
+P: H7/p6 => Moyeu emmanché à la presse qui transmet un couple
+P: H11/c11 => Assemblage grossier avec jeu important
+E: Plus la lettre de l'arbre avance dans l'alphabet, plus l'arbre est gros par rapport à l'alésage : g donne du jeu, k un ajustement incertain voisin du serrage léger, p un serrage franc. Le choix suit le catalogue du fabricant pour les roulements.
+
+@004
+Q: Que désigne le symbole ⌖ (cercle barré d'une croix) dans un cadre de tolérance géométrique ?
+C: Une tolérance de localisation
+W: Une tolérance de planéité
+W: Une tolérance de rugosité de surface
+W: Un trou taraudé à droite
+E: La localisation fixe la zone où doit se trouver l'axe d'un trou par rapport aux références A, B, C du cadre. C'est elle qui garantit que les trous de deux pièces se correspondent au montage, mieux qu'une simple cote avec tolérance.
+
+@005
+Q: Associer chaque symbole de tolérance géométrique à son nom.
+P: ⏥ => Planéité
+P: ○ => Circularité
+P: ⫽ => Parallélisme
+P: ⊥ => Perpendicularité
+E: Les tolérances de forme (planéité, circularité, rectitude) s'appliquent à un élément seul ; les tolérances d'orientation (parallélisme, perpendicularité) et de position se rapportent à une référence désignée par une lettre dans un cadre.
+
+@006
+Q: Sur un dessin technique, à quoi correspond un trait mixte fin (trait-point) ?
+C: Un axe ou un plan de symétrie
+W: Une arête cachée de la pièce
+W: Le contour vu d'une pièce coupée par un plan de coupe
+W: Une ligne de cote reliant deux flèches
+E: Le trait continu fort représente les arêtes vues, le trait interrompu fin les arêtes cachées, le trait mixte fin les axes. Sur un arbre, l'axe est tracé avant tout le reste : la cotation des diamètres s'y rapporte.
+
+@007
+Q: Que signifie l'indication Ra 1,6 portée sur une surface ?
+C: Une rugosité arithmétique moyenne de 1,6 µm au plus
+W: Un rayon de raccordement de 1,6 mm
+W: Une dureté de 1,6 sur l'échelle Rockwell A, mesurée après traitement
+W: Un chanfrein de 1,6 mm à 45°
+E: Ra mesure l'écart moyen du profil par rapport à sa ligne moyenne. Ra 3,2 correspond à un tournage soigné, Ra 1,6 à un tournage fin ou une rectification ébauche, Ra 0,4 à une portée de roulement rectifiée. Exiger trop fin coûte cher en usinage.
+
+@008
+Q: Associer chaque liaison mécanique au nombre de degrés de liberté qu'elle laisse.
+P: Encastrement => 0
+P: Pivot => 1 rotation
+P: Glissière => 1 translation
+P: Rotule => 3 rotations
+E: Un solide libre a six degrés de liberté, trois translations et trois rotations. La pivot d'un arbre sur deux roulements ne laisse que la rotation autour de l'axe ; la pivot glissant en laisse deux, la rotation et la translation le long de l'axe.
+
+@009
+Q: Un arbre est guidé par deux roulements à billes, l'un bloqué axialement des deux côtés, l'autre libre en translation dans son logement. Pourquoi ce montage ?
+C: Laisser l'arbre se dilater sans charger les roulements axialement
+W: Réduire le prix du montage en supprimant un circlip et une rondelle
+W: Permettre de démonter l'arbre sans outil
+W: Doubler la vitesse de rotation admissible du montage
+E: Un arbre en acier de 500 mm qui chauffe de 40 °C s'allonge d'environ 0,24 mm. Bloqué aux deux extrémités, il pousserait sur les roulements et les ferait chauffer puis casser. On a donc un roulement fixe et un roulement libre, ou un montage en opposition réglé avec un jeu.
+
+@010
+Q: Que signifie la désignation d'une vis CHC M10 × 40 classe 8.8 ?
+C: Tête cylindrique six pans creux, Ø 10 mm, longueur 40 mm, classe 8.8
+W: Tête hexagonale, pas de 10 mm, 40 filets, inox 8.8
+W: Vis à tête fraisée de 10 mm, longueur 40 mm, couple de serrage 8,8 N·m
+W: Goujon de 10 mm de diamètre et 40 mm de filetage, laiton traité
+E: CHC désigne la tête cylindrique creuse qui se serre à la clé Allen, M la série métrique ISO, 10 le diamètre nominal et 40 la longueur sous tête. Le pas n'est pas indiqué : c'est le pas gros, 1,5 mm pour du M10.
+
+@011
+Q: Pour une vis de classe 8.8, quelle est la limite élastique minimale en MPa ?
+N: 640
+U: MPa
+E: Le premier chiffre donne la résistance à la rupture divisée par 100 (800 MPa), le second le rapport entre limite élastique et rupture (0,8). 800 × 0,8 = 640 MPa. Une vis 10.9 monte à 900 MPa : on ne la remplace pas par une 8.8 sur un assemblage calculé.
+
+@012
+Q: Quel est le pas gros normalisé d'un filetage M10 ?
+N: 1,5
+U: mm
+E: Les pas gros ISO courants : M6 au pas de 1 mm, M8 à 1,25, M10 à 1,5, M12 à 1,75, M16 à 2. Le pas fin (M10 × 1,25 ou × 1) se signale toujours dans la désignation ; il résiste mieux au desserrage mais s'abîme plus vite au montage.
+
+@013
+Q: Quel diamètre de foret utilise-t-on avant de tarauder un trou en M10 au pas gros ?
+N: 8,5
+U: mm
+E: On retient la règle pratique diamètre nominal moins le pas : 10 − 1,5 = 8,5 mm. Un foret trop petit fait casser le taraud dans le trou, un foret trop grand donne des filets incomplets qui arrachent au serrage.
+
+@014
+Q: Un technicien serre une vis en tirant avec 200 N au bout d'une clé de 40 cm. Quel couple applique-t-il, en N·m ?
+N: 80
+U: N·m
+E: Couple = force × bras de levier = 200 N × 0,40 m = 80 N·m. Une rallonge sur une clé ordinaire multiplie le couple sans qu'on s'en rende compte : c'est la première cause de vis cassées ou de filets arrachés. On utilise une clé dynamométrique réglée sur la valeur du constructeur.
+
+@015
+Q: Pourquoi le serrage au couple d'une vis donne-t-il une précharge très variable d'un assemblage à l'autre ?
+C: Les frottements absorbent environ 90 % du couple de serrage
+W: La clé dynamométrique perd sa précision après chaque serrage effectué
+W: L'acier de la vis se dilate pendant le serrage et change sa longueur
+W: La précharge dépend de la couleur du traitement de surface choisi
+E: Seule une petite part du couple tend la vis ; le reste dépend de l'état des filets, de la lubrification et de la portée sous tête. Une vis graissée serrée au couple prévu pour une vis sèche reçoit beaucoup plus de tension et peut se rompre. Pour les assemblages critiques, on serre à l'angle ou on mesure l'allongement.
+
+@016
+Q: Remettre dans l'ordre le serrage d'une bride fixée par huit vis.
+O: Engager toutes les vis à la main
+O: Approcher les vis jusqu'au contact de la bride
+O: Serrer en croix à environ 30 % du couple final
+O: Serrer en croix au couple final
+O: Faire une passe de contrôle au couple final dans l'ordre circulaire
+E: Le serrage en croix plaque la bride de façon uniforme ; serrer une vis à fond puis la voisine voile la bride et fait fuir le joint. La passe de contrôle rattrape le léger desserrage des premières vis quand les suivantes compriment le joint.
+
+@017
+Q: Associer chaque moyen de freinage d'une vis à son principe.
+P: Frein filet anaérobie => Colle qui durcit à l'abri de l'air
+P: Écrou autofreiné => Bague polyamide qui serre le filet
+P: Rondelle à ailerons rabattus => Obstacle mécanique à la rotation
+P: Contre-écrou => Deux écrous serrés l'un contre l'autre
+E: Le frein filet moyen (bleu) se démonte à la clé, le fort (rouge) demande de chauffer vers 250 °C. Les rondelles Grower fendues sont peu efficaces contre les vibrations : sur un équipement vibrant, on préfère frein filet, écrou autofreiné ou rondelles à cames Nord-Lock.
+
+@018
+Q: Une vis M8 casse en la desserrant : le moignon dépasse à peine de la pièce. Quelle méthode essayer en premier ?
+C: Pénétrant, chocs légers, puis extracteur conique à gauche dans un avant-trou centré
+W: Percer directement au diamètre 8 mm pour retirer le reste de la vis d'un seul coup de foret
+W: Souder un écrou sur le moignon d'une pièce en aluminium sans précaution
+W: Tarauder à côté un nouveau trou en M10 décalé de 5 mm
+E: L'avant-trou bien centré, plus petit que le noyau, évite d'abîmer le filet de la pièce. L'extracteur à gauche se bloque en dévissant. Si l'extracteur casse à son tour, l'acier trempé ne se perce plus : d'où l'importance des petits gestes avant de forcer.
+
+@019
+Q: Associer chaque désignation d'acier à son type.
+P: S235 => Acier de construction d'usage général
+P: C45 => Acier non allié pour traitement thermique
+P: 42CrMo4 => Acier faiblement allié pour pièces très sollicitées
+P: X5CrNi18-10 => Acier inoxydable austénitique
+E: S indique une limite élastique minimale (235 MPa). C45 contient 0,45 % de carbone. Dans 42CrMo4, 42 donne 0,42 % de carbone et 4 le chrome divisé par 4. X annonce un acier fortement allié : 18 % de chrome et 10 % de nickel, l'inox 304.
+
+@020
+Q: Associer chaque traitement thermique à son effet.
+P: Trempe => Durcit l'acier par refroidissement rapide
+P: Revenu => Réduit la fragilité après trempe
+P: Recuit => Adoucit et supprime les contraintes internes
+P: Cémentation => Durcit la surface en l'enrichissant en carbone
+E: Une pièce trempée sans revenu est dure mais cassante comme du verre. La cémentation suivie d'une trempe donne une peau dure qui résiste à l'usure, pour des pignons par exemple, et un cœur tenace qui encaisse les chocs.
+
+@021
+Q: Sur une fiche de pièce de rechange, on lit « dureté 58-62 HRC ». Que peut-on en déduire ?
+C: La pièce est trempée et ne se reprend pas avec un outil de coupe ordinaire
+W: La pièce est en aluminium allié de fonderie, facile à reprendre au tour comme à la lime
+W: La pièce peut être pliée à froid sans risque
+W: Sa masse volumique est de 58 à 62 kg/dm³
+E: L'échelle Rockwell C mesure l'enfoncement d'un cône en diamant. Un acier doux tourne autour de 15 HRC, une bague de roulement autour de 60 HRC. Au-delà de 50 HRC, il faut une rectifieuse ou des outils en carbure ou en CBN pour usiner.
+
+@022
+Q: Une barre d'acier de section 100 mm² supporte un effort de traction de 10 000 N. Quelle contrainte subit-elle, en MPa ?
+N: 100
+U: MPa
+E: Contrainte = force / section = 10 000 N / 100 mm² = 100 N/mm², soit 100 MPa. Pour un S235, le coefficient de sécurité vaut 235 / 100 = 2,35 par rapport à la limite élastique. On compare toujours la contrainte à la limite élastique, pas à la rupture.
+
+@023
+Q: Une poutre en acier de 1 m s'échauffe de 100 °C. De combien s'allonge-t-elle, en mm (coefficient de dilatation 12 × 10⁻⁶ /°C) ?
+N: 1,2
+U: mm
+E: ΔL = α × L × ΔT = 12 × 10⁻⁶ × 1 000 mm × 100 = 1,2 mm. Cela semble faible, mais bloqué entre deux appuis fixes, cet allongement crée des efforts énormes : d'où les paliers libres, les joints de dilatation et les compensateurs sur les tuyauteries chaudes.
+
+@024
+Q: Quel matériau choisir pour une bague de frottement lubrifiée qui tourne lentement sous forte charge ?
+C: Un bronze
+W: Un acier S235 brut de laminage
+W: Un PVC rigide de plomberie
+W: Une fonte à graphite lamellaire non usinée
+E: Les bronzes à l'étain ou au plomb glissent bien sur l'acier, supportent des pressions élevées et s'usent avant l'arbre, qui est la pièce chère. Les bagues frittées imprégnées d'huile ou en polymère chargé (PTFE) conviennent quand on ne peut pas graisser.
+
+@025
+Q: Associer chaque instrument de mesure à sa résolution habituelle.
+P: Réglet => 0,5 mm
+P: Pied à coulisse au 1/50 => 0,02 mm
+P: Micromètre d'extérieur => 0,01 mm
+P: Comparateur au millième => 0,001 mm
+E: On choisit un instrument dix fois plus fin que la tolérance à contrôler : pour une tolérance de 0,021 mm sur une portée de roulement, le pied à coulisse ne suffit pas, il faut un micromètre ou un alésomètre.
+
+@026
+Q: Un micromètre affiche 12,5 mm sur la douille graduée et 23 sur le tambour (au centième). Quelle est la cote lue, en mm ?
+N: 12,73
+U: mm
+E: La douille donne les millimètres et demi-millimètres visibles (12,5), le tambour les centièmes à ajouter (0,23). Oublier le trait du demi-millimètre est l'erreur classique : on lirait 12,23 au lieu de 12,73.
+
+@027
+Q: Pourquoi mesure-t-on une portée d'arbre en plusieurs points, sur deux diamètres à 90° ?
+C: Pour détecter une ovalisation ou une conicité, invisibles en une seule mesure
+W: Pour faire la moyenne et améliorer la précision du micromètre lui-même
+W: Pour vérifier que l'arbre n'est pas magnétisé par l'usinage
+W: Pour respecter la norme de dessin, sans intérêt pratique en atelier
+E: Une portée usée par un roulement qui a tourné sur l'arbre devient ovale ou conique. Une seule mesure peut tomber pile dans la tolérance alors que la portée ne tiendra plus la bague. On note les valeurs sur la fiche d'intervention pour suivre l'usure.
+
+@028
+Q: À quoi sert un comparateur monté sur un support magnétique lors du contrôle d'un arbre entre pointes ?
+C: Mesurer le faux-rond en faisant tourner l'arbre
+W: Mesurer la dureté superficielle de l'arbre
+W: Mesurer le diamètre absolu de l'arbre au micron
+W: Vérifier le sens de rotation du moteur
+E: Le comparateur indique les variations de la surface pendant un tour complet : l'écart entre valeur haute et valeur basse donne le faux-rond. Un arbre de pompe voilé de quelques centièmes suffit à user les garnitures et à faire vibrer la machine.
+
+@029
+Q: Une cale étalon et un micromètre sortent d'un atelier à 30 °C. Pourquoi attendre avant une mesure précise ?
+C: Les pièces et l'instrument doivent être à la température de référence, 20 °C
+W: Le micromètre doit d'abord se décharger de l'électricité statique accumulée dehors
+W: Les graduations du tambour sont illisibles au-dessus de 25 °C
+W: La norme interdit de mesurer pendant la première heure de travail
+E: Une pièce d'acier de 100 mm prend 1,2 µm par degré : 10 °C d'écart faussent la mesure de 12 µm, l'ordre de grandeur d'une tolérance de roulement. Les mesures de précision se font sur pièces stabilisées, sans tenir longtemps l'instrument dans la main.
+
+@030
+Q: Associer chaque mode de dégradation à son aspect typique.
+P: Abrasion => Rayures dans le sens du mouvement
+P: Grippage => Arrachement et transfert de métal
+P: Fatigue de surface => Écaillage en petits cratères
+P: Corrosion de contact => Poudre rouge-brun entre deux pièces serrées
+E: Lire l'aspect d'une pièce usée oriente vers la cause : des particules dures pour l'abrasion, un manque de lubrifiant pour le grippage, une surcharge ou une fin de vie pour l'écaillage, des micro-déplacements sous vibrations pour la corrosion de contact.
+
+@031
+Q: Un axe rompu présente une cassure avec des lignes concentriques lisses et une petite zone finale à grain rugueux. Quelle est la cause la plus probable ?
+C: Une rupture par fatigue, partie d'une amorce et propagée lentement
+W: Une surcharge brutale unique, survenue au démarrage de la machine après l'arrêt
+W: Un défaut de trempe qui a rendu l'acier mou
+W: Une corrosion qui a dissous le métal à cœur
+E: Les lignes de repos marquent l'avancée progressive de la fissure à chaque cycle de charge ; la zone rugueuse est la rupture finale, quand la section restante ne tient plus. L'amorce se trouve souvent à un angle vif, une gorge ou une rayure : on cherche la cause à cet endroit.
+
+@032
+Q: Pourquoi un congé de raccordement réduit-il le risque de rupture d'un arbre épaulé ?
+C: Il diminue la concentration de contrainte au changement de diamètre
+W: Il augmente la dureté de surface de l'arbre à cet endroit
+W: Il permet de monter des roulements plus larges sur l'arbre
+W: Il évite que l'arbre rouille dans l'angle de l'épaulement
+E: Un angle vif concentre les contraintes, jusqu'à deux à trois fois la contrainte nominale, et amorce les fissures de fatigue. Le rayon du congé doit cependant rester inférieur au chanfrein de la bague de roulement, sinon celle-ci ne s'appuie pas sur l'épaulement.
+
+@033
+Q: Quel élément transmet le couple entre un arbre et un moyeu de poulie en se logeant dans deux rainures ?
+C: Une clavette parallèle
+W: Un circlip extérieur
+W: Une goupille élastique de positionnement
+W: Une rondelle de calage
+E: La clavette transmet le couple par ses flancs ; le circlip arrête axialement, la goupille positionne ou transmet un faible effort. Une clavette matée ou une rainure ovalisée signale un jeu qui s'est installé : il faut corriger l'ajustement, pas seulement changer la clavette.
+
+@034
+Q: Une poulie flotte sur son arbre malgré une clavette neuve et la rainure s'est élargie. Quelle cause est la plus probable ?
+C: Un jeu entre moyeu et arbre qui a laissé la clavette encaisser des chocs
+W: Une clavette trop dure par rapport à l'arbre en acier
+W: Un sens de rotation inversé du moteur électrique après un changement de câblage
+W: Une courroie trop neuve qui n'a pas encore pris sa forme
+E: La clavette ne doit pas centrer la poulie : c'est l'ajustement de l'alésage sur l'arbre. Avec du jeu, chaque démarrage frappe la clavette et martèle la rainure. On reprend l'arbre (chemisage, rechargement) ou on monte un moyeu à serrage conique.
+
+@035
+Q: Quel est l'avantage d'un moyeu à serrage conique (type Taper Lock) pour une poulie ?
+C: Montage serré sans jeu et démontage facile, sans presse ni chauffage
+W: Il remplace la courroie par un entraînement direct sans glissement
+W: Il permet de monter la poulie sur un arbre de diamètre quelconque sans alésage
+W: Il supprime la nécessité d'aligner les poulies entre elles
+E: Les vis tirent la douille conique fendue dans le moyeu, qui se resserre sur l'arbre. Pour démonter, on reporte les vis dans les trous d'extraction. Il faut serrer au couple indiqué et refaire un contrôle après quelques heures de marche.
+
+@036
+Q: Quel élément arrête axialement un roulement sur un arbre en se logeant dans une gorge ?
+C: Un circlip
+W: Une clavette disque
+W: Un joint torique
+W: Une bague de frottement en bronze
+E: L'anneau élastique ou circlip se monte avec une pince adaptée, extérieur sur l'arbre, intérieur dans l'alésage. Un circlip déformé au démontage se remplace : il perd sa tension et peut sauter en service.
+
+@037
+Q: Associer chaque type de joint à son usage.
+P: Joint à lèvre => Étanchéité d'un arbre tournant en sortie de réducteur
+P: Joint torique => Étanchéité statique entre deux pièces fixes
+P: Garniture mécanique => Étanchéité d'un arbre de pompe sous pression
+P: Joint plat => Étanchéité entre deux brides boulonnées
+E: Le joint à lèvre frotte sur l'arbre et demande une portée lisse et sans rayure. La garniture mécanique fait frotter deux faces planes très dures ; elle tolère mal la marche à sec et les vibrations.
+
+@038
+Q: Un joint à lèvre neuf fuit au bout de quelques jours. La portée de l'arbre présente un sillon brillant. Que faire ?
+C: Reprendre la portée ou décaler le joint, puis monter un joint neuf
+W: Remonter un joint identique en serrant davantage le chapeau
+W: Ajouter de la pâte à joint sur la lèvre du joint neuf
+W: Monter le joint à l'envers pour que la lèvre frotte ailleurs
+E: L'ancien joint a creusé un sillon : le nouveau ne peut pas porter dessus. On décale légèrement le joint à l'aide d'une entretoise, on monte une chemise d'usure (type Speedi-Sleeve) ou on reprend l'arbre. Le sens de la lèvre, côté huile, reste impératif.
+
+@039
+Q: Une garniture mécanique de pompe est neuve mais fuit dès la remise en service. Quelle erreur de montage est la plus probable ?
+C: Faces de frottement touchées ou rayées, ou pompe démarrée à sec
+W: Pompe raccordée avec une tuyauterie trop grosse côté refoulement
+W: Moteur trop puissant pour la pompe considérée
+W: Garniture neuve prévue pour un fluide plus visqueux
+E: Les faces en carbure ou en carbone sont rodées à quelques dixièmes de micron : une trace de doigt, une poussière ou une rayure suffit à faire fuir. Un démarrage sans liquide brûle les faces en quelques secondes. On monte propre, on remplit et on purge la pompe avant de démarrer.
+
+@040
+Q: Quel critère un mécanicien de maintenance vérifie-t-il avant de réutiliser un joint torique démonté ?
+C: Le remplacer, un joint démonté a pris sa déformation
+W: Le retourner pour présenter une face neuve
+W: Le passer au four pour lui rendre sa souplesse
+W: Le garder s'il n'a pas changé de couleur
+E: Un joint torique s'écrase et prend la forme de sa gorge : remonté, il ne retrouve pas la même compression et fuit. Le coût d'un joint est sans rapport avec celui d'un redémontage. On choisit aussi la bonne matière : NBR pour l'huile, EPDM pour l'eau chaude, FKM pour la température.
+
+@041
+Q: Pourquoi coupe-t-on l'énergie et attend-on l'arrêt complet avant de mesurer un jeu sur un accouplement ?
+C: Une machine peut redémarrer ou continuer à tourner par inertie
+W: Le comparateur électronique se dérègle en présence du courant d'alimentation
+W: L'huile doit refroidir pour que le jeu soit exact
+W: La mesure est plus rapide sur une machine froide
+E: La consignation électrique ne suffit pas : un volant, un ventilateur ou une charge suspendue gardent de l'énergie. On vérifie l'arrêt, on bloque mécaniquement si nécessaire et on purge les énergies stockées (ressorts, accumulateurs) avant de mettre les mains.
+
+@042
+Q: Remettre dans l'ordre le remplacement d'une clavette sur un arbre de moteur.
+O: Consigner la machine et vérifier l'arrêt
+O: Extraire la poulie avec un extracteur adapté
+O: Contrôler la rainure et l'ajustement de l'arbre
+O: Ajuster la clavette neuve à frottement doux
+O: Remonter la poulie, l'aligner et serrer au couple
+E: Contrôler avant de remonter évite de reproduire la panne : une rainure matée ou un arbre ovale feront casser la clavette neuve. L'alignement de la poulie se vérifie avant de retendre la courroie.
+
+@043
+Q: Pourquoi utilise-t-on un extracteur plutôt qu'un marteau pour sortir une poulie d'un arbre ?
+C: L'effort reste axial et progressif, sans abîmer l'arbre ni les roulements
+W: L'extracteur chauffe la poulie pour la dilater pendant l'effort
+W: Le marteau est interdit par la loi dans les ateliers de maintenance
+W: L'extracteur permet de démonter la poulie sans avoir à retirer la clavette de l'arbre
+E: Les coups sur une poulie se transmettent aux roulements du moteur et marquent les pistes de billes (brinelling). La vis de l'extracteur pousse au centre de l'arbre ; les griffes doivent porter sur le moyeu, pas sur la jante qui casserait.
+
+@044
+Q: Quel outil choisir pour serrer un écrou de roue de chariot à 120 N·m comme demandé par la notice ?
+C: Une clé dynamométrique réglée à 120 N·m
+W: Une clé à chocs pneumatique réglée au maximum
+W: Une clé plate avec un tube en rallonge
+W: Une clé à molette serrée au jugé jusqu'au blocage
+E: La clé à chocs donne un couple mal maîtrisé, souvent bien au-delà de la valeur prévue. La clé dynamométrique se règle, se range détendue au minimum de l'échelle et se fait étalonner régulièrement, par exemple tous les ans ou tous les 5 000 cycles.
+
+@045
+Q: Un mécanicien trouve une vis de fixation de moteur desserrée et la portée de la semelle marquée. Que vérifier avant de la resserrer ?
+C: La cause du desserrage : vibrations, pied bancal, absence de freinage
+W: La couleur de la peinture sous la vis
+W: La date de fabrication et la puissance inscrites sur la plaque signalétique du moteur
+W: Le sens de rotation du ventilateur de refroidissement
+E: Une vis qui se desserre est un symptôme. Un pied bancal (soft foot) déforme le carter quand on serre, des vibrations fortes desserrent les vis non freinées. Resserrer sans chercher la cause, c'est revenir la semaine suivante.
+
+@046
+Q: Qu'est-ce qu'un pied bancal (soft foot) sur un moteur ?
+C: Un pied qui ne porte pas à plat sur son support
+W: Un pied de moteur fissuré par la fatigue des vibrations
+W: Une semelle en caoutchouc placée sous le moteur
+W: Un pied de fixation monté avec une vis trop courte
+E: Quand on serre la vis d'un pied qui ne porte pas, le carter se déforme, les roulements se désalignent et le moteur vibre. On le détecte au comparateur en desserrant chaque vis tour à tour : un pied qui se soulève de plus de 0,05 mm se cale avec des cales pelables en inox.
+
+@047
+Q: Une machine montée sur des cales en acier pelables doit être relevée de 0,35 mm sous un pied. Combien de cales de 0,05 mm faut-il ajouter ?
+N: 7
+E: 0,35 / 0,05 = 7 cales. En pratique, on préfère une cale de 0,25 et deux de 0,05 : moins de cales, c'est moins de surfaces de contact qui se tassent. On limite à trois ou quatre cales par pied et on ne met jamais de rondelles en guise de cales.
+
+@048
+Q: Remettre dans l'ordre le contrôle d'un pied bancal avant un alignement.
+O: Serrer toutes les vis des pieds au couple
+O: Placer un comparateur au-dessus d'un pied
+O: Desserrer la vis de ce pied et lire le soulèvement
+O: Resserrer et recommencer sur chaque pied
+O: Caler les pieds qui se soulèvent au-delà de la tolérance
+E: Le contrôle se fait pied par pied, les autres vis serrées. Corriger le pied bancal d'abord : sinon l'alignement change à chaque serrage et l'on tourne en rond.
+
+@049
+Q: Pourquoi refuser de réutiliser une vis de culasse ou de bielle serrée à l'angle ?
+C: Elle a été allongée dans son domaine plastique et ne garantit plus la tension
+W: Elle a perdu son traitement de surface anticorrosion au premier montage effectué
+W: Son pas s'est inversé sous l'effet du serrage
+W: Le constructeur la marque d'un numéro unique par moteur
+E: Le serrage à l'angle tend volontairement la vis au-delà de sa limite élastique pour obtenir une précharge précise et constante. Une fois allongée, elle s'allonge encore au remontage et peut casser. La notice indique les vis à usage unique.
+
+@050
+Q: Une pièce de rechange d'origine coûte trois semaines de délai. Un tourneur peut la refaire en deux jours. Que faut-il avoir avant de lancer la fabrication ?
+C: Le plan avec cotes, tolérances, matière et traitement, ou une pièce saine relevée
+W: La seule photo de la pièce cassée envoyée par téléphone
+W: L'accord écrit du fournisseur d'origine sur le prix, le délai et la garantie de la copie
+W: Une pièce peinte de la même couleur que la machine
+E: Une pièce refaite sans la bonne matière ni le bon traitement casse vite : un axe trempé refait en acier doux se mate en quelques jours. On relève les cotes sur une pièce saine, on indique ajustements et état de surface, et on garde le plan pour la fois suivante.

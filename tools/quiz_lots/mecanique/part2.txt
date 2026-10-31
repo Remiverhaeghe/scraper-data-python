@@ -1,0 +1,389 @@
+@051
+Q: Dans une chaîne cinématique de convoyeur, quel est le rôle du réducteur placé après le moteur ?
+C: Baisser la vitesse et augmenter le couple disponible
+W: Augmenter la vitesse et le couple en même temps
+W: Changer la fréquence du courant d'alimentation
+W: Protéger le moteur contre les surintensités
+E: Un moteur asynchrone tourne vers 1 450 tr/min ; un tambour de convoyeur demande quelques dizaines de tours par minute avec un gros couple. À puissance constante, diviser la vitesse par dix multiplie le couple par dix, moins les pertes du réducteur.
+
+@052
+Q: Un moteur de 4 kW tourne à 1 450 tr/min. Quel couple fournit-il, en N·m ?
+N: 26,3
+U: N·m
+T: 2
+E: C = 9 550 × P (kW) / N (tr/min) = 9 550 × 4 / 1 450 ≈ 26,3 N·m. Le facteur 9 550 vient de P = C × ω, avec ω = 2π N / 60. Cette formule sert à vérifier un accouplement ou une clavette avant un remplacement.
+
+@053
+Q: Le même moteur entraîne un réducteur de rapport 1/10 et de rendement 0,95. Quel couple obtient-on en sortie, en N·m ?
+N: 250
+U: N·m
+T: 2
+E: Couple de sortie = 26,3 × 10 × 0,95 ≈ 250 N·m, à 145 tr/min. Le rendement fait perdre environ 5 % de puissance, qui part en chaleur dans l'huile : un réducteur qui chauffe anormalement signale une usure ou un mauvais niveau d'huile.
+
+@054
+Q: Un pignon de 20 dents entraîne une roue de 60 dents. Le pignon tourne à 1 450 tr/min. Quelle est la vitesse de la roue, en tr/min ?
+N: 483
+U: tr/min
+T: 1
+E: Le rapport vaut 20 / 60 = 1/3 : la roue tourne trois fois moins vite, 1 450 / 3 ≈ 483 tr/min, et reçoit trois fois plus de couple. On compte les dents à l'arrêt, machine consignée, pour retrouver un rapport quand la plaque est illisible.
+
+@055
+Q: Deux roues dentées de module 2 ont 20 et 60 dents. Quel entraxe faut-il entre leurs arbres, en mm ?
+N: 80
+U: mm
+E: Diamètre primitif = module × nombre de dents : 40 mm et 120 mm. L'entraxe vaut la moitié de leur somme, (40 + 120) / 2 = 80 mm. Deux roues ne s'engrènent que si elles ont le même module.
+
+@056
+Q: Associer chaque type d'engrenage à sa caractéristique.
+P: Denture droite => Simple, bruyante à haute vitesse
+P: Denture hélicoïdale => Silencieuse, crée un effort axial
+P: Roue et vis sans fin => Grand rapport, rendement faible
+P: Couple conique => Renvoi d'angle à 90°
+E: L'effort axial de la denture hélicoïdale doit être repris par des roulements adaptés. La vis sans fin donne un rapport de 1/40 dans un petit volume, mais son rendement peut tomber sous 50 % et elle chauffe ; certaines sont irréversibles.
+
+@057
+Q: Une poulie motrice de 100 mm tourne à 1 450 tr/min et entraîne une poulie de 250 mm. Quelle est la vitesse de la poulie menée, en tr/min ?
+N: 580
+U: tr/min
+T: 1
+E: Les vitesses sont inversement proportionnelles aux diamètres : 1 450 × 100 / 250 = 580 tr/min. En négligeant le glissement, c'est la vitesse de la machine ; une courroie qui patine fait baisser cette valeur, ce qu'un tachymètre révèle vite.
+
+@058
+Q: Quelle est la vitesse linéaire d'une courroie sur une poulie de 200 mm tournant à 1 450 tr/min, en m/s ?
+N: 15,2
+U: m/s
+T: 2
+E: v = π × D × N / 60 = π × 0,2 × 1 450 / 60 ≈ 15,2 m/s. Les fabricants donnent une vitesse maximale par profil, souvent autour de 30 m/s pour une courroie trapézoïdale classique ; au-delà, la force centrifuge décolle la courroie.
+
+@059
+Q: Associer chaque transmission à son avantage principal.
+P: Courroie trapézoïdale => Amortit les chocs et ne demande pas de graissage
+P: Courroie crantée => Synchronise sans glissement
+P: Chaîne à rouleaux => Transmet un gros couple à basse vitesse
+P: Engrenages => Rapport exact et compacité
+E: La courroie crantée sert là où la position compte, comme une distribution ou un axe de robot. La chaîne supporte les ambiances chaudes et sales mais demande lubrification et tension ; elle s'allonge par usure des articulations.
+
+@060
+Q: Quand faut-il remplacer une chaîne à rouleaux de transmission ?
+C: Quand son allongement mesuré dépasse environ 2 à 3 % de sa longueur
+W: À chaque changement de pignon, quelle que soit son usure
+W: Dès qu'elle présente un peu de graisse noircie sur les maillons et les galets
+W: Quand elle devient plus silencieuse qu'au premier montage
+E: On mesure une longueur de dix ou vingt maillons et on la compare à la valeur neuve, ou on utilise une jauge d'usure. Une chaîne allongée monte sur les dents et use vite les pignons : on change souvent chaîne et pignons ensemble.
+
+@061
+Q: Remettre dans l'ordre le remplacement d'une courroie trapézoïdale.
+O: Consigner la machine et déposer le carter de protection
+O: Desserrer le tendeur ou rapprocher le moteur
+O: Retirer la courroie sans faire levier sur les flasques
+O: Contrôler l'usure des gorges et l'alignement des poulies
+O: Monter la courroie neuve et régler la tension
+O: Remonter le carter et vérifier après quelques heures de marche
+E: Faire passer une courroie en forçant avec un tournevis abîme ses fibres. Les gorges usées en fond brillant font patiner la courroie neuve. Une courroie neuve s'allonge un peu pendant le rodage : d'où la retension.
+
+@062
+Q: Comment contrôler simplement la tension d'une courroie trapézoïdale ?
+C: Mesurer la flèche sous un effort donné au milieu du brin
+W: Compter le nombre de tours de la poulie motrice en une minute
+W: Mesurer la température du moteur après une heure de marche
+W: Vérifier que la courroie ne peut pas être tournée d'un quart de tour
+E: La méthode classique : environ 16 mm de flèche par mètre d'entraxe sous l'effort indiqué par le fabricant. Les tensiomètres à fréquence mesurent la vibration du brin pincé et donnent une valeur plus fiable que la sensation de la main.
+
+@063
+Q: Un réducteur chauffe à 95 °C, sent le brûlé, et le niveau d'huile est normal. L'huile prélevée est noire et épaisse. Quelle cause est probable ?
+C: Une huile dégradée par une vidange trop tardive ou une huile inadaptée
+W: Un moteur électrique sous-dimensionné qui force et chauffe le réducteur par conduction
+W: Une courroie trop tendue en amont du moteur
+W: Une sonde de température mal étalonnée dans le carter
+E: L'huile oxydée perd ses propriétés : la viscosité augmente, les additifs sont consommés et les engrenages frottent. On vidange, on rince si besoin, on vérifie la viscosité prescrite (ISO VG 220 ou 320 courante pour les réducteurs) et on raccourcit l'intervalle de vidange.
+
+@064
+Q: Que désigne l'indication ISO VG 68 sur un bidon d'huile ?
+C: Une viscosité cinématique d'environ 68 mm²/s à 40 °C
+W: Une huile prévue pour 68 heures de fonctionnement
+W: Une température maximale d'emploi de 68 °C
+W: Un indice d'acidité de 68 milligrammes
+E: La classe ISO VG classe les huiles industrielles selon leur viscosité à 40 °C, à ± 10 %. On ne remplace pas une huile par une autre de viscosité différente sans avis : trop fluide, le film casse ; trop épaisse, les pertes et la température montent.
+
+@065
+Q: Associer chaque désignation de roulement à son type.
+P: 6205 => Roulement rigide à une rangée de billes
+P: 7205 => Roulement à billes à contact oblique
+P: 22205 => Roulement à rotule sur rouleaux
+P: NU 205 => Roulement à rouleaux cylindriques
+E: Le premier chiffre ou les lettres donnent le type, les deux derniers chiffres l'alésage. Le contact oblique reprend une charge combinée et se monte par paire ; la rotule accepte un désalignement ; le NU laisse coulisser l'arbre et sert de roulement libre.
+
+@066
+Q: Quel est le diamètre d'alésage d'un roulement 6203, en mm ?
+N: 17
+U: mm
+E: Pour les codes 00 à 03, les alésages sont fixés par la norme : 10, 12, 15 et 17 mm. À partir de 04, on multiplie par 5 : un 6205 a un alésage de 25 mm, un 6310 de 50 mm. Le piège classique est de calculer 03 × 5 = 15.
+
+@067
+Q: Quelle bague d'un roulement monte-t-on serrée en général ?
+C: La bague qui tourne par rapport à la direction de la charge
+W: La bague extérieure, quelle que soit la machine
+W: La bague la plus facile à démonter au moment de la révision
+W: Les deux bagues, pour supprimer tout jeu de fonctionnement
+E: Sur un moteur, l'arbre tourne et la charge est fixe : la bague intérieure est serrée sur l'arbre, l'extérieure glissante dans le logement. Une bague tournante montée avec jeu « roule » sur sa portée, l'use et génère de la corrosion de contact.
+
+@068
+Q: Un roulement a une charge dynamique de base C = 14 kN et supporte une charge P = 2 kN. Quelle est sa durée L10, en millions de tours ?
+N: 343
+T: 1
+E: Pour un roulement à billes, L10 = (C / P)³ = 7³ = 343 millions de tours, durée atteinte par 90 % d'un lot de roulements. Doubler la charge divise la durée par huit : un désalignement ou une courroie trop tendue suffisent à raccourcir beaucoup la vie d'un roulement.
+
+@069
+Q: Ce roulement tourne à 1 500 tr/min. Combien d'heures représentent 343 millions de tours, arrondies à l'heure ?
+N: 3811
+U: h
+T: 1
+E: 343 000 000 / 1 500 = 228 667 minutes, soit environ 3 811 heures, un peu plus de cinq mois en marche continue. Ce calcul sert à fixer un remplacement préventif ou à comparer avec la durée réellement observée.
+
+@070
+Q: À quelle température maximale chauffe-t-on en général un roulement standard pour le monter sur un arbre ?
+N: 110
+U: °C
+T: 10
+E: On vise 80 à 90 °C au-dessus de la température de l'arbre, sans dépasser environ 110 à 120 °C : au-delà, l'acier perd sa dureté et la graisse des roulements protégés se dégrade. Le chauffage par induction démagnétise la pièce en fin de cycle ; le chalumeau est à proscrire.
+
+@071
+Q: Un roulement de 50 mm d'alésage est chauffé de 20 à 110 °C. De combien son alésage augmente-t-il, en µm (coefficient 12 × 10⁻⁶ /°C) ?
+N: 54
+U: µm
+T: 2
+E: ΔD = 12 × 10⁻⁶ × 50 mm × 90 = 0,054 mm, soit 54 µm. Le serrage d'un ajustement k6 sur 50 mm ne dépasse pas une vingtaine de microns : le roulement chaud glisse librement sur l'arbre, puis se serre en refroidissant.
+
+@072
+Q: Pour monter à froid un roulement serré sur l'arbre, où doit porter l'effort de la douille de frappe ?
+C: Sur la bague intérieure, qui est montée serrée
+W: Sur la bague extérieure, plus large et plus robuste
+W: Sur la cage, au centre du roulement
+W: Sur le flasque de protection, pour répartir l'effort
+E: L'effort transmis par les billes d'une bague à l'autre marque les pistes et condamne le roulement avant même sa mise en service. On utilise un kit de douilles de montage qui appuie à la fois sur la bague serrée, jamais de coups directs au marteau.
+
+@073
+Q: Remettre dans l'ordre le démontage d'un roulement serré sur un arbre.
+O: Consigner la machine et déposer les éléments qui gênent l'accès
+O: Repérer la position et le sens du roulement
+O: Placer l'extracteur avec les griffes sur la bague intérieure
+O: Extraire progressivement en gardant l'effort dans l'axe
+O: Contrôler la portée de l'arbre avant de monter le roulement neuf
+E: Le repérage évite de remonter un roulement à contact oblique à l'envers. Tirer par la bague extérieure fait passer l'effort par les billes : acceptable pour un roulement qu'on jette, mais pas pour l'arbre si l'effort devient oblique.
+
+@074
+Q: Un roulement démonté présente des empreintes régulières espacées comme les billes sur la piste. Quelle est la cause la plus probable ?
+C: Des chocs au montage ou des vibrations à l'arrêt (brinelling)
+W: Une lubrification trop abondante pendant des années
+W: Un roulement qui a tourné trop lentement pour sa taille
+W: Une fin de vie normale par fatigue après des millions de tours
+E: Les empreintes au pas des billes viennent de coups au montage ou de vibrations transmises pendant un transport ou un long arrêt (faux brinelling, aux traces plus ternes). On bloque les rotors pour le transport et on fait tourner périodiquement les machines de secours.
+
+@075
+Q: Un roulement de moteur alimenté par variateur présente des stries grises régulières sur la piste, comme une planche à laver. Quelle cause rechercher ?
+C: Des courants électriques qui traversent le roulement
+W: Un excès de graisse lors de la dernière intervention
+W: Un défaut d'alignement de l'accouplement côté pompe
+W: Une humidité trop faible dans l'atelier
+E: Les variateurs créent des tensions d'arbre qui se déchargent à travers les billes : les micro-arcs marquent les pistes en cannelures. Les remèdes : balai de mise à la terre de l'arbre, roulement isolé ou hybride à billes céramique, câblage blindé correct.
+
+@076
+Q: Quelle quantité de graisse mettre dans un roulement ouvert monté dans un palier à vitesse normale ?
+C: Remplir le roulement et environ le tiers à la moitié de l'espace libre du palier
+W: Remplir entièrement le palier et le roulement de graisse pour empêcher l'entrée des poussières
+W: Une goutte d'huile fine, la graisse étant réservée aux roulements lents
+W: Pas de graisse au montage, le roulement se lubrifie en tournant
+E: Trop de graisse provoque un brassage qui fait monter la température, trop peu un frottement métal sur métal. Pour un regraissage en service, on calcule la dose (formule du fabricant fonction du diamètre et de la largeur) et on graisse machine en marche si c'est sans danger.
+
+@077
+Q: Associer chaque défaut d'alignement à sa description.
+P: Défaut parallèle => Axes parallèles mais décalés
+P: Défaut angulaire => Axes qui se coupent avec un angle
+P: Pied bancal => Carter déformé au serrage des pieds
+P: Jeu axial insuffisant => Arbres qui se poussent en bout
+E: Un alignement se corrige dans le plan vertical (par cales) et dans le plan horizontal (par déplacement latéral), pour le décalage comme pour l'angle. Les accouplements élastiques tolèrent un défaut, mais ce défaut se paie en usure de roulements et en vibrations.
+
+@078
+Q: Remettre dans l'ordre un alignement d'arbres au laser.
+O: Consigner et contrôler le pied bancal
+O: Monter les têtes laser sur chaque arbre
+O: Mesurer en faisant tourner les arbres sur plusieurs positions
+O: Corriger le plan vertical par cales sous la machine mobile
+O: Corriger le plan horizontal puis serrer et mesurer à nouveau
+E: On corrige la machine mobile, en général le moteur, et on garde la pompe ou le réducteur fixe. Le plan vertical d'abord, car le calage déplace un peu la machine ; une dernière mesure après serrage confirme le résultat.
+
+@079
+Q: Pourquoi aligne-t-on parfois volontairement un moteur un peu plus bas que la pompe, à froid ?
+C: Pour compenser la dilatation de la pompe chaude en fonctionnement
+W: Pour faciliter l'écoulement de l'huile vers le moteur
+W: Pour réduire le bruit de l'accouplement au démarrage
+W: Pour que la courroie reste tendue malgré l'usure
+E: Une pompe qui véhicule un fluide à 150 °C s'élève de plusieurs dixièmes en chauffant. Le constructeur donne des valeurs de décalage à froid pour que les arbres soient alignés en régime établi ; un alignement parfait à froid devient faux à chaud.
+
+@080
+Q: Un accouplement élastique à plots en caoutchouc perd ses plots en poudre au bout de quelques semaines. Quelle cause rechercher ?
+C: Un désalignement des arbres supérieur à ce que tolère l'accouplement
+W: Un moteur plus lent que la vitesse nominale de l'accouplement
+W: Une graisse trop épaisse dans les roulements du moteur
+W: Une alimentation électrique en 400 V au lieu de 230 V
+E: L'élément élastique encaisse le désalignement en se déformant à chaque tour : au-delà des tolérances, il chauffe et se désagrège. Changer les plots sans réaligner reproduit la panne ; on aligne au comparateur ou au laser.
+
+@081
+Q: Un ventilateur vibre surtout à la fréquence de rotation, dans le sens radial, et la vibration augmente fortement avec la vitesse. Quel défaut est le plus probable ?
+C: Un balourd du rotor
+W: Un défaut de bague extérieure de roulement
+W: Un défaut de dent sur un engrenage du réducteur
+W: Une cavitation dans le circuit d'aspiration
+E: Le balourd donne une vibration radiale à 1 fois la fréquence de rotation, qui croît avec le carré de la vitesse. Sur un ventilateur, l'encrassement des pales est la cause la plus courante : un nettoyage précède l'équilibrage.
+
+@082
+Q: Associer chaque signature vibratoire au défaut qu'elle évoque le plus souvent.
+P: 1 × la rotation, radial => Balourd
+P: 2 × la rotation, axial élevé => Désalignement
+P: Fréquences non multiples de la rotation => Défaut de roulement
+P: Nombre de dents × la rotation => Défaut d'engrènement
+E: Ces règles orientent le diagnostic sans le remplacer : une analyse spectrale complète et un suivi de tendance confirment. Les fréquences de défaut de roulement se calculent à partir de sa géométrie, et les logiciels les superposent au spectre.
+
+@083
+Q: Un réducteur présente un pic vibratoire à 25 × la fréquence de rotation de l'arbre d'entrée. Le pignon d'entrée a 25 dents. Que suspecter ?
+C: L'engrènement de l'étage d'entrée : usure, jeu ou défaut de denture
+W: Un balourd du moteur électrique d'entraînement
+W: Un pied bancal sous le moteur qui déforme son carter à chaque serrage des vis
+W: Un mauvais niveau d'huile dans le carter du moteur
+E: La fréquence d'engrènement vaut le nombre de dents multiplié par la fréquence de rotation de l'arbre. Des bandes latérales espacées de la rotation d'un arbre montrent quel pignon est abîmé. On confirme par l'analyse d'huile et une inspection par le regard de visite.
+
+@084
+Q: Un moteur tourne à 1 470 tr/min. Quelle est sa fréquence de rotation, en Hz ?
+N: 24,5
+U: Hz
+T: 1
+E: 1 470 / 60 = 24,5 Hz. C'est la référence d'un spectre vibratoire : on y repère 1 × (24,5 Hz), 2 × (49 Hz), et l'on ne confond pas 2 × la rotation avec la fréquence électrique de 50 Hz ou ses harmoniques.
+
+@085
+Q: Quel signe précoce un technicien peut-il détecter sur un roulement bien avant le bruit audible ?
+C: Une hausse des mesures vibratoires haute fréquence ou ultrasonores
+W: Une baisse de la consommation électrique du moteur
+W: Une diminution de la vitesse de rotation de la machine
+W: Un changement de couleur de la peinture du palier
+E: Les mesures d'enveloppe, de type facteur de défaut ou ultrasons, réagissent aux premiers chocs microscopiques sur la piste, des mois avant l'échauffement et le bruit. Le suivi de tendance permet de planifier le remplacement lors d'un arrêt prévu.
+
+@086
+Q: Un palier chauffe à 85 °C alors que les relevés habituels donnent 50 °C. Quel geste fait en premier le technicien ?
+C: Vérifier la lubrification, la tension et l'alignement avant de conclure
+W: Remplacer aussitôt le roulement sans chercher la cause
+W: Arroser le palier d'eau froide pour le refroidir
+W: Ajouter de la graisse au pistolet jusqu'à ce qu'elle ressorte par les joints du palier
+E: Une hausse de température a une cause : manque ou excès de graisse, courroie trop tendue, désalignement, roulement en fin de vie. Arroser crée un choc thermique et peut fissurer la bague. Un thermomètre infrarouge et une mesure de vibration orientent le diagnostic.
+
+@087
+Q: Associer chaque outil de diagnostic à ce qu'il détecte le mieux.
+P: Caméra thermique => Échauffement anormal d'un palier ou d'un accouplement
+P: Analyseur de vibrations => Balourd, désalignement, roulement abîmé
+P: Analyse d'huile => Usure interne et contamination d'un réducteur
+P: Détecteur à ultrasons => Fuite d'air et début de défaut de roulement
+E: Ces techniques de maintenance conditionnelle se complètent : l'analyse d'huile voit les particules de fer d'un pignon qui s'use avant que les vibrations ne bougent, la thermographie repère un accouplement désaligné qui chauffe.
+
+@088
+Q: Une analyse d'huile de réducteur signale une forte hausse du fer et de la silice. Que suspecter ?
+C: Une usure des engrenages accélérée par une entrée de poussières
+W: Une huile trop fluide mise par erreur lors de la dernière vidange du carter
+W: Un excès d'additif anti-mousse dans l'huile neuve
+W: Une température de fonctionnement trop basse en hiver
+E: La silice vient en général de la poussière extérieure qui entre par un reniflard sans filtre ou un joint usé ; elle agit comme un abrasif et fait monter le fer. On remplace le reniflard par un modèle déshydratant filtrant, on change l'huile et on recontrôle.
+
+@089
+Q: Remettre dans l'ordre la vidange d'un réducteur.
+O: Faire tourner le réducteur pour réchauffer l'huile
+O: Consigner la machine et ouvrir le reniflard
+O: Vidanger et observer l'huile et le bouchon magnétique
+O: Remplir avec l'huile prescrite jusqu'au niveau
+O: Redémarrer, contrôler le niveau et l'absence de fuite
+E: L'huile chaude s'écoule mieux et entraîne les particules en suspension. Le bouchon magnétique est un indicateur gratuit : de la poudre fine est normale, des copeaux ou des éclats signalent un engrenage ou un roulement abîmé.
+
+@090
+Q: Pourquoi ne pas mélanger deux graisses de savons différents dans un même roulement ?
+C: Certaines bases sont incompatibles et le mélange perd sa consistance
+W: Le mélange de couleurs empêche de lire le niveau de graisse
+W: Les deux graisses doublent la consommation d'énergie du moteur
+W: La norme interdit le mélange pour des raisons de stockage
+E: Une graisse au lithium mélangée à une graisse polyurée ou à certaines bases complexes peut devenir liquide ou durcir. On garde la même graisse, repérée sur le graisseur par une étiquette, ou on purge complètement l'ancienne avant de changer.
+
+@091
+Q: Une machine vient d'être révisée. Au redémarrage, quels contrôles fait le mécanicien pendant les premières minutes ?
+C: Bruit, vibrations, températures, fuites et sens de rotation
+W: La consommation électrique relevée au tableau, sans autre contrôle
+W: La couleur de la peinture refaite pendant la révision
+W: Le nombre de pièces produites dans la première heure
+E: Les premières minutes révèlent les erreurs de montage : roulement trop serré qui chauffe, accouplement désaligné qui vibre, joint mal monté qui fuit. On relève les valeurs de référence sur la fiche d'intervention : elles serviront à suivre la machine.
+
+@092
+Q: Un convoyeur s'arrête par déclenchement du disjoncteur moteur au démarrage, en charge. À vide, il démarre normalement. Quelle cause mécanique vérifier ?
+C: Un point dur : rouleau grippé, bande trop tendue ou réducteur abîmé
+W: Une courroie trop détendue qui patine sur la poulie motrice
+W: Un capteur de fin de course mal positionné sur le bâti
+W: Une graisse trop fluide dans les roulements à billes du tambour de renvoi
+E: Le moteur appelle plus de courant pour vaincre un couple résistant anormal ; la protection déclenche. On fait tourner à la main machine consignée, on cherche les rouleaux qui ne tournent plus, on mesure l'intensité en marche et on la compare à la plaque du moteur.
+
+@093
+Q: Un arbre de pompe a cassé net au ras de la rainure de clavette. Quel facteur de conception favorise ce type de rupture ?
+C: Le fond de rainure à angle vif qui concentre les contraintes
+W: Un arbre en acier plus dur que la clavette qu'il porte
+W: Une clavette trop longue par rapport au moyeu
+W: Une vitesse de rotation inférieure à la nominale
+E: L'extrémité d'une rainure fraisée et ses angles vifs sont des amorces de fatigue classiques. Les ruptures se produisent souvent après des démarrages répétés ou un désalignement. On vérifie le rayon de fond de rainure sur la pièce de remplacement.
+
+@094
+Q: Associer chaque outil d'atelier à son usage.
+P: Extracteur à griffes => Sortir une poulie ou un roulement d'un arbre
+P: Clé à ergot => Serrer un écrou à encoches de roulement
+P: Chauffe-roulement à induction => Dilater un roulement avant montage
+P: Pince à circlips => Poser ou retirer un anneau élastique
+E: Le bon outil évite d'abîmer la pièce : un écrou à encoches frappé au chasse-goupille se mate, un circlip retiré au tournevis se déforme. Les outils spécifiques se rangent et s'entretiennent comme des instruments.
+
+@095
+Q: Pour usiner une pièce en acier de 40 mm de diamètre à une vitesse de coupe de 100 m/min, à quelle vitesse tourner, en tr/min ?
+N: 796
+U: tr/min
+T: 2
+E: N = 1 000 × Vc / (π × D) = 100 000 / (π × 40) ≈ 796 tr/min. On prend la vitesse disponible la plus proche sur le tour. Une vitesse trop haute brûle l'outil, trop basse donne un mauvais état de surface et une arête rapportée.
+
+@096
+Q: Un mécanicien doit percer un trou de 10 mm dans une tôle d'acier sur une perceuse à colonne. Quelle précaution est essentielle ?
+C: Brider la pièce dans un étau ou sur la table, jamais tenue à la main
+W: Porter des gants épais pour tenir la pièce pendant le perçage
+W: Percer à la vitesse maximale pour finir plus vite
+W: Retirer le protecteur du mandrin pour mieux voir le foret
+E: Quand le foret débouche, il accroche et fait tourner la pièce, qui devient une lame tournante. Les gants se prennent dans les outils en rotation : on les retire sur machine tournante. Lunettes, pièce bridée, vitesse adaptée au diamètre.
+
+@097
+Q: Une soudure sur un châssis fissure à nouveau quelques semaines après réparation, toujours au même endroit. Quelle cause rechercher ?
+C: Une concentration de contrainte ou une vibration qui sollicite la zone en fatigue
+W: Une baguette de soudure d'une marque différente de celle de la première réparation
+W: Un châssis peint trop vite après la soudure
+W: Une température d'atelier trop élevée pendant la réparation
+E: Ressouder sans renforcer reproduit la rupture : la fissure revient là où la contrainte est maximale. On perce un trou en bout de fissure pour arrêter sa propagation, on chanfreine pour souder à cœur et on ajoute un renfort qui répartit l'effort.
+
+@098
+Q: Avant de lever un réducteur de 180 kg avec un palan, que vérifie le mécanicien ?
+C: La charge maximale du palan et des élingues, et les points de levage prévus
+W: Le poids estimé à l'œil par un collègue de l'équipe
+W: Que le palan est neuf et bien graissé, sans regarder la charge admissible indiquée
+W: Que personne ne regarde, pour aller plus vite
+E: La charge maximale d'utilisation est marquée sur chaque accessoire ; l'angle des élingues réduit leur capacité. On utilise les anneaux de levage du carter, jamais un arbre, et personne ne passe sous la charge suspendue. Les accessoires sont vérifiés périodiquement.
+
+@099
+Q: Remettre dans l'ordre le diagnostic d'une machine qui fait un bruit nouveau.
+O: Recueillir les informations auprès de l'opérateur
+O: Écouter et localiser le bruit, machine en marche, sans danger
+O: Mesurer vibrations et températures sur les paliers suspects
+O: Consigner et inspecter les organes repérés
+O: Remplacer la pièce, puis rechercher et traiter la cause
+E: L'opérateur sait depuis quand le bruit existe et ce qui a changé. Mesurer avant de démonter évite de déposer un organe sain. Traiter la cause, par exemple un désalignement, évite que le roulement neuf s'abîme à son tour.
+
+@100
+Q: Après le remplacement d'un roulement cassé pour la troisième fois en six mois sur la même pompe, que doit faire l'équipe de maintenance ?
+C: Lancer une analyse de cause et noter les constats dans la GMAO
+W: Commander dix roulements d'avance pour les prochaines pannes
+W: Choisir un roulement de marque plus chère sans autre changement
+W: Augmenter la quantité de graisse à chaque intervention
+E: Une panne qui revient signale une cause non traitée : désalignement, pied bancal, arbre usé, mauvais ajustement, cavitation, lubrification. Les constats (aspect du roulement, mesures, photos) dans la GMAO permettent de suivre l'historique et de justifier une modification.

@@ -82,6 +82,27 @@ def test_new_dictionary_reanalyses_every_offer(tmp_path, monkeypatch):
     assert refresh_detected_skills(vDatabaseFile) == 1
 
 
+def test_long_analysis_logs_its_progress(tmp_path, monkeypatch, caplog):
+    """Vérifie que l'analyse en plusieurs lots journalise son avancement."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_offer(vDatabaseFile, "Java")
+    save_offers(
+        vDatabaseFile,
+        pd.DataFrame([{"source": "lever", "source_id": "2", "title": "SQL"}]),
+        NOW,
+    )
+    monkeypatch.setattr(skill_cache, "BATCH_SIZE", 1)
+
+    with caplog.at_level("INFO"):
+        assert refresh_detected_skills(vDatabaseFile) == 2
+
+    assert "Compétences à repérer dans 2 offre(s)" in caplog.text
+    assert "Compétences repérées : 1 / 2 offre(s)" in caplog.text
+    assert "2 / 2" not in caplog.text
+
+
 def test_failure_is_logged_without_stopping(tmp_path, monkeypatch, caplog):
     """Vérifie qu'une erreur d'analyse est journalisée sans être relevée."""
 

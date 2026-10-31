@@ -5,6 +5,19 @@ dans l'historique git.
 
 ## Non publié
 
+### Analyse des compétences des offres
+- Avancement journalisé lot par lot quand l'analyse dépasse 500 offres, par
+  exemple après une modification du dictionnaire de compétences : l'attente au
+  lancement ne passe plus pour un blocage
+
+### Révision mécanique
+- Lot de 100 questions dont 46 interactives (calculs, remises en ordre,
+  associations) : lecture de plan et ajustements, visserie et serrage,
+  matériaux et traitements thermiques, métrologie, étanchéité, transmissions
+  (engrenages, poulies, chaînes, réducteurs), roulements, lubrification,
+  alignement, vibrations et diagnostic d'atelier
+- Deux schémas : chaîne cinématique d'un convoyeur, montage d'un roulement
+
 ### Révision microservices et messagerie
 - Lot de 100 questions, thème vide le plus demandé par les offres après C# :
   découpage et bounded contexts, communication synchrone ou asynchrone, API

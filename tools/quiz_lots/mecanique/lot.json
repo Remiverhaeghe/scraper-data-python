@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026103103,
+  "skills": ["mécanique", "maintenance mécanique", "mécanicien"],
+  "schemas": [
+    {
+      "name": "mecanique-chaine-cinematique.svg",
+      "questions": ["051", "053", "058"],
+      "diagram": {
+        "title": "Chaîne cinématique d'un convoyeur",
+        "nodes": [
+          "Moteur asynchrone",
+          "Accouplement élastique",
+          "Réducteur à engrenages",
+          "Poulies et courroie",
+          "Tambour du convoyeur"
+        ],
+        "note": "La vitesse baisse et le couple augmente à chaque réduction"
+      }
+    },
+    {
+      "name": "mecanique-montage-roulement.svg",
+      "questions": ["066", "067", "070"],
+      "diagram": {
+        "title": "Montage d'un roulement par chauffage",
+        "nodes": [
+          "Contrôler l'arbre et le logement",
+          "Chauffer par induction, 110 °C au plus",
+          "Enfiler jusqu'à l'épaulement",
+          "Maintenir pendant le refroidissement",
+          "Graisser et vérifier la rotation"
+        ],
+        "note": "On ne frappe jamais sur la bague qui n'est pas montée serrée"
+      }
+    }
+  ]
+}

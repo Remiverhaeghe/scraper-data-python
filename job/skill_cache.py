@@ -61,6 +61,22 @@ def get_offers_to_analyse(pDatabaseFile, pLimit):
     return rRows
 
 
+def count_offers_to_analyse(pDatabaseFile):
+    """Retourne le nombre d'offres dont les compétences restent à repérer."""
+
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        rCount = vConnection.execute(
+            "SELECT COUNT(*) FROM job_offer WHERE detected_skills IS NULL"
+        ).fetchone()[0]
+
+    finally:
+        vConnection.close()
+
+    return rCount
+
+
 def save_detected_skills(pDatabaseFile, pRows):
     """Enregistre les compétences repérées, données par (json, source, id)."""
 
@@ -94,6 +110,12 @@ def refresh_detected_skills(pDatabaseFile, _pNow=None):
         )
 
     rCount = 0
+    vTotal = count_offers_to_analyse(pDatabaseFile)
+
+    # L'analyse complète dure plusieurs minutes dans l'application : sans
+    # avancement journalisé, elle passe pour un blocage.
+    if vTotal > BATCH_SIZE:
+        logger.info("Compétences à repérer dans %s offre(s)", vTotal)
 
     while vRows := get_offers_to_analyse(pDatabaseFile, BATCH_SIZE):
         save_detected_skills(
@@ -111,6 +133,9 @@ def refresh_detected_skills(pDatabaseFile, _pNow=None):
             ],
         )
         rCount += len(vRows)
+
+        if vTotal > BATCH_SIZE and rCount < vTotal:
+            logger.info("Compétences repérées : %s / %s offre(s)", rCount, vTotal)
 
     if rCount:
         logger.info(
