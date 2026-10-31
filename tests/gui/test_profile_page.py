@@ -76,7 +76,9 @@ def test_preparation_needs_a_profile_then_opens(qt_application, tmp_path, monkey
     monkeypatch.setattr(
         offer_assistant,
         "show_preparation",
-        lambda pParent, pTitle, pPreparation: vShown.append(pPreparation),
+        lambda pParent, pTitle, pPreparation, pExport: vShown.append(
+            (pPreparation, pExport)
+        ),
     )
 
     vPanel = offer_assistant.OfferAssistantPanel(vDatabaseFile)
@@ -88,7 +90,8 @@ def test_preparation_needs_a_profile_then_opens(qt_application, tmp_path, monkey
     save_profile(vDatabaseFile, build_profile("", "", "Java", "", ""))
     vPanel.open_preparation()
 
-    assert vShown[0]["match"]["covered"] == ["Java"]
+    assert vShown[0][0]["match"]["covered"] == ["Java"]
+    assert vShown[0][1] == vPanel.export_dossier
 
 
 def test_describe_preparation_escapes_and_lists(qt_application):

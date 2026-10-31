@@ -13,6 +13,8 @@ PAGE_HEIGHT = 842
 MARGIN = 56
 LINE_SPACING = 1.3
 FONTS = {False: "F1", True: "F2"}
+# Bloc dont le texte commence une nouvelle page (sans effet en haut de page)
+PAGE_BREAK = "\f"
 
 # Largeurs Helvetica (millièmes de corps) des caractères 32 à 126
 ASCII_WIDTHS = (
@@ -109,6 +111,13 @@ def layout_pages(pBlocks):
     vTop = PAGE_HEIGHT - MARGIN
 
     for vText, vSize, vBold, vSpaceBefore in pBlocks:
+        if vText == PAGE_BREAK:
+            if rPages[-1]:
+                rPages.append([])
+                vTop = PAGE_HEIGHT - MARGIN
+
+            continue
+
         vTop -= vSpaceBefore if rPages[-1] else 0
 
         for vLine in wrap(str(vText or ""), vSize, vBold):

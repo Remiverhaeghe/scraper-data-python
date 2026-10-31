@@ -800,6 +800,61 @@ def test_tailored_cv_is_saved_where_chosen(
     assert vTarget.read_bytes()[:4] == b"%PDF"
 
 
+def test_application_dossier_is_saved_as_pdf(
+    offers_page, database_file, tmp_path, monkeypatch
+):
+    """Vérifie le dossier refusé sans profil, puis enregistré en PDF et ouvert."""
+
+    offers_page.select_offer(("lever", "1"))
+    vInformed = []
+    vOpened = []
+    vTarget = tmp_path / "dossier.pdf"
+    monkeypatch.setattr(
+        offer_assistant.QMessageBox,
+        "information",
+        lambda *pArgs: vInformed.append(pArgs[2]),
+    )
+    monkeypatch.setattr(
+        offer_assistant.QFileDialog, "getSaveFileName", lambda *pArgs: ("", "")
+    )
+    monkeypatch.setattr(
+        offer_assistant.QDesktopServices, "openUrl", lambda pUrl: vOpened.append(pUrl)
+    )
+    monkeypatch.setattr("job.application_dossier.lookup_company", lambda *pArgs: [])
+
+    offers_page.detail_panel.assistant.export_dossier()
+
+    assert vInformed and vInformed[0].startswith("Renseignez d'abord")
+
+    save_profile(
+        database_file,
+        {**load_profile(database_file), "name": "Camille", "skills": ["Java"]},
+    )
+    offers_page.detail_panel.assistant.export_dossier()
+
+    assert not vTarget.exists() and not vOpened
+
+    monkeypatch.setattr(
+        offer_assistant.QFileDialog,
+        "getSaveFileName",
+        lambda *pArgs: (str(vTarget), ""),
+    )
+    offers_page.detail_panel.assistant.dossier_button.click()
+
+    assert vTarget.read_bytes()[:4] == b"%PDF"
+    assert len(vOpened) == 1
+
+    monkeypatch.setattr(
+        offer_assistant.QMessageBox,
+        "warning",
+        lambda *pArgs: vInformed.append(pArgs[2]),
+    )
+    vTarget = tmp_path / "absent" / "dossier.pdf"
+    offers_page.detail_panel.assistant.export_dossier("Ma lettre")
+
+    assert vInformed[-1].startswith("Enregistrement impossible")
+
+
 def test_keyboard_status_moves_to_the_next_offer(offers_page, database_file):
     """Vérifie le statut donné au clavier, puis l'offre suivante choisie."""
 

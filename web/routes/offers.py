@@ -30,6 +30,7 @@ from job.companies import (
     mark_preferred_companies,
 )
 from job.certifications import describe_offer_certifications, load_owned
+from job.application_dossier import write_dossier_pdf
 from job.company_info import lookup_company, summarize_company
 from job.contract import CONTRACT_TYPES
 from job.cv_export import (
@@ -800,6 +801,34 @@ def download_tailored_cv(
     rResponse = build_document_response(
         write_cv_pdf(vCv) if pFormat == "pdf" else write_docx(vCv),
         build_file_name(vOffer, "CV", f".{pFormat}"),
+    )
+
+    return rResponse
+
+
+@router.post("/offer/dossier", dependencies=[Depends(require_csrf)])
+def download_dossier(
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pLetter: str = Form("", alias="letter"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Télécharge le dossier de candidature en PDF, avec la lettre modifiée."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    vProfile = load_profile(pDatabaseFile)
+
+    if is_profile_empty(vProfile):
+        raise HTTPException(status_code=400, detail="Profil vide : rien à exporter.")
+
+    rResponse = build_document_response(
+        write_dossier_pdf(
+            vProfile,
+            vOffer,
+            pLetter[:MAX_LETTER_LENGTH] or None,
+            load_home(pDatabaseFile),
+        ),
+        build_file_name(vOffer, "Dossier", ".pdf"),
     )
 
     return rResponse

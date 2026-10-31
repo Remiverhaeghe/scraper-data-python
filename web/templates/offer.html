@@ -267,6 +267,7 @@
                 <textarea class="letter" name="letter" rows="14" aria-label="Brouillon de lettre de motivation">{{ preparation.letter }}</textarea>
                 <button class="button" type="submit" name="format" value="docx">{{ icon("download", 16) }} Lettre en Word</button>
                 <button class="button" type="submit" name="format" value="pdf">{{ icon("file-text", 16) }} Lettre en PDF</button>
+                <button class="button button-primary" type="submit" formaction="{{ url_for('download_dossier').path }}" title="Un seul PDF : l'offre en bref, le CV adapté, cette lettre, la fiche de l'entreprise et les questions à poser">{{ icon("briefcase", 16) }} Dossier complet (PDF)</button>
             </form>
             {% else %}
             <p class="muted">Renseignez d'abord vos compétences et expériences dans la page <a href="{{ url_for('show_profile').path }}">Profil</a>.</p>

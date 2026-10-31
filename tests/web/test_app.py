@@ -10,6 +10,7 @@ import pandas as pd
 from pathlib import Path
 
 import pytest
+from pypdf import PdfReader
 import requests
 from fastapi.testclient import TestClient
 
@@ -2980,6 +2981,26 @@ def test_letter_is_downloaded_as_edited(client):
     )
 
     assert vPdf.content[:4] == b"%PDF"
+
+
+def test_application_dossier_is_downloaded(client, monkeypatch):
+    """Vérifie le dossier : refusé sans profil, puis PDF avec la lettre modifiée."""
+
+    monkeypatch.setattr("job.application_dossier.lookup_company", lambda *pArgs: [])
+    vData = {"source": "adzuna", "id": "new", "letter": "Bonjour,\nMa lettre"}
+
+    assert client.post("/offer/dossier", data=vData).status_code == 400
+    client.post("/profile", data={"skills": "Python, Django", "experiences": ""})
+
+    assert "Dossier complet (PDF)" in client.get("/offer?source=adzuna&id=new").text
+
+    vResponse = client.post("/offer/dossier", data=vData)
+    vPages = PdfReader(io.BytesIO(vResponse.content)).pages
+
+    assert vResponse.headers["content-type"] == "application/pdf"
+    assert "Dossier%20-%20Entreprise%20A" in vResponse.headers["content-disposition"]
+    assert len(vPages) == 4
+    assert vPages[2].extract_text() == "Lettre de motivation\nBonjour,\nMa lettre"
 
 
 def test_search_journal_is_downloaded(client):

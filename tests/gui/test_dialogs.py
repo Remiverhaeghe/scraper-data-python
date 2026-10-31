@@ -59,6 +59,25 @@ def test_preparation_letter_is_copied_then_saved(qt_application, tmp_path, monke
     assert vWarnings[0].startswith("Enregistrement impossible")
 
 
+def test_dossier_button_receives_the_edited_letter(qt_application, monkeypatch):
+    """Vérifie que le bouton du dossier transmet la lettre telle que modifiée."""
+
+    vLetters = []
+
+    def click_dossier(pDialog):
+        for vButton in pDialog.findChildren(QPushButton):
+            if vButton.text() == "Dossier complet (PDF)":
+                vButton.click()
+
+        return 0
+
+    monkeypatch.setattr(dialogs.QDialog, "exec", click_dossier)
+
+    dialogs.show_preparation(None, "Dev Python", PREPARATION, vLetters.append)
+
+    assert vLetters == ["Madame, Monsieur,"]
+
+
 def test_letter_is_not_saved_without_a_file(qt_application, monkeypatch, tmp_path):
     """Vérifie qu'annuler le choix du fichier n'écrit rien."""
 

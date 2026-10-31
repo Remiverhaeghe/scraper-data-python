@@ -5,6 +5,13 @@ dans l'historique git.
 
 ## Non publié
 
+### Dossier de candidature en un clic
+- Un seul PDF par offre : l'offre en bref, le CV adapté, la lettre de motivation,
+  la fiche de l'entreprise (annuaire public) et les questions à poser, une partie
+  par page ; la lettre modifiée à l'écran est reprise (bureau, web)
+- Sans réponse de l'annuaire ou pour une entreprise étrangère, le dossier est
+  produit quand même, la fiche indiquant pourquoi elle manque
+
 ### Candidatures spontanées ciblées
 - Effectif de chaque employeur de la région et position de son site le plus proche
 - Suivi des candidatures spontanées : envoyée, relancée, entretien obtenu, refus

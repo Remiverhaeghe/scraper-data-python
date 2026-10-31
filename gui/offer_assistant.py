@@ -35,6 +35,7 @@ from gui.theme import COLORS
 from gui.widgets import create_button, get_exports_folder
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
 from job.company_info import lookup_company, summarize_company
+from job.application_dossier import write_dossier_pdf
 from job.cv_export import (
     build_file_name,
     build_tailored_cv,
@@ -173,6 +174,15 @@ class OfferAssistantPanel(QWidget):
         )
         self.cv_button.clicked.connect(self.export_cv)
 
+        self.dossier_button = create_button(
+            "Dossier de candidature (PDF)", "briefcase", pIconColor=COLORS["primary"]
+        )
+        self.dossier_button.setToolTip(
+            "Un seul PDF : l'offre en bref, le CV adapté, la lettre, la fiche de "
+            "l'entreprise et les questions à poser"
+        )
+        self.dossier_button.clicked.connect(lambda: self.export_dossier())
+
         self.sheet_button = create_button(
             "Fiche de préparation PDF…", "file-text", pIconColor=COLORS["primary"]
         )
@@ -255,6 +265,7 @@ class OfferAssistantPanel(QWidget):
         vLayout.addWidget(self.mission_panel)
         vLayout.addWidget(self.prepare_button)
         vLayout.addWidget(self.cv_button)
+        vLayout.addWidget(self.dossier_button)
         vLayout.addWidget(self.sheet_button)
         vLayout.addWidget(self.exam_button)
         vLayout.addWidget(self.exam_results_label)
@@ -393,6 +404,55 @@ class OfferAssistantPanel(QWidget):
         )
         QDesktopServices.openUrl(QUrl.fromLocalFile(vPath))
 
+    def export_dossier(self, pLetter=None):
+        """Enregistre le dossier en PDF ; pLetter remplace le brouillon de lettre."""
+        if self.offer is None:
+            return
+
+        vProfile = load_profile(self.database_file)
+
+        if is_profile_empty(vProfile):
+            QMessageBox.information(
+                self,
+                "Dossier de candidature",
+                "Renseignez d'abord vos compétences et expériences dans la page Profil.",
+            )
+            return
+
+        vPath, _ = QFileDialog.getSaveFileName(
+            self,
+            "Enregistrer le dossier de candidature",
+            str(get_exports_folder() / build_file_name(self.offer, "Dossier", ".pdf")),
+            "PDF prêt à envoyer (*.pdf)",
+        )
+
+        if not vPath:
+            return
+
+        # La fiche de l'entreprise interroge l'annuaire : le curseur signale l'attente
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+        try:
+            Path(vPath).write_bytes(
+                write_dossier_pdf(
+                    vProfile, self.offer, pLetter, load_home(self.database_file)
+                )
+            )
+
+        except OSError as vException:
+            logger.warning("Dossier de candidature non enregistré : %s", vException)
+            QMessageBox.warning(
+                self,
+                "Dossier de candidature",
+                f"Enregistrement impossible : {vException}",
+            )
+            return
+
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        QDesktopServices.openUrl(QUrl.fromLocalFile(vPath))
+
     def open_negotiation(self):
         """Ouvre le jeu de négociation sur le marché de l'offre."""
         if self.offer:
@@ -422,6 +482,7 @@ class OfferAssistantPanel(QWidget):
                     collect_asked_questions(self.database_file),
                     load_interim_agencies(self.database_file),
                 ),
+                self.export_dossier,
             )
 
     def refresh_comparison(self):

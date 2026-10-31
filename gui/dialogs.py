@@ -308,8 +308,11 @@ def save_letter(pParent, pTitle, pText):
     QDesktopServices.openUrl(QUrl.fromLocalFile(vPath))
 
 
-def show_preparation(pParent, pTitle, pPreparation):
-    """Affiche la préparation d'une candidature et le brouillon de lettre."""
+def show_preparation(pParent, pTitle, pPreparation, pExportDossier=None):
+    """Affiche la préparation d'une candidature et le brouillon de lettre.
+
+    pExportDossier, s'il est donné, reçoit la lettre modifiée pour produire le dossier.
+    """
 
     vBrowser = QTextBrowser()
     vBrowser.setHtml(describe_preparation(pPreparation))
@@ -332,6 +335,14 @@ def show_preparation(pParent, pTitle, pPreparation):
     vButtons.button(QDialogButtonBox.StandardButton.Close).setText("Fermer")
     vButtons.addButton(vCopyButton, QDialogButtonBox.ButtonRole.ActionRole)
     vButtons.addButton(vSaveButton, QDialogButtonBox.ButtonRole.ActionRole)
+
+    if pExportDossier is not None:
+        vDossierButton = QPushButton("Dossier complet (PDF)")
+        vDossierButton.setToolTip(
+            "CV adapté, cette lettre, fiche entreprise et questions"
+        )
+        vDossierButton.clicked.connect(lambda: pExportDossier(vLetter.toPlainText()))
+        vButtons.addButton(vDossierButton, QDialogButtonBox.ButtonRole.ActionRole)
 
     vDialog = QDialog(pParent)
     vDialog.setWindowTitle(f"Préparer ma candidature · {pTitle}")

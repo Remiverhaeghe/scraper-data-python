@@ -298,6 +298,7 @@ Documents/JobBoard/
 - [x] Réponses des recruteurs lues dans Gmail (IMAP, lecture seule) : refus ou entretien proposé, appliqué ou ignoré d'un clic
 - [x] CV adapté à une offre, en Word ou en PDF prêt à envoyer : compétences demandées en tête, expériences les plus proches d'abord ; lettre en Word ou en PDF
 - [x] Mots de l'annonce à reprendre, repérés par règles : intitulé, compétences (exigées en tête), qualités et conditions, chacun marqué présent ou absent du CV
+- [x] Dossier de candidature en un PDF : l'offre en bref, le CV adapté, la lettre (modifiée à l'écran), la fiche de l'entreprise tirée de l'annuaire public et les questions à poser, une partie par page (bureau, web)
 - [x] Annonces en ligne depuis plus de 45 jours signalées ; fiche entreprise avec l'établissement le plus proche du domicile
 - [x] Ajout d'une entreprise suivie en collant l'adresse de son site carrière (SmartRecruiters, Lever, Ashby, Greenhouse, Recruitee, Workable, Workday)
 - [x] Badge ESN et filtres « Clients finaux seulement », « Sans stage ni alternance » et « À ma portée » (expérience et diplôme demandés comparés aux vôtres)
@@ -788,6 +789,7 @@ scraper-data-python/
 │   ├── cv_export.py                           # CV réordonné pour une offre et lettre, en Word ou en PDF
 │   ├── cv_keywords.py                         # Mots de l'annonce à reprendre dans le CV et la lettre
 │   ├── pdf_document.py                        # PDF A4 simple écrit sans bibliothèque
+│   ├── application_dossier.py                 # Dossier de candidature : offre, CV, lettre, entreprise, questions
 │   ├── search_journal.py                      # Journal des démarches datées, exporté pour un tableur
 │   ├── education.py                           # Diplôme demandé par l'offre, repéré une fois puis comparé au vôtre
 │   ├── experience_fit.py                      # Expérience demandée par l'offre comparée à la vôtre
@@ -1362,6 +1364,7 @@ scraper-data-python/
 │   │   ├── test_cv_export.py                  # Teste le CV adapté, les fichiers Word et PDF
 │   │   ├── test_cv_keywords.py                # Teste l'intitulé nettoyé et les mots à reprendre
 │   │   ├── test_pdf_document.py               # Teste le PDF relu, les accents, la coupe et les pages
+│   │   ├── test_application_dossier.py        # Teste les pages du dossier, la lettre et la fiche entreprise
 │   │   ├── test_company_pages.py              # Teste l'ajout d'une entreprise depuis l'adresse de son site carrière
 │   │   ├── test_search_journal.py             # Teste le journal de recherche
 │   │   ├── test_education.py                  # Teste le diplôme demandé, son écart et son calcul en tâche de fond
