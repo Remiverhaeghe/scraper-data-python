@@ -8,7 +8,12 @@
 {% block content %}
 {{ ui.page_header("Défis", "Des problèmes à résoudre avec votre propre code, dans le langage de votre choix : seule la réponse est vérifiée", "trophy") }}
 
-<details class="card collapsible" data-remember="challenges" open>
+<a class="card challenge-puzzles" href="{{ url_for('show_puzzles').path }}">
+    <h2>{{ icon("code") }} Puzzles de code</h2>
+    <span class="card-subtitle">Remettre des lignes dans l'ordre, repérer la ligne fautive, compléter un trou : des séries de dix, de difficulté croissante</span>
+</a>
+
+<details class="card collapsible section-gap" data-remember="challenges" open>
     <summary>
         <h2>{{ icon("trophy") }} Les défis</h2>
         <span class="card-subtitle">Deux parties par défi, une étoile par partie réussie</span>

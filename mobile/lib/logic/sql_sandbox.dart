@@ -15,7 +15,8 @@ import 'python_compat.dart';
 const maxSeconds = Duration(seconds: 2);
 final tokenPattern = RegExp(r"'(?:[^']|'')*'|--[^\n]*|/\*[\s\S]*?(?:\*/|$)");
 final literalPattern = RegExp('\\x00(\\d+)\\x00');
-final topPattern = RegExp(r'^\s*SELECT\s+(DISTINCT\s+)?TOP\s*(?:\(\s*(\d+)\s*\)|(\d+))\s', caseSensitive: false);
+final topPattern =
+    RegExp(r'^\s*SELECT\s+(DISTINCT\s+)?TOP\s*(?:\(\s*(\d+)\s*\)|(\d+))\s', caseSensitive: false);
 final functionPattern = RegExp(r'\b([A-Za-z_][A-Za-z0-9_]*)\s*\(');
 const unitSeconds = {'day': 86400, 'hour': 3600, 'minute': 60};
 
@@ -48,7 +49,8 @@ class SqlRules {
   int get maxValueLength => json['max_value_length'] as int;
 
   List<(String, String)> pairs(Object? pValue) => [
-        for (final vPair in pValue as List? ?? const []) ((vPair as List)[0] as String, vPair[1] as String),
+        for (final vPair in pValue as List? ?? const [])
+          ((vPair as List)[0] as String, vPair[1] as String),
       ];
 
   List<(String, String)> refused(String pDialect) => pairs((json['refused'] as Map)[pDialect]);
@@ -84,7 +86,8 @@ class SqlRules {
   return (rCode, vLiterals);
 }
 
-String rewriteUnitFunction(String pCode, String pName, String pTarget, SqlRules pRules) => pCode.replaceAllMapped(
+String rewriteUnitFunction(String pCode, String pName, String pTarget, SqlRules pRules) =>
+    pCode.replaceAllMapped(
       RegExp('\\b$pName\\s*\\(\\s*([a-z]+)\\s*,', caseSensitive: false),
       (pMatch) {
         final vUnit = pRules.unit(pMatch.group(1)!.toLowerCase());
@@ -198,7 +201,8 @@ String translate(String pQuery, String pDialect, SqlRules pRules) {
 /// levé tel quel à SQLite : le message est celui que donne le PC.
 const _functionError = 'user-defined function raised exception';
 
-final _momentPattern = RegExp(r'^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,6}))?)?)?$');
+final _momentPattern =
+    RegExp(r'^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,6}))?)?)?$');
 
 /// Date lue au format AAAA-MM-JJ, avec ou sans heure, sans fuseau : en UTC.
 DateTime parseMoment(Object pValue) {
@@ -208,9 +212,12 @@ DateTime parseMoment(Object pValue) {
     throw _functionError;
   }
 
-  final vParts = [for (var vIndex = 1; vIndex <= 6; vIndex++) int.parse(vMatch.group(vIndex) ?? '0')];
+  final vParts = [
+    for (var vIndex = 1; vIndex <= 6; vIndex++) int.parse(vMatch.group(vIndex) ?? '0')
+  ];
   final vMicro = int.parse((vMatch.group(7) ?? '').padRight(6, '0'));
-  final rMoment = DateTime.utc(vParts[0], vParts[1], vParts[2], vParts[3], vParts[4], vParts[5], 0, vMicro);
+  final rMoment =
+      DateTime.utc(vParts[0], vParts[1], vParts[2], vParts[3], vParts[4], vParts[5], 0, vMicro);
 
   if (rMoment.year != vParts[0] ||
       rMoment.month != vParts[1] ||
@@ -228,17 +235,20 @@ DateTime dateOf(DateTime pMoment) => DateTime.utc(pMoment.year, pMoment.month, p
 
 int daysBetween(DateTime pStart, DateTime pEnd) => dateOf(pEnd).difference(dateOf(pStart)).inDays;
 
-double secondsBetween(DateTime pStart, DateTime pEnd) => pEnd.difference(pStart).inMicroseconds / 1e6;
+double secondsBetween(DateTime pStart, DateTime pEnd) =>
+    pEnd.difference(pStart).inMicroseconds / 1e6;
 
 /// Fonctions SQL ajoutées, selon le dialecte, comme open_database côté PC.
 void registerFunctions(Database pDatabase, String pDialect) {
-  void add(String pName, int pCount, Object? Function(List<Object?>) pFunction, {bool pDeterministic = true}) {
+  void add(String pName, int pCount, Object? Function(List<Object?>) pFunction,
+      {bool pDeterministic = true}) {
     pDatabase.createFunction(
       functionName: pName,
       argumentCount: AllowedArgumentCount(pCount),
       deterministic: pDeterministic,
       directOnly: false,
-      function: (pArguments) => pFunction([for (var vIndex = 0; vIndex < pCount; vIndex++) pArguments[vIndex]]),
+      function: (pArguments) =>
+          pFunction([for (var vIndex = 0; vIndex < pCount; vIndex++) pArguments[vIndex]]),
     );
   }
 
@@ -250,14 +260,18 @@ void registerFunctions(Database pDatabase, String pDialect) {
     add(
       'DATEDIFF',
       2,
-      (pArgs) => pArgs[0] == null || pArgs[1] == null ? null : daysBetween(parseMoment(pArgs[1]!), parseMoment(pArgs[0]!)),
+      (pArgs) => pArgs[0] == null || pArgs[1] == null
+          ? null
+          : daysBetween(parseMoment(pArgs[1]!), parseMoment(pArgs[0]!)),
     );
     add(
       'timestamp_diff',
       3,
       (pArgs) => pArgs[1] == null || pArgs[2] == null
           ? null
-          : (secondsBetween(parseMoment(pArgs[1]!), parseMoment(pArgs[2]!)) / unitSeconds[pArgs[0]]!).truncate(),
+          : (secondsBetween(parseMoment(pArgs[1]!), parseMoment(pArgs[2]!)) /
+                  unitSeconds[pArgs[0]]!)
+              .truncate(),
       pDeterministic: false,
     );
     add('mysql_isnull', 1, (pArgs) => pArgs[0] == null ? 1 : 0);
@@ -307,7 +321,8 @@ Map<String, Object?> fetchRows(IteratingCursor pCursor, int pMaxRows, int pMaxVa
     final vValues = pCursor.current.values;
 
     for (final vValue in vValues) {
-      final vLength = vValue is String ? utf8.encode(vValue).length : (vValue is Uint8List ? vValue.length : 0);
+      final vLength =
+          vValue is String ? utf8.encode(vValue).length : (vValue is Uint8List ? vValue.length : 0);
 
       if (vLength > pMaxValueLength) {
         throw SqliteException(extendedResultCode: 18, message: 'string or blob too big');
@@ -317,13 +332,22 @@ Map<String, Object?> fetchRows(IteratingCursor pCursor, int pMaxRows, int pMaxVa
     vRows.add(List<Object?>.from(vValues));
   }
 
-  return {'columns': List<String>.from(pCursor.columnNames), 'rows': vRows, 'truncated': vTruncated};
+  return {
+    'columns': List<String>.from(pCursor.columnNames),
+    'rows': vRows,
+    'truncated': vTruncated
+  };
 }
 
 /// Exécution dans l'isolat : base neuve, requête, contrôle ; renvoie le résultat brut.
 void _runInIsolate(List<Object?> pMessage) {
   final vPort = pMessage[0] as SendPort;
-  final vResult = <String, Object?>{'columns': <String>[], 'rows': <List<Object?>>[], 'truncated': false, 'changed': null};
+  final vResult = <String, Object?>{
+    'columns': <String>[],
+    'rows': <List<Object?>>[],
+    'truncated': false,
+    'changed': null
+  };
   final vDatabase = sqlite3.openInMemory();
 
   try {
@@ -351,7 +375,8 @@ void _runInIsolate(List<Object?> pMessage) {
       final vCheckStatement = vDatabase.prepare(vCheck);
 
       try {
-        vResult.addAll(fetchRows(vCheckStatement.selectCursor(), pMessage[5] as int, pMessage[6] as int));
+        vResult.addAll(
+            fetchRows(vCheckStatement.selectCursor(), pMessage[5] as int, pMessage[6] as int));
       } finally {
         vCheckStatement.close();
       }
@@ -483,8 +508,9 @@ String _fixed2(double pValue) {
   return '${vNegative ? '-' : ''}${vDigits.substring(0, vDigits.length - 2)}.${vDigits.substring(vDigits.length - 2)}';
 }
 
-double pyRound2(double pValue) =>
-    pValue.isNaN || pValue.isInfinite || pValue.abs() >= 1e20 ? pValue : double.parse(_fixed2(pValue));
+double pyRound2(double pValue) => pValue.isNaN || pValue.isInfinite || pValue.abs() >= 1e20
+    ? pValue
+    : double.parse(_fixed2(pValue));
 
 /// Représentation Python d'octets : b'A\x00'.
 String pyBytesRepr(Uint8List pBytes) {
@@ -554,7 +580,8 @@ String rowKey(List<Object?> pRow) => jsonEncode([
 /// Ce qui diffère du résultat attendu, ou une chaîne vide.
 String compareResults(Map<String, dynamic> pResult, Map<String, dynamic> pExpected, bool pOrdered) {
   List<List<Object?>> normalize(Object? pRows) => [
-        for (final vRow in pRows as List) [for (final vValue in vRow as List) normalizeValue(vValue)],
+        for (final vRow in pRows as List)
+          [for (final vValue in vRow as List) normalizeValue(vValue)],
       ];
 
   final vActual = normalize(pResult['rows']);
@@ -582,7 +609,8 @@ String compareResults(Map<String, dynamic> pResult, Map<String, dynamic> pExpect
     return rCounts;
   }
 
-  List<Object?>? firstSurplus(Map<String, (List<Object?>, int)> pFirst, Map<String, (List<Object?>, int)> pSecond) {
+  List<Object?>? firstSurplus(
+      Map<String, (List<Object?>, int)> pFirst, Map<String, (List<Object?>, int)> pSecond) {
     for (final vEntry in pFirst.entries) {
       if (vEntry.value.$2 > (pSecond[vEntry.key]?.$2 ?? 0)) {
         return vEntry.value.$1;

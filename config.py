@@ -56,6 +56,9 @@ SQL_LEVELS_FILE = ASSETS_DIRECTORY / "sql" / "levels.json"
 CIRCUIT_LEVELS_FILE = ASSETS_DIRECTORY / "circuit" / "levels.json"
 DEVOPS_LEVELS_FILE = ASSETS_DIRECTORY / "devops" / "levels.json"
 
+# Puzzles de code : ordre, ligne fautive, code à trou
+PUZZLES_FILE = ASSETS_DIRECTORY / "puzzles" / "puzzles.json"
+
 # Catalogue des thèmes et modèle de la demande de questions à ChatGPT
 QUIZ_GENERATION_DIRECTORY = ASSETS_DIRECTORY / "quiz_generation"
 

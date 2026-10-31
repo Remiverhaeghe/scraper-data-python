@@ -5,12 +5,21 @@ dans l'historique git.
 
 ## Non publié
 
+### Puzzles de code
+- 45 puzzles dans la page Défis (bureau, web) : lignes à remettre dans l'ordre,
+  ligne fautive, code à compléter, en Python, Java, SQL, Bash, Git, Docker et
+  texte structuré
+- Séries de dix de difficulté croissante, niveau qui monte ou redescend selon le
+  score, réponses justes d'affilée, récapitulatif des erreurs expliquées ; XP et
+  trois trophées
+
 ### Schémas électriques
 - Mesures lisibles : microampères en µA, arrondi avant le choix de l'unité, fuites
   du calcul sous 1 µA affichées nulles
 
 ### Application mobile 1.9.0
-- Simulations jouables hors ligne, contenu reçu du PC : pannes à résoudre, et
+- Simulations jouables hors ligne, contenu reçu du PC : puzzles de code (séries
+  recorrigées par le PC), pannes à résoudre, et
   simulateur d'automate (ladder dessiné en direct, scénario de test et
   chronogramme, machine pilotée au doigt), schémas électriques (schéma construit
   au toucher sur le dessin du PC, zoomable, montages vérifiés par étapes, mode

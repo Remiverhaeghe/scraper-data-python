@@ -2,12 +2,14 @@
 // générés par python -m tools.lab_cases : le téléphone doit donner les mêmes résultats.
 
 import 'dart:convert';
+import 'dart:math';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jobboard_revision/logic/circuit.dart';
 import 'package:jobboard_revision/logic/circuit_drawing.dart';
 import 'package:jobboard_revision/logic/circuit_levels.dart';
+import 'package:jobboard_revision/logic/code_puzzles.dart';
 import 'package:jobboard_revision/logic/devops.dart';
 import 'package:jobboard_revision/logic/git_levels.dart';
 import 'package:jobboard_revision/logic/git_sandbox.dart';
@@ -268,6 +270,56 @@ void main() {
         );
       });
     }
+  });
+
+  final vPuzzleContent = vCases['puzzles_content'] as Map;
+  final vPuzzles = {
+    for (final vPuzzle in vPuzzleContent['puzzles'] as List)
+      (vPuzzle as Map)['id'] as String: Map<String, dynamic>.from(vPuzzle),
+  };
+
+  group('Puzzles de code', () {
+    test('Chaque réponse est corrigée comme sur le PC', () {
+      for (final vCase in (vCases['puzzles'] as Map)['grades'] as List) {
+        final vPuzzle = vPuzzles[(vCase as Map)['puzzle']]!;
+        Object vResult;
+
+        try {
+          final (vCorrect, vGiven, vExpected) = gradePuzzle(vPuzzle, vCase['response']);
+          vResult = {
+            'grade': [vCorrect, vGiven, vExpected]
+          };
+        } on PuzzleAnswerError catch (vError) {
+          vResult = {'error': vError.message};
+        }
+
+        expect(
+            vResult,
+            {
+              for (final vKey in ['grade', 'error'])
+                if (vCase.containsKey(vKey)) vKey: vCase[vKey]
+            },
+            reason: '${vCase['puzzle']} ${vCase['response']}');
+        expect(gradePuzzle(vPuzzle, answerOf(vPuzzle)).$1, isTrue);
+      }
+    });
+
+    test('Le niveau suit le score de la série', () {
+      final vRules = PuzzleRules(Map<String, dynamic>.from(vPuzzleContent['rules'] as Map));
+
+      for (final vCase in (vCases['puzzles'] as Map)['levels'] as List) {
+        expect(vRules.nextLevel((vCase as List)[0] as int, vCase[1] as int), vCase[2],
+            reason: '$vCase');
+      }
+    });
+
+    test('Une série va du plus facile au plus dur', () {
+      final vRules = PuzzleRules(Map<String, dynamic>.from(vPuzzleContent['rules'] as Map));
+      final vSeries = vRules.drawSeries(vPuzzles.values.toList(), 2, {}, Random(4));
+
+      expect(vSeries.toSet(), hasLength(10));
+      expect([for (final vId in vSeries) vPuzzles[vId]!['level']], [1, 1, 1, 2, 2, 2, 2, 2, 3, 3]);
+    });
   });
 
   test('Arrondi au pair, comme Python', () {

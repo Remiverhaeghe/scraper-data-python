@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.puzzles_card import PuzzlesCard
 from gui.theme import COLORS
 from gui.widgets import (
     TileButton,
@@ -92,6 +93,9 @@ class ChallengesPage(QWidget):
         self.list_layout.setSpacing(8)
         vListLayout.addLayout(self.list_layout)
 
+        self.puzzles = PuzzlesCard(pDatabaseFile)
+
+        vLayout.addWidget(self.puzzles.card)
         vLayout.addWidget(self.list_card)
         vLayout.addWidget(self.create_detail_card())
         vLayout.addStretch(1)
@@ -173,6 +177,7 @@ class ChallengesPage(QWidget):
         """Relit la progression et reconstruit la liste des défis."""
         try:
             vChallenges = build_challenge_list(self.database_file, datetime.now())
+            self.puzzles.refresh()
 
         except Exception:
             logger.exception("Impossible de charger les défis")

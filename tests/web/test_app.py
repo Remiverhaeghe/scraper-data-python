@@ -27,6 +27,7 @@ from job.schedule import (
     save_scheduled_search,
 )
 from job.profile import build_profile, save_profile
+from job.code_puzzles import SERIES_LENGTH, build_puzzle_view
 from job.challenges import get_expected_answers, get_seed
 from job.quiz_import import import_questions, import_questions_file
 from tools.quiz_lot import build_pack as build_lot_pack
@@ -1889,6 +1890,42 @@ def test_challenges_are_listed_downloaded_and_answered(client):
 
     assert "Solution commentée" in vSolved.text
     assert "★★" in vSolved.text
+
+
+def test_code_puzzles_are_played_by_series(client):
+    """Vérifie une série de puzzles sur le web : réponses, renvoi refusé, bilan."""
+
+    vDatabaseFile = app.dependency_overrides[get_database_file]()
+
+    assert "Puzzles de code" in client.get("/challenges").text
+    assert "Commencer une série" in client.get("/puzzles").text
+
+    client.post("/puzzles/start")
+
+    for vPosition in range(SERIES_LENGTH):
+        vPuzzle = build_puzzle_view(vDatabaseFile)["puzzle"]
+        vData = {"position": str(vPosition)}
+
+        # Le premier puzzle reçoit une réponse fausse, les autres la bonne
+        if vPuzzle["type"] == "ordre":
+            vIndexes = list(range(len(vPuzzle["items"])))
+            vData["indexes"] = [
+                str(vIndex) for vIndex in vIndexes[:: -1 if vPosition == 0 else 1]
+            ]
+        elif vPuzzle["type"] == "saisie":
+            vData["text"] = vPuzzle["accepted"][0] if vPosition else "faux"
+        else:
+            vLine = vPuzzle["line"] - 1
+            vData["choice"] = str(
+                vLine if vPosition else (vLine + 1) % len(vPuzzle["lines"])
+            )
+
+        vPage = client.post("/puzzles/answer", data=vData)
+
+    assert client.post("/puzzles/answer", data={"position": "0"}).status_code == 400
+    assert "Bilan de la série : 9 sur 10" in vPage.text
+    assert "Réponse attendue" in vPage.text
+    assert "Nouvelle série" in vPage.text
 
 
 def test_git_levels_are_listed_played_and_solved(client):

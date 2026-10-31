@@ -596,8 +596,7 @@ COMPONENT_TYPES = (
         "contact_telerupteur",
         "Contact du télérupteur",
         ELECTRICAL,
-        CONTACT
-        + '<text x="50" y="58" font-size="11" font-weight="bold" '
+        CONTACT + '<text x="50" y="58" font-size="11" font-weight="bold" '
         'fill="#0f172a">TL</text>',
     ),
     two_terminals(

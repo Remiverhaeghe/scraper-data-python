@@ -303,7 +303,7 @@ Documents/JobBoard/
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
-- [x] 38 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] 41 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
@@ -430,7 +430,7 @@ Documents/JobBoard/
 - [x] Application installable sur l'écran d'accueil (manifeste web et icône)
 - [x] Application mobile Flutter de révision hors ligne (`mobile/`) : QCM, calculs, remises en ordre, associations, schémas et guides, répétition espacée, examen blanc chronométré, synchronisation automatique, rappel quotidien, icône et signature propres
 - [x] Correction et répétition espacée vérifiées des deux côtés par des cas communs (`tests/fixtures/shared_quiz_cases.json`), application mobile testée par la CI
-- [x] Pannes à résoudre, simulateur d'automate, schémas électriques, bac à sable Git, bac à sable SQL (SQLite embarqué), Maven et Docker jouables hors ligne sur le téléphone : contenu reçu du PC, simulateurs Dart vérifiés par les cas communs de `tests/fixtures/shared_lab_cases.json` (à régénérer par `python -m tools.lab_cases` après une modification du simulateur ou des scénarios), parties rejouées par le PC
+- [x] Puzzles de code, pannes à résoudre, simulateur d'automate, schémas électriques, bac à sable Git, bac à sable SQL (SQLite embarqué), Maven et Docker jouables hors ligne sur le téléphone : contenu reçu du PC, simulateurs Dart vérifiés par les cas communs de `tests/fixtures/shared_lab_cases.json` (à régénérer par `python -m tools.lab_cases` après une modification du simulateur ou des scénarios), parties rejouées par le PC
 
 ### Hébergement et sécurité
 
@@ -573,6 +573,8 @@ Page Défis du bureau et du web, sur le principe des calendriers de défis en li
 - [x] Résolution dans le langage de son choix : seule la réponse est comparée, aucun code n'est exécuté par l'application
 - [x] Seconde partie ouverte après la première, attente réglable après une erreur (30 s par défaut, jamais nulle), « trop haute » ou « trop basse » pour un nombre
 - [x] Indices dévoilés un à un et solution commentée une fois le défi terminé
+- [x] Puzzles de code : 45 extraits en Python, Java, SQL, Bash, Git, Docker et texte structuré, à remettre dans l'ordre, dont il faut repérer la ligne fautive ou compléter le trou
+- [x] Séries de dix de la plus facile à la plus dure, niveau qui monte à 8 bonnes réponses et redescend à 4, réponses justes d'affilée, récapitulatif des erreurs expliquées (bureau, web, téléphone hors ligne)
 
 ### Tests de recrutement
 
@@ -790,6 +792,7 @@ scraper-data-python/
 │   ├── exchange_rates.py                      # Taux de change de la BCE, rafraîchis chaque semaine
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
 │   ├── challenges/                            # Défis : moteur de progression et un module par défi
+│   ├── code_puzzles.py                        # Puzzles de code : séries, correction, niveau, bilan
 │   ├── git_sandbox.py                         # Bac à sable Git : dépôt simulé et commandes
 │   ├── git_graph.py                           # Dessin SVG du graphe des commits
 │   ├── git_levels.py                          # Niveaux Git : objectif, réussite et progression
@@ -1010,6 +1013,7 @@ scraper-data-python/
 │   ├── quiz_flagged_card.py                   # Questions signalées, remises dans les tirages
 │   ├── schema_editor.py                       # Éditeur de schéma : palette, grille et câblage
 │   ├── challenges_page.py                     # Défis de programmation
+│   ├── puzzles_card.py                        # Puzzles de code de la page Défis
 │   ├── aptitude_page.py                       # Tests de recrutement chronométrés
 │   ├── troubleshooting_page.py                # Pannes à résoudre : mesures, réparation, journal
 │   ├── ladder_page.py                         # Simulateur d'automate : éditeur, tests, simulation
@@ -1072,6 +1076,7 @@ scraper-data-python/
 │   │   ├── skills.py                          # Compétences demandées et préparation
 │   │   ├── certifications.py                  # Certifications, informations et documents
 │   │   ├── challenges.py                      # Défis de programmation
+│   │   ├── puzzles.py                         # Puzzles de code
 │   │   ├── aptitude.py                        # Tests de recrutement
 │   │   ├── troubleshooting.py                 # Pannes à résoudre
 │   │   ├── ladder.py                          # Simulateur d'automate
@@ -1107,6 +1112,7 @@ scraper-data-python/
 │   │   ├── market.html                        # Mon marché : salaires et demande
 │   │   ├── _quiz_answer.html                  # Champs de réponse selon le type de question
 │   │   ├── challenges.html                    # Défis de programmation
+│   │   ├── puzzles.html                       # Puzzles de code
 │   │   ├── aptitude.html                      # Tests de recrutement
 │   │   ├── troubleshooting.html               # Pannes à résoudre
 │   │   ├── ladder.html                        # Simulateur d'automate
@@ -1178,6 +1184,8 @@ scraper-data-python/
 │   │   └── levels.json                        # Niveaux Maven et Docker : fichier, objectif, solution
 │   ├── circuit/
 │   │   └── levels.json                        # Montages : palette, étapes vérifiées, solution
+│   ├── puzzles/
+│   │   └── puzzles.json                       # Puzzles de code : type, niveau, code, réponse, explication
 │   ├── sql/
 │   │   ├── atelier.sql                        # Base d'exemple du bac à sable SQL
 │   │   └── levels.json                        # Niveaux SQL : énoncé, solution par dialecte, pièges
@@ -1348,6 +1356,7 @@ scraper-data-python/
 │   │   ├── test_location_rates.py             # Teste le pays déduit du lieu et la conversion des devises
 │   │   ├── test_calendar.py                   # Teste l'export vers un agenda
 │   │   ├── test_challenges.py                 # Teste les défis, leurs solutions et les réponses
+│   │   ├── test_code_puzzles.py               # Teste les puzzles, les séries, le niveau et le téléphone
 │   │   ├── test_git_sandbox.py                # Teste le dépôt simulé, les commandes et le graphe
 │   │   ├── test_git_levels.py                 # Teste les niveaux Git et leur progression
 │   │   ├── test_sql_sandbox.py                # Teste les dialectes, les protections et la comparaison
@@ -1481,7 +1490,7 @@ scraper-data-python/
 │   │   ├── test_replies_panel.py               # Teste le panneau des réponses de recruteurs
 │   │   ├── test_quiz_page.py                   # Teste la page de révision
 │   │   ├── test_quiz_answer.py                 # Teste les saisies de réponse, revue de code comprise
-│   │   ├── test_challenges_page.py             # Teste la page des défis
+│   │   ├── test_challenges_page.py             # Teste la page des défis et ses puzzles de code
 │   │   ├── test_aptitude_page.py               # Teste une partie, l'abandon et le temps écoulé
 │   │   ├── test_troubleshooting_page.py        # Teste une intervention jusqu'à la réparation
 │   │   ├── test_ladder_page.py                 # Teste la vérification et la simulation pilotée

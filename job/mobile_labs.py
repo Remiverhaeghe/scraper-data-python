@@ -19,6 +19,17 @@ from job.circuit_levels import (
 from job.circuit_levels import load_levels as load_circuit_levels
 from job.circuit_levels import run_level as run_circuit_level
 from job.circuit_levels import save_attempt as save_circuit_attempt
+from job.code_puzzles import (
+    LEVEL_DOWN_SCORE,
+    LEVEL_LABELS,
+    LEVEL_UP_SCORE,
+    SERIES_LENGTH,
+    SERIES_PLAN,
+    TYPE_LABELS,
+    load_puzzle_progress,
+    load_puzzles,
+    replay_series,
+)
 from job.devops_levels import build_devops_overview
 from job.devops_levels import load_levels as load_devops_levels
 from job.devops_levels import mark_passed, replay_steps
@@ -29,7 +40,7 @@ from job.git_levels import is_goal_reached, replay_level
 from job.ladder_game import build_ladder_overview, load_levels, run_level
 from job.ladder_game import save_attempt as save_ladder_attempt
 from job.maven_sim import CENTRAL
-from job.progress import TROUBLESHOOTING_XP_PER_TEN, XP_RULES
+from job.progress import PUZZLE_XP_PER_RIGHT, TROUBLESHOOTING_XP_PER_TEN, XP_RULES
 from job.schema_building import MAX_ANSWER_COMPONENTS, MAX_ANSWER_WIRES
 from job.schema_drawing import GRID_COLUMNS, GRID_ROWS, build_editor_config
 from job.sql_levels import build_schema, build_sql_overview
@@ -124,6 +135,7 @@ def build_labs_package(pDatabaseFile):
             ],
         },
         "sql": build_sql_package(pDatabaseFile),
+        "puzzles": build_puzzles_package(pDatabaseFile),
         "circuit": {
             "levels": list(load_circuit_levels().values()),
             "library": build_circuit_library(),
@@ -134,6 +146,40 @@ def build_labs_package(pDatabaseFile):
                 if vRow["passed"]
             ],
         },
+    }
+
+    return rPackage
+
+
+def build_puzzle_rules():
+    """Retourne les règles des séries de puzzles que le téléphone applique à l'identique."""
+
+    rRules = {
+        "series_length": SERIES_LENGTH,
+        "plan": [list(vStep) for vStep in SERIES_PLAN],
+        "level_up": LEVEL_UP_SCORE,
+        "level_down": LEVEL_DOWN_SCORE,
+        "levels": {str(vLevel): vLabel for vLevel, vLabel in LEVEL_LABELS.items()},
+        "types": TYPE_LABELS,
+    }
+
+    return rRules
+
+
+def build_puzzles_package(pDatabaseFile):
+    """Retourne les puzzles à emporter, leurs règles et la progression du PC."""
+
+    vProgress = load_puzzle_progress(pDatabaseFile)
+
+    rPackage = {
+        "puzzles": list(load_puzzles().values()),
+        "rules": build_puzzle_rules(),
+        "xp": XP_RULES["puzzle_series"][1],
+        "xp_per_right": PUZZLE_XP_PER_RIGHT,
+        "level": vProgress["level"],
+        "streak": vProgress["streak"],
+        "best_streak": vProgress["best_streak"],
+        "stats": vProgress["stats"],
     }
 
     return rPackage
@@ -390,6 +436,16 @@ def integrate_circuit(pDatabaseFile, pItem, pFinishedAt):
     return rXp
 
 
+def integrate_puzzles(pDatabaseFile, pItem, pFinishedAt):
+    """Recorrige une série de puzzles du téléphone ; retourne les points gagnés."""
+
+    vScore = replay_series(pDatabaseFile, pItem.get("answers"), pFinishedAt)
+
+    rXp = XP_RULES["puzzle_series"][1] + PUZZLE_XP_PER_RIGHT * vScore
+
+    return rXp
+
+
 INTEGRATIONS = {
     "troubleshooting": integrate_troubleshooting,
     "ladder": integrate_ladder,
@@ -397,6 +453,7 @@ INTEGRATIONS = {
     "devops": integrate_devops,
     "sql": integrate_sql,
     "circuit": integrate_circuit,
+    "puzzles": integrate_puzzles,
 }
 
 

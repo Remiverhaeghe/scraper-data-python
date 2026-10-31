@@ -3,6 +3,7 @@
 import json
 from datetime import datetime
 
+from job.code_puzzles import get_answer
 from job.mobile_labs import build_labs_package, sync_lab_results
 from job.troubleshooting import load_results
 from storage.database import initialize_database
@@ -203,3 +204,29 @@ def test_phone_circuit_is_simulated_again(tmp_path):
         "Schéma illisible.",
     ]
     assert "led-resistance" in build_labs_package(vDatabaseFile)["circuit"]["passed"]
+
+
+def test_phone_puzzle_series_is_graded_again(tmp_path):
+    """Vérifie une série de puzzles du téléphone recorrigée, avec ses points, et une série incomplète refusée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vPuzzles = build_labs_package(vDatabaseFile)["puzzles"]["puzzles"][:10]
+    vResult = {
+        "id": "puzzles-1",
+        "lab": "puzzles",
+        "answers": [
+            {"id": vPuzzle["id"], "response": get_answer(vPuzzle)}
+            for vPuzzle in vPuzzles
+        ],
+        "finished_at": "2026-10-31T10:00:00",
+    }
+
+    vReport = sync_lab_results(
+        vDatabaseFile,
+        [vResult, {**vResult, "id": "puzzles-2", "answers": vResult["answers"][:9]}],
+    )
+
+    assert (vReport["saved"], vReport["xp"]) == (1, 30)
+    assert vReport["rejected"][0]["reason"] == "série incomplète"
+    assert build_labs_package(vDatabaseFile)["puzzles"]["level"] == 2

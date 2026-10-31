@@ -8,6 +8,7 @@ restent cachés jusqu'à leur obtention, pour l'effet de surprise.
 
 from datetime import timedelta
 
+from job.code_puzzles import load_puzzle_progress
 from job.quiz_exam import load_exam_results
 from storage.aptitude_sessions import get_aptitude_sessions
 from storage.settings_repository import load_json_setting, save_json_setting
@@ -292,6 +293,33 @@ ACHIEVEMENTS = (
         12,
         False,
     ),
+    (
+        "puzzle-first",
+        "Casse-tête",
+        "Terminer une série de puzzles de code",
+        "code",
+        "puzzle_series",
+        1,
+        False,
+    ),
+    (
+        "puzzle-streak",
+        "Sans faute",
+        "Enchaîner 10 puzzles de code justes",
+        "code",
+        "puzzle_best_streak",
+        10,
+        False,
+    ),
+    (
+        "puzzle-expert",
+        "Relecteur confirmé",
+        "Atteindre le niveau confirmé des puzzles de code",
+        "code",
+        "puzzle_level",
+        3,
+        False,
+    ),
     ("level-3", "Technicien", "Atteindre le niveau 3", "star", "level", 3, False),
     (
         "level-5",
@@ -405,6 +433,7 @@ def build_statistics(pDatabaseFile, pActivity, pProgress):
 
     vTotals = count_actions(pActivity)
     vDays = get_active_days(pActivity)
+    vPuzzles = load_puzzle_progress(pDatabaseFile)
 
     rStatistics = {
         **vTotals,
@@ -427,6 +456,8 @@ def build_statistics(pDatabaseFile, pActivity, pProgress):
         "comeback": int(has_comeback(vDays)),
         "best_day_xp": max((vDay["xp"] for vDay in pActivity.values()), default=0),
         "active_days": len(vDays),
+        "puzzle_best_streak": vPuzzles["best_streak"],
+        "puzzle_level": vPuzzles["level"],
     }
 
     return rStatistics

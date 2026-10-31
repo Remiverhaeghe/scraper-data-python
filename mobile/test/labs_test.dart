@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +12,7 @@ import 'package:jobboard_revision/logic/circuit_drawing.dart';
 import 'package:jobboard_revision/logic/circuit_editor.dart';
 import 'package:jobboard_revision/revision_state.dart';
 import 'package:jobboard_revision/screens/circuit_screen.dart';
+import 'package:jobboard_revision/screens/puzzle_screen.dart';
 import 'package:jobboard_revision/screens/devops_screen.dart';
 import 'package:jobboard_revision/logic/sql_sandbox.dart';
 import 'package:jobboard_revision/screens/git_screen.dart';
@@ -33,6 +35,7 @@ final gitLevels = sharedCases['git_levels'] as List;
 final devopsContent = Map<String, dynamic>.from(sharedCases['devops_content'] as Map);
 final sqlContent = Map<String, dynamic>.from(sharedCases['sql_content'] as Map);
 final circuitContent = Map<String, dynamic>.from(sharedCases['circuit_content'] as Map);
+final puzzlesContent = Map<String, dynamic>.from(sharedCases['puzzles_content'] as Map);
 
 /// Serveur simulé : contenu des simulations, envois notés, ou serveur trop ancien.
 MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
@@ -76,6 +79,14 @@ MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
             'passed': ['selection'],
           },
           'circuit': {...circuitContent, 'xp': 20, 'passed': <String>[]},
+          'puzzles': {
+            ...puzzlesContent,
+            'xp': 10,
+            'level': 2,
+            'streak': 3,
+            'best_streak': 5,
+            'stats': <String, dynamic>{},
+          },
         })),
         200,
         headers: {'content-type': 'application/json; charset=utf-8'},
@@ -261,7 +272,9 @@ void main() {
   test('Une requête trop longue est abandonnée', () async {
     final vContent = SqlContent.fromJson(sqlContent);
     final vResult = await vContent.execute(
-      'SELECT count(*) FROM intervention a, intervention b, intervention c, intervention d',
+      // Six tables croisées : assez long pour que le délai d'1 ms expire toujours avant
+      'SELECT count(*) FROM intervention a, intervention b, intervention c, intervention d, '
+          'intervention e, intervention f',
       'mysql',
       '',
       const Duration(milliseconds: 1),
@@ -371,6 +384,66 @@ void main() {
 
     expect(find.textContaining('Interrupteur de commande : ouvert'), findsOneWidget);
     expect(vState.circuitDraft('lampe-simple')?['schema'], isNotNull);
+  });
+
+  testWidgets('Une série de puzzles se joue puis part au PC', (pTester) async {
+    final vSent = <Object?>[];
+    final vState = await buildState(buildServer(vSent));
+    await pTester.runAsync(vState.synchronize);
+
+    expect(vState.puzzleProgress['level'], 2);
+
+    await pTester.pumpWidget(MaterialApp(home: PuzzleScreen(state: vState, random: Random(1))));
+    await pTester.tap(find.text('Commencer une série'));
+    await pTester.pumpAndSettle();
+
+    Future<void> tapVisible(Finder pFinder) async {
+      await pTester.ensureVisible(pFinder);
+      await pTester.pumpAndSettle();
+      await pTester.tap(pFinder);
+      await pTester.pumpAndSettle();
+    }
+
+    for (var vPosition = 0; vPosition < 10; vPosition++) {
+      final vSeries = vState.puzzleSeries!;
+      final vPuzzle = vState.puzzles.firstWhere(
+        (pPuzzle) => pPuzzle['id'] == (vSeries['ids'] as List)[vPosition],
+      );
+
+      if (vPuzzle['type'] == 'saisie') {
+        await pTester.enterText(
+            find.byType(TextField), (vPuzzle['accepted'] as List).first as String);
+      } else if (vPuzzle['type'] == 'ligne') {
+        final vLine = find.text((vPuzzle['lines'] as List)[(vPuzzle['line'] as int) - 1] as String);
+
+        await tapVisible(vLine);
+      }
+
+      await tapVisible(find.text('Valider'));
+
+      if (vPosition < 9) {
+        await tapVisible(find.text('Puzzle suivant'));
+      }
+    }
+
+    final vRecap = vState.puzzleRecap!;
+    final vOrders = vState.puzzles.where((pPuzzle) =>
+        pPuzzle['type'] == 'ordre' &&
+        (vRecap['mistakes'] as List).any((pMistake) => (pMistake as Map)['id'] == pPuzzle['id']));
+
+    // Les remises en ordre sont validées dans leur ordre mélangé : seules elles sont fausses
+    expect(vRecap['score'], 10 - vOrders.length);
+    expect(vState.puzzleSeries, isNull);
+    expect(vState.pendingLabs.single['lab'], 'puzzles');
+    expect(vState.pendingLabs.single['answers'], hasLength(10));
+
+    await pTester.scrollUntilVisible(find.text('Nouvelle série'), 200,
+        scrollable: find.byType(Scrollable).first);
+
+    await pTester.runAsync(vState.synchronize);
+
+    expect(vSent, hasLength(1));
+    expect(vState.puzzleProgress['level'], 2);
   });
 
   test("Un serveur sans simulations n'empêche pas la synchronisation", () async {

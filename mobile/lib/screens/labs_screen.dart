@@ -7,6 +7,7 @@ import 'circuit_screen.dart';
 import 'devops_screen.dart';
 import 'git_screen.dart';
 import 'ladder_screen.dart';
+import 'puzzle_screen.dart';
 import 'sql_screen.dart';
 import 'troubleshooting_screen.dart';
 
@@ -26,7 +27,8 @@ class LabsScreen extends StatelessWidget {
               if (state.troubleshootingScenarios.isEmpty &&
                   state.ladderLevels.isEmpty &&
                   state.gitLevels.isEmpty &&
-                  state.circuitLevels.isEmpty)
+                  state.circuitLevels.isEmpty &&
+                  state.puzzles.isEmpty)
                 const Text(
                   'Synchronisez une fois avec le PC pour télécharger les simulations : '
                   'elles se jouent ensuite sans réseau.',
@@ -34,6 +36,21 @@ class LabsScreen extends StatelessWidget {
               if (state.pendingLabs.isNotEmpty)
                 Text(
                     '${state.pendingLabs.length} partie(s) à envoyer au PC à la prochaine synchronisation.'),
+              if (state.puzzles.isNotEmpty)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.extension_outlined),
+                    title: const Text('Puzzles de code'),
+                    subtitle: Text(
+                      'Ordre, ligne fautive, code à compléter · niveau '
+                      '${state.puzzleRules.levelLabel(state.puzzleProgress['level'] as int)}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(pContext).push(
+                      MaterialPageRoute<void>(builder: (_) => PuzzleScreen(state: state)),
+                    ),
+                  ),
+                ),
               if (state.troubleshootingScenarios.isNotEmpty)
                 Card(
                   child: ListTile(

@@ -2,9 +2,13 @@
 
 from datetime import datetime
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLabel
+
 import gui.challenges_page as challenges_page
 from gui.challenges_page import ChallengesPage, format_stars
 from job.challenges import CHALLENGES, get_expected_answers, get_seed
+from job.code_puzzles import SERIES_LENGTH
 from storage.database import initialize_database
 
 
@@ -113,3 +117,45 @@ def test_full_solution_shows_the_note(qt_application, tmp_path):
     vPage.submit()
 
     assert vPage.answer_message.text().startswith("Bonne réponse : défi terminé")
+
+
+def test_code_puzzles_series_is_played(qt_application, tmp_path):
+    """Vérifie une série de puzzles : réponse vide refusée, réponses justes, bilan."""
+
+    vPage = create_page(tmp_path / "scraper.db")
+    vCard = vPage.puzzles
+
+    vCard.start()
+    vCard.submit()
+
+    assert vCard.message_label.text() == "Répondez avant de valider."
+
+    for _ in range(SERIES_LENGTH):
+        vPuzzle = vCard.puzzle
+
+        if vPuzzle["type"] == "ordre":
+            vList = vCard.widgets[0]
+            vItems = sorted(
+                (vList.takeItem(0) for _ in range(vList.count())),
+                key=lambda pItem: pItem.data(Qt.ItemDataRole.UserRole),
+            )
+
+            for vItem in vItems:
+                vList.addItem(vItem)
+        elif vPuzzle["type"] == "saisie":
+            vCard.widgets[0].setText(vPuzzle["accepted"][0])
+        else:
+            vCard.group.button(vPuzzle["line"] - 1).setChecked(True)
+
+        vCard.submit()
+        vTexts = [vLabel.text() for vLabel in vCard.card.findChildren(QLabel)]
+
+        assert any(vText.startswith("Bonne réponse") for vText in vTexts)
+
+        if vCard.puzzle is not None:
+            vCard.refresh()
+
+    vTexts = [vLabel.text() for vLabel in vCard.card.findChildren(QLabel)]
+
+    assert "Bilan de la série : 10 sur 10" in vTexts
+    assert "réponses justes d'affilée : 10" in vCard.status_label.text()

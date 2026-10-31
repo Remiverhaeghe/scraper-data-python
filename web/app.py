@@ -40,6 +40,7 @@ from web.routes.sql_sandbox import router as sql_sandbox_router
 from web.routes.circuit import router as circuit_router
 from web.routes.devops import router as devops_router
 from web.routes.challenges import router as challenges_router
+from web.routes.puzzles import router as puzzles_router
 from web.routes.git_sandbox import router as git_sandbox_router
 from web.routes.monitoring import router as monitoring_router
 from web.routes.profile import router as profile_router
@@ -244,6 +245,7 @@ app.include_router(aptitude_router)
 app.include_router(troubleshooting_router)
 app.include_router(ladder_router)
 app.include_router(challenges_router)
+app.include_router(puzzles_router)
 app.include_router(git_sandbox_router)
 app.include_router(sql_sandbox_router)
 app.include_router(circuit_router)

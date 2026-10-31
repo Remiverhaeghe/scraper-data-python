@@ -61,12 +61,16 @@ class SqlListScreen extends StatelessWidget {
                     Card(
                       child: ListTile(
                         leading: Icon(
-                          state.sqlPassed.contains(vLevel['id']) ? Icons.check_circle : Icons.storage_outlined,
+                          state.sqlPassed.contains(vLevel['id'])
+                              ? Icons.check_circle
+                              : Icons.storage_outlined,
                         ),
                         title: Text(vLevel['title'] as String),
-                        subtitle: Text(vLevel['goal'] as String, maxLines: 3, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(vLevel['goal'] as String,
+                            maxLines: 3, overflow: TextOverflow.ellipsis),
                         onTap: () => Navigator.of(pContext).push(
-                          MaterialPageRoute<void>(builder: (_) => SqlScreen(state: state, level: vLevel)),
+                          MaterialPageRoute<void>(
+                              builder: (_) => SqlScreen(state: state, level: vLevel)),
                         ),
                       ),
                     ),
@@ -95,7 +99,8 @@ class ResultTable extends StatelessWidget {
           columns: [for (final vColumn in columns) DataColumn(label: Text('$vColumn'))],
           rows: [
             for (final vRow in rows)
-              DataRow(cells: [for (final vValue in vRow as List) DataCell(Text(formatValue(vValue)))]),
+              DataRow(
+                  cells: [for (final vValue in vRow as List) DataCell(Text(formatValue(vValue)))]),
           ],
         ),
       );
@@ -219,7 +224,8 @@ class _SqlScreenState extends State<SqlScreen> {
                 for (final vTable in widget.state.sqlPackage['schema'] as List? ?? const [])
                   ListTile(
                     dense: true,
-                    title: Text('${(vTable as Map)['name']} (${(vTable['columns'] as List).join(', ')})'),
+                    title: Text(
+                        '${(vTable as Map)['name']} (${(vTable['columns'] as List).join(', ')})'),
                     subtitle: Text(vTable['label'] as String),
                   ),
               ],
@@ -232,7 +238,8 @@ class _SqlScreenState extends State<SqlScreen> {
               autocorrect: false,
               enableSuggestions: false,
               decoration: InputDecoration(
-                labelText: 'Requête ${widget.state.sqlDialect == 'sqlserver' ? 'SQL Server' : 'MySQL'}',
+                labelText:
+                    'Requête ${widget.state.sqlDialect == 'sqlserver' ? 'SQL Server' : 'MySQL'}',
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -243,15 +250,20 @@ class _SqlScreenState extends State<SqlScreen> {
                 FilledButton.icon(
                   onPressed: running ? null : execute,
                   icon: running
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.play_arrow),
                   label: const Text('Exécuter'),
                 ),
-                TextButton(onPressed: () => setState(() => showHint = true), child: const Text('Indice')),
-                TextButton(onPressed: () => setState(() => editor.text = vSolution), child: const Text('Voir la solution')),
+                TextButton(
+                    onPressed: () => setState(() => showHint = true), child: const Text('Indice')),
+                TextButton(
+                    onPressed: () => setState(() => editor.text = vSolution),
+                    child: const Text('Voir la solution')),
               ],
             ),
-            if (showHint) Text('Indice : ${pick(level, 'hint', dialect)}', style: vTheme.textTheme.bodySmall),
+            if (showHint)
+              Text('Indice : ${pick(level, 'hint', dialect)}', style: vTheme.textTheme.bodySmall),
             if (run != null) buildRun(),
           ],
         ),

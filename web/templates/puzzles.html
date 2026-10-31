@@ -1,0 +1,78 @@
+{# Puzzles de code (routes /puzzles) : série de dix, de la plus facile à la plus
+   dure, réponse corrigée puis récapitulatif des erreurs. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Puzzles de code{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Puzzles de code", "Des lignes à remettre dans l'ordre, une ligne fautive à repérer, un trou à compléter : par séries de dix, de difficulté croissante", "code") }}
+
+<p><a class="button" href="{{ url_for('show_challenges').path }}">{{ icon("trophy", 16) }} Retour aux défis</a></p>
+
+<section class="card puzzle-status" aria-label="Progression">
+    <p><strong>Niveau {{ view.level_label }}</strong> · réponses justes d'affilée : {{ view.streak }} · record : {{ view.best_streak }} · séries terminées : {{ view.series_count }}</p>
+    <p class="card-subtitle">Une série à 8 bonnes réponses ou plus fait monter d'un niveau, une série à 4 ou moins fait redescendre.</p>
+</section>
+
+{% if feedback %}
+<article class="card section-gap" id="puzzle">
+    <h2>{{ feedback.puzzle.title }}</h2>
+    <p class="application-message tone-{{ 'success' if feedback.correct else 'danger' }}" role="status">
+        {{ "Bonne réponse" if feedback.correct else "Ce n'est pas la bonne réponse" }} · réponses justes d'affilée : {{ feedback.streak }}
+    </p>
+    {% if not feedback.correct %}
+    <p>Votre réponse : <code>{{ feedback.given }}</code></p>
+    <p>Réponse attendue : <code>{{ feedback.expected }}</code></p>
+    {% endif %}
+    <p>{{ feedback.explanation }}</p>
+    {% if not feedback.finished %}
+    <p><a class="button button-primary" href="{{ url_for('show_puzzles').path }}#puzzle">{{ icon("arrow-right", 16) }} Puzzle suivant</a></p>
+    {% endif %}
+</article>
+{% elif view.puzzle %}
+{% set question = view.puzzle %}
+<article class="card section-gap" id="puzzle">
+    <h2>{{ question.title }}</h2>
+    <p class="card-subtitle">Puzzle {{ question.position + 1 }} sur {{ view.total }} · {{ question.type_label }} · {{ question.language }} · {{ question.level_label }}</p>
+    <p>{{ question.prompt }}</p>
+    {% if question.type == "saisie" %}<pre class="quiz-code"><code>{{ question.code }}</code></pre>{% endif %}
+    <form method="post" action="{{ url_for('answer_puzzles').path }}#puzzle">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="position" value="{{ question.position }}">
+        {% if question.type == "ligne" %}
+        {% if retry_message %}<p class="application-message tone-warning" role="status">{{ retry_message }}</p>{% endif %}
+        {% for index, line in question.shuffled %}
+        <label class="quiz-choice puzzle-line"><input type="radio" name="choice" value="{{ index }}" required> <span class="muted">{{ index + 1 }}</span> <code>{{ line }}</code></label>
+        {% endfor %}
+        {% else %}
+        {% include "_quiz_answer.html" %}
+        {% endif %}
+        <button class="button button-primary" type="submit">{{ icon("circle-check", 16) }} Valider</button>
+    </form>
+</article>
+{% elif retry_message %}
+<p class="application-message tone-warning" role="status">{{ retry_message }}</p>
+{% endif %}
+
+{% if not view.puzzle and view.recap %}
+<article class="card section-gap" id="recap">
+    <h2>Bilan de la série : {{ view.recap.score }} sur {{ view.recap.total }}</h2>
+    {% for mistake in view.recap.mistakes %}
+    <h3>{{ mistake.title }} <span class="card-subtitle">{{ mistake.language }}</span></h3>
+    <p>Votre réponse : <code>{{ mistake.given }}</code></p>
+    <p>Réponse attendue : <code>{{ mistake.expected }}</code></p>
+    <p>{{ mistake.explanation }}</p>
+    {% else %}
+    <p>Aucune erreur : série parfaite.</p>
+    {% endfor %}
+</article>
+{% endif %}
+
+{% if not view.puzzle %}
+<form class="section-gap" method="post" action="{{ url_for('start_puzzles').path }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <button class="button button-primary" type="submit">{{ icon("sparkles", 16) }} {{ "Nouvelle série" if view.series_count else "Commencer une série" }}</button>
+</form>
+{% endif %}
+{% endblock %}

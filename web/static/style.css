@@ -1856,6 +1856,22 @@ textarea.companies-preferred {
     border-color: var(--primary);
 }
 
+.challenge-puzzles {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.challenge-puzzles:hover {
+    border-color: var(--primary);
+}
+
+/* Ligne de code à désigner : indentation gardée, défilement sur téléphone */
+.puzzle-line code {
+    white-space: pre;
+    overflow-x: auto;
+}
+
 .challenge-item.is-done {
     border-color: var(--success);
     background: color-mix(in srgb, var(--success) 10%, transparent);

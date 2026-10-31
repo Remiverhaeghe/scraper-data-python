@@ -33,7 +33,7 @@ privilégiées, révision express de 5 minutes avec compte à rebours, note rapi
 une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
 lisibles hors ligne et fiche de préparation (pitch, questions pièges, questions à
 poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien,
-simulations jouables sans réseau, pannes à résoudre, automate en ladder, schémas électriques construits au toucher, bac à sable Git, bac à sable SQL (SQLite embarqué par le paquet sqlite3), Maven et Docker (contenu reçu du PC,
+simulations jouables sans réseau, puzzles de code par séries de dix, pannes à résoudre, automate en ladder, schémas électriques construits au toucher, bac à sable Git, bac à sable SQL (SQLite embarqué par le paquet sqlite3), Maven et Docker (contenu reçu du PC,
 parties revérifiées par le PC à la synchronisation), widget de l'écran d'accueil (questions à revoir, prochain entretien), dessiné par
 `android/app/src/main/kotlin/…/RevisionWidgetProvider.kt` et
 `res/layout/revision_widget.xml`, avec son fond (`res/drawable/widget_background.xml`)
@@ -184,6 +184,7 @@ mobile/
 │   │   ├── circuit_drawing.dart  # Dessin des circuits, identique à job/circuit_drawing.py
 │   │   ├── circuit_levels.dart   # Montages et étapes, identiques à job/circuit_levels.py
 │   │   ├── circuit_editor.dart   # Éditeur de schéma au toucher : bornes, fils, cases
+│   │   ├── code_puzzles.dart     # Puzzles de code : correction et séries, identiques à job/code_puzzles.py
 │   │   └── python_compat.dart    # Arrondi, lignes et format de Python, reproduits à l'identique
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
@@ -213,6 +214,7 @@ mobile/
 │   │   ├── troubleshooting_screen.dart # Pannes à résoudre : liste et partie
 │   │   ├── ladder_screen.dart    # Automate : niveaux, éditeur, test et simulation
 │   │   ├── circuit_screen.dart   # Schémas électriques : montages, mode libre, simulation
+│   │   ├── puzzle_screen.dart    # Puzzles de code : série, correction et bilan
 │   │   ├── git_screen.dart       # Git : niveaux par série, commandes, graphes et fichiers
 │   │   ├── devops_screen.dart    # Maven et Docker : fichier, commandes et console
 │   │   └── sql_screen.dart       # SQL : dialecte, niveaux, requête et tableaux de résultats

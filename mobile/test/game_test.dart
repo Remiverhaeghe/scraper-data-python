@@ -49,7 +49,13 @@ ApiClient serveGame(int pLevel) {
             'xp_for_level': 300,
             'streak': 2,
             'quests': [
-              {'label': 'Réviser 10 questions', 'progress': 4, 'target': 10, 'done': false, 'xp': 20},
+              {
+                'label': 'Réviser 10 questions',
+                'progress': 4,
+                'target': 10,
+                'done': false,
+                'xp': 20
+              },
             ],
             'achievements': [
               {'title': 'Premier pas', 'unlocked': true, 'unlocked_on': '2026-10-30'},

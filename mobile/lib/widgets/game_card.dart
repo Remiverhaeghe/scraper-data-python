@@ -118,7 +118,8 @@ class GameCard extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       leading: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        transitionBuilder: (pChild, pAnimation) => ScaleTransition(scale: pAnimation, child: pChild),
+        transitionBuilder: (pChild, pAnimation) =>
+            ScaleTransition(scale: pAnimation, child: pChild),
         child: Icon(
           vDone
               ? Icons.check_circle

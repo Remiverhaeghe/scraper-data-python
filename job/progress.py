@@ -14,6 +14,7 @@ import random
 from datetime import date, datetime, timedelta
 
 from job.achievements import build_player_card, evaluate_achievements
+from job.code_puzzles import PUZZLE_PROGRESS_KEY
 from job.quiz_exam import load_exam_results
 from storage.aptitude_sessions import get_aptitude_sessions
 from storage.database import connect_database
@@ -36,6 +37,10 @@ XP_RULES = {
     "sql_level": ("Niveau SQL réussi", 15),
     "circuit_level": ("Montage électrique réussi", 20),
     "devops_level": ("Niveau Maven ou Docker réussi", 20),
+    "puzzle_series": (
+        "Série de puzzles de code terminée, plus 2 par bonne réponse",
+        10,
+    ),
     "interested": ("Offre marquée « Intéressé »", 5),
     "applied": ("Candidature envoyée", 30),
     "follow_up": ("Relance faite", 15),
@@ -51,6 +56,9 @@ APTITUDE_XP_PER_RIGHT = 2
 
 # Points de chaque tranche de 10 points du score d'une panne résolue
 TROUBLESHOOTING_XP_PER_TEN = 2
+
+# Points de chaque bonne réponse d'une série de puzzles de code, en plus du forfait
+PUZZLE_XP_PER_RIGHT = 2
 
 # Résultats des pannes résolues, enregistrés par job/troubleshooting.py
 TROUBLESHOOTING_RESULTS_KEY = "troubleshooting_results"
@@ -234,6 +242,18 @@ def load_activity(pDatabaseFile):
         for vEntry in (vLevels if isinstance(vLevels, dict) else {}).values():
             if isinstance(vEntry, dict) and vEntry.get("passed_at"):
                 add_action(rActivity, read_day(vEntry["passed_at"]), vAction)
+
+    vPuzzles = load_json_setting(pDatabaseFile, PUZZLE_PROGRESS_KEY, {}, dict)
+
+    for vSeries in vPuzzles.get("history") or []:
+        if isinstance(vSeries, dict):
+            add_action(
+                rActivity,
+                read_day(vSeries.get("finished_at")),
+                "puzzle_series",
+                pXp=XP_RULES["puzzle_series"][1]
+                + PUZZLE_XP_PER_RIGHT * int(vSeries.get("score") or 0),
+            )
 
     for vDay, vQuests in load_quest_log(pDatabaseFile).get("done", {}).items():
         for vQuest in vQuests:

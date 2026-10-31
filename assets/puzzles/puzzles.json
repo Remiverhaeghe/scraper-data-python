@@ -1,0 +1,662 @@
+[
+  {
+    "id": "python-lire-fichier",
+    "type": "ordre",
+    "language": "Python",
+    "level": 1,
+    "title": "Additionner les mesures d'un fichier",
+    "prompt": "Remettez les lignes dans l'ordre : le programme additionne les valeurs du fichier, une par ligne, puis affiche le total.",
+    "items": [
+      "total = 0",
+      "with open(\"mesures.txt\", encoding=\"utf-8\") as fichier:",
+      "    for ligne in fichier:",
+      "        total += float(ligne)",
+      "print(total)"
+    ],
+    "explanation": "Le total s'initialise avant la boucle, sinon il repart de zéro à chaque ligne. Le with ferme le fichier tout seul, même en cas d'erreur ; l'affichage vient après, hors du bloc."
+  },
+  {
+    "id": "sql-ordre-clauses",
+    "type": "ordre",
+    "language": "SQL",
+    "level": 1,
+    "title": "Les clauses d'une requête",
+    "prompt": "Remettez les clauses dans l'ordre : les lignes de plus de 3 arrêts longs (plus de 5 minutes), de la plus touchée à la moins touchée.",
+    "items": [
+      "SELECT ligne, COUNT(*) AS arrets",
+      "FROM arret",
+      "WHERE duree > 5",
+      "GROUP BY ligne",
+      "HAVING COUNT(*) > 3",
+      "ORDER BY arrets DESC;"
+    ],
+    "explanation": "L'ordre d'écriture est toujours SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY. WHERE filtre les lignes avant le regroupement, HAVING filtre les groupes après."
+  },
+  {
+    "id": "git-publier-correctif",
+    "type": "ordre",
+    "language": "Git",
+    "level": 1,
+    "title": "Publier un correctif",
+    "prompt": "Le dépôt n'est pas encore sur ce poste. Remettez les commandes dans l'ordre : le commit doit se trouver sur la branche correctif, pas sur main, puis partir sur le serveur.",
+    "items": [
+      "git clone https://forge.exemple.fr/atelier.git",
+      "cd atelier",
+      "git switch -c correctif",
+      "git commit -am \"Corrige le seuil du capteur\"",
+      "git push -u origin correctif"
+    ],
+    "explanation": "On crée la branche avant de committer : un commit fait sur main y resterait. Le -u du premier push relie la branche locale à celle du serveur, pour les push et pull suivants."
+  },
+  {
+    "id": "docker-lancer-conteneur",
+    "type": "ordre",
+    "language": "Docker",
+    "level": 1,
+    "title": "Construire puis lancer",
+    "prompt": "Remettez les commandes dans l'ordre : construire l'image, lancer le conteneur, vérifier qu'il tourne, puis lire ses journaux.",
+    "items": [
+      "docker build -t atelier:1.0 .",
+      "docker run -d --name atelier -p 8080:8080 atelier:1.0",
+      "docker ps",
+      "docker logs atelier"
+    ],
+    "explanation": "Une image se construit avant de servir à un conteneur. docker ps liste les conteneurs en marche ; s'il n'y apparaît pas, docker logs dit souvent pourquoi il s'est arrêté."
+  },
+  {
+    "id": "bash-nettoyer-journaux",
+    "type": "ordre",
+    "language": "Bash",
+    "level": 1,
+    "title": "Nettoyer les vieux journaux",
+    "prompt": "Remettez le script dans l'ordre : il supprime les journaux de plus de 30 jours et s'arrête à la première erreur.",
+    "items": [
+      "#!/bin/bash",
+      "set -euo pipefail",
+      "dossier=\"/var/log/atelier\"",
+      "find \"$dossier\" -name \"*.log\" -mtime +30 -delete",
+      "echo \"Nettoyage terminé\""
+    ],
+    "explanation": "Le shebang est toujours la première ligne. set -euo pipefail arrête le script dès qu'une commande échoue ou qu'une variable n'existe pas : il vient avant tout le reste."
+  },
+  {
+    "id": "python-convertir-temperature",
+    "type": "ordre",
+    "language": "Python",
+    "level": 2,
+    "title": "Lire une température saisie",
+    "prompt": "Remettez la fonction dans l'ordre : elle accepte « 21,5 » comme « 21.5 », renvoie None si le texte n'est pas un nombre, et arrondit au dixième.",
+    "items": [
+      "def lire_temperature(texte):",
+      "    try:",
+      "        valeur = float(texte.replace(\",\", \".\"))",
+      "    except ValueError:",
+      "        return None",
+      "    return round(valeur, 1)"
+    ],
+    "explanation": "Seule la conversion, qui peut échouer, va dans le try. L'arrondi vient après le bloc : il n'est atteint que si la conversion a réussi."
+  },
+  {
+    "id": "java-classe-compteur",
+    "type": "ordre",
+    "language": "Java",
+    "level": 2,
+    "title": "Une classe compteur",
+    "prompt": "Remettez la classe dans l'ordre, l'attribut en tête de classe comme le veut la convention.",
+    "items": [
+      "public class Compteur {",
+      "    private int valeur;",
+      "    public void incrementer() {",
+      "        valeur++;",
+      "    }",
+      "}"
+    ],
+    "explanation": "Les attributs se déclarent en tête de classe, puis viennent les méthodes. L'accolade indentée ferme la méthode, celle de la marge ferme la classe."
+  },
+  {
+    "id": "sql-transaction-stock",
+    "type": "ordre",
+    "language": "SQL",
+    "level": 2,
+    "title": "Sortir une pièce du stock",
+    "prompt": "Remettez la transaction dans l'ordre : on verrouille la ligne du stock en la lisant, avant de la modifier.",
+    "items": [
+      "START TRANSACTION;",
+      "SELECT quantite FROM stock WHERE ref = 'R12' FOR UPDATE;",
+      "UPDATE stock SET quantite = quantite - 5 WHERE ref = 'R12';",
+      "COMMIT;"
+    ],
+    "explanation": "FOR UPDATE verrouille la ligne lue jusqu'à la fin de la transaction : deux opérateurs ne peuvent pas sortir la même dernière pièce en même temps. COMMIT rend la modification définitive."
+  },
+  {
+    "id": "st-ventilation-moteur",
+    "type": "ordre",
+    "language": "Texte structuré",
+    "level": 2,
+    "title": "Moteur et ventilation temporisée",
+    "prompt": "Remettez le programme d'automate dans l'ordre : la temporisation suit l'état du moteur calculé dans ce même cycle.",
+    "items": [
+      "IF marche AND NOT defaut THEN",
+      "    moteur := TRUE;",
+      "ELSIF arret OR defaut THEN",
+      "    moteur := FALSE;",
+      "END_IF;",
+      "tempo(IN := moteur, PT := T#5S);",
+      "ventilation := tempo.Q;"
+    ],
+    "explanation": "L'automate exécute le programme de haut en bas à chaque cycle. Appeler la temporisation après le IF lui donne l'état du moteur de ce cycle-ci, et sa sortie Q ne se lit qu'après l'appel."
+  },
+  {
+    "id": "git-rebase-conflit",
+    "type": "ordre",
+    "language": "Git",
+    "level": 2,
+    "title": "Un rebase en conflit",
+    "prompt": "Votre branche doit repartir de main, mais capteur.py entre en conflit. Remettez les commandes dans l'ordre, jusqu'à la publication de la branche réécrite.",
+    "items": [
+      "git rebase main",
+      "git status",
+      "git add capteur.py",
+      "git rebase --continue",
+      "git push --force-with-lease"
+    ],
+    "explanation": "git status montre les fichiers en conflit. Après correction, git add les marque résolus et --continue rejoue la suite. Le rebase réécrit l'historique : --force-with-lease refuse d'écraser un travail poussé entre-temps par quelqu'un d'autre."
+  },
+  {
+    "id": "python-decorateur",
+    "type": "ordre",
+    "language": "Python",
+    "level": 3,
+    "title": "Un décorateur qui journalise",
+    "prompt": "Remettez le décorateur dans l'ordre : il annonce chaque appel de la fonction décorée, puis renvoie son résultat.",
+    "items": [
+      "import functools",
+      "def journaliser(fonction):",
+      "    @functools.wraps(fonction)",
+      "    def enveloppe(*args, **kwargs):",
+      "        print(\"Appel de\", fonction.__name__)",
+      "        return fonction(*args, **kwargs)",
+      "    return enveloppe"
+    ],
+    "explanation": "Le décorateur reçoit la fonction et renvoie une enveloppe qui l'appelle. functools.wraps garde le nom et la documentation de la fonction d'origine ; le print vient avant le return, sinon il ne s'exécuterait jamais."
+  },
+  {
+    "id": "java-lire-fichier",
+    "type": "ordre",
+    "language": "Java",
+    "level": 3,
+    "title": "Lire un fichier ligne à ligne",
+    "prompt": "Remettez le bloc dans l'ordre : le lecteur se ferme tout seul et une erreur de lecture est journalisée.",
+    "items": [
+      "try (BufferedReader lecteur = Files.newBufferedReader(chemin)) {",
+      "    String ligne;",
+      "    while ((ligne = lecteur.readLine()) != null) {",
+      "        traiter(ligne);",
+      "    }",
+      "} catch (IOException e) {",
+      "    journal.error(\"Lecture impossible\", e);",
+      "}"
+    ],
+    "explanation": "Le try-with-resources ferme le lecteur à la sortie du bloc, même en cas d'exception. readLine renvoie null à la fin du fichier, ce qui arrête la boucle."
+  },
+  {
+    "id": "docker-image-multi-etapes",
+    "type": "ordre",
+    "language": "Docker",
+    "level": 3,
+    "title": "Une image en deux étapes",
+    "prompt": "Remettez le Dockerfile dans l'ordre : on compile avec Maven, on ne garde que le jar dans une image légère, et le pom passe avant les sources pour que les dépendances restent en cache.",
+    "items": [
+      "FROM maven:3.9-eclipse-temurin-21 AS build",
+      "WORKDIR /app",
+      "COPY pom.xml .",
+      "RUN mvn dependency:go-offline",
+      "COPY src ./src",
+      "RUN mvn package -DskipTests",
+      "FROM eclipse-temurin:21-jre",
+      "COPY --from=build /app/target/atelier.jar /atelier.jar"
+    ],
+    "explanation": "Chaque instruction crée une couche réutilisée tant que ses fichiers ne changent pas : copier le pom seul, puis télécharger les dépendances, évite de tout retélécharger à chaque modification du code. Le second FROM repart d'une image sans Maven, plus petite."
+  },
+  {
+    "id": "sql-classement-arrets",
+    "type": "ordre",
+    "language": "SQL",
+    "level": 3,
+    "title": "Classer les lignes par jour",
+    "prompt": "Remettez la requête dans l'ordre : on totalise les minutes d'arrêt par ligne et par jour, puis on classe les lignes de chaque jour.",
+    "items": [
+      "WITH arrets_jour AS (",
+      "    SELECT ligne, CAST(debut AS DATE) AS jour, SUM(duree) AS minutes",
+      "    FROM arret",
+      "    GROUP BY ligne, CAST(debut AS DATE)",
+      ")",
+      "SELECT ligne, jour, minutes,",
+      "       RANK() OVER (PARTITION BY jour ORDER BY minutes DESC) AS rang",
+      "FROM arrets_jour;"
+    ],
+    "explanation": "Le WITH nomme un résultat intermédiaire, réutilisé ensuite comme une table. RANK() OVER (PARTITION BY jour …) recommence le classement à chaque jour, sans regrouper les lignes."
+  },
+  {
+    "id": "bash-attendre-service",
+    "type": "ordre",
+    "language": "Bash",
+    "level": 3,
+    "title": "Attendre qu'un service réponde",
+    "prompt": "Remettez le script dans l'ordre : trois essais espacés de 5 secondes, une sortie en succès dès que le service répond, un message d'erreur sinon.",
+    "items": [
+      "for essai in 1 2 3; do",
+      "    if curl -fsS http://localhost:8080/sante; then",
+      "        echo \"Service prêt\"",
+      "        exit 0",
+      "    fi",
+      "    sleep 5",
+      "done",
+      "echo \"Service injoignable\" >&2"
+    ],
+    "explanation": "exit 0 arrête le script dès le premier succès : le message d'erreur, après la boucle, n'est atteint qu'après trois échecs. >&2 l'écrit sur la sortie d'erreur."
+  },
+  {
+    "id": "python-range",
+    "type": "saisie",
+    "language": "Python",
+    "level": 1,
+    "title": "Compter de 0 à 9",
+    "prompt": "Complétez pour afficher les nombres de 0 à 9.",
+    "code": "for i in ____(10):\n    print(i)",
+    "accepted": ["range"],
+    "explanation": "range(10) produit 0, 1, … 9 : la borne de fin est exclue."
+  },
+  {
+    "id": "sql-group-by",
+    "type": "saisie",
+    "language": "SQL",
+    "level": 1,
+    "title": "Compter par ligne",
+    "prompt": "Complétez pour compter les arrêts de chaque ligne.",
+    "code": "SELECT ligne, COUNT(*)\nFROM arret\n____ ligne;",
+    "accepted": ["GROUP BY"],
+    "explanation": "GROUP BY forme un groupe par valeur de ligne ; COUNT(*) compte alors les arrêts de chaque groupe."
+  },
+  {
+    "id": "bash-fichier-existe",
+    "type": "saisie",
+    "language": "Bash",
+    "level": 1,
+    "title": "Le fichier existe-t-il ?",
+    "prompt": "Complétez le test pour vérifier que le fichier existe.",
+    "code": "if [ ____ \"$fichier\" ]; then\n    echo \"Le fichier existe\"\nfi",
+    "accepted": ["-f", "-e"],
+    "explanation": "-f vrai pour un fichier ordinaire, -e pour tout ce qui existe (fichier, dossier…), -d pour un dossier."
+  },
+  {
+    "id": "git-commit",
+    "type": "saisie",
+    "language": "Git",
+    "level": 1,
+    "title": "Enregistrer une modification",
+    "prompt": "Complétez pour enregistrer les modifications préparées dans l'historique, avec un message.",
+    "code": "git add capteur.py\ngit ____ -m \"Ajoute le capteur de niveau\"",
+    "accepted": ["commit"],
+    "explanation": "git add prépare les modifications, git commit les enregistre dans l'historique local ; rien ne part sur le serveur avant git push."
+  },
+  {
+    "id": "st-affectation",
+    "type": "saisie",
+    "language": "Texte structuré",
+    "level": 1,
+    "title": "Arrêter la pompe",
+    "prompt": "Complétez pour arrêter la pompe quand le niveau dépasse le seuil haut.",
+    "code": "IF niveau > seuil_haut THEN\n    pompe ____ FALSE;\nEND_IF;",
+    "accepted": [":="],
+    "explanation": "En texte structuré, := affecte une valeur ; = compare deux valeurs."
+  },
+  {
+    "id": "python-dict-get",
+    "type": "saisie",
+    "language": "Python",
+    "level": 2,
+    "title": "Compter les codes défaut",
+    "prompt": "Complétez pour compter chaque code défaut, même la première fois qu'il apparaît.",
+    "code": "compteurs = {}\nfor code in codes:\n    compteurs[code] = compteurs.____(code, 0) + 1",
+    "accepted": ["get"],
+    "explanation": "get(code, 0) renvoie 0 pour un code absent au lieu de lever KeyError. collections.Counter fait le même travail en une ligne."
+  },
+  {
+    "id": "java-liste",
+    "type": "saisie",
+    "language": "Java",
+    "level": 2,
+    "title": "Une liste de codes",
+    "prompt": "Complétez pour créer une liste vide de codes.",
+    "code": "List<String> codes = new ____<>();",
+    "accepted": ["ArrayList", "LinkedList"],
+    "explanation": "List est une interface : on instancie une implémentation, le plus souvent ArrayList. Le <> laisse le compilateur déduire le type String."
+  },
+  {
+    "id": "sql-left-join",
+    "type": "saisie",
+    "language": "SQL",
+    "level": 2,
+    "title": "Toutes les machines",
+    "prompt": "Complétez pour lister toutes les machines, même celles qui n'ont jamais eu d'intervention.",
+    "code": "SELECT m.nom, i.date_fin\nFROM machine m\n____ intervention i ON i.machine_id = m.id;",
+    "accepted": ["LEFT JOIN", "LEFT OUTER JOIN"],
+    "explanation": "LEFT JOIN garde toutes les lignes de la table de gauche ; date_fin vaut NULL pour une machine sans intervention. Un INNER JOIN l'aurait fait disparaître."
+  },
+  {
+    "id": "docker-publier-port",
+    "type": "saisie",
+    "language": "Docker",
+    "level": 2,
+    "title": "Ouvrir un port",
+    "prompt": "Complétez pour joindre le serveur web du conteneur (port 80) sur le port 8080 du poste.",
+    "code": "docker run -d ____ 8080:80 nginx",
+    "accepted": ["-p", "--publish"],
+    "explanation": "-p hôte:conteneur publie un port : la machine écoute sur 8080 et transmet au port 80 du conteneur."
+  },
+  {
+    "id": "python-format-pourcentage",
+    "type": "saisie",
+    "language": "Python",
+    "level": 2,
+    "title": "Afficher un rendement",
+    "prompt": "Complétez le format pour afficher 0.8732 sous la forme 87.3%.",
+    "code": "rendement = 0.8732\nprint(f\"Rendement : {rendement:____}\")",
+    "accepted": [".1%"],
+    "explanation": "Le format % multiplie par 100 et ajoute le signe ; .1 garde une décimale."
+  },
+  {
+    "id": "python-pool-map",
+    "type": "saisie",
+    "language": "Python",
+    "level": 3,
+    "title": "Lire les capteurs en parallèle",
+    "prompt": "Complétez pour appeler lire_capteur sur chaque adresse, quatre à la fois, en gardant l'ordre des résultats.",
+    "code": "with ThreadPoolExecutor(max_workers=4) as pool:\n    resultats = list(pool.____(lire_capteur, adresses))",
+    "accepted": ["map"],
+    "explanation": "pool.map répartit les appels sur les fils et rend les résultats dans l'ordre des adresses. Les threads conviennent ici : on attend surtout le réseau."
+  },
+  {
+    "id": "java-moyenne-stream",
+    "type": "saisie",
+    "language": "Java",
+    "level": 3,
+    "title": "La moyenne des mesures",
+    "prompt": "Complétez pour calculer la moyenne des mesures, ou 0 s'il n'y en a aucune.",
+    "code": "double moyenne = mesures.stream()\n    .mapToDouble(Mesure::valeur)\n    .____()\n    .orElse(0);",
+    "accepted": ["average"],
+    "explanation": "average() renvoie un OptionalDouble, vide pour une liste vide ; orElse(0) donne la valeur de repli."
+  },
+  {
+    "id": "sql-cumul",
+    "type": "saisie",
+    "language": "SQL",
+    "level": 3,
+    "title": "Le stock au fil des mouvements",
+    "prompt": "Complétez pour afficher, à chaque mouvement, le stock cumulé depuis le début.",
+    "code": "SELECT ref, date_mvt, quantite,\n       ____(quantite) OVER (ORDER BY date_mvt) AS stock\nFROM mouvement;",
+    "accepted": ["SUM"],
+    "explanation": "Avec ORDER BY dans OVER, SUM additionne toutes les lignes depuis la première jusqu'à la ligne courante : c'est un cumul, sans regrouper."
+  },
+  {
+    "id": "bash-rediriger-erreurs",
+    "type": "saisie",
+    "language": "Bash",
+    "level": 3,
+    "title": "Garder aussi les erreurs",
+    "prompt": "Complétez pour que les messages d'erreur aillent eux aussi dans sortie.log.",
+    "code": "./sauvegarde.sh > sortie.log ____",
+    "accepted": ["2>&1"],
+    "explanation": "2>&1 envoie la sortie d'erreur (2) là où va déjà la sortie standard (1). Placé avant > sortie.log, il l'enverrait encore vers l'écran."
+  },
+  {
+    "id": "st-front-montant",
+    "type": "saisie",
+    "language": "Texte structuré",
+    "level": 3,
+    "title": "Compter les appuis",
+    "prompt": "Complétez pour compter un appui à chaque front montant du bouton, détecté par le bloc R_TRIG nommé front.",
+    "code": "front(CLK := bouton);\nIF front.____ THEN\n    compteur := compteur + 1;\nEND_IF;",
+    "accepted": ["Q"],
+    "explanation": "La sortie Q d'un R_TRIG n'est vraie que pendant le cycle où l'entrée passe de faux à vrai : un appui maintenu ne compte qu'une fois."
+  },
+  {
+    "id": "python-moyenne",
+    "type": "ligne",
+    "language": "Python",
+    "level": 1,
+    "title": "Une moyenne qui plante",
+    "prompt": "Cette fonction lève TypeError. Touchez la ligne fautive.",
+    "lines": [
+      "def moyenne(valeurs):",
+      "    total = 0",
+      "    for v in valeurs:",
+      "        total += v",
+      "    return total / len(v)"
+    ],
+    "line": 5,
+    "explanation": "len(v) prend la longueur de la dernière valeur, un nombre : il faut len(valeurs)."
+  },
+  {
+    "id": "sql-where-agregat",
+    "type": "ligne",
+    "language": "SQL",
+    "level": 1,
+    "title": "Un filtre mal placé",
+    "prompt": "La base refuse cette requête. Touchez la ligne fautive.",
+    "lines": [
+      "SELECT ligne, COUNT(*) AS arrets",
+      "FROM arret",
+      "WHERE COUNT(*) > 3",
+      "GROUP BY ligne;"
+    ],
+    "line": 3,
+    "explanation": "WHERE filtre les lignes avant le regroupement : il ne connaît pas encore COUNT(*). Un filtre sur un groupe s'écrit HAVING COUNT(*) > 3, après GROUP BY."
+  },
+  {
+    "id": "bash-affectation",
+    "type": "ligne",
+    "language": "Bash",
+    "level": 1,
+    "title": "Une variable qui ne s'affecte pas",
+    "prompt": "Le script affiche « dossier: command not found ». Touchez la ligne fautive.",
+    "lines": [
+      "#!/bin/bash",
+      "dossier = \"/var/log/atelier\"",
+      "ls \"$dossier\""
+    ],
+    "line": 2,
+    "explanation": "En Bash, une affectation ne prend aucune espace autour du = : avec des espaces, dossier est lu comme une commande."
+  },
+  {
+    "id": "python-deux-points",
+    "type": "ligne",
+    "language": "Python",
+    "level": 1,
+    "title": "Une alarme qui ne démarre pas",
+    "prompt": "Python signale une erreur de syntaxe. Touchez la ligne fautive.",
+    "lines": [
+      "seuil = 80",
+      "temperature = 85",
+      "if temperature > seuil",
+      "    print(\"Alarme\")"
+    ],
+    "line": 3,
+    "explanation": "Un if se termine par deux-points, qui annoncent le bloc indenté."
+  },
+  {
+    "id": "java-depassement-tableau",
+    "type": "ligne",
+    "language": "Java",
+    "level": 1,
+    "title": "Une boucle de trop",
+    "prompt": "Ce code lève ArrayIndexOutOfBoundsException. Touchez la ligne fautive.",
+    "lines": [
+      "int total = 0;",
+      "for (int i = 0; i <= mesures.length; i++) {",
+      "    total += mesures[i];",
+      "}"
+    ],
+    "line": 2,
+    "explanation": "Les indices vont de 0 à length - 1 : la condition doit être i < mesures.length."
+  },
+  {
+    "id": "python-defaut-mutable",
+    "type": "ligne",
+    "language": "Python",
+    "level": 2,
+    "title": "Une liste qui se souvient",
+    "prompt": "Appelée deux fois sans liste, la fonction renvoie ['A1'] puis ['A1', 'B2']. Touchez la ligne fautive.",
+    "lines": [
+      "def ajouter_defaut(code, liste=[]):",
+      "    liste.append(code)",
+      "    return liste"
+    ],
+    "line": 1,
+    "explanation": "La valeur par défaut est créée une seule fois, à la définition : tous les appels partagent la même liste. On écrit liste=None, puis on crée la liste dans la fonction."
+  },
+  {
+    "id": "sql-egal-null",
+    "type": "ligne",
+    "language": "SQL",
+    "level": 2,
+    "title": "Des machines introuvables",
+    "prompt": "La requête doit arrêter les machines sans statut, mais ne modifie aucune ligne. Touchez la ligne fautive.",
+    "lines": [
+      "UPDATE machine",
+      "SET statut = 'arret'",
+      "WHERE statut = NULL;"
+    ],
+    "line": 3,
+    "explanation": "Une comparaison avec NULL n'est jamais vraie, même NULL = NULL : on teste statut IS NULL."
+  },
+  {
+    "id": "java-comparer-textes",
+    "type": "ligne",
+    "language": "Java",
+    "level": 2,
+    "title": "Un convoyeur qui ne démarre pas",
+    "prompt": "lireEtat() renvoie bien « MARCHE », mais le convoyeur ne démarre pas. Touchez la ligne fautive.",
+    "lines": [
+      "String etat = lireEtat();",
+      "if (etat == \"MARCHE\") {",
+      "    demarrerConvoyeur();",
+      "}"
+    ],
+    "line": 2,
+    "explanation": "== compare les références des objets, pas leur contenu : deux textes identiques peuvent être deux objets différents. On écrit \"MARCHE\".equals(etat)."
+  },
+  {
+    "id": "docker-cmd-virgule",
+    "type": "ligne",
+    "language": "Docker",
+    "level": 2,
+    "title": "Un conteneur qui ne démarre pas",
+    "prompt": "L'image se construit, mais le conteneur s'arrête aussitôt avec une erreur de shell. Touchez la ligne fautive.",
+    "lines": [
+      "FROM python:3.12-slim",
+      "COPY requirements.txt .",
+      "RUN pip install -r requirements.txt",
+      "COPY app.py .",
+      "CMD [\"python\" \"app.py\"]"
+    ],
+    "line": 5,
+    "explanation": "La forme tableau de CMD est du JSON : sans virgule entre les éléments, Docker ne la reconnaît pas et passe tout le texte au shell. Il faut [\"python\", \"app.py\"]."
+  },
+  {
+    "id": "st-comparaison-affectation",
+    "type": "ligne",
+    "language": "Texte structuré",
+    "level": 2,
+    "title": "Une pompe qui ne s'arrête pas",
+    "prompt": "Le niveau haut est atteint, mais la pompe continue de tourner. Touchez la ligne fautive.",
+    "lines": [
+      "IF capteur_haut THEN",
+      "    pompe = FALSE;",
+      "ELSIF capteur_bas THEN",
+      "    pompe := TRUE;",
+      "END_IF;"
+    ],
+    "line": 2,
+    "explanation": "pompe = FALSE compare au lieu d'affecter : la pompe garde son état. L'affectation s'écrit pompe := FALSE."
+  },
+  {
+    "id": "python-lambda-boucle",
+    "type": "ligne",
+    "language": "Python",
+    "level": 3,
+    "title": "Trois fois la même valeur",
+    "prompt": "Le programme devrait afficher [0, 10, 20] mais affiche [20, 20, 20]. Touchez la ligne fautive.",
+    "lines": [
+      "actions = []",
+      "for i in range(3):",
+      "    actions.append(lambda: i * 10)",
+      "print([action() for action in actions])"
+    ],
+    "line": 3,
+    "explanation": "La lambda lit i au moment de son appel, quand la boucle est finie et que i vaut 2. On fige la valeur à la création : lambda i=i: i * 10."
+  },
+  {
+    "id": "java-division-entiere",
+    "type": "ligne",
+    "language": "Java",
+    "level": 3,
+    "title": "Un rendement à zéro",
+    "prompt": "Le rendement affiché vaut 0.0 % au lieu de 94 %. Touchez la ligne fautive.",
+    "lines": [
+      "int bonnes = 47;",
+      "int total = 50;",
+      "double rendement = bonnes / total * 100;",
+      "System.out.println(rendement + \" %\");"
+    ],
+    "line": 3,
+    "explanation": "47 / 50 entre deux int est une division entière : 0, et 0 × 100 reste 0. On convertit avant de diviser : (double) bonnes / total * 100."
+  },
+  {
+    "id": "sql-not-in-null",
+    "type": "ligne",
+    "language": "SQL",
+    "level": 3,
+    "title": "Aucune machine oubliée ?",
+    "prompt": "On cherche les machines sans aucune intervention. Certaines interventions ont un machine_id vide, et la requête ne renvoie rien. Touchez la ligne fautive.",
+    "lines": [
+      "SELECT nom",
+      "FROM machine",
+      "WHERE id NOT IN (SELECT machine_id FROM intervention);"
+    ],
+    "line": 3,
+    "explanation": "Dès que la sous-requête contient un NULL, NOT IN n'est jamais vrai. NOT EXISTS (SELECT 1 FROM intervention i WHERE i.machine_id = machine.id) n'a pas ce piège."
+  },
+  {
+    "id": "bash-guillemets",
+    "type": "ligne",
+    "language": "Bash",
+    "level": 3,
+    "title": "Une sauvegarde incomplète",
+    "prompt": "Les fichiers dont le nom contient une espace ne sont pas sauvegardés. Touchez la ligne fautive.",
+    "lines": [
+      "#!/bin/bash",
+      "for fichier in *.csv; do",
+      "    cp $fichier \"/sauvegarde/\"",
+      "done"
+    ],
+    "line": 3,
+    "explanation": "Sans guillemets, le shell découpe la valeur à chaque espace : « bilan mai.csv » devient deux arguments. On écrit \"$fichier\"."
+  },
+  {
+    "id": "python-egalite-flottants",
+    "type": "ligne",
+    "language": "Python",
+    "level": 3,
+    "title": "Un bilan jamais équilibré",
+    "prompt": "Le message ne s'affiche jamais. Touchez la ligne fautive.",
+    "lines": [
+      "total = 0.1 + 0.2",
+      "if total == 0.3:",
+      "    print(\"Bilan équilibré\")"
+    ],
+    "line": 2,
+    "explanation": "0.1 + 0.2 vaut 0.30000000000000004 en binaire : on compare des réels avec une tolérance, math.isclose(total, 0.3)."
+  }
+]
