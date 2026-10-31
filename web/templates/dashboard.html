@@ -22,6 +22,19 @@
 
 {# Session de concentration (job/focus_sessions.py) : static/focus.js anime
    l'anneau et recharge la page à la fin, qui clôt alors la session. #}
+{# Premiers pas (job/onboarding.py) : quêtes cochées d'après ce qui est fait. #}
+{% if not start.completed_at %}
+<section class="card" id="start">
+    <h2>{{ icon("sparkles") }} Premiers pas · {{ start.done }} / {{ start.total }}</h2>
+    <ul class="checklist">
+        {% for quest in start.quests %}
+        <li><a href="{{ web_pages[quest.page] }}">{{ icon("circle-check" if quest.done else "timer", 16) }} <strong>{{ quest.label }}</strong></a> <span class="muted">{{ quest.hint }}</span></li>
+        {% endfor %}
+    </ul>
+    <p><a class="button" href="{{ url_for('show_tour').path }}">{{ icon("sparkles", 16) }} Visite guidée</a></p>
+</section>
+{% endif %}
+
 <section class="card focus" id="focus">
     <h2>{{ icon("timer") }} Session de concentration</h2>
     <p class="card-subtitle">{{ focus.duration }} minutes sur un seul objectif : les points gagnés pendant la session comptent double.</p>

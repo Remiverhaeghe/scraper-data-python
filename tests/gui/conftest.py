@@ -49,6 +49,15 @@ def isolated_settings(tmp_path):
 
 
 @pytest.fixture(autouse=True)
+def no_first_tour(monkeypatch):
+    """Empêche la visite guidée de s'ouvrir seule : elle a ses propres tests."""
+
+    monkeypatch.setattr(
+        "gui.main_window.MainWindow.maybe_start_tour", lambda pWindow: None
+    )
+
+
+@pytest.fixture(autouse=True)
 def silent_speech(monkeypatch):
     """Coupe la synthèse vocale : un test ne doit jamais parler à voix haute."""
 

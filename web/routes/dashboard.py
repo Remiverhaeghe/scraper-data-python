@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from markupsafe import Markup
 
@@ -13,6 +13,7 @@ from job.presentation import (
     describe_execution,
 )
 from job.focus_sessions import build_focus_view, finish_focus, start_focus
+from job.onboarding import build_start_quests, build_tour
 from job.progress import build_progress
 from job.schedule import request_immediate_run
 from job.setup_checklist import build_setup_checklist
@@ -27,6 +28,18 @@ from web.dependencies import get_database_file, require_csrf
 from web.rendering import TONE_ICONS, build_bar_chart, templates
 
 router = APIRouter()
+
+# Pages du bureau et leur adresse sur le web ; la recherche se règle dans Offres
+WEB_PAGES = {
+    "home": "/",
+    "search": "/offers",
+    "offers": "/offers",
+    "applications": "/applications",
+    "profile": "/profile",
+    "quiz": "/quiz",
+    "progress": "/progress",
+    "settings": "/settings",
+}
 
 
 # Pages principales. Les données et leur mise en forme viennent de job/,
@@ -49,6 +62,8 @@ def show_dashboard(
             "active_page": "dashboard",
             "statistics": vStatistics,
             "focus": build_focus_view(pDatabaseFile, datetime.now()),
+            "start": build_start_quests(pDatabaseFile),
+            "web_pages": WEB_PAGES,
             "mascot": {
                 **vMascot,
                 # Dessin produit par job/mascot.py, sans aucune saisie : HTML sûr.
@@ -133,6 +148,30 @@ def stop_focus_session(pDatabaseFile: str = Depends(get_database_file)):
 
     rResponse = RedirectResponse(
         router.url_path_for("show_dashboard") + "#focus", status_code=303
+    )
+
+    return rResponse
+
+
+@router.get("/tour", response_class=HTMLResponse)
+def show_tour(request: Request, pStep: int = Query(1, alias="step")):
+    """Affiche une étape de la visite guidée par la mascotte."""
+
+    vTour = build_tour()
+    vStep = vTour[min(max(pStep, 1), len(vTour)) - 1]
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "tour.html",
+        {
+            "active_page": "dashboard",
+            "step": {
+                **vStep,
+                # Dessin produit par job/mascot.py, sans aucune saisie : HTML sûr.
+                "svg": Markup(vStep["svg"]),  # nosec B704
+                "url": WEB_PAGES[vStep["page"]],
+            },
+        },
     )
 
     return rResponse

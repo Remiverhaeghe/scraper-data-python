@@ -497,6 +497,8 @@ def test_visited_page_is_readable_offline(page):
     page.goto("/offers")
     page.wait_for_function("navigator.serviceWorker.controller !== null")
     page.reload()
+    # La copie s'écrit après l'affichage : sans cette attente, le test échoue parfois
+    page.wait_for_function("async () => Boolean(await caches.match('/offers'))")
 
     page.context.set_offline(True)
 

@@ -5,7 +5,7 @@ import time
 from datetime import date, datetime
 
 import shiboken6
-from PySide6.QtCore import QSize, Qt, QTimer, QUrl, Signal
+from PySide6.QtCore import QSettings, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFrame,
@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from config import CONTACT_URL, LICENSE_NAME, REPOSITORY_URL, TAGLINE
 from gui.desktop_notifier import DesktopNotifier
+from gui.tour_overlay import TourOverlay
 from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
 from gui.applications_page import ApplicationsPage
@@ -76,6 +77,9 @@ SLOW_PAGE_SECONDS = 1.0
 # Relecture des points : un gain s'affiche peu après l'action, sans que les pages
 # aient à le signaler. Le total se lit en quelques millisecondes.
 PROGRESS_CHECK_MS = 1500
+# Visite guidée du premier lancement, une fois la fenêtre installée
+TOUR_DELAY_MS = 800
+TOUR_DONE_SETTING = "tour_done"
 
 SCORE_WARM_UP_DELAY_MS = 15000
 
@@ -140,6 +144,8 @@ class MainWindow(QMainWindow):
         self.build_content()
 
         self.notifier = DesktopNotifier(self, self.database_file, self.navigate)
+        self.tour = None
+        QTimer.singleShot(TOUR_DELAY_MS, self.maybe_start_tour)
 
         self.progress_timer = QTimer(self)
         self.progress_timer.timeout.connect(self.check_progress)
@@ -254,6 +260,7 @@ class MainWindow(QMainWindow):
         self.settings_page.game_mode_changed.connect(self.check_progress)
 
         self.home_page.navigation_requested.connect(self.navigate)
+        self.home_page.tour_requested.connect(self.start_tour)
         self.home_page.offer_requested.connect(self.show_search_results)
         self.applications_page.offer_requested.connect(self.show_search_results)
         self.offers_page.detail_panel.exam_requested.connect(self.start_offer_exam)
@@ -511,6 +518,24 @@ class MainWindow(QMainWindow):
         self.page_labels[self.pages.count()] = pLabel
         self.navigation.addItem(vItem)
         self.pages.addWidget(pPage)
+
+    def maybe_start_tour(self):
+        """Lance la visite guidée au premier lancement, une seule fois."""
+        if not QSettings().value(TOUR_DONE_SETTING, False, bool):
+            self.start_tour()
+
+    def start_tour(self):
+        """Ouvre la visite guidée ; terminée ou passée, elle ne revient plus seule."""
+        if self.tour is not None:
+            return
+
+        QSettings().setValue(TOUR_DONE_SETTING, True)
+        self.tour = TourOverlay(self, self.navigate)
+        self.tour.finished.connect(self.end_tour)
+
+    def end_tour(self):
+        """Oublie la visite fermée."""
+        self.tour = None
 
     def navigate(self, pKey):
         """Affiche une page, ou la page des offres avec un préréglage de filtres."""

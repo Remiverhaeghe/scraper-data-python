@@ -2473,6 +2473,24 @@ def test_focus_session_is_started_and_stopped_on_the_dashboard(client):
     assert "Session arrêtée avant la fin : pas de bonus." in vStopped
 
 
+def test_start_quests_and_tour_on_the_web(client):
+    """Vérifie les premiers pas du tableau de bord et la visite, étape par étape."""
+
+    vDashboard = client.get("/").text
+
+    assert "Premiers pas · " in vDashboard and "/tour" in vDashboard
+
+    vFirst = client.get("/tour").text
+    vLast = client.get("/tour?step=99").text
+
+    assert (
+        "Bienvenue" in vFirst
+        and "Étape 1 sur 7" in vFirst
+        and "Précédent" not in vFirst
+    )
+    assert "Paramètres" in vLast and "Terminer" in vLast and 'href="/settings"' in vLast
+
+
 def test_offer_page_charts_mock_exam_scores(client, monkeypatch):
     """Vérifie le graphique des notes d'examen blanc à partir de deux examens."""
 

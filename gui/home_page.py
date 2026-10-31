@@ -22,6 +22,7 @@ from gui.progress_widgets import get_game_mode
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
+    clear_layout,
     create_button,
     create_card,
     create_fold_button,
@@ -36,6 +37,7 @@ from job.presentation import (
     format_date,
     format_net_salary,
 )
+from job.onboarding import build_start_quests
 from job.progress import build_progress
 from job.setup_checklist import build_setup_checklist
 from job.statistics import (
@@ -107,6 +109,7 @@ class HomePage(QWidget):
 
     # Clé de la page ou du filtre à afficher, interprétée par la fenêtre principale
     navigation_requested = Signal(str)
+    tour_requested = Signal()
 
     # Offre à afficher, en couple (source, identifiant), et sa description
     offer_requested = Signal(object, str)
@@ -146,6 +149,7 @@ class HomePage(QWidget):
         vLayout.addLayout(self.create_statistics())
         vLayout.addWidget(self.create_goal_bar())
         vLayout.addWidget(self.create_week_card())
+        vLayout.addWidget(self.create_start_card())
         vLayout.addWidget(self.create_checklist_card())
 
         # Une grille aligne les colonnes des deux rangées, qui se partagent la
@@ -327,6 +331,53 @@ class HomePage(QWidget):
 
         return rItem
 
+    def create_start_card(self):
+        """Construit les quêtes de démarrage et le bouton de la visite guidée."""
+        self.start_card, vLayout = create_card(
+            "Premiers pas",
+            "Des quêtes de démarrage qui se cochent d'elles-mêmes, et une visite "
+            "guidée par Boulon",
+            "sparkles",
+            "start",
+            pOpen=True,
+        )
+        self.start_layout = QVBoxLayout()
+        self.start_layout.setSpacing(2)
+        vTourButton = create_button("Visite guidée", "sparkles")
+        vTourButton.clicked.connect(self.tour_requested.emit)
+        vRow = QHBoxLayout()
+        vRow.addWidget(vTourButton)
+        vRow.addStretch(1)
+        vLayout.addLayout(self.start_layout)
+        vLayout.addLayout(vRow)
+
+        return self.start_card
+
+    def show_start_quests(self):
+        """Affiche les quêtes de démarrage ; la carte disparaît une fois tout fait."""
+        try:
+            vStart = build_start_quests(self.database_file)
+
+        except Exception:
+            logger.exception("Impossible de lire les premiers pas")
+            self.start_card.hide()
+            return
+
+        clear_layout(self.start_layout)
+        self.start_card.setVisible(vStart["completed_at"] is None)
+
+        for vQuest in vStart["quests"]:
+            vButton = self.create_checklist_row(
+                {
+                    "text": vQuest["label"],
+                    "hint": vQuest["hint"],
+                    "page": vQuest["page"],
+                },
+                "circle-check" if vQuest["done"] else "timer",
+                COLORS["success"] if vQuest["done"] else COLORS["primary"],
+            )
+            self.start_layout.addWidget(vButton)
+
     def create_checklist_card(self):
         """Construit la liste des réglages restant à faire."""
         self.checklist_card, vLayout = create_card(
@@ -341,7 +392,7 @@ class HomePage(QWidget):
 
         return self.checklist_card
 
-    def create_checklist_row(self, pItem):
+    def create_checklist_row(self, pItem, pIcon="circle-alert", pColor=None):
         """Construit une ligne cliquable qui ouvre la page où faire le réglage."""
         vButton = QPushButton()
         vButton.setObjectName("listRow")
@@ -357,7 +408,7 @@ class HomePage(QWidget):
         vLayout = QHBoxLayout(vButton)
         vLayout.setContentsMargins(8, 6, 8, 6)
         vLayout.setSpacing(12)
-        vLayout.addWidget(create_icon_label("circle-alert", COLORS["warning"], 20))
+        vLayout.addWidget(create_icon_label(pIcon, pColor or COLORS["warning"], 20))
         vLayout.addWidget(vTitleLabel)
         vLayout.addWidget(vHintLabel, 1)
 
@@ -771,6 +822,7 @@ class HomePage(QWidget):
     def refresh(self):
         """Relit les indicateurs et l'activité en base."""
         self.show_mascot()
+        self.show_start_quests()
         self.focus_panel.refresh()
         self.banner_text.setText(
             f"Centralisez les offres de {count_ready_sources()} sources configurées, "

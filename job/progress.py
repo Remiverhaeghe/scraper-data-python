@@ -41,6 +41,7 @@ XP_RULES = {
     "sql_level": ("Niveau SQL réussi", 15),
     "circuit_level": ("Montage électrique réussi", 20),
     "devops_level": ("Niveau Maven ou Docker réussi", 20),
+    "onboarding": ("Premiers pas terminés", 50),
     "focus_session": ("Session de concentration : ses points comptent double", 10),
     "negotiation": ("Négociation salariale simulée", 20),
     "oral_interview": ("Entretien oral simulé terminé", 25),
@@ -64,6 +65,9 @@ APTITUDE_XP_PER_RIGHT = 2
 
 # Points de chaque tranche de 10 points du score d'une panne résolue
 TROUBLESHOOTING_XP_PER_TEN = 2
+
+# Date des premiers pas terminés (job/onboarding.py)
+ONBOARDING_KEY = "onboarding"
 
 # Sessions de concentration terminées et leur bonus (job/focus_sessions.py)
 FOCUS_SESSIONS_KEY = "focus_sessions"
@@ -325,6 +329,11 @@ def load_activity(pDatabaseFile):
         for vEntry in (vLevels if isinstance(vLevels, dict) else {}).values():
             if isinstance(vEntry, dict) and vEntry.get("passed_at"):
                 add_action(rActivity, read_day(vEntry["passed_at"]), vAction)
+
+    vOnboarding = load_json_setting(pDatabaseFile, ONBOARDING_KEY, {}, dict)
+
+    if vOnboarding.get("completed_at"):
+        add_action(rActivity, read_day(vOnboarding["completed_at"]), "onboarding")
 
     for vSession in (
         load_json_setting(pDatabaseFile, FOCUS_SESSIONS_KEY, {}, dict).get("history")

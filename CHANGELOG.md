@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Première ouverture guidée
+- Visite des pages principales présentée par Boulon au premier lancement :
+  surimpression animée sur le bureau, page Visite guidée sur le web,
+  relançable depuis l'accueil
+- Quêtes de démarrage qui se cochent d'elles-mêmes (compétences, recherche
+  enregistrée, première recherche, première révision, téléphone connecté),
+  50 XP une fois toutes faites
+
 ### Notifications du bureau
 - Notifications natives de Windows : relances du jour, offre récente à 80 % et
   plus du profil, quête presque terminée, série en danger le soir ; un clic

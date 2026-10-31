@@ -1,0 +1,28 @@
+{# Visite guidée (job/onboarding.py) : une étape par page principale, présentée
+   par la mascotte, avec un lien pour ouvrir la page. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Visite guidée{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Visite guidée", "Boulon présente les pages principales, une par une", "sparkles") }}
+
+<article class="card mascot tour-step">
+    <span class="mascot-drawing">{{ step.svg }}</span>
+    <div>
+        <h2>{{ step.title }}</h2>
+        <p>{{ step.text }}</p>
+        <p class="muted">Étape {{ step.position }} sur {{ step.count }}</p>
+        <div class="rules-actions">
+            <a class="button" href="{{ step.url }}">{{ icon("arrow-right", 16) }} Ouvrir cette page</a>
+            {% if step.position > 1 %}<a class="button" href="{{ url_for('show_tour').path }}?step={{ step.position - 1 }}">Précédent</a>{% endif %}
+            {% if step.position < step.count %}
+            <a class="button button-primary" href="{{ url_for('show_tour').path }}?step={{ step.position + 1 }}">Suivant</a>
+            {% else %}
+            <a class="button button-primary" href="{{ url_for('show_dashboard').path }}">Terminer</a>
+            {% endif %}
+        </div>
+    </div>
+</article>
+{% endblock %}
