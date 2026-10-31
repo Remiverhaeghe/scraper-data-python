@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 import io
 from pathlib import Path
+from typing import Literal
 from urllib.parse import quote, urlencode
 
 from fastapi import (
@@ -34,8 +35,10 @@ from job.contract import CONTRACT_TYPES
 from job.cv_export import (
     build_file_name,
     build_tailored_cv,
+    write_cv_pdf,
     write_docx,
     write_letter_docx,
+    write_letter_pdf,
 )
 from job.deduplication import (
     COMPARED_FIELDS,
@@ -625,7 +628,7 @@ def show_offer(
             "offer": vPrepared,
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
             "preparation": vPreparation,
-            "negotiation": build_negotiation_view(pDatabaseFile),
+            "negotiation_game": build_negotiation_view(pDatabaseFile),
             "mission": (
                 build_mission(
                     pDatabaseFile, vPrepared, vPreparation["match"]["missing"]
@@ -759,13 +762,32 @@ def build_description_context(pOffer, pTranslated=False):
     return rContext
 
 
+def build_document_response(pContent, pFileName):
+    """Retourne un document Word ou PDF à télécharger sous le nom donné."""
+
+    rResponse = Response(
+        pContent,
+        media_type=(
+            "application/pdf"
+            if pFileName.endswith(".pdf")
+            else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ),
+        headers={
+            "Content-Disposition": "attachment; filename*=UTF-8''" + quote(pFileName)
+        },
+    )
+
+    return rResponse
+
+
 @router.get("/offer/cv")
 def download_tailored_cv(
     pSource: str = Query(alias="source"),
     pSourceId: str = Query(alias="id"),
+    pFormat: Literal["docx", "pdf"] = Query("docx", alias="format"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Télécharge le CV du profil réordonné pour l'offre, au format Word."""
+    """Télécharge le CV du profil réordonné pour l'offre, en Word ou en PDF."""
 
     vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
     vProfile = load_profile(pDatabaseFile)
@@ -773,15 +795,11 @@ def download_tailored_cv(
     if is_profile_empty(vProfile):
         raise HTTPException(status_code=400, detail="Profil vide : rien à exporter.")
 
-    rResponse = Response(
-        write_docx(build_tailored_cv(vProfile, vOffer)),
-        media_type=(
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        ),
-        headers={
-            "Content-Disposition": "attachment; filename*=UTF-8''"
-            + quote(build_file_name(vOffer))
-        },
+    vCv = build_tailored_cv(vProfile, vOffer)
+
+    rResponse = build_document_response(
+        write_cv_pdf(vCv) if pFormat == "pdf" else write_docx(vCv),
+        build_file_name(vOffer, "CV", f".{pFormat}"),
     )
 
     return rResponse
@@ -792,21 +810,17 @@ def download_letter(
     pSource: str = Form(alias="source"),
     pSourceId: str = Form(alias="id"),
     pLetter: str = Form("", alias="letter"),
+    pFormat: Literal["docx", "pdf"] = Form("docx", alias="format"),
     pDatabaseFile: str = Depends(get_database_file),
 ):
-    """Télécharge la lettre telle que modifiée dans la page, au format Word."""
+    """Télécharge la lettre telle que modifiée dans la page, en Word ou en PDF."""
 
     vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    vLetter = pLetter[:MAX_LETTER_LENGTH]
 
-    rResponse = Response(
-        write_letter_docx(pLetter[:MAX_LETTER_LENGTH]),
-        media_type=(
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        ),
-        headers={
-            "Content-Disposition": "attachment; filename*=UTF-8''"
-            + quote(build_file_name(vOffer, "Lettre"))
-        },
+    rResponse = build_document_response(
+        write_letter_pdf(vLetter) if pFormat == "pdf" else write_letter_docx(vLetter),
+        build_file_name(vOffer, "Lettre", f".{pFormat}"),
     )
 
     return rResponse
@@ -901,7 +915,10 @@ def render_negotiation(pRequest, pDatabaseFile, pOffer, pError=""):
         "_negotiation.html",
         {
             "offer": pOffer,
-            "negotiation": {**build_negotiation_view(pDatabaseFile), "error": pError},
+            "negotiation_game": {
+                **build_negotiation_view(pDatabaseFile),
+                "error": pError,
+            },
         },
     )
 

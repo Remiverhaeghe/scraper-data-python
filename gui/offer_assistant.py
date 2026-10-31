@@ -23,14 +23,24 @@ from PySide6.QtWidgets import (
 )
 
 from gui.chart import BarChart
-from gui.dialogs import show_preparation, show_text_dialog
+from gui.dialogs import (
+    DOCUMENT_FILTERS,
+    is_pdf,
+    show_preparation,
+    show_text_dialog,
+)
 from gui.interview_mission_panel import InterviewMissionPanel
 from gui.negotiation_dialog import NegotiationDialog
 from gui.theme import COLORS
 from gui.widgets import create_button, get_exports_folder
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
 from job.company_info import lookup_company, summarize_company
-from job.cv_export import build_file_name, build_tailored_cv, write_docx
+from job.cv_export import (
+    build_file_name,
+    build_tailored_cv,
+    write_cv_pdf,
+    write_docx,
+)
 from job.geocoding import load_home
 from job.interview_revision import build_offer_revision
 from job.agencies import load_interim_agencies
@@ -155,7 +165,7 @@ class OfferAssistantPanel(QWidget):
         self.prepare_button.clicked.connect(self.open_preparation)
 
         self.cv_button = create_button(
-            "CV adapté (.docx)", "download", pIconColor=COLORS["primary"]
+            "CV adapté (Word ou PDF)", "download", pIconColor=COLORS["primary"]
         )
         self.cv_button.setToolTip(
             "Votre profil réordonné pour l'offre : compétences demandées en tête, "
@@ -358,14 +368,15 @@ class OfferAssistantPanel(QWidget):
             self,
             "Enregistrer le CV adapté",
             str(get_exports_folder() / build_file_name(self.offer)),
-            "Document Word (*.docx)",
+            DOCUMENT_FILTERS,
         )
 
         if not vPath:
             return
 
         try:
-            Path(vPath).write_bytes(write_docx(build_tailored_cv(vProfile, self.offer)))
+            vWrite = write_cv_pdf if is_pdf(vPath) else write_docx
+            Path(vPath).write_bytes(vWrite(build_tailored_cv(vProfile, self.offer)))
 
         except OSError as vException:
             logger.warning("CV adapté non enregistré : %s", vException)

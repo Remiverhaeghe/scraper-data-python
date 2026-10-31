@@ -18,7 +18,7 @@ PREPARATION = {
 
 
 def test_preparation_letter_is_copied_then_saved(qt_application, tmp_path, monkeypatch):
-    """Vérifie la lettre copiée puis enregistrée en Word, et l'échec signalé."""
+    """Vérifie la lettre copiée puis enregistrée en Word et en PDF, et l'échec signalé."""
 
     vTarget = tmp_path / "lettre.docx"
     vOpened = []
@@ -26,7 +26,7 @@ def test_preparation_letter_is_copied_then_saved(qt_application, tmp_path, monke
 
     def click_buttons(pDialog):
         for vButton in pDialog.findChildren(QPushButton):
-            if vButton.text() in ("Copier la lettre", "Enregistrer en Word"):
+            if vButton.text() in ("Copier la lettre", "Enregistrer (Word ou PDF)"):
                 vButton.click()
 
         return 0
@@ -47,6 +47,11 @@ def test_preparation_letter_is_copied_then_saved(qt_application, tmp_path, monke
     assert qt_application.clipboard().text() == "Madame, Monsieur,"
     assert vTarget.read_bytes().startswith(b"PK")
     assert len(vOpened) == 1
+
+    vTarget = tmp_path / "lettre.pdf"
+    dialogs.save_letter(None, "Dev Python", "Madame, Monsieur,")
+
+    assert vTarget.read_bytes().startswith(b"%PDF")
 
     vTarget = tmp_path / "absent" / "lettre.docx"
     dialogs.save_letter(None, "Dev Python", "Texte")

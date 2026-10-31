@@ -3,11 +3,15 @@
 import io
 import zipfile
 
+from pypdf import PdfReader
+
 from job.cv_export import (
     build_file_name,
     build_tailored_cv,
+    write_cv_pdf,
     write_docx,
     write_letter_docx,
+    write_letter_pdf,
 )
 from job.cv_import import read_docx
 
@@ -86,3 +90,17 @@ def test_letter_is_written_line_by_line():
     assert (
         build_file_name(OFFER, "Lettre") == "Lettre - Acme - Développeur Java SQL.docx"
     )
+
+
+def test_cv_and_letter_are_written_as_pdf():
+    """Vérifie le CV et la lettre en PDF : mêmes textes que le Word, nom en .pdf."""
+
+    vCv = PdfReader(io.BytesIO(write_cv_pdf(build_tailored_cv(PROFILE, OFFER))))
+    vLetter = PdfReader(io.BytesIO(write_letter_pdf("Madame,\n\nMa lettre")))
+    vCvText = vCv.pages[0].extract_text()
+
+    assert vCv.metadata.title == "Camille Martin"
+    assert vCvText.startswith("Camille Martin")
+    assert "Compétences clés pour ce poste" in vCvText
+    assert vLetter.pages[0].extract_text() == "Madame,\nMa lettre"
+    assert build_file_name(OFFER, "CV", ".pdf").endswith("SQL.pdf")

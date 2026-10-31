@@ -111,10 +111,22 @@ def test_describe_preparation_escapes_and_lists(qt_application):
                 "pitch": {"short": "Court <b>", "long": "Long"},
             },
             "letter": "",
+            "keywords": {
+                "title": "Technicien <maintenance>",
+                "title_in_cv": False,
+                "skills": [{"term": "<Java>", "required": True, "in_cv": False}],
+                "qualities": [{"term": "Rigueur", "in_cv": True}],
+                "conditions": ["Astreintes"],
+                "missing_required": ["Anglais"],
+            },
         }
     )
 
     assert "Mon pitch, 30 secondes</h3><p>Court &lt;b&gt;</p>" in vHtml
+    assert "Technicien &lt;maintenance&gt;</b>, à reprendre" in vHtml
+    assert "&lt;Java&gt; <i>(exigée)</i> : <b>à écrire tel quel</b>" in vHtml
+    assert "Rigueur : déjà dans le CV" in vHtml
+    assert "lettre : Astreintes" in vHtml and "au CV : Anglais" in vHtml
     assert "&lt;Java&gt;" in vHtml
     assert "<Java>" not in vHtml
     assert "CV backend" in vHtml

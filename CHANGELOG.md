@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### CV et lettre ajustés à l'offre
+- Mots de l'annonce à reprendre, repérés par règles : intitulé nettoyé, compétences
+  couvertes (exigées en tête), qualités et conditions du poste ; chacun marqué
+  déjà dans le CV ou à écrire tel quel, les compétences exigées absentes étant à
+  préparer sans les ajouter au CV (préparation de candidature, bureau et web)
+- CV adapté et lettre en PDF prêt à envoyer, en plus du Word, écrit sans
+  bibliothèque : même document sur le bureau et sur le web
+
 ### Employeurs de la région
 - Liste des employeurs industriels, d'énergie et de transport de 250 salariés et
   plus des Hauts-de-France, tirée de l'annuaire public des entreprises (gratuit,

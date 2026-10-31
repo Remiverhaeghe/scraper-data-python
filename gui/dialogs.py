@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 
 from config import APPLICATION_NAME
 from gui.widgets import get_exports_folder
-from job.cv_export import build_file_name, write_letter_docx
+from job.cv_export import build_file_name, write_letter_docx, write_letter_pdf
 from job.preparation import describe_missing, describe_score
 from job.presentation import (
     LICENSE_SUMMARY,
@@ -29,6 +29,9 @@ from job.presentation import (
     read_icons_license,
     read_license,
 )
+
+# Word reste modifiable, le PDF part tel quel
+DOCUMENT_FILTERS = "Document Word (*.docx);;PDF prêt à envoyer (*.pdf)"
 
 
 def show_text_dialog(pParent, pTitle, pHtml=None, pText=None):
@@ -87,6 +90,60 @@ def show_license(pParent):
             f"<pre style='white-space: pre-wrap'>{escape(read_icons_license())}</pre>"
         ),
     )
+
+
+def describe_keywords(pKeywords):
+    """Met en forme les mots de l'annonce à reprendre, présents ou absents du CV."""
+
+    def mark(pTerm):
+        rHtml = (
+            f"<li>{escape(pTerm['term'])}"
+            + (" <i>(exigée)</i>" if pTerm.get("required") else "")
+            + (
+                " : déjà dans le CV"
+                if pTerm["in_cv"]
+                else " : <b>à écrire tel quel</b>"
+            )
+            + "</li>"
+        )
+
+        return rHtml
+
+    rHtml = (
+        "<h3>Mots de l'annonce à reprendre</h3>"
+        f"<p>Intitulé : <b>{escape(pKeywords['title'])}</b>"
+        + (
+            ", déjà dans le CV"
+            if pKeywords["title_in_cv"]
+            else ", à reprendre dans l'accroche du CV"
+        )
+        + "</p>"
+    )
+
+    if pKeywords["skills"]:
+        rHtml += (
+            "<p>Compétences</p><ul>" + "".join(map(mark, pKeywords["skills"])) + "</ul>"
+        )
+
+    if pKeywords["qualities"]:
+        rHtml += (
+            "<p>Qualités</p><ul>" + "".join(map(mark, pKeywords["qualities"])) + "</ul>"
+        )
+
+    if pKeywords["conditions"]:
+        rHtml += (
+            "<p>Conditions à aborder dans la lettre : "
+            f"{escape(', '.join(pKeywords['conditions']))}</p>"
+        )
+
+    if pKeywords["missing_required"]:
+        rHtml += (
+            "<p>Exigées mais absentes du profil, à préparer pour l'entretien sans "
+            "les ajouter au CV : "
+            f"{escape(', '.join(pKeywords['missing_required']))}</p>"
+        )
+
+    return rHtml
 
 
 def describe_preparation(pPreparation):
@@ -151,6 +208,9 @@ def describe_preparation(pPreparation):
             f"({pPreparation['cv']['matching']} compétence(s) de l'offre)</p>"
         )
 
+    if vKeywords := pPreparation.get("keywords"):
+        rHtml += describe_keywords(vKeywords)
+
     if vHybrid := pPreparation.get("hybrid"):
         rHtml += (
             f"<h3>Double profil · {escape(', '.join(vHybrid['terms']))}</h3>"
@@ -214,21 +274,30 @@ def describe_preparation(pPreparation):
     return rHtml
 
 
+def is_pdf(pPath):
+    """Indique si le chemin choisi demande un PDF plutôt qu'un document Word."""
+
+    rPdf = Path(pPath).suffix.lower() == ".pdf"
+
+    return rPdf
+
+
 def save_letter(pParent, pTitle, pText):
-    """Enregistre la lettre au format Word, à l'endroit choisi, puis l'ouvre."""
+    """Enregistre la lettre en Word ou en PDF, à l'endroit choisi, puis l'ouvre."""
 
     vPath, _ = QFileDialog.getSaveFileName(
         pParent,
         "Enregistrer la lettre",
         str(get_exports_folder() / build_file_name({"title": pTitle}, "Lettre")),
-        "Document Word (*.docx)",
+        DOCUMENT_FILTERS,
     )
 
     if not vPath:
         return
 
     try:
-        Path(vPath).write_bytes(write_letter_docx(pText))
+        vWrite = write_letter_pdf if is_pdf(vPath) else write_letter_docx
+        Path(vPath).write_bytes(vWrite(pText))
 
     except OSError as vException:
         QMessageBox.warning(
@@ -253,8 +322,8 @@ def show_preparation(pParent, pTitle, pPreparation):
         lambda: QApplication.clipboard().setText(vLetter.toPlainText())
     )
 
-    # La lettre telle que modifiée dans la fenêtre, au format Word
-    vSaveButton = QPushButton("Enregistrer en Word")
+    # La lettre telle que modifiée dans la fenêtre
+    vSaveButton = QPushButton("Enregistrer (Word ou PDF)")
     vSaveButton.clicked.connect(
         lambda: save_letter(vDialog, pTitle, vLetter.toPlainText())
     )

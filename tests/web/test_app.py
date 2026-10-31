@@ -2447,6 +2447,9 @@ def test_salary_negotiation_is_played_on_the_offer_page(client, monkeypatch):
     assert "Accord à" in vPage.text and "score" in vPage.text
     assert '"source": "adzuna"' in vPage.text
     assert (
+        "1 partie(s) · meilleur score" in client.get("/offer?source=adzuna&id=new").text
+    )
+    assert (
         client.post("/offer/negotiation/play", data={"choice": "accept"}).status_code
         == 400
     )
@@ -2898,6 +2901,17 @@ def test_tailored_cv_is_downloaded(client):
     assert vResponse.content[:2] == b"PK"
     assert "CV%20-%20Entreprise%20A" in vResponse.headers["content-disposition"]
 
+    vPdf = client.get("/offer/cv?source=adzuna&id=new&format=pdf")
+
+    assert vPdf.content[:4] == b"%PDF"
+    assert vPdf.headers["content-type"] == "application/pdf"
+    assert vPdf.headers["content-disposition"].endswith(".pdf")
+    assert client.get("/offer/cv?source=adzuna&id=new&format=odt").status_code == 422
+    assert (
+        "Mots de l'annonce à reprendre"
+        in client.get("/offer?source=adzuna&id=new").text
+    )
+
 
 def test_list_offers_hides_consulting_and_training(client):
     """Vérifie les cases Clients finaux seulement et Sans stage ni alternance."""
@@ -2956,6 +2970,13 @@ def test_letter_is_downloaded_as_edited(client):
     assert vResponse.status_code == 200
     assert vResponse.content[:2] == b"PK"
     assert "Lettre%20-%20Entreprise%20A" in vResponse.headers["content-disposition"]
+
+    vPdf = client.post(
+        "/offer/letter",
+        data={"source": "adzuna", "id": "new", "letter": "Bonjour,", "format": "pdf"},
+    )
+
+    assert vPdf.content[:4] == b"%PDF"
 
 
 def test_search_journal_is_downloaded(client):

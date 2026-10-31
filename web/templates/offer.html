@@ -244,9 +244,19 @@
             <ul>{% for answer in preparation.interview.star %}<li><strong>{{ answer.question }}</strong>{% if answer.skills %} <span class="muted">({{ answer.skills | join(", ") }})</span>{% endif %}<br><span class="pre-line">{{ answer.text }}</span></li>{% else %}<li class="muted">À préparer dans la page Profil</li>{% endfor %}</ul>
             <h3>Questions à poser</h3>
             <ul>{% for question in preparation.interview.questions %}<li>{{ question }}</li>{% endfor %}</ul>
+            {% set keywords = preparation.keywords %}
+            <h3>Mots de l'annonce à reprendre</h3>
+            <p>Intitulé : <strong>{{ keywords.title }}</strong>, {{ "déjà dans le CV" if keywords.title_in_cv else "à reprendre dans l'accroche du CV" }}</p>
+            {% for group, label in ((keywords.skills, "Compétences"), (keywords.qualities, "Qualités")) if group %}
+            <p>{{ label }}</p>
+            <ul>{% for item in group %}<li>{{ item.term }}{% if item.required %} <span class="muted">(exigée)</span>{% endif %} : {% if item.in_cv %}<span class="muted">déjà dans le CV</span>{% else %}<strong>à écrire tel quel</strong>{% endif %}</li>{% endfor %}</ul>
+            {% endfor %}
+            {% if keywords.conditions %}<p>Conditions à aborder dans la lettre : {{ keywords.conditions | join(", ") }}</p>{% endif %}
+            {% if keywords.missing_required %}<p>Exigées mais absentes du profil, à préparer pour l'entretien sans les ajouter au CV : {{ keywords.missing_required | join(", ") }}</p>{% endif %}
             <h3>CV adapté à cette offre</h3>
             <p>
-                <a class="button" href="{{ url_for('download_tailored_cv').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ icon("download", 16) }} Télécharger le CV (.docx)</a>
+                <a class="button" href="{{ url_for('download_tailored_cv').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ icon("download", 16) }} CV en Word</a>
+                <a class="button" href="{{ url_for('download_tailored_cv').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}&format=pdf">{{ icon("file-text", 16) }} CV en PDF</a>
                 <span class="muted">Votre profil réordonné : compétences demandées en tête, expériences les plus proches d'abord. À relire avant envoi.</span>
             </p>
             <h3>Brouillon de lettre de motivation</h3>
@@ -255,7 +265,8 @@
                 <input type="hidden" name="source" value="{{ offer.source }}">
                 <input type="hidden" name="id" value="{{ offer.source_id }}">
                 <textarea class="letter" name="letter" rows="14" aria-label="Brouillon de lettre de motivation">{{ preparation.letter }}</textarea>
-                <button class="button" type="submit">{{ icon("download", 16) }} Télécharger la lettre (.docx)</button>
+                <button class="button" type="submit" name="format" value="docx">{{ icon("download", 16) }} Lettre en Word</button>
+                <button class="button" type="submit" name="format" value="pdf">{{ icon("file-text", 16) }} Lettre en PDF</button>
             </form>
             {% else %}
             <p class="muted">Renseignez d'abord vos compétences et expériences dans la page <a href="{{ url_for('show_profile').path }}">Profil</a>.</p>

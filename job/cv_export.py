@@ -1,5 +1,5 @@
 """CV adapté à une offre et lettre de motivation, écrits au format Word (.docx)
-sans bibliothèque externe
+ou PDF sans bibliothèque externe
 
 Le CV reprend le profil tel quel, réordonné pour l'offre : compétences qu'elle
 demande en tête, puis expériences qui les mobilisent le plus. Rien n'est inventé.
@@ -11,6 +11,7 @@ import re
 import zipfile
 from html import escape
 
+from job.pdf_document import write_pdf
 from job.preparation import get_offer_skills
 from job.profile import split_list
 
@@ -91,42 +92,67 @@ def build_tailored_cv(pProfile, pOffer):
     return rCv
 
 
-def write_docx(pCv):
-    """Retourne les octets d'un document Word contenant le CV."""
+def build_cv_blocks(pCv):
+    """Retourne le CV en blocs (texte, taille, gras, espace avant), communs au Word et au PDF."""
 
-    vParagraphs = [build_paragraph(pCv["name"], NAME_SIZE, True)]
+    rBlocks = [(pCv["name"], NAME_SIZE, True, 0)]
 
     if pCv["headline"]:
-        vParagraphs.append(build_paragraph(pCv["headline"], HEADING_SIZE))
+        rBlocks.append((pCv["headline"], HEADING_SIZE, False, 0))
 
     if pCv["target"]:
-        vParagraphs.append(build_paragraph(f"Candidature : {pCv['target']}"))
+        rBlocks.append((f"Candidature : {pCv['target']}", TEXT_SIZE, False, 0))
 
     if pCv["matching_skills"]:
-        vParagraphs += [
-            build_paragraph("Compétences clés pour ce poste", HEADING_SIZE, True, 240),
-            build_paragraph(", ".join(pCv["matching_skills"])),
+        rBlocks += [
+            ("Compétences clés pour ce poste", HEADING_SIZE, True, 240),
+            (", ".join(pCv["matching_skills"]), TEXT_SIZE, False, 0),
         ]
 
     if pCv["other_skills"]:
-        vParagraphs += [
-            build_paragraph("Autres compétences", HEADING_SIZE, True, 240),
-            build_paragraph(", ".join(pCv["other_skills"])),
+        rBlocks += [
+            ("Autres compétences", HEADING_SIZE, True, 240),
+            (", ".join(pCv["other_skills"]), TEXT_SIZE, False, 0),
         ]
 
     if pCv["experiences"]:
-        vParagraphs.append(build_paragraph("Expériences", HEADING_SIZE, True, 240))
+        rBlocks.append(("Expériences", HEADING_SIZE, True, 240))
 
     for vExperience in pCv["experiences"]:
-        vParagraphs.append(
-            build_paragraph(vExperience.get("title") or "", TEXT_SIZE, True, 120)
-        )
+        rBlocks.append((vExperience.get("title") or "", TEXT_SIZE, True, 120))
 
         for vField in ("skills", "achievement"):
             if vExperience.get(vField):
-                vParagraphs.append(build_paragraph(f"• {vExperience[vField]}"))
+                rBlocks.append((f"• {vExperience[vField]}", TEXT_SIZE, False, 0))
 
-    rContent = write_document(vParagraphs)
+    return rBlocks
+
+
+def write_docx(pCv):
+    """Retourne les octets d'un document Word contenant le CV."""
+
+    rContent = write_document(
+        [build_paragraph(*vBlock) for vBlock in build_cv_blocks(pCv)]
+    )
+
+    return rContent
+
+
+def to_pdf_blocks(pBlocks):
+    """Convertit des blocs Word (demi-points, vingtièmes de point) en points pour le PDF."""
+
+    rBlocks = [
+        (vText, vSize / 2, vBold, vSpaceBefore / 20)
+        for vText, vSize, vBold, vSpaceBefore in pBlocks
+    ]
+
+    return rBlocks
+
+
+def write_cv_pdf(pCv):
+    """Retourne les octets d'un PDF contenant le CV, prêt à envoyer."""
+
+    rContent = write_pdf(to_pdf_blocks(build_cv_blocks(pCv)), pCv["name"])
 
     return rContent
 
@@ -158,7 +184,20 @@ def write_letter_docx(pText):
     return rContent
 
 
-def build_file_name(pOffer, pKind="CV"):
+def write_letter_pdf(pText):
+    """Retourne la lettre de motivation en PDF, une ligne vide gardée entre paragraphes."""
+
+    rContent = write_pdf(
+        to_pdf_blocks(
+            [(vLine, TEXT_SIZE, False, 0) for vLine in str(pText or "").splitlines()]
+        ),
+        "Lettre de motivation",
+    )
+
+    return rContent
+
+
+def build_file_name(pOffer, pKind="CV", pExtension=".docx"):
     """Retourne un nom de fichier lisible et sûr pour un document lié à une offre."""
 
     vName = " - ".join(
@@ -167,7 +206,7 @@ def build_file_name(pOffer, pKind="CV"):
 
     rFileName = (
         " ".join(FILE_NAME_FORBIDDEN.sub(" ", vName).split())[:MAX_FILE_NAME_LENGTH]
-        + ".docx"
+        + pExtension
     )
 
     return rFileName

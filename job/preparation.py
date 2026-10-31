@@ -8,6 +8,7 @@ import json
 import re
 from functools import lru_cache
 
+from job.cv_keywords import build_keyword_advice
 from job.education import compare_education, get_profile_level
 from job.enrichment import SKILL_PATTERNS, detect_skills
 from job.fingerprint import GENDER_MARKERS
@@ -658,6 +659,9 @@ def prepare_application(
         "interview": vInterview,
         "letter": build_letter(pProfile, vMatch, pOffer, vHybridSentence),
         "hybrid": vHybrid,
+        "keywords": build_keyword_advice(
+            pProfile, pOffer, vMatch, get_offer_text(pOffer)
+        ),
     }
 
     return rPreparation

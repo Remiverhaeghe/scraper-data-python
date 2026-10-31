@@ -771,7 +771,7 @@ def test_column_width_is_kept_for_the_next_opening(database_file):
 def test_tailored_cv_is_saved_where_chosen(
     offers_page, database_file, tmp_path, monkeypatch
 ):
-    """Vérifie l'enregistrement du CV adapté au chemin choisi, puis son ouverture."""
+    """Vérifie le CV adapté enregistré en Word puis en PDF, et son ouverture."""
 
     save_profile(
         database_file,
@@ -793,6 +793,11 @@ def test_tailored_cv_is_saved_where_chosen(
 
     assert vTarget.read_bytes()[:2] == b"PK"
     assert len(vOpened) == 1
+
+    vTarget = tmp_path / "cv.pdf"
+    offers_page.detail_panel.assistant.export_cv()
+
+    assert vTarget.read_bytes()[:4] == b"%PDF"
 
 
 def test_keyboard_status_moves_to_the_next_offer(offers_page, database_file):
