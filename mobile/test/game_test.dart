@@ -14,11 +14,12 @@ import 'package:jobboard_revision/services/revision_store.dart';
 import 'package:jobboard_revision/widgets/celebration.dart';
 import 'package:jobboard_revision/widgets/game_card.dart';
 
+import 'support/fake_reminders.dart';
 import 'support/sample_data.dart';
 
 const settings = ServerSettings(address: 'http://pc/api/v1', token: 'secret');
 
-Future<RevisionState> buildState() async {
+Future<RevisionState> buildState({FakeReminders? pReminders}) async {
   final rState = RevisionState(
     MemoryRevisionStore()
       ..settings = settings
@@ -28,6 +29,7 @@ Future<RevisionState> buildState() async {
       pSettings,
       pClient: MockClient((_) async => http.Response('', 503)),
     ),
+    reminders: pReminders,
   );
 
   await rState.load();
@@ -35,7 +37,7 @@ Future<RevisionState> buildState() async {
   return rState;
 }
 
-ApiClient serveGame(int pLevel) {
+ApiClient serveGame(int pLevel, {Map<String, dynamic>? pSeason}) {
   final rClient = ApiClient(
     settings,
     pClient: MockClient(
@@ -58,6 +60,7 @@ ApiClient serveGame(int pLevel) {
               },
             ],
             'cosmetics': {'frame': 'bronze', 'frame_color': '#B45309', 'frame_width': 3},
+            if (pSeason != null) 'season': pSeason,
             'mascot': {
               'mood': 'focused',
               'text': "Plus que 6 pour « Réviser 10 questions ». On s'y met ?",
@@ -153,5 +156,40 @@ void main() {
     await pTester.pumpAndSettle();
 
     expect(find.byType(CelebrationView), findsNothing);
+  });
+
+  testWidgets('Le bilan de la semaine est affiché et annoncé une fois par saison', (pTester) async {
+    final vReminders = FakeReminders();
+    final vState = await buildState(pReminders: vReminders);
+    const vSeason = {
+      'key': '2026-W44',
+      'title': 'Saison 44',
+      'summary': '310 XP, +210 par rapport à la semaine précédente',
+      'medal': {'label': "Médaille d'or : 17 quêtes sur 22", 'color': '#EAB308'},
+    };
+
+    await vState.savePreference(reminderPreference, true);
+    await vState.exchangeGame(serveGame(3, pSeason: vSeason));
+    await vState.exchangeGame(serveGame(3, pSeason: vSeason));
+    await vState.exchangeGame(serveGame(3, pSeason: {...vSeason, 'key': '2026-W45'}));
+
+    expect([for (final vItem in vReminders.shownSeasons) vItem['key']], ['2026-W44', '2026-W45']);
+
+    await pTester.pumpWidget(MaterialApp(home: Scaffold(body: GameCard(state: vState))));
+
+    expect(find.text('Bilan de la Saison 44'), findsOneWidget);
+    expect(find.textContaining("Médaille d'or"), findsOneWidget);
+    expect(GameCard.parseColor('#EAB308'), const Color(0xFFEAB308));
+    expect(GameCard.parseColor('rouge'), isNull);
+  });
+
+  test('Sans rappels actifs, le bilan est noté sans notification', () async {
+    final vReminders = FakeReminders();
+    final vState = await buildState(pReminders: vReminders);
+
+    await vState.exchangeGame(serveGame(3, pSeason: {'key': '2026-W44', 'title': 'Saison 44'}));
+
+    expect(vReminders.shownSeasons, isEmpty);
+    expect(vState.preferences[notifiedSeasonPreference], '2026-W44');
   });
 }

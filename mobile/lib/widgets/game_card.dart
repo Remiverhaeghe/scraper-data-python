@@ -25,17 +25,27 @@ class GameCard extends StatelessWidget {
         ),
       );
 
+  /// Couleur d'un code « #RRGGBB » envoyé par le PC, ou null.
+  static Color? parseColor(Object? pValue) {
+    final vColor = '${pValue ?? ''}';
+
+    final rColor = RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(vColor)
+        ? Color(int.parse('FF${vColor.substring(1)}', radix: 16))
+        : null;
+
+    return rColor;
+  }
+
   /// Bordure du cadre d'avatar choisi, ou aucune.
   static Border? frameBorder(Map? pCosmetics) {
     final vWidth = (pCosmetics?['frame_width'] as num?)?.toDouble() ?? 0;
-    final vColor = '${pCosmetics?['frame_color'] ?? ''}';
+    final vColor = parseColor(pCosmetics?['frame_color']);
 
-    if (vWidth == 0 || !vColor.startsWith('#')) {
+    if (vWidth == 0 || vColor == null) {
       return null;
     }
 
-    return Border.all(
-        color: Color(int.parse('FF${vColor.substring(1)}', radix: 16)), width: vWidth);
+    return Border.all(color: vColor, width: vWidth);
   }
 
   Widget buildLevel(BuildContext pContext, Map<String, dynamic> pGame) {
@@ -142,6 +152,26 @@ class GameCard extends StatelessWidget {
     return rTrophies;
   }
 
+  /// Bilan de la semaine écoulée : saison, XP comparée et médaille.
+  Widget buildSeason(BuildContext pContext, Map pSeason) {
+    final vMedal = pSeason['medal'] as Map?;
+
+    final rSeason = ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        Icons.military_tech,
+        color: parseColor(vMedal?['color']) ?? Theme.of(pContext).colorScheme.outline,
+      ),
+      title: Text('Bilan de la ${pSeason['title']}'),
+      subtitle: Text(
+        [pSeason['summary'], if (vMedal != null) vMedal['label']].join(' · '),
+      ),
+    );
+
+    return rSeason;
+  }
+
   Widget buildQuest(BuildContext pContext, Map<String, dynamic> pQuest) {
     final vDone = pQuest['done'] == true;
     final vColor = vDone ? successColorOf(pContext) : null;
@@ -189,6 +219,7 @@ class GameCard extends StatelessWidget {
               if (vGame['mascot'] case final Map vMascot) buildMascot(context, vMascot),
               buildLevel(context, vGame),
               buildTrophies(context, vGame),
+              if (vGame['season'] case final Map vSeason) buildSeason(context, vSeason),
               const SizedBox(height: 8),
               for (final vQuest in vGame['quests'] as List? ?? const [])
                 buildQuest(context, Map<String, dynamic>.from(vQuest as Map)),

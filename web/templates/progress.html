@@ -41,6 +41,29 @@
     </ul>
 </article>
 
+{# Bilan de la semaine écoulée (job/season_review.py), annoncé le lundi. #}
+{% set season = progress.season %}
+<article class="card section-gap season" id="season">
+    <h2>{{ icon("award") }} Bilan de la saison</h2>
+    {% if season %}
+    <p class="card-subtitle"><strong>{{ season.title }}</strong> · du {{ season.start | date_fr }} au {{ season.end | date_fr }}{% if season.record %} · record des huit dernières semaines{% endif %}</p>
+    <p>{{ season.summary }}</p>
+    {% if season.medal %}<p class="season-medal" style="--medal: {{ season.medal.color }}">{{ icon("award", 24) }} <strong>{{ season.medal.label }}</strong></p>{% endif %}
+    <div class="week-summary">
+        {% for row in season.statistics %}
+        <div class="week-item" title="{{ row.previous }} la semaine précédente">
+            <span class="week-value">{{ row.value }}</span>
+            <span class="muted">{{ row.label }}</span>
+            <span class="week-trend {{ 'trend-up' if row.value > row.previous else 'trend-down' if row.value < row.previous else '' }}">{{ row.trend }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    <p class="muted">Meilleur jour : le {{ season.best_day.day | date_fr }}, {{ season.best_day.xp }} XP</p>
+    {% else %}
+    <p class="muted">La semaine dernière s'est passée sans activité : une révision ou une candidature suffit pour que le prochain lundi ait son bilan.</p>
+    {% endif %}
+</article>
+
 <article class="card section-gap">
     <h2>{{ icon("award") }} Trophées · {{ progress.achievement_count }} sur {{ progress.achievements | length }}</h2>
     <p class="card-subtitle">Certains restent cachés jusqu'à leur obtention</p>

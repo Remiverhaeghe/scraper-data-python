@@ -5,6 +5,16 @@ dans l'historique git.
 
 ## Non publié
 
+### Bilan hebdomadaire « saison »
+- Bilan de la semaine écoulée sur la page Progression (bureau, web) : XP, jours
+  actifs, quêtes, candidatures, révisions et entretiens comparés à la semaine
+  précédente, meilleur jour, record des huit dernières semaines, médaille selon
+  la part des quêtes réussies
+- Annoncé le lundi par une notification du bureau, et une fois par semaine sur le
+  téléphone quand les rappels sont actifs
+- Correction : une quête de la semaine réussie rapporte enfin ses 60 XP (sa clé
+  de semaine n'était pas lue comme une date)
+
 ### CV et lettre ajustés à l'offre
 - Mots de l'annonce à reprendre, repérés par règles : intitulé nettoyé, compétences
   couvertes (exigées en tête), qualités et conditions du poste ; chacun marqué

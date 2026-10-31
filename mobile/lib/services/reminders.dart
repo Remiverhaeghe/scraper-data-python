@@ -19,6 +19,7 @@ const reminderId = 1;
 const offersNotificationId = 2;
 const repliesNotificationId = 3;
 const withdrawnNotificationId = 4;
+const seasonNotificationId = 5;
 
 // Rappels d'entretien : identifiants réservés, un par rappel
 const firstInterviewAlertId = 100;
@@ -65,6 +66,9 @@ abstract class Reminders {
 
   /// Signale les offres suivies que leur site a retirées.
   Future<void> showWithdrawn(List<Map<String, dynamic>> pOffers);
+
+  /// Annonce le bilan de la semaine écoulée.
+  Future<void> showSeasonReview(Map<String, dynamic> pSeason);
 
   /// Remplace les rappels d'entretien par ceux donnés.
   Future<void> scheduleInterviews(List<InterviewAlert> pAlerts);
@@ -222,6 +226,26 @@ class LocalReminders implements Reminders {
     );
 
     log('Notification de ${pOffers.length} offre(s) retirée(s)', name: 'offres');
+  }
+
+  @override
+  Future<void> showSeasonReview(Map<String, dynamic> pSeason) async {
+    await initialize();
+
+    await plugin.show(
+      id: seasonNotificationId,
+      title: 'Bilan de la ${pSeason['title']}',
+      body: '${pSeason['summary']}',
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'season',
+          'Bilan de la semaine',
+          channelDescription: 'XP, quêtes et candidatures de la semaine écoulée, le lundi',
+        ),
+      ),
+    );
+
+    log('Notification du bilan ${pSeason['key']}', name: 'progression');
   }
 
   @override

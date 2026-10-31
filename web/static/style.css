@@ -2894,6 +2894,17 @@ textarea.companies-preferred {
     font-weight: 700;
 }
 
+.season-medal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--medal);
+}
+
+.season-medal strong {
+    color: var(--text);
+}
+
 .week-trend {
     font-weight: 600;
 }

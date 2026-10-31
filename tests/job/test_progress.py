@@ -9,10 +9,13 @@ from job.progress import (
     compute_streak,
     describe_level,
     draw_daily_quests,
+    QUESTS_KEY,
     get_total_xp,
+    read_quest_day,
 )
 from storage.database import connect_database, initialize_database
 from storage.job_applications import save_application
+from storage.settings_repository import save_json_setting
 
 NOW = datetime(2026, 10, 29, 18, 0)
 TODAY = NOW.date()
@@ -121,3 +124,31 @@ def test_urgent_quests_come_first():
     assert vQuests[:2] == ["follow_up", "exam"]
     assert "revise" in vQuests
     assert "apply" not in vQuests
+
+
+def test_weekly_quest_points_are_counted_on_its_monday(database_file):
+    """Vérifie les points d'une quête de la semaine, comptés au lundi de sa semaine."""
+
+    save_json_setting(
+        database_file,
+        QUESTS_KEY,
+        {"drawn": {}, "done": {"2026-S43": ["week_apply"], "2026-10-28": ["revise"]}},
+    )
+
+    assert get_total_xp(database_file) == 60 + 20
+    assert read_quest_day("2026-S43") == date(2026, 10, 19)
+    assert read_quest_day("2026-S99") is None
+    assert read_quest_day("hier") is None
+
+
+def test_progress_includes_the_last_week_review(database_file):
+    """Vérifie le bilan de la semaine écoulée joint à la progression."""
+
+    assert build_progress(database_file, NOW)["season"] is None
+
+    answer(database_file, 4, pDay=date(2026, 10, 21))
+
+    vSeason = build_progress(database_file, NOW)["season"]
+
+    assert vSeason["key"] == "2026-W43" and vSeason["title"] == "Saison 43"
+    assert vSeason["statistics"][0]["value"] == 20

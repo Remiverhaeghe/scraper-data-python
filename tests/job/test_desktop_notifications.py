@@ -138,3 +138,29 @@ def test_new_offer_of_a_followed_employer_is_announced(database_file, monkeypatc
 
     assert vNotification["title"] == "Nouvelle offre chez Roquette"
     assert vNotification["text"] == "Technicien de maintenance"
+
+
+def test_last_week_review_is_announced_on_monday(database_file, monkeypatch):
+    """Vérifie le bilan de la semaine annoncé le lundi seulement."""
+
+    for vName in ("get_due_follow_ups", "find_hot_offers", "find_preferred_offers"):
+        monkeypatch.setattr(notifications, vName, lambda *pArgs: [])
+
+    monkeypatch.setattr(
+        notifications,
+        "build_progress",
+        lambda *pArgs: {
+            "quests": [],
+            "streak": 0,
+            "active_today": True,
+            "season": {"key": "2026-W44", "title": "Saison 44", "summary": "310 XP"},
+        },
+    )
+
+    assert pick_notification(database_file, MORNING) is None
+
+    vNotification = pick_notification(database_file, datetime(2026, 11, 2, 10, 0))
+
+    assert vNotification["title"] == "Bilan de la Saison 44"
+    assert vNotification["text"] == "310 XP"
+    assert vNotification["page"] == "progress"

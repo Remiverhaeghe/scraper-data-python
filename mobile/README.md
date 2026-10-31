@@ -29,7 +29,7 @@ offres proches de vos candidatures signalées, simulation d'entretien
 technique et auto-évaluation des compétences, envoyées au PC à la synchronisation,
 rappel de chaque entretien la veille à 18 h et une heure avant, notification des
 offres suivies retirées par leur site et des nouvelles offres des entreprises
-privilégiées, révision express de 5 minutes avec compte à rebours, note rapide sur
+privilégiées, bilan de la semaine écoulée annoncé une fois par semaine, révision express de 5 minutes avec compte à rebours, note rapide sur
 une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
 lisibles hors ligne et fiche de préparation (avancement de la mission entretien, pitch, questions pièges, questions à
 poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien,
@@ -223,7 +223,7 @@ mobile/
 │   │   └── sql_screen.dart       # SQL : dialecte, niveaux, requête et tableaux de résultats
 │   └── widgets/
 │       ├── celebration.dart      # Confettis et carte d'un niveau gagné ou d'un record
-│       ├── game_card.dart        # Mascotte, niveau et cadre, série et quêtes reçus du PC, accès au jeu
+│       ├── game_card.dart        # Mascotte, niveau et cadre, série, quêtes et bilan de la semaine, accès au jeu
 │       ├── question_input.dart   # Saisie selon le type de question
 │       └── question_parts.dart   # Code, schéma SVG plein écran et résultat corrigé
 └── test/
@@ -253,7 +253,7 @@ mobile/
     ├── home_widget_test.dart     # Teste les lignes du widget et sa mise à jour
     ├── sync_lock_test.dart       # Teste le verrou entre l'application et la tâche de fond
     ├── review_input_test.dart    # Teste la saisie d'une revue de code
-    ├── game_test.dart            # Teste la progression reçue, la fête de niveau et le jeu
+    ├── game_test.dart            # Teste la progression reçue, la fête de niveau, le bilan et le jeu
     ├── integration/
     │   └── server_sync_test.dart # Synchronisation avec le vrai serveur (CI seulement)
     ├── schema_view_test.dart     # Teste la description et le plein écran des schémas

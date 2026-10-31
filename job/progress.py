@@ -20,6 +20,7 @@ from job.mascot import build_mascot
 from job.interview_mission import MISSIONS_KEY
 from job.oral_interview import ORAL_KEY
 from job.salary_negotiation import NEGOTIATION_KEY
+from job.season_review import build_season_review
 from job.quiz_exam import load_exam_results
 from storage.aptitude_sessions import get_aptitude_sessions
 from storage.database import connect_database
@@ -145,6 +146,9 @@ WEEKLY_QUESTS = {
     "week_revise": ("Réviser 60 questions", 60),
 }
 
+# Une quête de la semaine est tirée chaque lundi
+WEEKLY_QUEST_COUNT = 1
+
 # Quêtes tirées pour chaque jour et chaque semaine, gardées pour ne pas changer en
 # cours de journée quand la situation évolue (une relance faite, par exemple)
 QUESTS_KEY = "progress_quests"
@@ -160,6 +164,22 @@ def read_day(pValue):
 
     try:
         rDay = date.fromisoformat(str(pValue)[:10])
+
+    except ValueError:
+        rDay = None
+
+    return rDay
+
+
+def read_quest_day(pKey):
+    """Retourne le jour d'une quête réussie : sa date, ou le lundi de sa semaine (2026-S44)."""
+
+    vYear, _, vWeek = str(pKey).partition("-S")
+
+    try:
+        rDay = (
+            date.fromisocalendar(int(vYear), int(vWeek), 1) if vWeek else read_day(pKey)
+        )
 
     except ValueError:
         rDay = None
@@ -384,7 +404,7 @@ def load_activity(pDatabaseFile):
         for vQuest in vQuests:
             add_action(
                 rActivity,
-                read_day(vDay),
+                read_quest_day(vDay),
                 "weekly_quest" if vQuest in WEEKLY_QUESTS else "daily_quest",
             )
 
@@ -705,6 +725,9 @@ def build_progress(pDatabaseFile, pNow=None):
     ]
     rProgress["mascot"] = build_mascot(rProgress, pNow or datetime.now())
     rProgress["cosmetics"] = build_cosmetics_view(pDatabaseFile, rProgress["level"])
+    rProgress["season"] = build_season_review(
+        vActivity, vToday, 7 * DAILY_QUEST_COUNT + WEEKLY_QUEST_COUNT
+    )
 
     return rProgress
 

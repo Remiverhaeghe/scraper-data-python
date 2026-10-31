@@ -1,9 +1,10 @@
 """Notifications du bureau : quoi signaler, quand, et jamais plus de trois par jour
 
-Cinq situations méritent une notification : les relances du jour, une offre
+Six situations méritent une notification : les relances du jour, une offre
 récente très proche du profil, une nouvelle offre d'un employeur suivi, une
-quête du jour presque terminée et, le soir, une série sur le point de s'arrêter. Chacune n'est signalée qu'une fois ; les
-heures calmes et le plafond quotidien des Paramètres évitent de lasser.
+quête du jour presque terminée, le soir une série sur le point de s'arrêter et,
+le lundi, le bilan de la semaine écoulée. Chacune n'est signalée qu'une fois ;
+les heures calmes et le plafond quotidien des Paramètres évitent de lasser.
 """
 
 from datetime import timedelta
@@ -88,6 +89,17 @@ def collect_candidates(pDatabaseFile, pNow):
         )
 
     vProgress = build_progress(pDatabaseFile, pNow)
+
+    # Le bilan de la semaine écoulée s'annonce le lundi
+    if pNow.weekday() == 0 and (vSeason := vProgress.get("season")):
+        rCandidates.append(
+            {
+                "key": f"season-{vSeason['key']}",
+                "title": f"Bilan de la {vSeason['title']}",
+                "text": vSeason["summary"],
+                "page": "progress",
+            }
+        )
 
     for vQuest in vProgress["quests"]:
         if (

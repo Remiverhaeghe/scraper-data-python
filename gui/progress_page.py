@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 from gui.chart import BarChart
 from gui.progress_widgets import build_badge_style
 from gui.rewards_card import RewardsCard
+from gui.season_card import SeasonCard
 from gui.theme import ACCENTS, COLORS
 from gui.widgets import (
     StatisticCard,
@@ -314,6 +315,8 @@ class ProgressPage(QWidget):
         vLayout.addWidget(vBanner)
         vLayout.addLayout(vCards)
         vLayout.addWidget(vQuestCard)
+        self.season = SeasonCard()
+        vLayout.addWidget(self.season)
         vLayout.addWidget(vTrophyCard)
         vLayout.addWidget(vPlayerCard)
         self.rewards = RewardsCard(pDatabaseFile)
@@ -342,6 +345,7 @@ class ProgressPage(QWidget):
             build_badge_style(42, pProgress.get("cosmetics"), BIG_BADGE)
         )
         self.rewards.set_view(pProgress["cosmetics"])
+        self.season.set_review(pProgress.get("season"))
         self.title_label.setText(f"Niveau {pProgress['level']} · {pProgress['title']}")
         self.next_label.setText(
             f"Encore {pProgress['xp_for_level'] - pProgress['xp_in_level']} XP pour "

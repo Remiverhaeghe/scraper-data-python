@@ -71,6 +71,9 @@ const trackingPreference = 'tracking';
 const gamePreference = 'game';
 const celebratedLevelPreference = 'celebrated_level';
 
+/// Semaine du dernier bilan annoncé : une seule notification par saison.
+const notifiedSeasonPreference = 'notified_season';
+
 /// Meilleur score du jeu « Contre la montre »
 const timeAttackBestPreference = 'time_attack_best';
 
@@ -1374,6 +1377,8 @@ class RevisionState extends ChangeNotifier {
       if (preferences[celebratedLevelPreference] == null && vGame['level'] is num) {
         await savePreference(celebratedLevelPreference, vGame['level'] as num);
       }
+
+      await notifySeason(vGame['season']);
     } on ApiException catch (vException) {
       if (vException.unreachable) {
         rethrow;
@@ -1381,6 +1386,19 @@ class RevisionState extends ChangeNotifier {
 
       log('Progression non reçue : ${vException.message}', name: 'sync');
     }
+  }
+
+  /// Annonce une fois le bilan d'une nouvelle semaine, si les rappels sont actifs.
+  Future<void> notifySeason(Object? pSeason) async {
+    if (pSeason is! Map || preferences[notifiedSeasonPreference] == '${pSeason['key']}') {
+      return;
+    }
+
+    if (reminderEnabled && reminders != null) {
+      await reminders!.showSeasonReview(Map<String, dynamic>.from(pSeason));
+    }
+
+    await savePreference(notifiedSeasonPreference, '${pSeason['key']}');
   }
 
   /// Meilleur score du jeu « Contre la montre », 0 avant la première partie.

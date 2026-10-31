@@ -34,6 +34,11 @@ class FakeReminders implements Reminders {
   Future<void> showWithdrawn(List<Map<String, dynamic>> pOffers) async =>
       shownWithdrawn.add(pOffers);
 
+  final shownSeasons = <Map<String, dynamic>>[];
+
+  @override
+  Future<void> showSeasonReview(Map<String, dynamic> pSeason) async => shownSeasons.add(pSeason);
+
   @override
   Future<void> scheduleInterviews(List<InterviewAlert> pAlerts) async =>
       interviewAlerts.add(pAlerts);

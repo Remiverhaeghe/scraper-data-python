@@ -4,7 +4,7 @@ import io
 import json
 import re
 import zipfile
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import pandas as pd
 from pathlib import Path
@@ -33,6 +33,8 @@ from job.code_puzzles import SERIES_LENGTH, build_puzzle_view
 from job.cosmetics import ACCENTS
 from job.weekly_planning import load_planned_revisions
 from job.local_employers import LOCAL_EMPLOYERS_KEY
+from job.progress import build_progress
+from job.season_review import build_season_review
 from job.challenges import get_expected_answers, get_seed
 from job.quiz_import import import_questions, import_questions_file
 from tools.quiz_lot import build_pack as build_lot_pack
@@ -3112,6 +3114,29 @@ def test_progress_page_and_sidebar_summary(client):
     assert "Candidature envoyée" in vPage.text
     assert 'data-xp="0"' in vSummary and 'data-level="1"' in vSummary
     assert 'hx-get="/progress/summary"' in client.get("/").text
+    assert "sans activité" in vPage.text
+
+
+def test_progress_page_shows_the_season_review(client, monkeypatch):
+    """Vérifie le bilan de la semaine écoulée sur la page Progression."""
+
+    monkeypatch.setattr(
+        "web.routes.progress.build_progress",
+        lambda *pArgs: {
+            **build_progress(app.dependency_overrides[get_database_file]()),
+            "season": build_season_review(
+                {date(2026, 10, 28): {"xp": 250, "actions": {"daily_quest": 9}}},
+                date(2026, 11, 2),
+                22,
+            ),
+        },
+    )
+
+    vPage = client.get("/progress").text
+
+    assert "Saison 44" in vPage and "du 26/10/2026 au 01/11/2026" in vPage
+    assert "Médaille d&#39;argent : 9 quêtes sur 22" in vPage
+    assert "Meilleur jour : le 28/10/2026, 250 XP" in vPage
 
 
 def test_certifications_page_saves_details_and_documents(client):
