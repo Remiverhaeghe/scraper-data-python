@@ -462,6 +462,7 @@ Page Révision du bureau et du web (installable sur le téléphone), sans servic
 
 - [x] QCM par langage et par niveau : « que fait ce code ? », « qu'apporte Java 11 ? », bonnes pratiques
 - [x] Questions interactives : calcul avec unité et tolérance (« 2,3 mA » accepté pour une réponse en A), remise en ordre d'étapes, association d'éléments, code à compléter, revue de code (défauts à cocher), zone à désigner en cliquant sur un schéma, schéma à construire (49 symboles d'électricité, électronique, pneumatique, hydraulique et réseau ; placement sur une grille, câblage des bornes à la souris, plusieurs exemplaires d'un même composant (deux vérins, des lampes en parallèle, des postes en étoile) ; correction par comparaison des liaisons, schéma construit dessiné à côté du schéma attendu, fils en trop en rouge) ; une saisie illisible est reposée sans être comptée. Examen compris ; l'application mobile reçoit les QCM, les calculs, les remises en ordre, les associations et les revues de code
+- [x] Thème livré « Lecture de schémas de maintenance » : composants à désigner sur quatre circuits (puissance d'un moteur triphasé, commande marche-arrêt avec auto-maintien, vérin pneumatique double effet, centrale hydraulique), consignation et recherche de panne en plusieurs étapes, commande d'un vérin à câbler
 - [x] Thèmes Java (nouveautés de Java 8 à 21), Python, SQL, JavaScript, Git, bonnes pratiques, Docker et Spring
 - [x] Thèmes demandés par les offres et encore sans question mis en avant en haut de la Révision, demande ChatGPT prête
 - [x] Lots écrits de 100 questions (tools/quiz_lots) : cloud (AWS, Azure, GCP), Terraform et Ansible, Linux et shell, SQL Server, MySQL et MariaDB, réseaux TCP/IP, sécurité applicative (OWASP), maintenance industrielle, Python, TypeScript, frameworks frontend (React, Angular, Vue), Kubernetes et Helm, en plus des lots d'automatisme, d'électricité, d'électronique, de fluides et de sigles
@@ -1190,6 +1191,7 @@ scraper-data-python/
 │   │   ├── iot-industriel.json                # IoT industriel : MQTT, OPC UA, edge, ISA-95, capteurs connectés
 │   │   ├── cybersecurite-industrielle.json    # Cybersécurité industrielle : IEC 62443, zones et conduits, ANSSI
 │   │   ├── normes-qse.json                    # Normes, qualité et sécurité : ISO 9001, habilitation, machines
+│   │   ├── schemas-maintenance.json           # Lecture de schémas : électricité, pneumatique, hydraulique
 │   │   ├── guides/                            # Guides pratiques livrés, un Markdown par thème
 │   │   └── schemas/                           # Schémas SVG livrés, montrés avec la question ou la correction
 │   ├── troubleshooting/

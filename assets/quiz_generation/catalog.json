@@ -80,6 +80,7 @@
       {"id": "levage-manutention", "label": "Levage et manutention", "skills": ["CACES", "levage", "pont roulant", "manutention"]},
       {"id": "qualite", "label": "Qualité et résolution de problèmes (8D, Ishikawa, ISO 9001)", "skills": ["qualité", "ISO 9001", "8D", "Ishikawa", "non-conformité"]},
       {"id": "lean", "label": "Lean manufacturing et amélioration continue (5S, SMED, TRS)", "skills": ["Lean", "5S", "SMED", "TRS", "amélioration continue"]},
+      {"id": "schemas-maintenance", "label": "Lecture de schémas de maintenance (électricité, pneumatique, hydraulique)", "skills": ["lecture de schémas", "schémas électriques", "pneumatique", "hydraulique", "dépannage"]},
       {"id": "maintenance-conditionnelle", "label": "Maintenance conditionnelle (vibrations, thermographie)", "skills": ["analyse vibratoire", "thermographie", "maintenance conditionnelle", "maintenance prédictive"]}
     ],
     "Électricité et énergie": [

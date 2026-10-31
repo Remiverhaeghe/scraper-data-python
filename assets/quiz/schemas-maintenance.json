@@ -1,0 +1,1300 @@
+{
+  "theme": "Lecture de schémas de maintenance (électricité, pneumatique, hydraulique)",
+  "skills": [
+    "lecture de schémas",
+    "schémas électriques",
+    "pneumatique",
+    "hydraulique",
+    "dépannage",
+    "maintenance industrielle"
+  ],
+  "questions": [
+    {
+      "id": "schemas-001",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur l'organe qui protège le moteur contre les surcharges.",
+      "zones": [
+        {
+          "label": "Q1",
+          "rect": [
+            112,
+            90,
+            124,
+            145
+          ]
+        },
+        {
+          "label": "KM1",
+          "rect": [
+            296,
+            90,
+            100,
+            145
+          ]
+        },
+        {
+          "label": "F1",
+          "rect": [
+            470,
+            90,
+            110,
+            145
+          ]
+        },
+        {
+          "label": "M1",
+          "rect": [
+            712,
+            90,
+            120,
+            150
+          ]
+        }
+      ],
+      "answer": 2,
+      "visual": {
+        "asset": "maint-puissance.svg",
+        "alt": "Trois phases L1, L2, L3 traversant Q1, KM1 et F1 jusqu'au moteur M1",
+        "show": "question"
+      },
+      "explanation": "Le relais thermique F1 chauffe ses bilames avec le courant du moteur : une surcharge prolongée les fait fléchir et ouvre son contact 95-96, qui coupe la commande du contacteur. Il ne coupe pas lui-même la puissance."
+    },
+    {
+      "id": "schemas-002",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur l'organe qui établit et coupe le courant du moteur à chaque marche et à chaque arrêt.",
+      "zones": [
+        {
+          "label": "Q1",
+          "rect": [
+            112,
+            90,
+            124,
+            145
+          ]
+        },
+        {
+          "label": "KM1",
+          "rect": [
+            296,
+            90,
+            100,
+            145
+          ]
+        },
+        {
+          "label": "F1",
+          "rect": [
+            470,
+            90,
+            110,
+            145
+          ]
+        },
+        {
+          "label": "M1",
+          "rect": [
+            712,
+            90,
+            120,
+            150
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "maint-puissance.svg",
+        "alt": "Trois phases L1, L2, L3 traversant Q1, KM1 et F1 jusqu'au moteur M1",
+        "show": "question"
+      },
+      "explanation": "Le contacteur KM1 est fait pour manœuvrer en charge des milliers de fois : sa bobine, commandée par le circuit de commande, ferme ou ouvre ses trois contacts de puissance."
+    },
+    {
+      "id": "schemas-003",
+      "level": "intermédiaire",
+      "type": "zone",
+      "question": "Avant d'intervenir sur le moteur, cliquez sur l'organe qui permet de séparer et de consigner l'installation.",
+      "zones": [
+        {
+          "label": "Q1",
+          "rect": [
+            112,
+            90,
+            124,
+            145
+          ]
+        },
+        {
+          "label": "KM1",
+          "rect": [
+            296,
+            90,
+            100,
+            145
+          ]
+        },
+        {
+          "label": "F1",
+          "rect": [
+            470,
+            90,
+            110,
+            145
+          ]
+        },
+        {
+          "label": "M1",
+          "rect": [
+            712,
+            90,
+            120,
+            150
+          ]
+        }
+      ],
+      "answer": 0,
+      "visual": {
+        "asset": "maint-puissance.svg",
+        "alt": "Trois phases L1, L2, L3 traversant Q1, KM1 et F1 jusqu'au moteur M1",
+        "show": "question"
+      },
+      "explanation": "Le sectionneur porte-fusibles Q1 isole le départ du réseau et se cadenasse en position ouverte : c'est l'organe de consignation. Ses fusibles aM protègent aussi contre les courts-circuits. Il ne s'ouvre jamais en charge : on arrête d'abord le moteur par KM1."
+    },
+    {
+      "id": "schemas-004",
+      "level": "intermédiaire",
+      "type": "zone",
+      "question": "Cliquez sur l'organe qui protège ce départ moteur contre les courts-circuits.",
+      "zones": [
+        {
+          "label": "Q1",
+          "rect": [
+            112,
+            90,
+            124,
+            145
+          ]
+        },
+        {
+          "label": "KM1",
+          "rect": [
+            296,
+            90,
+            100,
+            145
+          ]
+        },
+        {
+          "label": "F1",
+          "rect": [
+            470,
+            90,
+            110,
+            145
+          ]
+        },
+        {
+          "label": "M1",
+          "rect": [
+            712,
+            90,
+            120,
+            150
+          ]
+        }
+      ],
+      "answer": 0,
+      "visual": {
+        "asset": "maint-puissance.svg",
+        "alt": "Trois phases L1, L2, L3 traversant Q1, KM1 et F1 jusqu'au moteur M1",
+        "show": "question"
+      },
+      "explanation": "Les fusibles aM du sectionneur Q1 coupent un court-circuit en quelques millisecondes. Le relais thermique F1 réagit trop lentement pour cela : il ne protège que contre les surcharges."
+    },
+    {
+      "id": "schemas-005",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur le contact d'auto-maintien, qui garde le moteur en marche une fois le bouton Marche relâché.",
+      "zones": [
+        {
+          "label": "F1 95-96",
+          "rect": [
+            300,
+            86,
+            110,
+            50
+          ]
+        },
+        {
+          "label": "S1",
+          "rect": [
+            280,
+            146,
+            120,
+            50
+          ]
+        },
+        {
+          "label": "S2",
+          "rect": [
+            160,
+            218,
+            120,
+            54
+          ]
+        },
+        {
+          "label": "KM1 13-14",
+          "rect": [
+            340,
+            218,
+            120,
+            54
+          ]
+        },
+        {
+          "label": "Bobine KM1",
+          "rect": [
+            300,
+            296,
+            110,
+            42
+          ]
+        },
+        {
+          "label": "H1",
+          "rect": [
+            575,
+            302,
+            90,
+            50
+          ]
+        }
+      ],
+      "answer": 3,
+      "visual": {
+        "asset": "maint-commande.svg",
+        "alt": "Circuit de commande entre L et N : F1, S1, S2 en parallèle avec KM1, bobine KM1 et voyant H1",
+        "show": "question"
+      },
+      "explanation": "Le contact KM1 13-14, en parallèle sur le bouton Marche S2, se ferme dès que la bobine est alimentée : il prend le relais du bouton. Un appui sur Arrêt ou un déclenchement du thermique coupe la bobine, et l'auto-maintien retombe."
+    },
+    {
+      "id": "schemas-006",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur le bouton qui arrête le moteur.",
+      "zones": [
+        {
+          "label": "F1 95-96",
+          "rect": [
+            300,
+            86,
+            110,
+            50
+          ]
+        },
+        {
+          "label": "S1",
+          "rect": [
+            280,
+            146,
+            120,
+            50
+          ]
+        },
+        {
+          "label": "S2",
+          "rect": [
+            160,
+            218,
+            120,
+            54
+          ]
+        },
+        {
+          "label": "KM1 13-14",
+          "rect": [
+            340,
+            218,
+            120,
+            54
+          ]
+        },
+        {
+          "label": "Bobine KM1",
+          "rect": [
+            300,
+            296,
+            110,
+            42
+          ]
+        },
+        {
+          "label": "H1",
+          "rect": [
+            575,
+            302,
+            90,
+            50
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "maint-commande.svg",
+        "alt": "Circuit de commande entre L et N : F1, S1, S2 en parallèle avec KM1, bobine KM1 et voyant H1",
+        "show": "question"
+      },
+      "explanation": "S1 est un bouton à ouverture, placé en série : il est fermé au repos et coupe l'alimentation de la bobine quand on l'appuie. Un fil coupé sur ce circuit arrête aussi le moteur : c'est une sécurité positive."
+    },
+    {
+      "id": "schemas-007",
+      "level": "intermédiaire",
+      "type": "zone",
+      "question": "Le relais thermique a déclenché. Cliquez sur le contact qui vient de couper la commande.",
+      "zones": [
+        {
+          "label": "F1 95-96",
+          "rect": [
+            300,
+            86,
+            110,
+            50
+          ]
+        },
+        {
+          "label": "S1",
+          "rect": [
+            280,
+            146,
+            120,
+            50
+          ]
+        },
+        {
+          "label": "S2",
+          "rect": [
+            160,
+            218,
+            120,
+            54
+          ]
+        },
+        {
+          "label": "KM1 13-14",
+          "rect": [
+            340,
+            218,
+            120,
+            54
+          ]
+        },
+        {
+          "label": "Bobine KM1",
+          "rect": [
+            300,
+            296,
+            110,
+            42
+          ]
+        },
+        {
+          "label": "H1",
+          "rect": [
+            575,
+            302,
+            90,
+            50
+          ]
+        }
+      ],
+      "answer": 0,
+      "visual": {
+        "asset": "maint-commande.svg",
+        "alt": "Circuit de commande entre L et N : F1, S1, S2 en parallèle avec KM1, bobine KM1 et voyant H1",
+        "show": "question"
+      },
+      "explanation": "Le contact à ouverture 95-96 du relais thermique F1 est câblé en série dans la commande : il s'ouvre au déclenchement et coupe la bobine du contacteur. Après avoir trouvé la cause de la surcharge, on réarme le relais."
+    },
+    {
+      "id": "schemas-008",
+      "level": "intermédiaire",
+      "type": "zone",
+      "question": "Le moteur ne démarre pas. Vous voulez savoir si le contacteur reçoit bien sa commande : cliquez sur l'élément aux bornes duquel mesurer la tension.",
+      "zones": [
+        {
+          "label": "F1 95-96",
+          "rect": [
+            300,
+            86,
+            110,
+            50
+          ]
+        },
+        {
+          "label": "S1",
+          "rect": [
+            280,
+            146,
+            120,
+            50
+          ]
+        },
+        {
+          "label": "S2",
+          "rect": [
+            160,
+            218,
+            120,
+            54
+          ]
+        },
+        {
+          "label": "KM1 13-14",
+          "rect": [
+            340,
+            218,
+            120,
+            54
+          ]
+        },
+        {
+          "label": "Bobine KM1",
+          "rect": [
+            300,
+            296,
+            110,
+            42
+          ]
+        },
+        {
+          "label": "H1",
+          "rect": [
+            575,
+            302,
+            90,
+            50
+          ]
+        }
+      ],
+      "answer": 4,
+      "visual": {
+        "asset": "maint-commande.svg",
+        "alt": "Circuit de commande entre L et N : F1, S1, S2 en parallèle avec KM1, bobine KM1 et voyant H1",
+        "show": "question"
+      },
+      "explanation": "On mesure entre A1 et A2, aux bornes de la bobine de KM1. Tension présente mais contacteur qui ne colle pas : bobine ou contacteur en cause. Pas de tension : la panne est en amont, dans les contacts du circuit de commande."
+    },
+    {
+      "id": "schemas-009",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur l'appareil qui filtre l'air, en règle la pression et le lubrifie avant les composants.",
+      "zones": [
+        {
+          "label": "Unité FRL",
+          "rect": [
+            140,
+            330,
+            110,
+            60
+          ]
+        },
+        {
+          "label": "Distributeur 5/2",
+          "rect": [
+            328,
+            262,
+            252,
+            92
+          ]
+        },
+        {
+          "label": "Réducteur côté fond",
+          "rect": [
+            284,
+            162,
+            72,
+            66
+          ]
+        },
+        {
+          "label": "Réducteur côté tige",
+          "rect": [
+            504,
+            162,
+            72,
+            66
+          ]
+        },
+        {
+          "label": "Chambre côté fond",
+          "rect": [
+            300,
+            66,
+            100,
+            68
+          ]
+        },
+        {
+          "label": "Chambre côté tige",
+          "rect": [
+            402,
+            66,
+            158,
+            68
+          ]
+        }
+      ],
+      "answer": 0,
+      "visual": {
+        "asset": "maint-pneumatique.svg",
+        "alt": "Air traité alimentant un distributeur à bobine Y1, deux réducteurs et un vérin à tige",
+        "show": "question"
+      },
+      "explanation": "L'unité FRL, filtre, régulateur et lubrificateur, conditionne l'air en tête d'une machine : un air sale ou humide use les joints et grippe les distributeurs, une pression trop haute fatigue tout le circuit."
+    },
+    {
+      "id": "schemas-010",
+      "level": "intermédiaire",
+      "type": "zone",
+      "question": "Cliquez sur l'organe qui envoie l'air dans l'une ou l'autre chambre du vérin selon que la bobine Y1 est excitée ou non.",
+      "zones": [
+        {
+          "label": "Unité FRL",
+          "rect": [
+            140,
+            330,
+            110,
+            60
+          ]
+        },
+        {
+          "label": "Distributeur 5/2",
+          "rect": [
+            328,
+            262,
+            252,
+            92
+          ]
+        },
+        {
+          "label": "Réducteur côté fond",
+          "rect": [
+            284,
+            162,
+            72,
+            66
+          ]
+        },
+        {
+          "label": "Réducteur côté tige",
+          "rect": [
+            504,
+            162,
+            72,
+            66
+          ]
+        },
+        {
+          "label": "Chambre côté fond",
+          "rect": [
+            300,
+            66,
+            100,
+            68
+          ]
+        },
+        {
+          "label": "Chambre côté tige",
+          "rect": [
+            402,
+            66,
+            158,
+            68
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "maint-pneumatique.svg",
+        "alt": "Air traité alimentant un distributeur à bobine Y1, deux réducteurs et un vérin à tige",
+        "show": "question"
+      },
+      "explanation": "Le distributeur 5/2 monostable a cinq orifices et deux positions. Au repos, le ressort le tient sur la case de droite ; la bobine Y1 le bascule sur la case de gauche, qui inverse l'alimentation des chambres."
+    },
+    {
+      "id": "schemas-011",
+      "level": "intermédiaire",
+      "type": "zone",
+      "question": "Pour faire sortir la tige, cliquez sur la chambre du vérin qui doit recevoir l'air.",
+      "zones": [
+        {
+          "label": "Unité FRL",
+          "rect": [
+            140,
+            330,
+            110,
+            60
+          ]
+        },
+        {
+          "label": "Distributeur 5/2",
+          "rect": [
+            328,
+            262,
+            252,
+            92
+          ]
+        },
+        {
+          "label": "Réducteur côté fond",
+          "rect": [
+            284,
+            162,
+            72,
+            66
+          ]
+        },
+        {
+          "label": "Réducteur côté tige",
+          "rect": [
+            504,
+            162,
+            72,
+            66
+          ]
+        },
+        {
+          "label": "Chambre côté fond",
+          "rect": [
+            300,
+            66,
+            100,
+            68
+          ]
+        },
+        {
+          "label": "Chambre côté tige",
+          "rect": [
+            402,
+            66,
+            158,
+            68
+          ]
+        }
+      ],
+      "answer": 4,
+      "visual": {
+        "asset": "maint-pneumatique.svg",
+        "alt": "Air traité alimentant un distributeur à bobine Y1, deux réducteurs et un vérin à tige",
+        "show": "question"
+      },
+      "explanation": "L'air qui entre côté fond pousse le piston vers la droite : la tige sort, et l'air de la chambre côté tige s'échappe par le distributeur. Pour rentrer la tige, c'est l'inverse."
+    },
+    {
+      "id": "schemas-012",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "La tige sort trop vite. Cliquez sur le réducteur de débit qui règle la vitesse de sortie.",
+      "zones": [
+        {
+          "label": "Unité FRL",
+          "rect": [
+            140,
+            330,
+            110,
+            60
+          ]
+        },
+        {
+          "label": "Distributeur 5/2",
+          "rect": [
+            328,
+            262,
+            252,
+            92
+          ]
+        },
+        {
+          "label": "Réducteur côté fond",
+          "rect": [
+            284,
+            162,
+            72,
+            66
+          ]
+        },
+        {
+          "label": "Réducteur côté tige",
+          "rect": [
+            504,
+            162,
+            72,
+            66
+          ]
+        },
+        {
+          "label": "Chambre côté fond",
+          "rect": [
+            300,
+            66,
+            100,
+            68
+          ]
+        },
+        {
+          "label": "Chambre côté tige",
+          "rect": [
+            402,
+            66,
+            158,
+            68
+          ]
+        }
+      ],
+      "answer": 3,
+      "visual": {
+        "asset": "maint-pneumatique.svg",
+        "alt": "Air traité alimentant un distributeur à bobine Y1, deux réducteurs et un vérin à tige",
+        "show": "question"
+      },
+      "explanation": "On règle à l'échappement : pendant la sortie, c'est l'air chassé de la chambre côté tige qui passe par l'étranglement, le clapet étant fermé dans ce sens. Freiner l'échappement donne un mouvement régulier, même avec une charge qui entraîne."
+    },
+    {
+      "id": "schemas-013",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur l'appareil qui transforme l'énergie mécanique du moteur en débit d'huile.",
+      "zones": [
+        {
+          "label": "Réservoir",
+          "rect": [
+            50,
+            322,
+            290,
+            62
+          ]
+        },
+        {
+          "label": "Pompe",
+          "rect": [
+            100,
+            216,
+            60,
+            58
+          ]
+        },
+        {
+          "label": "Clapet anti-retour",
+          "rect": [
+            176,
+            164,
+            36,
+            32
+          ]
+        },
+        {
+          "label": "Limiteur de pression",
+          "rect": [
+            240,
+            206,
+            82,
+            66
+          ]
+        },
+        {
+          "label": "Manomètre",
+          "rect": [
+            326,
+            118,
+            48,
+            48
+          ]
+        },
+        {
+          "label": "Distributeur 4/3",
+          "rect": [
+            390,
+            192,
+            240,
+            66
+          ]
+        },
+        {
+          "label": "Vérin",
+          "rect": [
+            536,
+            62,
+            310,
+            64
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "maint-hydraulique.svg",
+        "alt": "Pompe, clapet, limiteur, manomètre, distributeur à trois positions et vérin",
+        "show": "question"
+      },
+      "explanation": "La pompe, entraînée par le moteur électrique, crée un débit ; la pression n'apparaît que quand ce débit rencontre une résistance, comme un vérin en charge ou un limiteur."
+    },
+    {
+      "id": "schemas-014",
+      "level": "intermédiaire",
+      "type": "zone",
+      "question": "Cliquez sur l'appareil qui protège la pompe et le circuit contre une surpression.",
+      "zones": [
+        {
+          "label": "Réservoir",
+          "rect": [
+            50,
+            322,
+            290,
+            62
+          ]
+        },
+        {
+          "label": "Pompe",
+          "rect": [
+            100,
+            216,
+            60,
+            58
+          ]
+        },
+        {
+          "label": "Clapet anti-retour",
+          "rect": [
+            176,
+            164,
+            36,
+            32
+          ]
+        },
+        {
+          "label": "Limiteur de pression",
+          "rect": [
+            240,
+            206,
+            82,
+            66
+          ]
+        },
+        {
+          "label": "Manomètre",
+          "rect": [
+            326,
+            118,
+            48,
+            48
+          ]
+        },
+        {
+          "label": "Distributeur 4/3",
+          "rect": [
+            390,
+            192,
+            240,
+            66
+          ]
+        },
+        {
+          "label": "Vérin",
+          "rect": [
+            536,
+            62,
+            310,
+            64
+          ]
+        }
+      ],
+      "answer": 3,
+      "visual": {
+        "asset": "maint-hydraulique.svg",
+        "alt": "Pompe, clapet, limiteur, manomètre, distributeur à trois positions et vérin",
+        "show": "question"
+      },
+      "explanation": "Le limiteur de pression s'ouvre vers le réservoir quand la pression dépasse son tarage : sans lui, une pompe volumétrique bloquée ferait monter la pression jusqu'à la casse. Il se règle au manomètre, jamais au jugé."
+    },
+    {
+      "id": "schemas-015",
+      "level": "intermédiaire",
+      "type": "zone",
+      "question": "Cliquez sur l'appareil qui empêche l'huile de refluer vers la pompe à l'arrêt.",
+      "zones": [
+        {
+          "label": "Réservoir",
+          "rect": [
+            50,
+            322,
+            290,
+            62
+          ]
+        },
+        {
+          "label": "Pompe",
+          "rect": [
+            100,
+            216,
+            60,
+            58
+          ]
+        },
+        {
+          "label": "Clapet anti-retour",
+          "rect": [
+            176,
+            164,
+            36,
+            32
+          ]
+        },
+        {
+          "label": "Limiteur de pression",
+          "rect": [
+            240,
+            206,
+            82,
+            66
+          ]
+        },
+        {
+          "label": "Manomètre",
+          "rect": [
+            326,
+            118,
+            48,
+            48
+          ]
+        },
+        {
+          "label": "Distributeur 4/3",
+          "rect": [
+            390,
+            192,
+            240,
+            66
+          ]
+        },
+        {
+          "label": "Vérin",
+          "rect": [
+            536,
+            62,
+            310,
+            64
+          ]
+        }
+      ],
+      "answer": 2,
+      "visual": {
+        "asset": "maint-hydraulique.svg",
+        "alt": "Pompe, clapet, limiteur, manomètre, distributeur à trois positions et vérin",
+        "show": "question"
+      },
+      "explanation": "Le clapet anti-retour laisse passer l'huile dans un seul sens : la bille quitte son siège quand la pompe refoule, et s'y plaque si l'huile tente de revenir."
+    },
+    {
+      "id": "schemas-016",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Cliquez sur l'appareil qui, en position centrale, immobilise le vérin en bloquant ses deux orifices.",
+      "zones": [
+        {
+          "label": "Réservoir",
+          "rect": [
+            50,
+            322,
+            290,
+            62
+          ]
+        },
+        {
+          "label": "Pompe",
+          "rect": [
+            100,
+            216,
+            60,
+            58
+          ]
+        },
+        {
+          "label": "Clapet anti-retour",
+          "rect": [
+            176,
+            164,
+            36,
+            32
+          ]
+        },
+        {
+          "label": "Limiteur de pression",
+          "rect": [
+            240,
+            206,
+            82,
+            66
+          ]
+        },
+        {
+          "label": "Manomètre",
+          "rect": [
+            326,
+            118,
+            48,
+            48
+          ]
+        },
+        {
+          "label": "Distributeur 4/3",
+          "rect": [
+            390,
+            192,
+            240,
+            66
+          ]
+        },
+        {
+          "label": "Vérin",
+          "rect": [
+            536,
+            62,
+            310,
+            64
+          ]
+        }
+      ],
+      "answer": 5,
+      "visual": {
+        "asset": "maint-hydraulique.svg",
+        "alt": "Pompe, clapet, limiteur, manomètre, distributeur à trois positions et vérin",
+        "show": "question"
+      },
+      "explanation": "En position centrale, le distributeur 4/3 à centre fermé bloque les orifices A, B, P et T : l'huile est enfermée dans les chambres du vérin, qui tient sa position. Les deux bobines le décalent pour faire sortir ou rentrer la tige."
+    },
+    {
+      "id": "schemas-017",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur l'appareil où lire la pression de service.",
+      "zones": [
+        {
+          "label": "Réservoir",
+          "rect": [
+            50,
+            322,
+            290,
+            62
+          ]
+        },
+        {
+          "label": "Pompe",
+          "rect": [
+            100,
+            216,
+            60,
+            58
+          ]
+        },
+        {
+          "label": "Clapet anti-retour",
+          "rect": [
+            176,
+            164,
+            36,
+            32
+          ]
+        },
+        {
+          "label": "Limiteur de pression",
+          "rect": [
+            240,
+            206,
+            82,
+            66
+          ]
+        },
+        {
+          "label": "Manomètre",
+          "rect": [
+            326,
+            118,
+            48,
+            48
+          ]
+        },
+        {
+          "label": "Distributeur 4/3",
+          "rect": [
+            390,
+            192,
+            240,
+            66
+          ]
+        },
+        {
+          "label": "Vérin",
+          "rect": [
+            536,
+            62,
+            310,
+            64
+          ]
+        }
+      ],
+      "answer": 4,
+      "visual": {
+        "asset": "maint-hydraulique.svg",
+        "alt": "Pompe, clapet, limiteur, manomètre, distributeur à trois positions et vérin",
+        "show": "question"
+      },
+      "explanation": "Le manomètre, monté sur la ligne de pression après le clapet, indique la pression que doit fournir la pompe. C'est lui qui sert à régler le limiteur et à vérifier que la pression retombe à zéro avant une intervention."
+    },
+    {
+      "id": "schemas-018",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les étapes de la consignation électrique d'un départ moteur.",
+      "items": [
+        "Séparer : ouvrir le sectionneur Q1, moteur déjà arrêté",
+        "Condamner : cadenasser le sectionneur en position ouverte",
+        "Identifier : vérifier qu'on travaille bien sur l'équipement consigné",
+        "Vérifier l'absence de tension avec un VAT contrôlé avant et après",
+        "Mettre à la terre et en court-circuit si le risque de retour l'impose"
+      ],
+      "explanation": "La norme NF C 18-510 fixe cet ordre : on ne vérifie l'absence de tension qu'une fois l'équipement séparé, condamné et identifié, et on contrôle le VAT sur une source connue avant et après la mesure."
+    },
+    {
+      "id": "schemas-019",
+      "level": "intermédiaire",
+      "type": "ordre",
+      "question": "Le contacteur KM1 ne colle pas quand on appuie sur Marche. Remettez dans l'ordre les contrôles, en suivant le circuit depuis la source.",
+      "items": [
+        "Mesurer la tension de commande entre L et N",
+        "Contrôler le contact 95-96 du relais thermique F1",
+        "Contrôler le bouton Arrêt S1",
+        "Contrôler le bouton Marche S2 pendant qu'on l'actionne",
+        "Mesurer la tension entre A1 et A2 de la bobine de KM1"
+      ],
+      "explanation": "On suit le courant depuis la source : la tension disparaît juste après l'organe défaillant. Cette méthode évite de démonter au hasard et situe la panne en quelques mesures."
+    },
+    {
+      "id": "schemas-020",
+      "level": "intermédiaire",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre le remplacement d'un vérin pneumatique.",
+      "items": [
+        "Couper l'arrivée d'air et purger le circuit",
+        "Repérer puis débrancher les tubes du vérin",
+        "Démonter le vérin usé",
+        "Monter le vérin neuf et rebrancher les tubes selon le repérage",
+        "Remettre l'air progressivement, puis régler la vitesse aux réducteurs"
+      ],
+      "explanation": "Un circuit purgé ne garde pas d'énergie qui ferait bouger la tige pendant le démontage. Le repérage des tubes évite d'inverser sortie et rentrée, et la remise en air progressive évite un coup de bélier sur le vérin neuf."
+    },
+    {
+      "id": "schemas-021",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre le remplacement de la cartouche du filtre d'une centrale hydraulique.",
+      "items": [
+        "Consigner le moteur de la pompe",
+        "Faire chuter la pression jusqu'à zéro au manomètre",
+        "Remplacer la cartouche du filtre",
+        "Faire l'appoint d'huile au niveau du réservoir",
+        "Déconsigner, redémarrer et contrôler l'absence de fuite"
+      ],
+      "explanation": "Le moteur consigné ne peut plus relancer la pompe ; la pression résiduelle, d'un accumulateur par exemple, se purge ensuite. Une huile sous pression qui jaillit peut traverser la peau : on n'ouvre jamais un circuit avant d'avoir lu zéro au manomètre."
+    },
+    {
+      "id": "schemas-022",
+      "level": "confirmé",
+      "type": "construction",
+      "question": "Construisez la commande d'un vérin double effet : air traité, distributeur 5/2, et un réducteur sur chaque chambre.",
+      "components": [
+        {
+          "type": "source_air",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "frl",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "type": "distributeur_52",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "id": "r1",
+          "type": "reducteur",
+          "x": 1,
+          "y": 0,
+          "label": "Réducteur côté fond"
+        },
+        {
+          "id": "r2",
+          "type": "reducteur",
+          "x": 2,
+          "y": 0,
+          "label": "Réducteur côté tige"
+        },
+        {
+          "type": "verin_double",
+          "x": 2,
+          "y": 1
+        }
+      ],
+      "connections": [
+        [
+          "source_air",
+          "sortie",
+          "frl",
+          "1"
+        ],
+        [
+          "frl",
+          "2",
+          "distributeur_52",
+          "1"
+        ],
+        [
+          "distributeur_52",
+          "4",
+          "r1",
+          "1"
+        ],
+        [
+          "r1",
+          "2",
+          "verin_double",
+          "fond"
+        ],
+        [
+          "distributeur_52",
+          "2",
+          "r2",
+          "1"
+        ],
+        [
+          "r2",
+          "2",
+          "verin_double",
+          "tige"
+        ]
+      ],
+      "distractors": [
+        "verin_simple",
+        "distributeur_32"
+      ],
+      "explanation": "L'air passe par l'unité FRL avant le distributeur, dont l'orifice 1 est l'alimentation. Les orifices 4 et 2 vont chacun à une chambre du vérin, à travers un réducteur qui règle la vitesse à l'échappement. Un vérin double effet a besoin d'un distributeur à deux sorties : un 3/2 ne commande qu'un vérin simple effet."
+    }
+  ]
+}

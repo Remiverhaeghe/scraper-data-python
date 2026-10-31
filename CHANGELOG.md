@@ -5,6 +5,13 @@ dans l'historique git.
 
 ## Non publié
 
+### Lecture de schémas de maintenance
+- Nouveau thème livré (Industrie, Maintenance) : cliquer sur le bon composant de
+  quatre circuits dessinés pour l'occasion (puissance d'un moteur triphasé,
+  commande avec auto-maintien, vérin pneumatique double effet, centrale
+  hydraulique), consignation et recherche de panne en plusieurs étapes à
+  remettre dans l'ordre, commande d'un vérin pneumatique à câbler
+
 ### Mascotte
 - Boulon, un petit robot de maintenance en SVG, sur l'accueil du bureau, le
   tableau de bord web et la carte de jeu du téléphone : content, concentré,
