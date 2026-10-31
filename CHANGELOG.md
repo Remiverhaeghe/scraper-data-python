@@ -5,6 +5,15 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision IA et machine learning
+- Thème de 100 questions rangé dans Informatique, Données : types
+  d'apprentissage, jeux de données et fuites, mesures (précision, rappel, F1,
+  AUC), algorithmes courants, réseaux de neurones et PyTorch, LLM, RAG,
+  embeddings et modèles locaux (Ollama), maintenance prédictive et vision
+  industrielle, AI Act, RGPD et injection de prompt
+- Quatre schémas avec questions à zone et calculs : cycle d'un projet, matrice
+  de confusion, RAG, courbes d'apprentissage ; guide pratique
+
 ### Documentation découpée
 - README réduit à la présentation, au lancement et à l'emplacement des données,
   avec une table vers le dossier `docs/`

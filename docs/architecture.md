@@ -563,6 +563,7 @@ scraper-data-python/
 │   │   ├── normes-qse.json                    # Normes, qualité et sécurité : ISO 9001, habilitation, machines
 │   │   ├── schemas-maintenance.json           # Lecture de schémas : électricité, pneumatique, hydraulique
 │   │   ├── anglais-technique.json             # Anglais technique : vocabulaire d'atelier et d'informatique, faux amis
+│   │   ├── ia-machine-learning.json           # IA et machine learning : évaluation, LLM, RAG, industrie, AI Act
 │   │   ├── guides/                            # Guides pratiques livrés, un Markdown par thème
 │   │   └── schemas/                           # Schémas SVG livrés, montrés avec la question ou la correction
 │   ├── troubleshooting/

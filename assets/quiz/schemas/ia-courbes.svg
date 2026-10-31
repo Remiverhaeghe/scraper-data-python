@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="420" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Courbes d&#x27;apprentissage : erreur selon la complexité</text>
+<rect x="100.0" y="60.0" width="230.0" height="280.0" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="215.0" y="90.0" text-anchor="middle" font-size="22" font-weight="bold" fill="#334155">A</text>
+<rect x="330.0" y="60.0" width="230.0" height="280.0" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="445.0" y="90.0" text-anchor="middle" font-size="22" font-weight="bold" fill="#334155">B</text>
+<rect x="560.0" y="60.0" width="300.0" height="280.0" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="710.0" y="90.0" text-anchor="middle" font-size="22" font-weight="bold" fill="#334155">C</text>
+<line x1="100.0" y1="340.0" x2="870.0" y2="340.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="100.0" y1="340.0" x2="100.0" y2="52.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<text x="60.0" y="70.0" text-anchor="middle" font-size="13" fill="#334155">Erreur</text>
+<text x="480.0" y="362.0" text-anchor="middle" font-size="13" fill="#334155">Complexité du modèle, ou nombre d&#x27;époques</text>
+<path d="M110,100 C200,280 500,310 850,325" fill="none" stroke="#0369a1" stroke-width="3"/>
+<path d="M110,95 Q445,360 850,100" fill="none" stroke="#c2410c" stroke-width="3" stroke-dasharray="8 5"/>
+<line x1="200.0" y1="395.0" x2="240.0" y2="395.0" stroke="#0369a1" stroke-width="3"/>
+<text x="250.0" y="400.0" text-anchor="start" font-size="13" fill="#0f172a">Erreur sur l&#x27;entraînement</text>
+<line x1="520.0" y1="395.0" x2="560.0" y2="395.0" stroke="#c2410c" stroke-width="3" stroke-dasharray="8 5"/>
+<text x="570.0" y="400.0" text-anchor="start" font-size="13" fill="#0f172a">Erreur sur la validation</text>
+</svg>

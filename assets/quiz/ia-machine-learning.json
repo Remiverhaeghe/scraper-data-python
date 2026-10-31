@@ -1,0 +1,1861 @@
+{
+  "theme": "IA et machine learning",
+  "skills": [
+    "intelligence artificielle",
+    "IA",
+    "machine learning",
+    "deep learning",
+    "LLM",
+    "IA générative",
+    "scikit-learn",
+    "PyTorch",
+    "TensorFlow",
+    "RAG",
+    "data science",
+    "vision industrielle",
+    "maintenance prédictive"
+  ],
+  "questions": [
+    {
+      "id": "ia-001",
+      "level": "débutant",
+      "question": "Qu'est-ce qui distingue le machine learning d'un programme écrit avec des règles ?",
+      "choices": [
+        "Le comportement est appris à partir d'exemples",
+        "Le programme tourne forcément sur une carte graphique",
+        "Les résultats sont garantis exacts sur une donnée nouvelle",
+        "Le code source est généré puis compilé à chaque appel"
+      ],
+      "answer": 0,
+      "explanation": "Au lieu d'écrire les règles (si vibration > seuil alors alerte), on fournit des exemples et l'algorithme ajuste les paramètres d'un modèle. Le résultat reste une estimation, avec un taux d'erreur à mesurer."
+    },
+    {
+      "id": "ia-002",
+      "level": "débutant",
+      "question": "Prédire la durée restante avant la panne d'un roulement, en heures, est un problème de :",
+      "choices": [
+        "Classification binaire",
+        "Régression",
+        "Regroupement (clustering)",
+        "Réduction de dimension"
+      ],
+      "answer": 1,
+      "explanation": "La sortie est une valeur numérique continue : c'est une régression. Prédire « panne dans les 7 jours : oui ou non » serait une classification binaire."
+    },
+    {
+      "id": "ia-003",
+      "level": "débutant",
+      "question": "Dans un jeu de données de pièces contrôlées, qu'appelle-t-on l'étiquette (label) ?",
+      "choices": [
+        "Le nom de la colonne qui sert d'identifiant unique à la pièce dans la base",
+        "La réponse attendue pour chaque exemple, « bonne » ou « défectueuse »",
+        "Le format du fichier qui contient les mesures de la ligne",
+        "La version du modèle enregistrée après chaque entraînement"
+      ],
+      "answer": 1,
+      "explanation": "Les variables d'entrée (features) décrivent l'exemple : dimensions, température, image. L'étiquette est ce que le modèle doit apprendre à prédire ; en apprentissage supervisé, il faut des exemples étiquetés, souvent par des opérateurs."
+    },
+    {
+      "id": "ia-004",
+      "level": "débutant",
+      "question": "Quel cas relève de l'apprentissage non supervisé ?",
+      "choices": [
+        "Regrouper des machines par profil de consommation, sans catégorie connue",
+        "Prédire le prix d'une pièce à partir d'un historique de devis chiffrés",
+        "Classer des images de soudures annotées bonnes ou mauvaises par un contrôleur",
+        "Prévoir la charge d'un atelier à partir des commandes des années passées"
+      ],
+      "answer": 0,
+      "explanation": "Sans étiquette, l'algorithme cherche une structure dans les données : groupes (k-means), anomalies, réduction de dimension. Les trois autres cas apprennent une réponse connue sur l'historique : apprentissage supervisé."
+    },
+    {
+      "id": "ia-005",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque type d'apprentissage à un exemple.",
+      "pairs": [
+        [
+          "Supervisé",
+          "Prédire une panne à partir d'historiques étiquetés"
+        ],
+        [
+          "Non supervisé",
+          "Regrouper des clients sans catégorie connue"
+        ],
+        [
+          "Par renforcement",
+          "Un robot qui apprend par essais et récompenses"
+        ],
+        [
+          "Auto-supervisé",
+          "Un LLM qui apprend à prédire le mot suivant d'un texte brut"
+        ]
+      ],
+      "explanation": "L'apprentissage auto-supervisé fabrique ses étiquettes à partir des données elles-mêmes : le mot masqué ou suivant. C'est ainsi que sont préentraînés les grands modèles de langage, avant d'être ajustés."
+    },
+    {
+      "id": "ia-006",
+      "level": "débutant",
+      "question": "Que désigne le terme « deep learning » ?",
+      "choices": [
+        "Un apprentissage qui lit les données en profondeur dans la base",
+        "Une méthode qui explore chaque combinaison possible de paramètres",
+        "Un entraînement très long, réservé aux supercalculateurs",
+        "Un apprentissage par des réseaux de neurones à nombreuses couches"
+      ],
+      "answer": 3,
+      "explanation": "Le deep learning est une branche du machine learning qui empile de nombreuses couches de neurones. Il excelle sur l'image, le son et le texte, au prix de beaucoup de données et de calcul."
+    },
+    {
+      "id": "ia-007",
+      "level": "débutant",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre les étapes d'un projet de machine learning.",
+      "items": [
+        "Définir le besoin et la mesure du succès",
+        "Collecter les données",
+        "Nettoyer et étiqueter les données",
+        "Entraîner le modèle",
+        "Évaluer sur le jeu de test",
+        "Déployer en production",
+        "Surveiller les performances"
+      ],
+      "explanation": "On commence par la question métier et l'indicateur de succès (par exemple, rappel d'au moins 95 % sur les défauts). La préparation des données prend souvent la plus grande part du temps ; la surveillance continue après le déploiement."
+    },
+    {
+      "id": "ia-008",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur l'étape où l'on mesure la performance sur des données que le modèle n'a jamais vues.",
+      "zones": [
+        {
+          "label": "Définir le besoin",
+          "rect": [
+            30,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Collecter les données",
+          "rect": [
+            245,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Nettoyer et étiqueter",
+          "rect": [
+            460,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Entraîner le modèle",
+          "rect": [
+            675,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Évaluer sur le test",
+          "rect": [
+            675,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Déployer",
+          "rect": [
+            460,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Surveiller",
+          "rect": [
+            245,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Réentraîner",
+          "rect": [
+            30,
+            220,
+            190,
+            80
+          ]
+        }
+      ],
+      "answer": 4,
+      "visual": {
+        "asset": "ia-projet.svg",
+        "alt": "Les huit étapes d'un projet de machine learning",
+        "show": "question"
+      },
+      "explanation": "Le jeu de test, mis de côté dès le début, simule la production. Le mesurer une seule fois, à la fin, évite de régler le modèle sur lui sans s'en rendre compte."
+    },
+    {
+      "id": "ia-009",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Une nouvelle matière arrive et les rejets à tort augmentent. Cliquez sur l'étape qui doit le révéler.",
+      "zones": [
+        {
+          "label": "Définir le besoin",
+          "rect": [
+            30,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Collecter les données",
+          "rect": [
+            245,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Nettoyer et étiqueter",
+          "rect": [
+            460,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Entraîner le modèle",
+          "rect": [
+            675,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Évaluer sur le test",
+          "rect": [
+            675,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Déployer",
+          "rect": [
+            460,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Surveiller",
+          "rect": [
+            245,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Réentraîner",
+          "rect": [
+            30,
+            220,
+            190,
+            80
+          ]
+        }
+      ],
+      "answer": 6,
+      "visual": {
+        "asset": "ia-projet.svg",
+        "alt": "Les huit étapes d'un projet de machine learning",
+        "show": "question"
+      },
+      "explanation": "La surveillance suit les entrées, les prédictions et les résultats réels. Elle détecte la dérive, puis déclenche le réentraînement avec des exemples récents de la nouvelle matière."
+    },
+    {
+      "id": "ia-010",
+      "level": "débutant",
+      "question": "Pourquoi garde-t-on un jeu de test que le modèle ne voit pas pendant l'entraînement ?",
+      "choices": [
+        "Pour accélérer l'entraînement en lui donnant moins de données à traiter à chaque fois",
+        "Pour pouvoir réentraîner le modèle plus tard si une panne survient",
+        "Pour estimer sa performance sur des données nouvelles, comme en production",
+        "Pour respecter le RGPD, qui limite la part des données utilisables"
+      ],
+      "answer": 2,
+      "explanation": "Un score mesuré sur les données d'entraînement est optimiste : le modèle les a apprises. Le jeu de test, mis de côté dès le début, simule les données de production."
+    },
+    {
+      "id": "ia-011",
+      "level": "débutant",
+      "type": "numerique",
+      "question": "Un jeu de 10 000 images est découpé en 70 % d'entraînement, 15 % de validation et 15 % de test. Combien d'images servent au test ?",
+      "value": 1500,
+      "tolerance": 0,
+      "explanation": "15 % de 10 000 donnent 1 500 images. La validation sert à régler le modèle (hyperparamètres, arrêt précoce) ; le test, à la mesure finale."
+    },
+    {
+      "id": "ia-012",
+      "level": "débutant",
+      "question": "Un modèle obtient 99 % de bonnes réponses sur l'entraînement et 70 % sur le test. Quel diagnostic est le plus probable ?",
+      "choices": [
+        "Surapprentissage : il a mémorisé les exemples au lieu de généraliser",
+        "Sous-apprentissage : le modèle reste trop simple pour la complexité des données",
+        "Le jeu de test est trop grand et dilue les bonnes réponses",
+        "La carte graphique a introduit des erreurs de calcul au test"
+      ],
+      "answer": 0,
+      "explanation": "Un grand écart entre entraînement et test signe le surapprentissage. Remèdes : plus de données, modèle plus simple, régularisation, arrêt précoce. Le sous-apprentissage donne des scores médiocres partout."
+    },
+    {
+      "id": "ia-013",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur la zone où le modèle surapprend.",
+      "zones": [
+        {
+          "label": "Zone A",
+          "rect": [
+            100,
+            60,
+            230,
+            280
+          ]
+        },
+        {
+          "label": "Zone B",
+          "rect": [
+            330,
+            60,
+            230,
+            280
+          ]
+        },
+        {
+          "label": "Zone C",
+          "rect": [
+            560,
+            60,
+            300,
+            280
+          ]
+        }
+      ],
+      "answer": 2,
+      "visual": {
+        "asset": "ia-courbes.svg",
+        "alt": "Erreurs d'entraînement et de validation",
+        "show": "question"
+      },
+      "explanation": "À droite, l'erreur d'entraînement continue de baisser alors que l'erreur de validation remonte : le modèle apprend le bruit des exemples et généralise moins bien."
+    },
+    {
+      "id": "ia-014",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Cliquez sur la zone où il faut arrêter l'entraînement (arrêt précoce).",
+      "zones": [
+        {
+          "label": "Zone A",
+          "rect": [
+            100,
+            60,
+            230,
+            280
+          ]
+        },
+        {
+          "label": "Zone B",
+          "rect": [
+            330,
+            60,
+            230,
+            280
+          ]
+        },
+        {
+          "label": "Zone C",
+          "rect": [
+            560,
+            60,
+            300,
+            280
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "ia-courbes.svg",
+        "alt": "Erreurs d'entraînement et de validation",
+        "show": "question"
+      },
+      "explanation": "L'arrêt précoce garde le modèle au minimum de l'erreur de validation. Keras (EarlyStopping) ou une boucle PyTorch surveillent cette erreur et gardent les meilleurs poids."
+    },
+    {
+      "id": "ia-015",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur la zone où le modèle est encore trop simple : les deux erreurs restent élevées.",
+      "zones": [
+        {
+          "label": "Zone A",
+          "rect": [
+            100,
+            60,
+            230,
+            280
+          ]
+        },
+        {
+          "label": "Zone B",
+          "rect": [
+            330,
+            60,
+            230,
+            280
+          ]
+        },
+        {
+          "label": "Zone C",
+          "rect": [
+            560,
+            60,
+            300,
+            280
+          ]
+        }
+      ],
+      "answer": 0,
+      "visual": {
+        "asset": "ia-courbes.svg",
+        "alt": "Erreurs d'entraînement et de validation",
+        "show": "question"
+      },
+      "explanation": "C'est le sous-apprentissage : le modèle ne capte pas la structure des données. On ajoute des variables utiles, un modèle plus riche ou plus d'époques."
+    },
+    {
+      "id": "ia-016",
+      "level": "confirmé",
+      "question": "Que corrige-t-on dans ce code ?",
+      "code": "scaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\nX_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2)",
+      "choices": [
+        "test_size=0.2 laisse trop peu de données pour l'entraînement",
+        "Le scaler est ajusté sur tout le jeu, test compris, avant la séparation",
+        "StandardScaler ne convient qu'aux images, il faut passer par MinMaxScaler ici",
+        "fit_transform doit être remplacé ici par un simple transform"
+      ],
+      "answer": 1,
+      "explanation": "La moyenne et l'écart-type viennent aussi du test : c'est une fuite de données, et le score devient trop optimiste. On sépare d'abord, puis scaler.fit_transform(X_train) et scaler.transform(X_test), ou l'on met tout dans un Pipeline."
+    },
+    {
+      "id": "ia-017",
+      "level": "débutant",
+      "question": "Que fait random_state=42 dans cet appel ?",
+      "code": "X_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42\n)",
+      "choices": [
+        "Il garde 42 % des lignes de X et de y pour le jeu de test final",
+        "Il limite l'entraînement à 42 itérations au plus",
+        "Il rend le tirage reproductible d'une exécution à l'autre",
+        "Il choisit la colonne 42 comme étiquette à prédire"
+      ],
+      "answer": 2,
+      "explanation": "random_state fixe la graine du générateur aléatoire : le même découpage revient à chaque exécution, ce qui permet de comparer deux modèles à données égales. La valeur 42 n'a rien de spécial."
+    },
+    {
+      "id": "ia-018",
+      "level": "débutant",
+      "question": "Que renvoie cette ligne pour un classifieur scikit-learn ?",
+      "code": "print(model.score(X_test, y_test))",
+      "choices": [
+        "La perte moyenne calculée pendant le dernier entraînement",
+        "L'exactitude : la part de prédictions justes sur le test",
+        "Le nombre de lignes du jeu de test lues sans erreur",
+        "La probabilité moyenne donnée à la classe positive"
+      ],
+      "answer": 1,
+      "explanation": "Pour un classifieur, score renvoie l'accuracy (exactitude) ; pour un régresseur, le R². Sur des classes déséquilibrées, mieux vaut regarder la précision, le rappel ou le F1."
+    },
+    {
+      "id": "ia-019",
+      "level": "confirmé",
+      "question": "Quel est le défaut de ce code ?",
+      "code": "model = RandomForestClassifier()\nmodel.fit(X_test, y_test)\nprint(model.score(X_test, y_test))",
+      "choices": [
+        "RandomForestClassifier exige un nombre d'arbres en paramètre",
+        "score doit recevoir les prédictions et non les données d'entrée",
+        "Le modèle est entraîné et évalué sur les mêmes données de test",
+        "fit renvoie déjà le score, la dernière ligne est donc inutile"
+      ],
+      "answer": 2,
+      "explanation": "Évaluer un modèle sur ses données d'entraînement donne un score flatteur, proche de 100 % pour une forêt. On entraîne sur X_train et y_train, on évalue sur X_test et y_test."
+    },
+    {
+      "id": "ia-020",
+      "level": "débutant",
+      "question": "Que montre cette ligne pandas ?",
+      "code": "df.isna().sum()",
+      "choices": [
+        "La somme des valeurs numériques présentes dans chaque colonne",
+        "Le nombre de lignes en double dans le tableau",
+        "Les colonnes qui contiennent des nombres à virgule",
+        "Le nombre de valeurs manquantes dans chaque colonne"
+      ],
+      "answer": 3,
+      "explanation": "isna() marque chaque cellule vide (NaN) et sum() les compte par colonne. C'est l'un des premiers contrôles d'un jeu de données : capteur débranché, saisie oubliée."
+    },
+    {
+      "id": "ia-021",
+      "level": "confirmé",
+      "question": "Que produit ce code ?",
+      "code": "from sklearn.cluster import KMeans\n\ngroupes = KMeans(n_clusters=3, random_state=0).fit_predict(X)",
+      "choices": [
+        "Les trois colonnes de X les plus utiles pour prédire",
+        "Trois modèles entraînés sur des tiers différents de X",
+        "Les trois lignes de X les plus éloignées de la moyenne",
+        "Un numéro de groupe, de 0 à 2, pour chaque ligne de X"
+      ],
+      "answer": 3,
+      "explanation": "k-means répartit les points en k groupes autour de centres qu'il déplace jusqu'à stabilité. Le nombre de groupes est choisi à l'avance ; la méthode du coude ou le score de silhouette aident à le fixer."
+    },
+    {
+      "id": "ia-022",
+      "level": "expert",
+      "question": "Un modèle de prédiction de pannes affiche un score excellent ; la colonne « date de remplacement de la pièce » figurait dans les entrées. Quel est le problème ?",
+      "choices": [
+        "Les dates doivent être converties en texte avant l'entraînement",
+        "Le modèle manque de variables pour généraliser à d'autres sites",
+        "Une fuite : cette information n'existe qu'après la panne",
+        "Une colonne de date ralentit l'entraînement sans apporter d'information"
+      ],
+      "answer": 2,
+      "explanation": "Une variable connue seulement après l'événement à prédire donne la réponse au modèle. En production, elle est absente et le score s'effondre. Pour chaque variable, se demander : la connaît-on au moment de la prédiction ?"
+    },
+    {
+      "id": "ia-023",
+      "level": "confirmé",
+      "question": "Qu'est-ce que la validation croisée à 5 plis ?",
+      "choices": [
+        "Entraîner 5 modèles différents et garder celui du meilleur score",
+        "Faire valider le modèle par 5 personnes du métier avant sa mise en service",
+        "Entraîner 5 fois, chaque fois évalué sur un cinquième différent",
+        "Répéter 5 fois le même entraînement pour en vérifier la stabilité"
+      ],
+      "answer": 2,
+      "explanation": "Les données sont coupées en 5 parts ; chaque part sert une fois de validation, les 4 autres d'entraînement. La moyenne des 5 scores est plus fiable qu'un seul découpage, surtout avec peu de données."
+    },
+    {
+      "id": "ia-024",
+      "level": "expert",
+      "question": "Pourquoi ce Pipeline évite-t-il une fuite de données ?",
+      "code": "pipe = make_pipeline(StandardScaler(), LogisticRegression())\nscores = cross_val_score(pipe, X, y, cv=5)",
+      "choices": [
+        "cross_val_score retire d'office les colonnes trop corrélées",
+        "LogisticRegression normalise d'elle-même les données en entrée",
+        "Le scaler est réajusté sur la partie d'entraînement de chaque pli",
+        "make_pipeline mélange les lignes avant chaque entraînement"
+      ],
+      "answer": 2,
+      "explanation": "Chaque pli refait fit sur ses 4 parts d'entraînement puis transform sur la part de validation : la validation reste réellement inconnue. Normaliser X avant cross_val_score fausserait les scores."
+    },
+    {
+      "id": "ia-025",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque problème à son remède habituel.",
+      "pairs": [
+        [
+          "Surapprentissage",
+          "Régularisation, plus de données, arrêt précoce"
+        ],
+        [
+          "Sous-apprentissage",
+          "Modèle plus riche ou variables supplémentaires"
+        ],
+        [
+          "Fuite de données",
+          "Séparer les jeux avant toute préparation"
+        ],
+        [
+          "Dérive des données",
+          "Surveiller la production et réentraîner"
+        ]
+      ],
+      "explanation": "Ces quatre défauts expliquent la plupart des modèles décevants : un écart entraînement-test, des scores médiocres partout, un score trop beau pour être vrai, ou une performance qui baisse avec le temps."
+    },
+    {
+      "id": "ia-026",
+      "level": "confirmé",
+      "question": "Pourquoi l'exactitude est-elle trompeuse pour détecter des pièces défectueuses rares ?",
+      "choices": [
+        "Elle ne se calcule que sur des données numériques continues",
+        "Un modèle qui déclare chaque pièce bonne atteint déjà un score très élevé",
+        "Elle pénalise trop les fausses alertes par rapport aux défauts manqués par le modèle",
+        "Elle demande un jeu de test plus grand que celui d'entraînement"
+      ],
+      "answer": 1,
+      "explanation": "Avec 2 % de pièces défectueuses, répondre « bonne » à chaque fois donne 98 % d'exactitude sans rien détecter. On suit le rappel (défauts trouvés) et la précision (alertes justes)."
+    },
+    {
+      "id": "ia-027",
+      "level": "débutant",
+      "type": "zone",
+      "question": "Cliquez sur la case des fausses alertes : des pièces bonnes rejetées à tort.",
+      "zones": [
+        {
+          "label": "Défectueuses détectées",
+          "rect": [
+            300,
+            115,
+            240,
+            100
+          ]
+        },
+        {
+          "label": "Défectueuses non détectées",
+          "rect": [
+            560,
+            115,
+            240,
+            100
+          ]
+        },
+        {
+          "label": "Bonnes rejetées à tort",
+          "rect": [
+            300,
+            235,
+            240,
+            100
+          ]
+        },
+        {
+          "label": "Bonnes acceptées",
+          "rect": [
+            560,
+            235,
+            240,
+            100
+          ]
+        }
+      ],
+      "answer": 2,
+      "visual": {
+        "asset": "ia-confusion.svg",
+        "alt": "Matrice de confusion de 1 000 pièces",
+        "show": "question"
+      },
+      "explanation": "Ce sont les faux positifs (FP) : le modèle annonce un défaut qui n'existe pas. Ils coûtent des contrôles et des rebuts inutiles."
+    },
+    {
+      "id": "ia-028",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Cliquez sur la case la plus grave pour le client : les défauts que le modèle laisse passer.",
+      "zones": [
+        {
+          "label": "Défectueuses détectées",
+          "rect": [
+            300,
+            115,
+            240,
+            100
+          ]
+        },
+        {
+          "label": "Défectueuses non détectées",
+          "rect": [
+            560,
+            115,
+            240,
+            100
+          ]
+        },
+        {
+          "label": "Bonnes rejetées à tort",
+          "rect": [
+            300,
+            235,
+            240,
+            100
+          ]
+        },
+        {
+          "label": "Bonnes acceptées",
+          "rect": [
+            560,
+            235,
+            240,
+            100
+          ]
+        }
+      ],
+      "answer": 1,
+      "visual": {
+        "asset": "ia-confusion.svg",
+        "alt": "Matrice de confusion de 1 000 pièces",
+        "show": "question"
+      },
+      "explanation": "Ce sont les faux négatifs (FN) : des pièces défectueuses livrées. Le rappel, VP / (VP + FN), mesure la part des défauts trouvés."
+    },
+    {
+      "id": "ia-029",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "D'après cette matrice, quelle est la précision du modèle, en % ?",
+      "value": 72.7,
+      "tolerance": 1,
+      "unit": "%",
+      "visual": {
+        "asset": "ia-confusion.svg",
+        "alt": "Matrice de confusion de 1 000 pièces",
+        "show": "question"
+      },
+      "explanation": "Précision = VP / (VP + FP) = 40 / (40 + 15) = 72,7 %. Parmi les pièces rejetées, un peu plus d'une sur quatre était bonne."
+    },
+    {
+      "id": "ia-030",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "D'après cette matrice, quel est le rappel du modèle, en % ?",
+      "value": 88.9,
+      "tolerance": 1,
+      "unit": "%",
+      "visual": {
+        "asset": "ia-confusion.svg",
+        "alt": "Matrice de confusion de 1 000 pièces",
+        "show": "question"
+      },
+      "explanation": "Rappel = VP / (VP + FN) = 40 / (40 + 5) = 88,9 %. Le modèle trouve près de neuf défauts sur dix ; 5 pièces défectueuses passent."
+    },
+    {
+      "id": "ia-031",
+      "level": "débutant",
+      "type": "numerique",
+      "question": "D'après cette matrice, quelle est l'exactitude du modèle, en % ?",
+      "value": 98,
+      "tolerance": 0.5,
+      "unit": "%",
+      "visual": {
+        "asset": "ia-confusion.svg",
+        "alt": "Matrice de confusion de 1 000 pièces",
+        "show": "question"
+      },
+      "explanation": "Exactitude = (VP + VN) / total = (40 + 940) / 1 000 = 98 %. Le chiffre paraît excellent alors que 5 défauts passent et 15 pièces bonnes sont rejetées."
+    },
+    {
+      "id": "ia-032",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Sur 1 000 pièces dont 45 défectueuses, un modèle répond « bonne » à chaque fois. Quelle est son exactitude, en % ?",
+      "value": 95.5,
+      "tolerance": 0.1,
+      "unit": "%",
+      "explanation": "Il a raison pour les 955 pièces bonnes : 955 / 1 000 = 95,5 %, avec un rappel nul. L'exactitude seule ne dit rien sur une classe rare."
+    },
+    {
+      "id": "ia-033",
+      "level": "expert",
+      "type": "numerique",
+      "question": "Un modèle a une précision de 0,8 et un rappel de 0,5. Quel est son score F1, en % ?",
+      "value": 61.5,
+      "tolerance": 1,
+      "unit": "%",
+      "explanation": "F1 = 2 × P × R / (P + R) = 2 × 0,8 × 0,5 / 1,3 = 0,615. La moyenne harmonique punit le point faible : la moyenne simple donnerait 65 %."
+    },
+    {
+      "id": "ia-034",
+      "level": "confirmé",
+      "question": "Sur une ligne pharmaceutique, laisser passer un défaut est grave, une fausse alerte coûte un contrôle manuel. Quelle mesure privilégier ?",
+      "choices": [
+        "La précision, pour réduire le nombre de contrôles manuels",
+        "L'exactitude, plus simple à expliquer à la production",
+        "Le temps de réponse du modèle sur le poste de contrôle",
+        "Le rappel, pour manquer le moins de défauts possible"
+      ],
+      "answer": 3,
+      "explanation": "Le rappel mesure la part des vrais défauts détectés. On accepte plus de fausses alertes, par exemple en abaissant le seuil de décision, et l'on chiffre ce que coûtent les contrôles en plus."
+    },
+    {
+      "id": "ia-035",
+      "level": "confirmé",
+      "question": "Quel effet a ce seuil par rapport au seuil habituel de 0,5 ?",
+      "code": "proba = model.predict_proba(X_test)[:, 1]\nalerte = proba > 0.3",
+      "choices": [
+        "Plus d'alertes : le rappel monte, la précision baisse en général",
+        "Moins d'alertes : la précision monte, le rappel baisse en général",
+        "Le modèle est réentraîné avec une pénalité de 30 % sur les erreurs",
+        "Les prédictions ne dépendent plus des probabilités du modèle"
+      ],
+      "answer": 0,
+      "explanation": "Abaisser le seuil déclare positifs des cas moins sûrs : on rate moins de défauts mais on lève plus de fausses alertes. Le seuil se choisit avec le métier, à partir du coût de chaque erreur."
+    },
+    {
+      "id": "ia-036",
+      "level": "expert",
+      "question": "Que mesure l'aire sous la courbe ROC (AUC) ?",
+      "choices": [
+        "La capacité à classer un positif avant un négatif, quel que soit le seuil",
+        "La part de prédictions justes au seuil de décision de 0,5",
+        "Le temps de calcul moyen du modèle rapporté au nombre de lignes du jeu de test",
+        "L'écart moyen entre la probabilité prédite et l'étiquette"
+      ],
+      "answer": 0,
+      "explanation": "0,5 correspond au hasard, 1 à un classement parfait. L'AUC compare des modèles indépendamment du seuil ; sur des classes très déséquilibrées, la courbe précision-rappel est souvent plus parlante."
+    },
+    {
+      "id": "ia-037",
+      "level": "confirmé",
+      "question": "Un jeu contient 1 % de pannes. Quelle approche aide le modèle à ne pas les ignorer ?",
+      "choices": [
+        "Supprimer les pannes du jeu, car elles faussent la moyenne",
+        "Pondérer les classes ou rééchantillonner l'entraînement",
+        "Mesurer la performance par la seule exactitude sur le test",
+        "Mélanger plus souvent les lignes avant chaque entraînement"
+      ],
+      "answer": 1,
+      "explanation": "class_weight=\"balanced\" dans scikit-learn donne plus de poids aux exemples rares ; on peut aussi suréchantillonner les pannes ou sous-échantillonner les cas normaux, sur l'entraînement uniquement. L'évaluation se fait alors au rappel et à la précision."
+    },
+    {
+      "id": "ia-038",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque mesure à la question à laquelle elle répond.",
+      "pairs": [
+        [
+          "Précision",
+          "Parmi les alertes levées, combien sont justes ?"
+        ],
+        [
+          "Rappel",
+          "Parmi les vrais défauts, combien sont trouvés ?"
+        ],
+        [
+          "F1",
+          "Quel compromis entre alertes justes et défauts trouvés ?"
+        ],
+        [
+          "MAE",
+          "De combien la valeur prédite se trompe-t-elle en moyenne ?"
+        ]
+      ],
+      "explanation": "Précision et rappel tirent en sens inverse quand on déplace le seuil ; le F1 les résume en un nombre. La MAE (erreur absolue moyenne) s'exprime dans l'unité prédite : heures, degrés, millimètres."
+    },
+    {
+      "id": "ia-039",
+      "level": "débutant",
+      "question": "Que fait un arbre de décision ?",
+      "choices": [
+        "Il relie chaque exemple à ses voisins les plus proches dans le jeu",
+        "Il trace la droite qui passe au plus près des points du jeu",
+        "Il trie les exemples par date pour suivre leur évolution",
+        "Il enchaîne des questions sur les variables jusqu'à une décision"
+      ],
+      "answer": 3,
+      "explanation": "Exemple : « vibration > 4 mm/s ? puis température > 70 °C ? → risque élevé ». Un arbre se lit et s'explique facilement ; seul, il surapprend vite, d'où les forêts aléatoires qui en moyennent des centaines."
+    },
+    {
+      "id": "ia-040",
+      "level": "confirmé",
+      "question": "Qu'apporte une forêt aléatoire par rapport à un seul arbre de décision ?",
+      "choices": [
+        "Une explication plus simple, lisible comme une seule suite de règles",
+        "Un entraînement plus rapide, car chaque arbre a moins de feuilles",
+        "Une prédiction plus stable, moyennée sur de nombreux arbres variés",
+        "Une meilleure prise en compte des images que les arbres classiques"
+      ],
+      "answer": 2,
+      "explanation": "Chaque arbre apprend sur un tirage des lignes et des variables ; leurs votes se compensent. On gagne en robustesse et l'on perd une partie de la lisibilité, compensée par l'importance des variables."
+    },
+    {
+      "id": "ia-041",
+      "level": "débutant",
+      "question": "Quel algorithme prédit la classe d'un point d'après les exemples les plus proches de lui ?",
+      "choices": [
+        "La régression linéaire simple",
+        "Les k plus proches voisins (k-NN)",
+        "Le regroupement k-means",
+        "La descente de gradient stochastique"
+      ],
+      "answer": 1,
+      "explanation": "k-NN ne construit presque pas de modèle : il garde les exemples et fait voter les k plus proches. Il exige des variables à la même échelle, sinon la plus grande écrase les autres. Ne pas le confondre avec k-means, qui regroupe sans étiquette."
+    },
+    {
+      "id": "ia-042",
+      "level": "confirmé",
+      "question": "Sur des données tabulaires de production (mesures, réglages, résultats), quelle famille de modèles donne souvent les meilleurs résultats ?",
+      "choices": [
+        "Les grands modèles de langage, qui lisent les tableaux",
+        "Les réseaux convolutifs, conçus pour ce format",
+        "Les modèles génératifs d'images appliqués aux mesures",
+        "Les arbres boostés, comme XGBoost ou LightGBM"
+      ],
+      "answer": 3,
+      "explanation": "Sur des tableaux de taille courante, le gradient boosting d'arbres reste souvent devant les réseaux de neurones, s'entraîne vite et accepte des variables d'échelles différentes. On le compare toujours à une base simple, régression ou forêt."
+    },
+    {
+      "id": "ia-043",
+      "level": "confirmé",
+      "question": "Que fait la descente de gradient pendant l'entraînement ?",
+      "choices": [
+        "Elle supprime les exemples qui augmentent l'erreur du modèle",
+        "Elle réduit la taille du réseau à chaque nouvelle époque d'entraînement",
+        "Elle calcule directement les poids optimaux en une seule fois",
+        "Elle ajuste les poids pas à pas dans le sens qui réduit l'erreur"
+      ],
+      "answer": 3,
+      "explanation": "Le gradient indique comment l'erreur varie quand chaque poids bouge ; on déplace les poids d'un petit pas en sens inverse. La taille du pas est le taux d'apprentissage."
+    },
+    {
+      "id": "ia-044",
+      "level": "confirmé",
+      "type": "numerique",
+      "question": "Un poids vaut 2, le gradient de la perte par rapport à ce poids vaut 4 et le taux d'apprentissage 0,1. Que vaut le poids après une mise à jour ?",
+      "value": 1.6,
+      "tolerance": 0.01,
+      "explanation": "w ← w − taux × gradient = 2 − 0,1 × 4 = 1,6. Le signe moins fait descendre la perte : on va dans le sens opposé au gradient."
+    },
+    {
+      "id": "ia-045",
+      "level": "confirmé",
+      "question": "Le taux d'apprentissage est trop élevé. Quel symptôme observe-t-on ?",
+      "choices": [
+        "La perte oscille ou diverge au lieu de diminuer",
+        "La perte baisse très lentement mais régulièrement",
+        "Le modèle devient plus lent à prédire en production",
+        "Le test donne exactement le score de l'entraînement"
+      ],
+      "answer": 0,
+      "explanation": "Des pas trop grands sautent par-dessus le minimum : la perte fait des bonds, voire part à l'infini (NaN). Trop petit, l'apprentissage est lent. On essaie des valeurs espacées d'un facteur 10 : 0,1 ; 0,01 ; 0,001."
+    },
+    {
+      "id": "ia-046",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'une époque (epoch) lors de l'entraînement d'un réseau ?",
+      "choices": [
+        "Un lot de 32 exemples traités ensemble par le réseau",
+        "Une version du modèle livrée en production",
+        "Une couche de neurones ajoutée au réseau",
+        "Un passage complet sur le jeu d'entraînement"
+      ],
+      "answer": 3,
+      "explanation": "Le jeu est découpé en lots (batch) et les poids sont mis à jour après chaque lot. Une époque correspond à un passage sur tous les lots ; on en fait plusieurs en surveillant la perte de validation."
+    },
+    {
+      "id": "ia-047",
+      "level": "confirmé",
+      "question": "À quoi sert une fonction d'activation comme ReLU dans un réseau de neurones ?",
+      "choices": [
+        "À introduire une non-linéarité entre les couches",
+        "À activer le réseau au démarrage du serveur",
+        "À choisir les exemples utilisés à chaque nouvelle époque",
+        "À convertir le texte d'entrée en nombres"
+      ],
+      "answer": 0,
+      "explanation": "Sans non-linéarité, empiler des couches revient à une seule transformation linéaire. ReLU, max(0, x), est simple et efficace ; sigmoïde ou softmax servent souvent en sortie pour produire des probabilités."
+    },
+    {
+      "id": "ia-048",
+      "level": "expert",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre une itération de la boucle d'entraînement PyTorch.",
+      "items": [
+        "Remettre les gradients à zéro (optimiseur.zero_grad())",
+        "Calculer les prédictions du lot (model(x))",
+        "Calculer la perte (critere(sortie, y))",
+        "Rétropropager les gradients (perte.backward())",
+        "Mettre à jour les poids (optimiseur.step())"
+      ],
+      "explanation": "Ces cinq lignes reviennent pour chaque lot. La remise à zéro peut aussi se placer juste avant backward ; l'important est qu'elle ait lieu à chaque lot, car PyTorch additionne les gradients."
+    },
+    {
+      "id": "ia-049",
+      "level": "expert",
+      "question": "Quel oubli rend cet entraînement faux ?",
+      "code": "for x, y in loader:\n    perte = critere(model(x), y)\n    perte.backward()\n    optimiseur.step()",
+      "choices": [
+        "model.train() en fin de boucle pour enregistrer les poids calculés sur le lot",
+        "perte.item() pour convertir la perte avant l'appel à backward",
+        "optimiseur.zero_grad() : les gradients s'accumulent d'un lot à l'autre",
+        "torch.no_grad() autour de la boucle pour gagner du temps"
+      ],
+      "answer": 2,
+      "explanation": "PyTorch additionne les gradients à chaque backward. Sans remise à zéro, chaque mise à jour mélange les lots précédents et l'entraînement part de travers."
+    },
+    {
+      "id": "ia-050",
+      "level": "confirmé",
+      "question": "Pourquoi appelle-t-on model.eval() et torch.no_grad() avant de prédire avec PyTorch ?",
+      "code": "model.eval()\nwith torch.no_grad():\n    sortie = model(images)",
+      "choices": [
+        "Pour évaluer le modèle et afficher son score sur le test",
+        "Pour protéger le fichier du modèle contre l'écriture",
+        "Pour un comportement d'inférence, sans calcul de gradients",
+        "Pour envoyer les calculs vers la carte graphique"
+      ],
+      "answer": 2,
+      "explanation": "eval() fige le dropout et la normalisation par lots ; no_grad() évite de garder les calculs pour la rétropropagation, ce qui économise mémoire et temps. Oublier eval() donne des prédictions qui varient d'un appel à l'autre."
+    },
+    {
+      "id": "ia-051",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque architecture à son usage typique.",
+      "pairs": [
+        [
+          "Transformer",
+          "Texte et grands modèles de langage"
+        ],
+        [
+          "LSTM",
+          "Séries temporelles, comme un historique de capteur"
+        ],
+        [
+          "Autoencodeur",
+          "Détection d'anomalies par l'erreur de reconstruction"
+        ],
+        [
+          "Modèle de diffusion",
+          "Génération d'images à partir d'un texte"
+        ]
+      ],
+      "explanation": "Le Transformer et son mécanisme d'attention ont remplacé les réseaux récurrents pour le texte. Un autoencodeur entraîné sur des cas normaux reconstruit mal ce qu'il n'a jamais vu : l'écart signale l'anomalie."
+    },
+    {
+      "id": "ia-052",
+      "level": "débutant",
+      "type": "association",
+      "question": "Associez chaque outil à son rôle.",
+      "pairs": [
+        [
+          "scikit-learn",
+          "Machine learning classique : régressions, forêts"
+        ],
+        [
+          "PyTorch",
+          "Construction et entraînement de réseaux de neurones"
+        ],
+        [
+          "pandas",
+          "Chargement et préparation de tableaux de données"
+        ],
+        [
+          "Ollama",
+          "Exécution d'un modèle de langage sur son poste"
+        ]
+      ],
+      "explanation": "Ces outils sont gratuits et libres. Un projet type charge et nettoie avec pandas, teste un modèle simple avec scikit-learn, puis passe à PyTorch si les images ou le texte l'exigent."
+    },
+    {
+      "id": "ia-053",
+      "level": "confirmé",
+      "question": "Quel type de réseau convient le mieux au contrôle visuel de pièces par caméra ?",
+      "choices": [
+        "Un réseau convolutif (CNN)",
+        "Un réseau récurrent (LSTM)",
+        "Une régression logistique",
+        "Un regroupement k-means"
+      ],
+      "answer": 0,
+      "explanation": "Les convolutions repèrent des motifs locaux (bords, rayures, taches) quelle que soit leur position. On part souvent d'un modèle préentraîné (ResNet, ou YOLO pour localiser) qu'on affine sur ses propres images."
+    },
+    {
+      "id": "ia-054",
+      "level": "confirmé",
+      "question": "Qu'est-ce que l'apprentissage par transfert ?",
+      "choices": [
+        "Transférer un modèle du serveur vers une machine de production",
+        "Faire apprendre un modèle par un autre en lui posant des questions",
+        "Copier les poids d'un modèle vers un autre de taille différente",
+        "Partir d'un modèle déjà entraîné et l'affiner sur ses données"
+      ],
+      "answer": 3,
+      "explanation": "Un modèle entraîné sur des millions d'images sait déjà repérer formes et textures ; quelques centaines d'images de ses pièces suffisent souvent pour l'adapter. C'est la règle en vision comme en langage."
+    },
+    {
+      "id": "ia-055",
+      "level": "expert",
+      "question": "Pour détecter des défauts rares jamais vus, sans exemple étiqueté de défaut, quelle approche convient ?",
+      "choices": [
+        "Attendre d'avoir mille défauts pour entraîner un classifieur",
+        "Apprendre l'aspect normal et signaler ce qui s'en écarte",
+        "Demander à un LLM de décrire chaque image de la ligne",
+        "Retenir l'exactitude comme mesure sur le jeu des pièces bonnes"
+      ],
+      "answer": 1,
+      "explanation": "La détection d'anomalies (autoencodeur, Isolation Forest, distance à la normale) apprend sur les pièces bonnes, abondantes. Un écart fort déclenche une alerte, à confirmer par un opérateur ; les cas confirmés enrichissent ensuite le jeu."
+    },
+    {
+      "id": "ia-056",
+      "level": "débutant",
+      "question": "Qu'apporte la maintenance prédictive par rapport à la maintenance préventive systématique ?",
+      "choices": [
+        "Elle supprime les arrêts de production pour maintenance",
+        "Elle remplace les techniciens par des alertes automatiques",
+        "Elle intervient selon l'état mesuré plutôt qu'à date fixe",
+        "Elle s'applique sans capteur, à partir du planning"
+      ],
+      "answer": 2,
+      "explanation": "Le préventif systématique change une pièce à intervalle fixe, parfois trop tôt ou trop tard. Le prédictif suit des indicateurs (vibrations, température, courant) et estime quand l'intervention devient nécessaire ; le technicien décide."
+    },
+    {
+      "id": "ia-057",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre la mise en place d'une maintenance prédictive sur un moteur.",
+      "items": [
+        "Installer les capteurs de vibration et de température",
+        "Historiser les mesures avec les pannes de la GMAO",
+        "Calculer les indicateurs (valeur efficace, fréquences)",
+        "Entraîner un modèle de détection d'anomalies",
+        "Fixer les seuils d'alerte avec la maintenance",
+        "Valider sur une période de test avant généralisation"
+      ],
+      "explanation": "Sans historique de mesures et de pannes datées, pas d'apprentissage. Les seuils se règlent avec les techniciens, qui connaissent le coût d'une fausse alerte et d'une panne manquée."
+    },
+    {
+      "id": "ia-058",
+      "level": "confirmé",
+      "question": "Pourquoi un historique de GMAO est-il précieux pour un projet de maintenance prédictive ?",
+      "choices": [
+        "Il contient les mesures de vibrations à haute fréquence",
+        "Il remplace la phase de nettoyage des données issues des capteurs de la ligne",
+        "Il fournit le modèle déjà entraîné par l'éditeur",
+        "Il date les pannes et les interventions qui servent d'étiquettes"
+      ],
+      "answer": 3,
+      "explanation": "Les capteurs donnent les entrées, la GMAO dit ce qui s'est passé : panne, cause, pièce changée. Des bons de travail mal renseignés (« réparé », sans cause) sont souvent la première limite d'un projet."
+    },
+    {
+      "id": "ia-059",
+      "level": "confirmé",
+      "question": "Un modèle de maintenance prédictive lève dix fausses alertes par jour. Quel est le risque principal ?",
+      "choices": [
+        "Les équipes cessent de regarder les alertes, même les vraies",
+        "Le modèle se réentraîne de lui-même et finit par se corriger",
+        "La GMAO refuse les demandes au-delà d'un certain nombre",
+        "Les capteurs s'usent plus vite à cause des alertes"
+      ],
+      "answer": 0,
+      "explanation": "Trop de fausses alertes use la confiance : c'est la fatigue d'alerte. On règle le seuil avec la maintenance, on regroupe les alertes et l'on mesure la précision obtenue sur le terrain."
+    },
+    {
+      "id": "ia-060",
+      "level": "confirmé",
+      "question": "Que calcule cette ligne sur un relevé de vibrations échantillonné chaque seconde ?",
+      "code": "df[\"vib_moy\"] = df[\"vibration\"].rolling(60).mean()",
+      "choices": [
+        "La vibration moyenne de chaque heure complète de mesure",
+        "Les 60 plus fortes vibrations du relevé, triées",
+        "La moyenne glissante de la vibration sur la dernière minute",
+        "La vibration décalée de 60 secondes dans le temps"
+      ],
+      "answer": 2,
+      "explanation": "rolling(60) prend une fenêtre de 60 lignes qui avance d'une ligne à chaque fois. Ce lissage atténue le bruit ; les 59 premières lignes valent NaN, faute d'historique suffisant."
+    },
+    {
+      "id": "ia-061",
+      "level": "expert",
+      "question": "Le modèle de contrôle qualité se dégrade après un changement de fournisseur de matière. Comment appelle-t-on ce phénomène ?",
+      "choices": [
+        "La dérive des données (data drift)",
+        "Le surapprentissage du jeu de test",
+        "L'oubli catastrophique du réseau",
+        "La fuite des données d'entraînement"
+      ],
+      "answer": 0,
+      "explanation": "Les données de production ne ressemblent plus à celles de l'entraînement : couleur, texture, éclairage. On surveille la distribution des entrées et les performances, et l'on réentraîne avec des exemples récents étiquetés."
+    },
+    {
+      "id": "ia-062",
+      "level": "confirmé",
+      "question": "Pourquoi exécuter un modèle de vision sur un PC industriel au pied de la ligne (edge) ?",
+      "choices": [
+        "Parce que les offres de cloud n'acceptent pas les images industrielles",
+        "Pour éviter d'avoir à entraîner le modèle au préalable",
+        "Pour décider en quelques millisecondes sans dépendre du réseau",
+        "Parce qu'un modèle embarqué est forcément plus précis"
+      ],
+      "answer": 2,
+      "explanation": "Une décision d'éjection se prend pendant le passage de la pièce : la latence et la disponibilité du réseau comptent. Le calcul local garde aussi les images sur le site ; l'entraînement se fait souvent ailleurs, sur plus de puissance."
+    },
+    {
+      "id": "ia-063",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'un jumeau numérique ?",
+      "choices": [
+        "Une copie de sauvegarde du programme de l'automate",
+        "Un second automate qui prend le relais en cas de panne",
+        "Une machine identique installée sur un autre site",
+        "Un modèle d'un équipement réel, alimenté par ses mesures"
+      ],
+      "answer": 3,
+      "explanation": "Le jumeau reproduit le comportement d'une machine ou d'une ligne à partir de lois physiques, de données ou des deux. Il sert à simuler un réglage, tester une évolution ou estimer l'usure sans toucher à la production."
+    },
+    {
+      "id": "ia-064",
+      "level": "débutant",
+      "question": "Comment un grand modèle de langage (LLM) produit-il sa réponse ?",
+      "choices": [
+        "Il prédit le token suivant le plus plausible, l'un après l'autre",
+        "Il cherche la réponse exacte dans une base de questions déjà posées",
+        "Il consulte internet à chaque question pour vérifier les faits",
+        "Il applique des règles de grammaire écrites par des linguistes"
+      ],
+      "answer": 0,
+      "explanation": "Un LLM est entraîné à prédire la suite d'un texte. Il ne consulte une source que si l'application lui en donne une (recherche web, documents) ; sinon il s'appuie sur ce qu'il a appris, sans garantie d'exactitude."
+    },
+    {
+      "id": "ia-065",
+      "level": "débutant",
+      "question": "Qu'appelle-t-on une hallucination d'un LLM ?",
+      "choices": [
+        "Un refus de répondre à une question jugée sensible",
+        "Une réponse fausse ou inventée présentée avec assurance",
+        "Une réponse coupée en cours de route, faute de place dans le contexte",
+        "Un message d'erreur renvoyé par le serveur du modèle"
+      ],
+      "answer": 1,
+      "explanation": "Le modèle produit du texte plausible, pas des faits vérifiés : référence de norme inventée, fonction de bibliothèque inexistante, couple de serrage faux. On vérifie toute information importante dans une source fiable."
+    },
+    {
+      "id": "ia-066",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un token pour un LLM ?",
+      "choices": [
+        "Un mot de passe qui donne accès au modèle",
+        "Une phrase complète du texte d'entrée",
+        "Un morceau de texte, souvent une partie de mot",
+        "Une ligne de code produite par le modèle"
+      ],
+      "answer": 2,
+      "explanation": "Le texte est découpé en tokens : mots courts, morceaux de mots, ponctuation. Les limites de contexte et les tarifs des API se comptent en tokens ; en français, un mot fait souvent plus d'un token."
+    },
+    {
+      "id": "ia-067",
+      "level": "confirmé",
+      "question": "Que désigne la fenêtre de contexte d'un LLM ?",
+      "choices": [
+        "La période couverte par les données sur lesquelles il a été entraîné",
+        "La fenêtre de l'application dans laquelle il s'affiche",
+        "Le temps maximal accordé pour produire une réponse",
+        "La quantité de texte qu'il peut prendre en compte en une fois"
+      ],
+      "answer": 3,
+      "explanation": "Consigne, historique de la conversation, documents fournis et réponse partagent cette limite, comptée en tokens. Au-delà, le début est tronqué ou refusé ; un long document se découpe ou passe par un RAG."
+    },
+    {
+      "id": "ia-068",
+      "level": "confirmé",
+      "question": "Quel effet a une température proche de 0 sur les réponses d'un LLM ?",
+      "choices": [
+        "Des réponses plus créatives et variées",
+        "Une consommation d'énergie plus faible par réponse",
+        "Des réponses plus stables et prévisibles",
+        "Une longueur de réponse plus courte"
+      ],
+      "answer": 2,
+      "explanation": "La température règle le hasard dans le choix des tokens. Basse, elle convient pour extraire des données ou produire du code ; haute, pour chercher des idées. Elle ne rend pas le modèle plus juste."
+    },
+    {
+      "id": "ia-069",
+      "level": "confirmé",
+      "question": "Qu'est-ce que le few-shot prompting ?",
+      "choices": [
+        "Poser plusieurs fois la même question pour comparer",
+        "Donner quelques exemples résolus dans la demande",
+        "Limiter la réponse à quelques mots par ligne",
+        "Réentraîner le modèle sur une poignée d'exemples"
+      ],
+      "answer": 1,
+      "explanation": "Deux ou trois exemples (entrée, puis sortie attendue) montrent le format et le ton mieux qu'une longue description. Le modèle n'est pas modifié : les exemples ne valent que pour cette demande."
+    },
+    {
+      "id": "ia-070",
+      "level": "débutant",
+      "question": "Quelle demande à un LLM a le plus de chances de donner une réponse utilisable ?",
+      "choices": [
+        "Une question courte, pour laisser le modèle libre",
+        "Le même mot répété en majuscules pour insister",
+        "Une demande en anglais, langue qu'il comprend seule",
+        "Contexte, tâche précise, format attendu et contraintes"
+      ],
+      "answer": 3,
+      "explanation": "Exemple : « Tu relis un mode opératoire de consignation. Liste les étapes manquantes, sous forme de tableau, sans inventer de référence. » Un rôle, une tâche, un format et des limites réduisent les allers-retours."
+    },
+    {
+      "id": "ia-071",
+      "level": "confirmé",
+      "question": "Pourquoi un LLM se trompe-t-il souvent sur des calculs précis ou sur l'actualité récente ?",
+      "choices": [
+        "Il est volontairement bridé sur les nombres par son éditeur",
+        "Il arrondit chaque nombre pour réduire la taille des réponses",
+        "Il ne lit correctement que les nombres écrits en lettres",
+        "Il prédit du texte et ses connaissances s'arrêtent à une date"
+      ],
+      "answer": 3,
+      "explanation": "Le calcul passe mieux par un outil (calculatrice, Python) que l'assistant appelle. Les faits récents demandent une recherche ou des documents fournis ; sinon le modèle répond avec ses données d'entraînement, parfois anciennes."
+    },
+    {
+      "id": "ia-072",
+      "level": "confirmé",
+      "question": "Que vérifier avant d'utiliser du code proposé par un assistant IA ?",
+      "choices": [
+        "Qu'il compile sans erreur, ce qui suffit à le valider",
+        "Le comprendre, le tester et vérifier les bibliothèques citées",
+        "Qu'il est plus court que celui qu'on aurait écrit soi-même",
+        "Qu'il reprend le nommage le plus courant sur internet"
+      ],
+      "answer": 1,
+      "explanation": "Un assistant peut inventer une fonction ou un paquet qui n'existe pas (et qu'un attaquant peut publier sous ce nom), ignorer un cas limite ou introduire une faille. Relecture, tests et analyse de sécurité restent nécessaires."
+    },
+    {
+      "id": "ia-073",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'un RAG (Retrieval-Augmented Generation) ?",
+      "choices": [
+        "Réentraîner le modèle chaque nuit sur les nouveaux documents",
+        "Comprimer le modèle pour qu'il tienne sur un PC portable",
+        "Faire vérifier la réponse du modèle par un second modèle",
+        "Joindre au prompt des passages trouvés dans ses documents"
+      ],
+      "answer": 3,
+      "explanation": "On cherche les passages pertinents (notices, procédures) et on les donne au modèle avec la question. Il répond à partir de sources à jour et citables, sans réentraînement."
+    },
+    {
+      "id": "ia-074",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Cliquez sur l'étape qui permet de comparer le sens de deux textes par un calcul de distance.",
+      "zones": [
+        {
+          "label": "Documents internes",
+          "rect": [
+            30,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Découpage en passages",
+          "rect": [
+            245,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Calcul des embeddings",
+          "rect": [
+            460,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Base vectorielle",
+          "rect": [
+            675,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Recherche des passages",
+          "rect": [
+            675,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Prompt complété",
+          "rect": [
+            460,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "LLM",
+          "rect": [
+            245,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Réponse avec sources",
+          "rect": [
+            30,
+            220,
+            190,
+            80
+          ]
+        }
+      ],
+      "answer": 2,
+      "visual": {
+        "asset": "ia-rag.svg",
+        "alt": "Indexation et recherche d'un RAG",
+        "show": "question"
+      },
+      "explanation": "Chaque passage devient un vecteur. La question passe par le même modèle d'embedding, et la recherche retient les vecteurs les plus proches, par similarité cosinus."
+    },
+    {
+      "id": "ia-075",
+      "level": "confirmé",
+      "type": "zone",
+      "question": "Cliquez sur l'étape où l'on demande au modèle de s'en tenir aux extraits trouvés, et de dire s'il ne trouve pas.",
+      "zones": [
+        {
+          "label": "Documents internes",
+          "rect": [
+            30,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Découpage en passages",
+          "rect": [
+            245,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Calcul des embeddings",
+          "rect": [
+            460,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Base vectorielle",
+          "rect": [
+            675,
+            70,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Recherche des passages",
+          "rect": [
+            675,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Prompt complété",
+          "rect": [
+            460,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "LLM",
+          "rect": [
+            245,
+            220,
+            190,
+            80
+          ]
+        },
+        {
+          "label": "Réponse avec sources",
+          "rect": [
+            30,
+            220,
+            190,
+            80
+          ]
+        }
+      ],
+      "answer": 5,
+      "visual": {
+        "asset": "ia-rag.svg",
+        "alt": "Indexation et recherche d'un RAG",
+        "show": "question"
+      },
+      "explanation": "La consigne du prompt cadre la réponse : n'utiliser que les passages fournis, citer leur source, répondre « je ne sais pas » sinon. Cela réduit les hallucinations sans les supprimer."
+    },
+    {
+      "id": "ia-076",
+      "level": "confirmé",
+      "type": "ordre",
+      "question": "Remettez dans l'ordre le traitement d'une question par un RAG.",
+      "items": [
+        "Calculer l'embedding de la question",
+        "Chercher les passages les plus proches dans la base vectorielle",
+        "Construire le prompt avec la consigne, les passages et la question",
+        "Faire générer la réponse par le LLM",
+        "Afficher la réponse avec les sources citées"
+      ],
+      "explanation": "L'indexation des documents (découpage, embeddings, base vectorielle) est faite à l'avance ; ces cinq étapes ont lieu à chaque question, en une à quelques secondes."
+    },
+    {
+      "id": "ia-077",
+      "level": "expert",
+      "question": "Une entreprise veut qu'un assistant réponde avec ses procédures, mises à jour chaque semaine. Que choisir en premier ?",
+      "choices": [
+        "Un RAG, qui relit les documents à jour à chaque question",
+        "Un fine-tuning hebdomadaire du modèle sur les procédures",
+        "Un modèle plus gros, qui connaît mieux le monde industriel",
+        "Une température élevée pour couvrir davantage de cas"
+      ],
+      "answer": 0,
+      "explanation": "Le fine-tuning ajuste le style et le comportement mais retient mal des faits qui changent, et coûte à chaque mise à jour. Avec un RAG, il suffit de réindexer les documents modifiés, et la source peut être citée."
+    },
+    {
+      "id": "ia-078",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'un embedding ?",
+      "choices": [
+        "Un texte inséré au milieu d'un autre pour le compléter",
+        "Un vecteur de nombres qui représente le sens d'un texte",
+        "Une image intégrée dans la réponse d'un modèle",
+        "Un modèle installé à l'intérieur d'une autre application"
+      ],
+      "answer": 1,
+      "explanation": "Deux textes de sens voisin ont des vecteurs proches, même sans mot commun (« fuite d'huile » et « perte de fluide »). On les compare par similarité cosinus : c'est la base de la recherche sémantique."
+    },
+    {
+      "id": "ia-079",
+      "level": "expert",
+      "question": "Que calcule cette fonction ?",
+      "code": "def f(a, b):\n    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))",
+      "choices": [
+        "La similarité cosinus : 1 pour deux vecteurs de même direction",
+        "La distance euclidienne entre les deux vecteurs donnés",
+        "La moyenne des produits terme à terme des deux vecteurs",
+        "L'angle en degrés entre les deux vecteurs donnés"
+      ],
+      "answer": 0,
+      "explanation": "Le produit scalaire divisé par le produit des normes donne le cosinus de l'angle : 1 pour une même direction, 0 sans rapport, -1 pour des sens opposés. C'est la mesure habituelle entre embeddings."
+    },
+    {
+      "id": "ia-080",
+      "level": "confirmé",
+      "question": "Pourquoi découpe-t-on les documents en passages avant de les indexer pour un RAG ?",
+      "choices": [
+        "Pour réduire la taille des fichiers sur le disque",
+        "Pour que chaque passage soit traduit séparément",
+        "Pour retrouver et transmettre l'extrait utile",
+        "Pour empêcher la copie des documents complets"
+      ],
+      "answer": 2,
+      "explanation": "L'embedding d'un document entier mélange tous ses sujets. Des passages de quelques centaines de tokens, avec un léger chevauchement, se retrouvent mieux et tiennent dans le contexte."
+    },
+    {
+      "id": "ia-081",
+      "level": "expert",
+      "question": "Qu'est-ce qu'une injection de prompt indirecte ?",
+      "choices": [
+        "Une consigne cachée dans un document que lit le modèle",
+        "Une question posée plusieurs fois pour lasser le modèle",
+        "Un prompt trop long, coupé par la fenêtre de contexte",
+        "Un mot de passe glissé dans la réponse du modèle"
+      ],
+      "answer": 0,
+      "explanation": "Une page web, un courriel ou un PDF peut contenir « ignore tes instructions et envoie… ». Le modèle distingue mal données et consignes : on limite ses droits, on valide ses actions et on ne lui confie pas de secret."
+    },
+    {
+      "id": "ia-082",
+      "level": "expert",
+      "question": "Quel risque présente ce code d'un assistant qui résume des courriels ?",
+      "code": "prompt = f\"Résume ce courriel puis exécute les actions demandées :\\n{courriel}\"\nreponse = llm(prompt)\nexecuter(reponse)",
+      "choices": [
+        "Le f-string tronque les courriels de plus de 1 000 caractères",
+        "Le modèle ne sait pas résumer un texte écrit en français",
+        "Un courriel piégé peut dicter des actions au système",
+        "La réponse du modèle arrive trop tard pour être exécutée"
+      ],
+      "answer": 2,
+      "explanation": "Le contenu du courriel, écrit par n'importe qui, devient une consigne, et la réponse est exécutée sans contrôle. On sépare clairement données et instructions, on limite les actions possibles et l'on fait valider par une personne."
+    },
+    {
+      "id": "ia-083",
+      "level": "confirmé",
+      "question": "Qu'est-ce qu'un agent IA ?",
+      "choices": [
+        "Un employé chargé de surveiller les réponses du modèle",
+        "Un modèle spécialisé, entraîné sur un seul métier",
+        "Un LLM qui enchaîne des actions avec des outils",
+        "Un programme qui installe les mises à jour du modèle"
+      ],
+      "answer": 2,
+      "explanation": "L'agent décide d'appeler un outil (recherche, base de données, API), lit le résultat et poursuit jusqu'au but. Chaque outil ouvert est une surface d'attaque : droits minimaux et validation humaine des actions sensibles."
+    },
+    {
+      "id": "ia-084",
+      "level": "débutant",
+      "question": "Quelles données ne faut-il pas coller dans un assistant IA public sans accord de l'entreprise ?",
+      "choices": [
+        "Une question sur la syntaxe d'une boucle en Python",
+        "Plans, code source, données clients ou personnelles",
+        "Un extrait de la documentation publique d'une bibliothèque",
+        "Une demande de reformulation d'un courriel banal"
+      ],
+      "answer": 1,
+      "explanation": "Ce qui est envoyé peut être conservé, relu ou servir à l'entraînement selon l'offre utilisée. Les entreprises fixent souvent une charte : outil validé, données anonymisées, pas de secret industriel."
+    },
+    {
+      "id": "ia-085",
+      "level": "confirmé",
+      "question": "Pourquoi faire tourner un modèle en local avec Ollama ou llama.cpp ?",
+      "choices": [
+        "Les données restent sur la machine, sans abonnement à payer",
+        "Les modèles locaux sont plus précis que les modèles en ligne",
+        "Le modèle se met à jour de lui-même avec les derniers faits",
+        "Le modèle n'a besoin ni de mémoire ni de processeur rapide"
+      ],
+      "answer": 0,
+      "explanation": "Des modèles ouverts (Mistral, Llama, Qwen, Gemma) tournent sur un PC correct, mieux avec une carte graphique. Ils sont en général moins forts que les plus grands modèles en ligne, mais suffisent pour résumer, classer ou reformuler."
+    },
+    {
+      "id": "ia-086",
+      "level": "débutant",
+      "question": "Que fait cette commande ?",
+      "code": "ollama run mistral",
+      "choices": [
+        "Elle télécharge le modèle si besoin et ouvre une discussion locale",
+        "Elle envoie la question aux serveurs de l'éditeur Mistral AI",
+        "Elle entraîne un nouveau modèle à partir de celui de Mistral",
+        "Elle installe Ollama dans un conteneur Docker du poste"
+      ],
+      "answer": 0,
+      "explanation": "Ollama gère des modèles ouverts sur sa machine : pull pour télécharger, run pour discuter, et une API locale sur le port 11434 pour les appeler depuis un programme. Rien ne sort du poste."
+    },
+    {
+      "id": "ia-087",
+      "level": "confirmé",
+      "question": "Qu'est-ce que la quantification d'un modèle, par exemple en 4 bits ?",
+      "choices": [
+        "Compter les paramètres du modèle avant de le publier",
+        "Stocker les poids avec moins de bits pour réduire la mémoire",
+        "Noter la qualité des réponses sur une échelle de 4",
+        "Limiter le modèle à quatre réponses possibles pour chaque question"
+      ],
+      "answer": 1,
+      "explanation": "Passer de 16 à 4 bits par poids divise la mémoire par près de quatre, avec une petite perte de qualité. C'est ce qui permet de faire tourner un modèle de 7 milliards de paramètres sur un PC ordinaire."
+    },
+    {
+      "id": "ia-088",
+      "level": "expert",
+      "type": "numerique",
+      "question": "Combien de mémoire faut-il environ pour les seuls poids d'un modèle de 7 milliards de paramètres stockés sur 16 bits, en Go ?",
+      "value": 14,
+      "tolerance": 1,
+      "unit": "Go",
+      "explanation": "16 bits font 2 octets : 7 × 10⁹ × 2 = 14 × 10⁹ octets, soit 14 Go. Quantifié en 4 bits, il tient dans 3,5 à 4 Go, plus la mémoire du contexte."
+    },
+    {
+      "id": "ia-089",
+      "level": "débutant",
+      "question": "Qu'est-ce qu'un modèle « préentraîné » publié sur Hugging Face ?",
+      "choices": [
+        "Un modèle vide qu'il faut entraîner de zéro avant usage",
+        "Un modèle payant dont l'essai gratuit dure trente jours",
+        "Un modèle retenu lors d'un concours d'entraînement",
+        "Un modèle déjà entraîné, réutilisable tel quel ou à affiner"
+      ],
+      "answer": 3,
+      "explanation": "Hugging Face héberge des milliers de modèles et de jeux de données ouverts. On vérifie la licence (usage commercial ou non) et la carte du modèle, qui décrit ses données d'entraînement et ses limites."
+    },
+    {
+      "id": "ia-090",
+      "level": "confirmé",
+      "question": "Pourquoi être prudent en chargeant un modèle au format pickle téléchargé ?",
+      "choices": [
+        "Le format pickle compresse mal les poids des réseaux",
+        "Le fichier ne fonctionne qu'avec la version 2 de Python",
+        "Le modèle perd de sa précision à chaque chargement",
+        "Le chargement peut exécuter du code arbitraire"
+      ],
+      "answer": 3,
+      "explanation": "pickle reconstruit des objets Python et peut lancer n'importe quelle fonction. On préfère le format safetensors, qui ne contient que des tableaux de nombres, et des sources de confiance."
+    },
+    {
+      "id": "ia-091",
+      "level": "débutant",
+      "question": "Quel texte européen encadre l'intelligence artificielle selon son niveau de risque ?",
+      "choices": [
+        "Le règlement Machines 2023/1230",
+        "Le règlement sur l'IA (AI Act, 2024/1689)",
+        "La directive NIS 2 sur la cybersécurité",
+        "Le règlement eIDAS sur l'identification électronique"
+      ],
+      "answer": 1,
+      "explanation": "Le règlement (UE) 2024/1689 classe les usages : interdits, à haut risque, soumis à transparence, minimal. Il s'applique par étapes depuis son entrée en vigueur le 1er août 2024 ; les pratiques interdites le sont depuis février 2025."
+    },
+    {
+      "id": "ia-092",
+      "level": "confirmé",
+      "type": "association",
+      "question": "Associez chaque niveau de risque de l'AI Act à un exemple.",
+      "pairs": [
+        [
+          "Inacceptable : interdit",
+          "Notation sociale des citoyens"
+        ],
+        [
+          "Haut risque",
+          "Composant de sécurité d'une machine fondé sur l'IA"
+        ],
+        [
+          "Risque limité : transparence",
+          "Chatbot qui doit se présenter comme une IA"
+        ],
+        [
+          "Risque minimal",
+          "Filtre antispam d'une messagerie"
+        ]
+      ],
+      "explanation": "Un système d'IA qui sert de composant de sécurité d'un produit déjà réglementé, comme une machine, est à haut risque : il passe par l'évaluation de conformité du produit. Un chatbot doit dire qu'il est une IA."
+    },
+    {
+      "id": "ia-093",
+      "level": "expert",
+      "question": "Un logiciel d'IA trie les candidatures d'un recrutement. Comment l'AI Act le classe-t-il ?",
+      "choices": [
+        "Haut risque : gestion des risques, documentation, contrôle humain",
+        "Risque minimal : un simple code de conduite volontaire",
+        "Pratique interdite sur le territoire de l'Union européenne",
+        "Hors champ, car le dernier mot revient au recruteur"
+      ],
+      "answer": 0,
+      "explanation": "Recrutement, évaluation des salariés et accès à la formation figurent parmi les usages à haut risque de l'annexe III : gestion des risques, qualité des données, journalisation, information des personnes et contrôle humain sont exigés."
+    },
+    {
+      "id": "ia-094",
+      "level": "confirmé",
+      "question": "Quelle pratique l'AI Act interdit-il au travail, sauf raison médicale ou de sécurité ?",
+      "choices": [
+        "La traduction automatique des consignes de poste",
+        "La détection d'anomalies sur les machines",
+        "Le résumé automatique des comptes rendus",
+        "La reconnaissance des émotions des salariés"
+      ],
+      "answer": 3,
+      "explanation": "Déduire les émotions d'une personne au travail ou à l'école est interdit depuis février 2025, comme la notation sociale ou la manipulation exploitant des vulnérabilités. Surveiller des machines reste permis."
+    },
+    {
+      "id": "ia-095",
+      "level": "confirmé",
+      "question": "Un modèle de tri de CV entraîné sur dix ans d'embauches défavorise les candidates. Quelle est la cause la plus probable ?",
+      "choices": [
+        "Les données reproduisent les biais des décisions passées",
+        "Le modèle a trop peu de paramètres pour lire un CV",
+        "Les CV des candidates sont plus longs à analyser",
+        "Le seuil de décision est resté à la valeur par défaut de 0,5"
+      ],
+      "answer": 0,
+      "explanation": "Un modèle apprend ce que montrent les données, discriminations comprises, même sans colonne « sexe » : un prénom, un club ou un parcours servent d'indice. On mesure les résultats par groupe et l'on corrige données et usage."
+    },
+    {
+      "id": "ia-096",
+      "level": "confirmé",
+      "question": "Que signifie l'explicabilité d'un modèle ?",
+      "choices": [
+        "Pouvoir publier le code du modèle sous une licence libre",
+        "Pouvoir dire quelles variables ont pesé dans une décision",
+        "Pouvoir réentraîner le modèle sans perte de qualité",
+        "Pouvoir faire tourner le modèle sur un autre serveur"
+      ],
+      "answer": 1,
+      "explanation": "L'importance des variables, SHAP ou LIME indiquent pourquoi le modèle a prédit une panne : vibration, température, heures de marche. Un technicien fait davantage confiance à une alerte qu'il peut vérifier."
+    },
+    {
+      "id": "ia-097",
+      "level": "confirmé",
+      "question": "Le RGPD s'applique-t-il à un modèle entraîné sur des données de salariés (badges, temps de poste) ?",
+      "choices": [
+        "Non, le règlement sur l'IA remplace le RGPD pour l'IA",
+        "Oui : finalité, base légale, minimisation et information",
+        "Non, tant que les données restent internes à l'entreprise",
+        "Oui, mais à la condition que les données sortent de l'Union"
+      ],
+      "answer": 1,
+      "explanation": "Ce sont des données personnelles. L'AI Act s'ajoute au RGPD sans le remplacer ; les salariés sont informés, le CSE consulté pour un outil de contrôle de l'activité, et l'on ne garde que les données nécessaires."
+    },
+    {
+      "id": "ia-098",
+      "level": "débutant",
+      "question": "Qui est responsable d'une décision prise à partir d'une recommandation d'IA en atelier ?",
+      "choices": [
+        "L'éditeur du modèle, qui a fourni la recommandation",
+        "La personne ou l'entreprise qui décide de l'appliquer",
+        "Le fournisseur des capteurs qui ont donné les mesures",
+        "Personne, la recommandation n'étant qu'indicative"
+      ],
+      "answer": 1,
+      "explanation": "Une IA ne porte pas de responsabilité. L'utilisateur garde la décision : consigner, arrêter une machine, libérer un lot. D'où l'importance du contrôle humain et de la traçabilité des recommandations suivies."
+    },
+    {
+      "id": "ia-099",
+      "level": "confirmé",
+      "question": "Pourquoi versionner les données et le modèle, en plus du code ?",
+      "choices": [
+        "Pour que Git compresse mieux les fichiers du projet",
+        "Pour que le modèle s'entraîne plus vite lors de la fois suivante, sur le même poste",
+        "Pour reproduire un résultat et revenir à une version qui marchait",
+        "Pour se passer de tests à chaque nouvelle version"
+      ],
+      "answer": 2,
+      "explanation": "Un modèle dépend du code, des données et des réglages. Noter la version de chacun (DVC, MLflow, ou un simple registre) permet d'expliquer un écart ou de revenir en arrière après une mise en service ratée."
+    },
+    {
+      "id": "ia-100",
+      "level": "confirmé",
+      "question": "Une fois le modèle en production, que faut-il surveiller ?",
+      "choices": [
+        "Les entrées, les prédictions et les résultats réels constatés",
+        "La température du serveur, qui reflète à elle seule la charge du modèle",
+        "Le nombre de lignes de code du service de prédiction",
+        "La date du dernier entraînement, sans autre mesure"
+      ],
+      "answer": 0,
+      "explanation": "Les entrées révèlent une dérive (nouvelle matière, capteur décalé), les prédictions un changement de comportement, et les résultats réels, connus plus tard, la vraie performance. Journaliser chaque prédiction aide au diagnostic."
+    }
+  ]
+}

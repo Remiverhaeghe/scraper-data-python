@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="470" viewBox="0 0 900 470" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="470" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">RAG : répondre à partir de ses propres documents</text>
+<rect x="30.0" y="70.0" width="190.0" height="80.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="125.0" y="106.2" text-anchor="middle" font-size="14" fill="#0f172a">Documents internes</text>
+<text x="125.0" y="123.2" text-anchor="middle" font-size="14" fill="#0f172a">(notices, procédures)</text>
+<rect x="245.0" y="70.0" width="190.0" height="80.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="340.0" y="106.2" text-anchor="middle" font-size="14" fill="#0f172a">Découpage</text>
+<text x="340.0" y="123.2" text-anchor="middle" font-size="14" fill="#0f172a">en passages</text>
+<rect x="460.0" y="70.0" width="190.0" height="80.0" rx="8" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+<text x="555.0" y="106.2" text-anchor="middle" font-size="14" fill="#0f172a">Calcul des</text>
+<text x="555.0" y="123.2" text-anchor="middle" font-size="14" fill="#0f172a">embeddings</text>
+<rect x="675.0" y="70.0" width="190.0" height="80.0" rx="8" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+<text x="770.0" y="106.2" text-anchor="middle" font-size="14" fill="#0f172a">Base</text>
+<text x="770.0" y="123.2" text-anchor="middle" font-size="14" fill="#0f172a">vectorielle</text>
+<rect x="675.0" y="220.0" width="190.0" height="80.0" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+<text x="770.0" y="256.2" text-anchor="middle" font-size="14" fill="#0f172a">Recherche des passages</text>
+<text x="770.0" y="273.2" text-anchor="middle" font-size="14" fill="#0f172a">les plus proches</text>
+<rect x="460.0" y="220.0" width="190.0" height="80.0" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+<text x="555.0" y="256.2" text-anchor="middle" font-size="14" fill="#0f172a">Prompt : consigne</text>
+<text x="555.0" y="273.2" text-anchor="middle" font-size="14" fill="#0f172a">+ passages + question</text>
+<rect x="245.0" y="220.0" width="190.0" height="80.0" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="340.0" y="256.2" text-anchor="middle" font-size="14" fill="#0f172a">LLM : génère</text>
+<text x="340.0" y="273.2" text-anchor="middle" font-size="14" fill="#0f172a">la réponse</text>
+<rect x="30.0" y="220.0" width="190.0" height="80.0" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="125.0" y="256.2" text-anchor="middle" font-size="14" fill="#0f172a">Réponse citant</text>
+<text x="125.0" y="273.2" text-anchor="middle" font-size="14" fill="#0f172a">ses sources</text>
+<line x1="220.0" y1="110.0" x2="243.0" y2="110.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="435.0" y1="110.0" x2="458.0" y2="110.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="650.0" y1="110.0" x2="673.0" y2="110.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="770.0" y1="150.0" x2="770.0" y2="218.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="675.0" y1="260.0" x2="652.0" y2="260.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="460.0" y1="260.0" x2="437.0" y2="260.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<line x1="245.0" y1="260.0" x2="222.0" y2="260.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="675.0" y="350.0" width="190.0" height="60.0" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+<text x="770.0" y="376.2" text-anchor="middle" font-size="14" fill="#0f172a">Question de</text>
+<text x="770.0" y="393.2" text-anchor="middle" font-size="14" fill="#0f172a">l&#x27;utilisateur</text>
+<line x1="770.0" y1="350.0" x2="770.0" y2="302.0" stroke="#334155" stroke-width="2" marker-end="url(#fleche)"/>
+<text x="330.0" y="375.0" text-anchor="middle" font-size="13" fill="#475569">En haut : indexation, faite à l&#x27;avance</text>
+<text x="330.0" y="397.0" text-anchor="middle" font-size="13" fill="#475569">En bas : recherche et génération, à chaque question</text>
+</svg>

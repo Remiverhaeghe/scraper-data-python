@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400" viewBox="0 0 900 400" font-family="Arial, sans-serif">
+<defs><marker id="fleche" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker></defs>
+<rect width="900" height="400" fill="#ffffff"/>
+<text x="450.0" y="32" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Matrice de confusion : contrôle visuel de 1 000 pièces</text>
+<text x="560.0" y="70.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Prédiction du modèle</text>
+<text x="420.0" y="100.0" text-anchor="middle" font-size="14" fill="#0f172a">« défectueuse »</text>
+<text x="680.0" y="100.0" text-anchor="middle" font-size="14" fill="#0f172a">« bonne »</text>
+<text x="160.0" y="170.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Réel : défectueuse</text>
+<text x="160.0" y="290.0" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Réel : bonne</text>
+<rect x="300.0" y="115.0" width="240.0" height="100.0" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="420.0" y="175.0" text-anchor="middle" font-size="30" font-weight="bold" fill="#0f172a">40</text>
+<rect x="560.0" y="115.0" width="240.0" height="100.0" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+<text x="680.0" y="175.0" text-anchor="middle" font-size="30" font-weight="bold" fill="#0f172a">5</text>
+<rect x="300.0" y="235.0" width="240.0" height="100.0" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+<text x="420.0" y="295.0" text-anchor="middle" font-size="30" font-weight="bold" fill="#0f172a">15</text>
+<rect x="560.0" y="235.0" width="240.0" height="100.0" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+<text x="680.0" y="295.0" text-anchor="middle" font-size="30" font-weight="bold" fill="#0f172a">940</text>
+<text x="450.0" y="375.0" text-anchor="middle" font-size="13" fill="#475569">La classe positive est « défectueuse » : c&#x27;est elle que le modèle doit trouver</text>
+</svg>

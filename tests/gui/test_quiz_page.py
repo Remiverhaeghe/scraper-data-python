@@ -377,7 +377,7 @@ def test_category_list_filters_and_toggles(qt_application, tmp_path):
 
     assert "SQL" in vTitles
     assert "Java" not in vTitles
-    assert "Données · 1" in vTitles
+    assert "Données · 2" in vTitles
 
     # Second clic sur la catégorie active : retour à l'ensemble des thèmes
     vPage.category_buttons[("Informatique", "Données")].click()

@@ -81,7 +81,11 @@ DOMAIN_RULES = (
         "backend frontend android html css",
     ),
     ("Industrie", "Automatisme", "automatisme plc iot iiot mqtt"),
-    ("Informatique", "Données", "sql base donnees postgresql mysql oracle mongodb"),
+    (
+        "Informatique",
+        "Données",
+        "sql base donnees postgresql mysql oracle mongodb ia artificielle learning llm",
+    ),
     (
         "Informatique",
         "Exploitation et DevOps",
