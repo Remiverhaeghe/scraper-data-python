@@ -72,6 +72,7 @@ from job.interview_journal import (
     collect_asked_questions,
     collect_company_questions,
 )
+from job.interview_mission import build_mission, set_step
 from job.interview_revision import build_offer_revision
 from job.manual_offers import (
     IMPORT_FORMATS,
@@ -599,6 +600,7 @@ def show_offer(
     vCompanyRules = load_company_rules(pDatabaseFile)
 
     vExamResults = load_exam_results(pDatabaseFile, (pSource, str(pSourceId)))
+    vPreparation = build_preparation(pDatabaseFile, vPrepared)
     vComparisonKeys = load_comparison_keys(pDatabaseFile)
 
     rResponse = templates.TemplateResponse(
@@ -617,7 +619,14 @@ def show_offer(
             "company_lookup": can_lookup_company(vPrepared),
             "offer": vPrepared,
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
-            "preparation": build_preparation(pDatabaseFile, vPrepared),
+            "preparation": vPreparation,
+            "mission": (
+                build_mission(
+                    pDatabaseFile, vPrepared, vPreparation["match"]["missing"]
+                )
+                if vPreparation
+                else None
+            ),
             "market_salary": describe_market_salary(vMarket),
             "negotiation": describe_negotiation(vMarket, vPrepared, vSettings),
             "net_after_commute": describe_net_after_commute(vPrepared, vSettings),
@@ -837,6 +846,45 @@ def build_offer_url(pSource, pSourceId):
     )
 
     return rUrl
+
+
+@router.post(
+    "/offer/mission", response_class=HTMLResponse, dependencies=[Depends(require_csrf)]
+)
+def update_mission_step(
+    request: Request,
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pStep: str = Form(alias="step"),
+    pDone: bool = Form(False, alias="done"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Coche ou décoche une étape de la mission d'entretien, puis la réaffiche."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+    vPreparation = build_preparation(pDatabaseFile, vOffer)
+
+    if vPreparation is None:
+        raise HTTPException(status_code=400, detail="Complétez d'abord votre profil.")
+
+    try:
+        set_step(pDatabaseFile, vOffer, pStep, pDone)
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "_interview_mission.html",
+        {
+            "offer": vOffer,
+            "mission": build_mission(
+                pDatabaseFile, vOffer, vPreparation["match"]["missing"]
+            ),
+        },
+    )
+
+    return rResponse
 
 
 @router.post("/offer/company", dependencies=[Depends(require_csrf)])

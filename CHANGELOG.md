@@ -5,6 +5,13 @@ dans l'historique git.
 
 ## Non publié
 
+### Mission entretien
+- Préparation d'un entretien en mission sur la fiche de l'offre (bureau, web) :
+  fiche entreprise, pitch, questions pièges, manques, simulation, puis le boss,
+  l'examen blanc de l'offre à réussir à 70 % ; avancement en pourcentage, XP et
+  trophée « Prêt pour le jour J » une fois tout prêt
+- Avancement de la mission sur la fiche d'entretien du téléphone
+
 ### Puzzles de code
 - 45 puzzles dans la page Défis (bureau, web) : lignes à remettre dans l'ordre,
   ligne fautive, code à compléter, en Python, Java, SQL, Bash, Git, Docker et

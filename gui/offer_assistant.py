@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from gui.chart import BarChart
 from gui.dialogs import show_preparation, show_text_dialog
+from gui.interview_mission_panel import InterviewMissionPanel
 from gui.theme import COLORS
 from gui.widgets import create_button, get_exports_folder
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
@@ -145,6 +146,7 @@ class OfferAssistantPanel(QWidget):
         self.database_file = pDatabaseFile
         self.offer = None
         self.company_summary = None
+        self.mission_panel = InterviewMissionPanel(pDatabaseFile)
 
         self.prepare_button = create_button(
             "Préparer ma candidature", "sparkles", pIconColor=COLORS["primary"]
@@ -228,6 +230,7 @@ class OfferAssistantPanel(QWidget):
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0, 0, 0, 0)
         vLayout.setSpacing(4)
+        vLayout.addWidget(self.mission_panel)
         vLayout.addWidget(self.prepare_button)
         vLayout.addWidget(self.cv_button)
         vLayout.addWidget(self.sheet_button)
@@ -270,6 +273,7 @@ class OfferAssistantPanel(QWidget):
         )
         self.availability_button.setEnabled(safe_url(vOffer.get("url")) != "#")
         self.show_exam_results(vOffer)
+        self.mission_panel.set_offer(pOffer)
         self.refresh_comparison()
         self.show_availability(
             describe_availability(vOffer),

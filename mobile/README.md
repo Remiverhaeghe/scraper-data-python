@@ -31,7 +31,7 @@ rappel de chaque entretien la veille à 18 h et une heure avant, notification de
 offres suivies retirées par leur site et des nouvelles offres des entreprises
 privilégiées, révision express de 5 minutes avec compte à rebours, note rapide sur
 une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
-lisibles hors ligne et fiche de préparation (pitch, questions pièges, questions à
+lisibles hors ligne et fiche de préparation (avancement de la mission entretien, pitch, questions pièges, questions à
 poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien,
 simulations jouables sans réseau, puzzles de code par séries de dix, pannes à résoudre, automate en ladder, schémas électriques construits au toucher, bac à sable Git, bac à sable SQL (SQLite embarqué par le paquet sqlite3), Maven et Docker (contenu reçu du PC,
 parties revérifiées par le PC à la synchronisation), widget de l'écran d'accueil (questions à revoir, prochain entretien), dessiné par

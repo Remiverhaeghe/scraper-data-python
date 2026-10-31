@@ -118,6 +118,7 @@ class SheetScreen extends StatelessWidget {
           Text('${sheet['title'] ?? ''}', style: vTheme.textTheme.titleLarge),
           for (final vLine in vHeader) Text(vLine, style: vTheme.textTheme.bodyMedium),
           const SizedBox(height: 8),
+          if (sheet['mission'] case final Map vMission) MissionCard(mission: vMission),
           for (final (vName, vLines) in vSections)
             ExpansionTile(
               title: Text(vName),
@@ -137,5 +138,56 @@ class SheetScreen extends StatelessWidget {
     );
 
     return rScreen;
+  }
+}
+
+/// Avancement de la mission d'entretien, cochée sur le PC.
+class MissionCard extends StatelessWidget {
+  const MissionCard({super.key, required this.mission});
+
+  final Map mission;
+
+  @override
+  Widget build(BuildContext context) {
+    final vTheme = Theme.of(context);
+    final vPercent = (mission['percent'] as num? ?? 0).toInt();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Mission entretien · $vPercent %', style: vTheme.textTheme.titleMedium),
+            const SizedBox(height: 6),
+            LinearProgressIndicator(value: vPercent / 100),
+            if (mission['completed_at'] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  'Mission accomplie : vous êtes prêt pour le jour J.',
+                  style: TextStyle(color: Colors.green.shade700),
+                ),
+              ),
+            for (final vStep in mission['steps'] as List? ?? const [])
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  (vStep as Map)['done'] == true
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color: vStep['done'] == true ? Colors.green.shade700 : null,
+                ),
+                title: Text('${vStep['label']}'),
+                subtitle: Text(
+                  '${vStep['task']}${'${vStep['detail'] ?? ''}'.isEmpty ? '' : '\n${vStep['detail']}'}',
+                ),
+              ),
+            Text('Les étapes se cochent sur le PC.', style: vTheme.textTheme.bodySmall),
+          ],
+        ),
+      ),
+    );
   }
 }

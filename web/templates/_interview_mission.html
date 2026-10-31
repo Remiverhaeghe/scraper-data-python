@@ -1,0 +1,25 @@
+{# Mission d'entretien d'une offre (job/interview_mission.py) : étapes à cocher,
+   étapes vérifiées d'après les examens blancs, et avancement. Remplacée sur place
+   quand une case change. #}
+<section class="card interview-mission" id="interview-mission">
+    <h2>{{ icon("target") }} Mission entretien · {{ mission.percent }} %</h2>
+    <div class="quiz-progress" role="progressbar" aria-valuenow="{{ mission.percent }}" aria-valuemin="0" aria-valuemax="100" aria-label="Avancement de la mission"><span style="width: {{ mission.percent }}%"></span></div>
+    {% if mission.completed_at %}
+    <p class="application-message tone-success" role="status">Mission accomplie{% if mission.just_completed %} à l'instant{% endif %} : vous êtes prêt pour le jour J.</p>
+    {% else %}
+    <p class="card-subtitle">{{ mission.done }} étape(s) sur {{ mission.total }}. Les manques et le boss se valident seuls d'après vos examens blancs, plus bas.</p>
+    {% endif %}
+    <ul class="mission-steps">
+        {% for step in mission.steps %}
+        <li class="{{ 'is-done' if step.done }}">
+            {% if step.automatic %}
+            <span class="tone-{{ 'success' if step.done else 'muted' }}">{{ icon("circle-check" if step.done else "timer", 18) }}</span>
+            <span><strong>{{ step.label }}</strong> · {{ step.task }}{% if step.detail %}<br><span class="muted">{{ step.detail }}</span>{% endif %}</span>
+            {% else %}
+            <input type="checkbox" id="mission-{{ step.id }}"{% if step.done %} checked{% endif %} hx-post="{{ url_for('update_mission_step').path }}" hx-vals='{{ {"source": offer.source, "id": offer.source_id, "step": step.id, "done": "" if step.done else "true"} | tojson }}' hx-target="#interview-mission" hx-swap="outerHTML">
+            <label for="mission-{{ step.id }}"><strong>{{ step.label }}</strong> · {{ step.task }}</label>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</section>

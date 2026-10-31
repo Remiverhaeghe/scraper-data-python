@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -92,5 +93,31 @@ void main() {
     expect(formatMoment('2026-10-27T14:30'), '27/10 à 14:30');
     expect(formatMoment('2026-10-27'), '27/10');
     expect(formatMoment(null), '');
+  });
+
+  testWidgets("La fiche montre l'avancement de la mission d'entretien", (pTester) async {
+    await pTester.pumpWidget(const MaterialApp(
+      home: SheetScreen(sheet: {
+        'title': 'Technicien chez Acme',
+        'sections': [],
+        'mission': {
+          'percent': 50,
+          'completed_at': null,
+          'steps': [
+            {'label': 'Pitch', 'task': 'Dire son pitch', 'done': true, 'detail': ''},
+            {
+              'label': 'Boss',
+              'task': 'Examen blanc',
+              'done': false,
+              'detail': 'Meilleure note : 60 %'
+            },
+          ],
+        },
+      }),
+    ));
+
+    expect(find.text('Mission entretien · 50 %'), findsOneWidget);
+    expect(find.textContaining('Meilleure note : 60 %'), findsOneWidget);
+    expect(find.byIcon(Icons.check_circle), findsOneWidget);
   });
 }

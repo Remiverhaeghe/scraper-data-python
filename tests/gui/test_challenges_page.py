@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
 import gui.challenges_page as challenges_page
+import gui.puzzles_card as puzzles_card
 from gui.challenges_page import ChallengesPage, format_stars
 from job.challenges import CHALLENGES, get_expected_answers, get_seed
 from job.code_puzzles import SERIES_LENGTH
@@ -119,14 +120,18 @@ def test_full_solution_shows_the_note(qt_application, tmp_path):
     assert vPage.answer_message.text().startswith("Bonne réponse : défi terminé")
 
 
-def test_code_puzzles_series_is_played(qt_application, tmp_path):
+def test_code_puzzles_series_is_played(qt_application, tmp_path, monkeypatch):
     """Vérifie une série de puzzles : réponse vide refusée, réponses justes, bilan."""
 
     vPage = create_page(tmp_path / "scraper.db")
     vCard = vPage.puzzles
 
     vCard.start()
-    vCard.submit()
+
+    # Une remise en ordre a toujours une réponse : le cas vide est simulé.
+    with monkeypatch.context() as vPatch:
+        vPatch.setattr(puzzles_card, "read_response", lambda *pArgs: None)
+        vCard.submit()
 
     assert vCard.message_label.text() == "Répondez avant de valider."
 

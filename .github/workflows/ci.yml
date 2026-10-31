@@ -48,9 +48,10 @@ jobs:
       - name: Analyse de sécurité bandit
         run: bandit -q -r . -x ./tests
 
-      # Le seuil de couverture est défini dans pyproject.toml
+      # Le seuil de couverture est défini dans pyproject.toml ; -n auto répartit les
+      # tests sur tous les cœurs de la machine (pytest-xdist).
       - name: Tests et couverture
-        run: pytest -q --cov
+        run: pytest -q -n auto --cov
 
   # L'application s'utilise sous Windows : les tests y tournent aussi, pour voir
   # tôt un écart entre systèmes (chemins, Qt, encodage). Formatage et analyses
@@ -78,7 +79,7 @@ jobs:
         run: python -m playwright install chromium
 
       - name: Tests et couverture
-        run: pytest -q --cov
+        run: pytest -q -n auto --cov
 
   # Application Flutter du dossier mobile/ : analyse et tests, dont les cas de
   # correction communs avec le serveur (tests/fixtures/shared_quiz_cases.json).

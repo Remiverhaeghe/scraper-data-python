@@ -1,6 +1,8 @@
 """Cas des simulations communs au PC et au téléphone, et leur intégration"""
 
 import json
+
+import pytest
 from datetime import datetime
 
 from job.code_puzzles import get_answer
@@ -230,3 +232,122 @@ def test_phone_puzzle_series_is_graded_again(tmp_path):
     assert (vReport["saved"], vReport["xp"]) == (1, 30)
     assert vReport["rejected"][0]["reason"] == "série incomplète"
     assert build_labs_package(vDatabaseFile)["puzzles"]["level"] == 2
+
+
+ENVELOPE = {"id": "partie-x", "finished_at": "2026-10-31T10:00:00"}
+
+
+@pytest.mark.parametrize(
+    "pItem, pReason",
+    [
+        ("illisible", "partie illisible"),
+        ({"lab": "sql"}, "identifiant de partie manquant"),
+        ({"id": "x", "finished_at": "hier"}, "date de fin illisible"),
+        ({**ENVELOPE, "lab": "inconnu"}, "simulation ou scénario inconnu"),
+        ({**ENVELOPE, "lab": "troubleshooting", "actions": "x"}, "actions illisibles"),
+        (
+            {**ENVELOPE, "lab": "troubleshooting", "scenario": "x", "actions": []},
+            "simulation ou scénario inconnu",
+        ),
+        (
+            {
+                **ENVELOPE,
+                "lab": "troubleshooting",
+                "scenario": "differentiel",
+                "actions": [],
+            },
+            "panne non résolue",
+        ),
+        ({**ENVELOPE, "lab": "ladder", "level": "x"}, "simulation ou niveau inconnu"),
+        (
+            {**ENVELOPE, "lab": "ladder", "level": "marche-arret", "program": 3},
+            "programme illisible",
+        ),
+        (
+            {**ENVELOPE, "lab": "ladder", "level": "marche-arret", "program": ""},
+            "niveau non réussi",
+        ),
+        ({**ENVELOPE, "lab": "git", "level": "x"}, "simulation ou niveau inconnu"),
+        (
+            {**ENVELOPE, "lab": "git", "level": "premiers-commits", "history": [1]},
+            "commandes illisibles",
+        ),
+        (
+            {**ENVELOPE, "lab": "git", "level": "premiers-commits", "history": []},
+            "niveau non réussi",
+        ),
+        ({**ENVELOPE, "lab": "devops", "level": "x"}, "simulation ou niveau inconnu"),
+        (
+            {**ENVELOPE, "lab": "devops", "level": "docker-port-pris", "steps": [{}]},
+            "étapes illisibles",
+        ),
+        (
+            {
+                **ENVELOPE,
+                "lab": "devops",
+                "level": "docker-port-pris",
+                "steps": [{"file": "", "command": "docker ps"}],
+            },
+            "niveau non réussi",
+        ),
+        (
+            {**ENVELOPE, "lab": "sql", "level": "x", "dialect": "mysql"},
+            "simulation ou niveau inconnu",
+        ),
+        (
+            {**ENVELOPE, "lab": "sql", "level": "plus-cheres", "dialect": "mysql"},
+            "requête illisible",
+        ),
+        (
+            {
+                **ENVELOPE,
+                "lab": "sql",
+                "level": "plus-cheres",
+                "dialect": "mysql",
+                "query": "SELECT 1",
+            },
+            "niveau non réussi",
+        ),
+        ({**ENVELOPE, "lab": "circuit", "level": "x"}, "simulation ou niveau inconnu"),
+        (
+            {
+                **ENVELOPE,
+                "lab": "circuit",
+                "level": "lampe-simple",
+                "schema": {
+                    "components": [{"id": "pile", "type": "pile", "x": [], "y": 0}]
+                },
+            },
+            "Trop de composants : Source de tension continue.",
+        ),
+        (
+            {
+                **ENVELOPE,
+                "lab": "circuit",
+                "level": "lampe-simple",
+                "schema": {
+                    "components": [{"id": "lampe_bornes", "type": "lampe_bornes"}]
+                },
+            },
+            "niveau non réussi",
+        ),
+        ({**ENVELOPE, "lab": "puzzles", "answers": None}, "série incomplète"),
+    ],
+)
+def test_phone_results_are_refused_with_a_reason(tmp_path, pItem, pReason):
+    """Vérifie que chaque partie illisible ou ratée est refusée, avec sa raison."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+
+    vReport = sync_lab_results(vDatabaseFile, [pItem])
+
+    assert vReport["saved"] == 0
+    assert vReport["rejected"][0]["reason"] == pReason
+
+
+def test_too_many_phone_results_are_refused(tmp_path):
+    """Vérifie le plafond de parties par envoi."""
+
+    with pytest.raises(ValueError):
+        sync_lab_results(tmp_path / "scraper.db", [{}] * 201)

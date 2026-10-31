@@ -15,6 +15,7 @@ from datetime import date, datetime, timedelta
 
 from job.achievements import build_player_card, evaluate_achievements
 from job.code_puzzles import PUZZLE_PROGRESS_KEY
+from job.interview_mission import MISSIONS_KEY
 from job.quiz_exam import load_exam_results
 from storage.aptitude_sessions import get_aptitude_sessions
 from storage.database import connect_database
@@ -37,6 +38,7 @@ XP_RULES = {
     "sql_level": ("Niveau SQL réussi", 15),
     "circuit_level": ("Montage électrique réussi", 20),
     "devops_level": ("Niveau Maven ou Docker réussi", 20),
+    "interview_mission": ("Mission d'entretien terminée", 60),
     "puzzle_series": (
         "Série de puzzles de code terminée, plus 2 par bonne réponse",
         10,
@@ -242,6 +244,12 @@ def load_activity(pDatabaseFile):
         for vEntry in (vLevels if isinstance(vLevels, dict) else {}).values():
             if isinstance(vEntry, dict) and vEntry.get("passed_at"):
                 add_action(rActivity, read_day(vEntry["passed_at"]), vAction)
+
+    for vMission in load_json_setting(pDatabaseFile, MISSIONS_KEY, {}, dict).values():
+        if isinstance(vMission, dict) and vMission.get("completed_at"):
+            add_action(
+                rActivity, read_day(vMission["completed_at"]), "interview_mission"
+            )
 
     vPuzzles = load_json_setting(pDatabaseFile, PUZZLE_PROGRESS_KEY, {}, dict)
 

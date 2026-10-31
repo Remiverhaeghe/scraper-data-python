@@ -27,7 +27,7 @@ from job.geocoding import load_home
 from job.interview_revision import find_offer_themes
 from job.preparation import match_offer
 from job.presentation import STATUS_LABELS, clean_missing_values, format_net_salary
-from job.profile import load_profile
+from job.profile import is_profile_empty, load_profile
 from job.quiz import (
     LEITNER_INTERVALS,
     QUIZ_LEVELS,
@@ -47,6 +47,7 @@ from job.quiz_types import (
     grade_answer,
 )
 from job.similar_offers import find_similar_offers
+from job.interview_mission import build_mission
 from job.preparation_sheet import build_preparation_sheet
 from job.weekly_digest import get_coming_interviews, get_new_offers
 from storage.job_applications import (
@@ -732,6 +733,7 @@ def build_tracking(pDatabaseFile, pNow):
     entretien des sept prochains jours, pour les consulter hors ligne.
     """
 
+    vProfile = load_profile(pDatabaseFile)
     rTracking = {
         "applications": [
             {
@@ -749,11 +751,28 @@ def build_tracking(pDatabaseFile, pNow):
             )
         ],
         "sheets": {
-            f"{vInterview['source']}/{vInterview['source_id']}": build_preparation_sheet(
-                pDatabaseFile, clean_missing_values(vInterview)
+            f"{vInterview['source']}/{vInterview['source_id']}": build_mobile_sheet(
+                pDatabaseFile, clean_missing_values(vInterview), vProfile
             )
             for vInterview in get_coming_interviews(pDatabaseFile, pNow)
         },
     }
 
     return rTracking
+
+
+def build_mobile_sheet(pDatabaseFile, pOffer, pProfile):
+    """Retourne la fiche de préparation d'un entretien, avec l'avancement de sa mission."""
+
+    rSheet = {
+        **build_preparation_sheet(pDatabaseFile, pOffer),
+        "mission": (
+            None
+            if is_profile_empty(pProfile)
+            else build_mission(
+                pDatabaseFile, pOffer, match_offer(pProfile, pOffer)["missing"]
+            )
+        ),
+    }
+
+    return rSheet

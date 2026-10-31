@@ -294,6 +294,15 @@ ACHIEVEMENTS = (
         False,
     ),
     (
+        "mission-first",
+        "Prêt pour le jour J",
+        "Terminer une mission d'entretien, boss compris",
+        "target",
+        "interview_mission",
+        1,
+        False,
+    ),
+    (
         "puzzle-first",
         "Casse-tête",
         "Terminer une série de puzzles de code",

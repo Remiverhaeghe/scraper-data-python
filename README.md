@@ -238,6 +238,7 @@ Documents/JobBoard/
 - [x] Score global pondéré, annonces douteuses signalées, résumé « L'essentiel » d'une annonce, offre ajoutée depuis son lien
 - [x] Récapitulatif quotidien facultatif par e-mail et bilan « Votre semaine » sur l'accueil
 - [x] Préparation d'entretien : fiche imprimable ou PDF, pitch, questions pièges selon l'employeur, questions déjà posées par l'entreprise, glossaire des compétences
+- [x] Mission entretien sur chaque offre : fiche entreprise, pitch, questions pièges et simulation cochés, manques et boss (examen blanc de l'offre à 70 %) validés d'après les examens, avancement en pourcentage, XP et trophée une fois tout prêt (bureau, web, avancement sur le téléphone)
 - [x] Relance envoyée depuis l'application après relecture, historique des statuts de chaque candidature
 - [x] Page Santé : planificateur en marche, formats des sources (champ vide pour plus de la moitié des offres récentes), sources utiles revues chaque jour
 - [x] Pages lentes signalées dans les journaux (plus d'une seconde), sur le web et le bureau
@@ -303,7 +304,7 @@ Documents/JobBoard/
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
-- [x] 41 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] 42 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
@@ -749,6 +750,7 @@ scraper-data-python/
 │   ├── followed_availability.py               # Vérification quotidienne des offres suivies
 │   ├── freshness.py                           # Score de fraîcheur des offres
 │   ├── interview_journal.py                   # Journal d'entretien : questions posées
+│   ├── interview_mission.py                   # Mission entretien : étapes, avancement, boss
 │   ├── health.py                              # État de santé de l'application
 │   ├── offer_comparison.py                    # Comparaison des offres côte à côte
 │   ├── weekly_digest.py                       # Récapitulatif hebdomadaire par e-mail
@@ -993,6 +995,7 @@ scraper-data-python/
 │   ├── offer_assistant.py                     # Aide : préparation, examen blanc, ChatGPT, lien
 │   ├── offer_application.py                   # Suivi de candidature : statut, relance, entretien
 │   ├── interview_journal_panel.py             # Journal d'entretien d'une offre
+│   ├── interview_mission_panel.py             # Mission entretien d'une offre
 │   ├── follow_ups_panel.py                    # Relances de la semaine et brouillons
 │   ├── replies_panel.py                       # Réponses des recruteurs lues dans Gmail
 │   ├── spontaneous_dialog.py                  # Saisie d'une candidature spontanée
@@ -1100,6 +1103,7 @@ scraper-data-python/
 │   │   ├── compare.html                       # Comparaison des offres
 │   │   ├── _application.html                  # Bloc de suivi d'une candidature
 │   │   ├── _interview_journal.html            # Journal d'entretien d'une offre
+│   │   ├── _interview_mission.html            # Mission entretien d'une offre
 │   │   ├── _attachments.html                  # Pièces jointes d'une offre
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── preparation_sheet.html             # Fiche de préparation imprimable, sans menu
@@ -1324,6 +1328,7 @@ scraper-data-python/
 │   │   ├── test_self_assessment.py            # Teste l'auto-évaluation et ses effets
 │   │   ├── test_freshness.py                  # Teste le score de fraîcheur
 │   │   ├── test_interview_journal.py          # Teste le journal d'entretien
+│   │   ├── test_interview_mission.py          # Teste les étapes, le boss et la récompense
 │   │   ├── test_health.py                     # Teste l'état de santé de l'application
 │   │   ├── test_interview_revision.py         # Teste la révision ciblée et l'examen blanc d'une offre
 │   │   ├── test_manual_offers.py              # Teste l'ajout manuel et l'import d'offres
@@ -1473,6 +1478,7 @@ scraper-data-python/
 │   │   ├── test_dialogs.py                     # Teste la préparation, la lettre et les fenêtres de texte
 │   │   ├── test_health_panel.py                # Teste la carte d'état de l'application
 │   │   ├── test_interview_journal_panel.py     # Teste le panneau du journal d'entretien
+│   │   ├── test_interview_mission_panel.py     # Teste le panneau de mission d'entretien
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
 │   │   ├── test_progress_page.py               # Teste la progression, le « +XP » et la célébration
 │   │   ├── test_interview_simulation_panel.py  # Teste la simulation d'entretien

@@ -2937,3 +2937,22 @@ textarea.companies-preferred {
     font-size: 0.85rem;
     white-space: pre;
 }
+
+/* Mission d'entretien : étapes cochées, faites ou vérifiées d'après les examens */
+.mission-steps {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mission-steps li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.mission-steps li.is-done strong {
+    color: var(--success);
+}

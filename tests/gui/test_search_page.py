@@ -402,6 +402,8 @@ def test_search_without_keyword_warns_for_general_sources(search_page):
 
     use_fake_controller(search_page)
     search_page.check_sources(False)
+    # Adzuna demande des identifiants : absents sur la CI, la source serait grisée.
+    search_page.source_buttons["adzuna"].setEnabled(True)
     search_page.source_buttons["adzuna"].setChecked(True)
     search_page.keyword_edit.clear()
 

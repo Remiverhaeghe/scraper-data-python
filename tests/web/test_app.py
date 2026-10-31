@@ -2346,6 +2346,31 @@ def test_interview_journal_on_offer_page(client):
     assert "Questions déjà posées en entretien" in vPage
 
 
+def test_interview_mission_steps_are_ticked_on_the_offer_page(client):
+    """Vérifie la mission d'entretien de la fiche : absente sans profil, étape cochée, boss refusé."""
+
+    assert "Mission entretien" not in client.get("/offer?source=adzuna&id=new").text
+
+    client.post("/profile", data={"skills": "Python"})
+
+    assert "Mission entretien · " in client.get("/offer?source=adzuna&id=new").text
+
+    vTicked = client.post(
+        "/offer/mission",
+        data={"source": "adzuna", "id": "new", "step": "pitch", "done": "true"},
+    )
+
+    assert 'id="mission-pitch" checked' in vTicked.text
+    assert "1 étape(s) sur 6" in vTicked.text or "2 étape(s) sur 6" in vTicked.text
+    assert (
+        client.post(
+            "/offer/mission",
+            data={"source": "adzuna", "id": "new", "step": "boss", "done": "true"},
+        ).status_code
+        == 400
+    )
+
+
 def test_offer_page_charts_mock_exam_scores(client, monkeypatch):
     """Vérifie le graphique des notes d'examen blanc à partir de deux examens."""
 
