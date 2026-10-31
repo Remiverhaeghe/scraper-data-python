@@ -5,6 +5,13 @@ dans l'historique git.
 
 ## Non publié
 
+### Récompenses cosmétiques
+- Six couleurs d'accent et quatre cadres du badge de niveau, débloqués avec les
+  niveaux et choisis sur la page Progression (bureau, web) ; l'accent recolore
+  toute l'interface, le cadre apparaît aussi sur le téléphone
+- Son court de réussite pour une quête, un trophée ou un niveau, désactivable ;
+  généré sans dépendance sur le bureau, joué par le navigateur sur le web
+
 ### Planning de la semaine
 - Page Planning (bureau, web) : entretiens, relances, séances de révision
   prévues et quêtes de la semaine, jour par jour ; une tâche glissée d'un jour à

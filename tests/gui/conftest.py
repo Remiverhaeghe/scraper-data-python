@@ -58,6 +58,13 @@ def no_first_tour(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def silent_chime(monkeypatch):
+    """Coupe le son de réussite : un test ne doit rien jouer."""
+
+    monkeypatch.setattr("gui.main_window.play_success", lambda: None)
+
+
+@pytest.fixture(autouse=True)
 def silent_speech(monkeypatch):
     """Coupe la synthèse vocale : un test ne doit jamais parler à voix haute."""
 

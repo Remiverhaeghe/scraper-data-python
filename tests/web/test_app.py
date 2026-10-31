@@ -7,6 +7,8 @@ import zipfile
 from datetime import datetime, timedelta
 
 import pandas as pd
+from pathlib import Path
+
 import pytest
 import requests
 from fastapi.testclient import TestClient
@@ -28,6 +30,7 @@ from job.schedule import (
 )
 from job.profile import build_profile, save_profile
 from job.code_puzzles import SERIES_LENGTH, build_puzzle_view
+from job.cosmetics import ACCENTS
 from job.weekly_planning import load_planned_revisions
 from job.challenges import get_expected_answers, get_seed
 from job.quiz_import import import_questions, import_questions_file
@@ -2533,6 +2536,43 @@ def test_planning_lists_moves_and_plans_revisions(client):
     )
 
     assert load_planned_revisions(vDatabaseFile) == []
+
+
+def test_rewards_are_chosen_on_the_progress_page(client):
+    """Vérifie les récompenses : verrouillée refusée, choix, son coupé, encart du menu."""
+
+    vPage = client.get("/progress").text
+
+    assert 'id="rewards"' in vPage and "Vert sécurité · niveau 2" in vPage
+    assert (
+        client.post("/progress/reward", data={"kind": "accent", "id": "or"}).status_code
+        == 400
+    )
+
+    client.post("/progress/reward", data={"kind": "accent", "id": "bleu"})
+    vSummary = client.get("/progress/summary").text
+
+    assert 'data-accent="bleu"' in vSummary and 'data-sounds="1"' in vSummary
+    assert "Activer le son de réussite" in client.post("/progress/sounds").text
+    assert 'data-sounds="0"' in client.get("/progress/summary").text
+
+
+def test_accent_rules_of_the_stylesheet_match_the_catalogue():
+    """Vérifie que style.css porte les teintes de chaque accent, en clair et en sombre."""
+
+    vCss = Path("web/static/style.css").read_text(encoding="utf-8")
+
+    for vId, (_, _, vLight, vDark) in ACCENTS.items():
+        for vSelector, vColors in (
+            (f':root[data-accent="{vId}"] {{', vLight),
+            (f':root[data-accent="{vId}"][data-theme="dark"] {{', vDark),
+        ):
+            if vColors:
+                vRule = vCss[
+                    vCss.index(vSelector) : vCss.index("}", vCss.index(vSelector))
+                ]
+
+                assert f"--primary: {vColors['primary'].lower()};" in vRule, vSelector
 
 
 def test_offer_page_charts_mock_exam_scores(client, monkeypatch):

@@ -48,6 +48,8 @@ def test_points_gained_are_shown_then_level_is_celebrated(
     vWindow, vDatabaseFile = create_window(tmp_path)
     vShown = []
     vCelebrated = []
+    vChimes = []
+    monkeypatch.setattr(main_window, "play_success", lambda: vChimes.append(True))
     monkeypatch.setattr(
         main_window,
         "show_xp_gain",
@@ -65,13 +67,17 @@ def test_points_gained_are_shown_then_level_is_celebrated(
     vWindow.check_progress()
 
     assert vShown == ["+10 XP", "Trophée obtenu : Premier pas"]
-    assert not vCelebrated
+    assert not vCelebrated and len(vChimes) == 1
+
+    vWindow.check_progress()
+
+    assert len(vChimes) == 1
 
     answer(vDatabaseFile, 18)
     vWindow.check_progress()
 
     assert "Quête réussie : Réviser 10 questions" in vShown
-    assert vCelebrated == ["Niveau 2"]
+    assert vCelebrated == ["Niveau 2"] and len(vChimes) == 2
     assert vWindow.progress_box.title_label.text() == "Apprenti confirmé"
 
 

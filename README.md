@@ -311,6 +311,7 @@ Documents/JobBoard/
 - [x] Première ouverture guidée : visite des pages principales présentée par la mascotte au premier lancement (surimpression animée sur le bureau, page Visite guidée sur le web, relançable à tout moment), quêtes de démarrage cochées d'elles-mêmes (compétences, recherche enregistrée, première recherche, première révision, téléphone connecté) et récompensées une fois
 - [x] Notifications natives de Windows sur le bureau : relances du jour, offre récente à 80 % et plus du profil, quête du jour presque terminée, série en danger le soir ; un clic ouvre la bonne page ; heures calmes et plafond quotidien (3 par défaut) réglables dans les Paramètres, chaque notification montrée une seule fois
 - [x] Sessions de concentration de 25 minutes (méthode Pomodoro) sur un objectif : postuler, réviser ou préparer un entretien ; anneau du minuteur animé, points des actions faites pendant la session comptés double si elle va à son terme, bilan des actions en fin de session (accueil du bureau, tableau de bord web)
+- [x] Récompenses cosmétiques débloquées avec les niveaux : six couleurs d'accent (bleu atelier à or du technicien expert) appliquées à toute l'interface, cadres du badge de niveau (bronze à diamant), son court de réussite désactivable pour une quête, un trophée ou un niveau ; choix sur la page Progression (bureau, web), cadre affiché sur le téléphone
 - [x] Mascotte Boulon, robot de maintenance dessiné en SVG : content, concentré, endormi ou fier selon la progression, phrases écrites à l'avance qui saluent, commentent les quêtes du jour et fêtent les réussites, endormie sans reproche après trois jours d'absence (accueil du bureau, tableau de bord web, carte de jeu du téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
@@ -747,6 +748,7 @@ scraper-data-python/
 │   ├── progress.py                            # Points, niveaux, série et quêtes, calculés depuis l'activité
 │   ├── achievements.py                        # Trophées et carte joueur, déduits de l'activité
 │   ├── mascot.py                              # Mascotte : dessin, humeur et phrase du jour
+│   ├── cosmetics.py                           # Récompenses : couleurs d'accent, cadres, son de réussite
 │   ├── focus_sessions.py                      # Sessions de concentration : fenêtre, bonus, bilan
 │   ├── desktop_notifications.py               # Notifications du bureau : choix, heures calmes, plafond
 │   ├── onboarding.py                          # Premiers pas : quêtes de démarrage et étapes de la visite
@@ -1016,6 +1018,8 @@ scraper-data-python/
 │   ├── focus_panel.py                         # Session de concentration de l'accueil, anneau du minuteur
 │   ├── desktop_notifier.py                    # Notifications natives de Windows, clic vers la page
 │   ├── tour_overlay.py                        # Visite guidée en surimpression, présentée par la mascotte
+│   ├── rewards_card.py                        # Carte des récompenses de la page Progression
+│   ├── sounds.py                              # Carillon de réussite généré, joué par Windows
 │   ├── planning_page.py                       # Planning de la semaine, tâches glissées d'un jour à l'autre
 │   ├── speech.py                              # Lecture à voix haute par la voix de Windows
 │   ├── follow_ups_panel.py                    # Relances de la semaine et brouillons
@@ -1373,6 +1377,7 @@ scraper-data-python/
 │   │   ├── test_progress.py                   # Teste les points, niveaux, série et quêtes
 │   │   ├── test_achievements.py               # Teste les trophées, cachés compris, et la carte joueur
 │   │   ├── test_mascot.py                     # Teste l'humeur, la phrase et le dessin de la mascotte
+│   │   ├── test_cosmetics.py                  # Teste le déblocage par niveau, le choix et la retombée
 │   │   ├── test_focus_sessions.py             # Teste la fenêtre comptée, le bonus et le bilan
 │   │   ├── test_desktop_notifications.py      # Teste le choix, les heures calmes et le plafond
 │   │   ├── test_onboarding.py                 # Teste les quêtes de démarrage et la visite
@@ -1522,6 +1527,7 @@ scraper-data-python/
 │   │   ├── test_focus_panel.py                 # Teste le minuteur, la fin de session et l'arrêt
 │   │   ├── test_desktop_notifier.py            # Teste la notification montrée et la page ouverte
 │   │   ├── test_tour_overlay.py                # Teste la visite guidée et les premiers pas de l'accueil
+│   │   ├── test_rewards_card.py                # Teste les récompenses, le carillon et l'accent du thème
 │   │   ├── test_planning_page.py               # Teste le planning : ajout, déplacement, retrait, semaines
 │   │   ├── test_drawn_widgets.py               # Teste le dessin de la machine d'automate et de la célébration
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation

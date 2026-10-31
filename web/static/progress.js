@@ -4,6 +4,8 @@
 (function () {
     var MODE_KEY = "jobboard-game";
     var LAST_KEY = "jobboard-progress";
+    // Lue aussi par theme.js, avant l'affichage de la page
+    var ACCENT_KEY = "jobboard-accent";
     var MODES = ["full", "discreet", "off"];
     var TOAST_GAP_MS = 700;
     var CELEBRATION_MS = 2600;
@@ -157,8 +159,12 @@
         };
         var vLast = readLast();
         var vDelay = 0;
+        var vSuccess = false;
 
         writeStorage(LAST_KEY, JSON.stringify(vNow));
+        // Couleur d'accent choisie en récompense, gardée pour le prochain chargement
+        document.documentElement.dataset.accent = pBox.dataset.accent;
+        writeStorage(ACCENT_KEY, pBox.dataset.accent);
 
         // Première visite : la référence, sans fête pour l'historique.
         if (vMode === "off" || !vLast) {
@@ -174,6 +180,7 @@
             if ((vLast.quests || []).indexOf(pQuest) < 0) {
                 showToast("Quête réussie : " + pQuest, pBox, vDelay);
                 vDelay += TOAST_GAP_MS;
+                vSuccess = true;
             }
         });
 
@@ -181,10 +188,13 @@
             if ((vLast.trophies || []).indexOf(pTrophy) < 0) {
                 showToast("Trophée obtenu : " + pTrophy, pBox, vDelay);
                 vDelay += TOAST_GAP_MS;
+                vSuccess = true;
             }
         });
 
         if (vNow.level > vLast.level) {
+            vSuccess = true;
+
             if (vMode === "full") {
                 celebrate(
                     "Niveau " + vNow.level,
@@ -194,6 +204,32 @@
             } else {
                 showToast("Niveau " + vNow.level + " : " + pBox.dataset.title, pBox, vDelay);
             }
+        }
+
+        if (vSuccess && pBox.dataset.sounds === "1") {
+            playChime();
+        }
+    }
+
+    // Carillon de deux notes, joué par le navigateur ; il peut refuser sans clic préalable.
+    function playChime() {
+        try {
+            var vContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            [[523.25, 0], [783.99, 0.12]].forEach(function (pNote) {
+                var vOscillator = vContext.createOscillator();
+                var vGain = vContext.createGain();
+                var vStart = vContext.currentTime + pNote[1];
+
+                vOscillator.frequency.value = pNote[0];
+                vGain.gain.setValueAtTime(0.15, vStart);
+                vGain.gain.exponentialRampToValueAtTime(0.001, vStart + 0.25);
+                vOscillator.connect(vGain).connect(vContext.destination);
+                vOscillator.start(vStart);
+                vOscillator.stop(vStart + 0.25);
+            });
+        } catch (vError) {
+            // Son indisponible : la réussite reste affichée.
         }
     }
 

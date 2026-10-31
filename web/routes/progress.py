@@ -2,12 +2,13 @@
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from job.achievements import get_heat_level, sort_achievements
-from job.progress import build_progress
-from web.dependencies import get_database_file
+from job.cosmetics import choose_cosmetic, set_sounds
+from job.progress import build_progress, describe_level, get_total_xp
+from web.dependencies import get_database_file, require_csrf
 from web.rendering import build_bar_chart, templates
 
 router = APIRouter()
@@ -59,5 +60,53 @@ def show_progress_summary(
         "_progress_summary.html",
         {"progress": build_progress(pDatabaseFile)},
     )
+
+    return rResponse
+
+
+def redirect_to_rewards():
+    """Revient à la carte des récompenses de la page Progression."""
+
+    rResponse = RedirectResponse(
+        router.url_path_for("show_progress") + "#rewards", status_code=303
+    )
+
+    return rResponse
+
+
+@router.post("/progress/reward", dependencies=[Depends(require_csrf)])
+def choose_reward(
+    pKind: str = Form(alias="kind"),
+    pId: str = Form(alias="id"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Choisit une couleur d'accent ou un cadre débloqué."""
+
+    try:
+        choose_cosmetic(
+            pDatabaseFile,
+            pKind,
+            pId,
+            describe_level(get_total_xp(pDatabaseFile))["level"],
+        )
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = redirect_to_rewards()
+
+    return rResponse
+
+
+@router.post("/progress/sounds", dependencies=[Depends(require_csrf)])
+def change_reward_sounds(
+    pEnabled: bool = Form(False, alias="enabled"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Active ou coupe le son de réussite."""
+
+    set_sounds(pDatabaseFile, pEnabled)
+
+    rResponse = redirect_to_rewards()
 
     return rResponse

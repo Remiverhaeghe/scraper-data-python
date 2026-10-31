@@ -25,6 +25,19 @@ class GameCard extends StatelessWidget {
         ),
       );
 
+  /// Bordure du cadre d'avatar choisi, ou aucune.
+  static Border? frameBorder(Map? pCosmetics) {
+    final vWidth = (pCosmetics?['frame_width'] as num?)?.toDouble() ?? 0;
+    final vColor = '${pCosmetics?['frame_color'] ?? ''}';
+
+    if (vWidth == 0 || !vColor.startsWith('#')) {
+      return null;
+    }
+
+    return Border.all(
+        color: Color(int.parse('FF${vColor.substring(1)}', radix: 16)), width: vWidth);
+  }
+
   Widget buildLevel(BuildContext pContext, Map<String, dynamic> pGame) {
     final vTheme = Theme.of(pContext);
     final vInLevel = (pGame['xp_in_level'] as num?)?.toDouble() ?? 0;
@@ -36,14 +49,21 @@ class GameCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: vTheme.colorScheme.primary,
-              child: Text(
-                '${pGame['level']}',
-                style: TextStyle(
-                  color: vTheme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w800,
+            // Cadre choisi en récompense sur le PC, autour du badge de niveau
+            DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: frameBorder(pGame['cosmetics'] as Map?),
+              ),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: vTheme.colorScheme.primary,
+                child: Text(
+                  '${pGame['level']}',
+                  style: TextStyle(
+                    color: vTheme.colorScheme.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),

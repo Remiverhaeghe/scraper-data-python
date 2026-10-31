@@ -104,6 +104,20 @@ def get_game_mode():
     return rMode
 
 
+def build_badge_style(pRadius, pCosmetics=None, pExtra="font-weight: 700;"):
+    """Retourne le style du badge de niveau, entouré du cadre choisi en récompense."""
+
+    vWidth = (pCosmetics or {}).get("frame_width") or 0
+    vFrame = f"border: {vWidth}px solid {pCosmetics['frame_color']}; " if vWidth else ""
+
+    rStyle = (
+        f"background: {COLORS['primary']}; color: {COLORS['on_primary']}; "
+        f"border-radius: {pRadius}px; {vFrame}{pExtra}"
+    )
+
+    return rStyle
+
+
 class SidebarProgress(QFrame):
     """Encart du menu latéral : niveau, barre de points et série en cours."""
 
@@ -116,7 +130,8 @@ class SidebarProgress(QFrame):
         self.setObjectName("sidebarProgress")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("Votre progression : niveau, quêtes et série")
-        vColor, vBackground = ACCENTS["blue"]
+        # Couleur principale du thème : elle suit l'accent choisi en récompense
+        vColor, vBackground = COLORS["primary"], COLORS["primary_light"]
         self.setStyleSheet(
             f"QFrame#sidebarProgress {{ background: {vBackground}; "
             "border-radius: 12px; }"
@@ -125,10 +140,7 @@ class SidebarProgress(QFrame):
         self.level_label = QLabel("1")
         self.level_label.setFixedSize(28, 28)
         self.level_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.level_label.setStyleSheet(
-            f"background: {vColor}; color: {COLORS['on_primary']}; "
-            "border-radius: 14px; font-weight: 700;"
-        )
+        self.level_label.setStyleSheet(build_badge_style(14))
 
         self.title_label = QLabel()
         self.title_label.setStyleSheet(f"color: {vColor}; font-weight: 600;")
@@ -169,6 +181,9 @@ class SidebarProgress(QFrame):
     def set_progress(self, pProgress, pAnimate=False):
         """Affiche la progression ; la barre se remplit en douceur si pAnimate."""
         self.level_label.setText(str(pProgress["level"]))
+        self.level_label.setStyleSheet(
+            build_badge_style(14, pProgress.get("cosmetics"))
+        )
         self.title_label.setText(pProgress["title"])
         self.streak_label.setText(str(pProgress["streak"]))
         self.setToolTip(

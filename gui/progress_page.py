@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
     QFrame,
@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
 )
 
 from gui.chart import BarChart
+from gui.progress_widgets import build_badge_style
+from gui.rewards_card import RewardsCard
 from gui.theme import ACCENTS, COLORS
 from gui.widgets import (
     StatisticCard,
@@ -81,6 +83,7 @@ def create_quest_row(pQuest):
 
 
 TROPHY_COLUMNS = 4
+BIG_BADGE = "font-size: 30px; font-weight: 800;"
 
 # Taille d'une case de la carte d'activité, et espace entre deux cases
 HEAT_CELL = 14
@@ -191,6 +194,8 @@ class Heatmap(QWidget):
 class ProgressPage(QWidget):
     """Montre le niveau atteint, les quêtes en cours et la façon de gagner des points."""
 
+    restyle_requested = Signal()
+
     def __init__(self, pDatabaseFile):
         """Construit la page ; refresh la remplit."""
         super().__init__()
@@ -208,15 +213,13 @@ class ProgressPage(QWidget):
             pIcon="award",
         )
 
-        vColor, vBackground = ACCENTS["blue"]
+        # Couleurs principales du thème : elles suivent l'accent choisi en récompense
+        vColor, vBackground = COLORS["primary"], COLORS["primary_light"]
 
         self.level_label = QLabel()
         self.level_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.level_label.setFixedSize(84, 84)
-        self.level_label.setStyleSheet(
-            f"background: {vColor}; color: {COLORS['on_primary']}; "
-            "border-radius: 42px; font-size: 30px; font-weight: 800;"
-        )
+        self.level_label.setStyleSheet(build_badge_style(42, None, BIG_BADGE))
 
         self.title_label = QLabel()
         self.title_label.setStyleSheet(
@@ -313,6 +316,9 @@ class ProgressPage(QWidget):
         vLayout.addWidget(vQuestCard)
         vLayout.addWidget(vTrophyCard)
         vLayout.addWidget(vPlayerCard)
+        self.rewards = RewardsCard(pDatabaseFile)
+        self.rewards.changed.connect(self.restyle_requested.emit)
+        vLayout.addWidget(self.rewards)
         vLayout.addWidget(vHistoryCard)
         vLayout.addWidget(vRulesCard)
         vLayout.addStretch(1)
@@ -332,6 +338,10 @@ class ProgressPage(QWidget):
     def show_progress(self, pProgress):
         """Affiche une progression déjà calculée."""
         self.level_label.setText(str(pProgress["level"]))
+        self.level_label.setStyleSheet(
+            build_badge_style(42, pProgress.get("cosmetics"), BIG_BADGE)
+        )
+        self.rewards.set_view(pProgress["cosmetics"])
         self.title_label.setText(f"Niveau {pProgress['level']} · {pProgress['title']}")
         self.next_label.setText(
             f"Encore {pProgress['xp_for_level'] - pProgress['xp_in_level']} XP pour "
@@ -359,7 +369,7 @@ class ProgressPage(QWidget):
             [
                 (
                     "Points",
-                    ACCENTS["blue"][0],
+                    COLORS["primary"],
                     [vDay["xp"] for vDay in pProgress["history"]],
                 )
             ],

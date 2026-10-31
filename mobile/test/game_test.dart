@@ -57,6 +57,7 @@ ApiClient serveGame(int pLevel) {
                 'xp': 20
               },
             ],
+            'cosmetics': {'frame': 'bronze', 'frame_color': '#B45309', 'frame_width': 3},
             'mascot': {
               'mood': 'focused',
               'text': "Plus que 6 pour « Réviser 10 questions ». On s'y met ?",
@@ -127,6 +128,8 @@ void main() {
     expect(find.text('Trophées : 1 / 2'), findsOneWidget);
     expect(find.text('Premier pas'), findsOneWidget);
     expect(find.textContaining('Plus que 6 pour'), findsOneWidget);
+    expect(GameCard.frameBorder({'frame_color': '#B45309', 'frame_width': 3})?.top.width, 3);
+    expect(GameCard.frameBorder({'frame_width': 0}), isNull);
   });
 
   testWidgets('Une partie : bonne réponse, fin du temps et record fêté', (pTester) async {

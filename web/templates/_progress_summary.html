@@ -5,9 +5,10 @@
    data-title="{{ progress.title }}" data-next-title="{{ progress.next_title }}"
    data-quests="{{ progress.quests | selectattr('done') | map(attribute='label') | join('|') }}"
    data-trophies="{{ progress.achievements | selectattr('unlocked') | map(attribute='title') | join('|') }}"
+   data-accent="{{ progress.cosmetics.accent }}" data-sounds="{{ 1 if progress.cosmetics.sounds else 0 }}"
    title="Niveau {{ progress.level }} · {{ progress.xp_in_level }} / {{ progress.xp_for_level }} XP · série de {{ progress.streak }} jour(s)">
     <span class="progress-box-row">
-        <span class="progress-level">{{ progress.level }}</span>
+        <span class="progress-level frame-{{ progress.cosmetics.frame }}">{{ progress.level }}</span>
         <span class="progress-title">{{ progress.title }}</span>
         <span class="progress-streak">{{ icon("flame", 16) }} {{ progress.streak }}</span>
     </span>

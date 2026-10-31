@@ -15,6 +15,7 @@ from datetime import date, datetime, timedelta
 
 from job.achievements import build_player_card, evaluate_achievements
 from job.code_puzzles import PUZZLE_PROGRESS_KEY
+from job.cosmetics import build_cosmetics_view
 from job.mascot import build_mascot
 from job.interview_mission import MISSIONS_KEY
 from job.oral_interview import ORAL_KEY
@@ -703,6 +704,7 @@ def build_progress(pDatabaseFile, pNow=None):
         "level"
     ]
     rProgress["mascot"] = build_mascot(rProgress, pNow or datetime.now())
+    rProgress["cosmetics"] = build_cosmetics_view(pDatabaseFile, rProgress["level"])
 
     return rProgress
 

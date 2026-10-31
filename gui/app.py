@@ -10,6 +10,8 @@ from config import APPLICATION_NAME, DATABASE_FILE
 from gui.branding import create_logo_icon
 from gui.main_window import MainWindow
 from gui.theme import TEXT_SCALE_SETTING, THEME_SETTING, apply_theme
+from job.cosmetics import build_cosmetics_view
+from job.progress import describe_level, get_total_xp
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -17,6 +19,20 @@ logger = get_logger(__name__)
 # Identifiant propre à l'application : sans lui, Windows regroupe la fenêtre
 # sous l'icône de Python dans la barre des tâches.
 WINDOWS_APP_ID = "Remiverhaeghe.JobBoardPerso"
+
+
+def read_accent():
+    """Retourne la couleur d'accent choisie et débloquée, ou None si elle est illisible."""
+
+    try:
+        vLevel = describe_level(get_total_xp(DATABASE_FILE))["level"]
+
+        return build_cosmetics_view(DATABASE_FILE, vLevel)["accent"]
+
+    except Exception:
+        logger.exception("Couleur d'accent illisible : thème d'origine")
+
+        return None
 
 
 class DesktopApplication:
@@ -32,11 +48,15 @@ class DesktopApplication:
             self.application,
             self.settings.value(THEME_SETTING, "system", str),
             self.settings.value(TEXT_SCALE_SETTING, 100, int),
+            read_accent(),
         )
 
         self.window = MainWindow(DATABASE_FILE, APPLICATION_NAME)
         self.window.theme_requested.connect(self.change_theme)
         self.window.text_scale_requested.connect(self.change_text_scale)
+        self.window.restyle_requested.connect(
+            lambda: QTimer.singleShot(0, self.restyle_window)
+        )
         self.window.showMaximized()
 
         logger.info("Application de bureau ouverte avec le thème %s", vTheme)
@@ -66,6 +86,7 @@ class DesktopApplication:
                 self.application,
                 self.settings.value(THEME_SETTING, "system", str),
                 self.settings.value(TEXT_SCALE_SETTING, 100, int),
+                read_accent(),
             ),
         )
 

@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QGuiApplication, QPalette
 
 from gui.icons import stylesheet_path
+from job.cosmetics import get_accent_colors
 
 THEME_FILE = Path(__file__).with_name("theme.qss")
 
@@ -172,13 +173,14 @@ def build_palette():
     return rPalette
 
 
-def apply_theme(pApplication, pChoice, pTextScale=100):
-    """Applique un thème et une taille de texte, retourne le thème réellement utilisé."""
+def apply_theme(pApplication, pChoice, pTextScale=100, pAccent=None):
+    """Applique un thème, une couleur d'accent et une taille de texte ; retourne le thème."""
 
     rTheme = resolve_theme(pChoice)
 
     COLORS.clear()
     COLORS.update(THEMES[rTheme])
+    COLORS.update(get_accent_colors(pAccent, rTheme))
     ACCENTS.clear()
     ACCENTS.update(THEME_ACCENTS[rTheme])
 

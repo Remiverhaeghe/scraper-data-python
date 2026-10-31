@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 from config import CONTACT_URL, LICENSE_NAME, REPOSITORY_URL, TAGLINE
 from gui.desktop_notifier import DesktopNotifier
 from gui.planning_page import PlanningPage
+from gui.sounds import play_success
 from gui.tour_overlay import TourOverlay
 from gui.branding import create_logo_icon
 from gui.dialogs import show_legal_notice, show_license
@@ -117,6 +118,7 @@ class MainWindow(QMainWindow):
 
     # Thème choisi dans les paramètres : light ou dark
     theme_requested = Signal(str)
+    restyle_requested = Signal()
     text_scale_requested = Signal(int)
 
     def __init__(self, pDatabaseFile, pTitle):
@@ -210,6 +212,7 @@ class MainWindow(QMainWindow):
         # L'ordre d'ajout fixe l'ordre du menu ; la clé sert à navigate().
         self.add_page("home", "Accueil", "house", self.home_page)
         self.progress_page = ProgressPage(vDatabaseFile)
+        self.progress_page.restyle_requested.connect(self.restyle_requested.emit)
         self.add_page("progress", "Progression", "award", self.progress_page)
         self.add_page("search", "Recherche", "search", self.search_page)
         self.add_page("offers", "Offres", "briefcase", self.offers_page)
@@ -509,6 +512,22 @@ class MainWindow(QMainWindow):
                     f"Niveau {pProgress['level']} : {pProgress['title']}",
                     vDelay,
                 )
+
+        # Un son court pour une quête, un trophée ou un niveau ; pas pour de simples points
+        vSuccess = (
+            pProgress["level"] > pPrevious["level"]
+            or any(
+                vQuest["done"] and vQuest["id"] not in vDoneBefore
+                for vQuest in pProgress["quests"]
+            )
+            or any(
+                vItem["unlocked"] and vItem["id"] not in vUnlockedBefore
+                for vItem in pProgress["achievements"]
+            )
+        )
+
+        if vSuccess and pProgress.get("cosmetics", {}).get("sounds"):
+            play_success()
 
     def add_page(self, pKey, pLabel, pIcon, pPage):
         """Ajoute une page et son entrée dans le menu latéral."""

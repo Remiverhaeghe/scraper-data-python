@@ -86,4 +86,28 @@
         </ul>
     </article>
 </div>
+<section class="card section-gap" id="rewards">
+    <h2>{{ icon("gift") }} Récompenses</h2>
+    <p class="card-subtitle">Chaque niveau débloque de quoi personnaliser l'interface, ici comme sur le bureau.</p>
+    {% for kind, title, items in (("accent", "Couleur d'accent", progress.cosmetics.accents), ("frame", "Cadre du badge de niveau", progress.cosmetics.frames)) %}
+    <h3>{{ title }}</h3>
+    <div class="rewards-row">
+        {% for item in items %}
+        <form method="post" action="{{ url_for('choose_reward').path }}#rewards">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <input type="hidden" name="kind" value="{{ kind }}">
+            <input type="hidden" name="id" value="{{ item.id }}">
+            <button class="button reward{% if item.chosen %} is-chosen{% endif %}" type="submit" style="--reward: {{ item.color or 'var(--border)' }}"{% if not item.unlocked %} disabled title="Débloquée au niveau {{ item.level }}"{% endif %}>
+                {% if item.chosen %}{{ icon("circle-check", 16) }} {% endif %}{{ item.label }}{% if not item.unlocked %} · niveau {{ item.level }}{% endif %}
+            </button>
+        </form>
+        {% endfor %}
+    </div>
+    {% endfor %}
+    <form method="post" action="{{ url_for('change_reward_sounds').path }}#rewards">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="enabled" value="{{ '' if progress.cosmetics.sounds else 'true' }}">
+        <button class="button" type="submit">{{ icon("bell-ring", 16) }} {{ "Couper le son de réussite" if progress.cosmetics.sounds else "Activer le son de réussite" }}</button>
+    </form>
+</section>
 {% endblock %}

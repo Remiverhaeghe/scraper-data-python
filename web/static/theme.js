@@ -32,6 +32,13 @@
 
     applyChoice(readChoice());
 
+    // Couleur d'accent choisie en récompense, mémorisée par progress.js
+    try {
+        document.documentElement.dataset.accent = localStorage.getItem("jobboard-accent") || "bleu";
+    } catch (vError) {
+        document.documentElement.dataset.accent = "bleu";
+    }
+
     vSystemDark.addEventListener("change", function () {
         applyChoice(readChoice());
     });
