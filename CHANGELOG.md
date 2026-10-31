@@ -5,6 +5,12 @@ dans l'historique git.
 
 ## Non publié
 
+### Sessions de concentration
+- Session de 25 minutes sur un objectif (postuler, réviser, préparer un
+  entretien), sur l'accueil du bureau et le tableau de bord web : anneau du
+  minuteur animé, points des actions faites pendant la session comptés double
+  si elle va à son terme, bilan des actions à la fin
+
 ### Lecture de schémas de maintenance
 - Nouveau thème livré (Industrie, Maintenance) : cliquer sur le bon composant de
   quatre circuits dessinés pour l'occasion (puissance d'un moteur triphasé,

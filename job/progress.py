@@ -41,6 +41,7 @@ XP_RULES = {
     "sql_level": ("Niveau SQL réussi", 15),
     "circuit_level": ("Montage électrique réussi", 20),
     "devops_level": ("Niveau Maven ou Docker réussi", 20),
+    "focus_session": ("Session de concentration : ses points comptent double", 10),
     "negotiation": ("Négociation salariale simulée", 20),
     "oral_interview": ("Entretien oral simulé terminé", 25),
     "interview_mission": ("Mission d'entretien terminée", 60),
@@ -63,6 +64,19 @@ APTITUDE_XP_PER_RIGHT = 2
 
 # Points de chaque tranche de 10 points du score d'une panne résolue
 TROUBLESHOOTING_XP_PER_TEN = 2
+
+# Sessions de concentration terminées et leur bonus (job/focus_sessions.py)
+FOCUS_SESSIONS_KEY = "focus_sessions"
+
+# Actions horodatées en base : table, colonne de date, condition, action
+TIMED_ACTIONS = (
+    ("quiz_answer", "answered_at", "correct = 1", "answer_right"),
+    ("quiz_answer", "answered_at", "correct = 0", "answer_wrong"),
+    ("challenge_attempt", "answered_at", "correct = 1", "challenge_right"),
+    ("challenge_attempt", "answered_at", "correct = 0", "challenge_tried"),
+    ("job_follow_up", "followed_up_at", "1 = 1", "follow_up"),
+    ("interview_note", "interviewed_at", "1 = 1", "interview_note"),
+)
 
 # Points de chaque bonne réponse d'une série de puzzles de code, en plus du forfait
 PUZZLE_XP_PER_RIGHT = 2
@@ -159,6 +173,68 @@ def add_action(pActivity, pDay, pAction, pCount=1, pXp=None):
     vDay["xp"] += XP_RULES[pAction][1] * pCount if pXp is None else pXp
 
 
+def count_window_actions(pDatabaseFile, pStart, pEnd):
+    """Retourne les actions faites entre deux instants et les points qu'elles rapportent.
+
+    Seules comptent les actions horodatées : réponses, défis, relances, comptes
+    rendus, candidatures, examens et séances terminées dans la fenêtre.
+    """
+
+    vStart = pStart.isoformat(timespec="seconds")
+    vEnd = pEnd.isoformat(timespec="seconds")
+    vCounts = {}
+    vXp = 0
+    vConnection = connect_database(pDatabaseFile)
+
+    try:
+        # Tables et colonnes fixes de TIMED_ACTIONS ; les dates passent en paramètres.
+        for vTable, vColumn, vCondition, vAction in TIMED_ACTIONS:
+            (vCount,) = vConnection.execute(
+                f"SELECT COUNT(*) FROM {vTable} "  # nosec B608
+                f"WHERE {vCondition} AND {vColumn} >= ? AND {vColumn} < ?",
+                (vStart, vEnd),
+            ).fetchone()
+            vCounts[vAction] = vCount
+
+        for vStatus, vCount in vConnection.execute(
+            "SELECT status, COUNT(*) FROM application_history "
+            "WHERE changed_at >= ? AND changed_at < ? GROUP BY status",
+            (vStart, vEnd),
+        ):
+            if vStatus in STATUS_ACTIONS:
+                vAction = STATUS_ACTIONS[vStatus]
+                vCounts[vAction] = vCounts.get(vAction, 0) + vCount
+
+    finally:
+        vConnection.close()
+
+    for vAction, vCount in vCounts.items():
+        vXp += XP_RULES[vAction][1] * vCount
+
+    for vResult in load_exam_results(pDatabaseFile):
+        if vStart <= str(vResult.get("finished_at") or "") < vEnd:
+            vCounts["exam"] = vCounts.get("exam", 0) + 1
+            vXp += XP_RULES["exam"][1] + int(vResult.get("score") or 0) // 10
+
+    for vKey, vAction in (
+        (ORAL_KEY, "oral_interview"),
+        (NEGOTIATION_KEY, "negotiation"),
+    ):
+        for vEntry in (
+            load_json_setting(pDatabaseFile, vKey, {}, dict).get("history") or []
+        ):
+            if (
+                isinstance(vEntry, dict)
+                and vStart <= str(vEntry.get("finished_at") or "") < vEnd
+            ):
+                vCounts[vAction] = vCounts.get(vAction, 0) + 1
+                vXp += XP_RULES[vAction][1]
+
+    rWindow = ({vAction: vCount for vAction, vCount in vCounts.items() if vCount}, vXp)
+
+    return rWindow
+
+
 def load_activity(pDatabaseFile):
     """Retourne, par jour, les actions faites et les points gagnés."""
 
@@ -249,6 +325,18 @@ def load_activity(pDatabaseFile):
         for vEntry in (vLevels if isinstance(vLevels, dict) else {}).values():
             if isinstance(vEntry, dict) and vEntry.get("passed_at"):
                 add_action(rActivity, read_day(vEntry["passed_at"]), vAction)
+
+    for vSession in (
+        load_json_setting(pDatabaseFile, FOCUS_SESSIONS_KEY, {}, dict).get("history")
+        or []
+    ):
+        if isinstance(vSession, dict) and vSession.get("completed"):
+            add_action(
+                rActivity,
+                read_day(vSession.get("ended_at")),
+                "focus_session",
+                pXp=XP_RULES["focus_session"][1] + int(vSession.get("bonus") or 0),
+            )
 
     for vGame in (
         load_json_setting(pDatabaseFile, NEGOTIATION_KEY, {}, dict).get("history") or []

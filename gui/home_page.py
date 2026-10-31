@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.chart import BarChart
+from gui.focus_panel import FocusPanel
 from gui.progress_widgets import get_game_mode
 from gui.theme import COLORS
 from gui.widgets import (
@@ -140,6 +141,8 @@ class HomePage(QWidget):
         )
 
         vLayout.addWidget(self.create_banner())
+        self.focus_panel = FocusPanel(pDatabaseFile)
+        vLayout.addWidget(self.focus_panel)
         vLayout.addLayout(self.create_statistics())
         vLayout.addWidget(self.create_goal_bar())
         vLayout.addWidget(self.create_week_card())
@@ -768,6 +771,7 @@ class HomePage(QWidget):
     def refresh(self):
         """Relit les indicateurs et l'activité en base."""
         self.show_mascot()
+        self.focus_panel.refresh()
         self.banner_text.setText(
             f"Centralisez les offres de {count_ready_sources()} sources configurées, "
             "suivez vos candidatures et n'oubliez plus aucune relance."

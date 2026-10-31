@@ -2457,6 +2457,22 @@ def test_dashboard_shows_the_mascot(client):
     assert 'class="mascot-bubble">' in vPage
 
 
+def test_focus_session_is_started_and_stopped_on_the_dashboard(client):
+    """Vérifie la session de concentration du tableau de bord : début, anneau, arrêt."""
+
+    assert 'id="focus"' in client.get("/").text
+    assert client.post("/focus/start", data={"goal": "x"}).status_code == 400
+
+    vRunning = client.post("/focus/start", data={"goal": "revise"}).text
+
+    assert "data-focus-ring" in vRunning and "Objectif : Réviser" in vRunning
+    assert client.post("/focus/start", data={"goal": "revise"}).status_code == 400
+
+    vStopped = client.post("/focus/stop").text
+
+    assert "Session arrêtée avant la fin : pas de bonus." in vStopped
+
+
 def test_offer_page_charts_mock_exam_scores(client, monkeypatch):
     """Vérifie le graphique des notes d'examen blanc à partir de deux examens."""
 

@@ -2,8 +2,8 @@
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 from markupsafe import Markup
 
 from job.presentation import (
@@ -12,6 +12,7 @@ from job.presentation import (
     STATUS_LABELS,
     describe_execution,
 )
+from job.focus_sessions import build_focus_view, finish_focus, start_focus
 from job.progress import build_progress
 from job.schedule import request_immediate_run
 from job.setup_checklist import build_setup_checklist
@@ -47,6 +48,7 @@ def show_dashboard(
         {
             "active_page": "dashboard",
             "statistics": vStatistics,
+            "focus": build_focus_view(pDatabaseFile, datetime.now()),
             "mascot": {
                 **vMascot,
                 # Dessin produit par job/mascot.py, sans aucune saisie : HTML sûr.
@@ -99,6 +101,38 @@ def request_search(pDatabaseFile: str = Depends(get_database_file)):
         " ".join(vErrors)
         or "Recherche demandée : le planificateur la lance dans la minute. "
         "Les nouvelles offres apparaîtront ensuite dans la liste."
+    )
+
+    return rResponse
+
+
+@router.post("/focus/start", dependencies=[Depends(require_csrf)])
+def start_focus_session(
+    pGoal: str = Form(alias="goal"), pDatabaseFile: str = Depends(get_database_file)
+):
+    """Commence une session de concentration."""
+
+    try:
+        start_focus(pDatabaseFile, pGoal, datetime.now())
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = RedirectResponse(
+        router.url_path_for("show_dashboard") + "#focus", status_code=303
+    )
+
+    return rResponse
+
+
+@router.post("/focus/stop", dependencies=[Depends(require_csrf)])
+def stop_focus_session(pDatabaseFile: str = Depends(get_database_file)):
+    """Clôt la session en cours ; arrêtée avant la fin, elle n'a pas de bonus."""
+
+    finish_focus(pDatabaseFile, datetime.now())
+
+    rResponse = RedirectResponse(
+        router.url_path_for("show_dashboard") + "#focus", status_code=303
     )
 
     return rResponse

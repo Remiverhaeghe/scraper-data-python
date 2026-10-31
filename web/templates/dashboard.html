@@ -20,6 +20,43 @@
     <span class="mascot-bubble">{{ mascot.text }}</span>
 </a>
 
+{# Session de concentration (job/focus_sessions.py) : static/focus.js anime
+   l'anneau et recharge la page à la fin, qui clôt alors la session. #}
+<section class="card focus" id="focus">
+    <h2>{{ icon("timer") }} Session de concentration</h2>
+    <p class="card-subtitle">{{ focus.duration }} minutes sur un seul objectif : les points gagnés pendant la session comptent double.</p>
+    {% if focus.current %}
+    <div class="focus-body">
+        <div class="focus-ring" data-focus-ring data-remaining="{{ focus.current.remaining }}" data-duration="{{ focus.duration * 60 }}" style="--share: {{ focus.current.remaining / (focus.duration * 60) }}">
+            <span data-focus-clock>{{ "%02d:%02d" | format(focus.current.remaining // 60, focus.current.remaining % 60) }}</span>
+        </div>
+        <div>
+            <p><strong>Objectif : {{ focus.current.goal_label }}</strong></p>
+            <form method="post" action="{{ url_for('stop_focus_session').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <button class="button" type="submit">{{ icon("history", 16) }} Arrêter</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <form class="rules-actions" method="post" action="{{ url_for('start_focus_session').path }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <select name="goal" aria-label="Objectif de la session">
+            {% for goal, label in focus.goals.items() %}<option value="{{ goal }}">{{ label }}</option>{% endfor %}
+        </select>
+        <button class="button button-primary" type="submit">{{ icon("timer", 16) }} Commencer</button>
+    </form>
+    <p class="muted">{{ focus.today }} session(s) menée(s) à terme aujourd'hui.</p>
+    {% if focus.last %}
+    <div class="application-message tone-{{ 'success' if focus.last.completed else 'warning' }}" role="status">
+        <p>Dernière session · {{ focus.last.goal_label }} · {{ focus.last.minutes }} min</p>
+        <ul>{% for line in focus.last.lines %}<li>{{ line }}</li>{% else %}<li>Aucune action comptée pendant la session</li>{% endfor %}</ul>
+        <p>{% if focus.last.completed %}{{ focus.last.xp }} points, doublés : +{{ focus.last.bonus }} XP de bonus.{% else %}Session arrêtée avant la fin : pas de bonus.{% endif %}</p>
+    </div>
+    {% endif %}
+    {% endif %}
+</section>
+
 <section class="banner">
     <div>
         <h2>Votre recherche d'emploi, pilotée au même endroit</h2>
