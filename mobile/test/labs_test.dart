@@ -9,7 +9,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:jobboard_revision/revision_state.dart';
 import 'package:jobboard_revision/screens/devops_screen.dart';
+import 'package:jobboard_revision/logic/sql_sandbox.dart';
 import 'package:jobboard_revision/screens/git_screen.dart';
+import 'package:jobboard_revision/screens/sql_screen.dart';
 import 'package:jobboard_revision/screens/ladder_screen.dart';
 import 'package:jobboard_revision/screens/troubleshooting_screen.dart';
 import 'package:jobboard_revision/services/api_client.dart';
@@ -26,6 +28,7 @@ final sharedCases =
     jsonDecode(File('../tests/fixtures/shared_lab_cases.json').readAsStringSync()) as Map;
 final gitLevels = sharedCases['git_levels'] as List;
 final devopsContent = Map<String, dynamic>.from(sharedCases['devops_content'] as Map);
+final sqlContent = Map<String, dynamic>.from(sharedCases['sql_content'] as Map);
 
 /// Serveur simulé : contenu des simulations, envois notés, ou serveur trop ancien.
 MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
@@ -61,6 +64,13 @@ MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
             'best': {'fusion': 3},
           },
           'devops': {...devopsContent, 'xp': 20, 'passed': <String>[]},
+          'sql': {
+            ...sqlContent,
+            'schema': <Object>[],
+            'xp': 15,
+            'dialect': 'sqlserver',
+            'passed': ['selection'],
+          },
         })),
         200,
         headers: {'content-type': 'application/json; charset=utf-8'},
@@ -216,6 +226,43 @@ void main() {
     await pTester.pumpWidget(MaterialApp(home: DevopsScreen(state: vState, level: vLevel)));
 
     expect(find.textContaining('port is already allocated'), findsOneWidget);
+  });
+
+  testWidgets('Un niveau SQL se joue en SQL Server puis part au PC', (pTester) async {
+    final vState = await buildState(buildServer([]));
+    await pTester.runAsync(vState.synchronize);
+
+    expect(vState.sqlDialect, 'sqlserver');
+    expect(vState.sqlPassed, {'selection'});
+
+    final vLevel = vState.sqlLevelList.firstWhere((pLevel) => pLevel['id'] == 'plus-cheres');
+
+    await pTester.pumpWidget(MaterialApp(home: SqlScreen(state: vState, level: vLevel)));
+    await pTester.enterText(
+      find.byType(TextField),
+      'SELECT TOP 3 id, cout FROM intervention ORDER BY cout DESC',
+    );
+    await pTester.runAsync(() async {
+      await pTester.tap(find.text('Exécuter'));
+      await Future<void>.delayed(const Duration(seconds: 2));
+    });
+    await pTester.pumpAndSettle();
+
+    expect(find.textContaining('Niveau réussi · +15 XP'), findsOneWidget);
+    expect(vState.pendingLabs.single['dialect'], 'sqlserver');
+    expect(vState.sqlPassed, containsAll(['selection', 'plus-cheres']));
+  });
+
+  test('Une requête trop longue est abandonnée', () async {
+    final vContent = SqlContent.fromJson(sqlContent);
+    final vResult = await vContent.execute(
+      'SELECT count(*) FROM intervention a, intervention b, intervention c, intervention d',
+      'mysql',
+      '',
+      const Duration(milliseconds: 1),
+    );
+
+    expect(vResult['error'], 'Requête arrêtée au bout de 2 secondes : vérifiez les jointures.');
   });
 
   test("Un serveur sans simulations n'empêche pas la synchronisation", () async {

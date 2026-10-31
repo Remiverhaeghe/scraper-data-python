@@ -6,6 +6,7 @@ import '../revision_state.dart';
 import 'devops_screen.dart';
 import 'git_screen.dart';
 import 'ladder_screen.dart';
+import 'sql_screen.dart';
 import 'troubleshooting_screen.dart';
 
 class LabsScreen extends StatelessWidget {
@@ -56,6 +57,20 @@ class LabsScreen extends StatelessWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(pContext).push(
                       MaterialPageRoute<void>(builder: (_) => GitListScreen(state: state)),
+                    ),
+                  ),
+                ),
+              if (state.sqlLevelList.isNotEmpty)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.storage_outlined),
+                    title: const Text('Bac à sable SQL'),
+                    subtitle: Text(
+                      '${state.sqlPassed.length} / ${state.sqlLevelList.length} niveaux réussis',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(pContext).push(
+                      MaterialPageRoute<void>(builder: (_) => SqlListScreen(state: state)),
                     ),
                   ),
                 ),

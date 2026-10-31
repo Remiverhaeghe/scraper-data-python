@@ -430,7 +430,7 @@ Documents/JobBoard/
 - [x] Application installable sur l'écran d'accueil (manifeste web et icône)
 - [x] Application mobile Flutter de révision hors ligne (`mobile/`) : QCM, calculs, remises en ordre, associations, schémas et guides, répétition espacée, examen blanc chronométré, synchronisation automatique, rappel quotidien, icône et signature propres
 - [x] Correction et répétition espacée vérifiées des deux côtés par des cas communs (`tests/fixtures/shared_quiz_cases.json`), application mobile testée par la CI
-- [x] Pannes à résoudre, simulateur d'automate, bac à sable Git, Maven et Docker jouables hors ligne sur le téléphone : contenu reçu du PC, simulateurs Dart vérifiés par les cas communs de `tests/fixtures/shared_lab_cases.json` (à régénérer par `python -m tools.lab_cases` après une modification du simulateur ou des scénarios), parties rejouées par le PC
+- [x] Pannes à résoudre, simulateur d'automate, bac à sable Git, bac à sable SQL (SQLite embarqué), Maven et Docker jouables hors ligne sur le téléphone : contenu reçu du PC, simulateurs Dart vérifiés par les cas communs de `tests/fixtures/shared_lab_cases.json` (à régénérer par `python -m tools.lab_cases` après une modification du simulateur ou des scénarios), parties rejouées par le PC
 
 ### Hébergement et sécurité
 
@@ -625,7 +625,7 @@ Page SQL du bureau et du web, pour s'exercer aux requêtes sur la base d'une usi
 - [x] Dialecte MySQL ou SQL Server au choix : LIMIT ou TOP, IFNULL ou ISNULL, NOW ou GETDATE, DATEDIFF et TIMESTAMPDIFF ; une écriture de l'autre dialecte est signalée
 - [x] Résultat comparé à celui de la solution de référence : une autre requête qui renvoie les mêmes lignes est acceptée ; résultat attendu affiché à côté du sien
 - [x] Erreurs classiques expliquées : `= NULL`, `COUNT(*)` après un LEFT JOIN, NOT IN face à des NULL, BETWEEN sur des dates avec heure, agrégat dans WHERE, colonne ambiguë
-- [x] Base SQLite en mémoire recréée à chaque requête : seules SELECT, INSERT, UPDATE et DELETE sont permises, requête arrêtée au bout de 2 secondes
+- [x] Base SQLite en mémoire recréée à chaque requête : seules SELECT, INSERT, UPDATE et DELETE sont permises (EXPLAIN, PRAGMA, tables internes, requêtes récursives et fonctions comme random ou zeroblob refusées avant exécution), requête arrêtée au bout de 2 secondes, date du jour fixe (NOW, GETDATE, CURRENT_DATE)
 
 ### Schémas électriques
 
@@ -679,7 +679,7 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 | GET | `/api/v1/offers` | Nouvelles offres de la semaine, fiche lisible hors ligne : description, compétences couvertes et manquantes, salaire, distance, position et `near` (dans le rayon des alertes) |
 | POST | `/api/v1/applications` | Statuts donnés aux offres sur le téléphone : `{"changes": [{"source", "source_id", "status"}]}` ; notes et date d'entretien gardées |
 | GET, POST | `/api/v1/interview` | Questions de la simulation d'entretien ; séries faites sur le téléphone : `{"series": [...]}` |
-| GET, POST | `/api/v1/labs` | Simulations jouables hors ligne (scénarios de pannes, niveaux d'automate, de Git, de Maven et de Docker, dépôt Maven et images Docker simulés, règles et réussites du PC) ; parties faites sur le téléphone : `{"results": [{"id", "lab", "scenario" et "actions", ou "level" et "program", "history" ou "steps", "finished_at"}]}`, rejouées par le PC avant d'être comptées |
+| GET, POST | `/api/v1/labs` | Simulations jouables hors ligne (scénarios de pannes, niveaux d'automate, de Git, de SQL, de Maven et de Docker, base d'exemple SQL et règles de dialecte, dépôt Maven et images Docker simulés, réussites du PC) ; parties faites sur le téléphone : `{"results": [{"id", "lab", "scenario" et "actions", ou "level" et "program", "history", "steps" ou "query" et "dialect", "finished_at"}]}`, rejouées par le PC avant d'être comptées |
 | GET, POST | `/api/v1/skills` | Grille d'auto-évaluation ; niveaux saisis sur le téléphone : `{"levels": {"Java": 6}}` |
 | GET | `/api/v1/replies` | Réponses de recruteurs repérées dans Gmail par le planificateur : offre, statut annoncé, date d'entretien ; jamais le contenu du message |
 

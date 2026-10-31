@@ -70,7 +70,8 @@ def test_other_dialect_is_refused(pQuery, pDialect, pMessage):
         "DROP TABLE machine",
         "CREATE TABLE essai (a)",
         "BEGIN",
-        "SELECT load_extension('x')",
+        "EXPLAIN SELECT 1",
+        "SELECT * FROM pragma_table_info('machine')",
     ],
 )
 def test_only_row_statements_are_allowed(pQuery):
@@ -80,17 +81,30 @@ def test_only_row_statements_are_allowed(pQuery):
 
 
 def test_limits_stop_dangerous_queries():
-    """Vérifie l'arrêt d'une boucle sans fin, d'une valeur énorme, d'une 2e requête."""
+    """Vérifie l'arrêt d'une requête trop longue, d'une récursion, d'une valeur énorme."""
 
     assert (
         "2 secondes"
+        in execute(
+            "SELECT count(*) FROM intervention a, intervention b, intervention c, "
+            "intervention d, intervention e, intervention f, intervention g",
+            "mysql",
+        )["error"]
+    )
+    assert (
+        "récursives"
         in execute(
             "WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM n) "
             "SELECT count(*) FROM n",
             "mysql",
         )["error"]
     )
-    assert "trop volumineuse" in execute("SELECT zeroblob(500000000)", "mysql")["error"]
+    for vFunction in ("zeroblob(500000000)", "load_extension('x')", "random()"):
+        assert execute(f"SELECT {vFunction}", "mysql")["error"].startswith(
+            "Fonction non permise ici"
+        )
+
+    assert execute("SELECT CURRENT_DATE", "mysql")["rows"] == [("2026-06-30",)]
     assert (
         "Une seule requête"
         in execute("SELECT 1; DELETE FROM machine", "mysql")["error"]

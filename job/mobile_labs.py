@@ -20,6 +20,29 @@ from job.ladder_game import build_ladder_overview, load_levels, run_level
 from job.ladder_game import save_attempt as save_ladder_attempt
 from job.maven_sim import CENTRAL
 from job.progress import TROUBLESHOOTING_XP_PER_TEN, XP_RULES
+from job.sql_levels import build_schema, build_sql_overview
+from job.sql_levels import load_levels as load_sql_levels
+from job.sql_levels import run_level as run_sql_level
+from job.sql_levels import save_attempt as save_sql_attempt
+from job.sql_sandbox import (
+    ALLOWED_STATEMENTS,
+    DIALECTS,
+    ERROR_MESSAGES,
+    INTERNAL_WRITE_PATTERN,
+    MAX_CELL_LENGTH,
+    MAX_QUERY_LENGTH,
+    MAX_ROWS,
+    MAX_VALUE_LENGTH,
+    NOT_ALLOWED_MESSAGE,
+    RECURSIVE_MESSAGE,
+    REFUSED,
+    REFUSED_FUNCTIONS,
+    REWRITES,
+    TODAY,
+    UNIT_FUNCTIONS,
+    UNITS,
+    load_script,
+)
 from job.troubleshooting import (
     STAR_THRESHOLDS,
     UNPROVEN_SCORE,
@@ -88,6 +111,55 @@ def build_labs_package(pDatabaseFile):
                 if vRow["passed"]
             ],
         },
+        "sql": build_sql_package(pDatabaseFile),
+    }
+
+    return rPackage
+
+
+def build_sql_rules():
+    """Retourne les règles du bac à sable SQL que le téléphone applique à l'identique."""
+
+    rRules = {
+        "today": TODAY,
+        "dialects": DIALECTS,
+        "max_query_length": MAX_QUERY_LENGTH,
+        "max_rows": MAX_ROWS,
+        "max_cell_length": MAX_CELL_LENGTH,
+        "max_value_length": MAX_VALUE_LENGTH,
+        "allowed_statements": list(ALLOWED_STATEMENTS),
+        "refused_functions": sorted(REFUSED_FUNCTIONS),
+        "not_allowed": NOT_ALLOWED_MESSAGE,
+        "recursive": RECURSIVE_MESSAGE,
+        "internal_write": INTERNAL_WRITE_PATTERN,
+        "refused": REFUSED,
+        "rewrites": REWRITES,
+        "unit_functions": UNIT_FUNCTIONS,
+        "units": UNITS,
+        "errors": ERROR_MESSAGES,
+    }
+
+    return rRules
+
+
+def build_sql_package(pDatabaseFile):
+    """Retourne le bac à sable SQL à emporter : niveaux, base, règles, réussites."""
+
+    vOverview = build_sql_overview(pDatabaseFile)
+
+    rPackage = {
+        "levels": list(load_sql_levels().values()),
+        "schema": build_schema(),
+        "script": load_script(),
+        "rules": build_sql_rules(),
+        "xp": XP_RULES["sql_level"][1],
+        "dialect": vOverview["dialect"],
+        "passed": [
+            vRow["id"]
+            for vSeries in vOverview["series"]
+            for vRow in vSeries["rows"]
+            if vRow["passed"]
+        ],
     }
 
     return rPackage
@@ -222,11 +294,35 @@ def integrate_devops(pDatabaseFile, pItem, pFinishedAt):
     return rXp
 
 
+def integrate_sql(pDatabaseFile, pItem, pFinishedAt):
+    """Réexécute une requête SQL du téléphone ; retourne les points gagnés."""
+
+    vLevel = load_sql_levels().get(pItem.get("level"))
+    vQuery = pItem.get("query")
+    vDialect = pItem.get("dialect")
+
+    if vLevel is None or vDialect not in DIALECTS:
+        raise ValueError("simulation ou niveau inconnu")
+
+    if not isinstance(vQuery, str) or len(vQuery) > MAX_QUERY_LENGTH:
+        raise ValueError("requête illisible")
+
+    if not run_sql_level(vLevel, vQuery, vDialect)["passed"]:
+        raise ValueError("niveau non réussi")
+
+    vFirst = save_sql_attempt(pDatabaseFile, vLevel["id"], vQuery, True, pFinishedAt)
+
+    rXp = XP_RULES["sql_level"][1] if vFirst else 0
+
+    return rXp
+
+
 INTEGRATIONS = {
     "troubleshooting": integrate_troubleshooting,
     "ladder": integrate_ladder,
     "git": integrate_git,
     "devops": integrate_devops,
+    "sql": integrate_sql,
 }
 
 

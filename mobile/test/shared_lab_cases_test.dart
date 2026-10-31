@@ -11,6 +11,8 @@ import 'package:jobboard_revision/logic/git_sandbox.dart';
 import 'package:jobboard_revision/logic/ladder.dart';
 import 'package:jobboard_revision/logic/ladder_game.dart';
 import 'package:jobboard_revision/logic/python_compat.dart';
+import 'package:jobboard_revision/logic/sql_levels.dart';
+import 'package:jobboard_revision/logic/sql_sandbox.dart';
 import 'package:jobboard_revision/logic/troubleshooting.dart';
 
 void main() {
@@ -165,6 +167,23 @@ void main() {
         }
 
         expect(jsonDecode(jsonEncode(vHost)), equals(vCase['host']));
+      });
+    }
+  });
+
+  final vSqlContent = SqlContent.fromJson(Map<String, dynamic>.from(vCases['sql_content'] as Map));
+  final vSqlLevels = SqlLevels(vSqlContent);
+
+  group('SQL', () {
+    for (final vCase in vCases['sql'] as List) {
+      test((vCase as Map)['name'] as String, () async {
+        final vRun = await vSqlLevels.runLevel(
+          vSqlContent.levels[vCase['level']]!,
+          vCase['query'] as String,
+          vCase['dialect'] as String,
+        );
+
+        expect(jsonDecode(jsonEncode(vRun)), equals(vCase['expected']));
       });
     }
   });

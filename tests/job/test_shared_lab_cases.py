@@ -139,3 +139,27 @@ def test_phone_devops_steps_are_replayed(tmp_path):
     assert (vReport["saved"], vReport["xp"]) == (1, 20)
     assert vReport["rejected"][0]["reason"] == "niveau non réussi"
     assert build_labs_package(vDatabaseFile)["devops"]["passed"] == [vLevel["id"]]
+
+
+def test_phone_sql_query_is_run_again(tmp_path):
+    """Vérifie une requête SQL Server réussie comptée une fois, et une requête fausse refusée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vResult = {
+        "id": "sql-1",
+        "lab": "sql",
+        "level": "plus-cheres",
+        "dialect": "sqlserver",
+        "query": "SELECT TOP 3 id, cout FROM intervention ORDER BY cout DESC",
+        "finished_at": "2026-10-30T09:00:00",
+    }
+
+    vReport = sync_lab_results(
+        vDatabaseFile,
+        [vResult, {**vResult, "id": "sql-2", "dialect": "mysql"}],
+    )
+
+    assert (vReport["saved"], vReport["xp"]) == (1, 15)
+    assert vReport["rejected"][0]["reason"] == "niveau non réussi"
+    assert "plus-cheres" in build_labs_package(vDatabaseFile)["sql"]["passed"]

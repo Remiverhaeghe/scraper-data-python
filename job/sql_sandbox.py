@@ -41,7 +41,33 @@ ALLOWED_ACTIONS = {
     sqlite3.SQLITE_DELETE,
 }
 WRITE_ACTIONS = {sqlite3.SQLITE_INSERT, sqlite3.SQLITE_UPDATE, sqlite3.SQLITE_DELETE}
-REFUSED_FUNCTIONS = {"load_extension"}
+# Fonctions refusées : extension, valeurs énormes ou résultats propres à la machine
+REFUSED_FUNCTIONS = {
+    "load_extension",
+    "zeroblob",
+    "randomblob",
+    "random",
+    "printf",
+    "format",
+    "sqlite_version",
+    "sqlite_source_id",
+}
+ALLOWED_STATEMENTS = (
+    "SELECT",
+    "WITH",
+    "INSERT",
+    "UPDATE",
+    "DELETE",
+    "VALUES",
+    "REPLACE",
+)
+NOT_ALLOWED_MESSAGE = (
+    "Seules les requêtes SELECT, INSERT, UPDATE et DELETE sont permises ici."
+)
+FUNCTION_PATTERN = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(")
+RECURSIVE_MESSAGE = "Les requêtes récursives (WITH RECURSIVE) ne sont pas simulées ici."
+# Écriture visant une table interne de SQLite (sqlite_master, sqlite_sequence…)
+INTERNAL_WRITE_PATTERN = r"\b(?:INTO|UPDATE|FROM)\s+[\"`\[]?sqlite_"
 
 TOKEN_PATTERN = re.compile(r"'(?:[^']|'')*'|--[^\n]*|/\*.*?(?:\*/|\Z)", re.S)
 LITERAL_PATTERN = re.compile(r"\x00(\d+)\x00")
@@ -142,9 +168,12 @@ REWRITES = {
         (r"\bCURDATE\s*\(\s*\)", f"'{TODAY[:10]}'"),
         (r"\bISNULL\s*\(", "mysql_isnull("),
         (r"\bCHAR_LENGTH\s*\(", "length("),
+        (r"\bCURRENT_TIMESTAMP\b", f"'{TODAY}'"),
+        (r"\bCURRENT_DATE\b", f"'{TODAY[:10]}'"),
     ),
     "sqlserver": (
         (r"\bGETDATE\s*\(\s*\)", f"'{TODAY}'"),
+        (r"\bCURRENT_TIMESTAMP\b", f"'{TODAY}'"),
         (r"\bISNULL\s*\(", "ifnull("),
         (r"\bLEN\s*\(", "length("),
     ),
@@ -245,6 +274,38 @@ def rewrite_unit_function(pCode, pName, pTarget):
     return rCode
 
 
+def check_statement(pCode):
+    """Refuse avant exécution ce qui n'est pas une requête sur les lignes.
+
+    Le téléphone, qui n'a pas d'authorizer, applique la même règle : une
+    requête est acceptée ou refusée de la même façon des deux côtés.
+    """
+
+    vFirst = re.match(r"\s*([A-Za-z]+)", pCode)
+
+    if (
+        vFirst is None
+        or vFirst.group(1).upper() not in ALLOWED_STATEMENTS
+        or re.search(r"\bpragma_", pCode, re.I)
+        or re.search(INTERNAL_WRITE_PATTERN, pCode, re.I)
+    ):
+        raise SqlError(NOT_ALLOWED_MESSAGE)
+
+    # Seule requête sans fin possible sur une base aussi petite ; le téléphone ne
+    # peut pas interrompre SQLite, elle est donc refusée des deux côtés
+    if re.search(r"\bRECURSIVE\b", pCode, re.I):
+        raise SqlError(RECURSIVE_MESSAGE)
+
+    for vName in FUNCTION_PATTERN.findall(pCode):
+        if vName.lower() in REFUSED_FUNCTIONS:
+            raise SqlError(f"Fonction non permise ici : {vName}.")
+
+    vBody = pCode.rstrip(" \n\r\t")
+
+    if ";" in (vBody[:-1] if vBody.endswith(";") else vBody):
+        raise SqlError("Une seule requête à la fois.")
+
+
 def translate(pQuery, pDialect):
     """Retourne la requête pour SQLite ; lève SqlError si le dialecte la refuse."""
 
@@ -261,6 +322,8 @@ def translate(pQuery, pDialect):
 
     if not vCode.strip(" \n\r\t;"):
         raise SqlError("Écrivez une requête.")
+
+    check_statement(vCode)
 
     for vPattern, vMessage in REFUSED[pDialect]:
         if re.search(vPattern, vCode, re.I):

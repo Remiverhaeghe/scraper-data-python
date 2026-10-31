@@ -9,7 +9,9 @@ dans l'historique git.
 - Simulations jouables hors ligne, contenu reçu du PC : pannes à résoudre, et
   simulateur d'automate (ladder dessiné en direct, scénario de test et
   chronogramme, machine pilotée au doigt), bac à sable Git (32 niveaux, fichiers,
-  remise et conflits, graphes du dépôt, de l'objectif et du serveur), Maven et
+  remise et conflits, graphes du dépôt, de l'objectif et du serveur), bac à
+  sable SQL (SQLite embarqué, dialectes MySQL et SQL Server, requête coupée à
+  2 secondes), Maven et
   Docker (fichier à corriger, console simulée, partie reprise là où on l'a
   laissée) ; simulateurs réécrits en Dart et
   vérifiés par des cas communs avec Python (`python -m tools.lab_cases`), dessins
@@ -64,6 +66,9 @@ dans l'historique git.
 - HTTPS sur le réseau local, certificat reconnu par son empreinte (QR code)
 
 ### Tableau de bord et bureau
+- Bac à sable SQL : requête vérifiée avant exécution (EXPLAIN, PRAGMA, tables
+  internes, requêtes récursives et fonctions non déterministes refusées),
+  CURRENT_DATE et CURRENT_TIMESTAMP à la date fixe de la base d'exemple
 - Maven : pom.xml lu par un lecteur XML réduit (messages d'erreur localisés,
   DOCTYPE refusé) ; Docker : sortie de docker logs figée au moment de la
   commande, CMD vide sans plantage, jokers de COPY sensibles à la casse partout

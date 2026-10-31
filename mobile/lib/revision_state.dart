@@ -10,6 +10,8 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import 'logic/devops.dart';
+import 'logic/sql_levels.dart';
+import 'logic/sql_sandbox.dart';
 import 'logic/exam.dart';
 import 'logic/grading.dart';
 import 'logic/interview_alerts.dart';
@@ -88,6 +90,9 @@ const gitBestPreference = 'git_best';
 const gitHistoriesPreference = 'git_histories';
 const devopsPassedPreference = 'devops_passed';
 const devopsSessionsPreference = 'devops_sessions';
+const sqlDialectPreference = 'sql_dialect';
+const sqlPassedPreference = 'sql_passed';
+const sqlQueriesPreference = 'sql_queries';
 
 /// Auto-évaluation : grille reçue du PC et niveaux saisis pas encore envoyés
 const skillGridPreference = 'skill_grid';
@@ -349,6 +354,79 @@ class RevisionState extends ChangeNotifier {
     }
 
     return savePreference(devopsSessionsPreference, vSessions);
+  }
+
+  Map<String, dynamic> get sqlPackage => Map<String, dynamic>.from(labs['sql'] as Map? ?? const {});
+
+  SqlLevels? _sqlLevels;
+  Object? _sqlSource;
+
+  /// Niveaux SQL et leur moteur, refaits seulement quand le contenu reçu change.
+  SqlLevels? get sqlLevels {
+    final vPackage = labs['sql'];
+
+    if (vPackage == null) {
+      return null;
+    }
+
+    if (!identical(vPackage, _sqlSource)) {
+      _sqlSource = vPackage;
+      _sqlLevels = SqlLevels(SqlContent.fromJson(Map<String, dynamic>.from(vPackage as Map)));
+    }
+
+    return _sqlLevels;
+  }
+
+  List<Map<String, dynamic>> get sqlLevelList => [
+        for (final vItem in sqlPackage['levels'] as List? ?? const []) Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  int get sqlXp => (sqlPackage['xp'] as num? ?? 15).toInt();
+
+  /// Dialecte choisi sur le téléphone, celui du PC à défaut.
+  String get sqlDialect =>
+      preferences[sqlDialectPreference] as String? ?? sqlPackage['dialect'] as String? ?? 'mysql';
+
+  Future<void> setSqlDialect(String pDialect) => savePreference(sqlDialectPreference, pDialect);
+
+  /// Niveaux SQL réussis, sur le PC ou sur le téléphone.
+  Set<String> get sqlPassed => {
+        for (final vId in sqlPackage['passed'] as List? ?? const []) vId as String,
+        for (final vId in preferences[sqlPassedPreference] as List? ?? const []) vId as String,
+      };
+
+  /// Dernière requête écrite pour un niveau, ou son point de départ.
+  String sqlQuery(Map<String, dynamic> pLevel) =>
+      (preferences[sqlQueriesPreference] as Map?)?[pLevel['id']] as String? ?? pLevel['starter'] as String;
+
+  Future<void> saveSqlQuery(String pLevelId, String pQuery) => savePreference(
+        sqlQueriesPreference,
+        {...Map<String, dynamic>.from(preferences[sqlQueriesPreference] as Map? ?? const {}), pLevelId: pQuery},
+      );
+
+  /// Garde un niveau SQL réussi ; la requête part au PC, qui la réexécute.
+  Future<bool> recordSql(String pLevelId, String pQuery, String pDialect) async {
+    final rFirst = !sqlPassed.contains(pLevelId);
+
+    preferences = {
+      ...preferences,
+      sqlPassedPreference: [...sqlPassed, if (rFirst) pLevelId],
+      pendingLabsPreference: [
+        ...pendingLabs,
+        {
+          'id': const Uuid().v4(),
+          'lab': 'sql',
+          'level': pLevelId,
+          'query': pQuery,
+          'dialect': pDialect,
+          'finished_at': DateTime.now().toIso8601String(),
+        },
+      ],
+    };
+    await store.savePreferences(preferences);
+    notifyListeners();
+
+    return rFirst;
   }
 
   /// Garde un niveau Maven ou Docker réussi ; les étapes partent au PC, qui les rejoue.

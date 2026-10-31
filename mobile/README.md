@@ -33,7 +33,7 @@ privilégiées, révision express de 5 minutes avec compte à rebours, note rapi
 une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
 lisibles hors ligne et fiche de préparation (pitch, questions pièges, questions à
 poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien,
-simulations jouables sans réseau, pannes à résoudre, automate en ladder, bac à sable Git, Maven et Docker (contenu reçu du PC,
+simulations jouables sans réseau, pannes à résoudre, automate en ladder, bac à sable Git, bac à sable SQL (SQLite embarqué par le paquet sqlite3), Maven et Docker (contenu reçu du PC,
 parties revérifiées par le PC à la synchronisation), widget de l'écran d'accueil (questions à revoir, prochain entretien), dessiné par
 `android/app/src/main/kotlin/…/RevisionWidgetProvider.kt` et
 `res/layout/revision_widget.xml`, avec son fond (`res/drawable/widget_background.xml`)
@@ -178,6 +178,8 @@ mobile/
 │   │   ├── maven_sim.dart        # Maven simulé, identique à job/maven_sim.py
 │   │   ├── docker_sim.dart       # Docker simulé, identique à job/docker_sim.py
 │   │   ├── devops.dart           # Objectif et étape des niveaux Maven et Docker
+│   │   ├── sql_sandbox.dart      # Bac à sable SQL, identique à job/sql_sandbox.py, dans un isolat
+│   │   ├── sql_levels.dart       # Niveaux SQL et comparaison, identiques à job/sql_levels.py
 │   │   └── python_compat.dart    # Arrondi, lignes et format de Python, reproduits à l'identique
 │   ├── services/
 │   │   ├── api_client.dart       # Appels à l'API /api/v1 et messages d'erreur
@@ -207,7 +209,8 @@ mobile/
 │   │   ├── troubleshooting_screen.dart # Pannes à résoudre : liste et partie
 │   │   ├── ladder_screen.dart    # Automate : niveaux, éditeur, test et simulation
 │   │   ├── git_screen.dart       # Git : niveaux par série, commandes, graphes et fichiers
-│   │   └── devops_screen.dart    # Maven et Docker : fichier, commandes et console
+│   │   ├── devops_screen.dart    # Maven et Docker : fichier, commandes et console
+│   │   └── sql_screen.dart       # SQL : dialecte, niveaux, requête et tableaux de résultats
 │   └── widgets/
 │       ├── celebration.dart      # Confettis et carte d'un niveau gagné ou d'un record
 │       ├── game_card.dart        # Niveau, série et quêtes reçus du PC, accès au jeu
