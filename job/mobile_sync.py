@@ -654,10 +654,16 @@ def sync_status_changes(pDatabaseFile, pChanges, pNow):
         vSourceId = str((vChange or {}).get("source_id") or "")
         vStatus = (vChange or {}).get("status")
 
-        # Une offre supprimée entre-temps, ou un statut réservé au PC, est refusé.
+        # Une offre supprimée entre-temps, un statut réservé au PC, ou une
+        # candidature déjà menée plus loin sur le PC (entretien…), est refusé.
+        vCurrent = (get_application(pDatabaseFile, vSource, vSourceId) or {}).get(
+            "status"
+        )
+
         if (
             vStatus not in PHONE_STATUSES
             or get_offer(pDatabaseFile, vSource, vSourceId) is None
+            or (vCurrent is not None and vCurrent not in PHONE_STATUSES)
         ):
             vRejected.append(f"{vSource}/{vSourceId}")
             continue

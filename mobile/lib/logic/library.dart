@@ -2,6 +2,9 @@
 
 import '../models/quiz_package.dart';
 
+/// Domaine des thèmes sans domaine et des guides sans thème, affiché en dernier.
+const otherDomain = 'Autres';
+
 /// Schéma de la bibliothèque, décrit par le texte de sa première question.
 class LibrarySchema {
   const LibrarySchema({required this.name, required this.content, required this.description});
@@ -61,7 +64,7 @@ List<LibraryEntry> buildLibrary(QuizPackage pPackage) {
 
   final vLinkedGuides = {for (final vTheme in pPackage.themes) vTheme.guide};
 
-  // Ordre des thèmes reçu du PC, regroupé par domaine, guides sans thème à la fin.
+  // Ordre des thèmes reçu du PC, regroupé par domaine, « Autres » à la fin.
   final vByDomain = <String, List<LibraryEntry>>{};
 
   for (final vTheme in pPackage.themes) {
@@ -77,11 +80,19 @@ List<LibraryEntry> buildLibrary(QuizPackage pPackage) {
     }
   }
 
+  for (final vGuide in pPackage.guides.values) {
+    if (!vLinkedGuides.contains(vGuide.name)) {
+      vByDomain.putIfAbsent(otherDomain, () => []).add(
+            LibraryEntry(
+                label: vGuide.title, domain: otherDomain, guide: vGuide, schemas: const []),
+          );
+    }
+  }
+
   final rEntries = [
-    for (final vEntries in vByDomain.values) ...vEntries,
-    for (final vGuide in pPackage.guides.values)
-      if (!vLinkedGuides.contains(vGuide.name))
-        LibraryEntry(label: vGuide.title, domain: 'Autres', guide: vGuide, schemas: const []),
+    for (final vEntry in vByDomain.entries)
+      if (vEntry.key != otherDomain) ...vEntry.value,
+    ...?vByDomain[otherDomain],
   ];
 
   return rEntries;

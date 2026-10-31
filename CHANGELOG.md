@@ -10,6 +10,8 @@ dans l'historique git.
   avec leur fiche complète, même après la semaine de leur parution ; filtre
   « Retenues » dans les offres, sans nouvelle alerte pour elles
 - Une candidature ouvre la fiche de son offre quand aucun entretien n'est proche
+- Une candidature en entretien garde son statut : affiché sans menu sur le
+  téléphone, et tout changement venu du téléphone refusé par le PC
 - Page « Guides et schémas » : guides pratiques et schémas de chaque thème,
   rangés comme à l'accueil, avec une recherche dans leur texte, sans réseau
 

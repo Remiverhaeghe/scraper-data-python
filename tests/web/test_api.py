@@ -185,6 +185,18 @@ def test_offers_and_status_changes_from_the_phone(api, tmp_path):
     assert vApplication["notes"] == "Contact : la RH"
     assert vApplication["interview_at"] == "2026-11-03T10:00"
 
+    # Un entretien se décide sur le PC : le téléphone ne peut pas le rétrograder.
+    save_application(vDatabaseFile, "lever", "1", "INTERVIEW")
+    vReport = api.post(
+        "/api/v1/applications",
+        json={
+            "changes": [{"source": "lever", "source_id": "1", "status": "INTERESTED"}]
+        },
+    ).json()
+
+    assert vReport == {"applied": 0, "rejected": ["lever/1"]}
+    assert get_application(vDatabaseFile, "lever", "1")["status"] == "INTERVIEW"
+
 
 def test_quick_notes_from_the_phone(api, tmp_path):
     """Vérifie les notes rapides : ajoutées datées, sans doublon, refus expliqués."""

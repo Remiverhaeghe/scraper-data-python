@@ -146,6 +146,20 @@ class OfferCard extends StatelessWidget {
     final vStatus = offer['status'] as String?;
     final vDistance = offer['distance_km'];
     final vSimilarTo = offer['similar_to'];
+    // Un entretien se décide sur le PC : le statut s'affiche sans menu.
+    final vLocked = vStatus != null && !offerStatuses.containsKey(vStatus);
+    final vStatusLabel = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Text(
+        offerStatusLabels[vStatus] ?? 'Statut',
+        style: TextStyle(
+          color: vStatus == 'APPLIED' || vLocked
+              ? successColorOf(context)
+              : vTheme.colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
     final vDetails = [
       offer['company'],
       offer['location'],
@@ -187,30 +201,22 @@ class OfferCard extends StatelessWidget {
                     icon: const Icon(Icons.open_in_new, size: 18),
                     label: const Text('Ouvrir'),
                   ),
-                  PopupMenuButton<String>(
-                    tooltip: 'Changer le statut',
-                    onSelected: (pStatus) => state.setOfferStatus(offer, pStatus),
-                    itemBuilder: (_) => [
-                      for (final vEntry in offerStatuses.entries)
-                        CheckedPopupMenuItem(
-                          value: vEntry.key,
-                          checked: vEntry.key == vStatus,
-                          child: Text(vEntry.value),
-                        ),
-                    ],
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: Text(
-                        offerStatusLabels[vStatus] ?? 'Statut',
-                        style: TextStyle(
-                          color: vStatus == 'APPLIED'
-                              ? successColorOf(context)
-                              : vTheme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                  if (vLocked)
+                    vStatusLabel
+                  else
+                    PopupMenuButton<String>(
+                      tooltip: 'Changer le statut',
+                      onSelected: (pStatus) => state.setOfferStatus(offer, pStatus),
+                      itemBuilder: (_) => [
+                        for (final vEntry in offerStatuses.entries)
+                          CheckedPopupMenuItem(
+                            value: vEntry.key,
+                            checked: vEntry.key == vStatus,
+                            child: Text(vEntry.value),
+                          ),
+                      ],
+                      child: vStatusLabel,
                     ),
-                  ),
                 ],
               ),
             ],

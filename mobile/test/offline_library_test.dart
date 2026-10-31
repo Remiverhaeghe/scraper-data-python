@@ -39,6 +39,24 @@ void main() {
     expect(vEntries[2].domain, 'Autres');
   });
 
+  test('Un thème du domaine Autres rejoint les guides sans thème, à la fin', () {
+    final vJson = buildPackageJson();
+    (vJson['themes'] as List).insert(0, {
+      'key': 'divers',
+      'label': 'Divers',
+      'domain': 'Autres',
+      'guide': 'divers.md',
+    });
+    (vJson['guides'] as List).addAll(<Map<String, String>>[
+      {'name': 'divers.md', 'title': 'Guide divers', 'content': ''},
+      {'name': 'seul.md', 'title': 'Guide seul', 'content': ''},
+    ]);
+
+    final vEntries = buildLibrary(QuizPackage.fromJson(vJson));
+
+    expect([for (final vEntry in vEntries) vEntry.label], ['Docker', 'Divers', 'Guide seul']);
+  });
+
   test('La recherche porte sur le thème, le texte du guide et les schémas', () {
     final vEntries = buildLibrary(buildLibraryPackage());
 
@@ -85,6 +103,24 @@ void main() {
     );
     expect(filterOffers(vOffers, pRetainedOnly: true, pNearOnly: true), hasLength(1));
     expect(filterOffers(vOffers), hasLength(5));
+  });
+
+  testWidgets("Une offre en entretien affiche son statut sans menu", (pTester) async {
+    final vState = RevisionState(MemoryRevisionStore(), reminders: FakeReminders());
+
+    await pTester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Column(
+          children: [
+            OfferCard(state: vState, offer: const {'source_id': '1', 'status': 'INTERVIEW'}),
+            OfferCard(state: vState, offer: const {'source_id': '2', 'status': 'INTERESTED'}),
+          ],
+        ),
+      ),
+    ));
+
+    expect(find.text('Entretien'), findsOneWidget);
+    expect(find.byType(PopupMenuButton<String>), findsOneWidget);
   });
 
   test("Une candidature retrouve la fiche de son offre, identifiant texte ou nombre", () {
