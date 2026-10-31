@@ -73,6 +73,11 @@ from job.interview_journal import (
     collect_company_questions,
 )
 from job.interview_mission import build_mission, set_step
+from job.salary_negotiation import (
+    build_negotiation_view,
+    play_negotiation,
+    start_negotiation,
+)
 from job.interview_revision import build_offer_revision
 from job.manual_offers import (
     IMPORT_FORMATS,
@@ -620,6 +625,7 @@ def show_offer(
             "offer": vPrepared,
             "group": get_offer_group(pDatabaseFile, vPrepared, prepare),
             "preparation": vPreparation,
+            "negotiation": build_negotiation_view(pDatabaseFile),
             "mission": (
                 build_mission(
                     pDatabaseFile, vPrepared, vPreparation["match"]["missing"]
@@ -882,6 +888,74 @@ def update_mission_step(
                 pDatabaseFile, vOffer, vPreparation["match"]["missing"]
             ),
         },
+    )
+
+    return rResponse
+
+
+def render_negotiation(pRequest, pDatabaseFile, pOffer, pError=""):
+    """Réaffiche la carte du jeu de négociation."""
+
+    rResponse = templates.TemplateResponse(
+        pRequest,
+        "_negotiation.html",
+        {
+            "offer": pOffer,
+            "negotiation": {**build_negotiation_view(pDatabaseFile), "error": pError},
+        },
+    )
+
+    return rResponse
+
+
+@router.post(
+    "/offer/negotiation/start",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def start_salary_negotiation(
+    request: Request,
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Commence une partie de négociation sur le marché de l'offre."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+
+    try:
+        start_negotiation(pDatabaseFile, vOffer)
+
+    except ValueError as vException:
+        return render_negotiation(request, pDatabaseFile, vOffer, str(vException))
+
+    rResponse = render_negotiation(request, pDatabaseFile, vOffer)
+
+    return rResponse
+
+
+@router.post(
+    "/offer/negotiation/play",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def play_salary_negotiation(
+    request: Request,
+    pChoice: str = Form(alias="choice"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Joue une réponse de la négociation en cours."""
+
+    try:
+        vGame = play_negotiation(pDatabaseFile, pChoice)
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = render_negotiation(
+        request,
+        pDatabaseFile,
+        {"source": vGame["source"], "source_id": vGame["source_id"]},
     )
 
     return rResponse

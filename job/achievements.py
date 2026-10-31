@@ -9,6 +9,7 @@ restent cachés jusqu'à leur obtention, pour l'effet de surprise.
 from datetime import timedelta
 
 from job.code_puzzles import load_puzzle_progress
+from job.salary_negotiation import load_negotiation
 from job.quiz_exam import load_exam_results
 from storage.aptitude_sessions import get_aptitude_sessions
 from storage.settings_repository import load_json_setting, save_json_setting
@@ -294,6 +295,15 @@ ACHIEVEMENTS = (
         False,
     ),
     (
+        "negotiator",
+        "Négociateur",
+        "Obtenir 80 points ou plus au jeu de négociation salariale",
+        "banknote",
+        "negotiation_best",
+        80,
+        False,
+    ),
+    (
         "oral-5",
         "À l'aise à l'oral",
         "Terminer 5 entretiens oraux simulés",
@@ -475,6 +485,14 @@ def build_statistics(pDatabaseFile, pActivity, pProgress):
         "best_day_xp": max((vDay["xp"] for vDay in pActivity.values()), default=0),
         "active_days": len(vDays),
         "puzzle_best_streak": vPuzzles["best_streak"],
+        "negotiation_best": max(
+            (
+                int(vGame.get("score") or 0)
+                for vGame in load_negotiation(pDatabaseFile)["history"]
+                if isinstance(vGame, dict)
+            ),
+            default=0,
+        ),
         "puzzle_level": vPuzzles["level"],
     }
 

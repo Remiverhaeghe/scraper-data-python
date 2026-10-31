@@ -17,6 +17,7 @@ from job.achievements import build_player_card, evaluate_achievements
 from job.code_puzzles import PUZZLE_PROGRESS_KEY
 from job.interview_mission import MISSIONS_KEY
 from job.oral_interview import ORAL_KEY
+from job.salary_negotiation import NEGOTIATION_KEY
 from job.quiz_exam import load_exam_results
 from storage.aptitude_sessions import get_aptitude_sessions
 from storage.database import connect_database
@@ -39,6 +40,7 @@ XP_RULES = {
     "sql_level": ("Niveau SQL réussi", 15),
     "circuit_level": ("Montage électrique réussi", 20),
     "devops_level": ("Niveau Maven ou Docker réussi", 20),
+    "negotiation": ("Négociation salariale simulée", 20),
     "oral_interview": ("Entretien oral simulé terminé", 25),
     "interview_mission": ("Mission d'entretien terminée", 60),
     "puzzle_series": (
@@ -246,6 +248,12 @@ def load_activity(pDatabaseFile):
         for vEntry in (vLevels if isinstance(vLevels, dict) else {}).values():
             if isinstance(vEntry, dict) and vEntry.get("passed_at"):
                 add_action(rActivity, read_day(vEntry["passed_at"]), vAction)
+
+    for vGame in (
+        load_json_setting(pDatabaseFile, NEGOTIATION_KEY, {}, dict).get("history") or []
+    ):
+        if isinstance(vGame, dict):
+            add_action(rActivity, read_day(vGame.get("finished_at")), "negotiation")
 
     vOral = load_json_setting(pDatabaseFile, ORAL_KEY, {}, dict)
 

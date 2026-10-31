@@ -1,0 +1,33 @@
+{# Jeu de négociation salariale (job/salary_negotiation.py) : dialogue avec un
+   recruteur à règles, réponses jouées sur place, score et conseils à la fin. #}
+<section class="card negotiation" id="negotiation">
+    <h2>{{ icon("banknote") }} Simuler la négociation salariale</h2>
+    {% set game = negotiation.game %}
+    {% if game %}
+    <p class="card-subtitle">{{ game.title }} · marché {{ game.low | euros }} à {{ game.high | euros }} brut annuel, médiane {{ game.median | euros }} · votre salaire visé : {{ game.target | euros }}</p>
+    <ol class="negotiation-transcript">
+        {% for speaker, text in game.transcript %}
+        <li class="negotiation-{{ speaker }}"><strong>{{ "Recruteur" if speaker == "recruiter" else "Vous" }} :</strong> {{ text }}</li>
+        {% endfor %}
+    </ol>
+    {% if game.choices %}
+    <div class="negotiation-choices">
+        {% for choice, text in game.choices %}
+        <button class="button" type="button" hx-post="{{ url_for('play_salary_negotiation').path }}" hx-vals='{{ {"choice": choice} | tojson }}' hx-target="#negotiation" hx-swap="outerHTML">{{ text }}</button>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="application-message tone-{{ 'success' if game.score >= 70 else 'warning' }}" role="status">
+        {% if game.deal %}Accord à {{ game.offer | euros }} brut annuel{% if game.benefits %}, avec des avantages{% endif %}{% else %}Pas d'accord{% endif %} · score {{ game.score }} / 100
+    </p>
+    <ul>{% for advice in game.advice %}<li>{{ advice }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% else %}
+    <p class="card-subtitle">Un recruteur fictif, des montants tirés du marché de l'offre et de votre salaire visé : entraînez-vous à annoncer, argumenter et conclure.</p>
+    {% endif %}
+    {% if negotiation.error %}<p class="application-message tone-warning" role="status">{{ negotiation.error }}</p>{% endif %}
+    {% if not game or not game.choices %}
+    <button class="button button-primary" type="button" hx-post="{{ url_for('start_salary_negotiation').path }}" hx-vals='{{ {"source": offer.source, "id": offer.source_id} | tojson }}' hx-target="#negotiation" hx-swap="outerHTML">{{ icon("banknote", 16) }} {{ "Rejouer" if game else "Commencer" }}</button>
+    {% endif %}
+    {% if negotiation.count %}<p class="muted">{{ negotiation.count }} partie(s) · meilleur score : {{ negotiation.best }} / 100</p>{% endif %}
+</section>

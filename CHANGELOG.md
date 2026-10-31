@@ -5,6 +5,13 @@ dans l'historique git.
 
 ## Non publié
 
+### Jeu de négociation salariale
+- Sur la fiche de chaque offre (bureau, web) : un recruteur à règles, avec un
+  budget plafond qu'il ne dit pas, des montants en brut annuel tirés du marché de
+  l'offre et du salaire visé ; prétentions, contre-proposition, avantages ou
+  ultimatum, puis score sur 100 et conseils tirés des réponses ; XP et trophée
+  « Négociateur »
+
 ### Entretien oral simulé
 - Questions classiques, pièges (selon le prochain entretien) ou techniques, lues
   à voix haute par la synthèse vocale gratuite de Windows, du navigateur ou

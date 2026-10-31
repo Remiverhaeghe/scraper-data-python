@@ -2409,6 +2409,44 @@ def test_oral_interview_is_played_on_the_profile_page(client):
     assert "Nouvelle séance" in client.post("/profile/oral/stop").text
 
 
+def test_salary_negotiation_is_played_on_the_offer_page(client, monkeypatch):
+    """Vérifie le jeu de négociation : sans marché, puis une partie jouée jusqu'au score."""
+
+    vStart = {"source": "adzuna", "id": "new"}
+
+    assert (
+        "Simuler la négociation salariale"
+        in client.get("/offer?source=adzuna&id=new").text
+    )
+
+    monkeypatch.setattr(
+        "job.salary_negotiation.load_market_median", lambda *pArgs: None
+    )
+    monkeypatch.setattr(
+        "job.salary_negotiation.find_market_salary", lambda *pArgs: None
+    )
+
+    assert (
+        "Pas encore assez d"
+        in client.post("/offer/negotiation/start", data=vStart).text
+    )
+
+    monkeypatch.setattr(
+        "job.salary_negotiation.load_market_median", lambda *pArgs: 2500
+    )
+    client.post("/offer/negotiation/start", data=vStart)
+
+    for vChoice in ("range", "argue", "accept"):
+        vPage = client.post("/offer/negotiation/play", data={"choice": vChoice})
+
+    assert "Accord à" in vPage.text and "score" in vPage.text
+    assert '"source": "adzuna"' in vPage.text
+    assert (
+        client.post("/offer/negotiation/play", data={"choice": "accept"}).status_code
+        == 400
+    )
+
+
 def test_offer_page_charts_mock_exam_scores(client, monkeypatch):
     """Vérifie le graphique des notes d'examen blanc à partir de deux examens."""
 

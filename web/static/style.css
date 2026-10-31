@@ -2962,3 +2962,34 @@ textarea.companies-preferred {
     font-size: 1.4rem;
     font-variant-numeric: tabular-nums;
 }
+
+/* Jeu de négociation : dialogue avec le recruteur et réponses possibles */
+.negotiation-transcript {
+    display: grid;
+    gap: 6px;
+    padding: 0;
+    list-style: none;
+}
+
+.negotiation-transcript li {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--surface-muted, color-mix(in srgb, var(--border) 30%, transparent));
+}
+
+.negotiation-transcript .negotiation-candidate {
+    justify-self: end;
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.negotiation-choices {
+    display: grid;
+    gap: 6px;
+}
+
+.negotiation-choices .button {
+    justify-content: flex-start;
+    text-align: left;
+    white-space: normal;
+}

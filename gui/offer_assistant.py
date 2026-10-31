@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 from gui.chart import BarChart
 from gui.dialogs import show_preparation, show_text_dialog
 from gui.interview_mission_panel import InterviewMissionPanel
+from gui.negotiation_dialog import NegotiationDialog
 from gui.theme import COLORS
 from gui.widgets import create_button, get_exports_folder
 from job.assistant import CHATGPT_URL, PROMPT_KINDS, build_prompts
@@ -180,6 +181,17 @@ class OfferAssistantPanel(QWidget):
         )
         self.exam_button.clicked.connect(self.request_exam)
 
+        self.negotiation_button = create_button(
+            "Simuler la négociation salariale…",
+            "banknote",
+            pIconColor=COLORS["primary"],
+        )
+        self.negotiation_button.setToolTip(
+            "Un recruteur fictif, des montants tirés du marché de l'offre et de votre "
+            "salaire visé"
+        )
+        self.negotiation_button.clicked.connect(self.open_negotiation)
+
         # Demandes à coller dans ChatGPT : aucune API payante n'est appelée.
         self.chatgpt_button = create_button(
             "Préparer avec ChatGPT", "bot", pIconColor=COLORS["primary"]
@@ -237,6 +249,7 @@ class OfferAssistantPanel(QWidget):
         vLayout.addWidget(self.exam_button)
         vLayout.addWidget(self.exam_results_label)
         vLayout.addWidget(self.exam_chart)
+        vLayout.addWidget(self.negotiation_button)
         vLayout.addWidget(self.chatgpt_button)
         vLayout.addWidget(self.company_info_button)
         vLayout.addWidget(self.assistant_label)
@@ -368,6 +381,11 @@ class OfferAssistantPanel(QWidget):
             self.offer["source_id"],
         )
         QDesktopServices.openUrl(QUrl.fromLocalFile(vPath))
+
+    def open_negotiation(self):
+        """Ouvre le jeu de négociation sur le marché de l'offre."""
+        if self.offer:
+            NegotiationDialog(self, self.database_file, self.offer).exec()
 
     def open_preparation(self):
         """Ouvre la préparation de candidature, ou invite à remplir le profil."""

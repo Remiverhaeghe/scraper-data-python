@@ -1,6 +1,15 @@
 """Tests du lancement automatique à l'ouverture de session Windows"""
 
+import sys
+
+import pytest
+
 from tools.windows_startup import SCRIPT_NAME, build_script, install, main, remove
+
+# Le fichier s'écrit dans la page de code OEM de cmd, propre à Windows.
+WINDOWS_ONLY = pytest.mark.skipif(
+    sys.platform != "win32", reason="encodage OEM propre à Windows"
+)
 
 
 def test_script_starts_web_and_scheduler_from_the_project():
@@ -14,6 +23,7 @@ def test_script_starts_web_and_scheduler_from_the_project():
     assert '"C:\\Users\\rémi\\Python\\python.exe" -m scheduler' in vScript
 
 
+@WINDOWS_ONLY
 def test_install_then_remove(tmp_path):
     """Vérifie l'écriture du fichier, lisible par cmd malgré l'accent, puis son retrait."""
 
@@ -26,6 +36,7 @@ def test_install_then_remove(tmp_path):
     assert not remove(tmp_path)
 
 
+@WINDOWS_ONLY
 def test_main_uses_the_user_startup_folder(tmp_path, monkeypatch, capsys):
     """Vérifie que la commande écrit dans le dossier Démarrage de APPDATA."""
 
