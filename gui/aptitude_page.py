@@ -253,7 +253,8 @@ class AptitudePage(QWidget):
     def start_session(self, pCategory, pSeed=None):
         """Tire une partie et lance le chronomètre."""
         self.category = pCategory
-        self.seed = random.randrange(1 << 30) if pSeed is None else pSeed
+        # Graine d'une série d'exercices, sans usage cryptographique.
+        self.seed = random.randrange(1 << 30) if pSeed is None else pSeed  # nosec B311
         self.questions = generate_session(pCategory, self.seed)
         self.answers = []
         self.started_at = time.monotonic()

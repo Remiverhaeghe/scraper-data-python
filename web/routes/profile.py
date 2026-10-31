@@ -23,6 +23,7 @@ from job.self_assessment import (
     build_grid,
     save_skill_levels,
 )
+from job.oral_interview import answer_oral, build_oral_view, start_oral, stop_oral
 from job.interview_simulation import (
     ALL_THEMES,
     get_current_question,
@@ -86,6 +87,7 @@ def render_profile(
             "asked_questions": collect_asked_questions(pDatabaseFile)[:5],
             "drill_cards": get_due_cards(pDatabaseFile, datetime.now()),
             **build_simulation_context(pDatabaseFile),
+            "oral": build_oral_view(pDatabaseFile),
             "skill_grid": build_grid(load_profile(pDatabaseFile)),
             "max_level": MAX_LEVEL,
             "known_level": KNOWN_LEVEL,
@@ -297,6 +299,69 @@ def redirect_to_simulation():
     rResponse = RedirectResponse(
         router.url_path_for("show_profile") + "#simulation", status_code=303
     )
+
+    return rResponse
+
+
+def redirect_to_oral():
+    """Revient à la carte d'entretien oral de la page Profil."""
+
+    rResponse = RedirectResponse(
+        router.url_path_for("show_profile") + "#oral", status_code=303
+    )
+
+    return rResponse
+
+
+@router.post("/profile/oral/start", dependencies=[Depends(require_csrf)])
+def start_oral_interview(
+    pMode: str = Form(alias="mode"),
+    pDuration: int = Form(alias="duration"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Commence une séance d'entretien oral."""
+
+    try:
+        start_oral(pDatabaseFile, pMode, pDuration, datetime.now())
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = redirect_to_oral()
+
+    return rResponse
+
+
+@router.post("/profile/oral/answer", dependencies=[Depends(require_csrf)])
+def answer_oral_interview(
+    pPosition: int = Form(alias="position"),
+    pSeconds: int = Form(alias="seconds"),
+    pStructure: int = Form(alias="structure"),
+    pExample: int = Form(alias="example"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Note la réponse à la question en cours."""
+
+    try:
+        answer_oral(
+            pDatabaseFile, pPosition, pSeconds, pStructure, pExample, datetime.now()
+        )
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    rResponse = redirect_to_oral()
+
+    return rResponse
+
+
+@router.post("/profile/oral/stop", dependencies=[Depends(require_csrf)])
+def stop_oral_interview(pDatabaseFile: str = Depends(get_database_file)):
+    """Abandonne la séance d'entretien oral en cours."""
+
+    stop_oral(pDatabaseFile)
+
+    rResponse = redirect_to_oral()
 
     return rResponse
 

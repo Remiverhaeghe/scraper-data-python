@@ -294,6 +294,15 @@ ACHIEVEMENTS = (
         False,
     ),
     (
+        "oral-5",
+        "À l'aise à l'oral",
+        "Terminer 5 entretiens oraux simulés",
+        "bell-ring",
+        "oral_interview",
+        5,
+        False,
+    ),
+    (
         "mission-first",
         "Prêt pour le jour J",
         "Terminer une mission d'entretien, boss compris",

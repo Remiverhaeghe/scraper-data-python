@@ -2956,3 +2956,9 @@ textarea.companies-preferred {
 .mission-steps li.is-done strong {
     color: var(--success);
 }
+
+/* Entretien oral : chrono de la réponse, rouge une fois le temps dépassé */
+.oral-clock {
+    font-size: 1.4rem;
+    font-variant-numeric: tabular-nums;
+}

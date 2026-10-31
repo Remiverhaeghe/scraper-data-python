@@ -16,6 +16,7 @@ from datetime import date, datetime, timedelta
 from job.achievements import build_player_card, evaluate_achievements
 from job.code_puzzles import PUZZLE_PROGRESS_KEY
 from job.interview_mission import MISSIONS_KEY
+from job.oral_interview import ORAL_KEY
 from job.quiz_exam import load_exam_results
 from storage.aptitude_sessions import get_aptitude_sessions
 from storage.database import connect_database
@@ -38,6 +39,7 @@ XP_RULES = {
     "sql_level": ("Niveau SQL réussi", 15),
     "circuit_level": ("Montage électrique réussi", 20),
     "devops_level": ("Niveau Maven ou Docker réussi", 20),
+    "oral_interview": ("Entretien oral simulé terminé", 25),
     "interview_mission": ("Mission d'entretien terminée", 60),
     "puzzle_series": (
         "Série de puzzles de code terminée, plus 2 par bonne réponse",
@@ -245,6 +247,14 @@ def load_activity(pDatabaseFile):
             if isinstance(vEntry, dict) and vEntry.get("passed_at"):
                 add_action(rActivity, read_day(vEntry["passed_at"]), vAction)
 
+    vOral = load_json_setting(pDatabaseFile, ORAL_KEY, {}, dict)
+
+    for vSession in vOral.get("history") or []:
+        if isinstance(vSession, dict):
+            add_action(
+                rActivity, read_day(vSession.get("finished_at")), "oral_interview"
+            )
+
     for vMission in load_json_setting(pDatabaseFile, MISSIONS_KEY, {}, dict).values():
         if isinstance(vMission, dict) and vMission.get("completed_at"):
             add_action(
@@ -418,7 +428,8 @@ def draw_daily_quests(pSituation, pToday):
         and vQuest not in ("follow_up", "exam")
         and (pSituation["new_offers"] or vQuest not in ("apply", "interested"))
     ]
-    random.Random(pToday.toordinal()).shuffle(vOthers)
+    # Quêtes du jour tirées pareil toute la journée, sans usage cryptographique.
+    random.Random(pToday.toordinal()).shuffle(vOthers)  # nosec B311
 
     # La révision reste toujours proposée : c'est la quête faisable partout.
     vOthers.sort(key=lambda pQuest: pQuest != "revise")

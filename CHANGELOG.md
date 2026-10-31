@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Entretien oral simulé
+- Questions classiques, pièges (selon le prochain entretien) ou techniques, lues
+  à voix haute par la synthèse vocale gratuite de Windows, du navigateur ou
+  d'Android ; réponse chronométrée (1 min, 1 min 30 ou 2 min) puis grille :
+  structure, exemple concret, durée mesurée ; conseil après chaque réponse,
+  notes suivies d'une séance à l'autre, XP et trophée « À l'aise à l'oral »
+- Sur le téléphone, hors ligne : moteur vocal d'Android, séances renotées par le PC
+
 ### Mission entretien
 - Préparation d'un entretien en mission sur la fiche de l'offre (bureau, web) :
   fiche entreprise, pitch, questions pièges, manques, simulation, puis le boss,

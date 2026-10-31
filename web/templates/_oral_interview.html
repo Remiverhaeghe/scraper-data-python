@@ -1,0 +1,57 @@
+{# Entretien oral simulé (job/oral_interview.py) : la question est lue par le
+   navigateur (static/oral.js), le chrono mesure la réponse dite à voix haute.
+   Sans script, la durée se saisit à la main. #}
+<article class="card section-gap" id="oral" data-oral>
+    <h2>{{ icon("bell-ring") }} Entretien oral simulé</h2>
+    <p class="card-subtitle">La question est lue à voix haute : répondez à l'oral, dans le temps choisi, puis notez votre réponse. Rien n'est enregistré du son.</p>
+    {% if oral.count %}
+    <p class="muted">{{ oral.count }} séance(s) · dernière : {{ oral.last.score }} % · notes récentes : {% for score in oral.recent %}{{ score }} %{% if not loop.last %}, {% endif %}{% endfor %}</p>
+    {% if oral.weakest %}<p class="muted">À travailler : {{ oral.weakest[0] }}, {{ oral.weakest[1] | lower }}.</p>{% endif %}
+    {% endif %}
+    {% if oral.previous %}
+    <p class="application-message tone-{{ 'success' if oral.previous.score >= 70 else 'warning' }}" role="status">Réponse précédente notée {{ oral.previous.score }} % · {{ oral.previous.seconds }} s, {{ oral.previous.duration_label }}. Conseil : {{ oral.previous.hint }}</p>
+    {% elif oral.last and not oral.session %}
+    <p class="application-message tone-success" role="status">Dernière séance terminée : {{ oral.last.score }} %.</p>
+    {% endif %}
+    {% if oral.session %}
+    <p class="muted">{{ oral.modes[oral.session.mode] }}{% if oral.session.target %} · {{ oral.session.target }}{% endif %} · question {{ oral.position + 1 }} sur {{ oral.session.questions | length }}</p>
+    <p><strong data-oral-question>{{ oral.question.question }}</strong></p>
+    <div class="rules-actions">
+        <button class="button" type="button" data-oral-listen hidden>{{ icon("bell-ring", 16) }} Écouter la question</button>
+        <button class="button" type="button" data-oral-begin hidden>{{ icon("timer", 16) }} Je commence</button>
+        <button class="button button-primary" type="button" data-oral-done hidden>{{ icon("circle-check", 16) }} J'ai terminé</button>
+        <strong class="oral-clock" data-oral-clock data-duration="{{ oral.session.duration }}"></strong>
+    </div>
+    <form method="post" action="{{ url_for('answer_oral_interview').path }}#oral" data-oral-grid>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="position" value="{{ oral.position }}">
+        <label>Durée de votre réponse, en secondes
+            <input type="number" name="seconds" min="0" max="3600" required data-oral-seconds>
+        </label>
+        {% for id, label, tip in oral.criteria[:2] %}
+        <fieldset>
+            <legend>{{ label }} : {{ tip }}</legend>
+            {% for value, text in oral.ratings.items() %}
+            <label class="check"><input type="radio" name="{{ id }}" value="{{ value }}" required> {{ text }}</label>
+            {% endfor %}
+        </fieldset>
+        {% endfor %}
+        <div class="rules-actions"><button class="button button-primary" type="submit">Valider ma note</button></div>
+    </form>
+    <form method="post" action="{{ url_for('stop_oral_interview').path }}#oral">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button class="button" type="submit">Arrêter la séance</button>
+    </form>
+    {% else %}
+    <form class="rules-actions" method="post" action="{{ url_for('start_oral_interview').path }}#oral">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <select name="mode" aria-label="Type de questions">
+            {% for mode, label in oral.modes.items() %}<option value="{{ mode }}">{{ label }}</option>{% endfor %}
+        </select>
+        <select name="duration" aria-label="Temps de réponse">
+            {% for duration in oral.durations %}<option value="{{ duration }}"{% if loop.index == 2 %} selected{% endif %}>{{ duration // 60 }}:{{ "%02d" | format(duration % 60) }} par réponse</option>{% endfor %}
+        </select>
+        <button class="button button-primary" type="submit">{{ "Nouvelle séance" if oral.count else "Commencer" }}</button>
+    </form>
+    {% endif %}
+</article>

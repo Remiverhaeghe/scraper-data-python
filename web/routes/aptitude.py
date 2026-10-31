@@ -68,7 +68,8 @@ def play_aptitude(
     """Tire une partie ; la graine et l'heure de départ partent avec le formulaire."""
 
     check_category(pCategory)
-    vSeed = random.randrange(1 << 30)
+    # Graine d'une série d'exercices, sans usage cryptographique.
+    vSeed = random.randrange(1 << 30)  # nosec B311
 
     rResponse = render_aptitude(
         request,

@@ -17,6 +17,7 @@
     <script src="{{ url_for('static', path='pwa.js').path }}" defer></script>
     <script src="{{ url_for('static', path='progress.js').path }}" defer></script>
     <script src="{{ url_for('static', path='aptitude.js').path }}" defer></script>
+    <script src="{{ url_for('static', path='oral.js').path }}" defer></script>
     {% block head %}{% endblock %}
 </head>
 <body hx-headers='{{ {"X-CSRF-Token": csrf_token(request)} | tojson }}'>

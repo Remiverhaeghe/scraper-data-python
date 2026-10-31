@@ -16,7 +16,13 @@ from job.circuit_levels import build_values, get_controls
 from job.circuit_levels import load_levels as load_circuit_levels
 from job.circuit_levels import run_level as run_circuit_level
 from job.code_puzzles import get_answer, get_next_level, grade_puzzle, load_puzzles
-from job.mobile_labs import build_circuit_library, build_puzzle_rules, build_sql_rules
+from job.mobile_labs import (
+    build_circuit_library,
+    build_oral_rules,
+    build_puzzle_rules,
+    build_sql_rules,
+)
+from job.oral_interview import grade_answer
 from job.sql_levels import load_levels as load_sql_levels
 from job.sql_levels import pick
 from job.sql_levels import run_level as run_sql_level
@@ -594,6 +600,8 @@ def build_cases():
             "registry": REGISTRY,
         },
         "devops": build_devops_cases(),
+        "oral_rules": build_oral_rules(),
+        "oral": build_oral_cases(),
         "puzzles_content": {
             "puzzles": list(load_puzzles().values()),
             "rules": build_puzzle_rules(),
@@ -827,6 +835,45 @@ def build_circuit_cases():
             for vValue in MEASURES
         ],
     }
+
+    return rCases
+
+
+def build_oral_cases():
+    """Retourne les notes attendues d'une réponse orale : temps, durée, grille."""
+
+    rCases = []
+
+    for vSeconds, vDuration, vStructure, vExample in (
+        (0, 60, 0, 0),
+        (19.4, 60, 2, 2),
+        (19.6, 60, 2, 2),
+        (20, 90, 1, 2),
+        (90, 90, 2, 1),
+        (90.4, 90, 2, 2),
+        (125, 120, 1, 1),
+        (45, 60, 3, 1),
+        (45, 60, True, 1),
+        (-1, 60, 1, 1),
+        (3601, 60, 1, 1),
+    ):
+        try:
+            vExpected = {
+                "grade": grade_answer(vSeconds, vDuration, vStructure, vExample)
+            }
+
+        except ValueError as vError:
+            vExpected = {"error": str(vError)}
+
+        rCases.append(
+            {
+                "seconds": vSeconds,
+                "duration": vDuration,
+                "structure": vStructure,
+                "example": vExample,
+                **vExpected,
+            }
+        )
 
     return rCases
 

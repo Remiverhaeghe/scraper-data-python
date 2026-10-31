@@ -15,6 +15,7 @@ import 'package:jobboard_revision/logic/git_levels.dart';
 import 'package:jobboard_revision/logic/git_sandbox.dart';
 import 'package:jobboard_revision/logic/ladder.dart';
 import 'package:jobboard_revision/logic/ladder_game.dart';
+import 'package:jobboard_revision/logic/oral_interview.dart';
 import 'package:jobboard_revision/logic/python_compat.dart';
 import 'package:jobboard_revision/logic/sql_levels.dart';
 import 'package:jobboard_revision/logic/sql_sandbox.dart';
@@ -320,6 +321,22 @@ void main() {
       expect(vSeries.toSet(), hasLength(10));
       expect([for (final vId in vSeries) vPuzzles[vId]!['level']], [1, 1, 1, 2, 2, 2, 2, 2, 3, 3]);
     });
+  });
+
+  test("Chaque réponse orale est notée comme sur le PC", () {
+    final vMinSeconds = (vCases['oral_rules'] as Map)['min_seconds'] as int;
+
+    for (final vCase in vCases['oral'] as List) {
+      final vGrade = gradeOralAnswer(
+        (vCase as Map)['seconds'],
+        vCase['duration'] as int,
+        vCase['structure'],
+        vCase['example'],
+        vMinSeconds,
+      );
+
+      expect(vGrade, vCase['grade'], reason: '$vCase');
+    }
   });
 
   test('Arrondi au pair, comme Python', () {

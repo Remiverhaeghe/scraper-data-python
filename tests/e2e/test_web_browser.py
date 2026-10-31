@@ -552,3 +552,29 @@ def test_aptitude_shows_one_question_at_a_time(page):
         "Raisonnement mécanique :"
     )
     assert page.console_errors == []
+
+
+def test_oral_answer_is_timed_then_graded(page):
+    """Vérifie qu'oral.js lance le chrono, mesure la réponse puis montre la grille."""
+
+    page.goto("/profile#oral")
+    page.locator('#oral button[type="submit"]').first.click()
+    vGrid = page.locator("[data-oral-grid]")
+
+    sync_api.expect(vGrid).to_be_hidden()
+
+    page.locator("[data-oral-begin]").click()
+    sync_api.expect(page.locator("[data-oral-done]")).to_be_visible()
+    page.locator("[data-oral-done]").click()
+
+    sync_api.expect(vGrid).to_be_visible()
+    assert page.locator("[data-oral-seconds]").input_value() == "0"
+
+    page.locator('input[name="structure"][value="2"]').check()
+    page.locator('input[name="example"][value="1"]').check()
+    page.locator("[data-oral-grid] button").click()
+
+    sync_api.expect(page.locator("#oral")).to_contain_text(
+        "Réponse précédente notée 50 %"
+    )
+    assert page.console_errors == []

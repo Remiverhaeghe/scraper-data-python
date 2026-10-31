@@ -49,6 +49,13 @@ def isolated_settings(tmp_path):
 
 
 @pytest.fixture(autouse=True)
+def silent_speech(monkeypatch):
+    """Coupe la synthèse vocale : un test ne doit jamais parler à voix haute."""
+
+    monkeypatch.setattr("gui.speech.find_powershell", lambda: None)
+
+
+@pytest.fixture(autouse=True)
 def no_cache_warm_up(monkeypatch):
     """Coupe le calcul anticipé et la sauvegarde du démarrage, faits sur une base supprimée."""
 

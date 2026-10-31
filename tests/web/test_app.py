@@ -2371,6 +2371,44 @@ def test_interview_mission_steps_are_ticked_on_the_offer_page(client):
     )
 
 
+def test_oral_interview_is_played_on_the_profile_page(client):
+    """Vérifie une séance d'entretien oral sur le web : choix refusé, notes, bilan."""
+
+    assert 'id="oral"' in client.get("/profile").text
+    assert (
+        client.post(
+            "/profile/oral/start", data={"mode": "x", "duration": "90"}
+        ).status_code
+        == 400
+    )
+
+    client.post("/profile/oral/start", data={"mode": "tricky", "duration": "60"})
+
+    for vPosition in range(5):
+        vPage = client.post(
+            "/profile/oral/answer",
+            data={"position": vPosition, "seconds": 45, "structure": 2, "example": 1},
+        )
+
+    assert "Dernière séance terminée : 83 %" in vPage.text
+    assert (
+        client.post(
+            "/profile/oral/answer",
+            data={"position": 0, "seconds": 45, "structure": 2, "example": 1},
+        ).status_code
+        == 400
+    )
+
+    client.post("/profile/oral/start", data={"mode": "general", "duration": "90"})
+    vPage = client.post(
+        "/profile/oral/answer",
+        data={"position": 0, "seconds": 5, "structure": 0, "example": 0},
+    )
+
+    assert "Réponse précédente notée 0 %" in vPage.text
+    assert "Nouvelle séance" in client.post("/profile/oral/stop").text
+
+
 def test_offer_page_charts_mock_exam_scores(client, monkeypatch):
     """Vérifie le graphique des notes d'examen blanc à partir de deux examens."""
 

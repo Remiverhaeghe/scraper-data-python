@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 
 from gui.interview_drill_panel import InterviewDrillPanel
 from gui.interview_simulation_panel import InterviewSimulationPanel
+from gui.oral_interview_panel import OralInterviewPanel
 from gui.self_assessment_panel import SelfAssessmentPanel
 from gui.star_answers_panel import StarAnswersPanel
 from gui.theme import COLORS
@@ -198,6 +199,7 @@ class ProfilePage(QWidget):
         self.self_assessment_panel = SelfAssessmentPanel(pDatabaseFile)
         self.drill_panel = InterviewDrillPanel(pDatabaseFile)
         self.simulation_panel = InterviewSimulationPanel(pDatabaseFile)
+        self.oral_panel = OralInterviewPanel(pDatabaseFile)
         # Une question ratée rejoint aussitôt l'entraînement à l'oral.
         self.simulation_panel.next_button.clicked.connect(self.drill_panel.refresh)
 
@@ -205,6 +207,7 @@ class ProfilePage(QWidget):
         vLayout.addWidget(self.self_assessment_panel)
         vLayout.addWidget(self.star_panel)
         vLayout.addWidget(self.simulation_panel)
+        vLayout.addWidget(self.oral_panel)
         vLayout.addWidget(self.drill_panel)
 
     def refresh(self):
@@ -213,6 +216,7 @@ class ProfilePage(QWidget):
         self.self_assessment_panel.refresh()
         self.drill_panel.refresh()
         self.simulation_panel.refresh()
+        self.oral_panel.refresh()
 
         try:
             vTexts = profile_to_texts(load_profile(self.database_file))

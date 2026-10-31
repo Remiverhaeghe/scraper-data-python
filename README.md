@@ -238,6 +238,7 @@ Documents/JobBoard/
 - [x] Score global pondéré, annonces douteuses signalées, résumé « L'essentiel » d'une annonce, offre ajoutée depuis son lien
 - [x] Récapitulatif quotidien facultatif par e-mail et bilan « Votre semaine » sur l'accueil
 - [x] Préparation d'entretien : fiche imprimable ou PDF, pitch, questions pièges selon l'employeur, questions déjà posées par l'entreprise, glossaire des compétences
+- [x] Entretien oral simulé : questions classiques, pièges (selon le prochain entretien) ou techniques lues à voix haute par la synthèse vocale gratuite (Windows, navigateur, Android), réponse chronométrée de 1 à 2 minutes, grille structure, exemple et durée, conseil après chaque réponse, notes suivies d'une séance à l'autre et critère à travailler (bureau, web, téléphone hors ligne)
 - [x] Mission entretien sur chaque offre : fiche entreprise, pitch, questions pièges et simulation cochés, manques et boss (examen blanc de l'offre à 70 %) validés d'après les examens, avancement en pourcentage, XP et trophée une fois tout prêt (bureau, web, avancement sur le téléphone)
 - [x] Relance envoyée depuis l'application après relecture, historique des statuts de chaque candidature
 - [x] Page Santé : planificateur en marche, formats des sources (champ vide pour plus de la moitié des offres récentes), sources utiles revues chaque jour
@@ -304,7 +305,7 @@ Documents/JobBoard/
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
-- [x] 42 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] 43 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
@@ -751,6 +752,7 @@ scraper-data-python/
 │   ├── freshness.py                           # Score de fraîcheur des offres
 │   ├── interview_journal.py                   # Journal d'entretien : questions posées
 │   ├── interview_mission.py                   # Mission entretien : étapes, avancement, boss
+│   ├── oral_interview.py                      # Entretien oral : questions, grille, durée, séances
 │   ├── health.py                              # État de santé de l'application
 │   ├── offer_comparison.py                    # Comparaison des offres côte à côte
 │   ├── weekly_digest.py                       # Récapitulatif hebdomadaire par e-mail
@@ -996,6 +998,8 @@ scraper-data-python/
 │   ├── offer_application.py                   # Suivi de candidature : statut, relance, entretien
 │   ├── interview_journal_panel.py             # Journal d'entretien d'une offre
 │   ├── interview_mission_panel.py             # Mission entretien d'une offre
+│   ├── oral_interview_panel.py                # Entretien oral simulé, chrono et grille
+│   ├── speech.py                              # Lecture à voix haute par la voix de Windows
 │   ├── follow_ups_panel.py                    # Relances de la semaine et brouillons
 │   ├── replies_panel.py                       # Réponses des recruteurs lues dans Gmail
 │   ├── spontaneous_dialog.py                  # Saisie d'une candidature spontanée
@@ -1104,6 +1108,7 @@ scraper-data-python/
 │   │   ├── _application.html                  # Bloc de suivi d'une candidature
 │   │   ├── _interview_journal.html            # Journal d'entretien d'une offre
 │   │   ├── _interview_mission.html            # Mission entretien d'une offre
+│   │   ├── _oral_interview.html               # Entretien oral simulé de la page Profil
 │   │   ├── _attachments.html                  # Pièces jointes d'une offre
 │   │   ├── offer_new.html                     # Ajout manuel et import d'offres
 │   │   ├── preparation_sheet.html             # Fiche de préparation imprimable, sans menu
@@ -1153,6 +1158,7 @@ scraper-data-python/
 │       ├── pwa.js                             # Enregistre le service worker, en HTTPS seulement
 │       ├── progress.js                        # « +XP », quêtes et confettis, d'après l'encart du menu
 │       ├── aptitude.js                        # Test de recrutement : une question à la fois, compte à rebours
+│       ├── oral.js                            # Entretien oral : lecture de la question et chrono
 │       ├── offline.html                       # Page affichée quand le PC ne répond pas
 │       ├── htmx.min.js                        # HTMX 2.0.4, copie locale
 │       ├── offers_map.js                      # Place les offres et le domicile sur la carte
@@ -1329,6 +1335,7 @@ scraper-data-python/
 │   │   ├── test_freshness.py                  # Teste le score de fraîcheur
 │   │   ├── test_interview_journal.py          # Teste le journal d'entretien
 │   │   ├── test_interview_mission.py          # Teste les étapes, le boss et la récompense
+│   │   ├── test_oral_interview.py             # Teste les questions, la grille, la durée et les séances
 │   │   ├── test_health.py                     # Teste l'état de santé de l'application
 │   │   ├── test_interview_revision.py         # Teste la révision ciblée et l'examen blanc d'une offre
 │   │   ├── test_manual_offers.py              # Teste l'ajout manuel et l'import d'offres
@@ -1479,6 +1486,8 @@ scraper-data-python/
 │   │   ├── test_health_panel.py                # Teste la carte d'état de l'application
 │   │   ├── test_interview_journal_panel.py     # Teste le panneau du journal d'entretien
 │   │   ├── test_interview_mission_panel.py     # Teste le panneau de mission d'entretien
+│   │   ├── test_oral_interview_panel.py        # Teste le chrono, la grille et la voix absente
+│   │   ├── test_drawn_widgets.py               # Teste le dessin de la machine d'automate et de la célébration
 │   │   ├── test_profile_page.py                # Teste le profil et la fenêtre de préparation
 │   │   ├── test_progress_page.py               # Teste la progression, le « +XP » et la célébration
 │   │   ├── test_interview_simulation_panel.py  # Teste la simulation d'entretien

@@ -45077,6 +45077,168 @@
    }
   }
  ],
+ "oral_rules": {
+  "modes": {
+   "general": "Questions classiques",
+   "tricky": "Questions pièges",
+   "technical": "Questions techniques"
+  },
+  "durations": [
+   60,
+   90,
+   120
+  ],
+  "session_length": 5,
+  "min_seconds": 20,
+  "criteria": [
+   [
+    "structure",
+    "Structure",
+    "Idée annoncée, développée, puis conclue"
+   ],
+   [
+    "example",
+    "Exemple concret",
+    "Une situation vécue, avec son résultat"
+   ],
+   [
+    "duration",
+    "Durée",
+    "Ni trop courte, ni au-delà du temps"
+   ]
+  ],
+  "ratings": {
+   "0": "Non",
+   "1": "En partie",
+   "2": "Oui"
+  },
+  "duration_ratings": {
+   "0": "trop courte",
+   "1": "au-delà du temps",
+   "2": "dans le temps"
+  }
+ },
+ "oral": [
+  {
+   "seconds": 0,
+   "duration": 60,
+   "structure": 0,
+   "example": 0,
+   "grade": {
+    "seconds": 0,
+    "structure": 0,
+    "example": 0,
+    "duration": 0,
+    "score": 0
+   }
+  },
+  {
+   "seconds": 19.4,
+   "duration": 60,
+   "structure": 2,
+   "example": 2,
+   "grade": {
+    "seconds": 19,
+    "structure": 2,
+    "example": 2,
+    "duration": 0,
+    "score": 67
+   }
+  },
+  {
+   "seconds": 19.6,
+   "duration": 60,
+   "structure": 2,
+   "example": 2,
+   "grade": {
+    "seconds": 20,
+    "structure": 2,
+    "example": 2,
+    "duration": 2,
+    "score": 100
+   }
+  },
+  {
+   "seconds": 20,
+   "duration": 90,
+   "structure": 1,
+   "example": 2,
+   "grade": {
+    "seconds": 20,
+    "structure": 1,
+    "example": 2,
+    "duration": 2,
+    "score": 83
+   }
+  },
+  {
+   "seconds": 90,
+   "duration": 90,
+   "structure": 2,
+   "example": 1,
+   "grade": {
+    "seconds": 90,
+    "structure": 2,
+    "example": 1,
+    "duration": 2,
+    "score": 83
+   }
+  },
+  {
+   "seconds": 90.4,
+   "duration": 90,
+   "structure": 2,
+   "example": 2,
+   "grade": {
+    "seconds": 90,
+    "structure": 2,
+    "example": 2,
+    "duration": 2,
+    "score": 100
+   }
+  },
+  {
+   "seconds": 125,
+   "duration": 120,
+   "structure": 1,
+   "example": 1,
+   "grade": {
+    "seconds": 125,
+    "structure": 1,
+    "example": 1,
+    "duration": 1,
+    "score": 50
+   }
+  },
+  {
+   "seconds": 45,
+   "duration": 60,
+   "structure": 3,
+   "example": 1,
+   "error": "Notez la structure et l'exemple de votre réponse."
+  },
+  {
+   "seconds": 45,
+   "duration": 60,
+   "structure": true,
+   "example": 1,
+   "error": "Notez la structure et l'exemple de votre réponse."
+  },
+  {
+   "seconds": -1,
+   "duration": 60,
+   "structure": 1,
+   "example": 1,
+   "error": "Notez la structure et l'exemple de votre réponse."
+  },
+  {
+   "seconds": 3601,
+   "duration": 60,
+   "structure": 1,
+   "example": 1,
+   "error": "Notez la structure et l'exemple de votre réponse."
+  }
+ ],
  "puzzles_content": {
   "puzzles": [
    {

@@ -12,6 +12,7 @@ import 'package:jobboard_revision/logic/circuit_drawing.dart';
 import 'package:jobboard_revision/logic/circuit_editor.dart';
 import 'package:jobboard_revision/revision_state.dart';
 import 'package:jobboard_revision/screens/circuit_screen.dart';
+import 'package:jobboard_revision/screens/oral_screen.dart';
 import 'package:jobboard_revision/screens/puzzle_screen.dart';
 import 'package:jobboard_revision/screens/devops_screen.dart';
 import 'package:jobboard_revision/logic/sql_sandbox.dart';
@@ -21,6 +22,7 @@ import 'package:jobboard_revision/screens/ladder_screen.dart';
 import 'package:jobboard_revision/screens/troubleshooting_screen.dart';
 import 'package:jobboard_revision/services/api_client.dart';
 import 'package:jobboard_revision/services/revision_store.dart';
+import 'package:jobboard_revision/services/speech.dart';
 
 import 'support/sample_data.dart';
 
@@ -36,6 +38,17 @@ final devopsContent = Map<String, dynamic>.from(sharedCases['devops_content'] as
 final sqlContent = Map<String, dynamic>.from(sharedCases['sql_content'] as Map);
 final circuitContent = Map<String, dynamic>.from(sharedCases['circuit_content'] as Map);
 final puzzlesContent = Map<String, dynamic>.from(sharedCases['puzzles_content'] as Map);
+
+/// Moteur vocal absent : la lecture rend la main aussitôt, comme sur un téléphone sans voix.
+class SilentSpeech extends Speech {
+  const SilentSpeech();
+
+  @override
+  Future<bool> speak(String pText) async => false;
+
+  @override
+  Future<void> stop() async {}
+}
 
 /// Serveur simulé : contenu des simulations, envois notés, ou serveur trop ancien.
 MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
@@ -79,6 +92,19 @@ MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
             'passed': ['selection'],
           },
           'circuit': {...circuitContent, 'xp': 20, 'passed': <String>[]},
+          'oral': {
+            'rules': sharedCases['oral_rules'],
+            'questions': {
+              for (final vMode in ['general', 'tricky', 'technical'])
+                vMode: [
+                  for (var vIndex = 1; vIndex <= 6; vIndex++)
+                    ['Question $vMode $vIndex ?', 'Conseil $vIndex'],
+                ],
+            },
+            'targets': {'tricky': 'Acme · Client final'},
+            'xp': 25,
+            'recent': [70],
+          },
           'puzzles': {
             ...puzzlesContent,
             'xp': 10,
@@ -444,6 +470,57 @@ void main() {
 
     expect(vSent, hasLength(1));
     expect(vState.puzzleProgress['level'], 2);
+  });
+
+  testWidgets("Une séance d'entretien oral se chronomètre, se note puis part au PC",
+      (pTester) async {
+    final vSent = <Object?>[];
+    final vState = await buildState(buildServer(vSent));
+    await pTester.runAsync(vState.synchronize);
+
+    await pTester.pumpWidget(MaterialApp(
+        home: OralScreen(state: vState, speech: const SilentSpeech(), random: Random(2))));
+
+    expect(find.text('Notes récentes : 70 %'), findsOneWidget);
+
+    await pTester.tap(find.text('Commencer'));
+    await pTester.pump(const Duration(milliseconds: 100));
+    await pTester.pump(const Duration(milliseconds: 100));
+
+    final vScrollable = find.byType(Scrollable).first;
+
+    for (var vPosition = 0; vPosition < 5; vPosition++) {
+      // Sans moteur vocal, le chrono démarre dès la question affichée
+      expect(find.text("J'ai terminé"), findsOneWidget);
+
+      await pTester.tap(find.text("J'ai terminé"));
+      await pTester.pump();
+      await pTester.tap(find.text('Oui').at(0));
+      await pTester.pump();
+      await pTester.tap(find.text('En partie').at(1));
+      await pTester.pump();
+      await pTester.scrollUntilVisible(find.text('Valider ma note'), 100, scrollable: vScrollable);
+      await pTester.tap(find.text('Valider ma note'));
+      await pTester.pumpAndSettle();
+
+      expect(find.textContaining('Réponse notée 50 % · 0 s, trop courte'), findsOneWidget);
+
+      if (vPosition < 4) {
+        await pTester.scrollUntilVisible(find.text('Question suivante'), 100,
+            scrollable: vScrollable);
+        await pTester.tap(find.text('Question suivante'));
+        await pTester.pump(const Duration(milliseconds: 100));
+        await pTester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    expect(find.textContaining('Séance terminée : 50 % · +25 XP'), findsOneWidget);
+    expect(vState.oralRecent, [70, 50]);
+    expect(((vState.pendingLabs.single['session'] as Map)['answers'] as List), hasLength(5));
+
+    await pTester.runAsync(vState.synchronize);
+
+    expect(((vSent.single as Map)['results'] as List).single['lab'], 'oral');
   });
 
   test("Un serveur sans simulations n'empêche pas la synchronisation", () async {

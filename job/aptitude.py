@@ -631,7 +631,8 @@ def generate_session(pCategory, pSeed):
     if pCategory not in GENERATORS:
         raise ValueError(f"Catégorie inconnue : {pCategory}")
 
-    vRandom = random.Random(f"{pCategory}-{pSeed}")
+    # Tirage reproductible des questions, sans usage cryptographique.
+    vRandom = random.Random(f"{pCategory}-{pSeed}")  # nosec B311
 
     rQuestions = [
         {"category": pCategory, **GENERATORS[pCategory](vRandom)}

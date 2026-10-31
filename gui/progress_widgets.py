@@ -275,7 +275,8 @@ class CelebrationOverlay(QWidget):
         self.setGeometry(pWindow.rect())
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        vRandom = random.Random()
+        # Position des confettis, sans usage cryptographique.
+        vRandom = random.Random()  # nosec B311
         self.confetti = [
             {
                 "x": vRandom.uniform(0, self.width()),

@@ -31,6 +31,18 @@ from job.code_puzzles import (
     replay_series,
 )
 from job.devops_levels import build_devops_overview
+from job.oral_interview import (
+    CRITERIA,
+    DURATION_RATINGS,
+    DURATIONS,
+    MIN_SECONDS,
+    MODES,
+    RATINGS,
+    SESSION_LENGTH,
+    build_oral_view,
+    build_questions,
+    record_phone_session,
+)
 from job.devops_levels import load_levels as load_devops_levels
 from job.devops_levels import mark_passed, replay_steps
 from job.docker_sim import REGISTRY
@@ -136,6 +148,7 @@ def build_labs_package(pDatabaseFile):
         },
         "sql": build_sql_package(pDatabaseFile),
         "puzzles": build_puzzles_package(pDatabaseFile),
+        "oral": build_oral_package(pDatabaseFile, datetime.now()),
         "circuit": {
             "levels": list(load_circuit_levels().values()),
             "library": build_circuit_library(),
@@ -180,6 +193,45 @@ def build_puzzles_package(pDatabaseFile):
         "streak": vProgress["streak"],
         "best_streak": vProgress["best_streak"],
         "stats": vProgress["stats"],
+    }
+
+    return rPackage
+
+
+def build_oral_rules():
+    """Retourne les règles de l'entretien oral que le téléphone applique à l'identique."""
+
+    rRules = {
+        "modes": MODES,
+        "durations": list(DURATIONS),
+        "session_length": SESSION_LENGTH,
+        "min_seconds": MIN_SECONDS,
+        "criteria": [list(vCriterion) for vCriterion in CRITERIA],
+        "ratings": {str(vValue): vLabel for vValue, vLabel in RATINGS.items()},
+        "duration_ratings": {
+            str(vValue): vLabel for vValue, vLabel in DURATION_RATINGS.items()
+        },
+    }
+
+    return rRules
+
+
+def build_oral_package(pDatabaseFile, pNow):
+    """Retourne les questions de chaque mode, les règles et les notes récentes du PC."""
+
+    vQuestions = {vMode: build_questions(pDatabaseFile, vMode, pNow) for vMode in MODES}
+    vView = build_oral_view(pDatabaseFile)
+
+    rPackage = {
+        "rules": build_oral_rules(),
+        "questions": {
+            vMode: [list(vQuestion) for vQuestion in vQuestions[vMode][0]]
+            for vMode in MODES
+        },
+        "targets": {vMode: vQuestions[vMode][1] for vMode in MODES},
+        "xp": XP_RULES["oral_interview"][1],
+        "recent": vView["recent"],
+        "count": vView["count"],
     }
 
     return rPackage
@@ -446,6 +498,16 @@ def integrate_puzzles(pDatabaseFile, pItem, pFinishedAt):
     return rXp
 
 
+def integrate_oral(pDatabaseFile, pItem, pFinishedAt):
+    """Ajoute une séance d'entretien oral du téléphone ; retourne les points gagnés."""
+
+    record_phone_session(pDatabaseFile, pItem.get("session"), pFinishedAt)
+
+    rXp = XP_RULES["oral_interview"][1]
+
+    return rXp
+
+
 INTEGRATIONS = {
     "troubleshooting": integrate_troubleshooting,
     "ladder": integrate_ladder,
@@ -454,6 +516,7 @@ INTEGRATIONS = {
     "sql": integrate_sql,
     "circuit": integrate_circuit,
     "puzzles": integrate_puzzles,
+    "oral": integrate_oral,
 }
 
 

@@ -7,6 +7,7 @@ import 'circuit_screen.dart';
 import 'devops_screen.dart';
 import 'git_screen.dart';
 import 'ladder_screen.dart';
+import 'oral_screen.dart';
 import 'puzzle_screen.dart';
 import 'sql_screen.dart';
 import 'troubleshooting_screen.dart';
@@ -36,6 +37,18 @@ class LabsScreen extends StatelessWidget {
               if (state.pendingLabs.isNotEmpty)
                 Text(
                     '${state.pendingLabs.length} partie(s) à envoyer au PC à la prochaine synchronisation.'),
+              if (state.oralRules.isNotEmpty)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.record_voice_over),
+                    title: const Text('Entretien oral'),
+                    subtitle: const Text('Questions lues à voix haute, réponse chronométrée'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(pContext).push(
+                      MaterialPageRoute<void>(builder: (_) => OralScreen(state: state)),
+                    ),
+                  ),
+                ),
               if (state.puzzles.isNotEmpty)
                 Card(
                   child: ListTile(

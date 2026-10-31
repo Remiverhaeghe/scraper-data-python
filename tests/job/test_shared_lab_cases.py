@@ -332,6 +332,7 @@ ENVELOPE = {"id": "partie-x", "finished_at": "2026-10-31T10:00:00"}
             "niveau non réussi",
         ),
         ({**ENVELOPE, "lab": "puzzles", "answers": None}, "série incomplète"),
+        ({**ENVELOPE, "lab": "oral", "session": {"mode": "x"}}, "séance illisible"),
     ],
 )
 def test_phone_results_are_refused_with_a_reason(tmp_path, pItem, pReason):
@@ -351,3 +352,31 @@ def test_too_many_phone_results_are_refused(tmp_path):
 
     with pytest.raises(ValueError):
         sync_lab_results(tmp_path / "scraper.db", [{}] * 201)
+
+
+def test_phone_oral_session_is_graded_again(tmp_path):
+    """Vérifie une séance orale du téléphone renotée par le PC, avec ses points."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vPackage = build_labs_package(vDatabaseFile)["oral"]
+
+    assert set(vPackage["questions"]) == {"general", "tricky", "technical"}
+
+    vReport = sync_lab_results(
+        vDatabaseFile,
+        [
+            {
+                **ENVELOPE,
+                "lab": "oral",
+                "session": {
+                    "mode": "general",
+                    "duration": 60,
+                    "answers": [{"seconds": 40, "structure": 2, "example": 2}] * 5,
+                },
+            }
+        ],
+    )
+
+    assert (vReport["saved"], vReport["xp"]) == (1, 25)
+    assert build_labs_package(vDatabaseFile)["oral"]["recent"] == [100]

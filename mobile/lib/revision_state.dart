@@ -634,6 +634,36 @@ class RevisionState extends ChangeNotifier {
     return rGrade;
   }
 
+  Map<String, dynamic> get oralContent =>
+      Map<String, dynamic>.from(labs['oral'] as Map? ?? const {});
+
+  Map<String, dynamic> get oralRules =>
+      Map<String, dynamic>.from(oralContent['rules'] as Map? ?? const {});
+
+  int get oralXp => (oralContent['xp'] as num? ?? 25).toInt();
+
+  /// Notes des dernières séances : celles du PC, puis celles pas encore envoyées.
+  List<int> get oralRecent => [
+        for (final vScore in oralContent['recent'] as List? ?? const []) (vScore as num).toInt(),
+        for (final vLab in pendingLabs)
+          if (vLab['lab'] == 'oral') (vLab['score'] as num).toInt(),
+      ];
+
+  /// Garde une séance d'entretien oral ; ses notes partent au PC, qui les renote.
+  Future<void> recordOral(Map<String, dynamic> pSession, int pScore) => savePreference(
+        pendingLabsPreference,
+        [
+          ...pendingLabs,
+          {
+            'id': const Uuid().v4(),
+            'lab': 'oral',
+            'session': pSession,
+            'score': pScore,
+            'finished_at': DateTime.now().toIso8601String(),
+          },
+        ],
+      );
+
   /// Garde un niveau Maven ou Docker réussi ; les étapes partent au PC, qui les rejoue.
   Future<bool> recordDevops(String pLevelId, List<Map<String, dynamic>> pSteps) async {
     final rFirst = !devopsPassed.contains(pLevelId);
