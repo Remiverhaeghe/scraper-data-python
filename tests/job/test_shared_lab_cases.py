@@ -163,3 +163,43 @@ def test_phone_sql_query_is_run_again(tmp_path):
     assert (vReport["saved"], vReport["xp"]) == (1, 15)
     assert vReport["rejected"][0]["reason"] == "niveau non réussi"
     assert "plus-cheres" in build_labs_package(vDatabaseFile)["sql"]["passed"]
+
+
+def test_phone_circuit_is_simulated_again(tmp_path):
+    """Vérifie un montage réussi compté une fois, un montage incomplet et un schéma forgé refusés."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vLevel = next(
+        vLevel
+        for vLevel in build_labs_package(vDatabaseFile)["circuit"]["levels"]
+        if vLevel["id"] == "led-resistance"
+    )
+    vSchema = {
+        "components": vLevel["solution_components"],
+        "wires": vLevel["solution_wires"],
+    }
+    vResult = {
+        "id": "circuit-1",
+        "lab": "circuit",
+        "level": "led-resistance",
+        "schema": vSchema,
+        "values": {"resistance": 470.0, "pile": 48.0},
+        "finished_at": "2026-10-31T09:00:00",
+    }
+
+    vReport = sync_lab_results(
+        vDatabaseFile,
+        [
+            vResult,
+            {**vResult, "id": "circuit-2", "values": {"resistance": 1.0}},
+            {**vResult, "id": "circuit-3", "schema": {"components": "forgé"}},
+        ],
+    )
+
+    assert (vReport["saved"], vReport["xp"]) == (1, 20)
+    assert [vItem["reason"] for vItem in vReport["rejected"]] == [
+        "niveau non réussi",
+        "Schéma illisible.",
+    ]
+    assert "led-resistance" in build_labs_package(vDatabaseFile)["circuit"]["passed"]

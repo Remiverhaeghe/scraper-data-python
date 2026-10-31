@@ -5,6 +5,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jobboard_revision/logic/circuit.dart';
+import 'package:jobboard_revision/logic/circuit_drawing.dart';
+import 'package:jobboard_revision/logic/circuit_levels.dart';
 import 'package:jobboard_revision/logic/devops.dart';
 import 'package:jobboard_revision/logic/git_levels.dart';
 import 'package:jobboard_revision/logic/git_sandbox.dart';
@@ -184,6 +187,85 @@ void main() {
         );
 
         expect(jsonDecode(jsonEncode(vRun)), equals(vCase['expected']));
+      });
+    }
+  });
+
+  final vCircuitContent = vCases['circuit_content'] as Map;
+  final vLibrary = CircuitLibrary(Map<String, dynamic>.from(vCircuitContent['library'] as Map));
+  final vCircuitLevels = {
+    for (final vLevel in vCircuitContent['levels'] as List)
+      (vLevel as Map)['id'] as String: Map<String, dynamic>.from(vLevel),
+  };
+  final vCircuitCases = vCases['circuit'] as Map;
+
+  List<Map<String, dynamic>> readComponents(Map pCase) => [
+        for (final vItem in pCase['components'] as List) Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  List<List<String>> readWires(Map pCase) => [
+        for (final vWire in pCase['wires'] as List) List<String>.from(vWire as List),
+      ];
+
+  group('Circuits', () {
+    test('Mesures écrites comme le PC', () {
+      for (final vMeasure in vCircuitCases['measures'] as List) {
+        final vValue = ((vMeasure as List)[0] as num).toDouble();
+
+        expect([formatMeasure(vValue, 'V'), formatMeasure(vValue, 'A')], vMeasure.sublist(1),
+            reason: '$vValue');
+      }
+    });
+
+    for (final vCase in vCircuitCases['levels'] as List) {
+      test((vCase as Map)['name'] as String, () {
+        final vLevel = vCircuitLevels[vCase['level']]!;
+        final vComponents = readComponents(vCase);
+        final vWires = readWires(vCase);
+        final vValues = buildValues(
+          vComponents,
+          Map<String, dynamic>.from(vCase['raw'] as Map),
+          (vLevel['values'] as Map?)?.cast<String, dynamic>(),
+          vLevel['editable'] as List? ?? const [],
+        );
+        final vRun = runCircuitLevel(vLibrary, vLevel, vComponents, vWires, vValues);
+
+        expect(vValues, equals(vCase['values']));
+        expect(jsonDecode(jsonEncode(vRun)), equals(vCase['run']));
+        expect(
+          vLibrary.renderCircuit(vComponents, vWires, vRun['result'] as Map<String, dynamic>),
+          vCase['svg'],
+        );
+      });
+    }
+
+    for (final vCase in vCircuitCases['free'] as List) {
+      test('libre : ${(vCase as Map)['name']}', () {
+        final vComponents = readComponents(vCase);
+        final vWires = readWires(vCase);
+        final vValues = buildValues(vComponents, Map<String, dynamic>.from(vCase['raw'] as Map));
+        final vCircuit = vLibrary.circuit(vComponents, vWires, vValues);
+        Map<String, dynamic>? vResult;
+        final vResults = [];
+
+        for (final vInputs in vCase['steps'] as List) {
+          vResult =
+              vCircuit.simulate(Map<String, dynamic>.from(vInputs as Map), vResult?['memory']);
+          vResults.add(jsonDecode(jsonEncode(vResult)));
+        }
+
+        expect(vValues, equals(vCase['values']));
+        expect(vResults, equals(vCase['results']));
+        expect(vLibrary.renderCircuit(vComponents, vWires, null, vCase['name'] as String),
+            vCase['plain']);
+        expect(vLibrary.renderCircuit(vComponents, vWires, vResult), vCase['svg']);
+        expect(
+          [
+            for (final (vId, vType, vLabel) in getControls(vLibrary, vComponents))
+              [vId, vType, vLabel],
+          ],
+          vCase['controls'],
+        );
       });
     }
   });

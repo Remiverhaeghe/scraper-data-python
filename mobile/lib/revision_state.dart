@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import 'logic/devops.dart';
+import 'logic/circuit_drawing.dart';
 import 'logic/sql_levels.dart';
 import 'logic/sql_sandbox.dart';
 import 'logic/exam.dart';
@@ -93,6 +94,8 @@ const devopsSessionsPreference = 'devops_sessions';
 const sqlDialectPreference = 'sql_dialect';
 const sqlPassedPreference = 'sql_passed';
 const sqlQueriesPreference = 'sql_queries';
+const circuitPassedPreference = 'circuit_passed';
+const circuitDraftsPreference = 'circuit_drafts';
 
 /// Auto-évaluation : grille reçue du PC et niveaux saisis pas encore envoyés
 const skillGridPreference = 'skill_grid';
@@ -378,7 +381,8 @@ class RevisionState extends ChangeNotifier {
   }
 
   List<Map<String, dynamic>> get sqlLevelList => [
-        for (final vItem in sqlPackage['levels'] as List? ?? const []) Map<String, dynamic>.from(vItem as Map),
+        for (final vItem in sqlPackage['levels'] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
       ];
 
   int get sqlXp => (sqlPackage['xp'] as num? ?? 15).toInt();
@@ -397,11 +401,15 @@ class RevisionState extends ChangeNotifier {
 
   /// Dernière requête écrite pour un niveau, ou son point de départ.
   String sqlQuery(Map<String, dynamic> pLevel) =>
-      (preferences[sqlQueriesPreference] as Map?)?[pLevel['id']] as String? ?? pLevel['starter'] as String;
+      (preferences[sqlQueriesPreference] as Map?)?[pLevel['id']] as String? ??
+      pLevel['starter'] as String;
 
   Future<void> saveSqlQuery(String pLevelId, String pQuery) => savePreference(
         sqlQueriesPreference,
-        {...Map<String, dynamic>.from(preferences[sqlQueriesPreference] as Map? ?? const {}), pLevelId: pQuery},
+        {
+          ...Map<String, dynamic>.from(preferences[sqlQueriesPreference] as Map? ?? const {}),
+          pLevelId: pQuery
+        },
       );
 
   /// Garde un niveau SQL réussi ; la requête part au PC, qui la réexécute.
@@ -419,6 +427,82 @@ class RevisionState extends ChangeNotifier {
           'level': pLevelId,
           'query': pQuery,
           'dialect': pDialect,
+          'finished_at': DateTime.now().toIso8601String(),
+        },
+      ],
+    };
+    await store.savePreferences(preferences);
+    notifyListeners();
+
+    return rFirst;
+  }
+
+  Map<String, dynamic> get circuitContent =>
+      Map<String, dynamic>.from(labs['circuit'] as Map? ?? const {});
+
+  CircuitLibrary? _circuitLibrary;
+  Object? _circuitSource;
+
+  /// Grille et symboles des schémas, refaits seulement quand le contenu reçu change.
+  CircuitLibrary? get circuitLibrary {
+    final vLibrary = circuitContent['library'];
+
+    if (vLibrary == null) {
+      return null;
+    }
+
+    if (!identical(vLibrary, _circuitSource)) {
+      _circuitSource = vLibrary;
+      _circuitLibrary = CircuitLibrary(Map<String, dynamic>.from(vLibrary as Map));
+    }
+
+    return _circuitLibrary;
+  }
+
+  List<Map<String, dynamic>> get circuitLevels => [
+        for (final vItem in circuitContent['levels'] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  int get circuitXp => (circuitContent['xp'] as num? ?? 20).toInt();
+
+  /// Montages réussis, sur le PC ou sur le téléphone.
+  Set<String> get circuitPassed => {
+        for (final vId in circuitContent['passed'] as List? ?? const []) vId as String,
+        for (final vId in preferences[circuitPassedPreference] as List? ?? const []) vId as String,
+      };
+
+  /// Schéma en cours d'un niveau, ou du mode libre (clé vide) : composants, fils, valeurs saisies.
+  Map<String, dynamic>? circuitDraft(String pKey) {
+    final vDraft = (preferences[circuitDraftsPreference] as Map?)?[pKey];
+
+    return vDraft == null ? null : jsonDecode(jsonEncode(vDraft)) as Map<String, dynamic>;
+  }
+
+  Future<void> saveCircuitDraft(String pKey, Map<String, dynamic> pDraft) => savePreference(
+        circuitDraftsPreference,
+        {
+          ...Map<String, dynamic>.from(preferences[circuitDraftsPreference] as Map? ?? const {}),
+          pKey: pDraft
+        },
+      );
+
+  /// Garde un montage réussi ; le schéma part au PC, qui le resimule.
+  Future<bool> recordCircuit(
+      String pLevelId, Map<String, dynamic> pSchema, Map<String, double> pValues) async {
+    final rFirst = !circuitPassed.contains(pLevelId);
+
+    preferences = {
+      ...preferences,
+      circuitPassedPreference: [...circuitPassed, if (rFirst) pLevelId],
+      pendingLabsPreference: [
+        ...pendingLabs,
+        {
+          'id': const Uuid().v4(),
+          'lab': 'circuit',
+          'level': pLevelId,
+          'schema': jsonDecode(jsonEncode(pSchema)),
+          'values': pValues,
           'finished_at': DateTime.now().toIso8601String(),
         },
       ],

@@ -313,6 +313,7 @@ def build_editor_config(pTypes, pColumns, pRows, pLimits=None):
             "corridorOffset": CORRIDOR_OFFSET,
             "labelGap": LABEL_GAP,
             "labelLineHeight": LABEL_LINE_HEIGHT,
+            "labelWidth": LABEL_WIDTH,
             "wireExit": WIRE_EXIT,
             "laneStep": LANE_STEP,
             "laneCount": LANE_COUNT,

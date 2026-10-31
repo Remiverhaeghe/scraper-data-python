@@ -430,7 +430,7 @@ Documents/JobBoard/
 - [x] Application installable sur l'écran d'accueil (manifeste web et icône)
 - [x] Application mobile Flutter de révision hors ligne (`mobile/`) : QCM, calculs, remises en ordre, associations, schémas et guides, répétition espacée, examen blanc chronométré, synchronisation automatique, rappel quotidien, icône et signature propres
 - [x] Correction et répétition espacée vérifiées des deux côtés par des cas communs (`tests/fixtures/shared_quiz_cases.json`), application mobile testée par la CI
-- [x] Pannes à résoudre, simulateur d'automate, bac à sable Git, bac à sable SQL (SQLite embarqué), Maven et Docker jouables hors ligne sur le téléphone : contenu reçu du PC, simulateurs Dart vérifiés par les cas communs de `tests/fixtures/shared_lab_cases.json` (à régénérer par `python -m tools.lab_cases` après une modification du simulateur ou des scénarios), parties rejouées par le PC
+- [x] Pannes à résoudre, simulateur d'automate, schémas électriques, bac à sable Git, bac à sable SQL (SQLite embarqué), Maven et Docker jouables hors ligne sur le téléphone : contenu reçu du PC, simulateurs Dart vérifiés par les cas communs de `tests/fixtures/shared_lab_cases.json` (à régénérer par `python -m tools.lab_cases` après une modification du simulateur ou des scénarios), parties rejouées par le PC
 
 ### Hébergement et sécurité
 
@@ -636,6 +636,8 @@ Page Schémas électriques du bureau et du web, pour câbler puis manœuvrer des
 - [x] Neuf montages guidés vérifiés par étapes : lampe, deux lampes en parallèle, va-et-vient, télérupteur, démarrage moteur avec auto-maintien, LED et sa résistance, diviseur de tension, mesure de courant, commande d'une lampe 230 V par un relais en 12 V
 - [x] Simulation manœuvrable : fils sous tension en rouge, état de chaque composant sous son nom, un bouton par commande
 - [x] Mode libre : tous les composants, valeurs réglables, schémas enregistrés sous un nom et exportables en SVG
+- [x] Mesures lisibles : microampères en µA, fuites du calcul sous 1 µA affichées nulles
+- [x] Jouable hors ligne sur le téléphone : schéma construit au toucher sur le même dessin, zoomable, montages vérifiés puis resimulés par le PC
 
 ### Maven et Docker
 

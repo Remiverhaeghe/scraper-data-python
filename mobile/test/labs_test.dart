@@ -7,7 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:jobboard_revision/logic/circuit_drawing.dart';
+import 'package:jobboard_revision/logic/circuit_editor.dart';
 import 'package:jobboard_revision/revision_state.dart';
+import 'package:jobboard_revision/screens/circuit_screen.dart';
 import 'package:jobboard_revision/screens/devops_screen.dart';
 import 'package:jobboard_revision/logic/sql_sandbox.dart';
 import 'package:jobboard_revision/screens/git_screen.dart';
@@ -29,6 +32,7 @@ final sharedCases =
 final gitLevels = sharedCases['git_levels'] as List;
 final devopsContent = Map<String, dynamic>.from(sharedCases['devops_content'] as Map);
 final sqlContent = Map<String, dynamic>.from(sharedCases['sql_content'] as Map);
+final circuitContent = Map<String, dynamic>.from(sharedCases['circuit_content'] as Map);
 
 /// Serveur simulé : contenu des simulations, envois notés, ou serveur trop ancien.
 MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
@@ -71,6 +75,7 @@ MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
             'dialect': 'sqlserver',
             'passed': ['selection'],
           },
+          'circuit': {...circuitContent, 'xp': 20, 'passed': <String>[]},
         })),
         200,
         headers: {'content-type': 'application/json; charset=utf-8'},
@@ -263,6 +268,109 @@ void main() {
     );
 
     expect(vResult['error'], 'Requête arrêtée au bout de 2 secondes : vérifiez les jointures.');
+  });
+
+  test("L'éditeur de schéma se manie au toucher, comme sur le PC", () {
+    final vLibrary = CircuitLibrary(Map<String, dynamic>.from(circuitContent['library'] as Map));
+    final vDraft = CircuitDraft(vLibrary, {'alimentation': 1, 'lampe_bornes': 2});
+
+    (num, num) port(String pId, String pPort) {
+      final vItem = vDraft.components.firstWhere((pItem) => pItem['id'] == pId);
+
+      return vLibrary.portPosition(
+        vItem['type'] as String,
+        pPort,
+        vLibrary.origin(vItem['x'] as int, vItem['y'] as int),
+      );
+    }
+
+    void tapPort(String pId, String pPort) {
+      final (vX, vY) = port(pId, pPort);
+      vDraft.tap(vX.toDouble(), vY.toDouble());
+    }
+
+    expect([vDraft.add('alimentation'), vDraft.add('lampe_bornes'), vDraft.add('lampe_bornes')],
+        ['alimentation', 'lampe_bornes-1', 'lampe_bornes-2']);
+    expect(vDraft.add('alimentation'), isNull);
+    expect([for (final vItem in vDraft.components) (vItem['x'], vItem['y'])],
+        [(0, 0), (0, 1), (0, 2)]);
+
+    tapPort('alimentation', 'L');
+    expect(vDraft.pending, ('alimentation', 'L'));
+    tapPort('lampe_bornes-1', '1');
+    tapPort('lampe_bornes-1', '1');
+    tapPort('alimentation', 'L');
+    expect(vDraft.wires, [
+      ['alimentation', 'L', 'lampe_bornes-1', '1'],
+    ]);
+    expect(vDraft.pending, isNull);
+
+    // Un fil ne se tire pas entre deux bornes d'un même composant
+    tapPort('alimentation', 'L');
+    tapPort('alimentation', 'N');
+    expect(vDraft.pending, ('alimentation', 'N'));
+    tapPort('alimentation', 'N');
+    expect(vDraft.pending, isNull);
+
+    final vMiddle = port('lampe_bornes-2', '1');
+    final vCell = vLibrary.origin(2, 3);
+
+    vDraft.tap(vMiddle.$1 + 60, vMiddle.$2 + 30);
+    expect(vDraft.selected, 'lampe_bornes-2');
+    vDraft.tap(vCell.$1 + 60.0, vCell.$2 + 60.0);
+    expect(
+        vDraft.components.last, {'id': 'lampe_bornes-2', 'type': 'lampe_bornes', 'x': 2, 'y': 3});
+    expect(vDraft.add('lampe_bornes'), isNull);
+
+    final vRoute = vLibrary.wirePath(
+      ('alimentation', 'L', vLibrary.origin(0, 0)),
+      ('lampe_bornes', '1', vLibrary.origin(0, 1)),
+      0,
+    );
+    final vPoint = RegExp(r'V([0-9.]+) H([0-9.]+)').firstMatch(vRoute)!;
+
+    expect(
+      vDraft.tap(double.parse(vPoint.group(2)!), double.parse(vPoint.group(1)!) + 20),
+      startsWith('Fil retiré'),
+    );
+    expect(vDraft.wires, isEmpty);
+
+    vDraft.remove('lampe_bornes-1');
+    expect(vDraft.add('lampe_bornes'), 'lampe_bornes-1');
+  });
+
+  testWidgets('Un montage électrique se vérifie, se manœuvre puis part au PC', (pTester) async {
+    final vState = await buildState(buildServer([]));
+    await pTester.runAsync(vState.synchronize);
+
+    final vLevel = vState.circuitLevels.firstWhere((pLevel) => pLevel['id'] == 'lampe-simple');
+
+    await pTester.pumpWidget(MaterialApp(home: CircuitScreen(state: vState, level: vLevel)));
+    await pTester.scrollUntilVisible(find.text('Voir la solution'), 200,
+        scrollable: find.byType(Scrollable).first);
+    await pTester.tap(find.text('Voir la solution'));
+    await pTester.pump();
+    await pTester.tap(find.text('Vérifier'));
+    await pTester.runAsync(() => pTester.pumpAndSettle());
+
+    expect(vState.circuitPassed, {'lampe-simple'});
+
+    await pTester.scrollUntilVisible(find.textContaining('Montage réussi · +20 XP'), 200,
+        scrollable: find.byType(Scrollable).first);
+
+    final vSent = vState.pendingLabs.single;
+
+    expect(vSent['lab'], 'circuit');
+    expect((vSent['schema'] as Map)['wires'], hasLength(4));
+
+    final vSwitch = find.textContaining('Interrupteur de commande : fermé');
+
+    await pTester.scrollUntilVisible(vSwitch, 200, scrollable: find.byType(Scrollable).first);
+    await pTester.tap(vSwitch);
+    await pTester.pump();
+
+    expect(find.textContaining('Interrupteur de commande : ouvert'), findsOneWidget);
+    expect(vState.circuitDraft('lampe-simple')?['schema'], isNotNull);
   });
 
   test("Un serveur sans simulations n'empêche pas la synchronisation", () async {

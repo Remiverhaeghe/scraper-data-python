@@ -96,6 +96,8 @@ LIVE_VOLTS = 1.0
 FULL_RATIO = 0.6
 DIM_RATIO = 0.1
 MAX_ITERATIONS = 40
+# En deçà, le courant n'est que la fuite du calcul (GMIN) : la mesure s'affiche nulle
+MEASURE_FLOOR = 1e-6
 
 
 def get_value(pType, pId, pValues):
@@ -183,18 +185,26 @@ def solve(pMatrix, pVector):
 
 
 def format_measure(pValue, pUnit):
-    """Retourne une mesure lisible en français : 230 V, 3,33 V, 14,7 mA."""
+    """Retourne une mesure lisible en français : 230 V, 3,33 V, 14,7 mA, 8 µA."""
 
     vValue = abs(pValue)
 
-    if 0.001 <= vValue < 1:
+    # Arrondi avant le choix de l'unité : 0,9996 A s'écrit 1 A, pas 1e+03 mA
+    if vValue < 100:
+        vValue = float(f"{vValue:.3g}")
+
+    if vValue < MEASURE_FLOOR:
+        vText, vUnit = "0", pUnit
+    elif vValue < 0.001:
+        vText, vUnit = f"{vValue * 1e6:.3g}", "µ" + pUnit
+    elif vValue < 1:
         vText, vUnit = f"{vValue * 1000:.3g}", "m" + pUnit
     elif vValue >= 100:
         vText, vUnit = f"{vValue:.0f}", pUnit
     else:
         vText, vUnit = f"{vValue:.3g}", pUnit
 
-    rText = f"{'-' if pValue < 0 and vValue >= 0.001 else ''}{vText} {vUnit}".replace(
+    rText = f"{'-' if pValue < 0 and vText != '0' else ''}{vText} {vUnit}".replace(
         ".", ","
     )
 

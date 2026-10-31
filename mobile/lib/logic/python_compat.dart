@@ -34,11 +34,62 @@ String escapeHtml(String pText) => pText
     .replaceAll("'", '&#x27;');
 
 /// Écrit un nombre comme le format « g » de Python : 2.0 donne 2, 0.5 donne 0.5.
-String formatG(num pValue) {
-  var rText = pValue.toDouble().toStringAsPrecision(6);
+String formatG(num pValue) => formatGeneral(pValue, 6);
 
-  if (rText.contains('.') && !rText.contains('e')) {
-    rText = rText.replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
+/// Écrit un nombre comme le format « .Ng » de Python : arrondi au pair, 1e-09.
+String formatGeneral(num pValue, int pPrecision) {
+  final vValue = pValue.toDouble();
+
+  if (vValue == 0) {
+    return vValue.isNegative ? '-0' : '0';
+  }
+
+  // 21 chiffres exacts suffisent à reconnaître une moitié exacte, arrondie au pair
+  final vText = vValue.abs().toStringAsExponential(20);
+  final vMark = vText.indexOf('e');
+  final vAll = vText.substring(0, vMark).replaceFirst('.', '');
+  var vExponent = int.parse(vText.substring(vMark + 1));
+  final vDigits = [for (final vCode in vAll.substring(0, pPrecision).codeUnits) vCode - 48];
+  final vRest = vAll.substring(pPrecision);
+  final vUp = vRest.compareTo('5'.padRight(vRest.length, '0')) > 0 ||
+      (vRest.startsWith('5') &&
+          !vRest.substring(1).contains(RegExp('[1-9]')) &&
+          vDigits.last.isOdd);
+
+  if (vUp) {
+    var vIndex = pPrecision - 1;
+
+    while (vIndex >= 0 && vDigits[vIndex] == 9) {
+      vDigits[vIndex] = 0;
+      vIndex -= 1;
+    }
+
+    if (vIndex < 0) {
+      vDigits.insert(0, 1);
+      vDigits.removeLast();
+      vExponent += 1;
+    } else {
+      vDigits[vIndex] += 1;
+    }
+  }
+
+  final vMantissa = vDigits.join();
+  final vSign = vValue < 0 ? '-' : '';
+  String rText;
+
+  if (vExponent >= -4 && vExponent < pPrecision) {
+    final vInteger = vExponent >= 0 ? vMantissa.substring(0, vExponent + 1) : '0';
+    final vFraction = (vExponent >= 0
+            ? vMantissa.substring(vExponent + 1)
+            : '${'0' * (-vExponent - 1)}$vMantissa')
+        .replaceFirst(RegExp(r'0+$'), '');
+
+    rText = '$vSign$vInteger${vFraction.isEmpty ? '' : '.$vFraction'}';
+  } else {
+    final vFraction = vMantissa.substring(1).replaceFirst(RegExp(r'0+$'), '');
+
+    rText = '$vSign${vMantissa[0]}${vFraction.isEmpty ? '' : '.$vFraction'}'
+        'e${vExponent < 0 ? '-' : '+'}${vExponent.abs().toString().padLeft(2, '0')}';
   }
 
   return rText;

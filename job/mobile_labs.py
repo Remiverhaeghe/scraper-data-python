@@ -9,6 +9,16 @@ partie avec le simulateur de référence, puis l'enregistre comme sur le bureau.
 from dataclasses import asdict
 from datetime import datetime
 
+from job.circuit import SIMULATED_TYPES
+from job.circuit_levels import (
+    FREE_LIMITS,
+    build_circuit_overview,
+    build_values,
+    read_schema,
+)
+from job.circuit_levels import load_levels as load_circuit_levels
+from job.circuit_levels import run_level as run_circuit_level
+from job.circuit_levels import save_attempt as save_circuit_attempt
 from job.devops_levels import build_devops_overview
 from job.devops_levels import load_levels as load_devops_levels
 from job.devops_levels import mark_passed, replay_steps
@@ -20,6 +30,8 @@ from job.ladder_game import build_ladder_overview, load_levels, run_level
 from job.ladder_game import save_attempt as save_ladder_attempt
 from job.maven_sim import CENTRAL
 from job.progress import TROUBLESHOOTING_XP_PER_TEN, XP_RULES
+from job.schema_building import MAX_ANSWER_COMPONENTS, MAX_ANSWER_WIRES
+from job.schema_drawing import GRID_COLUMNS, GRID_ROWS, build_editor_config
 from job.sql_levels import build_schema, build_sql_overview
 from job.sql_levels import load_levels as load_sql_levels
 from job.sql_levels import run_level as run_sql_level
@@ -112,9 +124,31 @@ def build_labs_package(pDatabaseFile):
             ],
         },
         "sql": build_sql_package(pDatabaseFile),
+        "circuit": {
+            "levels": list(load_circuit_levels().values()),
+            "library": build_circuit_library(),
+            "xp": XP_RULES["circuit_level"][1],
+            "passed": [
+                vRow["id"]
+                for vRow in build_circuit_overview(pDatabaseFile)["rows"]
+                if vRow["passed"]
+            ],
+        },
     }
 
     return rPackage
+
+
+def build_circuit_library():
+    """Retourne la grille, les symboles et la palette libre de l'éditeur de circuits."""
+
+    rLibrary = {
+        **build_editor_config(SIMULATED_TYPES, GRID_COLUMNS, GRID_ROWS, FREE_LIMITS),
+        "max_components": MAX_ANSWER_COMPONENTS,
+        "max_wires": MAX_ANSWER_WIRES,
+    }
+
+    return rLibrary
 
 
 def build_sql_rules():
@@ -317,12 +351,52 @@ def integrate_sql(pDatabaseFile, pItem, pFinishedAt):
     return rXp
 
 
+def integrate_circuit(pDatabaseFile, pItem, pFinishedAt):
+    """Resimule un montage électrique du téléphone ; retourne les points gagnés."""
+
+    vLevel = load_circuit_levels().get(pItem.get("level"))
+    vValues = pItem.get("values")
+
+    if vLevel is None:
+        raise ValueError("simulation ou niveau inconnu")
+
+    try:
+        vComponents, vWires = read_schema(pItem.get("schema"), vLevel["palette"])
+
+    except (TypeError, KeyError, AttributeError) as vError:
+        raise ValueError("schéma illisible") from vError
+
+    vValues = build_values(
+        vComponents,
+        vValues if isinstance(vValues, dict) else {},
+        vLevel.get("values"),
+        vLevel.get("editable", []),
+    )
+
+    if not run_circuit_level(vLevel, vComponents, vWires, vValues)["passed"]:
+        raise ValueError("niveau non réussi")
+
+    vFirst = save_circuit_attempt(
+        pDatabaseFile,
+        vLevel["id"],
+        {"components": vComponents, "wires": vWires},
+        vValues,
+        True,
+        pFinishedAt,
+    )
+
+    rXp = XP_RULES["circuit_level"][1] if vFirst else 0
+
+    return rXp
+
+
 INTEGRATIONS = {
     "troubleshooting": integrate_troubleshooting,
     "ladder": integrate_ladder,
     "git": integrate_git,
     "devops": integrate_devops,
     "sql": integrate_sql,
+    "circuit": integrate_circuit,
 }
 
 

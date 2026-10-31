@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../revision_state.dart';
+import 'circuit_screen.dart';
 import 'devops_screen.dart';
 import 'git_screen.dart';
 import 'ladder_screen.dart';
@@ -24,7 +25,8 @@ class LabsScreen extends StatelessWidget {
             children: [
               if (state.troubleshootingScenarios.isEmpty &&
                   state.ladderLevels.isEmpty &&
-                  state.gitLevels.isEmpty)
+                  state.gitLevels.isEmpty &&
+                  state.circuitLevels.isEmpty)
                 const Text(
                   'Synchronisez une fois avec le PC pour télécharger les simulations : '
                   'elles se jouent ensuite sans réseau.',
@@ -85,6 +87,20 @@ class LabsScreen extends StatelessWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(pContext).push(
                       MaterialPageRoute<void>(builder: (_) => DevopsListScreen(state: state)),
+                    ),
+                  ),
+                ),
+              if (state.circuitLevels.isNotEmpty && state.circuitLibrary != null)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.electrical_services),
+                    title: const Text('Schémas électriques'),
+                    subtitle: Text(
+                      '${state.circuitPassed.length} / ${state.circuitLevels.length} montages réussis, et le mode libre',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(pContext).push(
+                      MaterialPageRoute<void>(builder: (_) => CircuitListScreen(state: state)),
                     ),
                   ),
                 ),

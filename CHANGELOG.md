@@ -5,10 +5,16 @@ dans l'historique git.
 
 ## Non publié
 
+### Schémas électriques
+- Mesures lisibles : microampères en µA, arrondi avant le choix de l'unité, fuites
+  du calcul sous 1 µA affichées nulles
+
 ### Application mobile 1.9.0
 - Simulations jouables hors ligne, contenu reçu du PC : pannes à résoudre, et
   simulateur d'automate (ladder dessiné en direct, scénario de test et
-  chronogramme, machine pilotée au doigt), bac à sable Git (32 niveaux, fichiers,
+  chronogramme, machine pilotée au doigt), schémas électriques (schéma construit
+  au toucher sur le dessin du PC, zoomable, montages vérifiés par étapes, mode
+  libre, commandes manœuvrées), bac à sable Git (32 niveaux, fichiers,
   remise et conflits, graphes du dépôt, de l'objectif et du serveur), bac à
   sable SQL (SQLite embarqué, dialectes MySQL et SQL Server, requête coupée à
   2 secondes), Maven et
