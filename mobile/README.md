@@ -223,7 +223,7 @@ mobile/
 │   │   └── sql_screen.dart       # SQL : dialecte, niveaux, requête et tableaux de résultats
 │   └── widgets/
 │       ├── celebration.dart      # Confettis et carte d'un niveau gagné ou d'un record
-│       ├── game_card.dart        # Niveau, série et quêtes reçus du PC, accès au jeu
+│       ├── game_card.dart        # Mascotte, niveau, série et quêtes reçus du PC, accès au jeu
 │       ├── question_input.dart   # Saisie selon le type de question
 │       └── question_parts.dart   # Code, schéma SVG plein écran et résultat corrigé
 └── test/

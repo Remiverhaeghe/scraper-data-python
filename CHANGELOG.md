@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Mascotte
+- Boulon, un petit robot de maintenance en SVG, sur l'accueil du bureau, le
+  tableau de bord web et la carte de jeu du téléphone : content, concentré,
+  endormi ou fier selon la progression ; il salue selon l'heure, commente les
+  quêtes du jour, fête un niveau ou un trophée et s'endort après trois jours
+  d'absence, sans reproche ; phrases écrites à l'avance, masqué si le jeu est
+  désactivé sur le bureau
+
 ### Jeu de négociation salariale
 - Sur la fiche de chaque offre (bureau, web) : un recruteur à règles, avec un
   budget plafond qu'il ne dit pas, des montants en brut annuel tirés du marché de

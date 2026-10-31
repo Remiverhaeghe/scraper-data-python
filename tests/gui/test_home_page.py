@@ -4,9 +4,11 @@ from datetime import datetime
 
 import pandas as pd
 
+from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QPushButton
 
 from gui.home_page import HomePage, describe_activity
+from gui.progress_widgets import GAME_MODE_SETTING
 from job.statistics import CHART_DAYS, load_statistics
 from gui.theme import COLORS
 from scraper.history import HistoryEntry
@@ -257,3 +259,18 @@ def test_withdrawn_card_is_shown_only_with_offers(qt_application, tmp_path):
 
     assert not vPage.withdrawn_card.isHidden()
     assert vPage.withdrawn_layout.count() == 1
+
+
+def test_mascot_greets_unless_the_game_is_off(qt_application, tmp_path):
+    """Vérifie la mascotte du bandeau, remplacée par les icônes sans jeu."""
+
+    vPage = HomePage(build_database(tmp_path))
+    vPage.refresh()
+
+    assert not vPage.mascot.isHidden() and vPage.banner_icons.isHidden()
+    assert vPage.mascot_bubble.text()
+
+    QSettings().setValue(GAME_MODE_SETTING, "off")
+    vPage.refresh()
+
+    assert vPage.mascot.isHidden() and not vPage.banner_icons.isHidden()

@@ -307,6 +307,7 @@ Documents/JobBoard/
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine
 - [x] 44 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
+- [x] Mascotte Boulon, robot de maintenance dessiné en SVG : content, concentré, endormi ou fier selon la progression, phrases écrites à l'avance qui saluent, commentent les quêtes du jour et fêtent les réussites, endormie sans reproche après trois jours d'absence (accueil du bureau, tableau de bord web, carte de jeu du téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
@@ -740,6 +741,7 @@ scraper-data-python/
 │   ├── profile.py                             # Profil du candidat : compétences, expériences, CV
 │   ├── progress.py                            # Points, niveaux, série et quêtes, calculés depuis l'activité
 │   ├── achievements.py                        # Trophées et carte joueur, déduits de l'activité
+│   ├── mascot.py                              # Mascotte : dessin, humeur et phrase du jour
 │   ├── aptitude.py                            # Tests de recrutement : questions générées et scores
 │   ├── troubleshooting.py                     # Pannes à résoudre : partie rejouée, score
 │   ├── ladder.py                              # Langage du simulateur d'automate et dessin ladder
@@ -1351,6 +1353,7 @@ scraper-data-python/
 │   │   ├── test_quiz.py                       # Teste la révision et le contenu des questions
 │   │   ├── test_progress.py                   # Teste les points, niveaux, série et quêtes
 │   │   ├── test_achievements.py               # Teste les trophées, cachés compris, et la carte joueur
+│   │   ├── test_mascot.py                     # Teste l'humeur, la phrase et le dessin de la mascotte
 │   │   ├── test_aptitude.py                   # Teste les questions générées, la correction et les scores
 │   │   ├── test_troubleshooting.py            # Teste les scénarios, la consignation et le score
 │   │   ├── test_ladder.py                     # Teste le langage, le dessin, les niveaux et les erreurs classiques

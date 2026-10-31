@@ -4,6 +4,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
+from markupsafe import Markup
 
 from job.presentation import (
     CHART_PALETTE,
@@ -11,6 +12,7 @@ from job.presentation import (
     STATUS_LABELS,
     describe_execution,
 )
+from job.progress import build_progress
 from job.schedule import request_immediate_run
 from job.setup_checklist import build_setup_checklist
 from job.statistics import (
@@ -37,6 +39,7 @@ def show_dashboard(
     """Affiche le tableau de bord : indicateurs, graphique et activité récente."""
 
     vStatistics = load_statistics(pDatabaseFile)
+    vMascot = build_progress(pDatabaseFile)["mascot"]
 
     rResponse = templates.TemplateResponse(
         request,
@@ -44,6 +47,11 @@ def show_dashboard(
         {
             "active_page": "dashboard",
             "statistics": vStatistics,
+            "mascot": {
+                **vMascot,
+                # Dessin produit par job/mascot.py, sans aucune saisie : HTML sûr.
+                "svg": Markup(vMascot["svg"]),  # nosec B704
+            },
             "checklist": build_setup_checklist(pDatabaseFile),
             "ready_sources": count_ready_sources(),
             "new_offer_days": vStatistics["new_offer_days"],

@@ -57,6 +57,12 @@ ApiClient serveGame(int pLevel) {
                 'xp': 20
               },
             ],
+            'mascot': {
+              'mood': 'focused',
+              'text': "Plus que 6 pour « Réviser 10 questions ». On s'y met ?",
+              'svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">'
+                  '<rect width="120" height="120" fill="#f59e0b"/></svg>',
+            },
             'achievements': [
               {'title': 'Premier pas', 'unlocked': true, 'unlocked_on': '2026-10-30'},
               {'title': 'Lancé', 'unlocked': false, 'unlocked_on': null},
@@ -120,6 +126,7 @@ void main() {
     expect(find.text('Technicien'), findsOneWidget);
     expect(find.text('Trophées : 1 / 2'), findsOneWidget);
     expect(find.text('Premier pas'), findsOneWidget);
+    expect(find.textContaining('Plus que 6 pour'), findsOneWidget);
   });
 
   testWidgets('Une partie : bonne réponse, fin du temps et record fêté', (pTester) async {

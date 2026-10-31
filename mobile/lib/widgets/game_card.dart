@@ -2,6 +2,7 @@
 // jour et accès au jeu « Contre la montre ».
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../revision_state.dart';
 import '../screens/time_attack_screen.dart';
@@ -11,6 +12,18 @@ class GameCard extends StatelessWidget {
   const GameCard({super.key, required this.state});
 
   final RevisionState state;
+
+  /// Mascotte : humeur et phrase choisies par le PC à la synchronisation.
+  Widget buildMascot(BuildContext pContext, Map pMascot) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          children: [
+            SvgPicture.string('${pMascot['svg']}', width: 64, height: 64),
+            const SizedBox(width: 12),
+            Expanded(child: Text('${pMascot['text']}')),
+          ],
+        ),
+      );
 
   Widget buildLevel(BuildContext pContext, Map<String, dynamic> pGame) {
     final vTheme = Theme.of(pContext);
@@ -153,6 +166,7 @@ class GameCard extends StatelessWidget {
             if (vGame == null)
               const Text('Votre niveau et vos quêtes arrivent à la prochaine synchronisation.')
             else ...[
+              if (vGame['mascot'] case final Map vMascot) buildMascot(context, vMascot),
               buildLevel(context, vGame),
               buildTrophies(context, vGame),
               const SizedBox(height: 8),

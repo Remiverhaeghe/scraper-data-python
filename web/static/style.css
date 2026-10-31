@@ -2993,3 +2993,26 @@ textarea.companies-preferred {
     text-align: left;
     white-space: normal;
 }
+
+/* Mascotte du tableau de bord : le robot et sa bulle */
+.mascot {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.mascot-drawing svg {
+    display: block;
+    width: 84px;
+    height: 84px;
+}
+
+.mascot-bubble {
+    position: relative;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+}

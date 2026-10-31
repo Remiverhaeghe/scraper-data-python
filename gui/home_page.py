@@ -2,7 +2,8 @@
 
 from datetime import datetime
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QByteArray, Qt, Signal
+from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.chart import BarChart
+from gui.progress_widgets import get_game_mode
 from gui.theme import COLORS
 from gui.widgets import (
     StatisticCard,
@@ -33,6 +35,7 @@ from job.presentation import (
     format_date,
     format_net_salary,
 )
+from job.progress import build_progress
 from job.setup_checklist import build_setup_checklist
 from job.statistics import (
     ACTIVITY_AXES,
@@ -202,16 +205,32 @@ class HomePage(QWidget):
         vTexts.addSpacing(8)
         vTexts.addLayout(vButtonRow)
 
-        vIcons = QHBoxLayout()
+        self.banner_icons = QWidget()
+        vIcons = QHBoxLayout(self.banner_icons)
         vIcons.setSpacing(22)
 
         for vIcon in ("search", "briefcase", "bell-ring"):
             vIcons.addWidget(create_icon_label(vIcon, COLORS["banner_text"], 46))
 
+        # Mascotte : remplace les icônes, sauf quand le jeu est désactivé
+        self.mascot = QWidget()
+        vMascot = QHBoxLayout(self.mascot)
+        vMascot.setContentsMargins(0, 0, 0, 0)
+        self.mascot_bubble = QLabel()
+        self.mascot_bubble.setObjectName("bannerText")
+        self.mascot_bubble.setWordWrap(True)
+        self.mascot_bubble.setMaximumWidth(260)
+        self.mascot_drawing = QSvgWidget()
+        self.mascot_drawing.setFixedSize(96, 96)
+        vMascot.addWidget(self.mascot_bubble)
+        vMascot.addWidget(self.mascot_drawing)
+        self.mascot.hide()
+
         vLayout = QHBoxLayout(rBanner)
         vLayout.setContentsMargins(32, 22, 40, 22)
         vLayout.addLayout(vTexts, 1)
-        vLayout.addLayout(vIcons)
+        vLayout.addWidget(self.banner_icons)
+        vLayout.addWidget(self.mascot)
 
         return rBanner
 
@@ -728,8 +747,27 @@ class HomePage(QWidget):
         for vEntry in pEntries:
             self.activity_layout.addWidget(self.create_activity_row(vEntry))
 
+    def show_mascot(self):
+        """Affiche la mascotte et sa phrase du jour, ou les icônes sans jeu."""
+        vMascot = None
+
+        if get_game_mode() != "off":
+            try:
+                vMascot = build_progress(self.database_file)["mascot"]
+
+            except Exception:
+                logger.exception("Impossible de préparer la mascotte")
+
+        if vMascot:
+            self.mascot_bubble.setText(vMascot["text"])
+            self.mascot_drawing.load(QByteArray(vMascot["svg"].encode("utf-8")))
+
+        self.mascot.setVisible(vMascot is not None)
+        self.banner_icons.setVisible(vMascot is None)
+
     def refresh(self):
         """Relit les indicateurs et l'activité en base."""
+        self.show_mascot()
         self.banner_text.setText(
             f"Centralisez les offres de {count_ready_sources()} sources configurées, "
             "suivez vos candidatures et n'oubliez plus aucune relance."

@@ -2447,6 +2447,16 @@ def test_salary_negotiation_is_played_on_the_offer_page(client, monkeypatch):
     )
 
 
+def test_dashboard_shows_the_mascot(client):
+    """Vérifie la mascotte du tableau de bord : dessin, humeur et phrase."""
+
+    vPage = client.get("/").text
+
+    assert 'class="card mascot"' in vPage
+    assert "<title>Boulon, robot de maintenance</title>" in vPage
+    assert 'class="mascot-bubble">' in vPage
+
+
 def test_offer_page_charts_mock_exam_scores(client, monkeypatch):
     """Vérifie le graphique des notes d'examen blanc à partir de deux examens."""
 
