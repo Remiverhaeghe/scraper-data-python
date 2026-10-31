@@ -1,0 +1,447 @@
+@051
+Q: Qu'est-ce qui distingue fondamentalement Kafka d'une file de messages classique comme RabbitMQ ?
+C: Kafka conserve un journal relisible ; une file supprime le message une fois acquitté
+W: Kafka ne fonctionne qu'en mémoire, sans écriture sur disque
+W: RabbitMQ ne peut pas transporter de JSON
+W: Kafka exige que producteur et consommateur restent connectés en même temps au broker
+E: Kafka ajoute les messages à la fin d'un journal conservé selon une durée ou une taille ; chaque consommateur avance à son rythme et peut revenir en arrière. RabbitMQ distribue les messages aux consommateurs et les retire après accusé de réception : c'est une file de travail.
+
+@052
+Q: Associer chaque notion Kafka à sa définition.
+P: Topic => Flux nommé de messages d'un même type
+P: Partition => Journal ordonné, unité de parallélisme d'un topic
+P: Offset => Position d'un message dans sa partition
+P: Broker => Serveur Kafka qui stocke des partitions
+E: Un topic commandes de six partitions est réparti sur plusieurs brokers. Chaque message reçoit un offset croissant dans sa partition ; le consommateur mémorise le dernier offset traité pour reprendre au bon endroit.
+
+@053
+Q: Comment Kafka choisit-il la partition des messages envoyés par ce code ?
+C: Par un hachage de la clé, donc toujours la même partition pour une même clé
+W: Au hasard à chaque envoi, quelle que soit la clé
+W: Par ordre alphabétique de la clé
+W: Selon la taille du message, les plus gros partant dans la dernière partition du topic
+E: Le partitionneur par défaut calcule un hachage murmur2 de la clé modulo le nombre de partitions. Tous les événements de la commande C-1042 tombent dans la même partition et restent ordonnés. Changer le nombre de partitions casse cette correspondance pour les nouveaux messages.
+```python
+vProducer.send("commandes", key=b"C-1042", value=vCommandeCreee)
+vProducer.send("commandes", key=b"C-1042", value=vCommandePayee)
+```
+
+@054
+Q: Un topic a 6 partitions et un groupe compte 8 consommateurs. Combien de consommateurs restent inactifs ?
+N: 2
+E: Dans un groupe, une partition n'est lue que par un seul consommateur. Avec six partitions, six consommateurs travaillent et deux attendent, utiles seulement comme secours. Le nombre de partitions fixe le parallélisme maximal d'un groupe : on le choisit avec de la marge.
+
+@055
+Q: Deux applications différentes, Facturation et Statistiques, doivent recevoir tous les messages du topic commandes. Comment les configurer ?
+C: Chacune avec son propre group.id
+W: Les deux avec le même group.id
+W: Un topic par application, alimenté par deux producteurs différents
+W: Ce n'est pas possible : un message Kafka n'est lu qu'une fois
+E: Chaque groupe reçoit l'intégralité du topic et garde ses propres offsets. À l'intérieur d'un groupe, les partitions sont réparties entre les instances : c'est ainsi qu'on fait à la fois de la diffusion (plusieurs groupes) et de la répartition de charge (plusieurs instances).
+
+@056
+Q: Pourquoi l'ordre des événements d'une même commande est-il garanti si la clé du message est l'identifiant de la commande ?
+C: Une même clé va dans une même partition, lue dans l'ordre
+W: Kafka trie les messages d'un topic par date de création
+W: Les consommateurs attendent l'arrivée complète du lot avant de lire
+W: Le broker refuse les messages arrivés dans le désordre
+E: Kafka garantit l'ordre à l'intérieur d'une partition, pas entre partitions. Sans clé, CommandeCréée et CommandePayée peuvent atterrir dans deux partitions et être traités dans le désordre par deux instances différentes.
+
+@057
+Q: Que garantit le réglage acks=all côté producteur ?
+C: Le message est écrit sur toutes les répliques synchronisées avant l'accusé
+W: Le message est lu par tous les consommateurs avant l'accusé
+W: Le message est envoyé à tous les topics du cluster
+W: Le producteur attend que le disque soit vidé sur tous les brokers du monde
+E: Avec acks=all et min.insync.replicas=2 sur un topic répliqué trois fois, un message acquitté survit à la perte d'un broker. acks=1 n'attend que le leader : si celui-ci tombe avant la réplication, le message est perdu.
+
+@058
+Q: Un topic a un facteur de réplication 3 et min.insync.replicas=2. Combien de brokers portant ses répliques peuvent tomber sans bloquer les producteurs en acks=all ?
+N: 1
+E: Il faut au moins deux répliques synchronisées pour accepter une écriture. Trois répliques moins une panne en laissent deux : ça passe. Avec deux pannes, il n'en reste qu'une et le producteur reçoit NotEnoughReplicas ; les lectures restent possibles.
+
+@059
+Q: Quel risque présente ce consommateur Kafka configuré avec enable.auto.commit=true ?
+C: Un offset validé avant la fin du traitement : message perdu en cas de plantage
+W: Les messages sont lus deux fois plus lentement
+W: Le consommateur ne peut lire qu'une seule partition
+W: Les messages sont supprimés du topic dès leur lecture par le premier consommateur
+E: La validation automatique enregistre périodiquement les offsets lus, que le traitement ait réussi ou non. Si le service plante après la validation, le message ne sera jamais retraité. On désactive l'auto-commit et on valide après le traitement, ce qui donne une livraison au moins une fois.
+```python
+vConsumer = KafkaConsumer(
+    "commandes",
+    group_id="facturation",
+    enable_auto_commit=True,
+)
+for vMessage in vConsumer:
+    facturer(vMessage.value)
+```
+
+@060
+Q: Remettre dans l'ordre la boucle d'un consommateur Kafka qui garantit une livraison au moins une fois.
+O: Lire un lot de messages avec poll
+O: Traiter chaque message et écrire son effet
+O: Valider les offsets du lot avec commit
+O: Revenir lire le lot suivant
+E: Valider après le traitement fait qu'un plantage entre les deux provoque une relecture, jamais une perte. Le traitement doit donc être idempotent. Valider avant le traitement donnerait « au plus une fois » : pas de doublon mais des pertes.
+
+@061
+Q: Associer chaque garantie de livraison à sa conséquence.
+P: Au plus une fois => Pertes possibles, jamais de doublon
+P: Au moins une fois => Doublons possibles, jamais de perte
+P: Exactement une fois => Ni perte ni doublon, à un coût supplémentaire
+P: Consommateur idempotent => Doublons reçus mais sans effet
+E: Dans la pratique on vise « au moins une fois » avec un consommateur idempotent. Kafka offre l'exactement une fois de bout en bout seulement entre topics Kafka (transactions, Kafka Streams) ; dès qu'une base externe est écrite, l'idempotence reste nécessaire.
+
+@062
+Q: Que fait le réglage enable.idempotence=true du producteur Kafka ?
+C: Le broker écarte les doublons dus aux relances du producteur
+W: Le consommateur ignore automatiquement les messages déjà traités
+W: Les messages identiques sont fusionnés dans le topic
+W: Le producteur refuse d'envoyer deux fois le même contenu métier
+E: Le producteur numérote ses envois ; si une relance réseau renvoie un lot déjà écrit, le broker le reconnaît et ne le duplique pas, tout en gardant l'ordre. Cela ne protège pas d'un code applicatif qui envoie deux fois le même événement. C'est le comportement par défaut depuis Kafka 3.0.
+
+@063
+Q: Qu'est-ce que le lag d'un groupe de consommateurs Kafka ?
+C: L'écart entre le dernier offset produit et le dernier offset validé
+W: Le temps de réponse réseau entre deux brokers
+W: La taille occupée par le topic et ses répliques sur le disque des brokers
+W: Le nombre de consommateurs inactifs du groupe
+E: Un lag qui grandit signifie que les consommateurs ne suivent pas le débit des producteurs. C'est l'indicateur à surveiller en premier (Burrow, kafka-exporter pour Prometheus) : une alerte sur le lag détecte un consommateur bloqué avant que les utilisateurs ne s'en plaignent.
+
+@064
+Q: Quelle commande affiche le lag de chaque partition pour le groupe facturation ?
+C: kafka-consumer-groups.sh --describe --group facturation
+W: kafka-topics.sh --create --topic facturation
+W: kafka-console-producer.sh --topic facturation
+W: kafka-configs.sh --alter --group facturation
+E: La sortie donne, par partition, CURRENT-OFFSET, LOG-END-OFFSET, LAG et le consommateur affecté. Une partition avec un gros lag et un seul consommateur pointe souvent un message qui fait échouer le traitement en boucle ou une clé trop chargée.
+```bash
+kafka-consumer-groups.sh --bootstrap-server kafka:9092 --describe --group facturation
+```
+
+@065
+Q: Le producteur publie 1 200 messages par seconde ; le groupe en traite 1 000 par seconde. Au bout de combien de secondes le lag atteint-il 60 000 messages ?
+N: 300
+U: s
+E: Le lag grandit de 1 200 − 1 000 = 200 messages par seconde, soit 60 000 / 200 = 300 s, cinq minutes. Ajouter des consommateurs n'aide que si le topic a des partitions libres ; sinon il faut accélérer le traitement ou repartitionner.
+
+@066
+Q: Après chaque redéploiement, un consommateur traite à nouveau des messages et les journaux montrent « Revoking previously assigned partitions ». Que se passe-t-il ?
+C: Un rééquilibrage du groupe, avec reprise au dernier offset validé
+W: Le topic a été supprimé puis recréé automatiquement par le pipeline de déploiement
+W: Le broker a perdu ses données
+W: Le producteur a renvoyé les messages de la dernière heure
+E: Quand un consommateur rejoint ou quitte le groupe, les partitions sont réparties à nouveau. Les messages lus mais pas encore validés sont relus par le nouveau propriétaire. On valide souvent, on arrête proprement les consommateurs et on rend le traitement idempotent ; l'affectation coopérative réduit ces interruptions.
+
+@067
+Q: Un consommateur configuré ainsi est exclu du groupe car un lot de messages met plus de cinq minutes à être traité. Quel paramètre de cette configuration est en cause ?
+C: max.poll.interval.ms
+W: retention.ms
+W: num.partitions
+W: compression.type
+E: Si poll n'est pas rappelé dans ce délai (300 000 ms par défaut), Kafka considère le consommateur bloqué et rééquilibre le groupe ; le lot est relu ailleurs et le problème recommence. On réduit max.poll.records ou on accélère le traitement plutôt que d'allonger le délai sans limite.
+```properties
+group.id=export
+enable.auto.commit=false
+max.poll.records=500
+max.poll.interval.ms=300000
+```
+
+@068
+Q: Quelle est la différence entre la suppression par rétention et le compactage d'un topic Kafka ?
+C: La rétention efface les messages anciens ; le compactage garde le dernier message par clé
+W: La rétention compresse les messages ; le compactage les chiffre
+W: La rétention s'applique aux consommateurs d'un groupe ; le compactage aux seuls producteurs
+W: Le compactage efface tout le topic chaque nuit
+E: Avec cleanup.policy=compact, un topic « prix des articles » garde la dernière valeur de chaque article, ce qui permet de reconstruire un état complet. Un message de valeur nulle (tombstone) supprime la clé. La rétention classique convient aux flux d'événements limités dans le temps.
+
+@069
+Q: Combien de jours représente retention.ms=604800000 ?
+N: 7
+U: jours
+E: 604 800 000 ms = 604 800 s = 168 h = 7 jours, la valeur par défaut de Kafka. Un consommateur arrêté plus longtemps que la rétention perd des messages : il reprendra selon auto.offset.reset, au début ou à la fin du journal restant.
+
+@070
+Q: Un nouveau groupe de consommateurs démarre sur un topic existant. Que contrôle auto.offset.reset ?
+C: S'il commence au plus ancien message conservé ou seulement aux nouveaux
+W: La fréquence de validation des offsets
+W: Le nombre de partitions du topic
+W: La suppression des offsets enregistrés par les autres groupes du même topic
+E: earliest relit tout l'historique conservé, latest ne lit que ce qui arrive après le démarrage (valeur par défaut). Le réglage ne s'applique que si le groupe n'a pas d'offset enregistré ou si celui-ci a expiré.
+
+@071
+Q: À quoi sert un Schema Registry avec Avro ou Protobuf dans Kafka ?
+C: Contrôler la compatibilité des schémas avant qu'un producteur ne publie
+W: Stocker une copie de chaque message dans un second cluster pour la sauvegarde
+W: Répartir les partitions entre les brokers
+W: Authentifier les consommateurs
+E: Le producteur enregistre le schéma et envoie seulement son identifiant dans chaque message. Le registre refuse un schéma qui casserait les consommateurs, par exemple un champ obligatoire ajouté sans valeur par défaut en compatibilité BACKWARD.
+
+@072
+Q: Quelle évolution d'un schéma Avro reste compatible pour les consommateurs existants ?
+C: Ajouter un champ facultatif avec une valeur par défaut
+W: Renommer un champ existant sans alias
+W: Changer le type d'un champ de string en int
+W: Supprimer un champ requis que les consommateurs lisent encore
+E: Un ancien consommateur ignore le nouveau champ ; un nouveau consommateur qui lit un ancien message utilise la valeur par défaut. Les autres changements cassent la désérialisation : il faut alors un nouveau topic ou une migration coordonnée.
+
+@073
+Q: Que permet Kafka Connect ?
+C: Brancher Kafka à des bases et systèmes externes par configuration
+W: Connecter les utilisateurs à l'interface d'administration Kafka par mot de passe
+W: Lier deux clusters Kafka par un câble réseau dédié
+W: Exécuter du SQL sur les brokers
+E: Des connecteurs source (Debezium pour lire le journal de PostgreSQL ou MySQL) et sink (Elasticsearch, S3, JDBC) déplacent les données sans écrire de code. Debezium est une façon courante d'alimenter une outbox vers Kafka.
+
+@074
+Q: Associer chaque élément RabbitMQ à son rôle.
+P: Exchange => Reçoit les messages et les route
+P: Queue => Stocke les messages jusqu'à leur consommation
+P: Binding => Règle qui relie un exchange à une queue
+P: Routing key => Étiquette du message utilisée pour le routage
+E: Un producteur RabbitMQ ne publie jamais directement dans une queue : il publie dans un exchange, avec une routing key. Les bindings décident des queues qui recevront une copie. L'exchange par défaut route vers la queue qui porte le nom de la clé.
+
+@075
+Q: Associer chaque type d'exchange RabbitMQ à sa règle de routage.
+P: direct => Clé de routage identique à celle du binding
+P: topic => Clé comparée à un motif avec * et #
+P: fanout => Copie dans toutes les queues liées
+P: headers => Comparaison des en-têtes du message
+E: Un exchange fanout sert à diffuser un événement à plusieurs services ; direct envoie les tâches d'un type à une queue précise ; topic permet des abonnements du genre commande.*.fr. headers est rarement utilisé.
+
+@076
+Q: Avec ce binding sur un exchange de type topic, quelle clé de routage atteint la queue paiements ?
+C: commande.fr.payee
+W: commande.payee
+W: commande.fr.nord.payee
+W: paiement.fr.payee
+E: * remplace exactement un mot, # remplace zéro, un ou plusieurs mots. commande.payee n'a pas de mot au milieu, commande.fr.nord.payee en a deux : seul commande.#.payee les accepterait tous les deux.
+```python
+vChannel.queue_bind(
+    exchange="evenements",
+    queue="paiements",
+    routing_key="commande.*.payee",
+)
+```
+
+@077
+Q: Que se passe-t-il pour un message RabbitMQ livré à un consommateur qui plante avant d'envoyer son accusé (ack manuel) ?
+C: Le message revient dans la queue et sera livré à nouveau
+W: Le message est perdu définitivement
+W: Le message est copié dans les autres queues du même vhost
+W: RabbitMQ s'arrête pour éviter une incohérence
+E: Tant que l'ack n'est pas reçu, RabbitMQ garde le message ; si la connexion se ferme, il le remet en queue avec l'indicateur redelivered. Avec autoAck=true, le message est considéré traité dès l'envoi et un plantage le perd.
+
+@078
+Q: Quel défaut contient ce consommateur RabbitMQ en Python (pika) ?
+C: En cas d'exception, le message n'est ni acquitté ni refusé et reste bloqué
+W: basic_ack ne peut être appelé que par le producteur
+W: Le paramètre delivery_tag ne s'utilise qu'avec les exchanges de type fanout ou topic
+W: Un consommateur ne peut pas lire du JSON
+E: Si traiter lève une exception, la fonction sort sans ack : le message reste « non acquitté » tant que le canal est ouvert et occupe une place du prefetch. On l'entoure d'un try/except qui appelle basic_nack avec requeue=False pour l'envoyer à la dead letter queue, en journalisant l'erreur.
+```python
+def on_message(pChannel, pMethod, pProperties, pBody):
+    traiter(json.loads(pBody))
+    pChannel.basic_ack(delivery_tag=pMethod.delivery_tag)
+```
+
+@079
+Q: À quoi sert le réglage prefetch (basic_qos) d'un consommateur RabbitMQ ?
+C: Limiter le nombre de messages non acquittés envoyés à ce consommateur
+W: Précharger les messages sur disque avant leur publication
+W: Fixer la durée de vie des messages dans la queue
+W: Choisir l'exchange utilisé par défaut
+E: Sans limite, RabbitMQ pousse toute la queue vers le premier consommateur connecté, qui sature pendant que les autres restent inactifs. Un prefetch de 10 à 50 répartit mieux la charge ; 1 donne la répartition la plus équitable au prix du débit.
+
+@080
+Q: Quel est le rôle d'une dead letter queue (DLQ) ?
+C: Recevoir les messages refusés, expirés ou en échec répété pour analyse
+W: Stocker les messages des consommateurs supprimés
+W: Accélérer les messages prioritaires
+W: Garder une copie horodatée de chaque message publié pour l'audit réglementaire
+E: Un message qui échoue à chaque fois (« poison message ») bloque une file s'il est remis indéfiniment. Configuré avec x-dead-letter-exchange, RabbitMQ le déplace vers la DLQ ; on y surveille le nombre de messages et on les rejoue après correction.
+
+@081
+Q: Que manque-t-il pour que les messages de cette queue survivent à un redémarrage de RabbitMQ ?
+C: Publier les messages en mode persistant (delivery_mode=2)
+W: Une queue durable suffit à rendre ses messages persistants
+W: Déclarer la queue avec exclusive=True
+W: Utiliser un exchange fanout
+E: Il faut les deux : une queue durable, qui est recréée au redémarrage, et des messages persistants, écrits sur disque. Sans delivery_mode=2, la queue revient vide. Les confirmations de publication (publisher confirms) assurent en plus que le broker a bien reçu le message.
+```python
+vChannel.queue_declare(queue="factures", durable=True)
+vChannel.basic_publish(exchange="", routing_key="factures", body=vBody)
+```
+
+@082
+Q: Quel type de queue RabbitMQ est recommandé pour répliquer les messages sur plusieurs nœuds ?
+C: La quorum queue, répliquée par l'algorithme Raft
+W: La queue exclusive
+W: La queue auto-delete
+W: La queue classique miroir activée par défaut
+E: Les quorum queues répliquent chaque message sur une majorité de nœuds et remplacent les anciennes queues classiques en miroir, supprimées dans RabbitMQ 4. Avec trois nœuds, la queue reste disponible si un nœud tombe.
+
+@083
+Q: Un traitement de fond doit répartir des tâches d'export entre plusieurs workers, chaque tâche traitée une seule fois, sans besoin de relire l'historique. Quel choix est le plus simple ?
+C: Une queue RabbitMQ partagée par tous les workers
+W: Un topic Kafka compacté avec une partition par worker
+W: Une table SQL relue toutes les secondes par chaque worker
+W: Un appel REST de chaque worker vers tous les autres
+E: C'est le cas d'usage de la file de travail (competing consumers) : RabbitMQ distribue les messages, gère les accusés et les relivraisons. Kafka convient mieux quand plusieurs consommateurs doivent lire les mêmes événements ou les rejouer.
+
+@084
+Q: Quand Kafka est-il préférable à RabbitMQ ?
+C: Pour un gros débit d'événements que plusieurs services doivent relire
+W: Pour une file de quelques tâches avec routage par motif
+W: Pour des messages qui doivent expirer au bout de dix secondes s'ils restent non lus
+W: Pour une messagerie entre deux processus sur la même machine
+E: Kafka encaisse des centaines de milliers de messages par seconde par partitionnement et lecture séquentielle sur disque, et chaque groupe relit à son rythme. RabbitMQ brille sur le routage fin, les priorités, les délais et les files de travail.
+
+@085
+Q: Remettre dans l'ordre le traitement d'un message RabbitMQ en échec avec une file de relance différée.
+O: Le consommateur échoue et refuse le message sans le remettre en queue
+O: Le message part dans une file d'attente avec un délai d'expiration
+O: À expiration, il revient dans la file principale par dead letter
+O: Après trois échecs comptés dans l'en-tête x-death, il va dans la DLQ finale
+E: Remettre immédiatement en queue un message en échec crée une boucle qui consomme le CPU. Une file à TTL sans consommateur sert de minuterie. L'en-tête x-death compte les passages, ce qui permet de plafonner les relances.
+
+@086
+Q: Un message contient une commande dont le JSON est invalide. Le consommateur lève une exception et le remet en queue (requeue=True) à chaque fois. Quel symptôme observe-t-on ?
+C: Le même message tourne en boucle et le CPU du consommateur reste élevé
+W: Le message disparaît après la première erreur
+W: RabbitMQ corrige le JSON automatiquement
+W: Les autres messages de la queue sont traités deux fois plus vite qu'avant
+E: Une erreur permanente ne se résout pas en relançant. On distingue les erreurs passagères (base indisponible : relance différée) des erreurs définitives (message invalide : DLQ immédiate, alerte, journal avec l'identifiant du message).
+
+@087
+Q: Dans ce consommateur Spring Kafka, que se passe-t-il si traiter lève une exception, avec le gestionnaire d'erreurs par défaut ?
+C: Le message est retenté quelques fois puis ignoré avec un journal d'erreur
+W: Le consommateur s'arrête définitivement
+W: Le message est republié automatiquement dans un autre topic par le broker Kafka
+W: L'offset recule au début de la partition
+E: Le DefaultErrorHandler retente neuf fois sans délai, puis journalise et passe au message suivant : celui-ci est perdu en silence. On configure un DeadLetterPublishingRecoverer pour l'envoyer dans commandes.DLT et un délai entre les essais.
+```java
+@KafkaListener(topics = "commandes", groupId = "facturation")
+public void ecouter(CommandeCreee pEvenement) {
+    factureService.traiter(pEvenement);
+}
+```
+
+@088
+Q: Qu'est-ce qu'une architecture pilotée par les événements (event-driven) ?
+C: Des services qui publient des faits et réagissent à ceux des autres sans s'appeler
+W: Une interface graphique qui réagit aux clics de souris
+W: Un ordonnanceur central qui lance chaque nuit des tâches à heure fixe sur les serveurs
+W: Une base de données avec des déclencheurs SQL
+E: Commande publie CommandePassée sans savoir qui écoute ; Facturation, Stock et Notification s'abonnent. Ajouter un consommateur ne modifie pas le producteur. La contrepartie : le flux complet est moins visible, d'où l'importance des traces et de la documentation des événements.
+
+@089
+Q: Associer chaque type de message à son exemple.
+P: Commande => ReserverStock
+P: Événement => StockReserve
+P: Requête => ObtenirPrixArticle
+P: Réponse => PrixArticle
+E: Une commande demande une action à un destinataire précis et peut être refusée ; un événement constate un fait passé et peut avoir plusieurs abonnés. Le nommage le reflète : impératif pour une commande, participe passé pour un événement.
+
+@090
+Q: Pourquoi inclure un identifiant unique et une date dans chaque événement publié ?
+C: Pour dédoublonner, tracer et ordonner les traitements
+W: Pour que le broker calcule la facture d'hébergement
+W: Pour chiffrer le message avec la date comme clé
+W: Pour éviter d'avoir un schéma
+E: L'identifiant permet au consommateur d'ignorer un doublon et de retrouver le message dans les journaux ; la date d'occurrence permet d'écarter un événement plus ancien que l'état déjà connu. CloudEvents propose une enveloppe standard avec id, source, type et time.
+
+@091
+Q: Un consommateur reçoit PrixModifié(article 7, 12 €, 10 h 02) puis PrixModifié(article 7, 11 €, 10 h 01), arrivés dans le désordre. Que doit-il faire ?
+C: Ignorer le second, plus ancien que la valeur déjà enregistrée
+W: Appliquer le second, car c'est le dernier reçu
+W: Faire la moyenne des deux prix
+W: Rejeter les deux et arrêter le service
+E: Comparer une version ou une date d'occurrence à celle déjà stockée évite d'écraser une donnée récente par une ancienne. En SQL : UPDATE … SET prix = ?, version = ? WHERE article = ? AND version < ?.
+
+@092
+Q: Combien de messages par seconde un consommateur traite-t-il au maximum si chaque message prend 20 ms de traitement séquentiel ?
+N: 50
+U: messages/s
+E: 1 000 ms / 20 ms = 50 messages par seconde par consommateur. Pour suivre 400 messages par seconde, il faut au moins huit consommateurs en parallèle, donc au moins huit partitions dans Kafka, ou bien raccourcir le traitement en groupant les écritures en base.
+
+@093
+Q: Quelle mesure de sécurité est indispensable entre les clients et un cluster Kafka exposé sur le réseau de l'entreprise ?
+C: Chiffrement TLS, authentification SASL et ACL par topic
+W: Désactiver la réplication pour réduire la surface d'attaque
+W: Ouvrir le port 9092 à Internet pour simplifier
+W: Partager un compte commun entre les services
+E: Par défaut, Kafka écoute en clair et sans authentification. On active TLS, une authentification (SASL/SCRAM ou certificats mTLS) et des ACL : le service Facturation peut lire commandes, mais pas écrire dans paiements. Un compte par service limite les dégâts d'une fuite.
+
+@094
+Q: Pourquoi une interface d'administration RabbitMQ ne doit-elle pas garder le compte guest/guest ?
+C: Ce mot de passe connu de tous donne un accès complet au broker
+W: Le compte guest ralentit la publication des messages sur chaque queue
+W: Le compte guest ne peut pas créer de queues
+W: Le compte guest supprime les messages au redémarrage
+E: Depuis la version 3.3, guest ne peut se connecter que depuis localhost, mais une image Docker mal configurée ou un relais le réexpose facilement. On crée un compte d'administration au mot de passe fort et un compte par application, limité à son vhost.
+
+@095
+Q: Compléter cette déclaration de queue RabbitMQ pour envoyer les messages refusés vers l'exchange dlx.
+A: x-dead-letter-exchange
+E: L'argument x-dead-letter-exchange désigne l'exchange qui recevra les messages refusés (nack sans remise en queue), expirés ou rejetés par une limite de longueur. x-dead-letter-routing-key permet en plus de choisir leur clé de routage.
+```python
+vChannel.queue_declare(
+    queue="commandes",
+    durable=True,
+    arguments={"____": "dlx"},
+)
+```
+
+@096
+Q: Dans un docker-compose de développement, quel service manque pour que ce broker Kafka démarre en mode KRaft ?
+C: Aucun, KRaft remplace ZooKeeper dans le broker lui-même
+W: Un conteneur ZooKeeper obligatoire
+W: Un conteneur RabbitMQ pour la coordination
+W: Une base PostgreSQL pour stocker les offsets
+E: Depuis Kafka 3.3, le mode KRaft gère les métadonnées du cluster par consensus Raft entre brokers contrôleurs ; ZooKeeper est retiré dans Kafka 4.0. Un seul conteneur suffit en développement, alors que trois contrôleurs sont conseillés en production.
+```yaml
+services:
+  kafka:
+    image: apache/kafka:3.8.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+```
+
+@097
+Q: Un service de commandes passe de 1 à 4 instances, mais le débit de consommation du topic commandes ne bouge pas. Le topic n'a qu'une partition. Quelle est la cause ?
+C: Une seule partition ne peut être lue que par un consommateur du groupe
+W: Les instances partagent le même port réseau
+W: Le producteur envoie trop peu de messages
+W: Kafka limite le débit de chaque groupe à un message par seconde et par partition
+E: Trois instances sur quatre restent inactives. Il faut augmenter le nombre de partitions (kafka-topics.sh --alter --partitions), en sachant que la répartition des clés change pour les nouveaux messages et que l'ordre par clé n'est garanti qu'à partir de là.
+
+@098
+Q: Les commandes sont enregistrées, mais les factures n'arrivent plus depuis une heure. Le lag du groupe facturation est bloqué sur la partition 3 et les journaux répètent la même exception de désérialisation. Que faire ?
+C: Écarter le message illisible vers une DLQ, corriger puis le rejouer
+W: Supprimer le topic commandes et le recréer
+W: Redémarrer les brokers du cluster un par un
+W: Augmenter la mémoire et le nombre de threads des consommateurs du groupe
+E: Un message illisible bloque la partition : le consommateur échoue, relit le même offset et recommence. On le fait passer à une DLQ, par configuration du gestionnaire d'erreurs ou en avançant l'offset après l'avoir sauvegardé, puis on corrige le producteur ou le schéma.
+
+@099
+Q: Remettre dans l'ordre le diagnostic d'une requête lente qui traverse plusieurs microservices.
+O: Retrouver la trace par l'identifiant de corrélation de la requête
+O: Repérer le span le plus long dans la vue en cascade
+O: Lire les journaux et métriques du service concerné à cet instant
+O: Reproduire le cas et corriger la cause
+O: Vérifier la latence après le déploiement de la correction
+E: La trace localise le service et l'opération lente avant de lire des journaux au hasard. Les métriques montrent si le problème est général ou ponctuel ; la vérification après correction confirme que la cause était la bonne.
+
+@100
+Q: Remettre dans l'ordre la mise en place d'un nouveau consommateur d'événements en production.
+O: Définir le schéma de l'événement et le faire valider dans le registre
+O: Écrire un traitement idempotent avec validation des offsets après traitement
+O: Configurer la DLQ, les relances et les métriques de lag
+O: Déployer avec un group.id dédié et auto.offset.reset choisi
+O: Surveiller le lag et la DLQ pendant les premiers jours
+E: Le schéma et l'idempotence protègent contre les doublons et les incompatibilités ; la DLQ et les métriques rendent les échecs visibles au lieu de silencieux. Choisir earliest ou latest dès le départ évite de retraiter tout l'historique par surprise.

@@ -1,0 +1,35 @@
+{
+  "lot": 1,
+  "seed": 2026103102,
+  "skills": ["microservices", "Kafka", "RabbitMQ", "architecture distribuée"],
+  "schemas": [
+    {
+      "name": "microservices-saga.svg",
+      "questions": ["036", "037", "040"],
+      "diagram": {
+        "title": "Saga d'une commande",
+        "nodes": [
+          "Commande créée (en attente)",
+          "Paiement débité",
+          "Stock réservé",
+          "Commande confirmée"
+        ],
+        "note": "Si une étape échoue, les compensations annulent les précédentes"
+      }
+    },
+    {
+      "name": "kafka-consommateurs.svg",
+      "questions": ["054", "056", "060"],
+      "diagram": {
+        "title": "Consommation d'un topic Kafka",
+        "nodes": [
+          "Producteur : clé de message",
+          "Topic : partitions ordonnées",
+          "Groupe : une partition par consommateur",
+          "Offset validé après traitement"
+        ],
+        "note": "L'ordre n'est garanti qu'à l'intérieur d'une partition"
+      }
+    }
+  ]
+}

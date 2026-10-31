@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision microservices et messagerie
+- Lot de 100 questions, thème vide le plus demandé par les offres après C# :
+  découpage et bounded contexts, communication synchrone ou asynchrone, API
+  Gateway, résilience (délai, relances, disjoncteur, cloisons), observabilité
+  et traces, sagas et outbox, Kafka (partitions, groupes, offsets, lag) et
+  RabbitMQ (exchanges, accusés, prefetch, dead letter queue)
+- Deux schémas : saga d'une commande, consommation d'un topic Kafka
+
 ### Révision C# et .NET
 - Lot de 100 questions rangé dans Informatique, Développement, thème vide le
   plus demandé par les offres : bases du langage, collections et LINQ,

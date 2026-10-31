@@ -1,0 +1,432 @@
+@001
+Q: Qu'est-ce qui caractérise le mieux une architecture en microservices ?
+C: Des petits services déployables séparément, chacun maître de ses données
+W: Une seule application découpée en paquets Java partageant une base commune
+W: Un ensemble de fonctions serverless appelées directement depuis le navigateur
+W: Un serveur d'applications qui héberge plusieurs fichiers WAR sur la même JVM
+E: Le critère décisif est l'indépendance : chaque service se construit, se déploie et évolue sans attendre les autres, et garde ses données pour lui. Des modules qui partagent la même base et le même déploiement restent un monolithe, même bien découpé.
+
+@002
+Q: Une équipe de quatre développeurs lance un nouveau produit dont le métier est encore flou. Quelle approche est la plus raisonnable ?
+C: Un monolithe modulaire, découpé plus tard si le besoin apparaît
+W: Vingt microservices dès le départ pour préparer la montée en charge
+W: Un microservice par table de la base de données
+W: Un microservice par développeur pour éviter les conflits Git
+E: Les microservices coûtent cher en exploitation : réseau, déploiements, supervision, cohérence des données. Tant que les frontières du métier bougent, un découpage prématuré fige de mauvaises frontières. Un monolithe bien structuré en modules se découpe ensuite le long des coutures qui ont fait leurs preuves.
+
+@003
+Q: Associer chaque notion à sa définition.
+P: Bounded context => Périmètre où un modèle métier garde un sens unique
+P: Langage omniprésent => Vocabulaire partagé entre métier et code
+P: Agrégat => Groupe d'objets modifié en une seule transaction
+P: Événement de domaine => Fait métier passé, publié aux autres contextes
+E: Ces notions viennent du Domain-Driven Design. Un bon microservice suit souvent un bounded context : « client » ne veut pas dire la même chose pour la facturation et pour la livraison, chacun garde son modèle.
+
+@004
+Q: Que dit la loi de Conway, souvent citée pour découper des microservices ?
+C: Un système reproduit la structure de communication de l'organisation qui le conçoit
+W: Le nombre de services double tous les dix-huit mois
+W: Chaque service ajouté au système divise par deux la disponibilité totale de l'ensemble
+W: Un service doit rester sous la barre des mille lignes de code
+E: Si trois équipes travaillent sur un produit, il finit souvent découpé en trois blocs. On s'en sert à rebours : on organise les équipes autour des domaines métier pour obtenir les frontières de services souhaitées.
+
+@005
+Q: Deux services lisent et écrivent dans les mêmes tables d'une base partagée. Quel est le principal problème ?
+C: Un changement de schéma oblige à modifier et redéployer les deux services
+W: La base refuse plus de deux connexions simultanées
+W: Les requêtes SQL deviennent impossibles à indexer
+W: Les deux services doivent alors être écrits dans le même langage et le même framework
+E: La base partagée crée un couplage caché : renommer une colonne casse l'autre service, et aucune équipe ne maîtrise seule ses données. Le principe « une base par service » impose de passer par l'API ou par des événements pour accéder aux données d'un autre.
+
+@006
+Q: Quelle est la différence entre une communication synchrone et une communication asynchrone entre services ?
+C: En synchrone l'appelant attend la réponse, en asynchrone il dépose un message et continue
+W: En synchrone les services partagent la mémoire, en asynchrone ils échangent par des fichiers sur le disque
+W: Le synchrone utilise TCP, l'asynchrone passe par UDP
+W: L'asynchrone est réservé aux services écrits en JavaScript
+E: Un appel REST ou gRPC est synchrone : si le service appelé est lent ou en panne, l'appelant l'est aussi. Un message publié dans Kafka ou RabbitMQ découple les deux : le consommateur le traitera quand il sera disponible, au prix d'une cohérence différée.
+
+@007
+Q: Le service Commande appelle Paiement, qui appelle Fraude, qui appelle Client, chacun disponible à 99,5 %. Quelle est la disponibilité de la chaîne en % (arrondie au dixième) ?
+N: 98,0
+U: %
+T: 1
+E: Les disponibilités se multiplient : 0,995⁴ ≈ 0,980, soit environ 98 %, près de sept jours d'indisponibilité par an au lieu de deux. Les longues chaînes d'appels synchrones dégradent la disponibilité ; l'asynchrone ou la réduction des dépendances limitent cet effet.
+
+@008
+Q: Quel rôle joue une API Gateway devant des microservices ?
+C: Point d'entrée unique : routage, authentification, limitation de débit
+W: Base de données centrale où chaque service stocke ses tables
+W: Orchestrateur qui démarre et arrête les conteneurs
+W: Bibliothèque partagée, compilée dans chaque service pour appeler les autres
+E: Le client ne connaît qu'une adresse ; la passerelle (Spring Cloud Gateway, Kong, Traefik, Nginx) route vers le bon service, vérifie le jeton, applique les quotas et peut agréger des réponses. Elle ne doit pas contenir de logique métier, sinon elle redevient un monolithe.
+
+@009
+Q: Qu'est-ce que le motif Backend For Frontend (BFF) ?
+C: Une passerelle dédiée à un type de client, par exemple le mobile
+W: Un service qui sert les fichiers statiques du frontend
+W: Un framework JavaScript pour appeler des API REST
+W: Une base de données en lecture seule pour l'interface
+E: L'application mobile a besoin de réponses compactes, le site web de pages plus riches. Plutôt qu'une passerelle générique pleine de cas particuliers, chaque frontend a son BFF qui agrège et adapte les appels aux services internes.
+
+@010
+Q: Dans un cluster où les instances de services apparaissent et disparaissent, à quoi sert la découverte de services ?
+C: Trouver les instances disponibles d'un service à partir de son nom
+W: Chiffrer le trafic entre deux services
+W: Générer la documentation OpenAPI de chaque service à partir de son code
+W: Détecter les failles de sécurité dans les images
+E: Les adresses IP changent à chaque redémarrage ou mise à l'échelle. Un annuaire (Consul, Eureka) ou le DNS des Services Kubernetes fait correspondre un nom stable, par exemple paiement, aux instances saines du moment.
+
+@011
+Q: Associer chaque protocole à son usage typique entre services.
+P: REST sur HTTP/JSON => API publique lisible et facile à tester
+P: gRPC => Appels internes rapides avec contrat Protobuf
+P: Kafka => Flux d'événements conservés et relisibles
+P: AMQP avec RabbitMQ => File de tâches avec routage et accusés de réception
+E: Il n'existe pas de protocole universel. REST reste la référence pour l'extérieur, gRPC gagne en interne grâce au binaire et à HTTP/2, Kafka conserve un journal d'événements, RabbitMQ distribue des messages à traiter une fois.
+
+@012
+Q: Pourquoi gRPC est-il souvent plus rapide que REST/JSON pour des appels internes ?
+C: Messages Protobuf binaires sur HTTP/2 multiplexé
+W: Il contourne la pile TCP du système
+W: Il compresse le code source des services
+W: Il évite toute sérialisation des données
+E: Protobuf produit des messages compacts et rapides à décoder, et HTTP/2 fait passer plusieurs appels sur une seule connexion. Le contrat .proto génère aussi le code client et serveur dans plusieurs langages. En contrepartie, les messages ne se lisent pas à l'œil nu.
+
+@013
+Q: Compléter cette définition Protobuf pour que le champ ait le numéro 2.
+A: 2
+E: Chaque champ Protobuf porte un numéro unique qui l'identifie dans le message binaire, pas son nom. On peut renommer un champ sans casser la compatibilité, mais on ne réutilise jamais le numéro d'un champ supprimé : on le déclare reserved.
+```protobuf
+message Commande {
+  string id = 1;
+  int64 montant_centimes = ____;
+}
+```
+
+@014
+Q: Le service Stock répond en 30 s au lieu de 50 ms. Sans protection, que risque le service Commande qui l'appelle en synchrone ?
+C: Saturer ses threads et connexions en attente, puis tomber à son tour
+W: Recevoir des données de stock plus précises
+W: Basculer automatiquement vers une autre base
+W: Pas grand-chose : HTTP coupe de lui-même la connexion au bout d'une seconde
+E: C'est la panne en cascade : chaque requête bloque une ressource pendant 30 s, le pool s'épuise et Commande ne répond plus à personne. Un délai d'attente court, un disjoncteur et des pools séparés par dépendance contiennent la panne.
+
+@015
+Q: Quel réglage manque le plus à cet appel HTTP entre deux services ?
+C: Un délai d'attente sur la connexion et la lecture
+W: Un en-tête User-Agent personnalisé
+W: Le passage en HTTP/1.0
+W: Une boucle qui rappelle tant que la réponse n'est pas 200
+E: Sans timeout, requests attend indéfiniment un serveur qui ne répond pas, et le thread reste bloqué. On fixe toujours un délai, par exemple timeout=(3, 10) pour la connexion et la lecture, adapté au temps de réponse attendu de la dépendance.
+```python
+import requests
+
+vResponse = requests.get("http://stock:8080/articles/42")
+vResponse.raise_for_status()
+```
+
+@016
+Q: Remettre dans l'ordre les états d'un disjoncteur (circuit breaker) lors d'une panne puis du rétablissement d'une dépendance.
+O: Fermé : les appels passent et les échecs sont comptés
+O: Ouvert : le taux d'échec dépasse le seuil, les appels échouent aussitôt
+O: Semi-ouvert : après un délai, quelques appels d'essai passent
+O: Fermé : les essais réussissent, le trafic normal reprend
+E: Le disjoncteur évite d'insister sur un service en panne : en état ouvert, on renvoie tout de suite une erreur ou une valeur de repli au lieu d'attendre. Resilience4j ou Polly l'implémentent ; un essai qui échoue en semi-ouvert rouvre le circuit.
+
+@017
+Q: Pourquoi ajouter de l'aléa (jitter) à des tentatives répétées avec attente exponentielle ?
+C: Éviter que tous les clients relancent au même instant
+W: Rendre les journaux plus difficiles à lire pour un attaquant
+W: Garantir que la deuxième tentative réussisse
+W: Réduire la taille des requêtes renvoyées
+E: Après une coupure, mille clients qui attendent exactement 1 s, 2 s puis 4 s frappent le service rétabli en vagues synchronisées et le refont tomber. Un délai tiré au hasard étale les tentatives. On plafonne aussi le nombre d'essais.
+
+@018
+Q: Un client relance jusqu'à 3 fois une requête en échec (soit 4 tentatives au plus), avec une attente de 200 ms doublée à chaque relance. Combien de millisecondes d'attente cumulée au pire, hors durée des appels ?
+N: 1400
+U: ms
+E: Les attentes sont 200, 400 puis 800 ms avant les trois relances, soit 1 400 ms. Ce calcul sert à vérifier que le total reste sous le délai accordé à l'appelant : des relances à chaque niveau d'une chaîne de services multiplient vite ce temps.
+
+@019
+Q: Quelle opération peut-on relancer sans risque après une erreur réseau ?
+C: Un PUT qui remplace la ressource par une valeur complète
+W: Un POST qui débite un compte sans identifiant de requête
+W: Un POST qui ajoute une ligne de commande
+W: Un appel qui incrémente un compteur de stock
+E: Une opération idempotente produit le même état qu'on l'exécute une ou plusieurs fois : GET, PUT et DELETE le sont par définition HTTP. Pour un POST, on fournit une clé d'idempotence que le serveur mémorise afin d'ignorer les doublons.
+
+@020
+Q: À quoi sert l'en-tête Idempotency-Key envoyé avec ce POST de paiement ?
+C: Le serveur reconnaît une relance et ne débite pas deux fois
+W: Il chiffre le corps de la requête
+W: Il identifie l'utilisateur à la place du jeton
+W: Il force le serveur à traiter cette requête avant les autres en file
+E: Si la réponse se perd, le client relance avec la même clé. Le serveur garde clé et résultat pendant un certain temps : une seconde requête identique renvoie la réponse enregistrée. Stripe ou Adyen fonctionnent ainsi.
+```http
+POST /paiements HTTP/1.1
+Idempotency-Key: 3f2c9a7e-81b4-4d0e-9c55-0a6e2f1b7d10
+Content-Type: application/json
+
+{"commande": "C-1042", "montant": 4990}
+```
+
+@021
+Q: Quel motif cette configuration Resilience4j met-elle en place pour l'appel au service Stock ?
+C: Bulkhead (cloison)
+W: Strangler fig
+W: Sidecar
+W: CQRS
+E: Comme les cloisons étanches d'un navire, chaque dépendance a son pool limité : si Stock ne répond plus, seuls ses dix appels simultanés sont bloqués, les appels vers Paiement continuent. Resilience4j propose un bulkhead par sémaphore ou par pool de threads.
+```yaml
+resilience4j:
+  bulkhead:
+    instances:
+      stock:
+        maxConcurrentCalls: 10
+        maxWaitDuration: 0
+```
+
+@022
+Q: Associer chaque motif de résilience au problème qu'il traite.
+P: Timeout => Attente sans fin d'une réponse
+P: Retry => Erreur passagère du réseau
+P: Circuit breaker => Dépendance en panne durable
+P: Fallback => Besoin d'une réponse dégradée plutôt que rien
+E: Ces motifs se combinent : un délai court, deux relances au plus, un disjoncteur au-dessus, et une valeur de repli (prix en cache, liste vide, message « indisponible ») quand le circuit est ouvert. Relancer sans disjoncteur aggrave une panne durable.
+
+@023
+Q: Quelle est la différence entre une sonde liveness et une sonde readiness dans Kubernetes ?
+C: Liveness redémarre un conteneur bloqué, readiness le retire du trafic s'il n'est pas prêt
+W: Liveness vérifie l'espace disque du nœud, readiness vérifie la mémoire disponible du conteneur
+W: Liveness s'exécute au démarrage, readiness une fois par jour
+W: Les deux sont identiques, seul le nom change selon la version
+E: Une readiness qui échoue sort le pod du Service sans le tuer, par exemple pendant le chargement d'un cache. Une liveness ne doit pas tester les dépendances : si la base tombe, redémarrer tous les pods n'arrange rien et amplifie la panne.
+
+@024
+Q: Pourquoi chaque microservice doit-il journaliser un identifiant de corrélation transmis d'un appel à l'autre ?
+C: Pour retrouver les journaux d'une même requête à travers tous les services
+W: Pour chiffrer les journaux de bout en bout
+W: Pour réduire le volume des journaux de moitié
+W: Pour que le load balancer renvoie la requête suivante vers la même instance du service
+E: Une commande traverse cinq services et produit des journaux sur dix machines. Sans identifiant commun, impossible de reconstituer son parcours. La passerelle crée l'identifiant (ou reprend traceparent), chaque service le relaie dans les appels et les messages et l'écrit dans chaque ligne.
+
+@025
+Q: Associer chaque pilier de l'observabilité à l'outil qui le porte le plus souvent.
+P: Métriques => Prometheus et Grafana
+P: Journaux => Loki ou la pile ELK
+P: Traces distribuées => Jaeger ou Tempo
+P: Instrumentation commune => OpenTelemetry
+E: Les métriques disent qu'il y a un problème (taux d'erreur, latence), les traces montrent quel service ralentit, les journaux expliquent pourquoi. OpenTelemetry fournit un SDK et un format communs pour produire les trois sans dépendre d'un éditeur.
+
+@026
+Q: Dans une trace distribuée, qu'est-ce qu'un span ?
+C: Une opération chronométrée, rattachée à la trace et à son span parent
+W: Le nombre total de services appelés par une requête
+W: Un fichier de journal compressé
+W: La partie d'un message Kafka qui contient la clé et les en-têtes de routage
+E: Une trace est l'arbre des spans d'une requête : passerelle, puis appel à Commande, puis requête SQL, chacun avec début, durée et attributs. La vue en cascade de Jaeger montre d'un coup d'œil le span qui consomme le temps.
+
+@027
+Q: Quel en-tête standard W3C propage le contexte de trace entre services HTTP ?
+C: traceparent
+W: X-Forwarded-For
+W: Authorization
+W: Cache-Control
+E: traceparent porte la version, l'identifiant de trace, celui du span parent et les indicateurs d'échantillonnage. OpenTelemetry le lit et l'écrit automatiquement ; pour Kafka ou RabbitMQ, il voyage dans les en-têtes du message.
+
+@028
+Q: Une page met 2 s à s'afficher. La trace montre : passerelle 2 000 ms, Commande 1 950 ms, dont 40 appels successifs à Catalogue de 45 ms chacun. Quelle correction viser en premier ?
+C: Remplacer les 40 appels par un appel groupé ou des appels parallèles
+W: Doubler le nombre d'instances de la passerelle et du service Commande
+W: Passer les journaux en niveau DEBUG
+W: Ajouter de la mémoire au service Catalogue
+E: 40 × 45 ms = 1 800 ms : c'est le problème N+1 transposé au réseau. Un endpoint qui accepte une liste d'identifiants, ou des appels concurrents, ramène ce temps à une ou deux latences. Ajouter des instances ne réduit pas un temps séquentiel.
+
+@029
+Q: Quel élément de cette ligne de journal ne doit pas y figurer ?
+C: Le jeton d'accès ou le mot de passe reçu dans la requête
+W: L'identifiant de corrélation
+W: Le code de statut HTTP renvoyé
+W: La durée de traitement en millisecondes
+E: Les journaux sont centralisés, conservés et lus par beaucoup de monde. Un jeton journalisé permet d'usurper l'utilisateur. On masque les en-têtes Authorization, les cookies et les données personnelles inutiles au diagnostic.
+```text
+2026-10-31 10:02:11 INFO commande corr=7f3a91c2 POST /commandes 201 48 ms Authorization=Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0MiJ9
+```
+
+@030
+Q: Où ranger la configuration propre à chaque environnement d'un microservice (URL de base, niveau de journal) ?
+C: Dans des variables d'environnement ou un service de configuration, hors de l'image
+W: En dur dans le code, avec un if sur le nom de la machine
+W: Dans l'image Docker elle-même, reconstruite et retaguée pour chaque environnement
+W: Dans la base d'un autre service
+E: Selon les douze facteurs, la même image passe de la recette à la production ; seule la configuration change. Les secrets vont dans un coffre (Vault, Secrets Kubernetes chiffrés), jamais dans le dépôt Git.
+
+@031
+Q: Pourquoi une transaction distribuée en deux phases (2PC) est-elle rarement utilisée entre microservices ?
+C: Elle verrouille les données et lie chaque service à la disponibilité des autres
+W: Elle ne fonctionne qu'avec des bases MongoDB configurées en replica set sur chaque service
+W: Elle interdit l'utilisation de HTTPS
+W: Elle oblige à écrire chaque service participant en Java
+E: En 2PC, un coordinateur verrouille les données de tous les participants jusqu'à la décision finale ; un participant lent ou un coordinateur en panne bloque tout. Kafka ou une API REST ne participent d'ailleurs pas à ce protocole. On préfère la saga et la cohérence à terme.
+
+@032
+Q: Que signifie la cohérence à terme (eventual consistency) ?
+C: Les copies d'une donnée peuvent diverger un moment puis convergent
+W: Les données ne redeviennent cohérentes qu'à la clôture de fin de mois
+W: Une transaction est annulée si elle dure plus d'une minute
+W: Chaque lecture renvoie à coup sûr la dernière écriture
+E: Après une commande, le service Recherche peut afficher l'ancien stock pendant quelques centaines de millisecondes, le temps que l'événement soit traité. L'interface doit le tolérer : afficher « commande en cours » plutôt que promettre un état immédiat.
+
+@033
+Q: Selon le théorème CAP, que doit choisir un système distribué lorsqu'une partition réseau coupe ses nœuds ?
+C: Entre la cohérence et la disponibilité
+W: Entre la latence et le débit
+W: Entre le chiffrement et la compression
+W: Entre SQL et NoSQL
+E: Pendant la coupure, un nœud isolé peut refuser de répondre pour ne pas servir de donnée périmée (choix CP) ou répondre quand même au risque d'incohérence (choix AP). Hors partition, la question devient celle du compromis entre latence et cohérence.
+
+@034
+Q: Quelle est la différence entre une saga orchestrée et une saga chorégraphiée ?
+C: Orchestrée : un coordinateur commande les étapes ; chorégraphiée : chaque service réagit aux événements
+W: Orchestrée : tout tient dans une seule transaction SQL ; chorégraphiée : il n'y a pas de transaction du tout
+W: Orchestrée : écrite en BPMN ; chorégraphiée : écrite en YAML
+W: Il s'agit de deux noms différents pour un même motif
+E: La chorégraphie est simple pour deux ou trois étapes mais le flux devient difficile à suivre ensuite. Un orchestrateur (Temporal, Camunda, ou une machine à états maison) rend le déroulé explicite et centralise les compensations.
+
+@035
+Q: Qu'est-ce qu'une transaction de compensation dans une saga ?
+C: Une action métier qui annule l'effet d'une étape déjà validée
+W: Un ROLLBACK SQL exécuté à distance sur la base d'un autre service
+W: Un remboursement automatique de la facture d'hébergement
+W: Un verrou posé sur chaque table touchée pendant la saga
+E: Chaque étape d'une saga est une transaction locale déjà validée : on ne peut plus la défaire par un ROLLBACK. On écrit donc l'action inverse, par exemple rembourser un paiement ou libérer une réservation de stock, qui doit elle-même être idempotente.
+
+@036
+Q: Remettre dans l'ordre les étapes d'une saga de commande qui réussit.
+O: Commande créée à l'état en attente
+O: Paiement débité
+O: Stock réservé
+O: Commande confirmée et client notifié
+E: L'état « en attente » est visible dès le départ : le client sait que la commande est en cours. Chaque étape est une transaction locale qui publie un événement déclenchant la suivante, ou répond à l'orchestrateur.
+
+@037
+Q: Dans la saga de commande, la réservation du stock échoue après le débit du paiement. Que doit faire la saga ?
+C: Rembourser le paiement puis passer la commande à l'état annulée
+W: Relancer la réservation indéfiniment jusqu'à ce qu'elle réussisse
+W: Laisser le paiement débité et confirmer la commande
+W: Supprimer la commande de la base sans prévenir personne
+E: Les compensations s'exécutent dans l'ordre inverse des étapes réussies : ici le remboursement, puis l'annulation de la commande avec un motif lisible. Quelques relances sont acceptables pour une erreur passagère, pas pour un article réellement épuisé.
+
+@038
+Q: Quel problème le motif Transactional Outbox résout-il ?
+C: Écrire en base et publier l'événement sans risquer d'en perdre un des deux
+W: Supprimer les anciens messages d'une file RabbitMQ
+W: Chiffrer les événements avant leur envoi
+W: Accélérer les requêtes SQL de lecture grâce à une table de cache intermédiaire
+E: Si le service valide sa transaction puis plante avant d'envoyer à Kafka, l'événement est perdu ; s'il envoie d'abord, l'écriture peut échouer. L'outbox écrit l'événement dans une table de la même base, dans la même transaction ; un relais (Debezium ou une tâche) le publie ensuite.
+
+@039
+Q: Quel défaut contient ce code de service ?
+C: L'événement peut être publié alors que la transaction est ensuite annulée
+W: save ne peut pas être appelé dans une méthode @Transactional
+W: Kafka refuse les messages envoyés depuis Spring
+W: Le nom du topic doit être en majuscules
+E: L'envoi à Kafka ne fait pas partie de la transaction SQL : si une contrainte échoue au commit, les autres services ont déjà reçu « commande créée » pour une commande qui n'existe pas. On écrit l'événement dans une table outbox dans la même transaction.
+```java
+@Transactional
+public void creer(Commande pCommande) {
+    commandeRepository.save(pCommande);
+    kafkaTemplate.send("commandes", pCommande.getId(), new CommandeCreee(pCommande));
+    stockClient.verifier(pCommande);
+}
+```
+
+@040
+Q: Comment rendre un consommateur de messages idempotent quand un même événement peut arriver deux fois ?
+C: Enregistrer l'identifiant des messages traités et ignorer ceux déjà vus
+W: Supprimer la file après chaque message lu
+W: Traiter chaque message dans un nouveau thread
+W: Augmenter la taille maximale des messages pour regrouper les doublons en un seul
+E: Les brokers garantissent en pratique une livraison au moins une fois : après un redémarrage, un message déjà traité revient. Une table des identifiants traités, écrite dans la même transaction que l'effet métier, ou une opération naturellement idempotente (UPSERT) évite le double traitement.
+
+@041
+Q: Que propose le motif CQRS ?
+C: Séparer le modèle d'écriture des modèles de lecture
+W: Chiffrer toutes les requêtes entre services
+W: Regrouper l'ensemble des requêtes dans un seul service
+W: Remplacer SQL par des fichiers CSV
+E: Les commandes passent par un modèle orienté règles métier, les lectures par des vues dénormalisées construites à partir des événements (par exemple dans Elasticsearch pour la recherche). On gagne en performance de lecture, au prix d'une cohérence à terme et de plus de code.
+
+@042
+Q: En event sourcing, qu'est-ce qui est enregistré comme source de vérité ?
+C: La suite des événements survenus
+W: L'état courant de chaque objet, sans son historique
+W: Les journaux applicatifs au format texte
+W: Une copie quotidienne de la base
+E: Le solde d'un compte se recalcule en rejouant « crédité 100 », « débité 30 », etc. On obtient un historique complet et la possibilité de reconstruire de nouvelles vues ; on garde des instantanés pour éviter de tout rejouer à chaque lecture.
+
+@043
+Q: Un service doit afficher le nom du client sur chaque commande, alors que les clients appartiennent au service Client. Quelle solution limite le couplage ?
+C: Garder une copie locale du nom, mise à jour par les événements ClientModifié
+W: Faire une jointure SQL directe sur la base du service Client
+W: Appeler le service Client pour chaque ligne de la liste
+W: Fusionner les deux services en un seul
+E: La copie locale rend l'affichage indépendant de la disponibilité du service Client et évite les appels en rafale. La donnée peut être brièvement périmée, ce qui est acceptable pour un nom ; le service Client reste seul maître de la donnée de référence.
+
+@044
+Q: Quel motif permet de remplacer progressivement un monolithe par des microservices ?
+C: Strangler fig (figuier étrangleur)
+W: Big bang
+W: Singleton
+W: Active record
+E: Une passerelle placée devant le monolithe redirige une fonctionnalité à la fois vers le nouveau service ; le reste continue d'aller au monolithe. On peut revenir en arrière à chaque étape, contrairement à une réécriture complète livrée d'un bloc.
+
+@045
+Q: Remettre dans l'ordre l'extraction d'une fonctionnalité d'un monolithe avec le motif strangler fig.
+O: Placer une passerelle devant le monolithe sans changer le routage
+O: Développer le nouveau service et synchroniser ses données
+O: Router une petite part du trafic vers le nouveau service et comparer
+O: Basculer tout le trafic de la fonctionnalité
+O: Supprimer le code devenu inutile dans le monolithe
+E: La passerelle d'abord, car elle permet ensuite de basculer sans toucher aux clients. La bascule progressive (quelques pourcents, puis tout) limite le risque ; supprimer l'ancien code évite deux implémentations à maintenir.
+
+@046
+Q: Quel est le rôle d'un sidecar dans un service mesh comme Istio ou Linkerd ?
+C: Un proxy à côté de chaque service, qui gère TLS mutuel, relances et métriques
+W: Un second conteneur qui exécute les tests unitaires
+W: Une base de données embarquée dans le pod pour garder en cache les réponses des autres services
+W: Un tableau de bord pour les développeurs
+E: Le proxy (Envoy pour Istio) intercepte le trafic du pod : chiffrement mTLS, délais, relances, disjoncteur et traces sans modifier le code. En contrepartie, chaque appel traverse deux proxies et l'exploitation se complexifie ; le mesh se justifie avec beaucoup de services.
+
+@047
+Q: Associer chaque stratégie de déploiement à son principe.
+P: Rolling update => Instances remplacées une à une
+P: Blue-green => Deux environnements complets, bascule d'un coup
+P: Canary => Petite part du trafic sur la nouvelle version
+P: Feature flag => Code livré mais fonctionnalité activée à part
+E: Le canary mesure les erreurs sur 5 % du trafic avant d'étendre ; le blue-green permet un retour arrière immédiat ; le rolling update est le comportement par défaut d'un Deployment Kubernetes. Toutes supposent que deux versions cohabitent un moment, donc des API rétrocompatibles.
+
+@048
+Q: Un service ajoute un champ obligatoire dans la réponse de son API, et un client existant plante. Quelle règle a été oubliée ?
+C: Les clients doivent ignorer les champs inconnus
+W: Les API doivent renvoyer du XML plutôt que du JSON
+W: Chaque champ doit être une chaîne de caractères
+W: Les réponses doivent rester sous 1 Ko
+E: Ajouter un champ est une évolution compatible si les clients sont tolérants (en Java, Jackson avec FAIL_ON_UNKNOWN_PROPERTIES à false). Supprimer ou renommer un champ, en revanche, casse les clients : on passe alors par une nouvelle version d'API et une période de cohabitation.
+
+@049
+Q: Qu'apporte un test de contrat orienté consommateur, par exemple avec Pact ?
+C: Vérifier que le fournisseur respecte ce que chaque client attend, sans tout déployer
+W: Mesurer la tenue en charge du service
+W: Vérifier l'orthographe de la documentation
+W: Tester l'interface graphique de chaque client de bout en bout dans un navigateur Selenium
+E: Le client décrit les requêtes qu'il envoie et les réponses qu'il attend ; le fournisseur rejoue ce contrat dans sa propre CI. Une modification cassante est détectée avant le déploiement, sans environnement complet de bout en bout, lent et fragile.
+
+@050
+Q: Après une mise en production, le taux d'erreurs 503 de Commande grimpe et les traces montrent des appels à Stock qui échouent immédiatement. Que vérifier en premier ?
+C: L'état du disjoncteur vers Stock et la santé des instances de Stock
+W: La taille des images Docker de Commande
+W: Le format des dates dans les journaux
+W: La version du navigateur des clients
+E: Des échecs immédiats, sans attente, signent souvent un disjoncteur ouvert ou un Service sans instance prête. On regarde les métriques du disjoncteur, puis kubectl get endpoints et les readiness de Stock. On remonte à la cause avant de forcer la fermeture du circuit.
