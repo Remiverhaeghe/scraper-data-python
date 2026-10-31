@@ -91,7 +91,7 @@ Dans `android/app/src/main/AndroidManifest.xml`, déjà modifié :
   serveur répond en HTTP sur le réseau local, ce qu'Android bloque par défaut.
 
 Le jeton circule alors en clair sur le Wi-Fi. Sur un réseau partagé, passer par
-Tailscale, qui chiffre la liaison (voir le README principal).
+Tailscale, qui chiffre la liaison (voir [docs/mobile.md](../docs/mobile.md)).
 
 ## Développement
 
@@ -145,7 +145,7 @@ modification : `dart run flutter_launcher_icons`.
 ## Premier lancement
 
 1. Sur le PC, lancer le tableau de bord en écoutant sur le réseau (`WEB_HOST`
-   dans `config.py`, voir le README principal), puis `python -m web`.
+   dans `config.py`, voir [docs/mobile.md](../docs/mobile.md)), puis `python -m web`.
 2. Dans *Paramètres*, *Application mobile* : copier l'adresse et créer un jeton.
 3. Dans l'application : saisir l'adresse et le jeton, puis *Se connecter*.
 

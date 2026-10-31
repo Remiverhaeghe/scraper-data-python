@@ -5,6 +5,12 @@ dans l'historique git.
 
 ## Non publié
 
+### Documentation découpée
+- README réduit à la présentation, au lancement et à l'emplacement des données,
+  avec une table vers le dossier `docs/`
+- Dossier `docs/` : fonctionnalités, architecture et arborescence, sécurité,
+  Docker sur le NAS, téléphone et API mobile, révision et simulations
+
 ### Téléphone hors ligne
 - Les offres retenues (intéressé, postulé, entretien) restent sur le téléphone
   avec leur fiche complète, même après la semaine de leur parution ; filtre
