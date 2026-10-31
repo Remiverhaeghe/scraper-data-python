@@ -1,4 +1,4 @@
-"""Employeurs industriels de la région, sur la page Mon marché"""
+"""Employeurs industriels de la région et candidatures spontanées, sur Mon marché"""
 
 import threading
 from datetime import datetime
@@ -12,20 +12,25 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QSpinBox,
+    QTabWidget,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
+from gui.employers_map import EmployersMap
 from gui.theme import COLORS
 from gui.widgets import create_button, create_card, show_message
+from job.geocoding import load_home
 from job.local_employers import (
     build_employers_view,
     fetch_local_employers,
     follow_employer,
+    record_spontaneous,
 )
 from job.presentation import format_date
+from job.spontaneous_applications import STATUSES
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -33,13 +38,31 @@ logger = get_logger(__name__)
 COLUMNS = (
     "Employeur",
     "Secteur",
+    "Effectif",
     "Site le plus proche",
     "Distance",
     "Offres en base",
-    "Suivi",
+    "Candidature",
 )
+RIGHT_ALIGNED = (4, 5)
 SEARCH_URL = "https://duckduckgo.com/?q={query}"
 MAX_ROWS = 300
+
+
+def describe_contact(pEmployer):
+    """Retourne la colonne Candidature : étape, date et relance due, ou le suivi."""
+
+    vApplication = pEmployer.get("spontaneous")
+
+    if vApplication is None:
+        return "Suivi" if pEmployer["followed"] else ""
+
+    rText = f"{vApplication['status_label']} · envoi du {format_date(vApplication['sent_on'])}"
+
+    if vApplication["follow_up_due"]:
+        rText += " · à relancer"
+
+    return rText
 
 
 class LocalEmployersPanel(QWidget):
@@ -57,8 +80,8 @@ class LocalEmployersPanel(QWidget):
 
         vCard, vLayout = create_card(
             "Employeurs industriels de la région",
-            "Entreprises de 250 salariés et plus, d'après l'annuaire public : suivez-en "
-            "une pour être alerté de ses nouvelles offres",
+            "Entreprises de 250 salariés et plus, d'après l'annuaire public : suivez "
+            "vos candidatures spontanées et soyez alerté de leurs nouvelles offres",
             "briefcase",
             "local-employers",
         )
@@ -70,10 +93,13 @@ class LocalEmployersPanel(QWidget):
         self.distance_spin.setSuffix(" km")
         self.distance_spin.setSpecialValueText("Toute la région")
         self.distance_spin.valueChanged.connect(self.refresh)
+        self.contact_combo = QComboBox()
+        self.contact_combo.currentIndexChanged.connect(self.refresh)
         self.update_button = create_button("Mettre à jour la liste", "history")
         self.update_button.clicked.connect(self.start_fetch)
         vFilters = QHBoxLayout()
         vFilters.addWidget(self.sector_combo, 1)
+        vFilters.addWidget(self.contact_combo, 1)
         vFilters.addWidget(self.distance_spin)
         vFilters.addWidget(self.update_button)
 
@@ -103,6 +129,26 @@ class LocalEmployersPanel(QWidget):
         vActions.addWidget(vCareer)
         vActions.addStretch(1)
 
+        self.status_combo = QComboBox()
+        self.status_combo.addItem("Pas de candidature", "")
+
+        for vStatus, vLabel in STATUSES.items():
+            self.status_combo.addItem(vLabel, vStatus)
+
+        vRecord = create_button("Enregistrer l'étape", "send")
+        vRecord.clicked.connect(self.record_status)
+        vTracking = QHBoxLayout()
+        vTracking.addWidget(QLabel("Candidature spontanée :"))
+        vTracking.addWidget(self.status_combo)
+        vTracking.addWidget(vRecord)
+        vTracking.addStretch(1)
+
+        self.map = EmployersMap()
+        self.map.employer_clicked.connect(self.select_employer)
+        self.tabs = QTabWidget()
+        self.tabs.addTab(self.table, "Liste")
+        self.tabs.addTab(self.map, "Carte")
+
         self.status_label = QLabel()
         self.status_label.setObjectName("cardSubtitle")
         self.status_label.setWordWrap(True)
@@ -111,8 +157,9 @@ class LocalEmployersPanel(QWidget):
 
         vLayout.addLayout(vFilters)
         vLayout.addWidget(self.status_label)
-        vLayout.addWidget(self.table)
+        vLayout.addWidget(self.tabs)
         vLayout.addLayout(vActions)
+        vLayout.addLayout(vTracking)
         vLayout.addWidget(self.message_label)
 
         vOuter = QVBoxLayout(self)
@@ -126,6 +173,7 @@ class LocalEmployersPanel(QWidget):
                 self.database_file,
                 self.sector_combo.currentData() or "",
                 self.distance_spin.value() or None,
+                self.contact_combo.currentData() or "",
             )
 
         except Exception:
@@ -141,10 +189,20 @@ class LocalEmployersPanel(QWidget):
 
             self.sector_combo.blockSignals(False)
 
+        if not self.contact_combo.count():
+            self.contact_combo.blockSignals(True)
+
+            for vContact, vLabel in vView["contacts"].items():
+                self.contact_combo.addItem(vLabel, vContact)
+
+            self.contact_combo.blockSignals(False)
+
         self.employers = vView["employers"][:MAX_ROWS]
         self.status_label.setText(
             f"{vView['region']} · {len(vView['employers'])} employeur(s) affiché(s) sur "
-            f"{vView['count']} · liste du {format_date(vView['updated_at'])}"
+            f"{vView['count']} · liste du {format_date(vView['updated_at'])} · "
+            f"{vView['sent_count']} candidature(s) spontanée(s), "
+            f"{vView['due_count']} à relancer"
             if vView["updated_at"]
             else "Liste encore vide : mettez-la à jour depuis l'annuaire public "
             "(une vingtaine de secondes)."
@@ -156,6 +214,7 @@ class LocalEmployersPanel(QWidget):
                 (
                     vEmployer["name"],
                     vEmployer["sector"],
+                    vEmployer.get("headcount") or "",
                     vEmployer["city"],
                     (
                         ""
@@ -163,12 +222,12 @@ class LocalEmployersPanel(QWidget):
                         else f"{vEmployer['distance_km']} km"
                     ),
                     str(vEmployer["offers"]),
-                    "Suivi" if vEmployer["followed"] else "",
+                    describe_contact(vEmployer),
                 )
             ):
                 vItem = QTableWidgetItem(vValue)
 
-                if vColumn in (3, 4):
+                if vColumn in RIGHT_ALIGNED:
                     vItem.setTextAlignment(
                         Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                     )
@@ -176,6 +235,7 @@ class LocalEmployersPanel(QWidget):
                 self.table.setItem(vRow, vColumn, vItem)
 
         self.table.resizeColumnsToContents()
+        self.map.set_employers(load_home(self.database_file), self.employers)
 
     def selected(self):
         """Retourne l'employeur choisi, ou None en l'indiquant."""
@@ -200,6 +260,36 @@ class LocalEmployersPanel(QWidget):
         show_message(
             self.message_label,
             f"{vEmployer['name']} est suivi : ses nouvelles offres seront signalées.",
+            "success",
+        )
+        self.refresh()
+
+    def select_employer(self, pSiren):
+        """Choisit dans la liste l'employeur cliqué sur la carte."""
+        for vRow, vEmployer in enumerate(self.employers):
+            if vEmployer["siren"] == pSiren:
+                self.table.selectRow(vRow)
+                show_message(self.message_label, f"{vEmployer['name']} choisi.", None)
+
+    def record_status(self):
+        """Enregistre l'étape choisie de la candidature spontanée."""
+        vEmployer = self.selected()
+
+        if vEmployer is None:
+            return
+
+        try:
+            record_spontaneous(
+                self.database_file, vEmployer["siren"], self.status_combo.currentData()
+            )
+
+        except ValueError as vError:
+            show_message(self.message_label, str(vError), "warning")
+            return
+
+        show_message(
+            self.message_label,
+            f"{vEmployer['name']} : {self.status_combo.currentText().lower()}.",
             "success",
         )
         self.refresh()

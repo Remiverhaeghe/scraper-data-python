@@ -1,10 +1,11 @@
 """Notifications du bureau : quoi signaler, quand, et jamais plus de trois par jour
 
-Six situations méritent une notification : les relances du jour, une offre
-récente très proche du profil, une nouvelle offre d'un employeur suivi, une
-quête du jour presque terminée, le soir une série sur le point de s'arrêter et,
-le lundi, le bilan de la semaine écoulée. Chacune n'est signalée qu'une fois ;
-les heures calmes et le plafond quotidien des Paramètres évitent de lasser.
+Sept situations méritent une notification : les relances du jour, celles des
+candidatures spontanées, une offre récente très proche du profil, une nouvelle
+offre d'un employeur suivi, une quête du jour presque terminée, le soir une
+série sur le point de s'arrêter et, le lundi, le bilan de la semaine écoulée.
+Chacune n'est signalée qu'une fois ; les heures calmes et le plafond quotidien
+des Paramètres évitent de lasser.
 """
 
 from datetime import timedelta
@@ -12,6 +13,7 @@ from datetime import timedelta
 from job.application_tracking import get_due_follow_ups
 from job.companies import find_preferred_offers
 from job.progress import build_progress
+from job.spontaneous_applications import list_due_follow_ups
 from job.settings import load_settings
 from job.statistics import find_hot_offers
 from storage.settings_repository import load_json_setting, save_json_setting
@@ -62,6 +64,19 @@ def collect_candidates(pDatabaseFile, pNow):
                 + (f" chez {vFirst['company']}" if vFirst.get("company") else "")
                 + (" et d'autres" if len(vFollowUps) > 1 else ""),
                 "page": "applications",
+            }
+        )
+
+    vSpontaneous = list_due_follow_ups(pDatabaseFile, pNow.date())
+
+    if vSpontaneous:
+        rCandidates.append(
+            {
+                "key": f"spontaneous-{vToday}",
+                "title": f"{len(vSpontaneous)} candidature(s) spontanée(s) à relancer",
+                "text": vSpontaneous[0]["name"]
+                + (" et d'autres" if len(vSpontaneous) > 1 else ""),
+                "page": "market",
             }
         )
 

@@ -1,10 +1,16 @@
 {# Employeurs industriels de la région (job/local_employers.py), tirés de
-   l'annuaire public des entreprises ; suivre un employeur l'ajoute aux
-   entreprises privilégiées, dont les nouvelles offres sont signalées. #}
+   l'annuaire public des entreprises, et candidatures spontanées
+   (job/spontaneous_applications.py) ; la carte réutilise static/offers_map.js. #}
 {% extends "base.html" %}
 {% import "_macros.html" as ui %}
 
 {% block title %}Employeurs de la région{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', path='leaflet/leaflet.css').path }}">
+    <script src="{{ url_for('static', path='leaflet/leaflet.js').path }}" defer></script>
+    <script src="{{ url_for('static', path='offers_map.js').path }}" defer></script>
+{% endblock %}
 
 {% block content %}
 {{ ui.page_header("Employeurs de la région", "Entreprises industrielles, d'énergie et de transport de 250 salariés et plus, " ~ view.region, "briefcase") }}
@@ -19,6 +25,9 @@
             <option value="">Tous les secteurs</option>
             {% for item in view.sectors %}<option value="{{ item }}"{% if item == sector %} selected{% endif %}>{{ item }}</option>{% endfor %}
         </select>
+        <select name="contact" aria-label="Candidature spontanée">
+            {% for value, label in view.contacts.items() %}<option value="{{ value }}"{% if value == contact %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
         <label>À moins de <input type="number" name="distance" min="0" max="1000" step="10" value="{{ distance or '' }}" placeholder="toute la région"> km</label>
         <button class="button" type="submit">Filtrer</button>
     </form>
@@ -27,22 +36,53 @@
         <button class="button" type="submit">{{ icon("history", 16) }} Mettre à jour la liste</button>
     </form>
     <p class="muted">
-        {% if view.updated_at %}{{ shown }} employeur(s) affiché(s) sur {{ view.count }} · liste du {{ view.updated_at | date_fr }}{% else %}Liste encore vide : mettez-la à jour depuis l'annuaire public (une vingtaine de secondes).{% endif %}
+        {% if view.updated_at %}{{ shown }} employeur(s) affiché(s) sur {{ view.count }} · liste du {{ view.updated_at | date_fr }} · {{ view.sent_count }} candidature(s) spontanée(s), {{ view.due_count }} à relancer{% else %}Liste encore vide : mettez-la à jour depuis l'annuaire public (une vingtaine de secondes).{% endif %}
     </p>
 </section>
 
-{% if view.employers %}
+{% if map_points or map_home %}
 <section class="card section-gap">
+    <div class="map-legend">
+        <span class="map-key"><span class="map-dot map-dot-primary"></span> à contacter</span>
+        <span class="map-key"><span class="map-dot map-dot-warning"></span> candidature en cours</span>
+        <span class="map-key"><span class="map-dot map-dot-danger"></span> à relancer</span>
+        <span class="map-key"><span class="map-dot map-dot-success"></span> entretien obtenu</span>
+        <span class="map-key"><span class="map-dot map-dot-muted"></span> réponse reçue</span>
+    </div>
+    <div id="offers-map" class="offers-map" aria-label="Carte des employeurs"></div>
+    <script type="application/json" id="map-data">{{ {"points": map_points, "home": map_home, "radius": distance or None} | tojson }}</script>
+</section>
+{% endif %}
+
+{% if view.employers %}
+<section class="card section-gap" id="employers-list">
     <table class="table">
-        <thead><tr><th scope="col">Employeur</th><th scope="col">Secteur</th><th scope="col">Site le plus proche</th><th scope="col">Distance</th><th scope="col">Offres en base</th><th scope="col">Veille</th></tr></thead>
+        <thead><tr><th scope="col">Employeur</th><th scope="col">Secteur</th><th scope="col">Effectif</th><th scope="col">Site le plus proche</th><th scope="col">Distance</th><th scope="col">Offres en base</th><th scope="col">Candidature spontanée</th><th scope="col">Veille</th></tr></thead>
         <tbody>
             {% for employer in view.employers %}
             <tr>
                 <td><a href="{{ employer.page }}" rel="noopener" target="_blank">{{ employer.name }}</a></td>
                 <td>{{ employer.sector }}</td>
+                <td>{{ employer.headcount }}</td>
                 <td>{{ employer.city }}</td>
                 <td>{% if employer.distance_km is not none %}{{ employer.distance_km }} km{% endif %}</td>
                 <td>{{ employer.offers }}</td>
+                <td>
+                    {% set application = employer.spontaneous %}
+                    {% if application %}<span class="muted">Envoi du {{ application.sent_on | date_fr }}</span>{% if application.follow_up_due %} <span class="badge badge-warning">À relancer</span>{% endif %}{% endif %}
+                    <form class="inline-form" method="post" action="{{ url_for('record_spontaneous_application').path }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                        <input type="hidden" name="siren" value="{{ employer.siren }}">
+                        <input type="hidden" name="sector" value="{{ sector }}">
+                        <input type="hidden" name="distance" value="{{ distance }}">
+                        <input type="hidden" name="contact" value="{{ contact }}">
+                        <select name="status" aria-label="Étape de la candidature chez {{ employer.name }}">
+                            <option value="">Pas de candidature</option>
+                            {% for value, label in statuses.items() %}<option value="{{ value }}"{% if application and application.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+                        </select>
+                        <button class="button" type="submit">Noter</button>
+                    </form>
+                </td>
                 <td>
                     {% if employer.followed %}<span class="badge badge-success">Suivi</span>{% else %}
                     <form method="post" action="{{ url_for('follow_local_employer').path }}">

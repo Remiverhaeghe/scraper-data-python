@@ -293,6 +293,7 @@ Documents/JobBoard/
 - [x] Mon marché : offres des 90 derniers jours, compétences et villes les plus demandées avec leur net mensuel médian
 - [x] Mon marché : régions (département gardé au placement des offres), compétences à travailler en priorité et évolution mois par mois
 - [x] Employeurs industriels de la région (annuaire public des entreprises, 250 salariés et plus) : filtre par secteur et distance, offres en base, suivi qui signale leurs nouvelles offres
+- [x] Candidatures spontanées ciblées : effectif de chaque employeur, étape notée (envoyée, relancée, entretien, refus, sans réponse), relance proposée après 15 jours sans réponse et notifiée, filtre « pas encore contactés » ou « à relancer », carte autour du domicile (OpenStreetMap sur le web, carte schématique hors ligne sur le bureau) ; l'envoi suit l'employeur et rapporte des points
 - [x] Recherches « Près de chez moi » prêtes d'un clic : Java, PHP, développeur, maintenance et automatisme autour du domicile
 - [x] Réponses des recruteurs lues dans Gmail (IMAP, lecture seule) : refus ou entretien proposé, appliqué ou ignoré d'un clic
 - [x] CV adapté à une offre, en Word ou en PDF prêt à envoyer : compétences demandées en tête, expériences les plus proches d'abord ; lettre en Word ou en PDF
@@ -311,7 +312,7 @@ Documents/JobBoard/
 - [x] 44 trophées (dont 3 cachés) déduits de l'activité, carte joueur avec records et carte d'activité sur 12 semaines (bureau, web, téléphone)
 - [x] Planning de la semaine (bureau, web) : entretiens, relances, séances de révision prévues et quêtes de la semaine jour par jour ; une tâche glissée d'un jour à l'autre change sa date, et l'abonnement d'agenda suit, révisions prévues comprises
 - [x] Première ouverture guidée : visite des pages principales présentée par la mascotte au premier lancement (surimpression animée sur le bureau, page Visite guidée sur le web, relançable à tout moment), quêtes de démarrage cochées d'elles-mêmes (compétences, recherche enregistrée, première recherche, première révision, téléphone connecté) et récompensées une fois
-- [x] Notifications natives de Windows sur le bureau : relances du jour, offre récente à 80 % et plus du profil, quête du jour presque terminée, série en danger le soir, bilan de la semaine le lundi ; un clic ouvre la bonne page ; heures calmes et plafond quotidien (3 par défaut) réglables dans les Paramètres, chaque notification montrée une seule fois
+- [x] Notifications natives de Windows sur le bureau : relances du jour, offre récente à 80 % et plus du profil, quête du jour presque terminée, série en danger le soir, bilan de la semaine le lundi, candidature spontanée à relancer ; un clic ouvre la bonne page ; heures calmes et plafond quotidien (3 par défaut) réglables dans les Paramètres, chaque notification montrée une seule fois
 - [x] Sessions de concentration de 25 minutes (méthode Pomodoro) sur un objectif : postuler, réviser ou préparer un entretien ; anneau du minuteur animé, points des actions faites pendant la session comptés double si elle va à son terme, bilan des actions en fin de session (accueil du bureau, tableau de bord web)
 - [x] Récompenses cosmétiques débloquées avec les niveaux : six couleurs d'accent (bleu atelier à or du technicien expert) appliquées à toute l'interface, cadres du badge de niveau (bronze à diamant), son court de réussite désactivable pour une quête, un trophée ou un niveau ; choix sur la page Progression (bureau, web), cadre affiché sur le téléphone
 - [x] Bilan hebdomadaire « saison » : la semaine écoulée (lundi à dimanche) avec XP, jours actifs, quêtes, candidatures, révisions et entretiens comparés à la semaine précédente, meilleur jour, record des huit dernières semaines et médaille selon les quêtes réussies ; page Progression (bureau, web), notification le lundi sur le bureau et une fois par semaine sur le téléphone
@@ -758,6 +759,7 @@ scraper-data-python/
 │   ├── onboarding.py                          # Premiers pas : quêtes de démarrage et étapes de la visite
 │   ├── weekly_planning.py                     # Planning de la semaine : tâches par jour, déplacements
 │   ├── local_employers.py                     # Employeurs de la région : annuaire public, secteurs, suivi
+│   ├── spontaneous_applications.py            # Candidatures spontanées : étapes, relance due, teinte
 │   ├── aptitude.py                            # Tests de recrutement : questions générées et scores
 │   ├── troubleshooting.py                     # Pannes à résoudre : partie rejouée, score
 │   ├── ladder.py                              # Langage du simulateur d'automate et dessin ladder
@@ -1044,6 +1046,7 @@ scraper-data-python/
 │   ├── certification_dialog.py                # Informations et documents d'une certification
 │   ├── market_page.py                         # Mon marché : salaires et demande
 │   ├── local_employers_panel.py               # Employeurs industriels de la région, sur Mon marché
+│   ├── employers_map.py                       # Carte schématique des employeurs autour du domicile
 │   ├── quiz_answer.py                         # Zones de réponse selon le type, schéma cliquable
 │   ├── quiz_import_panel.py                   # Ajout de questions : priorités, ChatGPT, import, export
 │   ├── quiz_priority_banner.py                # Thèmes vides demandés par les offres
@@ -1397,6 +1400,7 @@ scraper-data-python/
 │   │   ├── test_onboarding.py                 # Teste les quêtes de démarrage et la visite
 │   │   ├── test_weekly_planning.py            # Teste les tâches par jour, les déplacements et l'agenda
 │   │   ├── test_local_employers.py            # Teste l'annuaire, le secteur, le filtre et le suivi
+│   │   ├── test_spontaneous_applications.py   # Teste les étapes, la relance due, la teinte et les points
 │   │   ├── test_aptitude.py                   # Teste les questions générées, la correction et les scores
 │   │   ├── test_troubleshooting.py            # Teste les scénarios, la consignation et le score
 │   │   ├── test_ladder.py                     # Teste le langage, le dessin, les niveaux et les erreurs classiques
@@ -1581,6 +1585,7 @@ scraper-data-python/
 │   │   ├── test_certifications_page.py         # Teste la page et la fenêtre d'une certification
 │   │   ├── test_market_page.py                 # Teste la page Mon marché
 │   │   ├── test_local_employers_panel.py       # Teste la liste, le filtre, le suivi et la mise à jour
+│   │   ├── test_employers_map.py               # Teste la projection, le dessin, le survol et le clic
 │   │   ├── test_theme.py                       # Teste les thèmes, les icônes et le logo
 │   │   ├── test_theme_contrast.py              # Teste les contrastes des thèmes (WCAG AA)
 │   │   └── test_widgets.py                     # Teste la carte repliable, « Tout replier » et la tuile cliquable

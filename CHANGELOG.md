@@ -5,6 +5,17 @@ dans l'historique git.
 
 ## Non publié
 
+### Candidatures spontanées ciblées
+- Effectif de chaque employeur de la région et position de son site le plus proche
+- Suivi des candidatures spontanées : envoyée, relancée, entretien obtenu, refus
+  ou sans réponse ; relance proposée après 15 jours sans réponse, notifiée sur le
+  bureau ; filtre « pas encore contactés », « candidature envoyée », « à relancer »
+- Carte des employeurs autour du domicile, colorée selon la candidature : fond
+  OpenStreetMap sur le web, carte schématique hors ligne sur le bureau
+- Un envoi suit l'employeur (ses nouvelles offres sont signalées) et rapporte
+  30 XP ; la relance et l'entretien obtenu comptent comme pour une offre, et les
+  envois entrent dans le bilan de la saison
+
 ### Bilan hebdomadaire « saison »
 - Bilan de la semaine écoulée sur la page Progression (bureau, web) : XP, jours
   actifs, quêtes, candidatures, révisions et entretiens comparés à la semaine

@@ -21,6 +21,7 @@ from job.interview_mission import MISSIONS_KEY
 from job.oral_interview import ORAL_KEY
 from job.salary_negotiation import NEGOTIATION_KEY
 from job.season_review import build_season_review
+from job.spontaneous_applications import SPONTANEOUS_KEY
 from job.quiz_exam import load_exam_results
 from storage.aptitude_sessions import get_aptitude_sessions
 from storage.database import connect_database
@@ -54,6 +55,7 @@ XP_RULES = {
     ),
     "interested": ("Offre marquée « Intéressé »", 5),
     "applied": ("Candidature envoyée", 30),
+    "spontaneous": ("Candidature spontanée envoyée", 30),
     "follow_up": ("Relance faite", 15),
     "interview": ("Entretien obtenu", 100),
     "interview_note": ("Compte rendu d'entretien", 20),
@@ -386,6 +388,18 @@ def load_activity(pDatabaseFile):
         if isinstance(vMission, dict) and vMission.get("completed_at"):
             add_action(
                 rActivity, read_day(vMission["completed_at"]), "interview_mission"
+            )
+
+    # Candidatures spontanées : envoi, relance et entretien obtenu, comme une offre
+    for vApplication in load_json_setting(
+        pDatabaseFile, SPONTANEOUS_KEY, {}, dict
+    ).values():
+        add_action(rActivity, read_day(vApplication.get("sent_on")), "spontaneous")
+        add_action(rActivity, read_day(vApplication.get("followed_up_on")), "follow_up")
+
+        if vApplication.get("status") == "interview":
+            add_action(
+                rActivity, read_day(vApplication.get("answered_on")), "interview"
             )
 
     vPuzzles = load_json_setting(pDatabaseFile, PUZZLE_PROGRESS_KEY, {}, dict)

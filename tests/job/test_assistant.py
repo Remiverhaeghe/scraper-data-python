@@ -116,7 +116,12 @@ def test_nearest_site_is_given_from_home(monkeypatch):
 
     vCompany = lookup_company("Decathlon", {"latitude": 50.69, "longitude": 3.18})[0]
 
-    assert vCompany["nearest"] == {"city": "Lille", "distance_km": 11}
+    assert vCompany["nearest"] == {
+        "city": "Lille",
+        "distance_km": 11,
+        "latitude": 50.63,
+        "longitude": 3.06,
+    }
     assert summarize_company(vCompany).endswith(
         "2 établissement(s) ouvert(s), le plus proche à Lille (11 km de chez vous)"
     )

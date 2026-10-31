@@ -13,7 +13,7 @@ STATISTICS = (
     ("xp", "XP gagnée", ()),
     ("active_days", "Jours actifs", ()),
     ("quests", "Quêtes réussies", ("daily_quest", "weekly_quest")),
-    ("applications", "Candidatures", ("applied",)),
+    ("applications", "Candidatures", ("applied", "spontaneous")),
     ("answers", "Questions révisées", ("answer_right", "answer_wrong")),
     ("interviews", "Entretiens obtenus", ("interview",)),
 )

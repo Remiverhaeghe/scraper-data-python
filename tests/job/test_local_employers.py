@@ -1,6 +1,6 @@
 """Tests des employeurs industriels de la région : secteurs, distance, suivi, offres"""
 
-from datetime import datetime
+from datetime import date, datetime
 
 import pandas as pd
 import pytest
@@ -14,6 +14,7 @@ from job.local_employers import (
     fetch_local_employers,
     follow_employer,
     get_sector,
+    record_spontaneous,
 )
 from job.geocoding import HOME_KEY
 from storage.database import initialize_database
@@ -34,6 +35,7 @@ def make_result(pSiren, pName, pActivity, pLatitude, pSigle=None):
         "sigle": pSigle,
         "activite_principale": pActivity,
         "categorie_entreprise": "GE",
+        "tranche_effectif_salarie": "42",
         "matching_etablissements": [
             {
                 "latitude": str(pLatitude),
@@ -144,3 +146,46 @@ def test_unreachable_directory_keeps_the_previous_list(database_file):
         fetch_local_employers(database_file, NOW, failing_request, 0)
 
     assert build_employers_view(database_file)["count"] == 0
+
+
+def test_spontaneous_applications_are_tracked_and_filtered(database_file):
+    """Vérifie l'effectif, la position, l'envoi qui suit l'employeur et le filtre."""
+
+    def fake_request(_pMethod, _pUrl, pParams):
+        return {
+            "total_pages": 1,
+            "results": [
+                make_result("1", "ROQUETTE FRERES", "10.62Z", 50.60),
+                make_result("2", "ALSTOM TRANSPORT SA", "30.20Z", 50.35),
+            ],
+        }
+
+    fetch_local_employers(database_file, NOW, fake_request, 0)
+    record_spontaneous(database_file, "2", "sent", date(2026, 10, 1))
+
+    vView = build_employers_view(database_file, pToday=date(2026, 10, 20))
+    vAlstom = vView["employers"][1]
+
+    assert vAlstom["headcount"] == "1 000 à 1 999 salariés"
+    assert (vAlstom["latitude"], vAlstom["longitude"]) == (50.35, 3.06)
+    assert vAlstom["followed"] and vAlstom["spontaneous"]["follow_up_due"]
+    assert (vView["sent_count"], vView["due_count"]) == (1, 1)
+
+    def names(pContact):
+        return [
+            vItem["name"]
+            for vItem in build_employers_view(
+                database_file, pContact=pContact, pToday=date(2026, 10, 20)
+            )["employers"]
+        ]
+
+    assert names("todo") == ["ROQUETTE FRERES"]
+    assert names("sent") == names("due") == ["ALSTOM TRANSPORT SA"]
+
+    record_spontaneous(database_file, "1", "refused", date(2026, 10, 2))
+
+    assert names("due") == ["ALSTOM TRANSPORT SA"]
+    assert "ROQUETTE FRERES" not in load_company_rules(database_file)["preferred"]
+
+    with pytest.raises(ValueError):
+        record_spontaneous(database_file, "inconnu", "sent")

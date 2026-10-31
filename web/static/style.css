@@ -2860,6 +2860,14 @@ textarea.companies-preferred {
     background: var(--muted);
 }
 
+.map-dot-primary {
+    background: var(--primary);
+}
+
+.map-dot-danger {
+    background: var(--danger);
+}
+
 .skill-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));

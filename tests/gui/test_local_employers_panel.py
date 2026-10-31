@@ -3,7 +3,9 @@
 import gui.local_employers_panel as panel_module
 from gui.local_employers_panel import LocalEmployersPanel
 from job.companies import load_company_rules
+from job.geocoding import HOME_KEY
 from job.local_employers import LOCAL_EMPLOYERS_KEY
+from job.spontaneous_applications import load_spontaneous
 from storage.database import initialize_database
 from storage.settings_repository import save_json_setting
 
@@ -13,8 +15,11 @@ EMPLOYERS = [
         "name": "ROQUETTE FRERES",
         "names": ["ROQUETTE FRERES"],
         "sector": "Agroalimentaire",
+        "headcount": "1 000 à 1 999 salariés",
         "city": "Lestrem",
         "distance_km": 40,
+        "latitude": 50.61,
+        "longitude": 2.67,
         "page": "https://annuaire-entreprises.data.gouv.fr/entreprise/1",
     },
     {
@@ -89,7 +94,7 @@ def test_employers_are_updated_filtered_and_followed(
         "ALSTOM TRANSPORT SA",
         "ALSTOM",
     }
-    assert vPanel.table.item(1, 5).text() == "Suivi"
+    assert vPanel.table.item(1, 6).text() == "Suivi"
     assert vOpened[0].endswith("/entreprise/2") and "duckduckgo" in vOpened[1]
 
     vPanel.sector_combo.setCurrentIndex(vPanel.sector_combo.findData("Agroalimentaire"))
@@ -104,3 +109,50 @@ def test_employers_are_updated_filtered_and_followed(
 
     assert vPanel.message_label.text() == "Le service public ne répond pas."
     assert vPanel.update_button.isEnabled()
+
+
+def test_spontaneous_application_is_tracked_and_placed_on_the_map(
+    qt_application, tmp_path
+):
+    """Vérifie l'envoi noté, le filtre des contactés et l'employeur choisi sur la carte."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    save_json_setting(
+        vDatabaseFile,
+        LOCAL_EMPLOYERS_KEY,
+        {"updated_at": "2026-10-31T09:00:00", "employers": EMPLOYERS},
+    )
+    save_json_setting(
+        vDatabaseFile,
+        HOME_KEY,
+        {"label": "Lille", "latitude": 50.63, "longitude": 3.06},
+    )
+    vPanel = LocalEmployersPanel(vDatabaseFile)
+    vPanel.refresh()
+
+    assert vPanel.table.item(0, 2).text() == "1 000 à 1 999 salariés"
+    assert vPanel.map.home["label"] == "Lille"
+
+    vPanel.record_status()
+
+    assert vPanel.message_label.text() == "Choisissez d'abord un employeur."
+
+    vPanel.map.employer_clicked.emit("1")
+    vPanel.status_combo.setCurrentIndex(vPanel.status_combo.findData("sent"))
+    vPanel.record_status()
+
+    assert load_spontaneous(vDatabaseFile)["1"]["status"] == "sent"
+    assert vPanel.table.item(0, 6).text().startswith("Envoyée · envoi du ")
+    assert "1 candidature(s) spontanée(s), 0 à relancer" in vPanel.status_label.text()
+
+    vPanel.contact_combo.setCurrentIndex(vPanel.contact_combo.findData("todo"))
+
+    assert vPanel.table.rowCount() == 1
+    assert vPanel.table.item(0, 0).text() == "ALSTOM TRANSPORT SA"
+
+    vPanel.table.selectRow(0)
+    save_json_setting(vDatabaseFile, LOCAL_EMPLOYERS_KEY, {"employers": []})
+    vPanel.record_status()
+
+    assert vPanel.message_label.text().startswith("Employeur absent")

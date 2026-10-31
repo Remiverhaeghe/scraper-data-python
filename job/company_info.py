@@ -91,7 +91,7 @@ def format_revenue(pFinances):
 
 
 def find_nearest_site(pResult, pHome):
-    """Retourne la commune et la distance de l'établissement ouvert le plus proche.
+    """Retourne commune, distance et position de l'établissement ouvert le plus proche.
 
     Retourne None sans domicile ou sans établissement placé.
     """
@@ -115,14 +115,20 @@ def find_nearest_site(pResult, pHome):
                         (pHome["latitude"], pHome["longitude"]), vPosition
                     ),
                     vSite.get("libelle_commune") or "",
+                    vPosition,
                 )
             )
 
     rNearest = None
 
     if vSites:
-        vDistance, vCity = min(vSites)
-        rNearest = {"city": vCity.title(), "distance_km": round(vDistance)}
+        vDistance, vCity, (vLatitude, vLongitude) = min(vSites)
+        rNearest = {
+            "city": vCity.title(),
+            "distance_km": round(vDistance),
+            "latitude": vLatitude,
+            "longitude": vLongitude,
+        }
 
     return rNearest
 

@@ -8,7 +8,7 @@ nouvelles offres sont alors signalées par la veille existante.
 """
 
 import time
-from datetime import datetime
+from datetime import date, datetime
 
 import requests
 
@@ -16,6 +16,11 @@ from job.company_info import COMPANY_PAGE_URL, COMPANY_SEARCH_URL, find_nearest_
 from job.companies import add_company_rule, get_company_keys, load_company_rules
 from job.fingerprint import normalize_company
 from job.geocoding import load_home
+from job.spontaneous_applications import (
+    describe_spontaneous,
+    load_spontaneous,
+    save_spontaneous,
+)
 from storage.job_offers import get_offers
 from storage.settings_repository import load_json_setting, save_json_setting
 from utils.api_client import request_json
@@ -45,6 +50,24 @@ SECTORS = {
     "Métallurgie et mécanique": ("24", "25", "28", "33"),
 }
 OTHER_SECTOR = "Autre industrie"
+
+# Filtre sur le suivi des candidatures spontanées
+CONTACT_FILTERS = {
+    "": "Tous les employeurs",
+    "todo": "Pas encore contactés",
+    "sent": "Candidature envoyée",
+    "due": "À relancer",
+}
+
+# Tranches d'effectif INSEE demandées, en clair
+HEADCOUNTS = {
+    "32": "250 à 499 salariés",
+    "41": "500 à 999 salariés",
+    "42": "1 000 à 1 999 salariés",
+    "51": "2 000 à 4 999 salariés",
+    "52": "5 000 à 9 999 salariés",
+    "53": "10 000 salariés et plus",
+}
 
 
 def get_sector(pActivity):
@@ -81,8 +104,11 @@ def describe_employer(pResult, pHome):
         "activity": pResult.get("activite_principale"),
         "category": pResult.get("categorie_entreprise"),
         "sites": len(pResult.get("matching_etablissements") or []),
+        "headcount": HEADCOUNTS.get(str(pResult.get("tranche_effectif_salarie")), ""),
         "city": vNearest["city"] if vNearest else "",
         "distance_km": vNearest["distance_km"] if vNearest else None,
+        "latitude": vNearest["latitude"] if vNearest else None,
+        "longitude": vNearest["longitude"] if vNearest else None,
         "page": COMPANY_PAGE_URL.format(siren=pResult.get("siren")),
     }
 
@@ -92,7 +118,7 @@ def describe_employer(pResult, pHome):
 def fetch_local_employers(
     pDatabaseFile, pNow=None, pRequest=request_json, pPause=PAUSE_SECONDS
 ):
-    """Interroge l'annuaire public et enregistre la liste ; retourne le nombre d'employeurs.
+    """Interroge l'annuaire public, enregistre la liste et retourne sa taille.
 
     Lève ValueError si le service ne répond pas : la liste précédente est gardée.
     """
@@ -125,7 +151,8 @@ def fetch_local_employers(
                         vEmployer = describe_employer(vResult, vHome)
                         vKnown = vEmployers.get(vEmployer["siren"])
 
-                        # Une entreprise présente dans plusieurs départements garde son site le plus proche
+                        # Présente dans plusieurs départements : le site le plus
+                        # proche est gardé
                         if vKnown is None or (
                             vEmployer["distance_km"] is not None
                             and (
@@ -141,7 +168,8 @@ def fetch_local_employers(
     except (requests.RequestException, ValueError) as vError:
         logger.warning("Annuaire des entreprises injoignable : %s", vError)
         raise ValueError(
-            "Le service public de recherche d'entreprises ne répond pas, réessayez plus tard."
+            "Le service public de recherche d'entreprises ne répond pas, "
+            "réessayez plus tard."
         ) from vError
 
     save_json_setting(
@@ -159,11 +187,29 @@ def fetch_local_employers(
     return rCount
 
 
-def build_employers_view(pDatabaseFile, pSector="", pMaxDistance=None):
+def matches_contact(pSpontaneous, pContact):
+    """Indique si le suivi d'une candidature spontanée répond au filtre choisi."""
+
+    rMatches = {
+        "todo": pSpontaneous is None,
+        "sent": pSpontaneous is not None,
+        "due": bool(pSpontaneous and pSpontaneous["follow_up_due"]),
+    }.get(pContact, True)
+
+    return rMatches
+
+
+def build_employers_view(
+    pDatabaseFile, pSector="", pMaxDistance=None, pContact="", pToday=None
+):
     """Retourne les employeurs à afficher : filtrés, du plus proche au plus loin.
 
-    Chacun indique ses offres en base et s'il est suivi (entreprise privilégiée).
+    Chacun indique ses offres en base, s'il est suivi (entreprise privilégiée) et
+    où en est sa candidature spontanée.
     """
+
+    vToday = pToday or date.today()
+    vSpontaneous = load_spontaneous(pDatabaseFile)
 
     vData = load_json_setting(pDatabaseFile, LOCAL_EMPLOYERS_KEY, {}, dict)
     vPreferred = set(get_company_keys(load_company_rules(pDatabaseFile), "preferred"))
@@ -182,6 +228,13 @@ def build_employers_view(pDatabaseFile, pSector="", pMaxDistance=None):
         if pMaxDistance and (vEmployer.get("distance_km") or 0) > pMaxDistance:
             continue
 
+        vApplication = describe_spontaneous(
+            vSpontaneous.get(vEmployer.get("siren")), vToday
+        )
+
+        if not matches_contact(vApplication, pContact):
+            continue
+
         vKeys = {normalize_company(vName) for vName in vEmployer.get("names", [])} - {
             ""
         }
@@ -190,6 +243,7 @@ def build_employers_view(pDatabaseFile, pSector="", pMaxDistance=None):
                 **vEmployer,
                 "offers": sum(vOfferCounts.get(vKey, 0) for vKey in vKeys),
                 "followed": bool(vKeys & vPreferred),
+                "spontaneous": vApplication,
             }
         )
 
@@ -207,18 +261,24 @@ def build_employers_view(pDatabaseFile, pSector="", pMaxDistance=None):
         "sectors": [*SECTORS, OTHER_SECTOR],
         "employers": vEmployers,
         "count": len(vData.get("employers") or []),
+        "contacts": CONTACT_FILTERS,
+        "sent_count": len(vSpontaneous),
+        "due_count": sum(
+            bool(vItem and vItem["follow_up_due"])
+            for vItem in (
+                describe_spontaneous(vApplication, vToday)
+                for vApplication in vSpontaneous.values()
+            )
+        ),
     }
 
     return rView
 
 
-def follow_employer(pDatabaseFile, pSiren):
-    """Suit un employeur : chacun de ses noms rejoint les entreprises privilégiées.
+def find_employer(pDatabaseFile, pSiren):
+    """Retourne l'employeur enregistré de ce SIREN ; lève ValueError s'il est absent."""
 
-    Lève ValueError pour un employeur absent de la liste.
-    """
-
-    vEmployer = next(
+    rEmployer = next(
         (
             vItem
             for vItem in load_json_setting(
@@ -230,11 +290,43 @@ def follow_employer(pDatabaseFile, pSiren):
         None,
     )
 
-    if vEmployer is None:
+    if rEmployer is None:
         raise ValueError("Employeur absent de la liste : mettez-la à jour.")
+
+    return rEmployer
+
+
+def follow_employer(pDatabaseFile, pSiren):
+    """Suit un employeur : chacun de ses noms rejoint les entreprises privilégiées.
+
+    Lève ValueError pour un employeur absent de la liste.
+    """
+
+    vEmployer = find_employer(pDatabaseFile, pSiren)
 
     # Les offres reprennent le nom complet, la raison sociale ou le sigle
     for vName in dict.fromkeys(vEmployer.get("names") or [vEmployer["name"]]):
         add_company_rule(pDatabaseFile, vName, "preferred")
 
     logger.info("Employeur suivi : %s", vEmployer["name"])
+
+
+def record_spontaneous(pDatabaseFile, pSiren, pStatus, pToday=None, pNote=None):
+    """Note l'étape d'une candidature spontanée ; un envoi suit aussi l'employeur.
+
+    Lève ValueError pour un employeur absent de la liste ou une étape inconnue.
+    """
+
+    vEmployer = find_employer(pDatabaseFile, pSiren)
+    save_spontaneous(
+        pDatabaseFile,
+        pSiren,
+        vEmployer["name"],
+        pStatus,
+        pToday or date.today(),
+        pNote,
+    )
+
+    # Ses prochaines offres seront signalées : la candidature peut déboucher dessus
+    if pStatus == "sent":
+        follow_employer(pDatabaseFile, pSiren)

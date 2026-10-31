@@ -33,6 +33,7 @@ from job.code_puzzles import SERIES_LENGTH, build_puzzle_view
 from job.cosmetics import ACCENTS
 from job.weekly_planning import load_planned_revisions
 from job.local_employers import LOCAL_EMPLOYERS_KEY
+from job.spontaneous_applications import load_spontaneous
 from job.progress import build_progress
 from job.season_review import build_season_review
 from job.challenges import get_expected_answers, get_seed
@@ -3487,8 +3488,11 @@ def test_employers_page_updates_filters_and_follows(client, monkeypatch):
                         "name": "Fonderie B",
                         "names": ["Fonderie B"],
                         "sector": "Métallurgie et mécanique",
+                        "headcount": "500 à 999 salariés",
                         "city": "Douai",
                         "distance_km": 40,
+                        "latitude": 50.37,
+                        "longitude": 3.08,
                         "page": "https://annuaire-entreprises.data.gouv.fr/entreprise/222",
                     },
                 ],
@@ -3515,6 +3519,23 @@ def test_employers_page_updates_filters_and_follows(client, monkeypatch):
     assert vFollowed.status_code == 200
     assert "Suivi" in vFollowed.text
     assert client.post("/employers/follow", data={"siren": "999"}).status_code == 200
+
+    vSent = client.post(
+        "/employers/spontaneous",
+        data={"siren": "222", "status": "sent", "contact": "sent"},
+    )
+
+    assert vSent.status_code == 200
+    assert load_spontaneous(vDatabaseFile)["222"]["status"] == "sent"
+    assert "Fonderie B" in vSent.text and "Entreprise A" not in vSent.text
+    assert "1 candidature(s) spontanée(s), 0 à relancer" in vSent.text
+    assert '"tone": "warning"' in vSent.text
+    assert (
+        client.post(
+            "/employers/spontaneous", data={"siren": "222", "status": "oublié"}
+        ).status_code
+        == 400
+    )
 
     def failing_fetch(_pDatabaseFile, _pNow):
         raise ValueError("Le service public ne répond pas.")

@@ -1,4 +1,4 @@
-// Carte des offres : lit les points du gabarit et les place sur un fond
+// Carte des offres et des employeurs : lit les points du gabarit et les place sur un fond
 // OpenStreetMap. Les textes sont insérés comme texte, jamais comme HTML.
 document.addEventListener("DOMContentLoaded", () => {
     const vElement = document.getElementById("offers-map");
@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
         success: vStyles.getPropertyValue("--success").trim(),
         warning: vStyles.getPropertyValue("--warning").trim(),
         muted: vStyles.getPropertyValue("--muted").trim(),
+        danger: vStyles.getPropertyValue("--danger").trim(),
         primary: vStyles.getPropertyValue("--primary").trim(),
     };
 
