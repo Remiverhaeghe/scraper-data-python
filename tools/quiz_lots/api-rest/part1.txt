@@ -1,0 +1,452 @@
+@001
+Q: Que désigne une ressource dans une API REST ?
+C: Une entité exposée par l'API et identifiée par une URI, comme /clients/42
+W: Une méthode Java annotée qui traite une requête
+W: Le serveur physique qui héberge l'API
+W: Un fichier de configuration YAML chargé au démarrage du service web par le framework
+E: REST raisonne en ressources (un client, une commande, la liste des commandes) que l'on manipule avec les méthodes HTTP. L'URI désigne la ressource, la méthode dit ce qu'on en fait : GET /clients/42 lit, DELETE /clients/42 supprime.
+
+@002
+Q: Associer chaque méthode HTTP à son usage dans une API REST.
+P: GET => Lire une ressource ou une collection
+P: POST => Créer une ressource dans une collection
+P: PUT => Remplacer entièrement une ressource
+P: PATCH => Modifier une partie d'une ressource
+P: DELETE => Supprimer une ressource
+E: Ce découpage permet de comprendre une route sans lire son code. Une API qui fait tout passer en POST (POST /getClient, POST /deleteClient) perd ce sens et le bénéfice des caches, des relances automatiques et des outils qui s'appuient sur la méthode.
+
+@003
+Q: Associer chaque famille de codes de statut HTTP à sa signification.
+P: 2xx => Succès
+P: 3xx => Redirection
+P: 4xx => Erreur du client
+P: 5xx => Erreur du serveur
+E: Le premier chiffre suffit souvent au diagnostic : un 4xx demande de corriger la requête (paramètre, droits, format), un 5xx oriente vers les journaux du serveur. Un client ne relance automatiquement que sur certains 5xx et sur 429, jamais sur un 400.
+
+@004
+Q: Une création de commande par POST /commandes réussit. Quel code de statut répondre ?
+C: 201 Created
+W: 200 OK avec un corps vide
+W: 202 Accepted, systématiquement, puisque l'écriture en base prend toujours un peu de temps
+W: 204 No Content
+E: 201 indique qu'une ressource a été créée ; la réponse porte l'en-tête Location vers son URI et souvent sa représentation. 202 est réservé à un traitement réellement différé, dont le résultat n'existe pas encore au moment de la réponse.
+
+@005
+Q: Quelle est la différence entre les codes 401 et 403 ?
+C: 401 : identité absente ou invalide ; 403 : client identifié mais non autorisé
+W: 401 : client identifié mais non autorisé ; 403 : jeton absent
+W: 401 signale une ressource inexistante et 403 une méthode que la route n'accepte pas du tout
+W: Aucune, les deux codes sont interchangeables
+E: Malgré son nom (Unauthorized), 401 concerne l'authentification : il faut se connecter ou renouveler le jeton, et la réponse porte WWW-Authenticate. 403 dit que la personne est connue mais n'a pas le droit : se reconnecter n'y changera rien.
+
+@006
+Q: Quelle URI suit les conventions REST pour lire les commandes du client 42 ?
+C: GET /clients/42/commandes
+W: GET /getCommandesClient?id=42
+W: POST /clients/42/lireCommandes
+W: GET /client/commandes/recuperer/42
+E: Les chemins contiennent des noms au pluriel, pas de verbe : l'action est portée par la méthode HTTP. L'imbrication /clients/42/commandes exprime l'appartenance ; on évite de descendre au-delà de deux niveaux, au profit d'un filtre comme /commandes?client=42.
+
+@007
+Q: Que signifie qu'une API REST est sans état (stateless) ?
+C: Chaque requête porte tout ce qu'il faut pour être traitée, sans session côté serveur
+W: L'API ne stocke aucune donnée en base
+W: Les réponses ne contiennent jamais de code de statut
+W: Le serveur ignore les en-têtes envoyés par le client et ne lit que le corps de la requête
+E: Le jeton d'authentification, les paramètres et le corps voyagent avec chaque requête. N'importe quelle instance derrière le répartiteur de charge peut alors répondre, ce qui facilite la montée en charge et les redémarrages. Les données métier, elles, restent bien en base.
+
+@008
+Q: Que fait cette commande curl ?
+C: Elle crée un client en envoyant un corps JSON
+W: Elle lit la fiche du client Durand
+W: Elle supprime le client Durand de la base
+W: Elle télécharge la liste des clients dans un fichier local nommé Durand
+E: -X POST fixe la méthode, -H ajoute un en-tête et -d fournit le corps. Content-Type annonce au serveur comment lire ce corps : sans lui, curl envoie application/x-www-form-urlencoded et beaucoup d'API répondent 415 ou 422.
+```bash
+curl -X POST https://api.exemple.fr/clients \
+  -H "Content-Type: application/json" \
+  -d '{"nom": "Durand"}'
+```
+
+@009
+Q: Compléter cette requête pour annoncer que le corps envoyé est du JSON.
+A: Content-Type
+A: content-type
+E: Content-Type décrit le format du corps envoyé, dans la requête comme dans la réponse. Le serveur choisit son analyseur d'après lui : un corps JSON annoncé en text/plain est refusé par la plupart des frameworks avec 415 Unsupported Media Type.
+```http
+POST /clients HTTP/1.1
+Host: api.exemple.fr
+____: application/json
+
+{"nom": "Durand"}
+```
+
+@010
+Q: Quel en-tête le client envoie-t-il pour indiquer le format qu'il souhaite recevoir ?
+C: Accept
+W: Content-Type
+W: Content-Length
+W: User-Agent
+E: C'est la négociation de contenu : Accept: application/json ou text/csv. Si le serveur ne sait produire aucun des formats demandés, il répond 406 Not Acceptable. Content-Type, lui, décrit le corps que l'on envoie.
+
+@011
+Q: Associer chaque code de statut à la situation qu'il décrit.
+P: 200 => Lecture réussie avec un corps
+P: 204 => Suppression réussie, réponse sans corps
+P: 404 => Ressource inexistante
+P: 400 => Corps JSON mal formé
+P: 500 => Exception non gérée côté serveur
+E: Un code précis évite au client de lire le corps pour savoir ce qui s'est passé. Une API qui répond 200 avec {"erreur": "introuvable"} trompe les outils de supervision, les caches et les relances automatiques.
+
+@012
+Q: Quel document JSON est valide ?
+C: {"nom": "Durand", "actif": true, "remise": null}
+W: {'nom': 'Durand', 'actif': True}
+W: {nom: "Durand", actif: true,}
+W: {"nom": "Durand", "actif": "true" "remise": null}
+E: JSON impose des guillemets doubles autour des clés et des chaînes, true, false et null en minuscules, des virgules entre les éléments et aucune virgule finale. Le deuxième choix est un dictionnaire Python, le troisième un objet JavaScript.
+
+@013
+Q: Quel format est recommandé pour une date-heure dans un JSON d'API ?
+C: 2026-10-31T14:30:00Z, au format ISO 8601
+W: 31/10/2026 14h30
+W: Le nombre de jours écoulés depuis l'an 2000
+W: Oct 31 2026 2:30PM, comme l'affiche par défaut SQL Server
+E: La RFC 3339, profil d'ISO 8601, est lue par tous les langages et se trie comme une chaîne. Le Z ou un décalage (+01:00) lève toute ambiguïté de fuseau : sans lui, une intervention planifiée à 14 h peut glisser d'une heure au changement d'heure.
+
+@014
+Q: Quelle méthode HTTP est dite sûre (safe), c'est-à-dire sans effet sur l'état du serveur ?
+C: GET
+W: POST
+W: DELETE
+W: PATCH
+E: GET, HEAD et OPTIONS sont sûres : robots d'indexation, préchargement des navigateurs et outils de supervision les appellent sans précaution. Un lien GET /commandes/12/supprimer finit tôt ou tard par être suivi par l'un d'eux.
+
+@015
+Q: Remettre dans l'ordre ce qui se passe quand un programme appelle https://api.exemple.fr/clients/42.
+O: Résolution DNS du nom api.exemple.fr
+O: Connexion TCP au port 443
+O: Négociation TLS et vérification du certificat
+O: Envoi de la requête GET /clients/42 avec ses en-têtes
+O: Réception de la réponse : ligne de statut, en-têtes, corps
+E: Chaque étape a son erreur typique : nom inconnu pour le DNS, délai dépassé ou connexion refusée pour TCP, certificat expiré ou nom non concordant pour TLS, puis enfin un code HTTP. curl -v montre ces étapes une à une.
+
+@016
+Q: Où placer le filtre « statut = payée » sur la liste des commandes ?
+C: Dans la chaîne de requête : GET /commandes?statut=payee
+W: Dans le chemin : GET /commandes/payee/filtrer
+W: Dans le corps d'une requête GET
+W: Dans un en-tête X-Filtre, seul endroit lu par les serveurs d'applications
+E: Le chemin identifie la ressource, la chaîne de requête affine la lecture : filtre, tri, pagination. Un corps sur GET n'a pas de sens défini, beaucoup de proxys et de bibliothèques le suppriment.
+
+@017
+Q: Un client envoie DELETE /clients alors que l'API n'autorise que GET et POST sur la collection. Quel code répondre ?
+C: 405 Method Not Allowed, avec l'en-tête Allow
+W: 404 Not Found
+W: 400 Bad Request
+W: 501 Not Implemented
+E: La ressource existe mais pas cette méthode : 405, et Allow: GET, POST liste les méthodes acceptées. 501 signifie que le serveur ne connaît pas du tout la méthode, ce qui n'arrive guère avec DELETE.
+
+@018
+Q: Qu'est-ce qu'OpenAPI ?
+C: Une spécification qui décrit une API HTTP : chemins, paramètres, réponses
+W: Un serveur web open source qui remplace Nginx devant les API Java et Python
+W: Une licence libre imposée aux API publiques
+W: Un protocole binaire qui remplace HTTP
+E: Le document OpenAPI (YAML ou JSON, anciennement Swagger) sert de contrat : documentation, génération de clients, simulation de serveur, tests de conformité. FastAPI et springdoc le produisent à partir du code.
+R: Spécification OpenAPI 3.1 | https://spec.openapis.org/oas/v3.1.0
+
+@019
+Q: À quoi sert Swagger UI ?
+C: Afficher la documentation d'une API OpenAPI et essayer ses routes depuis le navigateur
+W: Générer la base de données à partir des entités
+W: Chiffrer les échanges entre client et serveur
+W: Surveiller les temps de réponse en production
+E: Swagger UI lit le document OpenAPI et propose un formulaire par route : c'est souvent le premier outil pour tester une API sans écrire de client. En production, on le protège ou on le désactive pour ne pas exposer la surface d'attaque.
+
+@020
+Q: Associer chaque partie de l'URL https://api.exemple.fr:8443/v1/clients?page=2 à son nom.
+P: https => Schéma
+P: api.exemple.fr => Hôte
+P: 8443 => Port
+P: /v1/clients => Chemin
+P: page=2 => Chaîne de requête
+E: Sans port explicite, https utilise 443 et http 80. Un fragment après # n'est jamais envoyé au serveur : il reste dans le navigateur.
+
+@021
+Q: Un utilisateur signale une erreur 500 sur l'écran des commandes. Remettre dans l'ordre la démarche de diagnostic.
+O: Noter l'heure, la route et l'identifiant de requête renvoyé au client
+O: Retrouver la ligne correspondante dans les journaux du serveur
+O: Lire l'exception et sa pile d'appels
+O: Reproduire avec curl et le même corps de requête
+O: Corriger puis ajouter un test qui rejoue le cas
+E: Un 5xx se diagnostique côté serveur : la réponse ne doit jamais contenir la pile d'appels, mais un identifiant qui permet de la retrouver. Reproduire avant de corriger évite de modifier le code sur une hypothèse.
+
+@022
+Q: Compléter la commande pour afficher la ligne de statut et les en-têtes de la réponse en plus du corps.
+A: -i
+A: --include
+E: -i ajoute la ligne de statut et les en-têtes à la sortie. -v détaille aussi la requête envoyée et la négociation TLS, -I envoie un HEAD et n'affiche que les en-têtes.
+```bash
+curl ____ https://api.exemple.fr/clients/42
+```
+
+@023
+Q: Une API renvoie 20 éléments par page et la collection en compte 245. Combien de pages faut-il pour tout lire ?
+N: 13
+E: 245 / 20 = 12,25 : douze pages pleines et une treizième de 5 éléments. Le client s'arrête sur une page incomplète ou, mieux, quand la réponse n'annonce plus de page suivante.
+
+@024
+Q: À quoi sert la méthode HEAD ?
+C: Obtenir les en-têtes qu'aurait une réponse GET, sans son corps
+W: Créer l'en-tête d'une ressource avant son contenu
+W: Supprimer uniquement les métadonnées
+W: Ouvrir un canal bidirectionnel avec le serveur, comme WebSocket
+E: HEAD vérifie qu'une ressource existe, lit sa taille (Content-Length) ou son ETag sans la télécharger. Pratique pour savoir si un gros fichier a changé avant de le récupérer.
+
+@025
+Q: Pourquoi exposer une API uniquement en HTTPS, même sur le réseau interne d'une usine ?
+C: Jetons et données circulent chiffrés et le client vérifie le serveur
+W: HTTPS rend les réponses plus rapides que HTTP
+W: Les codes de statut n'existent qu'en HTTPS
+W: HTTP ne sait pas transporter du JSON, seulement du HTML et des images
+E: Sur un réseau interne partagé, un poste compromis lit tout ce qui passe en clair, jetons d'accès compris. Le certificat garantit aussi que le client parle au bon serveur ; une autorité interne ou Let's Encrypt suffisent.
+
+@026
+Q: Quelle méthode HTTP n'est pas idempotente ?
+C: POST
+W: PUT
+W: DELETE
+W: GET
+E: Une méthode idempotente produit le même effet sur le serveur qu'on l'envoie une fois ou dix. Après un délai dépassé, on peut relancer un PUT ou un DELETE sans crainte ; relancer un POST peut créer une deuxième commande.
+
+@027
+Q: Associer chaque méthode à ses propriétés.
+P: GET => Sûre et idempotente
+P: DELETE => Idempotente mais modifie l'état
+P: POST => Ni sûre ni idempotente
+P: OPTIONS => Sûre, décrit les possibilités de la route
+E: Ces propriétés sont un contrat : les clients HTTP, proxys et passerelles s'en servent pour décider s'ils peuvent relancer seuls. Un DELETE rejoué sur une ressource déjà supprimée renvoie souvent 404, mais l'état du serveur est bien le même.
+
+@028
+Q: Le client envoie ce PUT sur un client qui avait aussi un téléphone enregistré. Que devient le téléphone ?
+C: Il disparaît : PUT remplace la ressource entière
+W: Il est conservé, PUT ne touche qu'aux champs envoyés
+W: La requête est refusée en 400 car le téléphone manque
+W: Il est copié dans l'historique puis remis à sa valeur par défaut
+E: PUT envoie la représentation complète. Pour une mise à jour partielle, on utilise PATCH. Beaucoup d'API traitent PUT comme une fusion, ce qui brouille le contrat : la documentation doit le dire clairement.
+```http
+PUT /clients/42 HTTP/1.1
+Content-Type: application/json
+
+{"nom": "Durand", "email": "durand@exemple.fr"}
+```
+
+@029
+Q: Compléter ce PATCH au format JSON Merge Patch pour effacer le téléphone du client.
+A: null
+E: Avec JSON Merge Patch (RFC 7396), un champ absent reste inchangé et un champ à null est supprimé. La limite : on ne peut pas donner la valeur null à un champ. JSON Patch (RFC 6902) lève cette ambiguïté avec des opérations explicites.
+R: RFC 7396 JSON Merge Patch | https://www.rfc-editor.org/rfc/rfc7396
+```http
+PATCH /clients/42 HTTP/1.1
+Content-Type: application/merge-patch+json
+
+{"telephone": ____}
+```
+
+@030
+Q: Compléter la réponse à une création pour donner l'adresse de la nouvelle commande.
+A: Location
+A: location
+E: Location porte l'URI de la ressource créée : le client n'a pas à reconstruire l'adresse ni à connaître la règle de numérotation. Le même en-tête sert aux redirections 3xx.
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+____: /commandes/1789
+
+{"id": 1789, "statut": "brouillon"}
+```
+
+@031
+Q: Une liste de 2 millions de mouvements de stock est paginée par ?offset=1500000&limit=50 et répond en 8 s. Pourquoi, et que préférer ?
+C: La base parcourt puis jette 1,5 million de lignes ; une pagination par curseur l'évite
+W: Le JSON de 50 lignes est trop gros, il faut réduire limit à 10
+W: HTTP limite l'offset à 65 535
+W: Le serveur recalcule l'ETag de toute la table à chaque page suivante demandée par le client
+E: Avec un curseur (keyset), le client renvoie le dernier identifiant lu et la requête devient WHERE id > :dernier ORDER BY id LIMIT 50, servie par l'index quel que soit le rang. Elle reste aussi stable si des lignes sont insérées pendant la lecture.
+
+@032
+Q: Une API autorise 600 requêtes par minute et par clé. Un script de synchronisation doit lire 15 000 fiches, une requête par fiche. Combien de minutes au minimum ?
+N: 25
+U: min
+E: 15 000 / 600 = 25 minutes. Lire les fiches par pages de 100 ramènerait le travail à 150 requêtes : avant de négocier un quota plus élevé, on regarde si l'API propose une lecture par lot ou un filtre sur la date de modification.
+
+@033
+Q: Compléter cette réponse pour indiquer au client combien de secondes attendre avant de réessayer.
+A: Retry-After
+A: retry-after
+E: 429 Too Many Requests signale un quota dépassé ; Retry-After donne un délai en secondes ou une date HTTP. Le même en-tête accompagne 503 pendant une maintenance. Les en-têtes RateLimit indiquent en plus le quota restant.
+```http
+HTTP/1.1 429 Too Many Requests
+____: 120
+Content-Type: application/problem+json
+```
+
+@034
+Q: Que faut-il corriger dans cette boucle de relance d'un client Python ?
+C: Elle relance aussitôt, sans lire Retry-After ni limiter les essais
+W: timeout=10 est interdit avec requests
+W: Le code 429 n'est jamais renvoyé par une API
+W: Il faut remplacer get par post pour que le serveur accepte une deuxième tentative
+E: Cette boucle martèle le serveur qui demande justement de ralentir. On attend la durée de Retry-After, sinon une attente exponentielle avec aléa, on plafonne le nombre d'essais et on journalise l'abandon.
+```python
+while True:
+    vResponse = requests.get(vUrl, timeout=10)
+    if vResponse.status_code != 429:
+        break
+```
+
+@035
+Q: POST /clients avec un e-mail déjà utilisé par un autre client. Quel code est le plus adapté ?
+C: 409 Conflict
+W: 500 Internal Server Error
+W: 404 Not Found
+W: 201 Created, en renvoyant le client existant sans le signaler
+E: 409 décrit un conflit avec l'état actuel de la ressource. L'erreur classique consiste à laisser remonter la violation de contrainte d'unicité de la base, qui devient un 500 et inquiète inutilement la supervision.
+
+@036
+Q: Le JSON reçu est bien formé, mais la quantité commandée vaut −3. Quel code renvoient beaucoup d'API pour distinguer ce cas d'un JSON illisible ?
+C: 422 Unprocessable Content
+W: 415 Unsupported Media Type
+W: 406 Not Acceptable
+W: 304 Not Modified
+E: 400 sert pour une requête illisible, 422 pour un contenu compris mais qui viole une règle de validation. FastAPI renvoie 422 par défaut avec le champ fautif. 415 concerne un Content-Type que le serveur ne sait pas lire.
+
+@037
+Q: Ce corps d'erreur suit quel format normalisé ?
+C: Problem Details, de type application/problem+json
+W: Le format SOAP Fault
+W: Le format de journal Common Log Format, celui d'Apache
+W: GraphQL errors
+E: La RFC 9457 (qui remplace la RFC 7807) fixe type, title, status, detail et instance, et autorise des champs propres à l'API. Les clients traitent ainsi toutes les erreurs de la même façon, quel que soit le service.
+R: RFC 9457 Problem Details for HTTP APIs | https://www.rfc-editor.org/rfc/rfc9457
+```json
+{
+  "type": "https://api.exemple.fr/erreurs/stock-insuffisant",
+  "title": "Stock insuffisant",
+  "status": 409,
+  "detail": "Il reste 2 unités de la référence R-118, 5 demandées",
+  "instance": "/commandes/1789"
+}
+```
+
+@038
+Q: Associer chaque champ de Problem Details à son rôle.
+P: type => URI qui identifie la catégorie d'erreur
+P: title => Résumé lisible, identique pour toute la catégorie
+P: status => Code HTTP repris dans le corps
+P: detail => Explication propre à cette occurrence
+E: Le client programme ses réactions sur type, jamais sur le texte de title ou detail qui peut être traduit ou reformulé. detail ne doit pas contenir de pile d'appels ni de requête SQL.
+
+@039
+Q: Associer chaque stratégie de versionnage d'une API à son exemple.
+P: Dans le chemin => GET /v2/clients
+P: Par type de média => Accept: application/vnd.exemple.v2+json
+P: Par paramètre => GET /clients?version=2
+P: Par en-tête dédié => Api-Version: 2
+E: Le chemin est le plus répandu : visible dans les journaux, facile à router dans une passerelle et à tester dans un navigateur. Quelle que soit la stratégie, on ne crée une version majeure que pour une rupture de contrat.
+
+@040
+Q: Lequel de ces changements casse les clients existants d'une API v1 ?
+C: Rendre obligatoire un paramètre qui était facultatif
+W: Ajouter un champ dans la réponse
+W: Ajouter une nouvelle route GET /v1/fournisseurs
+W: Accepter un nouveau paramètre de tri facultatif sur une liste existante
+E: Les ajouts sont compatibles tant que les clients ignorent les champs inconnus (principe du lecteur tolérant). Retirer ou renommer un champ, changer son type, durcir une validation ou modifier le sens d'un code de statut demandent une nouvelle version.
+
+@041
+Q: Le client a gardé la réponse de GET /produits/7 avec l'ETag "a1b2" et la redemande avec If-None-Match. Que renvoie le serveur si le produit n'a pas changé ?
+C: 304 Not Modified, sans corps
+W: 200 OK avec le même corps
+W: 412 Precondition Failed, l'ETag ne correspond plus
+W: 204 No Content
+E: 304 dit au client que sa copie est toujours bonne : seule la ligne de statut et quelques en-têtes transitent. Sur un catalogue lu souvent et modifié rarement, la bande passante et le travail de sérialisation chutent.
+
+@042
+Q: Remettre dans l'ordre les étapes d'une lecture avec cache conditionnel.
+O: Premier GET : le serveur répond 200 avec le corps et l'ETag "a1b2"
+O: Le client garde la réponse et son ETag
+O: GET suivant avec If-None-Match: "a1b2"
+O: Le serveur compare avec l'ETag actuel de la ressource
+O: Réponse 304 sans corps : le client réutilise sa copie
+E: L'ETag est une empreinte de la version : hachage du contenu, numéro de version ou date de modification. Si les empreintes diffèrent, le serveur répond 200 avec le nouveau corps et le nouvel ETag.
+
+@043
+Q: Compléter la requête conditionnelle qui ne télécharge le produit que s'il a changé.
+A: If-None-Match
+A: if-none-match
+E: If-None-Match transporte l'ETag connu du client. Son pendant pour les dates est If-Modified-Since, associé à l'en-tête Last-Modified, moins précis car limité à la seconde.
+```http
+GET /produits/7 HTTP/1.1
+Host: api.exemple.fr
+____: "a1b2"
+```
+
+@044
+Q: Une réponse porte Cache-Control: max-age=600 et l'en-tête Age: 240, ajouté par un cache intermédiaire. Combien de secondes reste-t-elle fraîche ?
+N: 360
+U: s
+E: Age indique depuis combien de secondes la réponse est stockée dans un cache. Elle reste utilisable sans revalidation pendant 600 − 240 = 360 s, puis le cache la revalide, par exemple avec If-None-Match.
+
+@045
+Q: Associer chaque directive Cache-Control à son effet.
+P: no-store => Ne rien conserver, réponse sensible
+P: no-cache => Conserver mais revalider à chaque usage
+P: private => Cache du navigateur seulement, pas des proxys
+P: max-age=3600 => Réutilisable une heure sans revalidation
+E: no-cache est souvent mal compris : il n'interdit pas le stockage. Une réponse qui contient des données personnelles ou un jeton prend no-store ; une ressource publique et stable peut être partagée par les caches intermédiaires.
+
+@046
+Q: Deux techniciens modifient la même gamme de maintenance. Le second envoie un PUT avec If-Match: "v7" alors que la gamme est passée en "v8". Que répond le serveur ?
+C: 412 Precondition Failed : il doit relire la gamme avant de réessayer
+W: 200 OK, la dernière écriture gagne
+W: 304 Not Modified
+W: 428 Precondition Required
+E: C'est le verrouillage optimiste : la modification n'est appliquée que si la version n'a pas bougé depuis la lecture. Sans lui, le second écrase sans le savoir le travail du premier. 428 sert quand l'API exige If-Match et que le client l'a omis.
+
+@047
+Q: Une page servie par https://app.exemple.fr appelle https://api.exemple.fr en JavaScript. Le navigateur bloque la réponse. Qui doit corriger ?
+C: L'API, en renvoyant Access-Control-Allow-Origin: https://app.exemple.fr
+W: Le front, en passant fetch en mode no-cors pour pouvoir lire la réponse
+W: Le pare-feu de l'entreprise
+W: Personne : CORS ne concerne que les applications mobiles
+E: CORS est appliqué par le navigateur à la demande du serveur. En no-cors, la réponse devient opaque et illisible. curl et Postman ne sont pas soumis à CORS : « ça marche dans Postman » ne prouve rien pour le navigateur.
+R: MDN : Cross-Origin Resource Sharing | https://developer.mozilla.org/fr/docs/Web/HTTP/CORS
+
+@048
+Q: Remettre dans l'ordre un appel PUT inter-origines qui porte un en-tête Authorization.
+O: Le navigateur envoie une requête OPTIONS de contrôle préalable
+O: L'API répond avec Access-Control-Allow-Methods et Allow-Headers
+O: Le navigateur vérifie que PUT et Authorization sont autorisés
+O: Le navigateur envoie le vrai PUT
+O: Le script lit la réponse si Allow-Origin correspond
+E: Le contrôle préalable (preflight) concerne les méthodes autres que GET, HEAD et POST simples, et les en-têtes non standard. Access-Control-Max-Age permet au navigateur de le garder en mémoire au lieu de le répéter avant chaque appel.
+
+@049
+Q: Compléter l'en-tête qui transmet un jeton d'accès OAuth 2.
+A: Bearer
+A: bearer
+E: Bearer signifie « porteur » : quiconque détient le jeton peut l'utiliser, d'où HTTPS obligatoire et des jetons de courte durée. Le jeton ne se met jamais dans l'URL, qui finit dans les journaux.
+```http
+GET /commandes HTTP/1.1
+Host: api.exemple.fr
+Authorization: ____ eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI0MiJ9.c2lnbmF0dXJl
+```
+
+@050
+Q: Que contient la partie centrale (payload) d'un JWT, et qu'en déduire ?
+C: Des revendications (sub, exp, scope) lisibles par tous : on n'y met aucun secret
+W: Des données chiffrées en AES, illisibles sans la clé privée du serveur d'autorisation
+W: Le mot de passe de l'utilisateur, haché en SHA-256
+W: Uniquement la signature
+E: Un JWT signé (JWS) est encodé en Base64URL, pas chiffré : n'importe qui peut le décoder, par exemple sur jwt.io. La signature garantit seulement qu'il n'a pas été modifié. Un jeton chiffré est un JWE, beaucoup plus rare.

@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110101,
+  "skills": ["API REST", "HTTP", "OpenAPI", "JSON"],
+  "schemas": [
+    {
+      "name": "api-rest-cache-conditionnel.svg",
+      "questions": ["041", "042", "043"],
+      "diagram": {
+        "title": "Requête conditionnelle avec ETag",
+        "nodes": [
+          "Premier GET : 200, corps et ETag a1b2",
+          "Le client garde la réponse et l'ETag",
+          "GET suivant avec If-None-Match a1b2",
+          "Le serveur compare avec l'ETag actuel",
+          "304 sans corps : la copie est réutilisée"
+        ],
+        "note": "Si la ressource a changé, le serveur répond 200 avec le nouveau corps"
+      }
+    },
+    {
+      "name": "api-rest-traitement-asynchrone.svg",
+      "questions": ["066", "067", "068"],
+      "diagram": {
+        "title": "Traitement long derrière une API",
+        "nodes": [
+          "POST /exports : demande enregistrée",
+          "202 Accepted, Location /exports/91",
+          "GET /exports/91 : en cours",
+          "Travail terminé en arrière-plan",
+          "GET /exports/91 : terminé, lien du fichier"
+        ],
+        "note": "Retry-After cadence les interrogations ; un webhook peut les remplacer"
+      }
+    }
+  ]
+}

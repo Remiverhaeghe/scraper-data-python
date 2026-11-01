@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision API REST et HTTP
+- Lot de 100 questions dont 40 interactives (associations, remises en ordre,
+  calculs, code à compléter) : méthodes, idempotence et codes de statut,
+  conception des URI, pagination, versionnage, erreurs Problem Details, cache
+  et ETag, verrouillage optimiste, CORS, OAuth 2 et JWT, OWASP API Top 10,
+  webhooks, OpenAPI, FastAPI, Spring et diagnostic derrière un proxy
+- Deux schémas : requête conditionnelle avec ETag, traitement long en 202
+
 ### Analyse des compétences des offres
 - Avancement journalisé lot par lot quand l'analyse dépasse 500 offres, par
   exemple après une modification du dictionnaire de compétences : l'attente au

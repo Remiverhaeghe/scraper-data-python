@@ -1,0 +1,457 @@
+@051
+Q: Associer chaque revendication standard d'un JWT à son sens.
+P: sub => Sujet : l'utilisateur ou le client concerné
+P: exp => Date d'expiration
+P: aud => API destinataire du jeton
+P: iss => Émetteur : le serveur d'autorisation
+E: Une API vérifie la signature, puis exp, iss et aud. Sans contrôle de aud, un jeton délivré pour l'application de planning serait accepté par l'API de paie du même fournisseur d'identité.
+
+@052
+Q: Pourquoi ce contrôle d'un JWT côté API est-il dangereux ?
+C: N'importe qui peut forger un jeton avec le sub de son choix
+W: decode est trop lent pour être appelé à chaque requête
+W: Le champ sub n'existe pas dans un JWT
+W: Il faudrait d'abord décoder le jeton en Base64 standard plutôt qu'en Base64URL
+E: Sans vérification de signature, le payload n'est qu'un texte fourni par le client. Avec PyJWT on écrit jwt.decode(vToken, vPublicKey, algorithms=["RS256"], audience="api-stock") : la liste d'algorithmes fermée écarte aussi le piège de alg: none.
+```python
+vClaims = jwt.decode(vToken, options={"verify_signature": False})
+vUserId = vClaims["sub"]
+```
+
+@053
+Q: Associer chaque flux OAuth 2 à son cas d'usage.
+P: Authorization code avec PKCE => Application web ou mobile au nom d'un utilisateur
+P: Client credentials => Service qui appelle une API en son propre nom
+P: Refresh token => Nouveau jeton d'accès sans reconnexion
+P: Device code => Téléviseur ou terminal sans clavier
+E: Les flux implicit et password sont abandonnés par OAuth 2.1 : le premier expose le jeton dans l'URL, le second fait saisir le mot de passe dans l'application cliente. Un traitement nocturne entre deux serveurs utilise client credentials.
+
+@054
+Q: Une clé d'API est passée dans l'URL : GET /mesures?api_key=sk_live_8f2a. Quel est le risque principal ?
+C: La clé finit dans les journaux des serveurs et des proxys
+W: L'URL devient trop longue pour HTTP
+W: Les serveurs ignorent les paramètres nommés api_key
+W: Le cache du navigateur chiffre la clé, qui devient inutilisable au deuxième appel
+E: Journaux d'accès, historique du navigateur, en-tête Referer, outils de supervision : l'URL est copiée partout. La clé passe dans un en-tête (Authorization ou X-API-Key), avec une portée minimale et une rotation possible sans interruption.
+
+@055
+Q: Un utilisateur connecté remplace /factures/1001 par /factures/1002 dans l'URL et voit la facture d'un autre client. De quelle faille s'agit-il ?
+C: BOLA (Broken Object Level Authorization), première de l'OWASP API Top 10
+W: Une injection SQL
+W: Une attaque CSRF
+W: Un défaut de CORS
+E: Être connecté ne suffit pas : chaque requête doit vérifier que l'objet demandé appartient à l'utilisateur ou à son entreprise. Des identifiants non devinables compliquent l'attaque mais ne remplacent pas ce contrôle. Répondre 404 plutôt que 403 évite de confirmer l'existence de la facture.
+R: OWASP API Security Top 10 2023 | https://owasp.org/API-Security/editions/2023/en/0x11-t10/
+
+@056
+Q: Quel défaut présente cette route Express ?
+C: Le client peut modifier n'importe quel champ, role ou solde compris
+W: PATCH ne peut pas renvoyer 204
+W: req.params.id n'existe pas dans Express
+W: La réponse devrait être 201 Created pour toute modification réussie d'un compte
+E: C'est l'affectation de masse (mass assignment) : tout ce que le client envoie part en base. On passe par un schéma ou un DTO qui liste les champs modifiables. La route ne vérifie pas non plus que l'utilisateur modifie son propre compte.
+```javascript
+app.patch("/utilisateurs/:id", async (req, res) => {
+  await Utilisateur.update(req.body, { where: { id: req.params.id } });
+  res.sendStatus(204);
+});
+```
+
+@057
+Q: Compléter cette route FastAPI pour qu'une création réponde 201.
+A: 201
+A: status.HTTP_201_CREATED
+E: Par défaut, FastAPI répond 200 sur un POST. status_code fixe le code de succès et apparaît dans le document OpenAPI généré ; on y ajoute l'en-tête Location via l'objet Response si les clients en ont besoin.
+```python
+@app.post("/commandes", status_code=____)
+def creer_commande(pCommande: CommandeCreation) -> Commande:
+    return service.creer(pCommande)
+```
+
+@058
+Q: Dans ce contrôleur Spring, que renvoie la méthode quand le client n'existe pas ?
+C: 404 Not Found sans corps
+W: 200 OK avec un corps null
+W: 500, car un Optional vide lève une exception
+W: 204 No Content, réponse par défaut de Spring pour un Optional vide
+E: findById renvoie un Optional : map le transforme en 200 avec le client, orElse fournit la réponse 404 quand il est vide. Pour des erreurs plus riches, on lève une exception traitée par un @ControllerAdvice qui produit un ProblemDetail.
+```java
+@GetMapping("/clients/{id}")
+public ResponseEntity<Client> lire(@PathVariable long id) {
+    return repository.findById(id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+}
+```
+
+@059
+Q: Avec ce modèle Pydantic, que répond FastAPI à un POST dont quantite vaut 0 ?
+C: 422 avec le champ en erreur, sans entrer dans la fonction
+W: 200, la validation n'a lieu qu'à l'enregistrement
+W: 500 avec une ValidationError non gérée
+W: 400 accompagné d'une page HTML générique produite par Uvicorn
+E: FastAPI valide le corps avant d'appeler la fonction et renvoie la liste des erreurs (loc, msg, type). La règle métier vit ainsi dans le modèle, documentée dans OpenAPI, au lieu d'un if perdu dans le code.
+```python
+class LigneCommande(BaseModel):
+    reference: str
+    quantite: int = Field(gt=0)
+```
+
+@060
+Q: Que fournit l'en-tête Link: <https://api.exemple.fr/commandes?page=3>; rel="next" dans une réponse paginée ?
+C: L'URL de la page suivante, que le client suit sans la reconstruire
+W: Un lien vers la documentation de la route
+W: L'adresse du serveur de secours
+W: Une ressource que le navigateur doit précharger en HTTP/2 avant la réponse finale
+E: GitHub pagine ainsi avec rel="next", "prev", "first" et "last". Le client n'a pas à connaître la règle de pagination : il suit le lien jusqu'à ce qu'il n'y en ait plus.
+
+@061
+Q: Qu'apporte HATEOAS dans une réponse REST ?
+C: Des liens vers les actions possibles depuis l'état courant, comme annuler ou payer
+W: La compression des réponses
+W: Le chiffrement du corps
+W: Un schéma XML obligatoire
+E: Une commande à l'état brouillon expose un lien payer, une commande expédiée n'en a plus : le client n'a pas à recoder les règles d'état. C'est le niveau 3 du modèle de Richardson, peu répandu en pratique hors des API publiques.
+
+@062
+Q: Remettre dans l'ordre les niveaux du modèle de maturité de Richardson.
+O: Niveau 0 : un seul point d'entrée, tout passe en POST
+O: Niveau 1 : des ressources distinctes avec leurs URI
+O: Niveau 2 : méthodes et codes HTTP employés selon leur sens
+O: Niveau 3 : liens hypermédia dans les réponses
+E: La plupart des API dites REST s'arrêtent au niveau 2, qui apporte déjà l'essentiel : caches, relances sûres, outils standard. Le niveau 0 ressemble à du RPC transporté par HTTP, comme SOAP.
+
+@063
+Q: Le serveur reçoit deux POST /paiements avec la même Idempotency-Key mais des montants différents. Que doit-il faire ?
+C: Refuser la seconde requête : la clé désigne déjà une autre opération
+W: Traiter la seconde et écraser le premier paiement
+W: Répondre 304 Not Modified
+W: Traiter les deux, puisque des montants différents désignent deux paiements distincts
+E: La clé d'idempotence n'a de sens que pour rejouer exactement la même requête : le serveur renvoie alors la réponse mémorisée. Un corps différent trahit une erreur du client ; la proposition de norme IETF prévoit 422, et 409 si la première requête est encore en cours.
+
+@064
+Q: Comment un service qui reçoit un webhook vérifie-t-il que l'appel vient bien du fournisseur ?
+C: En recalculant la signature HMAC du corps avec le secret partagé
+W: En vérifiant que l'adresse IP source est privée
+W: En lisant le champ User-Agent
+W: En répondant 401 au premier appel puis en acceptant le second, qui prouve la persistance de l'émetteur
+E: Le fournisseur signe le corps brut et place la signature dans un en-tête. Un horodatage signé avec le corps limite le rejeu. Le récepteur répond vite en 2xx puis traite en arrière-plan, sinon le fournisseur relance et crée des doublons.
+
+@065
+Q: Compléter la vérification de signature du webhook, en temps constant.
+A: compare_digest
+E: Une comparaison avec == s'arrête au premier caractère différent : en mesurant les temps de réponse, un attaquant peut deviner la signature octet par octet. hmac.compare_digest compare toujours la chaîne entière.
+```python
+vExpected = hmac.new(vSecret, vBody, hashlib.sha256).hexdigest()
+if not hmac.____(vExpected, vReceived):
+    raise PermissionError("Signature du webhook invalide")
+```
+
+@066
+Q: Un export de 3 millions de lignes prend 4 minutes. Que répondre au POST /exports ?
+C: 202 Accepted avec Location vers une ressource de suivi
+W: 200 OK après 4 minutes d'attente
+W: 201 Created immédiatement avec un fichier vide
+W: 504 Gateway Timeout volontaire, le client relancera plus tard
+E: Une requête de 4 minutes dépasse les délais des passerelles et des navigateurs, et tout est perdu si la connexion tombe. La demande est enregistrée, un travailleur la traite, et le client suit l'avancement sur /exports/91.
+
+@067
+Q: Remettre dans l'ordre le déroulement d'un traitement asynchrone derrière une API.
+O: POST /exports : le serveur enregistre la demande
+O: Réponse 202 avec Location: /exports/91
+O: Le client interroge GET /exports/91 et lit « en cours »
+O: Le travail se termine en arrière-plan
+O: GET /exports/91 renvoie « terminé » et le lien du fichier
+E: La ressource de suivi porte un statut (en attente, en cours, terminé, échec) et, en cas d'échec, un Problem Details. Elle peut aussi rediriger par 303 See Other vers le résultat quand il est prêt.
+
+@068
+Q: Le client interroge toutes les 10 secondes la ressource de suivi d'un export qui dure 4 minutes. Combien de requêtes GET de suivi envoie-t-il au plus ?
+N: 24
+E: 240 s / 10 s = 24 interrogations. Le serveur peut cadencer le client avec Retry-After sur la réponse de suivi, ou proposer un webhook de fin de traitement pour supprimer les interrogations.
+
+@069
+Q: Un écran affiche 50 commandes puis appelle GET /clients/{id} pour chacune afin d'afficher le nom du client. Combien de requêtes HTTP au total ?
+N: 51
+E: C'est le problème N+1 transposé aux API : la latence réseau de 50 appels s'additionne. Parades : inclure le résumé du client dans la commande, un paramètre ?include=client, une lecture groupée GET /clients?id=3,8,12 ou une API dédiée à l'écran (BFF).
+
+@070
+Q: Pourquoi plafonner le paramètre limit d'une liste, par exemple à 100 ?
+C: Un client qui demande limit=1000000 peut épuiser la mémoire et la base
+W: HTTP interdit plus de 100 objets JSON par réponse
+W: Les navigateurs tronquent les réponses plus longues
+W: OpenAPI ne sait pas décrire un paramètre entier dont la valeur dépasse 100
+E: C'est le risque de consommation non restreinte de ressources de l'OWASP API Top 10. On fixe un maximum, documenté dans OpenAPI, et on renvoie 400 au-delà ou on ramène la valeur au plafond en le signalant.
+
+@071
+Q: Compléter cette description OpenAPI pour que le paramètre id soit lu dans le chemin.
+A: path
+E: in vaut path, query, header ou cookie. Un paramètre de chemin est toujours obligatoire : required: true est exigé par la spécification. Le type integer permet aux générateurs de produire un client typé et au serveur de rejeter /clients/abc.
+```yaml
+paths:
+  /clients/{id}:
+    get:
+      parameters:
+        - name: id
+          in: ____
+          required: true
+          schema:
+            type: integer
+```
+
+@072
+Q: À quoi sert la ligne $ref de ce document OpenAPI ?
+C: Réutiliser un schéma défini une seule fois dans components
+W: Appeler une autre API au moment de la réponse
+W: Télécharger un fichier distant à chaque requête
+W: Rediriger le client vers l'URL du schéma par un code 302 Found
+E: components/schemas centralise les modèles (Client, Commande, Problem) : une modification se répercute sur toutes les routes qui les citent, et les générateurs de code produisent une seule classe.
+```yaml
+responses:
+  "200":
+    description: Client trouvé
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/Client"
+```
+
+@073
+Q: Associer chaque pratique à sa description.
+P: Contract-first => Le fichier OpenAPI est écrit et validé avant le code
+P: Code-first => La spécification est générée depuis les annotations du code
+P: Génération de client => openapi-generator produit un client typé
+P: Test de contrat => Vérifie que les réponses réelles respectent la spécification
+E: Les deux approches se valent si le contrat est versionné et testé. Schemathesis génère des requêtes à partir du document OpenAPI et signale les réponses non conformes ; Pact fait vérifier par le fournisseur les attentes enregistrées par chaque client.
+
+@074
+Q: Une équipe mobile et une équipe back démarrent en même temps une nouvelle API. Pourquoi l'approche contract-first les aide-t-elle ?
+C: Le mobile code contre un serveur simulé à partir du contrat pendant que le back l'implémente
+W: Elle supprime le besoin de tests
+W: Elle rend l'API plus rapide en production
+W: Elle impose le même langage aux deux équipes
+E: Un outil comme Prism sert des réponses d'exemple tirées du document OpenAPI. Les désaccords (nom de champ, format de date, pagination) apparaissent à la relecture du contrat, pas lors de l'intégration finale.
+
+@075
+Q: Un client Java casse dès que l'API ajoute un champ remise à la réponse. Compléter la configuration de Jackson pour qu'il ignore les champs inconnus.
+A: FAIL_ON_UNKNOWN_PROPERTIES
+E: Par défaut, un ObjectMapper créé à la main lève UnrecognizedPropertyException sur un champ inconnu ; Spring Boot désactive déjà cette option dans le sien. Un client tolérant laisse le fournisseur enrichir ses réponses sans coordination.
+```java
+ObjectMapper mapper = new ObjectMapper();
+mapper.configure(DeserializationFeature.____, false);
+Commande commande = mapper.readValue(json, Commande.class);
+```
+
+@076
+Q: Comment transmettre le montant 19,99 € dans le JSON d'une API de facturation ?
+C: En centimes entiers, 1999, ou en chaîne "19.99", avec la devise à part
+W: En nombre à virgule flottante, 19.99, lu en double par le client
+W: En chaîne « 19,99 € » à analyser
+W: En deux nombres flottants séparés, l'un pour les euros, l'autre pour les centimes
+E: Un double ne représente pas exactement 19,99 : les sommes de lignes de facture finissent par perdre un centime. La devise suit le code ISO 4217 (EUR) dans un champ dédié.
+
+@077
+Q: Un identifiant 64 bits, 9007199254740993, arrive arrondi à 9007199254740992 dans le front JavaScript. Pourquoi ?
+C: Number est un double : au-delà de 2^53, les entiers perdent en précision
+W: JSON limite les nombres à 32 bits
+W: Le serveur arrondit les nombres impairs
+W: gzip perd le dernier chiffre des nombres longs
+E: JSON n'impose pas de limite, mais JSON.parse convertit en Number. Les identifiants de grande taille s'envoient en chaîne, comme le fait Twitter avec id_str ; BigInt existe mais JSON.parse ne le produit pas seul.
+
+@078
+Q: Une passerelle appelle en série trois services. Chaque appel a un délai d'attente de 15 s et peut être tenté 2 fois. Dans le pire cas, combien de secondes la passerelle attend-elle avant d'avoir épuisé toutes les tentatives ?
+N: 90
+U: s
+E: 3 × 15 × 2 = 90 s, alors que le client de la passerelle abandonne souvent à 30 s : le travail continue pour rien. On raisonne en budget de délai global, transmis aux services appelés, et on raccourcit les délais unitaires.
+
+@079
+Q: Associer chaque code 5xx à sa cause.
+P: 500 Internal Server Error => Exception non prévue dans l'application
+P: 502 Bad Gateway => Réponse invalide du serveur amont reçue par le proxy
+P: 503 Service Unavailable => Service en maintenance ou surchargé
+P: 504 Gateway Timeout => Serveur amont trop lent pour le proxy
+E: 502 et 504 viennent du proxy (Nginx, passerelle, répartiteur), pas de l'application : ses journaux en disent souvent plus que ceux du service. 503 accompagné de Retry-After annonce une indisponibilité temporaire.
+
+@080
+Q: Derrière Nginx, une API répond 502 juste après chaque déploiement, puis tout rentre dans l'ordre au bout d'une minute. Cause la plus probable ?
+C: Nginx transmet les requêtes avant que la nouvelle instance écoute sur son port
+W: Le certificat TLS a expiré
+W: Les clients envoient un JSON invalide
+W: La base a perdu ses index au redémarrage et chaque requête dépasse soixante secondes
+E: L'application démarre, charge sa configuration et ouvre ses connexions avant d'écouter : pendant ce temps, Nginx reçoit un refus de connexion et renvoie 502. Une sonde de disponibilité (readiness) et un déploiement progressif suppriment la coupure.
+
+@081
+Q: Comment suivre une requête d'un client à travers la passerelle et trois services dans les journaux ?
+C: Propager un identifiant de corrélation et l'écrire dans chaque ligne de journal
+W: Comparer les horodatages des journaux à la seconde près
+W: Journaliser le corps complet de chaque requête, jetons compris
+W: Écrire les journaux de tous les services dans un même fichier
+E: L'en-tête traceparent (W3C Trace Context) ou X-Request-ID est créé à l'entrée puis transmis à chaque appel. On le renvoie aussi au client dans la réponse d'erreur pour que le support retrouve la trace. Les jetons et mots de passe ne sont jamais journalisés.
+
+@082
+Q: Le client envoie Accept-Encoding: gzip, br. Que fait le serveur ?
+C: Il peut compresser le corps et l'indique par Content-Encoding
+W: Il chiffre la réponse avec l'algorithme indiqué
+W: Il refuse la requête si br n'est pas installé
+W: Il découpe la réponse en plusieurs requêtes HTTP successives, une par encodage
+E: Un JSON se compresse souvent à moins de 20 % de sa taille. Le serveur choisit parmi les encodages proposés, ou n'en applique aucun : ce n'est pas une erreur. On évite de compresser les réponses qui mêlent secrets et données fournies par l'utilisateur (attaques de type BREACH).
+
+@083
+Q: Qu'apporte HTTP/2 à une API appelée très souvent par le même client ?
+C: Plusieurs requêtes multiplexées sur une connexion et des en-têtes compressés
+W: Un nouveau jeu de méthodes et de codes de statut
+W: La disparition des en-têtes
+W: Le passage obligatoire du JSON au format binaire Protobuf
+E: La sémantique (méthodes, codes, en-têtes) est la même qu'en HTTP/1.1 : seul le transport change, le code de l'API n'est pas modifié. HTTP/3 reprend ce modèle sur QUIC, au-dessus d'UDP.
+
+@084
+Q: Que risque ce paramètre de tri ?
+C: Une injection SQL : tri doit être choisi dans une liste blanche de colonnes
+W: Rien, un ORDER BY ne peut pas être détourné
+W: Un dépassement de mémoire si tri est vide
+W: Une erreur CORS
+E: Un nom de colonne ne peut pas être passé en paramètre lié comme une valeur. On associe les valeurs permises à des colonnes connues ({"nom": "nom", "prix": "prix_ht"}) et on répond 400 pour tout le reste.
+```python
+@app.get("/articles")
+def lister(tri: str = "nom"):
+    return db.execute(f"SELECT * FROM articles ORDER BY {tri}").fetchall()
+```
+
+@085
+Q: Une API de supervision expose l'historique des mesures d'une machine. Le client veut aussi recevoir les nouvelles mesures dès qu'elles arrivent, en restant en HTTP simple. Que proposer ?
+C: Server-Sent Events : une réponse text/event-stream qui reste ouverte
+W: Interroger GET toutes les 10 ms
+W: Augmenter max-age dans Cache-Control
+W: Un PATCH sur la machine qui reste en attente jusqu'à la prochaine mesure enregistrée
+E: SSE pousse des événements du serveur vers le client sur une connexion HTTP ordinaire, avec reprise automatique (Last-Event-ID). WebSocket se justifie quand le client doit aussi envoyer des messages en continu.
+
+@086
+Q: Pourquoi cette route viole-t-elle le contrat de PUT ?
+C: Rejouer la requête incrémente encore : PUT doit être idempotent
+W: PUT n'accepte pas de corps JSON
+W: Les identifiants numériques sont interdits en PUT
+W: Il manque l'en-tête Accept, obligatoire sur toute requête qui porte un corps
+E: Clients HTTP et passerelles peuvent relancer seuls un PUT après une coupure : le compteur avancerait de deux. L'action se modélise en POST /compteurs/7/increments, ou en PUT de la valeur cible ({"valeur": 42}) protégé par If-Match.
+```http
+PUT /compteurs/7 HTTP/1.1
+Content-Type: application/json
+
+{"increment": 1}
+```
+
+@087
+Q: Une API renvoie du JSON ou du CSV selon l'en-tête Accept, et un cache partagé sert parfois du CSV à un client qui demande du JSON. Que manque-t-il ?
+C: L'en-tête Vary: Accept dans la réponse
+W: Un ETag faible
+W: Cache-Control: public
+W: Content-Length, sans lequel les caches confondent les réponses
+E: Vary liste les en-têtes de requête qui font varier la réponse : le cache les ajoute à sa clé. On le met aussi pour Accept-Encoding, et Vary: Authorization évite de servir les données d'un utilisateur à un autre.
+
+@088
+Q: Que signifie le préfixe W/ dans ETag: W/"a1b2" ?
+C: Un validateur faible : même sens, pas forcément les mêmes octets
+W: La ressource est en écriture seule
+W: Le serveur tourne sous Windows
+W: L'ETag expire au bout d'une semaine
+E: Un ETag faible convient au cache conditionnel (If-None-Match) mais pas à If-Match, qui exige une comparaison forte. Certains serveurs affaiblissent l'ETag quand ils compressent la réponse, ce qui casse le verrouillage optimiste.
+
+@089
+Q: Compléter ce JSON Patch qui retire le téléphone seulement si la version vaut encore 7.
+A: remove
+E: JSON Patch (RFC 6902) applique une liste d'opérations : add, remove, replace, move, copy et test. Le tout est atomique : si test échoue, rien n'est appliqué, ce qui donne un verrouillage optimiste dans le corps même de la requête.
+R: RFC 6902 JSON Patch | https://www.rfc-editor.org/rfc/rfc6902
+```http
+PATCH /clients/42 HTTP/1.1
+Content-Type: application/json-patch+json
+
+[
+  {"op": "test", "path": "/version", "value": 7},
+  {"op": "____", "path": "/telephone"}
+]
+```
+
+@090
+Q: Un seau à jetons contient au plus 100 jetons et se remplit de 10 jetons par seconde. Il est plein quand un client envoie 160 requêtes réparties sur 3 secondes. Combien sont acceptées ?
+N: 130
+E: Chaque requête consomme un jeton : les 100 du départ plus les 3 × 10 ajoutés pendant les 3 secondes, soit 130. Les 30 autres reçoivent 429. Le seau autorise une rafale ponctuelle tout en limitant le débit moyen à 10 requêtes par seconde.
+
+@091
+Q: Pourquoi le flux Authorization Code d'une application mobile utilise-t-il PKCE ?
+C: L'application ne peut pas garder de secret ; PKCE rend inutilisable un code intercepté
+W: PKCE chiffre le jeton d'accès
+W: PKCE remplace HTTPS
+W: PKCE évite d'afficher la page de connexion
+E: Une autre application installée sur le téléphone peut intercepter la redirection et le code. Sans le code_verifier, tiré au hasard et resté dans l'application légitime, elle ne peut pas l'échanger contre un jeton. OAuth 2.1 rend PKCE obligatoire pour tous les clients.
+R: RFC 7636 Proof Key for Code Exchange | https://www.rfc-editor.org/rfc/rfc7636
+
+@092
+Q: Remettre dans l'ordre le flux Authorization Code avec PKCE.
+O: L'application tire un code_verifier aléatoire et en calcule le code_challenge
+O: Elle ouvre la page d'autorisation avec le code_challenge
+O: L'utilisateur se connecte et le serveur renvoie un code d'autorisation
+O: L'application échange le code contre un jeton en envoyant le code_verifier
+O: Le serveur vérifie que le verifier correspond au challenge puis délivre le jeton
+E: Le code_challenge vaut le SHA-256 du verifier encodé en Base64URL (méthode S256). Le serveur d'autorisation ne voit le verifier qu'à l'échange final, sur une connexion directe.
+
+@093
+Q: Un JWT d'accès vaut 24 h et un salarié quitte l'entreprise à 9 h. Quel est le problème, et la parade courante ?
+C: Le jeton reste valide jusqu'à expiration ; on donne aux jetons d'accès une durée courte et un jeton de rafraîchissement révocable
+W: Aucun : un JWT est vérifié à chaque appel auprès de l'annuaire
+W: Le jeton expire dès la déconnexion du poste
+W: Passer de HS256 à RS256 l'invalide
+E: Un JWT est vérifié localement par l'API, sans interroger personne : il ne peut pas être révoqué en cours de vie. On vise 5 à 15 minutes pour le jeton d'accès ; l'introspection auprès du serveur d'autorisation reste possible pour les opérations sensibles.
+
+@094
+Q: Plusieurs API vérifient les jetons d'un même serveur d'autorisation. Pourquoi préférer RS256 ou ES256 à HS256 ?
+C: Les API vérifient avec la clé publique sans pouvoir fabriquer de jetons
+W: RS256 produit des jetons plus courts
+W: HS256 n'est pas pris en charge en Python
+W: RS256 chiffre le contenu du jeton, qui devient illisible pour les clients
+E: Avec HS256, le même secret signe et vérifie : chaque API qui le détient pourrait émettre des jetons. Avec une paire de clés, les API lisent les clés publiques sur l'adresse JWKS du serveur et choisissent la bonne grâce au champ kid, ce qui permet la rotation.
+
+@095
+Q: Pourquoi une pagination par curseur opaque (?apres=eyJpZCI6MTAwfQ) plutôt qu'un paramètre ?apres_id=100 exposé tel quel ?
+C: Le serveur peut changer le tri ou la forme du curseur sans casser les clients
+W: Un curseur opaque est chiffré par le serveur et protège ainsi la base des injections SQL
+W: Les entiers sont interdits dans les URL
+W: Le curseur opaque dispense de trier côté base de données
+E: Le client renvoie le curseur sans l'interpréter. Le jour où le tri passe à (date, id) pour départager les égalités, seul le serveur change. L'opacité n'est pas une sécurité : le curseur reste à valider comme toute entrée.
+
+@096
+Q: Une API permet à ses clients d'enregistrer l'URL de leur webhook. Quel contrôle est indispensable avant d'y envoyer des requêtes ?
+C: Refuser les adresses internes après résolution DNS, pour éviter une SSRF
+W: Vérifier que l'URL se termine par .json
+W: Limiter l'URL à 50 caractères
+W: Exiger le port 80
+E: Sans ce contrôle, un client déclare http://169.254.169.254/ ou http://10.0.0.5:8080/admin et fait appeler par le serveur des services internes. La vérification se fait au moment de l'envoi, sur l'adresse réellement résolue, pour déjouer le changement de DNS.
+
+@097
+Q: En production derrière la passerelle, l'en-tête Location des créations pointe vers http://10.0.3.17:8080/commandes/1789. Que corriger ?
+C: Lire X-Forwarded-Host et X-Forwarded-Proto, transmis par la passerelle déclarée de confiance
+W: Écrire l'adresse publique en dur dans chaque contrôleur
+W: Supprimer l'en-tête Location
+W: Passer la passerelle en HTTP pour que les deux adresses correspondent
+E: L'application ne voit que la connexion de la passerelle. On lui fait lire les en-têtes transmis (Forwarded, RFC 7239), mais seulement depuis l'adresse de la passerelle, sinon un client pourrait les falsifier : server.forward-headers-strategy en Spring, --proxy-headers et --forwarded-allow-ips avec uvicorn.
+
+@098
+Q: Comment annoncer aux clients qu'une route v1 sera retirée le 30 juin 2027 ?
+C: En-têtes Deprecation et Sunset dans les réponses, et annonce dans la documentation
+W: Renvoyer 410 Gone dès aujourd'hui
+W: Ralentir volontairement la route
+W: Changer son URL sans prévenir pour forcer la migration
+E: Sunset (RFC 8594) donne la date de retrait, Deprecation signale que la route est déconseillée. Les journaux, ventilés par clé ou par client, montrent qui appelle encore la v1 : on les contacte avant la date au lieu de découvrir les dégâts après.
+
+@099
+Q: Associer chaque code de statut moins courant à sa situation.
+P: 207 Multi-Status => Lot traité en partie, un statut par élément
+P: 410 Gone => Ressource retirée définitivement
+P: 415 Unsupported Media Type => Content-Type non accepté
+P: 428 Precondition Required => If-Match exigé mais absent
+E: Pour un import de 500 articles dont 3 en erreur, répondre 200 ou 400 pour le tout ne dit rien d'utile : un statut par ligne permet au client de ne renvoyer que les lignes rejetées. 410 dit au client d'arrêter de chercher, là où 404 laisse un doute.
+
+@100
+Q: Une API de GMAO met 6 s à renvoyer les ordres de travail. Les journaux SQL montrent une requête pour la liste puis une par ordre pour lire sa machine. Quel correctif côté serveur ?
+C: Charger les machines en une seule requête, par jointure ou avec IN
+W: Ajouter Cache-Control: no-store
+W: Renvoyer la réponse en XML
+W: Porter à 30 secondes le délai d'attente du client
+E: C'est le N+1 de l'ORM : le chargement paresseux de la relation déclenche une requête par ligne. JOIN FETCH en JPA, selectinload avec SQLAlchemy ou Include avec Entity Framework règlent le problème ; activer le journal SQL en développement le révèle tôt.
