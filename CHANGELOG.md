@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision HTML, CSS et accessibilité
+- Lot de 100 questions dont 34 interactives (associations, remises en ordre,
+  calculs, code à compléter) : HTML sémantique, formulaires, modèle de boîte,
+  cascade, spécificité et couches @layer, flexbox et grid, responsive et
+  requêtes de conteneur, propriétés personnalisées, Sass (@use, mixins, BEM),
+  performances d'affichage, WCAG, RGAA et ARIA
+- Deux schémas : cascade CSS, affichage d'une page par le navigateur
+
 ### Révision froid et génie climatique
 - Lot de 100 questions dont 29 interactives (associations, remises en ordre,
   calculs) : cycle frigorifique, surchauffe et sous-refroidissement, détendeurs

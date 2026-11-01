@@ -1,0 +1,490 @@
+@051
+Q: Quel rapport de contraste minimal le niveau AA des WCAG demande-t-il pour un texte de taille normale ?
+N: 4,5
+E: Le niveau AA demande 4,5:1 pour le texte courant et 3:1 pour le grand texte (24 px, ou 18,66 px en gras) et les composants d'interface. Le niveau AAA monte à 7:1. Les outils de développement affichent ce rapport dans le sélecteur de couleur.
+R: W3C : critère 1.4.3 contraste minimal | https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
+
+@052
+Q: Quel est le principe de base d'un usage correct d'ARIA ?
+C: Préférer un élément HTML natif qui a déjà le rôle et le comportement voulus
+W: Ajouter un role sur chaque élément de la page pour que les lecteurs d'écran le comprennent
+W: Remplacer les balises sémantiques par des div munis d'attributs ARIA, plus faciles à styler
+W: Réserver ARIA aux applications mobiles
+E: C'est la première règle d'ARIA : un rôle ne fait qu'annoncer, il n'apporte ni focus ni gestion du clavier. Un <div role="button"> doit recevoir tabindex="0" et réagir à Entrée et Espace, ce qu'un <button> fait seul. Les audits constatent plus d'erreurs sur les pages chargées d'ARIA que sur les autres.
+R: W3C : utiliser ARIA, première règle | https://www.w3.org/TR/using-aria/#rule1
+
+@053
+Q: Associer chaque attribut ARIA à son rôle.
+P: aria-label => Donne un nom accessible quand aucun texte visible ne le fournit
+P: aria-labelledby => Prend le nom accessible dans un autre élément de la page
+P: aria-describedby => Relie une description complémentaire, comme une aide de saisie
+P: aria-expanded => Indique si le contenu commandé est déplié
+P: aria-current => Signale l'élément courant d'un ensemble, comme la page active du menu
+E: aria-label et aria-labelledby remplacent le texte visible pour le nom, alors qu'aria-describedby s'y ajoute, lu après une courte pause. Un bouton d'icône seule, comme une loupe, reçoit aria-label="Rechercher". Les états comme aria-expanded se mettent à jour en JavaScript à chaque ouverture.
+
+@054
+Q: Un bouton qui ne contient qu'une icône SVG est annoncé « bouton » sans autre précision. Que manque-t-il dans ce code ?
+C: Un nom accessible, par exemple aria-label="Fermer" sur le bouton
+W: Un attribut alt sur la balise <svg>
+W: Un role="button" sur le bouton
+W: Un tabindex="0", qui rend le bouton lisible par les lecteurs d'écran
+E: Un <svg> n'a pas d'attribut alt. On donne le nom au bouton (aria-label, ou un texte masqué visuellement) et on retire l'icône de l'arbre d'accessibilité avec aria-hidden="true" et focusable="false". Le bouton est déjà focalisable et porte déjà son rôle.
+```html
+<button class="fermer">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+</button>
+```
+
+@055
+Q: Pourquoi ne faut-il pas écrire outline: none sur :focus sans proposer autre chose ?
+C: Les personnes qui naviguent au clavier ne voient plus où se trouve le focus
+W: Le navigateur rétablit le contour au bout de quelques secondes
+W: Cela empêche les clics de souris sur l'élément
+W: Les lecteurs d'écran cessent alors d'annoncer l'élément focalisé et passent au suivant
+E: Le critère WCAG 2.4.7 demande un focus visible. Si le contour par défaut ne convient pas au design, on le remplace, par exemple :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }, plutôt que de le supprimer. Le lecteur d'écran, lui, suit le focus sans le voir.
+
+@056
+Q: À quoi sert un lien d'évitement placé en tout début de page ?
+C: Il permet au clavier de passer directement au contenu principal sans parcourir le menu
+W: Il évite que les moteurs de recherche indexent les liens du menu, répétés sur chaque page du site
+W: Il redirige vers la version mobile du site
+W: Il recharge la page en cas d'erreur
+E: <a href="#contenu" class="evitement">Aller au contenu</a> est souvent masqué jusqu'à ce qu'il reçoive le focus. Sans lui, un menu de trente liens se parcourt à chaque page. Le RGAA le demande, comme les repères <main> et <nav>.
+
+@057
+Q: Remettre dans l'ordre une vérification rapide de l'accessibilité d'une page, du plus simple au plus poussé.
+O: Lancer un audit automatique gratuit, par exemple Lighthouse ou axe
+O: Parcourir la page au clavier seul avec Tab, Maj+Tab, Entrée et Échap
+O: Zoomer à 200 % et vérifier qu'aucun texte ne se chevauche
+O: Écouter les parcours principaux avec un lecteur d'écran comme NVDA
+O: Faire tester la page par des utilisateurs en situation de handicap
+E: Les outils automatiques ne trouvent qu'une partie des problèmes, environ un tiers selon les études : un alt présent mais faux passe le contrôle. Le clavier et le zoom se vérifient en quelques minutes ; NVDA est gratuit sous Windows et VoiceOver est livré avec macOS et iOS.
+
+@058
+Q: Que signifie RGAA en France ?
+C: Référentiel général d'amélioration de l'accessibilité
+W: Règlement général d'adaptation des applications
+W: Recueil des guides d'accessibilité de l'Agence du numérique, publié pour les seuls sites de l'État
+W: Référentiel graphique des administrations
+E: Le RGAA traduit les WCAG en 106 critères vérifiables avec une méthode de test. Il s'impose aux services publics et, depuis la transposition de l'Acte européen sur l'accessibilité en juin 2025, à de nombreuses entreprises privées, avec une déclaration d'accessibilité publiée.
+
+@059
+Q: Comment rendre ce tableau de données lisible pour un lecteur d'écran ?
+C: Utiliser <th> avec scope pour les en-têtes et <caption> pour son titre
+W: Construire le tableau avec des div et display: grid, plus simple à lire pour les assistances
+W: Mettre chaque cellule dans un <p>
+W: Ajouter role="presentation" sur le tableau
+E: Les en-têtes associés permettent au lecteur d'écran d'annoncer « Mars, Chiffre d'affaires, 12 000 » au lieu d'un nombre isolé. role="presentation" retire au contraire la sémantique du tableau ; il convient aux anciens tableaux de mise en page.
+```html
+<table>
+  <tr><td></td><td>Chiffre d'affaires</td><td>Commandes</td></tr>
+  <tr><td>Mars</td><td>12 000</td><td>85</td></tr>
+</table>
+```
+
+@060
+Q: Compléter cette image pour que le navigateur choisisse le fichier selon la largeur affichée.
+A: srcset
+E: srcset liste les fichiers avec leur largeur réelle (w), sizes indique la largeur prévue à l'affichage. Le navigateur combine les deux avec la densité de l'écran et ne télécharge qu'un fichier. width et height réservent la place et évitent le décalage de mise en page au chargement.
+```html
+<img src="atelier-800.jpg"
+     ____="atelier-400.jpg 400w, atelier-800.jpg 800w, atelier-1600.jpg 1600w"
+     sizes="(min-width: 60em) 50vw, 100vw"
+     width="800" height="533" alt="Technicien réglant un variateur">
+```
+
+@061
+Q: Que fait l'attribut loading="lazy" sur une image ?
+C: Il retarde son téléchargement jusqu'à ce qu'elle approche de la zone visible
+W: Il charge l'image en basse qualité puis en haute qualité
+W: Il compresse l'image côté navigateur
+W: Il empêche la mise en cache de l'image, qui est retéléchargée à chaque affichage
+E: Le chargement différé économise la bande passante des images placées loin dans la page. On ne l'applique pas à l'image principale visible dès l'ouverture : la retarder dégrade le LCP. Le même attribut existe pour les iframes.
+
+@062
+Q: Pourquoi un z-index: 9999 ne fait-il pas passer cet élément au-dessus d'un autre ?
+C: Il appartient à un contexte d'empilement créé par un parent, qui reste sous l'autre élément
+W: z-index ne dépasse pas 999
+W: z-index ne fonctionne que sur les éléments en position: fixed
+W: Le navigateur ignore les z-index supérieurs à celui de la balise body, fixé à 1000 par défaut
+E: Un parent avec opacity inférieure à 1, transform, filter ou position plus un z-index crée un contexte d'empilement : ses enfants s'empilent entre eux, puis le groupe entier se range comme un seul calque. Augmenter le z-index de l'enfant n'y change rien ; il faut agir sur le parent ou déplacer l'élément, d'où les modales placées en fin de body.
+```html
+<div class="carte" style="transform: translateY(0); z-index: 1; position: relative">
+  <div class="infobulle" style="position: absolute; z-index: 9999">Aide</div>
+</div>
+<header style="position: relative; z-index: 2">Menu</header>
+```
+
+@063
+Q: Quelles propriétés animer de préférence pour une transition fluide ?
+C: transform et opacity
+W: width et height
+W: top et left
+W: margin et padding, qui laissent le navigateur recalculer la page au bon rythme
+E: transform et opacity peuvent être traitées par le compositeur, souvent sur le processeur graphique, sans recalculer la mise en page ni repeindre. Animer width ou top relance le calcul de la mise en page à chaque image et saccade sur les appareils modestes.
+
+@064
+Q: Compléter cette règle pour couper les animations chez les personnes qui ont demandé moins de mouvement dans leur système.
+A: prefers-reduced-motion
+E: Les animations fortes (parallaxe, zooms, défilements automatiques) provoquent des vertiges chez certaines personnes atteintes de troubles vestibulaires. On peut aussi faire l'inverse : n'activer les animations que sous @media (prefers-reduced-motion: no-preference).
+```css
+@media (____: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+@065
+Q: Associer chaque élément HTML natif au composant qu'il évite de recoder.
+P: <details> et <summary> => Un bloc dépliable, ouvert au clic ou au clavier
+P: <dialog> => Une fenêtre modale avec gestion du focus
+P: <datalist> => Des suggestions de saisie sur un champ texte
+P: <progress> => Une barre d'avancement
+P: <fieldset> et <legend> => Un groupe de boutons radio avec son intitulé
+E: Ces éléments arrivent avec le comportement clavier et les rôles accessibles. Une modale codée à la main doit piéger le focus, gérer Échap et rendre le reste inerte ; dialog.showModal() le fait, et l'attribut inert couvre les cas restants.
+
+@066
+Q: Pourquoi un fichier CSS bloque-t-il l'affichage de la page alors qu'une image ne le fait pas ?
+C: Le navigateur attend le CSS pour éviter d'afficher un contenu sans style qui changerait ensuite d'aspect
+W: Le CSS est téléchargé après toutes les images
+W: Une image n'a pas besoin du réseau
+W: Le CSS doit être exécuté comme un script avant que le HTML ne soit lu par le navigateur
+E: Le CSS du head est bloquant pour le rendu : sans lui, la page clignoterait d'une version brute à la version stylée (FOUC). Il ne bloque pas l'analyse du HTML, mais un script qui le suit attend sa fin. D'où des feuilles courtes, et le CSS critique placé en ligne pour le haut de page.
+
+@067
+Q: Quelle différence entre les attributs defer et async sur un script ?
+C: defer exécute les scripts après l'analyse du HTML dans leur ordre, async dès leur arrivée dans un ordre quelconque
+W: async attend la fin du chargement des images, defer non
+W: defer bloque l'analyse du HTML pendant le téléchargement, async non
+W: Les deux sont équivalents depuis HTML5
+E: Les deux téléchargent sans bloquer l'analyse. defer garantit l'ordre et attend que le DOM soit prêt, ce qui convient au code de la page. async convient à un script indépendant, comme une mesure d'audience. Un module (type="module") se comporte par défaut comme defer.
+
+@068
+Q: Que fait la propriété font-display: swap dans cette déclaration de police ?
+C: Le texte s'affiche tout de suite avec une police de secours, remplacée quand la police web arrive
+W: Le texte reste invisible jusqu'au chargement de la police
+W: La police n'est téléchargée que si l'utilisateur la possède déjà
+W: Elle échange la police avec celle du système d'exploitation de l'utilisateur, sans rien télécharger
+E: Sans swap, le navigateur peut masquer le texte jusqu'à trois secondes (FOIT). swap le montre immédiatement, avec un léger décalage au changement de police ; ajuster la police de secours avec size-adjust réduit ce décalage. Héberger le fichier en woff2 sur son propre domaine évite une connexion supplémentaire.
+```css
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter.woff2") format("woff2");
+  font-display: swap;
+}
+```
+
+@069
+Q: Quel indicateur Core Web Vitals mesure les décalages inattendus de la mise en page ?
+C: CLS (Cumulative Layout Shift)
+W: LCP (Largest Contentful Paint)
+W: INP (Interaction to Next Paint)
+W: TTFB (Time To First Byte), qui mesure le temps mis par la page pour se stabiliser à l'écran
+E: Un CLS sous 0,1 est jugé bon. Les causes classiques : image sans dimensions, bandeau inséré au-dessus du contenu, police de remplacement de taille différente. Le LCP mesure l'affichage du plus grand élément visible, l'INP la réactivité aux interactions.
+
+@070
+Q: Une image fait 1600 px de large affichée dans un emplacement de 400 px CSS, sur un écran de densité 2. Quelle largeur d'image suffit, en pixels ?
+N: 800
+U: px
+E: 400 px CSS × densité 2 = 800 pixels physiques. Le fichier de 1600 px est quatre fois plus lourd en surface pour aucun gain visible. C'est ce calcul que fait le navigateur avec srcset et sizes, à condition de lui proposer plusieurs largeurs.
+
+@071
+Q: Remettre dans l'ordre les étapes de l'affichage d'une page par le navigateur.
+O: Analyse du HTML en arbre DOM
+O: Analyse du CSS en arbre CSSOM
+O: Arbre de rendu : éléments visibles et styles calculés
+O: Mise en page : position et taille de chaque boîte
+O: Peinture puis composition des calques à l'écran
+E: Le DOM et le CSSOM se construisent en parallèle, mais le rendu attend les deux. Un élément en display: none est absent de l'arbre de rendu, alors qu'un élément en visibility: hidden y figure et occupe sa place. Le panneau Performance des outils de développement montre ces étapes en couleurs.
+
+@072
+Q: Un script lit offsetHeight juste après avoir modifié la largeur d'un élément, dans une boucle sur cent éléments. Quel est le problème ?
+C: Chaque lecture force un recalcul de mise en page synchrone, cent fois de suite
+W: offsetHeight renvoie toujours 0 après une modification
+W: La boucle bloque le téléchargement des feuilles de style suivantes
+W: Le navigateur ignore les modifications faites dans une boucle et n'applique que la dernière
+E: Écrire puis lire une dimension oblige le navigateur à refaire la mise en page tout de suite (layout thrashing). On regroupe les lectures, puis les écritures, ou on passe par requestAnimationFrame. Le panneau Performance signale ces recalculs par un avertissement « Forced reflow ».
+```js
+for (const vCarte of vCartes) {
+  vCarte.style.width = "50%";
+  vHauteurs.push(vCarte.offsetHeight);
+}
+```
+
+@073
+Q: Quelle modification déclenche seulement une composition, sans mise en page ni peinture ?
+C: Changer transform: translateX() sur un élément déjà placé sur son propre calque
+W: Changer la largeur d'une colonne de grille
+W: Changer la couleur de fond d'un bouton, que le processeur graphique applique sans repeindre
+W: Ajouter un paragraphe dans le DOM
+E: Modifier la géométrie relance mise en page, peinture et composition. Une couleur de fond ne demande que peinture et composition. transform et opacity peuvent ne toucher que la composition. will-change: transform prépare le calque à l'avance, à réserver aux éléments vraiment animés car chaque calque consomme de la mémoire.
+
+@074
+Q: Que permettent les requêtes de conteneur de cet extrait ?
+C: Adapter la carte à la largeur de son conteneur plutôt qu'à celle de la fenêtre
+W: Interroger le serveur pour connaître la taille de l'écran
+W: Charger une feuille de style différente par composant
+W: Remplacer les media queries pour l'impression et les écrans de grande taille
+E: Une même carte peut se trouver dans une colonne étroite ou une zone large de la même page : la media query ne voit que la fenêtre, la requête de conteneur voit la place réelle. container-type: inline-size déclare le conteneur ; les unités cqi se rapportent à sa largeur.
+R: MDN : Container queries | https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Containment/Container_queries
+```css
+.colonne { container-type: inline-size; }
+
+@container (min-width: 30rem) {
+  .carte { display: grid; grid-template-columns: 8rem 1fr; }
+}
+```
+
+@075
+Q: Que sélectionne la règle de ce code, qui utilise :has() ?
+C: Les cartes qui contiennent une image
+W: Les images placées dans une carte
+W: Les cartes qui suivent une image
+W: Les cartes sans image, pour leur donner une marge
+E: :has() sélectionne un élément d'après ce qu'il contient ou ce qui le suit : c'est le sélecteur parent attendu pendant des années. form:has(:invalid) colore un formulaire incomplet, label:has(+ input:required) marque les libellés des champs obligatoires, sans JavaScript.
+```css
+.carte:has(img) {
+  grid-template-rows: 12rem auto;
+}
+```
+
+@076
+Q: Compléter cette règle pour une taille de titre fluide, entre 1,5rem et 3rem selon la largeur de la fenêtre.
+A: clamp
+E: clamp(minimum, valeur préférée, maximum) borne une valeur qui varie avec la fenêtre. Mélanger rem et vw dans la valeur préférée garde l'effet du zoom : une taille en vw seul ne grossit pas quand l'utilisateur zoome, ce qui fait échouer le critère WCAG de redimensionnement du texte.
+```css
+h1 {
+  font-size: ____(1.5rem, 1rem + 3vw, 3rem);
+}
+```
+
+@077
+Q: Associer chaque propriété logique à la propriété physique qu'elle remplace en français, écrit de gauche à droite.
+P: margin-inline-start => margin-left
+P: padding-block-end => padding-bottom
+P: inline-size => width
+P: inset-inline-end => right
+P: border-block-start => border-top
+E: Les propriétés logiques suivent le sens d'écriture : en arabe ou en hébreu, margin-inline-start devient la marge de droite sans autre règle. Une interface traduite un jour dans une langue écrite de droite à gauche n'a ainsi presque rien à changer, à condition d'ajouter dir="rtl".
+
+@078
+Q: Quel attribut fait annoncer un message d'état, comme « Panier mis à jour », sans déplacer le focus ?
+C: aria-live="polite" sur une zone présente dès le chargement de la page
+W: aria-hidden="false" sur le message
+W: role="alert" sur le bouton qui a déclenché l'action
+W: tabindex="-1" sur le message, que le lecteur d'écran lit dès qu'il apparaît dans la page
+E: Une région live doit exister avant que son contenu change : insérée d'un coup avec son texte, elle n'est souvent pas annoncée. polite attend la fin de la phrase en cours, assertive coupe la lecture et se réserve aux erreurs urgentes. role="status" équivaut à aria-live="polite".
+
+@079
+Q: Remettre dans l'ordre le comportement attendu d'une fenêtre modale accessible.
+O: Le focus se place dans la modale, sur son titre ou son premier champ
+O: Tab et Maj+Tab restent dans la modale
+O: Le reste de la page est inerte pour la souris et les lecteurs d'écran
+O: Échap ou le bouton Fermer referme la modale
+O: Le focus revient sur l'élément qui l'avait ouverte
+E: <dialog> ouvert par showModal() assure le piège du focus, Échap et l'inertie du fond. Le retour du focus est facile à oublier en JavaScript : l'utilisateur au clavier se retrouve sinon en haut de la page et doit tout reparcourir.
+
+@080
+Q: Dans ce formulaire, comment relier le message d'erreur au champ pour un lecteur d'écran ?
+C: Ajouter aria-describedby="err-cp" et aria-invalid="true" sur le champ
+W: Colorer le champ en rouge, que le lecteur d'écran annonce
+W: Placer le message dans le placeholder du champ
+W: Ajouter role="alert" sur le libellé, qui est relu à chaque fois que le champ reçoit le focus
+E: aria-invalid annonce le champ comme invalide et aria-describedby fait lire le message à l'arrivée sur le champ. La couleur seule ne suffit pas (critère 1.4.1) : un daltonien ou un lecteur d'écran ne la perçoit pas. Le placeholder disparaît à la saisie et a souvent un contraste trop faible.
+```html
+<label for="cp">Code postal</label>
+<input id="cp" name="cp" inputmode="numeric">
+<p id="err-cp" class="erreur">Le code postal compte 5 chiffres.</p>
+```
+
+@081
+Q: Que donne la compilation de ce code Sass avec la fonction math.div ?
+C: .colonne { width: 33.3333333333%; }
+W: .colonne { width: math.div(100%, 3); }
+W: .colonne { width: calc(100% / 3); }
+W: Une erreur, car Sass ne divise pas une valeur exprimée en pourcentage
+E: Le module sass:math calcule à la compilation. La barre oblique seule n'est plus une division en Dart Sass, car elle sert de séparateur en CSS (grid-area: 1 / 3, font: 16px/1.5). Pour un calcul qui dépend de la page, comme 100% - 2rem, on laisse calc() au navigateur.
+```scss
+@use "sass:math";
+
+.colonne {
+  width: math.div(100%, 3);
+}
+```
+
+@082
+Q: Associer chaque élément du langage Sass à son rôle.
+P: $variable => Valeur réutilisée, remplacée à la compilation
+P: @mixin => Bloc de déclarations paramétrable inclus par @include
+P: @function => Calcul qui renvoie une valeur
+P: %placeholder => Sélecteur qui n'existe que pour @extend
+P: @each => Boucle qui génère une règle par élément d'une liste ou d'une map
+E: @each sur une map de couleurs génère par exemple .alerte-succes, .alerte-erreur et .alerte-info en trois lignes. Sass n'apporte rien au navigateur : tout produit du CSS standard, qu'il faut relire dans le fichier compilé quand le résultat surprend.
+
+@083
+Q: Quelle commande de Dart Sass compile scss/main.scss vers css/main.css et recompile à chaque modification ?
+C: sass --watch scss/main.scss css/main.css
+W: sass scss/main.scss > css/main.css --live
+W: npm sass build main.scss
+W: node-sass --dev scss/main.scss, qui est l'outil officiel et maintenu par l'équipe de Sass
+E: Dart Sass est l'implémentation de référence, installable par npm install -D sass. node-sass et LibSass ne sont plus maintenus et ne connaissent pas @use. --style=compressed minifie la sortie et --no-source-map retire la carte des sources en production.
+
+@084
+Q: Une feuille de 8 000 lignes a vu ses sélecteurs s'alourdir jusqu'à #page .contenu .bloc ul li a. Quelle démarche permet d'en sortir progressivement ?
+C: Ranger l'existant dans une couche @layer basse et écrire les nouveaux composants en classes simples dans une couche plus tardive
+W: Ajouter !important sur chaque nouvelle règle pour passer devant l'existant
+W: Réécrire toute la feuille d'un coup avant la prochaine livraison
+W: Passer tout l'existant en sélecteurs d'id pour harmoniser la spécificité
+E: Les couches permettent à une règle de spécificité (0,1,0) de passer devant un ancien sélecteur lourd, sans surenchère. On migre ensuite composant par composant en supprimant les anciennes règles, avec des captures d'écran comparées pour détecter les régressions visuelles.
+
+@085
+Q: Pourquoi le placeholder de ce champ ne remplace-t-il pas un libellé ?
+C: Il disparaît dès la saisie et n'est pas annoncé de façon fiable par toutes les aides techniques
+W: Le placeholder n'est pas affiché sur mobile
+W: Il est envoyé au serveur avec la valeur
+W: Les navigateurs le limitent à dix caractères et coupent le reste du texte
+E: Une fois le champ rempli, l'utilisateur ne sait plus ce qu'il a saisi, ni dans quel format. Le texte grisé a souvent un contraste insuffisant et peut passer pour une valeur déjà remplie. Le placeholder peut donner un exemple, en plus d'un label visible.
+```html
+<input type="email" name="email" placeholder="Adresse e-mail">
+```
+
+@086
+Q: Quelle est la spécificité du sélecteur :is(#menu, .lien) a:where(.actif) ?
+C: (1,0,1) : :is prend le plus fort de ses arguments, :where compte pour zéro
+W: (0,1,1) : :is prend l'argument le plus faible
+W: (1,2,1) : chaque argument compte
+W: (0,0,1) : les pseudo-classes fonctionnelles ne comptent pas, comme le sélecteur universel
+E: :is(), :not() et :has() valent la spécificité de leur argument le plus spécifique, ici #menu, même quand c'est .lien qui correspond. :where() vaut toujours zéro, ce qui en fait l'outil des feuilles de base faciles à surcharger.
+R: MDN : :where() | https://developer.mozilla.org/fr/docs/Web/CSS/:where
+
+@087
+Q: Le blanc #ffffff a une luminance relative de 1 et un gris une luminance de 0,18. Quel est leur rapport de contraste ? Arrondir à deux décimales.
+N: 4,57
+T: 1
+E: Le rapport vaut (L1 + 0,05) / (L2 + 0,05), avec L1 la plus claire : 1,05 / 0,23 ≈ 4,57. Le gris passe donc le niveau AA pour le texte courant, de peu. Le 0,05 représente la lumière ambiante réfléchie par l'écran, et donne au noir pur un rapport maximal de 21 avec le blanc.
+R: W3C : définition du rapport de contraste | https://www.w3.org/TR/WCAG22/#dfn-contrast-ratio
+
+@088
+Q: Un lien caché dans un menu fermé par aria-hidden="true" reste atteignable avec Tab. Quel est le risque ?
+C: Le focus arrive sur un élément que le lecteur d'écran n'annonce pas : l'utilisateur ne sait pas où il est
+W: Le navigateur refuse de charger la page
+W: Le lien est annoncé deux fois
+W: aria-hidden supprime aussi l'élément du parcours au clavier, il n'y a donc pas de risque
+E: aria-hidden retire l'élément de l'arbre d'accessibilité mais pas de l'ordre de tabulation. Pour un contenu masqué, display: none, hidden ou inert retirent les deux à la fois. Les audits axe signalent ce cas sous la règle « aria-hidden-focus ».
+
+@089
+Q: Remettre dans l'ordre les sources que le navigateur consulte pour calculer le nom accessible d'un bouton, de la plus prioritaire à la moins prioritaire.
+O: aria-labelledby
+O: aria-label
+O: Contenu textuel du bouton
+O: Attribut title
+E: Un aria-label sur un bouton qui a déjà du texte remplace ce texte : si le texte visible dit « Envoyer » et l'aria-label « Valider », un utilisateur de commande vocale qui dit « cliquer Envoyer » échoue (critère 2.5.3). Le nom accessible devrait commencer par le texte visible. L'onglet Accessibilité des outils de développement affiche le nom calculé.
+R: W3C : calcul du nom accessible | https://www.w3.org/TR/accname-1.2/
+
+@090
+Q: Que permet subgrid dans cet extrait ?
+C: Les cartes reprennent les lignes de la grille parente, donc titres, textes et boutons s'alignent d'une carte à l'autre
+W: Une grille de secours pour les navigateurs anciens
+W: Une grille plus petite qui se répète dans chaque cellule
+W: L'imbrication de grilles indépendantes dans la cellule, chacune avec ses propres lignes de départ
+E: Sans subgrid, chaque carte a sa propre grille : un titre sur deux lignes décale les boutons de cette carte seulement. Avec grid-template-rows: subgrid, la carte s'étend sur trois lignes du parent et ses enfants s'y placent, dimensionnées par le plus grand contenu de la rangée.
+```css
+.cartes { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: auto; }
+.carte  { display: grid; grid-row: span 3; grid-template-rows: subgrid; }
+```
+
+@091
+Q: Une liste de 2 000 lignes défile lentement. Que fait content-visibility: auto sur chaque section hors écran ?
+C: Le navigateur saute le calcul de mise en page et la peinture des sections non visibles
+W: Les sections sont retirées du DOM et rechargées depuis le serveur à l'approche
+W: Les sections deviennent invisibles pour les lecteurs d'écran
+W: Le texte n'est plus trouvable avec Ctrl+F tant que la section n'a pas été affichée une fois à l'écran
+E: Le contenu reste dans le DOM, accessible et trouvable par la recherche, mais son rendu est différé. contain-intrinsic-size: auto 500px donne une hauteur estimée, sans quoi la barre de défilement sauterait à chaque section rendue. Pour des dizaines de milliers de lignes, une liste virtualisée reste plus efficace.
+
+@092
+Q: Une politique de sécurité CSP stricte bloque les attributs style="" écrits dans le HTML. Quelle solution respecte la politique sans l'affaiblir ?
+C: Passer ces styles dans des classes d'une feuille externe servie par le site
+W: Ajouter 'unsafe-inline' à style-src
+W: Désactiver la CSP sur les pages concernées
+W: Encoder les styles en base64 dans l'attribut, ce que la CSP laisse passer
+E: 'unsafe-inline' rouvre la porte à l'injection de styles, qui permet de masquer ou maquiller du contenu, voire d'exfiltrer des valeurs par des sélecteurs d'attributs. Les blocs <style> peuvent passer par un nonce ou une empreinte ; les attributs style, non, sauf 'unsafe-hashes'. Les classes sont la voie la plus simple.
+
+@093
+Q: Que corrige l'unité dvh par rapport à vh dans cet en-tête plein écran ?
+C: Sa hauteur suit la fenêtre réelle quand la barre d'adresse du mobile apparaît ou disparaît
+W: Elle exprime la hauteur en pixels physiques plutôt qu'en pixels CSS
+W: Elle exclut la hauteur de la barre de défilement horizontale
+W: Elle corrige la hauteur sur les écrans de densité supérieure à 2, mais pas le cas des mobiles
+E: Sur mobile, 100vh correspond à la fenêtre barre d'adresse repliée : le bas de l'en-tête est masqué à l'ouverture. dvh suit la taille en cours, svh la plus petite et lvh la plus grande. On garde souvent une ligne 100vh avant, pour les navigateurs qui ne connaissent pas dvh.
+```css
+.accueil {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+```
+
+@094
+Q: Associer chaque critère WCAG à ce qu'il vérifie.
+P: 1.1.1 Contenu non textuel => Une alternative textuelle pour les images utiles
+P: 1.4.10 Redistribution => Lecture sans défilement horizontal à 320 px CSS
+P: 2.1.1 Clavier => Toutes les fonctions utilisables au clavier
+P: 2.4.7 Visibilité du focus => Un indicateur de focus visible
+P: 4.1.2 Nom, rôle et valeur => Les composants exposent leur nom, leur rôle et leur état
+E: Les WCAG se rangent sous quatre principes : perceptible, utilisable, compréhensible, robuste. La redistribution à 320 px correspond à un écran de 1280 px zoomé à 400 % ; elle se teste en réduisant la fenêtre et en zoomant.
+
+@095
+Q: Des tests de régression visuelle signalent un écart de quelques pixels sur toutes les pages après une mise à jour de bibliothèque CSS. Quelle démarche suivre d'abord ?
+C: Comparer les styles calculés d'un élément avant et après, pour trouver la propriété qui a changé
+W: Mettre à jour toutes les captures de référence pour que les tests repassent
+W: Ajouter des marges négatives aux pages concernées
+W: Revenir à l'ancienne version de la bibliothèque et bloquer définitivement les mises à jour
+E: L'onglet Calculé des outils de développement montre la valeur finale et la règle qui la donne. Un changement de line-height, de box-sizing ou de police de base suffit souvent à tout décaler. Accepter les nouvelles captures sans comprendre l'écart retire tout l'intérêt du test.
+
+@096
+Q: Que se passe-t-il pour une déclaration CSS que le navigateur ne comprend pas, comme une propriété récente ?
+C: Il l'ignore et applique les autres déclarations de la règle
+W: Il ignore toute la feuille de style
+W: Il affiche une erreur à l'utilisateur
+W: Il ignore toute la règle, sélecteur compris, et passe à la suivante
+E: Cette tolérance permet d'empiler une valeur de repli puis la valeur moderne, comme 100vh puis 100dvh. Attention aux listes de sélecteurs : un seul sélecteur inconnu dans « a, b:inconnu » fait ignorer toute la règle, ce que :is() et :where() évitent grâce à leur analyse tolérante. @supports teste explicitement une fonctionnalité.
+
+@097
+Q: Compléter cette règle pour n'appliquer la grille que dans les navigateurs qui gèrent subgrid.
+A: @supports
+E: @supports applique son bloc si la déclaration testée est comprise. On écrit d'abord une mise en page simple qui fonctionne partout, puis on l'améliore dans le bloc : c'est l'amélioration progressive. @supports selector(:has(a)) teste aussi un sélecteur.
+```css
+____ (grid-template-rows: subgrid) {
+  .carte {
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+  }
+}
+```
+
+@098
+Q: Un menu déroulant personnalisé reçoit role="menu". Pourquoi est-ce souvent une erreur pour une navigation de site ?
+C: Le rôle menu promet une navigation aux flèches comme dans un logiciel, que le code ne fournit généralement pas
+W: role="menu" n'existe pas dans ARIA
+W: Il empêche l'affichage du menu sur mobile
+W: Il rend les liens du menu invisibles pour les moteurs de recherche, qui ignorent alors la navigation
+E: Le lecteur d'écran change de mode et attend les flèches, Origine et Fin ; si seul Tab fonctionne, l'utilisateur est perdu. Pour une navigation, une liste de liens dans <nav> et un bouton aria-expanded qui l'ouvre suffisent. Le guide APG du W3C décrit le comportement de chaque rôle complexe.
+R: W3C : guide des pratiques ARIA (APG) | https://www.w3.org/WAI/ARIA/apg/
+
+@099
+Q: Remettre dans l'ordre une démarche pour rendre accessible un composant existant signalé par un audit.
+O: Reproduire le défaut au clavier et avec un lecteur d'écran
+O: Lire le critère WCAG ou RGAA concerné et le comportement attendu
+O: Remplacer si possible le balisage par un élément natif
+O: Compléter avec ARIA ce que le natif ne couvre pas
+O: Revérifier au clavier, au lecteur d'écran et avec l'audit automatique
+E: Partir du défaut reproduit évite de corriger à l'aveugle. Le natif d'abord limite le JavaScript à maintenir. La dernière vérification couvre aussi la régression : un composant corrigé qui casse la navigation au clavier ailleurs n'a rien gagné.
+
+@100
+Q: Une page passe l'audit Lighthouse à 100 en accessibilité. Que peut-on en conclure ?
+C: Les contrôles automatisables passent, mais il reste à vérifier à la main le clavier, le sens des textes et les parcours
+W: La page est conforme au RGAA et aux WCAG
+W: La page n'a plus besoin d'être testée par des utilisateurs
+W: La page est utilisable au lecteur d'écran, puisque Lighthouse simule NVDA pendant son audit
+E: Lighthouse s'appuie sur axe et ne voit que ce qui se mesure : un alt présent, un contraste, un nom accessible non vide. Il ne sait pas si l'alt décrit bien l'image ni si l'ordre de lecture a un sens. Une déclaration de conformité suppose un audit complet des critères sur un échantillon de pages.

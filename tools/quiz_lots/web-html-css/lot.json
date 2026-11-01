@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110104,
+  "skills": ["HTML", "CSS", "Sass", "accessibilité"],
+  "schemas": [
+    {
+      "name": "web-html-css-cascade.svg",
+      "questions": ["036", "037", "038"],
+      "diagram": {
+        "title": "Cascade CSS : départager deux déclarations",
+        "nodes": [
+          "Déclarations qui ciblent l'élément",
+          "Origine et importance",
+          "Couche @layer",
+          "Spécificité du sélecteur",
+          "Ordre d'apparition"
+        ],
+        "note": "Avec !important, l'ordre des couches s'inverse"
+      }
+    },
+    {
+      "name": "web-html-css-rendu.svg",
+      "questions": ["071", "072", "073"],
+      "diagram": {
+        "title": "Affichage d'une page par le navigateur",
+        "nodes": [
+          "HTML analysé en DOM",
+          "CSS analysé en CSSOM",
+          "Arbre de rendu",
+          "Mise en page des boîtes",
+          "Peinture puis composition"
+        ],
+        "note": "transform et opacity ne relancent que la composition"
+      }
+    }
+  ]
+}

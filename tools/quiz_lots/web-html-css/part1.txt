@@ -1,0 +1,461 @@
+@001
+Q: À quoi sert la ligne <!DOCTYPE html> placée en tête d'une page ?
+C: Elle fait afficher la page en mode standard plutôt qu'en mode de compatibilité
+W: Elle charge la dernière version du moteur HTML depuis le site du W3C, puis la met en cache
+W: Elle déclare la langue du document
+W: Elle remplace la balise <html>
+E: Sans doctype, les navigateurs passent en mode « quirks » et reproduisent des comportements anciens : modèle de boîte d'Internet Explorer 5, hauteurs de tableaux différentes. La forme courte <!DOCTYPE html> suffit en HTML5, sans référence à une DTD.
+R: MDN : mode quirks et mode standard | https://developer.mozilla.org/fr/docs/Web/HTML/Quirks_Mode_and_Standards_Mode
+
+@002
+Q: Quelle balise contient le contenu principal et propre à une page, à raison d'un seul visible à la fois ?
+C: <main>
+W: <section>
+W: <body>
+W: <article>, qui regroupe le contenu central de la page et le distingue de l'en-tête et du pied de page
+E: <main> exclut ce qui se répète d'une page à l'autre (en-tête, navigation, pied de page). Les lecteurs d'écran proposent d'y sauter directement. <article> désigne un contenu autonome, réutilisable ailleurs (billet, fiche produit), et une page peut en contenir plusieurs.
+
+@003
+Q: Associer chaque balise sémantique à son usage.
+P: <header> => En-tête de la page ou d'une section : logo, titre, outils
+P: <nav> => Bloc de liens de navigation principaux
+P: <aside> => Contenu annexe : encadré, liens connexes
+P: <footer> => Pied de page ou de section : mentions, contacts
+P: <figure> => Image ou schéma accompagné de sa légende <figcaption>
+E: Ces balises remplacent les <div class="header"> d'autrefois. Elles n'ont pas d'effet visuel particulier mais donnent des repères (landmarks) aux technologies d'assistance et un sens au code pour le développeur suivant.
+
+@004
+Q: Que doit contenir l'attribut alt d'une image purement décorative, comme un filet ornemental ?
+C: Une chaîne vide : alt=""
+W: Le nom du fichier image
+W: Le mot « décoration », pour que l'utilisateur sache qu'il peut l'ignorer sans perdre d'information
+W: Rien : l'attribut alt doit être retiré
+E: Un alt vide indique aux lecteurs d'écran d'ignorer l'image. Sans attribut alt, beaucoup lisent le nom du fichier (« filet-final-v2 point png »), ce qui gêne la lecture. Une image porteuse d'information demande au contraire un texte qui transmet cette information.
+R: W3C : arbre de décision pour l'attribut alt | https://www.w3.org/WAI/tutorials/images/decision-tree/
+
+@005
+Q: Pourquoi renseigner l'attribut lang de la balise <html> ?
+C: Pour que les lecteurs d'écran prononcent le texte avec la bonne langue
+W: Pour que le serveur choisisse l'encodage des caractères envoyés au navigateur
+W: Pour traduire automatiquement la page dans la langue du visiteur
+W: Pour activer les polices accentuées
+E: Un texte français lu avec une synthèse vocale anglaise devient incompréhensible. lang sert aussi à la césure (hyphens: auto), aux guillemets de q et aux correcteurs orthographiques. Un passage dans une autre langue reçoit son propre attribut, par exemple <span lang="en">.
+
+@006
+Q: Quelle balise relie un texte à un champ de formulaire pour le nommer ?
+C: <label>
+W: <legend>
+W: <span> placé juste avant le champ
+W: <caption>
+E: <label for="email"> associé à id="email" donne un nom accessible au champ et agrandit la zone cliquable : cliquer sur le texte place le curseur dans le champ ou coche la case. <legend> titre un groupe <fieldset>, <caption> un tableau.
+
+@007
+Q: Compléter ce champ pour que son libellé lui soit associé.
+A: for
+E: L'attribut for du label reprend l'id du champ. On peut aussi placer le champ à l'intérieur du label, ce qui évite les identifiants, mais certains outils d'assistance anciens gèrent moins bien cette forme implicite.
+```html
+<label ____="email">Adresse e-mail</label>
+<input type="email" id="email" name="email">
+```
+
+@008
+Q: Quelle différence entre un id et une classe ?
+C: Un id est unique dans la page, une même classe peut être portée par plusieurs éléments
+W: Un id ne sert qu'au JavaScript et une classe qu'au CSS
+W: Une classe est prioritaire sur un id dans la cascade
+W: Un élément ne peut porter qu'une seule classe, mais plusieurs id séparés par des espaces
+E: Un id sert d'ancre (#contact), de cible à for ou aria-labelledby. Pour le style, on préfère les classes : un sélecteur d'id a une spécificité très forte qui rend les surcharges difficiles. Un élément peut porter plusieurs classes séparées par des espaces.
+
+@009
+Q: Quelle balise meta faut-il pour qu'une page responsive ne soit pas affichée réduite sur un téléphone ?
+C: <meta name="viewport" content="width=device-width, initial-scale=1">
+W: <meta name="responsive" content="true">
+W: <meta charset="utf-8">
+W: <meta http-equiv="X-UA-Compatible" content="IE=edge">
+E: Sans elle, le navigateur mobile simule un écran d'environ 980 px puis réduit le tout : les media queries ne se déclenchent pas comme prévu. Éviter maximum-scale=1 et user-scalable=no, qui empêchent de zoomer et posent un problème d'accessibilité.
+
+@010
+Q: Dans le modèle de boîte CSS, quel est l'ordre des couches, de l'intérieur vers l'extérieur ?
+O: content : le contenu
+O: padding : la marge intérieure
+O: border : la bordure
+O: margin : la marge extérieure
+E: Le fond (background) s'étend sous le padding et la bordure, jamais sous la marge. Les marges verticales de deux blocs voisins fusionnent (margin collapsing), ce qui surprend souvent : 20 px et 30 px donnent 30 px d'écart, pas 50.
+
+@011
+Q: Avec box-sizing: content-box, une boîte a width: 200px, padding: 10px et border: 2px. Quelle largeur occupe-t-elle à l'écran, en pixels, hors marges ?
+N: 224
+U: px
+E: En content-box, width ne compte que le contenu : 200 + 2 × 10 + 2 × 2 = 224 px. Avec box-sizing: border-box, la boîte ferait 200 px et le contenu se réduirait à 176 px, d'où la règle *, *::before, *::after { box-sizing: border-box; } présente dans la plupart des feuilles de base.
+
+@012
+Q: Quelle valeur de display fait passer un élément à la ligne et lui permet de prendre toute la largeur disponible ?
+C: block
+W: inline
+W: inline-block
+W: contents, qui garde l'élément dans le flux mais efface sa boîte et laisse ses enfants prendre sa place
+E: Un élément block (div, p, h1) commence sur une nouvelle ligne et accepte width et height. Un élément inline (span, a, strong) suit le texte et ignore width, height et les marges verticales. inline-block reste dans la ligne mais accepte des dimensions.
+
+@013
+Q: Associer chaque sélecteur CSS à ce qu'il cible.
+P: .carte => Les éléments qui portent la classe carte
+P: #menu => L'élément dont l'id vaut menu
+P: nav a => Les liens placés n'importe où dans un nav
+P: ul > li => Les li enfants directs d'un ul
+P: h2 + p => Le paragraphe qui suit immédiatement un h2
+E: L'espace est le combinateur descendant, > se limite aux enfants directs, + vise le frère suivant immédiat et ~ tous les frères suivants. Les combinateurs se lisent de droite à gauche par le navigateur : « nav a » cherche d'abord tous les a.
+
+@014
+Q: Que vaut 1rem quand la taille de police de l'élément html est celle par défaut d'un navigateur ?
+C: 16 px
+W: 10 px
+W: 12 px
+W: La taille de police du parent direct de l'élément, comme pour em
+E: rem se rapporte à la racine (root em), em au parent pour font-size et à l'élément lui-même pour les autres propriétés. Garder la taille racine du navigateur permet à l'utilisateur qui a grossi sa police de base d'en profiter partout ; fixer html { font-size: 10px } casse ce réglage.
+
+@015
+Q: Un titre est en 1.5rem avec la taille racine par défaut. Quelle est sa taille en pixels ?
+N: 24
+U: px
+E: 1,5 × 16 = 24 px. Contrairement à em, rem ne se multiplie pas d'un niveau d'imbrication à l'autre : la taille reste la même où que se trouve le titre.
+
+@016
+Q: Que fait la règle de cet extrait sur un lien ?
+C: Elle change sa couleur quand la souris le survole
+W: Elle change sa couleur une fois le lien visité
+W: Elle change sa couleur quand le lien reçoit le focus au clavier
+W: Elle change sa couleur pendant le clic, puis la rétablit une fois le bouton de la souris relâché
+E: :hover réagit au pointeur, :focus au focus clavier, :active pendant l'activation et :visited aux liens déjà ouverts. Un effet réservé à :hover est invisible au clavier et sur écran tactile : on associe souvent :hover et :focus-visible.
+```css
+a:hover {
+  color: #b00020;
+}
+```
+
+@017
+Q: Comment écrit-on un commentaire dans une feuille CSS ?
+C: /* commentaire */
+W: // commentaire
+W: <!-- commentaire -->
+W: # commentaire
+E: CSS ne connaît que /* … */, sur une ou plusieurs lignes. // provoque une erreur d'analyse qui fait ignorer la déclaration suivante, piège classique en copiant du Sass. <!-- --> est la syntaxe des commentaires HTML.
+
+@018
+Q: Combien de titres <h1> conseille-t-on par page ?
+C: Un, qui donne le sujet de la page
+W: Un par section, pour que chaque bloc ait le niveau le plus fort
+W: Pas de h1 : le titre de l'onglet suffit
+W: Autant qu'on veut, ils sont tous équivalents
+E: Les lecteurs d'écran listent les titres pour naviguer ; une hiérarchie h1, h2, h3 sans saut de niveau donne le plan de la page. Choisir un niveau pour sa taille est une erreur : la taille se règle en CSS, le niveau reflète la structure.
+
+@019
+Q: Quel élément faut-il pour une action dans la page, comme ouvrir un menu, plutôt qu'un <div> cliquable ?
+C: <button type="button">
+W: <a href="#">
+W: <div> avec onclick et un curseur en forme de main, plus léger à mettre en forme qu'un bouton natif
+W: <span role="link">
+E: Un button reçoit le focus au clavier, réagit à Entrée et Espace et annonce son rôle aux lecteurs d'écran, sans une ligne de JavaScript. Un div demande tabindex, role et la gestion des touches pour approcher ce résultat. Le lien sert à naviguer vers une adresse, le bouton à agir.
+
+@020
+Q: Quelle propriété CSS rend le texte en gras ?
+C: font-weight
+W: font-style
+W: text-decoration
+W: font-variant
+E: font-weight: bold équivaut à 700, normal à 400. font-style gère l'italique, text-decoration le soulignement. Avec une police web, le gras demandé doit exister dans les fichiers chargés, sinon le navigateur fabrique un faux gras moins lisible.
+
+@021
+Q: Compléter ce lien pour qu'il s'ouvre dans un nouvel onglet.
+A: _blank
+E: target="_blank" ouvre un nouvel onglet. Les navigateurs récents appliquent noopener par défaut, mais rel="noopener" reste utile pour les anciens : sans lui, la page ouverte peut rediriger l'onglet d'origine via window.opener. Prévenir l'utilisateur que le lien s'ouvre ailleurs est une bonne pratique d'accessibilité.
+```html
+<a href="https://www.w3.org/WAI/" target="____" rel="noopener">Ressources WAI (nouvel onglet)</a>
+```
+
+@022
+Q: Quel type de champ fait apparaître le clavier numérique de téléphone sur un mobile ?
+C: <input type="tel">
+W: <input type="text" pattern="[0-9]*">
+W: <input type="phone">
+W: <input type="number">, prévu pour tout ce qui ne contient que des chiffres comme un numéro de téléphone
+E: type="tel" affiche le pavé téléphonique sans imposer de format. type="number" convient à une quantité : il ajoute des flèches, accepte des notations comme 1e5 et supprime les zéros de tête, ce qui ne va pas pour un numéro ou un code postal. type="phone" n'existe pas.
+
+@023
+Q: Quelle couleur donne la valeur #000 ?
+C: Le noir
+W: Le blanc
+W: Le gris moyen
+W: Une couleur transparente
+E: #000 est la forme courte de #000000 : rouge, vert et bleu à zéro. #fff est le blanc. Une quatrième ou huitième position hexadécimale ajoute l'opacité (#0008 pour un noir semi-transparent), comme rgb(0 0 0 / 50 %).
+
+@024
+Q: Associer chaque unité CSS à sa référence.
+P: px => Pixel CSS, unité de référence de l'écran
+P: % => Part de la valeur correspondante du parent
+P: em => Taille de police de l'élément ou du parent
+P: vw => Centième de la largeur de la fenêtre
+P: ch => Largeur du caractère 0 de la police
+E: max-width: 65ch limite la longueur des lignes pour la lecture. vw et vh suivent la fenêtre : sur mobile, 100vh déborde quand la barre d'adresse s'affiche, d'où les unités dvh et svh. Les pourcentages se rapportent selon la propriété à la largeur ou à la hauteur du conteneur.
+
+@025
+Q: Quel outil gratuit, intégré aux navigateurs, permet d'inspecter le HTML et les règles CSS appliquées à un élément ?
+C: Les outils de développement, ouverts avec F12
+W: Le validateur du W3C, qui affiche les règles calculées de chaque élément après l'avoir rendu
+W: Le code source de la page, ouvert avec Ctrl+U
+W: Le mode lecture du navigateur
+E: L'inspecteur montre le DOM réel, les règles appliquées et barrées, le modèle de boîte et les styles calculés. Ctrl+U affiche le HTML reçu du serveur, avant tout JavaScript. Le validateur du W3C vérifie la syntaxe sans rendre la page.
+
+@026
+Q: Remettre ces sélecteurs dans l'ordre de spécificité, du plus faible au plus fort.
+O: p
+O: .note
+O: p.note
+O: .contenu .note
+O: #intro
+E: Les spécificités valent (0,0,1), (0,1,0), (0,1,1), (0,2,0) et (1,0,0). On compare d'abord les id, puis les classes, attributs et pseudo-classes, puis les éléments : onze éléments ne battent jamais une classe. Le sélecteur universel * et les combinateurs ne comptent pas.
+R: MDN : Specificity | https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascade/Specificity
+
+@027
+Q: Deux règles de cet extrait ciblent le même bouton, sans couche ni !important. Laquelle donne la couleur ?
+C: La règle #envoyer, dont le sélecteur d'id est le plus spécifique
+W: La règle .bouton.primaire, car elle combine deux classes
+W: La dernière écrite, car l'ordre d'apparition décide en premier
+W: La règle button.bouton, dont le sélecteur contient le type d'élément
+E: La spécificité se compare comme un triplet (id, classes, éléments) : #envoyer vaut (1,0,0), .bouton.primaire (0,2,0), button.bouton (0,1,1). Un seul id l'emporte sur n'importe quel nombre de classes. L'ordre d'apparition ne départage que deux spécificités égales.
+```css
+#envoyer { color: green; }
+.bouton.primaire { color: blue; }
+button.bouton { color: red; }
+```
+
+@028
+Q: Pourquoi déconseille-t-on de multiplier les !important ?
+C: Chaque surcharge en demande un autre, et la feuille devient difficile à faire évoluer
+W: Le navigateur les ignore au-delà de dix déclarations
+W: Ils ralentissent l'affichage, car le navigateur recalcule la cascade pour chacun d'eux
+W: Ils ne fonctionnent que sur les sélecteurs d'id
+E: !important court-circuite la spécificité : pour changer la valeur ensuite, il faut un autre !important plus spécifique, et la surenchère commence. On le garde pour des cas ciblés, comme une classe utilitaire .visually-hidden qui ne doit jamais être surchargée, ou pour corriger un style tiers impossible à modifier.
+
+@029
+Q: Quelles déclarations de cet extrait centrent l'enfant horizontalement et verticalement dans le conteneur ?
+C: justify-content: center et align-items: center
+W: text-align: center et vertical-align: middle, qui suffisent dès que le conteneur est un flex
+W: margin: auto et float: center
+W: align-content: center et flex-wrap: wrap
+E: En flexbox, justify-content agit sur l'axe principal (horizontal par défaut, flex-direction: row) et align-items sur l'axe secondaire. Si flex-direction passe à column, les rôles s'inversent. place-items: center fait la même chose en une ligne avec display: grid.
+```css
+.conteneur {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+```
+
+@030
+Q: Que signifie flex: 1 sur les éléments d'un conteneur flex ?
+C: Ils se partagent à parts égales l'espace disponible
+W: Ils prennent chacun une ligne entière
+W: Ils gardent leur taille de contenu sans grandir ni rétrécir, ce qui fige la mise en page
+W: Le premier élément prend tout l'espace et les autres disparaissent
+E: flex: 1 vaut flex-grow: 1, flex-shrink: 1, flex-basis: 0 %. La base nulle fait que l'espace entier est réparti, d'où des colonnes de même largeur quel que soit leur contenu. flex: auto part de la taille du contenu et donne des colonnes inégales.
+
+@031
+Q: Associer chaque propriété flexbox à son effet.
+P: flex-direction => Choisit l'axe principal : ligne ou colonne
+P: flex-wrap => Autorise le passage des éléments à la ligne
+P: gap => Fixe l'espace entre les éléments
+P: flex-grow => Part de l'espace libre qu'un élément récupère
+P: order => Change la position d'affichage d'un élément
+E: order ne change que l'affichage : la tabulation et les lecteurs d'écran suivent l'ordre du HTML, ce qui crée un parcours incohérent si l'écart est grand. gap a remplacé les marges négatives qu'on utilisait pour espacer les éléments.
+
+@032
+Q: Une grille de 800 px a grid-template-columns: 1fr 2fr 1fr et gap: 20px. Quelle largeur prend la colonne du milieu, en pixels ?
+N: 380
+U: px
+E: Les deux gouttières prennent 40 px, il reste 760 px pour 4 fractions, soit 190 px par fraction. La colonne de 2fr fait donc 380 px. Les fractions ne se partagent que l'espace laissé par les gouttières et les pistes de taille fixe.
+
+@033
+Q: Compléter cette grille pour créer autant de colonnes de 200 px minimum que la largeur le permet.
+A: auto-fill
+A: auto-fit
+E: repeat(auto-fill, minmax(200px, 1fr)) donne une grille responsive sans media query. Les deux mots clés diffèrent quand il y a peu d'éléments : auto-fill garde des colonnes vides, auto-fit les replie et laisse les éléments s'étirer sur toute la largeur.
+```css
+.galerie {
+  display: grid;
+  grid-template-columns: repeat(____, minmax(200px, 1fr));
+  gap: 1rem;
+}
+```
+
+@034
+Q: Quand préférer grid à flexbox pour une mise en page ?
+C: Quand il faut aligner les éléments à la fois en lignes et en colonnes
+W: Quand les éléments doivent se suivre sur une seule ligne, comme une barre d'outils
+W: Quand la page doit fonctionner sur mobile
+W: Quand on veut que les éléments gardent la largeur de leur contenu
+E: Flexbox raisonne sur un axe : chaque ligne se répartit sans tenir compte des autres. Grid fixe des pistes communes, d'où des cartes alignées d'une ligne à l'autre. Les deux se combinent : une grille de cartes, et un flex à l'intérieur de chaque carte.
+
+@035
+Q: Quelle approche décrit le « mobile first » en CSS ?
+C: Écrire les styles du petit écran par défaut, puis les compléter avec des media queries min-width
+W: Écrire les styles de bureau, puis les réduire avec des media queries max-width
+W: Faire un site séparé m.exemple.fr pour les téléphones
+W: Cacher sur mobile les contenus jugés secondaires, puis les afficher au fur et à mesure que l'écran grandit
+E: Le petit écran a souvent la mise en page la plus simple, en une colonne : on y ajoute des colonnes quand la place le permet. Les téléphones lisent moins de règles inutiles et le code reste plus court qu'avec des annulations successives.
+
+@036
+Q: Remettre dans l'ordre les étapes que suit le navigateur pour retenir la valeur d'une propriété sur un élément.
+O: Rassembler les déclarations dont le sélecteur cible l'élément
+O: Écarter celles d'une origine ou d'une importance plus faible
+O: Départager par la couche @layer
+O: Départager par la spécificité du sélecteur
+O: Retenir la dernière écrite en cas d'égalité
+E: Si aucune déclaration ne cible l'élément, la valeur vient de l'héritage pour les propriétés héritées (color, font) ou de la valeur initiale pour les autres (margin, border). L'onglet Styles des outils de développement barre les déclarations perdantes dans cet ordre.
+
+@037
+Q: Une feuille déclare @layer base, composants ; puis .bouton dans composants et #page .bouton dans base. Quelle règle gagne pour une même propriété ?
+C: Celle de la couche composants, déclarée en dernier, malgré sa spécificité plus faible
+W: Celle de la couche base, grâce à son sélecteur d'id
+W: Celle qui apparaît la plus bas dans le fichier
+W: Ni l'une ni l'autre : le navigateur garde la valeur héritée du parent quand deux couches se contredisent
+E: L'ordre des couches est fixé par la première déclaration @layer et passe avant la spécificité. Les styles hors couche l'emportent sur toutes les couches. On range ainsi un reset et une bibliothèque dans des couches basses, et les styles du projet n'ont plus à lutter contre leurs sélecteurs.
+R: MDN : @layer | https://developer.mozilla.org/fr/docs/Web/CSS/@layer
+
+@038
+Q: Comment se comporte !important face aux couches @layer ?
+C: L'ordre s'inverse : un !important d'une couche basse l'emporte sur celui d'une couche plus tardive
+W: Les couches n'ont plus d'effet et seule la spécificité compte
+W: Un !important dans une couche est ignoré
+W: La couche déclarée en dernier gagne, comme pour les déclarations normales, ce qui garde un seul ordre pour toute la feuille
+E: Pour les déclarations importantes, les origines et les couches s'inversent, comme le style utilisateur important qui passe devant le style d'auteur important. Un reset placé en couche basse peut ainsi protéger une règle avec !important contre les couches suivantes.
+
+@039
+Q: Quelle propriété de positionnement fixe un élément par rapport à son ancêtre positionné le plus proche ?
+C: position: absolute
+W: position: relative
+W: position: fixed, qui suit l'ancêtre en position relative au lieu de la fenêtre dès qu'il en existe un
+W: position: static
+E: Un élément absolute sort du flux et se place par top, right, bottom, left dans le premier ancêtre dont position n'est pas static, d'où le couple parent relative, enfant absolute. fixed se rapporte à la fenêtre, sauf si un ancêtre a un transform ou un filter : il devient alors le référent.
+
+@040
+Q: Un en-tête en position: sticky; top: 0 ne colle pas en haut lors du défilement. Quelle est la cause la plus fréquente ?
+C: Un ancêtre a overflow: hidden ou auto, qui devient le conteneur de défilement
+W: Il manque un z-index supérieur à celui de tous les éléments qui défilent sous l'en-tête
+W: Il faut aussi position: fixed sur le parent
+W: top doit être exprimé en pourcentage
+E: sticky colle par rapport au plus proche ancêtre qui défile. Un overflow posé plus haut, souvent pour masquer un débordement horizontal, capture ce rôle. L'élément ne colle aussi que dans les limites de son parent : un parent de la même hauteur que lui ne lui laisse aucune course. overflow: clip évite le premier piège.
+
+@041
+Q: Compléter cette media query pour réserver la mise en page en deux colonnes aux écrans d'au moins 768 px.
+A: min-width
+E: En mobile first, min-width ajoute des règles à partir d'une largeur. La syntaxe par intervalle des navigateurs récents donne la même chose : @media (width >= 768px). Exprimer les points de rupture en em suit le zoom de l'utilisateur.
+```css
+@media (____: 768px) {
+  .page {
+    grid-template-columns: 1fr 3fr;
+  }
+}
+```
+
+@042
+Q: Que fait ce code avec la propriété --couleur-accent ?
+C: Il déclare une propriété personnalisée sur :root et l'utilise dans le bouton
+W: Il crée une variable Sass, remplacée à la compilation
+W: Il définit une couleur que le navigateur réserve aux liens
+W: Il produit une erreur : les noms de propriétés CSS ne peuvent pas commencer par deux tirets
+E: Les propriétés personnalisées vivent dans le navigateur : elles héritent, se redéfinissent dans un sélecteur ou une media query et se modifient en JavaScript. Le second argument de var() sert de valeur de repli. Une variable Sass, elle, disparaît à la compilation.
+```css
+:root {
+  --couleur-accent: #0b57d0;
+}
+.bouton {
+  background: var(--couleur-accent, blue);
+}
+```
+
+@043
+Q: Pourquoi un mode sombre se fait-il plus simplement avec des propriétés personnalisées qu'avec des variables Sass ?
+C: Leur valeur change dans le navigateur, sous une media query, sans recompiler la feuille
+W: Les variables Sass ne gèrent pas les couleurs
+W: Les propriétés personnalisées sont plus rapides à charger
+W: Sass refuse les media queries qui contiennent prefers-color-scheme et s'arrête à la compilation
+E: On redéfinit --fond et --texte dans @media (prefers-color-scheme: dark) ou sous [data-theme="dark"], et tous les composants suivent. Avec Sass, il faudrait générer deux jeux de règles. Les deux se combinent : Sass pour la palette de départ, les propriétés personnalisées pour le thème courant.
+
+@044
+Q: Associer chaque pseudo-classe à ce qu'elle cible.
+P: :first-child => Un élément qui est le premier enfant de son parent
+P: :nth-child(2n) => Les enfants de rang pair
+P: :not(.actif) => Les éléments sans la classe actif
+P: :focus-visible => Un élément focalisé de façon visible, surtout au clavier
+P: :checked => Une case ou un bouton radio coché
+E: :focus-visible laisse le navigateur décider : focus au clavier, oui ; clic de souris sur un bouton, non. Il permet d'afficher un contour net pour le clavier sans gêner les utilisateurs de la souris, au lieu de supprimer tout contour avec outline: none.
+
+@045
+Q: Que fait le pseudo-élément ::before de cet extrait ?
+C: Il insère un contenu généré avant le contenu du lien
+W: Il applique le style au lien qui précède celui-ci dans la page
+W: Il sélectionne le premier caractère du lien
+W: Il affiche le texte avant le chargement complet de la page, puis le retire
+E: ::before et ::after créent une boîte dans l'élément, au début ou à la fin, à condition de renseigner content. Le texte généré peut être lu par les lecteurs d'écran : pour un pictogramme décoratif, la syntaxe content: "→" / "" donne un texte de remplacement vide.
+```css
+.externe::before {
+  content: "↗ ";
+}
+```
+
+@046
+Q: Dans la méthode BEM, que désigne le nom carte__titre--mis-en-avant ?
+C: L'élément titre du bloc carte, dans sa variante mis-en-avant
+W: Le bloc titre placé dans une carte mise en avant
+W: Une carte enfant d'un titre
+W: Un identifiant unique généré par l'outil de compilation
+E: BEM découpe en bloc (carte), élément (__titre) et modificateur (--mis-en-avant). Chaque sélecteur reste une classe simple de spécificité (0,1,0) : pas de lutte de spécificité, et le nom dit où se trouve le style. Le prix est des noms longs dans le HTML.
+
+@047
+Q: Quel CSS produit la compilation de ce code Sass ?
+C: .menu a { color: navy; } puis .menu a:hover { color: red; }
+W: .menu a { color: navy; } puis .menu a :hover { color: red; }
+W: a.menu { color: navy; } puis a.menu:hover { color: red; }
+W: .menu { color: navy; } a:hover { color: red; }
+E: L'imbrication Sass reproduit le combinateur descendant, et & reprend le sélecteur parent sans espace. Sans &, Sass écrirait « .menu a :hover », qui cible un descendant survolé. Imbriquer plus de trois niveaux produit des sélecteurs longs et trop spécifiques.
+```scss
+.menu {
+  a {
+    color: navy;
+    &:hover {
+      color: red;
+    }
+  }
+}
+```
+
+@048
+Q: Compléter cette feuille Sass pour charger le module des variables et les utiliser.
+A: @use
+E: @use charge un module une seule fois et préfixe ses membres par son nom (variables.$primaire). @import, déprécié depuis Dart Sass 1.80, mélangeait toutes les variables dans un espace global et dupliquait le CSS à chaque import.
+R: Sass : la règle @use | https://sass-lang.com/documentation/at-rules/use/
+```scss
+____ "variables";
+
+.bouton {
+  background: variables.$primaire;
+}
+```
+
+@049
+Q: Quelle différence entre un mixin Sass et @extend ?
+C: Le mixin recopie ses déclarations là où il est inclus, @extend ajoute le sélecteur à une règle existante
+W: Le mixin ne prend pas de paramètres, @extend en accepte
+W: @extend copie les déclarations, le mixin regroupe les sélecteurs
+W: Les deux produisent exactement le même CSS, seule la syntaxe diffère entre les versions de Sass
+E: @include bouton($couleur) duplique les déclarations, ce qui se compresse bien en gzip. @extend .base regroupe les sélecteurs (.base, .alerte { … }) mais peut produire des combinaisons inattendues et ne traverse pas les media queries. On réserve @extend aux placeholders %nom.
+
+@050
+Q: Associer chaque attribut de validation de formulaire à son rôle.
+P: required => Le champ doit être rempli
+P: minlength => Nombre minimal de caractères
+P: pattern => Expression régulière que la valeur doit respecter
+P: min => Valeur minimale d'un nombre ou d'une date
+P: novalidate => Désactive la validation native sur le formulaire
+E: La validation du navigateur aide l'utilisateur, mais elle se contourne en une requête : le serveur doit tout revérifier. Les pseudo-classes :invalid et :user-invalid permettent de styler les erreurs, la seconde seulement après une saisie pour ne pas afficher de rouge dès l'ouverture.
