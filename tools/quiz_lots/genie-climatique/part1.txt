@@ -1,0 +1,391 @@
+@001
+Q: Dans un circuit frigorifique, quel est le rôle de l'évaporateur ?
+C: Absorber la chaleur du milieu à refroidir en vaporisant le fluide
+W: Rejeter à l'extérieur la chaleur prise dans la pièce, en liquéfiant le fluide qui arrive du compresseur
+W: Augmenter la pression du fluide avant la détente
+W: Stocker le fluide liquide pendant les arrêts
+E: Le fluide entre dans l'évaporateur sous forme de liquide froid à basse pression. En bouillant, il prend la chaleur de l'air ou de l'eau qui le traverse : c'est là que se produit le froid utile. Le condenseur fait l'inverse côté haute pression et rejette cette chaleur dehors.
+
+@002
+Q: Associer chaque organe du circuit frigorifique à son rôle.
+P: Compresseur => Aspire la vapeur basse pression et la refoule en haute pression
+P: Condenseur => Cède la chaleur au milieu extérieur et liquéfie le fluide
+P: Détendeur => Abaisse la pression du liquide et dose son entrée dans l'évaporateur
+P: Évaporateur => Prend la chaleur du milieu à refroidir en vaporisant le fluide
+P: Filtre déshydrateur => Retient l'humidité et les impuretés du circuit
+E: Les quatre premiers organes forment le cycle, le filtre déshydrateur le protège. Le compresseur et le détendeur séparent le circuit en deux zones : la haute pression (refoulement, condenseur, ligne liquide) et la basse pression (évaporateur, aspiration).
+
+@003
+Q: Pourquoi un fluide frigorigène absorbe-t-il beaucoup de chaleur dans l'évaporateur sans que sa température change ?
+C: Il change d'état : la chaleur reçue sert à le vaporiser
+W: Le ventilateur de l'évaporateur le refroidit en permanence
+W: Sa pression augmente au fil des tubes de l'évaporateur, ce qui compense la chaleur reçue de l'air
+W: L'huile qui l'accompagne stocke toute la chaleur
+E: À pression donnée, un liquide qui bout reste à sa température de saturation tant qu'il reste du liquide : c'est la chaleur latente de vaporisation. C'est aussi pour cette raison qu'une pression mesurée suffit à connaître la température d'évaporation ou de condensation.
+
+@004
+Q: Que représente la température lue sur l'échelle d'un manomètre de frigoriste ?
+C: La température à laquelle le fluide bout ou se condense à la pression mesurée
+W: La température de l'air ambiant autour de l'appareil
+W: La température réelle du tube sur lequel le flexible est raccordé
+W: La température maximale du compresseur avant déclenchement
+E: Les manomètres portent une échelle par fluide (R32, R410A, R134a…), d'où l'importance de choisir le bon. Le tube peut être plus chaud que cette température (vapeur surchauffée) ou plus froid (liquide sous-refroidi) : les écarts donnent la surchauffe et le sous-refroidissement.
+
+@005
+Q: Un manomètre indique 12 bar en pression relative. Quelle est la pression absolue approchée, en bar ?
+N: 13
+U: bar
+E: Pression absolue = pression relative + pression atmosphérique, soit environ 12 + 1,013 ≈ 13 bar. Les tables pression-température sont parfois données en absolu : les confondre décale la température lue de plusieurs degrés.
+
+@006
+Q: Que signifie le sigle CVC dans le bâtiment ?
+C: Chauffage, ventilation et climatisation
+W: Contrôle, vérification et conformité des installations
+W: Circuit à vapeur condensée
+W: Compression, vaporisation et condensation, les trois phases d'un cycle frigorifique
+E: Le métier couvre la production de chaleur et de froid, le traitement de l'air et sa distribution. On trouve aussi HVAC en anglais (heating, ventilation and air conditioning) et CVCD quand le désenfumage s'y ajoute.
+
+@007
+Q: Que mesure le PRP (pouvoir de réchauffement planétaire) d'un fluide frigorigène ?
+C: Son effet sur le climat comparé à celui de la même masse de CO2, sur 100 ans
+W: Sa capacité à détruire la couche d'ozone, comparée à celle du R11
+W: La quantité de chaleur qu'il transporte par kilogramme
+W: Sa température d'ébullition à la pression atmosphérique
+E: Le PRP (GWP en anglais) vaut 1 pour le CO2. Le R410A atteint 2088 : un kilogramme qui fuit équivaut à plus de deux tonnes de CO2. La destruction de l'ozone se mesure par un autre indicateur, le PDO (ODP), nul pour les HFC.
+
+@008
+Q: Associer chaque fluide frigorigène à sa description.
+P: R410A => Mélange HFC des climatiseurs de la génération précédente
+P: R32 => HFC pur au PRP de 675, faiblement inflammable
+P: R290 => Propane, très inflammable, PRP de 3
+P: R744 => Dioxyde de carbone, fonctionne à très haute pression
+P: R717 => Ammoniac, toxique, réservé aux grosses installations
+E: Les HFC cèdent la place à des fluides à faible PRP : R32 en climatisation, propane dans les petits appareils et les pompes à chaleur monobloc, CO2 dans les supermarchés, ammoniac dans les entrepôts et l'agroalimentaire. Chacun impose ses propres règles de sécurité et son outillage.
+
+@009
+Q: Pourquoi est-il interdit de dégazer volontairement un fluide frigorigène ?
+C: La réglementation impose de le récupérer, à cause de son effet sur le climat ou sur l'ozone
+W: Le fluide gèle l'air autour de l'appareil et bloque les ventilateurs
+W: Seul le dégazage en intérieur est interdit ; dehors, une purge lente reste tolérée par le code de l'environnement
+W: Une fois dégazé, le fluide ne peut plus être revendu
+E: Le règlement européen F-Gas et le code de l'environnement interdisent tout rejet volontaire. Le fluide est transféré par une station dans une bouteille de récupération, puis rendu au distributeur pour régénération ou destruction, avec un bordereau de suivi.
+
+@010
+Q: Que faut-il en France pour manipuler des fluides frigorigènes ?
+C: Une attestation d'aptitude pour le technicien, une attestation de capacité pour son entreprise
+W: L'habilitation électrique B2V suffit, quel que soit l'équipement, puisque le compresseur est un récepteur électrique
+W: Un CACES de catégorie 3
+W: Rien tant que la charge de l'appareil reste inférieure à 30 kg
+E: L'attestation d'aptitude, délivrée par un organisme évaluateur certifié, existe en plusieurs catégories selon les opérations et les équipements. L'attestation de capacité de l'entreprise est délivrée par un organisme agréé. L'habilitation électrique reste nécessaire en plus pour travailler dans les armoires.
+
+@011
+Q: Que mesure le COP d'une pompe à chaleur ?
+C: Le rapport entre la chaleur fournie et l'électricité consommée
+W: Le nombre de cycles de dégivrage par heure
+W: La pression de refoulement divisée par la pression d'aspiration du compresseur
+W: La charge de fluide rapportée à la puissance de l'appareil
+E: Un COP de 4 signifie 4 kWh de chaleur pour 1 kWh électrique : les 3 autres sont pris dans l'air, l'eau ou le sol. Le COP baisse quand l'écart entre la source froide et les émetteurs augmente ; le SCOP l'intègre sur une saison de chauffage.
+
+@012
+Q: Une pompe à chaleur fournit 10,5 kW de chaleur en absorbant 3 kW électriques. Quel est son COP ?
+N: 3,5
+E: COP = 10,5 / 3 = 3,5. En mode froid, on parle d'EER : puissance frigorifique divisée par la puissance électrique absorbée. Les valeurs des catalogues sont mesurées dans des conditions normalisées, souvent plus favorables que celles du chantier.
+
+@013
+Q: Quelle différence sépare une VMC simple flux d'une VMC double flux ?
+C: La double flux insuffle aussi l'air neuf et récupère la chaleur de l'air extrait
+W: La double flux extrait l'air deux fois plus vite pour sécher les salles d'eau
+W: La simple flux ne fonctionne que la nuit
+W: La simple flux recycle l'air intérieur sans aucun apport d'air neuf ni rejet vers l'extérieur
+E: En simple flux, un ventilateur extrait l'air des pièces humides et l'air neuf entre par les entrées d'air des menuiseries. La double flux souffle et extrait par deux réseaux ; son échangeur transmet 70 à 90 % de la chaleur de l'air vicié à l'air neuf, sans les mélanger.
+
+@014
+Q: Sur un climatiseur split, que transportent les deux tubes de liaison entre l'unité intérieure et l'unité extérieure ?
+C: Le fluide frigorigène : un tube liquide fin et un tube gaz plus gros
+W: L'eau de condensation et l'alimentation électrique
+W: L'air soufflé et l'air repris par l'unité intérieure
+W: L'huile du compresseur dans l'un, le fluide frigorigène dans l'autre, chacun circulant en sens opposé
+E: La vapeur, de faible masse volumique, demande plus de section : le tube gaz est donc le plus gros. L'eau de condensation part par une évacuation séparée, en pente ou par une pompe de relevage.
+
+@015
+Q: Pourquoi isole-t-on le tube gaz d'un climatiseur ?
+C: Pour éviter la condensation et l'apport de chaleur sur un tube froid
+W: Pour réduire le bruit du compresseur
+W: Uniquement pour protéger le tube des ultraviolets
+W: Parce que le tube gaz est en haute pression en mode froid et risque d'éclater sans protection
+E: En mode froid, le tube gaz est à quelques degrés : sans isolant, il ruisselle et réchauffe le fluide, ce qui augmente la surchauffe et réduit la puissance. Sur une pompe à chaleur réversible, les deux tubes sont isolés, chacun pouvant être chaud ou froid selon le mode.
+
+@016
+Q: Quelle plage de température correspond à une chambre froide négative de stockage de surgelés ?
+C: De −18 à −25 °C environ
+W: De 0 à +4 °C
+W: De +8 à +12 °C
+W: De −2 à 0 °C
+E: Une chambre positive, autour de 0 à +4 °C, conserve les produits frais ; la chambre négative garde les surgelés à −18 °C au moins. Le négatif demande des résistances de cordon de porte, un dégivrage plus fréquent et une soupape de décompression.
+
+@017
+Q: Quel équipement de sécurité doit permettre de sortir d'une chambre froide ?
+C: Une porte qui s'ouvre de l'intérieur, complétée d'un dispositif d'alarme
+W: Un extincteur au CO2 derrière la porte
+W: Une fenêtre vitrée pour surveiller l'intérieur
+W: Un thermostat de sécurité qui coupe le froid dès qu'on ouvre la porte depuis l'extérieur
+E: Une personne enfermée dans une chambre négative est en danger en quelques dizaines de minutes. La porte doit s'ouvrir de l'intérieur même verrouillée de l'extérieur, et un bouton d'alarme lumineux, avec son éclairage de secours, permet d'appeler à l'aide. Ces dispositifs se testent lors des visites.
+
+@018
+Q: Que signifie la classe de sécurité A2L attribuée au R32 ?
+C: Faible toxicité et faible inflammabilité, avec une flamme lente
+W: Toxicité élevée, sans aucune inflammabilité
+W: Ininflammable et autorisé partout, sans limite de charge
+W: Deuxième génération de fluides, celle qui a succédé aux CFC classés A1 dans les années 1990
+E: La lettre donne la toxicité (A faible, B élevée), le chiffre l'inflammabilité (1 nulle, 2L faible, 2, 3 forte). R410A et R134a sont A1, R32 A2L, R290 A3, ammoniac B2L. Les fluides inflammables imposent des limites de charge selon le volume du local et un outillage adapté.
+
+@019
+Q: Remettre dans l'ordre le parcours du fluide dans un circuit frigorifique, à partir du compresseur.
+O: Compresseur
+O: Condenseur
+O: Filtre déshydrateur
+O: Voyant liquide
+O: Détendeur
+O: Évaporateur
+E: Le filtre et le voyant se placent sur la ligne liquide, avant le détendeur : un voyant plein, sans bulles, confirme que le détendeur reçoit bien du liquide. Sur les installations à réservoir, celui-ci se trouve juste après le condenseur.
+
+@020
+Q: Pourquoi un climatiseur produit-il de l'eau à l'unité intérieure ?
+C: L'air passe sous son point de rosée au contact de l'évaporateur et sa vapeur d'eau condense
+W: Une partie du fluide frigorigène fuit sous forme d'eau
+W: L'eau est ajoutée volontairement pour humidifier l'air soufflé
+W: Le compresseur rejette son eau de refroidissement par l'unité intérieure
+E: L'évaporateur, à quelques degrés, déshumidifie l'air au passage. L'eau tombe dans un bac relié à une évacuation : un bac ou un tube bouché fait couler l'eau le long du mur, une des pannes les plus fréquentes en climatisation.
+
+@021
+Q: Un climatiseur est vendu pour 12 000 BTU/h. Quelle est sa puissance approchée, en kW ?
+N: 3,5
+U: kW
+T: 2
+E: 1 W vaut environ 3,412 BTU/h, d'où 12 000 / 3 412 ≈ 3,5 kW. Les catalogues gardent souvent ces valeurs en BTU/h (9 000, 12 000, 18 000) ; 12 000 BTU/h correspond aussi à une tonne de réfrigération, unité américaine encore citée pour les gros groupes.
+
+@022
+Q: Quel est le rôle de la vanne 4 voies d'une pompe à chaleur réversible ?
+C: Inverser le sens du cycle pour passer du chaud au froid ou dégivrer l'unité extérieure
+W: Répartir le fluide entre quatre unités intérieures
+W: Mélanger l'eau chaude et l'eau froide du circuit de chauffage
+W: Limiter la pression de refoulement en renvoyant une partie des gaz chauds vers l'aspiration du compresseur
+E: Elle échange les rôles des deux échangeurs : en chauffage, l'unité intérieure devient condenseur. Une vanne bloquée laisse la machine dans un seul mode ; on contrôle d'abord la tension de sa bobine, puis les températures de ses tubes.
+
+@023
+Q: Quel avantage offre un réseau de ventilo-convecteurs en 4 tubes par rapport à un réseau 2 tubes ?
+C: Chaque appareil peut chauffer ou refroidir à tout moment, indépendamment des autres
+W: Il consomme deux fois moins d'eau
+W: Il se passe de régulation dans chaque local
+W: Il permet de raccorder les ventilo-convecteurs directement au réseau d'eau potable du bâtiment
+E: En 2 tubes, un seul réseau est basculé en été ou en hiver pour tout le bâtiment. En 4 tubes, un réseau chaud et un réseau froid alimentent chaque appareil : utile dans des bureaux exposés différemment, mais plus coûteux à installer.
+
+@024
+Q: Associer chaque outil du frigoriste à son usage.
+P: Manifold ou analyseur => Mesure HP et BP et en déduit les températures de saturation
+P: Pompe à vide => Retire l'air et l'humidité du circuit avant la charge
+P: Station de récupération => Transfère le fluide d'une installation vers une bouteille
+P: Balance de charge => Pèse le fluide introduit ou retiré
+P: Détecteur électronique => Repère les traces de fluide autour des raccords
+E: Les analyseurs numériques calculent directement surchauffe et sous-refroidissement à partir de pinces de température. La balance reste indispensable : la charge se fait au poids, les pressions servant à vérifier le fonctionnement.
+
+@025
+Q: Quel document remplit-on en France lors d'une intervention qui touche au fluide d'un équipement ?
+C: La fiche d'intervention, signée par l'opérateur et le détenteur de l'équipement
+W: Le bon de commande du fluide neuf
+W: Un permis de feu, même sans travail par point chaud
+W: Une déclaration préalable de travaux en mairie, jointe au dossier de l'équipement
+E: La fiche indique le fluide, les quantités chargées et récupérées et le résultat du contrôle d'étanchéité ; le détenteur la conserve au moins cinq ans. Les bouteilles de fluide récupéré circulent ensuite avec un bordereau de suivi (BSFF).
+
+@026
+Q: Remettre dans l'ordre les transformations du fluide sur un tour de cycle, en partant de l'aspiration du compresseur.
+O: Compression de la vapeur, qui sort chaude et à haute pression
+O: Désurchauffe puis condensation dans le condenseur
+O: Sous-refroidissement du liquide en sortie de condenseur
+O: Détente : chute de pression et de température
+O: Évaporation, puis surchauffe de la vapeur en fin d'évaporateur
+E: Le cycle se lit en deux pressions : le compresseur et le détendeur font passer de l'une à l'autre. La chaleur prise à l'évaporateur et le travail du compresseur sont rejetés ensemble au condenseur.
+
+@027
+Q: Pourquoi faut-il une surchauffe de la vapeur à l'aspiration du compresseur ?
+C: Pour être sûr qu'aucune goutte de liquide n'arrive au compresseur
+W: Pour augmenter la pression de condensation
+W: Pour que l'huile reste dans l'évaporateur
+W: Pour faire fondre en continu le givre qui se forme sur l'évaporateur pendant le fonctionnement
+E: Un liquide est incompressible : un coup de liquide casse clapets, bielles ou spirales. À l'inverse, une surchauffe trop forte prive le moteur du compresseur, refroidi par les gaz aspirés, et fait monter la température de refoulement.
+
+@028
+Q: Quel intérêt présente le sous-refroidissement du liquide avant le détendeur ?
+C: Garantir un liquide sans bulles au détendeur et gagner de la puissance frigorifique
+W: Diminuer la puissance absorbée par les ventilateurs
+W: Protéger le compresseur des coups de liquide en vaporisant les dernières gouttes avant l'aspiration
+W: Éviter le givrage du condenseur
+E: Le liquide perd de la pression dans la ligne (filtre, longueur, remontée) : sans marge sous sa température de saturation, il commence à bouillir avant le détendeur, qui reçoit un mélange et sous-alimente l'évaporateur. Chaque degré de sous-refroidissement augmente aussi l'effet frigorifique par kilogramme.
+
+@029
+Q: Au manomètre BP, la température d'évaporation lue est de 3 °C. Le thermomètre posé sur le tube d'aspiration, en sortie d'évaporateur, indique 10 °C. Quelle est la surchauffe, en K ?
+N: 7
+U: K
+E: Surchauffe = température du tube − température de saturation = 10 − 3 = 7 K. Avec un détendeur thermostatique, 4 à 8 K sont courants. La sonde se pose près du bulbe, bien serrée et isolée, sinon l'air ambiant fausse la mesure.
+
+@030
+Q: La température de condensation lue au manomètre HP est de 45 °C et le tube liquide en sortie de condenseur est à 39 °C. Quel est le sous-refroidissement, en K ?
+N: 6
+U: K
+E: Sous-refroidissement = température de condensation − température du liquide = 45 − 39 = 6 K. Sur une machine sans réservoir de liquide, il renseigne sur la charge : trop faible, manque de fluide ; trop élevé, surcharge.
+
+@031
+Q: BP basse, surchauffe élevée, sous-refroidissement faible et bulles au voyant : quelle est la cause la plus probable ?
+C: Un manque de fluide, souvent dû à une fuite
+W: Une surcharge en fluide
+W: Un condenseur encrassé
+W: Des incondensables, comme de l'air entré pendant une intervention précédente
+E: L'évaporateur sous-alimenté donne une forte surchauffe, le condenseur peu rempli un faible sous-refroidissement. Avant de compléter la charge, il faut trouver et réparer la fuite : recharger un équipement qui fuit sans le réparer est interdit.
+
+@032
+Q: HP anormalement élevée, compresseur qui déclenche par moments sur pressostat HP, unité extérieure couverte de poussière et de feuilles. Quelle cause traiter en premier ?
+C: Le condenseur encrassé, qui évacue mal la chaleur
+W: Un manque de fluide frigorigène
+W: Un détendeur bloqué en position fermée
+W: Le filtre à air de l'unité intérieure, qui freine le passage de l'air dans les locaux
+E: Le condenseur doit rejeter la chaleur prise à l'intérieur plus le travail du compresseur. Encrassé, il fait monter la température de condensation : le compresseur consomme plus et finit en sécurité. On le nettoie à basse pression, dans le sens inverse de l'air, et on vérifie son ventilateur.
+
+@033
+Q: Une installation à l'arrêt depuis longtemps, dans un local à 20 °C, affiche une pression correspondant à une saturation de 28 °C. Que soupçonner ?
+C: Des incondensables, comme de l'air, dans le circuit
+W: Un manque de fluide
+W: Un détendeur bloqué ouvert
+W: Un compresseur dont les clapets fuient
+E: À l'arrêt et à l'équilibre, la pression doit correspondre à la saturation du fluide à la température ambiante. Un gaz qui ne se condense pas ajoute sa propre pression. La cause habituelle est un tirage au vide insuffisant ; on récupère, on tire au vide et on recharge.
+
+@034
+Q: Pourquoi remplace-t-on le filtre déshydrateur à chaque ouverture du circuit ?
+C: Il a absorbé l'humidité de l'air entré et sa capacité est presque saturée
+W: Il se dissout dans l'huile une fois exposé à l'air
+W: La réglementation interdit de réutiliser un composant brasé
+W: Il empêche le tirage au vide d'atteindre les parties du circuit placées après lui
+E: Les huiles POE des HFC sont hygroscopiques. Humidité, fluide et huile forment des acides qui attaquent les isolants du moteur, et l'eau peut geler dans le détendeur. Le filtre neuf se pose en dernier, juste avant le tirage au vide.
+
+@035
+Q: L'indicateur d'humidité du voyant liquide est passé du vert au jaune. Que signale-t-il ?
+C: Une humidité trop élevée dans le circuit
+W: Un manque de fluide frigorigène
+W: Une huile chargée de particules métalliques
+W: Une surcharge en fluide
+E: La pastille change de couleur selon la teneur en eau ; les couleurs varient selon le fabricant. Elle se lit après quelques heures de fonctionnement. Les bulles visibles dans le voyant signalent autre chose : un liquide qui n'est pas complètement liquide.
+
+@036
+Q: Des bulles apparaissent au voyant liquide. Avant de conclure à un manque de fluide, que vérifie-t-on ?
+C: Qu'un filtre colmaté ne crée pas une perte de charge, en comparant la température avant et après
+W: Que la vanne 4 voies est en position chauffage
+W: La tension d'alimentation du ventilateur intérieur, qui fait varier la quantité de fluide visible au voyant
+W: Que l'huile du compresseur a été vidangée lors de la dernière visite d'entretien
+E: Dans un filtre colmaté, la pression chute et le liquide commence à se vaporiser : bulles après le filtre, sortie nettement plus froide que l'entrée. Au démarrage ou pendant un changement de régime, quelques bulles sont normales.
+
+@037
+Q: Quel rôle joue le bulbe d'un détendeur thermostatique ?
+C: Mesurer la température en sortie d'évaporateur pour régler l'ouverture selon la surchauffe
+W: Mesurer la température de l'air soufflé pour couper le compresseur une fois la consigne atteinte
+W: Contenir la réserve de fluide liquide
+W: Protéger l'évaporateur du gel
+E: La pression du bulbe pousse la membrane vers l'ouverture, la pression d'évaporation et le ressort vers la fermeture : l'équilibre maintient la surchauffe réglée. Le bulbe se fixe sur un tube horizontal, bien serré et isolé, jamais dessous sur un gros tube, où l'huile fausse la mesure.
+
+@038
+Q: Quand faut-il un détendeur thermostatique à égalisation externe ?
+C: Quand la perte de charge de l'évaporateur est importante, par exemple avec un distributeur de liquide
+W: Quand l'installation fonctionne seulement en chauffage
+W: Quand le fluide est un corps pur comme le R32, dont la pression reste la même tout le long de l'évaporateur
+W: Quand le bulbe est logé à l'intérieur du compresseur
+E: L'égalisation interne prend la pression à l'entrée de l'évaporateur. Si l'évaporateur perd beaucoup de pression, celle de la sortie est plus basse : le détendeur croit la surchauffe faible et ferme trop. La prise externe mesure la pression en sortie, juste après le bulbe.
+
+@039
+Q: Quel avantage apporte un détendeur électronique ?
+C: Il règle la surchauffe avec précision grâce à des sondes, même quand la charge varie
+W: Il fonctionne sans aucune alimentation électrique
+W: Il remplace aussi le filtre déshydrateur
+W: Il permet de supprimer le pressostat de sécurité haute pression, puisque le régulateur surveille déjà la pression de condensation
+E: Un moteur pas à pas, piloté par un régulateur qui lit une pression et une température, ouvre la vanne au pas près. La surchauffe peut être plus basse et stable : l'évaporateur est mieux rempli et le rendement meilleur. En panne, on lit les sondes et l'ouverture affichée.
+
+@040
+Q: Quelle contrainte impose un tube capillaire, l'organe de détente des petits appareils ?
+C: Une charge de fluide précise, pesée à quelques grammes près
+W: Une connexion permanente au réseau du bâtiment
+W: Un réglage sur le terrain à chaque saison
+W: Une vanne manuelle que l'utilisateur ouvre à chaque démarrage
+E: Sa section est fixe : le débit dépend seulement des pressions. Sans réservoir, la charge doit être exacte ; elle est indiquée sur la plaque. On vide complètement et on recharge à la balance, jamais en complétant au manomètre.
+
+@041
+Q: Associer chaque famille de fluide à l'huile qu'on lui associe habituellement.
+P: HFC (R410A, R32, R134a) => Huile polyolester (POE)
+P: Anciens CFC et HCFC (R12, R22) => Huile minérale
+P: Climatisation automobile au R1234yf => Huile polyalkylène glycol (PAG)
+E: POE et PAG absorbent vite l'humidité : on garde les bidons fermés et on n'expose pas le circuit à l'air. Le passage d'un ancien fluide à un HFC demande de changer d'huile, souvent en plusieurs vidanges.
+
+@042
+Q: Qu'est-ce qu'un coup de liquide ?
+C: L'arrivée de liquide au compresseur, qui peut casser clapets, pistons ou spirales
+W: Une montée brutale de pression dans le condenseur à l'arrêt
+W: Le bruit normal du fluide dans le détendeur
+W: Le gel de l'eau de condensation dans le bac de l'unité intérieure lors d'un fonctionnement prolongé
+E: Causes classiques : bulbe décroché ou détendeur bloqué ouvert, surcharge, ventilateur d'évaporateur arrêté, migration du fluide pendant l'arrêt. Protections : surchauffe suffisante, bouteille anti-coup de liquide, résistance de carter.
+
+@043
+Q: À quoi sert la résistance de carter d'un compresseur ?
+C: Empêcher le fluide de migrer et de se dissoudre dans l'huile pendant l'arrêt
+W: Préchauffer l'air de l'unité extérieure en hiver
+W: Dégivrer l'évaporateur de la chambre froide
+W: Accélérer le démarrage du moteur
+E: À l'arrêt, le fluide migre vers le point le plus froid. Dissous dans l'huile, il la fait mousser au démarrage : le compresseur aspire huile et liquide et perd sa lubrification. On la met sous tension plusieurs heures avant une première mise en route.
+
+@044
+Q: Associer chaque type de compresseur à son usage courant.
+P: Compresseur à piston => Bielles et clapets, fréquent en froid commercial
+P: Compresseur scroll => Deux spirales imbriquées, courant en climatisation
+P: Compresseur à vis => Rotors hélicoïdaux pour les fortes puissances
+P: Compresseur centrifuge => Roue à grande vitesse des très gros groupes d'eau glacée
+P: Compresseur rotatif => Petits climatiseurs et pompes à chaleur domestiques
+E: Le scroll est peu bruyant et tolère mal le liquide ; le piston, réparable dans ses versions semi-hermétiques, reste courant en commercial. Vis et centrifuges équipent les groupes de plusieurs centaines de kilowatts.
+
+@045
+Q: Qu'apporte un compresseur à vitesse variable (Inverter) ?
+C: Il adapte sa puissance au besoin, d'où moins de cycles marche-arrêt et un meilleur rendement saisonnier
+W: Il fonctionne sans fluide frigorigène
+W: Il supprime le besoin de dégivrage
+W: Il tourne toujours à vitesse maximale pour atteindre plus vite la consigne, puis s'arrête jusqu'au cycle suivant
+E: Un variateur de fréquence règle la vitesse du moteur. À charge partielle, les échangeurs paraissent surdimensionnés et le rendement grimpe, d'où les bons SEER et SCOP. Les pannes se diagnostiquent par les codes défaut et la carte de puissance.
+
+@046
+Q: Pourquoi charge-t-on en phase liquide un mélange zéotrope comme le R407C ?
+C: Ses composants s'évaporent à des températures différentes : charger en gaz changerait sa composition
+W: Le liquide est moins coûteux à transporter
+W: La phase gazeuse est toxique pour le technicien
+W: Pour aller plus vite, la réglementation fixant une durée maximale de charge sur les équipements de plus de 5 t éq. CO2
+E: En sortant de la bouteille en vapeur, les composants les plus volatils partent en premier. On charge en liquide, côté BP et progressivement, pour ne pas envoyer de liquide au compresseur. Tous les mélanges de la série R400, R410A compris, se chargent ainsi.
+
+@047
+Q: Un climatiseur contient 2,5 kg de R410A (PRP 2088). Quelle est sa charge en tonnes équivalent CO2 ?
+N: 5,22
+E: 2,5 × 2088 / 1000 = 5,22 t éq. CO2. À partir de 5 t, le contrôle d'étanchéité périodique est obligatoire au moins une fois par an. La même charge en R32 (PRP 675) ne ferait que 1,7 t.
+
+@048
+Q: Associer chaque charge à la fréquence minimale du contrôle d'étanchéité, sans système de détection de fuites.
+P: De 5 à moins de 50 t éq. CO2 => Tous les 12 mois
+P: De 50 à moins de 500 t éq. CO2 => Tous les 6 mois
+P: 500 t éq. CO2 et plus => Tous les 3 mois
+E: Un système permanent de détection de fuites double ces intervalles ; il est obligatoire à partir de 500 t. Les équipements hermétiquement scellés de moins de 10 t éq. CO2 sont dispensés. Le résultat est porté sur la fiche d'intervention.
+
+@049
+Q: Pour localiser une petite fuite sur un circuit vidangé, quelle méthode est recommandée ?
+C: Le mettre sous azote additionné de 5 % d'hydrogène et le sonder avec un détecteur adapté
+W: Le remplir d'oxygène et chercher les bulles à l'eau savonneuse
+W: Le remplir de fluide neuf jusqu'à la pression de service, puis relever la pression une semaine plus tard
+W: Chauffer les brasures au chalumeau et repérer celles qui noircissent
+E: Le mélange azote-hydrogène n'est pas inflammable et l'hydrogène, très petit, traverse les fuites les plus fines. L'eau savonneuse localise bien sous pression d'azote. Jamais d'oxygène : au contact de l'huile sous pression, il peut provoquer une explosion.
+
+@050
+Q: Pourquoi brase-t-on les tubes de cuivre sous balayage d'azote ?
+C: Pour éviter l'oxydation intérieure, dont les écailles boucheraient filtres et détendeurs
+W: Pour refroidir la brasure plus vite
+W: Pour éviter que le fluide resté dans le circuit s'enflamme au contact de la flamme du chalumeau
+W: Parce que l'azote sert de métal d'apport
+E: Au rouge, le cuivre au contact de l'air se couvre de calamine qui se détache, colmate filtres et capillaires et pollue l'huile. Un faible débit d'azote suffit. Cuivre sur cuivre, on brase au cuivre-phosphore ; sur laiton, à la brasure argent avec un décapant.

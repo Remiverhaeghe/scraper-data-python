@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110103,
+  "skills": ["CVC", "froid", "climatisation", "génie climatique", "frigoriste"],
+  "schemas": [
+    {
+      "name": "genie-climatique-cycle.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Cycle frigorifique à compression de vapeur",
+        "nodes": [
+          "Compression : vapeur chaude haute pression",
+          "Condensation : chaleur rejetée dehors",
+          "Sous-refroidissement du liquide",
+          "Détente : chute de pression",
+          "Évaporation puis surchauffe"
+        ],
+        "note": "La surchauffe protège le compresseur, le sous-refroidissement le détendeur"
+      }
+    },
+    {
+      "name": "genie-climatique-mise-en-service.svg",
+      "questions": ["066", "067", "068"],
+      "diagram": {
+        "title": "Mise en service d'un climatiseur split",
+        "nodes": [
+          "Épreuve à l'azote déshydraté",
+          "Tirage au vide sous 500 microns",
+          "Test de remontée, pompe isolée",
+          "Ouverture des vannes, complément pesé",
+          "Contrôle surchauffe et sous-refroidissement"
+        ],
+        "note": "Remontée continue : fuite ; remontée qui se stabilise : humidité"
+      }
+    }
+  ]
+}

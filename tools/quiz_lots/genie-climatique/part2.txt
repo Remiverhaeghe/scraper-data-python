@@ -1,0 +1,390 @@
+@051
+Q: Remettre dans l'ordre le raccordement d'une liaison frigorifique par évasement (dudgeon).
+O: Couper le tube au coupe-tube, bien perpendiculaire
+O: Ébavurer l'intérieur, tube tourné vers le bas
+O: Enfiler l'écrou sur le tube
+O: Réaliser l'évasement à l'outil à collet
+O: Serrer au couple indiqué avec une clé dynamométrique
+E: Oublier l'écrou avant d'évaser oblige à recouper. Ébavurer tube vers le bas évite que les copeaux tombent dedans. Trop serré, le collet se fend ; pas assez, il fuit : la clé dynamométrique et le couple du fabricant tranchent.
+
+@052
+Q: Un split est préchargé pour 7,5 m de liaison. Il est posé avec 15 m de liaison et la notice demande 20 g par mètre supplémentaire. Quel complément faut-il charger, en grammes ?
+N: 150
+U: g
+E: (15 − 7,5) × 20 = 150 g, pesés à la balance. La charge totale, usine et complément, s'inscrit sur l'étiquette de l'unité : elle sert au calcul en tonnes équivalent CO2 et aux contrôles suivants.
+
+@053
+Q: Que vérifie le test de remontée de pression après un tirage au vide ?
+C: Qu'il ne reste ni fuite ni humidité : le vide doit tenir une fois la pompe isolée
+W: Que la pompe à vide contient assez d'huile
+W: Que le compresseur démarre correctement
+W: Que les vannes de l'unité extérieure sont bien ouvertes avant la mise en service
+E: Pompe isolée, on observe le vacuomètre une dizaine de minutes. Une pression qui monte sans s'arrêter révèle une fuite ; une pression qui monte puis se stabilise révèle de l'humidité qui s'évapore encore.
+
+@054
+Q: Pourquoi contrôle-t-on le vide avec un vacuomètre électronique plutôt qu'avec le manomètre du manifold ?
+C: Le manomètre ne lit pas les quelques centaines de microns visés
+W: Le vacuomètre accélère la pompe à vide
+W: Le manomètre du manifold est interdit avec le R32 et les autres fluides faiblement inflammables
+W: Le vacuomètre dispense du test de remontée
+E: L'objectif courant est de descendre sous 500 microns (0,67 mbar), puis de tenir lors de la remontée. L'aiguille du manomètre est à −1 bar dès que l'essentiel de l'air est parti, alors que l'humidité est toujours là.
+
+@055
+Q: Comment accélérer un tirage au vide ?
+C: Utiliser des flexibles courts de gros diamètre et retirer les obus des valves
+W: Faire tourner le compresseur de l'installation pendant le tirage
+W: Refroidir les tubes pour condenser l'humidité
+W: Ouvrir légèrement la bouteille de fluide pour chasser l'air plus vite
+E: Le débit de la pompe se perd dans les petites sections ; un outil de dépose permet de retirer les obus sous vide. Réchauffer le circuit, et non le refroidir, aide l'eau à s'évaporer. Un compresseur qui tourne sous vide risque le claquage de ses enroulements.
+
+@056
+Q: Associer chaque relevé à la cause la plus probable.
+P: BP basse, surchauffe élevée, sous-refroidissement faible => Manque de fluide
+P: HP élevée, sous-refroidissement élevé, surchauffe faible => Surcharge en fluide
+P: BP basse, surchauffe élevée, sous-refroidissement élevé => Filtre ou détendeur qui restreint le passage
+P: BP élevée, HP basse, compresseur peu chaud => Compresseur qui ne comprime plus
+E: Une restriction retient le liquide dans le condenseur (sous-refroidissement élevé) et affame l'évaporateur (surchauffe élevée) : c'est ce qui la distingue d'un manque de fluide. Un compresseur aux clapets usés laisse les deux pressions se rapprocher.
+
+@057
+Q: L'évaporateur d'un climatiseur se couvre de glace en mode froid. Quelle cause chercher en premier ?
+C: Un filtre à air encrassé ou un ventilateur intérieur trop lent
+W: Un condenseur trop propre
+W: Une surcharge en fluide
+W: Une consigne de température trop élevée dans la pièce
+E: Moins d'air, c'est moins de chaleur à absorber : l'évaporation descend sous 0 °C, le givre se forme et freine encore l'air. Le manque de fluide et une température extérieure trop basse donnent le même symptôme. On dégivre avant de mesurer.
+
+@058
+Q: Pour une chambre froide à +2 °C, à quelle température d'évaporation s'attend-on environ ?
+C: Vers −6 à −8 °C, soit 8 à 10 K sous l'air de la chambre
+W: +2 °C, comme l'air de la chambre
+W: −30 °C
+W: +10 °C
+E: L'écart entre l'air et l'évaporation dépend de l'évaporateur. Un écart faible préserve l'humidité des produits frais ; un écart qui se creuse avec le temps signale un évaporateur givré ou encrassé.
+
+@059
+Q: Associer chaque méthode de dégivrage à sa description.
+P: Résistances électriques => Résistances logées dans l'évaporateur et le bac de condensats
+P: Gaz chauds => Vapeur de refoulement envoyée dans l'évaporateur
+P: Dégivrage naturel => Arrêt du froid avec ventilateurs en marche, en chambre positive
+P: Inversion de cycle => Vanne 4 voies basculée, sur les pompes à chaleur
+E: En chambre positive, l'air à quelques degrés au-dessus de zéro suffit à faire fondre le givre. En négatif, il faut apporter de la chaleur ; le bac et la tuyauterie d'évacuation sont aussi chauffés pour que l'eau ne regèle pas en route.
+
+@060
+Q: Pourquoi une chambre froide négative est-elle munie d'une soupape de décompression ?
+C: Pour équilibrer la pression quand l'air entré se refroidit et se contracte
+W: Pour évacuer le fluide en cas de fuite
+W: Pour faire entrer de l'air neuf pendant le dégivrage
+W: Pour limiter la pression dans l'évaporateur en cas de surchauffe
+E: Après une ouverture de porte, l'air chaud entré se refroidit et crée une dépression qui colle la porte et peut déformer les panneaux. La soupape, chauffée pour ne pas givrer, laisse entrer ou sortir un peu d'air.
+
+@061
+Q: Un circuit d'eau glacée débite 4 m³/h avec 5 K d'écart entre départ et retour. Quelle puissance transporte-t-il, en kW ?
+N: 23,3
+U: kW
+E: P = 1,163 × débit (m³/h) × écart (K) = 1,163 × 4 × 5 ≈ 23,3 kW. Le coefficient vient de la chaleur massique de l'eau (4,18 kJ/kg·K) divisée par 3 600 s. En eau glycolée, il est plus faible.
+
+@062
+Q: Une batterie chaude réchauffe 2 000 m³/h d'air de 10 K. Quelle puissance fournit-elle, en kW ?
+N: 6,8
+U: kW
+T: 3
+E: Pour l'air, P (W) ≈ 0,34 × débit (m³/h) × écart (K) = 0,34 × 2 000 × 10 = 6 800 W. Le coefficient vient de la masse volumique de l'air (1,2 kg/m³) et de sa chaleur massique (1 kJ/kg·K), divisées par 3 600.
+
+@063
+Q: Quel est le rôle d'un vase d'expansion dans un réseau de chauffage ?
+C: Absorber la dilatation de l'eau et maintenir une pression minimale dans le réseau
+W: Stocker l'eau chaude sanitaire
+W: Séparer l'air dissous de l'eau du circuit et l'évacuer par le purgeur placé à son sommet
+W: Augmenter le débit du circulateur
+E: Une membrane sépare l'eau d'un coussin d'azote gonflé selon la hauteur du bâtiment. Un vase dégonflé fait cracher la soupape en chauffe et chuter la pression à froid. On le contrôle à l'arrêt, côté eau isolé et vidé.
+
+@064
+Q: Une pompe à chaleur air/eau perd beaucoup de puissance par grand froid. Pourquoi ?
+C: L'air contient moins de chaleur à capter et l'écart de température à franchir augmente
+W: Le fluide gèle dans les tubes de l'unité extérieure
+W: Le compresseur se met en sécurité dès que l'air extérieur passe sous 5 °C, l'appoint prenant le relais
+W: L'eau du chauffage devient trop visqueuse
+E: Puissance et COP baissent ensemble quand l'air extérieur se refroidit, et les dégivrages se multiplient. On dimensionne avec un point d'équilibre et un appoint, et on préfère des émetteurs basse température.
+
+@065
+Q: Pourquoi une pompe à chaleur est-elle plus efficace avec un plancher chauffant qu'avec d'anciens radiateurs ?
+C: Le plancher se contente d'eau à 30 ou 35 °C : le compresseur force moins
+W: Le plancher stocke l'électricité la nuit
+W: Les radiateurs consomment de l'électricité en plus de l'eau chaude qui les traverse
+W: Le plancher supprime toute régulation
+E: Chaque degré de moins au départ d'eau améliore le COP de quelques pour cent. Des radiateurs anciens réclament souvent 55 à 65 °C, où le COP chute nettement. Une loi d'eau bien réglée garde la température de départ au plus bas.
+
+@066
+Q: Remettre dans l'ordre la mise en service d'un climatiseur split après le raccordement des liaisons.
+O: Éprouver le circuit à l'azote déshydraté et contrôler l'étanchéité
+O: Vider l'azote puis tirer au vide sous 500 microns
+O: Isoler la pompe et faire le test de remontée de pression
+O: Ouvrir les vannes de l'unité extérieure
+O: Peser le complément de charge si la longueur de liaison le demande
+O: Démarrer et contrôler surchauffe, sous-refroidissement et températures d'air
+E: L'épreuve à l'azote révèle une fuite franche avant tout, sans perdre de fluide. Le vide élimine air et humidité. Les vannes ne s'ouvrent qu'une fois le vide validé : le fluide de l'unité extérieure remplit alors les liaisons.
+
+@067
+Q: Pourquoi éprouve-t-on le circuit à l'azote déshydraté plutôt qu'à l'air comprimé ?
+C: L'azote est sec et inerte : il n'apporte ni humidité ni oxygène
+W: L'azote se détecte à l'odeur en cas de fuite
+W: L'air comprimé ne permet pas de dépasser 2 bar
+W: L'azote se dissout dans l'huile du compresseur et la protège de l'oxydation pendant la mise en service
+E: L'air comprimé apporte de l'eau et de l'oxygène, dangereux au contact de l'huile sous pression. La bouteille d'azote, à environ 200 bar, se raccorde toujours par un détendeur, réglé à la pression d'épreuve du fabricant.
+
+@068
+Q: Pendant le test de remontée, le vacuomètre passe de 400 à 1 800 microns puis se stabilise. Que faire ?
+C: Reprendre le tirage au vide, car de l'humidité s'évapore encore, en cassant le vide à l'azote si besoin
+W: Charger le fluide : une pression stable prouve l'étanchéité
+W: Chercher une fuite sur les raccords des liaisons, la remontée prouvant que de l'air entre dans le circuit
+W: Remplacer la pompe à vide, dont l'huile est forcément usée
+E: Une stabilisation correspond à l'eau qui atteint sa pression de vapeur ; une fuite ferait monter la pression sans arrêt. Casser le vide à l'azote sec puis recommencer entraîne l'humidité. Une huile de pompe laiteuse est aussi à vidanger.
+
+@069
+Q: Sur le diagramme enthalpique d'une machine, on relève 250 kJ/kg à l'entrée de l'évaporateur, 420 kJ/kg à l'aspiration et 460 kJ/kg au refoulement. Quel est son coefficient d'efficacité frigorifique théorique ?
+N: 4,25
+E: Effet frigorifique : 420 − 250 = 170 kJ/kg. Travail de compression : 460 − 420 = 40 kJ/kg. Efficacité : 170 / 40 = 4,25. En chauffage, on récupère aussi le travail : (460 − 250) / 40 = 5,25. Les pertes du moteur et des ventilateurs réduisent ces valeurs sur le terrain.
+
+@070
+Q: Sur un diagramme log p-h, comment se représente la détente dans le détendeur ?
+C: Par un trait vertical : la pression chute à enthalpie constante
+W: Par un trait horizontal : la pression reste constante
+W: Par une courbe isentrope, comme la compression
+W: Par un point unique, la détente étant instantanée et sans changement d'état du fluide
+E: Le détendeur n'échange ni travail ni chaleur : la détente est isenthalpique. Évaporation et condensation sont des traits horizontaux, à pression constante ; la compression suit à peu près une isentrope.
+
+@071
+Q: Que désigne le glissement de température d'un fluide comme le R407C ?
+C: À pression constante, la température varie de plusieurs kelvins entre le début et la fin du changement d'état
+W: La baisse lente de température du fluide stocké en bouteille
+W: L'écart entre l'air soufflé et l'air repris
+W: La dérive lente d'une sonde de détendeur électronique, qui fausse peu à peu la surchauffe affichée au régulateur
+E: Il atteint environ 7 K pour le R407C. La surchauffe se calcule à partir de la température de rosée, le sous-refroidissement à partir de la température de bulle. Les analyseurs numériques le gèrent si l'on choisit le bon fluide.
+
+@072
+Q: Pourquoi parle-t-on de cycle transcritique pour les installations au CO2 (R744) des supermarchés ?
+C: Par temps chaud, la haute pression dépasse le point critique du CO2, à 31 °C : le gaz se refroidit sans se condenser
+W: Le CO2 y est utilisé sous forme solide, comme la carboglace
+W: Le compresseur travaille alternativement au-dessus et en dessous de la pression atmosphérique
+W: Le fluide traverse deux évaporateurs en série, l'un pour le froid positif et l'autre pour le négatif, à deux pressions différentes
+E: Au-dessus du point critique, le condenseur devient un refroidisseur de gaz et une vanne haute pression règle le cycle. Les pressions dépassent souvent 90 bar. On n'enferme jamais de CO2 liquide entre deux vannes : en se réchauffant, il ferait éclater la tuyauterie.
+
+@073
+Q: Quel risque particulier présente le R290 (propane) lors d'une intervention ?
+C: Son inflammabilité : ventiler, écarter les sources d'ignition, utiliser un outillage compatible
+W: Une toxicité élevée, qui impose un appareil respiratoire isolant pendant toute la durée de la récupération
+W: Des pressions de fonctionnement supérieures à 100 bar
+W: Il attaque le cuivre des tubes
+E: Classé A3, il s'enflamme dans l'air dès environ 2 % en volume. Les charges sont limitées selon le local, un détecteur portatif accompagne le technicien, et l'on ne brase jamais sur un circuit qui n'a pas été vidé et balayé à l'azote.
+
+@074
+Q: Que prévoit le règlement européen F-Gas pour les HFC à fort PRP ?
+C: Une baisse progressive des quantités mises sur le marché et des interdictions dans les équipements neufs
+W: Le démontage immédiat de toutes les installations existantes qui contiennent plus de 5 t éq. CO2 de ces fluides
+W: Leur remplacement par de l'ammoniac dans les climatiseurs domestiques
+W: Une simple obligation d'étiquetage, sans limite de quantité
+E: Les quotas font monter les prix des HFC comme le R404A ou le R410A et le règlement de 2024 programme leur sortie d'ici 2050. L'entretien des installations existantes reste possible, parfois avec du fluide régénéré seulement.
+
+@075
+Q: Une chambre froide contient 12 kg de R404A (PRP 3922). Quelle est sa charge en tonnes équivalent CO2 ?
+N: 47,06
+E: 12 × 3922 / 1000 = 47,06 t éq. CO2 : contrôle annuel, juste sous le seuil des 50 t. Avec un fluide de substitution d'un PRP voisin de 1 400, comme le R449A, la même charge tomberait vers 17 t.
+
+@076
+Q: Lors du remplacement d'un R404A par un fluide de substitution comme le R449A, que doit-on prévoir ?
+C: Vérifier huile et joints, adapter le détendeur et changer le filtre déshydrateur
+W: Rien : les deux fluides se mélangent sans conséquence
+W: Mélanger les deux fluides pour faire baisser progressivement le PRP de la charge
+W: Remplacer obligatoirement toute la tuyauterie
+E: Le R449A s'emploie avec une huile POE, souvent déjà en place, mais sa puissance et son glissement diffèrent. On récupère entièrement l'ancien fluide, on ne mélange jamais, et l'étiquette de l'équipement est mise à jour.
+
+@077
+Q: Avant d'intervenir sur l'évaporateur d'une installation à réservoir, comment confiner le fluide sans le retirer du circuit ?
+C: Fermer la sortie du réservoir et laisser le compresseur aspirer jusqu'à la coupure du pressostat BP
+W: Desserrer les raccords de l'évaporateur pour laisser sortir le gaz
+W: Arrêter le compresseur, attendre que le fluide migre seul vers le condenseur, puis fermer la vanne d'aspiration
+W: Chauffer l'évaporateur au chalumeau
+E: Ce tirage au vide de l'installation (pump-down) stocke le fluide dans le condenseur et le réservoir. Le reste de l'évaporateur est récupéré à la station. Sur un circuit qui fuit, on évite de descendre sous la pression atmosphérique, sinon l'air entre.
+
+@078
+Q: Remettre dans l'ordre la récupération du fluide d'une installation à démanteler.
+O: Peser la bouteille de récupération vide et vérifier sa date d'épreuve
+O: Raccorder station, installation et bouteille avec des flexibles purgés
+O: Récupérer en phase liquide puis en vapeur jusqu'au vide demandé
+O: Peser la bouteille pleine et reporter la quantité sur la fiche d'intervention
+O: Rendre la bouteille au distributeur avec son bordereau de suivi
+E: On utilise une bouteille dédiée à la récupération, jamais une bouteille de fluide neuf. Mélanger deux fluides dans la même bouteille la rend impropre à la régénération : elle part en destruction, beaucoup plus coûteuse.
+
+@079
+Q: Pourquoi ne remplit-on jamais une bouteille de récupération au-delà de 80 % ?
+C: Le liquide se dilate en chauffant : sans volume de vapeur, la pression monte brutalement
+W: La station ne sait pas peser au-delà
+W: Le fluide se décompose en acides au contact de la paroi supérieure de la bouteille, restée vide et humide
+W: La règle ne vaut que pour les bouteilles de CO2
+E: Une bouteille pleine de liquide laissée au soleil peut éclater. La masse maximale est gravée sur la bouteille ; on la remplit sur une balance, et les stations récentes s'arrêtent grâce à un flotteur ou à une sonde de niveau.
+
+@080
+Q: Pourquoi les tours aéroréfrigérantes sont-elles très surveillées ?
+C: Leur eau tiède pulvérisée peut disperser des légionelles, d'où un entretien et des analyses réglementés
+W: Elles rejettent du fluide frigorigène dans l'atmosphère
+W: Leur bruit dépasse toujours les limites de voisinage
+W: Elles consomment davantage d'électricité que les compresseurs et pèsent lourd dans le bilan énergétique du site
+E: Les légionelles se multiplient entre 25 et 45 °C et la maladie s'attrape en respirant des gouttelettes. Ces installations relèvent de la rubrique ICPE 2921 : analyses périodiques, plan d'entretien, arrêt et désinfection si les seuils sont dépassés.
+
+@081
+Q: Dans une centrale de traitement d'air, comment la batterie froide déshumidifie-t-elle l'air ?
+C: Sa surface est plus froide que le point de rosée : la vapeur d'eau s'y condense
+W: Elle aspire l'humidité par une pompe à vide
+W: Elle chauffe l'air pour évaporer les gouttes
+W: Elle injecte un produit desséchant dans l'air soufflé
+E: L'air sort froid et presque saturé ; une batterie de réchauffage le ramène à la consigne. Le bac de condensats demande un siphon calculé selon la dépression de la centrale, sinon l'eau ne s'évacue pas et déborde.
+
+@082
+Q: Remettre dans l'ordre les éléments traversés par l'air neuf dans une centrale de traitement d'air classique.
+O: Registre de prise d'air neuf
+O: Filtre
+O: Récupérateur de chaleur
+O: Batterie froide
+O: Batterie de réchauffage
+O: Ventilateur de soufflage
+E: Le filtre protège le récupérateur et les batteries de l'encrassement. La batterie froide précède le réchauffage pour déshumidifier puis remettre l'air en température. Selon les centrales, le ventilateur peut aussi se trouver avant les batteries.
+
+@083
+Q: Pourquoi équilibre-t-on un réseau hydraulique de chauffage ou d'eau glacée ?
+C: Pour que chaque émetteur reçoive son débit prévu, sans que les plus proches de la pompe ne prennent tout
+W: Pour que l'eau ait la même température à l'aller et au retour
+W: Pour éviter de purger l'air du réseau
+W: Pour que la pompe fonctionne toujours à son débit maximal, celui où son rendement est le meilleur d'après sa courbe
+E: On règle des vannes d'équilibrage munies de prises de pression, en mesurant le débit de chaque branche. Sans équilibrage, monter la vitesse de la pompe ne règle qu'une partie du problème et augmente consommation et bruit.
+
+@084
+Q: Associer chaque élément de régulation à sa fonction.
+P: Loi d'eau => Calcule la température de départ selon la température extérieure
+P: Vanne trois voies mélangeuse => Mélange l'eau de retour à l'eau chaude pour ajuster le départ
+P: Thermostat d'ambiance => Agit selon la température mesurée dans la pièce
+P: Pressostat différentiel sur filtre => Signale qu'un filtre est encrassé
+E: La loi d'eau anticipe les besoins à partir de l'extérieur ; le thermostat corrige à partir de la pièce. Le pressostat différentiel mesure la perte de charge du filtre : il évite de changer les filtres trop tôt ou trop tard.
+
+@085
+Q: Par quel protocole ouvert une GTB communique-t-elle couramment avec les régulateurs CVC ?
+C: BACnet, ou Modbus pour les équipements plus simples
+W: SNMP uniquement
+W: Profinet, imposé dans les centrales de traitement d'air
+W: KNX, seul protocole autorisé dans les bâtiments tertiaires
+E: BACnet décrit des objets standard (entrées, consignes, alarmes, calendriers) ; Modbus expose des registres numérotés qu'il faut documenter. KNX est courant pour l'éclairage et les stores, sans être exclusif.
+
+@086
+Q: Sur une installation à détendeur thermostatique, la surchauffe et la BP oscillent sans cesse. Quelle cause est la plus probable ?
+C: Un détendeur surdimensionné ou une surchauffe réglée trop basse
+W: Un condenseur sous-dimensionné
+W: Un excès d'huile dans le carter
+W: Un ventilateur de condenseur à vitesse variable
+E: Le détendeur ouvre trop, du liquide atteint le bulbe, il se ferme, la surchauffe remonte, et ainsi de suite : c'est le pompage. On règle la surchauffe par petits pas en attendant la stabilisation, après avoir vérifié la pose du bulbe et la taille de l'orifice.
+
+@087
+Q: Après le grillage du moteur d'un compresseur hermétique, quelle précaution prend-on avant d'en monter un neuf ?
+C: Tester l'acidité de l'huile, nettoyer le circuit et poser des filtres anti-acide
+W: Monter le neuf directement, l'huile neuve neutralisant l'acide
+W: Rincer le circuit à l'eau chaude puis le sécher à l'air comprimé avant de tirer au vide
+W: Augmenter la charge de 20 % pour diluer l'acide
+E: L'isolant brûlé du moteur forme acides et boues : sans nettoyage, le compresseur neuf grille à son tour. Le fluide récupéré sent l'âcre et l'huile est noire. Un filtre provisoire à l'aspiration demande de surveiller sa perte de charge.
+
+@088
+Q: Un groupe d'eau glacée de 35 kW travaille avec 5 K d'écart. Quel débit d'eau lui faut-il, en m³/h ?
+N: 6,02
+U: m³/h
+E: Débit = P / (1,163 × écart) = 35 / 5,815 ≈ 6,0 m³/h. À pleine charge, un écart mesuré de 2 K au lieu de 5 indique un débit plus de deux fois trop fort ; un écart trop grand, un débit insuffisant qui expose l'évaporateur au gel.
+
+@089
+Q: Pourquoi un groupe d'eau glacée possède-t-il un contrôleur de débit sur son évaporateur ?
+C: Sans débit, l'évaporateur peut geler et éclater : le contrôleur interdit alors le compresseur
+W: Pour mesurer la consommation électrique du groupe
+W: Pour régler automatiquement la charge en fluide selon le débit d'eau qui traverse l'évaporateur à plaques
+W: Pour remplacer la sonde de température de départ
+E: Un échangeur à plaques gèle en quelques minutes sans circulation. Une sonde antigel complète la protection, et l'eau glycolée s'impose si le circuit est exposé au froid. Un contrôleur shunté pour « dépanner » finit souvent en échangeur fendu.
+
+@090
+Q: On passe un circuit d'eau glacée en eau glycolée à 30 %. Quelle conséquence anticiper ?
+C: Moins de chaleur massique, plus de viscosité : plus de débit, échangeurs moins puissants
+W: Aucune, le glycol a les mêmes propriétés que l'eau
+W: Le circuit doit être refait en acier galvanisé, seul matériau qui résiste au glycol sur la durée
+W: Le vase d'expansion devient inutile
+E: On choisit le monopropylène glycol, peu toxique, quand une fuite peut toucher des denrées. La concentration se mesure au réfractomètre. L'acier galvanisé est justement à éviter : le zinc réagit avec les inhibiteurs du glycol.
+
+@091
+Q: Pourquoi une fuite de CO2 (R744) dans un local est-elle dangereuse malgré son PRP de 1 ?
+C: Plus lourd que l'air et inodore, il s'accumule en partie basse et peut asphyxier
+W: Il s'enflamme au contact des éclairages
+W: Il détruit la couche d'ozone
+W: Il se transforme en acide fluorhydrique au contact de l'humidité de l'air ambiant
+E: Des détecteurs placés en partie basse déclenchent alarme et ventilation. Les HFC, également plus lourds que l'air, présentent aussi un risque d'asphyxie en fosse ; ce sont eux qui forment de l'acide fluorhydrique dans une flamme, pas le CO2.
+
+@092
+Q: Évaporateur sous le compresseur, longue remontée d'aspiration : comment garantir le retour d'huile ?
+C: Avec une vitesse de gaz suffisante dans la colonne montante et des pièges à huile
+W: En ajoutant de l'huile au compresseur à chaque visite
+W: En posant les tuyauteries horizontales en pente vers l'évaporateur
+W: Avec une pompe à huile placée sous l'évaporateur
+E: Un gaz trop lent laisse l'huile dans l'évaporateur et la colonne, et le compresseur en manque. On réduit le diamètre des colonnes montantes et on pose un siphon à leur base ; les tronçons horizontaux descendent vers le compresseur.
+
+@093
+Q: Pourquoi le SEER d'un climatiseur Inverter dépasse-t-il nettement son EER nominal ?
+C: Le SEER pondère des charges partielles et des températures plus douces, où la vitesse variable excelle
+W: Le SEER ne compte pas la consommation du compresseur
+W: Le SEER se mesure en hiver, quand le condenseur profite d'un air extérieur plus froid et d'une pression plus basse
+W: L'EER inclut les pertes de la liaison frigorifique, ce que le SEER ignore
+E: L'EER nominal se mesure à pleine charge par 35 °C extérieur. Le SEER, calculé selon la norme EN 14825, combine plusieurs points de charge partielle et les consommations en veille : c'est lui qui figure sur l'étiquette énergie.
+
+@094
+Q: Que demande le décret BACS aux bâtiments tertiaires dont les systèmes de chauffage ou de climatisation dépassent 290 kW ?
+C: Un système d'automatisation et de contrôle capable de suivre, d'analyser et d'ajuster les consommations
+W: Le remplacement de tous les groupes froids et chaudières par des pompes à chaleur avant la prochaine échéance
+W: Une ventilation naturelle sans ventilateur
+W: Une visite quotidienne d'un frigoriste
+E: Le système enregistre les consommations par zone, les compare et signale les dérives, en communiquant avec les équipements par des protocoles ouverts. Le seuil s'abaisse à 70 kW pour une seconde échéance.
+
+@095
+Q: Un compresseur scroll triphasé neuf démarre, très bruyant, et HP et BP restent presque égales. Quelle est la cause ?
+C: Le sens de rotation est inversé : il faut permuter deux phases
+W: Il manque de l'huile dans le carter
+W: Le détendeur est bloqué fermé
+W: Le fluide est trop froid pour être comprimé
+E: Un scroll ne comprime que dans un sens ; à l'envers, il chauffe, fait du bruit et s'abîme vite. Un contrôleur d'ordre des phases sur l'armoire évite le problème après une intervention sur l'alimentation.
+
+@096
+Q: En chauffage, l'unité extérieure d'une PAC air/eau se couvre d'une glace qui ne disparaît plus malgré les dégivrages. Quelles pistes suivre ?
+C: Sonde de dégivrage défaillante ou mal placée, vanne 4 voies qui ne bascule pas, ou manque de fluide
+W: Un circulateur de chauffage réglé en vitesse maximale
+W: Un vase d'expansion trop gonflé
+W: Un débit d'air trop fort sur l'unité extérieure, qui refroidit l'échangeur plus vite que les dégivrages ne le réchauffent
+E: Pendant un dégivrage, l'échangeur extérieur doit chauffer franchement. On compare la résistance de la sonde à sa table, on vérifie que l'évacuation des condensats n'a pas gelé, et un manque de fluide fait évaporer trop froid.
+
+@097
+Q: Un compresseur aspire à 6 bar absolus et refoule à 24 bar absolus. Quel est son taux de compression ?
+N: 4
+E: Taux = HP absolue / BP absolue = 24 / 6 = 4. Calculé en relatif (23 / 5), on trouverait 4,6 : erreur classique. Un taux élevé réduit le rendement volumétrique et fait chauffer le refoulement ; au-delà d'environ 8 à 10, on passe à la compression bi-étagée.
+
+@098
+Q: La température de refoulement d'un compresseur dépasse 120 °C. Que craindre et que soupçonner ?
+C: Une huile dégradée ; causes : forte surchauffe, taux de compression élevé ou manque de fluide
+W: Aucun risque, cette température est sans importance
+W: Seulement la brûlure du technicien ; la cause habituelle est un condenseur surdimensionné qui refroidit trop le gaz
+W: Un coup de liquide dû à une surcharge
+E: Au-delà de 120 à 135 °C sur la tuyauterie de refoulement, l'huile se dégrade et forme des dépôts. On mesure à une quinzaine de centimètres de la sortie du compresseur. En basse température, une injection de liquide ou de vapeur limite cette valeur.
+
+@099
+Q: Un contrôle d'étanchéité révèle une fuite. Que prévoit la réglementation ?
+C: Réparer sans délai, puis refaire un contrôle d'étanchéité dans le mois qui suit
+W: Compléter la charge et attendre le prochain contrôle périodique
+W: Déclarer la fuite et attendre l'accord de la préfecture avant d'intervenir
+W: Arrêter définitivement l'équipement et le démanteler sous huit jours
+E: Recharger un équipement qui fuit sans le réparer est interdit. La fuite, la réparation, les quantités ajoutées et le contrôle de vérification figurent sur les fiches d'intervention que le détenteur conserve.
+
+@100
+Q: Remettre dans l'ordre le diagnostic d'une installation qui ne refroidit plus assez.
+O: Vérifier l'alimentation, les consignes et les alarmes du régulateur
+O: Contrôler les filtres à air et les ventilateurs des deux échangeurs
+O: Relever HP, BP, températures d'air et températures des tubes
+O: Calculer surchauffe et sous-refroidissement et les comparer aux valeurs attendues
+O: Conclure sur la cause avant d'ajouter ou de retirer du fluide
+E: Beaucoup de pannes de froid viennent d'un filtre, d'un ventilateur ou d'une consigne. Les manomètres ne se branchent qu'ensuite : chaque raccordement libère un peu de fluide et peut introduire de l'air.

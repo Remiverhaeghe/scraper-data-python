@@ -5,6 +5,15 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision froid et génie climatique
+- Lot de 100 questions dont 29 interactives (associations, remises en ordre,
+  calculs) : cycle frigorifique, surchauffe et sous-refroidissement, détendeurs
+  et compresseurs, fluides (PRP, classes de sécurité, R32, R290, CO2),
+  règlement F-Gas et contrôles d'étanchéité, mise en service et tirage au vide,
+  récupération, diagnostic, froid commercial, centrales de traitement d'air,
+  hydraulique, régulation et GTB
+- Deux schémas : cycle frigorifique, mise en service d'un climatiseur split
+
 ### Révision virtualisation
 - Lot de 100 questions dont 30 interactives (associations, remises en ordre,
   calculs, commandes à compléter) : hyperviseurs, VMware vSphere (vMotion, DRS,
