@@ -1,0 +1,435 @@
+@001
+Q: Qu'est-ce qu'une installation Server Core de Windows Server ?
+C: Une installation sans bureau graphique, administrée en ligne de commande ou à distance
+W: Une version gratuite limitée à un seul rôle, réservée aux tests
+W: L'édition qui contient tous les rôles, au contraire de l'édition Standard dont plusieurs rôles sont retirés
+W: Le noyau seul, sans réseau ni pilotes, destiné aux conteneurs
+E: Server Core réduit la surface d'attaque, le nombre de mises à jour et la mémoire consommée. On l'administre avec sconfig, PowerShell, Windows Admin Center ou les consoles RSAT d'un poste. Depuis Windows Server 2016, on ne passe plus de Core à l'expérience bureau sans réinstaller.
+
+@002
+Q: Quelle différence de licence sépare principalement Windows Server Standard et Datacenter ?
+C: Datacenter couvre un nombre illimité de VM Windows Server sur l'hôte, Standard deux
+W: Standard ne peut pas devenir contrôleur de domaine
+W: Datacenter est réservé aux serveurs de plus de 64 cœurs
+W: Standard n'accepte pas les scripts PowerShell signés par un tiers ni les modules de la galerie
+E: Les deux éditions se licencient par cœur physique, 16 cœurs au minimum par serveur. Standard donne droit à deux machines virtuelles Windows Server par licence complète, Datacenter à un nombre illimité, avec en plus Storage Spaces Direct ou les VM blindées. Au-delà d'une dizaine de VM par hôte, Datacenter devient généralement rentable.
+
+@003
+Q: Dans le Gestionnaire de serveur, quelle est la différence entre un rôle et une fonctionnalité ?
+C: Un rôle rend un service au réseau (DNS, DHCP, AD DS) ; une fonctionnalité outille le serveur lui-même
+W: Un rôle est payant, une fonctionnalité gratuite
+W: Une fonctionnalité ne s'installe qu'en PowerShell
+W: Un rôle s'applique à un utilisateur, une fonctionnalité à un ordinateur du domaine
+E: Exemples de fonctionnalités : BitLocker, le clustering de basculement, la sauvegarde Windows Server, les outils RSAT. Les deux s'installent de la même manière, par l'assistant ou par Install-WindowsFeature, qui accepte -IncludeManagementTools pour ajouter les consoles.
+
+@004
+Q: Compléter cette commande qui installe le rôle DHCP avec ses consoles d'administration.
+A: Install-WindowsFeature
+E: Get-WindowsFeature liste les noms exacts des rôles et indique ceux déjà installés. Sans -IncludeManagementTools, seul le service est ajouté : pratique sur un Server Core administré depuis un poste équipé de RSAT.
+```powershell
+____ -Name DHCP -IncludeManagementTools
+```
+
+@005
+Q: Comment se forme le nom d'une commande PowerShell (cmdlet) ?
+C: Un verbe approuvé, un tiret, puis un nom au singulier : Get-Service
+W: Un nom puis un verbe : Service-Get
+W: Un préfixe ps suivi du nom de l'outil
+W: Librement, la casse et l'ordre des mots étant choisis par l'auteur du module qui la publie
+E: Les verbes sont normalisés (Get, Set, New, Remove, Start, Stop…) et Get-Verb les liste. Cette régularité permet de deviner une commande : Get-Command -Noun Service affiche toutes celles qui agissent sur les services.
+
+@006
+Q: Quelle commande affiche des exemples d'utilisation de Get-Process ?
+C: Get-Help Get-Process -Examples
+W: Get-Process /?
+W: man Get-Process --sample
+W: Show-Command Get-Process -Usage, qui ouvre la documentation en ligne
+E: L'aide locale reste sommaire tant qu'on n'a pas lancé Update-Help depuis une console administrateur. -Online ouvre la page de documentation, -Full ajoute le détail des paramètres. Les alias man et help existent mais renvoient à la même aide.
+
+@007
+Q: Qu'est-ce qui circule dans le pipeline PowerShell entre deux commandes ?
+C: Des objets .NET, avec leurs propriétés et méthodes
+W: Du texte, découpé en colonnes par des espaces ou des tabulations
+W: Des fichiers temporaires
+W: Des lignes JSON
+E: C'est la grande différence avec bash. Get-Service | Where-Object Status -eq Running filtre sur une vraie propriété, sans découper du texte. Get-Member montre les propriétés et méthodes disponibles d'un objet reçu.
+
+@008
+Q: Quel est le rôle d'un contrôleur de domaine Active Directory ?
+C: Héberger une copie de l'annuaire et authentifier les comptes du domaine
+W: Distribuer les adresses IP aux postes
+W: Stocker les profils itinérants des utilisateurs
+W: Servir de passerelle Internet aux postes du domaine et filtrer les flux entrants et sortants
+E: Chaque contrôleur de domaine porte une copie de la base NTDS.dit, répliquée avec les autres. On en prévoit au moins deux par domaine : si l'unique contrôleur tombe, plus personne ne peut ouvrir de session réseau ni accéder aux ressources protégées.
+
+@009
+Q: Associer chaque objet Active Directory à sa définition.
+P: Forêt => Limite de sécurité, ensemble de domaines partageant un schéma
+P: Domaine => Limite d'administration et de réplication des comptes
+P: Unité d'organisation => Conteneur pour déléguer et appliquer des GPO
+P: Site => Groupe de sous-réseaux bien reliés, pour la réplication et l'authentification
+P: Groupe => Ensemble de comptes auxquels on donne des droits
+E: La forêt est la vraie frontière de sécurité, pas le domaine : un administrateur du domaine racine peut prendre la main sur toute la forêt. Les OU suivent l'organisation de l'administration (qui gère quoi), les sites suivent le réseau physique.
+
+@010
+Q: Pourquoi les postes d'un domaine doivent-ils utiliser les serveurs DNS du domaine plutôt que celui de la box ou de Google ?
+C: Ils trouvent les contrôleurs de domaine grâce aux enregistrements SRV de la zone AD
+W: Le DNS public ignore les noms courts, ce qui empêche toute ouverture de session sur un poste Windows
+W: Le DNS du domaine est plus rapide pour Internet
+W: Pour chiffrer les requêtes
+E: Un poste configuré avec 8.8.8.8 ne trouve pas _ldap._tcp.dc._msdcs.<domaine> : jonction impossible, ouvertures de session lentes, GPO non appliquées. Les DNS du domaine résolvent Internet eux-mêmes ou par des redirecteurs.
+
+@011
+Q: Remettre dans l'ordre l'échange entre un poste et un serveur DHCP.
+O: DHCPDISCOVER : le poste cherche un serveur par diffusion
+O: DHCPOFFER : le serveur propose une adresse
+O: DHCPREQUEST : le poste demande l'adresse proposée
+O: DHCPACK : le serveur confirme et fixe la durée du bail
+E: On retient DORA. Le poste renouvelle son bail à 50 % de sa durée, directement auprès du serveur. Si le serveur est sur un autre sous-réseau, le routeur doit relayer la diffusion (ip helper-address) vers lui.
+
+@012
+Q: Un poste affiche l'adresse 169.254.12.40. Qu'en conclure ?
+C: Il n'a obtenu aucune réponse d'un serveur DHCP
+W: Il a reçu une adresse publique
+W: Son adresse est fixée à la main par un administrateur
+W: Il est connecté au VPN de l'entreprise, qui lui attribue une adresse de cette plage réservée
+E: La plage 169.254.0.0/16 (APIPA) est auto-attribuée quand le DHCP ne répond pas. Pistes : câble ou VLAN, relais DHCP absent, étendue pleine, service arrêté ou serveur non autorisé dans AD. ipconfig /renew relance la demande.
+
+@013
+Q: Un dossier partagé donne « Contrôle total » à Tout le monde au niveau du partage et « Lecture » à un utilisateur en NTFS. Que peut faire cet utilisateur à travers le réseau ?
+C: Seulement lire
+W: Tout, le partage l'emporte
+W: Rien, les deux droits se contredisent
+W: Lire et modifier, car les droits du partage et de NTFS s'additionnent pour un même compte
+E: À travers le réseau, le droit effectif est le plus restrictif des deux couches. Pratique courante : partage en contrôle total pour les utilisateurs authentifiés, et réglage fin uniquement en NTFS. L'onglet Sécurité, « Accès effectif », permet de vérifier.
+
+@014
+Q: Un utilisateur est membre de deux groupes : l'un a « Modification » sur un dossier, l'autre un refus explicite d'écriture. Quel est le résultat ?
+C: L'écriture est refusée
+W: L'écriture est autorisée, car Modification inclut l'écriture
+W: Le premier groupe ajouté l'emporte
+W: Windows demande à l'utilisateur de choisir
+E: Les autorisations des groupes s'additionnent, sauf un refus explicite qui l'emporte sur une autorisation de même niveau. Un refus hérité cède cependant devant une autorisation explicite posée sur l'objet. On évite les refus : ils compliquent le diagnostic.
+
+@015
+Q: Qu'est-ce qu'une stratégie de groupe (GPO) ?
+C: Un ensemble de paramètres appliqué aux utilisateurs ou ordinateurs d'un site, domaine ou OU
+W: Un groupe de sécurité qui contient des stratégies
+W: Un script lancé une fois à l'installation de Windows
+W: La liste des mots de passe autorisés dans le domaine, stockée en clair sur chaque poste client
+E: Une GPO a une partie Ordinateur, appliquée au démarrage puis toutes les 90 minutes environ, et une partie Utilisateur, appliquée à l'ouverture de session. Elle n'agit qu'une fois liée à un site, un domaine ou une OU ; les conteneurs par défaut Users et Computers ne peuvent pas recevoir de GPO.
+
+@016
+Q: Quelle commande force sur un poste l'application immédiate des stratégies de groupe ?
+C: gpupdate /force
+W: gpresult /r
+W: Restart-Service gpsvc
+W: Sync-ADObject
+E: gpupdate /force réapplique tous les paramètres, modifiés ou non. Certains réglages (installation de logiciel, redirection de dossiers) n'agissent qu'au redémarrage ou à la prochaine ouverture de session. gpresult /r affiche ensuite les GPO réellement appliquées.
+
+@017
+Q: Sur quel port TCP écoute par défaut le Bureau à distance (RDP) ?
+N: 3389
+E: RDP utilise TCP 3389, et UDP 3389 pour améliorer la fluidité. On ne l'expose jamais directement sur Internet : passerelle RD Gateway, VPN ou bastion avec authentification multifacteur. Les attaques par force brute sur ce port sont permanentes.
+
+@018
+Q: Associer chaque journal Windows à ce qu'on y trouve.
+P: Système => Pilotes, services qui démarrent ou échouent, arrêts inattendus
+P: Sécurité => Ouvertures de session, échecs et accès audités
+P: Application => Erreurs des logiciels installés
+P: Installation => Mises à jour et ajouts de rôles
+E: Le journal Sécurité n'enregistre que ce que la stratégie d'audit demande. Les journaux « Applications et services » (Microsoft > Windows > …) détaillent un composant précis : GroupPolicy, DNS Server, TerminalServices.
+
+@019
+Q: Que renvoie cette commande ?
+C: Les services à démarrage automatique qui sont arrêtés
+W: Tous les services arrêtés, quel que soit leur type de démarrage
+W: Les services automatiques, qu'ils tournent ou non
+W: Une erreur, car Where-Object n'accepte qu'une seule condition par bloc de script
+E: -and combine les deux conditions sur l'objet courant $_. Cette requête repère après un redémarrage les services qui auraient dû démarrer. Certains services automatiques s'arrêtent normalement après leur travail (démarrage déclenché) : le résultat demande un tri.
+```powershell
+Get-Service | Where-Object { $_.StartType -eq 'Automatic' -and $_.Status -eq 'Stopped' }
+```
+
+@020
+Q: À quoi sert WSUS dans un parc Windows ?
+C: Approuver et distribuer les mises à jour Microsoft depuis un serveur interne
+W: Sauvegarder les serveurs chaque nuit
+W: Superviser l'espace disque des postes
+W: Déployer des images Windows complètes par le réseau sur des postes neufs, au démarrage PXE
+E: Les postes, pointés par GPO vers le serveur WSUS, n'installent que les mises à jour approuvées : on teste sur un groupe pilote avant le reste du parc. Microsoft a annoncé en 2024 la dépréciation de WSUS au profit de solutions cloud (Windows Update for Business, Azure Update Manager), mais il reste très présent.
+
+@021
+Q: Sur un Server Core, quel outil propose un menu texte pour nommer le serveur, régler l'IP et joindre un domaine ?
+C: sconfig
+W: msconfig
+W: diskpart
+W: regedit
+E: sconfig s'ouvre par défaut à la connexion depuis Windows Server 2022. Rename-Computer, New-NetIPAddress et Add-Computer font la même chose en PowerShell, ce qui s'automatise.
+
+@022
+Q: Qu'est-ce que Windows Admin Center ?
+C: Une console web gratuite pour administrer des serveurs à distance
+W: L'ancien nom du Gestionnaire de serveur
+W: Un service payant d'Azure obligatoire pour Server Core
+W: Une console installée sur chaque contrôleur de domaine pour gérer uniquement les comptes et les groupes
+E: Installé sur un poste ou une passerelle, il pilote serveurs, clusters et Hyper-V depuis le navigateur, en s'appuyant sur PowerShell et WinRM. Il remplace bien des consoles MMC, surtout pour Server Core.
+
+@023
+Q: Quelle différence entre un groupe de sécurité et un groupe de distribution dans Active Directory ?
+C: Seul le groupe de sécurité peut recevoir des autorisations
+W: Le groupe de distribution ne contient que des ordinateurs
+W: Le groupe de sécurité ne peut pas avoir d'adresse e-mail
+W: Aucune, les deux noms désignent le même type de groupe selon la version de la console
+E: Le groupe de distribution sert aux listes de diffusion Exchange. Un groupe de sécurité porte un SID et apparaît dans le jeton de l'utilisateur : c'est ce qui lui permet de figurer dans les ACL. On peut convertir l'un en l'autre.
+
+@024
+Q: Que fait cette commande ?
+C: Elle affiche le compte jdupont avec sa date de dernière connexion et son état
+W: Elle crée le compte jdupont
+W: Elle déverrouille le compte jdupont
+W: Elle liste tous les comptes dont le nom contient jdupont, dans toute la forêt et ses domaines approuvés
+E: -Identity accepte le sAMAccountName, le DN, le GUID ou le SID. Par défaut, Get-ADUser ne renvoie qu'une dizaine de propriétés : -Properties en ajoute. LastLogonDate s'appuie sur lastLogonTimestamp, répliqué avec un retard pouvant aller jusqu'à 14 jours.
+```powershell
+Get-ADUser -Identity jdupont -Properties LastLogonDate, LockedOut
+```
+
+@025
+Q: Compléter cette commande qui déverrouille un compte bloqué après trop d'erreurs de mot de passe.
+A: Unlock-ADAccount
+E: Le verrouillage revient si la cause reste : session ouverte ailleurs avec l'ancien mot de passe, lecteur réseau ou tâche planifiée mémorisée, téléphone qui synchronise la messagerie. L'événement 4740 sur l'émulateur PDC indique le poste d'origine.
+```powershell
+____ -Identity jdupont
+```
+
+@026
+Q: Associer chaque rôle FSMO à sa mission.
+P: Maître de schéma => Seul à pouvoir modifier le schéma de la forêt
+P: Maître d'attribution de noms de domaine => Ajout et suppression de domaines dans la forêt
+P: Émulateur PDC => Heure de référence, changements de mot de passe, verrouillages
+P: Maître RID => Distribue des blocs d'identifiants aux contrôleurs pour créer des objets
+P: Maître d'infrastructure => Met à jour les références vers les objets d'autres domaines
+E: Les deux premiers sont uniques dans la forêt, les trois autres uniques par domaine. netdom query fsmo, Get-ADDomain et Get-ADForest indiquent qui les détient. L'émulateur PDC est celui dont la panne se remarque le plus vite.
+
+@027
+Q: Sur quel serveur d'une forêt lance-t-on cette commande qui fixe une source de temps externe ?
+C: L'émulateur PDC du domaine racine de la forêt
+W: Chaque poste client, pour qu'il interroge directement pool.ntp.org sans passer par les contrôleurs
+W: Le maître de schéma
+W: Tous les contrôleurs de domaine, chacun avec sa propre source NTP
+E: Les postes se calent sur leur contrôleur, les contrôleurs sur le PDC de leur domaine, et le PDC racine sur la source externe : c'est la hiérarchie que Kerberos attend. Sur une VM, on désactive pour ce contrôleur la synchronisation de l'heure par l'hyperviseur, sinon elle reprend la main.
+```powershell
+w32tm /config /manualpeerlist:"pool.ntp.org" /syncfromflags:manual /reliable:yes /update
+```
+
+@028
+Q: Quel écart d'horloge maximal, en minutes, Kerberos tolère-t-il par défaut entre un poste et le contrôleur de domaine ?
+N: 5
+U: min
+E: Au-delà, l'authentification échoue (erreur KRB_AP_ERR_SKEW) et le poste se replie parfois sur NTLM ou refuse l'accès. w32tm /query /status et w32tm /stripchart /computer:<contrôleur> mesurent l'écart.
+
+@029
+Q: Remettre dans l'ordre les échanges Kerberos quand un utilisateur ouvre un partage de fichiers.
+O: Demande d'un ticket d'authentification (TGT) au KDC, à l'ouverture de session
+O: Réception du TGT, chiffré avec la clé du compte krbtgt
+O: Présentation du TGT pour demander un ticket de service au nom du serveur de fichiers
+O: Réception du ticket de service, chiffré avec la clé du compte du serveur
+O: Envoi du ticket de service au serveur de fichiers, qui le vérifie seul
+E: Le serveur de fichiers n'interroge pas le contrôleur : il déchiffre le ticket avec sa propre clé. klist affiche les tickets en cache sur le poste, klist purge les vide pour forcer une nouvelle demande.
+
+@030
+Q: Kerberos chiffre le ticket de service avec la clé du compte qui porte le SPN demandé. Que se passe-t-il si deux comptes portent le même SPN ?
+C: Le KDC ne sait pas quel compte choisir et l'authentification Kerberos échoue
+W: Le premier compte créé est utilisé
+W: Les deux comptes reçoivent le ticket
+W: Rien, un SPN peut être partagé librement entre plusieurs comptes d'un même domaine
+E: Le contrôleur journalise l'événement KDC 11 et le client échoue ou se replie sur NTLM. setspn -X liste les doublons du domaine, setspn -L <compte> les SPN d'un compte. Cas classique : un service SQL Server passé d'un compte local à un compte de domaine.
+
+@031
+Q: Un utilisateur vient d'être ajouté à un groupe qui donne accès à un partage, mais l'accès reste refusé. Quelle explication est la plus probable ?
+C: Son ticket Kerberos, émis avant l'ajout, ne contient pas encore le nouveau groupe
+W: Le partage doit être recréé
+W: Les autorisations NTFS ne s'appliquent qu'après un redémarrage du serveur de fichiers et de ses services
+W: Le groupe ne fonctionne qu'au bout de 24 heures
+E: Les groupes sont inscrits dans le TGT à l'ouverture de session. Il faut fermer puis rouvrir la session, ou purger les tickets avec klist purge ; la réplication entre contrôleurs de sites différents peut ajouter un délai.
+
+@032
+Q: Remettre dans l'ordre d'application les stratégies de groupe reçues par un ordinateur.
+O: Stratégie locale de l'ordinateur
+O: GPO liées au site
+O: GPO liées au domaine
+O: GPO liées à l'OU parente
+O: GPO liées à l'OU qui contient l'ordinateur
+E: On retient LSDOU. En cas de conflit, le dernier appliqué gagne : l'OU la plus proche de l'objet l'emporte sur le domaine. Plusieurs GPO liées au même conteneur s'appliquent selon leur ordre de liaison, la numéro 1 en dernier, donc prioritaire.
+
+@033
+Q: Une GPO liée au domaine est marquée « Appliquée » (Enforced) et une OU a « Bloquer l'héritage ». Que reçoit un ordinateur de cette OU ?
+C: La GPO du domaine s'applique quand même, et l'emporte sur celles de l'OU
+W: Rien du domaine, le blocage d'héritage l'emporte toujours
+W: La GPO du domaine, mais l'OU garde la priorité en cas de conflit
+W: Une erreur de traitement, qui suspend l'application de toutes les GPO jusqu'à correction par un administrateur
+E: Enforced passe au-dessus du blocage d'héritage et inverse la priorité : le paramètre imposé par le domaine ne peut plus être contredit plus bas. Ces deux options compliquent la lecture ; on les réserve à quelques règles de sécurité.
+
+@034
+Q: Une GPO liée à la bonne OU ne s'applique pas à un poste. Quelle commande montre si elle a été refusée et pourquoi (filtrage, WMI, lien désactivé) ?
+C: gpresult /h rapport.html
+W: gpupdate /force
+W: Get-GPO -All
+W: repadmin /showrepl
+E: Le rapport HTML liste les GPO appliquées et refusées, avec le motif (« Refusé (sécurité) », « Filtre WMI faux », « Vide »). Lancé dans une console administrateur, il couvre la partie ordinateur. Get-GPResultantSetOfPolicy produit le même rapport pour une machine distante.
+
+@035
+Q: Depuis le correctif MS16-072, quelle précaution prendre quand on retire « Utilisateurs authentifiés » du filtrage de sécurité d'une GPO utilisateur ?
+C: Laisser à « Ordinateurs du domaine » le droit de lecture, sinon la GPO n'est plus lue
+W: Ajouter le groupe Administrateurs en refus
+W: Réactiver NTLM sur le domaine
+W: Lier aussi la GPO à la racine de chaque domaine de la forêt, pour que les postes la retrouvent
+E: Depuis ce correctif, le poste lit les GPO avec son compte d'ordinateur, même pour la partie utilisateur. Le filtrage se règle en donnant « Appliquer la stratégie » au groupe ciblé et « Lire » seul aux ordinateurs du domaine.
+
+@036
+Q: Quelle méthode recommande Microsoft pour donner l'accès à un dossier dans un domaine ?
+C: Comptes dans un groupe global métier, membre d'un groupe local de domaine qui reçoit l'autorisation
+W: Autorisations données directement à chaque compte utilisateur
+W: Un groupe universel par dossier, contenant tous les comptes de la forêt
+W: Les comptes ajoutés au groupe Administrateurs du serveur de fichiers
+E: C'est AGDLP (Account, Global, Domain Local, Permission). Le groupe global dit qui sont les gens (Comptabilité), le groupe local de domaine dit quel accès (DL_Compta_Lecture). Un nouvel arrivant se gère en un seul ajout, et l'audit des accès reste lisible.
+
+@037
+Q: Associer chaque étendue de groupe à ses règles.
+P: Global => Membres du même domaine, utilisable dans toute la forêt
+P: Local de domaine => Membres de toute la forêt, utilisable dans son seul domaine
+P: Universel => Membres de toute la forêt, utilisable partout, répliqué au catalogue global
+P: Local d'un serveur => Défini sur une machine, sans existence dans l'annuaire
+E: Les groupes universels sont stockés avec leurs membres dans le catalogue global : on y met des groupes globaux plutôt que des comptes, pour limiter la réplication. Dans un domaine unique, les différences se voient moins mais AGDLP garde son intérêt.
+
+@038
+Q: À quoi servent les sites Active Directory ?
+C: Indiquer quels contrôleurs sont proches de quels sous-réseaux, pour l'authentification et la réplication
+W: Héberger les sites web de l'intranet
+W: Séparer les domaines d'une forêt
+W: Définir les fuseaux horaires et les plages d'ouverture de session des utilisateurs de chaque agence
+E: Un poste s'authentifie auprès d'un contrôleur de son site, trouvé d'après son sous-réseau. Entre sites, la réplication suit les liens de sites et leur planification, compressée. Un sous-réseau oublié envoie des postes s'authentifier à l'autre bout du pays.
+
+@039
+Q: Quelle commande donne une synthèse de l'état de réplication de tous les contrôleurs de domaine ?
+C: repadmin /replsummary
+W: dcdiag /fix
+W: nltest /dsgetdc
+W: Get-ADReplicationSite
+E: /replsummary donne pour chaque contrôleur le plus long délai depuis la dernière réplication réussie et le nombre d'échecs. /showrepl détaille un contrôleur, /syncall /AdeP force une synchronisation. dcdiag teste le reste : DNS, services, SYSVOL.
+
+@040
+Q: Compléter cette commande qui teste en détail la configuration DNS d'un contrôleur de domaine.
+A: dcdiag
+E: Le test DNS vérifie la délégation, les redirecteurs, l'inscription dynamique et les enregistrements du contrôleur. La plupart des pannes AD commencent par un problème de DNS : enregistrement SRV manquant, carte réseau qui pointe vers un DNS externe.
+```powershell
+____ /test:dns /v
+```
+
+@041
+Q: Qu'est-ce que le partage SYSVOL d'un contrôleur de domaine ?
+C: Le dossier répliqué qui contient les fichiers des GPO et les scripts d'ouverture de session
+W: La base de données des comptes
+W: Le journal des transactions de l'annuaire
+W: Le partage où chaque utilisateur range ses documents, accessible depuis tous les postes du domaine
+E: La partie « annuaire » d'une GPO est répliquée avec AD, ses fichiers avec SYSVOL, par DFSR. Si les deux divergent, la GPO s'applique mal. La migration de FRS vers DFSR est obligatoire avant d'ajouter un contrôleur Windows Server 2019 ou plus récent.
+
+@042
+Q: Que produit ce pipeline ?
+C: Les cinq processus qui consomment le plus de mémoire, avec leur nom et leur mémoire en Mo
+W: Les cinq premiers processus par ordre alphabétique
+W: Les cinq processus les plus anciens
+W: Une erreur, car l'expression calculée est mal formée
+E: Sort-Object -Descending trie du plus grand au plus petit, Select-Object -First 5 garde le début. La table @{Name=…; Expression=…} crée une propriété calculée : WorkingSet est en octets, la division par 1MB donne des mégaoctets.
+```powershell
+Get-Process | Sort-Object WorkingSet -Descending |
+    Select-Object -First 5 Name, @{Name='Mo'; Expression={ [math]::Round($_.WorkingSet / 1MB) }}
+```
+
+@043
+Q: Pourquoi préférer la première de ces deux commandes, qui donnent le même résultat ?
+C: Le filtre est exécuté par le contrôleur, qui ne renvoie que les comptes utiles
+W: Where-Object ne sait pas comparer des chaînes
+W: -Filter * est interdit hors des contrôleurs de domaine
+W: La première cherche dans l'OU courante seulement, ce qui réduit le risque de modifier un autre service
+E: Règle « filtrer à gauche » : sur un annuaire de 20 000 comptes, la seconde forme rapatrie tout puis trie sur le poste. Même logique pour Get-WinEvent -FilterHashtable plutôt qu'un Where-Object après coup.
+```powershell
+Get-ADUser -Filter "Department -eq 'Compta'" -Properties Department
+Get-ADUser -Filter * -Properties Department | Where-Object Department -eq 'Compta'
+```
+
+@044
+Q: Que garantit le réglage appliqué par cette commande ?
+C: Les scripts téléchargés doivent être signés ; ceux écrits localement s'exécutent
+W: Aucun script ne peut s'exécuter
+W: Seuls les scripts signés par Microsoft s'exécutent
+W: Les scripts sont toujours exécutés à distance, sur un serveur de confiance désigné par GPO
+E: C'est la valeur par défaut sur Windows Server. La stratégie d'exécution n'est pas une barrière de sécurité : powershell -ExecutionPolicy Bypass la contourne. Elle évite surtout de lancer par erreur un script récupéré sur Internet, repéré par sa marque Zone.Identifier.
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope LocalMachine
+```
+
+@045
+Q: Sur quel port TCP écoute WinRM en HTTP pour la communication à distance PowerShell ?
+N: 5985
+E: Le port 5986 sert à WinRM en HTTPS. Même en HTTP, dans un domaine, le contenu est chiffré grâce à Kerberos. Enable-PSRemoting active le service et la règle de pare-feu ; la communication à distance est active par défaut sur Windows Server.
+
+@046
+Q: Que fait cette commande ?
+C: Elle exécute le bloc en parallèle sur les trois serveurs et renvoie les résultats, marqués du nom de chaque machine
+W: Elle ouvre trois sessions interactives successives
+W: Elle copie le bloc sur chacun des trois serveurs et l'inscrit comme tâche planifiée, lancée au prochain redémarrage
+W: Elle n'agit que sur SRV01, les autres noms étant ignorés
+E: Invoke-Command lance le bloc sur 32 machines à la fois par défaut (-ThrottleLimit). Les objets reviennent désérialisés, avec la propriété PSComputerName : on peut les trier ou les exporter, mais plus appeler leurs méthodes. Enter-PSSession sert à l'interactif sur une seule machine.
+```powershell
+Invoke-Command -ComputerName SRV01, SRV02, SRV03 -ScriptBlock {
+    Get-Volume -DriveLetter C | Select-Object SizeRemaining
+}
+```
+
+@047
+Q: Dans cette session ouverte sur SRV01, la seconde commande renvoie « Accès refusé ». Quelle est la cause habituelle ?
+C: Le double saut : SRV01 ne peut pas réutiliser vos identifiants pour aller sur SRV02
+W: Le partage n'existe pas
+W: PowerShell distant ne gère pas les chemins UNC
+W: Le pare-feu de votre poste bloque les connexions SMB sortantes vers SRV02 depuis la session
+E: Avec Kerberos, vos identifiants ne sont pas délégués au premier serveur. Solutions : délégation contrainte basée sur les ressources (RBCD) de SRV01 vers SRV02, ou -Credential passé explicitement. CredSSP résout aussi le problème mais laisse le mot de passe sur SRV01 : à éviter.
+```powershell
+Enter-PSSession -ComputerName SRV01
+Get-ChildItem \\SRV02\partage
+```
+
+@048
+Q: Pourquoi le bloc catch de ce script n'est-il jamais exécuté quand le fichier n'existe pas ?
+C: Get-Item émet une erreur non bloquante ; il faut -ErrorAction Stop pour l'intercepter
+W: catch n'intercepte que les exceptions levées par les méthodes .NET, jamais celles des cmdlets
+W: Write-Warning masque l'erreur
+W: Le chemin doit être entre guillemets doubles pour que l'erreur remonte au bloc catch
+E: La plupart des cmdlets continuent après une erreur non bloquante, sans passer par catch. -ErrorAction Stop sur la commande, ou $ErrorActionPreference = 'Stop' en tête de script, change ce comportement. $_.Exception.Message donne le texte de l'erreur dans le catch.
+```powershell
+try {
+    Get-Item 'D:\Export\rapport.csv'
+}
+catch {
+    Write-Warning "Fichier absent"
+}
+```
+
+@049
+Q: Compléter ce script qui exporte les comptes désactivés dans un fichier lisible par Excel.
+A: Export-Csv
+E: -NoTypeInformation retire la ligne #TYPE ajoutée par Windows PowerShell 5.1 (PowerShell 7 ne l'écrit plus). Avec un Excel français, -Delimiter ';' évite que tout tienne dans une seule colonne, et -Encoding UTF8 garde les accents.
+```powershell
+Search-ADAccount -AccountDisabled -UsersOnly |
+    Select-Object Name, SamAccountName, DistinguishedName |
+    ____ -Path C:\Export\desactives.csv -NoTypeInformation -Delimiter ';' -Encoding UTF8
+```
+
+@050
+Q: Associer chaque identifiant d'événement du journal Sécurité à sa signification.
+P: 4624 => Ouverture de session réussie
+P: 4625 => Échec d'ouverture de session
+P: 4740 => Compte verrouillé
+P: 4720 => Compte utilisateur créé
+P: 4728 => Membre ajouté à un groupe global de sécurité
+E: Ces identifiants servent aux requêtes, aux alertes et aux règles d'un SIEM. Le type d'ouverture de session (2 interactive, 3 réseau, 10 bureau à distance) précise le contexte d'un 4624 ou d'un 4625.

@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision Windows Server et PowerShell
+- Lot de 100 questions dont 29 interactives (associations, remises en ordre,
+  calculs, code à compléter) : Server Core et rôles, PowerShell (pipeline,
+  filtrage, communication à distance, erreurs), Active Directory (FSMO, sites,
+  réplication, corbeille, restauration), GPO, DNS, DHCP, partages et NTFS, DFS,
+  Storage Spaces, gMSA, JEA, LAPS, tiering et attaques Kerberos
+- Deux schémas : échanges Kerberos, ordre d'application des GPO
+
 ### Révision HTML, CSS et accessibilité
 - Lot de 100 questions dont 34 interactives (associations, remises en ordre,
   calculs, code à compléter) : HTML sémantique, formulaires, modèle de boîte,

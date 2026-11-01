@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110105,
+  "skills": ["Windows Server", "PowerShell", "Active Directory"],
+  "schemas": [
+    {
+      "name": "windows-server-kerberos.svg",
+      "questions": ["029", "030", "031"],
+      "diagram": {
+        "title": "Kerberos : accès d'un utilisateur à un partage",
+        "nodes": [
+          "Ouverture de session : demande du TGT",
+          "Le KDC renvoie le TGT (clé krbtgt)",
+          "Le poste présente le TGT pour un SPN",
+          "Ticket de service (clé du serveur)",
+          "Le serveur vérifie seul le ticket"
+        ],
+        "note": "Les groupes de l'utilisateur sont figés dans le TGT"
+      }
+    },
+    {
+      "name": "windows-server-gpo.svg",
+      "questions": ["032", "033", "034"],
+      "diagram": {
+        "title": "Ordre d'application des stratégies de groupe",
+        "nodes": [
+          "Stratégie locale",
+          "GPO du site",
+          "GPO du domaine",
+          "GPO des OU parentes",
+          "GPO de l'OU de l'objet"
+        ],
+        "note": "La dernière appliquée l'emporte, sauf GPO « Appliquée »"
+      }
+    }
+  ]
+}

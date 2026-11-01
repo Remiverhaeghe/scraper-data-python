@@ -1,0 +1,409 @@
+@051
+Q: Que renvoie cette commande lancée sur l'émulateur PDC ?
+C: Les verrouillages de compte des dernières 24 heures, avec le poste à l'origine
+W: Tous les événements de sécurité de la semaine
+W: Les ouvertures de session réussies de la veille
+W: Les comptes désactivés depuis la veille par un administrateur ou un script planifié
+E: -FilterHashtable filtre côté journal, bien plus vite qu'un Where-Object. Dans un 4740, le champ « Nom de l'ordinateur appelant » désigne la machine qui envoie le mauvais mot de passe ; reste à y chercher la session, le service ou la tâche en cause.
+```powershell
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Security'; Id = 4740; StartTime = (Get-Date).AddDays(-1)
+} | Select-Object TimeCreated, Message
+```
+
+@052
+Q: Quel mode du basculement DHCP de Windows Server partage les clients entre deux serveurs actifs ?
+C: L'équilibrage de charge (load balance)
+W: La veille à chaud (hot standby)
+W: Le fractionnement 80/20 des étendues
+W: Le cluster de basculement à stockage partagé
+E: En équilibrage de charge, les deux serveurs répondent, à 50/50 par défaut, et chacun connaît tous les baux. La veille à chaud garde un serveur passif avec une réserve d'adresses (5 % par défaut), adaptée à un site distant. Le fractionnement 80/20 est l'ancienne méthode, sans réplication des baux.
+
+@053
+Q: Une étendue DHCP couvre 192.168.10.1 à 192.168.10.254 et exclut 192.168.10.1 à 192.168.10.20 pour les serveurs et imprimantes. Combien d'adresses reste-t-il à distribuer ?
+N: 234
+E: 254 adresses moins 20 exclues donnent 234. Les exclusions conviennent aux équipements à adresse fixe ; pour une imprimante qui doit rester en DHCP avec toujours la même adresse, on préfère une réservation sur son adresse MAC.
+
+@054
+Q: Associer chaque type d'enregistrement DNS à son rôle.
+P: A => Nom vers adresse IPv4
+P: PTR => Adresse IP vers nom, dans une zone inverse
+P: CNAME => Alias vers un autre nom
+P: SRV => Service, port et serveur, par exemple les contrôleurs LDAP
+P: MX => Serveur de messagerie d'un domaine
+E: AAAA est l'équivalent de A en IPv6. Une zone inverse manquante ne bloque pas AD mais rend nslookup bavard (« serveur inconnu ») et prive certains outils de noms lisibles.
+
+@055
+Q: Quel avantage apporte une zone DNS intégrée à Active Directory ?
+C: Elle est répliquée avec l'annuaire et accepte les mises à jour dynamiques sécurisées
+W: Elle n'a plus besoin de serveur DNS
+W: Elle devient résolvable depuis Internet sans délégation chez le bureau d'enregistrement du domaine
+W: Elle remplace le DHCP
+E: Plus de zone principale unique et de secondaires en lecture seule : chaque contrôleur DNS peut écrire. « Sécurisées seulement » réserve l'inscription aux machines du domaine, qui ne peuvent modifier que leurs propres enregistrements.
+
+@056
+Q: Compléter cette commande qui vérifie que le DNS publie les contrôleurs de domaine de corp.local.
+A: SRV
+E: Une réponse vide signale un problème d'inscription : service Netlogon à redémarrer (il réinscrit ses enregistrements), carte réseau du contrôleur qui ne pointe pas vers un DNS du domaine, zone _msdcs absente. Resolve-DnsName -Type SRV fait la même chose en PowerShell.
+```powershell
+nslookup -type=____ _ldap._tcp.dc._msdcs.corp.local
+```
+
+@057
+Q: Quel intérêt présente un espace de noms DFS (\\corp.local\partages) ?
+C: Les utilisateurs gardent le même chemin même si le serveur de fichiers change
+W: Il chiffre les fichiers partagés
+W: Il compresse les fichiers pour gagner de la place sur les disques des serveurs de fichiers
+W: Il remplace les autorisations NTFS
+E: Le chemin pointe vers des cibles qu'on déplace sans toucher aux raccourcis, scripts ou lecteurs mappés. Associé à la réplication DFS, il offre plusieurs cibles par dossier, le poste choisissant celle de son site.
+
+@058
+Q: Deux utilisateurs modifient le même fichier en même temps sur deux serveurs reliés par la réplication DFS. Que se passe-t-il ?
+C: La dernière écriture l'emporte, l'autre version part dans le dossier ConflictAndDeleted
+W: Les deux versions sont fusionnées
+W: Le second utilisateur reçoit un message de verrouillage
+W: La réplication s'arrête sur les deux serveurs jusqu'à ce qu'un administrateur choisisse la version à garder
+E: DFSR ne verrouille pas les fichiers entre serveurs. Pour des documents modifiés à plusieurs, on garde une seule cible active par dossier, les autres en secours. DFSR convient bien aux données surtout lues : logiciels, modèles, archives.
+
+@059
+Q: Un utilisateur a écrasé un fichier ce matin sur un partage. Quelle fonction lui permet de récupérer la version d'hier sans l'administrateur ?
+C: Les clichés instantanés (versions précédentes) du volume
+W: La corbeille du serveur
+W: La réplication DFS
+W: Le journal des modifications NTFS, consultable depuis l'Explorateur de fichiers du poste
+E: Les clichés instantanés (VSS) photographient le volume selon une planification, deux fois par jour par défaut ; clic droit, « Versions précédentes ». Ils ne remplacent pas une sauvegarde : ils sont sur le même disque et un rançongiciel commence souvent par les supprimer avec vssadmin.
+
+@060
+Q: Quel problème résout Windows LAPS ?
+C: Le même mot de passe administrateur local sur tous les postes
+W: L'oubli des mots de passe utilisateurs
+W: Le verrouillage des comptes de domaine
+W: La synchronisation de l'heure
+E: LAPS génère un mot de passe aléatoire par machine, le change régulièrement et le stocke dans AD (ou Entra ID), lisible seulement par les groupes autorisés. Sans lui, un mot de passe local récupéré sur un poste ouvre tout le parc par mouvement latéral. Il est intégré à Windows depuis avril 2023.
+
+@061
+Q: Compléter cette commande qui lit le mot de passe LAPS du poste PC042.
+A: Get-LapsADPassword
+E: -AsPlainText affiche le mot de passe en clair ; sans lui, il est renvoyé en SecureString. La lecture est journalisée si l'audit est activé : on doit pouvoir savoir qui a consulté quel mot de passe.
+```powershell
+____ -Identity PC042 -AsPlainText
+```
+
+@062
+Q: Un pool Storage Spaces compte quatre disques de 2 To. Quelle capacité utile offre un espace en miroir double (two-way mirror) qui les utilise tous ?
+N: 4
+U: To
+E: Le miroir double garde deux copies de chaque donnée : la moitié de la capacité brute est utilisable, soit 4 To sur 8. Le miroir triple n'en garde qu'un tiers mais supporte la perte de deux disques ; la parité est plus économe mais lente en écriture.
+
+@063
+Q: Pour quel usage choisir ReFS plutôt que NTFS sur Windows Server ?
+C: Les volumes de VM Hyper-V ou de sauvegarde, grâce au clonage de blocs et aux sommes de contrôle
+W: Le volume système C:, pour démarrer plus vite
+W: Les partages utilisateurs qui ont besoin des quotas de disque NTFS, du chiffrement EFS et des liens physiques
+W: Les clés USB
+E: ReFS détecte la corruption (et la répare avec Storage Spaces en miroir), accélère la création de disques VHDX fixes et la fusion des points de contrôle. Il ne démarre pas Windows et ne gère ni EFS ni les quotas de disque NTFS : NTFS reste le choix général.
+
+@064
+Q: Quel type de sauvegarde permet de reconstruire un serveur sur un disque vierge ?
+C: Une sauvegarde complète du système (bare metal recovery)
+W: Une sauvegarde de l'état du système seule
+W: Une copie du dossier C:\Windows et des profils des utilisateurs sur un partage réseau
+W: Un export du registre
+E: L'état du système (registre, AD, SYSVOL, fichiers de démarrage) suffit à restaurer l'annuaire d'un contrôleur, pas à remonter une machine morte. La sauvegarde complète se restaure en démarrant sur le support d'installation, option « Réparer l'ordinateur ».
+
+@065
+Q: Que change l'option « Énumération basée sur l'accès » d'un partage ?
+C: Les utilisateurs ne voient que les dossiers qu'ils ont le droit d'ouvrir
+W: Les fichiers sont listés par date d'accès
+W: Les dossiers sont chiffrés selon le profil de l'utilisateur
+W: Le partage n'apparaît plus dans le voisinage réseau, mais reste accessible par son chemin complet
+E: Sans elle, chacun voit tous les dossiers et reçoit « Accès refusé » en cliquant. Elle réduit les appels au support et évite de révéler des noms parlants (« Licenciements_2026 »), mais ne protège rien : les droits NTFS font le travail. Masquer un partage se fait autrement, par un $ à la fin de son nom.
+
+@066
+Q: Une OU entière a été supprimée par erreur. La corbeille Active Directory est activée. Que permet-elle ?
+C: Restaurer les objets avec leurs attributs et appartenances aux groupes, sans redémarrer de contrôleur
+W: Restaurer seulement les noms des comptes, sans mots de passe
+W: Rien, elle ne concerne que les fichiers SYSVOL
+W: Une restauration, à condition de remonter d'abord une sauvegarde de la veille sur l'émulateur PDC du domaine
+E: Sans la corbeille, un objet supprimé perd la plupart de ses attributs (tombstone) et seule une restauration faisant autorité depuis une sauvegarde le ramène complètement. On restaure d'abord l'OU, puis son contenu : Get-ADObject -IncludeDeletedObjects | Restore-ADObject. L'activation est irréversible.
+
+@067
+Q: Compléter cette commande qui active la corbeille Active Directory dans la forêt corp.local.
+A: Enable-ADOptionalFeature
+E: L'option se trouve aussi dans le Centre d'administration Active Directory. Seuls les objets supprimés après l'activation sont récupérables avec leurs attributs : on l'active dès la création de la forêt.
+```powershell
+____ -Identity 'Recycle Bin Feature' -Scope ForestOrConfigurationSet -Target corp.local
+```
+
+@068
+Q: Quelle est, en jours, la durée de vie par défaut des objets supprimés (tombstone lifetime) d'une forêt créée depuis Windows Server 2003 SP1 ?
+N: 180
+U: jours
+E: Un contrôleur resté hors ligne plus longtemps ne doit pas être reconnecté : il réintroduirait des objets supprimés (lingering objects). On le rétrograde de force et on nettoie ses métadonnées. Une sauvegarde plus ancienne que cette durée est inutilisable pour restaurer AD.
+
+@069
+Q: Un contrôleur de domaine virtuel a été restauré depuis une copie de son disque vieille d'une semaine, sur un hyperviseur sans VM-GenerationID. Quel risque ?
+C: Un retour arrière d'USN : ses partenaires ignorent ses nouvelles modifications
+W: Aucun, la réplication rattrape tout
+W: La perte des seules GPO modifiées pendant la semaine, les comptes étant répliqués à part
+W: Le changement de son nom de domaine
+E: Les partenaires croient avoir déjà reçu les changements portant ces numéros de séquence. Le contrôleur journalise l'événement 2095 et suspend la réplication. Depuis Windows Server 2012, VM-GenerationID permet au contrôleur de détecter la restauration et de se protéger, sur un hyperviseur compatible.
+
+@070
+Q: Le contrôleur qui détenait le rôle de maître RID est détruit et ne reviendra pas. Que faire ?
+C: Saisir le rôle sur un autre contrôleur, puis nettoyer les métadonnées de l'ancien
+W: Attendre que le rôle revienne seul au bout de 24 heures
+W: Réinstaller l'ancien serveur avec le même nom
+W: Transférer le rôle depuis l'ancien contrôleur avec Move-ADDirectoryServerOperationMasterRole, sans -Force
+E: Un transfert demande que l'ancien détenteur réponde ; la saisie (-Force) s'en passe. Un contrôleur dont on a saisi un rôle ne doit jamais revenir sur le réseau. Le nettoyage des métadonnées se fait en supprimant son objet dans « Sites et services » ou avec ntdsutil.
+
+@071
+Q: Pourquoi créer cette stratégie plutôt qu'une GPO liée à l'OU des administrateurs pour imposer 16 caractères à leurs comptes ?
+C: Une GPO liée à une OU ne règle que les comptes locaux des machines
+W: Les GPO ne gèrent pas la longueur des mots de passe
+W: La commande s'applique sans réplication, immédiatement sur tous les contrôleurs
+W: Une GPO liée à une OU l'emporterait sur la stratégie du domaine et affaiblirait les autres comptes
+E: La stratégie de mot de passe des comptes du domaine vient de la GPO liée au domaine. Une stratégie affinée (PSO) vise des groupes globaux ou des utilisateurs ; Add-ADFineGrainedPasswordPolicySubject la rattache, et Precedence départage un compte visé par plusieurs PSO, la plus petite valeur gagnant.
+```powershell
+New-ADFineGrainedPasswordPolicy -Name PSO-Admins -Precedence 10 `
+    -MinPasswordLength 16 -ComplexityEnabled $true -LockoutThreshold 5
+```
+
+@072
+Q: Quel avantage un compte de service géré de groupe (gMSA) apporte-t-il pour un service Windows ?
+C: Son mot de passe est changé automatiquement par AD et personne ne le connaît
+W: Il n'a besoin d'aucun droit sur le serveur
+W: Il peut ouvrir une session interactive sur tous les serveurs
+W: Il reste valable même si le domaine est supprimé, grâce à une copie locale chiffrée du secret
+E: Les serveurs autorisés récupèrent le mot de passe (240 octets, changé tous les 30 jours par défaut) auprès des contrôleurs. Fini le compte de service au mot de passe qui n'expire jamais, noté dans un tableur. Il demande une clé racine KDS (Add-KdsRootKey) créée une fois par forêt.
+
+@073
+Q: Compléter cette commande qui installe un compte gMSA créé auparavant sur le serveur où il va servir.
+A: Install-ADServiceAccount
+E: Le serveur doit figurer dans PrincipalsAllowedToRetrieveManagedPassword du compte, de préférence par un groupe. Test-ADServiceAccount vérifie ensuite qu'il récupère le mot de passe ; le service se configure avec le compte CORP\svc-app$ et un mot de passe vide.
+```powershell
+____ -Identity svc-app
+```
+
+@074
+Q: À quoi sert Just Enough Administration (JEA) ?
+C: Laisser un opérateur lancer quelques commandes précises à distance sans être administrateur
+W: Donner les droits administrateur pour une durée limitée
+W: Chiffrer les scripts PowerShell
+W: Déployer des scripts PowerShell sur des serveurs Linux
+E: Un point de terminaison PowerShell restreint expose une liste de cmdlets et paramètres autorisés (fichier de capacités de rôle .psrc), exécutés sous un compte virtuel privilégié. Exemple : redémarrer le service d'impression sans pouvoir ouvrir de session sur le serveur. Les sessions sont consignées en transcription.
+
+@075
+Q: Un poste a lancé cette commande. Quel événement montre le code réellement exécuté, une fois décodé ?
+C: 4104, journal Microsoft-Windows-PowerShell/Operational
+W: 4688, journal Sécurité, avec la ligne de commande complète du processus créé
+W: 7045, journal Système
+W: 1102, journal Sécurité
+E: La journalisation des blocs de script s'active par GPO. Les attaquants lancent souvent powershell -EncodedCommand : le 4104 montre le code réellement exécuté. 4688 trace la création d'un processus, 7045 l'installation d'un service, 1102 l'effacement du journal Sécurité : trois autres signaux à surveiller.
+```powershell
+powershell.exe -NoProfile -WindowStyle Hidden -EncodedCommand JABjAD0ATgBlAHcALQBPAGIAagBlAGMAdAA=
+```
+
+@076
+Q: Que change l'ajout d'un compte administrateur au groupe Protected Users ?
+C: Plus de NTLM, de délégation ni de mise en cache des identifiants pour ce compte
+W: Le compte ne peut plus être supprimé
+W: Le compte reçoit les droits sur toute la forêt
+W: Le mot de passe du compte n'expire plus et ne peut être changé que par un administrateur
+E: Le compte ne s'authentifie plus qu'en Kerberos AES, avec des TGT de 4 heures non renouvelables. On teste avant d'y placer des comptes : un service qui dépend de NTLM ou de la délégation cesse de fonctionner. Les comptes de service et d'ordinateur n'ont rien à y faire.
+
+@077
+Q: Associer chaque type de délégation Kerberos à sa description.
+P: Délégation non contrainte => Le serveur reçoit le TGT de l'utilisateur et peut l'usurper partout
+P: Délégation contrainte => Le serveur n'agit qu'auprès des services listés sur son compte
+P: Délégation basée sur les ressources => Le service cible désigne lui-même qui peut déléguer vers lui
+E: La délégation non contrainte est à bannir hors des contrôleurs : un attaquant qui compromet le serveur récupère les TGT des administrateurs qui s'y connectent. RBCD se règle sur la ressource (PrincipalsAllowedToDelegateToAccount), sans droit d'administration du domaine.
+
+@078
+Q: Pourquoi ajouter un témoin (disque, partage de fichiers ou cloud) à un cluster de basculement de deux nœuds ?
+C: Pour qu'en cas de coupure entre les nœuds, l'un d'eux garde la majorité des votes
+W: Pour doubler les performances
+W: Pour stocker les sauvegardes du cluster
+W: Pour permettre aux deux nœuds de faire tourner la même VM en même temps sans conflit d'écriture
+E: Avec deux voix seulement, la coupure du lien laisse chaque nœud à 50 % : sans arbitre, aucun ne peut continuer sans risquer le « split brain ». Le témoin apporte la troisième voix. Le quorum dynamique ajuste ensuite les votes quand des nœuds s'arrêtent proprement.
+
+@079
+Q: Quelle commande lance les tests de validation recommandés avant de créer un cluster de basculement ?
+C: Test-Cluster
+W: New-Cluster -Force
+W: Get-ClusterLog
+W: Test-NetConnection
+E: Test-Cluster vérifie le matériel, le réseau, le stockage partagé et la configuration des nœuds ; le support Microsoft attend un rapport sans erreur. Get-ClusterLog sert ensuite au diagnostic d'une bascule.
+
+@080
+Q: Pourquoi désactiver SMBv1 sur les serveurs et postes ?
+C: Ce protocole ancien a été exploité par des vers comme WannaCry et n'offre aucune protection moderne
+W: Il est plus lent que FTP
+W: Il empêche l'accès aux espaces de noms DFS et aux partages administratifs comme C$ depuis les postes récents
+W: Il consomme une licence d'accès client par connexion
+E: Windows Server 2019 et plus récents ne l'installent plus par défaut. Avant de le retirer d'un serveur ancien, on active l'audit (Set-SmbServerConfiguration -AuditSmb1Access $true) pour repérer les vieux copieurs ou NAS qui s'en servent encore.
+
+@081
+Q: Quel est le principe de PowerShell DSC (Desired State Configuration) ?
+C: Décrire l'état attendu d'un serveur, que le moteur applique puis corrige en cas de dérive
+W: Enregistrer les commandes tapées pour les rejouer plus tard
+W: Installer les mises à jour à heure fixe
+W: Convertir des scripts PowerShell en exécutables autonomes signés
+E: Une configuration déclare par exemple « rôle IIS présent, service Spooler arrêté » ; elle est compilée en fichier MOF que le LCM (Local Configuration Manager) applique et vérifie régulièrement. Même idée qu'Ansible ou Puppet ; dans Azure, la relève s'appelle Machine Configuration.
+
+@082
+Q: Que prévoit le modèle d'administration par niveaux (tiering) pour les comptes administrateurs du domaine ?
+C: Ils ne s'ouvrent que sur les contrôleurs et les postes d'administration dédiés
+W: Ils servent aussi au travail quotidien pour gagner du temps
+W: Ils sont partagés entre les administrateurs pour assurer la continuité de service pendant les congés
+W: Ils sont désactivés la nuit
+E: Niveau 0 : AD et ce qui le contrôle ; niveau 1 : serveurs ; niveau 2 : postes. Un compte de niveau 0 ouvert sur un poste compromis y laisse des identifiants exploitables. Chaque administrateur a un compte par niveau, plus un compte sans privilège pour la messagerie et le web ; les GPO « Interdire l'ouverture de session » imposent la séparation.
+
+@083
+Q: Avant de restreindre NTLM dans un domaine, que faut-il faire ?
+C: Activer l'audit NTLM pour repérer les applications et équipements qui l'utilisent encore
+W: Réinitialiser tous les mots de passe
+W: Désactiver Kerberos
+W: Supprimer les comptes de service
+E: Les GPO « Sécurité réseau : restreindre NTLM » ont un mode audit qui journalise dans Microsoft-Windows-NTLM/Operational. On y trouve souvent des imprimantes, des applications métier ou des accès par adresse IP au lieu du nom, qui empêchent Kerberos puisque le SPN porte un nom.
+
+@084
+Q: Un poste du domaine rafraîchit ses GPO toutes les 90 minutes, avec un décalage aléatoire pouvant atteindre 30 minutes. Quel délai maximal, en minutes, peut s'écouler entre deux rafraîchissements ?
+N: 120
+U: min
+E: Le décalage évite que tous les postes interrogent les contrôleurs au même instant. Les contrôleurs de domaine rafraîchissent leurs propres GPO toutes les 5 minutes. Pour un changement urgent, Invoke-GPUpdate ou la console GPMC poussent la mise à jour sur toute une OU.
+
+@085
+Q: Que protège Credential Guard sur un serveur ou un poste Windows ?
+C: Les secrets de LSASS (hachages NTLM, TGT), isolés par la virtualisation
+W: Les mots de passe enregistrés dans le navigateur
+W: Les fichiers chiffrés par BitLocker
+W: L'accès au Bureau à distance depuis Internet, par une vérification de l'appareil
+E: Sans lui, un outil comme Mimikatz lancé avec des droits administrateur lit la mémoire de LSASS et récupère les identifiants des sessions ouvertes. Avec la sécurité basée sur la virtualisation, ils vivent dans un processus isolé (LSAIso), hors de portée même d'un administrateur local.
+
+@086
+Q: Qu'est-ce que l'attaque Kerberoasting ?
+C: Demander des tickets de service pour des comptes à SPN, puis casser hors ligne leur mot de passe
+W: Voler le disque d'un contrôleur pour lire NTDS.dit
+W: Saturer le KDC de demandes pour le rendre indisponible
+W: Forger un TGT avec la clé du compte krbtgt volée
+E: N'importe quel utilisateur du domaine peut demander ces tickets, chiffrés avec la clé du compte de service. Un mot de passe humain faible tombe en quelques heures, surtout chiffré en RC4. Parades : gMSA, mots de passe de plus de 25 caractères, AES seul, et alerte sur les rafales d'événements 4769 avec le chiffrement 0x17.
+
+@087
+Q: Après une compromission du domaine, pourquoi réinitialiser deux fois le mot de passe du compte krbtgt, avec un intervalle ?
+C: AD garde le mot de passe actuel et le précédent : il faut deux changements pour invalider l'ancienne clé
+W: Le premier changement n'est jamais pris en compte
+W: Pour respecter la longueur minimale du mot de passe
+W: Parce que chaque contrôleur ne réplique qu'un changement sur deux
+E: Un attaquant qui a volé la clé krbtgt forge des « golden tickets » valables pour n'importe quel compte. On attend entre les deux changements au moins la durée de vie maximale d'un TGT (10 heures par défaut) et la fin de la réplication, sinon des authentifications légitimes échouent. Microsoft publie un script pour le faire proprement.
+
+@088
+Q: Quels droits permettent l'attaque DCSync, qui récupère les hachages de tous les comptes sans toucher au disque d'un contrôleur ?
+C: Les droits de réplication de l'annuaire, dont « Replicating Directory Changes All »
+W: Le droit de lecture sur l'OU Users
+W: L'appartenance au groupe Opérateurs d'impression
+W: Le droit d'ouvrir une session sur un contrôleur de domaine
+E: L'attaquant se fait passer pour un contrôleur et demande la réplication par le protocole MS-DRSR. Ces droits ne doivent appartenir qu'aux contrôleurs et à de rares comptes justifiés (Entra Connect). On audite les ACL de la racine du domaine et on surveille l'événement 4662 portant ces droits depuis une machine qui n'est pas un contrôleur.
+
+@089
+Q: Toutes les combien de minutes, par défaut, le processus SDProp réapplique-t-il les autorisations d'AdminSDHolder aux comptes protégés ?
+N: 60
+U: min
+E: Les membres des groupes protégés (Admins du domaine, Opérateurs de compte…) reçoivent l'ACL d'AdminSDHolder et adminCount = 1. Une délégation posée sur leur OU disparaît donc au bout d'une heure, ce qui surprend. Un attaquant qui modifie l'ACL d'AdminSDHolder obtient au contraire une persistance discrète.
+
+@090
+Q: Pourquoi exiger la signature LDAP et la liaison de canal (channel binding) sur les contrôleurs ?
+C: Pour empêcher qu'une authentification NTLM relayée serve à modifier l'annuaire
+W: Pour accélérer les requêtes LDAP
+W: Pour remplacer Kerberos
+W: Pour que les clients Linux puissent s'authentifier sans être joints au domaine ni posséder de keytab
+E: Une liaison LDAP non signée accepte une authentification relayée (attaques NTLM relay). Avant de l'exiger, on surveille le journal Directory Service : l'événement 2887 compte chaque jour les liaisons non signées, le 2889 désigne les clients en cause une fois la journalisation détaillée activée.
+
+@091
+Q: Les ouvertures de session prennent plusieurs minutes dans une agence depuis l'ajout d'un nouveau sous-réseau. Les postes s'authentifient auprès d'un contrôleur du siège. Quelle correction apporter ?
+C: Déclarer le sous-réseau dans « Sites et services » et l'associer au site de l'agence
+W: Ajouter un second contrôleur de domaine au siège
+W: Augmenter la durée des baux DHCP de l'agence
+W: Désactiver le pare-feu Windows sur les postes de l'agence
+E: Un sous-réseau inconnu n'appartient à aucun site : le poste prend n'importe quel contrôleur, parfois à travers un lien lent. Le fichier %SystemRoot%\debug\netlogon.log des contrôleurs liste les clients « NO_CLIENT_SITE », et nltest /dsgetsite indique sur le poste le site retenu.
+
+@092
+Q: Sur un poste restauré depuis une ancienne image, cette commande renvoie False et l'ouverture de session de domaine échoue (« La relation d'approbation… a échoué »). Quelle réparation sans sortir le poste du domaine ?
+C: Relancer la commande avec -Repair et un compte autorisé
+W: Supprimer le profil de l'utilisateur sur le poste, puis rouvrir sa session avec ses identifiants du domaine
+W: Redémarrer le contrôleur de domaine
+W: Réinitialiser le mot de passe de l'utilisateur
+E: Le compte ordinateur change son mot de passe tous les 30 jours ; l'image ancienne a gardé un mot de passe que le domaine ne reconnaît plus. On ouvre une session locale, ou avec des identifiants en cache, puis on répare le canal sécurisé. Reset-ComputerMachinePassword fait le même travail.
+```powershell
+Test-ComputerSecureChannel -Verbose
+```
+
+@093
+Q: Ce script doit désactiver les comptes inactifs depuis plus de 90 jours. Quel est son défaut le plus grave ?
+C: Un LastLogonDate vide passe pour plus ancien que la limite : un compte créé hier et jamais utilisé est désactivé
+W: Disable-ADAccount ne lit pas les objets reçus par le pipeline
+W: AddDays n'accepte pas de valeur négative
+W: -Properties LastLogonDate est inutile, la propriété étant toujours renvoyée
+E: En PowerShell, $null -lt une date vaut $true. Il faut écarter les comptes vides ou les comparer à whenCreated, limiter la recherche aux OU d'utilisateurs avec -SearchBase pour épargner les comptes de service, et tester d'abord avec -WhatIf. LastLogonDate pouvant retarder de 14 jours, on garde une marge.
+```powershell
+$limite = (Get-Date).AddDays(-90)
+Get-ADUser -Filter * -Properties LastLogonDate |
+    Where-Object { $_.LastLogonDate -lt $limite } |
+    Disable-ADAccount
+```
+
+@094
+Q: Remettre dans l'ordre une restauration faisant autorité d'une OU supprimée, sans corbeille AD.
+O: Redémarrer un contrôleur en mode de restauration des services d'annuaire (DSRM)
+O: Restaurer l'état du système depuis une sauvegarde antérieure à la suppression
+O: Marquer l'OU comme faisant autorité avec ntdsutil
+O: Redémarrer normalement pour que l'OU se réplique vers les autres contrôleurs
+O: Rétablir les appartenances aux groupes avec le fichier LDIF produit par ntdsutil
+E: Sans l'étape ntdsutil, la restauration est « non autoritaire » : les autres contrôleurs renvoient la suppression et l'OU disparaît de nouveau. Le mot de passe DSRM, défini à la promotion, doit être connu et testé avant le jour de la panne.
+
+@095
+Q: Associer chaque symptôme à la commande qui aide le plus à le diagnostiquer.
+P: Poste qui ne trouve aucun contrôleur => nltest /dsgetdc:corp.local
+P: GPO non appliquée => gpresult /h rapport.html
+P: Réplication en échec entre deux sites => repadmin /showrepl
+P: Ticket Kerberos suspect sur un poste => klist
+P: Port fermé vers un serveur => Test-NetConnection -Port
+E: Ces cinq commandes couvrent une grande part des incidents AD de premier niveau. On commence presque toujours par vérifier le DNS du poste (ipconfig /all, Resolve-DnsName) : bien des « problèmes AD » s'arrêtent là.
+
+@096
+Q: Pourquoi le groupe Opérateurs de sauvegarde doit-il être traité comme un groupe d'administration du domaine ?
+C: Ses membres peuvent lire tous les fichiers d'un contrôleur, dont NTDS.dit, en contournant les ACL
+W: Ils peuvent créer et lier des GPO à la racine du domaine, appliquées ensuite à tous les contrôleurs
+W: Ils reçoivent automatiquement le rôle de maître de schéma
+W: Ils peuvent modifier le schéma de la forêt
+E: Le privilège SeBackupPrivilege autorise la lecture de tout fichier pour le sauvegarder. Une copie de NTDS.dit et de la ruche SYSTEM donne les hachages de tous les comptes. Opérateurs de compte, de serveur et d'impression posent des risques comparables : on les laisse vides.
+
+@097
+Q: Un pool Storage Spaces Direct compte six disques de 4 To répartis sur trois nœuds. Quelle capacité utile, en To, offre un miroir triple qui les utilise tous ?
+N: 8
+U: To
+E: Trois copies de chaque donnée : 24 To bruts divisés par trois. On laisse en plus l'équivalent d'un disque par nœud non alloué, réserve qui permet de reconstruire après une panne sans attendre le remplacement. Le miroir triple tolère la perte de deux disques ou nœuds à la fois.
+
+@098
+Q: La zone DNS du domaine contient des centaines d'enregistrements de postes disparus, dont certains pointent vers des adresses réattribuées. Que régler ?
+C: Le vieillissement et nettoyage (scavenging), sur la zone et sur un serveur DNS
+W: Supprimer et recréer la zone chaque mois
+W: Passer les postes en adresse IP fixe
+W: Désactiver les mises à jour dynamiques de la zone, pour que seuls les administrateurs puissent y écrire
+E: Les enregistrements dynamiques portent un horodatage rafraîchi par le poste ; au-delà des intervalles de non-actualisation et d'actualisation (7 jours chacun par défaut), ils deviennent supprimables. Le nettoyage s'active à deux endroits : propriétés de la zone et serveur qui l'exécute. Les enregistrements statiques ne sont jamais touchés.
+
+@099
+Q: Lors de la préparation d'un plan de reprise après rançongiciel, quelle sauvegarde de l'annuaire est la plus importante ?
+C: L'état du système d'un contrôleur, hors ligne ou immuable, avec le mot de passe DSRM noté hors du SI
+W: Une réplication vers un contrôleur supplémentaire en ligne
+W: Un export CSV des utilisateurs
+W: Une copie du dossier SYSVOL sur un partage du domaine
+E: Un contrôleur répliqué reçoit aussi les dégâts : ce n'est pas une sauvegarde. La reprise d'une forêt suit une procédure précise (restauration d'un contrôleur par domaine, saisie des rôles, nettoyage, double réinitialisation de krbtgt) qu'on répète en environnement isolé avant d'en avoir besoin.
+
+@100
+Q: Le compte d'un administrateur se verrouille toutes les heures. L'événement 4740 désigne le serveur SRV-APP. Quelle cause rechercher en priorité sur ce serveur ?
+C: Une tâche planifiée, un service ou une session déconnectée qui utilise l'ancien mot de passe
+W: Un antivirus qui bloque le compte
+W: Un défaut du disque système du serveur
+W: Un fuseau horaire différent de celui du contrôleur, qui fait expirer les tickets avant leur heure
+E: Les identifiants enregistrés dans une tâche, un service ou un lecteur mappé ne suivent pas le changement de mot de passe. Get-ScheduledTask (Principal.UserId), Get-CimInstance Win32_Service (StartName) puis quser pour les sessions ouvertes. Un compte administrateur qui fait tourner des services est déjà un défaut : un gMSA le remplace.
