@@ -1,0 +1,422 @@
+@001
+Q: Qu'est-ce qu'un hyperviseur ?
+C: Le logiciel qui partage les ressources d'un serveur physique entre plusieurs machines virtuelles
+W: Un serveur de fichiers chargé de stocker les disques des machines virtuelles
+W: Un processeur dédié aux calculs graphiques des postes virtualisés
+W: Le système d'exploitation installé à l'intérieur de chaque machine virtuelle
+E: L'hyperviseur découpe le processeur, la mémoire, le stockage et le réseau de l'hôte et présente à chaque machine virtuelle un matériel virtuel complet. Chaque VM y installe son propre système, isolé des autres : une panne ou un redémarrage de l'une n'affecte pas ses voisines.
+
+@002
+Q: Associer chaque produit de virtualisation à sa description.
+P: VMware ESXi => Hyperviseur de type 1 de l'offre vSphere
+P: Microsoft Hyper-V => Rôle de virtualisation de Windows Server
+P: Proxmox VE => Distribution Debian qui pilote KVM et LXC
+P: VirtualBox => Hyperviseur de type 2 installé sur un poste
+P: KVM => Module du noyau Linux qui le transforme en hyperviseur
+E: Les trois premiers servent en production dans les salles serveurs. VirtualBox reste un outil de poste de travail, pour un laboratoire ou des tests. Proxmox VE ajoute à KVM une interface web, la gestion de cluster et la sauvegarde, sans licence obligatoire.
+
+@003
+Q: Quelle est la différence entre un hyperviseur de type 1 et un hyperviseur de type 2 ?
+C: Le type 1 s'exécute directement sur le matériel, le type 2 s'installe sur un système d'exploitation hôte
+W: Le type 1 ne fait tourner que des machines Linux, le type 2 que des machines Windows
+W: Le type 2 est réservé aux serveurs de production organisés en cluster
+W: Le type 1 émule un processeur d'une autre architecture que celle de l'hôte, ce que le type 2 ne sait pas faire
+E: ESXi, Hyper-V et KVM sont de type 1 : aucune couche intermédiaire ne s'intercale entre l'hyperviseur et le matériel, d'où de meilleures performances et une surface d'attaque réduite. VirtualBox ou VMware Workstation, de type 2, dépendent du Windows ou du Linux du poste et de ses redémarrages.
+
+@004
+Q: Quelle option du BIOS faut-il activer sur un serveur pour y faire tourner un hyperviseur moderne ?
+C: Intel VT-x ou AMD-V
+W: L'Hyper-Threading seul
+W: Le Turbo Boost du processeur
+W: Le démarrage hérité (Legacy BIOS) à la place de l'UEFI, que les hyperviseurs réclament pour démarrer
+E: VT-x et AMD-V permettent au processeur d'exécuter le code des machines virtuelles sans le traduire. Elles sont souvent désactivées en sortie d'usine : un hyperviseur qui refuse de démarrer une VM avec un message sur la virtualisation matérielle demande d'abord un tour dans le BIOS. VT-d ou AMD-Vi s'ajoutent pour donner une carte PCI à une VM.
+
+@005
+Q: Que vérifie cette commande sur un serveur Linux ?
+C: Que le processeur annonce les extensions de virtualisation Intel ou AMD
+W: Le nombre de machines virtuelles en cours d'exécution sur l'hôte
+W: Que le module KVM est chargé dans le noyau et prêt à accueillir des machines virtuelles
+W: La quantité de mémoire réservée aux machines virtuelles
+E: vmx désigne Intel VT-x et svm AMD-V ; grep -c compte les processeurs logiques qui portent l'indicateur. Un résultat nul indique un processeur sans ces extensions ou un BIOS qui les masque. lsmod | grep kvm et le journal du noyau confirment ensuite que KVM a pu s'en servir.
+```bash
+grep -cE 'vmx|svm' /proc/cpuinfo
+```
+
+@006
+Q: Quelle différence fondamentale sépare une machine virtuelle d'un conteneur ?
+C: La machine virtuelle embarque son propre noyau, le conteneur partage celui de l'hôte
+W: Le conteneur émule un matériel complet, BIOS compris, alors que la machine virtuelle se contente du noyau de l'hôte
+W: La machine virtuelle ne peut pas recevoir d'adresse IP propre
+W: Le conteneur démarre plus lentement, car il charge un firmware virtuel
+E: Partager le noyau rend le conteneur léger et rapide à démarrer, mais limite l'isolation et impose un système compatible : un conteneur LXC sur Proxmox ne fera jamais tourner Windows. La VM coûte plus cher en mémoire et en disque mais isole complètement les systèmes.
+
+@007
+Q: Dans vSphere, quel est le rôle de vCenter Server ?
+C: Administrer de façon centralisée plusieurs hôtes ESXi et activer vMotion, DRS et HA
+W: C'est l'hyperviseur installé sur chaque serveur physique
+W: Remplacer le BIOS des serveurs du cluster
+W: Un client lourd installé sur le poste de chaque administrateur pour se connecter à un seul hôte à la fois
+E: Un hôte ESXi s'administre seul par son interface web, mais les fonctions de cluster (migration à chaud, répartition de charge, redémarrage automatique) passent par vCenter. Il est livré sous forme d'appliance virtuelle (VCSA), souvent hébergée dans le cluster qu'elle administre.
+
+@008
+Q: Associer chaque fonction de vSphere à ce qu'elle apporte.
+P: vMotion => Déplacer une VM allumée vers un autre hôte
+P: Storage vMotion => Déplacer les disques d'une VM allumée vers un autre datastore
+P: DRS => Répartir la charge entre les hôtes du cluster
+P: HA => Redémarrer ailleurs les VM d'un hôte tombé
+P: Fault Tolerance => Maintenir une copie synchrone qui prend le relais sans coupure
+E: vMotion et Storage vMotion servent aux interventions planifiées, DRS s'appuie sur vMotion pour équilibrer les hôtes. HA et Fault Tolerance répondent aux pannes : HA redémarre, Fault Tolerance évite toute interruption au prix du double des ressources.
+
+@009
+Q: Un hôte ESXi d'un cluster HA tombe en panne. Que vivent les machines virtuelles qu'il hébergeait ?
+C: Elles s'arrêtent brutalement puis redémarrent sur les autres hôtes, en quelques minutes
+W: Elles continuent sans la moindre interruption sur un autre hôte
+W: Elles restent arrêtées jusqu'au retour de l'hôte d'origine
+W: Elles sont déplacées à chaud par vMotion juste avant la panne, que HA détecte par anticipation
+E: HA ne fait pas de continuité de service : pour les applications, la panne ressemble à une coupure de courant suivie d'un redémarrage. Bases de données et services doivent donc supporter un arrêt brutal. Pour éviter toute coupure, il faut Fault Tolerance ou une redondance au niveau applicatif.
+
+@010
+Q: Qu'est-ce qu'un datastore dans vSphere ?
+C: Un espace de stockage (VMFS, NFS, vSAN) où ESXi range les fichiers des machines virtuelles
+W: La base de données de vCenter qui conserve les journaux des hôtes
+W: Une machine virtuelle dédiée aux sauvegardes
+W: Le cache mémoire que se partagent les hôtes du cluster pour accélérer les machines virtuelles
+E: Un datastore masque la technologie de stockage : une LUN iSCSI ou Fibre Channel formatée en VMFS, un partage NFS d'un NAS ou le stockage distribué vSAN. Pour vMotion et HA, tous les hôtes du cluster doivent voir les mêmes datastores.
+
+@011
+Q: Associer chaque fichier d'une machine virtuelle VMware à son contenu.
+P: .vmx => Configuration de la machine virtuelle
+P: .vmdk => Descripteur du disque virtuel
+P: -flat.vmdk => Données du disque virtuel
+P: .nvram => État du BIOS ou de l'UEFI virtuel
+P: .vswp => Fichier d'échange créé au démarrage de la VM
+E: Le .vmx, fichier texte, se lit pour diagnostiquer une configuration. Le .vswp a la taille de la mémoire non réservée de la VM : sur un datastore presque plein, la VM refuse de démarrer faute de pouvoir le créer. Une réservation mémoire totale le réduit à zéro.
+
+@012
+Q: Quelle différence entre un disque virtuel fin (thin) et un disque épais (thick) ?
+C: Le disque fin n'occupe que l'espace réellement écrit ; le disque épais réserve toute sa taille dès la création
+W: Le disque fin est limité à 2 To, quelle que soit la version de l'hyperviseur
+W: Le disque épais compresse les données au fil de l'eau
+W: Le disque fin est réservé aux machines virtuelles Linux, le disque épais aux machines Windows et aux bases de données
+E: Le disque fin permet de promettre plus d'espace que le datastore n'en possède, ce qui est pratique tant que les VM ne remplissent pas leurs disques. Il faut alors surveiller le remplissage réel du datastore : quand il atteint 100 %, les VM qui écrivent sont mises en pause.
+
+@013
+Q: Un datastore de 2 To héberge 10 machines virtuelles, chacune avec un disque fin de 500 Go. Quel est le taux d'allocation, en pourcentage de la capacité du datastore ?
+N: 250
+U: %
+E: 10 × 500 Go = 5 To promis pour 2 To réels, soit 5 / 2 = 250 %. Ce taux n'est pas une faute en soi, si les disques ne sont remplis qu'à 30 ou 40 %. Une alarme sur l'espace libre réel du datastore, à 80 % par exemple, laisse le temps d'agir avant la saturation.
+
+@014
+Q: Un snapshot de machine virtuelle peut-il servir de sauvegarde ?
+C: Non : il dépend du disque d'origine et disparaît avec lui
+W: Oui, dès qu'il est conservé plus de 24 heures
+W: Oui, car il copie l'intégralité du disque vers un autre datastore
+W: Non, car il ne capture que la mémoire vive, sans le contenu des disques
+E: Un snapshot ne copie rien : il gèle le disque de base et redirige les écritures vers un fichier delta, sur le même datastore. Si la baie ou le datastore est perdu, le snapshot l'est aussi. Il sert à revenir en arrière après une mise à jour, pas à reconstruire après un sinistre.
+
+@015
+Q: Pourquoi éviter de conserver un snapshot pendant plusieurs semaines ?
+C: Le disque delta grossit à chaque écriture, ralentit la VM et allonge sa suppression
+W: Il bloque le redémarrage de la machine virtuelle
+W: Il est supprimé automatiquement au bout de 72 heures et la VM perd alors ses données
+W: Il empêche la machine virtuelle d'obtenir une adresse IP par DHCP
+E: VMware recommande de ne pas garder un snapshot plus de 72 heures et de limiter la chaîne à deux ou trois niveaux. Un delta de plusieurs centaines de gigaoctets remplit aussi le datastore sans prévenir. Une alarme ou un script qui liste les snapshots anciens évite ces surprises.
+
+@016
+Q: Après une sauvegarde interrompue, vCenter affiche « Virtual machine disks consolidation is needed ». Que faire ?
+C: Lancer la consolidation des disques, qui fusionne les deltas orphelins dans le disque de base
+W: Supprimer à la main les fichiers -delta.vmdk depuis le navigateur du datastore
+W: Recréer la machine virtuelle à partir d'un modèle
+W: Redémarrer vCenter, qui fusionne de lui-même les disques restés en attente pendant son démarrage
+E: La sauvegarde a laissé des deltas que le gestionnaire de snapshots ne liste plus, mais que la VM utilise toujours. Les effacer à la main casse la chaîne et rend le disque inutilisable. La consolidation se lance par clic droit sur la VM, Snapshots, Consolider, de préférence en heure creuse.
+
+@017
+Q: À quoi servent les VMware Tools installés dans une machine virtuelle ?
+C: Fournir des pilotes optimisés, l'arrêt propre depuis l'hyperviseur et la remontée de l'adresse IP
+W: Activer la licence vSphere de l'hôte
+W: Protéger la machine virtuelle contre les virus
+W: Sauvegarder chaque nuit la machine virtuelle vers le datastore de secours choisi dans vCenter Server
+E: Sans eux, l'arrêt de la VM depuis vCenter devient une coupure brutale et les sauvegardes ne peuvent pas mettre l'invité au repos. Sous Linux, le paquet open-vm-tools de la distribution les remplace. Sous Hyper-V et KVM, les services d'intégration et l'agent invité QEMU jouent le même rôle.
+
+@018
+Q: Quelle carte réseau virtuelle choisir pour un serveur virtualisé sous VMware ?
+C: VMXNET3, carte paravirtualisée
+W: E1000, parce qu'elle offre le meilleur débit
+W: Une carte sans pilote, détectée seule par le système invité
+W: Flexible, recommandée pour tout système d'exploitation de serveur récent
+E: VMXNET3 sait que le matériel est virtuel et évite l'émulation d'une vraie carte Intel : débit plus élevé, charge processeur plus faible. Windows n'a pas son pilote d'origine, fourni par les VMware Tools ; E1000 sert seulement pendant l'installation d'un système qui n'en dispose pas encore.
+
+@019
+Q: Qu'est-ce qu'un groupe de ports (port group) sur un commutateur virtuel VMware ?
+C: Un ensemble de ports virtuels qui partagent une configuration, notamment un VLAN
+W: Un agrégat de cartes réseau physiques de l'hôte
+W: Un pare-feu placé devant chaque machine virtuelle
+W: Le nom donné à un hôte ESXi quand il rejoint un cluster
+E: On branche la carte d'une VM sur un groupe de ports nommé, par exemple « PROD-VLAN20 », et non sur un port précis. Toutes les VM de ce groupe héritent du VLAN, de la politique de sécurité et du choix des cartes physiques de sortie. Le même nom doit exister sur tous les hôtes pour que vMotion fonctionne.
+
+@020
+Q: Cette commande règle l'ID de VLAN d'un groupe de ports d'un vSwitch standard. Que se passe-t-il ensuite ?
+C: Les trames arrivent dans la VM avec leur étiquette VLAN, et c'est le système invité qui les traite
+W: Le groupe de ports est désactivé jusqu'à la saisie d'un VLAN valide
+W: Les trames étiquetées sont rejetées et seul le trafic sans étiquette VLAN traverse ce groupe de ports
+W: Les VM reçoivent uniquement le VLAN natif du commutateur physique
+E: 4095 active le mode VGT (Virtual Guest Tagging) : le vSwitch transmet toutes les VLAN sans retirer les étiquettes. On s'en sert pour un pare-feu ou un routeur virtuel qui gère lui-même plusieurs VLAN. L'ID 0 correspond au contraire à l'absence d'étiquette.
+```bash
+esxcli network vswitch standard portgroup set -p "FW-TRUNK" --vlan-id 4095
+```
+
+@021
+Q: Associer chaque type de commutateur virtuel Hyper-V à ce qu'il permet.
+P: Externe => Relier les VM au réseau physique par une carte de l'hôte
+P: Interne => Faire communiquer les VM entre elles et avec l'hôte
+P: Privé => Faire communiquer les VM entre elles uniquement
+E: Un commutateur externe prend une carte physique de l'hôte ; si c'est sa seule carte, l'hôte passe par une carte virtuelle partagée et la connexion coupe un instant à la création. Le commutateur privé sert aux laboratoires isolés, sans aucun accès au réseau de l'entreprise.
+
+@022
+Q: Qu'apporte une machine virtuelle Hyper-V de génération 2 par rapport à la génération 1 ?
+C: Le démarrage UEFI avec Secure Boot et le démarrage sur un disque SCSI ou une carte réseau synthétique
+W: Elle ne prend en charge que les systèmes 32 bits
+W: Elle démarre en BIOS hérité, ce qui convient mieux aux anciennes images de déploiement PXE
+W: Elle impose un disque au format VHD
+E: La génération se choisit à la création et ne se modifie plus. On prend la génération 2 pour tout système récent ; la génération 1 reste utile pour un système ancien ou une image qui ne sait démarrer qu'en BIOS. Windows 11 dans une VM exige la génération 2 et une puce TPM virtuelle.
+
+@023
+Q: Compléter la commande pour créer une machine virtuelle Hyper-V de génération 2.
+A: Generation
+A: generation
+E: New-VM crée la machine et son disque VHDX en une seule commande. Un script de ce type, versionné, permet de recréer à l'identique les VM d'un laboratoire ou d'une recette. La mémoire se donne en unités PowerShell (4GB), converties en octets.
+```powershell
+New-VM -Name "SRV-APP01" -MemoryStartupBytes 4GB -____ 2 -NewVHDPath "D:\VM\SRV-APP01.vhdx" -NewVHDSizeBytes 80GB
+```
+
+@024
+Q: Pourquoi préférer le format VHDX au format VHD pour un disque Hyper-V ?
+C: VHDX accepte jusqu'à 64 To et résiste mieux aux coupures de courant grâce à son journal
+W: VHD est le format le plus récent et le plus performant
+W: VHDX se monte tel quel dans VMware ESXi, sans conversion
+W: VHDX est limité à 2 To mais compresse les données
+E: Le format VHD plafonne à environ 2 To et ne protège pas ses métadonnées en cas de coupure. VHDX est le format par défaut depuis Windows Server 2012. VHD ne garde d'intérêt que pour échanger un disque avec un outil ou un ancien système qui ne lit pas VHDX.
+
+@025
+Q: Quelle différence entre un point de contrôle standard et un point de contrôle de production sous Hyper-V ?
+C: Celui de production passe par VSS dans l'invité, sans la mémoire ; le standard capture aussi la mémoire
+W: Le point de contrôle standard est réservé aux serveurs de production, celui de production aux laboratoires
+W: Le point de contrôle de production copie le disque entier vers un autre hôte
+W: Le libellé seul change, les deux enregistrent exactement le même état de la machine
+E: Un point de contrôle standard restaure la VM dans l'état exact de l'instant, mémoire comprise, ce qui peut remettre une base de données dans un état incohérent vis-à-vis des autres serveurs. Le point de contrôle de production, par défaut depuis Windows Server 2016, fige proprement les applications comme une sauvegarde.
+
+@026
+Q: Que fait ce script PowerShell sur un hôte Hyper-V ?
+C: Il liste les points de contrôle de plus de sept jours des machines allumées
+W: Il supprime les points de contrôle de plus de sept jours
+W: Il crée un point de contrôle pour chaque machine allumée depuis plus de sept jours
+W: Il liste les machines virtuelles démarrées depuis plus de sept jours
+E: Get-VMSnapshot, alias historique de Get-VMCheckpoint, reçoit les machines par le pipeline. Planifié chaque semaine et envoyé par mail, ce genre de liste évite les points de contrôle oubliés qui remplissent un volume. Ajouter Remove-VMSnapshot en fin de ligne les supprimerait.
+```powershell
+Get-VM | Where-Object State -eq 'Running' | Get-VMSnapshot |
+    Where-Object CreationTime -lt (Get-Date).AddDays(-7)
+```
+
+@027
+Q: Que fait la mémoire dynamique de Hyper-V ?
+C: Elle ajuste la mémoire de la VM entre un minimum et un maximum selon ses besoins
+W: Elle réserve en permanence la valeur maximale à la machine virtuelle
+W: Elle permet de dépasser sans limite la mémoire physique de l'hôte
+W: Elle remplace le fichier d'échange du système invité
+E: Les services d'intégration de l'invité signalent sa pression mémoire et l'hôte ajoute ou reprend de la mémoire. Certaines applications qui dimensionnent leur cache au démarrage, comme SQL Server ou Exchange, s'en accommodent mal : l'éditeur recommande alors une mémoire fixe.
+
+@028
+Q: Associer chaque commande PowerShell Hyper-V à son effet.
+P: Get-VM => Lister les machines virtuelles et leur état
+P: Start-VM => Démarrer une machine virtuelle
+P: Checkpoint-VM => Créer un point de contrôle
+P: Move-VM => Migrer une machine allumée vers un autre hôte
+P: Export-VM => Copier la configuration et les disques dans un dossier
+E: Move-VM réalise la migration dynamique (Live Migration), l'équivalent de vMotion, si les deux hôtes y sont autorisés. Export-VM produit un dossier que Import-VM relit sur un autre hôte. Toutes ces commandes acceptent -ComputerName pour agir sur un hôte distant.
+
+@029
+Q: Que met en place Hyper-V Replica, activé ici par cette commande ?
+C: Une réplication asynchrone d'une VM vers un autre hôte, toutes les 30 secondes, 5 minutes ou 15 minutes
+W: Une réplication synchrone qui garantit zéro perte de données
+W: Un cluster de basculement obligatoire entre les deux hôtes
+W: Une sauvegarde sur bande déclenchée à chaque arrêt planifié de la machine virtuelle, puis expédiée au site distant
+E: Replica ne demande ni stockage partagé ni cluster, ce qui en fait une solution de reprise simple entre deux sites. Le basculement reste manuel, planifié ou non. La fréquence choisie fixe la perte de données maximale : jusqu'à 15 minutes d'écritures si le site principal disparaît.
+```powershell
+Enable-VMReplication -VMName "SRV-APP01" -ReplicaServerName "HV-SECOURS" -ReplicaServerPort 80 -AuthenticationType Kerberos -ReplicationFrequencySec 300
+```
+
+@030
+Q: Dans un cluster de basculement Hyper-V, qu'est-ce qu'un volume partagé de cluster (CSV) ?
+C: Un volume accessible en même temps par tous les nœuds, où sont rangées les machines virtuelles
+W: Un disque local propre à chaque nœud du cluster
+W: Le volume système sur lequel Windows Server est installé
+W: Un partage SMB ouvert depuis le poste de l'administrateur
+E: Avec un CSV, chaque nœud peut faire tourner n'importe quelle VM du volume : une migration ne change que l'hôte, sans démonter de disque. Les volumes apparaissent sous C:\ClusterStorage sur chaque nœud. On les crée sur une baie iSCSI ou Fibre Channel, ou avec Storage Spaces Direct.
+
+@031
+Q: Quelles technologies Proxmox VE emploie-t-il pour les machines virtuelles et pour les conteneurs ?
+C: KVM et QEMU pour les machines virtuelles, LXC pour les conteneurs
+W: Hyper-V pour les machines virtuelles et Docker pour les conteneurs
+W: Xen pour les machines virtuelles et Podman pour les conteneurs
+W: VirtualBox pour les machines virtuelles et OpenVZ pour les conteneurs
+E: Proxmox VE est une Debian avec un noyau adapté, une interface web et des outils en ligne de commande (qm pour les VM, pct pour les conteneurs). Les deux types cohabitent dans le même cluster, avec les mêmes stockages et la même sauvegarde. Docker s'installe à l'intérieur d'une VM ou d'un conteneur, pas sur l'hôte.
+
+@032
+Q: Associer chaque commande Proxmox VE à son rôle.
+P: qm list => Lister les machines virtuelles KVM du nœud
+P: pct list => Lister les conteneurs LXC du nœud
+P: vzdump => Sauvegarder une VM ou un conteneur
+P: pvecm status => Afficher l'état du cluster et du quorum
+P: qm migrate => Déplacer une VM vers un autre nœud
+E: Ces commandes s'exécutent sur un nœud en SSH et rendent service quand l'interface web ne répond plus. Chaque VM ou conteneur porte un numéro (VMID) unique dans le cluster, 100 et suivants par défaut, que toutes ces commandes attendent.
+
+@033
+Q: Compléter la commande pour démarrer la machine virtuelle 101 sur un nœud Proxmox.
+A: start
+E: qm start, qm shutdown (arrêt propre par ACPI ou l'agent invité) et qm stop (coupure brutale) pilotent les VM ; pct start et pct shutdown font de même pour les conteneurs. qm status 101 confirme l'état obtenu.
+```bash
+qm ____ 101
+```
+
+@034
+Q: Un cluster Proxmox de deux nœuds perd l'un d'eux. Le nœud restant affiche cette sortie et refuse de démarrer une VM. Pourquoi ?
+C: Il a perdu le quorum : avec un vote sur deux, il ne détient pas la majorité
+W: La licence d'abonnement du nœud restant a expiré
+W: Le stockage Ceph du nœud restant est plein
+W: Proxmox interdit les clusters de deux nœuds et bloque le survivant dès la première panne
+E: Sans majorité, le nœud ne sait pas s'il est seul ou isolé par une coupure réseau, et bloque /etc/pve pour éviter que deux moitiés démarrent les mêmes VM. Un troisième vote, apporté par un QDevice sur une petite machine externe, règle le problème. pvecm expected 1 débloque à la main, en sachant ce qu'on fait.
+```text
+Votequorum information
+~~~~~~~~~~~~~~~~~~~~~~
+Expected votes:   2
+Highest expected: 2
+Total votes:      1
+Quorum:           2 Activity blocked
+```
+
+@035
+Q: Un cluster Proxmox compte 5 nœuds disposant chacun d'un vote. Combien de nœuds peuvent tomber sans que le cluster perde le quorum ?
+N: 2
+E: Le quorum demande la majorité stricte, soit la moitié des votes arrondie à l'inférieur plus un : 2 + 1 = 3 votes. Trois nœuds suffisent, deux peuvent donc tomber. Avec 4 nœuds, le quorum vaut aussi 3 et un seul nœud peut tomber : un nombre impair de votes tire le meilleur parti du matériel.
+R: Proxmox VE Cluster Manager | https://pve.proxmox.com/wiki/Cluster_Manager
+
+@036
+Q: Quel stockage Proxmox VE permet la réplication d'une VM entre deux nœuds sans stockage partagé ?
+C: ZFS local sur chaque nœud, avec la réplication de stockage de Proxmox
+W: LVM classique, sans provisionnement fin
+W: Un répertoire en ext4 contenant des disques au format raw
+W: Un partage SMB monté depuis un poste Windows
+E: La réplication envoie périodiquement les instantanés ZFS d'un nœud à l'autre, toutes les 15 minutes par défaut. En cas de panne, la VM redémarre sur l'autre nœud avec les données de la dernière réplication. C'est une solution courante pour un petit cluster sans baie de stockage.
+
+@037
+Q: Associer chaque format de disque ou d'export à son environnement d'origine.
+P: VMDK => VMware
+P: VHDX => Hyper-V
+P: qcow2 => QEMU et KVM
+P: OVA => Archive unique d'une VM exportée au format OVF
+E: Les formats se convertissent entre eux avec qemu-img ou les outils des éditeurs. qcow2 offre l'allocation à la demande et les snapshots internes ; raw, plus simple, est un peu plus rapide et convient aux stockages qui gèrent eux-mêmes les snapshots, comme ZFS ou Ceph.
+
+@038
+Q: Que montre cette sortie sur un hôte KVM ?
+C: db01 est définie dans libvirt mais arrêtée
+W: db01 a été supprimée et ne subsiste que dans l'historique
+W: db01 est suspendue en mémoire
+W: db01 est en cours de migration vers un autre hôte
+E: --all ajoute à la liste les machines définies mais éteintes, sans identifiant. virsh start db01 la démarre, virsh dominfo db01 détaille sa configuration. Sans --all, db01 n'apparaîtrait pas, ce qui fait croire à tort qu'elle a disparu.
+```text
+$ virsh list --all
+ Id   Name    State
+-----------------------
+ 3    web01   running
+ -    db01    shut off
+```
+
+@039
+Q: Compléter la commande pour que la VM web01 démarre automatiquement avec l'hôte KVM.
+A: autostart
+E: Sans autostart, un redémarrage de l'hôte laisse les VM éteintes jusqu'à une intervention manuelle. virsh autostart --disable web01 retire l'option. Sous Proxmox, l'équivalent est l'option « Démarrer au boot » avec un ordre et un délai de démarrage.
+```bash
+virsh ____ web01
+```
+
+@040
+Q: Pourquoi utiliser les pilotes virtio pour les disques et le réseau d'une VM KVM ?
+C: Ce sont des périphériques paravirtualisés, bien plus rapides qu'un matériel émulé
+W: Pour chiffrer les disques de la machine virtuelle
+W: Pour faire tourner sur un serveur x86 des systèmes conçus pour les processeurs ARM
+W: Ils sont obligatoires pour démarrer n'importe quel système Linux
+E: Linux intègre virtio dans son noyau. Windows ne l'a pas : il faut joindre l'ISO virtio-win pendant l'installation, sinon l'installateur ne voit aucun disque. Les pilotes émulés (IDE, e1000) dépannent pour démarrer un système qui n'a pas encore les pilotes.
+
+@041
+Q: Remettre dans l'ordre les étapes d'une migration à chaud avec vMotion.
+O: Contrôle de compatibilité entre l'hôte source et l'hôte de destination
+O: Copie de la mémoire de la VM pendant qu'elle continue de tourner
+O: Recopie des pages modifiées entre-temps, par passes successives
+O: Courte suspension pour transférer le dernier état et le processeur
+O: Reprise sur l'hôte de destination et annonce réseau par RARP
+E: Chaque passe recopie moins de pages que la précédente ; quand le reste est assez petit, la bascule dure moins d'une seconde. Une VM qui modifie sa mémoire plus vite que le réseau vMotion ne la copie ralentit la migration, d'où un réseau vMotion dédié à 10 Gbit/s ou plus.
+
+@042
+Q: Pourquoi une migration vMotion classique n'a-t-elle pas à copier les disques de la VM ?
+C: Les deux hôtes accèdent au même datastore partagé
+W: Les disques sont compressés dans la mémoire transférée
+W: vMotion recrée des disques vides sur l'hôte de destination
+W: Les disques sont recopiés la nuit suivante par DRS, en dehors des heures de production
+E: Seuls la mémoire et l'état du processeur changent d'hôte : les fichiers .vmx et .vmdk restent en place sur le datastore. Sans stockage partagé, vMotion peut copier aussi les disques en combinant migration de l'hôte et du stockage, ce qui prend bien plus longtemps.
+
+@043
+Q: Une vMotion entre deux hôtes Intel de générations différentes échoue sur une incompatibilité de processeur. Quelle fonction la rend possible ?
+C: EVC, qui aligne les instructions exposées sur la génération la plus ancienne du cluster
+W: Fault Tolerance, activée sur la machine virtuelle à migrer
+W: Storage DRS sur le cluster
+W: Augmenter le nombre de vCPU de la VM pour compenser la différence de génération entre les processeurs
+E: Une VM qui a démarré en utilisant des instructions récentes ne peut pas reprendre sur un processeur qui ne les a pas. EVC (Enhanced vMotion Compatibility) masque ces instructions à l'échelle du cluster. Il ne mélange pas Intel et AMD : entre les deux, seule une migration à froid fonctionne.
+
+@044
+Q: Après une vMotion, une VM répond aux machines du même hôte mais plus au reste du réseau. Quelle est la cause la plus probable ?
+C: Le VLAN du groupe de ports n'est pas autorisé sur le lien physique de l'hôte de destination
+W: Les VMware Tools ne sont pas à jour
+W: La VM possède un snapshot
+W: Le disque de la VM est en provisionnement fin
+E: Sur l'hôte d'arrivée, le groupe de ports existe mais le port du commutateur physique, configuré en trunk, n'autorise pas ce VLAN. Le symptôme suit la VM d'un hôte à l'autre, ce qui oriente le diagnostic. On compare la configuration des ports physiques de tous les hôtes du cluster.
+
+@045
+Q: Qu'indique une valeur élevée de CPU Ready (%RDY dans esxtop) pour une machine virtuelle ?
+C: La VM attend qu'un cœur physique se libère : l'hôte est trop chargé ou la VM a trop de vCPU
+W: La machine virtuelle est inactive et attend du travail de ses utilisateurs ou de ses tâches planifiées
+W: Le processeur de l'invité attend la fin d'une lecture sur le disque
+W: Les VMware Tools de la machine virtuelle ne répondent plus
+E: Le système invité peut afficher un processeur peu chargé alors que l'application est lente : le temps d'attente ne se voit que depuis l'hyperviseur. Au-delà d'environ 5 % par vCPU, on cherche à réduire le nombre de vCPU, à migrer des VM ou à ajouter un hôte.
+
+@046
+Q: Le graphique temps réel de vCenter, échantillonné toutes les 20 secondes, indique 1 000 ms de CPU Ready pour une VM à un vCPU. Quel pourcentage du temps a-t-elle passé à attendre ?
+N: 5
+U: %
+E: 1 000 ms sur 20 000 ms = 5 %. Pour une VM à plusieurs vCPU, la valeur additionne tous ses vCPU : 4 000 ms sur 4 vCPU donnent aussi 5 % par vCPU. Les graphiques sur une journée ou une semaine utilisent des intervalles plus longs, à prendre en compte dans le calcul.
+
+@047
+Q: Un hôte possède 2 processeurs de 16 cœurs, sans compter l'Hyper-Threading. Ses machines virtuelles totalisent 128 vCPU. Quel est le rapport entre vCPU et cœurs physiques ?
+N: 4
+E: 128 / 32 = 4, soit 4 vCPU par cœur. Le bon rapport dépend de la charge réelle : des serveurs peu sollicités supportent davantage, des VM de calcul ou de bases de données beaucoup moins. C'est le CPU Ready mesuré, pas le rapport seul, qui dit si l'hôte est saturé.
+
+@048
+Q: Pourquoi donner 8 vCPU à une VM qui n'en utilise que 2 peut-il la ralentir ?
+C: L'ordonnanceur doit trouver plus de cœurs libres en même temps, l'attente augmente et la VM gêne ses voisines
+W: Le système invité refuse de démarrer au-delà de 4 vCPU
+W: La mémoire de la VM est divisée par le nombre de vCPU
+W: Les licences du système invité bloquent l'usage des vCPU supplémentaires et ralentissent alors les autres VM de l'hôte
+E: Plus une VM a de vCPU, plus il est difficile de les servir tous à temps, et le temps d'attente (Ready, Co-Stop) grimpe. Le bon réflexe est de partir petit et d'augmenter d'après les mesures. Les licences par cœur, comme celles de SQL Server, rendent ce surdimensionnement aussi coûteux.
+
+@049
+Q: Associer chaque technique de récupération de mémoire d'ESXi à son principe.
+P: Partage de pages (TPS) => Fusionner les pages mémoire identiques
+P: Ballooning => Faire rendre de la mémoire par le pilote de l'invité
+P: Compression => Compresser des pages plutôt que de les écrire sur disque
+P: Swap de l'hôte => Écrire sur disque des pages de la VM, en dernier recours
+E: ESXi les emploie dans cet ordre, du moins coûteux au plus pénalisant. Le ballooning laisse l'invité choisir les pages à libérer ; le swap de l'hôte les choisit à l'aveugle et ralentit fortement la VM. Du swap de l'hôte dans les mesures signale une surallocation de mémoire à corriger.
+
+@050
+Q: Trois hôtes de 256 Go forment un cluster HA qui doit tolérer la perte d'un hôte. Combien de gigaoctets de mémoire les VM peuvent-elles consommer au total pour que tout redémarre sans surallocation après une panne ?
+N: 512
+U: Go
+E: Après la perte d'un hôte, il reste 2 × 256 = 512 Go. En pratique, on retire la mémoire de l'hyperviseur et une marge : remplir les trois hôtes à plus des deux tiers fait échouer une partie des redémarrages. Le contrôle d'admission de HA réserve justement cette capacité.

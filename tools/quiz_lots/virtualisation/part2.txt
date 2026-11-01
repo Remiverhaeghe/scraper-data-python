@@ -1,0 +1,435 @@
+@051
+Q: À quoi sert le contrôle d'admission (admission control) de vSphere HA ?
+C: Réserver de la capacité pour redémarrer les VM d'un hôte tombé, en refusant d'allumer des VM au-delà
+W: Filtrer les administrateurs autorisés à se connecter à vCenter
+W: Bloquer les migrations vMotion pendant les heures de production
+W: Analyser chaque machine virtuelle au démarrage pour y détecter des logiciels malveillants
+E: Sans lui, on peut allumer des VM jusqu'à saturer le cluster, et HA n'a plus de place où redémarrer quoi que ce soit le jour d'une panne. La politique la plus courante réserve un pourcentage de processeur et de mémoire, 33 % pour un cluster de trois hôtes qui doit en perdre un.
+
+@052
+Q: Quelle contrainte accompagne l'activation de Fault Tolerance sur une machine virtuelle ?
+C: Les ressources sont consommées en double et un réseau dédié à faible latence relie les hôtes
+W: Elle ne fonctionne que sur des machines virtuelles arrêtées
+W: Elle redémarre la VM sur un autre hôte en cas de panne, comme HA
+W: Elle se combine sans surcoût avec les snapshots, DRS et les autres fonctions du cluster vSphere
+E: Une VM secondaire tourne en permanence sur un autre hôte et reçoit l'état de la principale en continu ; elle prend le relais sans coupure si l'hôte principal tombe. Le coût en processeur, en mémoire et en réseau la réserve aux quelques VM qui ne tolèrent aucune interruption.
+
+@053
+Q: Deux contrôleurs de domaine virtualisés ne doivent jamais se retrouver sur le même hôte. Quelle règle DRS cette commande PowerCLI crée-t-elle ?
+C: Une règle d'anti-affinité entre ces deux machines virtuelles
+W: Une règle d'affinité entre ces deux machines virtuelles
+W: Une réservation de mémoire sur chacune d'elles
+W: Le passage du cluster en mode manuel, pour que DRS cesse de déplacer les VM
+E: L'anti-affinité garantit qu'une panne d'hôte n'emporte pas les deux contrôleurs à la fois, ce que la redondance cherchait justement à éviter. L'affinité sert au cas inverse : garder ensemble deux VM qui échangent beaucoup. Les règles VM vers hôtes répondent aux licences liées à certains serveurs.
+```powershell
+New-DrsRule -Cluster "PROD" -Name "Separer-DC" -KeepTogether $false -VM "DC01", "DC02"
+```
+
+@054
+Q: Un serveur Windows migré de VMware vers KVM s'arrête au démarrage sur INACCESSIBLE_BOOT_DEVICE. Quelle est la cause la plus probable ?
+C: Le pilote du nouveau contrôleur de disque, virtio, n'était pas installé dans Windows avant la migration
+W: La licence Windows n'a pas été réactivée
+W: La carte réseau virtuelle a changé d'adresse MAC
+W: Le disque converti dépasse la taille maximale que KVM accepte pour le disque de démarrage d'une machine Windows
+E: Windows ne charge au démarrage que les pilotes de stockage qu'il connaît. Pour s'en sortir, on attache le disque en SATA, on démarre, on installe les pilotes virtio-win, puis on repasse en virtio. Installer ces pilotes avant la migration évite l'incident.
+
+@055
+Q: Remettre dans l'ordre l'application d'un correctif sur un hôte ESXi d'un cluster en production.
+O: Vérifier que le cluster peut absorber la charge avec un hôte en moins
+O: Passer l'hôte en mode maintenance
+O: Laisser DRS évacuer les machines virtuelles par vMotion
+O: Appliquer le correctif et redémarrer l'hôte
+O: Sortir du mode maintenance avant de passer à l'hôte suivant
+E: Un hôte en mode maintenance n'accepte plus de VM ; avec DRS en mode entièrement automatisé, l'évacuation est automatique. Traiter les hôtes un par un garde le service ouvert. vSphere Lifecycle Manager enchaîne ces étapes sur tout le cluster.
+
+@056
+Q: Quelle différence entre un datastore iSCSI et un datastore NFS sous ESXi ?
+C: iSCSI présente un disque en mode bloc qu'ESXi formate en VMFS ; NFS présente un partage déjà formaté par le NAS
+W: NFS chiffre les échanges entre l'hôte et le NAS, alors qu'iSCSI les envoie en clair sur tout le réseau de stockage
+W: iSCSI exige un réseau Fibre Channel
+W: Un datastore NFS est accessible en lecture seule par les hôtes ESXi
+E: Avec iSCSI, la LUN reçoit le système de fichiers VMFS, partagé entre les hôtes. Avec NFS, c'est le NAS qui gère les fichiers, et sa capacité s'agrandit sans toucher aux hôtes. Les deux conviennent à vMotion et HA ; on les place sur un réseau de stockage séparé.
+
+@057
+Q: Pourquoi relier chaque hôte au stockage par au moins deux chemins (multipathing) ?
+C: Pour garder l'accès au stockage si un câble, un commutateur ou un contrôleur tombe, et répartir la charge
+W: Pour doubler la capacité disponible sur le datastore
+W: Pour sauvegarder automatiquement les machines virtuelles
+W: Parce que le provisionnement fin des disques ne fonctionne qu'à travers deux chemins
+E: Une perte totale d'accès au stockage arrête toutes les VM de l'hôte. Avec deux cartes reliées à deux commutateurs vers deux contrôleurs de la baie, aucune panne isolée ne coupe le stockage. esxcli storage core path list montre l'état de chaque chemin.
+
+@058
+Q: Un datastore qui héberge des disques fins atteint 100 % d'occupation. Que deviennent les VM qui tentent d'écrire ?
+C: Elles sont mises en pause avec un message demandant de libérer de l'espace
+W: Elles continuent en écrivant temporairement dans leur mémoire
+W: Elles sont supprimées pour libérer de la place
+W: Elles basculent seules vers un autre datastore du cluster qui dispose encore d'espace libre
+E: La pause évite de corrompre les systèmes de fichiers des invités. Pour reprendre, on libère de la place : supprimer un snapshot ancien, déplacer une VM par Storage vMotion ou agrandir le datastore, puis répondre au message de chaque VM. Une alarme à 80 % évite d'en arriver là.
+
+@059
+Q: Que recommande la règle de sauvegarde 3-2-1 ?
+C: Trois copies des données sur deux supports différents, dont une hors site
+W: Trois snapshots par jour, deux par semaine et un par mois
+W: Trois serveurs, deux clusters et un seul site principal
+W: Trois jours de rétention, deux semaines d'archives et une restauration testée chaque mois
+E: La copie hors site protège d'un incendie ou d'un vol, le second support d'une panne de la baie. Face aux rançongiciels, on y ajoute une copie hors ligne ou immuable et des restaurations vérifiées (3-2-1-1-0) : les attaquants ciblent d'abord les sauvegardes accessibles depuis le réseau.
+
+@060
+Q: Comment un logiciel de sauvegarde comme Veeam obtient-il une copie cohérente d'une VM vSphere allumée ?
+C: Il crée un snapshot temporaire après mise au repos de l'invité, lit les disques puis supprime le snapshot
+W: Il arrête systématiquement la VM pendant toute la durée de la sauvegarde
+W: Il copie le contenu de la mémoire vive de la VM, plus rapide à lire que ses disques
+W: Il lit les fichiers .vmdk pendant que la VM écrit dedans, sans précaution particulière, en comptant sur la journalisation de l'invité
+E: La mise au repos par les VMware Tools et VSS vide les caches des applications : la copie lue sur le disque gelé est cohérente. Le snapshot ne vit que le temps de la lecture. Si sa suppression échoue, la consolidation des disques devient nécessaire.
+
+@061
+Q: Qu'apporte le suivi des blocs modifiés (Changed Block Tracking) aux sauvegardes de VM ?
+C: Il note les blocs modifiés pour que la sauvegarde incrémentale ne lise qu'eux
+W: Il compresse les disques virtuels pendant la nuit
+W: Il chiffre les blocs envoyés vers le serveur de sauvegarde
+W: Il déduplique les blocs identiques directement sur le datastore de production
+E: Sans ce suivi, chaque incrémentale relirait tout le disque pour trouver les différences. Avec lui, la sauvegarde nocturne d'un serveur de 500 Go peut ne lire que quelques gigaoctets. Après certaines restaurations ou migrations, on réinitialise le suivi pour repartir d'une base sûre.
+
+@062
+Q: Une sauvegarde complète de 1,2 To passe par un lien à 1 Gbit/s, utilisé au mieux à 100 Mo/s. Combien d'heures dure-t-elle au minimum ?
+N: 3,33
+U: h
+T: 2
+E: 1,2 To = 1 200 000 Mo ; 1 200 000 / 100 = 12 000 s, soit 3 h 20. Une fenêtre de nuit de quatre heures est donc tout juste suffisante, d'où l'intérêt des incrémentales, de la compression ou d'un réseau de sauvegarde à 10 Gbit/s.
+
+@063
+Q: Associer chaque sigle à sa signification en virtualisation.
+P: P2V => Convertir une machine physique en machine virtuelle
+P: V2V => Convertir une VM d'un hyperviseur à un autre
+P: VDI => Postes de travail virtuels hébergés sur des serveurs
+P: OVF => Format d'échange décrivant une VM et ses disques
+E: Le P2V a vidé les salles serveurs dans les années 2010 ; le V2V revient avec les migrations depuis VMware. L'OVF, souvent empaqueté en un seul fichier OVA, sert à livrer des appliances virtuelles prêtes à importer, comme vCenter ou un pare-feu.
+
+@064
+Q: Compléter la commande pour convertir le disque VMware d'un serveur au format qcow2.
+A: convert
+E: qemu-img lit la plupart des formats (vmdk, vhdx, raw, qcow2) ; -f donne le format source et -O celui de sortie. qemu-img info vérifie ensuite le résultat. Proxmox VE propose aussi un assistant d'import qui lit directement les VM d'un hôte ESXi.
+```bash
+qemu-img ____ -f vmdk -O qcow2 srv01.vmdk srv01.qcow2
+```
+
+@065
+Q: Remettre dans l'ordre la migration d'un serveur Windows de VMware vers KVM.
+O: Installer les pilotes virtio-win dans la VM encore sous VMware
+O: Arrêter proprement la VM source
+O: Convertir le disque vmdk au format qcow2
+O: Créer la VM sous KVM avec le disque converti et la démarrer
+O: Désinstaller les VMware Tools et vérifier réseau et services
+E: Installer virtio avant l'arrêt évite l'écran INACCESSIBLE_BOOT_DEVICE. La carte réseau change : Windows la voit comme nouvelle et l'adresse IP fixe est à ressaisir. On garde la VM source éteinte, sans la supprimer, jusqu'à la validation des utilisateurs.
+
+@066
+Q: Remettre dans l'ordre ce qui se passe quand on crée puis supprime un snapshot de VM.
+O: Le disque de base passe en lecture seule
+O: Un disque delta est créé et reçoit toutes les nouvelles écritures
+O: Les lectures combinent le delta et le disque de base
+O: À la suppression, le delta est fusionné dans le disque de base
+O: La VM écrit de nouveau directement dans le disque de base
+E: Tant que le snapshot existe, chaque lecture peut devoir consulter plusieurs fichiers, ce qui coûte en performances. La fusion se fait VM allumée. Chaque snapshot supplémentaire ajoute un delta à la chaîne et un fichier de plus à parcourir.
+
+@067
+Q: Une VM porte un snapshot vieux de trois mois dont le delta pèse 400 Go. Pourquoi sa suppression risque-t-elle de durer des heures et de ralentir la VM ?
+C: Les 400 Go modifiés doivent être réécrits dans le disque de base pendant que la VM continue d'écrire
+W: Le delta doit d'abord être décompressé par l'hyperviseur
+W: La VM doit rester arrêtée pendant toute la fusion
+W: vCenter doit d'abord recopier l'intégralité du datastore avant d'autoriser la suppression du snapshot
+E: La fusion lit et réécrit tout le delta, en concurrence avec les entrées et sorties de la VM. On la lance en heure creuse en surveillant la latence du datastore. La vraie correction est en amont : une alarme sur l'âge et la taille des snapshots.
+
+@068
+Q: Un datastore est presque plein à cause du delta d'un snapshot de trois mois. Pourquoi « revenir au snapshot » n'est-il pas la bonne manière de libérer de la place ?
+C: Revenir efface trois mois de modifications, alors que la suppression garde l'état actuel
+W: Revenir à un snapshot échoue quand le datastore est plein, faute de place pour le fichier delta temporaire
+W: Revenir au snapshot double la taille du delta
+W: Les deux opérations ont le même effet sur les données, seule leur durée change
+E: Revenir au snapshot jette le delta et remet la VM dans l'état d'il y a trois mois : données métier, mises à jour et journaux disparaissent. Supprimer le snapshot conserve l'état courant. La confusion entre les deux boutons a déjà coûté des données à plus d'une équipe.
+
+@069
+Q: Pourquoi généraliser un modèle Windows avec Sysprep avant de le cloner ?
+C: Pour que chaque clone reçoive un identifiant de sécurité et un nom uniques, sans conflit dans le domaine
+W: Pour activer la licence Windows du modèle
+W: Pour réduire la taille du disque virtuel du modèle
+W: Pour installer les VMware Tools, que Windows ne sait installer qu'au cours de la phase de généralisation Sysprep
+E: Des clones non généralisés partagent le même SID de machine et le même nom, ce que Microsoft ne prend pas en charge dans un domaine. vCenter et SCVMM appliquent Sysprep au clonage par des spécifications de personnalisation. Sous Linux, on vide l'identifiant machine et les clés SSH de l'hôte.
+
+@070
+Q: Qu'est-ce qu'un clone lié (linked clone) ?
+C: Une VM qui partage le disque d'un parent en lecture seule et ne stocke que ses différences
+W: Une copie complète et indépendante de la VM d'origine
+W: Une VM synchronisée en permanence avec son parent
+W: Une copie de la VM sur un autre site, mise à jour à chaque réplication
+E: Le clone lié se crée en quelques secondes et occupe peu de place : il est courant pour les laboratoires et les postes VDI. Il dépend de son parent, qu'on ne doit ni supprimer ni modifier. Pour un serveur durable, on préfère un clone complet.
+
+@071
+Q: Pourquoi un contrôleur de domaine virtualisé ne doit-il pas régler son heure sur celle de l'hôte par les outils d'intégration ?
+C: Il doit suivre la hiérarchie NTP du domaine : deux sources d'heure se contredisent et Kerberos échoue
+W: L'hôte ne possède pas d'horloge matérielle
+W: La licence Windows Server l'interdit dans une machine virtuelle
+W: Une machine virtuelle n'a pas d'horloge propre et ne peut donc pas servir de référence d'heure aux autres serveurs
+E: Le contrôleur qui porte le rôle d'émulateur PDC donne l'heure au domaine en se calant sur une source NTP fiable. Si l'hôte corrige l'heure en parallèle, après une restauration ou une migration, les écarts cassent l'authentification Kerberos, qui refuse plus de 5 minutes de décalage. On désactive donc le fournisseur d'heure de l'hyperviseur sur ces machines.
+
+@072
+Q: Une VM de 24 vCPU tourne sur un hôte à deux processeurs de 16 cœurs. Pourquoi ses accès mémoire peuvent-ils ralentir ?
+C: Elle déborde d'un nœud NUMA : une partie de ses accès mémoire passe par l'autre processeur, plus lentement
+W: Une machine virtuelle ne peut pas dépasser 16 vCPU
+W: L'Hyper-Threading est désactivé pour les grosses machines virtuelles
+W: Les vCPU au-delà du seizième sont émulés de manière logicielle par l'hyperviseur, ce qui ralentit toute la VM
+E: Chaque processeur physique a sa mémoire locale ; l'atteindre depuis l'autre processeur coûte plus cher. Une VM qui tient dans un nœud, ici 16 vCPU et la mémoire de ce processeur, évite ce surcoût. Au-delà, l'hyperviseur expose une topologie NUMA virtuelle pour que l'invité place bien ses données.
+
+@073
+Q: À quoi sert le passthrough PCI (DirectPath I/O, IOMMU) ?
+C: Donner à une VM l'accès direct à une carte physique, comme un GPU ou une carte d'acquisition, au prix de sa mobilité
+W: Partager une même carte physique entre les VM de l'hôte, chacune recevant une part de ses ressources
+W: Accélérer les migrations vMotion
+W: Chiffrer le trafic entre la machine virtuelle et la carte réseau physique de l'hôte, sans passer par le commutateur virtuel
+E: La VM pilote la carte avec le pilote du fabricant, presque sans perte de performance. Il faut VT-d ou AMD-Vi dans le BIOS. En contrepartie, la VM est attachée à son hôte : plus de vMotion ni de redémarrage HA ailleurs, et la réservation de toute sa mémoire est exigée.
+
+@074
+Q: Compléter la commande pour autoriser la VM LAB-ESX à faire tourner son propre hyperviseur (virtualisation imbriquée).
+A: ExposeVirtualizationExtensions
+E: La VM doit être arrêtée pour ce réglage. La virtualisation imbriquée sert aux laboratoires et aux formations : un ESXi ou un Hyper-V dans une VM, avec ses propres VM. Les performances ne conviennent pas à la production.
+```powershell
+Set-VMProcessor -VMName "LAB-ESX" -____ $true
+```
+
+@075
+Q: Sous Proxmox VE, quelle différence entre un conteneur LXC privilégié et non privilégié ?
+C: Dans un conteneur non privilégié, le root du conteneur correspond à un utilisateur sans droits sur l'hôte
+W: Un conteneur non privilégié n'a pas accès au réseau
+W: Un conteneur privilégié est plus lent, car il passe par l'émulation
+W: Le réglage ne change que l'icône affichée dans l'interface web de Proxmox et l'ordre de démarrage des conteneurs du nœud
+E: Les identifiants des utilisateurs sont décalés : root dans le conteneur est l'utilisateur 100000 sur l'hôte. Une évasion du conteneur ne donne donc pas la main sur l'hôte. Proxmox crée des conteneurs non privilégiés par défaut ; le mode privilégié reste réservé aux cas qui l'exigent, comme certains montages NFS.
+
+@076
+Q: Associer chaque compteur d'esxtop à ce qu'il mesure.
+P: %RDY => Temps passé à attendre un cœur physique libre
+P: %CSTP => Temps d'arrêt imposé pour garder les vCPU synchronisés
+P: DAVG => Latence côté périphérique de stockage
+P: KAVG => Temps passé dans le noyau ESXi
+P: MCTLSZ => Mémoire récupérée par le ballooning
+E: esxtop s'ouvre en SSH sur l'hôte ; les touches c, m, d et n basculent entre processeur, mémoire, disque et réseau. Un %CSTP élevé signale une VM qui a plus de vCPU qu'elle n'en utilise. GAVG, la latence vue par l'invité, vaut à peu près DAVG plus KAVG.
+
+@077
+Q: Pourquoi virtualise-t-on souvent les serveurs de supervision SCADA d'une usine ?
+C: Pour redémarrer vite sur un autre hôte en cas de panne et faire durer d'anciens systèmes sur du matériel récent
+W: Pour se passer des automates programmables
+W: Pour se passer du réseau industriel
+W: Pour obtenir un fonctionnement en temps réel dur, que seule la virtualisation garantit aux applications industrielles
+E: Postes de supervision, historiens et serveurs de licences se virtualisent bien, avec des sauvegardes et une reprise plus simples. Les automates et les tâches en temps réel restent sur leur matériel. On vérifie la compatibilité annoncée par l'éditeur et on garde le réseau industriel séparé du réseau bureautique.
+
+@078
+Q: Un logiciel industriel est protégé par une clé USB de licence. Comment le faire tourner dans une VM sous ESXi ?
+C: Rediriger le port USB de l'hôte vers la VM, ou passer par un serveur USB sur IP
+W: Copier le contenu de la clé dans le disque virtuel
+W: Ce n'est pas possible, ces licences exigent une machine physique
+W: Les VMware Tools émulent d'eux-mêmes les clés de licence des grands éditeurs
+E: La redirection depuis l'hôte est simple mais lie la licence à cet hôte : si HA redémarre la VM ailleurs, la clé ne suit pas. Un serveur USB sur IP, petit boîtier réseau, présente la clé à la VM où qu'elle tourne. Une licence réseau ou logicielle, quand l'éditeur la propose, évite le problème.
+
+@079
+Q: Pourquoi isoler dans un réseau dédié l'administration des hyperviseurs (ESXi, vCenter, cartes iDRAC ou iLO) ?
+C: Qui atteint l'administration contrôle toutes les VM ; les rançongiciels visent directement ESXi
+W: Pour améliorer le débit des machines virtuelles
+W: Parce que la licence vSphere l'exige
+W: Pour que vMotion puisse traverser le pare-feu de l'entreprise sans règle particulière ni ouverture de ports
+E: La campagne ESXiArgs de 2023 a chiffré des milliers d'hôtes exposés, par une faille du service OpenSLP déjà corrigée. Réseau d'administration séparé, correctifs appliqués, SSH coupé hors intervention et comptes nominatifs limitent ce risque. Les sauvegardes doivent rester hors de portée de ce réseau.
+
+@080
+Q: Que fait le mode verrouillage (lockdown mode) d'un hôte ESXi ?
+C: L'hôte refuse l'administration directe et passe par vCenter, hormis quelques comptes d'exception
+W: Il arrête les machines virtuelles de l'hôte jusqu'à la levée du verrouillage
+W: Il bloque les migrations vMotion
+W: Il chiffre les datastores de l'hôte avec une clé conservée dans vCenter et dans le module TPM du serveur
+E: L'interface web de l'hôte et les connexions directes sont fermées : chaque action passe par vCenter, ses droits et ses journaux. Le mode strict coupe aussi la console locale. On garde une procédure de secours documentée pour le jour où vCenter lui-même est en panne.
+
+@081
+Q: Qu'appelle-t-on une évasion de machine virtuelle (VM escape) ?
+C: Une faille qui permet au code d'une VM d'agir sur l'hyperviseur ou sur les autres VM
+W: Une VM qui migre vers un autre hôte sans autorisation
+W: Une perte de connexion réseau de la machine virtuelle
+W: Un snapshot qui continue de grossir après la suppression de la machine virtuelle
+E: C'est la faille la plus grave en virtualisation : elle rompt l'isolation sur laquelle repose tout le modèle. Elles sont rares mais existent ; VMware en a corrigé plusieurs exploitées en 2025. Appliquer rapidement les correctifs de l'hyperviseur fait partie de l'exploitation courante.
+
+@082
+Q: vCenter est indisponible. Que montre cette commande lancée en SSH sur un hôte ESXi ?
+C: Les VM inscrites sur l'hôte, avec leur identifiant, leur datastore et leur fichier .vmx
+W: Les machines virtuelles du cluster entier, quel que soit l'hôte ESXi qui les fait tourner
+W: Les machines virtuelles allumées, sans celles qui sont arrêtées ou suspendues
+W: Les snapshots de chaque machine virtuelle
+E: L'identifiant (Vmid) obtenu sert ensuite aux autres commandes vim-cmd, par exemple power.getstate pour l'état de la VM. Ces commandes locales permettent de relancer vCenter lui-même, qui n'est qu'une VM du cluster, ou un contrôleur de domaine.
+```bash
+vim-cmd vmsvc/getallvms
+```
+
+@083
+Q: vCenter est en panne. Compléter la commande pour allumer depuis le shell de l'hôte la VM d'identifiant 12.
+A: on
+E: power.on, power.shutdown (arrêt propre par les VMware Tools) et power.off (coupure brutale) pilotent la VM sans vCenter. On note dans la procédure de secours sur quel hôte vCenter tourne habituellement, avec DRS réglé pour le garder sur un hôte connu.
+```bash
+vim-cmd vmsvc/power.____ 12
+```
+
+@084
+Q: Que produit ce script PowerCLI ?
+C: La liste des snapshots de toutes les VM, avec leur date de création et leur taille
+W: Un snapshot de chaque machine virtuelle du vCenter, nommé d'après sa date et sa taille
+W: La suppression des snapshots de toutes les machines virtuelles
+W: La liste des machines virtuelles qui n'ont aucun snapshot
+E: PowerCLI est le module PowerShell de VMware ; Connect-VIServer ouvre d'abord la session sur vCenter. Trié par date et exporté avec Export-Csv, ce rapport hebdomadaire repère les snapshots oubliés avant qu'ils remplissent un datastore.
+```powershell
+Get-VM | Get-Snapshot | Select-Object VM, Name, Created, SizeGB
+```
+
+@085
+Q: Compléter cette commande PowerCLI pour supprimer, sans confirmation, les snapshots de la VM SRV-APP01.
+A: Remove
+E: La suppression fusionne les deltas dans le disque de base ; elle peut durer longtemps sur un gros snapshot. Ajouter -RunAsync rend la main tout de suite et laisse suivre la tâche dans vCenter. On teste d'abord la commande avec -WhatIf.
+```powershell
+Get-VM "SRV-APP01" | Get-Snapshot | ____-Snapshot -Confirm:$false
+```
+
+@086
+Q: Cette commande montre l'état d'une VM Hyper-V. Quelle est la cause la plus fréquente de cet état ?
+C: Le volume de ses disques est plein, souvent à cause d'un disque dynamique ou d'un point de contrôle
+W: La licence Windows de la machine virtuelle a expiré
+W: Les services d'intégration de la machine virtuelle sont trop anciens
+W: Un administrateur a mis la machine en pause par erreur depuis le Gestionnaire Hyper-V ou par Suspend-VM
+E: Hyper-V met la VM en pause critique plutôt que de la laisser corrompre ses disques. On libère de l'espace sur le volume (fusion d'un point de contrôle, déplacement d'un disque), puis Resume-VM la relance là où elle s'était arrêtée.
+```text
+PS> Get-VM SRV-APP01 | Select-Object Name, State
+
+Name      State
+----      -----
+SRV-APP01 PausedCritical
+```
+
+@087
+Q: D'après cette configuration Proxmox, dans quel VLAN la VM 101 envoie-t-elle ses trames ?
+C: Le VLAN 20, par le pont vmbr0
+W: Le VLAN 101, numéro de la VM
+W: Le VLAN 1, VLAN natif par défaut
+W: Pas de VLAN, car l'adresse MAC commence par BC:24:11
+E: tag=20 étiquette les trames de cette carte ; le pont vmbr0 doit être déclaré VLAN aware et le port du commutateur physique doit transporter le VLAN 20. Ce fichier, dans /etc/pve, est répliqué sur tous les nœuds du cluster.
+```text
+# /etc/pve/qemu-server/101.conf
+balloon: 2048
+memory: 8192
+cores: 4
+net0: virtio=BC:24:11:5A:3C:01,bridge=vmbr0,tag=20
+scsi0: local-zfs:vm-101-disk-0,discard=on,size=64G
+```
+
+@088
+Q: Que signifient les lignes memory et balloon de cette configuration Proxmox ?
+C: La VM dispose au plus de 8 Go et le ballooning peut la ramener à 2 Go si l'hôte manque de mémoire
+W: La VM reçoit 8 Go plus 2 Go de réserve, soit 10 Go
+W: La VM dispose de 2 Go de mémoire réelle, complétés par 8 Go de fichier d'échange pris sur le stockage du nœud
+W: 8192 désigne la fréquence du processeur virtuel en mégahertz
+E: Les valeurs sont en Mio. Proxmox réclame de la mémoire aux VM par le pilote de ballooning quand l'hôte dépasse 80 % d'occupation, sans descendre sous la valeur balloon. balloon: 0 désactive le mécanisme ; il faut alors que les mémoires des VM tiennent dans celle de l'hôte.
+```text
+memory: 8192
+balloon: 2048
+```
+
+@089
+Q: Pourquoi activer l'option discard sur le disque d'une VM placée sur un stockage fin ?
+C: Pour que les blocs effacés dans l'invité (TRIM) soient rendus au stockage de l'hôte
+W: Pour chiffrer le disque virtuel
+W: Pour supprimer le disque à l'arrêt de la VM
+W: Pour désactiver le cache d'écriture du disque, qui consomme sinon de l'espace sur le stockage fin
+E: Sans discard, un fichier supprimé dans l'invité libère de la place dans son système de fichiers mais pas sur l'hôte : le disque fin ne fait que grossir. Avec l'option et un TRIM périodique dans l'invité (fstrim, ou l'optimisation des lecteurs sous Windows), l'espace revient au pool.
+
+@090
+Q: Remettre dans l'ordre un test de restauration de sauvegarde d'une VM.
+O: Restaurer la VM sous un autre nom, dans un réseau isolé
+O: Démarrer la copie et vérifier que le système démarre
+O: Contrôler l'application et la fraîcheur des données
+O: Noter la durée de restauration obtenue
+O: Supprimer la copie et consigner le résultat
+E: Le réseau isolé évite un conflit d'adresse ou de nom avec la VM de production. La durée mesurée se compare au RTO promis au métier. Une sauvegarde jamais restaurée reste une hypothèse : on planifie ce test, au moins pour les serveurs critiques.
+
+@091
+Q: Le delta d'un snapshot grossit de 20 Go par jour et le datastore a encore 300 Go libres. Au bout de combien de jours sera-t-il plein ?
+N: 15
+U: jours
+E: 300 / 20 = 15 jours, et moins si d'autres VM grossissent aussi. Les VM écrivant sur ce datastore seront alors mises en pause. Une alarme sur l'âge des snapshots, trois jours par exemple, déclenche l'action bien avant cette échéance.
+
+@092
+Q: Une VM est répliquée toutes les 15 minutes vers un site de secours, où elle redémarre en une heure. Que valent son RPO et son RTO ?
+C: RPO de 15 minutes, RTO d'une heure
+W: RPO d'une heure, RTO de 15 minutes
+W: RPO d'une heure et quart, RTO nul
+W: RPO nul, puisque la réplication est automatique et transparente pour l'application
+E: Le RPO mesure la perte de données maximale acceptée, ici les écritures depuis la dernière réplication. Le RTO mesure la durée d'interruption, jusqu'au service rétabli. Ces deux chiffres se fixent avec le métier, avant de choisir entre sauvegarde, réplication ou cluster.
+
+@093
+Q: Pourquoi de nombreuses entreprises étudient-elles Proxmox VE ou Hyper-V depuis 2024 ?
+C: Après le rachat par Broadcom, les licences VMware sont passées à des abonnements groupés, souvent plus chers
+W: VMware ESXi ne fonctionne plus sur les processeurs Intel
+W: Proxmox VE est imposé aux administrations par une directive européenne
+W: vSphere a cessé de prendre en charge les machines virtuelles Windows Server dans la version publiée en 2024
+E: Le changement de modèle a fortement augmenté la facture de nombreuses PME et collectivités. Proxmox VE, gratuit avec un abonnement de support facultatif, et Hyper-V, inclus dans Windows Server, sont les alternatives les plus citées. La migration se prépare : inventaire, compatibilité des applications, sauvegarde et formation.
+
+@094
+Q: Qu'apporte Proxmox Backup Server par rapport à une simple copie des fichiers de sauvegarde ?
+C: Des sauvegardes incrémentales dédupliquées, vérifiées, avec restauration de fichiers isolés
+W: Il remplace le cluster Proxmox VE en cas de panne
+W: Il n'est gratuit que pour trois machines virtuelles
+W: Il se limite à des snapshots conservés sur le même stockage que les machines virtuelles sauvegardées
+E: Les blocs identiques entre VM et entre jours ne sont stockés qu'une fois, ce qui permet une longue rétention. Les tâches de vérification relisent les sauvegardes pour détecter une corruption. Une synchronisation vers un second serveur, hors site, complète la règle 3-2-1.
+R: Proxmox Backup Server, documentation | https://pbs.proxmox.com/docs/
+
+@095
+Q: Qu'est-ce que Ceph dans un cluster Proxmox VE ?
+C: Un stockage distribué, répliqué entre les disques locaux d'au moins trois nœuds, sans baie partagée
+W: Un logiciel de sauvegarde vers le cloud
+W: Un hyperviseur concurrent de KVM
+W: Le service de quorum du cluster
+E: Chaque bloc est copié en trois exemplaires sur des nœuds différents : la perte d'un nœud ne fait perdre aucune donnée et les VM redémarrent ailleurs. Ceph demande un réseau dédié rapide, 10 Gbit/s au minimum, et consomme du processeur et de la mémoire sur chaque nœud.
+
+@096
+Q: Une VM Windows est lente et l'hôte montre beaucoup de mémoire de cette VM swappée par l'hyperviseur. Quelle conclusion tirer ?
+C: L'hôte manque de mémoire physique : réduire la surallocation, migrer des VM ou ajouter de la mémoire
+W: Il faut augmenter la mémoire de cette machine virtuelle
+W: Il faut défragmenter le disque de l'invité
+W: Les VMware Tools doivent être réinstallés, car le swap de l'hôte provient d'un pilote de ballooning défectueux
+E: Le swap de l'hôte est le dernier recours d'un hyperviseur à court de mémoire, invisible depuis l'invité. Donner plus de mémoire à la VM aggrave le manque. On regarde la consommation de tout l'hôte et on répartit les VM dans le cluster.
+
+@097
+Q: Dans esxtop, le disque d'une VM lente affiche ces latences, en millisecondes. Où chercher la cause ?
+C: Du côté de la baie de stockage ou du réseau de stockage, en aval de l'hôte
+W: Dans le noyau ESXi, qui met les requêtes en file d'attente
+W: Dans le système de fichiers de l'invité
+W: Dans les VMware Tools de la machine virtuelle, qui retardent les écritures
+E: DAVG mesure le temps de réponse du périphérique, depuis la carte de l'hôte jusqu'à la baie ; au-delà d'environ 20 ms, le stockage peine. Un KAVG élevé désignerait au contraire une file d'attente dans l'hôte. On compare avec les autres VM du même datastore et les mesures de la baie.
+```text
+DEVICE                   DAVG/cmd  KAVG/cmd  GAVG/cmd
+naa.600508b1001c3a4f       40.12      0.03     40.15
+```
+
+@098
+Q: Les fichiers d'une VM ont été copiés à la main puis inscrits sur un hôte. Au démarrage, VMware demande si la machine a été déplacée ou copiée. Que répondre si la copie tournera en même temps que l'original ?
+C: « Je l'ai copiée », pour générer un nouvel identifiant UUID et une nouvelle adresse MAC
+W: « Je l'ai déplacée », pour conserver la configuration réseau d'origine
+W: Annuler, puis supprimer le fichier .nvram de la copie
+W: Peu importe, ESXi corrige seul les conflits d'adresse MAC entre deux machines virtuelles
+E: Répondre « déplacée » garde l'UUID et l'adresse MAC : deux VM identiques sur le réseau provoquent des conflits et des pertes de paquets difficiles à diagnostiquer. Le système invité garde son nom et son adresse IP fixe, à changer avant de le brancher sur le réseau de production.
+
+@099
+Q: Compléter la commande pour activer l'agent invité QEMU sur la VM 101 de Proxmox.
+A: agent
+E: L'agent, installé dans l'invité (paquet qemu-guest-agent), permet un arrêt propre, la remontée des adresses IP et le gel du système de fichiers pendant les sauvegardes. Sans lui, Proxmox envoie un signal ACPI que certains systèmes ignorent, et l'arrêt finit en coupure après le délai.
+R: Proxmox VE, agent invité QEMU | https://pve.proxmox.com/wiki/Qemu-guest-agent
+```bash
+qm set 101 --____ enabled=1
+```
+
+@100
+Q: Une PME de trois serveurs, au budget serré, veut de la haute disponibilité sans acheter de baie de stockage. Quelle solution est la plus réaliste ?
+C: Un cluster Proxmox VE de trois nœuds avec Ceph ou la réplication ZFS
+W: Un hôte ESXi unique avec des sauvegardes sur clé USB
+W: VirtualBox installé sur le poste du responsable informatique
+W: Des conteneurs Docker lancés sur un seul serveur
+E: Trois nœuds donnent un quorum sûr ; Ceph partage les disques locaux, la réplication ZFS suffit si quelques minutes de perte sont acceptables. Une sauvegarde hors du cluster, par exemple sur Proxmox Backup Server, reste indispensable : la haute disponibilité ne protège ni d'une erreur ni d'un rançongiciel.

@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110102,
+  "skills": ["VMware", "Hyper-V", "virtualisation", "Proxmox"],
+  "schemas": [
+    {
+      "name": "virtualisation-vmotion.svg",
+      "questions": ["041", "042", "043"],
+      "diagram": {
+        "title": "Migration à chaud d'une VM avec vMotion",
+        "nodes": [
+          "Contrôle de compatibilité des deux hôtes",
+          "Copie de la mémoire, VM toujours allumée",
+          "Recopie des pages modifiées, par passes",
+          "Bascule : dernier état et processeur",
+          "Reprise sur la destination, annonce RARP"
+        ],
+        "note": "Les disques restent sur le datastore partagé par les deux hôtes"
+      }
+    },
+    {
+      "name": "virtualisation-snapshot.svg",
+      "questions": ["066", "067", "068"],
+      "diagram": {
+        "title": "Vie d'un snapshot de machine virtuelle",
+        "nodes": [
+          "Disque de base passé en lecture seule",
+          "Disque delta créé pour les écritures",
+          "Lectures : delta puis disque de base",
+          "Suppression : delta fusionné dans la base",
+          "Écritures de nouveau dans le disque de base"
+        ],
+        "note": "Revenir au snapshot efface le delta et toutes les modifications"
+      }
+    }
+  ]
+}

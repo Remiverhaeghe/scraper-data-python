@@ -5,6 +5,15 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision virtualisation
+- Lot de 100 questions dont 30 interactives (associations, remises en ordre,
+  calculs, commandes à compléter) : hyperviseurs, VMware vSphere (vMotion, DRS,
+  HA, datastores, snapshots), Hyper-V (générations, points de contrôle,
+  Replica), Proxmox VE (KVM, LXC, quorum, ZFS, Ceph), KVM et libvirt,
+  surallocation et esxtop, sauvegarde et reprise, migration V2V, sécurité des
+  hyperviseurs et virtualisation des serveurs industriels
+- Deux schémas : migration à chaud avec vMotion, vie d'un snapshot
+
 ### Révision API REST et HTTP
 - Lot de 100 questions dont 40 interactives (associations, remises en ordre,
   calculs, code à compléter) : méthodes, idempotence et codes de statut,
