@@ -5,6 +5,16 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision analyse de données
+- Lot de 100 questions dont 33 interactives (associations, remises en ordre,
+  calculs, code à compléter) : Pandas (chargement CSV et Excel, types, loc et
+  iloc, valeurs manquantes, doublons, jointures et leurs contrôles, groupby,
+  pivot_table, melt, dates et fuseaux, fenêtres glissantes), vectorisation,
+  équivalents Excel, graphiques, statistiques descriptives et valeurs
+  aberrantes, moyennes pondérées, tests A/B et p-value, biais, Parquet, DuckDB
+  et Polars, qualité des données, RGPD, cohortes
+- Deux schémas : démarche d'une analyse, agrégation groupby
+
 ### Révision performance et optimisation
 - Lot de 100 questions dont 30 interactives (associations, remises en ordre,
   calculs, code à compléter) : latence, débit et percentiles, profilage

@@ -1,0 +1,36 @@
+{
+  "lot": 1,
+  "seed": 2026110202,
+  "skills": ["analyse de données", "pandas", "Excel", "data analyst"],
+  "schemas": [
+    {
+      "name": "analyse-donnees-demarche.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Démarche d'une analyse de données",
+        "nodes": [
+          "Question métier formulée avec le demandeur",
+          "Collecte et origine des données",
+          "Nettoyage : types, manquants, doublons",
+          "Exploration et analyse",
+          "Restitution de la réponse et de ses limites"
+        ],
+        "note": "Une anomalie trouvée en route renvoie à l'étape précédente"
+      }
+    },
+    {
+      "name": "analyse-donnees-groupby.svg",
+      "questions": ["045", "046", "047"],
+      "diagram": {
+        "title": "Agrégation groupby : découper, appliquer, assembler",
+        "nodes": [
+          "Découpage des lignes selon la clé",
+          "Agrégat appliqué à chaque groupe",
+          "Assemblage indexé par la clé",
+          "reset_index : la clé redevient une colonne"
+        ],
+        "note": "transform renvoie une valeur par ligne, agg une valeur par groupe"
+      }
+    }
+  ]
+}

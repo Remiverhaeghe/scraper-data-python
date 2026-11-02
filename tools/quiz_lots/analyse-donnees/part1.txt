@@ -1,0 +1,421 @@
+@001
+Q: Quelle structure Pandas représente un tableau à deux dimensions avec des colonnes nommées ?
+C: Le DataFrame
+W: La Series
+W: Le ndarray de NumPy à une seule dimension
+W: Le dictionnaire de listes, converti en tableau à chaque accès
+E: Une Series est une seule colonne avec son index ; un DataFrame assemble plusieurs Series qui partagent le même index. Chaque colonne garde son propre type (dtype), alors qu'un tableau NumPy impose le même type à toutes les cellules.
+
+@002
+Q: Compléter cette instruction qui charge un fichier CSV dans un DataFrame.
+A: read_csv
+E: read_csv détecte les en-têtes et devine le type de chaque colonne. Les exports d'un Excel français utilisent souvent le point-virgule et la virgule décimale : on précise alors sep=";" et decimal=",".
+```python
+import pandas as pd
+
+ventes = pd.____("ventes.csv")
+```
+
+@003
+Q: Quelle méthode affiche, pour chaque colonne d'un DataFrame, son type et le nombre de valeurs non vides ?
+C: info()
+W: head()
+W: describe()
+W: value_counts()
+E: info() est le premier réflexe après un chargement : il révèle une colonne de montants lue comme texte (object) ou des valeurs manquantes. head() montre les premières lignes, describe() les statistiques des colonnes numériques.
+
+@004
+Q: Un fichier exporté d'Excel contient « 12,50 » dans la colonne montant et Pandas la lit comme du texte. Quel paramètre de read_csv corrige ce problème ?
+C: decimal=","
+W: sep=","
+W: encoding="utf-8"
+W: thousands=" " pour retirer les espaces des milliers
+E: Par défaut Pandas attend le point comme séparateur décimal. Avec decimal=",", « 12,50 » devient 12.5. Si les champs sont eux aussi séparés par des virgules, le fichier est ambigu : il faut d'abord vérifier le séparateur réel, souvent sep=";".
+
+@005
+Q: Quelle différence sépare la moyenne et la médiane d'une série de salaires ?
+C: La médiane coupe la série en deux moitiés et résiste aux valeurs extrêmes
+W: La moyenne ne se calcule que sur des nombres entiers
+W: La médiane est toujours supérieure à la moyenne
+W: Ce sont deux noms de la même mesure, l'un en statistique, l'autre en comptabilité
+E: Quelques très hauts salaires tirent la moyenne vers le haut alors que la médiane bouge à peine. C'est pour cela que l'INSEE publie le salaire médian : il décrit mieux la situation d'un salarié ordinaire.
+
+@006
+Q: Les ventes journalières d'une boutique sont 120, 80, 100, 90 et 610 €. Quelle est la médiane en euros ?
+N: 100
+U: €
+E: Triées, les valeurs donnent 80, 90, 100, 120, 610 : la médiane est la troisième, 100 €. La moyenne vaut 200 €, tirée vers le haut par la journée exceptionnelle à 610 €, que la médiane ignore.
+
+@007
+Q: Comment sélectionner les lignes du DataFrame ventes dont le montant dépasse 1 000 ?
+C: ventes[ventes["montant"] > 1000]
+W: ventes["montant" > 1000]
+W: ventes.select(montant > 1000)
+W: ventes.filter(ventes["montant"] > 1000, axis="rows")
+E: ventes["montant"] > 1000 produit une Series de booléens ; placée entre crochets, elle garde les lignes à True. On combine plusieurs conditions avec & et |, chacune entre parenthèses : (a > 1) & (b == "Lille").
+
+@008
+Q: Que fait la méthode isna() appliquée à une colonne ?
+C: Elle indique, ligne par ligne, si la valeur est manquante
+W: Elle supprime les lignes qui contiennent des vides
+W: Elle remplace les valeurs manquantes par zéro
+W: Elle compte les colonnes non numériques
+E: Le résultat est une Series de booléens. ventes["montant"].isna().sum() compte les manquants, puisque True vaut 1. Pour supprimer on utilise dropna(), pour remplacer fillna().
+
+@009
+Q: Associer chaque méthode Pandas à son rôle.
+P: head() => Afficher les premières lignes
+P: describe() => Résumer les colonnes numériques
+P: dropna() => Retirer les lignes incomplètes
+P: drop_duplicates() => Retirer les lignes en double
+P: sort_values() => Trier selon une colonne
+E: Ces méthodes renvoient un nouveau DataFrame sans modifier l'original : il faut réaffecter le résultat (ventes = ventes.dropna()). describe() donne l'effectif, la moyenne, l'écart type, le minimum, les quartiles et le maximum.
+
+@010
+Q: À quoi sert value_counts() appliqué à la colonne ville ?
+C: Compter le nombre de lignes pour chaque ville
+W: Calculer la somme des montants de chaque ville
+W: Lister les villes sans doublon, dans l'ordre alphabétique
+W: Vérifier que chaque ville est écrite en majuscules
+E: Le résultat est trié du plus fréquent au moins fréquent. Avec normalize=True on obtient des proportions plutôt que des effectifs. Pour faire la somme d'une autre colonne par ville, on passe par groupby.
+
+@011
+Q: Pourquoi une colonne de codes postaux doit-elle être lue comme du texte ?
+C: Pour garder le zéro initial, par exemple 01000
+W: Parce que Pandas refuse les nombres de plus de quatre chiffres
+W: Pour pouvoir calculer la moyenne des codes postaux
+W: Parce que le texte prend moins de mémoire que les entiers
+E: Lu comme nombre, « 01000 » devient 1000 et la jointure avec un référentiel échoue. On précise dtype={"code_postal": str} dans read_csv. Même règle pour les numéros de téléphone, de SIRET ou de pièce : un identifiant n'est pas une quantité.
+
+@012
+Q: Quelle fonction Excel retrouve une valeur dans une table de référence à partir d'une clé, en remplacement de RECHERCHEV ?
+C: RECHERCHEX
+W: SOMME.SI
+W: CONCATENER
+W: NB.SI.ENS, qui compte les lignes répondant à plusieurs conditions
+E: RECHERCHEX (XLOOKUP en anglais) cherche la clé dans n'importe quelle colonne, renvoie une valeur située à gauche comme à droite et gère le cas « non trouvé ». En Pandas, l'équivalent est une jointure avec merge.
+
+@013
+Q: Qu'est-ce qu'un tableau croisé dynamique dans Excel ?
+C: Un résumé qui agrège les données selon des lignes et colonnes choisies
+W: Un graphique qui se met à jour à chaque saisie dans la feuille
+W: Une feuille protégée par mot de passe et partagée avec toute l'équipe en ligne
+W: Une macro VBA qui recopie un tableau d'une feuille à l'autre
+E: Par exemple, le chiffre d'affaires par région en lignes et par mois en colonnes, recalculé d'un clic quand la source change. En Pandas, pivot_table produit le même résultat avec index, columns, values et aggfunc.
+
+@014
+Q: Associer chaque type de graphique à l'usage qui lui convient le mieux.
+P: Courbe => Évolution du chiffre d'affaires mois par mois
+P: Barres => Comparaison des ventes de cinq magasins
+P: Histogramme => Répartition des âges des clients
+P: Nuage de points => Lien entre surface et prix des logements
+P: Boîte à moustaches => Dispersion et valeurs extrêmes des délais
+E: Le choix suit la question posée : évolution, comparaison, répartition, relation ou dispersion. Le camembert ne se lit bien qu'avec deux ou trois parts : au-delà, des barres triées sont plus lisibles.
+
+@015
+Q: Que renvoie ventes.shape pour un DataFrame de 1 200 lignes et 8 colonnes ?
+C: (1200, 8)
+W: (8, 1200)
+W: 9600
+W: La liste des huit noms de colonnes
+E: shape est un attribut, sans parenthèses, qui donne (lignes, colonnes). len(ventes) donne le nombre de lignes et ventes.columns la liste des noms de colonnes.
+
+@016
+Q: Quelle est la différence entre loc et iloc ?
+C: loc sélectionne par étiquette, iloc par position numérique
+W: loc lit les données, iloc les modifie
+W: iloc ne fonctionne que sur les colonnes, loc que sur les lignes
+W: loc est réservé aux DataFrame chargés depuis un fichier local, iloc aux autres
+E: ventes.loc[5, "montant"] lit la ligne dont l'index vaut 5 ; ventes.iloc[5, 2] lit la sixième ligne, troisième colonne. Après un tri ou un filtre, l'étiquette 5 et la position 5 ne désignent plus la même ligne.
+
+@017
+Q: Quel est le rôle d'un analyste de données (data analyst) dans une entreprise ?
+C: Transformer des données en réponses utiles aux décisions métier
+W: Administrer les serveurs de bases de données
+W: Développer des modèles d'apprentissage profond
+W: Saisir les commandes des clients dans l'ERP
+E: Il part d'une question (pourquoi les ventes baissent-elles dans l'Est ?), réunit et nettoie les données, les analyse et restitue le résultat par un tableau de bord ou une note. Le data engineer construit les flux de données, le data scientist les modèles prédictifs.
+
+@018
+Q: Un tableau de bord affiche « 1 200 commandes ce mois-ci ». Que manque-t-il à ce chiffre pour être interprété ?
+C: Un point de comparaison, comme l'objectif ou l'an passé
+W: Une décimale supplémentaire pour gagner en précision
+W: Une couleur rouge ou verte dans le tableau de bord
+W: Le nom de la personne qui a extrait le chiffre de la base
+E: Un nombre seul ne dit pas si c'est bien ou mal. Comparé au même mois l'an passé (saisonnalité) ou à l'objectif, il devient un indicateur. On précise aussi la définition : commandes passées, payées ou livrées ?
+
+@019
+Q: Le chiffre d'affaires passe de 80 000 € à 92 000 €. Quelle est l'évolution en pourcentage ?
+N: 15
+U: %
+E: (92 000 − 80 000) / 80 000 = 0,15, soit +15 %. En Pandas, pct_change() calcule cette évolution d'une ligne à la suivante, par exemple d'un mois à l'autre.
+
+@020
+Q: Que produit ce code sur le DataFrame ventes ?
+C: Le total des montants pour chaque région
+W: Le nombre de lignes de chaque région
+W: La liste des régions triée par ordre alphabétique
+W: Le montant de la première vente de chaque région, sans les autres
+E: groupby découpe les lignes par région, applique la somme à chaque groupe puis assemble les résultats dans une Series indexée par région. Remplacer sum() par mean() ou count() change l'agrégat calculé.
+```python
+ventes.groupby("region")["montant"].sum()
+```
+
+@021
+Q: Pourquoi garder une copie intacte du fichier source avant de le nettoyer ?
+C: Pour pouvoir refaire le nettoyage et vérifier chaque correction
+W: Parce que Pandas efface le fichier dès qu'il l'a chargé en mémoire
+W: Parce qu'un fichier nettoyé ne peut plus être ouvert dans Excel
+W: Pour respecter la limite de taille des DataFrame
+E: Un nettoyage écrit dans un script, appliqué à des données brutes jamais modifiées, se rejoue à l'identique à la prochaine livraison du fichier. Corriger à la main dans Excel ne laisse aucune trace de ce qui a changé.
+
+@022
+Q: Comment Pandas représente-t-il habituellement une valeur manquante dans une colonne numérique ?
+C: NaN
+W: 0
+W: Une chaîne vide
+W: La valeur -1, choisie par convention dans les colonnes de type float
+E: NaN (Not a Number) se propage dans les calculs, mais sum() et mean() l'ignorent par défaut. Remplacer NaN par 0 change le sens : une vente inconnue n'est pas une vente nulle, et la moyenne baisse à tort.
+
+@023
+Q: Associer chaque fonction Excel à son équivalent Pandas.
+P: SOMME.SI => groupby puis sum
+P: RECHERCHEX => merge
+P: NB.SI => value_counts
+P: Supprimer les doublons => drop_duplicates
+P: Filtre automatique => Masque booléen entre crochets
+E: Les mêmes opérations existent dans les deux outils. Pandas l'emporte quand le fichier dépasse le million de lignes d'une feuille Excel, quand le traitement doit être rejoué chaque semaine ou quand plusieurs sources doivent être assemblées.
+
+@024
+Q: Qu'est-ce qu'un notebook Jupyter ?
+C: Un document qui mêle code exécutable, résultats et texte explicatif
+W: Un tableur en ligne compatible avec les formules Excel
+W: Un éditeur réservé à l'écriture de requêtes SQL
+W: Un serveur de base de données conçu pour les analystes
+E: Chaque cellule s'exécute séparément et garde son résultat, ce qui convient à l'exploration. Piège classique : exécuter les cellules dans le désordre crée un état que personne ne peut reproduire. Avant de partager, on relance tout depuis le début.
+
+@025
+Q: Pourquoi une corrélation ne prouve-t-elle pas une relation de cause à effet ?
+C: Deux mesures peuvent varier ensemble à cause d'un troisième facteur
+W: Parce qu'une corrélation n'est jamais supérieure à 0,5
+W: Parce que la causalité ne se mesure que sur des données textuelles
+W: Parce que la corrélation se calcule uniquement sur des dates
+E: Les ventes de glaces et les noyades augmentent ensemble : la chaleur explique les deux. Pour établir une cause, il faut une expérience contrôlée (test A/B) ou un raisonnement qui écarte les facteurs de confusion.
+
+@026
+Q: Remettre dans l'ordre les étapes d'une analyse de données.
+O: Formuler la question métier avec le demandeur
+O: Collecter les données utiles et vérifier leur origine
+O: Nettoyer : types, valeurs manquantes, doublons
+O: Explorer et analyser : agrégats, graphiques, tests
+O: Restituer la réponse et ses limites
+E: Commencer par les données sans question précise produit des graphiques que personne n'utilise. Le nettoyage prend souvent la plus grande part du temps. Une étape ratée renvoie à la précédente : une anomalie vue à l'exploration fait revenir à la collecte.
+
+@027
+Q: À l'étape de restitution d'une analyse, que faut-il présenter en plus du résultat ?
+C: Les limites : périmètre des données, hypothèses et biais connus
+W: Le code source complet de chaque transformation appliquée
+W: Toutes les lignes brutes, pour que le lecteur refasse le calcul
+W: Uniquement les graphiques qui confirment l'intuition du demandeur
+E: Un décideur doit savoir jusqu'où le résultat tient : « hors ventes en ligne », « mars incomplet », « clients professionnels exclus ». Le code reste disponible pour une relecture, mais la restitution tient en un message clair, un graphique et ses réserves.
+
+@028
+Q: Au milieu de l'analyse, un tiers des lignes d'un mois manque dans l'extraction. Que faire ?
+C: Revenir à l'étape de collecte et en informer le demandeur
+W: Compléter les lignes manquantes par la moyenne des autres mois
+W: Retirer ce mois du graphique sans le mentionner
+W: Continuer l'analyse : un tiers reste un échantillon suffisant
+E: Les lignes manquantes ne sont probablement pas tirées au hasard : un magasin, un canal ou une semaine entière peut avoir disparu. Inventer des valeurs ou masquer le mois cache le problème ; le signaler permet de corriger l'extraction à la source.
+
+@029
+Q: Quelle différence sépare merge et concat en Pandas ?
+C: merge associe des lignes par une clé, concat empile des tableaux
+W: merge travaille sur des colonnes, concat sur des Series
+W: concat supprime les doublons, merge les conserve
+W: Ce sont deux noms de la même opération, l'ancien et le nouveau
+E: concat met bout à bout les exports de janvier, février et mars qui ont les mêmes colonnes. merge rapproche les commandes de leur client, comme une jointure SQL. Empiler des tableaux aux colonnes différentes crée des colonnes remplies de NaN.
+
+@030
+Q: Associer chaque valeur du paramètre how de merge au résultat obtenu.
+P: inner => Seules les clés présentes des deux côtés
+P: left => Toutes les lignes de gauche, complétées si possible
+P: right => Toutes les lignes de droite, complétées si possible
+P: outer => Toutes les clés des deux tableaux
+E: how="inner" est la valeur par défaut : une commande dont le client manque au référentiel disparaît sans prévenir et le chiffre d'affaires baisse. how="left" garde toutes les commandes et laisse NaN dans les colonnes du client absent, ce qui rend le trou visible.
+
+@031
+Q: Après ce merge, le DataFrame commandes passe de 10 000 à 12 400 lignes. Quelle est la cause la plus probable ?
+C: Des client_id apparaissent plusieurs fois dans clients
+W: how="left" ajoute les clients qui n'ont jamais commandé
+W: merge duplique toujours les lignes dont la clé est manquante
+W: Pandas ajoute une ligne de total pour chaque client du référentiel
+E: Un client présent deux fois dans le référentiel double chacune de ses commandes ; le chiffre d'affaires devient faux sans aucune erreur. clients["client_id"].duplicated().sum() trouve les coupables, et validate="many_to_one" fait échouer la jointure dans ce cas.
+```python
+resultat = commandes.merge(clients, on="client_id", how="left")
+```
+
+@032
+Q: Compléter ce code pour que la jointure échoue si un client apparaît deux fois dans le référentiel.
+A: many_to_one
+A: m:1
+E: validate lève une MergeError dès que la cardinalité attendue n'est pas respectée. Les autres valeurs sont one_to_one, one_to_many et many_to_many. Ce contrôle coûte peu et évite un total gonflé découvert des semaines plus tard.
+```python
+commandes.merge(clients, on="client_id", how="left", validate="____")
+```
+
+@033
+Q: Que contient la colonne _merge ajoutée par le paramètre indicator=True ?
+C: L'origine de chaque ligne : both, left_only ou right_only
+W: Le nombre de correspondances trouvées pour chaque clé
+W: La date et l'heure de la jointure
+W: Le nom de la colonne utilisée comme clé de jointure entre les tableaux
+E: Filtrer sur left_only liste les commandes dont le client est inconnu du référentiel : c'est souvent la première anomalie à remonter. Un contrôle de jointure vaut mieux qu'un total silencieusement faux.
+
+@034
+Q: Pourquoi ce code déclenche-t-il un avertissement SettingWithCopyWarning ?
+C: Le filtre peut renvoyer une vue liée à ventes, d'où une modification ambiguë
+W: La colonne remise n'existe pas encore dans le DataFrame
+W: Une multiplication par 0.1 produit des arrondis
+W: Les chaînes ne se comparent pas avec ==, il faut la méthode eq() de Pandas
+E: Pandas ne sait pas si l'on veut modifier ventes ou une copie. On lève l'ambiguïté avec .copy() après le filtre, ou en écrivant directement ventes.loc[masque, "remise"]. Avec le copy-on-write, activé par défaut depuis Pandas 3.0, le résultat d'un filtre se comporte toujours comme une copie.
+```python
+lille = ventes[ventes["ville"] == "Lille"]
+lille["remise"] = lille["montant"] * 0.1
+```
+
+@035
+Q: Comment convertir en vraies dates une colonne lue comme texte au format « 31/12/2025 » ?
+C: pd.to_datetime(ventes["date"], format="%d/%m/%Y")
+W: ventes["date"].astype(int)
+W: pd.Timestamp(ventes["date"])
+W: ventes["date"].str.split("/") suivi d'une boucle sur chaque morceau
+E: Sans format, une date comme 03/04/2025 risque d'être lue au format américain (3 avril ou 4 mars). Préciser le format lève l'ambiguïté et accélère la conversion. errors="coerce" transforme les valeurs illisibles en NaT au lieu d'échouer.
+
+@036
+Q: Compléter ce code qui extrait le mois de chaque date de vente.
+A: dt
+E: L'accesseur .dt donne accès aux éléments d'une date : year, month, day, dayofweek, quarter. La colonne doit être de type datetime64 ; sur du texte, Pandas lève une erreur, d'où la conversion avec to_datetime au préalable.
+```python
+ventes["mois"] = ventes["date"].____.month
+```
+
+@037
+Q: Que produit ce code appliqué à des ventes datées ?
+C: Le total des montants pour chaque mois civil
+W: La moyenne glissante des montants sur un mois
+W: Un échantillon aléatoire d'une vente par mois
+W: Les ventes du dernier mois uniquement, triées par montant
+E: resample regroupe une série temporelle par période : "D" jour, "W" semaine, "ME" fin de mois. Contrairement à un groupby sur le mois, il crée aussi les mois sans vente, avec un total à zéro, ce qui évite les trous dans un graphique.
+```python
+ventes.set_index("date").resample("ME")["montant"].sum()
+```
+
+@038
+Q: Les ventes de cinq jours consécutifs valent 10, 20, 30, 40 et 50. Quelle valeur donne rolling(3).mean() pour le cinquième jour ?
+N: 40
+E: La fenêtre de trois jours couvre 30, 40 et 50, dont la moyenne vaut 40. Les deux premiers jours donnent NaN faute de trois valeurs, sauf avec min_periods=1. La moyenne glissante lisse les variations quotidiennes pour faire apparaître la tendance.
+
+@039
+Q: Quelle méthode transforme un tableau large (une colonne par mois) en tableau long (une ligne par mois) ?
+C: melt
+W: pivot_table
+W: transpose
+W: explode, qui éclate les listes contenues dans une colonne
+E: Un tableau long (produit, mois, quantité) se filtre, se groupe et se trace facilement. pivot_table fait l'inverse : il remet les mois en colonnes pour une restitution lisible. Les fichiers Excel des métiers sont souvent larges, l'analyse préfère le format long.
+
+@040
+Q: Compléter cet appel qui donne le chiffre d'affaires par région en lignes et par mois en colonnes.
+A: pivot_table
+E: pivot_table agrège les doublons avec aggfunc, alors que pivot échoue si un couple région-mois apparaît deux fois. margins=True ajoute les totaux de lignes et de colonnes, fill_value=0 remplace les cases vides.
+```python
+ventes.____(index="region", columns="mois", values="montant", aggfunc="sum")
+```
+
+@041
+Q: Pourquoi cette boucle est-elle lente sur un million de lignes, et que lui préférer ?
+C: Elle traite les lignes une à une ; ventes["ht"] * 1.2 calcule la colonne d'un coup
+W: iterrows trie le DataFrame à chaque tour ; il suffit de le trier avant
+W: Multiplier par un décimal est lent ; mieux vaut multiplier par 12 puis diviser par 10
+W: loc recharge le fichier CSV à chaque appel ; il faut l'ouvrir en mode binaire
+E: Les opérations vectorisées s'exécutent dans du code compilé (NumPy) sur toute la colonne : quelques millisecondes au lieu de plusieurs minutes. apply(axis=1) reste une boucle déguisée. On cherche d'abord l'opération de colonne, puis np.where ou np.select pour les conditions.
+```python
+for i, ligne in ventes.iterrows():
+    ventes.loc[i, "ttc"] = ligne["ht"] * 1.2
+```
+
+@042
+Q: Compléter ce code qui classe chaque vente en « grosse » au-delà de 1 000 € et en « petite » sinon, sans boucle.
+A: where
+E: np.where(condition, valeur_si_vrai, valeur_si_faux) s'applique à toute la colonne d'un coup. Pour plus de deux catégories, np.select prend une liste de conditions et une liste de valeurs, ou pd.cut des bornes numériques.
+```python
+import numpy as np
+
+ventes["taille"] = np.____(ventes["montant"] > 1000, "grosse", "petite")
+```
+
+@043
+Q: Qu'est-ce qu'une valeur aberrante (outlier) dans un jeu de données ?
+C: Une valeur très éloignée des autres, erreur de saisie ou cas réel rare
+W: Une valeur manquante remplacée par zéro lors du nettoyage
+W: Une ligne en double, à supprimer avant toute analyse
+W: Une valeur négative dans une colonne numérique
+E: Un âge de 250 ans est une erreur ; une commande de 80 000 € d'un grand compte est peut-être réelle. On ne la supprime pas sans comprendre : on la vérifie avec le métier, puis on la corrige, on l'exclut en le signalant ou on utilise des mesures robustes comme la médiane.
+
+@044
+Q: Les délais de livraison ont un premier quartile de 2 jours et un troisième quartile de 6 jours. Au-delà de quelle valeur, en jours, la règle Q3 + 1,5 × IQR signale-t-elle un délai comme aberrant ?
+N: 12
+U: jours
+E: L'écart interquartile (IQR) vaut 6 − 2 = 4 jours ; la limite haute vaut 6 + 1,5 × 4 = 12 jours. C'est la règle de Tukey qu'utilise la boîte à moustaches pour dessiner les points isolés. La limite basse, 2 − 6 = −4, n'a pas de sens ici.
+
+@045
+Q: Remettre dans l'ordre les étapes d'un groupby.
+O: Découper les lignes en groupes selon la valeur de la clé
+O: Appliquer l'agrégat à chaque groupe séparément
+O: Assembler les résultats dans un tableau indexé par la clé
+O: Remettre la clé en colonne avec reset_index si besoin
+E: C'est le schéma split-apply-combine. Le résultat a la clé pour index ; reset_index() ou as_index=False la remet en colonne, ce qui facilite un merge ou un export. Plusieurs clés produisent un index à plusieurs niveaux.
+
+@046
+Q: Que produit ce code ?
+C: Une ligne par région : total, panier moyen, nombre de clients distincts
+W: Une ligne par vente avec trois colonnes calculées en plus
+W: Une erreur, car agg n'accepte qu'une seule fonction par colonne
+W: Trois DataFrame séparés, un par indicateur, qu'il faut ensuite réunir avec concat
+E: L'agrégation nommée donne directement des colonnes aux noms clairs. nunique compte les valeurs distinctes : un client qui a commandé trois fois compte une fois, alors que count compterait trois lignes.
+```python
+ventes.groupby("region").agg(
+    ca=("montant", "sum"),
+    panier=("montant", "mean"),
+    clients=("client_id", "nunique"),
+)
+```
+
+@047
+Q: Quelle différence sépare transform et agg après un groupby ?
+C: transform renvoie une valeur par ligne d'origine, agg une valeur par groupe
+W: transform modifie le DataFrame d'origine, agg en crée une copie
+W: agg ne fonctionne qu'avec des fonctions écrites en Python
+W: transform trie les groupes, agg les laisse dans l'ordre d'origine
+E: ventes.groupby("region")["montant"].transform("sum") place le total de la région sur chacune de ses lignes : on calcule ensuite la part de chaque vente dans sa région par une simple division, sans jointure.
+
+@048
+Q: Une région réalise 45 000 € sur un chiffre d'affaires total de 180 000 €. Quelle est sa part en pourcentage ?
+N: 25
+U: %
+E: 45 000 / 180 000 = 0,25, soit 25 %. Pour toutes les régions d'un coup : ca / ca.sum() * 100. Arrondir chaque part peut donner un total de 99 ou 101 % : on le signale plutôt que de forcer une valeur.
+
+@049
+Q: Comment lire la feuille « Ventes 2025 » d'un classeur Excel avec Pandas ?
+C: pd.read_excel("suivi.xlsx", sheet_name="Ventes 2025")
+W: pd.read_csv("suivi.xlsx", sheet="Ventes 2025")
+W: pd.read_excel("suivi.xlsx")["Ventes 2025"]
+W: pd.ExcelFile("Ventes 2025").read("suivi.xlsx", engine="xlsx")
+E: read_excel s'appuie sur openpyxl pour les fichiers .xlsx, à installer à part. sheet_name=None charge toutes les feuilles dans un dictionnaire. skiprows et usecols ignorent les lignes de titre et les colonnes décoratives fréquentes dans les fichiers métier.
+
+@050
+Q: Dans un fichier Excel importé, une colonne de dates affiche des nombres comme 45658. Que représentent-ils ?
+C: Des jours comptés depuis 1900, format interne des dates Excel
+W: Un horodatage Unix, c'est-à-dire des secondes écoulées depuis 1970
+W: Un identifiant de ligne ajouté par Excel
+W: Une date chiffrée par la protection de la feuille
+E: Excel stocke les dates comme des numéros de série ; 45658 correspond au 1er janvier 2025. pd.to_datetime(colonne, unit="D", origin="1899-12-30") les convertit. Le cas survient quand la cellule a perdu son format date lors d'un export.
