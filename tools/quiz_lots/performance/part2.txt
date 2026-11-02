@@ -1,0 +1,493 @@
+@051
+Q: Un service reçoit 200 requêtes par seconde et chacune reste 0,25 s dans le système. Combien de requêtes sont en cours en moyenne, d'après la loi de Little ?
+N: 50
+E: La loi de Little s'écrit L = λ × W : 200 × 0,25 = 50 requêtes simultanées. Elle sert à dimensionner un pool de threads ou de connexions : si le pool n'en accepte que 20, les 30 autres attendent et le temps de réponse s'allonge.
+
+@052
+Q: Compléter ce script k6 qui fait tourner 50 utilisateurs virtuels pendant cinq minutes.
+A: duration
+E: Chaque utilisateur virtuel exécute la fonction en boucle ; sleep simule le temps de réflexion entre deux actions. Les seuils (thresholds) font échouer le test si le p95 dépasse 300 ms, ce qui permet de l'intégrer à une chaîne d'intégration continue.
+```javascript
+import http from "k6/http";
+import { sleep } from "k6";
+
+export const options = {
+  vus: 50,
+  ____: "5m",
+  thresholds: { http_req_duration: ["p(95)<300"] },
+};
+
+export default function () {
+  http.get("https://recette.exemple.fr/api/offres");
+  sleep(1);
+}
+```
+
+@053
+Q: Pourquoi un test de charge monte-t-il progressivement en nombre d'utilisateurs plutôt que de démarrer d'emblée à la cible ?
+C: Pour repérer le palier où les temps de réponse se dégradent et laisser les caches et pools se remplir
+W: Parce que les injecteurs ne savent pas créer plus de dix utilisateurs par seconde
+W: Pour éviter que le serveur détecte le test et désactive ses optimisations
+W: Parce que la licence des outils de test l'exige au-delà de cent utilisateurs
+E: Une montée par paliers relie chaque niveau de charge à son temps de réponse : la courbe montre où le système décroche. Démarrer à froid à pleine charge mesure surtout le démarrage (compilation JIT, caches vides, connexions à ouvrir), ce qui relève d'un test de pic.
+
+@054
+Q: Un test de charge envoie les requêtes de chaque utilisateur virtuel sans aucune pause. Quel défaut cela introduit-il ?
+C: La charge produite ne ressemble pas au trafic réel : quelques utilisateurs simulent un débit énorme
+W: Les résultats sont plus réalistes, car de vrais utilisateurs enchaînent les clics
+W: Le test ne peut plus mesurer les percentiles de temps de réponse
+W: Le serveur met toutes les requêtes en cache et ne travaille plus
+E: Un vrai visiteur lit la page avant de cliquer à nouveau. Sans temps de réflexion, 50 utilisateurs virtuels peuvent valoir des milliers de vrais. On raisonne mieux en débit cible (requêtes par seconde) qu'en nombre d'utilisateurs, avec un modèle d'arrivée qui ne dépend pas des réponses.
+
+@055
+Q: Associer chaque outil de test de charge à sa particularité.
+P: k6 => Scénarios écrits en JavaScript, lancés en ligne de commande
+P: JMeter => Plans de test construits dans une interface graphique Java
+P: Gatling => Scénarios en code Scala, Java ou Kotlin, rapports HTML détaillés
+P: Locust => Scénarios écrits en Python, interface web de pilotage
+E: Tous sont gratuits et libres dans leur version de base. Le choix tient au langage de l'équipe et à l'intégration continue : un scénario en code se relit et se versionne mieux qu'un fichier .jmx. JMeter reste répandu pour les protocoles variés (JDBC, JMS, FTP).
+
+@056
+Q: Pendant ce test par paliers, que montrent ces mesures à partir de 300 utilisateurs ?
+C: Saturation : le débit plafonne et le temps de réponse s'envole
+W: Le serveur accélère sous la charge grâce à ses caches qui se remplissent
+W: L'injecteur est trop lent et doit être remplacé par un autre outil
+W: Le réseau perd des paquets entre l'injecteur et le serveur de test
+E: Au-delà du point de saturation, chaque utilisateur ajouté attend dans une file sans que le débit progresse : c'est la loi de Little en action. Il faut alors trouver la ressource saturée (CPU, pool de connexions, verrou, base) avec les mesures du serveur pendant le palier.
+```text
+utilisateurs  débit (req/s)  p95 (ms)
+100           480            120
+200           910            135
+300           1150           410
+400           1160           1850
+```
+
+@057
+Q: Pourquoi les premières itérations d'un micro-benchmark Java sont-elles plus lentes que les suivantes ?
+C: La JVM interprète d'abord le code puis compile les parties chaudes à la volée (JIT)
+W: Le ramasse-miettes est désactivé au début du programme
+W: Le processeur réduit sa fréquence après quelques secondes
+W: Le système d'exploitation charge le bytecode octet par octet
+E: Le compilateur JIT optimise d'après le comportement observé : il faut une phase de chauffe avant de mesurer. JMH (Java Microbenchmark Harness) gère la chauffe, les répétitions et plusieurs pièges d'optimisation ; une boucle chronométrée à la main donne souvent des résultats faux.
+
+@058
+Q: Que règle l'option -Xmx4g au lancement d'une application Java ?
+C: La taille maximale du tas où sont rangés les objets
+W: La mémoire totale du processus, piles et code compris
+W: La taille minimale réservée au démarrage
+W: La quantité de mémoire partagée avec les autres JVM de la machine
+E: -Xms fixe la taille initiale ; les égaliser évite des redimensionnements. Le processus consomme davantage que le tas : métaspace, piles des threads, tampons natifs. Dans un conteneur, -XX:MaxRAMPercentage adapte le tas à la limite mémoire au lieu d'une valeur figée.
+
+@059
+Q: Associer chaque ramasse-miettes de la JVM à son usage typique.
+P: Serial => Petits tas et machines à un seul cœur
+P: Parallel => Traitements par lots où compte le débit total
+P: G1 => Choix par défaut, pauses courtes visées sur un tas moyen ou grand
+P: ZGC => Très grands tas avec des pauses de l'ordre de la milliseconde
+E: G1 est le défaut depuis Java 9. Parallel accepte des pauses plus longues en échange d'un meilleur débit, utile pour un traitement de nuit. ZGC, générationnel depuis Java 21, vise les services sensibles à la latence. On choisit d'après les journaux GC (-Xlog:gc), pas par habitude.
+
+@060
+Q: Compléter cette balise pour que le script se télécharge sans bloquer l'analyse du HTML et s'exécute une fois la page analysée.
+A: defer
+E: Sans attribut, le navigateur interrompt l'analyse pour télécharger et exécuter le script, ce qui retarde l'affichage. defer conserve l'ordre des scripts ; async exécute dès réception, dans un ordre quelconque, ce qui convient à un script indépendant comme une mesure d'audience.
+```html
+<script src="/js/app.js" ____></script>
+```
+
+@061
+Q: Quel est l'effet de ce code sur le champ de recherche ?
+C: L'API n'est appelée qu'après 300 ms sans frappe
+W: La recherche est lancée trois fois plus souvent qu'avant
+W: Les résultats sont gardés en cache pendant 300 ms
+W: La saisie est bloquée pendant 300 ms après chaque touche
+E: C'est un anti-rebond (debounce) : chaque frappe annule le minuteur précédent. Taper « pompe » envoie une requête au lieu de cinq. Le throttle, voisin, garantit au plus un appel par intervalle, mieux adapté au défilement ou au redimensionnement.
+```javascript
+let vMinuteur;
+champ.addEventListener("input", () => {
+  clearTimeout(vMinuteur);
+  vMinuteur = setTimeout(() => rechercher(champ.value), 300);
+});
+```
+
+@062
+Q: Pourquoi cette boucle provoque-t-elle des recalculs de mise en page répétés ?
+C: Elle lit offsetHeight juste après une écriture de style, à chaque tour
+W: La méthode forEach est plus lente qu'une boucle for
+W: La propriété style.height ne s'applique qu'après un rechargement de la page
+W: Les éléments sont redessinés dans le désordre par le navigateur
+E: Le navigateur regroupe d'ordinaire les modifications ; une lecture de géométrie l'oblige à tout recalculer immédiatement. On appelle cela le layout thrashing. On lit d'abord toutes les valeurs, puis on écrit toutes les modifications, éventuellement dans requestAnimationFrame.
+```javascript
+cartes.forEach((vCarte) => {
+  vCarte.style.height = "auto";
+  vCarte.dataset.hauteur = vCarte.offsetHeight;
+});
+```
+
+@063
+Q: Avec HTTP/2, pourquoi la concaténation de tous les scripts en un seul fichier géant est-elle devenue moins utile ?
+C: Plusieurs requêtes partagent en parallèle une seule connexion
+W: HTTP/2 interdit plus de dix fichiers par page
+W: HTTP/2 concatène lui-même les fichiers côté serveur
+W: Les navigateurs ne mettent plus en cache les fichiers de plus de 1 Mo
+E: Le multiplexage supprime l'essentiel du coût d'une requête supplémentaire. Des fichiers plus petits se mettent en cache séparément : modifier un module n'invalide plus tout le paquet. Le découpage par page (code splitting) ne charge que ce qui sert à l'écran affiché.
+
+@064
+Q: Remettre ces opérations dans l'ordre, de la plus rapide à la plus lente.
+O: Lecture dans le cache L1 du processeur, environ 1 ns
+O: Lecture en mémoire vive, environ 100 ns
+O: Lecture aléatoire sur un SSD, environ 100 µs
+O: Lecture aléatoire sur un disque dur, environ 10 ms
+O: Aller-retour réseau entre Paris et New York, environ 75 ms
+E: Chaque niveau gagne ou perd un à trois ordres de grandeur. Un aller-retour vers un service distant coûte autant que des millions d'accès mémoire : c'est pourquoi on regroupe les appels réseau et les requêtes SQL bien avant d'optimiser une boucle.
+
+@065
+Q: Ce code insère 50 000 lignes et prend plusieurs minutes. Quelle modification apporte le plus grand gain ?
+C: Insérer par lots dans une seule transaction (executemany, un commit)
+W: Remplacer la boucle for par une boucle while
+W: Fermer et rouvrir la connexion toutes les mille lignes
+W: Ajouter un index sur chaque colonne de la table pour accélérer l'écriture
+E: Chaque commit attend l'écriture durable du journal sur disque, 50 000 fois ici. Une seule transaction, ou des lots de quelques milliers de lignes, divise le temps par dix ou cent. Pour de très gros volumes, COPY (PostgreSQL) ou LOAD DATA (MySQL) vont encore plus vite.
+```python
+for vOffre in pOffres:
+    vCurseur.execute("INSERT INTO offre (titre, ville) VALUES (?, ?)", vOffre)
+    vConnexion.commit()
+```
+
+@066
+Q: 80 % d'un traitement se parallélise parfaitement, le reste non. Quelle accélération maximale obtient-on avec 4 cœurs, d'après la loi d'Amdahl ?
+N: 2,5
+E: Accélération = 1 / (0,2 + 0,8 / 4) = 1 / 0,4 = 2,5. Avec une infinité de cœurs, elle plafonnerait à 1 / 0,2 = 5. La part séquentielle (lecture du fichier, fusion des résultats, verrou partagé) fixe la limite : c'est elle qu'il faut réduire pour aller plus loin.
+
+@067
+Q: Un serveur traite une requête en 10 ms en moyenne et fonctionne à 90 % d'utilisation. Quel temps de réponse moyen prévoit le modèle de file M/M/1, en ms ?
+N: 100
+U: ms
+E: Le modèle donne R = S / (1 − U) = 10 / 0,1 = 100 ms. À 50 % d'utilisation, on aurait 20 ms ; à 99 %, une seconde. D'où la règle de garder une marge : une ressource proche de 100 % d'utilisation fait exploser les files d'attente bien avant de « manquer » de capacité.
+
+@068
+Q: Pourquoi viser une utilisation moyenne de 60 à 70 % du CPU plutôt que 95 % pour un service interactif ?
+C: Près de la saturation, la moindre rafale fait grimper la file d'attente
+W: Un processeur chargé à 95 % chauffe davantage et s'use plus vite que prévu
+W: Les systèmes d'exploitation réservent 30 % du CPU au noyau
+W: Les mesures de CPU au-delà de 70 % ne sont pas fiables
+E: Le trafic arrive par rafales, pas de manière régulière. La marge absorbe ces pointes, une panne de nœud ou un pic saisonnier. Un traitement par lots, sans utilisateur qui attend, peut au contraire tourner à pleine charge.
+
+@069
+Q: Une requête interroge 100 serveurs en parallèle et attend toutes les réponses. Chaque serveur est lent dans 1 % des cas, indépendamment des autres. Quelle part des requêtes subit au moins une réponse lente, en pourcentage ?
+N: 63,4
+U: %
+T: 2
+E: La probabilité qu'aucun serveur ne soit lent vaut 0,99¹⁰⁰ ≈ 0,366 ; au moins un lent : 1 − 0,366 ≈ 63,4 %. Le p99 d'un serveur devient le cas courant pour l'utilisateur : dans une architecture en éventail, c'est la traîne de chaque composant qui compte.
+
+@070
+Q: Quelle technique réduit la latence de traîne d'un appel en éventail vers des réplicas identiques ?
+C: Renvoyer la requête à un autre réplica si la première réponse tarde au-delà du p95, et garder la plus rapide
+W: Augmenter le délai d'expiration de chaque appel
+W: Interroger les réplicas l'un après l'autre jusqu'à obtenir une réponse
+W: Désactiver la compression des réponses entre services
+E: Ces requêtes couvertes (hedged requests) ne coûtent que quelques pour cent de trafic en plus, puisqu'on ne relance que les retardataires. Elles ne conviennent qu'aux lectures ou aux opérations idempotentes ; on annule la requête perdante pour ne pas gaspiller de ressources.
+
+@071
+Q: Associer chaque élément des méthodes USE et RED à sa signification.
+P: Utilisation => Part du temps où une ressource est occupée
+P: Saturation => Travail en attente faute de capacité, comme une file
+P: Rate => Nombre de requêtes reçues par seconde par un service
+P: Duration => Distribution des temps de réponse d'un service
+E: USE (Utilization, Saturation, Errors) passe en revue chaque ressource matérielle : CPU, mémoire, disque, réseau. RED (Rate, Errors, Duration) s'applique à chaque service vu de ses clients. Les deux donnent une liste de contrôle qui évite de chercher au hasard.
+
+@072
+Q: Un serveur dispose de 8 threads de travail et chaque requête occupe un thread 40 ms. Quel débit maximal peut-il tenir, en requêtes par seconde ?
+N: 200
+U: req/s
+E: Un thread traite 1 / 0,04 = 25 requêtes par seconde, huit threads 200. Au-delà, les requêtes s'accumulent. Si ces 40 ms sont surtout de l'attente réseau, ajouter des threads relève le plafond ; si c'est du calcul sur 4 cœurs, le CPU sature bien avant.
+
+@073
+Q: Une formule courante pour dimensionner un pool de connexions vers une base est (nombre de cœurs × 2) + nombre de disques. Combien de connexions donne-t-elle pour un serveur de base à 4 cœurs et un disque ?
+N: 9
+E: (4 × 2) + 1 = 9. Cette formule de la documentation de HikariCP est un point de départ à vérifier par un test de charge. Le chiffre paraît faible, mais une base ne travaille pas plus vite avec cent connexions actives qu'avec dix : elle passe son temps à alterner entre elles.
+
+@074
+Q: Une équipe porte le pool de connexions de 20 à 200 pour absorber un pic, et la base ralentit encore. Quelle explication est la plus probable ?
+C: Trop de requêtes simultanées se disputent CPU et verrous de la base
+W: Un pool plus grand désactive les index de la base
+W: Les connexions supplémentaires ne sont pas chiffrées
+W: Le pilote JDBC plafonne le débit au-delà de cinquante connexions ouvertes
+E: La base ne possède que quelques cœurs et disques : au-delà, les requêtes s'attendent mutuellement à l'intérieur de la base au lieu d'attendre dans le pool, à moindre coût. Mieux vaut un pool modeste, une file côté application et des requêtes plus rapides.
+
+@075
+Q: Un service saturé reçoit plus de requêtes qu'il ne peut en traiter. Quelle réaction préserve le mieux les utilisateurs ?
+C: Refuser vite l'excédent par une 503 avec Retry-After
+W: Accepter toutes les requêtes et les mettre dans une file d'attente illimitée
+W: Redémarrer le service à chaque dépassement du seuil de charge
+W: Doubler le délai d'expiration configuré dans chaque client
+E: C'est le délestage (load shedding). Une file illimitée transforme une surcharge passagère en panne : la mémoire grimpe et les réponses arrivent après l'abandon du client. Refuser tôt, borner les files et propager la contre-pression (backpressure) gardent un service utilisable pour la majorité.
+
+@076
+Q: Ces deux fonctions additionnent la même matrice de 4 000 × 4 000. Pourquoi somme_colonnes est-elle plusieurs fois plus lente en Java ?
+C: Elle saute d'une ligne à l'autre en mémoire et perd l'avantage des lignes de cache du processeur
+W: Elle effectue deux fois plus d'additions que somme_lignes
+W: Java vérifie les bornes du tableau seulement dans somme_colonnes
+W: Le ramasse-miettes se déclenche à chaque changement de ligne
+E: Un tableau int[][] est un tableau de lignes : parcourir une ligne lit des entiers contigus, chargés par blocs de 64 octets. Parcourir une colonne touche une ligne de cache différente à chaque lecture. Même nombre d'opérations, accès mémoire bien plus coûteux.
+```java
+long somme_lignes(int[][] pM) {
+    long rTotal = 0;
+    for (int i = 0; i < pM.length; i++)
+        for (int j = 0; j < pM[i].length; j++) rTotal += pM[i][j];
+    return rTotal;
+}
+
+long somme_colonnes(int[][] pM) {
+    long rTotal = 0;
+    for (int j = 0; j < pM[0].length; j++)
+        for (int i = 0; i < pM.length; i++) rTotal += pM[i][j];
+    return rTotal;
+}
+```
+
+@077
+Q: Le p50 d'un service Java est stable à 15 ms mais son p99 monte régulièrement à 800 ms. Les journaux GC montrent de longues pauses. Quelle piste explorer d'abord ?
+C: Réduire les allocations du chemin chaud et régler le tas ou le GC
+W: Ajouter des index sur les tables interrogées par chaque requête du service
+W: Passer le service en HTTP/2
+W: Augmenter le nombre de répliques de la base de données
+E: Une pause du ramasse-miettes arrête tous les threads applicatifs : quelques requêtes tombent dessus et forment la traîne. Un profil d'allocation (async-profiler -e alloc, JFR) montre qui crée le plus d'objets. Un tas trop petit multiplie les collections ; un passage à ZGC raccourcit les pauses.
+
+@078
+Q: Remettre dans l'ordre le diagnostic d'une requête SQL lente signalée en production.
+O: Repérer les requêtes les plus coûteuses dans le journal des requêtes lentes ou pg_stat_statements
+O: Rejouer la requête avec EXPLAIN ANALYZE sur des données de volume comparable
+O: Lire le plan pour trouver le nœud qui consomme le temps
+O: Corriger par un index, une réécriture ou des statistiques à jour
+O: Vérifier le nouveau plan et le gain mesuré en production
+E: On trie d'abord par temps total cumulé, pas par durée unitaire : une requête de 5 ms lancée un million de fois pèse plus qu'une requête de 2 s quotidienne. Tester sur une base de développement presque vide donne un plan différent de celui de la production.
+
+@079
+Q: Que renvoie cette requête sur une base PostgreSQL où l'extension pg_stat_statements est active ?
+C: Les dix requêtes au temps total le plus élevé, avec appels et moyenne
+W: Les dix dernières requêtes exécutées, dans l'ordre chronologique de leur arrivée
+W: Les dix tables les plus volumineuses de la base
+W: Les dix sessions actuellement bloquées par un verrou
+E: L'extension regroupe les requêtes identiques aux paramètres près. Elle se charge par shared_preload_libraries et un redémarrage. pg_stat_statements_reset() remet les compteurs à zéro avant une campagne de mesure. MySQL fournit l'équivalent dans performance_schema.
+```sql
+SELECT query, calls, total_exec_time, mean_exec_time
+FROM pg_stat_statements
+ORDER BY total_exec_time DESC
+LIMIT 10;
+```
+
+@080
+Q: Compléter cette requête JPQL pour charger les commandes avec leur client en une seule requête SQL et éviter le problème N+1.
+A: FETCH
+E: Sans FETCH, la jointure filtre mais Hibernate charge encore chaque client à la demande, au premier accès. Un @EntityGraph donne le même résultat sans écrire la requête. Attention à la pagination combinée avec FETCH sur une collection : Hibernate pagine alors en mémoire.
+```java
+@Query("SELECT c FROM Commande c JOIN ____ c.client WHERE c.statut = :statut")
+List<Commande> trouverParStatut(@Param("statut") Statut pStatut);
+```
+
+@081
+Q: Les lectures ont été déportées vers un réplica de la base. Un utilisateur enregistre son profil puis ne voit pas sa modification à l'écran suivant. Pourquoi ?
+C: Le réplica reçoit les écritures avec retard
+W: Le réplica refuse les lectures des utilisateurs authentifiés
+W: La modification n'a pas été validée sur la base principale
+W: Le navigateur a mis en cache l'ancienne page de profil
+E: La réplication asynchrone a un retard, souvent de quelques millisecondes, parfois de plusieurs secondes sous charge. Parade courante : lire sur la base principale pendant quelques secondes après une écriture de l'utilisateur, ou suivre la position de réplication avant de lire.
+
+@082
+Q: Que révèle cet extrait d'un vidage des threads (jstack) d'un service lent dont le CPU reste faible ?
+C: Une contention sur un verrou détenu par un seul thread
+W: Une boucle infinie qui consomme tout le processeur de la machine
+W: Une fuite de mémoire dans le tas
+W: Un manque de threads dans le pool HTTP
+E: BLOCKED et « waiting to lock » montrent des threads arrêtés sur un synchronized. Le thread qui détient le verrou fait peut-être un appel réseau à l'intérieur de la section critique. On réduit la portée du verrou, on sort les entrées-sorties de la zone protégée ou on utilise une structure concurrente.
+```text
+"http-nio-8080-exec-17" BLOCKED
+    at fr.exemple.Tarifs.calculer(Tarifs.java:42)
+    - waiting to lock <0x000000071a2b3c40> (a fr.exemple.Tarifs)
+"http-nio-8080-exec-3" RUNNABLE
+    at fr.exemple.Tarifs.lireTaux(Tarifs.java:88)
+    - locked <0x000000071a2b3c40> (a fr.exemple.Tarifs)
+```
+
+@083
+Q: Associer chaque commande Linux à ce qu'elle montre en priorité.
+P: top => Processus qui consomment le plus de CPU et de mémoire
+P: vmstat 1 => Évolution de la file d'exécution, de la mémoire et de l'attente disque
+P: iostat -x 1 => Utilisation et temps d'attente de chaque disque
+P: ss -s => Résumé des connexions réseau par état
+E: Lancées avec un intervalle d'une seconde, elles montrent une évolution et pas une photo. iostat appartient au paquet sysstat, comme pidstat et sar qui gardent un historique. On commence large (vmstat) avant de zoomer sur la ressource suspecte.
+
+@084
+Q: Que suggère cette sortie de vmstat sur un serveur de base de données lent ?
+C: Une attente disque : wa élevée, processus bloqués en E/S
+W: Le processeur est saturé par les calculs de l'application
+W: La mémoire est pleine et le système échange sur le disque
+W: Le réseau est la ressource saturée de ce serveur de base
+E: wa compte le temps où le CPU est libre mais des entrées-sorties sont en cours, b les processus bloqués sur le disque. us et sy restent faibles, si et so à zéro : pas de manque de mémoire. Suite logique : iostat -x pour trouver le disque saturé, puis les requêtes qui lisent le plus.
+```text
+procs -----------memory---------- ---swap-- -----io---- ---cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo us sy id wa
+ 1  9      0 812340  10240 6021440    0    0 48120   310  4  3 31 62
+ 0 11      0 811980  10240 6022100    0    0 51200   280  5  2 28 65
+```
+
+@085
+Q: La mémoire d'un service Java grimpe sur plusieurs jours jusqu'à l'erreur OutOfMemoryError. Quelle démarche identifie le mieux l'objet en cause ?
+C: Comparer deux vidages du tas pris à quelques heures d'écart
+W: Doubler la valeur de -Xmx et attendre le prochain incident
+W: Redémarrer le service toutes les nuits
+W: Lire les journaux applicatifs à la recherche du mot « memory »
+E: jcmd <pid> GC.heap_dump produit le vidage ; Eclipse MAT ou VisualVM affichent l'histogramme des classes et la chaîne de références qui empêche la libération, souvent un cache statique ou une collection d'écouteurs. -XX:+HeapDumpOnOutOfMemoryError capture l'état au moment de l'erreur.
+
+@086
+Q: Un injecteur attend chaque réponse avant d'envoyer la requête suivante. Pendant une pause de 2 s du serveur, il cesse d'envoyer. Quel biais cela introduit-il dans les percentiles mesurés ?
+C: L'omission coordonnée : les requêtes qui auraient dû partir pendant la pause ne sont pas comptées, les percentiles paraissent bien meilleurs
+W: Aucun biais, la pause du serveur est comptée une fois
+W: Les percentiles deviennent pessimistes, car chaque pause est mesurée deux fois
+W: Une erreur de synchronisation des horloges entre injecteur et serveur
+E: Un utilisateur réel n'attend pas le serveur pour arriver. Les outils à débit d'arrivée constant (k6 constant-arrival-rate, wrk2, Gatling en modèle ouvert) envoient les requêtes à l'heure prévue et mesurent depuis cette heure. Le terme vient de Gil Tene, auteur de HdrHistogram.
+
+@087
+Q: Trois serveurs affichent chacun un p99 de 120, 140 et 900 ms. Un tableau de bord affiche la moyenne, 387 ms, comme p99 global. Pourquoi est-ce faux ?
+C: Un percentile ne se moyenne pas : il se recalcule sur toutes les mesures
+W: Il faudrait prendre la médiane des trois valeurs
+W: Il faudrait additionner les trois valeurs
+W: C'est correct dès lors que les trois serveurs ont reçu le même volume de trafic
+E: La vraie valeur dépend de la répartition des requêtes ; elle peut être très différente de la moyenne des p99. Les métriques en histogramme (Prometheus histogram et histogram_quantile, HdrHistogram) se fusionnent puis donnent un percentile juste, à la précision des tranches près.
+
+@088
+Q: Que suggère ce résultat de perf stat sur une boucle de calcul ?
+C: Le processeur attend la mémoire : peu d'instructions par cycle
+W: Le programme est limité par le réseau
+W: Le processeur exécute ses instructions à pleine vitesse sans attendre
+W: Le compilateur a vectorisé toute la boucle
+E: Un cœur moderne peut exécuter plusieurs instructions par cycle ; 0,42 indique des cycles perdus à attendre les données. Le remède porte sur la disposition en mémoire (structures contiguës, tableaux plutôt que listes chaînées) plus que sur le nombre d'opérations.
+```text
+ Performance counter stats for './agreger':
+    9 812 004 551      cycles
+    4 121 042 178      instructions      #    0,42  insn per cycle
+      601 223 410      cache-misses      #   38,20 % of all cache refs
+```
+
+@089
+Q: Deux threads incrémentent chacun leur propre compteur, sans verrou ni donnée partagée, et le programme ne passe pourtant pas à l'échelle. Les compteurs sont voisins en mémoire. De quel phénomène s'agit-il ?
+C: Le faux partage : les deux compteurs occupent la même ligne de cache, que les cœurs se disputent
+W: Un interblocage entre les deux threads
+W: Le verrou global de l'interpréteur
+W: Une fuite de mémoire dans la pile des threads
+E: La cohérence des caches travaille par ligne de 64 octets : chaque écriture invalide la ligne dans l'autre cœur. On espace les compteurs (remplissage, annotation @Contended en Java) ou on accumule localement avant de fusionner, comme le fait LongAdder.
+
+@090
+Q: Sur un serveur à deux processeurs physiques, pourquoi un processus peut-il ralentir quand ses threads tournent sur un socket et sa mémoire est allouée sur l'autre ?
+C: La mémoire de l'autre socket (NUMA) est plus lente d'accès
+W: Les deux processeurs ne partagent pas le même système d'exploitation
+W: La mémoire de l'autre socket n'est pas protégée par la correction d'erreurs
+W: Le noyau désactive alors le cache L3 partagé entre les cœurs
+E: Chaque socket possède sa propre mémoire ; traverser l'interconnexion ajoute de la latence et consomme de la bande passante. numactl --hardware montre la topologie, numastat les accès distants. Bases de données et JVM (-XX:+UseNUMA) savent tenir compte de cette organisation.
+
+@091
+Q: Pourquoi certains profileurs Java classiques désignent-ils des méthodes qui ne sont pas les vraies coupables ?
+C: Ils n'échantillonnent qu'aux points de sûreté (safepoints)
+W: Ils ne mesurent que le temps passé dans le ramasse-miettes de la JVM
+W: Ils ignorent les méthodes compilées par le JIT
+W: Ils ne fonctionnent qu'en mode interprété
+E: Une boucle compilée sans point de sûreté n'apparaît pas, le temps est attribué à la méthode suivante. async-profiler et Java Flight Recorder échantillonnent sans attendre ces points : leurs graphes en flammes sont plus fidèles et coûtent peu en production.
+
+@092
+Q: Un service répond lentement alors que son CPU reste à 15 %. Un graphe en flammes classique ne montre rien de notable. Quelle analyse compléter ?
+C: Une analyse hors CPU, du temps passé à attendre disque ou verrou
+W: Une analyse du code source par un outil de qualité
+W: Un nouveau graphe en flammes avec une fréquence d'échantillonnage doublée
+W: Un test de charge avec deux fois plus d'utilisateurs
+E: Le profil CPU ne voit que le temps passé à calculer. Le temps perdu à attendre se mesure à part : async-profiler en mode wall, offcputime des outils BCC, ou une trace distribuée qui découpe le temps entre appels. Le faible CPU est justement l'indice d'une attente.
+
+@093
+Q: Pourquoi ce benchmark JMH renvoie-t-il le résultat du calcul au lieu de l'ignorer ?
+C: Sans utilisation du résultat, le JIT peut supprimer le calcul comme code mort et mesurer une boucle vide
+W: JMH exige qu'une méthode de benchmark renvoie toujours un entier
+W: Le résultat est enregistré dans le rapport final de JMH
+W: Le renvoi force le ramasse-miettes à passer après chaque appel
+E: Renvoyer la valeur, ou la passer à un Blackhole, empêche cette élimination. Lire les données depuis un champ d'état @State évite aussi qu'une constante soit calculée une fois pour toutes à la compilation. Un benchmark qui donne 0,3 ns par appel mesure souvent du vide.
+```java
+@State(Scope.Thread)
+public class TriBenchmark {
+    int[] aDonnees = genererDonnees(10_000);
+
+    @Benchmark
+    public int[] trier() {
+        int[] vCopie = aDonnees.clone();
+        Arrays.sort(vCopie);
+        return vCopie;
+    }
+}
+```
+
+@094
+Q: Une API interne répond en 2 ms côté serveur, mais le client mesure régulièrement 40 ms sur de petites requêtes. Quelle cause réseau est classique ?
+C: Nagle et l'accusé de réception différé ; TCP_NODELAY corrige
+W: Une résolution DNS refaite avant chaque petite requête envoyée par le client
+W: Une MTU trop grande sur la carte réseau
+W: La compression TLS activée par défaut
+E: Nagle retient un petit paquet tant que le précédent n'est pas acquitté, et le récepteur retarde son accusé d'environ 40 ms sous Linux. Les deux attentes se bloquent mutuellement. La plupart des clients HTTP et pilotes activent TCP_NODELAY ; un client écrit à la main l'oublie souvent.
+
+@095
+Q: Un banc de mesure en intégration continue doit signaler les régressions de performance. Quelle règle évite les fausses alertes ?
+C: Comparer à une référence glissante sur plusieurs exécutions et n'alerter qu'au-delà de la variation habituelle
+W: Alerter dès qu'une exécution est plus lente que la précédente
+W: Mesurer une seule fois par semaine pour réduire le bruit
+W: Lancer les mesures sur les agents partagés les plus chargés pour reproduire la production
+E: Les machines partagées varient selon leurs voisins, la fréquence du processeur ou le turbo. On fixe l'environnement (machine dédiée, fréquence bloquée), on répète, puis on compare des distributions plutôt que deux valeurs isolées ; la dispersion mesurée fixe le seuil d'alerte.
+
+@096
+Q: Cette boucle s'exécute nettement plus vite quand le tableau est trié au préalable, à nombre d'éléments égal. Pourquoi ?
+C: Données triées : le branchement devient prévisible pour le processeur
+W: Le tri supprime les doublons et réduit d'autant le nombre de tours de boucle
+W: Les données triées tiennent dans moins de mémoire
+W: Le compilateur saute les éléments inférieurs à 128
+E: Le processeur exécute à l'avance la branche qu'il prévoit ; une erreur de prédiction coûte une quinzaine de cycles. Sur des données aléatoires, il se trompe une fois sur deux. Un compilateur peut aussi remplacer le test par une instruction sans branchement ou vectoriser la boucle, ce qui efface l'écart.
+```c
+for (int i = 0; i < n; i++) {
+    if (donnees[i] >= 128) {
+        somme += donnees[i];
+    }
+}
+```
+
+@097
+Q: Pourquoi une base de données au tas de mémoire très volumineux gagne-t-elle souvent à utiliser les grandes pages (huge pages) ?
+C: Moins d'échecs dans le TLB, le cache des traductions d'adresses
+W: Les grandes pages sont compressées par le noyau
+W: Elles permettent d'adresser plus de mémoire que la quantité physique installée
+W: Elles chiffrent la mémoire partagée entre processus
+E: Avec des pages de 4 Ko, 64 Go de mémoire représentent seize millions d'entrées ; avec des pages de 2 Mo, trente-deux mille. PostgreSQL (huge_pages), Oracle et la JVM (-XX:+UseLargePages) en tirent parti. Les Transparent Huge Pages automatiques sont en revanche souvent déconseillées pour les bases, à cause de pauses de compactage.
+
+@098
+Q: Que fait cette commande bpftrace sur un serveur de production ?
+C: Elle compte, par nom de processus, les appels système d'ouverture de fichier, sans modifier les programmes
+W: Elle bloque l'ouverture de fichiers par les processus inconnus
+W: Elle enregistre le contenu de tous les fichiers ouverts
+W: Elle recompile le noyau avec des sondes de débogage
+E: eBPF exécute de petits programmes vérifiés dans le noyau, attachés à des points de trace. On obtient une mesure fine (appels, latences, histogrammes) avec un coût faible et sans redémarrer. Le résultat s'affiche à l'arrêt par Ctrl+C ; les outils BCC (biolatency, execsnoop) en offrent des versions prêtes.
+```bash
+bpftrace -e 'tracepoint:syscalls:sys_enter_openat { @[comm] = count(); }'
+```
+
+@099
+Q: 95 % d'un traitement se parallélise parfaitement. Quelle accélération maximale atteindrait-on avec un nombre illimité de cœurs, d'après la loi d'Amdahl ?
+N: 20
+E: Avec une infinité de cœurs, la partie parallèle tend vers zéro et il reste 1 / 0,05 = 20. Les 5 % séquentiels suffisent à plafonner le gain. En pratique, la synchronisation et les échanges entre cœurs abaissent encore ce plafond : la loi d'Amdahl est une borne optimiste.
+
+@100
+Q: Pourquoi cette version NumPy du calcul est-elle des dizaines de fois plus rapide que la boucle Python équivalente ?
+C: Une boucle compilée sur un tableau contigu, sans objet Python par valeur
+W: NumPy répartit automatiquement chaque opération sur la carte graphique de la machine
+W: NumPy met en cache le résultat des appels précédents
+W: NumPy arrondit les calculs à la précision simple pour aller plus vite
+E: La boucle Python manipule un objet float par valeur, avec vérification de type à chaque opération. NumPy applique l'opération sur des nombres bruts contigus, que le processeur traite par paquets (SIMD). Pour une boucle impossible à vectoriser, Numba ou Cython compilent le code Python.
+```python
+import numpy as np
+
+vPrix = np.array(pPrix, dtype=np.float64)
+vTtc = vPrix * 1.2
+vTotal = vTtc[vTtc > 100].sum()
+```

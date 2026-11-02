@@ -1,0 +1,36 @@
+{
+  "lot": 1,
+  "seed": 2026110201,
+  "skills": ["performance", "optimisation", "profiling"],
+  "schemas": [
+    {
+      "name": "performance-demarche.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Démarche d'optimisation mesurée",
+        "nodes": [
+          "Objectif mesurable (p95 visé)",
+          "Mesure de référence reproductible",
+          "Profilage : goulot principal",
+          "Correction d'un seul point",
+          "Nouvelle mesure et comparaison"
+        ],
+        "note": "Le gain total est borné par la part du goulot corrigé"
+      }
+    },
+    {
+      "name": "performance-cache-aside.svg",
+      "questions": ["045", "046", "047"],
+      "diagram": {
+        "title": "Lecture selon le modèle cache-aside",
+        "nodes": [
+          "Recherche de la clé dans le cache",
+          "Absente : lecture en base",
+          "Rangement dans le cache avec un TTL",
+          "Réponse ; les lectures suivantes trouvent la clé"
+        ],
+        "note": "À l'écriture en base, supprimer la clé du cache"
+      }
+    }
+  ]
+}

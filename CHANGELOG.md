@@ -5,6 +5,16 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision performance et optimisation
+- Lot de 100 questions dont 30 interactives (associations, remises en ordre,
+  calculs, code à compléter) : latence, débit et percentiles, profilage
+  (cProfile, py-spy, graphes en flammes, async-profiler), complexité, caches et
+  invalidation, index et plans d'exécution SQL, problème N+1, pools de
+  connexions, tests de charge (k6, JMeter, Gatling), JVM et ramasse-miettes,
+  Core Web Vitals, lois de Little et d'Amdahl, files d'attente, latence de
+  traîne, analyse système (vmstat, perf, eBPF)
+- Deux schémas : démarche d'optimisation, lecture selon le modèle cache-aside
+
 ### Révision Windows Server et PowerShell
 - Lot de 100 questions dont 29 interactives (associations, remises en ordre,
   calculs, code à compléter) : Server Core et rôles, PowerShell (pipeline,

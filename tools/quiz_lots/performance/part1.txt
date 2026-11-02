@@ -1,0 +1,437 @@
+@001
+Q: Quelle différence sépare la latence et le débit d'un service ?
+C: La latence mesure la durée d'une requête, le débit le nombre de requêtes traitées par seconde
+W: Ce sont deux noms de la même mesure, l'un employé côté réseau et l'autre côté serveur
+W: La latence se mesure en octets, le débit en millisecondes
+W: Le débit concerne le navigateur, la latence la base de données
+E: Les deux évoluent souvent en sens inverse sous charge : regrouper les traitements augmente le débit mais allonge l'attente de chaque requête. Un objectif de performance précise les deux, par exemple 500 requêtes par seconde avec un p95 sous 200 ms.
+
+@002
+Q: Pourquoi le temps de réponse moyen suffit-il rarement à décrire la performance ressentie ?
+C: Il masque les requêtes lentes, que révèlent p95 et p99
+W: Il est trop coûteux à calculer sur un serveur de production chargé
+W: Il dépend du nombre de cœurs du poste de l'utilisateur
+W: La moyenne arrondit les valeurs à la seconde la plus proche
+E: Avec 98 réponses à 50 ms et 2 à 5 s, la moyenne vaut environ 150 ms et paraît correcte, alors que deux utilisateurs sur cent attendent cinq secondes. Le p99 indique la valeur sous laquelle se trouvent 99 % des requêtes : c'est lui qui révèle la traîne.
+
+@003
+Q: Que signifie un temps de réponse p95 de 300 ms ?
+C: 95 % des requêtes répondent en 300 ms ou moins
+W: La requête la plus lente a pris 300 ms
+W: Le serveur répond en 300 ms dans 5 % des cas
+W: La moyenne des 95 dernières requêtes vaut 300 ms
+E: Les 5 % restants sont plus lents, sans limite indiquée : seul le maximum ou un percentile plus élevé (p99, p99,9) les décrit. Un percentile ne se moyenne pas entre serveurs ; on le recalcule sur l'ensemble des mesures ou sur un histogramme fusionné.
+
+@004
+Q: Quelle règle suivre avant d'optimiser un programme jugé lent ?
+C: Mesurer d'abord pour savoir où le temps est réellement passé
+W: Réécrire les boucles dans un langage compilé
+W: Ajouter un cache devant chaque fonction appelée plus d'une fois
+W: Augmenter la mémoire du serveur
+E: L'intuition se trompe souvent sur le goulot d'étranglement. Une mesure de référence permet aussi de vérifier que la modification a vraiment gagné quelque chose. Optimiser sans mesurer ajoute de la complexité, parfois pour un gain nul.
+
+@005
+Q: Qu'est-ce qu'un profileur ?
+C: Un outil qui mesure où un programme passe son temps ou sa mémoire
+W: Un compilateur qui optimise le code juste avant sa mise en production
+W: Un outil qui envoie un grand nombre de requêtes à un serveur
+W: Un journal qui enregistre les erreurs d'un programme
+E: Il répond à la question « quelles fonctions coûtent le plus ? ». L'outil qui envoie du trafic est un injecteur de charge (k6, JMeter, Gatling) : il dit si le service tient, le profileur dit pourquoi il ne tient pas. Les deux se complètent.
+
+@006
+Q: Associer chaque complexité à l'opération qui la présente habituellement.
+P: O(1) => Lecture d'une clé dans un dictionnaire
+P: O(log n) => Recherche dichotomique dans une liste triée
+P: O(n) => Recherche d'une valeur dans une liste non triée
+P: O(n log n) => Tri par comparaison d'une liste
+P: O(n²) => Comparaison de chaque élément avec tous les autres
+E: La complexité décrit comment le coût grandit avec la taille des données, pas la durée absolue. Passer de O(n²) à O(n log n) change tout pour un million d'éléments, alors qu'optimiser une boucle déjà linéaire ne gagne qu'un facteur constant.
+
+@007
+Q: Pourquoi cette fonction devient-elle très lente quand les deux listes contiennent 100 000 éléments ?
+C: Le test « in » sur une liste parcourt la liste à chaque fois, d'où un coût quadratique
+W: La fonction append recopie toute la liste à chaque ajout
+W: Python limite les boucles à 10 000 tours
+W: La compréhension serait plus rapide parce qu'elle s'exécute dans un autre processus
+E: Chaque recherche dans une liste coûte O(n), répétée n fois. Convertir la liste en ensemble avec set(pDejaVus) rend chaque recherche O(1) en moyenne : quelques millisecondes au lieu de plusieurs minutes.
+```python
+def nouveaux(pClients, pDejaVus):
+    rNouveaux = []
+    for vClient in pClients:
+        if vClient not in pDejaVus:
+            rNouveaux.append(vClient)
+    return rNouveaux
+```
+
+@008
+Q: Qu'est-ce qu'un cache ?
+C: Une copie rapide d'un résultat coûteux, tant qu'elle reste valable
+W: Une sauvegarde de la base de données
+W: Une file d'attente des requêtes en surnombre
+W: Un serveur de secours qui reprend le trafic quand le principal tombe en panne
+E: Le cache gagne du temps parce que la copie est plus proche ou plus rapide à lire (mémoire au lieu du disque, serveur voisin au lieu d'un service distant). Son prix : décider quand la copie n'est plus à jour, ce qu'on appelle l'invalidation.
+
+@009
+Q: Un cache a reçu 1 000 lectures, dont 850 ont trouvé la donnée. Quel est son taux de succès (hit ratio) en pourcentage ?
+N: 85
+U: %
+E: Le taux de succès vaut 850 / 1 000 = 85 %. Les 15 % d'échecs (miss) vont jusqu'à la source. Un taux faible indique des clés trop variées, une durée de vie trop courte ou un cache trop petit qui évince les entrées avant leur réutilisation.
+
+@010
+Q: À quoi sert un CDN pour un site web ?
+C: Servir les fichiers statiques depuis des serveurs proches
+W: Compiler le JavaScript du site avant son envoi au navigateur
+W: Héberger la base de données au plus près des visiteurs du site
+W: Remplacer le serveur DNS qui résout le nom de domaine du site
+E: Un CDN (Content Delivery Network) garde en cache images, scripts et feuilles de style dans de nombreux points de présence. La distance réseau baisse, le serveur d'origine reçoit moins de requêtes. Cloudflare, Fastly ou CloudFront en sont des exemples.
+
+@011
+Q: Quel gain apporte la compression gzip ou Brotli des réponses HTTP ?
+C: Moins d'octets transférés pour les textes : HTML, CSS, JS, JSON
+W: Elle accélère le traitement des requêtes par le serveur d'application
+W: Elle divise par deux la taille des images JPEG et des vidéos
+W: Elle remplace la mise en cache par le navigateur
+E: Un fichier texte perd souvent 70 à 80 % de sa taille. Les images JPEG, PNG ou WebP sont déjà compressées : les recompresser coûte du CPU sans rien gagner. Le serveur choisit l'algorithme d'après l'en-tête Accept-Encoding envoyé par le navigateur.
+
+@012
+Q: Un script compressé passe de 500 Ko à 120 Ko. Quel pourcentage de la taille d'origine a été économisé ?
+N: 76
+U: %
+E: L'économie vaut (500 − 120) / 500 = 380 / 500 = 76 %. Sur une connexion mobile lente, cela représente plusieurs centaines de millisecondes de téléchargement en moins.
+
+@013
+Q: Qu'est-ce qu'un index dans une base de données relationnelle ?
+C: Une structure triée qui retrouve des lignes sans tout lire
+W: La clé primaire, obligatoirement numérique et générée par la base
+W: Une copie de la table rangée sur un autre serveur de la grappe
+W: Le numéro de ligne attribué automatiquement à chaque insertion
+E: Un index B-tree sur une colonne permet de trouver une valeur en quelques lectures au lieu d'un parcours complet. Il a un coût : place disque et écritures plus lentes, car chaque insertion ou modification met aussi l'index à jour.
+
+@014
+Q: Compléter cette instruction qui accélère la recherche des commandes d'un client.
+A: INDEX
+E: Sans index sur client_id, la requête WHERE client_id = 42 lit toute la table commande. On indexe d'abord les colonnes de filtre et de jointure les plus fréquentes, pas toutes les colonnes par précaution.
+```sql
+CREATE ____ idx_commande_client ON commande (client_id);
+```
+
+@015
+Q: Une page affiche 50 commandes ; le journal SQL montre 51 requêtes, une pour la liste et une par commande pour lire son client. Comment s'appelle ce problème ?
+C: Le problème N+1
+W: Un interblocage (deadlock)
+W: Une injection SQL
+W: Un débordement du pool de connexions
+E: Chaque requête est rapide mais leur nombre explose avec la taille de la liste, d'autant que chacune paie un aller-retour réseau. Une jointure ou un chargement groupé (JOIN FETCH, select_related, IN (…)) ramène tout en une ou deux requêtes.
+
+@016
+Q: Pourquoi une application utilise-t-elle un pool de connexions vers sa base de données ?
+C: Pour réutiliser des connexions ouvertes plutôt que d'en créer
+W: Pour répartir les tables entre plusieurs serveurs
+W: Pour chiffrer les échanges avec la base
+W: Pour permettre à chaque utilisateur d'avoir sa propre connexion permanente
+E: Ouvrir une connexion coûte une poignée de main TCP, parfois TLS, et une authentification : plusieurs millisecondes. Le pool (HikariCP, pgbouncer, SQLAlchemy) en garde quelques-unes prêtes et limite aussi leur nombre, ce qui protège la base d'un afflux.
+
+@017
+Q: Qu'est-ce qu'un traitement limité par les entrées-sorties (I/O-bound) ?
+C: Un traitement qui attend surtout le disque ou le réseau
+W: Un traitement qui sature le processeur par des calculs intensifs
+W: Un programme qui écrit trop de logs
+W: Un traitement interdit d'accès au disque
+E: Ajouter des cœurs n'y change rien : il faut attendre moins (cache, requêtes groupées) ou attendre en parallèle (asynchrone, threads). Un traitement limité par le CPU (CPU-bound) se gagne au contraire par un meilleur algorithme ou plusieurs processus.
+
+@018
+Q: Associer chaque type de test de performance à son objectif.
+P: Test de charge => Vérifier le comportement sous le trafic attendu
+P: Test de stress => Monter au-delà jusqu'à la rupture pour trouver la limite
+P: Test d'endurance => Tenir plusieurs heures pour révéler fuites et dérives
+P: Test de pic => Encaisser une hausse brutale et soudaine du trafic
+E: Chaque test répond à une question différente. Le test d'endurance (soak) révèle une mémoire qui grossit lentement ou un pool qui s'épuise ; le test de pic vérifie l'autoscaling et les files d'attente. Tous demandent un environnement proche de la production.
+
+@019
+Q: Associer chaque indicateur web à ce qu'il mesure.
+P: LCP => Affichage du plus grand élément visible de la page
+P: INP => Délai de réaction de la page aux interactions
+P: CLS => Décalages inattendus de la mise en page
+P: TTFB => Délai avant le premier octet de la réponse du serveur
+E: LCP, INP et CLS forment les Core Web Vitals de Google, avec pour seuils « bons » 2,5 s, 200 ms et 0,1. INP a remplacé FID en mars 2024. Le TTFB n'en fait pas partie mais pèse sur le LCP : une page qui arrive tard s'affiche tard.
+
+@020
+Q: Quel outil intégré à Chrome produit un rapport de performance d'une page avec des recommandations chiffrées ?
+C: Lighthouse
+W: Wireshark
+W: Postman
+W: SonarQube
+E: Lighthouse simule un chargement sur mobile ralenti et note la performance, l'accessibilité et les bonnes pratiques. C'est une mesure de laboratoire ; les données réelles des visiteurs (CrUX, mesures RUM) varient davantage selon les appareils et les réseaux.
+
+@021
+Q: Dans l'onglet Réseau des outils de développement, quelle information permet de repérer un fichier qui retarde l'affichage ?
+C: La cascade : début et durée de chaque téléchargement
+W: Le nombre de lignes de chaque fichier source chargé par la page
+W: La liste des cookies déposés par le domaine du site
+W: Le niveau de zoom appliqué à la page par le navigateur
+E: La cascade (waterfall) montre ce qui attend quoi : un script bloquant qui retarde les suivants, une police chargée tard, une image énorme. Cocher « Disable cache » et choisir un réseau ralenti reproduit l'expérience d'un premier visiteur sur mobile.
+
+@022
+Q: Compléter cette balise pour que l'image ne soit téléchargée qu'à l'approche de la zone visible.
+A: lazy
+E: Le chargement différé natif évite de télécharger les images situées bas dans la page. On ne l'applique pas à l'image principale visible au chargement : cela retarderait le LCP. Les attributs width et height réservent la place et évitent un décalage (CLS).
+```html
+<img src="atelier.webp" alt="Atelier" width="800" height="450" loading="____">
+```
+
+@023
+Q: Qu'est-ce qu'une fuite de mémoire dans un programme dont la mémoire est gérée par un ramasse-miettes ?
+C: Des objets inutiles encore référencés, donc jamais libérés
+W: De la mémoire lue par un autre processus
+W: Une erreur de segmentation au démarrage du programme
+W: Un fichier temporaire qui n'est pas supprimé à la fermeture
+E: Le ramasse-miettes ne libère que ce qui n'est plus atteignable. Une liste ou un cache global qui grossit sans limite, des écouteurs d'événements jamais retirés sont les causes classiques. Le symptôme : la mémoire monte régulièrement jusqu'à l'erreur OutOfMemory ou l'arrêt par le système.
+
+@024
+Q: Pourquoi la pagination accélère-t-elle une API qui renvoie une liste de commandes ?
+C: Chaque réponse ne lit et n'envoie qu'une partie des résultats
+W: Elle compresse automatiquement la réponse JSON
+W: Elle place les résultats dans le cache du navigateur
+W: Elle évite d'avoir à créer des index sur les tables interrogées par l'API
+E: Renvoyer 100 000 lignes coûte en lecture, en mémoire, en sérialisation et en réseau, alors que l'écran n'en affiche que 50. Sur de grandes tables, la pagination par curseur (WHERE id > dernier_id) reste rapide là où un OFFSET élevé relit toutes les lignes sautées.
+
+@025
+Q: Un utilisateur se plaint d'un écran lent. Quelle première information demander pour diagnostiquer efficacement ?
+C: Le moment et l'action précise, pour retrouver la requête
+W: La marque et le modèle de l'écran sur lequel il travaille
+W: La version du compilateur utilisée pour construire l'application
+W: Le nombre d'onglets ouverts en même temps dans son navigateur
+E: Sans moment ni action précise, impossible de relier la plainte aux journaux et aux traces. Un identifiant de requête affiché dans l'application ou un horodatage suffit souvent à retrouver la trace distribuée et à voir quel composant a pris le temps.
+
+@026
+Q: Remettre dans l'ordre les étapes d'une démarche d'optimisation.
+O: Fixer un objectif mesurable, par exemple un p95 sous 200 ms
+O: Mesurer la situation de départ dans des conditions reproductibles
+O: Profiler pour trouver le goulot d'étranglement principal
+O: Corriger ce seul goulot
+O: Mesurer à nouveau et comparer à la référence
+E: On change une chose à la fois, sinon on ne sait pas laquelle a agi. On s'arrête dès que l'objectif est atteint : au-delà, chaque gain coûte plus de complexité. Le goulot suivant apparaît souvent ailleurs une fois le premier levé.
+
+@027
+Q: Une fonction représente 5 % du temps d'une requête. Quel gain maximal apporte sa réécriture, même infiniment rapide ?
+C: 5 % du temps de la requête, pas davantage
+W: Un gain proportionnel au nombre de lignes réécrites
+W: La moitié du temps de la requête
+W: Un gain qui dépend surtout du langage choisi pour la réécriture
+E: C'est la loi d'Amdahl appliquée à l'optimisation : le gain total est borné par la part de ce qu'on améliore. C'est pour cela que le profilage précède la correction : il désigne la partie qui pèse vraiment.
+
+@028
+Q: Après une optimisation, le temps moyen baisse de 3 % sur une seule mesure. Que faut-il en conclure ?
+C: Rien encore : l'écart peut venir du bruit de mesure
+W: L'optimisation est validée et peut partir en production
+W: L'optimisation a échoué, un vrai gain dépasse toujours 10 %
+W: Il faut recompiler le programme en mode débogage
+E: Deux exécutions identiques varient souvent de quelques pour cent (cache du disque, autres processus, fréquence du processeur). On répète les mesures, on compare médianes et dispersion, et on garde les conditions identiques : même machine, mêmes données, même charge.
+
+@029
+Q: Compléter cette commande qui profile un script Python et trie les fonctions par temps cumulé.
+A: cProfile
+E: cProfile est fourni avec Python. La colonne cumtime compte le temps passé dans la fonction et dans celles qu'elle appelle, tottime le temps passé dans la fonction seule. L'option -o enregistre le profil pour l'explorer ensuite avec pstats ou snakeviz.
+```bash
+python -m ____ -s cumulative traitement.py
+```
+
+@030
+Q: Dans ce rapport de cProfile, quelle fonction faut-il examiner en premier ?
+C: lire_offre, qui cumule l'essentiel du temps
+W: main, puisqu'elle a le temps cumulé le plus élevé
+W: normaliser, la fonction appelée le plus souvent
+W: <built-in method builtins.len>, parce qu'elle est native
+E: main contient tout le reste, son cumtime ne désigne rien. normaliser est appelée souvent mais coûte peu au total. lire_offre prend 8,9 s sur 9,4 : c'est là que se trouve le gain, peut-être un appel réseau répété qu'on pourrait grouper ou mettre en cache.
+```text
+   ncalls  tottime  cumtime  filename:lineno(function)
+        1    0.010    9.420  main.py:12(main)
+     2000    0.150    8.910  scraper.py:40(lire_offre)
+    50000    0.300    0.410  texte.py:8(normaliser)
+   120000    0.020    0.020  {built-in method builtins.len}
+```
+
+@031
+Q: Quelle différence sépare un profileur par échantillonnage d'un profileur déterministe ?
+C: L'échantillonneur relève la pile d'appels à intervalles réguliers, le déterministe trace chaque appel de fonction
+W: L'échantillonneur ne fonctionne que sur les langages compilés
+W: Le déterministe mesure la mémoire, l'échantillonneur le temps
+W: Le déterministe ne s'utilise qu'en production
+E: Tracer chaque appel (cProfile) ralentit fortement les programmes qui appellent beaucoup de petites fonctions et fausse leur poids relatif. L'échantillonnage (py-spy, async-profiler, perf) coûte peu et s'utilise même en production, au prix d'une précision statistique.
+
+@032
+Q: Quel outil observe un processus Python déjà lancé, en production, sans le redémarrer ni modifier son code ?
+C: py-spy
+W: cProfile
+W: timeit
+W: pdb
+E: py-spy lit la mémoire du processus depuis l'extérieur : py-spy top montre les fonctions actives en direct, py-spy record produit un graphe en flammes, py-spy dump affiche la pile de chaque thread, utile pour un programme bloqué. Il demande souvent les droits administrateur.
+
+@033
+Q: Dans un graphe en flammes (flame graph), que représente la largeur d'une case ?
+C: La part des échantillons où la fonction est dans la pile
+W: L'ordre chronologique des appels, du début à la fin de la mesure
+W: La durée moyenne d'un seul appel à la fonction
+W: Le nombre de lignes de code de la fonction
+E: Les fonctions appelantes sont en bas, les appelées au-dessus. On cherche les cases larges en haut de pile : c'est là que le processeur travaille vraiment. L'axe horizontal est trié par ordre alphabétique pour fusionner les piles identiques, il ne montre pas le temps qui passe.
+
+@034
+Q: Compléter cette commande qui mesure la durée d'une expression Python en la répétant de nombreuses fois.
+A: timeit
+E: timeit répète l'instruction, désactive temporairement le ramasse-miettes et retient le meilleur résultat d'une série, ce qui réduit le bruit d'une mesure isolée. Dans un notebook, la commande magique %timeit fait la même chose.
+```bash
+python -m ____ "'-'.join(str(n) for n in range(100))"
+```
+
+@035
+Q: Pourquoi ce code peut-il devenir lent quand le nombre de lignes grandit fortement ?
+C: Chaque += peut recopier tout le texte déjà accumulé
+W: La méthode strip charge le fichier entier en mémoire
+W: La boucle for sur une liste est interprétée deux fois
+W: Les f-strings sont recalculées à chaque affichage de la variable
+E: Les chaînes Python sont immuables. CPython optimise parfois ce cas, mais ce n'est pas garanti ; rassembler les morceaux dans une liste puis appeler "".join(vMorceaux) ne copie qu'une fois. Java a le même piège, résolu par StringBuilder.
+```python
+vRapport = ""
+for vLigne in pLignes:
+    vRapport += f"{vLigne.strip()}\n"
+```
+
+@036
+Q: Quel avantage mémoire apporte l'expression génératrice de ce code par rapport à une liste en compréhension ?
+C: Les valeurs sont produites une à une, sans être toutes stockées
+W: Elle calcule la somme sur plusieurs cœurs
+W: Elle garde le résultat en cache pour les appels suivants de la fonction
+W: Elle trie les données avant de les additionner
+E: Avec des crochets, Python construirait d'abord une liste de dix millions d'entiers, des centaines de mégaoctets ; avec des parenthèses, la mémoire reste constante. Le générateur ne se parcourt qu'une fois : pour réutiliser les valeurs, il faut une liste.
+```python
+vTotal = sum(vMontant * 1.2 for vMontant in range(10_000_000))
+```
+
+@037
+Q: Compléter ce code pour mémoriser les résultats des 256 derniers appels distincts de la fonction.
+A: lru_cache
+E: Le décorateur garde en mémoire les résultats associés aux arguments, qui doivent être hachables. maxsize borne la mémoire ; cache_info() affiche succès et échecs. À réserver aux fonctions pures : si le taux de change évolue en base, le cache renverra une valeur périmée.
+```python
+import functools
+
+@functools.____(maxsize=256)
+def taux_de_change(pDevise):
+    return lire_taux_en_base(pDevise)
+```
+
+@038
+Q: En Python, pourquoi plusieurs threads n'accélèrent-ils pas un calcul purement CPU sous CPython ?
+C: Le verrou global de l'interpréteur (GIL) n'exécute qu'un thread Python à la fois
+W: Les threads Python tournent sur un seul cœur par conception du système
+W: Python crée un processus distinct pour chaque thread
+W: Les threads n'ont pas accès aux variables globales
+E: Les threads restent utiles pour attendre le réseau ou le disque, car le GIL est relâché pendant ces attentes. Pour du calcul, on utilise multiprocessing ou concurrent.futures.ProcessPoolExecutor, ou des bibliothèques natives comme NumPy qui relâchent le GIL. Python 3.13 propose une version expérimentale sans GIL.
+
+@039
+Q: Pourquoi cette coroutine bloque-t-elle tout le serveur asynchrone pendant deux secondes ?
+C: time.sleep bloque la boucle d'événements, qui ne peut plus servir les autres requêtes
+W: La boucle d'événements limite chaque coroutine à une seconde
+W: Le mot-clé async rend la fonction plus lente qu'une fonction normale
+W: Le dictionnaire renvoyé doit être sérialisé dans un autre thread
+E: Dans du code asynchrone, toute attente doit céder la main avec await : asyncio.sleep, un client HTTP asynchrone (httpx, aiohttp), un pilote de base asynchrone. Un appel bloquant inévitable se déporte avec asyncio.to_thread. Node.js présente le même piège avec une boucle de calcul longue.
+```python
+@app.get("/stock")
+async def stock():
+    time.sleep(2)
+    return {"quantite": 12}
+```
+
+@040
+Q: Que montre la commande EXPLAIN ANALYZE de PostgreSQL de plus qu'EXPLAIN seul ?
+C: Le temps et les lignes réellement constatés, car la requête s'exécute
+W: La liste des index qu'il faudrait créer
+W: Le texte de la requête réécrit sous une forme plus rapide
+W: Le texte de la requête réécrit sous une forme plus rapide par l'optimiseur
+E: EXPLAIN donne le plan prévu et des estimations ; ANALYZE exécute la requête et ajoute les valeurs réelles. Un grand écart entre lignes estimées et réelles signale des statistiques périmées. Attention : sur un UPDATE ou un DELETE, la modification a vraiment lieu, sauf dans une transaction annulée.
+
+@041
+Q: Ce plan PostgreSQL concerne une table de 2 millions de lignes. Que révèle-t-il ?
+C: Un parcours complet de la table, faute d'index sur email
+W: Un index bien utilisé : le plan est déjà optimal pour cette recherche
+W: Un interblocage entre deux transactions concurrentes sur client
+W: Une jointure mal écrite entre la table client et une autre
+E: Seq Scan signifie que toutes les lignes sont lues puis filtrées : « Rows Removed by Filter » en écarte presque deux millions pour une seule trouvée. Un index sur email, ou sur lower(email) si la recherche ignore la casse, transforme ce parcours en Index Scan de quelques millisecondes.
+```text
+Seq Scan on client  (cost=0.00..45811.00 rows=1 width=72) (actual time=0.03..412.70 rows=1 loops=1)
+  Filter: (email = 'paul@exemple.fr'::text)
+  Rows Removed by Filter: 1999999
+Execution Time: 412.75 ms
+```
+
+@042
+Q: Pourquoi cette requête n'utilise-t-elle pas l'index posé sur date_commande ?
+C: La fonction appliquée à la colonne empêche l'usage de l'index
+W: Un index B-tree ne sert qu'aux recherches sur des colonnes de texte
+W: Les colonnes de type date ne peuvent pas être indexées
+W: SELECT * désactive l'usage de tous les index de la table
+E: L'index range les valeurs de date_commande, pas celles de YEAR(date_commande). On réécrit la condition en intervalle : date_commande >= '2026-01-01' AND date_commande < '2027-01-01'. On dit alors que la condition est sargable. Autre solution : un index sur l'expression.
+```sql
+SELECT * FROM commande WHERE YEAR(date_commande) = 2026;
+```
+
+@043
+Q: Un index composite est créé sur (client_id, date_commande). Quelle requête ne peut pas en profiter efficacement ?
+C: Une requête filtrée sur date_commande seule
+W: Une requête filtrée sur client_id seul
+W: Une requête filtrée sur client_id et date_commande
+W: Une requête filtrée sur client_id et triée par date_commande
+E: Comme un annuaire trié par nom puis prénom, l'index est rangé d'abord par client_id. Sans cette première colonne, les dates sont dispersées dans tout l'index. On place en tête la colonne filtrée par égalité, puis celle des intervalles ou du tri.
+
+@044
+Q: Qu'apporte un index couvrant à une requête fréquente ?
+C: Il contient toutes les colonnes lues : la table n'est pas lue
+W: Il couvre toutes les tables de la base en une seule structure
+W: Il verrouille la table pendant la lecture pour éviter les conflits
+W: Il remplace la clé primaire de la table lors des jointures SQL
+E: PostgreSQL l'indique par Index Only Scan, SQL Server ajoute les colonnes par INCLUDE. Le gain est net sur une requête très fréquente ; en contrepartie l'index grossit et ralentit les écritures. C'est aussi une raison d'éviter SELECT * : lire toutes les colonnes oblige à visiter la table.
+
+@045
+Q: Remettre dans l'ordre la lecture d'une donnée selon le modèle cache-aside.
+O: L'application cherche la clé dans le cache
+O: La clé est absente : l'application lit la donnée en base
+O: L'application range la donnée dans le cache avec une durée de vie
+O: L'application renvoie la donnée ; les lectures suivantes la trouvent dans le cache
+E: C'est l'application qui gère le cache, d'où le nom « à côté ». Lors d'une modification, on écrit en base puis on supprime la clé du cache plutôt que de la mettre à jour : la lecture suivante rechargera une valeur fraîche.
+
+@046
+Q: Avec un cache-aside, une donnée est modifiée en base mais les utilisateurs voient l'ancienne valeur pendant dix minutes. Quelle est la cause la plus probable ?
+C: La clé n'est pas supprimée du cache à la modification
+W: La base de données n'a pas validé la transaction
+W: Le cache est trop grand pour la mémoire disponible sur le serveur
+W: Le navigateur refuse les données venant d'un cache
+E: Sans invalidation, la valeur reste servie jusqu'à l'expiration de son TTL. On supprime la clé après l'écriture en base ; un TTL court reste un filet de sécurité pour les cas oubliés. Plus la donnée doit être fraîche, plus ce point demande de soin.
+
+@047
+Q: Une clé très demandée expire et des centaines de requêtes recalculent la même valeur en même temps, ce qui sature la base. Comment nomme-t-on ce phénomène ?
+C: Une ruée sur le cache (cache stampede)
+W: Une injection de cache par un attaquant
+W: Un cache froid au démarrage
+W: Une éviction LRU
+E: Parades possibles : un verrou pour qu'une seule requête recalcule pendant que les autres attendent ou reçoivent l'ancienne valeur, un rafraîchissement anticipé avant l'expiration, des durées de vie légèrement aléatoires pour éviter que beaucoup de clés expirent ensemble.
+
+@048
+Q: Un cache répond en 1 ms, la base en 50 ms, et le taux de succès est de 90 %. Quelle est la durée moyenne d'une lecture, en ms, en comptant 1 ms de consultation du cache même en cas d'échec ?
+N: 6
+U: ms
+E: Les succès coûtent 0,9 × 1 = 0,9 ms ; les échecs 0,1 × (1 + 50) = 5,1 ms ; total 6 ms. Passer à 99 % de succès donnerait 0,99 + 0,51 = 1,5 ms : les derniers points de taux de succès comptent beaucoup.
+
+@049
+Q: Associer chaque stratégie d'écriture d'un cache à sa description.
+P: Cache-aside => L'application lit la base en cas d'absence et remplit le cache
+P: Read-through => Le cache va lui-même chercher la donnée absente à la source
+P: Write-through => Chaque écriture met à jour le cache et la base ensemble
+P: Write-behind => L'écriture en base est différée et regroupée par le cache
+E: Write-behind accélère les écritures mais risque de perdre les données non encore recopiées si le cache tombe. Write-through garde cache et base cohérents au prix d'écritures plus lentes. Cache-aside reste le modèle le plus répandu avec Redis.
+
+@050
+Q: Quelle durée de vie donner à une ressource dont l'URL contient l'empreinte du contenu, comme app.3f9a2c.js ?
+C: Une très longue, avec max-age=31536000, immutable
+W: Aucune mise en cache, avec Cache-Control: no-store
+W: Une minute, pour que les mises à jour arrivent vite
+W: Une durée calculée à partir de la date de création du dépôt
+E: Toute modification du fichier change son nom, donc son URL : l'ancienne version peut rester en cache un an sans risque. La page HTML qui référence ces fichiers garde en revanche une durée courte ou no-cache, pour découvrir les nouveaux noms à chaque déploiement.
