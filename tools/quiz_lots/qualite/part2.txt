@@ -1,0 +1,395 @@
+@051
+Q: Dans une AMDEC processus, comment calcule-t-on l'indice de priorité de risque (IPR) classique ?
+C: Gravité × occurrence × détection
+W: Gravité + occurrence + détection
+W: Gravité × occurrence, divisé par la détection
+W: Occurrence × détection, sans tenir compte de la gravité
+E: L'IPR va de 1 à 1 000 avec des échelles de 1 à 10. Le guide AIAG-VDA de 2019 le remplace par l'Action Priority, qui donne plus de poids à la gravité : une gravité de 9 ou 10 appelle une action même si l'IPR est faible.
+
+@052
+Q: Un mode de défaillance a une gravité de 7, une occurrence de 4 et une détection de 6. Quel est son IPR ?
+N: 168
+E: 7 × 4 × 6 = 168. Une action qui améliore la détection à 2 ramène l'IPR à 56, mais ne change ni la gravité ni la fréquence du défaut : agir sur l'occurrence reste préférable.
+
+@053
+Q: Que contient un plan de surveillance (control plan) ?
+C: Les caractéristiques à contrôler, la méthode, la fréquence et la réaction
+W: La liste des fournisseurs autorisés et leurs dernières notes
+W: Les objectifs qualité de l'année validés en revue de direction
+W: Le planning des audits internes et le nom de leurs responsables
+E: Pour chaque étape du procédé, le plan de surveillance précise quoi contrôler, avec quel moyen, combien de pièces, à quelle fréquence et quoi faire en cas d'écart. Il découle de l'AMDEC et se met à jour après chaque 8D.
+
+@054
+Q: Qu'est-ce qu'une caractéristique spéciale sur un plan ?
+C: Une caractéristique liée à la sécurité, à la loi ou à une fonction clé
+W: Une cote dont la tolérance est plus large que la tolérance générale du plan
+W: Une caractéristique que le client contrôle lui-même à la réception
+W: Une cote ajoutée par le fournisseur pour faciliter l'usinage
+E: Repérées par un symbole sur le plan, elles demandent une maîtrise renforcée : capabilité suivie, contrôle à fréquence élevée, traçabilité. Une erreur sur une caractéristique de sécurité peut entraîner un rappel de produits.
+
+@055
+Q: Associer chaque outil qualité de l'automobile à son objet.
+P: APQP => Planifier la qualité d'un produit nouveau
+P: PPAP => Faire approuver les pièces de production par le client
+P: AMDEC => Anticiper les défaillances et leurs effets
+P: MSA => Valider les moyens de mesure
+P: SPC => Piloter le procédé par les statistiques
+E: Ces core tools de l'AIAG sont exigés par l'IATF 16949. Le PPAP rassemble les preuves (résultats dimensionnels, capabilités, plan de surveillance, AMDEC) avant le démarrage série.
+
+@056
+Q: Quel est le but d'une inspection du premier article (FAI) ?
+C: Vérifier qu'une pièce issue du procédé série respecte tout le plan
+W: Contrôler la première pièce de chaque équipe avant la relève
+W: Valider le prototype réalisé par le bureau d'études
+W: Mesurer la capabilité du procédé sur les trente premières pièces produites
+E: Dans l'aéronautique, l'EN 9102 encadre cette inspection : chaque caractéristique du plan est mesurée et tracée sur une pièce produite avec l'outillage et la gamme série. Elle est refaite après un changement significatif.
+
+@057
+Q: Pourquoi valide-t-on la première pièce après un changement de série ?
+C: Le réglage vient de changer et peut être faux
+W: Les normes imposent de rebuter la première pièce de chaque série
+W: La première pièce sert d'étalon pour mesurer le reste de la série
+W: Le client paie la première pièce à un prix différent des suivantes
+E: Après un changement d'outil ou de programme, une erreur de réglage toucherait toute la série. Valider la première pièce, souvent avec une double signature régleur et qualité, arrête l'erreur au premier exemplaire.
+
+@058
+Q: Remettre dans l'ordre le traitement d'une réclamation client.
+O: Accuser réception et recueillir les faits et les pièces
+O: Sécuriser les stocks et les livraisons en cours
+O: Analyser les causes racines
+O: Mettre en œuvre et valider les actions correctives
+O: Clôturer avec le client et capitaliser
+E: Le client attend une réponse rapide sur le confinement, souvent sous 24 heures, puis l'analyse sous quelques jours. Capitaliser dans l'AMDEC et les leçons apprises évite de revivre la même réclamation sur un autre produit.
+
+@059
+Q: Une réclamation porte sur un lot fabriqué il y a trois mois. Que permet une bonne traçabilité ?
+C: Retrouver les lots de matière, la machine et les livraisons concernées
+W: Prouver au client que le défaut vient de son propre montage
+W: Remplacer l'analyse des causes par la simple lecture des enregistrements
+W: Se passer de confinement puisque les lots sont déjà livrés
+E: La traçabilité ascendante remonte aux matières et aux conditions de fabrication ; la traçabilité descendante retrouve tous les clients qui ont reçu des pièces du même lot. Sans elle, le périmètre d'un rappel s'étend à toute une période de production.
+
+@060
+Q: Associer chaque terme de traçabilité à sa définition.
+P: Traçabilité ascendante => Remonter du produit vers les matières et composants
+P: Traçabilité descendante => Retrouver les clients qui ont reçu un lot donné
+P: Numéro de lot => Identifier un ensemble produit dans les mêmes conditions
+P: Numéro de série => Identifier un produit unique
+E: Le lot est la maille habituelle : plus il est petit, plus un rappel est ciblé. Les pièces de sécurité sont souvent tracées au numéro de série, parfois avec les paramètres de fabrication enregistrés.
+
+@061
+Q: Associer chaque indicateur qualité à ce qu'il mesure.
+P: PPM client => Pièces non conformes livrées par million
+P: Taux de rebut => Part de la production détruite
+P: FTQ => Part des pièces bonnes du premier coup
+P: Coût de non-qualité => Pertes financières dues aux défauts
+P: Délai de réponse 8D => Rapidité de traitement des réclamations
+E: Un tableau de bord qualité mélange indicateurs de résultat (PPM, coût) et de pilotage (délai 8D, taux de réalisation des actions). Suivre seulement les PPM client cache le travail de tri et de retouche fait en interne.
+
+@062
+Q: Un roulement a cassé. L'équipe le remplace et clôt le problème. Qu'a-t-elle traité ?
+C: Le symptôme, pas la cause racine
+W: La cause racine, puisque la pièce cassée a été changée
+W: La cause de non-détection, puisque la casse était visible
+W: Le confinement et l'action corrective en une même étape
+E: Remplacer le roulement est une correction. Il faut encore savoir pourquoi il a cassé (lubrification, désalignement, surcharge) : sans cela, le nouveau roulement cassera de la même façon.
+
+@063
+Q: Après la découverte de vis mal serrées, associer chaque action à sa catégorie.
+P: Resserrer les vis des pièces trouvées en stock => Correction
+P: Remplacer la visseuse dont l'embrayage glisse => Action corrective
+P: Contrôler le couple des visseuses d'une autre ligne, encore sans défaut => Action préventive
+E: La correction traite le produit, l'action corrective supprime la cause du défaut survenu, l'action préventive traite un risque qui ne s'est pas encore réalisé. L'ISO 9001:2015 intègre la prévention dans l'approche par les risques.
+
+@064
+Q: Comment vérifie-t-on l'efficacité d'une action corrective ?
+C: En constatant sur une période définie que le défaut ne revient pas
+W: En contrôlant que l'action a été réalisée à la date prévue
+W: En recueillant l'avis de l'équipe qui a conduit l'analyse
+W: En vérifiant que le client a signé le rapport 8D final
+E: Réalisée ne veut pas dire efficace. On fixe à l'avance un critère et une durée, par exemple zéro défaut sur trois mois de production, et on vérifie les données. Si le défaut revient, l'analyse des causes était incomplète.
+
+@065
+Q: Comment confirmer une cause racine supposée avant d'investir dans une solution ?
+C: Faire apparaître puis disparaître le défaut en agissant sur la cause
+W: Demander à l'opérateur le plus ancien s'il partage l'hypothèse
+W: Retenir la cause qui a reçu le plus de votes lors du brainstorming de l'équipe
+W: Vérifier que la cause figure déjà dans l'AMDEC du procédé
+E: Une cause confirmée permet d'allumer et d'éteindre le défaut à volonté. Le vote pondéré aide à choisir quelles causes tester en premier, mais il ne remplace pas la preuve par les faits.
+
+@066
+Q: Associer chaque type d'audit qualité à ce qu'il examine.
+P: Audit système => L'organisation au regard d'un référentiel
+P: Audit procédé => Le respect et l'efficacité d'un procédé de fabrication
+P: Audit produit => La conformité de produits prêts à livrer
+P: Audit fournisseur => La capacité d'un fournisseur à tenir ses engagements
+E: L'audit produit se fait comme le client verrait la pièce, souvent sur des pièces emballées. L'audit procédé, comme celui de la VDA 6.3, vérifie au poste que les paramètres et les contrôles prévus sont appliqués.
+
+@067
+Q: Qu'est-ce qu'un audit par couches (layered process audit) ?
+C: Des audits courts et fréquents du poste, menés à plusieurs niveaux hiérarchiques
+W: Un audit système répété chaque année par plusieurs organismes
+W: Un audit réalisé successivement sur chaque étage de l'usine
+W: Un audit fournisseur découpé en plusieurs visites espacées
+E: Chef d'équipe chaque jour, responsable d'atelier chaque semaine, directeur chaque mois : chacun vérifie sur quelques questions que les points critiques sont respectés. La hiérarchie montre son implication et les dérives de pratique sont vues tôt.
+
+@068
+Q: Dans le modèle de Kano, que provoque l'absence d'une exigence de base ?
+C: Une forte insatisfaction, alors que sa présence passe inaperçue
+W: Une légère baisse de satisfaction, vite compensée par le prix
+W: Un enthousiasme du client qui découvre une nouveauté
+W: Un effet neutre tant que les exigences de performance sont tenues
+E: Kano distingue les exigences de base (attendues, implicites), de performance (plus il y en a, mieux c'est) et d'enchantement (inattendues). Une voiture aux freins peu fiables ne se rattrape pas par un bel écran.
+
+@069
+Q: À quoi sert la maison de la qualité (QFD) ?
+C: À traduire les attentes du client en caractéristiques techniques
+W: À ranger les dossiers qualité par client et par produit
+W: À classer les fournisseurs selon leur niveau de certification
+W: À répartir les postes de contrôle entre les différents ateliers de production
+E: La matrice croise les attentes exprimées (« porte facile à fermer ») et les grandeurs mesurables (effort de fermeture en newtons), avec leurs poids. Elle relie la conception à la voix du client dès le début du projet.
+
+@070
+Q: Que fait un opérateur qui tire le cordon andon ?
+C: Il signale un problème et appelle de l'aide
+W: Il déclare la fin de sa série et lance le changement d'outil
+W: Il valide la première pièce bonne après un réglage
+W: Il demande au magasin un réapprovisionnement de composants
+E: L'andon applique le jidoka : ne pas laisser passer un défaut au poste suivant. Chez Toyota, le chef d'équipe vient dans les secondes ; si le problème n'est pas réglé avant la fin du cycle, la ligne s'arrête.
+
+@071
+Q: Un procédé a un écart-type de 0,02 mm. Quel intervalle de tolérance minimal faut-il pour obtenir un Cp de 1,33, en mm ?
+N: 0,16
+U: mm
+T: 1
+E: IT = Cp × 6σ = 1,33 × 0,12 = 0,1596, soit environ 0,16 mm. À l'inverse, avec une tolérance imposée, on calcule l'écart-type maximal que le procédé doit tenir.
+
+@072
+Q: 500 cartes électroniques sont contrôlées. Chacune présente 20 opportunités de défaut et 15 défauts sont trouvés. Combien de défauts par million d'opportunités (DPMO) cela représente-t-il ?
+N: 1500
+E: 15 / (500 × 20) × 1 000 000 = 1 500 DPMO. Rapporter aux opportunités permet de comparer des produits de complexité différente, une carte de 20 soudures et une carte de 2 000.
+
+@073
+Q: Trois postes successifs ont des rendements du premier coup de 98 %, 95 % et 97 %. Quel est le rendement cumulé de la ligne (RTY), en % ?
+N: 90,3
+U: %
+T: 1
+E: RTY = 0,98 × 0,95 × 0,97 = 0,903, soit 90,3 %. Chaque poste paraît bon, mais près d'une pièce sur dix passe par une retouche ou un rebut quelque part sur la ligne.
+
+@074
+Q: Remettre dans l'ordre la construction d'un diagramme d'Ishikawa.
+O: Formuler l'effet de façon précise et mesurable
+O: Tracer les arêtes des familles de causes
+O: Lister les causes possibles par brainstorming
+O: Hiérarchiser les causes les plus probables
+O: Vérifier les causes retenues par les faits
+E: Le diagramme ne donne que des hypothèses : il faut ensuite les tester. Hiérarchiser par un vote ou une matrice évite de vérifier les causes au hasard.
+
+@075
+Q: Remettre dans l'ordre une étude de capabilité d'un procédé.
+O: Valider le moyen de mesure par une étude R&R
+O: Prélever des sous-groupes sur une période représentative
+O: Vérifier la stabilité sur une carte de contrôle
+O: Vérifier que la distribution est proche de la loi normale
+O: Calculer Cp et Cpk et les comparer à l'objectif
+E: Calculer un Cpk sur un procédé instable n'a pas de sens : la valeur ne prédit rien. Et un moyen de mesure trop dispersé gonfle l'écart-type observé, ce qui fait baisser artificiellement la capabilité.
+
+@076
+Q: Pourquoi vérifie-t-on la normalité des mesures avant de calculer un Cpk classique ?
+C: Les formules supposent une loi normale pour estimer les hors tolérances
+W: Une loi normale prouve que le procédé est sous contrôle
+W: La normalité confirme que le moyen de mesure est fiable
+W: Les clients refusent les mesures qui suivent une autre loi
+E: Une planéité ou une concentricité, bornées à zéro, suivent souvent une loi dissymétrique. On utilise alors une loi adaptée ou des percentiles, sinon le Cpk annoncé ne correspond pas au taux réel de hors tolérances.
+
+@077
+Q: Remettre dans l'ordre cette chaîne des 5 pourquoi, de l'effet vers la cause racine.
+O: Des pièces sortent avec une cote hors tolérance
+O: La fraise est usée au-delà de sa limite
+O: Elle n'a pas été changée à sa durée de vie prévue
+O: Le compteur de pièces de l'outil a été remis à zéro par erreur
+O: Le programme permet cette remise à zéro sans changement d'outil
+E: La dernière cause est maîtrisable et générale : bloquer la remise à zéro tant que l'outil n'est pas changé protège toutes les fraises. S'arrêter à « erreur de l'opérateur » n'aurait rien corrigé.
+
+@078
+Q: Une analyse conclut à une « erreur humaine ». Pourquoi le client refuse-t-il souvent cette cause racine ?
+C: Elle ne dit pas ce qui a permis l'erreur ni comment l'empêcher
+W: Le droit du travail interdit de citer un opérateur dans un 8D
+W: Les erreurs humaines relèvent du service RH et non de la qualité
+W: Elle oblige à refaire l'AMDEC complète du procédé concerné
+E: Tout le monde se trompe un jour ; la question est pourquoi le procédé l'a permis et pourquoi le contrôle ne l'a pas vu. Poka-yoke, standard au poste et formation sont des actions ; « sensibiliser l'opérateur » est rarement accepté.
+
+@079
+Q: Pourquoi met-on à jour le standard de travail après une action corrective ?
+C: Pour que la nouvelle façon de faire survive aux changements d'équipe
+W: Pour prouver à l'auditeur que l'analyse a bien eu lieu
+W: Pour pouvoir retirer le contrôle de la caractéristique
+W: Pour que l'opérateur signe une décharge de responsabilité
+E: Sans standard, la pratique dépend de la mémoire de quelques personnes. Le standard mis à jour, la formation des équipes et un audit de poste ancrent l'amélioration : c'est l'étape Act du PDCA.
+
+@080
+Q: Un lot présente une cote légèrement hors tolérance, sans effet sur la fonction selon le bureau d'études. Que faut-il avant de le livrer ?
+C: Une dérogation écrite acceptée par le client
+W: L'accord oral du responsable de production
+W: Un tri à 100 % des pièces du lot concerné
+W: Une modification du plan faite par le fournisseur
+E: Seul le client peut accepter un produit non conforme à ses exigences. La dérogation est limitée en quantité ou en durée, les pièces sont identifiées, et l'action corrective reste à mener.
+
+@081
+Q: Pourquoi isole-t-on physiquement les produits non conformes, par exemple dans un bac rouge fermé ?
+C: Pour éviter qu'ils soient utilisés ou livrés par erreur
+W: Pour pouvoir les retoucher sans enregistrer la décision
+W: Pour les compter plus vite lors de l'inventaire annuel
+W: Pour les renvoyer au fournisseur sans analyse préalable
+E: L'ISO 9001, au paragraphe 8.7, exige que les éléments de sortie non conformes soient identifiés et maîtrisés. Une étiquette et une zone dédiée évitent qu'une pièce suspecte rejoigne le flux de production.
+
+@082
+Q: Un fournisseur livre depuis deux ans sans défaut sur une référence. Quelle évolution du contrôle de réception est courante ?
+C: Un contrôle allégé ou une livraison sous assurance qualité
+W: Un contrôle renforcé pour vérifier que le niveau se maintient
+W: Un audit système tous les cinq ans à la place du contrôle
+W: Un contrôle à 100 % de chaque lot pour valider la tendance
+E: L'assurance qualité fournisseur reporte la preuve chez le fournisseur : ses enregistrements et ses capabilités remplacent le contrôle de réception. On garde des audits et des contrôles inopinés pour vérifier que le niveau tient.
+
+@083
+Q: Laquelle de ces sources de variation est une cause spéciale ?
+C: Un outil cassé en cours de série
+W: Les petites vibrations habituelles de la machine
+W: La variation normale de dureté entre lots de matière
+W: Les écarts de lecture entre deux mesures successives
+E: Les causes communes sont nombreuses, faibles et permanentes : les réduire demande d'agir sur le système (machine, matière, méthode). Les causes spéciales sont ponctuelles et identifiables : on les traite au poste, dès qu'elles apparaissent.
+
+@084
+Q: Associer chaque propriété d'un moyen de mesure à sa définition.
+P: Justesse => Écart moyen entre la mesure et la valeur vraie
+P: Répétabilité => Dispersion d'un opérateur qui remesure la même pièce
+P: Reproductibilité => Écart entre opérateurs mesurant les mêmes pièces
+P: Linéarité => Variation de la justesse sur l'étendue de mesure
+P: Stabilité => Variation de la justesse dans le temps
+E: L'étalonnage traite la justesse ; l'étude R&R, la répétabilité et la reproductibilité. Un pied à coulisse juste mais peu répétable reste inutilisable pour une tolérance serrée.
+
+@085
+Q: Quelle règle simple relie la résolution d'un instrument et la tolérance à contrôler ?
+C: La résolution vaut environ un dixième de la tolérance
+W: La résolution égale la moitié de la tolérance
+W: La résolution dépasse la tolérance pour tout lire
+W: La résolution suit la classe de l'instrument, sans lien avec la tolérance
+E: Pour une tolérance de 0,1 mm, un pied à coulisse au centième convient, un réglet non. La règle du dixième est un minimum : l'étude R&R confirme ensuite que l'instrument convient.
+
+@086
+Q: Une étude R&R donne une variation de mesure de 0,012 mm (6 σ) pour une cote tolérancée sur 0,08 mm. Quel est le %R&R rapporté à la tolérance ?
+N: 15
+U: %
+E: 0,012 / 0,08 = 0,15, soit 15 %. Entre 10 et 30 %, le moyen est acceptable selon l'importance de la caractéristique, son coût et l'avis du client.
+
+@087
+Q: Les rayures font 60 % des défauts mais 10 % du coût ; les fissures, 5 % des défauts et 50 % du coût. Laquelle traiter d'abord pour réduire les pertes ?
+C: Les fissures, qui pèsent le plus en coût
+W: Les rayures, qui pèsent le plus en nombre
+W: Les deux en même temps, à parts égales
+W: Celle que le client a citée en dernier
+E: Le Pareto change selon l'unité choisie. Si l'objectif est financier, on le trace en euros ; si une fissure touche la sécurité, la gravité passe de toute façon devant.
+
+@088
+Q: À quoi sert l'étape D0 ajoutée à certaines versions du 8D ?
+C: À juger si un 8D est justifié et à lancer les actions d'urgence
+W: À présenter le rapport 8D final au client pour signature
+W: À former les membres de l'équipe aux outils statistiques
+W: À désigner le fournisseur responsable du problème
+E: Un problème simple, déjà connu ou sans enjeu ne mérite pas un 8D complet. Le D0 évite de lancer la démarche partout et met en place la protection immédiate, avant même la constitution de l'équipe.
+
+@089
+Q: Qui compose idéalement l'équipe d'un 8D ?
+C: Plusieurs métiers qui connaissent le produit et le procédé
+W: Les membres du service qualité, garants de la bonne application de la méthode
+W: Le responsable de production et le client concerné
+W: Les opérateurs du poste où le défaut a été trouvé
+E: Un pilote, souvent un qualiticien, entouré de la production, des méthodes, de la maintenance, parfois des achats ou du bureau d'études. La diversité des métiers multiplie les pistes de causes et facilite la mise en œuvre des actions.
+
+@090
+Q: Pourquoi prélève-t-on un sous-groupe de pièces consécutives sur une carte X̄-R ?
+C: Pour mesurer la variation à court terme, sans dérive dans le groupe
+W: Pour réduire le nombre de mesures à saisir dans le logiciel
+W: Pour avoir une pièce de chaque équipe dans le même groupe
+W: Pour que l'étendue reste proche de l'intervalle de tolérance
+E: Le sous-groupe rationnel regroupe des pièces faites dans les mêmes conditions : l'étendue R mesure le bruit de fond, et les écarts entre moyennes révèlent les causes spéciales. Mélanger deux équipes dans un groupe gonflerait R et élargirait les limites.
+
+@091
+Q: Les coûts de non-qualité d'un site atteignent 180 000 € pour un chiffre d'affaires de 6 millions d'euros. Quelle part du chiffre d'affaires représentent-ils, en % ?
+N: 3
+U: %
+E: 180 000 / 6 000 000 = 0,03, soit 3 %. Les coûts cachés (retards, tri, réunions, heures supplémentaires) n'apparaissent pas dans ce chiffre comptable, qui sous-estime donc la non-qualité réelle.
+
+@092
+Q: Classer ces moyens de maîtrise d'un défaut, du plus efficace au moins efficace.
+O: Supprimer la possibilité de l'erreur dès la conception
+O: Poka-yoke qui arrête le procédé avant le défaut
+O: Contrôle automatique à 100 % au poste
+O: Autocontrôle par l'opérateur
+O: Contrôle par échantillonnage en fin de ligne
+E: Plus on agit en amont, moins on dépend de la vigilance et moins le défaut coûte. Le contrôle final par échantillonnage détecte tard, sur une partie des pièces, quand la valeur ajoutée est déjà engagée.
+
+@093
+Q: Associer chaque étape du 8D à son contenu.
+P: D2 => Décrire le problème avec le QQOQCP et l'« est / n'est pas »
+P: D3 => Protéger le client par des actions immédiates
+P: D5 => Choisir les actions correctives et prouver leur efficacité
+P: D6 => Déployer les actions et retirer le confinement
+P: D8 => Clore et reconnaître le travail de l'équipe
+E: Le confinement n'est levé qu'en D6, une fois les actions correctives en place et validées. Le D8 compte aussi : reconnaître l'équipe entretient l'envie de mener sérieusement les prochains 8D.
+
+@094
+Q: Quand peut-on lever les actions de confinement d'un 8D ?
+C: Quand les actions correctives sont en place et leur efficacité vérifiée
+W: Dès que la cause racine a été identifiée en D4
+W: Au bout de trente jours sans nouvelle réclamation client
+W: Lorsque le client a reçu le premier rapport intermédiaire
+E: Identifier la cause ne la supprime pas. Retirer le tri trop tôt laisse repartir des pièces mauvaises si l'action corrective n'est pas encore efficace.
+
+@095
+Q: Dans une organisation Six Sigma, quel est le rôle d'un Black Belt ?
+C: Mener à plein temps des projets DMAIC et accompagner les Green Belts
+W: Valider les budgets des projets d'amélioration du site
+W: Réaliser les audits de certification ISO 9001 de l'entreprise
+W: Superviser les opérateurs chargés de l'autocontrôle
+E: Le Green Belt mène des projets en plus de son poste, le Black Belt s'y consacre et maîtrise les outils statistiques, le Master Black Belt forme et accompagne. Le Champion, souvent un directeur, choisit les projets et lève les obstacles.
+
+@096
+Q: Quel est l'intérêt d'un plan d'expériences par rapport à des essais facteur par facteur ?
+C: Il mesure les interactions entre facteurs avec moins d'essais
+W: Il évite d'avoir à mesurer les résultats de chaque essai
+W: Il remplace l'étude de capabilité avant le démarrage de la production série
+W: Il teste un facteur isolé avec une précision plus grande
+E: Avec trois facteurs à deux niveaux, un plan complet demande 8 essais et révèle par exemple qu'une température ne pose problème qu'avec une certaine pression. Changer un facteur à la fois rate ces interactions.
+
+@097
+Q: L'arête « Mesure » d'un Ishikawa contient « pied à coulisse non étalonné ». Quelle vérification faire d'abord ?
+C: Consulter son état d'étalonnage et le remesurer sur un étalon
+W: Le remplacer par un instrument neuf sans autre analyse
+W: Retirer cette cause, qui relève du service métrologie
+W: Former les opérateurs à la lecture du vernier
+E: Une hypothèse se vérifie par un fait simple : la fiche de vie de l'instrument et une mesure sur cale étalon. Si l'instrument est juste, la cause est écartée et l'équipe passe à la suivante.
+
+@098
+Q: À quoi sert une base de leçons apprises dans un service qualité ?
+C: À réutiliser les analyses passées sur les nouveaux produits
+W: À archiver les rapports 8D pendant la durée légale de conservation
+W: À noter les opérateurs selon le nombre de défauts qu'ils produisent
+W: À calculer le coût de non-qualité de chacun des services du site
+E: Une leçon n'est apprise que si elle change quelque chose : une règle de conception, une ligne d'AMDEC générique, un point de contrôle. On consulte la base au lancement de chaque projet, et pas seulement après un incident.
+
+@099
+Q: Un indicateur PPM baisse de 200 à 150 un mois, puis remonte à 190 le mois suivant. Que faire avant de réagir ?
+C: Comparer l'écart à la variation habituelle d'un mois à l'autre
+W: Féliciter l'équipe puis lancer un 8D sur la remontée
+W: Chercher la cause de la baisse pour la reproduire au plus tôt sur la ligne
+W: Changer d'indicateur puisqu'il varie trop pour être suivi
+E: Un indicateur mensuel fluctue aussi au hasard. Une carte aux valeurs individuelles sur l'indicateur montre si un mois sort de la variation habituelle ; sans signal, réagir à chaque mois revient à du surréglage appliqué au pilotage.
+
+@100
+Q: Que dit la règle du 1-10-100 sur le coût d'un défaut ?
+C: Plus un défaut est détecté tard, plus il coûte cher
+W: Un défaut sur cent pièces coûte dix fois le prix d'une pièce
+W: Un contrôle coûte un euro, une retouche dix et un rebut cent
+W: Il faut dix contrôles pour détecter un défaut sur cent pièces
+E: Détecté en conception, un défaut coûte 1 ; en production, 10 ; chez le client, 100. Les ordres de grandeur sont indicatifs, mais ils justifient d'investir dans la prévention et l'AMDEC plutôt que dans le tri.

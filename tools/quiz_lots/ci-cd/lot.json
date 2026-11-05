@@ -1,0 +1,36 @@
+{
+  "lot": 1,
+  "seed": 2026110502,
+  "skills": ["CI/CD", "GitHub Actions", "GitLab CI", "Jenkins", "déploiement continu"],
+  "schemas": [
+    {
+      "name": "ci-cd-pipeline.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Pipeline de livraison continue",
+        "nodes": [
+          "Commit poussé : build et tests unitaires",
+          "Analyse du code et des dépendances",
+          "Artefact versionné publié une seule fois",
+          "Déploiement en recette, tests de bout en bout",
+          "Mise en production du même artefact"
+        ],
+        "note": "Les étapes rapides d'abord : un échec arrête le pipeline au plus tôt"
+      }
+    },
+    {
+      "name": "ci-cd-canary.svg",
+      "questions": ["045", "046", "047"],
+      "diagram": {
+        "title": "Déploiement canary par paliers",
+        "nodes": [
+          "Version 2 déployée à côté de la version 1",
+          "5 % du trafic envoyé à la version 2",
+          "Erreurs et latence comparées entre les deux versions",
+          "Seuils respectés : 25 %, puis 50 %, puis 100 %"
+        ],
+        "note": "Seuil dépassé à un palier : tout le trafic revient à la version 1"
+      }
+    }
+  ]
+}

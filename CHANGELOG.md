@@ -5,6 +5,29 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision qualité et résolution de problèmes
+- Lot de 100 questions dont 37 interactives (associations, remises en ordre,
+  calculs) : 8D (D0 à D8, confinement, causes d'apparition et de
+  non-détection), Ishikawa et 5M, 5 pourquoi, QQOQCP et « est / n'est pas »,
+  Pareto, PDCA et DMAIC, poka-yoke, autocontrôle, QRQC et trois réels,
+  traitement des non-conformités (retouche, réparation, dérogation), coûts de
+  la qualité, MSP (cartes de contrôle, Cp, Cpk, Ppk, surréglage), étude R&R,
+  échantillonnage ISO 2859-1, AMDEC et plan de surveillance, core tools de
+  l'automobile, traçabilité, audits, indicateurs (PPM, FTQ, DPMO, RTY)
+- Deux schémas : démarche 8D, réaction à un signal sur une carte de contrôle
+
+### Révision intégration et déploiement continus
+- Lot de 100 questions dont 33 interactives (associations, remises en ordre,
+  calculs, code à compléter) : intégration, livraison et déploiement continus,
+  GitHub Actions (déclencheurs, matrices, cache, concurrence, environnements,
+  droits du jeton), GitLab CI (stages, rules, needs, jobs cachés), Jenkinsfile
+  (post, parallel, identifiants), artefacts et SemVer, tests instables,
+  blue-green, canary, rolling update, feature flags, migrations expand et
+  contract, GitOps avec Argo CD, sécurité de la chaîne (OIDC, injection de
+  script, actions épinglées, SBOM, signature, provenance SLSA), DORA et budget
+  d'erreur
+- Deux schémas : pipeline de livraison continue, déploiement canary par paliers
+
 ### Révision méthodes agiles et gestion de projet
 - Lot de 100 questions dont 33 interactives (associations, remises en ordre,
   calculs, code à compléter) : Manifeste agile, Scrum (rôles, événements,
