@@ -5,6 +5,20 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision supervision, journaux et métriques
+- Lot de 100 questions dont 32 interactives (associations, remises en ordre,
+  calculs, code à compléter) : métriques, journaux et traces, Prometheus
+  (types de métriques, rate et histogram_quantile, cardinalité, Pushgateway,
+  règles d'enregistrement, absent, jointures group_left, histogrammes natifs),
+  Alertmanager (groupement, inhibition, silences, haute disponibilité),
+  Grafana (variables, provisioning), pile Elastic (Filebeat, grok, KQL, ILM,
+  mapping et shards), Loki et LogQL, OpenTelemetry (collecteur, échantillonnage
+  en tête et en queue, exemplars, conventions sémantiques), Zabbix et Nagios,
+  méthodes RED et USE, SLI, SLO, budget d'erreur et burn rate, incidents,
+  post-mortem, MTTD et MTTR
+- Deux schémas : parcours d'une alerte Prometheus, pipeline d'un collecteur
+  OpenTelemetry
+
 ### Révision qualité et résolution de problèmes
 - Lot de 100 questions dont 37 interactives (associations, remises en ordre,
   calculs) : 8D (D0 à D8, confinement, causes d'apparition et de

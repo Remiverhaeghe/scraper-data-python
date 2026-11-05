@@ -1,0 +1,427 @@
+@051
+Q: Un service publie un message dans Kafka, un autre le consomme plus tard. Comment garder les deux traitements dans la même trace ?
+C: En plaçant le contexte de trace dans les en-têtes du message
+W: En donnant au consommateur le même nom de service que le producteur
+W: En réglant les deux services sur le même fuseau horaire
+W: En écrivant l'identifiant de trace dans le nom du topic
+E: Les SDK OpenTelemetry injectent traceparent dans les en-têtes Kafka ou AMQP comme dans les en-têtes HTTP. Pour un traitement très différé, on relie souvent les deux traces par un lien de span plutôt que par une relation parent-enfant.
+
+@052
+Q: À quoi servent les exemplars attachés à une métrique de latence ?
+C: À relier un point du graphe à une trace précise ayant cette durée
+W: À conserver la valeur exacte de chacune des requêtes mesurées par l'API
+W: À fournir des données de démonstration aux tableaux de bord
+W: À comparer la latence avec celle de la semaine précédente
+E: Un exemplar est un identifiant de trace associé à un bucket d'histogramme. Dans Grafana, un clic sur un pic de latence ouvre une trace réelle de ce pic dans Tempo ou Jaeger, sans chercher à la main.
+
+@053
+Q: Qu'est-ce qui distingue Loki d'Elasticsearch pour stocker des journaux ?
+C: Loki n'indexe que les labels, le texte des lignes n'est pas indexé
+W: Loki indexe chaque mot des lignes, comme le ferait un moteur de recherche
+W: Loki ne conserve que les journaux des sept derniers jours
+W: Loki ne peut recevoir que des journaux venant de Kubernetes
+E: Sans index plein texte, Loki stocke à faible coût sur un stockage objet ; une recherche filtre d'abord par labels puis parcourt les lignes. Il faut donc peu de labels, bornés, comme pour Prometheus.
+R: Grafana Loki documentation | https://grafana.com/docs/loki/latest/
+
+@054
+Q: Compléter cette requête LogQL qui compte, par seconde, les lignes contenant « error » du service api.
+A: rate
+A: count_over_time
+E: rate() donne des lignes par seconde, count_over_time() le nombre de lignes sur la fenêtre. Le filtre |= cherche une chaîne exacte ; |~ accepte une expression régulière, plus coûteuse.
+```logql
+sum(____({app="api"} |= "error" [5m]))
+```
+
+@055
+Q: Remettre dans l'ordre les phases d'une politique de cycle de vie (ILM) Elasticsearch pour des journaux.
+O: Hot : écriture et recherches fréquentes sur disques rapides
+O: Warm : index en lecture seule, déplacés sur des nœuds moins chers
+O: Cold : recherches rares, réplicas réduits
+O: Delete : suppression à la fin de la durée de conservation
+E: La politique est appliquée automatiquement à chaque index créé par rollover. La durée de conservation se fixe avec le besoin réel et les obligations légales, et non par habitude : garder un an de journaux DEBUG coûte cher.
+
+@056
+Q: Les journaux d'une application contiennent des champs à noms variables, comme dans cet extrait. Quel risque pour Elasticsearch ?
+C: Une explosion du mapping, qui ralentit voire bloque le cluster
+W: Une perte des documents, car les champs inconnus sont ignorés en silence
+W: Une corruption de l'index lors du prochain redémarrage
+W: Un refus des recherches portant sur les champs numériques
+E: Chaque nouveau nom de champ s'ajoute au mapping, gardé dans l'état du cluster. Au-delà de index.mapping.total_fields.limit (1 000 par défaut), l'indexation échoue ; on garde des noms de champs fixes et on met les valeurs variables dans les valeurs.
+```json
+{"level":"INFO","panier":{"article_7841":2,"article_9133":1}}
+```
+
+@057
+Q: Que fait ce filtre Logstash ?
+C: Il découpe la ligne en champs nommés à partir de motifs prédéfinis
+W: Il chiffre la ligne avant de l'envoyer à Elasticsearch
+W: Il supprime les lignes qui ne commencent pas par une adresse IP valide
+W: Il compresse les lignes répétées en un seul événement
+E: grok associe des motifs (IP, WORD, NUMBER) à des noms de champs. Une ligne qui ne correspond pas reçoit l'étiquette _grokparsefailure, à surveiller après chaque changement de format des journaux.
+```text
+filter {
+  grok {
+    match => { "message" => "%{IP:client} %{WORD:method} %{URIPATH:path} %{NUMBER:status}" }
+  }
+}
+```
+
+@058
+Q: Pourquoi installer Filebeat sur les serveurs plutôt que Logstash ?
+C: Il consomme peu de mémoire et reprend la lecture là où il s'était arrêté
+W: Il est le seul à savoir lire les fichiers de journaux en rotation par logrotate
+W: Il indexe les journaux localement pour les recherches rapides
+W: Il transforme les journaux avec plus de filtres que Logstash
+E: Logstash tourne sur une JVM et demande plusieurs centaines de mégaoctets. Filebeat, écrit en Go, garde sa position dans un registre et renvoie les lignes non acquittées après une coupure du réseau.
+
+@059
+Q: Que renvoie cette requête KQL dans Kibana ?
+C: Les journaux du service checkout dont le code de statut vaut 500 ou plus
+W: Le nombre de requêtes du service checkout, réparties par code de statut HTTP
+W: Les journaux des autres services que checkout en erreur
+W: Les 500 derniers journaux du service checkout
+E: KQL filtre sur les champs, avec des comparaisons et des opérateurs and, or, not. Pour un champ texte analysé, service : checkout cherche le mot ; sur un champ keyword, la valeur exacte.
+```text
+service.name : "checkout" and http.response.status_code >= 500
+```
+
+@060
+Q: À quoi sert une variable $instance dans un tableau de bord Grafana ?
+C: À choisir le serveur affiché dans une liste, sans dupliquer les panneaux
+W: À enregistrer le nom de l'utilisateur qui consulte en ce moment le tableau de bord
+W: À stocker un mot de passe utilisé par la source de données
+W: À fixer l'intervalle de rafraîchissement du tableau de bord
+E: La variable est remplie par une requête (label_values(up, instance)) et injectée dans les requêtes des panneaux. Un seul tableau de bord sert alors à tous les serveurs, et l'URL garde le choix pour le partager.
+
+@061
+Q: Pourquoi décrire les tableaux de bord et les sources Grafana dans des fichiers versionnés ?
+C: Pour les recréer à l'identique et relire leurs changements comme du code
+W: Pour qu'ils s'affichent plus vite dans le navigateur
+W: Pour que Grafana puisse fonctionner sans base de données ni compte administrateur
+W: Pour empêcher les utilisateurs de consulter les tableaux de bord
+E: Le provisioning lit des fichiers YAML et JSON au démarrage ; Terraform ou Grafonnet servent aussi. Un tableau de bord modifié à la main dans l'interface se perd à la réinstallation et personne ne sait qui l'a changé.
+
+@062
+Q: Associer chaque outil à ce qu'il traite d'abord.
+P: Prometheus => Métriques collectées en mode pull
+P: Loki => Journaux indexés par labels
+P: Jaeger => Traces distribuées
+P: Zabbix => Supervision d'équipements avec agents et modèles
+P: Nagios => Contrôles actifs par greffons
+E: Ces outils se combinent souvent : Zabbix pour le réseau et les serveurs historiques, Prometheus et Grafana pour les applications, Loki et Jaeger pour le détail. Tous sont gratuits et auto-hébergeables.
+
+@063
+Q: Dans Zabbix, qu'est-ce qu'un modèle (template) ?
+C: Un ensemble d'éléments, déclencheurs et graphes appliqué à plusieurs hôtes
+W: Un tableau de bord prédéfini affiché sur la page d'accueil
+W: Une copie de sauvegarde de la configuration d'un hôte
+W: Un format de message pour les notifications par courriel
+E: Lier le modèle « Linux by Zabbix agent » à un serveur crée d'un coup des dizaines d'éléments surveillés et leurs déclencheurs. Modifier le modèle met à jour tous les hôtes liés.
+
+@064
+Q: Associer chaque code de sortie d'un greffon Nagios à l'état affiché.
+P: 0 => OK
+P: 1 => WARNING
+P: 2 => CRITICAL
+P: 3 => UNKNOWN
+E: La convention vient de Nagios et sert aussi à Icinga, Centreon et aux contrôles locaux de Zabbix ou Checkmk. Un script maison qui plante doit renvoyer 3, pour ne pas passer pour un état sain.
+
+@065
+Q: Prometheus garde 50 000 séries collectées toutes les 15 s pendant 15 jours, à environ 1,5 octet par échantillon compressé. Quel volume en gigaoctets (10⁹ octets) faut-il prévoir ?
+N: 6,48
+U: Go
+T: 2
+E: Un échantillon toutes les 15 s fait 5 760 par jour, soit 86 400 sur 15 jours. 86 400 × 50 000 × 1,5 = 6,48 × 10⁹ octets. On ajoute une marge pour le journal d'écriture (WAL) et la compaction.
+
+@066
+Q: Une alerte de file d'attente passe d'active à résolue toutes les deux minutes. Quel réglage réduit ce battement ?
+C: Une durée for plus longue et un seuil de retour plus bas que le seuil de déclenchement
+W: Un scrape_interval plus court pour mesurer la file plus souvent
+W: Un repeat_interval plus court pour envoyer chaque changement d'état
+W: Une règle d'enregistrement à la place de la règle d'alerte
+E: Le battement fatigue l'astreinte et pousse à ignorer les alertes. On lisse aussi la mesure (avg_over_time) ou on retient keep_firing_for, disponible dans les versions récentes de Prometheus.
+
+@067
+Q: Remettre dans l'ordre la gestion d'un incident en production.
+O: L'alerte se déclenche et l'astreinte en accuse réception
+O: L'impact est évalué et l'incident déclaré avec un responsable
+O: Le service est rétabli, par exemple par un retour arrière
+O: La cause racine est recherchée une fois l'urgence passée
+O: Le post-mortem fixe les actions pour éviter la récidive
+E: Rétablir passe avant comprendre : un retour arrière immédiat vaut mieux qu'une heure de diagnostic pendant la panne. Les traces, journaux et métriques gardés permettent d'analyser ensuite à tête reposée.
+
+@068
+Q: Qu'entend-on par post-mortem sans reproche (blameless) ?
+C: Une analyse qui cherche les failles du système plutôt qu'un coupable
+W: Une analyse rédigée sans citer les heures ni les actions menées pendant l'incident
+W: Une réunion réservée aux responsables, sans les équipes techniques
+W: Un compte rendu que l'on ne transmet pas à la direction
+E: Si une seule commande a pu arrêter la production, la question est pourquoi le système l'a permis. Chercher un coupable pousse à cacher les erreurs, et les incidents suivants deviennent plus difficiles à comprendre.
+
+@069
+Q: Sur un mois, quatre incidents ont duré 30, 50, 20 et 60 minutes de la détection au rétablissement. Quel est le MTTR ?
+N: 40
+U: min
+E: (30 + 50 + 20 + 60) / 4 = 160 / 4 = 40 minutes. Le MTTR se suit avec le MTTD (délai de détection) : un rétablissement rapide ne compense pas une panne remarquée une heure trop tard.
+
+@070
+Q: Pourquoi une alerte de burn rate combine-t-elle une fenêtre longue (1 h) et une fenêtre courte (5 min) ?
+C: La longue prouve l'ampleur, la courte vérifie que le problème dure encore
+W: La longue sert pendant les heures ouvrées, la courte aux nuits et aux week-ends
+W: La courte déclenche l'alerte, la longue l'envoie à la direction
+W: Les deux fenêtres servent à comparer deux versions du service
+E: Avec la seule fenêtre d'une heure, l'alerte resterait active longtemps après la correction. Exiger les deux au-dessus du seuil donne une alerte rapide à se déclencher et rapide à se résoudre.
+
+@071
+Q: Compléter cette requête qui calcule le 99e centile de latence par service.
+A: le
+E: histogram_quantile a besoin du label le (less or equal), qui porte la borne de chaque bucket. L'oublier dans le by fait disparaître les buckets et la fonction renvoie un résultat vide.
+```promql
+histogram_quantile(0.99,
+  sum by (service, ____) (rate(http_request_duration_seconds_bucket[5m])))
+```
+
+@072
+Q: Le SLO impose 95 % de réponses en moins de 300 ms. Les buckets de l'histogramme sont 0,1, 0,5, 1 et 5 s. Que faut-il corriger ?
+C: Ajouter une borne à 0,3 s pour compter exactement les requêtes sous le seuil
+W: Remplacer l'histogram par une gauge mise à jour à chaque requête
+W: Supprimer le bucket de 5 s, qui fausse le calcul des centiles élevés de latence
+W: Diviser par dix toutes les bornes pour gagner en précision
+E: Avec une borne à 0,3, le SLI se calcule directement : bucket{le="0.3"} divisé par count. Sans elle, le résultat est interpolé entre 0,1 et 0,5 s et peut se tromper largement de part et d'autre du seuil.
+
+@073
+Q: Compléter cette règle qui alerte si la métrique du job de sauvegarde n'existe plus.
+A: absent
+E: Une condition comme backup_last_success == 0 ne se déclenche pas quand la série disparaît : il n'y a plus rien à comparer. absent() renvoie 1 lorsqu'aucune série ne correspond, ce qui détecte un exporter arrêté ou un label renommé.
+```yaml
+- alert: SauvegardeSansMetrique
+  expr: ____(backup_last_success_timestamp_seconds{job="sauvegarde"})
+  for: 15m
+```
+
+@074
+Q: Pourquoi cette requête renvoie-t-elle parfois 2,5 erreurs ?
+C: La fonction extrapole aux bords de la fenêtre à partir des points collectés
+W: Le counter a été remis à zéro pendant la fenêtre et la valeur est divisée par deux
+W: Prometheus arrondit les valeurs au demi le plus proche
+W: Deux instances ont envoyé la même erreur, comptée à moitié
+E: increase est un raccourci de rate multiplié par la durée : les points ne tombent pas pile aux bords de la fenêtre et la fonction prolonge la tendance. Le résultat est une estimation, pas un comptage exact.
+```promql
+increase(errors_total[1h])
+```
+
+@075
+Q: Quel besoin couvrent Thanos ou Grafana Mimir à côté de Prometheus ?
+C: Une conservation longue et une vue globale sur plusieurs Prometheus
+W: Une collecte des journaux avec index plein texte
+W: Un remplacement d'Alertmanager pour les notifications
+W: Une instrumentation automatique des applications Java
+E: Prometheus garde ses données en local, pour quelques semaines. Ces outils envoient les blocs vers un stockage objet, dédoublonnent les paires de Prometheus redondants et répondent à une requête PromQL sur l'ensemble des clusters.
+
+@076
+Q: Quelle différence entre la fédération Prometheus et remote_write ?
+C: La fédération lit des séries chez un autre Prometheus, remote_write les pousse vers un stockage
+W: La fédération chiffre les données, remote_write les transmet en clair
+W: La fédération sert aux journaux, remote_write aux métriques
+W: La fédération copie les règles d'alerte, remote_write les tableaux de bord
+E: La fédération convient pour remonter quelques séries agrégées vers un Prometheus central. remote_write envoie chaque échantillon au fil de l'eau vers Mimir, Thanos Receive ou VictoriaMetrics, adapté à la conservation longue.
+
+@077
+Q: Dans un cluster Kubernetes, que fournit kube-state-metrics que cAdvisor ne fournit pas ?
+C: L'état des objets : réplicas voulus, pods en attente, redémarrages
+W: La consommation processeur et mémoire de chaque conteneur, relevée par le kubelet
+W: Les journaux de chaque pod envoyés vers Loki
+W: Les traces des appels entre les services du cluster
+E: cAdvisor, intégré au kubelet, mesure ce que consomment les conteneurs. kube-state-metrics lit l'API Kubernetes et expose l'état déclaré et réel : un Deployment à 3 réplicas voulus et 1 disponible s'y voit tout de suite.
+
+@078
+Q: Avec le Prometheus Operator, quel objet indique quels services collecter ?
+C: Un ServiceMonitor, qui sélectionne les services par leurs labels
+W: Un ConfigMap qui contient le fichier prometheus.yml complet du cluster
+W: Un Ingress qui expose /metrics de chaque service à l'extérieur
+W: Un CronJob qui interroge les services à intervalle fixe
+E: L'Operator traduit ServiceMonitor et PodMonitor en configuration de collecte. Chaque équipe déploie le sien avec son application, sans toucher au fichier central de Prometheus.
+
+@079
+Q: Le volume des journaux INFO d'un service très sollicité coûte trop cher. Quelle solution garde la capacité de diagnostic ?
+C: Échantillonner les journaux des requêtes réussies et garder ceux en erreur
+W: Passer le service en niveau ERROR et supprimer les journaux INFO
+W: Réduire la conservation à une heure pour l'ensemble des journaux du service
+W: Écrire les journaux dans un fichier local sans les centraliser
+E: Une requête réussie sur cent suffit pour connaître le comportement normal ; chaque erreur reste utile. Les métriques prennent le relais pour les comptages, qu'un journal échantillonné ne donne plus exactement.
+
+@080
+Q: Remettre dans l'ordre le diagnostic d'une lenteur signalée sur une API.
+O: Repérer sur le tableau de bord RED la route et l'heure de la hausse
+O: Ouvrir une trace lente depuis un exemplar du graphe de latence
+O: Identifier le span qui porte l'essentiel de la durée
+O: Lire les journaux portant le même trace_id
+O: Corriger, puis vérifier le retour de la latence sur le tableau de bord
+E: On part du général (métriques) vers le particulier (trace, puis journaux). Sans identifiant commun, il faudrait rapprocher les trois sources à la main par l'heure, ce qui devient impraticable avec des centaines de requêtes par seconde.
+
+@081
+Q: Que permet le motif %X{trace_id} dans cette configuration Logback ?
+C: D'écrire dans chaque ligne l'identifiant de trace placé dans le MDC
+W: D'exclure des journaux les lignes qui ne portent pas d'identifiant de trace
+W: De chiffrer l'identifiant de trace avant son écriture
+W: De créer un nouveau span pour chaque ligne de journal
+E: Le MDC (Mapped Diagnostic Context) garde des valeurs propres au fil d'exécution. L'agent Java OpenTelemetry y place trace_id et span_id, ce qui relie chaque ligne de journal à sa trace dans Grafana ou Kibana.
+```xml
+<pattern>%d{ISO8601} %-5level [%X{trace_id}] %logger{36} - %msg%n</pattern>
+```
+
+@082
+Q: Pourquoi suivre les conventions sémantiques d'OpenTelemetry pour nommer les attributs ?
+C: Pour que les outils reconnaissent les attributs, comme http.response.status_code
+W: Pour réduire la taille des spans envoyés au collecteur
+W: Pour que les noms soient traduits dans la langue de l'utilisateur
+W: Pour que les attributs soient chiffrés pendant leur transport
+E: Si chaque équipe invente status, http_code ou statusCode, aucune requête ne fonctionne sur l'ensemble des services. Les conventions fixent aussi les noms des métriques HTTP, ce qui permet les tableaux de bord communs.
+
+@083
+Q: Quelle différence entre la supervision synthétique et le RUM (Real User Monitoring) ?
+C: La première simule des parcours, le second mesure ceux des vrais visiteurs
+W: La première mesure le serveur web, le second la base de données qui l'alimente
+W: La première est gratuite, le second demande un logiciel payant
+W: La première suit les journaux, le second les traces distribuées
+E: Une sonde synthétique détecte une panne même la nuit sans trafic, à partir de quelques lieux fixes. Le RUM, par un script dans la page, révèle la lenteur réelle selon le navigateur, le pays ou le réseau mobile.
+
+@084
+Q: Associer chaque indicateur d'exploitation à ce qu'il mesure.
+P: MTTD => Délai moyen entre le début d'une panne et sa détection
+P: MTTA => Délai moyen avant qu'une alerte soit prise en charge
+P: MTTR => Délai moyen jusqu'au rétablissement du service
+P: MTBF => Durée moyenne de bon fonctionnement entre deux pannes
+E: Ces moyennes cachent les cas extrêmes : un seul incident de huit heures pèse plus que dix incidents courts. On les lit avec la liste des incidents, et on suit leur tendance plutôt que leur valeur d'un mois.
+
+@085
+Q: On veut retrouver les requêtes lentes d'un client précis. Où placer son identifiant ?
+C: Dans un attribut des spans et dans les journaux de la requête
+W: Dans un label de la métrique de latence de l'API
+W: Dans le nom de la métrique, avec un suffixe propre à chaque client
+W: Dans le nom du job Prometheus qui collecte l'API
+E: Les traces et journaux supportent des valeurs à forte cardinalité, pas les métriques. Une recherche par attribut dans Tempo ou Jaeger retrouve ses traces lentes ; pour un client sensible, on vérifie que l'identifiant n'est pas une donnée personnelle en clair.
+
+@086
+Q: Avec cette configuration, pourquoi la requête renvoie-t-elle souvent un résultat vide ?
+C: La fenêtre de 30 s contient au plus un point, il en faut deux pour un taux
+W: La fonction rate refuse par conception les fenêtres inférieures à une minute
+W: Le label job doit être cité entre guillemets simples
+W: Le counter http_requests_total doit être converti en gauge
+E: rate a besoin d'au moins deux échantillons dans la fenêtre. On prend une fenêtre d'au moins quatre fois l'intervalle de collecte, ici 2 min, pour tolérer une collecte manquée. Grafana propose $__rate_interval, qui applique cette règle.
+```text
+# prometheus.yml
+global:
+  scrape_interval: 30s
+
+# requête du panneau
+rate(http_requests_total{job="api"}[30s])
+```
+
+@087
+Q: Sur la fenêtre, un counter passe de 100 à 160, l'application redémarre, puis il passe de 0 à 30. Hors extrapolation, quelle augmentation increase() retient-il ?
+N: 90
+E: Avant le redémarrage, 160 - 100 = 60 ; après, le compteur repart de 0 et monte à 30. La baisse est traitée comme une remise à zéro : 60 + 30 = 90. Un calcul naïf, 30 - 100, donnerait une valeur négative.
+
+@088
+Q: Qu'apportent les histogrammes natifs de Prometheus par rapport aux histogrammes classiques ?
+C: Des buckets exponentiels automatiques, stockés dans une seule série
+W: Des quantiles exacts calculés pour chaque requête reçue
+W: Une collecte en mode push sans passer par le Pushgateway
+W: Une compatibilité complète avec les summary exposés par les autres instances
+E: Les histogrammes classiques créent une série par borne, choisie à l'avance. Les natifs adaptent leur résolution et coûtent moins de séries, mais demandent une version récente de Prometheus et des bibliothèques clientes.
+
+@089
+Q: Deux Prometheus identiques évaluent les mêmes règles pour la haute disponibilité. Comment éviter les notifications en double ?
+C: Envoyer aux mêmes Alertmanager en cluster, qui dédoublonnent les alertes
+W: Désactiver les règles d'alerte sur le second Prometheus
+W: Régler un repeat_interval différent sur chaque Prometheus
+W: Faire collecter chaque cible par un seul des deux serveurs
+E: Les Alertmanager en cluster partagent leur état par gossip : une alerte identique venue des deux Prometheus n'est notifiée qu'une fois. Désactiver les règles sur l'un ferait perdre la redondance en cas de panne de l'autre.
+
+@090
+Q: Un cluster Elasticsearch crée un index par jour et par service, avec 5 shards chacun, pour quelques Mo par index. Quel problème apparaît ?
+C: Trop de petits shards, qui consomment mémoire et état du cluster
+W: Des shards trop gros, qui ralentissent la réplication entre les nœuds
+W: Des recherches impossibles sur plusieurs index à la fois
+W: Une perte des journaux lors de chaque rollover quotidien
+E: Chaque shard a un coût fixe en mémoire et en gestion, quelle que soit sa taille. On vise des shards de 10 à 50 Go, avec un rollover par taille ou par âge plutôt qu'un index par jour.
+
+@091
+Q: Un cluster reçoit 600 Go de journaux par jour (données primaires) et vise des shards de 40 Go. Combien de shards primaires faut-il pour l'index quotidien ?
+N: 15
+E: 600 / 40 = 15 shards primaires. Avec une réplique, 30 shards sont répartis sur les nœuds ; on vérifie que leur nombre permet une répartition équilibrée, par exemple sur 5 ou 15 nœuds de données.
+
+@092
+Q: Plusieurs collecteurs OpenTelemetry font de l'échantillonnage en queue derrière un répartiteur de charge. Que faut-il ajouter ?
+C: Une couche qui envoie tous les spans d'une même trace au même collecteur
+W: Un collecteur par service applicatif, sans répartiteur
+W: Un échantillonnage en tête dans chaque application
+W: Une synchronisation des horloges entre les collecteurs
+E: Si les spans d'une trace sont répartis entre collecteurs, aucun ne voit la trace entière et la décision est faussée. Le loadbalancing exporter du collecteur répartit par trace_id vers la couche qui échantillonne.
+
+@093
+Q: Dans une trace, un span enfant semble commencer avant son parent. Quelle est la cause la plus probable ?
+C: Un décalage d'horloge entre les deux serveurs
+W: Un échantillonnage qui a supprimé une partie des spans
+W: Une erreur HTTP renvoyée par le service appelé
+W: Une file de messages qui a réordonné les requêtes
+E: Chaque service horodate ses spans avec sa propre horloge. Quelques dizaines de millisecondes d'écart suffisent à rendre une trace incohérente : NTP ou chrony sur tous les serveurs est un prérequis du traçage.
+
+@094
+Q: Quelle différence entre un collecteur OpenTelemetry déployé en agent et en passerelle ?
+C: L'agent tourne près de l'application, la passerelle centralise les traitements
+W: L'agent reçoit les métriques, la passerelle les journaux et les traces
+W: L'agent est réservé aux conteneurs, la passerelle aux machines virtuelles et physiques
+W: L'agent transforme les données, la passerelle les transmet sans les lire
+E: L'agent, par nœud ou en sidecar, ajoute les métadonnées locales (nom du pod, de l'hôte) et décharge vite l'application. La passerelle porte l'échantillonnage en queue, le filtrage et les identifiants des stockages.
+
+@095
+Q: Des adresses électroniques apparaissent dans des attributs de spans. Où les retirer en premier, sans attendre une correction de chaque application ?
+C: Dans un processor du collecteur qui masque ou supprime ces attributs
+W: Dans Grafana, en masquant la colonne lors de l'affichage
+W: Dans le stockage des traces, en réduisant la durée de conservation à un jour
+W: Dans Alertmanager, en filtrant les alertes concernées
+E: Le collecteur est le point de passage commun : un processor attributes, redaction ou transform y retire la donnée avant tout stockage. La correction dans le code reste nécessaire, mais le risque RGPD est stoppé tout de suite.
+
+@096
+Q: Un service interne ne reçoit que quelques requêtes par heure. Pourquoi un SLO basé sur la part de requêtes réussies y est-il trompeur ?
+C: Deux échecs sur dix requêtes font chuter le ratio et déclenchent l'alerte
+W: Prometheus ne collecte pas les services qui reçoivent peu de requêtes par heure
+W: Le budget d'erreur ne se calcule que sur un trafic continu
+W: Les requêtes rares ne sont pas comptées par les counters
+E: Avec peu d'événements, le ratio varie fortement. On allonge la fenêtre, on ajoute du trafic synthétique ou on passe à un SLO par tranches de temps (minutes bonnes ou mauvaises).
+
+@097
+Q: Quel avantage offre une instrumentation par eBPF, comme Grafana Beyla ?
+C: Elle mesure les appels HTTP et SQL sans modifier ni redémarrer l'application
+W: Elle remplace les journaux applicatifs par des traces complètes
+W: Elle fonctionne sur Windows comme sur Linux sans configuration
+W: Elle donne le détail des fonctions métier appelées dans le code de l'application
+E: eBPF observe les appels système et réseau depuis le noyau Linux : une application ancienne obtient des métriques RED et des traces de base. Pour le détail du code métier, une instrumentation par SDK reste nécessaire.
+
+@098
+Q: Compléter cette requête qui ajoute le label version de app_info aux taux d'erreurs.
+A: group_left
+E: app_info vaut 1 et porte des labels descriptifs. La jointure on (instance) avec group_left copie version sur chaque série d'erreurs : on compare alors le taux d'erreurs avant et après un déploiement.
+```promql
+rate(http_errors_total[5m])
+  * on (instance) ____ (version) app_info
+```
+
+@099
+Q: Remettre dans l'ordre la mise en place d'un SLO pour un service.
+O: Choisir le parcours utilisateur qui compte le plus
+O: Définir le SLI qui mesure ce parcours
+O: Fixer l'objectif et la fenêtre, par exemple 99,5 % sur 28 jours
+O: Poser les alertes de consommation du budget d'erreur
+O: Revoir l'objectif après quelques semaines de mesures réelles
+E: Partir des métriques disponibles plutôt que du besoin de l'utilisateur donne des SLO sans intérêt. Un objectif fixé trop haut sans historique déclenche des alertes permanentes ; on l'ajuste après observation.
+
+@100
+Q: Que prévoit une politique de budget d'erreur quand le budget du mois est épuisé ?
+C: Les mises en production de fonctions sont gelées au profit de la fiabilité
+W: Le SLO est abaissé pour que le budget redevienne positif
+W: Les alertes du service sont coupées jusqu'au mois suivant
+W: L'équipe d'exploitation reprend la maintenance du code de l'équipe de développement
+E: La politique, signée à l'avance par le produit et la technique, évite le débat pendant la crise. Les correctifs de fiabilité et de sécurité continuent de partir ; le gel cesse quand le budget se reconstitue.
