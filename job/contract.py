@@ -56,7 +56,8 @@ def add_contract(pItems):
 
     vItems = pItems.copy()
 
-    vTexts = vItems.reindex(columns=TEXT_COLUMNS).fillna("").astype(str)
+    # Une colonne absente arrive en float64 vide, qui refuse une chaîne vide.
+    vTexts = vItems.reindex(columns=TEXT_COLUMNS).astype(object).fillna("").astype(str)
 
     vContracts = [
         vContract if not pd.isna(vContract) else detect_contract(vTextRow)
