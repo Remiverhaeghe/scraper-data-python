@@ -1,0 +1,437 @@
+@001
+Q: Pourquoi utiliser uint16_t plutôt que unsigned int dans un code embarqué ?
+C: Sa taille est fixée à 16 bits quel que soit le compilateur
+W: Il est plus rapide à calculer que unsigned int sur tous les processeurs 32 bits
+W: Il est rangé en mémoire flash et ne consomme donc pas de mémoire vive
+W: Il interdit au compilateur toute optimisation sur la variable déclarée
+E: La taille de int dépend de la cible : 16 bits sur un AVR, 32 bits sur un Cortex-M. Les types de stdint.h (uint8_t, int32_t…) rendent explicite la taille d'un registre ou d'une trame et évitent les surprises au portage.
+
+@002
+Q: Combien d'octets occupe un int sur un ATmega328P (Arduino Uno) avec avr-gcc ?
+N: 2
+U: octets
+E: Sur AVR, int fait 16 bits : un compteur int dépasse 32 767 et devient négatif. C'est une erreur fréquente en reprenant un code écrit pour un PC ou un Cortex-M, où int fait 32 bits.
+
+@003
+Q: Que fait le mot-clé volatile sur cette variable ?
+C: Il force une relecture en mémoire à chaque accès, sans mise en cache dans un registre
+W: Il rend les accès à la variable atomiques entre l'interruption et la boucle
+W: Il place la variable dans une zone de mémoire protégée contre l'écriture
+W: Il remet la variable à zéro à chaque redémarrage du microcontrôleur
+E: Sans volatile, le compilateur peut lire flag une seule fois et boucler indéfiniment, car rien dans la boucle ne le modifie. volatile ne protège pas d'un accès concurrent : il garantit seulement que chaque lecture va en mémoire.
+```c
+volatile bool flag = false;
+
+void EXTI0_IRQHandler(void) { flag = true; }
+
+int main(void) {
+    while (!flag) { }
+}
+```
+
+@004
+Q: Compléter cette ligne qui met à 1 le bit 5 du registre PORTB sans toucher aux autres.
+A: |=
+E: Le OU bit à bit avec un masque n'allume que le bit voulu. Une affectation simple PORTB = (1 << 5) éteindrait les sept autres sorties du port, une erreur classique.
+```c
+PORTB ____ (1 << 5);
+```
+
+@005
+Q: Compléter cette ligne qui met à 0 le bit 3 du registre PORTB.
+A: ~
+E: On inverse le masque pour obtenir des 1 partout sauf sur le bit 3, puis on applique un ET. Le OU exclusif, ^=, inverse le bit au lieu de le forcer à 0.
+```c
+PORTB &= ____(1 << 3);
+```
+
+@006
+Q: Associer chaque opération sur le bit n d'un registre REG à son écriture en C.
+P: Mettre à 1 => REG |= (1u << n)
+P: Mettre à 0 => REG &= ~(1u << n)
+P: Inverser => REG ^= (1u << n)
+P: Tester => (REG >> n) & 1u
+E: Ces quatre écritures reviennent dans tout pilote bas niveau. Le suffixe u rend le masque non signé : 1 << 31 sur un int signé est un comportement indéfini en C.
+
+@007
+Q: Une variable uint8_t vaut 250. Quelle valeur contient-elle après lui avoir ajouté 10 ?
+N: 4
+E: Un uint8_t va de 0 à 255 : 260 modulo 256 donne 4. Le débordement d'un entier non signé est défini en C, celui d'un entier signé ne l'est pas : le compilateur peut alors supposer qu'il n'arrive pas.
+
+@008
+Q: À quoi servent ces lignes en tête d'un fichier capteur.h ?
+C: À empêcher que le contenu soit inclus deux fois dans une même compilation
+W: À compiler le fichier une seule fois pour l'ensemble des fichiers du projet
+W: À déclarer que les fonctions du fichier sont réservées au module capteur.c
+W: À vérifier que le capteur est branché avant de compiler le programme
+E: Sans garde d'inclusion, deux #include du même en-tête redéfinissent les types et provoquent une erreur. #pragma once fait la même chose, accepté par la plupart des compilateurs sans être standard.
+```c
+#ifndef CAPTEUR_H
+#define CAPTEUR_H
+
+uint16_t capteur_lire(void);
+
+#endif
+```
+
+@009
+Q: Remettre dans l'ordre les étapes qui transforment un fichier main.c en binaire à flasher.
+O: Préprocesseur : inclusion des en-têtes et remplacement des macros
+O: Compilation : traduction du C en assembleur
+O: Assemblage : production du fichier objet main.o
+O: Édition de liens : réunion des objets et placement en mémoire
+O: Conversion de l'ELF en .hex ou .bin pour la programmation
+E: Une erreur de syntaxe vient de la compilation, une « undefined reference » de l'édition de liens. Le fichier .map produit à la fin indique où chaque fonction et variable a été placée, et ce qui occupe la mémoire.
+
+@010
+Q: Qu'est-ce qu'une chaîne de compilation croisée, comme arm-none-eabi-gcc ?
+C: Un compilateur qui tourne sur le PC et produit du code pour une autre architecture
+W: Un compilateur qui produit en même temps du code pour Windows et pour Linux
+W: Un outil qui compare deux versions du code avant de lancer la compilation
+W: Un compilateur exécuté directement sur le microcontrôleur au démarrage
+E: Le microcontrôleur n'a ni la mémoire ni le système pour compiler. « none » signifie sans système d'exploitation, « eabi » désigne la convention d'appel ARM pour l'embarqué.
+
+@011
+Q: À quoi sert une sonde SWD ou JTAG (ST-Link, J-Link) ?
+C: À programmer la flash et déboguer le code pas à pas sur la carte
+W: À mesurer la consommation électrique de la carte pendant son fonctionnement
+W: À relier la carte au réseau Ethernet pour la mettre à jour à distance
+W: À simuler le microcontrôleur sur le PC sans avoir besoin de la carte
+E: La sonde accède au cœur du processeur : points d'arrêt, lecture des registres et de la mémoire, exécution pas à pas. SWD utilise deux fils (SWDIO, SWCLK), JTAG quatre ou cinq.
+
+@012
+Q: Quelle différence entre une macro #define et une constante const en C ?
+C: La macro est un remplacement de texte, la constante a un type vérifié
+W: La macro est stockée en mémoire vive, la constante dans la mémoire flash
+W: La macro est évaluée à l'exécution, la constante à la compilation
+W: La macro est visible dans le débogueur, la constante ne l'est pas
+E: Le préprocesseur remplace le texte avant la compilation, sans contrôle de type ni de portée. Une macro mal parenthésée, comme #define DOUBLE(x) x * 2, donne un résultat faux pour DOUBLE(a + 1).
+
+@013
+Q: Que vaut l'expression CARRE(2 + 1) avec cette macro ?
+N: 5
+E: Le préprocesseur écrit 2 + 1 * 2 + 1, soit 5 et non 9. On parenthèse chaque paramètre et l'expression entière : #define CARRE(x) ((x) * (x)). En C++, une fonction constexpr évite le problème.
+```c
+#define CARRE(x) x * x
+```
+
+@014
+Q: Quel est le rôle de la boucle infinie dans le main d'un programme embarqué sans système d'exploitation ?
+C: Exécuter les tâches du programme en continu, car il n'y a pas d'OS où revenir
+W: Attendre que le système d'exploitation charge le programme suivant en mémoire
+W: Vider la mémoire vive entre deux exécutions successives du programme
+W: Empêcher le chien de garde de redémarrer le microcontrôleur trop tôt
+E: Sur un PC, main rend la main au système. En embarqué, sortir de main mène à un comportement dépendant du code de démarrage, souvent une boucle vide ou un redémarrage. La super-boucle lit les entrées, traite, écrit les sorties, puis recommence.
+
+@015
+Q: Que signifie le mot-clé static devant une variable déclarée dans une fonction ?
+C: Elle garde sa valeur d'un appel à l'autre
+W: Elle est recréée à zéro à chaque appel de la fonction
+W: Elle est partagée avec les autres fichiers du projet
+W: Elle est rangée dans la pile de la fonction appelante
+E: Elle vit dans .data ou .bss comme une globale, mais n'est visible que dans la fonction. Devant une fonction ou une globale, static limite au contraire la visibilité au fichier, ce qui évite les conflits de noms entre modules.
+
+@016
+Q: Associer chaque bus de communication à sa caractéristique principale.
+P: UART => Liaison série asynchrone point à point, sans horloge
+P: SPI => Bus synchrone rapide avec une ligne de sélection par esclave
+P: I2C => Bus à deux fils où chaque esclave a une adresse
+P: CAN => Bus différentiel multi-maître avec arbitrage par identifiant
+E: L'UART sert à la console de débogage et aux modules GPS ou radio ; SPI aux écrans et mémoires flash ; I2C aux capteurs lents ; CAN à l'automobile et à l'industrie, pour sa robustesse aux perturbations.
+
+@017
+Q: Une liaison UART à 115 200 bauds utilise le format 8N1 (1 bit de départ, 8 de données, 1 d'arrêt). Combien d'octets peut-elle transmettre par seconde au maximum ?
+N: 11520
+U: octets/s
+E: Chaque octet coûte 10 bits sur la ligne : 115 200 / 10 = 11 520 octets par seconde. Un journal de débogage trop bavard sur l'UART peut ainsi ralentir toute la boucle si l'envoi est bloquant.
+
+@018
+Q: Deux cartes reliées en UART reçoivent des caractères incohérents. Quelle cause vérifier en premier ?
+C: Un débit ou un format de trame différent de part et d'autre
+W: Un câble trop court entre les deux broches TX et RX des cartes
+W: Une adresse d'esclave mal réglée sur la carte qui reçoit les données
+W: Une résistance de terminaison de 120 Ω absente en bout de ligne
+E: Les deux côtés doivent avoir le même débit, le même nombre de bits, de parité et de bits d'arrêt, ainsi qu'une masse commune. On vérifie aussi que TX d'un côté va bien sur RX de l'autre.
+
+@019
+Q: Pourquoi les lignes SDA et SCL d'un bus I2C ont-elles besoin de résistances de rappel ?
+C: Les composants ne font que tirer la ligne à 0, la résistance la ramène à 1
+W: Les résistances limitent le courant de court-circuit entre deux esclaves
+W: Les résistances filtrent les parasites venant de l'alimentation de la carte
+W: Les résistances fixent l'adresse de chaque esclave relié au bus I2C
+E: Les sorties I2C sont à drain ouvert : plusieurs composants peuvent tirer la ligne sans conflit. Des valeurs de 2,2 à 10 kΩ sont courantes ; trop fortes, les fronts montants deviennent lents et le bus échoue à 400 kHz.
+
+@020
+Q: Quel est l'ordre des octets en mémoire du nombre 0x12345678 sur un processeur little-endian, de l'adresse la plus basse à la plus haute ?
+C: 78 56 34 12
+W: 12 34 56 78
+W: 56 78 12 34
+W: 34 12 78 56
+E: Les Cortex-M et x86 sont little-endian : l'octet de poids faible est rangé en premier. Les protocoles réseau transmettent en big-endian, d'où htons et htonl ou un décodage octet par octet.
+
+@021
+Q: Que fait une fonction setup() dans un croquis Arduino, par rapport à loop() ?
+C: Elle s'exécute une fois au démarrage, loop() ensuite en boucle
+W: Elle s'exécute à chaque interruption, loop() pendant les temps morts
+W: Elle s'exécute avant chaque tour, loop() une fois à la fin du programme
+W: Elle s'exécute sur le PC, loop() sur la carte une fois téléversée
+E: Le main caché de l'Arduino appelle setup() puis loop() dans une boucle infinie. On y règle les broches, les liaisons série et les capteurs ; un delay() long dans loop() bloque tout le reste du programme.
+
+@022
+Q: Pourquoi éviter malloc et free dans un micrologiciel qui tourne des mois sans redémarrer ?
+C: La fragmentation peut faire échouer une allocation après des jours de fonctionnement
+W: Ces fonctions ne sont pas fournies par les compilateurs pour les microcontrôleurs
+W: Ces fonctions écrivent dans la mémoire flash et l'usent beaucoup trop rapidement
+W: Ces fonctions désactivent les interruptions pendant toute leur durée
+E: Avec quelques dizaines de Ko de RAM, des allocations de tailles variées laissent des trous inutilisables. On préfère une allocation statique au démarrage, ou des pools de blocs de taille fixe. MISRA C interdit l'allocation dynamique.
+
+@023
+Q: Que vaut sizeof(tab) / sizeof(tab[0]) pour ce tableau ?
+N: 10
+E: sizeof(tab) vaut 20 octets (10 éléments de 2 octets), divisé par la taille d'un élément. Le calcul ne fonctionne plus une fois le tableau passé à une fonction : il devient un pointeur et sizeof renvoie la taille d'une adresse.
+```c
+uint16_t tab[10];
+```
+
+@024
+Q: Que contient la variable p après ces lignes ?
+C: L'adresse de la variable temperature
+W: La valeur 21, copiée depuis temperature
+W: L'adresse du pointeur p lui-même
+W: Une copie de la variable temperature
+E: & donne l'adresse, * la valeur pointée : *p vaut 21 et *p = 22 modifie temperature. En embarqué, les registres matériels se manipulent de la même façon, par un pointeur volatile vers une adresse fixe.
+```c
+int16_t temperature = 21;
+int16_t *p = &temperature;
+```
+
+@025
+Q: Quel est l'intérêt d'un printf redirigé sur l'UART pendant la mise au point ?
+C: Suivre le déroulement du programme sur un terminal série du PC
+W: Afficher les messages sur l'écran LCD relié au microcontrôleur
+W: Enregistrer les messages dans la flash pour les lire après coupure
+W: Accélérer le programme en remplaçant les points d'arrêt du débogueur
+E: C'est souvent le premier outil de diagnostic, mais il coûte : printf avec flottants prend plusieurs Ko de flash et un envoi bloquant ralentit la boucle. Dans une interruption, on l'évite et on préfère un tampon ou un témoin lumineux.
+
+@026
+Q: Remettre dans l'ordre le traitement d'une interruption sur un Cortex-M.
+O: Le périphérique lève son drapeau d'interruption
+O: Le NVIC compare sa priorité à celle du code en cours
+O: Le processeur sauvegarde les registres sur la pile
+O: La routine d'interruption s'exécute et acquitte le drapeau
+O: Les registres sont restaurés et le code interrompu reprend
+E: La sauvegarde automatique des registres permet d'écrire les routines en C ordinaire. Oublier d'acquitter le drapeau fait rentrer immédiatement dans la routine, en boucle, et bloque le programme principal.
+
+@027
+Q: Pourquoi une routine d'interruption doit-elle rester courte ?
+C: Elle retarde le programme principal et les interruptions de priorité égale ou plus basse
+W: Le compilateur refuse les routines d'interruption de plus de cent lignes de code
+W: La pile du microcontrôleur se vide à chaque instruction de la routine exécutée
+W: Les interruptions longues remettent à zéro les variables globales du programme
+E: Pendant la routine, les autres événements attendent : un octet UART peut être perdu. On se contente de lire la donnée, la ranger dans un tampon et lever un indicateur ; le traitement se fait dans la boucle principale ou une tâche.
+
+@028
+Q: Quelle erreur contient cette routine d'interruption ?
+C: Elle attend 50 ms dans l'interruption, ce qui bloque le reste du programme
+W: Elle lit la broche avec une fonction alors qu'il faudrait lire le registre directement
+W: Elle compte les appuis dans une variable globale au lieu d'une variable locale
+W: Elle est déclarée sans valeur de retour alors qu'elle devrait renvoyer un code
+E: Une attente active dans une interruption gèle tout, et HAL_Delay s'appuie souvent sur l'interruption SysTick, qui peut ne plus tourner. Pour l'anti-rebond, on lance un temporisateur ou on vérifie la broche plus tard dans la boucle.
+```c
+void EXTI0_IRQHandler(void) {
+    HAL_Delay(50);
+    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)) {
+        appuis++;
+    }
+    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
+}
+```
+
+@029
+Q: Un temporisateur reçoit une horloge de 16 MHz avec un prédiviseur de 64. Combien de ticks faut-il compter pour obtenir une période de 1 ms ?
+N: 250
+E: 16 MHz / 64 = 250 kHz, soit un tick toutes les 4 µs ; 1 ms / 4 µs = 250. Sur un temporisateur qui compte de 0 à la valeur de comparaison, on charge souvent 249, car le zéro compte aussi.
+
+@030
+Q: Un convertisseur analogique-numérique de 12 bits a une référence de 3,3 V. Quelle tension, en mV, représente un pas ?
+N: 0,806
+U: mV
+T: 1
+E: 12 bits donnent 4 096 pas : 3 300 mV / 4 096 ≈ 0,806 mV. Le bruit et la précision de la référence comptent souvent plus que la résolution : 12 bits sur une référence imprécise à 2 % ne donnent pas 0,8 mV de précision.
+
+@031
+Q: Compléter cette conversion d'une mesure brute d'un convertisseur 12 bits en millivolts, avec une référence de 3 300 mV.
+A: 4096
+A: 4095
+E: La division par 4 096 (ou 4 095 selon la convention choisie) se fait après la multiplication, en 32 bits, pour ne pas perdre la précision. Le transtypage en uint32_t évite le débordement de 4 095 × 3 300 sur un int de 16 bits.
+```c
+uint16_t mv = (uint32_t)brut * 3300u / ____;
+```
+
+@032
+Q: À quoi sert le DMA d'un microcontrôleur ?
+C: À copier des données entre périphérique et mémoire sans occuper le processeur
+W: À protéger certaines zones de la mémoire contre les accès du programme
+W: À diviser la fréquence d'horloge pour réduire la consommation électrique de la carte
+W: À détecter les erreurs de mémoire et les corriger pendant l'exécution
+E: Le DMA remplit par exemple un tampon avec 1 000 mesures du convertisseur pendant que le processeur calcule, puis lève une interruption à mi-tampon et en fin de tampon. Le processeur traite une moitié pendant que l'autre se remplit.
+
+@033
+Q: Quel est l'intérêt d'un tampon circulaire entre une interruption UART et la boucle principale ?
+C: L'interruption écrit et la boucle lit sans attendre l'une l'autre
+W: Il chiffre les octets reçus avant de les transmettre au programme
+W: Il double la vitesse de la liaison série en réutilisant la mémoire
+W: Il évite de configurer une priorité pour l'interruption de réception
+E: Avec un seul producteur (l'interruption) et un seul consommateur (la boucle), deux indices suffisent, chacun modifié d'un seul côté. Si le tampon est plein, on perd des octets : sa taille se dimensionne selon le débit et la durée maximale de la boucle.
+
+@034
+Q: Compléter ce calcul de l'indice suivant dans un tampon circulaire de taille TAILLE.
+A: %
+E: Le modulo ramène l'indice à 0 en fin de tableau. Avec une taille puissance de deux, (tete + 1) & (TAILLE - 1) donne le même résultat sans division, plus rapide sur un petit processeur.
+```c
+tete = (tete + 1) ____ TAILLE;
+```
+
+@035
+Q: La boucle principale lit compteur, une variable uint32_t incrémentée par une interruption, sur un AVR 8 bits. Quel risque ?
+C: L'interruption peut changer la valeur au milieu de la lecture des quatre octets
+W: Le compilateur range compteur en flash et la lecture renvoie la valeur initiale
+W: La variable déborde à 255 car le processeur ne sait compter que sur 8 bits
+W: La lecture désactive les interruptions et fait perdre des événements
+E: Sur 8 bits, lire 32 bits prend quatre instructions : on peut lire deux octets avant l'incrément et deux après. On copie la variable dans une section critique, interruptions coupées le temps de la copie, ou on relit jusqu'à obtenir deux valeurs égales.
+
+@036
+Q: Que fait ce code autour de la copie ?
+C: Il coupe les interruptions puis restaure leur état précédent
+W: Il réactive les interruptions dans tous les cas après la copie
+W: Il donne une priorité maximale à la copie face à l'interruption
+W: Il bloque le processeur jusqu'à la prochaine interruption reçue
+E: Sauvegarder PRIMASK permet d'imbriquer cette section critique dans une autre sans réactiver les interruptions trop tôt. La section critique reste aussi courte que possible pour ne pas retarder les interruptions.
+```c
+uint32_t etat = __get_PRIMASK();
+__disable_irq();
+copie = compteur;
+__set_PRIMASK(etat);
+```
+
+@037
+Q: Associer chaque section mémoire d'un programme embarqué à son contenu.
+P: .text => Code exécutable et constantes, en flash
+P: .data => Variables globales initialisées, copiées en RAM au démarrage
+P: .bss => Variables globales sans valeur initiale, mises à zéro au démarrage
+P: Pile => Variables locales et adresses de retour des fonctions
+P: Tas => Mémoire allouée par malloc pendant l'exécution
+E: Le code de démarrage copie .data de la flash vers la RAM et remplit .bss de zéros avant d'appeler main. Le fichier .map et la commande arm-none-eabi-size donnent la taille de chaque section.
+
+@038
+Q: Pourquoi déclarer une table de conversion avec const sur un microcontrôleur ?
+C: Elle peut rester en flash au lieu d'occuper de la RAM
+W: Elle est recopiée plus vite en RAM au démarrage de la carte
+W: Elle devient accessible depuis les routines d'interruption
+W: Elle est protégée contre la lecture par une sonde de débogage
+E: Sur un Cortex-M, une donnée const est placée dans .rodata, en flash, lue directement. Sur AVR, à l'architecture Harvard, il faut en plus PROGMEM et pgm_read_byte, sinon la table est copiée en RAM.
+
+@039
+Q: Que risque cette fonction appelée par un microcontrôleur ayant 2 Ko de pile ?
+C: Un débordement de pile, car le tableau local occupe 4 Ko
+W: Une lecture lente, car les tableaux locaux sont rangés en flash
+W: Une erreur de compilation, car un tableau local doit être static
+W: Une remise à zéro du tableau à chaque tour de la boucle for
+E: 1 024 entiers de 4 octets font 4 Ko sur la pile : la fonction écrase les variables voisines sans message d'erreur. On rend le tableau static ou global, et on mesure la pile réelle (motif de remplissage, -fstack-usage).
+```c
+void filtrer(void) {
+    int32_t echantillons[1024];
+    for (int i = 0; i < 1024; i++) {
+        echantillons[i] = lire_adc();
+    }
+}
+```
+
+@040
+Q: Qu'est-ce qu'un système d'exploitation temps réel (RTOS), comme FreeRTOS ou Zephyr ?
+C: Un noyau qui ordonnance des tâches selon leur priorité avec des délais prévisibles
+W: Un système qui exécute chaque tâche plus vite qu'un programme sans noyau
+W: Un système qui synchronise l'horloge de la carte avec un serveur de temps
+W: Un noyau Linux allégé pour les cartes qui ont plusieurs gigaoctets de RAM
+E: Temps réel signifie déterministe, pas rapide : une tâche prioritaire prend la main dans un délai borné. Le RTOS apporte tâches, files de messages, sémaphores et temporisateurs logiciels, pour quelques Ko de flash.
+
+@041
+Q: Pourquoi utiliser vTaskDelay plutôt qu'une boucle d'attente dans une tâche FreeRTOS ?
+C: La tâche est bloquée et le processeur passe aux autres tâches pendant l'attente
+W: La tâche obtient une priorité plus haute pendant toute la durée de l'attente
+W: L'attente est mesurée plus précisément qu'avec une boucle de comptage
+W: L'appel désactive les interruptions et protège ainsi les données partagées entre tâches
+E: Une boucle d'attente garde le processeur et affame les tâches de priorité inférieure. vTaskDelayUntil, qui part de l'instant de réveil précédent, donne une période fixe pour une tâche cyclique, sans dérive.
+
+@042
+Q: Quelle différence entre un mutex et un sémaphore binaire dans FreeRTOS ?
+C: Le mutex a un propriétaire et applique l'héritage de priorité
+W: Le mutex s'utilise dans une interruption, le sémaphore dans une tâche
+W: Le mutex compte jusqu'à plusieurs valeurs, le sémaphore jusqu'à un
+W: Le mutex est plus rapide, car il ne bloque pas la tâche qui le demande
+E: Le mutex protège une ressource partagée : la tâche qui le prend doit le rendre. Le sémaphore binaire sert à signaler un événement, par exemple d'une interruption vers une tâche, et peut être donné par un autre contexte.
+
+@043
+Q: Comment une routine d'interruption doit-elle envoyer une donnée à une tâche FreeRTOS ?
+C: Avec la variante xQueueSendFromISR de l'appel de file
+W: Avec xQueueSend et un délai d'attente fixé à portMAX_DELAY
+W: Avec une variable globale protégée par un mutex pris dans la routine
+W: Avec vTaskDelay pour laisser la tâche lire la donnée avant de sortir
+E: Les fonctions FromISR ne bloquent jamais et signalent par un paramètre si une tâche plus prioritaire a été réveillée ; portYIELD_FROM_ISR bascule alors vers elle en sortie d'interruption. Prendre un mutex dans une interruption est interdit.
+
+@044
+Q: Associer chaque état d'une tâche FreeRTOS à sa situation.
+P: Running => En cours d'exécution sur le processeur
+P: Ready => Prête, en attente que le processeur se libère
+P: Blocked => En attente d'un délai, d'une file ou d'un sémaphore
+P: Suspended => Mise à l'écart par vTaskSuspend jusqu'à reprise
+E: Sur un cœur, une seule tâche est Running. L'ordonnanceur choisit la tâche Ready de plus haute priorité ; une tâche Blocked ne consomme aucun temps processeur, ce qui permet d'en avoir beaucoup.
+
+@045
+Q: Remettre dans l'ordre ce qui se passe quand une tâche prioritaire attend une donnée d'une interruption.
+O: La tâche prioritaire se bloque sur la file vide
+O: L'ordonnanceur exécute une tâche moins prioritaire
+O: L'interruption dépose la donnée dans la file
+O: La tâche prioritaire repasse à l'état prêt
+O: L'ordonnanceur lui rend le processeur en sortie d'interruption
+E: Le délai entre l'événement et le traitement reste borné, quelle que soit la charge des tâches moins prioritaires. C'est ce qu'apporte un RTOS par rapport à une super-boucle, où l'événement attend la fin du tour.
+
+@046
+Q: Une tâche basse prend un mutex, une tâche haute l'attend, et une tâche moyenne occupe le processeur. Comment s'appelle ce problème ?
+C: L'inversion de priorité
+W: L'interblocage entre tâches
+W: La famine de la tâche basse
+W: Le débordement de la pile
+E: La tâche haute attend en réalité la tâche moyenne, qui empêche la basse de rendre le mutex. L'héritage de priorité élève temporairement la tâche basse ; c'est la panne célèbre de Mars Pathfinder en 1997.
+
+@047
+Q: Deux tâches prennent les mutex A et B dans un ordre différent et restent bloquées. Quelle règle évite ce blocage ?
+C: Prendre les mutex dans le même ordre dans toutes les tâches
+W: Donner aux deux tâches exactement la même priorité de départ
+W: Remplacer les mutex par des sémaphores binaires équivalents
+W: Augmenter la taille de la pile de chacune des deux tâches
+E: L'interblocage demande une attente circulaire : la tâche 1 tient A et attend B, la tâche 2 tient B et attend A. Un ordre fixe supprime le cycle ; un délai d'attente sur la prise du mutex permet aussi de détecter le problème.
+
+@048
+Q: Comment détecter un débordement de pile d'une tâche FreeRTOS ?
+C: Activer configCHECK_FOR_STACK_OVERFLOW et suivre uxTaskGetStackHighWaterMark
+W: Lire la valeur de retour de xTaskCreate à chaque tour de boucle de la tâche
+W: Compiler avec l'option -O0 pour que le compilateur ajoute des contrôles
+W: Désactiver les interruptions pendant les fonctions qui utilisent la pile
+E: Le noyau remplit la pile d'un motif connu et vérifie qu'il n'est pas écrasé ; le crochet vApplicationStackOverflowHook est alors appelé. La marge mesurée en essai sert à dimensionner chaque pile au plus juste.
+
+@049
+Q: Pourquoi utiliser une file de messages plutôt qu'une variable globale entre deux tâches ?
+C: La file copie les données et réveille la tâche qui attend
+W: La file range les données en flash pour les garder après coupure
+W: La file accélère l'exécution en évitant les appels au noyau
+W: La file supprime le besoin d'attribuer une priorité aux tâches
+E: La variable globale demande une protection et une scrutation ; la file assure la cohérence de chaque message et bloque la tâche lectrice tant qu'elle est vide. Les messages sont copiés : on y place une petite structure ou un pointeur vers un tampon.
+
+@050
+Q: Pourquoi désactive-t-on souvent les exceptions C++ (-fno-exceptions) sur un microcontrôleur ?
+C: Elles ajoutent du code et un temps de traitement difficile à borner
+W: Les compilateurs ARM ne savent pas les générer pour les cœurs Cortex-M
+W: Elles imposent l'usage d'un système d'exploitation comme Linux
+W: Elles empêchent l'utilisation des classes et des constructeurs
+E: Le déroulement de la pile demande des tables et une bibliothèque de support, coûteux en flash, avec une durée variable. On renvoie alors des codes d'erreur, std::optional ou std::expected (C++23), et on désactive aussi souvent RTTI.

@@ -5,6 +5,32 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision BI et reporting
+- Lot de 100 questions dont 32 interactives (associations, remises en ordre,
+  calculs, code à compléter) : Power Query et query folding, modèle en étoile,
+  cardinalités et sens de filtrage, DAX (mesures et colonnes calculées,
+  contextes de ligne et de filtre, CALCULATE, ALL, KEEPFILTERS, itérateurs,
+  intelligence temporelle, USERELATIONSHIP, variables), import, DirectQuery,
+  modèles composites et agrégations, actualisation incrémentielle, RLS
+  dynamique, espaces de travail et pipelines, PBIP, VertiPaq et DAX Studio,
+  Tableau (LOD, extraits), Qlik (modèle associatif, set analysis), entrepôt de
+  données (grain, dimensions de type 1 et 2, clés de substitution, mesures
+  semi-additives), choix des visuels et pièges de lecture
+- Deux schémas : évaluation d'une mesure DAX, historisation d'une dimension de
+  type 2
+
+### Révision C, C++ et systèmes embarqués
+- Lot de 100 questions dont 32 interactives (associations, remises en ordre,
+  calculs, code à compléter) : types à taille fixe, volatile, manipulation de
+  bits, macros, chaîne de compilation croisée, sections mémoire et démarrage
+  d'un Cortex-M, interruptions et sections critiques, temporisateurs, CAN, SPI,
+  I2C et UART, DMA et cache, tampons circulaires, FreeRTOS (tâches, files,
+  mutex, inversion de priorité, appels FromISR, BASEPRI), C++ embarqué (RAII,
+  constexpr, std::array, fonctions virtuelles, déplacement, placement new),
+  comportements indéfinis et promotions, MISRA C, tests sur PC, HardFault, OTA
+  et démarrage sécurisé, virgule fixe Q15, rate monotonic et WCET
+- Deux schémas : traitement d'une interruption, réveil d'une tâche FreeRTOS
+
 ### Révision supervision, journaux et métriques
 - Lot de 100 questions dont 32 interactives (associations, remises en ordre,
   calculs, code à compléter) : métriques, journaux et traces, Prometheus
