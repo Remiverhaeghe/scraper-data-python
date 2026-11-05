@@ -1,0 +1,418 @@
+@001
+Q: Quel est le rôle de Power Query dans Power BI Desktop ?
+C: Importer, nettoyer et transformer les données avant de les charger
+W: Écrire les mesures DAX affichées dans les visuels du rapport
+W: Publier le rapport sur le service Power BI pour les collègues
+W: Définir les rôles de sécurité qui filtrent les lignes par utilisateur
+E: Power Query enregistre chaque transformation comme une étape du langage M : suppression de colonnes, changement de type, fusion, dépivotage. L'actualisation rejoue ces étapes sur les données sources, sans retouche manuelle.
+
+@002
+Q: Associer chaque outil de Power BI à son rôle.
+P: Power Query => Préparer et transformer les données sources
+P: Vue Modèle => Relier les tables et définir les relations
+P: DAX => Écrire les mesures et les colonnes calculées
+P: Service Power BI => Partager les rapports et planifier l'actualisation
+E: Desktop sert à construire, le service en ligne à diffuser. Une erreur fréquente est de calculer dans Power Query ce qui relève d'une mesure, ou l'inverse : la préparation va en amont, l'agrégation dans le modèle.
+
+@003
+Q: Dans un modèle en étoile, que contient une table de faits ?
+C: Les événements mesurés, comme les lignes de vente, avec leurs clés et montants
+W: Les attributs descriptifs des clients, comme le nom, la ville et la catégorie tarifaire
+W: La liste des utilisateurs autorisés à consulter les rapports de l'entreprise
+W: Les paramètres de connexion aux bases de données utilisées par le rapport
+E: La table de faits est longue et étroite : une ligne par événement, des clés vers les dimensions et des valeurs numériques. Les dimensions (client, produit, date) sont plus courtes et portent les libellés qui servent à filtrer.
+
+@004
+Q: Associer chaque table d'un modèle de ventes à son rôle.
+P: Ventes => Table de faits
+P: Produit => Dimension reliée directement aux faits
+P: Calendrier => Dimension de dates marquée comme telle
+P: Catégorie, reliée à Produit => Dimension en flocon
+E: Les dimensions entourent la table de faits, d'où le nom d'étoile. Si Produit est elle-même reliée à Catégorie, on parle de flocon ; Power BI fonctionne mieux en étoile, en fusionnant Catégorie dans Produit.
+
+@005
+Q: Quelle est la cardinalité habituelle de la relation entre Produit et Ventes ?
+C: Un à plusieurs : un produit figure sur de nombreuses lignes de vente
+W: Plusieurs à plusieurs : chaque vente peut contenir plusieurs produits
+W: Un à un : chaque produit correspond à une seule ligne de vente
+W: Plusieurs à un : un produit dépend de plusieurs lignes de vente
+E: Le côté « un » est la dimension, où la clé est unique ; le côté « plusieurs », la table de faits. Si Power BI propose plusieurs à plusieurs, c'est souvent que la clé de la dimension contient des doublons à corriger.
+
+@006
+Q: Quelle différence entre une mesure et une colonne calculée en DAX ?
+C: La mesure se calcule à l'affichage selon les filtres, la colonne ligne par ligne au chargement
+W: La mesure se stocke dans le modèle, la colonne se calcule à chaque clic sur le rapport
+W: La mesure s'écrit en langage M, la colonne calculée en DAX dans la vue des données
+W: La mesure ne s'applique qu'aux dates, la colonne aux montants et aux quantités
+E: Une colonne calculée occupe de la mémoire et ne réagit pas aux segments. Une mesure comme Total ventes = SUM(Ventes[Montant]) s'évalue pour chaque cellule du visuel, dans son contexte de filtre.
+
+@007
+Q: Compléter cette mesure qui additionne la colonne Montant de la table Ventes.
+A: SUM
+E: SUM agrège une colonne dans le contexte de filtre courant. Pour un calcul ligne par ligne avant la somme, comme quantité fois prix, on utilise SUMX.
+```dax
+Total ventes = ____(Ventes[Montant])
+```
+
+@008
+Q: Pourquoi utiliser DIVIDE plutôt que l'opérateur / dans une mesure de marge ?
+C: DIVIDE renvoie un vide ou une valeur choisie quand le dénominateur vaut zéro
+W: DIVIDE arrondit le résultat au nombre de décimales fixé dans le format de la mesure
+W: DIVIDE calcule plus vite que l'opérateur / sur les grandes tables de faits
+W: DIVIDE convertit automatiquement le résultat en pourcentage dans le visuel
+E: Une division par zéro donne l'infini ou une erreur dans le visuel. DIVIDE(numérateur ; dénominateur ; valeur de repli) laisse la cellule vide par défaut, ce qui masque aussi la ligne sans données.
+
+@009
+Q: Pourquoi créer une table de dates dédiée dans un modèle Power BI ?
+C: Pour utiliser les fonctions d'intelligence temporelle et filtrer toutes les tables par date
+W: Pour que les dates s'affichent au format français dans les visuels du rapport
+W: Pour stocker l'heure de chaque actualisation des données dans le service
+W: Pour réduire la taille du fichier en supprimant les colonnes de date des faits
+E: La table doit couvrir des années complètes sans trou et être marquée comme table de dates. On y ajoute année, mois, trimestre, semaine ISO, jours ouvrés, au lieu de les recalculer dans chaque table de faits.
+
+@010
+Q: Que fait un segment (slicer) dans un rapport Power BI ?
+C: Il filtre les autres visuels de la page selon la valeur choisie
+W: Il découpe le rapport en plusieurs fichiers plus petits à partager
+W: Il fige l'affichage d'un visuel pendant l'actualisation des données
+W: Il trie les lignes d'un tableau selon la colonne sélectionnée
+E: Le segment ajoute un filtre au contexte de tous les visuels liés. On règle ces liens par « Modifier les interactions » ; la synchronisation des segments étend le filtre à d'autres pages.
+
+@011
+Q: Remettre dans l'ordre la construction d'un premier rapport Power BI.
+O: Se connecter aux sources de données
+O: Nettoyer et transformer dans Power Query
+O: Relier les tables dans la vue Modèle
+O: Écrire les mesures DAX
+O: Construire les visuels et publier le rapport
+E: Un modèle propre en amont simplifie tout le reste : les mesures deviennent courtes et les visuels réactifs. Commencer par les visuels pousse à empiler des calculs pour contourner un modèle mal construit.
+
+@012
+Q: Pourquoi dépivoter un fichier Excel qui a une colonne par mois ?
+C: Pour obtenir une ligne par mois, filtrable et reliée à la table de dates
+W: Pour réduire le nombre de lignes et accélérer l'actualisation du fichier
+W: Pour conserver la mise en forme du fichier Excel dans le rapport final
+W: Pour créer automatiquement une mesure par mois dans le modèle de données
+E: Le format large impose de modifier le rapport à chaque nouveau mois. Après dépivotage, on obtient deux colonnes, Mois et Valeur : un nouveau mois devient une ligne de plus, sans retouche.
+
+@013
+Q: Que désigne un KPI dans un tableau de bord ?
+C: Un indicateur clé comparé à une cible, qui suit un objectif précis
+W: Un graphique en secteurs qui détaille la répartition des ventes par région
+W: Une table du modèle qui contient la liste des produits vendus
+W: Un filtre appliqué à toutes les pages d'un même rapport
+E: Un chiffre seul ne dit rien : 1 200 commandes est-ce bien ? Le KPI se présente avec sa cible, sa tendance et sa période. Il en faut peu par page, choisis avec ceux qui prennent les décisions.
+
+@014
+Q: Associer chaque besoin à un visuel adapté.
+P: Évolution du chiffre d'affaires sur 24 mois => Courbe
+P: Comparer les ventes de 8 magasins => Barres horizontales triées
+P: Lien entre prix et quantité vendue => Nuage de points
+P: Valeur d'un indicateur face à sa cible => Carte KPI ou jauge
+P: Ventes par région sur le territoire => Carte géographique
+E: Le secteur se lit mal au-delà de quelques parts, car l'œil compare mal les angles. Des barres triées par valeur répondent plus vite à la question « qui fait le plus ».
+
+@015
+Q: Quelle est la différence entre le mode Import et DirectQuery dans Power BI ?
+C: Import copie les données dans le modèle, DirectQuery interroge la source à chaque visuel
+W: Import lit les fichiers Excel, DirectQuery se limite aux fichiers CSV et texte
+W: Import fonctionne hors ligne, DirectQuery demande une licence de développeur
+W: Import affiche les données en temps réel, DirectQuery les met à jour chaque nuit
+E: Import est le plus rapide et offre tout le DAX, mais les données datent de la dernière actualisation. DirectQuery reste à jour et convient aux gros volumes, au prix de visuels plus lents et de la charge reportée sur la source.
+
+@016
+Q: À quoi sert la passerelle de données (gateway) Power BI ?
+C: À actualiser depuis le service en ligne des sources situées sur le réseau interne
+W: À convertir les rapports Power BI en fichiers PDF pour les envoyer par courriel aux clients
+W: À connecter Power BI Desktop à Internet lorsque le poste est derrière un proxy
+W: À limiter le nombre d'utilisateurs connectés en même temps au même rapport
+E: Le service en ligne ne voit pas le serveur SQL de l'entreprise : la passerelle installée sur le réseau interne fait le lien, en sortie seulement. Elle doit rester allumée aux heures d'actualisation planifiées.
+
+@017
+Q: Que garantit la sécurité au niveau des lignes (RLS) dans Power BI ?
+C: Chaque utilisateur ne voit que les lignes de son périmètre, comme sa région
+W: Chaque utilisateur doit saisir un mot de passe pour ouvrir le rapport partagé
+W: Les données du rapport sont chiffrées sur le poste de chaque utilisateur
+W: Les lignes modifiées par un utilisateur sont tracées dans un journal
+E: Un rôle porte un filtre DAX, par exemple [Région] = "Nord", ou dynamique avec USERPRINCIPALNAME(). On teste chaque rôle avec « Afficher en tant que » avant de publier, car un rôle oublié laisse voir toutes les lignes.
+
+@018
+Q: Qu'est-ce qu'un entrepôt de données (data warehouse) ?
+C: Une base conçue pour l'analyse, alimentée par les applications de gestion
+W: Une base qui enregistre les commandes en temps réel pour le site web marchand
+W: Un serveur de fichiers qui garde les sauvegardes de toutes les bases
+W: Un logiciel de visualisation qui remplace les tableurs du service
+E: Les bases de gestion (OLTP) sont optimisées pour écrire des transactions ; l'entrepôt (OLAP) regroupe et historise les données pour les lire en masse. Les rapports lourds sur la base de production ralentissent l'activité.
+
+@019
+Q: Que signifie le sigle ETL ?
+C: Extraire, transformer et charger les données
+W: Exporter, trier puis lister les données brutes
+W: Évaluer, tester et livrer le rapport
+W: Encoder, transférer et lire les fichiers
+E: En ETL, la transformation se fait avant le chargement, dans un outil dédié. En ELT, on charge d'abord les données brutes dans l'entrepôt, puis on les transforme en SQL, une approche courante avec les entrepôts dans le nuage et dbt.
+
+@020
+Q: Dans Tableau, quelle différence entre une dimension et une mesure ?
+C: La dimension découpe les données, la mesure s'agrège
+W: La dimension est un nombre, la mesure un texte
+W: La dimension vient d'Excel, la mesure d'une base SQL
+W: La dimension se calcule, la mesure se stocke
+E: Région, produit ou date découpent ; montant ou quantité se somment ou se moyennent. Tableau colore les champs discrets en bleu et les champs continus en vert, une distinction qui recoupe souvent l'autre sans s'y confondre.
+
+@021
+Q: Quel principe distingue le moteur de Qlik Sense des autres outils ?
+C: Le modèle associatif, qui montre les valeurs liées et exclues par chaque sélection
+W: Le modèle relationnel, qui impose d'écrire une jointure pour chaque visuel
+W: Le modèle en cube, qui calcule chaque nuit tous les croisements possibles
+W: Le modèle hiérarchique, qui range les tables dans une arborescence fixe
+E: Une sélection colore en vert les valeurs choisies, en blanc les valeurs associées et en gris les exclues. Voir ce qui n'a pas de lien (clients sans commande) est souvent aussi utile que voir ce qui en a.
+
+@022
+Q: Un rapport compare 2025 et 2026 mais l'année 2026 n'est pas finie. Quel piège faut-il éviter ?
+C: Comparer une année partielle à une année complète
+W: Afficher les deux années dans un même graphique
+W: Utiliser une table de dates pour les deux années comparées
+W: Arrondir les montants au millier d'euros près
+E: On compare à période égale : du 1er janvier à la même date l'année précédente, avec TOTALYTD et SAMEPERIODLASTYEAR. Le rapport indique clairement la date des dernières données chargées.
+
+@023
+Q: Pourquoi indiquer sur un tableau de bord la date de la dernière actualisation ?
+C: Pour que le lecteur sache si les chiffres reflètent la situation actuelle
+W: Pour respecter le format imposé par le service Power BI à la publication
+W: Pour que les segments de date se règlent sur la bonne période par défaut à l'ouverture
+W: Pour que l'actualisation suivante se lance au bon moment dans la journée
+E: Une actualisation en échec laisse afficher des chiffres anciens sans alerte visible. Une mesure qui lit la date maximale chargée, ou l'heure de fin d'actualisation, évite de piloter sur des données périmées.
+
+@024
+Q: Une base de 200 000 ventes a une moyenne de 85 € et une médiane de 42 €. Que dit cet écart ?
+C: Quelques grosses ventes tirent la moyenne vers le haut
+W: La moitié des ventes dépasse 85 € de chiffre d'affaires
+W: Les ventes sont réparties de façon symétrique autour de 42 €
+W: Le calcul de la moyenne contient une erreur de saisie
+E: Une moyenne très supérieure à la médiane signale une distribution étirée vers la droite. Sur un tableau de bord, la médiane ou les quartiles décrivent mieux la vente typique que la moyenne seule.
+
+@025
+Q: Un mois compte 1 200 commandes, dont 54 retournées. Quel est le taux de retour, en % ?
+N: 4,5
+U: %
+E: 54 / 1 200 = 0,045, soit 4,5 %. Dans un rapport, on calcule ce taux par une mesure DIVIDE(retours ; commandes) plutôt qu'en moyennant des taux mensuels, qui donnerait le même poids aux petits et aux gros mois.
+
+@026
+Q: Remettre dans l'ordre l'évaluation d'une mesure dans une cellule d'un visuel Power BI.
+O: Le visuel fixe les filtres de la ligne et de la colonne de la cellule
+O: Les segments et filtres de page s'ajoutent à ce contexte
+O: Les relations propagent ces filtres de la dimension vers les faits
+O: CALCULATE modifie le contexte si la mesure le demande
+O: L'agrégation s'applique aux lignes restantes de la table de faits
+E: Comprendre le contexte de filtre est la clé du DAX : une même mesure donne un résultat différent dans chaque cellule parce que ses filtres changent, pas parce que sa formule change.
+
+@027
+Q: Que fait CALCULATE dans cette mesure ?
+C: Il calcule le total des ventes en remplaçant le filtre sur la couleur par « Rouge »
+W: Il crée une nouvelle table qui ne contient que les produits de couleur rouge
+W: Il colore en rouge les cellules du visuel qui affichent cette mesure
+W: Il ajoute une colonne Couleur à la table Ventes lors du chargement des données sources
+E: CALCULATE évalue une expression dans un contexte de filtre modifié. Un filtre sur Produit[Couleur] venu d'un segment est remplacé ; les filtres sur les autres colonnes sont conservés.
+```dax
+Ventes rouges =
+CALCULATE([Total ventes], Produit[Couleur] = "Rouge")
+```
+
+@028
+Q: Pourquoi cette mesure renvoie-t-elle le même total sur chaque ligne d'un tableau par catégorie ?
+C: ALL retire le filtre sur la catégorie, donc chaque ligne voit l'ensemble
+W: CALCULATE ignore les relations entre la table Ventes et la table Produit
+W: Le total des ventes est mis en cache après le premier calcul du visuel
+W: La mesure doit être transformée en colonne calculée pour varier par ligne
+E: C'est voulu pour un dénominateur : Part = DIVIDE([Total ventes] ; [Total toutes catégories]) donne la part de chaque catégorie. REMOVEFILTERS est un synonyme plus lisible de ALL dans ce rôle.
+```dax
+Total toutes catégories =
+CALCULATE([Total ventes], ALL(Produit[Catégorie]))
+```
+
+@029
+Q: Compléter cette mesure qui donne le chiffre d'affaires de la même période l'année précédente.
+A: SAMEPERIODLASTYEAR
+E: La fonction décale d'un an les dates du contexte courant, mois, trimestre ou sélection libre. Elle exige une table de dates marquée et continue ; DATEADD(Calendrier[Date] ; -1 ; YEAR) donne le même résultat.
+```dax
+CA N-1 =
+CALCULATE([Total ventes], ____(Calendrier[Date]))
+```
+
+@030
+Q: Le chiffre d'affaires passe de 80 000 € à 92 000 € d'une année sur l'autre. Quelle est l'évolution, en % ?
+N: 15
+U: %
+E: (92 000 - 80 000) / 80 000 = 0,15. En DAX : DIVIDE([CA] - [CA N-1] ; [CA N-1]). Sans DIVIDE, un produit nouveau, sans ventes l'an passé, ferait afficher une erreur.
+
+@031
+Q: Compléter cette mesure qui calcule le cumul du chiffre d'affaires depuis le début de l'année.
+A: TOTALYTD
+E: TOTALYTD cumule du 1er janvier à la dernière date du contexte. Un troisième argument, comme "30/06", permet un exercice qui ne suit pas l'année civile.
+```dax
+CA cumulé = ____([Total ventes], Calendrier[Date])
+```
+
+@032
+Q: Que calcule SUMX dans cette mesure ?
+C: La somme, ligne par ligne, de la quantité multipliée par le prix
+W: Le produit de la somme des quantités et de la somme des prix
+W: La moyenne des prix pondérée par le nombre de lignes de vente du contexte
+W: Le maximum du montant atteint par une ligne de la table Ventes
+E: Les fonctions en X sont des itérateurs : elles créent un contexte de ligne pour chaque ligne de la table, puis agrègent. SUM(Quantité) × SUM(Prix) donnerait un résultat faux dès qu'il y a plus d'une ligne.
+```dax
+CA calculé = SUMX(Ventes, Ventes[Quantité] * Ventes[Prix unitaire])
+```
+
+@033
+Q: Trois lignes de vente : 2 articles à 10 €, 1 à 30 €, 3 à 5 €. Quelle valeur donne SUMX(Ventes ; Ventes[Quantité] * Ventes[Prix]) ?
+N: 65
+U: €
+E: 2 × 10 + 1 × 30 + 3 × 5 = 20 + 30 + 15 = 65 €. Le calcul faux SUM(Quantité) × SUM(Prix) donnerait 6 × 45 = 270 €.
+
+@034
+Q: Compléter cette colonne calculée de Ventes qui récupère la catégorie depuis la table Produit.
+A: RELATED
+E: RELATED suit une relation du côté plusieurs vers le côté un, dans un contexte de ligne. Avant d'ajouter la colonne, on se demande si la catégorie ne peut pas simplement être utilisée depuis la dimension, ce qui économise de la mémoire.
+```dax
+Catégorie = ____(Produit[Catégorie])
+```
+
+@035
+Q: Une table Ventes a deux dates, commande et livraison, reliées au Calendrier. Une seule relation est active. Comment calculer les ventes par date de livraison ?
+C: Avec CALCULATE et USERELATIONSHIP sur la relation inactive
+W: En dupliquant la table Ventes et en la reliant par la date de livraison
+W: En activant les deux relations à la fois dans la vue Modèle
+W: En remplaçant la date de livraison par la date de commande
+E: La relation inactive, en pointillés, n'est utilisée que là où une mesure la demande : CALCULATE([Total ventes] ; USERELATIONSHIP(Ventes[DateLivraison] ; Calendrier[Date])). Une table de dates par rôle est l'autre solution, plus lourde.
+
+@036
+Q: Pourquoi éviter le filtrage croisé dans les deux directions sur toutes les relations ?
+C: Il crée des chemins ambigus et ralentit le modèle
+W: Il empêche l'actualisation planifiée du rapport publié
+W: Il supprime les relations inactives de la vue Modèle
+W: Il désactive la sécurité au niveau des lignes du rapport
+E: Le filtre va normalement de la dimension vers les faits. Le sens double se réserve à des cas précis, comme une table de pont plusieurs à plusieurs ; sinon, une mesure avec CROSSFILTER le limite au calcul qui en a besoin.
+
+@037
+Q: Associer chaque fonction DAX à son usage.
+P: CALCULATE => Évaluer une expression dans un contexte de filtre modifié
+P: FILTER => Renvoyer les lignes d'une table qui vérifient une condition
+P: ALL => Retirer les filtres d'une table ou d'une colonne
+P: RELATED => Lire une valeur dans la table liée côté un
+P: DISTINCTCOUNT => Compter les valeurs différentes d'une colonne
+E: Ces fonctions couvrent la plupart des mesures courantes. FILTER parcourt la table ligne à ligne : pour un simple filtre sur une colonne, l'argument booléen de CALCULATE est plus rapide.
+
+@038
+Q: Que compte cette mesure ?
+C: Le nombre de clients différents ayant au moins une vente dans le contexte
+W: Le nombre de lignes de vente enregistrées pour chaque client du contexte courant
+W: Le nombre de clients présents dans la table Client, avec ou sans vente
+W: Le nombre de ventes dont le client est renseigné dans le contexte
+E: DISTINCTCOUNT ne compte qu'une fois chaque valeur de Ventes[ClientID]. Un client qui a passé dix commandes en mars compte pour un dans la cellule de mars.
+```dax
+Clients actifs = DISTINCTCOUNT(Ventes[ClientID])
+```
+
+@039
+Q: Que fait cette étape Power Query écrite en M ?
+C: Elle garde les lignes dont le montant est strictement positif
+W: Elle ajoute une colonne qui indique si le montant est positif
+W: Elle trie les lignes par montant du plus grand au plus petit
+W: Elle remplace par zéro les montants négatifs de la colonne
+E: Table.SelectRows filtre les lignes ; each introduit une fonction appliquée à chaque ligne, et [Montant] lit sa colonne. Chaque étape de l'interface produit une ligne de ce genre, visible dans l'éditeur avancé.
+```text
+= Table.SelectRows(#"Type modifié", each [Montant] > 0)
+```
+
+@040
+Q: Qu'est-ce que le query folding dans Power Query ?
+C: La traduction des étapes en une requête exécutée par la source elle-même
+W: Le regroupement de plusieurs requêtes Power Query dans un même dossier
+W: La compression des données en mémoire après leur chargement dans le modèle
+W: La mise en cache des résultats pour accélérer les actualisations suivantes
+E: Un filtre sur une table SQL devient un WHERE envoyé au serveur : on ne transfère que les lignes utiles. Une étape non traduisible, comme une colonne ajoutée par une fonction M complexe, coupe le repli pour toutes les étapes suivantes.
+
+@041
+Q: Pourquoi placer les filtres et la suppression des colonnes au début des étapes Power Query ?
+C: Pour que ces étapes soient repliées vers la source et réduisent le volume tôt
+W: Pour que l'éditeur affiche les étapes dans l'ordre alphabétique de leur nom
+W: Pour que les colonnes supprimées puissent être restaurées à l'actualisation
+W: Pour que les types de colonnes soient détectés après le chargement des lignes
+E: Moins de lignes et de colonnes à transférer, c'est une actualisation plus rapide et un modèle plus léger. Après une étape qui casse le repli, tout est traité par le moteur local, ligne par ligne.
+
+@042
+Q: Pourquoi supprimer les colonnes inutiles d'un modèle importé, comme un identifiant de transaction unique ?
+C: Une colonne aux valeurs presque toutes différentes se compresse mal et pèse lourd
+W: Les colonnes inutilisées ralentissent le chargement du service en ligne
+W: Les colonnes d'identifiants empêchent la création de relations entre les tables du modèle
+W: Les colonnes de texte ne sont pas acceptées par le moteur VertiPaq
+E: VertiPaq compresse colonne par colonne avec un dictionnaire des valeurs distinctes : une colonne de 10 millions de valeurs uniques peut peser plus que tout le reste. On découpe aussi les dates-heures en date et heure séparées.
+
+@043
+Q: Remettre dans l'ordre le traitement d'un fichier de ventes dans Power Query.
+O: Se connecter au dossier qui contient les fichiers mensuels
+O: Combiner les fichiers en une seule table
+O: Promouvoir la première ligne en en-têtes
+O: Définir le type de chaque colonne
+O: Supprimer les lignes vides et les doublons de clé
+E: La connexion à un dossier ajoute automatiquement chaque nouveau fichier déposé. Le typage précède les contrôles de qualité, car une date mal typée ne se compare pas et un montant en texte ne s'additionne pas.
+
+@044
+Q: Une dimension Client a 4 800 lignes, mais 4 650 identifiants distincts. Combien de lignes en double faut-il traiter ?
+N: 150
+U: lignes
+E: 4 800 - 4 650 = 150 lignes de trop. Sans correction, Power BI refuse la relation un à plusieurs et propose plusieurs à plusieurs, qui masque le problème au lieu de le régler.
+
+@045
+Q: Remettre dans l'ordre l'historisation d'un changement d'adresse client en dimension de type 2.
+O: Détecter que l'adresse source diffère de la version courante
+O: Clore la ligne courante avec une date de fin
+O: Insérer une nouvelle ligne avec une nouvelle clé de substitution
+O: Marquer la nouvelle ligne comme version courante
+O: Relier les ventes suivantes à la nouvelle clé
+E: Les ventes passées restent liées à l'ancienne adresse : un rapport par région reste juste dans le temps. En type 1, on écraserait l'adresse et l'historique des ventes par région serait réécrit.
+
+@046
+Q: Pourquoi une dimension de type 2 utilise-t-elle une clé de substitution plutôt que le code client ?
+C: Un même client a plusieurs lignes, une par version, avec chacune sa propre clé
+W: Le code client est trop long pour servir de clé dans une base de données
+W: La clé de substitution chiffre le code client pour respecter les règles du RGPD
+W: Le code client change à chaque modification de l'adresse du client
+E: Le code client (clé métier) se répète d'une version à l'autre. La clé de substitution, un entier généré par l'entrepôt, identifie une version précise et rend la jointure avec les faits rapide.
+
+@047
+Q: Quelle est la différence entre une dimension à évolution lente de type 1 et de type 2 ?
+C: Le type 1 écrase l'ancienne valeur, le type 2 garde l'historique
+W: Le type 1 garde l'historique, le type 2 écrase l'ancienne valeur
+W: Le type 1 concerne les dates, le type 2 les montants des ventes
+W: Le type 1 se recharge chaque nuit, le type 2 chaque semaine
+E: On choisit par attribut : une faute de frappe sur le nom se corrige en type 1, un changement de région commerciale s'historise en type 2. Le type 2 grossit la dimension et demande des dates de validité.
+
+@048
+Q: Que désigne le grain d'une table de faits ?
+C: Ce que représente exactement une ligne, par exemple une ligne de commande
+W: Le niveau de compression des données dans le moteur de stockage de l'entrepôt de données
+W: Le nombre de colonnes numériques présentes dans la table de faits
+W: La fréquence de chargement de la table, par heure ou par jour
+E: Le grain se décide en premier : ligne de commande, commande entière ou total par jour et magasin. Mélanger deux grains dans une table fait compter des montants deux fois ou empêche de descendre au détail.
+
+@049
+Q: Compléter cette requête SQL qui alimente une table de faits agrégée par jour et magasin.
+A: GROUP BY
+E: Toutes les colonnes non agrégées du SELECT figurent dans le GROUP BY. Ce pré-agrégat réduit fortement le volume quand le détail des tickets n'est pas utile au rapport.
+```sql
+SELECT date_vente, magasin_id, SUM(montant) AS ca, COUNT(*) AS nb_tickets
+FROM ventes
+____ date_vente, magasin_id;
+```
+
+@050
+Q: Associer chaque terme de la modélisation décisionnelle à sa définition.
+P: Table de faits => Événements mesurés au grain choisi
+P: Dimension => Attributs descriptifs servant à filtrer et regrouper
+P: Clé de substitution => Identifiant technique généré par l'entrepôt
+P: Dimension à évolution lente => Attributs qui changent peu, historisés ou non
+P: Dimension conforme => Dimension partagée par plusieurs tables de faits
+E: Une dimension Date ou Produit conforme permet de comparer les ventes et les stocks sur les mêmes axes. Ce vocabulaire vient de la méthode de Ralph Kimball, la plus utilisée pour les modèles décisionnels.

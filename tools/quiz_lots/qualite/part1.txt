@@ -1,0 +1,389 @@
+@001
+Q: Quelle différence l'ISO 9000 fait-elle entre une non-conformité et un défaut ?
+C: Le défaut est une non-conformité qui touche l'usage prévu
+W: Le défaut concerne l'aspect, la non-conformité les cotes
+W: La non-conformité est trouvée par le client, le défaut en interne
+W: Le défaut se retouche, la non-conformité part au rebut
+E: Toute exigence non satisfaite est une non-conformité ; on parle de défaut quand elle concerne une utilisation prévue ou spécifiée. La distinction compte en responsabilité du fait des produits : un défaut engage davantage le fabricant.
+
+@002
+Q: Associer chaque outil de la qualité à la question à laquelle il répond.
+P: Diagramme de Pareto => Quels problèmes pèsent le plus ?
+P: Diagramme d'Ishikawa => Quelles causes possibles explorer ?
+P: Histogramme => Comment les mesures se répartissent-elles ?
+P: Carte de contrôle => Le procédé reste-t-il stable dans le temps ?
+P: Diagramme de dispersion => Deux grandeurs varient-elles ensemble ?
+E: Ces outils font partie des sept outils de base de la qualité, avec la feuille de relevé et le logigramme. Chacun répond à une question précise : les enchaîner (Pareto pour choisir, Ishikawa pour chercher, carte pour suivre) structure l'analyse.
+
+@003
+Q: Quel est le but des actions de confinement en D3 d'un 8D ?
+C: Protéger le client pendant que la cause est recherchée
+W: Supprimer la cause racine avant d'en informer le client
+W: Former l'équipe à la méthode avant le début de l'analyse
+W: Chiffrer le coût du problème pour la revue de direction
+E: Le confinement (tri des stocks, contrôle renforcé, blocage des lots en transit) est immédiat et provisoire. Il ne corrige rien : il empêche de nouvelles pièces mauvaises d'atteindre le client jusqu'à ce que les actions correctives de D6 soient validées.
+
+@004
+Q: Associer chaque famille des 5M à une cause qu'on y range.
+P: Main-d'œuvre => Opérateur intérimaire non formé au poste
+P: Matière => Lot de tôle d'épaisseur en limite basse
+P: Machine => Usure de la broche de la fraiseuse
+P: Méthode => Gamme qui omet le serrage au couple
+P: Milieu => Température de l'atelier en hausse l'après-midi
+E: Les 5M structurent le brainstorming pour ne pas oublier de famille de causes. On ajoute souvent Mesure (6M) et Management (7M) : un instrument mal étalonné relève de la mesure, pas de la machine.
+
+@005
+Q: Que représente la tête d'un diagramme d'Ishikawa ?
+C: L'effet observé, formulé de façon factuelle
+W: La cause la plus probable désignée par l'équipe
+W: L'action corrective retenue après le vote pondéré
+W: Le responsable de l'analyse et la date de clôture
+E: Le poisson se lit des arêtes (causes) vers la tête (effet). Un effet vague comme « mauvaise qualité » produit des causes vagues : on écrit plutôt « 3 % de bavures au perçage de la référence 42 depuis lundi ».
+
+@006
+Q: Dans la méthode des 5 pourquoi, quand s'arrête-t-on de questionner ?
+C: Sur une cause maîtrisable qui explique l'effet
+W: Après cinq questions, quel que soit le résultat obtenu
+W: Dès qu'une personne responsable de l'erreur est identifiée
+W: Lorsque l'équipe tombe d'accord sur une cause plausible
+E: Cinq est un ordre de grandeur, pas une règle. On remonte jusqu'à une cause racine sur laquelle on peut agir, vérifiée par les faits, puis on relit la chaîne à l'envers avec « donc » pour s'assurer qu'elle tient. S'arrêter sur une personne masque le plus souvent un défaut de méthode.
+
+@007
+Q: À quoi sert le QQOQCP au début d'une résolution de problème ?
+C: À décrire le problème de façon complète et factuelle
+W: À classer les causes par ordre d'importance décroissante
+W: À répartir les actions correctives entre les services
+W: À calculer la capabilité du procédé concerné par le défaut
+E: Qui, Quoi, Où, Quand, Comment, Combien, Pourquoi : les questions obligent à poser des faits (référence, poste, date, quantité) avant de chercher des causes. C'est l'équivalent français du 5W2H, utilisé en D2 d'un 8D.
+
+@008
+Q: Quel est l'intérêt de l'analyse « est / n'est pas » en D2 d'un 8D ?
+C: Restreindre les causes à ce qui distingue les cas touchés des autres
+W: Lister les personnes intégrées à l'équipe et celles qui en sont écartées
+W: Séparer les coûts imputables au client de ceux du fournisseur
+W: Décider si le problème relève d'un 8D ou d'une simple correction
+E: Si le défaut apparaît sur la ligne 2 et pas sur la ligne 1, avec la même matière, la cause est à chercher dans ce qui diffère entre les deux lignes. Cette comparaison élimine beaucoup d'hypothèses avant même l'Ishikawa.
+
+@009
+Q: Sur 400 défauts relevés, les rayures en comptent 180 et les bavures 120. Quelle part cumulée ces deux causes représentent-elles, en % ?
+N: 75
+U: %
+E: (180 + 120) / 400 = 0,75, soit 75 %. Le Pareto trie les causes par fréquence décroissante et trace la courbe cumulée : traiter ces deux causes vise les trois quarts des défauts.
+
+@010
+Q: Que montre la règle des 80/20 sur un diagramme de Pareto ?
+C: Qu'un petit nombre de causes concentre la plupart des effets
+W: Que 80 % des défauts sont détectés par 20 % des contrôles
+W: Qu'il faut traiter 80 % des causes pour régler 20 % des effets
+W: Que l'atelier tolère 20 % de défauts sur 80 % des références
+E: Les proportions exactes varient, mais l'idée reste : quelques causes pèsent lourd. Le Pareto se trace aussi en coût plutôt qu'en nombre, car une cause rare mais chère peut passer devant une cause fréquente et bénigne.
+
+@011
+Q: Remettre dans l'ordre les étapes de la roue de Deming.
+O: Plan : définir l'objectif et les actions
+O: Do : réaliser les actions à petite échelle
+O: Check : mesurer les résultats et les comparer à l'objectif
+O: Act : standardiser ou corriger, puis relancer un cycle
+E: Le PDCA est la boucle de base de l'amélioration continue. L'étape Act est souvent oubliée : sans standardisation, le gain obtenu pendant l'essai disparaît au premier changement d'équipe.
+
+@012
+Q: Remettre dans l'ordre les phases d'un projet DMAIC.
+O: Define : cadrer le problème et le périmètre
+O: Measure : mesurer la situation de départ
+O: Analyze : identifier les causes racines
+O: Improve : mettre en œuvre et tester les solutions
+O: Control : pérenniser par le suivi et les standards
+E: DMAIC est la démarche des projets Six Sigma. Mesurer avant d'analyser évite de chercher des causes à un problème mal quantifié ; la phase Control installe par exemple une carte de contrôle et un plan de surveillance mis à jour.
+
+@013
+Q: Quel taux de défauts vise un procédé de niveau six sigma, selon la convention habituelle ?
+C: Environ 3,4 défauts par million d'opportunités
+W: Environ un défaut pour mille pièces produites
+W: Environ 6 défauts par million de pièces livrées au client
+W: Environ 0,27 % de pièces hors tolérance en sortie de ligne
+E: Le chiffre de 3,4 DPMO suppose un décalage de 1,5 sigma de la moyenne à long terme. Sans ce décalage, six sigma donnerait environ 0,002 défaut par million ; 0,27 % correspond à un procédé centré à trois sigma.
+
+@014
+Q: Un client a reçu 50 000 pièces, dont 35 non conformes. Quel est le taux en PPM ?
+N: 700
+U: ppm
+E: 35 / 50 000 × 1 000 000 = 700 PPM. Les clients industriels suivent leurs fournisseurs en PPM livrés, parfois en séparant les pièces non conformes des incidents logistiques.
+
+@015
+Q: Une cote est tolérancée à 20 ± 0,15 mm. Le procédé a un écart-type de 0,025 mm. Quel est son Cp ?
+N: 2
+E: Cp = (Ts − Ti) / 6σ = 0,30 / 0,15 = 2. Le Cp ne regarde que la dispersion par rapport à l'intervalle de tolérance : il ignore le centrage du procédé.
+
+@016
+Q: Une cote est tolérancée à 20 ± 0,15 mm, l'écart-type vaut 0,025 mm et la moyenne est à 20,05 mm. Quel est le Cpk ?
+N: 1,33
+T: 1
+E: Cpk = min(Ts − m ; m − Ti) / 3σ. Côté haut : (20,15 − 20,05) / 0,075 = 1,33 ; côté bas : 0,20 / 0,075 = 2,67. On garde le plus petit : le décentrage fait perdre une partie de la capabilité.
+
+@017
+Q: Un procédé affiche un Cp de 1,8 et un Cpk de 0,9. Que faut-il faire en priorité ?
+C: Recentrer le réglage, la dispersion étant déjà faible
+W: Réduire la dispersion en changeant de machine
+W: Élargir la tolérance avec l'accord du bureau d'études
+W: Contrôler à 100 % en attendant un nouvel investissement
+E: Un écart important entre Cp et Cpk signale un décentrage : la dispersion tiendrait dans la tolérance si la moyenne était au milieu. Un simple réglage ou une correction d'outil suffit souvent.
+
+@018
+Q: Quelle différence y a-t-il entre Cpk et Ppk ?
+C: Ppk prend l'écart-type global, Cpk la dispersion à court terme
+W: Ppk s'applique aux pièces achetées, Cpk aux pièces fabriquées
+W: Cpk se calcule sur 30 pièces, Ppk sur une série complète de production
+W: Ppk tient compte du centrage, alors que Cpk l'ignore
+E: Le Cpk estime σ à partir de la variation à l'intérieur des sous-groupes (souvent R̄/d2) ; le Ppk prend l'écart-type de toutes les mesures, dérives entre sous-groupes comprises. Un Ppk bien plus bas que le Cpk révèle un procédé instable dans le temps.
+
+@019
+Q: D'où viennent les limites d'une carte de contrôle ?
+C: De la variabilité naturelle du procédé, mesurée sur des données stables
+W: Des tolérances inscrites sur le plan de définition de la pièce
+W: Des exigences du client reprises dans le cahier des charges
+W: D'une marge fixée à 10 % de l'intervalle de tolérance
+E: Les limites, à ± 3 σ de la moyenne des sous-groupes, disent ce que le procédé fait ; les tolérances, ce que le client veut. Mélanger les deux est une erreur classique : un procédé peut être sous contrôle et produire hors tolérance, ou l'inverse.
+
+@020
+Q: Associer chaque observation à son interprétation sur une carte de contrôle.
+P: Un point au-delà de la limite supérieure => Cause spéciale probable, à rechercher
+P: Sept points consécutifs du même côté de la moyenne => Décalage du réglage moyen
+P: Sept points consécutifs en hausse => Dérive progressive, comme une usure d'outil
+P: Points répartis au hasard entre les limites => Variation de cause commune
+E: Les règles de lecture (Western Electric, Nelson) détectent des signaux même sans point hors limites. Réagir à une variation de cause commune en retouchant le réglage, c'est du surréglage : la dispersion augmente.
+
+@021
+Q: Un régleur corrige la machine à chaque mesure qui s'écarte de la cible, même entre les limites. Quel effet cela produit-il ?
+C: La dispersion augmente au lieu de diminuer
+W: Le Cpk s'améliore puisque la moyenne reste centrée
+W: Les limites de contrôle se resserrent d'elles-mêmes
+W: Les causes spéciales disparaissent de la carte de contrôle
+E: Deming l'a montré avec l'expérience de l'entonnoir : compenser une variation aléatoire ajoute une seconde variation. Une carte de contrôle sert justement à n'intervenir que sur un signal statistique.
+
+@022
+Q: Sur une carte X̄-R à sous-groupes de 5, la moyenne générale vaut 50,00 mm, R̄ vaut 0,20 mm et A2 vaut 0,577. Quelle est la limite supérieure de la carte des moyennes, en mm ?
+N: 50,115
+U: mm
+T: 0,05
+E: LSC = X̿ + A2 × R̄ = 50,00 + 0,577 × 0,20 = 50,115 mm. La limite inférieure vaut 49,885 mm ; le coefficient A2 dépend de la taille des sous-groupes.
+
+@023
+Q: Associer chaque donnée suivie à la carte de contrôle adaptée.
+P: Diamètre mesuré sur 5 pièces par heure => Carte moyenne et étendue (X̄-R)
+P: Mesure unique par lot, comme une viscosité => Carte aux valeurs individuelles (I-MR)
+P: Proportion de pièces défectueuses par lot => Carte p
+P: Nombre de défauts d'aspect par carrosserie => Carte c
+E: Les cartes aux mesures (X̄-R, X̄-S, I-MR) suivent une grandeur continue ; les cartes aux attributs (p, np, c, u) comptent des défectueux ou des défauts. Une carte aux mesures détecte plus tôt une dérive, avec moins de pièces.
+
+@024
+Q: Que mesure une étude R&R d'un moyen de mesure ?
+C: La part de variation due à l'instrument et aux opérateurs
+W: L'écart entre la valeur lue et celle d'un étalon raccordé
+W: La durée de vie de l'instrument avant son prochain étalonnage
+W: La résolution de l'afficheur rapportée à la tolérance de la cote
+E: Répétabilité : un même opérateur mesure plusieurs fois la même pièce. Reproductibilité : plusieurs opérateurs mesurent les mêmes pièces. L'écart à l'étalon relève de la justesse et de l'étalonnage, pas du R&R.
+
+@025
+Q: Une étude R&R donne 35 % de la tolérance. Que conclut-on habituellement ?
+C: Le moyen de mesure n'est pas acceptable pour cette cote
+W: Le moyen est acceptable sans réserve pour la production
+W: Le procédé de fabrication est trop dispersé pour la cote
+W: L'instrument doit repartir en étalonnage, sans autre suite
+E: Les repères courants du manuel MSA de l'AIAG sont : moins de 10 %, acceptable ; 10 à 30 %, acceptable selon l'enjeu ; au-delà de 30 %, inacceptable. Un R&R trop élevé fausse les cartes de contrôle et les Cpk.
+
+@026
+Q: Remettre dans l'ordre les étapes d'une démarche 8D.
+O: Constituer l'équipe et décrire le problème
+O: Mettre en place les actions de confinement
+O: Identifier les causes racines d'apparition et de non-détection
+O: Choisir puis mettre en œuvre les actions correctives
+O: Prévenir la récidive, puis clore et féliciter l'équipe
+E: D1-D2, D3, D4, D5-D6, D7-D8 : le confinement vient avant l'analyse pour protéger le client tout de suite. Le D0, ajouté dans certaines versions, décide si le problème mérite un 8D et lance les actions d'urgence.
+
+@027
+Q: Pourquoi le D4 d'un 8D cherche-t-il deux causes racines ?
+C: Pour expliquer l'apparition du défaut et sa fuite jusqu'au client
+W: Le client exige une cause interne et une cause chez le fournisseur
+W: L'une des deux sert de solution de repli si la première est fausse
+W: La méthode impose une cause humaine et une cause technique
+E: Corriger la cause d'apparition empêche le défaut de se produire ; corriger la cause de non-détection empêche un futur défaut d'échapper au contrôle. Un 8D qui ne traite que l'une des deux est souvent refusé par le client.
+
+@028
+Q: Que vérifie-t-on en D7 d'un 8D ?
+C: Que la correction est étendue aux produits et procédés similaires
+W: Que le client a bien reçu les pièces triées pendant le D3
+W: Que l'équipe a été constituée avec les bons métiers
+W: Que le coût du 8D a été refacturé au fournisseur fautif
+E: D7 empêche la récidive ailleurs : mise à jour de l'AMDEC, du plan de surveillance, des gammes, et déploiement sur les autres lignes ou références. C'est l'étape qui transforme une correction locale en apprentissage de l'entreprise.
+
+@029
+Q: Qu'est-ce qu'un poka-yoke ?
+C: Un dispositif qui empêche l'erreur ou la rend visible sur-le-champ
+W: Un contrôle visuel renforcé confié à un opérateur très expérimenté
+W: Une consigne affichée au poste pour rappeler les points critiques
+W: Un audit surprise réalisé par le service qualité sur la ligne
+E: Un détrompeur mécanique (pion qui interdit de monter la pièce à l'envers), un capteur qui bloque le cycle si une vis manque : le poka-yoke ne compte pas sur la vigilance humaine. Il est plus fiable qu'une consigne ou qu'un contrôle visuel.
+
+@030
+Q: Associer chaque détrompeur à la méthode de Shingo qu'il applique.
+P: Pion de centrage qui n'accepte la pièce que dans un sens => Méthode par contact
+P: Bac qui doit être vide de ses 4 vis avant de valider => Méthode par nombre fixe
+P: Écran qui impose de scanner chaque étape dans l'ordre => Méthode par séquence
+E: Shingo distingue trois méthodes de détrompage : contact (forme, dimension), nombre fixe (compter les gestes ou les pièces) et séquence (ordre des étapes). Chacune peut arrêter le procédé ou seulement avertir ; l'arrêt est plus sûr.
+
+@031
+Q: Qu'apporte l'autocontrôle confié à l'opérateur ?
+C: Le défaut est détecté au poste où il apparaît, sans délai
+W: Le service qualité n'a plus besoin de suivre d'indicateur
+W: La gamme de contrôle final peut être supprimée d'office
+W: L'opérateur valide lui-même les dérogations du client
+E: Contrôler là où l'on fabrique raccourcit la boucle : la machine est arrêtée avant de produire un lot entier de pièces mauvaises. L'autocontrôle suppose une formation, des moyens de mesure adaptés et une habilitation de l'opérateur.
+
+@032
+Q: Associer chaque décision sur un produit non conforme à sa définition.
+P: Retouche => Action qui rend le produit conforme aux exigences
+P: Réparation => Action qui le rend apte à l'usage sans le rendre conforme
+P: Dérogation => Accord du client pour livrer le produit en l'état
+P: Déclassement => Changement de grade pour un autre usage
+P: Rebut => Destruction ou recyclage du produit
+E: L'ISO 9000 distingue retouche et réparation : une pièce réparée reste non conforme au plan. La dérogation est écrite, limitée en quantité ou en durée, et ne dispense pas de corriger la cause.
+
+@033
+Q: Associer chaque dépense à sa catégorie de coût de la qualité.
+P: Formation des opérateurs à l'autocontrôle => Coût de prévention
+P: Contrôle de réception des lots fournisseurs => Coût d'évaluation
+P: Pièces rebutées en cours de fabrication => Défaillance interne
+P: Pénalités payées après une réclamation client => Défaillance externe
+E: Le modèle PAF (prévention, évaluation, défaillances) montre qu'un euro de prévention en évite plusieurs de défaillance. Les défaillances externes coûtent le plus : tri chez le client, transport, pénalités, image.
+
+@034
+Q: Un atelier produit 12 000 pièces par mois à 8 € de coût de revient et 2,5 % partent au rebut. Combien ce rebut coûte-t-il chaque mois, en euros ?
+N: 2400
+U: €
+E: 12 000 × 0,025 = 300 pièces ; 300 × 8 € = 2 400 €. Ce chiffre sous-estime le coût réel : temps machine perdu, tri, analyse et retards ne sont pas comptés.
+
+@035
+Q: Sur 800 pièces lancées, 40 sont retouchées puis acceptées et 8 sont rebutées. Quel est le taux de bon du premier coup (FTQ), en % ?
+N: 94
+U: %
+E: Bonnes du premier coup : 800 − 40 − 8 = 752, soit 752 / 800 = 94 %. Le rendement final atteint 99 % une fois les retouches acceptées, mais le FTQ montre le travail caché que représentent les retouches.
+
+@036
+Q: Que représente le NQA (niveau de qualité acceptable) d'un plan d'échantillonnage ?
+C: Un taux de défectueux que le plan accepte la plupart du temps
+W: Le nombre de pièces à prélever dans chaque lot reçu
+W: Le taux maximal de défectueux garanti dans chacun des lots acceptés
+W: La part de lots que le fournisseur peut livrer sans contrôle
+E: Avec l'ISO 2859-1, un lot dont le taux de défectueux égale le NQA est accepté avec une forte probabilité, souvent autour de 95 %. Le NQA ne garantit pas la qualité d'un lot accepté : un lot plus mauvais peut passer par hasard.
+
+@037
+Q: Un plan simple prévoit n = 80, Ac = 2 et Re = 3. On trouve 3 pièces défectueuses dans l'échantillon. Que fait-on ?
+C: On refuse le lot
+W: On accepte le lot avec réserve
+W: On prélève un second échantillon de 80
+W: On accepte le lot et on rebute les 3 pièces
+E: Avec un plan simple, le lot est accepté si le nombre de défectueux est au plus Ac, refusé s'il atteint Re. Un lot refusé est renvoyé, trié à 100 % ou soumis à dérogation selon le contrat.
+
+@038
+Q: Quand l'ISO 2859-1 fait-elle passer du contrôle normal au contrôle renforcé ?
+C: Quand 2 lots sur 5 consécutifs ou moins ont été refusés
+W: Dès qu'un défaut d'aspect est signalé par un opérateur
+W: Quand le fournisseur change de responsable qualité
+W: Après dix lots acceptés de suite sans pièce défectueuse
+E: Les règles de modification protègent l'acheteur quand la qualité se dégrade : 2 lots refusés sur au plus 5 consécutifs déclenchent le contrôle renforcé. Le retour au contrôle normal demande 5 lots consécutifs acceptés en renforcé.
+
+@039
+Q: Pourquoi un contrôle visuel à 100 % n'assure-t-il pas zéro défaut livré ?
+C: L'attention baisse avec la répétition et des défauts échappent
+W: Le contrôle à 100 % est proscrit par les normes d'échantillonnage
+W: Les défauts visibles sont rarement des non-conformités au sens strict
+W: Les opérateurs ne contrôlent en pratique qu'une pièce sur dix
+E: Les études sur l'inspection visuelle donnent souvent une efficacité de 80 à 90 %. D'où l'intérêt des poka-yoke et des contrôles automatiques, et surtout de traiter la cause plutôt que de trier.
+
+@040
+Q: Quel est le principe de la QRQC (Quick Response Quality Control) ?
+C: Réagir vite sur le terrain, avec les vraies pièces et les faits
+W: Remplacer les audits annuels par une revue mensuelle des KPI
+W: Confier chaque réclamation au fournisseur concerné sous 24 heures
+W: Contrôler en priorité les lots livrés aux clients les plus importants
+E: San Gen Shugi : aller sur le lieu réel, voir la pièce réelle, analyser les données réelles. Les réunions QRQC se tiennent au poste, chaque jour, et lancent confinement et analyse dès l'apparition du problème.
+
+@041
+Q: Associer chaque principe des trois réels (San Gen Shugi) à sa traduction.
+P: Genba => Aller sur le lieu réel
+P: Genbutsu => Examiner la pièce réelle
+P: Genjitsu => S'appuyer sur les faits réels
+E: Les trois réels évitent d'analyser un problème en salle de réunion à partir d'un résumé. Une pièce défectueuse posée sur la table apporte souvent plus d'indices qu'une heure de discussion. On ajoute parfois Genri et Gensoku, la théorie et les standards, pour former les cinq réels.
+
+@042
+Q: Qu'est-ce qu'un rapport A3 en résolution de problème ?
+C: La démarche entière résumée sur une feuille, du contexte au suivi
+W: Le troisième niveau d'escalade d'une réclamation client
+W: Un formulaire de dérogation signé par trois services
+W: La liste des actions classées par priorité A, B ou C
+E: Hérité de Toyota, l'A3 tient sur une feuille de ce format : contexte, situation actuelle, objectif, causes, contre-mesures, plan et suivi. La contrainte de place oblige à synthétiser et facilite le partage.
+
+@043
+Q: Quelle règle s'applique pendant la phase de production d'idées d'un brainstorming ?
+C: Ne pas critiquer les idées et chercher la quantité
+W: Garder les idées appuyées par des mesures chiffrées
+W: Laisser parler d'abord le responsable de l'équipe
+W: Écarter les idées qui sortent du périmètre du service
+E: La critique vient après, pendant le tri. Un tour de table ou des post-it individuels limitent l'effet des personnes qui parlent le plus fort.
+
+@044
+Q: À quoi sert une matrice multicritère pour choisir une action corrective ?
+C: À comparer les solutions sur des critères pondérés
+W: À vérifier que l'action a supprimé la cause sur les trois derniers mois
+W: À répartir les actions retenues entre les membres de l'équipe projet
+W: À estimer la probabilité d'apparition de chaque cause de l'Ishikawa
+E: Chaque solution reçoit une note par critère (coût, délai, efficacité), multipliée par le poids du critère. La matrice rend le choix explicite et traçable, ce que le client demande souvent en D5 d'un 8D.
+
+@045
+Q: Remettre dans l'ordre la réaction à un point hors limites sur une carte de contrôle.
+O: Signal détecté : point hors limites ou série anormale
+O: Production arrêtée ou mise en attente selon la consigne du poste
+O: Pièces produites depuis le dernier bon contrôle isolées
+O: Cause spéciale recherchée puis corrigée
+O: Reprise de la production, consignée sur la carte
+E: Isoler les pièces depuis le dernier contrôle bon limite la quantité suspecte à trier. Noter l'événement sur la carte relie le signal à sa cause et aide les analyses suivantes.
+
+@046
+Q: Pourquoi isole-t-on les pièces produites depuis le dernier contrôle bon ?
+C: On ignore à quel moment la dérive a commencé
+W: Elles doivent être recontrôlées par un laboratoire accrédité
+W: La carte impose de recalculer ses limites sur ces pièces
+W: Le client exige qu'elles soient livrées dans un lot séparé
+E: Entre deux prélèvements, le procédé a pu se dégrader à n'importe quel instant. La fréquence de contrôle fixe donc la quantité à risque : plus les prélèvements sont espacés, plus le tri est long.
+
+@047
+Q: Après une modification du procédé, comme un nouvel outillage, que fait-on des limites de la carte ?
+C: On les recalcule sur de nouvelles données stables
+W: On les conserve pour comparer avec l'ancien outillage
+W: On les remplace par les tolérances du plan de la pièce
+W: On les élargit de 20 % pendant le premier mois
+E: Les limites décrivent un procédé donné ; si le procédé change, elles ne le décrivent plus. On collecte de l'ordre de 20 à 25 sous-groupes après la modification, on vérifie la stabilité, puis on fixe les nouvelles limites.
+
+@048
+Q: L'histogramme d'une cote montre deux pics séparés. Quelle explication chercher d'abord ?
+C: Un mélange de deux populations, comme deux machines
+W: Un instrument de mesure dont la résolution est trop fine
+W: Une tolérance trop large par rapport au besoin du client
+W: Un échantillon trop grand pour un histogramme lisible
+E: Une distribution à deux bosses signale le plus souvent deux sources mélangées : deux empreintes de moule, deux opérateurs, deux lots matière. On stratifie les données par source pour les séparer et les comparer.
+
+@049
+Q: Qu'est-ce que la stratification des données ?
+C: Séparer les mesures selon leur origine pour comparer les groupes
+W: Trier les mesures de la plus petite à la plus grande
+W: Écarter les valeurs aberrantes avant de tracer le graphique
+W: Regrouper les causes en familles sur les arêtes du diagramme d'Ishikawa
+E: Classer les défauts par ligne, équipe, fournisseur ou moule fait souvent apparaître la cause sans autre outil. C'est pourquoi la feuille de relevé note l'origine de chaque mesure dès la collecte.
+
+@050
+Q: Un diagramme de dispersion montre une forte corrélation entre l'humidité et le taux de rebut. Que peut-on en conclure ?
+C: Le lien reste à confirmer par un essai
+W: L'humidité cause le rebut et doit être régulée tout de suite
+W: Le taux de rebut fait varier l'humidité de l'atelier
+W: Les deux grandeurs sont indépendantes l'une de l'autre
+E: Une corrélation ne prouve pas la cause : un troisième facteur, comme la saison qui change aussi la matière, peut expliquer les deux. Un essai contrôlé, en faisant varier l'humidité seule, confirme la relation avant d'investir.

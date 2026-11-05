@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110503,
+  "skills": ["qualité", "ISO 9001", "8D", "Ishikawa", "non-conformité"],
+  "schemas": [
+    {
+      "name": "qualite-8d.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Démarche 8D de résolution de problème",
+        "nodes": [
+          "D1-D2 : équipe et description du problème",
+          "D3 : actions de confinement",
+          "D4 : causes d'apparition et de non-détection",
+          "D5-D6 : actions correctives choisies puis déployées",
+          "D7-D8 : prévention de la récidive et clôture"
+        ],
+        "note": "Le confinement protège le client avant même l'analyse des causes"
+      }
+    },
+    {
+      "name": "qualite-carte-controle.svg",
+      "questions": ["045", "046", "047"],
+      "diagram": {
+        "title": "Réaction à un signal sur une carte de contrôle",
+        "nodes": [
+          "Point hors limites ou série anormale",
+          "Production arrêtée ou mise en attente",
+          "Pièces isolées depuis le dernier contrôle bon",
+          "Cause spéciale recherchée et corrigée",
+          "Reprise consignée sur la carte"
+        ],
+        "note": "Les limites viennent du procédé, pas des tolérances du plan"
+      }
+    }
+  ]
+}

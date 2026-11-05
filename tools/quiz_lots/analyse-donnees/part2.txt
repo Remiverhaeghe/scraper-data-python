@@ -1,0 +1,454 @@
+@051
+Q: Quel type Pandas réduit fortement la mémoire d'une colonne texte qui ne contient que quelques valeurs répétées, comme la région ?
+C: category
+W: object
+W: float64
+W: datetime64, qui stocke chaque texte comme un horodatage
+E: Une colonne category stocke chaque valeur distincte une seule fois et un code entier par ligne : 13 régions sur 10 millions de lignes passent de plusieurs centaines de Mo à une dizaine. memory_usage(deep=True) mesure le gain.
+
+@052
+Q: Compléter ce code qui retire les espaces superflus en début et en fin de nom de ville.
+A: strip
+E: « Lille » et « Lille » suivi d'une espace sont deux villes différentes pour groupby. Le nettoyage du texte passe par l'accesseur .str : strip, lower ou upper, replace. Normaliser la casse et les espaces avant de regrouper évite des totaux éclatés.
+```python
+ventes["ville"] = ventes["ville"].str.____()
+```
+
+@053
+Q: Que fait ce code sur le tableau des ventes ?
+C: Il garde une ligne par commande, la dernière apparue
+W: Il supprime toutes les commandes qui apparaissent plusieurs fois
+W: Il garde la commande dont le montant est le plus élevé
+W: Il supprime la colonne commande_id après avoir retiré les doublons
+E: keep="first", la valeur par défaut, garde la première occurrence ; keep=False supprime toutes les lignes en double. Avant de supprimer, on compte avec duplicated().sum() et on regarde quelques exemples : un doublon révèle parfois un problème d'extraction.
+```python
+ventes.drop_duplicates(subset=["commande_id"], keep="last")
+```
+
+@054
+Q: Quelle stratégie convient pour les valeurs manquantes de la colonne « canal de vente » ?
+C: Créer une modalité « Non renseigné » pour les garder visibles
+W: Remplacer par la moyenne de la colonne
+W: Supprimer la colonne entière dès qu'une valeur manque
+W: Remplacer par la modalité la plus fréquente sans le signaler
+E: La moyenne n'a pas de sens pour du texte. Imputer la modalité la plus fréquente gonfle artificiellement ce canal. Une modalité explicite garde la trace du manque, que l'on peut mesurer et remonter à l'équipe qui saisit les données.
+
+@055
+Q: Associer chaque paramètre de read_csv à son rôle.
+P: sep => Séparateur des champs
+P: encoding => Jeu de caractères du fichier
+P: usecols => Colonnes à charger
+P: dtype => Type imposé à certaines colonnes
+P: parse_dates => Colonnes à lire comme dates
+E: Les exports Windows sont souvent en cp1252 ou en utf-8-sig : un mauvais encoding fait apparaître « Ã© » à la place de « é ». usecols et dtype réduisent la mémoire dès le chargement, avant même le nettoyage.
+
+@056
+Q: Que calcule ce code ?
+C: Pour chaque région, la part de chaque canal dans ses ventes
+W: Le chiffre d'affaires de chaque canal dans chaque région
+W: La corrélation entre la région et le canal
+W: Le nombre de canaux différents utilisés dans toutes les régions réunies
+E: crosstab compte les lignes pour chaque couple de modalités. normalize="index" divise chaque ligne par son total : chaque région somme à 1. Pour sommer un montant plutôt que compter, on ajoute values= et aggfunc="sum".
+```python
+pd.crosstab(ventes["region"], ventes["canal"], normalize="index")
+```
+
+@057
+Q: Comment découper l'âge des clients en tranches 18-25, 26-40, 41-60 et plus de 60 ans ?
+C: pd.cut avec les bornes des tranches
+W: pd.qcut avec quatre quantiles
+W: groupby sur la colonne âge
+W: round(âge, -1) pour arrondir chaque âge à la dizaine
+E: cut utilise des bornes fixées à l'avance ; qcut crée des tranches de même effectif, utiles pour isoler le quart des clients qui dépense le plus. Attention aux bornes : par défaut l'intervalle est fermé à droite, ]25, 40].
+
+@058
+Q: Que montre une boîte à moustaches (box plot) ?
+C: La médiane, les quartiles et les valeurs isolées d'une distribution
+W: L'évolution d'une mesure dans le temps
+W: La part de chaque catégorie dans un total
+W: Le lien entre deux variables numériques, point par point, avec sa droite de tendance
+E: La boîte va du premier au troisième quartile, le trait central marque la médiane, les moustaches s'arrêtent à 1,5 fois l'écart interquartile. Plusieurs boîtes côte à côte comparent d'un coup d'œil les délais de livraison de plusieurs entrepôts.
+
+@059
+Q: Compléter ce code qui trace le chiffre d'affaires mensuel avec Matplotlib.
+A: plot
+E: Les Series et DataFrame tracent directement grâce à Matplotlib ; kind="bar" ou kind="hist" change le type de graphique. Un titre, des axes nommés avec leur unité et une source citée rendent le graphique lisible sans explication orale.
+```python
+import matplotlib.pyplot as plt
+
+ca_mensuel.____()
+plt.title("Chiffre d'affaires mensuel (€)")
+plt.show()
+```
+
+@060
+Q: Un graphique en barres compare deux magasins : 980 et 1 020 ventes, avec un axe vertical qui commence à 950. Quel est le problème ?
+C: L'écart de 4 % paraît énorme car les barres ne partent pas de zéro
+W: Les barres devraient être remplacées par un camembert
+W: Les valeurs devraient être arrondies à la centaine
+W: Il manque une troisième barre pour afficher la moyenne des deux magasins
+E: La longueur d'une barre est lue comme proportionnelle à la valeur : en partant de 950, la seconde barre semble deux fois plus haute que la première. Pour des barres, l'axe part de zéro ; pour montrer un petit écart, on affiche l'écart lui-même.
+
+@061
+Q: Remettre dans l'ordre un nettoyage typique avant l'analyse.
+O: Charger le fichier brut en précisant séparateur et encodage
+O: Vérifier types et valeurs manquantes avec info()
+O: Convertir les types : dates, montants, identifiants en texte
+O: Normaliser les textes et retirer les doublons
+O: Contrôler les totaux par rapport à la source
+E: Les doublons se cherchent après la normalisation, sinon « Lille » et « lille » échappent au contrôle. Le dernier rapprochement avec un total connu (celui de la comptabilité ou de l'outil source) prouve que le nettoyage n'a rien perdu ni dupliqué.
+
+@062
+Q: Une colonne de quantités entières contient quelques valeurs manquantes et devient float64. Quel type garde des entiers malgré les manquants ?
+C: Int64, le type entier qui accepte pd.NA
+W: int64, en remplaçant NaN par une chaîne vide
+W: object, qui accepte tout
+W: float32
+E: Le NaN historique de NumPy n'existe que pour les flottants : 3 devient 3.0. Les types nullables (Int64 avec majuscule, boolean, string) représentent le manque par pd.NA et gardent le bon type. astype("Int64") convertit la colonne.
+
+@063
+Q: Que fait la méthode query dans cet appel ?
+C: Elle filtre les lignes avec une condition écrite sous forme de texte
+W: Elle envoie une requête SQL à la base d'origine du DataFrame
+W: Elle crée une colonne booléenne nommée query
+W: Elle trie les ventes selon les colonnes citées
+E: query équivaut à ventes[(ventes["montant"] > 1000) & (ventes["region"] == "Nord")], en plus lisible. Une variable Python s'y insère avec un arobase : query("montant > @seuil"). Le texte ne se construit jamais à partir d'une saisie utilisateur.
+```python
+ventes.query("montant > 1000 and region == 'Nord'")
+```
+
+@064
+Q: Une campagne a amené 4 000 visiteurs, dont 140 ont acheté. Quel est le taux de conversion en pourcentage ?
+N: 3,5
+U: %
+E: 140 / 4 000 = 0,035, soit 3,5 %. Pour comparer deux campagnes, il faut le même dénominateur : visiteurs uniques ou visites, sur la même période. Sans définition écrite, deux équipes publient deux taux différents pour la même campagne.
+
+@065
+Q: Pourquoi enregistrer un DataFrame nettoyé au format Parquet plutôt qu'en CSV ?
+C: Parquet garde les types, compresse par colonne et se relit bien plus vite
+W: Parquet s'ouvre dans Excel d'un double-clic, sans aucun outil supplémentaire
+W: Le CSV ne peut pas dépasser 65 536 lignes
+W: Parquet chiffre le fichier par défaut
+E: Un CSV relu oblige à redeviner les types : dates, codes postaux et catégories sont à reconvertir. Parquet stocke le schéma, compresse colonne par colonne et ne lit que les colonnes demandées. Il demande pyarrow et reste illisible pour un utilisateur d'Excel.
+
+@066
+Q: Pourquoi cette moyenne des taux de marge donne-t-elle un résultat trompeur pour chaque enseigne ?
+C: Elle donne le même poids à un petit et à un gros magasin
+W: mean() ignore les taux négatifs
+W: Les taux devraient être arrondis avant la moyenne
+W: groupby trie les enseignes et décale les taux d'une ligne vers le bas
+E: La marge globale d'une enseigne se calcule en sommant les marges puis en divisant par la somme des chiffres d'affaires. Faire la moyenne de ratios déjà calculés pondère chaque magasin de la même façon, quelle que soit sa taille.
+```python
+marges.groupby("enseigne")["taux_marge"].mean()
+```
+
+@067
+Q: Magasin A : 100 000 € de chiffre d'affaires à 10 % de marge ; magasin B : 300 000 € à 30 % de marge. Quel est le taux de marge global en pourcentage ?
+N: 25
+U: %
+E: Marges : 10 000 + 90 000 = 100 000 € sur 400 000 € de chiffre d'affaires, soit 25 %. La moyenne simple des deux taux donnerait 20 % : elle ignore que B pèse trois fois plus que A.
+
+@068
+Q: Qu'illustre le paradoxe de Simpson ?
+C: Une tendance vraie dans chaque groupe s'inverse sur l'ensemble réuni
+W: Une moyenne calculée deux fois peut donner deux résultats différents
+W: Les petits échantillons donnent toujours des moyennes plus élevées que les grands
+W: Une corrélation forte implique une relation de cause à effet
+E: Exemple classique : un traitement réussit mieux dans chaque catégorie de patients mais moins bien au total, parce qu'il a surtout été donné aux cas graves. En commerce, une remise semble inefficace globalement alors qu'elle marche dans chaque région. On compare toujours à structure égale.
+
+@069
+Q: Une enquête de satisfaction est envoyée aux seuls clients ayant laissé un avis en ligne. Quel biais menace ses conclusions ?
+C: Un biais de sélection : ces clients ne représentent pas l'ensemble
+W: Un biais de confirmation chez l'analyste qui rédige les questions
+W: Un biais d'arrondi, car les notes vont de 1 à 5
+W: Aucun, à partir de 1 000 réponses un échantillon est toujours représentatif
+E: Les clients qui laissent des avis sont plus engagés, très satisfaits ou très mécontents. La taille ne corrige pas un mauvais tirage : 10 000 réponses biaisées restent biaisées. Un tirage aléatoire dans toute la base clients limite ce biais.
+
+@070
+Q: Quel indicateur calcule ce code sur des données mensuelles ?
+C: L'évolution par rapport au même mois de l'année précédente
+W: L'évolution par rapport au mois précédent
+W: La moyenne des douze derniers mois
+W: La part du mois dans le total annuel
+E: periods=12 compare janvier à janvier, ce qui neutralise la saisonnalité : comparer décembre à novembre dans un commerce dit surtout que Noël existe. Les douze premiers mois valent NaN faute de référence.
+```python
+mensuel["evolution"] = mensuel["ca"].pct_change(periods=12)
+```
+
+@071
+Q: Compléter ce code qui ajoute à chaque vente le cumul des montants de son client, dans l'ordre des dates.
+A: cumsum
+E: Après un groupby, cumsum repart de zéro pour chaque client et renvoie une valeur par ligne, alignée sur l'index d'origine. Le tri préalable par date est indispensable : le cumul suit l'ordre des lignes, pas celui des dates.
+```python
+ventes = ventes.sort_values("date")
+ventes["cumul"] = ventes.groupby("client_id")["montant"].____()
+```
+
+@072
+Q: Associer chaque fonction Pandas à son résultat sur une colonne triée par date.
+P: shift(1) => La valeur de la ligne précédente
+P: diff() => L'écart avec la ligne précédente
+P: cumsum() => Le total depuis la première ligne
+P: rolling(7).mean() => La moyenne des sept dernières lignes
+P: rank() => Le classement de chaque valeur
+E: Ces fonctions supposent un ordre : sans tri par date, shift et diff comparent des lignes sans rapport. rolling(7) compte des lignes ; sur des données avec des jours manquants, rolling("7D") sur un index de dates compte vraiment sept jours.
+
+@073
+Q: Le fichier de 6 Go ne tient pas en mémoire. Que permet ce code ?
+C: Agréger le fichier par morceaux sans jamais le charger en entier
+W: Lire le fichier six fois plus vite en parallèle sur plusieurs cœurs
+W: Découper le fichier en plusieurs CSV enregistrés sur le disque
+W: Échantillonner une ligne sur 500 000 pour estimer le total de chaque région
+E: Chaque morceau est agrégé puis libéré ; les totaux partiels sont additionnés à la fin. La méthode convient aux sommes et aux comptes, pas directement à une médiane. Pour ces volumes, DuckDB ou Polars restent souvent plus simples.
+```python
+totaux = []
+for morceau in pd.read_csv("ventes.csv", chunksize=500_000):
+    totaux.append(morceau.groupby("region")["montant"].sum())
+resultat = pd.concat(totaux).groupby(level=0).sum()
+```
+
+@074
+Q: Quel outil exécute une requête SQL directement sur un fichier Parquet ou un DataFrame, sans serveur ?
+C: DuckDB
+W: MySQL Workbench
+W: Power Query
+W: SQLite, une fois les données importées ligne à ligne dans un fichier de base
+E: DuckDB est une base analytique embarquée : duckdb.sql("SELECT region, sum(montant) FROM 'ventes.parquet' GROUP BY region").df() renvoie un DataFrame. Elle traite des fichiers plus gros que la mémoire et parallélise les agrégats.
+
+@075
+Q: Quelle différence principale distingue Polars de Pandas ?
+C: Polars parallélise et optimise une requête paresseuse avant de l'exécuter
+W: Polars ne lit que des fichiers Excel
+W: Polars est une surcouche de Pandas qui ajoute des graphiques interactifs au navigateur
+W: Polars exige une base de données pour stocker ses tableaux
+E: Avec scan_csv puis collect, Polars construit un plan, ne lit que les colonnes utiles et applique les filtres tôt. Son écriture par expressions (pl.col("montant").sum()) diffère de Pandas : on ne passe pas d'un outil à l'autre en changeant seulement l'import.
+
+@076
+Q: Dans un test A/B, la page B convertit à 3,4 % contre 3,1 % pour la page A. Que vérifier avant de conclure que B est meilleure ?
+C: Que l'écart dépasse ce que le hasard explique, vu les effectifs
+W: Que la page B a été conçue par l'équipe la plus expérimentée
+W: Que l'écart dépasse 0,1 point, seuil admis pour tous les tests de ce type
+W: Que les deux pages ont le même nombre de mots
+E: Avec 500 visiteurs par page, un tel écart arrive souvent par hasard ; avec 200 000, beaucoup moins. Un test de proportions donne la probabilité d'observer cet écart sans vraie différence. Durée et effectif se fixent avant le test, pas en regardant les résultats.
+
+@077
+Q: Que signifie une p-value de 0,03 dans un test comparant deux moyennes ?
+C: Sans vraie différence, un écart aussi grand surviendrait 3 % du temps
+W: Il y a 3 % de chances que la conclusion soit vraie
+W: La différence entre les deux moyennes vaut 3 %
+W: 3 % des données ont été exclues du test parce qu'elles étaient aberrantes
+E: Une p-value faible rend l'hypothèse « aucune différence » peu crédible, sans mesurer l'ampleur de l'effet. Avec des millions de lignes, un écart minuscule devient significatif : on présente aussi la taille de l'effet et son intervalle de confiance.
+
+@078
+Q: Le coefficient de corrélation de Pearson entre deux variables vaut 0,02. Que peut-on conclure ?
+C: Aucune relation linéaire, mais une relation courbe reste possible
+W: Les deux variables sont indépendantes
+W: Les deux variables évoluent presque toujours ensemble
+W: L'une des variables contient des valeurs manquantes
+E: Pearson ne mesure que l'alignement sur une droite : une relation en U donne un coefficient proche de zéro. On regarde toujours le nuage de points. Le coefficient de Spearman, fondé sur les rangs, capte les relations monotones non linéaires.
+
+@079
+Q: Le tableau commandes contient 3 lignes pour le client 7 ; le référentiel adresses en contient 2 pour ce client (livraison et facturation). Combien de lignes produit un merge sur client_id pour ce client ?
+N: 6
+E: Une jointure associe chaque ligne de gauche à chaque ligne de droite de même clé : 3 × 2 = 6. C'est l'explosion de jointure : chaque commande comptée deux fois double le chiffre d'affaires. On filtre d'abord le référentiel (type == "facturation") pour obtenir une ligne par client.
+
+@080
+Q: Quelle mesure protège les données personnelles d'un fichier clients transmis pour une analyse ?
+C: Pseudonymiser l'identifiant et retirer les colonnes inutiles à l'analyse
+W: Renommer les colonnes nom et prénom pour les rendre moins lisibles
+W: Envoyer le fichier au format Parquet plutôt qu'en CSV
+W: Garder toutes les colonnes au cas où l'analyse évoluerait
+E: Le RGPD impose la minimisation : seules les données nécessaires circulent. Une pseudonymisation (identifiant remplacé par une valeur tirée au hasard, table de correspondance gardée à part) reste une donnée personnelle mais limite les risques. Un simple hachage d'un e-mail se retrouve facilement.
+
+@081
+Q: Pourquoi ce code est-il risqué pour l'analyse ?
+C: Un montant inconnu devient une vente nulle, ce qui fausse les moyennes
+W: fillna ne fonctionne pas sur les colonnes numériques
+W: Le résultat n'est pas réaffecté à la colonne
+W: fillna supprime les lignes où le montant manque, et le nombre de ventes baisse
+E: Zéro est une vraie valeur : la moyenne baisse et les ventes « à zéro » apparaissent dans les graphiques. On garde le manque visible, on l'exclut des calculs en le signalant, ou on corrige la source. Une imputation se décide avec le métier et se documente.
+```python
+ventes["montant"] = ventes["montant"].fillna(0)
+```
+
+@082
+Q: Que vérifient ces assertions placées à la fin d'un traitement ?
+C: Des règles de qualité : pas de doublon, pas de montant négatif, total conservé
+W: La vitesse d'exécution du traitement
+W: Le format du fichier Excel produit en sortie
+W: Que chaque colonne contient du texte, pour éviter les erreurs de type dans le rapport
+E: Ces contrôles arrêtent le traitement dès qu'une hypothèse est violée, plutôt que de publier un tableau de bord faux. Le contrôle du total compare au chiffre de la source : c'est lui qui détecte une jointure qui duplique ou un filtre trop large. Pandera ou Great Expectations formalisent ces règles.
+```python
+assert resultat["commande_id"].is_unique
+assert resultat["montant"].ge(0).all()
+assert abs(resultat["montant"].sum() - total_source) < 0.01
+```
+
+@083
+Q: Associer chaque biais à sa description.
+P: Biais de sélection => Échantillon non représentatif de la population
+P: Biais du survivant => Seuls les cas restants sont observés
+P: Biais de confirmation => Chercher les chiffres qui donnent raison
+P: Biais de mesure => Instrument ou définition qui déforme la valeur
+E: Le biais du survivant est classique en analyse de clientèle : étudier les seuls clients actifs ignore ceux qui sont partis, justement les plus instructifs. Contre le biais de confirmation, on écrit l'hypothèse et le critère de décision avant de regarder les chiffres.
+
+@084
+Q: Pourquoi utiliser des chemins relatifs et un fichier requirements.txt dans un projet d'analyse partagé ?
+C: Pour que l'analyse se rejoue à l'identique sur un autre poste
+W: Pour réduire la taille des fichiers de données
+W: Parce que Pandas refuse les chemins absolus
+W: Pour empêcher les autres analystes de modifier les notebooks partagés de l'équipe
+E: Une analyse qu'un collègue ne peut pas relancer ne peut pas être vérifiée. Versions des bibliothèques figées, données brutes conservées, script ou notebook relancé de bout en bout : un changement de version de Pandas peut modifier un résultat.
+
+@085
+Q: Remettre dans l'ordre la construction d'un indicateur pour un tableau de bord.
+O: Définir l'indicateur avec le métier : formule, périmètre, période
+O: Identifier la source de référence de chaque donnée
+O: Calculer et rapprocher le résultat d'un chiffre déjà connu
+O: Choisir la visualisation et la comparaison à afficher
+O: Documenter la définition et planifier la mise à jour
+E: Un indicateur mal défini (chiffre d'affaires hors taxes ou toutes taxes, à la commande ou à la facture) donne deux chiffres pour la même réunion. Le rapprochement avec un chiffre déjà validé par la comptabilité ou le métier installe la confiance avant la mise en ligne.
+
+@086
+Q: Pourquoi ce code est-il lent sur des millions de lignes, et comment le réécrire ?
+C: La fonction s'exécute ligne par ligne ; pd.cut ou np.select traitent la colonne d'un coup
+W: Les return multiples empêchent Pandas de compiler la fonction
+W: axis=1 parcourt les colonnes au lieu des lignes
+W: apply recopie tout le DataFrame avant chaque appel ; il suffit d'ajouter copy=False à l'appel
+E: apply(axis=1) construit une Series pour chaque ligne et appelle la fonction Python autant de fois. pd.cut(ventes["montant"], [-np.inf, 100, 1000, np.inf], labels=["petite", "moyenne", "grande"]) donne le même résultat des dizaines de fois plus vite.
+```python
+def categorie(ligne):
+    if ligne["montant"] > 1000:
+        return "grande"
+    if ligne["montant"] > 100:
+        return "moyenne"
+    return "petite"
+
+
+ventes["cat"] = ventes.apply(categorie, axis=1)
+```
+
+@087
+Q: Les horodatages des commandes sont stockés en UTC. Une commande passée à Paris le 1er janvier à 0 h 30 apparaît dans le total de décembre. Quelle correction appliquer ?
+C: Convertir vers Europe/Paris avec tz_convert avant de regrouper
+W: Ajouter une heure à toutes les dates, été comme hiver, avec un Timedelta
+W: Supprimer les commandes passées entre minuit et une heure
+W: Arrondir les dates au jour avec dt.floor avant toute conversion
+E: dt.tz_localize("UTC").dt.tz_convert("Europe/Paris") place chaque commande dans son jour local. Ajouter une heure fixe se trompe l'été, quand Paris est à UTC+2. Le jour comptable dépend du fuseau du métier, pas de celui du serveur.
+
+@088
+Q: Le chiffre d'affaires passe de 100 000 € à 121 000 € en deux ans. Quel est le taux de croissance annuel moyen en pourcentage ?
+N: 10
+U: %
+E: (121 000 / 100 000)^(1/2) − 1 = 1,1 − 1 = 10 %. Diviser la hausse totale de 21 % par deux donne 10,5 %, ce qui ignore l'effet cumulé : +10 % puis +10 % font +21 %.
+
+@089
+Q: Le total de ce code est inférieur à la somme de la colonne montant. Pourquoi ?
+C: Les lignes dont le canal manque sont exclues du groupby par défaut
+W: sum() arrondit chaque groupe à l'euro près
+W: groupby supprime les canaux dont le total est négatif
+W: Le second sum() additionne aussi les noms des canaux, convertis en zéro
+E: Par défaut, groupby(dropna=True) écarte les clés manquantes : le total par canal est inférieur au total général. dropna=False garde un groupe NaN. Comparer la somme des groupes au total de la colonne détecte ce trou.
+```python
+ventes.groupby("canal")["montant"].sum().sum()
+```
+
+@090
+Q: Associer chaque méthode d'imputation au cas où elle convient.
+P: Dernière valeur connue (ffill) => Stock manquant entre deux inventaires
+P: Interpolation linéaire => Température horaire manquante
+P: Médiane du groupe => Prix manquant d'un produit de catégorie connue
+P: Modalité « Inconnu » => Canal de vente non saisi
+P: Aucune imputation => Montant d'une facture à recontrôler
+E: Chaque méthode suppose quelque chose : ffill que rien n'a changé, l'interpolation une évolution régulière, la médiane du groupe que le produit ressemble à ses voisins. Quand la valeur engage une décision financière, on ne l'invente pas : on la fait corriger à la source.
+
+@091
+Q: Un modèle de prévision des ventes est évalué en répartissant au hasard les mois de 2020 à 2025 entre apprentissage et test. Quel est le problème ?
+C: Des mois futurs servent à prédire le passé : l'erreur paraît trop faible
+W: Le jeu de test doit toujours être plus grand que le jeu d'apprentissage
+W: Les mois doivent être triés par chiffre d'affaires
+W: Mélanger les mois au hasard réduit la précision des montants enregistrés en base
+E: Pour une série temporelle, on apprend sur le passé et on teste sur la période suivante (validation chronologique, TimeSeriesSplit). Un découpage aléatoire laisse fuiter l'information de tendance et donne une erreur trop optimiste, qui ne tient pas en production.
+
+@092
+Q: Que fait ce code et pourquoi l'écrire ainsi ?
+C: Une chaîne d'étapes sans variables intermédiaires, lisible de haut en bas
+W: Un traitement exécuté en parallèle sur plusieurs cœurs
+W: Une requête envoyée à la base, assign servant de mot-clé SQL
+W: Une écriture imposée depuis Pandas 2
+E: Le lambda d'assign reçoit le DataFrame tel qu'il est à cette étape, ce qui évite de citer une variable extérieure qui n'a pas encore la colonne. Chaque étape se commente ou se retire facilement pour déboguer, et aucun DataFrame intermédiaire ne traîne en mémoire.
+```python
+resultat = (
+    ventes.query("statut == 'payee'")
+    .assign(ttc=lambda d: d["ht"] * 1.2)
+    .groupby("region", as_index=False)
+    .agg(ca_ttc=("ttc", "sum"))
+    .sort_values("ca_ttc", ascending=False)
+)
+```
+
+@093
+Q: Sur 400 clients tirés au hasard et interrogés, 50 % sont satisfaits. Quelle est la marge d'erreur à 95 %, en points, avec la formule 1,96 × √(p(1−p)/n) ?
+N: 4,9
+U: points
+T: 3
+E: √(0,5 × 0,5 / 400) = 0,025, multiplié par 1,96 : 0,049, soit ± 4,9 points. Quadrupler l'échantillon divise seulement la marge par deux : 1 600 réponses donnent ± 2,45 points. Cette marge couvre le hasard du tirage, pas un biais de sélection.
+
+@094
+Q: Ce résultat explique un écart d'un centime entre deux totaux. Quelle règle suivre pour les montants ?
+C: Comparer avec une tolérance, ou calculer en centimes entiers ou en Decimal
+W: Arrondir chaque montant à l'euro avant de sommer
+W: Passer les montants en float32 pour gagner en précision
+W: Trier les montants avant la somme pour supprimer l'erreur
+E: Les flottants binaires ne représentent pas exactement 0,1. Sur des millions de lignes les écarts s'accumulent et une égalité stricte échoue. On compare avec une tolérance (np.isclose), on stocke les montants en centimes entiers, ou on utilise Decimal quand l'exactitude comptable est exigée.
+```python
+>>> 0.1 + 0.2
+0.30000000000000004
+```
+
+@095
+Q: Qu'est-ce qu'une fuite de données (data leakage) dans une analyse prédictive des résiliations ?
+C: Une variable connue seulement après la résiliation, utilisée pour la prédire
+W: La publication accidentelle du fichier clients sur internet
+W: Une valeur manquante remplacée par la moyenne
+W: Une colonne supprimée par erreur pendant le nettoyage du jeu de données d'apprentissage
+E: Exemple : la date de restitution du matériel, présente uniquement chez les clients partis. Le modèle semble parfait en test et se révèle inutile en production. Chaque variable doit être disponible au moment où la prédiction serait faite.
+
+@096
+Q: Remettre dans l'ordre l'automatisation d'un rapport hebdomadaire construit à la main dans Excel.
+O: Écrire le traitement dans un script à partir des fichiers bruts
+O: Comparer ses résultats avec le dernier rapport manuel
+O: Ajouter des contrôles de qualité qui arrêtent le traitement en cas d'anomalie
+O: Planifier l'exécution et journaliser chaque passage
+O: Prévenir les destinataires et retirer l'ancienne procédure
+E: La comparaison avec le rapport manuel révèle les règles implicites jamais écrites : un client exclu à la main, un arrondi particulier. Sans contrôles ni journal, une exécution planifiée qui échoue ou produit un tableau vide passe inaperçue jusqu'à la réunion.
+
+@097
+Q: Une étude compare 50 indicateurs entre deux groupes et trouve 3 écarts significatifs au seuil de 5 %. Quelle prudence s'impose ?
+C: Environ 2 ou 3 faux positifs sont attendus par hasard sur 50 tests
+W: Aucune, chaque test est indépendant et valide
+W: Il faut ramener le nombre d'indicateurs à 3 et refaire les tests
+W: Les écarts significatifs sont forcément les plus importants pour le métier
+E: Au seuil de 5 %, 50 tests donnent en moyenne 2,5 faux positifs. C'est le problème des comparaisons multiples : on corrige le seuil (Bonferroni : 0,05 / 50) ou on confirme les écarts trouvés sur de nouvelles données avant de bâtir une décision dessus.
+
+@098
+Q: Compléter ce code qui garde, pour chaque client, uniquement sa commande la plus récente.
+A: idxmax
+E: idxmax renvoie l'étiquette de la ligne où la date est maximale dans chaque groupe, et loc récupère ces lignes entières. Autre écriture : trier par date puis drop_duplicates("client_id", keep="last"). L'index doit être unique, sinon loc ramène plusieurs lignes.
+```python
+dernieres = commandes.loc[commandes.groupby("client_id")["date"].____()]
+```
+
+@099
+Q: Qu'apporte une analyse par cohortes de clients ?
+C: Suivre chaque groupe de clients selon son mois d'arrivée, à âge égal
+W: Regrouper les clients par ordre alphabétique
+W: Comparer les clients d'une même ville
+W: Calculer le chiffre d'affaires total de l'année
+E: Une cohorte réunit les clients arrivés le même mois. On compare leur rétention au premier, deuxième, troisième mois de leur vie : on voit si les clients de la dernière campagne restent moins longtemps que les précédents, ce que le total mensuel masque.
+
+@100
+Q: Une cohorte de 800 clients arrivés en janvier compte encore 240 acheteurs en avril. Quel est son taux de rétention en pourcentage ?
+N: 30
+U: %
+E: 240 / 800 = 30 %. Présentées en triangle, une ligne par cohorte et une colonne par mois d'ancienneté, ces rétentions se comparent à âge égal. Une chute plus rapide pour les cohortes récentes signale un problème d'acquisition ou de produit.

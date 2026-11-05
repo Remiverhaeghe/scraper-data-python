@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110602,
+  "skills": ["Power BI", "Tableau", "BI", "reporting", "Qlik"],
+  "schemas": [
+    {
+      "name": "bi-reporting-contexte.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Évaluation d'une mesure DAX dans une cellule",
+        "nodes": [
+          "Cellule : filtres de ligne et de colonne du visuel",
+          "Segments et filtres de page ajoutés",
+          "Relations : filtres propagés vers les faits",
+          "CALCULATE : contexte de filtre modifié",
+          "Agrégation des lignes restantes"
+        ],
+        "note": "Même formule, résultat différent : seuls les filtres changent"
+      }
+    },
+    {
+      "name": "bi-reporting-scd2.svg",
+      "questions": ["045", "046", "047"],
+      "diagram": {
+        "title": "Historisation d'une dimension de type 2",
+        "nodes": [
+          "Changement détecté dans la source",
+          "Ligne courante close avec une date de fin",
+          "Nouvelle ligne et nouvelle clé de substitution",
+          "Nouvelle ligne marquée courante",
+          "Ventes suivantes reliées à la nouvelle clé"
+        ],
+        "note": "Les ventes passées gardent l'ancienne version"
+      }
+    }
+  ]
+}

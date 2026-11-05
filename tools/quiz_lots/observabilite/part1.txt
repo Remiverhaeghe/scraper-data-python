@@ -1,0 +1,431 @@
+@001
+Q: Dans un système observable, que représente une trace ?
+C: Le parcours d'une requête à travers les services qu'elle traverse
+W: Le relevé périodique de la charge processeur de chacun des serveurs
+W: L'historique des déploiements appliqués à une application
+W: La liste des erreurs regroupées par fichier de journal
+E: Une trace est un arbre de spans, chacun mesurant une étape (appel HTTP, requête SQL, file de messages). Elle complète les métriques, qui comptent, et les journaux, qui racontent un événement précis.
+
+@002
+Q: Associer chaque pilier de l'observabilité à la question à laquelle il répond le mieux.
+P: Métriques => Combien de requêtes, d'erreurs, quelle latence au fil du temps ?
+P: Journaux => Que s'est-il passé exactement lors de cet événement ?
+P: Traces => Où la requête a-t-elle passé son temps entre les services ?
+E: Les métriques sont peu coûteuses et idéales pour alerter ; les journaux portent le détail ; les traces relient les étapes d'une même requête. On passe souvent de l'un à l'autre pendant un diagnostic, d'où l'intérêt d'un identifiant de trace commun.
+
+@003
+Q: Qu'apporte l'observabilité par rapport à une supervision classique ?
+C: Elle permet d'explorer des pannes qu'on n'avait pas prévues
+W: Elle remplace les alertes par des tableaux de bord affichés en salle
+W: Elle se limite aux serveurs physiques et à leurs équipements réseau
+W: Elle supprime le besoin de conserver les journaux applicatifs
+E: La supervision vérifie des états connus à l'avance (disque plein, service arrêté). L'observabilité vise à répondre à des questions nouvelles à partir des données émises, par exemple « pourquoi seuls les clients belges voient-ils cette lenteur ? ».
+
+@004
+Q: Comment Prometheus récupère-t-il les métriques d'une application ?
+C: Il interroge périodiquement un point HTTP exposé par la cible
+W: L'application lui envoie ses mesures en UDP à chaque événement
+W: Il lit les fichiers de journaux et en déduit les compteurs
+W: Un agent copie la base de l'application vers son stockage
+E: Prometheus fonctionne en mode pull : à chaque scrape_interval, il lit /metrics sur chaque cible. L'échec d'une collecte est lui-même une information, exposée dans la métrique up.
+R: Prometheus - Overview | https://prometheus.io/docs/introduction/overview/
+
+@005
+Q: Associer chaque type de métrique Prometheus à l'usage qui lui convient.
+P: Counter => Nombre total de requêtes traitées depuis le démarrage
+P: Gauge => Nombre de connexions ouvertes à l'instant
+P: Histogram => Répartition des durées de réponse par tranches
+P: Summary => Quantiles calculés côté client sur une instance
+E: Un counter ne fait que croître (sauf redémarrage), une gauge monte et descend. L'histogram range les observations dans des buckets agrégeables entre instances, contrairement aux quantiles d'un summary.
+R: Prometheus - Metric types | https://prometheus.io/docs/concepts/metric_types/
+
+@006
+Q: Que se passe-t-il pour un counter Prometheus quand l'application redémarre ?
+C: Il repart de zéro et rate() traite cette baisse comme une remise à zéro
+W: Il reprend la dernière valeur connue, conservée par Prometheus pour la cible
+W: Il devient négatif jusqu'à ce que la collecte suivante le corrige
+W: Sa série est supprimée et recréée sous un nouveau nom de métrique
+E: Une baisse de valeur d'un counter est interprétée comme un redémarrage : rate() et increase() ajoutent la valeur d'avant la baisse. C'est pourquoi on ne fait jamais de calcul direct sur la valeur brute d'un counter.
+
+@007
+Q: Quel est le rôle principal de Grafana ?
+C: Afficher des tableaux de bord à partir de sources de données
+W: Collecter les métriques des serveurs et des applications à intervalle fixe
+W: Stocker les journaux applicatifs en index plein texte
+W: Router les alertes vers la bonne équipe d'astreinte
+E: Grafana ne stocke pas les métriques : il interroge Prometheus, Loki, Elasticsearch, une base SQL… et met en forme le résultat. Il propose aussi ses propres règles d'alerte, mais son cœur reste la visualisation.
+
+@008
+Q: Que fournit node_exporter ?
+C: Les métriques système d'un hôte Linux : processeur, mémoire, disques, réseau
+W: Les métriques de consommation de chacun des conteneurs lancés sur un nœud Kubernetes
+W: Un tableau de bord prêt à l'emploi pour chaque serveur supervisé
+W: Les traces des processus Node.js qui tournent sur la machine
+E: Les exporters traduisent l'état d'un système au format Prometheus. node_exporter couvre l'hôte ; les conteneurs relèvent de cAdvisor, les objets Kubernetes de kube-state-metrics.
+
+@009
+Q: Compléter ce fichier prometheus.yml pour collecter deux serveurs sur le port 9100.
+A: targets
+E: Chaque job de scrape_configs liste ses cibles statiques dans static_configs. En production, on préfère souvent la découverte automatique (Kubernetes, Consul, fichiers) pour suivre l'arrivée et le départ des machines.
+```yaml
+scrape_configs:
+  - job_name: node
+    static_configs:
+      - ____: ["srv-web1:9100", "srv-web2:9100"]
+```
+
+@010
+Q: Une connexion à la base échoue, puis réussit à la seconde tentative automatique. Quel niveau de journal convient ?
+C: WARN, car l'incident est absorbé mais mérite d'être suivi
+W: ERROR, car un échec de connexion bloque l'application
+W: DEBUG, car l'événement n'a pas d'effet pour l'utilisateur
+W: FATAL, car la base de données a cessé de répondre
+E: ERROR signale une opération qui a échoué et demande une intervention ; WARN, une anomalie récupérée. Des ERROR trop fréquents pour des cas anodins rendent les vraies erreurs invisibles et faussent les alertes basées sur les journaux.
+
+@011
+Q: Associer chaque niveau de journal à la situation qu'il décrit.
+P: DEBUG => Valeur des paramètres d'une requête, utile pour développer
+P: INFO => Démarrage du service et version déployée
+P: WARN => Délai dépassé puis nouvelle tentative réussie
+P: ERROR => Commande non enregistrée malgré les tentatives
+E: En production, on journalise d'ordinaire à partir d'INFO. DEBUG s'active ponctuellement, pour un module précis, le temps d'un diagnostic, car son volume coûte en stockage et peut exposer des données.
+
+@012
+Q: Pourquoi écrire les journaux applicatifs en JSON plutôt qu'en texte libre ?
+C: Pour que chaque champ soit filtrable sans expression régulière
+W: Pour réduire la taille des fichiers sur le disque du serveur
+W: Pour que les messages soient lisibles sans outil dans un terminal
+W: Pour chiffrer le contenu des messages avant leur envoi
+E: Un journal structuré porte des champs nommés (niveau, service, trace_id, durée) que Loki ou Elasticsearch filtrent directement. Le texte libre oblige à maintenir des motifs grok fragiles au moindre changement de format.
+
+@013
+Q: Quel élément de cette ligne de journal pose un problème de sécurité ?
+C: Le champ authorization, qui contient le jeton d'accès
+W: Le champ trace_id, qui permet de relier entre eux les services
+W: Le champ duration_ms, qui révèle les performances
+W: Le champ path, qui indique la ressource appelée
+E: Un jeton journalisé peut être rejoué par quiconque lit les journaux, souvent plus largement accessibles que la production. On masque les en-têtes sensibles dans le code ou dans le collecteur, et on traite de même les données personnelles soumises au RGPD.
+```json
+{"level":"INFO","path":"/api/orders","status":200,"duration_ms":84,
+ "trace_id":"4bf92f3577b34da6","authorization":"Bearer eyJhbGciOi..."}
+```
+
+@014
+Q: Que désigne la pile ELK ?
+C: Elasticsearch, Logstash et Kibana
+W: Elasticsearch, Loki et Kubernetes
+W: Exporter, Logrotate et Keepalived
+W: Event Log Kernel, l'outil de journal de Linux
+E: Logstash reçoit et transforme les journaux, Elasticsearch les indexe, Kibana les affiche. Avec Beats (Filebeat), on parle de Elastic Stack ; avec Fluentd à la place de Logstash, de pile EFK.
+
+@015
+Q: Associer chaque composant de la pile Elastic à son rôle.
+P: Filebeat => Lire les fichiers de journaux et les expédier
+P: Logstash => Analyser, enrichir et transformer les événements
+P: Elasticsearch => Indexer et rechercher les documents
+P: Kibana => Explorer les données et construire des vues
+E: Filebeat est léger et tourne sur chaque serveur ; Logstash, plus gourmand, se place au centre pour les transformations lourdes. Pour des besoins simples, Filebeat peut écrire directement dans Elasticsearch avec un pipeline d'ingestion.
+
+@016
+Q: Qu'est-ce qu'un SLI ?
+C: Une mesure du service vue par l'utilisateur, comme la part de requêtes réussies
+W: L'engagement contractuel de disponibilité signé avec le client
+W: Le seuil de processeur au-delà duquel une alerte est envoyée
+W: Le document qui décrit la procédure de reprise après incident
+E: Service Level Indicator : un ratio d'événements bons sur le total, par exemple les requêtes répondues en moins de 300 ms. Le SLO fixe l'objectif sur ce SLI, le SLA ajoute des pénalités contractuelles.
+
+@017
+Q: Quelle est la différence entre un SLO et un SLA ?
+C: Le SLO est un objectif interne, le SLA un engagement contractuel
+W: Le SLO porte sur la latence des requêtes, le SLA sur la disponibilité
+W: Le SLO se mesure par serveur, le SLA par centre de données
+W: Le SLO s'applique en test, le SLA en production
+E: On fixe le SLO plus exigeant que le SLA : si l'objectif interne de 99,9 % est manqué, l'équipe réagit avant d'atteindre les 99,5 % promis au client, qui déclencheraient des pénalités.
+
+@018
+Q: Un service a un SLO de disponibilité de 99,9 % sur 30 jours. Combien de minutes d'indisponibilité son budget d'erreur autorise-t-il ?
+N: 43,2
+U: min
+E: 30 jours font 43 200 minutes ; 0,1 % de 43 200 donne 43,2 minutes. Ce budget se consomme par les pannes comme par les déploiements risqués : une fois épuisé, la priorité passe à la fiabilité.
+
+@019
+Q: À quoi sert le blackbox_exporter de Prometheus ?
+C: À tester un service de l'extérieur : HTTP, TCP, ICMP, DNS
+W: À lire les métriques internes d'une application Java
+W: À enregistrer les traces des requêtes en échec
+W: À archiver les métriques anciennes dans un stockage froid
+E: Il exécute une sonde vers une URL ou un port et expose le résultat (probe_success, durée, date d'expiration du certificat). Il voit ce que voit l'utilisateur, y compris une panne réseau ou DNS que l'application elle-même ignore.
+
+@020
+Q: Que contient la page /metrics d'une application instrumentée pour Prometheus ?
+C: Les valeurs courantes des métriques, au format texte d'exposition
+W: L'historique des mesures depuis le démarrage, au format CSV
+W: Un tableau de bord HTML qui résume les métriques de l'application
+W: Les journaux d'erreurs des cinq dernières minutes
+E: Chaque ligne porte un nom, des labels et une valeur, précédée de commentaires HELP et TYPE. L'application ne garde que l'état courant ; c'est Prometheus qui construit l'historique au fil des collectes.
+
+@021
+Q: Dans Prometheus, que crée chaque combinaison différente de valeurs de labels ?
+C: Une série temporelle distincte, stockée séparément
+W: Une nouvelle cible de collecte ajoutée à la configuration
+W: Un tableau de bord Grafana créé automatiquement
+W: Une règle d'alerte dédiée à cette combinaison
+E: http_requests_total{method="GET",status="200"} et {method="POST",status="200"} sont deux séries. C'est ce qui rend les labels puissants pour filtrer et agréger, et dangereux quand une valeur varie sans limite.
+
+@022
+Q: Compléter cette requête PromQL qui liste les cibles que Prometheus n'arrive plus à collecter.
+A: up
+E: Prometheus ajoute à chaque cible la série up, qui vaut 1 si la dernière collecte a réussi et 0 sinon. C'est la première alerte à poser : sans elle, une application arrêtée fait simplement disparaître ses métriques.
+```promql
+____ == 0
+```
+
+@023
+Q: Quel est le rôle d'Alertmanager à côté de Prometheus ?
+C: Grouper, dédoublonner et router les alertes vers les bons destinataires
+W: Évaluer les expressions PromQL des règles d'alerte
+W: Collecter les métriques des cibles injoignables
+W: Afficher l'historique des alertes sur un tableau de bord
+E: Prometheus évalue les règles et envoie les alertes actives ; Alertmanager décide qui reçoit quoi, quand et par quel canal (courriel, Slack, PagerDuty), et gère les silences pendant une maintenance.
+R: Prometheus - Alertmanager | https://prometheus.io/docs/alerting/latest/alertmanager/
+
+@024
+Q: Pourquoi horodater les journaux en UTC au format ISO 8601 ?
+C: Pour comparer sans erreur des événements venant de serveurs différents
+W: Pour que les journaux occupent moins de place une fois compressés et archivés
+W: Pour que les dates s'affichent à l'heure locale dans Kibana
+W: Pour respecter le format imposé par le protocole syslog
+E: Des serveurs en heure locale, avec passage à l'heure d'été, rendent l'ordre des événements faux pendant un incident. Un horodatage UTC avec millisecondes, 2026-11-05T14:03:12.481Z, se trie et se compare directement.
+
+@025
+Q: Quelle supervision détecte qu'un site est injoignable depuis Internet alors que le serveur répond en interne ?
+C: Une sonde synthétique qui appelle l'URL publique de l'extérieur
+W: Une alerte sur la charge processeur du serveur web
+W: Une alerte sur le nombre d'erreurs dans les journaux applicatifs
+W: Un tableau de bord sur la mémoire utilisée par l'application
+E: Un problème DNS, un certificat expiré ou un pare-feu mal réglé ne laisse aucune trace côté serveur. Seule une mesure prise du point de vue de l'utilisateur, depuis l'extérieur, révèle ce type de panne.
+
+@026
+Q: Remettre dans l'ordre le parcours d'une alerte Prometheus.
+O: L'exporter expose la métrique sur /metrics
+O: Prometheus collecte la cible à intervalle régulier
+O: Une règle d'alerte reste vraie pendant la durée for
+O: Alertmanager groupe l'alerte et choisit sa route
+O: Le destinataire reçoit la notification
+E: Prometheus ne notifie pas lui-même : il envoie les alertes actives à Alertmanager. Chaque étape ajoute un délai (intervalle de collecte, d'évaluation, for, group_wait) qu'il faut connaître pour estimer le temps de détection.
+
+@027
+Q: Que fait la ligne for: 10m de cette règle d'alerte ?
+C: L'alerte n'est envoyée que si la condition reste vraie 10 minutes
+W: La règle est évaluée une fois toutes les 10 minutes
+W: L'alerte est renvoyée toutes les 10 minutes tant qu'elle dure
+W: La moyenne de l'espace disque est calculée sur les 10 dernières minutes
+E: Pendant ce délai, l'alerte est à l'état pending ; elle passe à firing si la condition tient jusqu'au bout. On évite ainsi d'être réveillé pour un pic passager, au prix d'une détection plus lente.
+```yaml
+- alert: DisqueBientotPlein
+  expr: node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.10
+  for: 10m
+  labels:
+    severity: warning
+```
+
+@028
+Q: Trente serveurs perdent en même temps l'accès à la base. Quel réglage d'Alertmanager évite trente notifications séparées ?
+C: Le group_by, qui rassemble les alertes partageant certains labels
+W: Le repeat_interval, qui espace les rappels successifs d'une même alerte
+W: Le scrape_interval, qui ralentit la collecte des serveurs
+W: Le for de la règle, qui retarde l'envoi de chaque alerte
+E: Avec group_by: [alertname, cluster], les trente alertes partent dans une seule notification. group_wait laisse quelques secondes pour attendre les alertes du même groupe avant le premier envoi.
+
+@029
+Q: Compléter cette requête qui donne le nombre de requêtes par seconde, moyenné sur 5 minutes.
+A: rate
+E: rate() calcule la vitesse moyenne d'augmentation d'un counter sur la fenêtre, en tenant compte des redémarrages. Appliquer sum() avant rate() serait une erreur : la somme masquerait les remises à zéro de chaque instance.
+```promql
+sum(____(http_requests_total[5m]))
+```
+
+@030
+Q: Quelle différence entre rate() et irate() sur un counter ?
+C: irate ne regarde que les deux derniers points, rate toute la fenêtre
+W: irate tient compte des redémarrages du counter, alors que rate ne le fait pas
+W: rate s'applique aux gauges, irate aux counters
+W: irate renvoie une valeur par minute, rate par seconde
+E: irate réagit vite mais dessine des courbes en dents de scie, utiles pour un graphe très zoomé. Pour une alerte ou une règle d'enregistrement, rate est plus stable et donc préférable.
+
+@031
+Q: Que calcule cette requête ?
+C: Le 95e centile des durées de requête, sur 5 minutes, toutes instances confondues
+W: La moyenne des durées des 95 % de requêtes les plus rapides
+W: La part des requêtes qui durent moins de 0,95 seconde
+W: La durée maximale observée sur 95 % des instances
+E: histogram_quantile estime le centile à partir des buckets, en supposant une répartition uniforme dans chaque tranche. La précision dépend donc des bornes choisies : un bucket de 1 à 5 s rend le 95e centile flou dans cet intervalle.
+```promql
+histogram_quantile(0.95,
+  sum by (le) (rate(http_request_duration_seconds_bucket[5m])))
+```
+
+@032
+Q: Pourquoi préférer un histogram à un summary quand l'application tourne sur plusieurs instances ?
+C: Les buckets s'additionnent entre instances, les quantiles d'un summary non
+W: Le summary ne peut pas être collecté par Prometheus en mode pull classique
+W: L'histogram calcule des quantiles exacts, le summary des estimations
+W: Le summary consomme une série par requête observée
+E: La moyenne de deux 99e centiles n'est pas le 99e centile global. Avec un histogram, on somme les buckets de toutes les instances puis on calcule le centile ; le summary donne des quantiles précis mais figés par instance.
+
+@033
+Q: Un développeur ajoute le label user_id à cette métrique. Quel risque ?
+C: Une explosion du nombre de séries, qui sature la mémoire de Prometheus
+W: Une fuite des identifiants, car /metrics est chiffré par défaut
+W: Une perte des valeurs, car un label Prometheus ne peut pas contenir de chiffres
+W: Un calcul faux de rate(), qui ignore les labels numériques
+E: Chaque utilisateur crée ses propres séries, multipliées par les autres labels. On réserve les labels aux valeurs bornées (méthode, route, code) ; l'identifiant d'utilisateur va dans les journaux ou les attributs de trace.
+```text
+http_requests_total{method="GET",route="/panier",status="200",user_id="81234"} 3
+```
+
+@034
+Q: Une métrique porte les labels method (3 valeurs), route (12), status (5) et instance (20). Combien de séries peut-elle créer au maximum ?
+N: 3600
+E: Le nombre de séries est le produit des valeurs possibles : 3 × 12 × 5 × 20 = 3 600. Ajouter un label à 100 valeurs le porterait à 360 000 : la cardinalité se surveille label par label, avant la mise en production.
+
+@035
+Q: Dans quel cas utiliser le Pushgateway de Prometheus ?
+C: Pour un traitement par lots trop court pour être collecté
+W: Pour envoyer toutes les métriques d'une application web
+W: Pour collecter des cibles situées derrière un pare-feu d'entreprise
+W: Pour réduire la charge de Prometheus sur un gros parc
+E: Un job de sauvegarde qui dure 20 secondes peut finir entre deux collectes : il pousse son résultat, que Prometheus lit ensuite. Utilisé pour des services permanents, le Pushgateway masque leur arrêt, car la dernière valeur y reste.
+
+@036
+Q: Compléter cette règle qui précalcule une requête coûteuse sous un nouveau nom.
+A: record
+E: Une recording rule évalue l'expression à chaque cycle et stocke le résultat comme une nouvelle série. Les tableaux de bord et les alertes lisent alors cette série légère au lieu de recalculer l'agrégat sur des milliers de séries.
+```yaml
+groups:
+  - name: http
+    rules:
+      - ____: job:http_requests:rate5m
+        expr: sum by (job) (rate(http_requests_total[5m]))
+```
+
+@037
+Q: Associer chaque notion d'Alertmanager à son effet.
+P: Route => Choisit le destinataire selon les labels de l'alerte
+P: Inhibition => Masque une alerte quand une autre plus grave est active
+P: Silence => Coupe les notifications pendant une maintenance prévue
+P: group_wait => Attend avant le premier envoi d'un groupe
+P: repeat_interval => Fixe le délai avant de renvoyer une alerte qui dure
+E: Ces réglages servent à n'envoyer que ce qui est utile, au bon endroit. Un silence se pose avec une date de fin et un commentaire, pour qu'il ne masque pas une panne réelle des semaines plus tard.
+
+@038
+Q: À quoi sert cette règle d'inhibition ?
+C: À taire les alertes d'un service quand son centre de données est injoignable
+W: À relancer les alertes d'un service juste après une coupure du centre de données
+W: À envoyer les alertes critiques avant les alertes d'avertissement
+W: À fusionner en une seule toutes les alertes d'un même service
+E: Quand le centre de données tombe, des dizaines d'alertes découlent de la même cause. L'inhibition garde la cause visible et supprime les conséquences, à condition que les deux alertes partagent le label datacenter.
+```yaml
+inhibit_rules:
+  - source_matchers: [alertname="DatacenterInjoignable"]
+    target_matchers: [severity="warning"]
+    equal: [datacenter]
+```
+
+@039
+Q: Quelles mesures la méthode RED suit-elle pour un service ?
+C: Le débit de requêtes, les erreurs et la durée des réponses
+W: Le réseau, l'espace disque et la durée de disponibilité du serveur
+W: Les redémarrages, les événements et les dépendances
+W: La retenue des journaux, leur export et leur durée de vie
+E: Rate, Errors, Duration : trois mesures vues de l'appelant, qui suffisent à dire si un service web ou une API rend un bon service. Elle se combine avec la méthode USE, tournée vers les ressources.
+
+@040
+Q: Que suit la méthode USE pour chaque ressource d'un serveur ?
+C: Son taux d'utilisation, sa saturation et ses erreurs
+W: Ses utilisateurs, ses services et leurs événements
+W: Son uptime, son stockage et son état de chiffrement
+W: Ses mises à jour, sa sécurité et son empreinte énergétique
+E: Utilization, Saturation, Errors, proposée par Brendan Gregg : un disque utilisé à 60 % mais avec une file d'attente qui s'allonge est saturé. La saturation est souvent la mesure qui manque sur les tableaux de bord.
+
+@041
+Q: Associer chaque signal d'or du livre SRE de Google à un exemple de mesure.
+P: Latence => 95e centile du temps de réponse de l'API
+P: Trafic => Requêtes HTTP reçues par seconde
+P: Erreurs => Part des réponses en code 5xx
+P: Saturation => Longueur de la file d'attente des connexions
+E: Les quatre signaux d'or sont le minimum à suivre pour un service exposé aux utilisateurs. On sépare la latence des requêtes réussies de celle des erreurs : une erreur rapide ne doit pas faire baisser la latence affichée.
+
+@042
+Q: Pourquoi alerter sur les symptômes plutôt que sur les causes ?
+C: Parce qu'un symptôme touche l'utilisateur, alors qu'une cause peut rester sans effet
+W: Parce que les causes ne sont pas mesurables avec Prometheus
+W: Parce que les alertes sur les causes coûtent plus cher en stockage
+W: Parce que les symptômes se corrigent sans intervention humaine
+E: Un processeur à 90 % peut être normal ; un taux d'erreurs qui monte ne l'est jamais pour le client. Les mesures de causes restent utiles sur les tableaux de bord, pour le diagnostic, sans réveiller l'astreinte.
+
+@043
+Q: Un SLO de 99,9 % de requêtes réussies est suivi sur 30 jours. Pendant la dernière heure, 1,44 % des requêtes ont échoué. Quel est le taux de consommation du budget (burn rate) ?
+N: 14,4
+E: Le budget autorise 0,1 % d'erreurs ; 1,44 / 0,1 = 14,4. Un burn rate de 1 épuise le budget pile en 30 jours. La valeur 14,4 sur une heure est le seuil d'alerte urgente recommandé par le guide SRE de Google.
+
+@044
+Q: À ce taux de consommation de 14,4, en combien d'heures le budget d'erreur de 30 jours sera-t-il épuisé ?
+N: 50
+U: h
+E: 30 jours font 720 heures ; 720 / 14,4 = 50 heures. Une heure à ce rythme consomme 2 % du budget mensuel, ce qui justifie de réveiller quelqu'un.
+
+@045
+Q: Qu'est-ce qu'OpenTelemetry ?
+C: Un standard ouvert avec SDK et collecteur pour émettre traces, métriques et journaux
+W: Un logiciel de stockage des traces avec son interface de recherche
+W: Une offre payante d'hébergement de tableaux de bord Grafana
+W: Un format de fichier de journal destiné aux serveurs Linux
+E: OpenTelemetry, né de la fusion d'OpenTracing et OpenCensus, standardise l'instrumentation et le protocole OTLP. Le stockage reste libre : Jaeger ou Tempo pour les traces, Prometheus pour les métriques, Loki ou Elasticsearch pour les journaux.
+R: OpenTelemetry - What is OpenTelemetry? | https://opentelemetry.io/docs/what-is-opentelemetry/
+
+@046
+Q: Remettre dans l'ordre le parcours d'une trace instrumentée avec OpenTelemetry.
+O: Le SDK de l'application crée les spans de la requête
+O: L'application exporte les spans en OTLP vers le collecteur
+O: Un receiver du collecteur reçoit les données
+O: Les processors filtrent, enrichissent et regroupent les spans
+O: Un exporter les envoie vers le stockage des traces
+E: Le collecteur découple l'application du stockage : changer de Jaeger à Tempo ne touche que sa configuration. Il absorbe aussi les pics et retente les envois si le stockage est momentanément indisponible.
+
+@047
+Q: Quel est le rôle du processor batch dans un collecteur OpenTelemetry ?
+C: Regrouper les données avant l'envoi pour réduire le nombre d'appels réseau
+W: Rejouer les traces anciennes pour recalculer les métriques
+W: Échantillonner les traces pour ne garder que les erreurs
+W: Convertir les journaux texte en spans de trace
+E: L'envoi par paquets réduit la charge du réseau et du stockage. On le place en fin de chaîne, après memory_limiter, qui protège le collecteur en refusant des données quand sa mémoire approche de la limite.
+
+@048
+Q: Quelle est la différence entre l'échantillonnage en tête (head-based) et en queue (tail-based) des traces ?
+C: En tête, on décide au début de la requête ; en queue, une fois la trace complète
+W: En tête, on garde les premiers spans ; en queue, les derniers
+W: En tête, le collecteur décide ; en queue, c'est l'application
+W: En tête, on échantillonne les métriques ; en queue, les traces
+E: Garder 10 % des traces dès le départ est simple et léger, mais perd au hasard les traces en erreur. La décision en queue peut garder toutes les traces lentes ou en échec, au prix de garder en mémoire les traces en cours.
+
+@049
+Q: Pourquoi l'échantillonnage en queue se fait-il dans le collecteur et pas dans l'application ?
+C: Il faut voir les spans de tous les services pour juger la trace entière
+W: Les applications ne peuvent pas lire le code de statut HTTP de leurs réponses
+W: Le collecteur est le seul à connaître l'horloge exacte des serveurs
+W: Les SDK OpenTelemetry n'exportent pas les spans en erreur
+E: Une trace traverse plusieurs services, chacun ne voyant que ses spans. Le processor tail_sampling attend la fin de la trace (decision_wait) avant d'appliquer ses politiques : erreur, latence, part aléatoire.
+
+@050
+Q: Compléter ce pipeline de collecteur OpenTelemetry.
+A: exporters
+E: Un pipeline associe receivers, processors et exporters déclarés plus haut dans le fichier. Un composant déclaré mais absent de service.pipelines n'est pas démarré : c'est une erreur fréquente lors d'un premier réglage.
+```yaml
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      ____: [otlp/tempo]
+```

@@ -1,0 +1,389 @@
+@051
+Q: Associer chaque artefact Scrum à l'engagement qui l'accompagne.
+P: Product Backlog => Product Goal
+P: Sprint Backlog => Sprint Goal
+P: Increment => Definition of Done
+E: Depuis le Scrum Guide 2020, chaque artefact porte un engagement qui donne le cap ou le niveau de qualité. Le Product Goal est l'objectif à long terme du produit ; le Sprint Goal, celui du sprint ; la Definition of Done, l'exigence de qualité de l'incrément.
+
+@052
+Q: Chaque Daily Scrum se transforme en compte rendu individuel au Scrum Master. Quel problème cela pose-t-il ?
+C: L'équipe se justifie au lieu de se coordonner vers le Sprint Goal
+W: La réunion devient trop courte pour traiter tous les sujets
+W: Les Developers parlent trop entre eux pendant la réunion
+W: Le Product Owner ne peut plus y assister en tant qu'invité
+E: Le Daily Scrum appartient aux Developers : ils y adaptent leur plan pour atteindre le Sprint Goal. Un tour de table tourné vers un chef ressemble à un pointage et fait disparaître l'entraide.
+
+@053
+Q: Quel est le but de la Sprint Review ?
+C: Inspecter le résultat du sprint avec les parties prenantes
+W: Faire signer au client la recette de chacune des stories livrées
+W: Évaluer la performance individuelle des développeurs
+W: Planifier les tâches techniques du sprint suivant
+E: La revue est une séance de travail, pas une simple démonstration : les parties prenantes réagissent à l'incrément et le Product Backlog s'ajuste. La planification du sprint suivant a lieu au Sprint Planning.
+
+@054
+Q: Associer chaque lettre de la matrice RACI à son rôle.
+P: R => Réalise la tâche
+P: A => Rend des comptes et valide, un seul par tâche
+P: C => Est consulté avant la décision
+P: I => Est informé du résultat
+E: Le RACI clarifie qui fait quoi sur chaque livrable. Une seule personne doit être « A » par tâche : deux validateurs mènent à des arbitrages bloqués. Trop de « C » ralentit les décisions.
+
+@055
+Q: La tâche A dure 3 jours. B (5 jours) et C (2 jours) commencent après A, en parallèle. D (4 jours) commence quand B et C sont finies. Quelle est la durée minimale du projet en jours ?
+N: 12
+U: jours
+E: Le chemin A, B, D dure 3 + 5 + 4 = 12 jours ; le chemin A, C, D dure 3 + 2 + 4 = 9 jours. Le plus long est le chemin critique : tout retard sur A, B ou D retarde le projet, alors que C dispose de 3 jours de marge.
+
+@056
+Q: Une tâche est estimée à 4 jours au mieux, 6 jours le plus probablement et 14 jours au pire. Quelle est son estimation PERT en jours ?
+N: 7
+U: jours
+E: PERT = (optimiste + 4 × probable + pessimiste) / 6 = (4 + 24 + 14) / 6 = 42 / 6 = 7 jours. Le pessimiste, très éloigné, tire l'estimation au-dessus de la valeur probable.
+
+@057
+Q: Sur une grille de 1 à 4, un risque a une probabilité de 3 et un impact de 4. Quelle est sa criticité ?
+N: 12
+E: Criticité = probabilité × impact = 3 × 4 = 12, sur un maximum de 16. Les risques au-delà d'un seuil convenu reçoivent une action : réduire la probabilité, limiter l'impact, transférer ou accepter en le disant.
+
+@058
+Q: Une équipe de 4 développeurs prépare un sprint de 10 jours ouvrés ; l'un d'eux sera absent 3 jours. Quelle est sa capacité en jours-personne ?
+N: 37
+U: jours
+E: 4 × 10 = 40 jours-personne, moins 3 jours d'absence, soit 37. L'équipe ajuste ensuite son engagement en proportion de sa vélocité habituelle, car tout le temps n'est pas consacré aux stories.
+
+@059
+Q: Qu'est-ce qu'un jalon dans un planning de projet ?
+C: Un événement de durée nulle qui marque un point de contrôle
+W: Une tâche longue découpée en plusieurs sous-tâches
+W: Une marge laissée entre deux tâches dépendantes
+W: Un livrable intermédiaire facturé au client à part
+E: Un jalon (fin de recette, mise en production, comité de décision) n'a pas de durée : c'est une date à laquelle on vérifie un résultat. Il sert à suivre l'avancement et à décider de la suite.
+
+@060
+Q: À quoi sert un WBS (organigramme des tâches) ?
+C: À découper le projet en livrables, puis en lots de travail
+W: À placer les tâches du projet sur une échelle de temps
+W: À répartir le budget du projet entre les fournisseurs
+W: À classer les risques du projet par niveau de criticité décroissant
+E: Le WBS décompose le périmètre en éléments de plus en plus fins, jusqu'à des lots qu'on sait estimer et confier. Il précède le planning : le Gantt place ensuite ces lots dans le temps.
+
+@061
+Q: Associer chaque pratique de l'eXtreme Programming à sa description.
+P: Programmation en binôme => Deux développeurs sur le même code
+P: TDD => Le test écrit avant le code qui le fait passer
+P: Intégration continue => Le code fusionné et testé plusieurs fois par jour
+P: Refactoring => Améliorer la structure sans changer le comportement
+E: L'XP complète Scrum sur le plan technique : sans tests automatisés ni intégration continue, livrer un incrément propre à chaque sprint devient vite impossible. Le refactoring régulier garde le code facile à modifier.
+
+@062
+Q: Compléter ce scénario Gherkin qui décrit un critère d'acceptation.
+A: Given
+E: Given pose le contexte, When décrit l'action, Then le résultat attendu. Écrits avec le Product Owner, ces scénarios servent à la fois de critères d'acceptation et de tests automatisés, avec Cucumber ou behave.
+```gherkin
+Scenario: Remise appliquée au-delà de 100 euros
+  ____ un panier de 120 euros
+  When le client valide sa commande
+  Then une remise de 10 % est appliquée
+```
+
+@063
+Q: Une équipe de support reçoit chaque jour des demandes imprévisibles. Pourquoi Kanban lui convient-il souvent mieux que Scrum ?
+C: Le flux continu absorbe les urgences sans attendre un sprint
+W: Kanban supprime le besoin de prioriser les demandes entrantes
+W: Scrum interdit de corriger des anomalies pendant un sprint
+W: Kanban n'impose aucune limite : l'équipe prend tout ce qui arrive
+E: En Kanban, l'élément le plus prioritaire est tiré dès qu'une place se libère. Une classe de service « urgent » peut même passer devant. Les limites d'encours restent indispensables pour ne pas tout commencer à la fois.
+
+@064
+Q: Comment rendre visible la dette technique dans un projet agile ?
+C: L'inscrire au Product Backlog, ordonnée avec le reste
+W: La glisser discrètement dans l'estimation des stories
+W: La traiter dans un sprint dédié, une seule fois par an
+W: La noter dans le wiki, hors du suivi des tickets
+E: Visible au backlog, la dette se discute avec le Product Owner en termes de coût : ralentissement, anomalies. Cachée dans les estimations, elle fausse la vélocité ; repoussée à un sprint annuel, elle s'accumule.
+
+@065
+Q: Compléter cette requête JQL qui liste les tickets passés à « Terminé » depuis le début de la semaine.
+A: CHANGED
+A: changed
+E: CHANGED interroge l'historique d'un champ : CHANGED TO vise la nouvelle valeur, DURING borne la période. On l'utilise pour mesurer ce qui a été livré dans la semaine, quel que soit l'état actuel du ticket.
+```text
+project = WEB AND status ____ TO "Terminé" DURING (startOfWeek(), now())
+```
+
+@066
+Q: La direction fixe à l'équipe un objectif de vélocité en hausse de 20 %. Quel effet faut-il craindre ?
+C: Les estimations gonflent sans que la valeur livrée augmente
+W: L'équipe ne peut plus estimer ses stories en points
+W: Le Product Backlog se vide beaucoup trop rapidement
+W: Les sprints doivent être raccourcis dans la même proportion
+E: C'est la loi de Goodhart : une mesure devenue objectif cesse d'être une bonne mesure. Une story de 3 devient une 5 et la vélocité monte sur le papier. La vélocité sert à planifier, pas à évaluer.
+
+@067
+Q: L'équipe A a une vélocité de 40 points, l'équipe B de 20 points. Que peut-on en conclure ?
+C: Rien : chaque équipe a sa propre échelle de points
+W: L'équipe A est deux fois plus productive que l'équipe B
+W: L'équipe B sous-estime toutes ses stories de moitié
+W: L'équipe B doit recevoir deux fois moins de travail
+E: Les points sont relatifs à une équipe : ils reposent sur ses propres stories de référence. Comparer les vélocités pousse à gonfler les estimations. Pour comparer, on regarde plutôt les délais et la valeur livrée.
+
+@068
+Q: Comment une prévision Monte Carlo estime-t-elle une date de livraison ?
+C: Elle rejoue des milliers de fois le débit passé pour chiffrer une probabilité par date
+W: Elle multiplie la vélocité moyenne par le nombre de sprints qui restent à faire
+W: Elle demande à chaque développeur une estimation optimiste et une pessimiste
+W: Elle applique une marge de sécurité de 30 % au planning initial du projet
+E: On tire au hasard des semaines passées et on cumule leur débit jusqu'à épuiser le backlog, des milliers de fois. On obtient par exemple « 85 % de chances avant le 12 mars ». La moyenne simple ignore la variabilité.
+
+@069
+Q: Une story a un lead time de 10 jours, dont 2 jours de travail effectif ; le reste est de l'attente. Quelle est son efficience de flux en pourcentage ?
+N: 20
+U: %
+E: Efficience de flux = temps de travail / lead time = 2 / 10 = 20 %. Des valeurs de 5 à 15 % sont courantes : réduire les attentes (validation, revue, déploiement) raccourcit davantage le délai que travailler plus vite.
+
+@070
+Q: Associer chaque gaspillage du Lean appliqué au logiciel à un exemple.
+P: Travail partiellement fait => Code commencé mais jamais livré
+P: Fonctionnalités en trop => Une option que personne n'utilise
+P: Changements de contexte => Basculer sans cesse entre plusieurs tâches
+P: Attente => Un ticket bloqué en attente de validation
+P: Défauts => Une anomalie découverte en production
+E: Mary et Tom Poppendieck ont transposé les gaspillages du système Toyota au développement. Les repérer guide les améliorations : moins d'encours, des stories plus petites, des tests plus tôt.
+
+@071
+Q: En WSJF, le coût du retard est la somme de la valeur métier (8), de l'urgence (5) et de la réduction de risque (3). La taille estimée vaut 4. Quel est le score WSJF ?
+N: 4
+E: Coût du retard = 8 + 5 + 3 = 16 ; WSJF = 16 / 4 = 4. On traite d'abord les éléments au score le plus élevé : une petite fonction à forte valeur passe devant un gros chantier de valeur comparable.
+
+@072
+Q: Qu'exprime le coût du retard (cost of delay) ?
+C: La valeur perdue pour chaque période où une fonction n'est pas livrée
+W: Les pénalités contractuelles dues au client en cas de dépassement des délais
+W: Le surcoût en salaires d'une équipe qui dépasse son planning
+W: Le temps perdu en réunions pendant la durée d'un sprint
+E: Une fonction qui rapporte 10 000 € par mois coûte 10 000 € pour chaque mois de retard. Chiffrer ce coût aide à ordonner le backlog sur une base économique plutôt qu'à l'intuition.
+
+@073
+Q: Un projet a une valeur acquise de 40 000 € pour un coût réel de 50 000 €. Quel est son indice de performance des coûts (CPI) ?
+N: 0,8
+E: CPI = valeur acquise / coût réel = 40 000 / 50 000 = 0,8. Chaque euro dépensé produit 0,80 € de travail prévu : le projet dépasse son budget. Un CPI supérieur à 1 indique une dépense inférieure au prévu.
+
+@074
+Q: Un projet affiche un SPI de 0,9 et un CPI de 1,1. Quelle situation décrit-il ?
+C: En retard sur le planning, mais économe pour le travail fait
+W: En avance sur le planning, mais au-delà du budget prévu à date
+W: En retard sur le planning et au-delà du budget prévu
+W: Dans les temps et dans le budget, à 10 % près
+E: Le SPI compare la valeur acquise à la valeur planifiée : 0,9 signifie 90 % du travail prévu à date. Le CPI à 1,1 indique un coût inférieur à la valeur produite. Rattraper le retard peut consommer cette marge.
+
+@075
+Q: Comment concilier un contrat au forfait et une démarche agile ?
+C: Fixer budget et délai, et laisser varier le périmètre
+W: Fixer le périmètre détaillé au départ, puis livrer en sprints
+W: Facturer chaque sprint au temps réellement passé par l'équipe
+W: Interdire tout changement de priorité après la signature
+E: Le client garde la maîtrise de ses priorités : les fonctions les plus utiles sont livrées d'abord, les moins utiles sortent si le budget est atteint. Un périmètre détaillé figé revient à un cycle en V découpé en sprints.
+
+@076
+Q: Plusieurs équipes Scrum travaillent sur le même produit. Que prévoit le Scrum Guide ?
+C: Un seul Product Backlog et un seul Product Owner
+W: Un Product Backlog et un Product Owner par équipe
+W: Un Product Backlog par équipe et un seul Product Owner
+W: Un seul Product Backlog et un Product Owner par équipe
+E: Un produit a un seul Product Goal, donc un seul backlog et un seul Product Owner pour arbitrer. Plusieurs backlogs créent des priorités contradictoires et des dépendances invisibles.
+
+@077
+Q: Dans SAFe, qu'est-ce que le PI Planning ?
+C: Un événement où les équipes d'un train planifient ensemble les semaines à venir
+W: Une revue mensuelle du budget de chaque équipe par le comité de direction
+W: La rétrospective commune organisée une seule fois en fin d'année
+W: La réunion où le Product Owner rédige seul les user stories du trimestre
+E: Le PI Planning réunit toutes les équipes d'un Agile Release Train, souvent pendant deux jours, au début d'un incrément de programme de 8 à 12 semaines. Les équipes y alignent leurs objectifs et rendent visibles leurs dépendances.
+
+@078
+Q: Associer chaque indicateur DORA à ce qu'il mesure.
+P: Fréquence de déploiement => Combien de fois on livre en production
+P: Délai de mise en production => Du commit à la production
+P: Taux d'échec des changements => La part des livraisons qui causent un incident
+P: Temps de restauration => Le délai pour rétablir le service après un incident
+E: Ces quatre indicateurs mesurent à la fois la vitesse et la stabilité. Les équipes les plus performantes progressent sur les deux : livrer souvent en petits lots réduit le risque de chaque livraison.
+
+@079
+Q: Une équipe est souvent bloquée par une autre qui gère seule la base de données. Quelle réponse est la plus durable ?
+C: Revoir l'organisation pour rendre l'équipe autonome sur ce périmètre
+W: Ajouter des jalons de synchronisation entre les deux équipes
+W: Ajouter une marge à chaque estimation qui touche à la base
+W: Demander au Scrum Master de relancer l'autre équipe chaque matin au Daily Scrum
+E: Les dépendances entre équipes allongent les délais et ne se gèrent bien qu'en les supprimant : compétences ajoutées à l'équipe, outils en libre-service, découpage différent du produit. Relancer ou planifier ne fait que les subir.
+
+@080
+Q: Que renvoie cette requête JQL ?
+C: Les tickets qui ont été au statut Bloqué à un moment d'octobre
+W: Les tickets toujours au statut Bloqué au 31 octobre au soir
+W: Les tickets sortis du statut Bloqué au cours du mois d'octobre
+W: Les tickets créés en octobre et passés par le statut Bloqué
+E: WAS cherche dans l'historique, contrairement à = qui ne regarde que l'état actuel. Un ticket bloqué le 3 puis terminé le 10 est retenu, même s'il a été créé en septembre. C'est utile pour compter les blocages d'une période.
+```text
+project = WEB AND status WAS "Bloqué" DURING ("2026-10-01", "2026-10-31")
+```
+
+@081
+Q: Que fait ce message de commit dans un dépôt relié à Jira avec les smart commits activés ?
+C: Il commente WEB-42 et y enregistre 1 h 30 de temps passé
+W: Il ferme le ticket WEB-42 et lui ajoute une sous-tâche
+W: Il crée un nouveau ticket WEB-42 avec ce texte en titre
+W: Il attribue le ticket WEB-42 à l'auteur du commit pour 1 h 30
+E: La clé du ticket relie le commit à WEB-42. #comment ajoute le texte qui suit en commentaire, #time enregistre du temps passé. Une transition s'écrit avec son nom, par exemple #done, et l'adresse e-mail du commit doit correspondre à un compte Jira.
+```text
+WEB-42 #comment cache invalidé après mise à jour #time 1h 30m
+```
+
+@082
+Q: Quel indicateur Kanban repère le plus tôt un élément en difficulté ?
+C: L'âge des éléments en cours, comparé aux délais habituels
+W: Le débit moyen de l'équipe calculé sur le trimestre
+W: Le nombre total d'éléments terminés depuis le début
+W: La vélocité constatée lors du dernier sprint
+E: Le cycle time ne se mesure qu'à la fin, une fois le retard subi. L'âge d'un élément en cours se lit chaque jour : un élément plus vieux que 85 % des précédents mérite qu'on en parle au point quotidien.
+
+@083
+Q: Une équipe prévoit un sprint de stabilisation tous les quatre sprints pour corriger et tester. Que révèle cette pratique ?
+C: La Definition of Done est trop faible : les incréments ne sont pas finis
+W: L'équipe applique la cadence conseillée par le Scrum Guide
+W: Les sprints sont trop longs et devraient passer à une semaine
+W: Le Product Owner donne trop de place aux stories techniques
+E: Si tester et corriger se fait plus tard, les incréments n'étaient pas utilisables et la vélocité était surestimée. Il faut renforcer la Definition of Done et automatiser les tests, pour que chaque sprint livre un produit terminé.
+
+@084
+Q: Lequel de ces exemples est un bon résultat clé (key result) dans un OKR ?
+C: Un délai de réponse du support passé sous 4 heures
+W: La migration de la base de données vers PostgreSQL
+W: Des clients toujours plus ravis de nos services
+W: La sortie de la nouvelle version prévue le 15 mars
+E: Un résultat clé mesure un effet obtenu, pas une tâche ni un souhait vague. La migration ou la sortie d'une version sont des moyens ; « ravir les clients » peut être l'objectif, mesuré ensuite par des résultats chiffrés.
+
+@085
+Q: Compléter cette requête JQL qui liste les anomalies des sprints en cours.
+A: openSprints
+E: openSprints() renvoie les sprints démarrés et non clos ; closedSprints() et futureSprints() existent aussi. Ces fonctions évitent de modifier le filtre d'un tableau de bord à chaque nouveau sprint.
+```text
+project = WEB AND sprint in ____() AND issuetype = Bug
+```
+
+@086
+Q: Selon la théorie des files d'attente, l'attente croît avec le facteur ρ / (1 - ρ), où ρ est le taux d'occupation. Que vaut ce facteur pour une équipe occupée à 90 % ?
+N: 9
+E: 0,9 / (1 - 0,9) = 0,9 / 0,1 = 9, contre 4 à 80 % et 1 à 50 %. L'attente explose en approchant de 100 % : c'est la formule de Kingman. Garder de la marge rend le flux plus rapide.
+
+@087
+Q: Pourquoi viser 100 % d'occupation des développeurs allonge-t-il les délais ?
+C: Sans marge, chaque imprévu crée une file qui ne se résorbe pas
+W: Les développeurs trop chargés estiment moins bien leurs stories
+W: Le Scrum Guide interdit une charge supérieure à 80 % du temps
+W: La vélocité baisse mécaniquement quand l'équipe est pleine
+E: La variabilité est inévitable : anomalies, questions, absences. Sans capacité libre, ces aléas s'ajoutent aux files d'attente et les délais s'allongent fortement. La marge sert à absorber l'imprévu et à aider les collègues.
+
+@088
+Q: Le 85e percentile du cycle time des 20 dernières stories vaut 8 jours. Que peut-on annoncer pour la prochaine story ?
+C: Environ 85 % de chances qu'elle soit finie en 8 jours ou moins
+W: Elle sera terminée en 8 jours, avec une marge de 15 %
+W: En moyenne, les stories demandent 8 jours de travail
+W: 85 % de ses tâches seront terminées au bout de 8 jours
+E: C'est une attente de niveau de service : une probabilité tirée de l'historique, sans estimation. La moyenne serait plus basse et cacherait les stories longues. On suppose que la prochaine story ressemble aux précédentes.
+
+@089
+Q: Que dit la loi de Conway ?
+C: Un système reflète la structure de communication de l'organisation qui le conçoit
+W: Ajouter des personnes à un projet en retard le retarde encore davantage
+W: Le travail s'étend jusqu'à occuper tout le temps disponible pour le faire
+W: Quand une mesure devient un objectif, elle cesse d'être une bonne mesure
+E: Trois équipes séparées produisent souvent trois composants séparés. On s'en sert à l'envers : on organise les équipes selon l'architecture voulue. Les autres choix sont les lois de Brooks, de Parkinson et de Goodhart.
+
+@090
+Q: Un projet a trois mois de retard et le manager ajoute quatre développeurs. Quel effet prévoit la loi de Brooks ?
+C: Le retard augmente : formation et coordination freinent l'équipe
+W: Le retard diminue en proportion du nombre de développeurs ajoutés à l'équipe
+W: Le retard reste le même, car la vélocité ne change pas
+W: Le retard disparaît si les nouveaux arrivants sont expérimentés
+E: Les nouveaux venus doivent être formés par l'équipe existante et chaque personne ajoute des liens de communication : n(n - 1) / 2. À court terme, la production baisse. Réduire le périmètre est souvent plus efficace.
+
+@091
+Q: Associer chaque type d'équipe de Team Topologies à sa mission.
+P: Équipe alignée sur un flux => Livre de bout en bout un flux de valeur
+P: Équipe plateforme => Fournit des services internes en libre-service
+P: Équipe facilitatrice => Aide un temps les autres à gagner une compétence
+P: Équipe sous-système compliqué => Porte un composant qui exige une expertise rare
+E: La plupart des équipes sont alignées sur un flux ; les trois autres types existent pour réduire leur charge cognitive. Une plateforme qui oblige à ouvrir un ticket pour chaque besoin recrée la dépendance qu'elle devait supprimer.
+
+@092
+Q: Associer chaque domaine du modèle Cynefin à la démarche qui lui convient.
+P: Clair => Appliquer les bonnes pratiques connues
+P: Compliqué => Faire analyser la situation par des experts
+P: Complexe => Expérimenter, observer, puis adapter
+P: Chaotique => Agir d'abord pour stabiliser la situation
+E: Le développement d'un produit nouveau relève souvent du complexe : les causes ne se comprennent qu'après coup, d'où les itérations courtes. Un incident majeur en production est chaotique : on rétablit le service avant d'analyser.
+
+@093
+Q: Pourquoi réduire la taille des lots (stories, fusions, livraisons) accélère-t-il le flux ?
+C: Les retours arrivent plus tôt, l'attente diminue
+W: Les petits lots demandent moins de tests au total
+W: Les petits lots s'estiment toujours sans aucune erreur
+W: Le nombre de réunions diminue avec la taille des lots
+E: Un gros lot attend que toutes ses parties soient prêtes, puis concentre les risques au moment de l'intégration. Des petits lots livrés souvent font apparaître les erreurs plus tôt, quand elles coûtent encore peu à corriger.
+
+@094
+Q: La loi de Little (délai = encours / débit) donne un résultat faux pour une équipe. Quelle cause est la plus probable ?
+C: Le flux n'est pas stable : l'équipe commence bien plus qu'elle ne finit
+W: Les éléments n'ont pas tous la même taille en story points
+W: L'équipe travaille en sprints plutôt qu'en flux continu
+W: Le débit est compté en éléments plutôt qu'en points
+E: La loi de Little suppose un système stable : autant d'entrées que de sorties et des éléments qui finissent par sortir. Elle tolère des tailles variables et s'applique aussi en sprints. Un encours qui gonfle fausse le calcul.
+
+@095
+Q: Trois équipes Scrum livrent le même produit. Que dit le Scrum Guide de leur Definition of Done ?
+C: Elles définissent ensemble une même DoD et la respectent toutes
+W: Chaque équipe définit librement la sienne selon ses pratiques
+W: Le Product Owner rédige une DoD distincte pour chaque équipe
+W: La DoD de l'équipe la plus exigeante s'impose aux deux autres équipes
+E: L'incrément est commun : s'il mêle des parties finies selon des règles différentes, il n'est pas utilisable. Une même DoD garantit que l'ensemble intégré respecte le même niveau de qualité.
+
+@096
+Q: Un tableau de bord d'équipe ne suit que la vélocité et le respect des dates. Que lui manque-t-il ?
+C: Une mesure de la valeur réellement obtenue par les utilisateurs
+W: Le détail des heures passées par chacun des développeurs sur les stories
+W: Le nombre de lignes de code produites à chaque sprint
+W: Le taux de présence de chacun aux événements Scrum
+E: Livrer à l'heure ce que personne n'utilise reste un échec. Evidence-Based Management suit aussi la valeur actuelle, la valeur non réalisée et la capacité à innover. Les heures ou les lignes de code mesurent l'activité, pas le résultat.
+
+@097
+Q: Dans le cadre Nexus, quel est le rôle de la Nexus Integration Team ?
+C: Faire en sorte qu'un incrément intégré sorte à chaque sprint
+W: Réaliser elle-même les fusions de code de toutes les équipes du produit
+W: Remplacer les Scrum Masters des équipes qui la composent
+W: Rédiger le Product Backlog à la place du Product Owner
+E: Nexus étend Scrum à trois à neuf équipes sur un même produit. La Nexus Integration Team rend visibles et résout les problèmes d'intégration, mais le travail d'intégration reste fait par les équipes.
+
+@098
+Q: Une équipe découpe ses stories à des tailles comparables et compte seulement les éléments terminés. Que permet cette approche ?
+C: Prévoir à partir du débit, sans estimer chaque story en points
+W: Supprimer le besoin d'ordonner le Product Backlog
+W: Garantir une date de livraison fixe au client
+W: Mesurer la productivité de chaque développeur
+E: C'est l'idée du mouvement #NoEstimates : avec des stories de taille voisine, le nombre d'éléments par semaine prévoit aussi bien que les points, pour un effort moindre. Le temps gagné va au découpage et à la discussion du besoin.
+
+@099
+Q: Remettre dans l'ordre les étapes de la gestion des risques d'un projet.
+O: Identifier les risques avec l'équipe et les parties prenantes
+O: Évaluer leur probabilité et leur impact
+O: Décider d'une réponse : éviter, réduire, transférer ou accepter
+O: Suivre les risques et réviser le registre régulièrement
+E: Le registre des risques vit tout au long du projet : de nouveaux risques apparaissent et d'autres disparaissent. En agile, on le revoit souvent pendant la rétrospective ou l'affinage, et les actions de réduction entrent au backlog.
+
+@100
+Q: Pourquoi le Scrum Guide demande-t-il que le Product Owner soit une seule personne et non un comité ?
+C: Pour qu'une seule personne arbitre les priorités et en réponde
+W: Pour réduire le coût de la Scrum Team sur la durée du projet
+W: Parce qu'un comité ne peut pas avoir de compte dans Jira
+W: Pour que le Scrum Master puisse le remplacer en cas d'absence prolongée
+E: Le Product Owner peut écouter un comité ou des parties prenantes, mais leurs souhaits passent par lui. Un comité qui change d'avis à chaque réunion empêche l'équipe de savoir ce qui compte le plus.

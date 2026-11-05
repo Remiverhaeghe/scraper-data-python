@@ -1,0 +1,433 @@
+@051
+Q: Dans Tableau, que calcule cette expression de niveau de détail (LOD) ?
+C: Le total des ventes de chaque client, quel que soit le niveau de la vue
+W: Le total des ventes de la vue, réparti à parts égales entre les clients
+W: Les ventes du premier client de la liste, répétées sur chaque ligne de la vue
+W: Le nombre de clients distincts présents dans le niveau de détail de la vue
+E: FIXED calcule à la granularité indiquée, indépendamment des dimensions de la vue ; il ignore les filtres de dimension ordinaires mais pas les filtres de contexte. Ce total par client sert ensuite à classer les clients par tranche de chiffre d'affaires.
+```text
+{ FIXED [Client] : SUM([Ventes]) }
+```
+
+@052
+Q: Compléter cette expression Tableau qui calcule la date de première commande de chaque client.
+A: FIXED
+E: L'expression renvoie une valeur par client, répétée sur chacune de ses lignes. On en tire des analyses de cohortes : clients regroupés par mois de première commande, puis suivis mois après mois.
+```text
+{ ____ [Client] : MIN([Date commande]) }
+```
+
+@053
+Q: Dans Tableau, quelle différence entre un extrait et une connexion en direct ?
+C: L'extrait copie les données dans un fichier optimisé, le direct interroge la source
+W: L'extrait se limite aux fichiers Excel, le direct accepte les bases SQL du marché
+W: L'extrait se met à jour à chaque clic, le direct une seule fois par jour, pendant la nuit
+W: L'extrait garde la mise en forme des visuels, le direct garde les filtres
+E: Le fichier .hyper d'un extrait est rapide et allège la base source, mais ses données datent de la dernière actualisation. Le mode direct convient aux données qui doivent être fraîches et à une base assez rapide pour répondre.
+
+@054
+Q: Dans Qlik Sense, que signifient les couleurs vert, blanc et gris après une sélection ?
+C: Sélectionné, associé à la sélection, exclu par la sélection
+W: Valeur positive, valeur nulle, valeur négative du champ
+W: Donnée à jour, donnée en cours de chargement, donnée en erreur
+W: Champ mesure, champ dimension, champ non utilisé du modèle
+E: Le gris est souvent le plus instructif : les produits en gris après avoir choisi une région n'y ont jamais été vendus. Cette lecture des exclusions est le cœur du modèle associatif de Qlik.
+
+@055
+Q: Que calcule cette expression d'analyse d'ensemble (set analysis) dans Qlik ?
+C: La somme des ventes de 2025, quelle que soit l'année sélectionnée
+W: La somme des ventes de toutes les années sauf 2025 dans la sélection
+W: La somme des ventes de 2025 ajoutée aux ventes de l'année sélectionnée
+W: La somme des ventes de 2025, si l'année 2025 fait partie de la sélection
+E: Les accolades définissent un ensemble de données propre à l'expression : {<Année={2025}>} remplace la sélection sur Année. {1} désignerait toutes les données, en ignorant les sélections de l'utilisateur.
+```text
+Sum({<Année={2025}>} Ventes)
+```
+
+@056
+Q: Associer chaque outil de BI à son trait principal.
+P: Power BI => Modèle tabulaire, Power Query et langage DAX
+P: Tableau => Exploration visuelle par glisser-déposer et calculs LOD
+P: Qlik Sense => Moteur associatif et analyse d'ensemble
+P: Looker Studio => Tableaux de bord en ligne reliés aux sources Google
+P: Metabase => Outil libre de questions et tableaux de bord sur SQL
+E: Le choix dépend souvent de l'écosystème existant : Microsoft 365, Salesforce, Google. Metabase et Apache Superset sont gratuits et auto-hébergeables, une bonne option pour des besoins simples.
+
+@057
+Q: Un graphique en barres compare 12 régions, triées par ordre alphabétique. Que faut-il changer en priorité ?
+C: Trier les barres par valeur pour que le classement se lise d'un coup d'œil
+W: Passer à un graphique en secteurs pour montrer la part de chaque région
+W: Ajouter une couleur différente par région pour mieux les distinguer entre elles
+W: Afficher les barres en trois dimensions pour mettre en relief les écarts
+E: L'ordre alphabétique oblige à chercher la plus grande barre. Une couleur unique, avec une couleur d'accent pour la région à commenter, attire l'œil sur le message plutôt que sur la légende.
+
+@058
+Q: Pourquoi limiter le nombre de visuels sur une page de rapport Power BI ?
+C: Chaque visuel envoie ses requêtes, ce qui ralentit la page et brouille le message
+W: Le service Power BI refuse de publier les pages qui dépassent dix visuels
+W: Les visuels supplémentaires sont masqués sur les écrans de petite taille
+W: Les segments cessent de filtrer au-delà de huit visuels sur une même page du rapport
+E: Une page de trente visuels met plusieurs secondes à s'afficher et ne dit rien de clair. On vise une question par page, quelques indicateurs en haut, le détail accessible par extraction (drill-through) ou info-bulle.
+
+@059
+Q: À quoi sert l'analyseur de performances (Performance Analyzer) de Power BI Desktop ?
+C: À mesurer le temps de chaque visuel : requête DAX, affichage et autres
+W: À compter le nombre d'utilisateurs qui ont ouvert le rapport publié
+W: À vérifier que les relations du modèle ne contiennent pas de doublons
+W: À comparer la vitesse de Power BI avec celle des autres outils de BI du marché
+E: Il enregistre les durées pendant qu'on manipule la page. La requête DAX copiée se rejoue dans DAX Studio pour voir le plan et le temps passé dans le moteur de stockage ou de formules.
+
+@060
+Q: Pourquoi des mesures intermédiaires réutilisées valent-elles mieux qu'une seule longue formule ?
+C: Elles se testent séparément et une correction profite à toutes les mesures
+W: Le moteur DAX refuse les formules qui dépassent une certaine longueur de texte
+W: Elles occupent moins de place en mémoire que les colonnes calculées
+W: Elles sont recalculées une seule fois par jour, à l'actualisation
+E: Total ventes, CA N-1 et Évolution s'empilent : une erreur sur le total se corrige à un seul endroit. Les variables (VAR … RETURN) jouent le même rôle à l'intérieur d'une mesure et évitent de recalculer une sous-expression.
+
+@061
+Q: Compléter cette mesure qui stocke un résultat intermédiaire dans une variable.
+A: RETURN
+E: VAR calcule une valeur une fois, dans le contexte où elle est définie ; RETURN donne l'expression finale. Le code se lit mieux et la variable n'est pas réévaluée à chaque usage.
+```dax
+Évolution =
+VAR vCA = [Total ventes]
+VAR vCAPrecedent = [CA N-1]
+____ DIVIDE(vCA - vCAPrecedent, vCAPrecedent)
+```
+
+@062
+Q: Un rapport de 30 visuels est publié pour 400 utilisateurs. Combien de requêtes reçoit le modèle si chacun ouvre la page une fois, sans cache ?
+N: 12000
+U: requêtes
+E: 30 × 400 = 12 000 requêtes, au moins, car chaque clic sur un segment relance toutes celles de la page. En DirectQuery, ce sont autant de requêtes vers la base source, d'où l'intérêt des agrégations et de pages plus sobres.
+
+@063
+Q: À quoi servent les espaces de travail et les applications dans le service Power BI ?
+C: L'espace sert à construire et publier, l'application à diffuser une version stable
+W: L'espace sert aux fichiers Excel, l'application aux rapports Power BI publiés
+W: L'espace stocke les données sources, l'application les mesures DAX du modèle publié
+W: L'espace sert aux administrateurs, l'application aux développeurs de rapports
+E: Les auteurs modifient dans l'espace de travail sans déranger les lecteurs, qui consultent l'application. On sépare souvent développement, test et production avec des pipelines de déploiement.
+
+@064
+Q: Un service veut suivre ses ventes dans un tableau de bord gratuit et auto-hébergé, branché sur PostgreSQL. Quelle solution convient ?
+C: Metabase ou Apache Superset installés sur un serveur interne
+W: Power BI Desktop partagé par courriel en fichier .pbix à chacun
+W: Une feuille Excel recopiée chaque matin depuis la base à la main
+W: Tableau Public, en y publiant les données internes de l'entreprise
+E: Ces deux outils libres se connectent à PostgreSQL, permettent des questions en SQL ou par interface et des tableaux de bord partagés. Tableau Public rend les données visibles par tous sur Internet : à proscrire pour des données internes.
+
+@065
+Q: Le taux de marge vaut 30 % en janvier (CA 100 000 €) et 10 % en février (CA 10 000 €). Quel est le taux de marge sur les deux mois, en % ?
+N: 28,18
+U: %
+T: 1
+E: Marge : 30 000 + 1 000 = 31 000 € pour 110 000 € de CA, soit 28,18 %. La moyenne des taux, 20 %, est fausse : on recalcule le ratio à partir des sommes, ce que fait naturellement une mesure DIVIDE(SUM(Marge) ; SUM(CA)).
+
+@066
+Q: Quelle différence entre contexte de ligne et contexte de filtre en DAX ?
+C: Le contexte de ligne parcourt une ligne à la fois, le contexte de filtre restreint les lignes visibles
+W: Le contexte de ligne s'applique aux mesures, le contexte de filtre aux colonnes calculées du modèle de données
+W: Le contexte de ligne vient des segments, le contexte de filtre des relations entre les tables
+W: Le contexte de ligne se crée au chargement, le contexte de filtre à la publication du rapport
+E: Une colonne calculée ou un itérateur comme SUMX créent un contexte de ligne ; les visuels et CALCULATE fixent le contexte de filtre. Le contexte de ligne ne filtre rien par lui-même : il faut une transition de contexte.
+
+@067
+Q: Pourquoi cette colonne calculée donne-t-elle le total de chaque client, et non le total général ?
+C: CALCULATE transforme le contexte de ligne en filtre sur la ligne courante
+W: La colonne calculée est évaluée après l'application des segments du rapport
+W: SUM ne voit que la ligne courante dans une colonne calculée de dimension
+W: La relation entre Client et Ventes est inactive pour les colonnes calculées
+E: C'est la transition de contexte : CALCULATE, explicite ou implicite quand on appelle une mesure, change la ligne en cours en filtres. Sans CALCULATE, SUM(Ventes[Montant]) renverrait le même total général sur chaque client.
+```dax
+CA client = CALCULATE(SUM(Ventes[Montant]))
+```
+
+@068
+Q: Pourquoi cette mesure est-elle lente sur une table de 50 millions de lignes ?
+C: FILTER parcourt toute la table Ventes au lieu de filtrer une seule colonne
+W: CALCULATE ne peut pas utiliser les index de la table Ventes en mémoire vive du service
+W: Le filtre sur le montant oblige Power BI à recharger la table Ventes
+W: La comparaison à 1 000 se fait en texte, ce qui est plus coûteux
+E: Filtrer une table entière matérialise toutes ses colonnes pour chaque ligne. KEEPFILTERS(Ventes[Montant] > 1000) ou le simple filtre de colonne dans CALCULATE laisse le moteur de stockage travailler sur une seule colonne compressée.
+```dax
+Grosses ventes =
+CALCULATE([Total ventes], FILTER(Ventes, Ventes[Montant] > 1000))
+```
+
+@069
+Q: Que permet l'actualisation incrémentielle d'une table de faits dans Power BI ?
+C: Ne recharger que les partitions récentes et garder l'historique déjà chargé
+W: Charger une ligne à la fois dès qu'elle apparaît dans la base source
+W: Actualiser les visuels un par un pour que la page reste consultable
+W: Reprendre une actualisation interrompue à la ligne où elle s'est arrêtée la veille
+E: On définit les paramètres RangeStart et RangeEnd dans Power Query, une période à conserver et une période à rafraîchir. Le filtre doit se replier vers la source, sinon chaque partition relit toute la table.
+
+@070
+Q: Une table de faits contient 3 ans d'historique et l'actualisation incrémentielle recharge les 10 derniers jours. Quelle part des jours est rechargée chaque nuit, en % ?
+N: 0,91
+U: %
+T: 2
+E: 3 ans font 1 095 jours : 10 / 1 095 ≈ 0,91 %. L'actualisation passe de toute la table à moins d'un centième de son volume, ce qui la rend aussi plus sûre pour la base source.
+
+@071
+Q: Pourquoi un modèle composite combine-t-il des tables en import et une table en DirectQuery ?
+C: Pour garder des dimensions rapides en mémoire et des faits trop gros ou très frais à la source
+W: Pour que chaque utilisateur choisisse le mode de connexion qui lui convient le mieux
+W: Pour diviser par deux la taille du fichier .pbix lors de sa publication en ligne
+W: Pour permettre l'utilisation du langage M dans les mesures écrites en DAX
+E: Les dimensions en mode double répondent aux segments sans interroger la source. On y ajoute souvent une table d'agrégats importée : les visuels agrégés la lisent, le détail descend en DirectQuery.
+
+@072
+Q: Comment rendre dynamique un rôle de sécurité au niveau des lignes pour des centaines de commerciaux ?
+C: Filtrer une table de correspondance sur l'adresse de l'utilisateur connecté
+W: Créer un rôle par commercial et l'affecter à chacun dans le service
+W: Publier un rapport différent par commercial dans des espaces séparés
+W: Masquer les pages du rapport selon le nom du commercial connecté au service en ligne
+E: Une table Utilisateur-Région, filtrée par [Email] = USERPRINCIPALNAME() et reliée à la dimension Région, applique le périmètre à tous les faits. Ajouter un commercial revient à ajouter une ligne, sans retoucher le modèle.
+
+@073
+Q: Compléter ce filtre de rôle qui ne garde que les lignes de l'utilisateur connecté.
+A: USERPRINCIPALNAME
+E: La fonction renvoie l'identifiant de connexion, en général l'adresse électronique. Dans Power BI Desktop, elle donne le compte Windows ou le compte connecté : on teste avec « Afficher en tant que » et un autre utilisateur.
+```dax
+[Email] = ____()
+```
+
+@074
+Q: Pourquoi la sécurité au niveau des lignes ne protège-t-elle pas un rapport partagé à des membres de l'espace de travail ayant le rôle Contributeur ?
+C: Les rôles RLS ne s'appliquent qu'aux lecteurs, pas à ceux qui peuvent modifier
+W: Les rôles RLS ne fonctionnent que dans Power BI Desktop, pas dans le service en ligne
+W: Le rôle Contributeur désactive les filtres DAX des tables de dimension
+W: La RLS ne s'applique qu'aux rapports en DirectQuery, pas en import
+E: Administrateurs, membres et contributeurs voient toutes les données du modèle. Les lecteurs soumis à la RLS reçoivent le rôle Lecteur, ou accèdent par l'application ou un partage.
+
+@075
+Q: Remettre dans l'ordre la mise en production d'un rapport Power BI avec des pipelines de déploiement.
+O: Publier le rapport dans l'espace de développement
+O: Déployer vers l'espace de test
+O: Faire valider les chiffres par le métier sur des données réelles
+O: Déployer vers l'espace de production
+O: Mettre à jour l'application diffusée aux lecteurs
+E: Des règles de déploiement changent la source d'un espace à l'autre, comme la base de test et la base de production. Les lecteurs ne voient la nouvelle version qu'à la mise à jour de l'application.
+
+@076
+Q: Pourquoi enregistrer un rapport au format PBIP plutôt qu'en .pbix dans un dépôt Git ?
+C: Le modèle et le rapport sont des fichiers texte, comparables entre deux versions
+W: Le format PBIP chiffre les données pour qu'elles ne sortent pas de l'entreprise
+W: Le format PBIP s'ouvre dans Excel sans installer Power BI Desktop sur le poste
+W: Le format PBIP fusionne automatiquement les modifications de deux auteurs différents
+E: Un .pbix est une archive binaire : Git ne montre aucune différence. Le projet PBIP enregistre le modèle en TMDL ou JSON et le rapport en JSON, ce qui permet la relecture et l'intégration continue.
+
+@077
+Q: Que propose un rapport paginé par rapport à un rapport Power BI classique ?
+C: Une mise en page fixe pour l'impression ou le PDF, sur autant de pages que nécessaire
+W: Une actualisation en temps réel des données à chaque changement de page
+W: Une navigation par onglets entre plusieurs rapports interactifs liés
+W: Une mise en page qui s'adapte à la taille de l'écran du téléphone
+E: Les rapports paginés, issus de SQL Server Reporting Services, conviennent aux factures, listes et états réglementaires qui doivent tenir sur du papier. Ils se conçoivent dans Power BI Report Builder.
+
+@078
+Q: Pourquoi masquer les colonnes de clés techniques dans la vue Rapport ?
+C: Pour éviter que les auteurs les utilisent dans les visuels à la place des libellés
+W: Pour réduire la taille du modèle en supprimant ces colonnes de la mémoire
+W: Pour empêcher les relations du modèle d'utiliser ces colonnes de clé
+W: Pour chiffrer les identifiants clients dans le fichier publié en ligne
+E: Une colonne masquée reste dans le modèle et sert aux relations. On masque aussi les colonnes numériques des faits pour ne laisser que les mesures, ce qui évite les sommes implicites mal formatées.
+
+@079
+Q: Que fait ce code SQL dans un entrepôt pour une dimension de type 2 ?
+C: Il clôt la version courante des clients dont l'adresse a changé
+W: Il supprime les clients dont l'adresse a changé depuis la veille
+W: Il remplace l'ancienne adresse par la nouvelle sur la ligne courante
+W: Il crée une nouvelle ligne pour chaque client présent dans la source
+E: C'est la première étape d'un chargement de type 2 ; une seconde requête insère ensuite la nouvelle version, avec une nouvelle clé et date_fin vide. Comparer une empreinte (hash) des attributs suivis simplifie la détection des changements.
+```sql
+UPDATE dim_client d
+SET date_fin = CURRENT_DATE - 1, courant = FALSE
+FROM stg_client s
+WHERE d.code_client = s.code_client
+  AND d.courant
+  AND d.adresse <> s.adresse;
+```
+
+@080
+Q: À quoi sert une table de pont (bridge) dans un modèle décisionnel ?
+C: À représenter une relation plusieurs à plusieurs, comme un compte et ses titulaires
+W: À relier deux tables de faits sans passer par une dimension partagée
+W: À stocker les mesures DAX qui ne dépendent d'aucune table du modèle
+W: À accélérer les relations un à plusieurs entre une dimension et ses faits
+E: Un compte a plusieurs titulaires, un titulaire plusieurs comptes. La table de pont porte les paires ; un filtre bidirectionnel limité à cette relation propage la sélection. Attention aux totaux, qui ne sont plus additifs.
+
+@081
+Q: Quelle propriété ont les mesures semi-additives, comme un stock ou un solde de compte ?
+C: Elles s'additionnent entre produits mais pas dans le temps
+W: Elles s'additionnent dans le temps mais pas entre produits
+W: Elles ne s'agrègent qu'avec une moyenne, quelle que soit la dimension
+W: Elles se calculent sur la moitié des lignes de la table de faits
+E: Le stock de mars ne se somme pas au stock de février : on prend le dernier état de la période, avec LASTDATE, LASTNONBLANK ou CLOSINGBALANCEMONTH. Entre magasins, les stocks se somment normalement.
+
+@082
+Q: Compléter cette mesure de stock de fin de période.
+A: LASTDATE
+E: Dans un visuel par mois, LASTDATE garde le dernier jour du mois ; sur l'année, le 31 décembre. Si le dernier jour n'a pas de relevé, LASTNONBLANK cherche la dernière date qui en a un.
+```dax
+Stock fin =
+CALCULATE(SUM(Stock[Quantité]), ____(Calendrier[Date]))
+```
+
+@083
+Q: Un magasin a un stock de 120 unités le 31 janvier, 90 le 28 février et 150 le 31 mars. Quel stock affiche une mesure correcte pour le premier trimestre ?
+N: 150
+U: unités
+E: Le stock est semi-additif : le trimestre prend le dernier état, celui du 31 mars. Une SUM donnerait 360 unités, un chiffre sans réalité physique.
+
+@084
+Q: Pourquoi documenter la définition de chaque indicateur dans un dictionnaire partagé ?
+C: Pour que deux rapports nommant « chiffre d'affaires » calculent la même chose
+W: Pour respecter le format de fichier imposé par le service Power BI
+W: Pour que les mesures DAX se calculent plus vite dans le modèle publié
+W: Pour que les visuels se mettent à jour automatiquement après une modification
+E: Hors taxes ou TTC, avant ou après retours, date de commande ou de facture : sans définition commune, les réunions se passent à réconcilier des chiffres. Un modèle sémantique partagé, réutilisé par plusieurs rapports, applique cette définition une seule fois.
+
+@085
+Q: Associer chaque anomalie de données à son contrôle avant publication.
+P: Doublons de clé dans une dimension => Compter les lignes et les clés distinctes
+P: Ventes sans produit connu => Chercher les clés de faits absentes de la dimension
+P: Trous dans la table de dates => Vérifier une ligne par jour sans interruption
+P: Total différent de la comptabilité => Rapprocher un mois clôturé avec la source
+P: Montants en texte => Contrôler le type de colonne dans Power Query
+E: Une ligne de vente sans produit correspondant apparaît sous « (vide) » dans les visuels : le total reste juste mais la répartition est fausse. Ces contrôles se rejouent à chaque actualisation, idéalement dans l'entrepôt.
+
+@086
+Q: Pourquoi les agrégations définies par l'utilisateur accélèrent-elles un gros modèle en DirectQuery ?
+C: Les visuels agrégés lisent une petite table importée au lieu d'interroger la source détaillée
+W: Elles compressent la table de faits en DirectQuery dans la mémoire du service en ligne
+W: Elles remplacent les mesures DAX par des requêtes SQL plus courtes envoyées à la source
+W: Elles désactivent les relations inutiles pendant le calcul de chaque visuel du rapport
+E: Une table Ventes par jour, produit et magasin en import répond à la plupart des visuels en quelques millisecondes. Seule l'extraction vers le ticket descend vers les milliards de lignes de la source.
+
+@087
+Q: Une colonne de date-heure de 20 millions de lignes a 18 millions de valeurs distinctes. La découper en date et heure arrondie à la minute laisse combien de valeurs distinctes au plus pour l'heure ?
+N: 1440
+U: valeurs
+E: Une journée compte 24 × 60 = 1 440 minutes. Avec quelques milliers de dates d'un côté et 1 440 heures de l'autre, les dictionnaires de VertiPaq restent minuscules au lieu de 18 millions d'entrées.
+
+@088
+Q: Que révèle DAX Studio quand une mesure passe l'essentiel de son temps dans le moteur de formules ?
+C: Le calcul se fait ligne par ligne au lieu d'être délégué au moteur de stockage
+W: La source de données répond lentement aux requêtes envoyées par Power BI
+W: Le rapport contient trop de visuels pour la taille de l'écran utilisé
+W: Les relations du modèle ont été créées dans le mauvais sens de filtrage
+E: Le moteur de stockage, multicœur et sur colonnes compressées, est rapide ; le moteur de formules est monocœur. Un itérateur sur une table entière ou un IF dans une boucle font souvent basculer le travail du mauvais côté.
+
+@089
+Q: Pourquoi le mode double (dual) est-il conseillé pour les dimensions d'un modèle composite ?
+C: La table sert d'import avec les faits importés et de DirectQuery avec les faits à la source
+W: La table est chargée deux fois pour garantir une copie de secours dans le modèle
+W: La table s'actualise deux fois plus souvent que les autres tables du modèle
+W: La table peut recevoir deux relations actives vers la même table de faits
+E: Une dimension en import seul, reliée à des faits en DirectQuery, crée une relation limitée, plus lente et moins riche. En mode double, le moteur choisit selon la requête, ce qui garde des segments rapides.
+
+@090
+Q: Pourquoi un indicateur de satisfaction calculé sur 12 réponses doit-il être signalé sur le tableau de bord ?
+C: L'échantillon est trop petit : une ou deux réponses font varier fortement le résultat
+W: Le moteur de calcul arrondit différemment les petites séries de réponses
+W: Les indicateurs sur moins de 100 lignes ne s'affichent pas dans les cartes
+W: Le RGPD interdit d'afficher un indicateur calculé sur moins de 20 personnes
+E: Avec 12 réponses, l'écart d'un mois à l'autre peut être pur hasard. On affiche l'effectif à côté du taux et on masque ou grise les cellules sous un seuil, ce qui évite aussi d'identifier des personnes.
+
+@091
+Q: Pourquoi la compression de VertiPaq dépend-elle de l'ordre de tri des lignes au chargement ?
+C: L'encodage par plages regroupe les valeurs identiques qui se suivent
+W: Le moteur lit seulement les premières lignes pour choisir le type des colonnes
+W: Les lignes triées se chargent en parallèle sur plusieurs processeurs
+W: Les relations ne fonctionnent que si les clés sont chargées dans l'ordre
+E: Une colonne Pays triée devient quelques plages « France × 1 200 000 », très compactes. Le moteur choisit lui-même un ordre, mais trier la source par les colonnes peu variées aide parfois sur les très grosses tables.
+
+@092
+Q: Une mesure de taux de conversion affiche 4 % par mois mais 12 % sur l'année. Quelle cause rechercher ?
+C: Un dénominateur compté en distinct qui ne s'additionne pas d'un mois à l'autre
+W: Une actualisation incomplète des mois les plus anciens de la table de faits des ventes
+W: Un format d'affichage qui multiplie le résultat par trois au niveau du total
+W: Une relation inactive utilisée au niveau de l'année et pas au niveau du mois
+E: Les visiteurs distincts de l'année sont bien moins nombreux que la somme des visiteurs de chaque mois, car beaucoup reviennent. Le total est juste pour sa propre définition : le rapport doit l'expliquer ou comparer à périmètre identique.
+
+@093
+Q: Que fait ce code SQL au moment de charger une table de faits ?
+C: Il remplace les clés métier par les clés de substitution valides à la date de vente
+W: Il supprime les ventes des clients qui ont changé d'adresse dans l'année
+W: Il crée une version de dimension pour chaque nouvelle vente chargée
+W: Il copie l'adresse courante du client dans chaque ligne de vente
+E: La jointure sur l'intervalle de validité rattache chaque vente à la version du client en vigueur ce jour-là. Une vente sans correspondance va vers une ligne « inconnu » de la dimension plutôt que d'être perdue.
+```sql
+INSERT INTO fait_vente (client_sk, date_vente, montant)
+SELECT d.client_sk, s.date_vente, s.montant
+FROM stg_vente s
+JOIN dim_client d
+  ON d.code_client = s.code_client
+ AND s.date_vente BETWEEN d.date_debut AND COALESCE(d.date_fin, '9999-12-31');
+```
+
+@094
+Q: Pourquoi une table de faits ne doit-elle pas contenir de libellés comme le nom du produit ?
+C: Les libellés se répètent sur des millions de lignes et appartiennent à la dimension
+W: Les tables de faits ne peuvent pas contenir de colonnes de type texte
+W: Les libellés empêchent l'actualisation incrémentielle de la table de faits
+W: Le moteur refuse de calculer des mesures sur une table qui contient des colonnes de texte
+E: Le nom changé une fois dans la dimension s'applique à tout l'historique. Dans la table de faits, il faudrait réécrire des millions de lignes, et la colonne de texte alourdirait le modèle.
+
+@095
+Q: Remettre dans l'ordre le diagnostic d'un rapport Power BI lent.
+O: Mesurer chaque visuel avec l'analyseur de performances
+O: Isoler la requête DAX la plus lente
+O: L'analyser dans DAX Studio : moteur de stockage ou de formules
+O: Corriger la mesure ou le modèle, par exemple en supprimant une colonne inutile
+O: Mesurer à nouveau dans les mêmes conditions
+E: On corrige une seule chose à la fois et on mesure, cache vidé, pour savoir ce qui a réellement aidé. VertiPaq Analyzer, dans DAX Studio, montre aussi les colonnes qui pèsent le plus dans le modèle.
+
+@096
+Q: Qu'apporte une couche sémantique partagée, comme un modèle Power BI réutilisé par plusieurs rapports ?
+C: Une seule définition des mesures et des droits, utilisée par tous les rapports
+W: Une copie des données par rapport pour que chacun puisse les modifier
+W: Une traduction automatique des rapports dans la langue de l'utilisateur
+W: Une mise en page commune appliquée aux visuels de chacun des rapports de l'entreprise
+E: Sans elle, chaque rapport recopie ses mesures et la RLS, avec des écarts inévitables. Les rapports légers se connectent au modèle publié en connexion active, et la correction d'une mesure s'applique partout.
+
+@097
+Q: Pourquoi utiliser KEEPFILTERS dans cette mesure ?
+C: Pour combiner le filtre « Rouge » avec la sélection de l'utilisateur au lieu de la remplacer
+W: Pour garder en cache le résultat de la mesure entre deux actualisations du rapport
+W: Pour conserver les filtres du rapport lors de l'export du visuel au format Excel
+W: Pour empêcher la RLS de filtrer la table Produit pendant le calcul de la mesure
+E: Sans KEEPFILTERS, un segment sur « Bleu » donnerait quand même les ventes rouges. Avec, l'intersection de Bleu et Rouge est vide et la cellule aussi, ce que l'utilisateur attend souvent.
+```dax
+Ventes rouges =
+CALCULATE([Total ventes], KEEPFILTERS(Produit[Couleur] = "Rouge"))
+```
+
+@098
+Q: Un tableau de bord montre que les magasins ayant le plus de vendeurs vendent le plus. Pourquoi ne pas conclure qu'embaucher augmente les ventes ?
+C: Les grands magasins ont à la fois plus de vendeurs et plus de clients
+W: Le nombre de vendeurs n'est pas une mesure acceptée par les outils de BI
+W: La corrélation ne se calcule pas sur moins de cent magasins différents
+W: Les ventes et les effectifs viennent de deux tables qui ne sont pas reliées
+E: La taille du magasin cause les deux : c'est un facteur de confusion. On compare à taille égale, par exemple les ventes par vendeur et par mètre carré, ou on teste l'effet sur quelques magasins.
+
+@099
+Q: Remettre dans l'ordre la conception d'un tableau de bord avec ses utilisateurs.
+O: Recenser les décisions que le tableau de bord doit aider à prendre
+O: Choisir les indicateurs et leurs définitions avec le métier
+O: Vérifier que les données nécessaires existent et sont fiables
+O: Présenter une maquette et la faire corriger
+O: Livrer, puis suivre l'usage réel des pages
+E: Partir des données disponibles produit des rapports que personne n'ouvre. Les statistiques d'usage du service montrent quelles pages servent : on supprime celles qui ne sont pas lues.
+
+@100
+Q: Les chiffres d'un rapport diffèrent de ceux de la comptabilité pour un mois clôturé. Quelle démarche suivre en premier ?
+C: Comparer les définitions puis rapprocher le détail ligne à ligne sur le mois
+W: Corriger les chiffres du rapport pour qu'ils égalent ceux de la comptabilité
+W: Republier le rapport après une actualisation complète de toutes les tables
+W: Ajouter une note précisant que les chiffres du rapport sont des estimations
+E: L'écart vient souvent d'une règle (date de facture ou de livraison, avoirs, taxes) plus que d'un bogue. On isole les lignes en écart, on corrige la règle ou la donnée, et on ajoute un contrôle de rapprochement à chaque clôture.

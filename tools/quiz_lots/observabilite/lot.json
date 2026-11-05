@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110504,
+  "skills": ["supervision", "Prometheus", "Grafana", "ELK", "monitoring"],
+  "schemas": [
+    {
+      "name": "observabilite-alerte.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Parcours d'une alerte Prometheus",
+        "nodes": [
+          "Exporter : métriques exposées sur /metrics",
+          "Prometheus : collecte à chaque scrape_interval",
+          "Règle d'alerte : condition vraie pendant for",
+          "Alertmanager : groupement, inhibition, route",
+          "Notification : courriel, messagerie, astreinte"
+        ],
+        "note": "Chaque étape ajoute un délai au temps de détection"
+      }
+    },
+    {
+      "name": "observabilite-otel.svg",
+      "questions": ["045", "046", "047"],
+      "diagram": {
+        "title": "Pipeline d'un collecteur OpenTelemetry",
+        "nodes": [
+          "SDK : spans, métriques et journaux de l'application",
+          "Export OTLP vers le collecteur",
+          "Receivers : réception des données",
+          "Processors : memory_limiter, filtrage, batch",
+          "Exporters : Tempo, Prometheus, Loki"
+        ],
+        "note": "Changer de stockage ne touche que la configuration du collecteur"
+      }
+    }
+  ]
+}

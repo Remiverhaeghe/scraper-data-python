@@ -58,7 +58,8 @@ def add_benefits(pItems):
 
     vItems = pItems.copy()
 
-    vTexts = vItems.reindex(columns=TEXT_COLUMNS).fillna("").astype(str)
+    # Une colonne absente arrive en float64 vide, qui refuse une chaîne vide.
+    vTexts = vItems.reindex(columns=TEXT_COLUMNS).astype(object).fillna("").astype(str)
 
     vBenefits = [
         detect_benefits(" ".join(vRow)) for vRow in vTexts.itertuples(index=False)

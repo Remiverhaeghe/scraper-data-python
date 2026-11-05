@@ -1,0 +1,448 @@
+@051
+Q: Qu'apporte le principe RAII en C++ pour un pilote qui prend un mutex ?
+C: Le destructeur rend le mutex, même en cas de sortie anticipée de la fonction
+W: Le constructeur prend le mutex plus vite qu'un appel direct au noyau temps réel
+W: Le compilateur vérifie à la compilation que deux tâches ne prennent pas le mutex
+W: Le mutex est créé en flash et ne consomme donc plus de mémoire vive sur la carte
+E: Un objet de verrou pris dans le constructeur et rendu dans le destructeur évite d'oublier la libération sur un return ajouté plus tard. std::lock_guard applique ce principe ; on écrit le même pour un mutex FreeRTOS ou une section critique.
+
+@052
+Q: Compléter cette classe pour que la section critique se termine à la sortie du bloc.
+A: ~SectionCritique
+E: Le destructeur porte le nom de la classe précédé d'un tilde ; il est appelé automatiquement en fin de portée. Les interruptions sont ainsi réactivées sur chaque chemin de sortie de la fonction.
+```cpp
+class SectionCritique {
+public:
+    SectionCritique() : etat(__get_PRIMASK()) { __disable_irq(); }
+    ____() { __set_PRIMASK(etat); }
+private:
+    uint32_t etat;
+};
+```
+
+@053
+Q: Pourquoi préférer std::array à std::vector dans un micrologiciel ?
+C: Sa taille est fixée à la compilation et il n'alloue pas de mémoire dynamique
+W: Il est le seul conteneur de la bibliothèque standard à fonctionner sans exceptions
+W: Il range ses éléments en flash, ce qui libère la mémoire vive pour la pile
+W: Il vérifie les indices à chaque accès sans coût supplémentaire à l'exécution
+E: std::vector alloue sur le tas, avec les risques de fragmentation. std::array a le coût d'un tableau C tout en connaissant sa taille, ce qui permet les boucles for sur intervalle et les algorithmes de la bibliothèque standard.
+
+@054
+Q: Que permet constexpr sur cette fonction ?
+C: Calculer la table à la compilation, sans code ni temps d'exécution au démarrage
+W: Interdire la modification de la table une fois la carte mise sous tension et démarrée
+W: Exécuter la fonction dans une interruption sans risque d'accès concurrent
+W: Ranger la fonction en RAM pour qu'elle s'exécute plus vite qu'en flash
+E: Une table de sinus ou de CRC calculée par une fonction constexpr se retrouve directement dans .rodata. On évite ainsi une table recopiée à la main et le temps de calcul au démarrage.
+```cpp
+constexpr std::array<uint8_t, 256> table_crc8() {
+    std::array<uint8_t, 256> t{};
+    for (int i = 0; i < 256; ++i) { t[i] = calcul_crc8(i); }
+    return t;
+}
+constexpr auto TABLE = table_crc8();
+```
+
+@055
+Q: Quel est le coût d'une fonction virtuelle en C++ embarqué ?
+C: Un pointeur de table par objet et un appel indirect, sans allocation dynamique
+W: Une allocation dynamique sur le tas à chaque appel de la fonction virtuelle
+W: Une copie complète de l'objet sur la pile à chaque appel de la fonction virtuelle
+W: Un système d'exploitation obligatoire pour résoudre l'appel à l'exécution
+E: Le coût est souvent acceptable pour une interface de pilote (capteur, bus). On l'évite dans une boucle très serrée, où un template peut résoudre l'appel à la compilation et permettre l'inlining.
+
+@056
+Q: Pourquoi une classe de base avec des fonctions virtuelles doit-elle avoir un destructeur virtuel ?
+C: Pour que delete via un pointeur de base appelle aussi le destructeur dérivé
+W: Pour que le compilateur place la classe dans la mémoire flash du microcontrôleur
+W: Pour que les objets dérivés soient construits plus vite au démarrage du programme
+W: Pour interdire la copie des objets de la classe dérivée par affectation
+E: Sans destructeur virtuel, détruire un objet dérivé par un pointeur de base est un comportement indéfini : les ressources de la classe dérivée ne sont pas libérées. Si les objets ne sont jamais détruits, un destructeur protégé non virtuel suffit.
+
+@057
+Q: Associer chaque mot-clé ou outil C++ à son usage en embarqué.
+P: constexpr => Calculer une valeur à la compilation
+P: enum class => Définir des états typés sans conversion implicite en entier
+P: template => Écrire un pilote générique résolu à la compilation
+P: std::unique_ptr => Posséder un objet seul et le libérer à la fin
+P: namespace => Regrouper les noms d'un module pour éviter les conflits
+E: Le C++ moderne apporte de la sûreté sans coût d'exécution, à condition de maîtriser ce qu'il génère. Un template instancié pour dix types produit dix copies du code : on surveille la taille de la flash.
+
+@058
+Q: Que signifie volatile uint32_t * const dans cette définition de registre ?
+C: Un pointeur fixe vers une valeur relue à chaque accès
+W: Un pointeur modifiable vers une valeur en lecture seule
+W: Un pointeur fixe vers une valeur rangée en flash
+W: Un pointeur relu à chaque accès vers une constante
+E: On lit la déclaration de droite à gauche : const s'applique au pointeur (l'adresse ne change pas), volatile à la valeur pointée (le matériel peut la changer). C'est la forme habituelle des registres dans les fichiers CMSIS.
+```c
+#define GPIOA_ODR (*(volatile uint32_t * const)0x40020014u)
+```
+
+@059
+Q: Pourquoi cette structure fait-elle 12 octets et non 7 sur un Cortex-M ?
+C: Le compilateur ajoute des octets de bourrage pour aligner chaque champ
+W: Le compilateur range chaque champ dans un mot de 32 bits complet et aligné
+W: Le compilateur ajoute un en-tête de 5 octets pour la gestion du tas
+W: Le compilateur double la taille des champs de type uint8_t
+E: Le uint32_t doit commencer à une adresse multiple de 4 : 3 octets de bourrage suivent a, puis 2 après c pour aligner la structure entière. Trier les champs par taille décroissante ramène la structure à 8 octets.
+```c
+struct mesure {
+    uint8_t  a;
+    uint32_t b;
+    uint16_t c;
+};
+```
+
+@060
+Q: Quelle taille aurait la structure mesure en rangeant ses champs dans l'ordre b, c, a ?
+N: 8
+U: octets
+E: b occupe 4 octets, c 2, a 1, soit 7, et un octet de bourrage final aligne la structure sur 4 pour qu'un tableau de mesures reste aligné. On gagne 4 octets par élément sans attribut propre au compilateur.
+
+@061
+Q: Pourquoi éviter __attribute__((packed)) pour décoder une trame reçue ?
+C: Les accès non alignés peuvent être lents ou provoquer une faute sur certains cœurs
+W: L'attribut empêche le compilateur d'optimiser le reste du programme entier
+W: L'attribut ajoute des octets de bourrage à la fin de chaque trame décodée
+W: L'attribut change l'ordre des octets des champs de la structure
+E: Un Cortex-M0 lève une HardFault sur un accès 32 bits non aligné, et l'attribut n'est pas portable entre compilateurs. On décode la trame octet par octet, avec des décalages, ce qui règle aussi l'ordre des octets.
+
+@062
+Q: Compléter cette lecture d'un entier 16 bits big-endian à partir de deux octets reçus.
+A: <<
+E: L'octet de poids fort arrive en premier : on le décale de 8 bits puis on ajoute l'octet de poids faible. Ce code fonctionne quel que soit l'ordre des octets du processeur, contrairement à un memcpy dans un uint16_t.
+```c
+uint16_t valeur = (uint16_t)((trame[0] ____ 8) | trame[1]);
+```
+
+@063
+Q: Sur un bus CAN, deux nœuds émettent en même temps. Lequel gagne l'arbitrage ?
+C: Celui dont l'identifiant a la valeur numérique la plus basse
+W: Celui qui a commencé à émettre en premier sur le bus
+W: Celui dont la trame contient le plus d'octets de données
+W: Celui qui est relié le plus près de la résistance de terminaison
+E: Un bit dominant (0) écrase un bit récessif (1). Chaque nœud relit le bus pendant l'identifiant ; celui qui lit un 0 alors qu'il envoie un 1 se retire sans détruire la trame gagnante. L'identifiant fixe donc la priorité du message.
+
+@064
+Q: Combien vaut la résistance placée à chaque extrémité d'un bus CAN haute vitesse ?
+N: 120
+U: Ω
+E: Deux résistances de 120 Ω, une à chaque bout, adaptent l'impédance du câble et évitent les réflexions. On mesure environ 60 Ω entre CAN_H et CAN_L, alimentation coupée, quand les deux sont en place.
+
+@065
+Q: Quels réglages d'un bus SPI doivent correspondre entre le maître et l'esclave ?
+C: Le mode (polarité et phase de l'horloge), l'ordre des bits et la fréquence maximale
+W: L'adresse sur 7 bits de l'esclave et la valeur des résistances de rappel du bus partagé
+W: Le nombre de bits d'arrêt, la parité et le débit en bauds de la liaison série
+W: L'identifiant du message et la valeur de la résistance de terminaison du bus
+E: CPOL fixe l'état de repos de l'horloge, CPHA le front où la donnée est lue : quatre modes possibles. Un mauvais mode donne des données décalées d'un bit, une erreur difficile à voir sans analyseur logique.
+
+@066
+Q: Une variable partagée est déclarée volatile. Pourquoi ce code reste-t-il faux sur un Cortex-M ?
+C: L'incrément lit, modifie puis écrit : une interruption peut s'intercaler entre ces étapes
+W: Le mot-clé volatile n'est pas reconnu par les compilateurs ARM récents
+W: Une variable volatile ne peut pas être modifiée dans une interruption
+W: Le compilateur supprime les incréments d'une variable volatile non lue
+E: volatile empêche la mise en cache dans un registre, pas l'entrelacement. Pour un compteur partagé, on utilise une section critique, std::atomic ou les instructions LDREX et STREX des Cortex-M3 et plus.
+```c
+volatile uint32_t compteur;
+
+void SysTick_Handler(void) { compteur++; }
+
+void tache(void) { compteur++; }
+```
+
+@067
+Q: Pourquoi std::atomic<uint32_t> ne fonctionne-t-il pas sans verrou sur un Cortex-M0 ?
+C: Ce cœur n'a pas les instructions LDREX et STREX des cœurs plus récents
+W: Ce cœur ne sait pas manipuler les entiers de 32 bits en une instruction
+W: Ce cœur ne dispose pas de contrôleur d'interruptions de type NVIC
+W: Ce cœur exige un système d'exploitation pour les opérations atomiques
+E: Sur ARMv6-M, la bibliothèque doit masquer les interruptions pour simuler l'atomicité, ou l'édition de liens échoue faute de fonctions __atomic_*. is_lock_free() permet de le vérifier ; une lecture ou une écriture alignée de 32 bits reste atomique.
+
+@068
+Q: Où placer le rafraîchissement du chien de garde dans une super-boucle ?
+C: Une fois par tour de boucle, après que chaque tâche a confirmé son exécution
+W: Dans l'interruption d'un temporisateur, à intervalle régulier et fixe
+W: Au début de chaque fonction appelée par la boucle principale
+W: Dans le gestionnaire HardFault, pour éviter un redémarrage
+E: Un rafraîchissement depuis une interruption de temporisateur continue même si la boucle est bloquée : le chien de garde ne sert plus à rien. Avec un RTOS, une tâche de surveillance ne le rafraîchit que si chaque tâche a signalé sa vie.
+
+@069
+Q: Que provoque ce code selon la norme C ?
+C: Un comportement indéfini, que le compilateur peut traiter comme impossible
+W: Un retour à la valeur INT32_MIN, garanti par la norme du langage C
+W: Une erreur de compilation, car le débordement est détecté à l'avance
+W: Une interruption matérielle de débordement levée par le processeur Cortex-M
+E: Le débordement d'un entier signé est indéfini : l'optimiseur peut supprimer le test x + 1 > x, qu'il considère toujours vrai. -fsanitize=undefined le détecte sur PC ; -fwrapv impose le rebouclage, au prix de la portabilité.
+```c
+int32_t x = INT32_MAX;
+x = x + 1;
+```
+
+@070
+Q: Pourquoi ce test donne-t-il un résultat inattendu ?
+C: a et b sont promus en int : 200 + 100 vaut 300, qui dépasse 255
+W: L'addition de deux uint8_t provoque une erreur de compilation en C
+W: La comparaison avec 255 se fait en virgule flottante
+W: Le compilateur range somme dans un registre de 8 bits
+E: Avant un calcul, les types plus petits que int sont promus en int : a + b vaut 300 et le test est faux, alors que le stocker dans un uint8_t donnerait 44. Ces promotions surprennent surtout avec les décalages et les comparaisons signé et non signé.
+```c
+uint8_t a = 200, b = 100;
+if (a + b < 255) { /* ... */ }
+```
+
+@071
+Q: Que renvoie sizeof(tab) dans cette fonction compilée pour un Cortex-M ?
+N: 4
+U: octets
+E: Un tableau passé en paramètre devient un pointeur : sizeof donne la taille d'une adresse, 4 octets sur une cible 32 bits. On passe donc la longueur en paramètre, ou on utilise std::span en C++20.
+```c
+void moyenne(uint16_t tab[10]) {
+    size_t n = sizeof(tab);
+}
+```
+
+@072
+Q: Pourquoi strtok ne doit-il pas être appelé depuis deux tâches FreeRTOS ?
+C: Il garde sa position dans une variable statique partagée entre les appels
+W: Il désactive les interruptions pendant toute la durée du découpage
+W: Il alloue la chaîne découpée sur le tas avec malloc à chaque appel
+W: Il ne fonctionne que sur des chaînes rangées en mémoire flash
+E: Une fonction non réentrante mélange les découpages des deux tâches. On utilise strtok_r, qui reçoit sa position en paramètre ; la même question se pose pour les bibliothèques standard en général, d'où les options de newlib réentrantes.
+
+@073
+Q: Pourquoi un champ de bits ne convient-il pas pour décrire une trame d'un protocole ?
+C: L'ordre et le placement des bits dépendent du compilateur
+W: Un champ de bits ne peut pas dépasser huit bits de largeur
+W: Un champ de bits est rangé en flash et ne peut pas être modifié
+W: Un champ de bits n'est pas accepté dans une structure C++
+E: La norme laisse au compilateur l'ordre des champs et leur regroupement. Pour une trame ou un registre documenté, on préfère des masques et des décalages explicites, portables et faciles à relire avec la documentation.
+
+@074
+Q: Un micrologiciel sur pile doit tenir des mois sur un Cortex-M. Quelle mesure réduit le plus la consommation ?
+C: Mettre le processeur en veille entre deux événements et le réveiller par interruption
+W: Augmenter la fréquence d'horloge pour finir les calculs plus vite
+W: Remplacer les interruptions par une scrutation rapide des broches
+W: Désactiver le chien de garde pour éviter les réveils inutiles
+E: L'instruction WFI arrête le cœur jusqu'à la prochaine interruption ; les modes Stop ou Standby coupent davantage, au prix d'un réveil plus long. On coupe aussi l'horloge des périphériques inutilisés et on règle les broches libres en entrée analogique.
+
+@075
+Q: Un capteur I2C reste bloqué après une coupure au milieu d'une lecture : SDA reste à 0. Comment débloquer le bus ?
+C: Générer jusqu'à neuf impulsions sur SCL, puis une condition d'arrêt
+W: Couper l'alimentation des résistances de rappel du bus pendant une seconde
+W: Envoyer une trame de réinitialisation à l'adresse générale 0x7F du bus
+W: Basculer la ligne SDA en sortie et la forcer à 1 pendant la lecture
+E: L'esclave attend la fin d'un octet commencé. Quelques coups d'horloge lui font terminer son transfert et relâcher SDA, puis le STOP remet le bus au repos. Beaucoup de pilotes le prévoient au démarrage pour cette raison.
+
+@076
+Q: Le DMA remplit un tampon en RAM sur un Cortex-M7 avec cache de données. Le processeur y lit d'anciennes valeurs. Pourquoi ?
+C: Le cache garde l'ancienne copie : il faut l'invalider sur ce tampon après le transfert
+W: Le DMA écrit plus lentement que le processeur ne lit dans la mémoire vive
+W: Le tampon doit être déclaré volatile pour que le DMA puisse y écrire
+W: Le DMA ne peut pas écrire dans la RAM utilisée par le processeur
+E: Le DMA écrit en mémoire sans passer par le cache. On appelle SCB_InvalidateDCache_by_Addr sur le tampon aligné sur 32 octets, ou on place le tampon dans une zone non cachée configurée par la MPU.
+
+@077
+Q: Remettre dans l'ordre le démarrage d'un Cortex-M après une remise à zéro.
+O: Le processeur lit le pointeur de pile initial à l'adresse 0
+O: Il lit l'adresse du gestionnaire de Reset dans la table des vecteurs
+O: Le code de démarrage copie .data et met .bss à zéro
+O: SystemInit règle les horloges, puis les constructeurs C++ sont appelés
+O: La fonction main démarre
+E: Tout ceci se trouve dans le fichier startup et le script d'édition de liens. Une variable globale qui ne vaut pas sa valeur initiale signale souvent une copie de .data oubliée dans un code de démarrage écrit à la main.
+
+@078
+Q: À quoi sert le script d'édition de liens (fichier .ld) d'un projet embarqué ?
+C: À indiquer où placer chaque section dans la flash et la RAM de la puce
+W: À compiler les fichiers sources dans le bon ordre pour le microcontrôleur
+W: À télécharger le binaire dans la carte au moyen de la sonde de débogage
+W: À lister les bibliothèques à installer sur le PC avant la compilation
+E: Il décrit les zones mémoire (MEMORY) et le placement des sections (SECTIONS). On le modifie pour réserver une zone au chargeur d'amorçage, à des paramètres en flash ou à une RAM rapide pour une routine critique.
+
+@079
+Q: Qu'est-ce que MISRA C ?
+C: Un ensemble de règles de codage C pour les logiciels critiques
+W: Un compilateur C certifié pour l'automobile et l'aéronautique civile
+W: Une bibliothèque standard allégée pour les microcontrôleurs
+W: Une norme de bus de terrain pour les calculateurs embarqués
+E: Né dans l'automobile, MISRA C interdit ou encadre les constructions risquées : allocation dynamique, récursivité, conversions implicites, goto. Les outils d'analyse statique (cppcheck avec son module, PC-lint, Polyspace) vérifient la conformité.
+
+@080
+Q: Comment tester le code de calcul d'un micrologiciel sans la carte ?
+C: Compiler ce code pour le PC avec un cadre de tests et remplacer le matériel par des doublures
+W: Lancer le micrologiciel sur le PC en le compilant avec arm-none-eabi-gcc
+W: Tester le code dans le débogueur de la carte, point d'arrêt par point d'arrêt
+W: Attendre la carte finale, car le code embarqué ne peut pas se tester ailleurs
+E: En séparant la logique (filtre, protocole, machine à états) des accès aux registres, on la teste avec Unity, CppUTest ou GoogleTest en quelques secondes, dans la CI. Les accès matériels passent par une interface simulée.
+
+@081
+Q: Associer chaque outil de diagnostic à ce qu'il permet de voir.
+P: Analyseur logique => Les trames SPI, I2C ou UART décodées sur les fils
+P: Oscilloscope => La forme analogique d'un signal et ses fronts
+P: Sonde SWD => Les registres et la mémoire du processeur à l'arrêt
+P: Fichier .map => La place occupée par chaque fonction et variable
+P: SWO ou RTT => Des traces envoyées par le programme sans arrêter le cœur
+E: Un analyseur logique bon marché suffit souvent à trouver un mauvais mode SPI ou une adresse I2C erronée. L'oscilloscope révèle ce que l'analyseur ne voit pas : fronts lents, rebonds, parasites.
+
+@082
+Q: Que fait std::move dans cet appel ?
+C: Il permet de transférer le tampon sans le copier
+W: Il déplace l'objet de la RAM vers la mémoire flash
+W: Il copie le tampon puis efface l'objet d'origine
+W: Il change l'adresse de l'objet sur la pile
+E: std::move convertit en référence de droite ; le constructeur par déplacement récupère alors le pointeur interne au lieu de dupliquer les données. Après l'appel, trame reste valide mais dans un état non spécifié, à ne plus lire.
+```cpp
+Trame trame = construire_trame();
+file.envoyer(std::move(trame));
+```
+
+@083
+Q: Quelle est la règle de cinq en C++ ?
+C: Une classe qui définit un destructeur, une copie ou un déplacement définit les cinq
+W: Une classe ne doit pas dépasser cinq fonctions membres publiques
+W: Un pilote doit gérer au plus cinq interruptions différentes
+W: Une fonction ne doit pas dépasser cinq paramètres en entrée
+E: Destructeur, constructeur de copie, affectation par copie, constructeur et affectation par déplacement. Pour une classe qui possède un registre ou un tampon, on supprime souvent la copie (= delete) pour éviter deux propriétaires.
+
+@084
+Q: Pourquoi le placement new est-il utilisé en embarqué ?
+C: Pour construire un objet dans une zone mémoire réservée à l'avance
+W: Pour allouer un objet sur le tas plus vite que l'opérateur new habituel
+W: Pour placer un objet dans un registre du processeur pendant son usage
+W: Pour créer un objet dans la flash depuis le programme en cours
+E: On réserve un tampon statique correctement aligné, puis new (tampon) Objet(…) y appelle le constructeur sans allocation. On appelle ensuite le destructeur explicitement : c'est ainsi que fonctionnent les pools d'objets.
+
+@085
+Q: Une HardFault survient sur un Cortex-M. Quelle information lire en premier pour trouver l'instruction fautive ?
+C: Le PC sauvegardé sur la pile par l'exception, avec les registres CFSR et HFSR
+W: La valeur du compteur du chien de garde, qui donne le numéro de l'instruction fautive
+W: Le contenu de la section .bss, qui garde une trace des dernières erreurs
+W: Le registre de l'UART, où le processeur écrit le message de la faute
+E: À l'entrée de l'exception, le cœur empile R0-R3, R12, LR, PC et xPSR. Le PC empilé, rapproché du fichier .map ou de addr2line, désigne l'instruction ; CFSR précise la cause (accès non aligné, division par zéro, bus).
+
+@086
+Q: Remettre dans l'ordre une mise à jour à distance (OTA) sûre avec deux emplacements de flash.
+O: Télécharger la nouvelle image dans l'emplacement inactif
+O: Vérifier sa signature et son empreinte
+O: Marquer l'image à essayer et redémarrer
+O: Le chargeur d'amorçage lance la nouvelle image en mode essai
+O: L'application confirme son bon fonctionnement, sinon retour à l'ancienne
+E: La confirmation évite qu'une image qui plante au démarrage bloque la carte : sans confirmation, le chargeur revient à l'ancienne image. MCUboot applique ce schéma pour Zephyr et d'autres systèmes.
+
+@087
+Q: À quoi sert le démarrage sécurisé (secure boot) d'un microcontrôleur ?
+C: À n'exécuter qu'un micrologiciel signé par une clé de confiance
+W: À chiffrer les données envoyées par la carte sur le réseau
+W: À accélérer le démarrage en sautant le code d'initialisation des horloges
+W: À protéger la carte contre les surtensions de l'alimentation
+E: Le chargeur d'amorçage, lui-même protégé en écriture, vérifie la signature de l'application avec une clé publique. On ferme aussi l'accès de débogage en production (RDP sur STM32), sinon la protection se contourne par la sonde.
+
+@088
+Q: En format Q15, quelle valeur décimale représente l'entier 16 384 ?
+N: 0,5
+E: Q15 code un nombre entre -1 et 1 sur 16 bits signés : valeur = entier / 32 768. 16 384 / 32 768 = 0,5. Ce calcul en virgule fixe remplace les flottants sur les processeurs sans unité de calcul flottant.
+
+@089
+Q: Compléter cette multiplication de deux nombres Q15 a et b.
+A: 15
+E: Le produit de deux Q15 est un Q30 sur 32 bits ; on décale de 15 bits pour revenir au Q15. Un arrondi (ajouter 1 << 14 avant le décalage) et une saturation sur -1 × -1 complètent souvent l'opération.
+```c
+int16_t produit = (int16_t)(((int32_t)a * b) >> ____);
+```
+
+@090
+Q: Trois tâches périodiques ont des temps d'exécution de 1, 2 et 3 ms pour des périodes de 10, 20 et 30 ms. Quel est le taux d'utilisation du processeur, en % ?
+N: 30
+U: %
+E: 1/10 + 2/20 + 3/30 = 0,1 + 0,1 + 0,1 = 0,3. Avec des priorités fixes données aux périodes les plus courtes (rate monotonic), trois tâches sont garanties ordonnançables sous 78 % environ.
+
+@091
+Q: Dans l'ordonnancement rate monotonic, comment fixe-t-on la priorité des tâches périodiques ?
+C: Plus la période est courte, plus la priorité est haute
+W: Plus la tâche est longue, plus la priorité est haute
+W: Plus la tâche est ancienne, plus la priorité est haute
+W: Plus la période est longue, plus la priorité est haute
+E: Pour des priorités fixes et des échéances égales aux périodes, c'est l'attribution optimale. Elle se vérifie par la borne de Liu et Layland, n(2^(1/n) - 1), ou par une analyse du temps de réponse de chaque tâche.
+
+@092
+Q: Pourquoi mesurer le pire temps d'exécution (WCET) d'une routine plutôt que son temps moyen ?
+C: Une échéance manquée une fois peut suffire à provoquer une défaillance
+W: Le temps moyen ne peut pas se mesurer sur un microcontrôleur
+W: Le pire temps est plus facile à calculer que le temps moyen
+W: Le compilateur optimise le code d'après la valeur du pire temps
+E: Une commande de moteur qui rate son cycle une fois sur dix mille peut endommager le matériel. On mesure avec le compteur DWT_CYCCNT ou une broche basculée à l'oscilloscope, dans les pires conditions : caches froids, interruptions simultanées.
+
+@093
+Q: Sur un Cortex-M3, que permet le registre BASEPRI par rapport à __disable_irq() ?
+C: Masquer les interruptions sous un seuil et laisser passer les plus urgentes
+W: Masquer les interruptions plus vite, en une seule instruction du processeur
+W: Masquer les exceptions HardFault et NMI en plus des interruptions
+W: Masquer les interruptions d'un seul périphérique choisi par son numéro
+E: FreeRTOS s'en sert : les interruptions au-dessus de configMAX_SYSCALL_INTERRUPT_PRIORITY ne sont jamais retardées par le noyau, mais ne doivent appeler aucune fonction du RTOS. Attention, sur Cortex-M, un nombre plus petit signifie une priorité plus haute.
+
+@094
+Q: Pourquoi une routine d'interruption appelant xQueueSendFromISR plante-t-elle quand sa priorité NVIC vaut 0 ?
+C: Sa priorité dépasse le seuil autorisé pour appeler le noyau FreeRTOS
+W: La priorité 0 interdit tout accès à la mémoire vive pendant la routine
+W: La priorité 0 est réservée au temporisateur SysTick du système
+W: La file doit être créée avec une priorité égale à celle de la routine
+E: La priorité 0 est la plus haute : la routine peut interrompre le noyau au milieu d'une section critique et corrompre ses listes. configASSERT avec vPortValidateInterruptPriority détecte cette erreur, fréquente avec les réglages par défaut des HAL.
+
+@095
+Q: Pourquoi calculer un CRC sur une image de micrologiciel ou un bloc de paramètres en flash ?
+C: Pour détecter une corruption avant de l'utiliser
+W: Pour chiffrer le contenu contre la lecture par sonde
+W: Pour compresser l'image et gagner de la place en flash
+W: Pour accélérer la lecture de la flash par le processeur
+E: Un CRC détecte les erreurs accidentelles (écriture interrompue, bit inversé) mais pas une modification volontaire : contre celle-ci, il faut une signature. Beaucoup de microcontrôleurs ont un calculateur CRC matériel.
+
+@096
+Q: Quelle est la différence entre la norme IEC 61508 et l'ISO 26262 pour le logiciel embarqué ?
+C: La première est générique pour la sûreté fonctionnelle, la seconde l'adapte à l'automobile
+W: La première vise le logiciel, la seconde le matériel électronique des calculateurs
+W: La première est américaine, la seconde européenne, pour les mêmes équipements
+W: La première traite de la cybersécurité, la seconde de la compatibilité électromagnétique des cartes
+E: IEC 61508 définit des niveaux SIL ; ISO 26262 des niveaux ASIL de A à D. Plus le niveau est élevé, plus les exigences de méthode sont fortes : règles de codage, couverture de tests, analyse statique, traçabilité des exigences.
+
+@097
+Q: Que fait le mot-clé volatile sur cette boucle d'attente de 1 000 itérations ?
+C: Il empêche le compilateur de supprimer la boucle, sans en fixer la durée
+W: Il garantit une durée exacte de 1 000 cycles pour chaque appel de la fonction
+W: Il désactive les interruptions pendant la boucle pour en stabiliser la durée
+W: Il place la boucle en RAM pour qu'elle s'exécute à vitesse constante
+E: Sans volatile, -O2 supprime la boucle qui ne produit rien. Sa durée dépend encore du niveau d'optimisation, des états d'attente de la flash et des interruptions : pour une attente précise, on utilise un temporisateur ou DWT_CYCCNT.
+```c
+void attente(void) {
+    for (volatile uint32_t i = 0; i < 1000; i++) { }
+}
+```
+
+@098
+Q: Associer chaque niveau d'optimisation de GCC à son usage courant en embarqué.
+P: -O0 => Débogage pas à pas fidèle au code source
+P: -Os => Réduire la taille du binaire pour tenir en flash
+P: -O2 => Accélérer le code sans trop grossir le binaire
+P: -Og => Optimiser modérément tout en restant débogable
+E: Un bogue qui n'apparaît qu'en -O2 révèle souvent un comportement indéfini ou un volatile manquant, que l'optimiseur exploite. On teste donc le binaire avec le niveau d'optimisation livré.
+
+@099
+Q: Compléter ce code pour que la donnée reçue par DMA soit lue après le transfert sur un Cortex-M7 avec cache.
+A: SCB_InvalidateDCache_by_Addr
+E: L'invalidation force la relecture depuis la RAM, où le DMA a écrit. Le tampon doit être aligné sur une ligne de cache (32 octets) et sa taille multiple de 32, sinon l'invalidation efface des variables voisines.
+```c
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    ____((uint32_t *)tampon, sizeof(tampon));
+    traiter(tampon);
+}
+```
+
+@100
+Q: Un micrologiciel fonctionne en -O0 mais plante en -O2. Quelle cause rechercher en premier ?
+C: Un comportement indéfini ou un volatile manquant que l'optimiseur exploite
+W: Un compilateur défaillant, à remplacer par une version plus ancienne de GCC
+W: Une flash trop lente pour exécuter le code optimisé du programme
+W: Une pile trop grande, que l'optimisation réduit de moitié
+E: Les bogues du compilateur sont rares ; les variables partagées sans volatile, les débordements signés et les accès hors limites sont fréquents. -Wall -Wextra, -fsanitize=undefined sur PC et l'analyse statique les trouvent souvent.

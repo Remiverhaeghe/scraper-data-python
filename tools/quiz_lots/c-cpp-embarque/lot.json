@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110601,
+  "skills": ["C++", "langage C", "embarqué", "microcontrôleur", "RTOS"],
+  "schemas": [
+    {
+      "name": "c-cpp-embarque-interruption.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Traitement d'une interruption sur un Cortex-M",
+        "nodes": [
+          "Périphérique : drapeau d'interruption levé",
+          "NVIC : comparaison des priorités",
+          "Sauvegarde automatique des registres sur la pile",
+          "Routine courte : lecture, tampon, acquittement",
+          "Restauration et reprise du code interrompu"
+        ],
+        "note": "Le traitement long se fait hors de la routine, dans la boucle ou une tâche"
+      }
+    },
+    {
+      "name": "c-cpp-embarque-rtos.svg",
+      "questions": ["045", "046", "047"],
+      "diagram": {
+        "title": "Réveil d'une tâche FreeRTOS par une interruption",
+        "nodes": [
+          "Tâche prioritaire bloquée sur une file vide",
+          "Tâches moins prioritaires exécutées",
+          "Interruption : xQueueSendFromISR",
+          "Tâche prioritaire de nouveau prête",
+          "portYIELD_FROM_ISR : bascule immédiate"
+        ],
+        "note": "Le délai de réaction reste borné quelle que soit la charge"
+      }
+    }
+  ]
+}

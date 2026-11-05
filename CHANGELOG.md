@@ -5,6 +5,100 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision BI et reporting
+- Lot de 100 questions dont 32 interactives (associations, remises en ordre,
+  calculs, code à compléter) : Power Query et query folding, modèle en étoile,
+  cardinalités et sens de filtrage, DAX (mesures et colonnes calculées,
+  contextes de ligne et de filtre, CALCULATE, ALL, KEEPFILTERS, itérateurs,
+  intelligence temporelle, USERELATIONSHIP, variables), import, DirectQuery,
+  modèles composites et agrégations, actualisation incrémentielle, RLS
+  dynamique, espaces de travail et pipelines, PBIP, VertiPaq et DAX Studio,
+  Tableau (LOD, extraits), Qlik (modèle associatif, set analysis), entrepôt de
+  données (grain, dimensions de type 1 et 2, clés de substitution, mesures
+  semi-additives), choix des visuels et pièges de lecture
+- Deux schémas : évaluation d'une mesure DAX, historisation d'une dimension de
+  type 2
+
+### Révision C, C++ et systèmes embarqués
+- Lot de 100 questions dont 32 interactives (associations, remises en ordre,
+  calculs, code à compléter) : types à taille fixe, volatile, manipulation de
+  bits, macros, chaîne de compilation croisée, sections mémoire et démarrage
+  d'un Cortex-M, interruptions et sections critiques, temporisateurs, CAN, SPI,
+  I2C et UART, DMA et cache, tampons circulaires, FreeRTOS (tâches, files,
+  mutex, inversion de priorité, appels FromISR, BASEPRI), C++ embarqué (RAII,
+  constexpr, std::array, fonctions virtuelles, déplacement, placement new),
+  comportements indéfinis et promotions, MISRA C, tests sur PC, HardFault, OTA
+  et démarrage sécurisé, virgule fixe Q15, rate monotonic et WCET
+- Deux schémas : traitement d'une interruption, réveil d'une tâche FreeRTOS
+
+### Révision supervision, journaux et métriques
+- Lot de 100 questions dont 32 interactives (associations, remises en ordre,
+  calculs, code à compléter) : métriques, journaux et traces, Prometheus
+  (types de métriques, rate et histogram_quantile, cardinalité, Pushgateway,
+  règles d'enregistrement, absent, jointures group_left, histogrammes natifs),
+  Alertmanager (groupement, inhibition, silences, haute disponibilité),
+  Grafana (variables, provisioning), pile Elastic (Filebeat, grok, KQL, ILM,
+  mapping et shards), Loki et LogQL, OpenTelemetry (collecteur, échantillonnage
+  en tête et en queue, exemplars, conventions sémantiques), Zabbix et Nagios,
+  méthodes RED et USE, SLI, SLO, budget d'erreur et burn rate, incidents,
+  post-mortem, MTTD et MTTR
+- Deux schémas : parcours d'une alerte Prometheus, pipeline d'un collecteur
+  OpenTelemetry
+
+### Révision qualité et résolution de problèmes
+- Lot de 100 questions dont 37 interactives (associations, remises en ordre,
+  calculs) : 8D (D0 à D8, confinement, causes d'apparition et de
+  non-détection), Ishikawa et 5M, 5 pourquoi, QQOQCP et « est / n'est pas »,
+  Pareto, PDCA et DMAIC, poka-yoke, autocontrôle, QRQC et trois réels,
+  traitement des non-conformités (retouche, réparation, dérogation), coûts de
+  la qualité, MSP (cartes de contrôle, Cp, Cpk, Ppk, surréglage), étude R&R,
+  échantillonnage ISO 2859-1, AMDEC et plan de surveillance, core tools de
+  l'automobile, traçabilité, audits, indicateurs (PPM, FTQ, DPMO, RTY)
+- Deux schémas : démarche 8D, réaction à un signal sur une carte de contrôle
+
+### Révision intégration et déploiement continus
+- Lot de 100 questions dont 33 interactives (associations, remises en ordre,
+  calculs, code à compléter) : intégration, livraison et déploiement continus,
+  GitHub Actions (déclencheurs, matrices, cache, concurrence, environnements,
+  droits du jeton), GitLab CI (stages, rules, needs, jobs cachés), Jenkinsfile
+  (post, parallel, identifiants), artefacts et SemVer, tests instables,
+  blue-green, canary, rolling update, feature flags, migrations expand et
+  contract, GitOps avec Argo CD, sécurité de la chaîne (OIDC, injection de
+  script, actions épinglées, SBOM, signature, provenance SLSA), DORA et budget
+  d'erreur
+- Deux schémas : pipeline de livraison continue, déploiement canary par paliers
+
+### Révision méthodes agiles et gestion de projet
+- Lot de 100 questions dont 33 interactives (associations, remises en ordre,
+  calculs, code à compléter) : Manifeste agile, Scrum (rôles, événements,
+  artefacts et engagements), user stories, estimation et vélocité, Kanban
+  (limites d'encours, loi de Little, diagramme de flux cumulé, âge des
+  éléments), Jira (JQL, workflows, smart commits), gestion de projet (Gantt,
+  chemin critique, PERT, RACI, risques, valeur acquise), priorisation (MoSCoW,
+  WSJF, coût du retard), prévisions Monte Carlo, SAFe et Nexus, DORA, Team
+  Topologies, Cynefin
+- Deux schémas : déroulement d'un sprint, flux tiré sur un tableau Kanban
+
+### Révision analyse de données
+- Lot de 100 questions dont 33 interactives (associations, remises en ordre,
+  calculs, code à compléter) : Pandas (chargement CSV et Excel, types, loc et
+  iloc, valeurs manquantes, doublons, jointures et leurs contrôles, groupby,
+  pivot_table, melt, dates et fuseaux, fenêtres glissantes), vectorisation,
+  équivalents Excel, graphiques, statistiques descriptives et valeurs
+  aberrantes, moyennes pondérées, tests A/B et p-value, biais, Parquet, DuckDB
+  et Polars, qualité des données, RGPD, cohortes
+- Deux schémas : démarche d'une analyse, agrégation groupby
+
+### Révision performance et optimisation
+- Lot de 100 questions dont 30 interactives (associations, remises en ordre,
+  calculs, code à compléter) : latence, débit et percentiles, profilage
+  (cProfile, py-spy, graphes en flammes, async-profiler), complexité, caches et
+  invalidation, index et plans d'exécution SQL, problème N+1, pools de
+  connexions, tests de charge (k6, JMeter, Gatling), JVM et ramasse-miettes,
+  Core Web Vitals, lois de Little et d'Amdahl, files d'attente, latence de
+  traîne, analyse système (vmstat, perf, eBPF)
+- Deux schémas : démarche d'optimisation, lecture selon le modèle cache-aside
+
 ### Révision Windows Server et PowerShell
 - Lot de 100 questions dont 29 interactives (associations, remises en ordre,
   calculs, code à compléter) : Server Core et rôles, PowerShell (pipeline,

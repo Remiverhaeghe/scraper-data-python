@@ -1,0 +1,445 @@
+@001
+Q: Qu'est-ce que l'intégration continue ?
+C: Fusionner souvent le code, vérifié à chaque fois par un build automatique
+W: Déployer en production après chaque commit, sans la moindre validation humaine
+W: Faire relire tout le code par un testeur avant chaque fusion
+W: Livrer une version complète au client à la fin de chaque sprint
+E: Chaque développeur intègre son travail dans la branche commune au moins une fois par jour, et un serveur construit puis teste chaque modification. Les conflits et régressions apparaissent tant qu'ils sont petits, au lieu de s'accumuler jusqu'à une fusion douloureuse.
+
+@002
+Q: Associer chaque pratique à ce qu'elle garantit.
+P: Intégration continue => Chaque modification est construite et testée automatiquement
+P: Livraison continue => Chaque version validée peut partir, sur simple décision
+P: Déploiement continu => Chaque version validée part en production sans intervention
+P: Feature flag => La mise à disposition est découplée du déploiement
+E: La livraison continue garde une décision humaine avant la production ; le déploiement continu la supprime. Dans les deux cas, le pipeline doit être assez fiable pour qu'une version verte soit réellement livrable.
+
+@003
+Q: Où GitHub Actions lit-il les workflows d'un dépôt ?
+C: Dans les fichiers YAML du dossier .github/workflows
+W: Dans le fichier Jenkinsfile placé à la racine du dépôt
+W: Dans le fichier .gitlab-ci.yml placé à la racine
+W: Dans les paramètres du dépôt, hors de tout fichier versionné
+E: Chaque fichier .yml de .github/workflows est un workflow distinct. Comme il est versionné avec le code, une modification du pipeline passe par une pull request et se relit comme le reste.
+
+@004
+Q: Compléter ce workflow pour qu'il se lance à chaque push sur main et à chaque pull request.
+A: on
+E: La clé on liste les événements déclencheurs : push, pull_request, schedule, workflow_dispatch… Le filtre branches limite le push à main, tandis que toutes les pull requests sont vérifiées.
+```yaml
+name: CI
+____:
+  push:
+    branches: [main]
+  pull_request:
+```
+
+@005
+Q: Quel fichier décrit le pipeline d'un projet GitLab ?
+C: .gitlab-ci.yml, à la racine du dépôt
+W: Jenkinsfile, dans le dossier ci/ du projet
+W: pipeline.yml, dans le dossier .gitlab/workflows
+W: gitlab.json, rangé dans les réglages du projet
+E: GitLab lit .gitlab-ci.yml à chaque push et crée le pipeline correspondant. Le chemin peut être changé dans les réglages CI/CD, mais la convention évite de chercher où vit la configuration.
+
+@006
+Q: Quel est le rôle d'un runner GitLab ou d'un agent Jenkins ?
+C: Exécuter les jobs du pipeline sur une machine
+W: Stocker les artefacts produits par les builds terminés
+W: Valider les merge requests à la place des relecteurs
+W: Calculer l'ordre des stages à partir du fichier de pipeline
+E: Le serveur (GitLab, Jenkins) orchestre et le runner exécute. Un runner peut être partagé, hébergé par l'éditeur ou installé sur une machine de l'équipe quand le job a besoin d'un accès réseau ou d'un matériel particulier.
+
+@007
+Q: À quoi sert une étape de lint dans la CI ?
+C: Détecter erreurs et écarts de style sans exécuter le code
+W: Mesurer la couverture des tests unitaires du projet
+W: Compiler le code en mode optimisé pour la production
+W: Vérifier que chaque dépendance est à sa dernière version
+E: Un linter comme pylint, ESLint ou Checkstyle lit le code : variable inutilisée, import manquant, style non conforme. Placé en début de pipeline, il coûte quelques secondes et évite des discussions de forme en relecture.
+
+@008
+Q: Pourquoi faire échouer le pipeline quand un test unitaire échoue ?
+C: Pour empêcher la fusion d'un code qui régresse
+W: Pour que le développeur relance le pipeline jusqu'à ce qu'il passe
+W: Pour réduire le temps de build en sautant les étapes suivantes
+W: Pour déclencher le retour à la version précédente en production
+E: Un pipeline rouge bloque la merge request quand la branche est protégée. Si un échec n'empêche rien, l'équipe s'habitue au rouge et les vraies régressions passent inaperçues.
+
+@009
+Q: Où ranger le jeton d'accès au registre utilisé par un workflow GitHub Actions ?
+C: Dans un secret du dépôt, lu par ${{ secrets.NOM }}
+W: Dans le fichier YAML du workflow, en clair, le dépôt étant privé
+W: Dans une variable env définie en tête du workflow versionné
+W: Dans un commentaire du README réservé aux mainteneurs
+E: Un secret est chiffré par GitHub, injecté au moment du job et masqué dans les journaux. Tout ce qui est versionné reste dans l'historique Git, même après suppression, et un dépôt privé peut devenir public ou être cloné.
+
+@010
+Q: Dans un pipeline, quelle est la différence entre un cache et un artefact ?
+C: Le cache accélère les jobs ; l'artefact est un résultat à transmettre
+W: Le cache est gardé sans limite ; l'artefact disparaît à la fin du job
+W: Le cache sert au déploiement ; l'artefact contient les dépendances
+W: Les deux mots désignent le même stockage partagé
+E: Le cache garde des dépendances téléchargées et peut manquer sans casser le build. L'artefact (JAR, rapport de tests, image) est produit par un job et doit être présent pour le job suivant ou pour le déploiement.
+
+@011
+Q: Un pipeline enchaîne la compilation (4 min), puis les tests (6 min) et l'analyse de style (2 min) lancés en parallèle, puis le déploiement (3 min). Quelle est sa durée totale ?
+N: 13
+U: min
+E: Les deux tâches parallèles durent autant que la plus longue : 4 + 6 + 3 = 13 minutes. Raccourcir l'analyse de style ne change rien ; seule la branche la plus lente compte.
+
+@012
+Q: Que signifie un badge rouge « build failing » sur la branche main d'un dépôt ?
+C: Le dernier pipeline exécuté sur main a échoué
+W: Le dépôt contient des failles connues dans ses dépendances
+W: La branche main est protégée contre les pushs directs
+W: Le dernier déploiement en production a été annulé
+E: Le badge reflète l'état du dernier pipeline de la branche choisie. Sur main, un badge rouge signale que la branche commune est cassée : la réparer passe avant toute nouvelle fusion.
+
+@013
+Q: Compléter ce Jenkinsfile déclaratif.
+A: stages
+E: Un pipeline déclaratif contient agent, puis stages, qui regroupe les stage. Chaque stage porte un nom affiché dans l'interface et ses steps. L'option -B de Maven évite les sorties interactives dans les journaux.
+```groovy
+pipeline {
+    agent any
+    ____ {
+        stage('Build') {
+            steps {
+                sh 'mvn -B package'
+            }
+        }
+    }
+}
+```
+
+@014
+Q: Que fait l'action actions/checkout en début de job ?
+C: Elle récupère le code du dépôt sur la machine du runner
+W: Elle vérifie que le commit est signé par un auteur connu
+W: Elle valide la syntaxe du workflow avant son exécution
+W: Elle crée une branche de travail réservée au job en cours
+E: Un runner hébergé démarre vide à chaque job. Sans checkout, les commandes suivantes ne trouvent aucun fichier du projet. Par défaut, seul le dernier commit est récupéré (fetch-depth: 1).
+
+@015
+Q: Pourquoi vise-t-on un pipeline d'intégration de moins de dix minutes environ ?
+C: Pour que le développeur ait son retour avant de passer à autre chose
+W: Parce que les runners gratuits arrêtent tout job dépassant dix minutes
+W: Pour pouvoir mettre en production dix minutes après chaque commit
+W: Parce qu'au-delà, les tests unitaires deviennent instables
+E: Un retour lent pousse à empiler les modifications et à changer de tâche ; corriger devient plus coûteux. On parallélise, on met en cache et on déplace les tests lents dans une étape ultérieure.
+
+@016
+Q: Associer chaque clé d'un workflow GitHub Actions à son rôle.
+P: runs-on => Choisit le type de machine du job
+P: steps => Liste les étapes, exécutées dans l'ordre
+P: uses => Appelle une action publiée
+P: run => Lance une commande shell
+E: Un job s'exécute sur une machine (runs-on) et enchaîne ses steps. Chaque step appelle soit une action réutilisable (uses), soit une commande (run). Les jobs, eux, tournent en parallèle sauf dépendance déclarée.
+
+@017
+Q: Une bibliothèque passe de la version 2.3.1 à 3.0.0. Qu'annonce ce changement selon SemVer ?
+C: Un changement incompatible avec les versions 2.x
+W: Une correction de bug, sans nouvelle fonction
+W: Une nouvelle fonction, compatible avec les versions 2.x
+W: Une préversion de test, non destinée à la production
+E: SemVer lit MAJEURE.MINEURE.CORRECTIF. La majeure augmente quand l'API publique casse, la mineure pour un ajout compatible, le correctif pour une correction. Les outils de mise à jour s'appuient sur cette convention pour proposer ou bloquer une montée.
+
+@018
+Q: Quel intérêt y a-t-il à lancer le pipeline sur chaque pull request ?
+C: Vérifier la modification avant qu'elle arrive sur la branche principale
+W: Déployer chaque branche en production pour la tester en conditions réelles
+W: Remplacer la relecture du code par les collègues de l'équipe
+W: Générer automatiquement les notes de version du projet
+E: Le résultat s'affiche dans la pull request et peut être rendu obligatoire avant la fusion. Les relecteurs se concentrent alors sur la conception, pas sur la compilation ou le style.
+
+@019
+Q: Que recommande le développement basé sur le tronc (trunk-based development) ?
+C: Des branches courtes, fusionnées dans le tronc au moins chaque jour
+W: Une branche par fonctionnalité, gardée jusqu'à la fin de la version
+W: Une branche par environnement : développement, recette, production
+W: Des fusions dans le tronc seulement à la fin de chaque sprint
+E: Plus une branche vit longtemps, plus elle diverge et plus la fusion est risquée. Le travail inachevé reste caché derrière un feature flag. Les études DORA associent cette pratique aux équipes qui livrent le plus souvent.
+
+@020
+Q: Compléter ce job GitLab pour le rattacher à l'étape de tests.
+A: stage
+E: La liste stages fixe l'ordre des étapes ; chaque job déclare la sienne par stage. Les jobs d'un même stage tournent en parallèle et le stage suivant attend leur réussite.
+```yaml
+stages:
+  - build
+  - test
+
+tests-unitaires:
+  ____: test
+  script:
+    - pytest -q
+```
+
+@021
+Q: Dans .gitlab-ci.yml, que fixe la clé image d'un job ?
+C: L'image Docker dans laquelle le runner exécute le script
+W: L'image Docker que le job doit construire puis publier
+W: Le logo affiché pour le job dans l'interface de GitLab
+W: L'image de base imposée sur les postes des développeurs
+E: Avec un runner Docker, image: python:3.12 fournit Python sans rien installer sur la machine. Fixer une version précise plutôt que latest évite qu'un pipeline casse le jour où l'image change.
+
+@022
+Q: Le build de main est cassé depuis ce matin. Que faire ?
+C: Le réparer ou annuler le commit fautif avant toute nouvelle fusion
+W: Continuer à fusionner : le prochain build corrigera peut-être l'erreur
+W: Désactiver les tests en échec pour débloquer le reste de l'équipe
+W: Attendre la fin du sprint pour corriger les erreurs en une seule fois
+E: Tant que main est rouge, personne ne sait si sa propre modification casse quelque chose de plus. Un revert rapide rend la branche saine ; la correction revient ensuite, vérifiée par la CI.
+
+@023
+Q: Un pipeline de 12 minutes tourne à chaque push, et l'équipe pousse 30 fois par jour. Combien de minutes de runner consomme-t-elle par jour ?
+N: 360
+U: min
+E: 12 × 30 = 360 minutes, soit six heures de machine par jour. Les offres hébergées facturent ou plafonnent ces minutes : le cache et l'annulation des runs dépassés réduisent vite la note.
+
+@024
+Q: Remettre dans l'ordre les étapes d'un job de tests Python dans GitHub Actions.
+O: Récupérer le code avec actions/checkout
+O: Installer Python avec actions/setup-python
+O: Installer les dépendances avec pip
+O: Lancer les tests avec pytest
+E: Chaque étape dépend de la précédente : pas de dépendances sans Python, pas de tests sans dépendances. L'action setup-python peut aussi gérer le cache pip avec l'option cache: pip.
+
+@025
+Q: Quand ce workflow se lance-t-il ?
+C: Chaque lundi à 2 h, heure UTC
+W: Chaque jour de la semaine à 2 h, heure UTC
+W: Le 2 de chaque mois, à minuit heure UTC
+W: Un lundi sur deux, à 2 h heure UTC
+E: Les cinq champs cron sont minute, heure, jour du mois, mois, jour de la semaine : 0 2 * * 1 donne lundi à 2 h 00. GitHub interprète l'heure en UTC et peut retarder le lancement aux heures chargées.
+```yaml
+on:
+  schedule:
+    - cron: "0 2 * * 1"
+```
+
+@026
+Q: Remettre dans l'ordre les étapes d'un pipeline de livraison continue.
+O: Build et tests unitaires
+O: Analyse du code et des dépendances
+O: Publication de l'artefact versionné
+O: Déploiement en recette et tests de bout en bout
+O: Mise en production après validation
+E: Les contrôles rapides passent en premier pour arrêter tôt un changement défectueux. L'artefact n'est publié qu'une fois, puis promu d'un environnement à l'autre.
+
+@027
+Q: Pourquoi le même artefact est-il déployé en recette puis en production plutôt que reconstruit ?
+C: Pour mettre en production exactement ce qui a été testé
+W: Pour réduire la place occupée dans le registre d'artefacts
+W: Parce qu'un artefact reconstruit ne peut plus être signé
+W: Pour éviter de relancer les tests unitaires une seconde fois
+E: Reconstruire peut tirer une autre version de dépendance ou un autre compilateur : le binaire testé n'est plus celui qui part. Le principe « build once, deploy many » garde un seul artefact, seule la configuration change.
+
+@028
+Q: Pourquoi les tests unitaires passent-ils avant les tests de bout en bout dans ce pipeline ?
+C: Ils sont rapides et arrêtent tôt un changement défectueux
+W: Les tests de bout en bout ont besoin du rapport de couverture
+W: Les tests unitaires exigent un environnement de recette libre
+W: L'ordre est indifférent : seul le temps total du pipeline compte
+E: Un test unitaire prend des millisecondes, un test de bout en bout plusieurs secondes et un environnement complet. Échouer en deux minutes plutôt qu'en vingt libère les runners et donne un retour plus précis.
+
+@029
+Q: Combien de jobs ce workflow lance-t-il ?
+N: 6
+E: La matrice croise trois versions de Python et deux bases de données : 3 × 2 = 6 jobs, lancés en parallèle si des runners sont libres. include et exclude permettent d'ajouter ou de retirer des combinaisons précises.
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+        db: [postgres, mysql]
+```
+
+@030
+Q: Dans GitHub Actions, que fait needs: build dans le job deploy ?
+C: deploy attend la réussite du job build avant de démarrer
+W: deploy reprend les fichiers de build sans avoir à les télécharger
+W: deploy se lance en parallèle de build, sur le même runner
+W: deploy relance automatiquement build si celui-ci a échoué
+E: Les jobs sont parallèles par défaut et tournent sur des machines différentes. needs crée l'ordre, mais pas le partage de fichiers : il faut upload-artifact dans build et download-artifact dans deploy.
+
+@031
+Q: Compléter cette clé de cache pour qu'elle change dès que requirements.txt change.
+A: hashFiles
+E: hashFiles calcule une empreinte du fichier : une dépendance ajoutée donne une nouvelle clé, donc un cache neuf. Une clé fixe garderait indéfiniment le premier cache enregistré.
+```yaml
+- uses: actions/cache@v4
+  with:
+    path: ~/.cache/pip
+    key: pip-${{ ____('requirements.txt') }}
+```
+
+@032
+Q: Une équipe met node_modules en cache avec la clé fixe « deps ». Quel risque prend-elle ?
+C: Garder d'anciens paquets après une mise à jour du verrou
+W: Télécharger de nouveau les dépendances à chaque build
+W: Partager son cache avec les dépôts d'autres organisations
+W: Dépasser la durée maximale autorisée pour un job GitHub
+E: Un cache existant n'est jamais écrasé sous la même clé : le build réutilise des paquets qui ne correspondent plus à package-lock.json. On inclut l'empreinte du verrou dans la clé, et npm ci plutôt que npm install.
+
+@033
+Q: Associer chaque clé d'un job GitLab à son rôle.
+P: stage => Rattache le job à une étape du pipeline
+P: artifacts => Garde des fichiers produits pour les jobs suivants
+P: rules => Décide si le job est ajouté au pipeline
+P: needs => Lance le job dès que ses dépendances ont fini
+E: rules remplace les anciennes clés only et except, plus limitées. needs construit un graphe : le job n'attend plus la fin de tout le stage précédent, seulement les jobs dont il dépend.
+
+@034
+Q: Comment exiger une approbation humaine avant tout déploiement en production avec GitHub Actions ?
+C: Un environnement production avec des relecteurs obligatoires
+W: Une condition if: github.actor == 'admin' sur le job de déploiement
+W: Un commentaire « à valider » ajouté en tête du workflow
+W: Une branche production protégée et mise en lecture seule
+E: Le job qui déclare environment: production se met en pause jusqu'à l'accord d'un relecteur désigné. L'environnement porte aussi ses propres secrets, invisibles des jobs qui ne le déclarent pas.
+
+@035
+Q: Que fait ce bloc à la fin d'un pipeline Jenkins ?
+C: Publie toujours les résultats de tests, et prévient l'équipe en cas d'échec
+W: Publie les résultats de tests uniquement si le build a réussi
+W: Relance une fois le pipeline en échec, puis envoie le message à toute l'équipe
+W: Envoie le message à chaque exécution, résultats de tests joints
+E: post s'exécute après les stages. always tourne quel que soit le résultat, ce qui permet de voir quels tests ont échoué ; failure seulement si le pipeline a échoué. Il existe aussi success, unstable et cleanup.
+```groovy
+post {
+    always {
+        junit 'target/surefire-reports/*.xml'
+    }
+    failure {
+        mail to: 'equipe@exemple.fr', subject: "Échec ${env.JOB_NAME}"
+    }
+}
+```
+
+@036
+Q: Un test échoue une fois sur vingt sans aucun changement de code. Quelle conduite adopter ?
+C: Le mettre en quarantaine avec un ticket, puis corriger sa cause
+W: Relancer le pipeline jusqu'à obtenir enfin un passage vert
+W: Le supprimer, puisqu'il ne détecte pas de vraie erreur
+W: Ajouter trois nouvelles tentatives automatiques et ne plus y penser
+E: Un test instable apprend à l'équipe à ignorer le rouge. Les causes habituelles sont l'ordre des tests, une attente fixe, l'heure courante ou un service externe. La quarantaine garde le test visible sans bloquer les autres.
+
+@037
+Q: Selon la pyramide des tests, comment répartir les tests d'un pipeline ?
+C: Beaucoup d'unitaires, moins d'intégration, peu de bout en bout
+W: Beaucoup de bout en bout, moins d'intégration, peu d'unitaires
+W: Autant de tests de chaque niveau pour équilibrer la couverture
+W: Uniquement des tests de bout en bout, plus proches de l'usage réel
+E: Les tests unitaires sont rapides, stables et désignent l'erreur précisément. Les tests de bout en bout couvrent les parcours critiques mais sont lents et fragiles ; trop nombreux, ils allongent le pipeline et le rendent instable.
+
+@038
+Q: Remettre dans l'ordre les étapes d'un déploiement blue-green.
+O: Déployer la nouvelle version sur l'environnement inactif, le vert
+O: Tester la version verte sans trafic d'utilisateurs
+O: Basculer le routeur vers l'environnement vert
+O: Garder le bleu prêt pour un retour arrière immédiat
+E: La bascule est instantanée et le retour arrière consiste à rebasculer. Le prix est une capacité doublée pendant le déploiement, et une base de données partagée qui doit rester compatible avec les deux versions.
+
+@039
+Q: Qu'est-ce qu'un déploiement canary ?
+C: Envoyer une petite part du trafic à la nouvelle version, puis l'augmenter
+W: Déployer la nouvelle version le vendredi soir, quand le trafic est faible
+W: Remplacer les instances d'un seul coup pour gagner du temps
+W: Tester la version sur un clone de la production, sans trafic réel
+E: Comme le canari des mineurs, la petite part du trafic sert d'alerte : si les erreurs montent, peu d'utilisateurs sont touchés et le trafic revient à l'ancienne version. Il faut des métriques fiables pour comparer les deux.
+
+@040
+Q: Pendant un déploiement progressif (rolling update), qu'est-ce qui doit rester vrai ?
+C: Ancienne et nouvelle versions tournent ensemble et doivent être compatibles
+W: L'application est arrêtée le temps de remplacer ses instances
+W: Seule la base de données change de version pendant l'opération
+W: Le trafic part d'abord en entier vers un autre centre de données de secours
+E: Les instances sont remplacées par petits groupes, sans capacité supplémentaire. Pendant quelques minutes, une requête peut toucher l'ancienne version et la suivante la nouvelle : API et schéma de base doivent accepter les deux.
+
+@041
+Q: Quel avantage apporte un feature flag dans un déploiement continu ?
+C: Déployer le code éteint, puis l'activer sans nouveau déploiement
+W: Supprimer le besoin de tests automatiques sur la nouvelle fonction
+W: Empêcher la fusion du code tant que la fonction n'est pas finie
+W: Accélérer le build en sautant tout le code désactivé
+E: Le code inachevé part en production sans être visible, ce qui permet de fusionner chaque jour. L'activation peut être progressive, par groupe d'utilisateurs. Un flag oublié devient de la dette : on le retire une fois la fonction généralisée.
+
+@042
+Q: Remettre dans l'ordre le renommage d'une colonne sans interruption de service (expand puis contract).
+O: Ajouter la nouvelle colonne, sans retirer l'ancienne
+O: Déployer le code qui écrit dans les deux colonnes
+O: Recopier les données existantes dans la nouvelle colonne
+O: Déployer le code qui lit seulement la nouvelle colonne
+O: Supprimer l'ancienne colonne
+E: À chaque étape, la version en production et la précédente fonctionnent avec le schéma en place, donc le retour arrière reste possible. Un simple RENAME casserait immédiatement les instances encore à l'ancienne version.
+
+@043
+Q: Après un déploiement, le taux d'erreurs passe de 0,1 % à 8 %. Quelle est la première action ?
+C: Revenir à la version précédente, puis analyser
+W: Corriger directement sur le serveur de production pour gagner du temps
+W: Attendre une heure pour voir si le taux d'erreurs se stabilise
+W: Ajouter des instances pour absorber les requêtes en erreur
+E: Rétablir le service passe avant comprendre la cause. Le retour arrière doit être une opération connue et rapide, souvent le redéploiement de l'artefact précédent. Une correction faite à la main sur le serveur échappe au pipeline et sera écrasée.
+
+@044
+Q: Pourquoi placer ce bloc en tête de ce workflow ?
+C: Réduire les droits du GITHUB_TOKEN à la lecture du dépôt
+W: Empêcher les forks de lire le code source du dépôt
+W: Rendre le dépôt public accessible en lecture seule
+W: Interdire aux développeurs de modifier le workflow
+E: Chaque job reçoit un GITHUB_TOKEN dont les droits par défaut peuvent être larges. Les limiter au besoin réduit les dégâts si une étape est compromise ; un job qui publie une release demande alors contents: write pour lui seul.
+```yaml
+permissions:
+  contents: read
+```
+
+@045
+Q: Remettre dans l'ordre les étapes d'un déploiement canary.
+O: Déployer la version 2 à côté de la version 1
+O: Envoyer 5 % du trafic à la version 2
+O: Comparer erreurs et latence des deux versions
+O: Passer à 25 %, puis 50 %, puis 100 % du trafic
+E: Chaque palier dure assez longtemps pour mesurer quelque chose. La comparaison porte sur les mêmes indicateurs pour les deux versions ; le passage au palier suivant peut être automatique.
+
+@046
+Q: Pendant le palier à 5 %, la version 2 montre 3 % d'erreurs contre 0,2 % pour la version 1. Que faire ?
+C: Rendre tout le trafic à la version 1
+W: Passer au palier de 25 % pour obtenir plus de mesures
+W: Garder 5 % du trafic sur la version 2 jusqu'à la suivante
+W: Redémarrer les instances de la version 2 et continuer
+E: L'écart dépasse largement tout seuil raisonnable : le canary a joué son rôle en limitant l'incident à 5 % des utilisateurs. On analyse ensuite les journaux de la version 2 hors trafic.
+
+@047
+Q: Pourquoi comparer la version 2 à la version 1 au même moment plutôt qu'aux mesures de la semaine passée ?
+C: Même trafic, même instant : l'écart vient de la version
+W: Les mesures de la semaine passée sont effacées à chaque déploiement
+W: La version 1 cesse de produire des mesures une fois la version 2 lancée
+W: La supervision ne sait pas lire plus d'une heure d'historique
+E: Le trafic varie selon l'heure, le jour et les campagnes. Une comparaison simultanée sur des populations semblables neutralise ces variations ; c'est ce que font les outils d'analyse canary comme Kayenta ou Argo Rollouts.
+
+@048
+Q: Comment un artefact unique reçoit-il les paramètres propres à chaque environnement ?
+C: Par des variables d'environnement ou une configuration lue au démarrage
+W: Par une reconstruction de l'artefact pour chaque environnement
+W: Par des fichiers de configuration modifiés à la main sur les serveurs
+W: Par une branche Git distincte pour chaque environnement
+E: L'artefact ne contient aucune adresse ni secret d'environnement ; ils sont fournis au lancement, par variables ou par un fichier monté. C'est le troisième principe des applications « twelve-factor ».
+
+@049
+Q: Associer chaque indicateur DORA à ce qu'il mesure.
+P: Fréquence de déploiement => Nombre de mises en production sur une période
+P: Délai des changements => Temps entre le commit et sa mise en production
+P: Taux d'échec des changements => Part des déploiements qui causent un incident
+P: Délai de restauration => Temps pour rétablir le service après un incident
+E: Les deux premiers mesurent la vitesse, les deux derniers la stabilité. Les recherches DORA montrent que les meilleures équipes progressent sur les quatre à la fois : livrer souvent par petits lots réduit aussi les incidents.
+
+@050
+Q: À quoi sert la porte qualité (quality gate) de SonarQube dans un pipeline ?
+C: Faire échouer le pipeline si le nouveau code passe sous les seuils
+W: Corriger automatiquement le code qui enfreint les règles
+W: Mesurer le temps d'exécution de chaque étape du pipeline
+W: Bloquer toute fusion qui n'a pas été relue par deux personnes
+E: La porte combine des conditions : couverture du nouveau code, nouveaux bugs, failles, duplication. Elle porte sur le code ajouté ou modifié, ce qui évite d'exiger la correction de tout l'existant d'un coup.

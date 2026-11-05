@@ -1,0 +1,36 @@
+{
+  "lot": 1,
+  "seed": 2026110501,
+  "skills": ["Agile", "Scrum", "Kanban", "Jira", "gestion de projet"],
+  "schemas": [
+    {
+      "name": "agile-sprint.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Déroulement d'un sprint Scrum",
+        "nodes": [
+          "Sprint Planning : Sprint Goal et Sprint Backlog",
+          "Daily Scrum : 15 minutes chaque jour",
+          "Travail vers l'incrément, Definition of Done respectée",
+          "Sprint Review avec les parties prenantes",
+          "Sprint Retrospective : actions d'amélioration"
+        ],
+        "note": "Le travail non terminé retourne au Product Backlog"
+      }
+    },
+    {
+      "name": "agile-kanban.svg",
+      "questions": ["045", "046", "047"],
+      "diagram": {
+        "title": "Flux tiré sur un tableau Kanban",
+        "nodes": [
+          "Prêt : éléments affinés en attente",
+          "En développement (limite 3)",
+          "En revue de code (limite 2)",
+          "Terminé"
+        ],
+        "note": "Un élément n'avance que si une place se libère : finir avant de commencer"
+      }
+    }
+  ]
+}
