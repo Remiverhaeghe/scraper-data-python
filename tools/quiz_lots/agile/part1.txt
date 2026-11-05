@@ -1,0 +1,395 @@
+@001
+Q: Selon le Manifeste agile, que valorise-t-on davantage que les processus et les outils ?
+C: Les individus et leurs interactions
+W: La documentation exhaustive des besoins
+W: Le respect strict du plan validé au départ
+W: La négociation contractuelle avec le client
+E: Le Manifeste de 2001 oppose quatre paires de valeurs. Les éléments de droite gardent de la valeur, mais ceux de gauche comptent davantage : une équipe qui se parle résout plus vite un problème qu'un outil ou une procédure.
+
+@002
+Q: Associer chaque valeur du Manifeste agile à ce qu'elle passe au second plan.
+P: Les individus et leurs interactions => Les processus et les outils
+P: Des logiciels opérationnels => Une documentation exhaustive
+P: La collaboration avec les clients => La négociation contractuelle
+P: L'adaptation au changement => Le suivi d'un plan
+E: Le Manifeste ne rejette pas la documentation, les contrats ou les plans : il dit seulement que, en cas de conflit, la partie gauche l'emporte. Un logiciel qui fonctionne reste la meilleure mesure de l'avancement.
+
+@003
+Q: Dans Scrum, qui est responsable de maximiser la valeur du produit et d'ordonner le Product Backlog ?
+C: Le Product Owner
+W: Le Scrum Master
+W: Les Developers, par un vote au début de chaque sprint
+W: Le chef de projet désigné par le client
+E: Le Product Owner est une seule personne, qui peut déléguer la rédaction des éléments mais reste responsable de leur ordre. Le Scrum Master veille au bon usage de Scrum ; les Developers réalisent l'incrément.
+
+@004
+Q: Quelle durée maximale le Scrum Guide fixe-t-il pour un sprint ?
+C: Un mois
+W: Deux semaines exactement, pour toutes les équipes
+W: Trois mois, la durée d'un trimestre
+W: Aucune limite : la durée dépend du périmètre choisi
+E: Un sprint dure un mois ou moins, et sa durée reste fixe d'un sprint à l'autre. Deux semaines est une pratique courante, pas une règle. Un sprint plus long augmente le risque et retarde les retours des utilisateurs.
+
+@005
+Q: Quelle est la durée maximale d'un Daily Scrum, en minutes ?
+N: 15
+U: min
+E: Le Daily Scrum est limité à 15 minutes, au même endroit et à la même heure chaque jour. Il sert aux Developers à inspecter leur progression vers le Sprint Goal ; les discussions détaillées se poursuivent après, avec les seules personnes concernées.
+
+@006
+Q: Quel est le rôle principal du Scrum Master ?
+C: Aider l'équipe à appliquer Scrum et faire lever les obstacles
+W: Répartir les tâches entre les développeurs au début de chaque journée
+W: Valider la qualité de chaque incrément avant la revue
+W: Rédiger les user stories à la place du Product Owner
+E: Le Scrum Master est responsable de l'efficacité de la Scrum Team : il forme, facilite et fait tomber les obstacles. Il ne distribue pas le travail, car les Developers s'organisent eux-mêmes.
+
+@007
+Q: Compléter cette user story écrite au format habituel.
+A: afin
+A: Afin
+E: Le format « En tant que… je veux… afin de… » oblige à nommer l'utilisateur et le bénéfice attendu. Sans le « afin de », l'équipe ignore pourquoi la fonction existe et ne peut pas proposer une solution plus simple.
+```text
+En tant que gestionnaire de stock,
+je veux être alerté quand un article passe sous son seuil,
+____ de lancer la commande avant la rupture.
+```
+
+@008
+Q: À quoi servent les critères d'acceptation d'une user story ?
+C: À fixer les conditions vérifiables pour accepter la story
+W: À estimer la durée de développement de la story en heures
+W: À fixer l'ordre de priorité de la story dans le backlog
+W: À désigner le développeur chargé de réaliser la story
+E: Un critère d'acceptation se vérifie par oui ou non : « l'alerte part quand le stock passe sous 10 ». Ils précisent le besoin avant le développement et servent de base aux tests. L'estimation et la priorité sont d'autres sujets.
+
+@009
+Q: Que décrit la Definition of Done d'une équipe Scrum ?
+C: Les critères de qualité communs à tout incrément
+W: La liste des stories prévues pour le sprint en cours
+W: Les critères d'acceptation propres à chacune des stories
+W: La date de livraison convenue avec le client du projet
+E: La Definition of Done s'applique à tous les éléments : code relu, tests automatisés passés, documentation à jour, déployé en recette. Les critères d'acceptation, eux, sont propres à une story.
+
+@010
+Q: Sur un tableau Kanban, que signifie la limite « 3 » en haut de la colonne « En cours » ?
+C: Trois éléments au plus peuvent s'y trouver en même temps
+W: Trois éléments doivent y être terminés chaque jour
+W: Chaque élément peut y rester trois jours au maximum
+W: Trois personnes au plus peuvent travailler dans la colonne
+E: C'est la limite de travail en cours (WIP). Quand la colonne est pleine, on ne commence rien de nouveau : on aide à terminer ce qui est en cours. Cette contrainte rend visibles les blocages.
+
+@011
+Q: Que représente un story point ?
+C: Une mesure relative de l'effort, de la complexité et de l'incertitude
+W: Un nombre d'heures de travail converti en points
+W: La valeur métier attribuée à la story par le Product Owner
+W: Le nombre de tâches techniques que contient la story
+E: Les points comparent les stories entre elles : une story à 5 demande environ deux fois plus qu'une à 2 ou 3. Ils ne valent pas un nombre d'heures, ce qui évite de juger les estimations comme des engagements individuels.
+
+@012
+Q: Une équipe a livré 23, 19 et 21 points lors de ses trois derniers sprints. Quelle est sa vélocité moyenne en points ?
+N: 21
+U: points
+E: (23 + 19 + 21) / 3 = 63 / 3 = 21 points. La vélocité aide l'équipe à savoir combien prendre au prochain sprint ; c'est un outil de prévision interne, pas un indicateur de performance.
+
+@013
+Q: Que montre un burndown chart de sprint ?
+C: Le travail restant au fil des jours du sprint
+W: Le travail terminé cumulé depuis le début du projet
+W: La charge de chaque développeur, jour par jour
+W: Le nombre d'anomalies ouvertes chaque semaine
+E: La courbe descend à mesure que le travail est fini et se compare à une ligne idéale. Un plateau de plusieurs jours signale un blocage ou des stories trop grosses, qui ne se terminent qu'en fin de sprint.
+
+@014
+Q: Qu'est-ce qu'un MVP (produit minimum viable) ?
+C: La plus petite version qui permet d'apprendre auprès de vrais utilisateurs
+W: La version complète du produit livrée en une seule fois
+W: Une maquette statique, sans aucune fonctionnalité réelle
+W: La version qui contient toutes les fonctions du cahier des charges
+E: Le MVP sert à vérifier une hypothèse avec un minimum d'effort : les utilisateurs s'en servent-ils, paient-ils ? Il fonctionne vraiment, contrairement à une maquette, mais reste volontairement limité.
+
+@015
+Q: Associer chaque événement Scrum à son objectif.
+P: Sprint Planning => Définir le Sprint Goal et choisir le travail
+P: Daily Scrum => Inspecter la progression vers le Sprint Goal
+P: Sprint Review => Présenter le résultat aux parties prenantes
+P: Sprint Retrospective => Améliorer la façon de travailler de l'équipe
+E: Chaque événement est une occasion d'inspecter et d'adapter. La revue porte sur le produit, la rétrospective sur l'équipe et ses pratiques. Le sprint lui-même est le cinquième événement, qui contient les quatre autres.
+
+@016
+Q: Quelle différence principale sépare un projet en cycle en V d'un projet agile ?
+C: L'agile livre par itérations, le cycle en V enchaîne des phases
+W: Le cycle en V ne prévoit aucune phase de tests avant la mise en service
+W: L'agile se passe de toute documentation et de tout plan de projet
+W: Le cycle en V réserve les tests aux utilisateurs finaux du logiciel
+E: Le cycle en V enchaîne spécification, conception, réalisation puis tests, chaque test répondant à une phase de conception. Le client voit le produit tard. L'agile livre un incrément utilisable à chaque itération et ajuste le besoin au fil des retours.
+
+@017
+Q: Dans Jira, que regroupe un epic ?
+C: Des stories qui servent un même objectif plus large
+W: Les sous-tâches techniques d'une seule et même story
+W: Les tickets d'un même sprint, quel que soit leur sujet
+W: Les anomalies remontées par le support en une semaine
+E: Un epic est trop gros pour un sprint : « Paiement en ligne » se découpe en stories (carte, virement, remboursement). Les sous-tâches, elles, découpent une story en travail technique.
+
+@018
+Q: Qu'est-ce que le Product Backlog ?
+C: La liste ordonnée et évolutive de ce qui améliorera le produit
+W: Le cahier des charges validé et signé par le client au début du projet
+W: La liste des tâches de l'équipe pour le sprint en cours
+W: L'historique de toutes les fonctionnalités déjà livrées
+E: Le Product Backlog n'est jamais figé : il s'enrichit des retours et se réordonne. Les éléments du haut sont détaillés et prêts, ceux du bas restent grossiers. Les tâches du sprint forment le Sprint Backlog.
+
+@019
+Q: Selon le Scrum Guide, quand un incrément est-il créé ?
+C: Dès qu'un élément respecte la Definition of Done
+W: À la fin de la Sprint Review, après accord du client
+W: Quand le Product Owner l'a déployé en production
+W: Le dernier jour du sprint, quel que soit son état
+E: Un élément qui ne respecte pas la Definition of Done n'est pas un incrément et ne peut pas être présenté à la revue. Plusieurs incréments peuvent naître pendant un sprint, et on peut livrer avant la revue.
+
+@020
+Q: À quoi sert l'affinage (refinement) du Product Backlog ?
+C: À découper, préciser et estimer les éléments à venir
+W: À retirer du sprint les éléments qui prennent du retard
+W: À répartir les tâches du sprint entre les développeurs
+W: À valider l'incrément avant sa présentation au client
+E: L'affinage est une activité continue, pas un événement Scrum. Il prépare les éléments du haut du backlog pour qu'ils soient assez petits et clairs pour un prochain Sprint Planning.
+
+@021
+Q: Quelle taille le Scrum Guide 2020 recommande-t-il pour une Scrum Team ?
+C: Dix personnes ou moins
+W: Exactement sept personnes, plus ou moins deux
+W: Au moins douze personnes pour couvrir les compétences
+W: Aucune indication : la taille dépend du budget
+E: Une équipe plus grande communique moins bien ; au-delà, on la divise en plusieurs équipes qui partagent le même Product Goal, Product Backlog et Product Owner. La règle « sept plus ou moins deux » venait d'anciennes versions du guide.
+
+@022
+Q: En rétrospective, l'équipe constate que les déploiements échouent souvent. Que doit-elle en retirer ?
+C: Une ou deux actions concrètes, suivies au sprint suivant
+W: Un rapport au management qui désigne le responsable des échecs
+W: La liste exhaustive des problèmes, sans action précise
+W: La décision de reporter le sujet à la prochaine revue
+E: Une rétrospective utile débouche sur peu d'actions, précises et suivies : « ajouter un test de fumée après chaque déploiement ». Chercher un coupable casse la confiance ; une liste sans action ne change rien.
+
+@023
+Q: Quel est le principe de base de Kanban ?
+C: Visualiser le flux et limiter le travail en cours
+W: Découper le temps en sprints de durée fixe
+W: Estimer chaque tâche en points avant de la commencer
+W: Désigner un responsable par colonne du tableau
+E: Kanban ne prescrit ni rôles ni itérations : il part du fonctionnement actuel, rend le flux visible et limite l'encours pour que le travail circule. On améliore ensuite par petites touches, mesures à l'appui.
+
+@024
+Q: Le triangle de la gestion de projet relie trois contraintes. Lesquelles ?
+C: Le périmètre, le coût et le délai
+W: La qualité, le budget et le nombre de réunions
+W: Le client, le fournisseur et le sous-traitant
+W: Les risques, les jalons et les livrables
+E: Modifier l'une des trois contraintes agit sur les autres : ajouter du périmètre à délai fixe coûte plus cher ou dégrade la qualité. Une démarche agile fixe souvent délai et coût, et fait varier le périmètre.
+
+@025
+Q: Que représente un diagramme de Gantt ?
+C: Les tâches sur un calendrier, avec durées et dépendances
+W: La répartition du budget du projet par poste de dépense
+W: L'organigramme de l'équipe et de ses responsables
+W: Les risques classés selon leur probabilité et leur impact
+E: Chaque tâche est une barre sur l'axe du temps, reliée à celles dont elle dépend. Le Gantt montre le chemin critique et les jalons ; il devient vite faux si personne ne le met à jour.
+
+@026
+Q: Remettre dans l'ordre les événements d'un sprint Scrum.
+O: Sprint Planning
+O: Daily Scrum, chaque jour du sprint
+O: Sprint Review
+O: Sprint Retrospective
+E: Le sprint s'ouvre sur le Sprint Planning et se termine par la revue puis la rétrospective. Le sprint suivant commence aussitôt après. L'affinage du backlog a lieu pendant le sprint, sans être un événement.
+
+@027
+Q: Qui définit le Sprint Goal ?
+C: Toute la Scrum Team, pendant le Sprint Planning
+W: Le Product Owner seul, avant le Sprint Planning
+W: Le Scrum Master, à partir de la vélocité passée
+W: Les parties prenantes, pendant la Sprint Review
+E: Le Product Owner propose comment le sprint peut augmenter la valeur du produit, puis toute l'équipe formule le Sprint Goal. Il donne une raison commune et laisse de la souplesse sur le détail des éléments.
+
+@028
+Q: À la fin du sprint, deux stories ne respectent pas la Definition of Done. Que deviennent-elles ?
+C: Elles retournent au Product Backlog pour être réordonnées
+W: Elles sont présentées comme terminées à la revue, avec une réserve
+W: Le sprint est prolongé de quelques jours pour les finir
+W: Elles sont livrées, puis corrigées au sprint suivant
+E: La durée du sprint ne change pas et un élément non terminé ne compte pas. Le Product Owner décide de sa place dans le backlog : il peut redevenir prioritaire ou perdre son intérêt.
+
+@029
+Q: Remettre dans l'ordre les trois sujets traités pendant un Sprint Planning.
+O: Pourquoi ce sprint a de la valeur : le Sprint Goal
+O: Quoi : les éléments choisis dans le Product Backlog
+O: Comment : le plan pour réaliser ces éléments
+E: Le Scrum Guide 2020 organise le Sprint Planning autour de ces trois sujets. Le Sprint Goal, les éléments choisis et le plan forment le Sprint Backlog. Le plan reste souple et s'ajuste chaque jour.
+
+@030
+Q: Au planning poker, deux développeurs annoncent 2 et 13 pour la même story. Que faire ?
+C: Les écouter expliquer leur estimation, puis voter à nouveau
+W: Retenir la moyenne des deux, arrondie à 8 points
+W: Retenir l'estimation du développeur le plus expérimenté de l'équipe
+W: Retenir 13 par prudence et passer à la story suivante
+E: Un tel écart révèle une compréhension différente : l'un connaît une difficulté, l'autre un raccourci. La discussion est le vrai intérêt de l'exercice ; la moyenne masquerait ce désaccord.
+
+@031
+Q: Pourquoi estime-t-on avec une suite proche de Fibonacci (1, 2, 3, 5, 8, 13) ?
+C: Les écarts croissants reflètent l'incertitude
+W: Le calcul de la vélocité exige des nombres premiers
+W: Jira n'accepte que ces valeurs dans le champ Story Points
+W: Elle convertit les points en jours sans aucun arrondi
+E: Hésiter entre 8 et 9 n'a pas de sens pour une grosse story : la suite force un choix grossier. Au-delà de 13, on découpe plutôt la story que de l'estimer plus finement.
+
+@032
+Q: Comment découper une grosse story « Paiement en ligne » de façon verticale ?
+C: Une story par moyen de paiement, chacune de bout en bout
+W: Une story pour l'interface, une pour l'API, une pour la base
+W: Une story pour la conception, une pour le code, une pour les tests
+W: Une story par développeur, selon sa spécialité technique
+E: Une tranche verticale traverse toutes les couches et livre une valeur utilisable : on peut déjà payer par carte. Un découpage par couche ou par phase ne livre rien d'utile avant que toutes les parties soient finies.
+
+@033
+Q: Quelle différence sépare la Definition of Ready de la Definition of Done ?
+C: L'une dit quand entrer en sprint, l'autre quand c'est fini
+W: L'une concerne les tests, l'autre la documentation
+W: L'une vient du Scrum Guide, l'autre est une option
+W: Ce sont deux noms de la même liste, selon les équipes
+E: La Definition of Ready (story claire, critères d'acceptation, estimée) est une pratique d'équipe, absente du Scrum Guide. La Definition of Done, elle, y figure : c'est l'engagement attaché à l'incrément.
+
+@034
+Q: Une équipe a en moyenne 12 éléments en cours et en termine 4 par semaine. Selon la loi de Little, quel est le délai moyen d'un élément, en semaines ?
+N: 3
+U: semaines
+E: Délai moyen = travail en cours / débit = 12 / 4 = 3 semaines. Pour raccourcir le délai sans aller plus vite, il suffit de réduire le travail en cours : avec 8 éléments, il tomberait à 2 semaines.
+
+@035
+Q: Quelle différence sépare le lead time du cycle time ?
+C: Le lead time part de la demande, le cycle time du début du travail
+W: Le lead time mesure les anomalies, le cycle time les stories
+W: Le cycle time inclut l'attente dans le backlog, pas le lead time
+W: Ce sont deux mesures identiques, l'une de Scrum, l'autre de Kanban
+E: Le client vit le lead time : de sa demande à la livraison. Le cycle time ne compte que le temps depuis que l'équipe a commencé. Un grand écart entre les deux signale un backlog trop long ou des demandes qui attendent.
+
+@036
+Q: Compléter cette requête JQL pour trier les tickets par priorité décroissante.
+A: ORDER
+A: order
+E: ORDER BY se place toujours en fin de requête JQL, après les conditions. DESC trie du plus prioritaire au moins prioritaire ; plusieurs critères se séparent par des virgules : ORDER BY priority DESC, created ASC.
+```text
+project = WEB AND status = "En cours" ____ BY priority DESC
+```
+
+@037
+Q: Que renvoie cette requête JQL ?
+C: Les tickets non résolus du projet WEB qui me sont attribués
+W: Les tickets du projet WEB que j'ai créés, quel que soit leur état
+W: Les tickets résolus du projet WEB, triés par date de création
+W: Les tickets du projet WEB qui n'ont aucun responsable
+E: currentUser() désigne la personne connectée, ce qui permet de partager le même filtre dans toute l'équipe. resolution = Unresolved garde les tickets sans résolution. Pour les tickets créés par soi, on utilise reporter = currentUser().
+```text
+project = WEB AND assignee = currentUser() AND resolution = Unresolved
+```
+
+@038
+Q: Dans Jira, qu'est-ce qu'une transition ?
+C: Le passage autorisé d'un statut à un autre
+W: Le transfert d'un ticket d'un projet Jira à un autre
+W: Le report d'une story non terminée d'un sprint au suivant
+W: La conversion d'une sous-tâche en story indépendante
+E: Le workflow définit les statuts et les transitions entre eux. Une transition peut exiger une condition (seul le testeur valide), un champ à remplir ou déclencher une action, comme renseigner la résolution.
+
+@039
+Q: En plein sprint, un responsable commercial demande d'ajouter une fonction urgente. Que faire ?
+C: L'orienter vers le Product Owner, qui décide avec les Developers
+W: L'ajouter directement au Sprint Backlog, car le client est prioritaire
+W: Refuser, car le Sprint Backlog ne peut jamais évoluer
+W: Demander au Scrum Master de la confier au développeur le plus libre
+E: Le Product Owner arbitre la valeur et l'ordre du travail. Le Sprint Backlog peut être renégocié avec les Developers tant que le Sprint Goal n'est pas compromis ; sinon, la demande attend le sprint suivant.
+
+@040
+Q: Qui peut annuler un sprint selon le Scrum Guide ?
+C: Le Product Owner seul
+W: Le Scrum Master
+W: Les Developers, à l'unanimité
+W: Le sponsor qui finance le projet
+E: Un sprint s'annule seulement si son Sprint Goal devient obsolète, par exemple après l'abandon d'un marché. Seul le Product Owner en a l'autorité. C'est rare et coûteux : on préfère des sprints courts.
+
+@041
+Q: Associer chaque catégorie de la méthode MoSCoW à son sens.
+P: Must have => Indispensable à la livraison
+P: Should have => Important, mais un contournement existe
+P: Could have => Souhaitable si le temps le permet
+P: Won't have => Exclu de cette livraison
+E: MoSCoW force à dire ce qui est vraiment indispensable. Si tout est « Must have », la méthode ne sert à rien : on vise souvent au plus 60 % de l'effort en Must pour garder une marge.
+
+@042
+Q: Qu'est-ce qu'un spike dans une équipe agile ?
+C: Un travail limité dans le temps pour lever une incertitude
+W: Une anomalie bloquante remontée par la production
+W: Une hausse soudaine de la vélocité d'un sprint
+W: Une story trop grosse pour tenir dans un sprint
+E: Avant d'estimer une story qui dépend d'une API inconnue, l'équipe consacre deux jours à un prototype. Le résultat est une connaissance, pas une fonction livrée ; la durée est fixée d'avance pour ne pas déborder.
+
+@043
+Q: Quel avantage le burnup chart a-t-il sur le burndown ?
+C: Il sépare le travail fait de l'évolution du périmètre
+W: Il se construit sans avoir à estimer les éléments du backlog
+W: Il remplace la Sprint Review auprès des parties prenantes
+W: Il donne la vélocité de chacun des développeurs de l'équipe
+E: Le burnup trace deux courbes : le travail terminé et le périmètre total. Si le burndown stagne, on ne sait pas si l'équipe a ralenti ou si du travail a été ajouté ; le burnup le montre.
+
+@044
+Q: Un sprint de 10 jours démarre avec 60 points. Sur la ligne idéale du burndown, combien de points restent à la fin du jour 4 ?
+N: 36
+U: points
+E: La ligne idéale descend de 60 / 10 = 6 points par jour. Après 4 jours : 60 - 4 × 6 = 36 points. Si la courbe réelle est bien au-dessus, l'équipe en parle au Daily Scrum plutôt que d'attendre la fin du sprint.
+
+@045
+Q: Remettre dans l'ordre les colonnes d'un tableau Kanban de développement.
+O: Prêt : éléments affinés en attente
+O: En développement
+O: En revue de code
+O: Terminé
+E: Le tableau suit le chemin réel du travail. Chaque colonne de travail a sa limite d'encours : un élément n'est tiré dans la colonne suivante que lorsqu'une place s'y libère. Ajouter une colonne « Bloqué » cache souvent le problème plutôt que de le traiter.
+
+@046
+Q: La colonne « En revue » (limite 2) est pleine et un développeur vient de finir son code. Que faire selon Kanban ?
+C: Aider à relire les éléments en revue avant de commencer autre chose
+W: Dépasser la limite exceptionnellement pour ne pas bloquer le flux
+W: Commencer une nouvelle story en attendant qu'une place se libère en revue
+W: Faire passer son élément directement dans la colonne Terminé
+E: La limite est atteinte : le goulot est la revue. Commencer autre chose augmenterait l'encours et le délai. Kanban demande de finir avant de commencer ; l'aide à la revue débloque tout le flux.
+
+@047
+Q: Pourquoi limiter le travail en cours réduit-il le délai de livraison ?
+C: Moins d'éléments en parallèle, donc moins d'attente
+W: Les développeurs vont plus vite sous la pression de la limite
+W: Les éléments limités sont estimés avec plus de précision
+W: Les tickets bloqués trop longtemps sont retirés du tableau
+E: Chaque élément commencé attend pendant qu'on avance sur les autres, et chaque changement de tâche coûte du temps. Avec moins d'éléments ouverts, chacun traverse le tableau plus vite : c'est la loi de Little.
+
+@048
+Q: Il reste 50 éléments à livrer et l'équipe en termine en moyenne 5 par semaine. Combien de semaines faut-il prévoir ?
+N: 10
+U: semaines
+E: 50 / 5 = 10 semaines. Cette prévision suppose un débit stable et un périmètre fixe ; on l'accompagne d'une fourchette, par exemple avec le débit des semaines les plus lentes et les plus rapides.
+
+@049
+Q: Sur un diagramme de flux cumulé, la bande « En test » s'élargit semaine après semaine. Que faut-il en conclure ?
+C: Le travail s'accumule en test : c'est un goulot d'étranglement
+W: L'équipe teste davantage, donc la qualité du produit s'améliore
+W: Le périmètre total du projet augmente chaque semaine
+W: Les éléments terminés sont de plus en plus nombreux
+E: La largeur verticale d'une bande donne le nombre d'éléments à cette étape. Une bande qui grossit reçoit plus qu'elle ne livre. On limite alors l'encours en amont et on renforce le test, par exemple en automatisant.
+
+@050
+Q: Associer chaque format de rétrospective à son principe.
+P: Start, Stop, Continue => Ce qu'il faut commencer, arrêter ou garder
+P: Les 4L => Liked, Learned, Lacked, Longed for
+P: Le bateau => Les vents qui poussent et les ancres qui freinent
+P: Mad, Sad, Glad => Les émotions vécues pendant le sprint
+E: Changer de format évite la routine et fait parler d'autres sujets. Quel que soit le format, la rétrospective se termine par quelques actions concrètes, qu'on vérifie à la suivante.

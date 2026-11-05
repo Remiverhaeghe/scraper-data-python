@@ -5,6 +5,17 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision méthodes agiles et gestion de projet
+- Lot de 100 questions dont 33 interactives (associations, remises en ordre,
+  calculs, code à compléter) : Manifeste agile, Scrum (rôles, événements,
+  artefacts et engagements), user stories, estimation et vélocité, Kanban
+  (limites d'encours, loi de Little, diagramme de flux cumulé, âge des
+  éléments), Jira (JQL, workflows, smart commits), gestion de projet (Gantt,
+  chemin critique, PERT, RACI, risques, valeur acquise), priorisation (MoSCoW,
+  WSJF, coût du retard), prévisions Monte Carlo, SAFe et Nexus, DORA, Team
+  Topologies, Cynefin
+- Deux schémas : déroulement d'un sprint, flux tiré sur un tableau Kanban
+
 ### Révision analyse de données
 - Lot de 100 questions dont 33 interactives (associations, remises en ordre,
   calculs, code à compléter) : Pandas (chargement CSV et Excel, types, loc et
