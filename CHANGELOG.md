@@ -5,6 +5,15 @@ dans l'historique git.
 
 ## Non publié
 
+### Schémas électriques : électronique
+- Nouveaux composants simulés : transistor NPN (bloqué, régime linéaire,
+  saturé), diode Zener, potentiomètre, buzzer, photorésistance et
+  thermistance commandées par un bouton
+- Onze montages guidés : buzzer, potentiomètre, Zener, transistor en
+  interrupteur et en régime linéaire, veilleuse, alarme de surchauffe, diode
+  de roue libre, portes NON, ET et OU ; trophée Électronicien
+- Simulateur du téléphone porté à l'identique, vérifié par les cas communs
+
 ### Révision : six thèmes complétés
 - Lots de 100 questions pour les thèmes livrés avec peu de questions, sans
   reprendre celles qui existaient : Docker (multi-stage, BuildKit, secrets,

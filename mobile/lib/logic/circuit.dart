@@ -1,5 +1,5 @@
 // Simulateur de circuits, réécrit depuis job/circuit.py : analyse nodale en courant
-// continu, relais, télérupteur, protections et diodes. Les calculs suivent le même
+// continu, relais, télérupteur, protections, diodes, Zener et transistors. Les calculs suivent le même
 // ordre que Python, jusqu'à la somme compensée de sum() : les nombres sont identiques.
 
 import 'python_compat.dart';
@@ -10,6 +10,8 @@ const valueRanges = <String, (double, double, double, String)>{
   'resistance': (1000.0, 1.0, 1000000.0, 'Ω'),
   'bobine_relais': (230.0, 5.0, 230.0, 'V'),
   'telerupteur': (230.0, 5.0, 230.0, 'V'),
+  'zener': (5.1, 2.4, 33.0, 'V'),
+  'potentiometre': (50.0, 0.0, 100.0, '%'),
 };
 
 /// Commandes manœuvrées par l'utilisateur et leur état de repos.
@@ -21,6 +23,8 @@ const operableDefaults = <String, bool>{
   'bouton_marche': false,
   'bouton_arret': false,
   'va_et_vient': false,
+  'ldr': true,
+  'ctn': false,
 };
 
 const pushButtons = {'bouton_marche', 'bouton_arret'};
@@ -33,6 +37,7 @@ const _loads = {
   'resistance',
   'bobine_relais',
   'telerupteur',
+  'buzzer',
   'voltmetre',
 };
 
@@ -53,6 +58,20 @@ const _ledMaxCurrent = 0.03;
 const _ledLitCurrent = 0.002;
 const _diodeForward = 0.7;
 const _diodeSeries = 0.5;
+const _zenerSeries = 5.0;
+const _zenerMaxCurrent = 0.1;
+const _transistorGain = 100.0;
+const _vceSat = 0.2;
+const _vceSatResistance = 1.0;
+const _potentiometerResistance = 10000.0;
+const _buzzerResistance = 200.0;
+const _buzzerOnCurrent = 0.01;
+
+/// Capteurs résistifs : (résistance, état), commande active puis au repos.
+const _sensors = {
+  'ldr': ((1000.0, 'éclairée, 1 kΩ'), (100000.0, "dans l'ombre, 100 kΩ")),
+  'ctn': ((1000.0, 'chauffée, 1 kΩ'), (10000.0, 'à 25 °C, 10 kΩ')),
+};
 const _voltmeterResistance = 1e7;
 const _liveVolts = 1.0;
 const _fullRatio = 0.6;
@@ -309,6 +328,19 @@ class Circuit {
     };
   }
 
+  /// Transistors en régime linéaire : (id, C, E, B, transconductance).
+  List<(String, int, int, int, double)> _controlled(_State pState) => [
+        for (final MapEntry(key: vId, value: vType) in types.entries)
+          if (vType == 'transistor_npn' && pState.modes[vId] == 'actif')
+            (
+              vId,
+              portNets(vId)[0],
+              portNets(vId)[2],
+              portNets(vId)[1],
+              _transistorGain / _diodeSeries
+            ),
+      ];
+
   double _resistance(String pId) {
     final vType = types[pId]!;
 
@@ -324,6 +356,10 @@ class Circuit {
 
     if (vType == 'voltmetre') {
       return _voltmeterResistance;
+    }
+
+    if (vType == 'buzzer') {
+      return _buzzerResistance;
     }
 
     return _mainsVolts * _mainsVolts / _loadWatts[vType]!;
@@ -351,6 +387,46 @@ class Circuit {
               vType == 'led' ? (_ledForward, _ledSeries) : (_diodeForward, _diodeSeries);
           rBranches.add((vId, vPorts[0], vPorts[1], 1 / vSeries, vForward));
         }
+      } else if (vType == 'zener') {
+        final vMode = pState.modes[vId];
+
+        if (vMode == 'direct') {
+          rBranches.add((vId, vPorts[0], vPorts[1], 1 / _diodeSeries, _diodeForward));
+        } else if (vMode == 'inverse') {
+          // Branche retournée : le courant compté va de la cathode à l'anode
+          rBranches
+              .add((vId, vPorts[1], vPorts[0], 1 / _zenerSeries, getValue('zener', vId, values)));
+        }
+      } else if (vType == 'transistor_npn') {
+        final vMode = pState.modes[vId] ?? '';
+
+        if (vMode.isNotEmpty) {
+          rBranches.add(('$vId.base', vPorts[1], vPorts[2], 1 / _diodeSeries, _diodeForward));
+        }
+
+        if (vMode == 'sature') {
+          rBranches.add((vId, vPorts[0], vPorts[2], 1 / _vceSatResistance, _vceSat));
+        }
+      } else if (vType == 'potentiometre') {
+        final vRatio = getValue('potentiometre', vId, values) / 100;
+        rBranches.add((
+          vId,
+          vPorts[0],
+          vPorts[1],
+          1 / (_potentiometerResistance * (1 - vRatio) + _closedResistance),
+          0.0,
+        ));
+        rBranches.add((
+          '$vId.bas',
+          vPorts[1],
+          vPorts[2],
+          1 / (_potentiometerResistance * vRatio + _closedResistance),
+          0.0,
+        ));
+      } else if (_sensors.containsKey(vType)) {
+        final vSensor = _sensors[vType]!;
+        final vResistance = _isClosed(vId, pInputs, pState) ? vSensor.$1.$1 : vSensor.$2.$1;
+        rBranches.add((vId, vPorts[0], vPorts[1], 1 / vResistance, 0.0));
       } else if (_loads.contains(vType)) {
         rBranches.add((vId, vPorts[0], vPorts[1], 1 / _resistance(vId), 0.0));
       } else if (_isClosed(vId, pInputs, pState)) {
@@ -400,6 +476,27 @@ class Circuit {
       }
     }
 
+    final vControlled = _controlled(pState);
+
+    for (final (_, vNetC, vNetE, vNetB, vGain) in vControlled) {
+      // Courant de C vers E = g·(Vb − Ve − Vf), sorti en C et entré en E
+      for (final (vRow, vSign) in [(vIndexes[vNetC], 1), (vIndexes[vNetE], -1)]) {
+        if (vRow == null) {
+          continue;
+        }
+
+        vVector[vRow] += vSign * vGain * _diodeForward;
+
+        for (final (vNet, vFactor) in [(vNetB, 1), (vNetE, -1)]) {
+          final vColumn = vIndexes[vNet];
+
+          if (vColumn != null) {
+            vMatrix[vRow][vColumn] += vSign * vFactor * vGain;
+          }
+        }
+      }
+    }
+
     final vSolution = solve(vMatrix, vVector);
     final vVoltages = {for (final vEntry in vIndexes.entries) vEntry.key: vSolution[vEntry.value]};
     vVoltages[ground] = 0.0;
@@ -410,6 +507,10 @@ class Circuit {
       // Pour une source, le courant compté est celui qu'elle débite par sa borne +
       final vCurrent = vConductance * (vVoltages[vNetA]! - vVoltages[vNetB]! - vForce);
       vCurrents[vId] = _sources.contains(types[vId]) ? -vCurrent : vCurrent;
+    }
+
+    for (final (vId, _, vNetE, vNetB, vGain) in vControlled) {
+      vCurrents[vId] = vGain * (vVoltages[vNetB]! - vVoltages[vNetE]! - _diodeForward);
     }
 
     return (vVoltages, vCurrents);
@@ -518,10 +619,57 @@ class Circuit {
           pState.diodes[vId] = vNext;
           vChanged = true;
         }
+      } else if (vType == 'zener' || vType == 'transistor_npn') {
+        final vMode = pState.modes[vId] ?? '';
+        final vNext = vType == 'zener'
+            ? _nextZenerMode(vId, vMode, pVoltages, pCurrents)
+            : _nextTransistorMode(vId, vMode, pVoltages, pCurrents);
+
+        if (vNext != vMode) {
+          pState.modes[vId] = vNext;
+          vChanged = true;
+        }
       }
     }
 
     return vChanged;
+  }
+
+  /// Régime suivant d'une Zener : bloquée, directe ou inverse.
+  String _nextZenerMode(
+      String pId, String pMode, Map<int, double> pVoltages, Map<String, double> pCurrents) {
+    if (pMode.isNotEmpty) {
+      return (pCurrents[pId] ?? 0) > 0 ? pMode : '';
+    }
+
+    final vVoltage = _voltage(pId, pVoltages);
+
+    if (vVoltage > _diodeForward) {
+      return 'direct';
+    }
+
+    return -vVoltage > getValue('zener', pId, values) ? 'inverse' : '';
+  }
+
+  /// Régime suivant d'un transistor : bloqué, actif ou saturé.
+  String _nextTransistorMode(
+      String pId, String pMode, Map<int, double> pVoltages, Map<String, double> pCurrents) {
+    final [vCollector, vBase, vEmitter] = portNets(pId);
+    final vBaseCurrent = pCurrents['$pId.base'] ?? 0;
+
+    if (pMode.isEmpty) {
+      return pVoltages[vBase]! - pVoltages[vEmitter]! > _diodeForward ? 'actif' : '';
+    }
+
+    if (vBaseCurrent <= 0) {
+      return '';
+    }
+
+    if (pMode == 'actif') {
+      return pVoltages[vCollector]! - pVoltages[vEmitter]! < _vceSat ? 'sature' : 'actif';
+    }
+
+    return (pCurrents[pId] ?? 0) > _transistorGain * vBaseCurrent ? 'actif' : 'sature';
   }
 
   Map<String, dynamic> _describe(Map<String, dynamic> pInputs, _State pState,
@@ -597,6 +745,32 @@ class Circuit {
       } else if (pPart['on'] == true) {
         pPart['tone'] = 'led';
       }
+    } else if (vType == 'zener') {
+      _describeZener(pId, pPart, pState, pFaults);
+    } else if (vType == 'transistor_npn') {
+      final vMode = pState.modes[pId] ?? '';
+
+      pPart['on'] = vMode == 'sature';
+      pPart['status'] = switch (vMode) {
+        'actif' => 'non saturé, ${formatMeasure(vCurrent, 'A')}',
+        'sature' => 'saturé, ${formatMeasure(vCurrent, 'A')}',
+        _ => 'bloqué',
+      };
+      pPart['tone'] = vMode.isNotEmpty ? 'active' : '';
+    } else if (vType == 'buzzer') {
+      final vSigned = pPart['current'] as double;
+
+      pPart['on'] = vSigned >= _buzzerOnCurrent;
+      pPart['status'] = vSigned >= _buzzerOnCurrent
+          ? 'sonne'
+          : (-vSigned >= _buzzerOnCurrent ? "branché à l'envers, muet" : 'muet');
+      pPart['tone'] = vSigned >= _buzzerOnCurrent ? 'active' : '';
+    } else if (vType == 'potentiometre') {
+      pPart['status'] =
+          'curseur à ${formatG(getValue('potentiometre', pId, values))} %'.replaceAll('.', ',');
+    } else if (_sensors.containsKey(vType)) {
+      final vSensor = _sensors[vType]!;
+      pPart['status'] = _isClosed(pId, pInputs, pState) ? vSensor.$1.$2 : vSensor.$2.$2;
     } else if (vType == 'bobine_relais' || vType == 'telerupteur') {
       final vActive =
           vType == 'bobine_relais' ? pState.coils[pId] == true : pState.remote?[pId] == true;
@@ -631,6 +805,34 @@ class Circuit {
       }
     }
   }
+
+  /// Complète l'état d'une Zener ; en inverse, son courant compté est négatif.
+  void _describeZener(String pId, Map<String, dynamic> pPart, _State pState, List<String> pFaults) {
+    final vMode = pState.modes[pId] ?? '';
+
+    if (vMode == 'inverse') {
+      pPart['current'] = -(pPart['current'] as double);
+    }
+
+    final vCurrent = (pPart['current'] as double).abs();
+
+    pPart['on'] = vMode.isNotEmpty;
+    pPart['status'] = switch (vMode) {
+      'direct' => 'passante, ${formatMeasure(vCurrent, 'A')}',
+      'inverse' => 'régule, ${formatMeasure(vCurrent, 'A')}',
+      _ => 'bloquée',
+    };
+    pPart['tone'] = vMode == 'inverse' ? 'active' : '';
+
+    if (vCurrent > _zenerMaxCurrent) {
+      pPart['status'] = 'détruite';
+      pPart['tone'] = 'fault';
+      pPart['on'] = false;
+      pFaults.add('Diode Zener détruite : ${formatMeasure(vCurrent, 'A')} pour '
+          '${formatMeasure(_zenerMaxCurrent, 'A')} au plus. Une résistance '
+          'en série limite le courant.');
+    }
+  }
 }
 
 /// État d'une simulation : bobines collées, télérupteurs, protections, diodes passantes.
@@ -641,5 +843,8 @@ class _State {
   final Map<String, dynamic> latches;
   final Set<String> tripped;
   final diodes = <String, bool>{};
+
+  /// Régime des Zener et des transistors : '' bloqué, sinon direct, inverse, actif, sature.
+  final modes = <String, String>{};
   Map<String, dynamic>? remote;
 }

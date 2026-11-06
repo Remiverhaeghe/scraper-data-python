@@ -261,5 +261,352 @@
       ["lampe_bornes", "2", "alimentation", "N"]
     ],
     "explanation": "Le relais isole la commande de la puissance : l'opérateur ne touche que du 12 V, et une carte électronique peut piloter un récepteur 230 V. C'est le rôle des sorties à relais d'un automate."
+  },
+  {
+    "id": "buzzer",
+    "title": "Un buzzer et sa polarité",
+    "goal": "Sur une pile de 9 V, le buzzer sonne tant que l'on appuie sur le bouton poussoir, et se tait dès qu'on le relâche.",
+    "hint": "Le bouton poussoir se place en série, entre le + de la pile et le buzzer. Un buzzer actif est polarisé : sa borne + va du côté du + de la pile, sinon il reste muet.",
+    "palette": {"pile": 1, "bouton_marche": 1, "buzzer": 1},
+    "values": {"pile": 9},
+    "steps": [
+      {"set": {"bouton_marche": false}, "expect": {"buzzer": "off"}, "message": "Bouton relâché : le buzzer est muet."},
+      {"set": {"bouton_marche": true}, "expect": {"buzzer": "on"}, "message": "Bouton appuyé : le buzzer sonne."},
+      {"set": {"bouton_marche": false}, "expect": {"buzzer": "off"}, "message": "Bouton relâché : il se tait."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "bouton_marche", "type": "bouton_marche", "x": 1, "y": 0},
+      {"id": "buzzer", "type": "buzzer", "x": 2, "y": 0}
+    ],
+    "solution_wires": [
+      ["pile", "+", "bouton_marche", "1"],
+      ["bouton_marche", "2", "buzzer", "+"],
+      ["buzzer", "−", "pile", "−"]
+    ],
+    "explanation": "Un buzzer actif contient son propre oscillateur : il suffit de l'alimenter en continu, dans le bon sens. Un buzzer passif, lui, doit recevoir un signal alternatif, par exemple une sortie PWM de microcontrôleur."
+  },
+  {
+    "id": "potentiometre",
+    "title": "Le potentiomètre, un diviseur réglable",
+    "goal": "À partir de la pile de 9 V, obtenez 3,3 V (à 0,1 V près) mesurés par le voltmètre, en réglant le curseur du potentiomètre.",
+    "hint": "Les deux bornes extrêmes vont aux pôles de la pile, le voltmètre mesure entre le curseur et le −. La tension du curseur est proportionnelle à sa position : 3,3 / 9, soit environ 37 %.",
+    "palette": {"pile": 1, "potentiometre": 1, "voltmetre": 1},
+    "values": {"pile": 9, "potentiometre": 50},
+    "editable": ["potentiometre"],
+    "steps": [{"set": {}, "expect": {"voltmetre.voltage": [3.2, 3.4]}, "message": "Le voltmètre mesure 3,3 V sur le curseur."}],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "potentiometre", "type": "potentiometre", "x": 1, "y": 0},
+      {"id": "voltmetre", "type": "voltmetre", "x": 2, "y": 0}
+    ],
+    "solution_wires": [
+      ["pile", "+", "potentiometre", "1"],
+      ["potentiometre", "2", "pile", "−"],
+      ["voltmetre", "1", "potentiometre", "curseur"],
+      ["voltmetre", "2", "pile", "−"]
+    ],
+    "solution_values": {"potentiometre": 36.7},
+    "explanation": "Le potentiomètre est un diviseur de tension dont le rapport se règle à la main : deux résistances en série, dont le curseur déplace le point commun. Câblé avec deux bornes seulement, il devient une résistance variable."
+  },
+  {
+    "id": "zener",
+    "title": "Stabiliser une tension avec une Zener",
+    "goal": "À partir d'une pile de 12 V, obtenez environ 5 V stables (4,9 à 5,4 V) avec une Zener de 5,1 V, parcourue par 5 à 30 mA. Réglez la résistance.",
+    "hint": "La Zener se branche à l'envers : cathode vers le +, à travers la résistance, anode vers le −. La résistance prend 12 − 5,1 = 6,9 V : pour 20 mA, R = 6,9 / 0,02, soit environ 330 Ω.",
+    "palette": {"pile": 1, "resistance": 1, "zener": 1, "voltmetre": 1},
+    "values": {"pile": 12, "resistance": 47, "zener": 5.1},
+    "editable": ["resistance"],
+    "steps": [{"set": {}, "expect": {"voltmetre.voltage": [4.9, 5.4], "zener.current": [0.005, 0.03]}, "message": "Le voltmètre mesure environ 5 V et la Zener reste dans sa plage de courant."}],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "resistance", "type": "resistance", "x": 1, "y": 0},
+      {"id": "zener", "type": "zener", "x": 2, "y": 0},
+      {"id": "voltmetre", "type": "voltmetre", "x": 3, "y": 0}
+    ],
+    "solution_wires": [
+      ["pile", "+", "resistance", "1"],
+      ["resistance", "2", "zener", "cathode"],
+      ["zener", "anode", "pile", "−"],
+      ["voltmetre", "1", "zener", "cathode"],
+      ["voltmetre", "2", "zener", "anode"]
+    ],
+    "solution_values": {"resistance": 330},
+    "explanation": "En inverse, la Zener laisse passer le courant dès que sa tension atteint Vz et la maintient presque constante. La résistance absorbe l'écart et limite le courant : sans elle, la Zener est détruite. Pour des courants plus forts, on passe à un régulateur comme le 7805."
+  },
+  {
+    "id": "transistor-interrupteur",
+    "title": "Le transistor en interrupteur",
+    "goal": "Un interrupteur commande, par un transistor NPN, une LED alimentée en 9 V à travers 470 Ω. LED allumée, le transistor doit être saturé et la LED parcourue par 10 à 20 mA. Réglez la résistance de base.",
+    "hint": "La LED et sa résistance vont du + au collecteur, l'émetteur au −. La base reçoit le courant de l'interrupteur à travers sa propre résistance. Il faut environ 14 mA au collecteur : avec un gain de 100, au moins 0,14 mA de base, plutôt le double. R = (9 − 0,7) / 0,0008, soit environ 10 kΩ.",
+    "palette": {"pile": 1, "interrupteur": 1, "resistance": 2, "led": 1, "transistor_npn": 1},
+    "values": {"pile": 9, "resistance-1": 1000000, "resistance-2": 470},
+    "editable": ["resistance-1", "resistance-2"],
+    "steps": [
+      {"set": {"interrupteur": false}, "expect": {"led": "off", "transistor_npn": "off"}, "message": "Interrupteur ouvert : le transistor est bloqué, la LED éteinte."},
+      {"set": {"interrupteur": true}, "expect": {"transistor_npn": "on", "led": "on", "led.current": [0.01, 0.02]}, "message": "Interrupteur fermé : le transistor est saturé et la LED éclaire avec 10 à 20 mA."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "resistance-2", "type": "resistance", "x": 2, "y": 0},
+      {"id": "led", "type": "led", "x": 2, "y": 1},
+      {"id": "interrupteur", "type": "interrupteur", "x": 0, "y": 2},
+      {"id": "resistance-1", "type": "resistance", "x": 1, "y": 2},
+      {"id": "transistor_npn", "type": "transistor_npn", "x": 2, "y": 2}
+    ],
+    "solution_wires": [
+      ["pile", "+", "interrupteur", "1"],
+      ["interrupteur", "2", "resistance-1", "1"],
+      ["resistance-1", "2", "transistor_npn", "base"],
+      ["pile", "+", "resistance-2", "1"],
+      ["resistance-2", "2", "led", "anode"],
+      ["led", "cathode", "transistor_npn", "collecteur"],
+      ["transistor_npn", "émetteur", "pile", "−"]
+    ],
+    "solution_values": {"resistance-1": 10000, "resistance-2": 470},
+    "explanation": "Un petit courant de base commande un courant de collecteur jusqu'à β fois plus grand. Saturé, le transistor se comporte comme un interrupteur fermé, avec 0,2 V à ses bornes. Avec une résistance de base trop forte, il reste en régime linéaire : la LED éclaire peu et le transistor chauffe."
+  },
+  {
+    "id": "transistor-gradateur",
+    "title": "Régler un courant avec le transistor",
+    "goal": "Le curseur d'un potentiomètre attaque la base du transistor à travers 100 kΩ ; la LED est en série avec 470 Ω dans le collecteur. Réglez le potentiomètre pour que la LED soit parcourue par 4 à 6 mA, transistor non saturé.",
+    "hint": "Le potentiomètre va du + au −, son curseur à la base à travers la résistance de 100 kΩ. En régime linéaire, Ic = 100 × Ib = 100 × (9 × position − 0,7) / 100 000. Pour 5 mA, la position vaut environ 63 %.",
+    "palette": {"pile": 1, "potentiometre": 1, "resistance": 2, "led": 1, "transistor_npn": 1},
+    "values": {"pile": 9, "potentiometre": 100, "resistance-1": 100000, "resistance-2": 470},
+    "editable": ["potentiometre", "resistance-1", "resistance-2"],
+    "steps": [{"set": {}, "expect": {"led": "on", "led.current": [0.004, 0.006], "transistor_npn": "off"}, "message": "La LED éclaire avec 4 à 6 mA et le transistor fonctionne en régime linéaire."}],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "resistance-2", "type": "resistance", "x": 2, "y": 0},
+      {"id": "led", "type": "led", "x": 2, "y": 1},
+      {"id": "potentiometre", "type": "potentiometre", "x": 0, "y": 2},
+      {"id": "resistance-1", "type": "resistance", "x": 1, "y": 2},
+      {"id": "transistor_npn", "type": "transistor_npn", "x": 2, "y": 2}
+    ],
+    "solution_wires": [
+      ["pile", "+", "potentiometre", "1"],
+      ["potentiometre", "2", "pile", "−"],
+      ["potentiometre", "curseur", "resistance-1", "1"],
+      ["resistance-1", "2", "transistor_npn", "base"],
+      ["pile", "+", "resistance-2", "1"],
+      ["resistance-2", "2", "led", "anode"],
+      ["led", "cathode", "transistor_npn", "collecteur"],
+      ["transistor_npn", "émetteur", "pile", "−"]
+    ],
+    "solution_values": {"potentiometre": 63, "resistance-1": 100000, "resistance-2": 470},
+    "explanation": "Entre bloqué et saturé, le transistor amplifie : le courant de collecteur suit celui de base, multiplié par le gain β. C'est le régime des amplificateurs. Le gain varie d'un transistor à l'autre : pour un réglage précis, on asservit le courant au lieu de compter sur β."
+  },
+  {
+    "id": "veilleuse",
+    "title": "Une veilleuse qui s'allume la nuit",
+    "goal": "Une photorésistance et une résistance forment un pont diviseur qui commande la base du transistor : la LED s'allume dans l'ombre et s'éteint à la lumière. Réglez la résistance du pont.",
+    "hint": "Résistance du pont entre le + et la base, photorésistance entre la base et le −. Éclairée (1 kΩ), elle doit tirer la base sous 0,7 V ; dans l'ombre (100 kΩ), la laisser monter. Avec 47 kΩ : 9 × 1 / 48 = 0,19 V à la lumière.",
+    "palette": {"pile": 1, "resistance": 2, "ldr": 1, "led": 1, "transistor_npn": 1},
+    "values": {"pile": 9, "resistance-1": 1000, "resistance-2": 470},
+    "editable": ["resistance-1", "resistance-2"],
+    "steps": [
+      {"set": {"ldr": true}, "expect": {"led": "off"}, "message": "En plein jour : la veilleuse est éteinte."},
+      {"set": {"ldr": false}, "expect": {"led": "on"}, "message": "Dans l'ombre : elle s'allume."},
+      {"set": {"ldr": true}, "expect": {"led": "off"}, "message": "Le jour revenu : elle s'éteint."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "resistance-1", "type": "resistance", "x": 1, "y": 0},
+      {"id": "resistance-2", "type": "resistance", "x": 2, "y": 0},
+      {"id": "led", "type": "led", "x": 2, "y": 1},
+      {"id": "ldr", "type": "ldr", "x": 1, "y": 2},
+      {"id": "transistor_npn", "type": "transistor_npn", "x": 2, "y": 2}
+    ],
+    "solution_wires": [
+      ["pile", "+", "resistance-1", "1"],
+      ["resistance-1", "2", "ldr", "1"],
+      ["ldr", "2", "pile", "−"],
+      ["resistance-1", "2", "transistor_npn", "base"],
+      ["pile", "+", "resistance-2", "1"],
+      ["resistance-2", "2", "led", "anode"],
+      ["led", "cathode", "transistor_npn", "collecteur"],
+      ["transistor_npn", "émetteur", "pile", "−"]
+    ],
+    "solution_values": {"resistance-1": 47000, "resistance-2": 470},
+    "explanation": "Le pont diviseur transforme une résistance qui varie en tension qui varie, et le transistor en fait un signal tout ou rien. Remplacer la résistance du pont par un potentiomètre permet de régler le seuil de déclenchement : c'est le montage des interrupteurs crépusculaires."
+  },
+  {
+    "id": "alarme-surchauffe",
+    "title": "Une alarme de surchauffe",
+    "goal": "Une thermistance CTN fait sonner un buzzer, par un transistor, quand elle chauffe. À 25 °C, le buzzer doit rester muet. Réglez la résistance du pont.",
+    "hint": "La résistance d'une CTN baisse quand elle chauffe : placez-la côté +, la résistance fixe côté −, et la base au point milieu. À 25 °C (10 kΩ), la base doit rester sous 0,7 V : une résistance d'environ 680 Ω convient.",
+    "palette": {"pile": 1, "ctn": 1, "resistance": 1, "buzzer": 1, "transistor_npn": 1},
+    "values": {"pile": 9, "resistance": 10000},
+    "editable": ["resistance"],
+    "steps": [
+      {"set": {"ctn": false}, "expect": {"buzzer": "off"}, "message": "À 25 °C : l'alarme est muette."},
+      {"set": {"ctn": true}, "expect": {"buzzer": "on"}, "message": "Surchauffe : le buzzer sonne."},
+      {"set": {"ctn": false}, "expect": {"buzzer": "off"}, "message": "Retour à 25 °C : il se tait."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "ctn", "type": "ctn", "x": 1, "y": 0},
+      {"id": "buzzer", "type": "buzzer", "x": 2, "y": 0},
+      {"id": "resistance", "type": "resistance", "x": 1, "y": 2},
+      {"id": "transistor_npn", "type": "transistor_npn", "x": 2, "y": 1}
+    ],
+    "solution_wires": [
+      ["pile", "+", "ctn", "1"],
+      ["ctn", "2", "resistance", "1"],
+      ["resistance", "2", "pile", "−"],
+      ["ctn", "2", "transistor_npn", "base"],
+      ["pile", "+", "buzzer", "+"],
+      ["buzzer", "−", "transistor_npn", "collecteur"],
+      ["transistor_npn", "émetteur", "pile", "−"]
+    ],
+    "solution_values": {"resistance": 680},
+    "explanation": "Inverser la CTN et la résistance inverse le fonctionnement : l'alarme sonnerait au froid. Une CTN (coefficient de température négatif) sert à mesurer ou surveiller une température, une CTP à protéger un circuit, car sa résistance monte brusquement en chauffant."
+  },
+  {
+    "id": "roue-libre",
+    "title": "La diode de roue libre",
+    "goal": "Un transistor commande la bobine d'un relais 12 V. Ajoutez la diode de roue libre qui protège le transistor : elle ne doit conduire aucun courant quand la bobine est alimentée.",
+    "hint": "La bobine va du + au collecteur, l'émetteur au −, la base à l'interrupteur à travers la résistance. La diode se branche en parallèle sur la bobine, en inverse : cathode côté +, anode côté collecteur.",
+    "palette": {"pile": 1, "interrupteur": 1, "resistance": 1, "transistor_npn": 1, "bobine_relais": 1, "diode": 1},
+    "values": {"pile": 12, "bobine_relais": 12, "resistance": 1000},
+    "steps": [
+      {"set": {"interrupteur": false}, "expect": {"bobine_relais": "off"}, "message": "Interrupteur ouvert : le relais est au repos."},
+      {"set": {"interrupteur": true}, "expect": {"bobine_relais": "on", "diode.current": [0, 0.001], "diode.voltage": [10, 13]}, "message": "Interrupteur fermé : le relais colle, la diode est bloquée avec la tension de la bobine à ses bornes."},
+      {"set": {"interrupteur": false}, "expect": {"bobine_relais": "off"}, "message": "Interrupteur ouvert : le relais retombe."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "bobine_relais", "type": "bobine_relais", "x": 2, "y": 0},
+      {"id": "diode", "type": "diode", "x": 3, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 0, "y": 1},
+      {"id": "resistance", "type": "resistance", "x": 1, "y": 1},
+      {"id": "transistor_npn", "type": "transistor_npn", "x": 2, "y": 1}
+    ],
+    "solution_wires": [
+      ["pile", "+", "interrupteur", "1"],
+      ["interrupteur", "2", "resistance", "1"],
+      ["resistance", "2", "transistor_npn", "base"],
+      ["pile", "+", "bobine_relais", "1"],
+      ["bobine_relais", "2", "transistor_npn", "collecteur"],
+      ["transistor_npn", "émetteur", "pile", "−"],
+      ["diode", "cathode", "bobine_relais", "1"],
+      ["diode", "anode", "bobine_relais", "2"]
+    ],
+    "explanation": "Une bobine s'oppose aux variations de courant : à la coupure, elle crée une surtension de plusieurs centaines de volts qui détruit le transistor. La diode offre au courant un chemin pour s'éteindre doucement. Branchée dans le mauvais sens, elle court-circuite l'alimentation dès que le transistor conduit."
+  },
+  {
+    "id": "porte-non",
+    "title": "Une porte logique NON",
+    "goal": "Sur une alimentation de 5 V, la sortie (le collecteur, mesuré par le voltmètre) vaut 1 (plus de 4,5 V) quand l'entrée est à 0, et 0 (moins de 0,4 V) quand l'entrée est à 1.",
+    "hint": "La résistance de collecteur (1 kΩ) relie le + au collecteur, l'émetteur va au −. L'interrupteur, à travers la résistance de base (10 kΩ), fait l'entrée. Le voltmètre mesure entre le collecteur et le −.",
+    "palette": {"pile": 1, "interrupteur": 1, "resistance": 2, "transistor_npn": 1, "voltmetre": 1},
+    "values": {"pile": 5, "resistance-1": 10000, "resistance-2": 1000},
+    "steps": [
+      {"set": {"interrupteur": false}, "expect": {"voltmetre.voltage": [4.5, 5.1]}, "message": "Entrée à 0 : la sortie est à 1."},
+      {"set": {"interrupteur": true}, "expect": {"voltmetre.voltage": [0, 0.4]}, "message": "Entrée à 1 : le transistor saturé tire la sortie à 0."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "resistance-2", "type": "resistance", "x": 2, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 0, "y": 1},
+      {"id": "resistance-1", "type": "resistance", "x": 1, "y": 1},
+      {"id": "transistor_npn", "type": "transistor_npn", "x": 2, "y": 1},
+      {"id": "voltmetre", "type": "voltmetre", "x": 3, "y": 1}
+    ],
+    "solution_wires": [
+      ["pile", "+", "interrupteur", "1"],
+      ["interrupteur", "2", "resistance-1", "1"],
+      ["resistance-1", "2", "transistor_npn", "base"],
+      ["pile", "+", "resistance-2", "1"],
+      ["resistance-2", "2", "transistor_npn", "collecteur"],
+      ["transistor_npn", "émetteur", "pile", "−"],
+      ["voltmetre", "1", "transistor_npn", "collecteur"],
+      ["voltmetre", "2", "pile", "−"]
+    ],
+    "explanation": "C'est l'inverseur de la logique RTL, l'ancêtre des circuits intégrés : un transistor saturé donne un 0, bloqué il laisse la résistance tirer la sortie à 1. Les portes CMOS actuelles reposent sur la même idée, avec deux transistors complémentaires et presque aucun courant au repos."
+  },
+  {
+    "id": "porte-et",
+    "title": "Une porte ET à transistors",
+    "goal": "La LED ne s'allume que si les deux interrupteurs sont fermés. Les résistances 1 et 2 limitent les courants de base, la résistance 3 celui de la LED ; réglez-les si besoin.",
+    "hint": "Mettez les deux transistors en série : la LED et sa résistance du + au collecteur du transistor 2, l'émetteur du 2 au collecteur du 1, l'émetteur du 1 au −. Chaque interrupteur commande une base à travers sa résistance.",
+    "palette": {"pile": 1, "interrupteur": 2, "resistance": 3, "led": 1, "transistor_npn": 2},
+    "values": {"pile": 9, "resistance-1": 10000, "resistance-2": 10000, "resistance-3": 470},
+    "editable": ["resistance-1", "resistance-2", "resistance-3"],
+    "steps": [
+      {"set": {"interrupteur-1": false, "interrupteur-2": false}, "expect": {"led": "off"}, "message": "0 et 0 : la LED est éteinte."},
+      {"set": {"interrupteur-1": true}, "expect": {"led": "off"}, "message": "1 et 0 : toujours éteinte."},
+      {"set": {"interrupteur-2": true}, "expect": {"led": "on"}, "message": "1 et 1 : la LED s'allume."},
+      {"set": {"interrupteur-1": false}, "expect": {"led": "off"}, "message": "0 et 1 : elle s'éteint."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "resistance-3", "type": "resistance", "x": 2, "y": 0},
+      {"id": "led", "type": "led", "x": 2, "y": 1},
+      {"id": "interrupteur-2", "type": "interrupteur", "x": 0, "y": 2},
+      {"id": "resistance-2", "type": "resistance", "x": 1, "y": 2},
+      {"id": "transistor_npn-2", "type": "transistor_npn", "x": 2, "y": 2},
+      {"id": "interrupteur-1", "type": "interrupteur", "x": 0, "y": 3},
+      {"id": "resistance-1", "type": "resistance", "x": 1, "y": 3},
+      {"id": "transistor_npn-1", "type": "transistor_npn", "x": 2, "y": 3}
+    ],
+    "solution_wires": [
+      ["pile", "+", "interrupteur-1", "1"],
+      ["interrupteur-1", "2", "resistance-1", "1"],
+      ["resistance-1", "2", "transistor_npn-1", "base"],
+      ["pile", "+", "interrupteur-2", "1"],
+      ["interrupteur-2", "2", "resistance-2", "1"],
+      ["resistance-2", "2", "transistor_npn-2", "base"],
+      ["pile", "+", "resistance-3", "1"],
+      ["resistance-3", "2", "led", "anode"],
+      ["led", "cathode", "transistor_npn-2", "collecteur"],
+      ["transistor_npn-2", "émetteur", "transistor_npn-1", "collecteur"],
+      ["transistor_npn-1", "émetteur", "pile", "−"]
+    ],
+    "solution_values": {"resistance-1": 10000, "resistance-2": 10000, "resistance-3": 470},
+    "explanation": "Deux interrupteurs en série donnent un ET, deux en parallèle un OU : les transistors appliquent la même règle, commandés électriquement. Chaque transistor saturé garde 0,2 V : on en empile peu, ce qui limite le nombre d'entrées d'une telle porte."
+  },
+  {
+    "id": "porte-ou",
+    "title": "Une porte OU à transistors",
+    "goal": "La LED s'allume dès que l'un des deux interrupteurs est fermé. Les résistances 1 et 2 limitent les courants de base, la résistance 3 celui de la LED ; réglez-les si besoin.",
+    "hint": "Mettez les deux transistors en parallèle : la LED et sa résistance du + aux deux collecteurs reliés, les deux émetteurs au −. Chaque interrupteur commande une base à travers sa résistance.",
+    "palette": {"pile": 1, "interrupteur": 2, "resistance": 3, "led": 1, "transistor_npn": 2},
+    "values": {"pile": 9, "resistance-1": 10000, "resistance-2": 10000, "resistance-3": 470},
+    "editable": ["resistance-1", "resistance-2", "resistance-3"],
+    "steps": [
+      {"set": {"interrupteur-1": false, "interrupteur-2": false}, "expect": {"led": "off"}, "message": "0 et 0 : la LED est éteinte."},
+      {"set": {"interrupteur-1": true}, "expect": {"led": "on"}, "message": "1 et 0 : la LED s'allume."},
+      {"set": {"interrupteur-2": true}, "expect": {"led": "on"}, "message": "1 et 1 : elle reste allumée."},
+      {"set": {"interrupteur-1": false}, "expect": {"led": "on"}, "message": "0 et 1 : toujours allumée."},
+      {"set": {"interrupteur-2": false}, "expect": {"led": "off"}, "message": "0 et 0 : elle s'éteint."}
+    ],
+    "solution_components": [
+      {"id": "pile", "type": "pile", "x": 0, "y": 0},
+      {"id": "resistance-3", "type": "resistance", "x": 2, "y": 0},
+      {"id": "led", "type": "led", "x": 2, "y": 1},
+      {"id": "interrupteur-1", "type": "interrupteur", "x": 0, "y": 2},
+      {"id": "resistance-1", "type": "resistance", "x": 1, "y": 2},
+      {"id": "transistor_npn-1", "type": "transistor_npn", "x": 2, "y": 2},
+      {"id": "interrupteur-2", "type": "interrupteur", "x": 0, "y": 3},
+      {"id": "resistance-2", "type": "resistance", "x": 1, "y": 3},
+      {"id": "transistor_npn-2", "type": "transistor_npn", "x": 3, "y": 2}
+    ],
+    "solution_wires": [
+      ["pile", "+", "interrupteur-1", "1"],
+      ["interrupteur-1", "2", "resistance-1", "1"],
+      ["resistance-1", "2", "transistor_npn-1", "base"],
+      ["pile", "+", "interrupteur-2", "1"],
+      ["interrupteur-2", "2", "resistance-2", "1"],
+      ["resistance-2", "2", "transistor_npn-2", "base"],
+      ["pile", "+", "resistance-3", "1"],
+      ["resistance-3", "2", "led", "anode"],
+      ["led", "cathode", "transistor_npn-1", "collecteur"],
+      ["led", "cathode", "transistor_npn-2", "collecteur"],
+      ["transistor_npn-1", "émetteur", "pile", "−"],
+      ["transistor_npn-2", "émetteur", "pile", "−"]
+    ],
+    "solution_values": {"resistance-1": 10000, "resistance-2": 10000, "resistance-3": 470},
+    "explanation": "Les deux transistors en parallèle ouvrent chacun un chemin vers le − : il suffit d'un seul pour allumer la LED. En prenant la sortie sur les collecteurs plutôt que sur la LED, on obtient l'inverse, une porte NON-OU, avec laquelle on peut construire toutes les autres."
   }
 ]

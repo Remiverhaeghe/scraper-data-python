@@ -463,6 +463,60 @@ COMPONENT_TYPES = (
         '<line x1="56" y1="74" x2="56" y2="100"/>'
         '<polygon points="56,74 46,72 51,65" fill="#0f172a"/></g>',
     ),
+    ComponentType(
+        "potentiometre",
+        "Potentiomètre",
+        ELECTRONIC,
+        (("1", TOP), ("curseur", (78, 50)), ("2", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="22"/>'
+        '<rect x="30" y="22" width="20" height="56"/>'
+        '<line x1="40" y1="78" x2="40" y2="100"/>'
+        '<line x1="78" y1="50" x2="58" y2="50"/></g>'
+        '<polygon points="51,50 60,44 60,56" fill="#0f172a"/>',
+    ),
+    ComponentType(
+        "zener",
+        "Diode Zener",
+        ELECTRONIC,
+        (("anode", TOP), ("cathode", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="34"/>'
+        '<polygon points="22,34 58,34 40,64" fill="#0f172a"/>'
+        '<polyline points="16,58 22,64 58,64 64,70"/>'
+        '<line x1="40" y1="64" x2="40" y2="100"/></g>',
+    ),
+    ComponentType(
+        "buzzer",
+        "Buzzer",
+        ELECTRONIC,
+        (("+", TOP), ("−", BOTTOM)),
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="36"/>'
+        '<path d="M18,64 L18,56 A22,22 0 0 1 62,56 L62,64 Z"/>'
+        '<line x1="40" y1="64" x2="40" y2="100"/></g>'
+        '<text x="54" y="24" font-size="14" font-weight="bold" '
+        'fill="#0f172a">+</text>',
+    ),
+    two_terminals(
+        "ldr",
+        "Photorésistance (LDR)",
+        ELECTRONIC,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="22"/>'
+        '<rect x="30" y="22" width="20" height="56"/>'
+        '<line x1="40" y1="78" x2="40" y2="100"/>'
+        '<line x1="4" y1="24" x2="24" y2="40"/><line x1="4" y1="44" x2="24" '
+        'y2="60"/><polyline points="16,40 24,40 24,32"/>'
+        '<polyline points="16,60 24,60 24,52"/></g>',
+    ),
+    two_terminals(
+        "ctn",
+        "Thermistance (CTN)",
+        ELECTRONIC,
+        f'<g {STROKE}><line x1="40" y1="0" x2="40" y2="22"/>'
+        '<rect x="30" y="22" width="20" height="56"/>'
+        '<line x1="40" y1="78" x2="40" y2="100"/>'
+        '<polyline points="14,82 22,82 62,18"/></g>'
+        '<text x="56" y="70" font-size="12" font-weight="bold" '
+        'fill="#0f172a">−t°</text>',
+    ),
     two_terminals(
         "bobine_relais",
         "Bobine de relais",

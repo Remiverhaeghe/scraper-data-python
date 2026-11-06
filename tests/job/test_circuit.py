@@ -198,3 +198,83 @@ def test_measures_and_drawing():
     assert format_measure(230, "V") == "230 V"
     assert 'stroke="#dc2626"' in vSvg
     assert "allumée" in vSvg
+
+
+SWITCHED_LED = [
+    ["pile", "+", "resistance-1", "1"],
+    ["resistance-1", "2", "transistor_npn", "base"],
+    ["pile", "+", "resistance-2", "1"],
+    ["resistance-2", "2", "led", "anode"],
+    ["led", "cathode", "transistor_npn", "collecteur"],
+    ["transistor_npn", "émetteur", "pile", "−"],
+]
+
+
+@pytest.mark.parametrize(
+    "pBase, pStatus, pCurrent",
+    [(1_000_000, "non saturé", 100 * 8.3 / 1e6), (10_000, "saturé", 6.8 / 476)],
+)
+def test_transistor_amplifies_then_saturates(pBase, pStatus, pCurrent):
+    """Vérifie Ic = β·Ib en régime linéaire, puis la saturation à 0,2 V."""
+
+    vCircuit = build(
+        ["pile", "resistance-1", "resistance-2", "led", "transistor_npn"],
+        SWITCHED_LED,
+        {"pile": 9, "resistance-1": pBase, "resistance-2": 470},
+    )
+    vPart = vCircuit.simulate({})["parts"]["transistor_npn"]
+
+    assert vPart["status"].startswith(pStatus)
+    assert vPart["current"] == pytest.approx(pCurrent, rel=0.01)
+    assert vPart["on"] == (pStatus == "saturé")
+
+
+def test_zener_regulates_or_burns_without_resistance():
+    """Vérifie la tension régulée en inverse, et la Zener détruite sans résistance."""
+
+    vWires = [
+        ["pile", "+", "resistance", "1"],
+        ["resistance", "2", "zener", "cathode"],
+        ["zener", "anode", "pile", "−"],
+    ]
+    vIds = ["pile", "resistance", "zener"]
+    vGood = build(vIds, vWires, {"pile": 12, "resistance": 330}).simulate({})
+    vBurnt = build(vIds, vWires, {"pile": 12, "resistance": 10}).simulate({})
+
+    assert vGood["parts"]["zener"]["voltage"] == pytest.approx(-5.2, abs=0.01)
+    assert vGood["parts"]["zener"]["current"] < 0
+    assert vGood["parts"]["zener"]["status"].startswith("régule")
+    assert vBurnt["parts"]["zener"]["status"] == "détruite"
+    assert "Zener détruite" in vBurnt["faults"][0]
+
+
+def test_sensors_buzzer_and_potentiometer():
+    """Vérifie les capteurs commandés, la polarité du buzzer et le curseur."""
+
+    vCircuit = build(
+        ["pile", "ldr", "potentiometre", "buzzer-1", "buzzer-2", "voltmetre"],
+        [
+            ["pile", "+", "ldr", "1"],
+            ["ldr", "2", "pile", "−"],
+            ["pile", "+", "potentiometre", "1"],
+            ["potentiometre", "2", "pile", "−"],
+            ["voltmetre", "1", "potentiometre", "curseur"],
+            ["voltmetre", "2", "pile", "−"],
+            ["pile", "+", "buzzer-1", "+"],
+            ["buzzer-1", "−", "pile", "−"],
+            ["pile", "−", "buzzer-2", "+"],
+            ["buzzer-2", "−", "pile", "+"],
+        ],
+        {"pile": 9, "potentiometre": 25},
+    )
+    vLit = vCircuit.simulate({})["parts"]
+    vDark = vCircuit.simulate({"ldr": False})["parts"]
+
+    assert vLit["ldr"]["current"] == pytest.approx(
+        100 * vDark["ldr"]["current"], rel=0.01
+    )
+    assert vDark["ldr"]["status"] == "dans l'ombre, 100 kΩ"
+    assert vLit["voltmetre"]["voltage"] == pytest.approx(9 * 0.25, rel=0.02)
+    assert vLit["potentiometre"]["status"] == "curseur à 25 %"
+    assert vLit["buzzer-1"]["status"] == "sonne"
+    assert vLit["buzzer-2"]["status"] == "branché à l'envers, muet"

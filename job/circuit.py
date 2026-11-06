@@ -10,6 +10,11 @@ jour les contacts d'après les bobines, puis on recommence jusqu'à un état
 stable. L'état précédent sert de départ : c'est ce qui permet l'auto-maintien.
 Le 230 V est traité comme une tension continue de même valeur efficace : les
 charges sont résistives, les puissances et les courants restent justes.
+
+Diodes, Zener et transistors sont linéaires par morceaux : chaque itération
+choisit leur régime (bloqué, passant, saturé) d'après le calcul précédent. En
+régime linéaire, le courant de collecteur vaut β fois celui de base : c'est une
+source de courant commandée par la tension base-émetteur.
 """
 
 from job.schema_library import COMPONENTS
@@ -37,6 +42,12 @@ SIMULATED_TYPES = (
     "resistance",
     "led",
     "diode",
+    "zener",
+    "transistor_npn",
+    "potentiometre",
+    "buzzer",
+    "ldr",
+    "ctn",
     "voltmetre",
     "amperemetre",
 )
@@ -50,6 +61,8 @@ OPERABLE_DEFAULTS = {
     "bouton_marche": False,
     "bouton_arret": False,
     "va_et_vient": False,
+    "ldr": True,
+    "ctn": False,
 }
 PUSH_BUTTONS = ("bouton_marche", "bouton_arret")
 PROTECTIONS = ("disjoncteur", "fusible")
@@ -62,6 +75,7 @@ LOADS = (
     "resistance",
     "bobine_relais",
     "telerupteur",
+    "buzzer",
     "voltmetre",
 )
 
@@ -71,6 +85,8 @@ VALUE_RANGES = {
     "resistance": (1000.0, 1.0, 1_000_000.0, "Ω"),
     "bobine_relais": (230.0, 5.0, 230.0, "V"),
     "telerupteur": (230.0, 5.0, 230.0, "V"),
+    "zener": (5.1, 2.4, 33.0, "V"),
+    "potentiometre": (50.0, 0.0, 100.0, "%"),
 }
 
 MAINS_VOLTS = 230.0
@@ -91,6 +107,21 @@ LED_MAX_CURRENT = 0.03
 LED_LIT_CURRENT = 0.002
 DIODE_FORWARD = 0.7
 DIODE_SERIES = 0.5
+ZENER_SERIES = 5.0
+# Environ 0,5 W pour une Zener de 5,1 V
+ZENER_MAX_CURRENT = 0.1
+TRANSISTOR_GAIN = 100.0
+VCE_SAT = 0.2
+VCE_SAT_RESISTANCE = 1.0
+POTENTIOMETER_RESISTANCE = 10_000.0
+BUZZER_RESISTANCE = 200.0
+BUZZER_ON_CURRENT = 0.01
+ELECTRONIC_PARTS = ("zener", "transistor_npn", "buzzer", "potentiometre", "ldr", "ctn")
+# Capteurs résistifs : (résistance, état), commande active puis au repos
+SENSORS = {
+    "ldr": ((1_000.0, "éclairée, 1 kΩ"), (100_000.0, "dans l'ombre, 100 kΩ")),
+    "ctn": ((1_000.0, "chauffée, 1 kΩ"), (10_000.0, "à 25 °C, 10 kΩ")),
+}
 VOLTMETER_RESISTANCE = 1e7
 LIVE_VOLTS = 1.0
 FULL_RATIO = 0.6
@@ -182,6 +213,24 @@ def solve(pMatrix, pVector):
         rSolution[vRow] = vSum / vRows[vRow][vRow] if vRows[vRow][vRow] else 0.0
 
     return rSolution
+
+
+def stamp_controlled(pMatrix, pVector, pIndexes, pControlled):
+    """Ajoute au système les transistors en régime linéaire, sources commandées."""
+
+    for _, vNetC, vNetE, vNetB, vGain in pControlled:
+        # Courant de C vers E = g·(Vb − Ve − Vf), sorti en C et entré en E
+        for vRow, vSign in ((pIndexes.get(vNetC), 1), (pIndexes.get(vNetE), -1)):
+            if vRow is None:
+                continue
+
+            pVector[vRow] += vSign * vGain * DIODE_FORWARD
+
+            for vNet, vFactor in ((vNetB, 1), (vNetE, -1)):
+                vColumn = pIndexes.get(vNet)
+
+                if vColumn is not None:
+                    pMatrix[vRow][vColumn] += vSign * vFactor * vGain
 
 
 def format_measure(pValue, pUnit):
@@ -317,6 +366,13 @@ class Circuit:
                         else (DIODE_FORWARD, DIODE_SERIES)
                     )
                     rBranches.append((vId, vPorts[0], vPorts[1], 1 / vSeries, vForward))
+            elif vType in ("zener", "transistor_npn", "potentiometre"):
+                rBranches += self.build_electronic_branches(vId, vType, vPorts, pState)
+            elif vType in SENSORS:
+                vResistance = SENSORS[vType][
+                    0 if self.is_closed(vId, pInputs, pState) else 1
+                ][0]
+                rBranches.append((vId, vPorts[0], vPorts[1], 1 / vResistance, 0.0))
             elif vType in LOADS:
                 rBranches.append(
                     (vId, vPorts[0], vPorts[1], 1 / self.get_resistance(vId), 0.0)
@@ -327,6 +383,89 @@ class Circuit:
                 )
 
         return rBranches
+
+    def build_electronic_branches(self, pId, pType, pPorts, pState):
+        """Retourne les branches d'une Zener, d'un transistor ou d'un potentiomètre."""
+
+        rBranches = []
+        if pType == "zener":
+            vMode = pState["modes"].get(pId)
+
+            if vMode == "direct":
+                rBranches.append(
+                    (pId, pPorts[0], pPorts[1], 1 / DIODE_SERIES, DIODE_FORWARD)
+                )
+            elif vMode == "inverse":
+                # Branche retournée : le courant compté va de la cathode à l'anode
+                rBranches.append(
+                    (
+                        pId,
+                        pPorts[1],
+                        pPorts[0],
+                        1 / ZENER_SERIES,
+                        get_value("zener", pId, self.values),
+                    )
+                )
+        elif pType == "transistor_npn":
+            vMode = pState["modes"].get(pId)
+
+            if vMode:
+                rBranches.append(
+                    (
+                        f"{pId}.base",
+                        pPorts[1],
+                        pPorts[2],
+                        1 / DIODE_SERIES,
+                        DIODE_FORWARD,
+                    )
+                )
+
+            if vMode == "sature":
+                rBranches.append(
+                    (pId, pPorts[0], pPorts[2], 1 / VCE_SAT_RESISTANCE, VCE_SAT)
+                )
+        elif pType == "potentiometre":
+            vRatio = get_value("potentiometre", pId, self.values) / 100
+            rBranches.append(
+                (
+                    pId,
+                    pPorts[0],
+                    pPorts[1],
+                    1 / (POTENTIOMETER_RESISTANCE * (1 - vRatio) + CLOSED_RESISTANCE),
+                    0.0,
+                )
+            )
+            rBranches.append(
+                (
+                    f"{pId}.bas",
+                    pPorts[1],
+                    pPorts[2],
+                    1 / (POTENTIOMETER_RESISTANCE * vRatio + CLOSED_RESISTANCE),
+                    0.0,
+                )
+            )
+
+        return rBranches
+
+    def build_controlled(self, pState):
+        """Retourne les transistors en régime linéaire : (id, C, E, B, transconductance)."""
+
+        rControlled = []
+
+        for vId, vType in self.types.items():
+            if vType == "transistor_npn" and pState["modes"].get(vId) == "actif":
+                vCollector, vBase, vEmitter = self.get_ports(vId)
+                rControlled.append(
+                    (
+                        vId,
+                        vCollector,
+                        vEmitter,
+                        vBase,
+                        TRANSISTOR_GAIN / DIODE_SERIES,
+                    )
+                )
+
+        return rControlled
 
     def get_resistance(self, pId):
         """Retourne la résistance d'un récepteur, d'après sa puissance ou sa valeur."""
@@ -339,6 +478,8 @@ class Circuit:
             rResistance = get_value(vType, pId, self.values) ** 2 / COIL_WATTS
         elif vType == "voltmetre":
             rResistance = VOLTMETER_RESISTANCE
+        elif vType == "buzzer":
+            rResistance = BUZZER_RESISTANCE
         else:
             rResistance = MAINS_VOLTS**2 / LOAD_WATTS[vType]
 
@@ -376,6 +517,9 @@ class Circuit:
                 vMatrix[vA][vB] -= vConductance
                 vMatrix[vB][vA] -= vConductance
 
+        vControlled = self.build_controlled(pState)
+        stamp_controlled(vMatrix, vVector, vIndexes, vControlled)
+
         vSolution = solve(vMatrix, vVector)
         vVoltages = {vNet: vSolution[vIndex] for vNet, vIndex in vIndexes.items()}
         vVoltages[self.ground] = 0.0
@@ -385,7 +529,12 @@ class Circuit:
         for vId, vNetA, vNetB, vConductance, vForce in vBranches:
             # Pour une source, le courant compté est celui qu'elle débite par sa borne +
             vCurrent = vConductance * (vVoltages[vNetA] - vVoltages[vNetB] - vForce)
-            vCurrents[vId] = -vCurrent if self.types[vId] in SOURCES else vCurrent
+            vCurrents[vId] = -vCurrent if self.types.get(vId) in SOURCES else vCurrent
+
+        for vId, _, vNetE, vNetB, vGain in vControlled:
+            vCurrents[vId] = vGain * (
+                vVoltages[vNetB] - vVoltages[vNetE] - DIODE_FORWARD
+            )
 
         rComputed = (vVoltages, vCurrents)
 
@@ -414,6 +563,7 @@ class Circuit:
             "latches": dict(vMemory.get("latches", {})),
             "tripped": set(vMemory.get("tripped", [])),
             "diodes": {},
+            "modes": {},
         }
         vRemoteBefore = dict(vMemory.get("remote", {}))
         vToggled = set()
@@ -509,8 +659,67 @@ class Circuit:
                 if vNext != vOn:
                     pState["diodes"][vId] = vNext
                     vChanged = True
+            elif vType in ("zener", "transistor_npn"):
+                vMode = pState["modes"].get(vId, "")
+                vNext = (
+                    self.next_zener_mode(vId, vMode, pVoltages, pCurrents)
+                    if vType == "zener"
+                    else self.next_transistor_mode(vId, vMode, pVoltages, pCurrents)
+                )
+
+                if vNext != vMode:
+                    pState["modes"][vId] = vNext
+                    vChanged = True
 
         return vChanged
+
+    def next_zener_mode(self, pId, pMode, pVoltages, pCurrents):
+        """Retourne le régime suivant d'une Zener : bloquée, directe ou inverse."""
+
+        if pMode:
+            rMode = pMode if pCurrents.get(pId, 0) > 0 else ""
+        else:
+            vVoltage = self.get_voltage(pId, pVoltages)
+            rMode = (
+                "direct"
+                if vVoltage > DIODE_FORWARD
+                else (
+                    "inverse"
+                    if -vVoltage > get_value("zener", pId, self.values)
+                    else ""
+                )
+            )
+
+        return rMode
+
+    def next_transistor_mode(self, pId, pMode, pVoltages, pCurrents):
+        """Retourne le régime suivant d'un transistor : bloqué, actif ou saturé."""
+
+        vCollector, vBase, vEmitter = self.get_ports(pId)
+        vBaseCurrent = pCurrents.get(f"{pId}.base", 0)
+
+        if not pMode:
+            rMode = (
+                "actif"
+                if pVoltages[vBase] - pVoltages[vEmitter] > DIODE_FORWARD
+                else ""
+            )
+        elif vBaseCurrent <= 0:
+            rMode = ""
+        elif pMode == "actif":
+            rMode = (
+                "sature"
+                if pVoltages[vCollector] - pVoltages[vEmitter] < VCE_SAT
+                else "actif"
+            )
+        else:
+            rMode = (
+                "actif"
+                if pCurrents.get(pId, 0) > TRANSISTOR_GAIN * vBaseCurrent
+                else "sature"
+            )
+
+        return rMode
 
     def describe(self, pInputs, pState, pVoltages, pCurrents, pFaults):
         """Retourne l'état lisible de chaque composant, les mesures et les défauts."""
@@ -593,6 +802,8 @@ class Circuit:
                 )
             elif pPart["on"]:
                 pPart["tone"] = "led"
+        elif vType in ELECTRONIC_PARTS:
+            self.describe_electronic(pId, pPart, pInputs, pState, pFaults)
         elif vType in ("bobine_relais", "telerupteur"):
             vActive = (
                 pState["coils"].get(pId)
@@ -602,11 +813,12 @@ class Circuit:
             pPart["on"] = bool(vActive)
             pPart["status"] = "excitée" if vActive else "au repos"
             pPart["tone"] = "active" if vActive else ""
-        elif vType == "voltmetre":
-            pPart["status"] = format_measure(pPart["voltage"], "V")
-            pPart["tone"] = "measure"
-        elif vType == "amperemetre":
-            pPart["status"] = format_measure(pPart["current"], "A")
+        elif vType in ("voltmetre", "amperemetre"):
+            pPart["status"] = (
+                format_measure(pPart["voltage"], "V")
+                if vType == "voltmetre"
+                else format_measure(pPart["current"], "A")
+            )
             pPart["tone"] = "measure"
         elif vType in PROTECTIONS and pId in pState["tripped"]:
             pPart["status"] = "déclenché" if vType == "disjoncteur" else "fondu"
@@ -626,3 +838,67 @@ class Circuit:
 
             if vType in PUSH_BUTTONS and pInputs.get(pId):
                 pPart["status"] += ", appuyé"
+
+    def describe_electronic(self, pId, pPart, pInputs, pState, pFaults):
+        """Complète l'état d'un composant électronique : régime, son, curseur, capteur."""
+
+        vType = pPart["type"]
+        vCurrent = abs(pPart["current"])
+
+        if vType == "zener":
+            self.describe_zener(pId, pPart, pState, pFaults)
+        elif vType == "transistor_npn":
+            vMode = pState["modes"].get(pId, "")
+            pPart["on"] = vMode == "sature"
+            pPart["status"] = {
+                "": "bloqué",
+                "actif": f"non saturé, {format_measure(vCurrent, 'A')}",
+                "sature": f"saturé, {format_measure(vCurrent, 'A')}",
+            }[vMode]
+            pPart["tone"] = "active" if vMode else ""
+        elif vType == "buzzer":
+            pPart["on"] = pPart["current"] >= BUZZER_ON_CURRENT
+            pPart["status"] = (
+                "sonne"
+                if pPart["on"]
+                else (
+                    "branché à l'envers, muet"
+                    if -pPart["current"] >= BUZZER_ON_CURRENT
+                    else "muet"
+                )
+            )
+            pPart["tone"] = "active" if pPart["on"] else ""
+        elif vType == "potentiometre":
+            vPosition = get_value("potentiometre", pId, self.values)
+            pPart["status"] = f"curseur à {vPosition:g} %".replace(".", ",")
+        elif vType in SENSORS:
+            pPart["status"] = SENSORS[vType][
+                0 if self.is_closed(pId, pInputs, pState) else 1
+            ][1]
+
+    def describe_zener(self, pId, pPart, pState, pFaults):
+        """Complète l'état d'une Zener ; en inverse, son courant compté est négatif."""
+
+        vMode = pState["modes"].get(pId, "")
+
+        if vMode == "inverse":
+            pPart["current"] = -pPart["current"]
+
+        vCurrent = abs(pPart["current"])
+        pPart["on"] = bool(vMode)
+        pPart["status"] = {
+            "": "bloquée",
+            "direct": f"passante, {format_measure(vCurrent, 'A')}",
+            "inverse": f"régule, {format_measure(vCurrent, 'A')}",
+        }[vMode]
+        pPart["tone"] = "active" if vMode == "inverse" else ""
+
+        if vCurrent > ZENER_MAX_CURRENT:
+            pPart["status"] = "détruite"
+            pPart["tone"] = "fault"
+            pPart["on"] = False
+            pFaults.append(
+                f"Diode Zener détruite : {format_measure(vCurrent, 'A')} pour "
+                f"{format_measure(ZENER_MAX_CURRENT, 'A')} au plus. Une résistance "
+                "en série limite le courant."
+            )

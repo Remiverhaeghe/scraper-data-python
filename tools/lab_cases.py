@@ -411,6 +411,64 @@ FREE_CIRCUITS = (
         {},
         [{}, {"va_et_vient": True}, {"bouton_arret": True}],
     ),
+    (
+        "Zener en direct, puis en inverse sans résistance",
+        [("pile-1", 0, 0), ("zener-1", 1, 0), ("pile-2", 0, 1), ("zener-2", 1, 1)],
+        [
+            ["pile-1", "+", "zener-1", "anode"],
+            ["zener-1", "cathode", "pile-1", "−"],
+            ["pile-2", "+", "zener-2", "cathode"],
+            ["zener-2", "anode", "pile-2", "−"],
+            ["pile-1", "−", "pile-2", "−"],
+        ],
+        {"pile-1": 1.5, "pile-2": 12, "zener-2": "6.8"},
+        [{}],
+    ),
+    (
+        "base sans résistance et collecteur en l'air",
+        [("pile-1", 0, 0), ("transistor_npn-1", 1, 0)]
+        + [("pile-2", 0, 1), ("resistance", 1, 1), ("transistor_npn-2", 2, 1)],
+        [
+            ["pile-1", "+", "transistor_npn-1", "base"],
+            ["transistor_npn-1", "émetteur", "pile-1", "−"],
+            ["pile-2", "+", "resistance", "1"],
+            ["resistance", "2", "transistor_npn-2", "base"],
+            ["transistor_npn-2", "émetteur", "pile-2", "−"],
+        ],
+        {"pile-1": 5, "pile-2": 5, "resistance": 4700},
+        [{}],
+    ),
+    (
+        "buzzer à l'envers et potentiomètre en butée sur une LED",
+        [("pile", 0, 0), ("buzzer", 1, 0), ("potentiometre", 2, 0), ("led", 3, 0)],
+        [
+            ["pile", "+", "buzzer", "−"],
+            ["buzzer", "+", "pile", "−"],
+            ["pile", "+", "potentiometre", "1"],
+            ["potentiometre", "curseur", "led", "anode"],
+            ["led", "cathode", "pile", "−"],
+        ],
+        {"pile": 9, "potentiometre": 99.5},
+        [{}],
+    ),
+    (
+        "capteurs manœuvrés et transistor en régime linéaire",
+        [("pile", 0, 0), ("ldr", 1, 0), ("ctn", 2, 0), ("transistor_npn", 1, 1)]
+        + [("resistance-1", 2, 1), ("buzzer", 3, 1), ("amperemetre", 3, 0)],
+        [
+            ["pile", "+", "ctn", "1"],
+            ["ctn", "2", "resistance-1", "1"],
+            ["resistance-1", "2", "transistor_npn", "base"],
+            ["transistor_npn", "base", "ldr", "1"],
+            ["ldr", "2", "pile", "−"],
+            ["pile", "+", "amperemetre", "1"],
+            ["amperemetre", "2", "buzzer", "+"],
+            ["buzzer", "−", "transistor_npn", "collecteur"],
+            ["transistor_npn", "émetteur", "pile", "−"],
+        ],
+        {"pile": 9, "resistance-1": 220000},
+        [{}, {"ldr": False}, {"ldr": False, "ctn": True}, {"ctn": True}],
+    ),
 )
 MEASURES = (
     0.0,

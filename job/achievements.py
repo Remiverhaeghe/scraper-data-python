@@ -277,6 +277,15 @@ ACHIEVEMENTS = (
         False,
     ),
     (
+        "circuit-electronics",
+        "Électronicien",
+        "Réussir les 20 montages électriques et électroniques",
+        "zap",
+        "circuit_level",
+        20,
+        False,
+    ),
+    (
         "devops-first",
         "Premier build",
         "Réussir un niveau Maven ou Docker",
