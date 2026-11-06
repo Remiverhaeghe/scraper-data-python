@@ -1,6 +1,7 @@
 """Tests de la lecture des messages Gmail"""
 
 import imaplib
+import locale
 from datetime import datetime
 
 import pytest
@@ -104,6 +105,30 @@ def test_inbox_is_read_without_marking_messages():
         "Message 3",
         "Message 1",
     ]
+
+
+@pytest.mark.usefixtures("fake_imap")
+def test_search_date_stays_in_english_with_a_french_locale():
+    """Vérifie que la date de recherche IMAP ne suit pas la locale du système."""
+
+    vPrevious = locale.setlocale(locale.LC_TIME)
+
+    for vName in ("fr_FR.UTF-8", "fr_FR", "French_France"):
+        try:
+            locale.setlocale(locale.LC_TIME, vName)
+            break
+        except locale.Error:
+            continue
+    else:
+        pytest.skip("Aucune locale française installée")
+
+    try:
+        read_recent_messages(datetime(2026, 2, 10, 12, 0), 7)
+
+    finally:
+        locale.setlocale(locale.LC_TIME, vPrevious)
+
+    assert FakeImap.instances[0].search_criteria == ("SINCE", "03-Feb-2026")
 
 
 @pytest.mark.usefixtures("fake_imap")

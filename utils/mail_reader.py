@@ -24,6 +24,9 @@ MAX_TEXT_LENGTH = 4000
 # Messages lus au plus : les plus récents
 MAX_MESSAGES = 300
 
+# IMAP attend les mois en anglais, quelle que soit la locale
+IMAP_MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+
 
 def decode_text(pValue):
     """Décode un en-tête encodé (=?utf-8?...?=) en texte lisible."""
@@ -91,7 +94,10 @@ def read_recent_messages(pNow, pDays):
     if vMissing:
         raise ValueError(f"À renseigner dans .env : {', '.join(vMissing)}")
 
-    vSince = (pNow - timedelta(days=pDays)).strftime("%d-%b-%Y")
+    vSinceDate = pNow - timedelta(days=pDays)
+    vSince = (
+        f"{vSinceDate.day:02d}-{IMAP_MONTHS[vSinceDate.month - 1]}-{vSinceDate.year}"
+    )
     rMessages = []
 
     with imaplib.IMAP4_SSL(

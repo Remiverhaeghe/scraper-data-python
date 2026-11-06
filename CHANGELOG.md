@@ -9,9 +9,15 @@ dans l'historique git.
 - Moteur Excel du téléphone découpé en trois fichiers, comme le Python :
   formules, fonctions et valeurs ; une plage lit sa feuille par une
   interface, sans dépendance circulaire
+- État du téléphone allégé de 600 lignes : chaque simulation (pannes,
+  automate, Git, Maven et Docker, SQL, Excel, schémas, puzzles, oral) a
+  son mixin dans `lib/state/`, et la mise en attente d'une partie est
+  écrite une seule fois ; les écrans n'ont pas changé
 - Tests de la lecture Gmail (lecture seule, messages laissés non lus,
   délai, plafond des messages), du comptage des offres sur chaque
   plateforme, de l'échec d'Argos et du script de certificat HTTPS
+- Date de recherche Gmail toujours écrite en anglais (« Oct »), même si
+  la locale du système passe en français
 
 ### Schémas à construire sur le téléphone
 - Questions « schéma à construire » envoyées au téléphone avec la

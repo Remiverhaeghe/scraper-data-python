@@ -160,6 +160,9 @@ mobile/
 │   ├── main.dart                 # Démarrage : configuration ou accueil
 │   ├── theme.dart                # Couleurs et icônes, reprises du bureau
 │   ├── revision_state.dart       # État : contenu, calendrier, réponses en attente, synchronisation
+│   ├── state/                    # Parties de l'état, un mixin par simulation
+│   │   ├── labs.dart             # Contenu reçu, parties en attente et leur échange avec le PC
+│   │   └── *_simulation.dart     # Pannes, automate, Git, Maven/Docker, SQL, Excel, schémas, puzzles, oral
 │   ├── models/
 │   │   ├── quiz_package.dart     # Thèmes, questions, schémas et guides reçus
 │   │   └── review_state.dart     # Boîte de Leitner et date de révision d'une question
