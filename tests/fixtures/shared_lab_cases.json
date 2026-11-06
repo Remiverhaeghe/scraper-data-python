@@ -1475,6 +1475,841 @@
    }
   },
   {
+   "name": "auto-maintien : chemin le plus court",
+   "scenario": "auto-maintien",
+   "actions": [
+    "check:tension-13",
+    "repair:resserrer"
+   ],
+   "expected": {
+    "done": [
+     "tension-13"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Marche enfoncé, mesurer la tension sur la sortie de S1 puis sur la borne 13 de KM1",
+      "result": "24 V en sortie de S1, 0 V sur la borne 13 de KM1 : la liaison entre les deux ne conduit pas.",
+      "minutes": 3
+     },
+     {
+      "label": "Resserrer le fil de la borne 13 de KM1",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 5,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 8,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "auto-maintien : réparation sans preuve",
+   "scenario": "auto-maintien",
+   "actions": [
+    "repair:resserrer"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Resserrer le fil de la borne 13 de KM1",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 5,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 5,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "auto-maintien : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "auto-maintien",
+   "actions": [
+    "check:operateur",
+    "check:observer-km1",
+    "check:tension-13",
+    "check:consigner",
+    "check:serrage",
+    "check:contact-13-14",
+    "check:bobine",
+    "repair:bloc-auxiliaire",
+    "repair:bloc-auxiliaire",
+    "repair:resserrer",
+    "check:operateur"
+   ],
+   "expected": {
+    "done": [
+     "operateur",
+     "observer-km1",
+     "tension-13",
+     "consigner",
+     "serrage",
+     "contact-13-14",
+     "bobine"
+    ],
+    "wrong": [
+     "bloc-auxiliaire"
+    ],
+    "log": [
+     {
+      "label": "Interroger l'opérateur",
+      "result": "Ça a commencé ce matin. Hier, un électricien a remplacé le bouton Arrêt, dont le capuchon était cassé.",
+      "minutes": 1
+     },
+     {
+      "label": "Observer KM1 pendant et après l'appui sur Marche",
+      "result": "KM1 colle pendant l'appui et retombe au relâchement : l'auto-maintien ne se fait pas.",
+      "minutes": 1
+     },
+     {
+      "label": "Marche enfoncé, mesurer la tension sur la sortie de S1 puis sur la borne 13 de KM1",
+      "result": "24 V en sortie de S1, 0 V sur la borne 13 de KM1 : la liaison entre les deux ne conduit pas.",
+      "minutes": 3
+     },
+     {
+      "label": "Consigner le départ de la pompe",
+      "result": "Sectionneur ouvert et cadenassé, absence de tension vérifiée au VAT : le départ est consigné.",
+      "minutes": 5
+     },
+     {
+      "label": "Contrôler le serrage des bornes de S1 et de KM1",
+      "result": "Le fil arrivant sur la borne 13 de KM1 n'est pas serré : il sort de la borne à la main.",
+      "minutes": 2
+     },
+     {
+      "label": "Mesurer la continuité du contact 13-14 de KM1",
+      "result": "Ouvert au repos, 0 Ω quand on enfonce KM1 à la main : le contact est bon.",
+      "minutes": 3
+     },
+     {
+      "label": "Mesurer la résistance de la bobine KM1",
+      "result": "30 Ω, valeur normale pour cette bobine.",
+      "minutes": 3
+     },
+     {
+      "label": "Remplacer le bloc de contacts auxiliaires de KM1",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 15,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Resserrer le fil de la borne 13 de KM1",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 5,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 38,
+    "solved": true,
+    "proven": true,
+    "score": 22,
+    "stars": 1
+   }
+  },
+  {
+   "name": "telerupteur-bloque : chemin le plus court",
+   "scenario": "telerupteur-bloque",
+   "actions": [
+    "check:tension-bobine",
+    "repair:poussoir"
+   ],
+   "expected": {
+    "done": [
+     "tension-bobine"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Sans appui, mesurer la tension sur la bobine A1-A2 de KL1",
+      "result": "230 V en permanence, sans que personne n'appuie : un poussoir reste fermé.",
+      "minutes": 3
+     },
+     {
+      "label": "Remplacer le poussoir bloqué",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 10,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 13,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "telerupteur-bloque : réparation sans preuve",
+   "scenario": "telerupteur-bloque",
+   "actions": [
+    "repair:poussoir"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer le poussoir bloqué",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 10,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 10,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "telerupteur-bloque : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "telerupteur-bloque",
+   "actions": [
+    "check:operateur",
+    "check:disjoncteur",
+    "check:ecouter-kl1",
+    "check:tension-bobine",
+    "check:tour-boutons",
+    "check:lampes",
+    "repair:telerupteur",
+    "repair:telerupteur",
+    "repair:poussoir",
+    "check:operateur"
+   ],
+   "expected": {
+    "done": [
+     "operateur",
+     "disjoncteur",
+     "ecouter-kl1",
+     "tension-bobine",
+     "tour-boutons",
+     "lampes"
+    ],
+    "wrong": [
+     "telerupteur"
+    ],
+    "log": [
+     {
+      "label": "Interroger les caristes",
+      "result": "Ça ne marche plus depuis ce matin. Personne n'a remarqué de choc ni d'incident.",
+      "minutes": 1
+     },
+     {
+      "label": "Contrôler le disjoncteur de l'éclairage",
+      "result": "Enclenché, 230 V présents en sortie.",
+      "minutes": 2
+     },
+     {
+      "label": "Écouter et toucher le télérupteur KL1",
+      "result": "KL1 bourdonne en permanence et son boîtier est chaud.",
+      "minutes": 1
+     },
+     {
+      "label": "Sans appui, mesurer la tension sur la bobine A1-A2 de KL1",
+      "result": "230 V en permanence, sans que personne n'appuie : un poussoir reste fermé.",
+      "minutes": 3
+     },
+     {
+      "label": "Faire le tour des six boutons poussoirs",
+      "result": "Le poussoir du quai 3 est enfoncé, son boîtier fendu : il reste coincé en position appuyée.",
+      "minutes": 10
+     },
+     {
+      "label": "Essayer deux tubes sur un autre circuit",
+      "result": "Les tubes s'allument : ils sont bons.",
+      "minutes": 6
+     },
+     {
+      "label": "Remplacer le télérupteur KL1",
+      "result": "Essai : la panne est toujours là. Neuf, il chaufferait de la même façon : sa bobine n'est pas faite pour rester alimentée.",
+      "minutes": 20,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer le poussoir bloqué",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 10,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 53,
+    "solved": true,
+    "proven": true,
+    "score": 28,
+    "stars": 1
+   }
+  },
+  {
+   "name": "ventilateur-inverse : chemin le plus court",
+   "scenario": "ventilateur-inverse",
+   "actions": [
+    "check:sens",
+    "repair:inverser"
+   ],
+   "expected": {
+    "done": [
+     "sens"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Comparer le sens de rotation à la flèche du carter",
+      "result": "L'hélice tourne en sens inverse de la flèche : elle brasse l'air sans l'extraire.",
+      "minutes": 1
+     },
+     {
+      "label": "Inverser deux phases dans la boîte à bornes du moteur",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 10,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 11,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "ventilateur-inverse : réparation sans preuve",
+   "scenario": "ventilateur-inverse",
+   "actions": [
+    "repair:inverser"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Inverser deux phases dans la boîte à bornes du moteur",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 10,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 10,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "ventilateur-inverse : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "ventilateur-inverse",
+   "actions": [
+    "check:sens",
+    "check:intensite",
+    "check:plaque",
+    "check:ordre-phases",
+    "check:consigner",
+    "check:bornier",
+    "repair:couplage",
+    "repair:couplage",
+    "repair:inverser",
+    "check:sens"
+   ],
+   "expected": {
+    "done": [
+     "sens",
+     "intensite",
+     "plaque",
+     "ordre-phases",
+     "consigner",
+     "bornier"
+    ],
+    "wrong": [
+     "couplage"
+    ],
+    "log": [
+     {
+      "label": "Comparer le sens de rotation à la flèche du carter",
+      "result": "L'hélice tourne en sens inverse de la flèche : elle brasse l'air sans l'extraire.",
+      "minutes": 1
+     },
+     {
+      "label": "Mesurer le courant sur les trois phases",
+      "result": "4,1 A par phase, équilibré, conforme à la plaque du moteur.",
+      "minutes": 3
+     },
+     {
+      "label": "Lire la plaque signalétique et le couplage",
+      "result": "Moteur 230/400 V couplé en étoile sur un réseau 400 V : le couplage est correct.",
+      "minutes": 1
+     },
+     {
+      "label": "Contrôler l'ordre des phases à l'arrivée de l'armoire",
+      "result": "L1, L2, L3 dans le bon ordre à l'arrivée : le réseau n'a pas changé.",
+      "minutes": 3
+     },
+     {
+      "label": "Consigner le départ du ventilateur",
+      "result": "Sectionneur ouvert et cadenassé, absence de tension vérifiée au VAT : le départ est consigné.",
+      "minutes": 5
+     },
+     {
+      "label": "Ouvrir la boîte à bornes du moteur",
+      "result": "U1, V1 et W1 reçoivent L1, L3 et L2 : deux phases sont croisées par rapport au repérage d'origine.",
+      "minutes": 3
+     },
+     {
+      "label": "Passer le moteur en couplage triangle",
+      "result": "Essai : la panne est toujours là. Interdit : en triangle sur 400 V, chaque enroulement de ce moteur 230/400 V recevrait 400 V au lieu de 230 V et brûlerait.",
+      "minutes": 10,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Inverser deux phases dans la boîte à bornes du moteur",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 10,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 36,
+    "solved": true,
+    "proven": true,
+    "score": 29,
+    "stars": 1
+   }
+  },
+  {
+   "name": "pt100-coupee : chemin le plus court",
+   "scenario": "pt100-coupee",
+   "actions": [
+    "check:resistance-bornes",
+    "repair:cable"
+   ],
+   "expected": {
+    "done": [
+     "resistance-bornes"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Débrancher la sonde au régulateur et mesurer sa résistance",
+      "result": "Circuit ouvert entre les fils de la sonde : la chaîne de mesure est coupée.",
+      "minutes": 4
+     },
+     {
+      "label": "Remplacer le câble de la sonde et le protéger à la charnière",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 20,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 24,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "pt100-coupee : réparation sans preuve",
+   "scenario": "pt100-coupee",
+   "actions": [
+    "repair:cable"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer le câble de la sonde et le protéger à la charnière",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 20,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 20,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "pt100-coupee : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "pt100-coupee",
+   "actions": [
+    "check:afficheur",
+    "check:thermometre",
+    "check:parametres",
+    "check:resistance-bornes",
+    "check:resistance-tete",
+    "check:cable",
+    "repair:sonde",
+    "repair:sonde",
+    "repair:cable",
+    "check:afficheur"
+   ],
+   "expected": {
+    "done": [
+     "afficheur",
+     "thermometre",
+     "parametres",
+     "resistance-bornes",
+     "resistance-tete",
+     "cable"
+    ],
+    "wrong": [
+     "sonde"
+    ],
+    "log": [
+     {
+      "label": "Lire le régulateur et sa notice",
+      "result": "HHHH signifie mesure au-dessus de la plage : le régulateur coupe la chauffe par sécurité.",
+      "minutes": 2
+     },
+     {
+      "label": "Mesurer la température avec un thermomètre de contrôle",
+      "result": "24 °C dans l'étuve : la température affichée est fausse, l'étuve est froide.",
+      "minutes": 3
+     },
+     {
+      "label": "Contrôler le paramétrage de l'entrée",
+      "result": "Entrée Pt100 3 fils, plage 0 à 400 °C : conforme au schéma.",
+      "minutes": 3
+     },
+     {
+      "label": "Débrancher la sonde au régulateur et mesurer sa résistance",
+      "result": "Circuit ouvert entre les fils de la sonde : la chaîne de mesure est coupée.",
+      "minutes": 4
+     },
+     {
+      "label": "Mesurer la résistance de l'élément dans la tête de sonde",
+      "result": "109 Ω, normal pour une Pt100 à 24 °C : l'élément est bon, la coupure est dans le câble.",
+      "minutes": 5
+     },
+     {
+      "label": "Suivre le câble de la sonde",
+      "result": "Au niveau de la charnière de la porte, la gaine est écrasée et un conducteur est sectionné.",
+      "minutes": 4
+     },
+     {
+      "label": "Remplacer la sonde Pt100",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 30,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer le câble de la sonde et le protéger à la charnière",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 20,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 71,
+    "solved": true,
+    "proven": true,
+    "score": 27,
+    "stars": 1
+   }
+  },
+  {
+   "name": "tablier-descend : chemin le plus court",
+   "scenario": "tablier-descend",
+   "actions": [
+    "check:isolement",
+    "repair:clapet"
+   ],
+   "expected": {
+    "done": [
+     "isolement"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Fermer la vanne d'isolement entre le clapet et le vérin",
+      "result": "Le tablier ne bouge plus : l'huile s'échappait en amont de la vanne, par le clapet piloté, et non à travers le piston.",
+      "minutes": 4
+     },
+     {
+      "label": "Remplacer la cartouche du clapet anti-retour piloté",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 25,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 29,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "tablier-descend : réparation sans preuve",
+   "scenario": "tablier-descend",
+   "actions": [
+    "repair:clapet"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Remplacer la cartouche du clapet anti-retour piloté",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 25,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 25,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "tablier-descend : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "tablier-descend",
+   "actions": [
+    "check:observer",
+    "check:fuites",
+    "check:temperature",
+    "check:isolement",
+    "check:consigner",
+    "check:clapet",
+    "repair:joints",
+    "repair:joints",
+    "repair:clapet",
+    "check:observer"
+   ],
+   "expected": {
+    "done": [
+     "observer",
+     "fuites",
+     "temperature",
+     "isolement",
+     "consigner",
+     "clapet"
+    ],
+    "wrong": [
+     "joints"
+    ],
+    "log": [
+     {
+      "label": "Mesurer la descente, distributeur au repos",
+      "result": "Le tablier descend d'environ 5 mm par minute.",
+      "minutes": 1
+     },
+     {
+      "label": "Chercher des fuites extérieures sur le vérin et les flexibles",
+      "result": "Aucune trace d'huile : la fuite est interne.",
+      "minutes": 2
+     },
+     {
+      "label": "Mesurer la température de l'huile",
+      "result": "48 °C, valeur normale.",
+      "minutes": 2
+     },
+     {
+      "label": "Fermer la vanne d'isolement entre le clapet et le vérin",
+      "result": "Le tablier ne bouge plus : l'huile s'échappait en amont de la vanne, par le clapet piloté, et non à travers le piston.",
+      "minutes": 4
+     },
+     {
+      "label": "Consigner la plieuse",
+      "result": "Tablier descendu sur cales, moteur consigné, pression résiduelle purgée et vérifiée au manomètre.",
+      "minutes": 8
+     },
+     {
+      "label": "Démonter et inspecter le clapet piloté",
+      "result": "Le siège du clapet est marqué par une particule incrustée : il ne ferme plus étanche.",
+      "minutes": 10
+     },
+     {
+      "label": "Refaire les joints du vérin",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 180,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Remplacer la cartouche du clapet anti-retour piloté",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 25,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 232,
+    "solved": true,
+    "proven": true,
+    "score": 0,
+    "stars": 1
+   }
+  },
+  {
+   "name": "bridage-fuite : chemin le plus court",
+   "scenario": "bridage-fuite",
+   "actions": [
+    "check:test-verin",
+    "repair:joints"
+   ],
+   "expected": {
+    "done": [
+     "test-verin"
+    ],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Vérin sorti, débrancher le tuyau côté tige et écouter l'orifice",
+      "result": "L'air s'échappe en continu par l'orifice côté tige : il traverse le piston, le joint de piston fuit.",
+      "minutes": 5
+     },
+     {
+      "label": "Changer les joints de piston du vérin",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 25,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 30,
+    "solved": true,
+    "proven": true,
+    "score": 100,
+    "stars": 3
+   }
+  },
+  {
+   "name": "bridage-fuite : réparation sans preuve",
+   "scenario": "bridage-fuite",
+   "actions": [
+    "repair:joints"
+   ],
+   "expected": {
+    "done": [],
+    "wrong": [],
+    "log": [
+     {
+      "label": "Changer les joints de piston du vérin",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 25,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 25,
+    "solved": true,
+    "proven": false,
+    "score": 50,
+    "stars": 2
+   }
+  },
+  {
+   "name": "bridage-fuite : toutes les mesures, une erreur, puis une action ignorée",
+   "scenario": "bridage-fuite",
+   "actions": [
+    "check:observer",
+    "check:pression",
+    "check:ecoute",
+    "check:test-verin",
+    "check:test-distributeur",
+    "check:limiteurs",
+    "repair:distributeur",
+    "repair:distributeur",
+    "repair:joints",
+    "check:observer"
+   ],
+   "expected": {
+    "done": [
+     "observer",
+     "pression",
+     "ecoute",
+     "test-verin",
+     "test-distributeur",
+     "limiteurs"
+    ],
+    "wrong": [
+     "distributeur"
+    ],
+    "log": [
+     {
+      "label": "Observer le vérin pendant un perçage",
+      "result": "Le vérin sort et serre, puis recule doucement sous l'effort de coupe.",
+      "minutes": 1
+     },
+     {
+      "label": "Lire le manomètre du filtre-régulateur",
+      "result": "6 bar, conforme au réglage.",
+      "minutes": 1
+     },
+     {
+      "label": "Écouter l'échappement du distributeur, vérin sorti",
+      "result": "Un sifflement continu sort de l'échappement côté tige du distributeur.",
+      "minutes": 2
+     },
+     {
+      "label": "Vérin sorti, débrancher le tuyau côté tige et écouter l'orifice",
+      "result": "L'air s'échappe en continu par l'orifice côté tige : il traverse le piston, le joint de piston fuit.",
+      "minutes": 5
+     },
+     {
+      "label": "Boucher les sorties du distributeur et écouter les échappements",
+      "result": "Aucune fuite : le distributeur est étanche.",
+      "minutes": 5
+     },
+     {
+      "label": "Contrôler le réglage des limiteurs de débit",
+      "result": "Réglages repérés à la peinture, identiques à l'origine.",
+      "minutes": 2
+     },
+     {
+      "label": "Remplacer le distributeur",
+      "result": "Essai : la panne est toujours là.",
+      "minutes": 20,
+      "repair": true,
+      "solved": false
+     },
+     {
+      "label": "Changer les joints de piston du vérin",
+      "result": "La machine repart : panne résolue.",
+      "minutes": 25,
+      "repair": true,
+      "solved": true
+     }
+    ],
+    "minutes": 61,
+    "solved": true,
+    "proven": true,
+    "score": 37,
+    "stars": 1
+   }
+  },
+  {
    "name": "essai-arrondi-bas : chemin le plus court",
    "scenario": "essai-arrondi-bas",
    "actions": [
@@ -49784,6 +50619,798 @@
     "explanation": "Le relais isole la commande de la puissance : l'opérateur ne touche que du 12 V, et une carte électronique peut piloter un récepteur 230 V. C'est le rôle des sorties à relais d'un automate."
    },
    {
+    "id": "lampes-serie",
+    "title": "Deux lampes en série",
+    "goal": "Branchez deux lampes en série derrière l'interrupteur, l'ampèremètre sur la ligne et le voltmètre aux bornes de la première lampe : relevez comment elles se partagent la tension.",
+    "hint": "En série, le courant traverse une lampe puis l'autre : la sortie de la première va à l'entrée de la seconde. L'ampèremètre s'insère dans la ligne, le voltmètre se branche en parallèle sur la lampe à mesurer.",
+    "palette": {
+     "alimentation": 1,
+     "disjoncteur": 1,
+     "interrupteur": 1,
+     "lampe_bornes": 2,
+     "amperemetre": 1,
+     "voltmetre": 1
+    },
+    "steps": [
+     {
+      "set": {
+       "interrupteur": false
+      },
+      "expect": {
+       "amperemetre.current": [
+        0,
+        0.001
+       ]
+      },
+      "message": "Interrupteur ouvert : aucun courant."
+     },
+     {
+      "set": {
+       "interrupteur": true
+      },
+      "expect": {
+       "amperemetre.current": [
+        0.12,
+        0.14
+       ],
+       "voltmetre.voltage": [
+        110,
+        120
+       ]
+      },
+      "message": "Interrupteur fermé : 0,13 A traversent les deux lampes, et chacune ne reçoit que 115 V."
+     }
+    ],
+    "solution_components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "amperemetre",
+      "type": "amperemetre",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes-1",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     },
+     {
+      "id": "voltmetre",
+      "type": "voltmetre",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "lampe_bornes-2",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 2
+     }
+    ],
+    "solution_wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "amperemetre",
+      "1"
+     ],
+     [
+      "amperemetre",
+      "2",
+      "lampe_bornes-1",
+      "1"
+     ],
+     [
+      "lampe_bornes-1",
+      "2",
+      "lampe_bornes-2",
+      "1"
+     ],
+     [
+      "lampe_bornes-2",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "voltmetre",
+      "1",
+      "lampe_bornes-1",
+      "1"
+     ],
+     [
+      "voltmetre",
+      "2",
+      "lampe_bornes-1",
+      "2"
+     ]
+    ],
+    "explanation": "En série, les résistances s'ajoutent : deux lampes de 882 Ω font 1 763 Ω, d'où 230 / 1 763 = 0,13 A, deux fois moins que pour une lampe seule. La tension se partage, 115 V chacune, et elles éclairent faiblement. Si l'une grille, l'autre s'éteint aussi : c'est pourquoi l'éclairage se câble en parallèle."
+   },
+   {
+    "id": "mesure-tension",
+    "title": "Mesurer une tension pour dépanner",
+    "goal": "Placez le voltmètre 1 aux bornes de la lampe et le voltmètre 2 aux bornes de l'interrupteur, puis comparez les mesures interrupteur ouvert et fermé.",
+    "hint": "Un voltmètre se branche toujours en parallèle, une borne de chaque côté de l'élément mesuré. Il ne coupe rien : le circuit fonctionne comme sans lui.",
+    "palette": {
+     "alimentation": 1,
+     "disjoncteur": 1,
+     "interrupteur": 1,
+     "lampe_bornes": 1,
+     "voltmetre": 2
+    },
+    "steps": [
+     {
+      "set": {
+       "interrupteur": false
+      },
+      "expect": {
+       "lampe_bornes": "off",
+       "voltmetre-1.voltage": [
+        0,
+        1
+       ],
+       "voltmetre-2.voltage": [
+        220,
+        240
+       ]
+      },
+      "message": "Interrupteur ouvert : 0 V sur la lampe, et toute la tension se retrouve aux bornes de l'interrupteur."
+     },
+     {
+      "set": {
+       "interrupteur": true
+      },
+      "expect": {
+       "lampe_bornes": "on",
+       "voltmetre-1.voltage": [
+        220,
+        240
+       ],
+       "voltmetre-2.voltage": [
+        0,
+        1
+       ]
+      },
+      "message": "Interrupteur fermé : 230 V sur la lampe, presque 0 V sur l'interrupteur."
+     }
+    ],
+    "solution_components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "voltmetre-2",
+      "type": "voltmetre",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "voltmetre-1",
+      "type": "voltmetre",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "solution_wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "lampe_bornes",
+      "1"
+     ],
+     [
+      "lampe_bornes",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "voltmetre-1",
+      "1",
+      "lampe_bornes",
+      "1"
+     ],
+     [
+      "voltmetre-1",
+      "2",
+      "lampe_bornes",
+      "2"
+     ],
+     [
+      "voltmetre-2",
+      "1",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "voltmetre-2",
+      "2",
+      "interrupteur",
+      "2"
+     ]
+    ],
+    "explanation": "Un contact fermé en bon état n'a presque pas de tension à ses bornes ; un contact ouvert retrouve toute la tension de la source. C'est la méthode du dépanneur sous tension : on promène le voltmètre le long de la chaîne, et l'élément qui présente la tension est celui qui est ouvert."
+   },
+   {
+    "id": "voyants-marche-arret",
+    "title": "Voyants de marche et d'arrêt",
+    "goal": "Un interrupteur commande un relais. Relais au repos, le voyant 2 (arrêt) est allumé ; relais collé, le voyant 1 (marche) s'allume et le voyant 2 s'éteint.",
+    "hint": "Le contact à fermeture (NO) se ferme quand la bobine est excitée, le contact à ouverture (NF) s'ouvre. Chaque voyant est alimenté à travers l'un des deux contacts.",
+    "palette": {
+     "alimentation": 1,
+     "disjoncteur": 1,
+     "interrupteur": 1,
+     "bobine_relais": 1,
+     "contact_relais": 1,
+     "contact_relais_nf": 1,
+     "lampe_bornes": 2
+    },
+    "steps": [
+     {
+      "set": {
+       "interrupteur": false
+      },
+      "expect": {
+       "bobine_relais": "off",
+       "lampe_bornes-1": "off",
+       "lampe_bornes-2": "on"
+      },
+      "message": "Relais au repos : seul le voyant d'arrêt est allumé."
+     },
+     {
+      "set": {
+       "interrupteur": true
+      },
+      "expect": {
+       "bobine_relais": "on",
+       "lampe_bornes-1": "on",
+       "lampe_bornes-2": "off"
+      },
+      "message": "Relais collé : le voyant de marche s'allume, celui d'arrêt s'éteint."
+     },
+     {
+      "set": {
+       "interrupteur": false
+      },
+      "expect": {
+       "lampe_bornes-1": "off",
+       "lampe_bornes-2": "on"
+      },
+      "message": "Relais retombé : retour au voyant d'arrêt."
+     }
+    ],
+    "solution_components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 1,
+      "y": 1
+     },
+     {
+      "id": "bobine_relais",
+      "type": "bobine_relais",
+      "x": 1,
+      "y": 2
+     },
+     {
+      "id": "contact_relais",
+      "type": "contact_relais",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes-1",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "contact_relais_nf",
+      "type": "contact_relais_nf",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "lampe_bornes-2",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "solution_wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "bobine_relais",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "contact_relais",
+      "1"
+     ],
+     [
+      "contact_relais",
+      "2",
+      "lampe_bornes-1",
+      "1"
+     ],
+     [
+      "lampe_bornes-1",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "contact_relais_nf",
+      "1"
+     ],
+     [
+      "contact_relais_nf",
+      "2",
+      "lampe_bornes-2",
+      "1"
+     ],
+     [
+      "lampe_bornes-2",
+      "2",
+      "alimentation",
+      "N"
+     ]
+    ],
+    "explanation": "Les contacts NO et NF d'un même relais changent d'état ensemble : quand l'un se ferme, l'autre s'ouvre. Sur une armoire, le voyant vert de marche et le voyant d'arrêt sont souvent câblés ainsi, sur les contacts auxiliaires du contacteur."
+   },
+   {
+    "id": "deux-postes",
+    "title": "Commander un moteur de deux postes",
+    "goal": "Le moteur démarre depuis l'un ou l'autre des deux boutons Marche, et s'arrête depuis l'un ou l'autre des deux boutons Arrêt, avec auto-maintien.",
+    "hint": "Les Arrêts se câblent en série : n'importe lequel doit pouvoir couper. Les Marches se câblent en parallèle entre elles et avec le contact d'auto-maintien : n'importe lequel doit pouvoir alimenter la bobine.",
+    "palette": {
+     "alimentation": 1,
+     "disjoncteur": 1,
+     "bouton_arret": 2,
+     "bouton_marche": 2,
+     "bobine_relais": 1,
+     "contact_relais": 1,
+     "contacteur": 1,
+     "moteur_mono": 1
+    },
+    "steps": [
+     {
+      "set": {},
+      "expect": {
+       "moteur_mono": "off"
+      },
+      "message": "Au départ, le moteur est arrêté."
+     },
+     {
+      "set": {
+       "bouton_marche-1": true
+      },
+      "expect": {
+       "moteur_mono": "on"
+      },
+      "message": "La Marche du poste 1 démarre le moteur."
+     },
+     {
+      "set": {
+       "bouton_marche-1": false
+      },
+      "expect": {
+       "moteur_mono": "on"
+      },
+      "message": "Bouton relâché : l'auto-maintien garde le moteur en marche."
+     },
+     {
+      "set": {
+       "bouton_arret-2": true
+      },
+      "expect": {
+       "moteur_mono": "off"
+      },
+      "message": "L'Arrêt du poste 2 le coupe."
+     },
+     {
+      "set": {
+       "bouton_arret-2": false,
+       "bouton_marche-2": true
+      },
+      "expect": {
+       "moteur_mono": "on"
+      },
+      "message": "La Marche du poste 2 le redémarre."
+     },
+     {
+      "set": {
+       "bouton_marche-2": false
+      },
+      "expect": {
+       "moteur_mono": "on"
+      },
+      "message": "Le moteur reste en marche."
+     },
+     {
+      "set": {
+       "bouton_arret-1": true
+      },
+      "expect": {
+       "moteur_mono": "off"
+      },
+      "message": "L'Arrêt du poste 1 le coupe aussi."
+     },
+     {
+      "set": {
+       "bouton_arret-1": false
+      },
+      "expect": {
+       "moteur_mono": "off"
+      },
+      "message": "Arrêt relâché, le moteur ne repart pas seul."
+     }
+    ],
+    "solution_components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "contacteur",
+      "type": "contacteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "moteur_mono",
+      "type": "moteur_mono",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "bouton_arret-1",
+      "type": "bouton_arret",
+      "x": 0,
+      "y": 1
+     },
+     {
+      "id": "bouton_arret-2",
+      "type": "bouton_arret",
+      "x": 1,
+      "y": 1
+     },
+     {
+      "id": "bouton_marche-1",
+      "type": "bouton_marche",
+      "x": 0,
+      "y": 2
+     },
+     {
+      "id": "bouton_marche-2",
+      "type": "bouton_marche",
+      "x": 1,
+      "y": 2
+     },
+     {
+      "id": "contact_relais",
+      "type": "contact_relais",
+      "x": 2,
+      "y": 2
+     },
+     {
+      "id": "bobine_relais",
+      "type": "bobine_relais",
+      "x": 1,
+      "y": 3
+     }
+    ],
+    "solution_wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "bouton_arret-1",
+      "1"
+     ],
+     [
+      "bouton_arret-1",
+      "2",
+      "bouton_arret-2",
+      "1"
+     ],
+     [
+      "bouton_arret-2",
+      "2",
+      "bouton_marche-1",
+      "1"
+     ],
+     [
+      "bouton_arret-2",
+      "2",
+      "bouton_marche-2",
+      "1"
+     ],
+     [
+      "bouton_arret-2",
+      "2",
+      "contact_relais",
+      "1"
+     ],
+     [
+      "bouton_marche-1",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "bouton_marche-2",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "contact_relais",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "bobine_relais",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "contacteur",
+      "1"
+     ],
+     [
+      "contacteur",
+      "2",
+      "moteur_mono",
+      "1"
+     ],
+     [
+      "moteur_mono",
+      "2",
+      "alimentation",
+      "N"
+     ]
+    ],
+    "explanation": "Règle de câblage à retenir : les organes d'arrêt en série (une logique ET : tous doivent être fermés pour marcher), les organes de marche en parallèle (une logique OU). Les arrêts d'urgence d'une machine s'ajoutent de la même façon, en série dans la chaîne."
+   },
+   {
+    "id": "consignation",
+    "title": "Consigner avant d'intervenir",
+    "goal": "Ajoutez un sectionneur en tête de l'installation. Sectionneur ouvert, la lampe doit rester éteinte et hors tension, même si quelqu'un actionne l'interrupteur.",
+    "hint": "Le sectionneur se place juste après l'alimentation, sur la phase, avant le disjoncteur : il isole tout ce qui se trouve en aval.",
+    "palette": {
+     "alimentation": 1,
+     "sectionneur": 1,
+     "disjoncteur": 1,
+     "interrupteur": 1,
+     "lampe_bornes": 1
+    },
+    "steps": [
+     {
+      "set": {
+       "sectionneur": true,
+       "interrupteur": true
+      },
+      "expect": {
+       "lampe_bornes": "on"
+      },
+      "message": "Sectionneur et interrupteur fermés : la lampe est allumée."
+     },
+     {
+      "set": {
+       "interrupteur": false
+      },
+      "expect": {
+       "lampe_bornes": "off"
+      },
+      "message": "On arrête d'abord la charge : un sectionneur ne s'ouvre pas en charge."
+     },
+     {
+      "set": {
+       "sectionneur": false
+      },
+      "expect": {
+       "lampe_bornes": "off"
+      },
+      "message": "Sectionneur ouvert et cadenassé."
+     },
+     {
+      "set": {
+       "interrupteur": true
+      },
+      "expect": {
+       "lampe_bornes": "off",
+       "lampe_bornes.potential": [
+        0,
+        1
+       ]
+      },
+      "message": "Quelqu'un actionne l'interrupteur : la lampe reste éteinte et hors tension."
+     }
+    ],
+    "solution_components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "sectionneur",
+      "type": "sectionneur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "solution_wires": [
+     [
+      "alimentation",
+      "L",
+      "sectionneur",
+      "1"
+     ],
+     [
+      "sectionneur",
+      "2",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "lampe_bornes",
+      "1"
+     ],
+     [
+      "lampe_bornes",
+      "2",
+      "alimentation",
+      "N"
+     ]
+    ],
+    "explanation": "Consigner, c'est séparer, condamner (cadenas), identifier, puis vérifier l'absence de tension au VAT avant de toucher. Un vrai sectionneur coupe tous les pôles, neutre compris ; ici il ne coupe que la phase. Il n'a pas de pouvoir de coupure : on arrête la charge avant de l'ouvrir."
+   },
+   {
     "id": "buzzer",
     "title": "Un buzzer et sa polarité",
     "goal": "Sur une pile de 9 V, le buzzer sonne tant que l'on appuie sur le bouton poussoir, et se tait dès qu'on le relâche.",
@@ -57038,6 +58665,3325 @@
      }
     },
     "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"372\" viewBox=\"0 0 1032 372\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"372\" fill=\"#ffffff\"/><g transform=\"translate(60,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"42\"/><line x1=\"18\" y1=\"42\" x2=\"62\" y2=\"42\"/><line x1=\"30\" y1=\"54\" x2=\"50\" y2=\"54\" stroke-width=\"5\"/><line x1=\"40\" y1=\"54\" x2=\"40\" y2=\"100\"/></g><text x=\"66\" y=\"38\" font-size=\"14\" font-weight=\"bold\" fill=\"#0f172a\">+</text></g><text x=\"152\" y=\"233\" font-size=\"12\" fill=\"#334155\">Source de tension</text><text x=\"152\" y=\"247\" font-size=\"12\" fill=\"#334155\">continue</text><g transform=\"translate(300,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"392\" y=\"233\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"392\" y=\"247\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"392\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"34\"/><rect x=\"18\" y=\"34\" width=\"44\" height=\"32\"/><line x1=\"40\" y1=\"66\" x2=\"40\" y2=\"100\"/></g></g><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">Bobine de relais</text><text x=\"632\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">au repos</text><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"76\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"104\" font-size=\"12\" fill=\"#334155\">fermeture</text><text x=\"632\" y=\"122\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Lampe</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text></svg>"
+   },
+   {
+    "name": "lampes-serie : solution",
+    "level": "lampes-serie",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "amperemetre",
+      "type": "amperemetre",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes-1",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     },
+     {
+      "id": "voltmetre",
+      "type": "voltmetre",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "lampe_bornes-2",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 2
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "amperemetre",
+      "1"
+     ],
+     [
+      "amperemetre",
+      "2",
+      "lampe_bornes-1",
+      "1"
+     ],
+     [
+      "lampe_bornes-1",
+      "2",
+      "lampe_bornes-2",
+      "1"
+     ],
+     [
+      "lampe_bornes-2",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "voltmetre",
+      "1",
+      "lampe_bornes-1",
+      "1"
+     ],
+     [
+      "voltmetre",
+      "2",
+      "lampe_bornes-1",
+      "2"
+     ]
+    ],
+    "raw": {},
+    "values": {},
+    "run": {
+     "passed": true,
+     "checks": [
+      {
+       "message": "Interrupteur ouvert : aucun courant.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Interrupteur fermé : 0,13 A traversent les deux lampes, et chacune ne reçoit que 115 V.",
+       "passed": true,
+       "details": []
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.99347822040593,
+        "current": 0.13043559188133713,
+        "potential": 229.99347822040593,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.0013043536188774851,
+        "current": 0.1304353618877485,
+        "potential": 229.99347822040593,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.0013043513189359146,
+        "current": 0.13043513189359146,
+        "potential": 229.99217386678706,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "amperemetre": {
+        "type": "amperemetre",
+        "voltage": 0.0013043490190796092,
+        "current": 0.13043490190796092,
+        "potential": 229.99086951546812,
+        "on": false,
+        "status": "130 mA",
+        "tone": "measure"
+       },
+       "lampe_bornes-1": {
+        "type": "lampe_bornes",
+        "voltage": 114.98976414686733,
+        "current": 0.1304231729454072,
+        "potential": 229.98956516644904,
+        "on": false,
+        "status": "faible",
+        "tone": "dim"
+       },
+       "voltmetre": {
+        "type": "voltmetre",
+        "voltage": 114.98976414686733,
+        "current": 1.1498976414686732e-05,
+        "potential": 229.98956516644904,
+        "on": false,
+        "status": "115 V",
+        "tone": "measure"
+       },
+       "lampe_bornes-2": {
+        "type": "lampe_bornes",
+        "voltage": 114.99980101958171,
+        "current": 0.13043455692202086,
+        "potential": 114.99980101958171,
+        "on": false,
+        "status": "faible",
+        "tone": "dim"
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "amperemetre",
+        "1"
+       ],
+       [
+        "amperemetre",
+        "2"
+       ],
+       [
+        "disjoncteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "2"
+       ],
+       [
+        "interrupteur",
+        "1"
+       ],
+       [
+        "interrupteur",
+        "2"
+       ],
+       [
+        "lampe_bornes-1",
+        "1"
+       ],
+       [
+        "lampe_bornes-1",
+        "2"
+       ],
+       [
+        "lampe_bornes-2",
+        "1"
+       ],
+       [
+        "voltmetre",
+        "1"
+       ],
+       [
+        "voltmetre",
+        "2"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {},
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "interrupteur": true
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"522\" viewBox=\"0 0 1032 522\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"522\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V155 H529 V17 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,136 V160 H774 V12 H820 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,136 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,286 V336\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"336\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,436 V455 H769 V155 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M580,186 V162 H774 V162 H820 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,286 V315 H779 V315 H820 V286\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"83\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"632\" y=\"97\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"632\" y=\"115\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">A</text></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Ampèremètre</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">130 mA</text><rect x=\"786\" y=\"200\" width=\"68\" height=\"72\" rx=\"18\" fill=\"#fde68a\" opacity=\"0.45\"/><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Lampe 1</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#a16207\">faible</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">V</text></g><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">Voltmètre</text><text x=\"632\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">115 V</text><rect x=\"786\" y=\"350\" width=\"68\" height=\"72\" rx=\"18\" fill=\"#fde68a\" opacity=\"0.45\"/><g transform=\"translate(780,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"390\" font-size=\"12\" fill=\"#334155\">Lampe 2</text><text x=\"872\" y=\"408\" font-size=\"12\" font-weight=\"bold\" fill=\"#a16207\">faible</text></svg>"
+   },
+   {
+    "name": "lampes-serie : sans le dernier fil",
+    "level": "lampes-serie",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "amperemetre",
+      "type": "amperemetre",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes-1",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     },
+     {
+      "id": "voltmetre",
+      "type": "voltmetre",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "lampe_bornes-2",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 2
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "amperemetre",
+      "1"
+     ],
+     [
+      "amperemetre",
+      "2",
+      "lampe_bornes-1",
+      "1"
+     ],
+     [
+      "lampe_bornes-1",
+      "2",
+      "lampe_bornes-2",
+      "1"
+     ],
+     [
+      "lampe_bornes-2",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "voltmetre",
+      "1",
+      "lampe_bornes-1",
+      "1"
+     ]
+    ],
+    "raw": {},
+    "values": {},
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Interrupteur ouvert : aucun courant.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Interrupteur fermé : 0,13 A traversent les deux lampes, et chacune ne reçoit que 115 V.",
+       "passed": false,
+       "details": [
+        "Voltmètre : 2,28 V"
+       ]
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.99347849648234,
+        "current": 0.13043007035321352,
+        "potential": 229.99347849648234,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.001304298403596249,
+        "current": 0.1304298403596249,
+        "potential": 229.99347849648234,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.0013042961036831002,
+        "current": 0.13042961036831002,
+        "potential": 229.99217419807874,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "amperemetre": {
+        "type": "amperemetre",
+        "voltage": 0.0013042938037983731,
+        "current": 0.1304293803798373,
+        "potential": 229.99086990197506,
+        "on": false,
+        "status": "130 mA",
+        "tone": "measure"
+       },
+       "lampe_bornes-1": {
+        "type": "lampe_bornes",
+        "voltage": 114.9948334975967,
+        "current": 0.13042892268158418,
+        "potential": 229.98956560817126,
+        "on": false,
+        "status": "faible",
+        "tone": "dim"
+       },
+       "voltmetre": {
+        "type": "voltmetre",
+        "voltage": 2.27712441196212,
+        "current": 2.27712441196212e-07,
+        "potential": 229.98956560817126,
+        "on": false,
+        "status": "2,28 V",
+        "tone": "measure"
+       },
+       "lampe_bornes-2": {
+        "type": "lampe_bornes",
+        "voltage": 114.99473211057456,
+        "current": 0.13042880768685206,
+        "potential": 114.99473211057456,
+        "on": false,
+        "status": "faible",
+        "tone": "dim"
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "amperemetre",
+        "1"
+       ],
+       [
+        "amperemetre",
+        "2"
+       ],
+       [
+        "disjoncteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "2"
+       ],
+       [
+        "interrupteur",
+        "1"
+       ],
+       [
+        "interrupteur",
+        "2"
+       ],
+       [
+        "lampe_bornes-1",
+        "1"
+       ],
+       [
+        "lampe_bornes-1",
+        "2"
+       ],
+       [
+        "lampe_bornes-2",
+        "1"
+       ],
+       [
+        "voltmetre",
+        "1"
+       ],
+       [
+        "voltmetre",
+        "2"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {},
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "interrupteur": true
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"522\" viewBox=\"0 0 1032 522\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"522\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V155 H529 V17 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,136 V160 H774 V12 H820 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,136 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,286 V336\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"336\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,436 V455 H769 V155 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M580,186 V162 H774 V162 H820 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"83\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"632\" y=\"97\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"632\" y=\"115\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">A</text></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Ampèremètre</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">130 mA</text><rect x=\"786\" y=\"200\" width=\"68\" height=\"72\" rx=\"18\" fill=\"#fde68a\" opacity=\"0.45\"/><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Lampe 1</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#a16207\">faible</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">V</text></g><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">Voltmètre</text><text x=\"632\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">2,28 V</text><rect x=\"786\" y=\"350\" width=\"68\" height=\"72\" rx=\"18\" fill=\"#fde68a\" opacity=\"0.45\"/><g transform=\"translate(780,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"390\" font-size=\"12\" fill=\"#334155\">Lampe 2</text><text x=\"872\" y=\"408\" font-size=\"12\" font-weight=\"bold\" fill=\"#a16207\">faible</text></svg>"
+   },
+   {
+    "name": "lampes-serie : sans fil",
+    "level": "lampes-serie",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "amperemetre",
+      "type": "amperemetre",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes-1",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     },
+     {
+      "id": "voltmetre",
+      "type": "voltmetre",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "lampe_bornes-2",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 2
+     }
+    ],
+    "wires": [],
+    "raw": {},
+    "values": {},
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Interrupteur ouvert : aucun courant.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Interrupteur fermé : 0,13 A traversent les deux lampes, et chacune ne reçoit que 115 V.",
+       "passed": false,
+       "details": [
+        "Ampèremètre : 0 A",
+        "Voltmètre : 0 V"
+       ]
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.9999999885,
+        "current": 2.299998413946014e-07,
+        "potential": 229.9999999885,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "amperemetre": {
+        "type": "amperemetre",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "0 A",
+        "tone": "measure"
+       },
+       "lampe_bornes-1": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       },
+       "voltmetre": {
+        "type": "voltmetre",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "0 V",
+        "tone": "measure"
+       },
+       "lampe_bornes-2": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {},
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "interrupteur": true
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"522\" viewBox=\"0 0 1032 522\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"522\" fill=\"#ffffff\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"83\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"632\" y=\"97\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"632\" y=\"115\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">A</text></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Ampèremètre</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">0 A</text><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Lampe 1</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">V</text></g><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">Voltmètre</text><text x=\"632\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">0 V</text><g transform=\"translate(780,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"390\" font-size=\"12\" fill=\"#334155\">Lampe 2</text><text x=\"872\" y=\"408\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text></svg>"
+   },
+   {
+    "name": "mesure-tension : solution",
+    "level": "mesure-tension",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "voltmetre-2",
+      "type": "voltmetre",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "voltmetre-1",
+      "type": "voltmetre",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "lampe_bornes",
+      "1"
+     ],
+     [
+      "lampe_bornes",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "voltmetre-1",
+      "1",
+      "lampe_bornes",
+      "1"
+     ],
+     [
+      "voltmetre-1",
+      "2",
+      "lampe_bornes",
+      "2"
+     ],
+     [
+      "voltmetre-2",
+      "1",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "voltmetre-2",
+      "2",
+      "interrupteur",
+      "2"
+     ]
+    ],
+    "raw": {},
+    "values": {},
+    "run": {
+     "passed": true,
+     "checks": [
+      {
+       "message": "Interrupteur ouvert : 0 V sur la lampe, et toute la tension se retrouve aux bornes de l'interrupteur.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Interrupteur fermé : 230 V sur la lampe, presque 0 V sur l'interrupteur.",
+       "passed": true,
+       "details": []
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.98695637293238,
+        "current": 0.2608725413523416,
+        "potential": 229.98695637293238,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.002608723113638689,
+        "current": 0.2608723113638689,
+        "potential": 229.98695637293238,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.0026087208112244298,
+        "current": 0.260872081122443,
+        "potential": 229.98434764981874,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "lampe_bornes": {
+        "type": "lampe_bornes",
+        "voltage": 229.98173892900752,
+        "current": 0.2608488532276078,
+        "potential": 229.98173892900752,
+        "on": true,
+        "status": "allumée",
+        "tone": "lit"
+       },
+       "voltmetre-2": {
+        "type": "voltmetre",
+        "voltage": 0.0026087208112244298,
+        "current": 2.6087208112244295e-10,
+        "potential": 229.98434764981874,
+        "on": false,
+        "status": "2,61 mV",
+        "tone": "measure"
+       },
+       "voltmetre-1": {
+        "type": "voltmetre",
+        "voltage": 229.98173892900752,
+        "current": 2.299817389290075e-05,
+        "potential": 229.98173892900752,
+        "on": false,
+        "status": "230 V",
+        "tone": "measure"
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "disjoncteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "2"
+       ],
+       [
+        "interrupteur",
+        "1"
+       ],
+       [
+        "interrupteur",
+        "2"
+       ],
+       [
+        "lampe_bornes",
+        "1"
+       ],
+       [
+        "voltmetre-1",
+        "1"
+       ],
+       [
+        "voltmetre-2",
+        "1"
+       ],
+       [
+        "voltmetre-2",
+        "2"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {},
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "interrupteur": true
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"372\" viewBox=\"0 0 1032 372\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"372\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V155 H529 V17 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,136 V160 H774 V12 H820 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,136 V165 H779 V165 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M820,186 V172 H764 V22 H820 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,286 V305 H769 V155 H820 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"286\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M580,186 V162 H534 V12 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,286 V315 H539 V165 H580 V136\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"83\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"632\" y=\"97\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"632\" y=\"115\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><rect x=\"786\" y=\"50\" width=\"68\" height=\"72\" rx=\"18\" fill=\"#facc15\" opacity=\"0.55\"/><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Lampe</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#a16207\">allumée</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">V</text></g><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">Voltmètre 2</text><text x=\"632\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">2,61 mV</text><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">V</text></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Voltmètre 1</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">230 V</text></svg>"
+   },
+   {
+    "name": "mesure-tension : sans le dernier fil",
+    "level": "mesure-tension",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "voltmetre-2",
+      "type": "voltmetre",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "voltmetre-1",
+      "type": "voltmetre",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "lampe_bornes",
+      "1"
+     ],
+     [
+      "lampe_bornes",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "voltmetre-1",
+      "1",
+      "lampe_bornes",
+      "1"
+     ],
+     [
+      "voltmetre-1",
+      "2",
+      "lampe_bornes",
+      "2"
+     ],
+     [
+      "voltmetre-2",
+      "1",
+      "interrupteur",
+      "1"
+     ]
+    ],
+    "raw": {},
+    "values": {},
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Interrupteur ouvert : 0 V sur la lampe, et toute la tension se retrouve aux bornes de l'interrupteur.",
+       "passed": false,
+       "details": [
+        "Voltmètre 2 : 2,28 V"
+       ]
+      },
+      {
+       "message": "Interrupteur fermé : 230 V sur la lampe, presque 0 V sur l'interrupteur.",
+       "passed": false,
+       "details": [
+        "Voltmètre 2 : 2,28 V"
+       ]
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.98695636154793,
+        "current": 0.26087276904149803,
+        "potential": 229.98695636154793,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.002608725390530253,
+        "current": 0.2608725390530253,
+        "potential": 229.98695636154793,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.002608720813640275,
+        "current": 0.2608720813640275,
+        "potential": 229.9843476361574,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "lampe_bornes": {
+        "type": "lampe_bornes",
+        "voltage": 229.98173891534375,
+        "current": 0.26084885321211015,
+        "potential": 229.98173891534375,
+        "on": true,
+        "status": "allumée",
+        "tone": "lit"
+       },
+       "voltmetre-2": {
+        "type": "voltmetre",
+        "voltage": 2.2770727488728255,
+        "current": 2.2770727488728255e-07,
+        "potential": 229.9843476361574,
+        "on": false,
+        "status": "2,28 V",
+        "tone": "measure"
+       },
+       "voltmetre-1": {
+        "type": "voltmetre",
+        "voltage": 229.98173891534375,
+        "current": 2.2998173891534373e-05,
+        "potential": 229.98173891534375,
+        "on": false,
+        "status": "230 V",
+        "tone": "measure"
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "disjoncteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "2"
+       ],
+       [
+        "interrupteur",
+        "1"
+       ],
+       [
+        "interrupteur",
+        "2"
+       ],
+       [
+        "lampe_bornes",
+        "1"
+       ],
+       [
+        "voltmetre-1",
+        "1"
+       ],
+       [
+        "voltmetre-2",
+        "1"
+       ],
+       [
+        "voltmetre-2",
+        "2"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {},
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "interrupteur": true
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"372\" viewBox=\"0 0 1032 372\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"372\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V155 H529 V17 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,136 V160 H774 V12 H820 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,136 V165 H779 V165 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M820,186 V172 H764 V22 H820 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,286 V305 H769 V155 H820 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"286\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M580,186 V162 H534 V12 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"83\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"632\" y=\"97\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"632\" y=\"115\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><rect x=\"786\" y=\"50\" width=\"68\" height=\"72\" rx=\"18\" fill=\"#facc15\" opacity=\"0.55\"/><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Lampe</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#a16207\">allumée</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">V</text></g><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">Voltmètre 2</text><text x=\"632\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">2,28 V</text><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">V</text></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Voltmètre 1</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">230 V</text></svg>"
+   },
+   {
+    "name": "mesure-tension : sans fil",
+    "level": "mesure-tension",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "voltmetre-2",
+      "type": "voltmetre",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "voltmetre-1",
+      "type": "voltmetre",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "wires": [],
+    "raw": {},
+    "values": {},
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Interrupteur ouvert : 0 V sur la lampe, et toute la tension se retrouve aux bornes de l'interrupteur.",
+       "passed": false,
+       "details": [
+        "Voltmètre 2 : 0 V"
+       ]
+      },
+      {
+       "message": "Interrupteur fermé : 230 V sur la lampe, presque 0 V sur l'interrupteur.",
+       "passed": false,
+       "details": [
+        "Lampe : éteinte",
+        "Voltmètre 1 : 0 V"
+       ]
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.9999999885,
+        "current": 2.299998413946014e-07,
+        "potential": 229.9999999885,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "lampe_bornes": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       },
+       "voltmetre-2": {
+        "type": "voltmetre",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "0 V",
+        "tone": "measure"
+       },
+       "voltmetre-1": {
+        "type": "voltmetre",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "0 V",
+        "tone": "measure"
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {},
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "interrupteur": true
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"372\" viewBox=\"0 0 1032 372\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"372\" fill=\"#ffffff\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"83\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"632\" y=\"97\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"632\" y=\"115\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Lampe</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">V</text></g><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">Voltmètre 2</text><text x=\"632\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">0 V</text><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"56\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">V</text></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Voltmètre 1</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#1d4ed8\">0 V</text></svg>"
+   },
+   {
+    "name": "voyants-marche-arret : solution",
+    "level": "voyants-marche-arret",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 1,
+      "y": 1
+     },
+     {
+      "id": "bobine_relais",
+      "type": "bobine_relais",
+      "x": 1,
+      "y": 2
+     },
+     {
+      "id": "contact_relais",
+      "type": "contact_relais",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes-1",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "contact_relais_nf",
+      "type": "contact_relais_nf",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "lampe_bornes-2",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "bobine_relais",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "contact_relais",
+      "1"
+     ],
+     [
+      "contact_relais",
+      "2",
+      "lampe_bornes-1",
+      "1"
+     ],
+     [
+      "lampe_bornes-1",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "contact_relais_nf",
+      "1"
+     ],
+     [
+      "contact_relais_nf",
+      "2",
+      "lampe_bornes-2",
+      "1"
+     ],
+     [
+      "lampe_bornes-2",
+      "2",
+      "alimentation",
+      "N"
+     ]
+    ],
+    "raw": {},
+    "values": {
+     "bobine_relais": 230.0
+    },
+    "run": {
+     "passed": true,
+     "checks": [
+      {
+       "message": "Relais au repos : seul le voyant d'arrêt est allumé.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Relais collé : le voyant de marche s'allume, celui d'arrêt s'éteint.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Relais retombé : retour au voyant d'arrêt.",
+       "passed": true,
+       "details": []
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.98695752274978,
+        "current": 0.26084954500447566,
+        "potential": 229.98695752274978,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.002608493150148661,
+        "current": 0.2608493150148661,
+        "potential": 229.98695752274978,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 229.98434902959963,
+        "current": 0.0,
+        "potential": 229.98434902959963,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "bobine_relais": {
+        "type": "bobine_relais",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "au repos",
+        "tone": ""
+       },
+       "contact_relais": {
+        "type": "contact_relais",
+        "voltage": 229.98434902959963,
+        "current": 0.0,
+        "potential": 229.98434902959963,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "lampe_bornes-1": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       },
+       "contact_relais_nf": {
+        "type": "contact_relais_nf",
+        "voltage": 0.002608490850349199,
+        "current": 0.2608490850349199,
+        "potential": 229.98434902959963,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "lampe_bornes-2": {
+        "type": "lampe_bornes",
+        "voltage": 229.98174053874928,
+        "current": 0.26084885505340183,
+        "potential": 229.98174053874928,
+        "on": true,
+        "status": "allumée",
+        "tone": "lit"
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "contact_relais",
+        "1"
+       ],
+       [
+        "contact_relais_nf",
+        "1"
+       ],
+       [
+        "contact_relais_nf",
+        "2"
+       ],
+       [
+        "disjoncteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "2"
+       ],
+       [
+        "interrupteur",
+        "1"
+       ],
+       [
+        "lampe_bornes-2",
+        "1"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {
+        "bobine_relais": false
+       },
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "interrupteur": false
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"522\" viewBox=\"0 0 1032 522\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"522\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,286 V336\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"286\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"340\" cy=\"336\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,436 V465 H299 V165 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,136 V150 H524 V22 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,136 V155 H769 V17 H820 V36\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M820,136 V160 H774 V160 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,136 V168.5 H580 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,286 V300 H764 V172 H820 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M820,286 V305 H769 V155 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"286\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(300,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"392\" y=\"233\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"392\" y=\"247\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"392\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(300,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"34\"/><rect x=\"18\" y=\"34\" width=\"44\" height=\"32\"/><line x1=\"40\" y1=\"66\" x2=\"40\" y2=\"100\"/></g></g><text x=\"392\" y=\"390\" font-size=\"12\" fill=\"#334155\">Bobine de relais</text><text x=\"392\" y=\"408\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">au repos</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"76\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"104\" font-size=\"12\" fill=\"#334155\">fermeture</text><text x=\"632\" y=\"122\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Lampe 1</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"32\" x2=\"54\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"58\" y2=\"28\"/></g></g><text x=\"632\" y=\"226\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"254\" font-size=\"12\" fill=\"#334155\">ouverture</text><text x=\"632\" y=\"272\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><rect x=\"786\" y=\"200\" width=\"68\" height=\"72\" rx=\"18\" fill=\"#facc15\" opacity=\"0.55\"/><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Lampe 2</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#a16207\">allumée</text></svg>"
+   },
+   {
+    "name": "voyants-marche-arret : sans le dernier fil",
+    "level": "voyants-marche-arret",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 1,
+      "y": 1
+     },
+     {
+      "id": "bobine_relais",
+      "type": "bobine_relais",
+      "x": 1,
+      "y": 2
+     },
+     {
+      "id": "contact_relais",
+      "type": "contact_relais",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes-1",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "contact_relais_nf",
+      "type": "contact_relais_nf",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "lampe_bornes-2",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "bobine_relais",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "contact_relais",
+      "1"
+     ],
+     [
+      "contact_relais",
+      "2",
+      "lampe_bornes-1",
+      "1"
+     ],
+     [
+      "lampe_bornes-1",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "contact_relais_nf",
+      "1"
+     ],
+     [
+      "contact_relais_nf",
+      "2",
+      "lampe_bornes-2",
+      "1"
+     ]
+    ],
+    "raw": {},
+    "values": {
+     "bobine_relais": 230.0
+    },
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Relais au repos : seul le voyant d'arrêt est allumé.",
+       "passed": false,
+       "details": [
+        "Lampe 2 : éteinte"
+       ]
+      },
+      {
+       "message": "Relais collé : le voyant de marche s'allume, celui d'arrêt s'éteint.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Relais retombé : retour au voyant d'arrêt.",
+       "passed": false,
+       "details": [
+        "Lampe 2 : éteinte"
+       ]
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.9999999540001,
+        "current": 9.199982287100283e-07,
+        "potential": 229.9999999540001,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 6.899966820128611e-09,
+        "current": 6.899966820128611e-07,
+        "potential": 229.9999999540001,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 229.99999994710012,
+        "current": 0.0,
+        "potential": 229.99999994710012,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "bobine_relais": {
+        "type": "bobine_relais",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "au repos",
+        "tone": ""
+       },
+       "contact_relais": {
+        "type": "contact_relais",
+        "voltage": 229.99999994710012,
+        "current": 0.0,
+        "potential": 229.99999994710012,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "lampe_bornes-1": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       },
+       "contact_relais_nf": {
+        "type": "contact_relais_nf",
+        "voltage": 4.599968406182597e-09,
+        "current": 4.5999684061825974e-07,
+        "potential": 229.99999994710012,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "lampe_bornes-2": {
+        "type": "lampe_bornes",
+        "voltage": 0.00020278315443533756,
+        "current": 2.2999979709112012e-07,
+        "potential": 229.99999994250015,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "contact_relais",
+        "1"
+       ],
+       [
+        "contact_relais_nf",
+        "1"
+       ],
+       [
+        "contact_relais_nf",
+        "2"
+       ],
+       [
+        "disjoncteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "2"
+       ],
+       [
+        "interrupteur",
+        "1"
+       ],
+       [
+        "lampe_bornes-2",
+        "1"
+       ],
+       [
+        "lampe_bornes-2",
+        "2"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {
+        "bobine_relais": false
+       },
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "interrupteur": false
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"522\" viewBox=\"0 0 1032 522\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"522\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,286 V336\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"286\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"340\" cy=\"336\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,436 V465 H299 V165 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,136 V150 H524 V22 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,136 V155 H769 V17 H820 V36\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M820,136 V160 H774 V160 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,136 V168.5 H580 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,286 V300 H764 V172 H820 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(300,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"392\" y=\"233\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"392\" y=\"247\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"392\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(300,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"34\"/><rect x=\"18\" y=\"34\" width=\"44\" height=\"32\"/><line x1=\"40\" y1=\"66\" x2=\"40\" y2=\"100\"/></g></g><text x=\"392\" y=\"390\" font-size=\"12\" fill=\"#334155\">Bobine de relais</text><text x=\"392\" y=\"408\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">au repos</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"76\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"104\" font-size=\"12\" fill=\"#334155\">fermeture</text><text x=\"632\" y=\"122\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Lampe 1</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"32\" x2=\"54\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"58\" y2=\"28\"/></g></g><text x=\"632\" y=\"226\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"254\" font-size=\"12\" fill=\"#334155\">ouverture</text><text x=\"632\" y=\"272\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Lampe 2</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text></svg>"
+   },
+   {
+    "name": "voyants-marche-arret : sans fil",
+    "level": "voyants-marche-arret",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 1,
+      "y": 1
+     },
+     {
+      "id": "bobine_relais",
+      "type": "bobine_relais",
+      "x": 1,
+      "y": 2
+     },
+     {
+      "id": "contact_relais",
+      "type": "contact_relais",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes-1",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "contact_relais_nf",
+      "type": "contact_relais_nf",
+      "x": 2,
+      "y": 1
+     },
+     {
+      "id": "lampe_bornes-2",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "wires": [],
+    "raw": {},
+    "values": {
+     "bobine_relais": 230.0
+    },
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Relais au repos : seul le voyant d'arrêt est allumé.",
+       "passed": false,
+       "details": [
+        "Lampe 2 : éteinte"
+       ]
+      },
+      {
+       "message": "Relais collé : le voyant de marche s'allume, celui d'arrêt s'éteint.",
+       "passed": false,
+       "details": [
+        "Bobine de relais : au repos",
+        "Lampe 1 : éteinte"
+       ]
+      },
+      {
+       "message": "Relais retombé : retour au voyant d'arrêt.",
+       "passed": false,
+       "details": [
+        "Lampe 2 : éteinte"
+       ]
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.9999999885,
+        "current": 2.299998413946014e-07,
+        "potential": 229.9999999885,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "bobine_relais": {
+        "type": "bobine_relais",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "au repos",
+        "tone": ""
+       },
+       "contact_relais": {
+        "type": "contact_relais",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "lampe_bornes-1": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       },
+       "contact_relais_nf": {
+        "type": "contact_relais_nf",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "lampe_bornes-2": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {
+        "bobine_relais": false
+       },
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "interrupteur": false
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"522\" viewBox=\"0 0 1032 522\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"522\" fill=\"#ffffff\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(300,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"392\" y=\"233\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"392\" y=\"247\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"392\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(300,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"34\"/><rect x=\"18\" y=\"34\" width=\"44\" height=\"32\"/><line x1=\"40\" y1=\"66\" x2=\"40\" y2=\"100\"/></g></g><text x=\"392\" y=\"390\" font-size=\"12\" fill=\"#334155\">Bobine de relais</text><text x=\"392\" y=\"408\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">au repos</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"76\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"104\" font-size=\"12\" fill=\"#334155\">fermeture</text><text x=\"632\" y=\"122\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Lampe 1</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text><g transform=\"translate(540,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"32\" x2=\"54\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"58\" y2=\"28\"/></g></g><text x=\"632\" y=\"226\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"240\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"254\" font-size=\"12\" fill=\"#334155\">ouverture</text><text x=\"632\" y=\"272\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Lampe 2</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text></svg>"
+   },
+   {
+    "name": "deux-postes : solution",
+    "level": "deux-postes",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "contacteur",
+      "type": "contacteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "moteur_mono",
+      "type": "moteur_mono",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "bouton_arret-1",
+      "type": "bouton_arret",
+      "x": 0,
+      "y": 1
+     },
+     {
+      "id": "bouton_arret-2",
+      "type": "bouton_arret",
+      "x": 1,
+      "y": 1
+     },
+     {
+      "id": "bouton_marche-1",
+      "type": "bouton_marche",
+      "x": 0,
+      "y": 2
+     },
+     {
+      "id": "bouton_marche-2",
+      "type": "bouton_marche",
+      "x": 1,
+      "y": 2
+     },
+     {
+      "id": "contact_relais",
+      "type": "contact_relais",
+      "x": 2,
+      "y": 2
+     },
+     {
+      "id": "bobine_relais",
+      "type": "bobine_relais",
+      "x": 1,
+      "y": 3
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "bouton_arret-1",
+      "1"
+     ],
+     [
+      "bouton_arret-1",
+      "2",
+      "bouton_arret-2",
+      "1"
+     ],
+     [
+      "bouton_arret-2",
+      "2",
+      "bouton_marche-1",
+      "1"
+     ],
+     [
+      "bouton_arret-2",
+      "2",
+      "bouton_marche-2",
+      "1"
+     ],
+     [
+      "bouton_arret-2",
+      "2",
+      "contact_relais",
+      "1"
+     ],
+     [
+      "bouton_marche-1",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "bouton_marche-2",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "contact_relais",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "bobine_relais",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "contacteur",
+      "1"
+     ],
+     [
+      "contacteur",
+      "2",
+      "moteur_mono",
+      "1"
+     ],
+     [
+      "moteur_mono",
+      "2",
+      "alimentation",
+      "N"
+     ]
+    ],
+    "raw": {},
+    "values": {
+     "bobine_relais": 230.0
+    },
+    "run": {
+     "passed": true,
+     "checks": [
+      {
+       "message": "Au départ, le moteur est arrêté.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "La Marche du poste 1 démarre le moteur.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Bouton relâché : l'auto-maintien garde le moteur en marche.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "L'Arrêt du poste 2 le coupe.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "La Marche du poste 2 le redémarre.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Le moteur reste en marche.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "L'Arrêt du poste 1 le coupe aussi.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Arrêt relâché, le moteur ne repart pas seul.",
+       "passed": true,
+       "details": []
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.99999995400017,
+        "current": 9.199965234074625e-07,
+        "potential": 229.99999995400017,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 6.899938398419181e-09,
+        "current": 6.899938398419181e-07,
+        "potential": 229.99999995400017,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "contacteur": {
+        "type": "contacteur",
+        "voltage": 229.99999994710024,
+        "current": 0.0,
+        "potential": 229.99999994710024,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "moteur_mono": {
+        "type": "moteur_mono",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "arrêté",
+        "tone": ""
+       },
+       "bouton_arret-1": {
+        "type": "bouton_arret",
+        "voltage": 4.599939984473167e-09,
+        "current": 4.599939984473167e-07,
+        "potential": 229.99999994710024,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "bouton_arret-2": {
+        "type": "bouton_arret",
+        "voltage": 2.299998413946014e-09,
+        "current": 2.299998413946014e-07,
+        "potential": 229.9999999425003,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "bouton_marche-1": {
+        "type": "bouton_marche",
+        "voltage": 229.9999999402003,
+        "current": 0.0,
+        "potential": 229.9999999402003,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "bouton_marche-2": {
+        "type": "bouton_marche",
+        "voltage": 229.9999999402003,
+        "current": 0.0,
+        "potential": 229.9999999402003,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "contact_relais": {
+        "type": "contact_relais",
+        "voltage": 229.9999999402003,
+        "current": 0.0,
+        "potential": 229.9999999402003,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "bobine_relais": {
+        "type": "bobine_relais",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "au repos",
+        "tone": ""
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "bouton_arret-1",
+        "1"
+       ],
+       [
+        "bouton_arret-1",
+        "2"
+       ],
+       [
+        "bouton_arret-2",
+        "1"
+       ],
+       [
+        "bouton_arret-2",
+        "2"
+       ],
+       [
+        "bouton_marche-1",
+        "1"
+       ],
+       [
+        "bouton_marche-2",
+        "1"
+       ],
+       [
+        "contact_relais",
+        "1"
+       ],
+       [
+        "contacteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "2"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {
+        "bobine_relais": false
+       },
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "bouton_marche-1": false,
+      "bouton_arret-2": false,
+      "bouton_marche-2": false,
+      "bouton_arret-1": false
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"672\" viewBox=\"0 0 1032 672\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"672\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V163.5 H100 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"100\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M100,286 V310 H294 V162 H340 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,286 V318.5 H100 V336\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"100\" cy=\"336\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,286 V336\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"336\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,286 V313.5 H580 V336\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"336\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M100,436 V466 H340 V486\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"340\" cy=\"486\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,436 V486\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"340\" cy=\"486\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M580,436 V461 H340 V486\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"340\" cy=\"486\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,586 V605 H289 V155 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"586\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,136 V160 H534 V12 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,136 V165 H779 V7 H820 V36\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M820,136 V150 H764 V150 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><path d=\"M40,32 a7,7 0 0,1 0,-12\" stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\"/></g><text x=\"632\" y=\"76\" font-size=\"12\" fill=\"#334155\">Contact de</text><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">puissance du</text><text x=\"632\" y=\"104\" font-size=\"12\" fill=\"#334155\">contacteur</text><text x=\"632\" y=\"122\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"24\"/><circle cx=\"40\" cy=\"50\" r=\"26\"/><line x1=\"40\" y1=\"76\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"52\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">M</text><text x=\"40\" y=\"68\" text-anchor=\"middle\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">1~</text></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Moteur monophasé</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">arrêté</text><g transform=\"translate(60,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"32\" x2=\"54\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"58\" y2=\"28\"/><line x1=\"49\" y1=\"50\" x2=\"12\" y2=\"50\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"42\" x2=\"12\" y2=\"58\"/></g></g><text x=\"152\" y=\"233\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"152\" y=\"247\" font-size=\"12\" fill=\"#334155\">ouverture 1</text><text x=\"152\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(300,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"32\" x2=\"54\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"58\" y2=\"28\"/><line x1=\"49\" y1=\"50\" x2=\"12\" y2=\"50\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"42\" x2=\"12\" y2=\"58\"/></g></g><text x=\"392\" y=\"233\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"392\" y=\"247\" font-size=\"12\" fill=\"#334155\">ouverture 2</text><text x=\"392\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(60,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"53\" x2=\"12\" y2=\"53\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"45\" x2=\"12\" y2=\"61\"/></g></g><text x=\"152\" y=\"383\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"152\" y=\"397\" font-size=\"12\" fill=\"#334155\">fermeture 1</text><text x=\"152\" y=\"415\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(300,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"53\" x2=\"12\" y2=\"53\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"45\" x2=\"12\" y2=\"61\"/></g></g><text x=\"392\" y=\"383\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"392\" y=\"397\" font-size=\"12\" fill=\"#334155\">fermeture 2</text><text x=\"392\" y=\"415\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(540,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"376\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"390\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"404\" font-size=\"12\" fill=\"#334155\">fermeture</text><text x=\"632\" y=\"422\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(300,486)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"34\"/><rect x=\"18\" y=\"34\" width=\"44\" height=\"32\"/><line x1=\"40\" y1=\"66\" x2=\"40\" y2=\"100\"/></g></g><text x=\"392\" y=\"540\" font-size=\"12\" fill=\"#334155\">Bobine de relais</text><text x=\"392\" y=\"558\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">au repos</text></svg>"
+   },
+   {
+    "name": "deux-postes : sans le dernier fil",
+    "level": "deux-postes",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "contacteur",
+      "type": "contacteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "moteur_mono",
+      "type": "moteur_mono",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "bouton_arret-1",
+      "type": "bouton_arret",
+      "x": 0,
+      "y": 1
+     },
+     {
+      "id": "bouton_arret-2",
+      "type": "bouton_arret",
+      "x": 1,
+      "y": 1
+     },
+     {
+      "id": "bouton_marche-1",
+      "type": "bouton_marche",
+      "x": 0,
+      "y": 2
+     },
+     {
+      "id": "bouton_marche-2",
+      "type": "bouton_marche",
+      "x": 1,
+      "y": 2
+     },
+     {
+      "id": "contact_relais",
+      "type": "contact_relais",
+      "x": 2,
+      "y": 2
+     },
+     {
+      "id": "bobine_relais",
+      "type": "bobine_relais",
+      "x": 1,
+      "y": 3
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "bouton_arret-1",
+      "1"
+     ],
+     [
+      "bouton_arret-1",
+      "2",
+      "bouton_arret-2",
+      "1"
+     ],
+     [
+      "bouton_arret-2",
+      "2",
+      "bouton_marche-1",
+      "1"
+     ],
+     [
+      "bouton_arret-2",
+      "2",
+      "bouton_marche-2",
+      "1"
+     ],
+     [
+      "bouton_arret-2",
+      "2",
+      "contact_relais",
+      "1"
+     ],
+     [
+      "bouton_marche-1",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "bouton_marche-2",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "contact_relais",
+      "2",
+      "bobine_relais",
+      "1"
+     ],
+     [
+      "bobine_relais",
+      "2",
+      "alimentation",
+      "N"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "contacteur",
+      "1"
+     ],
+     [
+      "contacteur",
+      "2",
+      "moteur_mono",
+      "1"
+     ]
+    ],
+    "raw": {},
+    "values": {
+     "bobine_relais": 230.0
+    },
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Au départ, le moteur est arrêté.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "La Marche du poste 1 démarre le moteur.",
+       "passed": false,
+       "details": [
+        "Moteur monophasé : arrêté"
+       ]
+      },
+      {
+       "message": "Bouton relâché : l'auto-maintien garde le moteur en marche.",
+       "passed": false,
+       "details": [
+        "Moteur monophasé : arrêté"
+       ]
+      },
+      {
+       "message": "L'Arrêt du poste 2 le coupe.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "La Marche du poste 2 le redémarre.",
+       "passed": false,
+       "details": [
+        "Moteur monophasé : arrêté"
+       ]
+      },
+      {
+       "message": "Le moteur reste en marche.",
+       "passed": false,
+       "details": [
+        "Moteur monophasé : arrêté"
+       ]
+      },
+      {
+       "message": "L'Arrêt du poste 1 le coupe aussi.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Arrêt relâché, le moteur ne repart pas seul.",
+       "passed": true,
+       "details": []
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.99999995400017,
+        "current": 9.199965234074625e-07,
+        "potential": 229.99999995400017,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 6.899938398419181e-09,
+        "current": 6.899938398419181e-07,
+        "potential": 229.99999995400017,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "contacteur": {
+        "type": "contacteur",
+        "voltage": 229.99999994710024,
+        "current": 0.0,
+        "potential": 229.99999994710024,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "moteur_mono": {
+        "type": "moteur_mono",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "arrêté",
+        "tone": ""
+       },
+       "bouton_arret-1": {
+        "type": "bouton_arret",
+        "voltage": 4.599939984473167e-09,
+        "current": 4.599939984473167e-07,
+        "potential": 229.99999994710024,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "bouton_arret-2": {
+        "type": "bouton_arret",
+        "voltage": 2.299998413946014e-09,
+        "current": 2.299998413946014e-07,
+        "potential": 229.9999999425003,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "bouton_marche-1": {
+        "type": "bouton_marche",
+        "voltage": 229.9999999402003,
+        "current": 0.0,
+        "potential": 229.9999999402003,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "bouton_marche-2": {
+        "type": "bouton_marche",
+        "voltage": 229.9999999402003,
+        "current": 0.0,
+        "potential": 229.9999999402003,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "contact_relais": {
+        "type": "contact_relais",
+        "voltage": 229.9999999402003,
+        "current": 0.0,
+        "potential": 229.9999999402003,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "bobine_relais": {
+        "type": "bobine_relais",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "au repos",
+        "tone": ""
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "bouton_arret-1",
+        "1"
+       ],
+       [
+        "bouton_arret-1",
+        "2"
+       ],
+       [
+        "bouton_arret-2",
+        "1"
+       ],
+       [
+        "bouton_arret-2",
+        "2"
+       ],
+       [
+        "bouton_marche-1",
+        "1"
+       ],
+       [
+        "bouton_marche-2",
+        "1"
+       ],
+       [
+        "contact_relais",
+        "1"
+       ],
+       [
+        "contacteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "1"
+       ],
+       [
+        "disjoncteur",
+        "2"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {
+        "bobine_relais": false
+       },
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "bouton_marche-1": false,
+      "bouton_arret-2": false,
+      "bouton_marche-2": false,
+      "bouton_arret-1": false
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"672\" viewBox=\"0 0 1032 672\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"672\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V163.5 H100 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"100\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M100,286 V310 H294 V162 H340 V186\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"186\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,286 V318.5 H100 V336\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"100\" cy=\"336\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,286 V336\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"336\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,286 V313.5 H580 V336\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"286\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"336\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M100,436 V466 H340 V486\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"340\" cy=\"486\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,436 V486\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"340\" cy=\"486\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M580,436 V461 H340 V486\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"436\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"340\" cy=\"486\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,586 V605 H289 V155 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"586\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M340,136 V160 H534 V12 H580 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M580,136 V165 H779 V7 H820 V36\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#2563eb\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><path d=\"M40,32 a7,7 0 0,1 0,-12\" stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\"/></g><text x=\"632\" y=\"76\" font-size=\"12\" fill=\"#334155\">Contact de</text><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">puissance du</text><text x=\"632\" y=\"104\" font-size=\"12\" fill=\"#334155\">contacteur</text><text x=\"632\" y=\"122\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"24\"/><circle cx=\"40\" cy=\"50\" r=\"26\"/><line x1=\"40\" y1=\"76\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"52\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">M</text><text x=\"40\" y=\"68\" text-anchor=\"middle\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">1~</text></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Moteur monophasé</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">arrêté</text><g transform=\"translate(60,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"32\" x2=\"54\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"58\" y2=\"28\"/><line x1=\"49\" y1=\"50\" x2=\"12\" y2=\"50\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"42\" x2=\"12\" y2=\"58\"/></g></g><text x=\"152\" y=\"233\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"152\" y=\"247\" font-size=\"12\" fill=\"#334155\">ouverture 1</text><text x=\"152\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(300,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"32\" x2=\"54\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"58\" y2=\"28\"/><line x1=\"49\" y1=\"50\" x2=\"12\" y2=\"50\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"42\" x2=\"12\" y2=\"58\"/></g></g><text x=\"392\" y=\"233\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"392\" y=\"247\" font-size=\"12\" fill=\"#334155\">ouverture 2</text><text x=\"392\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(60,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"53\" x2=\"12\" y2=\"53\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"45\" x2=\"12\" y2=\"61\"/></g></g><text x=\"152\" y=\"383\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"152\" y=\"397\" font-size=\"12\" fill=\"#334155\">fermeture 1</text><text x=\"152\" y=\"415\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(300,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"53\" x2=\"12\" y2=\"53\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"45\" x2=\"12\" y2=\"61\"/></g></g><text x=\"392\" y=\"383\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"392\" y=\"397\" font-size=\"12\" fill=\"#334155\">fermeture 2</text><text x=\"392\" y=\"415\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(540,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"376\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"390\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"404\" font-size=\"12\" fill=\"#334155\">fermeture</text><text x=\"632\" y=\"422\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(300,486)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"34\"/><rect x=\"18\" y=\"34\" width=\"44\" height=\"32\"/><line x1=\"40\" y1=\"66\" x2=\"40\" y2=\"100\"/></g></g><text x=\"392\" y=\"540\" font-size=\"12\" fill=\"#334155\">Bobine de relais</text><text x=\"392\" y=\"558\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">au repos</text></svg>"
+   },
+   {
+    "name": "deux-postes : sans fil",
+    "level": "deux-postes",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "contacteur",
+      "type": "contacteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "moteur_mono",
+      "type": "moteur_mono",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "bouton_arret-1",
+      "type": "bouton_arret",
+      "x": 0,
+      "y": 1
+     },
+     {
+      "id": "bouton_arret-2",
+      "type": "bouton_arret",
+      "x": 1,
+      "y": 1
+     },
+     {
+      "id": "bouton_marche-1",
+      "type": "bouton_marche",
+      "x": 0,
+      "y": 2
+     },
+     {
+      "id": "bouton_marche-2",
+      "type": "bouton_marche",
+      "x": 1,
+      "y": 2
+     },
+     {
+      "id": "contact_relais",
+      "type": "contact_relais",
+      "x": 2,
+      "y": 2
+     },
+     {
+      "id": "bobine_relais",
+      "type": "bobine_relais",
+      "x": 1,
+      "y": 3
+     }
+    ],
+    "wires": [],
+    "raw": {},
+    "values": {
+     "bobine_relais": 230.0
+    },
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Au départ, le moteur est arrêté.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "La Marche du poste 1 démarre le moteur.",
+       "passed": false,
+       "details": [
+        "Moteur monophasé : arrêté"
+       ]
+      },
+      {
+       "message": "Bouton relâché : l'auto-maintien garde le moteur en marche.",
+       "passed": false,
+       "details": [
+        "Moteur monophasé : arrêté"
+       ]
+      },
+      {
+       "message": "L'Arrêt du poste 2 le coupe.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "La Marche du poste 2 le redémarre.",
+       "passed": false,
+       "details": [
+        "Moteur monophasé : arrêté"
+       ]
+      },
+      {
+       "message": "Le moteur reste en marche.",
+       "passed": false,
+       "details": [
+        "Moteur monophasé : arrêté"
+       ]
+      },
+      {
+       "message": "L'Arrêt du poste 1 le coupe aussi.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Arrêt relâché, le moteur ne repart pas seul.",
+       "passed": true,
+       "details": []
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.9999999885,
+        "current": 2.299998413946014e-07,
+        "potential": 229.9999999885,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "contacteur": {
+        "type": "contacteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "moteur_mono": {
+        "type": "moteur_mono",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "arrêté",
+        "tone": ""
+       },
+       "bouton_arret-1": {
+        "type": "bouton_arret",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "bouton_arret-2": {
+        "type": "bouton_arret",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "bouton_marche-1": {
+        "type": "bouton_marche",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "bouton_marche-2": {
+        "type": "bouton_marche",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "contact_relais": {
+        "type": "contact_relais",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "bobine_relais": {
+        "type": "bobine_relais",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "au repos",
+        "tone": ""
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {
+        "bobine_relais": false
+       },
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "bouton_marche-1": false,
+      "bouton_arret-2": false,
+      "bouton_marche-2": false,
+      "bouton_arret-1": false
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"672\" viewBox=\"0 0 1032 672\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"672\" fill=\"#ffffff\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><path d=\"M40,32 a7,7 0 0,1 0,-12\" stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\"/></g><text x=\"632\" y=\"76\" font-size=\"12\" fill=\"#334155\">Contact de</text><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">puissance du</text><text x=\"632\" y=\"104\" font-size=\"12\" fill=\"#334155\">contacteur</text><text x=\"632\" y=\"122\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"24\"/><circle cx=\"40\" cy=\"50\" r=\"26\"/><line x1=\"40\" y1=\"76\" x2=\"40\" y2=\"100\"/></g><text x=\"40\" y=\"52\" text-anchor=\"middle\" font-size=\"17\" font-weight=\"bold\" fill=\"#0f172a\">M</text><text x=\"40\" y=\"68\" text-anchor=\"middle\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">1~</text></g><text x=\"872\" y=\"90\" font-size=\"12\" fill=\"#334155\">Moteur monophasé</text><text x=\"872\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">arrêté</text><g transform=\"translate(60,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"32\" x2=\"54\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"58\" y2=\"28\"/><line x1=\"49\" y1=\"50\" x2=\"12\" y2=\"50\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"42\" x2=\"12\" y2=\"58\"/></g></g><text x=\"152\" y=\"233\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"152\" y=\"247\" font-size=\"12\" fill=\"#334155\">ouverture 1</text><text x=\"152\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(300,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"32\" x2=\"54\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"58\" y2=\"28\"/><line x1=\"49\" y1=\"50\" x2=\"12\" y2=\"50\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"42\" x2=\"12\" y2=\"58\"/></g></g><text x=\"392\" y=\"233\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"392\" y=\"247\" font-size=\"12\" fill=\"#334155\">ouverture 2</text><text x=\"392\" y=\"265\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(60,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"53\" x2=\"12\" y2=\"53\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"45\" x2=\"12\" y2=\"61\"/></g></g><text x=\"152\" y=\"383\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"152\" y=\"397\" font-size=\"12\" fill=\"#334155\">fermeture 1</text><text x=\"152\" y=\"415\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(300,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"32\" y1=\"53\" x2=\"12\" y2=\"53\" stroke-dasharray=\"4 3\"/><line x1=\"12\" y1=\"45\" x2=\"12\" y2=\"61\"/></g></g><text x=\"392\" y=\"383\" font-size=\"12\" fill=\"#334155\">Bouton poussoir à</text><text x=\"392\" y=\"397\" font-size=\"12\" fill=\"#334155\">fermeture 2</text><text x=\"392\" y=\"415\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(540,336)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"632\" y=\"376\" font-size=\"12\" fill=\"#334155\">Contact du</text><text x=\"632\" y=\"390\" font-size=\"12\" fill=\"#334155\">relais, à</text><text x=\"632\" y=\"404\" font-size=\"12\" fill=\"#334155\">fermeture</text><text x=\"632\" y=\"422\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(300,486)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"34\"/><rect x=\"18\" y=\"34\" width=\"44\" height=\"32\"/><line x1=\"40\" y1=\"66\" x2=\"40\" y2=\"100\"/></g></g><text x=\"392\" y=\"540\" font-size=\"12\" fill=\"#334155\">Bobine de relais</text><text x=\"392\" y=\"558\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">au repos</text></svg>"
+   },
+   {
+    "name": "consignation : solution",
+    "level": "consignation",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "sectionneur",
+      "type": "sectionneur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "sectionneur",
+      "1"
+     ],
+     [
+      "sectionneur",
+      "2",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "lampe_bornes",
+      "1"
+     ],
+     [
+      "lampe_bornes",
+      "2",
+      "alimentation",
+      "N"
+     ]
+    ],
+    "raw": {},
+    "values": {},
+    "run": {
+     "passed": true,
+     "checks": [
+      {
+       "message": "Sectionneur et interrupteur fermés : la lampe est allumée.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "On arrête d'abord la charge : un sectionneur ne s'ouvre pas en charge.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Sectionneur ouvert et cadenassé.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Quelqu'un actionne l'interrupteur : la lampe reste éteinte et hors tension.",
+       "passed": true,
+       "details": []
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.9999999885,
+        "current": 2.299998413946014e-07,
+        "potential": 229.9999999885,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "sectionneur": {
+        "type": "sectionneur",
+        "voltage": 229.9999999885,
+        "current": 0.0,
+        "potential": 229.9999999885,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "lampe_bornes": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "sectionneur",
+        "1"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {},
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "sectionneur": false,
+      "interrupteur": true
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"372\" viewBox=\"0 0 1032 372\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"372\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V155 H529 V17 H580 V36\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M580,136 V160 H774 V12 H820 V36\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M820,136 V186\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M820,286 V300 H764 V150 H100 V136\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"286\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"100\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><line x1=\"32\" y1=\"32\" x2=\"48\" y2=\"32\" stroke=\"#0f172a\" stroke-width=\"2.5\"/></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Sectionneur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"632\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"872\" y=\"83\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"872\" y=\"97\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"872\" y=\"115\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Lampe</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text></svg>"
+   },
+   {
+    "name": "consignation : sans le dernier fil",
+    "level": "consignation",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "sectionneur",
+      "type": "sectionneur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "wires": [
+     [
+      "alimentation",
+      "L",
+      "sectionneur",
+      "1"
+     ],
+     [
+      "sectionneur",
+      "2",
+      "disjoncteur",
+      "1"
+     ],
+     [
+      "disjoncteur",
+      "2",
+      "interrupteur",
+      "1"
+     ],
+     [
+      "interrupteur",
+      "2",
+      "lampe_bornes",
+      "1"
+     ]
+    ],
+    "raw": {},
+    "values": {},
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Sectionneur et interrupteur fermés : la lampe est allumée.",
+       "passed": false,
+       "details": [
+        "Lampe : éteinte"
+       ]
+      },
+      {
+       "message": "On arrête d'abord la charge : un sectionneur ne s'ouvre pas en charge.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Sectionneur ouvert et cadenassé.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Quelqu'un actionne l'interrupteur : la lampe reste éteinte et hors tension.",
+       "passed": true,
+       "details": []
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.9999999885,
+        "current": 2.299998413946014e-07,
+        "potential": 229.9999999885,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "sectionneur": {
+        "type": "sectionneur",
+        "voltage": 229.9999999885,
+        "current": 0.0,
+        "potential": 229.9999999885,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "lampe_bornes": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ],
+       [
+        "sectionneur",
+        "1"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {},
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "sectionneur": false,
+      "interrupteur": true
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"372\" viewBox=\"0 0 1032 372\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"372\" fill=\"#ffffff\"/><path d=\"M100,36 V22 H284 V22 H340 V36\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2.5\"/><circle cx=\"100\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><circle cx=\"340\" cy=\"36\" r=\"3.5\" fill=\"#dc2626\"/><path d=\"M340,136 V155 H529 V17 H580 V36\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"340\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"580\" cy=\"36\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M580,136 V160 H774 V12 H820 V36\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"580\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"36\" r=\"3.5\" fill=\"#2563eb\"/><path d=\"M820,136 V186\" fill=\"none\" stroke=\"#2563eb\" stroke-width=\"2.5\"/><circle cx=\"820\" cy=\"136\" r=\"3.5\" fill=\"#2563eb\"/><circle cx=\"820\" cy=\"186\" r=\"3.5\" fill=\"#2563eb\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><line x1=\"32\" y1=\"32\" x2=\"48\" y2=\"32\" stroke=\"#0f172a\" stroke-width=\"2.5\"/></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Sectionneur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"632\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"872\" y=\"83\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"872\" y=\"97\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"872\" y=\"115\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Lampe</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text></svg>"
+   },
+   {
+    "name": "consignation : sans fil",
+    "level": "consignation",
+    "components": [
+     {
+      "id": "alimentation",
+      "type": "alimentation",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "id": "sectionneur",
+      "type": "sectionneur",
+      "x": 1,
+      "y": 0
+     },
+     {
+      "id": "disjoncteur",
+      "type": "disjoncteur",
+      "x": 2,
+      "y": 0
+     },
+     {
+      "id": "interrupteur",
+      "type": "interrupteur",
+      "x": 3,
+      "y": 0
+     },
+     {
+      "id": "lampe_bornes",
+      "type": "lampe_bornes",
+      "x": 3,
+      "y": 1
+     }
+    ],
+    "wires": [],
+    "raw": {},
+    "values": {},
+    "run": {
+     "passed": false,
+     "checks": [
+      {
+       "message": "Sectionneur et interrupteur fermés : la lampe est allumée.",
+       "passed": false,
+       "details": [
+        "Lampe : éteinte"
+       ]
+      },
+      {
+       "message": "On arrête d'abord la charge : un sectionneur ne s'ouvre pas en charge.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Sectionneur ouvert et cadenassé.",
+       "passed": true,
+       "details": []
+      },
+      {
+       "message": "Quelqu'un actionne l'interrupteur : la lampe reste éteinte et hors tension.",
+       "passed": true,
+       "details": []
+      }
+     ],
+     "result": {
+      "parts": {
+       "alimentation": {
+        "type": "alimentation",
+        "voltage": 229.9999999885,
+        "current": 2.299998413946014e-07,
+        "potential": 229.9999999885,
+        "on": false,
+        "status": "",
+        "tone": ""
+       },
+       "sectionneur": {
+        "type": "sectionneur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "ouvert",
+        "tone": ""
+       },
+       "disjoncteur": {
+        "type": "disjoncteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "interrupteur": {
+        "type": "interrupteur",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": true,
+        "status": "fermé",
+        "tone": ""
+       },
+       "lampe_bornes": {
+        "type": "lampe_bornes",
+        "voltage": 0.0,
+        "current": 0.0,
+        "potential": 0.0,
+        "on": false,
+        "status": "éteinte",
+        "tone": ""
+       }
+      },
+      "live": [
+       [
+        "alimentation",
+        "L"
+       ]
+      ],
+      "faults": [],
+      "memory": {
+       "coils": {},
+       "latches": {},
+       "tripped": [],
+       "remote": {}
+      }
+     },
+     "inputs": {
+      "sectionneur": false,
+      "interrupteur": true
+     }
+    },
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1032\" height=\"372\" viewBox=\"0 0 1032 372\" role=\"img\" font-family=\"Arial, sans-serif\"><title>Circuit</title><rect width=\"1032\" height=\"372\" fill=\"#ffffff\"/><g transform=\"translate(60,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"30\"/><circle cx=\"40\" cy=\"50\" r=\"20\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><path d=\"M30,50 q5,-8 10,0 t10,0\"/></g><text x=\"48\" y=\"16\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">L</text><text x=\"48\" y=\"94\" font-size=\"12\" font-weight=\"bold\" fill=\"#0f172a\">N</text></g><text x=\"152\" y=\"83\" font-size=\"12\" fill=\"#334155\">Alimentation 230</text><text x=\"152\" y=\"97\" font-size=\"12\" fill=\"#334155\">V</text><g transform=\"translate(300,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><line x1=\"32\" y1=\"32\" x2=\"48\" y2=\"32\" stroke=\"#0f172a\" stroke-width=\"2.5\"/></g><text x=\"392\" y=\"90\" font-size=\"12\" fill=\"#334155\">Sectionneur</text><text x=\"392\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">ouvert</text><g transform=\"translate(540,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g><g stroke=\"#0f172a\" stroke-width=\"2.5\"><line x1=\"34\" y1=\"26\" x2=\"46\" y2=\"38\"/><line x1=\"46\" y1=\"26\" x2=\"34\" y2=\"38\"/></g></g><text x=\"632\" y=\"90\" font-size=\"12\" fill=\"#334155\">Disjoncteur</text><text x=\"632\" y=\"108\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,36)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"32\"/><line x1=\"40\" y1=\"70\" x2=\"40\" y2=\"100\"/><line x1=\"40\" y1=\"70\" x2=\"24\" y2=\"36\"/></g></g><text x=\"872\" y=\"83\" font-size=\"12\" fill=\"#334155\">Interrupteur de</text><text x=\"872\" y=\"97\" font-size=\"12\" fill=\"#334155\">commande</text><text x=\"872\" y=\"115\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">fermé</text><g transform=\"translate(780,186)\"><g stroke=\"#0f172a\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"28\"/><circle cx=\"40\" cy=\"50\" r=\"22\"/><line x1=\"25\" y1=\"35\" x2=\"55\" y2=\"65\"/><line x1=\"55\" y1=\"35\" x2=\"25\" y2=\"65\"/><line x1=\"40\" y1=\"72\" x2=\"40\" y2=\"100\"/></g></g><text x=\"872\" y=\"240\" font-size=\"12\" fill=\"#334155\">Lampe</text><text x=\"872\" y=\"258\" font-size=\"12\" font-weight=\"bold\" fill=\"#475569\">éteinte</text></svg>"
    },
    {
     "name": "buzzer : solution",

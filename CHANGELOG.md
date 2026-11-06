@@ -5,6 +5,17 @@ dans l'historique git.
 
 ## Non publié
 
+### Montages et pannes complétés
+- Cinq montages électriques : deux lampes en série, mesure de tension pour
+  dépanner, voyants sur contacts NO et NF, moteur commandé de deux postes,
+  consignation par sectionneur ; trophées Électricien et Électronicien
+  portés à 14 et 25 montages
+- Six pannes : auto-maintien perdu, télérupteur bloqué par un poussoir,
+  ventilateur qui tourne à l'envers, sonde Pt100 coupée, tablier de plieuse
+  qui dérive, vérin de bridage qui fuit
+- Téléphone servi par la synchronisation, sans changement de code ; cas
+  communs régénérés
+
 ### Atelier Excel
 - Nouvelle page Excel sur le bureau, le web et le téléphone : 28 niveaux de
   formules sur les tableaux d'une usine (références et $, conditions, NB.SI

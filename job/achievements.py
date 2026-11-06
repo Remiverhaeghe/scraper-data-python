@@ -270,19 +270,19 @@ ACHIEVEMENTS = (
     (
         "circuit-all",
         "Électricien",
-        "Réussir les 9 montages électriques",
+        "Réussir les 14 montages électriques",
         "zap",
         "circuit_level",
-        9,
+        14,
         False,
     ),
     (
         "circuit-electronics",
         "Électronicien",
-        "Réussir les 20 montages électriques et électroniques",
+        "Réussir les 25 montages électriques et électroniques",
         "zap",
         "circuit_level",
-        20,
+        25,
         False,
     ),
     (

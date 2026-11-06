@@ -241,5 +241,145 @@
       {"id": "compresseur", "label": "Remplacer le compresseur", "minutes": 240}
     ],
     "explanation": "Un purgeur bloqué ouvert vide le réservoir en continu : le compresseur compense jour et nuit. La chute de pression production arrêtée prouve une fuite, l'écoute la situe. Les fuites d'air coûtent cher : l'air comprimé est l'énergie la plus chère de l'atelier."
+  },
+  {
+    "id": "auto-maintien",
+    "title": "La pompe s'arrête dès qu'on relâche Marche",
+    "domain": "Électricité",
+    "symptom": "Pour faire tourner la pompe de relevage, l'opérateur doit garder le bouton Marche enfoncé : dès qu'il le relâche, la pompe s'arrête.",
+    "machine": "Pompe de relevage, moteur triphasé 400 V commandé en logique câblée, sans automate : bouton Arrêt S1, bouton Marche S2, bobine du contacteur KM1 en 24 V alternatif, contact d'auto-maintien KM1 13-14 en parallèle de S2.",
+    "best_minutes": 14,
+    "checks": [
+      {"id": "operateur", "label": "Interroger l'opérateur", "minutes": 1, "result": "Ça a commencé ce matin. Hier, un électricien a remplacé le bouton Arrêt, dont le capuchon était cassé."},
+      {"id": "observer-km1", "label": "Observer KM1 pendant et après l'appui sur Marche", "minutes": 1, "result": "KM1 colle pendant l'appui et retombe au relâchement : l'auto-maintien ne se fait pas."},
+      {"id": "tension-13", "label": "Marche enfoncé, mesurer la tension sur la sortie de S1 puis sur la borne 13 de KM1", "minutes": 3, "result": "24 V en sortie de S1, 0 V sur la borne 13 de KM1 : la liaison entre les deux ne conduit pas.", "evidence": true},
+      {"id": "consigner", "label": "Consigner le départ de la pompe", "minutes": 5, "result": "Sectionneur ouvert et cadenassé, absence de tension vérifiée au VAT : le départ est consigné."},
+      {"id": "serrage", "label": "Contrôler le serrage des bornes de S1 et de KM1", "minutes": 2, "requires": "consigner", "result": "Le fil arrivant sur la borne 13 de KM1 n'est pas serré : il sort de la borne à la main.", "evidence": true},
+      {"id": "contact-13-14", "label": "Mesurer la continuité du contact 13-14 de KM1", "minutes": 3, "requires": "consigner", "result": "Ouvert au repos, 0 Ω quand on enfonce KM1 à la main : le contact est bon."},
+      {"id": "bobine", "label": "Mesurer la résistance de la bobine KM1", "minutes": 3, "requires": "consigner", "result": "30 Ω, valeur normale pour cette bobine."}
+    ],
+    "causes": [
+      {"id": "resserrer", "label": "Resserrer le fil de la borne 13 de KM1", "minutes": 5, "right": true},
+      {"id": "bloc-auxiliaire", "label": "Remplacer le bloc de contacts auxiliaires de KM1", "minutes": 15},
+      {"id": "bouton-marche", "label": "Remplacer le bouton Marche", "minutes": 10, "note": "Le bouton Marche fonctionne : la pompe tourne tant qu'on appuie."},
+      {"id": "contacteur", "label": "Remplacer le contacteur KM1", "minutes": 25},
+      {"id": "bouton-arret", "label": "Remplacer à nouveau le bouton Arrêt", "minutes": 10}
+    ],
+    "explanation": "Si la pompe tourne tant qu'on appuie, la bobine, S1 et S2 fonctionnent : seule la branche d'auto-maintien est en cause. La tension mesurée de part et d'autre de la liaison localise la coupure, et l'intervention de la veille oriente vers un serrage oublié. On resserre après consignation."
+  },
+  {
+    "id": "telerupteur-bloque",
+    "title": "L'éclairage de l'entrepôt ne répond plus à aucun bouton",
+    "domain": "Électricité",
+    "symptom": "Les lampes de l'entrepôt restent éteintes, quel que soit le bouton poussoir utilisé. Un léger bourdonnement vient du tableau électrique.",
+    "machine": "Éclairage commandé par le télérupteur KL1 (bobine 230 V), depuis six boutons poussoirs répartis dans l'entrepôt et sur les quais, protégé par un disjoncteur 10 A.",
+    "best_minutes": 23,
+    "checks": [
+      {"id": "operateur", "label": "Interroger les caristes", "minutes": 1, "result": "Ça ne marche plus depuis ce matin. Personne n'a remarqué de choc ni d'incident."},
+      {"id": "disjoncteur", "label": "Contrôler le disjoncteur de l'éclairage", "minutes": 2, "result": "Enclenché, 230 V présents en sortie."},
+      {"id": "ecouter-kl1", "label": "Écouter et toucher le télérupteur KL1", "minutes": 1, "result": "KL1 bourdonne en permanence et son boîtier est chaud."},
+      {"id": "tension-bobine", "label": "Sans appui, mesurer la tension sur la bobine A1-A2 de KL1", "minutes": 3, "result": "230 V en permanence, sans que personne n'appuie : un poussoir reste fermé.", "evidence": true},
+      {"id": "tour-boutons", "label": "Faire le tour des six boutons poussoirs", "minutes": 10, "result": "Le poussoir du quai 3 est enfoncé, son boîtier fendu : il reste coincé en position appuyée.", "evidence": true},
+      {"id": "lampes", "label": "Essayer deux tubes sur un autre circuit", "minutes": 6, "result": "Les tubes s'allument : ils sont bons."}
+    ],
+    "causes": [
+      {"id": "poussoir", "label": "Remplacer le poussoir bloqué", "minutes": 10, "right": true},
+      {"id": "telerupteur", "label": "Remplacer le télérupteur KL1", "minutes": 20, "note": "Neuf, il chaufferait de la même façon : sa bobine n'est pas faite pour rester alimentée."},
+      {"id": "tubes", "label": "Remplacer tous les tubes", "minutes": 40},
+      {"id": "disjoncteur", "label": "Remplacer le disjoncteur", "minutes": 10}
+    ],
+    "explanation": "Un télérupteur bascule à chaque impulsion. Si un poussoir reste fermé, sa bobine est alimentée en continu : les autres boutons n'envoient plus d'impulsion, et la bobine chauffe parce qu'elle n'est pas prévue pour rester sous tension. La tension permanente sur A1-A2 le prouve ; il reste à trouver le poussoir."
+  },
+  {
+    "id": "ventilateur-inverse",
+    "title": "Le ventilateur d'extraction ne tire presque plus d'air",
+    "domain": "Électricité",
+    "symptom": "Depuis le remplacement du moteur du ventilateur d'extraction de l'atelier de peinture, l'air ne se renouvelle plus : les fumées stagnent.",
+    "machine": "Ventilateur hélicoïde entraîné par un moteur asynchrone triphasé 400 V de 2,2 kW, couplé en étoile, alimenté par le contacteur KM3. Le moteur a été remplacé hier par un modèle identique.",
+    "best_minutes": 16,
+    "checks": [
+      {"id": "sens", "label": "Comparer le sens de rotation à la flèche du carter", "minutes": 1, "result": "L'hélice tourne en sens inverse de la flèche : elle brasse l'air sans l'extraire.", "evidence": true},
+      {"id": "intensite", "label": "Mesurer le courant sur les trois phases", "minutes": 3, "result": "4,1 A par phase, équilibré, conforme à la plaque du moteur."},
+      {"id": "plaque", "label": "Lire la plaque signalétique et le couplage", "minutes": 1, "result": "Moteur 230/400 V couplé en étoile sur un réseau 400 V : le couplage est correct."},
+      {"id": "ordre-phases", "label": "Contrôler l'ordre des phases à l'arrivée de l'armoire", "minutes": 3, "result": "L1, L2, L3 dans le bon ordre à l'arrivée : le réseau n'a pas changé."},
+      {"id": "consigner", "label": "Consigner le départ du ventilateur", "minutes": 5, "result": "Sectionneur ouvert et cadenassé, absence de tension vérifiée au VAT : le départ est consigné."},
+      {"id": "bornier", "label": "Ouvrir la boîte à bornes du moteur", "minutes": 3, "requires": "consigner", "result": "U1, V1 et W1 reçoivent L1, L3 et L2 : deux phases sont croisées par rapport au repérage d'origine.", "evidence": true}
+    ],
+    "causes": [
+      {"id": "inverser", "label": "Inverser deux phases dans la boîte à bornes du moteur", "minutes": 10, "right": true},
+      {"id": "couplage", "label": "Passer le moteur en couplage triangle", "minutes": 10, "note": "Interdit : en triangle sur 400 V, chaque enroulement de ce moteur 230/400 V recevrait 400 V au lieu de 230 V et brûlerait."},
+      {"id": "helice", "label": "Remonter l'hélice dans l'autre sens", "minutes": 30, "note": "Le sens de rotation ne dépend pas de l'hélice mais de l'ordre des phases."},
+      {"id": "moteur", "label": "Renvoyer le moteur au fournisseur", "minutes": 60}
+    ],
+    "explanation": "Le sens d'un moteur triphasé dépend de l'ordre des phases : en croiser deux l'inverse. Le courant reste normal, ce qui ne trahit rien ; c'est la flèche du carter qui donne la preuve. Après tout remplacement de moteur, on contrôle le sens avant de remettre en service."
+  },
+  {
+    "id": "pt100-coupee",
+    "title": "Le régulateur de l'étuve affiche HHHH",
+    "domain": "Capteurs",
+    "symptom": "L'étuve de séchage ne chauffe plus. Le régulateur affiche HHHH à la place de la température et l'alarme haute est active.",
+    "machine": "Étuve électrique à 120 °C, régulateur de température à entrée Pt100 3 fils, sonde montée dans la paroi, câble qui passe le long de la porte jusqu'à l'armoire.",
+    "best_minutes": 30,
+    "checks": [
+      {"id": "afficheur", "label": "Lire le régulateur et sa notice", "minutes": 2, "result": "HHHH signifie mesure au-dessus de la plage : le régulateur coupe la chauffe par sécurité."},
+      {"id": "thermometre", "label": "Mesurer la température avec un thermomètre de contrôle", "minutes": 3, "result": "24 °C dans l'étuve : la température affichée est fausse, l'étuve est froide."},
+      {"id": "parametres", "label": "Contrôler le paramétrage de l'entrée", "minutes": 3, "result": "Entrée Pt100 3 fils, plage 0 à 400 °C : conforme au schéma."},
+      {"id": "resistance-bornes", "label": "Débrancher la sonde au régulateur et mesurer sa résistance", "minutes": 4, "result": "Circuit ouvert entre les fils de la sonde : la chaîne de mesure est coupée.", "evidence": true},
+      {"id": "resistance-tete", "label": "Mesurer la résistance de l'élément dans la tête de sonde", "minutes": 5, "result": "109 Ω, normal pour une Pt100 à 24 °C : l'élément est bon, la coupure est dans le câble.", "evidence": true},
+      {"id": "cable", "label": "Suivre le câble de la sonde", "minutes": 4, "result": "Au niveau de la charnière de la porte, la gaine est écrasée et un conducteur est sectionné."}
+    ],
+    "causes": [
+      {"id": "cable", "label": "Remplacer le câble de la sonde et le protéger à la charnière", "minutes": 20, "right": true},
+      {"id": "sonde", "label": "Remplacer la sonde Pt100", "minutes": 30},
+      {"id": "regulateur", "label": "Remplacer le régulateur", "minutes": 45},
+      {"id": "resistances", "label": "Remplacer les résistances de chauffe", "minutes": 60, "note": "Elles ne sont pas en cause : le régulateur les coupe parce qu'il croit l'étuve brûlante."}
+    ],
+    "explanation": "Une Pt100 vaut 100 Ω à 0 °C et environ 0,39 Ω de plus par degré. Coupée, sa résistance devient infinie : le régulateur lit une température hors plage et coupe la chauffe. En mesurant au régulateur puis à la tête, on sépare la sonde du câble."
+  },
+  {
+    "id": "tablier-descend",
+    "title": "Le tablier de la plieuse descend tout seul à l'arrêt",
+    "domain": "Hydraulique",
+    "symptom": "Tablier arrêté en position haute, il redescend lentement de lui-même. L'opérateur doit le remonter avant chaque pliage.",
+    "machine": "Plieuse : vérin double effet vertical, tige vers le bas, tablier de 800 kg tenu par un clapet anti-retour piloté sur la chambre côté tige, vanne d'isolement manuelle entre le clapet et le vérin, distributeur 4/3 à centre ouvert (A, B et T reliés au repos).",
+    "best_minutes": 30,
+    "checks": [
+      {"id": "observer", "label": "Mesurer la descente, distributeur au repos", "minutes": 1, "result": "Le tablier descend d'environ 5 mm par minute."},
+      {"id": "fuites", "label": "Chercher des fuites extérieures sur le vérin et les flexibles", "minutes": 2, "result": "Aucune trace d'huile : la fuite est interne."},
+      {"id": "temperature", "label": "Mesurer la température de l'huile", "minutes": 2, "result": "48 °C, valeur normale."},
+      {"id": "isolement", "label": "Fermer la vanne d'isolement entre le clapet et le vérin", "minutes": 4, "result": "Le tablier ne bouge plus : l'huile s'échappait en amont de la vanne, par le clapet piloté, et non à travers le piston.", "evidence": true},
+      {"id": "consigner", "label": "Consigner la plieuse", "minutes": 8, "result": "Tablier descendu sur cales, moteur consigné, pression résiduelle purgée et vérifiée au manomètre."},
+      {"id": "clapet", "label": "Démonter et inspecter le clapet piloté", "minutes": 10, "requires": "consigner", "result": "Le siège du clapet est marqué par une particule incrustée : il ne ferme plus étanche.", "evidence": true}
+    ],
+    "causes": [
+      {"id": "clapet", "label": "Remplacer la cartouche du clapet anti-retour piloté", "minutes": 25, "right": true},
+      {"id": "joints", "label": "Refaire les joints du vérin", "minutes": 180},
+      {"id": "distributeur", "label": "Remplacer le distributeur", "minutes": 40, "note": "À centre ouvert, le distributeur relie déjà A et B au réservoir : ce n'est pas lui qui tient la charge, c'est le clapet piloté."},
+      {"id": "pompe", "label": "Remplacer la pompe", "minutes": 120}
+    ],
+    "explanation": "Une charge verticale est tenue par un clapet piloté, étanche par nature, et non par le distributeur. Si le vérin dérive, la fuite est soit dans le clapet, soit à travers le piston : la vanne d'isolement fait la différence en quelques minutes. Une particule sur le siège rappelle aussi de surveiller la filtration."
+  },
+  {
+    "id": "bridage-fuite",
+    "title": "La pièce bouge pendant l'usinage",
+    "domain": "Pneumatique",
+    "symptom": "Sur le centre de perçage, la pièce se décale pendant le perçage. Le vérin de bridage sort bien, mais ne tient pas.",
+    "machine": "Vérin de bridage double effet de diamètre 63, commandé par un distributeur 5/2 monostable, alimenté à 6 bar par un filtre-régulateur, avec limiteurs de débit à l'échappement.",
+    "best_minutes": 32,
+    "checks": [
+      {"id": "observer", "label": "Observer le vérin pendant un perçage", "minutes": 1, "result": "Le vérin sort et serre, puis recule doucement sous l'effort de coupe."},
+      {"id": "pression", "label": "Lire le manomètre du filtre-régulateur", "minutes": 1, "result": "6 bar, conforme au réglage."},
+      {"id": "ecoute", "label": "Écouter l'échappement du distributeur, vérin sorti", "minutes": 2, "result": "Un sifflement continu sort de l'échappement côté tige du distributeur."},
+      {"id": "test-verin", "label": "Vérin sorti, débrancher le tuyau côté tige et écouter l'orifice", "minutes": 5, "result": "L'air s'échappe en continu par l'orifice côté tige : il traverse le piston, le joint de piston fuit.", "evidence": true},
+      {"id": "test-distributeur", "label": "Boucher les sorties du distributeur et écouter les échappements", "minutes": 5, "result": "Aucune fuite : le distributeur est étanche."},
+      {"id": "limiteurs", "label": "Contrôler le réglage des limiteurs de débit", "minutes": 2, "result": "Réglages repérés à la peinture, identiques à l'origine."}
+    ],
+    "causes": [
+      {"id": "joints", "label": "Changer les joints de piston du vérin", "minutes": 25, "right": true},
+      {"id": "distributeur", "label": "Remplacer le distributeur", "minutes": 20},
+      {"id": "pression", "label": "Monter la pression à 8 bar", "minutes": 2, "note": "Le serrage augmenterait un peu, mais la fuite resterait, et la pièce ou le vérin risquent d'être surchargés."},
+      {"id": "limiteur", "label": "Fermer davantage le limiteur de débit côté tige", "minutes": 5}
+    ],
+    "explanation": "Un joint de piston qui fuit laisse passer l'air d'une chambre à l'autre : la pression s'équilibre et le vérin perd sa force. Le sifflement à l'échappement oriente, mais il peut venir du distributeur ; débrancher le côté tige, vérin sorti, montre que l'air traverse le piston."
   }
 ]

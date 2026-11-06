@@ -263,6 +263,175 @@
     "explanation": "Le relais isole la commande de la puissance : l'opérateur ne touche que du 12 V, et une carte électronique peut piloter un récepteur 230 V. C'est le rôle des sorties à relais d'un automate."
   },
   {
+    "id": "lampes-serie",
+    "title": "Deux lampes en série",
+    "goal": "Branchez deux lampes en série derrière l'interrupteur, l'ampèremètre sur la ligne et le voltmètre aux bornes de la première lampe : relevez comment elles se partagent la tension.",
+    "hint": "En série, le courant traverse une lampe puis l'autre : la sortie de la première va à l'entrée de la seconde. L'ampèremètre s'insère dans la ligne, le voltmètre se branche en parallèle sur la lampe à mesurer.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "interrupteur": 1, "lampe_bornes": 2, "amperemetre": 1, "voltmetre": 1},
+    "steps": [
+      {"set": {"interrupteur": false}, "expect": {"amperemetre.current": [0, 0.001]}, "message": "Interrupteur ouvert : aucun courant."},
+      {"set": {"interrupteur": true}, "expect": {"amperemetre.current": [0.12, 0.14], "voltmetre.voltage": [110, 120]}, "message": "Interrupteur fermé : 0,13 A traversent les deux lampes, et chacune ne reçoit que 115 V."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 2, "y": 0},
+      {"id": "amperemetre", "type": "amperemetre", "x": 3, "y": 0},
+      {"id": "lampe_bornes-1", "type": "lampe_bornes", "x": 3, "y": 1},
+      {"id": "voltmetre", "type": "voltmetre", "x": 2, "y": 1},
+      {"id": "lampe_bornes-2", "type": "lampe_bornes", "x": 3, "y": 2}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "interrupteur", "1"],
+      ["interrupteur", "2", "amperemetre", "1"],
+      ["amperemetre", "2", "lampe_bornes-1", "1"],
+      ["lampe_bornes-1", "2", "lampe_bornes-2", "1"],
+      ["lampe_bornes-2", "2", "alimentation", "N"],
+      ["voltmetre", "1", "lampe_bornes-1", "1"],
+      ["voltmetre", "2", "lampe_bornes-1", "2"]
+    ],
+    "explanation": "En série, les résistances s'ajoutent : deux lampes de 882 Ω font 1 763 Ω, d'où 230 / 1 763 = 0,13 A, deux fois moins que pour une lampe seule. La tension se partage, 115 V chacune, et elles éclairent faiblement. Si l'une grille, l'autre s'éteint aussi : c'est pourquoi l'éclairage se câble en parallèle."
+  },
+  {
+    "id": "mesure-tension",
+    "title": "Mesurer une tension pour dépanner",
+    "goal": "Placez le voltmètre 1 aux bornes de la lampe et le voltmètre 2 aux bornes de l'interrupteur, puis comparez les mesures interrupteur ouvert et fermé.",
+    "hint": "Un voltmètre se branche toujours en parallèle, une borne de chaque côté de l'élément mesuré. Il ne coupe rien : le circuit fonctionne comme sans lui.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "interrupteur": 1, "lampe_bornes": 1, "voltmetre": 2},
+    "steps": [
+      {"set": {"interrupteur": false}, "expect": {"lampe_bornes": "off", "voltmetre-1.voltage": [0, 1], "voltmetre-2.voltage": [220, 240]}, "message": "Interrupteur ouvert : 0 V sur la lampe, et toute la tension se retrouve aux bornes de l'interrupteur."},
+      {"set": {"interrupteur": true}, "expect": {"lampe_bornes": "on", "voltmetre-1.voltage": [220, 240], "voltmetre-2.voltage": [0, 1]}, "message": "Interrupteur fermé : 230 V sur la lampe, presque 0 V sur l'interrupteur."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 2, "y": 0},
+      {"id": "lampe_bornes", "type": "lampe_bornes", "x": 3, "y": 0},
+      {"id": "voltmetre-2", "type": "voltmetre", "x": 2, "y": 1},
+      {"id": "voltmetre-1", "type": "voltmetre", "x": 3, "y": 1}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "interrupteur", "1"],
+      ["interrupteur", "2", "lampe_bornes", "1"],
+      ["lampe_bornes", "2", "alimentation", "N"],
+      ["voltmetre-1", "1", "lampe_bornes", "1"],
+      ["voltmetre-1", "2", "lampe_bornes", "2"],
+      ["voltmetre-2", "1", "interrupteur", "1"],
+      ["voltmetre-2", "2", "interrupteur", "2"]
+    ],
+    "explanation": "Un contact fermé en bon état n'a presque pas de tension à ses bornes ; un contact ouvert retrouve toute la tension de la source. C'est la méthode du dépanneur sous tension : on promène le voltmètre le long de la chaîne, et l'élément qui présente la tension est celui qui est ouvert."
+  },
+  {
+    "id": "voyants-marche-arret",
+    "title": "Voyants de marche et d'arrêt",
+    "goal": "Un interrupteur commande un relais. Relais au repos, le voyant 2 (arrêt) est allumé ; relais collé, le voyant 1 (marche) s'allume et le voyant 2 s'éteint.",
+    "hint": "Le contact à fermeture (NO) se ferme quand la bobine est excitée, le contact à ouverture (NF) s'ouvre. Chaque voyant est alimenté à travers l'un des deux contacts.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "interrupteur": 1, "bobine_relais": 1, "contact_relais": 1, "contact_relais_nf": 1, "lampe_bornes": 2},
+    "steps": [
+      {"set": {"interrupteur": false}, "expect": {"bobine_relais": "off", "lampe_bornes-1": "off", "lampe_bornes-2": "on"}, "message": "Relais au repos : seul le voyant d'arrêt est allumé."},
+      {"set": {"interrupteur": true}, "expect": {"bobine_relais": "on", "lampe_bornes-1": "on", "lampe_bornes-2": "off"}, "message": "Relais collé : le voyant de marche s'allume, celui d'arrêt s'éteint."},
+      {"set": {"interrupteur": false}, "expect": {"lampe_bornes-1": "off", "lampe_bornes-2": "on"}, "message": "Relais retombé : retour au voyant d'arrêt."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 1, "y": 1},
+      {"id": "bobine_relais", "type": "bobine_relais", "x": 1, "y": 2},
+      {"id": "contact_relais", "type": "contact_relais", "x": 2, "y": 0},
+      {"id": "lampe_bornes-1", "type": "lampe_bornes", "x": 3, "y": 0},
+      {"id": "contact_relais_nf", "type": "contact_relais_nf", "x": 2, "y": 1},
+      {"id": "lampe_bornes-2", "type": "lampe_bornes", "x": 3, "y": 1}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "interrupteur", "1"],
+      ["interrupteur", "2", "bobine_relais", "1"],
+      ["bobine_relais", "2", "alimentation", "N"],
+      ["disjoncteur", "2", "contact_relais", "1"],
+      ["contact_relais", "2", "lampe_bornes-1", "1"],
+      ["lampe_bornes-1", "2", "alimentation", "N"],
+      ["disjoncteur", "2", "contact_relais_nf", "1"],
+      ["contact_relais_nf", "2", "lampe_bornes-2", "1"],
+      ["lampe_bornes-2", "2", "alimentation", "N"]
+    ],
+    "explanation": "Les contacts NO et NF d'un même relais changent d'état ensemble : quand l'un se ferme, l'autre s'ouvre. Sur une armoire, le voyant vert de marche et le voyant d'arrêt sont souvent câblés ainsi, sur les contacts auxiliaires du contacteur."
+  },
+  {
+    "id": "deux-postes",
+    "title": "Commander un moteur de deux postes",
+    "goal": "Le moteur démarre depuis l'un ou l'autre des deux boutons Marche, et s'arrête depuis l'un ou l'autre des deux boutons Arrêt, avec auto-maintien.",
+    "hint": "Les Arrêts se câblent en série : n'importe lequel doit pouvoir couper. Les Marches se câblent en parallèle entre elles et avec le contact d'auto-maintien : n'importe lequel doit pouvoir alimenter la bobine.",
+    "palette": {"alimentation": 1, "disjoncteur": 1, "bouton_arret": 2, "bouton_marche": 2, "bobine_relais": 1, "contact_relais": 1, "contacteur": 1, "moteur_mono": 1},
+    "steps": [
+      {"set": {}, "expect": {"moteur_mono": "off"}, "message": "Au départ, le moteur est arrêté."},
+      {"set": {"bouton_marche-1": true}, "expect": {"moteur_mono": "on"}, "message": "La Marche du poste 1 démarre le moteur."},
+      {"set": {"bouton_marche-1": false}, "expect": {"moteur_mono": "on"}, "message": "Bouton relâché : l'auto-maintien garde le moteur en marche."},
+      {"set": {"bouton_arret-2": true}, "expect": {"moteur_mono": "off"}, "message": "L'Arrêt du poste 2 le coupe."},
+      {"set": {"bouton_arret-2": false, "bouton_marche-2": true}, "expect": {"moteur_mono": "on"}, "message": "La Marche du poste 2 le redémarre."},
+      {"set": {"bouton_marche-2": false}, "expect": {"moteur_mono": "on"}, "message": "Le moteur reste en marche."},
+      {"set": {"bouton_arret-1": true}, "expect": {"moteur_mono": "off"}, "message": "L'Arrêt du poste 1 le coupe aussi."},
+      {"set": {"bouton_arret-1": false}, "expect": {"moteur_mono": "off"}, "message": "Arrêt relâché, le moteur ne repart pas seul."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 1, "y": 0},
+      {"id": "contacteur", "type": "contacteur", "x": 2, "y": 0},
+      {"id": "moteur_mono", "type": "moteur_mono", "x": 3, "y": 0},
+      {"id": "bouton_arret-1", "type": "bouton_arret", "x": 0, "y": 1},
+      {"id": "bouton_arret-2", "type": "bouton_arret", "x": 1, "y": 1},
+      {"id": "bouton_marche-1", "type": "bouton_marche", "x": 0, "y": 2},
+      {"id": "bouton_marche-2", "type": "bouton_marche", "x": 1, "y": 2},
+      {"id": "contact_relais", "type": "contact_relais", "x": 2, "y": 2},
+      {"id": "bobine_relais", "type": "bobine_relais", "x": 1, "y": 3}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "disjoncteur", "1"],
+      ["disjoncteur", "2", "bouton_arret-1", "1"],
+      ["bouton_arret-1", "2", "bouton_arret-2", "1"],
+      ["bouton_arret-2", "2", "bouton_marche-1", "1"],
+      ["bouton_arret-2", "2", "bouton_marche-2", "1"],
+      ["bouton_arret-2", "2", "contact_relais", "1"],
+      ["bouton_marche-1", "2", "bobine_relais", "1"],
+      ["bouton_marche-2", "2", "bobine_relais", "1"],
+      ["contact_relais", "2", "bobine_relais", "1"],
+      ["bobine_relais", "2", "alimentation", "N"],
+      ["disjoncteur", "2", "contacteur", "1"],
+      ["contacteur", "2", "moteur_mono", "1"],
+      ["moteur_mono", "2", "alimentation", "N"]
+    ],
+    "explanation": "Règle de câblage à retenir : les organes d'arrêt en série (une logique ET : tous doivent être fermés pour marcher), les organes de marche en parallèle (une logique OU). Les arrêts d'urgence d'une machine s'ajoutent de la même façon, en série dans la chaîne."
+  },
+  {
+    "id": "consignation",
+    "title": "Consigner avant d'intervenir",
+    "goal": "Ajoutez un sectionneur en tête de l'installation. Sectionneur ouvert, la lampe doit rester éteinte et hors tension, même si quelqu'un actionne l'interrupteur.",
+    "hint": "Le sectionneur se place juste après l'alimentation, sur la phase, avant le disjoncteur : il isole tout ce qui se trouve en aval.",
+    "palette": {"alimentation": 1, "sectionneur": 1, "disjoncteur": 1, "interrupteur": 1, "lampe_bornes": 1},
+    "steps": [
+      {"set": {"sectionneur": true, "interrupteur": true}, "expect": {"lampe_bornes": "on"}, "message": "Sectionneur et interrupteur fermés : la lampe est allumée."},
+      {"set": {"interrupteur": false}, "expect": {"lampe_bornes": "off"}, "message": "On arrête d'abord la charge : un sectionneur ne s'ouvre pas en charge."},
+      {"set": {"sectionneur": false}, "expect": {"lampe_bornes": "off"}, "message": "Sectionneur ouvert et cadenassé."},
+      {"set": {"interrupteur": true}, "expect": {"lampe_bornes": "off", "lampe_bornes.potential": [0, 1]}, "message": "Quelqu'un actionne l'interrupteur : la lampe reste éteinte et hors tension."}
+    ],
+    "solution_components": [
+      {"id": "alimentation", "type": "alimentation", "x": 0, "y": 0},
+      {"id": "sectionneur", "type": "sectionneur", "x": 1, "y": 0},
+      {"id": "disjoncteur", "type": "disjoncteur", "x": 2, "y": 0},
+      {"id": "interrupteur", "type": "interrupteur", "x": 3, "y": 0},
+      {"id": "lampe_bornes", "type": "lampe_bornes", "x": 3, "y": 1}
+    ],
+    "solution_wires": [
+      ["alimentation", "L", "sectionneur", "1"],
+      ["sectionneur", "2", "disjoncteur", "1"],
+      ["disjoncteur", "2", "interrupteur", "1"],
+      ["interrupteur", "2", "lampe_bornes", "1"],
+      ["lampe_bornes", "2", "alimentation", "N"]
+    ],
+    "explanation": "Consigner, c'est séparer, condamner (cadenas), identifier, puis vérifier l'absence de tension au VAT avant de toucher. Un vrai sectionneur coupe tous les pôles, neutre compris ; ici il ne coupe que la phase. Il n'a pas de pouvoir de coupure : on arrête la charge avant de l'ouvrir."
+  },
+  {
     "id": "buzzer",
     "title": "Un buzzer et sa polarité",
     "goal": "Sur une pile de 9 V, le buzzer sonne tant que l'on appuie sur le bouton poussoir, et se tait dès qu'on le relâche.",
