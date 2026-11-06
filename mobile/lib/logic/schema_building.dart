@@ -42,10 +42,13 @@ class SchemaAnswer {
 
 /// Rapprochement retenu entre la réponse et le schéma attendu.
 class SchemaMatch {
-  const SchemaMatch(this.answer, this.mapping, this.missing, this.extra);
+  const SchemaMatch(this.answer, this.mapping, this.swapped, this.missing, this.extra);
 
   final SchemaAnswer answer;
   final Map<String, String> mapping;
+
+  /// Composants symétriques retournés pour ce rapprochement.
+  final Set<String> swapped;
   final Set<SchemaEdge> missing;
   final Set<SchemaEdge> extra;
 }
@@ -230,6 +233,7 @@ class SchemaGrader {
         final vMatch = SchemaMatch(
           vAnswer,
           vMapping,
+          vSwapped,
           vExpected.difference(vEdges),
           vEdges.difference(vExpected),
         );
@@ -243,6 +247,36 @@ class SchemaGrader {
     }
 
     return rBest!;
+  }
+
+  /// Indices des fils de la réponse absents du schéma attendu.
+  Set<int> findWrongWires(SchemaMatch pMatch) {
+    final rIndexes = {
+      for (var vIndex = 0; vIndex < pMatch.answer.wires.length; vIndex++)
+        if (pMatch.extra.containsAll(buildEdges(
+          [pMatch.answer.wires[vIndex]],
+          pMatch.answer.instances,
+          pMatch.mapping,
+          pMatch.swapped,
+        )))
+          vIndex,
+    };
+
+    return rIndexes;
+  }
+
+  /// Nom de chaque composant de la réponse : celui de son équivalent attendu.
+  Map<String, String> answerLabels(SchemaMatch pMatch) {
+    final vLabels = labels;
+
+    final rLabels = {
+      for (final vEntry in pMatch.answer.instances.entries)
+        vEntry.key: pMatch.mapping.containsKey(vEntry.key)
+            ? vLabels[pMatch.mapping[vEntry.key]]!
+            : _label(vEntry.value),
+    };
+
+    return rLabels;
   }
 
   /// Décrit une extrémité ; la borne n'est citée que si elle compte.

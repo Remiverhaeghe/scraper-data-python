@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jobboard_revision/logic/grading.dart';
 import 'package:jobboard_revision/logic/review.dart';
+import 'package:jobboard_revision/logic/schema_building.dart';
 import 'package:jobboard_revision/models/quiz_package.dart';
 import 'package:jobboard_revision/models/review_state.dart';
 
@@ -40,6 +41,14 @@ void main() {
           expect((vGrade.correct, vGrade.expected), (vCase['correct'], vCase['expected']));
           // Les écarts d'un schéma construit sont décrits à l'identique.
           expect(vGrade.given, vCase['given'] ?? vGrade.given);
+        }
+
+        if (vCase['wrong_wires'] != null) {
+          final vGrader = SchemaGrader(vQuestion);
+          final vWrong = vGrader.findWrongWires(vGrader.matchAnswer(vCase['response'])).toList()
+            ..sort();
+
+          expect(vWrong, vCase['wrong_wires']);
         }
       });
     }

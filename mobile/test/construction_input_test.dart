@@ -5,9 +5,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jobboard_revision/logic/circuit_drawing.dart';
 import 'package:jobboard_revision/logic/grading.dart';
 import 'package:jobboard_revision/models/quiz_package.dart';
 import 'package:jobboard_revision/widgets/question_input.dart';
+import 'package:jobboard_revision/widgets/zoomable_svg.dart';
 
 // Grille du PC (job/schema_drawing.py), symboles réduits à un trait
 const grid = {
@@ -129,6 +131,16 @@ void main() {
     expect(vGrade.correct, isFalse);
     expect(vGrade.given, startsWith('composants manquants : Réseau'));
     expect(vGrade.expected, 'Réseau – Fusible ; Fusible – Point lumineux');
+
+    // Une fois corrigé, le schéma construit est redessiné à côté de l'attendu.
+    await pTester.pumpWidget(wrap(vQuestion, false, vResponses.add));
+
+    expect(find.text('Votre schéma'), findsOneWidget);
+    expect(find.text('Schéma attendu'), findsOneWidget);
+    expect(
+      pTester.widget<ZoomableSvg>(find.byType(ZoomableSvg)).svg,
+      contains('<title>Votre schéma</title>'),
+    );
   });
 
   testWidgets('Le schéma attendu s\'affiche une fois la réponse corrigée', (pTester) async {
@@ -138,6 +150,24 @@ void main() {
     expect(
       pTester.widget<ActionChip>(find.widgetWithText(ActionChip, 'Réseau')).onPressed,
       isNull,
+    );
+  });
+
+  test('Un fil absent du schéma attendu est dessiné en rouge pointillé', () {
+    final vLibrary = CircuitLibrary(buildQuestion().schemaLibrary);
+    final vInstances = {
+      'reseau': ('reseau', (0, 0), 'Réseau'),
+      'lampe': ('lampe', (0, 1), 'Point lumineux'),
+    };
+    final vWires = [
+      ['reseau', 'sortie', 'lampe', 'entrée'],
+    ];
+
+    expect(
+        vLibrary.renderSchema(vInstances, vWires, 'Schéma'), isNot(contains('stroke-dasharray')));
+    expect(
+      vLibrary.renderSchema(vInstances, vWires, 'Schéma', {0}),
+      contains('stroke="#dc2626" stroke-width="2.5" stroke-dasharray="7 4"'),
     );
   });
 }

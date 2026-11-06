@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../logic/circuit_drawing.dart';
 import '../logic/circuit_editor.dart';
+import '../logic/grading.dart';
 import '../logic/review.dart';
 import '../logic/schema_building.dart';
 import '../models/quiz_package.dart';
@@ -424,6 +425,32 @@ class _ConstructionInputState extends State<ConstructionInput> {
     return rSvg;
   }
 
+  /// Schéma construit à la correction : chaque composant porte le nom de son
+  /// équivalent attendu, les fils absents du schéma attendu sont en rouge.
+  String renderAnswer() {
+    final vGrader = SchemaGrader(widget.question);
+    String rSvg;
+
+    try {
+      final vMatch = vGrader.matchAnswer(draft.toSchema());
+      final vLabels = vGrader.answerLabels(vMatch);
+
+      rSvg = draft.library.renderSchema(
+        {
+          for (final vEntry in vMatch.answer.instances.entries)
+            vEntry.key: (vEntry.value, vMatch.answer.positions[vEntry.key]!, vLabels[vEntry.key]!),
+        },
+        vMatch.answer.wires,
+        'Votre schéma',
+        vGrader.findWrongWires(vMatch),
+      );
+    } on UnreadableAnswer {
+      rSvg = draft.render();
+    }
+
+    return rSvg;
+  }
+
   @override
   Widget build(BuildContext context) {
     final vTheme = Theme.of(context);
@@ -448,9 +475,15 @@ class _ConstructionInputState extends State<ConstructionInput> {
           ],
         ),
         const SizedBox(height: 8),
+        if (!widget.enabled) ...[
+          Text('Votre schéma', style: vTheme.textTheme.titleSmall),
+          const SizedBox(height: 4),
+        ],
         Container(
           decoration: BoxDecoration(border: Border.all(color: vTheme.dividerColor)),
-          child: ZoomableSvg(svg: draft.render(), onTap: widget.enabled ? tap : null),
+          child: widget.enabled
+              ? ZoomableSvg(svg: draft.render(), onTap: tap)
+              : ZoomableSvg(svg: renderAnswer()),
         ),
         if (widget.enabled)
           Row(

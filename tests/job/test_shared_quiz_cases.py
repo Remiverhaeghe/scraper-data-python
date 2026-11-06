@@ -8,6 +8,7 @@ import pytest
 
 from job.quiz import build_review_schedule
 from job.quiz_types import grade_answer
+from job.schema_building import find_wrong_wires, match_answer
 
 CASES = json.loads(
     (
@@ -31,6 +32,11 @@ def test_shared_grading_case(pCase):
         assert (vCorrect, vExpected) == (pCase["correct"], pCase["expected"])
         # Les écarts d'un schéma construit sont décrits à l'identique.
         assert vGiven == pCase.get("given", vGiven)
+
+    if "wrong_wires" in pCase:
+        vMatch = match_answer(pCase["question"], pCase["response"])
+
+        assert sorted(find_wrong_wires(vMatch)) == pCase["wrong_wires"]
 
 
 @pytest.mark.parametrize(

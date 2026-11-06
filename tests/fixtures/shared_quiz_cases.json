@@ -118,7 +118,8 @@
       "response": {"components": [{"id": "reseau-1", "type": "reseau", "x": 0, "y": 0}, {"id": "disjoncteur-1", "type": "disjoncteur", "x": 1, "y": 0}, {"id": "contacteur-1", "type": "contacteur", "x": 2, "y": 0}, {"id": "moteur-1", "type": "moteur", "x": 3, "y": 0}], "wires": [["reseau-1", "sortie", "disjoncteur-1", "2"], ["contacteur-1", "1", "disjoncteur-1", "1"], ["contacteur-1", "2", "moteur-1", "entrée"]]},
       "correct": true,
       "given": "Schéma conforme",
-      "expected": "Réseau d'alimentation – Disjoncteur ; Disjoncteur – Contact de puissance du contacteur ; Contact de puissance du contacteur – Moteur asynchrone triphasé"
+      "expected": "Réseau d'alimentation – Disjoncteur ; Disjoncteur – Contact de puissance du contacteur ; Contact de puissance du contacteur – Moteur asynchrone triphasé",
+      "wrong_wires": []
     },
     {
       "name": "Schéma avec une liaison manquante",
@@ -126,7 +127,8 @@
       "response": {"components": [{"id": "reseau-1", "type": "reseau", "x": 0, "y": 0}, {"id": "disjoncteur-1", "type": "disjoncteur", "x": 1, "y": 0}, {"id": "contacteur-1", "type": "contacteur", "x": 2, "y": 0}, {"id": "moteur-1", "type": "moteur", "x": 3, "y": 0}], "wires": [["reseau-1", "sortie", "disjoncteur-1", "1"], ["disjoncteur-1", "2", "contacteur-1", "1"]]},
       "correct": false,
       "given": "liaisons manquantes : Contact de puissance du contacteur – Moteur asynchrone triphasé",
-      "expected": "Réseau d'alimentation – Disjoncteur ; Disjoncteur – Contact de puissance du contacteur ; Contact de puissance du contacteur – Moteur asynchrone triphasé"
+      "expected": "Réseau d'alimentation – Disjoncteur ; Disjoncteur – Contact de puissance du contacteur ; Contact de puissance du contacteur – Moteur asynchrone triphasé",
+      "wrong_wires": []
     },
     {
       "name": "Schéma avec un leurre à la place du contacteur",
@@ -134,7 +136,8 @@
       "response": {"components": [{"id": "reseau-1", "type": "reseau", "x": 0, "y": 0}, {"id": "disjoncteur-1", "type": "disjoncteur", "x": 1, "y": 0}, {"id": "fusible-1", "type": "fusible", "x": 2, "y": 0}, {"id": "moteur-1", "type": "moteur", "x": 3, "y": 0}], "wires": [["reseau-1", "sortie", "disjoncteur-1", "1"], ["disjoncteur-1", "2", "fusible-1", "1"], ["fusible-1", "2", "moteur-1", "entrée"]]},
       "correct": false,
       "given": "composants manquants : Contact de puissance du contacteur ; composants en trop : Fusible ; liaisons manquantes : Contact de puissance du contacteur – Disjoncteur, Contact de puissance du contacteur – Moteur asynchrone triphasé ; liaisons en trop : Disjoncteur – Fusible, Fusible – Moteur asynchrone triphasé",
-      "expected": "Réseau d'alimentation – Disjoncteur ; Disjoncteur – Contact de puissance du contacteur ; Contact de puissance du contacteur – Moteur asynchrone triphasé"
+      "expected": "Réseau d'alimentation – Disjoncteur ; Disjoncteur – Contact de puissance du contacteur ; Contact de puissance du contacteur – Moteur asynchrone triphasé",
+      "wrong_wires": [1, 2]
     },
     {
       "name": "Schéma avec trop de moteurs",
@@ -160,7 +163,8 @@
       "response": {"components": [{"id": "reservoir-1", "type": "reservoir", "x": 0, "y": 0}, {"id": "filtre-1", "type": "filtre", "x": 1, "y": 0}, {"id": "filtre-2", "type": "filtre", "x": 2, "y": 0}, {"id": "pompe-1", "type": "pompe", "x": 3, "y": 0}, {"id": "limiteur-1", "type": "limiteur", "x": 0, "y": 1}], "wires": [["reservoir-1", "retour", "filtre-2", "2"], ["filtre-2", "1", "pompe-1", "aspiration"], ["pompe-1", "refoulement", "limiteur-1", "entrée"], ["limiteur-1", "réservoir", "filtre-1", "2"], ["filtre-1", "1", "reservoir-1", "aspiration"]]},
       "correct": true,
       "given": "Schéma conforme",
-      "expected": "Réservoir d'huile – Filtre d'aspiration ; Filtre d'aspiration – Pompe hydraulique (aspiration) ; Pompe hydraulique (refoulement) – Limiteur de pression (entrée) ; Limiteur de pression (réservoir) – Filtre de retour ; Filtre de retour – Réservoir d'huile"
+      "expected": "Réservoir d'huile – Filtre d'aspiration ; Filtre d'aspiration – Pompe hydraulique (aspiration) ; Pompe hydraulique (refoulement) – Limiteur de pression (entrée) ; Limiteur de pression (réservoir) – Filtre de retour ; Filtre de retour – Réservoir d'huile",
+      "wrong_wires": []
     },
     {
       "name": "Schéma avec un limiteur inversé",
@@ -168,7 +172,8 @@
       "response": {"components": [{"id": "reservoir-1", "type": "reservoir", "x": 0, "y": 0}, {"id": "filtre-1", "type": "filtre", "x": 1, "y": 0}, {"id": "filtre-2", "type": "filtre", "x": 2, "y": 0}, {"id": "pompe-1", "type": "pompe", "x": 3, "y": 0}, {"id": "limiteur-1", "type": "limiteur", "x": 0, "y": 1}], "wires": [["reservoir-1", "aspiration", "filtre-1", "1"], ["filtre-1", "2", "pompe-1", "aspiration"], ["pompe-1", "refoulement", "limiteur-1", "réservoir"], ["limiteur-1", "entrée", "filtre-2", "1"], ["filtre-2", "2", "reservoir-1", "retour"]]},
       "correct": false,
       "given": "liaisons manquantes : Filtre de retour – Limiteur de pression (réservoir), Limiteur de pression (entrée) – Pompe hydraulique (refoulement) ; liaisons en trop : Filtre de retour – Limiteur de pression (entrée), Limiteur de pression (réservoir) – Pompe hydraulique (refoulement)",
-      "expected": "Réservoir d'huile – Filtre d'aspiration ; Filtre d'aspiration – Pompe hydraulique (aspiration) ; Pompe hydraulique (refoulement) – Limiteur de pression (entrée) ; Limiteur de pression (réservoir) – Filtre de retour ; Filtre de retour – Réservoir d'huile"
+      "expected": "Réservoir d'huile – Filtre d'aspiration ; Filtre d'aspiration – Pompe hydraulique (aspiration) ; Pompe hydraulique (refoulement) – Limiteur de pression (entrée) ; Limiteur de pression (réservoir) – Filtre de retour ; Filtre de retour – Réservoir d'huile",
+      "wrong_wires": [2, 3]
     },
     {
       "name": "Schéma avec une lampe oubliée",
@@ -176,7 +181,8 @@
       "response": {"components": [{"id": "reseau-1", "type": "reseau", "x": 0, "y": 0}, {"id": "fusible-1", "type": "fusible", "x": 1, "y": 0}, {"id": "lampe-1", "type": "lampe", "x": 2, "y": 0}], "wires": [["reseau-1", "sortie", "fusible-1", "1"], ["fusible-1", "2", "lampe-1", "entrée"]]},
       "correct": false,
       "given": "composants manquants : Point lumineux 2 ; liaisons manquantes : Fusible – Point lumineux 2",
-      "expected": "Réseau d'alimentation – Fusible ; Fusible – Point lumineux 1 ; Fusible – Point lumineux 2"
+      "expected": "Réseau d'alimentation – Fusible ; Fusible – Point lumineux 1 ; Fusible – Point lumineux 2",
+      "wrong_wires": []
     },
     {
       "name": "Schéma avec deux lampes en série",
@@ -184,7 +190,8 @@
       "response": {"components": [{"id": "reseau-1", "type": "reseau", "x": 0, "y": 0}, {"id": "fusible-1", "type": "fusible", "x": 1, "y": 0}, {"id": "lampe-1", "type": "lampe", "x": 2, "y": 0}, {"id": "lampe-2", "type": "lampe", "x": 3, "y": 0}], "wires": [["reseau-1", "sortie", "fusible-1", "1"], ["fusible-1", "2", "lampe-1", "entrée"], ["lampe-1", "entrée", "lampe-2", "entrée"]]},
       "correct": false,
       "given": "liaisons manquantes : Fusible – Point lumineux 2 ; liaisons en trop : Point lumineux 1 – Point lumineux 2",
-      "expected": "Réseau d'alimentation – Fusible ; Fusible – Point lumineux 1 ; Fusible – Point lumineux 2"
+      "expected": "Réseau d'alimentation – Fusible ; Fusible – Point lumineux 1 ; Fusible – Point lumineux 2",
+      "wrong_wires": [2]
     }
   ],
   "review": [

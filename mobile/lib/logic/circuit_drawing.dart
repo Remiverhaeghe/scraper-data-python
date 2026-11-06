@@ -6,6 +6,7 @@ import 'circuit.dart';
 import 'python_compat.dart';
 
 const _liveColor = '#dc2626';
+const _wrongWireColor = '#dc2626';
 const _halos = {
   'lit': ('#facc15', '0.55'),
   'dim': ('#fde68a', '0.45'),
@@ -127,14 +128,17 @@ class CircuitLibrary {
     );
   }
 
-  /// Fil entre deux bornes, avec les points qui marquent ses extrémités.
+  /// Fil entre deux bornes, avec les points qui marquent ses extrémités ; un fil
+  /// absent du schéma attendu (pWrong) est en rouge pointillé.
   String drawWire((String, String, (int, int)) pEndA, (String, String, (int, int)) pEndB, int pLane,
-      [String? pColor]) {
-    final vColor = pColor ?? grid['wireColor'] as String;
+      [String? pColor, bool pWrong = false]) {
+    final vColor = pColor ?? (pWrong ? _wrongWireColor : grid['wireColor'] as String);
+    final vDash = pWrong ? ' stroke-dasharray="7 4"' : '';
     final vStart = portPosition(pEndA.$1, pEndA.$2, pEndA.$3);
     final vEnd = portPosition(pEndB.$1, pEndB.$2, pEndB.$3);
 
-    return '<path d="${wirePath(pEndA, pEndB, pLane)}" fill="none" stroke="$vColor" stroke-width="2.5"/>'
+    return '<path d="${wirePath(pEndA, pEndB, pLane)}" fill="none" stroke="$vColor" '
+        'stroke-width="2.5"$vDash/>'
         '${[
       for (final (vX, vY) in [vStart, vEnd])
         '<circle cx="${formatG(vX)}" cy="${formatG(vY)}" r="3.5" fill="$vColor"/>',
@@ -216,9 +220,11 @@ class CircuitLibrary {
       '$pContent</svg>';
 
   /// SVG d'un schéma sans simulation, comme render_schema sur le PC : pInstances
-  /// associe à chaque identifiant (type, case, nom).
+  /// associe à chaque identifiant (type, case, nom) ; les fils dont l'indice est
+  /// dans pWrong sont en rouge pointillé.
   String renderSchema(Map<String, (String, (int, int), String)> pInstances,
-      List<List<String>> pConnections, String pTitle) {
+      List<List<String>> pConnections, String pTitle,
+      [Set<int> pWrong = const {}]) {
     final vOrigins = {
       for (final vEntry in pInstances.entries)
         vEntry.key: origin(vEntry.value.$2.$1, vEntry.value.$2.$2),
@@ -241,6 +247,8 @@ class CircuitLibrary {
           (pInstances[vIdA]!.$1, vPortA, vOrigins[vIdA]!),
           (pInstances[vIdB]!.$1, vPortB, vOrigins[vIdB]!),
           vIndex % vLanes,
+          null,
+          pWrong.contains(vIndex),
         ));
       }
     }

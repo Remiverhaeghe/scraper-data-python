@@ -9,12 +9,14 @@ dans l'historique git.
 - Questions « schéma à construire » envoyées au téléphone avec la
   bibliothèque des symboles, une seule fois par paquet
 - Saisie au toucher avec l'éditeur des montages électriques, palette
-  limitée aux composants et leurres de la question, schéma attendu affiché
-  à la correction
+  limitée aux composants et leurres de la question ; à la correction, schéma
+  construit (noms des composants attendus, fils en trop en rouge pointillé)
+  au-dessus du schéma attendu
 - Correction portée en Dart, identique au PC : même rapprochement des
   composants, mêmes écarts décrits ; ordre des types fixé côté Python pour
   qu'un cas d'égalité donne toujours le même résultat
-- Cas communs : dix schémas corrigés de la même façon en Python et en Dart
+- Cas communs : dix schémas corrigés de la même façon en Python et en Dart,
+  fils faux compris
 
 ### Puzzles et schémas à construire complétés
 - Vingt-sept puzzles de code (45 → 72, huit par type et niveau) : else
