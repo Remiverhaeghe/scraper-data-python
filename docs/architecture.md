@@ -379,6 +379,7 @@ scraper-data-python/
 │   ├── applications_page.py                   # Candidatures par étape et taux de réponse
 │   ├── funnel_panel.py                        # Entonnoir des candidatures
 │   ├── quiz_page.py                           # Révision technique : thèmes, questions et examen
+│   ├── quiz_exam_mixin.py                     # Mode examen de la révision : minuteur, résultat
 │   ├── quiz_theme_cards.py                    # Cartes de thèmes et en-têtes de domaine
 │   ├── skills_page.py                         # Compétences demandées et préparation
 │   ├── certifications_page.py                 # Certifications : plan conseillé et suivi
@@ -670,7 +671,8 @@ scraper-data-python/
 │   ├── saved_searches.py                      # Recherches enregistrées
 │   ├── duplicates.py                          # Décisions sur les offres publiées plusieurs fois
 │   ├── translations.py                        # Cache des traductions de descriptions
-│   └── job_offers.py                          # Enregistre les offres et détecte les nouvelles
+│   ├── job_offers.py                          # Enregistre les offres et détecte les nouvelles
+│   └── offer_stats.py                         # Statistiques, qualité et empreintes des offres
 │
 ├── tests/                                     # Ensemble des tests automatisés
 │   ├── __init__.py                            # Initialise le package de tests

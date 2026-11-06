@@ -325,7 +325,7 @@ def describe_import(pReport):
 def list_import_problems(pReport):
     """Liste les lignes non importées et leur raison, dans l'ordre du fichier."""
 
-    vProblems = [(vLine, vReason) for vLine, vReason in pReport["rejected"]]
+    vProblems = list(pReport["rejected"])
     vProblems += [
         (vLine, f"déjà présente ({vTitle})") for vLine, vTitle in pReport["duplicates"]
     ]

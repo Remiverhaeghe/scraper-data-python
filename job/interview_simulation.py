@@ -78,7 +78,7 @@ def start_simulation(pDatabaseFile, pTheme, pNow, pRandom=random):
     vIds = [
         vId
         for vId, vQuestion in load_interview_questions().items()
-        if pTheme == ALL_THEMES or vQuestion["theme"] == pTheme
+        if pTheme in (ALL_THEMES, vQuestion["theme"])
     ]
 
     if not vIds:

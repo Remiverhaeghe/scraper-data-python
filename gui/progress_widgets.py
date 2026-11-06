@@ -145,10 +145,10 @@ class SidebarProgress(QFrame):
         self.title_label = QLabel()
         self.title_label.setStyleSheet(f"color: {vColor}; font-weight: 600;")
 
-        self.bar = QProgressBar()
-        self.bar.setTextVisible(False)
-        self.bar.setFixedHeight(6)
-        self.bar.setStyleSheet(
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setTextVisible(False)
+        self.progress_bar.setFixedHeight(6)
+        self.progress_bar.setStyleSheet(
             f"QProgressBar {{ background: {COLORS['surface']}; border: none; "
             "border-radius: 3px; }"
             f"QProgressBar::chunk {{ background: {vColor}; border-radius: 3px; }}"
@@ -172,9 +172,9 @@ class SidebarProgress(QFrame):
         vLayout.setContentsMargins(10, 8, 10, 8)
         vLayout.setSpacing(6)
         vLayout.addLayout(vTop)
-        vLayout.addWidget(self.bar)
+        vLayout.addWidget(self.progress_bar)
 
-        self.bar_animation = QPropertyAnimation(self.bar, b"value", self)
+        self.bar_animation = QPropertyAnimation(self.progress_bar, b"value", self)
         self.bar_animation.setDuration(BAR_ANIMATION_MS)
         self.bar_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
@@ -191,15 +191,17 @@ class SidebarProgress(QFrame):
             f"{pProgress['xp_for_level']} XP\n{describe_streak(pProgress)}\n"
             "Cliquez pour voir vos quêtes"
         )
-        self.bar.setMaximum(pProgress["xp_for_level"])
+        self.progress_bar.setMaximum(pProgress["xp_for_level"])
 
         if pAnimate:
             self.bar_animation.stop()
-            self.bar_animation.setStartValue(min(self.bar.value(), self.bar.maximum()))
+            self.bar_animation.setStartValue(
+                min(self.progress_bar.value(), self.progress_bar.maximum())
+            )
             self.bar_animation.setEndValue(pProgress["xp_in_level"])
             self.bar_animation.start()
         else:
-            self.bar.setValue(pProgress["xp_in_level"])
+            self.progress_bar.setValue(pProgress["xp_in_level"])
 
     def mouseReleaseEvent(self, pEvent):  # pylint: disable=invalid-name
         """Ouvre la page Progression d'un clic."""

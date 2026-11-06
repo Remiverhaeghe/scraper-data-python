@@ -28,6 +28,16 @@ dans l'historique git.
   mobile_scanner 7.5 et sqlite3 3.9 sur le téléphone.
   flutter_local_notifications reste en 22 : la 23 exige la plateforme
   Android 37
+- Statistiques des offres (qualité, répartitions, compétences, empreintes
+  des caches) sorties de `storage/job_offers.py` dans
+  `storage/offer_stats.py`
+- Mode examen de la révision sorti de la page dans un mixin
+  (`gui/quiz_exam_mixin.py`)
+- Cas Git communs étendus aux erreurs (remise vide ou entrée absente,
+  fichier en conflit, marqueurs restants) et au conflit de `stash pop`,
+  vérifiés en Python et en Dart ; tests de l'installation des modèles
+  d'Argos
+- Corrections pylint : imports inutilisés, f-string, comparaison par `in`
 
 ### Schémas à construire sur le téléphone
 - Questions « schéma à construire » envoyées au téléphone avec la

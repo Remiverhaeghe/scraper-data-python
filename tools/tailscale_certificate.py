@@ -14,7 +14,6 @@ Prérequis, dans la console d'administration de Tailscale (DNS) : MagicDNS et
 """
 
 import sys
-from pathlib import Path
 
 from config import DATA_DIRECTORY, WEB_PORT
 from utils.tailscale import read_server_identity, request_certificate

@@ -1,6 +1,7 @@
 """Tests de la traduction hors ligne des descriptions"""
 
-from types import SimpleNamespace
+import sys
+from types import ModuleType, SimpleNamespace
 
 import pytest
 
@@ -121,3 +122,53 @@ def test_translation_is_kept_in_the_database(fake_argos, tmp_path):
 
     assert vFirst == vSecond
     assert len(fake_argos.calls) == 2
+
+
+def install_fake_module(pMonkeypatch, pName, pModule):
+    """Déclare un faux sous-module d'argostranslate, sans toucher au vrai paquet."""
+
+    vParent = ModuleType("argostranslate")
+    setattr(vParent, pName, pModule)
+    pMonkeypatch.setitem(sys.modules, "argostranslate", vParent)
+    pMonkeypatch.setitem(sys.modules, f"argostranslate.{pName}", pModule)
+
+
+def test_load_argos_returns_the_module(monkeypatch):
+    """Vérifie que le module de traduction d'Argos est retourné s'il est installé."""
+
+    vModule = ModuleType("argostranslate.translate")
+    install_fake_module(monkeypatch, "translate", vModule)
+
+    assert translation.load_argos() is vModule
+
+
+def test_load_argos_without_package(monkeypatch):
+    """Vérifie qu'Argos absent donne None au lieu d'une erreur d'import."""
+
+    monkeypatch.setitem(sys.modules, "argostranslate", None)
+
+    assert translation.load_argos() is None
+
+
+def test_install_models_skips_missing_pairs(fake_argos, monkeypatch, capsys):
+    """Vérifie que seuls les modèles présents dans l'index sont installés."""
+
+    vInstalled = []
+    vModule = ModuleType("argostranslate.package")
+    vModule.update_package_index = lambda: None
+    vModule.get_available_packages = lambda: [
+        SimpleNamespace(
+            from_code="de", to_code="en", download=lambda: "de_en.argosmodel"
+        )
+    ]
+    vModule.install_from_path = vInstalled.append
+    install_fake_module(monkeypatch, "package", vModule)
+
+    translation.install_models()
+
+    vOutput = capsys.readouterr().out
+
+    assert vInstalled == ["de_en.argosmodel"]
+    assert "Modèle en vers fr introuvable" in vOutput
+    assert "Modèles installés : de, en, fr" in vOutput
+    assert fake_argos.codes == {"de", "en", "fr"}

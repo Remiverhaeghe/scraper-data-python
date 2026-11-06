@@ -26,11 +26,13 @@ from storage.job_applications import (
 )
 from storage.job_offers import (
     FOLLOW_UP_STATUSES,
-    count_new_offers_by_day,
     count_offers,
+    get_offers,
+)
+from storage.offer_stats import (
+    count_new_offers_by_day,
     count_offers_by_contract,
     count_offers_by_source,
-    get_offers,
 )
 from storage.saved_searches import get_saved_searches
 from storage.settings_repository import load_json_setting, save_json_setting

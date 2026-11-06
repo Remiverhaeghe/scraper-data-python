@@ -6,7 +6,7 @@ import io
 from job.export import protect_formula
 from job.presentation import get_source_label
 from storage.history_repository import get_history
-from storage.job_offers import (
+from storage.offer_stats import (
     QUALITY_COLUMNS,
     count_filled_fields,
     get_offers_to_check,

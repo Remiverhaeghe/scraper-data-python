@@ -16,7 +16,8 @@ from job.salary_market import (
 )
 from job.settings import load_settings
 from job.sources.registry import SOURCES
-from storage.job_offers import get_offers, get_salary_signature
+from storage.job_offers import get_offers
+from storage.offer_stats import get_salary_signature
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

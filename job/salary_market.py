@@ -14,7 +14,8 @@ from job.location import FRANCE
 from job.preparation import get_offer_skills
 from job.presentation import clean_missing_values, format_euros
 from job.settings import get_net_ratio, get_tax_rate, load_settings
-from storage.job_offers import get_offers, get_salary_signature
+from storage.job_offers import get_offers
+from storage.offer_stats import get_salary_signature
 
 MIN_COMPARABLES = 3
 MIN_SKILL_SHARE = 1 / 3

@@ -636,7 +636,8 @@ def build_quests(pDatabaseFile, pActivity, pToday):
 
     vLog = load_quest_log(pDatabaseFile)
     vDayKey = pToday.isoformat()
-    vWeekKey = "{}-S{:02d}".format(*pToday.isocalendar()[:2])
+    vYear, vWeek = pToday.isocalendar()[:2]
+    vWeekKey = f"{vYear}-S{vWeek:02d}"
     vDrawn = vLog.setdefault("drawn", {})
     vDone = vLog.setdefault("done", {})
     vChanged = False

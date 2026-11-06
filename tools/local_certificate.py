@@ -8,7 +8,6 @@ de nouveau depuis le téléphone.
 """
 
 import sys
-from pathlib import Path
 
 from config import DATA_DIRECTORY, WEB_HOST
 from utils.tls import create_certificate

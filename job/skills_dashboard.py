@@ -11,7 +11,7 @@ from job.profile import load_profile
 from job.quiz import build_quiz_overview
 from job.quiz_domains import DOMAIN_ICONS, classify_theme
 from job.quiz_generation import load_catalog
-from storage.job_offers import get_skill_lists
+from storage.offer_stats import get_skill_lists
 from storage.quiz_answers import get_answer_history
 
 # Nombre de compétences affichées, les plus demandées d'abord

@@ -12,7 +12,7 @@ from pathlib import Path
 from config import QUIZ_DIRECTORY
 from job.quiz_domains import classify_theme
 from job.quiz_types import check_typed_fields, grade_answer, prepare_question
-from storage.job_offers import (
+from storage.offer_stats import (
     count_offers_by_skill,
     get_offer_texts,
     get_offers_signature,

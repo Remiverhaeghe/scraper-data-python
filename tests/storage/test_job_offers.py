@@ -12,14 +12,13 @@ from storage.job_applications import save_application
 from storage.job_offers import (
     CONTENT_COLUMNS,
     get_known_descriptions,
-    count_new_offers_by_day,
     count_offers,
     get_offer,
     get_offers,
-    get_offers_to_check,
     read_remote,
     save_offers,
 )
+from storage.offer_stats import count_new_offers_by_day, get_offers_to_check
 
 
 def build_items():

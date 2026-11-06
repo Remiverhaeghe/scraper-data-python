@@ -29,7 +29,8 @@ from storage.backup import (
 )
 from storage.geo_cache import count_offer_positions
 from storage.history_repository import get_history
-from storage.job_offers import count_empty_fields, get_offers
+from storage.job_offers import get_offers
+from storage.offer_stats import count_empty_fields
 from storage.settings_repository import get_setting_values, load_json_setting
 from utils.logger import get_logger
 from utils.mailer import get_missing_email_settings

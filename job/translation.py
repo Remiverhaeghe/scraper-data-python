@@ -11,7 +11,6 @@ import re
 import sys
 from datetime import datetime
 from functools import lru_cache
-from pathlib import Path
 
 from config import DATA_DIRECTORY
 from utils.logger import get_logger
