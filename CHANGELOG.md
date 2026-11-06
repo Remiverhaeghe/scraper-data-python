@@ -6,6 +6,13 @@ dans l'historique git.
 ## Non publié
 
 ### Point qualité
+- Fonctions Excel découpées par famille, à l'identique en Python et en
+  Dart : agrégats et arrondis, conditions et critères, recherches, texte,
+  dates ; le registre des noms reste dans `excel_functions`
+- Tests des clients HTTP des sources d'entreprises (adresse, identifiant
+  échappé, erreur journalisée sans la clé), des refus de la configuration
+  du scraper et des routes des schémas électriques (solution, réarmement,
+  nom manquant, suppression)
 - Moteur Excel du téléphone découpé en trois fichiers, comme le Python :
   formules, fonctions et valeurs ; une plage lit sa feuille par une
   interface, sans dépendance circulaire

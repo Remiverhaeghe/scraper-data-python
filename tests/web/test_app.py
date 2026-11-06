@@ -3477,6 +3477,79 @@ def test_circuit_is_checked_operated_saved_and_exported_on_the_web(client):
     assert client.get("/circuit?level=inconnu").status_code == 404
 
 
+def test_circuit_solution_rearm_and_free_schema_errors_on_the_web(client):
+    """Vérifie la solution, le réarmement d'un disjoncteur, les refus et la suppression."""
+
+    assert client.get("/circuit").status_code == 200
+
+    vPartial = json.dumps(
+        {"components": [{"id": "pile", "type": "alimentation", "x": 0, "y": 0}]}
+    )
+    vSolution = client.post(
+        "/circuit/run",
+        data={"level": "demarrage-moteur", "answer": vPartial, "action": "solution"},
+    ).text
+
+    assert "<svg" in vSolution
+
+    assert (
+        "Placez au moins un composant"
+        in client.post(
+            "/circuit/run",
+            data={"level": "demarrage-moteur", "answer": "{", "action": "check"},
+        ).text
+    )
+
+    vFree = json.dumps(
+        {
+            "components": [
+                {"id": "pile", "type": "pile", "x": 0, "y": 0},
+                {"id": "disj", "type": "disjoncteur", "x": 2, "y": 0},
+            ],
+            "wires": [],
+        }
+    )
+    vRearmed = client.post(
+        "/circuit/run",
+        data={
+            "answer": vFree,
+            "action": "operate:disj",
+            "inputs": json.dumps({"disj": False}),
+            "memory": json.dumps({"tripped": ["disj"]}),
+        },
+    )
+
+    assert vRearmed.status_code == 200
+    assert client.post("/circuit/run", data={"answer": vFree}).status_code == 200
+    assert (
+        client.post(
+            "/circuit/run",
+            data={"answer": vFree, "action": "operate:inconnu"},
+        ).status_code
+        == 200
+    )
+
+    assert (
+        "Donnez un nom au schéma."
+        in client.post(
+            "/circuit/run", data={"answer": vFree, "action": "save", "name": " "}
+        ).text
+    )
+
+    client.post(
+        "/circuit/run",
+        data={"answer": vFree, "action": "save", "name": "A supprimer"},
+        follow_redirects=False,
+    )
+    vDeleted = client.post(
+        "/circuit/delete", data={"name": "A supprimer"}, follow_redirects=False
+    )
+
+    assert vDeleted.status_code == 303
+    assert vDeleted.headers["location"].endswith("/circuit?free=1")
+    assert "A supprimer" not in client.get("/circuit?free=1").text
+
+
 def test_devops_level_is_played_on_the_web(client):
     """Vérifie une commande Docker refusée, la solution réussie et la remise à zéro."""
 

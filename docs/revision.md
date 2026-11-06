@@ -123,7 +123,7 @@ Page Excel du bureau et du web, pour s'exercer aux formules sur les tableaux d'u
 - [x] Excel en français : noms de fonctions français, point-virgule entre arguments, virgule décimale ; un nom anglais (SUM, VLOOKUP…) ou une virgule entre arguments est signalé avec la bonne écriture
 - [x] Formule écrite pour la première cellule puis recopiée sur la plage, comme avec la poignée : les $ oubliés se voient sur les lignes suivantes ; chaque cellule comparée à celle de la solution de référence, valeurs obtenues et attendues affichées
 - [x] Erreurs classiques expliquées : référence non figée, recherche approchée sur une liste non triée, < au lieu de <=, nombre resté en texte, critère ">2" pour « au moins 2 » ; valeur recopiée à la main, fonction attendue absente et référence circulaire refusées
-- [x] Moteur de formules sans dépendance (job/excel_formula.py, excel_functions.py, excel_values.py) : une cinquantaine de fonctions, erreurs d'Excel (#N/A, #DIV/0!, #VALEUR!…), dates en numéros de série, date du jour fixe, formats euro, pourcentage et date
+- [x] Moteur de formules sans dépendance (job/excel_formula.py, excel_values.py, et une famille de fonctions par module : excel_math, excel_conditions, excel_lookup, excel_text, excel_dates) : une cinquantaine de fonctions, erreurs d'Excel (#N/A, #DIV/0!, #VALEUR!…), dates en numéros de série, date du jour fixe, formats euro, pourcentage et date
 - [x] Jouable hors ligne sur le téléphone, formule recalculée par le PC à la synchronisation ; trophées Première formule et As du tableur
 
 ## Schémas électriques

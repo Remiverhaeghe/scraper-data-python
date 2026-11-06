@@ -187,7 +187,12 @@ mobile/
 │   │   ├── sql_sandbox.dart      # Bac à sable SQL, identique à job/sql_sandbox.py, dans un isolat
 │   │   ├── sql_levels.dart       # Niveaux SQL et comparaison, identiques à job/sql_levels.py
 │   │   ├── excel_formula.dart    # Formules Excel : jetons, parseur, feuille, comme job/excel_formula.py
-│   │   ├── excel_functions.dart  # Fonctions du tableur, identiques à job/excel_functions.py
+│   │   ├── excel_functions.dart  # Registre des fonctions, comme job/excel_functions.py
+│   │   ├── excel_math.dart       # Agrégats et arrondis, comme job/excel_math.py
+│   │   ├── excel_conditions.dart # SI, ET, OU et critères, comme job/excel_conditions.py
+│   │   ├── excel_lookup.dart     # Recherches, comme job/excel_lookup.py
+│   │   ├── excel_text.dart       # Fonctions de texte, comme job/excel_text.py
+│   │   ├── excel_dates.dart      # Fonctions de date, comme job/excel_dates.py
 │   │   ├── excel_values.dart     # Erreurs, plages, conversions, dates, comme job/excel_values.py
 │   │   ├── excel_levels.dart     # Niveaux Excel, recopie et comparaison, identiques à job/excel_levels.py
 │   │   ├── circuit.dart          # Simulateur de circuits, identique à job/circuit.py

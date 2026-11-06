@@ -47,7 +47,7 @@ from job.devops_levels import load_levels as load_devops_levels
 from job.devops_levels import mark_passed, replay_steps
 from job.docker_sim import REGISTRY
 from job.excel_formula import ENGLISH_NAMES, MAX_FORMULA_LENGTH
-from job.excel_functions import TODAY as EXCEL_TODAY
+from job.excel_dates import TODAY as EXCEL_TODAY
 from job.excel_levels import build_excel_overview
 from job.excel_levels import load_levels as load_excel_levels
 from job.excel_levels import run_level as run_excel_level

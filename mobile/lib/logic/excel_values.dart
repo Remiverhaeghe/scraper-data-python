@@ -402,3 +402,6 @@ bool sameValue(Object? pValue, Object? pExpected) {
       (pValue is ExcelError) == (pExpected is ExcelError) &&
       pValue == pExpected;
 }
+
+Object? argument(List<Object?> pArguments, int pIndex, [Object? pDefault]) =>
+    pIndex < pArguments.length ? pArguments[pIndex] : pDefault;

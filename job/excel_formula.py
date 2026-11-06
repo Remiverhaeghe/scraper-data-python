@@ -1,8 +1,8 @@
 """Formules Excel en français : lecture, recopie, calcul sur une petite feuille
 
 Les noms de fonctions, le point-virgule entre arguments et la virgule décimale
-sont ceux d'Excel en français. Les fonctions sont dans job/excel_functions.py,
-les conversions et les formats dans job/excel_values.py.
+sont ceux d'Excel en français. Le registre des fonctions est dans
+job/excel_functions.py, les conversions et les formats dans job/excel_values.py.
 """
 
 import math

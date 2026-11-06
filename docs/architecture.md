@@ -160,7 +160,12 @@ scraper-data-python/
 │   ├── sql_sandbox.py                         # Bac à sable SQL : base en mémoire, dialectes, comparaison
 │   ├── sql_levels.py                          # Niveaux SQL : vérification et progression
 │   ├── excel_formula.py                       # Formules Excel en français : lecture, recopie, calcul
-│   ├── excel_functions.py                     # Fonctions d'Excel : agrégats, conditions, recherches, dates
+│   ├── excel_functions.py                     # Registre des fonctions d'Excel : nom, arguments, calcul
+│   ├── excel_math.py                          # Agrégats et arrondis : SOMME, MOYENNE, NB, ARRONDI
+│   ├── excel_conditions.py                    # SI, ET, OU et critères : NB.SI, SOMME.SI, SOMMEPROD
+│   ├── excel_lookup.py                        # Recherches : RECHERCHEV, RECHERCHEX, EQUIV, INDEX
+│   ├── excel_text.py                          # Fonctions de texte : GAUCHE, STXT, TROUVE, TEXTE
+│   ├── excel_dates.py                         # Fonctions de date : DATE, DATEDIF, NB.JOURS.OUVRES
 │   ├── excel_values.py                        # Valeurs d'Excel : erreurs, conversions, dates, formats
 │   ├── excel_levels.py                        # Niveaux Excel : recopie, comparaison, progression
 │   ├── circuit.py                             # Simulateur de circuits : nœuds, relais, défauts

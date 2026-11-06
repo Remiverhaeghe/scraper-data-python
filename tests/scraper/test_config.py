@@ -39,3 +39,29 @@ def test_validate_rejects_invalid_max_response_size():
 
     with pytest.raises(ValueError):
         vConfig.validate()
+
+
+@pytest.mark.parametrize(
+    "pOptions, pField",
+    [
+        ({"max_items": 0}, "max_items"),
+        ({"max_pages": 0}, "max_pages"),
+        ({"delay": -1}, "delay"),
+        ({"timeout": 0}, "timeout"),
+        ({"retry_count": -1}, "retry_count"),
+        ({"retry_delay": -0.5}, "retry_delay"),
+    ],
+)
+def test_validate_names_the_invalid_field(pOptions, pField):
+    """Vérifie que le message d'erreur nomme le réglage refusé."""
+
+    vConfig = ScrapingConfig(**pOptions)
+
+    with pytest.raises(ValueError, match=pField):
+        vConfig.validate()
+
+
+def test_validate_accepts_default_configuration():
+    """Vérifie qu'une configuration par défaut est valide."""
+
+    ScrapingConfig(max_items=1, max_pages=1).validate()
