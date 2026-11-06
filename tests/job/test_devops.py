@@ -62,6 +62,11 @@ def test_every_solution_reaches_its_goal(pLevel):
         ("maven-java", ["mvn compile"], "BUILD FAILURE"),
         ("maven-surefire", ["mvn package"], "BUILD SUCCESS"),
         ("maven-conflit", ["mvn test"], "There are test failures."),
+        ("maven-version-oubliee", ["mvn package"], "version' for org.slf4j"),
+        ("maven-propriete", ["mvn package"], "${junit.jupiter.version}"),
+        ("maven-provided", ["mvn package"], "package lombok does not exist"),
+        ("maven-plugin-compilateur", ["mvn package"], "in -source 11"),
+        ("maven-install", ["mvn install"], "1.0.0-SNAPSHOT"),
         (
             "docker-premier",
             ["docker build -t atelier:1.0 .", "curl localhost:8080"],
@@ -98,6 +103,30 @@ def test_every_solution_reaches_its_goal(pLevel):
                 "curl localhost:8080/mesures",
             ],
             '"mesures": 0',
+        ),
+        (
+            "docker-port-interne",
+            [
+                "docker build -t a:1 .",
+                "docker run -d --name a -p 8080:8080 a:1",
+                "curl localhost:8080",
+            ],
+            "Connection reset by peer",
+        ),
+        (
+            "docker-script",
+            ["docker build -t c:1 .", "docker run -d --name c c:1", "docker logs c"],
+            "can't open file '/app/app.py'",
+        ),
+        ("docker-guillemets", ["docker build -t a:1 ."], "guillemets doubles"),
+        (
+            "docker-mise-en-service",
+            [
+                "docker build -t a:1 .",
+                "docker run -d --name a -e DB_URL=x a:1",
+                "docker logs a",
+            ],
+            "UnsupportedClassVersionError",
         ),
     ],
 )

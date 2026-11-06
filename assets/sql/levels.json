@@ -110,6 +110,51 @@
       "explanation": "NULL signifie « inconnu » : toute comparaison avec NULL donne inconnu, donc jamais vrai. D'où IS NULL et IS NOT NULL."
     },
     {
+      "id": "tri-multiple",
+      "series": "Les bases",
+      "title": "Trier sur deux colonnes",
+      "goal": "Machines triées par atelier, puis de la plus puissante à la moins puissante dans chaque atelier : atelier_id, code et puissance_kw.",
+      "starter": "SELECT atelier_id, code, puissance_kw\nFROM machine",
+      "hint": "ORDER BY accepte plusieurs colonnes, chacune avec son sens : ASC par défaut, DESC pour décroissant.",
+      "solution": "SELECT atelier_id, code, puissance_kw\nFROM machine\nORDER BY atelier_id, puissance_kw DESC",
+      "ordered": true,
+      "pitfalls": [
+        [
+          "ORDER\\s+BY\\s+puissance",
+          "L'ordre des colonnes dans ORDER BY compte : la première trie, la suivante départage. Ici, d'abord l'atelier."
+        ]
+      ],
+      "explanation": "La première colonne de ORDER BY trie, la suivante ne sert qu'à départager les égalités. DESC ne porte que sur la colonne qu'il suit."
+    },
+    {
+      "id": "prix-entre",
+      "series": "Les bases",
+      "title": "Une fourchette de prix",
+      "goal": "Pièces dont le prix est compris entre 10 et 30 €, bornes comprises : référence et prix, de la moins chère à la plus chère.",
+      "starter": "SELECT reference, prix\nFROM piece",
+      "hint": "WHERE prix BETWEEN 10 AND 30 garde les deux bornes ; c'est l'équivalent de prix >= 10 AND prix <= 30.",
+      "solution": "SELECT reference, prix\nFROM piece\nWHERE prix BETWEEN 10 AND 30\nORDER BY prix",
+      "ordered": true,
+      "explanation": "BETWEEN inclut les deux bornes. Sur des nombres, c'est sans piège ; sur des dates avec heure, la borne haute s'arrête à minuit."
+    },
+    {
+      "id": "sous-le-minimum",
+      "series": "Les bases",
+      "title": "Sous le stock minimal",
+      "goal": "Pièces dont le stock est passé sous le stock minimal : référence, stock et stock_mini.",
+      "starter": "SELECT reference, stock, stock_mini\nFROM piece",
+      "hint": "Une condition peut comparer deux colonnes de la même ligne : WHERE stock < stock_mini.",
+      "solution": "SELECT reference, stock, stock_mini\nFROM piece\nWHERE stock < stock_mini",
+      "ordered": false,
+      "pitfalls": [
+        [
+          "stock\\s*<=\\s*stock_mini",
+          "Au stock minimal, la pièce est encore suffisante : « sous » se traduit par <, pas <=."
+        ]
+      ],
+      "explanation": "Le filtre est évalué ligne par ligne : chaque pièce est comparée à son propre minimum. Le filtre hydraulique, pile au minimum, n'est pas encore à commander."
+    },
+    {
       "id": "par-type",
       "series": "Regrouper",
       "title": "Préventif ou correctif",
@@ -152,6 +197,51 @@
       "solution": "SELECT MONTH(debut), COUNT(*), SUM(cout)\nFROM intervention\nGROUP BY MONTH(debut)\nORDER BY MONTH(debut)",
       "ordered": true,
       "explanation": "On peut regrouper sur une expression, pas seulement sur une colonne. MONTH existe en MySQL comme en SQL Server ; sur plusieurs années, il faudrait aussi regrouper par YEAR(debut)."
+    },
+    {
+      "id": "machines-differentes",
+      "series": "Regrouper",
+      "title": "Combien de machines différentes ?",
+      "goal": "Pour chaque technicien affecté : technicien_id, nombre d'interventions et nombre de machines différentes sur lesquelles il est intervenu.",
+      "starter": "SELECT technicien_id, COUNT(*)\nFROM intervention\nGROUP BY technicien_id",
+      "hint": "COUNT(DISTINCT machine_id) compte les valeurs différentes ; les interventions sans technicien s'écartent avec WHERE technicien_id IS NOT NULL.",
+      "solution": "SELECT technicien_id, COUNT(*), COUNT(DISTINCT machine_id)\nFROM intervention\nWHERE technicien_id IS NOT NULL\nGROUP BY technicien_id",
+      "ordered": false,
+      "pitfalls": [
+        [
+          "COUNT\\s*\\(\\s*machine_id",
+          "COUNT(machine_id) compte les interventions, pas les machines : écrivez COUNT(DISTINCT machine_id)."
+        ]
+      ],
+      "explanation": "COUNT(*) compte les lignes du groupe, COUNT(DISTINCT colonne) les valeurs différentes. Sans le WHERE, les interventions non affectées forment un groupe NULL."
+    },
+    {
+      "id": "cout-moyen",
+      "series": "Regrouper",
+      "title": "Le coût moyen",
+      "goal": "Coût moyen des interventions par type, arrondi à deux décimales : type et coût moyen.",
+      "starter": "SELECT type\nFROM intervention\nGROUP BY type",
+      "hint": "ROUND(AVG(cout), 2) : AVG calcule la moyenne du groupe, ROUND l'arrondit au nombre de décimales demandé.",
+      "solution": "SELECT type, ROUND(AVG(cout), 2)\nFROM intervention\nGROUP BY type",
+      "ordered": false,
+      "pitfalls": [
+        [
+          "(?:IFNULL|ISNULL|COALESCE)\\s*\\(\\s*cout",
+          "Remplacer le coût vide par 0 fait baisser la moyenne : AVG ignore déjà les NULL, c'est ce qu'on veut ici."
+        ]
+      ],
+      "explanation": "AVG ignore les NULL : les interventions en cours, sans coût, ne comptent pas dans la moyenne. Les remplacer par 0 ferait baisser la moyenne à tort."
+    },
+    {
+      "id": "tableau-croise",
+      "series": "Regrouper",
+      "title": "Le tableau croisé",
+      "goal": "Par machine, le nombre d'interventions préventives et de correctives sur deux colonnes : machine_id, préventives, correctives, par machine_id.",
+      "starter": "SELECT machine_id\nFROM intervention\nGROUP BY machine_id",
+      "hint": "SUM(CASE WHEN type = 'preventive' THEN 1 ELSE 0 END) compte les préventives du groupe ; même chose pour les correctives.",
+      "solution": "SELECT machine_id,\n    SUM(CASE WHEN type = 'preventive' THEN 1 ELSE 0 END),\n    SUM(CASE WHEN type = 'corrective' THEN 1 ELSE 0 END)\nFROM intervention\nGROUP BY machine_id\nORDER BY machine_id",
+      "ordered": true,
+      "explanation": "Une somme de CASE fait pivoter des lignes en colonnes, et s'écrit de la même façon en MySQL et en SQL Server. COUNT(CASE WHEN … THEN 1 END) marche aussi, car COUNT ignore les NULL."
     },
     {
       "id": "jointure",
@@ -231,6 +321,45 @@
       "explanation": "Trois écritures possibles : NOT EXISTS, LEFT JOIN … WHERE i.id IS NULL, ou NOT IN en filtrant les NULL. NOT EXISTS est la plus sûre."
     },
     {
+      "id": "renforts",
+      "series": "Jointures",
+      "title": "Les renforts",
+      "goal": "Interventions faites par un technicien d'un autre atelier que celui de la machine : id, nom du technicien et code de la machine, par id.",
+      "starter": "SELECT i.id\nFROM intervention i",
+      "hint": "Joignez technicien et machine à l'intervention, puis comparez t.atelier_id et m.atelier_id dans le WHERE.",
+      "solution": "SELECT i.id, t.nom, m.code\nFROM intervention i\nJOIN technicien t ON t.id = i.technicien_id\nJOIN machine m ON m.id = i.machine_id\nWHERE t.atelier_id <> m.atelier_id\nORDER BY i.id",
+      "ordered": true,
+      "explanation": "Deux jointures partent de la même table. Les interventions sans technicien disparaissent avec la jointure interne, et une comparaison avec NULL n'est jamais vraie."
+    },
+    {
+      "id": "binomes",
+      "series": "Jointures",
+      "title": "Les binômes",
+      "goal": "Paires de techniciens de même spécialité, chaque paire une seule fois : nom du premier, nom du second et spécialité.",
+      "starter": "SELECT a.nom\nFROM technicien a",
+      "hint": "Auto-jointure : la table technicien apparaît deux fois, avec deux alias ; a.id < b.id évite la paire inversée et le technicien seul avec lui-même.",
+      "solution": "SELECT a.nom, b.nom, a.specialite\nFROM technicien a\nJOIN technicien b ON b.specialite = a.specialite AND a.id < b.id",
+      "ordered": false,
+      "pitfalls": [
+        [
+          "\\.id\\s*(?:<>|!=)",
+          "a.id <> b.id garde chaque paire deux fois, dans les deux sens : a.id < b.id ne la garde qu'une fois."
+        ]
+      ],
+      "explanation": "Une auto-jointure compare les lignes d'une table entre elles. Avec <>, chaque paire sort deux fois (Martin-Garcia et Garcia-Martin) ; avec <, une seule."
+    },
+    {
+      "id": "valeur-pieces",
+      "series": "Jointures",
+      "title": "La valeur des pièces",
+      "goal": "Valeur des pièces consommées par intervention : id de l'intervention, code de la machine et montant (quantité × prix), du plus élevé au plus faible, puis par id.",
+      "starter": "SELECT pu.intervention_id\nFROM piece_utilisee pu",
+      "hint": "Partez de piece_utilisee, joignez piece pour le prix, intervention puis machine pour le code ; SUM(pu.quantite * p.prix) par intervention.",
+      "solution": "SELECT i.id, m.code, SUM(pu.quantite * p.prix)\nFROM piece_utilisee pu\nJOIN piece p ON p.id = pu.piece_id\nJOIN intervention i ON i.id = pu.intervention_id\nJOIN machine m ON m.id = i.machine_id\nGROUP BY i.id, m.code\nORDER BY SUM(pu.quantite * p.prix) DESC, i.id",
+      "ordered": true,
+      "explanation": "La table de liaison piece_utilisee relie interventions et pièces. Le calcul se fait ligne par ligne avant la somme ; le second critère de tri départage les montants égaux."
+    },
+    {
       "id": "au-dessus-moyenne",
       "series": "Pour aller plus loin",
       "title": "Au-dessus de la moyenne",
@@ -287,6 +416,51 @@
       "explanation": "Les deux serveurs ne comptent pas pareil : de 14 h 30 à 9 h le lendemain, TIMESTAMPDIFF (MySQL) donne 18 heures entières, DATEDIFF (SQL Server) compte 19 changements d'heure. Changez de dialecte pour le voir."
     },
     {
+      "id": "categories-cout",
+      "series": "Pour aller plus loin",
+      "title": "Des catégories de coût",
+      "goal": "Classez chaque intervention : « en cours » si le coût est vide, « faible » sous 100 €, « moyen » sous 500 €, « élevé » au-delà : id et catégorie, par id.",
+      "starter": "SELECT id, cout\nFROM intervention\nORDER BY id",
+      "hint": "CASE évalue ses WHEN dans l'ordre et s'arrête au premier vrai : commencez par WHEN cout IS NULL.",
+      "solution": "SELECT id,\n    CASE\n        WHEN cout IS NULL THEN 'en cours'\n        WHEN cout < 100 THEN 'faible'\n        WHEN cout < 500 THEN 'moyen'\n        ELSE 'élevé'\n    END\nFROM intervention\nORDER BY id",
+      "ordered": true,
+      "pitfalls": [
+        [
+          "^(?![\\s\\S]*IS\\s+NULL)[\\s\\S]*\\bCASE\\b",
+          "Un coût NULL ne vérifie aucune condition et tombe dans ELSE : testez cout IS NULL en premier."
+        ]
+      ],
+      "explanation": "Un coût NULL ne vérifie aucune comparaison : sans test IS NULL, il tombe dans ELSE et une intervention en cours passe pour « élevé »."
+    },
+    {
+      "id": "alertes",
+      "series": "Pour aller plus loin",
+      "title": "Le tableau des alertes",
+      "goal": "Une seule liste d'alertes en deux colonnes : « intervention en cours » avec le code de la machine, puis « rupture » avec la référence de chaque pièce au stock nul.",
+      "starter": "SELECT 'rupture', reference\nFROM piece\nWHERE stock = 0",
+      "hint": "Deux SELECT de même nombre de colonnes, réunis par UNION ALL ; le premier joint intervention et machine.",
+      "solution": "SELECT 'intervention en cours', m.code\nFROM intervention i\nJOIN machine m ON m.id = i.machine_id\nWHERE i.fin IS NULL\nUNION ALL\nSELECT 'rupture', reference\nFROM piece\nWHERE stock = 0",
+      "ordered": false,
+      "explanation": "UNION ALL met les résultats bout à bout ; UNION retire en plus les doublons, ce qui demande un tri. Les deux requêtes doivent avoir le même nombre de colonnes."
+    },
+    {
+      "id": "annuaire",
+      "series": "Pour aller plus loin",
+      "title": "L'annuaire",
+      "goal": "Prénom et nom réunis dans une seule colonne (« Julie Martin »), puis la spécialité, triés par nom.",
+      "starter": "SELECT prenom, nom, specialite\nFROM technicien",
+      "hint": "CONCAT(prenom, ' ', nom) colle les morceaux, en MySQL comme en SQL Server ; le tri peut porter sur une colonne non affichée.",
+      "solution": "SELECT CONCAT(prenom, ' ', nom), specialite\nFROM technicien\nORDER BY nom",
+      "ordered": true,
+      "pitfalls": [
+        [
+          "prenom\\s*\\+",
+          "Le + ne colle des textes qu'en SQL Server, et renvoie NULL si un morceau est NULL : CONCAT marche dans les deux dialectes."
+        ]
+      ],
+      "explanation": "CONCAT existe dans les deux dialectes et traite un NULL comme un texte vide. Le + de SQL Server et le || standard renvoient NULL dès qu'un morceau est NULL."
+    },
+    {
       "id": "cte",
       "series": "Requêtes avancées",
       "title": "Les ateliers qui coûtent",
@@ -318,6 +492,45 @@
       "solution": "SELECT id, cout, SUM(cout) OVER (ORDER BY debut)\nFROM intervention\nWHERE fin IS NOT NULL\nORDER BY debut",
       "ordered": true,
       "explanation": "Avec ORDER BY dans OVER, la somme devient un cumul. Sans fenêtre, il faudrait une sous-requête par ligne, bien plus lente."
+    },
+    {
+      "id": "intervention-precedente",
+      "series": "Requêtes avancées",
+      "title": "L'intervention précédente",
+      "goal": "Pour chaque intervention : machine_id, id, début et début de l'intervention précédente sur la même machine, par machine puis par date.",
+      "starter": "SELECT machine_id, id, debut\nFROM intervention\nORDER BY machine_id, debut",
+      "hint": "LAG(debut) OVER (PARTITION BY machine_id ORDER BY debut) lit la valeur de la ligne d'avant, machine par machine.",
+      "solution": "SELECT machine_id, id, debut,\n    LAG(debut) OVER (PARTITION BY machine_id ORDER BY debut)\nFROM intervention\nORDER BY machine_id, debut",
+      "ordered": true,
+      "pitfalls": [
+        [
+          "^(?![\\s\\S]*PARTITION)[\\s\\S]*\\bLAG\\b",
+          "Sans PARTITION BY machine_id, LAG prend l'intervention précédente toutes machines confondues."
+        ]
+      ],
+      "explanation": "LAG lit la ligne précédente, LEAD la suivante ; la première intervention de chaque machine n'a pas de précédente et donne NULL. C'est la base du calcul d'un MTBF."
+    },
+    {
+      "id": "part-atelier",
+      "series": "Requêtes avancées",
+      "title": "La part de chaque atelier",
+      "goal": "Part de chaque atelier dans le coût total des interventions, en pourcentage arrondi à une décimale : nom de l'atelier et part.",
+      "starter": "SELECT a.nom, SUM(i.cout)\nFROM intervention i\nJOIN machine m ON m.id = i.machine_id\nJOIN atelier a ON a.id = m.atelier_id\nGROUP BY a.id, a.nom",
+      "hint": "Divisez la somme de l'atelier par le total, obtenu par une sous-requête (SELECT SUM(cout) FROM intervention) ou par SUM(SUM(i.cout)) OVER ().",
+      "solution": "SELECT a.nom,\n    ROUND(100.0 * SUM(i.cout) / (SELECT SUM(cout) FROM intervention), 1)\nFROM intervention i\nJOIN machine m ON m.id = i.machine_id\nJOIN atelier a ON a.id = m.atelier_id\nGROUP BY a.id, a.nom",
+      "ordered": false,
+      "explanation": "Le 100.0 force un calcul décimal : entre deux entiers, SQL Server fait une division entière. SUM(SUM(i.cout)) OVER () donne le total sans relire la table."
+    },
+    {
+      "id": "classement",
+      "series": "Requêtes avancées",
+      "title": "Le classement des machines",
+      "goal": "Machines classées par coût total de leurs interventions, de la plus coûteuse à la moins coûteuse : code, coût total et rang.",
+      "starter": "SELECT m.code, SUM(i.cout)\nFROM machine m\nJOIN intervention i ON i.machine_id = m.id\nGROUP BY m.id, m.code",
+      "hint": "RANK() OVER (ORDER BY SUM(i.cout) DESC) numérote les groupes après le GROUP BY ; triez ensuite par ce rang.",
+      "solution": "SELECT m.code, SUM(i.cout),\n    RANK() OVER (ORDER BY SUM(i.cout) DESC)\nFROM machine m\nJOIN intervention i ON i.machine_id = m.id\nGROUP BY m.id, m.code\nORDER BY SUM(i.cout) DESC",
+      "ordered": true,
+      "explanation": "En cas d'égalité, ROW_NUMBER départage arbitrairement (1, 2, 3), RANK donne le même rang et saute le suivant (1, 1, 3), DENSE_RANK ne saute pas (1, 1, 2)."
     },
     {
       "id": "hausse-prix",
@@ -354,6 +567,60 @@
       "check": "SELECT reference FROM piece ORDER BY id",
       "ordered": true,
       "explanation": "Le joint hydraulique est en rupture mais déjà utilisé : il reste, l'historique des interventions en a besoin. Ici NOT IN convient, car piece_id n'est jamais NULL."
+    },
+    {
+      "id": "affecter-technicien",
+      "series": "Modifier les données",
+      "title": "Affecter le nouveau",
+      "goal": "Nicolas Garcia (technicien 6) prend les interventions en cours qui n'ont pas de technicien : mettez la table intervention à jour.",
+      "starter": "UPDATE intervention\nSET technicien_id = 6\nWHERE ",
+      "hint": "Deux conditions : fin IS NULL (en cours) et technicien_id IS NULL (non affectée).",
+      "solution": "UPDATE intervention\nSET technicien_id = 6\nWHERE fin IS NULL\n    AND technicien_id IS NULL",
+      "check": "SELECT id, technicien_id FROM intervention ORDER BY id",
+      "ordered": true,
+      "pitfalls": [
+        [
+          "WHERE[\\s\\S]*=\\s*NULL",
+          "= NULL n'est jamais vrai : une valeur vide se teste avec IS NULL."
+        ]
+      ],
+      "explanation": "L'intervention 12, terminée sans technicien, ne doit pas changer : l'historique dirait à tort que Nicolas Garcia l'a faite."
+    },
+    {
+      "id": "cloturer",
+      "series": "Modifier les données",
+      "title": "Clôturer une intervention",
+      "goal": "L'intervention 17 sur le tour vient de se terminer, pour 350 € : renseignez sa fin à la date et l'heure du jour et son coût.",
+      "starter": "UPDATE intervention\nSET ",
+      "hint": {
+        "mysql": "SET fin = NOW(), cout = 350 : plusieurs colonnes se modifient en une fois, séparées par des virgules ; WHERE id = 17.",
+        "sqlserver": "SET fin = GETDATE(), cout = 350 : plusieurs colonnes se modifient en une fois, séparées par des virgules ; WHERE id = 17."
+      },
+      "solution": {
+        "mysql": "UPDATE intervention\nSET fin = NOW(), cout = 350\nWHERE id = 17",
+        "sqlserver": "UPDATE intervention\nSET fin = GETDATE(), cout = 350\nWHERE id = 17"
+      },
+      "check": "SELECT id, fin, cout FROM intervention ORDER BY id",
+      "ordered": true,
+      "pitfalls": [
+        [
+          "^(?![\\s\\S]*\\bWHERE\\b)[\\s\\S]*\\bUPDATE\\b",
+          "Sans WHERE, toutes les interventions sont clôturées : limitez la mise à jour à id = 17."
+        ]
+      ],
+      "explanation": "NOW() en MySQL, GETDATE() en SQL Server. CURDATE() donnerait la date sans l'heure, soit minuit : la durée de l'intervention serait fausse."
+    },
+    {
+      "id": "reserver-pieces",
+      "series": "Modifier les données",
+      "title": "Préparer la révision du tour",
+      "goal": "Réservez une unité de chaque pièce déjà utilisée sur le tour CN (machine 1) : retirez 1 au stock de ces pièces.",
+      "starter": "UPDATE piece\nSET stock = stock - 1\nWHERE ",
+      "hint": "WHERE id IN (sous-requête) : la sous-requête joint piece_utilisee et intervention et garde les pièces de la machine 1.",
+      "solution": "UPDATE piece\nSET stock = stock - 1\nWHERE id IN (\n    SELECT pu.piece_id\n    FROM piece_utilisee pu\n    JOIN intervention i ON i.id = pu.intervention_id\n    WHERE i.machine_id = 1\n)",
+      "check": "SELECT reference, stock FROM piece ORDER BY id",
+      "ordered": true,
+      "explanation": "Le roulement 6204 a servi deux fois sur le tour, mais IN ne le retient qu'une fois : son stock baisse d'une seule unité. UPDATE … JOIN (MySQL) et UPDATE … FROM (SQL Server) s'écrivent différemment, IN marche partout."
     }
   ]
 }

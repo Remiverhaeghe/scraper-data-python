@@ -5,6 +5,19 @@ dans l'historique git.
 
 ## Non publié
 
+### SQL, Maven et Docker complétés
+- Dix-huit niveaux SQL : tri sur deux colonnes, BETWEEN, comparaison de deux
+  colonnes, COUNT DISTINCT, moyenne arrondie, tableau croisé, renforts entre
+  ateliers, auto-jointure, valeur des pièces consommées, catégories avec
+  CASE et NULL, UNION ALL, CONCAT, LAG, part du total, RANK, affectation,
+  clôture datée, UPDATE avec sous-requête ; trophée As du SQL porté à 44
+- Cinq niveaux Maven (version oubliée, propriété mal nommée, Lombok en
+  provided, release du plugin compilateur, mvn install d'une version) et
+  quatre niveaux Docker (SERVER_PORT, script mal copié, CMD entre
+  apostrophes, mise en service complète) ; trophée Intégrateur porté à 21
+- Téléphone servi par la synchronisation, sans changement de code ; cas
+  communs régénérés
+
 ### Automate complété
 - Dix niveaux de ladder : arrêt prioritaire en SET et RESET, marche par
   à-coups, remplissage entre deux flotteurs, avertissement avant démarrage,

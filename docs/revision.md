@@ -109,7 +109,7 @@ Page Git du bureau et du web, pour s'exercer aux branches sans risque :
 
 Page SQL du bureau et du web, pour s'exercer aux requêtes sur la base d'une usine (ateliers, machines, techniciens, interventions, pièces) :
 
-- [x] Vingt-six niveaux en six séries : les bases, regrouper, jointures, pour aller plus loin (sous-requêtes, CASE, dates), requêtes avancées (WITH, ROW_NUMBER, cumul avec OVER), modifier les données (UPDATE, INSERT, DELETE)
+- [x] Quarante-quatre niveaux en six séries : les bases (tri sur deux colonnes, BETWEEN, comparaison de deux colonnes), regrouper (COUNT DISTINCT, moyenne arrondie, tableau croisé par SUM(CASE)), jointures (auto-jointure, deux jointures depuis une table, table de liaison), pour aller plus loin (sous-requêtes, CASE et NULL, UNION ALL, CONCAT, dates), requêtes avancées (WITH, ROW_NUMBER, RANK, LAG, cumul et pourcentage du total), modifier les données (UPDATE, INSERT, DELETE, UPDATE avec sous-requête) ; trophée As du SQL pour les quarante-quatre
 - [x] Dialecte MySQL ou SQL Server au choix : LIMIT ou TOP, IFNULL ou ISNULL, NOW ou GETDATE, DATEDIFF et TIMESTAMPDIFF ; une écriture de l'autre dialecte est signalée
 - [x] Résultat comparé à celui de la solution de référence : une autre requête qui renvoie les mêmes lignes est acceptée ; résultat attendu affiché à côté du sien
 - [x] Erreurs classiques expliquées : `= NULL`, `COUNT(*)` après un LEFT JOIN, NOT IN face à des NULL, BETWEEN sur des dates avec heure, agrégat dans WHERE, colonne ambiguë
@@ -143,7 +143,7 @@ Page Schémas électriques du bureau et du web, pour câbler puis manœuvrer des
 Page Maven et Docker du bureau et du web : un fichier à corriger, des commandes lancées dans une console simulée, rien n'est exécuté sur la machine :
 
 - [x] Maven : pom.xml lu (coordonnées, propriétés, dépendances, plugins), dépendances résolues dans un dépôt central réduit, cycle de vie compile, test, package avec les messages de Maven, mvn dependency:tree
-- [x] Six niveaux Maven : coordonnées, dépendance manquante, scopes, version de Java, plugin surefire trop ancien, conflit de versions
+- [x] Onze niveaux Maven : coordonnées, dépendance manquante, scopes, version de Java, plugin surefire trop ancien, conflit de versions, version oubliée, propriété mal nommée, Lombok en provided, release du plugin compilateur prioritaire, publication d'une version avec mvn install
 - [x] Docker : Dockerfile construit instruction par instruction, docker build, run (-p, -v, -e, --name), ps, logs, stop, rm, volume, et curl pour vérifier que le service répond
-- [x] Six niveaux Docker : premier Dockerfile, conteneur qui s'arrête aussitôt, port déjà pris, application Python, variable d'environnement, données gardées par un volume
+- [x] Dix niveaux Docker : premier Dockerfile, conteneur qui s'arrête aussitôt, port déjà pris, application Python, variable d'environnement, données gardées par un volume, port interne changé par SERVER_PORT, script copié au mauvais endroit, CMD entre apostrophes, mise en service complète ; trophée Intégrateur pour les vingt et un niveaux
 - [x] Fichier, conteneurs et console gardés d'une séance à l'autre ; niveau remis à zéro sur demande

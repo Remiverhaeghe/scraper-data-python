@@ -77,6 +77,52 @@ def test_hour_durations_depend_on_the_dialect():
             "WHERE id NOT IN (SELECT technicien_id FROM intervention)",
             "NOT EXISTS",
         ),
+        (
+            "sous-le-minimum",
+            "SELECT reference, stock, stock_mini FROM piece WHERE stock <= stock_mini",
+            "pas <=",
+        ),
+        (
+            "machines-differentes",
+            "SELECT technicien_id, COUNT(*), COUNT(machine_id) FROM intervention "
+            "WHERE technicien_id IS NOT NULL GROUP BY technicien_id",
+            "COUNT(DISTINCT machine_id)",
+        ),
+        (
+            "cout-moyen",
+            "SELECT type, ROUND(AVG(IFNULL(cout, 0)), 2) FROM intervention "
+            "GROUP BY type",
+            "AVG ignore déjà les NULL",
+        ),
+        (
+            "binomes",
+            "SELECT a.nom, b.nom, a.specialite FROM technicien a "
+            "JOIN technicien b ON b.specialite = a.specialite AND a.id <> b.id",
+            "a.id < b.id",
+        ),
+        (
+            "categories-cout",
+            "SELECT id, CASE WHEN cout < 100 THEN 'faible' WHEN cout < 500 "
+            "THEN 'moyen' ELSE 'élevé' END FROM intervention ORDER BY id",
+            "cout IS NULL",
+        ),
+        (
+            "intervention-precedente",
+            "SELECT machine_id, id, debut, LAG(debut) OVER (ORDER BY debut) "
+            "FROM intervention ORDER BY machine_id, debut",
+            "PARTITION BY machine_id",
+        ),
+        (
+            "affecter-technicien",
+            "UPDATE intervention SET technicien_id = 6 "
+            "WHERE fin IS NULL AND technicien_id = NULL",
+            "IS NULL",
+        ),
+        (
+            "cloturer",
+            "UPDATE intervention SET fin = NOW(), cout = 350",
+            "id = 17",
+        ),
     ],
 )
 def test_classic_mistakes_fail_with_advice(pLevelId, pQuery, pAdvice):
@@ -102,6 +148,26 @@ def test_other_queries_with_the_same_rows_pass():
         "INSERT INTO intervention (machine_id, technicien_id, type, debut) "
         "VALUES (1, 1, 'preventive', NOW())",
         "mysql",
+    )["passed"]
+    assert run_level(
+        get_level("tableau-croise"),
+        "SELECT machine_id, COUNT(CASE WHEN type = 'preventive' THEN 1 END), "
+        "COUNT(CASE WHEN type = 'corrective' THEN 1 END) FROM intervention "
+        "GROUP BY machine_id ORDER BY machine_id",
+        "sqlserver",
+    )["passed"]
+    assert run_level(
+        get_level("part-atelier"),
+        "SELECT a.nom, ROUND(100.0 * SUM(i.cout) / SUM(SUM(i.cout)) OVER (), 1) "
+        "FROM intervention i JOIN machine m ON m.id = i.machine_id "
+        "JOIN atelier a ON a.id = m.atelier_id GROUP BY a.id, a.nom",
+        "mysql",
+    )["passed"]
+    assert run_level(
+        get_level("cloturer"),
+        "UPDATE intervention SET cout = 350, fin = '2026-06-30 08:00:00' "
+        "WHERE id = 17",
+        "sqlserver",
     )["passed"]
 
 

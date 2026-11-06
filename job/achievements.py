@@ -252,10 +252,10 @@ ACHIEVEMENTS = (
     (
         "sql-all",
         "As du SQL",
-        "Réussir les 26 niveaux du bac à sable SQL",
+        "Réussir les 44 niveaux du bac à sable SQL",
         "database",
         "sql_level",
-        26,
+        44,
         False,
     ),
     (
@@ -315,10 +315,10 @@ ACHIEVEMENTS = (
     (
         "devops-all",
         "Intégrateur",
-        "Réussir les 12 niveaux Maven et Docker",
+        "Réussir les 21 niveaux Maven et Docker",
         "server",
         "devops_level",
-        12,
+        21,
         False,
     ),
     (
