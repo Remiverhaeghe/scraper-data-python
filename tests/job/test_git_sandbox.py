@@ -3,7 +3,8 @@
 import pytest
 
 from job.git_graph import FADED_OPACITY, compute_layout, render_graph
-from job.git_sandbox import Repository, replay, run_command
+from job.git_repository import Repository
+from job.git_sandbox import replay, run_command
 
 
 def run_all(pRepository, *pCommands):

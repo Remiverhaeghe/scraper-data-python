@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../logic/git_levels.dart';
-import '../logic/git_sandbox.dart';
+import '../logic/git_repository.dart';
+import '../logic/git_worktree.dart';
 import '../revision_state.dart';
 
 /// Débuts de commande proposés sous le champ, pour taper moins au téléphone.

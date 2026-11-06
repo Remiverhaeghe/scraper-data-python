@@ -9,7 +9,8 @@ autre chemin qui aboutit au même graphe réussit aussi le niveau.
 from dataclasses import dataclass
 
 from job.git_graph import render_graph
-from job.git_sandbox import MAX_HISTORY, describe_worktree, replay, run_command
+from job.git_sandbox import MAX_HISTORY, replay, run_command
+from job.git_worktree import describe_worktree
 from storage.git_levels import get_git_level_results, save_git_level_result
 
 

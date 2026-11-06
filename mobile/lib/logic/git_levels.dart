@@ -3,6 +3,7 @@
 
 import 'dart:convert';
 
+import 'git_repository.dart';
 import 'git_sandbox.dart';
 import 'python_compat.dart';
 

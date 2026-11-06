@@ -38,7 +38,8 @@ from job.excel_values import format_value
 from job.git_graph import render_graph
 from job.git_levels import LEVELS as GIT_LEVELS
 from job.git_levels import is_goal_reached
-from job.git_sandbox import describe_worktree, replay, run_command
+from job.git_sandbox import replay, run_command
+from job.git_worktree import describe_worktree
 from job.ladder import parse_program, render_svg
 from job.maven_sim import CENTRAL
 from job.ladder_game import (

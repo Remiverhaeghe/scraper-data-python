@@ -13,6 +13,9 @@ dans l'historique git.
   automate, Git, Maven et Docker, SQL, Excel, schémas, puzzles, oral) a
   son mixin dans `lib/state/`, et la mise en attente d'une partie est
   écrite une seule fois ; les écrans n'ont pas changé
+- Bac à sable Git découpé en cinq modules, à l'identique en Python et en
+  Dart : dépôt simulé, fichiers et index, historique, serveur, et lecture
+  des commandes ; aucun message ni comportement modifié
 - Tests de la lecture Gmail (lecture seule, messages laissés non lus,
   délai, plafond des messages), du comptage des offres sur chaque
   plateforme, de l'échec d'Argos et du script de certificat HTTPS

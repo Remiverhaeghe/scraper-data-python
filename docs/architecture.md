@@ -150,7 +150,11 @@ scraper-data-python/
 │   ├── calendar.py                            # Export des relances et entretiens au format .ics
 │   ├── challenges/                            # Défis : moteur de progression et un module par défi
 │   ├── code_puzzles.py                        # Puzzles de code : séries, correction, niveau, bilan
-│   ├── git_sandbox.py                         # Bac à sable Git : dépôt simulé et commandes
+│   ├── git_sandbox.py                         # Bac à sable Git : lecture et aiguillage des commandes
+│   ├── git_repository.py                      # Dépôt simulé, fusion à trois voies, conflits, options
+│   ├── git_worktree.py                        # Commandes Git sur les fichiers, l'index et la remise
+│   ├── git_history.py                         # Commandes Git sur l'historique : commit, merge, rebase…
+│   ├── git_remote.py                          # Commandes Git vers le serveur : fetch, pull, push
 │   ├── git_graph.py                           # Dessin SVG du graphe des commits
 │   ├── git_levels.py                          # Niveaux Git : objectif, réussite et progression
 │   ├── sql_sandbox.py                         # Bac à sable SQL : base en mémoire, dialectes, comparaison
