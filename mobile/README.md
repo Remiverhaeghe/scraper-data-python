@@ -183,7 +183,9 @@ mobile/
 │   │   ├── devops.dart           # Objectif et étape des niveaux Maven et Docker
 │   │   ├── sql_sandbox.dart      # Bac à sable SQL, identique à job/sql_sandbox.py, dans un isolat
 │   │   ├── sql_levels.dart       # Niveaux SQL et comparaison, identiques à job/sql_levels.py
-│   │   ├── excel_formula.dart    # Formules Excel en français, identiques à job/excel_*.py
+│   │   ├── excel_formula.dart    # Formules Excel : jetons, parseur, feuille, comme job/excel_formula.py
+│   │   ├── excel_functions.dart  # Fonctions du tableur, identiques à job/excel_functions.py
+│   │   ├── excel_values.dart     # Erreurs, plages, conversions, dates, comme job/excel_values.py
 │   │   ├── excel_levels.dart     # Niveaux Excel, recopie et comparaison, identiques à job/excel_levels.py
 │   │   ├── circuit.dart          # Simulateur de circuits, identique à job/circuit.py
 │   │   ├── circuit_drawing.dart  # Dessin des circuits, identique à job/circuit_drawing.py

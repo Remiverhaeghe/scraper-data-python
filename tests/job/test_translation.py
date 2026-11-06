@@ -97,6 +97,18 @@ def test_german_needs_the_english_model(monkeypatch):
     translation.get_installed_codes.cache_clear()
 
 
+def test_argos_failure_gives_a_readable_error(fake_argos, monkeypatch):
+    """Vérifie qu'une erreur d'Argos devient un message lisible pour l'utilisateur."""
+
+    def fail(_pText, pFrom, pTo):
+        raise RuntimeError(f"modèle {pFrom}>{pTo} corrompu")
+
+    monkeypatch.setattr(fake_argos, "translate", fail)
+
+    with pytest.raises(ValueError, match="La traduction a échoué"):
+        translate_to_french(GERMAN)
+
+
 def test_translation_is_kept_in_the_database(fake_argos, tmp_path):
     """Vérifie qu'une description traduite une fois n'est plus recalculée."""
 

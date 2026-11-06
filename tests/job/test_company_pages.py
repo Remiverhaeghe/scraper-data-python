@@ -1,5 +1,7 @@
 """Tests des entreprises suivies sur les pages carrière"""
 
+import importlib
+
 import pytest
 import requests
 
@@ -57,3 +59,43 @@ def test_unknown_or_missing_company_is_refused(tmp_path, monkeypatch):
         vDatabaseFile, "https://jobs.ashbyhq.com/alan"
     )
     assert "alan" in load_company_list("ashby", vDatabaseFile)
+
+
+# Workday attend un site au format [Nom=]hôte/tenant/site.
+ACME = {vPlatform: "acme" for vPlatform in company_pages.PLATFORMS}
+ACME["workday"] = "Acme=acme.wd3/acme/jobs"
+
+
+@pytest.mark.parametrize(
+    ("pPlatform", "pFunction", "pAnswer"),
+    [
+        ("smartrecruiters", "get_postings", {"totalFound": 4}),
+        ("lever", "get_postings", [{}, {}, {}, {}]),
+        ("ashby", "get_jobs", [{}, {}, {}, {}]),
+        ("greenhouse", "get_jobs", {"jobs": [{}, {}, {}, {}]}),
+        ("recruitee", "get_offers", [{}, {}, {}, {}]),
+        ("workable", "get_account", {"jobs": [{}, {}, {}, {}]}),
+        ("workday", "search_jobs", {"total": 4}),
+    ],
+)
+def test_published_offers_are_counted_on_each_platform(
+    pPlatform, pFunction, pAnswer, monkeypatch
+):
+    """Vérifie le nombre d'offres lu dans la réponse propre à chaque plateforme."""
+
+    vClient = importlib.import_module(f"job.sources.{pPlatform}.client")
+    monkeypatch.setattr(vClient, pFunction, lambda *pArgs: pAnswer)
+
+    assert company_pages.count_published_offers(pPlatform, ACME[pPlatform]) == 4
+
+
+def test_empty_answers_count_no_offer(monkeypatch):
+    """Vérifie qu'une réponse sans total ni liste compte zéro offre."""
+
+    vSmartRecruiters = importlib.import_module("job.sources.smartrecruiters.client")
+    vWorkday = importlib.import_module("job.sources.workday.client")
+    monkeypatch.setattr(vSmartRecruiters, "get_postings", lambda *pArgs: {})
+    monkeypatch.setattr(vWorkday, "search_jobs", lambda *pArgs: {})
+
+    assert company_pages.count_published_offers("smartrecruiters", "acme") == 0
+    assert company_pages.count_published_offers("workday", ACME["workday"]) == 0

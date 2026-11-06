@@ -12,6 +12,7 @@ import 'package:jobboard_revision/logic/circuit_levels.dart';
 import 'package:jobboard_revision/logic/code_puzzles.dart';
 import 'package:jobboard_revision/logic/devops.dart';
 import 'package:jobboard_revision/logic/excel_formula.dart' as excel;
+import 'package:jobboard_revision/logic/excel_values.dart' as excel;
 import 'package:jobboard_revision/logic/excel_levels.dart';
 import 'package:jobboard_revision/logic/git_levels.dart';
 import 'package:jobboard_revision/logic/git_sandbox.dart';

@@ -2,6 +2,7 @@
 // à job/excel_levels.py, sur le contenu reçu du PC.
 
 import 'excel_formula.dart';
+import 'excel_values.dart';
 
 const noReferenceMessage = "La formule doit s'appuyer sur les cellules de la feuille, pas sur des "
     'valeurs recopiées à la main.';

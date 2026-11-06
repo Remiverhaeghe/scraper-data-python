@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Point qualité
+- Moteur Excel du téléphone découpé en trois fichiers, comme le Python :
+  formules, fonctions et valeurs ; une plage lit sa feuille par une
+  interface, sans dépendance circulaire
+- Tests de la lecture Gmail (lecture seule, messages laissés non lus,
+  délai, plafond des messages), du comptage des offres sur chaque
+  plateforme, de l'échec d'Argos et du script de certificat HTTPS
+
 ### Schémas à construire sur le téléphone
 - Questions « schéma à construire » envoyées au téléphone avec la
   bibliothèque des symboles, une seule fois par paquet
