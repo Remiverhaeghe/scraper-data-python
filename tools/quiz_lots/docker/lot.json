@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110603,
+  "skills": ["Docker", "conteneur", "Docker Compose"],
+  "schemas": [
+    {
+      "name": "docker-multi-stage.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Construction en plusieurs étapes",
+        "nodes": [
+          "Étape build : image complète avec compilateur",
+          "Dépendances téléchargées, cache conservé",
+          "Sources compilées en binaire ou archive",
+          "Étape finale : image d'exécution légère",
+          "COPY --from=build du seul résultat"
+        ],
+        "note": "Outils de construction et sources restent hors de l'image finale"
+      }
+    },
+    {
+      "name": "docker-arret.svg",
+      "questions": ["046", "047", "048"],
+      "diagram": {
+        "title": "Arrêt d'un conteneur",
+        "nodes": [
+          "docker stop : SIGTERM au processus 1",
+          "L'application refuse le nouveau travail",
+          "Requêtes en cours terminées, connexions fermées",
+          "Délai écoulé : SIGKILL",
+          "Code de sortie 143 (SIGTERM) ou 137 (SIGKILL)"
+        ],
+        "note": "Avec la forme shell de CMD, le signal s'arrête au shell"
+      }
+    }
+  ]
+}

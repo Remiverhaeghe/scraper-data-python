@@ -1,0 +1,445 @@
+@051
+Q: Que fait ce middleware Express ?
+C: Il journalise chaque requête puis passe la main au traitement suivant
+W: Il bloque chaque requête tant que la réponse précédente n'est pas envoyée
+W: Il renvoie une réponse vide pour chaque requête qui arrive au serveur
+W: Il relance la requête précédente si elle a échoué côté serveur
+E: Sans l'appel à next, la requête resterait sans réponse et le client attendrait jusqu'à expiration. Les middlewares s'exécutent dans l'ordre de leur déclaration avec app.use.
+```javascript
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+```
+
+@052
+Q: Comment un gestionnaire d'erreurs Express se distingue-t-il d'un middleware ordinaire ?
+C: Il prend quatre paramètres, l'erreur en premier
+W: Il porte un nom qui commence par le mot error
+W: Il se déclare avant les routes de l'application
+W: Il s'enregistre avec app.catch au lieu de app.use
+E: (err, req, res, next) : Express ne l'appelle qu'en cas d'erreur, s'il est déclaré après les routes. Express 5 transmet aussi les rejets des fonctions async à ce gestionnaire.
+
+@053
+Q: Pourquoi utiliser un flux (stream) pour envoyer un fichier de 2 Go au client ?
+C: Le fichier passe par petits morceaux, sans être chargé entier en mémoire
+W: Le flux compresse le fichier avant de l'envoyer au navigateur du client
+W: Le flux envoie le fichier plus vite en ouvrant plusieurs connexions réseau
+W: Le flux garde une copie du fichier dans le cache du serveur web
+E: createReadStream(chemin).pipe(res) envoie le fichier en gardant quelques Ko en mémoire. pipeline de node:stream/promises gère en plus les erreurs et la fermeture des deux côtés.
+
+@054
+Q: Associer chaque outil de l'écosystème JavaScript à son rôle.
+P: ESLint => Détecter les erreurs et mauvaises pratiques dans le code
+P: Prettier => Formater le code de façon uniforme
+P: Vitest => Exécuter les tests unitaires
+P: Vite => Servir le projet en développement et le construire pour la production
+P: Playwright => Tester l'application dans de vrais navigateurs
+E: ESLint et Prettier se lancent en pré-commit et en CI. Vitest reprend l'API de Jest, avec un démarrage plus rapide sur les projets basés sur Vite.
+
+@055
+Q: Compléter ce test Vitest qui vérifie le calcul de la TVA.
+A: toBe
+E: toBe compare avec Object.is, adapté aux nombres et chaînes ; toEqual compare le contenu d'objets ou de tableaux. Pour des décimaux, toBeCloseTo évite les surprises d'arrondi.
+```javascript
+import { expect, test } from "vitest";
+import { ttc } from "./tva.js";
+
+test("ajoute 20 % de TVA", () => {
+  expect(ttc(100)).____(120);
+});
+```
+
+@056
+Q: Pourquoi ce test passe-t-il alors que la fonction rejette sa promesse ?
+C: La promesse n'est ni attendue ni renvoyée : le test se termine avant le rejet
+W: Vitest considère comme réussi un test qui ne contient pas d'assertion explicite
+W: La méthode rejects ne fonctionne qu'avec des fonctions synchrones
+W: Le rejet est ignoré, car la fonction est déclarée sans le mot async
+E: On écrit await expect(charger()).rejects.toThrow(). expect.assertions(1) fait aussi échouer un test asynchrone qui n'a vérifié aucune assertion.
+```javascript
+test("refuse un identifiant vide", () => {
+  expect(charger("")).rejects.toThrow("identifiant");
+});
+```
+
+@057
+Q: Que fait AbortController avec fetch ?
+C: Il permet d'annuler une requête en cours, par exemple quand l'utilisateur change de page
+W: Il permet de relancer automatiquement une requête qui a échoué sur le réseau
+W: Il permet de limiter la taille du corps de la réponse reçue du serveur
+W: Il permet de bloquer les requêtes vers des domaines non autorisés par la page
+E: On passe controller.signal à fetch, puis controller.abort() rejette la promesse avec une AbortError. AbortSignal.timeout(5000) crée un signal qui s'annule seul après 5 s.
+
+@058
+Q: Que renvoie Object.groupBy(commandes, c => c.statut) ?
+C: Un objet dont chaque clé est un statut et chaque valeur le tableau des commandes concernées
+W: Un tableau des statuts distincts, triés par ordre d'apparition dans les commandes
+W: Un tableau de commandes trié par statut, du plus fréquent au plus rare
+W: Le nombre de commandes pour chaque statut, sous forme d'une Map
+E: Disponible dans les navigateurs récents et Node.js 21, il remplace un reduce fastidieux. Map.groupBy fait la même chose avec des clés de n'importe quel type.
+
+@059
+Q: Qu'affiche ce code ?
+C: 2
+W: 1
+W: 3
+W: NaN
+E: Un générateur suspend son exécution à chaque yield et reprend au next suivant. Les générateurs servent à produire des suites paresseuses, sans calculer toutes les valeurs à l'avance.
+```javascript
+function* compteur() {
+  yield 1;
+  yield 2;
+  yield 3;
+}
+const it = compteur();
+it.next();
+console.log(it.next().value);
+```
+
+@060
+Q: Pourquoi une WeakMap convient-elle pour associer des données à des éléments du DOM ?
+C: Elle n'empêche pas le ramasse-miettes de libérer un élément retiré de la page
+W: Elle range les données dans le DOM pour qu'elles restent après un rechargement de la page
+W: Elle accepte les chaînes comme clés, contrairement à une Map ordinaire
+W: Elle chiffre les données associées pour les protéger des autres scripts
+E: Avec une Map, l'élément supprimé resterait en mémoire tant que la Map le référence : c'est une fuite. Une WeakMap n'accepte que des objets comme clés et ne se parcourt pas.
+
+@061
+Q: Quel est l'intérêt d'un import dynamique comme await import("./graphique.js") ?
+C: Charger un module seulement au moment où il sert, pour alléger le chargement initial
+W: Charger un module depuis un autre domaine sans passer par les règles CORS
+W: Charger un module plusieurs fois pour obtenir une instance neuve à chaque appel de la fonction
+W: Charger un module en ignorant les erreurs de syntaxe qu'il pourrait contenir
+E: Une bibliothèque de graphiques de 300 Ko n'est téléchargée que quand l'utilisateur ouvre l'onglet concerné. Les outils de construction en font un fichier séparé.
+
+@062
+Q: Que se passe-t-il si un écouteur d'événement ajouté à chaque ouverture d'une fenêtre n'est jamais retiré ?
+C: Les écouteurs s'accumulent, le traitement se répète et la mémoire grossit
+W: Le navigateur retire automatiquement les écouteurs inutilisés après trente secondes
+W: Le dernier écouteur ajouté remplace les précédents sur l'élément
+W: L'élément cesse de recevoir des événements au-delà de dix écouteurs
+E: Un clic déclenche alors l'action autant de fois que la fenêtre a été ouverte. On retire l'écouteur à la fermeture, ou on passe un AbortSignal dans les options et on l'annule.
+
+@063
+Q: À quoi sert un Web Worker ?
+C: À exécuter un calcul long dans un autre fil sans figer la page
+W: À mettre la page en cache pour qu'elle s'affiche sans réseau disponible
+W: À partager une variable globale entre plusieurs onglets
+W: À accélérer l'affichage des images de la page web
+E: Le worker n'a pas accès au DOM et communique par messages (postMessage). Le service worker, lui, intercepte les requêtes réseau pour le fonctionnement hors ligne.
+
+@064
+Q: Que fait un service worker dans une application web progressive ?
+C: Il intercepte les requêtes réseau et peut répondre depuis un cache hors ligne
+W: Il exécute le code serveur de l'application directement dans le navigateur du client
+W: Il remplace le serveur web pour héberger l'application sur le poste
+W: Il synchronise le DOM entre plusieurs onglets de la même application
+E: Il s'installe une fois et survit à la fermeture de la page. Il n'agit qu'en HTTPS (ou sur localhost), et une mise à jour mal gérée peut servir une ancienne version longtemps.
+
+@065
+Q: Une liste de 10 000 éléments est filtrée à chaque frappe, en 40 ms par filtrage. Combien de millisecondes la page est-elle bloquée pour 8 frappes sans debounce ?
+N: 320
+U: ms
+E: 8 × 40 = 320 ms de blocage, perçus comme une saisie saccadée. Avec un debounce, un seul filtrage s'exécute après la pause, soit 40 ms.
+
+@066
+Q: Pourquoi cette comparaison de chaînes trie-t-elle mal les noms accentués ?
+C: L'opérateur < compare les codes des caractères, pas l'ordre alphabétique français
+W: Les chaînes accentuées ne peuvent pas être comparées avec les opérateurs
+W: La méthode sort supprime les accents avant de comparer les chaînes
+W: Les noms commençant par une majuscule sont placés en fin de liste
+E: « Émile » passe après « Zoé ». localeCompare avec "fr" ou un Intl.Collator, plus rapide pour de longues listes, respecte l'ordre de la langue.
+```javascript
+noms.sort((a, b) => (a < b ? -1 : 1));
+```
+
+@067
+Q: Compléter ce tri qui respecte l'ordre alphabétique français.
+A: localeCompare
+E: La méthode renvoie un nombre négatif, nul ou positif comme attendu par sort. L'option sensitivity: "base" ignore en plus accents et casse pour l'égalité.
+```javascript
+noms.sort((a, b) => a.____(b, "fr"));
+```
+
+@068
+Q: Qu'est-ce qu'un prototype en JavaScript ?
+C: L'objet dont un autre objet hérite les propriétés absentes de lui-même
+W: Une version d'essai d'une fonction avant sa mise en production
+W: Le modèle de classe requis pour créer un objet littéral
+W: Une copie d'un objet gardée pour pouvoir annuler ses modifications plus tard
+E: La recherche d'une propriété remonte la chaîne des prototypes. Les classes ES2015 sont une syntaxe au-dessus de ce mécanisme : les méthodes sont rangées sur le prototype, partagé par les instances.
+
+@069
+Q: Pourquoi modifier Array.prototype dans une application est-il dangereux ?
+C: Le changement touche tous les tableaux, y compris ceux des bibliothèques
+W: Le navigateur refuse les modifications du prototype des tableaux
+W: Les tableaux perdent leur méthode length après la modification
+W: La modification ne s'applique qu'aux tableaux créés avant elle
+E: Une méthode ajoutée peut entrer en conflit avec une future méthode standard du même nom, comme ce fut le cas pour flatten et contains. On écrit plutôt une fonction utilitaire.
+
+@070
+Q: Que fait Object.freeze(config) sur cet objet ?
+C: Il empêche de modifier les propriétés de premier niveau, pas celles des objets imbriqués
+W: Il empêche toute modification de l'objet et de ses objets imbriqués en profondeur
+W: Il copie l'objet dans une zone de mémoire protégée en lecture seule
+W: Il interdit la lecture de l'objet depuis un autre module de l'application
+E: config.port = 8080 est ignoré (ou lève une erreur en mode strict), mais config.db.hote reste modifiable. Une copie profonde gelée demande une fonction récursive.
+```javascript
+const config = Object.freeze({ port: 3000, db: { hote: "localhost" } });
+```
+
+@071
+Q: Remettre dans l'ordre le chargement d'un script déclaré avec defer.
+O: Le navigateur lit le HTML et rencontre la balise script
+O: Il télécharge le script en parallèle sans bloquer la lecture
+O: Il termine la construction du DOM
+O: Il exécute le script dans l'ordre des scripts defer
+O: L'événement DOMContentLoaded se déclenche
+E: Un script sans attribut bloque la lecture du HTML pendant son téléchargement. async exécute le script dès qu'il arrive, sans ordre garanti ; les modules ES se comportent comme defer.
+
+@072
+Q: Pourquoi placer un script analytique tiers avec async plutôt que sans attribut dans le head ?
+C: Il ne bloque plus l'affichage de la page pendant son téléchargement
+W: Il s'exécute avant les autres scripts déclarés dans la page chargée
+W: Il ne peut plus lire les cookies du site qui l'inclut
+W: Il se charge depuis le cache même la première fois
+E: Un script tiers lent ou indisponible retarderait sinon toute la page. Il garde en revanche les droits d'un script du site : on limite ce qu'on inclut et on encadre avec une Content-Security-Policy.
+
+@073
+Q: Que permet une Content-Security-Policy telle que script-src 'self' ?
+C: De n'exécuter que les scripts servis par le site, ce qui bloque les scripts injectés
+W: De chiffrer les scripts du site pendant leur transfert vers le navigateur
+W: D'empêcher les autres sites d'afficher la page dans un cadre intégré
+W: De vérifier que les scripts du site ne contiennent pas d'erreur de syntaxe
+E: Un script en ligne injecté par une faille XSS n'est plus exécuté. Les gestionnaires onclick dans le HTML et eval sont aussi bloqués, ce qui oblige à des écouteurs posés en JavaScript.
+
+@074
+Q: Pourquoi ne jamais construire une requête SQL avec un gabarit de chaîne dans Node.js ?
+C: Une valeur saisie peut modifier la requête : c'est une injection SQL
+W: Les gabarits de chaîne ne gèrent pas les guillemets doubles des noms de table
+W: Le pilote de base refuse les requêtes qui contiennent des accents graves
+W: Les gabarits de chaîne ralentissent l'exécution des requêtes par la base
+E: Un nom comme ' OR 1=1 -- renvoie toutes les lignes. On passe les valeurs en paramètres : db.query("SELECT * FROM client WHERE email = $1", [email]).
+```javascript
+db.query(`SELECT * FROM client WHERE email = '${email}'`);
+```
+
+@075
+Q: Combien de requêtes arrivent au serveur pour la saisie de « clavier » avec un debounce de 300 ms, si la frappe ne marque aucune pause de plus de 300 ms ?
+N: 1
+U: requête
+E: Chaque frappe relance le minuteur ; la requête ne part qu'après 300 ms sans frappe. Sans debounce, sept requêtes partiraient, une par lettre.
+
+@076
+Q: Pourquoi une fonction async dans forEach ne s'attend-elle pas ?
+C: forEach ignore les promesses renvoyées et n'attend aucune d'elles
+W: forEach exécute ses fonctions dans un autre fil que la boucle principale
+W: forEach refuse les fonctions async et lève une erreur de syntaxe
+W: forEach attend chaque promesse mais ignore celles qui échouent
+E: « terminé » s'affiche avant les enregistrements. On écrit for (const ligne of lignes) { await enregistrer(ligne); } pour un traitement en série, ou Promise.all(lignes.map(enregistrer)) en parallèle.
+```javascript
+lignes.forEach(async ligne => {
+  await enregistrer(ligne);
+});
+console.log("terminé");
+```
+
+@077
+Q: Pourquoi limiter le nombre d'appels simultanés quand on envoie 5 000 requêtes vers une API ?
+C: L'API peut refuser ou ralentir sous la charge, et le poste épuise ses connexions
+W: Le navigateur refuse de créer plus de cent promesses dans une même page
+W: Node.js arrête le processus au-delà de mille requêtes HTTP en attente
+W: Les réponses arrivent dans le désordre au-delà de cent requêtes simultanées envoyées
+E: Un Promise.all sur 5 000 appels lance tout d'un coup et déclenche souvent des erreurs 429. On traite par lots, ou avec une file à concurrence limitée comme p-limit.
+
+@078
+Q: 5 000 appels sont envoyés par lots de 50 en parallèle, chaque lot durant 400 ms. Combien de secondes dure le traitement ?
+N: 40
+U: s
+E: 5 000 / 50 = 100 lots, × 0,4 s = 40 s. Une file à concurrence glissante fait mieux : elle relance un appel dès qu'un autre se termine, sans attendre le plus lent du lot.
+
+@079
+Q: Que permet le mot-clé Symbol.iterator dans une classe ?
+C: De rendre ses instances parcourables avec for...of et la décomposition
+W: De rendre ses propriétés privées pour les autres modules
+W: De compter le nombre d'instances créées depuis le démarrage
+W: De trier automatiquement ses éléments à chaque ajout
+E: Une méthode *[Symbol.iterator]() qui fait yield de chaque élément suffit. Les tableaux, Map, Set et chaînes l'implémentent déjà.
+
+@080
+Q: Pourquoi BigInt est-il nécessaire pour manipuler cet identifiant reçu d'une API ?
+C: Il dépasse Number.MAX_SAFE_INTEGER et perd sa précision en Number
+W: Les identifiants à plus de dix chiffres sont refusés par JSON.parse
+W: Number ne peut pas représenter les entiers supérieurs à un milliard
+W: BigInt est plus rapide que Number pour les opérations entières
+E: Au-delà de 2^53 - 1, deux entiers voisins ont la même représentation : 9007199254740993 devient 9007199254740992. Ces identifiants circulent plutôt en chaîne dans le JSON.
+```javascript
+const id = 9007199254740993;
+```
+
+@081
+Q: Que vaut Number.MAX_SAFE_INTEGER, plus grand entier exactement représenté, sous forme de puissance de 2 moins 1 : 2^n - 1 ? Donner n.
+N: 53
+E: Les nombres sont des flottants double précision avec une mantisse de 53 bits. Number.isSafeInteger(x) vérifie qu'un entier est sous cette limite.
+
+@082
+Q: À quoi sert la propriété "exports" dans le package.json d'une bibliothèque ?
+C: À définir les points d'entrée publics et à masquer les fichiers internes
+W: À lister les dépendances que la bibliothèque fournit à ses propres utilisateurs
+W: À indiquer les fonctions exportées pour générer la documentation
+W: À exporter la bibliothèque vers plusieurs registres npm à la fois
+E: Les fichiers non listés ne peuvent plus être importés directement, ce qui protège les détails internes. Les conditions import et require servent des versions ES et CommonJS.
+
+@083
+Q: Pourquoi npm audit signale-t-il souvent des failles dans des dépendances indirectes ?
+C: Les paquets utilisés par nos dépendances en ont eux-mêmes, parfois sur plusieurs niveaux
+W: npm audit analyse le code source du projet et y cherche des failles connues
+W: npm audit vérifie les paquets installés globalement sur le poste du développeur
+W: npm audit signale les dépendances qui n'ont pas été mises à jour depuis un an
+E: Un projet de 20 dépendances directes en installe souvent plusieurs centaines. On met à jour la dépendance directe concernée, ou on force une version avec la propriété overrides en dernier recours.
+
+@084
+Q: Quel risque présente un script postinstall dans une dépendance npm ?
+C: Il s'exécute à l'installation avec les droits de l'utilisateur, avant tout audit
+W: Il supprime les autres dépendances installées dans le dossier node_modules du projet
+W: Il remplace le fichier package-lock.json par une version plus ancienne
+W: Il désactive la vérification des empreintes des paquets téléchargés
+E: Plusieurs attaques de la chaîne d'approvisionnement ont volé des jetons ainsi. npm ci --ignore-scripts, ou une liste blanche des paquets autorisés à exécuter des scripts, réduit le risque.
+
+@085
+Q: Associer chaque niveau de journal de la console à son usage.
+P: console.error => Une erreur à signaler et à corriger
+P: console.warn => Une situation anormale mais supportée
+P: console.info => Une information de déroulement
+P: console.debug => Un détail utile au développement
+P: console.table => Un tableau de données lisible pendant la mise au point
+E: En production, côté serveur, on préfère une bibliothèque de journaux structurés comme pino, qui écrit du JSON avec niveau et horodatage. Les appels console.log oubliés se repèrent avec ESLint.
+
+@086
+Q: Qu'affiche ce code ?
+C: 1, 4, 3, 2
+W: 1, 2, 3, 4
+W: 1, 3, 4, 2
+W: 1, 4, 2, 3
+E: 1 et 4 sont synchrones. La file des microtâches passe ensuite et affiche 3 ; la tâche du minuteur n'arrive qu'après, et affiche 2, même avec un délai de 0 ms.
+```javascript
+console.log(1);
+setTimeout(() => console.log(2), 0);
+queueMicrotask(() => console.log(3));
+console.log(4);
+```
+
+@087
+Q: Pourquoi une boucle de microtâches qui se planifient sans fin bloque-t-elle la page ?
+C: La file des microtâches doit être vide avant la tâche suivante et le rendu
+W: Les microtâches s'exécutent dans un fil séparé qui accapare le processeur du poste
+W: Le navigateur limite le nombre de microtâches et suspend ensuite la page
+W: Les microtâches désactivent l'événement de rendu jusqu'à leur suppression
+E: Contrairement aux minuteurs, les microtâches ne cèdent jamais la main au rendu. Un traitement long découpé par setTimeout ou scheduler.yield laisse la page respirer entre deux morceaux.
+
+@088
+Q: Que garantit Promise.withResolvers() ?
+C: Une promesse et ses fonctions resolve et reject accessibles en dehors du constructeur
+W: Une promesse qui ne peut pas être rejetée, même en cas d'erreur
+W: Une promesse résolue immédiatement avec la valeur passée en argument
+W: Une promesse qui se relance seule jusqu'à obtenir une réponse
+E: Utile pour relier une promesse à un événement déclenché ailleurs, comme un message de worker. Avant, on recopiait resolve et reject dans des variables extérieures.
+
+@089
+Q: Pourquoi éviter eval et new Function avec des données venues de l'utilisateur ?
+C: Ils exécutent du texte comme du code, ce qui permet d'injecter n'importe quelle instruction
+W: Ils transforment les nombres en chaînes de caractères de façon imprévisible
+W: Ils ne fonctionnent que dans les versions de Node.js antérieures à la 18
+W: Ils suppriment les variables globales créées par les autres scripts de la page
+E: Une calculatrice qui évalue la saisie donne accès aux cookies ou au système de fichiers côté serveur. On analyse plutôt l'expression avec un analyseur dédié ; une CSP sans unsafe-eval bloque eval côté navigateur.
+
+@090
+Q: Remettre dans l'ordre le diagnostic d'une fuite de mémoire dans une page web.
+O: Reproduire l'action suspecte plusieurs fois
+O: Prendre un instantané du tas dans les outils de développement
+O: Répéter l'action puis prendre un second instantané
+O: Comparer les objets qui s'accumulent et leur chaîne de rétention
+O: Corriger la référence qui les retient, souvent un écouteur ou un cache
+E: La vue « Comparison » des outils de développement montre les objets créés entre deux instantanés. Un élément « Detached » encore référencé par un écouteur est une cause classique.
+
+@091
+Q: Que fait structuredClone sur un objet contenant une référence circulaire ?
+C: Il copie l'objet en reproduisant la référence circulaire dans la copie
+W: Il lève une erreur, comme le ferait JSON.stringify sur une référence circulaire
+W: Il coupe la référence circulaire et la remplace par la valeur null
+W: Il renvoie l'objet d'origine sans le copier pour éviter la boucle
+E: L'algorithme de clonage structuré, utilisé aussi par postMessage, gère les cycles, les dates, les Map et les Set. Les fonctions et les classes perdent en revanche leur prototype.
+
+@092
+Q: Quelle différence entre Array.from({ length: 3 }) et new Array(3) ?
+C: Le premier contient trois undefined, le second trois cases vides
+W: Le premier contient trois zéros, le second trois chaînes de caractères vides
+W: Le premier est figé, le second peut être modifié ensuite
+W: Le premier crée un Set, le second un tableau ordinaire
+E: map saute les cases vides : new Array(3).map((_, i) => i) donne encore trois cases vides. Array.from({ length: 3 }, (_, i) => i) donne [0, 1, 2].
+
+@093
+Q: Pourquoi le résultat d'un calcul de prix doit-il se faire en centimes entiers ?
+C: Les flottants accumulent des erreurs d'arrondi visibles sur les montants
+W: Les montants décimaux ne peuvent pas être envoyés dans un JSON
+W: Les centimes permettent de trier les montants par ordre alphabétique croissant
+W: Les entiers occupent moins de mémoire que les nombres décimaux
+E: 19,99 × 3 donne 59,97000000000001. En centimes, 1999 × 3 = 5997 est exact ; on ne convertit en euros qu'à l'affichage, avec Intl.NumberFormat.
+
+@094
+Q: Que se passe-t-il si une promesse rejetée n'a aucun gestionnaire dans Node.js 22 ?
+C: Le processus s'arrête avec l'erreur, comme pour une exception non attrapée
+W: L'erreur est ignorée et le programme continue sans message
+W: Node.js relance automatiquement la promesse jusqu'à sa réussite
+W: L'erreur est écrite dans un fichier de journal sans arrêter le processus en cours
+E: Le comportement par défaut est --unhandled-rejections=throw depuis Node.js 15. Un gestionnaire global process.on("unhandledRejection") sert à journaliser, pas à masquer l'erreur.
+
+@095
+Q: Pourquoi le verrou package-lock.json doit-il être commité ?
+C: Pour que tous les postes et la CI installent exactement les mêmes versions
+W: Pour que npm puisse publier le projet sans le fichier package.json
+W: Pour que les dépendances soient mises à jour à chaque installation
+W: Pour que les fichiers de node_modules soient suivis par Git
+E: Sans verrou, une installation un mois plus tard peut récupérer une version différente d'une dépendance indirecte, et le bogue n'apparaît que sur certains postes.
+
+@096
+Q: À quoi sert l'option --watch de Node.js 22 en développement ?
+C: À relancer le programme quand un fichier qu'il importe est modifié
+W: À surveiller la mémoire du programme et l'arrêter en cas de fuite détectée
+W: À afficher en direct les requêtes reçues par le serveur web
+W: À recompiler le TypeScript du projet sans outil supplémentaire
+E: Elle remplace nodemon pour les cas simples. --watch-path précise les dossiers à surveiller.
+
+@097
+Q: Pourquoi deux requêtes de recherche lancées à la suite peuvent-elles afficher un résultat périmé ?
+C: La réponse de la première peut arriver après celle de la seconde et l'écraser
+W: Le navigateur met en cache la première réponse et la sert aux suivantes
+W: Le serveur refuse la seconde requête tant que la première n'est pas encore finie
+W: Les promesses sont résolues dans l'ordre inverse de leur création
+E: L'utilisateur tape « vis » puis « visse » et voit les résultats de « vis ». On annule la requête précédente avec AbortController, ou on ignore une réponse qui ne correspond plus au dernier terme demandé.
+
+@098
+Q: Que fait l'expression a ||= 10 ?
+C: Elle affecte 10 à a si a est une valeur fausse
+W: Elle affecte 10 à a si a est null ou undefined
+W: Elle compare a à 10 et renvoie un booléen
+W: Elle ajoute 10 à a si a est un nombre
+E: a ||= 10 équivaut à a || (a = 10). a ??= 10 n'affecte que si a est null ou undefined, et a &&= f(a) seulement si a est vraie.
+
+@099
+Q: Quel risque présente l'enregistrement d'un jeton d'accès dans localStorage ?
+C: Tout script exécuté dans la page, y compris injecté, peut le lire
+W: Le jeton est envoyé aux autres sites visités par le navigateur
+W: Le jeton est effacé dès que l'utilisateur ferme l'onglet ouvert de l'application
+W: Le jeton est copié en clair dans l'historique de navigation
+E: Une faille XSS suffit à voler le jeton. Un cookie HttpOnly, Secure et SameSite, inaccessible au JavaScript, réduit ce risque au prix d'une protection CSRF à prévoir.
+
+@100
+Q: Remettre dans l'ordre la publication sûre d'une bibliothèque sur npm depuis la CI.
+O: Lancer les tests et l'analyse sur le commit étiqueté
+O: Construire le paquet avec npm pack et vérifier son contenu
+O: S'authentifier par un jeton de publication OIDC à durée courte
+O: Publier avec npm publish --provenance
+O: Vérifier la page du paquet et l'attestation de provenance
+E: La provenance relie le paquet publié au dépôt et au workflow qui l'ont construit. npm pack --dry-run montre les fichiers inclus, pour ne pas publier un .env ou des tests par erreur.

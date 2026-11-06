@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110608,
+  "skills": ["architecture logicielle", "SOLID", "design patterns", "Clean Code"],
+  "schemas": [
+    {
+      "name": "architecture-logicielle-couches.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Architecture en couches",
+        "nodes": [
+          "Présentation : contrôleurs et écrans",
+          "Application : cas d'usage",
+          "Domaine : règles métier et entités",
+          "Infrastructure : base, fichiers, services externes",
+          "Hexagonale : le domaine définit des ports, l'infrastructure les implémente"
+        ],
+        "note": "Les dépendances pointent vers le domaine"
+      }
+    },
+    {
+      "name": "architecture-logicielle-hexagonale.svg",
+      "questions": ["068", "069", "070"],
+      "diagram": {
+        "title": "Requête dans une architecture hexagonale",
+        "nodes": [
+          "Adaptateur web : requête HTTP reçue",
+          "Port d'entrée : appel du cas d'usage",
+          "Domaine : règles appliquées",
+          "Port de sortie : enregistrement demandé",
+          "Adaptateur base : requête SQL exécutée"
+        ],
+        "note": "Le domaine ne voit ni HTTP ni SQL"
+      }
+    }
+  ]
+}

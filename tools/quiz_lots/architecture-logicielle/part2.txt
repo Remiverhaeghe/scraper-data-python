@@ -1,0 +1,436 @@
+@051
+Q: Pourquoi cette hiérarchie enfreint-elle le principe de substitution de Liskov ?
+C: Un Carre change aussi la hauteur quand on change sa largeur, ce qu'un Rectangle ne fait pas
+W: Un Carre ne peut pas hériter d'une classe qui a plus de deux attributs privés
+W: Les méthodes de Carre doivent être déclarées finales pour respecter le principe
+W: Un Carre devrait implémenter une interface plutôt qu'étendre la classe Rectangle
+E: Un code qui fixe largeur 4 et hauteur 5 attend une aire de 20 et obtient 25 avec un Carre. Une sous-classe doit tenir les promesses de sa classe parente ; ici, deux classes sans héritage, ou des objets immuables, règlent le problème.
+```java
+class Carre extends Rectangle {
+    @Override
+    void setLargeur(int l) { super.setLargeur(l); super.setHauteur(l); }
+    @Override
+    void setHauteur(int h) { super.setLargeur(h); super.setHauteur(h); }
+}
+```
+
+@052
+Q: Une interface Imprimante impose imprimer, scanner et faxer. Une imprimante simple lève une exception pour scanner et faxer. Quel principe est enfreint ?
+C: La ségrégation des interfaces : les clients ne doivent pas dépendre de méthodes inutiles
+W: La responsabilité unique : l'imprimante simple fait trop de choses différentes
+W: L'ouverture-fermeture : l'interface ne peut plus recevoir de nouvelles méthodes
+W: L'inversion des dépendances : l'imprimante dépend d'une classe concrète du projet et de ses pilotes
+E: On sépare Impression, Numerisation et Telecopie ; un appareil multifonction implémente les trois. Une méthode qui lève UnsupportedOperationException signale souvent ce problème.
+
+@053
+Q: Que signifie l'inversion des dépendances dans ce schéma : Service → interface Notificateur ← NotificateurSmtp ?
+C: Le service métier et l'implémentation technique dépendent tous deux de l'abstraction
+W: Le service est appelé par l'implémentation SMTP au lieu de l'appeler lui-même
+W: L'implémentation SMTP est chargée avant le service au démarrage de l'application de notification
+W: Le service hérite de l'implémentation SMTP pour réutiliser son code d'envoi
+E: L'interface appartient au module métier, l'implémentation au module technique. Remplacer SMTP par une API d'envoi ne touche pas au service ; en test, un faux notificateur suffit.
+
+@054
+Q: Combien de classes faut-il ajouter pour un quatrième mode de paiement avec le pattern Stratégie, si les trois premiers en ont chacun une ?
+N: 1
+U: classe
+E: On ajoute une implémentation de ModePaiement et on l'enregistre, sans toucher aux trois autres ni au code appelant. Avec un switch, il faudrait modifier chaque méthode qui teste le mode.
+
+@055
+Q: Pourquoi un domaine riche se teste-t-il facilement ?
+C: Ses règles sont dans des objets ordinaires, testables sans base ni framework
+W: Ses classes sont générées par l'outil et testées par le framework lui-même à la compilation
+W: Ses règles sont écrites en SQL, que la base de données vérifie toute seule
+W: Ses objets sont tous des singletons faciles à remplacer pendant les tests
+E: Un test crée une Commande, appelle payer et vérifie l'état, en quelques millisecondes. Les tests d'intégration plus lents se concentrent alors sur les adaptateurs : base, API, files.
+
+@056
+Q: Qu'est-ce qu'un contexte délimité (bounded context) en conception pilotée par le domaine ?
+C: Une partie du système où chaque terme métier a un sens précis et unique
+W: Une zone de la base de données réservée à une seule équipe du projet
+W: Un module dont l'accès est limité aux administrateurs de l'application métier
+W: Une période pendant laquelle une fonctionnalité reste en développement
+E: « Client » n'a pas les mêmes attributs pour la vente, la comptabilité et le support. Chaque contexte a son modèle ; les échanges entre contextes passent par des traductions explicites.
+
+@057
+Q: Qu'est-ce que le langage omniprésent (ubiquitous language) en DDD ?
+C: Le vocabulaire métier partagé par l'équipe et repris tel quel dans le code
+W: Le langage de programmation imposé à chacune des équipes techniques du projet
+W: La traduction du code source dans la langue de chaque utilisateur final
+W: Le format JSON commun aux échanges entre les services du système
+E: Si le métier dit « réserver un créneau », le code a une méthode reserverCreneau, pas createSlotEntry. Les malentendus entre experts métier et développeurs se voient alors dans le code.
+
+@058
+Q: Qu'est-ce qu'un agrégat en DDD ?
+C: Un groupe d'objets modifiés ensemble, accessible par une seule entité racine
+W: Une table de la base qui regroupe les données de plusieurs autres tables liées
+W: Un calcul statistique qui résume les données d'un ensemble d'entités
+W: Un module qui réunit l'ensemble des services d'un même contexte
+E: Une Commande et ses lignes forment un agrégat : on ajoute une ligne par commande.ajouterLigne(), qui vérifie le plafond. Une transaction ne modifie en principe qu'un agrégat ; les autres suivent par événements.
+
+@059
+Q: Associer chaque élément tactique du DDD à sa définition.
+P: Entité => Objet défini par son identité, qui persiste dans le temps
+P: Objet valeur => Objet immuable défini par ses valeurs
+P: Agrégat => Grappe cohérente modifiée par sa racine
+P: Événement de domaine => Fait métier passé, comme CommandePayee
+P: Service de domaine => Règle qui ne revient à aucune entité en particulier
+E: Un transfert entre deux comptes est un service de domaine : il n'appartient ni à l'un ni à l'autre. Les événements se nomment au passé, car ils décrivent ce qui s'est déjà produit.
+
+@060
+Q: Pourquoi relier deux agrégats par l'identifiant plutôt que par une référence d'objet ?
+C: Chaque agrégat reste chargé et modifié seul, sans transaction qui les englobe
+W: Les identifiants occupent moins de mémoire que les références d'objet en Java
+W: Le langage interdit les références circulaires entre deux entités
+W: Les identifiants se trient plus facilement que les objets complets
+E: Commande garde clientId, pas un objet Client complet. Cela évite de charger un graphe d'objets entier et de modifier deux agrégats dans une même transaction.
+
+@061
+Q: Qu'apporte CQRS (séparation des commandes et des requêtes) ?
+C: Un modèle d'écriture centré sur les règles et un modèle de lecture adapté aux écrans
+W: Une base de données unique pour l'écriture et la lecture, avec moins de tables à gérer
+W: Une API qui accepte des requêtes SQL envoyées directement par le client
+W: Une file de messages qui remplace la base de données de l'application
+E: Les écrans de liste lisent une vue dénormalisée, rapide ; les commandes passent par le domaine. La complexité ajoutée ne se justifie que si les deux besoins divergent vraiment.
+
+@062
+Q: Pourquoi un monolithe modulaire est-il souvent un bon point de départ avant les microservices ?
+C: Les frontières se testent dans un seul déploiement, sans coût de réseau ni de cohérence distribuée
+W: Les microservices exigent une licence payante de plateforme pour fonctionner
+W: Un monolithe modulaire se découpe automatiquement en microservices plus tard
+W: Les microservices ne peuvent pas partager le même langage de programmation
+E: Si les modules communiquent par des interfaces et ne partagent pas leurs tables, en extraire un plus tard est faisable. Des microservices mal découpés font payer la complexité distribuée sans en tirer de bénéfice.
+
+@063
+Q: Que faut-il pour qu'un module d'un monolithe puisse être extrait facilement plus tard ?
+C: Des interfaces publiques claires et des données qui ne sont pas partagées
+W: Un code écrit dans un autre langage que le reste du monolithe
+W: Une base de données commune où chaque module lit directement les tables des autres
+W: Un nombre de classes inférieur à cent dans le module concerné
+E: Les jointures SQL entre tables de modules différents sont le premier obstacle à l'extraction. Chaque module possède ses tables, et les autres passent par son interface.
+
+@064
+Q: Pourquoi préférer une exception explicite au retour null de cette méthode pour une commande introuvable ?
+C: L'appelant ne peut pas oublier le cas, alors qu'un null se propage silencieusement
+W: Les exceptions s'exécutent plus vite que le test d'une valeur nulle
+W: Le compilateur interdit de renvoyer null depuis une méthode publique
+W: Les exceptions sont enregistrées automatiquement dans la base de données du projet
+E: Un null non testé déclenche un NullPointerException loin de sa cause. Optional<Commande> dit aussi clairement que l'absence est possible et oblige à la traiter.
+```java
+Commande trouver(long id) {
+    return commandes.get(id);
+}
+```
+
+@065
+Q: Qu'est-ce que le pattern Objet nul (Null Object) ?
+C: Un objet au comportement neutre qui remplace null, comme une remise de zéro
+W: Un objet qui libère la mémoire des objets devenus inutilisés
+W: Un objet qui lève une exception à chaque appel de ses méthodes
+W: Un objet vide utilisé pour réserver une place libre dans une collection Java
+E: AucuneRemise.appliquer(montant) renvoie le montant inchangé : le code appelant n'a plus de if (remise != null). Il ne convient pas quand l'absence est une erreur à signaler.
+
+@066
+Q: Que signifie « échouer tôt » (fail fast) ?
+C: Détecter une erreur dès qu'elle apparaît, plutôt que de laisser un état invalide se propager
+W: Arrêter le développement d'une fonctionnalité dès que les premiers tests échouent
+W: Livrer rapidement une version incomplète pour recueillir l'avis des utilisateurs
+W: Couper l'application en production au moindre avertissement des journaux
+E: Une configuration manquante doit arrêter le démarrage avec un message clair, pas provoquer une erreur obscure trois heures plus tard. Valider les paramètres à l'entrée des fonctions suit la même idée.
+
+@067
+Q: Pourquoi l'immuabilité simplifie-t-elle le code concurrent ?
+C: Un objet qui ne change pas se partage entre threads sans verrou
+W: Un objet immuable s'exécute dans un thread réservé du processeur
+W: Le compilateur parallélise seul les méthodes d'un objet immuable
+W: Un objet immuable n'occupe pas de place dans la mémoire partagée
+E: Les bogues de concurrence viennent d'un état modifié par plusieurs threads. Avec des records Java ou des dataclasses figées, une « modification » crée un nouvel objet, et les anciens restent valides.
+
+@068
+Q: Remettre dans l'ordre le traitement d'une requête dans une architecture hexagonale.
+O: L'adaptateur web reçoit la requête HTTP
+O: Il la traduit en appel au cas d'usage par son port d'entrée
+O: Le cas d'usage applique les règles du domaine
+O: Il appelle le port de sortie pour enregistrer
+O: L'adaptateur de base de données exécute la requête SQL
+E: Le domaine ne voit jamais HTTP ni SQL. Ajouter une interface en ligne de commande ou un consommateur de file revient à écrire un nouvel adaptateur d'entrée vers le même cas d'usage.
+
+@069
+Q: Pourquoi le domaine ne doit-il pas importer les annotations du framework web ?
+C: Le métier deviendrait lié au framework et difficile à tester ou à migrer
+W: Les annotations du framework ralentissent l'exécution des règles métier du domaine
+W: Les annotations du framework sont interdites dans les classes immuables
+W: Le framework refuse de charger les classes qui contiennent des règles
+E: Un passage de Spring MVC à un autre framework, ou une mise à jour majeure, ne devrait toucher que les adaptateurs. Les règles métier sont la partie la plus durable du code.
+
+@070
+Q: Compléter ce test qui vérifie une règle du domaine sans base de données.
+A: assertThrows
+E: Le test crée l'entité, déclenche l'action et vérifie l'exception, sans Spring ni base. Il s'exécute en quelques millisecondes et documente la règle métier.
+```java
+@Test
+void refuseDePayerUneCommandeAnnulee() {
+    var commande = Commande.annulee();
+    ____(IllegalStateException.class, () -> commande.payer(paiement));
+}
+```
+
+@071
+Q: Une équipe veut un service de notification à la fois par courriel, SMS et application. Quel pattern évite une classe qui gère tous les canaux ?
+C: Une interface Canal et une implémentation par canal, appelées tour à tour
+W: Un Singleton Notifications qui contient une méthode pour chaque canal disponible
+W: Une classe abstraite Notification avec un switch sur le canal choisi
+W: Une méthode statique qui teste le type de chaque destinataire
+E: Chaque canal évolue seul et se teste seul ; un nouveau canal s'ajoute sans modifier les autres. Le service reçoit la liste des canaux par injection.
+
+@072
+Q: Pourquoi limiter le nombre de paramètres d'une méthode publique ?
+C: Au-delà de trois ou quatre, l'appel devient illisible et les inversions faciles
+W: La machine virtuelle refuse les méthodes de plus de cinq paramètres
+W: Chaque paramètre supplémentaire double le temps d'exécution
+W: Les paramètres nombreux empêchent l'utilisation des interfaces
+E: creer("Durand", "Lille", "59000", true, false) mélange facilement deux chaînes. Un objet paramètre ou un Builder nomme chaque valeur.
+
+@073
+Q: Qu'est-ce qu'une couture (seam) dans un code à tester ?
+C: Un endroit où l'on peut remplacer un comportement sans modifier le code testé
+W: Une ligne de code qui relie deux modules écrits par deux équipes différentes
+W: Une méthode qui réunit le code de production et le code de test dans un fichier
+W: Une interruption volontaire du programme pour lire son état dans le débogueur
+E: Un paramètre de constructeur, une interface ou une horloge injectée sont des coutures. Un new Date() ou un appel statique en plein milieu d'une méthode n'en offrent pas, ce qui rend le test dépendant de l'heure.
+
+@074
+Q: Pourquoi injecter une horloge (Clock) plutôt qu'appeler LocalDate.now() comme dans cette règle métier ?
+C: Le test peut fixer la date et vérifier les cas limites, comme une fin de mois
+W: L'horloge injectée donne une heure plus précise que celle du système
+W: LocalDate.now() est interdit dans les applications multithread
+W: L'horloge injectée corrige automatiquement le passage à l'heure d'été ou d'hiver
+E: Une règle « remise le dernier jour du mois » ne se teste qu'en contrôlant la date. Clock.fixed(...) en test, Clock.systemDefaultZone() en production.
+```java
+boolean remiseDuJour() {
+    var aujourdHui = LocalDate.now();
+    return aujourdHui.equals(aujourdHui.with(TemporalAdjusters.lastDayOfMonth()));
+}
+```
+
+@075
+Q: Une classe a 12 méthodes publiques et 30 classes du projet l'utilisent. Elle change chaque semaine. Combien de classes risquent d'être touchées par un changement d'interface ?
+N: 30
+U: classes
+E: Toutes ses dépendantes peuvent devoir être revues : c'est un couplage afférent élevé sur une classe instable, le pire cas. Une classe très utilisée doit être stable, souvent une interface ; une classe qui change souvent doit être peu utilisée.
+
+@076
+Q: Pourquoi le pattern Façade est-il utile devant un module de facturation complexe ?
+C: Les autres modules appellent quelques méthodes simples sans connaître ses classes internes
+W: Il remplace le module de facturation par une version simplifiée et plus rapide
+W: Il copie les données de facturation dans chaque module qui en a besoin
+W: Il impose que le module de facturation n'ait qu'une seule classe publique
+E: Facturation.emettre(commandeId) cache le calcul, la numérotation et la génération du PDF. Le module peut réorganiser ses classes sans casser les appelants.
+
+@077
+Q: Quel pattern est utilisé quand Spring crée un objet qui ouvre une transaction avant d'appeler la vraie méthode ?
+C: Proxy
+W: Façade
+W: Monteur
+W: Prototype
+E: Le proxy implémente la même interface et ajoute un comportement autour de l'appel. C'est pourquoi un appel interne à la même classe, qui ne passe pas par le proxy, ne démarre pas de transaction.
+
+@078
+Q: Pourquoi un commentaire qui paraphrase le code est-il à éviter ?
+C: Il n'apporte rien et finit par mentir quand le code change sans lui
+W: Les commentaires ralentissent la compilation du code source
+W: Les commentaires sont supprimés par le gestionnaire de versions du projet
+W: Les commentaires empêchent l'analyse statique de fonctionner
+E: « // incrémente i » n'aide personne. Un commentaire utile explique le pourquoi : une contrainte réglementaire, un contournement d'un bogue d'une bibliothèque, un choix non évident.
+
+@079
+Q: Que signifie la règle du boy-scout appliquée au code ?
+C: Laisser le code un peu plus propre qu'on ne l'a trouvé à chaque passage
+W: Ne modifier que le code dont on est soi-même l'auteur d'origine
+W: Réécrire entièrement un module dès qu'on y trouve un défaut
+W: Documenter chaque fonction avant d'y toucher pour la première fois dans le projet
+E: Renommer une variable obscure ou extraire une méthode en passant améliore le code sans projet de refonte dédié. On garde ces petits nettoyages dans des commits séparés du changement fonctionnel.
+
+@080
+Q: Associer chaque pattern de création à son usage.
+P: Fabrique => Choisir la classe concrète à instancier en un seul endroit
+P: Fabrique abstraite => Créer des familles d'objets cohérents entre eux
+P: Monteur => Construire pas à pas un objet aux nombreux paramètres
+P: Prototype => Créer un objet en copiant un modèle existant
+P: Singleton => Garantir une instance unique, à utiliser avec prudence
+E: Avec l'injection de dépendances, une bonne partie de ces besoins est couverte par le conteneur. Le Builder reste très utilisé, souvent généré (Lombok, records avec méthodes de copie).
+
+@081
+Q: Pourquoi le pattern Composite convient-il à un menu qui contient des entrées et des sous-menus ?
+C: Une entrée et un sous-menu s'utilisent de la même façon par le code qui affiche le menu
+W: Il garantit que chaque menu de l'application n'a qu'une seule instance
+W: Il transforme chaque entrée du menu en commande que l'on peut annuler
+W: Il charge les sous-menus depuis la base de données à la demande
+E: Un sous-menu contient des éléments qui peuvent être des entrées ou d'autres sous-menus, à toute profondeur. Les arborescences de fichiers ou les nomenclatures de pièces suivent la même structure.
+
+@082
+Q: Que signifie « programmer pour une interface, pas pour une implémentation » ?
+C: Déclarer les dépendances par leur contrat, comme List ou CommandeRepository
+W: Écrire l'interface graphique avant le code métier de l'application
+W: Créer une interface pour chaque classe du projet, même sans second usage prévu
+W: Remplacer les classes abstraites par des interfaces dans tout le code
+E: List<Commande> commandes = new ArrayList<>() permet de changer d'implémentation sans toucher au reste. Créer une interface pour une classe qui n'aura jamais de seconde implémentation, en revanche, ajoute du bruit.
+
+@083
+Q: Pourquoi une interface à implémentation unique n'est-elle pas toujours une bonne idée ?
+C: Elle ajoute une indirection sans bénéfice si aucun remplacement n'est prévu, même en test
+W: Le compilateur refuse une interface qui n'a qu'une seule classe d'implémentation
+W: Une interface à implémentation unique ralentit chaque appel de méthode d'un facteur dix
+W: Les frameworks d'injection ne savent pas gérer une interface sans plusieurs implémentations
+E: L'interface se justifie à une frontière (port vers la base, un service externe) ou pour une doublure de test. Ailleurs, on l'extrait le jour où une seconde implémentation apparaît, l'IDE le fait en un clic.
+
+@084
+Q: Quels attributs de qualité faut-il arbitrer dans un choix d'architecture ?
+C: Performance, disponibilité, sécurité, coût, maintenabilité, souvent en tension
+W: Le nombre de classes, de méthodes et de lignes du code source
+W: Le langage, le framework et l'éditeur choisis par l'équipe
+W: Le nombre de développeurs, de testeurs et de chefs de projet
+E: Un cache améliore la performance mais complique la cohérence ; une redondance améliore la disponibilité mais coûte. On choisit en fonction des priorités du métier, notées dans un ADR.
+
+@085
+Q: Pourquoi un rapport de couverture à 100 % ne garantit-il pas un code bien conçu ?
+C: La couverture dit quel code s'exécute en test, pas s'il est vérifié ni bien structuré
+W: La couverture ne mesure que les classes publiques du projet testé
+W: La couverture est faussée par les commentaires présents dans le code
+W: La couverture ne compte pas les méthodes privées des classes
+E: Un test sans assertion couvre tout et ne vérifie rien. Les tests de mutation (PIT, mutmut) mesurent mieux leur efficacité : ils modifient le code et vérifient qu'un test échoue.
+
+@086
+Q: Pourquoi l'héritage profond, sur cinq niveaux, rend-il le code fragile ?
+C: Le comportement d'une classe dépend de chaque niveau, et un changement en haut se propage partout
+W: Le compilateur limite les hiérarchies à trois niveaux pour des raisons de mémoire
+W: Les classes profondes ne peuvent pas être sérialisées en JSON par les bibliothèques
+W: Chaque niveau d'héritage double la taille de l'objet en mémoire vive
+E: Pour comprendre une méthode, il faut lire cinq classes. C'est le problème de la classe de base fragile ; la composition et les interfaces limitent la profondeur.
+
+@087
+Q: Quelle est la complexité cyclomatique de cette méthode ?
+N: 4
+E: Un chemin de base, plus un pour le if, un pour le && et un pour la boucle for : 4. Les opérateurs logiques comptent comme des décisions, car ils créent des chemins de plus à tester.
+```java
+int compter(List<Commande> commandes, boolean urgentes) {
+    int n = 0;
+    for (Commande c : commandes) {
+        if (urgentes && c.estUrgente()) {
+            n++;
+        }
+    }
+    return n;
+}
+```
+
+@088
+Q: Comment introduire une nouvelle implémentation d'un composant critique sans tout basculer d'un coup ?
+C: Passer par une abstraction, faire cohabiter les deux implémentations, puis migrer progressivement
+W: Remplacer l'ancienne implémentation dans une branche longue fusionnée en fin de projet
+W: Copier le code de l'ancienne implémentation dans la nouvelle puis supprimer les tests
+W: Déployer la nouvelle implémentation la nuit et supprimer l'ancienne le lendemain matin
+E: C'est la « branche par abstraction » : le code appelle une interface, un réglage choisit l'implémentation, on bascule par étapes et on revient en arrière si besoin. L'ancienne implémentation disparaît une fois la migration finie.
+
+@089
+Q: Qu'est-ce que le pattern « figuier étrangleur » (strangler fig) pour remplacer un ancien système ?
+C: Remplacer ses fonctions une à une par un nouveau système qui l'entoure, jusqu'à pouvoir l'éteindre
+W: Réécrire tout l'ancien système en une fois puis basculer les utilisateurs un week-end
+W: Copier la base de l'ancien système dans le nouveau et garder les deux en écriture
+W: Geler l'ancien système et interdire toute évolution tant que le nouveau n'est pas prêt
+E: Un routage envoie progressivement les écrans ou les API vers le nouveau système. Chaque étape apporte de la valeur et réduit le risque, contrairement à la réécriture complète.
+
+@090
+Q: Remettre dans l'ordre le remplacement progressif d'un ancien module par le pattern du figuier étrangleur.
+O: Placer un point d'entrée qui route vers l'ancien module
+O: Réécrire une première fonction dans le nouveau module
+O: Router cette fonction vers le nouveau module et comparer les résultats
+O: Répéter pour les autres fonctions
+O: Éteindre l'ancien module quand il ne reçoit plus d'appel
+E: La comparaison des résultats, en double exécution ou sur un échantillon, détecte les écarts avant la bascule complète. Le point d'entrée peut être un proxy HTTP ou une façade dans le code.
+
+@091
+Q: Pourquoi un événement de domaine se nomme-t-il au passé, comme CommandePayee ?
+C: Il décrit un fait déjà accompli, que les abonnés ne peuvent pas refuser
+W: Le nom au passé indique que l'événement a été archivé en base
+W: Les noms au passé sont imposés par les bibliothèques de messages du marché
+W: Le passé signale que l'événement ne concerne que l'historique
+E: Une commande, PayerCommande, peut être refusée ; un événement, CommandePayee, constate. Les abonnés réagissent, ils ne valident pas.
+
+@092
+Q: Combien de dépendances directes compte un service qui reçoit dans son constructeur un repository, un notificateur, une horloge et deux services métier ?
+N: 5
+E: Cinq paramètres de constructeur, cinq dépendances. Au-delà de cinq ou six, la classe a probablement trop de responsabilités : c'est un signal pour la découper.
+
+@093
+Q: Pourquoi une couche anti-corruption est-elle utile face à l'API d'un ancien système ?
+C: Elle traduit le modèle de l'ancien système pour qu'il ne contamine pas le nouveau domaine
+W: Elle chiffre les échanges avec l'ancien système pour éviter la corruption des données transmises
+W: Elle vérifie l'intégrité des fichiers échangés à l'aide d'une somme de contrôle
+W: Elle empêche l'ancien système de recevoir des requêtes du nouveau domaine
+E: Les codes obscurs et les champs mal nommés de l'ancien système restent dans l'adaptateur. Le nouveau domaine garde son langage, et remplacer l'ancien système ne touche que cette couche.
+
+@094
+Q: Pourquoi un abonné à un événement qui échoue ne doit-il pas annuler l'action d'origine ?
+C: L'action est déjà faite ; l'abonné doit pouvoir réessayer seul sans bloquer les autres
+W: Les abonnés n'ont pas accès à la base de données de l'action d'origine
+W: L'action d'origine est supprimée de l'historique dès qu'un abonné échoue
+W: Les événements sont détruits après leur lecture par le premier abonné
+E: Si l'envoi du courriel de confirmation échoue, la commande reste payée. L'abonné rejoue plus tard, ce qui suppose un traitement idempotent et une file avec reprise.
+
+@095
+Q: Associer chaque architecture à sa caractéristique principale.
+P: En couches => Chaque couche n'appelle que celle du dessous
+P: Hexagonale => Le domaine au centre, entouré de ports et d'adaptateurs
+P: Microservices => Des services déployés et mis à l'échelle séparément
+P: Orientée événements => Des composants qui réagissent à des faits publiés
+P: Monolithe modulaire => Un seul déploiement découpé en modules indépendants
+E: Ces styles se combinent : un monolithe modulaire dont chaque module suit une architecture hexagonale et publie des événements est courant. Le choix dépend des contraintes, pas de la mode.
+
+@096
+Q: Pourquoi mesurer les dépendances entre modules avec un outil d'analyse dans la CI ?
+C: Pour détecter qu'un module importe un autre module interdit avant que l'habitude s'installe
+W: Pour mesurer la vitesse d'exécution de chaque module de l'application
+W: Pour générer automatiquement la documentation de chaque module
+W: Pour compter les lignes de code écrites par chaque équipe dans le mois
+E: Une règle d'architecture qui n'est vérifiée qu'à la relecture finit par être contournée. ArchUnit, jdepend ou import-linter échouent dès qu'une dépendance interdite apparaît.
+
+@097
+Q: Une méthode de 400 lignes sans test doit être modifiée. Quelle première étape réduit le risque ?
+C: Écrire des tests de caractérisation qui figent son comportement actuel
+W: La réécrire entièrement en plusieurs petites méthodes avant toute autre chose
+W: Ajouter des commentaires sur chaque bloc pour expliquer ce qu'il fait
+W: La copier dans une nouvelle classe et supprimer l'ancienne
+E: Ces tests vérifient ce que fait le code, même si c'est discutable, pour détecter un changement involontaire pendant le refactoring. On choisit les entrées à partir des journaux ou de cas réels.
+
+@098
+Q: Pourquoi cette méthode enfreint-elle le principe de moindre surprise ?
+C: Une méthode getTotal qui écrit en base surprend et provoque des erreurs chez l'appelant
+W: Une méthode bien nommée s'exécute plus vite qu'une méthode mal nommée
+W: Les noms surprenants sont refusés par les analyseurs statiques du code
+W: Une méthode au nom attendu n'a pas besoin d'être testée
+E: Un getter doit être sans effet visible. Si une méthode envoie un courriel, son nom le dit : envoyerConfirmation, et pas getConfirmation.
+```java
+public BigDecimal getTotal() {
+    total = lignes.stream().map(Ligne::montant).reduce(BigDecimal.ZERO, BigDecimal::add);
+    repository.save(this);
+    return total;
+}
+```
+
+@099
+Q: Qu'est-ce que la conception guidée par les tests (TDD) apporte à l'architecture ?
+C: Un code découplé, car il doit être instanciable et vérifiable dès le premier test
+W: Une architecture imposée par le framework de test utilisé par l'équipe
+W: Une documentation générée à partir des noms des tests unitaires écrits
+W: Une couverture à 100 % qui remplace la relecture de code par l'équipe
+E: Écrire le test d'abord oblige à concevoir l'interface du point de vue de l'appelant et à injecter les dépendances. Une classe difficile à tester révèle souvent une conception à revoir.
+
+@100
+Q: Remettre dans l'ordre le cycle du TDD.
+O: Écrire un test qui échoue pour le comportement voulu
+O: Écrire le code le plus simple qui le fait passer
+O: Relancer les tests et vérifier qu'ils passent
+O: Refactoriser le code et les tests sans changer le comportement
+O: Recommencer avec le comportement suivant
+E: Rouge, vert, refactoriser : les petits pas gardent le code toujours fonctionnel. Sauter l'étape de refactoring laisse s'accumuler la duplication que les tests auraient permis de nettoyer sans risque.

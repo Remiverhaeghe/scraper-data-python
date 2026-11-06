@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110607,
+  "skills": ["SQL", "PostgreSQL", "Oracle"],
+  "schemas": [
+    {
+      "name": "sql-ordre-logique.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Ordre logique d'une requête",
+        "nodes": [
+          "FROM et JOIN : réunir les tables",
+          "WHERE : filtrer les lignes",
+          "GROUP BY puis HAVING : regrouper et filtrer les groupes",
+          "SELECT : calculer les colonnes et alias",
+          "ORDER BY puis LIMIT : trier et couper"
+        ],
+        "note": "Un alias de SELECT n'existe pas encore dans WHERE"
+      }
+    },
+    {
+      "name": "sql-diagnostic.svg",
+      "questions": ["060", "061", "062"],
+      "diagram": {
+        "title": "Diagnostic d'une requête lente",
+        "nodes": [
+          "pg_stat_statements : temps cumulé",
+          "Paramètres réels, EXPLAIN ANALYZE",
+          "Lignes estimées et réelles comparées",
+          "Index, réécriture ou statistiques",
+          "Nouvelle mesure dans les mêmes conditions"
+        ],
+        "note": "Une requête rapide appelée un million de fois peut coûter le plus"
+      }
+    }
+  ]
+}

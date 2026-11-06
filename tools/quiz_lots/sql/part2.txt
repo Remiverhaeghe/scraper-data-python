@@ -1,0 +1,431 @@
+@051
+Q: Qu'est-ce qu'un index couvrant ?
+C: Un index qui contient toutes les colonnes lues, sans retour à la table
+W: Un index posé sur la totalité des colonnes de la table concernée
+W: Un index partagé entre plusieurs tables reliées par une clé étrangère
+W: Un index qui se reconstruit automatiquement chaque nuit sur le serveur
+E: CREATE INDEX ON commande (client_id) INCLUDE (montant) permet un « Index Only Scan » pour une somme par client. Le plan affiche alors moins de lectures de pages.
+
+@052
+Q: Que fait un index partiel comme celui-ci ?
+C: Il n'indexe que les commandes en attente, ce qui le garde petit et rapide
+W: Il indexe une partie des colonnes et laisse les autres de côté
+W: Il indexe les commandes en attente en premier, puis les autres
+W: Il interdit d'insérer une commande qui n'est pas en attente
+E: Si 1 % des commandes sont en attente, l'index ne pèse qu'une fraction d'un index complet. Il ne sert qu'aux requêtes dont le filtre implique la même condition.
+```sql
+CREATE INDEX commande_en_attente ON commande (date_commande)
+WHERE statut = 'en_attente';
+```
+
+@053
+Q: Pourquoi trop d'index ralentissent-ils une table très sollicitée en écriture ?
+C: Chaque insertion ou mise à jour doit aussi modifier chaque index concerné
+W: Les index sont relus en entier à chaque lecture de la table par une requête
+W: Les index verrouillent la table pendant toute la durée des transactions
+W: Les index doublent la taille de chaque ligne écrite dans la table
+E: Une table avec dix index fait onze écritures par insertion. La vue pg_stat_user_indexes montre les index jamais utilisés, candidats à la suppression.
+
+@054
+Q: Associer chaque niveau d'isolation au phénomène qu'il empêche en plus du précédent.
+P: READ UNCOMMITTED => Aucun : les lectures sales sont possibles en théorie
+P: READ COMMITTED => Les lectures sales
+P: REPEATABLE READ => Les lectures non répétables
+P: SERIALIZABLE => Les anomalies de concurrence entre transactions
+E: PostgreSQL traite READ UNCOMMITTED comme READ COMMITTED, son niveau par défaut. En SERIALIZABLE, une transaction peut échouer à la validation et doit être relancée par l'application.
+
+@055
+Q: Que se passe-t-il lors d'un interblocage (deadlock) entre deux transactions ?
+C: Le moteur détecte le cycle et annule l'une des deux pour débloquer l'autre
+W: Les deux transactions attendent sans fin jusqu'au redémarrage du serveur
+W: Le moteur valide les deux transactions en fusionnant leurs modifications
+W: Le moteur annule les deux transactions et verrouille les tables concernées
+E: La transaction annulée reçoit une erreur et doit être rejouée. Mettre à jour les lignes dans un ordre fixe, par exemple par identifiant croissant, évite la plupart des interblocages.
+
+@056
+Q: Compléter cette requête qui verrouille la ligne de stock lue jusqu'à la fin de la transaction.
+A: FOR UPDATE
+E: Une autre transaction qui veut la même ligne attend la validation. SKIP LOCKED permet à plusieurs travailleurs de prendre chacun une tâche différente dans une table servant de file.
+```sql
+BEGIN;
+SELECT quantite FROM stock WHERE produit_id = 7 ____;
+UPDATE stock SET quantite = quantite - 1 WHERE produit_id = 7;
+COMMIT;
+```
+
+@057
+Q: Comment PostgreSQL permet-il à une lecture de ne pas bloquer une écriture sur les mêmes lignes ?
+C: Par le MVCC : chaque transaction voit une version cohérente des lignes
+W: Par une copie complète de la table créée au début de chaque lecture
+W: Par la mise en file des écritures jusqu'à la fin des lectures en cours
+W: Par un verrou partagé qui laisse passer les écritures sur les autres colonnes
+E: Une mise à jour crée une nouvelle version de la ligne ; l'ancienne reste visible pour les transactions qui l'ont commencée avant. VACUUM nettoie ensuite les versions devenues inutiles.
+
+@058
+Q: Pourquoi VACUUM est-il nécessaire dans PostgreSQL ?
+C: Il récupère l'espace des anciennes versions de lignes laissées par le MVCC
+W: Il sauvegarde la base dans un fichier compressé chaque nuit
+W: Il vérifie les contraintes de clé étrangère des tables de la base
+W: Il supprime les lignes plus anciennes que la durée de conservation
+E: L'autovacuum s'en charge d'ordinaire. Une transaction restée ouverte des heures l'empêche de nettoyer : la table grossit et ralentit sans que le volume de données utiles change.
+
+@059
+Q: Une transaction ouverte depuis six heures sur un poste de développeur ralentit la production. Pourquoi ?
+C: Elle empêche le nettoyage des anciennes versions de lignes, qui s'accumulent
+W: Elle verrouille les tables de la base jusqu'à sa validation
+W: Elle consomme la moitié de la mémoire du serveur de base de données
+W: Elle force le serveur à écrire chaque requête dans un journal à part
+E: pg_stat_activity montre les sessions « idle in transaction » et leur âge. Le réglage idle_in_transaction_session_timeout ferme automatiquement ces sessions oubliées.
+
+@060
+Q: Remettre dans l'ordre le diagnostic d'une requête devenue lente en production.
+O: Repérer la requête dans pg_stat_statements par son temps cumulé
+O: Récupérer ses paramètres réels et la rejouer avec EXPLAIN ANALYZE
+O: Comparer lignes estimées et réelles, et repérer l'étape la plus coûteuse
+O: Corriger : index, réécriture ou statistiques mises à jour
+O: Mesurer de nouveau dans les mêmes conditions
+E: Une requête rapide mais appelée un million de fois peut coûter plus qu'une requête lente appelée une fois : on trie par temps total. Des statistiques à jour (ANALYZE) corrigent souvent un mauvais plan.
+
+@061
+Q: Qu'est-ce qu'une vue matérialisée ?
+C: Le résultat d'une requête stocké comme une table, rafraîchi sur demande
+W: Une vue qui se met à jour à chaque modification des tables sources
+W: Une table temporaire supprimée à la fin de la session qui l'a créée sur le serveur
+W: Une copie de la base de données sur un second serveur en lecture
+E: Elle accélère un tableau de bord coûteux à calculer, au prix de données qui datent du dernier REFRESH MATERIALIZED VIEW. CONCURRENTLY permet de rafraîchir sans bloquer les lectures, avec un index unique.
+
+@062
+Q: Quelle différence entre une vue ordinaire et une vue matérialisée ?
+C: La vue ordinaire réexécute sa requête à chaque lecture, la matérialisée lit un résultat stocké
+W: La vue ordinaire stocke ses données sur le disque, la matérialisée dans la mémoire vive du serveur
+W: La vue ordinaire est réservée aux administrateurs, la matérialisée visible par tous
+W: La vue ordinaire accepte les jointures, la matérialisée une seule table à la fois
+E: Une vue ordinaire ne coûte rien en stockage et reste toujours à jour. Elle sert à simplifier les requêtes ou à n'exposer que certaines colonnes à un rôle.
+
+@063
+Q: Pourquoi donner à l'application un rôle qui n'a que SELECT, INSERT, UPDATE et DELETE sur ses tables ?
+C: Une injection ou un bogue ne pourra ni supprimer les tables ni toucher aux autres bases
+W: Les requêtes s'exécutent plus vite avec un rôle qui a moins de droits
+W: Le rôle propriétaire ne peut pas se connecter depuis une application
+W: Les droits réduits évitent d'écrire des requêtes paramétrées
+E: C'est le moindre privilège : les migrations utilisent un rôle propriétaire distinct, le rapport en lecture seule un troisième. GRANT et REVOKE se versionnent avec le schéma.
+
+@064
+Q: Compléter cette commande qui donne au rôle rapport le droit de lire la table commande.
+A: GRANT
+E: Pour les tables créées plus tard, ALTER DEFAULT PRIVILEGES applique le droit automatiquement. Un rôle de lecture n'a ni INSERT, ni UPDATE, ni DELETE.
+```sql
+____ SELECT ON commande TO rapport;
+```
+
+@065
+Q: À quoi sert un déclencheur (trigger) BEFORE UPDATE qui met à jour une colonne modifie_le ?
+C: À dater chaque modification de la ligne, quel que soit le programme qui l'écrit
+W: À empêcher la modification de la ligne tant que la date n'a pas été saisie par l'utilisateur
+W: À sauvegarder la ligne modifiée dans un fichier sur le disque du serveur
+W: À annuler la mise à jour si elle survient en dehors des heures ouvrées
+E: Le trigger s'exécute dans la même transaction, pour chaque ligne modifiée. Trop de logique dans les triggers rend le comportement difficile à suivre : on les réserve à ce genre de règle simple et systématique.
+
+@066
+Q: Pourquoi cette requête renvoie-t-elle des clients en double ?
+C: La jointure produit une ligne par commande, donc un client par commande passée
+W: La table client contient des doublons que la jointure fait apparaître
+W: La condition de jointure doit utiliser LIKE au lieu de l'égalité
+W: Le moteur répète chaque ligne quand la table jointe dépasse mille lignes au total
+E: Pour « les clients qui ont commandé en 2026 », EXISTS évite la multiplication. Ajouter DISTINCT masque le problème et coûte un tri ; il ne règle pas les sommes faussées par la même jointure.
+```sql
+SELECT c.nom FROM client c
+JOIN commande o ON o.client_id = c.id
+WHERE o.date_commande >= '2026-01-01';
+```
+
+@067
+Q: Pourquoi cette somme est-elle trop élevée ?
+C: Chaque commande est répétée autant de fois qu'elle a de paiements
+W: SUM additionne aussi les montants des commandes annulées de la table
+W: La fonction SUM ne s'applique pas aux colonnes de type NUMERIC
+W: Le LEFT JOIN ajoute une ligne vide comptée comme un montant
+E: Joindre deux relations « un à plusieurs » avant d'agréger multiplie les lignes. On agrège chaque table séparément (sous-requête ou CTE), puis on joint les totaux.
+```sql
+SELECT o.client_id, SUM(o.montant)
+FROM commande o
+LEFT JOIN paiement p ON p.commande_id = o.id
+GROUP BY o.client_id;
+```
+
+@068
+Q: Une commande de 100 € a été réglée en 3 paiements. Que donne SUM(o.montant) pour ce client après la jointure avec les paiements ?
+N: 300
+U: €
+E: La commande apparaît trois fois, une par paiement : 3 × 100. Ce piège passe souvent inaperçu en test, avec des données où chaque commande n'a qu'un paiement.
+
+@069
+Q: Que permet une jointure LATERAL dans PostgreSQL ?
+C: De lancer une sous-requête par ligne qui utilise les colonnes de la ligne courante
+W: De joindre deux tables situées dans deux bases de données différentes
+W: De joindre deux tables sans condition, comme un produit cartésien rapide
+W: De joindre une table à une vue matérialisée rafraîchie à la volée
+E: Par exemple, les trois dernières commandes de chaque client : LEFT JOIN LATERAL (SELECT … WHERE o.client_id = c.id ORDER BY date_commande DESC LIMIT 3). Avec un index adapté, c'est rapide même sur de gros volumes.
+
+@070
+Q: Compléter cette requête qui lit la ville dans une colonne JSONB.
+A: ->>
+E: -> renvoie du JSON, ->> du texte. Un index GIN sur la colonne, ou un index sur l'expression (donnees->>'ville'), rend la recherche rapide.
+```sql
+SELECT id FROM client
+WHERE donnees ____ 'ville' = 'Lille';
+```
+
+@071
+Q: Quand stocker des données en JSONB plutôt qu'en colonnes ?
+C: Pour des attributs variables et peu interrogés, comme des préférences ou des métadonnées
+W: Pour les montants et les dates, afin de ne pas avoir à choisir leur type exact
+W: Pour les clés étrangères, afin de relier plusieurs tables par un même champ
+W: Pour l'ensemble des colonnes, car JSONB est plus rapide que les types classiques
+E: Les colonnes gardent les contraintes, les types et des statistiques précises. Un JSONB qui contient le cœur des données métier perd ces protections.
+
+@072
+Q: Pourquoi partitionner une table de mesures par mois ?
+C: Pour ne lire que les partitions utiles et supprimer un mois ancien d'un coup
+W: Pour répartir automatiquement les mesures entre plusieurs serveurs du réseau
+W: Pour éviter de créer une clé primaire sur une table de grande taille
+W: Pour chiffrer chaque mois de mesures avec une clé différente
+E: Une requête sur mars ne lit que la partition de mars (élagage). Supprimer un an de données revient à détacher ou supprimer des partitions, sans DELETE massif ni VACUUM.
+
+@073
+Q: Une table de mesures reçoit 2 millions de lignes par jour et garde 12 mois. Combien de lignes contient environ une partition mensuelle de 30 jours ?
+N: 60000000
+U: lignes
+E: 2 millions × 30 = 60 millions de lignes par mois, soit environ 720 millions sur un an. Supprimer un mois revient à détacher une partition, au lieu d'un DELETE de 60 millions de lignes.
+
+@074
+Q: Que garantit une sauvegarde par pg_dump ?
+C: Une image cohérente de la base à l'instant de son lancement
+W: Une copie mise à jour en continu de chaque transaction validée
+W: Une sauvegarde des différents serveurs PostgreSQL du réseau
+W: Une restauration possible à la seconde près d'un incident
+E: pg_dump s'appuie sur une transaction cohérente, sans bloquer les écritures. Pour revenir à un instant précis, il faut archiver les journaux d'écriture (WAL) en plus d'une sauvegarde physique.
+
+@075
+Q: Pourquoi tester régulièrement la restauration d'une sauvegarde ?
+C: Une sauvegarde jamais restaurée peut être incomplète ou inutilisable le jour venu
+W: Les sauvegardes s'effacent automatiquement si elles ne sont pas restaurées
+W: La restauration met à jour les statistiques de la base de production
+W: Le serveur refuse les nouvelles sauvegardes tant qu'une n'a pas été restaurée avec succès
+E: Fichier tronqué, rôle manquant, extension absente : ces problèmes n'apparaissent qu'à la restauration. On mesure aussi la durée de restauration, à comparer au temps d'arrêt acceptable.
+
+@076
+Q: Quelle différence entre une réplication en flux (streaming) et une sauvegarde ?
+C: Le réplica copie aussi les erreurs, comme une table supprimée par mégarde
+W: Le réplica permet de revenir à l'état de la veille en cas d'erreur
+W: Le réplica remplace les sauvegardes dès qu'il est installé sur un autre site
+W: Le réplica ne copie que les tables modifiées depuis le dernier jour
+E: Un DROP TABLE se propage au réplica en quelques millisecondes. Le réplica protège d'une panne matérielle, la sauvegarde d'une erreur humaine ou logique : il faut les deux.
+
+@077
+Q: Pourquoi une requête de rapport longue sur un réplica peut-elle être annulée ?
+C: Le réplica doit appliquer des changements qui suppriment des lignes encore lues
+W: Le réplica refuse toute requête qui dure plus de trente secondes
+W: Le serveur principal annule les requêtes du réplica pour se protéger
+W: Les rapports ne peuvent lire que les tables du serveur principal
+E: C'est un conflit de réplication. hot_standby_feedback ou max_standby_streaming_delay le réduisent, au prix d'un nettoyage retardé sur le principal ou d'un réplica en retard.
+
+@078
+Q: Associer chaque type PostgreSQL à la donnée qui lui convient.
+P: NUMERIC(10,2) => Un montant en euros
+P: TIMESTAMPTZ => L'instant d'une commande
+P: DATE => Une date de naissance
+P: UUID => Un identifiant généré hors de la base
+P: TEXT => Un commentaire libre
+E: VARCHAR(n) n'apporte rien en performance sur TEXT dans PostgreSQL : on limite la taille par une contrainte CHECK si la règle métier l'exige. BOOLEAN vaut mieux qu'un caractère 'O' ou 'N'.
+
+@079
+Q: Pourquoi un UUID aléatoire comme clé primaire peut-il ralentir les insertions sur une grosse table ?
+C: Les valeurs arrivent dans le désordre et dispersent les écritures dans tout l'index
+W: Les UUID occupent plus de place que les textes de même longueur affichée
+W: PostgreSQL doit vérifier l'unicité de l'UUID en lisant la table entière
+W: Les UUID ne peuvent pas être indexés par un index B-tree standard
+E: Une clé croissante remplit toujours la fin de l'index, gardée en mémoire. Les UUID version 7, ordonnés par le temps, gardent l'avantage d'une génération hors base sans ce défaut.
+
+@080
+Q: Remettre dans l'ordre l'ajout sans interruption d'une colonne NOT NULL sur une grosse table.
+O: Ajouter la colonne sans contrainte
+O: Faire écrire la nouvelle colonne par l'application
+O: Remplir les anciennes lignes par petits lots
+O: Ajouter une contrainte CHECK NOT VALID puis la valider
+O: Passer la colonne en NOT NULL
+E: Remplir des millions de lignes en un seul UPDATE tient un verrou et gonfle la table. VALIDATE CONSTRAINT vérifie sans bloquer les écritures ; PostgreSQL 12 et plus s'en sert ensuite pour éviter un parcours lors du SET NOT NULL.
+
+@081
+Q: Pourquoi CREATE INDEX CONCURRENTLY est-il préférable en production ?
+C: Il construit l'index sans bloquer les écritures sur la table
+W: Il construit l'index sur plusieurs serveurs à la fois
+W: Il construit un index plus petit que la version de création normale
+W: Il construit l'index dans une transaction annulable
+E: La création normale bloque INSERT, UPDATE et DELETE pendant toute sa durée. La version concurrente est plus lente, ne peut pas tourner dans une transaction, et peut laisser un index invalide à supprimer si elle échoue.
+
+@082
+Q: Pourquoi une requête paramétrée protège-t-elle de l'injection SQL ?
+C: La valeur est transmise à part et ne peut jamais être interprétée comme du SQL
+W: Le pilote retire les apostrophes des valeurs avant de les insérer dans le texte
+W: La base refuse les valeurs qui contiennent des mots-clés comme DROP ou SELECT
+W: La requête est chiffrée entre l'application et le serveur de base de données
+E: La requête est analysée avant de recevoir les valeurs. Les noms de tables ou de colonnes ne peuvent pas être paramétrés : s'ils viennent de l'utilisateur, on les choisit dans une liste fixe.
+
+@083
+Q: Qu'affiche cette requête si la table commande est vide ?
+C: Une ligne avec NULL
+W: Aucune ligne
+W: Une ligne avec le chiffre 0
+W: Une erreur
+E: Un agrégat sans GROUP BY renvoie toujours une ligne ; SUM de rien vaut NULL, alors que COUNT(*) vaudrait 0. COALESCE(SUM(montant), 0) affiche 0 dans un rapport.
+```sql
+SELECT SUM(montant) FROM commande;
+```
+
+@084
+Q: Combien de lignes renvoie SELECT COUNT(*) FROM commande GROUP BY client_id sur une table vide ?
+N: 0
+U: lignes
+E: Avec GROUP BY, chaque groupe donne une ligne : pas de ligne, pas de groupe. Sans GROUP BY, la même requête renverrait une ligne contenant 0.
+
+@085
+Q: Que fait cette requête de mise à jour avec jointure, propre à PostgreSQL ?
+C: Elle applique à chaque produit le prix de la table tarif_2026 correspondante
+W: Elle copie la table tarif_2026 entière à la place de la table produit existante
+W: Elle ajoute les produits de tarif_2026 absents de la table produit
+W: Elle met à jour les tarifs à partir des prix de la table produit
+E: Les produits sans correspondance dans tarif_2026 ne sont pas modifiés. Si tarif_2026 contient deux lignes pour un même produit, le prix retenu est imprévisible : une contrainte unique l'évite.
+```sql
+UPDATE produit p
+SET prix = t.prix
+FROM tarif_2026 t
+WHERE t.produit_id = p.id;
+```
+
+@086
+Q: Pourquoi un comptage COUNT(*) sur une table de 200 millions de lignes est-il lent dans PostgreSQL ?
+C: Avec le MVCC, chaque ligne doit être vérifiée comme visible pour la transaction
+W: COUNT(*) lit chacune des colonnes de chaque ligne, contrairement à COUNT(id)
+W: PostgreSQL recalcule les statistiques de la table à chaque comptage
+W: Le comptage verrouille la table pour empêcher les insertions pendant la lecture
+E: Il n'y a pas de compteur global, car chaque transaction peut voir un nombre différent. Pour un ordre de grandeur, reltuples dans pg_class donne l'estimation des statistiques.
+
+@087
+Q: Pourquoi une condition OR entre deux colonnes indexées séparément peut-elle donner un parcours complet ?
+C: Aucun index seul ne couvre la condition ; le moteur doit combiner deux index ou tout lire
+W: La condition OR est traitée comme un produit cartésien entre les deux colonnes
+W: Les index ne fonctionnent qu'avec AND dans la norme du langage SQL
+W: La condition OR désactive les statistiques de la table pour la requête
+E: PostgreSQL sait souvent combiner les index (BitmapOr). Sinon, une UNION de deux requêtes, chacune avec son index, est plus rapide.
+
+@088
+Q: Que fait la clause FILTER dans cette requête ?
+C: Elle compte séparément les commandes payées et annulées dans une seule lecture
+W: Elle exclut du résultat les clients sans commande payée
+W: Elle trie les commandes par statut avant de les compter par client
+W: Elle crée deux tables temporaires, une par statut de commande
+E: FILTER (WHERE …) restreint les lignes vues par un agrégat. C'est l'équivalent standard et lisible de SUM(CASE WHEN statut = 'payee' THEN 1 ELSE 0 END).
+```sql
+SELECT client_id,
+       COUNT(*) FILTER (WHERE statut = 'payee') AS payees,
+       COUNT(*) FILTER (WHERE statut = 'annulee') AS annulees
+FROM commande GROUP BY client_id;
+```
+
+@089
+Q: Pourquoi le plan d'exécution change-t-il quand une requête préparée est exécutée de nombreuses fois ?
+C: Après quelques exécutions, PostgreSQL peut passer à un plan générique indépendant des valeurs
+W: Le plan est recalculé chaque minute à partir des journaux d'écriture
+W: Le moteur choisit au hasard parmi plusieurs plans à chaque exécution
+W: Le plan est supprimé du cache dès que la table reçoit une insertion
+E: Un plan générique convient mal si les valeurs sont très déséquilibrées : un statut rare et un statut courant demandent des plans différents. plan_cache_mode = force_custom_plan règle ce cas.
+
+@090
+Q: À quoi sert la recherche plein texte de PostgreSQL (tsvector, tsquery) ?
+C: À chercher des mots selon leur racine, avec une langue et un classement par pertinence
+W: À chercher une chaîne exacte dans une colonne, plus vite qu'avec l'opérateur LIKE classique
+W: À traduire automatiquement les textes stockés dans une autre langue
+W: À vérifier l'orthographe des textes saisis avant leur insertion
+E: Avec la configuration french, « réparations » trouve « réparer ». Un index GIN sur l'expression to_tsvector('french', description) rend la recherche rapide.
+
+@091
+Q: Quelle colonne placer en premier dans un index composite pour une requête WHERE statut = 'payee' AND date_commande >= … ?
+C: statut, filtré par égalité, puis date_commande, filtrée par plage
+W: date_commande, filtrée par plage, puis statut, filtré par égalité
+W: L'ordre est sans effet, le moteur réordonne les colonnes à la lecture
+W: La colonne la plus longue en octets, pour réduire la taille de l'index
+E: Avec l'égalité en tête, les lignes voulues forment une plage continue de l'index. Avec la date en tête, le moteur parcourt toute la plage de dates et filtre le statut ensuite.
+
+@092
+Q: Une table de 50 millions de lignes a 20 000 commandes en attente. Quelle part de la table, en %, un index partiel sur ces commandes couvre-t-il ?
+N: 0,04
+U: %
+T: 2
+E: 20 000 / 50 000 000 = 0,0004, soit 0,04 %. L'index reste minuscule et en mémoire, alors qu'un index complet sur statut indexerait 50 millions de lignes pour quelques valeurs.
+
+@093
+Q: Pourquoi le niveau SERIALIZABLE demande-t-il une logique de reprise dans l'application ?
+C: Une transaction en conflit échoue à la validation et doit être rejouée
+W: Une transaction sérialisable ne peut pas lire les données des autres
+W: Le moteur exécute les transactions une par une, ce qui provoque des délais
+W: Une transaction sérialisable ne peut pas modifier plus de dix lignes
+E: L'erreur de sérialisation (code 40001) est normale à ce niveau. L'application rejoue toute la transaction, avec un nombre d'essais limité.
+
+@094
+Q: Que se passe-t-il avec une séquence quand une transaction qui a pris une valeur est annulée ?
+C: La valeur est perdue et laisse un trou dans la numérotation
+W: La valeur est rendue et attribuée à la prochaine insertion
+W: La séquence revient en arrière jusqu'à la dernière valeur validée
+W: La transaction suivante reçoit une erreur de clé en double
+E: Les séquences ne sont pas transactionnelles, pour ne pas bloquer les insertions concurrentes. Une numérotation sans trou, comme celle des factures, demande un compteur verrouillé dans une table.
+
+@095
+Q: Pourquoi une numérotation de factures sans trou ne doit-elle pas reposer sur une séquence ?
+C: Une transaction annulée consomme un numéro qui ne sera jamais attribué
+W: Les séquences recommencent à 1 après chaque redémarrage du serveur de base
+W: Les séquences ne peuvent pas dépasser la valeur de 32 767
+W: Les séquences attribuent les numéros dans un ordre aléatoire
+E: La réglementation impose souvent une numérotation continue des factures. Un compteur dans une table, lu avec FOR UPDATE dans la transaction de création, garantit la continuité au prix de la sérialisation des créations.
+
+@096
+Q: Remettre dans l'ordre le traitement d'une file de tâches stockée en table par plusieurs travailleurs.
+O: Ouvrir une transaction
+O: Prendre une tâche avec SELECT … FOR UPDATE SKIP LOCKED LIMIT 1
+O: Traiter la tâche
+O: Marquer la tâche comme terminée
+O: Valider la transaction
+E: SKIP LOCKED fait passer chaque travailleur à la tâche suivante non verrouillée au lieu d'attendre. Si le travailleur plante, la transaction est annulée et la tâche redevient disponible.
+
+@097
+Q: Pourquoi le résultat de cette requête change-t-il d'une exécution à l'autre ?
+C: Le tri par date ne départage pas les commandes du même jour
+W: La fonction ROW_NUMBER choisit une valeur au hasard à chaque appel
+W: Les dates sont converties dans le fuseau de chaque session ouverte
+W: Le moteur lit les partitions de la table dans le désordre
+E: À date égale, l'ordre est libre et la pagination peut sauter ou répéter des lignes. On ajoute une colonne unique au tri : ORDER BY date_commande DESC, id DESC.
+```sql
+SELECT id FROM commande ORDER BY date_commande DESC LIMIT 20;
+```
+
+@098
+Q: Pourquoi la contrainte UNIQUE (email) laisse-t-elle passer deux lignes où l'email est NULL ?
+C: Deux NULL ne sont pas considérés comme égaux pour l'unicité
+W: La contrainte UNIQUE ne s'applique pas aux colonnes de type texte
+W: La contrainte n'est vérifiée qu'à la fin de la journée par le moteur
+W: Les lignes avec NULL sont rangées dans une table cachée séparée
+E: PostgreSQL 15 ajoute UNIQUE NULLS NOT DISTINCT pour refuser les doublons de NULL. Sinon, une colonne NOT NULL ou un index partiel règle le cas.
+
+@099
+Q: Pourquoi stocker une adresse de livraison sur la commande alors qu'elle existe déjà sur le client ?
+C: Pour garder l'adresse telle qu'elle était au moment de la commande
+W: Pour accélérer la jointure entre la commande et le client concerné
+W: Pour respecter la troisième forme normale de la table de commandes
+W: Pour permettre au client de modifier son adresse sans recharger la page
+E: Si le client déménage, la facture d'une commande passée doit garder l'ancienne adresse. Cette duplication est voulue : elle fige un fait historique, ce n'est pas une redondance à normaliser.
+
+@100
+Q: Combien de pages de 8 Ko faut-il au moins pour stocker une table de 1 Go dans PostgreSQL ?
+N: 131072
+U: pages
+E: 1 Go = 1 073 741 824 octets ; divisé par 8 192, cela fait 131 072 pages. EXPLAIN (ANALYZE, BUFFERS) compte les pages lues : c'est souvent la meilleure mesure du coût réel d'une requête.

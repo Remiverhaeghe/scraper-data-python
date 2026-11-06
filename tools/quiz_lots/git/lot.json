@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110605,
+  "skills": ["Git", "GitLab", "GitHub"],
+  "schemas": [
+    {
+      "name": "git-rebase.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Rebase d'une branche sur main",
+        "nodes": [
+          "Ancêtre commun de la branche et de main",
+          "Commits de la branche mis de côté",
+          "Branche replacée sur le dernier commit de main",
+          "Commits rejoués un à un, nouveaux identifiants",
+          "Push avec --force-with-lease"
+        ],
+        "note": "Ne rebaser que les branches non partagées"
+      }
+    },
+    {
+      "name": "git-fuite-secret.svg",
+      "questions": ["045", "046", "047"],
+      "diagram": {
+        "title": "Secret poussé par erreur",
+        "nodes": [
+          "Révoquer le secret immédiatement",
+          "Vérifier son utilisation dans les journaux",
+          "Lire le secret depuis une variable ou un coffre",
+          "Nettoyer l'historique si nécessaire",
+          "Détection automatique en pré-commit et en CI"
+        ],
+        "note": "Un secret poussé est compromis, même après réécriture"
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110604,
+  "skills": ["Spring", "Spring Boot", "Spring MVC", "Spring Security"],
+  "schemas": [
+    {
+      "name": "spring-demarrage.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Démarrage d'une application Spring Boot",
+        "nodes": [
+          "main : SpringApplication.run",
+          "Propriétés et profils chargés",
+          "Scan des composants et auto-configuration",
+          "Beans créés, dépendances injectées",
+          "Serveur web démarré, CommandLineRunner"
+        ],
+        "note": "L'auto-configuration s'efface devant les beans déclarés par l'application"
+      }
+    },
+    {
+      "name": "spring-securite.svg",
+      "questions": ["043", "044", "045"],
+      "diagram": {
+        "title": "Requête protégée par Spring Security",
+        "nodes": [
+          "Chaîne de filtres de sécurité",
+          "Extraction des identifiants ou du jeton",
+          "AuthenticationManager : vérification",
+          "SecurityContext : utilisateur authentifié",
+          "Règles d'autorisation : accès ou 403"
+        ],
+        "note": "Un 401 vient de l'authentification, un 403 de l'autorisation"
+      }
+    }
+  ]
+}

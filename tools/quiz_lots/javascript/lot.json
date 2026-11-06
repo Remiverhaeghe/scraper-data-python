@@ -1,0 +1,37 @@
+{
+  "lot": 1,
+  "seed": 2026110606,
+  "skills": ["JavaScript", "Node.js", "ES6"],
+  "schemas": [
+    {
+      "name": "javascript-boucle-evenements.svg",
+      "questions": ["026", "027", "028"],
+      "diagram": {
+        "title": "Boucle d'événements",
+        "nodes": [
+          "Code synchrone exécuté sur la pile d'appels",
+          "Pile d'appels vide",
+          "File des microtâches vidée : promesses",
+          "Une tâche : minuteur, clic, réponse réseau",
+          "Rendu de la page, puis tour suivant"
+        ],
+        "note": "Un code synchrone long fige clics et affichage"
+      }
+    },
+    {
+      "name": "javascript-evenement-dom.svg",
+      "questions": ["043", "044", "045"],
+      "diagram": {
+        "title": "Propagation d'un clic dans le DOM",
+        "nodes": [
+          "Capture : de la fenêtre vers la cible",
+          "Cible : écouteurs de l'élément cliqué",
+          "Remontée : vers les ancêtres",
+          "Délégation : un écouteur sur le parent",
+          "Action par défaut, sauf preventDefault"
+        ],
+        "note": "event.target.closest retrouve l'élément utile"
+      }
+    }
+  ]
+}
