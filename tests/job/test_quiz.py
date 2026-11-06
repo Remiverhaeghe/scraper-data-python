@@ -112,6 +112,18 @@ def test_right_choice_is_not_given_away():
     assert not describe_bias(measure_bias(vAll))
 
 
+def test_describe_bias_reports_each_tell():
+    """Vérifie les trois alertes et le silence sous le nombre minimal de QCM."""
+
+    vProblems = describe_bias({"total": 10, "longest": 4, "shortest": 4, "absolute": 3})
+
+    assert len(vProblems) == 3
+    assert "plus longue dans 4 QCM sur 10" in vProblems[0]
+    assert "plus courte" in vProblems[1]
+    assert "mot absolu" in vProblems[2]
+    assert not describe_bias({"total": 5, "longest": 5, "shortest": 5, "absolute": 5})
+
+
 def test_invalid_question_is_reported(tmp_path):
     """Vérifie le message d'une question dont la réponse n'existe pas."""
 

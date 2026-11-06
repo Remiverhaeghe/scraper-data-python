@@ -6,6 +6,9 @@ dans l'historique git.
 ## Non publié
 
 ### Point qualité
+- Tests du téléchargement des taux de la BCE (date, fichier sans taux,
+  taux enregistrés illisibles), des alertes de biais des questionnaires
+  et d'un texte Remote OK non réparable
 - Fonctions Excel découpées par famille, à l'identique en Python et en
   Dart : agrégats et arrondis, conditions et critères, recherches, texte,
   dates ; le registre des noms reste dans `excel_functions`

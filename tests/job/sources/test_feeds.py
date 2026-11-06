@@ -41,6 +41,8 @@ def test_remoteok_skips_legal_notice_and_repairs_text(monkeypatch):
     assert remoteok_client.get_jobs() == [{"id": "1137548", "position": "Risk Analyst"}]
     assert repair_text("Analyst â\x80\x93 Remote") == "Analyst – Remote"
     assert repair_text("Déjà correct") == "Déjà correct"
+    # Le tiret long n'existe pas en Latin-1 : le texte n'est pas réparable.
+    assert repair_text("Ã la carte – Remote") == "Ã la carte – Remote"
 
     vJob = parse_remoteok(
         {"id": 1, "position": "Dev", "salary_min": 0, "tags": ["python", "sql"]}
