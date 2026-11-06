@@ -94,6 +94,17 @@ def test_solution_passes_and_starter_fails(pLevel):
             "RESET x3 = x3 & haut\ndescendre = x1\nmonter = x3\nrotation = x1 | x2 | x3",
         ),
         ("grafcet-percage", "descendre = depart | descendre\nmonter = descendre"),
+        (
+            "anti-court-cycle",
+            "moteur = (marche | moteur) & arret & !attente\nSET attente = moteur\n"
+            "t_repos = TON(!moteur, 2s)\nRESET attente = t_repos\n"
+            "voyant_attente = attente & !moteur",
+        ),
+        (
+            "post-ventilation",
+            "chauffage = thermostat\nt_ventil = TON(!thermostat, 3s)\n"
+            "moteur = thermostat | !t_ventil",
+        ),
     ],
 )
 def test_classic_mistakes_fail(pLevelId, pProgram):

@@ -5,6 +5,15 @@ dans l'historique git.
 
 ## Non publié
 
+### Automate complété
+- Dix niveaux de ladder : arrêt prioritaire en SET et RESET, marche par
+  à-coups, remplissage entre deux flotteurs, avertissement avant démarrage,
+  arrêt d'urgence et réarmement, post-ventilation d'un four, anti-court-cycle
+  d'un compresseur, arrêt du tapis en position, trois allers-retours de
+  vérin, perçage avec débourrage ; trophée Automaticien porté à 20 niveaux
+- Téléphone servi par la synchronisation, sans changement de code ; cas
+  communs régénérés
+
 ### Montages et pannes complétés
 - Cinq montages électriques : deux lampes en série, mesure de tension pour
   dépanner, voyants sur contacts NO et NF, moteur commandé de deux postes,

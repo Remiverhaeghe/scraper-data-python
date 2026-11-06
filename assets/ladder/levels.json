@@ -312,5 +312,317 @@
       {"at": 4.8, "expect": {"pompe1": 0, "pompe2": 0}, "message": "Plus de demande : les deux pompes s'arrêtent."}
     ],
     "forbidden": [{"all": ["pompe1", "pompe2"], "message": "Les deux pompes tournent ensemble."}]
+  },
+  {
+    "id": "priorite-arret",
+    "title": "SET, RESET et arrêt prioritaire",
+    "machine": "moteur",
+    "goal": "Le moteur est mémorisé par SET et RESET au lieu d'un auto-maintien. Marche le démarre, Arrêt le coupe, et l'arrêt doit l'emporter si les deux boutons sont appuyés ensemble.",
+    "hint": "Les barreaux s'exécutent de haut en bas : quand SET et RESET visent la même sortie dans un cycle, c'est le dernier écrit qui gagne. Arrêt est à ouverture : appuyé, il vaut 0.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "moteur", "kind": "output", "label": "Contacteur du moteur"}
+    ],
+    "starter": "# SET sortie = condition   met la sortie à 1 ; RESET sortie = condition   la remet à 0\nRESET moteur = !arret\nSET moteur = marche\n",
+    "solution": "SET moteur = marche\nRESET moteur = !arret",
+    "duration": 4.0,
+    "events": [
+      {"at": 0.5, "set": {"marche": 1}},
+      {"at": 0.8, "set": {"marche": 0}},
+      {"at": 1.5, "set": {"arret": 0}},
+      {"at": 1.8, "set": {"arret": 1}},
+      {"at": 2.5, "set": {"marche": 1, "arret": 0}},
+      {"at": 3.0, "set": {"marche": 0}},
+      {"at": 3.2, "set": {"arret": 1}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"moteur": 1}, "message": "Marche démarre le moteur, qui reste en marche bouton relâché."},
+      {"at": 2.0, "expect": {"moteur": 0}, "message": "Arrêt coupe le moteur."},
+      {"at": 2.8, "expect": {"moteur": 0}, "message": "Marche et Arrêt ensemble : l'arrêt l'emporte."},
+      {"at": 3.5, "expect": {"moteur": 0}, "message": "Le moteur reste arrêté une fois les boutons relâchés."}
+    ]
+  },
+  {
+    "id": "a-coups",
+    "title": "Marche par à-coups",
+    "machine": "moteur",
+    "goal": "En plus de la marche normale, un bouton À-coups fait tourner le moteur seulement tant qu'il est appuyé, pour positionner la machine. Un à-coups pendant la marche normale fait retomber le maintien.",
+    "hint": "Séparez le maintien dans une mémoire : elle se maintient par Marche et tombe sur Arrêt ou À-coups. Le moteur tourne si la mémoire est à 1 ou si À-coups est appuyé.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "acoups", "kind": "input", "label": "Bouton À-coups", "default": 0, "control": "button"},
+      {"name": "moteur", "kind": "output", "label": "Contacteur du moteur"}
+    ],
+    "starter": "moteur = (marche | acoups | moteur) & arret\n",
+    "solution": "maintien = (marche | maintien) & arret & !acoups\nmoteur = (maintien | acoups) & arret",
+    "duration": 5.0,
+    "events": [
+      {"at": 0.5, "set": {"acoups": 1}},
+      {"at": 1.0, "set": {"acoups": 0}},
+      {"at": 1.5, "set": {"marche": 1}},
+      {"at": 1.8, "set": {"marche": 0}},
+      {"at": 2.5, "set": {"arret": 0}},
+      {"at": 2.8, "set": {"arret": 1}},
+      {"at": 3.2, "set": {"marche": 1}},
+      {"at": 3.5, "set": {"marche": 0}},
+      {"at": 4.0, "set": {"acoups": 1}},
+      {"at": 4.3, "set": {"acoups": 0}}
+    ],
+    "checks": [
+      {"at": 0.8, "expect": {"moteur": 1}, "message": "À-coups fait tourner le moteur tant qu'il est appuyé."},
+      {"at": 1.3, "expect": {"moteur": 0}, "message": "À-coups relâché, le moteur s'arrête : pas d'auto-maintien."},
+      {"at": 2.2, "expect": {"moteur": 1}, "message": "Marche démarre le moteur avec auto-maintien."},
+      {"at": 3.0, "expect": {"moteur": 0}, "message": "Arrêt coupe le moteur."},
+      {"at": 4.6, "expect": {"moteur": 0}, "message": "Un à-coups pendant la marche fait retomber le maintien."}
+    ]
+  },
+  {
+    "id": "niveau-cuve",
+    "title": "Remplissage d'une cuve entre deux flotteurs",
+    "machine": "moteur",
+    "goal": "Une pompe remplit une cuve. Elle démarre quand l'eau passe sous le flotteur bas et s'arrête quand elle atteint le flotteur haut. Entre les deux, elle garde son état, pour ne pas démarrer et s'arrêter sans cesse.",
+    "hint": "C'est un auto-maintien : le flotteur bas découvert joue le rôle du bouton Marche, le flotteur haut celui du bouton Arrêt. Un flotteur recouvert vaut 1.",
+    "variables": [
+      {"name": "niveau_bas", "kind": "input", "label": "Flotteur bas : 1 tant que l'eau le recouvre", "default": 1, "control": "switch_nc"},
+      {"name": "niveau_haut", "kind": "input", "label": "Flotteur haut : 1 tant que l'eau le recouvre", "default": 1, "control": "switch_nc"},
+      {"name": "pompe1", "kind": "output", "label": "Contacteur de la pompe de remplissage"}
+    ],
+    "starter": "pompe1 = !niveau_bas\n",
+    "solution": "pompe1 = (!niveau_bas | pompe1) & !niveau_haut",
+    "duration": 4.5,
+    "events": [
+      {"at": 0.5, "set": {"niveau_haut": 0}},
+      {"at": 1.5, "set": {"niveau_bas": 0}},
+      {"at": 2.5, "set": {"niveau_bas": 1}},
+      {"at": 3.5, "set": {"niveau_haut": 1}}
+    ],
+    "checks": [
+      {"at": 0.3, "expect": {"pompe1": 0}, "message": "Cuve pleine : la pompe est arrêtée."},
+      {"at": 1.0, "expect": {"pompe1": 0}, "message": "Le niveau baisse entre les flotteurs : la pompe reste arrêtée."},
+      {"at": 2.0, "expect": {"pompe1": 1}, "message": "Sous le flotteur bas, la pompe démarre."},
+      {"at": 3.0, "expect": {"pompe1": 1}, "message": "Elle continue pendant que l'eau remonte entre les flotteurs."},
+      {"at": 4.0, "expect": {"pompe1": 0}, "message": "Le flotteur haut l'arrête."}
+    ]
+  },
+  {
+    "id": "avertissement",
+    "title": "Avertissement avant démarrage",
+    "machine": "moteur",
+    "goal": "Sur une machine longue, l'opérateur ne voit pas tout le poste. Marche fait d'abord sonner le klaxon pendant 2 s, puis le moteur démarre et le klaxon se tait. Arrêt coupe tout, même pendant l'avertissement.",
+    "hint": "Mémorisez la demande de marche par un auto-maintien, puis lancez une temporisation sur cette mémoire : le klaxon sonne tant qu'elle n'est pas écoulée, le moteur tourne une fois écoulée.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "moteur", "kind": "output", "label": "Contacteur du moteur"},
+      {"name": "klaxon", "kind": "output", "label": "Klaxon d'avertissement"}
+    ],
+    "starter": "moteur = (marche | moteur) & arret\n",
+    "solution": "demande = (marche | demande) & arret\nt_klaxon = TON(demande, 2s)\nklaxon = demande & !t_klaxon\nmoteur = demande & t_klaxon",
+    "duration": 7.5,
+    "events": [
+      {"at": 0.5, "set": {"marche": 1}},
+      {"at": 0.8, "set": {"marche": 0}},
+      {"at": 3.5, "set": {"arret": 0}},
+      {"at": 3.8, "set": {"arret": 1}},
+      {"at": 4.5, "set": {"marche": 1}},
+      {"at": 4.8, "set": {"marche": 0}},
+      {"at": 5.5, "set": {"arret": 0}},
+      {"at": 5.8, "set": {"arret": 1}}
+    ],
+    "checks": [
+      {"at": 1.5, "expect": {"klaxon": 1, "moteur": 0}, "message": "Marche fait d'abord sonner le klaxon, moteur à l'arrêt."},
+      {"at": 3.0, "expect": {"klaxon": 0, "moteur": 1}, "message": "Après 2 s, le moteur démarre et le klaxon se tait."},
+      {"at": 4.0, "expect": {"klaxon": 0, "moteur": 0}, "message": "Arrêt coupe le moteur."},
+      {"at": 6.0, "expect": {"klaxon": 0, "moteur": 0}, "message": "Arrêt pendant l'avertissement coupe le klaxon."},
+      {"at": 7.3, "expect": {"moteur": 0}, "message": "Le moteur ne démarre pas après un arrêt pendant l'avertissement."}
+    ]
+  },
+  {
+    "id": "arret-urgence",
+    "title": "Arrêt d'urgence et réarmement",
+    "machine": "moteur",
+    "goal": "Le coup de poing d'arrêt d'urgence coupe le moteur et reste enfoncé. Une fois déverrouillé, Marche reste refusé tant que l'opérateur n'a pas appuyé sur Réarmement. Le voyant reste allumé jusqu'au réarmement, qui ne redémarre pas le moteur.",
+    "hint": "Mémorisez le défaut avec SET quand l'arrêt d'urgence est enfoncé, et effacez-le avec RESET seulement si Réarmement est appuyé et le coup de poing déverrouillé. Le contact inversé du défaut se place en série dans la marche.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "au", "kind": "input", "label": "Arrêt d'urgence, à ouverture et accrochage : 1 au repos", "default": 1, "control": "switch_nc"},
+      {"name": "rearmement", "kind": "input", "label": "Bouton Réarmement", "default": 0, "control": "button"},
+      {"name": "moteur", "kind": "output", "label": "Contacteur du moteur"},
+      {"name": "voyant_au", "kind": "output", "label": "Voyant arrêt d'urgence, rouge"}
+    ],
+    "starter": "moteur = (marche | moteur) & arret & au\n",
+    "solution": "SET defaut = !au\nRESET defaut = rearmement & au\nmoteur = (marche | moteur) & arret & !defaut\nvoyant_au = defaut",
+    "duration": 6.0,
+    "events": [
+      {"at": 0.5, "set": {"marche": 1}},
+      {"at": 0.8, "set": {"marche": 0}},
+      {"at": 1.5, "set": {"au": 0}},
+      {"at": 2.0, "set": {"rearmement": 1}},
+      {"at": 2.3, "set": {"rearmement": 0}},
+      {"at": 2.6, "set": {"au": 1}},
+      {"at": 3.0, "set": {"marche": 1}},
+      {"at": 3.3, "set": {"marche": 0}},
+      {"at": 4.0, "set": {"rearmement": 1}},
+      {"at": 4.3, "set": {"rearmement": 0}},
+      {"at": 5.0, "set": {"marche": 1}},
+      {"at": 5.3, "set": {"marche": 0}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"moteur": 1, "voyant_au": 0}, "message": "Marche démarre le moteur."},
+      {"at": 1.8, "expect": {"moteur": 0, "voyant_au": 1}, "message": "L'arrêt d'urgence coupe le moteur et allume le voyant."},
+      {"at": 2.5, "expect": {"voyant_au": 1}, "message": "Réarmer avec le coup de poing encore enfoncé n'a pas d'effet."},
+      {"at": 3.5, "expect": {"moteur": 0, "voyant_au": 1}, "message": "Coup de poing déverrouillé : Marche reste refusé avant le réarmement."},
+      {"at": 4.5, "expect": {"moteur": 0, "voyant_au": 0}, "message": "Le réarmement éteint le voyant sans redémarrer le moteur."},
+      {"at": 5.5, "expect": {"moteur": 1}, "message": "Après réarmement, Marche redémarre le moteur."}
+    ]
+  },
+  {
+    "id": "post-ventilation",
+    "title": "Post-ventilation d'un four",
+    "machine": "moteur",
+    "goal": "Le thermostat commande la résistance d'un four. Le ventilateur tourne pendant la chauffe, puis continue 3 s après la coupure pour évacuer la chaleur. Au repos, rien ne tourne.",
+    "hint": "Un TON compte à partir du moment où son entrée passe à 1 : lancez-le quand la chauffe est coupée et que le ventilateur tourne encore. Le ventilateur se maintient lui-même jusqu'à la fin de la temporisation.",
+    "variables": [
+      {"name": "thermostat", "kind": "input", "label": "Thermostat : 1 pour chauffer", "default": 0, "control": "switch"},
+      {"name": "chauffage", "kind": "output", "label": "Contacteur de la résistance"},
+      {"name": "moteur", "kind": "output", "label": "Moteur du ventilateur"}
+    ],
+    "starter": "chauffage = thermostat\nmoteur = thermostat\n",
+    "solution": "chauffage = thermostat\nt_ventil = TON(!thermostat & moteur, 3s)\nmoteur = thermostat | (moteur & !t_ventil)",
+    "duration": 6.0,
+    "events": [
+      {"at": 0.5, "set": {"thermostat": 1}},
+      {"at": 2.0, "set": {"thermostat": 0}}
+    ],
+    "checks": [
+      {"at": 0.3, "expect": {"chauffage": 0, "moteur": 0}, "message": "Au repos, rien ne tourne."},
+      {"at": 1.0, "expect": {"chauffage": 1, "moteur": 1}, "message": "Pendant la chauffe, le ventilateur tourne."},
+      {"at": 3.0, "expect": {"chauffage": 0, "moteur": 1}, "message": "Chauffe coupée : le ventilateur continue."},
+      {"at": 4.5, "expect": {"moteur": 1}, "message": "Il tourne encore 2,5 s après la coupure."},
+      {"at": 5.5, "expect": {"moteur": 0}, "message": "Il s'arrête 3 s après la coupure."}
+    ]
+  },
+  {
+    "id": "anti-court-cycle",
+    "title": "Anti-court-cycle d'un compresseur",
+    "machine": "moteur",
+    "goal": "Un compresseur ne doit pas redémarrer moins de 2 s après son arrêt, le temps que les pressions s'équilibrent. Pendant cette attente, Marche est refusé et le voyant d'attente est allumé. Le premier démarrage est libre.",
+    "hint": "Une mémoire d'attente passe à 1 avec SET pendant la marche ; une temporisation sur le moteur arrêté l'efface avec RESET. Son contact inversé se place en série avec le bouton Marche seulement, pas avec le maintien.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "moteur", "kind": "output", "label": "Contacteur du compresseur"},
+      {"name": "voyant_attente", "kind": "output", "label": "Voyant attente avant redémarrage, orange"}
+    ],
+    "starter": "moteur = (marche | moteur) & arret\n",
+    "solution": "moteur = ((marche & !attente) | moteur) & arret\nSET attente = moteur\nt_repos = TON(!moteur, 2s)\nRESET attente = t_repos\nvoyant_attente = attente & !moteur",
+    "duration": 5.0,
+    "events": [
+      {"at": 0.5, "set": {"marche": 1}},
+      {"at": 0.8, "set": {"marche": 0}},
+      {"at": 1.5, "set": {"arret": 0}},
+      {"at": 1.8, "set": {"arret": 1}},
+      {"at": 2.5, "set": {"marche": 1}},
+      {"at": 2.8, "set": {"marche": 0}},
+      {"at": 4.0, "set": {"marche": 1}},
+      {"at": 4.3, "set": {"marche": 0}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"moteur": 1, "voyant_attente": 0}, "message": "Le premier démarrage est libre."},
+      {"at": 2.0, "expect": {"moteur": 0, "voyant_attente": 1}, "message": "Arrêt coupe le compresseur et allume le voyant d'attente."},
+      {"at": 3.0, "expect": {"moteur": 0}, "message": "Marche est refusé moins de 2 s après l'arrêt."},
+      {"at": 3.8, "expect": {"voyant_attente": 0}, "message": "Après 2 s, le voyant d'attente s'éteint."},
+      {"at": 4.5, "expect": {"moteur": 1}, "message": "Marche redémarre alors le compresseur."}
+    ]
+  },
+  {
+    "id": "arret-en-position",
+    "title": "Arrêt du tapis en position",
+    "machine": "tapis",
+    "goal": "Arrêt ne coupe pas le tapis tout de suite : il continue jusqu'à ce qu'une pièce soit devant le capteur, pour que le poste suivant la trouve en place. Marche relance le tapis et efface la demande d'arrêt.",
+    "hint": "Mémorisez la demande d'arrêt avec SET et effacez-la avec RESET sur Marche. Le maintien du tapis tombe quand la demande et la pièce sont là toutes les deux : « ! » ne s'applique pas à une parenthèse, inversez chaque contact et mettez-les en parallèle.",
+    "variables": [
+      {"name": "marche", "kind": "input", "label": "Bouton Marche", "default": 0, "control": "button"},
+      {"name": "arret", "kind": "input", "label": "Bouton Arrêt, à ouverture : 1 au repos", "default": 1, "control": "button_nc"},
+      {"name": "piece", "kind": "input", "label": "Capteur : pièce devant le capteur", "default": 0, "control": "sensor"},
+      {"name": "tapis", "kind": "output", "label": "Moteur du tapis"}
+    ],
+    "starter": "tapis = (marche | tapis) & arret\n",
+    "solution": "SET demande = !arret\nRESET demande = marche\ntapis = (marche | tapis) & (!demande | !piece)",
+    "duration": 5.5,
+    "events": [
+      {"at": 0.5, "set": {"marche": 1}},
+      {"at": 0.8, "set": {"marche": 0}},
+      {"at": 1.8, "set": {"arret": 0}},
+      {"at": 2.0, "set": {"arret": 1}},
+      {"at": 4.0, "set": {"marche": 1}},
+      {"at": 4.3, "set": {"marche": 0}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"tapis": 1}, "message": "Marche lance le tapis."},
+      {"at": 2.2, "expect": {"tapis": 1}, "message": "Arrêt demandé : le tapis continue jusqu'à la pièce suivante."},
+      {"at": 3.5, "expect": {"tapis": 0, "piece": 1}, "message": "Le tapis s'arrête pièce devant le capteur."},
+      {"at": 4.5, "expect": {"tapis": 1}, "message": "Marche relance le tapis."},
+      {"at": 5.3, "expect": {"tapis": 1}, "message": "La demande d'arrêt est effacée : le tapis ne s'arrête plus à la pièce."}
+    ]
+  },
+  {
+    "id": "allers-retours",
+    "title": "Trois allers-retours du vérin",
+    "machine": "verin",
+    "goal": "Départ lance trois allers-retours du vérin : il sort jusqu'à la fin de course, rentre, attend 1,5 s qu'il soit bien rentré, puis ressort. Après le troisième retour, il reste rentré jusqu'au prochain Départ.",
+    "hint": "Comptez les fins de course avec un CTU remis à zéro par Départ. Une mémoire de cycle passe à 1 avec Départ et tombe quand le compteur est atteint. La sortie du vérin se met à 1 avec SET et retombe avec RESET en fin de course.",
+    "variables": [
+      {"name": "depart", "kind": "input", "label": "Bouton Départ cycle", "default": 0, "control": "button"},
+      {"name": "fin_sortie", "kind": "input", "label": "Capteur : vérin sorti", "default": 0, "control": "sensor"},
+      {"name": "sortir", "kind": "output", "label": "Électrovanne de sortie du vérin"}
+    ],
+    "starter": "sortir = (depart | sortir) & !fin_sortie\n",
+    "solution": "n = CTU(fin_sortie, 3, depart)\nSET cycle = depart\nRESET cycle = n\nt_rentree = TON(cycle & !sortir, 1.5s)\nSET sortir = cycle & (depart | t_rentree)\nRESET sortir = fin_sortie",
+    "duration": 10.0,
+    "events": [
+      {"at": 0.5, "set": {"depart": 1}},
+      {"at": 0.8, "set": {"depart": 0}}
+    ],
+    "checks": [
+      {"at": 1.0, "expect": {"sortir": 1}, "message": "Départ fait sortir le vérin."},
+      {"at": 2.0, "expect": {"sortir": 0}, "message": "En fin de course, le vérin rentre."},
+      {"at": 3.5, "expect": {"sortir": 1}, "message": "Après l'attente, il ressort une deuxième fois."},
+      {"at": 6.0, "expect": {"sortir": 1}, "message": "Puis une troisième fois."},
+      {"at": 9.8, "expect": {"sortir": 0, "fin_sortie": 0}, "message": "Après trois allers-retours, le vérin reste rentré."}
+    ]
+  },
+  {
+    "id": "debourrage",
+    "title": "Perçage avec débourrage",
+    "machine": "percage",
+    "goal": "Pour dégager les copeaux, le perçage se fait en deux descentes : la broche descend jusqu'en bas, remonte en haut, redescend, puis remonte et s'arrête. Elle tourne pendant tout le cycle.",
+    "hint": "Prolongez le Grafcet du perçage simple : quatre étapes, descente, remontée, deuxième descente, remontée finale. Chaque étape est activée par SET sur la précédente et son capteur, puis désactive la précédente par RESET.",
+    "variables": [
+      {"name": "depart", "kind": "input", "label": "Bouton Départ cycle", "default": 0, "control": "button"},
+      {"name": "haut", "kind": "input", "label": "Capteur : broche en haut", "default": 1, "control": "sensor"},
+      {"name": "bas", "kind": "input", "label": "Capteur : broche en bas", "default": 0, "control": "sensor"},
+      {"name": "descendre", "kind": "output", "label": "Descente de la broche"},
+      {"name": "monter", "kind": "output", "label": "Montée de la broche"},
+      {"name": "rotation", "kind": "output", "label": "Rotation de la broche"}
+    ],
+    "starter": "SET x1 = depart & haut & !x1 & !x2\nSET x2 = x1 & bas\nRESET x1 = x2\nRESET x2 = x2 & haut\ndescendre = x1\nmonter = x2\nrotation = x1 | x2\n",
+    "solution": "SET x1 = depart & haut & !x1 & !x2 & !x3 & !x4\nSET x2 = x1 & bas\nRESET x1 = x2\nSET x3 = x2 & haut\nRESET x2 = x3\nSET x4 = x3 & bas\nRESET x3 = x4\nRESET x4 = x4 & haut\ndescendre = x1 | x3\nmonter = x2 | x4\nrotation = x1 | x2 | x3 | x4",
+    "duration": 10.0,
+    "events": [
+      {"at": 0.5, "set": {"depart": 1}},
+      {"at": 0.8, "set": {"depart": 0}}
+    ],
+    "checks": [
+      {"at": 1.5, "expect": {"descendre": 1, "rotation": 1}, "message": "Départ lance la première descente, broche en rotation."},
+      {"at": 3.5, "expect": {"descendre": 0, "monter": 1}, "message": "En bas, la broche remonte pour dégager les copeaux."},
+      {"at": 5.5, "expect": {"descendre": 1, "monter": 0}, "message": "En haut, elle redescend une deuxième fois."},
+      {"at": 7.5, "expect": {"monter": 1}, "message": "En bas, elle remonte pour finir."},
+      {"at": 9.5, "expect": {"descendre": 0, "monter": 0, "rotation": 0}, "message": "En haut, le cycle s'arrête."}
+    ],
+    "forbidden": [{"all": ["descendre", "monter"], "message": "La broche reçoit l'ordre de descendre et de monter en même temps."}]
   }
 ]

@@ -234,10 +234,10 @@ ACHIEVEMENTS = (
     (
         "ladder-all",
         "Automaticien",
-        "Réussir les 10 niveaux du simulateur d'automate",
+        "Réussir les 20 niveaux du simulateur d'automate",
         "cpu",
         "ladder_level",
-        10,
+        20,
         False,
     ),
     (

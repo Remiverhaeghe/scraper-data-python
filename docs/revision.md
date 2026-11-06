@@ -86,7 +86,7 @@ Page Pannes à résoudre du bureau et du web, pour s'entraîner au diagnostic :
 Page Automate du bureau et du web, pour programmer en ladder :
 
 - [x] Un barreau par ligne (`moteur = (marche | moteur) & arret`), dessiné en ladder en direct : contacts en série et en parallèle, contacts à ouverture, bobines, SET, RESET, temporisation TON et compteur CTU
-- [x] Dix niveaux : marche-arrêt avec auto-maintien, défaut thermique, temporisation d'un vérin, comptage de pièces, séquence Grafcet de perçage, inversion du sens de marche, démarrage étoile-triangle, voyant clignotant, commande bimanuelle, alternance de deux pompes
+- [x] Vingt niveaux : marche-arrêt avec auto-maintien, défaut thermique, temporisation d'un vérin, comptage de pièces, séquence Grafcet de perçage, inversion du sens de marche, démarrage étoile-triangle, voyant clignotant, commande bimanuelle, alternance de deux pompes, arrêt prioritaire en SET et RESET, marche par à-coups, remplissage entre deux flotteurs, avertissement avant démarrage, arrêt d'urgence et réarmement, post-ventilation, anti-court-cycle d'un compresseur, arrêt du tapis en position, trois allers-retours de vérin, perçage avec débourrage ; trophée Automaticien pour les vingt
 - [x] Cycle d'automate de 100 ms, barreaux lus de haut en bas ; scénario de test automatique avec chronogramme, indice et solution
 - [x] Sur le bureau, machine animée (moteur, vérin, tapis, broche) pilotée à la souris, contacts passants colorés en direct
 
