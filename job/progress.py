@@ -43,6 +43,7 @@ XP_RULES = {
     "ladder_level": ("Niveau d'automate réussi", 25),
     "sql_level": ("Niveau SQL réussi", 15),
     "circuit_level": ("Montage électrique réussi", 20),
+    "excel_level": ("Niveau Excel réussi", 15),
     "devops_level": ("Niveau Maven ou Docker réussi", 20),
     "onboarding": ("Premiers pas terminés", 50),
     "focus_session": ("Session de concentration : ses points comptent double", 10),
@@ -100,6 +101,9 @@ SQL_PROGRESS_KEY = "sql_progress"
 
 # Montages réussis et schémas libres de l'éditeur de circuits (job/circuit_levels.py)
 CIRCUIT_PROGRESS_KEY = "circuit_progress"
+
+# Formules et réussites de l'atelier Excel (job/excel_levels.py)
+EXCEL_PROGRESS_KEY = "excel_progress"
 
 # Fichiers, hôte Docker et réussites des niveaux Maven et Docker (job/devops_levels.py)
 DEVOPS_PROGRESS_KEY = "devops_progress"
@@ -345,6 +349,7 @@ def load_activity(pDatabaseFile):
     for vKey, vAction in (
         (SQL_PROGRESS_KEY, "sql_level"),
         (CIRCUIT_PROGRESS_KEY, "circuit_level"),
+        (EXCEL_PROGRESS_KEY, "excel_level"),
         (DEVOPS_PROGRESS_KEY, "devops_level"),
     ):
         vLevels = load_json_setting(pDatabaseFile, vKey, {}, dict).get("levels")

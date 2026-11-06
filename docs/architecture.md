@@ -155,6 +155,10 @@ scraper-data-python/
 │   ├── git_levels.py                          # Niveaux Git : objectif, réussite et progression
 │   ├── sql_sandbox.py                         # Bac à sable SQL : base en mémoire, dialectes, comparaison
 │   ├── sql_levels.py                          # Niveaux SQL : vérification et progression
+│   ├── excel_formula.py                       # Formules Excel en français : lecture, recopie, calcul
+│   ├── excel_functions.py                     # Fonctions d'Excel : agrégats, conditions, recherches, dates
+│   ├── excel_values.py                        # Valeurs d'Excel : erreurs, conversions, dates, formats
+│   ├── excel_levels.py                        # Niveaux Excel : recopie, comparaison, progression
 │   ├── circuit.py                             # Simulateur de circuits : nœuds, relais, défauts
 │   ├── circuit_drawing.py                     # Dessin SVG d'un circuit simulé
 │   ├── circuit_levels.py                      # Montages guidés, vérification, schémas libres
@@ -392,6 +396,7 @@ scraper-data-python/
 │   ├── ladder_machine.py                      # Machine animée du simulateur
 │   ├── git_page.py                            # Bac à sable Git
 │   ├── sql_page.py                            # Bac à sable SQL
+│   ├── excel_page.py                          # Atelier Excel
 │   ├── circuit_page.py                        # Schémas électriques
 │   ├── devops_page.py                         # Maven et Docker
 │   ├── history_page.py                        # Historique des exécutions
@@ -460,6 +465,7 @@ scraper-data-python/
 │   │   ├── ladder.py                          # Simulateur d'automate
 │   │   ├── git_sandbox.py                     # Bac à sable Git
 │   │   ├── sql_sandbox.py                     # Bac à sable SQL
+│   │   ├── excel.py                           # Atelier Excel
 │   │   ├── circuit.py                         # Schémas électriques
 │   │   ├── devops.py                          # Maven et Docker
 │   │   ├── monitoring.py                      # Qualité, journaux et historique
@@ -502,6 +508,7 @@ scraper-data-python/
 │   │   ├── ladder.html                        # Simulateur d'automate
 │   │   ├── git.html                           # Bac à sable Git
 │   │   ├── sql.html                           # Bac à sable SQL
+│   │   ├── excel.html                         # Atelier Excel
 │   │   ├── circuit.html                       # Schémas électriques
 │   │   ├── devops.html                        # Maven et Docker
 │   │   ├── _prompt.html                       # Demande préparée pour ChatGPT
@@ -579,6 +586,8 @@ scraper-data-python/
 │   ├── sql/
 │   │   ├── atelier.sql                        # Base d'exemple du bac à sable SQL
 │   │   └── levels.json                        # Niveaux SQL : énoncé, solution par dialecte, pièges
+│   ├── excel/
+│   │   └── levels.json                        # Niveaux Excel : feuille, plage, solution, pièges
 │   ├── interview/                             # Simulation d'entretien technique
 │   │   └── questions.json                     # Questions ouvertes, réponse attendue et points clés
 │   └── quiz_generation/                       # Génération de questions avec ChatGPT
@@ -774,6 +783,8 @@ scraper-data-python/
 │   │   ├── test_git_levels.py                 # Teste les niveaux Git et leur progression
 │   │   ├── test_sql_sandbox.py                # Teste les dialectes, les protections et la comparaison
 │   │   ├── test_sql_levels.py                 # Teste les solutions, les erreurs classiques et la progression
+│   │   ├── test_excel_formula.py              # Teste les calculs, les messages, la recopie et les formats
+│   │   ├── test_excel_levels.py               # Teste les solutions, les erreurs classiques et la progression
 │   │   ├── test_circuit.py                    # Teste les lois électriques, les relais et les défauts
 │   │   ├── test_circuit_levels.py             # Teste les montages, les erreurs classiques et les schémas libres
 │   │   ├── test_devops.py                     # Teste Maven, Docker, les niveaux et leur progression
@@ -920,6 +931,7 @@ scraper-data-python/
 │   │   ├── test_ladder_page.py                 # Teste la vérification et la simulation pilotée
 │   │   ├── test_git_page.py                    # Teste la page du bac à sable Git
 │   │   ├── test_sql_page.py                    # Teste la page du bac à sable SQL
+│   │   ├── test_excel_page.py                  # Teste la page de l'atelier Excel
 │   │   ├── test_circuit_page.py                # Teste un montage réussi, manœuvré, et le mode libre
 │   │   ├── test_devops_page.py                 # Teste un niveau joué dans la console
 │   │   ├── test_schema_editor.py               # Teste l'éditeur de schéma du bureau

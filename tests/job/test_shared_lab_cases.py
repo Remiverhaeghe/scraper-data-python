@@ -168,6 +168,32 @@ def test_phone_sql_query_is_run_again(tmp_path):
     assert "plus-cheres" in build_labs_package(vDatabaseFile)["sql"]["passed"]
 
 
+def test_phone_excel_formula_is_computed_again(tmp_path):
+    """Vérifie une formule réussie comptée une fois, et une formule fausse refusée."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    initialize_database(vDatabaseFile)
+    vResult = {
+        "id": "excel-1",
+        "lab": "excel",
+        "level": "taux-fige",
+        "formula": "=B2*(1+F$1)",
+        "finished_at": "2026-11-06T09:00:00",
+    }
+
+    vReport = sync_lab_results(
+        vDatabaseFile,
+        [vResult, {**vResult, "id": "excel-2", "formula": "=B2*(1+F1)"}],
+    )
+
+    assert (vReport["saved"], vReport["xp"]) == (1, 15)
+    assert vReport["rejected"][0]["reason"] == "niveau non réussi"
+    assert build_labs_package(vDatabaseFile)["excel"]["passed"] == ["taux-fige"]
+    assert build_labs_package(vDatabaseFile)["excel"]["rules"]["today"] == (
+        "2026-06-30"
+    )
+
+
 def test_phone_circuit_is_simulated_again(tmp_path):
     """Vérifie un montage réussi compté une fois, un montage incomplet et un schéma forgé refusés."""
 
@@ -306,6 +332,15 @@ ENVELOPE = {"id": "partie-x", "finished_at": "2026-10-31T10:00:00"}
                 "dialect": "mysql",
                 "query": "SELECT 1",
             },
+            "niveau non réussi",
+        ),
+        ({**ENVELOPE, "lab": "excel", "level": "x"}, "simulation ou niveau inconnu"),
+        (
+            {**ENVELOPE, "lab": "excel", "level": "nb-si", "formula": ["="]},
+            "formule illisible",
+        ),
+        (
+            {**ENVELOPE, "lab": "excel", "level": "nb-si", "formula": "=6"},
             "niveau non réussi",
         ),
         ({**ENVELOPE, "lab": "circuit", "level": "x"}, "simulation ou niveau inconnu"),

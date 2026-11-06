@@ -54,6 +54,7 @@ LADDER_LEVELS_FILE = ASSETS_DIRECTORY / "ladder" / "levels.json"
 SQL_DATABASE_FILE = ASSETS_DIRECTORY / "sql" / "atelier.sql"
 SQL_LEVELS_FILE = ASSETS_DIRECTORY / "sql" / "levels.json"
 CIRCUIT_LEVELS_FILE = ASSETS_DIRECTORY / "circuit" / "levels.json"
+EXCEL_LEVELS_FILE = ASSETS_DIRECTORY / "excel" / "levels.json"
 DEVOPS_LEVELS_FILE = ASSETS_DIRECTORY / "devops" / "levels.json"
 
 # Puzzles de code : ordre, ligne fautive, code à trou

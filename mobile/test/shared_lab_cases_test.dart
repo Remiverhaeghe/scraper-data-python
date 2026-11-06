@@ -11,6 +11,8 @@ import 'package:jobboard_revision/logic/circuit_drawing.dart';
 import 'package:jobboard_revision/logic/circuit_levels.dart';
 import 'package:jobboard_revision/logic/code_puzzles.dart';
 import 'package:jobboard_revision/logic/devops.dart';
+import 'package:jobboard_revision/logic/excel_formula.dart' as excel;
+import 'package:jobboard_revision/logic/excel_levels.dart';
 import 'package:jobboard_revision/logic/git_levels.dart';
 import 'package:jobboard_revision/logic/git_sandbox.dart';
 import 'package:jobboard_revision/logic/ladder.dart';
@@ -190,6 +192,39 @@ void main() {
         );
 
         expect(jsonDecode(jsonEncode(vRun)), equals(vCase['expected']));
+      });
+    }
+  });
+
+  final vExcelLevels = ExcelLevels(Map<String, dynamic>.from(vCases['excel_content'] as Map));
+
+  group('Excel', () {
+    for (final vCase in vCases['excel'] as List) {
+      test((vCase as Map)['name'] as String, () {
+        final vRun = vExcelLevels.runLevel(
+          vExcelLevels.levels[vCase['level']]!,
+          vCase['formula'] as String,
+        );
+
+        expect(jsonDecode(jsonEncode(vRun)), equals(vCase['expected']));
+      });
+    }
+
+    for (final vCase in vCases['excel_formulas'] as List) {
+      test('formule ${(vCase as Map)['formula']}', () {
+        final vFormula = vCase['formula'] as String;
+        Map<String, String> vResult;
+
+        try {
+          excel.parseFormula(vFormula, vExcelLevels.rules);
+          final vSheet =
+              excel.Sheet(vCases['excel_sheet'] as List, vExcelLevels.rules, {'Z1': vFormula});
+          vResult = {'value': excel.formatValue(vSheet.value(1, 26)), 'error': ''};
+        } on excel.FormulaError catch (vError) {
+          vResult = {'value': '', 'error': vError.message};
+        }
+
+        expect(vResult, equals(vCase['expected']));
       });
     }
   });

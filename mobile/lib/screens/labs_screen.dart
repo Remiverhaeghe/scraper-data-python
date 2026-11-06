@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../revision_state.dart';
 import 'circuit_screen.dart';
 import 'devops_screen.dart';
+import 'excel_screen.dart';
 import 'git_screen.dart';
 import 'ladder_screen.dart';
 import 'oral_screen.dart';
@@ -103,6 +104,20 @@ class LabsScreen extends StatelessWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(pContext).push(
                       MaterialPageRoute<void>(builder: (_) => SqlListScreen(state: state)),
+                    ),
+                  ),
+                ),
+              if (state.excelLevelList.isNotEmpty && state.excelLevels != null)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.table_chart_outlined),
+                    title: const Text('Atelier Excel'),
+                    subtitle: Text(
+                      '${state.excelPassed.length} / ${state.excelLevelList.length} niveaux réussis',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(pContext).push(
+                      MaterialPageRoute<void>(builder: (_) => ExcelListScreen(state: state)),
                     ),
                   ),
                 ),

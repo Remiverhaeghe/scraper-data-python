@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 import 'logic/devops.dart';
 import 'logic/circuit_drawing.dart';
 import 'logic/code_puzzles.dart';
+import 'logic/excel_levels.dart';
 import 'logic/sql_levels.dart';
 import 'logic/sql_sandbox.dart';
 import 'logic/exam.dart';
@@ -98,6 +99,8 @@ const devopsSessionsPreference = 'devops_sessions';
 const sqlDialectPreference = 'sql_dialect';
 const sqlPassedPreference = 'sql_passed';
 const sqlQueriesPreference = 'sql_queries';
+const excelPassedPreference = 'excel_passed';
+const excelFormulasPreference = 'excel_formulas';
 const circuitPassedPreference = 'circuit_passed';
 const circuitDraftsPreference = 'circuit_drafts';
 const puzzleProgressPreference = 'puzzle_progress';
@@ -440,6 +443,77 @@ class RevisionState extends ChangeNotifier {
           'level': pLevelId,
           'query': pQuery,
           'dialect': pDialect,
+          'finished_at': DateTime.now().toIso8601String(),
+        },
+      ],
+    };
+    await store.savePreferences(preferences);
+    notifyListeners();
+
+    return rFirst;
+  }
+
+  Map<String, dynamic> get excelPackage =>
+      Map<String, dynamic>.from(labs['excel'] as Map? ?? const {});
+
+  ExcelLevels? _excelLevels;
+  Object? _excelSource;
+
+  /// Niveaux Excel et leurs règles, refaits seulement quand le contenu reçu change.
+  ExcelLevels? get excelLevels {
+    final vPackage = labs['excel'];
+
+    if (vPackage == null) {
+      return null;
+    }
+
+    if (!identical(vPackage, _excelSource)) {
+      _excelSource = vPackage;
+      _excelLevels = ExcelLevels(Map<String, dynamic>.from(vPackage as Map));
+    }
+
+    return _excelLevels;
+  }
+
+  List<Map<String, dynamic>> get excelLevelList => [
+        for (final vItem in excelPackage['levels'] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  int get excelXp => (excelPackage['xp'] as num? ?? 15).toInt();
+
+  /// Niveaux Excel réussis, sur le PC ou sur le téléphone.
+  Set<String> get excelPassed => {
+        for (final vId in excelPackage['passed'] as List? ?? const []) vId as String,
+        for (final vId in preferences[excelPassedPreference] as List? ?? const []) vId as String,
+      };
+
+  /// Dernière formule écrite pour un niveau, ou « = » pour commencer.
+  String excelFormula(Map<String, dynamic> pLevel) =>
+      (preferences[excelFormulasPreference] as Map?)?[pLevel['id']] as String? ?? '=';
+
+  Future<void> saveExcelFormula(String pLevelId, String pFormula) => savePreference(
+        excelFormulasPreference,
+        {
+          ...Map<String, dynamic>.from(preferences[excelFormulasPreference] as Map? ?? const {}),
+          pLevelId: pFormula
+        },
+      );
+
+  /// Garde un niveau Excel réussi ; la formule part au PC, qui la recalcule.
+  Future<bool> recordExcel(String pLevelId, String pFormula) async {
+    final rFirst = !excelPassed.contains(pLevelId);
+
+    preferences = {
+      ...preferences,
+      excelPassedPreference: [...excelPassed, if (rFirst) pLevelId],
+      pendingLabsPreference: [
+        ...pendingLabs,
+        {
+          'id': const Uuid().v4(),
+          'lab': 'excel',
+          'level': pLevelId,
+          'formula': pFormula,
           'finished_at': DateTime.now().toIso8601String(),
         },
       ],

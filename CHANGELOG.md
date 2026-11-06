@@ -5,6 +5,16 @@ dans l'historique git.
 
 ## Non publié
 
+### Atelier Excel
+- Nouvelle page Excel sur le bureau, le web et le téléphone : 28 niveaux de
+  formules sur les tableaux d'une usine (références et $, conditions, NB.SI
+  et SOMME.SI, RECHERCHEV, RECHERCHEX, INDEX et EQUIV, textes et dates)
+- Excel en français : noms de fonctions, point-virgule, virgule décimale ;
+  formule recopiée sur la plage comme avec la poignée, chaque cellule
+  comparée à la solution, erreurs classiques expliquées
+- Moteur de formules sans dépendance, porté à l'identique sur le téléphone
+  et vérifié par les cas communs ; trophées Première formule et As du tableur
+
 ### Schémas électriques : électronique
 - Nouveaux composants simulés : transistor NPN (bloqué, régime linéaire,
   saturé), diode Zener, potentiomètre, buzzer, photorésistance et

@@ -3383,6 +3383,31 @@ def test_sql_level_is_run_on_the_web(client):
     assert client.post("/sql/dialect", data={"dialect": "oracle"}).status_code == 400
 
 
+def test_excel_level_is_checked_on_the_web(client):
+    """Vérifie la feuille, un $ oublié signalé et la réussite enregistrée."""
+
+    vPage = client.get("/excel?level=taux-fige").text
+
+    assert "Prix TTC" in vPage
+    assert 'class="excel-target "' in vPage
+
+    vError = client.post(
+        "/excel/run", data={"level": "taux-fige", "formula": "=B2*(1+F1)"}
+    ).text
+
+    assert "5 cellules sur 6" in vError
+    assert "excel-target ko" in vError
+
+    vResult = client.post(
+        "/excel/run", data={"level": "taux-fige", "formula": "=B2*(1+$F$1)"}
+    ).text
+
+    assert "Niveau réussi · +15 XP" in vResult
+    assert ">10,08 €</td>" in vResult
+    assert "1 / " in client.get("/excel").text
+    assert client.get("/excel?level=inconnu").status_code == 404
+
+
 def test_circuit_is_checked_operated_saved_and_exported_on_the_web(client):
     """Vérifie un montage réussi, un poussoir manœuvré, un schéma libre et son export."""
 

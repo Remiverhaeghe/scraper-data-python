@@ -2605,6 +2605,32 @@ textarea.companies-preferred {
     font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
 }
 
+/* Feuille de l'atelier Excel : cellules à remplir surlignées, vertes ou rouges après essai */
+.excel-sheet th {
+    color: var(--muted);
+    text-align: center;
+}
+
+.excel-sheet .excel-header {
+    font-weight: 600;
+}
+
+.excel-sheet .excel-target {
+    background: var(--primary-light);
+    font-weight: 600;
+}
+
+.excel-sheet .excel-target.ok {
+    background: var(--green-light);
+    color: var(--success);
+}
+
+.excel-sheet .excel-target.ko {
+    color: var(--danger);
+    outline: 1px solid var(--danger);
+    outline-offset: -1px;
+}
+
 /* Ladder et chronogramme : défilement horizontal plutôt qu'un dessin écrasé */
 .ladder-drawing {
     overflow-x: auto;

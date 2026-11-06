@@ -17,6 +17,7 @@ import 'package:jobboard_revision/screens/puzzle_screen.dart';
 import 'package:jobboard_revision/screens/devops_screen.dart';
 import 'package:jobboard_revision/logic/sql_sandbox.dart';
 import 'package:jobboard_revision/screens/git_screen.dart';
+import 'package:jobboard_revision/screens/excel_screen.dart';
 import 'package:jobboard_revision/screens/sql_screen.dart';
 import 'package:jobboard_revision/screens/ladder_screen.dart';
 import 'package:jobboard_revision/screens/troubleshooting_screen.dart';
@@ -37,6 +38,7 @@ final gitLevels = sharedCases['git_levels'] as List;
 final devopsContent = Map<String, dynamic>.from(sharedCases['devops_content'] as Map);
 final sqlContent = Map<String, dynamic>.from(sharedCases['sql_content'] as Map);
 final circuitContent = Map<String, dynamic>.from(sharedCases['circuit_content'] as Map);
+final excelContent = Map<String, dynamic>.from(sharedCases['excel_content'] as Map);
 final puzzlesContent = Map<String, dynamic>.from(sharedCases['puzzles_content'] as Map);
 
 /// Moteur vocal absent : la lecture rend la main aussitôt, comme sur un téléphone sans voix.
@@ -92,6 +94,11 @@ MockClient buildServer(List<Object?> pSent, {bool pOldServer = false}) {
             'passed': ['selection'],
           },
           'circuit': {...circuitContent, 'xp': 20, 'passed': <String>[]},
+          'excel': {
+            ...excelContent,
+            'xp': 15,
+            'passed': ['cout-main-oeuvre'],
+          },
           'oral': {
             'rules': sharedCases['oral_rules'],
             'questions': {
@@ -293,6 +300,32 @@ void main() {
     expect(find.textContaining('Niveau réussi · +15 XP'), findsOneWidget);
     expect(vState.pendingLabs.single['dialect'], 'sqlserver');
     expect(vState.sqlPassed, containsAll(['selection', 'plus-cheres']));
+  });
+
+  testWidgets('Un niveau Excel se valide puis part au PC', (pTester) async {
+    final vState = await buildState(buildServer([]));
+    await pTester.runAsync(vState.synchronize);
+
+    expect(vState.excelPassed, {'cout-main-oeuvre'});
+
+    final vLevel = vState.excelLevelList.firstWhere((pLevel) => pLevel['id'] == 'taux-fige');
+
+    await pTester.pumpWidget(MaterialApp(home: ExcelScreen(state: vState, level: vLevel)));
+    await pTester.enterText(find.byType(TextField), '=B2*(1+F1)');
+    await pTester.tap(find.text('Valider'));
+    await pTester.pumpAndSettle();
+
+    expect(find.textContaining('figez la ligne du taux'), findsOneWidget);
+    expect(vState.pendingLabs, isEmpty);
+
+    await pTester.enterText(find.byType(TextField), r'=B2*(1+$F$1)');
+    await pTester.tap(find.text('Valider'));
+    await pTester.pumpAndSettle();
+
+    expect(find.textContaining('Niveau réussi · +15 XP'), findsOneWidget);
+    expect(vState.pendingLabs.single['formula'], r'=B2*(1+$F$1)');
+    expect(vState.excelPassed, containsAll(['cout-main-oeuvre', 'taux-fige']));
+    expect(vState.excelFormula(vLevel), r'=B2*(1+$F$1)');
   });
 
   test('Une requête trop longue est abandonnée', () async {

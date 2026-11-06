@@ -35,7 +35,7 @@ une offre ajoutée aux notes de la candidature sur le PC, candidatures en cours
 lisibles hors ligne et fiche de préparation (avancement de la mission entretien, pitch, questions pièges, questions à
 poser) proposée sur l'accueil dans les 24 heures qui précèdent un entretien,
 guides pratiques et schémas de chaque thème consultables sans réseau, avec une
-recherche dans leur texte, simulations jouables sans réseau, entretien oral lu à voix haute par le moteur vocal d'Android (canal natif de MainActivity.kt), puzzles de code par séries de dix, pannes à résoudre, automate en ladder, schémas électriques construits au toucher, bac à sable Git, bac à sable SQL (SQLite embarqué par le paquet sqlite3), Maven et Docker (contenu reçu du PC,
+recherche dans leur texte, simulations jouables sans réseau, entretien oral lu à voix haute par le moteur vocal d'Android (canal natif de MainActivity.kt), puzzles de code par séries de dix, pannes à résoudre, automate en ladder, schémas électriques construits au toucher, bac à sable Git, bac à sable SQL (SQLite embarqué par le paquet sqlite3), atelier Excel, Maven et Docker (contenu reçu du PC,
 parties revérifiées par le PC à la synchronisation), widget de l'écran d'accueil (questions à revoir, prochain entretien), dessiné par
 `android/app/src/main/kotlin/…/RevisionWidgetProvider.kt` et
 `res/layout/revision_widget.xml`, avec son fond (`res/drawable/widget_background.xml`)
@@ -183,6 +183,8 @@ mobile/
 │   │   ├── devops.dart           # Objectif et étape des niveaux Maven et Docker
 │   │   ├── sql_sandbox.dart      # Bac à sable SQL, identique à job/sql_sandbox.py, dans un isolat
 │   │   ├── sql_levels.dart       # Niveaux SQL et comparaison, identiques à job/sql_levels.py
+│   │   ├── excel_formula.dart    # Formules Excel en français, identiques à job/excel_*.py
+│   │   ├── excel_levels.dart     # Niveaux Excel, recopie et comparaison, identiques à job/excel_levels.py
 │   │   ├── circuit.dart          # Simulateur de circuits, identique à job/circuit.py
 │   │   ├── circuit_drawing.dart  # Dessin des circuits, identique à job/circuit_drawing.py
 │   │   ├── circuit_levels.dart   # Montages et étapes, identiques à job/circuit_levels.py
@@ -224,7 +226,8 @@ mobile/
 │   │   ├── oral_screen.dart      # Entretien oral : question lue, chrono, grille et conseil
 │   │   ├── git_screen.dart       # Git : niveaux par série, commandes, graphes et fichiers
 │   │   ├── devops_screen.dart    # Maven et Docker : fichier, commandes et console
-│   │   └── sql_screen.dart       # SQL : dialecte, niveaux, requête et tableaux de résultats
+│   │   ├── sql_screen.dart       # SQL : dialecte, niveaux, requête et tableaux de résultats
+│   │   └── excel_screen.dart     # Excel : niveaux, feuille, formule et cellules comparées
 │   └── widgets/
 │       ├── celebration.dart      # Confettis et carte d'un niveau gagné ou d'un record
 │       ├── game_card.dart        # Mascotte, niveau et cadre, série, quêtes et bilan de la semaine, accès au jeu

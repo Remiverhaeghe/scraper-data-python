@@ -39,6 +39,7 @@ EXPORTED_SETTINGS = (
     "sql_progress",
     "circuit_progress",
     "devops_progress",
+    "excel_progress",
 )
 
 ATTACHMENT_PREFIX = "pieces_jointes/"

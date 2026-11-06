@@ -1,0 +1,666 @@
+{
+  "levels": [
+    {
+      "id": "cout-main-oeuvre",
+      "series": "Les bases",
+      "title": "Coût de la main-d'œuvre",
+      "goal": "En D2, calculez le coût de l'intervention : heures × taux horaire. La formule est recopiée jusqu'à D6.",
+      "rows": [
+        ["Intervention", "Heures", "Taux horaire", "Coût"],
+        ["Vidange presse", 2.5, 48, null],
+        ["Courroie tour", 1.5, 52, null],
+        ["Graissage convoyeur", 0.75, 48, null],
+        ["Capteur robot", 3, 65, null],
+        ["Filtre compresseur", 1, 45, null]
+      ],
+      "formats": {"C": "euro", "D": "euro"},
+      "cell": "D2",
+      "fill": "D2:D6",
+      "hint": "Une formule commence par = et désigne les cellules par leur adresse : colonne puis ligne.",
+      "solution": "=B2*C2",
+      "explanation": "Sans $, les références sont relatives : recopiée en D3, la formule devient =B3*C3. Une seule formule suffit pour toute la colonne."
+    },
+    {
+      "id": "somme-semaine",
+      "series": "Les bases",
+      "title": "Heures de la semaine",
+      "goal": "En G2, faites le total des heures du technicien sur la semaine. La formule est recopiée jusqu'à G5.",
+      "rows": [
+        ["Technicien", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Total"],
+        ["Martin", 7, 7.5, 8, 7, 6, null],
+        ["Leroy", 8, 8, 0, 7.5, 7.5, null],
+        ["Garnier", 6.5, 7, 7, 7, 7, null],
+        ["Benali", 7, null, 8, 8, 7.5, null]
+      ],
+      "cell": "G2",
+      "fill": "G2:G5",
+      "hint": "SOMME additionne une plage entière : la première et la dernière cellule, séparées par deux-points.",
+      "solution": "=SOMME(B2:F2)",
+      "requires": ["SOMME"],
+      "explanation": "SOMME(B2:F2) ignore la cellule vide de Benali et reste juste si l'on insère une colonne dans la plage, contrairement à =B2+C2+D2+E2+F2."
+    },
+    {
+      "id": "moyenne-arrondie",
+      "series": "Les bases",
+      "title": "Arrêt moyen arrondi",
+      "goal": "En E2, calculez la durée moyenne des arrêts (en minutes), arrondie à une décimale.",
+      "rows": [
+        ["Arrêt", "Machine", "Durée (min)", null, "Moyenne"],
+        [1, "Presse P1", 42, null, null],
+        [2, "Tour T3", 15, null, null],
+        [3, "Robot R2", 67, null, null],
+        [4, "Presse P1", 23, null, null],
+        [5, "Convoyeur C1", 8, null, null],
+        [6, "Tour T3", 31, null, null],
+        [7, "Robot R2", 54, null, null]
+      ],
+      "cell": "E2",
+      "hint": "MOYENNE se place dans ARRONDI, dont le second argument est le nombre de décimales.",
+      "solution": "=ARRONDI(MOYENNE(C2:C8);1)",
+      "requires": ["ARRONDI", "MOYENNE"],
+      "pitfalls": [
+        ["ARRONDI\\.(SUP|INF)", "ARRONDI.SUP et ARRONDI.INF arrondissent toujours dans le même sens : ici, c'est l'arrondi au plus proche qui est demandé."]
+      ],
+      "explanation": "ARRONDI change la valeur elle-même, pas seulement son affichage : un format à une décimale garderait 34,2857… dans les calculs suivants."
+    },
+    {
+      "id": "taux-fige",
+      "series": "Les bases",
+      "title": "Prix TTC",
+      "goal": "En C2, calculez le prix TTC à partir du prix HT et du taux de TVA en F1. La formule est recopiée jusqu'à C7.",
+      "rows": [
+        ["Pièce", "Prix HT", "Prix TTC", null, "TVA", 0.2],
+        ["Roulement 6204", 8.4, null],
+        ["Courroie A42", 14.9, null],
+        ["Filtre hydraulique", 22.5, null],
+        ["Joint torique", 1.2, null],
+        ["Capteur inductif", 38, null],
+        ["Fusible 10 A", 0.8, null]
+      ],
+      "formats": {"B": "euro", "C": "euro", "F": "percent"},
+      "cell": "C2",
+      "fill": "C2:C7",
+      "hint": "Le taux est toujours en F1 : il faut empêcher la recopie de déplacer cette référence.",
+      "solution": "=B2*(1+$F$1)",
+      "pitfalls": [
+        ["F1(?!\\d)", "Recopiée vers le bas, F1 devient F2, F3… qui sont vides : figez la ligne du taux avec $F$1 (touche F4)."]
+      ],
+      "explanation": "$F$1 est une référence absolue : la recopie ne la déplace pas. F$1 suffirait ici, car seule la ligne doit rester fixe quand on recopie vers le bas."
+    },
+    {
+      "id": "ecart-temperatures",
+      "series": "Les bases",
+      "title": "Écart de température",
+      "goal": "En E2, calculez l'écart entre la plus haute et la plus basse température relevées sur le moteur.",
+      "rows": [
+        ["Heure", "Température (°C)", null, null, "Écart"],
+        ["06:00", 41.5, null, null, null],
+        ["08:00", 52, null, null, null],
+        ["10:00", 63.5, null, null, null],
+        ["12:00", 71, null, null, null],
+        ["14:00", 68.5, null, null, null],
+        ["16:00", 59, null, null, null],
+        ["18:00", 47.5, null, null, null]
+      ],
+      "cell": "E2",
+      "hint": "MAX et MIN renvoient la plus grande et la plus petite valeur d'une plage.",
+      "solution": "=MAX(B2:B8)-MIN(B2:B8)",
+      "requires": ["MAX", "MIN"],
+      "explanation": "Les fonctions se combinent comme des nombres : MAX(…)-MIN(…) donne l'étendue des relevés."
+    },
+    {
+      "id": "part-du-total",
+      "series": "Les bases",
+      "title": "Part de chaque atelier",
+      "goal": "En C2, calculez la part de l'atelier dans le coût total de maintenance (B7). La formule est recopiée jusqu'à C6.",
+      "rows": [
+        ["Atelier", "Coût", "Part"],
+        ["Usinage", 12400, null],
+        ["Assemblage", 6800, null],
+        ["Peinture", 4300, null],
+        ["Logistique", 2100, null],
+        ["Utilités", 5400, null],
+        ["Total", "=SOMME(B2:B6)", null]
+      ],
+      "formats": {"B": "euro", "C": "percent"},
+      "cell": "C2",
+      "fill": "C2:C6",
+      "hint": "Divisez le coût de l'atelier par le total, en figeant la référence du total.",
+      "solution": "=B2/$B$7",
+      "pitfalls": [
+        ["B7(?!\\d)", "Recopiée vers le bas, B7 devient B8, B9… : figez la ligne du total avec $B$7 ou B$7."]
+      ],
+      "explanation": "Le format pourcentage multiplie l'affichage par 100 : la cellule contient 0,4 et affiche 40 %. Inutile d'écrire *100 dans la formule."
+    },
+    {
+      "id": "si-commande",
+      "series": "Conditions",
+      "title": "Pièces à commander",
+      "goal": "En D2, affichez « Commander » si le stock est inférieur ou égal au stock minimal, sinon « OK ». La formule est recopiée jusqu'à D7.",
+      "rows": [
+        ["Pièce", "Stock", "Stock minimal", "Action"],
+        ["Roulement 6204", 12, 10, null],
+        ["Courroie A42", 3, 5, null],
+        ["Filtre hydraulique", 4, 4, null],
+        ["Joint torique", 150, 50, null],
+        ["Capteur inductif", 0, 2, null],
+        ["Fusible 10 A", 25, 30, null]
+      ],
+      "cell": "D2",
+      "fill": "D2:D7",
+      "hint": "SI(condition;valeur si vrai;valeur si faux), les textes entre guillemets.",
+      "solution": "=SI(B2<=C2;\"Commander\";\"OK\")",
+      "requires": ["SI"],
+      "pitfalls": [
+        ["B2\\s*<(?![=>])", "Le filtre hydraulique a un stock égal au minimum : il doit aussi être commandé, avec <= plutôt que <."]
+      ],
+      "explanation": "Le cas d'égalité est celui qui se trompe le plus souvent : relisez toujours « inférieur » ou « inférieur ou égal » dans la demande."
+    },
+    {
+      "id": "si-et",
+      "series": "Conditions",
+      "title": "Pannes urgentes",
+      "goal": "En D2, affichez « Urgent » si la machine est en panne et de criticité A, sinon « Planifié ». La formule est recopiée jusqu'à D7.",
+      "rows": [
+        ["Machine", "État", "Criticité", "Priorité"],
+        ["Presse P1", "Panne", "A", null],
+        ["Tour T3", "Panne", "B", null],
+        ["Robot R2", "Marche", "A", null],
+        ["Convoyeur C1", "Panne", "A", null],
+        ["Compresseur K1", "Marche", "C", null],
+        ["Fraiseuse F2", "Panne", "C", null]
+      ],
+      "cell": "D2",
+      "fill": "D2:D7",
+      "hint": "ET(condition1;condition2) est vrai seulement si les deux conditions le sont ; il se place comme condition du SI.",
+      "solution": "=SI(ET(B2=\"Panne\";C2=\"A\");\"Urgent\";\"Planifié\")",
+      "requires": ["SI", "ET"],
+      "pitfalls": [
+        ["\\bOU\\(", "OU suffit d'une seule condition vraie : le robot R2, en marche, deviendrait urgent. Il faut les deux, donc ET."]
+      ],
+      "explanation": "ET et OU renvoient VRAI ou FAUX : ils ne s'emploient presque jamais seuls, mais comme condition d'un SI."
+    },
+    {
+      "id": "si-imbrique",
+      "series": "Conditions",
+      "title": "Seuils de température",
+      "goal": "En C2, affichez « Arrêt » à partir de 90 °C, « Surveiller » à partir de 75 °C, sinon « Normal ». La formule est recopiée jusqu'à C8.",
+      "rows": [
+        ["Moteur", "Température (°C)", "Consigne"],
+        ["M1", 62, null],
+        ["M2", 75, null],
+        ["M3", 93.5, null],
+        ["M4", 89.9, null],
+        ["M5", 90, null],
+        ["M6", 74.5, null],
+        ["M7", 48, null]
+      ],
+      "cell": "C2",
+      "fill": "C2:C8",
+      "hint": "Testez d'abord le seuil le plus haut ; le troisième argument du SI peut être un autre SI.",
+      "solution": "=SI(B2>=90;\"Arrêt\";SI(B2>=75;\"Surveiller\";\"Normal\"))",
+      "requires": ["SI|SI.CONDITIONS"],
+      "pitfalls": [
+        ["B2\\s*>(?!=)", "« À partir de » inclut le seuil : 90 °C donne « Arrêt », avec >= plutôt que >."]
+      ],
+      "explanation": "L'ordre compte : en testant B2>=75 en premier, 93,5 °C s'arrêterait à « Surveiller ». SI.CONDITIONS(B2>=90;\"Arrêt\";B2>=75;\"Surveiller\";VRAI;\"Normal\") se lit plus facilement."
+    },
+    {
+      "id": "nb-si",
+      "series": "Conditions",
+      "title": "Nombre de correctives",
+      "goal": "En H2, comptez les interventions correctives.",
+      "rows": [
+        ["N°", "Type", "Atelier", "Durée (h)", "Coût", null, null, "Correctives"],
+        [1, "Corrective", "Usinage", 3, 420],
+        [2, "Préventive", "Usinage", 1.5, 150],
+        [3, "Corrective", "Assemblage", 2, 260],
+        [4, "Corrective", "Usinage", 1, 130],
+        [5, "Préventive", "Peinture", 2.5, 240],
+        [6, "Corrective", "Peinture", 4, 610],
+        [7, "Préventive", "Assemblage", 1, 95],
+        [8, "Corrective", "Usinage", 2.5, 380],
+        [9, "Corrective", "Assemblage", 0.5, 70],
+        [10, "Préventive", "Usinage", 2, 180]
+      ],
+      "formats": {"E": "euro"},
+      "cell": "H2",
+      "hint": "NB.SI(plage;critère) compte les cellules de la plage qui répondent au critère.",
+      "solution": "=NB.SI(B2:B11;\"Corrective\")",
+      "requires": ["NB.SI|NB.SI.ENS"],
+      "pitfalls": [
+        ["\\bNB\\(|NBVAL\\(", "NB compte les nombres et NBVAL les cellules non vides : pour un critère, c'est NB.SI."]
+      ],
+      "explanation": "Le critère ne tient pas compte de la casse : \"corrective\" donne le même résultat. Il accepte aussi les jokers, comme \"Corr*\"."
+    },
+    {
+      "id": "somme-si",
+      "series": "Conditions",
+      "title": "Coût par atelier",
+      "goal": "En H2, faites le total des coûts de l'atelier écrit en G2. La formule est recopiée jusqu'à H4.",
+      "rows": [
+        ["N°", "Type", "Atelier", "Durée (h)", "Coût", null, "Atelier", "Coût total"],
+        [1, "Corrective", "Usinage", 3, 420, null, "Assemblage"],
+        [2, "Préventive", "Usinage", 1.5, 150, null, "Peinture"],
+        [3, "Corrective", "Assemblage", 2, 260, null, "Usinage"],
+        [4, "Corrective", "Usinage", 1, 130],
+        [5, "Préventive", "Peinture", 2.5, 240],
+        [6, "Corrective", "Peinture", 4, 610],
+        [7, "Préventive", "Assemblage", 1, 95],
+        [8, "Corrective", "Usinage", 2.5, 380],
+        [9, "Corrective", "Assemblage", 0.5, 70],
+        [10, "Préventive", "Usinage", 2, 180]
+      ],
+      "formats": {"E": "euro", "H": "euro"},
+      "cell": "H2",
+      "fill": "H2:H4",
+      "hint": "SOMME.SI(plage du critère;critère;plage à additionner). Les deux plages ne doivent pas glisser à la recopie.",
+      "solution": "=SOMME.SI($C$2:$C$11;G2;$E$2:$E$11)",
+      "requires": ["SOMME.SI|SOMME.SI.ENS"],
+      "pitfalls": [
+        ["(?<!\\$)C2\\s*:|(?<!\\$)E2\\s*:", "Recopiées, C2:C11 et E2:E11 glissent en C4:C13 et E4:E13 et oublient les premières lignes : figez-les avec $."]
+      ],
+      "explanation": "Le critère G2 reste relatif pour suivre chaque atelier, les plages sont figées : c'est le mélange typique d'un tableau de synthèse."
+    },
+    {
+      "id": "nb-si-ens",
+      "series": "Conditions",
+      "title": "Correctives longues",
+      "goal": "En H2, comptez les interventions correctives d'au moins 2 heures.",
+      "rows": [
+        ["N°", "Type", "Atelier", "Durée (h)", "Coût", null, null, "Correctives ≥ 2 h"],
+        [1, "Corrective", "Usinage", 3, 420],
+        [2, "Préventive", "Usinage", 1.5, 150],
+        [3, "Corrective", "Assemblage", 2, 260],
+        [4, "Corrective", "Usinage", 1, 130],
+        [5, "Préventive", "Peinture", 2.5, 240],
+        [6, "Corrective", "Peinture", 4, 610],
+        [7, "Préventive", "Assemblage", 1, 95],
+        [8, "Corrective", "Usinage", 2.5, 380],
+        [9, "Corrective", "Assemblage", 0.5, 70],
+        [10, "Préventive", "Usinage", 2, 180]
+      ],
+      "formats": {"E": "euro"},
+      "cell": "H2",
+      "hint": "NB.SI.ENS prend des paires plage;critère. Un critère de comparaison s'écrit entre guillemets : \">=2\".",
+      "solution": "=NB.SI.ENS(B2:B11;\"Corrective\";D2:D11;\">=2\")",
+      "requires": ["NB.SI.ENS"],
+      "pitfalls": [
+        ["\">\\s*2\"", "« Au moins 2 heures » inclut 2 : le critère est \">=2\"."]
+      ],
+      "explanation": "Chaque paire ajoute une condition, toutes doivent être vraies. Pour un seuil variable en cellule, on concatène : \">=\"&J1."
+    },
+    {
+      "id": "somme-si-ens",
+      "series": "Conditions",
+      "title": "Correctives par atelier",
+      "goal": "En H2, faites le total des coûts des seules interventions correctives de l'atelier écrit en G2. La formule est recopiée jusqu'à H4.",
+      "rows": [
+        ["N°", "Type", "Atelier", "Durée (h)", "Coût", null, "Atelier", "Correctives"],
+        [1, "Corrective", "Usinage", 3, 420, null, "Assemblage"],
+        [2, "Préventive", "Usinage", 1.5, 150, null, "Peinture"],
+        [3, "Corrective", "Assemblage", 2, 260, null, "Usinage"],
+        [4, "Corrective", "Usinage", 1, 130],
+        [5, "Préventive", "Peinture", 2.5, 240],
+        [6, "Corrective", "Peinture", 4, 610],
+        [7, "Préventive", "Assemblage", 1, 95],
+        [8, "Corrective", "Usinage", 2.5, 380],
+        [9, "Corrective", "Assemblage", 0.5, 70],
+        [10, "Préventive", "Usinage", 2, 180]
+      ],
+      "formats": {"E": "euro", "H": "euro"},
+      "cell": "H2",
+      "fill": "H2:H4",
+      "hint": "SOMME.SI.ENS commence par la plage à additionner, puis les paires plage;critère.",
+      "solution": "=SOMME.SI.ENS($E$2:$E$11;$B$2:$B$11;\"Corrective\";$C$2:$C$11;G2)",
+      "requires": ["SOMME.SI.ENS"],
+      "pitfalls": [
+        ["(?<!\\$)[BCE]2\\s*:", "Les plages glissent à la recopie et oublient les premières lignes : figez-les avec $."]
+      ],
+      "explanation": "Attention à l'ordre : SOMME.SI met la plage à additionner en dernier, SOMME.SI.ENS en premier."
+    },
+    {
+      "id": "moyenne-si",
+      "series": "Conditions",
+      "title": "Durée moyenne d'une préventive",
+      "goal": "En H2, calculez la durée moyenne des interventions préventives.",
+      "rows": [
+        ["N°", "Type", "Atelier", "Durée (h)", "Coût", null, null, "Moyenne préventive"],
+        [1, "Corrective", "Usinage", 3, 420],
+        [2, "Préventive", "Usinage", 1.5, 150],
+        [3, "Corrective", "Assemblage", 2, 260],
+        [4, "Corrective", "Usinage", 1, 130],
+        [5, "Préventive", "Peinture", 2.5, 240],
+        [6, "Corrective", "Peinture", 4, 610],
+        [7, "Préventive", "Assemblage", 1, 95],
+        [8, "Corrective", "Usinage", 2.5, 380],
+        [9, "Corrective", "Assemblage", 0.5, 70],
+        [10, "Préventive", "Usinage", 2, 180]
+      ],
+      "formats": {"E": "euro"},
+      "cell": "H2",
+      "hint": "MOYENNE.SI(plage du critère;critère;plage à moyenner).",
+      "solution": "=MOYENNE.SI(B2:B11;\"Préventive\";D2:D11)",
+      "requires": ["MOYENNE.SI|SOMME.SI"],
+      "explanation": "SOMME.SI(…)/NB.SI(…) donne le même résultat ; MOYENNE.SI renvoie #DIV/0! quand aucune ligne ne répond au critère."
+    },
+    {
+      "id": "recherchev",
+      "series": "Recherche",
+      "title": "Désignation d'une pièce",
+      "goal": "En C2, affichez la désignation de la pièce dont la référence est en A2, lue dans le catalogue F1:H7. La formule est recopiée jusqu'à C6.",
+      "rows": [
+        ["Référence", "Quantité", "Désignation", null, null, "Référence", "Désignation", "Prix"],
+        ["FLT-H12", 2, null, null, null, "RLT-6204", "Roulement 6204", 8.4],
+        ["RLT-6204", 8, null, null, null, "CRS-A42", "Courroie A42", 14.9],
+        ["CPT-IND", 1, null, null, null, "FLT-H12", "Filtre hydraulique", 22.5],
+        ["FUS-10A", 20, null, null, null, "JNT-T30", "Joint torique 30 mm", 1.2],
+        ["CRS-A42", 3, null, null, null, "CPT-IND", "Capteur inductif", 38],
+        [null, null, null, null, null, "FUS-10A", "Fusible 10 A", 0.8]
+      ],
+      "formats": {"H": "euro"},
+      "cell": "C2",
+      "fill": "C2:C6",
+      "hint": "RECHERCHEV(valeur cherchée;tableau figé;numéro de colonne;FAUX) : FAUX demande une correspondance exacte.",
+      "solution": "=RECHERCHEV(A2;$F$2:$H$7;2;FAUX)",
+      "requires": ["RECHERCHEV|RECHERCHEX|INDEX"],
+      "pitfalls": [
+        ["^(?!.*(FAUX|;\\s*0\\s*\\)))(?=.*RECHERCHEV)", "Sans FAUX en dernier argument, RECHERCHEV fait une recherche approchée, faite pour une liste triée : sur ce catalogue, elle renvoie #N/A ou une autre pièce."],
+        ["(?<!\\$)F2\\s*:", "Recopié, le tableau F2:H7 glisse vers le bas et perd les premières pièces : figez-le avec $F$2:$H$7."]
+      ],
+      "explanation": "Le numéro de colonne se compte depuis la première colonne du tableau : 2 désigne G, la désignation. Le tableau commence toujours par la colonne où l'on cherche."
+    },
+    {
+      "id": "montant-ligne",
+      "series": "Recherche",
+      "title": "Montant d'une commande",
+      "goal": "En C2, calculez le montant de la ligne : quantité × prix du catalogue F1:H7. La formule est recopiée jusqu'à C6.",
+      "rows": [
+        ["Référence", "Quantité", "Montant", null, null, "Référence", "Désignation", "Prix"],
+        ["FLT-H12", 2, null, null, null, "RLT-6204", "Roulement 6204", 8.4],
+        ["RLT-6204", 8, null, null, null, "CRS-A42", "Courroie A42", 14.9],
+        ["CPT-IND", 1, null, null, null, "FLT-H12", "Filtre hydraulique", 22.5],
+        ["FUS-10A", 20, null, null, null, "JNT-T30", "Joint torique 30 mm", 1.2],
+        ["CRS-A42", 3, null, null, null, "CPT-IND", "Capteur inductif", 38],
+        [null, null, null, null, null, "FUS-10A", "Fusible 10 A", 0.8]
+      ],
+      "formats": {"C": "euro", "H": "euro"},
+      "cell": "C2",
+      "fill": "C2:C6",
+      "hint": "Le prix est la troisième colonne du catalogue ; la recherche se multiplie comme un nombre.",
+      "solution": "=B2*RECHERCHEV(A2;$F$2:$H$7;3;FAUX)",
+      "requires": ["RECHERCHEV|RECHERCHEX|INDEX"],
+      "pitfalls": [
+        ["^(?!.*(FAUX|;\\s*0\\s*\\)))(?=.*RECHERCHEV)", "Sans FAUX en dernier argument, la recherche est approchée et le prix trouvé n'est pas forcément celui de la pièce."]
+      ],
+      "explanation": "Une recherche s'utilise comme n'importe quelle valeur : multipliée, comparée ou placée dans un SI."
+    },
+    {
+      "id": "bareme",
+      "series": "Recherche",
+      "title": "Prime selon un barème",
+      "goal": "En C2, affichez la prime de l'opérateur selon le barème E1:F5 : chaque seuil vaut jusqu'au suivant. La formule est recopiée jusqu'à C7.",
+      "rows": [
+        ["Opérateur", "Pièces produites", "Prime", null, "À partir de", "Prime"],
+        ["Martin", 320, null, null, 0, 0],
+        ["Leroy", 500, null, null, 500, 50],
+        ["Garnier", 1499, null, null, 1000, 120],
+        ["Benali", 2000, null, null, 1500, 200],
+        ["Petit", 999, null, null],
+        ["Roux", 1000, null, null]
+      ],
+      "formats": {"C": "euro", "F": "euro"},
+      "cell": "C2",
+      "fill": "C2:C7",
+      "hint": "Sur des seuils triés, la recherche approchée (VRAI, ou rien en dernier argument) retient le plus grand seuil inférieur ou égal.",
+      "solution": "=RECHERCHEV(B2;$E$2:$F$5;2;VRAI)",
+      "requires": ["RECHERCHEV|RECHERCHEX|INDEX"],
+      "pitfalls": [
+        ["FAUX|;\\s*0\\s*\\)", "En recherche exacte, 320 pièces ne trouvent aucun seuil égal et renvoient #N/A : un barème se lit en recherche approchée."]
+      ],
+      "explanation": "La recherche approchée remplace une cascade de SI ; elle exige des seuils en ordre croissant, sinon le résultat est faux sans aucune erreur affichée."
+    },
+    {
+      "id": "recherchex",
+      "series": "Recherche",
+      "title": "Technicien d'une machine",
+      "goal": "En B2, affichez le technicien responsable de la machine en A2, d'après le tableau E1:F6 où la machine est à droite. La formule est recopiée jusqu'à B5.",
+      "rows": [
+        ["Machine", "Technicien", null, null, "Technicien", "Machine"],
+        ["Robot R2", null, null, null, "Martin", "Presse P1"],
+        ["Presse P1", null, null, null, "Leroy", "Tour T3"],
+        ["Compresseur K1", null, null, null, "Garnier", "Robot R2"],
+        ["Tour T3", null, null, null, "Benali", "Convoyeur C1"],
+        [null, null, null, null, "Petit", "Compresseur K1"]
+      ],
+      "cell": "B2",
+      "fill": "B2:B5",
+      "hint": "RECHERCHEX(valeur cherchée;colonne où chercher;colonne à renvoyer) : les colonnes peuvent être dans n'importe quel ordre.",
+      "solution": "=RECHERCHEX(A2;$F$2:$F$6;$E$2:$E$6)",
+      "requires": ["RECHERCHEX|INDEX"],
+      "pitfalls": [
+        ["RECHERCHEV", "RECHERCHEV ne cherche que dans la première colonne du tableau et ne renvoie que vers la droite : ici, la machine est à droite du technicien."]
+      ],
+      "explanation": "RECHERCHEX est exacte par défaut et lit à gauche comme à droite. Sur une version ancienne d'Excel, INDEX($E$2:$E$6;EQUIV(A2;$F$2:$F$6;0)) fait la même chose."
+    },
+    {
+      "id": "index-equiv",
+      "series": "Recherche",
+      "title": "Stock par magasin",
+      "goal": "En H2, affichez le stock de la pièce en F2 dans le magasin en G2, lu dans le tableau A1:D6. La formule est recopiée jusqu'à H4.",
+      "rows": [
+        ["Pièce", "Magasin A", "Magasin B", "Magasin C", null, "Pièce", "Magasin", "Stock"],
+        ["Roulement 6204", 12, 4, 30, null, "Courroie A42", "Magasin C"],
+        ["Courroie A42", 3, 9, 1, null, "Fusible 10 A", "Magasin A"],
+        ["Filtre hydraulique", 4, 0, 6, null, "Filtre hydraulique", "Magasin B"],
+        ["Capteur inductif", 0, 2, 5],
+        ["Fusible 10 A", 25, 40, 18]
+      ],
+      "cell": "H2",
+      "fill": "H2:H4",
+      "hint": "EQUIV(valeur;liste;0) donne la position exacte dans une liste ; INDEX(tableau;ligne;colonne) lit la cellule à ces positions.",
+      "solution": "=INDEX($B$2:$D$6;EQUIV(F2;$A$2:$A$6;0);EQUIV(G2;$B$1:$D$1;0))",
+      "requires": ["INDEX", "EQUIV"],
+      "pitfalls": [
+        ["EQUIV\\((?:[^;()]|\\([^()]*\\))*;(?:[^;()]|\\([^()]*\\))*\\)", "Sans 0 en troisième argument, EQUIV cherche une valeur approchée dans une liste supposée triée."]
+      ],
+      "explanation": "Deux EQUIV donnent la ligne et la colonne, INDEX lit l'intersection : c'est la recherche à double entrée, dans un tableau croisé."
+    },
+    {
+      "id": "sierreur",
+      "series": "Recherche",
+      "title": "Référence inconnue",
+      "goal": "En C2, affichez la désignation de la pièce, ou « Référence inconnue » si elle n'est pas au catalogue F1:H7. La formule est recopiée jusqu'à C6.",
+      "rows": [
+        ["Référence", "Quantité", "Désignation", null, null, "Référence", "Désignation", "Prix"],
+        ["FLT-H12", 2, null, null, null, "RLT-6204", "Roulement 6204", 8.4],
+        ["RLT-6205", 8, null, null, null, "CRS-A42", "Courroie A42", 14.9],
+        ["CPT-IND", 1, null, null, null, "FLT-H12", "Filtre hydraulique", 22.5],
+        ["FUS-16A", 20, null, null, null, "JNT-T30", "Joint torique 30 mm", 1.2],
+        ["CRS-A42", 3, null, null, null, "CPT-IND", "Capteur inductif", 38],
+        [null, null, null, null, null, "FUS-10A", "Fusible 10 A", 0.8]
+      ],
+      "formats": {"H": "euro"},
+      "cell": "C2",
+      "fill": "C2:C6",
+      "hint": "SIERREUR(valeur;valeur en cas d'erreur) remplace le #N/A d'une recherche qui échoue.",
+      "solution": "=SIERREUR(RECHERCHEV(A2;$F$2:$H$7;2;FAUX);\"Référence inconnue\")",
+      "requires": ["SIERREUR|RECHERCHEX"],
+      "explanation": "SIERREUR masque toutes les erreurs, y compris une faute dans la formule : on le pose une fois la recherche vérifiée. RECHERCHEX a sa propre valeur de repli en quatrième argument."
+    },
+    {
+      "id": "code-machine",
+      "series": "Texte et dates",
+      "title": "Code d'une machine",
+      "goal": "En C2, construisez le code de la machine : les trois premières lettres de l'atelier en majuscules, un tiret, puis le numéro (par exemple USI-7). La formule est recopiée jusqu'à C6.",
+      "rows": [
+        ["Atelier", "Numéro", "Code"],
+        ["Usinage", 7, null],
+        ["Assemblage", 12, null],
+        ["peinture", 3, null],
+        ["Logistique", 21, null],
+        ["Utilités", 4, null]
+      ],
+      "cell": "C2",
+      "fill": "C2:C6",
+      "hint": "GAUCHE(texte;n) garde les n premiers caractères, MAJUSCULE met en capitales et & colle des textes.",
+      "solution": "=MAJUSCULE(GAUCHE(A2;3))&\"-\"&B2",
+      "requires": ["GAUCHE|STXT"],
+      "explanation": "& convertit le numéro en texte. CONCAT(MAJUSCULE(GAUCHE(A2;3));\"-\";B2) donne le même résultat."
+    },
+    {
+      "id": "nettoyer-saisie",
+      "series": "Texte et dates",
+      "title": "Nettoyer une saisie",
+      "goal": "En B2, remettez le nom saisi au propre : sans espaces en trop et en majuscules. La formule est recopiée jusqu'à B6.",
+      "rows": [
+        ["Saisie", "Nom propre"],
+        ["  dupont jean", null],
+        ["MARTIN   Paul ", null],
+        ["leroy  anne", null],
+        ["Benali Karim", null],
+        ["  garnier    luc  ", null]
+      ],
+      "cell": "B2",
+      "fill": "B2:B6",
+      "hint": "SUPPRESPACE retire les espaces de début et de fin et ne garde qu'une espace entre les mots.",
+      "solution": "=MAJUSCULE(SUPPRESPACE(A2))",
+      "requires": ["SUPPRESPACE"],
+      "explanation": "Les espaces invisibles font échouer les recherches et les NB.SI : on nettoie une saisie avant de s'en servir comme clé."
+    },
+    {
+      "id": "annee-serie",
+      "series": "Texte et dates",
+      "title": "Année de fabrication",
+      "goal": "En B2, extrayez l'année du numéro de série (les quatre chiffres après « SN- »), sous forme de nombre. La formule est recopiée jusqu'à B6.",
+      "rows": [
+        ["Numéro de série", "Année"],
+        ["SN-2019-0457", null],
+        ["SN-2022-1180", null],
+        ["SN-2008-0031", null],
+        ["SN-2024-2210", null],
+        ["SN-2015-0912", null]
+      ],
+      "cell": "B2",
+      "fill": "B2:B6",
+      "hint": "STXT(texte;position;nombre de caractères) extrait le milieu d'un texte ; le résultat est un texte qu'il faut convertir.",
+      "solution": "=CNUM(STXT(A2;4;4))",
+      "requires": ["STXT"],
+      "pitfalls": [
+        ["^(?!.*(CNUM|\\*\\s*1|\\+\\s*0|--))", "STXT renvoie le texte « 2019 », pas le nombre : CNUM(…) ou …*1 le convertit."]
+      ],
+      "explanation": "Un nombre stocké en texte s'aligne à gauche et ne se trie pas comme un nombre : CNUM ou une opération (*1) le convertit."
+    },
+    {
+      "id": "duree-arret",
+      "series": "Texte et dates",
+      "title": "Durée d'un arrêt",
+      "goal": "En D2, calculez la durée de l'arrêt en jours, entre la date de début et la date de remise en service. La formule est recopiée jusqu'à D6.",
+      "rows": [
+        ["Machine", "Arrêt", "Remise en service", "Jours"],
+        ["Presse P1", "2026-03-02", "2026-03-05", null],
+        ["Tour T3", "2026-02-25", "2026-03-04", null],
+        ["Robot R2", "2026-04-28", "2026-05-02", null],
+        ["Convoyeur C1", "2026-06-10", "2026-06-10", null],
+        ["Fraiseuse F2", "2025-12-22", "2026-01-08", null]
+      ],
+      "formats": {"B": "date", "C": "date"},
+      "cell": "D2",
+      "fill": "D2:D6",
+      "hint": "Une date est un nombre de jours : une soustraction suffit.",
+      "solution": "=C2-B2",
+      "explanation": "Excel compte les jours depuis le 1er janvier 1900 : 05/03/2026 vaut 46086. La différence de deux dates est donc un nombre de jours, années bissextiles comprises."
+    },
+    {
+      "id": "anciennete",
+      "series": "Texte et dates",
+      "title": "Âge des machines",
+      "goal": "En C2, calculez l'âge de la machine en années entières, à la date du jour (AUJOURDHUI, fixée ici au 30/06/2026). La formule est recopiée jusqu'à C6.",
+      "rows": [
+        ["Machine", "Mise en service", "Âge (ans)"],
+        ["Presse P1", "2011-09-15", null],
+        ["Tour T3", "2019-06-30", null],
+        ["Robot R2", "2023-07-01", null],
+        ["Convoyeur C1", "2008-01-10", null],
+        ["Compresseur K1", "2020-02-29", null]
+      ],
+      "formats": {"B": "date"},
+      "cell": "C2",
+      "fill": "C2:C6",
+      "hint": "DATEDIF(date de début;date de fin;\"y\") compte les années entières écoulées.",
+      "solution": "=DATEDIF(B2;AUJOURDHUI();\"y\")",
+      "requires": ["DATEDIF|ANNEE"],
+      "pitfalls": [
+        ["/\\s*365", "Diviser par 365 se trompe autour des anniversaires à cause des années bissextiles : DATEDIF compte les années entières."]
+      ],
+      "explanation": "DATEDIF n'apparaît pas dans l'assistant d'Excel mais fonctionne : \"y\" pour les années, \"m\" pour les mois, \"d\" pour les jours. Le robot, à un jour de ses trois ans, en a encore deux."
+    },
+    {
+      "id": "prochaine-visite",
+      "series": "Texte et dates",
+      "title": "Prochaine visite",
+      "goal": "En D2, calculez la date de la prochaine visite : la dernière visite décalée de la périodicité en mois. La formule est recopiée jusqu'à D6.",
+      "rows": [
+        ["Équipement", "Dernière visite", "Périodicité (mois)", "Prochaine visite"],
+        ["Pont roulant", "2026-01-31", 1, null],
+        ["Compresseur K1", "2025-11-15", 6, null],
+        ["Extincteurs", "2025-09-30", 12, null],
+        ["Chariot élévateur", "2026-03-31", 3, null],
+        ["Armoire électrique", "2025-08-29", 6, null]
+      ],
+      "formats": {"B": "date", "D": "date"},
+      "cell": "D2",
+      "fill": "D2:D6",
+      "hint": "MOIS.DECALER(date;nombre de mois) avance d'un nombre de mois, en restant dans le mois visé.",
+      "solution": "=MOIS.DECALER(B2;C2)",
+      "requires": ["MOIS.DECALER|DATE|FIN.MOIS"],
+      "pitfalls": [
+        ["\\*\\s*30|\\+\\s*C2\\s*\\*", "Un mois ne fait pas toujours 30 jours : MOIS.DECALER avance de mois en mois."]
+      ],
+      "explanation": "Du 31 janvier, un mois plus tard donne le 28 février : MOIS.DECALER garde le dernier jour du mois quand le jour n'existe pas. FIN.MOIS donne, lui, la fin du mois visé."
+    },
+    {
+      "id": "jours-ouvres",
+      "series": "Texte et dates",
+      "title": "Délai en jours ouvrés",
+      "goal": "En D2, calculez le délai de livraison en jours ouvrés, de la commande à la livraison incluses, sans compter les jours fériés de F2:F4. La formule est recopiée jusqu'à D5.",
+      "rows": [
+        ["Commande", "Passée le", "Livrée le", "Jours ouvrés", null, "Fériés"],
+        ["CDE-101", "2026-04-27", "2026-05-08", null, null, "2026-05-01"],
+        ["CDE-102", "2026-07-06", "2026-07-17", null, null, "2026-05-08"],
+        ["CDE-103", "2026-08-10", "2026-08-14", null, null, "2026-07-14"],
+        ["CDE-104", "2026-06-01", "2026-06-05", null]
+      ],
+      "formats": {"B": "date", "C": "date", "F": "date"},
+      "cell": "D2",
+      "fill": "D2:D5",
+      "hint": "NB.JOURS.OUVRES(début;fin;fériés) compte du lundi au vendredi, bornes comprises ; la liste des fériés doit être figée.",
+      "solution": "=NB.JOURS.OUVRES(B2;C2;$F$2:$F$4)",
+      "requires": ["NB.JOURS.OUVRES"],
+      "pitfalls": [
+        ["(?<!\\$)F2\\s*:", "Recopiée, la liste des fériés glisse vers le bas et oublie le 1er mai : figez-la avec $F$2:$F$4."]
+      ],
+      "explanation": "Les deux bornes comptent : une commande passée et livrée le même jour ouvré fait 1. Un férié tombé un week-end ne retire rien."
+    },
+    {
+      "id": "texte-date",
+      "series": "Texte et dates",
+      "title": "Phrase avec une date",
+      "goal": "En C2, écrivez la phrase « Visite du jeudi 05 mars 2026 » à partir de la date en B2. La formule est recopiée jusqu'à C5.",
+      "rows": [
+        ["Équipement", "Date", "Libellé"],
+        ["Pont roulant", "2026-03-05", null],
+        ["Compresseur K1", "2026-07-14", null],
+        ["Extincteurs", "2026-12-01", null],
+        ["Chariot élévateur", "2027-01-04", null]
+      ],
+      "formats": {"B": "date"},
+      "cell": "C2",
+      "fill": "C2:C5",
+      "hint": "Collée à un texte, une date devient son numéro de série : TEXTE(date;\"jjjj jj mmmm aaaa\") l'écrit en toutes lettres.",
+      "solution": "=\"Visite du \"&TEXTE(B2;\"jjjj jj mmmm aaaa\")",
+      "requires": ["TEXTE"],
+      "explanation": "Dans le format, jjjj donne le jour en lettres, jj le jour sur deux chiffres, mmmm le mois en lettres et aaaa l'année. TEXTE renvoie un texte : on ne calcule plus avec."
+    }
+  ]
+}

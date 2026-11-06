@@ -46,6 +46,12 @@ from job.oral_interview import (
 from job.devops_levels import load_levels as load_devops_levels
 from job.devops_levels import mark_passed, replay_steps
 from job.docker_sim import REGISTRY
+from job.excel_formula import ENGLISH_NAMES, MAX_FORMULA_LENGTH
+from job.excel_functions import TODAY as EXCEL_TODAY
+from job.excel_levels import build_excel_overview
+from job.excel_levels import load_levels as load_excel_levels
+from job.excel_levels import run_level as run_excel_level
+from job.excel_levels import save_attempt as save_excel_attempt
 from job.git_levels import LEVELS as GIT_LEVELS
 from job.git_levels import get_level as get_git_level
 from job.git_levels import is_goal_reached, replay_level
@@ -147,6 +153,7 @@ def build_labs_package(pDatabaseFile):
             ],
         },
         "sql": build_sql_package(pDatabaseFile),
+        "excel": build_excel_package(pDatabaseFile),
         "puzzles": build_puzzles_package(pDatabaseFile),
         "oral": build_oral_package(pDatabaseFile, datetime.now()),
         "circuit": {
@@ -286,6 +293,38 @@ def build_sql_package(pDatabaseFile):
         "rules": build_sql_rules(),
         "xp": XP_RULES["sql_level"][1],
         "dialect": vOverview["dialect"],
+        "passed": [
+            vRow["id"]
+            for vSeries in vOverview["series"]
+            for vRow in vSeries["rows"]
+            if vRow["passed"]
+        ],
+    }
+
+    return rPackage
+
+
+def build_excel_rules():
+    """Retourne les règles de l'atelier Excel que le téléphone applique à l'identique."""
+
+    rRules = {
+        "today": EXCEL_TODAY,
+        "max_formula_length": MAX_FORMULA_LENGTH,
+        "english_names": ENGLISH_NAMES,
+    }
+
+    return rRules
+
+
+def build_excel_package(pDatabaseFile):
+    """Retourne l'atelier Excel à emporter : niveaux, règles, réussites."""
+
+    vOverview = build_excel_overview(pDatabaseFile)
+
+    rPackage = {
+        "levels": list(load_excel_levels().values()),
+        "rules": build_excel_rules(),
+        "xp": XP_RULES["excel_level"][1],
         "passed": [
             vRow["id"]
             for vSeries in vOverview["series"]
@@ -449,6 +488,30 @@ def integrate_sql(pDatabaseFile, pItem, pFinishedAt):
     return rXp
 
 
+def integrate_excel(pDatabaseFile, pItem, pFinishedAt):
+    """Recalcule une formule Excel du téléphone ; retourne les points gagnés."""
+
+    vLevel = load_excel_levels().get(pItem.get("level"))
+    vFormula = pItem.get("formula")
+
+    if vLevel is None:
+        raise ValueError("simulation ou niveau inconnu")
+
+    if not isinstance(vFormula, str) or len(vFormula) > MAX_FORMULA_LENGTH:
+        raise ValueError("formule illisible")
+
+    if not run_excel_level(vLevel, vFormula)["passed"]:
+        raise ValueError("niveau non réussi")
+
+    vFirst = save_excel_attempt(
+        pDatabaseFile, vLevel["id"], vFormula.strip(), True, pFinishedAt
+    )
+
+    rXp = XP_RULES["excel_level"][1] if vFirst else 0
+
+    return rXp
+
+
 def integrate_circuit(pDatabaseFile, pItem, pFinishedAt):
     """Resimule un montage électrique du téléphone ; retourne les points gagnés."""
 
@@ -514,6 +577,7 @@ INTEGRATIONS = {
     "git": integrate_git,
     "devops": integrate_devops,
     "sql": integrate_sql,
+    "excel": integrate_excel,
     "circuit": integrate_circuit,
     "puzzles": integrate_puzzles,
     "oral": integrate_oral,

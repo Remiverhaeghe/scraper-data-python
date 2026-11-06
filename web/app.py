@@ -40,6 +40,7 @@ from web.routes.ladder import router as ladder_router
 from web.routes.sql_sandbox import router as sql_sandbox_router
 from web.routes.circuit import router as circuit_router
 from web.routes.devops import router as devops_router
+from web.routes.excel import router as excel_router
 from web.routes.challenges import router as challenges_router
 from web.routes.employers import router as employers_router
 from web.routes.planning import router as planning_router
@@ -256,6 +257,7 @@ app.include_router(planning_router)
 app.include_router(employers_router)
 app.include_router(git_sandbox_router)
 app.include_router(sql_sandbox_router)
+app.include_router(excel_router)
 app.include_router(circuit_router)
 app.include_router(devops_router)
 app.include_router(monitoring_router)

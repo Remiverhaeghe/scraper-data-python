@@ -1,0 +1,92 @@
+{# Atelier Excel (routes /excel) : formules job/excel_formula.py, niveaux et progression job/excel_levels.py. #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Excel{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Atelier Excel", "Des formules d'Excel en français sur les tableaux d'une usine, recopiées comme avec la poignée et comparées au résultat attendu", "sheet") }}
+
+<section class="grid grid-4">
+    {{ ui.stat(overview.passed ~ " / " ~ overview.total, "Niveaux réussis", "sheet", "green") }}
+</section>
+
+{% if level %}
+<article class="card section-gap" id="level">
+    <h2>{{ level.title }}</h2>
+    <p>{{ level.goal }}</p>
+
+    <div class="table-wrapper">
+        <table class="table excel-sheet">
+            <thead><tr><th></th>{% for column in grid.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
+            <tbody>
+                {% for row in grid.rows %}
+                {% set row_number = loop.index %}
+                <tr>
+                    <th>{{ row_number }}</th>
+                    {% for cell in row %}
+                    {% set name = grid.columns[loop.index0] ~ row_number %}
+                    <td class="{% if name in grid.targets %}excel-target {{ states.get(name, '') }}{% endif %}{% if row_number == 1 %} excel-header{% endif %}">{{ cell }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <details>
+        <summary>Indice</summary>
+        <p>{{ level.hint }}</p>
+    </details>
+    <details>
+        <summary>Solution</summary>
+        <pre class="sql-code">{{ level.solution }}</pre>
+    </details>
+
+    <form class="profile-form" method="post" action="{{ url_for('run_excel').path }}#level">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <input type="hidden" name="level" value="{{ level.id }}">
+        <label>Formule de {{ level.cell }} <input class="sql-code" type="text" name="formula" value="{{ formula }}" maxlength="{{ max_formula_length }}" spellcheck="false" autocomplete="off"></label>
+        <button class="button button-primary" type="submit">{{ icon("circle-check", 16) }} Valider</button>
+    </form>
+
+    {% if run %}
+    {% if run.passed %}
+    <h3 class="tone-success">Niveau réussi{% if first %} · +{{ level_xp }} XP{% endif %}</h3>
+    <p>{{ level.explanation }}</p>
+    {% else %}
+    <p class="tone-danger">{{ run.message }}</p>
+    {% for advice in run.advice %}<p>Conseil : {{ advice }}</p>{% endfor %}
+    {% endif %}
+
+    {% if run.cells %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead><tr><th>Cellule</th><th>Votre valeur</th><th>Attendu</th></tr></thead>
+            <tbody>
+                {% for cell in run.cells %}<tr><td>{{ cell.cell }}</td><td class="{{ 'tone-success' if cell.ok else 'tone-danger' }}">{{ cell.value }}</td><td>{{ cell.expected }}</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    {% endif %}
+    <p><a href="{{ url_for('show_excel').path }}">Choisir un autre niveau</a></p>
+</article>
+{% endif %}
+
+<article class="card section-gap">
+    <h2>Choisir un niveau</h2>
+    <p class="card-subtitle">Chaque niveau réussi rapporte {{ level_xp }} XP ; les noms de fonctions et le point-virgule sont ceux d'Excel en français</p>
+    {% for series in overview.series %}
+    <h3 class="level-series">{{ icon("sheet", 18) }} {{ series.label }} <small class="muted">{{ series.done }} / {{ series.rows | length }} réussi(s)</small></h3>
+    <div class="challenge-list">
+        {% for row in series.rows %}
+        <a class="challenge-item{% if row.passed %} is-done{% endif %}{% if level and level.id == row.id %} is-active{% endif %}" href="{{ url_for('show_excel').path }}?level={{ row.id }}#level">
+            <strong>{% if row.passed %}{{ icon("circle-check", 16) }} {% endif %}{{ row.title }}</strong>
+            <span class="card-subtitle">{{ row.goal }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</article>
+{% endblock %}
