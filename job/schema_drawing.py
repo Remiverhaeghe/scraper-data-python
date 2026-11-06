@@ -330,6 +330,8 @@ def build_editor_config(pTypes, pColumns, pRows, pLimits=None):
                 "ports": [
                     [vName, vX, vY] for vName, (vX, vY) in COMPONENTS[vType].ports
                 ],
+                "symmetric": COMPONENTS[vType].symmetric,
+                "node": COMPONENTS[vType].node,
             }
             for vType in pTypes
         },

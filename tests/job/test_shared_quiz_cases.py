@@ -26,9 +26,11 @@ def test_shared_grading_case(pCase):
         with pytest.raises(ValueError):
             grade_answer(pCase["question"], pCase["response"])
     else:
-        vCorrect, _, vExpected = grade_answer(pCase["question"], pCase["response"])
+        vCorrect, vGiven, vExpected = grade_answer(pCase["question"], pCase["response"])
 
         assert (vCorrect, vExpected) == (pCase["correct"], pCase["expected"])
+        # Les écarts d'un schéma construit sont décrits à l'identique.
+        assert vGiven == pCase.get("given", vGiven)
 
 
 @pytest.mark.parametrize(

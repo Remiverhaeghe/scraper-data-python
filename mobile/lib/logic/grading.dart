@@ -4,6 +4,7 @@
 import 'dart:math';
 
 import '../models/quiz_package.dart';
+import 'schema_building.dart';
 
 /// Une réponse de calcul plus longue est une erreur de saisie.
 const maxTextAnswerLength = 200;
@@ -220,6 +221,8 @@ Grade gradeAnswer(QuizQuestion pQuestion, Object? pResponse) {
       rGrade = gradePairs(pQuestion, pResponse);
     case 'revue':
       rGrade = gradeReview(pQuestion, pResponse);
+    case 'construction':
+      rGrade = SchemaGrader(pQuestion).grade(pResponse);
     default:
       throw const UnreadableAnswer('Type de question non pris en charge.');
   }

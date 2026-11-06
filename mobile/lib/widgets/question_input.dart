@@ -1,12 +1,18 @@
 // Saisie d'une réponse selon le type de question. Chaque saisie remonte la
 // réponse au format attendu par la correction, ou null tant qu'elle est incomplète.
 
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../logic/circuit_drawing.dart';
+import '../logic/circuit_editor.dart';
 import '../logic/review.dart';
+import '../logic/schema_building.dart';
 import '../models/quiz_package.dart';
+import 'question_parts.dart';
+import 'zoomable_svg.dart';
 
 class QuestionInput extends StatelessWidget {
   const QuestionInput({
@@ -47,6 +53,13 @@ class QuestionInput extends StatelessWidget {
         );
       case 'revue':
         rInput = ReviewInput(
+          question: question,
+          random: random,
+          enabled: enabled,
+          onChanged: onChanged,
+        );
+      case 'construction':
+        rInput = ConstructionInput(
           question: question,
           random: random,
           enabled: enabled,
@@ -328,6 +341,147 @@ class _PairsInputState extends State<PairsInput> {
               ),
             ),
           ),
+      ],
+    );
+
+    return rInput;
+  }
+}
+
+/// Schéma à construire : la réponse est le schéma posé (composants et fils), ou
+/// null tant qu'il est vide. Une fois corrigé, le schéma attendu s'affiche dessous.
+class ConstructionInput extends StatefulWidget {
+  const ConstructionInput({
+    super.key,
+    required this.question,
+    required this.random,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final QuizQuestion question;
+  final Random random;
+  final bool enabled;
+  final ValueChanged<Object?> onChanged;
+
+  @override
+  State<ConstructionInput> createState() => _ConstructionInputState();
+}
+
+class _ConstructionInputState extends State<ConstructionInput> {
+  late final CircuitDraft draft = CircuitDraft(
+    CircuitLibrary(widget.question.schemaLibrary),
+    Map<String, dynamic>.from(widget.question.paletteLimits),
+  );
+
+  // Attendus et leurres mélangés, comme la palette du PC
+  late final List<String> palette = [...widget.question.paletteLimits.keys]..shuffle(widget.random);
+  String message = '';
+
+  /// Copie détachée du brouillon, qui continue d'évoluer après l'envoi.
+  void changed(String pMessage) {
+    setState(() => message = pMessage);
+    widget.onChanged(
+      draft.components.isEmpty ? null : jsonDecode(jsonEncode(draft.toSchema())),
+    );
+  }
+
+  void add(String pType) {
+    final vId = draft.add(pType);
+
+    changed(vId == null
+        ? 'Plus de case libre.'
+        : '${draft.label(vId)} placé : touchez ses bornes pour le relier.');
+  }
+
+  void tap(Offset pPosition) {
+    final vBefore = jsonEncode(draft.toSchema());
+    final vMessage = draft.tap(pPosition.dx, pPosition.dy);
+
+    if (jsonEncode(draft.toSchema()) != vBefore) {
+      changed(vMessage);
+    } else {
+      setState(() => message = vMessage);
+    }
+  }
+
+  String renderExpected() {
+    final vLabels = SchemaGrader(widget.question).labels;
+
+    final rSvg = draft.library.renderSchema(
+      {
+        for (final vItem in widget.question.components)
+          (vItem['id'] ?? vItem['type']) as String: (
+            vItem['type'] as String,
+            (vItem['x'] as int, vItem['y'] as int),
+            vLabels[vItem['id'] ?? vItem['type']]!,
+          ),
+      },
+      widget.question.connections,
+      'Schéma attendu',
+    );
+
+    return rSvg;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final vTheme = Theme.of(context);
+    final vSelected = draft.selected;
+
+    final rInput = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          spacing: 6,
+          runSpacing: 2,
+          children: [
+            for (final vType in palette)
+              ActionChip(
+                visualDensity: VisualDensity.compact,
+                label: Text(
+                  '${draft.library.components[vType]!['label']}'
+                  '${draft.limit(vType) > 1 ? ' (${draft.count(vType)}/${draft.limit(vType)})' : ''}',
+                ),
+                onPressed: widget.enabled && draft.canAdd(vType) ? () => add(vType) : null,
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(border: Border.all(color: vTheme.dividerColor)),
+          child: ZoomableSvg(svg: draft.render(), onTap: widget.enabled ? tap : null),
+        ),
+        if (widget.enabled)
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  message.isEmpty
+                      ? 'Touchez un composant de la palette pour le placer, une borne puis une '
+                          'autre pour tirer un fil, un fil pour le retirer. Pincez pour zoomer.'
+                      : message,
+                  style: vTheme.textTheme.bodySmall,
+                ),
+              ),
+              if (vSelected != null)
+                IconButton(
+                  tooltip: 'Supprimer ${draft.label(vSelected)}',
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () {
+                    final vLabel = draft.label(vSelected);
+                    draft.remove(vSelected);
+                    changed('$vLabel supprimé.');
+                  },
+                ),
+            ],
+          )
+        else ...[
+          const SizedBox(height: 12),
+          Text('Schéma attendu', style: vTheme.textTheme.titleSmall),
+          const SizedBox(height: 4),
+          SchemaView(content: renderExpected(), description: 'Schéma attendu'),
+        ],
       ],
     );
 

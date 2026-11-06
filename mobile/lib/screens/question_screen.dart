@@ -20,6 +20,7 @@ const typeLabels = {
   'numerique': 'Calcul',
   'ordre': 'Remise en ordre',
   'association': 'Association',
+  'construction': 'Schéma à construire',
 };
 
 /// Sans thème, les questions sont tirées dans tous les thèmes ; avec timeLimit,

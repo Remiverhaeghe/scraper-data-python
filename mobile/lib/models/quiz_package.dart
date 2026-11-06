@@ -5,7 +5,7 @@
 const apiVersion = 1;
 
 /// Types de questions affichés et corrigés par l'application.
-const supportedTypes = {'qcm', 'numerique', 'ordre', 'association', 'revue'};
+const supportedTypes = {'qcm', 'numerique', 'ordre', 'association', 'revue', 'construction'};
 
 /// Tolérance d'un calcul sans tolérance précisée, en pourcentage.
 const defaultTolerance = 1.0;
@@ -84,6 +84,36 @@ class QuizQuestion {
         for (final vPair in data['pairs'] as List? ?? const []) List<String>.from(vPair as List),
       ];
 
+  /// Composants attendus d'un schéma à construire : type, case, nom facultatif.
+  List<Map<String, dynamic>> get components => [
+        for (final vItem in data['components'] as List? ?? const [])
+          Map<String, dynamic>.from(vItem as Map),
+      ];
+
+  /// Liaisons attendues [composant, borne, composant, borne].
+  List<List<String>> get connections => [
+        for (final vWire in data['connections'] as List? ?? const [])
+          List<String>.from(vWire as List),
+      ];
+
+  /// Grille et symboles des schémas, rattachés par le paquet.
+  Map<String, dynamic> get schemaLibrary =>
+      Map<String, dynamic>.from(data['schema_library'] as Map? ?? const {});
+
+  /// Exemplaires permis par type dans la palette : attendus et leurres.
+  Map<String, int> get paletteLimits {
+    final rLimits = <String, int>{};
+
+    for (final vType in [
+      for (final vItem in components) vItem['type'] as String,
+      for (final vType in data['distractors'] as List? ?? const []) vType as String,
+    ]) {
+      rLimits.update(vType, (pCount) => pCount + 1, ifAbsent: () => 1);
+    }
+
+    return rLimits;
+  }
+
   Map<String, dynamic>? get visual => data['visual'] as Map<String, dynamic>?;
 
   /// Un schéma à reconnaître se montre avec la question, sinon à la correction.
@@ -110,13 +140,20 @@ class QuizPackage {
       );
     }
 
+    // Envoyée une seule fois, elle est rattachée à chaque schéma à construire.
+    final vLibrary = pJson['schema_library'] as Map?;
+
     final vQuestions = <QuizQuestion>[
       for (final vItem in pJson['questions'] as List? ?? const [])
         QuizQuestion(Map<String, dynamic>.from(vItem as Map)),
       // Un type ajouté plus tard sur le serveur est ignoré sans erreur.
       for (final vItem in pJson['interactive_questions'] as List? ?? const [])
-        if (supportedTypes.contains((vItem as Map)['type']))
-          QuizQuestion(Map<String, dynamic>.from(vItem)),
+        if (supportedTypes.contains((vItem as Map)['type']) &&
+            (vItem['type'] != 'construction' || vLibrary != null))
+          QuizQuestion({
+            ...Map<String, dynamic>.from(vItem),
+            if (vItem['type'] == 'construction') 'schema_library': vLibrary,
+          }),
     ];
 
     final vGuides = <String, QuizGuide>{

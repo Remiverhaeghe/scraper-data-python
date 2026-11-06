@@ -274,7 +274,9 @@ def iterate_mappings(pAnswer, pExpected):
 
     vChoices = []
 
-    for vType in set(pAnswer.values()):
+    # Ordre fixe : à écarts égaux, la correspondance retenue est toujours la même,
+    # ici comme sur le téléphone.
+    for vType in sorted(set(pAnswer.values())):
         vAnswerIds = sorted(vId for vId, vKind in pAnswer.items() if vKind == vType)
         vExpectedIds = sorted(vId for vId, vKind in pExpected.items() if vKind == vType)
 

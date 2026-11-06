@@ -82086,7 +82086,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "pile": {
      "label": "Source de tension continue",
@@ -82106,7 +82108,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "masse": {
      "label": "Masse",
@@ -82120,7 +82124,9 @@
        40,
        0
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "disjoncteur": {
      "label": "Disjoncteur",
@@ -82139,7 +82145,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "fusible": {
      "label": "Fusible",
@@ -82158,7 +82166,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "sectionneur": {
      "label": "Sectionneur",
@@ -82177,7 +82187,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "interrupteur": {
      "label": "Interrupteur de commande",
@@ -82197,7 +82209,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "bouton_marche": {
      "label": "Bouton poussoir à fermeture",
@@ -82217,7 +82231,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "bouton_arret": {
      "label": "Bouton poussoir à ouverture",
@@ -82237,7 +82253,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "va_et_vient": {
      "label": "Interrupteur va-et-vient",
@@ -82262,7 +82280,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "bobine_relais": {
      "label": "Bobine de relais",
@@ -82281,7 +82301,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "contact_relais": {
      "label": "Contact du relais, à fermeture",
@@ -82302,7 +82324,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "contact_relais_nf": {
      "label": "Contact du relais, à ouverture",
@@ -82323,7 +82347,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "contacteur": {
      "label": "Contact de puissance du contacteur",
@@ -82344,7 +82370,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "relais_thermique": {
      "label": "Relais thermique",
@@ -82363,7 +82391,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "telerupteur": {
      "label": "Bobine de télérupteur",
@@ -82383,7 +82413,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "contact_telerupteur": {
      "label": "Contact du télérupteur",
@@ -82403,7 +82435,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "lampe_bornes": {
      "label": "Lampe",
@@ -82422,7 +82456,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "moteur_mono": {
      "label": "Moteur monophasé",
@@ -82441,7 +82477,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "resistance": {
      "label": "Résistance",
@@ -82460,7 +82498,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "led": {
      "label": "Diode électroluminescente (LED)",
@@ -82481,7 +82521,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "diode": {
      "label": "Diode",
@@ -82500,7 +82542,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "zener": {
      "label": "Diode Zener",
@@ -82519,7 +82563,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "transistor_npn": {
      "label": "Transistor NPN",
@@ -82543,7 +82589,9 @@
        56,
        100
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "potentiometre": {
      "label": "Potentiomètre",
@@ -82567,7 +82615,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "buzzer": {
      "label": "Buzzer",
@@ -82586,7 +82636,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": false,
+     "node": false
     },
     "ldr": {
      "label": "Photorésistance (LDR)",
@@ -82606,7 +82658,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "ctn": {
      "label": "Thermistance (CTN)",
@@ -82626,7 +82680,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "voltmetre": {
      "label": "Voltmètre",
@@ -82645,7 +82701,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     },
     "amperemetre": {
      "label": "Ampèremètre",
@@ -82664,7 +82722,9 @@
        40,
        100
       ]
-     ]
+     ],
+     "symmetric": true,
+     "node": false
     }
    },
    "max_components": 16,

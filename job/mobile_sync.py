@@ -46,6 +46,8 @@ from job.quiz_types import (
     get_type,
     grade_answer,
 )
+from job.schema_building import get_palette_limits
+from job.schema_drawing import GRID_COLUMNS, GRID_ROWS, build_editor_config
 from job.similar_offers import find_similar_offers
 from job.interview_mission import build_mission
 from job.preparation_sheet import build_preparation_sheet
@@ -116,7 +118,13 @@ CLIENT_ID_PATTERN = re.compile(r"[A-Za-z0-9-]{8,64}")
 
 # Types interactifs envoyés au téléphone, à part des QCM : une application qui ne
 # les connaît pas encore ignore simplement la liste qui les contient.
-MOBILE_INTERACTIVE_TYPES = ("numerique", "ordre", "association", "revue")
+MOBILE_INTERACTIVE_TYPES = (
+    "numerique",
+    "ordre",
+    "association",
+    "revue",
+    "construction",
+)
 
 # Une réponse datée de plus loin est refusée : horloge du téléphone déréglée.
 MAX_CLOCK_DRIFT = timedelta(days=1)
@@ -201,6 +209,24 @@ def check_mobile_token(pDatabaseFile, pToken):
     return rValid
 
 
+def build_schema_library(pQuiz):
+    """Retourne la grille et les symboles utiles aux schémas à construire du paquet."""
+
+    vTypes = sorted(
+        {
+            vType
+            for vTheme in pQuiz.values()
+            for vQuestion in vTheme["questions"]
+            if get_type(vQuestion) == "construction"
+            for vType in get_palette_limits(vQuestion)
+        }
+    )
+
+    rLibrary = build_editor_config(vTypes, GRID_COLUMNS, GRID_ROWS)
+
+    return rLibrary
+
+
 def build_quiz_package(pDatabaseFile, pNow):
     """Retourne tout le contenu de révision, pour un usage hors ligne.
 
@@ -239,6 +265,8 @@ def build_quiz_package(pDatabaseFile, pNow):
             if get_type(vQuestion) in MOBILE_INTERACTIVE_TYPES
         ],
         "interactive_types": list(MOBILE_INTERACTIVE_TYPES),
+        # Symboles reçus une fois pour toutes les questions à construire
+        "schema_library": build_schema_library(vQuiz),
         "assets": get_quiz_assets(pDatabaseFile),
         "guides": [
             get_quiz_guide(pDatabaseFile, vGuide["name"])
@@ -330,14 +358,20 @@ def build_progress(pDatabaseFile, pNow):
 def grade_synced_response(pQuestion, pResponse, pClientId):
     """Corrige la réponse du téléphone à une question interactive ; retourne si elle est juste."""
 
-    # Calcul : texte court ou nombre ; ordre, association, revue : liste d'indices.
-    vReadable = (
-        isinstance(pResponse, (str, int, float))
-        and not isinstance(pResponse, bool)
-        and len(str(pResponse)) <= MAX_TEXT_ANSWER_LENGTH
-        if get_type(pQuestion) == "numerique"
-        else isinstance(pResponse, list)
-    )
+    # Calcul : texte court ou nombre ; schéma : composants et fils ; ordre,
+    # association, revue : liste d'indices.
+    vType = get_type(pQuestion)
+
+    if vType == "numerique":
+        vReadable = (
+            isinstance(pResponse, (str, int, float))
+            and not isinstance(pResponse, bool)
+            and len(str(pResponse)) <= MAX_TEXT_ANSWER_LENGTH
+        )
+    elif vType == "construction":
+        vReadable = isinstance(pResponse, dict)
+    else:
+        vReadable = isinstance(pResponse, list)
 
     if not vReadable:
         raise ValueError(f"{pClientId} : réponse illisible")

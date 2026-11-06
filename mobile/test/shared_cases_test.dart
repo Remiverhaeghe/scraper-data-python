@@ -38,6 +38,8 @@ void main() {
           final vGrade = gradeAnswer(vQuestion, vResponse);
 
           expect((vGrade.correct, vGrade.expected), (vCase['correct'], vCase['expected']));
+          // Les écarts d'un schéma construit sont décrits à l'identique.
+          expect(vGrade.given, vCase['given'] ?? vGrade.given);
         }
       });
     }

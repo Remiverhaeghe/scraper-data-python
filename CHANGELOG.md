@@ -5,6 +5,17 @@ dans l'historique git.
 
 ## Non publié
 
+### Schémas à construire sur le téléphone
+- Questions « schéma à construire » envoyées au téléphone avec la
+  bibliothèque des symboles, une seule fois par paquet
+- Saisie au toucher avec l'éditeur des montages électriques, palette
+  limitée aux composants et leurres de la question, schéma attendu affiché
+  à la correction
+- Correction portée en Dart, identique au PC : même rapprochement des
+  composants, mêmes écarts décrits ; ordre des types fixé côté Python pour
+  qu'un cas d'égalité donne toujours le même résultat
+- Cas communs : dix schémas corrigés de la même façon en Python et en Dart
+
 ### Puzzles et schémas à construire complétés
 - Vingt-sept puzzles de code (45 → 72, huit par type et niveau) : else
   d'un try, requête nommée avec WITH, git stash et revert, requête préparée,

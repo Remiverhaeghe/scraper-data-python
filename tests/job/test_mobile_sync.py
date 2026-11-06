@@ -124,6 +124,50 @@ def test_late_answers_keep_their_place_in_history(database_file):
     }
 
 
+def test_constructions_are_sent_and_graded_on_sync(database_file):
+    """Vérifie l'envoi des schémas à construire, leurs symboles et leur correction."""
+
+    vPackage = build_quiz_package(database_file, NOW)
+    vQuestion = next(
+        vItem
+        for vItem in vPackage["interactive_questions"]
+        if vItem["type"] == "construction"
+    )
+    vSymbols = vPackage["schema_library"]["components"]
+
+    assert {vItem["type"] for vItem in vQuestion["components"]} <= set(vSymbols)
+    assert {"drawing", "ports", "symmetric", "node"} <= set(
+        next(iter(vSymbols.values()))
+    )
+
+    vSchema = {
+        "components": vQuestion["components"],
+        "wires": vQuestion["connections"],
+    }
+    vReport = sync_answers(
+        database_file,
+        [
+            {
+                "id": "telephone-0020",
+                "question_id": vQuestion["id"],
+                "response": vSchema,
+                "answered_at": NOW.isoformat(),
+            },
+            {
+                "id": "telephone-0021",
+                "question_id": vQuestion["id"],
+                "response": vQuestion["connections"],
+                "answered_at": NOW.isoformat(),
+            },
+        ],
+        NOW,
+    )
+
+    assert vReport["added"] == 1
+    assert len(vReport["rejected"]) == 1
+    assert get_last_answers(database_file) == {vQuestion["id"]: True}
+
+
 def test_sync_refuses_invalid_batches(database_file):
     """Vérifie le refus d'un envoi qui n'est pas une liste ou qui est trop gros."""
 

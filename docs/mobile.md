@@ -67,11 +67,14 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 | GET, POST | `/api/v1/skills` | Grille d'auto-évaluation ; niveaux saisis sur le téléphone : `{"levels": {"Java": 6}}` |
 | GET | `/api/v1/replies` | Réponses de recruteurs repérées dans Gmail par le planificateur : offre, statut annoncé, date d'entretien ; jamais le contenu du message |
 
-Les QCM sont dans `questions`. Les calculs, remises en ordre, associations et revues de code
-sont dans `interactive_questions`, avec leur `type` : une application qui ne les connaît pas
-encore les ignore. Leurs éléments sont dans l'ordre correct, à mélanger à l'affichage. Une
-réponse porte alors `response` : texte du calcul (« 2,3 mA »), ou liste d'indices d'origine pour
-l'ordre, l'association et les constats cochés d'une revue de code.
+Les QCM sont dans `questions`. Les calculs, remises en ordre, associations, revues de code et
+schémas à construire sont dans `interactive_questions`, avec leur `type` : une application qui
+ne les connaît pas encore les ignore. Leurs éléments sont dans l'ordre correct, à mélanger à
+l'affichage. Une réponse porte alors `response` : texte du calcul (« 2,3 mA »), liste d'indices
+d'origine pour l'ordre, l'association et les constats cochés d'une revue de code, ou schéma
+`{"components", "wires"}` posé dans l'éditeur. Les symboles des schémas à construire (grille,
+dessin, bornes, symétrie) sont envoyés une seule fois dans `schema_library` ; la correction
+Dart (`mobile/lib/logic/schema_building.dart`) reprend celle de `job/schema_building.py`.
 
 Le téléphone corrige lui-même avec le contenu téléchargé ; à l'envoi, le serveur recalcule
 chaque correction, ignore une réponse déjà reçue (même `id`) et refuse une date hors limites.

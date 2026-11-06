@@ -215,6 +215,53 @@ class CircuitLibrary {
       '<title>${escapeHtml(pTitle)}</title><rect width="$pWidth" height="$pHeight" fill="#ffffff"/>'
       '$pContent</svg>';
 
+  /// SVG d'un schéma sans simulation, comme render_schema sur le PC : pInstances
+  /// associe à chaque identifiant (type, case, nom).
+  String renderSchema(Map<String, (String, (int, int), String)> pInstances,
+      List<List<String>> pConnections, String pTitle) {
+    final vOrigins = {
+      for (final vEntry in pInstances.entries)
+        vEntry.key: origin(vEntry.value.$2.$1, vEntry.value.$2.$2),
+    };
+    final vLanes = (grid['laneCount'] as num).toInt();
+    var vColumns = 0;
+    var vRows = 0;
+    final vParts = <String>[];
+
+    for (final (_, (vX, vY), _) in pInstances.values) {
+      vColumns = vX + 1 > vColumns ? vX + 1 : vColumns;
+      vRows = vY + 1 > vRows ? vY + 1 : vRows;
+    }
+
+    for (var vIndex = 0; vIndex < pConnections.length; vIndex++) {
+      final [vIdA, vPortA, vIdB, vPortB] = pConnections[vIndex];
+
+      if (vOrigins.containsKey(vIdA) && vOrigins.containsKey(vIdB)) {
+        vParts.add(drawWire(
+          (pInstances[vIdA]!.$1, vPortA, vOrigins[vIdA]!),
+          (pInstances[vIdB]!.$1, vPortB, vOrigins[vIdB]!),
+          vIndex % vLanes,
+        ));
+      }
+    }
+
+    for (final vEntry in pInstances.entries) {
+      final vOrigin = vOrigins[vEntry.key]!;
+
+      vParts.add('<g transform="translate(${formatG(vOrigin.$1)},${formatG(vOrigin.$2)})">'
+          '${components[vEntry.value.$1]!['drawing']}</g>${drawLabel(vEntry.value.$3, vOrigin)}');
+    }
+
+    final rSvg = wrapSvg(
+      2 * margin + vColumns * cellWidth,
+      2 * margin + vRows * cellHeight,
+      vParts.join(),
+      pTitle,
+    );
+
+    return rSvg;
+  }
+
   /// SVG d'un circuit, avec l'état simulé s'il est fourni.
   String renderCircuit(List<Map<String, dynamic>> pComponents, List<List<String>> pWires,
       [Map<String, dynamic>? pResult, String pTitle = 'Circuit']) {
