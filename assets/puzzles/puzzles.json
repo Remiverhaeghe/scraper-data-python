@@ -80,6 +80,53 @@
     "explanation": "Le shebang est toujours la première ligne. set -euo pipefail arrête le script dès qu'une commande échoue ou qu'une variable n'existe pas : il vient avant tout le reste."
   },
   {
+    "id": "python-filtrer-alertes",
+    "type": "ordre",
+    "language": "Python",
+    "level": 1,
+    "title": "Garder les mesures trop hautes",
+    "prompt": "Remettez les lignes dans l'ordre : le programme garde les mesures au-dessus de 50, puis affiche combien il en a trouvé.",
+    "items": [
+      "alertes = []",
+      "for mesure in mesures:",
+      "    if mesure > 50:",
+      "        alertes.append(mesure)",
+      "print(len(alertes))"
+    ],
+    "explanation": "La liste se crée avant la boucle, le test se fait dans la boucle et l'ajout dans le test. L'affichage, hors de la boucle, n'a lieu qu'une fois, quand toutes les mesures sont passées."
+  },
+  {
+    "id": "bash-archiver-journaux",
+    "type": "ordre",
+    "language": "Bash",
+    "level": 1,
+    "title": "Archiver avant de supprimer",
+    "prompt": "Remettez les commandes dans l'ordre : aller dans le dossier des journaux, créer le dossier archives, compresser les journaux, et seulement ensuite les supprimer.",
+    "items": [
+      "cd /var/log/atelier",
+      "mkdir -p archives",
+      "tar -czf archives/journaux.tar.gz *.log",
+      "rm *.log"
+    ],
+    "explanation": "On ne supprime qu'après avoir archivé : dans l'ordre inverse, il n'y aurait plus rien à compresser. L'option -p de mkdir évite une erreur si le dossier existe déjà."
+  },
+  {
+    "id": "java-premier-programme",
+    "type": "ordre",
+    "language": "Java",
+    "level": 1,
+    "title": "Un premier programme",
+    "prompt": "Remettez les lignes dans l'ordre : la classe Atelier affiche un message au lancement.",
+    "items": [
+      "public class Atelier {",
+      "    public static void main(String[] args) {",
+      "        System.out.println(\"Atelier prêt\");",
+      "    }",
+      "}"
+    ],
+    "explanation": "La méthode main se déclare dans la classe, et l'instruction dans la méthode. Chaque accolade ouverte se referme dans l'ordre inverse : d'abord celle de main, puis celle de la classe."
+  },
+  {
     "id": "python-convertir-temperature",
     "type": "ordre",
     "language": "Python",
@@ -161,6 +208,58 @@
       "git push --force-with-lease"
     ],
     "explanation": "git status montre les fichiers en conflit. Après correction, git add les marque résolus et --continue rejoue la suite. Le rebase réécrit l'historique : --force-with-lease refuse d'écraser un travail poussé entre-temps par quelqu'un d'autre."
+  },
+  {
+    "id": "python-try-else",
+    "type": "ordre",
+    "language": "Python",
+    "level": 2,
+    "title": "Une mesure illisible",
+    "prompt": "Remettez les lignes dans l'ordre : une mesure illisible est signalée dans le journal, une mesure valide est ajoutée à la liste.",
+    "items": [
+      "try:",
+      "    valeur = float(texte)",
+      "except ValueError:",
+      "    logger.warning(\"Mesure illisible : %s\", texte)",
+      "else:",
+      "    mesures.append(valeur)"
+    ],
+    "explanation": "Le bloc else ne s'exécute que si le try n'a levé aucune exception. Mettre l'ajout dans le try l'exposerait au même except, et une erreur de la liste passerait pour une mesure illisible."
+  },
+  {
+    "id": "sql-cte-arrets",
+    "type": "ordre",
+    "language": "SQL",
+    "level": 2,
+    "title": "Une requête en deux temps",
+    "prompt": "Remettez les lignes dans l'ordre : on totalise les arrêts d'octobre par machine dans une sous-requête nommée, puis on garde les machines au-delà de 120 minutes.",
+    "items": [
+      "WITH arrets_mois AS (",
+      "    SELECT machine, SUM(duree) AS total",
+      "    FROM arret",
+      "    WHERE date_arret >= '2026-10-01'",
+      "    GROUP BY machine",
+      ")",
+      "SELECT machine, total FROM arrets_mois",
+      "WHERE total > 120;"
+    ],
+    "explanation": "WITH nomme une sous-requête qu'on interroge ensuite comme une table. Le filtre sur la date porte sur les lignes, avant le regroupement ; celui sur le total porte sur le résultat de la sous-requête."
+  },
+  {
+    "id": "git-stash-mise-a-jour",
+    "type": "ordre",
+    "language": "Git",
+    "level": 2,
+    "title": "Mettre son travail de côté",
+    "prompt": "Des modifications non commitées empêchent de changer de branche. Remettez les commandes dans l'ordre : les mettre de côté, mettre main à jour, revenir sur sa branche et les reprendre.",
+    "items": [
+      "git stash",
+      "git switch main",
+      "git pull",
+      "git switch correctif",
+      "git stash pop"
+    ],
+    "explanation": "git stash range les modifications en cours et laisse un répertoire propre. git stash pop les réapplique sur la branche courante et les retire de la pile ; en cas de conflit, elles restent dans la pile."
   },
   {
     "id": "python-decorateur",
@@ -257,6 +356,58 @@
     "explanation": "exit 0 arrête le script dès le premier succès : le message d'erreur, après la boucle, n'est atteint qu'après trois échecs. >&2 l'écrit sur la sortie d'erreur."
   },
   {
+    "id": "java-requete-preparee",
+    "type": "ordre",
+    "language": "Java",
+    "level": 3,
+    "title": "Mettre une machine à l'arrêt",
+    "prompt": "Remettez les lignes dans l'ordre : la requête préparée passe la machine à l'arrêt, se ferme toute seule, puis la transaction est validée.",
+    "items": [
+      "String sql = \"UPDATE machine SET etat = 'ARRET' WHERE id = ?\";",
+      "try (PreparedStatement requete = connexion.prepareStatement(sql)) {",
+      "    requete.setInt(1, idMachine);",
+      "    requete.executeUpdate();",
+      "}",
+      "connexion.commit();"
+    ],
+    "explanation": "Le paramètre se fixe avant l'exécution, et le try-with-resources ferme la requête à l'accolade. Le paramètre ? évite l'injection SQL : jamais de concaténation de l'identifiant dans le texte."
+  },
+  {
+    "id": "st-sequence-verin",
+    "type": "ordre",
+    "language": "Texte structuré",
+    "level": 3,
+    "title": "Un aller-retour de vérin",
+    "prompt": "Remettez les lignes dans l'ordre : à l'étape 0, on attend le départ ; à l'étape 10, le vérin sort jusqu'à la fin de course ; à l'étape 20, il rentre jusqu'à l'origine.",
+    "items": [
+      "CASE etape OF",
+      "    0: IF depart THEN etape := 10; END_IF;",
+      "    10: sortie := TRUE;",
+      "        IF fin_course THEN sortie := FALSE; etape := 20; END_IF;",
+      "    20: rentree := TRUE;",
+      "        IF origine THEN rentree := FALSE; etape := 0; END_IF;",
+      "END_CASE;"
+    ],
+    "explanation": "Chaque étape commande sa sortie et teste la condition qui fait passer à la suivante, comme une étape de GRAFCET et sa transition. Un seul numéro d'étape est actif à chaque cycle."
+  },
+  {
+    "id": "bash-dossier-temporaire",
+    "type": "ordre",
+    "language": "Bash",
+    "level": 3,
+    "title": "Un dossier temporaire toujours nettoyé",
+    "prompt": "Remettez les lignes dans l'ordre : le script s'arrête à la première erreur, crée un dossier temporaire, programme aussitôt sa suppression, télécharge l'export puis le copie.",
+    "items": [
+      "#!/bin/bash",
+      "set -euo pipefail",
+      "temp=$(mktemp -d)",
+      "trap 'rm -rf \"$temp\"' EXIT",
+      "curl -fsS -o \"$temp/export.csv\" \"$URL_EXPORT\"",
+      "cp \"$temp/export.csv\" /data/entrant/"
+    ],
+    "explanation": "Le trap sur EXIT s'exécute à la sortie du script, même quand set -e l'interrompt sur une erreur : le dossier temporaire ne traîne jamais. Le -f de curl transforme une erreur HTTP en échec du script."
+  },
+  {
     "id": "python-range",
     "type": "saisie",
     "language": "Python",
@@ -264,7 +415,9 @@
     "title": "Compter de 0 à 9",
     "prompt": "Complétez pour afficher les nombres de 0 à 9.",
     "code": "for i in ____(10):\n    print(i)",
-    "accepted": ["range"],
+    "accepted": [
+      "range"
+    ],
     "explanation": "range(10) produit 0, 1, … 9 : la borne de fin est exclue."
   },
   {
@@ -275,7 +428,9 @@
     "title": "Compter par ligne",
     "prompt": "Complétez pour compter les arrêts de chaque ligne.",
     "code": "SELECT ligne, COUNT(*)\nFROM arret\n____ ligne;",
-    "accepted": ["GROUP BY"],
+    "accepted": [
+      "GROUP BY"
+    ],
     "explanation": "GROUP BY forme un groupe par valeur de ligne ; COUNT(*) compte alors les arrêts de chaque groupe."
   },
   {
@@ -286,7 +441,10 @@
     "title": "Le fichier existe-t-il ?",
     "prompt": "Complétez le test pour vérifier que le fichier existe.",
     "code": "if [ ____ \"$fichier\" ]; then\n    echo \"Le fichier existe\"\nfi",
-    "accepted": ["-f", "-e"],
+    "accepted": [
+      "-f",
+      "-e"
+    ],
     "explanation": "-f vrai pour un fichier ordinaire, -e pour tout ce qui existe (fichier, dossier…), -d pour un dossier."
   },
   {
@@ -297,7 +455,9 @@
     "title": "Enregistrer une modification",
     "prompt": "Complétez pour enregistrer les modifications préparées dans l'historique, avec un message.",
     "code": "git add capteur.py\ngit ____ -m \"Ajoute le capteur de niveau\"",
-    "accepted": ["commit"],
+    "accepted": [
+      "commit"
+    ],
     "explanation": "git add prépare les modifications, git commit les enregistre dans l'historique local ; rien ne part sur le serveur avant git push."
   },
   {
@@ -308,8 +468,50 @@
     "title": "Arrêter la pompe",
     "prompt": "Complétez pour arrêter la pompe quand le niveau dépasse le seuil haut.",
     "code": "IF niveau > seuil_haut THEN\n    pompe ____ FALSE;\nEND_IF;",
-    "accepted": [":="],
+    "accepted": [
+      ":="
+    ],
     "explanation": "En texte structuré, := affecte une valeur ; = compare deux valeurs."
+  },
+  {
+    "id": "python-enumerate",
+    "type": "saisie",
+    "language": "Python",
+    "level": 1,
+    "title": "Numéroter les machines",
+    "prompt": "Complétez pour afficher chaque machine avec son numéro, à partir de 1.",
+    "code": "for numero, nom in ____(machines, start=1):\n    print(numero, nom)",
+    "accepted": [
+      "enumerate"
+    ],
+    "explanation": "enumerate renvoie à chaque tour le rang et l'élément. Sans start=1, la numérotation commence à 0."
+  },
+  {
+    "id": "sql-order-desc",
+    "type": "saisie",
+    "language": "SQL",
+    "level": 1,
+    "title": "De la plus puissante à la moins puissante",
+    "prompt": "Complétez pour trier les machines de la plus puissante à la moins puissante.",
+    "code": "SELECT nom, puissance\nFROM machine\nORDER BY puissance ____;",
+    "accepted": [
+      "DESC",
+      "desc"
+    ],
+    "explanation": "ORDER BY trie par défaut dans l'ordre croissant (ASC). DESC inverse le tri, pour avoir la plus grande valeur en tête."
+  },
+  {
+    "id": "docker-logs",
+    "type": "saisie",
+    "language": "Docker",
+    "level": 1,
+    "title": "Suivre les journaux",
+    "prompt": "Complétez pour afficher les journaux du conteneur atelier et continuer à les suivre en direct.",
+    "code": "docker ____ -f atelier",
+    "accepted": [
+      "logs"
+    ],
+    "explanation": "docker logs affiche la sortie standard et d'erreur du conteneur ; -f la suit en continu, comme tail -f. Ctrl+C arrête le suivi sans arrêter le conteneur."
   },
   {
     "id": "python-dict-get",
@@ -319,7 +521,9 @@
     "title": "Compter les codes défaut",
     "prompt": "Complétez pour compter chaque code défaut, même la première fois qu'il apparaît.",
     "code": "compteurs = {}\nfor code in codes:\n    compteurs[code] = compteurs.____(code, 0) + 1",
-    "accepted": ["get"],
+    "accepted": [
+      "get"
+    ],
     "explanation": "get(code, 0) renvoie 0 pour un code absent au lieu de lever KeyError. collections.Counter fait le même travail en une ligne."
   },
   {
@@ -330,7 +534,10 @@
     "title": "Une liste de codes",
     "prompt": "Complétez pour créer une liste vide de codes.",
     "code": "List<String> codes = new ____<>();",
-    "accepted": ["ArrayList", "LinkedList"],
+    "accepted": [
+      "ArrayList",
+      "LinkedList"
+    ],
     "explanation": "List est une interface : on instancie une implémentation, le plus souvent ArrayList. Le <> laisse le compilateur déduire le type String."
   },
   {
@@ -341,7 +548,10 @@
     "title": "Toutes les machines",
     "prompt": "Complétez pour lister toutes les machines, même celles qui n'ont jamais eu d'intervention.",
     "code": "SELECT m.nom, i.date_fin\nFROM machine m\n____ intervention i ON i.machine_id = m.id;",
-    "accepted": ["LEFT JOIN", "LEFT OUTER JOIN"],
+    "accepted": [
+      "LEFT JOIN",
+      "LEFT OUTER JOIN"
+    ],
     "explanation": "LEFT JOIN garde toutes les lignes de la table de gauche ; date_fin vaut NULL pour une machine sans intervention. Un INNER JOIN l'aurait fait disparaître."
   },
   {
@@ -352,7 +562,10 @@
     "title": "Ouvrir un port",
     "prompt": "Complétez pour joindre le serveur web du conteneur (port 80) sur le port 8080 du poste.",
     "code": "docker run -d ____ 8080:80 nginx",
-    "accepted": ["-p", "--publish"],
+    "accepted": [
+      "-p",
+      "--publish"
+    ],
     "explanation": "-p hôte:conteneur publie un port : la machine écoute sur 8080 et transmet au port 80 du conteneur."
   },
   {
@@ -363,8 +576,50 @@
     "title": "Afficher un rendement",
     "prompt": "Complétez le format pour afficher 0.8732 sous la forme 87.3%.",
     "code": "rendement = 0.8732\nprint(f\"Rendement : {rendement:____}\")",
-    "accepted": [".1%"],
+    "accepted": [
+      ".1%"
+    ],
     "explanation": "Le format % multiplie par 100 et ajoute le signe ; .1 garde une décimale."
+  },
+  {
+    "id": "git-revert",
+    "type": "saisie",
+    "language": "Git",
+    "level": 2,
+    "title": "Annuler un commit déjà poussé",
+    "prompt": "Le dernier commit, déjà sur le serveur, casse la production. Complétez pour l'annuler sans réécrire l'historique partagé.",
+    "code": "git ____ HEAD\ngit push",
+    "accepted": [
+      "revert"
+    ],
+    "explanation": "git revert crée un nouveau commit qui défait le précédent : l'historique reste intact pour les collègues. Un reset suivi d'un push forcé réécrirait l'historique déjà récupéré par d'autres."
+  },
+  {
+    "id": "bash-grep-compter",
+    "type": "saisie",
+    "language": "Bash",
+    "level": 2,
+    "title": "Compter les erreurs",
+    "prompt": "Complétez pour afficher le nombre de lignes du journal qui contiennent ERREUR.",
+    "code": "grep ____ \"ERREUR\" atelier.log",
+    "accepted": [
+      "-c",
+      "--count"
+    ],
+    "explanation": "grep -c compte les lignes qui correspondent au lieu de les afficher. grep ERREUR atelier.log | wc -l donne le même résultat avec deux commandes."
+  },
+  {
+    "id": "java-is-blank",
+    "type": "saisie",
+    "language": "Java",
+    "level": 2,
+    "title": "Un commentaire vide",
+    "prompt": "Complétez pour refuser un commentaire vide ou fait uniquement d'espaces.",
+    "code": "if (commentaire.____()) {\n    throw new IllegalArgumentException(\"Commentaire obligatoire\");\n}",
+    "accepted": [
+      "isBlank"
+    ],
+    "explanation": "isBlank, depuis Java 11, est vrai pour une chaîne vide ou composée seulement d'espaces. isEmpty laisserait passer « ␣␣␣ », qui a une longueur de 3."
   },
   {
     "id": "python-pool-map",
@@ -374,7 +629,9 @@
     "title": "Lire les capteurs en parallèle",
     "prompt": "Complétez pour appeler lire_capteur sur chaque adresse, quatre à la fois, en gardant l'ordre des résultats.",
     "code": "with ThreadPoolExecutor(max_workers=4) as pool:\n    resultats = list(pool.____(lire_capteur, adresses))",
-    "accepted": ["map"],
+    "accepted": [
+      "map"
+    ],
     "explanation": "pool.map répartit les appels sur les fils et rend les résultats dans l'ordre des adresses. Les threads conviennent ici : on attend surtout le réseau."
   },
   {
@@ -385,7 +642,9 @@
     "title": "La moyenne des mesures",
     "prompt": "Complétez pour calculer la moyenne des mesures, ou 0 s'il n'y en a aucune.",
     "code": "double moyenne = mesures.stream()\n    .mapToDouble(Mesure::valeur)\n    .____()\n    .orElse(0);",
-    "accepted": ["average"],
+    "accepted": [
+      "average"
+    ],
     "explanation": "average() renvoie un OptionalDouble, vide pour une liste vide ; orElse(0) donne la valeur de repli."
   },
   {
@@ -396,7 +655,9 @@
     "title": "Le stock au fil des mouvements",
     "prompt": "Complétez pour afficher, à chaque mouvement, le stock cumulé depuis le début.",
     "code": "SELECT ref, date_mvt, quantite,\n       ____(quantite) OVER (ORDER BY date_mvt) AS stock\nFROM mouvement;",
-    "accepted": ["SUM"],
+    "accepted": [
+      "SUM"
+    ],
     "explanation": "Avec ORDER BY dans OVER, SUM additionne toutes les lignes depuis la première jusqu'à la ligne courante : c'est un cumul, sans regrouper."
   },
   {
@@ -407,7 +668,9 @@
     "title": "Garder aussi les erreurs",
     "prompt": "Complétez pour que les messages d'erreur aillent eux aussi dans sortie.log.",
     "code": "./sauvegarde.sh > sortie.log ____",
-    "accepted": ["2>&1"],
+    "accepted": [
+      "2>&1"
+    ],
     "explanation": "2>&1 envoie la sortie d'erreur (2) là où va déjà la sortie standard (1). Placé avant > sortie.log, il l'enverrait encore vers l'écran."
   },
   {
@@ -418,8 +681,51 @@
     "title": "Compter les appuis",
     "prompt": "Complétez pour compter un appui à chaque front montant du bouton, détecté par le bloc R_TRIG nommé front.",
     "code": "front(CLK := bouton);\nIF front.____ THEN\n    compteur := compteur + 1;\nEND_IF;",
-    "accepted": ["Q"],
+    "accepted": [
+      "Q"
+    ],
     "explanation": "La sortie Q d'un R_TRIG n'est vraie que pendant le cycle où l'entrée passe de faux à vrai : un appui maintenu ne compte qu'une fois."
+  },
+  {
+    "id": "sql-row-number",
+    "type": "saisie",
+    "language": "SQL",
+    "level": 3,
+    "title": "Le dernier arrêt de chaque machine",
+    "prompt": "Complétez pour numéroter les arrêts de chaque machine, du plus récent au plus ancien ; le rang 1 est alors le dernier arrêt.",
+    "code": "SELECT machine, debut,\n    ROW_NUMBER() OVER (____ BY machine ORDER BY debut DESC) AS rang\nFROM arret;",
+    "accepted": [
+      "PARTITION",
+      "partition"
+    ],
+    "explanation": "PARTITION BY fait repartir la numérotation à 1 pour chaque machine, sans regrouper les lignes comme GROUP BY. Il suffit ensuite de garder rang = 1 dans une requête englobante."
+  },
+  {
+    "id": "python-dataclass-frozen",
+    "type": "saisie",
+    "language": "Python",
+    "level": 3,
+    "title": "Une mesure non modifiable",
+    "prompt": "Complétez pour qu'une mesure ne puisse plus être modifiée après sa création.",
+    "code": "@dataclass(____=True)\nclass Mesure:\n    capteur: str\n    valeur: float",
+    "accepted": [
+      "frozen"
+    ],
+    "explanation": "Avec frozen=True, affecter un champ lève FrozenInstanceError. L'objet devient aussi hachable : il peut servir de clé de dictionnaire ou entrer dans un ensemble."
+  },
+  {
+    "id": "docker-user",
+    "type": "saisie",
+    "language": "Docker",
+    "level": 3,
+    "title": "Ne pas tourner en root",
+    "prompt": "Complétez le Dockerfile pour que l'application ne tourne pas sous le compte root.",
+    "code": "FROM python:3.12-slim\nRUN useradd --create-home app\nWORKDIR /home/app\nCOPY --chown=app . .\n____ app\nCMD [\"python\", \"main.py\"]",
+    "accepted": [
+      "USER",
+      "user"
+    ],
+    "explanation": "USER fixe le compte des instructions suivantes et du processus lancé par CMD. Une faille dans l'application ne donne alors que les droits de ce compte, pas ceux de root dans le conteneur."
   },
   {
     "id": "python-moyenne",
@@ -502,6 +808,57 @@
     "explanation": "Les indices vont de 0 à length - 1 : la condition doit être i < mesures.length."
   },
   {
+    "id": "docker-fichier-introuvable",
+    "type": "ligne",
+    "language": "Docker",
+    "level": 1,
+    "title": "Un fichier introuvable",
+    "prompt": "La construction échoue : pip ne trouve pas le fichier des dépendances. Touchez la ligne fautive.",
+    "lines": [
+      "FROM python:3.12-slim",
+      "WORKDIR /app",
+      "COPY requirements.txt .",
+      "RUN pip install -r requirement.txt",
+      "COPY . .",
+      "CMD [\"python\", \"main.py\"]"
+    ],
+    "line": 4,
+    "explanation": "Le fichier copié s'appelle requirements.txt, avec un s ; pip cherche requirement.txt, qui n'existe pas dans l'image. Copier les dépendances avant le reste du code garde l'installation en cache."
+  },
+  {
+    "id": "python-affectation-test",
+    "type": "ligne",
+    "language": "Python",
+    "level": 1,
+    "title": "Un test qui ne passe pas",
+    "prompt": "Python refuse de lancer ce programme : SyntaxError. Touchez la ligne fautive.",
+    "lines": [
+      "codes = [1, 3, 5]",
+      "for code in codes:",
+      "    if code = 3:",
+      "        print(\"Défaut critique\")"
+    ],
+    "line": 3,
+    "explanation": "Un seul = affecte une valeur, == compare. Python refuse l'affectation dans un if, ce qui évite l'erreur silencieuse qu'on rencontre en C."
+  },
+  {
+    "id": "java-point-virgule",
+    "type": "ligne",
+    "language": "Java",
+    "level": 1,
+    "title": "Un oubli à la compilation",
+    "prompt": "Le compilateur signale « ';' expected ». Touchez la ligne fautive.",
+    "lines": [
+      "int total = 0;",
+      "for (int pieces : lots) {",
+      "    total += pieces",
+      "}",
+      "System.out.println(total);"
+    ],
+    "line": 3,
+    "explanation": "En Java, chaque instruction se termine par un point-virgule. Les lignes qui ouvrent ou ferment un bloc, comme le for et l'accolade, n'en prennent pas."
+  },
+  {
     "id": "python-defaut-mutable",
     "type": "ligne",
     "language": "Python",
@@ -582,6 +939,53 @@
     "explanation": "pompe = FALSE compare au lieu d'affecter : la pompe garde son état. L'affectation s'écrit pompe := FALSE."
   },
   {
+    "id": "python-mode-lecture",
+    "type": "ligne",
+    "language": "Python",
+    "level": 2,
+    "title": "Un rapport qui ne s'écrit pas",
+    "prompt": "Le programme s'arrête sur io.UnsupportedOperation: not writable. Touchez la ligne fautive.",
+    "lines": [
+      "with open(\"rapport.txt\", \"r\", encoding=\"utf-8\") as fichier:",
+      "    fichier.write(\"Contrôle terminé\\n\")",
+      "print(\"Rapport écrit\")"
+    ],
+    "line": 1,
+    "explanation": "Le mode \"r\" ouvre en lecture seule. Pour écrire, il faut \"w\", qui vide le fichier, ou \"a\", qui ajoute à la fin."
+  },
+  {
+    "id": "bash-point-virgule-then",
+    "type": "ligne",
+    "language": "Bash",
+    "level": 2,
+    "title": "Un redémarrage refusé",
+    "prompt": "Le script s'arrête sur « syntax error near unexpected token fi ». Touchez la ligne fautive.",
+    "lines": [
+      "read -r reponse",
+      "if [ \"$reponse\" = \"oui\" ] then",
+      "    systemctl restart atelier",
+      "fi"
+    ],
+    "line": 2,
+    "explanation": "then doit commencer une nouvelle commande : soit sur la ligne suivante, soit après un point-virgule, comme dans if [ ... ]; then. Sans lui, then devient un argument de [ et le fi arrive sans then."
+  },
+  {
+    "id": "git-push-mauvaise-branche",
+    "type": "ligne",
+    "language": "Git",
+    "level": 2,
+    "title": "Une fusion restée en local",
+    "prompt": "La fusion est faite sur le poste, mais la branche main du serveur n'a pas changé. Touchez la ligne fautive.",
+    "lines": [
+      "git switch main",
+      "git pull",
+      "git merge correctif",
+      "git push origin correctif"
+    ],
+    "line": 4,
+    "explanation": "La fusion a modifié main en local ; c'est main qu'il faut pousser, avec git push origin main. Pousser correctif envoie la branche de travail, déjà à jour."
+  },
+  {
     "id": "python-lambda-boucle",
     "type": "ligne",
     "language": "Python",
@@ -658,5 +1062,55 @@
     ],
     "line": 2,
     "explanation": "0.1 + 0.2 vaut 0.30000000000000004 en binaire : on compare des réels avec une tolérance, math.isclose(total, 0.3)."
+  },
+  {
+    "id": "sql-left-join-where",
+    "type": "ligne",
+    "language": "SQL",
+    "level": 3,
+    "title": "Des machines qui disparaissent",
+    "prompt": "Les machines sans arrêt long doivent apparaître avec 0, mais elles disparaissent du résultat. Touchez la ligne fautive.",
+    "lines": [
+      "SELECT m.nom, COUNT(a.id) AS arrets",
+      "FROM machine m",
+      "LEFT JOIN arret a ON a.machine_id = m.id",
+      "WHERE a.duree > 5",
+      "GROUP BY m.nom;"
+    ],
+    "line": 4,
+    "explanation": "Pour une machine sans arrêt, a.duree vaut NULL et le WHERE l'élimine : la jointure externe redevient interne. La condition va dans le ON : LEFT JOIN arret a ON a.machine_id = m.id AND a.duree > 5."
+  },
+  {
+    "id": "java-integer-egalite",
+    "type": "ligne",
+    "language": "Java",
+    "level": 3,
+    "title": "Deux valeurs égales, mais pas pour Java",
+    "prompt": "Le capteur renvoie bien 200, la valeur attendue, mais valider() n'est jamais appelé. Touchez la ligne fautive.",
+    "lines": [
+      "Integer attendu = 200;",
+      "Integer mesure = lireCapteur();",
+      "if (mesure == attendu) {",
+      "    valider();",
+      "}"
+    ],
+    "line": 3,
+    "explanation": "Entre deux Integer, == compare les références. Java ne réutilise les objets qu'entre -128 et 127 : à 200, ce sont deux objets distincts. On écrit mesure.equals(attendu), ou on travaille en int."
+  },
+  {
+    "id": "bash-cd-sans-controle",
+    "type": "ligne",
+    "language": "Bash",
+    "level": 3,
+    "title": "Le mauvais dossier vidé",
+    "prompt": "Quand le dossier d'export n'existe pas, le script vide le dossier courant. Touchez la ligne fautive.",
+    "lines": [
+      "#!/bin/bash",
+      "cd \"$DOSSIER_EXPORT\"",
+      "rm -rf ./*",
+      "echo \"Export vidé\""
+    ],
+    "line": 2,
+    "explanation": "Si cd échoue, le script continue dans le dossier de départ et rm y supprime tout. On écrit cd \"$DOSSIER_EXPORT\" || exit 1, ou set -e en tête du script."
   }
 ]

@@ -53,7 +53,7 @@ def database_file(tmp_path):
 
 
 def test_delivered_puzzles_cover_each_type_and_level():
-    """Vérifie que les puzzles livrés sont valides, avec cinq puzzles par type et niveau."""
+    """Vérifie que les puzzles livrés sont valides, avec huit puzzles par type et niveau."""
 
     vPuzzles = load_puzzles().values()
 
@@ -64,7 +64,7 @@ def test_delivered_puzzles_cover_each_type_and_level():
                     vPuzzle["type"] == vType and vPuzzle["level"] == vLevel
                     for vPuzzle in vPuzzles
                 )
-                == 5
+                == 8
             )
 
     assert all(grade_puzzle(vPuzzle, get_answer(vPuzzle))[0] for vPuzzle in vPuzzles)

@@ -59,7 +59,7 @@ Page Défis du bureau et du web, sur le principe des calendriers de défis en li
 - [x] Résolution dans le langage de son choix : seule la réponse est comparée, aucun code n'est exécuté par l'application
 - [x] Seconde partie ouverte après la première, attente réglable après une erreur (30 s par défaut, jamais nulle), « trop haute » ou « trop basse » pour un nombre
 - [x] Indices dévoilés un à un et solution commentée une fois le défi terminé
-- [x] Puzzles de code : 45 extraits en Python, Java, SQL, Bash, Git, Docker et texte structuré, à remettre dans l'ordre, dont il faut repérer la ligne fautive ou compléter le trou
+- [x] Puzzles de code : 72 extraits en Python, Java, SQL, Bash, Git, Docker et texte structuré, à remettre dans l'ordre, dont il faut repérer la ligne fautive ou compléter le trou
 - [x] Séries de dix de la plus facile à la plus dure, niveau qui monte à 8 bonnes réponses et redescend à 4, réponses justes d'affilée, récapitulatif des erreurs expliquées (bureau, web, téléphone hors ligne)
 
 ## Tests de recrutement

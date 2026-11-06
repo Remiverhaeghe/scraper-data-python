@@ -1559,6 +1559,282 @@
         ]
       ],
       "explanation": "Ces briques, combinées, réalisent la défense en profondeur décrite par l'IEC 62443 et les guides de l'ANSSI."
+    },
+    {
+      "id": "cyber-101",
+      "level": "débutant",
+      "type": "construction",
+      "question": "Séparez le réseau bureautique du réseau de l'atelier : le routeur de l'opérateur, puis un pare-feu, et derrière lui un switch par zone, avec un poste dans chacune.",
+      "components": [
+        {
+          "type": "internet",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "routeur",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "type": "pare_feu",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "id": "s1",
+          "type": "switch",
+          "x": 0,
+          "y": 3,
+          "label": "Switch bureautique"
+        },
+        {
+          "id": "s2",
+          "type": "switch",
+          "x": 1,
+          "y": 3,
+          "label": "Switch de l'atelier"
+        },
+        {
+          "id": "p1",
+          "type": "poste",
+          "x": 0,
+          "y": 4,
+          "label": "Poste de comptabilité"
+        },
+        {
+          "id": "p2",
+          "type": "poste",
+          "x": 1,
+          "y": 4,
+          "label": "Poste de supervision"
+        }
+      ],
+      "connections": [
+        [
+          "internet",
+          "bas",
+          "routeur",
+          "haut"
+        ],
+        [
+          "routeur",
+          "bas",
+          "pare_feu",
+          "haut"
+        ],
+        [
+          "pare_feu",
+          "bas",
+          "s1",
+          "haut"
+        ],
+        [
+          "pare_feu",
+          "bas",
+          "s2",
+          "haut"
+        ],
+        [
+          "s1",
+          "bas",
+          "p1",
+          "haut"
+        ],
+        [
+          "s2",
+          "bas",
+          "p2",
+          "haut"
+        ]
+      ],
+      "distractors": [
+        "point_acces",
+        "serveur_web"
+      ],
+      "explanation": "Chaque zone a son switch, et seul le pare-feu les relie : c'est lui qui décide quels flux passent entre bureautique et atelier. Brancher les deux zones sur un même switch les mettrait dans le même réseau, et un poste bureautique infecté atteindrait directement la supervision."
+    },
+    {
+      "id": "cyber-102",
+      "level": "intermédiaire",
+      "type": "construction",
+      "question": "Ouvrez un Wi-Fi pour les visiteurs sans leur donner accès au réseau interne : le point d'accès invité se raccorde directement au pare-feu, à côté du switch interne qui dessert le poste.",
+      "components": [
+        {
+          "type": "internet",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "routeur",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "type": "pare_feu",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "type": "switch",
+          "x": 0,
+          "y": 3,
+          "label": "Switch interne"
+        },
+        {
+          "type": "point_acces",
+          "x": 1,
+          "y": 3,
+          "label": "Wi-Fi invité"
+        },
+        {
+          "type": "poste",
+          "x": 0,
+          "y": 4
+        }
+      ],
+      "connections": [
+        [
+          "internet",
+          "bas",
+          "routeur",
+          "haut"
+        ],
+        [
+          "routeur",
+          "bas",
+          "pare_feu",
+          "haut"
+        ],
+        [
+          "pare_feu",
+          "bas",
+          "switch",
+          "haut"
+        ],
+        [
+          "pare_feu",
+          "bas",
+          "point_acces",
+          "haut"
+        ],
+        [
+          "switch",
+          "bas",
+          "poste",
+          "haut"
+        ]
+      ],
+      "distractors": [
+        "base_donnees",
+        "serveur_web"
+      ],
+      "explanation": "Le Wi-Fi invité forme sa propre zone, sur une patte dédiée du pare-feu, qui ne laisse sortir que vers Internet. Branché sur le switch interne, le point d'accès mettrait les téléphones des visiteurs dans le même réseau que les postes de l'entreprise."
+    },
+    {
+      "id": "cyber-103",
+      "level": "confirmé",
+      "type": "construction",
+      "question": "Construisez une DMZ entre deux pare-feu : le serveur web publié sur Internet se trouve dans la DMZ, et la base de données reste dans la zone interne avec le poste.",
+      "components": [
+        {
+          "type": "internet",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "f1",
+          "type": "pare_feu",
+          "x": 0,
+          "y": 1,
+          "label": "Pare-feu externe"
+        },
+        {
+          "id": "s1",
+          "type": "switch",
+          "x": 0,
+          "y": 2,
+          "label": "Switch de la DMZ"
+        },
+        {
+          "type": "serveur_web",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "id": "f2",
+          "type": "pare_feu",
+          "x": 0,
+          "y": 3,
+          "label": "Pare-feu interne"
+        },
+        {
+          "id": "s2",
+          "type": "switch",
+          "x": 0,
+          "y": 4,
+          "label": "Switch interne"
+        },
+        {
+          "type": "base_donnees",
+          "x": 1,
+          "y": 4
+        },
+        {
+          "type": "poste",
+          "x": 0,
+          "y": 5
+        }
+      ],
+      "connections": [
+        [
+          "internet",
+          "bas",
+          "f1",
+          "haut"
+        ],
+        [
+          "f1",
+          "bas",
+          "s1",
+          "haut"
+        ],
+        [
+          "s1",
+          "bas",
+          "serveur_web",
+          "haut"
+        ],
+        [
+          "s1",
+          "bas",
+          "f2",
+          "haut"
+        ],
+        [
+          "f2",
+          "bas",
+          "s2",
+          "haut"
+        ],
+        [
+          "s2",
+          "bas",
+          "base_donnees",
+          "haut"
+        ],
+        [
+          "s2",
+          "bas",
+          "poste",
+          "haut"
+        ]
+      ],
+      "distractors": [
+        "point_acces",
+        "routeur"
+      ],
+      "explanation": "Internet n'atteint que la DMZ, et le pare-feu interne n'autorise que le flux du serveur web vers la base. Si le serveur exposé est compromis, l'attaquant reste bloqué par un second filtrage avant d'atteindre les données et les postes."
     }
   ]
 }

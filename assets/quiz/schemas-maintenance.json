@@ -1295,6 +1295,696 @@
         "distributeur_32"
       ],
       "explanation": "L'air passe par l'unité FRL avant le distributeur, dont l'orifice 1 est l'alimentation. Les orifices 4 et 2 vont chacun à une chambre du vérin, à travers un réducteur qui règle la vitesse à l'échappement. Un vérin double effet a besoin d'un distributeur à deux sorties : un 3/2 ne commande qu'un vérin simple effet."
+    },
+    {
+      "id": "schemas-023",
+      "level": "débutant",
+      "type": "construction",
+      "question": "Construisez le départ d'un moteur de convoyeur protégé par un disjoncteur-moteur, qui coupe à la fois les courts-circuits et les surcharges, puis commandé par un contacteur.",
+      "components": [
+        {
+          "type": "reseau",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "disjoncteur",
+          "x": 0,
+          "y": 1,
+          "label": "Disjoncteur-moteur"
+        },
+        {
+          "type": "contacteur",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "type": "moteur",
+          "x": 0,
+          "y": 3
+        }
+      ],
+      "connections": [
+        [
+          "reseau",
+          "sortie",
+          "disjoncteur",
+          "1"
+        ],
+        [
+          "disjoncteur",
+          "2",
+          "contacteur",
+          "1"
+        ],
+        [
+          "contacteur",
+          "2",
+          "moteur",
+          "entrée"
+        ]
+      ],
+      "distractors": [
+        "fusible",
+        "relais_thermique",
+        "differentiel"
+      ],
+      "explanation": "Le disjoncteur-moteur réunit le magnétique (courts-circuits) et le thermique réglé au courant du moteur (surcharges) : il remplace le couple fusibles et relais thermique. Il se place en tête du départ, avant le contacteur qui assure la commande."
+    },
+    {
+      "id": "schemas-024",
+      "level": "intermédiaire",
+      "type": "construction",
+      "question": "Construisez un petit tableau d'atelier : un interrupteur différentiel commun, puis un circuit de prises et un circuit d'éclairage commandé par un interrupteur, chacun avec son propre disjoncteur.",
+      "components": [
+        {
+          "type": "reseau",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "differentiel",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "id": "d1",
+          "type": "disjoncteur",
+          "x": 0,
+          "y": 2,
+          "label": "Disjoncteur des prises"
+        },
+        {
+          "id": "d2",
+          "type": "disjoncteur",
+          "x": 1,
+          "y": 2,
+          "label": "Disjoncteur de l'éclairage"
+        },
+        {
+          "type": "prise",
+          "x": 0,
+          "y": 3
+        },
+        {
+          "type": "interrupteur",
+          "x": 1,
+          "y": 3
+        },
+        {
+          "type": "lampe",
+          "x": 1,
+          "y": 4
+        }
+      ],
+      "connections": [
+        [
+          "reseau",
+          "sortie",
+          "differentiel",
+          "1"
+        ],
+        [
+          "differentiel",
+          "2",
+          "d1",
+          "1"
+        ],
+        [
+          "differentiel",
+          "2",
+          "d2",
+          "1"
+        ],
+        [
+          "d1",
+          "2",
+          "prise",
+          "entrée"
+        ],
+        [
+          "d2",
+          "2",
+          "interrupteur",
+          "1"
+        ],
+        [
+          "interrupteur",
+          "2",
+          "lampe",
+          "entrée"
+        ]
+      ],
+      "distractors": [
+        "contacteur",
+        "transformateur"
+      ],
+      "explanation": "Le différentiel en tête protège les personnes sur les deux circuits. Chaque circuit garde son disjoncteur, calibré pour la section de ses câbles : un défaut sur les prises ne coupe pas l'éclairage de l'atelier."
+    },
+    {
+      "id": "schemas-025",
+      "level": "intermédiaire",
+      "type": "construction",
+      "question": "Construisez l'alimentation d'un circuit de commande en très basse tension : protection au primaire, transformateur, protection au secondaire, puis un voyant de présence tension.",
+      "components": [
+        {
+          "type": "reseau",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "fusible",
+          "x": 0,
+          "y": 1,
+          "label": "Protection du primaire"
+        },
+        {
+          "type": "transformateur",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "type": "disjoncteur",
+          "x": 0,
+          "y": 3,
+          "label": "Protection du secondaire"
+        },
+        {
+          "type": "lampe",
+          "x": 0,
+          "y": 4,
+          "label": "Voyant sous tension"
+        }
+      ],
+      "connections": [
+        [
+          "reseau",
+          "sortie",
+          "fusible",
+          "1"
+        ],
+        [
+          "fusible",
+          "2",
+          "transformateur",
+          "1"
+        ],
+        [
+          "transformateur",
+          "2",
+          "disjoncteur",
+          "1"
+        ],
+        [
+          "disjoncteur",
+          "2",
+          "lampe",
+          "entrée"
+        ]
+      ],
+      "distractors": [
+        "differentiel",
+        "contacteur"
+      ],
+      "explanation": "Le transformateur abaisse la tension pour que les boutons et bobines du pupitre soient sans danger. Il se protège des deux côtés : au primaire contre un défaut du transformateur, au secondaire contre un court-circuit dans le câblage de commande."
+    },
+    {
+      "id": "schemas-026",
+      "level": "confirmé",
+      "type": "construction",
+      "question": "Construisez, en unifilaire, les départs de deux pompes, principale et secours, derrière un même sectionneur et les mêmes fusibles : chaque moteur a son contacteur et son relais thermique.",
+      "components": [
+        {
+          "type": "reseau",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "sectionneur",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "type": "fusible",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "id": "km1",
+          "type": "contacteur",
+          "x": 0,
+          "y": 3,
+          "label": "KM1 pompe principale"
+        },
+        {
+          "id": "km2",
+          "type": "contacteur",
+          "x": 1,
+          "y": 3,
+          "label": "KM2 pompe de secours"
+        },
+        {
+          "id": "f1",
+          "type": "relais_thermique",
+          "x": 0,
+          "y": 4,
+          "label": "Thermique de la pompe principale"
+        },
+        {
+          "id": "f2",
+          "type": "relais_thermique",
+          "x": 1,
+          "y": 4,
+          "label": "Thermique de la pompe de secours"
+        },
+        {
+          "id": "m1",
+          "type": "moteur",
+          "x": 0,
+          "y": 5,
+          "label": "Pompe principale"
+        },
+        {
+          "id": "m2",
+          "type": "moteur",
+          "x": 1,
+          "y": 5,
+          "label": "Pompe de secours"
+        }
+      ],
+      "connections": [
+        [
+          "reseau",
+          "sortie",
+          "sectionneur",
+          "1"
+        ],
+        [
+          "sectionneur",
+          "2",
+          "fusible",
+          "1"
+        ],
+        [
+          "fusible",
+          "2",
+          "km1",
+          "1"
+        ],
+        [
+          "fusible",
+          "2",
+          "km2",
+          "1"
+        ],
+        [
+          "km1",
+          "2",
+          "f1",
+          "1"
+        ],
+        [
+          "f1",
+          "2",
+          "m1",
+          "entrée"
+        ],
+        [
+          "km2",
+          "2",
+          "f2",
+          "1"
+        ],
+        [
+          "f2",
+          "2",
+          "m2",
+          "entrée"
+        ]
+      ],
+      "distractors": [
+        "differentiel",
+        "transformateur"
+      ],
+      "explanation": "Le sectionneur et les fusibles sont communs : ils isolent et protègent l'ensemble contre les courts-circuits. Chaque moteur garde son contacteur et son thermique, réglé à son propre courant : une surcharge sur la pompe principale laisse la pompe de secours disponible."
+    },
+    {
+      "id": "schemas-027",
+      "level": "débutant",
+      "type": "construction",
+      "question": "Construisez la commande d'un vérin simple effet par un distributeur 3/2, avec un manomètre pour contrôler la pression après l'unité de traitement et un silencieux sur l'échappement.",
+      "components": [
+        {
+          "type": "source_air",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "frl",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "type": "manometre",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "type": "distributeur_32",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "type": "verin_simple",
+          "x": 0,
+          "y": 3
+        },
+        {
+          "type": "silencieux",
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "connections": [
+        [
+          "source_air",
+          "sortie",
+          "frl",
+          "1"
+        ],
+        [
+          "frl",
+          "2",
+          "manometre",
+          "prise"
+        ],
+        [
+          "frl",
+          "2",
+          "distributeur_32",
+          "1"
+        ],
+        [
+          "distributeur_32",
+          "2",
+          "verin_simple",
+          "fond"
+        ],
+        [
+          "distributeur_32",
+          "3",
+          "silencieux",
+          "entrée"
+        ]
+      ],
+      "distractors": [
+        "distributeur_52",
+        "reducteur"
+      ],
+      "explanation": "Le manomètre se pique après l'unité FRL pour lire la pression réellement réglée. Le distributeur reçoit l'air par 1, alimente le vérin par 2 et le vide par 3 : le silencieux sur 3 limite le bruit et la projection de particules."
+    },
+    {
+      "id": "schemas-028",
+      "level": "intermédiaire",
+      "type": "construction",
+      "question": "Construisez la commande d'un vérin double effet par un distributeur 5/2, avec un manomètre après l'unité de traitement et un silencieux sur chacun des deux échappements.",
+      "components": [
+        {
+          "type": "source_air",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "frl",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "type": "manometre",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "type": "distributeur_52",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "type": "verin_double",
+          "x": 0,
+          "y": 3
+        },
+        {
+          "id": "s1",
+          "type": "silencieux",
+          "x": 1,
+          "y": 2,
+          "label": "Silencieux de l'échappement 3"
+        },
+        {
+          "id": "s2",
+          "type": "silencieux",
+          "x": 2,
+          "y": 2,
+          "label": "Silencieux de l'échappement 5"
+        }
+      ],
+      "connections": [
+        [
+          "source_air",
+          "sortie",
+          "frl",
+          "1"
+        ],
+        [
+          "frl",
+          "2",
+          "manometre",
+          "prise"
+        ],
+        [
+          "frl",
+          "2",
+          "distributeur_52",
+          "1"
+        ],
+        [
+          "distributeur_52",
+          "4",
+          "verin_double",
+          "fond"
+        ],
+        [
+          "distributeur_52",
+          "2",
+          "verin_double",
+          "tige"
+        ],
+        [
+          "distributeur_52",
+          "3",
+          "s1",
+          "entrée"
+        ],
+        [
+          "distributeur_52",
+          "5",
+          "s2",
+          "entrée"
+        ]
+      ],
+      "distractors": [
+        "distributeur_32",
+        "verin_simple"
+      ],
+      "explanation": "Un 5/2 a deux échappements, 3 et 5, un par chambre du vérin : chacun reçoit son silencieux. Un silencieux colmaté freine l'échappement et ralentit le vérin dans un seul sens, une panne qu'on retrouve en le démontant."
+    },
+    {
+      "id": "schemas-029",
+      "level": "intermédiaire",
+      "type": "construction",
+      "question": "Construisez le circuit d'un moteur hydraulique qui tourne dans les deux sens, commandé par un distributeur 4/3 : la pompe aspire au réservoir, un limiteur protège l'installation et l'huile revient au réservoir.",
+      "components": [
+        {
+          "type": "reservoir",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "pompe",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "type": "limiteur",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "type": "distributeur_43",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "type": "moteur_hydraulique",
+          "x": 0,
+          "y": 3
+        }
+      ],
+      "connections": [
+        [
+          "reservoir",
+          "aspiration",
+          "pompe",
+          "aspiration"
+        ],
+        [
+          "pompe",
+          "refoulement",
+          "limiteur",
+          "entrée"
+        ],
+        [
+          "limiteur",
+          "réservoir",
+          "reservoir",
+          "retour"
+        ],
+        [
+          "pompe",
+          "refoulement",
+          "distributeur_43",
+          "P"
+        ],
+        [
+          "distributeur_43",
+          "A",
+          "moteur_hydraulique",
+          "1"
+        ],
+        [
+          "distributeur_43",
+          "B",
+          "moteur_hydraulique",
+          "2"
+        ],
+        [
+          "distributeur_43",
+          "T",
+          "reservoir",
+          "retour"
+        ]
+      ],
+      "distractors": [
+        "accumulateur",
+        "verin_double"
+      ],
+      "explanation": "Le distributeur envoie la pression P vers A ou vers B et renvoie l'autre orifice vers T : le moteur tourne dans un sens ou dans l'autre. Au centre fermé, la pompe débite sur le limiteur, qui renvoie l'huile au réservoir et chauffe le circuit si l'arrêt dure."
+    },
+    {
+      "id": "schemas-030",
+      "level": "confirmé",
+      "type": "construction",
+      "question": "Construisez une centrale qui commande un vérin double effet par un distributeur 4/3 : la pompe aspire à travers un filtre, un limiteur la protège, et un clapet anti-retour empêche la charge de refouler vers la pompe.",
+      "components": [
+        {
+          "type": "reservoir",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "filtre",
+          "x": 0,
+          "y": 1,
+          "label": "Filtre d'aspiration"
+        },
+        {
+          "type": "pompe",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "type": "limiteur",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "type": "clapet",
+          "x": 0,
+          "y": 3
+        },
+        {
+          "type": "distributeur_43",
+          "x": 0,
+          "y": 4
+        },
+        {
+          "type": "verin_double",
+          "x": 0,
+          "y": 5
+        }
+      ],
+      "connections": [
+        [
+          "reservoir",
+          "aspiration",
+          "filtre",
+          "1"
+        ],
+        [
+          "filtre",
+          "2",
+          "pompe",
+          "aspiration"
+        ],
+        [
+          "pompe",
+          "refoulement",
+          "limiteur",
+          "entrée"
+        ],
+        [
+          "limiteur",
+          "réservoir",
+          "reservoir",
+          "retour"
+        ],
+        [
+          "pompe",
+          "refoulement",
+          "clapet",
+          "entrée"
+        ],
+        [
+          "clapet",
+          "sortie",
+          "distributeur_43",
+          "P"
+        ],
+        [
+          "distributeur_43",
+          "A",
+          "verin_double",
+          "fond"
+        ],
+        [
+          "distributeur_43",
+          "B",
+          "verin_double",
+          "tige"
+        ],
+        [
+          "distributeur_43",
+          "T",
+          "reservoir",
+          "retour"
+        ]
+      ],
+      "distractors": [
+        "accumulateur",
+        "moteur_hydraulique"
+      ],
+      "explanation": "Le limiteur se place entre la pompe et le clapet : placé après, il ne protégerait plus la pompe une fois le clapet fermé. Le filtre d'aspiration arrête les grosses particules avant la pompe ; colmaté, il la fait caviter, ce qui s'entend comme un bruit de graviers."
     }
   ]
 }

@@ -1569,6 +1569,94 @@
         ]
       ],
       "explanation": "Ces briques se combinent : les capteurs alimentent l'edge, qui publie dans l'UNS, d'où le MES et le jumeau numérique tirent leurs données."
+    },
+    {
+      "id": "iot-101",
+      "level": "intermédiaire",
+      "type": "construction",
+      "question": "Une tablette de maintenance consulte la supervision web, dont l'historique est dans une base de données ; l'ensemble sort vers le cloud de l'éditeur à travers un pare-feu. Construisez ce réseau autour d'un switch.",
+      "components": [
+        {
+          "type": "poste",
+          "x": 0,
+          "y": 0,
+          "label": "Tablette de maintenance"
+        },
+        {
+          "type": "point_acces",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "type": "switch",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "type": "serveur_web",
+          "x": 1,
+          "y": 2,
+          "label": "Supervision web"
+        },
+        {
+          "type": "base_donnees",
+          "x": 1,
+          "y": 3,
+          "label": "Historique des mesures"
+        },
+        {
+          "type": "pare_feu",
+          "x": 0,
+          "y": 3
+        },
+        {
+          "type": "internet",
+          "x": 0,
+          "y": 4
+        }
+      ],
+      "connections": [
+        [
+          "poste",
+          "bas",
+          "point_acces",
+          "haut"
+        ],
+        [
+          "point_acces",
+          "bas",
+          "switch",
+          "haut"
+        ],
+        [
+          "switch",
+          "bas",
+          "serveur_web",
+          "haut"
+        ],
+        [
+          "switch",
+          "bas",
+          "base_donnees",
+          "haut"
+        ],
+        [
+          "switch",
+          "bas",
+          "pare_feu",
+          "haut"
+        ],
+        [
+          "pare_feu",
+          "bas",
+          "internet",
+          "haut"
+        ]
+      ],
+      "distractors": [
+        "routeur"
+      ],
+      "explanation": "La tablette rejoint le réseau par le point d'accès Wi-Fi, puis le switch qui relie serveur, base et pare-feu. Seul le pare-feu donne accès au cloud, et uniquement pour les flux attendus vers l'éditeur : les équipements de l'atelier ne sont jamais exposés directement."
     }
   ]
 }

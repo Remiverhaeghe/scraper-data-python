@@ -5,6 +5,20 @@ dans l'historique git.
 
 ## Non publié
 
+### Puzzles et schémas à construire complétés
+- Vingt-sept puzzles de code (45 → 72, huit par type et niveau) : else
+  d'un try, requête nommée avec WITH, git stash et revert, requête préparée,
+  séquence de vérin en texte structuré, trap sur un dossier temporaire,
+  PARTITION BY, dataclass figée, USER dans un Dockerfile, LEFT JOIN annulé
+  par un WHERE, Integer comparés avec ==, cd sans contrôle
+- Douze schémas à construire : disjoncteur-moteur, tableau d'atelier à deux
+  circuits, commande en très basse tension, pompes principale et secours,
+  manomètre et silencieux en pneumatique, moteur hydraulique à deux sens,
+  centrale avec filtre et clapet ; zones bureautique et atelier, Wi-Fi
+  invité et DMZ (cybersécurité), réseau d'une tablette de maintenance (IoT)
+- Téléphone servi par la synchronisation pour les puzzles, sans changement
+  de code ; cas communs régénérés
+
 ### SQL, Maven et Docker complétés
 - Dix-huit niveaux SQL : tri sur deux colonnes, BETWEEN, comparaison de deux
   colonnes, COUNT DISTINCT, moyenne arrondie, tableau croisé, renforts entre
