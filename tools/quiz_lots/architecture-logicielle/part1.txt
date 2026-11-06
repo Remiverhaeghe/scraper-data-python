@@ -1,0 +1,485 @@
+@001
+Q: Une classe Facture calcule les totaux, génère le PDF et envoie le courriel au client. Quel principe enfreint-elle ?
+C: La responsabilité unique : elle a trois raisons de changer
+W: La substitution de Liskov, car elle ne peut pas être remplacée par une sous-classe
+W: La ségrégation des interfaces, car elle n'implémente aucune interface du projet
+W: L'ouverture-fermeture, car elle ne déclare pas de méthode abstraite à redéfinir
+E: Un changement de mise en page du PDF, de règle de TVA ou de fournisseur de courriel touche la même classe. On sépare en CalculFacture, GenerateurPdf et EnvoiFacture, chacune testable seule.
+
+@002
+Q: Associer chaque principe SOLID à la situation qui le respecte.
+P: Responsabilité unique => Le calcul de la TVA vit dans une classe à part
+P: Ouvert-fermé => Un nouveau mode de paiement s'ajoute par une nouvelle classe
+P: Substitution de Liskov => Toute sous-classe de Stockage s'utilise là où Stockage est attendu
+P: Ségrégation des interfaces => Un lecteur dépend de Lecture, pas d'une interface qui écrit aussi
+P: Inversion des dépendances => Le service métier dépend d'une interface, pas de la base PostgreSQL
+E: Ces principes visent un code qui change sans casser ailleurs. Ils se lisent comme des signaux d'alerte, pas comme des règles à appliquer partout dès la première ligne.
+
+@003
+Q: Pourquoi ce code enfreint-il le principe ouvert-fermé ?
+C: Chaque nouveau mode de paiement oblige à modifier cette méthode
+W: La méthode est publique alors qu'elle devrait être déclarée privée
+W: Le paramètre mode devrait être un entier plutôt qu'une chaîne
+W: La méthode renvoie un nombre décimal au lieu d'un objet métier
+E: Un switch sur un type qui revient dans plusieurs méthodes appelle le polymorphisme : une interface ModePaiement avec une implémentation par mode. Un switch unique et stable peut en revanche rester tel quel.
+```java
+double frais(String mode, double montant) {
+    switch (mode) {
+        case "carte": return montant * 0.015;
+        case "virement": return 0.5;
+        case "paypal": return montant * 0.029 + 0.35;
+        default: throw new IllegalArgumentException(mode);
+    }
+}
+```
+
+@004
+Q: Que dit le principe YAGNI (You Aren't Gonna Need It) ?
+C: Ne pas coder une fonction tant qu'elle n'est pas réellement nécessaire
+W: Ne pas réutiliser une fonction écrite par une autre équipe du projet
+W: Ne pas écrire de test pour une fonction qui n'est pas encore appelée par le code
+W: Ne pas documenter une fonction tant qu'elle n'est pas en production
+E: Une abstraction prévue « pour plus tard » coûte du code à lire et à maintenir, et se révèle souvent mal adaptée au besoin réel. On simplifie aujourd'hui et on généralise quand le second cas arrive.
+
+@005
+Q: Que conseille le principe KISS ?
+C: Préférer la solution la plus simple qui répond au besoin
+W: Préférer la solution qui couvre le plus grand nombre de cas
+W: Préférer la solution qui utilise le moins de lignes de code
+W: Préférer la solution qui suit le plus de design patterns
+E: Simple ne veut pas dire court : une boucle claire vaut mieux qu'une ligne astucieuse que personne ne relit. La complexité se justifie par un besoin, pas par l'élégance.
+
+@006
+Q: Pourquoi deux blocs de code identiques ne doivent-ils pas toujours être factorisés ?
+C: S'ils changent pour des raisons différentes, la factorisation les lie à tort
+W: Le compilateur optimise mieux deux blocs identiques qu'une fonction partagée
+W: Une fonction partagée ne peut pas être testée séparément de ses appelants
+W: Les règles de nommage interdisent deux fonctions qui font la même chose
+E: Le calcul des frais de port et celui d'une pénalité peuvent coïncider aujourd'hui et diverger demain. Une mauvaise abstraction se remplit de paramètres et de conditions : mieux vaut un peu de duplication qu'un mauvais regroupement.
+
+@007
+Q: Qu'est-ce qu'un nom de fonction révélateur d'intention ?
+C: Un nom qui dit ce que fait la fonction, comme calculerTotalTtc
+W: Un nom court qui tient en trois lettres, comme ctt ou clc
+W: Un nom qui reprend le type de retour, comme doubleResultat
+W: Un nom qui reprend le numéro du ticket, comme fonctionJira482 ou correctifTicket17
+E: Le lecteur comprend l'appel sans ouvrir la fonction. Un nom difficile à trouver signale souvent une fonction qui fait plusieurs choses.
+
+@008
+Q: Que signale cet appel d'une fonction qui prend un paramètre booléen ?
+C: Qu'elle fait deux choses différentes selon la valeur, peu lisibles à l'appel
+W: Qu'elle ne peut être appelée que depuis une méthode de test unitaire du module
+W: Qu'elle s'exécute deux fois plus vite qu'une fonction sans paramètre
+W: Qu'elle doit être déclarée statique pour fonctionner correctement
+E: À l'appel, true ne dit rien. Deux fonctions, envoyerParCourriel et envoyerParCourrier, ou un paramètre de type énuméré, rendent l'intention visible.
+```java
+envoyer(facture, true);
+```
+
+@009
+Q: Qu'est-ce qu'un effet de bord dans une fonction ?
+C: Une modification de l'état extérieur, comme écrire en base ou changer un champ
+W: Une erreur levée quand un paramètre reçu par la fonction appelée est jugé invalide
+W: Une valeur de retour différente selon le type du paramètre reçu
+W: Un appel récursif de la fonction à elle-même sans condition d'arrêt
+E: Une fonction pure, sans effet de bord, renvoie toujours le même résultat pour les mêmes entrées : elle se teste et se réutilise facilement. On regroupe les effets de bord aux bords du programme.
+
+@010
+Q: Pourquoi préférer la composition à l'héritage pour réutiliser du code ?
+C: La composition assemble des comportements sans lier la classe à toute une hiérarchie
+W: L'héritage n'est pas pris en charge par les langages orientés objet les plus récents
+W: La composition s'exécute plus vite que l'appel d'une méthode héritée
+W: L'héritage interdit d'écrire des tests unitaires pour les sous-classes
+E: Une sous-classe dépend des détails de sa classe parente : un changement dans le parent peut la casser. Une classe qui contient un Notificateur peut en changer, même à l'exécution.
+
+@011
+Q: Associer chaque famille de design patterns à ce qu'elle traite.
+P: Création => La façon d'instancier des objets
+P: Structure => La façon d'assembler classes et objets
+P: Comportement => La répartition des responsabilités et la communication
+E: Les 23 patterns du « Gang of Four » se rangent dans ces trois familles. Un pattern est une solution nommée à un problème courant : le nom partagé accélère la discussion en équipe.
+
+@012
+Q: Quel pattern permet de changer d'algorithme de calcul de frais selon le mode de paiement, sans condition ?
+C: Stratégie
+W: Singleton
+W: Façade
+W: Observateur
+E: Chaque mode implémente une interface commune ; le code appelant reçoit la stratégie et l'utilise sans connaître sa classe. Ajouter un mode revient à ajouter une classe.
+
+@013
+Q: Compléter ce code pour que chaque mode de paiement fournisse son calcul de frais.
+A: interface
+E: L'interface fixe le contrat ; Carte, Virement ou Paypal l'implémentent. Le service reçoit un ModePaiement et appelle frais sans aucun switch.
+```java
+public ____ ModePaiement {
+    double frais(double montant);
+}
+```
+
+@014
+Q: Quel problème pose ce Singleton accessible partout par une méthode statique ?
+C: Il crée une dépendance cachée et un état global difficile à remplacer en test
+W: Il consomme plus de mémoire qu'une classe ordinaire instanciée plusieurs fois
+W: Il empêche le compilateur de vérifier les types de ses méthodes
+W: Il interdit l'utilisation de la classe dans plusieurs threads
+E: Une classe qui appelle Config.getInstance() ne montre pas cette dépendance dans son constructeur. Un objet unique fourni par l'injection de dépendances garde l'unicité sans ces défauts.
+```java
+public double tauxTva() {
+    return Config.getInstance().tauxTva();
+}
+```
+
+@015
+Q: À quoi sert le pattern Adaptateur ?
+C: À faire fonctionner une classe avec une interface qu'elle n'implémente pas
+W: À créer des objets complexes étape par étape avec des valeurs fixées par défaut
+W: À limiter l'application à une seule instance d'une classe donnée
+W: À notifier plusieurs objets lorsqu'un objet change d'état
+E: Un service de courriel tiers expose envoyerMessage(dest, corps) ; l'adaptateur implémente l'interface Notificateur du projet et traduit les appels. Changer de fournisseur ne touche que l'adaptateur.
+
+@016
+Q: Quel pattern correspond à ce code ?
+C: Fabrique : la création des objets est regroupée en un seul endroit
+W: Adaptateur : une interface est traduite vers une autre
+W: Observateur : des abonnés sont prévenus d'un changement
+W: Décorateur : un comportement est ajouté autour d'un objet existant
+E: Le code appelant ne connaît pas les classes concrètes. Avec une table de correspondance ou un registre, ajouter un format ne demande même plus de toucher au switch.
+```java
+static Export creer(String format) {
+    return switch (format) {
+        case "csv" -> new ExportCsv();
+        case "pdf" -> new ExportPdf();
+        default -> throw new IllegalArgumentException(format);
+    };
+}
+```
+
+@017
+Q: Ce constructeur est difficile à lire. Quand utiliser le pattern Monteur (Builder) à la place ?
+C: Pour construire un objet qui a beaucoup de paramètres, dont plusieurs facultatifs
+W: Pour construire un objet unique partagé par l'ensemble des modules de l'application
+W: Pour construire un objet à partir d'une copie d'un autre objet existant
+W: Pour construire un objet dans un thread séparé de l'appelant
+E: new Commande(client, null, null, true, 3, null) est illisible et fragile. Commande.builder().client(c).urgente().quantite(3).build() nomme chaque valeur et vérifie la cohérence dans build().
+```java
+new Commande(client, null, null, true, 3, null);
+```
+
+@018
+Q: Qu'est-ce que la cohésion d'une classe ?
+C: La force du lien entre ses éléments, qui servent un même but
+W: Le nombre de classes qui dépendent d'elle dans le projet
+W: Le nombre de lignes de code qu'elle contient au total
+W: La part de ses méthodes couvertes par des tests unitaires automatisés
+E: Une classe cohésive a des méthodes qui utilisent les mêmes données pour un même rôle. Une classe Utilitaires qui regroupe dates, fichiers et TVA a une cohésion faible.
+
+@019
+Q: Que signifie un couplage fort entre deux classes ?
+C: Modifier l'une oblige souvent à modifier l'autre
+W: Les deux classes s'exécutent toujours dans le même thread
+W: Les deux classes sont rangées dans le même fichier source
+W: Les deux classes partagent une même classe parente
+E: On vise une forte cohésion et un faible couplage : des modules qui font une chose et dépendent peu des détails des autres. Dépendre d'une interface plutôt que d'une classe concrète réduit le couplage.
+
+@020
+Q: Que recommande la loi de Déméter ?
+C: Ne parler qu'à ses voisins directs, sans enchaîner les accès aux objets des autres
+W: Ne pas créer plus de trois niveaux d'héritage dans une hiérarchie de classes du même module
+W: Ne pas dépasser sept paramètres dans la signature d'une méthode publique
+W: Ne pas appeler une méthode statique depuis une méthode d'instance
+E: commande.getClient().getAdresse().getVille() lie le code à la structure de trois classes. commande.villeDeLivraison() cache ce détail et le rend modifiable en un seul endroit.
+
+@021
+Q: Quel défaut de conception ce code illustre-t-il ?
+C: Un enchaînement d'appels qui dépend de la structure interne de plusieurs objets
+W: Une méthode statique appelée depuis un objet au lieu de sa classe
+W: Une absence de constructeur sur la classe Commande du projet
+W: Une variable locale déclarée avec un type trop général
+E: C'est une violation de la loi de Déméter. Si l'adresse passe dans un objet Livraison, chaque appelant doit changer ; une méthode sur Commande localise le changement.
+```java
+String ville = commande.getClient().getAdresse().getVille();
+```
+
+@022
+Q: Qu'est-ce qu'un objet valeur (value object) ?
+C: Un objet défini par ses valeurs, immuable et comparé par son contenu
+W: Un objet stocké en base avec un identifiant généré par une séquence de la base
+W: Un objet qui ne contient que des méthodes statiques utilitaires
+W: Un objet qui transporte des données entre le client et le serveur
+E: Montant(12.50, EUR) ou Adresse sont des objets valeurs : deux montants égaux sont interchangeables. Ils portent leurs règles (pas de montant négatif, devise cohérente) et évitent de passer des double partout.
+
+@023
+Q: Qu'est-ce que l'obsession des types primitifs (primitive obsession) ?
+C: Représenter des notions métier par des chaînes et des nombres bruts
+W: Utiliser des types primitifs pour les compteurs de boucle et les indices du code
+W: Refuser les classes génériques au profit des tableaux simples
+W: Convertir les objets en chaînes pour les écrire dans les journaux
+E: Un String email accepte n'importe quoi, et rien n'empêche d'inverser deux String dans un appel. Un type Email validé à la construction rend les erreurs impossibles à écrire.
+
+@024
+Q: Compléter ce record Java pour qu'il refuse un montant négatif à sa construction.
+A: throw
+E: Le constructeur compact valide les valeurs : un Montant existant est toujours valide, et le reste du code n'a plus à vérifier. C'est le principe « échouer tôt ».
+```java
+public record Montant(BigDecimal valeur) {
+    public Montant {
+        if (valeur.signum() < 0) {
+            ____ new IllegalArgumentException("montant négatif");
+        }
+    }
+}
+```
+
+@025
+Q: Combien de chemins indépendants (complexité cyclomatique) compte cette fonction ?
+N: 3
+U: chemins
+E: Un chemin de base plus un par décision : deux if donnent 3. Au-delà d'une dizaine, une fonction devient difficile à tester entièrement ; on la découpe.
+```python
+def remise(client, montant):
+    if client.fidele:
+        return montant * 0.1
+    if montant > 500:
+        return montant * 0.05
+    return 0
+```
+
+@026
+Q: Remettre dans l'ordre les couches d'une architecture en couches classique, de l'utilisateur vers les données.
+O: Présentation : contrôleurs et écrans
+O: Application : cas d'usage qui orchestrent le travail
+O: Domaine : règles métier et entités
+O: Infrastructure : base de données, fichiers, services externes
+E: Chaque couche n'appelle que celle du dessous. Une règle métier écrite dans un contrôleur ou dans une requête SQL se retrouve dupliquée dès qu'un second point d'entrée apparaît, comme une API ou un traitement par lots.
+
+@027
+Q: Dans une architecture hexagonale, qu'est-ce qu'un port ?
+C: Une interface définie par le domaine pour ce dont il a besoin ou ce qu'il offre
+W: Le numéro de port réseau sur lequel l'application écoute les requêtes entrantes
+W: Une classe de la base de données qui traduit les entités en tables
+W: Un module qui contient les fichiers de configuration de l'application
+E: Le domaine déclare un port CommandeRepository ; l'infrastructure fournit un adaptateur PostgreSQL. Le domaine ne connaît ni la base, ni le framework web, et se teste avec un adaptateur en mémoire.
+
+@028
+Q: Quelle règle de dépendance impose l'architecture hexagonale ou « clean » ?
+C: Les dépendances pointent vers le domaine, jamais du domaine vers l'infrastructure
+W: Le domaine dépend de la base de données, qui dépend de l'interface web
+W: Chaque couche dépend des deux couches situées immédiatement autour d'elle
+W: L'interface web et la base de données dépendent l'une de l'autre directement, sans interface
+E: Le domaine n'importe ni le framework, ni le pilote SQL. Un outil comme ArchUnit ou import-linter vérifie cette règle dans les tests et bloque un import interdit.
+
+@029
+Q: À quoi sert le pattern Repository ?
+C: À donner au domaine une collection d'objets métier, en cachant le stockage
+W: À stocker les fichiers de configuration de l'application dans un dépôt Git
+W: À répliquer la base de données sur un second serveur en lecture seule
+W: À générer automatiquement les tables de la base à partir des classes
+E: Le service appelle commandes.trouverParClient(id) sans écrire de SQL. En test, un repository en mémoire remplace la base ; en production, une implémentation JPA ou SQL fait le travail.
+
+@030
+Q: Qu'est-ce qu'un modèle de domaine anémique ?
+C: Des entités réduites à des données, avec toute la logique dans des services
+W: Un domaine qui ne contient qu'une seule entité métier sans relation
+W: Un domaine dont les entités n'ont pas encore de table créée en base de données
+W: Un domaine écrit sans tests unitaires pour ses règles métier
+E: Si n'importe quel service peut écrire commande.setStatut("payee"), les règles (payer une commande annulée est interdit) sont dispersées. Une méthode commande.payer() les garde au même endroit.
+
+@031
+Q: Pourquoi cette méthode est-elle préférable à un setter de statut ?
+C: Elle garde la règle métier dans l'entité et empêche un état incohérent
+W: Elle s'exécute plus vite qu'un setter, car elle évite un appel de méthode
+W: Elle permet de modifier le statut sans passer par une transaction en base
+W: Elle évite d'écrire un test pour vérifier le changement de statut
+E: Aucun code ne peut plus passer une commande annulée à l'état payé. L'entité protège ses invariants, et le nom payer dit ce qui se passe dans le langage du métier.
+```java
+public void payer(Paiement paiement) {
+    if (statut != Statut.EN_ATTENTE) {
+        throw new IllegalStateException("commande " + statut);
+    }
+    this.paiement = paiement;
+    this.statut = Statut.PAYEE;
+}
+```
+
+@032
+Q: Qu'est-ce qu'un DTO (Data Transfer Object) ?
+C: Un objet simple qui transporte des données entre deux couches ou deux systèmes
+W: Un objet métier qui porte les règles de validation de toute l'application
+W: Un objet qui gère les transactions ouvertes entre l'application et la base de données
+W: Un objet qui conserve en cache les données lues depuis le disque dur
+E: Le DTO fixe le format échangé, indépendamment des entités internes. Le domaine peut évoluer sans casser l'API, et l'API n'expose que ce qui doit l'être.
+
+@033
+Q: Associer chaque pattern de structure à son usage.
+P: Adaptateur => Brancher une classe sur une interface qu'elle n'implémente pas
+P: Décorateur => Ajouter un comportement autour d'un objet sans le modifier
+P: Façade => Offrir une entrée simple vers un sous-système compliqué
+P: Proxy => Contrôler l'accès à un objet, par exemple pour le charger à la demande
+P: Composite => Traiter un groupe d'objets comme un objet seul
+E: Décorateur et Proxy ont la même forme, une classe qui en enveloppe une autre ; leur intention diffère. Spring utilise des proxys pour @Transactional et @Cacheable.
+
+@034
+Q: Quel pattern applique cette classe ?
+C: Décorateur : elle ajoute une mise en cache autour d'un autre service de tarifs
+W: Stratégie : elle choisit un algorithme de calcul selon le client connecté au service
+W: Façade : elle simplifie l'accès à plusieurs services de tarifs différents
+W: Singleton : elle garantit qu'un seul service de tarifs existe en mémoire
+E: Elle implémente la même interface que l'objet qu'elle enveloppe et lui délègue le travail. On peut empiler cache, journalisation et mesure de durée sans toucher au service d'origine.
+```java
+class TarifsEnCache implements Tarifs {
+    private final Tarifs source;
+    private final Map<String, Prix> cache = new ConcurrentHashMap<>();
+
+    public Prix prix(String ref) {
+        return cache.computeIfAbsent(ref, source::prix);
+    }
+}
+```
+
+@035
+Q: À quoi sert le pattern Observateur ?
+C: À prévenir plusieurs objets d'un changement sans que la source les connaisse
+W: À vérifier que les objets d'un programme respectent leur contrat
+W: À observer les performances d'une méthode pendant son exécution
+W: À enregistrer les modifications d'un objet pour pouvoir les annuler par la suite
+E: Une commande payée publie un événement ; la facturation, le stock et les courriels s'y abonnent. Ajouter un abonné ne change pas la commande, mais l'ordre et les erreurs des abonnés deviennent moins visibles.
+
+@036
+Q: Quel pattern permet d'enregistrer une action pour l'annuler ou la rejouer plus tard ?
+C: Commande
+W: Façade
+W: Adaptateur
+W: Composite
+E: Chaque action devient un objet avec executer() et annuler() : une pile de commandes donne l'historique et la fonction « annuler » d'un éditeur. Le même principe sert aux files de tâches.
+
+@037
+Q: Quel pattern ce code applique-t-il ?
+C: Patron de méthode : l'ordre des étapes est fixé, les détails sont redéfinis
+W: Stratégie : l'algorithme complet est remplacé à l'exécution par un autre objet
+W: Monteur : l'objet final est assemblé étape par étape par l'appelant
+W: Observateur : les étapes sont prévenues quand le rapport change
+E: La classe abstraite garde la structure (lire, calculer, mettre en forme) ; chaque rapport redéfinit une étape. La Stratégie fait la même chose par composition, plus souple quand les variations se combinent.
+```java
+abstract class Rapport {
+    final String produire() {
+        var donnees = lire();
+        return mettreEnForme(calculer(donnees));
+    }
+    abstract List<Ligne> lire();
+    abstract Resume calculer(List<Ligne> lignes);
+    abstract String mettreEnForme(Resume resume);
+}
+```
+
+@038
+Q: Quel pattern convient à une commande qui change de comportement selon qu'elle est en attente, payée ou expédiée ?
+C: État : chaque statut est une classe qui définit les actions permises
+W: Singleton : un seul statut existe pour l'ensemble des commandes
+W: Façade : le statut est caché derrière une interface simplifiée
+W: Proxy : le statut est chargé à la demande depuis la base de données du service
+E: Les règles de chaque état (annuler une commande expédiée est interdit) vivent dans sa classe, au lieu de switch répétés dans toutes les méthodes. Pour trois états simples, un enum avec des méthodes suffit souvent.
+
+@039
+Q: À quoi sert la chaîne de responsabilité ?
+C: À faire passer une demande à une suite de traitements, dont chacun peut la gérer ou la transmettre
+W: À répartir une tâche entre plusieurs threads exécutés en parallèle
+W: À garantir que chaque objet de la chaîne a une seule responsabilité
+W: À verrouiller une ressource partagée entre plusieurs objets
+E: Les filtres de servlet, les middlewares Express et la chaîne de Spring Security suivent ce modèle : authentification, journalisation, compression, chacun dans son maillon.
+
+@040
+Q: Remettre dans l'ordre un refactoring sûr d'une méthode longue.
+O: Écrire des tests qui figent le comportement actuel
+O: Extraire un bloc cohérent dans une méthode bien nommée
+O: Relancer les tests
+O: Recommencer avec le bloc suivant
+O: Supprimer le code devenu inutile et relancer les tests
+E: Un refactoring change la structure sans changer le comportement : les tests le prouvent à chaque petit pas. Mélanger refactoring et nouvelle fonctionnalité dans un même commit rend la relecture et un retour arrière difficiles.
+
+@041
+Q: Qu'est-ce qu'un « objet dieu » (God object) ?
+C: Une classe qui sait et fait presque tout dans l'application
+W: Une classe abstraite dont héritent toutes les autres classes
+W: Une classe qui ne peut être instanciée qu'une seule fois
+W: Une classe générée automatiquement par le framework utilisé
+E: Une classe ApplicationManager de 4 000 lignes touchée par chaque changement crée des conflits de fusion et des régressions. On en extrait les responsabilités une à une, guidé par les tests.
+
+@042
+Q: Quel défaut appelle-t-on « chirurgie au fusil de chasse » (shotgun surgery) ?
+C: Un changement simple oblige à modifier de nombreuses classes à la fois
+W: Une classe modifiée par de nombreux développeurs dans la même semaine de travail
+W: Un correctif appliqué en production sans passer par les tests
+W: Une méthode appelée depuis de nombreux endroits du programme
+E: Ajouter un champ client touche l'entité, le DTO, trois écrans, deux exports et un rapport : la notion est éparpillée. C'est le signe d'une responsabilité à regrouper.
+
+@043
+Q: Qu'est-ce que la « jalousie de fonctionnalité » (feature envy) ?
+C: Une méthode qui utilise surtout les données d'une autre classe que la sienne
+W: Une méthode qui reprend le nom d'une méthode d'une autre classe
+W: Une classe qui hérite de plusieurs classes pour réunir leurs méthodes
+W: Une fonction écrite par une équipe pour concurrencer celle d'une autre équipe
+E: Une méthode de Facture qui lit dix champs de Client pour calculer une remise devrait souvent vivre dans Client. Déplacer la méthode rapproche le calcul de ses données.
+
+@044
+Q: Quel signal indique qu'une fonction devrait être découpée ?
+C: Elle mélange plusieurs niveaux d'abstraction et demande des commentaires pour être suivie
+W: Elle utilise des variables locales au lieu de champs de la classe
+W: Elle est appelée depuis plus de deux autres fonctions du projet
+W: Elle contient une boucle et une condition dans le même corps
+E: Une fonction qui lit un fichier, valide, calcule et envoie un courriel se lit mal. Chaque commentaire du type « étape 2 : calcul » annonce une fonction à extraire avec ce nom.
+
+@045
+Q: Qu'est-ce que la dette technique ?
+C: Le coût futur des raccourcis pris aujourd'hui dans le code ou l'architecture
+W: Le budget à rembourser au fournisseur d'une licence logicielle arrivée à expiration
+W: Le temps passé à former les nouveaux développeurs sur le projet
+W: La somme des bogues signalés par les utilisateurs non encore corrigés
+E: Comme une dette financière, elle peut être un choix raisonnable pour livrer vite, à condition d'être connue et remboursée. Ses intérêts se paient en lenteur de chaque évolution.
+
+@046
+Q: Pourquoi noter une décision d'architecture dans un ADR (Architecture Decision Record) ?
+C: Pour garder le contexte, les options étudiées et la raison du choix
+W: Pour obtenir la validation automatique de la décision par la CI
+W: Pour générer le diagramme d'architecture à partir de la décision prise
+W: Pour empêcher toute modification de la décision par l'équipe
+E: Deux ans plus tard, « pourquoi RabbitMQ et pas Kafka ? » trouve sa réponse dans le dépôt. Un ADR remplacé n'est pas effacé : un nouvel ADR le marque comme dépassé.
+
+@047
+Q: Associer chaque défaut de code à sa correction habituelle.
+P: Méthode trop longue => Extraire des méthodes bien nommées
+P: Switch sur un type répété => Remplacer par du polymorphisme
+P: Longue liste de paramètres => Regrouper dans un objet paramètre
+P: Nombre magique => Le remplacer par une constante nommée
+P: Code mort => Le supprimer, l'historique Git le garde
+E: Ces corrections sont décrites dans le catalogue de refactoring de Martin Fowler. Les IDE en automatisent beaucoup, ce qui limite le risque d'erreur.
+
+@048
+Q: Que dit la loi de Conway ?
+C: L'architecture d'un système reflète la structure de communication de l'équipe qui le construit
+W: La complexité d'un logiciel double tous les deux ans sans effort de simplification
+W: Un projet en retard prend encore plus de retard quand on lui ajoute des personnes
+W: Le temps de travail s'étend pour remplir la durée disponible jusqu'à l'échéance
+E: Trois équipes qui se parlent peu produisent trois modules faiblement intégrés. On peut s'en servir à l'envers : organiser les équipes selon l'architecture souhaitée.
+
+@049
+Q: Quel est le premier niveau du modèle C4 pour décrire une architecture ?
+C: Le contexte : le système, ses utilisateurs et les systèmes avec lesquels il échange
+W: Le code : les classes et leurs relations dans chaque module du système
+W: Les conteneurs : les applications, bases et files qui composent le système étudié ici
+W: Les composants : les grands blocs à l'intérieur de chaque application
+E: Contexte, conteneurs, composants, code : on zoome du plus large au plus fin. Le niveau contexte se montre à un non-technicien ; le niveau code se génère souvent à partir des sources.
+
+@050
+Q: Compléter ce code pour que la classe reçoive son dépôt de commandes au lieu de le créer elle-même.
+A: this.repository
+E: L'injection par constructeur rend la dépendance visible et remplaçable. new CommandeRepositoryJpa() dans la classe l'aurait liée à une implémentation et à une base pour chaque test.
+```java
+public class ServicePaiement {
+    private final CommandeRepository repository;
+
+    public ServicePaiement(CommandeRepository repository) {
+        ____ = repository;
+    }
+}
+```

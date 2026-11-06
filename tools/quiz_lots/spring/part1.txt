@@ -1,0 +1,435 @@
+@001
+Q: Que regroupe l'annotation @SpringBootApplication ?
+C: @Configuration, @EnableAutoConfiguration et @ComponentScan
+W: @RestController, @Service et @Repository pour toute l'application
+W: @Transactional, @Async et @Scheduled appliqués à la classe principale
+W: @Bean, @Value et @Profile pour charger la configuration par défaut
+E: La classe annotée sert de point de départ au scan des composants : les classes rangées dans d'autres paquets que le sien et ses sous-paquets ne sont pas trouvées. C'est une cause fréquente de bean introuvable.
+
+@002
+Q: Associer chaque stéréotype Spring à la couche où on le place.
+P: @RestController => Couche web qui reçoit les requêtes HTTP
+P: @Service => Logique métier
+P: @Repository => Accès aux données, avec traduction des exceptions
+P: @Configuration => Déclaration de beans par des méthodes @Bean
+P: @Component => Composant générique sans rôle particulier
+E: Tous sont des @Component détectés par le scan ; le rôle sert à la lisibilité et à quelques comportements, comme la traduction des exceptions SQL en DataAccessException pour @Repository.
+
+@003
+Q: Pourquoi préférer l'injection par constructeur à @Autowired sur un champ ?
+C: Les dépendances deviennent obligatoires, finales et faciles à fournir dans un test
+W: Le constructeur est appelé plus tôt et accélère le démarrage de l'application entière
+W: L'injection sur un champ est refusée par les versions récentes de Spring Boot
+W: Le constructeur permet de créer plusieurs instances d'un même bean singleton
+E: Avec un seul constructeur, @Autowired est même inutile. Un test unitaire instancie la classe avec new et des doublures, sans démarrer Spring ; un constructeur à dix paramètres signale aussi une classe qui en fait trop.
+
+@004
+Q: Compléter cette classe pour que Spring l'injecte dans un contrôleur comme service métier.
+A: @Service
+E: Le scan des composants la détecte et crée un singleton. Le contrôleur la reçoit par son constructeur, sans new : Spring gère sa création et ses propres dépendances.
+```java
+____
+public class CommandeService {
+    private final CommandeRepository repository;
+
+    public CommandeService(CommandeRepository repository) {
+        this.repository = repository;
+    }
+}
+```
+
+@005
+Q: Où Spring Boot lit-il par défaut la configuration de l'application ?
+C: Dans application.properties ou application.yml, à la racine du classpath
+W: Dans un fichier spring.xml placé à côté du fichier .jar de l'application
+W: Dans les variables de la classe principale annotée @SpringBootApplication
+W: Dans le fichier pom.xml, section properties, lu au démarrage de l'application
+E: Les variables d'environnement et les arguments de la ligne de commande surchargent ces valeurs : SERVER_PORT=9090 remplace server.port. C'est ce qui permet de garder un même .jar pour tous les environnements.
+
+@006
+Q: Compléter ce champ qui lit la propriété app.nom, avec la valeur Atelier par défaut.
+A: @Value
+E: La syntaxe ${clé:défaut} donne une valeur de repli si la propriété manque. Pour plusieurs propriétés liées, @ConfigurationProperties est plus lisible et validable.
+```java
+____("${app.nom:Atelier}")
+private String nom;
+```
+
+@007
+Q: Quel port utilise par défaut une application Spring Boot web ?
+N: 8080
+E: server.port le change ; server.port=0 choisit un port libre au hasard, pratique pour lancer plusieurs instances ou des tests d'intégration en parallèle.
+
+@008
+Q: Que fait @GetMapping("/commandes/{id}") sur une méthode de contrôleur ?
+C: Il associe les requêtes GET sur ce chemin à la méthode, avec id en variable
+W: Il crée une commande en base à chaque appel de l'adresse indiquée
+W: Il limite l'accès à la méthode aux utilisateurs dont l'identifiant correspond
+W: Il met en cache la réponse de la méthode pour chaque identifiant demandé
+E: Le paramètre se lit avec @PathVariable Long id. @PostMapping, @PutMapping et @DeleteMapping couvrent les autres méthodes HTTP ; @RequestMapping sur la classe donne un préfixe commun.
+
+@009
+Q: Associer chaque annotation à la partie de la requête HTTP qu'elle lit.
+P: @PathVariable => Un segment du chemin, comme l'identifiant dans /commandes/42
+P: @RequestParam => Un paramètre de l'URL, comme ?page=2
+P: @RequestBody => Le corps de la requête, converti depuis le JSON
+P: @RequestHeader => Un en-tête, comme Accept-Language
+E: La conversion du JSON vers l'objet Java est faite par Jackson. Un @RequestParam est obligatoire par défaut : required = false ou defaultValue évitent une erreur 400 quand il manque.
+
+@010
+Q: Que renvoie un contrôleur qui retourne ResponseEntity.status(HttpStatus.CREATED).body(commande) ?
+C: Une réponse 201 avec la commande en JSON dans le corps
+W: Une réponse 200 avec un en-tête Created et un corps vide
+W: Une réponse 204 sans corps, la commande étant créée en base
+W: Une réponse 302 qui redirige vers la commande nouvellement créée
+E: ResponseEntity contrôle le code, les en-têtes et le corps. Pour une création, on ajoute souvent l'en-tête Location avec ResponseEntity.created(uri), qui donne l'adresse de la nouvelle ressource.
+
+@011
+Q: Que fait Spring Data JPA avec cette interface sans implémentation ?
+C: Il génère à l'exécution les méthodes CRUD et une requête pour findByEmail
+W: Il crée la table client dans la base à partir du nom de l'interface
+W: Il exige une classe ClientRepositoryImpl écrite à la main pour implémenter findByEmail
+W: Il copie la table client en mémoire au démarrage de l'application
+E: Le nom de méthode est analysé (findBy, And, OrderBy…) et traduit en requête JPQL. Pour une requête plus complexe, @Query donne la requête explicitement.
+```java
+public interface ClientRepository extends JpaRepository<Client, Long> {
+    Optional<Client> findByEmail(String email);
+}
+```
+
+@012
+Q: Compléter cette entité JPA pour marquer sa clé primaire.
+A: @Id
+E: @GeneratedValue indique comment la valeur est produite : IDENTITY pour une colonne auto-incrémentée, SEQUENCE pour une séquence PostgreSQL ou Oracle, plus efficace pour les insertions en lot.
+```java
+@Entity
+public class Client {
+    ____
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String email;
+}
+```
+
+@013
+Q: Pourquoi éviter spring.jpa.hibernate.ddl-auto=update en production ?
+C: Hibernate modifie le schéma sans contrôle ni retour arrière possible
+W: Hibernate efface les données de chaque table au redémarrage du service
+W: Hibernate refuse de démarrer si la base contient déjà des tables
+W: Hibernate désactive les transactions tant que le mode update est actif
+E: update ajoute des colonnes mais ne renomme ni ne supprime rien, et ses choix ne sont pas relus. En production, on versionne les migrations avec Flyway ou Liquibase et on règle ddl-auto sur validate.
+
+@014
+Q: Remettre dans l'ordre le traitement d'une requête par Spring MVC.
+O: Le DispatcherServlet reçoit la requête
+O: Les filtres et intercepteurs s'appliquent
+O: Le HandlerMapping trouve la méthode du contrôleur
+O: Les arguments sont convertis et validés, puis la méthode s'exécute
+O: Le retour est converti en JSON et écrit dans la réponse
+E: Une exception levée à n'importe quelle étape remonte vers les gestionnaires @ExceptionHandler. Les filtres de Spring Security s'exécutent avant le DispatcherServlet, d'où des erreurs 401 qui n'atteignent jamais le contrôleur.
+
+@015
+Q: À quoi sert @ControllerAdvice combiné à @ExceptionHandler ?
+C: À traiter les exceptions de tous les contrôleurs en un seul endroit
+W: À journaliser chaque requête avant son arrivée dans le contrôleur concerné
+W: À relancer automatiquement une méthode qui a levé une exception
+W: À masquer les exceptions en renvoyant une réponse 200 au client
+E: Une CommandeIntrouvableException devient une réponse 404 cohérente pour toute l'API, au format ProblemDetail (RFC 9457) depuis Spring 6. Les contrôleurs restent centrés sur le cas normal.
+
+@016
+Q: Que fait le starter spring-boot-starter-actuator ?
+C: Il ajoute des points d'accès de santé, de métriques et d'information sur l'application
+W: Il ajoute un tableau de bord graphique pour modifier la configuration en direct
+W: Il ajoute un système de tâches planifiées qui remplace l'annotation @Scheduled
+W: Il ajoute un serveur de journaux qui centralise la sortie des différentes instances déployées
+E: /actuator/health sert aux sondes de Kubernetes, /actuator/prometheus aux métriques. Seul health est exposé en HTTP par défaut ; on expose le reste avec soin, car env ou heapdump révèlent des informations sensibles.
+
+@017
+Q: Quel code HTTP renvoie Spring quand un champ annoté @NotBlank est vide dans un @RequestBody @Valid ?
+N: 400
+E: La validation lève MethodArgumentNotValidException, traduite en 400 Bad Request. Un @ExceptionHandler la transforme en liste lisible de champs en erreur pour le client.
+
+@018
+Q: Comment lancer une application Spring Boot avec le profil prod ?
+C: Avec --spring.profiles.active=prod ou la variable SPRING_PROFILES_ACTIVE
+W: En renommant le fichier application.yml en prod.yml avant de lancer le .jar
+W: En ajoutant @Profile("prod") sur la classe principale de l'application
+W: En compilant le projet avec l'option -Pprod de Maven pour le déploiement
+E: Spring charge alors application-prod.yml en plus de application.yml, ses valeurs l'emportant. -Pprod active un profil Maven, qui n'a rien à voir avec les profils Spring.
+
+@019
+Q: Que fait la commande mvn spring-boot:run ?
+C: Elle compile le projet et lance l'application sans construire le .jar
+W: Elle construit le .jar exécutable puis le pousse vers le registre d'images
+W: Elle lance les tests d'intégration sur une base de données vide
+W: Elle génère un nouveau projet Spring Boot à partir d'un modèle
+E: Pratique pendant le développement. mvn package produit le .jar exécutable (java -jar), qui embarque Tomcat et toutes les dépendances.
+
+@020
+Q: Pourquoi une application Spring Boot n'a-t-elle pas besoin d'un serveur Tomcat installé ?
+C: Le serveur est embarqué dans le .jar et démarré par l'application
+W: Spring Boot répond aux requêtes sans serveur HTTP grâce à la JVM
+W: Le .jar s'installe dans le Tomcat du système au premier démarrage
+W: Spring Boot télécharge Tomcat depuis Internet à chaque lancement
+E: spring-boot-starter-web apporte Tomcat ; on peut le remplacer par Jetty ou Undertow en changeant de dépendance. L'application se lance avec java -jar et se met facilement dans une image Docker.
+
+@021
+Q: Que fait l'annotation @Transactional sur une méthode de service ?
+C: Elle ouvre une transaction au début et la valide ou l'annule à la fin
+W: Elle verrouille la table entière pendant l'exécution de la méthode
+W: Elle exécute la méthode dans un nouveau thread pour ne pas bloquer
+W: Elle enregistre les paramètres de la méthode dans un journal d'audit de la base
+E: Une RuntimeException annule la transaction, une exception vérifiée non, sauf rollbackFor. La transaction passe par un proxy : elle ne s'applique pas à un appel interne à la même classe.
+
+@022
+Q: Que renvoie findById d'un JpaRepository quand l'identifiant n'existe pas ?
+C: Un Optional vide
+W: La valeur null, à tester
+W: Une entité aux champs vides
+W: Une exception SQLException
+E: On écrit repository.findById(id).orElseThrow(() -> new CommandeIntrouvableException(id)), traduite en 404 par un gestionnaire d'exceptions. getReferenceById renvoie au contraire un proxy, sans lire la base tout de suite.
+
+@023
+Q: Que fait @Scheduled(cron = "0 0 2 * * *") sur une méthode ?
+C: Elle la lance chaque jour à 2 h du matin, si @EnableScheduling est actif
+W: Elle la lance deux fois par heure, au début et au milieu de chaque heure
+W: Elle la lance à intervalle de deux secondes, sans attendre la fin de l'appel
+W: Elle la lance une seule fois, deux heures après le démarrage du service
+E: L'expression cron de Spring a six champs, en commençant par les secondes. Avec plusieurs instances, la tâche tourne sur chacune : un verrou comme ShedLock évite un double traitement.
+
+@024
+Q: Associer chaque niveau de journal de Spring Boot à son réglage dans application.yml.
+P: logging.level.root: WARN => Seuls les avertissements et erreurs de toutes les bibliothèques
+P: logging.level.fr.atelier: DEBUG => Le détail du code de l'application seul
+P: logging.level.org.hibernate.SQL: DEBUG => Les requêtes SQL générées par Hibernate
+P: logging.level.org.springframework.web: DEBUG => Le routage des requêtes par Spring MVC
+E: On règle le niveau par paquet plutôt que tout en DEBUG, qui noierait les journaux. Les paramètres liés aux requêtes SQL se voient avec org.hibernate.orm.jdbc.bind en TRACE.
+
+@025
+Q: À quoi sert spring-boot-devtools pendant le développement ?
+C: À redémarrer vite l'application quand une classe compilée change
+W: À déployer l'application sur le serveur de test après chaque commit
+W: À générer automatiquement les tests unitaires des classes de service
+W: À désactiver la sécurité pour faciliter les essais dans le navigateur
+E: Il recharge seulement les classes du projet, pas les dépendances, d'où un redémarrage en une ou deux secondes. Il se désactive de lui-même quand l'application tourne depuis un .jar empaqueté.
+
+@026
+Q: Remettre dans l'ordre le démarrage d'une application Spring Boot.
+O: La méthode main appelle SpringApplication.run
+O: L'environnement charge les propriétés et les profils actifs
+O: Le scan trouve les composants et l'auto-configuration ajoute ses beans
+O: Les beans sont créés et leurs dépendances injectées
+O: Le serveur web démarre, puis les CommandLineRunner s'exécutent
+E: Une erreur de démarrage s'explique souvent par l'étape : propriété manquante, bean introuvable, dépendance circulaire. Le rapport --debug montre quelles auto-configurations ont été appliquées ou écartées.
+
+@027
+Q: Comment l'auto-configuration décide-t-elle de créer une DataSource ?
+C: Elle la crée si un pilote JDBC est présent et qu'aucune DataSource n'est déjà déclarée
+W: Elle la crée si une classe du projet porte le mot DataSource dans son nom
+W: Elle la crée à chaque démarrage, puis la supprime si la base ne répond pas
+W: Elle la crée si la propriété spring.datasource.enabled vaut true
+E: Les conditions @ConditionalOnClass et @ConditionalOnMissingBean guident l'auto-configuration. Déclarer son propre bean DataSource suffit à remplacer celui de Spring Boot.
+
+@028
+Q: Que fait cette annotation sur une classe d'auto-configuration ?
+C: Elle n'applique la configuration que si aucun bean ObjectMapper n'existe déjà
+W: Elle crée un bean ObjectMapper même si un autre a déjà été déclaré
+W: Elle supprime les beans ObjectMapper déclarés par l'application
+W: Elle signale une erreur au démarrage si un bean ObjectMapper manque
+E: C'est le principe de l'auto-configuration : des valeurs par défaut qui s'effacent devant les choix de l'application. Le rapport de conditions (--debug) explique pourquoi une configuration a été écartée.
+```java
+@Bean
+@ConditionalOnMissingBean
+public ObjectMapper objectMapper() { return new ObjectMapper(); }
+```
+
+@029
+Q: Pourquoi utiliser @ConfigurationProperties plutôt que plusieurs @Value ?
+C: Les propriétés d'un même préfixe sont regroupées, typées et validables
+W: Les propriétés sont relues à chaque appel et suivent les changements du fichier
+W: Les propriétés sont chiffrées en mémoire pour protéger les mots de passe
+W: Les propriétés deviennent modifiables depuis l'interface d'Actuator
+E: Un record AppProperties(String nom, Duration delai, int maxEssais) annoté @ConfigurationProperties("app") reçoit app.nom, app.delai et app.max-essais. @Validated y ajoute la validation au démarrage.
+
+@030
+Q: Compléter ce record pour qu'il reçoive les propriétés commençant par app.mail.
+A: @ConfigurationProperties
+E: Le record est enregistré avec @EnableConfigurationProperties ou @ConfigurationPropertiesScan. Spring convertit "30s" en Duration et accepte app.mail.delai-envoi pour delaiEnvoi.
+```java
+____("app.mail")
+public record MailProperties(String expediteur, Duration delaiEnvoi) {}
+```
+
+@031
+Q: Pourquoi une erreur 404 sur /actuator/metrics alors qu'Actuator est installé ?
+C: Seul le point health est exposé en HTTP par défaut
+W: Les métriques ne sont actives qu'avec le profil prod
+W: Le point metrics exige un serveur Prometheus démarré
+W: Actuator n'expose ses points que sur le port 9090
+E: management.endpoints.web.exposure.include=health,info,metrics,prometheus choisit les points exposés. On les place souvent sur un port de gestion séparé (management.server.port), non publié vers l'extérieur.
+
+@032
+Q: Quel risque présente l'exposition de /actuator/env ou /actuator/heapdump sur Internet ?
+C: Ils révèlent la configuration et le contenu de la mémoire, secrets compris
+W: Ils permettent de redémarrer l'application avec une autre version du code déployé
+W: Ils ralentissent l'application en activant le mode débogage permanent
+W: Ils suppriment les journaux de l'application à chaque consultation
+E: Un vidage mémoire contient les mots de passe en clair et les jetons des sessions. Ces points restent fermés, ou protégés par Spring Security sur un port interne.
+
+@033
+Q: Que fait la propagation REQUIRES_NEW sur une méthode @Transactional ?
+C: Elle suspend la transaction en cours et en ouvre une nouvelle, validée séparément
+W: Elle rejoint la transaction en cours et en crée une si aucune n'existe encore
+W: Elle exige qu'une transaction existe déjà et lève une erreur dans le cas contraire
+W: Elle exécute la méthode sans transaction, même si une transaction est ouverte
+E: Utile pour un journal d'audit qui doit rester même si l'opération principale échoue. REQUIRED, la valeur par défaut, rejoint la transaction existante ; MANDATORY exige qu'elle existe.
+
+@034
+Q: Associer chaque propagation transactionnelle à son comportement.
+P: REQUIRED => Rejoindre la transaction en cours ou en créer une
+P: REQUIRES_NEW => Suspendre la transaction en cours et en ouvrir une autre
+P: MANDATORY => Exiger une transaction existante
+P: NEVER => Refuser de s'exécuter dans une transaction
+P: SUPPORTS => Suivre la transaction en cours s'il y en a une
+E: REQUIRED convient dans la plupart des cas. REQUIRES_NEW consomme une seconde connexion à la base pendant la suspension : employé en boucle, il peut épuiser le pool.
+
+@035
+Q: Pourquoi la transaction n'est-elle pas annulée par cette méthode ?
+C: IOException est une exception vérifiée, qui ne déclenche pas d'annulation par défaut
+W: La méthode est publique, alors qu'@Transactional ne s'applique qu'aux méthodes privées
+W: L'exception est levée après l'enregistrement, quand la transaction est déjà validée
+W: Spring n'annule une transaction que sur une erreur SQL levée par le pilote JDBC
+E: Par défaut, seules RuntimeException et Error annulent. @Transactional(rollbackFor = Exception.class) change la règle ; beaucoup d'équipes l'imposent pour éviter la surprise.
+```java
+@Transactional
+public void importer(Path fichier) throws IOException {
+    repository.save(new Import(fichier.toString()));
+    Files.readAllLines(fichier);
+}
+```
+
+@036
+Q: Que fait readOnly = true sur une méthode @Transactional ?
+C: Il indique une lecture seule, ce qui évite à Hibernate de surveiller les entités chargées
+W: Il interdit à la base de données d'exécuter des requêtes SELECT pendant la méthode
+W: Il copie les données lues dans un cache partagé entre les instances
+W: Il rend les entités renvoyées immuables pour le reste de l'application
+E: Hibernate saute la vérification des modifications (dirty checking) en fin de transaction. Certains pilotes ou routeurs dirigent aussi ces transactions vers un réplica en lecture.
+
+@037
+Q: Pourquoi cette méthode déclenche-t-elle une LazyInitializationException ?
+C: La liste des lignes est lue après la fermeture de la session Hibernate
+W: La relation OneToMany est interdite sans l'option de chargement EAGER
+W: Le contrôleur ne peut pas accéder directement aux entités de la base
+W: La méthode getLignes n'est pas déclarée dans le repository de commande
+E: Le chargement paresseux exige une session ouverte. On charge ce qu'il faut dans le service transactionnel (JOIN FETCH, @EntityGraph) et on renvoie un DTO. Activer open-in-view masque le problème au prix de requêtes dispersées.
+```java
+@GetMapping("/commandes/{id}/lignes")
+public int nombreDeLignes(@PathVariable Long id) {
+    Commande vCommande = service.trouver(id);
+    return vCommande.getLignes().size();
+}
+```
+
+@038
+Q: Compléter cette requête qui charge les commandes avec leurs lignes en une seule requête SQL.
+A: FETCH
+E: JOIN FETCH remplit la collection dans la même requête et supprime le problème N+1. DISTINCT évite les doublons de commandes ; pour une pagination, on préfère deux requêtes, car Hibernate pagine alors en mémoire.
+```java
+@Query("SELECT DISTINCT c FROM Commande c JOIN ____ c.lignes WHERE c.client.id = :clientId")
+List<Commande> avecLignes(@Param("clientId") Long clientId);
+```
+
+@039
+Q: Pourquoi renvoyer un DTO plutôt qu'une entité JPA dans un contrôleur REST ?
+C: Pour choisir les champs exposés et ne pas lier le contrat de l'API au schéma
+W: Pour que les entités soient enregistrées plus vite par Hibernate dans la base
+W: Pour que Jackson puisse convertir les dates au format ISO 8601 dans le JSON
+W: Pour que le contrôleur puisse s'exécuter sans transaction en lecture seule
+E: Sérialiser une entité expose des champs internes (mot de passe haché), déclenche des chargements paresseux et des boucles infinies sur les relations bidirectionnelles. Un record Java fait un DTO concis.
+
+@040
+Q: Une page affiche 20 commandes et lit le client de chacune par une relation paresseuse. Combien de requêtes SQL sont exécutées ?
+N: 21
+U: requêtes
+E: Une requête pour la liste, puis une par commande : c'est le problème N+1. Un JOIN FETCH ou un @EntityGraph(attributePaths = "client") ramène tout en une requête.
+
+@041
+Q: À quoi sert Pageable dans une méthode de repository ?
+C: À demander une page de résultats triée, avec le nombre total d'éléments
+W: À découper la base de données en plusieurs schémas selon les utilisateurs
+W: À mettre en cache les résultats d'une requête pour les pages suivantes
+W: À limiter le nombre de connexions ouvertes vers la base de données
+E: PageRequest.of(0, 20, Sort.by("date").descending()) donne la première page. La méthode renvoie Page<T>, qui lance une requête de comptage ; Slice<T> s'en passe quand le total n'est pas utile.
+
+@042
+Q: À quoi sert Flyway dans un projet Spring Boot ?
+C: À appliquer au démarrage les scripts de migration versionnés de la base
+W: À sauvegarder la base de données avant chaque déploiement de l'application
+W: À générer les entités JPA à partir des tables existantes de la base
+W: À répartir les requêtes entre plusieurs bases de données selon leur charge
+E: Les scripts V1__creation.sql, V2__ajout_colonne.sql sont appliqués dans l'ordre et notés dans la table flyway_schema_history. Un script déjà appliqué ne doit plus être modifié : on en ajoute un nouveau.
+
+@043
+Q: Remettre dans l'ordre le traitement d'une requête protégée par Spring Security.
+O: La requête traverse la chaîne de filtres de sécurité
+O: Un filtre extrait les identifiants ou le jeton de la requête
+O: L'AuthenticationManager vérifie ces identifiants
+O: L'utilisateur authentifié est placé dans le SecurityContext
+O: Les règles d'autorisation décident de laisser passer la requête
+E: Un 401 signifie que l'authentification a échoué, un 403 que l'utilisateur est connu mais n'a pas le droit. Le journal org.springframework.security en DEBUG montre le filtre qui a refusé la requête.
+
+@044
+Q: Compléter cette configuration qui exige le rôle ADMIN pour /admin/**.
+A: hasRole
+E: hasRole("ADMIN") vérifie l'autorité ROLE_ADMIN. Les règles sont lues dans l'ordre : la plus précise doit précéder anyRequest(), sinon elle n'est jamais atteinte.
+```java
+http.authorizeHttpRequests(auth -> auth
+    .requestMatchers("/admin/**").____("ADMIN")
+    .anyRequest().authenticated());
+```
+
+@045
+Q: Pourquoi stocker les mots de passe avec BCryptPasswordEncoder ?
+C: Il produit un hachage lent et salé, difficile à casser même si la base fuit
+W: Il chiffre les mots de passe avec une clé qui permet de les relire au besoin
+W: Il compresse les mots de passe pour réduire la place prise dans la base
+W: Il envoie les mots de passe à un service externe chargé de les vérifier
+E: Le sel rend inutiles les tables précalculées, le coût réglable ralentit chaque essai. Argon2PasswordEncoder est aussi proposé ; un mot de passe ne doit jamais être chiffré de façon réversible.
+
+@046
+Q: Pourquoi désactiver la protection CSRF est-il acceptable pour une API sans état appelée avec un jeton Bearer ?
+C: Le navigateur n'ajoute pas le jeton tout seul, contrairement à un cookie de session
+W: Les API REST ne reçoivent que des requêtes GET, qui ne modifient aucune donnée
+W: Le jeton Bearer est chiffré par HTTPS et ne peut donc pas être volé par un site tiers
+W: Spring Security vérifie l'origine de chaque requête dès que CSRF est désactivé
+E: L'attaque CSRF repose sur un identifiant envoyé automatiquement par le navigateur. Si l'API utilise un cookie de session, la protection reste nécessaire, même pour une application monopage.
+
+@047
+Q: Que vérifie un serveur de ressources Spring Security configuré avec oauth2ResourceServer().jwt() ?
+C: La signature du jeton avec la clé publique de l'émetteur, sa date d'expiration et son émetteur
+W: La présence du jeton dans la base de données des sessions ouvertes de l'application
+W: Le mot de passe de l'utilisateur, transmis dans le jeton à chaque requête protégée
+W: L'adresse IP du client, comparée à celle enregistrée au moment de la connexion
+E: Les clés sont lues sur le point jwks de l'émetteur (spring.security.oauth2.resourceserver.jwt.issuer-uri). Le serveur ne garde pas d'état : un jeton volé reste valable jusqu'à expiration, d'où des durées courtes.
+
+@048
+Q: Que fait @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id") sur une méthode ?
+C: Elle autorise l'appel aux administrateurs ou à l'utilisateur dont l'identifiant est demandé
+W: Elle journalise l'appel quand l'utilisateur n'est pas administrateur de l'application web
+W: Elle remplace l'identifiant reçu par celui de l'utilisateur connecté avant l'appel
+W: Elle vérifie le rôle après l'exécution de la méthode et annule son résultat si besoin
+E: La sécurité au niveau des méthodes s'active avec @EnableMethodSecurity. Elle protège le service même s'il est appelé hors d'un contrôleur, par exemple depuis une tâche planifiée.
+
+@049
+Q: Quel code HTTP renvoie Spring Security à un utilisateur connecté qui n'a pas le rôle exigé ?
+N: 403
+E: 403 Forbidden : l'identité est connue, le droit manque. Un utilisateur non connecté reçoit 401, ou une redirection vers la page de connexion avec une connexion par formulaire.
+
+@050
+Q: Que teste @WebMvcTest(CommandeController.class) ?
+C: La couche web du contrôleur seule, avec les services remplacés par des doublures
+W: L'application entière, avec la base de données et le serveur réellement démarrés
+W: Les requêtes SQL du repository, exécutées sur une base embarquée en mémoire
+W: Les performances du contrôleur sous une charge de mille requêtes par seconde
+E: Seuls les composants web sont chargés ; les services se fournissent avec @MockitoBean. MockMvc envoie des requêtes simulées et vérifie code, en-têtes et JSON, en quelques centaines de millisecondes.

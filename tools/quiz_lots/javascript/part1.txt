@@ -1,0 +1,470 @@
+@001
+Q: Qu'affiche ce code ?
+C: [1, 2, 3, 4]
+W: [1, 2, 3]
+W: Une TypeError
+W: undefined
+E: const empêche de réassigner la variable, pas de modifier l'objet ou le tableau qu'elle désigne. Pour un objet vraiment non modifiable, on utilise Object.freeze, qui reste superficiel.
+```javascript
+const nombres = [1, 2, 3];
+nombres.push(4);
+console.log(nombres);
+```
+
+@002
+Q: Que vaut 0.1 + 0.2 === 0.3 en JavaScript ?
+C: false, car 0.1 + 0.2 vaut 0.30000000000000004
+W: true, car JavaScript arrondit les décimales au calcul
+W: Une erreur de précision levée au calcul
+W: true, car === compare les valeurs arrondies
+E: Les nombres suivent la norme IEEE 754 : 0,1 n'a pas de représentation binaire exacte. Pour de l'argent, on compte en centimes entiers ; pour comparer, Math.abs(a - b) < Number.EPSILON.
+
+@003
+Q: Qu'affiche ce code ?
+C: [1, 10, 2, 25]
+W: [1, 2, 10, 25]
+W: [25, 10, 2, 1]
+W: [10, 1, 2, 25]
+E: Sans fonction de comparaison, sort compare les éléments comme des chaînes : "10" vient avant "2". On écrit nombres.sort((a, b) => a - b) ; sort modifie aussi le tableau d'origine.
+```javascript
+const nombres = [10, 2, 25, 1];
+console.log(nombres.sort());
+```
+
+@004
+Q: Compléter ce code qui garde les commandes dont le montant dépasse 100.
+A: filter
+E: filter renvoie un nouveau tableau avec les éléments pour lesquels la fonction renvoie vrai. map transforme chaque élément, find renvoie le premier qui convient.
+```javascript
+const grosses = commandes.____(c => c.montant > 100);
+```
+
+@005
+Q: Associer chaque méthode de tableau à ce qu'elle renvoie.
+P: map => Un nouveau tableau d'éléments transformés
+P: filter => Un nouveau tableau des éléments retenus
+P: find => Le premier élément qui convient, ou undefined
+P: some => true si au moins un élément convient
+P: reduce => Une valeur accumulée à partir de tous les éléments
+E: Ces méthodes ne modifient pas le tableau d'origine, contrairement à push, sort, splice ou reverse. Les versions toSorted et toReversed renvoient une copie.
+
+@006
+Q: Que vaut total après ce code ?
+N: 60
+E: reduce part de la valeur initiale 0 et ajoute chaque montant : 0 + 10 + 20 + 30. Sans valeur initiale, reduce prend le premier élément, ici un objet, et le résultat serait faux.
+```javascript
+const lignes = [{ montant: 10 }, { montant: 20 }, { montant: 30 }];
+const total = lignes.reduce((somme, l) => somme + l.montant, 0);
+```
+
+@007
+Q: Quelle différence entre ?? et || pour donner une valeur par défaut ?
+C: ?? ne remplace que null et undefined, || remplace aussi 0, "" et false
+W: ?? remplace les valeurs fausses, || ne remplace que null et undefined
+W: ?? s'utilise avec les nombres, || avec les chaînes de caractères
+W: ?? lève une erreur si la valeur est absente, || renvoie undefined
+E: Avec quantite || 1, une quantité de 0 devient 1, ce qui est faux. quantite ?? 1 garde le 0 et ne remplace que l'absence de valeur.
+
+@008
+Q: Que vaut remise après ce code ?
+N: 0
+E: L'opérateur ?? garde 0, qui n'est ni null ni undefined. Avec ||, remise vaudrait 10 et le client recevrait une remise qu'il n'a pas.
+```javascript
+const client = { remise: 0 };
+const remise = client.remise ?? 10;
+```
+
+@009
+Q: Qu'affiche ce code ?
+C: Bonjour Ada, vous avez 3 messages
+W: Bonjour ${nom}, vous avez ${n} messages
+W: Une erreur de syntaxe sur les accolades
+W: Bonjour undefined, vous avez 3 messages
+E: Les gabarits de chaîne, entre accents graves, évaluent les expressions entre ${}. Avec des guillemets simples ou doubles, le texte serait affiché tel quel.
+```javascript
+const nom = "Ada";
+const n = 3;
+console.log(`Bonjour ${nom}, vous avez ${n} messages`);
+```
+
+@010
+Q: Que fait l'opérateur de décomposition dans cette ligne ?
+C: Il crée un nouvel objet avec les propriétés de client, dont ville remplacée
+W: Il modifie l'objet client en place en changeant la valeur de sa ville
+W: Il crée un tableau contenant l'objet client suivi de la nouvelle valeur de ville
+W: Il copie client en profondeur, objets imbriqués compris
+E: La copie est superficielle : un objet imbriqué, comme client.adresse, reste partagé entre les deux. structuredClone(client) fait une copie profonde.
+```javascript
+const modifie = { ...client, ville: "Lille" };
+```
+
+@011
+Q: Quelle différence entre == et Object.is pour NaN ?
+C: NaN == NaN vaut false, Object.is(NaN, NaN) vaut true
+W: NaN == NaN vaut true, Object.is(NaN, NaN) vaut false
+W: Les deux valent false, NaN ne s'égale à lui-même nulle part
+W: Les deux valent true, NaN reste un nombre
+E: NaN est le seul nombre différent de lui-même. Pour le tester, on utilise Number.isNaN(x) ; la fonction globale isNaN convertit d'abord, et isNaN("abc") vaut true.
+
+@012
+Q: Compléter ce code qui récupère le dernier élément du tableau.
+A: at
+E: at(-1) compte depuis la fin ; c'est plus lisible que liste[liste.length - 1]. liste[-1] renvoie undefined, car les crochets ne gèrent pas les indices négatifs.
+```javascript
+const dernier = liste.____(-1);
+```
+
+@013
+Q: Pourquoi utiliser textContent plutôt qu'innerHTML pour afficher un texte saisi par l'utilisateur ?
+C: textContent n'interprète pas le HTML et empêche l'injection de script
+W: textContent s'affiche plus vite que innerHTML dans les vieux navigateurs
+W: textContent conserve la mise en forme du texte saisi dans le formulaire
+W: textContent fonctionne sans que la page soit entièrement chargée
+E: Un commentaire contenant <img src=x onerror=…> exécuterait du code dans la page de chaque visiteur avec innerHTML : c'est une faille XSS. Les frameworks échappent le texte par défaut pour la même raison.
+
+@014
+Q: Que fait addEventListener("click", gerer) sur un bouton ?
+C: Il appelle gerer à chaque clic, en plus des autres écouteurs déjà posés
+W: Il remplace l'écouteur de clic déjà défini dans l'attribut onclick du bouton
+W: Il appelle gerer une seule fois, au premier clic, puis retire l'écouteur
+W: Il appelle gerer immédiatement, puis à chaque clic sur l'élément parent
+E: Plusieurs écouteurs peuvent coexister ; l'option { once: true } le retire après le premier appel. Pour le retirer à la main, removeEventListener exige la même fonction, pas une fonction fléchée recréée.
+
+@015
+Q: À quoi sert event.preventDefault() dans l'écouteur submit d'un formulaire ?
+C: À empêcher l'envoi et le rechargement de la page pour traiter le formulaire en JavaScript
+W: À empêcher l'événement de remonter vers les éléments parents du formulaire envoyé
+W: À vider les champs du formulaire une fois l'envoi vers le serveur terminé
+W: À valider les champs requis du formulaire avant de l'envoyer au serveur
+E: On récupère ensuite les champs avec new FormData(event.target) et on les envoie avec fetch. stopPropagation, lui, arrête la remontée de l'événement, sans empêcher l'action par défaut.
+
+@016
+Q: Associer chaque déclaration de variable à son comportement.
+P: var => Portée de fonction, hissée et initialisée à undefined
+P: let => Portée de bloc, réassignable
+P: const => Portée de bloc, non réassignable
+P: Variable sans déclaration => Globale implicite, refusée en mode strict
+E: let et const sont aussi hissées, mais inaccessibles avant leur déclaration (zone morte temporelle). Les modules ES sont toujours en mode strict, ce qui supprime les globales implicites.
+
+@017
+Q: Qu'affiche ce code ?
+C: Une ReferenceError
+W: undefined
+W: 5
+W: null
+E: let est dans la zone morte temporelle jusqu'à sa déclaration : y accéder lève une erreur. Avec var, la ligne afficherait undefined, ce qui masque souvent un ordre d'exécution erroné.
+```javascript
+console.log(stock);
+let stock = 5;
+```
+
+@018
+Q: Que contient la propriété response.ok renvoyée par fetch ?
+C: true si le code HTTP est entre 200 et 299
+W: true si le serveur a répondu, quel que soit le code
+W: true si le corps de la réponse est du JSON valide
+W: true si la requête a été envoyée en HTTPS
+E: fetch ne rejette sa promesse que sur une erreur réseau : une réponse 404 ou 500 la résout normalement. On teste donc response.ok avant de lire le corps.
+
+@019
+Q: Compléter ce code qui convertit le corps de la réponse en objet.
+A: json
+E: response.json() renvoie une promesse : il faut l'attendre. Le corps ne se lit qu'une fois ; response.clone() permet de le lire deux fois.
+```javascript
+const reponse = await fetch("/api/commandes/42");
+if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
+const commande = await reponse.____();
+```
+
+@020
+Q: Que contient localStorage après un rechargement de la page ?
+C: Les mêmes données, gardées pour ce domaine jusqu'à leur suppression
+W: Rien, car localStorage est vidé à chaque rechargement de la page
+W: Les données des autres sites ouverts dans le même navigateur
+W: Les données de la session, effacées après trente minutes d'inactivité
+E: localStorage ne stocke que des chaînes : on passe par JSON.stringify et JSON.parse. Il est lisible par tout script de la page : on n'y met pas de jeton d'accès sensible, exposé à une faille XSS.
+
+@021
+Q: Que fait la commande npm install dans un projet qui a un package-lock.json ?
+C: Elle installe les dépendances, en suivant les versions du fichier de verrouillage
+W: Elle met à jour les dépendances vers leur dernière version majeure
+W: Elle publie le projet sur le registre npm sous le nom du package.json
+W: Elle supprime les dépendances qui ne sont plus utilisées par le code
+E: En intégration continue, npm ci est préférable : il supprime node_modules, installe exactement le verrou et échoue s'il ne correspond pas au package.json.
+
+@022
+Q: Quelles versions accepte la dépendance "express": "^4.21.0" ?
+C: Les versions 4.x.x à partir de 4.21.0, sans passer à 5
+W: La version 4.21.0 exactement, figée par le symbole ^
+W: Les versions 4.21.x seulement, pas 4.22.0
+W: Toute version supérieure ou égale à 4.21.0
+E: ^ autorise les versions mineures et correctives, ~ seulement les correctives. Le package-lock.json fige la version réellement installée, pour que tous les postes aient la même.
+
+@023
+Q: Associer chaque fichier ou dossier d'un projet Node.js à son rôle.
+P: package.json => Décrire le projet, ses scripts et ses dépendances
+P: package-lock.json => Figer les versions installées de tout l'arbre
+P: node_modules => Contenir les paquets installés, à ne pas versionner
+P: .npmrc => Régler le registre et les options de npm
+E: package-lock.json se commite ; node_modules va dans .gitignore. Un jeton d'accès au registre ne doit pas être écrit en clair dans un .npmrc versionné.
+
+@024
+Q: Quelle différence entre une exportation nommée et une exportation par défaut d'un module ES ?
+C: Une nommée s'importe entre accolades sous son nom, celle par défaut sous le nom choisi
+W: Une nommée se charge au démarrage, celle par défaut seulement lors de son premier appel
+W: Une nommée reste privée au module, celle par défaut est visible depuis les autres
+W: Une nommée exige une classe, celle par défaut accepte une fonction ou une valeur
+E: import { calculer } from "./tva.js" pour une exportation nommée, import Tva from "./tva.js" pour celle par défaut. Les exportations nommées facilitent le renommage par l'éditeur et l'élimination du code mort.
+
+@025
+Q: Que renvoie typeof [] en JavaScript ?
+C: "object"
+W: "array"
+W: "list"
+W: "undefined"
+E: Les tableaux sont des objets. Array.isArray(valeur) est le bon test ; typeof distingue seulement les types primitifs, les fonctions et le reste.
+
+@026
+Q: Remettre dans l'ordre l'exécution de ce code par la boucle d'événements.
+O: Le code synchrone affiche A puis D
+O: La pile d'appels se vide
+O: Les microtâches s'exécutent : la promesse affiche C
+O: La tâche du minuteur s'exécute et affiche B
+O: La boucle attend l'événement suivant
+E: Les microtâches (promesses, queueMicrotask) passent toutes avant la tâche suivante, même un setTimeout de 0 ms. L'affichage est donc A, D, C, B.
+```javascript
+console.log("A");
+setTimeout(() => console.log("B"), 0);
+Promise.resolve().then(() => console.log("C"));
+console.log("D");
+```
+
+@027
+Q: Pourquoi une boucle synchrone de cinq secondes fige-t-elle toute la page ?
+C: Le code JavaScript de la page tourne sur un seul fil, qui ne traite plus les événements
+W: Le navigateur réserve un seul processeur à chaque onglet ouvert par l'utilisateur du poste
+W: La page attend la fin de la boucle pour recharger ses fichiers depuis le serveur
+W: Les boucles longues désactivent la boucle d'événements jusqu'au rechargement
+E: Clics, affichage et minuteurs attendent que la pile d'appels se vide. On découpe le travail en morceaux, on le confie à un Web Worker, ou on rend la main avec await entre deux paquets.
+
+@028
+Q: Combien de temps attend ce code avant d'afficher « fini », si chaque attente prend 1 s ?
+N: 3
+U: s
+E: Chaque await attend la fin de la précédente : les trois attentes s'enchaînent. Lancées ensemble avec Promise.all, elles prendraient 1 s au total.
+```javascript
+const attendre = ms => new Promise(r => setTimeout(r, ms));
+await attendre(1000);
+await attendre(1000);
+await attendre(1000);
+console.log("fini");
+```
+
+@029
+Q: Compléter ce code pour lancer les trois appels en parallèle et attendre tous les résultats.
+A: Promise.all
+E: Les trois requêtes partent en même temps ; la durée totale est celle de la plus lente. Si l'une échoue, Promise.all rejette tout de suite, d'où Promise.allSettled pour garder les réussites.
+```javascript
+const [client, commandes, factures] = await ____([
+  lireClient(id), lireCommandes(id), lireFactures(id),
+]);
+```
+
+@030
+Q: Associer chaque méthode de Promise à son comportement.
+P: Promise.all => Attendre toutes les promesses, rejeter au premier échec
+P: Promise.allSettled => Attendre toutes les promesses, réussites et échecs compris
+P: Promise.race => Suivre la première promesse terminée, réussie ou non
+P: Promise.any => Suivre la première réussite, rejeter si toutes échouent
+E: Promise.race sert souvent à imposer un délai maximal en faisant la course avec un minuteur. AbortSignal.timeout(5000) passé à fetch fait la même chose plus proprement.
+
+@031
+Q: Pourquoi cette erreur n'est-elle pas attrapée par le try ?
+C: La promesse n'est pas attendue : elle échoue après la sortie du bloc try
+W: Le bloc try n'attrape que les erreurs de syntaxe, pas celles de l'exécution
+W: La fonction envoyer ne renvoie pas de valeur et ne peut donc pas échouer
+W: Le bloc catch doit déclarer le type d'erreur pour l'attraper
+E: Sans await, try ne voit que la création de la promesse. Le rejet devient une « unhandled rejection » qui, sous Node.js, arrête le processus par défaut.
+```javascript
+try {
+  envoyer(message);
+} catch (erreur) {
+  console.error(erreur);
+}
+```
+
+@032
+Q: Qu'est-ce qu'une fermeture (closure) en JavaScript ?
+C: Une fonction qui garde l'accès aux variables du contexte où elle a été créée
+W: Une fonction qui ferme les connexions réseau ouvertes avant de se terminer
+W: Une fonction qui ne peut plus être appelée une fois qu'elle a été exécutée
+W: Une fonction déclarée dans un module et invisible depuis les autres modules du projet
+E: Un compteur créé par une fonction usine garde son état privé entre les appels. C'est aussi la source de fuites de mémoire quand une fermeture longue durée retient un gros objet.
+
+@033
+Q: Qu'affiche ce code ?
+C: 3, 3, 3
+W: 0, 1, 2
+W: 1, 2, 3
+W: undefined trois fois
+E: var a une portée de fonction : les trois fonctions partagent le même i, qui vaut 3 quand elles s'exécutent. Avec let, chaque tour de boucle a son propre i et le code affiche 0, 1, 2.
+```javascript
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0);
+}
+```
+
+@034
+Q: Compléter ce code qui crée un compteur privé grâce à une fermeture.
+A: return
+E: La fonction renvoyée garde l'accès à valeur, invisible depuis l'extérieur. Chaque appel de creerCompteur crée un compteur indépendant.
+```javascript
+function creerCompteur() {
+  let valeur = 0;
+  ____ () => ++valeur;
+}
+const suivant = creerCompteur();
+suivant(); suivant();
+```
+
+@035
+Q: Que vaut this dans une méthode appelée sous forme detachee() après const detachee = objet.methode ?
+C: undefined en mode strict, car la méthode a perdu son objet
+W: L'objet d'origine, car this est fixé à la déclaration de la méthode
+W: La fonction elle-même, car elle est appelée seule
+W: Le module courant, car le code est un module ES
+E: this dépend de la façon dont la fonction est appelée. On fixe this avec objet.methode.bind(objet), ou on passe une fonction fléchée, comme () => objet.methode().
+
+@036
+Q: Que permet un champ #prive dans une classe JavaScript ?
+C: De rendre le champ inaccessible hors de la classe, vérifié par le langage
+W: De chiffrer la valeur du champ dans la mémoire du navigateur
+W: De partager le champ entre les instances de la classe
+W: De masquer le champ dans JSON.stringify sans le rendre privé
+E: Contrairement à la convention _prive, l'accès à objet.#solde depuis l'extérieur est une erreur de syntaxe. Les méthodes #privées existent aussi.
+```javascript
+class Compte {
+  #solde = 0;
+  deposer(montant) { this.#solde += montant; }
+  get solde() { return this.#solde; }
+}
+```
+
+@037
+Q: Quelle différence entre un objet et une Map pour stocker des paires clé-valeur ?
+C: Une Map accepte toute valeur comme clé et garde l'ordre d'insertion
+W: Une Map se sérialise directement en JSON, contrairement à un objet ordinaire
+W: Une Map accepte les clés de type chaîne, l'objet n'importe quel type
+W: Une Map interdit la modification des valeurs après leur ajout
+E: Une Map a aussi une taille directe (size) et ne risque pas de collision avec des propriétés héritées comme toString. Un objet reste plus simple pour une structure aux clés connues.
+
+@038
+Q: Que vaut la taille de cet ensemble ?
+N: 3
+E: Un Set ne garde qu'un exemplaire de chaque valeur. [...new Set(tableau)] est la façon courte de retirer les doublons d'un tableau de valeurs simples.
+```javascript
+const etiquettes = new Set(["urgent", "client", "urgent", "devis"]);
+console.log(etiquettes.size);
+```
+
+@039
+Q: Pourquoi JSON.parse(JSON.stringify(objet)) est-il une mauvaise copie profonde ?
+C: Les dates deviennent des chaînes et les fonctions, Map ou undefined disparaissent
+W: JSON.stringify refuse les objets contenant plus de dix niveaux d'imbrication successifs
+W: La copie partage encore les objets imbriqués avec l'objet d'origine
+W: JSON.parse renvoie un tableau au lieu d'un objet pour les données copiées
+E: structuredClone copie les dates, Map, Set et les références circulaires. Il refuse en revanche les fonctions et les éléments du DOM.
+
+@040
+Q: Que vaut new Date(2026, 1, 15).getMonth() ?
+N: 1
+E: Les mois commencent à 0 : 1 désigne février. Cette date est en heure locale ; pour échanger des dates, on utilise des chaînes ISO 8601 en UTC, comme 2026-02-15T00:00:00Z.
+
+@041
+Q: Comment afficher 1234.5 au format monétaire français, soit 1 234,50 € ?
+C: Avec Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" })
+W: Avec montant.toFixed(2) suivi du symbole de l'euro ajouté en fin de chaîne
+W: Avec montant.toString("fr-FR") qui applique les règles de la langue
+W: Avec parseFloat(montant) qui insère les espaces des milliers
+E: Intl gère l'espace insécable des milliers, la virgule décimale et la place du symbole selon la langue. toFixed renvoie « 1234.50 », avec un point et sans séparateur de milliers.
+
+@042
+Q: Pourquoi déclencher une recherche à chaque frappe pose-t-il problème, et que fait une fonction debounce ?
+C: Chaque frappe envoie une requête ; debounce attend une pause de saisie pour n'en envoyer qu'une
+W: Chaque frappe recharge la page ; debounce garde la page affichée pendant la saisie
+W: Chaque frappe efface le champ ; debounce conserve le texte saisi jusqu'à l'envoi
+W: Chaque frappe bloque le clavier ; debounce rend la main à l'utilisateur plus vite
+E: Pour « clavier », sept requêtes partent sans debounce, dont les réponses peuvent arriver dans le désordre. Avec une attente de 300 ms, une seule part ; AbortController annule en plus une requête devenue inutile.
+
+@043
+Q: Que permet la délégation d'événements ?
+C: Gérer les clics de nombreux éléments avec un seul écouteur posé sur leur parent
+W: Transmettre un événement d'une page à une autre page ouverte du même site web
+W: Retarder un événement jusqu'à ce que la page ait fini de se charger
+W: Confier le traitement d'un événement à un Web Worker en arrière-plan
+E: L'événement remonte vers le parent, où event.target.closest("li") retrouve l'élément cliqué. Cela fonctionne aussi pour les éléments ajoutés après coup.
+
+@044
+Q: Compléter cet écouteur posé sur la liste pour retrouver la ligne cliquée.
+A: closest
+E: closest remonte depuis l'élément cliqué jusqu'au premier ancêtre qui correspond au sélecteur. Un clic sur un span à l'intérieur du li retrouve bien la ligne.
+```javascript
+liste.addEventListener("click", event => {
+  const ligne = event.target.____("li");
+  if (ligne) ouvrir(ligne.dataset.id);
+});
+```
+
+@045
+Q: Remettre dans l'ordre les phases d'un événement de clic dans le DOM.
+O: Capture : de la fenêtre vers l'élément cliqué
+O: Cible : les écouteurs de l'élément cliqué
+O: Remontée : de l'élément vers ses ancêtres
+O: Action par défaut du navigateur si elle n'a pas été empêchée
+E: Les écouteurs sont appelés pendant la remontée par défaut ; { capture: true } les place dans la phase de capture. stopPropagation arrête la propagation à l'étape en cours.
+
+@046
+Q: Pourquoi le navigateur bloque-t-il cette requête fetch vers https://api.autre-site.fr depuis https://monsite.fr ?
+C: Le serveur de l'API ne renvoie pas d'en-tête CORS autorisant l'origine du site
+W: Les requêtes fetch ne peuvent viser que le domaine qui a servi la page
+W: Le navigateur interdit les requêtes HTTPS vers un domaine qui a une autre extension
+W: Le pare-feu du poste bloque les requêtes JavaScript vers un autre domaine
+E: C'est la politique de même origine : seul le serveur appelé peut lever la restriction avec Access-Control-Allow-Origin. Le message apparaît dans la console du navigateur, pas dans les journaux du serveur.
+
+@047
+Q: Qu'est-ce qui distingue un module CommonJS d'un module ES dans Node.js ?
+C: CommonJS utilise require et module.exports, ES utilise import et export
+W: CommonJS fonctionne dans le navigateur, ES dans Node.js et pas ailleurs
+W: CommonJS charge les modules en parallèle, ES les charge un par un
+W: CommonJS impose TypeScript, ES accepte le JavaScript ordinaire
+E: "type": "module" dans package.json, ou l'extension .mjs, active les modules ES. Ces deux mondes cohabitent mal : importer un module ES depuis require demande une version récente de Node.js.
+
+@048
+Q: Compléter ce package.json pour que npm test lance Vitest.
+A: scripts
+E: npm run nom lance un script ; test, start et build ont des raccourcis. Les scripts utilisent les binaires de node_modules/.bin sans installation globale.
+```json
+{
+  "name": "atelier",
+  "____": {
+    "test": "vitest run",
+    "lint": "eslint ."
+  }
+}
+```
+
+@049
+Q: Que contient process.env.PORT dans une application Node.js ?
+C: La variable d'environnement PORT, sous forme de chaîne, ou undefined
+W: Le port choisi au hasard par Node.js au démarrage du serveur web local
+W: Le numéro du port écrit dans le fichier package.json du projet
+W: Le port du serveur web déjà en marche sur la même machine
+E: Les variables d'environnement sont toujours des chaînes : Number(process.env.PORT ?? 3000) donne un nombre avec une valeur par défaut. Depuis Node.js 20.6, --env-file=.env charge un fichier sans dépendance.
+
+@050
+Q: Pourquoi readFileSync est-il à éviter dans le traitement d'une requête d'un serveur Node.js ?
+C: Il bloque la boucle d'événements et suspend toutes les autres requêtes
+W: Il ne sait pas lire les fichiers encodés en UTF-8 sur le disque
+W: Il ouvre le fichier en écriture et peut l'effacer par erreur
+W: Il lit le fichier depuis le cache du navigateur du client
+E: Node.js traite toutes les requêtes sur un seul fil : une lecture bloquante de 200 ms les arrête toutes. fs/promises avec await laisse les autres requêtes avancer pendant la lecture.

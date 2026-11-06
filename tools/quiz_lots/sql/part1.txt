@@ -1,0 +1,461 @@
+@001
+Q: Compléter cette requête qui trie les clients par ville, puis par nom.
+A: ORDER BY
+E: Sans ORDER BY, l'ordre des lignes n'est pas garanti, même s'il semble stable en test. Chaque colonne peut avoir son sens : ORDER BY ville ASC, nom DESC.
+```sql
+SELECT nom, ville FROM client
+____ ville, nom;
+```
+
+@002
+Q: Que renvoie cette requête ?
+C: Le nombre de commandes de chaque client, pour les clients ayant commandé
+W: Le nombre total de commandes, répété sur chaque ligne de la table client
+W: Le nombre de clients différents ayant passé au moins une commande
+W: La liste des commandes triées par client, sans regroupement
+E: Chaque groupe correspond à un client_id présent dans commande. Les clients sans commande n'apparaissent pas : il faudrait partir de client avec un LEFT JOIN et compter commande.id.
+```sql
+SELECT client_id, COUNT(*) AS nb
+FROM commande
+GROUP BY client_id;
+```
+
+@003
+Q: Pourquoi cette requête est-elle refusée par PostgreSQL ?
+C: La colonne nom n'est ni dans le GROUP BY ni dans une fonction d'agrégat
+W: La fonction COUNT ne peut pas être utilisée avec une clause GROUP BY sur une ville
+W: La table client doit être nommée avec un alias pour être regroupée
+W: Le GROUP BY doit contenir chacune des colonnes de la table client
+E: Pour chaque ville, plusieurs noms sont possibles : PostgreSQL refuse de choisir. On ajoute nom au GROUP BY ou on l'agrège (MIN(nom), STRING_AGG(nom, ', ')). MySQL l'accepte selon son mode, avec un résultat imprévisible.
+```sql
+SELECT ville, nom, COUNT(*)
+FROM client
+GROUP BY ville;
+```
+
+@004
+Q: Associer chaque fonction d'agrégat à ce qu'elle calcule.
+P: COUNT(*) => Le nombre de lignes du groupe
+P: SUM(montant) => Le total des montants non nuls
+P: AVG(montant) => La moyenne des montants non nuls
+P: MIN(date_commande) => La date la plus ancienne du groupe
+P: COUNT(DISTINCT client_id) => Le nombre de clients différents
+E: Les agrégats ignorent les NULL, sauf COUNT(*). AVG sur une colonne avec des NULL ne divise que par les valeurs présentes, ce qui peut surprendre si NULL voulait dire zéro.
+
+@005
+Q: Que vaut COALESCE(remise, 0) quand remise est NULL ?
+C: 0
+W: NULL
+W: Une erreur
+W: Une chaîne vide
+E: COALESCE renvoie le premier argument non nul. Utile pour un calcul : prix - remise vaut NULL si remise est NULL, alors que prix - COALESCE(remise, 0) donne le prix.
+
+@006
+Q: Que vaut prix * quantite si quantite est NULL ?
+C: NULL
+W: 0
+W: prix
+W: Une erreur
+E: Toute opération arithmétique avec NULL donne NULL. Une contrainte NOT NULL avec une valeur par défaut évite d'avoir à protéger chaque calcul.
+
+@007
+Q: Compléter cette requête qui classe les commandes en « petite » ou « grande » selon leur montant.
+A: CASE
+E: CASE WHEN … THEN … ELSE … END donne une valeur selon des conditions évaluées dans l'ordre. Sans ELSE, les lignes qui ne remplissent aucune condition reçoivent NULL.
+```sql
+SELECT id,
+       ____ WHEN montant >= 500 THEN 'grande' ELSE 'petite' END AS taille
+FROM commande;
+```
+
+@008
+Q: Que fait la clause LIMIT 10 sans ORDER BY ?
+C: Elle renvoie dix lignes quelconques, pas forcément les mêmes d'une fois à l'autre
+W: Elle renvoie les dix premières lignes insérées dans la table, dans l'ordre d'insertion
+W: Elle renvoie les dix lignes de plus petite clé primaire, triées dans l'ordre croissant
+W: Elle renvoie les dix lignes les plus récentes, d'après la date de modification
+E: Le moteur rend les lignes dans l'ordre qui l'arrange, selon le plan choisi. Pour « les dix dernières commandes », on écrit ORDER BY date_commande DESC LIMIT 10.
+
+@009
+Q: Que renvoie cette requête avec LIKE ?
+C: Les clients dont le nom commence par Dup
+W: Les clients dont le nom contient Dup n'importe où
+W: Les clients dont le nom finit par Dup
+W: Les clients nommés exactement Dup
+E: % remplace n'importe quelle suite de caractères, _ un seul caractère. LIKE est sensible à la casse dans PostgreSQL ; ILIKE ne l'est pas.
+```sql
+SELECT nom FROM client WHERE nom LIKE 'Dup%';
+```
+
+@010
+Q: Compléter cette requête qui ne renvoie qu'une fois chaque ville.
+A: DISTINCT
+E: DISTINCT supprime les lignes en double du résultat. Un DISTINCT ajouté pour masquer des doublons venus d'une jointure cache souvent une jointure mal écrite.
+```sql
+SELECT ____ ville FROM client;
+```
+
+@011
+Q: Que renvoie BETWEEN 10 AND 20 ?
+C: Les valeurs de 10 à 20, bornes comprises
+W: Les valeurs de 11 à 19, bornes exclues
+W: Les valeurs de 10 à 19, borne haute exclue
+W: Les valeurs de 11 à 20, borne basse exclue
+E: Pour des dates avec heure, date_commande BETWEEN '2026-01-01' AND '2026-01-31' oublie la journée du 31 après minuit. On écrit plutôt >= '2026-01-01' AND < '2026-02-01'.
+
+@012
+Q: Combien de lignes renvoie un CROSS JOIN entre une table de 4 tailles et une table de 6 couleurs ?
+N: 24
+U: lignes
+E: Le produit cartésien associe chaque ligne de l'une à chaque ligne de l'autre : 4 × 6. Une jointure sans condition, ou avec une condition oubliée, produit le même effet, parfois des millions de lignes.
+
+@013
+Q: Associer chaque contrainte à ce qu'elle garantit.
+P: PRIMARY KEY => Une valeur unique et non nulle qui identifie la ligne
+P: UNIQUE => L'absence de doublon dans la colonne
+P: NOT NULL => La présence d'une valeur
+P: CHECK (quantite > 0) => Une règle vérifiée à chaque écriture
+P: FOREIGN KEY => L'existence de la ligne référencée
+E: Les contraintes protègent les données quel que soit le programme qui écrit. Une règle vérifiée seulement dans l'application est contournée par le premier script d'import.
+
+@014
+Q: Que fait ON DELETE CASCADE sur une clé étrangère de ligne_commande vers commande ?
+C: La suppression d'une commande supprime aussi ses lignes
+W: La suppression d'une ligne supprime aussi sa commande
+W: La suppression d'une commande est refusée s'il reste des lignes
+W: La suppression d'une commande met à NULL la clé des lignes
+E: C'est adapté aux lignes qui n'ont pas de sens sans leur commande. Pour un client lié à des factures, on préfère le refus par défaut (RESTRICT) : supprimer un client ne doit pas effacer la comptabilité.
+
+@015
+Q: Compléter cette requête qui ajoute un client.
+A: INSERT INTO
+E: Nommer les colonnes rend l'insertion robuste à l'ajout d'une colonne dans la table. Les valeurs venant d'un utilisateur passent par des paramètres, jamais par concaténation.
+```sql
+____ client (nom, email, ville)
+VALUES ('Durand', 'durand@exemple.fr', 'Lille');
+```
+
+@016
+Q: Que fait cette requête si on oublie la clause WHERE ?
+C: Elle passe toutes les commandes au statut annulée
+W: Elle est refusée car WHERE est requis avec UPDATE
+W: Elle ne modifie que la dernière ligne insérée
+W: Elle ne modifie que les commandes déjà annulées
+E: Sans WHERE, la mise à jour touche toute la table. On écrit d'abord le SELECT avec le même WHERE pour compter les lignes, et on travaille dans une transaction pour pouvoir annuler.
+```sql
+UPDATE commande SET statut = 'annulee';
+```
+
+@017
+Q: Quelle différence entre DELETE FROM commande et TRUNCATE commande ?
+C: TRUNCATE vide la table d'un coup sans parcourir les lignes, DELETE les supprime une à une
+W: TRUNCATE supprime la table et sa structure, DELETE ne supprime que les données
+W: TRUNCATE garde les lignes récentes, DELETE supprime l'ensemble des lignes de la table
+W: TRUNCATE s'annule par ROLLBACK, DELETE ne peut pas être annulé une fois lancé
+E: TRUNCATE est bien plus rapide sur une grosse table et ne déclenche pas les triggers ligne par ligne. Dans PostgreSQL, il reste annulable dans une transaction ; DROP TABLE supprime la structure.
+
+@018
+Q: Que renvoie cette requête avec IN ?
+C: Les commandes des statuts « payee » ou « expediee »
+W: Les commandes dont le statut contient les deux mots
+W: Les commandes qui ont changé de statut deux fois
+W: Les commandes qui ont un autre statut que ces deux-là
+E: IN équivaut à une suite de OR. NOT IN avec une liste qui contient NULL ne renvoie rien du tout : une raison de préférer NOT EXISTS avec une sous-requête.
+```sql
+SELECT id FROM commande WHERE statut IN ('payee', 'expediee');
+```
+
+@019
+Q: Quel est le rôle d'un alias de table, comme c dans FROM client c ?
+C: Raccourcir les noms et distinguer deux usages d'une même table
+W: Créer une copie temporaire de la table pour la durée de la requête
+W: Donner un nom permanent à la table, visible par les autres requêtes
+W: Accélérer la requête en évitant la relecture du nom de la table
+E: Les alias deviennent indispensables pour joindre une table à elle-même, comme un employé et son responsable. Préfixer les colonnes (c.nom) évite les ambiguïtés quand deux tables ont une colonne du même nom.
+
+@020
+Q: Compléter cette requête qui associe chaque employé à son responsable, stocké dans la même table.
+A: LEFT JOIN
+E: L'auto-jointure lit la table deux fois sous deux alias. Avec un LEFT JOIN, le directeur, qui n'a pas de responsable, apparaît avec NULL ; une jointure interne l'écarterait.
+```sql
+SELECT e.nom, r.nom AS responsable
+FROM employe e
+____ employe r ON r.id = e.responsable_id;
+```
+
+@021
+Q: Que renvoie cette requête ?
+C: Les clients qui ont au moins une commande
+W: Les clients qui n'ont pas encore passé de commande
+W: Les commandes qui ont un client connu
+W: Le nombre de commandes par client
+E: EXISTS s'arrête dès qu'une ligne correspond, sans compter toutes les commandes. NOT EXISTS donne les clients sans commande, y compris quand des colonnes contiennent NULL.
+```sql
+SELECT nom FROM client c
+WHERE EXISTS (SELECT 1 FROM commande o WHERE o.client_id = c.id);
+```
+
+@022
+Q: Pourquoi cette requête ne renvoie-t-elle aucune ligne alors que des clients n'ont pas commandé ?
+C: La sous-requête renvoie un NULL, et NOT IN avec un NULL n'est jamais vrai
+W: NOT IN ne fonctionne pas avec une sous-requête dans PostgreSQL
+W: La sous-requête doit être nommée avec un alias pour être utilisée
+W: Les clients sans commande sont exclus par la clé étrangère
+E: x NOT IN (1, 2, NULL) vaut inconnu, jamais vrai, dès qu'une commande a un client_id nul. NOT EXISTS ou un LEFT JOIN … WHERE o.id IS NULL donnent le bon résultat.
+```sql
+SELECT nom FROM client
+WHERE id NOT IN (SELECT client_id FROM commande);
+```
+
+@023
+Q: Remettre dans l'ordre la conception d'une base pour une nouvelle application.
+O: Lister les entités et leurs attributs avec le métier
+O: Définir les relations et leurs cardinalités
+O: Normaliser pour supprimer les redondances
+O: Choisir les types, les clés et les contraintes
+O: Créer les index d'après les requêtes réellement prévues
+E: Les index se décident en dernier, à partir des recherches attendues. Un schéma qui commence par les écrans de l'application mélange souvent plusieurs entités dans une même table.
+
+@024
+Q: Qu'impose la première forme normale ?
+C: Des valeurs atomiques, sans liste ni groupe répété dans une colonne
+W: Une clé primaire composée de plusieurs colonnes dans chaque table créée
+W: L'absence de colonne pouvant contenir la valeur NULL
+W: Une table séparée pour chaque colonne de type texte
+E: Une colonne telephones = '0601…, 0702…' viole la première forme normale : on ne peut ni chercher ni contraindre un numéro. On crée une table telephone reliée au client.
+
+@025
+Q: Une table commande répète le nom et la ville du client sur chaque ligne. Quel problème cela pose-t-il ?
+C: Un changement de ville doit être reporté partout, sous peine d'incohérence
+W: La table ne peut plus recevoir de clé primaire tant que ces colonnes existent
+W: Les requêtes sur la table commande deviennent refusées par le moteur
+W: Les noms de clients sont limités à la taille de la colonne de commande
+E: C'est une anomalie de mise à jour, corrigée en plaçant ces données dans client, référencé par client_id. On duplique volontairement seulement une valeur à figer, comme l'adresse de livraison au jour de la commande.
+
+@026
+Q: Remettre dans l'ordre les étapes logiques de l'exécution de cette requête.
+O: FROM et JOIN : réunir commande et client
+O: WHERE : garder les commandes de 2026
+O: GROUP BY : regrouper par ville
+O: HAVING : garder les villes de plus de 10 commandes
+O: SELECT puis ORDER BY : calculer les colonnes et trier
+E: C'est pourquoi un alias défini dans SELECT ne peut pas servir dans WHERE, mais peut servir dans ORDER BY. LIMIT s'applique en tout dernier.
+```sql
+SELECT cl.ville, COUNT(*) AS nb
+FROM commande co JOIN client cl ON cl.id = co.client_id
+WHERE co.date_commande >= '2026-01-01'
+GROUP BY cl.ville
+HAVING COUNT(*) > 10
+ORDER BY nb DESC;
+```
+
+@027
+Q: Pourquoi cette requête est-elle refusée ?
+C: L'alias total n'existe pas encore quand WHERE est évalué
+W: La fonction SUM ne peut pas recevoir d'alias dans une requête
+W: Le mot total est réservé par le langage SQL standard
+W: La clause WHERE doit précéder la clause FROM dans la requête
+E: Un filtre sur un agrégat se met dans HAVING : HAVING SUM(montant) > 1000. Pour réutiliser un alias dans un filtre, on passe par une sous-requête ou une CTE.
+```sql
+SELECT client_id, SUM(montant) AS total
+FROM commande
+WHERE total > 1000
+GROUP BY client_id;
+```
+
+@028
+Q: Une table de 500 000 lignes est filtrée par WHERE à 20 000 lignes, regroupées en 40 villes, dont 12 passent le HAVING. Combien de lignes le résultat contient-il ?
+N: 12
+U: lignes
+E: Chaque groupe donne une ligne : 40 groupes, dont 12 gardés par HAVING. Filtrer tôt dans WHERE réduit le travail du regroupement ; HAVING ne sert qu'aux conditions sur les agrégats.
+
+@029
+Q: Compléter cette requête qui nomme un résultat intermédiaire avec une expression de table commune.
+A: WITH
+E: Une CTE rend une requête complexe lisible étape par étape. Depuis PostgreSQL 12, une CTE non récursive utilisée une fois est intégrée à la requête par l'optimiseur, sans surcoût.
+```sql
+____ ventes AS (
+  SELECT client_id, SUM(montant) AS total
+  FROM commande GROUP BY client_id
+)
+SELECT c.nom, v.total FROM client c JOIN ventes v ON v.client_id = c.id;
+```
+
+@030
+Q: À quoi sert une CTE récursive (WITH RECURSIVE) ?
+C: À parcourir une hiérarchie, comme une nomenclature ou un organigramme, à profondeur variable
+W: À répéter une requête jusqu'à ce qu'elle renvoie le même résultat deux fois de suite
+W: À appeler une procédure stockée pour chaque ligne d'une table de faits
+W: À mettre en cache le résultat d'une requête pour les appels suivants
+E: Une partie de départ sélectionne la racine, une partie récursive ajoute les enfants des lignes trouvées, jusqu'à ce qu'il n'y en ait plus. Une condition de profondeur protège d'un cycle dans les données.
+
+@031
+Q: Quelle différence entre RANK() et DENSE_RANK() en cas d'égalité ?
+C: RANK saute des rangs après une égalité, DENSE_RANK n'en saute pas
+W: RANK classe par ordre croissant, DENSE_RANK par ordre décroissant
+W: RANK ignore les NULL, DENSE_RANK les place en première position
+W: RANK numérote chaque ligne, DENSE_RANK les égalités entre elles
+E: Pour les scores 100, 90, 90, 80 : RANK donne 1, 2, 2, 4 ; DENSE_RANK donne 1, 2, 2, 3 ; ROW_NUMBER donne 1, 2, 3, 4, en départageant au hasard sans critère supplémentaire.
+
+@032
+Q: Quel rang RANK() donne-t-il au score 80 pour les scores 100, 90, 90, 80 triés par ordre décroissant ?
+N: 4
+E: Les deux 90 partagent le rang 2 et occupent deux places : le suivant prend le rang 4. Avec DENSE_RANK, il prendrait le rang 3.
+
+@033
+Q: Compléter cette requête qui affiche le montant de la commande précédente du même client.
+A: LAG
+E: LAG lit une ligne précédente dans la fenêtre, LEAD une ligne suivante. On calcule ainsi l'écart entre deux commandes sans auto-jointure.
+```sql
+SELECT client_id, date_commande, montant,
+       ____(montant) OVER (PARTITION BY client_id ORDER BY date_commande) AS precedent
+FROM commande;
+```
+
+@034
+Q: Que calcule cette fonction de fenêtre ?
+C: Le cumul des montants de chaque client, commande après commande
+W: Le total des montants de chaque client, répété sur chacune de ses lignes
+W: Le total général des montants, répété sur chaque ligne du résultat
+W: La moyenne glissante des montants sur les trois dernières commandes
+E: Avec ORDER BY dans OVER, la fenêtre va par défaut du début de la partition à la ligne courante. Sans ORDER BY, SUM … OVER (PARTITION BY client_id) donne le total du client sur chaque ligne.
+```sql
+SUM(montant) OVER (PARTITION BY client_id ORDER BY date_commande)
+```
+
+@035
+Q: Pourquoi une fonction de fenêtre ne réduit-elle pas le nombre de lignes, contrairement à GROUP BY ?
+C: Elle calcule une valeur pour chaque ligne en regardant les lignes de sa fenêtre
+W: Elle s'exécute après LIMIT et ne voit donc qu'une partie des lignes
+W: Elle ne peut utiliser que les fonctions COUNT et ROW_NUMBER du langage
+W: Elle crée une table temporaire avec les lignes en double de la requête
+E: On garde le détail tout en ajoutant un total, un rang ou une part : montant / SUM(montant) OVER () donne la part de chaque commande dans le total général.
+
+@036
+Q: Associer chaque fonction de fenêtre à son résultat.
+P: ROW_NUMBER() => Un numéro unique dans la partition
+P: RANK() => Un rang avec des trous après les égalités
+P: LAG(x) => La valeur de x sur la ligne précédente
+P: SUM(x) OVER (ORDER BY d) => Un cumul de x dans l'ordre de d
+P: NTILE(4) => Le quartile de la ligne
+E: Ces fonctions s'évaluent après WHERE et GROUP BY : pour filtrer sur leur résultat, comme « le premier de chaque groupe », on passe par une sous-requête ou une CTE.
+
+@037
+Q: Compléter cette requête PostgreSQL qui garde la commande la plus récente de chaque client.
+A: DISTINCT ON
+E: DISTINCT ON garde la première ligne de chaque client selon l'ORDER BY, qui doit commencer par les mêmes colonnes. La version portable passe par ROW_NUMBER() dans une sous-requête.
+```sql
+SELECT ____ (client_id) client_id, id, date_commande
+FROM commande
+ORDER BY client_id, date_commande DESC;
+```
+
+@038
+Q: Que fait INSERT … ON CONFLICT (email) DO UPDATE dans PostgreSQL ?
+C: Il insère la ligne, ou met à jour la ligne existante si l'email est déjà présent
+W: Il insère la ligne en double puis supprime la plus ancienne des deux lignes concernées
+W: Il refuse l'insertion et renvoie la ligne déjà présente sans la modifier
+W: Il verrouille la table entière le temps de vérifier l'unicité de l'email
+E: C'est un « upsert » atomique, sans fenêtre où deux sessions inséreraient chacune la même ligne. Il exige un index unique sur email ; EXCLUDED désigne les valeurs proposées.
+
+@039
+Q: Compléter cette insertion qui renvoie l'identifiant généré.
+A: RETURNING
+E: RETURNING évite une seconde requête pour connaître l'identifiant ou une valeur par défaut. Il fonctionne aussi avec UPDATE et DELETE pour savoir quelles lignes ont été touchées.
+```sql
+INSERT INTO commande (client_id, montant) VALUES (42, 129.90)
+____ id;
+```
+
+@040
+Q: Pourquoi stocker un montant en NUMERIC(10,2) plutôt qu'en REAL ?
+C: NUMERIC stocke la valeur exacte, REAL fait des arrondis binaires
+W: NUMERIC prend moins de place sur le disque que le type REAL
+W: REAL refuse les valeurs négatives comme un avoir ou un remboursement
+W: NUMERIC calcule plus vite que REAL sur les grandes tables
+E: Une somme de REAL donne 0,30000001 au lieu de 0,30. Les montants vont en NUMERIC (ou en entier de centimes) ; REAL et DOUBLE PRECISION conviennent aux mesures physiques.
+
+@041
+Q: Quelle différence entre TIMESTAMP et TIMESTAMPTZ dans PostgreSQL ?
+C: TIMESTAMPTZ désigne un instant précis, converti selon le fuseau de la session
+W: TIMESTAMPTZ garde le nom du fuseau horaire saisi avec chaque valeur
+W: TIMESTAMPTZ est réservé aux dates postérieures à l'an 2000
+W: TIMESTAMPTZ occupe deux fois plus de place que TIMESTAMP
+E: Les deux font 8 octets ; TIMESTAMPTZ stocke en UTC et affiche dans le fuseau de la session. TIMESTAMP sans fuseau devient ambigu dès que serveurs et utilisateurs sont dans des fuseaux différents.
+
+@042
+Q: Compléter cette requête qui regroupe les ventes par mois.
+A: date_trunc
+E: date_trunc ramène chaque date au début de la période : mois, semaine, jour. Le résultat reste une date, triable correctement, contrairement à un texte comme 'mars 2026'.
+```sql
+SELECT ____('month', date_commande) AS mois, SUM(montant)
+FROM commande GROUP BY 1 ORDER BY 1;
+```
+
+@043
+Q: Pourquoi un index sur nom n'est-il pas utilisé par cette requête ?
+C: La fonction appliquée à la colonne empêche de chercher dans l'index tel quel
+W: Les index ne s'appliquent pas aux colonnes de type texte dans PostgreSQL ou MySQL
+W: La requête renvoie trop de lignes pour que l'index soit consulté
+W: L'index doit être reconstruit après chaque insertion dans la table
+E: L'index est trié sur nom, pas sur LOWER(nom). On crée un index sur l'expression, CREATE INDEX ON client (LOWER(nom)), ou on utilise une colonne de type citext.
+```sql
+SELECT * FROM client WHERE LOWER(nom) = 'durand';
+```
+
+@044
+Q: Pourquoi LIKE '%dupont' ne peut-il pas utiliser un index B-tree ordinaire ?
+C: Le début de la chaîne est inconnu, donc il n'y a pas de point d'entrée dans l'ordre de l'index
+W: LIKE est interdit sur les colonnes indexées par la norme du langage SQL
+W: L'index B-tree ne stocke que les dix premiers caractères de chaque valeur
+W: Le caractère % est traduit en expression régulière, que l'index ignore
+E: LIKE 'dupont%' peut utiliser l'index, car il délimite une plage. Pour chercher au milieu d'un texte, PostgreSQL propose l'extension pg_trgm et un index GIN.
+
+@045
+Q: Un index composite est créé sur (client_id, date_commande). Quelle requête peut l'utiliser efficacement ?
+C: WHERE client_id = 42 AND date_commande >= '2026-01-01'
+W: WHERE date_commande >= '2026-01-01', sans filtre sur le client
+W: WHERE montant > 100 AND date_commande >= '2026-01-01'
+W: WHERE statut = 'payee' OR client_id = 42 dans la même clause
+E: L'index est trié d'abord par client, puis par date dans chaque client : il sert pour client_id seul, ou client_id plus date. Un filtre sur la seule date ne profite pas de ce tri.
+
+@046
+Q: Que montre EXPLAIN ANALYZE devant une requête ?
+C: Le plan choisi, avec les temps et le nombre de lignes réellement mesurés
+W: Les erreurs de syntaxe de la requête, avec leur position exacte dans le texte
+W: L'historique des exécutions passées de la requête sur le serveur
+W: Les index à créer pour accélérer la requête, classés par gain attendu
+E: ANALYZE exécute vraiment la requête : sur un UPDATE, on l'entoure d'une transaction annulée. Un grand écart entre lignes estimées et réelles signale des statistiques périmées.
+
+@047
+Q: Que signifie un « Seq Scan » sur une table de 10 millions de lignes dans un plan d'exécution ?
+C: La table est lue en entier, souvent faute d'index adapté au filtre
+W: La table est lue dans l'ordre de sa clé primaire grâce à l'index de cette clé
+W: La table est lue en parallèle sur plusieurs serveurs du cluster
+W: La table est lue depuis le cache sans accès au disque du serveur
+E: Pour une requête qui renvoie une grande part de la table, le parcours complet est le bon choix. Pour quelques lignes, il signale un index manquant ou inutilisable, comme une fonction appliquée à la colonne.
+
+@048
+Q: Pourquoi la pagination par OFFSET devient-elle lente sur les pages lointaines ?
+C: Le moteur doit lire puis jeter toutes les lignes qui précèdent la page demandée
+W: Le moteur verrouille la table pendant le calcul de chaque page demandée
+W: Le moteur trie à nouveau la table entière à chaque page demandée par l'utilisateur
+W: Le moteur stocke chaque page dans une table temporaire avant de la renvoyer
+E: OFFSET 100000 lit 100 000 lignes pour rien. La pagination par clé reprend après la dernière valeur vue : WHERE id > 100020 ORDER BY id LIMIT 20, qui utilise l'index.
+
+@049
+Q: Avec une pagination de 20 lignes par page, combien de lignes le moteur lit-il au moins pour afficher la page 501 avec OFFSET ?
+N: 10020
+U: lignes
+E: OFFSET 10000 LIMIT 20 : les 10 000 premières lignes sont lues et écartées, puis 20 sont renvoyées. La pagination par clé n'en lit qu'une vingtaine, quelle que soit la page.
+
+@050
+Q: Compléter cette requête de pagination par clé, plus rapide que OFFSET.
+A: >
+E: On reprend juste après la dernière valeur de la page précédente. Avec un tri sur plusieurs colonnes, on compare des tuples : WHERE (date_commande, id) < ($1, $2).
+```sql
+SELECT id, date_commande FROM commande
+WHERE id ____ 100020
+ORDER BY id
+LIMIT 20;
+```

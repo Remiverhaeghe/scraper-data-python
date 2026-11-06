@@ -5,6 +5,27 @@ dans l'historique git.
 
 ## Non publié
 
+### Révision : six thèmes complétés
+- Lots de 100 questions pour les thèmes livrés avec peu de questions, sans
+  reprendre celles qui existaient : Docker (multi-stage, BuildKit, secrets,
+  healthcheck, réseaux, Compose, durcissement, signaux et arrêt, cgroups),
+  Spring (auto-configuration, propriétés, Spring Data JPA, transactions,
+  Spring Security, tests de tranche, Actuator, cache, outbox), Git (index,
+  rebase interactif, reflog, bisect, fins de ligne, protection de branche,
+  signature, objets internes, fuite d'un secret), JavaScript (tableaux, ?? et
+  ||, boucle d'événements, promesses, fermetures, DOM et délégation, Node.js,
+  npm, sécurité), SQL (agrégats, NOT IN et NULL, CTE, fonctions de fenêtre,
+  index et plans, pagination par clé, isolation, MVCC, JSONB, partitions,
+  sauvegardes)
+- Nouveau lot conception, SOLID et design patterns (cohésion et couplage,
+  patterns de création, de structure et de comportement, DDD, architecture
+  hexagonale, refactoring, figuier étrangleur, TDD), qui couvre le thème
+  « Bonnes pratiques et API », absent du catalogue des lots
+- Douze schémas : multi-stage et arrêt d'un conteneur, démarrage et sécurité
+  Spring, rebase et secret poussé, boucle d'événements et propagation d'un
+  clic, ordre logique et diagnostic d'une requête, couches et requête en
+  architecture hexagonale
+
 ### Révision BI et reporting
 - Lot de 100 questions dont 32 interactives (associations, remises en ordre,
   calculs, code à compléter) : Power Query et query folding, modèle en étoile,

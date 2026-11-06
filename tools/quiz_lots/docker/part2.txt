@@ -1,0 +1,441 @@
+@051
+Q: Que fait l'option read_only: true sur ce service Compose ?
+C: Elle monte le système de fichiers du conteneur en lecture seule, sauf les volumes et tmpfs
+W: Elle interdit au service de lire les fichiers montés depuis l'hôte par les volumes
+W: Elle empêche les autres services du projet de se connecter à ce service sur le réseau interne
+W: Elle bloque la modification du fichier Compose tant que le service reste démarré
+E: Un attaquant ne peut plus déposer d'outil ni modifier le code dans le conteneur. Les dossiers où l'application doit écrire (cache, fichiers temporaires) passent en tmpfs ou en volume.
+```yaml
+services:
+  api:
+    image: ghcr.io/remi/monapp:1.4.2
+    read_only: true
+    tmpfs:
+      - /tmp
+```
+
+@052
+Q: Associer chaque réglage de durcissement d'un service à son effet.
+P: user: "10001" => Lancer le processus sans les droits root
+P: cap_drop: [ALL] => Retirer les capacités du noyau accordées par défaut
+P: security_opt: [no-new-privileges:true] => Empêcher de regagner des droits par un programme setuid
+P: read_only: true => Interdire l'écriture hors des volumes et tmpfs
+P: pids_limit: 200 => Borner le nombre de processus contre une bombe fork
+E: Chaque réglage réduit ce qu'un attaquant peut faire après avoir compromis l'application. On ajoute ensuite une à une les capacités vraiment nécessaires, comme NET_BIND_SERVICE pour écouter sur le port 80.
+
+@053
+Q: Pourquoi un port publié par Docker reste-t-il joignable malgré une règle ufw qui le bloque ?
+C: Docker écrit ses propres règles iptables, appliquées avant celles d'ufw
+W: ufw filtre les connexions sortantes de l'hôte, pas celles qui arrivent
+W: Docker désactive ufw au démarrage de son démon sur la machine hôte
+W: Les ports au-dessus de 1024 ne sont pas filtrés par le pare-feu ufw
+E: Les paquets destinés aux conteneurs passent par la chaîne FORWARD et la table nat gérées par Docker. On publie sur 127.0.0.1 les services qui ne doivent pas être exposés, ou on filtre dans la chaîne DOCKER-USER.
+
+@054
+Q: Que montre la commande docker stats ?
+C: La consommation de processeur, mémoire, réseau et disque de chaque conteneur en direct
+W: Le nombre d'images téléchargées depuis le registre au cours du mois écoulé
+W: L'historique des redémarrages de chaque conteneur depuis le démarrage du démon
+W: La taille de chaque couche des images utilisées par les conteneurs en marche
+E: C'est le premier réflexe face à un serveur lent. Pour un historique, on collecte ces mesures avec cAdvisor ou l'exporteur du démon Docker, lus par Prometheus.
+
+@055
+Q: Compléter cette commande qui affiche seulement l'adresse IP d'un conteneur.
+A: inspect
+E: L'option --format accepte un modèle Go qui extrait un champ du JSON. La même méthode lit l'état de santé (.State.Health.Status) ou le code de sortie (.State.ExitCode).
+```bash
+docker ____ --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' web
+```
+
+@056
+Q: Comment sauvegarder le contenu du volume donnees dans une archive sur l'hôte ?
+C: Lancer un conteneur temporaire qui monte le volume et un dossier de l'hôte, puis y créer l'archive
+W: Copier le dossier du volume avec docker cp depuis l'image qui a créé ce volume
+W: Lancer docker volume export, qui écrit le volume dans un fichier tar compressé
+W: Arrêter Docker et copier le fichier de base de données interne du démon
+E: Cette commande crée donnees.tar.gz dans le dossier courant. Pour une base de données en marche, on préfère son outil de sauvegarde (pg_dump), car copier les fichiers à chaud peut donner une sauvegarde incohérente.
+```bash
+docker run --rm -v donnees:/data -v "$PWD":/backup alpine \
+  tar czf /backup/donnees.tar.gz -C /data .
+```
+
+@057
+Q: Pourquoi éviter docker commit pour produire une image de production ?
+C: L'image obtenue ne se reconstruit pas, car rien ne décrit comment elle a été faite
+W: docker commit ne conserve pas les fichiers modifiés dans le conteneur d'origine arrêté
+W: docker commit produit une image que les registres refusent de recevoir
+W: docker commit supprime le conteneur source une fois l'image créée
+E: Un Dockerfile versionné rend l'image reproductible et relisible en revue de code. docker commit reste utile pour figer l'état d'un conteneur à analyser après un incident.
+
+@058
+Q: Que fait docker buildx build --platform linux/amd64,linux/arm64 ?
+C: Il construit une image pour les deux architectures, publiée sous un même nom
+W: Il construit l'image sur deux machines différentes en même temps sur le réseau
+W: Il construit une image qui contient un seul binaire valable pour les deux processeurs
+W: Il convertit une image amd64 existante en image arm64 sans la reconstruire
+E: Le registre reçoit une liste de manifestes ; chaque hôte télécharge la variante de son processeur, comme un Raspberry Pi ou un NAS ARM. La construction de l'autre architecture passe par l'émulation QEMU, plus lente, ou par un nœud natif.
+
+@059
+Q: En intégration continue, comment réutiliser le cache de construction d'une exécution à l'autre ?
+C: Exporter le cache vers le registre ou le cache de la CI avec --cache-to et --cache-from
+W: Lancer la construction avec --no-cache pour que les couches soient enregistrées
+W: Copier le dossier /var/lib/docker du runner dans les artefacts du pipeline
+W: Ajouter un volume nommé au Dockerfile pour y garder les couches construites
+E: Chaque runner de CI démarre vide : sans cache exporté, les dépendances sont retéléchargées à chaque fois. type=gha pour GitHub Actions ou type=registry stockent les couches entre les exécutions.
+
+@060
+Q: Que fait la commande docker compose watch en développement ?
+C: Elle synchronise les fichiers modifiés dans le conteneur ou le reconstruit selon les règles
+W: Elle affiche les journaux de tous les services et les filtre par niveau de gravité
+W: Elle surveille la santé des services et envoie une alerte en cas de panne
+W: Elle relance les services quand une nouvelle image apparaît dans le registre
+E: Une règle sync copie le code source modifié, rebuild reconstruit l'image quand requirements.txt change. On évite ainsi le montage du dossier entier, lent sous Windows et macOS.
+
+@061
+Q: Remettre dans l'ordre le diagnostic d'un conteneur qui redémarre en boucle.
+O: docker ps -a : repérer le code de sortie et le nombre de redémarrages
+O: docker logs : lire les dernières lignes avant l'arrêt
+O: docker inspect : vérifier OOMKilled, la commande et les variables
+O: Relancer l'image avec un shell pour reproduire à la main
+O: Corriger l'image ou la configuration, puis redéployer
+E: Un code 137 avec OOMKilled oriente vers la mémoire ; un code 1 avec une erreur de connexion, vers une dépendance absente. docker run --rm -it --entrypoint sh image permet d'explorer l'image sans lancer l'application.
+
+@062
+Q: Pourquoi les secrets de Compose sont-ils préférables aux variables d'environnement pour un mot de passe ?
+C: Ils sont montés en fichier dans /run/secrets et n'apparaissent pas dans docker inspect
+W: Ils sont chiffrés dans l'image et déchiffrés par le démon à chaque démarrage
+W: Ils sont transmis par le registre et ne restent jamais sur le disque de l'hôte
+W: Ils changent de valeur à chaque redémarrage du service pour limiter les fuites
+E: Les variables sont visibles dans docker inspect, dans /proc et souvent dans les journaux d'erreur. L'application lit le fichier ; beaucoup d'images officielles acceptent POSTGRES_PASSWORD_FILE pour cela.
+```yaml
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+```
+
+@063
+Q: Que fait un outil comme Trivy sur une image Docker ?
+C: Il liste les vulnérabilités connues des paquets et bibliothèques contenus dans l'image
+W: Il réduit la taille de l'image en supprimant les fichiers inutiles de ses couches
+W: Il signe l'image pour que le registre refuse les versions qui ont été modifiées
+W: Il surveille les conteneurs en marche et coupe ceux qui consomment trop de mémoire vive
+E: On l'exécute en intégration continue et on bloque la publication au-delà d'une gravité choisie. Il produit aussi un SBOM, la liste des composants de l'image, utile pour savoir si une faille annoncée vous concerne.
+
+@064
+Q: Quelle différence principale entre Podman et Docker ?
+C: Podman n'a pas de démon central et lance les conteneurs sans droits root par défaut
+W: Podman exécute des machines virtuelles complètes au lieu de simples conteneurs Linux isolés
+W: Podman ne lit que ses propres images, incompatibles avec celles de Docker
+W: Podman ne fonctionne que sous Windows, Docker seulement sous Linux
+E: Podman accepte les mêmes images OCI et presque les mêmes commandes (alias docker=podman). Sans démon root, une faille dans un conteneur donne moins de droits sur l'hôte ; il génère aussi des unités systemd.
+
+@065
+Q: Chaque réplica d'un service consomme 300 Mo et l'hôte réserve 1 Go (1 024 Mo) au système. Combien de réplicas au plus tiennent sur un hôte de 4 Go (4 096 Mo) ?
+N: 10
+U: réplicas
+E: 4 096 - 1 024 = 3 072 Mo disponibles ; 3 072 / 300 = 10,24, soit 10 réplicas. On garde en pratique une marge pour les pics et le cache disque, et on fixe une limite de mémoire par conteneur.
+
+@066
+Q: Comment Docker stocke-t-il les modifications faites dans un conteneur ?
+C: Dans une couche inscriptible propre au conteneur, au-dessus des couches de l'image
+W: Dans une copie complète de l'image créée au démarrage de chaque conteneur
+W: Directement dans les couches de l'image, partagées par les autres conteneurs de l'hôte
+W: Dans un volume anonyme créé pour chaque fichier modifié par le conteneur
+E: Le pilote overlay2 copie un fichier dans la couche du conteneur au moment où il est modifié (copie sur écriture). Écrire beaucoup dans cette couche est lent et ces données disparaissent avec le conteneur : les écritures intensives vont dans un volume.
+
+@067
+Q: Que montre docker diff web ?
+C: Les fichiers ajoutés, modifiés ou supprimés dans le conteneur depuis son lancement
+W: Les différences de configuration entre le conteneur web et la définition de son fichier Compose
+W: Les couches qui diffèrent entre l'image du conteneur et sa version précédente
+W: Les écarts de version entre le client Docker et le démon de la machine hôte
+E: A pour ajouté, C pour modifié, D pour supprimé. Un conteneur qui écrit beaucoup hors de ses volumes s'y repère tout de suite, comme un cache ou des journaux oubliés.
+
+@068
+Q: Quel résolveur DNS un conteneur sur un réseau défini par l'utilisateur interroge-t-il ?
+C: Le serveur DNS intégré de Docker, à l'adresse 127.0.0.11
+W: Le serveur DNS du fournisseur d'accès, inscrit dans l'image de base
+W: Le fichier /etc/hosts de l'hôte, copié au démarrage du conteneur
+W: Le serveur DNS du registre d'où vient l'image du conteneur
+E: Il répond pour les noms des conteneurs et services du réseau, puis transmet les autres noms aux serveurs DNS de l'hôte. Un problème de résolution externe vient souvent du resolv.conf de l'hôte, par exemple avec systemd-resolved.
+
+@069
+Q: Pourquoi un conteneur Docker dans un pipeline de CI qui construit des images pose-t-il problème ?
+C: Docker dans Docker demande le mode privilégié, et le socket de l'hôte donne tous les droits
+W: Les images construites dans un conteneur ne peuvent pas être poussées vers un registre d'images
+W: Les conteneurs de CI ne disposent pas de la commande docker dans leur image de base
+W: La construction dans un conteneur est refusée par la licence de Docker Desktop
+E: Les deux approches exposent l'hôte du runner. Kaniko, Buildah ou BuildKit sans droits root construisent une image sans démon privilégié, une option plus sûre sur un runner partagé.
+
+@070
+Q: À quoi sert l'option userns-remap du démon Docker ?
+C: À faire correspondre le root du conteneur à un utilisateur sans droits de l'hôte
+W: À renommer les utilisateurs des conteneurs pour éviter les conflits entre images
+W: À donner à chaque conteneur un mot de passe root différent au démarrage
+W: À partager les comptes de l'hôte avec tous les conteneurs du même projet
+E: Avec les espaces de noms utilisateur, un processus root qui s'échappe du conteneur n'est qu'un utilisateur ordinaire sur l'hôte. Les droits des volumes doivent alors correspondre aux identifiants décalés.
+
+@071
+Q: Le démarrage met 40 secondes et le healthcheck échoue pendant ce temps. Quel réglage évite de déclarer le conteneur unhealthy trop tôt ?
+C: start_period, pendant lequel les échecs ne comptent pas
+W: interval, qui espace davantage les vérifications de santé
+W: retries, pour accepter plus d'échecs une fois démarré
+W: timeout, pour attendre plus longtemps chaque réponse
+E: Pendant start_period, un succès fait passer le conteneur à healthy, mais un échec n'est pas compté. Augmenter retries retarderait aussi la détection d'une vraie panne plus tard.
+
+@072
+Q: Que fait ce fichier .dockerignore sur la taille du contexte de construction ?
+C: Il évite d'envoyer node_modules, .git et les fichiers .env au démon
+W: Il supprime ces dossiers du disque après chaque construction réussie
+W: Il exclut ces dossiers des volumes montés au démarrage du conteneur
+W: Il empêche Git de suivre ces dossiers dans le dépôt du projet
+E: Un contexte de plusieurs gigaoctets ralentit chaque construction et COPY . . embarquerait des secrets. Le fichier suit la syntaxe de .gitignore, avec ! pour réinclure une exception.
+```text
+.git
+node_modules
+.env
+*.log
+```
+
+@073
+Q: Que fait docker compose up -d --scale worker=3 ?
+C: Il démarre trois conteneurs du service worker sur le même hôte
+W: Il démarre le service worker sur trois hôtes différents du réseau
+W: Il donne au service worker trois processeurs et trois fois plus de mémoire
+W: Il redémarre le service worker trois fois de suite pour tester sa reprise
+E: Un service qui publie un port fixe ne peut pas avoir plusieurs réplicas sur le même hôte. Pour des files de traitement, plusieurs workers lisent la même file et se partagent le travail.
+
+@074
+Q: Quelle commande permet de se placer dans l'espace réseau d'un conteneur distroless pour le diagnostiquer ?
+C: Lancer un conteneur d'outils avec --network container:web
+W: Ouvrir un shell dans le conteneur web avec docker exec -it
+W: Copier un shell dans le conteneur avec docker cp puis le lancer
+W: Reconstruire l'image web avec un shell pour la durée du test
+E: Le conteneur d'outils (nicolaka/netshoot, par exemple) partage les interfaces réseau du conteneur cible : curl, dig ou tcpdump voient ce que voit l'application. --pid container:web donne de même accès à ses processus.
+
+@075
+Q: Associer chaque outil de l'écosystème des conteneurs à son rôle.
+P: containerd => Gérer le cycle de vie des conteneurs et des images sur l'hôte
+P: runc => Créer le conteneur à partir de la spécification OCI
+P: BuildKit => Construire les images avec cache et parallélisme
+P: Docker Compose => Décrire et lancer une application de plusieurs services
+P: Registre OCI => Stocker et distribuer les images
+E: Kubernetes parle directement à containerd, sans le démon Docker. Les images construites par Docker suivent le format OCI et tournent donc avec tous ces outils.
+
+@076
+Q: Pourquoi le profil seccomp par défaut de Docker améliore-t-il la sécurité ?
+C: Il bloque des appels système rarement utiles et souvent exploités
+W: Il chiffre les échanges entre le conteneur et le démon Docker local
+W: Il vérifie la signature de l'image avant chaque démarrage
+W: Il empêche le conteneur d'ouvrir des connexions sortantes
+E: Une quarantaine d'appels système sont refusés, comme ceux qui chargent un module noyau ou changent l'heure. --security-opt seccomp=unconfined retire cette protection : à éviter sauf diagnostic ponctuel.
+
+@077
+Q: Pourquoi le mode --privileged est-il à éviter ?
+C: Il donne au conteneur toutes les capacités et l'accès aux périphériques de l'hôte
+W: Il bloque la publication des ports et isole le conteneur du réseau local de l'hôte
+W: Il oblige le conteneur à tourner sous le compte root de la machine hôte
+W: Il désactive les journaux du conteneur pour masquer ses actions
+E: Un conteneur privilégié peut monter le disque de l'hôte et en sortir facilement. Pour un besoin précis (un port série, une capacité réseau), --device et --cap-add donnent juste ce qu'il faut.
+
+@078
+Q: Un registre garde toutes les versions poussées. Quelle pratique limite sa taille sans risque pour la production ?
+C: Une règle de nettoyage qui garde les dernières versions et celles en production
+W: Pousser toutes les versions sous la même étiquette pour écraser les anciennes
+W: Supprimer les images du registre dès qu'elles sont téléchargées par le serveur de production
+W: Compresser les images avec gzip avant de les pousser vers le registre
+E: Une image supprimée trop tôt empêche un retour arrière ou le redémarrage d'un nœud. GHCR, GitLab et Harbor proposent des politiques par nombre de versions et par âge, en excluant les étiquettes protégées.
+
+@079
+Q: Compléter ce Dockerfile pour que l'application ne tourne pas en root.
+A: USER
+E: L'utilisateur est créé avec un identifiant fixe pour que les droits des volumes soient prévisibles. Un identifiant numérique permet aussi à Kubernetes de vérifier runAsNonRoot.
+```dockerfile
+RUN groupadd -g 10001 app && useradd -u 10001 -g app -M app
+COPY --chown=app:app . /app
+____ 10001:10001
+```
+
+@080
+Q: Pourquoi ces deux commandes RUN laissent-elles une image plus grosse qu'une seule commande ?
+C: Le cache supprimé dans la seconde couche reste stocké dans la première
+W: La seconde instruction RUN recopie la première couche avant de s'exécuter
+W: Docker conserve un instantané complet du système après chaque instruction
+W: La suppression d'un dossier ajoute un fichier de sauvegarde de même taille
+E: Une couche ne peut que masquer un fichier d'une couche précédente, pas le retirer. On installe et nettoie dans le même RUN : apt-get install … && rm -rf /var/lib/apt/lists/*.
+```dockerfile
+RUN apt-get update && apt-get install -y build-essential
+RUN rm -rf /var/lib/apt/lists/*
+```
+
+@081
+Q: Comment voir la taille de chaque couche d'une image ?
+C: Avec docker history, qui liste les instructions et leur taille
+W: Avec docker stats, qui affiche la taille des couches en direct
+W: Avec docker ps -s, qui détaille les couches de chaque image
+W: Avec docker logs, qui garde la trace de chaque construction
+E: Une couche de plusieurs centaines de Mo signale souvent un cache oublié ou un COPY trop large. L'outil dive explore le contenu de chaque couche pour trouver les fichiers en trop.
+
+@082
+Q: Un service doit écouter sur le port 80 sans tourner en root. Que faut-il ajouter ?
+C: La capacité NET_BIND_SERVICE, ou écouter sur un port haut publié en 80
+W: Le mode privilégié, seul moyen d'ouvrir un port inférieur à 1024
+W: Le réseau host, qui donne les droits root sur l'ensemble des ports de l'hôte
+W: Une règle iptables écrite depuis l'intérieur du conteneur
+E: Le plus simple est souvent d'écouter sur 8080 dans le conteneur et de publier 80:8080. Sinon, cap_add: [NET_BIND_SERVICE] après cap_drop: [ALL] donne ce seul droit.
+
+@083
+Q: Avec un délai d'arrêt de 10 s et une application qui met 25 s à vider sa file, que se passe-t-il au docker stop ?
+C: L'application est tuée par SIGKILL avant d'avoir fini, et des messages sont perdus
+W: Docker attend la fin du traitement, car le délai n'est qu'une recommandation
+W: L'application est mise en pause et reprend au prochain démarrage du conteneur arrêté
+W: Docker relance l'arrêt une seconde fois avec un délai doublé automatiquement
+E: On allonge stop_grace_period dans Compose (ou -t), et l'application doit cesser de prendre du travail dès SIGTERM. Les messages non acquittés d'une file sont alors redistribués plutôt que perdus.
+
+@084
+Q: Que signifie une image « orpheline » (dangling) dans docker images ?
+C: Une couche finale sans nom, laissée par une reconstruction qui a repris l'étiquette
+W: Une image téléchargée sans conteneur depuis plus d'un mois sur la machine
+W: Une image dont le registre d'origine n'est plus joignable depuis l'hôte
+W: Une image construite sans Dockerfile, à partir d'un conteneur existant
+E: Elle s'affiche avec <none>:<none>. Chaque reconstruction sous le même nom en laisse une ; docker image prune les supprime sans toucher aux images nommées.
+
+@085
+Q: Que fait la commande docker context use nas ?
+C: Elle dirige les commandes docker suivantes vers le démon de la machine nas
+W: Elle copie les images locales vers la machine nas avant chaque déploiement
+W: Elle ouvre un shell sur la machine nas avec les droits de l'utilisateur
+W: Elle change le dossier de construction pour celui de la machine nas
+E: Un contexte créé avec docker context create nas --docker host=ssh://remi@nas passe par SSH. docker compose up s'exécute alors sur le NAS depuis le poste de travail, sans y copier le dépôt.
+
+@086
+Q: Sur quels mécanismes du noyau Linux repose l'isolation d'un conteneur ?
+C: Les espaces de noms pour ce qu'il voit, les cgroups pour ce qu'il consomme
+W: Les machines virtuelles légères et l'hyperviseur intégré au noyau Linux
+W: Les comptes utilisateurs et les droits des fichiers, sans autre mécanisme du noyau
+W: Le pare-feu iptables et les règles SELinux, appliqués à chaque processus
+E: Les espaces de noms isolent les processus, le réseau, les montages, les utilisateurs et le nom d'hôte. Les cgroups limitent mémoire, processeur et nombre de processus. seccomp, AppArmor et les capacités complètent la protection.
+
+@087
+Q: Une image multi-architecture couvre amd64, arm64 et arm/v7 ; chaque variante fait 150 Mo. Combien de Mo un Raspberry Pi arm64 télécharge-t-il ?
+N: 150
+U: Mo
+E: Le client lit la liste de manifestes et ne télécharge que la variante de sa plateforme. Le registre stocke les trois variantes, soit 450 Mo, moins les couches éventuellement partagées.
+
+@088
+Q: À quoi sert la variable SOURCE_DATE_EPOCH lors d'une construction d'image ?
+C: À fixer les horodatages pour obtenir une image identique octet pour octet
+W: À dater l'image dans le registre pour trier les versions par ancienneté
+W: À expirer automatiquement l'image après la date indiquée dans la variable
+W: À synchroniser l'horloge du conteneur avec celle de l'hôte au démarrage
+E: Une construction reproductible permet à un tiers de vérifier qu'une image correspond bien à son code source. BuildKit applique cette date aux fichiers et aux métadonnées de l'image.
+
+@089
+Q: Que garantit la signature d'une image avec cosign, vérifiée au déploiement ?
+C: Que l'image vient bien de la chaîne de construction attendue et n'a pas été modifiée
+W: Que l'image ne contient pas de vulnérabilité connue au moment du déploiement
+W: Que l'image se télécharge plus vite grâce à une compression supplémentaire
+W: Que l'image a été construite sans droits root sur la machine de construction
+E: La signature lie l'empreinte de l'image à une identité, comme le workflow GitHub qui l'a produite (signature sans clé avec OIDC). Un contrôleur d'admission refuse alors une image non signée, même poussée avec la bonne étiquette.
+
+@090
+Q: Pourquoi une application Node.js lancée en processus 1 laisse-t-elle des processus zombies ?
+C: Elle ne récupère pas les processus enfants terminés, rôle normal du processus 1
+W: Elle crée un processus par requête et Docker refuse de les arrêter
+W: Le noyau ne nettoie plus les processus d'un conteneur sans réseau
+W: Les conteneurs n'autorisent qu'un seul processus enfant à la fois
+E: Sur un système classique, init récupère les orphelins. Une application qui lance des commandes externes accumule des zombies jusqu'à la limite de processus ; tini (--init) règle le problème.
+
+@091
+Q: Dans un cgroup v2, que se passe-t-il quand memory.high est atteint, avant memory.max ?
+C: Le noyau ralentit le conteneur et récupère de la mémoire, sans le tuer
+W: Le noyau tue immédiatement le processus le plus gourmand en mémoire du conteneur
+W: Docker double la limite memory.max pour éviter un arrêt brutal
+W: Le conteneur est mis en pause jusqu'à libération de mémoire
+E: memory.high sert d'avertissement par pression, memory.max de plafond dur qui déclenche l'OOM killer. --memory-reservation de Docker règle une limite souple proche de cette idée.
+
+@092
+Q: Pourquoi un conteneur Java voit-il parfois tous les cœurs de l'hôte malgré --cpus=2 ?
+C: Une JVM ancienne ne lit pas les limites des cgroups et dimensionne ses pools sur l'hôte
+W: L'option --cpus ne s'applique qu'aux processus lancés après le démarrage du conteneur Java
+W: La JVM ignore les limites dès qu'on ne précise pas l'option -Xmx au démarrage
+W: Docker ne transmet pas les limites de processeur aux conteneurs sans healthcheck
+E: Avec 64 cœurs vus, le ramasse-miettes et les pools de threads créent des dizaines de threads qui se disputent 2 cœurs. Les JVM récentes lisent les cgroups v1 et v2 ; -XX:ActiveProcessorCount force la valeur.
+
+@093
+Q: Combien de couches au plus une image peut-elle empiler avec le pilote overlay2 ?
+N: 128
+U: couches
+E: La limite vient du nombre de dossiers que overlay2 superpose. Elle n'est presque jamais atteinte avec un Dockerfile normal, mais une image obtenue par docker commit répétés peut s'en approcher.
+
+@094
+Q: Remettre dans l'ordre la publication sûre d'une image en intégration continue.
+O: Construire l'image avec un cache exporté
+O: Lancer les tests sur l'image construite
+O: Analyser l'image avec un scanner de vulnérabilités
+O: Pousser l'image avec une étiquette de version et son empreinte
+O: Signer l'image et publier son SBOM
+E: L'image testée est exactement celle qui part en production, désignée par son empreinte. La signature et le SBOM permettent ensuite de vérifier son origine et de répondre vite à une nouvelle faille.
+
+@095
+Q: Que permet la commande docker debug sur une image distroless ?
+C: D'ouvrir un shell avec des outils dans le conteneur sans modifier son image
+W: De recompiler l'application en mode débogage à l'intérieur du conteneur en marche
+W: D'ajouter définitivement un shell à l'image avant de la pousser
+W: De lire les journaux du conteneur après sa suppression du disque
+E: Les outils sont montés depuis une image séparée, à côté du système de fichiers du conteneur. Kubernetes propose la même idée avec les conteneurs éphémères (kubectl debug).
+
+@096
+Q: Pourquoi l'étiquette 1.4 d'une image peut-elle pointer vers 1.4.0 puis 1.4.3 ?
+C: L'éditeur la déplace à chaque correctif pour suivre la dernière version 1.4
+W: Le registre choisit au hasard une version de la branche 1.4 à chaque téléchargement
+W: Docker convertit l'étiquette en la version la plus proche présente sur l'hôte
+W: L'étiquette 1.4 est un alias de latest dans la plupart des registres publics
+E: Les étiquettes courtes donnent les correctifs sans effort, mais sans contrôle. Pour la production, on épingle la version complète ou l'empreinte, et un outil propose les montées de version.
+
+@097
+Q: Un conteneur sans limite de processus lance une bombe fork. Quel réglage aurait protégé l'hôte ?
+C: Une limite pids_limit sur le conteneur
+W: Une limite de mémoire très élevée et fixe
+W: Le réseau host pour ce conteneur
+W: Une politique restart: always
+E: Sans limite, la création de processus épuise la table des processus de l'hôte et bloque tous les autres services. pids_limit: 200 suffit largement à la plupart des applications web.
+
+@098
+Q: Pourquoi l'arrêt d'un service derrière un répartiteur doit-il commencer par refuser les nouvelles connexions ?
+C: Pour terminer les requêtes en cours pendant que le répartiteur retire l'instance
+W: Pour libérer la mémoire du conteneur avant que Docker ne le supprime
+W: Pour que le healthcheck du conteneur passe à healthy plus rapidement
+W: Pour permettre à Docker de copier les connexions ouvertes vers le nouveau conteneur
+E: Sur SIGTERM, l'application signale qu'elle n'est plus prête, finit ses requêtes, puis quitte. Sans cela, un déploiement coupe des requêtes en plein vol et provoque des erreurs 502.
+
+@099
+Q: Que fait ce service Compose avec network_mode: "service:vpn" ?
+C: Il partage la pile réseau du service vpn et sort par son tunnel
+W: Il crée un nouveau réseau nommé vpn réservé à ce service
+W: Il publie ses ports sur l'interface du service vpn de l'hôte
+W: Il chiffre son trafic avec la clé du service vpn sans la partager
+E: Les deux conteneurs partagent les mêmes interfaces : le service n'a d'accès réseau qu'à travers le tunnel. Ses ports se publient alors sur le service vpn, et il n'a plus de nom propre sur le réseau du projet.
+```yaml
+services:
+  vpn:
+    image: qmcgaw/gluetun:v3
+    cap_add: [NET_ADMIN]
+  telechargement:
+    image: lscr.io/linuxserver/qbittorrent:5.1.2
+    network_mode: "service:vpn"
+```
+
+@100
+Q: Que se passe-t-il si un conteneur écrit 20 Go de fichiers temporaires dans sa couche inscriptible ?
+C: L'espace de /var/lib/docker se remplit, ce qui peut bloquer les autres conteneurs
+W: Docker déplace les fichiers vers un volume anonyme dès que 10 Go sont atteints
+W: Le conteneur est arrêté par Docker, qui limite chaque couche à 10 Go par défaut
+W: Les fichiers sont écrits en mémoire vive et disparaissent sans toucher au disque de l'hôte
+E: Avec overlay2, il n'y a pas de quota par défaut sur la couche du conteneur. On place les fichiers temporaires dans un tmpfs limité ou un volume, et on surveille l'espace de /var/lib/docker.

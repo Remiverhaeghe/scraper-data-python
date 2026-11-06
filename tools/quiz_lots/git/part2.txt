@@ -1,0 +1,421 @@
+@051
+Q: Quelle différence entre Git Flow et le développement sur tronc (trunk-based) ?
+C: Git Flow multiplie les branches longues, le tronc fusionne de petites branches courtes
+W: Git Flow se limite aux projets libres, le tronc aux dépôts privés des entreprises
+W: Git Flow interdit les étiquettes de version, le tronc les rend obligatoires à chaque fusion
+W: Git Flow demande un serveur GitLab, le tronc fonctionne avec GitHub seulement
+E: Git Flow (develop, release, hotfix) convient à des versions livrées rarement. Le tronc, avec des branches d'un ou deux jours et des feature flags, réduit les conflits et va avec la livraison continue.
+
+@052
+Q: Une branche de fonctionnalité vit depuis trois semaines. Quel risque grandit chaque jour ?
+C: Des conflits plus nombreux et plus difficiles au moment de la fusion
+W: Une perte des commits de la branche par le nettoyage automatique de Git
+W: Un blocage de la branche par le serveur au-delà de trente jours d'activité
+W: Une suppression des étiquettes de version posées sur la branche main
+E: Plus main avance, plus l'écart à rattraper est grand. On découpe en livraisons plus petites, on fusionne régulièrement main dans la branche, ou on cache le code inachevé derrière un drapeau.
+
+@053
+Q: Que fait git merge --abort pendant une fusion en conflit ?
+C: Il annule la fusion et revient à l'état d'avant
+W: Il garde la version locale pour chaque conflit
+W: Il valide la fusion en ignorant les conflits restants
+W: Il supprime la branche que l'on tentait de fusionner
+E: Utile quand la fusion se révèle plus compliquée que prévu. --abort exige qu'aucune modification non commitée n'ait existé avant la fusion ; de même, git rebase --abort annule un rebase en cours.
+
+@054
+Q: Pendant une fusion, que fait git checkout --theirs config.yml ?
+C: Il prend la version de la branche fusionnée pour ce fichier en conflit
+W: Il prend la version de la branche courante pour ce fichier resté en conflit
+W: Il prend la version du dépôt distant pour ce fichier en conflit
+W: Il prend la version de l'ancêtre commun pour ce fichier en conflit
+E: --ours garde la version de la branche courante. Attention, pendant un rebase les rôles s'inversent : ours désigne la branche sur laquelle on rejoue, theirs le commit en cours de rejeu.
+
+@055
+Q: À quoi sert l'option rerere de Git ?
+C: À mémoriser la résolution d'un conflit pour la réappliquer quand il revient
+W: À relancer automatiquement une fusion qui a échoué à cause d'un conflit de fichiers
+W: À refuser les fusions qui produisent plus de dix fichiers en conflit
+W: À récupérer les commits perdus lors d'un rebase mal terminé
+E: « Reuse recorded resolution » : avec rerere.enabled=true, un conflit déjà résolu lors d'un rebase précédent est corrigé tout seul. Utile pour une branche longue qu'on rebase souvent.
+
+@056
+Q: Comment corriger le dernier commit si l'on a oublié d'y ajouter un fichier, avant de pousser ?
+C: Ajouter le fichier puis lancer git commit --amend --no-edit
+W: Créer un nouveau commit puis supprimer l'ancien avec git revert
+W: Lancer git reset --hard HEAD~1 puis recommencer tout le travail
+W: Ajouter le fichier puis pousser avec git push --force-with-lease
+E: --no-edit garde le message. L'identifiant du commit change : si le commit était déjà poussé, il faudra forcer, ce qui pose problème sur une branche partagée.
+
+@057
+Q: Que fait git log main..feature ?
+C: Il liste les commits de feature absents de main
+W: Il liste les commits de main absents de feature
+W: Il liste les commits communs aux deux branches
+W: Il liste les fichiers différents entre les deux
+E: Les deux points se lisent « accessible depuis feature mais pas depuis main ». Trois points (main...feature) donnent les commits propres à l'une ou l'autre, utile avec --left-right.
+
+@058
+Q: Que fait git commit -p, ou git add -p ?
+C: Il propose chaque bloc modifié un à un pour choisir lesquels inclure
+W: Il prépare un commit pour chaque fichier modifié du répertoire de travail
+W: Il pousse le commit vers le serveur dès qu'il est enregistré
+W: Il ajoute les fichiers dont le nom suit un motif donné
+E: On sépare ainsi un correctif d'une modification de mise en forme faite dans le même fichier. Des commits ciblés se relisent, s'annulent et se reportent beaucoup plus facilement.
+
+@059
+Q: Qu'est-ce qu'un sous-module Git ?
+C: Un autre dépôt inclus dans un dossier, figé sur un commit précis
+W: Une branche secondaire stockée dans un dossier caché du dépôt
+W: Une copie d'un dossier du dépôt envoyée vers un autre serveur
+W: Un fichier de configuration qui partage des hooks entre plusieurs projets
+E: Le dépôt parent ne garde que l'identifiant du commit du sous-module. Après un clone, git submodule update --init --recursive est nécessaire ; oublier de pousser le sous-module casse le dépôt pour les autres.
+
+@060
+Q: À quoi sert Git LFS ?
+C: À stocker les gros fichiers binaires à part, le dépôt ne gardant qu'un pointeur
+W: À compresser l'historique du dépôt pour le rendre plus rapide à cloner
+W: À partager le dépôt entre plusieurs serveurs pour répartir la charge
+W: À verrouiller les fichiers texte pendant qu'un développeur les modifie
+E: Images, vidéos ou modèles de plusieurs centaines de Mo alourdissent chaque clone. Avec LFS, le fichier n'est téléchargé que pour la version extraite ; le serveur doit le prendre en charge, souvent avec un quota.
+
+@061
+Q: Compléter cette commande qui déclare les fichiers .psd comme suivis par Git LFS.
+A: track
+E: La règle est écrite dans .gitattributes, qu'il faut commiter. Les fichiers déjà présents dans l'historique ne sont pas convertis : git lfs migrate s'en charge, en réécrivant l'historique.
+```bash
+git lfs ____ "*.psd"
+```
+
+@062
+Q: Que récupère ce clone lancé en intégration continue ?
+C: Il ne récupère que le dernier commit, sans l'historique précédent
+W: Il ne récupère que le premier niveau de dossiers du dépôt
+W: Il ne récupère qu'une branche, mais avec tout son historique
+W: Il ne récupère que les fichiers modifiés lors du dernier mois écoulé
+E: Utile en intégration continue pour gagner du temps. git log, git blame ou git describe sont alors limités ; git fetch --unshallow récupère le reste si besoin.
+```bash
+git clone --depth 1 https://github.com/equipe/projet.git
+```
+
+@063
+Q: Quelle différence entre un clone partiel (--filter=blob:none) et un clone superficiel (--depth) ?
+C: Le partiel garde tout l'historique mais télécharge le contenu des fichiers à la demande
+W: Le partiel ne récupère qu'une branche, le superficiel l'ensemble des branches
+W: Le partiel ne fonctionne qu'avec Git LFS, le superficiel avec tous les serveurs
+W: Le partiel supprime les étiquettes, le superficiel les conserve pour les versions publiées
+E: Avec un clone partiel, git log reste complet et les fichiers des vieux commits sont récupérés seulement si on les consulte. C'est souvent le meilleur compromis pour un gros dépôt.
+
+@064
+Q: Associer chaque objet interne de Git à ce qu'il représente.
+P: blob => Le contenu d'un fichier
+P: tree => Un dossier : noms, droits et objets qu'il contient
+P: commit => Un instantané avec son arbre, ses parents, son auteur et son message
+P: tag annoté => Une étiquette signée ou commentée qui désigne un objet
+E: Deux fichiers identiques partagent le même blob, même dans des dossiers ou commits différents. Une branche n'est qu'un fichier contenant l'identifiant d'un commit.
+
+@065
+Q: Pourquoi deux fichiers identiques dans deux dossiers différents n'occupent-ils qu'une fois la place dans le dépôt ?
+C: Git range les contenus par leur empreinte, et deux contenus égaux ont la même
+W: Git compare les noms de fichiers et ne garde que le premier de même nom
+W: Git compresse les dossiers entiers et supprime les doublons de chaque archive
+W: Git stocke les fichiers identiques dans un dossier partagé entre les dépôts
+E: Le stockage est adressé par contenu : l'identifiant d'un objet est l'empreinte de son contenu. Renommer un fichier ne crée donc pas de nouveau blob, seulement un nouvel arbre.
+
+@066
+Q: Que fait git gc ?
+C: Il compresse les objets en paquets et supprime les objets devenus inaccessibles
+W: Il supprime les branches locales qui ne sont plus présentes sur le serveur distant
+W: Il vérifie l'intégrité des objets et répare ceux qui sont corrompus
+W: Il ferme les fichiers ouverts par Git pour libérer le répertoire
+E: Git le lance de lui-même de temps en temps. Les objets accessibles depuis le reflog sont gardés tant qu'il n'a pas expiré : c'est ce qui permet de récupérer un commit perdu pendant plusieurs semaines.
+
+@067
+Q: Que contient le fichier .git/refs/heads/main d'un dépôt non compacté ?
+C: L'identifiant du dernier commit de la branche main
+W: La liste des commits de la branche main, du plus récent au plus ancien
+W: Le contenu des fichiers de la branche main au dernier commit
+W: L'adresse du serveur distant associé à la branche main
+E: Une branche n'est qu'un pointeur de 41 octets : la créer ou la supprimer est instantané. Après git pack-refs, les références sont regroupées dans .git/packed-refs.
+
+@068
+Q: Pourquoi git pull avec cette configuration donne-t-il un historique plus linéaire ?
+C: Les commits locaux sont rejoués après ceux du serveur au lieu de créer une fusion
+W: Les commits du serveur sont réécrits pour suivre l'ordre des commits locaux
+W: Les commits locaux sont regroupés en un seul avant d'être envoyés au serveur distant
+W: Les commits de fusion sont supprimés de l'historique entier du dépôt
+E: Sans ce réglage, chaque git pull sur une branche qui a divergé ajoute un commit « Merge branch 'main' of … ». pull.ff=only est une autre option : il refuse de fusionner et oblige à choisir.
+```text
+[pull]
+    rebase = true
+```
+
+@069
+Q: Remettre dans l'ordre la mise à jour d'une branche de fonctionnalité avec main avant de demander la fusion.
+O: Récupérer le distant avec git fetch
+O: Rebaser la branche sur origin/main
+O: Résoudre les conflits éventuels et continuer le rebase
+O: Relancer les tests sur la branche à jour
+O: Pousser avec --force-with-lease
+E: La CI teste alors exactement ce qui sera fusionné. Si la branche est partagée, on préfère fusionner origin/main dans la branche, ce qui ne réécrit rien.
+
+@070
+Q: Compléter cette commande qui retrouve le commit qui a ajouté ou retiré la chaîne API_KEY dans l'historique.
+A: -S
+E: L'option « pioche » liste les commits où le nombre d'occurrences de la chaîne change. -G accepte une expression régulière et trouve aussi les lignes modifiées qui la contiennent.
+```bash
+git log ____ "API_KEY" --oneline
+```
+
+@071
+Q: Pourquoi git pull est-il déconseillé dans un script de déploiement automatique ?
+C: Il peut lancer une fusion ou s'arrêter sur un conflit au lieu d'une version précise
+W: Il ne récupère que les fichiers modifiés et laisse les nouveaux fichiers ajoutés de côté
+W: Il exige un mot de passe à chaque appel, même avec une clé SSH configurée
+W: Il supprime le dossier de déploiement avant de récupérer la nouvelle version
+E: Un script fiable fait git fetch puis git checkout --force sur une étiquette ou un identifiant précis. On sait alors exactement quelle version tourne, et un retour arrière revient à extraire l'étiquette précédente.
+
+@072
+Q: Que signifie cette sortie de git describe --tags ?
+C: Le commit courant suit de 5 commits l'étiquette v1.4.0, et son identifiant court est 3f2a9c1
+W: L'étiquette v1.4.0 a été posée il y a 5 jours sur le commit 3f2a9c1 de main
+W: La version v1.4.5 est en cours de préparation, numérotée par Git à partir du commit 3f2a9c1
+W: Cinq étiquettes ont été posées depuis v1.4.0, la dernière sur le commit 3f2a9c1
+E: Le g précède l'identifiant court du commit. Ce nom unique et lisible sert souvent de numéro de version de construction ; sur le commit étiqueté lui-même, git describe affiche simplement v1.4.0.
+```text
+v1.4.0-5-g3f2a9c1
+```
+
+@073
+Q: Que change ce réglage dans le fichier ~/.gitconfig ?
+C: Le premier git push d'une nouvelle branche crée et suit la branche distante
+W: Chaque commit est poussé vers le distant dès qu'il est enregistré
+W: Les branches locales sont supprimées une fois poussées sur le serveur distant de l'équipe
+W: Le distant origin est créé automatiquement à partir du nom du dossier
+E: On évite ainsi le message qui demande git push --set-upstream. Combiné avec pull.rebase et fetch.prune, il simplifie le quotidien en équipe.
+```text
+[push]
+    autoSetupRemote = true
+```
+
+@074
+Q: À quoi sert git switch - ?
+C: À revenir à la branche précédente
+W: À supprimer la branche courante du poste
+W: À créer une branche sans nom
+W: À annuler le dernier changement
+E: Comme cd - dans un terminal. git checkout - fait la même chose ; @{-1} désigne aussi la branche précédente dans les autres commandes.
+
+@075
+Q: Que montre git shortlog -sn --since="1 year ago" ?
+C: Le nombre de commits par auteur sur l'année écoulée, trié par nombre
+W: La liste des fichiers les plus modifiés au cours de l'année écoulée
+W: Les messages de commit de l'année, réduits à leurs dix premiers mots
+W: Le temps passé par chaque développeur sur le dépôt pendant l'année
+E: Un indicateur de répartition de la connaissance : si un seul auteur a écrit 90 % d'un module, son départ fragilise l'équipe. Le nombre de commits ne mesure pas la valeur du travail.
+
+@076
+Q: Comment annuler un git rebase terminé qui a mal tourné, avant de pousser ?
+C: Revenir à l'état d'avant grâce au reflog, avec git reset --hard ORIG_HEAD ou une entrée du reflog
+W: Lancer git rebase --abort, qui fonctionne aussi après la fin du rebase
+W: Lancer git revert sur chaque commit rejoué, du plus récent au plus ancien
+W: Supprimer le dossier .git puis cloner de nouveau le dépôt depuis le serveur
+E: ORIG_HEAD pointe le commit d'avant le rebase ; le reflog garde aussi l'entrée « rebase (start) ». --abort ne sert que pendant un rebase en cours.
+
+@077
+Q: Un dépôt a l'historique A-B-C sur main et A-B-D-E sur feature. Combien de commits git rebase main rejoue-t-il depuis feature ?
+N: 2
+U: commits
+E: L'ancêtre commun est B : D et E sont rejoués après C, et deviennent D' et E'. Si un commit de feature contenait déjà le même changement que C, Git le reconnaîtrait et l'écarterait.
+
+@078
+Q: Pourquoi le sparse-checkout est-il utile dans un monorepo ?
+C: Il n'extrait que les dossiers dont on a besoin, tout en gardant le dépôt entier
+W: Il crée un dépôt séparé pour chaque dossier extrait du monorepo
+W: Il empêche les autres équipes de modifier les dossiers non extraits
+W: Il supprime l'historique des dossiers que l'on n'a pas extraits
+E: git sparse-checkout set mobile docs limite le répertoire de travail à ces dossiers. Combiné à un clone partiel, il rend un dépôt de plusieurs gigaoctets maniable sur un poste ordinaire.
+
+@079
+Q: Le fichier .env, déjà commité, vient d'être ajouté à ce .gitignore. Pourquoi reste-t-il suivi ?
+C: Le .gitignore ne s'applique qu'aux fichiers non suivis : il faut d'abord git rm --cached
+W: Le .gitignore n'est lu qu'après un redémarrage du poste de travail
+W: Le .gitignore ignore les fichiers dont le nom commence par un point
+W: Le .gitignore ne s'applique qu'aux branches créées après sa modification
+E: git rm --cached .env retire le fichier de l'index sans le supprimer du disque ; le commit suivant cesse de le suivre. Le contenu reste dans l'historique : un secret qu'il contenait est à changer.
+```text
+.env
+__pycache__/
+```
+
+@080
+Q: Que fait la commande git range-diff main@{1} main feature@{1} feature ?
+C: Elle compare deux versions d'une même série de commits, par exemple avant et après un rebase
+W: Elle compare les fichiers de deux branches sur une plage de lignes donnée
+W: Elle compare les dates des commits de deux branches sur une période
+W: Elle compare la taille de deux branches en nombre de fichiers modifiés
+E: Après une relecture, on rebase et on corrige : range-diff montre au relecteur ce qui a changé commit par commit, sans relire toute la série.
+
+@081
+Q: Comment voir sur quelle branche un commit donné a été intégré ?
+C: Avec git branch --contains suivi de l'identifiant du commit
+W: Avec git log --branch suivi de l'identifiant du commit
+W: Avec git show --origin suivi de l'identifiant du commit
+W: Avec git status --commit suivi de l'identifiant complet du commit
+E: git branch -r --contains cherche aussi parmi les branches distantes, et git tag --contains indique les versions qui embarquent un correctif.
+
+@082
+Q: Que fait git config --global init.defaultBranch main ?
+C: Il donne le nom main à la première branche des nouveaux dépôts
+W: Il renomme master en main dans les dépôts déjà clonés du poste
+W: Il interdit les commits directs sur la branche main des dépôts
+W: Il choisit main comme branche extraite après chaque git clone
+E: Sans ce réglage, git init crée encore master selon les versions. Pour un dépôt existant, on renomme avec git branch -m master main puis on met à jour la branche par défaut sur le serveur.
+
+@083
+Q: Pourquoi le serveur refuse-t-il ce push avec « non-fast-forward » ?
+C: La branche distante contient des commits que la branche locale n'a pas
+W: La branche locale contient un fichier trop gros pour le serveur
+W: La branche distante est protégée contre tout push de l'équipe
+W: La branche locale n'a pas été signée avec une clé SSH
+E: Pousser écraserait ces commits : Git refuse. On récupère et on intègre (git pull --rebase), puis on pousse. Forcer n'est justifié que sur sa propre branche, après avoir compris ce qui sera écrasé.
+```text
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'github.com:equipe/projet.git'
+```
+
+@084
+Q: Pourquoi un dépôt Git ne doit-il pas être placé dans un dossier synchronisé comme OneDrive ou Dropbox ?
+C: La synchronisation peut copier .git à moitié et corrompre le dépôt
+W: Git refuse de s'exécuter dans un dossier qui contient des fichiers cachés
+W: La synchronisation convertit les identifiants des commits en majuscules
+W: Les dossiers synchronisés interdisent les fichiers sans extension
+E: Deux postes qui écrivent dans .git en même temps produisent des conflits de fichiers internes. Le serveur Git est déjà la copie de sauvegarde ; on pousse régulièrement.
+
+@085
+Q: Que permet un modèle de demande de fusion (.github/pull_request_template.md) ?
+C: De préremplir la description avec les rubriques attendues, comme les tests faits
+W: De bloquer la fusion tant que la description ne dépasse pas cent mots
+W: De créer automatiquement une branche pour chaque nouvelle demande
+W: De choisir les relecteurs selon les fichiers modifiés par la demande
+E: Une description qui explique le pourquoi, les tests réalisés et les points d'attention accélère la relecture. Les relecteurs automatiques relèvent de CODEOWNERS.
+
+@086
+Q: Pourquoi le reflog ne permet-il pas de récupérer un travail sur un autre poste ?
+C: Le reflog est local : il n'est jamais transmis par push ou clone
+W: Le reflog est chiffré avec la clé de l'utilisateur qui l'a créé
+W: Le reflog n'enregistre que les commits faits sur la branche main
+W: Le reflog est vidé à chaque push vers le serveur distant
+E: Un clone neuf démarre avec un reflog vide. Seuls les commits poussés existent ailleurs : pousser régulièrement sa branche, même inachevée, protège d'une panne du poste.
+
+@087
+Q: Combien d'octets fait la référence d'une branche dans un fichier non compacté, saut de ligne compris, avec SHA-1 ?
+N: 41
+U: octets
+E: 40 caractères hexadécimaux plus un saut de ligne. C'est pourquoi créer une branche dans Git est quasi gratuit, contrairement aux anciens outils qui copiaient les fichiers.
+
+@088
+Q: Que fait git filter-repo --path secrets.txt --invert-paths ?
+C: Il réécrit tout l'historique en retirant le fichier secrets.txt de chaque commit
+W: Il chiffre le fichier secrets.txt dans tous les commits de l'historique
+W: Il ajoute secrets.txt au .gitignore de chaque branche du dépôt
+W: Il crée une branche qui contient seulement le fichier secrets.txt
+E: Tous les identifiants de commits changent : chacun doit recloner, et les demandes de fusion ouvertes deviennent caduques. On ne l'utilise qu'en cas de besoin réel, avec l'accord de l'équipe.
+
+@089
+Q: Pourquoi git merge -s ours est-il différent de git merge -X ours ?
+C: -s ours ignore tout le contenu de l'autre branche, -X ours ne tranche que les conflits
+W: -s ours fusionne vers le serveur, -X ours fusionne en local uniquement
+W: -s ours crée une étiquette, -X ours crée un commit de fusion ordinaire
+W: -s ours garde les deux versions, -X ours supprime les fichiers en conflit
+E: La stratégie ours enregistre une fusion sans rien prendre de l'autre branche, pour la marquer comme intégrée. L'option -X ours fusionne normalement et ne choisit la version locale que là où il y a conflit.
+
+@090
+Q: Ce script deploie.sh a été enregistré avec des fins de ligne CRLF. Que se passe-t-il à son exécution sous Linux ?
+C: Le shell cherche un interpréteur nommé « bash\r » et échoue avec « bad interpreter »
+W: Le script s'exécute normalement mais affiche chaque ligne deux fois
+W: Le noyau convertit les fins de ligne avant d'exécuter le script
+W: Le script s'exécute avec Windows Subsystem for Linux sans erreur
+E: La ligne #!/bin/bash se termine par un retour chariot invisible. Une règle *.sh text eol=lf dans .gitattributes l'évite pour tous les postes de l'équipe.
+```bash
+#!/bin/bash
+echo "Déploiement"
+```
+
+@091
+Q: Comment Git détecte-t-il un renommage de fichier dans un commit ?
+C: Il compare les contenus supprimés et ajoutés et les rapproche au-delà d'un seuil de similitude
+W: Il lit une métadonnée de renommage enregistrée par git mv dans le commit
+W: Il demande à l'utilisateur de confirmer le renommage au moment du commit
+W: Il se fie à la date de création du fichier dans le système de fichiers
+E: Git n'enregistre pas les renommages : git mv équivaut à supprimer puis ajouter. Un renommage accompagné de grosses modifications peut donc apparaître comme une suppression et un ajout.
+
+@092
+Q: Pourquoi séparer un renommage de fichier et une modification de son contenu en deux commits ?
+C: Git reconnaît mieux le renommage et l'historique du fichier reste suivi
+W: Git refuse un commit qui renomme et modifie le même fichier suivi à la fois
+W: Les deux commits prennent moins de place qu'un commit unique
+W: Le serveur ne peut afficher qu'un type de changement par commit
+E: Avec un contenu très modifié, la similitude tombe sous 50 % et git log --follow ou git blame perdent la trace. Le relecteur voit aussi plus clairement ce qui a réellement changé.
+
+@093
+Q: Remettre dans l'ordre le traitement d'un correctif urgent sur une version déjà livrée, avec une branche de maintenance.
+O: Créer la branche de correctif depuis l'étiquette de la version livrée
+O: Corriger et tester sur cette branche
+O: Fusionner dans la branche de maintenance et poser une nouvelle étiquette
+O: Déployer la version corrigée
+O: Reporter le correctif sur main par cherry-pick -x ou fusion
+E: Oublier le report sur main fait réapparaître le défaut à la version suivante. Sur un développement sur tronc, on corrige d'abord sur main puis on reporte vers la branche de maintenance.
+
+@094
+Q: Que fait la commande git notes add -m "Testé sur le banc 2" a1b2c3d ?
+C: Elle attache une note au commit sans changer son identifiant
+W: Elle modifie le message du commit et change donc son identifiant
+W: Elle crée une étiquette annotée sur le commit avec ce texte
+W: Elle ajoute un fichier NOTES au commit dans l'historique
+E: Les notes vivent dans refs/notes et ne sont pas poussées par défaut. Elles servent à ajouter des informations après coup (résultat de test, lien vers un ticket) sans réécrire l'historique.
+
+@095
+Q: Pourquoi un commit de fusion a-t-il deux parents ?
+C: Il relie le dernier commit de chacune des deux branches fusionnées
+W: Il garde une copie de sauvegarde du commit précédent de la branche
+W: Il désigne l'auteur et le relecteur de la fusion comme parents
+W: Il pointe à la fois vers la branche locale et vers la branche distante
+E: git log --first-parent ne suit que le premier parent, celui de la branche réceptrice : on voit alors l'historique de main comme une suite de fusions de fonctionnalités.
+
+@096
+Q: Que se passe-t-il si deux développeurs créent chacun une étiquette v2.0 sur des commits différents et la poussent ?
+C: Le second push est refusé, car l'étiquette existe déjà sur le serveur
+W: Le serveur garde les deux étiquettes, distinguées par la date de création
+W: Le serveur déplace l'étiquette vers le commit du second développeur
+W: Le serveur fusionne les deux commits en un seul commit étiqueté
+E: Déplacer une étiquette publiée trompe ceux qui l'ont déjà récupérée. On publie les versions par la CI, à partir d'un seul endroit, et une règle protège les étiquettes v* contre la modification.
+
+@097
+Q: Combien d'objets blob crée un commit qui modifie 3 fichiers d'un projet de 2 000 fichiers ?
+N: 3
+U: objets
+E: Seuls les contenus nouveaux créent des blobs ; les 1 997 autres fichiers réutilisent leurs blobs existants. Les arbres des dossiers modifiés sont recréés, jusqu'à la racine.
+
+@098
+Q: Pourquoi git log --first-parent main est-il utile avec des fusions par commit de fusion ?
+C: Il montre une ligne par fusion dans main, sans les commits internes des branches
+W: Il montre le premier commit de chaque branche fusionnée dans main
+W: Il montre les commits faits directement sur main avant sa création
+W: Il montre la branche parente de chaque branche de fonctionnalité
+E: On obtient l'équivalent d'un historique squashé, tout en gardant le détail des branches pour qui veut le consulter. git bisect --first-parent restreint aussi la recherche aux commits de main.
+
+@099
+Q: À quoi sert git maintenance start sur un gros dépôt ?
+C: À planifier des tâches de fond comme le préchargement et la compaction des objets
+W: À verrouiller le dépôt pendant une opération de maintenance du serveur
+W: À sauvegarder le dépôt chaque nuit vers un second dépôt distant
+W: À vérifier chaque jour que les branches suivent la protection de main
+E: Les tâches prefetch, commit-graph et incremental-repack accélèrent fetch, log et status. Le graphe des commits rend git log --graph rapide même sur des centaines de milliers de commits.
+
+@100
+Q: Une équipe veut que main reste toujours déployable. Quelle combinaison de règles y contribue le plus ?
+C: Demandes de fusion obligatoires, CI verte exigée et branches courtes
+W: Pushs directs autorisés, tests lancés chaque nuit et branches longues
+W: Fusions par les administrateurs seuls, sans CI ni relecture
+W: Une branche par développeur, fusionnée une fois par mois
+E: Chaque changement est relu et testé avant d'atteindre main, et les petites fusions limitent les conflits. Une version à déployer se résume alors à étiqueter le dernier commit de main.

@@ -1,0 +1,454 @@
+@001
+Q: Que fait l'option -d de docker run ?
+C: Elle lance le conteneur en arrière-plan et rend la main au terminal
+W: Elle supprime le conteneur dès qu'il s'arrête pour libérer la place sur le disque
+W: Elle télécharge la dernière version de l'image avant de démarrer le conteneur
+W: Elle désactive le réseau du conteneur pour l'isoler complètement de l'hôte
+E: En mode détaché, le conteneur tourne seul ; docker logs et docker attach permettent de suivre sa sortie. Sans -d, la sortie s'affiche dans le terminal et Ctrl+C arrête le conteneur.
+
+@002
+Q: Que fait l'option --rm de docker run ?
+C: Elle supprime le conteneur à son arrêt
+W: Elle supprime l'image après le lancement du conteneur
+W: Elle redémarre le conteneur s'il s'arrête sur une erreur
+W: Elle efface les volumes nommés montés dans le conteneur
+E: Pratique pour une commande ponctuelle (docker run --rm python:3.14 python -V) : on évite d'accumuler des conteneurs arrêtés. Les volumes nommés sont conservés ; seuls les volumes anonymes du conteneur sont supprimés avec lui.
+
+@003
+Q: Associer chaque commande Docker à ce qu'elle affiche ou fait.
+P: docker ps -a => Les conteneurs, y compris ceux qui sont arrêtés
+P: docker images => Les images présentes sur la machine
+P: docker logs -f web => La sortie du conteneur web, suivie en continu
+P: docker exec -it web sh => Un shell ouvert dans le conteneur web qui tourne
+P: docker inspect web => La configuration complète du conteneur web en JSON
+E: Ces cinq commandes suffisent à la plupart des diagnostics. docker exec n'agit que sur un conteneur en marche ; pour un conteneur qui plante au démarrage, on lit ses journaux ou on le relance avec une autre commande.
+
+@004
+Q: Quelle différence entre docker stop et docker kill ?
+C: stop envoie SIGTERM puis SIGKILL après un délai, kill envoie SIGKILL tout de suite
+W: stop met le conteneur en pause, kill le supprime avec ses volumes de données
+W: stop s'applique à un conteneur, kill arrête l'ensemble des conteneurs lancés sur l'hôte
+W: stop arrête le processus principal, kill arrête le démon Docker de la machine
+E: Le délai par défaut est de 10 secondes (option -t). Il laisse l'application fermer ses connexions et terminer ses écritures ; une application qui ignore SIGTERM est tuée à la fin du délai.
+
+@005
+Q: Compléter cette commande qui construit une image nommée monapp:1.2 depuis le dossier courant.
+A: -t
+E: -t (ou --tag) donne le nom et l'étiquette ; le point final désigne le contexte de construction envoyé au démon. Sans étiquette, Docker utilise latest.
+```bash
+docker build ____ monapp:1.2 .
+```
+
+@006
+Q: Pourquoi éviter l'étiquette latest dans un fichier de déploiement ?
+C: Elle désigne la dernière image poussée, qui peut changer sans prévenir
+W: Elle n'est acceptée que par Docker Hub et refusée par les registres privés
+W: Elle télécharge l'image à chaque démarrage et ralentit le lancement
+W: Elle empêche d'utiliser les volumes nommés avec cette image
+E: latest n'est qu'une étiquette par défaut, pas « la plus récente stable ». Deux serveurs peuvent tourner sur deux versions différentes ; on déploie une version précise (1.4.2) ou une empreinte sha256.
+
+@007
+Q: Que fait l'instruction EXPOSE 8080 dans un Dockerfile ?
+C: Elle documente le port écouté, sans le publier sur l'hôte
+W: Elle publie le port 8080 sur toutes les interfaces de l'hôte
+W: Elle ouvre le port 8080 dans le pare-feu de la machine hôte
+W: Elle redirige le port 80 du conteneur vers le port 8080
+E: Seul -p (ou ports: dans Compose) publie un port. EXPOSE sert de documentation et à l'option -P, qui publie les ports exposés sur des ports aléatoires de l'hôte.
+
+@008
+Q: Quelle différence entre COPY et ADD dans un Dockerfile ?
+C: ADD sait aussi extraire une archive et télécharger une URL, COPY copie seulement
+W: COPY copie des dossiers entiers, ADD ne copie qu'un fichier à la fois dans l'image
+W: COPY s'exécute à la construction, ADD au démarrage du conteneur sur la machine
+W: ADD conserve les droits des fichiers copiés, COPY les remet tous à root
+E: On préfère COPY, plus prévisible : un ADD d'un .tar.gz l'extrait sans le dire. Pour télécharger un fichier, un RUN curl suivi d'une vérification d'empreinte est plus sûr qu'un ADD depuis une URL.
+
+@009
+Q: Quelle différence entre un volume nommé et un montage de dossier (bind mount) ?
+C: Le volume est géré par Docker, le montage expose un dossier précis de l'hôte
+W: Le volume se limite aux bases de données, le montage sert pour les autres fichiers
+W: Le volume est effacé à l'arrêt du conteneur, le montage conserve les fichiers
+W: Le volume se crée dans l'image, le montage se crée au lancement du conteneur
+E: Le montage de dossier convient au développement (code source édité sur l'hôte) ou à un fichier de configuration. Le volume, rangé sous /var/lib/docker/volumes, est plus portable et convient aux données de production.
+
+@010
+Q: Compléter cette commande qui passe la variable LOG_LEVEL au conteneur.
+A: -e
+E: -e NOM=valeur ou --env-file fichier.env ; dans l'application, la variable se lit comme une variable d'environnement. Les secrets passés ainsi restent visibles dans docker inspect : pour un mot de passe, on préfère un secret monté en fichier.
+```bash
+docker run ____ LOG_LEVEL=debug monapp:1.2
+```
+
+@011
+Q: Que fait l'instruction WORKDIR /app ?
+C: Elle fixe le dossier courant des instructions suivantes et du conteneur
+W: Elle crée un volume nommé app qui garde les données du conteneur
+W: Elle copie le dossier courant de l'hôte vers /app dans l'image
+W: Elle interdit l'écriture en dehors du dossier /app dans le conteneur lancé
+E: WORKDIR crée le dossier s'il n'existe pas. On l'utilise plutôt que RUN cd /app, qui n'a d'effet que dans la même instruction RUN : chaque RUN démarre dans le dossier de travail courant.
+
+@012
+Q: Combien de couches de système de fichiers ce Dockerfile ajoute-t-il à l'image de base ?
+N: 3
+E: RUN, COPY et ADD créent des couches ; ENV, WORKDIR, CMD ou EXPOSE ne modifient que les métadonnées. Regrouper les commandes d'un même RUN réduit le nombre de couches et permet de nettoyer dans la couche où les fichiers ont été créés.
+```dockerfile
+FROM python:3.14-slim
+ENV PYTHONUNBUFFERED=1
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r /app/requirements.txt
+COPY . /app/
+EXPOSE 8000
+CMD ["python", "/app/main.py"]
+```
+
+@013
+Q: Que fait la commande docker compose down -v ?
+C: Elle arrête et supprime les conteneurs, le réseau et les volumes du projet
+W: Elle arrête les conteneurs du projet sans les supprimer, en gardant leurs volumes
+W: Elle supprime les images construites par le projet pour forcer une reconstruction
+W: Elle met à jour les conteneurs du projet vers la version de leurs images
+E: Sans -v, les volumes nommés sont conservés et les données survivent à un down. L'option est utile pour repartir d'une base vide en développement, et dangereuse en production.
+
+@014
+Q: Que fait docker compose up -d --build ?
+C: Elle reconstruit les images si besoin, puis démarre les services en arrière-plan
+W: Elle construit les images sans démarrer les services, puis les pousse au registre
+W: Elle démarre les services en arrière-plan avec les images d'origine du registre
+W: Elle supprime les conteneurs en marche et relance une construction sans cache
+E: Sans --build, Compose réutilise l'image déjà construite même si le code a changé. Seuls les services dont la configuration ou l'image a changé sont recréés.
+
+@015
+Q: Associer chaque instruction de Dockerfile à son rôle.
+P: FROM => Choisir l'image de base
+P: RUN => Exécuter une commande pendant la construction
+P: COPY => Copier des fichiers du contexte dans l'image
+P: ENV => Définir une variable d'environnement
+P: CMD => Donner la commande lancée par défaut au démarrage
+E: RUN agit à la construction et laisse son résultat dans une couche ; CMD n'agit qu'au lancement du conteneur. Un RUN apt-get update seul, séparé de l'installation, peut réutiliser un cache périmé.
+
+@016
+Q: Pourquoi un conteneur doit-il pouvoir être supprimé et recréé à tout moment ?
+C: Une mise à jour remplace le conteneur par un neuf, issu de la nouvelle image
+W: Docker supprime les conteneurs inactifs depuis plus de vingt-quatre heures
+W: Les conteneurs perdent leur réseau après chaque redémarrage du démon Docker de l'hôte
+W: Les conteneurs ne peuvent pas être redémarrés après un arrêt de l'hôte
+E: On ne modifie pas un conteneur en place : les données vont dans des volumes, la configuration dans des variables ou des fichiers montés. Un correctif appliqué à la main dans un conteneur disparaît au prochain déploiement.
+
+@017
+Q: Que libère docker system prune ?
+C: Les conteneurs arrêtés, les réseaux inutilisés, les images orphelines et le cache de construction
+W: Les images utilisées par des conteneurs arrêtés, ainsi que les volumes nommés de chaque projet Compose
+W: Les conteneurs en marche depuis plus d'une semaine, pour forcer leur redémarrage
+W: Les journaux des conteneurs et les fichiers temporaires des applications en marche
+E: Avec -a, il supprime aussi les images non utilisées par un conteneur ; avec --volumes, les volumes non utilisés. On vérifie l'occupation avant avec docker system df.
+
+@018
+Q: Qu'est-ce qu'un registre d'images ?
+C: Un serveur qui stocke et distribue les images, comme Docker Hub ou GHCR
+W: Le fichier qui liste les conteneurs lancés sur la machine avec leurs ports
+W: La base où Docker range les journaux de tous les conteneurs d'un hôte
+W: L'outil qui construit les images à partir d'un Dockerfile et d'un contexte
+E: docker push envoie une image, docker pull la récupère. GitHub, GitLab et les fournisseurs de nuage proposent chacun un registre ; on peut aussi héberger le registre officiel registry:2 sur son réseau.
+
+@019
+Q: Compléter cette commande qui donne un second nom à une image avant de la pousser vers GHCR.
+A: tag
+E: docker tag ne copie rien : il ajoute un nom pointant vers la même image. Le nom complet inclut le registre et le propriétaire, sans quoi docker push vise Docker Hub.
+```bash
+docker ____ monapp:1.2 ghcr.io/remi/monapp:1.2
+docker push ghcr.io/remi/monapp:1.2
+```
+
+@020
+Q: Un conteneur s'arrête dès son lancement. Quelle commande donne la raison en premier ?
+C: docker logs suivi du nom du conteneur, pour lire sa dernière sortie
+W: docker exec -it suivi du nom du conteneur, pour ouvrir un shell dedans
+W: docker pull suivi du nom de l'image, pour retélécharger une version saine
+W: docker network ls, pour vérifier que le réseau par défaut existe encore
+E: Le conteneur arrêté garde ses journaux ; docker ps -a montre aussi son code de sortie. docker exec est impossible sur un conteneur qui ne tourne pas.
+
+@021
+Q: Associer chaque code de sortie d'un conteneur à sa cause la plus probable.
+P: 0 => Le processus s'est terminé normalement
+P: 1 => L'application a quitté sur une erreur
+P: 137 => Le processus a reçu SIGKILL, souvent par manque de mémoire
+P: 143 => Le processus a reçu SIGTERM et s'est arrêté
+E: 128 + numéro du signal : 9 pour SIGKILL, 15 pour SIGTERM. docker inspect indique OOMKilled: true quand la limite de mémoire a provoqué l'arrêt.
+
+@022
+Q: Pourquoi un conteneur n'est-il pas une machine virtuelle ?
+C: Il partage le noyau de l'hôte et isole seulement ses processus
+W: Il démarre plus lentement, car il charge son propre noyau complet
+W: Il ne peut pas exécuter de programme écrit pour Linux sur un hôte Linux
+W: Il exige un processeur différent de celui de la machine hôte
+E: L'isolation repose sur les espaces de noms et les cgroups du noyau Linux. Le conteneur démarre en une fraction de seconde mais offre une frontière de sécurité plus faible qu'une machine virtuelle.
+
+@023
+Q: Que publie -p 8080:80 dans cette commande ?
+C: Le port 80 du conteneur sur le port 8080 de l'hôte
+W: Le port 8080 du conteneur sur le port 80 de l'hôte
+W: Les ports 80 à 8080 du conteneur sur ceux de l'hôte
+W: Le port 80 de l'hôte sur le port 8080 du réseau Docker
+E: L'ordre est hôte:conteneur. Sans adresse, le port est ouvert sur toutes les interfaces ; 127.0.0.1:8080:80 le limite à la machine elle-même.
+```bash
+docker run -d -p 8080:80 nginx:1.29
+```
+
+@024
+Q: Une image fait 1,2 Go avec python:3.14 et 180 Mo avec python:3.14-slim. Quel pourcentage de taille économise-t-on ?
+N: 85
+U: %
+E: (1 200 - 180) / 1 200 = 0,85. Une image plus petite se télécharge plus vite et contient moins de paquets, donc moins de vulnérabilités signalées par les scanners.
+
+@025
+Q: Pourquoi écrire les journaux d'une application conteneurisée sur la sortie standard plutôt que dans un fichier ?
+C: Docker les collecte, les fait tourner et les transmet sans configuration propre au conteneur
+W: Les fichiers écrits dans un conteneur sont refusés par le système de fichiers en couches de l'image
+W: La sortie standard est chiffrée par Docker avant d'être écrite sur le disque de l'hôte
+W: Les journaux écrits sur la sortie standard ne consomment pas d'espace disque sur l'hôte
+E: C'est un principe des applications « twelve-factor ». Un fichier dans le conteneur disparaît avec lui et grossit sans rotation ; docker logs, Loki ou Elasticsearch lisent directement la sortie standard.
+
+@026
+Q: Remettre dans l'ordre les étapes d'une construction en plusieurs étapes (multi-stage) pour une application Java.
+O: FROM maven AS build : image complète avec le JDK et Maven
+O: Copier le pom.xml et télécharger les dépendances
+O: Copier les sources et construire le .jar
+O: FROM eclipse-temurin:21-jre : nouvelle image légère
+O: COPY --from=build du seul .jar, puis lancement
+E: L'image finale ne contient ni Maven, ni les sources, ni le cache des dépendances : elle passe souvent de 800 à 200 Mo. Copier le pom.xml avant les sources garde le cache des dépendances tant qu'il ne change pas.
+
+@027
+Q: Compléter cette ligne qui récupère le binaire construit dans l'étape nommée build.
+A: --from=build
+E: COPY --from accepte le nom d'une étape (FROM … AS build) ou une image externe, comme COPY --from=ghcr.io/astral-sh/uv:0.9 /uv /bin/. Les fichiers non copiés restent dans l'étape intermédiaire, absente de l'image finale.
+```dockerfile
+FROM golang:1.25 AS build
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=0 go build -o /app .
+
+FROM gcr.io/distroless/static-debian12
+COPY ____ /app /app
+ENTRYPOINT ["/app"]
+```
+
+@028
+Q: Une image multi-stage passe de 850 Mo à 120 Mo. Quel est le principal gain hors stockage ?
+C: Moins d'outils embarqués, donc moins de vulnérabilités et d'outils pour un attaquant
+W: Un démarrage du conteneur plus rapide, car le noyau charge moins de modules
+W: Une consommation de mémoire divisée par sept pendant toute l'exécution de l'application
+W: Une compatibilité avec un plus grand nombre de processeurs différents
+E: Un compilateur, un gestionnaire de paquets ou un shell dans l'image de production servent un attaquant qui a pris pied dans le conteneur. La mémoire utilisée dépend de l'application, pas de la taille de l'image.
+
+@029
+Q: Quel risque présente une image alpine pour une application Python avec des dépendances compilées ?
+C: Alpine utilise musl au lieu de glibc, et beaucoup de wheels précompilées ne s'y installent pas
+W: Alpine ne propose pas de version récente de Python dans ses dépôts de paquets officiels et maintenus
+W: Alpine refuse l'exécution de programmes sous un compte autre que root par défaut
+W: Alpine ne gère pas les volumes nommés, ce qui oblige à utiliser des montages de dossier
+E: pip doit alors compiler numpy ou cryptography, ce qui demande un compilateur et rallonge la construction. Pour Python, une image -slim basée sur Debian est souvent plus simple et à peine plus grosse.
+
+@030
+Q: Que contient une image distroless ?
+C: L'application et ses bibliothèques d'exécution, sans shell ni gestionnaire de paquets
+W: Une distribution Linux complète, sans le noyau, avec ses outils de diagnostic
+W: Un système minimal qui télécharge ses paquets au premier démarrage du conteneur sur l'hôte
+W: Une image vide qui monte le système de fichiers de l'hôte en lecture seule
+E: Sans shell, on ne peut pas ouvrir de session avec docker exec, ce qui gêne le diagnostic mais réduit la surface d'attaque. Les variantes :debug ajoutent busybox pour la mise au point.
+
+@031
+Q: Quelle différence entre ARG et ENV dans un Dockerfile ?
+C: ARG n'existe qu'à la construction, ENV reste aussi dans le conteneur
+W: ARG se lit dans le conteneur, ENV seulement pendant la construction de l'image
+W: ARG reçoit des nombres, ENV reçoit des chaînes de caractères
+W: ARG se déclare dans Compose, ENV se déclare dans le Dockerfile
+E: docker build --build-arg VERSION=1.2 renseigne un ARG. Un secret passé en ARG reste visible dans l'historique de l'image (docker history) : on utilise un secret de construction à la place.
+
+@032
+Q: Comment fournir un jeton d'accès à un dépôt privé pendant la construction, sans qu'il reste dans l'image ?
+C: Avec un secret BuildKit monté le temps d'une instruction RUN
+W: Avec une variable ARG supprimée par un RUN unset juste après
+W: Avec un fichier copié par COPY puis supprimé dans un RUN suivant
+W: Avec une variable ENV vidée dans la dernière instruction du fichier
+E: Un fichier copié puis supprimé reste dans la couche du COPY. RUN --mount=type=secret,id=jeton monte le secret dans /run/secrets le temps de la commande, sans l'écrire dans une couche.
+```dockerfile
+RUN --mount=type=secret,id=jeton \
+    JETON=$(cat /run/secrets/jeton) pip install -r requirements.txt
+```
+
+@033
+Q: Que fait cette instruction RUN ?
+C: Elle garde le cache de pip entre deux constructions sans l'inclure dans l'image
+W: Elle installe les dépendances dans un volume monté au démarrage de chaque conteneur
+W: Elle télécharge les paquets depuis le cache du registre d'images utilisé
+W: Elle désactive le cache de pip pour garantir des versions toujours à jour
+E: Le montage de cache BuildKit persiste sur la machine de construction. Une modification de requirements.txt invalide la couche, mais les paquets déjà téléchargés sont réutilisés au lieu d'être repris sur Internet.
+```dockerfile
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
+```
+
+@034
+Q: Compléter cette instruction qui vérifie toutes les 30 secondes que l'application répond.
+A: HEALTHCHECK
+E: Le conteneur passe de starting à healthy ou unhealthy selon le code de retour de la commande. Docker seul ne redémarre pas un conteneur unhealthy ; Compose s'en sert pour depends_on, et Swarm pour remplacer la tâche.
+```dockerfile
+____ --interval=30s --timeout=3s --retries=3 \
+  CMD curl -fs http://localhost:8000/sante || exit 1
+```
+
+@035
+Q: Associer chaque politique de redémarrage à son effet.
+P: no => Le conteneur ne redémarre jamais seul
+P: on-failure => Redémarrage si le code de sortie n'est pas 0
+P: always => Redémarrage en toutes circonstances, y compris au démarrage du démon
+P: unless-stopped => Comme always, sauf après un arrêt manuel
+E: unless-stopped est courant sur un serveur : le service revient après un redémarrage de l'hôte, mais un docker stop volontaire est respecté. on-failure:5 limite le nombre de tentatives.
+
+@036
+Q: Dans un projet Compose, comment le service web joint-il la base de données du service db ?
+C: Par le nom du service, db, résolu par le DNS du réseau du projet
+W: Par l'adresse 127.0.0.1, partagée par les services du même projet
+W: Par l'adresse IP de l'hôte et le port publié par le service db
+W: Par une ligne ajoutée à la main dans le fichier /etc/hosts du service
+E: Compose crée un réseau par projet, et chaque service y est joignable par son nom. Le port interne suffit (db:5432) : la base n'a pas besoin d'être publiée sur l'hôte, ce qui évite de l'exposer.
+
+@037
+Q: Pourquoi deux conteneurs lancés sur le réseau bridge par défaut ne se trouvent-ils pas par leur nom ?
+C: Seuls les réseaux créés par l'utilisateur fournissent la résolution DNS des noms
+W: Le réseau par défaut bloque la communication entre conteneurs lancés séparément
+W: Les noms de conteneurs ne sont résolus qu'à l'intérieur d'un projet Compose
+W: Le réseau par défaut ne fonctionne qu'avec des conteneurs de la même image
+E: docker network create app, puis --network app sur chaque conteneur, active le DNS intégré. Le bridge par défaut ne permet de joindre les autres que par adresse IP, qui change à chaque recréation.
+
+@038
+Q: Que garantit cette configuration Compose au démarrage ?
+C: L'API attend que la base soit déclarée en bonne santé avant de démarrer
+W: L'API redémarre automatiquement chaque fois que la base de données s'arrête
+W: L'API et la base démarrent en même temps, dans un ordre choisi au hasard
+W: L'API s'arrête si la base met plus de dix secondes à démarrer correctement
+E: Sans condition, depends_on n'attend que le lancement du conteneur, pas que PostgreSQL accepte les connexions. L'application doit malgré tout savoir retenter sa connexion, car la base peut redémarrer plus tard.
+```yaml
+services:
+  api:
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:18
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "app"]
+      interval: 5s
+```
+
+@039
+Q: Compléter ce service Compose pour qu'il redémarre après un redémarrage du serveur, sauf s'il a été arrêté à la main.
+A: unless-stopped
+E: La politique s'écrit restart: dans Compose. Associée à un démon Docker lancé au démarrage du système, elle remet les services en route sans intervention.
+```yaml
+services:
+  web:
+    image: ghcr.io/remi/monapp:1.4.2
+    restart: ____
+```
+
+@040
+Q: À quoi sert le fichier compose.override.yaml ?
+C: À ajouter des réglages locaux, fusionnés automatiquement avec compose.yaml
+W: À remplacer compose.yaml quand celui-ci contient une erreur de syntaxe
+W: À stocker les mots de passe des services en dehors du dépôt Git du projet
+W: À décrire les services de production, chargés à la place des services locaux
+E: Compose lit les deux fichiers et fusionne les valeurs : on y met les montages de code source ou un port de débogage pour le développement. En production, on choisit explicitement les fichiers avec -f.
+
+@041
+Q: D'où vient la valeur de ${TAG} dans ce fichier Compose ?
+C: D'une variable d'environnement ou du fichier .env placé à côté du fichier Compose
+W: De l'étiquette la plus récente trouvée dans le registre d'images du projet
+W: Du fichier env_file indiqué dans la définition de ce service, plus bas dans le fichier
+W: De la variable TAG définie par une instruction ENV dans le Dockerfile
+E: Le fichier .env sert à l'interpolation du fichier Compose ; env_file, lui, transmet des variables au conteneur. ${TAG:-latest} donne une valeur par défaut, ${TAG:?message} arrête Compose si elle manque.
+```yaml
+services:
+  web:
+    image: ghcr.io/remi/monapp:${TAG}
+```
+
+@042
+Q: À quoi servent les profils (profiles) dans un fichier Compose ?
+C: À ne démarrer certains services, comme un outil d'administration, que sur demande
+W: À donner des droits différents à chaque développeur qui lance le projet
+W: À limiter la mémoire et le processeur de chaque service selon l'hôte
+W: À choisir la version de Docker utilisée pour démarrer chaque service
+E: Un service avec profiles: [outils] ne démarre qu'avec docker compose --profile outils up. On y range pgAdmin, un serveur de courriel de test ou un script de migration ponctuel.
+
+@043
+Q: Pourquoi limiter la taille des journaux d'un conteneur avec le pilote json-file ?
+C: Par défaut, le fichier de journal grossit sans limite jusqu'à remplir le disque
+W: Les journaux trop longs ralentissent le démarrage de chaque nouveau conteneur lancé
+W: Docker supprime le conteneur dès que son journal dépasse un gigaoctet
+W: Les journaux longs sont tronqués et perdent leurs premières lignes
+E: Un service bavard peut écrire des dizaines de gigaoctets dans /var/lib/docker/containers. On règle max-size et max-file dans daemon.json pour tous les conteneurs, ou par service dans Compose.
+```yaml
+logging:
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+```
+
+@044
+Q: Avec max-size 10m et max-file 3, quel espace maximal, en Mo, les journaux d'un conteneur occupent-ils ?
+N: 30
+U: Mo
+E: Docker garde au plus 3 fichiers de 10 Mo : le plus ancien est supprimé à chaque rotation. Avec 20 conteneurs sur la machine, on prévoit donc au moins 600 Mo pour les journaux.
+
+@045
+Q: Pourquoi déployer une image par son empreinte, comme monapp@sha256:9f86…, plutôt que par son étiquette ?
+C: L'empreinte désigne un contenu précis, alors qu'une étiquette peut être déplacée
+W: L'empreinte télécharge l'image plus vite qu'une étiquette depuis le registre distant
+W: L'empreinte permet de pousser l'image vers plusieurs registres à la fois
+W: L'empreinte est exigée par Docker Hub pour les images publiques
+E: Quelqu'un peut repousser une autre image sous l'étiquette 1.4.2, par erreur ou par malveillance. L'empreinte garantit d'obtenir exactement l'image testée ; Dependabot ou Renovate la tiennent à jour.
+
+@046
+Q: Pourquoi un processus lancé par la forme shell de CMD ne reçoit-il pas le signal d'arrêt ?
+C: Le shell devient le processus 1 et ne transmet pas SIGTERM à l'application
+W: La forme shell lance l'application dans un autre conteneur que le premier lancé
+W: La forme shell désactive les signaux pour éviter les arrêts accidentels
+W: Le shell renvoie SIGTERM à Docker au lieu de le donner à l'application
+E: CMD python main.py lance /bin/sh -c ; l'application, enfant du shell, est tuée par SIGKILL au bout de 10 s sans pouvoir se fermer proprement. La forme JSON, CMD ["python", "main.py"], en fait le processus 1.
+```dockerfile
+CMD python main.py
+```
+
+@047
+Q: À quoi sert l'option --init de docker run ?
+C: À lancer un mini-init qui transmet les signaux et récupère les processus zombies
+W: À exécuter un script d'initialisation de la base avant le démarrage du service principal
+W: À réinitialiser le système de fichiers du conteneur à chaque nouveau démarrage
+W: À attendre que les autres conteneurs du réseau soient prêts avant de démarrer
+E: Le processus 1 d'un conteneur a un rôle particulier : il doit relayer les signaux et récupérer les enfants terminés. tini, ajouté par --init ou init: true dans Compose, le fait pour une application qui l'ignore.
+
+@048
+Q: Un conteneur limité à 512 Mo de mémoire dépasse cette limite. Que se passe-t-il ?
+C: Le noyau tue le processus, et le conteneur s'arrête avec le code 137
+W: Docker double la limite automatiquement pour éviter l'arrêt du service
+W: Le conteneur se met en pause jusqu'à ce que de la mémoire se libère
+W: L'application reçoit une erreur et continue avec moins de mémoire
+E: docker inspect affiche OOMKilled: true. Pour Java, la JVM lit la limite du conteneur depuis la version 10 : on règle -XX:MaxRAMPercentage pour garder une marge hors du tas.
+
+@049
+Q: Compléter cette commande qui limite le conteneur à un processeur et demi.
+A: --cpus
+E: --cpus=1.5 répartit 150 % d'un cœur sur la durée, quel que soit le nombre de cœurs de l'hôte. --memory et --pids-limit complètent les limites pour qu'un conteneur ne prive pas les autres.
+```bash
+docker run -d ____=1.5 --memory=512m monapp:1.2
+```
+
+@050
+Q: Pourquoi monter /var/run/docker.sock dans un conteneur est-il dangereux ?
+C: Le conteneur peut piloter Docker et donc prendre le contrôle complet de l'hôte
+W: Le conteneur perd son accès au réseau tant que le socket reste monté
+W: Le socket ralentit l'ensemble des conteneurs qui tournent sur l'hôte
+W: Le conteneur ne peut plus être arrêté par une commande docker stop
+E: Qui parle au démon peut lancer un conteneur privilégié montant / de l'hôte. Des outils comme Traefik ou Portainer en ont besoin : on les limite, avec un proxy de socket en lecture seule restreint aux appels utiles.

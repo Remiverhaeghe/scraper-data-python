@@ -1,0 +1,425 @@
+@001
+Q: Associer chaque zone de Git à ce qu'elle contient.
+P: Répertoire de travail => Les fichiers tels qu'on les modifie sur le disque
+P: Index => Les modifications préparées pour le prochain commit
+P: Dépôt local => L'historique des commits enregistrés
+P: Dépôt distant => L'historique partagé sur le serveur
+E: git add copie vers l'index, git commit enregistre l'index dans le dépôt local, git push envoie au distant. git status montre l'écart entre ces zones et dit quelle commande fait passer de l'une à l'autre.
+
+@002
+Q: Que montre git diff --staged ?
+C: Les différences entre l'index et le dernier commit
+W: Les différences entre le répertoire de travail et l'index
+W: Les différences entre la branche locale et le dépôt distant
+W: Les fichiers non suivis présents dans le répertoire de travail
+E: Sans option, git diff compare le répertoire de travail à l'index : ce qui n'a pas encore été ajouté. Relire git diff --staged avant de commiter évite d'envoyer un fichier de débogage oublié.
+
+@003
+Q: Compléter cette commande qui annule les modifications non indexées d'un fichier.
+A: restore
+E: git restore remplace la version du répertoire de travail par celle de l'index ; avec --staged, il retire le fichier de l'index sans toucher au disque. Ces modifications perdues ne sont pas récupérables par Git.
+```bash
+git ____ config.py
+```
+
+@004
+Q: Quelle commande configure le nom et l'adresse inscrits dans les commits ?
+C: git config --global user.name puis user.email
+W: git init --author avec le nom et l'adresse à inscrire
+W: git remote add avec l'adresse du compte sur le serveur
+W: git commit --signature avec le nom complet de l'auteur
+E: --global écrit dans ~/.gitconfig pour tous les dépôts ; sans option, le réglage vaut pour le dépôt courant, utile pour séparer compte personnel et compte professionnel.
+
+@005
+Q: Que fait git clone https://github.com/equipe/projet.git ?
+C: Il copie le dépôt avec tout son historique et crée le distant origin
+W: Il copie la dernière version des fichiers, sans l'historique des commits
+W: Il crée un nouveau dépôt vide sur le serveur au nom indiqué dans l'adresse
+W: Il relie un dossier existant au dépôt distant sans rien télécharger
+E: Chaque clone est un dépôt complet : on peut consulter l'historique et commiter hors ligne. Pour un très gros dépôt, --depth 1 ne récupère que le dernier commit.
+
+@006
+Q: Remettre dans l'ordre le cycle habituel pour proposer une modification.
+O: Créer une branche à partir de main à jour
+O: Modifier les fichiers et vérifier avec git status
+O: Ajouter les fichiers à l'index avec git add
+O: Enregistrer un commit avec un message clair
+O: Pousser la branche et ouvrir une demande de fusion
+E: Travailler sur une branche garde main déployable et permet la relecture avant fusion. La CI s'exécute sur la demande de fusion, avant que le code n'atteigne main.
+
+@007
+Q: Que signifie ce message de git status ?
+C: Deux commits locaux n'ont pas encore été poussés
+W: Deux commits du serveur n'ont pas encore été récupérés
+W: Deux fichiers sont modifiés mais pas encore indexés
+W: Deux branches locales pointent vers le même commit
+E: Les informations sur le distant datent du dernier fetch : la branche distante a pu avancer depuis. git status -sb ou git log origin/main..main montre les commits concernés.
+```text
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+```
+
+@008
+Q: Quelle différence entre une fusion en avance rapide (fast-forward) et un commit de fusion ?
+C: L'avance rapide déplace la branche, le commit de fusion relie deux historiques
+W: L'avance rapide supprime la branche fusionnée, le commit de fusion la conserve
+W: L'avance rapide se limite aux branches distantes, le commit de fusion aux locales
+W: L'avance rapide réécrit les commits, le commit de fusion garde leurs identifiants
+E: Si main n'a pas bougé depuis la création de la branche, Git avance simplement main. --no-ff force un commit de fusion pour garder la trace de la branche dans l'historique.
+
+@009
+Q: Que contiennent les marqueurs de ce fichier après un conflit de fusion ?
+C: En haut la version de la branche courante, en bas celle de la branche fusionnée
+W: En haut la version d'origine, en bas la version proposée par Git pour résoudre
+W: En haut la version du serveur, en bas la version locale du même fichier
+W: En haut la version la plus récente, en bas la version la plus ancienne du fichier
+E: On édite le fichier pour garder la bonne version, on retire les marqueurs, puis git add et git commit (ou git merge --continue). Le réglage merge.conflictstyle=zdiff3 affiche aussi la version commune, souvent décisive.
+```text
+<<<<<<< HEAD
+TIMEOUT = 30
+=======
+TIMEOUT = 60
+>>>>>>> feature/delai
+```
+
+@010
+Q: Compléter cette commande qui envoie la branche et la relie à sa branche distante.
+A: -u
+E: -u (ou --set-upstream) enregistre la branche de suivi : ensuite, git push et git pull suffisent sans préciser le distant ni la branche.
+```bash
+git push ____ origin feature/export-csv
+```
+
+@011
+Q: Que fait git log -p fichier.py ?
+C: Il affiche les commits qui ont touché ce fichier, avec leurs modifications
+W: Il affiche le contenu complet du fichier à chaque commit de la branche courante
+W: Il affiche les commits poussés vers le serveur depuis le dernier fetch
+W: Il affiche les personnes qui ont modifié chaque ligne du fichier
+E: Avec --follow, l'historique continue au-delà d'un renommage. git blame, lui, donne pour chaque ligne le dernier commit qui l'a modifiée.
+
+@012
+Q: Quelle différence entre une étiquette légère et une étiquette annotée ?
+C: L'annotée est un objet avec auteur, date et message, la légère un simple pointeur
+W: L'annotée se pousse automatiquement, la légère reste dans le dépôt local
+W: L'annotée peut être déplacée, la légère est fixée une fois pour toutes
+W: L'annotée désigne une branche, la légère désigne un commit précis
+E: On utilise git tag -a v1.4.0 -m "Version 1.4.0" pour une version publiée ; une étiquette annotée peut aussi être signée. Les étiquettes ne partent pas avec un push simple : git push origin v1.4.0 ou --follow-tags.
+
+@013
+Q: Que fait git branch -d feature/export ?
+C: Il supprime la branche locale si elle est déjà fusionnée
+W: Il supprime la branche sur le serveur et sur le poste local
+W: Il supprime les commits de la branche de l'historique entier
+W: Il supprime la branche même si elle contient du travail non fusionné
+E: -D force la suppression d'une branche non fusionnée. Sur le serveur, on supprime avec git push origin --delete feature/export ; git fetch --prune nettoie ensuite les références distantes disparues.
+
+@014
+Q: Qu'est-ce que HEAD dans Git ?
+C: Un pointeur vers le commit ou la branche actuellement extraits
+W: Le dernier commit poussé sur la branche main du dépôt distant origin
+W: Le premier commit de l'historique, créé par git init
+W: Le nom donné au dépôt distant par défaut après un clone
+E: HEAD désigne d'ordinaire une branche, qui désigne un commit. HEAD~1 est le parent du commit courant, HEAD~3 l'arrière-grand-parent ; HEAD^2 le second parent d'un commit de fusion.
+
+@015
+Q: Que signifie ce message affiché après l'extraction d'une étiquette ?
+C: HEAD pointe un commit et non une branche : les nouveaux commits ne sont rattachés à aucune
+W: La branche courante a été supprimée du dépôt distant par une autre personne
+W: Le dépôt local a perdu son lien avec le serveur et doit être cloné à nouveau
+W: Le répertoire de travail contient des conflits non résolus depuis la dernière fusion de branches
+E: Cela arrive en extrayant une étiquette ou un identifiant de commit. Pour garder un travail fait dans cet état, on crée une branche avec git switch -c ; sinon, les commits finissent par être nettoyés.
+```text
+Note: switching to 'v1.4.0'.
+You are in 'detached HEAD' state.
+HEAD is now at 3f2a9c1 Corrige le calcul de la TVA
+```
+
+@016
+Q: Que fait git revert sur un commit déjà poussé ?
+C: Il crée un nouveau commit qui annule les changements du commit visé
+W: Il supprime le commit visé de l'historique local et de celui du serveur
+W: Il ramène la branche au commit visé en effaçant les commits suivants
+W: Il replace les changements du commit visé dans l'index sans commiter
+E: L'historique partagé n'est pas réécrit : les autres développeurs peuvent récupérer l'annulation normalement. Pour annuler un commit de fusion, on précise le parent à garder avec -m 1.
+
+@017
+Q: Combien de caractères hexadécimaux compte l'identifiant SHA-1 complet d'un commit ?
+N: 40
+U: caractères
+E: 160 bits valent 40 chiffres hexadécimaux ; les 7 premiers suffisent d'ordinaire pour désigner un commit sans ambiguïté. Git prend en charge SHA-256 (64 caractères) pour les nouveaux dépôts, encore peu répandu.
+
+@018
+Q: Pourquoi écrire des messages de commit courts à l'impératif, comme « Corrige le calcul de la TVA » ?
+C: Le titre se lit dans git log --oneline et décrit ce que fait le commit
+W: Git refuse les messages de plus de cinquante caractères sur la première ligne
+W: Le serveur trie les commits par ordre alphabétique de leur message
+W: Les messages courts réduisent la taille du dépôt une fois compressé
+E: On garde un titre de 50 à 70 caractères, une ligne vide, puis le pourquoi dans le corps si besoin. Un historique lisible sert à la revue, à git bisect et à la rédaction des notes de version.
+
+@019
+Q: Associer chaque préfixe des Conventional Commits à son usage.
+P: feat => Une nouvelle fonctionnalité
+P: fix => La correction d'un défaut
+P: docs => Une modification de la documentation
+P: refactor => Une restructuration sans changement de comportement
+P: chore => De l'entretien, comme une mise à jour de dépendance
+E: Ces préfixes permettent de générer le journal des versions et de déduire le numéro SemVer : fix donne un correctif, feat une version mineure, BREAKING CHANGE une version majeure.
+
+@020
+Q: Que fait git fetch --prune ?
+C: Il récupère le distant et supprime les références de branches qui n'y existent plus
+W: Il récupère le distant et supprime les branches locales déjà fusionnées dans la branche main
+W: Il supprime les commits inaccessibles du dépôt local pour gagner de la place
+W: Il récupère seulement les étiquettes du distant sans les branches
+E: Les références origin/… des branches supprimées sur le serveur restent sinon affichées. fetch.prune=true dans la configuration l'applique à chaque fetch.
+
+@021
+Q: Où se règlent les fichiers que Git doit ignorer pour un seul poste, sans modifier le .gitignore partagé ?
+C: Dans .git/info/exclude, ou dans un fichier global déclaré par core.excludesFile
+W: Dans le fichier .gitattributes placé à la racine du dépôt partagé
+W: Dans la section ignore du fichier .git/config du dépôt partagé
+W: Dans un fichier .gitignore placé dans le dossier personnel de l'utilisateur connecté
+E: Les fichiers propres à un éditeur (.idea, .vscode) ou au système (.DS_Store, Thumbs.db) ont leur place dans le fichier global. Le .gitignore du projet garde ce qui concerne tout le monde.
+
+@022
+Q: Compléter cette commande qui affiche ce que contenait config.py dans le commit a1b2c3d, sans le restaurer.
+A: show
+E: La syntaxe commit:chemin désigne un fichier dans un commit. git restore --source=a1b2c3d config.py le restaurerait dans le répertoire de travail.
+```bash
+git ____ a1b2c3d:config.py
+```
+
+@023
+Q: Que fait git clean -fd ?
+C: Il supprime les fichiers et dossiers non suivis du répertoire de travail
+W: Il supprime les fichiers suivis qui n'ont pas changé depuis le dernier commit
+W: Il supprime les branches locales qui n'existent plus sur le dépôt distant
+W: Il supprime l'historique des commits plus anciens que trente jours
+E: Ces fichiers ne sont pas récupérables par Git. On lance d'abord git clean -nd pour voir la liste ; -x supprime aussi les fichiers ignorés, comme les dossiers de compilation.
+
+@024
+Q: À quoi sert cette commande ?
+C: À savoir quel commit a modifié en dernier chaque ligne de 40 à 60
+W: À signaler les lignes de 40 à 60 qui contiennent une erreur de syntaxe
+W: À annuler les modifications des lignes 40 à 60 depuis le dernier commit
+W: À comparer les lignes 40 à 60 entre deux branches du dépôt
+E: Le commit trouvé, avec son message et sa demande de fusion, explique souvent pourquoi le code est ainsi. Un fichier .git-blame-ignore-revs écarte les commits de reformatage massif.
+```bash
+git blame -L 40,60 service.py
+```
+
+@025
+Q: Un dépôt local a 3 commits non poussés, et le serveur 2 commits non récupérés sur la même branche. Combien de commits la branche locale contiendra-t-elle de plus après git pull --rebase, par rapport au serveur ?
+N: 3
+U: commits
+E: Les 2 commits du serveur sont intégrés, puis les 3 commits locaux sont rejoués par-dessus : la branche locale a 3 commits d'avance, à pousser. Une fusion classique ajouterait en plus un commit de fusion.
+
+@026
+Q: Remettre dans l'ordre les effets d'un git rebase main sur une branche de fonctionnalité.
+O: Git trouve l'ancêtre commun de la branche et de main
+O: Il met de côté les commits propres à la branche
+O: Il replace la branche sur le dernier commit de main
+O: Il rejoue un à un les commits mis de côté
+O: La branche pointe vers les nouveaux commits, aux identifiants différents
+E: Les commits rejoués sont de nouveaux objets : la branche déjà poussée doit l'être de nouveau avec --force-with-lease. En cas de conflit, on corrige puis git rebase --continue, ou on abandonne avec --abort.
+
+@027
+Q: Pourquoi utiliser git push --force-with-lease plutôt que --force après un rebase ?
+C: Il refuse d'écraser la branche distante si quelqu'un y a poussé entre-temps
+W: Il pousse plus vite, car il n'envoie que les commits réécrits par le rebase
+W: Il demande l'accord des autres développeurs avant d'écraser la branche
+W: Il garde une copie de l'ancienne branche distante sous un nouveau nom
+E: --force écrase sans vérifier et peut faire disparaître les commits d'un collègue. --force-with-lease compare la branche distante à la dernière version récupérée et s'arrête si elle a bougé.
+
+@028
+Q: Que se passe-t-il si un collègue a déjà basé son travail sur la branche que l'on vient de rebaser et de forcer ?
+C: Son historique diverge et ses commits doivent être replacés sur la nouvelle branche
+W: Git met à jour son poste automatiquement au prochain git status qu'il lance
+W: Ses commits sont supprimés du serveur et doivent être réécrits à la main
+W: Le serveur refuse le push forcé tant que le collègue n'a pas fait un fetch
+E: Il voit alors des doublons ou des conflits incompréhensibles. D'où la règle : on ne rebase que ses branches non partagées, ou on prévient avant de réécrire une branche commune.
+
+@029
+Q: Compléter cette commande qui ouvre un rebase interactif sur les trois derniers commits.
+A: -i
+E: L'éditeur liste les commits avec une action par ligne : pick, reword, squash, fixup, drop, et l'ordre des lignes peut être changé. C'est le moyen de nettoyer une branche avant de la proposer en relecture.
+```bash
+git rebase ____ HEAD~3
+```
+
+@030
+Q: Associer chaque action du rebase interactif à son effet.
+P: pick => Garder le commit tel quel
+P: reword => Garder le commit et modifier son message
+P: squash => Fusionner avec le commit précédent en combinant les messages
+P: fixup => Fusionner avec le commit précédent en gardant le seul message de celui-ci
+P: drop => Retirer le commit de la branche
+E: git commit --fixup=a1b2c3d prépare un commit marqué ; git rebase -i --autosquash le place et le marque fixup tout seul. C'est pratique pour intégrer les remarques d'une relecture.
+
+@031
+Q: Comment retrouver une branche supprimée par erreur, dont les commits n'ont jamais été poussés ?
+C: Chercher son dernier commit dans git reflog, puis recréer la branche dessus
+W: Récupérer la branche sur le serveur avec git fetch, car Git la garde en copie
+W: Lancer git fsck --repair, qui reconstruit les branches effacées du dépôt
+W: Annuler la suppression avec git revert sur le nom de la branche supprimée
+E: Le reflog note chaque déplacement de HEAD pendant 90 jours par défaut. git switch -c feature/export a1b2c3d recrée la branche ; les commits ne disparaissent qu'au nettoyage par git gc.
+
+@032
+Q: Associer chaque mode de git reset HEAD~1 à son effet.
+P: --soft => Défaire le commit en gardant les changements dans l'index
+P: --mixed => Défaire le commit en gardant les changements hors de l'index
+P: --hard => Défaire le commit et effacer les changements du disque
+E: --mixed est le mode par défaut. --soft permet de refaire un commit différent avec les mêmes changements ; --hard est le seul qui perd du travail, récupérable par le reflog s'il avait été commité.
+
+@033
+Q: Quelle stratégie de fusion d'une demande de fusion produit un seul commit sur main ?
+C: La fusion avec écrasement (squash and merge)
+W: La fusion avec un commit de fusion classique
+W: La fusion par rebase de chacun des commits
+W: La fusion en avance rapide sans commit nouveau
+E: L'historique de main reste propre, un commit par fonctionnalité, mais le détail des commits de la branche disparaît. Après un squash, git branch -d refuse de supprimer la branche locale, qui ne paraît pas fusionnée : on utilise -D.
+
+@034
+Q: Pourquoi une règle de protection de branche est-elle utile sur main ?
+C: Elle impose une demande de fusion et la réussite des contrôles avant tout ajout
+W: Elle chiffre le contenu de la branche pour qu'il ne soit lisible que par l'équipe
+W: Elle sauvegarde la branche chaque nuit sur un second serveur de l'entreprise
+W: Elle empêche la création de branches à partir de main par les nouveaux venus
+E: Sans elle, un push direct contourne la relecture et la CI. Si les administrateurs figurent dans la liste de contournement, la règle ne s'applique pas à eux : on retire cette exception pour qu'elle vaille pour tous.
+
+@035
+Q: À quoi sert un fichier CODEOWNERS dans un dépôt GitHub ou GitLab ?
+C: À demander automatiquement la relecture des responsables des fichiers modifiés
+W: À lister les contributeurs du projet pour la page d'accueil du dépôt
+W: À interdire la modification de certains fichiers par les autres équipes du dépôt
+W: À attribuer la licence de chaque fichier à son auteur d'origine
+E: Une ligne comme /mobile/ @equipe-mobile ajoute l'équipe en relectrice des demandes de fusion qui touchent ce dossier. Combiné à la protection de branche, son accord devient obligatoire.
+
+@036
+Q: Que fait git cherry-pick -x a1b2c3d ?
+C: Il applique le commit sur la branche courante et note son origine dans le message
+W: Il applique le commit puis le supprime de la branche d'où il vient
+W: Il applique le commit sans créer de nouveau commit sur la branche
+W: Il applique le commit sur toutes les branches qui en dérivent
+E: La ligne « cherry picked from commit … » permet de savoir qu'un correctif reporté sur une branche de maintenance vient de main. Sans -x, le lien entre les deux commits est perdu.
+
+@037
+Q: À quoi sert la commande git bisect ?
+C: À trouver par dichotomie le commit qui a introduit un défaut
+W: À couper une branche en deux pour fusionner chaque moitié séparément
+W: À comparer deux branches pour lister les commits qui les séparent
+W: À diviser un gros commit en deux commits plus petits et lisibles
+E: On marque un commit bon et un commit mauvais ; Git extrait le milieu, on teste, on marque, et ainsi de suite. git bisect run ./test.sh automatise l'opération avec un script qui renvoie 0 si tout va bien.
+
+@038
+Q: Entre un commit sain et un commit défaillant, 1 000 commits ont été ajoutés. Combien d'étapes git bisect faut-il au plus pour trouver le coupable ?
+N: 10
+U: étapes
+E: Chaque étape divise l'intervalle par deux : 2^10 = 1 024, donc 10 tests suffisent. Les commits qui ne compilent pas se passent avec git bisect skip.
+
+@039
+Q: Compléter cette séquence qui lance une recherche dichotomique entre la version v1.2 et le commit courant.
+A: bisect
+E: Après start, on indique le mauvais commit (HEAD) et le bon (v1.2). git bisect reset ramène sur la branche de départ une fois le coupable trouvé.
+```bash
+git ____ start
+git bisect bad HEAD
+git bisect good v1.2
+```
+
+@040
+Q: Pourquoi ce fichier .gitattributes est-il utile dans une équipe mêlant Windows et Linux ?
+C: Il fixe les fins de ligne LF dans le dépôt et dans les fichiers extraits
+W: Il convertit l'encodage des fichiers en UTF-8 à chaque commit
+W: Il empêche les développeurs Windows de modifier les scripts shell
+W: Il compresse les fichiers texte avant de les envoyer au serveur
+E: Sans règle commune, chaque poste convertit selon son réglage core.autocrlf, et des diffs entiers apparaissent pour des fins de ligne. Un script shell en CRLF échoue sous Linux avec « bad interpreter ».
+```text
+* text=auto eol=lf
+*.png binary
+```
+
+@041
+Q: Comment voir les fins de ligne enregistrées dans l'index et dans le répertoire de travail pour chaque fichier ?
+C: Avec git ls-files --eol
+W: Avec git diff --check --cached
+W: Avec git status --eol
+W: Avec git log --stat
+E: La sortie affiche i/lf, i/crlf ou i/mixed pour l'index, w/… pour le disque, et l'attribut appliqué. git add --renormalize . applique une nouvelle règle aux fichiers déjà suivis.
+
+@042
+Q: Que fait git stash -u par rapport à git stash ?
+C: Il met aussi de côté les fichiers non suivis
+W: Il met de côté seulement les fichiers indexés
+W: Il pousse la réserve vers le dépôt distant
+W: Il applique la réserve puis la supprime
+E: Sans -u, un nouveau fichier jamais ajouté reste dans le répertoire de travail. git stash push -m "essai" -- chemin met de côté une partie seulement des fichiers, avec un nom lisible dans git stash list.
+
+@043
+Q: À quoi sert git worktree add ../projet-correctif hotfix ?
+C: À extraire la branche hotfix dans un second dossier, sans quitter la branche actuelle
+W: À copier le dépôt entier dans un autre dossier avec un historique séparé
+W: À fusionner la branche hotfix dans le dossier courant puis à la supprimer
+W: À créer un dépôt distant de secours dans le dossier parent du projet
+E: Les deux dossiers partagent le même dépôt : pas de second clone, pas de stash pour changer de contexte. Une même branche ne peut pas être extraite dans deux arbres de travail à la fois.
+
+@044
+Q: Pourquoi le dépôt reste-t-il volumineux après la suppression d'un gros fichier dans un nouveau commit ?
+C: Le fichier reste dans l'historique, présent dans les commits précédents
+W: Git garde une copie de sauvegarde des fichiers supprimés pendant un an
+W: Le fichier reste dans l'index tant que git gc n'a pas été lancé à la main
+W: Le serveur refuse de supprimer les fichiers qui dépassent un mégaoctet
+E: Chaque clone télécharge encore ce fichier. Il faut réécrire l'historique (git filter-repo) ou, en amont, stocker les gros fichiers binaires avec Git LFS.
+
+@045
+Q: Remettre dans l'ordre la réaction à un mot de passe commité et poussé par erreur.
+O: Révoquer ou changer le secret immédiatement
+O: Vérifier dans les journaux s'il a été utilisé
+O: Retirer le secret du code et le lire depuis une variable ou un coffre
+O: Nettoyer l'historique si nécessaire avec git filter-repo
+O: Ajouter une détection automatique, comme gitleaks, en pré-commit et en CI
+E: Le secret doit être considéré comme compromis dès qu'il a été poussé : des robots scannent les dépôts publics en quelques minutes. Réécrire l'historique ne suffit pas, car des clones et des copies en cache existent déjà.
+
+@046
+Q: Pourquoi réécrire l'historique ne suffit-il pas après la fuite d'un secret ?
+C: Des clones, des forks et des caches ont déjà pu copier l'ancienne version
+W: Git interdit de réécrire les commits qui contiennent un mot de passe
+W: Le serveur restaure l'historique d'origine au bout de vingt-quatre heures
+W: La réécriture ne change que le dépôt local, jamais celui du serveur
+E: La seule mesure sûre est la révocation du secret. Le nettoyage de l'historique évite seulement que le secret reste lisible pour les prochains clones.
+
+@047
+Q: À quoi sert un hook pre-commit ?
+C: À lancer des vérifications locales avant que le commit soit créé
+W: À envoyer une notification à l'équipe après chaque commit poussé
+W: À fusionner automatiquement les commits trop petits entre eux
+W: À signer chaque commit avec la clé privée de l'utilisateur
+E: Un formatage, une analyse statique ou une recherche de secrets qui échoue bloque le commit. Les hooks ne sont pas versionnés par défaut : l'outil pre-commit, avec un fichier .pre-commit-config.yaml, les partage dans l'équipe.
+
+@048
+Q: Pourquoi une vérification en hook local ne remplace-t-elle pas la même vérification en CI ?
+C: Un hook se contourne avec --no-verify et n'est pas installé partout
+W: Les hooks locaux ne peuvent pas lancer de programme écrit en Python
+W: Les hooks locaux ralentissent le serveur Git à chaque push reçu
+W: La CI refuse les commits qui ont déjà passé un hook local
+E: Le hook donne un retour rapide, la CI fait foi pour tous. C'est la combinaison des deux qui évite qu'une erreur arrive sur main.
+
+@049
+Q: Que vérifie GitHub quand un commit porte la mention « Verified » ?
+C: Que le commit est signé par une clé GPG, SSH ou S/MIME liée au compte de l'auteur
+W: Que le commit a passé tous les contrôles de la CI avant d'être fusionné
+W: Que le commit a été relu et approuvé par un membre de l'équipe
+W: Que l'adresse électronique de l'auteur a été confirmée par un courriel
+E: N'importe qui peut écrire un autre nom dans user.name et user.email. La signature prouve l'auteur ; une règle de branche peut exiger des commits signés.
+
+@050
+Q: Compléter cette configuration qui signe les commits avec une clé SSH.
+A: ssh
+E: Avec commit.gpgsign=true, chaque commit est signé ; la clé publique est déclarée comme clé de signature sur le compte GitHub ou GitLab. Une clé SSH existante suffit, sans installer GPG.
+```bash
+git config --global gpg.format ____
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true
+```

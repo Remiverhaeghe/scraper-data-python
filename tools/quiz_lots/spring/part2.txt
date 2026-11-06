@@ -1,0 +1,448 @@
+@051
+Q: Que fait MockMvc dans ce test ?
+C: Il simule une requête GET et vérifie le code 200 et un champ du JSON
+W: Il démarre Tomcat sur un port libre et envoie une vraie requête HTTP
+W: Il appelle directement la méthode du contrôleur sans passer par Spring
+W: Il enregistre la réponse pour la comparer à celle du test précédent
+E: La requête traverse la vraie configuration Spring MVC (conversion, validation, gestion des erreurs) sans réseau. jsonPath lit le corps avec une expression ; le service est fourni par une doublure.
+```java
+mockMvc.perform(get("/commandes/42"))
+    .andExpect(status().isOk())
+    .andExpect(jsonPath("$.numero").value("C-42"));
+```
+
+@052
+Q: Compléter ce test pour remplacer le service par une doublure Mockito dans le contexte Spring.
+A: @MockitoBean
+E: Depuis Spring Boot 3.4, @MockitoBean remplace @MockBean. La doublure prend la place du bean réel et se programme avec when(...).thenReturn(...).
+```java
+@WebMvcTest(CommandeController.class)
+class CommandeControllerTest {
+    @Autowired MockMvc mockMvc;
+    ____ CommandeService service;
+}
+```
+
+@053
+Q: Pourquoi utiliser Testcontainers plutôt qu'une base H2 en mémoire pour tester les repositories ?
+C: Les tests tournent sur le vrai moteur, avec son SQL et ses types propres
+W: H2 ne sait pas exécuter de requêtes SQL qui contiennent une jointure entre tables
+W: Testcontainers démarre plus vite que H2 pour chaque classe de test
+W: H2 est payant au-delà de dix tables dans un même schéma de test
+E: Une requête native PostgreSQL, un type JSONB ou une contrainte particulière passent sur H2 et échouent en production, ou l'inverse. @ServiceConnection relie le conteneur à Spring Boot sans configuration manuelle.
+
+@054
+Q: Que teste @DataJpaTest ?
+C: Les repositories et le mapping JPA, avec une transaction annulée après chaque test
+W: Les contrôleurs et la sérialisation JSON des entités renvoyées au client
+W: L'application entière, serveur web compris, sur un port choisi au hasard
+W: La migration des données d'une base de production vers une base de test
+E: Seule la couche JPA est chargée. L'annulation en fin de test isole les tests entre eux ; avec Testcontainers, on remplace la base embarquée par @AutoConfigureTestDatabase(replace = NONE).
+
+@055
+Q: Pourquoi limiter le nombre de tests @SpringBootTest dans un projet ?
+C: Chaque contexte différent se recharge, ce qui ralentit beaucoup la suite
+W: Spring Boot n'accepte pas plus de vingt tests de ce type dans un même module
+W: Ces tests ne peuvent pas utiliser de doublures pour les services
+W: Ces tests modifient la base de production à chaque exécution
+E: Spring met en cache un contexte réutilisé par les tests de même configuration ; une doublure ou une propriété différente en crée un nouveau. Les tests de tranche (@WebMvcTest, @DataJpaTest) et les tests unitaires purs restent la base.
+
+@056
+Q: Associer chaque annotation de test à ce qu'elle charge.
+P: @SpringBootTest => Le contexte complet de l'application
+P: @WebMvcTest => Les contrôleurs et la configuration Spring MVC
+P: @DataJpaTest => Les entités, les repositories et une source de données
+P: @JsonTest => La configuration de Jackson pour tester la sérialisation
+P: Aucune annotation Spring => Rien : un test unitaire avec new et des doublures
+E: Plus la tranche est fine, plus le test est rapide et précis sur la cause d'un échec. Un service métier se teste sans Spring, en lui passant ses dépendances par le constructeur.
+
+@057
+Q: Que fait l'aspect déclaré par @Around("@annotation(Chronometre)") ?
+C: Il entoure chaque méthode annotée @Chronometre pour exécuter du code avant et après
+W: Il remplace les méthodes annotées par une version compilée plus rapide
+W: Il lance chaque méthode annotée dans un thread séparé du thread appelant
+W: Il interdit l'appel des méthodes annotées hors des contrôleurs REST
+E: L'aspect mesure la durée, journalise ou vérifie un droit sans toucher au code métier. Comme pour @Transactional, il passe par un proxy et ne s'applique pas aux appels internes à la classe.
+
+@058
+Q: Que se passe-t-il quand cette méthode @Async est appelée ?
+C: Elle s'exécute dans un autre thread et l'appelant continue sans attendre
+W: Elle s'exécute après la fin de la transaction en cours de la méthode appelante
+W: Elle s'exécute dans le même thread mais avec une priorité plus basse
+W: Elle s'exécute au prochain démarrage de l'application si elle échoue
+E: Elle peut renvoyer CompletableFuture pour récupérer un résultat. Il faut @EnableAsync et, de préférence, un exécuteur dimensionné : une exception d'une méthode void est sinon seulement journalisée.
+```java
+@Async
+public CompletableFuture<Rapport> generer(Long id) {
+    return CompletableFuture.completedFuture(calculer(id));
+}
+```
+
+@059
+Q: Comment publier un événement et le traiter seulement après la validation de la transaction ?
+C: Avec ApplicationEventPublisher et un écouteur @TransactionalEventListener
+W: Avec un appel direct au service de courriel à la fin de la méthode transactionnelle
+W: Avec @Async sur l'écouteur, qui attend la fin de la transaction de l'appelant
+W: Avec une tâche @Scheduled qui relit les commandes toutes les minutes
+E: La phase AFTER_COMMIT garantit que le courriel de confirmation ne part pas pour une commande finalement annulée. Si l'envoi doit survivre à un arrêt, on passe par une table d'événements (outbox) ou une file.
+
+@060
+Q: Que fait @Cacheable sur cette méthode ?
+C: Il garde le résultat par valeur des paramètres et le renvoie sans rappeler la méthode
+W: Il enregistre le résultat de la méthode en base pour le relire au prochain démarrage du service
+W: Il exécute la méthode à l'avance au démarrage pour remplir le cache de tarifs
+W: Il partage le résultat entre les utilisateurs connectés à la même session
+E: @EnableCaching active le mécanisme ; Caffeine ou Redis servent de stockage. @CacheEvict vide l'entrée quand le tarif change, sinon on sert une valeur périmée.
+```java
+@Cacheable("tarifs")
+public Tarif tarif(String reference) {
+    return fournisseur.lireTarif(reference);
+}
+```
+
+@061
+Q: Pourquoi préférer RestClient ou WebClient à RestTemplate dans un nouveau projet ?
+C: RestTemplate est en maintenance, et les nouveaux clients ont une API fluide plus lisible
+W: RestTemplate ne sait pas envoyer de corps JSON dans une requête POST
+W: RestTemplate est retiré de Spring Boot 3 et ne compile plus
+W: Les nouveaux clients règlent eux-mêmes leurs délais d'attente
+E: RestClient est synchrone, WebClient réactif. Dans tous les cas, on fixe des délais de connexion et de lecture : sans délai, un service distant lent bloque les threads jusqu'à épuisement.
+
+@062
+Q: Compléter cet appel RestClient qui lit une commande et la convertit en objet.
+A: body
+E: retrieve() lance l'appel ; body(Class) convertit la réponse avec Jackson. Un code 4xx ou 5xx lève une RestClientResponseException, que onStatus permet de traduire.
+```java
+Commande vCommande = restClient.get()
+    .uri("/commandes/{id}", id)
+    .retrieve()
+    .____(Commande.class);
+```
+
+@063
+Q: Pourquoi définir un délai de lecture sur chaque client HTTP sortant d'un service Spring ?
+C: Pour qu'un service distant bloqué n'immobilise pas les threads indéfiniment
+W: Pour que le service distant traite les requêtes dans l'ordre de leur arrivée
+W: Pour réduire la taille des réponses renvoyées par le service distant
+W: Pour chiffrer les échanges avec le service distant sans certificat
+E: Tomcat a 200 threads par défaut : avec un appel bloqué par requête, l'application ne répond plus. Délai, disjoncteur (Resilience4j) et repli limitent la propagation de la panne.
+
+@064
+Q: Une application Tomcat a 200 threads. Chaque requête appelle un service distant qui ne répond plus, sans délai configuré. Combien de requêtes simultanées suffisent à bloquer l'application ?
+N: 200
+U: requêtes
+E: Chaque thread reste bloqué sur l'appel distant, et les requêtes suivantes s'accumulent dans la file. Un délai de 2 s libère les threads et transforme la panne distante en erreurs rapides.
+
+@065
+Q: Qu'apportent les threads virtuels activés par spring.threads.virtual.enabled=true ?
+C: Des milliers de requêtes bloquantes en parallèle sans pool de threads système
+W: Une exécution du code Java plus rapide grâce à une compilation native
+W: Une protection automatique contre les appels distants trop lents
+W: Un partage de la mémoire entre plusieurs instances de l'application
+E: Disponibles depuis Java 21, ils se libèrent pendant une attente d'entrée-sortie. Ils ne remplacent pas un délai : un service bloqué accumule alors des milliers de requêtes en mémoire.
+
+@066
+Q: Quels changements imposait le passage de Spring Boot 2 à Spring Boot 3 ?
+C: Java 17 au minimum et le passage des paquets javax à jakarta
+W: L'abandon de Maven au profit de Gradle et du langage Kotlin
+W: Le remplacement de Tomcat par Netty pour les applications web
+W: La suppression de Spring Data JPA au profit de Spring Data JDBC
+E: javax.persistence devient jakarta.persistence, javax.servlet devient jakarta.servlet. L'outil OpenRewrite automatise l'essentiel de la migration ; les bibliothèques encore en javax doivent être mises à jour.
+
+@067
+Q: Pourquoi une dépendance circulaire entre deux beans fait-elle échouer le démarrage ?
+C: Avec l'injection par constructeur, aucun des deux ne peut être créé en premier
+W: Spring limite chaque bean à une seule dépendance injectée par constructeur
+W: Les deux beans reçoivent le même nom et entrent en conflit dans le contexte de l'application
+W: Le scan des composants s'arrête au premier bean qui dépend d'un autre
+E: Spring Boot interdit les cycles par défaut depuis la version 2.6. Le cycle révèle souvent une responsabilité mal découpée : on extrait la partie commune dans un troisième bean.
+
+@068
+Q: Deux beans implémentent l'interface NotificationService. Comment choisir lequel injecter ?
+C: Avec @Qualifier sur le point d'injection, ou @Primary sur le bean par défaut
+W: Spring injecte celui dont la classe a été compilée en dernier dans le projet
+W: Spring choisit au hasard et journalise un avertissement au démarrage
+W: Il faut renommer l'interface pour qu'elle ne soit implémentée qu'une fois
+E: Sans indication, Spring lève NoUniqueBeanDefinitionException. On peut aussi injecter List<NotificationService> pour utiliser toutes les implémentations, par exemple courriel et SMS.
+
+@069
+Q: Quelle différence entre un bean de portée singleton et prototype ?
+C: Un singleton est partagé, un prototype est créé à chaque demande
+W: Un singleton vit pendant une requête, un prototype pendant la session
+W: Un singleton est thread-safe d'office, un prototype ne l'est pas
+W: Un singleton se déclare en XML, un prototype par annotation
+E: Un singleton partagé entre les threads ne doit pas garder d'état modifiable, comme un champ compteur ou un client en cours. Un prototype injecté dans un singleton n'est créé qu'une fois : on passe par ObjectProvider pour en obtenir un neuf.
+
+@070
+Q: Remettre dans l'ordre le cycle de vie d'un bean Spring.
+O: Instanciation par le constructeur
+O: Injection des dépendances restantes
+O: Méthode annotée @PostConstruct
+O: Utilisation du bean par l'application
+O: Méthode annotée @PreDestroy à l'arrêt du contexte
+E: @PostConstruct convient à une initialisation qui a besoin des dépendances, comme précharger un cache. @PreDestroy n'est appelée qu'à un arrêt propre du contexte, pas sur un kill -9.
+
+@071
+Q: Comment Spring Boot permet-il un arrêt propre pendant un déploiement ?
+C: Avec server.shutdown=graceful, qui finit les requêtes en cours avant d'arrêter
+W: Avec un redémarrage automatique du contexte toutes les nuits à heure fixe
+W: Avec la désactivation des sondes de santé pendant les déploiements planifiés de la semaine
+W: Avec la mise en cache des requêtes reçues pendant l'arrêt du service web
+E: À la réception de SIGTERM, le serveur refuse les nouvelles connexions et attend les requêtes en cours, dans la limite de spring.lifecycle.timeout-per-shutdown-phase. La sonde readiness passe à OUT_OF_SERVICE pour que Kubernetes retire l'instance.
+
+@072
+Q: Quelle différence entre les sondes liveness et readiness d'Actuator ?
+C: Liveness dit si l'application doit être redémarrée, readiness si elle peut recevoir du trafic
+W: Liveness mesure la mémoire utilisée, readiness la charge du processeur du service
+W: Liveness vérifie la base de données, readiness vérifie les services distants appelés
+W: Liveness s'utilise en développement, readiness dans un environnement de production surveillé
+E: Inclure la base de données dans liveness ferait redémarrer toutes les instances quand la base tombe, ce qui n'arrange rien. Une dépendance indisponible doit plutôt rendre l'instance « non prête ».
+
+@073
+Q: Pourquoi cette entité pose-t-elle un problème avec equals et hashCode générés sur tous les champs ?
+C: Les collections paresseuses sont chargées et les relations bidirectionnelles bouclent
+W: Hibernate refuse les entités qui redéfinissent equals dans leur classe
+W: Le champ id doit rester le seul champ privé d'une entité JPA
+W: Les entités ne peuvent pas être rangées dans un HashSet par Hibernate
+E: @Data de Lombok génère equals, hashCode et toString sur tous les champs : une Commande qui compare ses lignes, qui comparent leur commande, provoque un débordement de pile. On base l'égalité sur l'identifiant métier, ou on évite @Data sur les entités.
+```java
+@Entity
+@Data
+public class Commande {
+    @Id @GeneratedValue private Long id;
+    @OneToMany(mappedBy = "commande") private List<Ligne> lignes;
+}
+```
+
+@074
+Q: Que fait le verrouillage optimiste avec un champ @Version ?
+C: Il refuse une mise à jour si la ligne a été modifiée depuis sa lecture
+W: Il verrouille la ligne en base dès sa lecture, jusqu'à la fin de la session
+W: Il garde les versions successives de la ligne dans une table d'historique dédiée
+W: Il fusionne automatiquement deux modifications concurrentes de la ligne
+E: L'UPDATE inclut WHERE version = ? ; si aucune ligne n'est touchée, Hibernate lève OptimisticLockException. L'API renvoie alors 409 et le client relit la ressource avant de réessayer.
+
+@075
+Q: Deux utilisateurs modifient la même commande, de version 7, puis enregistrent. Quelle version porte la commande après la seule mise à jour acceptée ?
+N: 8
+E: La première mise à jour passe de 7 à 8 ; la seconde, qui attend encore 7, ne trouve aucune ligne et échoue. Sans @Version, la seconde écraserait silencieusement la première.
+
+@076
+Q: Pourquoi le mode spring.jpa.open-in-view est-il signalé par un avertissement au démarrage ?
+C: Il garde la session ouverte jusqu'à la vue et cache des requêtes lancées hors du service
+W: Il ouvre une transaction d'écriture pour chaque requête GET reçue par l'application web
+W: Il désactive le cache de second niveau d'Hibernate pour l'ensemble des entités
+W: Il expose les entités JPA directement dans les réponses JSON de l'application
+E: Activé par défaut, il évite les LazyInitializationException en laissant charger les relations pendant la sérialisation, avec une connexion tenue plus longtemps. Le désactiver oblige à charger explicitement ce dont la réponse a besoin.
+
+@077
+Q: Que fait la méthode save d'un JpaRepository sur une entité qui a déjà un identifiant ?
+C: Elle fusionne l'entité avec merge, souvent après un SELECT de vérification
+W: Elle insère une nouvelle ligne avec un nouvel identifiant généré
+W: Elle lève une exception, car save ne sert qu'aux nouvelles entités
+W: Elle supprime l'ancienne ligne puis insère la nouvelle à sa place
+E: Avec un identifiant assigné à la main, Spring Data ne sait pas si l'entité est nouvelle et lance un SELECT avant chaque insertion. Implémenter Persistable ou utiliser @Version évite ce coût sur des imports massifs.
+
+@078
+Q: Pourquoi ces insertions en boucle sont-elles lentes malgré saveAll ?
+C: Sans jdbc.batch_size et avec IDENTITY, Hibernate envoie une requête par ligne
+W: saveAll ouvre une nouvelle transaction pour chaque élément de la liste
+W: saveAll vérifie l'unicité de chaque ligne avec un verrou sur la table
+W: saveAll ignore la liste et relit toute la table avant d'insérer
+E: La génération IDENTITY oblige à insérer ligne par ligne pour connaître l'identifiant. Une séquence avec allocationSize et spring.jpa.properties.hibernate.jdbc.batch_size=50 regroupe les insertions.
+```java
+List<Mesure> vMesures = lireFichier(chemin);
+repository.saveAll(vMesures);
+```
+
+@079
+Q: Avec batch_size à 50, combien d'allers-retours vers la base faut-il pour insérer 10 000 lignes ?
+N: 200
+U: lots
+E: 10 000 / 50 = 200 lots au lieu de 10 000 requêtes. Au-delà de quelques centaines de milliers de lignes, on vide aussi régulièrement le contexte de persistance (flush puis clear) pour ne pas saturer la mémoire.
+
+@080
+Q: Quelle annotation de Bean Validation vérifie qu'un champ contient une adresse électronique ?
+C: @Email
+W: @Mail
+W: @Pattern
+W: @Address
+E: @Pattern avec une expression régulière conviendrait aussi, mais @Email est fait pour cela. On combine souvent @NotBlank @Email @Size(max = 254), et on crée une annotation propre pour une règle métier réutilisée.
+
+@081
+Q: Compléter ce DTO pour refuser une quantité inférieure à 1.
+A: @Min
+E: @Min(1) s'applique aux nombres ; @Positive conviendrait aussi. La validation ne s'exécute que si le paramètre du contrôleur porte @Valid ou @Validated.
+```java
+public record LigneDemande(
+    @NotBlank String reference,
+    ____(1) int quantite) {}
+```
+
+@082
+Q: Pourquoi externaliser les secrets d'une application Spring plutôt que les écrire dans application.yml ?
+C: Le fichier est versionné et le .jar se diffuse, ce qui exposerait les secrets
+W: Spring Boot refuse les propriétés contenant le mot password dans le fichier de configuration
+W: Les secrets écrits dans le fichier sont effacés à chaque compilation Maven
+W: Le fichier application.yml n'est pas lu quand le profil prod est actif
+E: On les passe par variables d'environnement, fichiers montés (spring.config.import=configtree:) ou un coffre comme Vault. Le fichier de base garde des valeurs vides ou de développement.
+
+@083
+Q: Que permet spring.config.import=optional:configtree:/run/secrets/ ?
+C: Lire chaque fichier du dossier comme une propriété nommée d'après le fichier
+W: Chiffrer les propriétés de l'application dans le dossier indiqué
+W: Importer la configuration d'une autre application Spring du réseau
+W: Recharger la configuration à chaud quand un fichier du dossier change
+E: Un fichier /run/secrets/spring.datasource.password devient la propriété du même nom. C'est le format des secrets Docker et Kubernetes ; optional: évite l'échec quand le dossier n'existe pas en développement.
+
+@084
+Q: Que fait cette configuration de journalisation dans application.yml ?
+C: Elle écrit les journaux au format JSON structuré ECS sur la console
+W: Elle envoie les journaux à Elasticsearch sans passer par la console
+W: Elle convertit les anciens journaux texte au format JSON une fois par jour
+W: Elle masque les données personnelles des journaux avant leur écriture
+E: Les journaux structurés, intégrés à Spring Boot depuis la version 3.4, se filtrent par champ dans Loki ou Kibana. Le collecteur lit la sortie standard du conteneur.
+```yaml
+logging:
+  structured:
+    format:
+      console: ecs
+```
+
+@085
+Q: Associer chaque point d'accès Actuator à son usage.
+P: /actuator/health => Sondes de santé pour l'orchestrateur
+P: /actuator/prometheus => Métriques au format collecté par Prometheus
+P: /actuator/info => Version et informations de construction
+P: /actuator/loggers => Lire et changer le niveau de journal à chaud
+P: /actuator/threaddump => État des threads pour un diagnostic de blocage
+E: loggers permet de passer un paquet en DEBUG le temps d'un diagnostic, sans redémarrage. Ces points d'écriture ou de diagnostic restent réservés à un réseau d'administration.
+
+@086
+Q: Que mesure la métrique http.server.requests exposée par Micrometer ?
+C: Le nombre et la durée des requêtes, par route, méthode et code de statut
+W: Le nombre de connexions ouvertes vers la base de données pendant une requête
+W: La taille en mémoire de chaque requête reçue et de sa réponse envoyée
+W: Le nombre d'utilisateurs connectés en même temps à l'application web
+E: Le label uri reprend le modèle de route (/commandes/{id}), pas l'adresse réelle, pour éviter l'explosion des séries. Avec percentiles-histogram activé, Prometheus calcule des centiles de latence.
+
+@087
+Q: Pourquoi une compilation native GraalVM d'une application Spring Boot démarre-t-elle en quelques dizaines de millisecondes ?
+C: Le code est compilé à l'avance et l'analyse des beans est faite pendant la construction
+W: L'application native ne charge que les beans utilisés par la première requête
+W: La JVM reste en mémoire entre deux démarrages et réutilise son état précédent
+W: Le binaire natif supprime Spring et ne garde que le code écrit par l'équipe
+E: Le traitement AOT de Spring génère le code d'initialisation à la construction. En contrepartie, la construction est longue, la réflexion doit être déclarée, et le débit maximal est parfois inférieur à celui d'une JVM chaude.
+
+@088
+Q: Comment l'observation de Spring Boot 3 propage-t-elle une trace entre deux services ?
+C: Micrometer Tracing ajoute l'en-tête traceparent aux appels sortants instrumentés
+W: Spring copie l'identifiant de session HTTP dans chaque appel vers les autres services
+W: Chaque service lit la trace dans la base de données partagée entre les services
+W: L'identifiant de trace est ajouté par Tomcat dans l'adresse de chaque requête
+E: RestClient, WebClient ou KafkaTemplate construits par Spring sont instrumentés ; un client créé avec new ne l'est pas. L'identifiant de trace apparaît aussi dans les journaux pour relier les deux.
+
+@089
+Q: Pourquoi ce RestClient n'envoie-t-il pas l'en-tête de trace ?
+C: Il est créé avec RestClient.create() au lieu du RestClient.Builder fourni par Spring
+W: L'en-tête de trace n'est ajouté qu'aux requêtes POST et PUT sortantes
+W: La méthode est privée et échappe donc au proxy de Spring
+W: L'adresse du service distant ne commence pas par https
+E: Le RestClient.Builder injecté porte l'instrumentation et les convertisseurs configurés. Créer ses clients à la main contourne aussi les délais et les intercepteurs communs.
+```java
+private final RestClient client = RestClient.create("http://stock:8080");
+```
+
+@090
+Q: Pourquoi des instances d'un service, derrière un répartiteur, partagent-elles mal une session HTTP en mémoire ?
+C: Chaque instance garde ses sessions, et un utilisateur renvoyé ailleurs perd la sienne
+W: Les sessions HTTP sont chiffrées avec une clé différente sur chaque instance
+W: Le répartiteur supprime les cookies de session avant de transmettre la requête
+W: Spring limite la session à une seule instance par contrat de licence
+E: Spring Session stocke les sessions dans Redis ou une base, partagées par les instances. Une API sans état avec jeton évite la question, au prix d'une révocation plus difficile.
+
+@091
+Q: Que garantit la méthode Kafka annotée @KafkaListener avec un acquittement après traitement ?
+C: Un message n'est marqué comme lu qu'après son traitement réussi
+W: Un message n'est traité qu'une fois, même après un redémarrage
+W: Les messages sont traités dans l'ordre global de leur publication
+W: Les messages en échec sont supprimés pour ne pas bloquer la file
+E: C'est une livraison « au moins une fois » : après une panne, un message peut être retraité. Le traitement doit donc être idempotent, par exemple en notant les identifiants déjà traités.
+
+@092
+Q: Une file a 6 partitions et le service tourne en 4 instances, une consommation par instance. Combien de partitions une instance traite-t-elle au plus ?
+N: 2
+U: partitions
+E: 6 partitions sur 4 consommateurs : deux instances en prennent 2, deux en prennent 1. Au-delà de 6 instances, les consommateurs en trop restent inactifs : le nombre de partitions borne le parallélisme.
+
+@093
+Q: Pourquoi @Transactional ne garantit-il pas la cohérence entre l'écriture en base et l'envoi d'un message Kafka ?
+C: Les deux systèmes ont des transactions séparées, l'un peut réussir sans l'autre
+W: Kafka annule les messages envoyés dès que la transaction de la base de données échoue
+W: Spring envoie les messages Kafka avant d'ouvrir la transaction de la base
+W: La transaction de la base bloque Kafka jusqu'à sa validation complète
+E: Si l'envoi réussit puis la validation échoue, un message annonce une commande inexistante. Le motif outbox écrit l'événement dans une table de la même transaction, relayé ensuite vers Kafka.
+
+@094
+Q: Remettre dans l'ordre la mise en place du motif outbox dans un service Spring.
+O: Écrire la commande et l'événement dans la même transaction
+O: Valider la transaction en base
+O: Un relais lit les événements non publiés de la table
+O: Le relais publie l'événement dans Kafka
+O: Le relais marque l'événement comme publié
+E: La publication peut se répéter après une panne du relais : les consommateurs doivent ignorer les doublons. Debezium fait office de relais en lisant le journal de la base, sans requêter la table.
+
+@095
+Q: Pourquoi le niveau d'isolation READ COMMITTED de PostgreSQL ne suffit-il pas à ce décrément de stock ?
+C: Deux transactions lisent le même stock, et l'une écrase la mise à jour de l'autre
+W: READ COMMITTED interdit à deux transactions de lire la même ligne d'une table à la fois
+W: PostgreSQL annule les deux transactions dès qu'elles touchent la même ligne
+W: Le décrément s'exécute hors transaction, car la méthode ne renvoie rien
+E: C'est une mise à jour perdue. Un UPDATE stock SET quantite = quantite - 1 WHERE quantite > 0 atomique, un verrou pessimiste (@Lock(PESSIMISTIC_WRITE)) ou une @Version corrigent le problème.
+```java
+@Transactional
+public void reserver(Long id) {
+    Stock vStock = repository.findById(id).orElseThrow();
+    vStock.setQuantite(vStock.getQuantite() - 1);
+}
+```
+
+@096
+Q: Comment éviter qu'une requête lente de rapport bloque les connexions du pool HikariCP ?
+C: La sortir vers un réplica ou un pool séparé, avec un délai de requête borné
+W: Augmenter le pool à mille connexions pour absorber les requêtes lentes de rapport
+W: Désactiver le pool pour ouvrir une connexion neuve à chaque requête
+W: Lancer la requête dans un @Async sans transaction pour libérer le pool
+E: Un pool de 10 connexions occupé par 10 rapports bloque toutes les requêtes rapides. La base supporte mal des centaines de connexions : on isole les usages plutôt que d'agrandir sans fin.
+
+@097
+Q: Que mesure la métrique hikaricp.connections.pending ?
+C: Le nombre de threads qui attendent une connexion libre du pool
+W: Le nombre de connexions ouvertes mais pas encore authentifiées par la base
+W: Le nombre de requêtes SQL en attente d'exécution dans la base de données
+W: Le nombre de connexions fermées par la base après un délai d'inactivité
+E: Une valeur supérieure à zéro qui dure signale un pool trop petit ou des connexions tenues trop longtemps (transaction ouverte pendant un appel HTTP distant). Elle se surveille avec hikaricp.connections.acquire.
+
+@098
+Q: Pourquoi éviter un appel HTTP distant à l'intérieur d'une méthode @Transactional ?
+C: La connexion à la base reste prise pendant toute la durée de l'appel distant
+W: Spring annule automatiquement la transaction dès qu'un appel HTTP est lancé
+W: Les appels HTTP ne peuvent pas lire les données modifiées par la transaction
+W: Le client HTTP refuse de fonctionner dans un thread qui tient une transaction
+E: Un service distant lent épuise alors le pool de connexions. On sépare les étapes : appel distant hors transaction, puis transaction courte pour enregistrer le résultat.
+
+@099
+Q: Que fait le mécanisme de reprise de Resilience4j combiné à un disjoncteur sur un appel distant ?
+C: Il retente les échecs passagers puis coupe les appels si la panne persiste
+W: Il met en file les appels échoués pour les rejouer au prochain démarrage
+W: Il répartit les appels entre plusieurs services distants selon leur charge
+W: Il augmente le délai de lecture à chaque échec jusqu'à obtenir une réponse
+E: Les reprises sans limite multiplient la charge sur un service déjà en difficulté. Le disjoncteur ouvert renvoie tout de suite une erreur ou un repli, puis teste à nouveau après un délai.
+
+@100
+Q: Une méthode publique d'un bean appelle une autre méthode @Cacheable de la même classe. Pourquoi le cache n'est-il jamais utilisé ?
+C: L'appel interne ne passe pas par le proxy qui gère le cache
+W: Le cache n'est actif que pour les méthodes déclarées statiques
+W: Le cache est vidé à chaque appel d'une méthode de la même classe
+W: Le cache ne fonctionne qu'avec des paramètres de type String
+E: Comme pour @Transactional ou @Async, l'aspect s'applique aux appels venus de l'extérieur du bean. On déplace la méthode dans un autre bean ou on injecte le bean dans lui-même par ObjectProvider.
