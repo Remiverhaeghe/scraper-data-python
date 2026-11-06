@@ -1,7 +1,7 @@
 """Tests du modèle de tableau des offres"""
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QModelIndex, Qt
 
 from gui.offers_model import (
     COLUMNS,
@@ -132,3 +132,133 @@ def test_hybrid_offer_title_and_tooltip(qt_application):
     assert vModel.data(vIndex, Qt.ItemDataRole.ToolTipRole).endswith(
         "informatique : MES, SQL"
     )
+
+
+@pytest.mark.parametrize(
+    "pKey, pOffer, pExpected",
+    [
+        (
+            "salary_net_monthly_min",
+            {"estimated_salary": "2 000 €"},
+            "≈ 2 000 € (estimé)",
+        ),
+        ("salary_net_monthly_min", {}, ""),
+        ("match_score", {"match_score": 72}, "72 %"),
+        ("match_score", {"match_score": None}, ""),
+        ("freshness", {"freshness": 80}, "80"),
+        (
+            "first_seen_at",
+            {"first_seen_at": "2026-08-20T08:00:00", "republished": True},
+            "20/08/2026 · republiée",
+        ),
+        (
+            "first_seen_at",
+            {"first_seen_at": "2026-08-20", "old_at_source_days": 45},
+            "20/08/2026 · publiée il y a 45 j",
+        ),
+        ("first_seen_at", {"first_seen_at": "2026-08-20"}, "20/08/2026"),
+        ("company", {"company": "Kent", "company_preferred": True}, "★ Kent"),
+        ("company", {"company": "Adecco", "is_agency": True}, "Adecco · intérim"),
+        ("company", {"company": "Alten", "is_consulting": True}, "Alten · ESN"),
+        ("company", {"company": None, "is_agency": True}, " · intérim"),
+        (
+            "title",
+            {"title": "Technicien", "suspicious_signs": ["paiement"]},
+            "⚠ Technicien · annonce douteuse",
+        ),
+        (
+            "title",
+            {"title": "Technicien", "like_ignored": True},
+            "Technicien · proche d'une offre ignorée",
+        ),
+        (
+            "title",
+            {"title": "Technicien", "above_experience": True, "required_years": 5},
+            "Technicien · 5 ans demandés",
+        ),
+        (
+            "source_label",
+            {"source_label": "Indeed", "source_labels": ["Indeed", "HelloWork"]},
+            "Indeed, HelloWork",
+        ),
+        ("source_label", {"source_label": "Indeed"}, "Indeed"),
+        ("application_status", {"application_status": "APPLIED"}, "Postulé"),
+        ("city", {"city": None}, ""),
+    ],
+)
+def test_format_cell_mentions(pKey, pOffer, pExpected):
+    """Vérifie les mentions ajoutées à une cellule selon les signaux de l'offre."""
+
+    assert format_cell(pOffer, pKey) == pExpected
+
+
+@pytest.mark.parametrize(
+    "pKey, pValue, pExpected",
+    [
+        ("match_score", 72, 72.0),
+        ("match_score", None, -1.0),
+        ("global_score", 55, 55.0),
+    ],
+)
+def test_get_sort_value_scores(pKey, pValue, pExpected):
+    """Vérifie que les scores absents passent derrière un score nul."""
+
+    assert get_sort_value({pKey: pValue}, pKey) == pExpected
+
+
+@pytest.mark.parametrize(
+    "pKey, pOffer, pTone",
+    [
+        ("title", {"is_expired": True, "contract": "CDI"}, "muted"),
+        ("company", {"company_preferred": True}, "primary"),
+        ("match_score", {"match_score": 90}, "success"),
+        ("match_score", {"match_score": None}, None),
+        ("freshness", {"freshness": 10}, "muted"),
+        ("source_label", {"needs_review": True}, "warning"),
+        ("source_label", {}, None),
+    ],
+)
+def test_get_cell_color_signals(pKey, pOffer, pTone):
+    """Vérifie le grisage d'une offre expirée et les couleurs des scores."""
+
+    vColor = get_cell_color(pOffer, pKey)
+
+    if pTone is None:
+        assert vColor is None
+    else:
+        assert vColor.name() == COLORS[pTone].lower()
+
+
+def test_title_tooltip_lists_every_signal(qt_application):
+    """Vérifie l'infobulle du titre : expiration, double profil et différences."""
+
+    vModel = OffersTableModel()
+    vModel.set_offers(
+        [
+            {
+                "title": "Technicien MES",
+                "is_expired": True,
+                "hybrid_terms": ["MES"],
+                "needs_review": True,
+                "differences": ["salaire", "ville"],
+            },
+            {"title": None, "is_expired": True},
+        ]
+    )
+    vColumn = [vKey for _, vKey, _ in COLUMNS].index("title")
+
+    assert vModel.data(vModel.index(0, vColumn), Qt.ItemDataRole.ToolTipRole) == (
+        "Technicien MES\nProbablement expirée\nDouble profil, maintenance et "
+        "informatique : MES\nÀ valider, différences entre annonces : salaire, ville"
+    )
+    assert vModel.data(vModel.index(1, vColumn), Qt.ItemDataRole.ToolTipRole) == (
+        "\nProbablement expirée"
+    )
+    assert vModel.data(vModel.index(0, 1), Qt.ItemDataRole.ToolTipRole) is None
+    assert vModel.data(vModel.index(1, 0), Qt.ItemDataRole.FontRole) is None
+    assert vModel.data(QModelIndex()) is None
+    assert vModel.data(
+        vModel.index(0, vColumn), Qt.ItemDataRole.ForegroundRole
+    ).name() == (COLORS["muted"].lower())
+    assert vModel.offer_at(1) == {"title": None, "is_expired": True}
+    assert vModel.headerData(0, Qt.Orientation.Vertical) is None

@@ -624,7 +624,18 @@ scraper-data-python/
 │   ├── tailscale_certificate.py               # Certificat reconnu pour l'accès par Tailscale
 │   ├── backup_key.py                          # Crée la clé de chiffrement des copies du NAS
 │   ├── mobile_integration.py                  # Prépare et contrôle le test téléphone ↔ serveur de la CI
-│   ├── lab_cases.py                           # Écrit les cas communs aux simulateurs Python et Dart
+│   ├── lab_cases/                             # Écrit les cas communs aux simulateurs Python et Dart
+│   │   ├── __init__.py                        # Assemble les cas et écrit tests/fixtures/shared_lab_cases.json
+│   │   ├── __main__.py                        # Point d'entrée de python -m tools.lab_cases
+│   │   ├── troubleshooting_cases.py           # Pannes à résoudre
+│   │   ├── ladder_cases.py                    # Automate et ladder
+│   │   ├── sql_cases.py                       # Bac à sable SQL
+│   │   ├── excel_cases.py                     # Atelier Excel et feuille d'essai des formules
+│   │   ├── devops_cases.py                    # Maven et Docker
+│   │   ├── circuit_cases.py                   # Schémas électriques, circuits libres, mesures
+│   │   ├── oral_cases.py                      # Entraînement à l'oral
+│   │   ├── puzzle_cases.py                    # Puzzles de code
+│   │   └── git_cases.py                       # Bac à sable Git
 │   └── quiz_lots/                             # Sources des lots écrits, un dossier par thème
 │
 ├── utils/                                     # Utilitaires techniques communs

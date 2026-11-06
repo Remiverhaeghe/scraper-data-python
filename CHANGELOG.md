@@ -23,11 +23,16 @@ dans l'historique git.
   la locale du système passe en français
 - Routes des offres découpées en cinq modules (liste, saisie, fiche,
   documents, préparation d'entretien) ; adresses et pages inchangées
+- Cas communs aux simulateurs Python et Dart (`tools/lab_cases/`) rangés
+  en un module par simulation ; fichier de cas régénéré à l'identique
 - Dépendances à jour : pandas 3.1.1, python-multipart 0.0.33,
   soupsieve 4.0.1 et correctifs des outils (verrou serveur régénéré) ;
-  mobile_scanner 7.5 et sqlite3 3.9 sur le téléphone.
-  flutter_local_notifications reste en 22 : la 23 exige la plateforme
-  Android 37
+  mobile_scanner 7.5 et sqlite3 3.9 sur le téléphone
+- flutter_local_notifications 23 sur le téléphone, compilé contre
+  Android 37 avec le plugin Android Gradle 9.1.1
+- Tests du tableau des offres (mentions, couleurs, tri, infobulle) et de
+  la page des schémas électriques (erreurs, réarmement d'un disjoncteur,
+  suppression, export SVG)
 - Statistiques des offres (qualité, répartitions, compétences, empreintes
   des caches) sorties de `storage/job_offers.py` dans
   `storage/offer_stats.py`
