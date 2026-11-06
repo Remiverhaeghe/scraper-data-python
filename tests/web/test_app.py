@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 import web.rendering as web_rendering
 import storage.backup as storage_backup
 import web.routes.applications as web_applications
-import web.routes.offers as web_offers
+import web.routes.offer_detail as web_offer_detail
 import web.routes.settings as web_settings
 import job.page_timings as page_timings
 import job.quiz_packs as quiz_packs
@@ -764,7 +764,9 @@ def test_expired_offers_are_hidden_by_default(client, tmp_path):
 def test_check_availability(client, tmp_path, monkeypatch, pResult, pMessage, pSaved):
     """Vérifie le message renvoyé et l'enregistrement du seul résultat net."""
 
-    monkeypatch.setattr("web.routes.offers.check_offer_link", lambda pUrl: pResult)
+    monkeypatch.setattr(
+        "web.routes.offer_detail.check_offer_link", lambda pUrl: pResult
+    )
 
     vResponse = client.post(
         "/offer/availability", data={"source": "adzuna", "id": "new"}
@@ -1216,7 +1218,7 @@ def test_chatgpt_prompts_and_company_info(client, monkeypatch):
     assert "Tu es recruteur pour le poste ci-dessous" in vPage
 
     monkeypatch.setattr(
-        web_offers,
+        web_offer_detail,
         "lookup_company",
         lambda pName, _pHome: [
             {
@@ -1243,7 +1245,7 @@ def test_chatgpt_prompts_and_company_info(client, monkeypatch):
     assert "Informations publiques déjà trouvées : DATA SA" in vInfo
 
     monkeypatch.setattr(
-        web_offers,
+        web_offer_detail,
         "lookup_company",
         lambda pName, _pHome: (_ for _ in ()).throw(
             ValueError("Service indisponible.")
@@ -2595,7 +2597,8 @@ def test_offer_page_charts_mock_exam_scores(client, monkeypatch):
         {"finished_at": "2026-10-12T10:00:00", "score": 40, "offer": ["adzuna", "new"]},
     ]
     monkeypatch.setattr(
-        "web.routes.offers.load_exam_results", lambda pDatabaseFile, pKey: vResults
+        "web.routes.offer_detail.load_exam_results",
+        lambda pDatabaseFile, pKey: vResults,
     )
 
     vPage = client.get("/offer", params={"source": "adzuna", "id": "new"}).text
@@ -2726,9 +2729,9 @@ def test_menu_alerts_badge(client):
 def test_offer_description_translated_in_place(client, monkeypatch):
     """Vérifie la traduction sur place de la description, puis le retour au texte."""
 
-    monkeypatch.setattr(web_offers, "can_translate", lambda _pText: True)
+    monkeypatch.setattr(web_offer_detail, "can_translate", lambda _pText: True)
     monkeypatch.setattr(
-        web_offers,
+        web_offer_detail,
         "translate_with_cache",
         lambda _pDatabaseFile, _pText: "Nous recherchons",
     )
@@ -3093,7 +3096,7 @@ def test_offer_is_added_from_a_link(client, monkeypatch):
     """Vérifie l'ajout depuis un lien, puis le message quand la page ne suffit pas."""
 
     monkeypatch.setattr(
-        "web.routes.offers.add_offer_from_link",
+        "web.routes.offer_creation.add_offer_from_link",
         lambda pDatabaseFile, pUrl, pNow: "abc",
     )
 
@@ -3109,7 +3112,7 @@ def test_offer_is_added_from_a_link(client, monkeypatch):
     def refuse(pDatabaseFile, pUrl, pNow):
         raise ValueError("Aucune fiche d'offre structurée sur cette page")
 
-    monkeypatch.setattr("web.routes.offers.add_offer_from_link", refuse)
+    monkeypatch.setattr("web.routes.offer_creation.add_offer_from_link", refuse)
 
     vRefused = client.post("/offers/from-link", data={"url": "https://exemple.fr"})
 

@@ -453,7 +453,11 @@ scraper-data-python/
 │   ├── routes/                                # Routes du tableau de bord, par domaine
 │   │   ├── __init__.py                        # Initialise le package des routes
 │   │   ├── dashboard.py                       # Tableau de bord et lancement d'une recherche
-│   │   ├── offers.py                          # Liste, saisie, import et fiche des offres
+│   │   ├── offers.py                          # Liste et carte des offres, avec leurs filtres
+│   │   ├── offer_creation.py                  # Saisie manuelle, ajout par lien et import
+│   │   ├── offer_detail.py                    # Fiche, disponibilité, entreprise, traduction
+│   │   ├── offer_documents.py                 # CV, dossier et lettre ajustés à une offre
+│   │   ├── offer_preparation.py               # Mission, négociation et fiche de préparation
 │   │   ├── offer_tracking.py                  # Suivi, relance, journal et pièces jointes d'une offre
 │   │   ├── comparison.py                      # Comparaison des offres
 │   │   ├── applications.py                    # Candidatures, statut et agenda

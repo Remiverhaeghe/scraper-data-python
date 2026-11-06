@@ -21,6 +21,13 @@ dans l'historique git.
   plateforme, de l'échec d'Argos et du script de certificat HTTPS
 - Date de recherche Gmail toujours écrite en anglais (« Oct »), même si
   la locale du système passe en français
+- Routes des offres découpées en cinq modules (liste, saisie, fiche,
+  documents, préparation d'entretien) ; adresses et pages inchangées
+- Dépendances à jour : pandas 3.1.1, python-multipart 0.0.33,
+  soupsieve 4.0.1 et correctifs des outils (verrou serveur régénéré) ;
+  mobile_scanner 7.5 et sqlite3 3.9 sur le téléphone.
+  flutter_local_notifications reste en 22 : la 23 exige la plateforme
+  Android 37
 
 ### Schémas à construire sur le téléphone
 - Questions « schéma à construire » envoyées au téléphone avec la

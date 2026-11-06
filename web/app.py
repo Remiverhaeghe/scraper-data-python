@@ -27,6 +27,10 @@ from web.auth import SESSION_COOKIE, get_sessions_revoked_at, read_session_token
 from web.dependencies import get_database_file
 from web.rendering import WEB_DIRECTORY, templates
 from web.routes.offers import router as offers_router
+from web.routes.offer_creation import router as offer_creation_router
+from web.routes.offer_detail import router as offer_detail_router
+from web.routes.offer_documents import router as offer_documents_router
+from web.routes.offer_preparation import router as offer_preparation_router
 from web.routes.dashboard import router as dashboard_router
 from web.routes.offer_tracking import router as offer_tracking_router
 from web.routes.comparison import router as comparison_router
@@ -242,6 +246,10 @@ async def render_http_error(pRequest, pException):
 # Chaque domaine du tableau de bord a son module de routes (web/routes).
 app.include_router(dashboard_router)
 app.include_router(offers_router)
+app.include_router(offer_creation_router)
+app.include_router(offer_detail_router)
+app.include_router(offer_documents_router)
+app.include_router(offer_preparation_router)
 app.include_router(offer_tracking_router)
 app.include_router(comparison_router)
 app.include_router(applications_router)

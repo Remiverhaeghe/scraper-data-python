@@ -38,7 +38,7 @@ from web.dependencies import get_database_file, require_csrf
 from web.forms import parse_date
 from web.rendering import get_message_tone, templates
 from web.routes.certifications import build_certification_url
-from web.routes.offers import build_offer_url, get_existing_offer
+from web.routes.offer_detail import build_offer_url, get_existing_offer
 
 router = APIRouter()
 

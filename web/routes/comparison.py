@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from job.offer_comparison import build_comparison, clear_comparison, toggle_comparison
 from web.dependencies import get_database_file, require_csrf
 from web.rendering import templates
-from web.routes.offers import build_offer_url, get_existing_offer
+from web.routes.offer_detail import build_offer_url, get_existing_offer
 
 router = APIRouter()
 
